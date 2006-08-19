@@ -451,8 +451,8 @@ EXEPATTERN =
 endif
 clean: $(SUBDIRS:%=%/clean) thisdirclean-common
 
-.PHONY: thisdirclean-common
-thisdirclean-common:
+.PHONY: thisdirclean
+thisdirclean:
 	-rm -f *.o *.o2 *.a *.so *.so.* *.dll *.dylib *.cat *~ *.i *.s \
 	  $(EXEPATTERN) *.def *.lnk \
 	  core *.core mergelist mergetrylist *.c1 empty.c \
@@ -460,7 +460,7 @@ thisdirclean-common:
 	-rm -rf importinc
 
 .PHONY: distclean
-distclean: $(SUBDIRS:%=%/distclean) thisdirclean-common
+distclean: $(SUBDIRS:%=%/distclean) thisdirclean
 	rm -f Makefile.depend
 
 DEP_SOURCES = $(wildcard *.c *.cpp *.cc)

@@ -39,8 +39,7 @@ typegen.o endiangen.o:%.o:%.c
 $(PROGS):%:%.o
 	$(LD_FOR_BUILD) -o $@ $<
 
-clean: cleanlocal
+distclean clean: cleanlocal
 .PHONY: cleanlocal
 cleanlocal:
 	rm -f $(PROGS)
-

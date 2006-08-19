@@ -384,7 +384,7 @@ localclean:
 # because no other makes will work after that is done.
 distclean: localdistclean
 .PHONY: localdistclean
-localdistclean:
+localdistclean: localclean
 	-rm -f `find -type l`
 	-rm -f Makefile.config
 
