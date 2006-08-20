@@ -25,9 +25,12 @@
 
 static void
 computeHexTable(int hexit[]) {
-    int i;
+
+    unsigned int i;
+
     for ( i = 0; i < 256; ++i )
-        hexit[i] = 1234567890;
+        hexit[i] = -1;
+
     hexit['0'] = 0;
     hexit['1'] = 1;
     hexit['2'] = 2;
@@ -91,16 +94,17 @@ rgbnorm(long         const rgb,
    number of digits isn't valid, issue an error message and identify
    the complete color color specification in error as 'colorname'.
 
-   For example, if the user says 0ff/000/000 and the maxval is 100,
+   For example, if the user says "0ff" and the maxval is 100,
    then rgb is 0xff, n is 3, and our result is 
    0xff / (16**3-1) * 100 = 6.
-
 -----------------------------------------------------------------------------*/
     pixval retval;
 
-    assert(hexDigitCount > 0);
-
     switch (hexDigitCount) {
+    case 0:
+        pm_error("A hexadecimal color specifier in color '%s' is "
+                 "an empty string", colorname);
+        break;
     case 1:
         retval = (pixval)((double) rgb * maxval / 15 + 0.5);
         break;
@@ -131,34 +135,77 @@ rgbnorm(long         const rgb,
 
 
 static void
-parseNewHexX11(const char       colorname[], 
+parseHexDigits(const char *   const string,
+               char           const delim,
+               int            const hexit[],
+               pixval *       const nP,
+               unsigned int * const digitCountP) {
+
+    unsigned int digitCount;
+    pixval n;
+    
+    digitCount = 0;
+    while (string[digitCount] != delim) {
+        char const digit = string[digitCount];
+        if (digit == '\0')
+            pm_error("rgb: color spec ends prematurely");
+        else {
+            int const hexval = hexit[(unsigned int)digit];
+            if (hexval == -1)
+                pm_error("Invalid hex digit in rgb: color spec: 0x%02x",
+                         digit);
+            n = n * 16 + hexval;
+            ++digitCount;
+        }
+    }
+    *nP = n;
+    *digitCountP = digitCount;
+}
+
+
+
+static void
+parseNewHexX11(char       const colorname[], 
                pixval     const maxval,
                bool       const closeOk,
                pixel *    const colorP) {
+/*----------------------------------------------------------------------------
+   Determine what color colorname[] specifies in the new style hex
+   color specification format (e.g. rgb:55/40/55).
 
+   Return that color as *colorP.
+
+   Assume colorname[] starts with "rgb:", but otherwise it might be
+   gibberish.
+-----------------------------------------------------------------------------*/
     int hexit[256];
 
-    const char* cp;
-    pixval r,g,b;
+    const char * cp;
+    pixval n;
+    unsigned int digitCount;
     pixval rNorm, gNorm, bNorm;
-
-    int i;
 
     computeHexTable(hexit);
 
-    cp = colorname + 4;
+    cp = &colorname[4];
 
-    for (i = 0, r = 0; *cp != '/'; ++i, ++cp)
-        r = r * 16 + hexit[(int)*cp];
-    rNorm = rgbnorm(r, maxval, i, closeOk, colorname);
+    parseHexDigits(cp, '/', hexit, &n, &digitCount);
 
-    for (i = 0, g = 0,++cp; *cp != '/'; ++i, ++cp )
-        g = g * 16 + hexit[(int)*cp];
-    gNorm = rgbnorm(g, maxval, i, closeOk, colorname);
+    rNorm = rgbnorm(n, maxval, digitCount, closeOk, colorname);
 
-    for (i = 0, b = 0, ++cp; *cp != '\0'; ++i, ++cp )
-        b = b * 16 + hexit[(int)*cp];
-    bNorm = rgbnorm(b, maxval, i, closeOk, colorname);
+    cp += digitCount;
+    ++cp;  /* Skip the slash */
+
+    parseHexDigits(cp, '/', hexit, &n, &digitCount);
+
+    gNorm = rgbnorm(n, maxval, digitCount, closeOk, colorname);
+
+    cp += digitCount;
+    ++cp;  /* Skip the slash */
+
+    parseHexDigits(cp, '\0', hexit, &n, &digitCount);
+
+    bNorm = rgbnorm(n, maxval, digitCount, closeOk, colorname);
 
     PPM_ASSIGN(*colorP, rNorm, gNorm, bNorm);
 }
@@ -200,17 +247,39 @@ parseNewDecX11(char       const colorname[],
 
 
 
+static bool
+isHexString(char const string[],
+            int  const hexit[]) {
+
+    bool retval;
+    const char * p;
+
+    for (p = &string[0], retval = true; *p && retval == true; ++p) {
+        if (hexit[(unsigned int)*p] == -1)
+            retval = false;
+    }
+    return retval;
+}
+
+
+
 static void
-parseOldX11(const char       colorname[], 
+parseOldX11(char       const colorname[], 
             pixval     const maxval,
             bool       const closeOk,
             pixel *    const colorP) {
-
+/*----------------------------------------------------------------------------
+   Return as *colorP the color specified by the old X11 style color
+   specififier colorname[] (e.g. #554055).
+-----------------------------------------------------------------------------*/
     int hexit[256];
     long r,g,b;
     pixval rNorm, gNorm, bNorm;
     
     computeHexTable(hexit);
+
+    if (!isHexString(&colorname[1], hexit))
+        pm_error("Non-hexadecimal characters in #-type color specification");
 
     switch (strlen(colorname) - 1 /* (Number of hex digits) */) {
     case 3:
