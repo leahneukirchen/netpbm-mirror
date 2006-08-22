@@ -1,1 +1,1 @@
-#define NETPBM_VERSION "Netpbm 10.35.0"
+#define NETPBM_VERSION "Netpbm 10.36.0"
