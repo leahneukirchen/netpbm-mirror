@@ -14,7 +14,7 @@
 #include "libpbm.h"
 #include "bitreverse.h"
 
-#if defined(__GNUC__) && (__GNUC__ >=3) && (__GNUC_MINOR__ >=1) && defined (__SSE__)
+#if defined(__GNUC__) && (__GNUC__ * 100 + __GNUC_MINOR__ >= 301) && defined (__SSE__)
 /* intel MMX-SSE enhancement for pbm_writepbmowraw() */
 /* GCC only.  Turn on with -msse */
 
