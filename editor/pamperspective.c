@@ -161,9 +161,9 @@ typedef struct {
          xw_ll, yw_ll, zw_ll,  xw_lr, yw_lr, zw_lr;
 
   /* Originally I planned to include the possibility to move the
-     centre of projection, that is the pixel the camera "looks at".  It
+     center of projection, that is the pixel the camera "looks at".  It
      turned out, maybe surprisingly, that this does not have any
-     effect. So now this centre is moved to (0,0).
+     effect. So now this center is moved to (0,0).
      
      Another original plan was to correct the output parameters
      depending on the lengths of the paralellograms sides or its
@@ -714,7 +714,7 @@ static void determine_world_parallelogram (world_data *const world,
   point of an image determines a line in the world.
   
   3 equations state that the 4 points form a parallelogram.  The 4th
-  equation is for normalization and states, that the centre of the
+  equation is for normalization and states, that the center of the
   parallelogram has a z-coordinate of 1.
 -----------------------------------------------------------------------------*/
 {
@@ -1021,8 +1021,8 @@ static void determine_coefficients_pixel (world_data *const world,
   Constructs ax,...,cz from xw_ul,...,zw_lr
      
   The calculations assume pixel coordinates, that is the point ul
-  corresponds to the centre of the pixel (0,0) and the point lr
-  corresponds to the centre of the pixel (width-1,height-1)
+  corresponds to the center of the pixel (0,0) and the point lr
+  corresponds to the center of the pixel (width-1,height-1)
 -----------------------------------------------------------------------------*/
 {
   number width,height;
