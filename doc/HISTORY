@@ -97,6 +97,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.36
 
+              Eliminate pm_perror() in favor of informative error messages.
+
               libnetpbm: fix rgb:r/g/b color name parsing for invalid
               syntax.
 

@@ -12,6 +12,7 @@
 
 #include <assert.h>
 #include <string.h>
+#include <errno.h>
 
 #include "pm_c_util.h"
 #include "nstring.h"
@@ -61,7 +62,8 @@ getline(FILE * const ifP,
     rc = fgets(buf, size, ifP);
     if (rc == NULL) {
         if (ferror(ifP))
-            pm_perror("read error");
+            pm_error("read error.  fgets() failed, errno=%d (%s)",
+                     errno, strerror(errno)));
         else
             pm_error("unexpected EOF");
     }

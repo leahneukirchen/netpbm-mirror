@@ -114,18 +114,6 @@ pm_usage(const char usage[]) {
 
 
 
-void
-pm_perror(const char reason[] ) {
-
-    if (reason != NULL && strlen(reason) != 0)
-        pm_error("%s - errno=%d (%s)", reason, errno, strerror(errno));
-    else
-        pm_error("Something failed with errno=%d (%s)", 
-                 errno, strerror(errno));
-}
-
-
-
 void PM_GNU_PRINTF_ATTR(1,2)
 pm_message(const char format[], ...) {
 

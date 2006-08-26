@@ -160,10 +160,6 @@ pm_message (const char format[], ...);
 void PM_GNU_PRINTF_ATTR(1,2)
 pm_error (const char reason[], ...);       
 
-/* Obsolete - use helpful error message instead */
-void
-pm_perror (const char reason[]);           
-
 /* Obsolete - use shhopt and user's manual instead */
 void 
 pm_usage (const char usage[]);             
