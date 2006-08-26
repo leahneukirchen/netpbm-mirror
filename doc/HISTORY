@@ -95,7 +95,7 @@ linear and gamma-adjusted.
 CHANGE HISTORY 
 --------------
 
-not yet  BJH  Release 10.36
+not yet  BJH  Release 10.36.0
 
               pm_accept_to_pamtuples: fix bug: fill in pam structure.
               Thanks "Christian Schlotter" <schlotter@users.sourceforge.net>.
@@ -108,7 +108,7 @@ not yet  BJH  Release 10.36
               libnetpbm: fix rgb:r/g/b color name parsing for invalid
               syntax.
 
-06.08.19 BJH  Release 10.35
+06.08.19 BJH  Release 10.35.0
 
               Add pgmdeshadow.
 
