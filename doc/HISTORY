@@ -97,6 +97,12 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.36
 
+              pm_accept_to_pamtuples: fix bug: fill in pam structure.
+              Thanks "Christian Schlotter" <schlotter@users.sourceforge.net>.
+
+              Fix selection of MMX_SEE fastpath based on GNU compiler version
+              number.
+
               Eliminate pm_perror() in favor of informative error messages.
 
               libnetpbm: fix rgb:r/g/b color name parsing for invalid
