@@ -20,7 +20,7 @@ echo Test 10.  Should print 1266273778 293:
 ./pamstereogram -randomseed=1 -makemask ../testgrid.pbm | cksum 
 
 echo Test 11.  Should print 3034751595 1070:
-./pamgauss 100 10 -maxval=10000 -sigma 20 | pamfunc -multiplier=500 | \
+pamgauss 100 10 -maxval=10000 -sigma 20 | pamfunc -multiplier=500 | \
   ./pamstereogram -randomseed=1 -dpi=10 -makemask | cksum
 
 # Grayscale
