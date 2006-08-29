@@ -28,11 +28,11 @@ pamgauss 100 10 -maxval=10000 -sigma 20 | pamfunc -multiplier=500 | \
 echo Test 20.  Should print 2468969328 289:
 ./pamstereogram -randomseed=1 -grayscale ../testgrid.pbm | cksum 
 echo Test 21.  Should print 1946982115 4068:
-./pamseq 1 100 | pnmtile 200 20 | \
+pamseq 1 100 | pnmtile 200 20 | \
   ./pamstereogram -randomseed=1 -dpi=10 -grayscale | \
   cksum
 echo Test 22.  Should print 2078013430 4068:
-./pamseq 1 100 | pnmtile 200 20 | \
+pamseq 1 100 | pnmtile 200 20 | \
   ./pamstereogram -randomseed=1 -dpi=10 -grayscale -maxval 255 | \
   cksum
 
@@ -41,7 +41,7 @@ echo Test 22.  Should print 2078013430 4068:
 echo Test 30.  Should print 1319392622 731:
 ./pamstereogram -randomseed=1 -color ../testgrid.pbm | cksum 
 echo Test 31.  Should print 389886159 12062:
-./pamseq 1 100 | pnmtile 200 20 | \
+pamseq 1 100 | pnmtile 200 20 | \
   ./pamstereogram -randomseed=1 -dpi=10 -color | \
   cksum
 
