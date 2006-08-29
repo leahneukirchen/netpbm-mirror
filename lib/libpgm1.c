@@ -28,6 +28,7 @@
 #include "libpam.h"
 #include "fileio.h"
 #include "mallocvar.h"
+#include "nstring.h"
 
 
 gray *
@@ -190,8 +191,99 @@ pgm_getrawsample(FILE * const file,
 
 
 
+static void
+readRpgmRow(FILE * const fileP,
+               gray * const grayrow, 
+               int    const cols,
+               gray   const maxval,
+               int    const format) {
+
+    unsigned int const bytesPerSample = maxval < 256 ? 1 : 2;
+    int          const bytesPerRow    = cols * bytesPerSample;
+    
+    unsigned char * rowBuffer;
+    const char * error;
+    
+    MALLOCARRAY(rowBuffer, bytesPerRow);
+    if (rowBuffer == NULL)
+        asprintfN(&error, "Unable to allocate memory for row buffer "
+                  "for %u columns", cols);
+    else {
+        ssize_t rc;
+        rc = fread(rowBuffer, 1, bytesPerRow, fileP);
+        if (rc == 0)
+            asprintfN(&error, "Error reading row.  fread() errno=%d (%s)",
+                      errno, strerror(errno));
+        else if (rc != bytesPerRow)
+            asprintfN(&error, "Error reading row.  Short read of %u bytes "
+                      "instead of %u", rc, bytesPerRow);
+        else {
+            error = NULL;
+            if (maxval < 256) {
+                unsigned int col;
+                for (col = 0; col < cols; ++col)
+                    grayrow[col] = (gray)rowBuffer[col];
+            } else {
+                unsigned int bufferCursor;
+                unsigned int col;
+                
+                bufferCursor = 0;  /* Start at beginning of rowBuffer[] */
+                
+                for (col = 0; col < cols; ++col) {
+                    gray g;
+                    
+                    g = rowBuffer[bufferCursor++] << 8;
+                    g |= rowBuffer[bufferCursor++];
+                    
+                    grayrow[col] = g;
+                }
+            }
+        }
+        free(rowBuffer);
+    }
+    if (error) {
+        pm_errormsg("%s", error);
+        strfree(error);
+        pm_longjmp();
+    }
+} 
+
+
+
+static void
+readPbmRow(FILE * const fileP,
+           gray * const grayrow, 
+           int    const cols,
+           gray   const maxval,
+           int    const format) {
+
+    jmp_buf jmpbuf;
+    jmp_buf * origJmpbufP;
+    bit * bitrow;
+    
+    bitrow = pbm_allocrow(cols);
+    if (setjmp(jmpbuf) != 0) {
+        pbm_freerow(bitrow);
+        pm_setjmpbuf(origJmpbufP);
+        pm_longjmp();
+    } else {
+        unsigned int col;
+
+        pm_setjmpbufsave(&jmpbuf, &origJmpbufP);
+
+        pbm_readpbmrow(fileP, bitrow, cols, format);
+        for (col = 0; col < cols; ++col)
+            grayrow[col] = (bitrow[col] == PBM_WHITE ) ? maxval : 0;
+
+        pm_setjmpbuf(origJmpbufP);
+    }
+    pbm_freerow(bitrow);
+}
+
+
+
 void
-pgm_readpgmrow(FILE * const file,
+pgm_readpgmrow(FILE * const fileP,
                gray * const grayrow, 
                int    const cols,
                gray   const maxval,
@@ -201,7 +293,7 @@ pgm_readpgmrow(FILE * const file,
     case PGM_FORMAT: {
         unsigned int col;
         for (col = 0; col < cols; ++col) {
-            grayrow[col] = pm_getuint(file);
+            grayrow[col] = pm_getuint(fileP);
             if (grayrow[col] > maxval)
                 pm_error("value out of bounds (%u > %u)",
                          grayrow[col], maxval);
@@ -209,86 +301,56 @@ pgm_readpgmrow(FILE * const file,
     }
     break;
         
-    case RPGM_FORMAT: {
-        unsigned int const bytesPerSample = maxval < 256 ? 1 : 2;
-        int          const bytesPerRow    = cols * bytesPerSample;
-
-        unsigned char * rowBuffer;
-        ssize_t rc;
-
-        MALLOCARRAY(rowBuffer, bytesPerRow);
-        if (rowBuffer == NULL)
-            pm_error("Unable to allocate memory for row buffer "
-                     "for %u columns", cols);
-
-        rc = fread(rowBuffer, 1, bytesPerRow, file);
-        if (rc == 0)
-            pm_error("Error reading row.  fread() errno=%d (%s)",
-                     errno, strerror(errno));
-        else if (rc != bytesPerRow)
-            pm_error("Error reading row.  Short read of %u bytes "
-                     "instead of %u", rc, bytesPerRow);
-
-        if (maxval < 256) {
-            unsigned int col;
-            for (col = 0; col < cols; ++col)
-                grayrow[col] = (gray)rowBuffer[col];
-        } else {
-            unsigned int bufferCursor;
-            unsigned int col;
-
-            bufferCursor = 0;  /* Start at beginning of rowBuffer[] */
-
-            for (col = 0; col < cols; ++col) {
-                gray g;
-
-                g = rowBuffer[bufferCursor++] << 8;
-                g |= rowBuffer[bufferCursor++];
-
-                grayrow[col] = g;
-            }
-        }
-        free(rowBuffer);
-    }
+    case RPGM_FORMAT:
+        readRpgmRow(fileP, grayrow, cols, maxval, format);
         break;
     
     case PBM_FORMAT:
-    case RPBM_FORMAT: {
-        bit * bitrow;
-        int col;
-
-        bitrow = pbm_allocrow(cols);
-        pbm_readpbmrow( file, bitrow, cols, format );
-        for (col = 0; col < cols; ++col)
-            grayrow[col] = (bitrow[col] == PBM_WHITE ) ? maxval : 0;
-        pbm_freerow(bitrow);
-    }
+    case RPBM_FORMAT:
+        readPbmRow(fileP, grayrow, cols, maxval, format);
         break;
         
     default:
-        pm_error( "can't happen" );
+        pm_error("can't happen");
     }
 }
 
 
 
 gray **
-pgm_readpgm(FILE * const file,
+pgm_readpgm(FILE * const fileP,
             int *  const colsP,
             int *  const rowsP, 
             gray * const maxvalP) {
 
-    gray** grays;
-    int row;
+    gray ** grays;
+    int rows, cols;
+    gray maxval;
     int format;
+    jmp_buf jmpbuf;
+    jmp_buf * origJmpbufP;
 
-    pgm_readpgminit( file, colsP, rowsP, maxvalP, &format );
+    pgm_readpgminit(fileP, &cols, &rows, &maxval, &format);
     
-    grays = pgm_allocarray( *colsP, *rowsP );
+    grays = pgm_allocarray(cols, rows);
+
+    if (setjmp(jmpbuf) != 0) {
+        pgm_freearray(grays, rows);
+        pm_setjmpbuf(origJmpbufP);
+        pm_longjmp();
+    } else {
+        unsigned int row;
     
-    for ( row = 0; row < *rowsP; ++row )
-        pgm_readpgmrow( file, grays[row], *colsP, *maxvalP, format );
-    
+        pm_setjmpbufsave(&jmpbuf, &origJmpbufP);
+
+        for (row = 0; row < rows; ++row)
+            pgm_readpgmrow(fileP, grays[row], cols, maxval, format);
+
+        pm_setjmpbuf(origJmpbufP);
+    }
+    *colsP = cols;
+    *rowsP = rows;
+    *maxvalP = maxval;
     return grays;
 }
 

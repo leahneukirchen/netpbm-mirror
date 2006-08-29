@@ -97,6 +97,10 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.36.0
 
+              Release allocated memory before longjmping from libnetpbm.
+
+              Add pm_errormsg(), pm_setusererrormsg(), pm_setusermessage().
+
               pm_accept_to_pamtuples: fix bug: fill in pam structure.
               Thanks "Christian Schlotter" <schlotter@users.sourceforge.net>.
 

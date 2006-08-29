@@ -18,30 +18,46 @@
 
 #include "pam.h"
 #include "fileio.h"
+#include "nstring.h"
 
 
 static void
 readPbmRow(const struct pam * const pamP,
            tuple *            const tuplerow) {
 
-    unsigned char *bitrow;
     if (pamP->depth != 1)
         pm_error("Invalid pam structure passed to pnm_readpamrow().  "
                  "It says PBM format, but 'depth' member is not 1.");
+    else {
+        jmp_buf jmpbuf;
+        jmp_buf * origJmpbufP;
+        unsigned char * bitrow;
+
+        bitrow = (unsigned char *) pbm_allocrow(pbm_packed_bytes(pamP->width));
+
+        if (setjmp(jmpbuf) != 0) {
+            pbm_freerow(bitrow);
+            pm_setjmpbuf(origJmpbufP);
+            pm_longjmp();
+        } else {
+            pm_setjmpbufsave(&jmpbuf, &origJmpbufP);
+
+            pbm_readpbmrow_packed(pamP->file, bitrow, pamP->width,
+                                  pamP->format);
     
-    bitrow = (unsigned char *) pbm_allocrow(pbm_packed_bytes(pamP->width));
-    pbm_readpbmrow_packed(pamP->file, bitrow, pamP->width, pamP->format);
-    
-    if (tuplerow) {
-        int col;
-        for (col = 0; col < pamP->width; ++col) {
-            tuplerow[col][0] = 
-                ( ((bitrow[col/8] >> (7-col%8)) & 1 ) == PBM_BLACK)
-                ? PAM_PBM_BLACK : PAM_PBM_WHITE
-                ;
+            if (tuplerow) {
+                unsigned int col;
+                for (col = 0; col < pamP->width; ++col) {
+                    tuplerow[col][0] = 
+                        ( ((bitrow[col/8] >> (7-col%8)) & 1 ) == PBM_BLACK)
+                        ? PAM_PBM_BLACK : PAM_PBM_WHITE
+                        ;
+                }
+            }
+            pm_setjmpbuf(origJmpbufP);
         }
-    }   
-    pbm_freerow(bitrow);
+        pbm_freerow(bitrow);
+    }
 }
 
 
@@ -185,6 +201,7 @@ readRawNonPbmRow(const struct pam * const pamP,
 
     unsigned char * inbuf;
     size_t bytesRead;
+    const char * error;
 
     inbuf = pnm_allocrowimage(pamP);
     
@@ -192,25 +209,34 @@ readRawNonPbmRow(const struct pam * const pamP,
 
     if (bytesRead != rowImageSize) {
         if (feof(pamP->file))
-            pm_error("End of file encountered when trying to read a row from "
-                     "input file.");
+            asprintfN(&error,
+                      "End of file encountered when trying to read a row from "
+                      "input file.");
         else 
-            pm_error("Error reading a row from input file.  "
-                     "fread() fails with errno=%d (%s)",
-                     errno, strerror(errno));
-    }
-    if (tuplerow) {
-        switch (pamP->bytes_per_sample) {
-        case 1: parse1BpsRow(pamP, tuplerow, inbuf); break;
-        case 2: parse2BpsRow(pamP, tuplerow, inbuf); break;
-        case 3: parse3BpsRow(pamP, tuplerow, inbuf); break;
-        case 4: parse4BpsRow(pamP, tuplerow, inbuf); break;
-        default:
-            pm_error("invalid bytes per sample passed to "
-                     "pnm_formatpamrow(): %u",  pamP->bytes_per_sample);
+            asprintfN(&error, "Error reading a row from input file.  "
+                      "fread() fails with errno=%d (%s)",
+                      errno, strerror(errno));
+    } else {
+        error = NULL;  /* initial assumption */
+        if (tuplerow) {
+            switch (pamP->bytes_per_sample) {
+            case 1: parse1BpsRow(pamP, tuplerow, inbuf); break;
+            case 2: parse2BpsRow(pamP, tuplerow, inbuf); break;
+            case 3: parse3BpsRow(pamP, tuplerow, inbuf); break;
+            case 4: parse4BpsRow(pamP, tuplerow, inbuf); break;
+            default:
+                asprintfN(&error, "invalid bytes per sample passed to "
+                          "pnm_formatpamrow(): %u",  pamP->bytes_per_sample);
+            }
         }
     }
     pnm_freerowimage(inbuf);
+
+    if (error) {
+        pm_errormsg("%s", error);
+        strfree(error);
+        pm_longjmp();
+    }
 }
 
 
@@ -263,15 +289,27 @@ pnm_readpam(FILE *       const fileP,
             struct pam * const pamP, 
             int          const size) {
 
-    tuple **tuplearray;
-    int row;
+    jmp_buf jmpbuf;
+    jmp_buf * origJmpbufP;
+    tuple ** tuplearray;
 
     pnm_readpaminit(fileP, pamP, size);
     
     tuplearray = pnm_allocpamarray(pamP);
     
-    for (row = 0; row < pamP->height; row++) 
-        pnm_readpamrow(pamP, tuplearray[row]);
+    if (setjmp(jmpbuf) != 0) {
+        pnm_freepamarray(tuplearray, pamP);
+        pm_setjmpbuf(origJmpbufP);
+        pm_longjmp();
+    } else {
+        unsigned int row;
 
+        pm_setjmpbufsave(&jmpbuf, &origJmpbufP);
+            
+        for (row = 0; row < pamP->height; ++row) 
+            pnm_readpamrow(pamP, tuplearray[row]);
+
+        pm_setjmpbuf(origJmpbufP);
+    }
     return tuplearray;
 }

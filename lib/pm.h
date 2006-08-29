@@ -154,8 +154,22 @@ pm_setjmpbufsave(jmp_buf *  const jmpbufP,
 void
 pm_longjmp(void);
 
+
+typedef void pm_usermessagefn(const char * msg);
+
+void
+pm_setusermessagefn(pm_usermessagefn * fn);
+
+typedef void pm_usererrormsgfn(const char * msg);
+
+void
+pm_setusererrormsgfn(pm_usererrormsgfn * fn);
+
 void PM_GNU_PRINTF_ATTR(1,2)
 pm_message (const char format[], ...);     
+
+void PM_GNU_PRINTF_ATTR(1,2)
+pm_errormsg(const char format[], ...);
 
 void PM_GNU_PRINTF_ATTR(1,2)
 pm_error (const char reason[], ...);       

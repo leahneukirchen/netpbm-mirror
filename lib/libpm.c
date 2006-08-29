@@ -55,7 +55,7 @@
 /* The following are set by pm_init(), then used by subsequent calls to other
    pm_xxx() functions.
    */
-static const char* pm_progname;
+static const char * pm_progname;
 static bool pm_showmessages;  
     /* Programs should display informational messages (because the user didn't
        specify the --quiet option).
@@ -75,6 +75,17 @@ static jmp_buf * pm_jmpbufP = NULL;
 
        NULL, which is the default value, means when a libnetpbm function
        encounters an error, it causes the process to exit.
+    */
+static pm_usererrormsgfn * userErrorMsgFn = NULL;
+    /* A function to call to issue an error message.
+
+       NULL means use the library default: print to Standard Error
+    */
+
+static pm_usermessagefn * userMessageFn = NULL;
+    /* A function to call to issue an error message.
+
+       NULL means use the library default: print to Standard Error
     */
 
 
@@ -108,6 +119,22 @@ pm_longjmp(void) {
 
 
 void
+pm_setusererrormsgfn(pm_usererrormsgfn * fn) {
+
+    userErrorMsgFn = fn;
+}
+
+
+
+void
+pm_setusermessagefn(pm_usermessagefn * fn) {
+
+    userMessageFn = fn;
+}
+
+
+
+void
 pm_usage(const char usage[]) {
     pm_error("usage:  %s %s", pm_progname, usage);
 }
@@ -122,10 +149,46 @@ pm_message(const char format[], ...) {
     va_start(args, format);
 
     if (pm_showmessages) {
-        fprintf(stderr, "%s: ", pm_progname);
-        vfprintf(stderr, format, args);
-        fputc('\n', stderr);
+        const char * msg;
+        vasprintfN(&msg, format, args);
+
+        if (userMessageFn)
+            userMessageFn(msg);
+        else
+            fprintf(stderr, "%s: %s\n", pm_progname, msg);
+
+        strfree(msg);
     }
+    va_end(args);
+}
+
+
+
+static void
+errormsg(const char * const msg) {
+
+    if (userErrorMsgFn)
+        userErrorMsgFn(msg);
+    else
+        fprintf(stderr, "%s: %s\n", pm_progname, msg);
+}
+
+
+
+void PM_GNU_PRINTF_ATTR(1,2)
+pm_errormsg(const char format[], ...) {
+
+    va_list args;
+    const char * msg;
+
+    va_start(args, format);
+
+    vasprintfN(&msg, format, args);
+    
+    errormsg(msg);
+
+    strfree(msg);
+
     va_end(args);
 }
 
@@ -134,12 +197,16 @@ pm_message(const char format[], ...) {
 void PM_GNU_PRINTF_ATTR(1,2)
 pm_error(const char format[], ...) {
     va_list args;
+    const char * msg;
 
     va_start(args, format);
 
-    fprintf(stderr, "%s: ", pm_progname);
-    vfprintf(stderr, format, args);
-    fputc('\n', stderr);
+    vasprintfN(&msg, format, args);
+    
+    errormsg(msg);
+
+    strfree(msg);
+
     va_end(args);
 
     pm_longjmp();
@@ -174,8 +241,64 @@ pm_freerow(char * const itrow) {
 
 
 
-char**
-pm_allocarray(int const cols, int const rows, int const size )  {
+static void
+allocarrayNoHeap(unsigned char ** const rowIndex,
+                 unsigned int     const cols,
+                 unsigned int     const rows,
+                 unsigned int     const size,
+                 const char **    const errorP) {
+
+    if (UINT_MAX / cols < size)
+        asprintfN(errorP,
+                  "Arithmetic overflow multiplying %u by %u to get the "
+                  "size of a row to allocate.", cols, size);
+    else {
+        unsigned int rowsDone;
+
+        rowsDone = 0;
+        *errorP = NULL;
+
+        while (rowsDone < rows && !*errorP) {
+            unsigned char * const rowSpace = malloc(cols * size);
+            if (rowSpace == NULL)
+                asprintfN(errorP,
+                          "Unable to allocate a %u-column by %u byte row",
+                          cols, size);
+            else
+                rowIndex[rowsDone++] = rowSpace;
+        }
+        if (*errorP) {
+            unsigned int row;
+            for (row = 0; row < rowsDone; ++row)
+                free(rowIndex[row]);
+        }
+    }
+}
+
+
+
+static unsigned char *
+allocRowHeap(unsigned int const cols,
+             unsigned int const rows,
+             unsigned int const size) {
+
+    unsigned char * retval;
+
+    if (UINT_MAX / cols / rows < size)
+        /* Too big even to request the memory ! */
+        retval = NULL;
+    else
+        retval = malloc(rows * cols * size);
+
+    return retval;
+}
+
+
+
+char **
+pm_allocarray(int const cols,
+              int const rows,
+              int const size )  {
 /*----------------------------------------------------------------------------
    Allocate an array of 'rows' rows of 'cols' columns each, with each
    element 'size' bytes.
@@ -194,38 +317,46 @@ pm_allocarray(int const cols, int const rows, int const size )  {
    We use unfragmented format if possible, but if the allocation of the
    row heap fails, we fall back to fragmented.
 -----------------------------------------------------------------------------*/
-    char** rowIndex;
-    char * rowheap;
+    unsigned char ** rowIndex;
+    const char * error;
 
     MALLOCARRAY(rowIndex, rows + 1);
     if (rowIndex == NULL)
-        pm_error("out of memory allocating row index (%u rows) for an array",
-                 rows);
-    rowheap = malloc(rows * cols * size);
-    if (rowheap == NULL) {
-        /* We couldn't get the whole heap in one block, so try fragmented
-           format.
-        */
-        unsigned int row;
-        
-        rowIndex[rows] = NULL;   /* Declare it fragmented format */
+        asprintfN(&error,
+                  "out of memory allocating row index (%u rows) for an array",
+                  rows);
+    else {
+        unsigned char * rowheap;
 
-        for (row = 0; row < rows; ++row) {
-            rowIndex[row] = pm_allocrow(cols, size);
-            if (rowIndex[row] == NULL)
-                pm_error("out of memory allocating Row %u "
-                         "(%u columns, %u bytes per tuple) "
-                         "of an array", row, cols, size);
+        rowheap = allocRowHeap(cols, rows, size);
+
+        if (rowheap) {
+            /* It's unfragmented format */
+
+            rowIndex[rows] = rowheap;  /* Declare it unfragmented format */
+
+            if (rowheap) {
+                unsigned int row;
+                
+                for (row = 0; row < rows; ++row)
+                    rowIndex[row] = &(rowheap[row * cols * size]);
+            }
+            error = NULL;
+        } else {
+            /* We couldn't get the whole heap in one block, so try fragmented
+               format.
+            */
+            rowIndex[rows] = NULL;   /* Declare it fragmented format */
+            
+            allocarrayNoHeap(rowIndex, cols, rows, size, &error);
         }
-    } else {
-        /* It's unfragmented format */
-        unsigned int row;
-        rowIndex[rows] = rowheap;  /* Declare it unfragmented format */
-
-        for (row = 0; row < rows; ++row)
-            rowIndex[row] = &(rowheap[row * cols * size]);
     }
-    return rowIndex;
+    if (error) {
+        pm_errormsg("Couldn't allocate %u-row array.  %s", rows, error);
+        strfree(error);
+        pm_longjmp();
+    }
+    return (char **)rowIndex;
 }
 
 
@@ -795,17 +926,65 @@ mkstemp2(char * const filenameBuffer) {
 
 
 
+static void
+makeTmpfileWithTemplate(const char *  const filenameTemplate,
+                        FILE **       const filePP,
+                        const char ** const filenameP,
+                        const char ** const errorP) {
+    
+    char * filenameBuffer;  /* malloc'ed */
+
+    filenameBuffer = strdup(filenameTemplate);
+
+    if (filenameBuffer == NULL)
+        asprintfN(errorP, "Unable to allocate storage for temporary "
+                  "file name");
+    else {
+        int rc;
+        
+        rc = mkstemp2(filenameBuffer);
+        
+        if (rc < 0)
+            asprintfN(errorP,
+                      "Unable to create temporary file according to name "
+                      "pattern '%s'.  mkstemp() failed with errno %d (%s)",
+                      filenameTemplate, errno, strerror(errno));
+        else {
+            int const fd = rc;
+            
+            FILE * fileP;
+            fileP = fdopen(fd, "w+b");
+            
+            if (fileP == NULL)
+                asprintfN(errorP, "Unable to create temporary file.  "
+                          "fdopen() failed with errno %d (%s)",
+                          errno, strerror(errno));
+            else {
+                *errorP = NULL;
+                *filePP = fileP;
+                *filenameP = filenameBuffer;
+            }
+            if (*errorP) {
+                unlink(filenameBuffer);
+                close(fd);
+            }
+        }
+        if (*errorP)
+            strfree(filenameBuffer);
+    }
+}
+
+
+
 void
 pm_make_tmpfile(FILE **       const filePP,
                 const char ** const filenameP) {
 
-    int fd;
-    FILE * fileP;
     const char * filenameTemplate;
-    char * filenameBuffer;  /* malloc'ed */
     unsigned int fnamelen;
     const char * tmpdir;
     const char * dirseparator;
+    const char * error;
 
     fnamelen = strlen (pm_progname) + 10; /* "/" + "_XXXXXX\0" */
 
@@ -820,27 +999,18 @@ pm_make_tmpfile(FILE **       const filePP,
               tmpdir, dirseparator, pm_progname, "_XXXXXX");
 
     if (filenameTemplate == NULL)
-        pm_error("Unable to allocate storage for temporary file name");
-
-    filenameBuffer = strdup(filenameTemplate);
-
-    fd = mkstemp2(filenameBuffer);
-
-    if (fd < 0)
-        pm_error("Unable to create temporary file according to name "
-                 "pattern '%s'.  mkstemp() failed with "
-                 "errno %d (%s)", filenameTemplate, errno, strerror(errno));
+        asprintfN(&error,
+                  "Unable to allocate storage for temporary file name");
     else {
-        fileP = fdopen(fd, "w+b");
+        makeTmpfileWithTemplate(filenameTemplate, filePP, filenameP, &error);
 
-        if (fileP == NULL)
-            pm_error("Unable to create temporary file.  fdopen() failed "
-                     "with errno %d (%s)", errno, strerror(errno));
+        strfree(filenameTemplate);
     }
-    strfree(filenameTemplate);
-
-    *filenameP = filenameBuffer;
-    *filePP = fileP;
+    if (error) {
+        pm_errormsg("%s", error);
+        strfree(error);
+        pm_longjmp();
+    }
 }
 
 
@@ -1200,9 +1370,9 @@ pm_readmagicnumber(FILE * const ifP) {
    Oliver Trepte, oliver@fysik4.kth.se, 930613 */
 
 #define PM_BUF_SIZE 16384      /* First try this size of the buffer, then
-                                   double this until we reach PM_MAX_BUF_INC */
+                                  double this until we reach PM_MAX_BUF_INC */
 #define PM_MAX_BUF_INC 65536   /* Don't allocate more memory in larger blocks
-                                   than this. */
+                                  than this. */
 
 char *
 pm_read_unknown_size(FILE * const file, 

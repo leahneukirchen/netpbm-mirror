@@ -134,6 +134,11 @@ asprintfN(const char ** const resultP,
           const char *  const fmt,
           ...) PM_GNU_PRINTF_ATTR(2,3);
 
+void
+vasprintfN(const char ** const resultP,
+           const char *  const format,
+           va_list             args);
+
 void 
 strfree(const char * const string);
 

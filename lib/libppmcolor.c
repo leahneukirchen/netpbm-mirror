@@ -19,6 +19,7 @@
 
 #include "pm_c_util.h"
 #include "mallocvar.h"
+#include "nstring.h"
 #include "ppm.h"
 #include "colorname.h"
 
@@ -471,11 +472,12 @@ processColorfileEntry(struct colorfile_entry const ce,
                       colorhash_table        const cht,
                       const char **          const colornames,
                       pixel *                const colors,
-                      unsigned int *         const colornameIndexP) {
+                      unsigned int *         const colornameIndexP,
+                      const char **          const errorP) {
 
     if (*colornameIndexP >= MAXCOLORNAMES)
-        pm_error("Too many colors in colorname dictionary.  "
-                 "Max allowed is %u", MAXCOLORNAMES);
+        asprintfN(errorP, "Too many colors in colorname dictionary.  "
+                  "Max allowed is %u", MAXCOLORNAMES);
     else {
         pixel color;
 
@@ -487,13 +489,17 @@ processColorfileEntry(struct colorfile_entry const ce,
                file gives for each color, so we just ignore the
                current entry.  
             */
+            *errorP = NULL;
         } else {
             ppm_addtocolorhash(cht, &color, *colornameIndexP);
             colornames[*colornameIndexP] = strdup(ce.colorname);
             colors[*colornameIndexP] = color;
             if (colornames[*colornameIndexP] == NULL)
-                pm_error("Unable to allocate space for color name");
-            ++(*colornameIndexP);
+                asprintfN(errorP, "Unable to allocate space for color name");
+            else {
+                *errorP = NULL;
+                ++(*colornameIndexP);
+            }
         }
     }
 }
@@ -501,39 +507,173 @@ processColorfileEntry(struct colorfile_entry const ce,
 
 
 static void
-readcolordict(const char *    const fileName,
+openColornameFile(const char *  const fileName,
+                  bool          const mustOpen,
+                  FILE **       const filePP,
+                  const char ** const errorP) {
+
+    jmp_buf jmpbuf;
+    jmp_buf * origJmpbufP;
+
+    if (setjmp(jmpbuf) != 0) {
+        asprintfN(errorP, "Failed to open color name file");
+        pm_setjmpbuf(origJmpbufP);
+        pm_longjmp();
+    } else {
+        *filePP = pm_openColornameFile(fileName, mustOpen);
+
+        *errorP = NULL;  /* Would have longjmped if there were a problem */
+
+        pm_setjmpbuf(origJmpbufP);
+    }
+}
+
+
+
+static void
+readOpenColorFile(FILE *          const colorFileP,
+                  unsigned int *  const nColorsP,
+                  const char **   const colornames,
+                  pixel *         const colors,
+                  colorhash_table const cht,
+                  const char **   const errorP) {
+/*----------------------------------------------------------------------------
+   Read the color dictionary file *colorFileP and add the colors in it
+   to colornames[], colors[], and 'cht'.
+
+   We may add colors to 'cht' even if we fail.
+-----------------------------------------------------------------------------*/
+    unsigned int nColorsDone;
+    bool done;
+
+    nColorsDone = 0;
+    done = FALSE;
+    *errorP = NULL;
+
+    while (!done && !*errorP) {
+        struct colorfile_entry const ce = pm_colorget(colorFileP);
+        
+        if (!ce.colorname)  
+            done = TRUE;
+        else 
+            processColorfileEntry(ce, cht, colornames, colors,
+                                  &nColorsDone, errorP);
+    }
+    if (!*errorP) {
+        *nColorsP = nColorsDone;
+        
+        while (nColorsDone < MAXCOLORNAMES)
+            colornames[nColorsDone++] = NULL;
+    }
+    
+    if (*errorP) {
+        unsigned int colorIndex;
+
+        for (colorIndex = 0; colorIndex < nColorsDone; ++colorIndex)
+            strfree(colornames[colorIndex]);
+    }
+}
+
+
+
+static colorhash_table
+allocColorHash(void) {
+
+    colorhash_table cht;
+    jmp_buf jmpbuf;
+    jmp_buf * origJmpbufP;
+
+    if (setjmp(jmpbuf) != 0)
+        cht = NULL;
+    else {
+        pm_setjmpbufsave(&jmpbuf, &origJmpbufP);
+        cht = ppm_alloccolorhash();
+    }
+    pm_setjmpbuf(origJmpbufP);
+
+    return cht;
+}
+
+
+
+static void
+readColorFile(const char *    const fileName,
               bool            const mustOpen,
               unsigned int *  const nColorsP,
               const char **   const colornames,
-              pixel * const   colors,
-              colorhash_table const cht) {
+              pixel *         const colors,
+              colorhash_table const cht,
+              const char **   const errorP) {
 
-    FILE * colorFile;
+    FILE * colorFileP;
 
-    colorFile = pm_openColornameFile(fileName, mustOpen);
-
-    if (colorFile != NULL) {
-        unsigned int colornameIndex;
-        bool done;
-
-        colornameIndex = 0;  /* initial value */
-        done = FALSE;
-        while (!done) {
-            struct colorfile_entry const ce = pm_colorget(colorFile);
-
-            if (!ce.colorname)  
-                done = TRUE;
-            else 
-                processColorfileEntry(ce, cht, colornames, colors,
-                                      &colornameIndex);
+    openColornameFile(fileName, mustOpen, &colorFileP, errorP);
+    if (!*errorP) {
+        if (colorFileP == NULL) {
+            /* Couldn't open it, but Caller says treat same as
+               empty file
+            */
+            *nColorsP = 0;
+            *errorP = NULL;
+        } else {
+            readOpenColorFile(colorFileP, nColorsP, colornames, colors, cht,
+                              errorP);
+            
+            fclose(colorFileP);
         }
+    }
+}
 
-        *nColorsP = colornameIndex;
+    
 
-        while (colornameIndex < MAXCOLORNAMES)
-            colornames[colornameIndex++] = NULL;
+static void
+readcolordict(const char *      const fileName,
+              bool              const mustOpen,
+              unsigned int *    const nColorsP,
+              const char ***    const colornamesP,
+              pixel **          const colorsP,
+              colorhash_table * const chtP,
+              const char **     const errorP) {
 
-        fclose(colorFile);
+    const char ** colornames;
+
+    MALLOCARRAY(colornames, MAXCOLORNAMES);
+
+    if (colornames == NULL)
+        asprintfN(errorP, "Unable to allocate space for colorname table.");
+    else {
+        pixel * colors;
+
+        MALLOCARRAY(colors, MAXCOLORNAMES);
+        
+        if (colors == NULL)
+            asprintfN(errorP, "Unable to allocate space for color table.");
+        else {
+            colorhash_table cht;
+
+            cht = allocColorHash();
+            
+            if (cht == NULL)
+                asprintfN(errorP, "Unable to allocate space for color hash");
+            else {
+                readColorFile(fileName, mustOpen,
+                              nColorsP, colornames, colors, cht,
+                              errorP);
+
+                if (*errorP)
+                    ppm_freecolorhash(cht);
+                else
+                    *chtP = cht;
+            }
+            if (*errorP)
+                free(colors);
+            else
+                *colorsP = colors;
+        }
+        if (*errorP)
+            free(colornames);
+        else
+            *colornamesP = colornames;
     }
 }
 
@@ -551,32 +691,31 @@ ppm_readcolordict(const char *      const fileName,
     const char ** colornames;
     pixel * colors;
     unsigned int nColors;
+    const char * error;
 
-    cht = ppm_alloccolorhash();
+    readcolordict(fileName, mustOpen, &nColors, &colornames, &colors, &cht,
+                  &error);
 
-    MALLOCARRAY(colornames, MAXCOLORNAMES);
-
-    colors = ppm_allocrow(MAXCOLORNAMES);
-
-    if (colornames == NULL)
-        pm_error("Unable to allocate space for colorname table.");
-
-    readcolordict(fileName, mustOpen, &nColors, colornames, colors, cht);
-
-    if (chtP)
-        *chtP = cht;
-    else
+    if (error) {
+        pm_errormsg("%s", error);
+        strfree(error);
         ppm_freecolorhash(cht);
-    if (colornamesP)
-        *colornamesP = colornames;
-    else
-        ppm_freecolornames(colornames);
-    if (colorsP)
-        *colorsP = colors;
-    else
-        ppm_freerow(colors);
-    if (nColorsP)
-        *nColorsP = nColors;
+    } else {
+        if (chtP)
+            *chtP = cht;
+        else
+            ppm_freecolorhash(cht);
+        if (colornamesP)
+            *colornamesP = colornames;
+        else
+            ppm_freecolornames(colornames);
+        if (colorsP)
+            *colorsP = colors;
+        else
+            ppm_freerow(colors);
+        if (nColorsP)
+            *nColorsP = nColors;
+    }
 }
 
 

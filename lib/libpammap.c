@@ -24,12 +24,13 @@
 #define HASH_SIZE 20023
 
 unsigned int
-pnm_hashtuple(struct pam * const pamP, tuple const tuple) {
+pnm_hashtuple(struct pam * const pamP,
+              tuple        const tuple) {
 /*----------------------------------------------------------------------------
    Return the hash value of the tuple 'tuple' -- i.e. an index into a hash
    table.
 -----------------------------------------------------------------------------*/
-    int i;
+    unsigned int i;
     unsigned int hash;
     const unsigned int hash_factor[] = {33023, 30013, 27011};
 
@@ -281,7 +282,7 @@ computehashrecoverable(struct pam *   const pamP,
        tuple values. 
     */
     for (row = 0; row < pamP->height && !full; ++row) {
-        int col;
+        unsigned int col;
         const tuple * tuplerow;  /* The row of tuples we are processing */
         
         if (tupleArray)
@@ -354,19 +355,20 @@ computetuplefreqhash(struct pam *   const pamP,
     rowbuffer = NULL;
     color = NULL;
 
-    if (setjmp(jmpbuf) == 0) {
-        pm_setjmpbufsave(&jmpbuf, &origJmpbufP);
-        computehashrecoverable(pamP, tupleArray, maxsize, newMaxval, sizeP,
-                               &tuplefreqhash, &rowbuffer, &color);
-        pm_setjmpbuf(origJmpbufP);
-    } else {
+    if (setjmp(jmpbuf) != 0) {
         if (color) 
             pnm_freepamtuple(color);
         if (rowbuffer)
             pnm_freepamrow(rowbuffer);
         if (tuplefreqhash)
             pnm_destroytuplehash(tuplefreqhash);
+        pm_setjmpbuf(origJmpbufP);
         pm_longjmp();
+    } else {
+        pm_setjmpbufsave(&jmpbuf, &origJmpbufP);
+        computehashrecoverable(pamP, tupleArray, maxsize, newMaxval, sizeP,
+                               &tuplefreqhash, &rowbuffer, &color);
+        pm_setjmpbuf(origJmpbufP);
     }
     return tuplefreqhash;
 }

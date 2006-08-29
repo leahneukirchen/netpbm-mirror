@@ -133,6 +133,74 @@ pnm_readpnminit(FILE *   const fileP,
 
 
 
+static void
+readpgmrow(FILE * const fileP,
+           xel *  const xelrow,
+           int    const cols,
+           xelval const maxval,
+           int    const format) {
+
+    jmp_buf jmpbuf;
+    jmp_buf * origJmpbufP;
+    gray * grayrow;
+
+    grayrow = pgm_allocrow(cols);
+
+    if (setjmp(jmpbuf) != 0) {
+        pgm_freerow(grayrow);
+        pm_setjmpbuf(origJmpbufP);
+        pm_longjmp();
+    } else {
+        unsigned int col;
+
+        pm_setjmpbufsave(&jmpbuf, &origJmpbufP);
+
+        pgm_readpgmrow(fileP, grayrow, cols, (gray) maxval, format);
+
+        for (col = 0; col < cols; ++col)
+            PNM_ASSIGN1(xelrow[col], grayrow[col]);
+
+        pm_setjmpbuf(origJmpbufP);
+    }
+    pgm_freerow(grayrow);
+}
+
+
+
+static void
+readpbmrow(FILE * const fileP,
+               xel *  const xelrow,
+               int    const cols,
+               xelval const maxval,
+               int    const format) {
+
+    jmp_buf jmpbuf;
+    jmp_buf * origJmpbufP;
+    bit * bitrow;
+
+    bitrow = pbm_allocrow(cols);
+
+    if (setjmp(jmpbuf) != 0) {
+        pbm_freerow(bitrow);
+        pm_setjmpbuf(origJmpbufP);
+        pm_longjmp();
+    } else {
+        unsigned int col;
+
+        pm_setjmpbufsave(&jmpbuf, &origJmpbufP);
+
+        pbm_readpbmrow(fileP, bitrow, cols, format);
+
+        for (col = 0; col < cols; ++col)
+            PNM_ASSIGN1(xelrow[col], bitrow[col] == PBM_BLACK ? 0 : maxval);
+
+        pm_setjmpbuf(origJmpbufP);
+    }
+    pbm_freerow(bitrow);
+}
+
+
+
 void
 pnm_readpnmrow(FILE * const fileP,
                xel *  const xelrow,
@@ -145,28 +213,13 @@ pnm_readpnmrow(FILE * const fileP,
         ppm_readppmrow(fileP, (pixel*) xelrow, cols, (pixval) maxval, format);
         break;
 
-    case PGM_TYPE: {
-        gray * grayrow;
-        unsigned int col;
-
-        grayrow = pgm_allocrow(cols);
-        pgm_readpgmrow(fileP, grayrow, cols, (gray) maxval, format);
-        for (col = 0; col < cols; ++col)
-            PNM_ASSIGN1(xelrow[col], grayrow[col]);
-        pgm_freerow(grayrow);
-    }
-    break;
+    case PGM_TYPE:
+        readpgmrow(fileP, xelrow, cols, maxval, format);
+        break;
         
-    case PBM_TYPE: {
-        bit * bitrow;
-        unsigned int col;
-        bitrow = pbm_allocrow(cols);
-        pbm_readpbmrow(fileP, bitrow, cols, format);
-        for (col = 0; col < cols; ++col)
-            PNM_ASSIGN1(xelrow[col], bitrow[col] == PBM_BLACK ? 0: maxval);
-        pbm_freerow(bitrow);
-    }
-    break;
+    case PBM_TYPE:
+        readpbmrow(fileP, xelrow, cols, maxval, format);
+        break;
 
     default:
         pm_error("INTERNAL ERROR.  Impossible format.");
@@ -182,15 +235,35 @@ pnm_readpnm(FILE *   const fileP,
             xelval * const maxvalP,
             int *    const formatP) {
 
+    jmp_buf jmpbuf;
+    jmp_buf * origJmpbufP;
+    int cols, rows;
+    xelval maxval;
+    int format;
     xel ** xels;
-    int row;
 
-    pnm_readpnminit(fileP, colsP, rowsP, maxvalP, formatP);
+    pnm_readpnminit(fileP, &cols, &rows, &maxval, &format);
 
-    xels = pnm_allocarray(*colsP, *rowsP);
+    xels = pnm_allocarray(cols, rows);
 
-    for (row = 0; row < *rowsP; ++row)
-        pnm_readpnmrow(fileP, xels[row], *colsP, *maxvalP, *formatP);
+    if (setjmp(jmpbuf) != 0) {
+        pnm_freearray(xels, rows);
+        pm_setjmpbuf(origJmpbufP);
+        pm_longjmp();
+    } else {
+        unsigned int row;
+
+        pm_setjmpbufsave(&jmpbuf, &origJmpbufP);
+
+        for (row = 0; row < rows; ++row)
+            pnm_readpnmrow(fileP, xels[row], cols, maxval, format);
+
+        pm_setjmpbuf(origJmpbufP);
+    }
+    *colsP = cols;
+    *rowsP = rows;
+    *maxvalP = maxval;
+    *formatP = format;
 
     return xels;
 }

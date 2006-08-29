@@ -58,8 +58,8 @@ static void
 packBitsWithMmxSse(FILE *          const fileP,
                    const bit *     const bitrow,
                    unsigned char * const packedBits,
-                   int             const cols,
-                   int *           const nextColP) {
+                   unsigned int    const cols,
+                   unsigned int *  const nextColP) {
 /*----------------------------------------------------------------------------
    Pack the bits of bitrow[] into bytes at 'packedBits'.  Going left to right,
    stop when there aren't enough bits left to fill a whole byte.  Return
@@ -136,8 +136,8 @@ static void
 packBitsGeneric(FILE *          const fileP,
                 const bit *     const bitrow,
                 unsigned char * const packedBits,
-                int             const cols,
-                int *           const nextColP) {
+                unsigned int    const cols,
+                unsigned int *  const nextColP) {
 /*----------------------------------------------------------------------------
    Pack the bits of bitrow[] into byts at 'packedBits'.  Going left to right,
    stop when there aren't enough bits left to fill a whole byte.  Return
@@ -167,41 +167,63 @@ packBitsGeneric(FILE *          const fileP,
 
 
 static void
+packPartialBytes(const bit *     const bitrow,
+                 unsigned int    const cols,
+                 unsigned int    const nextCol,
+                 unsigned char * const packedBits) {
+              
+    /* routine for partial byte at the end of packedBits[]
+       Prior to addition of the above enhancement,
+       this method was used for the entire process
+    */                   
+    
+    unsigned int col;
+    int bitshift;
+    unsigned char item;
+    
+    bitshift = 7;  /* initial value */
+    item = 0;      /* initial value */
+    for (col = nextCol; col < cols; ++col, --bitshift)
+        if (bitrow[col] != 0)
+            item |= 1 << bitshift;
+    
+    packedBits[col/8] = item;
+}
+
+
+
+static void
 writePbmRowRaw(FILE *      const fileP,
                const bit * const bitrow,
                int         const cols) {
 
-    int nextCol;
+    jmp_buf jmpbuf;
+    jmp_buf * origJmpbufP;
+    unsigned char * packedBits;
 
-    unsigned char * const packedBits = pbm_allocrow_packed(cols);
+    packedBits = pbm_allocrow_packed(cols);
 
-    if (HAVE_MMX_SSE)
-        packBitsWithMmxSse(fileP, bitrow, packedBits, cols, &nextCol);
-    else 
-        packBitsGeneric(fileP, bitrow, packedBits, cols, &nextCol);
+    if (setjmp(jmpbuf) != 0) {
+        pbm_freerow_packed(packedBits);
+        pm_setjmpbuf(origJmpbufP);
+        pm_longjmp();
+    } else {
+        unsigned int nextCol;
 
-    /* routine for partial byte at the end of packed_bits[]
-       Prior to addition of the above enhancement,
-       this method was used for the entire process
-     */                   
+        pm_setjmpbufsave(&jmpbuf, &origJmpbufP);
 
-    if (cols % 8 > 0) {
-        int col;
-        int bitshift;
-        unsigned char item;
+        if (HAVE_MMX_SSE)
+            packBitsWithMmxSse(fileP, bitrow, packedBits, cols, &nextCol);
+        else 
+            packBitsGeneric(fileP, bitrow, packedBits, cols, &nextCol);
 
-        bitshift = 7;  /* initial value */
-        item = 0;      /* initial value */
-        for (col = nextCol; col < cols; ++col, --bitshift )
-            if (bitrow[col] !=0)
-                item |= 1 << bitshift
-                ;
+        if (cols % 8 > 0)
+            packPartialBytes(bitrow, cols, nextCol, packedBits);
         
-        packedBits[col/8] = item;
+        writePackedRawRow(fileP, packedBits, cols);
+
+        pm_setjmpbuf(origJmpbufP);
     }
-    
-    writePackedRawRow(fileP, packedBits, cols);
-    
     pbm_freerow_packed(packedBits);
 }
 
@@ -244,22 +266,37 @@ pbm_writepbmrow(FILE * const fileP,
 
 void
 pbm_writepbmrow_packed(FILE *                const fileP, 
-                       const unsigned char * const packed_bits,
+                       const unsigned char * const packedBits,
                        int                   const cols, 
                        int                   const forceplain) {
 
     if (!forceplain && !pm_plain_output)
-        writePackedRawRow(fileP, packed_bits, cols);
+        writePackedRawRow(fileP, packedBits, cols);
     else {
-        bit *bitrow;
-        int col;
+        jmp_buf jmpbuf;
+        jmp_buf * origJmpbufP;
+        bit * bitrow;
 
         bitrow = pbm_allocrow(cols);
 
-        for (col = 0; col < cols; ++col) 
-            bitrow[col] = 
-                packed_bits[col/8] & (0x80 >> (col%8)) ? PBM_BLACK : PBM_WHITE;
-        writePbmRowPlain(fileP, bitrow, cols);
+        if (setjmp(jmpbuf) != 0) {
+            pbm_freerow(bitrow);
+            pm_setjmpbuf(origJmpbufP);
+            pm_longjmp();
+        } else {
+            unsigned int col;
+            
+            pm_setjmpbufsave(&jmpbuf, &origJmpbufP);
+
+            for (col = 0; col < cols; ++col) 
+                bitrow[col] = 
+                    packedBits[col/8] & (0x80 >> (col%8)) ?
+                    PBM_BLACK : PBM_WHITE;
+
+            writePbmRowPlain(fileP, bitrow, cols);
+
+            pm_setjmpbuf(origJmpbufP);
+        }
         pbm_freerow(bitrow);
     }
 }

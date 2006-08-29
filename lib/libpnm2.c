@@ -55,6 +55,74 @@ pnm_writepnminit(FILE * const fileP,
 
 
 
+static void
+writepgmrow(FILE *       const fileP, 
+            xel *        const xelrow, 
+            unsigned int const cols, 
+            xelval       const maxval, 
+            int          const format, 
+            bool         const plainFormat) {
+    
+    jmp_buf jmpbuf;
+    jmp_buf * origJmpbufP;
+    gray * grayrow;
+    
+    grayrow = pgm_allocrow(cols);
+    
+    if (setjmp(jmpbuf) != 0) {
+        pgm_freerow(grayrow);
+        pm_setjmpbuf(origJmpbufP);
+        pm_longjmp();
+    } else {
+        unsigned int col;
+
+        pm_setjmpbufsave(&jmpbuf, &origJmpbufP);
+        
+        for (col = 0; col < cols; ++col)
+            grayrow[col] = PNM_GET1(xelrow[col]);
+    
+        pgm_writepgmrow(fileP, grayrow, cols, (gray) maxval, plainFormat);
+
+        pm_setjmpbuf(origJmpbufP);
+    }
+    pgm_freerow(grayrow);
+}
+
+
+
+static void
+writepbmrow(FILE *       const fileP,
+            xel *        const xelrow,
+            unsigned int const cols,
+            bool         const plainFormat) {
+
+    jmp_buf jmpbuf;
+    jmp_buf * origJmpbufP;
+    bit * bitrow;
+
+    bitrow = pbm_allocrow(cols);
+    
+    if (setjmp(jmpbuf) != 0) {
+        pbm_freerow(bitrow);
+        pm_setjmpbuf(origJmpbufP);
+        pm_longjmp();
+    } else {
+        unsigned int col;
+
+        pm_setjmpbufsave(&jmpbuf, &origJmpbufP);
+
+        for (col = 0; col < cols; ++col)
+            bitrow[col] = PNM_GET1(xelrow[col]) == 0 ? PBM_BLACK : PBM_WHITE;
+    
+        pbm_writepbmrow(fileP, bitrow, cols, plainFormat);
+
+        pm_setjmpbuf(origJmpbufP);
+    }
+    pbm_freerow(bitrow);
+}    
+
+
+
 void
 pnm_writepnmrow(FILE * const fileP, 
                 xel *  const xelrow, 
@@ -71,35 +139,13 @@ pnm_writepnmrow(FILE * const fileP,
                         plainFormat);
         break;
 
-    case PGM_TYPE: {
-        gray* grayrow;
-        unsigned int col;
+    case PGM_TYPE:
+        writepgmrow(fileP, xelrow, cols, maxval, format, plainFormat);
+        break;
 
-        grayrow = pgm_allocrow(cols);
-
-        for (col = 0; col < cols; ++col)
-            grayrow[col] = PNM_GET1(xelrow[col]);
-
-        pgm_writepgmrow(fileP, grayrow, cols, (gray) maxval, plainFormat);
-
-        pgm_freerow( grayrow );
-    }
-    break;
-
-    case PBM_TYPE: {
-        bit* bitrow;
-        unsigned int col;
-
-        bitrow = pbm_allocrow(cols);
-
-        for (col = 0; col < cols; ++col)
-            bitrow[col] = PNM_GET1(xelrow[col]) == 0 ? PBM_BLACK : PBM_WHITE;
-
-        pbm_writepbmrow(fileP, bitrow, cols, plainFormat);
-
-        pbm_freerow(bitrow);
-    }    
-    break;
+    case PBM_TYPE:
+        writepbmrow(fileP, xelrow, cols, plainFormat);
+        break;
     
     default:
         pm_error("invalid format argument received by pnm_writepnmrow(): %d"
