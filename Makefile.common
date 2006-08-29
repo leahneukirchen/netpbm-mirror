@@ -449,7 +449,7 @@ EXEPATTERN = *$(EXE)
 else
 EXEPATTERN = 
 endif
-clean: $(SUBDIRS:%=%/clean) thisdirclean-common
+clean: $(SUBDIRS:%=%/clean) thisdirclean
 
 .PHONY: thisdirclean
 thisdirclean:
