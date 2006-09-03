@@ -95,6 +95,14 @@ linear and gamma-adjusted.
 CHANGE HISTORY 
 --------------
 
+06.09.03 BJH  Release 10.35.02
+
+              pbmtonokia: fix headers of NGG and NOL to include 3 character
+              magic.
+
+              pm_accept_to_pamtuples: fix bug: fill in pam structure.
+              Thanks "Christian Schlotter" <schlotter@users.sourceforge.net>.
+
 06.08.26 BJH  Release 10.35.01
 
               Fix selection of MMX_SEE fastpath based on GNU compiler version
@@ -103,7 +111,7 @@ CHANGE HISTORY
               libnetpbm: fix rgb:r/g/b color name parsing for invalid
               syntax.
 
-06.08.19 BJH  Release 10.35
+06.08.19 BJH  Release 10.35.00
 
               Add pgmdeshadow.
 

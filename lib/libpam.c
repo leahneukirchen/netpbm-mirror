@@ -1074,7 +1074,7 @@ pm_feed_from_pamtuples(int    const pipeToFeedFd,
     outpam.file = fdopen(pipeToFeedFd, "w");
 
     /* The following signals (and normally kills) the process with
-       SIGPIPE if the pipe does not take all 'inputLength' bytes.
+       SIGPIPE if the pipe does not take all the data.
     */
     pnm_writepam(&outpam, *inputTuplesP->tuplesP);
 
@@ -1089,10 +1089,11 @@ pm_accept_to_pamtuples(int    const pipeToSuckFd,
 
     struct pamtuples * const outputTuplesP = accepterParm;
 
-    struct pam inpam;
+    struct pam * const inpamP = outputTuplesP->pamP;
 
     *outputTuplesP->tuplesP =
-        pnm_readpam(fdopen(pipeToSuckFd, "r"), &inpam, sizeof(inpam));
+        pnm_readpam(fdopen(pipeToSuckFd, "r"), inpamP,
+                    PAM_STRUCT_SIZE(tuple_type));
 
-    pm_close(inpam.file);
+    pm_close(inpamP->file);
 }
