@@ -59,7 +59,7 @@ usage(char *myname)
              "    -net <network code>                     "
              "Network code for NOL operator logos\n"
              "    -txt <text message>                     "
-             "Text for NMP picture messages\n");
+             "Text for NPM picture messages\n");
 
     exit(1);
 }
@@ -183,12 +183,15 @@ main(int argc, char *argv[])
         break;
     case FMT_NOL:
         /* header - this is a hack */
-        header[1]=header[4]=header[5]=header[11]=header[13]=1;
-        header[3]=4;
-        header[7]=cols;
-        header[9]=rows;
-        header[15]=0x53;
-        fwrite(header,17,1,stdout);
+        header[0]='N';
+        header[1]='O';
+        header[2]='L';
+        header[4]=header[7]=header[8]=header[14]=header[16]=1;
+        header[6]=4;
+        header[10]=cols;
+        header[12]=rows;
+        header[18]=0x53;
+        fwrite(header,20,1,stdout);
 
         /* image */
         for (row=0;row<rows;row++) {
@@ -200,11 +203,14 @@ main(int argc, char *argv[])
         break;
     case FMT_NGG:
         /* header - this is a hack */
-        header[1]=header[7]=header[9]=1;
-        header[3]=cols;
-        header[5]=rows;
-        header[11]=0x4a;
-        fwrite(header,13,1,stdout);
+        header[0]='N';
+        header[1]='G';
+        header[2]='G';
+        header[4]=header[10]=header[12]=1;
+        header[6]=cols;
+        header[8]=rows;
+        header[14]=0x4a;
+        fwrite(header,16,1,stdout);
 
         /* image */
         for (row=0;row<rows;row++) {
