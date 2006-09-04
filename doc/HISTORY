@@ -97,6 +97,10 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.36.0
 
+              libnetpbm: BK color matching adjustments, change of
+              enum bk_color.  Thanks "Kenan Kalajdzic"
+              <kalajdzic@gmail.com>.
+
               pbmtonokia: fix headers of NGG and NOL to include 3 character
               magic.
 
