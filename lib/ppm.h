@@ -259,7 +259,10 @@ ppm_saturation(pixel const p,
 
 typedef enum {
     /* A color from the set of universally understood colors developed
-       by Brent Berlin and Paul Kay
+       by Brent Berlin and Paul Kay.
+
+       Algorithms in libnetpbm depend on the numerical representations
+       of these values being as follows.
     */
     BKCOLOR_GRAY = 0,
     BKCOLOR_BROWN,
