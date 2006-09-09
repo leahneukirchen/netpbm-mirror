@@ -5,6 +5,7 @@
 #include <string.h>
 #include <ctype.h>
 
+#include "pm_c_util.h"
 #include "pm.h"  /* For PM_GNU_PRINTF_ATTR, __inline__ */
 
 #ifdef __cplusplus
@@ -154,6 +155,9 @@ memmemN(const char * const haystack,
         size_t       const haystacklen,
         const char * const needle,
         size_t       const needlelen);
+
+bool
+strishex(const char * const subject);
 
 #ifdef __cplusplus
 }

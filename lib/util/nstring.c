@@ -895,3 +895,20 @@ memmemN(const char * const haystack,
 
     return NULL;
 }
+
+
+
+bool
+strishex(const char * const subject) {
+
+    bool retval;
+    unsigned int i;
+
+    retval = TRUE;  /* initial assumption */
+
+    for (i = 0; i < strlen(subject); ++i)
+        if (!ISXDIGIT(subject[i]))
+            retval = FALSE;
+
+    return retval;
+}

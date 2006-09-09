@@ -59,23 +59,6 @@ uppercase(const char * const subject) {
 
 
 
-static bool
-ishexstring(const char * const subject) {
-
-    bool retval;
-    unsigned int i;
-
-    retval = TRUE;  /* initial assumption */
-
-    for (i = 0; i < strlen(subject); ++i)
-        if (!ISXDIGIT(subject[i]))
-            retval = FALSE;
-
-    return retval;
-}
-
-
-
 static void
 parseCommandLine(int argc, char ** argv,
                  struct cmdlineInfo * const cmdlineP) {
@@ -131,7 +114,7 @@ parseCommandLine(int argc, char ** argv,
         if (strlen(netOpt) != 6)
             pm_error("-net option must be 6 hex digits long.  "
                      "You specified %u characters", strlen(netOpt));
-        else if (!ishexstring(netOpt))
+        else if (!strishex(netOpt))
             pm_error("-net option must be hexadecimal.  You specified '%s'",
                      netOpt);
         else

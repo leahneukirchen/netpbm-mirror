@@ -248,22 +248,6 @@ parseNewDecX11(char       const colorname[],
 
 
 
-static bool
-isHexString(char const string[],
-            int  const hexit[]) {
-
-    bool retval;
-    const char * p;
-
-    for (p = &string[0], retval = true; *p && retval == true; ++p) {
-        if (hexit[(unsigned int)*p] == -1)
-            retval = false;
-    }
-    return retval;
-}
-
-
-
 static void
 parseOldX11(char       const colorname[], 
             pixval     const maxval,
@@ -279,7 +263,7 @@ parseOldX11(char       const colorname[],
     
     computeHexTable(hexit);
 
-    if (!isHexString(&colorname[1], hexit))
+    if (!strishex(&colorname[1]))
         pm_error("Non-hexadecimal characters in #-type color specification");
 
     switch (strlen(colorname) - 1 /* (Number of hex digits) */) {
