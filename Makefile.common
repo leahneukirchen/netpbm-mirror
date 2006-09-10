@@ -66,9 +66,7 @@
 # for flags that are particular to the person doing the build and not
 # specific to Netpbm.
 
-NETPBM_MAJOR_RELEASE = 10
-NETPBM_MINOR_RELEASE = 35
-NETPBM_POINT_RELEASE = 0
+include $(SRCDIR)/Makefile.version
 
 INCLUDES2 := $(INCLUDES) -I$(SRCDIR)/$(SUBDIR) -I. -I importinc
 
