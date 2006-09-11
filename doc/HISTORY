@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+06.09.11 BJH  Release 10.35.05
+
+              Remove some generated files from release so build works.
+
+              Properly clean thinkjettopbm.c with 'make distclean'.
+
 06.09.10 BJH  Release 10.35.04
 
               Fix version number control.
