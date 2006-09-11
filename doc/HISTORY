@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+06.09.10 BJH  Release 10.35.04
+
+              Fix version number control.
+
 06.09.09 BJH  Release 10.35.03
 
               Remove general history from change file
