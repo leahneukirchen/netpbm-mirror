@@ -72,7 +72,7 @@ thinkjettopbm.c:%.c:%.c1 $(SRCDIR)/lib/util/lexheader
 	  grep -v "^[[:space:]]*int yywrap(void);" \
 	  >$@
 
-clean: localclean
+thisdirclean: localclean
 .PHONY: localclean
 localclean:
 	-rm -f thinkjettopbm.c
