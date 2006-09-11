@@ -508,9 +508,16 @@ thresholdLocal(struct pam *       const inpamP,
 
     windowHeight = MIN(oddLocalHeight, inpamP->height);
 
-    analyzeDistribution(inpamP, &histogram, &globalRange);
-
-    computeGlobalThreshold(inpamP, histogram, globalRange, &globalThreshold);
+    /* global information is needed for dual thresholding */
+    if (cmdline.dual) {
+        analyzeDistribution(inpamP, &histogram, &globalRange);
+        computeGlobalThreshold(inpamP, histogram, globalRange,
+                               &globalThreshold);
+    } else {
+        histogram = NULL;
+        initRange(&globalRange);
+        globalThreshold = 1.0;
+    }
 
     outrow = pnm_allocpamrow(outpamP);
 
@@ -580,17 +587,17 @@ main(int argc, char **argv) {
 
     parseCommandLine(argc, argv, &cmdline);
 
-    if (cmdline.simple)
+    if (cmdline.simple || cmdline.local)
         ifP = pm_openr(cmdline.inputFileName);
     else
         ifP = pm_openr_seekable(cmdline.inputFileName);
 
-    /* threshold each image in the PAM file */
+    /* Threshold each image in the PAM file */
     eof = FALSE;
     while (!eof) {
         pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
 
-        /* set output image parameters for a bilevel image */
+        /* Set output image parameters for a bilevel image */
         outpam.size        = sizeof(outpam);
         outpam.len         = PAM_STRUCT_SIZE(tuple_type);
         outpam.file        = stdout;
@@ -605,7 +612,7 @@ main(int argc, char **argv) {
 
         pnm_writepaminit(&outpam);
 
-        /* do the thresholding */
+        /* Do the thresholding */
 
         if (cmdline.simple)
             thresholdSimple(&inpam, &outpam, cmdline.threshold);
