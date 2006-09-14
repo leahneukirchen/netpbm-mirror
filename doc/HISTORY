@@ -6,6 +6,15 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.36.0
 
+              pbmtonokia: Add plain NPM output capability.  Thanks Paul Bolle
+              <pebolle@tiscali.nl>.
+
+              pbmtonokia: Pad to 8 bytes.  Thanks Paul Bolle
+              <pebolle@tiscali.nl>.
+
+              pbmtonokia: Limit text to 120 bytes.  Thanks Paul Bolle
+              <pebolle@tiscali.nl>.
+
               pamthreshold: don't gather global information, and reread
               file, for local thresholding (to save time, resources).
               Thanks Erik Auerswald <auerswal@unix-ag.uni-kl.de>.
