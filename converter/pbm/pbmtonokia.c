@@ -6,6 +6,7 @@
 
 #define _BSD_SOURCE    /* Make sure strcasecmp() is in string.h */
 #include <string.h>
+#include <assert.h>
 
 #include "pm_c_util.h"
 #include "nstring.h"
@@ -18,7 +19,8 @@ enum outputFormat {
     FMT_HEX_NGG,
     FMT_HEX_NPM,
     FMT_NOL,
-    FMT_NGG
+    FMT_NGG,
+    FMT_NPM
 };
 
 
@@ -104,9 +106,11 @@ parseCommandLine(int argc, char ** argv,
             cmdlineP->outputFormat = FMT_NOL;
         else if (STRCASEEQ(fmtOpt, "NGG"))
             cmdlineP->outputFormat = FMT_NGG;
+        else if (STRCASEEQ(fmtOpt, "NPM"))
+            cmdlineP->outputFormat = FMT_NPM;
         else
-            pm_error("-fmt option must be HEX_NOL, HEX_NGG, HEX_NPM, "
-                     "NOL, or NGG.  You specified '%s'", fmtOpt);
+            pm_error("-fmt option must be HEX_NGG, HEX_NOL, HEX_NPM, "
+                     "NGG, NOL or NPM.  You specified '%s'", fmtOpt);
     } else
         cmdlineP->outputFormat = FMT_HEX_NOL;
 
@@ -124,12 +128,16 @@ parseCommandLine(int argc, char ** argv,
 
     if (!txtSpec)
         cmdlineP->txt = NULL;
+    else if (strlen(cmdlineP->txt) > 120)
+        pm_error("Text message is longer (%u characters) than "
+                 "the 120 characters allowed by the format.",
+                 strlen(cmdlineP->txt));
 
     if (argc-1 == 0) 
         cmdlineP->inputFileName = "-";
     else if (argc-1 != 1)
         pm_error("Program takes zero or one argument (filename).  You "
-                 "specified %d", argc-1);
+                 "specified %u", argc-1);
     else
         cmdlineP->inputFileName = argv[1];
 }
@@ -267,6 +275,7 @@ convertToNol(bit **       const image,
 
     unsigned int row;
     char header[32];
+    unsigned int it;
     
     /* header - this is a hack */
 
@@ -305,6 +314,10 @@ convertToNol(bit **       const image,
             putc(output, ofP);
         }
     }
+
+    /* padding (to keep gnokii happy) */
+    for (it = 0; it < 8 - cols * rows % 8; ++it)
+        putc('0', ofP);
 }
 
 
@@ -318,6 +331,7 @@ convertToNgg(bit **       const image,
 
     unsigned int row;
     char    header[32];
+    unsigned int it;
 
     /* header - this is a hack */
 
@@ -353,6 +367,74 @@ convertToNgg(bit **       const image,
             putc(output, ofP);
         }
     }
+
+    /* padding (to keep gnokii happy) */
+    for (it = 0; it < 8 - cols * rows % 8; ++it)
+        putc('0', ofP);
+}
+
+
+
+static void
+convertToNpm(bit **       const image,
+             unsigned int const cols,
+             unsigned int const rows,
+             const char * const text,
+             FILE *       const ofP) {
+
+    unsigned int row;
+    char header[132];
+    size_t len;
+
+    if (text) 
+        len = strlen(text);
+    else
+        len = 0;
+
+    /* header and optional text */
+
+    header[       0] = 'N';
+    header[       1] = 'P';
+    header[       2] = 'M';
+    header[       3] = 0;
+    header[       4] = len;
+    header[       5] = 0;
+    memcpy(&header[5], text, len);
+    header[ 6 + len] = cols;
+    header[ 7 + len] = rows;
+    header[ 8 + len] = 1;
+    header[ 9 + len] = 1;
+    header[10 + len] = 0; /* unknown */
+
+    assert(10 + len < sizeof(header));
+
+    fwrite(header, 11 + len, 1, ofP);
+    
+    /* image: stream of bits, each row padded to a byte boundary
+       inspired by gnokii/common/gsm-filesystems.c
+     */
+    for (row = 0; row < rows; row++) {
+        unsigned int byteNumber;
+        int bitNumber;
+        char buffer[32];  /* picture messages are (always?) 72 x 28 */
+        unsigned int col;
+
+        byteNumber = 0;
+        bitNumber = 7;
+
+        MEMSZERO(buffer);
+
+        for (col = 0; col < cols; ++col) {
+            if (image[row][col] == PBM_BLACK)
+                buffer[byteNumber] |= (1 << bitNumber);
+            --bitNumber;
+            if (bitNumber < 0 && col < (cols - 1)) {
+                bitNumber = 7;
+                ++byteNumber;
+            }
+        }
+        fwrite(buffer, byteNumber + 1, 1, ofP);
+    }
 }
 
 
@@ -375,20 +457,23 @@ main(int    argc,
     pm_close(ifP);
 
     switch (cmdline.outputFormat) {
-    case FMT_HEX_NOL:
-        convertToHexNol(bits, cols, rows, cmdline.networkCode, stdout);
-        break;
     case FMT_HEX_NGG:
         convertToHexNgg(bits, cols, rows, stdout);
+        break;
+    case FMT_HEX_NOL:
+        convertToHexNol(bits, cols, rows, cmdline.networkCode, stdout);
         break;
     case FMT_HEX_NPM:
         convertToHexNpm(bits, cols, rows, cmdline.txt, stdout);
         break;
+    case FMT_NGG:
+        convertToNgg(bits, cols, rows, stdout);
+        break;
     case FMT_NOL:
         convertToNol(bits, cols, rows, stdout);
         break;
-    case FMT_NGG:
-        convertToNgg(bits, cols, rows, stdout);
+    case FMT_NPM:
+        convertToNpm(bits, cols, rows, cmdline.txt, stdout);
         break;
     }
 
