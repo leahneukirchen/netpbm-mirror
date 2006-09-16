@@ -705,7 +705,7 @@ shearXToOutputFile(FILE *                 const ofP,
     unsigned int row;
     xel * xelrow;
     
-    pnm_writepnminit(stdout, newcols, rows, maxval, format, 0);
+    pnm_writepnminit(ofP, newcols, rows, maxval, format, 0);
 
     xelrow = pnm_allocrow(newcols);
 
@@ -722,7 +722,7 @@ shearXToOutputFile(FILE *                 const ofP,
         shearFinal(xels[row], xelrow, cols, newcols, format, 
                    bgColor, antialias, shiftAmount, x2shearjunk);
 
-        pnm_writepnmrow(stdout, xelrow, newcols, maxval, format, 0);
+        pnm_writepnmrow(ofP, xelrow, newcols, maxval, format, 0);
     }
     pnm_freerow(xelrow);
 }
