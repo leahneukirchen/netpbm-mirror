@@ -63,7 +63,7 @@ getline(FILE * const ifP,
     if (rc == NULL) {
         if (ferror(ifP))
             pm_error("read error.  fgets() failed, errno=%d (%s)",
-                     errno, strerror(errno)));
+                     errno, strerror(errno));
         else
             pm_error("unexpected EOF");
     }
