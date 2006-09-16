@@ -68,7 +68,8 @@
 
 include $(SRCDIR)/Makefile.version
 
-INCLUDES2 := $(INCLUDES) -I$(SRCDIR)/$(SUBDIR) -I. -I importinc
+# -I. is needed when builddir != srcdir
+INCLUDES2 := -I. -I importinc -I$(SRCDIR)/$(SUBDIR) $(INCLUDES)
 
 ifeq ($(NETPBMLIBTYPE),unixstatic)
   NETPBMLIBFNAME = libnetpbm.$(STATICLIBSUFFIX)
@@ -194,7 +195,6 @@ config:
 $(OBJECTS): %.o: %.c importinc
 #############################################################################
 # Note that the user may have configured -I options into CFLAGS or CPPFLAGS.
-# -I. is needed when builddir != srcdir
 # Note about -o: There used to be systems that couldn't handle a space
 # between flag and value.  But we found a Solaris gcc on 2003.09.02 that
 # actually fails _without_ the space (it invokes Solaris 'as' with the
