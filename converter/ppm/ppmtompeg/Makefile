@@ -18,11 +18,12 @@ else
   JPEGLIBX = $(JPEGLIB)
 endif
 
-INCLUDES = -I$(SRCDIR)/$(SUBDIR)/headers 
+COMP_INCLUDES = -I$(SRCDIR)/$(SUBDIR)/headers 
 
+EXTERN_INCLUDES =
 ifneq ($(JPEGHDR_DIR),NONE)
   ifneq ($(JPEGHDR_DIR)x,x)
-    INCLUDES += -I$(JPEGHDR_DIR)
+    EXTERN_INCLUDES += -I$(JPEGHDR_DIR)
   endif
 endif
 

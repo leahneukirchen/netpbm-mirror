@@ -5,9 +5,10 @@ endif
 SUBDIR = converter/other/cameratopam
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
+EXTERN_INCLUDES =
 ifneq ($(JPEGLIB),NONE)
   ifneq ($(JPEGHDR_DIR)x,x)
-    INCLUDES += -I$(JPEGHDR_DIR)
+    EXTERN_INCLUDES += -I$(JPEGHDR_DIR)
     CFLAGS += -DHAVE_JPEG
   endif
 endif

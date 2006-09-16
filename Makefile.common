@@ -52,10 +52,14 @@
 #   front end, so takes linker options in a different format
 # LDFLAGS: linker options 
 # LIBS or LOADLIBES: names of libraries to be added to all links
-# INCLUDES: Compiler option string to establish the search path for include
-#   files when compiling things or computing dependencies (make dep).
-#   current directory, corresponding source tree directory, and ./importinc
-#   are implied, so should not be in here.
+# COMP_INCLUDES: Compiler option string to establish the search path for
+#   component-specific include files when compiling things or computing
+#   dependencies (make dep).  Header files from this part of the search
+#   path take precedence over general Netpbm header files and external
+#   library header files.
+# EXTERN_INCLUDES: Like COMP_INCLUDES, but for external libraries, e.g.
+#   libjpeg.  All header files from the Netpbm source tree take precedence
+#   over these.
 
 # In addition, there is CADD, which is extra C compilation flags and
 # is intended to be set on a make command line (e.g. 'make CADD=-g')
@@ -68,8 +72,10 @@
 
 include $(SRCDIR)/Makefile.version
 
+NETPBM_INCLUDES := -I importinc -I$(SRCDIR)/$(SUBDIR)
+
 # -I. is needed when builddir != srcdir
-INCLUDES2 := -I. -I importinc -I$(SRCDIR)/$(SUBDIR) $(INCLUDES)
+INCLUDES = -I. $(COMP_INCLUDES) $(NETPBM_INCLUDES) $(EXTERN_INCLUDES)
 
 ifeq ($(NETPBMLIBTYPE),unixstatic)
   NETPBMLIBFNAME = libnetpbm.$(STATICLIBSUFFIX)
@@ -210,7 +216,7 @@ $(OBJECTS): %.o: %.c importinc
 # assertion and crash the program if it isn't really true.  You can add
 # -UNDEBUG (in any of various ways) to override this.
 #
-	$(CC) -c $(INCLUDES2) -DNDEBUG \
+	$(CC) -c $(INCLUDES) -DNDEBUG \
 	    $(CPPFLAGS) $(CFLAGS) $(CFLAGS_PERSONAL) $(CADD) -o $@ $<
 
 # libopt is a utility program used in the make file below.
@@ -314,7 +320,7 @@ $(PORTBINARIES) $(MATHBINARIES): %: %.o $(NETPBMLIB) $(LIBOPT)
 
 %.o2: %.c importinc
 # Note that the user may have configured -I options into CFLAGS.
-	$(CC) -c $(INCLUDES2) -DNDEBUG $(CFLAGS) \
+	$(CC) -c $(INCLUDES) -DNDEBUG $(CFLAGS) \
 	  "-Dmain=main_$*" \
           $(CFLAGS_MERGE) $(CFLAGS_PERSONAL) $(CADD) -o $@ $<
 
@@ -469,7 +475,7 @@ dep: $(SUBDIRS:%=%/dep) importinc
 # before the first make after a clean.
 
 ifneq ($(DEP_SOURCES)x,x)
-	$(CC) -MM -MG $(INCLUDES2) $(DEP_SOURCES) >Makefile.depend
+	$(CC) -MM -MG $(INCLUDES) $(DEP_SOURCES) >Makefile.depend
 endif
 
 # Note: if I stack all these subdirectory targets into one rule, I get

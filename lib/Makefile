@@ -55,14 +55,14 @@ DATAFILES = rgb.txt
 .PHONY: all
 all: libnetpbm extra_staticlib
 
-INCLUDES = -I$(SRCDIR)/$(SUBDIR) -I. -Iimportinc
-
 SUBDIRS = util
 SCRIPTS = 
 BINARIES = 
 
 OMIT_LIBRARY_RULE = 1
 include $(SRCDIR)/Makefile.common
+
+INCLUDES = -I$(SRCDIR)/$(SUBDIR) -I. -Iimportinc
 
 # The following must go after Makefile.common because $(LIBNETPBM) may 
 # contain a reference to $(NETPBM_MAJOR_RELEASE).

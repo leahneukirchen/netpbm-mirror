@@ -7,9 +7,10 @@ VPATH=.:$(SRCDIR)/$(SUBDIR)
 
 include $(BUILDDIR)/Makefile.config
 
+EXTERN_INCLUDE =
 ifneq ($(X11LIB),NONE)
   ifneq ($(X11HDR_DIR),)
-    INCLUDES += -I$(X11HDR_DIR)
+    EXTERN_INCLUDES += -I$(X11HDR_DIR)
   endif
 endif
 

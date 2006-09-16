@@ -8,7 +8,7 @@ VPATH=.:$(SRCDIR)/$(SUBDIR)
 
 include $(BUILDDIR)/Makefile.config
 
-INCLUDES = -I$(SRCDIR)/$(FIASCOSUBDIR) -I$(SRCDIR)/$(FIASCOSUBDIR)/lib \
+COMP_INCLUDES = -I$(SRCDIR)/$(FIASCOSUBDIR) -I$(SRCDIR)/$(FIASCOSUBDIR)/lib \
 	 -I$(SRCDIR)/$(FIASCOSUBDIR)/input -I$(SRCDIR)/$(FIASCOSUBDIR)/output 
 
 OBJECTS =  approx.o bintree.o coder.o coeff.o \

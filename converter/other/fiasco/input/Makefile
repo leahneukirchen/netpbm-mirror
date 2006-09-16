@@ -13,8 +13,8 @@ OBJECTS =  basis.o matrices.o mc.o nd.o read.o tree.o weights.o
 
 MERGE_OBJECTS = $(OBJECTS)
 
-INCLUDES = -I$(SRCDIR)/$(FIASCOSUBDIR) -I$(SRCDIR)/$(FIASCOSUBDIR)/lib \
-	   -I$(SRCDIR)/$(FIASCOSUBDIR)/codec
+COMP_INCLUDES = -I$(SRCDIR)/$(FIASCOSUBDIR) -I$(SRCDIR)/$(FIASCOSUBDIR)/lib \
+	        -I$(SRCDIR)/$(FIASCOSUBDIR)/codec
 
 all: libfiasco_input.a
 
