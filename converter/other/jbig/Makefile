@@ -9,9 +9,9 @@ include $(BUILDDIR)/Makefile.config
 
 LIBJBIG_OBJECTS = jbig.o jbig_tab.o
 
-INCLUDES =
+EXTERN_INCLUDES =
 ifneq ($(JBIGHDR_DIR),NONE)
-  INCLUDES += -I$(JBIGHDR_DIR)
+  EXTERN_INCLUDES += -I$(JBIGHDR_DIR)
 endif
 
 ifneq ($(JBIGHDR_DIR),NONE)

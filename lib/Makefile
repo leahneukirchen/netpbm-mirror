@@ -40,7 +40,7 @@ ifneq (${VMS}x,x)
 LIBOBJECTS += libpbmvms.o
 endif
 # Library objects to be linked but not built by Makefile.common:
-LIBOBJECTS_X = util/shhopt.o util/nstring.o util/filename.o
+LIBOBJECTS_X = util/shhopt.o util/nstring.o util/vasprintf.o util/filename.o
 
 MANUALS3 = libnetpbm
 MANUALS5 = pbm pgm ppm pnm pam
@@ -55,14 +55,14 @@ DATAFILES = rgb.txt
 .PHONY: all
 all: libnetpbm extra_staticlib
 
-INCLUDES = -I$(SRCDIR)/$(SUBDIR) -I. -Iimportinc
-
 SUBDIRS = util
 SCRIPTS = 
 BINARIES = 
 
 OMIT_LIBRARY_RULE = 1
 include $(SRCDIR)/Makefile.common
+
+INCLUDES = -I$(SRCDIR)/$(SUBDIR) -I. -Iimportinc
 
 # The following must go after Makefile.common because $(LIBNETPBM) may 
 # contain a reference to $(NETPBM_MAJOR_RELEASE).

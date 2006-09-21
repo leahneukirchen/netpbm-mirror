@@ -7,7 +7,7 @@ VPATH=.:$(SRCDIR)/$(SUBDIR)
 
 include $(BUILDDIR)/Makefile.config
 
-INCLUDES = \
+COMP_INCLUDES = \
 	-I$(SRCDIR)/$(SUBDIR)/codec -I$(SRCDIR)/$(SUBDIR)/input \
 	-I$(SRCDIR)/$(SUBDIR)/output -I$(SRCDIR)/$(SUBDIR)/lib \
 

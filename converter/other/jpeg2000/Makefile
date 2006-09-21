@@ -9,9 +9,9 @@ SUBDIRS = libjasper
 
 include $(BUILDDIR)/Makefile.config
 
-INCLUDES =
+EXTERN_INCLUDES =
 ifneq ($(JASPERHDR_DIR),NONE)
-  INCLUDES += -I$(JASPERHDR_DIR)
+  EXTERN_INCLUDES += -I$(JASPERHDR_DIR)
 endif
 
 

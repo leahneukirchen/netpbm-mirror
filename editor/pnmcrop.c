@@ -338,12 +338,18 @@ findBordersInFile(const char *   const borderFileName,
 
 
 
+static const char *
+ending(unsigned int const n) {
+
+    return n > 1 ? "s" : "";
+}
+
+
+
 static void
 reportOneEdge(unsigned int const oldBorderSize,
               unsigned int const newBorderSize,
               const char * const place) {
-
-#define ending(n) (((n) > 1) ? "s" : "")
 
     if (newBorderSize > oldBorderSize)
         pm_message("Adding %u pixel%s to the %u-pixel %s border",
@@ -376,10 +382,10 @@ reportCroppingParameters(unsigned int const oldLeftBorderSize,
         oldTopBorderSize == 0 && oldBottomBorderSize == 0)
         pm_message("No Border found.");
 
-    reportOneEdge(oldLeftBorderSize,   newLeftBorderSize,   "left"   );
-    reportOneEdge(oldRightBorderSize,  newRightBorderSize,  "right"  );
-    reportOneEdge(oldTopBorderSize,    newTopBorderSize,    "top"    );
-    reportOneEdge(oldBottomBorderSize, newBottomBorderSize, "bottom" );
+    reportOneEdge(oldLeftBorderSize,   newLeftBorderSize,   "left"  );
+    reportOneEdge(oldRightBorderSize,  newRightBorderSize,  "right" );
+    reportOneEdge(oldTopBorderSize,    newTopBorderSize,    "top"   );
+    reportOneEdge(oldBottomBorderSize, newBottomBorderSize, "bottom");
 }
 
 

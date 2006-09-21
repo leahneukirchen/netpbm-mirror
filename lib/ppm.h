@@ -259,22 +259,25 @@ ppm_saturation(pixel const p,
 
 typedef enum {
     /* A color from the set of universally understood colors developed
-       by Brent Berlin and Paul Kay
+       by Brent Berlin and Paul Kay.
+
+       Algorithms in libnetpbm depend on the numerical representations
+       of these values being as follows.
     */
-    BKCOLOR_BLACK = 0,
-    BKCOLOR_GRAY,
-    BKCOLOR_WHITE,
-    BKCOLOR_RED,
+    BKCOLOR_GRAY = 0,
+    BKCOLOR_BROWN,
     BKCOLOR_ORANGE,
+    BKCOLOR_RED,
     BKCOLOR_YELLOW,
     BKCOLOR_GREEN,
     BKCOLOR_BLUE,
     BKCOLOR_VIOLET,
     BKCOLOR_PURPLE,
-    BKCOLOR_BROWN
+    BKCOLOR_WHITE,
+    BKCOLOR_BLACK
 } bk_color;
 
-#define BKCOLOR_COUNT (BKCOLOR_BROWN+1)
+#define BKCOLOR_COUNT (BKCOLOR_BLACK+1)
 
 bk_color
 ppm_bk_color_from_color(pixel  const color,

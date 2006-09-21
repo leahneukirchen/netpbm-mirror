@@ -9,9 +9,10 @@ include $(BUILDDIR)/Makefile.config
 
 SUBDIRS = pamx
 
+EXTERN_INCLUDES =
 ifneq ($(LINUXSVGALIB),NONE)
   ifneq ($(LINUXSVGAHDR_DIR),)
-    INCLUDES += -I$(LINUXSVGAHDR_DIR)
+    EXTERN_INCLUDES += -I$(LINUXSVGAHDR_DIR)
   endif
 endif
 

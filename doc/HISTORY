@@ -1,41 +1,55 @@
 See http://netpbm.sourceforge.net/history.html for a general history of
 Netpbm.
 
-
 CHANGE HISTORY 
 --------------
 
-06.09.11 BJH  Release 10.35.05
+06.09.21 BJH  Release 10.36.0
 
-              Remove some generated files from release so build works.
+              pbmtonokia: Add plain NPM output capability.  Thanks Paul Bolle
+              <pebolle@tiscali.nl>.
 
-              Properly clean thinkjettopbm.c with 'make distclean'.
+              pbmtonokia: Pad to 8 bytes.  Thanks Paul Bolle
+              <pebolle@tiscali.nl>.
 
-06.09.10 BJH  Release 10.35.04
+              pbmtonokia: Limit text to 120 bytes.  Thanks Paul Bolle
+              <pebolle@tiscali.nl>.
+
+              pamthreshold: don't gather global information, and reread
+              file, for local thresholding (to save time, resources).
+              Thanks Erik Auerswald <auerswal@unix-ag.uni-kl.de>.
+
+              libnetpbm: BK color matching adjustments, change of
+              enum bk_color.  Thanks "Kenan Kalajdzic"
+              <kalajdzic@gmail.com>.
 
               Fix version number control.
-
-06.09.09 BJH  Release 10.35.03
-
-              Remove general history from change file
-
-06.09.03 BJH  Release 10.35.02
 
               pbmtonokia: fix headers of NGG and NOL to include 3 character
               magic.
 
-              pm_accept_to_pamtuples: fix bug: fill in pam structure.
-              Thanks "Christian Schlotter" <schlotter@users.sourceforge.net>.
+              Release allocated memory before longjmping from libnetpbm.
 
-06.08.26 BJH  Release 10.35.01
-
-              Fix selection of MMX_SEE fastpath based on GNU compiler version
-              number.
+              Eliminate pm_perror() in favor of informative error messages.
 
               libnetpbm: fix rgb:r/g/b color name parsing for invalid
               syntax.
 
-06.08.19 BJH  Release 10.35.00
+              Add pm_errormsg(), pm_setusererrormsg(), pm_setusermessage().
+
+              pm_accept_to_pamtuples: fix bug: fill in pam structure.
+              Thanks "Christian Schlotter" <schlotter@users.sourceforge.net>.
+
+              Fix selection of MMX_SEE fastpath based on GNU compiler version
+              number.
+
+              Properly clean thinkjettopbm.c with 'make distclean'.
+
+              Remove some generated files from release so build works.
+
+              Remove general history from change file
+
+06.08.19 BJH  Release 10.35.0
 
               Add pgmdeshadow.
 

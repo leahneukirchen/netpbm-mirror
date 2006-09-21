@@ -81,119 +81,125 @@ void nextrow_pscale(ifd, row)
 
 }
 
+
+
 int
-main(argc, argv)
-     int argc;
-     char *argv[];
-{
-   FILE *ifd;
-   register bit *outrow;
-   register int row, col, i, k;
-   int scale, cutoff, ucutoff ;
-   unsigned char *flags;
+main(int argc, char ** argv) {
 
-   pbm_init( &argc, argv );
+    FILE * ifP;
+    bit * outrow;
+    unsigned int row;
+    int scale, cutoff, ucutoff ;
+    unsigned char *flags;
 
-   if (argc < 2)
-      pm_usage("scale [pbmfile]");
+    pbm_init( &argc, argv );
 
-   scale = atoi(argv[1]);
-   if (scale < 1)
-      pm_perror("bad scale (< 1)");
+    if (argc < 2)
+        pm_usage("scale [pbmfile]");
 
-   if (argc == 3)
-      ifd = pm_openr(argv[2]);
-   else
-      ifd = stdin ;
+    scale = atoi(argv[1]);
+    if (scale < 1)
+        pm_error("Scale argument must be at least one.  You specified '%s'",
+                 argv[1]);
 
-   inrow[0] = inrow[1] = inrow[2] = NULL;
-   pbm_readpbminit(ifd, &columns, &rows, &format) ;
+    if (argc == 3)
+        ifP = pm_openr(argv[2]);
+    else
+        ifP = stdin ;
 
-   outrow = pbm_allocrow(columns*scale) ;
-   MALLOCARRAY(flags, columns);
-   if (flags == NULL) 
-       pm_error("out of memory") ;
+    inrow[0] = inrow[1] = inrow[2] = NULL;
+    pbm_readpbminit(ifP, &columns, &rows, &format) ;
 
-   pbm_writepbminit(stdout, columns*scale, rows*scale, 0) ;
+    outrow = pbm_allocrow(columns*scale) ;
+    MALLOCARRAY(flags, columns);
+    if (flags == NULL) 
+        pm_error("out of memory") ;
 
-   cutoff = scale / 2;
-   ucutoff = scale - 1 - cutoff;
-   nextrow_pscale(ifd, 0);
-   for (row = 0; row < rows; row++) {
-      nextrow_pscale(ifd, row+1);
-      for (col = 0; col < columns; col++) {
-         flags[col] = 0 ;
-         for (i = 0; i != 8; i += 2) {
-            int vec = inrow[thisrow][col] != PBM_WHITE;
-            for (k = 0; k < 7; k++) {
-               int x = col + xd_pscale[(k+i)&7] ;
-               int y = thisrow + yd_pscale[(k+i)&7] ;
-               vec <<= 1;
-               if (x >=0 && x < columns && inrow[y])
-                  vec |= (inrow[y][x] != PBM_WHITE) ;
+    pbm_writepbminit(stdout, columns*scale, rows*scale, 0) ;
+
+    cutoff = scale / 2;
+    ucutoff = scale - 1 - cutoff;
+    nextrow_pscale(ifP, 0);
+    for (row = 0; row < rows; ++row) {
+        unsigned int col;
+        unsigned int i;
+        nextrow_pscale(ifP, row+1);
+        for (col = 0; col < columns; ++col) {
+            unsigned int i;
+            flags[col] = 0 ;
+            for (i = 0; i != 8; i += 2) {
+                int vec = inrow[thisrow][col] != PBM_WHITE;
+                unsigned int k;
+                for (k = 0; k < 7; ++k) {
+                    int x = col + xd_pscale[(k+i)&7] ;
+                    int y = thisrow + yd_pscale[(k+i)&7] ;
+                    vec <<= 1;
+                    if (x >=0 && x < columns && inrow[y])
+                        vec |= (inrow[y][x] != PBM_WHITE) ;
+                }
+                flags[col] |= corner(vec)<<i ;
             }
-            flags[col] |= corner(vec)<<i ;
-         }
-      }
-      for (i = 0; i < scale; i++) {
-         bit *ptr = outrow ;
-         int zone = (i > ucutoff) - (i < cutoff) ;
-         int cut = (zone < 0) ? (cutoff - i) :
-                   (zone > 0) ? (i - ucutoff) : 0 ;
+        }
+        for (i = 0; i < scale; i++) {
+            bit *ptr = outrow ;
+            int zone = (i > ucutoff) - (i < cutoff) ;
+            int cut = (zone < 0) ? (cutoff - i) :
+                (zone > 0) ? (i - ucutoff) : 0 ;
 
-         for (col = 0; col < columns; col++) {
-            int pix = inrow[thisrow][col] ;
-            int flag = flags[col] ;
-            int cutl, cutr ;
+            for (col = 0; col < columns; ++col) {
+                int pix = inrow[thisrow][col] ;
+                int flag = flags[col] ;
+                int cutl, cutr;
+                unsigned int k;
 
-            switch (zone) {
-            case -1:
-               switch (NW(flag)) {
-               case 0: cutl = 0; break;
-               case 1: cutl = cut; break;
-               case 2: cutl = cut ? cut-1 : 0; break;
-               case 3: cutl = (cut && cutoff > 1) ? cut-1 : cut; break;
-               default: cutl = 0;  /* Should never reach here */
-               }
-               switch (NE(flag)) {
-               case 0: cutr = 0; break;
-               case 1: cutr = cut; break;
-               case 2: cutr = cut ? cut-1 : 0; break;
-               case 3: cutr = (cut && cutoff > 1) ? cut-1 : cut; break;
-               default: cutr = 0;  /* Should never reach here */
-              }
-               break;
-            case 0:
-               cutl = cutr = 0;
-               break ;
-            case 1:
-               switch (SW(flag)) {
-               case 0: cutl = 0; break;
-               case 1: cutl = cut; break;
-               case 2: cutl = cut ? cut-1 : 0; break;
-               case 3: cutl = (cut && cutoff > 1) ? cut-1 : cut; break;
-               default: cutl = 0;  /* should never reach here */
-               }
-               switch (SE(flag)) {
-               case 0: cutr = 0; break;
-               case 1: cutr = cut; break;
-               case 2: cutr = cut ? cut-1 : 0; break;
-               case 3: cutr = (cut && cutoff > 1) ? cut-1 : cut; break;
-               default: cutr = 0;  /* should never reach here */
-               }
-               break;
-             default: cutl = 0; cutr = 0;  /* Should never reach here */
+                switch (zone) {
+                case -1:
+                    switch (NW(flag)) {
+                    case 0: cutl = 0; break;
+                    case 1: cutl = cut; break;
+                    case 2: cutl = cut ? cut-1 : 0; break;
+                    case 3: cutl = (cut && cutoff > 1) ? cut-1 : cut; break;
+                    default: cutl = 0;  /* Should never reach here */
+                    }
+                    switch (NE(flag)) {
+                    case 0: cutr = 0; break;
+                    case 1: cutr = cut; break;
+                    case 2: cutr = cut ? cut-1 : 0; break;
+                    case 3: cutr = (cut && cutoff > 1) ? cut-1 : cut; break;
+                    default: cutr = 0;  /* Should never reach here */
+                    }
+                    break;
+                case 0:
+                    cutl = cutr = 0;
+                    break ;
+                case 1:
+                    switch (SW(flag)) {
+                    case 0: cutl = 0; break;
+                    case 1: cutl = cut; break;
+                    case 2: cutl = cut ? cut-1 : 0; break;
+                    case 3: cutl = (cut && cutoff > 1) ? cut-1 : cut; break;
+                    default: cutl = 0;  /* should never reach here */
+                    }
+                    switch (SE(flag)) {
+                    case 0: cutr = 0; break;
+                    case 1: cutr = cut; break;
+                    case 2: cutr = cut ? cut-1 : 0; break;
+                    case 3: cutr = (cut && cutoff > 1) ? cut-1 : cut; break;
+                    default: cutr = 0;  /* should never reach here */
+                    }
+                    break;
+                default: cutl = 0; cutr = 0;  /* Should never reach here */
+                }
+                for (k = 0; k < cutl; ++k) /* left part */
+                    *ptr++ = !pix ;
+                for (k = 0; k < scale-cutl-cutr; ++k)  /* center part */
+                    *ptr++ = pix ;
+                for (k = 0; k < cutr; ++k) /* right part */
+                    *ptr++ = !pix ;
             }
-            for (k = 0; k < cutl; k++) /* left part */
-               *ptr++ = !pix ;
-            for (k = 0; k < scale-cutl-cutr; k++)  /* centre part */
-               *ptr++ = pix ;
-            for (k = 0; k < cutr; k++) /* right part */
-               *ptr++ = !pix ;
-         }
-         pbm_writepbmrow(stdout, outrow, scale*columns, 0) ;
-      }
-   }
-   pm_close(ifd);
-   exit(0);
+            pbm_writepbmrow(stdout, outrow, scale*columns, 0) ;
+        }
+    }
+    pm_close(ifP);
+    return 0;
 }

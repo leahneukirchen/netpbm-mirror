@@ -740,15 +740,6 @@ const char * const strsol = "NO MEMORY TO CREATE STRING!";
 
 
 
-/* We would like to have vasprintfN(), but it is difficult because you
-   can't run through a va_list twice, which we would want to do: once
-   to measure the length; once actually to build the string.  On some
-   machines, you can simply make two copies of the va_list variable in
-   normal C fashion, but on others you need va_copy, which is a
-   relatively recent invention.  In particular, the simple va_list copy
-   failed on an AMD64 Gcc Linux system in March 2006.
-*/
-
 void PM_GNU_PRINTF_ATTR(2,3)
 asprintfN(const char ** const resultP,
           const char *  const fmt, 
@@ -903,4 +894,21 @@ memmemN(const char * const haystack,
             return p;
 
     return NULL;
+}
+
+
+
+bool
+strishex(const char * const subject) {
+
+    bool retval;
+    unsigned int i;
+
+    retval = TRUE;  /* initial assumption */
+
+    for (i = 0; i < strlen(subject); ++i)
+        if (!ISXDIGIT(subject[i]))
+            retval = FALSE;
+
+    return retval;
 }

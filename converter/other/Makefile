@@ -20,10 +20,9 @@ ifneq ($(BUILD_FIASCO), N)
   SUBDIRS += fiasco
 endif
 
-INCLUDES = -I$(SRCDIR)/util 
 ifneq ($(TIFFLIB),NONE)
   ifneq ($(TIFFHDR_DIR)x,x)
-    INCLUDES += -I$(TIFFHDR_DIR)
+    EXTERN_INCLUDES += -I$(TIFFHDR_DIR)
   endif
 endif
 
@@ -31,30 +30,30 @@ ifeq ($(shell libpng-config --version),)
   ifneq ($(PNGLIB),NONE)
     HAVE_PNGLIB = Y
     ifneq ($(PNGHDR_DIR)x,x)
-      INCLUDES += -I$(PNGHDR_DIR)
+      EXTERN_INCLUDES += -I$(PNGHDR_DIR)
     endif
     ifneq ($(ZHDR_DIR)x,x)
-      INCLUDES += -I$(ZHDR_DIR)
+      EXTERN_INCLUDES += -I$(ZHDR_DIR)
     endif
   endif
 else
   HAVE_PNGLIB = Y
-  INCLUDES += $(shell libpng-config --cflags)
+  EXTERN_INCLUDES += $(shell libpng-config --cflags)
 endif
 
 ifneq ($(JPEGLIB),NONE)
   ifneq ($(JPEGHDR_DIR)x,x)
-    INCLUDES += -I$(JPEGHDR_DIR)
+    EXTERN_INCLUDES += -I$(JPEGHDR_DIR)
   endif
 endif
 ifneq ($(URTLIB),NONE)
   ifneq ($(URTHDR_DIR)x,x)
-    INCLUDES += -I$(URTHDR_DIR)
+    EXTERN_INCLUDES += -I$(URTHDR_DIR)
   endif
 endif
 ifneq ($(XML2_LIBS),NONE)
   ifneq ($(XML2_CFLAGS),NONE)
-    INCLUDES += $(XML2_CFLAGS)
+    EXTERN_INCLUDES += $(XML2_CFLAGS)
   endif
 endif
 

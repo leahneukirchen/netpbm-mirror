@@ -173,6 +173,9 @@ shared libraries (which is kept in /var/ld/ld.config).  Make sure that
 path includes the directory in which you installed the Netpbm shared
 library.  You can also use the LD_LIBRARY_PATH environment variable.
 
+On AIX, the environment variable LIBPATH affects the share library search
+path.  On AIX 5.3 and newer, you can use LD_LIBRARY_PATH as well.
+
 Besides the Netpbm shared library, libnetpbm, several of the converter
 programs, e.g. Jpegtopnm, use separately distributed libraries that
 understand the graphics format involved.  You need to make sure your

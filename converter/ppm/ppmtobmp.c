@@ -647,7 +647,7 @@ choose_colortype_bpp(struct cmdline_info const cmdline,
             pm_error("There are too many colors in the image to "
                      "represent in the\n"
                      "number of bits per pixel you requested: %d.\n"
-                     "You may use Ppmquant to reduce the number of "
+                     "You may use Pnmquant to reduce the number of "
                      "colors in the image.",
                      cmdline.bpp);
         else
