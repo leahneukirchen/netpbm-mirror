@@ -4,7 +4,7 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-not yet  BJH  Release 10.36.0
+06.09.21 BJH  Release 10.36.0
 
               pbmtonokia: Add plain NPM output capability.  Thanks Paul Bolle
               <pebolle@tiscali.nl>.
@@ -19,22 +19,21 @@ not yet  BJH  Release 10.36.0
               file, for local thresholding (to save time, resources).
               Thanks Erik Auerswald <auerswal@unix-ag.uni-kl.de>.
 
-              Remove some generated files from release so build works.
-
-              Properly clean thinkjettopbm.c with 'make distclean'.
-
-              Fix version number control.
-
-              Remove general history from change file
-
               libnetpbm: BK color matching adjustments, change of
               enum bk_color.  Thanks "Kenan Kalajdzic"
               <kalajdzic@gmail.com>.
+
+              Fix version number control.
 
               pbmtonokia: fix headers of NGG and NOL to include 3 character
               magic.
 
               Release allocated memory before longjmping from libnetpbm.
+
+              Eliminate pm_perror() in favor of informative error messages.
+
+              libnetpbm: fix rgb:r/g/b color name parsing for invalid
+              syntax.
 
               Add pm_errormsg(), pm_setusererrormsg(), pm_setusermessage().
 
@@ -44,10 +43,11 @@ not yet  BJH  Release 10.36.0
               Fix selection of MMX_SEE fastpath based on GNU compiler version
               number.
 
-              Eliminate pm_perror() in favor of informative error messages.
+              Properly clean thinkjettopbm.c with 'make distclean'.
 
-              libnetpbm: fix rgb:r/g/b color name parsing for invalid
-              syntax.
+              Remove some generated files from release so build works.
+
+              Remove general history from change file
 
 06.08.19 BJH  Release 10.35.0
 
