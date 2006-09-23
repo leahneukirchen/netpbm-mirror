@@ -8,6 +8,8 @@ VPATH=.:$(SRCDIR)/$(SUBDIR)
 include $(BUILDDIR)/Makefile.config
 
 SUBDIRS = base jp2 jpc
+LIB_OBJECTS =
+JASPERSRCDIR = $(SRCDIR)/$(SUBDIR)
 
 # NOTE: The library source code uses 64 bit types, so you cannot
 # build it (compile will fail) if you don't have 64 bit types defined

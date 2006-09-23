@@ -1,10 +1,12 @@
 # -*-makefile-*-    <-- an Emacs control
-# This is common rules for the pnmtojpc subdirectories.
+# This is common rules for the libjasper subdirectories.
 #
 # Set the following variables before including this:
 #
-#  LIB_OBJECTS: List of object files from this directory that go into 
-#               libjasper.
+#  SUBDIRS:      Subdirectory names
+#  LIB_OBJECTS:  List of object files from this directory that go into 
+#                libjasper.
+#  JASPERSRCDIR: libjasper source directory
 
 all: $(LIB_OBJECTS) partlist
 
@@ -19,19 +21,16 @@ $(SUBDIRS:%=%/partlist): %/partlist: $(CURDIR)/%
 
 include $(SRCDIR)/Makefile.common
 
-INCLUDES = -I$(JASPERSRCDIR)/include -I$(JASPERSRCDIR)/importinc
+INCLUDES = -I$(JASPERSRCDIR)/include -Iimportinc
 
 DEFS = -DHAVE_LIBM=1 -DSTDC_HEADERS=1 -DHAVE_FCNTL_H=1 -DHAVE_LIMITS_H=1 -DHAVE_UNISTD_H=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STDDEF_H=1 -DEXCLUDE_BMP_SUPPORT -DEXCLUDE_RAS_SUPPORT -DEXCLUDE_MIF_SUPPORT -DEXCLUDE_JPG_SUPPORT -DEXCLUDE_PGX_SUPPORT -DEXCLUDE_PNM_SUPPORT
 
 $(LIB_OBJECTS):%.o:%.c
 	$(CC) -c $(CFLAGS) $(INCLUDES) $(DEFS) $(CADD) $<
 
-$(LIB_OBJECTS): $(JASPERSRCDIR)/importinc
+$(LIB_OBJECTS): importinc
 
-$(JASPERSRCDIR)/importinc:
-	$(MAKE) -C $(dir $@) $(notdir $@)
-
-clean: localclean
+thisdirclean: localclean
 
 .PHONY: localclean
 localclean:

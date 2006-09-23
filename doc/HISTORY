@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.37.0
 
+              Build: fix build with separate build directory.
+
 06.09.21 BJH  Release 10.36.0
 
               pbmtonokia: Add plain NPM output capability.  Thanks Paul Bolle
