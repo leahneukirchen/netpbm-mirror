@@ -213,6 +213,28 @@ normal build (there's a question for that in the Configure program).
 See below.
 
 
+SEPARATE BUILD TREE
+-------------------
+
+While it's traditional to build a Unix package by adding object files
+to the same tree with the source files, it's actually much cleaner to
+keep your source tree exactly as you got it and put the built files in
+a separate directory, called the build tree.
+
+To do this, just create an empty directory and run 'configure' in it,
+then 'make':
+
+  mkdir netpbmbuild
+  cd netpbmbuild
+  /usr/src/netpbm/configure
+  ...
+  make
+
+But if you plan to modify Netpbm source code, you'll probably find it
+more convenient to build the traditional way, with a single tree for
+source and build.
+
+
 MERGE BUILD
 -----------
 
