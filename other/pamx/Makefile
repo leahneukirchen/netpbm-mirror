@@ -16,19 +16,20 @@ endif
 
 ifneq ($(X11LIB),NONE)
   BINARIES += pamx
+
+  PAMX_OBJECTS = \
+	  pamx.o \
+	  image.o \
+	  send.o \
+	  window.o \
+
+  MERGE_OBJECTS = \
+	  pamx.o2 \
+	  image.o \
+	  send.o \
+	  window.o \
+
 endif
-
-PAMX_OBJECTS = \
-	pamx.o \
-	image.o \
-	send.o \
-	window.o \
-
-MERGE_OBJECTS = \
-	pamx.o2 \
-	image.o \
-	send.o \
-	window.o \
 
 OBJECTS = $(PAMX_OBJECTS)
 
