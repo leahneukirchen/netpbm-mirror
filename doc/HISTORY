@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+06.09.29 BJH  Release 10.35.06
+
+              Build: fix build with separate build directory.
+
+              Build: fix merge build with no X11 library.
+
 06.09.11 BJH  Release 10.35.05
 
               Remove some generated files from release so build works.

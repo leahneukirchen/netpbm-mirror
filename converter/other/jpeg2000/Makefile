@@ -18,7 +18,7 @@ endif
 # INTERNAL_JASPERLIB must be relative to the current directory, because it
 # may end up in MERGE_OBJECTS, which must be relative.
 INTERNAL_JASPERLIB = libjasper/libjasper.a
-INTERNAL_JASPERHDR_DIR = libjasper/include
+INTERNAL_JASPERHDR_DIR = $(SRCDIR)/$(SUBDIR)/libjasper/include
 
 ifeq ($(JASPERLIB),$(INTERNAL_JASPERLIB))
   ifeq ($(HAVE_INT64),Y)
@@ -63,15 +63,9 @@ $(BINARIES): %: %.o $(JASPERLIB_DEP) $(NETPBMLIB) $(LIBOPT)
 	$(LD) $(LDFLAGS) $(MATHLIB) $(LDLIBS) -o $@ $< \
 	  $(LIBOPTS) $(JASPERDEPLIBS) -lm $(RPATH) $(LADD)
 
-$(INTERNAL_JASPERLIB): FORCE
+$(INTERNAL_JASPERLIB): $(BUILDDIR)/$(SUBDIR)/libjasper FORCE
 	$(MAKE) -f $(SRCDIR)/$(SUBDIR)/libjasper/Makefile \
 	   -C $(dir $@) $(notdir $@)
-
-clean: localclean
-
-.PHONY: localclean
-localclean:
-	$(MAKE) -f $(SRCDIR)/$(SUBDIR)/libjasper/Makefile -C libjasper clean
 
 .PHONY: FORCE
 FORCE:
