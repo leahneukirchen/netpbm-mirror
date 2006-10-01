@@ -230,9 +230,17 @@ then 'make':
   ...
   make
 
-But if you plan to modify Netpbm source code, you'll probably find it
+But if you plan to work on Netpbm source code, you'll probably find it
 more convenient to build the traditional way, with a single tree for
 source and build.
+
+In the source tree, you can type 'make' in any directory to do the
+default make for that directory, or make FILENAME to make the file of
+that name there.  In the separate build tree, there are special
+facilities to allow you to do a simple make from the _top level
+directory_, but if you want to make a subcomponent or individual part,
+you have to have a -f option and set SRCDIR and BLDDIR on your 'make'
+command.
 
 
 MERGE BUILD
