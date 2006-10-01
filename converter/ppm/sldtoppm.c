@@ -74,7 +74,7 @@ static void slider ARGS((void (*slvec) ARGS((struct svector *vec, int color)),
                     void (*slflood) ARGS((struct spolygon *poly, int color)) ));
 static void slidefind ARGS((char *sname, int dironly, int ucasen));
 static void draw ARGS((struct svector *vec, int color));
-static void flood ARGS((struct spolygon *poly, int color));
+static void flood ARGS((struct spolygon *const poly, int const color));
 
 static int ixdots, iydots;        /* Screen size in dots */
 static FILE *slfile;              /* Slide file descriptor */

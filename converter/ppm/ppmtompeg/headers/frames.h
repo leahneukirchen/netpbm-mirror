@@ -85,7 +85,7 @@ typedef struct dct_data_tye_struct {
   int fmotionX, fmotionY, bmotionX, bmotionY;
 } dct_data_type;
 
-void    EncodeYDC _ANSI_ARGS_((int32 dc_term, int32 *pred_term, BitBucket *bb));
+void    EncodeYDC _ANSI_ARGS_((int32 const dc_term, int32 * const pred_term, BitBucket * const bb));
 void
 EncodeCDC(int32       const dc_term,
           int32     * const pred_term,
