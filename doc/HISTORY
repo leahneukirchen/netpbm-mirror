@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+06.10.01 BJH  Release 10.35.07
+
+              Fix some prototypes that don't literally match definitions
+              so that Irix compiler will accept them.
+
 06.09.29 BJH  Release 10.35.06
 
               Build: fix build with separate build directory.

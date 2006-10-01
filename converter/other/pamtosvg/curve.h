@@ -83,7 +83,7 @@ append_pixel(curve_type    const c,
              pm_pixelcoord const p);
 
 /* Like `append_pixel', for a point in real coordinates.  */
-extern void append_point (curve_type c, float_coord p);
+extern void append_point (curve_type const c, float_coord const p);
 
 /* Write some or all, respectively, of the curve C in human-readable
    form to the log file, if logging is enabled.  */

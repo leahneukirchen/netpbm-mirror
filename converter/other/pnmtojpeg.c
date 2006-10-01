@@ -334,7 +334,7 @@ static void
 compute_rescaling_array(JSAMPLE ** const rescale_p, const pixval maxval,
                         const struct jpeg_compress_struct cinfo);
 static void
-convert_scanlines(struct jpeg_compress_struct *cinfo_p, FILE *input_file,
+convert_scanlines(struct jpeg_compress_struct * const cinfo_p, FILE * const input_file,
                   const pixval maxval, const int input_fmt,
                   JSAMPLE xlate_table[]);
 

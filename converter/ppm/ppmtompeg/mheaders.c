@@ -293,7 +293,7 @@ static void	GenPictHead _ANSI_ARGS_((BitBucket *bb, uint32 temp_ref,
 static void	GenMBType _ANSI_ARGS_((BitBucket *bb, uint32 pict_code_type,
 		  uint32 mb_quant, uint32 motion_forw, uint32 motion_back,
 		  uint32 mb_pattern, uint32 mb_intra));
-static void	GenMotionCode _ANSI_ARGS_((BitBucket *bb, int32 vector));
+static void	GenMotionCode _ANSI_ARGS_((BitBucket * const bb, int32 const vector));
 static void	GenBlockPattern _ANSI_ARGS_((BitBucket *bb,
 					     uint32 mb_pattern));
 

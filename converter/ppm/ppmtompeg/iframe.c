@@ -136,14 +136,14 @@ int  TIME_RATE;
 /*=====================*
  * EXPORTED PROCEDURES *
  *=====================*/
-extern void PrintItoIBitRate _ANSI_ARGS_((int numBits, int frameNum));
+extern void PrintItoIBitRate _ANSI_ARGS_((int const numBits, int const frameNum));
 
 /*===============================*
  * INTERNAL PROCEDURE prototypes *
  *===============================*/
 void AllocDctBlocks(void );
-int SetFCodeHelper (int sr);
-void CalcDistortion (MpegFrame *current, int y, int x);
+int SetFCodeHelper (int const sr);
+void CalcDistortion (MpegFrame * const current, int const y, int const x);
 
 int
 SetFCodeHelper(int const SR) {

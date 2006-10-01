@@ -65,7 +65,7 @@ extern "C" {
 #ifdef __GNUC__
 #define PM_GNU_PRINTF_ATTR(a,b) __attribute__ ((format (printf, a, b)))
 #else
-#define PM_GNU_PRINTF_ATTR
+#define PM_GNU_PRINTF_ATTR(a,b)
 #endif
 
 
