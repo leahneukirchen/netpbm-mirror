@@ -49,6 +49,7 @@
 #include <time.h>
 #include <assert.h>
 
+#include "pm_config.h"
 #include "pam.h"
 #include "shhopt.h"
 #include "mallocvar.h"
@@ -299,7 +300,9 @@ struct randomState {
 };
 
 
+#ifndef LITERAL_FN_DEF_MATCH
 static coord2Color randomColor;
+#endif
 
 static tuple
 randomColor(outGenerator * const outGenP,
@@ -336,7 +339,9 @@ randomColor(outGenerator * const outGenP,
 
 
 
+#ifndef LITERAL_FN_DEF_MATCH
 static outGenStateTerm termRandomColor;
+#endif
 
 static void
 termRandomColor(outGenerator * const outGenP) {
@@ -402,7 +407,9 @@ struct patternPixelState {
 
 
 
+#ifndef LITERAL_FN_DEF_MATCH
 static coord2Color patternPixel;
+#endif
 
 static tuple
 patternPixel(outGenerator * const outGenP,
@@ -431,7 +438,9 @@ patternPixel(outGenerator * const outGenP,
 
 
 
+#ifndef LITERAL_FN_DEF_MATCH
 static outGenStateTerm termPatternPixel;
+#endif
 
 static void
 termPatternPixel(outGenerator * const outGenP) {

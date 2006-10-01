@@ -222,6 +222,26 @@ extern int write();
   #endif
 #endif
 
+/* At least one compiler can't handle two declarations of the same function
+   that aren't literally identical.  E.g. "static foo_fn_t foo1;" conflicts
+   with "static void foo1(int);" even if type 'foo_fn_t' is defined as
+   void(int).  (The compiler we saw do this is SGI IDO cc (for IRIX 4.3)).
+
+   LITERAL_FN_DEF_MATCH says that the compiler might have this problem,
+   so one must be conservative in redeclaring functions.
+*/
+#if defined(__GNUC__)
+  #define LITERAL_FN_DEF_MATCH 0
+#else
+  #if (defined(__sgi))
+    #define LITERAL_FN_DEF_MATCH 1
+  #else   
+    #define LITERAL_FN_DEF_MATCH 0
+  #endif
+#endif
+
+
+
 /* CONFIGURE: Some systems seem to need more than standard program linkage
    to get a data (as opposed to function) item out of a library.
 
@@ -276,3 +296,5 @@ typedef long int pm_filepos;
   #define HAVE_MKSTEMP 1
 #endif
 
+typedef int qsort_comparison_fn(const void *, const void *);
+    /* A compare function to pass to <stdlib.h>'s qsort() */
