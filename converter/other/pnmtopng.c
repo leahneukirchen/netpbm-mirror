@@ -2238,12 +2238,12 @@ convertpnm(struct cmdlineInfo const cmdline,
          of the input image.
       */
   int transexact;  
-    /* boolean: the user wants only the exact color he specified to be
-       transparent; not just something close to it.
-    */
+      /* boolean: the user wants only the exact color he specified to be
+         transparent; not just something close to it.
+      */
   int transparent;
   bool alpha;
-    /* There will be an alpha mask */
+      /* There will be an alpha mask */
   unsigned int pnm_meaningful_bits;
   pixel backcolor;
       /* The background color, with maxval equal to that of the input
