@@ -12,6 +12,7 @@
  * HEADER FILES *
  *==============*/
 
+#include "pm_config.h"  /* For __inline__ */
 #include "ansi.h"
 #include "mtypes.h"
 #include "mheaders.h"
