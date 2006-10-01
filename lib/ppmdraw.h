@@ -265,17 +265,17 @@ ppmd_fill(pixel **         const pixels,
 /* Text drawing routines. */
 
 void
-ppmd_text(pixel**      const pixels, 
-          int          const cols, 
-          int          const rows, 
-          pixval       const maxval, 
-          int          const xpos, 
-          int          const ypos, 
-          int          const height, 
-          int          const angle, 
-          const char * const sArg, 
-          void (*drawprocP)(pixel**, int, int, pixval, int, int, const void*), 
-    const void*  const clientdata);
+ppmd_text(pixel**       const pixels, 
+          int           const cols, 
+          int           const rows, 
+          pixval        const maxval, 
+          int           const xpos, 
+          int           const ypos, 
+          int           const height, 
+          int           const angle, 
+          const char *  const sArg, 
+          ppmd_drawproc       drawProc,
+          const void *  const clientdata);
 /* Draws the null-terminated string 's' left justified at the point
    ('x', 'y').  The text will be 'height' pixels high and will be aligned on a
    baseline inclined 'angle' degrees with the X axis.  The supplied

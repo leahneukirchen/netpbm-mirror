@@ -278,24 +278,350 @@ const double VidRateNum[9]={1.0, 23.976, 24.0, 25.0, 29.97, 30.0,
                              50.0 ,59.94, 60.0};
 
 
-/*===============================*
- * INTERNAL PROCEDURE prototypes *
- *===============================*/
+/*=====================*
+ * INTERNAL PROCEDURES *
+ *=====================*/
 
-static void	GenMBAddrIncr _ANSI_ARGS_((BitBucket *bb, uint32 addr_incr));
-static void	GenPictHead _ANSI_ARGS_((BitBucket *bb, uint32 temp_ref,
-		    uint32 code_type, uint32 vbv_delay,
-		    int32 full_pel_forw_flag, uint32 forw_f_code,
-		    int32 full_pel_back_flag, uint32 back_f_code,
-		    uint8 *extra_info, uint32 extra_info_size,
-		    uint8 *ext_data, uint32 ext_data_size,
-		    uint8 *user_data, uint32 user_data_size));
-static void	GenMBType _ANSI_ARGS_((BitBucket *bb, uint32 pict_code_type,
-		  uint32 mb_quant, uint32 motion_forw, uint32 motion_back,
-		  uint32 mb_pattern, uint32 mb_intra));
-static void	GenMotionCode _ANSI_ARGS_((BitBucket *bb, int32 vector));
-static void	GenBlockPattern _ANSI_ARGS_((BitBucket *bb,
-					     uint32 mb_pattern));
+/*===========================================================================*
+ *
+ * GenMBType
+ *
+ *	generate macroblock type with given attributes
+ *	append result to the specified bitstream
+ *
+ * RETURNS:	nothing
+ *
+ * SIDE EFFECTS:    none
+ *
+ *===========================================================================*/
+static void
+GenMBType(bbPtr, pict_code_type, mb_quant, motion_forw, motion_back,
+          mb_pattern, mb_intra)
+    BitBucket *bbPtr;
+    uint32 pict_code_type;
+    uint32 mb_quant;
+    uint32 motion_forw;
+    uint32 motion_back;
+    uint32 mb_pattern;
+    uint32 mb_intra;
+{
+    int code;
+
+    switch (pict_code_type) {
+    case 1:
+        if ((motion_forw != 0) || (motion_back != 0) || (mb_pattern != 0) || (mb_intra != 1)) {
+            perror("Illegal parameters for macroblock type.");
+            exit(-1);
+        }
+        if (mb_quant) {
+            Bitio_Write(bbPtr, 0x1, 2);
+        } else {
+            Bitio_Write(bbPtr, 0x1, 1);
+        }
+        break;
+
+    case 2:
+        code = 0;
+        if (mb_quant) {
+            code += 16;
+        }
+        if (motion_forw) {
+            code += 8;
+        }
+        if (motion_back) {
+            code += 4;
+        }
+        if (mb_pattern) {
+            code += 2;
+        }
+        if (mb_intra) {
+            code += 1;
+        }
+
+        switch (code) {
+        case 1:
+            Bitio_Write(bbPtr, 0x3, 5);
+            break;
+        case 2:
+            Bitio_Write(bbPtr, 0x1, 2);
+            break;
+        case 8:
+            Bitio_Write(bbPtr, 0x1, 3);
+            break;
+        case 10:
+            Bitio_Write(bbPtr, 0x1, 1);
+            break;
+        case 17:
+            Bitio_Write(bbPtr, 0x1, 6);
+            break;
+        case 18:
+            Bitio_Write(bbPtr, 0x1, 5);
+            break;
+        case 26:
+            Bitio_Write(bbPtr, 0x2, 5);
+            break;
+        default:
+            perror("Illegal parameters for macroblock type.");
+            exit(-1);
+            break;
+        }
+        break;
+
+    case 3:
+        code = 0;
+        if (mb_quant) {
+            code += 16;
+        }
+        if (motion_forw) {
+            code += 8;
+        }
+        if (motion_back) {
+            code += 4;
+        }
+        if (mb_pattern) {
+            code += 2;
+        }
+        if (mb_intra) {
+            code += 1;
+        }
+
+        switch (code) {
+        case 12:
+            Bitio_Write(bbPtr, 0x2, 2);
+            break;
+        case 14:
+            Bitio_Write(bbPtr, 0x3, 2);
+            break;
+        case 4:
+            Bitio_Write(bbPtr, 0x2, 3);
+            break;
+        case 6:
+            Bitio_Write(bbPtr, 0x3, 3);
+            break;
+        case 8:
+            Bitio_Write(bbPtr, 0x2, 4);
+            break;
+        case 10:
+            Bitio_Write(bbPtr, 0x3, 4);
+            break;
+        case 1:
+            Bitio_Write(bbPtr, 0x3, 5);
+            break;
+        case 30:
+            Bitio_Write(bbPtr, 0x2, 5);
+            break;
+        case 26:
+            Bitio_Write(bbPtr, 0x3, 6);
+            break;
+        case 22:
+            Bitio_Write(bbPtr, 0x2, 6);
+            break;
+        case 17:
+            Bitio_Write(bbPtr, 0x1, 6);
+            break;
+        default:
+            perror("Illegal parameters for macroblock type.");
+            exit(-1);
+            break;
+        }
+        break;
+    }
+}
+
+
+/*===========================================================================*
+ *
+ * GenMotionCode
+ *
+ *	generate motion vector output with given value
+ *	append result to the specified bitstream
+ *
+ * RETURNS:	nothing
+ *
+ * SIDE EFFECTS:    none
+ *
+ *===========================================================================*/
+static void
+GenMotionCode(BitBucket * const bbPtr,
+              int32       const vector) {
+
+    uint32 code, num;
+
+    if ((vector < -16) || (vector > 16)) {
+        perror("Motion vector out of range.");
+        fprintf(stderr, "Motion vector out of range:  vector = %d\n", vector);
+        exit(-1);
+    }
+    code = mbMotionVectorTable[vector + 16][0];
+    num = mbMotionVectorTable[vector + 16][1];
+
+    Bitio_Write(bbPtr, code, num);
+}
+
+
+/*===========================================================================*
+ *
+ * GenBlockPattern
+ *
+ *	generate macroblock pattern output
+ *	append result to the specified bitstream
+ *
+ * RETURNS:	nothing
+ *
+ * SIDE EFFECTS:    none
+ *
+ *===========================================================================*/
+static void
+GenBlockPattern(bbPtr, mb_pattern)
+    BitBucket *bbPtr;
+    uint32 mb_pattern;
+{
+    uint32 code, num;
+
+    code = mbPatTable[mb_pattern][0];
+    num = mbPatTable[mb_pattern][1];
+
+    Bitio_Write(bbPtr, code, num);
+}
+
+
+/*===========================================================================*
+ *
+ * GenMBAddrIncr
+ *
+ *	generate macroblock address increment output
+ *	append result to the specified bitstream
+ *
+ * RETURNS:	nothing
+ *
+ * SIDE EFFECTS:    none
+ *
+ *===========================================================================*/
+static void
+GenMBAddrIncr(bbPtr, addr_incr)
+    BitBucket *bbPtr;
+    uint32 addr_incr;
+{
+    uint32 code;
+    uint32 num;
+
+    code = mbAddrIncrTable[addr_incr][0];
+    num = mbAddrIncrTable[addr_incr][1];
+
+    Bitio_Write(bbPtr, code, num);
+}
+
+
+/*===========================================================================*
+ *
+ * GenPictHead
+ *
+ *	generate picture header with given attributes
+ *	append result to the specified bitstream
+ *
+ * RETURNS:	nothing
+ *
+ * SIDE EFFECTS:    none
+ *
+ *===========================================================================*/
+static void
+GenPictHead(bbPtr, temp_ref, code_type, vbv_delay, full_pel_forw_flag,
+            forw_f_code, full_pel_back_flag, back_f_code, extra_info,
+            extra_info_size, ext_data, ext_data_size, user_data,
+            user_data_size)
+    BitBucket *bbPtr;
+    uint32 temp_ref;
+    uint32 code_type;
+    uint32 vbv_delay;
+    int32 full_pel_forw_flag;
+    uint32 forw_f_code;
+    int32 full_pel_back_flag;
+    uint32 back_f_code;
+    uint8 *extra_info;
+    uint32 extra_info_size;
+    uint8 *ext_data;
+    uint32 ext_data_size;
+    uint8 *user_data;
+    uint32 user_data_size;
+{
+    /* Write picture start code. */
+    Bitio_Write(bbPtr, PICT_START_CODE, 32);
+
+    /* Temp reference. */
+    Bitio_Write(bbPtr, temp_ref, 10);
+
+    /* Code_type. */
+    if (code_type == 0)
+        code_type = 1;
+
+    Bitio_Write(bbPtr, code_type, 3);
+
+    /* vbv_delay. */
+    vbv_delay = 0xffff;		    /* see page 36 (section 2.4.3.4) */
+    Bitio_Write(bbPtr, vbv_delay, 16);
+
+    if ((code_type == 2) || (code_type == 3)) {
+
+        /* Full pel forw flag. */
+
+        if (full_pel_forw_flag)
+            Bitio_Write(bbPtr, 0x01, 1);
+        else
+            Bitio_Write(bbPtr, 0x00, 1);
+
+        /* Forw f code. */
+
+        Bitio_Write(bbPtr, forw_f_code, 3);
+    }
+    if (code_type == 3) {
+
+        /* Full pel back flag. */
+
+        if (full_pel_back_flag)
+            Bitio_Write(bbPtr, 0x01, 1);
+        else
+            Bitio_Write(bbPtr, 0x00, 1);
+
+        /* Back f code. */
+
+        Bitio_Write(bbPtr, back_f_code, 3);
+    }
+    /* Extra bit picture info. */
+
+    if (extra_info != NULL) {
+        unsigned int i;
+        for (i = 0; i < extra_info_size; ++i) {
+            Bitio_Write(bbPtr, 0x01, 1);
+            Bitio_Write(bbPtr, extra_info[i], 8);
+        }
+    }
+    Bitio_Write(bbPtr, 0x00, 1);
+
+    /* next start code */
+    Bitio_BytePad(bbPtr);
+
+    /* Write ext data if present. */
+
+    if (ext_data != NULL) {
+        unsigned int i;
+
+        Bitio_Write(bbPtr, EXT_START_CODE, 32);
+
+        for (i = 0; i < ext_data_size; ++i)
+            Bitio_Write(bbPtr, ext_data[i], 8);
+        Bitio_BytePad(bbPtr);
+    }
+    /* Write user data if present. */
+    if (user_data != NULL) {
+        unsigned int i;
+        Bitio_Write(bbPtr, USER_START_CODE, 32);
+
+        for (i = 0; i < user_data_size; ++i)
+            Bitio_Write(bbPtr, user_data[i], 8);
+
+        Bitio_BytePad(bbPtr);
+    }
+}
 
 
 /*=====================*
@@ -767,7 +1093,8 @@ if ( addr_incr != 1 )
     }
 
     /* Generate mb type code. */
-    GenMBType(bbPtr, pict_code_type, mb_quant, motion_forw, motion_back, mb_pattern, mb_intra);
+    GenMBType(bbPtr, pict_code_type, mb_quant,
+              motion_forw, motion_back, mb_pattern, mb_intra);
 
     /* MB quant. */
     if (mb_quant) {
@@ -827,353 +1154,6 @@ if ( addr_incr != 1 )
 
     if (mb_pattern) {
 	GenBlockPattern(bbPtr, mb_pattern);
-    }
-}
-
-
-/*=====================*
- * INTERNAL PROCEDURES *
- *=====================*/
-
-/*===========================================================================*
- *
- * GenMBType
- *
- *	generate macroblock type with given attributes
- *	append result to the specified bitstream
- *
- * RETURNS:	nothing
- *
- * SIDE EFFECTS:    none
- *
- *===========================================================================*/
-static void
-GenMBType(bbPtr, pict_code_type, mb_quant, motion_forw, motion_back,
-	  mb_pattern, mb_intra)
-    BitBucket *bbPtr;
-    uint32 pict_code_type;
-    uint32 mb_quant;
-    uint32 motion_forw;
-    uint32 motion_back;
-    uint32 mb_pattern;
-    uint32 mb_intra;
-{
-    int code;
-
-    switch (pict_code_type) {
-    case 1:
-	if ((motion_forw != 0) || (motion_back != 0) || (mb_pattern != 0) || (mb_intra != 1)) {
-	    perror("Illegal parameters for macroblock type.");
-	    exit(-1);
-	}
-	if (mb_quant) {
-	    Bitio_Write(bbPtr, 0x1, 2);
-	} else {
-	    Bitio_Write(bbPtr, 0x1, 1);
-	}
-	break;
-
-    case 2:
-	code = 0;
-	if (mb_quant) {
-	    code += 16;
-	}
-	if (motion_forw) {
-	    code += 8;
-	}
-	if (motion_back) {
-	    code += 4;
-	}
-	if (mb_pattern) {
-	    code += 2;
-	}
-	if (mb_intra) {
-	    code += 1;
-	}
-
-	switch (code) {
-	case 1:
-	    Bitio_Write(bbPtr, 0x3, 5);
-	    break;
-	case 2:
-	    Bitio_Write(bbPtr, 0x1, 2);
-	    break;
-	case 8:
-	    Bitio_Write(bbPtr, 0x1, 3);
-	    break;
-	case 10:
-	    Bitio_Write(bbPtr, 0x1, 1);
-	    break;
-	case 17:
-	    Bitio_Write(bbPtr, 0x1, 6);
-	    break;
-	case 18:
-	    Bitio_Write(bbPtr, 0x1, 5);
-	    break;
-	case 26:
-	    Bitio_Write(bbPtr, 0x2, 5);
-	    break;
-	default:
-	    perror("Illegal parameters for macroblock type.");
-	    exit(-1);
-	    break;
-	}
-	break;
-
-    case 3:
-	code = 0;
-	if (mb_quant) {
-	    code += 16;
-	}
-	if (motion_forw) {
-	    code += 8;
-	}
-	if (motion_back) {
-	    code += 4;
-	}
-	if (mb_pattern) {
-	    code += 2;
-	}
-	if (mb_intra) {
-	    code += 1;
-	}
-
-	switch (code) {
-	case 12:
-	    Bitio_Write(bbPtr, 0x2, 2);
-	    break;
-	case 14:
-	    Bitio_Write(bbPtr, 0x3, 2);
-	    break;
-	case 4:
-	    Bitio_Write(bbPtr, 0x2, 3);
-	    break;
-	case 6:
-	    Bitio_Write(bbPtr, 0x3, 3);
-	    break;
-	case 8:
-	    Bitio_Write(bbPtr, 0x2, 4);
-	    break;
-	case 10:
-	    Bitio_Write(bbPtr, 0x3, 4);
-	    break;
-	case 1:
-	    Bitio_Write(bbPtr, 0x3, 5);
-	    break;
-	case 30:
-	    Bitio_Write(bbPtr, 0x2, 5);
-	    break;
-	case 26:
-	    Bitio_Write(bbPtr, 0x3, 6);
-	    break;
-	case 22:
-	    Bitio_Write(bbPtr, 0x2, 6);
-	    break;
-	case 17:
-	    Bitio_Write(bbPtr, 0x1, 6);
-	    break;
-	default:
-	    perror("Illegal parameters for macroblock type.");
-	    exit(-1);
-	    break;
-	}
-	break;
-    }
-}
-
-
-/*===========================================================================*
- *
- * GenMotionCode
- *
- *	generate motion vector output with given value
- *	append result to the specified bitstream
- *
- * RETURNS:	nothing
- *
- * SIDE EFFECTS:    none
- *
- *===========================================================================*/
-static void
-GenMotionCode(BitBucket * const bbPtr,
-              int32       const vector) {
-
-    uint32 code, num;
-
-    if ((vector < -16) || (vector > 16)) {
-	perror("Motion vector out of range.");
-	fprintf(stderr, "Motion vector out of range:  vector = %d\n", vector);
-	exit(-1);
-    }
-    code = mbMotionVectorTable[vector + 16][0];
-    num = mbMotionVectorTable[vector + 16][1];
-
-    Bitio_Write(bbPtr, code, num);
-}
-
-
-/*===========================================================================*
- *
- * GenBlockPattern
- *
- *	generate macroblock pattern output
- *	append result to the specified bitstream
- *
- * RETURNS:	nothing
- *
- * SIDE EFFECTS:    none
- *
- *===========================================================================*/
-static void
-GenBlockPattern(bbPtr, mb_pattern)
-    BitBucket *bbPtr;
-    uint32 mb_pattern;
-{
-    uint32 code, num;
-
-    code = mbPatTable[mb_pattern][0];
-    num = mbPatTable[mb_pattern][1];
-
-    Bitio_Write(bbPtr, code, num);
-}
-
-
-/*===========================================================================*
- *
- * GenMBAddrIncr
- *
- *	generate macroblock address increment output
- *	append result to the specified bitstream
- *
- * RETURNS:	nothing
- *
- * SIDE EFFECTS:    none
- *
- *===========================================================================*/
-static void
-GenMBAddrIncr(bbPtr, addr_incr)
-    BitBucket *bbPtr;
-    uint32 addr_incr;
-{
-    uint32 code;
-    uint32 num;
-
-    code = mbAddrIncrTable[addr_incr][0];
-    num = mbAddrIncrTable[addr_incr][1];
-
-    Bitio_Write(bbPtr, code, num);
-}
-
-
-/*===========================================================================*
- *
- * GenPictHead
- *
- *	generate picture header with given attributes
- *	append result to the specified bitstream
- *
- * RETURNS:	nothing
- *
- * SIDE EFFECTS:    none
- *
- *===========================================================================*/
-static void
-GenPictHead(bbPtr, temp_ref, code_type, vbv_delay, full_pel_forw_flag,
-	    forw_f_code, full_pel_back_flag, back_f_code, extra_info,
-	    extra_info_size, ext_data, ext_data_size, user_data,
-	    user_data_size)
-    BitBucket *bbPtr;
-    uint32 temp_ref;
-    uint32 code_type;
-    uint32 vbv_delay;
-    int32 full_pel_forw_flag;
-    uint32 forw_f_code;
-    int32 full_pel_back_flag;
-    uint32 back_f_code;
-    uint8 *extra_info;
-    uint32 extra_info_size;
-    uint8 *ext_data;
-    uint32 ext_data_size;
-    uint8 *user_data;
-    uint32 user_data_size;
-{
-    int i;
-
-    /* Write picture start code. */
-    Bitio_Write(bbPtr, PICT_START_CODE, 32);
-
-    /* Temp reference. */
-    Bitio_Write(bbPtr, temp_ref, 10);
-
-    /* Code_type. */
-    if (code_type == 0) {
-	code_type = 1;
-    }
-    Bitio_Write(bbPtr, code_type, 3);
-
-    /* vbv_delay. */
-    vbv_delay = 0xffff;		    /* see page 36 (section 2.4.3.4) */
-    Bitio_Write(bbPtr, vbv_delay, 16);
-
-    if ((code_type == 2) || (code_type == 3)) {
-
-	/* Full pel forw flag. */
-
-	if (full_pel_forw_flag) {
-	    Bitio_Write(bbPtr, 0x01, 1);
-	} else {
-	    Bitio_Write(bbPtr, 0x00, 1);
-	}
-
-	/* Forw f code. */
-
-	Bitio_Write(bbPtr, forw_f_code, 3);
-    }
-    if (code_type == 3) {
-
-	/* Full pel back flag. */
-
-	if (full_pel_back_flag) {
-	    Bitio_Write(bbPtr, 0x01, 1);
-	} else {
-	    Bitio_Write(bbPtr, 0x00, 1);
-	}
-
-	/* Back f code. */
-
-	Bitio_Write(bbPtr, back_f_code, 3);
-    }
-    /* Extra bit picture info. */
-
-    if (extra_info != NULL) {
-	for (i = 0; i < extra_info_size; i++) {
-	    Bitio_Write(bbPtr, 0x01, 1);
-	    Bitio_Write(bbPtr, extra_info[i], 8);
-	}
-    }
-    Bitio_Write(bbPtr, 0x00, 1);
-
-    /* next start code */
-    Bitio_BytePad(bbPtr);
-
-    /* Write ext data if present. */
-
-    if (ext_data != NULL) {
-	Bitio_Write(bbPtr, EXT_START_CODE, 32);
-
-	for (i = 0; i < ext_data_size; i++) {
-	    Bitio_Write(bbPtr, ext_data[i], 8);
-	}
-	Bitio_BytePad(bbPtr);
-    }
-    /* Write user data if present. */
-    if (user_data != NULL) {
-	Bitio_Write(bbPtr, USER_START_CODE, 32);
-
-	for (i = 0; i < user_data_size; i++) {
-	    Bitio_Write(bbPtr, user_data[i], 8);
-	}
-	Bitio_BytePad(bbPtr);
     }
 }
 

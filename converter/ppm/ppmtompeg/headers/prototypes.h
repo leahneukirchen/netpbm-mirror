@@ -44,20 +44,15 @@ void    ResetBFrameStats _ANSI_ARGS_((void));
 void    ResetPFrameStats _ANSI_ARGS_((void));
 void SetSearchRange (int const pixelsP,
                      int const pixelsB);
-void    ResetIFrameStats _ANSI_ARGS_((void));
 void
 SetPixelSearch(const char * const searchType);
-void    SetIQScale _ANSI_ARGS_((int qI));
 void    SetPQScale _ANSI_ARGS_((int qP));
 void    SetBQScale _ANSI_ARGS_((int qB));
-float   EstimateSecondsPerIFrame _ANSI_ARGS_((void));
 float   EstimateSecondsPerPFrame _ANSI_ARGS_((void));
 float   EstimateSecondsPerBFrame _ANSI_ARGS_((void));
 void    SetGOPSize _ANSI_ARGS_((int size));
 void
 SetStatFileName(const char * const fileName);
-void    SetSlicesPerFrame _ANSI_ARGS_((int number));
-void    SetBlocksPerSlice _ANSI_ARGS_((void));
 
 
 void DCTFrame _ANSI_ARGS_((MpegFrame * mf));
@@ -68,8 +63,6 @@ void    MotionSearchPreComputation _ANSI_ARGS_((MpegFrame *frame));
 
 void    ComputeHalfPixelData _ANSI_ARGS_((MpegFrame *frame));
 void mp_validate_size _ANSI_ARGS_((int *x, int *y));
-
-extern void SetFCode _ANSI_ARGS_((void));
 
 
 /* psearch.c */

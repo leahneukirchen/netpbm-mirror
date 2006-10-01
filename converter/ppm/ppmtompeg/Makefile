@@ -39,7 +39,15 @@ endif
 #
 
 MP_BASE_OBJS = mfwddct.o postdct.o huff.o bitio.o mheaders.o
-MP_ENCODE_OBJS = iframe.o pframe.o bframe.o psearch.o bsearch.o block.o 
+MP_ENCODE_OBJS = \
+  frames.o \
+  iframe.o \
+  pframe.o \
+  bframe.o \
+  psearch.o \
+  bsearch.o \
+  block.o 
+
 MP_OTHER_OBJS = mpeg.o subsample.o param.o rgbtoycc.o \
 	readframe.o combine.o jrevdct.o frame.o fsize.o frametype.o \
 	specifics.o rate.o opts.o input.o gethostname.o

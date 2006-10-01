@@ -60,9 +60,7 @@
 #define BIT_IO_INCLUDED
 
 
-/*==============*
- * HEADER FILES *
- *==============*/
+#include <stdio.h>
 
 #include "general.h"
 #include "ansi.h"

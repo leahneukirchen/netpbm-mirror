@@ -84,7 +84,6 @@ static struct bframeStats {
  *====================*/
 
 extern Block **dct, **dctr, **dctb;
-extern dct_data_type **dct_data;
 #define NO_MOTION 0
 #define MOTION 1
 #define SKIP 2  /* used in useMotion in dct_data */

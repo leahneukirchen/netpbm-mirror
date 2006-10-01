@@ -77,13 +77,15 @@ extern curve_type copy_most_of_curve (curve_type c);
 /* Free the memory C uses.  */
 extern void free_curve (curve_type c);
 
+/* Like `append_pixel', for a point in real coordinates.  */
+void
+append_point(curve_type  const curve,
+             float_coord const coord);
+
 /* Append the point P to the end of C's list.  */
 void
 append_pixel(curve_type    const c,
              pm_pixelcoord const p);
-
-/* Like `append_pixel', for a point in real coordinates.  */
-extern void append_point (curve_type c, float_coord p);
 
 /* Write some or all, respectively, of the curve C in human-readable
    form to the log file, if logging is enabled.  */
