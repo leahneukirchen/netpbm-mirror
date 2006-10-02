@@ -17,13 +17,15 @@
  */
 #define _XOPEN_SOURCE   /* Make sure popen() is in stdio.h */
 #define _BSD_SOURCE     /* Make sure stdrup() is in string.h */
+#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include "pbm.h"
+
 #include "nstring.h"
 #include "shhopt.h"
+#include "pbm.h"
 
 
 #define BUFFER_SIZE 2048
@@ -233,7 +235,7 @@ static void
 writeProgram(const char *       const psFname,
              struct cmdlineInfo const cmdline) {
 
-    const char *ps;
+    const char * ps;
     FILE * psfile;
 
     psfile = fopen(psFname, "w");

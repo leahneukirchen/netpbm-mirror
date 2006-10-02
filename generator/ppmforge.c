@@ -282,10 +282,9 @@ static unsigned int
 initseed(void) {
     /*  Generate initial random seed.  */
 
-    int i;
+    unsigned int i;
 
-    i = time(NULL) ^ 0xF37C;
-    srand(i);
+    srand(pm_randseed());
     for (i = 0; i < 7; ++i)
         rand();
     return rand();

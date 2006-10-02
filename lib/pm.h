@@ -348,6 +348,9 @@ pm_check(FILE *               const file,
 char *
 pm_arg0toprogname(const char arg0[]);
 
+unsigned int
+pm_randseed(void);
+
 #ifdef __cplusplus
 }
 #endif

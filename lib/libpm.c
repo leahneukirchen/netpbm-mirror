@@ -35,7 +35,9 @@
 #define _LARGE_FILE_API
     /* This makes the the x64() functions available on AIX */
 
+#include <unistd.h>
 #include <stdio.h>
+#include <fcntl.h>
 #include <stdarg.h>
 #include <string.h>
 #include <errno.h>
@@ -43,6 +45,7 @@
 #ifdef __DJGPP__
   #include <io.h>
 #endif
+#include <time.h>
 
 #include "pm_c_util.h"
 #include "version.h"
@@ -782,6 +785,15 @@ pm_arg0toprogname(const char arg0[]) {
 
 
 
+unsigned int
+pm_randseed(void) {
+
+    return time(NULL) ^ getpid();
+
+}
+
+
+
 /* File open/close that handles "-" as stdin/stdout and checks errors. */
 
 FILE*
@@ -986,7 +998,7 @@ pm_make_tmpfile(FILE **       const filePP,
     const char * dirseparator;
     const char * error;
 
-    fnamelen = strlen (pm_progname) + 10; /* "/" + "_XXXXXX\0" */
+    fnamelen = strlen(pm_progname) + 10; /* "/" + "_XXXXXX\0" */
 
     tmpdir = tmpDir();
 

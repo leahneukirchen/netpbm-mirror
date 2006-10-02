@@ -106,11 +106,10 @@ static int modulo(int t, int n)
 
 static void initseed()
 {
-    int i;
+    unsigned int i;
 
-    i = time(NULL) * 0xF37C;
-    srand(i);
-    for (i = 0; i < 7; i++) 
+    srand(pm_randseed());
+    for (i = 0; i < 7; ++i) 
         V rand();
 }
 

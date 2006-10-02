@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.37.0
 
+              Fix some compile failures with Irix IDO compiler.
+
               Build: Configure does test links to detect broken
               libpng-config --ldflags.
 

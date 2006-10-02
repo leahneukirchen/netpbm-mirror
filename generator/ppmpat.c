@@ -1006,7 +1006,7 @@ main(int argc, char ** argv) {
     if ( argn != argc )
         pm_usage( usage);
 
-    srand( (int) ( time( 0 ) ^ getpid( ) ) );
+    srand(pm_randseed());
     pixels = ppm_allocarray( cols, rows );
 
     switch ( pattern )

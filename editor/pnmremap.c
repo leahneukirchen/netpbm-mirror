@@ -299,7 +299,7 @@ initFserr(struct pam *   const pamP,
                      "for Plane %u, size %u", plane, fserrSize);
     }
 
-    srand((int)(time(0) ^ getpid()));
+    srand(pm_randseed());
 
     {
         int col;

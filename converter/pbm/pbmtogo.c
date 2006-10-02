@@ -214,7 +214,7 @@ main( argc, argv )
             fflush(stdout);
 
             /* Output the plot data */
-            write(1, outbuffer, nout);
+            fwrite(outbuffer, 1, nout, stdout);
 
             /* Reset the counters */
             linerepeat = 0;
@@ -225,7 +225,7 @@ main( argc, argv )
                   putchar(linerepeat);
                   printf("%d/", nout+1);
                   fflush(stdout);
-                  write(1, outbuffer, nout);
+                  fwrite(outbuffer, 1, nout, stdout);
                   linerepeat = 0;
               }
         }

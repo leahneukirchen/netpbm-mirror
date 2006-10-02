@@ -15,6 +15,7 @@
  * HEADER FILES *
  *==============*/
 #define _XOPEN_SOURCE    /* Make sure stdio.h contains fileno() */
+#include <unistd.h>
 #include <stdio.h>
 #include "all.h"
 /* With the lossless jpeg patch applied to the Jpeg library

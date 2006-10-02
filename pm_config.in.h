@@ -119,33 +119,6 @@ extern int rand();
 typedef uint32_t uint32n;
 typedef int32_t int32n;
 
-#include <fcntl.h>
-#include <time.h>
-#include <stdlib.h>
-#include <unistd.h>
-/* 
-   Before Netpbm 9.0, atoi() and exit() were declared for everybody
-   except MSDOS and Amiga, and time() and write() were declared for
-   everybody except MSDOS, Amiga, and __osf__.  fcntl.h, time.h, and
-   stlib.h were included for MSDOS and Amiga, and unistd.h was included
-   for everyone except VMS, MSDOS, and Amiga.  With the netbsd patches,
-   atoi(), exit(), time(), and write() were not declared for __NetBSD__.
-
-   We're hoping that all current systems have the standard header
-   files, and will reinstate some of these explicit declarations if we
-   hear otherwise.  
-
-   If it turns out to be this easy, we should just move these inclusions
-   to the source files that actually need them.
-   
-   -Bryan 2000.04.13
-
-extern int atoi();
-extern void exit();
-extern long time();
-extern int write(); 
-*/
-
 /* CONFIGURE: On most BSD systems, malloc() gets declared in stdlib.h, on
 ** system V, it gets declared in malloc.h. On some systems, malloc.h
 ** doesn't declare these, so we have to do it here. On other systems,
@@ -263,6 +236,7 @@ extern int write();
 # endif
 #endif
 
+#include <sys/types.h>
 /* In GNU, _LFS_LARGEFILE means the "off_t" functions (ftello, etc.) are
    available.  In AIX, _AIXVERSION_430 means it's AIX Version 4.3.0 or
    better, which seems to mean the "off_t" functions are available.
