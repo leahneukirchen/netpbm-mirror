@@ -25,7 +25,8 @@ $(BINARIES): %: %.o palmcolormap.o $(NETPBMLIB) $(LIBOPT)
 	  $(MATHLIB) $(LDLIBS) $(RPATH) $(LADD)
 
 gen_palm_colormap : % : %.c palmcolormap.o
-	$(CC) -I importinc $(CFLAGS) $(LDFLAGS) -o $@ $< palmcolormap.o \
+	$(CC) -I importinc $(CPPFLAGS) $(CFLAGS) $(LDFLAGS) -o $@ \
+	  $< palmcolormap.o \
 	  $(LIBOPTS) $(MATHLIB) $(LDLIBS) $(LADD)
 
 

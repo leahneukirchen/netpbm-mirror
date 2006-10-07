@@ -20,7 +20,7 @@ include $(SRCDIR)/Makefile.common
 INCLUDES = -I $(BUILDDIR) -I $(SRCDIR)/$(SUBDIR)/..
 
 $(UTILOBJECTS):%.o:%.c importinc
-	$(CC) -c $(INCLUDES) -DNDEBUG $(CFLAGS) $(CFLAGS_SHLIB) \
+	$(CC) -c $(INCLUDES) -DNDEBUG $(CPPFLAGS) $(CFLAGS) $(CFLAGS_SHLIB) \
 	  $(CFLAGS_PERSONAL) $(CADD) -o $@ $<
 
 testnstring: test.c nstring.h nstring.o

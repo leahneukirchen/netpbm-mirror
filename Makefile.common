@@ -61,13 +61,13 @@
 #   libjpeg.  All header files from the Netpbm source tree take precedence
 #   over these.
 
-# In addition, there is CADD, which is extra C compilation flags and
+# In addition, there is CADD, which is extra C compilation options and
 # is intended to be set on a make command line (e.g. 'make CADD=-g')
-# for flags that apply just to a particular build.
+# for options that apply just to a particular build.
 
 # In addition, there is CFLAGS_PERSONAL, which is extra C
-# compilation flags and is expected to be set via environment variable
-# for flags that are particular to the person doing the build and not
+# compilation options and is expected to be set via environment variable
+# for options that are particular to the person doing the build and not
 # specific to Netpbm.
 
 include $(SRCDIR)/Makefile.version
@@ -320,7 +320,7 @@ $(PORTBINARIES) $(MATHBINARIES): %: %.o $(NETPBMLIB) $(LIBOPT)
 
 %.o2: %.c importinc
 # Note that the user may have configured -I options into CFLAGS.
-	$(CC) -c $(INCLUDES) -DNDEBUG $(CFLAGS) \
+	$(CC) -c $(INCLUDES) -DNDEBUG $(CPPFLAGS) $(CFLAGS) \
 	  "-Dmain=main_$*" \
           $(CFLAGS_MERGE) $(CFLAGS_PERSONAL) $(CADD) -o $@ $<
 

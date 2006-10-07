@@ -79,8 +79,8 @@ extra_staticlib: $(EXTRA_STATICLIB)
 #----------------------------------------------------------------------------
 
 $(LIBOBJECTS): %.o: %.c importinc
-# Note that the user may have configured -I options into CFLAGS.
-	$(CC) -c $(INCLUDES) -DNDEBUG $(CFLAGS) $(CFLAGS_SHLIB) \
+# Note that the user may have configured -I options into CPPFLAGS/CFLAGS.
+	$(CC) -c $(INCLUDES) -DNDEBUG $(CPPFLAGS) $(CFLAGS) $(CFLAGS_SHLIB) \
 	  $(CFLAGS_PERSONAL) $(CADD) -o $@ $<
 
 MAJ = $(NETPBM_MAJOR_RELEASE)
