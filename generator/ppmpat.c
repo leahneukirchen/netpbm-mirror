@@ -218,14 +218,8 @@ random_color(pixval const maxval) {
 
 #define DARK_THRESH 0.25
 
-#if __STDC__
 static pixel
 random_bright_color( pixval maxval )
-#else /*__STDC__*/
-static pixel
-random_bright_color( maxval )
-    pixval maxval;
-#endif /*__STDC__*/
     {
     pixel p;
 
@@ -238,14 +232,8 @@ random_bright_color( maxval )
     return p;
     }
 
-#if __STDC__
 static pixel
 random_dark_color( pixval maxval )
-#else /*__STDC__*/
-static pixel
-random_dark_color( maxval )
-    pixval maxval;
-#endif /*__STDC__*/
     {
     pixel p;
 
@@ -313,16 +301,8 @@ gingham2( pixel** pixels, int cols, int rows, pixval maxval )
         average_drawproc, &forecolor );
     }
 
-#if __STDC__
 static void
 gingham3( pixel** pixels, int cols, int rows, pixval maxval )
-#else /*__STDC__*/
-static void
-gingham3( pixels, cols, rows, maxval )
-    pixel** pixels;
-    int cols, rows;
-    pixval maxval;
-#endif /*__STDC__*/
     {
     int colso4, rowso4;
     pixel backcolor, fore1color, fore2color;
@@ -362,16 +342,8 @@ gingham3( pixels, cols, rows, maxval )
         average_drawproc, &fore1color );
     }
 
-#if __STDC__
 static void
 madras( pixel** pixels, int cols, int rows, pixval maxval )
-#else /*__STDC__*/
-static void
-madras( pixels, cols, rows, maxval )
-    pixel** pixels;
-    int cols, rows;
-    pixval maxval;
-#endif /*__STDC__*/
     {
     int cols2, rows2, cols3, rows3, cols12, rows12, cols6a, rows6a, cols6b,
     rows6b;
@@ -493,16 +465,8 @@ madras( pixels, cols, rows, maxval )
         cols, rows3, average_drawproc, &fore2color );
     }
 
-#if __STDC__
 static void
 tartan( pixel** pixels, int cols, int rows, pixval maxval )
-#else /*__STDC__*/
-static void
-tartan( pixels, cols, rows, maxval )
-    pixel** pixels;
-    int cols, rows;
-    pixval maxval;
-#endif /*__STDC__*/
     {
     int cols1, rows1, cols3, rows3, cols10, rows10, cols5a, rows5a, cols5b,
     rows5b;
@@ -579,16 +543,8 @@ tartan( pixels, cols, rows, maxval )
 
 #define MAXPOLES 500
 
-#if __STDC__
 static void
 poles( pixel** pixels, int cols, int rows, pixval maxval )
-#else /*__STDC__*/
-static void
-poles( pixels, cols, rows, maxval )
-    pixel** pixels;
-    int cols, rows;
-    pixval maxval;
-#endif /*__STDC__*/
     {
     int poles, i, xs[MAXPOLES], ys[MAXPOLES], col, row;
     pixel colors[MAXPOLES];
@@ -730,16 +686,8 @@ sq_assign_colors(int     const circlecount,
 }
 
 
-#if __STDC__
 static void
 squig( pixel** pixels, int cols, int rows, pixval maxval )
-#else /*__STDC__*/
-static void
-squig( pixels, cols, rows, maxval )
-    pixel** pixels;
-    int cols, rows;
-    pixval maxval;
-#endif /*__STDC__*/
     {
     pixel color;
     int i, j, xc[SQ_POINTS], yc[SQ_POINTS], x0, y0, x1, y1, x2, y2, x3, y3;

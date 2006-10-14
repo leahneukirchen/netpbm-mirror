@@ -166,11 +166,7 @@ wr_int(unsigned char ** buffer, int val)
     } else {
         sign = val < 0 ? 0xff : 0x00;   /* Sign bits */
         length = 4;
-#ifdef __STDC__
         mask  = 0xffu << 24;
-#else
-        mask  = 0xff << 24;
-#endif
         while ((val & mask) == sign) {  /* Find the smallest representation */
             length--;
             mask >>= 8;

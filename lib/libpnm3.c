@@ -21,16 +21,8 @@
 #include "pbm.h"
 #include "libpbm.h"
 
-#if __STDC__
 xel
 pnm_backgroundxel( xel** xels, int cols, int rows, xelval maxval, int format )
-#else /*__STDC__*/
-xel
-pnm_backgroundxel( xels, cols, rows, maxval, format )
-    xel** xels;
-    int cols, rows, format;
-    xelval maxval;
-#endif /*__STDC__*/
     {
     xel bgxel, ul, ur, ll, lr;
 
@@ -93,16 +85,8 @@ pnm_backgroundxel( xels, cols, rows, maxval, format )
     return bgxel;
     }
 
-#if __STDC__
 xel
 pnm_backgroundxelrow( xel* xelrow, int cols, xelval maxval, int format )
-#else /*__STDC__*/
-xel
-pnm_backgroundxelrow( xelrow, cols, maxval, format )
-    xel* xelrow;
-    int cols, format;
-    xelval maxval;
-#endif /*__STDC__*/
     {
     xel bgxel, l, r;
 
@@ -158,15 +142,8 @@ pnm_backgroundxelrow( xelrow, cols, maxval, format )
     return bgxel;
     }
 
-#if __STDC__
 xel
 pnm_whitexel( xelval maxval, int format )
-#else /*__STDC__*/
-xel
-pnm_whitexel( maxval, format )
-    xelval maxval;
-    int format;
-#endif /*__STDC__*/
     {
     xel x;
 
@@ -191,15 +168,8 @@ pnm_whitexel( maxval, format )
     return x;
     }
 
-#if __STDC__
 xel
 pnm_blackxel( xelval maxval, int format )
-#else /*__STDC__*/
-xel
-pnm_blackxel( maxval, format )
-    xelval maxval;
-    int format;
-#endif /*__STDC__*/
     {
     xel x;
 
@@ -252,16 +222,8 @@ pnm_invertxel(xel*   const xP,
 
 
 
-#if __STDC__
 void
 pnm_promoteformat( xel** xels, int cols, int rows, xelval maxval, int format, xelval newmaxval, int newformat )
-#else /*__STDC__*/
-void
-pnm_promoteformat( xels, cols, rows, maxval, format, newmaxval, newformat )
-    xel** xels;
-    xelval maxval, newmaxval;
-    int cols, rows, format, newformat;
-#endif /*__STDC__*/
     {
     int row;
 
@@ -270,16 +232,8 @@ pnm_promoteformat( xels, cols, rows, maxval, format, newmaxval, newformat )
         xels[row], cols, maxval, format, newmaxval, newformat );
     }
 
-#if __STDC__
 void
 pnm_promoteformatrow( xel* xelrow, int cols, xelval maxval, int format, xelval newmaxval, int newformat )
-#else /*__STDC__*/
-void
-pnm_promoteformatrow( xelrow, cols, maxval, format, newmaxval, newformat )
-    xel* xelrow;
-    xelval maxval, newmaxval;
-    int cols, format, newformat;
-#endif /*__STDC__*/
     {
     register int col;
     register xel* xP;

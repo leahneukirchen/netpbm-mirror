@@ -80,14 +80,8 @@ putinit( )
     firstitem = 1;
     }
 
-#if __STDC__
 static void
 putbit( bit b )
-#else /*__STDC__*/
-static void
-putbit( b )
-bit b;
-#endif /*__STDC__*/
     {
     if ( bitsperitem == 16 )
 	putitem( );

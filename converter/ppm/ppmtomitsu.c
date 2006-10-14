@@ -41,7 +41,6 @@ typedef struct hashinfo {
         struct hashinfo *next;
 } hashinfo;
 
-#ifdef __STDC__
 static void lineputinit(int cols, int rows, int sharpness, int enlarge, int
                         copy, struct mediasize medias);
 static void frametransferinit(int cols, int rows, int sharpness, int enlarge,
@@ -52,28 +51,13 @@ static void lookuptabledata(int cols, int rows, int enlarge,
                             struct mediasize medias);
 static void check_and_rotate(int cols, int rows, int enlarge,
                              struct mediasize medias);
-#define CONST const
-#else /*__STDC__*/
-static int lineputinit();
-static int lookuptableinit();
-static int lookuptabledata();
-static int frametransferinit();
-static int check_and_rotate();
-#define CONST
-#endif
 
 #define cmd(arg)           fputc((arg), stdout)
 #define datum(arg)         fputc((char)(arg), stdout)
 #define data(arg,num)      fwrite((arg), sizeof(char), (num), stdout)
 
 
-#ifdef __STDC__
 int main(int argc, char *argv[] )
-#else
-int main( argc, argv )
-    int argc;
-    char* argv[];
-#endif
     {
     FILE             *ifp;
     /*hashinfo         colorhashtable[HASHSIZE];*/
@@ -365,16 +349,9 @@ int main( argc, argv )
     exit(0);
 }
 
-#ifdef __STDC__
 static void lineputinit(int cols, int rows,
                         int sharpness, int enlarge, int copy,
                         struct mediasize medias)
-#else /*__STDC__*/
-static int lineputinit(cols, rows, sharpness, enlarge, copy, medias)
-    int cols, rows;
-    int sharpness, enlarge, copy;
-    struct mediasize medias;
-#endif /*__STDC__*/
 {
     ONLINE;
     CLRMEM;
@@ -429,14 +406,8 @@ static int lineputinit(cols, rows, sharpness, enlarge, copy, medias)
     return;
 }
 
-#ifdef __STDC__
 static void lookuptableinit(int sharpness, int enlarge, int copy,
                             struct mediasize medias)
-#else /*__STDC__*/
-static int lookuptableinit(sharpness, enlarge, copy, medias)
-    int sharpness, enlarge, copy;
-    struct mediasize medias;
-#endif /*__STDC__*/
 {
     ONLINE;
     CLRMEM;
@@ -489,15 +460,8 @@ static int lookuptableinit(sharpness, enlarge, copy, medias)
     return;
 }
 
-#ifdef __STDC__
 static void lookuptabledata(int cols, int rows, int enlarge,
                                                         struct mediasize medias)
-#else /*__STDC__*/
-static int lookuptabledata(cols, rows, enlarge, medias)
-    int   rows, cols;
-    int   enlarge;
-    struct mediasize medias;
-#endif /*__STDC__*/
 {
     DONELOOKUPTABLE;
     check_and_rotate(cols, rows, enlarge, medias);
@@ -505,16 +469,8 @@ static int lookuptabledata(cols, rows, enlarge, medias)
     return;
 }
 
-#ifdef __STDC__
 static void frametransferinit(int cols, int rows, int sharpness,
                               int enlarge, int copy, struct mediasize medias)
-#else
-static int frametransferinit(cols, rows, sharpness, enlarge, copy, medias)
-
-    int     rows, cols;
-    int     sharpness, enlarge, copy;
-    struct mediasize medias;
-#endif
 {
     ONLINE;
     CLRMEM;
@@ -569,15 +525,8 @@ static int frametransferinit(cols, rows, sharpness, enlarge, copy, medias)
 }
 
 
-#ifdef __STDC__
 static void
 check_and_rotate(int cols, int rows, int enlarge, struct mediasize medias)
-#else
-static int
-check_and_rotate(cols, rows, enlarge, medias)
-    int cols, rows, enlarge;
-    struct mediasize medias;
-#endif
 {
     if (cols > rows) {
         ROTATEIMG(DOROTATE);                        /* rotate image */

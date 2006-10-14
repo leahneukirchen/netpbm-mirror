@@ -282,15 +282,8 @@ int i;
 	(void) putc(i & 0xff, fd);
 }
 
-#if __STDC__
 static void
 putLong( FILE *fd, long i )
-#else /*__STDC__*/
-static void
-putLong(fd, i)
-FILE *fd;
-long i;
-#endif /*__STDC__*/
 {
 	(void) putc((int)((i >> 24) & 0xff), fd);
 	(void) putc(((int)(i >> 16) & 0xff), fd);

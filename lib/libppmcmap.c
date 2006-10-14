@@ -774,15 +774,7 @@ ppm_findclosestcolor(const pixel * const colormap,
 
 
 void
-#if __STDC__
 ppm_colorrowtomapfile(FILE *ofp, pixel *colormap, int ncolors, pixval maxval)
-#else
-ppm_colorrowtomapfile(ofp, colormap, ncolors, maxval)
-    FILE *ofp;
-    pixel *colormap;
-    int ncolors;
-    pixval maxval;
-#endif
 {
     int i;
 
