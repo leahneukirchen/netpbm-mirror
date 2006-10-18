@@ -84,21 +84,21 @@ createPipeFeeder(void          pipeFeederRtn(int, void *),
    other end of the pipe as *fdP.
 -----------------------------------------------------------------------------*/
     int pipeToFeed[2];
-    pid_t feederPid;
+    pid_t rc;
 
     pipe(pipeToFeed);
-    feederPid = fork();
-    if (feederPid < 0) {
+    rc = fork();
+    if (rc < 0) {
         pm_error("fork() of stdin feeder failed.  errno=%d (%s)", 
                  errno, strerror(errno));
-    } else if (feederPid == 0) {
+    } else if (rc == 0) {
         /* This is the child -- the stdin feeder process */
         close(pipeToFeed[0]);
         (*pipeFeederRtn)(pipeToFeed[1], feederParm);
         exit(0);
-    }
-    else {
+    } else {
         /* This is the parent */
+        pid_t const feederPid = rc;
         close(pipeToFeed[1]);
         *fdP = pipeToFeed[0];
         *pidP = feederPid;
@@ -120,15 +120,15 @@ spawnProcessor(const char * const shellCommand,
    from which Caller can suck the shell's Standard Output.
 -----------------------------------------------------------------------------*/
     int stdoutpipe[2];
-    pid_t processorpid;
+    pid_t rc;
         
     pipe(stdoutpipe);
 
-    processorpid = fork();
-    if (processorpid < 0) {
+    rc = fork();
+    if (rc < 0) {
         pm_error("fork() of processor process failed.  errno=%d (%s)\n", 
                  errno, strerror(errno));
-    } else if (processorpid == 0) {
+    } else if (rc == 0) {
         /* The second child */
         close(stdoutpipe[0]);
 
@@ -139,6 +139,7 @@ spawnProcessor(const char * const shellCommand,
         pm_error("INTERNAL ERROR: execProgram() returns.");
     } else {
         /* The parent */
+        pid_t const processorpid = rc;
         close(stdoutpipe[1]);
         *stdoutFdP = stdoutpipe[0];
         *pidP = processorpid;
@@ -212,11 +213,11 @@ pm_system(void stdinFeeder(int, void *),
 
        If 'stdoutFeeder' is non-NULL, we create a child process to run
        the shell and create a pipe between the shell's Standard Output
-       and this process, and then this process runs 'stdoutAccepter'
-       to read the data from that pipe.
+       and the current process, and then the current process runs
+       'stdoutAccepter' to read the data from that pipe.
        
-       But if 'stdoutFeeder' is NULL, we just run the shell in this
-       process.
+       But if 'stdoutFeeder' is NULL, we just run the shell in the
+       current process.
 
        So there can be 1, 2, or 3 processes involved depending on 
        parameters.
@@ -242,6 +243,10 @@ pm_system(void stdinFeeder(int, void *),
         spawnProcessor(shellCommand, shellStdinFd, 
                        &shellStdoutFd, &processorPid);
 
+        /* The shell process has cloned our 'shellStdinFd'; we have no
+           more use for our copy.
+        */
+        close(shellStdinFd);
         /* Dispose of the stdout from that shell */
         (*stdoutAccepter)(shellStdoutFd, accepterParm);
         close(shellStdoutFd);
