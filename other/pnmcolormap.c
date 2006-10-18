@@ -25,6 +25,7 @@
 
 #include <math.h>
 
+#include "pm_config.h"
 #include "pam.h"
 #include "pammap.h"
 #include "shhopt.h"
@@ -166,10 +167,10 @@ parseCommandLine (int argc, char ** argv,
 }
 
 
-typedef int qsort_comparison_fn(const void *, const void *);
-    /* A collation function to be used as argument to qsort() */
 
+#ifndef LITERAL_FN_DEF_MATCH
 static qsort_comparison_fn compareplane;
+#endif
 
 static unsigned int compareplanePlane;
     /* This is a parameter to compareplane().  We use this global variable
@@ -189,7 +190,9 @@ compareplane(const void * const arg1,
 
 
 
+#ifndef LITERAL_FN_DEF_MATCH
 static qsort_comparison_fn sumcompare;
+#endif
 
 static int
 sumcompare(const void * const b1, const void * const b2) {

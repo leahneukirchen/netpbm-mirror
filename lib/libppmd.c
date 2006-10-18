@@ -18,14 +18,12 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#include "pm_config.h"
 #include "pm_c_util.h"
 #include "mallocvar.h"
 #include "ppm.h"
 #include "ppmdfont.h"
 #include "ppmdraw.h"
-
-typedef int qsort_compare(const void *, const void *);
-    /* A compare function to pass to stdlib.h's qsort() */
 
 
 #define DDA_SCALE 8192
@@ -779,7 +777,9 @@ ppmd_fill_drawproc(pixel**      const pixels,
 
 
 
-static qsort_compare yx_compare;
+#ifndef LITERAL_FN_DEF_MATCH
+static qsort_comparison_fn yx_compare;
+#endif
 
 static int
 yx_compare(const void * const c1Arg,

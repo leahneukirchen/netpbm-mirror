@@ -221,6 +221,33 @@ sub testCompile($$$) {
 
 
 
+sub testCompileLink($$$) {
+    my ($flags, $cSourceCodeR, $successR) = @_;
+#-----------------------------------------------------------------------------
+#  Do a test compile of the program in @{$cSourceCodeR}.
+#  
+#  Return $$successR == $TRUE iff the compile succeeds (exit code 0).
+#-----------------------------------------------------------------------------
+    my ($cFile, $cFileName) = tempFile('.c');
+
+    print $cFile @{$cSourceCodeR};
+    
+    my ($oFile, $oFileName) = tempFile('');
+    
+    my $compileCommand = "$testCc -o $oFileName $flags $cFileName";
+    print ("Doing test compile/link: $compileCommand\n");
+    my $rc = system($compileCommand);
+    
+    unlink($oFileName);
+    close($oFile);
+    unlink($cFileName);
+    close($cFile);
+
+    $$successR = ($rc == 0);
+}
+
+
+
 sub displayIntroduction() {
     print("This is the Netpbm configurator.  It is an interactive dialog " .
           "that\n");
@@ -1464,6 +1491,34 @@ sub testPngHdr($$$) {
 
 
 
+sub testLinkPnglib($$) {
+    my ($generalCflags, $pngCflags) = @_;
+
+    my @cSourceCode = (
+                       "#include <png.h>\n",
+                       "int main() {\n",
+                       "png_create_write_struct(0, NULL, NULL, NULL);\n",
+                       "}\n",
+                       );
+
+    testCompile("$generalCflags $pngCflags", \@cSourceCode, \my $success);
+    if (!$success) {
+        # Since it won't compile, we can't test the link
+    } else {
+        my $pngLdflags = qx{libpng-config --ldflags};
+        chomp($pngLdflags);
+        
+        testCompileLink("$generalCflags $pngCflags $pngLdflags",
+                        \@cSourceCode, \my $success);
+        
+        if (!$success) {
+            printBadPngConfigLdflagsWarning($pngLdflags);
+        }
+    }
+}
+
+
+
 sub testLibpngConfig($) {
     my ($needLocal) = @_;
 #-----------------------------------------------------------------------------
@@ -1478,15 +1533,9 @@ sub testLibpngConfig($) {
     testCompilePngH("$generalCflags $pngCflags", \my $success);
 
     if (!$success) {
-        print("\n");
-        print("Unable to compile a test PNG program using the compiler " .
-              "flags that libpng-config says to use: '$pngCflags'.\n");
-        print("This indicates that you have Libpng installed incorrectly.\n");
-        print("libpng-config gets installed as part of the Libpng package.\n");
+        printBadPngConfigCflagsWarning($pngCflags);
     } else {
-        
-
-
+        testLinkPnglib($generalCflags, $pngCflags);
     }
 }
 
