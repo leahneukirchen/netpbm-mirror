@@ -1143,6 +1143,17 @@ static void free_buffer (buffer *const b)
 {
   int i;
 
+  /* We have to read through the end of the input image even if we
+     didn't use all the rows, because if the input is a pipe, the
+     guy writing into the pipe may require all the data to go
+     through.
+  */
+  
+  while (b->last_logical < b->inpam->height-1) {
+      pnm_readpamrow(b->inpam, b->rows[0]);
+      ++b->last_logical;
+  }
+
   for (i=0; i<b->num_rows; i++)
     pnm_freepamrow (b->rows[i]);
   free (b->rows);

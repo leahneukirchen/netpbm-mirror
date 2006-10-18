@@ -242,6 +242,10 @@ pm_system(void stdinFeeder(int, void *),
         spawnProcessor(shellCommand, shellStdinFd, 
                        &shellStdoutFd, &processorPid);
 
+        /* The shell process has cloned our 'shellStdinFd'; we have no
+           more use for our copy.
+        */
+        close(shellStdinFd);
         /* Dispose of the stdout from that shell */
         (*stdoutAccepter)(shellStdoutFd, accepterParm);
         close(shellStdoutFd);

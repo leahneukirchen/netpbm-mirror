@@ -4,6 +4,15 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+06.10.18 BJH  Release 10.35.08
+
+              Fix pamperspective: read all of input.
+
+              Fix libnetpbm pm_system(): don't hang if shell command quits
+              before taking all the input.
+
+              Fix redefinitions of functions that Irix compiler can't handle.
+
 06.10.01 BJH  Release 10.35.07
 
               Fix some prototypes that don't literally match definitions
