@@ -4,7 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-06.10.18 BJH  Release 10.36.3
+06.10.21 BJH  Release 10.36.04
+
+              Fix pamcomp: due to use of undefined value, sometimes produces
+              plain format.
+
+06.10.18 BJH  Release 10.36.03
 
               Fix pamperspective: read all of input.
 
@@ -16,18 +21,18 @@ CHANGE HISTORY
               Build: Configure does test links to detect broken
               libpng-config --ldflags.
 
-06.10.01 BJH  Release 10.36.2
+06.10.01 BJH  Release 10.36.02
 
               Fix some prototypes that don't literally match definitions
               so that Irix compiler will accept them.
 
-06.09.29 BJH  Release 10.36.1
+06.09.29 BJH  Release 10.36.01
 
               Build: fix build with separate build directory.
 
               Build: fix merge build with no X11 library.
 
-06.09.21 BJH  Release 10.36.0
+06.09.21 BJH  Release 10.36.00
 
               pbmtonokia: Add plain NPM output capability.  Thanks Paul Bolle
               <pebolle@tiscali.nl>.
