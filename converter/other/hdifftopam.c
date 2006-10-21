@@ -96,7 +96,7 @@ main(int argc, char *argv[]) {
     tuple * outrow;
     tuple * prevrow;
 
-    pnm_init( &argc, argv );
+    pnm_init(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
