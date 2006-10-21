@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.37.0
 
+              Fix pamperspective: read all of input.
+
               Fix libnetpbm pm_system(): don't hang if shell command quits
               before taking all the input.
 
