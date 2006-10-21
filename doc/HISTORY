@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+06.10.21 BJH  Release 10.35.09
+
+              Fix pamcomp: due to use of undefined value, sometimes produces
+              plain format.
+
 06.10.18 BJH  Release 10.35.08
 
               Fix pamperspective: read all of input.
