@@ -52,7 +52,7 @@ struct pam {
            image.  Then it's PBM_FORMAT, RPBM_FORMAT, etc.
            */
     unsigned int plainformat;
-        /* Logical: On output, use the plain version of the format type
+        /* Logical: On output, use plain version of the format type
            indicated by 'format'.  Otherwise, use the raw version.
            (i.e., on output, the plainness information in 'format' is
            irrelevant).  Input functions set this to FALSE, for the
