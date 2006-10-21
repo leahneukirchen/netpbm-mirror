@@ -9,6 +9,8 @@
   * Specified by the user with WORDACCESS_GENERIC
 =============================================================================*/
 
+#include "pm_config.h"
+
 typedef uint32_t wordint;
 typedef unsigned char wordintBytes[sizeof(wordint)];
     
