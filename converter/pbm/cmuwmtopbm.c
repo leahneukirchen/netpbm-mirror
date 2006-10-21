@@ -1,4 +1,4 @@
-/* cmuwmtopbm.c - read a CMU window manager bitmap and produce a portable bitmap
+/* cmuwmtopbm.c - read a CMU window manager bitmap and produce a PBM image.
 **
 ** Copyright (C) 1989 by Jef Poskanzer.
 **
@@ -10,105 +10,106 @@
 ** implied warranty.
 */
 
+/* 2006.10 (afu)
+   Changed bitrow from plain to raw, read function from getc() to fread(),
+   write function from pbm_writepbmrow() to pbm_writepbmrow_packed().
+   Retired bitwise transformation functions.
+
+   This program does not check the pad bits at the end of each row.
+*/
+
+
 #include "pbm.h"
 #include "cmuwm.h"
 
-static void getinit ARGS(( FILE* file, int* colsP, int* rowsP, short* depthP, int* padrightP ));
-static bit getbit ARGS(( FILE* file ));
 
-int
-main( argc, argv )
-    int argc;
-    char* argv[];
-    {
-    FILE* ifp;
-    bit* bitrow;
-    register bit* bP;
-    int rows, cols, padright, row, col;
-    short depth;
-
-
-    pbm_init( &argc, argv );
-
-    if ( argc > 2 )
-	pm_usage( "[cmuwmfile]" );
-
-    if ( argc == 2 )
-	ifp = pm_openr( argv[1] );
-    else
-	ifp = stdin;
-
-    getinit( ifp, &cols, &rows, &depth, &padright );
-    if ( depth != 1 )
-	pm_error(
-	    "CMU window manager file has depth of %d, must be 1",
-	    (int) depth );
-
-    pbm_writepbminit( stdout, cols, rows, 0 );
-    bitrow = pbm_allocrow( cols );
-
-    for ( row = 0; row < rows; ++row )
-	{
-	/* Get data. */
-        for ( col = 0, bP = bitrow; col < cols; ++col, ++bP )
-	    *bP = getbit( ifp );
-	/* Discard line padding */
-        for ( col = 0; col < padright; ++col )
-	    (void) getbit( ifp );
-	pbm_writepbmrow( stdout, bitrow, cols, 0 );
-	}
-
-    pm_close( ifp );
-    pm_close( stdout );
-
-    exit( 0 );
-    }
-
-static int item, bitsperitem, bitshift;
 
 static void
-getinit( file, colsP, rowsP, depthP, padrightP )
-    FILE* file;
-    int* colsP;
-    int* rowsP;
-    short* depthP;
-    int* padrightP;
-    {
+readCmuwmHeader(FILE *         const ifP,
+                unsigned int * const colsP,
+                unsigned int * const rowsP,
+                unsigned int * const depthP) {
+
+    const char * const initReadError =
+        "CMU window manager header EOF / read error";
+
     long l;
+    short s;
+    int rc;
 
-    if ( pm_readbiglong( file, &l ) == -1 )
-	pm_error( "EOF / read error" );
-    if ( l != CMUWM_MAGIC )
-	pm_error( "bad magic number in CMU window manager file" );
-    if ( pm_readbiglong( file, &l ) == -1 )
-	pm_error( "EOF / read error" );
-    *colsP = (int) l;
-    if ( pm_readbiglong( file, &l ) == -1 )
-	pm_error( "EOF / read error" );
-    *rowsP = (int) l;
-    if ( pm_readbigshort( file, depthP ) == -1 )
-	pm_error( "EOF / read error" );
-    *padrightP = ( ( *colsP + 7 ) / 8 ) * 8 - *colsP;
+    rc = pm_readbiglong(ifP, &l);
+    if (rc == -1 )
+        pm_error(initReadError);
+    if (l != CMUWM_MAGIC)
+        pm_error("bad magic number in CMU window manager file");
+    rc = pm_readbiglong(ifP, &l);
+    if (rc == -1)
+        pm_error(initReadError);
+    *colsP = l;
+    rc = pm_readbiglong(ifP, &l);
+    if (rc == -1 )
+        pm_error(initReadError);
+    *rowsP = l;
+    rc = pm_readbigshort(ifP, &s);
+    if (rc == -1)
+        pm_error(initReadError);
+    *depthP = s;
+}
 
-    bitsperitem = 0;
+
+
+int
+main(int     argc,
+     char * argv[]) {
+
+    FILE * ifP;
+    unsigned char * bitrow;
+    unsigned int rows, cols, depth;
+    unsigned int row;
+
+    const char * inputFileName;
+
+    pbm_init(&argc, argv);
+
+    if (argc-1 > 1)
+        pm_error("Too many arguments (%u).  "
+                 "Only argument is optional input file", argc-1);
+    if (argc-1 == 1)
+        inputFileName = argv[1];
+    else
+        inputFileName = "-";
+    
+    ifP = pm_openr(inputFileName);
+
+    readCmuwmHeader(ifP, &cols, &rows, &depth);
+    if (depth != 1)
+        pm_error("CMU window manager file has depth of %u, must be 1", depth);
+
+    pbm_writepbminit(stdout, cols, rows, 0);
+    bitrow = pbm_allocrow_packed(cols);
+
+    for (row = 0; row < rows; ++row) {
+        unsigned int const bytesPerRow = pbm_packed_bytes(cols);
+        unsigned int byteSeq;
+        size_t bytesRead;
+
+        bytesRead = fread(bitrow, 1, bytesPerRow, ifP);
+        if (bytesRead != bytesPerRow)
+            pm_error("CWU window manager bitmap EOF / read error");
+            
+        /* Invert all bits in row - raster formats are similar.
+           CMUWM Black:0 White:1  End of row padded with 1
+           PBM   Black:1 White:0  End preferably padded with 0
+        */
+   
+        for (byteSeq = 0; byteSeq < bytesPerRow; ++byteSeq)
+            bitrow[byteSeq] = ~bitrow[byteSeq];
+                
+        pbm_writepbmrow_packed(stdout, bitrow, cols, 0);
     }
 
-static bit
-getbit( file )
-    FILE* file;
-    {
-    bit b;
+    pm_close(ifP);
+    pm_close(stdout);
 
-    if ( bitsperitem == 0 )
-	{
-	item = getc( file );
-	if ( item == EOF )
-	    pm_error( "EOF / read error" );
-	bitsperitem = 8;
-	bitshift = 7;
-	}
-    b = ( ( item >> bitshift) & 1 ) ? PBM_WHITE : PBM_BLACK;
-    --bitsperitem;
-    --bitshift;
-    return b;
-    }
+    return 0;
+}
