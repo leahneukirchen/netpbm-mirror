@@ -242,10 +242,11 @@ determineOutputType(struct pam * const composedPamP,
                     struct pam * const overlayPamP) {
 
     composedPamP->height = underlayPamP->height;
-    composedPamP->width = underlayPamP->width;
+    composedPamP->width  = underlayPamP->width;
 
     composedPamP->format = commonFormat(underlayPamP->format, 
                                         overlayPamP->format);
+    composedPamP->plainformat = FALSE;
     commonTupletype(underlayPamP->tuple_type, overlayPamP->tuple_type,
                     composedPamP->tuple_type, 
                     sizeof(composedPamP->tuple_type));
