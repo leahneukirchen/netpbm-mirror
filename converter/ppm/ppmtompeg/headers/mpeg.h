@@ -90,7 +90,9 @@ void
 ReadDecodedRefFrame(MpegFrame *  const frameP, 
                     unsigned int const frameNumber);
 
-extern void	SetBitRateFileName _ANSI_ARGS_((char *fileName));
+void
+SetBitRateFileName(const char * const fileName);
+
 extern void	SetFrameRate _ANSI_ARGS_((void));
 
 

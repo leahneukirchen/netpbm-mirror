@@ -276,9 +276,8 @@ SetReferenceFrameType(const char * const type) {
 
 
 void
-SetBitRateFileName(fileName)
-    char *fileName;
-{
+SetBitRateFileName(const char * const fileName) {
+
     strcpy(bitRateFileName, fileName);
 }
 
@@ -318,7 +317,7 @@ finishFrameOutput(MpegFrame * const frameP,
 
 static void
 outputIFrame(MpegFrame * const frameP,
-             BitBucket * const bb,
+             BitBucket * const bbP,
              int         const realStart,
              int         const realEnd,
              MpegFrame * const pastRefFrameP,
@@ -326,7 +325,7 @@ outputIFrame(MpegFrame * const frameP,
       
     /* only start a new GOP with I */
     /* don't start GOP if only doing frames */
-    if ((!separateFiles) && (currentGOP >= gopSize)) {
+    if (!separateFiles && currentGOP >= gopSize) {
         boolean const closed = 
             (totalFramesSent == frameP->id || pastRefFrameP == NULL);
 
@@ -344,7 +343,7 @@ outputIFrame(MpegFrame * const frameP,
             }
       
             Mhead_GenSequenceHeader(
-                bb, Fsize_x, Fsize_y,
+                bbP, Fsize_x, Fsize_y,
                 /* pratio */    aspectRatio,
                 /* pict_rate */ frameRate, /* bit_rate */ bit_rate,
                 /* buf_size */  buf_size,  /* c_param_flag */ 1,
@@ -359,7 +358,7 @@ outputIFrame(MpegFrame * const frameP,
                        closed ? "YES" : "NO", frameP->id);
     
         ++num_gop;
-        Mhead_GenGOPHeader(bb,  /* drop_frame_flag */ 0,
+        Mhead_GenGOPHeader(bbP,  /* drop_frame_flag */ 0,
                            tc_hrs, tc_min, tc_sec, tc_pict,
                            closed, /* broken_link */ 0,
                            /* ext_data */ NULL, /* ext_data_size */ 0,
@@ -368,16 +367,16 @@ outputIFrame(MpegFrame * const frameP,
         if (pastRefFrameP == NULL)
             SetGOPStartTime(0);
         else
-            SetGOPStartTime(pastRefFrameP->id+1);
+            SetGOPStartTime(pastRefFrameP->id + 1);
     }
       
-    if ((frameP->id >= realStart) && (frameP->id <= realEnd))
-        GenIFrame(bb, frameP);
+    if (frameP->id >= realStart && frameP->id <= realEnd)
+        GenIFrame(bbP, frameP);
       
-    numI--;
+    --numI;
     timeMask &= 0x6;
       
-    currentGOP++;
+    ++currentGOP;
     IncrementTCTime();
 }
 
@@ -393,10 +392,10 @@ outputPFrame(MpegFrame * const frameP,
     if ((frameP->id >= realStart) && (frameP->id <= realEnd))
         GenPFrame(bbP, frameP, pastRefFrameP);
 
-    numP--;
+    --numP;
     timeMask &= 0x5;
     
-    currentGOP++;
+    ++currentGOP;
     IncrementTCTime();
 }
 
@@ -498,6 +497,9 @@ processBFrames(MpegFrame *          const pastRefFrameP,
 
    But do only those B frames whose frame numbers are within the range
    'realStart' through 'realEnd'.
+
+   Output the frames to the output stream 'wholeStreamBbP'.  If NULL,
+   output each frame to its own individual file instead.
 -----------------------------------------------------------------------------*/
     boolean const separateFiles = (wholeStreamBbP == NULL);
     unsigned int const firstBFrameNum = pastRefFrameP->id + 1;
@@ -551,7 +553,7 @@ processBFrames(MpegFrame *          const pastRefFrameP,
 
 static void
 processRefFrame(MpegFrame *    const frameP, 
-                BitBucket *    const bb_arg,
+                BitBucket *    const wholeStreamBbP,
                 int            const realStart,
                 int            const realEnd,
                 MpegFrame *    const pastRefFrameP,
@@ -564,26 +566,28 @@ processRefFrame(MpegFrame *    const frameP,
 
    But only if its frame number is within the range 'realStart'
    through 'realEnd'.
+
+   Output the frame to the output stream 'wholeStreamBbP'.  If NULL,
+   output it to its own individual file instead.
 -----------------------------------------------------------------------------*/
     if (frameP->id >= realStart && frameP->id <= realEnd) {
-        boolean separateFiles;
-        BitBucket * bb;
+        bool const separateFiles = (wholeStreamBbP == NULL);
   
-        separateFiles = (bb_arg == NULL);
+        BitBucket * bbP;
   
-        if ( separateFiles )
-            bb = bitioNew(outputFileName, frameP->id, remoteIO);
+        if (separateFiles)
+            bbP = bitioNew(outputFileName, frameP->id, remoteIO);
         else
-            bb = bb_arg;
+            bbP = wholeStreamBbP;
   
         /* first, output this reference frame */
         switch (frameP->type) {
         case TYPE_IFRAME:
-            outputIFrame(frameP, bb, realStart, realEnd, pastRefFrameP, 
+            outputIFrame(frameP, bbP, realStart, realEnd, pastRefFrameP, 
                          separateFiles);
             break;
         case TYPE_PFRAME:
-            outputPFrame(frameP, bb, realStart, realEnd, pastRefFrameP);
+            outputPFrame(frameP, bbP, realStart, realEnd, pastRefFrameP);
             ShowRemainingTime(childProcess);
             break;
         default:
@@ -593,7 +597,7 @@ processRefFrame(MpegFrame *    const frameP,
         
         ++(*framesOutputP);
         
-        finishFrameOutput(frameP, bb, separateFiles, referenceFrame,
+        finishFrameOutput(frameP, bbP, separateFiles, referenceFrame,
                           childProcess, remoteIO);
     }
 }
@@ -702,7 +706,7 @@ readAndSaveFrame(struct inputSource * const inputSourceP,
 static void
 doFirstFrameStuff(enum frameContext const context,
                   const char *      const userDataFileName,
-                  BitBucket *       const bb,
+                  BitBucket *       const bbP,
                   int               const fsize_x,
                   int               const fsize_y,
                   int               const aspectRatio,
@@ -713,8 +717,12 @@ doFirstFrameStuff(enum frameContext const context,
 /*----------------------------------------------------------------------------
    Do stuff we have to do after reading the first frame in a sequence
    of frames requested of GenMPEGStream().
+
+   *bbP is the output stream to which to write any header stuff we have
+   to write.  If 'context' is such that there is no header stuff to write,
+   then 'bbP' is irrelevant.
 -----------------------------------------------------------------------------*/
-    *inputFrameBitsP = 24*Fsize_x*Fsize_y;
+    *inputFrameBitsP = 24 * Fsize_x * Fsize_y;
     SetBlocksPerSlice();
           
     if (context == CONTEXT_WHOLESTREAM) {
@@ -722,7 +730,7 @@ doFirstFrameStuff(enum frameContext const context,
         char * userData;
         unsigned int userDataSize;
 
-        assert(bb != NULL);
+        assert(bbP != NULL);
 
         DBG_PRINT(("Generating sequence header\n"));
         if (bitstreamMode == FIXED_RATE) {
@@ -770,7 +778,7 @@ doFirstFrameStuff(enum frameContext const context,
             userDataSize = strlen(userData);
             strfree(userDataString);
         }
-        Mhead_GenSequenceHeader(bb, Fsize_x, Fsize_y,
+        Mhead_GenSequenceHeader(bbP, Fsize_x, Fsize_y,
                                 /* pratio */ aspectRatio,
                                 /* pict_rate */ frameRate, 
                                 /* bit_rate */ bit_rate,
@@ -990,13 +998,21 @@ doAFrame(unsigned int         const frameNumber,
          unsigned int *       const framesReadP,
          unsigned int *       const framesOutputP,
          bool *               const firstFrameDoneP,
-         BitBucket *          const bbP,
+         BitBucket *          const wholeStreamBbP,
          unsigned int *       const inputFrameBitsP,
          bool *               const endOfStreamP) {
 /*----------------------------------------------------------------------------
    *endOfStreamP returned means we were unable to do a frame because
    the input stream has ended.  In that case, none of the other outputs
    are valid.
+
+   Process an input frame.  This can involve writing its description
+   to the output stream, saving it for later use, and/or writing
+   descriptions of previously saved frames to the output stream
+   because we now have enough information to do so.
+
+   Output the frames to the output stream 'wholeStreamBbP'.  If NULL,
+   output each frame to its own individual file instead.
 -----------------------------------------------------------------------------*/
     char const frameType = FType_Type(frameNumber);
     
@@ -1026,21 +1042,21 @@ doAFrame(unsigned int         const frameNumber,
             *endOfStreamP = FALSE;
 
             if (!*firstFrameDoneP) {
-                doFirstFrameStuff(context, userDataFileName,
-                                  bbP, Fsize_x, Fsize_y, aspectRatio,
+                doFirstFrameStuff(context, userDataFileName, wholeStreamBbP,
+                                  Fsize_x, Fsize_y, aspectRatio,
                                   frameRate, qtable, niqtable, 
                                   inputFrameBitsP);
             
                 *firstFrameDoneP = TRUE;
             }
-            processRefFrame(frameP, bbP, frameStart, frameEnd,
+            processRefFrame(frameP, wholeStreamBbP, frameStart, frameEnd,
                             pastRefFrameP, childProcess, outputFileName, 
                             framesReadP, framesOutputP);
                 
             if (pastRefFrameP) {
                 processBFrames(pastRefFrameP, frameP, realStart, realEnd,
                                inputSourceP, remoteIO, childProcess, 
-                               &IOtime, bbP, outputFileName,
+                               &IOtime, wholeStreamBbP, outputFileName,
                                framesReadP, framesOutputP, &currentGOP);
             }
             if (pastRefFrameP != NULL)
@@ -1086,17 +1102,20 @@ GenMPEGStream(struct inputSource * const inputSourceP,
    we stop where the stream ends if that is before 'frameEnd'.
 
 -----------------------------------------------------------------------------*/
-    BitBucket * bbP;
+    BitBucket * streamBbP;
+        /* The output stream to which we write all the frames.  NULL
+           means the frames are going to individual frame files.
+        */
     unsigned int frameNumber;
     bool endOfStream;
     bool firstFrameDone;
     int numBits;
     unsigned int firstFrame, lastFrame;
-    /* Frame numbers of the first and last frames we look at.  This
-       could be more than the the frames we actually encode because
-       we may need context (i.e. to encode a B frame, we need the subsequent
-       I or P frame).
-    */
+        /* Frame numbers of the first and last frames we look at.
+           This could be more than the the frames we actually encode
+           because we may need context (i.e. to encode a B frame, we
+           need the subsequent I or P frame).
+        */
     unsigned int framesRead;
         /* Number of frames we have read; for statistical purposes */
     MpegFrame * pastRefFrameP;
@@ -1150,10 +1169,10 @@ GenMPEGStream(struct inputSource * const inputSourceP,
     if (showBitRatePerFrame)
         OpenBitRateFile();  /* May modify showBitRatePerFrame */
 
-    if (context == CONTEXT_WHOLESTREAM || context == CONTEXT_GOP)
-        bbP = Bitio_New(ofP);
+    if (context == CONTEXT_JUSTFRAMES)
+        streamBbP = NULL;
     else
-        bbP = NULL;
+        streamBbP = Bitio_New(ofP);
 
     initTCTime(firstFrame);
 
@@ -1171,7 +1190,7 @@ GenMPEGStream(struct inputSource * const inputSourceP,
                  frameStart, frameEnd, realStart, realEnd,
                  childProcess, outputFileName,
                  pastRefFrameP, &pastRefFrameP,
-                 &framesRead, &framesOutput, &firstFrameDone, bbP,
+                 &framesRead, &framesOutput, &firstFrameDone, streamBbP,
                  inputFrameBitsP, &endOfStream);
     }
     
@@ -1180,10 +1199,10 @@ GenMPEGStream(struct inputSource * const inputSourceP,
     
     /* SEQUENCE END CODE */
     if (context == CONTEXT_WHOLESTREAM)
-        Mhead_GenSequenceEnder(bbP);
+        Mhead_GenSequenceEnder(streamBbP);
     
-    if (context == CONTEXT_WHOLESTREAM)
-        numBits = bbP->cumulativeBits;
+    if (streamBbP)
+        numBits = streamBbP->cumulativeBits;
     else {
         /* What should the correct value be?  Most likely 1.  "numBits" is
            used below, so we need to make sure it's properly initialized 
@@ -1192,9 +1211,8 @@ GenMPEGStream(struct inputSource * const inputSourceP,
         numBits = 1;
     }
 
-    if (context != CONTEXT_JUSTFRAMES) {
-        Bitio_Flush(bbP);
-        bbP = NULL;
+    if (streamBbP) {
+        Bitio_Flush(streamBbP);
         fclose(ofP);
     }
     handleBitRate(realEnd, numBits, childProcess, showBitRatePerFrame);
