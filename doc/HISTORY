@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+06.10.22 BJH  Release 10.35.10
+
+              ppmtompeg: fix reading of GOP files.  Thanks Alun Jones.
+
 06.10.21 BJH  Release 10.35.09
 
               Fix pamcomp: due to use of undefined value, sometimes produces
