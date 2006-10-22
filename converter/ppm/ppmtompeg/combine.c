@@ -110,7 +110,6 @@ appendSpecifiedGopFiles(struct inputSource * const inputSourceP,
              nAttempts < READ_ATTEMPTS && !ifP;
              ++nAttempts) {
 
-            FILE * ifP;
             ifP = fopen(fileName, "rb");
             if (ifP == NULL) {
                 pm_message("ERROR:  Couldn't read file '%s'.  retry %u", 

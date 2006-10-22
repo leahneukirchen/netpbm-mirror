@@ -1150,7 +1150,7 @@ GenMPEGStream(struct inputSource * const inputSourceP,
     if (showBitRatePerFrame)
         OpenBitRateFile();  /* May modify showBitRatePerFrame */
 
-    if (context == CONTEXT_WHOLESTREAM)
+    if (context == CONTEXT_WHOLESTREAM || context == CONTEXT_GOP)
         bbP = Bitio_New(ofP);
     else
         bbP = NULL;

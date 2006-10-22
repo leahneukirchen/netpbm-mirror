@@ -6,6 +6,13 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.37.0
 
+              ppmtompeg: fix reading of GOPs, combine server.  Thanks
+              Alun Jones.
+
+              cmuwmtopbm, mgrtopbm, pbmtocmuwm, pbmtoicon, pbmtomgr:
+              Rewrite to use packed PBM functions for efficiency.
+              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
               Fix pamcomp: due to use of undefined value, sometimes produces
               plain format.
 
