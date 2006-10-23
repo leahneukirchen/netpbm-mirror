@@ -6,8 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.37.0
 
-              ppmtompeg: fix reading of GOPs, combine server.  Thanks
-              Alun Jones.
+              pnm_readpaminit(): abort instead of crash if width == 0.
+
+              ppmtompeg: fix reading of GOPs.  Thanks Alun Jones.
 
               cmuwmtopbm, mgrtopbm, pbmtocmuwm, pbmtoicon, pbmtomgr:
               Rewrite to use packed PBM functions for efficiency.

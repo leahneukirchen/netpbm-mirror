@@ -86,24 +86,32 @@ validateComputableSize(struct pam * const pamP) {
    Another common operation is adding 1 or 2 to the highest row, column,
    or plane number in the image, so we make sure that's possible.
 -----------------------------------------------------------------------------*/
-    unsigned int const depth = allocationDepth(pamP);
+    if (pamP->width == 0)
+        pm_error("Width is zero.  Image must be at least one pixel wide");
+    else if (pamP->height == 0)
+        pm_error("Height is zero.  Image must be at least one pixel high");
+    else {
+        unsigned int const depth = allocationDepth(pamP);
 
-    if (depth > INT_MAX/sizeof(sample))
-        pm_error("image depth (%u) too large to be processed", depth);
-    else if (depth * sizeof(sample) > INT_MAX/pamP->width)
-        pm_error("image width and depth (%u, %u) too large "
-                 "to be processed.", pamP->width, depth);
-    else if (pamP->width * (depth * sizeof(sample)) >
-             INT_MAX - depth * sizeof(tuple *))
-        pm_error("image width and depth (%u, %u) too large "
-                 "to be processed.", pamP->width, depth);
-    
-    if (depth > INT_MAX - 2)
-        pm_error("image depth (%u) too large to be processed", depth);
-    if (pamP->width > INT_MAX - 2)
-        pm_error("image width (%u) too large to be processed", pamP->width);
-    if (pamP->height > INT_MAX - 2)
-        pm_error("image height (%u) too large to be processed", pamP->height);
+        if (depth > INT_MAX/sizeof(sample))
+            pm_error("image depth (%u) too large to be processed", depth);
+        else if (depth * sizeof(sample) > INT_MAX/pamP->width)
+            pm_error("image width and depth (%u, %u) too large "
+                     "to be processed.", pamP->width, depth);
+        else if (pamP->width * (depth * sizeof(sample)) >
+                 INT_MAX - depth * sizeof(tuple *))
+            pm_error("image width and depth (%u, %u) too large "
+                     "to be processed.", pamP->width, depth);
+        
+        if (depth > INT_MAX - 2)
+            pm_error("image depth (%u) too large to be processed", depth);
+        if (pamP->width > INT_MAX - 2)
+            pm_error("image width (%u) too large to be processed",
+                     pamP->width);
+        if (pamP->height > INT_MAX - 2)
+            pm_error("image height (%u) too large to be processed",
+                     pamP->height);
+    }
 }
 
 
