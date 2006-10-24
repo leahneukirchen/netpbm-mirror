@@ -52,6 +52,63 @@
 #include "pm_c_util.h"
 #include "pnm.h"
 
+struct cmdlineInfo {
+    const char * inputFileName;
+    double alpha;
+    double radius;
+};
+
+
+static void 
+parseCommandLine(int argc, 
+                 char ** argv, 
+                 struct cmdlineInfo  * const cmdlineP) {
+
+    if (argc-1 < 2)
+        pm_error("You must specify at least two arguments: alpha and radius.  "
+                 "You specified %u", argc-1);
+
+    if (sscanf(argv[1], "%lf", &cmdlineP->alpha) != 1)
+        pm_error("Invalid alpha (1st) argument '%s'.  "
+                 "Must be a decimal number",
+                 argv[1]);
+
+    if (sscanf( argv[2], "%lf", &cmdlineP->radius ) != 1)
+        pm_error("Invalid radius (2nd) argument '%s'.  "
+                 "Must be a decimal number", 
+                 argv[2]);
+    
+    if ((cmdlineP->alpha > -0.1 && cmdlineP->alpha < 0.0) ||
+        (cmdlineP->alpha > 0.5 && cmdlineP->alpha < 1.0))
+        pm_error( "Alpha must be in range 0.0 <= alpha <= 0.5 "
+                  "for alpha trimmed mean.  "
+                  "You specified %f", cmdlineP->alpha);
+    if (cmdlineP->alpha > 2.0)
+        pm_error("Alpha must be in range 1.0 <= cmdlineP->alpha <= 2.0 "
+                  "for optimal estimation.  You specified %f",
+                 cmdlineP->alpha);
+
+    if (cmdlineP->alpha < -0.9 ||
+        (cmdlineP->alpha > -0.1 && cmdlineP->alpha < 0.0))
+        pm_error( "Alpha must be in range -0.9 <= alpha <= -0.1 "
+                  "for edge enhancement.  You specified %f",
+                  cmdlineP->alpha);
+
+    if (cmdlineP->radius < 1.0/3 || cmdlineP->radius > 1.0)
+        pm_error("Radius must be in range 1/3 <= radius <= 1. "
+                 "You specified %f", cmdlineP->radius);
+
+    if (argc-1 < 3)
+        cmdlineP->inputFileName = "-";
+    else
+        cmdlineP->inputFileName = argv[3];
+
+    if (argc-1 > 3)
+        pm_error("Too many arguments: %u.  The most allowed are 3: alpha, "
+                 "radius, and file name", argc-1);
+}
+
+
 /* MXIVAL is the maximum input sample value we can handle.
    It is limited by our willingness to allocate storage in various arrays
    that are indexed by sample values.
@@ -756,7 +813,7 @@ atfilt5(int *p) {
 
 
 static void 
-do_one_frame(FILE *ifp) {
+do_one_frame(FILE * const ifP) {
 
     pnm_writepnminit( stdout, cols, rows, omaxval, oformat, 0 );
     
@@ -770,12 +827,12 @@ do_one_frame(FILE *ifp) {
 
             if (row == 0) {
                 irow0 = irow1;
-                pnm_readpnmrow( ifp, irow1, cols, maxval, format );
+                pnm_readpnmrow( ifP, irow1, cols, maxval, format );
             }
             if (row == (rows-1))
                 irow2 = irow1;
             else
-                pnm_readpnmrow( ifp, irow2, cols, maxval, format );
+                pnm_readpnmrow( ifP, irow2, cols, maxval, format );
 
             for (col = cols-1,po= col>0?1:0,no=0,
                      ip0=irow0,ip1=irow1,ip2=irow2,op=orow;
@@ -846,7 +903,7 @@ do_one_frame(FILE *ifp) {
 
             if (row == 0) {
                 irow0 = irow1;
-                pnm_readpnmrow( ifp, irow1, cols, maxval, format );
+                pnm_readpnmrow( ifP, irow1, cols, maxval, format );
                 if ( promote )
                     pnm_promoteformatrow( irow1, cols, maxval, 
                                           format, maxval, oformat );
@@ -854,7 +911,7 @@ do_one_frame(FILE *ifp) {
             if (row == (rows-1))
                 irow2 = irow1;
             else {
-                pnm_readpnmrow( ifp, irow2, cols, maxval, format );
+                pnm_readpnmrow( ifP, irow2, cols, maxval, format );
                 if ( promote )
                     pnm_promoteformatrow( irow2, cols, maxval, 
                                           format, maxval, oformat );
@@ -932,44 +989,18 @@ int (*atfuncs[6]) (int *) = {atfilt0,atfilt1,atfilt2,atfilt3,atfilt4,atfilt5};
 int
 main(int argc, char *argv[]) {
 
-    FILE * ifp;
+    FILE * ifP;
+    struct cmdlineInfo cmdline;
 	bool eof;  /* We've hit the end of the input stream */
     unsigned int imageSeq;  /* Sequence number of image, starting from 0 */
 
-    const char* const usage = "alpha radius pnmfile\n"
-        "0.0 <= alpha <= 0.5 for alpha trimmed mean -or- \n"
-        "1.0 <= alpha <= 2.0 for optimal estimation -or- \n"
-        "-0.1 >= alpha >= -0.9 for edge enhancement\n"
-        "0.3333 <= radius <= 1.0 specify effective radius\n";
+    pnm_init(&argc, argv);
 
-    pnm_init( &argc, argv );
+    parseCommandLine(argc, argv, &cmdline);
 
-    if ( argc < 3 || argc > 4 )
-        pm_usage( usage );
+    ifP = pm_openr(cmdline.inputFileName);
 
-    if ( sscanf( argv[1], "%lf", &alpha ) != 1 )
-        pm_usage( usage );
-    if ( sscanf( argv[2], "%lf", &radius ) != 1 )
-        pm_usage( usage );
-        
-    if ((alpha > -0.1 && alpha < 0.0) || (alpha > 0.5 && alpha < 1.0))
-        pm_error( "Alpha must be in range 0.0 <= alpha <= 0.5 "
-                  "for alpha trimmed mean" );
-    if (alpha > 2.0)
-        pm_error( "Alpha must be in range 1.0 <= alpha <= 2.0 "
-                  "for optimal estimation" );
-    if (alpha < -0.9 || (alpha > -0.1 && alpha < 0.0))
-        pm_error( "Alpha must be in range -0.9 <= alpha <= -0.1 "
-                  "for edge enhancement" );
-    if (radius < 0.333 || radius > 1.0)
-        pm_error( "Radius must be in range 0.333333333 <= radius <= 1.0" );
-
-    if ( argc == 4 )
-        ifp = pm_openr( argv[3] );
-    else
-        ifp = stdin;
-        
-    pnm_readpnminit( ifp, &cols, &rows, &maxval, &format );
+    pnm_readpnminit(ifP, &cols, &rows, &maxval, &format);
         
     if (maxval > MXIVAL) 
         pm_error("The maxval of the input image (%d) is too large.\n"
@@ -983,9 +1014,9 @@ main(int argc, char *argv[]) {
     atfunc = atfuncs[atfilt_setup(alpha, radius,
                                   (double)omaxval/(double)maxval)];
 
-    if ( oformat < PGM_TYPE ) {
+    if (oformat < PGM_TYPE) {
         oformat = RPGM_FORMAT;
-        pm_message( "promoting file to PGM" );
+        pm_message("promoting file to PGM");
     }
 
     orow = pnm_allocrow(cols);
@@ -999,8 +1030,12 @@ main(int argc, char *argv[]) {
     eof = FALSE;  /* We're already in the middle of the first image */
     imageSeq = 0;
     while (!eof) {
-        do_one_frame(ifp);
-        pm_nextimage(ifp, &eof);
+        /* Set the ugly global variables, until we can fix this */
+        alpha = cmdline.alpha;
+        radius = cmdline.radius;
+
+        do_one_frame(ifP);
+        pm_nextimage(ifP, &eof);
         if (!eof) {
             /* Read and validate header of next image */
             int imageCols, imageRows;
@@ -1008,7 +1043,7 @@ main(int argc, char *argv[]) {
             int imageFormat;
 
             ++imageSeq;
-            pnm_readpnminit(ifp, &imageCols, &imageRows, 
+            pnm_readpnminit(ifP, &imageCols, &imageRows, 
                             &imageMaxval, &imageFormat);
             verifySame(imageSeq,
                        imageCols, imageRows, imageMaxval, imageFormat,
@@ -1020,9 +1055,7 @@ main(int argc, char *argv[]) {
     pnm_freerow(irow1);
     pnm_freerow(irow2);
     pnm_freerow(orow);
-    pm_close(ifp);
+    pm_close(ifP);
 
     return 0;
 }
-
-
