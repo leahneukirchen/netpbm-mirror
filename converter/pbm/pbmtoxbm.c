@@ -1,4 +1,4 @@
-/* pbmtoxbm.c - read a portable bitmap and produce an X11 bitmap file
+/* pbmtoxbm.c - read a PBM image and produce an X11/X10 bitmap file
 **
 ** Copyright (C) 1988 by Jef Poskanzer.
 **
@@ -10,17 +10,113 @@
 ** implied warranty.
 */
 
+/* 2006.10 (afu)   
+   Changed bitrow from plain to raw, read function from pbm_readpbmrow() to
+   pbm_readpbmrow_packed().  Retired bitwise transformation functions.
+ 
+   Output function putitem rewritten to handle both X10 and X11.
+
+   Added -name option.  There is no check for the string thus given.
+
+*/
+
 #define _BSD_SOURCE 1      /* Make sure strdup() is in string.h */
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 
 #include <string.h>
 
 #include "pbm.h"
+#include "shhopt.h"
+#include "mallocvar.h"
+#include "bitreverse.h"
 #include "nstring.h"
 
 
+enum xbmVersion { X10, X11 };
+
+struct cmdlineInfo {
+    /* All the information the user supplied in the command line,
+       in a form easy for the program to use.
+    */
+    const char *    inputFileName;
+    const char *    name;
+    enum xbmVersion xbmVersion;
+};
+
 static void
-generateName(char const filenameArg[], const char ** const nameP) {
+parseCommandLine(int                 argc, 
+                 char **             argv,
+                 struct cmdlineInfo *cmdlineP ) {
+/*----------------------------------------------------------------------------
+   Parse program command line described in Unix standard form by argc
+   and argv.  Return the information in the options as *cmdlineP.  
+
+   If command line is internally inconsistent (invalid options, etc.),
+   issue error message to stderr and abort program.
+
+   Note that the strings we return are stored in the storage that
+   was passed to us as the argv array.  We also trash *argv.
+-----------------------------------------------------------------------------*/
+    optEntry *option_def;
+    /* Instructions to optParseOptions3 on how to parse our options. */
+
+    optStruct3 opt;
+    unsigned int option_def_index;
+    unsigned int x10, x11, nameSpec;
+    MALLOCARRAY_NOFAIL(option_def, 100);
+
+    option_def_index = 0;   /* incremented by OPTENT3 */
+
+    OPTENT3(0, "name", OPT_STRING, &cmdlineP->name, &nameSpec, 0);
+    OPTENT3(0, "x10" , OPT_FLAG,   NULL, &x10, 0);
+    OPTENT3(0, "x11" , OPT_FLAG,   NULL, &x11, 0);
+
+    opt.opt_table = option_def;
+    opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
+
+    optParseOptions3( &argc, argv, opt, sizeof(opt), 0);
+        /* Uses and sets argc, argv, and some of *cmdlineP and others. */
+
+    if (!nameSpec)
+        cmdlineP->name = NULL;
+    else if (strlen(cmdlineP->name) > 56)
+        pm_error("Image name too long: %d chars. (max 56)",
+                 strlen(cmdlineP->name));
+    else if (!ISALPHA(cmdlineP->name[0]) && cmdlineP->name[0] !='_')
+        pm_error("Image name '%s' starts with non-alphabet character.",
+                  cmdlineP->name);
+    else {
+        unsigned int i;
+        for (i = 0 ; i < strlen(cmdlineP->name); ++i)
+            if (!ISALNUM(cmdlineP->name[i]) && cmdlineP->name[i] != '_')
+                pm_error("Image name '%s' contains invalid character (%c).",
+                         cmdlineP->name, cmdlineP->name[i]);
+    }
+    
+    if (x10 && x11)
+        pm_error("You can't specify both -x10 and -x11");
+    else if (x10)
+        cmdlineP->xbmVersion = X10;
+    else 
+        cmdlineP->xbmVersion = X11;
+        
+    if (argc-1 < 1) 
+        cmdlineP->inputFileName = "-";
+    else {
+        cmdlineP->inputFileName = argv[1];
+        
+        if (argc-1 > 1)
+            pm_error("Program takes zero or one argument (filename).  You "
+                     "specified %u", argc-1);
+    }
+}
+
+
+
+static void
+generateName(char          const filenameArg[],
+             const char ** const nameP) {
 /*----------------------------------------------------------------------------
    Generate a name for the image to put in the bitmap file.  Derive it from
    the filename argument filenameArg[] and return it as a null-terminated
@@ -67,99 +163,235 @@ generateName(char const filenameArg[], const char ** const nameP) {
 
 
 
-int
-main(int argc, char * argv[]) {
+static unsigned short int itemBuff[22];
+static int itemCnt;    /* takes values 0 to 15 (x11) or 21 (x10) */
+static enum xbmVersion itemVersion;
 
-    FILE* ifp;
-    bit* bitrow;
+
+
+static void
+putitemX10(unsigned char const item) {
+
+    if (itemCnt == 22) {
+        /* Buffer is full.  Write out one line. */
+        int rc;
+        rc = printf(" 0x%02x%02x,0x%02x%02x,0x%02x%02x,0x%02x%02x,"
+                    "0x%02x%02x,0x%02x%02x,0x%02x%02x,0x%02x%02x,"
+                    "0x%02x%02x,0x%02x%02x,0x%02x%02x,\n",
+                    itemBuff[ 1], itemBuff[ 0], itemBuff[ 3], itemBuff[ 2],
+                    itemBuff[ 5], itemBuff[ 4], itemBuff[ 7], itemBuff[ 6],
+                    itemBuff[ 9], itemBuff[ 8], itemBuff[11], itemBuff[10],
+                    itemBuff[13], itemBuff[12], itemBuff[15], itemBuff[14],
+                    itemBuff[17], itemBuff[16], itemBuff[19], itemBuff[18],
+                    itemBuff[21], itemBuff[20]
+            );
+
+        if (rc < 0)        
+            pm_error("Error writing X10 bitmap raster item.  "
+                     "printf() failed with errno %d (%s)",
+                     errno, strerror(errno));
+        
+        itemCnt = 0;
+    }
+    itemBuff[itemCnt++] = bitreverse[item];
+}
+
+
+
+static void
+putitemX11(unsigned char const item) {
+
+    if (itemCnt == 15 ) {
+        /* Buffer is full.  Write out one line. */
+        int rc;
+        rc = printf(" 0x%02x,0x%02x,0x%02x,0x%02x,"
+                    "0x%02x,0x%02x,0x%02x,0x%02x,"
+                    "0x%02x,0x%02x,0x%02x,0x%02x,"
+                    "0x%02x,0x%02x,0x%02x,\n",
+                    itemBuff[0], itemBuff[1], itemBuff[2], itemBuff[3],
+                    itemBuff[4], itemBuff[5], itemBuff[6], itemBuff[7],
+                    itemBuff[8], itemBuff[9], itemBuff[10],itemBuff[11],
+                    itemBuff[12],itemBuff[13],itemBuff[14]
+            );
+        if (rc < 0)        
+            pm_error("Error writing X11 bitmap raster item.  "
+                     "printf() failed with errno %d (%s)",
+                     errno, strerror(errno));
+        
+        itemCnt = 0;
+    }
+    itemBuff[itemCnt++] = bitreverse[item];
+}
+
+
+
+static void
+putitem(unsigned char const item) {
+
+    switch (itemVersion) {
+    case X10: putitemX10(item); break;
+    case X11: putitemX11(item); break;
+    }
+}
+
+
+
+static void
+puttermX10(void) {
+
+    unsigned int i;
+
+    for (i = 0; i < itemCnt; i += 2) {
+        int rc;
+
+        rc = printf("%s0x%02x%02x%s",
+                    (i == 0) ? " " : "",
+                    itemBuff[i+1],
+                    itemBuff[i], 
+                    (i == itemCnt - 2) ? "};\n" : ",");
+        if (rc < 0)        
+            pm_error("Error writing end of X10 bitmap raster.  "
+                     "printf() failed with errno %d (%s)",
+                     errno, strerror(errno));
+    }
+}
+
+
+
+static void
+puttermX11(void) {
+
+    unsigned int i;
+
+    for (i = 0; i < itemCnt; ++i) {
+        int rc;
+
+        rc = printf("%s0x%02x%s",
+                    (i == 0)  ? " " : "",
+                    itemBuff[i],
+                    (i == itemCnt - 1) ? "};\n" : ",");
+
+        if (rc < 0)        
+            pm_error("Error writing end of X11 bitmap raster.  "
+                     "printf() failed with errno %d (%s)",
+                     errno, strerror(errno));
+    }
+}
+
+
+
+static void
+putinit(enum xbmVersion const xbmVersion) {
+
+    itemCnt = 0;
+    itemVersion = xbmVersion;
+}
+
+
+
+static void
+putterm(void) {
+
+    switch (itemVersion) {
+    case X10: puttermX10(); break;
+    case X11: puttermX11(); break;
+    }
+}
+
+
+
+static void
+writeXbmHeader(enum xbmVersion const xbmVersion,
+               const char *    const name,
+               unsigned int    const width,
+               unsigned int    const height,
+               FILE *          const ofP) {
+
+    printf("#define %s_width %d\n", name, width);
+    printf("#define %s_height %d\n", name, height);
+    printf("static %s %s_bits[] = {\n",
+           xbmVersion == X10 ? "short" : "char",
+           name);
+}
+
+
+
+static void
+convertRaster(FILE *          const ifP,
+              unsigned int    const cols,
+              unsigned int    const rows,
+              int             const format,
+              FILE *          const ofP,
+              enum xbmVersion const xbmVersion) {
+              
+    unsigned int const bitsPerUnit = xbmVersion == X10 ? 16 : 8;   
+    unsigned int const padright =
+        ((cols + bitsPerUnit - 1 ) / bitsPerUnit) * bitsPerUnit - cols;
+        /* Amount of padding to round cols up to the nearest multiple of 
+           8 (if x11) or 16 (if x10).
+        */
+    unsigned int const bitrowBytes = (cols + padright) / 8;
+
+    unsigned char * bitrow;
+    unsigned int row;
+
+    putinit(xbmVersion);
+
+    bitrow = pbm_allocrow(cols + padright);
+    bitrow[bitrowBytes-1] = 0;
+    
+    for (row = 0; row < rows; ++row) {
+        int const bitrowInBytes = pbm_packed_bytes(cols);
+        int const padrightIn    = bitrowInBytes * 8 - cols;
+
+        unsigned int i;
+
+        pbm_readpbmrow_packed(ifP, bitrow, cols, format);
+
+        if (padrightIn > 0) {
+            bitrow[bitrowInBytes - 1] >>= padrightIn;
+            bitrow[bitrowInBytes - 1] <<= padrightIn;
+        }
+
+        for (i = 0; i < bitrowBytes; ++i)
+            putitem(bitrow[i]);
+    }
+
+    putterm();
+
+    pbm_freerow(bitrow);
+}
+
+
+
+int
+main(int    argc,
+     char * argv[]) {
+
+    struct cmdlineInfo cmdline; 
+    FILE * ifP;
     int rows, cols, format;
-    int padright;
-    int row;
-    const char * inputFilename;
-    const char *name;
-    int itemsperline;
-    int bitsperitem;
-    int item;
-    int firstitem;
-    const char hexchar[] = "0123456789abcdef";
+    const char * name;
 
     pbm_init(&argc, argv);
 
-    if (argc-1 > 1)
-        pm_error("Too many arguments (%d).  The only valid argument is an "
-                 "input file name.", argc-1);
-    else if (argc-1 == 1) 
-        inputFilename = argv[1];
+    parseCommandLine(argc, argv, &cmdline);
+    if (cmdline.name == NULL) 
+        generateName(cmdline.inputFileName, &name);
     else
-        inputFilename = "-";
+        name = strdup(cmdline.name);
 
-    generateName(inputFilename, &name);
-    ifp = pm_openr(inputFilename);
+    ifP = pm_openr(cmdline.inputFileName);
     
-    pbm_readpbminit(ifp, &cols, &rows, &format);
-    bitrow = pbm_allocrow(cols);
+    pbm_readpbminit(ifP, &cols, &rows, &format);
     
-    /* Compute padding to round cols up to the nearest multiple of 8. */
-    padright = ((cols + 7)/8) * 8 - cols;
+    writeXbmHeader(cmdline.xbmVersion, name, cols, rows, stdout);
 
-    printf("#define %s_width %d\n", name, cols);
-    printf("#define %s_height %d\n", name, rows);
-    printf("static char %s_bits[] = {\n", name);
-
-    itemsperline = 0;
-    bitsperitem = 0;
-    item = 0;
-    firstitem = 1;
-
-#define PUTITEM \
-    { \
-    if ( firstitem ) \
-        firstitem = 0; \
-    else \
-        putchar( ',' ); \
-    if ( itemsperline == 15 ) \
-        { \
-        putchar( '\n' ); \
-        itemsperline = 0; \
-        } \
-    if ( itemsperline == 0 ) \
-        putchar( ' ' ); \
-    ++itemsperline; \
-    putchar('0'); \
-    putchar('x'); \
-    putchar(hexchar[item >> 4]); \
-    putchar(hexchar[item & 15]); \
-    bitsperitem = 0; \
-    item = 0; \
-    }
-
-#define PUTBIT(b) \
-    { \
-    if ( bitsperitem == 8 ) \
-        PUTITEM; \
-    if ( (b) == PBM_BLACK ) \
-        item += 1 << bitsperitem; \
-    ++bitsperitem; \
-    }
-
-    for (row = 0; row < rows; ++row) {
-        int col;
-        pbm_readpbmrow(ifp, bitrow, cols, format);
-        for (col = 0; col < cols; ++col)
-            PUTBIT(bitrow[col]);
-        for (col = 0; col < padright; ++col)
-            PUTBIT(0);
-    }
-
-    pm_close(ifp);
-
-    if (bitsperitem > 0)
-        PUTITEM;
-    printf("};\n");
-
-    pbm_freerow(bitrow);
+    convertRaster(ifP, cols, rows, format, stdout, cmdline.xbmVersion);
 
     strfree(name);
+    pm_close(ifP);
 
-    exit(0);
+    return 0;
 }
+
