@@ -17,7 +17,7 @@ PORTBINARIES =	atktopbm brushtopbm cmuwmtopbm ddbugtopbm g3topbm escp2topbm \
 		pbmtomacp pbmtomatrixorbital pbmtomda pbmtomgr pbmtomrf \
 		pbmtonokia \
 		pbmtopi3 pbmtoplot pbmtopsg3 pbmtoptx pbmtowbmp \
-		pbmtox10bm pbmtoxbm pbmtoybm pbmtozinc \
+		pbmtoxbm pbmtoybm pbmtozinc \
 		pi3topbm pktopbm \
 		wbmptopbm xbmtopbm ybmtopbm	
 
@@ -29,7 +29,7 @@ endif
 #in libm?
 MATHBINARIES =	pbmtopk
 BINARIES =	$(PORTBINARIES) $(MATHBINARIES)
-SCRIPTS =
+SCRIPTS =       pbmtox10bm
 
 OBJECTS = $(BINARIES:%=%.o)
 
