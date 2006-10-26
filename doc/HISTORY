@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+06.10.26 BJH  Release 10.35.11
+
+              pnm_readpaminit(): Don't crash if width == 0.
+
 06.10.22 BJH  Release 10.35.10
 
               ppmtompeg: fix reading of GOP files.  Thanks Alun Jones.
