@@ -90,7 +90,7 @@ validateComputableSize(struct pam * const pamP) {
 
     if (depth > INT_MAX/sizeof(sample))
         pm_error("image depth (%u) too large to be processed", depth);
-    else if (depth * sizeof(sample) > INT_MAX/pamP->width)
+    else if (pamP->width > 0 && depth * sizeof(sample) > INT_MAX/pamP->width)
         pm_error("image width and depth (%u, %u) too large "
                  "to be processed.", pamP->width, depth);
     else if (pamP->width * (depth * sizeof(sample)) >
