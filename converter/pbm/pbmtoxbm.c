@@ -337,7 +337,7 @@ convertRaster(FILE *          const ifP,
 
     putinit(xbmVersion);
 
-    bitrow = pbm_allocrow(cols + padright);
+    bitrow = pbm_allocrow_packed(cols + padright);
     bitrow[bitrowBytes-1] = 0;
     
     for (row = 0; row < rows; ++row) {
