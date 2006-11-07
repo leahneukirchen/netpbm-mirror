@@ -15,6 +15,8 @@
 */
 
 #include <byteswap.h>  /* See note above on bswap_64 */
+
+#include "pm.h"
  
 typedef uint64_t wordint;
 typedef unsigned char wordintBytes[sizeof(wordint)];

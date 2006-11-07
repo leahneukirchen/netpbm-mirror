@@ -15,6 +15,8 @@ typedef unsigned char wordintBytes[sizeof(wordint)];
 #include <sys/types.h>
 #include <netinet/in.h>
 
+#include "pm.h"
+
 /*
   Here we use the more widely used functions htonl and ntohl instead of
   bswap_32.  This makes possible the handling of weird byte ordering
