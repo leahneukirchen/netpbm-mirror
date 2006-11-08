@@ -62,7 +62,6 @@ parseCommandLine(int argc, char ** const argv,
         if (cmdlineP->threshold > 1.0)
             pm_error("-threshold greater than unity doesn't make sense.  "
                      "You specified %f", cmdlineP->threshold);
-        
     } else
         cmdlineP->threshold = 0.0;
 
