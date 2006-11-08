@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+06.11.08 BJH  Release 10.36.07
+
+              Build: remove unnecessary limit of 200 characters on
+              argument length in Libopt.
+
 06.10.26 BJH  Release 10.36.06
 
               pnm_readpaminit(): Don't crash if width == 0.

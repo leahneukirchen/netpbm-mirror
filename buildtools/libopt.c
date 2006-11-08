@@ -351,6 +351,8 @@ parse_filename(const char *  const filename,
     }
 }   
 
+
+
 static void
 parse_filepath(const char *  const filepath,
                const char ** const directory_p, 
@@ -453,9 +455,9 @@ processOneLibrary(const char *  const filepath,
    linker option string as a newly malloced null-terminated string at
    *optionsP.
 -----------------------------------------------------------------------------*/
-    const char *directory;
+    const char * directory;
         /* Directory component of 'filepath' */
-    const char *filename;
+    const char * filename;
         /* Filename component of 'filepath' */
 
     parse_filepath(filepath, &directory, &filename, errorP);
@@ -510,22 +512,18 @@ main(int argc, char **argv) {
         else if (strcmp(argv[arg], "-quiet") == 0)
             quiet = TRUE;
         else {
-            if (strlen(argv[arg]) > 200)
-                error = TRUE;
-            else {
-                const char * options;
-                processOneLibrary(argv[arg], runtime, explicit, 
-                                  &options, &error);
-                if (!error) {
-                    if (strlen(outputLine) + strlen(options) + 1 + 1 > 
-                        sizeof(outputLine))
-                        error = TRUE;
-                    else {
-                        strcat(outputLine, " ");
-                        strcat(outputLine, options);
-                    }
-                    strfree(options);
+            const char * options;
+            processOneLibrary(argv[arg], runtime, explicit, 
+                              &options, &error);
+            if (!error) {
+                if (strlen(outputLine) + strlen(options) + 1 + 1 > 
+                    sizeof(outputLine))
+                    error = TRUE;
+                else {
+                    strcat(outputLine, " ");
+                    strcat(outputLine, options);
                 }
+                strfree(options);
             }
         }
     }
