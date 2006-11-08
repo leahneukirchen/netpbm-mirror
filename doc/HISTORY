@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.37.0
 
+              Build: remove unnecessary limit of 200 characters on
+              argument length in Libopt.
+
               pbmtoxbm: add -name option.
               Thanks Prophet of the Way <afu@wta.att.ne.jp>.
 
