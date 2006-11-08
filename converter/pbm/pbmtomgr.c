@@ -1,22 +1,9 @@
 /* pbmtomgr.c - read a PBM image and produce a MGR bitmap
-**
-** Copyright (C) 1989 by Jef Poskanzer.
-**
-** Permission to use, copy, modify, and distribute this software and its
-** documentation for any purpose and without fee is hereby granted, provided
-** that the above copyright notice appear in all copies and that both that
-** copyright notice and this permission notice appear in supporting
-** documentation.  This software is provided "as is" without express or
-** implied warranty.
-*/
 
-/* 2006.10 (afu)
-   Changed bitrow from plain to raw, read function from pbm_readpbmrow() to
-   pbm_readpbmrow_packed(), write function from putc() to fwrite().
+   Copyright information is at end of file.
 
-   Retired bitwise transformation functions.
-   
-   Produces only new style bitmap (8 bit padding.)  See mgrtopbm.c .
+   You can find MGR and some MGR format test images at
+   ftp://sunsite.unc.edu/pub/Linux/apps/MGR/!INDEX.html
 */
 
 #include "pbm.h"
@@ -103,3 +90,25 @@ main(int argc,
     pm_close(ifP);
     return 0;
 }
+
+
+
+/* 2006.10 (afu)
+   Changed bitrow from plain to raw, read function from pbm_readpbmrow() to
+   pbm_readpbmrow_packed(), write function from putc() to fwrite().
+
+   Retired bitwise transformation functions.
+   
+   Produces only new style bitmap (8 bit padding.)  See mgrtopbm.c .
+*/
+
+/*
+** Copyright (C) 1989 by Jef Poskanzer.
+**
+** Permission to use, copy, modify, and distribute this software and its
+** documentation for any purpose and without fee is hereby granted, provided
+** that the above copyright notice appear in all copies and that both that
+** copyright notice and this permission notice appear in supporting
+** documentation.  This software is provided "as is" without express or
+** implied warranty.
+*/

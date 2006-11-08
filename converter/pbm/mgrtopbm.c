@@ -1,22 +1,10 @@
 /* mgrtopbm.c - read a MGR bitmap and produce a PBM image.
-**
-** Copyright (C) 1989 by Jef Poskanzer.
-**
-** Permission to use, copy, modify, and distribute this software and its
-** documentation for any purpose and without fee is hereby granted, provided
-** that the above copyright notice appear in all copies and that both that
-** copyright notice and this permission notice appear in supporting
-** documentation.  This software is provided "as is" without express or
-** implied warranty.
-*/
 
-/* 2006.10 (afu)
-   Changed bitrow from plain to raw, read function from getc() to fread(),
-   write function from pbm_writepbmrow() to pbm_writepbmrow_packed().
-   Retired bitwise transformation functions.
-   
-   NOT tested for old-style format files.  Only one zz file in mgrsrc-0.69 .
-  
+   Copyright information is at end of file.
+
+   You can find MGR and some MGR format test images at
+   ftp://sunsite.unc.edu/pub/Linux/apps/MGR/!INDEX.html
+
 */
 
 #include <string.h>
@@ -133,3 +121,26 @@ main(int    argc,
     pm_close(stdout);
     return 0;
 }
+
+
+
+/* 2006.10 (afu)
+   Changed bitrow from plain to raw, read function from getc() to fread(),
+   write function from pbm_writepbmrow() to pbm_writepbmrow_packed().
+   Retired bitwise transformation functions.
+   
+   NOT tested for old-style format files.  Only one zz file in mgrsrc-0.69 .
+  
+*/
+
+
+/*
+** Copyright (C) 1989 by Jef Poskanzer.
+**
+** Permission to use, copy, modify, and distribute this software and its
+** documentation for any purpose and without fee is hereby granted, provided
+** that the above copyright notice appear in all copies and that both that
+** copyright notice and this permission notice appear in supporting
+** documentation.  This software is provided "as is" without express or
+** implied warranty.
+*/
