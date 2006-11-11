@@ -11,8 +11,8 @@
   filename to be searched for in the linker's default search path, and
   generate a -l option, but no -L.
 
-  If an argument doesn't make sense as a library filespec, it is
-  copied verbatim, blank delimited, to the output string.
+  If an argument doesn't make sense as a library filespec, we copy
+  it verbatim, blank delimited, to the output string.
 
   The "lib" part of the library name, which we call the prefix, may be
   other than "lib".  The list of recognized values is compiled in as
@@ -52,11 +52,11 @@
 
      NETPBMLIB=../lib/libnetpbm.so
      ...
-     pbmmake: pbmmake.o $(PBMLIB)
-             ld -o pbmmake pbmmake.o `libopt $(PBMLIB)` --rpath=/lib/netpbm
+     pbmmake: pbmmake.o $(NETPBMLIB)
+             ld -o pbmmake pbmmake.o `libopt $(NETPBMLIB)` --rpath=/lib/netpbm
 
   Caveat: "-L../lib -lnetpbm" is NOT exactly the same as
-  "../pbm/libnetpbm.so" on any system.  All of the -l libraries are
+  "../lib/libnetpbm.so" on any system.  All of the -l libraries are
   searched for in all of the -L directories.  So you just might get a
   different library with the -L/-l version than if you specify the
   library file explicitly.
