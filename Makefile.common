@@ -271,24 +271,34 @@ endif
 #
 #   On IA32 Linux, at least, GNU ld takes -rpath.  It also has a -R option,
 #   but it is something else.
+#
+#   Alan Fry and Snowcrash demonstrated in 2006.11 that neither -rpath
+#   nor -R are recognized options on Mac OS X 'ld'.
+#
+#   http://developer.apple.com/releasenotes/DeveloperTools/RN-dyld/index.html
+#   says that on Mac OS X, libraries aren't searched for in directories,
+#   but rather specified by full name, so that rpath doesn't make any
+#   sense.  On Mac OS X, you use -install_name when you linkedit shared
+#   library S to give the complete installed name of S.  This goes into
+#   S so that when something linkedits with S, the complete installed
+#   name of S goes into the object that uses S.
 
-ifneq ($(NETPBMLIB_RUNTIME_PATH)x,x)
-  ifeq ($(LINKERISCOMPILER),Y)
-    # Before Netpbm 10.14 (March 2003), it looks like we used -R
-    # instead of -Wl,-rpath on all but a few selected platforms as configured
-    # by Configure.  But that doesn't make sense, because we also used
-    # LD=$(CC) always.  Beebe's notes and Saunders' observation above
-    # above indicate that we need
-    # -Wl,... everywhere that a compiler is used, whether native or GNU, 
-    # to link.
-    RPATH = -Wl,$(RPATHOPTNAME),$(NETPBMLIB_RUNTIME_PATH)
-  else
-    RPATH = $(RPATHOPTNAME)$(NETPBMLIB_RUNTIME_PATH)
+ifeq ($(NEED_RUNTIME_PATH),Y)
+  ifneq ($(NETPBMLIB_RUNTIME_PATH)x,x)
+    ifeq ($(LINKERISCOMPILER),Y)
+      # Before Netpbm 10.14 (March 2003), it looks like we used -R
+      # instead of -Wl,-rpath on all but a few selected platforms as configured
+      # by Configure.  But that doesn't make sense, because we also used
+      # LD=$(CC) always.  Beebe's notes and Saunders' observation above
+      # above indicate that we need
+      # -Wl,... everywhere that a compiler is used, whether native or GNU, 
+      # to link.
+      RPATH = -Wl,$(RPATHOPTNAME),$(NETPBMLIB_RUNTIME_PATH)
+    else
+      RPATH = $(RPATHOPTNAME)$(NETPBMLIB_RUNTIME_PATH)
+    endif
   endif
-else
-  RPATH =
 endif
-
 # Rules for conventional single-object file executables
 
 # Before Netpbm 10.21 (March 2004), we kept separate lists of binaries

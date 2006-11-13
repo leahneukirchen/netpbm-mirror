@@ -311,12 +311,19 @@ execLdconfig() {
 
 
 
+sub ldconfigExists() {
+
+    return (system("ldconfig -? 2>/dev/null") >> 8) != 127;
+}
+
+
+
 sub
 doLdconfig() {
 #-----------------------------------------------------------------------------
 #  Run Ldconfig where appropriate.
 #-----------------------------------------------------------------------------
-    if ($OSNAME eq "linux" || system("ldconfig -? 2>/dev/null") != 127) {
+    if ($OSNAME eq "linux" || ldconfigExists()) {
         # This is a system where Ldconfig makes sense
 
         print("In order for the Netpbm shared library to be found when " .
