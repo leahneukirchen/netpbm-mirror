@@ -4,9 +4,13 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+06.11.13 BJH  Release 10.35.15
+
+              Configure: fix default for X library location.
+
 06.11.13 BJH  Release 10.35.14
 
-              Configure: fix libX11 location default.
+              Configure: fix default for X library location.
 
 06.11.13 BJH  Release 10.35.13
 
