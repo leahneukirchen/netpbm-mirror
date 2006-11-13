@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+06.11.13 BJH  Release 10.35.14
+
+              Configure: fix libX11 location default.
+
 06.11.13 BJH  Release 10.35.13
 
               Build: fix Darwin build.
