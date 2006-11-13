@@ -8,6 +8,8 @@ not yet  BJH  Release 10.37.0
 
               Build: fix Darwin build.
 
+              Configure: fix default for X library location.
+
               Build: remove unnecessary limit of 200 characters on
               argument length in Libopt.
 
