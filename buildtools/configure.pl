@@ -584,10 +584,12 @@ sub libSuffix($) {
 #-----------------------------------------------------------------------------
     my $suffix;
 
-    if ($platform eq "windows") {
-        $suffix = ".a";
+    if ($platform eq 'windows') {
+        $suffix = '.a';
+    } elsif ($platform= 'darwin') {
+        $suffix = '.dylib';
     } else {
-        $suffix = ".so";
+        $suffix = '.so';
     }
 }
 
@@ -1001,6 +1003,8 @@ sub getX11Library($@) {
             $default = '/usr/link/X11/libX11' . libSuffix($platform);
         } elsif (-d('/usr/lib/X11')) {
             $default = '/usr/lib/libX11' . libSuffix($platform);
+        } elsif (-d('/usr/X11R6')) {
+            $default = '/usr/X11R6/lib/libX11' . libSuffix($platform);
         } else {
             $default = "libX11" . libSuffix($platform);
         }
@@ -1976,7 +1980,7 @@ if ($platform eq "GNU") {
     push(@Makefile_config, 'CFLAGS_SHLIB = -fno-common', "\n");
     push(@Makefile_config, "LDSHLIB = ",
          "-dynamiclib ",
-         '-install_name $(NETPBM_RUNTIME_PATH)/libnetpbm.$(MAJ).dylib', 
+         '-install_name $(NETPBMLIB_RUNTIME_PATH)/libnetpbm.$(MAJ).dylib', 
          "\n");
 #    push(@Makefile_config, "INSTALL = install\n");
 } else {

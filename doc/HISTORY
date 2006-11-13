@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+06.11.13 BJH  Release 10.35.13
+
+              Build: fix Darwin build.
+
 06.11.08 BJH  Release 10.35.12
 
               Build: remove unnecessary limit of 200 characters on
