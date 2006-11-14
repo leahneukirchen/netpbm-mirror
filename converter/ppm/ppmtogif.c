@@ -383,7 +383,7 @@ ppm_seek(FILE *             const fileP,
                  "Valid sizes are %u and %u", 
                  rasterPosSize, sizeof(pm_filepos), sizeof(long));
 
-    pixelPos = rasterPos + row * cols * bytesPerSample(maxval) + col;
+    pixelPos = rasterPos + row * cols * 3 * bytesPerSample(maxval) + col;
 
     pm_seek2(fileP, &pixelPos, sizeof(pixelPos));
 }

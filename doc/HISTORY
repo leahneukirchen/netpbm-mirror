@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+06.11.14 BJH  Release 10.35.16
+
+              ppmtogif: fix garbage output with -interlace.
+
 06.11.13 BJH  Release 10.35.15
 
               Configure: fix default for X library location.
