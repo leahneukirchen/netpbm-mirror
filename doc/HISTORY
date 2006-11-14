@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.37.0
 
+              ppmtogif: fix garbage output with -interlace.
+
               Build: fix Darwin build.
 
               Configure: fix default for X library location.
@@ -342,8 +344,6 @@ not yet  BJH  Release 10.37.0
 
               pamstereogram: Fix crippling bugs.  Thanks Scott Pakin
               <scott@pakin.org>.
-
-              giftopnm: Fix bug with interlaced GIF < 5 rows.
 
               giftopnm: Handle case of a clear code at the end of a block.
 
