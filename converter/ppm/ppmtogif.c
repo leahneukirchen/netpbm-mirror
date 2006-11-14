@@ -370,7 +370,16 @@ ppm_seek(FILE *             const fileP,
          pixval             const maxval,
          unsigned int       const col,
          unsigned int       const row) {
+/*----------------------------------------------------------------------------
+   Seek to Row 'row', Column 'col' of the raster of the PPM image on
+   file *fileP.
 
+   Assume the image has 'cols' columns and maxval 'maxval' and that
+   its raster begins at file position *rasterPosP.  'rasterPosSize' is
+   how many bytes wide *rasterPosP is, since Caller may have a different
+   idea of type pm_filepos than we have.
+-----------------------------------------------------------------------------*/
+    unsigned int const depth = 3;  /* PPM has 3 samples per pixel */
     pm_filepos rasterPos;
     pm_filepos pixelPos;
 
@@ -383,7 +392,7 @@ ppm_seek(FILE *             const fileP,
                  "Valid sizes are %u and %u", 
                  rasterPosSize, sizeof(pm_filepos), sizeof(long));
 
-    pixelPos = rasterPos + row * cols * bytesPerSample(maxval) + col;
+    pixelPos = rasterPos + row * cols * depth * bytesPerSample(maxval) + col;
 
     pm_seek2(fileP, &pixelPos, sizeof(pixelPos));
 }
@@ -451,8 +460,8 @@ pixelReaderGotoNextInterlaceRow(pixelReader * const rdrP) {
             break;
         }
     }
-    /* Now that we know which row should be current, get its
-       pixels into the buffer.
+    /* Now that we know which row should be current, position the file
+       there (so that the next ppm_readppmrow() reads that row).
     */
     ppm_seek(rdrP->fileP, &rdrP->rasterPos, sizeof(rdrP->rasterPos),
              rdrP->width, rdrP->maxval, 0, rdrP->next.row);
