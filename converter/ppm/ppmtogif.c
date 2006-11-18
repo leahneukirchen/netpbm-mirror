@@ -67,7 +67,7 @@ struct cmap {
            is at position i in the unsorted colormap.  permi[] is the inverse
            function of perm[].
         */
-    unsigned int cmapsize;
+    int cmapsize;
         /* Number of entries in the GIF colormap.  I.e. number of colors
            in the image, plus possibly one fake transparency color.
         */
@@ -87,15 +87,15 @@ struct cmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *input_filespec; /* Filespec of input file */
-    const char *alpha_filespec; /* Filespec of alpha file; NULL if none */
-    const char *alphacolor;     /* -alphacolor option value or default */
-    unsigned int interlace;     /* -interlace option value */
-    unsigned int sort;          /* -sort option value */
+    const char *input_filespec;  /* Filespec of input file */
+    const char *alpha_filespec;  /* Filespec of alpha file; NULL if none */
+    const char *alphacolor;      /* -alphacolor option value or default */
+    unsigned int interlace; /* -interlace option value */
+    unsigned int sort;     /* -sort option value */
     const char *mapfile;        /* -mapfile option value.  NULL if none. */
     const char *transparent;    /* -transparent option value.  NULL if none. */
     const char *comment;        /* -comment option value; NULL if none */
-    unsigned int nolzw;         /* -nolzw option */
+    unsigned int nolzw;    /* -nolzw option */
     unsigned int verbose;
 };
 
@@ -122,8 +122,8 @@ handleLatex2htmlHack(void) {
   -Bryan 2001.11.14
 -----------------------------------------------------------------------------*/
      pm_error("latex2html, you should just try the -interlace and "
-              "-transparent options to see if they work instead of "
-              "expecting a 'usage' message from -h");
+             "-transparent options to see if they work instead of "
+             "expecting a 'usage' message from -h");
 }
 
 
@@ -255,295 +255,190 @@ closestcolor(pixel         const color,
 enum pass {MULT8PLUS0, MULT8PLUS4, MULT4PLUS2, MULT2PLUS1};
 
 
-typedef struct {
-    FILE * fileP;
-        /* The PPM file stream from which pixels come.  The position
-           of this file is also part of the state of this pixelReader.
-        */
+struct pixelCursor {
     unsigned int width;
         /* Width of the image, in columns */
     unsigned int height;
         /* Height of the image, in rows */
-    pixval maxval;
-    int format;
-    pm_filepos rasterPos;
-        /* Position in file fileP of the start of the raster */
     bool interlace;
         /* We're accessing the image in interlace fashion */
     unsigned int nPixelsLeft;
-        /* Number of pixels we have left to read in the image */
-    pm_pixelcoord next;
-        /* Location of next pixel to read */
+        /* Number of pixels left to be read */
+    unsigned int curCol;
+        /* Location of pointed-to pixel, column */
+    unsigned int curRow;
+        /* Location of pointed-to pixel, row */
     enum pass pass;
         /* The interlace pass.  Undefined if !interlace */
-    pixel * curPixelRow;
-        /* The pixels of the current row (the one numbered in with pixel
-           'next' resides).
-           Dynamically allocated.
-        */
-} pixelReader;
+};
 
 
 
-static void
-pixelReaderReadCurrentRow(pixelReader * const rdrP) {
-
-    ppm_readppmrow(rdrP->fileP, rdrP->curPixelRow,
-                   rdrP->width, rdrP->maxval, rdrP->format);
-}
-
+static struct pixelCursor pixelCursor;
+    /* Current location in the input pixels.  */
 
 
 static void
-pixelReaderCreate(FILE *         const ifP,
-                  unsigned int   const width,
-                  unsigned int   const height,
-                  pixval         const maxval,
-                  int            const format,
-                  pm_filepos     const rasterPos,
-                  bool           const interlace,
-                  pixelReader ** const pixelReaderPP) {
+initPixelCursor(unsigned int const width,
+                unsigned int const height,
+                bool         const interlace) {
 
-    pixelReader * rdrP;
-
-    MALLOCVAR_NOFAIL(rdrP);
-
-    rdrP->fileP       = ifP;
-    rdrP->width       = width;
-    rdrP->height      = height;
-    rdrP->maxval      = maxval;
-    rdrP->format      = format;
-    rdrP->rasterPos   = rasterPos;
-    rdrP->interlace   = interlace;
-    rdrP->pass        = MULT8PLUS0;
-    rdrP->next.col    = 0;
-    rdrP->next.row    = 0;
-    rdrP->nPixelsLeft = width * height;
-
-    rdrP->curPixelRow = ppm_allocrow(width);
-
-    pm_seek2(rdrP->fileP, &rasterPos, sizeof(rasterPos));
-
-    pixelReaderReadCurrentRow(rdrP);
-
-    *pixelReaderPP = rdrP;
+    pixelCursor.width       = width;
+    pixelCursor.height      = height;
+    pixelCursor.interlace   = interlace;
+    pixelCursor.pass        = MULT8PLUS0;
+    pixelCursor.curCol      = 0;
+    pixelCursor.curRow      = 0;
+    pixelCursor.nPixelsLeft = width * height;
 }
 
 
 
 static void
-pixelReaderDestroy(pixelReader * const pixelReaderP) {
-
-    ppm_freerow(pixelReaderP->curPixelRow);
-
-    free(pixelReaderP);
-}
-
-
-
-static size_t
-bytesPerSample(pixval const maxval) {
-
-    return maxval < (1 << 16) ? 1 : 2;
-}
-
-
-
-/* TODO - move this to libnetpbm */
-
-
-
-void
-ppm_seek(FILE *             const fileP,
-         const pm_filepos * const rasterPosP,
-         size_t             const rasterPosSize,
-         unsigned int       const cols,
-         pixval             const maxval,
-         unsigned int       const col,
-         unsigned int       const row);
-
-void
-ppm_seek(FILE *             const fileP,
-         const pm_filepos * const rasterPosP,
-         size_t             const rasterPosSize,
-         unsigned int       const cols,
-         pixval             const maxval,
-         unsigned int       const col,
-         unsigned int       const row) {
-
-    pm_filepos rasterPos;
-    pm_filepos pixelPos;
-
-    if (rasterPosSize == sizeof(pm_filepos)) 
-        rasterPos = *rasterPosP;
-    else if (rasterPosSize == sizeof(long))
-        rasterPos = *(long*)rasterPosP;
-    else
-        pm_error("File position size passed to ppm_seek() is invalid: %u.  "
-                 "Valid sizes are %u and %u", 
-                 rasterPosSize, sizeof(pm_filepos), sizeof(long));
-
-    pixelPos = rasterPos + row * cols * 3 * bytesPerSample(maxval) + col;
-
-    pm_seek2(fileP, &pixelPos, sizeof(pixelPos));
-}
-
-
-
-
-static void
-pixelReaderGotoNextInterlaceRow(pixelReader * const rdrP) {
+getPixel(pixel **           const pixels,
+         pixval             const inputMaxval,
+         gray **            const alpha,
+         gray               const alphaThreshold, 
+         struct cmap *      const cmapP,
+         struct pixelCursor const pixelCursor,
+         int *              const retvalP) {
 /*----------------------------------------------------------------------------
-  Position reader to the next row in the interlace pattern.
-
-  Assume there is at least one more row to read.
+   Return as *retvalP the colormap index of the pixel at location
+   pointed to by 'pixelCursor' in the PPM raster 'pixels', using
+   colormap *cmapP.
 -----------------------------------------------------------------------------*/
-    assert(rdrP->nPixelsLeft >= rdrP->width);
+    unsigned int const x = pixelCursor.curCol;
+    unsigned int const y = pixelCursor.curRow;
 
+    int colorindex;
+
+    if (alpha && alpha[y][x] < alphaThreshold)
+        colorindex = cmapP->transparent;
+    else {
+        int presortColorindex;
+
+        presortColorindex = ppm_lookupcolor(cmapP->cht, &pixels[y][x]);
+        if (presortColorindex == -1)
+            presortColorindex = 
+                closestcolor(pixels[y][x], inputMaxval, cmapP);
+        colorindex = cmapP->perm[presortColorindex];
+    }
+    *retvalP = colorindex;
+}
+
+
+
+static void
+bumpRowInterlace(struct pixelCursor * const pixelCursorP) {
+/*----------------------------------------------------------------------------
+   Move *pixelCursorP to the next row in the interlace pattern.
+-----------------------------------------------------------------------------*/
     /* There are 4 passes:
-       MULT8PLUS0: Rows 0, 8, 16, 24, 32, etc.
+       MULT8PLUS0: Rows 8, 16, 24, 32, etc.
        MULT8PLUS4: Rows 4, 12, 20, 28, etc.
        MULT4PLUS2: Rows 2, 6, 10, 14, etc.
        MULT2PLUS1: Rows 1, 3, 5, 7, 9, etc.
     */
     
-    switch (rdrP->pass) {
+    switch (pixelCursorP->pass) {
     case MULT8PLUS0:
-        rdrP->next.row += 8;
+        pixelCursorP->curRow += 8;
         break;
     case MULT8PLUS4:
-        rdrP->next.row += 8;
+        pixelCursorP->curRow += 8;
         break;
     case MULT4PLUS2:
-        rdrP->next.row += 4;
+        pixelCursorP->curRow += 4;
         break;
     case MULT2PLUS1:
-        rdrP->next.row += 2;
+        pixelCursorP->curRow += 2;
         break;
     }
-
-    /* If we've finished a pass, next.row is now beyond the end of
-       the image.  In that case, we switch to the next pass now.
-
-       Note that if there are more than 4 rows, the sequence of passes
-       is sequential, but when there are fewer than 4, we may skip
-       e.g. from MULT8PLUS0 to MULT4PLUS2.
+    /* Set the proper pass for the next read.  Note that if there are
+       more than 4 rows, the sequence of passes is sequential, but
+       when there are fewer than 4, we may skip e.g. from MULT8PLUS0
+       to MULT4PLUS2.
     */
-    while (rdrP->next.row >= rdrP->height) {
-        switch (rdrP->pass) {
+    while (pixelCursorP->curRow >= pixelCursorP->height) {
+        switch (pixelCursorP->pass) {
         case MULT8PLUS0:
-            rdrP->pass = MULT8PLUS4;
-            rdrP->next.row = 4;
+            pixelCursorP->pass = MULT8PLUS4;
+            pixelCursorP->curRow = 4;
             break;
         case MULT8PLUS4:
-            rdrP->pass = MULT4PLUS2;
-            rdrP->next.row = 2;
+            pixelCursorP->pass = MULT4PLUS2;
+            pixelCursorP->curRow = 2;
             break;
         case MULT4PLUS2:
-            rdrP->pass = MULT2PLUS1;
-            rdrP->next.row = 1;
+            pixelCursorP->pass = MULT2PLUS1;
+            pixelCursorP->curRow = 1;
             break;
         case MULT2PLUS1:
-            /* An entry condition is that there be a row left to read,
-               but we have finished the last pass.  That can't be:
+            /* We've read the entire image; pass and current row are
+               now undefined.
             */
-            assert(false);
+            pixelCursorP->curRow = 0;
             break;
         }
     }
-    /* Now that we know which row should be current, get its
-       pixels into the buffer.
-    */
-    ppm_seek(rdrP->fileP, &rdrP->rasterPos, sizeof(rdrP->rasterPos),
-             rdrP->width, rdrP->maxval, 0, rdrP->next.row);
 }
 
 
 
 static void
-pixelReaderRead(pixelReader * const rdrP,
-                pixel *       const pixelP,
-                bool *        const eofP) {
-
-    if (rdrP->nPixelsLeft == 0)
-        *eofP = TRUE;
-    else {
-        *eofP = FALSE;
-
-        *pixelP = rdrP->curPixelRow[rdrP->next.col];
-
-        --rdrP->nPixelsLeft;
-
-        /* Move one column to the right */
-        ++rdrP->next.col;
-
-        if (rdrP->next.col >= rdrP->width) {
-            /* That pushed us past the end of a row. */
-            if (rdrP->nPixelsLeft > 0) {
-                /* Reset to the left edge ... */
-                rdrP->next.col = 0;
-                
-                /* ... of the next row */
-                if (!rdrP->interlace)
-                    ++rdrP->next.row;
-                else
-                    pixelReaderGotoNextInterlaceRow(rdrP);
-                
-                pixelReaderReadCurrentRow(rdrP);
-            }
-        }
-    }
-}
-
-
-
-static pm_pixelcoord
-pixelReaderNextCoord(pixelReader * const pixelReaderP) {
-
-    return pixelReaderP->next;
-}
-
-
-
-static void
-gifNextPixel(pixelReader *      const pixelReaderP,
-             pixval             const inputMaxval,
-             gray **            const alpha,
-             gray               const alphaThreshold, 
-             struct cmap *      const cmapP,
-             unsigned int *     const colorIndexP,
-             bool *             const eofP) {
+bumpPixel(struct pixelCursor * const pixelCursorP) {
 /*----------------------------------------------------------------------------
-   Return as *colorIndexP the colormap index of the next pixel supplied by
-   pixel reader 'pixelReaderP', using colormap *cmapP.
+   Bump *pixelCursorP to point to the next pixel to go into the GIF
 
-   Iff the reader is at the end of the image, return *eofP == TRUE
-   and nothing as *colorIndexP.
+   Must not call when there are no pixels left.
+-----------------------------------------------------------------------------*/
+    assert(pixelCursorP->nPixelsLeft > 0);
 
-   'alphaThreshold' is the gray level such that a pixel in the alpha
+    /* Move one column to the right */
+    ++pixelCursorP->curCol;
+    
+    if (pixelCursorP->curCol >= pixelCursorP->width) {
+        /* That pushed us past the end of a row. */
+        /* Reset to the left edge ... */
+        pixelCursorP->curCol = 0;
+        
+        /* ... of the next row */
+        if (!pixelCursorP->interlace)
+            /* Go to the following row */
+            ++pixelCursorP->curRow;
+        else
+            bumpRowInterlace(pixelCursorP);
+    }
+    --pixelCursorP->nPixelsLeft;
+}
+
+
+
+static int
+gifNextPixel(pixel **      const pixels,
+             pixval        const inputMaxval,
+             gray **       const alpha,
+             gray          const alphaThreshold, 
+             struct cmap * const cmapP) {
+/*----------------------------------------------------------------------------
+   Return the pre-sort color index (index into the unsorted GIF color map)
+   of the next pixel to be processed from the input image.
+
+   'alpha_threshold' is the gray level such that a pixel in the alpha
    map whose value is less that that represents a transparent pixel
    in the output.
 -----------------------------------------------------------------------------*/
-    pm_pixelcoord const coord = pixelReaderNextCoord(pixelReaderP);
+    int retval;
 
-    pixel pixel;
+    if (pixelCursor.nPixelsLeft == 0 )
+        retval = EOF;
+    else {
+        getPixel(pixels, inputMaxval, alpha, alphaThreshold, cmapP, 
+                 pixelCursor, &retval);
 
-    pixelReaderRead(pixelReaderP, &pixel, eofP);
-    if (!*eofP) {
-        int colorindex;
-
-        if (alpha && alpha[coord.row][coord.col] < alphaThreshold)
-            colorindex = cmapP->transparent;
-        else {
-            int presortColorindex;
-            
-            presortColorindex = ppm_lookupcolor(cmapP->cht, &pixel);
-            if (presortColorindex == -1)
-                presortColorindex = closestcolor(pixel, inputMaxval, cmapP);
-            colorindex = cmapP->perm[presortColorindex];
-        }
-        *colorIndexP = colorindex;
+        bumpPixel(&pixelCursor);
     }
+    return retval;
 }
 
 
@@ -950,25 +845,25 @@ cl_block(codeBuffer * const codeBufferP) {
 
 
 static void
-writeRasterLzw(pixelReader * const pixelReaderP,
-               pixval        const inputMaxval,
-               gray **       const alpha,
-               gray          const alphaMaxval, 
-               struct cmap * const cmapP, 
-               int           const initBits,
-               FILE *        const ofP) {
+write_raster_LZW(pixel **      const pixels,
+                 pixval        const input_maxval,
+                 gray **       const alpha,
+                 gray          const alpha_maxval, 
+                 struct cmap * const cmapP, 
+                 int           const initBits,
+                 FILE *        const ofP) {
 /*----------------------------------------------------------------------------
    Write the raster to file 'ofP'.
 
-   The raster to write is 'pixels', which has maxval 'inputMaxval',
-   modified by alpha mask 'alpha', which has maxval 'alphaMaxval'.
+   The raster to write is 'pixels', which has maxval 'input_maxval',
+   modified by alpha mask 'alpha', which has maxval 'alpha_maxval'.
 
    Use the colormap 'cmapP' to generate the raster ('pixels' is 
    composed of RGB samples; the GIF raster is colormap indices).
 
    Write the raster using LZW compression.
 -----------------------------------------------------------------------------*/
-    gray const alpha_threshold = (alphaMaxval + 1) / 2;
+    gray const alpha_threshold = (alpha_maxval + 1) / 2;
         /* gray levels below this in the alpha mask indicate transparent
            pixels in the output image.
         */
@@ -977,7 +872,6 @@ writeRasterLzw(pixelReader * const pixelReaderP,
     int hshift;
     bool eof;
     codeBuffer * codeBufferP;
-    unsigned int colorIndex;
     
     codeBufferP = codeBuffer_create(ofP, initBits);
     
@@ -993,9 +887,7 @@ writeRasterLzw(pixelReader * const pixelReaderP,
     EOFCode = ClearCode + 1;
     free_ent = ClearCode + 2;
 
-    gifNextPixel(pixelReaderP, inputMaxval, alpha, alpha_threshold, cmapP,
-                 &colorIndex, &eof);
-    ent = colorIndex;
+    ent = gifNextPixel(pixels, input_maxval, alpha, alpha_threshold, cmapP);
 
     {
         long fcode;
@@ -1008,13 +900,15 @@ writeRasterLzw(pixelReader * const pixelReaderP,
 
     codeBuffer_output(codeBufferP, (code_int)ClearCode);
 
+    eof = FALSE;
     while (!eof) {
-        unsigned int gifpixel;
+        int gifpixel;
             /* The value for the pixel in the GIF image.  I.e. the colormap
-               index.
+               index.  Or -1 to indicate "no more pixels."
             */
-        gifNextPixel(pixelReaderP, inputMaxval, alpha, alpha_threshold, cmapP,
-                     &gifpixel, &eof);
+        gifpixel = gifNextPixel(pixels, 
+                                input_maxval, alpha, alpha_threshold, cmapP);
+        if (gifpixel == EOF) eof = TRUE;
         if (!eof) {
             long const fcode = (long) (((long) gifpixel << BITS) + ent);
             code_int i;
@@ -1146,17 +1040,17 @@ writeRasterUncompressedTerm(struct gif_dest * const dinfoP) {
 
 
 static void
-writeRasterUncompressed(pixelReader *  const pixelReaderP,
+writeRasterUncompressed(FILE *         const ofP, 
+                        pixel **       const pixels,
                         pixval         const inputMaxval,
                         gray **        const alpha,
                         gray           const alphaMaxval, 
                         struct cmap *  const cmapP, 
-                        int            const initBits,
-                        FILE *         const ofP) {
+                        int            const initBits) {
 /*----------------------------------------------------------------------------
    Write the raster to file 'ofP'.
    
-   Same as writeRasterLzw(), except written out one code per
+   Same as write_raster_LZW(), except written out one code per
    pixel (plus some clear codes), so no compression.  And no use
    of the LZW patent.
 -----------------------------------------------------------------------------*/
@@ -1165,19 +1059,22 @@ writeRasterUncompressed(pixelReader *  const pixelReaderP,
            pixels in the output image.
         */
     bool eof;
+
     struct gif_dest gifDest;
 
     writeRasterUncompressedInit(ofP, &gifDest, initBits);
 
     eof = FALSE;
     while (!eof) {
-        unsigned int gifpixel;
+        int gifpixel;
             /* The value for the pixel in the GIF image.  I.e. the colormap
-               index.
+               index.  Or -1 to indicate "no more pixels."
             */
-        gifNextPixel(pixelReaderP, inputMaxval, alpha, alphaThreshold, cmapP,
-                     &gifpixel, &eof);
-        if (!eof)
+        gifpixel = gifNextPixel(pixels, 
+                                inputMaxval, alpha, alphaThreshold, cmapP);
+        if (gifpixel == EOF)
+            eof = TRUE;
+        else
             writeRasterUncompressedPixel(&gifDest, gifpixel);
     }
     writeRasterUncompressedTerm(&gifDest);
@@ -1287,12 +1184,10 @@ writeImageHeader(FILE *       const ofP,
 
 static void
 gifEncode(FILE *        const ofP, 
-          FILE *        const ifP,
+          pixel **      const pixels,
+          pixval        const inputMaxval,
           int           const gWidth,
           int           const gHeight, 
-          pixval        const inputMaxval,
-          int           const inputFormat,
-          pm_filepos    const rasterPos,
           gray **       const alpha,
           gray          const alphaMaxval,
           int           const gInterlace,
@@ -1308,8 +1203,6 @@ gifEncode(FILE *        const ofP,
     unsigned int const initCodeSize = bitsPerPixel <= 1 ? 2 : bitsPerPixel;
         /* The initial code size */
 
-    pixelReader * pixelReaderP;
-
     writeGifHeader(ofP, gWidth, gHeight, gInterlace, background,
                    bitsPerPixel, cmapP, comment);
 
@@ -1319,20 +1212,17 @@ gifEncode(FILE *        const ofP,
     writeImageHeader(ofP, leftOffset, topOffset, gWidth, gHeight, gInterlace,
                      initCodeSize);
 
-    pixelReaderCreate(ifP, gWidth, gHeight, inputMaxval, inputFormat,
-                      rasterPos, gInterlace, &pixelReaderP);
+    initPixelCursor(gWidth, gHeight, gInterlace);
 
     /* Write the actual raster */
     if (nolzw)
-        writeRasterUncompressed(pixelReaderP,
+        writeRasterUncompressed(ofP, pixels, 
                                 inputMaxval, alpha, alphaMaxval, cmapP, 
-                                initCodeSize + 1, ofP);
+                                initCodeSize + 1);
     else
-        writeRasterLzw(pixelReaderP, 
-                       inputMaxval, alpha, alphaMaxval, cmapP, 
-                       initCodeSize + 1, ofP);
-
-    pixelReaderDestroy(pixelReaderP);
+        write_raster_LZW(pixels, 
+                         inputMaxval, alpha, alphaMaxval, cmapP, 
+                         initCodeSize + 1, ofP);
 
     /* Write out a zero length data block (to end the series) */
     fputc(0, ofP);
@@ -1490,31 +1380,28 @@ static void add_to_colormap(struct cmap * const cmapP,
 
 
 static void
-colormapFromFile(char               const filespec[],
-                 unsigned int       const maxcolors,
-                 colorhist_vector * const chvP, 
-                 pixval *           const maxvalP,
-                 unsigned int *     const colorsP) {
+colormap_from_file(const char filespec[], unsigned int const maxcolors,
+                   colorhist_vector * const chvP, pixval * const maxvalP,
+                   int * const colorsP) {
 /*----------------------------------------------------------------------------
    Read a colormap from the PPM file filespec[].  Return the color histogram
    vector (which is practically a colormap) of the input image as *cvhP
    and the maxval for that histogram as *maxvalP.
 -----------------------------------------------------------------------------*/
-    FILE * mapfileP;
+    FILE *mapfile;
     int cols, rows;
-    pixel ** colormapPpm;
-    int colors;
+    pixel ** colormap_ppm;
 
-    mapfileP = pm_openr(filespec);
-    colormapPpm = ppm_readppm(mapfileP, &cols, &rows, maxvalP);
-    pm_close(mapfileP);
+    mapfile = pm_openr(filespec);
+    colormap_ppm = ppm_readppm(mapfile, &cols, &rows, maxvalP);
+    pm_close(mapfile);
     
-    pm_message("computing other colormap ...");
-    *chvP = ppm_computecolorhist(colormapPpm, cols, rows, maxcolors, &colors);
-
-    *colorsP = colors;
-
-    ppm_freearray(colormapPpm, rows); 
+    /* Figure out the colormap from the <mapfile>. */
+    pm_message("computing other colormap...");
+    *chvP = 
+        ppm_computecolorhist(colormap_ppm, cols, rows, maxcolors, colorsP);
+    
+    ppm_freearray(colormap_ppm, rows); 
 }
 
 
@@ -1538,26 +1425,20 @@ get_alpha(const char * const alpha_filespec, int const cols, int const rows,
 
 
 static void
-computePpmColormap(FILE *             const ifP,
-                   unsigned int       const cols,
-                   unsigned int       const rows,
-                   pixval             const maxval,
-                   int                const format,
-                   bool               const haveAlpha, 
-                   const char *       const mapfile,
-                   colorhist_vector * const chvP,
-                   colorhash_table *  const chtP,
-                   pixval *           const colormapMaxvalP, 
-                   unsigned int *     const colorsP) {
+compute_ppm_colormap(pixel ** const pixels, int const cols, int const rows,
+                     int const input_maxval, bool const have_alpha, 
+                     const char * const mapfile, colorhist_vector * const chvP,
+                     colorhash_table * const chtP,
+                     pixval * const colormap_maxvalP, 
+                     int * const colorsP) {
 /*----------------------------------------------------------------------------
-   Compute a colormap, PPM style, for the image on file 'ifP', which
-   is positioned to the raster and is 'cols' by 'rows' with maxval
-   'maxval' and format 'format'.  If 'mapfile' is non-null, Use the
-   colors in that (PPM) file for the color map instead of the colors
-   in 'ifP'.
+   Compute a colormap, PPM style, for the image 'pixels', which is
+   'cols' by 'rows' with maxval 'input_maxval'.  If 'mapfile' is
+   non-null, Use the colors in that (PPM) file for the color map
+   instead of the colors in 'pixels'.
 
    Return the colormap as *chvP and *chtP.  Return the maxval for that
-   colormap as *colormapMaxvalP.
+   colormap as *colormap_maxvalP.
 
    While we're at it, count the colors and validate that there aren't
    too many.  Return the count as *colorsP.  In determining if there are
@@ -1571,23 +1452,20 @@ computePpmColormap(FILE *             const ifP,
            isn't included in this count.
         */
 
-    if (haveAlpha)
+    if (have_alpha)
         maxcolors = MAXCMAPSIZE - 1;
     else
         maxcolors = MAXCMAPSIZE;
 
     if (mapfile) {
         /* Read the colormap from a separate colormap file. */
-        colormapFromFile(mapfile, maxcolors, chvP, colormapMaxvalP, 
-                         colorsP);
+        colormap_from_file(mapfile, maxcolors, chvP, colormap_maxvalP, 
+                           colorsP);
     } else {
         /* Figure out the color map from the input file */
-        int colors;
         pm_message("computing colormap...");
-        *chvP = ppm_computecolorhist2(ifP, cols, rows, maxval, format,
-                                      maxcolors, &colors); 
-        *colorsP = colors;
-        *colormapMaxvalP = maxval;
+        *chvP = ppm_computecolorhist(pixels, cols, rows, maxcolors, colorsP); 
+        *colormap_maxvalP = input_maxval;
     }
 
     if (*chvP == NULL)
@@ -1605,12 +1483,11 @@ main(int argc, char *argv[]) {
     struct cmdlineInfo cmdline;
     FILE * ifP;
     int rows, cols;
-    pixval inputMaxval;
-    int inputFormat;   
     int BitsPerPixel;
+    pixel ** pixels;   /* The input image, in PPM format */
+    pixval input_maxval;  /* Maxval for 'pixels' */
     gray ** alpha;     /* The supplied alpha mask; NULL if none */
     gray alpha_maxval; /* Maxval for 'alpha' */
-    pm_filepos rasterPos;
 
     struct cmap cmap;
         /* The colormap, with all its accessories */
@@ -1627,17 +1504,17 @@ main(int argc, char *argv[]) {
 
     verbose = cmdline.verbose;
 
-    ifP = pm_openr_seekable(cmdline.input_filespec);
+    ifP = pm_openr(cmdline.input_filespec);
 
-    ppm_readppminit(ifP, &cols, &rows, &inputMaxval, &inputFormat);
+    pixels = ppm_readppm(ifP, &cols, &rows, &input_maxval);
 
-    pm_tell2(ifP, &rasterPos, sizeof(rasterPos));
+    pm_close(ifP);
 
     get_alpha(cmdline.alpha_filespec, cols, rows, &alpha, &alpha_maxval);
 
-    computePpmColormap(ifP, cols, rows, inputMaxval, inputFormat,
-                       (alpha != NULL), cmdline.mapfile, 
-                       &chv, &cmap.cht, &cmap.maxval, &cmap.cmapsize);
+    compute_ppm_colormap(pixels, cols, rows, input_maxval, (alpha != NULL), 
+                         cmdline.mapfile, 
+                         &chv, &cmap.cht, &cmap.maxval, &cmap.cmapsize);
 
     /* Now turn the ppm colormap into the appropriate GIF colormap. */
 
@@ -1664,18 +1541,17 @@ main(int argc, char *argv[]) {
         else 
             cmap.transparent = -1;
     }
-
     /* All set, let's do it. */
-    gifEncode(stdout, ifP, cols, rows, inputMaxval, inputFormat, rasterPos,
+    gifEncode(stdout, pixels, input_maxval, cols, rows, 
               alpha, alpha_maxval, 
               cmdline.interlace, 0, BitsPerPixel, &cmap, cmdline.comment,
               cmdline.nolzw);
 
+    ppm_freearray(pixels, rows);
     if (alpha)
         pgm_freearray(alpha, rows);
 
-    pm_close(ifP);
-    pm_close(stdout);
+    fclose(stdout);
 
     return 0;
 }
