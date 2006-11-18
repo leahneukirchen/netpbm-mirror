@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+06.11.18 BJH  Release 10.35.17
+
+              ppmtogif: fix garbage output with non-ppm-raw input;
+              restore to 10.34 version.
+
 06.11.14 BJH  Release 10.35.16
 
               ppmtogif: fix garbage output with -interlace.
