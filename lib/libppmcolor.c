@@ -145,7 +145,8 @@ parseHexDigits(const char *   const string,
     unsigned int digitCount;
     pixval n;
     
-    digitCount = 0;
+    digitCount = 0;  /* initial value */
+    n = 0;           /* initial value */
     while (string[digitCount] != delim) {
         char const digit = string[digitCount];
         if (digit == '\0')

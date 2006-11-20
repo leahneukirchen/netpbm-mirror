@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.37.0
 
+              libnetpbm: fix bogus results from ppm_parsecolor() of
+              rgb:0/0/0 style color name.
+
               ppmtogif: fix garbage output with -interlace.
 
               Build: fix Darwin build.
@@ -93,7 +96,7 @@ not yet  BJH  Release 10.37.0
               pm_accept_to_pamtuples: fix bug: fill in pam structure.
               Thanks "Christian Schlotter" <schlotter@users.sourceforge.net>.
 
-              Fix selection of MMX_SEE fastpath based on GNU compiler version
+              Fix selection of MMX_SSE fastpath based on GNU compiler version
               number.
 
               Properly clean thinkjettopbm.c with 'make distclean'.
