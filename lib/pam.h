@@ -23,16 +23,16 @@ typedef unsigned long sample;
     */
 
 struct pam {
-/* This structure describes an open PAM image file.  It consists
-   entirely of information that belongs in the header of a PAM image
-   and filesystem information.  It does not contain any state
-   information about the processing of that image.  
-
-   This is not considered to be an opaque object.  The user of Netbpm
-   libraries is free to access and set any of these fields whenever
-   appropriate.  The structure exists to make coding of function calls
-   easy.
-*/
+    /* This structure describes an open PAM image file.  It consists
+       entirely of information that belongs in the header of a PAM image
+       and filesystem information.  It does not contain any state
+       information about the processing of that image.  
+       
+       This is not considered to be an opaque object.  The user of Netbpm
+       libraries is free to access and set any of these fields whenever
+       appropriate.  The structure exists to make coding of function calls
+       easy.
+    */
 
     /* 'size' and 'len' are necessary in order to provide forward and
        backward compatibility between library functions and calling programs
@@ -44,7 +44,9 @@ struct pam {
         /* The length, in bytes, of the information in this structure.
            The information starts in the first byte and is contiguous.  
            This cannot be greater than 'size'
-           */
+
+           Use PAM_STRUCT_SIZE() to compute or interpret a value for this.
+        */
     FILE * file;
     int format;
         /* The format code of the raw image.  This is PAM_FORMAT
@@ -102,7 +104,7 @@ struct pam {
 
            On output, NULL means no comments.
 
-           On input, libnetpbm mallocs storage for the comments and placed
+           On input, libnetpbm mallocs storage for the comments and places
            the pointer at *comment_p.  Caller must free it.  NULL means
            libnetpbm does not return comments and does not allocate any
            storage.
