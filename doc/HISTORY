@@ -6,10 +6,14 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.37.0
 
+              libnetpbm: add pnm_computetuplefreqtable3().  Has ability
+              to limit number of planes of input considered.
+
               libnetpbm: fix bogus results from ppm_parsecolor() of
               rgb:0/0/0 style color name.
 
-              ppmtogif: fix garbage output with -interlace.
+              ppmtogif: replace with pamtogif.  Fix garbage output with
+              -interlace.
 
               Build: fix Darwin build.
 
