@@ -1416,7 +1416,7 @@ writeGlobalColorMap(FILE *              const ofP,
     pam = cmapP->pam;
     pam.size = PAM_STRUCT_SIZE(allocation_depth);
     pam.len = pam.size;
-    pam.allocation_depth = 3;
+    pnm_setminallocationdepth(&pam, 3);
 
     tupleRgb255 = pnm_allocpamtuple(&pam);
 
