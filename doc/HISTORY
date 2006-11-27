@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.37.0
 
+              pamx: fix bug: incorrect display of one-plane input image.
+
               libnetpbm: add pnm_computetuplefreqtable3().  Has ability
               to limit number of planes of input considered.
 
