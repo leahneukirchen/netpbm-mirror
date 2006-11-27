@@ -4,6 +4,13 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+06.11.27 BJH  Release 10.35.18
+
+              Configure: Fix incorrect .dylib suffix in shared library default.
+
+              libnetpbm: fix bogus results from ppm_parsecolor() of
+              rgb:0/0/0 style color name.
+
 06.11.18 BJH  Release 10.35.17
 
               ppmtogif: fix garbage output with non-ppm-raw input;
