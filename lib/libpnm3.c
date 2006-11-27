@@ -142,57 +142,57 @@ pnm_backgroundxelrow( xel* xelrow, int cols, xelval maxval, int format )
     return bgxel;
     }
 
-xel
-pnm_whitexel( xelval maxval, int format )
-    {
-    xel x;
 
-    switch ( PNM_FORMAT_TYPE(format) )
-    {
-    case PPM_TYPE:
-    PPM_ASSIGN( x, maxval, maxval, maxval );
-    break;
-
-    case PGM_TYPE:
-    PNM_ASSIGN1( x, maxval );
-    break;
-
-    case PBM_TYPE:
-    PNM_ASSIGN1( x, maxval );
-    break;
-
-    default:
-    pm_error( "Invalid format passed to pnm_whitexel()");
-    }
-
-    return x;
-    }
 
 xel
-pnm_blackxel( xelval maxval, int format )
-    {
-    xel x;
+pnm_whitexel(xelval const maxval,
+             int    const format) {
 
-    switch ( PNM_FORMAT_TYPE(format) )
-    {
+    xel retval;
+
+    switch (PNM_FORMAT_TYPE(format)) {
     case PPM_TYPE:
-    PPM_ASSIGN( x, 0, 0, 0 );
-    break;
+        PPM_ASSIGN(retval, maxval, maxval, maxval);
+        break;
 
     case PGM_TYPE:
-    PNM_ASSIGN1( x, (xelval) 0 );
-    break;
-
     case PBM_TYPE:
-    PNM_ASSIGN1( x, (xelval) 0 );
-    break;
+        PNM_ASSIGN1(retval, maxval);
+        break;
 
     default:
-    pm_error( "Invalid format passed to pnm_blackxel(): %d", format);
+        pm_error("Invalid format %d passed to pnm_whitexel()", format);
     }
 
-    return x;
+    return retval;
+}
+
+
+
+xel
+pnm_blackxel(xelval const maxval,
+             int    const format) {
+
+    xel retval;
+
+    switch (PNM_FORMAT_TYPE(format)) {
+    case PPM_TYPE:
+        PPM_ASSIGN(retval, 0, 0, 0);
+        break;
+
+    case PGM_TYPE:
+    case PBM_TYPE:
+        PNM_ASSIGN1(retval, 0);
+        break;
+
+    default:
+        pm_error("Invalid format %d passed to pnm_blackxel()", format);
     }
+    
+    return retval;
+}
+
+
 
 void
 pnm_invertxel(xel*   const xP, 
