@@ -12,6 +12,7 @@
 
 #define _XOPEN_SOURCE   /* get M_PI in math.h */
 
+#include <assert.h>
 #include <math.h>
 #include <string.h>
 

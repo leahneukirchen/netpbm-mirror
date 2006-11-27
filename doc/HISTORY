@@ -6,8 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.37.0
 
-              pnmshear: add -background, -noantialias.  Thanks
-              Erik Auerswald <auerswal@unix-ag.uni-kl.de>.
+              pnmshear: add -background.  Thanks Erik Auerswald
+              <auerswal@unix-ag.uni-kl.de>.
 
               pamx: fix bug with X depth = 0.
 
