@@ -236,6 +236,7 @@ typedef int32_t int32n;
 # endif
 #endif
 
+#include <unistd.h>  /* Get _LFS_LARGEFILE defined */
 #include <sys/types.h>
 /* In GNU, _LFS_LARGEFILE means the "off_t" functions (ftello, etc.) are
    available.  In AIX, _AIXVERSION_430 means it's AIX Version 4.3.0 or
