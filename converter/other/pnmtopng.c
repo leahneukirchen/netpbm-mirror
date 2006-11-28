@@ -962,7 +962,7 @@ analyzeAlpha(FILE *     const ifp,
              gray       const alphaMaxval,
              bool *     const allOpaqueP,
              bool *     const singleColorIsTransP, 
-             pixel*     const alphaTranscolorP) {
+             pixel *    const alphaTranscolorP) {
 /*----------------------------------------------------------------------------
   Get information about the alpha mask, in combination with the masked
   image, that Caller can use to choose the most efficient way to
@@ -993,13 +993,13 @@ analyzeAlpha(FILE *     const ifp,
         */
         foundTransparentPixel = FALSE;  /* initial assumption */
         pm_seek2(ifp, &rasterPos, sizeof(rasterPos));
-        for (row = 0 ; row < rows && !foundTransparentPixel ; ++row) {
+        for (row = 0; row < rows && !foundTransparentPixel; ++row) {
             int col;
             pnm_readpnmrow(ifp, xelrow, cols, maxval, format);
             for (col = 0; col < cols && !foundTransparentPixel; ++col) {
                 if (alphaMask[row][col] == 0) {
                     foundTransparentPixel = TRUE;
-                    transcolor = xeltopixel(xelrow[col]);
+                    transcolor = pnm_xeltopixel(xelrow[col], format);
                 }
             }
         }

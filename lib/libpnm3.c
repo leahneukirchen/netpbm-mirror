@@ -337,12 +337,30 @@ pnm_promoteformatrow( xel* xelrow, int cols, xelval maxval, int format, xelval n
 
 
 pixel
-xeltopixel(xel const inputxel) {
+pnm_xeltopixel(xel const inputxel,
+               int const format) {
     
     pixel outputpixel;
 
-    PPM_ASSIGN(outputpixel, 
-               PNM_GET1(inputxel), PNM_GET1(inputxel), PNM_GET1(inputxel));
+    switch (PNM_FORMAT_TYPE(format)) {
+    case PPM_TYPE:
+        PPM_ASSIGN(outputpixel,
+                   PPM_GETR(inputxel),
+                   PPM_GETG(inputxel),
+                   PPM_GETB(inputxel));
+        break;
+    case PGM_TYPE:
+    case PBM_TYPE:
+        PPM_ASSIGN(outputpixel,
+                   PNM_GET1(inputxel),
+                   PNM_GET1(inputxel),
+                   PNM_GET1(inputxel));
+        break;
+    default:
+        pm_error("Invalid format code %d passed to pnm_xeltopixel()",
+                 format);
+    }
+
     return outputpixel;
 }
 
@@ -381,7 +399,7 @@ pnm_parsecolorxel(const char * const colorName,
                       colorName);
         break;
     default:
-        pm_error("Invalid format code %d passed to pnm_parsecolor()",
+        pm_error("Invalid format code %d passed to pnm_parsecolorxel()",
                  format);
     }
     

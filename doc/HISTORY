@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.37.0
 
+              pnmtopng: fix transparency optimization on PPM input.
+    
               pnmrotate: fix -background option with PGM/PBM input.
 
               pnmshear: add -background.  Thanks Erik Auerswald
