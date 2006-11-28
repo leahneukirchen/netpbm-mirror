@@ -126,6 +126,11 @@ pnm_promoteformatrow(xel* xelrow, int cols, xelval maxval, int format,
 pixel
 xeltopixel(xel const inputxel);
 
+xel
+pnm_parsecolorxel(const char * const colorName,
+                  xelval       const maxval,
+                  int          const format);
+
 #ifdef __cplusplus
 }
 #endif

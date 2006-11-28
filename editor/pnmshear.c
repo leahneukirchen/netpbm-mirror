@@ -16,6 +16,7 @@
 #include <math.h>
 #include <string.h>
 
+#include "ppm.h"
 #include "pnm.h"
 #include "shhopt.h"
 
@@ -95,7 +96,7 @@ makeNewXel(xel *  const outputXelP,
    The format of the pixel is 'format'.
 -----------------------------------------------------------------------------*/
 
-    switch ( PNM_FORMAT_TYPE(format) ) {
+    switch (PNM_FORMAT_TYPE(format)) {
     case PPM_TYPE:
         PPM_ASSIGN(*outputXelP,
                    (fracnew0 * PPM_GETR(prevXel) 
@@ -178,7 +179,6 @@ shearRow(xel *        const xelrow,
 }
 
 
-
 static xel
 backgroundColor(const char * const backgroundColorName,
                 xel *        const topRow,
@@ -189,24 +189,7 @@ backgroundColor(const char * const backgroundColorName,
     xel retval;
 
     if (backgroundColorName) {
-        retval = ppm_parsecolor(backgroundColorName, maxval);
-
-        switch(PNM_FORMAT_TYPE(format)) {
-        case PGM_TYPE:
-            if (!PPM_ISGRAY(retval))
-                pm_error("Image is PGM (grayscale), "
-                         "but you specified a non-gray "
-                         "background color '%s'", backgroundColorName);
-            break;
-        case PBM_TYPE:
-            if (!PNM_EQUAL(retval, pnm_whitexel(maxval, format)) &&
-                !PNM_EQUAL(retval, pnm_blackxel(maxval, format)))
-                pm_error ("Image is PBM (black and white), "
-                          "but you specified '%s', which is neither black "
-                          "nor white, as background color", 
-                          backgroundColorName);
-            break;
-        }
+        retval = pnm_parsecolorxel(backgroundColorName, maxval, format);
     } else 
         retval = pnm_backgroundxelrow(topRow, cols, maxval, format);
 

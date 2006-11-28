@@ -345,3 +345,45 @@ xeltopixel(xel const inputxel) {
                PNM_GET1(inputxel), PNM_GET1(inputxel), PNM_GET1(inputxel));
     return outputpixel;
 }
+
+
+
+xel
+pnm_parsecolorxel(const char * const colorName,
+                  xelval       const maxval,
+                  int          const format) {
+
+    pixel const bgColor = ppm_parsecolor(colorName, maxval);
+
+    xel retval;
+
+    switch(PNM_FORMAT_TYPE(format)) {
+    case PPM_TYPE:
+        PNM_ASSIGN(retval,
+                   PPM_GETR(bgColor), PPM_GETG(bgColor), PPM_GETB(bgColor));
+        break;
+    case PGM_TYPE:
+        if (PPM_ISGRAY(bgColor))
+            PNM_ASSIGN1(retval, PPM_GETB(bgColor));
+        else
+            pm_error("Non-gray color '%s' specified for a "
+                     "grayscale (PGM) image",
+                     colorName);
+                   break;
+    case PBM_TYPE:
+        if (PPM_EQUAL(bgColor, ppm_whitepixel(maxval)))
+            PNM_ASSIGN1(retval, maxval);
+        else if (PPM_EQUAL(bgColor, ppm_blackpixel()))
+            PNM_ASSIGN1(retval, 0);
+        else
+            pm_error ("Color '%s', which is neither black nor white, "
+                      "specified for a black and white (PBM) image",
+                      colorName);
+        break;
+    default:
+        pm_error("Invalid format code %d passed to pnm_parsecolor()",
+                 format);
+    }
+    
+    return retval;
+}

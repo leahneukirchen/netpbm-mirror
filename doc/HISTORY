@@ -6,8 +6,7 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.37.0
 
-              libnetpbm: Fix crash due to inconsistent definition of
-              pm_filepos.  Affects xxx_check of pgm images.
+              pnmrotate: fix -background option with PGM/PBM input.
 
               pnmshear: add -background.  Thanks Erik Auerswald
               <auerswal@unix-ag.uni-kl.de>.
