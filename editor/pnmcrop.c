@@ -549,6 +549,7 @@ main(int argc, char *argv[]) {
         /* The program's regular input file.  Could be a seekable copy of it
            in a temporary file.
         */
+    bool eof;   /* no more images in input stream */
 
     xelval maxval;
     int format;
@@ -567,53 +568,58 @@ main(int argc, char *argv[]) {
 
     ifP = pm_openr_seekable(cmdline.inputFilespec);
 
-    pnm_readpnminit(ifP, &cols, &rows, &maxval, &format);
+    eof = FALSE;
+    while (!eof) {
+        pnm_readpnminit(ifP, &cols, &rows, &maxval, &format);
 
-    pm_tell2(ifP, &rasterpos, sizeof(rasterpos));
+        pm_tell2(ifP, &rasterpos, sizeof(rasterpos));
 
-    background = computeBackground(ifP, cols, rows, maxval, format,
-                                   cmdline.background, cmdline.verbose);
+        background = computeBackground(ifP, cols, rows, maxval, format,
+                                       cmdline.background, cmdline.verbose);
 
-    if (cmdline.borderfile) {
-        findBordersInFile(cmdline.borderfile,
-                          background, cmdline.verbose, &hasBorders,
-                          &oldLeftBorder, &oldRightBorder,
-                          &oldTopBorder,  &oldBottomBorder);
-    } else {
+        if (cmdline.borderfile) {
+            findBordersInFile(cmdline.borderfile,
+                              background, cmdline.verbose, &hasBorders,
+                              &oldLeftBorder, &oldRightBorder,
+                              &oldTopBorder,  &oldBottomBorder);
+        } else {
+            pm_seek2(ifP, &rasterpos, sizeof(rasterpos));
+
+            findBordersInImage(ifP, cols, rows, maxval, format, 
+                               background, cmdline.verbose, &hasBorders,
+                               &oldLeftBorder, &oldRightBorder,
+                               &oldTopBorder,  &oldBottomBorder);
+        }
+        if (!hasBorders)
+            pm_error("The image is entirely background; "
+                     "there is nothing to crop.");
+
+        determineNewBorders(cmdline, 
+                            oldLeftBorder, oldRightBorder,
+                            oldTopBorder,  oldBottomBorder,
+                            &newLeftBorder, &newRightBorder,
+                            &newTopBorder,  &newBottomBorder);
+
+        if (cmdline.verbose) 
+            reportCroppingParameters(oldLeftBorder, oldRightBorder,
+                                     oldTopBorder,  oldBottomBorder,
+                                     newLeftBorder, newRightBorder,
+                                     newTopBorder,  newBottomBorder);
+
         pm_seek2(ifP, &rasterpos, sizeof(rasterpos));
 
-        findBordersInImage(ifP, cols, rows, maxval, format, 
-                           background, cmdline.verbose, &hasBorders,
-                           &oldLeftBorder, &oldRightBorder,
-                           &oldTopBorder,  &oldBottomBorder);
+        writeCropped(ifP, cols, rows, maxval, format,
+                     oldLeftBorder, oldRightBorder,
+                     oldTopBorder,  oldBottomBorder,
+                     newLeftBorder, newRightBorder,
+                     newTopBorder,  newBottomBorder,
+                     background, stdout);
+
+        pnm_nextimage(ifP, &eof);
     }
-    if (!hasBorders)
-        pm_error("The image is entirely background; "
-                 "there is nothing to crop.");
-
-    determineNewBorders(cmdline, 
-                        oldLeftBorder, oldRightBorder,
-                        oldTopBorder,  oldBottomBorder,
-                        &newLeftBorder, &newRightBorder,
-                        &newTopBorder,  &newBottomBorder);
-
-    if (cmdline.verbose) 
-        reportCroppingParameters(oldLeftBorder, oldRightBorder,
-                                 oldTopBorder,  oldBottomBorder,
-                                 newLeftBorder, newRightBorder,
-                                 newTopBorder,  newBottomBorder);
-
-    pm_seek2(ifP, &rasterpos, sizeof(rasterpos));
-
-    writeCropped(ifP, cols, rows, maxval, format,
-                 oldLeftBorder, oldRightBorder,
-                 oldTopBorder,  oldBottomBorder,
-                 newLeftBorder, newRightBorder,
-                 newTopBorder,  newBottomBorder,
-                 background, stdout);
 
     pm_close(stdout);
     pm_close(ifP);
-    
+
     return 0;
 }
