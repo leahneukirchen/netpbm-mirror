@@ -270,7 +270,7 @@ closestColor(tuple         const color,
         unsigned int plane;
 
         for (distance = 0, plane = 0; plane < nComp; ++plane)
-            // Divide by 4 is to avoid arithmetic overflow
+            /* Divide by 4 is to avoid arithmetic overflow */
             distance += SQR(color[plane] - cmapP->color[i][plane]) / 4;
 
         if (distance < dmin) {
@@ -595,7 +595,7 @@ static stringCode const maxCodeLimit = (stringCode)1 << BITS;
 
 
 struct hashTableEntry {
-    long fcode;   // -1 means unused slot
+    long fcode;   /* -1 means unused slot */
     unsigned int ent;
 };    
 
