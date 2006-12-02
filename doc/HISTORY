@@ -8,7 +8,7 @@ not yet  BJH  Release 10.37.0
 
               pbmtext: Fix crash when there is only one character.
 
-              pnmcrop: work on multi-image stream.
+              pnmcrop, pamtopnm: work on multi-image stream.
               Thanks Erik Auerswald <auerswal@unix-ag.uni-kl.de>.
 
               pnmtopng: fix transparency optimization on PPM input.
