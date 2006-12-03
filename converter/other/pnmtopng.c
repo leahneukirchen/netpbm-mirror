@@ -999,7 +999,7 @@ analyzeAlpha(FILE *     const ifp,
             for (col = 0; col < cols && !foundTransparentPixel; ++col) {
                 if (alphaMask[row][col] == 0) {
                     foundTransparentPixel = TRUE;
-                    transcolor = xeltopixel(xelrow[col]);
+                    transcolor = pnm_xeltopixel(xelrow[col], format);
                 }
             }
         }

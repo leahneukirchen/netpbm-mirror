@@ -246,8 +246,8 @@ get_line_dimensions(const char line[], const struct font * const font_p,
                     *bwid_p += full_pixels;
                     accumulated_ics -= full_pixels;
                 }
-                lastGlyphP = glyphP;
             }
+            lastGlyphP = glyphP;
             *bwid_p += glyphP->xadd;
         }
     }

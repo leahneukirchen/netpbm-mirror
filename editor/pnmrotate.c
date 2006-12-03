@@ -159,6 +159,27 @@ computeNewFormat(bool     const antialias,
 
 
 
+static bool
+isWhite(xel    const color,
+        xelval const maxval) {
+
+    return (PPM_GETR(color) == maxval &&
+            PPM_GETG(color) == maxval &&
+            PPM_GETB(color) == maxval);
+}
+
+
+
+static bool
+isBlack(xel const color) {
+
+    return (PPM_GETR(color) == 0 &&
+            PPM_GETG(color) == 0 &&
+            PPM_GETB(color) == 0);
+}
+
+
+
 static xel
 backgroundColor(const char * const backgroundColorName,
                 xel *        const topRow,
@@ -180,8 +201,7 @@ backgroundColor(const char * const backgroundColorName,
 
             break;
         case PBM_TYPE:
-            if (!PNM_EQUAL(retval, pnm_whitexel(maxval, format)) &&
-                !PNM_EQUAL(retval, pnm_blackxel(maxval, format)))
+            if (!isWhite(retval, maxval) && !isBlack(retval))
                 pm_error("Image is PBM (black and white), "
                          "but you specified '%s', which is neither black "
                          "nor white, as background color", 

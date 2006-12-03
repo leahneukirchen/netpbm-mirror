@@ -184,7 +184,7 @@ fillRow1(struct pam *     const pamP,
     
     for (col = 0; col < pamP->width; ++col) {
         unsigned int plane;
-        for (plane = 0; plane < pamP->depth; ++plane)
+        for (plane = 0; plane < 3; ++plane)
             *(*pP)++ =
                 pnm_scalesample(tuplerow[col][0], pamP->maxval, 255);
     }
