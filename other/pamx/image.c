@@ -157,7 +157,7 @@ newRGBImage(unsigned int const width,
             unsigned int const height,
             unsigned int const depth) {
     
-    unsigned int const pixlen = pixlen > 0 ? (depth + 7) / 8 : 1;
+    unsigned int const pixlen = depth > 0 ? (depth + 7) / 8 : 1;
         /* Special case for "zero" depth image, which is sometimes
            interpreted as "one color"
         */

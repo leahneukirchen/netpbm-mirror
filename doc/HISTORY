@@ -4,6 +4,18 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+06.12.13 BJH  Release 10.36.14
+
+              pbmtext: Fix crash when there is only one character.
+
+              pnmtopng: fix transparency optimization on PPM input.
+    
+              pnmrotate: fix -background option with PGM/PBM input.
+
+              pamx: fix bug with X depth = 0.
+
+              pamx: fix bug: incorrect display of one-plane input image.
+
 06.11.27 BJH  Release 10.36.13
 
               Configure: Fix incorrect .dylib suffix in shared library default.
