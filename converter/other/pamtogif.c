@@ -134,34 +134,6 @@ pamAlphaPlane(struct pam * const pamP) {
 
 
 static void
-handleLatex2htmlHack(void) {
-/*----------------------------------------------------------------------------
-  This program used to put out a "usage" message when it saw an option
-  it didn't understand.  Latex2html's configure program does a
-  ppmtogif -h (-h was never a valid option) to elicit that message and
-  then parses the message to see if it included the strings
-  "-interlace" and "-transparent".  That way it knows if the
-  'ppmtogif' program it found has those options or not.  I don't think
-  any 'ppmtogif' you're likely to find today lacks those options, but
-  latex2html checks anyway, and we don't want it to conclude that we
-  don't have them.
-
-  So we issue a special error message just to trick latex2html into
-  deciding that we have -interlace and -transparent options.  The function
-  is not documented in the man page.  We would like to see Latex2html 
-  either stop checking or check like configure programs usually do -- 
-  try the option and see if you get success or failure.
-
-  -Bryan 2001.11.14
------------------------------------------------------------------------------*/
-     pm_error("latex2html, you should just try the -interlace and "
-              "-transparent options to see if they work instead of "
-              "expecting a 'usage' message from -h");
-}
-
-
-
-static void
 parseCommandLine(int argc, char ** argv,
                  struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
@@ -176,8 +148,6 @@ parseCommandLine(int argc, char ** argv,
     optEntry * option_def;  /* malloc'ed */
     optStruct3 opt;  /* set by OPTENT3 */
     unsigned int option_def_index;
-
-    unsigned int latex2htmlhack;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
@@ -196,8 +166,6 @@ parseCommandLine(int argc, char ** argv,
             &cmdlineP->comment,        NULL, 0);
     OPTENT3(0,   "alphacolor",  OPT_STRING, 
             &cmdlineP->alphacolor,     NULL, 0);
-    OPTENT3(0,   "h",           OPT_FLAG, 
-            NULL,                       &latex2htmlhack, 0);
     OPTENT3(0,   "verbose",     OPT_FLAG, 
             NULL,                       &cmdlineP->verbose, 0);
     
@@ -216,9 +184,6 @@ parseCommandLine(int argc, char ** argv,
 
     optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
-
-    if (latex2htmlhack) 
-        handleLatex2htmlHack();
 
     if (argc-1 == 0) 
         cmdlineP->input_filespec = "-";
