@@ -383,7 +383,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3( &argc, argv, opt, sizeof(opt), 0);
+    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
 
@@ -2700,7 +2700,7 @@ main(int argc, char *argv[]) {
 
     int errorlevel;
     
-    pnm_init (&argc, argv);
+    pnm_init(&argc, argv);
     
     parseCommandLine(argc, argv, &cmdline);
     
