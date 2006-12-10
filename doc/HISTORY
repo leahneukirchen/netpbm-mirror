@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.37.0
 
+              pgmtoppm: Fix garbage output with -map and input maxval
+              != map maxval.
+
               pbmtext: Fix crash when there is only one character.
 
               pnmcrop, pamtopnm: work on multi-image stream.
