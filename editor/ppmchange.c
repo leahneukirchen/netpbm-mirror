@@ -72,7 +72,7 @@ parseCommandLine(int argc, char ** argv,
     optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
-    if (!closenessSpec)
+    if (!remainderSpec)
         cmdlineP->remainder_colorname = NULL;
 
     if (!closenessSpec)
@@ -144,22 +144,22 @@ changeRow(const pixel * const inrow,
    The input row is 'inrow'.  The output is returned as 'outrow', in
    storage which must be already allocated.  Both are 'cols' columns wide.
 -----------------------------------------------------------------------------*/
-    int col;
+    unsigned int col;
 
     for (col = 0; col < cols; ++col) {
-        int i;
-        int have_match; /* logical: It's a color user said to change */
+        unsigned int i;
+        bool haveMatch; /* logical: It's a color user said to change */
         pixel newcolor;  
         /* Color to which we must change current pixel.  Undefined unless
-           'have_match' is true.
+           'haveMatch' is true.
         */
 
-        have_match = FALSE;  /* haven't found a match yet */
-        for (i = 0; i < ncolors && !have_match; ++i) {
-            have_match = colormatch(inrow[col], colorfrom[i], closeness);
+        haveMatch = FALSE;  /* haven't found a match yet */
+        for (i = 0; i < ncolors && !haveMatch; ++i) {
+            haveMatch = colormatch(inrow[col], colorfrom[i], closeness);
             newcolor = colorto[i];
         }
-        if (have_match)
+        if (haveMatch)
             outrow[col] = newcolor;
         else if (remainder_specified)
             outrow[col] = remainder_color;
