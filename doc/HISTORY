@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.37.0
 
+              ppmchange: Fix bug with -closeness and not -remainder or
+              vice versa.
+
               pgmtoppm: Fix garbage output with -map and input maxval
               != map maxval.
 
