@@ -6,11 +6,6 @@
   History and copyright information is at the end of the file.
 =============================================================================*/
 
-
-/* TODO: merge the LZW and uncompressed subroutines.  They are separate
-   only because they had two different lineages and the code is too
-   complicated for me quickly to rewrite it.
-*/
 #include <assert.h>
 #include <string.h>
 
@@ -40,8 +35,11 @@ typedef int stringCode;
        A variable of this type sometimes has the value -1 instead of
        a string code due to cheesy programming.
 
-       Ergo, this data structure most be signed and at least BITS bits
+       Ergo, this data structure must be signed and at least BITS bits
        wide plus sign bit.
+
+       TODO: Some variables that should be of this type are defined as
+             "long".
     */
 
 
@@ -555,8 +553,10 @@ writeCommentExtension(FILE * const ofP,
  *
  */
 
-static stringCode const maxCodeLimit = (stringCode)1 << BITS;
-    /* One beyond the largest string code that can exist in GIF */
+
+static stringCode const maxCodeLimitLzw = (stringCode)1 << BITS;
+       /* One beyond the largest string code that can exist in GIF */ 
+       /* Used only in assertions  */
 
 
 struct hashTableEntry {
@@ -655,6 +655,11 @@ typedef struct {
     unsigned int nBits;
         /* Number of bits to put in output for each code */
     stringCode maxCode;                  /* maximum code, given n_bits */
+    stringCode maxCodeLimit;
+        /* LZW: One beyond the largest string code that can exist in GIF.
+           Uncompressed: a ceiling to prevent code size from ratcheting up.
+           In either case, output code never reaches this value.
+        */  
     unsigned long curAccum;
     int curBits;
     unsigned int codeCount;
@@ -670,7 +675,8 @@ typedef struct {
 
 static codeBuffer *
 codeBuffer_create(FILE *       const ofP,
-                  unsigned int const initBits) {
+                  unsigned int const initBits,
+                  bool         const lzw) {
 
     codeBuffer * codeBufferP;
 
@@ -679,6 +685,8 @@ codeBuffer_create(FILE *       const ofP,
     codeBufferP->initBits    = initBits;
     codeBufferP->nBits       = codeBufferP->initBits;
     codeBufferP->maxCode     = (1 << codeBufferP->nBits) - 1;
+    codeBufferP->maxCodeLimit = lzw ?
+        (stringCode)1 << BITS : (stringCode) (1 << codeBufferP->nBits) - 1; 
     codeBufferP->byteBufferP = byteBuffer_create(ofP);
     codeBufferP->curAccum    = 0;
     codeBufferP->curBits     = 0;
@@ -792,6 +800,12 @@ typedef struct {
 
            Constant.
         */
+    bool lzw;
+        /* We're actually doing LZW compression.  False means we follow
+           the algorithm enough tht an LZW decompressor will recover the
+           proper data, but always using one code per pixel, and therefore
+           not effecting any compression and not using the LZW patent.
+        */
     unsigned int hshift;
         /* This is how many bits we shift left a string code in forming the
            primary hash of the concatenation of that string with another.
@@ -841,11 +855,15 @@ typedef struct {
            because we're hoping to match an even longer string.
 
            Valid only when 'buildingString' is true.
+
+           In the non-lzw case the single pixel to output.
         */
     bool buildingString;
         /* We are in the middle of building a string; 'stringSoFar' describes
            the pixels in it so far.  The only time this is false is at the
            very beginning of the stream.
+ 
+           Ignored in the non-lzw case. 
         */
 } lzwCompressor;
 
@@ -853,7 +871,8 @@ typedef struct {
 
 static lzwCompressor *
 lzw_create(FILE *       const ofP,
-           unsigned int const initBits) {
+           unsigned int const initBits,
+           bool         const lzw) {
 
     lzwCompressor * lzwP;
 
@@ -865,6 +884,7 @@ lzw_create(FILE *       const ofP,
         pm_error("Couldn't get memory for %u-entry hash table.", HSIZE);
 
     /* Constants */
+    lzwP->lzw = lzw;
     lzwP->hshift =
         nSignificantBits(HSIZE-1) - 1 - nSignificantBits(MAXCMAPSIZE-1);
     lzwP->clearCode = 1 << (initBits - 1);
@@ -873,7 +893,7 @@ lzw_create(FILE *       const ofP,
 
     lzwP->buildingString = FALSE;
 
-    lzwP->codeBufferP = codeBuffer_create(ofP, initBits);
+    lzwP->codeBufferP = codeBuffer_create(ofP, initBits, lzw);
 
     return lzwP;
 }
@@ -941,7 +961,7 @@ lzwAdjustCodeSize(lzwCompressor * const lzwP,
         lzwP->codeLimit *= 2;
         codeBuffer_increaseCodeSize(lzwP->codeBufferP);
 
-        assert(lzwP->codeLimit <= maxCodeLimit);
+        assert(lzwP->codeLimit <= maxCodeLimitLzw);
     }
 }
 
@@ -954,9 +974,14 @@ lzwOutputCurrentString(lzwCompressor * const lzwP) {
 
    Doing this causes a new string code to be defined (code is
    lzwP->nextUnusedCode), so Caller must add that to the hash.  If
-   that code is beyond the overall limit, we reset the hash and put a
-   clear code in the stream to tell the decompressor to do the same.
-   So Caller must add it to the hash _before_ calling us.
+   that code's size is beyond the overall limit, we reset the hash
+   (which means future codes will start back at the minimum size) and
+   put a clear code in the stream to tell the decompressor to do the
+   same.  So Caller must add it to the hash _before_ calling us.
+
+   Note that in the non-compressing case, the overall limit is small
+   enough to prevent us from ever defining string codes; we'll always
+   reset the hash.
 
    There's an odd case that always screws up any attempt to make this
    code cleaner: At the end of the LZW stream, you have to output the
@@ -975,8 +1000,7 @@ lzwOutputCurrentString(lzwCompressor * const lzwP) {
    nothing to add.
 -----------------------------------------------------------------------------*/
     codeBuffer_output(lzwP->codeBufferP, lzwP->stringSoFar);
-    
-    if (lzwP->nextUnusedCode < maxCodeLimit) {
+    if (lzwP->nextUnusedCode < lzwP->codeBufferP->maxCodeLimit) {
         /* Allocate the code for the extended string, which Caller
            should have already put in the hash so he can use it in the
            future.  Decompressor knows when it sees the code output
@@ -1003,9 +1027,9 @@ lzwOutputCurrentString(lzwCompressor * const lzwP) {
 static void
 lzw_flush(lzwCompressor * const lzwP) {
 
-    /* Put out the code for the final string. */
-
-    lzwOutputCurrentString(lzwP);
+    if (lzwP->lzw)
+        lzwOutputCurrentString(lzwP);
+        /* Put out the code for the final string. */
 
     codeBuffer_output(lzwP->codeBufferP, lzwP->eofCode);
 
@@ -1021,7 +1045,7 @@ primaryHash(stringCode   const baseString,
 
     unsigned int hash;
 
-    assert(baseString < maxCodeLimit);
+    assert(baseString < maxCodeLimitLzw);
     assert(additionalPixel < MAXCMAPSIZE);
 
     hash = (additionalPixel << hshift) ^ baseString;
@@ -1071,7 +1095,6 @@ lookupInHash(lzwCompressor *  const lzwP,
 
 static void
 lzw_encodePixel(lzwCompressor * const lzwP,
-                struct pam *    const pamP,
                 unsigned int    const gifPixel) {
 
     bool found;
@@ -1134,34 +1157,24 @@ lzw_encodePixel(lzwCompressor * const lzwP,
  * questions about this implementation to ames!jaw.
  */
 
+static void
+writePixelUncompressed(lzwCompressor * const lzwP,
+                       unsigned int    const gifPixel) {
+                      
+    lzwP->stringSoFar = gifPixel;
+    lzwOutputCurrentString(lzwP);
 
-struct gifDest {
-    /* This structure controls output of uncompressed GIF raster */
-
-    byteBuffer * byteBufferP;  /* Where the full bytes go */
-
-    /* State for packing variable-width codes into a bitstream */
-    int n_bits;         /* current number of bits/code */
-    int maxcode;        /* maximum code, given n_bits */
-    int cur_accum;      /* holds bits not yet output */
-    int cur_bits;       /* # of bits in cur_accum */
-
-    /* State for GIF code assignment */
-    int ClearCode;      /* clear code (doesn't change) */
-    int EOFCode;        /* EOF code (ditto) */
-    int code_counter;   /* counts output symbols */
-};
-
-
+}    
 
 static void
-writeRasterLzw(struct pam *  const pamP,
-               rowReader *   const rowReaderP,
-               unsigned int  const alphaPlane,
-               unsigned int  const alphaThreshold,
-               struct cmap * const cmapP, 
-               unsigned int  const initBits,
-               FILE *        const ofP) {
+writeRaster(struct pam *  const pamP,
+            rowReader *   const rowReaderP,
+            unsigned int  const alphaPlane,
+            unsigned int  const alphaThreshold,
+            struct cmap * const cmapP, 
+            unsigned int  const initBits,
+            FILE *        const ofP,
+            bool          const lzw) {
 /*----------------------------------------------------------------------------
    Write the raster to file 'ofP'.
 
@@ -1171,7 +1184,8 @@ writeRasterLzw(struct pam *  const pamP,
    Use the colormap 'cmapP' to generate the raster ('rowReaderP' gives
    pixel values as RGB samples; the GIF raster is colormap indices).
 
-   Write the raster using LZW compression.
+   Write the raster using LZW compression, or uncompressed depending
+   on 'lzw'.
 -----------------------------------------------------------------------------*/
     lzwCompressor * lzwP;
     tuple * tuplerow;
@@ -1182,7 +1196,7 @@ writeRasterLzw(struct pam *  const pamP,
            number of the current row.
         */
     
-    lzwP = lzw_create(ofP, initBits);
+    lzwP = lzw_create(ofP, initBits, lzw);
 
     tuplerow = pnm_allocpamrow(pamP);
 
@@ -1203,8 +1217,10 @@ writeRasterLzw(struct pam *  const pamP,
                 /* The value for the pixel in the GIF image.  I.e. the colormap
                    index.
                 */
-            
-            lzw_encodePixel(lzwP, pamP, colorIndex);
+            if (lzw)
+                lzw_encodePixel(lzwP, colorIndex);
+            else
+                writePixelUncompressed(lzwP, colorIndex);    
         }
         ++nRowsDone;
     }
@@ -1220,140 +1236,9 @@ writeRasterLzw(struct pam *  const pamP,
 
 
 
-/* Routine to convert variable-width codes into a byte stream */
-
-static void
-outputUncompressed(struct gifDest * const dinfoP,
-                   int              const code) {
-
-    /* Emit a code of n_bits bits */
-    /* Uses cur_accum and cur_bits to reblock into 8-bit bytes */
-    dinfoP->cur_accum |= ((int) code) << dinfoP->cur_bits;
-    dinfoP->cur_bits += dinfoP->n_bits;
-
-    while (dinfoP->cur_bits >= 8) {
-        byteBuffer_out(dinfoP->byteBufferP, dinfoP->cur_accum & 0xFF);
-        dinfoP->cur_accum >>= 8;
-        dinfoP->cur_bits -= 8;
-    }
-}
-
-
-static void
-writeRasterUncompressedInit(FILE *           const ofP,
-                            struct gifDest * const dinfoP, 
-                            int              const i_bits) {
-/*----------------------------------------------------------------------------
-   Initialize pseudo-compressor
------------------------------------------------------------------------------*/
-
-    /* init all the state variables */
-    dinfoP->n_bits = i_bits;
-    dinfoP->maxcode = (1 << dinfoP->n_bits) - 1;
-    dinfoP->ClearCode = (1 << (i_bits - 1));
-    dinfoP->EOFCode = dinfoP->ClearCode + 1;
-    dinfoP->code_counter = dinfoP->ClearCode + 2;
-    /* init output buffering vars */
-    dinfoP->byteBufferP = byteBuffer_create(ofP);
-    dinfoP->cur_accum = 0;
-    dinfoP->cur_bits = 0;
-    /* GIF specifies an initial Clear code */
-    outputUncompressed(dinfoP, dinfoP->ClearCode);
-}
 
 
 
-static void
-writeRasterUncompressedPixel(struct gifDest * const dinfoP, 
-                             unsigned int     const colormapIndex) {
-/*----------------------------------------------------------------------------
-   "Compress" one pixel value and output it as a symbol.
-
-   'colormapIndex' must be less than dinfoP->n_bits wide.
------------------------------------------------------------------------------*/
-    assert(colormapIndex >> dinfoP->n_bits == 0);
-
-    outputUncompressed(dinfoP, colormapIndex);
-    /* Issue Clear codes often enough to keep the reader from ratcheting up
-     * its symbol size.
-     */
-    if (dinfoP->code_counter < dinfoP->maxcode) {
-        ++dinfoP->code_counter;
-    } else {
-        outputUncompressed(dinfoP, dinfoP->ClearCode);
-        dinfoP->code_counter = dinfoP->ClearCode + 2;	/* reset the counter */
-    }
-}
-
-
-
-static void
-writeRasterUncompressedTerm(struct gifDest * const dinfoP) {
-
-    outputUncompressed(dinfoP, dinfoP->EOFCode);
-
-    if (dinfoP->cur_bits > 0)
-        byteBuffer_out(dinfoP->byteBufferP, dinfoP->cur_accum & 0xFF);
-
-    byteBuffer_flush(dinfoP->byteBufferP);
-
-    byteBuffer_destroy(dinfoP->byteBufferP);
-}
-
-
-
-static void
-writeRasterUncompressed(struct pam *   const pamP,
-                        rowReader *    const rowReaderP,
-                        unsigned int   const alphaPlane,
-                        unsigned int   const alphaThreshold,
-                        struct cmap *  const cmapP, 
-                        int            const initBits,
-                        FILE *         const ofP) {
-/*----------------------------------------------------------------------------
-   Write the raster to file 'ofP'.
-   
-   Same as writeRasterLzw(), except written out one code per
-   pixel (plus some clear codes), so no compression.  And no use
-   of the LZW patent.
------------------------------------------------------------------------------*/
-    struct gifDest gifDest;
-    tuple * tuplerow;
-    unsigned int nRowsDone;
-        /* Number of rows we have read so far from the the input (the
-           last of which is the one we're working on now).  Note that
-           in case of interlace, this is not the same thing as the row
-           number of the current row.
-        */
-
-    tuplerow = pnm_allocpamrow(pamP);
-
-    writeRasterUncompressedInit(ofP, &gifDest, initBits);
-
-    nRowsDone = 0;
-
-    while (nRowsDone < pamP->height) {
-        unsigned int col;
-
-        rowReader_read(rowReaderP, tuplerow);
-
-        for (col = 0; col < pamP->width; ++col) {
-            unsigned int const colorIndex =
-                gifPixel(pamP, tuplerow[col],
-                         alphaPlane, alphaThreshold, cmapP);
-
-                /* The value for the pixel in the GIF image.  I.e. the colormap
-                   index.
-                */
-
-            writeRasterUncompressedPixel(&gifDest, colorIndex);
-        }
-        ++nRowsDone;
-    }
-    writeRasterUncompressedTerm(&gifDest);
-
-    pnm_freepamrow(tuplerow);
-}
 
 
 
@@ -1513,7 +1398,7 @@ gifEncode(struct pam *  const pamP,
           unsigned int  const bitsPerPixel,
           struct cmap * const cmapP,
           char          const comment[],
-          bool          const nolzw) {
+          bool          const lzw) {
 
     unsigned int const leftOffset = 0;
     unsigned int const topOffset  = 0;
@@ -1544,12 +1429,9 @@ gifEncode(struct pam *  const pamP,
     rowReaderP = rowReader_create(pamP, rasterPos, gInterlace);
 
     /* Write the actual raster */
-    if (nolzw)
-        writeRasterUncompressed(pamP, rowReaderP, alphaPlane, alphaThreshold,
-                                cmapP, initCodeSize + 1, ofP);
-    else
-        writeRasterLzw(pamP, rowReaderP, alphaPlane, alphaThreshold,
-                       cmapP, initCodeSize + 1, ofP);
+
+    writeRaster(pamP, rowReaderP, alphaPlane, alphaThreshold,
+                cmapP, initCodeSize + 1, ofP, lzw);
 
     rowReader_destroy(rowReaderP);
 
@@ -1941,7 +1823,7 @@ main(int argc, char *argv[]) {
     /* All set, let's do it. */
     gifEncode(&pam, stdout, rasterPos,
               cmdline.interlace, 0, bitsPerPixel, &cmap, cmdline.comment,
-              cmdline.nolzw);
+              !cmdline.nolzw);
     
     destroyCmap(&cmap);
 
@@ -1962,15 +1844,10 @@ main(int argc, char *argv[]) {
   and renamed 'pamtogif' by Bryan Henderson November 2006.
 
   The non-LZW GIF generation stuff was adapted from the Independent
-  JPEG Group's djpeg on 2001.09.29.  The uncompressed output subroutines
-  are derived directly from the corresponding subroutines in djpeg's
-  wrgif.c source file.  Its copyright notice say:
+  JPEG Group's djpeg on 2001.09.29.  In 2006.12 the output subroutines
+  were rewritten; now no uncompressed output subroutines are derived from
+  the Independent JPEG Group's source code.
 
-    Copyright (C) 1991-1997, Thomas G. Lane.  This file is part of the
-    Independent JPEG Group's software.  For conditions of distribution and
-    use, see the accompanying README file.
-
-  The referenced README file is README.JPEG in the Netpbm package.
  
   Copyright (C) 1989 by Jef Poskanzer.
  
