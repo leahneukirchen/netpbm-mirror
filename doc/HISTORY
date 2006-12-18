@@ -4,7 +4,7 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-not yet  BJH  Release 10.36.15
+06.12.18 BJH  Release 10.36.15
 
               ppmchange: Fix bug with -closeness and not -remainder or
               vice versa.
