@@ -72,7 +72,7 @@ parseCommandLine(int argc, char ** argv,
     optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
-    if (!closenessSpec)
+    if (!remainderSpec)
         cmdlineP->remainder_colorname = NULL;
 
     if (!closenessSpec)
