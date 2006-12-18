@@ -4,6 +4,14 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+06.12.18 BJH  Release 10.35.20
+
+              ppmchange: Fix bug with -closeness and not -remainder or
+              vice versa.
+
+              pgmtoppm: Fix garbage output with -map and input maxval
+              != map maxval.
+
 06.12.03 BJH  Release 10.35.19
 
               pbmtext: Fix crash when there is only one character.

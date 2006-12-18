@@ -141,7 +141,10 @@ main( argc, argv )
 		}
 	    }
 
-	ppm_writeppmrow( stdout, pixelrow, cols, (pixval) maxval, 0 );
+    if (!mappixels)
+        ppm_writeppmrow( stdout, pixelrow, cols, (pixval) maxval, 0 );
+    else
+        ppm_writeppmrow( stdout, pixelrow, cols, mapmaxval, 0 );
 	}
 
     pm_close( ifp );
