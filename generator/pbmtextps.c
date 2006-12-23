@@ -23,6 +23,7 @@
 #include <string.h>
 #include <errno.h>
 
+#include "mallocvar.h"
 #include "nstring.h"
 #include "shhopt.h"
 #include "pbm.h"
@@ -60,21 +61,51 @@ struct cmdlineInfo {
 
 
 static void
+buildTextFromArgs(int           const argc,
+                  char **       const argv,
+                  const char ** const textP) {
+
+    char * text;
+    unsigned int totalTextSize;
+    unsigned int i;
+
+    text = strdup("");
+    totalTextSize = 1;
+
+    for (i = 1; i < argc; ++i) {
+        if (i > 1) {
+            totalTextSize += 1;
+            text = realloc(text, totalTextSize);
+            if (text == NULL)
+                pm_error("out of memory");
+            strcat(text, " ");
+        } 
+        totalTextSize += strlen(argv[i]);
+        text = realloc(text, totalTextSize);
+        if (text == NULL)
+            pm_error("out of memory");
+        strcat(text, argv[i]);
+    }
+    *textP = text;
+}
+
+
+
+static void
 parseCommandLine(int argc, char ** argv,
                  struct cmdlineInfo *cmdlineP) {
 /*---------------------------------------------------------------------------
   Note that the file spec array we return is stored in the storage that
   was passed to us as the argv array.
 ---------------------------------------------------------------------------*/
-    optEntry *option_def = malloc(100*sizeof(optEntry));
+    optEntry * option_def;
     /* Instructions to OptParseOptions2 on how to parse our options.
    */
     optStruct3 opt;
 
     unsigned int option_def_index;
-    int i;
-    char * text;
-    int totaltextsize = 0;
+
+    MALLOCARRAY(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENTRY */
     OPTENT3(0, "resolution", OPT_INT,    &cmdlineP->res,            NULL,  0);
@@ -95,23 +126,7 @@ parseCommandLine(int argc, char ** argv,
 
     optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
 
-    text = NULL;
-
-    for (i = 1; i < argc; i++) {
-        if (i > 1) {
-            totaltextsize += 1;
-            text = realloc(text, totaltextsize);
-            if (text == NULL)
-                pm_error("out of memory");
-            strcat(text, " ");
-        } 
-        totaltextsize += strlen(argv[i]);
-        text = realloc(text, totaltextsize);
-        if (text == NULL)
-            pm_error("out of memory");
-        strcat(text, argv[i]);
-    }
-    cmdlineP->text = text;
+    buildTextFromArgs(argc, argv, &cmdlineP->text);
 }
 
 

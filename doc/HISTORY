@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.37.0
 
+              pbmtextps: Fix buffer overrun -- typical symptom: extra
+              text generated.
+
               ppmchange: Fix bug with -closeness and not -remainder or
               vice versa.
 
