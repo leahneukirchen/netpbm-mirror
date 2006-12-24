@@ -189,7 +189,7 @@ computeBackground(FILE *         const ifP,
                   xelval         const maxval,
                   int            const format,
                   enum bg_choice const backgroundChoice,
-                  int            const verbose) {
+                  bool           const verbose) {
 /*----------------------------------------------------------------------------
    Determine what color is the background color of the image in file
    *ifP, which is described by 'cols', 'rows', 'maxval', and 'format'.
