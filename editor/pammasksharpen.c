@@ -1,6 +1,6 @@
-#include "pam.h"
-#include "shhopt.h"
 #include "mallocvar.h"
+#include "shhopt.h"
+#include "pam.h"
 
 struct cmdlineInfo {
     /* All the information the user supplied in the command line,
