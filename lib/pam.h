@@ -454,6 +454,11 @@ tuple
 pnm_parsecolor(const char * const colorname,
                sample       const maxval);
 
+const char *
+pnm_colorname(struct pam * const pamP,
+              tuple        const color,
+              int          const hexok);
+
 extern double 
 pnm_lumin_factor[3];
 

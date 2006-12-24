@@ -399,13 +399,13 @@ ppm_parsecolor(const char * const colorname,
 
 
 
-char*
-ppm_colorname(const pixel* const colorP, 
-              pixval       const maxval, 
-              int          const hexok)   {
+char *
+ppm_colorname(const pixel * const colorP, 
+              pixval        const maxval, 
+              int           const hexok)   {
 
     int r, g, b;
-    FILE* f;
+    FILE * f;
     static char colorname[200];
 
     if (maxval == 255) {
@@ -445,8 +445,7 @@ ppm_colorname(const pixel* const colorP,
        hex specifier, so return that.
     */
     sprintf(colorname, "#%02x%02x%02x", r, g, b);
-    return colorname;
-}
+    return colorname;}
 
 
 
