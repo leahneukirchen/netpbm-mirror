@@ -6,6 +6,13 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.37.0
 
+              libnetpbm: add pnm_colorname().
+
+              add pambackground.  But doesn't find mid-row background yet.
+
+              libpam: better checking of sufficient size of struct pam
+              in pnm_writepaminit().
+
               pbmtextps: Fix buffer overrun -- typical symptom: extra
               text generated.
 
