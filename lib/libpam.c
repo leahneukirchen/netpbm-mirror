@@ -870,13 +870,17 @@ pnm_writepaminit(struct pam * const pamP) {
                  "(%d bytes, according to its 'len' element).",
                  pamP->size, pamP->len);
 
-    if (pamP->len < PAM_STRUCT_SIZE(bytes_per_sample))
+    if (pamP->size < PAM_STRUCT_SIZE(bytes_per_sample))
         pm_error("pam object passed to pnm_writepaminit() is too small.  "
                  "It must be large\n"
                  "enough to hold at least up through the "
                  "'bytes_per_sample' member, but according\n"
-                 "to its 'len' member, it is only %d bytes long.", 
-                 pamP->len);
+                 "to its 'size' member, it is only %d bytes long.", 
+                 pamP->size);
+    if (pamP->len < PAM_STRUCT_SIZE(maxval))
+        pm_error("pam object must contain members at least through 'maxval', "
+                 "but according to the 'len' member, it is only %u bytes "
+                 "long.", pamP->len);
 
     if (pamP->maxval > PAM_OVERALL_MAXVAL)
         pm_error("maxval (%lu) passed to pnm_writepaminit() "
@@ -887,6 +891,8 @@ pnm_writepaminit(struct pam * const pamP) {
     else
         tupleType = pamP->tuple_type;
 
+    if (pamP->len < PAM_STRUCT_SIZE(bytes_per_sample))
+        pamP->len = PAM_STRUCT_SIZE(bytes_per_sample);
     pamP->bytes_per_sample = pnm_bytespersample(pamP->maxval);
     
     switch (PAM_FORMAT_TYPE(pamP->format)) {
