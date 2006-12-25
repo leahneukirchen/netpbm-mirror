@@ -1,0 +1,91 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Pamtofits User Manual</TITLE></HEAD>
+<BODY>
+<H1>pamtofits</H1>
+Updated: 25 September 2005
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<A NAME="lbAB">&nbsp;</A>
+<H2>NAME</H2>
+
+pamtofits - convert a Netpbm image into FITS format
+
+<A NAME="lbAC">&nbsp;</A>
+<H2>SYNOPSIS</H2>
+
+<B>pamtofits</B>
+[<B>-max</B> <I>f</I>]
+[<B>-min</B> <I>f</I>]
+[<I>pamfile</I>]
+
+<A NAME="lbAD">&nbsp;</A>
+<H2>DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>pamtofits</b> reads a PNM or PAM image as input and produces a FITS
+(Flexible Image Transport System) file as output.  The resolution of
+the output file is either 8 bits/pixel, or 16 bits/pixel, depending on
+the value of maxval in the input file.  If the input file is a PBM or
+PGM image, the output file consists of a single plane image (NAXIS =
+2). If instead the input file is a PPM image, the output file will
+consist of a three-plane image (NAXIS = 3, NAXIS3 = 3).
+
+<p>You can find a full description of the FITS format in Astronomy
+&amp; Astrophysics Supplement Series 44 (1981), page 363.
+
+<A NAME="lbAE">&nbsp;</A>
+<H2>OPTIONS</H2>
+
+<p><b>-min</b> and <b>-max</b> tell <b>pamtofits</b> what &quot;physical
+values&quot; zero and maxval sample values, respectively, in the input
+image represent.  Physical values are a FITS concept.  <b>pamtofits</b>
+sets up the <b>BSCALE</b> and <b>BZERO</b> FITS header cards to indicate
+this information.
+
+<p>The default for <b>-min</b> is 0 and for <b>-max</b> is the maxval,
+which means if you don't specify these options, the FITS physical values
+are in fact the original Netpbm sample values.
+
+<p><b>pamtofits</b> always sets up the FITS header <b>DATAMIN</b> and
+<b>DATAMAX</b> cards to indicate that the highest physical value in
+the image is the one corresponding to the Netpbm maxval and the lowest is
+that corresponding to Netpbm zero.  This isn't really how those cards are
+supposed to be used, since the input image doesn't necessarily contain
+the full possible range of sample values.  It is a conservative
+approximation.
+
+<h2 id="history">HISTORY</h2>
+
+<p><b>pamtofits</b> was originally <b>pnmtofits</b> and did not handle
+PAM input.  It was extended and renamed in Netpbm 10.30 (October 2005).
+
+<A NAME="lbAF">&nbsp;</A>
+<H2>SEE ALSO</H2>
+
+<A HREF="fitstopnm.html">fitstopnm</A>,
+<A HREF="pam.html">pam</A>
+
+<A NAME="lbAG">&nbsp;</A>
+<H2>AUTHOR</H2>
+
+Copyright (C) 1989 by Wilson H. Bent (<A
+HREF="mailto:whb@hoh-2.att.com">whb@hoh-2.att.com</A>), with
+modifications by Alberto Accomazzi (<A
+HREF="mailto:alberto@cfa.harvard.edu">alberto@cfa.harvard.edu</A>).
+
+<HR>
+<A NAME="index">&nbsp;</A>
+<H2>Table Of Contents</H2>
+<UL>
+<LI><A HREF="#lbAB">NAME</A>
+<LI><A HREF="#lbAC">SYNOPSIS</A>
+<LI><A HREF="#lbAD">DESCRIPTION</A>
+<LI><A HREF="#lbAE">OPTIONS</A>
+<LI><A HREF="#history">HISTORY</A>
+<LI><A HREF="#lbAF">SEE ALSO</A>
+<LI><A HREF="#lbAG">AUTHOR</A>
+</UL>
+</BODY>
+</HTML>

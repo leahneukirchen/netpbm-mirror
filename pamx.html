@@ -1,0 +1,247 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Pamx User Manual</TITLE></HEAD>
+<BODY>
+<H1>pamx</H1>
+Updated: 25 March 2006
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<H2>NAME</H2>
+
+pamx - display Netpbm image in X Window System window
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>pamx</B>
+
+[<b>-fullscreen</b>]
+[<b>-install</b>]
+[<b>-private</b>]
+[<b>-fit</b>]
+[<b>-pixmap</b>]
+[<b>-verbose</b>]
+[<b>-display=</b><i>x-display</i>]
+[<b>-title=</b><i>text</i>]
+[<b>-foreground=</b><i>color</i>]
+[<b>-background=</b><i>color</i>]
+[<b>-border=</b><i>color</i>]
+[<b>-geometry=</b><i>x-geometry-string</i>]
+[<b>-visual=</b><i>name</i>]
+
+<i>netpbm_file</i>
+
+<P>All options can be abbreviated to their shortest unique prefix.  You
+may use two hyphens instead of one to designate an option.  You may
+use either white space or an equals sign between an option name and its
+value.
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+
+<p><b>pamx</b> displays a Netpbm image in an X Window System window.
+It is like a very simple version of the classic X image viewer
+<b>xloadimage</b>.
+
+<p>If you don't specify the input file <i>netpbm_file</i>, the input is
+from Standard Input.  The input image can be any Netpbm image format.
+If the input is a multi-image stream, <b>pamx</b> ignores all but the
+first image.
+
+<p><b>pamx</b> is not the best choice for general purpose viewing of
+images, because it is a traditional simple Netpbm building block.  It
+is a good thing to build into other programs and can be useful for
+debugging more complex systems, but you can get much more powerful
+viewers that can display Netpbm images.  For example, <b>xloadimage</b>,
+<b>xli</b>, <b>xzgv</b>, and any web browser.
+
+<p>The initial window is at most 90% of the size of the display unless
+the window manager does not correctly handle window size requests or
+if you've used the <b>-fullscreen</b> option.  You may move the image
+around in the window by dragging with the first mouse button.  The
+cursor will indicate which directions you may drag, if any.  You may
+exit the window by typing 'q' or control-C when the keyboard focus is
+on the window.
+
+<p><b>ppmsvgalib</b> is a similar program that displays an image on a
+Linux system without the need for the X Window System.
+
+
+<h2 id="resource">X RESOURCE CLASS</h2>
+
+<p><b>pamx</b> uses the resource class name <b>Xloadimage</b> for
+window managers which need this resource set.  This is, of course, the
+same resource class that the conventional viewer program
+<b>xloadimage</b> uses.
+
+<h2 id="options">OPTIONS</h2>
+
+<dl>
+<dt><b>-border=</b><i>color</i>
+
+<dd>This sets the background portion of the window which is not
+covered by any images to be <i>color</i>.
+
+<dt><b>-display=</b><i>display_name</i>
+
+<dd>This names the X display in which to put the window.  E.g. <b>0:0</b>.
+
+<dt><b>-fit</b>
+
+<dd>Force image to use the default visual and colormap.  This is
+useful if you do not want technicolor effects when the colormap focus
+is inside the image window, but it may reduce the quality of the
+displayed image.
+
+<dt><b>-fullscreen</b>
+
+<dd>Use the entire screen to display the image.
+
+<dt><b>-geometry=</b><I>W</I><b>x</b><i>H</i>[{<b>+</b>,<b>-</b>}<i>X</i>{<b>+</b>,<b>-</b>}<i>Y</i>
+
+<dd>This sets the size and position of the window in which <b>pamx</b>
+displays the image.
+
+<p>By default, the window size exactly matches the image size, except that
+if you don't specify <b>-fullscreen</b>, the maximum is 90% of the screen
+dimensions.
+
+<dt><b>-install</b>
+
+<dd>Forcibly install the image's colormap when the window is focused.
+This violates ICCCM standards and only exists to allow operation with
+naive window managers.  Use this option only if your window manager
+does not install colormaps properly.
+
+<dt><b>-pixmap</b>
+
+<dd>Force the use of a pixmap as backing-store.  This is provided for
+servers where backing-store is broken (such as some versions of the
+AIXWindows server).  It may improve scrolling performance on servers
+which provide backing-store.
+
+<dt><b>-private</b>
+
+<dd>Force <b>pamx</b> to use of a private colormap.  By default,
+<b>pamx</b> allocates colors shared unless there are not enough colors
+available.
+
+<dt><b>-verbose</b>
+
+<dd>Causes <b>pamx</b> to print various information about what it's
+doing to Standard Error.
+
+<dt><b>-visual=</b><i>visual_name</i>
+
+<dd>
+Force the use of a specific visual type to display an image.  By
+default, <b>pamx</b> tries to pick the best available image for a
+particular image type.  The available visual types are:
+<b>DirectColor</b>, <b>TrueColor</b>, <b>PseudoColor</b>,
+<b>StaticColor</b>, <b>GrayScale</b>, and <b>StaticGray</b>.
+You may use the shortest unique prefix of these names, and case is
+not significant.
+
+<dt><b>-background=</b><i>color</i>
+
+<dd>Use <i>color</i> as the background color instead of the default
+(usually white but this depends on the image type) if you are
+transferring a monochrome image to a color display.
+
+<dt><b>-foreground=</b><i>color</i>
+
+<dd>
+Use <i>color</i> as the foreground color instead of black if you are
+transferring a monochrome image to a color display.  You can also use
+this to invert the foreground and background colors of a monochrome
+image.
+
+<dt><b>-title=</b><i>text</i>
+
+<dd>Set the title bar title of the window.  Default is the file name of
+the input file, or &quot;stdin&quot; if the image is from Standard Input.
+
+</dl>
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<B><A HREF="ppmsvgalib.html">ppmsvgalib</A></B>,
+<B><A HREF="pam.html">pam</A></B>,
+<B><A HREF="pnm.html">pnm</A></B>,
+<B>xzgv</B>,
+<b>xloadimage</b>,
+<b>xli</b>
+
+<h2 id="author">AUTHOR</h2>
+
+<p><b>pamx</b> is by Bryan Henderson, in March 2006, based on
+<b>xloadimage</b> by Jim Frost, Centerline Software,
+jimf@centerline.com, 1989-1993.
+
+<p>Jim's code contained the following copyright notice and license:
+
+<blockquote>
+<p>Copyright 1989, 1993 Jim Frost
+   
+<p>Permission to use, copy, modify, distribute, and sell this software
+and its documentation for any purpose is hereby granted without fee,
+provided that the above copyright notice appear in all copies and that
+both that copyright notice and this permission notice appear in
+supporting documentation.  The author makes no representations about
+the suitability of this software for any purpose.  It is provided "as
+is" without express or implied warranty.
+   
+<p>THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
+EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF
+USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.
+
+</blockquote>
+
+<p>Lots of other people contributed to Xloadimage, and they are listed
+in the file COPYRIGHT in the source code.
+
+<h2 id="history">HISTORY</h2>
+
+<p><b>pamx</b> was new in Netpbm 10.34 (May 2006).
+
+<p><b>pamx</b> is essentially based on the classic X displayer program
+<b>xloadimage</b> by Jim Frost, 1989.  Bryan Henderson stripped it
+down and adapted it to Netpbm in March 2006.
+
+<p>The following features of <b>xloadimage</b> are left out of <b>pamx</b>,
+to be more compatible with Netpbm's philosophy of simple building blocks.
+Note that there are other programs in Netpbm that do all of these things:
+<ul>
+<li>slide show
+<li>zoom in/out
+<li>ability to accept formats other than Netpbm
+<li>ability to display on the root window
+<li>image transformations (brightening, clipping, rotating, etc)
+<li>decompressing and other decoding of input
+</ul>
+
+<b>pamx</b> also differs from <b>xloadimage</b> in that it uses
+Libnetpbm.
+
+<p>There is virtually no code from <b>xloadimage</b> actually in
+<b>pamx</b>, because Bryan rewrote it all to make it easier to
+understand.
+
+
+<HR>
+<H2 id="index">Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#resource">X RESOURCE CLASS</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
+</UL>
+</BODY>
+</HTML>

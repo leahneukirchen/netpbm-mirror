@@ -1,0 +1,77 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><title>Pgmmake User Manual</title></HEAD>
+<BODY>
+<H1>pgmmake</H1>
+Updated: 19 February 2006
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<H2>NAME</H2>
+pgmmake - create a PGM image of a specified gray level and dimensions
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>pgmmake</B>
+<b>-maxval=</b><i>maxval</i>
+<I>graylevel</I>
+<I>width</I>
+<i>height</I>
+
+<P>All options can be abbreviated to their shortest unique prefix.
+You may use two hyphens instead of one to designate an option.  You
+may use either white space or an equals sign between an option name
+and its value.
+
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><B>pgmmake</b> produces a PGM image of the specified gray level, width,
+height, and maxval.
+
+<P>Specify the gray level (<i>graylevel</i>) as a decimal floating point
+number in the range [0, 1].  E.g. 1 is white, 0 is black, and 0.5 is
+half luminosity gray.
+
+<h2 id="example">EXAMPLES</H2>
+
+<pre>
+    pgmmake 1 50 50
+</pre>
+<pre>
+    pgmmake .2 50 100 -maxval=5
+</pre>
+
+
+<H2 id="options">OPTIONS</H2>
+
+<DL>
+<DT><b>-maxval=</b><i>maxval</i>
+<DD>
+     The maxval for the generated image.  Default is 255.
+</DL>
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<A HREF="pbmmake.html">pbmmake</A>,
+<A HREF="ppmmake.html">ppmmake</A>,
+<A HREF="pgm.html">pgm</A>
+
+<h2 id="history">HISTORY</h2>
+
+<p>This program was new in Netpbm 10.32 (February 2006).
+
+<p>With older Netpbm, use <b>ppmmake</b> and <b>ppmtopgm</b>.
+
+<HR>
+<A NAME="index">&nbsp;</A>
+<H2>Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#example">EXAMPLES</A>
+<LI><A HREF="#options">OPTIONS</A>
+</UL>
+</BODY>
+</HTML>

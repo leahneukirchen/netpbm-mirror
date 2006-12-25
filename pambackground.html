@@ -1,0 +1,128 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Pambackground User Manual</TITLE></HEAD>
+<BODY>
+<H1>pambackground</H1>
+Updated: 24 December 2006
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<H2>NAME</H2>
+
+pambackground - create a mask of the background area of an image
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>pambackground</B>
+
+[<I>netpbmfile</I>
+
+[<b>-verbose=</b>]
+
+<p>Minimum unique abbreviation of option is acceptable.  You may use double
+hyphens instead of single hyphen to denote options.  You may use white
+space in place of the equals sign to separate an option name from its value.
+
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>pambackground</b> reads a PNM or PAM image as input.
+It generates as output a PAM image that identifies the background area
+of the image (a mask).
+
+<p>To identify the background, <b>pambackground</b> assumes the image
+is a foreground image, smaller than the total image size, placed over
+a single-color background.  It assumes that foreground image is solid
+-- it does not have holes through which the background can be seen.
+So in specific, <b>pambackground</b> first identifies the background
+color, then finds all contiguous pixels of that color in regions
+touching any edge of the image.  Think of it as starting at each of
+the four edges and moving inward as far as possible until it hits
+pixels of another color (the foreground image).
+
+<p><b>pambackground</b> identifies the background color as follows:
+If any 3 corners of the image are the same color, that's the background
+color.  If not, but 2 corners are the same color, the background color
+is the color of a pair of identically colored corners in this priority
+order: top, right, left, bottom.  If no two corners have the same color,
+the background color is the color of the upper left corner.
+
+<p>In a typical photograph, the area that you would consider the
+background is many shades of a color, so to <b>pambackground</b> it is
+multiple colors and <b>pambackground</b> will not meaningfully
+identify the background of your image.  To use <b>pambackground</b> in
+this case, you might use <b>ppmchange</b> to change all similar colors
+to a single one first.  For example, if the photograph is a building
+against a blue sky, where nothing remotely sky-blue appears in the
+building, you could use <b>ppmchange</b> to change all pixels within
+20% of &quot;SkyBlue&quot; to SkyBlue, then run <b>pambackground</b>
+on it.
+
+<p>As currently implemented, <b>pambackground</b> does not really
+do what is promised above.  It can't see places where the background
+appears in the middle of a row (think of the sky between two buildings).
+It will take a considerably more sophisticated algorithm to fix that;
+feel free to write the code and submit it for inclusion in Netpbm.
+
+<p>The PAM that <b>pambackground</b> creates has a single plane, with
+a maxval of 1.  The sample value 1 means background; 0 means
+foreground.  There is no tuple type.  Some older programs (but none
+that are part of Netpbm) don't know what a PAM is and expect a mask to
+be in the form of a PGM or PBM image.  To convert
+<b>pambackground</b>'s output to PBM, use <b>pamtopnm -assume</b>.  To
+convert to PGM, use <b>pgmtopgm</b>.
+
+<P><I>netpbmfile</I> is the file specification of the input file, or
+<B>-</B> to indicate Standard Input.  The default is Standard Input.
+
+<p>A common use for a background mask is with <b>pamcomp</b>.  You
+could replace the entire background (or foreground) of your 
+image with something else.
+
+<p>Another common use is to make an image with the background
+transparent (in some image format that has a concept of transparency;
+not Netpbm formats) so that image can be overlaid onto another image
+later.  Netpbm's converters to image formats that have transparency
+(e.g. PNG) let you use the mask that <b>pambackground</b> generates
+to identify the transparent areas for the output.
+
+<p>To simply make a mask of all the areas of a specified color, use
+<b>ppmcolormask</b>.  If you have a unique background color (one that
+doesn't occur in the foreground) and know what it is, this can create
+a background mask in cases that <b>pambackground</b> cannot: where there
+are see-through holes in the foreground image.
+
+<H2 id="options">OPTIONS</H2>
+
+<dl>
+
+<dt><b>-verbose</b>
+
+<dd>Tell interesting facts about the process.
+
+</dl>
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<B><A HREF="ppmcolormask.html">ppmcolormask</A></B>,
+<B><A HREF="pamcomp.html">pamcomp</A></B>,
+<B><A HREF="pamtopnm.html">pamtopnm</A></B>,
+<B><A HREF="pgmtopgm.html">pgmtopgm</A></B>,
+<B><A HREF="pnm.html">pnm</A></B>,
+<B><A HREF="pam.html">pam</A></B>,
+
+<h2 id="history">HISTORY</h2>
+
+<P><B>pambackground</B> was new in Netpbm 10.37 (December 2006).
+
+<HR>
+<H2 id="index">Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+</UL>
+</BODY>
+</HTML>

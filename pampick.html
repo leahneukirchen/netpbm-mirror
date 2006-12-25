@@ -1,0 +1,78 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Pampick User Manual</TITLE></HEAD>
+<BODY>
+<H1>pampick</H1>
+Updated: 25 October 2005
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<H2 id="name">NAME</H2>
+
+pampick - pick images out of a multi-image Netpbm image stream
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>pampick</B>
+
+<I>image_sequence_number</I> ...
+
+<p>Minimum unique abbreviation of option is acceptable.  You may use double
+hyphens instead of single hyphen to denote options.  You may use white
+space in place of the equals sign to separate an option name from its value.
+
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>pampick</b> reads a PNM or PAM image stream as input.  It
+picks certain images from the stream and copies them to a new image
+stream on Standard Output.
+
+<p>You identify the images to pick by sequence number within the stream.
+Each <i>image_sequence_number</i> is a decimal sequence number, with zero
+meaning the first image.
+
+<p>The arguments must be in increasing order, without duplicates.  The
+results are undefined if they are not.  (There are a number of
+enhancements that might be made in future releases that would make
+whatever <b>pampick</b> does today when you break this rule change).
+<b>pampick</b> outputs the images in the same order as they appear in
+the input.  If you specify no sequence numbers, <b>pampick</b> outputs
+nothing.  If you specify a sequence number that is beyond what is in
+the input, <b>pampick</b> fails with an error message to that effect.
+
+<p><b>pampick</b> always reads the entire input stream.  (This is helpful
+when the input stream is a pipe and whatever is feeding the pipe would be
+upset if it filled up or broke).
+
+<p>To see how many images, and what kind, are in a stream, use
+<b>pamfile</b>.
+
+<p>To extract all the images in a stream into separate named files,
+use <b>pamsplit</b>.
+
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<B><A HREF="pamfile.html">pamfile</A></B>,
+<B><A HREF="pamsplit.html">pamsplit</A></B>,
+<B><A HREF="pnm.html">pnm</A></B>,
+<B><A HREF="pam.html">pam</A></B>,
+<B>cat</b> man page
+
+<h2 id="history">HISTORY</h2>
+
+<p><b>pampick</b> was new in Netpbm 10.31 (December 2005);
+
+<HR>
+<A NAME="index">&nbsp;</A>
+<H2>Table Of Contents</H2>
+<UL>
+<LI><A HREF="#name">NAME</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+</UL>
+</BODY>
+</HTML>

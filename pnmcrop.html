@@ -1,0 +1,188 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Pnmcrop User Manual</TITLE></HEAD>
+<BODY>
+<H1>pnmcrop</H1>
+Updated: 30 November 2006
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<H2>NAME</H2>
+
+pnmcrop - crop a PNM image
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>pnmcrop</B>
+
+[<B>-white</B>|<B>-black</B>|<B>-sides</B>]
+
+[<B>-left</B>]
+
+[<B>-right</B>]
+
+[<B>-top</B>]
+
+[<B>-bottom</B>]
+
+[<B>-margin=</B><i>pixels</i>]
+
+[<B>-borderfile=</B><i>filename</i>]
+
+[<I>pnmfile</I>]
+
+<P>Minimum unique abbreviation of option is acceptable.  You may use
+double hyphens instead of single hyphen to denote options.  You may use
+white space in place of the equals sign to separate an option name
+from its value.
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>pnmcrop</b> reads a PBM, PGM, or PPM image as input, removes
+borders that are the background color, and produces the same type of
+image as output.
+
+<P>If you don't specify otherwise, <B>pnmcrop</B> assumes the
+background color is whatever color the top left and right corners of
+the image are and if they are different colors, something midway
+between them.  You can specify that the background is white or black
+with the <B>-white</B> and <B>-black</B> options or make
+<B>pnmcrop</B> base its guess on all four corners instead of just two
+with <B>-sides</B>.
+
+<P>By default, <B>pnmcrop</B> chops off any stripe of background color
+it finds, on all four sides.  You can tell <B>pnmcrop</B> to remove
+only specific borders with the <B>-left</B>, <B>-right</B>,
+<B>-top</B>, and <B>-bottom</B> options.
+
+<p>If you want to leave some border, use the <b>-margin</b> option.  It
+will not only spare some of the border from cropping, but will fill in
+(with what <b>pnmcrop</b> considers the background color) if necessary
+to get up to that size.
+
+<p>If the input is a multi-image stream, <b>pnmcrop</b> processes each
+one independently and produces a multi-image stream as output.  It chooses
+where to crop independently for each image.  So if you start with a stream
+of images of the same dimensions, you may end up with images of differing
+dimensions.  Before Netpbm 10.37 (December 2006), <b>pnmcrop</b> ignored
+all input images but the first.
+
+<P>If you want to chop a specific amount off the side of an image, use
+<B>pamcut</B>.
+
+<P>If you want to add different borders after removing the existing
+ones, use <B>pnmcat</B> or <B>pamcomp</B>.
+
+<H2 id="options">OPTIONS</H2>
+
+<DL COMPACT>
+<DT><B>-white</B>
+
+<DD>Take white to be the background color.  <B>pnmcrop</B> removes
+borders which are white.
+
+<DT><B>-black</B>
+
+<DD>Take black to be the background color.  <B>pnmcrop </B> removes
+borders which are black.
+
+<DT><B>-sides</B>
+
+<DD>Determine the background color from the colors of the four corners
+of the input image.  <B>pnmcrop</B> removes borders which are of the
+background color.
+
+<P>If at least three of the four corners are the same color,
+<B>pnmcrop </B> takes that as the background color.  If not,
+<B>pnmcrop</B> looks for two corners of the same color in the
+following order, taking the first found as the background color: top,
+left, right, bottom.  If all four corners are different colors,
+<B>pnmcrop</B> assumes an average of the four colors as the background
+color.
+
+<P>The <B>-sides</B> option slows <B>pnmcrop</B> down, as it reads the
+entire image to determine the background color in addition to the up
+to three times that it would read it without <B>-sides</B>.
+
+<DT><B>-left</B>
+
+<DD>Remove any left border.
+
+<DT><B>-right</B>
+
+<DD>Remove any right border.
+
+<DT><B>-top</B>
+
+<DD>Remove any top border.
+
+<DT><B>-bottom</B>
+
+<DD>Remove any bottom border.
+
+<dt><b>-margin=</b><i>pixels</i>
+
+<dd>Leave <i>pixels</i> pixels of border.  Expand the border to this size
+if necessary.
+
+<p>This option was new in Netpbm 10.29 (August 2005).
+
+<dt><b>-borderfile=</b><i>filename</i>
+
+<dd>Use the image in the file named <i>filename</i> instead of the input
+image to determine where the borders of the input image are.
+
+<p>Without this option, <b>pnmcrop</b> examines the input image and
+figures out what part of the image is border and what part is
+foreground (not border).  With this option, <b>pnmcrop</b> finds the
+borders in one image, then uses the those four border sizes (left,
+right, top, bottom) in cropping a different image.
+
+<p>The point of this is that you may want to help <b>pnmcrop</b> to
+come to a different conclusion as to where the border are by
+preprocessing the input image.  For example, consider an image that
+has speckles of noise in its borders.  <b>pnmcrop</b> isn't smart
+enough to recognize these as noise; it sees them as foreground image.
+So <b>pnmcrop</b> considers most of your borders to be foreground and
+does not crop them off as you want.  To fix this, run the image
+through a despeckler such as <b>pbmclean</b> and tell <b>pnmcrop</b>
+to use the despeckled version of the image as the <b>-borderfile</b>
+image, but the original speckled version as the input image.  That
+way, you crop the borders, but retain the true foreground image,
+speckles and all.
+
+<p>This option was new in Netpbm 10.29 (August 2005).
+
+<DT><B>-verbose</B>
+
+<DD>Print on Standard Error information about the processing,
+including exactly how much is being cropped off of which sides.
+
+</DL>
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<B><A HREF="pamcut.html">pamcut</A></B>,
+
+<B><A HREF="pamfile.html">pamfile</A></B>,
+
+<B><A HREF="pnm.html">pnm</A></B>
+
+<H2 id="author">AUTHOR</H2>
+
+Copyright (C) 1989 by Jef Poskanzer.
+
+
+<HR>
+<A NAME="index">&nbsp;</A>
+<H2>Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
+</UL>
+</BODY>
+</HTML>

@@ -1,0 +1,139 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Ppmcolormask User Manual</TITLE></HEAD>
+
+<BODY>
+
+<H1>ppmcolormask</H1>
+Updated: 1 May 2006
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<H2>NAME</H2>
+
+ppmcolormask - produce mask of areas of a certain color in a PPM file
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>ppmcolormask</B>
+
+<b>-color=</b><i>color_list</i>
+
+[<I>ppmfile</I>]
+
+<p>Obsolete:
+
+<p>
+<B>ppmcolormask</B>
+
+<I>color</I>
+
+[<I>ppmfile</I>]
+
+<h2 id="examples">EXAMPLES</h2>
+
+<pre>
+<code>
+    ppmcolormask -color red testimg.ppm &gt;redmask.pbm
+    pamcomp background.ppm testimg.ppm -alpha=redmask.pbm &gt;test.ppm
+
+    ppmcolormask -color=red,pink,salmon testimg.ppm &gt;reddishmask.pbm
+
+    ppmcolormask -color=bk:red,bk:orange,bk:yellow testimg.ppm &gt;firemask.pbm
+
+</code>
+</pre>
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<P><b>ppmcolormask</b> reads a PPM file as input and produces a PBM
+(bitmap) file as output.  The output file is the same dimensions as
+the input file and is black in all places where the input file is a
+color indicated by the <b>-color</b> option, and white everywhere
+else.
+
+<P>The output of <B>ppmcolormask</B> is useful as an alpha mask input
+to <B>pamcomp</B>.  Note that you can generate such an alpha mask
+automatically as you convert to PNG format with <B><A
+HREF="pnmtopng.html">pnmtopng</A></B>.  Use its <B>-transparent</B>
+option.
+
+<P><I>ppmfile</I> is the input file.  If you don't specify
+<I>ppmfile</I>, the input is from Standard Input.
+
+<P>The output goes to Standard Output.
+
+<p>In the obsolete alternative syntax, specifying the <i>color</i>
+names a single exact color to be masked.
+
+<p><b>ppmchange</b> does a similar thing: it modifies an image by
+changing colors you specify to other colors you specify.  The two
+programs give you somewhat different means of specifying colors in the
+input image.
+
+<p>To make a mask of an image's background, without having to tell it
+what color it is, use <b>pambackground</b>.
+
+<h2 id="options">OPTIONS</h2>
+
+<dl>
+<dt><b>-color=</b><I>color_list</I>
+
+<dd>This mandatory option specifies the colors that are to be masked
+(where the image is one of these colors, the output mask will be black).
+
+<p>Examples:
+
+<ul>
+<li><b>-color=red</b>
+<li><b>-color=red,pink,salmon</b>
+<li><b>-color=rgb:80/80/ff</b>
+<li><b>-color=bk:red,bk:orange,bk:yellow</b>
+</ul>
+
+<p><i>color_list</i> is a list of colors separated by commas.  Each
+color is either an exact color name as described for the <a
+href="libppm.html#colorname">argument of the <b>ppm_parsecolor()</b>
+library routine</a> or one of the <a
+href="libppm.html#berlinkay">Berlin-Kay color names</a>.  In the
+latter case, all colors that are better described by that Berlin-Kay
+color name than any other are in the mask set.
+
+<p>The algorithm <b>ppmcolormask</b> uses to determine to which colors
+a Berlin-Kay color name applies is based on a Sugeno-type fuzzy
+inference system developed by <a
+href="mailto:kenan@unix.ba">Kenan Kalajdzic</a> in 2006.  The
+fuzzy model consists of partially linear membership functions defined
+in the HSV color space.  Although more complex algorithms for fuzzy
+color matching exist, this algorithm is intentionally simplified to
+achieve a satisfactory speed using relatively compact code.
+
+<p>This option was new in Netpbm 10.34 (June 2006).  Before that,
+you must use the <i>color</i> argument and cannot specify a Berlin-Kay
+color.
+
+</dl>
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<B><A HREF="pambackground.html">pambackground</A></B>,
+<B><A HREF="ppmchange.html">ppmchange</A></B>,
+<B><A HREF="pgmtoppm.html">pgmtoppm</A></B>,
+<B><A HREF="pamcomp.html">pamcomp</A></B>,
+<B><A HREF="pbmmask.html">pbmmask</A></B>,
+<B><A HREF="ppm.html">ppm</A></B>
+
+
+<HR>
+<A NAME="index">&nbsp;</A>
+<H2>Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#examples">EXAMPLES</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
+</UL>
+</BODY>
+</HTML>

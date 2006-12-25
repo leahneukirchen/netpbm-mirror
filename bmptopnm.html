@@ -1,0 +1,67 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Bmptopnm User Manual</TITLE></HEAD>
+<BODY>
+<H1>bmptopnm</H1>
+Updated: 24 February 2006
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<H2>NAME</H2>
+bmptopnm - convert a BMP file into a PBM, PGM, or PNM image
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>bmptopnm</B>
+[<I>bmpfile</I>]
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>bmptopnm</b> reads a Microsoft Windows or OS/2 BMP file as
+input.  and produces a PBM, PGM, or PNM image as output.  If the input
+is colormapped and contains only black and white, the output is PBM.
+If the input is colormapped and contains only black white and gray,
+the output is PGM.  Otherwise, the output is PPM.
+
+<P><b>bmptopnm</b> understands BMP files compressed with run length
+encoding (RLE4/RLE8), but not if that encoding includes a &quot;delta&quot;
+(which is rare).  <b>bmptopnm</b> recognizes the delta and issues an
+error message.
+
+<p><b>bmptopnm</b> cannot convert BMP files compressed with JPEG or
+PNG encoding.  It recognizes the compression and issues an error
+message.  Before Netpbm 10.32 (February 2006), <b>bmptopnm</b>
+couldn't convert RLE BMP files either.
+
+<P>Before Netpbm 10.18 (September 2003), this program could not convert
+BMP images with the BI_BITFIELDS format ("compression type").  It would
+recognize the format and issue an error message.
+
+<P><b>bmptopnm</b> cannot convert OS/2 BMP files with 16 bits per
+pixel (only because the author did not have a complete specification
+for them).  It recognizes the format and issues an error message.
+Before Netpbm 10.16 (June 2003), it also could not convert Windows BMP
+files with 16 bits per pixel.
+
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<B><A HREF="ppmtobmp.html">ppmtobmp</A></B>,
+<B><A HREF="ppmtowinicon.html">ppmtowinicon</A></B>,
+<B><A HREF="ppm.html">ppm</A></B>
+
+<H2 id="author">AUTHOR</H2>
+
+Copyright (C) 1992 by David W. Sanderson.
+
+<HR>
+<H2 id="index">Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
+</UL>
+</BODY>
+</HTML>

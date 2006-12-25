@@ -1,0 +1,75 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD>
+<TITLE>Ppmtogif User Manual</TITLE></HEAD>
+<BODY>
+<H1>ppmtogif</H1>
+<BR>
+<p><b>ppmtogif</b> was replaced in Netpbm 10.37 (December 2002) by
+<b><a href=pamtogif.html>pamtogif</a></b>.
+
+<P><B>pamtogif</b> is mostly backward compatible with <b>ppmtogif</b>.
+
+<P>One way <b>pamtogif</b> is not backward compatible with <b>ppmtogif</b>
+is that to specify a transparency (alpha) mask with <b>ppmtogif</b>, you
+supply the transparency as a separate pseudo-PGM image and use the
+<b>-alpha</b> option, whereas with <b>pamtogif</b>, you supply an input
+image that has the transparency integrated into it, and there is no
+<b>-alpha</b> option.
+
+<p><b>ppmtogif</b> still exists as a separate program for backward 
+compatibility, but it runs <b>pamtogif</b> to do the essential work.
+The compatibility <b>ppmtogif</b> interprets an <b>-alpha</b> option
+by reading the transparency image and combining it with the input
+image, then feeding <b>pamtogif</b> the combined image it expects.
+Other than that, the compatibility <b>ppmtogif</b> just passes input and
+options directly to <b>pamtogif</b>.
+
+<P>You should not make any new use of <b>ppmtogif</b> and if you modify an
+existing use, you should upgrade to <b>pamtogif</b>.
+
+<p>Unless you use the <b>-alpha</b> option, you can simply change the name
+of the program.  If you use <b>-alpha</b>, here is how to upgrade:
+
+<pre>
+<kbd>
+  $ ppmtogif -alpha=myalpha.pgm myinput.ppm &gt;myoutput.gif
+</kbd>
+</pre>
+
+becomes
+
+<pre>
+<kbd>
+  $ pamstack -tupletype=RGB_ALPHA myinput.ppm myalpha.pgm |  \
+      pamtogif &gt;myoutput.gif
+</kbd>
+</pre>
+
+
+<h2>Original Ppmtogif</h2>
+
+<p>If you are using Netpbm before 10.37, <b>pamtogif</b> doesn't exist,
+so you use <b>ppmtogif</b>.  You can use the <b>pamtogif</b> manual
+for <b>ppmtogif</b>, with the following exceptions.
+
+<p>The current documentation of <b>pamtogif</b> documents all versions
+of that program.  Use the information for Version 10.37 only.
+
+<p><b>ppmtogif</b> before Netpbm 10.31 does not accept PAM input at all.
+
+<p><b>ppmtogif</b> does not accept PAM input with transparency information
+in it.  Instead, <b>ppmtogif</b> has an <b>-alpha</b> option.
+
+<p>The syntax of the option is <b>-alpha=</b><i>pgmfile</i>.
+<b>ppmtogif</b> treats the contents of the named PGM file the same as
+<b>pamtogif</b> treats the alpha plane of a PAM.  The PGM image must
+have the same dimensions as the input file.  But unlike the PAM case,
+the alpha image need not have the same maxval as the input.
+<b>ppmtogif</b> interprets the alpha file using the alpha file's
+maxval.
+
+<P>You cannot specify both <B>-transparent</B> and <B>-alpha</B>.
+
+
+</BODY>
+</HTML>

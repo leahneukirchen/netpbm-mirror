@@ -1,0 +1,86 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Pamsplit User Manual</TITLE></HEAD>
+<BODY>
+<H1>pamsplit</H1>
+Updated: 23 October 2005
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<H2>NAME</H2>
+
+pamsplit - split a multi-image PNM/PAM file into single-image files
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>pamsplit</B>
+
+[<I>netpbmfile</I>
+
+[<I> output_file_pattern</I>]]
+
+[<b>-padname=</b><i>n</i>]
+
+<p>Minimum unique abbreviation of option is acceptable.  You may use double
+hyphens instead of single hyphen to denote options.  You may use white
+space in place of the equals sign to separate an option name from its value.
+
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>pamsplit</b> reads a PNM or PAM stream as input.  It copies each image
+in the input into a separate file, in the same format.
+
+<P><I>netpbmfile</I> is the file specification of the input file, or
+<B>-</B> to indicate Standard Input.  The default is Standard Input.
+
+<P><I>output_file_pattern</I> tells how to name the output files.  It
+is the file specification of the output file, except that the first
+occurence of &quot;%d&quot; in it is replaced by the image sequence
+number in unpadded ASCII decimal, with the sequence starting at 0.  If
+there is no &quot;%d&quot; in the pattern, <B>pamsplit</B> fails.
+
+<P>The default output file pattern is &quot;image%d&quot;.
+
+<p>The <b>-padname</b> option specifies to how many characters you
+want the image sequence number in the output file name padded with
+zeroes.  <b>pamsplit</b> adds leading zeroes to the image sequence
+number to get up to at least that number of characters.  This is just
+the number of characters in the sequence number part of the name.  For
+example, <b>pamsplit - outputfile%d.ppm -padname=3</b> would yield
+output filenames <b>outputfile000.ppm</b>, <b>outputfile001.ppm</b>,
+etc.
+
+<p>The default is no padding (equivalent to <b>-padname=0</b>.
+<P>The <b>-padname</b> option was new in Netpbm 10.23 (July 2004).
+Before that, there was never any padding.
+
+
+<P>Note that to do the reverse operation (combining multiple
+single-image Netpbm files into a multi-image one), there is no special
+Netpbm program.  Just use <B>cat</B>.
+
+<p>If you just want to find out basic information about the images in a
+stream, you can use <b>pamfile</b> on the stream.
+
+<p>To extract images from a stream and generate a single stream containing
+them, use <b>pampick</b>.
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<B><A HREF="pamfile.html">pamfile</A></B>,
+<B><A HREF="pampick.html">pampick</A></B>,
+<B><A HREF="pnm.html">pnm</A></B>,
+<B><A HREF="pam.html">pam</A></B>,
+<B>cat</b> man page
+
+<HR>
+<H2 id="index">Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+</UL>
+</BODY>
+</HTML>

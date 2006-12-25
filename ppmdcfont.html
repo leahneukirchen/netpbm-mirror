@@ -1,0 +1,59 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Ppmdcfont User Manual</TITLE></HEAD>
+<BODY>
+<H1>ppmdcfont</H1>
+Updated: September 2005
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<H2 id="name">NAME</H2>
+
+ppmdcfont - Turn a Ppmdfont file into C source for a builtin font
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>ppmdcfont</B>
+
+
+<p>(There are no arguments or options)
+
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>ppmdcfont</b> creates a C source file that you can compile into
+a built-in font for use with the Netpbm PPM drawing facilities.  It
+reads a Ppmdfont file on Standard Input and writes the C source code to
+Standard Output.
+
+<p>The output C source code has the font object's name hardcoded as
+<b>ppmd_standardfont</b>, which you will definitely want to edit,
+because that is the name of the font built in to <b>libnetpbm</b>.  If
+you don't change it, it will conflict both cognitively and in program
+linking.  There should obviously be an option on <b>ppmdcfont</b> to
+choose this, but the development effort has not been justified so far.
+
+<p>See <A HREF="libnetpbm_draw.html">Libnetpbm PPM Drawing Function
+Manual</A> for details on Ppmdfont files.
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<B><A HREF="ppmdraw.html">ppmdraw</A></B>, <B><A
+HREF="ppmddumpfont.html">ppmddumpfont</A></B>, <B><A
+HREF="ppmdcfont.html">ppmdcfont</A></B>, <A
+HREF="libnetpbm_draw.html">Libnetpbm PPM Drawing Function Manual</A>
+
+
+<HR>
+<A NAME="index">&nbsp;</A>
+<H2>Table Of Contents</H2>
+<UL>
+<LI><A HREF="#name">NAME</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+</UL>
+</BODY>
+</HTML>
+

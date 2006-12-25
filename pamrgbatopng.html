@@ -1,0 +1,78 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Pamrgbtopng User Manual</TITLE></HEAD>
+<BODY>
+<H1>pamrgbatopng</H1>
+Updated: 24 July 2006
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<H2 id="name">NAME</H2>
+
+pamrgbatopng - convert PAM color/transparency image to PNG
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>pamrgbatopng</B>
+[<i>pamfile</i>]
+
+<P>Minimum unique abbreviation of option is acceptable.  You may use double
+hyphens instead of single hyphen to denote options.  You may use white
+space in place of the equals sign to separate an option name from its value.
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>pamrgbatopng</b> reads a PAM image with the RGB_ALPHA
+tuple type (a color visual image with transparency) and produces an
+equivalent PNG image as output.
+
+<p>The input image if from the file named by the <i>pamfile</i> argument,
+or Standard Input if you don't specify <i>pamfile</i>.  The output goes
+to Standard Output.
+
+<p>The maxval of the input image must be 255.  You can use
+<b>pamdepth</b> to change the maxval of an image to 255 if necessary.
+
+<p><a href="pnmtopng.html"><b>pnmtopng</b></a> is a much more powerful
+program for generating PNG images from Netpbm images, but it cannot
+take PAM images with transparency as input.  To supply transparency
+information, you must supply it in a separate PGM image.  That makes
+it considerably less convenient to use.
+
+<p>(But note that <b>pnmtopng</b> takes PAM images, even with RGB_ALPHA
+tuple type just fine -- it just ignores the alpha plane).
+
+<p>Netpbm's strategic direction is to add to <b>pnmtopng</b> all the
+capabilities of <b>pamrgbatopng</b> and retire <b>pamrtbatopng</b>.
+But there's no telling when that will happen.
+
+
+<H2 id="options">OPTIONS</H2>
+
+<p>None.
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<B><A HREF="pam.html">pam</A></B>
+<B><A HREF="pnmtopng.html">pnmtopng</A></B>
+<B><A HREF="pngtopnm.html">pngtopnm</A></B>
+
+<H2 ID="history">HISTORY</H2>
+
+<p><b>pamrgbatopng</b> was new in Netpbm 10.30 (October 2005).
+
+<HR>
+<A NAME="index">&nbsp;</A>
+<H2>Table Of Contents</H2>
+<UL>
+<LI><A HREF="#name">NAME</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#history">HISTORY</A>
+</UL>
+</BODY>
+</HTML>
+

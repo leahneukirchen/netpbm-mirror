@@ -1,0 +1,113 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Pnmsmooth User Manual</TITLE></HEAD>
+<BODY>
+<H1>pnmsmooth</H1>
+Updated: 4 December 1994
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<h2>NAME</H2>
+
+pnmsmooth - smooth out an image
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>pnmsmooth</B>
+
+[<b>-width=</b><i>cols</i>]
+[<b>-height=</b><i>rows</i>]
+
+[<B>-dump</B>=<I>dumpfile</I>]
+
+[<I>pnmfile</I>]
+
+<p>Deprecated backward-compatibility option:
+
+[<b>-size</b>]
+
+<p>Minimum unique abbreviation of option is acceptable.  You may use double
+hyphens instead of single hyphen to denote options.  You may use white
+space in place of the equals sign to separate an option name from its value.
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>pnmsmooth</b> smoothes out an image by replacing each pixel with
+the average of its width X height neighbors.  It is implemented as a
+progam that generates a PGM convolution matrix and then invokes
+<b>pnmconvol</b> with it.
+
+<H2 id="options">OPTIONS</H2>
+
+<DL COMPACT>
+<dt><b>-width=</b><i>cols</i>
+<dt><b>-height</b>=<i>rows</i>
+
+<dd>
+These options specify the dimensions of the convolution matrix.
+Default dimensions are 3 wide and 3 high.  Each dimension must be odd.
+The maximum size of the convolution matrix is limited by the maxval of
+the image such that width * height * 2 must not exceed the maxval.
+(use <b>pamdepth</b> to increase the maxval if necessary).
+
+<p>These options were new in Netpbm 10.32 (February 2006).  Before that,
+use <b>-size</b>.
+
+<DT><B>-size</b>
+
+<DD>This deprecated option exists in current Netpbm for backward
+compatibility.  It was obsoleted by <b>-width</b> and <b>-height</b>
+in Netpbm 10.32 (February 2006).
+
+<p>When you use this option, the first two program arguments are the width
+and height, respectively, of the convolution matrix and do the same thing
+as the <b>-width</b> and <b>-height</b> option values.  The third
+(optional) program argument is the input file name.
+
+<p>In reality, in old <b>pnmsmooth</b>, the width and height are two
+values of the <b>-size</b> option, but the modern Netpbm command syntax
+paradigm doesn't allow an option with multiple values, so instead
+<b>-size</b> is an option with no value and width and height are program
+arguments.  That has the fortunate effect of making the following command
+mean the same in current <b>pnmsmooth</b> as in old <b>pnmsmooth</b>:
+<pre>
+<kbd>
+     pnmsmooth -size 5 5 infile.ppm &gt;outfile.ppm
+</kbd>
+</pre>
+
+<DT><B>-dump=</b><i>dumpfile</i>
+
+<DD>This options makes <b>pnmsmooth</b> only generate and save the
+convolution file.  It does not invoke <b>pnmconvol</B> and does not
+produce an output image.
+
+</DL>
+
+
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<A HREF="pnmconvol.html">pnmconvol</A>,
+<A HREF="pnm.html">pnm</A>
+
+<h2 id="history">HISTORY</h2>
+
+<p>Before Netpbm 10.32 (February 2006), <b>pnmsmooth</b> did not use
+the modern Netpbm command line parser, so had an unconventional command line
+syntax.  Most importantly, you could not use an equal size or double
+hyphens in the options.
+
+<HR>
+<A NAME="index">&nbsp;</A>
+<H2>Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#history">HISTORY</A>
+</UL>
+</BODY>
+</HTML>

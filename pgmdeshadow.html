@@ -1,0 +1,77 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Pgmdeshadow User Manual</TITLE></HEAD>
+<BODY>
+<H1>pgmdeshadow</H1>
+Updated: 06 July 2006
+<p>
+
+<A HREF="#index">Table Of Contents</A>
+
+<H2>NAME</H2>
+
+pgmdeshadow - Deshadow a PGM image
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>pgmdeshadow</B>
+
+[<I>pnmfile</I>]
+
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>pgmdeshadow</b> removes gray shadows from an image.  This is
+useful for an image containing text, such as a scanned book pages,
+where a shadow typically appears near the book crease or near one side
+of the image.  <b>pgmdeshadow</b> recognizes a gray shadow as an area
+of smoothly changing color, starting from the outer edges of the
+image.  The program uses a simple image reconstruction algorithm to
+determine the local shadow gray level, then divides each pixel's gray
+level by the local shadow gray level.
+
+<p>The algorithm is the &quot;fast hybrid grayscale reruction&quot;
+algorithm from Luc Vincent, "Morphological Grayscale Reruction in
+Image Analysis: Applications and Efficient Algorithms.
+
+
+<H2 id="options">OPTIONS</H2>
+
+<p>None.
+
+<H2 id="references">REFERENCES</H2>
+
+<ul>
+
+<li>Luc Vincent, &quot;Morphological Grayscale Reruction in Image
+Analysis: Applications and Efficient Algorithms,&quot; IEEE
+Transactions on Image Processing, vol. 2, no. 2, April 1993,
+pp. 176-201.
+
+</ul>
+
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<A HREF="ppmshadow.html">ppmshadow</A>,
+<A HREF="pgm.html">pgm</A>
+
+<h2 id="history">HISTORY</h2>
+
+<P><b>pgmdeshadow</b> was added to Netpbm in Version 10.35 (August 2006).
+
+
+<HR>
+<H2 id="index">Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#references">REFERENCES</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#history">HISTORY</A>
+</UL>
+
+</BODY>
+</HTML>

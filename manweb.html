@@ -1,0 +1,244 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html> <head>
+<title>Manweb Reference Documentation</title>
+</head>
+
+<body>
+
+<h1>SYNOPSIS</h1>
+
+<b>manweb</b> <b>-help</b>
+<p>
+<b>manweb</b>
+[<b>-config=<i>configfile</i></b>]
+[<i>topic</i> [ <i>subtopic</i> ... ] ]
+
+<h1>EXAMPLES</h1>
+
+<pre>
+manweb
+</pre>
+This gets a master index of documentation.
+<pre>
+manweb netpbm
+</pre>
+This gets the main documentation page for the Netpbm package, with hyperlinks
+to the rest of the documentation.
+<pre>
+manweb netpbm pngtopnm
+</pre>
+This goes directly to the documentation page for the Pngtopnm program in
+the Netpbm package.
+<pre>
+manweb pngtopnm
+</pre>
+This also goes directly to the documentation page for the Pngtopnm program in
+the Netpbm package, if that's what would run in response to a <b>pngtopnm</b>
+shell command (your <b>PATH</b> environment variable is involved).
+<pre>
+manweb 3 fopen
+</pre>
+This gets the traditional man page for the fopen() subroutine using
+<b>man</b>.
+<pre>
+manweb cp
+</pre>
+This gets the GNU Info manual for the <b>cp</b> program, using <b>info</b>.
+
+
+<h1>DESCRIPTION</h1>
+
+<p><b>manweb</b> displays reference documentation via quick shell
+commands.  It is a replacement for the well-known <b>man</b>.
+
+<h2>Differences Between Man and Manweb</h2>
+
+<p><b>manweb</b>'s advantages over <b>man</b> are:
+
+<ul>
+  <li>
+       You can access documentation that is on the worldwide web instead of
+       having locally installed copies.  This saves installation work and gets
+       you more current documentation.
+       </li>
+  <li>
+       Documentation can be in HTML, which is more widely known, more widely
+       useful, and more expressive than the nroff/troff format used by
+       <b>man</b>.
+       </li>
+  <li>
+       <b>manweb</b> puts your topics in a tree for multilevel documentation.
+       <b>man</b> is intended for a single level of documentation.  For
+       example, you can have a man page for each shell command, but not for
+       the subcommands of a shell command.  And you cannot properly have
+       man pages for the members of multiple subroutine libraries.
+       </li>
+  <li>
+       Documentation can be hyperlinked.
+</ul>
+
+<p>Web servers need not be involved -- the documentation can be in local
+files.  Graphics need not be involved -- the <b>lynx</b> browser works fine
+in the same kind of terminals in which <b>man</b> works.
+
+<p><b>manweb</b> finds the documentation you specify and calls a web
+browser of your choice to display it.  The documentation <b>manweb</b>
+finds can be either an HTML file on your system, in which case,
+<b>manweb</b> gives a <b>file:</b> URL to your browser, or an explicit
+URL.  That explicit URL might be an <b>http:</b> URL referring to an
+HTML file on a web server somewhere, or anything else your browser
+understands.
+
+<p>If <b>manweb</b> finds neither an HTML file nor a URL, but your parameters
+look like they could mean something to <b>man</b>, <b>manweb</b> calls
+<b>man</b>.  Therefore, you can use a single command to access the vast
+body of traditional man pages, plus any newer <b>manweb</b> documentation.
+You can make "man" a shell alias of "manweb".
+
+<p><b>manweb</b> finds Info documentation as well.  It looks for the
+topic you specify as an Info topic after looking for HTML and URL
+documentation and before running <b>man</b>.  If <b>manweb</b> finds a
+corresponding Info topic, it runs the program <b>info</b> on it.  Info
+is the documentation system that the GNU project invented to, among
+other things, replace traditional Unix man pages.  However, HTML and the
+Worldwide Web were invented shortly afterward, so Info fizzled.  But there
+is still a lot of GNU software that is documented as Info topics.
+
+<h2>How Manweb Finds Documentation</h2>
+
+<p><b>manweb</b> passes a URL to a web browser.  This section tells
+how your <b>manweb</b> invocation parameters turn into that URL.
+
+<p><b>manweb</b>'s search starts in the "web directory" directory.
+That's either the value of the <b>webdir</b> keyword in your
+<b>manweb</b> configuration file, or the default <b>/usr/man/web</b>.
+
+<p>Your invocation parameters form a "topic chain."  Going from left to right,
+the first parameter is the main topic, the 2nd is a subtopic of the main
+topic, and so on.
+
+<p>Let's look at the simple case where you specify exactly one parameter --
+a main topic.  We'll call it <i>maintopic</i> and look at 4 ways
+<b>manweb</b> might find it:
+
+<ol>
+  <li>
+       <p>If <b>manweb</b> finds a file named <i>maintopic</i><b>.html</b>
+       in the web directory, the URL <b>manweb</b> passes to the
+       browser is just a <b>file:</b> URL that specifies that .html
+       file.
+       </li>
+  <li>
+       <p>If there's no .html file, but there is a file named
+       <i>maintopic</i><b>.url</b>, the contents of the first line of
+       that .url file is what <b>manweb</b> passes to the browser.  It
+       doesn't interpret the contents at all.  If it's garbage, the
+       browser chokes on it.
+       </li>
+  <li>       
+       <p>If there's neither a .html nor a .url file, but there is a
+       directory named <i>maintopic</i>, <b>manweb</b> looks in the
+       directory for a file named <i>index.html</i>.  If there is one,
+       <b>manweb</b> passes a <b>file:</b> URL specifying that
+       index.html file to the browser.  If there's no
+       <i>index.html</i>, <b>manweb</b> uses a <b>file:</b> URL that
+       specifies the directory itself.
+       </li>
+  <li>
+       <p>If <b>manweb</b> doesn't find documentation in any of the
+       above ways, it searches your executable search path (as defined
+       by your <b>PATH</b> environment variable) for a program named
+       <i>maintopic</i>.  If it finds one, it looks in the directory
+       that contains the program for a file named <b>doc.url</b>.  If
+       it finds one, it appends <i>maintopic</i><b>.html</b> to the
+       first line of the file and passes that to the browser.  Unless 
+       the first line does <em>not</em> end with a slash -- in that 
+       case, <b>manweb</b> passes the first line of the file unmodified
+       to the browser.
+       </ol>
+
+<p>It gets a little more interesting when you have subtopics.  Looking
+at each of the 4 cases above:
+
+<ol>
+  <li>
+       Where <i>maintopic</i><b>.html</b> exists, subtopics are invalid.
+       You get a warning message and the subtopics are ignored.
+       </li>
+  <li>
+       Where there's no .html file but <i>maintopic</i><b>.url</b> exists,
+       <b>manweb</b> appends the subtopic chain to the URL it gets from the
+       .url file as in the following example:  .url file contains
+       <b>http://acme.com/productxyz/</b> and subtopics are
+       <b>create</b> and
+       <b>database</b>.  The URL <b>manweb</b> passes to the browser is
+       <b>http://acme.com/productxyz/create/database.html</b>.
+
+       <p><b>manweb</b> doesn't check that this kind of appendage makes
+       any sense for the URL in question, except that if the URL in the
+       .url file doesn't end with a slash (<b>/</b>), <b>manweb</b>
+       issues a warning and doesn't append anything (ignores the subtopics).
+  <li>
+       Where there's neither a .html file nor a .url file, but there's a
+       <i>maintopic</i> directory, <b>manweb</b> recurses into that
+       directory and begins a whole new search using the first subtopic
+       as the main topic and the rest of the subtopics as subtopics of that.
+  <li>
+       When there are subtopics, the <b>PATH</b> thing doesn't make sense,
+       so <b>manweb</b> doesn't do it.
+</ol>
+
+If you give subtopics, the <b>PATH</b> thing described above for one
+topic doesn't apply.
+
+<p>If you give no parameters at all, <b>manweb</b> generates a URL for the
+web directory itself as described above for subdirectories.
+
+<p>The above is simplified by the assumption of a single web
+directory.  In reality, the <b>webdir</b> keyword in the configuration
+file can specify a chain of web directories.  <b>manweb</b> searches
+each one in turn, doing all the kinds of searches in each web directory
+before moving on to the next one.
+
+<h2>The Configuration File</h2>
+
+<p>The default location of the <b>manweb</b> configuration file is
+<b>/etc/manweb.conf</b>.  But you can override this with the environment
+variable <b>MANWEB_CONF_FILE</b>, and override that with the
+<b>-config</b> invocation option.
+
+<p>Lines starting with "#" are comments and are ignored, as are blank lines.
+
+<p>All other lines have the format <i>keyword</i>=<i>value</i>.  The
+keywords defined are:
+<dl>
+  <dt>webdir
+  <dd>
+       A colon-delimited sequence of directories to search for
+       documentation as described above.  If you
+       don't specify this, the default is <b>/usr/man/web</b> alone.
+  <dt>browser
+  <dd>
+       The file specification <b>manweb</b> of the web browser <b>manweb</b>
+       is to invoke
+       to display documentation (except when it uses <b>man</b> to display
+       a conventional man page).
+       If the file specification does not include a slash, <b>manweb</b>
+       searches for the file in the PATH search path.
+
+       <p>If you don't specify this, the default is the value of the
+       <b>BROWSER</b> environment variable, and if that is not set,
+       <b>lynx</b>.
+</dl>
+
+Example:
+<pre>
+# Configuration file for Manweb
+
+webdir=/usr/share/manweb
+browser=netscape
+</pre>
+
+
+</body> </html>
+

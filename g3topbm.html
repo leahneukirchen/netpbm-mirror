@@ -1,0 +1,144 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>G3topbm User Manual</TITLE></HEAD>
+<BODY>
+<H1>g3topbm</H1>
+Updated: 28 February 2006
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<H2>NAME</H2>
+g3topbm - convert a Group 3 fax file into a PBM image
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>g3topbm</B>
+[<B>-kludge</B>]
+[<B>-reversebits</B>]
+[<B>-stretch</B>]
+[{<B>-width=</B><i>pixels</i> | paper_size={A3,A4,A5,A6,B4}]
+[<B>-stop_error</B>]
+[<I>g3file</I>]
+
+<p>Minimum unique abbreviation of option is acceptable.  You may use double
+hyphens instead of single hyphen to denote options.  You may use white
+space in place of the equals sign to separate an option name from its value.
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>g3topbm</b> reads a Group 3 fax file as input and produces a PBM
+image as output.
+
+<p><b>g3topbm</b> tolerates various deviations from the standard,
+so as to recover some of the image if there was a transmission error.
+One thing it tolerates is lines of varying length.  The standard requires
+all the lines to be the same length; <b>g3topbm</b> makes the output
+image as wide as the longest line in the input and pads the others on
+the right.  It warns you when it does this.
+
+<p>You can use the <b>stop_error</b> option to make <b>g3topbm</b>
+insist on valid input.
+
+<H2 id="options">OPTIONS</H2>
+
+<DL COMPACT>
+<DT><B>-kludge</B>
+
+<DD>Tells <b>g3topbm</b> to ignore the first few lines of the file;
+sometimes fax files have some junk at the beginning.
+
+<DT><B>-reversebits</B>
+
+<DD>Tells <b>g3topbm</b> to interpret bits least-significant first,
+instead of the default most-significant first.  Apparently some fax
+modems do it one way and others do it the other way.  If you get a
+whole bunch of &quot;bad code word&quot; messages, try using this
+option.
+
+<DT><B>-stretch</B>
+
+<DD>This option tells <b>g3topbm</b> to stretch the image vertically by
+duplicating each row.  This is for the low-quality transmission mode.
+
+<dt><b>-width=</b><i>pixels</i>
+
+<dd>This option tells <b>g3topbm</b> that the image is supposed to be
+<i>pixels</i> pixels wide.  If any line in it is not that size, <b>g3topbm</b>
+issues a warning or fails, depending on whether you specify
+<b>-stop_error</b>.
+
+<p>You cannot specify both <b>-width</b> and <b>-paper_size</b>.
+
+<p>This option was new in Netpbm 10.33 (March 2006).
+
+<dt><b>-paper_size=</b>{<B>A3</B>,<B>A4</B>,<B>A5</B>,<b>A6</b>,<b>B4</b>}
+
+<dd>This option tells <b>g3topbm</b> for what size paper this image is
+supposed to be formatted.  <b>g3topbm</b> uses the width of the paper
+the same way as with the <b>-width</b> option.  <b>g3topbm</b>
+does not use the height of the paper for anything.
+
+<p>You cannot specify both <b>-width</b> and <b>-paper_size</b>.
+
+<p>This option was new in Netpbm 10.33 (March 2006).
+
+<DT><B>-stop_error</B>
+
+<DD>This option tells <b>g3topbm</b> to fail when it finds a problem
+in the input.  &quot;Fail&quot; means it terminates with a nonzero
+status code with the contents of the output file undefined.
+
+<p>If you don't specify this option, <b>g3topbm</b> does its best to
+work around input errors and salvage as much of the image as possible
+in the output image.  It first tries to resynchronize to a later line
+by searching for the next End Of Line marker, skipping any lines or
+partial lines in between.  It saves the beginning of the line in which
+it encountered the problem.  If the input file ends prematurely,
+<b>g3topbm</b> produces output containing the lines up to where it
+encountered the problem.
+
+<p><b>g3topbm</b> issues warning messages when it continues in spite of
+input errors.
+
+<p>This option was new in Netpbm 10.24 (August 2004).  Before that,
+<b>g3topbm</b> always failed when it encountered premature EOF and
+never failed when it encountered other problems.
+
+</DL>
+
+<H2 id="g3">ABOUT G3</H2>
+
+<P>G3 is the near universal format used by fax machines.  There is also
+a newer, more capable G4.
+
+<p>The standard for Group 3 fax is defined in CCITT Recommendation T.4.
+In the U.S., that is implemented by EIA standards EIA-465 and EIA-466.
+These standards cover the layers below the image format (which are
+irrelevant to <b>g3topbm</b> as well.
+
+<p>G3 faxes are 204 dots per inch (dpi) horizontally and 98 dpi (196
+dpi optionally, in fine-detail mode) vertically.  Since G3 neither
+assumes error free transmission nor retransmits when errors occur, the
+encoding scheme used is differential only over small segments never
+exceeding 2 lines at standard resolution or 4 lines for fine-detail.
+(The incremental G3 encoding scheme is called two-dimensional and the
+number of lines so encoded is specified by a parameter called k.)
+
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<A HREF="pbmtog3.html">pbmtog3</A>,
+<A HREF="pbm.html">pbm</A>
+
+<HR>
+<H2 id="index">Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#g3">ABOUT G3</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+</UL>
+</BODY>
+</HTML>

@@ -1,0 +1,71 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Pamdepth User Manual</TITLE></HEAD>
+<BODY>
+<H1>pamdepth</H1>
+Updated: 08 April 2000
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<H2>NAME</H2>
+
+pamdepth - change the maxval in a Netpbm image
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>pamdepth</B>
+
+<I>newmaxval</I>
+
+[<I>netpbmfile</I>]
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>pamdepth</b> reads a Netpbm image as input, scales all the pixel
+values, and writes out the image with the new maxval.  Scaling the
+colors down to a smaller maxval will result in some loss of
+information.
+
+<p>This program works on multi-image streams.
+
+<P>Be careful of off-by-one errors when choosing the new maxval.  For
+instance, if you want the color values to be five bits wide, use a
+maxval of 31, not 32.
+
+<P>One important use of <B>pamdepth</B> is to convert a new format
+2-byte-per-sample PNM file to the older 1-byte-per-sample format.
+Before April 2000, essentially all raw (binary) format PNM files had a
+maxval less than 256 and one byte per sample, and many programs may
+rely on that.  If you specify a <I>newmaxval</I> less than 256, the
+resulting file should be readable by any program that worked with PNM
+files before April 2000.
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<A HREF="pnm.html">pnm</A>,
+<A HREF="pam.html">pam</A>,
+<A HREF="pnmquant.html">pnmquant</A>,
+<A HREF="ppmdither.html">ppmdither</A>
+<A HREF="ppmbrighten.html">ppmbrighten</A>
+<A HREF="pamfunc.html">pamfunc</A>
+
+<h2 id="history">HISTORY</h2>
+
+<p><b>pamdepth</b> was new in Netpbm 10.32 (February 2006).  It replaced
+<b>pnmdepth</b>, by Jef Poskanzer.  <b>pamdepth</b> is backward compatible
+with <b>pamdepth</b> and adds the ability to process arbitrary PAM images
+and the ability to process multi-image input streams.  <b>pnmdepth</b>
+handled only PNM images and ignored all but the the first in any stream.
+
+<HR>
+<A NAME="index">&nbsp;</A>
+<H2>Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#history">HISTORY</A>
+</UL>
+</BODY>
+</HTML>

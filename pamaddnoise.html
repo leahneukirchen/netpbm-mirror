@@ -1,0 +1,197 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Pamaddnoise User Manual</TITLE></HEAD>
+<BODY>
+<H1>pamaddnoise</H1>
+Updated: 14 November 1995
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<A NAME="lbAB">&nbsp;</A>
+<H2>NAME</H2>
+
+pamaddnoise - add noise to a Netpbm image
+
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>pamaddnoise</B>
+
+[<B>-type</B> <I>noise_type</I>]
+
+[<B>-seed</B> <I>int</I>]
+
+<BR>
+
+<B>pamaddnoise</B> <B>-type</B> <B>gaussian</B>
+
+[<B>-sigma1</B> <I>value</I>]
+
+[<B>-sigma2</B> <I>value</I>]
+
+<BR>
+
+[<B>-seed</B> <I>int</I>]
+
+[<I>netpbmfile</I>]
+
+<BR>
+
+<B>pamaddnoise</B> <B>-type </B> <B>multiplicative_gaussian</B>
+
+[<B>-msigma</B> <I>value</I>]
+
+<BR>
+
+[<B>-seed</B> <I>int</I>]
+
+[<I>netpbmfile</I>]
+
+<BR>
+
+<B>pamaddnoise</B> <B>-type</B> <B>impulse</B>
+
+[<B>-tolerance</B> <i>ratio</I>]
+
+[<B>-seed</B> <I>int</I>]
+
+<BR>
+
+[<I>netpbmfile</I>]
+
+<BR>
+
+<B>pamaddnoise</B> <B>-type </B> <B>laplacian</B>
+
+[<B>-lsigma</B> <I>value</I>]
+
+[<B>-seed</B> <I>int</I>]
+
+<BR>
+
+[<I>netpbmfile</I>]
+
+<BR>
+
+<B>pamaddnoise</B> <B>-type </B> <B>poisson</B>
+
+[<B>-lambda</B> <I>value</I>]
+
+[<B>-seed</B> <I>int</I>]
+
+<BR>
+
+[<I>netpbmfile</I>]
+
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>pamaddnoise</b> adds the specified noise type to a Netpbm image.
+<b>pamaddnoise</b> treats a PPM image as 3 independent planes, not as
+a plane of colors in a color space.
+
+<H2 id="options">OPTIONS</H2>
+
+<DL COMPACT>
+<DT><B>-lambda</b> <i>value</i>
+
+<DD>Used for poisson noise only.  The default value is 0.05.
+
+<DT><B>-lsigma</b> <i>value</i>
+
+<DD>Used for laplacian noise only.  The default value is 10.0.
+
+<DT><B>-msigma</b> <i>value</i>
+
+<DD>Used for mutliplicative gaussian noise only.  The default value is
+0.5.
+
+<DT><B>-seed</b> <i>int</i>
+
+<DD>Used for all noise types.  Set the initial random number generator
+seed value.
+
+<DT><B>-sigma1</b> <i>value</i>
+
+<DD>Used for gaussian noise only.  The default value is 4.0.
+
+<DT><B>-sigma2</b> <i>value</i>
+
+<DD>Used for gaussian noise only.  The default value is 20.0.
+
+<DT><B>-tolerance</b> <i>ratio</i>
+
+<DD>
+Used for impulse noise only.  The default value is 0.10.  This means
+that 5% of all pixel values will be set to 0 and 5% will be set to
+the maxval
+
+<DT><B>-type</b> <i>noise_type</i>
+
+<DD>
+Select type of noise by name.  The following noise types are
+available: gaussian, multiplicative_gaussian, impulse, laplacian,
+poisson.  Only enough letters to be unique are required for the noise
+type option.  The default noise type is <b>gaussian</b>.
+
+<ul>
+<li><b>gaussian</b>
+<li><b>mulitiplicative_gaussian</b>
+<li><b>impulse</b>
+<li><b>laplacian</b>
+<li><b>poisson</b>
+</ul>
+
+</DL>
+
+<H2 id="references">REFERENCES</H2>
+
+<UL>
+<LI>&quot;Adaptive Image Restoration in Signal-Dependent Noise&quot;
+by R. Kasturi Institute for Electronic Science, Texas Tech University,
+1982
+
+<LI>&quot;Digital Image Processing Algorithms&quot; by Ioannis Pitas,
+Prentice Hall, 1993 ISBN 0-13-145814-0
+
+</UL>
+
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<A HREF="pgmnoise.html">pgmnoise</A>,
+<A HREF="pgmmedian.html">pgmmedian</A>,
+<A HREF="pnm.html">pnm</A>,
+<A HREF="pam.html">pam</A>,
+
+<h2 id="history">HISTORY</h2>
+
+<P><b>pamaddnoise</b> was added to Netpbm in Version 10.29 (August 2005).
+It had been distributed by Mike Burns via his own web site before that
+(and continued to be so).
+
+<p>Burns' version, and the one in Netpbm 10.29, was called <b>pnmaddnoise</b>
+and worked only on PNM images.  In Netpbm 10.30, it was converted to handle
+PAM images and renamed to <b>pamaddnoise</b>.
+
+
+<H2 id="author">AUTHOR</H2>
+
+Copyright (C) 1995 by Mike Burns &lt;<A
+HREF="mailto:burns@cac.psu.edu">burns@cac.psu.edu</A>&gt;
+
+<HR>
+<A NAME="index">&nbsp;</A>
+<H2>Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#references">REFERENCES</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#history">HISTORY</A>
+<LI><A HREF="#author">AUTHOR</A>
+</UL>
+</BODY>
+</HTML>

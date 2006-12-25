@@ -1,0 +1,75 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Pbmtoxbm User Manual</TITLE></HEAD>
+<BODY>
+<H1>pbmtoxbm</H1>
+Updated: 25 October 2006
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<H2>NAME</H2>
+pbmtoxbm - convert a PBM image to an X11 bitmap
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>pbmtoxbm</B>
+
+[{<b>-x10</b>|<b>-x11</b>}]
+
+[<I>pbmfile</I>]
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<b>pbmtoxbm</b> reads a PBM image as input and produces an X10 or X11 bitmap
+as output.
+
+
+<h2 id="options">OPTIONS</h2>
+
+<dl>
+<dt><b>-x10</b>
+
+<dd>This option causes <b>pbmtoxbm</b> to generate the X10 version of
+XBM.
+
+<p>You may not specify this with <b>-x11</b>.
+
+<p>This option was new with Netpbm 10.37 (December 2006).  Before that,
+use <b>pbmtox10bm</b> instead.
+
+<dt><b>-x11</b>
+
+<dd>This option causes <b>pbmtoxbm</b> to generate the X11 version of
+XBM.
+
+<p>You may not specify this with <b>-x10</b>.
+
+<p>The X11 version is the default, so this option has no effect.
+
+<p>This option was new with Netpbm 10.37 (December 2006).
+
+</dl>
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<A HREF="pbmtox10bm.html">pbmtox10bm</A>,
+<A HREF="xbmtopbm.html">xbmtopbm</A>,
+<A HREF="pbm.html">pbm</A>
+
+<H2 id="author">AUTHOR</H2>
+
+Copyright (C) 1988 by Jef Poskanzer.
+
+<HR>
+<A NAME="index">&nbsp;</A>
+<H2>Table Of Contents</H2>
+<UL>
+<LI><A HREF="#name">NAME</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
+</UL>
+</BODY>
+</HTML>

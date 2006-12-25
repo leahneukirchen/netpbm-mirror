@@ -1,0 +1,75 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Pammixinterlace User Manual</TITLE></HEAD>
+<BODY>
+<H1>pammixinterlace</H1>
+Updated: 02 July 2005
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<A NAME="lbAB">&nbsp;</A>
+<H2>NAME</H2>
+
+pammixinterlace - mix adjacent lines to merge interlaced images
+
+<A NAME="lbAC">&nbsp;</A>
+<H2>SYNOPSIS</H2>
+
+<B>pammixinterlace</B>
+
+[<I>infile</I>]
+
+
+<A NAME="lbAD">&nbsp;</A>
+<H2>DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><B>pammixinterlace</B> is meant to operate on an image which is the
+interlacing of two images, where raster rows 0, 2, 4, etc. are from
+one image and rows 1, 3, 5, etc. are from another.  (See below for
+why you might expect to encounter such an image).
+
+<p><b>pammixinterlace</b> makes each row of the output a mixture
+of the corresponding row of the input and its two neighbors.  It uses
+half of the main row and a quarter each of the two neighbor rows.
+
+<P>This can be useful if the image is a video capture from an
+interlaced video source.  In that case, each row shows the subject
+1/60 second before or after the two rows that surround it.  If the
+subject is moving, this can detract from the quality of the image.
+
+<p>In video data streams, you often find each frame contains only half
+the rows of the image -- the odd half or the even half.  The displayer
+of the stream displays the rows in their proper positions on a CRT as
+they come in.  When you display the rows in this order, the CRT has
+less flicker because a particular area of the screen gets refreshed
+twice as often.  In the process of capturing such a stream, computers
+often generate the interlaced image of the type that
+<b>pammixinterlace</b> works with.  But this interlaced image, when
+displayed on a CRT, does not look the same as if a displayer were
+rendering the stream directly on a CRT as it arrived, because of the
+timing of when the various pixels get drawn and subsequently fade.
+That's why you need something like <b>pammixinterlace</b>.
+
+<p>You may prefer the effect of simply extracting one of two images.
+You can do that with <b>pamdeinterlace</b>.
+
+
+<A NAME="lbAF">&nbsp;</A>
+<H2>SEE ALSO</H2>
+
+<B><A HREF="pamdeinterlace.html">pamdeinterlace</A></B>,
+<B><A HREF="pam.html">pam</A></B>
+<B><A HREF="pnm.html">pnm</A></B>
+
+<HR>
+<A NAME="index">&nbsp;</A>
+<H2>Table Of Contents</H2>
+<UL>
+<LI><A HREF="#lbAB">NAME</A>
+<LI><A HREF="#lbAC">SYNOPSIS</A>
+<LI><A HREF="#lbAD">DESCRIPTION</A>
+<LI><A HREF="#lbAF">SEE ALSO</A>
+</UL>
+</BODY>
+</HTML>

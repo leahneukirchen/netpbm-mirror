@@ -1,0 +1,103 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD><TITLE>Pambayer User Manual</TITLE></HEAD>
+<BODY>
+<H1>pambayer</H1>
+Updated: 18 August 2005
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<A NAME="lbAB">&nbsp;</A>
+<H2>NAME</H2>
+
+pambayer - interpret Bayer patterns
+
+<A NAME="lbAC">&nbsp;</A>
+<H2>SYNOPSIS</H2>
+
+<B>pambayer</B>
+<b>-type=</b>{<b>1</b>, <b>2</b>, <b>3</b>, <b>4</b>}
+[<I>pamfile</I>]
+
+<P>Minimum unique abbreviation of option is acceptable.  You may use
+double hyphens instead of single hyphen to denote options.  You may use
+white space in place of the equals sign to separate an option name
+from its value.
+
+
+<A NAME="lbAD">&nbsp;</A>
+<H2>DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<P><b>pambayer</b> reads a Bayer pattern in a 1-deep Netpbm image and
+produces a color image in PAM RGB format as output.
+
+<p>A Bayer pattern is what you get from the optical sensor in some
+digital cameras.  Such a camera doesn't have a red, green, and blue
+sensor in the exact same place for an individual pixel.  Instead, it
+has red, green, and blue sensors laid out in a two dimensional array.
+The pattern in which they are laid out is the Bayer pattern.  The
+input to <b>pambayer</b> is one sample value for each of those
+sensors, so some samples are red, some are green, and some are blue.
+
+
+<p>The input image is a PNM image or PAM image of arbitrary tuple type.
+<b>pambayer</b> looks at only the first plane of the input.
+
+<p>The output image is a PAM image of tuple type &quot;RGB&quot;, i.e.
+a standard color image.  You can convert this to PPM with
+<a href="pamtopnm.html"><b>pamtopnm</b></a>.
+
+<p>If you're interested in just one of the primary colors, use
+<b>pamchannel</b> on the output of <b>pambayer</b> to extract it.
+
+
+<H2 id="options">OPTIONS</H2>
+
+<DL COMPACT>
+
+<dt><b>type=</b><i>n</i>
+
+<dd>This tells which Bayer pattern the input is:
+
+<dl>
+<dt>1
+<dd>GBG/RGR/GBG matrix
+<dt>2
+<dd>RGR/GBG/RGR matrix
+<dt>3
+<dd>BGB/GRG/BGB matrix
+<dt>4
+<dd>GRG/BGB/GRG matrix
+</dl>
+
+This option is mandatory.
+
+</DL>
+
+
+
+<A NAME="lbAE">&nbsp;</A>
+<H2>SEE ALSO</H2>
+
+<B><A HREF="cameratopam.html">cameratopam</A></B>
+<B><A HREF="pam.html">pam</A></B>
+
+<H2 id="history">HISTORY</H2>
+
+<p><b>pambayer</b> was new in Netpbm 10.30 (October 2005).
+
+<HR>
+<A NAME="index">&nbsp;</A>
+<H2>Table Of Contents</H2>
+<UL>
+<LI><A HREF="#lbAB">NAME</A>
+<LI><A HREF="#lbAC">SYNOPSIS</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#lbAD">DESCRIPTION</A>
+<LI><A HREF="#lbAE">SEE ALSO</A>
+<LI><A HREF="#history">HISTORY</A>
+</UL>
+</BODY>
+</HTML>

@@ -1,0 +1,76 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Anytopnm User Manual</TITLE></HEAD>
+<BODY>
+<H1>anytopnm</H1>
+Updated: 05 September 2006
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<H2>NAME</H2>
+anytopnm - convert an arbitrary type of image file to PBM, PGM, or PPM
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>anytopnm</B>
+[<I>file</I>]
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><B>anytopnm</B> converts the input image, which may be in any of
+about 100 graphics formats, to PBM, PGM, or PPM format, depending on
+that nature of the input image, and outputs it to Standard Output.
+
+<P>To determine the format of the input, <B>anytopnm</B> uses the
+<B>file</B> program (possibly assisted by the magic numbers file
+fragment included with Netpbm). If that fails (very few image formats
+have magic numbers), <B>anytopnm</B> looks at the filename extension.
+If that fails, <B>anytopnm</B> punts.
+
+<P>The type of the output file depends on the input image.
+
+<p><b>anytopnm</b> uses the converters for particular graphics formats
+that are in the Netpbm package, so it can't convert any format that
+you couldn't convert with some other Netpbm program.  What
+<b>anytopnm</b> adds is the ability to recognize the format and choose
+the appropriate Netpbm program to convert it.  For example, if you
+invoke <b>anytopnm</b> on a PNG file, <b>anytopnm</b> will recognize
+that it is a PNG file and therefore <b>pngtopnm</b> knows how to
+convert it to PNM, so <b>anytopnm</b> invokes <b>pngtopnm</b>.
+
+<p><b>anytopnm</b> cannot recognize every possible input format, so you
+may still be able to convert an image with a specific Netpbm program when
+<b>anytopnm</b> fails to convert it.
+
+<P>If <B>file</B> indicates that the input file is compressed (either
+via Unix compress, gzip, or bzip compression), <B>anytopnm</B>
+uncompresses it and proceeds as above with the uncompressed result.
+
+<P>If <B>file</B> indicates that the input file is encoded by uuencode
+or btoa, <B>anytopnm</B> decodes it and proceeds as above with the
+decoded result.
+
+<P>If <I>file</I> is <B>-</B> or not given, <B>anytopnm</B> takes its
+input from Standard Input.
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<B><A HREF="pamfile.html">pamfile</A></B>,
+<B><A HREF="pnm.html">pnm</A></B>,
+<B>file</B> man page
+
+<H2 id="author">AUTHOR</H2>
+
+Copyright (C) 1991 by Jef Poskanzer.
+
+<HR>
+<H2 id="index">Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
+</UL>
+</BODY>
+</HTML>

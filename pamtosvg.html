@@ -1,0 +1,214 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Pamtosvg User Manual</TITLE></HEAD>
+<BODY>
+<H1>pamtosvg</H1>
+Updated: 23 April 2006
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<H2>NAME</H2>
+pamtosvg - convert a Netpbm image to a SVG (Scalable Vector Graphics) image
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>pamtosvg</B>
+
+[<b>-background-color=</b><i>colorname</i>]
+[<b>-centerline</b>]
+[<b>-corner-threshold=</b><i>angle</i>]
+[<b>-corner-always-threshold=</b><i>angle</i>]
+[<b>-corner-surround=</b><i>integer</i>]
+[<b>-tangent-surround=</b><i>integer</i>]
+[<b>-error-threshold=</b><i>float</i>]
+[<b>-filter-iterations=</b><i>count</i>]
+[<b>-line-reversion-threshold=</b><i>float</i>]
+[<b>-line-threshold=</b><i>float</i>]
+[<b>-width-factor=</b><i>float</i>]
+[<b>-preserve-width</b>]
+[<b>-remove-adjacent-corners</b>]
+[<b>-log</b>]
+[<b>-report-progress</b>]
+
+[<I>pnmfile</I>]
+
+<P>Minimum unique abbreviation of option is acceptable.  You may use
+double hyphens instead of single hyphen to denote options.  You may use
+white space in place of the equals sign to separate an option name
+from its value.
+
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>pamtosvg</b> reads a PNM image as input and produce an SVG
+(Scalable Vector Graphics) image as output.  Thus, it traces curves
+in the input image and creates a set of splines that represent the
+image.
+
+<p>SVG is a vector image format, which means it describes curves that
+compose an image.  By contrast, PNM is a raster format, which means it
+describes dots that compose an image.  The main practical difference
+between the two types is that you can scale vector images better.  A
+vector image also takes a lot less data to describe an image if the
+image is composed of simple curves.
+
+<p>That means it is really an understatement to say that <b>pamtosvg</b>
+is an image format converter.  It's really an image tracer.  Its main job
+is to trace a raster image and find the lines in it.  It then represents
+its findings in SVG format.
+
+<p><b>pamtosvg</b> does the same kind of thing that StreamLine,
+CorelTrace, and Autotrace do.  It is in fact derived from Autotrace.
+
+<p>SVG is a gigantic format, capable of amazing things.  <b>pamtosvg</b>
+exploits only a morsel of it.  The SVG image produced by <b>pamtosvg</b>
+consists of a single &lt;svg&gt; element, which has a &quot;width&quot;
+attribute and a &quot;height&quot; attribute.  The value of that element
+is composed of &lt;path&gt; elements.  That's it.
+
+<p>In the SVG output, distances are unitless, with one unit corresponding
+to one pixel of the input.
+
+<p>So that <b>pamtosvg</b> will find simple curves in the image, you
+may want to remove speckles from it with <b>pbmclean</b> and consolidate
+multiple shades into single colors with <b>pnmquant</b> first.
+
+<p>For more information on SVG, see <a
+href="http://www.w3.org/Graphics/SVG/">the Worldwide Web Consortium's
+SVG web page</a>.
+
+
+<H2 id="options">OPTIONS</H2>
+
+<DL COMPACT>
+<dt><b>-background-color=</b><i>colorname</i>
+
+<dd>Treat the specified color as the background color and ignore it.
+
+<p>If you don't specify this option, <b>pamtosvg</b> does not recognize
+any background color.
+
+<P>Specify the color (<i>colorname</i>) as described for the <a
+href="libppm.html#colorname">argument of the <b>ppm_parsecolor()</b>
+library routine</a>.
+
+<dt><b>-centerline</b>
+
+<dd>Trace an object's centerline.
+
+<p>By default, <b>pamtosvg</b> traces an object's outline.
+
+<dt><b>-corner-always-threshold=</b><i>angle</i>
+
+<dd>Consider any angle at a pixel which falls below angle <i>angle</i>
+(in decimal floating point degrees) as a corner, even if it is
+bordered by other corner pixels.  Default is 60 degrees.
+
+<dt><b>-corner-surround=</b><i>integer</i>
+
+<dd>Consider the specified number of pixels on either side of a
+point when determining if that point is a corner.  Default is 4.
+
+<dt><b>-corner-threshold=</b><i>angle</i>
+
+<dd>Consider any pixel which forms an angle with its predecessors and
+successors that is smaller than <i>angle</i> (in decimal floating
+point degrees) as a corner.  Default is 100.
+
+<dt><b>-error-threshold=</b><i>float</i>
+
+<dd>Subdivide fitted curves that are offset by a number of pixels
+exceeding the specified number.  Default is 2.0.
+
+<dt><b>-filter-iterations=</b><i>integer</i>
+
+<dd>Smooth the curve the specified number of times prior to fitting
+Default is 4.
+
+<dt><b>-line-reversion-threshold=</b><i>float</i>
+
+<dd>When a spline is closer to a straight line than the specified real
+number weighted by the square of the curve length, maintain it as a
+straight line, even if it is a list with curves.
+
+<p>Default is .01.
+
+<dt><b>-line-threshold=</b><i>float</i>
+
+<dd>If a spline does not deviate from the straight line defined by its
+endpoints by more than the specified number of pixels, then treat it
+as a straight line.
+
+<p>Default is 1.
+
+<dt><b>-log</b>
+
+<dd>Send a detailed progress report to the file named
+<i>inputfile</i><b>.log</b>, where <i>inputfile</i> is the root of the
+input file name, or &quot;pamtosvg&quot; if the input is from 
+Standard Input or a file with a weird name.
+
+<dt><b>-preserve-width</b>
+
+<dd>Preserve line width prior to thinning.  Meaningful only with
+<b>-centerline</b>.
+
+<dt><b>remove-adjacent-corners</b>
+
+<dd>Remove adjacent corners.
+
+<dt><b>-report-progress</b>
+
+<dd>Report the progress of the tracing to Standard Error as it happens.
+
+<dt><b>-tangent-surround</b>
+
+<dd>Consider the specified number of points to either side of a point
+when computing the tangent at that point.  Default is 3.
+
+<dt><b>-width-factor</b>
+
+<dd>Weight factor for fitting the linewidth.
+
+</DL>
+
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<B><A HREF="pnmquant.html">pnmquant</A></B>,
+<B><A HREF="pbmclean.html">pbmclean</A></B>,
+<A HREF="pnm.html">pnm</A>,
+<a href="http://autotrace.sourceforge.net">Autotrace</a>
+
+<h2 id="history">HISTORY</h2>
+
+<p><b>pamtosvg</b> was added to Netpbm in Version 10.33 (March 2006).
+
+<p>The core of <b>pamtosvg</b> -- the curve tracing logic -- was taken
+nearly unmodified from Martin Weber's Autotrace program.  That program
+duplicates a lot of Netpbm function, so <b>pamtosvg</b> is a much leaner
+program.
+
+<p>Bryan Henderson created <b>pamtosvg</b>, basically just by adapting
+Autotrace to Netpbm.
+
+<p>Autotrace was first released in 2000 and updates were released
+through 2002.  A number of people wrote the code in it, but Masatake
+Yamato and Martin Weber appear to be the principal creators of it.
+
+<p>As of June 2006, there was a <a
+href="http://autotrace.sourceforge.net">Sourceforge project</a> for it.
+
+<HR>
+<A NAME="index">&nbsp;</A>
+<H2>Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#history">HISTORY</A>
+</UL>
+</BODY>
+</HTML>

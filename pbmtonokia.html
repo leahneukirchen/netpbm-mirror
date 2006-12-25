@@ -1,0 +1,133 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Pbmtonokia User Manual</TITLE></HEAD>
+<BODY>
+<H1>pbmtonokia</H1>
+Updated: 14 September 2006
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<H2>NAME</H2>
+
+pbmtonokia - convert a PBM image to Nokia Smart Messaging Formats
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>pbmtonokia</b>
+[
+<b>-fmt</b>
+  {
+    <B>HEX_NOL</B>,
+    <B>HEX_NGG</B>,
+    <B>HEX_NPM</B>,
+    <B>NOL</B>,
+    <B>NGG</B>,
+    <B>NPM</B>
+  }   
+]
+<br>
+[<B>-net</b> <i>networkcode</i>]
+[<b>-txt</b> <i>text</i>]
+[<I>pbmfile</I>]
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>pbmtonokia</b> reads a PBM image as input and produces a Nokia
+Smart Messaging (hexcode, .nok, .ngg) file as output.
+
+<H2 id="options">OPTIONS</H2>
+
+<DL COMPACT>
+<DT><B>-fmt</B>
+<DD>
+Specifies the output format (default is HEX_NOL).
+
+<dl>
+<DT><b>HEX_NOL</b>
+<DD>
+Nokia Operator Logo as (uploadable) hexcode.
+Use option -net to specify network code.
+
+<DT><b>HEX_NGG</b>
+<DD>
+Nokia Group Graphic as (uploadable) hexcode.
+
+<DT><b>HEX_NPM</b>
+<DD>
+Nokia Picture Message as (uploadable) hexcode.
+Use option <b>-txt</b> to specify an optional text message.
+
+<DT><b>NOL</b>
+<DD>Nokia Operator Logo as .nol format. This is editable by
+the Group-Graphic Editor from Kessler Wireless Design (<A
+HREF="http://www.kessler-design.com">www.kessler-design.com</A>)
+
+<DT><b>NGG</b>
+
+<DD>Nokia Group Graphic as .ngg format. This is editable by the
+Group-Graphic Editor from Kessler Wireless Design (<A
+HREF="http://www.kessler-design.com">www.kessler-design.com</A>)
+
+<DT><b>NPM</b>
+
+<DD>Nokia Picture Message as .npm format. This is editable by the
+Picture-Message Editor from Kessler Wireless Design (<A
+HREF="http://www.kessler-design.com">www.kessler-design.com</A>)
+
+<p>This option was new in Netpbm 10.36 (October 2006).
+
+</dl>
+     
+<DT><B>-net</B>
+
+<DD>Specifies the 6 hex-digit operator network code for Operator
+Logos (Default is 62F210 = D1,Germany).
+
+<DT><B>-txt</B>
+
+<DD>
+Specifies the text message for Picture Messages.  The maximum size
+text message allowed by the format is 120 characters.
+
+<p>Default is no text message.
+
+</DL>
+
+<H2 id="limitations">LIMITATIONS</H2>
+
+Currently limited to rows&lt;=255 and columns&lt;=255.  Generates only
+black and white graphics, not animated.
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<ul>
+<li><B><A HREF="pbm.html">pbm</A></B>,
+
+<li><B>Nokia Smart Messaging Specification (<A
+HREF="http://forum.nokia.com)">http://forum.nokia.com)</A></B>
+
+<li><a href="http://www.kessler-design.com/wireless/samples.html">
+http://www.kessler-design.com/wireless/samples.html</a>
+
+<li><a href="http://www.gnokii.org">Gnokii</a>
+
+</ul>
+
+<H2 id="author">AUTHOR</H2>
+
+Copyright (C) 2001 Tim Ruehsen &lt;<A
+HREF="mailto:tim.ruehsen@openmediasystem.de">tim.ruehsen@openmediasystem.de</A>&gt;.
+
+<HR>
+<H2 id="index">Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#limitations">LIMITATIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
+</UL>
+</BODY>
+</HTML>

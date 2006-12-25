@@ -1,0 +1,255 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Ppmdraw User Manual</TITLE></HEAD>
+<BODY>
+
+<H1>ppmdraw</H1>
+Updated: 22 June 2005
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<H2>NAME</H2>
+ppmdraw - draw lines, text, etc on a PPM image
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>ppmdraw</B>
+
+{
+<B>-script=</B><I>script</I>
+|
+<B>-scriptfile=</B><i>filename</i>
+}
+[<b>-verbose</b>]
+
+[<I>ppmfile</I>]
+
+
+<P>All options can be abbreviated to their shortest unique prefix.
+You may use two hyphens instead of one to designate an option.  You
+may use either white space or an equals sign between an option name
+and its value.
+
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><B>ppmdraw</B> draws lines, shapes, text, etc. on a PPM image.  It is
+essentially an easy-to-program front end to <b>libnetpbm</b>'s
+&quot;ppmd&quot; subroutines.  It lets you create a human-friendly
+script to describe the drawing rather than write a C program.
+
+<p>You supply drawing instructions with a script, which you supply either
+in a file named by a <b>-scriptfile</b> option or as the value of a
+<b>-script</b> option.  Here is an example script:
+
+<pre>
+<code>
+setpos 50 50;
+text_here 10 30 &quot;hello&quot;;
+setcolor black;
+text_here 10 0 &quot;there&quot;;
+line_here 5 20;
+</code>
+</pre>
+
+<p>This example starts at Column 50, Row 50 of the input image and
+writes the word &quot;hello&quot; there in 10 pixel high white letters
+at a 30 degree angle up from horizontal.  Then, from where that leaves
+off, the script writes &quot;there&quot; in 10 pixel high black
+letters horizontally.  Finally, it draws a black line to a point 5
+pixels over and 20 pixels down from the end of &quot;there.&quot;
+
+<P>If you don't specify <I>ppmfile</I>, <B>ppmdraw</B> reads its input
+PPM image from Standard Input.
+
+<P>The output image goes to Standard Output.
+
+<p><b>ppmdraw</b> works on multi-image streams.  It executes the same
+script on each input image and produces an output stream with one image
+for each input image.  But before Netpbm 10.32 (February 2006),
+<b>ppmdraw</b> ignored every image after the first.
+
+<p>If you just want to add a single line of text to an image,
+<b>ppmlabel</b> may be more what you want.
+
+
+<H2 id="options">OPTIONS</H2>
+
+
+<DL COMPACT>
+<DT><B>-script=</B><I>script</I>
+
+<DD>This option gives the script.  See <a href="#script">Script</a>.
+
+<p>You may not specify both <b>-script</b> and <b>-scriptfile</b>.
+
+<dt><b>-scriptfile=</b><i>filename</i>
+
+<dd>This option names a file that contains the script.  <b>-</b>
+means Standard Input.
+
+<p>You may not specify both <b>-script</b> and <b>-scriptfile</b>.
+
+<p>You may not specify <b>-</b> (Standard Input) for both
+<b>-scriptfile</b> and the input image file.
+
+</DL>
+
+
+<H2 ID="script">SCRIPT</H2>
+
+<p>The heart of <b>ppmdraw</b> function is its script.  The script is
+a character stream.  The stream consists of commands.  Commands are
+separated by semicolons.  White space is regarded just like in C: Any
+contiguous stretch of unquoted white space is equivalent to a single
+space character.  Note that this means newlines have no particular
+significance.
+
+<p>A command is composed of tokens, separated from each other by
+white space.  To write a token that contains white space, enclose
+it in double quotes.  Everything between two matched quotation marks
+is one token.
+
+<p>The first token of a command is the verb, which determines the
+basic function of the command.  The rest of the tokens of the command
+are arguments, the meaning of which depends upon the verb.  The
+following list gives all the valid verbs, and for each its meaning and
+its arguments.
+
+<dl>
+<dt>setpos
+
+<dd>Set the &quot;current position&quot; in the image.  This affects
+where subsequent commands draw things.  The 2 arguments are the column
+and row number.
+
+<p>At the start of the script, the current position is (0,0).
+
+<dt>setlinetype
+
+<dd>The 1 argument is &quot;normal&quot; or &quot;nodiag.&quot;.  This
+effects a <b>ppmd_setlinetype()</b> call.  Further details are not yet
+documented.
+
+<dt>setlineclip
+
+<dd>This effects a <b>ppmd_setlineclip()</b> call.  Not yet documented.
+
+<dt>setcolor
+
+<dd>This sets the &quot;current color&quot;, which determines the color
+in which subsequent drawing commands draw.  Before the first
+<b>setcolor</b>, the current color is white.
+
+<dt>setfont
+
+<dd>This sets the &quot;current font&quot;, which determines the font
+in which subsequent text drawing commands draw.  Before the first
+<b>setfont</b>, the current color is a built in font called
+&quot;standard.&quot;
+
+<p>The argument of this command is a file name.  It is the name of a
+Netpbm PPMD font file.
+
+<p>A Netpbm PPMD font file typically has a name that ends in
+&quot;.ppmdfont&quot; and its first 8 bytes are the ASCII encoding of
+&quot;ppmdfont&quot;.
+
+<p>There is only one of these fonts as far as we know.  It is
+distributed with Netpbm as the file <b>standard.ppmdfont</b>, but you
+don't need to use that file because the same font is built into the
+Netpbm library and is the default.  If you want to make a new font,
+you can find the format of a ppmdfont file in the Netpbm interface
+header file <b>ppmdfont.h</b>, but you'll have to make your own tools
+to build it.
+
+<dt>line
+
+<dd>This draws a one pixel wide line in the current color.  The 4 arguments
+are: starting column, starting row, ending column, ending row.
+
+<p>This command does not affect the current position.
+
+<dt>line_here
+
+<dd>This is like <b>line</b>, except it works in a more relative way.
+
+<p>The line starts at the current point.  The two arguments are the
+rightward and downard displacement from there of the terminal point.
+The command moves the current position to the terminal point after drawing.
+
+<dt>spline3
+
+<dd>This draws a spline in the current color through 3 points.  The 6
+arguments are the starting column, starting row, middle column, middle
+row, ending column, and ending row.
+
+<p>This command does not affect the current position.
+
+<dt>circle
+
+<dd>This command draws a circle in the current color.  The three
+arguments are the column number and row number of the center of the
+circle and the radius of the circle in pixels.
+
+<dt>filledrectangle
+
+<dd>This command draws a rectangle filled with the current color.
+
+The 4 arguments are the column and row numbers of the upper left corner
+of the rectangle, the width of the rectangle, and the height of the
+rectangle.
+
+<dt>text
+
+<dd>This command draws text in the current color in the built-in font.
+The 5 arguments are:
+
+<ol>
+<li>column number of starting point of baseline
+<li>row number of starting point of baseline
+<li>height of characters, in pixels
+<li>angle of baseline in degrees elevated from the horizontal
+<li>text
+</ol>
+
+<p>Note that if your text contains white space, you'll have to use double
+quotes to cause it to be a single token.
+
+<dt>text_here
+
+<dd>This is like <b>text</b>, except that the baseline starts at
+the current position and the command updates the current position to the
+other end of the baseline after it draws.
+
+<p>Bear in mind that a script starts with the current position in the
+top line, so if you leave it there, only the bottom line of your text
+will be within the image!
+
+</dl>
+
+<h2 id="history">HISTORY</h2>
+
+<P><B>ppmdraw</B> was new in Netpbm 10.29 (August 2005).
+
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<B><A HREF="ppmlabel.html">ppmlabel</A></B>,
+<B><A HREF="ppm.html">ppm</A></B>
+
+
+
+<HR>
+<A NAME="index">&nbsp;</A>
+<H2>Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#script">SCRIPT</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+</UL>
+</BODY>
+</HTML>

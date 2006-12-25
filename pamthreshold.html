@@ -1,0 +1,148 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD><TITLE>Pamthreshold User Manual</TITLE></HEAD>
+<BODY>
+<H1>pamthreshold</H1>
+Updated: 12 May 2006
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<H2>NAME</H2>
+
+pamthreshold - threshold grayscale image to black and white
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>pamthreshold</B>
+[<b>-simple</b>]
+[<b>-local=</b><i>width</i><b>x</b><i>height</i>]
+[<b>-dual=</b><i>width</i><b>x</b><i>height</i>]
+[<b>-threshold=</b><i>threshold</i>]
+[<b>-contrast=</b><i>threshold</i>]
+[<I>inputpamfile</I>]
+
+<P>Minimum unique abbreviation of options is acceptable. You may use
+double hyphens instead of a single hyphen to denote options. You may use
+white space in place of the equals sign to separate an option name
+from its value.
+
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<P><b>pamthreshold</b> thresholds a grayscale image. Thresholding means
+dividing the image into background and foreground by comparing every pixel
+to a thresholding value.
+
+<p>The input should be a PGM image or a PAM image of tuple type
+GRAYSCALE.  However, pamthreshold doesn't check; it just thresholds the
+first channel as if it were grayscale samples.  So if you
+feed it e.g. a PPM image, it will work but produce probably useless
+results.
+
+<p>The output is a PAM with tuple type BLACKANDWHITE. You can turn
+this into a PBM (if you need to use it with an older program that
+doesn't understand PAM, or you can't afford the 8X amount of space
+that PAM uses for the image) with <b>pamtopnm</b>.
+
+<p>The output is to Standard Output.
+
+<p>Another way to convert a grayscale image to black and white is to
+dither.  Dithering is using clustered black and white pixels such that
+if you step back and look at the picture, you see varying levels of
+gray.  <B>pamditherbw</B> does dithering.
+
+<H2 id="options">OPTIONS</H2>
+
+<p>Without any options, <b>pamthreshold</b> uses an iterative
+algorithm found in the <a
+href="http://www.wikipedia.org/">wikipedia</a> article
+<a href="http://en.wikipedia.org/wiki/Thresholding_%28image_processing%29">
+<i>Thresholding (image processing)</i></a> to compute the
+thresholding value.  It uses this threshold to globally threshold the
+image.  This should work well for most images.  The program issues a
+message telling you what threshold it used.  (Netpbm messages go to
+Standard Error, and you can turn them off with the Netpbm command
+option <b>-quiet</b>).
+
+<DL COMPACT>
+
+<dt><b>-simple</b></dt>
+
+<dd>This selects simple or global thresholding,
+i.e. <b>pamthreshold</b> compares every pixel to the threshold you
+specify with <b>-threshold</b>.  This works well for black and white
+text pages scanned with a flatbed scanner and is faster than the
+default method that iteratively determines the thresholding value
+first.
+
+<dt><b>-local=</b><i>width</i><b>x</b><i>height</i></dt>
+
+<dd>This selects local adaptive thresholding (also known as dynamic
+thresholding) using the neighborhood of <i>width</i> and <i>height</i>
+around every pixel.  <b>pamthreshold</b> computes the threshold
+individually for each pixel of the image.  This can accommodate
+changing lighting conditions in the image.  Depending on the size of
+the neighborhood this can be quite slow.
+
+<dt><b>-dual=</b><i>width</i><b>x</b><i>height</i></dt>
+
+<dd>This selects a dual thresholding algorithm using a global threshold
+for low contrast neighborhoods and local thresholding otherwise.  This
+can preserve larger back- respectively foreground areas than local
+adaptive thresholding.  This algorithm was proposed in the paper
+"An Approach To Licence Plate Recognition" by J.R. Parker and Pavol Federl.
+
+<dt><b>-threshold=</b><i>threshold</i></dt>
+
+<dd>This sets the thresholding value for simple or local thresholding.
+The value is a floating point number in the range [0, 1], where 0
+is black and 1 is the maxval of the image.
+
+<p>If you don't specify this option, <b>pamthreshold</b> uses a threshold
+of 0.5.  Without <b>-simple</b> or <b>-local</b> this option is
+meaningless.
+
+<dt><b>-contrast=</b><i>threshold</i></dt>
+
+<dd>This sets the threshold to determine if a neighborhood has low contrast
+or not for dual thresholding.  The value is a floating point number in
+the range [0, 1].
+
+<p>If you don't specify this option, <b>pamthreshold</b> uses a contrast
+threshold of 0.05.  Without <b>-dual</b> this option is meaningless.
+
+</DL>
+
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<B><A HREF="pamditherbw.html">pamditherbw</A></B>,
+<B><A HREF="ppmtopgm.html">ppmtopgm</A></B>,
+<B><A HREF="pamtopnm.html">pamtopnm</A></B>,
+<B><A HREF="pam.html">pam</A></B>
+
+<H2 id="history">HISTORY</H2>
+
+<p><b>pamthreshold</b> was new in Netpbm 10.34 (June 2006).
+
+<h2 id="author">AUTHOR</h2>
+<p>
+<b>pamthreshold</b> is Copyright &copy; 2006 by Erik Auerswald and released
+under the <a href="http://www.gnu.org/licenses/gpl.html">GPL</a>.
+
+<HR>
+<H2 id="index">Table Of Contents</H2>
+<UL>
+<LI><A HREF="#name">NAME</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#history">HISTORY</A>
+<LI><A HREF="#author">AUTHOR</A>
+</UL>
+</BODY>
+</HTML>
+

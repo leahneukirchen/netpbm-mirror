@@ -1,0 +1,135 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Pgmmedian User Manual</TITLE></HEAD>
+<BODY>
+<H1>pgmmedian</H1>
+Updated: 28 August 2005
+<p>
+
+<A HREF="#index">Table Of Contents</A>
+
+<H2>NAME</H2>
+
+pgmmedian - apply a median filter to a PGM file
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>pgmmedian</B>
+
+[<b>-width=</b><i>n</i>]
+
+[<b>-height=</b><i>n</i>]
+
+[<B>-type=</B><I>median_type</I>]
+
+[<B>-cutoff=</B><I>int</I>]
+
+[<I>pnmfile</I>]
+
+
+<P>Minimum unique abbreviation of option is acceptable.  You may use double
+hyphens instead of single hyphen to denote options.  You may use white
+space in place of the equals sign to separate an option name from its value.
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>pgmmedian</b> applies a median filter to a PGM image, using either
+the histogram sort of select kth value method to determine the median.
+
+<p>See the <b>-type</b> and <b>-cutoff</b> options for information on
+how <b>pgmmedian</b> chooses between the two methods.
+
+<H2 id="options">OPTIONS</H2>
+
+<DL COMPACT>
+<DT><B>-cutoff</b> <i>int</i>
+
+<DD>This option provides the cutoff value that <b>pgmmedian</b> uses
+to decide between using the histogram sort or select kth value method
+to find the median.
+
+If (<i>maxval</i> / ((<i>width</i> * <i>height</i>) - 1)), where
+<i>maxval</i> is the maxval of the image and <i>width</i> and
+<i>height</i> are the dimensions of the mask, is less than the cutoff
+value, <b>pgmmedian</b> uses histogram sort.  Otherwise, it uses kth
+value.
+
+<p>If expression is less than the cutoff, <b>pgmmedian</b> uses the
+histogram sort.  Otherwise it uses the select kth value method.
+
+<p>This option has no effect if you specify <b>-type</b>.
+
+<p>The default is 250
+
+<DT><B>-width=</b><i>n</i>
+
+<DD>Width of the median mask to apply.
+
+<p>Default is 3.
+
+<DT><B>-height=</b><i>n</i>
+
+<DD>Height of the median mask to apply.
+
+<p>Default is 3.
+
+<DT><B>-type</b> <i>median_type</i>
+
+<DD>This option selects which method to use to find median regardless
+of cutoff value.  Choices are <b>histogram_sort</b> and <b>select</b>.
+
+<p>By default, <b>pgmmedian</b> decides which method to use as described
+under the <b>-cutoff</b> option.
+
+</DL>
+
+<H2 id="references">REFERENCES</H2>
+
+<ul>
+
+<li>&quot;Collected Algorithms from ACM&quot; Volume II, Algorithm 489
+by Robert W. Floyd
+
+<li>&quot;A Fast Two-Dimensional Median Filtering Algorithm&quot; in
+&quot;IEEE Transactions on Acoustics, Speech, and Signal
+Processing&quot; Vol. ASSP-27, No. 1, February 1979
+
+<li>&quot;Digital Image Processing Algorithms&quot; by Ioannis
+Pitas, Prentice Hall, 1993 ISBN 0-13-145814-0
+
+</ul>
+
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<A HREF="pgmnoise.html">pgmnoise</A>,
+<A HREF="pamaddnoise.html">pamaddnoise</A>,
+<A HREF="pgm.html">pgm</A>
+
+<h2 id="history">HISTORY</h2>
+
+<P><b>pgmmedian</b> was added to Netpbm in Version 10.29 (August 2005).
+It had been distributed by Mike Burns via his own web site before that
+(and continued to be so).
+
+
+<H2 id="author">AUTHOR</H2>
+
+Copyright (C) 1996 by Mike Burns &lt;<A
+HREF="mailto:burns@cac.psu.edu">burns@cac.psu.edu</A>&gt;
+
+<HR>
+<H2 id="index">Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#references">REFERENCES</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#history">HISTORY</A>
+<LI><A HREF="#author">AUTHOR</A>
+</UL>
+
+</BODY>
+</HTML>

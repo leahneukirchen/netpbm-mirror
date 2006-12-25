@@ -1,0 +1,148 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD><TITLE>Ppmglobe User Manual</TITLE></HEAD>
+<BODY>
+<H1>ppmglobe</H1>
+Updated: 23 February 2006
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<H2 id="name">NAME</H2>
+
+ppmglobe - generate strips to glue onto a sphere
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>ppmglobe</B>
+[<b>-background=</b><i>colorname</i>]
+[<b>-closeok</b>]
+<i>stripcount</i>
+[<i>filename</i>]
+
+<P>Minimum unique abbreviation of option is acceptable.  You may use double
+hyphens instead of single hyphen to denote options.  You may use white
+space in place of the equals sign to separate an option name from its value.
+
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>ppmglobe</b> does the inverse of a cylindrical projection of a
+sphere.  Starting with a cylindrical projection, it produces an image
+you can cut up and glue onto a sphere to obtain the spherical image of
+which it is the cylindrical projection.
+
+<p>What is a cylindrical projection?  Imagine a map of the Earth on
+flat paper.  There are lots of different ways cartographers show the
+three dimensional information in such a two dimensional map.  The
+cylindrical projection is one.  You could make a cylindrical projection
+by putting a light inside a globe and wrapping a rectangular sheet of
+paper around the globe, touching the globe at the Equator.  Then trace
+the image that the light projects onto the paper.  Lay the paper out flat
+and you have a cylindrical projection.
+
+<p>Here's where <b>ppmglobe</b> comes in:  Pass the image on that paper
+through <b>ppmglobe</b> and what comes out the other side looks something
+like this:
+
+<p>
+<img src="globe.jpg" alt="Example of map of the earth run through ppmglobe">
+
+<p>You could cut out the strips and glue it onto a sphere and you'd
+have a copy of the original globe.
+
+<p>Note that cylindrical projections are not what you normally see as
+maps of the Earth.  You're more likely to see a Mercator projection.
+In the Mercator projection, the Earth gets stretched North-South as
+well as East-West as you move away from the Equator.  It was invented
+for use in navigation, because you can draw straight compass courses
+on it, but is used today because it is pretty.
+
+<p>You can find maps of planets at <a
+href="http://maps.jpl.nasa.gov">maps.jpl.nasa.gov</a>.
+
+<H2 id="parameters">PARAMETERS</H2>
+
+<p><i>stripcount</i> is the number of strips <b>ppmglobe</b> is to
+generate in the output.  More strips makes it easier to fit onto a
+sphere (less stretching, tearing, and crumpling of paper), but makes
+you do more cutting out of the strips.
+
+<p>The strips are all the same width.  If the number of columns of
+pixels in the image doesn't evenly divide by the number of strips,
+<b>ppmglobe</b> truncates the image on the right to create nothing but
+whole strips.  In the pathological case that there are fewer columns
+of pixels than the number of strips you asked for, <b>ppmglobe</b>
+fails.
+
+<p>Before Netpbm 10.32 (February 2006), instead of truncating the image
+on the right, <b>ppmglobe</b> produces a fractional strip on the right.
+
+<p><i>filename</i> is the name of the input file.  If you don't
+specify this, <b>ppmglobe</b> reads the image from Standard Input.
+
+
+<H2 id="options">OPTIONS</H2>
+
+<DL COMPACT>
+
+<DT><B>-background=</B><I>colorname</I>
+<DD>
+This specifies the color that goes between the strips.
+
+<P>Specify the color (<i>color</i>) as described for the <a
+href="libppm.html#colorname">argument of the <b>ppm_parsecolor()</b>
+library routine</a>.
+
+<p>The default is black.
+
+<p>This option was new in Netpbm 10.31 (December 2005).  Before that,
+the background is always black.
+
+<DT><B>-closeok</B>
+<DD>
+This means it is OK if the background isn't exactly the color you specify.
+Sometimes, it is impossible to represent a named color exactly due to the
+precision (i.e. maxval) of the image's color space.  If you specify
+<b>-closeok</b> and <b>ppmglobe</b> can't represent the color you name
+exactly, it will use instead the closest color to it that is possible.
+If you don't specify <b>closeok</b>, <b>ppmglobe</b> fails in that
+situation.
+
+<p>This option was new in Netpbm 10.31 (December 2005).
+
+</DL>
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<B><A HREF="ppm.html">ppm</A></B>
+
+<H2 id="history">HISTORY</H2>
+
+<P><b>ppmglobe</b> was new in Netpbm 10.16 (June 2003).
+
+<p>It is derived from <a href="http://www.gensthaler.de/projekte/ppmglobemap">
+Max Gensthaler's <b>ppmglobemap</b></a>.
+
+<H2 id="authors">AUTHORS</H2>
+
+<p><a href="mailto:Max@Gensthaler.de">Max Gensthaler</a>
+wrote a program he called
+<b>ppmglobemap</b> in June 2003 and suggested it for inclusion in
+Netpbm.  Bryan Henderson modified the code slightly and included it in
+Netpbm as <b>ppmglobe</b>.
+
+<HR>
+<A NAME="index">&nbsp;</A><H2>Table Of Contents</H2>
+<UL>
+<LI><A HREF="#name">NAME</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#parameters">PARAMETERS</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#authors">AUTHORS</A>
+</UL>
+</BODY>
+</HTML>

@@ -1,0 +1,25 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD>
+<TITLE>Pnmflip User Manual</TITLE></HEAD>
+<BODY>
+<H1>pnmflip</H1>
+<BR>
+<p><b>pnmflip</b> was replaced in Netpbm 10.13 (December 2002) by
+<b><a href=pamflip.html>pamflip</a></b>.
+
+<P><B>pamflip</b> is mostly backward compatible with <b>pnmflip</b>,
+but works on PAM images too.
+
+<P>One way <b>pamflip</b> is not backward compatible with <b>pnmflip</b>
+is that <b>pnmflip</b> lets you specify any number of basic flip options,
+whereas <b>pamflip</b> requires exactly one.  (<b>pamflip</b> provides
+the <b>-xform</b> option for requesting multiple transformations, though).
+Because of this incompatibility, <b>pnmflip</b> still exists as a
+separate program, and all it does is translate its options to <b>pamflip</b>
+style and run <b>pamflip</b>.
+
+<P>You should not make any new use of <b>pnmflip</b> and if you modify an
+existing use, you should upgrade to <b>pamflip</b>.
+
+</BODY>
+</HTML>
