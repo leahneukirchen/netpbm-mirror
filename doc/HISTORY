@@ -4,6 +4,13 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+06.12.31 BJH  Release 10.35.21
+
+              libnetpbm: fix crash with PAM read as PNM.
+
+              pbmtextps: Fix buffer overrun -- typical symptom: extra
+              text generated.
+
 06.12.18 BJH  Release 10.35.20
 
               ppmchange: Fix bug with -closeness and not -remainder or

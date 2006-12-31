@@ -93,7 +93,8 @@ parseCommandLine(int argc, char ** argv,
 
     optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
 
-    text = NULL;
+    text = strdup("");
+    totaltextsize = 1;
 
     for (i = 1; i < argc; i++) {
         if (i > 1) {
