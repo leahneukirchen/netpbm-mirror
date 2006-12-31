@@ -4,14 +4,58 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-not yet  BJH  Release 10.37.0
-
-              libnetpbm: add pnm_colorname().
+06.12.31 BJH  Release 10.37.0
 
               add pambackground.  But doesn't find mid-row background yet.
 
+              pnmcrop, pamtopnm: work on multi-image stream.
+              Thanks Erik Auerswald <auerswal@unix-ag.uni-kl.de>.
+
+              pnmshear: add -background.  Thanks Erik Auerswald
+              <auerswal@unix-ag.uni-kl.de>.
+
+              ppmtogif: replace with pamtogif.  Fix garbage output with
+              -interlace.
+
+              pbmtoxbm: add -name option.
+              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
+              pbmtoxbm: Use packed PBM functions for efficiency.
+              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+              
+              xbmtopbm: Use packed PBM functions for efficiency.
+              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
+              cmuwmtopbm, mgrtopbm, pbmtocmuwm, pbmtoicon, pbmtomgr:
+              Use packed PBM functions for efficiency.
+              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
+              libnetpbm: add pnm_colorname().
+
+              libnetpbm: add pnm_computetuplefreqtable3().  Has ability
+              to limit number of planes of input considered.
+
               libpam: better checking of sufficient size of struct pam
               in pnm_writepaminit().
+
+              pnm_readpaminit(): abort instead of crash if width == 0.
+
+              pnmtopng: fix transparency optimization on PPM input.
+    
+              pnmrotate: fix -background option with PGM/PBM input.
+
+              pamx: fix bug with X depth = 0.
+
+              pamx: fix bug: incorrect display of one-plane input image.
+
+              libnetpbm: fix bogus results from ppm_parsecolor() of
+              rgb:0/0/0 style color name.
+
+              pbmtoxbm, pbmtox10bm: merge.
+              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
+              pbmtox10bm: Fix generation of name in XBM file.
+              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
 
               pbmtextps: Fix buffer overrun -- typical symptom: extra
               text generated.
@@ -24,60 +68,9 @@ not yet  BJH  Release 10.37.0
 
               pbmtext: Fix crash when there is only one character.
 
-              pnmcrop, pamtopnm: work on multi-image stream.
-              Thanks Erik Auerswald <auerswal@unix-ag.uni-kl.de>.
-
-              pnmtopng: fix transparency optimization on PPM input.
-    
-              pnmrotate: fix -background option with PGM/PBM input.
-
-              pnmshear: add -background.  Thanks Erik Auerswald
-              <auerswal@unix-ag.uni-kl.de>.
-
-              pamx: fix bug with X depth = 0.
-
-              pamx: fix bug: incorrect display of one-plane input image.
-
-              libnetpbm: add pnm_computetuplefreqtable3().  Has ability
-              to limit number of planes of input considered.
-
-              libnetpbm: fix bogus results from ppm_parsecolor() of
-              rgb:0/0/0 style color name.
-
-              ppmtogif: replace with pamtogif.  Fix garbage output with
-              -interlace.
-
-              Build: fix Darwin build.
-
-              Configure: fix default for X library location.
-
-              Build: remove unnecessary limit of 200 characters on
-              argument length in Libopt.
-
-              pbmtoxbm: add -name option.
-              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
-
-              pbmtoxbm: Use packed PBM functions for efficiency.
-              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
-              
-              xbmtopbm: Use packed PBM functions for efficiency.
-              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
-
-              pbmtoxbm, pbmtox10bm: merge.
-              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
-
-              pbmtox10bm: Fix generation of name in XBM file.
-              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
-
               pnmnlfilt: Give proper error message for syntax errors.
 
-              pnm_readpaminit(): abort instead of crash if width == 0.
-
               ppmtompeg: fix reading of GOPs.  Thanks Alun Jones.
-
-              cmuwmtopbm, mgrtopbm, pbmtocmuwm, pbmtoicon, pbmtomgr:
-              Use packed PBM functions for efficiency.
-              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
 
               Fix pamcomp: due to use of undefined value, sometimes produces
               plain format.
@@ -87,10 +80,17 @@ not yet  BJH  Release 10.37.0
               Fix libnetpbm pm_system(): don't hang if shell command quits
               before taking all the input.
 
-              Fix some compile failures with Irix IDO compiler.
-
               Build: Configure does test links to detect broken
               libpng-config --ldflags.
+
+              Build: Fix some compile failures with Irix IDO compiler.
+
+              Build: fix Darwin build.
+
+              Configure: fix default for X library location.
+
+              Build: remove unnecessary limit of 200 characters on
+              argument length in Libopt.
 
               Build: fix build with separate build directory.
 
