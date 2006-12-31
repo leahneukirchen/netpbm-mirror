@@ -19,7 +19,7 @@ main(int argc, char *argv[]) {
     int rows, cols;
     gray maxval;
     int row;
-    gray* grayrow;
+    gray * grayrow;
     
     pgm_init(&argc, argv);
     
@@ -32,7 +32,7 @@ main(int argc, char *argv[]) {
 
     grayrow = pgm_allocrow(cols);
 
-    for (row = 0; row < rows; row++) {
+    for (row = 0; row < rows; ++row) {
         pgm_readpgmrow(stdin, grayrow, cols, maxval, format);
         pgm_writepgmrow(stdout, grayrow, cols, maxval, 0);
     }
