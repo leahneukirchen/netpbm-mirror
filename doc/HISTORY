@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+06.12.31 BJH  Release 10.37.1
+
+              libnetpbm: fix crash with PAM read as PNM.
+
 06.12.31 BJH  Release 10.37.0
 
               add pambackground.  But doesn't find mid-row background yet.
