@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pambackground User Manual</TITLE></HEAD>
 <BODY>
 <H1>pambackground</H1>
-Updated: 24 December 2006
+Updated: 31 December 2006
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -59,11 +59,11 @@ building, you could use <b>ppmchange</b> to change all pixels within
 20% of &quot;SkyBlue&quot; to SkyBlue, then run <b>pambackground</b>
 on it.
 
-<p>As currently implemented, <b>pambackground</b> does not really
+<p>In Release 10.37, <b>pambackground</b> does not really
 do what is promised above.  It can't see places where the background
 appears in the middle of a row (think of the sky between two buildings).
-It will take a considerably more sophisticated algorithm to fix that;
-feel free to write the code and submit it for inclusion in Netpbm.
+From Release 10.38 forward, it snakes through whatever passages it has to
+to find all the background.
 
 <p>The PAM that <b>pambackground</b> creates has a single plane, with
 a maxval of 1.  The sample value 1 means background; 0 means
