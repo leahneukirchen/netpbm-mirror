@@ -687,10 +687,10 @@ pnm_readpaminitrestaspnm(FILE * const fileP,
 -----------------------------------------------------------------------------*/
     struct pam pam;
 
-    pam.size        = PAM_STRUCT_SIZE(tuple_type);
-    pam.file        = fileP;
-    pam.len         = sizeof(struct pam);
-    pam.format      = PAM_FORMAT;
+    pam.size   = sizeof(struct pam);
+    pam.file   = fileP;
+    pam.len    = PAM_STRUCT_SIZE(tuple_type);
+    pam.format = PAM_FORMAT;
 
     readpaminitrest(&pam);
 
