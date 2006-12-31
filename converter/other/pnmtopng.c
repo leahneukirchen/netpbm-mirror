@@ -383,7 +383,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3( &argc, argv, opt, sizeof(opt), 0);
+    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
 
@@ -962,7 +962,7 @@ analyzeAlpha(FILE *     const ifp,
              gray       const alphaMaxval,
              bool *     const allOpaqueP,
              bool *     const singleColorIsTransP, 
-             pixel*     const alphaTranscolorP) {
+             pixel *    const alphaTranscolorP) {
 /*----------------------------------------------------------------------------
   Get information about the alpha mask, in combination with the masked
   image, that Caller can use to choose the most efficient way to
@@ -993,7 +993,7 @@ analyzeAlpha(FILE *     const ifp,
         */
         foundTransparentPixel = FALSE;  /* initial assumption */
         pm_seek2(ifp, &rasterPos, sizeof(rasterPos));
-        for (row = 0 ; row < rows && !foundTransparentPixel ; ++row) {
+        for (row = 0; row < rows && !foundTransparentPixel; ++row) {
             int col;
             pnm_readpnmrow(ifp, xelrow, cols, maxval, format);
             for (col = 0; col < cols && !foundTransparentPixel; ++col) {
@@ -2238,12 +2238,12 @@ convertpnm(struct cmdlineInfo const cmdline,
          of the input image.
       */
   int transexact;  
-    /* boolean: the user wants only the exact color he specified to be
-       transparent; not just something close to it.
-    */
+      /* boolean: the user wants only the exact color he specified to be
+         transparent; not just something close to it.
+      */
   int transparent;
   bool alpha;
-    /* There will be an alpha mask */
+      /* There will be an alpha mask */
   unsigned int pnm_meaningful_bits;
   pixel backcolor;
       /* The background color, with maxval equal to that of the input
@@ -2700,7 +2700,7 @@ main(int argc, char *argv[]) {
 
     int errorlevel;
     
-    pnm_init (&argc, argv);
+    pnm_init(&argc, argv);
     
     parseCommandLine(argc, argv, &cmdline);
     

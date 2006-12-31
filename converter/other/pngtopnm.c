@@ -240,23 +240,12 @@ gamma_correct(png_uint_16 const v,
 
 
 
-#ifdef __STDC__
 static int iscolor (png_color c)
-#else
-static int iscolor (c)
-png_color c;
-#endif
 {
   return c.red != c.green || c.green != c.blue;
 }
 
-#ifdef __STDC__
 static void save_text (png_info *info_ptr, FILE *tfp)
-#else
-static void save_text (info_ptr, tfp)
-png_info *info_ptr;
-FILE *tfp;
-#endif
 {
   int i, j, k;
 
@@ -285,12 +274,7 @@ FILE *tfp;
   }
 }
 
-#ifdef __STDC__
 static void show_time (png_info *info_ptr)
-#else
-static void show_time (info_ptr)
-png_info *info_ptr;
-#endif
 {
     static const char * const month[] = {
         "", "January", "February", "March", "April", "May", "June",
@@ -305,13 +289,7 @@ png_info *info_ptr;
   }
 }
 
-#ifdef __STDC__
 static void pngtopnm_error_handler (png_structp png_ptr, png_const_charp msg)
-#else
-static void pngtopnm_error_handler (png_ptr, msg)
-png_structp png_ptr;
-png_const_charp msg;
-#endif
 {
   jmpbuf_wrapper  *jmpbuf_ptr;
 

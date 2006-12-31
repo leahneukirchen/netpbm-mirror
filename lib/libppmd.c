@@ -941,12 +941,7 @@ static int extleft, exttop, extright, extbottom;  /* To accumulate extents */
 /*  ISIN  --  Return sine of an angle in integral degrees.  The
           value returned is 65536 times the sine.  */
 
-#if __STDC__
 static long isin(int deg)
-#else
-    static long isin(deg)
-    int deg;
-#endif
 {
     /* Domain reduce to 0 to 360 degrees. */
 
@@ -971,12 +966,7 @@ static long isin(int deg)
 /*  ICOS  --  Return cosine of an angle in integral degrees.  The
           value returned is 65536 times the cosine.  */
 
-#if __STDC__
 static long icos(int deg)
-#else
-    static long icos(deg)
-    int deg;
-#endif
 {
     return isin(deg + 90);
 }  

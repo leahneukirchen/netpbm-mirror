@@ -4,17 +4,41 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-06.12.18 BJH  Release 10.36.15
+06.12.31 BJH  Release 10.37.0
 
-              ppmchange: Fix bug with -closeness and not -remainder or
-              vice versa.
+              add pambackground.  But doesn't find mid-row background yet.
 
-              pgmtoppm: Fix garbage output with -map and input maxval
-              != map maxval.
+              pnmcrop, pamtopnm: work on multi-image stream.
+              Thanks Erik Auerswald <auerswal@unix-ag.uni-kl.de>.
 
-06.12.03 BJH  Release 10.36.14
+              pnmshear: add -background.  Thanks Erik Auerswald
+              <auerswal@unix-ag.uni-kl.de>.
 
-              pbmtext: Fix crash when there is only one character.
+              ppmtogif: replace with pamtogif.  Fix garbage output with
+              -interlace.
+
+              pbmtoxbm: add -name option.
+              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
+              pbmtoxbm: Use packed PBM functions for efficiency.
+              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+              
+              xbmtopbm: Use packed PBM functions for efficiency.
+              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
+              cmuwmtopbm, mgrtopbm, pbmtocmuwm, pbmtoicon, pbmtomgr:
+              Use packed PBM functions for efficiency.
+              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
+              libnetpbm: add pnm_colorname().
+
+              libnetpbm: add pnm_computetuplefreqtable3().  Has ability
+              to limit number of planes of input considered.
+
+              libpam: better checking of sufficient size of struct pam
+              in pnm_writepaminit().
+
+              pnm_readpaminit(): abort instead of crash if width == 0.
 
               pnmtopng: fix transparency optimization on PPM input.
     
@@ -24,76 +48,55 @@ CHANGE HISTORY
 
               pamx: fix bug: incorrect display of one-plane input image.
 
-06.11.27 BJH  Release 10.36.13
-
-              Configure: Fix incorrect .dylib suffix in shared library default.
-
               libnetpbm: fix bogus results from ppm_parsecolor() of
               rgb:0/0/0 style color name.
 
-06.11.18 BJH  Release 10.36.12
+              pbmtoxbm, pbmtox10bm: merge.
+              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
 
-              ppmtogif: fix garbage output with non-ppm-raw input;
-              restore to 10.34 version.
+              pbmtox10bm: Fix generation of name in XBM file.
+              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
 
-06.11.14 BJH  Release 10.36.11
+              pbmtextps: Fix buffer overrun -- typical symptom: extra
+              text generated.
 
-              ppmtogif: fix garbage output with -interlace.
+              ppmchange: Fix bug with -closeness and not -remainder or
+              vice versa.
 
-06.11.13 BJH  Release 10.36.10
+              pgmtoppm: Fix garbage output with -map and input maxval
+              != map maxval.
 
-              Configure: fix libX11 location default.
+              pbmtext: Fix crash when there is only one character.
 
-06.11.13 BJH  Release 10.36.09
+              pnmnlfilt: Give proper error message for syntax errors.
 
-              Configure: fix libX11 location default.
-
-06.11.13 BJH  Release 10.36.08
-
-              Build: fix Darwin build.
-
-06.11.08 BJH  Release 10.36.07
-
-              Build: remove unnecessary limit of 200 characters on
-              argument length in Libopt.
-
-06.10.26 BJH  Release 10.36.06
-
-              pnm_readpaminit(): Don't crash if width == 0.
-
-06.10.22 BJH  Release 10.36.05
-
-              ppmtompeg: fix reading of GOP files.  Thanks Alun Jones.
-
-06.10.21 BJH  Release 10.36.04
+              ppmtompeg: fix reading of GOPs.  Thanks Alun Jones.
 
               Fix pamcomp: due to use of undefined value, sometimes produces
               plain format.
-
-06.10.18 BJH  Release 10.36.03
 
               Fix pamperspective: read all of input.
 
               Fix libnetpbm pm_system(): don't hang if shell command quits
               before taking all the input.
 
-              Fix redefinitions of functions that Irix compiler can't handle.
-
               Build: Configure does test links to detect broken
               libpng-config --ldflags.
 
-06.10.01 BJH  Release 10.36.02
+              Build: Fix some compile failures with Irix IDO compiler.
 
-              Fix some prototypes that don't literally match definitions
-              so that Irix compiler will accept them.
+              Build: fix Darwin build.
 
-06.09.29 BJH  Release 10.36.01
+              Configure: fix default for X library location.
+
+              Build: remove unnecessary limit of 200 characters on
+              argument length in Libopt.
 
               Build: fix build with separate build directory.
 
               Build: fix merge build with no X11 library.
 
-06.09.21 BJH  Release 10.36.00
+06.09.21 BJH  Release 10.36.0
 
               pbmtonokia: Add plain NPM output capability.  Thanks Paul Bolle
               <pebolle@tiscali.nl>.
@@ -129,7 +132,7 @@ CHANGE HISTORY
               pm_accept_to_pamtuples: fix bug: fill in pam structure.
               Thanks "Christian Schlotter" <schlotter@users.sourceforge.net>.
 
-              Fix selection of MMX_SEE fastpath based on GNU compiler version
+              Fix selection of MMX_SSE fastpath based on GNU compiler version
               number.
 
               Properly clean thinkjettopbm.c with 'make distclean'.
@@ -380,8 +383,6 @@ CHANGE HISTORY
 
               pamstereogram: Fix crippling bugs.  Thanks Scott Pakin
               <scott@pakin.org>.
-
-              giftopnm: Fix bug with interlaced GIF < 5 rows.
 
               giftopnm: Handle case of a clear code at the end of a block.
 

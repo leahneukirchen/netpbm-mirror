@@ -652,7 +652,7 @@ termStack(struct stack * const stackP) {
    max_dataVal.  The first byte in the stream tells you what dataWidth
    is.
 
-   LZW codes 0 - max_dataVal are direct codes.  Each on represents
+   LZW codes 0 - max_dataVal are direct codes.  Each one represents
    the true data element whose value is that of the LZW code itself.
    No decompression is required.
 
@@ -805,7 +805,7 @@ expandCodeOntoStack(struct decompressor * const decompP,
            represents and push it onto the code stack so the
            leftmost code is on top.  Set decompP->firstcode to the
            first (leftmost) code in that string.
-            */
+        */
 
         unsigned int stringCount;
         stringCount = 0;

@@ -86,24 +86,32 @@ validateComputableSize(struct pam * const pamP) {
    Another common operation is adding 1 or 2 to the highest row, column,
    or plane number in the image, so we make sure that's possible.
 -----------------------------------------------------------------------------*/
-    unsigned int const depth = allocationDepth(pamP);
+    if (pamP->width == 0)
+        pm_error("Width is zero.  Image must be at least one pixel wide");
+    else if (pamP->height == 0)
+        pm_error("Height is zero.  Image must be at least one pixel high");
+    else {
+        unsigned int const depth = allocationDepth(pamP);
 
-    if (depth > INT_MAX/sizeof(sample))
-        pm_error("image depth (%u) too large to be processed", depth);
-    else if (pamP->width > 0 && depth * sizeof(sample) > INT_MAX/pamP->width)
-        pm_error("image width and depth (%u, %u) too large "
-                 "to be processed.", pamP->width, depth);
-    else if (pamP->width * (depth * sizeof(sample)) >
-             INT_MAX - depth * sizeof(tuple *))
-        pm_error("image width and depth (%u, %u) too large "
-                 "to be processed.", pamP->width, depth);
-    
-    if (depth > INT_MAX - 2)
-        pm_error("image depth (%u) too large to be processed", depth);
-    if (pamP->width > INT_MAX - 2)
-        pm_error("image width (%u) too large to be processed", pamP->width);
-    if (pamP->height > INT_MAX - 2)
-        pm_error("image height (%u) too large to be processed", pamP->height);
+        if (depth > INT_MAX/sizeof(sample))
+            pm_error("image depth (%u) too large to be processed", depth);
+        else if (depth * sizeof(sample) > INT_MAX/pamP->width)
+            pm_error("image width and depth (%u, %u) too large "
+                     "to be processed.", pamP->width, depth);
+        else if (pamP->width * (depth * sizeof(sample)) >
+                 INT_MAX - depth * sizeof(tuple *))
+            pm_error("image width and depth (%u, %u) too large "
+                     "to be processed.", pamP->width, depth);
+        
+        if (depth > INT_MAX - 2)
+            pm_error("image depth (%u) too large to be processed", depth);
+        if (pamP->width > INT_MAX - 2)
+            pm_error("image width (%u) too large to be processed",
+                     pamP->width);
+        if (pamP->height > INT_MAX - 2)
+            pm_error("image height (%u) too large to be processed",
+                     pamP->height);
+    }
 }
 
 
@@ -862,13 +870,17 @@ pnm_writepaminit(struct pam * const pamP) {
                  "(%d bytes, according to its 'len' element).",
                  pamP->size, pamP->len);
 
-    if (pamP->len < PAM_STRUCT_SIZE(bytes_per_sample))
+    if (pamP->size < PAM_STRUCT_SIZE(bytes_per_sample))
         pm_error("pam object passed to pnm_writepaminit() is too small.  "
                  "It must be large\n"
                  "enough to hold at least up through the "
                  "'bytes_per_sample' member, but according\n"
-                 "to its 'len' member, it is only %d bytes long.", 
-                 pamP->len);
+                 "to its 'size' member, it is only %d bytes long.", 
+                 pamP->size);
+    if (pamP->len < PAM_STRUCT_SIZE(maxval))
+        pm_error("pam object must contain members at least through 'maxval', "
+                 "but according to the 'len' member, it is only %u bytes "
+                 "long.", pamP->len);
 
     if (pamP->maxval > PAM_OVERALL_MAXVAL)
         pm_error("maxval (%lu) passed to pnm_writepaminit() "
@@ -879,6 +891,8 @@ pnm_writepaminit(struct pam * const pamP) {
     else
         tupleType = pamP->tuple_type;
 
+    if (pamP->len < PAM_STRUCT_SIZE(bytes_per_sample))
+        pamP->len = PAM_STRUCT_SIZE(bytes_per_sample);
     pamP->bytes_per_sample = pnm_bytespersample(pamP->maxval);
     
     switch (PAM_FORMAT_TYPE(pamP->format)) {

@@ -77,6 +77,7 @@
 #include "frames.h"
 #include "motion_search.h"
 #include "fsize.h"
+#include "block.h"
 
 
 /*==================*

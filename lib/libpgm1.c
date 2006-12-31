@@ -381,6 +381,5 @@ pgm_check(FILE *               const file,
         pm_filepos const need_raster_size = rows * bytes_per_row;
         
         pm_check(file, check_type, need_raster_size, retval_p);
-        
     }
 }

@@ -21,15 +21,19 @@ INSTALLING A LOCAL COPY OF DOCUMENTATION
 If accessing the manual on the World Wide Web is not convenient for
 you (for example, if you want to access it from a computer that is not
 always connected to the Internet), just make a local copy of the web
-site files using GNU Wget:
+site files.  An obvious way to do that is just to copy the web site
+with GNU Wget:
 
   wget --recursive --relative http://netpbm.sourceforge.net/doc/
 
-The above copies all the HTML files from the web site into your
-current directory, under a subdirectory 'netpbm.sourceforge.net/doc'
-that it creates.  You can browse those files directly with a web
-browser.  If you don't have Wget, get it from
-ftp://ftp.gnu.org/gnu/wget.  It is very useful.
+However, a somewhat cleaner way is to get the files from the
+Subversion repository using the Subversion client program 'svn':
+
+  URL=https://netpbm.svn.sourceforge.net/svnroot/netpbm/userguide
+  svn export $URL
+
+This creates a directory "userguide" in your current directory containing
+all the same files that are on the web site.
 
 
 GETTING COMMAND HELP WITH A "MAN" COMMAND

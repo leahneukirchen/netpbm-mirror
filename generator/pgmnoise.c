@@ -11,67 +11,56 @@
 
 #include "pgm.h"
 
-/* global variables */
-#ifdef AMIGA
-static char *version = "$VER: pgmnoise 1.1 (16.11.93)"; /* Amiga version identification */
-#endif
 
-/**************************/
-/* start of main function */
-/**************************/
-int main(argc, argv)
-int argc;
-char *argv[];
-{
-	int argn, rows, cols, i, j;
-	gray *destrow;
-	const char * const usage = "width height\n        width and height are picture dimensions in pixels\n";
-	time_t timenow;
+int main(int    argc,
+         char * argv[]) {
 
-	/* parse in 'default' parameters */
-	pgm_init(&argc, argv);
+    int argn, rows, cols;
+    unsigned int row;
+    gray * destrow;
 
-	argn = 1;
+    const char * const usage = "width height\n        width and height are picture dimensions in pixels\n";
 
-	/* parse in dim factor */
-	if (argn == argc)
-		pm_usage(usage);
-	if (sscanf(argv[argn], "%d", &cols) != 1)
-		pm_usage(usage);
-	argn++;
-	if (argn == argc)
-		pm_usage(usage);
-	if (sscanf(argv[argn], "%d", &rows) != 1)
-		pm_usage(usage);
+    /* parse in 'default' parameters */
+    pgm_init(&argc, argv);
 
-	if (cols <= 0 || rows <= 0)
-		pm_error("picture dimensions should be positive numbers");
-	++argn;
+    argn = 1;
 
-	if (argn != argc)
-		pm_usage(usage);
+    /* parse in dim factor */
+    if (argn == argc)
+        pm_usage(usage);
+    if (sscanf(argv[argn], "%d", &cols) != 1)
+        pm_usage(usage);
+    argn++;
+    if (argn == argc)
+        pm_usage(usage);
+    if (sscanf(argv[argn], "%d", &rows) != 1)
+        pm_usage(usage);
 
-	/* no error checking required here, ppmlib does it all for us */
-	destrow = pgm_allocrow(cols);
+    if (cols <= 0 || rows <= 0)
+        pm_error("picture dimensions should be positive numbers");
+    ++argn;
 
-	pgm_writepgminit(stdout, cols, rows, PGM_MAXMAXVAL, 0);
+    if (argn != argc)
+        pm_usage(usage);
 
-	/* get time of day to feed the random number generator */
-	timenow = time(NULL);
-	srand(timenow);
+    destrow = pgm_allocrow(cols);
 
-	/* create the (gray) noise */
-	for (i = 0; i < rows; i++)
-	{
-		for (j = 0; j < cols; j++)
-			destrow[j] = rand() % PGM_MAXMAXVAL;
+    pgm_writepgminit(stdout, cols, rows, PGM_MAXMAXVAL, 0);
 
-		/* write out one line of graphic data */
-		pgm_writepgmrow(stdout, destrow, cols, PGM_MAXMAXVAL, 0);
-	}
+    srand(pm_randseed());
 
-	pgm_freerow(destrow);
+    /* create the (gray) noise */
 
-	exit(0);
+    for (row = 0; row < rows; ++row) {
+        unsigned int col;
+        for (col = 0; col < cols; ++col)
+            destrow[col] = rand() % PGM_MAXMAXVAL;
+
+        pgm_writepgmrow(stdout, destrow, cols, PGM_MAXMAXVAL, 0);
+    }
+
+    pgm_freerow(destrow);
+
+    return 0;
 }
-

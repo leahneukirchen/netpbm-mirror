@@ -58,7 +58,22 @@ typedef struct {
   ((f) == PPM_FORMAT || (f) == RPPM_FORMAT ? PPM_TYPE : PGM_FORMAT_TYPE(f))
 
 
-/* Declarations of routines. */
+static __inline__ pixel
+ppm_whitepixel(pixval maxval) {
+
+    pixel retval;
+    PPM_ASSIGN(retval, maxval, maxval, maxval);
+
+    return retval;
+}
+
+static __inline__ pixel
+ppm_blackpixel(void) {
+
+    pixel const retval = {0, 0, 0};
+
+    return retval;
+}
 
 void ppm_init(int * argcP, char* argv[]);
 

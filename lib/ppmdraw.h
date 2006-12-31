@@ -59,7 +59,7 @@ typedef struct {
 
 
 
-typedef void ppmd_drawproc(pixel ** const, int const, int const, pixval const, int const, int const, const void *const);
+typedef void ppmd_drawproc(pixel **, int, int, pixval, int, int, const void *);
 
 ppmd_drawproc ppmd_point_drawproc;
 
@@ -265,17 +265,17 @@ ppmd_fill(pixel **         const pixels,
 /* Text drawing routines. */
 
 void
-ppmd_text(pixel**      const pixels, 
-          int          const cols, 
-          int          const rows, 
-          pixval       const maxval, 
-          int          const xpos, 
-          int          const ypos, 
-          int          const height, 
-          int          const angle, 
-          const char * const sArg, 
-	  ppmd_drawproc,
-    const void*  const clientdata);
+ppmd_text(pixel**       const pixels, 
+          int           const cols, 
+          int           const rows, 
+          pixval        const maxval, 
+          int           const xpos, 
+          int           const ypos, 
+          int           const height, 
+          int           const angle, 
+          const char *  const sArg, 
+          ppmd_drawproc       drawProc,
+          const void *  const clientdata);
 /* Draws the null-terminated string 's' left justified at the point
    ('x', 'y').  The text will be 'height' pixels high and will be aligned on a
    baseline inclined 'angle' degrees with the X axis.  The supplied

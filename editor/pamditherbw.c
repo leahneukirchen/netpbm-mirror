@@ -487,7 +487,7 @@ createFsConverter(struct pam * const graypamP,
     /* Initialize Floyd-Steinberg error vectors. */
     MALLOCARRAY_NOFAIL(stateP->thiserr, graypamP->width + 2);
     MALLOCARRAY_NOFAIL(stateP->nexterr, graypamP->width + 2);
-    srand((int)(time(NULL) ^ getpid()));
+    srand(pm_randseed());
 
     {
         /* (random errors in [-1/8 .. 1/8]) */

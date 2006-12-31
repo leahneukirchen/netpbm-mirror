@@ -37,6 +37,9 @@
 
    We also assume that a char is 8 bits.
 */
+
+#include "pm_config.h"
+
 #if (!defined(WORDACCESS_GENERIC) \
      && defined(__GNUC__) && defined(__GLIBC__) \
      && (__GNUC__ * 100 + __GNUC_MINOR__ >= 304) )

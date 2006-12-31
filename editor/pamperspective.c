@@ -190,17 +190,26 @@ typedef struct {
 
 typedef struct {
 
-  int num_rows, last_physical, last_logical;
-  tuple** rows;
-  const struct pam* inpam;
+    unsigned int num_rows;
+    unsigned int last_physical;
+    unsigned int last_logical;
+        /* Row number of the input row most recently read from input
+           file into buffer (i.e. one less than the number of rows we
+           have read from the input)
+        */
+    tuple ** rows;
+    const struct pam * inpamP;
 
 } buffer;
 
 
 
+typedef void interpolateFn(tuple, number, number);
+
 /*
   The following are like MALLOCARRAY_NOFAIL and MALLOCVAR_NOFAIL,
-  but issue an error message instead of aborting.
+  but abort (fail) the program instead of killing the process with an
+  abort signal.
 */
 
 #define MALLOCARRAY_SAFE(handle,length) \
@@ -1080,83 +1089,98 @@ static int clean_y (int const y,  const struct pam *const outpam)
   return MIN(MAX(0, y), outpam->height-1);
 }
 
-static void init_buffer (buffer *const b, const world_data *const world,
-                         const option *const options,
-                         const struct pam *const inpam,
-                         const struct pam *const outpam)
-{
-  int yul, yur, yll, ylr, y_min;
-  int i, num_rows;
+static void
+init_buffer(buffer *           const bufferP,
+            const world_data * const worldP,
+            const option *     const optionsP,
+            const struct pam * const inpamP,
+            const struct pam * const outpamP) {
 
-  yul = outpixel_to_iny (0,0,world);
-  yur = outpixel_to_iny (outpam->width-1,0,world);
-  yll = outpixel_to_iny (0,outpam->height-1,world);
-  ylr = outpixel_to_iny (outpam->width-1,outpam->height-1,world);
+    unsigned int yul, yur, yll, ylr, y_min;
+    unsigned int num_rows;
 
-  y_min = MIN (MIN (yul,yur), MIN (yll,ylr));
-  num_rows = MAX (MAX (diff (yul, yur),
-                       diff (yll, ylr)),
-                  MAX (diff (clean_y(yul,outpam), clean_y(y_min,outpam)),
-                       diff (clean_y(yur,outpam), clean_y(y_min,outpam))))
-    + 2;
-  switch (options->enums[3]) {  /* --interpolation */
-  case nearest:
-    break;
-  case linear:
-    num_rows += 1;
-    break;
-  };
-  if (num_rows > inpam->height)
-    num_rows = inpam->height;
+    yul = outpixel_to_iny(0, 0, worldP);
+    yur = outpixel_to_iny(outpamP->width-1, 0, worldP);
+    yll = outpixel_to_iny(0, outpamP->height-1, worldP);
+    ylr = outpixel_to_iny(outpamP->width-1, outpamP->height-1, worldP);
+    
+    y_min = MIN(MIN(yul, yur), MIN(yll, ylr));
+    num_rows = MAX(MAX(diff(yul, yur),
+                       diff(yll, ylr)),
+                   MAX(diff(clean_y(yul, outpamP), clean_y(y_min, outpamP)),
+                       diff(clean_y(yur, outpamP), clean_y(y_min, outpamP))))
+        + 2;
+    switch (optionsP->enums[3]) {  /* --interpolation */
+    case nearest:
+        break;
+    case linear:
+        num_rows += 1;
+        break;
+    }
+    if (num_rows > inpamP->height)
+        num_rows = inpamP->height;
 
-  b->num_rows = num_rows;
-  MALLOCARRAY_SAFE (b->rows, num_rows);
-  for (i=0; i<num_rows; i++) {
-    b->rows[i] = pnm_allocpamrow (inpam);
-    pnm_readpamrow (inpam, b->rows[i]);
-  };
-  b->last_physical = num_rows-1;
-  b->last_logical = num_rows-1;
-  b->inpam = inpam;
+    MALLOCARRAY_SAFE(bufferP->rows, num_rows);
+    bufferP->num_rows = num_rows;
+    bufferP->last_logical = 0;
+    bufferP->last_physical = 0;
+    {
+        unsigned int row;
+        for (row = 0; row < num_rows; ++row) {
+            bufferP->rows[row] = pnm_allocpamrow(inpamP);
+            pnm_readpamrow(inpamP, bufferP->rows[row]);
+            ++bufferP->last_logical;
+            ++bufferP->last_physical;
+        }
+    }
+    bufferP->inpamP = inpamP;
 }
 
-static tuple* read_buffer (buffer *const b, int const logical_y)
-{
-  int y;
 
-  while (logical_y > b->last_logical) {
-    b->last_physical++;
-    if (b->last_physical == b->num_rows)
-      b->last_physical = 0;
-    pnm_readpamrow (b->inpam, b->rows[b->last_physical]);
-    b->last_logical++;
-  }
 
-  y = logical_y - b->last_logical + b->last_physical;
-  if (y<0)
-    y += b->num_rows;
+static tuple *
+read_buffer(buffer *     const bufferP,
+            unsigned int const logical_y) {
 
-  return b->rows[y];
+    unsigned int y;
+    
+    while (logical_y > bufferP->last_logical) {
+        ++bufferP->last_physical;
+        if (bufferP->last_physical == bufferP->num_rows)
+            bufferP->last_physical = 0;
+        pnm_readpamrow(bufferP->inpamP, bufferP->rows[bufferP->last_physical]);
+        ++bufferP->last_logical;
+    }
+    
+    y = logical_y - bufferP->last_logical + bufferP->last_physical;
+    if (y < 0)
+        y += bufferP->num_rows;
+
+    return bufferP->rows[y];
 }
 
-static void free_buffer (buffer *const b)
-{
-  int i;
 
-  /* We have to read through the end of the input image even if we
-     didn't use all the rows, because if the input is a pipe, the
-     guy writing into the pipe may require all the data to go
-     through.
-  */
-  
-  while (b->last_logical < b->inpam->height-1) {
-      pnm_readpamrow(b->inpam, b->rows[0]);
-      ++b->last_logical;
-  }
 
-  for (i=0; i<b->num_rows; i++)
-    pnm_freepamrow (b->rows[i]);
-  free (b->rows);
+static void
+term_buffer(buffer * const bufferP) {
+
+    unsigned int i;
+
+    /* We have to read through the end of the input image even if we
+       didn't use all the rows, because if the input is a pipe, the
+       guy writing into the pipe may require all the data to go
+       through.
+    */
+
+    while (bufferP->last_logical < bufferP->inpamP->height-1) {
+        pnm_readpamrow(bufferP->inpamP, bufferP->rows[0]);
+        ++bufferP->last_logical;
+    }
+
+    for (i = 0; i < bufferP->num_rows; ++i)
+        pnm_freepamrow(bufferP->rows[i]);
+    
+    free(bufferP->rows);
 }
 
 
@@ -1251,92 +1275,98 @@ static void linear_interpolation (tuple const dest,
 
 
 
-int main (int argc, char* argv[])
-{
-  FILE* infp;
-  struct pam inpam;
-  buffer inbuffer;
-  FILE* outfp;
-  struct pam outpam;
-  tuple* outrow;
-  option options;
-  world_data world;
-  int row,col;
-  number xi,yi;
-  void (*interpolate) (tuple, number, number);
+static void
+perspective(struct pam * const outpamP,
+            world_data * const worldP,
+            interpolateFn *    interpolater) {
 
-  /* The usual initializations */
+    tuple * outrow;
+    unsigned int row;
 
-  pnm_init (&argc, argv);
-  set_command_line_defaults (&options);
-  parse_command_line (argc, argv, &options);
-  infp = pm_openr (options.infilename);
-  pnm_readpaminit (infp, &inpam, PAM_STRUCT_SIZE(tuple_type));
+    outrow = pnm_allocpamrow(outpamP);
 
-  /* Our own initializations */
+    for (row = 0; row < outpamP->height; ++row) {
+        unsigned int col;
 
-  init_world (&options, &inpam, &world);
-  determine_world_parallelogram (&world, &options);
-  determine_output_width_and_height (&world, &options);
-  switch (options.enums[1]) {   /* --output_system */
-  case lattice:
-    determine_coefficients_lattice (&world, &options);
-    break;
-  case pixel_s:
-    determine_coefficients_pixel (&world, &options);
-    break;
-  };
-
-  /* Initialize outpam */
-
-  outfp = pm_openw ("-");
-  outpam.size = sizeof (outpam);
-  outpam.len = PAM_STRUCT_SIZE(bytes_per_sample);
-  outpam.file = outfp;
-  outpam.format = inpam.format;
-  outpam.plainformat = inpam.plainformat;
-  outpam.height = options.height;
-  outpam.width = options.width;
-  outpam.depth = inpam.depth;
-  outpam.maxval = inpam.maxval;
-  outpam.bytes_per_sample = inpam.bytes_per_sample;
-  pnm_writepaminit (&outpam);
-
-  /* Initialize the actual calculation */
-
-  init_buffer (&inbuffer, &world, &options, &inpam, &outpam);
-  outrow = pnm_allocpamrow (&outpam);
-  init_interpolation_global_vars (&inbuffer,&inpam,&outpam);
-  switch (options.enums[3]) {   /* --interpolation */
-  case nearest:
-    interpolate = take_nearest;
-    break;
-  case linear:
-    interpolate = linear_interpolation;
-    break;
-  };
-
-  /* Perform the actual calculation */
-
-  for (row=0; row<outpam.height; row++) {
-    for (col=0; col<outpam.width; col++) {
-      outpixel_to_inpixel (col,row,&xi,&yi,&world);
-      interpolate(outrow[col],xi,yi);
+        for (col = 0; col < outpamP->width; ++col) {
+            number xi,yi;
+            outpixel_to_inpixel(col, row, &xi, &yi, worldP);
+            interpolater(outrow[col], xi, yi);
+        }
+        pnm_writepamrow(outpamP, outrow);
     }
-    pnm_writepamrow (&outpam, outrow);
-  }
-
-  /* Close everything down nicely */
-
-  clean_interpolation_global_vars ();
-  free_buffer (&inbuffer);
-  pnm_freepamrow (outrow);
-  free_option (&options);
-  pm_close (infp);
-  pm_close (outfp);
-  return 0;
+    pnm_freepamrow(outrow);
 }
 
 
 
+int
+main(int argc, char* argv[]) {
 
+    FILE * ifP;
+    struct pam inpam;
+    buffer inbuffer;
+    struct pam outpam;
+    option options;
+    world_data world;
+    interpolateFn * interpolater;
+
+    pnm_init(&argc, argv);
+
+    set_command_line_defaults(&options);
+
+    parse_command_line(argc, argv, &options);
+
+    ifP = pm_openr(options.infilename);
+
+    pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
+
+    /* Our own initializations */
+
+    init_world(&options, &inpam, &world);
+    determine_world_parallelogram(&world, &options);
+    determine_output_width_and_height(&world, &options);
+    switch (options.enums[1]) {   /* --output_system */
+    case lattice:
+        determine_coefficients_lattice(&world, &options);
+        break;
+    case pixel_s:
+        determine_coefficients_pixel(&world, &options);
+        break;
+    };
+
+    outpam.size             = sizeof(outpam);
+    outpam.len              = PAM_STRUCT_SIZE(bytes_per_sample);
+    outpam.file             = stdout;
+    outpam.format           = inpam.format;
+    outpam.plainformat      = FALSE;
+    outpam.height           = options.height;
+    outpam.width            = options.width;
+    outpam.depth            = inpam.depth;
+    outpam.maxval           = inpam.maxval;
+    outpam.bytes_per_sample = inpam.bytes_per_sample;
+    pnm_writepaminit(&outpam);
+
+    /* Initialize the actual calculation */
+
+    init_buffer(&inbuffer, &world, &options, &inpam, &outpam);
+    init_interpolation_global_vars(&inbuffer, &inpam, &outpam);
+    switch (options.enums[3]) {   /* --interpolation */
+    case nearest:
+        interpolater = take_nearest;
+        break;
+    case linear:
+        interpolater = linear_interpolation;
+        break;
+    };
+
+    perspective(&outpam, &world, interpolater);
+
+    clean_interpolation_global_vars();
+    term_buffer(&inbuffer);
+    free_option(&options);
+    pm_close(ifP);
+    pm_close(stdout);
+
+    return 0;
+}

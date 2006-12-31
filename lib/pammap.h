@@ -96,6 +96,14 @@ pnm_computetuplefreqtable2(struct pam *   const pamP,
                            sample         const newMaxval,
                            unsigned int * const sizeP);
 
+tupletable
+pnm_computetuplefreqtable3(struct pam *   const pamP,
+                           tuple **       const tupleArray,
+                           unsigned int   const maxsize,
+                           unsigned int   const newDepth,
+                           sample         const newMaxval,
+                           unsigned int * const countP);
+
 tuplehash
 pnm_computetuplefreqhash(struct pam *   const pamP,
                          tuple **       const tupleArray,

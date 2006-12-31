@@ -91,21 +91,22 @@ main( argc, argv )
     pbm_writepbminit( stdout, newcols, newrows, 0 );
     newbitrow = pbm_allocrow( newcols );
 
-    if ( halftone == QT_FS ) {
+    if (halftone == QT_FS) {
+        unsigned int col;
         /* Initialize Floyd-Steinberg. */
         MALLOCARRAY(thiserr, newcols + 2);
         MALLOCARRAY(nexterr, newcols + 2);
-        if ( thiserr == NULL || nexterr == NULL )
-          pm_error( "out of memory" );
+        if (thiserr == NULL || nexterr == NULL)
+            pm_error("out of memory");
 
-        srand( (int) ( time( 0 ) ^ getpid( ) ) );
-        for ( col = 0; col < newcols + 2; ++col )
-          thiserr[col] = ( rand( ) % SCALE - HALFSCALE ) / 4;
+        srand(pm_randseed());
+        for (col = 0; col < newcols + 2; ++col)
+            thiserr[col] = (rand() % SCALE - HALFSCALE) / 4;
 	    /* (random errors in [-SCALE/8 .. SCALE/8]) */
 	} else {
         /* These variables are meaningless in this case, and the values
            should never be used.
-           */
+        */
         thiserr = NULL;
         nexterr = NULL;
     }

@@ -57,6 +57,7 @@ foreach (@ARGV) {
         if (defined($infile)) {
             print(STDERR
                   "You may specify at most one non-option parameter.\n");
+            exit(10);
         } else {
             $infile = $_;
         }

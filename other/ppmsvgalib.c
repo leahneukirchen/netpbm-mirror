@@ -249,7 +249,7 @@ main(int argc, char *argv[]) {
     int format;
     int rc;
 
-    ppm_init( &argc, argv );
+    ppm_init(&argc, argv);
 
     rc = vga_init();         /* Initialize. */
     if (rc < 0)

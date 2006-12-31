@@ -100,13 +100,13 @@ pnm_writepnm(FILE * const fileP,
              int    const forceplain);
 
 xel 
-pnm_backgroundxel (xel** xels, int cols, int rows, xelval maxval, int format);
+pnm_backgroundxel(xel** xels, int cols, int rows, xelval maxval, int format);
 
 xel 
-pnm_backgroundxelrow (xel* xelrow, int cols, xelval maxval, int format);
+pnm_backgroundxelrow(xel* xelrow, int cols, xelval maxval, int format);
 
 xel 
-pnm_whitexel (xelval maxval, int format);
+pnm_whitexel(xelval maxval, int format);
 
 xel 
 pnm_blackxel(xelval maxval, int format);
@@ -126,6 +126,11 @@ pnm_promoteformatrow(xel* xelrow, int cols, xelval maxval, int format,
 pixel
 pnm_xeltopixel(xel const inputxel,
                int const format);
+
+xel
+pnm_parsecolorxel(const char * const colorName,
+                  xelval       const maxval,
+                  int          const format);
 
 #ifdef __cplusplus
 }

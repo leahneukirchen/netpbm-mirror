@@ -130,18 +130,4 @@ Frame_Resize(MpegFrame * const omf,
              int         const outsize_x,
              int         const outsize_y);
 
-
-extern void	  Frame_Free _ANSI_ARGS_((MpegFrame * const frame));
-extern void	  Frame_Exit _ANSI_ARGS_((void));
-extern void	  Frame_AllocPPM _ANSI_ARGS_((MpegFrame * frame));
-extern void	  Frame_AllocYCC _ANSI_ARGS_((MpegFrame * const mf));
-extern void	  Frame_AllocDecoded _ANSI_ARGS_((MpegFrame * const frame,
-						  boolean const makeReference));
-extern void	  Frame_AllocHalf _ANSI_ARGS_((MpegFrame * const frame));
-extern void	  Frame_AllocBlocks _ANSI_ARGS_((MpegFrame * const mf));
-extern void	  Frame_Resize _ANSI_ARGS_((MpegFrame * const omf, MpegFrame * const mf,
-					    int const insize_x, int const insize_y,
-					    int const outsize_x, int const outsize_y));
-
-
-#endif /* FRAME_INCLUDED */
+#endif

@@ -60,8 +60,6 @@ static int32    totalTime = 0;
 static int      qscaleP;
 static float    totalSNR = 0.0;
 static float    totalPSNR = 0.0;
-extern Block    **dct, **dctr, **dctb;
-extern dct_data_type   **dct_data;
 
 /*=====================*
  * INTERNAL PROCEDURES *

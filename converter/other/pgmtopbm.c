@@ -11,10 +11,11 @@
 */
 
 #include <assert.h>
+
+#include "shhopt.h"
 #include "pgm.h"
 #include "dithers.h"
 #include "mallocvar.h"
-#include "shhopt.h"
 
 enum halftone {QT_FS, QT_THRESH, QT_DITHER8, QT_CLUSTER, QT_HILBERT};
 
@@ -445,7 +446,7 @@ createFsConverter(unsigned int const cols,
     /* Initialize Floyd-Steinberg error vectors. */
     MALLOCARRAY_NOFAIL(stateP->thiserr, cols + 2);
     MALLOCARRAY_NOFAIL(stateP->nexterr, cols + 2);
-    srand((int)(time(NULL) ^ getpid()));
+    srand(pm_randseed());
 
     {
         /* (random errors in [-fs_scale/8 .. fs_scale/8]) */

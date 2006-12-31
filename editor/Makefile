@@ -14,7 +14,7 @@ include $(BUILDDIR)/Makefile.config
 # This package is so big, it's useful even when some parts won't 
 # build.
 
-PORTBINARIES = pamaddnoise pamcomp pamcut \
+PORTBINARIES = pamaddnoise pambackground pamcomp pamcut \
 	       pamdeinterlace pamdice pamditherbw pamedge \
 	       pamenlarge \
 	       pamflip pamfunc pammasksharpen pammixinterlace \

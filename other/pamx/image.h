@@ -82,9 +82,4 @@ colorIntensity(unsigned int const red,
             BlueIntensity[blu / 256]);
 }
 
-Image *
-pbmLoad(const char * const fullname,
-        const char * const name,
-        bool         const verbose);
-
 #endif

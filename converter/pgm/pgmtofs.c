@@ -128,14 +128,8 @@ putitem( )
     bitshift = 8 - bitspersample;
 }
 
-#if __STDC__
 static void
 putgray( gray g )
-#else /*__STDC__*/
-    static void
-putgray( g )
-    gray g;
-#endif /*__STDC__*/
 {
     if ( bitsperitem == 8 )
         putitem( );

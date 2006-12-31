@@ -433,17 +433,8 @@ putdigit( d, bits, row0, col0 )
 	    bits[row0 + row][col0 + col] = digits[d][row][col];
     }
 
-#if __STDC__
 static int
 addlines( int d, bit** bits, int row0, int col0, int height, bit color )
-#else /*__STDC__*/
-static int
-addlines( d, bits, row0, col0, height, color )
-    int d;
-    bit** bits;
-    int row0, col0, height;
-    bit color;
-#endif /*__STDC__*/
     {
     switch ( d )
 	{
@@ -524,16 +515,8 @@ addlines( d, bits, row0, col0, height, color )
     return col0;
     }
 
-#if __STDC__
 static int
 rect( bit** bits, int row0, int col0, int height, int width, bit color )
-#else /*__STDC__*/
-static int
-rect( bits, row0, col0, height, width, color )
-    bit** bits;
-    int row0, col0, height, width;
-    bit color;
-#endif /*__STDC__*/
     {
     int row, col;
 
