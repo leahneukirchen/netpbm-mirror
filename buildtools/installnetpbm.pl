@@ -829,7 +829,7 @@ installConfig($$$$$$$) {
 
     my $configTemplateFilename = dirname($0) . "/config_template";
 
-    my $templateOpened = open(TEMPLATE, "<", $configTemplateFilename);
+    my $templateOpened = open(TEMPLATE, "<$configTemplateFilename");
     if (!$templateOpened) {
         $error = "Can't open template file '$configTemplateFilename'.\n";
     } else {
@@ -837,7 +837,7 @@ installConfig($$$$$$$) {
 
         close(TEMPLATE);
 
-        my $versionOpened = open(VERSION, "<", "$pkgdir/VERSION");
+        my $versionOpened = open(VERSION, "<$pkgdir/VERSION");
 
         my $version;
         if (!$versionOpened) {
@@ -859,7 +859,7 @@ installConfig($$$$$$$) {
             
             my $filename = "$bindir/netpbm-config";
             
-            my $success = open(NETPBM_CONFIG, ">", $filename);
+            my $success = open(NETPBM_CONFIG, ">$filename");
             if ($success) {
                 chmod(0755, $filename);
                 foreach (@{$fileContentsR}) { print NETPBM_CONFIG; }
