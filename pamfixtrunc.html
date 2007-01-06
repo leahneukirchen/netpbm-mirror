@@ -1,0 +1,90 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Pamfixtrunc User Manual</TITLE></HEAD>
+<BODY>
+<H1>pamfixtrunc</H1>
+Updated: 06 January 2006
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<H2>NAME</H2>
+
+pamfixtrunc - repair a Netpbm image whose file is truncated
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>pamfixtrunc</B>
+
+[<b>-verbose</b>]
+
+[<I>netpbmfile</I>]
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>pamfixtrunc</b> reads as much as it can of a Netpbm image
+that may be truncated (i.e. the file may not contain the last part
+of the image) and writes out a valid Netpbm image that is just
+missing the bottom rows of the original (pre-truncation) image.
+
+<p>The header of a Netpbm image implies how large the image must
+be (how many bytes the file must contain).  If the file is actually
+smaller than that, a Netpbm program that tries to read the image
+fails, with an error message telling you that it couldn't read the
+whole file.  The data in the file is arranged in row order, from
+top to bottom, and the most common reason for the file being smaller
+than its header says it should be is because the bottommost rows are
+simply missing.  So <b>pamfixtrunc</b> assumes that is the case
+and generates a new image with just the rows that are readable.
+(technically, that means the output's header indicates a smaller
+number of rows and omits any partial last row).
+
+<p>The most common way for a Netpbm file to be small is that something
+interrupted the program that generated it before it was finished writing
+the file.  For example, the program ran out of its own input or
+encountered a bug or ran out of space in which to write the output.
+
+<p>Another problem <b>pamfixtrunc</b> deals with is where the file isn't
+actually too small, but due to a system error, a byte in the middle of
+it cannot be read (think of a disk storage failure).  <b>pamfixtrunc</b>
+reads the input sequentially until it can't read any further, for any
+reason.  So it treats such an image as a truncated one, ignoring all
+data after the unreadable byte.
+
+<p>But be aware that an image file is sometimes too small because of a
+bug in the program that generated it, and in that case it is not
+simply a matter of the bottom of the image missing, so
+<b>pamfixtrunc</b> simply creates a valid Netpbm image containing a
+garbage picture.
+
+<p><b>pamfixtrunc</b> looks at only on the first image in a multi-image
+stream.
+
+<p>If you want to test an image file to see if it is corrupted by being
+too small, use <b>pamfile --allimages</b> .  It fails with an error
+message if the file is too small.
+
+<p>If you want to cut the bottom off a valid Netpbm image, use
+<b>pamcut</b>.
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<A HREF="pnm.html">pnm</A>,
+<A HREF="pam.html">pam</A>,
+<A HREF="pamcut.html">pamcut</A>,
+<A HREF="pamfile.html">pamfile</A>,
+
+<h2 id="history">HISTORY</h2>
+
+<p><b>pamfixtrunc</b> was new in Netpbm 10.38 (March 2007).
+
+<HR>
+<H2 id="index">Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#history">HISTORY</A>
+</UL>
+</BODY>
+</HTML>
