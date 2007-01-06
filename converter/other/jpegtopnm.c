@@ -157,8 +157,9 @@ interpret_adobe(const int adobe, const int notadobe,
 
 
 static void
-parse_command_line(const int argc, char ** argv,
-                   struct cmdlineInfo *cmdlineP) {
+parseCommandLine(int                  const argc,
+                 char **              const argv,
+                 struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that many of the strings that this function returns in the
    *cmdlineP structure are actually in the supplied argv array.  And
@@ -173,10 +174,10 @@ parse_command_line(const int argc, char ** argv,
          */
     optStruct3 opt;
 
-    int i;  /* local loop variable */
+    unsigned int i;  /* local loop variable */
 
-    char *maxmemory;
-    char *dctval;
+    const char * maxmemory;
+    const char * dctval;
     unsigned int adobe, notadobe;
 
     unsigned int tracelevelSpec, exifSpec, dctvalSpec, maxmemorySpec;
@@ -213,7 +214,8 @@ parse_command_line(const int argc, char ** argv,
 
     /* Make private copy of arguments for optParseOptions to corrupt */
     argc_parse = argc;
-    for (i=0; i < argc; i++) argv_parse[i] = argv[i];
+    for (i=0; i < argc; ++i)
+        argv_parse[i] = argv[i];
 
     optParseOptions3( &argc_parse, argv_parse, opt, sizeof(opt), 0);
         /* Uses and sets argc_parse, argv_parse, 
@@ -924,7 +926,7 @@ main(int argc, char **argv) {
 
     pnm_init(&argc, argv);
 
-    parse_command_line(argc, argv, &cmdline);
+    parseCommandLine(argc, argv, &cmdline);
 
     if (cmdline.exif_filespec && STREQ(cmdline.exif_filespec, "-"))
         /* He's got exif going to stdout, so there can be no image output */
@@ -967,4 +969,3 @@ main(int argc, char **argv) {
   
     exit(jerr.num_warnings > 0 ? EXIT_WARNING : EXIT_SUCCESS);
 }
-
