@@ -4,6 +4,17 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+not yet  BJH  Release 10.38.0
+
+              add pamfixtrunc.
+
+              ppmdraw: fix crash with use of freed storage.  Thanks
+              John Walker <kelvin@fourmilab.ch>.
+
+              installnetpbm: use 2-argument open() for old Perl.
+    
+              libnetpbm: fix crash with PAM read as PNM.
+
 06.12.31 BJH  Release 10.37.0
 
               add pambackground.  But doesn't find mid-row background yet.
