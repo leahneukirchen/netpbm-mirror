@@ -6,6 +6,11 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.38.0
 
+              libnetpbm: fix buffer overrun with PBM images < 8 columns.
+
+              configure: default to 'none' for Svgalib if it doesn't appear
+              to be installed.
+
               add pamfixtrunc.
 
               ppmdraw: fix crash with use of freed storage.  Thanks

@@ -132,6 +132,14 @@ packBitsWithMmxSse(FILE *          const fileP,
 
 
 
+static unsigned int
+bitValue(unsigned char const byteValue) {
+
+    return byteValue == 0 ? 0 : 1;
+}
+
+
+
 static void
 packBitsGeneric(FILE *          const fileP,
                 const bit *     const bitrow,
@@ -139,27 +147,25 @@ packBitsGeneric(FILE *          const fileP,
                 unsigned int    const cols,
                 unsigned int *  const nextColP) {
 /*----------------------------------------------------------------------------
-   Pack the bits of bitrow[] into byts at 'packedBits'.  Going left to right,
+   Pack the bits of bitrow[] into bytes at 'packedBits'.  Going left to right,
    stop when there aren't enough bits left to fill a whole byte.  Return
    as *nextColP the number of the next column after the rightmost one we
    packed.
 
    Don't use any special CPU facilities to do the packing.
 -----------------------------------------------------------------------------*/
-    int col;
+    unsigned int col;
 
-    #define iszero(x) ((x) == 0 ? 0 : 1)
-
-    for (col = 0; col < cols-7; col += 8)
+    for (col = 0; col + 7 < cols; col += 8)
         packedBits[col/8] = (
-            iszero(bitrow[col+0]) << 7 |
-            iszero(bitrow[col+1]) << 6 |
-            iszero(bitrow[col+2]) << 5 |
-            iszero(bitrow[col+3]) << 4 |
-            iszero(bitrow[col+4]) << 3 |
-            iszero(bitrow[col+5]) << 2 |
-            iszero(bitrow[col+6]) << 1 |
-            iszero(bitrow[col+7]) << 0
+            bitValue(bitrow[col+0]) << 7 |
+            bitValue(bitrow[col+1]) << 6 |
+            bitValue(bitrow[col+2]) << 5 |
+            bitValue(bitrow[col+3]) << 4 |
+            bitValue(bitrow[col+4]) << 3 |
+            bitValue(bitrow[col+5]) << 2 |
+            bitValue(bitrow[col+6]) << 1 |
+            bitValue(bitrow[col+7]) << 0
             );
     *nextColP = col;
 }
