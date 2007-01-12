@@ -1087,33 +1087,36 @@ readImageData(FILE *       const ifP,
 
 
 static void
-writePnm(FILE *outfile, xel ** const xels, 
-         const int cols, const int rows,
-         const int hasGray, const int hasColor) {
+writePnm(FILE * const outfileP,
+         xel ** const xels, 
+         int    const cols,
+         int    const rows,
+         int    const hasGray,
+         int    const hasColor) {
 /*----------------------------------------------------------------------------
-   Write a PNM image to the current position of file 'outfile' with
+   Write a PNM image to the current position of file *outfileP with
    dimensions 'cols' x 'rows' and raster 'xels'.
    
    Make it PBM, PGM, or PBM according to 'hasGray' and 'hasColor'.
 -----------------------------------------------------------------------------*/
     int format;
-    const char *format_name;
+    const char * formatName;
            
     if (hasColor) {
         format = PPM_FORMAT;
-        format_name = "PPM";
+        formatName = "PPM";
     } else if (hasGray) {
         format = PGM_FORMAT;
-        format_name = "PGM";
+        formatName = "PGM";
     } else {
         format = PBM_FORMAT;
-        format_name = "PBM";
+        formatName = "PBM";
     }
     if (verbose) 
-        pm_message("writing a %s file", format_name);
+        pm_message("writing a %s file", formatName);
     
-    if (outfile) 
-        pnm_writepnm(outfile, xels, cols, rows,
+    if (outfileP) 
+        pnm_writepnm(outfileP, xels, cols, rows,
                      (xelval) GIFMAXVAL, format, FALSE);
 }
 
