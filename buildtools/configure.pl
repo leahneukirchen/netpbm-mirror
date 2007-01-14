@@ -1075,27 +1075,27 @@ sub getLinuxsvgaLibrary($@) {
     my ($svgalib, $svgalibhdr_dir);
 
     if ($platform eq "GNU") {
-        {
-            my $default;
+        my $default;
 
-            if (-d('/usr/link/svgalib')) {
-                $default = '/usr/link/svgalib/libvga.so';
-            } elsif (-d('/usr/lib/svgalib')) {
-                $default = '/usr/lib/svgalib/libvga.so';
-            } else {
-                $default = 'libvga.so';
-            }
+        if (-d('/usr/link/svgalib')) {
+            $default = '/usr/link/svgalib/libvga.so';
+        } elsif (-d('/usr/lib/svgalib')) {
+            $default = '/usr/lib/svgalib/libvga.so';
+        } elsif (system('ldconfig -p | grep libvga &>/dev/null')) {
+            $default = 'libvga.so';
+        } else {
+            $default = 'none';
+        }
             
-            print("What is your Svgalib library?\n");
+        print("What is your Svgalib library?\n");
+        
+        my $response = prompt("library filename or 'none'", $default);
             
-            my $response = prompt("library filename or 'none'", $default);
-            
-            if ($response ne "none") {
-                $svgalib = $response;
-            }
+        if ($response ne 'none') {
+            $svgalib = $response;
         }
     }
-    if (defined($svgalib)) {
+    if (defined($svgalib) && $svgalib ne 'none') {
         my $default;
         
         if (-d('/usr/include/svgalib')) {
@@ -2148,12 +2148,10 @@ close(MAKEFILE_CONFIG) or
     die("Error:  Close of Makefile.config failed.\n");
 
 print("\n");
-print("We have created the file 'Makefile.config'.  Note, however, that \n");
-print("we guessed a lot at your configuration and you may want to look \n");
-print("at Makefile.config and edit it to your requirements and taste \n");
-print("before doing the make.\n");
+print("We have created the file 'Makefile.config'.  You may want to look \n");
+print("at it and edit it to your requirements and taste before doing the \n");
+print("make.\n");
 print("\n");
-
 
 print("Now you may proceed with 'make'\n");
 print("\n");
