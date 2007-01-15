@@ -4,6 +4,15 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+07.01.15 BJH  Release 10.35.22
+
+              libnetpbm: fix buffer overrun with PBM images < 8 columns.
+
+              ppmdraw: fix crash with use of freed storage.  Thanks
+              John Walker <kelvin@fourmilab.ch>.
+
+              installnetpbm: use 2-argument open() for old Perl.
+    
 06.12.31 BJH  Release 10.35.21
 
               libnetpbm: fix crash with PAM read as PNM.

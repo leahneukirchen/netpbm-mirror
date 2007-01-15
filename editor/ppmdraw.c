@@ -332,9 +332,11 @@ static void
 freeScript(struct script * const scriptP) {
 
     struct commandListElt * p;
+    struct commandListElt * nextP;
 
-    for (p = scriptP->commandListHeadP; p; p = p->nextP) {
+    for (p = scriptP->commandListHeadP; p; p = nextP) {
         freeDrawCommand(p->commandP);
+        nextP = p->nextP;
         free(p);
     }
 
