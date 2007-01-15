@@ -146,11 +146,11 @@ packBitsGeneric(FILE *          const fileP,
 
    Don't use any special CPU facilities to do the packing.
 -----------------------------------------------------------------------------*/
-    int col;
+    unsigned int col;
 
     #define iszero(x) ((x) == 0 ? 0 : 1)
 
-    for (col = 0; col < cols-7; col += 8)
+    for (col = 0; col + 7 < cols; col += 8)
         packedBits[col/8] = (
             iszero(bitrow[col+0]) << 7 |
             iszero(bitrow[col+1]) << 6 |
