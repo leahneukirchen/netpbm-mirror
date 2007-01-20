@@ -6,23 +6,27 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.38.0
 
+              Add pamfixtrunc.
+
+              pambackground: recognize mid-row background.
+
               libnetpbm: fix buffer overrun with PBM images < 8 columns.
-
-              configure: default to 'none' for Svgalib if it doesn't appear
-              to be installed.
-
-              add pamfixtrunc.
 
               ppmdraw: fix crash with use of freed storage.  Thanks
               John Walker <kelvin@fourmilab.ch>.
 
+              libnetpbm: fix crash with PAM read as PNM.
+
+              libnetpbm: Embellish "bad magic number" error message.
+
               installnetpbm: use 2-argument open() for old Perl.
     
-              libnetpbm: fix crash with PAM read as PNM.
+              configure: default to 'none' for Svgalib if it doesn't appear
+              to be installed.
 
 06.12.31 BJH  Release 10.37.0
 
-              add pambackground.  But doesn't find mid-row background yet.
+              Add pambackground.  But doesn't find mid-row background yet.
 
               pnmcrop, pamtopnm: work on multi-image stream.
               Thanks Erik Auerswald <auerswal@unix-ag.uni-kl.de>.

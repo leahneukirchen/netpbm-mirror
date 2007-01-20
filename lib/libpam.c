@@ -792,7 +792,8 @@ pnm_readpaminit(FILE *       const file,
         break;
         
     default:
-        pm_error("bad magic number - not a PAM, PPM, PGM, or PBM file");
+        pm_error("bad magic number 0x%x - not a PAM, PPM, PGM, or PBM file",
+                 pamP->format);
     }
     
     pamP->bytes_per_sample = pnm_bytespersample(pamP->maxval);
