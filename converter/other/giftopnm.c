@@ -1455,9 +1455,9 @@ main(int argc, char **argv) {
 
     pm_close(ifP);
     if (imageout_file != NULL) 
-        pm_close( imageout_file );
+        pm_close(imageout_file);
     if (alpha_file != NULL)
-        pm_close( alpha_file );
+        pm_close(alpha_file);
 
     return 0;
 }
