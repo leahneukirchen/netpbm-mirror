@@ -21,7 +21,7 @@ struct cmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *inputFilespec;  /* '-' if stdin */
+    const char * inputFilespec;  /* '-' if stdin */
     float saturation;
     float value;
     unsigned int normalize;
@@ -29,10 +29,9 @@ struct cmdlineInfo {
 
 
 
-
 static void
-parseCommandLine (int argc, char ** argv,
-                  struct cmdlineInfo *cmdlineP) {
+parseCommandLine(int argc, char ** argv,
+                 struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
    and argv.  Return the information in the options as *cmdlineP.  
@@ -270,9 +269,9 @@ int
 main(int argc, char * argv[]) {
 
     struct cmdlineInfo cmdline;
-    FILE *ifP;
+    FILE * ifP;
     pixval minValue, maxValue;
-    pixel *pixelrow;
+    pixel * pixelrow;
     pixval maxval;
     int rows, cols, format, row;
 
