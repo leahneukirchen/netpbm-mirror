@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pnmtops User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmtops</H1>
-Updated: 10 February 2006
+Updated: 21 January 2007
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -188,7 +188,7 @@ its shape; If you specify <B>-noturn</B>, <B>pnmtops</B> does
 compression in encoding the image in the Postscript program.  This may
 save time if the host-to-printer link is slow; but normally the
 printer's processing time dominates, so <B>-rle</B> has no effect (and
-in the absence of buffering, may make things slower.
+in the absence of buffering, may make things slower).
 
 <p>This may, however, make the Postscript program considerable smaller.
 
@@ -216,6 +216,14 @@ same as PNG).
 
 <p>Before Netpbm 10.32 (February 2006), you could not specify <b>-rle</b>
 and <b>-flate</b> together.
+
+<p>This sometimes produces what is probably an incorrect image -- one
+that is missing the lower rows.  This appears to be an implementation
+problem in the flate compressor, but we don't know what it is.  We
+also don't know on which images it has the problem.  (January 2007).
+We provide <a href="flatebug.png">an example</a> of an image with which
+<b>pnmtops</b> appears to have the problem.  (Convert it to PGM with
+<b>pngtopnm</b> and feed that to <b>pnmtops</b>).
 
 <dt><b>-ascii85</b>
 
