@@ -10,6 +10,8 @@ not yet  BJH  Release 10.38.0
 
               pambackground: recognize mid-row background.
 
+              giftopnm: Add -repair option.
+
               libnetpbm: fix buffer overrun with PBM images < 8 columns.
 
               ppmdraw: fix crash with use of freed storage.  Thanks
