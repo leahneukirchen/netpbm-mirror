@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Giftopnm User Manual</TITLE></HEAD>
 <BODY>
 <H1>giftopnm</H1>
-Updated: 6 August 2006
+Updated: 29 January 2007
 <BR>
 
 <A HREF="#index">Table Of Contents</A>
@@ -16,6 +16,7 @@ giftopnm - convert a GIF file into a PNM image
 [<B>-verbose</B>]
 [<B>-comments</B>]
 [<B>-image=</B>{<I>N</I>,<B>all</b>}]
+[<B>-repair</B>]
 [<B>-quitearly</B>]
 [<I>GIFfile</I>]
 
@@ -98,9 +99,44 @@ not do the same for the images after it; see <b>-quitearly</b>.
 <p>The <b>all</b> value was added in Netpbm 10.16 (June 2003).  Earlier
 <b>giftopnm</b> can extract only one image.
 
+<dt><b>-repair</b>
+
+<dd>This option makes <b>giftopnm</b> try to salvage what it can from an
+invalid GIF input.
+
+<p>In particular, when <b>giftopnm</b> detects that the GIF input is
+invalid so that it is impossible to determine what the pixels are
+intended to be, it produces a single arbitrary color for all further
+pixels in the image.  <b>giftopnm</b> processes the image from top to
+bottom, left to right, so this means the bottommost pixels will be
+this padding.
+
+<p><b>giftopnm</b> issues warning messages when it salvages an image
+in this way.
+
+<p>Without this option, <b>giftopnm</b> fails when it detects invalid
+GIF input.  Any output it produces is arbitrary, and typically is not
+a valid PNM image.
+
+<p>It is fairly common for an image to be corrupted such that is
+started off as a valid GIF, but had the end of the file cut off.  An
+interrupted network transfer tends to do this.  In this case,
+<b>giftopnm</b>'s salvage operation will produce a valid PNM image of
+the proer dimensions, but with a single arbitrary color for the pixels
+that were left out of the file.  If the truncation is in the middle of
+a row, <b>giftopnm</b> produces arbitrary pixels for the entire
+truncated row.
+
+<p>This option was new in Netpbm 10.38 (March 2007).  From 10.32 through
+10.37, <b>giftopnm</b> always fails if it detects invalid GIF input.
+Before 10.32, it succeeds in the case of a truncated image, and replaces
+the missing pixels with arbitrary colors, not necessarily all the same
+(The pre-10.32 behavior wasn't actually intended by the design).
+
+
 <dt><b>-quitearly</b>
 
-<dd>This options makes <b>giftopnm</b> stop reading its input file as soon
+<dd>This option makes <b>giftopnm</b> stop reading its input file as soon
 as it has converted and output the images from the input that you requested.
 By default, <b>giftopnm</b> reads until the end of the GIF stream, ignoring
 any data after the images you requested.
