@@ -20,12 +20,6 @@ pamfile - describe a Netpbm (PAM or PNM) file
 
 [<I>file</i> ...]
 
-<P>Minimum unique abbreviation of option is acceptable.  You may use
-double hyphens instead of single hyphen to denote options.  You may use
-white space in place of the equals sign to separate an option name
-from its value.
-
-
 <H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
@@ -33,6 +27,11 @@ from its value.
 <p><B>pamfile</b> reads one or more Netpbm files as input and writes
 out short descriptions of the image type, size, etc.  This is partly
 for use in shell scripts, so the format is not particularly pretty.
+
+<P>Minimum unique abbreviations of options are acceptable.  You may use
+double hyphens instead of single hyphen to denote options.  You may use
+white space in place of the equals sign to separate an option name
+from its value.
 
 <p>By default, <b>pamfile</b> reads only the header of the input file.
 If that file is a pipe, that might cause problems for the process that is

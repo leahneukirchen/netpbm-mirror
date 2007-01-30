@@ -37,12 +37,6 @@ pamscale - scale a Netpbm image
       [<I>pnmfile</I>]
 
 </pre>
-<?makeman .SH OPTION USAGE ?>
-
-<P>Minimum unique abbreviation of option is acceptable.  You may use
-double hyphens instead of single hyphen to denote options.  You may use
-white space in place of the equals sign to separate an option name
-from its value.
 
 <H2 id="description">DESCRIPTION</H2>
 
@@ -53,6 +47,11 @@ scales individually horizontally and vertically by specified factors.
 
 <P>You can either enlarge (scale factor &gt; 1) or reduce (scale factor
 &lt; 1).
+
+<P>Minimum unique abbreviation of option is acceptable.  You may use
+double hyphens instead of single hyphen to denote options.  You may use
+white space in place of the equals sign to separate an option name
+from its value.
 
 <h3 id="scalefactor">The Scale Factors</h3>
 
@@ -339,7 +338,7 @@ passing the step function of the source image through a low pass
 frequency filter and recovering a good approximation of the original
 continuous image.
 
-<h5>Refiltering</h5>
+<h4>Refiltering</h4>
 
 <p>There's another twist: If you simply sample the reconstructed
 original continuous image at the new sample rate, and that new sample
@@ -357,7 +356,7 @@ then get a perfect sampling of that.
 <p>Therefore, <b>pamscale</b> filters out frequencies above half the
 new sample rate before picking the new samples.
 
-<h5>Approximations</h5>
+<h4>Approximations</h4>
 
 <p>Unfortunately, <b>pamscale</b> doesn't do the convolution
 precisely.  Instead of evaluating the filter function at every point,
@@ -377,7 +376,7 @@ option.  The same holds for other filter functions that go on forever
 like sinc.  By default, for a filter that needs a window function,
 the window function is the Blackman function.
 
-<h5>Filter Functions Besides Sinc</h5>
+<h4>Filter Functions Besides Sinc</h4>
 
 <p>The math described above works only with sinc as the filter
 function.  <b>pamscale</b> offers many other filter functions, though.
@@ -402,7 +401,7 @@ the pixel values.  This is mathematically equivalent to the pixel mixing
 method when scaling down, and interpolation (ala <b>pamstretch</b>)
 when scaling up.
 
-<h5>Gamma</h5>
+<h4>Gamma</h4>
 
 <p><b>pamscale</b> assumes the underlying continuous function is a
 function of brightness (as opposed to light intensity), and therefore
@@ -413,7 +412,7 @@ to justify the implementation effort.
 
 <p>Resampling (<b>-filter</b>) was new in Netpbm 10.20 (January 2004).
 
-<h5>The filter functions</h5>
+<h4>The filter functions</h4>
 
 <p>Here is a list of the function names you can specify for the
 <b>-filter</b> option.  For most of them, you're on your own to figure
@@ -448,6 +447,7 @@ and centered on the Y axis with height 1 and base 2.
 <dt>normal
 <dt>hermite
 <dt>lanczos
+<dd>Not documented</dd>
 </dl>
 
 

@@ -2,10 +2,14 @@
 <html> <head>
 <title>Manweb Reference Documentation</title>
 </head>
-
+<h1>manweb</h1>
+<br>
 <body>
 
-<h1>SYNOPSIS</h1>
+<h2>NAME</h2>
+manweb - browse netpbm (and other) documentation
+
+<h2>SYNOPSIS</h2>
 
 <b>manweb</b> <b>-help</b>
 <p>
@@ -13,7 +17,7 @@
 [<b>-config=<i>configfile</i></b>]
 [<i>topic</i> [ <i>subtopic</i> ... ] ]
 
-<h1>EXAMPLES</h1>
+<h2>EXAMPLES</h2>
 
 <pre>
 manweb
@@ -46,7 +50,7 @@ manweb cp
 This gets the GNU Info manual for the <b>cp</b> program, using <b>info</b>.
 
 
-<h1>DESCRIPTION</h1>
+<h2>DESCRIPTION</h2>
 
 <p><b>manweb</b> displays reference documentation via quick shell
 commands.  It is a replacement for the well-known <b>man</b>.
@@ -104,7 +108,7 @@ other things, replace traditional Unix man pages.  However, HTML and the
 Worldwide Web were invented shortly afterward, so Info fizzled.  But there
 is still a lot of GNU software that is documented as Info topics.
 
-<h2>How Manweb Finds Documentation</h2>
+<h3>How Manweb Finds Documentation</h3>
 
 <p><b>manweb</b> passes a URL to a web browser.  This section tells
 how your <b>manweb</b> invocation parameters turn into that URL.
@@ -200,7 +204,7 @@ file can specify a chain of web directories.  <b>manweb</b> searches
 each one in turn, doing all the kinds of searches in each web directory
 before moving on to the next one.
 
-<h2>The Configuration File</h2>
+<h3>The Configuration File</h3>
 
 <p>The default location of the <b>manweb</b> configuration file is
 <b>/etc/manweb.conf</b>.  But you can override this with the environment
