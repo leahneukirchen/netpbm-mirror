@@ -6,6 +6,7 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.38.0
 
+
               Add pamfixtrunc.
 
               pambackground: recognize mid-row background.
@@ -13,6 +14,8 @@ not yet  BJH  Release 10.38.0
               giftopnm: Add -repair option.
 
               libnetpbm: fix buffer overrun with PBM images < 8 columns.
+
+              pamtogif: fail properly if image to wide or high for GIF.
 
               ppmdraw: fix crash with use of freed storage.  Thanks
               John Walker <kelvin@fourmilab.ch>.

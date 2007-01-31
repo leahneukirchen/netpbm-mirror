@@ -37,9 +37,6 @@ typedef int stringCode;
 
        Ergo, this data structure must be signed and at least BITS bits
        wide plus sign bit.
-
-       TODO: Some variables that should be of this type are defined as
-             "long".
     */
 
 
@@ -52,15 +49,6 @@ struct cmap {
         /* Maps a color index, as is found in the raster part of the
            GIF, to color.
         */
-    int perm[MAXCMAPSIZE], permi[MAXCMAPSIZE];
-        /* perm[i] is the position in the sorted colormap of the color which
-           is at position i in the unsorted colormap.  permi[] is the inverse
-           function of perm[].
-           
-           The sort colormap is the one that goes into the GIF.  The
-           unsorted one is the one that is hashed so we can find colors
-           in it.
-        */
     unsigned int cmapSize;
         /* Number of entries in the GIF colormap.  I.e. number of colors
            in the image, plus possibly one fake transparency color.
@@ -69,12 +57,12 @@ struct cmap {
         /* The colormap contains an entry for transparent pixels */
     unsigned int transparent;
         /* color index number in GIF palette of the color that is to
-           be transparent.  This is a post-sort index.
+           be transparent.
 
            Meaningful only if 'haveTransparent' is true.
         */
     tuplehash tuplehash;
-        /* A hash table to translate color to GIF (presort) colormap index. */
+        /* A hash table to translate color to GIF colormap index. */
 };
 
 struct cmdlineInfo {
@@ -211,7 +199,7 @@ closestColor(tuple         const color,
              struct pam *  const pamP,
              struct cmap * const cmapP) {
 /*----------------------------------------------------------------------------
-   Return the pre-sort colormap index of the color in the colormap *cmapP
+   Return the colormap index of the color in the colormap *cmapP
    that is closest to the color 'color', whose format is specified by 
    *pamP.
 
@@ -450,23 +438,21 @@ gifPixel(struct pam *   const pamP,
    'alphaThreshold' is the alpha level below which we consider a
    pixel transparent for GIF purposes.
 -----------------------------------------------------------------------------*/
-    unsigned int colorIndex;
+    int colorIndex;
 
     if (alphaPlane && tuple[alphaPlane] < alphaThreshold &&
         cmapP->haveTransparent)
         colorIndex = cmapP->transparent;
     else {
-        int presortColorindex;
         int found;
 
         pnm_lookuptuple(pamP, cmapP->tuplehash, tuple,
-                        &found, &presortColorindex);
+                        &found, &colorIndex);
         
         if (!found)
-            presortColorindex = closestColor(tuple, pamP, cmapP);
-
-        colorIndex = cmapP->perm[presortColorindex];
+            colorIndex = closestColor(tuple, pamP, cmapP);
     }
+    assert(colorIndex >= 0);
     return colorIndex;
 }
 
@@ -560,7 +546,7 @@ static stringCode const maxCodeLimitLzw = (stringCode)1 << BITS;
 
 
 struct hashTableEntry {
-    long fcode;   /* -1 means unused slot */
+    stringCode fcode;   /* -1 means unused slot */
     unsigned int ent;
 };    
 
@@ -729,13 +715,6 @@ codeBuffer_increaseCodeSize(codeBuffer * const codeBufferP) {
     codeBufferP->maxCode = (1 << codeBufferP->nBits) - 1;
 }
 
-
-
-static unsigned long const masks[] = { 0x0000, 0x0001, 0x0003, 0x0007, 0x000F,
-                                       0x001F, 0x003F, 0x007F, 0x00FF,
-                                       0x01FF, 0x03FF, 0x07FF, 0x0FFF,
-                                       0x1FFF, 0x3FFF, 0x7FFF, 0xFFFF };
-
 static void
 codeBuffer_output(codeBuffer * const codeBufferP,
                   stringCode   const code) {
@@ -751,10 +730,10 @@ codeBuffer_output(codeBuffer * const codeBufferP,
 -----------------------------------------------------------------------------*/
     assert (code <= codeBufferP->maxCode);
 
-    codeBufferP->curAccum &= masks[codeBufferP->curBits];
+    codeBufferP->curAccum &= (1 << codeBufferP->curBits) - 1;
 
     if (codeBufferP->curBits > 0)
-        codeBufferP->curAccum |= ((long)code << codeBufferP->curBits);
+        codeBufferP->curAccum |= ((unsigned long)code << codeBufferP->curBits);
     else
         codeBufferP->curAccum = code;
 
@@ -1060,7 +1039,7 @@ primaryHash(stringCode   const baseString,
 static void
 lookupInHash(lzwCompressor *  const lzwP,
              unsigned int     const gifPixel,
-             long             const fcode,
+             stringCode       const fcode,
              bool *           const foundP,
              unsigned short * const codeP,
              unsigned int *   const hashP) {
@@ -1109,9 +1088,10 @@ lzw_encodePixel(lzwCompressor * const lzwP,
         lzwP->stringSoFar = gifPixel;
         lzwP->buildingString = TRUE;
     } else {
-        long const fcode = ((long) gifPixel << BITS) + lzwP->stringSoFar;
+        stringCode const fcode =
+            ((stringCode) gifPixel << BITS) + lzwP->stringSoFar;
             /* The encoding of the string we've already recognized plus the
-               instant pixel, to be looked up in the hash of knows strings.
+               instant pixel, to be looked up in the hash of known strings.
             */
     
         lookupInHash(lzwP, gifPixel, fcode, &found, &code, &hash);
@@ -1272,9 +1252,9 @@ writeGlobalColorMap(FILE *              const ofP,
 
     for (i = 0; i < colorMapSize; ++i) {
         if (i < cmapP->cmapSize) {
-            tuple const color = cmapP->color[cmapP->permi[i]];
+            tuple const color = cmapP->color[i];
 
-            assert(cmapP->permi[i] < cmapP->cmapSize);
+            assert(i < cmapP->cmapSize);
 
             pnm_scaletuple(&pam, tupleRgb255, color, 255);
             pnm_maketuplergb(&pam, tupleRgb255);
@@ -1416,6 +1396,14 @@ gifEncode(struct pam *  const pamP,
     rowReader * rowReaderP;
 
     reportImageInfo(gInterlace, background, bitsPerPixel);
+    
+    if (pamP->width > 65535)
+      pm_error("Image width %u too large for GIF format.  (Max 65535)",
+                pamP->width );  
+    
+    if (pamP->height > 65535)
+      pm_error("Image height %u too large for GIF format.  (Max 65535)",
+                pamP->height );  
 
     writeGifHeader(ofP, pamP->width, pamP->height, background,
                    bitsPerPixel, cmapP, comment);
@@ -1449,7 +1437,7 @@ reportTransparent(struct cmap * const cmapP) {
 
     if (verbose) {
         if (cmapP->haveTransparent) {
-            tuple const color = cmapP->color[cmapP->permi[cmapP->transparent]];
+            tuple const color = cmapP->color[cmapP->transparent];
             pm_message("Color %u (%lu, %lu, %lu) is transparent",
                        cmapP->transparent,
                        color[PAM_RED_PLANE],
@@ -1497,7 +1485,7 @@ computeTransparent(char          const colorarg[],
         bool exact;
         tuple transcolor;
         bool found;
-        int presortColorindex;
+        int colorindex;
         
         if (colorarg[0] == '=') {
             colorspec = &colorarg[1];
@@ -1509,15 +1497,14 @@ computeTransparent(char          const colorarg[],
 
         transcolor = pnm_parsecolor(colorspec, cmapP->pam.maxval);
         pnm_lookuptuple(&cmapP->pam, cmapP->tuplehash, transcolor, &found,
-                        &presortColorindex);
+                        &colorindex);
         
         if (found) {
             cmapP->haveTransparent = TRUE;
-            cmapP->transparent = cmapP->perm[presortColorindex];
+            cmapP->transparent = colorindex;
         } else if (!exact) {
             cmapP->haveTransparent = TRUE;
-            cmapP->transparent =
-                cmapP->perm[closestColor(transcolor, &cmapP->pam, cmapP)];
+            cmapP->transparent = closestColor(transcolor, &cmapP->pam, cmapP);
         } else {
             cmapP->haveTransparent = FALSE;
             pm_message("Warning: specified transparent color "
@@ -1535,61 +1522,62 @@ computeTransparent(char          const colorarg[],
 
 
 static unsigned int
-sortOrder(tuple        const tuple,
-          struct pam * const pamP) {
-    
-    if (pamP->depth < 3)
-        return tuple[0];
-    else
-        return ((tuple[0] * MAXCMAPSIZE) + tuple[1]) * MAXCMAPSIZE + tuple[2];
+sortOrderColor(tuple const tuple) {
+
+    return ((tuple[PAM_RED_PLANE] * MAXCMAPSIZE) +
+            tuple[PAM_GRN_PLANE]) * MAXCMAPSIZE +
+           tuple[PAM_BLU_PLANE];
 }
 
 
 
+static qsort_comparison_fn sortCompareColor;
+
+static int
+sortCompareColor(const void * const entry1P,
+                 const void * const entry2P) {
+
+    struct tupleint * const * const tupleint1PP = entry1P;
+    struct tupleint * const * const tupleint2PP = entry2P;
+
+    return (sortOrderColor((*tupleint1PP)->tuple) 
+            - sortOrderColor((*tupleint2PP)->tuple));
+}
+
+
+
+static qsort_comparison_fn sortCompareGray;
+
+static int
+sortCompareGray(const void * const entry1P,
+                const void * const entry2P){
+
+    struct tupleint * const * const tupleint1PP = entry1P;
+    struct tupleint * const * const tupleint2PP = entry2P;
+
+    return ((*tupleint1PP)->tuple[0] - (*tupleint2PP)->tuple[0]);
+}
+
+
 
 static void
-sortColormap(bool          const sort,
-             struct cmap * const cmapP) {
+sortTupletable(struct pam * const mapPamP,
+               unsigned int const colors,
+               tupletable   const tuplefreq) {
 /*----------------------------------------------------------------------------
-   Sort (in place) the colormap *cmapP.
+   Sort the colormap *cmapP.
 
-   Create the perm[] and permi[] mappings for the colormap.
-
-   'sort' is logical:  true means to sort the colormap by red intensity,
-   then by green intensity, then by blue intensity.  False means a null
-   sort -- leave it in the same order in which we found it.
+   Sort the colormap by red intensity, then by green intensity,
+   then by blue intensity.
 -----------------------------------------------------------------------------*/
-    tuple * const color = cmapP->color;
-    int * const perm = cmapP->perm;
-    int * const permi = cmapP->permi;
-    struct pam * const pamP = &cmapP->pam;
-    unsigned int const cmapSize = cmapP->cmapSize;
-    
-    unsigned int i;
 
-    /* We will sort permi[].  So we first set up permi[] to reflect the
-       original, unsorted order.
-    */
-    for (i=0; i < cmapSize; i++)
-        permi[i] = i;
+    pm_message("sorting colormap");
 
-    if (sort) {
-        pm_message("sorting colormap");
-        for (i = 0; i < cmapSize; ++i) {
-            unsigned int j;
-            for (j = i+1; j < cmapSize; ++j) {
-                if (sortOrder(color[permi[i]], pamP) >
-                    sortOrder(color[permi[j]], pamP)) {
+    if (mapPamP->depth < 3)
+        qsort(tuplefreq, colors, sizeof(tuplefreq[0]), sortCompareGray);
+    else
+        qsort(tuplefreq, colors, sizeof(tuplefreq[0]), sortCompareColor); 
 
-                    sample tmp;
-                    
-                    tmp = permi[i]; permi[i] = permi[j]; permi[j] = tmp;
-                }
-            }
-        }
-    }
-    for (i = 0; i < cmapSize; ++i)
-        perm[permi[i]] = i;
 }
 
 
@@ -1691,7 +1679,8 @@ computeLibnetpbmColormap(struct pam *   const pamP,
                          tuple *        const color,
                          tuplehash *    const tuplehashP,
                          struct pam *   const mapPamP,
-                         unsigned int * const colorCountP) {
+                         unsigned int * const colorCountP,
+                         bool           const sort) {
 /*----------------------------------------------------------------------------
    Compute a colormap, libnetpbm style, for the image described by
    'pamP', which is positioned to the raster.
@@ -1710,6 +1699,9 @@ computeLibnetpbmColormap(struct pam *   const pamP,
    too many, allow one slot for a fake transparency color if 'haveAlpha'
    is true.  If there are too many, issue an error message and abort the
    program.
+
+   'sort' means to sort the colormap by red intensity, then by green
+   intensity, then by blue intensity, as opposed to arbitrary order.
 -----------------------------------------------------------------------------*/
     unsigned int const maxcolors = haveAlpha ? MAXCMAPSIZE - 1 : MAXCMAPSIZE;
         /* The most colors we can tolerate in the image.  If we have
@@ -1743,6 +1735,9 @@ computeLibnetpbmColormap(struct pam *   const pamP,
         pm_error("too many colors - try doing a 'pnmquant %u'", maxcolors);
 
     pm_message("%u colors found", colorCount);
+
+    if (sort)
+        sortTupletable(mapPamP, colorCount, tuplefreq);
 
     for (i = 0; i < colorCount; ++i) {
         color[i] = pnm_allocpamtuple(mapPamP);
@@ -1803,7 +1798,7 @@ main(int argc, char *argv[]) {
     
     computeLibnetpbmColormap(&pam, !!pamAlphaPlane(&pam), cmdline.mapfile, 
                              cmap.color, &cmap.tuplehash,
-                             &cmap.pam, &cmap.cmapSize);
+                             &cmap.pam, &cmap.cmapSize, cmdline.sort);
     
     assert(cmap.pam.maxval == pam.maxval);
 
@@ -1813,7 +1808,6 @@ main(int argc, char *argv[]) {
         */
         addToColormap(&cmap, cmdline.alphacolor, &fakeTransparent);
     }
-    sortColormap(cmdline.sort, &cmap);
 
     bitsPerPixel = pm_maxvaltobits(cmap.cmapSize-1);
 
@@ -1847,8 +1841,7 @@ main(int argc, char *argv[]) {
   JPEG Group's djpeg on 2001.09.29.  In 2006.12 the output subroutines
   were rewritten; now no uncompressed output subroutines are derived from
   the Independent JPEG Group's source code.
-
- 
+  
   Copyright (C) 1989 by Jef Poskanzer.
  
   Permission to use, copy, modify, and distribute this software and its
@@ -1862,3 +1855,4 @@ main(int argc, char *argv[]) {
   CompuServe Incorporated.  GIF(sm) is a Service Mark property of
   CompuServe Incorporated.
 ============================================================================*/
+
