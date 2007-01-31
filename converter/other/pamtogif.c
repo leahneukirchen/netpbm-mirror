@@ -1398,12 +1398,12 @@ gifEncode(struct pam *  const pamP,
     reportImageInfo(gInterlace, background, bitsPerPixel);
     
     if (pamP->width > 65535)
-      pm_error("Image width %u too large for GIF format.  (Max 65535)",
-                pamP->width );  
+        pm_error("Image width %u too large for GIF format.  (Max 65535)",
+                 pamP->width);
     
     if (pamP->height > 65535)
-      pm_error("Image height %u too large for GIF format.  (Max 65535)",
-                pamP->height );  
+        pm_error("Image height %u too large for GIF format.  (Max 65535)",
+                 pamP->height);
 
     writeGifHeader(ofP, pamP->width, pamP->height, background,
                    bitsPerPixel, cmapP, comment);
