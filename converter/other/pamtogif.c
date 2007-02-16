@@ -1531,7 +1531,9 @@ sortOrderColor(tuple const tuple) {
 
 
 
+#ifndef LITERAL_FN_DEF_MATCH
 static qsort_comparison_fn sortCompareColor;
+#endif
 
 static int
 sortCompareColor(const void * const entry1P,
@@ -1546,7 +1548,9 @@ sortCompareColor(const void * const entry1P,
 
 
 
+#ifndef LITERAL_FN_DEF_MATCH
 static qsort_comparison_fn sortCompareGray;
+#endif
 
 static int
 sortCompareGray(const void * const entry1P,
