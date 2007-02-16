@@ -6,12 +6,14 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.38.0
 
-
               Add pamfixtrunc.
 
               pambackground: recognize mid-row background.
 
               giftopnm: Add -repair option.
+
+              libnetpbm: in the "no such option" error message, say what
+              the valid options are.
 
               libnetpbm: fix buffer overrun with PBM images < 8 columns.
 

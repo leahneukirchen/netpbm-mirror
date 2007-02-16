@@ -89,9 +89,13 @@ optStructCount(const optEntry opt[])
     return ret;
 }
 
+
+
+static int
+optMatch(optEntry     const opt[],
+         const char * const s,
+         int          const lng) {
 /*------------------------------------------------------------------------
- |  NAME          optMatch
- |
  |  FUNCTION      Find a matching option.
  |
  |  INPUT         opt     array of possible options.
@@ -103,34 +107,38 @@ optStructCount(const optEntry opt[])
  |  DESCRIPTION   Short options are matched from the first character in
  |                the given string.
  */
-static int
-optMatch(const optEntry opt[], const char *s, int lng)
-{
-    int        nopt, q, matchlen = 0;
-    const char *p;
 
-    nopt = optStructCount(opt);
+    unsigned int const nopt = optStructCount(opt);
+
+    unsigned int q;
+    unsigned int matchlen;
+    const char * p;
+
+    matchlen = 0;  /* initial value */
+
     if (lng) {
         if ((p = strchr(s, '=')) != NULL)
             matchlen = p - s;
         else
             matchlen = strlen(s);
     }
-    for (q = 0; q < nopt; q++) {
+    for (q = 0; q < nopt; ++q) {
         if (lng) {
-            if (!opt[q].longName)
-                continue;
-            if (strncmp(s, opt[q].longName, matchlen) == 0)
-                return q;
+            if (opt[q].longName) {
+                if (strncmp(s, opt[q].longName, matchlen) == 0)
+                    return q;
+            }
         } else {
-            if (!opt[q].shortName)
-                continue;
-            if (*s == opt[q].shortName)
-                return q;
+            if (opt[q].shortName) {
+                if (s[0] == opt[q].shortName)
+                    return q;
+            }
         }
     }
     return -1;
 }
+
+
 
 /*------------------------------------------------------------------------
  |  NAME          optString
@@ -643,7 +651,15 @@ static void
 parse_short_option_token(char *argv[], const int argc, const int ai,
                          const optEntry opt_table[], 
                          int * const tokens_consumed_p) {
+/*----------------------------------------------------------------------------
+   Parse a cluster of short options, e.g. -walne .
 
+   The last option in the cluster might take an argument, and we parse
+   that as well.  e.g. -cf myfile or -cfmyfile .
+
+   argv[] and argc describe the whole program argument set.  'ai' is the
+   index of the argument that is the short option cluster.
+-----------------------------------------------------------------------------*/
     char *o;  /* A short option character */
     char *arg;
     int mi;   /* index into option table */
@@ -685,11 +701,60 @@ parse_short_option_token(char *argv[], const int argc, const int ai,
 
 
 static void
-parse_long_option(char *argv[], const int argc, const int ai,
-                  const int namepos,
-                  const optEntry opt_table[], 
-                  int * const tokens_consumed_p) {
+fatalUnrecognizedLongOption(const char * const optionName,
+                            optEntry     const optTable[]) {
 
+    unsigned int const nopt = optStructCount(optTable);
+
+    unsigned int q;
+
+    char optList[1024];
+
+    optList[0] = '\0';  /* initial value */
+
+    for (q = 0;
+         q < nopt && strlen(optList) + 1 <= sizeof(optList);
+         ++q) {
+
+        const optEntry * const optEntryP = &optTable[q];
+        const char * entry;
+
+        if (optEntryP->longName)
+            asprintfN(&entry, "-%s ", optEntryP->longName);
+        else
+            asprintfN(&entry, "-%c ", optEntryP->shortName);
+
+        strncat(optList, entry, sizeof(optList) - strlen(optList) - 1);
+
+        strfree(entry);
+
+        if (strlen(optList) + 1 == sizeof(optList)) {
+            /* Buffer is full.  Overwrite end of list with ellipsis */
+            strcpy(&optList[sizeof(optList) - 4], "...");
+        }
+    }
+    optFatal("unrecognized option '%s'.  Recognized options are: %s",
+             optionName, optList);
+}
+
+
+
+static void
+parse_long_option(char *   const argv[],
+                  int      const argc,
+                  int      const ai,
+                  int      const namepos,
+                  optEntry const opt_table[], 
+                  int *    const tokens_consumed_p) {
+/*----------------------------------------------------------------------------
+   Parse a long option, e.g. -verbose or --verbose.
+
+   The option might take an argument, and we parse
+   that as well.  e.g. -file=myfile or -file myfile .
+
+   argv[] and argc describe the whole program argument set.  'ai' is the
+   index of the argument that is the long option.
+-----------------------------------------------------------------------------*/
     char *equals_arg;
       /* The argument of an option, included in the same token, after a
          "=".  NULL if no "=" in the token.
@@ -703,8 +768,8 @@ parse_long_option(char *argv[], const int argc, const int ai,
     *tokens_consumed_p = 1;  /* initial assumption */
     /* find matching option */
     if ((mi = optMatch(opt_table, &argv[ai][namepos], 1)) < 0)
-        optFatal("unrecognized option `%s'", argv[ai]);
-            
+        fatalUnrecognizedLongOption(argv[ai], opt_table);
+
     /* possibly locate the argument to this option. */
     { 
         char *p;
@@ -727,7 +792,8 @@ parse_long_option(char *argv[], const int argc, const int ai,
         }
     } else {
         if (equals_arg)
-            optFatal("option `%s' doesn't allow an argument",
+            optFatal("option `%s' doesn't allow an argument, but you "
+                     "have specified it in the form name=value",
                      optString(opt_table[mi], 1));
         else 
             arg = NULL;
