@@ -125,10 +125,8 @@ a valid PNM image.
 started off as a valid GIF, but had the end of the file cut off.  An
 interrupted network transfer tends to do this.  In this case,
 <b>giftopnm</b>'s salvage operation will produce a valid PNM image of
-the proer dimensions, but with a single arbitrary color for the pixels
-that were left out of the file.  If the truncation is in the middle of
-a row, <b>giftopnm</b> produces arbitrary pixels for the entire
-truncated row.
+the proper dimensions, but with a single arbitrary color for the pixels
+that were left out of the file.
 
 <p>This option was new in Netpbm 10.38 (March 2007).  From 10.32 through
 10.37, <b>giftopnm</b> always fails if it detects invalid GIF input.
