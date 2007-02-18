@@ -13,6 +13,7 @@ ppm3d - convert two PPM images into an anaglyph (red/blue 3d glasses) PPM
 <H2 id="synopsis">SYNOPSIS</H2>
 
 <B>ppm3d</B>
+[<b>-color</b>]
 <I>leftppmfile</I>
 <I>rightppmfile</I>
 [<I>horizontal_offset</I>]
@@ -28,6 +29,30 @@ in blue/red format.  The idea is that if you look at the image with
 green or blue through the other), you see an image with depth.
 This is called an anaglyph stereogram.
 
+<p><b>ppm3d</b> can produce either of two kinds of anaglyph stereogram:
+monochrome or color.  Use the <b>-color</b> option to choose.
+
+<p>In the monochrome version, <b>ppm3d</b> ignores any color
+(actually, chrominance) in the input images and produces a result
+which is monochrome.  Viewed through red-green glasses it is yellow,
+but without any other color in the field, your brain tends to see it
+as grayscale.
+
+<p>In the color version, <b>ppm3d</b> generates a result which is
+close to the color of the original.  It's not great, though,
+due to the fact that each eye necessarily cannot see the entire
+spectrum.  Red and cyan don't work well, but most other colors --
+especially when heavily saturated -- come out quite well.
+
+<p>To view a color analgyph stereogram, you need glasses with a left
+lens that admits only red light and a right lens that admits only blue
+and green light.  (The right lens may be called a cyan lens because
+that is its pigment in white light; don't be misled into thinking that
+cyan is the only color that gets through it).  Your brain is wired so
+that even though the components of light are coming in through
+different eyes, they mix in your brain to form the same sensation as
+if you were looking at the combined light with both eyes.
+
 <P><I>horizontal_offset</I> defaults to 30 pixels.  The input PPMs
 must be the same dimensions.
 
@@ -35,6 +60,19 @@ must be the same dimensions.
 That makes a steregram that you view without special glasses, just by
 letting your eyes unfocus so that each eye sees different parts of the
 image.
+
+<h2 id="options">OPTIONS</h2>
+
+<dl>
+
+<dt><b>-color</b>
+
+<dd>This option causes <b>ppm3d</b> to generate a color anaglyph
+stereogram.  By default, it generates monochrome.
+
+<p>This option was new in Netpbm 10.38 (March 2007).
+
+</dl>
 
 <H2 id="seealso">SEE ALSO</H2>
 
@@ -50,6 +88,7 @@ Copyright (C) 1993 by David K. Drum.
 <UL>
 <LI><A HREF="#synopsis">SYNOPSIS</A>
 <LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
 <LI><A HREF="#seealso">SEE ALSO</A>
 <LI><A HREF="#author">AUTHOR</A>
 </UL>
