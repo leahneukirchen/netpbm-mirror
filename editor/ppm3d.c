@@ -109,17 +109,15 @@ computeGrayscaleRow(const pixel * const inputRow,
 
 
 static void
-compute3dRow(pixel *      const lPixelrow,
-             gray *       const lGrayrow,
-             pixel *      const rPixelrow,
-             gray *       const rGrayrow,
-             pixel *      const pixelrow,
-             unsigned int const cols,
-             unsigned int const offset) {
+compute3dRowMono(gray *       const lGrayrow,
+                 gray *       const rGrayrow,
+                 pixel *      const pixelrow,
+                 unsigned int const cols,
+                 unsigned int const offset) {
     
     unsigned int col;
-    gray * lgP;
-    gray * rgP;
+    gray *  lgP;
+    gray *  rgP;
     pixel * pP;
 
     assert(offset <= cols);
@@ -131,26 +129,60 @@ compute3dRow(pixel *      const lPixelrow,
         if (col < offset/2)
             ++lgP;
         else if (col >= offset/2 && col < offset) {
-            pixval const blu = (float) *lgP;
-            pixval const red = 0;
-            PPM_ASSIGN(*pP, red, blu, blu);
+            PPM_ASSIGN(*pP, 0, *lgP, *lgP);
             ++lgP;
             ++pP;
         } else if (col >= offset && col < cols) {
-            pixval const red = (float) *rgP;
-            pixval const blu = (float) *lgP;
-            PPM_ASSIGN(*pP, red, blu, blu);
+            PPM_ASSIGN(*pP, *rgP, *lgP, *lgP);
             ++lgP;
             ++rgP;
             ++pP;
         } else if (col >= cols && col < cols + offset/2) {
-            pixval const blu = 0;
-            pixval const red = (float) *rgP;
-            PPM_ASSIGN(*pP, red, blu, blu);
+            PPM_ASSIGN(*pP, *rgP, 0, 0);
             ++rgP;
             ++pP;
         } else
             ++rgP;
+    }
+}    
+
+
+
+static void
+compute3dRowColor(pixel *      const lPixelrow,
+                  pixel *      const rPixelrow,
+                  pixel *      const pixelrow,
+                  unsigned int const cols,
+                  unsigned int const offset) {
+    
+    unsigned int col;
+    pixel * lP;
+    pixel * rP;
+    pixel * pP;
+
+    assert(offset <= cols);
+
+    for (col = 0, pP = pixelrow, lP = lPixelrow, rP = rPixelrow;
+         col < cols + offset;
+         ++col) {
+            
+        if (col < offset/2)
+            ++lP;
+        else if (col >= offset/2 && col < offset) {
+            PPM_ASSIGN(*pP, 0, PPM_GETG(*lP), PPM_GETB(*lP));
+            ++lP;
+            ++pP;
+        } else if (col >= offset && col < cols) {
+            PPM_ASSIGN(*pP, PPM_GETR(*rP), PPM_GETG(*lP), PPM_GETB(*lP));
+            ++lP;
+            ++rP;
+            ++pP;
+        } else if (col >= cols && col < cols + offset/2) {
+            PPM_ASSIGN(*pP, PPM_GETR(*rP), 0, 0);
+            ++rP;
+            ++pP;
+        } else
+            ++rP;
     }
 }    
 
@@ -165,21 +197,22 @@ write3dRaster(FILE *       const ofP,
               pixval       const maxval,
               int          const lFormat,
               int          const rFormat,
-              unsigned int const offset) {
+              unsigned int const offset,
+              bool         const color) {
 
     pixel * lPixelrow;
-    gray * lGrayrow;
+    gray *  lGrayrow;
     pixel * rPixelrow;
-    gray * rGrayrow;
+    gray *  rGrayrow;
     pixel * pixelrow;
 
     unsigned int row;
 
     lPixelrow = ppm_allocrow (cols);
-    lGrayrow = pgm_allocrow (cols);
+    lGrayrow  = pgm_allocrow (cols);
     rPixelrow = ppm_allocrow (cols);
-    rGrayrow = pgm_allocrow (cols);
-    pixelrow = ppm_allocrow (cols);
+    rGrayrow  = pgm_allocrow (cols);
+    pixelrow  = ppm_allocrow (cols);
 
     for (row = 0; row < rows; ++row) {
         ppm_readppmrow(lIfP, lPixelrow, cols, maxval, lFormat);
@@ -188,8 +221,10 @@ write3dRaster(FILE *       const ofP,
         computeGrayscaleRow(lPixelrow, lGrayrow, maxval, cols);
         computeGrayscaleRow(rPixelrow, rGrayrow, maxval, cols);
 
-        compute3dRow(lPixelrow, lGrayrow, rPixelrow, rGrayrow,
-                     pixelrow, cols, offset);
+        if (color)
+            compute3dRowColor(lPixelrow, rPixelrow, pixelrow, cols, offset);
+        else
+            compute3dRowMono(lGrayrow, rGrayrow, pixelrow, cols, offset);
 
         ppm_writeppmrow(ofP, pixelrow, cols, maxval, 0);
     }
@@ -247,7 +282,7 @@ main(int argc, char *argv[]) {
     ppm_writeppminit(stdout, cols, rows, maxval, 0);
 
     write3dRaster(stdout, lIfP, rIfP, cols, rows, maxval,
-                  lFormat, rFormat, cmdline.offset);
+                  lFormat, rFormat, cmdline.offset, cmdline.color);
 
     pm_close(lIfP);
     pm_close(rIfP);
