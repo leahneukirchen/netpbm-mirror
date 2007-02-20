@@ -46,12 +46,16 @@ parseCommandLine(int argc, char ** argv,
     optStruct3 opt;
 
     unsigned int option_def_index;
+    unsigned int offsetSpec;
+    const char * offsetArg;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
     OPTENT3(0, "color",   OPT_FLAG,   NULL,
-            &cmdlineP->color, 0 );
+            &cmdlineP->color,   0);
+    OPTENT3(0, "offset",  OPT_UINT,   &cmdlineP->offset,
+            &offsetSpec,  0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -68,21 +72,31 @@ parseCommandLine(int argc, char ** argv,
         cmdlineP->rghtInputFileName = argv[2];
 
         if (argc-1 > 2) {
-            int const offsetnum = atoi(argv[3]);
-
-            if (offsetnum <= 0)
-                pm_error("Offset must be a positive number.  You specified "
-                         "'%s'", argv[3]);
-            else
-                cmdlineP->offset = offsetnum;
+            offsetArg = argv[3];
 
             if (argc-1 > 3)
                 pm_error("Program takes at most 3 arguments:  left and "
                          "right input file names and offset.  "
                          "You specified %u", argc-1);
         } else
-            cmdlineP->offset = 30;
+            offsetArg = NULL;
     }
+
+    if (offsetArg && offsetSpec)
+        pm_error("You cannot specify both -offset and the offset "
+                 "argument (i.e. with -offset, there is at most "
+                 "two arguments: left and right input file names");
+    else if (!offsetArg && !offsetSpec)
+        cmdlineP->offset = 30;
+    else if (offsetArg) {
+        int const offsetnum = atoi(offsetArg);
+        
+        if (offsetnum <= 0)
+            pm_error("Offset must be a positive number.  You specified "
+                     "'%s'", offsetArg);
+        else
+            cmdlineP->offset = offsetnum;
+    }                
 }
 
 
