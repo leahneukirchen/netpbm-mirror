@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.38.0
 
+              pamtoxvmini: fix crash.
+
               Add pamfixtrunc.
 
               pambackground: recognize mid-row background.
