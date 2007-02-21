@@ -212,7 +212,7 @@ writeXvRaster(struct pam * const pamP,
     }
 
     pm_freerow((char*)xvrow);
-    pnm_freepamrow(pamP);
+    pnm_freepamrow(tuplerow);
 
     pnm_destroytuplehash(paletteHash);
 }

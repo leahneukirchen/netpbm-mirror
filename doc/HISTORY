@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+07.02.21 BJH  Release 10.35.23
+
+              pamtoxvmini: fix crash.
+
+              ppmtogif: fail properly if image to wide or high for GIF.
+
 07.01.15 BJH  Release 10.35.22
 
               libnetpbm: fix buffer overrun with PBM images < 8 columns.

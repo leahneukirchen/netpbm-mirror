@@ -1203,6 +1203,14 @@ gifEncode(FILE *        const ofP,
     unsigned int const initCodeSize = bitsPerPixel <= 1 ? 2 : bitsPerPixel;
         /* The initial code size */
 
+    if (gWidth > 65535)
+        pm_error("Image width %u too large for GIF format.  (Max 65535)",
+                 gWidth);  
+    
+    if (gHeight > 65535)
+        pm_error("Image height %u too large for GIF format.  (Max 65535)",
+                 gHeight);  
+
     writeGifHeader(ofP, gWidth, gHeight, gInterlace, background,
                    bitsPerPixel, cmapP, comment);
 
