@@ -67,7 +67,6 @@ makeXvPalette(xvPalette * const xvPaletteP) {
             }
         }
     }
-
 }
 
 
@@ -228,7 +227,7 @@ main(int    argc,
     struct pam pam;
     xvPalette xvPalette;
  
-    ppm_init(&argc, argv);
+    pnm_init(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
