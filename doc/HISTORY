@@ -6,7 +6,11 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.38.0
 
-              pamtoxvmini: fix crash.
+              pammixinterlace: Add -filter and fir and ffmpeg filters.
+              Thanks Bruce Guenter <bruce@untroubled.org>.
+
+              pammixinterlace: Add -adaptive.
+              Thanks Bruce Guenter <bruce@untroubled.org>.
 
               Add pamfixtrunc.
 
@@ -21,6 +25,10 @@ not yet  BJH  Release 10.38.0
               libnetpbm: in the "no such option" error message, say what
               the valid options are.
 
+              libnetpbm: Embellish "bad magic number" error message.
+
+              pamtoxvmini: fix crash.
+
               libnetpbm: fix buffer overrun with PBM images < 8 columns.
 
               pamtogif: fail properly if image to wide or high for GIF.
@@ -29,8 +37,6 @@ not yet  BJH  Release 10.38.0
               John Walker <kelvin@fourmilab.ch>.
 
               libnetpbm: fix crash with PAM read as PNM.
-
-              libnetpbm: Embellish "bad magic number" error message.
 
               installnetpbm: use 2-argument open() for old Perl.
     
