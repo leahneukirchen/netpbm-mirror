@@ -29,6 +29,9 @@ not yet  BJH  Release 10.38.0
 
               libnetpbm: Embellish "bad magic number" error message.
 
+              pamtoxvmini: fix bug: produces garbage when maxval is
+              not 255.
+
               pamtoxvmini: fix crash.
 
               libnetpbm: fix buffer overrun with PBM images < 8 columns.

@@ -74,15 +74,20 @@ makeXvPalette(xvPalette * const xvPaletteP) {
 static void
 writeXvHeader(FILE *       const ofP,
               unsigned int const cols,
-              unsigned int const rows,
-              unsigned int const maxval) {
+              unsigned int const rows) {
            
     fprintf(ofP, "P7 332\n");
 
     fprintf(ofP, "# Created by Pamtoxvmini\n");
     fprintf(ofP, "#END_OF_COMMENTS\n");
 
-    fprintf(ofP, "%u %u %u\n", cols, rows, maxval);
+    /* I don't know what the maxval number (3rd field) means here, since
+       the maxvals are fixed at red=7, grn=7, blu=3.  We used to have
+       it put the maxval of the input image there.  That generated an
+       output that Xv choked on when the input maxval was 65535.
+    */
+
+    fprintf(ofP, "%u %u 255\n", cols, rows);
 }
 
 
@@ -104,7 +109,7 @@ findClosestColor(struct pam *      const pamP,
        colors in the XV palette:
     */
     assert(pamP->depth >= 3);
-    assert(pamP->maxval = 255);
+    assert(pamP->maxval == 255);
 
     bestPaletteIndex = 0;
     bestDistanceSoFar = UINT_MAX;
@@ -184,30 +189,34 @@ writeXvRaster(struct pam * const pamP,
     tuple * tuplerow;
     unsigned int row;
     unsigned char * xvrow;
+    struct pam scaledPam;
 
     paletteHash = pnm_createtuplehash();
 
     tuplerow = pnm_allocpamrow(pamP);
     xvrow = (unsigned char*)pm_allocrow(pamP->width, 1);
 
+    scaledPam = *pamP;
+    scaledPam.maxval = 255;
+
     for (row = 0; row < pamP->height; ++row) {
         unsigned int col;
 
         pnm_readpamrow(pamP, tuplerow);
-        pnm_scaletuplerow(pamP, tuplerow, tuplerow, 255);
-        pnm_makerowrgb(pamP, tuplerow);
+        pnm_scaletuplerow(pamP, tuplerow, tuplerow, scaledPam.maxval);
+        pnm_makerowrgb(&scaledPam, tuplerow);
 
-        for (col = 0; col < pamP->width; ++col) {
+        for (col = 0; col < scaledPam.width; ++col) {
             unsigned int paletteIndex;
 
-            getPaletteIndexThroughCache(pamP, tuplerow[col], xvPaletteP,
+            getPaletteIndexThroughCache(&scaledPam, tuplerow[col], xvPaletteP,
                                         paletteHash, &paletteIndex);
 
             assert(paletteIndex < 256);
 
             xvrow[col] = paletteIndex;
         }
-        fwrite(xvrow, 1, pamP->width, ofP);
+        fwrite(xvrow, 1, scaledPam.width, ofP);
     }
 
     pm_freerow((char*)xvrow);
@@ -239,7 +248,7 @@ main(int    argc,
 
     pnm_setminallocationdepth(&pam, 3);
 
-    writeXvHeader(stdout, pam.width, pam.height, pam.maxval);
+    writeXvHeader(stdout, pam.width, pam.height);
     
     writeXvRaster(&pam, &xvPalette, stdout);
 
