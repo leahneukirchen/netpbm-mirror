@@ -21,7 +21,7 @@ struct cmdlineInfo {
     */
     const char * leftInputFileName;  /* '-' if stdin */
     const char * rghtInputFileName;  /* '-' if stdin */
-    unsigned int offset;
+    int offset;
     unsigned int color;
 };
 
@@ -54,7 +54,7 @@ parseCommandLine(int argc, char ** argv,
     option_def_index = 0;   /* incremented by OPTENT3 */
     OPTENT3(0, "color",   OPT_FLAG,   NULL,
             &cmdlineP->color,   0);
-    OPTENT3(0, "offset",  OPT_UINT,   &cmdlineP->offset,
+    OPTENT3(0, "offset",  OPT_INT,    &cmdlineP->offset,
             &offsetSpec,  0);
 
     opt.opt_table = option_def;
@@ -87,16 +87,9 @@ parseCommandLine(int argc, char ** argv,
                  "argument (i.e. with -offset, there is at most "
                  "two arguments: left and right input file names");
     else if (!offsetArg && !offsetSpec)
-        cmdlineP->offset = 30;
-    else if (offsetArg) {
-        int const offsetnum = atoi(offsetArg);
-        
-        if (offsetnum <= 0)
-            pm_error("Offset must be a positive number.  You specified "
-                     "'%s'", offsetArg);
-        else
-            cmdlineP->offset = offsetnum;
-    }                
+        cmdlineP->offset = 0;
+    else if (offsetArg)
+        cmdlineP->offset = atoi(offsetArg);
 }
 
 
@@ -127,36 +120,38 @@ compute3dRowMono(gray *       const lGrayrow,
                  gray *       const rGrayrow,
                  pixel *      const pixelrow,
                  unsigned int const cols,
-                 unsigned int const offset) {
+                 int          const offset) {
     
     unsigned int col;
     gray *  lgP;
     gray *  rgP;
     pixel * pP;
 
-    assert(offset <= cols);
+    assert(abs(offset) <= cols);
 
     for (col = 0, pP = pixelrow, lgP = lGrayrow, rgP = rGrayrow;
          col < cols + offset;
          ++col) {
             
-        if (col < offset/2)
+        if ((int)col < offset/2)
             ++lgP;
-        else if (col >= offset/2 && col < offset) {
+        else if ((int)col < offset) {
             PPM_ASSIGN(*pP, 0, *lgP, *lgP);
             ++lgP;
             ++pP;
-        } else if (col >= offset && col < cols) {
+        } else if (col < cols) {
             PPM_ASSIGN(*pP, *rgP, *lgP, *lgP);
             ++lgP;
             ++rgP;
             ++pP;
-        } else if (col >= cols && col < cols + offset/2) {
+        } else if (col < cols + offset/2) {
             PPM_ASSIGN(*pP, *rgP, 0, 0);
             ++rgP;
             ++pP;
-        } else
+        } else {
+            assert(col < cols + offset);
             ++rgP;
+        }
     }
 }    
 
@@ -174,29 +169,31 @@ compute3dRowColor(pixel *      const lPixelrow,
     pixel * rP;
     pixel * pP;
 
-    assert(offset <= cols);
+    assert(abs(offset) <= cols);
 
     for (col = 0, pP = pixelrow, lP = lPixelrow, rP = rPixelrow;
          col < cols + offset;
          ++col) {
             
-        if (col < offset/2)
+        if ((int)col < offset/2)
             ++lP;
-        else if (col >= offset/2 && col < offset) {
+        else if ((int)col < offset) {
             PPM_ASSIGN(*pP, 0, PPM_GETG(*lP), PPM_GETB(*lP));
             ++lP;
             ++pP;
-        } else if (col >= offset && col < cols) {
+        } else if (col < cols) {
             PPM_ASSIGN(*pP, PPM_GETR(*rP), PPM_GETG(*lP), PPM_GETB(*lP));
             ++lP;
             ++rP;
             ++pP;
-        } else if (col >= cols && col < cols + offset/2) {
+        } else if (col < cols + offset/2) {
             PPM_ASSIGN(*pP, PPM_GETR(*rP), 0, 0);
             ++rP;
             ++pP;
-        } else
+        } else {
+            assert(col < cols + offset);
             ++rP;
+        }
     }
 }    
 
@@ -211,7 +208,7 @@ write3dRaster(FILE *       const ofP,
               pixval       const maxval,
               int          const lFormat,
               int          const rFormat,
-              unsigned int const offset,
+              int          const offset,
               bool         const color) {
 
     pixel * lPixelrow;
@@ -221,6 +218,8 @@ write3dRaster(FILE *       const ofP,
     pixel * pixelrow;
 
     unsigned int row;
+
+    assert(abs(offset) < cols);
 
     lPixelrow = ppm_allocrow (cols);
     lGrayrow  = pgm_allocrow (cols);
@@ -289,9 +288,10 @@ main(int argc, char *argv[]) {
     rows   = lRows;
     maxval = lMaxval;
 
-    if (cmdline.offset >= cols)
-        pm_error("Offset (%u columns) is not less than width of images "
-                 "(%u columns)", cmdline.offset, cols);
+    if (abs(cmdline.offset) >= cols)
+        pm_error("Magnitude of -offset (%u columns) is not less than "
+                 "width of images "
+                 "(%u columns)", abs(cmdline.offset), cols);
    
     ppm_writeppminit(stdout, cols, rows, maxval, 0);
 

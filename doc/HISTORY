@@ -16,6 +16,8 @@ not yet  BJH  Release 10.38.0
 
               pambackground: recognize mid-row background.
 
+              ppm3d: Change default offset to zero columns.
+
               ppm3d: Add -color option.
 
               ppm3d: Add -offset option as alternative to offset argument.
