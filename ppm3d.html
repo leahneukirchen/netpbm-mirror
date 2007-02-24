@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Ppm3d User Manual</TITLE></HEAD>
 <BODY>
 <H1>ppm3d</H1>
-Updated: 24 April 2004
+Updated: 20 February 2007
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -14,20 +14,23 @@ ppm3d - convert two PPM images into an anaglyph (red/blue 3d glasses) PPM
 
 <B>ppm3d</B>
 [<b>-color</b>]
+[<b>-offset=</b><i>horizontal_offset</i>]
 <I>leftppmfile</I>
 <I>rightppmfile</I>
-[<I>horizontal_offset</I>]
+
+<p>
+Deprecated optional 3rd argument: <I>horizontal_offset</I>
 
 <H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>ppm3d</b> reads two PPM images as input and produces a PPM as
-output, with the images overlapping by <I>horizontal_offset</I> pixels
-in blue/red format.  The idea is that if you look at the image with
+output, with the images overlapping by the specified number of pixels
+in blue-green/red format.  The idea is that if you look at the image with
 3-D glasses (glasses that admit only red through one eye and only
-green or blue through the other), you see an image with depth.
-This is called an anaglyph stereogram.
+green or blue through the other), you see an image with depth.  This
+is called an anaglyph stereogram.
 
 <p><b>ppm3d</b> can produce either of two kinds of anaglyph stereogram:
 monochrome or color.  Use the <b>-color</b> option to choose.
@@ -53,17 +56,46 @@ that even though the components of light are coming in through
 different eyes, they mix in your brain to form the same sensation as
 if you were looking at the combined light with both eyes.
 
-<P><I>horizontal_offset</I> defaults to 30 pixels.  The input PPMs
-must be the same dimensions.
+<P>The input PPMs must be the same dimensions.
 
 <p>To make a different kind of stereogram, use <b>pamstereogram</b>.
 That makes a steregram that you view without special glasses, just by
 letting your eyes unfocus so that each eye sees different parts of the
 image.
 
+<h2 id="arguments">ARGUMENTS</h2>
+
+<p>The mandatory arguments are file names of the left and right input
+images.
+
+<p>An optional third argument specifies the same thing as the value of
+the <b>-offset</b> argument, but is deprecated because -offset is easier
+to use and read.  Before Netpbm 10.38 (March 2007), this third argument
+is the only way to specify the offset.
+
 <h2 id="options">OPTIONS</h2>
 
 <dl>
+
+<dt><b>-offset=</b><i>horizontal_offset</i>
+
+<dd>This option indicates the amount, in pixels, by which the left and
+image is offset to the right of the right image in the output.
+
+<p>The effect of this option is to move the entire image forward
+(positive numbers) or backward (negative numbers).  With a zero
+offset, the main subject of the picture appears in the plane of the
+picture (i.e. if the image is projected on a screen, the location of
+the screen).  The main subject is the subject at the location where
+the line of sight of the left camera intersects the line of sight of
+the right camera -- the main subject appears at the same location in
+both the left and right images.
+
+<p>Default is zero.
+
+<p>This option was new in Netpbm 10.38 (March 2007).  Before that, use
+the third argument instead.  Also, before Netpbm 10.38 the default is
++30 pixels.
 
 <dt><b>-color</b>
 

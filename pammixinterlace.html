@@ -2,25 +2,26 @@
 <HTML><HEAD><TITLE>Pammixinterlace User Manual</TITLE></HEAD>
 <BODY>
 <H1>pammixinterlace</H1>
-Updated: 02 July 2005
+Updated: 22 February 2007
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
 pammixinterlace - mix adjacent lines to merge interlaced images
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>pammixinterlace</B>
+
+[<b>-filter=</b>{<b>linear</b>, <b>fir</b>, <b>ffmpeg</b>}]
+
+[<b>-adaptive</b>]
 
 [<I>infile</I>]
 
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -55,21 +56,42 @@ That's why you need something like <b>pammixinterlace</b>.
 You can do that with <b>pamdeinterlace</b>.
 
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<h2 id="options">OPTIONS</h2>
+
+<dl>
+
+<dt><b>-filter=</b>{<b>linear</b>,<b>fir</b>,<b>ffmpeg</b>}
+
+<dd>This option chooses between one of the three filtering mechanisms.
+<b>linear</b> is a linear-blend formula.  <b>fir</b> is a size-5 FIR
+low-pass filter, and <b>ffmpeg</b> is a formula pulled from the
+documentation of the program <a
+href="ffmpeg.mplayerhq.hu"><b>ffmpeg</b></a>.
+
+<p>The default is <b>fir</b>.
+
+<dt><b>-adaptive</b>
+
+<dd>This option turns on "adaptive" filtering mode.  In this mode
+<b>pammixinterlace</b> modifies only pixels that are obviously part of
+a "comb" pattern.
+
+</dl>
+
+
+<H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="pamdeinterlace.html">pamdeinterlace</A></B>,
 <B><A HREF="pam.html">pam</A></B>
 <B><A HREF="pnm.html">pnm</A></B>
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAF">SEE ALSO</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
 </UL>
 </BODY>
 </HTML>
