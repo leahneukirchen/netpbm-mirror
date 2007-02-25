@@ -430,13 +430,17 @@ optExecute(optEntry  const opt, char *arg, int lng)
     case OPT_UINT:
     case OPT_ULONG: {
         unsigned long tmp;
-        char *e;
+        char * tailPtr;
         
         if (arg == NULL)
             optFatal("internal error: optExecute() called with NULL argument "
                      "'%s'", optString(opt, lng));
-        tmp = strtoul(arg, &e, 10);
-        if (*e)
+
+        if (arg[0] == '-' || arg[1] == '+')
+            optFatal("unsigned number '%s' has a sign ('%c')",
+                     arg, arg[0]);
+        tmp = strtoul(arg, &tailPtr, 10);
+        if (*tailPtr)
             optFatal("invalid number `%s'", arg);
         if (errno == ERANGE
             || (opt.type == OPT_UINT && tmp > UINT_MAX))

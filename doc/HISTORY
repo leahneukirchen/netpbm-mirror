@@ -24,6 +24,9 @@ not yet  BJH  Release 10.38.0
 
               giftopnm: Add -repair option.
 
+              libnetpbm: shhopt: reject signed number as value for
+              OPT_UINT option.
+
               libnetpbm: in the "no such option" error message, say what
               the valid options are.
 
