@@ -39,6 +39,9 @@ not yet  BJH  Release 10.38.0
 
               libnetpbm: fix buffer overrun with PBM images < 8 columns.
 
+              libnetpbm: fix crash with PBM images < 8 columns on MMX/SSE
+              machine.
+
               pamtogif: fail properly if image to wide or high for GIF.
 
               ppmdraw: fix crash with use of freed storage.  Thanks

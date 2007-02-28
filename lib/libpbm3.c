@@ -107,11 +107,12 @@ packBitsWithMmxSse(FILE *          const fileP,
 
     typedef int v8qi __attribute__ ((mode(V8QI)));
     typedef int di __attribute__ ((mode(DI)));
-    int col;
 
     di const zero64 = 0;        /* to clear with PXOR */
 
-    for (col = 0; col < cols-7; col += 8) {
+    unsigned int col;
+
+    for (col = 0; col + 7 < cols; col += 8) {
         v8qi const compare =
             __builtin_ia32_pcmpeqb(*(v8qi*) (&bitrow[col]), *(v8qi*) &zero64);
         unsigned char const backwardWhiteMask = (unsigned char)
