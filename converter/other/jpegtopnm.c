@@ -109,6 +109,7 @@ struct cmdlineInfo {
     unsigned int comments;
     unsigned int dumpexif;
     unsigned int multiple;
+    unsigned int repair;
 };
 
 
@@ -116,9 +117,9 @@ static bool displayComments;
     /* User wants comments from the JPEG to be displayed */
 
 static void 
-interpret_maxmemory (bool         const maxmemorySpec,
-                     const char * const maxmemory, 
-                     long int *   const max_memory_to_use_p) { 
+interpret_maxmemory(bool         const maxmemorySpec,
+                    const char * const maxmemory, 
+                    long int *   const max_memory_to_use_p) { 
 /*----------------------------------------------------------------------------
    Interpret the "maxmemory" command line option.
 -----------------------------------------------------------------------------*/
@@ -207,6 +208,7 @@ parseCommandLine(int                  const argc,
             &exifSpec, 0);
     OPTENT3(0, "dumpexif",    OPT_FLAG,   NULL, &cmdlineP->dumpexif,      0);
     OPTENT3(0, "multiple",    OPT_FLAG,   NULL, &cmdlineP->multiple,      0);
+    OPTENT3(0, "repair",      OPT_FLAG,   NULL, &cmdlineP->repair,        0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -460,32 +462,34 @@ read_rgb(JSAMPLE *ptr, const enum colorspace color_space,
    copy_pixel_row().  But it would be impractical to allocate and free
    the storage with every call to copy_pixel_row().
 */
-static xel *pnmbuffer;      /* Output buffer.  Input to pnm_writepnmrow() */
+static xel * pnmbuffer;      /* Output buffer.  Input to pnm_writepnmrow() */
 
 static void
-copy_pixel_row(const JSAMPROW jpegbuffer, const int width, 
-               const unsigned int samples_per_pixel, 
-               const enum colorspace color_space,
-               const unsigned int maxval,
-               FILE * const output_file, const int output_type) {
-  JSAMPLE *ptr;
-  unsigned int output_cursor;     /* Cursor into output buffer 'pnmbuffer' */
+copyPixelRow(JSAMPROW        const jpegbuffer,
+             unsigned int    const width, 
+             unsigned int    const samplesPerPixel, 
+             enum colorspace const colorSpace,
+             FILE *          const ofP,
+             int             const format,
+             xelval          const maxval) {
 
-  ptr = jpegbuffer;  /* Start at beginning of input row */
+    JSAMPLE * ptr;
+    unsigned int outputCursor;     /* Cursor into output buffer 'pnmbuffer' */
 
-  for (output_cursor = 0; output_cursor < width; output_cursor++) {
-      xel current_pixel;
-      if (samples_per_pixel >= 3) {
-          const rgb_type * const rgb_p = read_rgb(ptr, color_space, maxval);
-          PPM_ASSIGN(current_pixel, rgb_p->r, rgb_p->g, rgb_p->b);
-      } else {
-          PNM_ASSIGN1(current_pixel, GETJSAMPLE(*ptr));
-      }
-      ptr += samples_per_pixel;  /* move to next pixel of input */
-      pnmbuffer[output_cursor] = current_pixel;
-  }
-  pnm_writepnmrow(output_file, pnmbuffer, width,
-                  maxval, output_type, FALSE);
+    ptr = &jpegbuffer[0];  /* Start at beginning of input row */
+    
+    for (outputCursor = 0; outputCursor < width; ++outputCursor) {
+        xel currentPixel;
+        if (samplesPerPixel >= 3) {
+            const rgb_type * const rgb_p = read_rgb(ptr, colorSpace, maxval);
+            PPM_ASSIGN(currentPixel, rgb_p->r, rgb_p->g, rgb_p->b);
+        } else {
+            PNM_ASSIGN1(currentPixel, GETJSAMPLE(*ptr));
+        }
+        ptr += samplesPerPixel;  /* move to next pixel of input */
+        pnmbuffer[outputCursor] = currentPixel;
+    }
+    pnm_writepnmrow(ofP, pnmbuffer, width, maxval, format, FALSE);
 }
 
 
@@ -798,17 +802,42 @@ computeColorSpace(struct jpeg_decompress_struct * const cinfoP,
 
 
 static void
+convertRaster(struct jpeg_decompress_struct * const cinfoP,
+              enum colorspace                 const color_space,
+              FILE *                          const ofP,
+              xelval                          const format,
+              unsigned int                    const maxval) {
+              
+    JSAMPROW jpegbuffer;  /* Input buffer.  Filled by jpeg_scanlines() */
+
+    jpegbuffer = ((*cinfoP->mem->alloc_sarray)
+                  ((j_common_ptr) cinfoP, JPOOL_IMAGE,
+                   cinfoP->output_width * cinfoP->output_components, 
+                   (JDIMENSION) 1)
+        )[0];
+
+    while (cinfoP->output_scanline < cinfoP->output_height) {
+        jpeg_read_scanlines(cinfoP, &jpegbuffer, 1);
+        if (ofP)
+            copyPixelRow(jpegbuffer, cinfoP->output_width, 
+                         cinfoP->out_color_components,
+                         color_space, ofP, format, maxval);
+    }
+}
+
+
+
+static void
 convertImage(FILE *                          const ofP, 
              struct cmdlineInfo              const cmdline,
              struct jpeg_decompress_struct * const cinfoP) {
 
-    int output_type;
+    int format;
         /* The type of output file, PGM or PPM.  Value is either PPM_TYPE
            or PGM_TYPE, which conveniently also pass as format values
            PPM_FORMAT and PGM_FORMAT.
         */
-    JSAMPROW jpegbuffer;  /* Input buffer.  Filled by jpeg_scanlines() */
-    unsigned int maxval;  
+    xelval maxval;  
         /* The maximum value of a sample (color component), both in the input
            and the output.
         */
@@ -819,22 +848,16 @@ convertImage(FILE *                          const ofP,
                    cmdline.dct_method, 
                    cmdline.max_memory_to_use, cmdline.nosmooth);
                    
-    set_color_spaces(cinfoP->jpeg_color_space, &output_type, 
+    set_color_spaces(cinfoP->jpeg_color_space, &format,
                      &cinfoP->out_color_space);
 
-    maxval = (1 << cinfoP->data_precision) - 1;
+    maxval = pm_bitstomaxval(cinfoP->data_precision);
 
     if (cmdline.verbose) 
-        tellDetails(*cinfoP, maxval, output_type);
+        tellDetails(*cinfoP, maxval, format);
 
     /* Calculate output image dimensions so we can allocate space */
     jpeg_calc_output_dimensions(cinfoP);
-
-    jpegbuffer = ((*cinfoP->mem->alloc_sarray)
-                  ((j_common_ptr) cinfoP, JPOOL_IMAGE,
-                   cinfoP->output_width * cinfoP->output_components, 
-                   (JDIMENSION) 1)
-        )[0];
 
     /* Start decompressor */
     jpeg_start_decompress(cinfoP);
@@ -842,20 +865,13 @@ convertImage(FILE *                          const ofP,
     if (ofP)
         /* Write pnm output header */
         pnm_writepnminit(ofP, cinfoP->output_width, cinfoP->output_height,
-                         maxval, output_type, FALSE);
+                         maxval, format, FALSE);
 
     pnmbuffer = pnm_allocrow(cinfoP->output_width);
     
     color_space = computeColorSpace(cinfoP, cmdline.inklevel);
-
-    /* Process data */
-    while (cinfoP->output_scanline < cinfoP->output_height) {
-        jpeg_read_scanlines(cinfoP, &jpegbuffer, 1);
-        if (ofP)
-            copy_pixel_row(jpegbuffer, cinfoP->output_width, 
-                           cinfoP->out_color_components,
-                           color_space, maxval, ofP, output_type);
-    }
+    
+    convertRaster(cinfoP, color_space, ofP, format, maxval);
 
     if (cmdline.comments)
         print_comments(*cinfoP);
@@ -907,10 +923,17 @@ convertImages(FILE *                          const ofP,
             convertImage(ofP, cmdline, cinfoP);
         }
     } else {
-        if (dsDataLeft(sourceManagerP))
+        if (dsDataLeft(sourceManagerP)) {
             convertImage(ofP, cmdline, cinfoP);
-        else
+        } else
             pm_error("Input stream is empty");
+    }
+    if (dsPrematureEof(sourceManagerP)) {
+        if (cmdline.repair)
+            pm_message("Premature EOF on input; repaired by padding end "
+                       "of image.");
+        else
+            pm_error("Premature EOF on input.  Use -repair to salvage.");
     }
 }
 
@@ -918,6 +941,7 @@ convertImages(FILE *                          const ofP,
 
 int
 main(int argc, char **argv) {
+
     FILE * ofP;
     struct cmdlineInfo cmdline;
     struct jpeg_decompress_struct cinfo;

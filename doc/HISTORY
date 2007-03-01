@@ -6,13 +6,13 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.38.0
 
+              Add pamfixtrunc.
+
               pammixinterlace: Add -filter and fir and ffmpeg filters.
               Thanks Bruce Guenter <bruce@untroubled.org>.
 
               pammixinterlace: Add -adaptive.
               Thanks Bruce Guenter <bruce@untroubled.org>.
-
-              Add pamfixtrunc.
 
               pambackground: recognize mid-row background.
 
@@ -21,6 +21,8 @@ not yet  BJH  Release 10.38.0
               ppm3d: Add -color option.
 
               ppm3d: Add -offset option as alternative to offset argument.
+
+              jpegtopnm: Add -repair option.
 
               giftopnm: Add -repair option.
 
