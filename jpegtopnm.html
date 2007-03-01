@@ -6,12 +6,10 @@ Updated: 13 October 2002
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 jpegtopnm - convert JPEG/JFIF file to PPM or PGM image
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>jpegtopnm</B>
 [<B>-dct</B> {<B>int</B>|<B>fast</B>|<B>float</B>}]
@@ -22,6 +20,7 @@ jpegtopnm - convert JPEG/JFIF file to PPM or PGM image
 [<B>-dumpexif</B>]
 [<B>-exif=</B><I>filespec</I>]
 [<B>-multiple</B>]
+[<B>-repair</B>]
 [<B>-verbose</B>]
 [<B>-tracelevel</B> <I>N</I>]
 [<I>filename</I>]
@@ -30,8 +29,7 @@ jpegtopnm - convert JPEG/JFIF file to PPM or PGM image
 hyphens instead of single hyphen to denote options.  You may use white
 space in place of the equals sign to separate an option name from its value.
 
-<A NAME="description">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -102,8 +100,7 @@ which assumes all the inks are simply subtractive and linear.
 for information on how images lose quality when you convert to and
 from JFIF.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<H2 id="options">OPTIONS</H2>
 
 The options are only for advanced users:
 <DL COMPACT>
@@ -202,14 +199,41 @@ See <a href="#description">Description section</a> for details.
 
 <p>This option was new in Netpbm 10.23 (July 2004).
 
+<dt><b>-repair</b>
+
+<dd>If the JFIF input is invalid, try to salvage whatever information is
+there and produce a valid PNM image as output.
+
+<p>Without this option, some invalid input causes <b>jpegtopnm</b>
+to fail, and what output it produces is undefined.  With <b>-repair</b>
+such invalid input causes <b>jpegtopnm</b> to succeed instead.
+
+<p>But note that there are some forms of invalid input that always cause
+<b>jpegtopnm</b> to fail and other than always cause it to salvage image
+information and succeed.
+
+<p>One particular case where <b>-repair</b> makes a difference is the
+common case that the file is truncated somewhere after the JFIF
+header.  Without <b>-repair</b>, that always causes a failure; with
+<b>-repair</b> it always causes success.  Because the image
+information is laid out generally top to bottom in the JFIF stream,
+the image <b>jpegtopnm</b> produces in this case has the proper image
+contents at the top, but the bottom is padded with gray.
+
+<p>This option was new in Netpbm 10.38.0 (March 2007).  Before that,
+<b>jpegtopnm</b> always fails in the cases in question.
+
+
 <DT><B>-comments</B>
 
 <DD>
 Print any comments in the input file to the Standard Error file.
+
 <DT><B>-verbose</B>
 
 <DD>
 Print details about the conversion to the Standard Error file.
+
 <DT><B>-tracelevel</B><I> n</I>
 
 <DD>Turn on the JPEG library's trace messages to the Standard Error
@@ -217,8 +241,8 @@ file.  A higher value of <I>n</I> gets more trace information.
 <B>-verbose</B> implies a trace level of at least 1.
 
 </DL>
-<A NAME="lbAF">&nbsp;</A>
-<H2>EXAMPLES</H2>
+
+<H2 id="examples">EXAMPLES</H2>
 
 <P>This example converts the color JFIF file foo.jpg to a PPM file
 named foo.ppm:
@@ -227,8 +251,7 @@ named foo.ppm:
     jpegtopnm foo.jpg &gt;foo.ppm
 </PRE>
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>HINTS</H2>
+<H2 id="hints">HINTS</H2>
 
 You can use <B>pnmquant</B> to color quantize the result, i.e. to
 reduce the number of distinct colors in the image.  In fact, you may
@@ -270,8 +293,7 @@ with all the other programs that deal with the NetPBM formats.  Also,
 the command syntax of <B>jpegtopnm</B> is consistent with that of the
 other Netpbm tools, unlike <B>djpeg</B>.
 
-<A NAME="lbAH">&nbsp;</A>
-<H2>ENVIRONMENT</H2>
+<H2 id="environment">ENVIRONMENT</H2>
 
 <DL COMPACT>
 <DT><B>JPEGMEM</B>
@@ -283,8 +305,7 @@ overrides any <B>JPEGMEM</B>.
 
 </DL>
 
-<A NAME="lbAI">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <p>
 <B><A HREF="ppm.html">ppm</A></B>,
@@ -308,32 +329,29 @@ overrides any <B>JPEGMEM</B>.
 Standard&quot;, Communications of the ACM, April 1991 (vol. 34,
 no. 4), pp. 30-44.
 
-<A NAME="lbAJ">&nbsp;</A>
-<H2>LIMITATIONS</H2>
+<H2 id="limitations">LIMITATIONS</H2>
 
 <p>Arithmetic coding is not offered for legal reasons.  The program
 could be much faster.
 
-<A NAME="lbAK">&nbsp;</A>
-<H2>AUTHOR</H2>
+<H2 id="author">AUTHOR</H2>
 
 <p><B>jpegtopnm</B> and this manual were derived in large part from
 <B>djpeg</B>, by the Independent JPEG Group.  The program is otherwise
 by Bryan Henderson on March 19, 2000.
 
 <HR>
-<A NAME="index">&nbsp;</A><H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
 <LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">EXAMPLES</A>
-<LI><A HREF="#lbAG">HINTS</A>
-<LI><A HREF="#lbAH">ENVIRONMENT</A>
-<LI><A HREF="#lbAI">SEE ALSO</A>
-<LI><A HREF="#lbAJ">LIMITATIONS</A>
-<LI><A HREF="#lbAK">AUTHOR</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#examples">EXAMPLES</A>
+<LI><A HREF="#hints">HINTS</A>
+<LI><A HREF="#environment">ENVIRONMENT</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#limitations">LIMITATIONS</A>
+<LI><A HREF="#author">AUTHOR</A>
 </UL>
 </BODY>
 </HTML>
