@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pamditherbw User Manual</TITLE></HEAD>
 <BODY>
 <H1>pamditherbw</H1>
-Updated: 20 June 2004
+Updated: 03 March 2007
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -14,7 +14,9 @@ pamditherbw - dither grayscale image to black and white
 
 <B>pamditherbw</B>
 
-[<B>-floyd</B> | <B>-fs</B> | <B>-threshold</B>
+[<B>-floyd</B> | <B>-fs</B>
+| <b>-atkinson</b>
+| <B>-threshold</B>
 | <B>-hilbert</B>
 | <B>-dither8</B> | <B>-d8</B> | <B>-cluster3</B>
 | <B>-c3</B> | <B>-cluster4</B> | <B>-c4</B>
@@ -67,18 +69,24 @@ does more sophisticated thresholding.
 error diffusion (<B>-floyd</B> or <B>-fs</B>).
 
 <p>Also available are simple thresholding (<B>-threshold</B>); Bayer's
-ordered dither (<B>-dither8</B>) with a 16x16 matrix; and three
-different sizes of 45-degree clustered-dot dither (<B>-cluster3</B>,
-<B>-cluster4</B>, <B>-cluster8</B>).
+ordered dither (<B>-dither8</B>) with a 16x16 matrix;
+<a href="http://www.tinrocket.com/projects/programming/graphics/00158/">
+Atkinson</a>; and three different sizes of 45-degree clustered-dot
+dither (<B>-cluster3</B>, <B>-cluster4</B>, <B>-cluster8</B>).
 
 <p>A space filling curve halftoning method using the Hilbert curve is
 also available (<B>-hilbert</B>).
 
-<P>Floyd-Steinberg will almost always give the best looking results;
-however, looking good is not always what you want.  For instance,
-thresholding can be used in a pipeline with the <b>pnmconvol</b> tool,
-for tasks like edge and peak detection.  And clustered-dot dithering
-gives a newspaper-ish look, a useful special effect.
+<P>Floyd-Steinberg or Atkinson will almost always give the best
+looking results; however, looking good is not always what you want.
+For instance, thresholding can be used in a pipeline with the
+<b>pnmconvol</b> tool, for tasks like edge and peak detection.  And
+clustered-dot dithering gives a newspaper-ish look, a useful special
+effect.
+
+<p>Floyd-Steinberg is by for the more traditional, but
+<a href="http://www.tinrocket.com/projects/programming/graphics/00158/">
+some claim</a> Atkinson works better.
 
 <P>The <B>-value</B> option alters the thresholding value for
 Floyd-Steinberg and simple thresholding.  It should be a real number
@@ -136,6 +144,8 @@ it accepts PAM input in addition to PGM and PBM and produces PAM
 output.
 
 <p><b>pamditherbw</b> obsoletes <b>pgmtopbm</b>.
+
+<p><b>-atkinson</b> was new in Netpbm 10.38 (March 2007).
 
 <H2 id="author">AUTHOR</H2>
 
