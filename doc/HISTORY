@@ -8,6 +8,8 @@ not yet  BJH  Release 10.38.0
 
               Add pamfixtrunc.
 
+              pamditherbw: Add -atkinson.
+
               pammixinterlace: Add -filter and fir and ffmpeg filters.
               Thanks Bruce Guenter <bruce@untroubled.org>.
 
