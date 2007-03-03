@@ -1644,7 +1644,8 @@ colormapFromFile(char               const filespec[],
 
     pm_message("computing other colormap ...");
     
-    pnm_computetuplefreqtable(mapPamP, colors, maxcolors, &colorCount);
+    *tupletableP =
+        pnm_computetuplefreqtable(mapPamP, colors, maxcolors, &colorCount);
 
     *colorCountP = colorCount;
 

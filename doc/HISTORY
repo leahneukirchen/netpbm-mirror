@@ -34,6 +34,8 @@ not yet  BJH  Release 10.38.0
 
               libnetpbm: Embellish "bad magic number" error message.
 
+              pamtogif: fix crash with -mapfile.
+
               pamtoxvmini: fix bug: produces garbage when maxval is
               not 255.
 
