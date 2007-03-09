@@ -4,6 +4,13 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+07.03.09 BJH  Release 10.35.24
+
+              libnetpbm: fix crash with PBM images < 8 columns on MMX/SSE
+              machine.
+
+              pamtoxvmini: fix maxval != 255 bugs.
+
 07.02.21 BJH  Release 10.35.23
 
               pamtoxvmini: fix crash.
