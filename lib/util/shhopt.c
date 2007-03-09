@@ -427,6 +427,11 @@ optExecute(optEntry  const opt, char *arg, int lng)
         if (arg == NULL)
             optFatal("internal error: optExecute() called with NULL argument "
                      "'%s'", optString(opt, lng));
+
+        if (arg[0] == '-' || arg[1] == '+')
+            optFatal("unsigned number '%s' has a sign ('%c')",
+                     arg, arg[0]);
+
         tmp = strtoul(arg, &e, 10);
         if (*e)
             optFatal("invalid number `%s'", arg);
