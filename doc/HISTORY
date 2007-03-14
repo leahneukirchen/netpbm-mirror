@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.38.0
 
+              Pnmtopclxl: fix -feeder, -outtray options.  Thanks
+              "Eric K. Olson" <olson@mauicomputing.com>.
+
               Add pamfixtrunc.
 
               pamditherbw: Add -atkinson.
