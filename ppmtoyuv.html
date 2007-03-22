@@ -7,18 +7,15 @@ Updated: 06 June 2005
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 ppmtoyuv - convert a PPM image to an Abekas YUV file
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>ppmtoyuv</B>
 [<I>ppmfile</I>]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -48,16 +45,22 @@ numbered lines, there are twice as many bits for Y of each pixel as
 for U or V.  On odd numbered lines, there are the same number of bits
 for Y as on even numbered lines, but no bits at all for U and V.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<p>Another YUV-based format is YUV4MPEG2, which is a movie format
+normally used with <a href="mjpeg.sourceforge.net"><b>MJPEGTools</b></a>.
+Netpbm does not have converters for this format, but <b>MJPEGTools</b>
+does.
+
+<H2 id="seealso">SEE ALSO</H2>
 
 <A HREF="yuvtoppm.html">yuvtoppm</A>,
 <A HREF="ppmtoeyuv.html">ppmtoeyuv</A>,
 <A HREF="ppmtoyuvsplit.html">ppmtoyuvsplit</A>,
-<A HREF="ppm.html">ppm</A>
+<A HREF="ppm.html">ppm</A>,
+<a href="mjpeg.sourceforge.net">pnmtoy4m</a>,
+<a href="mjpeg.sourceforge.net">y4mtopnm</a>
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>AUTHOR</H2>
+
+<H2 id="author">AUTHOR</H2>
 
 <p>Marc Boucher <A
 HREF="mailto:marc@PostImage.COM">marc@PostImage.COM</A>, based on
@@ -69,14 +72,12 @@ page 69.
 <P>Copyright (C) 1987 by Abekas Video Systems Inc.
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">SEE ALSO</A>
-<LI><A HREF="#lbAF">AUTHOR</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
 </UL>
 </BODY>
 </HTML>

@@ -574,6 +574,9 @@ creates movie files.  It's like a much more advanced version of <a
 href="ppmtompeg.html"><b>ppmtompeg</b></a>, without the Netpbm
 building block simplicity.
 
+<p><a href="mjpeg.sourceforge.net"><b>MJPEGTools</b></a> is software
+for dealing with the MJPEG movie format.
+
 <P>To create an animated GIF, or extract a frame from one, use
 <B>gifsicle</B>.  <B>gifsicle</B> converts between animated GIF and
 still GIF, and you can use <B>pamtogif</B> and <B>giftopnm</B> to
@@ -830,8 +833,21 @@ sort of a fork of the Netpbm format specifications.
 <li>YUV 4:2:0, aka YUV 420, and the simlar YUV 4:4:4, YUV 4:2:2,
 YUV 4:1:1, YUV 4:1:1s, and YUV 4:1:0.  Video systems often use this.
 
-<li><a href="http://en.wikipedia.org/wiki/MJPEG">MJPEG</a>
+<li><a href="http://en.wikipedia.org/wiki/MJPEG">MJPEG</a> movie
+format.
      
+<li>YUV4MPEG2 is a movie format whose purpose is similar to that of
+the Netpbm formats for still images.  You use it for manipulating
+movies, but not for storing or transmitting them.  The only known use
+of the format is with <a
+href="mjpeg.sourceforge.net"><b>MJPEGTools</b></a>.  The programs
+<b>pnmtoy4m</b> and <b>y4mtopnm</b> (and predecesors <b>ppmtoy4m</b>
+and <b>y4mtoppm</b>) in that package convert between a Netpbm stream
+and a YUV4MPEG2 stream.  As you might guess from the name, YUV4MPEG2
+uses a YUV representation of data, which is more convenient than the
+Netpbm formats' RGB representation for working with data that is
+ultimately MPEG2.
+
 </UL>
 
 <H2 id="history">History</H2>

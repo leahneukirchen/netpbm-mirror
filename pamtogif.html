@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pamtogif User Manual</TITLE></HEAD>
 <BODY>
 <H1>pamtogif</H1>
-Updated: 25 November 2006
+Updated: 22 March 2007
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -105,9 +105,9 @@ the variability.
 <DD>
 
 <P>Use the colors found in the file <I>mapfile</I> to create the
-colormap in the GIF file, instead of the colors from <I>ppmfile</I>.
+colormap in the GIF file, instead of the colors from <I>netpbmfile</I>.
 <I>mapfile</I> can be any PPM file; all that matters is the colors in
-it.  If the colors in <I>ppmfile</I> do not match those in
+it.  If the colors in <I>netpbmfile</I> do not match those in
 <I>mapfile</I>, <b>pamtogif</b> matches them to a &quot;best
 match.&quot; You can obtain a much better result by using <b>pnmremap</b>
 to change the colors in the input to those in the map file.
@@ -116,6 +116,12 @@ to change the colors in the input to those in the map file.
 colors you want to use.  The order of colors in the GIF palette have
 nothing to do with where they appear in the <i>mapfile</i> image, and
 duplication of colors in the image is irrelevant.
+
+<p>The map file's depth must match the number of color components in
+the input (which is not necessarily the same as the input's depth --
+the input might have an alpha plane in addition).  If your map file
+does not, or it <em>might</em> not, run your input through
+<b>pnmremap</b> using the same map file so that it does.
 
 <DT><B>-transparent=</B><I>color</I>
 
@@ -239,7 +245,7 @@ conversion process and the image it produces.
 
 <B><A HREF="giftopnm.html">giftopnm</A></B>,
 
-<B><A HREF="ppmquant.html">ppmquant</A></B>,
+<B><A HREF="pnmremap.html">pnmremap</A></B>,
 
 <B><A HREF="pngtopnm.html">pngtopnm</A></B>,
 
