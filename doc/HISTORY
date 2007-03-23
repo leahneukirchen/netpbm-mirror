@@ -4,6 +4,14 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+07.03.23 BJH  Release 10.35.25
+
+              pnmremap: fix incorrect output with map file deeper than
+              input file.
+
+              Pnmtopclxl: fix -feeder, -outtray options.  Thanks
+              "Eric K. Olson" <olson@mauicomputing.com>.
+
 07.03.09 BJH  Release 10.35.24
 
               libnetpbm: fix crash with PBM images < 8 columns on MMX/SSE

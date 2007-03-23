@@ -115,9 +115,9 @@ parseCommandLine(int argc, char ** argv,
             &cmdlineP->colorok, 0);
     OPTENT3(0, "center",    OPT_FLAG,    NULL,                  
             &cmdlineP->center, 0 );
-    OPTENT3(0, "feeder",    OPT_STRING,  &cmdlineP->feeder,
+    OPTENT3(0, "feeder",    OPT_UINT,    &cmdlineP->feeder,
             &cmdlineP->feederSpec,        0);
-    OPTENT3(0, "outtray",   OPT_STRING,  &cmdlineP->outtray,
+    OPTENT3(0, "outtray",   OPT_UINT,    &cmdlineP->outtray,
             &cmdlineP->outtraySpec,       0);
     OPTENT3(0, "verbose",   OPT_FLAG,    NULL,                  
             &cmdlineP->verbose, 0);

@@ -743,8 +743,9 @@ copyRaster(struct pam *   const inpamP,
         /* The following modify tuplerow, to make it consistent with
            *outpamP instead of *inpamP.
         */
-        adjustDepth(inpamP, tuplerow, outpamP->depth); 
+        assert(inpamP->allocation_depth >= outpamP->depth);
         pnm_scaletuplerow(inpamP, tuplerow, tuplerow, outpamP->maxval);
+        adjustDepth(inpamP, tuplerow, outpamP->depth); 
 
         /* The following both consults and adds to 'colorhash' and
            its associated 'usehash'.  It modifies 'tuplerow' too.
@@ -761,7 +762,6 @@ copyRaster(struct pam *   const inpamP,
     pnm_freepamrow(tuplerow);
     pnm_destroytuplehash(colorhash);
 }
-
 
 
 
@@ -801,12 +801,11 @@ remap(FILE * const ifP,
                    missingMethod, defaultColor, &missingCount);
         
         if (verbose)
-            pm_message("%d pixels not matched in color map", missingCount);
+            pm_message("%u pixels not matched in color map", missingCount);
         
         pnm_nextimage(ifP, &eof);
     }
 }
-
 
 
 
