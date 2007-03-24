@@ -42,6 +42,10 @@ not yet  BJH  Release 10.38.0
 
               libnetpbm: Embellish "bad magic number" error message.
 
+              picttoppm: Fix for multi-pixel-per-byte image in which
+              it says the image has a row that is too long (because of
+              padding).
+
               pamtogif: fix crash with -mapfile.
 
               pamtoxvmini: fix bug: produces garbage when maxval is
@@ -147,7 +151,7 @@ not yet  BJH  Release 10.38.0
 
               Build: Fix some compile failures with Irix IDO compiler.
 
-              Build: fix Darwin build.
+              Build: fix Darwin (Mac OS X) build.
 
               Configure: fix default for X library location.
 
