@@ -1754,10 +1754,8 @@ computeColormapBw(struct pam *   const pamP,
     tupletable const colormap = pnm_alloctupletable(pamP, 2);
     
     *mapPamP = *pamP;
+    mapPamP->depth = 1;
 
-    assert(mapPamP->depth  == 1);
-    assert(mapPamP->maxval == 1);
-      
     colormap[0]->value = 1;
     colormap[0]->tuple[0] = PAM_BLACK;
     colormap[1]->value = 1;
@@ -1839,7 +1837,7 @@ computeLibnetpbmColormap(struct pam *   const pamP,
         readAndValidateColormapFromFile(mapfile, maxcolors, &tuplefreq,
                                         mapPamP, &colorCount,
                                         nInputComp, pamP->maxval);
-    else if (pamP->depth == 1 && pamP->maxval == 1 && !sort &&
+    else if (nInputComp == 1 && pamP->maxval == 1 && !sort &&
              pamP->height * pamP->width > 1)
         computeColormapBw(pamP, mapPamP, &colorCount, &tuplefreq);
     else
