@@ -56,6 +56,10 @@ not yet  BJH  Release 10.38.0
 
               pamtogif: fix crash with -mapfile.
 
+              ppmtogif: handle case that map file and input file are not
+              the same depth, as was the case with the original ppmtogif.
+              Run the input through pnmremap.
+
               pamtoxvmini: fix bug: produces garbage when maxval is
               not 255.
 
