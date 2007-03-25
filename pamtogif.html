@@ -30,6 +30,8 @@ pamtogif - convert a Netpbm image to a GIF image
 
 [<B>-nolzw</B>]
 
+[<b>-aspect=</b><i>fraction</i>]
+
 [<B>-verbose</B>]
 
 <BR>
@@ -233,6 +235,30 @@ would see this as a particular case of LZW compression.
 the output of <B>pamtogif -nolzw </B>, he is then using the LZW
 patent.  But the patent holder expressed far less interest in
 enforcing the patent on decoding than on encoding.
+
+<dt><b>-aspect=</b><i>fraction</i>
+
+<dd>This is the aspect ratio of the pixels of the image.  Its only
+effect is to record that information in the GIF for use by whatever
+interprets the GIF.  Note that this feature of GIF is hardly ever used
+and most GIF decoders ignore this information and assume pixels are
+square.
+
+<p>Pixels in a Netpbm image do not have aspect ratios; there is always
+a one-one correspondence between GIF pixels and Netpbm pixels.
+
+<p>The aspect ratio is the quotient of width divided by height.  GIF
+allows aspect ratios from 0.25 (1:4) to 4 (4:1) in increments of 1/64.
+<b>pamtogif</b> implements a natural extension of GIF that allows an
+aspect ratio up to 4 14/64.  If you specify anything outside this range,
+<b>pamtogif</b> fails.  <b>pamtogif</b> rounds <i>fraction</i> to
+the nearest 1/64.
+
+<p>The default is square (1.0).
+
+<p>This option was new in Netpbm 10.38 (March 2007).  Before that, the
+pixels are always square.
+
 
 <DT><B>-verbose</B>
 
