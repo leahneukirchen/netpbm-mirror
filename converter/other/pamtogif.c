@@ -21,6 +21,7 @@ static unsigned int const gifMaxval = 255;
 
 static bool verbose;
 
+
 typedef int stringCode;
     /* A code to be place in the GIF raster.  It represents
        a string of one or more pixels.  You interpret this in the context
@@ -77,22 +78,11 @@ struct cmdlineInfo {
     const char *transparent;    /* -transparent option value.  NULL if none. */
     const char *comment;        /* -comment option value; NULL if none */
     unsigned int nolzw;         /* -nolzw option */
+    float aspect;               /* -aspect option value (the ratio).  */
     unsigned int verbose;
 };
 
 
-static unsigned int
-nSignificantBits(unsigned int const arg) {
-
-    unsigned int i;
-
-    i = 0;
-   
-    while (arg >> i != 0)
-        ++i;
-
-    return i;
-}
 
 
 
@@ -135,6 +125,8 @@ parseCommandLine(int argc, char ** argv,
     optStruct3 opt;  /* set by OPTENT3 */
     unsigned int option_def_index;
 
+    unsigned int aspectSpec;
+
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
@@ -152,8 +144,10 @@ parseCommandLine(int argc, char ** argv,
             &cmdlineP->comment,        NULL, 0);
     OPTENT3(0,   "alphacolor",  OPT_STRING, 
             &cmdlineP->alphacolor,     NULL, 0);
+    OPTENT3(0,   "aspect",      OPT_FLOAT, 
+            &cmdlineP->aspect,         &aspectSpec, 0);
     OPTENT3(0,   "verbose",     OPT_FLAG, 
-            NULL,                       &cmdlineP->verbose, 0);
+            NULL,                      &cmdlineP->verbose, 0);
     
     /* Set the defaults */
     cmdlineP->mapfile = NULL;
@@ -178,6 +172,19 @@ parseCommandLine(int argc, char ** argv,
                  "specified %d", argc-1);
     else
         cmdlineP->input_filespec = argv[1];
+        
+    if (aspectSpec) { 
+        if (cmdlineP->aspect < 0.25  || cmdlineP->aspect > 4.21875)
+            pm_error("Invalid -aspect value: %f.  "
+                     "GIF allows only the range 0.25-4.0 .",
+                     cmdlineP->aspect);
+        else if (cmdlineP->aspect > 4.0)
+            pm_message("Warning: "
+                       "You specified an aspect ratio over 4.0: %f.  "
+                       "This will result in an invalid GIF.",
+                       cmdlineP->aspect);
+    } else
+        cmdlineP->aspect = 1.0;
 }
 
 
@@ -453,7 +460,7 @@ gifPixel(struct pam *   const pamP,
             colorIndex = closestColor(tuple, pamP, cmapP);
     }
     assert(colorIndex >= 0);
-    return colorIndex;
+    return (unsigned int) colorIndex;
 }
 
 
@@ -521,8 +528,6 @@ writeCommentExtension(FILE * const ofP,
  */
 
 #define BITS    12
-
-#define HSIZE  5003            /* 80% occupancy */
 
 /*
  *
@@ -785,6 +790,12 @@ typedef struct {
            proper data, but always using one code per pixel, and therefore
            not effecting any compression and not using the LZW patent.
         */
+    unsigned int hsize;
+        /* The number of slots in the hash table.  This variable to
+           enhance overall performance by reducing memory use when
+           encoding smaller gifs. 
+         */
+        
     unsigned int hshift;
         /* This is how many bits we shift left a string code in forming the
            primary hash of the concatenation of that string with another.
@@ -848,27 +859,81 @@ typedef struct {
 
 
 
+
+static unsigned int
+nSignificantBits( unsigned int const arg ){
+
+#if defined(__GNUC__)  && (__GNUC__ * 100 + __GNUC_MINOR__ >= 304)
+
+    return (arg == 0) ? 0 : 8 * sizeof(unsigned int) - __builtin_clz(arg);
+
+#else
+
+    unsigned int i = 0;
+    while (arg >> i != 0)
+        ++i;
+
+    return i;
+#endif
+}
+
+
+
 static lzwCompressor *
 lzw_create(FILE *       const ofP,
            unsigned int const initBits,
-           bool         const lzw) {
+           bool         const lzw,
+           unsigned int const pixelCount) {
+
+    unsigned int const hsizeTable[] = {257, 521, 1031, 2053, 4099, 5003};
+    /* If the image has 4096 or fewer pixels we use prime numbers slightly
+       above powers of two between 8 and 12.  In this case the hash table
+       never fills up; clear code is never emitted.
+    
+       Above that we use a table with 4096 slots plus 20% extra.
+       When this is not enough the clear code is emitted.
+       Due to the extra 20% the table itself never fills up.
+       
+       lzw.hsize and lzw.hshift stay constant through the image.
+
+       Variable hsize is a performance enhancement based on the fact that
+       the encoder never needs more codes than the number of pixels in
+       the image.  Typically, the ratio of pixels to codes is around
+       10:1 to 20:1.
+   
+       Logic works with fixed values lzw.hsize=5003 and t=13.
+    */
 
     lzwCompressor * lzwP;
-
+       
     MALLOCVAR_NOFAIL(lzwP);
-
-    MALLOCARRAY(lzwP->hashTable, HSIZE);
-
-    if (lzwP->hashTable == NULL)
-        pm_error("Couldn't get memory for %u-entry hash table.", HSIZE);
 
     /* Constants */
     lzwP->lzw = lzw;
-    lzwP->hshift =
-        nSignificantBits(HSIZE-1) - 1 - nSignificantBits(MAXCMAPSIZE-1);
-    lzwP->clearCode = 1 << (initBits - 1);
-    lzwP->eofCode = lzwP->clearCode + 1;
+
+    lzwP->clearCode     = 1 << (initBits - 1);
+    lzwP->eofCode       = lzwP->clearCode + 1;
     lzwP->initCodeLimit = 1 << initBits;
+
+    if (lzw) {
+        unsigned int const t =
+            MIN(13, MAX(8, nSignificantBits(pixelCount +lzwP->eofCode - 2)));
+            /* Index into hsizeTable */
+    
+        lzwP->hsize = hsizeTable[t-8];
+
+        lzwP->hshift = (t == 13 ? 12 : t) - nSignificantBits(MAXCMAPSIZE-1);
+
+        MALLOCARRAY(lzwP->hashTable, lzwP->hsize);
+        
+        if (lzwP->hashTable == NULL)
+            pm_error("Couldn't get memory for %u-entry hash table.",
+                     lzwP->hsize);
+    } else {
+        /* No LZW compression.  We don't need a stringcode hash table */  
+        lzwP->hashTable = NULL;
+        lzwP->hsize     = 0;
+    }
 
     lzwP->buildingString = FALSE;
 
@@ -898,12 +963,10 @@ lzwHashClear(lzwCompressor * const lzwP) {
 
     unsigned int i;
 
-    for (i = 0; i < HSIZE; ++i)
+    for (i = 0; i < lzwP->hsize; ++i)
         lzwP->hashTable[i].fcode = -1;
 
     lzwP->nextUnusedCode = lzwP->clearCode + 2;
-
-    
 }
 
 
@@ -1028,9 +1091,7 @@ primaryHash(stringCode   const baseString,
     assert(additionalPixel < MAXCMAPSIZE);
 
     hash = (additionalPixel << hshift) ^ baseString;
-
-    assert(hash < HSIZE);
-
+    
     return hash;
 }
 
@@ -1050,13 +1111,13 @@ lookupInHash(lzwCompressor *  const lzwP,
         /* Index into hash table */
 
     i = primaryHash(lzwP->stringSoFar, gifPixel, lzwP->hshift);
-    disp = (i == 0) ? 1 : HSIZE - i;
+    disp = (i == 0) ? 1 : lzwP->hsize - i;
 
     while (lzwP->hashTable[i].fcode != fcode &&
            lzwP->hashTable[i].fcode >= 0) {
         i -= disp;
         if (i < 0)
-            i += HSIZE;
+            i += lzwP->hsize;
     }
 
     if (lzwP->hashTable[i].fcode == fcode) {
@@ -1176,7 +1237,7 @@ writeRaster(struct pam *  const pamP,
            number of the current row.
         */
     
-    lzwP = lzw_create(ofP, initBits, lzw);
+    lzwP = lzw_create(ofP, initBits, lzw, pamP->height * pamP->width);
 
     tuplerow = pnm_allocpamrow(pamP);
 
@@ -1213,12 +1274,6 @@ writeRaster(struct pam *  const pamP,
     
     lzw_destroy(lzwP);
 }
-
-
-
-
-
-
 
 
 
@@ -1280,14 +1335,15 @@ writeGifHeader(FILE *              const ofP,
                unsigned int        const background, 
                unsigned int        const bitsPerPixel,
                const struct cmap * const cmapP,
-               char                const comment[]) {
+               char                const comment[],
+               float               const aspect) {
 
     unsigned int const resolution = bitsPerPixel;
 
     unsigned char b;
 
     /* Write the Magic header */
-    if (cmapP->haveTransparent || comment)
+    if (cmapP->haveTransparent || comment || aspect != 1.0 )
         fwrite("GIF89a", 1, 6, ofP);
     else
         fwrite("GIF87a", 1, 6, ofP);
@@ -1312,9 +1368,11 @@ writeGifHeader(FILE *              const ofP,
     assert((unsigned char)background == background);
     fputc(background, ofP);
 
-    /* Byte of 0's (future expansion) */
-    fputc(0x00, ofP);
-
+    {
+        int const aspectValue = aspect == 1.0 ? 0 : ROUND(aspect * 64) - 15;
+        assert(0 <= aspectValue && aspectValue <= 255); 
+        fputc(aspectValue, ofP);
+    }
     writeGlobalColorMap(ofP, cmapP, bitsPerPixel);
 
     if (cmapP->haveTransparent) 
@@ -1378,6 +1436,7 @@ gifEncode(struct pam *  const pamP,
           unsigned int  const bitsPerPixel,
           struct cmap * const cmapP,
           char          const comment[],
+          float         const aspect,
           bool          const lzw) {
 
     unsigned int const leftOffset = 0;
@@ -1396,17 +1455,17 @@ gifEncode(struct pam *  const pamP,
     rowReader * rowReaderP;
 
     reportImageInfo(gInterlace, background, bitsPerPixel);
-    
+
     if (pamP->width > 65535)
         pm_error("Image width %u too large for GIF format.  (Max 65535)",
                  pamP->width);
-    
+     
     if (pamP->height > 65535)
         pm_error("Image height %u too large for GIF format.  (Max 65535)",
                  pamP->height);
 
     writeGifHeader(ofP, pamP->width, pamP->height, background,
-                   bitsPerPixel, cmapP, comment);
+                   bitsPerPixel, cmapP, comment, aspect);
 
     /* Write an Image separator */
     fputc(',', ofP);
@@ -1644,7 +1703,7 @@ colormapFromFile(char               const filespec[],
 
     pm_message("computing other colormap ...");
     
-    *tupletableP =
+    *tupletableP = 
         pnm_computetuplefreqtable(mapPamP, colors, maxcolors, &colorCount);
 
     *colorCountP = colorCount;
@@ -1653,6 +1712,62 @@ colormapFromFile(char               const filespec[],
 }
 
 
+
+static void
+readAndValidateColormapFromFile(char           const filename[],
+                                unsigned int   const maxcolors,
+                                tupletable *   const tuplefreqP, 
+                                struct pam *   const mapPamP,
+                                unsigned int * const colorCountP,
+                                unsigned int   const nInputComp,
+                                sample         const inputMaxval) {
+/*----------------------------------------------------------------------------
+   Read the colormap from a separate colormap file named filename[],
+   and make sure it's consistent with an image with 'nInputComp'
+   color components (e.g. 3 for RGB) and a maxval of 'inputMaxval'.
+-----------------------------------------------------------------------------*/
+    colormapFromFile(filename, maxcolors, tuplefreqP, mapPamP, colorCountP);
+
+    if (mapPamP->depth != nInputComp)
+        pm_error("Depth of map file (%u) does not match number of "
+                 "color components in input file (%u)",
+                 mapPamP->depth, nInputComp);
+    if (mapPamP->maxval != inputMaxval)
+        pm_error("Maxval of map file (%lu) does not match maxval of "
+                 "input file (%lu)", mapPamP->maxval, inputMaxval);
+}
+
+
+
+static void
+computeColormapBw(struct pam *   const pamP,
+                  struct pam *   const mapPamP,
+                  unsigned int * const colorCountP,
+                  tupletable   * const tuplefreqP) {
+/*----------------------------------------------------------------------------
+  Shortcut for black and white (e.g. PBM).  We know that there are
+  only two colors.  Users who know that only one color is present in
+  the image should specify -sort at the command line.  Example:
+
+   $ pbmmake -w 600 400 | pamtogif -sort > canvas.gif
+-----------------------------------------------------------------------------*/
+    tupletable const colormap = pnm_alloctupletable(pamP, 2);
+    
+    *mapPamP = *pamP;
+
+    assert(mapPamP->depth  == 1);
+    assert(mapPamP->maxval == 1);
+      
+    colormap[0]->value = 1;
+    colormap[0]->tuple[0] = PAM_BLACK;
+    colormap[1]->value = 1;
+    colormap[1]->tuple[0] = PAM_BW_WHITE;
+    
+    *tuplefreqP  = colormap;
+    *colorCountP = 2;
+}
+  
+    
 
 static void
 computeColormapFromInput(struct pam *   const pamP,
@@ -1720,19 +1835,14 @@ computeLibnetpbmColormap(struct pam *   const pamP,
     tupletable tuplefreq;
     unsigned int colorCount;
 
-    if (mapfile) {
-        /* Read the colormap from a separate colormap file. */
-        colormapFromFile(mapfile, maxcolors, &tuplefreq, mapPamP,
-                         &colorCount);
-
-        if (mapPamP->depth != nInputComp)
-            pm_error("Depth of map file (%u) does not match number of "
-                     "color components in input file (%u)",
-                      mapPamP->depth, pamP->depth);
-        if (mapPamP->maxval != pamP->maxval)
-            pm_error("Maxval of map file (%lu) does not match maxval of "
-                     "input file (%lu)", mapPamP->maxval, pamP->maxval);
-    } else
+    if (mapfile)
+        readAndValidateColormapFromFile(mapfile, maxcolors, &tuplefreq,
+                                        mapPamP, &colorCount,
+                                        nInputComp, pamP->maxval);
+    else if (pamP->depth == 1 && pamP->maxval == 1 && !sort &&
+             pamP->height * pamP->width > 1)
+        computeColormapBw(pamP, mapPamP, &colorCount, &tuplefreq);
+    else
         computeColormapFromInput(pamP, maxcolors, nInputComp, 
                                  mapPamP, &colorCount, &tuplefreq);
     
@@ -1814,7 +1924,7 @@ main(int argc, char *argv[]) {
         addToColormap(&cmap, cmdline.alphacolor, &fakeTransparent);
     }
 
-    bitsPerPixel = pm_maxvaltobits(cmap.cmapSize-1);
+    bitsPerPixel = cmap.cmapSize == 1 ? 1 : nSignificantBits(cmap.cmapSize-1);
 
     computeTransparent(cmdline.transparent,
                        !!pamAlphaPlane(&pam), fakeTransparent, &cmap);
@@ -1822,7 +1932,7 @@ main(int argc, char *argv[]) {
     /* All set, let's do it. */
     gifEncode(&pam, stdout, rasterPos,
               cmdline.interlace, 0, bitsPerPixel, &cmap, cmdline.comment,
-              !cmdline.nolzw);
+              cmdline.aspect, !cmdline.nolzw);
     
     destroyCmap(&cmap);
 
@@ -1847,6 +1957,11 @@ main(int argc, char *argv[]) {
   were rewritten; now no uncompressed output subroutines are derived from
   the Independent JPEG Group's source code.
   
+  2007.01  Changed sort routine to qsort.  (afu)
+  2007.03  Implemented variable hash table size, PBM color table
+           shortcut and "-aspect" command line option.   (afu)
+
+ 
   Copyright (C) 1989 by Jef Poskanzer.
  
   Permission to use, copy, modify, and distribute this software and its

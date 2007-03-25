@@ -6,11 +6,11 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.38.0
 
-              pnmremap: fix incorrect output with map file deeper than
-              input file.
+              pamtogif: Speed up for monochrome images.  Thanks
+              Prophet of the Way <afu@wta.att.ne.jp>.
 
-              pnmtopclxl: fix -feeder, -outtray options.  Thanks
-              "Eric K. Olson" <olson@mauicomputing.com>.
+              pamtogif: Add -aspect.  Thanks
+              Prophet of the Way <afu@wta.att.ne.jp>.
 
               Add pamfixtrunc.
 
@@ -41,6 +41,14 @@ not yet  BJH  Release 10.38.0
               the valid options are.
 
               libnetpbm: Embellish "bad magic number" error message.
+
+              pnmremap: fix incorrect output with map file deeper than
+              input file.
+
+              pnmtopclxl: fix -feeder, -outtray options.  Thanks
+              "Eric K. Olson" <olson@mauicomputing.com>.
+
+              picttoppm: Fix wild memory reference in all use cases.
 
               picttoppm: Fix for multi-pixel-per-byte image in which
               it says the image has a row that is too long (because of
