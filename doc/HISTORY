@@ -9,6 +9,10 @@ not yet  BJH  Release 10.38.0
               pamtogif: Speed up for monochrome images.  Thanks
               Prophet of the Way <afu@wta.att.ne.jp>.
 
+              pamtogif: Speed up for small images by using smaller
+              hash table (so smaller memory footprint).  Thanks
+              Prophet of the Way <afu@wta.att.ne.jp>.
+
               pamtogif: Add -aspect.  Thanks
               Prophet of the Way <afu@wta.att.ne.jp>.
 
@@ -79,6 +83,8 @@ not yet  BJH  Release 10.38.0
 
               installnetpbm: use 2-argument open() for old Perl.
     
+              configure: fix choice of default library suffix.
+
               configure: default to 'none' for Svgalib if it doesn't appear
               to be installed.
 
