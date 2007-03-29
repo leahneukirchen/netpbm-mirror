@@ -613,7 +613,7 @@ processX11Header(X11WDFileHeader *  const h11P,
        bit-per-pixel direct color window that had bitmap_unit = 32 and
        bitmap_pad = 8.  This was made by Xwd in Red Hat Xfree86 4.3.0-2.
 
-       In March 2007, Darren Frith present an xwd file like this:
+       In March 2007, Darren Frith presented an xwd file like this:
        Header says direct color, bits_per_pixel = 24, bitmap_unit =
        32, bitmap_pad = 8, byte order and bit order LSB first.  The
        bytes in each item are in fact MSB first and the pixels spread
@@ -623,7 +623,7 @@ processX11Header(X11WDFileHeader *  const h11P,
        The header says the bits within each pixel are one byte red,
        one byte green, one byte blue.  But they are actually blue,
        green, red.  Xwud, ImageMagick, and Gimp render this image
-       correctly, so it's not broken.
+       correctly, so it's not broken.  Created by Xwd of X.org 7.1.1.
 
        Before Netpbm 9.23 (January 2002), we used bitmap_unit as the
        item size always.  Then, until 10.19 (November 2003), we used
