@@ -1662,3 +1662,32 @@ pm_check(FILE *               const file,
 
 
 
+void
+pm_drain(FILE * const fileP,
+         uint   const limit,
+         uint * const bytesReadP) {
+/*----------------------------------------------------------------------------
+  Read bytes from *fileP until EOF and return as *bytesReadP how many there
+  were.
+
+  But don't read any more than 'limit'.
+
+  This is a good thing to call after reading an input file to be sure you
+  didn't leave some input behind, which could mean you didn't properly
+  interpret the file.
+-----------------------------------------------------------------------------*/
+    uint bytesRead;
+    bool eof;
+
+    for (bytesRead = 0, eof = false; !eof && bytesRead < 4096;) {
+
+        int rc;
+
+        rc = fgetc(fileP);
+
+        eof = (rc == EOF);
+        if (!eof)
+            ++bytesRead;
+    }
+    *bytesReadP = bytesRead;
+}
