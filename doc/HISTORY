@@ -5,6 +5,15 @@ CHANGE HISTORY
 --------------
 
 not yet  BJH  Release 10.38.0
+    
+              xwdtopnm: fix right edge padding for 24 bit per pixel,
+              32 bit per item images.
+
+              xwdtopnm: update assumptions about format for direct color
+              images to match an image we found.
+
+              xwdtopnm: use pm_drain() to catch some format
+              misinterpretations.
 
               pamtogif: Speed up for monochrome images.  Thanks
               Prophet of the Way <afu@wta.att.ne.jp>.
@@ -38,6 +47,8 @@ not yet  BJH  Release 10.38.0
 
               giftopnm: Add -repair option.
 
+              libnetpbm: add pm_drain().
+              
               libnetpbm: shhopt: reject signed number as value for
               OPT_UINT option.
 
@@ -3064,41 +3075,41 @@ Minor bug fixes and compatibility fixes are not documented in this file.
 
 PBM
 
-libpbm1.c	strstr() added to libpbm1.c.
-libpbm5.c	BDF font support added.
-pbmtext		BDF font support added.
-pbmto4425	New filter.
-pbmtoln03	Command line parsing changed to Pbmplus standard.
+libpbm1.c       strstr() added to libpbm1.c.
+libpbm5.c       BDF font functions added.
+pbmtext         Ability to use BDF fonts added.
+pbmto4425       New filter.
+pbmtoln03       Command line parsing changed to Pbmplus standard.
 
 
 PGM
 
-pgmnoise	New filter.
+pgmnoise        New filter.
 
 
 PPM
 
-picttoppm	Updated
-ppm3d		New facility.
-ppmchange	New filter.
-ppmdim		New filter.
-ppmflash	New filter.
-ppmmix		New filter.
-ppmntsc		New filter.
-ppmqvga		Option parsing changed to Pbmplus standard.
-ppmshift	New filter.
-ppmspread	New filter.
-ppmtoxpm	Prototypes added.
-xpmtoppm	Prototypes added.
-ilbmtoppm	Updated.
-ppmtoilbm	Updated.
+picttoppm       Updated
+ppm3d           New facility.
+ppmchange       New filter.
+ppmdim          New filter.
+ppmflash        New filter.
+ppmmix          New filter.
+ppmntsc         New filter.
+ppmqvga         Option parsing changed to Pbmplus standard.
+ppmshift        New filter.
+ppmspread       New filter.
+ppmtoxpm        Prototypes added.
+xpmtoppm        Prototypes added.
+ilbmtoppm       Updated.
+ppmtoilbm       Updated.
 
 
 PNM
 
-pnmtoddif	New filter.
-pnmhistmap	New facility.
-pnmtops		New option (-nocenter) added.
+pnmtoddif       New filter.
+pnmhistmap      New facility.
+pnmtops         New option (-nocenter) added.
 
 
 Functional changes to Netpbm since 7 December 1993.
@@ -3106,25 +3117,25 @@ Minor bug fixes and compatibility fixes are not documented in this file.
 
 PGM
 
-asciitopgm	New filter.
-fitstopgm	Replaced by fitstopnm.
-pgmtofits	Replaced by pnmtofits.
-pgmtopbm	Upgraded.
-pgmkernel	New filter.
+asciitopgm      New filter.
+fitstopgm       Replaced by fitstopnm.
+pgmtofits       Replaced by pnmtofits.
+pgmtopbm        Upgraded.
+pgmkernel       New filter.
 
 PPM
 
-ppmchange	Upgraded.
-xvminitoppm	New filter.
+ppmchange       Upgraded.
+xvminitoppm     New filter.
 
 PNM
 
-pnmalias	New filter.
-pnmtofits	Replacement for pgmtofits.
-fitstopnm	Replacement for fitstopgm.
-pnmtosgi	New filter.
-sgitopnm	New filter.
-pstopnm		New filter.
+pnmalias        New filter.
+pnmtofits       Replacement for pgmtofits.
+fitstopnm       Replacement for fitstopgm.
+pnmtosgi        New filter.
+sgitopnm        New filter.
+pstopnm         New filter.
 
 
 
@@ -3135,126 +3146,126 @@ The following is new in Netpbm (compared to Pbmplus):
 
 PBM
 
-pbmtext		BDF font support added.
+pbmtext         Ability to use BDF fonts added.
 
-pbmto4425	Display on an AT&T 4425 Ascii terminal.
+pbmto4425       Display on an AT&T 4425 Ascii terminal.
 
-pbmtoascii	A new improved version.
+pbmtoascii      A new improved version.
 
-pbmtoln03	Convert to DEC LN03+.
+pbmtoln03       Convert to DEC LN03+.
 
-pbmtolps	Fast PostScript creator.
+pbmtolps        Fast PostScript creator.
 
-pbmtopk		Conversion to/from a packed (PK) format font.
+pbmtopk         Conversion to/from a packed (PK) format font.
 pktopbm
 
-pbmclean	Flip isolated pixels.
+pbmclean        Flip isolated pixels.
 
-pbmpscale	Enlarge pbm image with edge smoothing.
+pbmpscale       Enlarge pbm image with edge smoothing.
 
 
 PGM
 
-asciitopgm	Convert an ascii image into pgm.
+asciitopgm      Convert an ascii image into pgm.
 
-pbmtopgm	Convert pbm to pgm by averaging areas.
+pbmtopgm        Convert pbm to pgm by averaging areas.
 
-rawtopgm	Handles input files without specification of the file size,
-		assuming the input image is quadratic. It also supports a
-		-tb (top bottom flip) option.
+rawtopgm        Handles input files without specification of the file size,
+                assuming the input image is quadratic. It also has a
+                -tb (top bottom flip) option.
 
-bioradtopgm	Conversion utility for files created by Biorad confocal
-		microscopes.
+bioradtopgm     Conversion utility for files created by Biorad confocal
+                microscopes.
 
-spottopgm	Convert SPOT satellite images to pgm.
+spottopgm       Convert SPOT satellite images to pgm.
 
-pgmkernel	Generate a convolution kernel.
+pgmkernel       Generate a convolution kernel.
 
-pgmnoise	Create a pgm file with random pixels.
+pgmnoise        Create a pgm file with random pixels.
 
 
 PPM
 
-bmptoppm	Conversion to/from windows bitmap format.
+bmptoppm        Conversion to/from windows bitmap format.
 ppmtobmp
 
-ppmtogif	Updated version.
-giftoppm	Removed (see giftopnm).
+ppmtogif        Updated version.
+giftoppm        Removed (see giftopnm).
 
-ppmtoilbm	Updated version.
+ppmtoilbm       Updated version.
 ilbmtoppm
 
-picttoppm	Updated version.
+picttoppm       Updated version.
 ppmtopict
 
-ppmtoxpm	Updated version, which supports xpm version 3.
+ppmtoxpm        Updated version, which understands xpm version 3.
 xpmtoppm
 
-ppmtomap	Extract all colors from a ppm file.
+ppmtomap        Extract all colors from a ppm file.
 
-ppmtomitsu	Convert to Mitsubishi S340-10 printer format.
+ppmtomitsu      Convert to Mitsubishi S340-10 printer format.
 
-xvminitoppm	Convert an XV thumbnail picture to ppm.
+xvminitoppm     Convert an XV thumbnail picture to ppm.
 
-ppmtoyuvsplit	Conversion to/from YUV triplets. (MPEG / JPEG).
+ppmtoyuvsplit   Conversion to/from YUV triplets. (MPEG / JPEG).
 yuvsplittoppm
 
-ppm3d		Create a red/blue stereo image.
+ppm3d           Create a red/blue stereo image.
 
-ppmbrighten	Change image saturation and value on an HSV map.
+ppmbrighten     Change image saturation and value on an HSV map.
 
-ppmchange	Change all pixels of one color to another in a portable pixmap
+ppmchange       Change all pixels of one color to another in a portable pixmap
 
-ppmdim		Dim a ppm file down to total blackness.
+ppmdim          Dim a ppm file down to total blackness.
 
-ppmdist		Simplistic grayscale assignment for machine generated
-		color images.
+ppmdist         Simplistic grayscale assignment for machine generated
+                color images.
 
-ppmflash	Brighten a picture up to complete white-out
+ppmflash        Brighten a picture up to complete white-out
 
-ppmmix		Blend together two portable pixmaps.
+ppmmix          Blend together two portable pixmaps.
 
-ppmnorm		Normalize the contrast in a portable pixmap.
+ppmnorm         Normalize the contrast in a portable pixmap.
 
-ppmntsc		Make a portable pixmap look like taken from an American TV.
+ppmntsc         Make a portable pixmap look like taken from an American TV.
 
-ppmqvga		Eight plane quantization.
+ppmqvga         Eight plane quantization.
 
-ppmshift	Shift lines of a portable pixmap left or right by a random amount.
+ppmshift        Shift lines of a portable pixmap left or right by a random amount.
 
-ppmspread	Displace a portable pixmap's pixels by a random amount.
+ppmspread       Displace a portable pixmap's pixels by a random amount.
 
-ppmtopjxl	Convert a ppm file into an HP PaintJet XL PCL file.
+ppmtopjxl       Convert a ppm file into an HP PaintJet XL PCL file.
 
 
 PNM
 
-pnmtops		New option (-nocenter) added.
+pnmtops         New option (-nocenter) added.
 
-pnmtofits	Replacement for pgmtofits/fitstopgm
+pnmtofits       Replacement for pgmtofits/fitstopgm
 fitstopnm
 
-pnmtosgi	Conversion to/from sgi image format.
+pnmtosgi        Conversion to/from sgi image format.
 sgitopnm
 
-pnmtosir	Conversion to/from Solitaire image recorder format.
+pnmtosir        Conversion to/from Solitaire image recorder format.
 sirtopnm
 
-giftopnm	Replaces giftoppm. Examines the input image and produces
-		a pbm, pgm, or ppm output.
+giftopnm        Replaces giftoppm. Examines the input image and produces
+                a pbm, pgm, or ppm output.
 
-pstopnm		Convert PostScript to pnm. Requires Ghostscript.
+pstopnm         Convert PostScript to pnm. Requires Ghostscript.
 
-zeisstopnm	Conversion utility for files created by Zeiss confocal
-		microscopes (the old standard).
+zeisstopnm      Conversion utility for files created by Zeiss confocal
+                microscopes (the old standard).
 
-pnmalias	Anti aliasing filter.
+pnmalias        Anti aliasing filter.
 
-pnmcomp		Composite two portable anymaps together.
+pnmcomp         Composite two portable anymaps together.
 
-pnmcrop		New options added.
+pnmcrop         New options added.
 
-pnmpad		Add borders to anymap.
+pnmpad          Add borders to anymap.
 
 
 LIBTIFF
@@ -3338,7 +3349,7 @@ Changes during the extended beta test period, starting on 15jan91:
     Added a -pseudodepth flag to pnmtoxwd.
     Updated tifftopnm for libtiff 2.4.
     Added many option flags to pnmtotiff.  (J.T. Conklin)
-    Added support for X11R5's new color specifiers rgb: and rgbi:.
+    Added recognition of X11R5's new color specifiers rgb: and rgbi:.
     Added pgmtexture.  (James Darrell McCauley)
     Added ppmtopj, pjtoppm, and ppmdither.  (Christos Zoulas)
     Added ppmtotga.  (Mark Shand)
@@ -3346,7 +3357,7 @@ Changes during the extended beta test period, starting on 15jan91:
     Added pbmtoatk and atktopbm.  (Bill Janssen)
     Added ppmtoyuv and yuvtoppm.  (Marc Boucher)
     Fixes to picttoppm.  (George Phillips)
-    Added 24-bit support to ilbmtoppm.  (Mark Thompson)
+    Added recognition of 24-bit images to ilbmtoppm.  (Mark Thompson)
 
 Changes since the X.V11R4 / comp.sources.misc distribution of 22nov89:
 
@@ -3387,7 +3398,7 @@ Changes since the X.V11R4 / comp.sources.misc distribution of 22nov89:
     Added -expand flag to pbmmask.
     Speedup to pnmflip - don't buffer if possible.
     Added color-name-to-value routine to ppm - uses X11's rgb.txt if present.
-    Updated Imakefile support to reflect X.V11R4.
+    Updated Imakefile function to reflect X.V11R4.
     Removed picttopbm.
     Improved pnmcut argument syntax so that negative coords work like pnmpaste.
     Added "magic" file, for use with the "file" program.
@@ -3411,7 +3422,7 @@ Changes since the X.V11R4 / comp.sources.misc distribution of 22nov89:
     Added -map flag to ppmquant - user-specifiable colormap.  Also, the
       Floyd-Steinberg error diffusion finally works right.
     Added -map flag to pgmtoppm.
-    Added DirectColor support to xwdtopnm and pnmtoxwd.
+    Added DirectColor capability to xwdtopnm and pnmtoxwd.
     Speedup to pgmtolj from Arthur David Olson: avoid sending whitespace.
     Fix to pbmtogo from Bo Thide': 2D compression now works.
 
@@ -3495,7 +3506,7 @@ Changes since the comp.sources.misc distribution of 31oct88:
 
 Changes since the X.V11R3 distribution of 31aug88:
 
-    The cbm format has been revised to support run-length encoding.
+    The cbm format has been revised to include run-length encoding.
     Pbmtops now does run-length encoding.
 
 Major changes since the X.V11R2 distribution of 28mar88:
