@@ -180,13 +180,28 @@ struct raster {
 };
 
 
+
 static void
 allocateRaster(struct raster * const rasterP,
                unsigned int    const width,
                unsigned int    const height,
                unsigned int    const bitsPerPixel) {
+/*----------------------------------------------------------------------------
+   Allocate storage for a raster that can contain a 'width' x 'height'
+   pixel rectangle read from a PICT image with 'bitsPerPixel' bits
+   per pixel.
 
-    if (width > UINT_MAX/4)
+   Make the space large enough to round the number of pixels up to a
+   multiple of 16, because we've seen many images in which the PICT raster
+   does contain that much padding on the right.  I don't know why; I could
+   understand a multiple of 8, since in 1 bpp image, the smallest unit
+   expressable in PICT is 8 pixels.  But why 16?  The images we saw came
+   from Adobe Illustrator 10 in March 2007, supplied by
+   Guillermo Gómez Valcárcel.
+-----------------------------------------------------------------------------*/
+    unsigned int const allocWidth = ROUNDUP(width, 16);
+
+    if (width > UINT_MAX/4 - 16)
         pm_error("Width %u pixels too large for arithmetic", width);
 
     rasterP->rowCount = height;
@@ -211,16 +226,16 @@ allocateRaster(struct raster * const rasterP,
            We have yet to see if we can properly interpret the data.
         */
 
-        rasterP->rowSize = width * 4;
+        rasterP->rowSize = allocWidth * 4;
         break;
     case 16:
-        rasterP->rowSize = width * 2;
+        rasterP->rowSize = allocWidth * 2;
         break;
     case 8:
     case 4:
     case 2:
     case 1:
-        rasterP->rowSize = width * 1;
+        rasterP->rowSize = allocWidth * 1;
         break;
     default:
         pm_error("INTERNAL ERROR: impossible bitsPerPixel value in "
@@ -2123,6 +2138,9 @@ expandRun(unsigned char * const block,
    returned.
 -----------------------------------------------------------------------------*/
     unsigned int const pkpixsize = bitsPerPixel == 16 ? 2 : 1;
+        /* The repetition unit size, in bytes.  The run consists of this many
+           bytes of packed data repeated the specified number of times.
+        */
 
     if (1 + pkpixsize > blockLimit)
         pm_error("PICT run block runs off the end of its line.  "
@@ -2138,7 +2156,8 @@ expandRun(unsigned char * const block,
         assert(block[0] & 0x80);  /* It's a run */
 
         if (verbose > 1)
-            pm_message("Block: run of %u pixels or plane samples", runLength);
+            pm_message("Block: run of %u packed %u-byte units",
+                       runLength, pkpixsize);
 
         unpackBuf(&block[1], pkpixsize, bitsPerPixel,
                   &bytePixels, &expandedByteCount);
@@ -2156,7 +2175,9 @@ expandRun(unsigned char * const block,
         
         if (expandedByteCount * runLength > expandedSize)
             pm_error("Invalid PICT image.  It contains a row with more pixels "
-                     "than the width of the image");
+                     "than the width of the rectangle containing it, "
+                     "even padded up to a "
+                     "multiple of 16 pixels.  Use -verbose to see details.");
         
         outputCursor = 0;
         for (i = 0; i < runLength; ++i) {
@@ -2214,8 +2235,8 @@ copyPixelGroup(unsigned char * const block,
         assert((block[0] & 0x80) == 0);  /* It's not a run */
         
         if (verbose > 1)
-            pm_message("Block: %u individual pixels or plane samples",
-                       groupLen);
+            pm_message("Block: %u explicit packed %u-byte units",
+                       groupLen, pkpixsize);
         
         unpackBuf(&block[1], groupLen * pkpixsize, bitsPerPixel,
                   &bytePixels, &bytePixelLen);
@@ -2295,7 +2316,9 @@ interpretCompressedLine(unsigned char * const linebuf,
    image from which it comes is corrupt.
 -----------------------------------------------------------------------------*/
     unsigned int lineCursor;
+        /* Cursor into linebuf[] -- the compressed data */
     unsigned int rasterCursor;
+        /* Cursor into rowRaster[] -- the uncompressed data */
 
     for (lineCursor = 0, rasterCursor = 0; lineCursor < linelen; ) {
         unsigned int blockLength, rasterBytesGenerated;
@@ -2328,7 +2351,7 @@ unpackCompressedBits(FILE *          const ifP,
                      unsigned int    const rowBytes,
                      unsigned int    const bitsPerPixel) {
 /*----------------------------------------------------------------------------
-   Read the raster of on file *ifP and place it in 'raster'.
+   Read the raster on file *ifP and place it in 'raster'.
 
    The data in the file is compressed with run length encoding and
    possibly packed multiple pixels per byte as well.
@@ -2341,6 +2364,9 @@ unpackCompressedBits(FILE *          const ifP,
    *boundsP describes the rectangle.
 -----------------------------------------------------------------------------*/
     unsigned int const llsize = rowBytes > 200 ? 2 : 1;
+        /* Width in bytes of the field at the beginning of a line that tells
+           how long (in bytes) the line is.
+        */
     unsigned int rowOfRect;
     unsigned char * linebuf;
     unsigned int linebufSize;
@@ -3575,18 +3601,24 @@ do_pixmap(struct canvas * const canvasP,
 
 
 static void
-do_bitmap(struct canvas * const canvasP,
+do_bitmap(FILE *          const ifP,
+          struct canvas * const canvasP,
           int             const version, 
           int             const rowBytes, 
           int             const is_region) {
 /*----------------------------------------------------------------------------
    Do a bitmap.  That's one bit per pixel, 0 is white, 1 is black.
+
+   Read the raster from file 'ifP'.
 -----------------------------------------------------------------------------*/
     struct Rect Bounds;
     struct Rect srcRect;
     struct Rect dstRect;
     word mode;
     struct raster raster;
+        /* This raster contains padding on the right to make a multiple
+           of 16 pixels per row.
+        */
     static struct RGBColor color_table[] = { 
         {65535L, 65535L, 65535L}, {0, 0, 0} };
 
@@ -3602,7 +3634,7 @@ do_bitmap(struct canvas * const canvasP,
 
     stage = "unpacking rectangle";
 
-    unpackbits(ifp, &Bounds, rowBytes, 1, &raster);
+    unpackbits(ifP, &Bounds, rowBytes, 1, &raster);
 
     blit(srcRect, Bounds, raster, canvasP, 8,
          dstRect, picFrame, rowlen, color_table, mode);
@@ -3630,7 +3662,7 @@ BitsRect(struct canvas * const canvasP,
     if (pixMap)
         do_pixmap(canvasP, version, rowBytes, 0);
     else
-        do_bitmap(canvasP, version, rowBytes, 0);
+        do_bitmap(ifp, canvasP, version, rowBytes, 0);
 }
 
 
@@ -3653,7 +3685,7 @@ BitsRegion(struct canvas * const canvasP,
     if (pixMap)
         do_pixmap(canvasP, version, rowBytes, 1);
     else
-        do_bitmap(canvasP, version, rowBytes, 1);
+        do_bitmap(ifp, canvasP, version, rowBytes, 1);
 }
 
 
