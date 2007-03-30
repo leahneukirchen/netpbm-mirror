@@ -16,9 +16,9 @@
 #include <limits.h>
 #include <assert.h>
 
-#include "pam.h"
 #include "fileio.h"
 #include "nstring.h"
+#include "pam.h"
 
 
 static void

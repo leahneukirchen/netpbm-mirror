@@ -1012,10 +1012,9 @@ convert_scanlines(struct jpeg_compress_struct * const cinfo_p,
   }
 
   pnm_freerow(pnm_buffer);
-  /* Dont' worry about the compressor input buffer; it gets freed 
+  /* Don't worry about the compressor input buffer; it gets freed 
      automatically
   */
-
 }
 
 

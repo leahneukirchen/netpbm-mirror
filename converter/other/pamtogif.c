@@ -21,6 +21,7 @@ static unsigned int const gifMaxval = 255;
 
 static bool verbose;
 
+
 typedef int stringCode;
     /* A code to be place in the GIF raster.  It represents
        a string of one or more pixels.  You interpret this in the context
@@ -37,9 +38,6 @@ typedef int stringCode;
 
        Ergo, this data structure must be signed and at least BITS bits
        wide plus sign bit.
-
-       TODO: Some variables that should be of this type are defined as
-             "long".
     */
 
 
@@ -52,15 +50,6 @@ struct cmap {
         /* Maps a color index, as is found in the raster part of the
            GIF, to color.
         */
-    int perm[MAXCMAPSIZE], permi[MAXCMAPSIZE];
-        /* perm[i] is the position in the sorted colormap of the color which
-           is at position i in the unsorted colormap.  permi[] is the inverse
-           function of perm[].
-           
-           The sort colormap is the one that goes into the GIF.  The
-           unsorted one is the one that is hashed so we can find colors
-           in it.
-        */
     unsigned int cmapSize;
         /* Number of entries in the GIF colormap.  I.e. number of colors
            in the image, plus possibly one fake transparency color.
@@ -69,12 +58,12 @@ struct cmap {
         /* The colormap contains an entry for transparent pixels */
     unsigned int transparent;
         /* color index number in GIF palette of the color that is to
-           be transparent.  This is a post-sort index.
+           be transparent.
 
            Meaningful only if 'haveTransparent' is true.
         */
     tuplehash tuplehash;
-        /* A hash table to translate color to GIF (presort) colormap index. */
+        /* A hash table to translate color to GIF colormap index. */
 };
 
 struct cmdlineInfo {
@@ -89,22 +78,11 @@ struct cmdlineInfo {
     const char *transparent;    /* -transparent option value.  NULL if none. */
     const char *comment;        /* -comment option value; NULL if none */
     unsigned int nolzw;         /* -nolzw option */
+    float aspect;               /* -aspect option value (the ratio).  */
     unsigned int verbose;
 };
 
 
-static unsigned int
-nSignificantBits(unsigned int const arg) {
-
-    unsigned int i;
-
-    i = 0;
-   
-    while (arg >> i != 0)
-        ++i;
-
-    return i;
-}
 
 
 
@@ -147,6 +125,8 @@ parseCommandLine(int argc, char ** argv,
     optStruct3 opt;  /* set by OPTENT3 */
     unsigned int option_def_index;
 
+    unsigned int aspectSpec;
+
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
@@ -164,8 +144,10 @@ parseCommandLine(int argc, char ** argv,
             &cmdlineP->comment,        NULL, 0);
     OPTENT3(0,   "alphacolor",  OPT_STRING, 
             &cmdlineP->alphacolor,     NULL, 0);
+    OPTENT3(0,   "aspect",      OPT_FLOAT, 
+            &cmdlineP->aspect,         &aspectSpec, 0);
     OPTENT3(0,   "verbose",     OPT_FLAG, 
-            NULL,                       &cmdlineP->verbose, 0);
+            NULL,                      &cmdlineP->verbose, 0);
     
     /* Set the defaults */
     cmdlineP->mapfile = NULL;
@@ -190,6 +172,19 @@ parseCommandLine(int argc, char ** argv,
                  "specified %d", argc-1);
     else
         cmdlineP->input_filespec = argv[1];
+        
+    if (aspectSpec) { 
+        if (cmdlineP->aspect < 0.25  || cmdlineP->aspect > 4.21875)
+            pm_error("Invalid -aspect value: %f.  "
+                     "GIF allows only the range 0.25-4.0 .",
+                     cmdlineP->aspect);
+        else if (cmdlineP->aspect > 4.0)
+            pm_message("Warning: "
+                       "You specified an aspect ratio over 4.0: %f.  "
+                       "This will result in an invalid GIF.",
+                       cmdlineP->aspect);
+    } else
+        cmdlineP->aspect = 1.0;
 }
 
 
@@ -211,7 +206,7 @@ closestColor(tuple         const color,
              struct pam *  const pamP,
              struct cmap * const cmapP) {
 /*----------------------------------------------------------------------------
-   Return the pre-sort colormap index of the color in the colormap *cmapP
+   Return the colormap index of the color in the colormap *cmapP
    that is closest to the color 'color', whose format is specified by 
    *pamP.
 
@@ -450,24 +445,22 @@ gifPixel(struct pam *   const pamP,
    'alphaThreshold' is the alpha level below which we consider a
    pixel transparent for GIF purposes.
 -----------------------------------------------------------------------------*/
-    unsigned int colorIndex;
+    int colorIndex;
 
     if (alphaPlane && tuple[alphaPlane] < alphaThreshold &&
         cmapP->haveTransparent)
         colorIndex = cmapP->transparent;
     else {
-        int presortColorindex;
         int found;
 
         pnm_lookuptuple(pamP, cmapP->tuplehash, tuple,
-                        &found, &presortColorindex);
+                        &found, &colorIndex);
         
         if (!found)
-            presortColorindex = closestColor(tuple, pamP, cmapP);
-
-        colorIndex = cmapP->perm[presortColorindex];
+            colorIndex = closestColor(tuple, pamP, cmapP);
     }
-    return colorIndex;
+    assert(colorIndex >= 0);
+    return (unsigned int) colorIndex;
 }
 
 
@@ -536,8 +529,6 @@ writeCommentExtension(FILE * const ofP,
 
 #define BITS    12
 
-#define HSIZE  5003            /* 80% occupancy */
-
 /*
  *
  * GIF Image compression - modified 'compress'
@@ -560,7 +551,7 @@ static stringCode const maxCodeLimitLzw = (stringCode)1 << BITS;
 
 
 struct hashTableEntry {
-    long fcode;   /* -1 means unused slot */
+    stringCode fcode;   /* -1 means unused slot */
     unsigned int ent;
 };    
 
@@ -729,13 +720,6 @@ codeBuffer_increaseCodeSize(codeBuffer * const codeBufferP) {
     codeBufferP->maxCode = (1 << codeBufferP->nBits) - 1;
 }
 
-
-
-static unsigned long const masks[] = { 0x0000, 0x0001, 0x0003, 0x0007, 0x000F,
-                                       0x001F, 0x003F, 0x007F, 0x00FF,
-                                       0x01FF, 0x03FF, 0x07FF, 0x0FFF,
-                                       0x1FFF, 0x3FFF, 0x7FFF, 0xFFFF };
-
 static void
 codeBuffer_output(codeBuffer * const codeBufferP,
                   stringCode   const code) {
@@ -751,10 +735,10 @@ codeBuffer_output(codeBuffer * const codeBufferP,
 -----------------------------------------------------------------------------*/
     assert (code <= codeBufferP->maxCode);
 
-    codeBufferP->curAccum &= masks[codeBufferP->curBits];
+    codeBufferP->curAccum &= (1 << codeBufferP->curBits) - 1;
 
     if (codeBufferP->curBits > 0)
-        codeBufferP->curAccum |= ((long)code << codeBufferP->curBits);
+        codeBufferP->curAccum |= ((unsigned long)code << codeBufferP->curBits);
     else
         codeBufferP->curAccum = code;
 
@@ -806,6 +790,12 @@ typedef struct {
            proper data, but always using one code per pixel, and therefore
            not effecting any compression and not using the LZW patent.
         */
+    unsigned int hsize;
+        /* The number of slots in the hash table.  This variable to
+           enhance overall performance by reducing memory use when
+           encoding smaller gifs. 
+         */
+        
     unsigned int hshift;
         /* This is how many bits we shift left a string code in forming the
            primary hash of the concatenation of that string with another.
@@ -869,27 +859,81 @@ typedef struct {
 
 
 
+
+static unsigned int
+nSignificantBits( unsigned int const arg ){
+
+#if defined(__GNUC__)  && (__GNUC__ * 100 + __GNUC_MINOR__ >= 304)
+
+    return (arg == 0) ? 0 : 8 * sizeof(unsigned int) - __builtin_clz(arg);
+
+#else
+
+    unsigned int i = 0;
+    while (arg >> i != 0)
+        ++i;
+
+    return i;
+#endif
+}
+
+
+
 static lzwCompressor *
 lzw_create(FILE *       const ofP,
            unsigned int const initBits,
-           bool         const lzw) {
+           bool         const lzw,
+           unsigned int const pixelCount) {
+
+    unsigned int const hsizeTable[] = {257, 521, 1031, 2053, 4099, 5003};
+    /* If the image has 4096 or fewer pixels we use prime numbers slightly
+       above powers of two between 8 and 12.  In this case the hash table
+       never fills up; clear code is never emitted.
+    
+       Above that we use a table with 4096 slots plus 20% extra.
+       When this is not enough the clear code is emitted.
+       Due to the extra 20% the table itself never fills up.
+       
+       lzw.hsize and lzw.hshift stay constant through the image.
+
+       Variable hsize is a performance enhancement based on the fact that
+       the encoder never needs more codes than the number of pixels in
+       the image.  Typically, the ratio of pixels to codes is around
+       10:1 to 20:1.
+   
+       Logic works with fixed values lzw.hsize=5003 and t=13.
+    */
 
     lzwCompressor * lzwP;
-
+       
     MALLOCVAR_NOFAIL(lzwP);
-
-    MALLOCARRAY(lzwP->hashTable, HSIZE);
-
-    if (lzwP->hashTable == NULL)
-        pm_error("Couldn't get memory for %u-entry hash table.", HSIZE);
 
     /* Constants */
     lzwP->lzw = lzw;
-    lzwP->hshift =
-        nSignificantBits(HSIZE-1) - 1 - nSignificantBits(MAXCMAPSIZE-1);
-    lzwP->clearCode = 1 << (initBits - 1);
-    lzwP->eofCode = lzwP->clearCode + 1;
+
+    lzwP->clearCode     = 1 << (initBits - 1);
+    lzwP->eofCode       = lzwP->clearCode + 1;
     lzwP->initCodeLimit = 1 << initBits;
+
+    if (lzw) {
+        unsigned int const t =
+            MIN(13, MAX(8, nSignificantBits(pixelCount +lzwP->eofCode - 2)));
+            /* Index into hsizeTable */
+    
+        lzwP->hsize = hsizeTable[t-8];
+
+        lzwP->hshift = (t == 13 ? 12 : t) - nSignificantBits(MAXCMAPSIZE-1);
+
+        MALLOCARRAY(lzwP->hashTable, lzwP->hsize);
+        
+        if (lzwP->hashTable == NULL)
+            pm_error("Couldn't get memory for %u-entry hash table.",
+                     lzwP->hsize);
+    } else {
+        /* No LZW compression.  We don't need a stringcode hash table */  
+        lzwP->hashTable = NULL;
+        lzwP->hsize     = 0;
+    }
 
     lzwP->buildingString = FALSE;
 
@@ -919,12 +963,10 @@ lzwHashClear(lzwCompressor * const lzwP) {
 
     unsigned int i;
 
-    for (i = 0; i < HSIZE; ++i)
+    for (i = 0; i < lzwP->hsize; ++i)
         lzwP->hashTable[i].fcode = -1;
 
     lzwP->nextUnusedCode = lzwP->clearCode + 2;
-
-    
 }
 
 
@@ -1049,9 +1091,7 @@ primaryHash(stringCode   const baseString,
     assert(additionalPixel < MAXCMAPSIZE);
 
     hash = (additionalPixel << hshift) ^ baseString;
-
-    assert(hash < HSIZE);
-
+    
     return hash;
 }
 
@@ -1060,7 +1100,7 @@ primaryHash(stringCode   const baseString,
 static void
 lookupInHash(lzwCompressor *  const lzwP,
              unsigned int     const gifPixel,
-             long             const fcode,
+             stringCode       const fcode,
              bool *           const foundP,
              unsigned short * const codeP,
              unsigned int *   const hashP) {
@@ -1071,13 +1111,13 @@ lookupInHash(lzwCompressor *  const lzwP,
         /* Index into hash table */
 
     i = primaryHash(lzwP->stringSoFar, gifPixel, lzwP->hshift);
-    disp = (i == 0) ? 1 : HSIZE - i;
+    disp = (i == 0) ? 1 : lzwP->hsize - i;
 
     while (lzwP->hashTable[i].fcode != fcode &&
            lzwP->hashTable[i].fcode >= 0) {
         i -= disp;
         if (i < 0)
-            i += HSIZE;
+            i += lzwP->hsize;
     }
 
     if (lzwP->hashTable[i].fcode == fcode) {
@@ -1109,9 +1149,10 @@ lzw_encodePixel(lzwCompressor * const lzwP,
         lzwP->stringSoFar = gifPixel;
         lzwP->buildingString = TRUE;
     } else {
-        long const fcode = ((long) gifPixel << BITS) + lzwP->stringSoFar;
+        stringCode const fcode =
+            ((stringCode) gifPixel << BITS) + lzwP->stringSoFar;
             /* The encoding of the string we've already recognized plus the
-               instant pixel, to be looked up in the hash of knows strings.
+               instant pixel, to be looked up in the hash of known strings.
             */
     
         lookupInHash(lzwP, gifPixel, fcode, &found, &code, &hash);
@@ -1196,7 +1237,7 @@ writeRaster(struct pam *  const pamP,
            number of the current row.
         */
     
-    lzwP = lzw_create(ofP, initBits, lzw);
+    lzwP = lzw_create(ofP, initBits, lzw, pamP->height * pamP->width);
 
     tuplerow = pnm_allocpamrow(pamP);
 
@@ -1236,12 +1277,6 @@ writeRaster(struct pam *  const pamP,
 
 
 
-
-
-
-
-
-
 static void
 writeGlobalColorMap(FILE *              const ofP,
                     const struct cmap * const cmapP,
@@ -1272,9 +1307,9 @@ writeGlobalColorMap(FILE *              const ofP,
 
     for (i = 0; i < colorMapSize; ++i) {
         if (i < cmapP->cmapSize) {
-            tuple const color = cmapP->color[cmapP->permi[i]];
+            tuple const color = cmapP->color[i];
 
-            assert(cmapP->permi[i] < cmapP->cmapSize);
+            assert(i < cmapP->cmapSize);
 
             pnm_scaletuple(&pam, tupleRgb255, color, 255);
             pnm_maketuplergb(&pam, tupleRgb255);
@@ -1300,14 +1335,15 @@ writeGifHeader(FILE *              const ofP,
                unsigned int        const background, 
                unsigned int        const bitsPerPixel,
                const struct cmap * const cmapP,
-               char                const comment[]) {
+               char                const comment[],
+               float               const aspect) {
 
     unsigned int const resolution = bitsPerPixel;
 
     unsigned char b;
 
     /* Write the Magic header */
-    if (cmapP->haveTransparent || comment)
+    if (cmapP->haveTransparent || comment || aspect != 1.0 )
         fwrite("GIF89a", 1, 6, ofP);
     else
         fwrite("GIF87a", 1, 6, ofP);
@@ -1332,9 +1368,11 @@ writeGifHeader(FILE *              const ofP,
     assert((unsigned char)background == background);
     fputc(background, ofP);
 
-    /* Byte of 0's (future expansion) */
-    fputc(0x00, ofP);
-
+    {
+        int const aspectValue = aspect == 1.0 ? 0 : ROUND(aspect * 64) - 15;
+        assert(0 <= aspectValue && aspectValue <= 255); 
+        fputc(aspectValue, ofP);
+    }
     writeGlobalColorMap(ofP, cmapP, bitsPerPixel);
 
     if (cmapP->haveTransparent) 
@@ -1398,6 +1436,7 @@ gifEncode(struct pam *  const pamP,
           unsigned int  const bitsPerPixel,
           struct cmap * const cmapP,
           char          const comment[],
+          float         const aspect,
           bool          const lzw) {
 
     unsigned int const leftOffset = 0;
@@ -1420,13 +1459,13 @@ gifEncode(struct pam *  const pamP,
     if (pamP->width > 65535)
         pm_error("Image width %u too large for GIF format.  (Max 65535)",
                  pamP->width);
-    
+     
     if (pamP->height > 65535)
         pm_error("Image height %u too large for GIF format.  (Max 65535)",
                  pamP->height);
 
     writeGifHeader(ofP, pamP->width, pamP->height, background,
-                   bitsPerPixel, cmapP, comment);
+                   bitsPerPixel, cmapP, comment, aspect);
 
     /* Write an Image separator */
     fputc(',', ofP);
@@ -1457,7 +1496,7 @@ reportTransparent(struct cmap * const cmapP) {
 
     if (verbose) {
         if (cmapP->haveTransparent) {
-            tuple const color = cmapP->color[cmapP->permi[cmapP->transparent]];
+            tuple const color = cmapP->color[cmapP->transparent];
             pm_message("Color %u (%lu, %lu, %lu) is transparent",
                        cmapP->transparent,
                        color[PAM_RED_PLANE],
@@ -1505,7 +1544,7 @@ computeTransparent(char          const colorarg[],
         bool exact;
         tuple transcolor;
         bool found;
-        int presortColorindex;
+        int colorindex;
         
         if (colorarg[0] == '=') {
             colorspec = &colorarg[1];
@@ -1517,15 +1556,14 @@ computeTransparent(char          const colorarg[],
 
         transcolor = pnm_parsecolor(colorspec, cmapP->pam.maxval);
         pnm_lookuptuple(&cmapP->pam, cmapP->tuplehash, transcolor, &found,
-                        &presortColorindex);
+                        &colorindex);
         
         if (found) {
             cmapP->haveTransparent = TRUE;
-            cmapP->transparent = cmapP->perm[presortColorindex];
+            cmapP->transparent = colorindex;
         } else if (!exact) {
             cmapP->haveTransparent = TRUE;
-            cmapP->transparent =
-                cmapP->perm[closestColor(transcolor, &cmapP->pam, cmapP)];
+            cmapP->transparent = closestColor(transcolor, &cmapP->pam, cmapP);
         } else {
             cmapP->haveTransparent = FALSE;
             pm_message("Warning: specified transparent color "
@@ -1543,61 +1581,66 @@ computeTransparent(char          const colorarg[],
 
 
 static unsigned int
-sortOrder(tuple        const tuple,
-          struct pam * const pamP) {
-    
-    if (pamP->depth < 3)
-        return tuple[0];
-    else
-        return ((tuple[0] * MAXCMAPSIZE) + tuple[1]) * MAXCMAPSIZE + tuple[2];
+sortOrderColor(tuple const tuple) {
+
+    return ((tuple[PAM_RED_PLANE] * MAXCMAPSIZE) +
+            tuple[PAM_GRN_PLANE]) * MAXCMAPSIZE +
+           tuple[PAM_BLU_PLANE];
 }
 
 
 
+#ifndef LITERAL_FN_DEF_MATCH
+static qsort_comparison_fn sortCompareColor;
+#endif
+
+static int
+sortCompareColor(const void * const entry1P,
+                 const void * const entry2P) {
+
+    struct tupleint * const * const tupleint1PP = entry1P;
+    struct tupleint * const * const tupleint2PP = entry2P;
+
+    return (sortOrderColor((*tupleint1PP)->tuple) 
+            - sortOrderColor((*tupleint2PP)->tuple));
+}
+
+
+
+#ifndef LITERAL_FN_DEF_MATCH
+static qsort_comparison_fn sortCompareGray;
+#endif
+
+static int
+sortCompareGray(const void * const entry1P,
+                const void * const entry2P){
+
+    struct tupleint * const * const tupleint1PP = entry1P;
+    struct tupleint * const * const tupleint2PP = entry2P;
+
+    return ((*tupleint1PP)->tuple[0] - (*tupleint2PP)->tuple[0]);
+}
+
+
 
 static void
-sortColormap(bool          const sort,
-             struct cmap * const cmapP) {
+sortTupletable(struct pam * const mapPamP,
+               unsigned int const colors,
+               tupletable   const tuplefreq) {
 /*----------------------------------------------------------------------------
-   Sort (in place) the colormap *cmapP.
+   Sort the colormap *cmapP.
 
-   Create the perm[] and permi[] mappings for the colormap.
-
-   'sort' is logical:  true means to sort the colormap by red intensity,
-   then by green intensity, then by blue intensity.  False means a null
-   sort -- leave it in the same order in which we found it.
+   Sort the colormap by red intensity, then by green intensity,
+   then by blue intensity.
 -----------------------------------------------------------------------------*/
-    tuple * const color = cmapP->color;
-    int * const perm = cmapP->perm;
-    int * const permi = cmapP->permi;
-    struct pam * const pamP = &cmapP->pam;
-    unsigned int const cmapSize = cmapP->cmapSize;
-    
-    unsigned int i;
 
-    /* We will sort permi[].  So we first set up permi[] to reflect the
-       original, unsorted order.
-    */
-    for (i=0; i < cmapSize; i++)
-        permi[i] = i;
+    pm_message("sorting colormap");
 
-    if (sort) {
-        pm_message("sorting colormap");
-        for (i = 0; i < cmapSize; ++i) {
-            unsigned int j;
-            for (j = i+1; j < cmapSize; ++j) {
-                if (sortOrder(color[permi[i]], pamP) >
-                    sortOrder(color[permi[j]], pamP)) {
+    if (mapPamP->depth < 3)
+        qsort(tuplefreq, colors, sizeof(tuplefreq[0]), sortCompareGray);
+    else
+        qsort(tuplefreq, colors, sizeof(tuplefreq[0]), sortCompareColor); 
 
-                    sample tmp;
-                    
-                    tmp = permi[i]; permi[i] = permi[j]; permi[j] = tmp;
-                }
-            }
-        }
-    }
-    for (i = 0; i < cmapSize; ++i)
-        perm[permi[i]] = i;
 }
 
 
@@ -1660,7 +1703,7 @@ colormapFromFile(char               const filespec[],
 
     pm_message("computing other colormap ...");
     
-    *tupletableP =
+    *tupletableP = 
         pnm_computetuplefreqtable(mapPamP, colors, maxcolors, &colorCount);
 
     *colorCountP = colorCount;
@@ -1669,6 +1712,60 @@ colormapFromFile(char               const filespec[],
 }
 
 
+
+static void
+readAndValidateColormapFromFile(char           const filename[],
+                                unsigned int   const maxcolors,
+                                tupletable *   const tuplefreqP, 
+                                struct pam *   const mapPamP,
+                                unsigned int * const colorCountP,
+                                unsigned int   const nInputComp,
+                                sample         const inputMaxval) {
+/*----------------------------------------------------------------------------
+   Read the colormap from a separate colormap file named filename[],
+   and make sure it's consistent with an image with 'nInputComp'
+   color components (e.g. 3 for RGB) and a maxval of 'inputMaxval'.
+-----------------------------------------------------------------------------*/
+    colormapFromFile(filename, maxcolors, tuplefreqP, mapPamP, colorCountP);
+
+    if (mapPamP->depth != nInputComp)
+        pm_error("Depth of map file (%u) does not match number of "
+                 "color components in input file (%u)",
+                 mapPamP->depth, nInputComp);
+    if (mapPamP->maxval != inputMaxval)
+        pm_error("Maxval of map file (%lu) does not match maxval of "
+                 "input file (%lu)", mapPamP->maxval, inputMaxval);
+}
+
+
+
+static void
+computeColormapBw(struct pam *   const pamP,
+                  struct pam *   const mapPamP,
+                  unsigned int * const colorCountP,
+                  tupletable   * const tuplefreqP) {
+/*----------------------------------------------------------------------------
+  Shortcut for black and white (e.g. PBM).  We know that there are
+  only two colors.  Users who know that only one color is present in
+  the image should specify -sort at the command line.  Example:
+
+   $ pbmmake -w 600 400 | pamtogif -sort > canvas.gif
+-----------------------------------------------------------------------------*/
+    tupletable const colormap = pnm_alloctupletable(pamP, 2);
+    
+    *mapPamP = *pamP;
+    mapPamP->depth = 1;
+
+    colormap[0]->value = 1;
+    colormap[0]->tuple[0] = PAM_BLACK;
+    colormap[1]->value = 1;
+    colormap[1]->tuple[0] = PAM_BW_WHITE;
+    
+    *tuplefreqP  = colormap;
+    *colorCountP = 2;
+}
+  
+    
 
 static void
 computeColormapFromInput(struct pam *   const pamP,
@@ -1700,7 +1797,8 @@ computeLibnetpbmColormap(struct pam *   const pamP,
                          tuple *        const color,
                          tuplehash *    const tuplehashP,
                          struct pam *   const mapPamP,
-                         unsigned int * const colorCountP) {
+                         unsigned int * const colorCountP,
+                         bool           const sort) {
 /*----------------------------------------------------------------------------
    Compute a colormap, libnetpbm style, for the image described by
    'pamP', which is positioned to the raster.
@@ -1719,6 +1817,9 @@ computeLibnetpbmColormap(struct pam *   const pamP,
    too many, allow one slot for a fake transparency color if 'haveAlpha'
    is true.  If there are too many, issue an error message and abort the
    program.
+
+   'sort' means to sort the colormap by red intensity, then by green
+   intensity, then by blue intensity, as opposed to arbitrary order.
 -----------------------------------------------------------------------------*/
     unsigned int const maxcolors = haveAlpha ? MAXCMAPSIZE - 1 : MAXCMAPSIZE;
         /* The most colors we can tolerate in the image.  If we have
@@ -1732,19 +1833,14 @@ computeLibnetpbmColormap(struct pam *   const pamP,
     tupletable tuplefreq;
     unsigned int colorCount;
 
-    if (mapfile) {
-        /* Read the colormap from a separate colormap file. */
-        colormapFromFile(mapfile, maxcolors, &tuplefreq, mapPamP,
-                         &colorCount);
-
-        if (mapPamP->depth != nInputComp)
-            pm_error("Depth of map file (%u) does not match number of "
-                     "color components in input file (%u)",
-                      mapPamP->depth, pamP->depth);
-        if (mapPamP->maxval != pamP->maxval)
-            pm_error("Maxval of map file (%lu) does not match maxval of "
-                     "input file (%lu)", mapPamP->maxval, pamP->maxval);
-    } else
+    if (mapfile)
+        readAndValidateColormapFromFile(mapfile, maxcolors, &tuplefreq,
+                                        mapPamP, &colorCount,
+                                        nInputComp, pamP->maxval);
+    else if (nInputComp == 1 && pamP->maxval == 1 && !sort &&
+             pamP->height * pamP->width > 1)
+        computeColormapBw(pamP, mapPamP, &colorCount, &tuplefreq);
+    else
         computeColormapFromInput(pamP, maxcolors, nInputComp, 
                                  mapPamP, &colorCount, &tuplefreq);
     
@@ -1752,6 +1848,9 @@ computeLibnetpbmColormap(struct pam *   const pamP,
         pm_error("too many colors - try doing a 'pnmquant %u'", maxcolors);
 
     pm_message("%u colors found", colorCount);
+
+    if (sort)
+        sortTupletable(mapPamP, colorCount, tuplefreq);
 
     for (i = 0; i < colorCount; ++i) {
         color[i] = pnm_allocpamtuple(mapPamP);
@@ -1812,7 +1911,7 @@ main(int argc, char *argv[]) {
     
     computeLibnetpbmColormap(&pam, !!pamAlphaPlane(&pam), cmdline.mapfile, 
                              cmap.color, &cmap.tuplehash,
-                             &cmap.pam, &cmap.cmapSize);
+                             &cmap.pam, &cmap.cmapSize, cmdline.sort);
     
     assert(cmap.pam.maxval == pam.maxval);
 
@@ -1822,9 +1921,8 @@ main(int argc, char *argv[]) {
         */
         addToColormap(&cmap, cmdline.alphacolor, &fakeTransparent);
     }
-    sortColormap(cmdline.sort, &cmap);
 
-    bitsPerPixel = pm_maxvaltobits(cmap.cmapSize-1);
+    bitsPerPixel = cmap.cmapSize == 1 ? 1 : nSignificantBits(cmap.cmapSize-1);
 
     computeTransparent(cmdline.transparent,
                        !!pamAlphaPlane(&pam), fakeTransparent, &cmap);
@@ -1832,7 +1930,7 @@ main(int argc, char *argv[]) {
     /* All set, let's do it. */
     gifEncode(&pam, stdout, rasterPos,
               cmdline.interlace, 0, bitsPerPixel, &cmap, cmdline.comment,
-              !cmdline.nolzw);
+              cmdline.aspect, !cmdline.nolzw);
     
     destroyCmap(&cmap);
 
@@ -1856,6 +1954,10 @@ main(int argc, char *argv[]) {
   JPEG Group's djpeg on 2001.09.29.  In 2006.12 the output subroutines
   were rewritten; now no uncompressed output subroutines are derived from
   the Independent JPEG Group's source code.
+  
+  2007.01  Changed sort routine to qsort.  (afu)
+  2007.03  Implemented variable hash table size, PBM color table
+           shortcut and "-aspect" command line option.   (afu)
 
  
   Copyright (C) 1989 by Jef Poskanzer.
@@ -1871,3 +1973,4 @@ main(int argc, char *argv[]) {
   CompuServe Incorporated.  GIF(sm) is a Service Mark property of
   CompuServe Incorporated.
 ============================================================================*/
+

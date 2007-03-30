@@ -496,7 +496,7 @@ destroyBmepsOutputEncoder(struct bmepsoe * const bmepsoeP) {
 static void
 outputBmepsSample(struct bmepsoe * const bmepsoeP,
                   unsigned int     const sampleValue,
-          unsigned int     const bitsPerSample) {
+                  unsigned int     const bitsPerSample) {
 
     if (bitsPerSample == 8)
         oe_byte_add(bmepsoeP->oeP, sampleValue);
@@ -1300,7 +1300,7 @@ main(int argc, char * argv[]) {
     strfree(name);
 
     pm_close(ifp);
-    
+
     return 0;
 }
 

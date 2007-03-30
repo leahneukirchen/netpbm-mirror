@@ -45,6 +45,11 @@ struct sourceManager {
     */
     struct jpeg_source_mgr jpegSourceMgr;
     FILE * ifP;
+    bool prematureEof;
+        /* We have been asked for data and were unable to comply because
+           the file had no more to give (so we supplied EOI markers
+           instead).
+        */
     JOCTET * currentBuffer;
     JOCTET * nextBuffer;
     unsigned int bytesInNextBuffer;
@@ -66,6 +71,10 @@ dsInitSource(j_decompress_ptr const cinfoP) {
 
 
 
+static const JOCTET jfifEoiMarker[] = {0xff, JPEG_EOI};
+    /* An EOI (end of image) marker */
+
+
 static boolean
 dsFillInputBuffer(j_decompress_ptr const cinfoP) {
 /*----------------------------------------------------------------------------
@@ -74,9 +83,19 @@ dsFillInputBuffer(j_decompress_ptr const cinfoP) {
 -----------------------------------------------------------------------------*/
     struct sourceManager * const srcP = (struct sourceManager *) cinfoP->src;
 
-    if (srcP->bytesInNextBuffer == 0) 
-        pm_error("End-of-file encountered in the middle of JPEG image.");
-    else {
+    if (srcP->bytesInNextBuffer == 0) {
+        /* The decompressor expects more bytes, but there aren't any, so
+           the file is corrupted -- probably truncated.  We want the
+           decompressor to decompress whatever it's read so far, so we
+           synthesize an EOI marker here, but we also set error state
+           in the source manager.  The decompressor will recognize the
+           truncation and pad out the image with gray.
+        */
+        srcP->prematureEof = TRUE;
+        
+        srcP->jpegSourceMgr.next_input_byte = jfifEoiMarker;
+        srcP->jpegSourceMgr.bytes_in_buffer = sizeof(jfifEoiMarker);
+    } else {
         /* Rotate the buffers */
         srcP->jpegSourceMgr.next_input_byte = srcP->nextBuffer;
         srcP->jpegSourceMgr.bytes_in_buffer = srcP->bytesInNextBuffer;
@@ -87,7 +106,7 @@ dsFillInputBuffer(j_decompress_ptr const cinfoP) {
             srcP->currentBuffer = tmp;
         }
 
-        /* Fill the new 'next' buffer */
+        /* Fill the new "next" buffer */
         srcP->bytesInNextBuffer = 
             fread(srcP->nextBuffer, 1, BUFFER_SIZE, srcP->ifP);
     }
@@ -139,6 +158,14 @@ dsDataLeft(struct sourceManager * const srcP) {
 
 
 
+bool
+dsPrematureEof(struct sourceManager * const srcP) {
+
+    return srcP->prematureEof;
+}
+
+
+
 struct sourceManager * 
 dsCreateSource(const char * const fileName) {
 
@@ -156,6 +183,7 @@ dsCreateSource(const char * const fileName) {
     srcP->jpegSourceMgr.resync_to_restart = jpeg_resync_to_restart;
     srcP->jpegSourceMgr.term_source = dsTermSource;
     
+    srcP->prematureEof = FALSE;
     srcP->currentBuffer = srcP->buffer1;
     srcP->nextBuffer = srcP->buffer2;
     srcP->jpegSourceMgr.bytes_in_buffer = 

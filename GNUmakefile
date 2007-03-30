@@ -174,7 +174,7 @@ package: build_complete package_build advise_installnetpbm
 
 build_complete:
 # The regular build creates this file as its last act, so if it doesn't exist,
-# that means either the user skipping the build step, or the build failed.
+# that means either the user skipped the build step, or the build failed.
 	@echo "You must build Netpbm before you can package Netpbm. "
 	@echo "The usual way to do this is to type 'make' with no arguments."
 	@echo "If you did that, then the build apparently failed.  There "

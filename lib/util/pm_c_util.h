@@ -15,6 +15,14 @@
 #define ROUND(X) (((X) >= 0) ? (int)((X)+0.5) : (int)((X)-0.5))
 #undef ROUNDU
 #define ROUNDU(X) ((unsigned int)((X)+0.5))
+
+/* ROUNDUP rounds up to a specified multiple.  E.g. ROUNDUP(22, 8) == 24 */
+
+#undef ROUNDUP
+#define ROUNDUP(X,M) (((X)+(M)-1)/(M)*(M))
+#undef ROUNDDN
+#define ROUNDDN(X,M) ((X)/(M)*(M))
+
 #undef SQR
 #define SQR(a) ((a)*(a))
 

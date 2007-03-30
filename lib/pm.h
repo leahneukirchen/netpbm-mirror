@@ -345,6 +345,11 @@ pm_check(FILE *               const file,
          pm_filepos           const need_raster_size,
          enum pm_check_code * const retval_p);
 
+void
+pm_drain(FILE *         const fileP,
+         unsigned int   const limit,
+         unsigned int * const bytesReadP);
+
 char *
 pm_arg0toprogname(const char arg0[]);
 

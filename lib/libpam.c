@@ -687,10 +687,10 @@ pnm_readpaminitrestaspnm(FILE * const fileP,
 -----------------------------------------------------------------------------*/
     struct pam pam;
 
-    pam.size        = sizeof(struct pam);
-    pam.file        = fileP;
-    pam.len         = PAM_STRUCT_SIZE(tuple_type);
-    pam.format      = PAM_FORMAT;
+    pam.size   = sizeof(struct pam);
+    pam.file   = fileP;
+    pam.len    = PAM_STRUCT_SIZE(tuple_type);
+    pam.format = PAM_FORMAT;
 
     readpaminitrest(&pam);
 
@@ -792,7 +792,8 @@ pnm_readpaminit(FILE *       const file,
         break;
         
     default:
-        pm_error("bad magic number - not a PAM, PPM, PGM, or PBM file");
+        pm_error("bad magic number 0x%x - not a PAM, PPM, PGM, or PBM file",
+                 pamP->format);
     }
     
     pamP->bytes_per_sample = pnm_bytespersample(pamP->maxval);

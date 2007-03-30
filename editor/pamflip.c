@@ -171,7 +171,7 @@ parseCommandLine(int argc, char ** const argv,
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
 -----------------------------------------------------------------------------*/
-    optEntry *option_def = malloc(100*sizeof(optEntry));
+    optEntry * option_def;
         /* Instructions to OptParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
@@ -182,6 +182,8 @@ parseCommandLine(int argc, char ** const argv,
     unsigned int memsizeSpec, pagesizeSpec, xformSpec;
     unsigned int memsizeOpt;
     const char *xformOpt;
+
+    MALLOCARRAY(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENTRY */
     OPTENT3(0, "lr",        OPT_FLAG,    NULL, &lr,      0);
@@ -860,7 +862,7 @@ main(int argc, char * argv[]) {
     struct cmdlineInfo cmdline;
     struct pam inpam;
     struct pam outpam;
-    FILE* ifP;
+    FILE * ifP;
     struct xformMatrix xform;
 
     pnm_init(&argc, argv);

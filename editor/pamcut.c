@@ -94,8 +94,10 @@ parseCommandLine(int argc, char ** const argv,
         pm_error("-height may not be negative.");
 
     if ((argc-1) != 0 && (argc-1) != 1 && (argc-1) != 4 && (argc-1) != 5)
-        pm_error("Wrong number of arguments.  "
-                 "Must be 0, 1, 4, or 5 arguments.");
+        pm_error("Wrong number of arguments: %u.  The only argument in "
+                 "the preferred syntax is an optional input file name.  "
+                 "In older syntax, there are also forms with 4 and 5 "
+                 "arguments.", argc-1);
 
     switch (argc-1) {
     case 0:
