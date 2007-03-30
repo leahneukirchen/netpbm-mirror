@@ -4,28 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-not yet  BJH  Release 10.38.0
+07.03.30 BJH  Release 10.38.0
     
-              xwdtopnm: fix right edge padding for 24 bit per pixel,
-              32 bit per item images.
-
-              xwdtopnm: update assumptions about format for direct color
-              images to match an image we found.
-
-              xwdtopnm: use pm_drain() to catch some format
-              misinterpretations.
-
-              pamtogif: Speed up for monochrome images.  Thanks
-              Prophet of the Way <afu@wta.att.ne.jp>.
-
-              pamtogif: Speed up for small images by using smaller
-              hash table (so smaller memory footprint).  Thanks
-              Prophet of the Way <afu@wta.att.ne.jp>.
+              Add pamfixtrunc.
 
               pamtogif: Add -aspect.  Thanks
               Prophet of the Way <afu@wta.att.ne.jp>.
-
-              Add pamfixtrunc.
 
               pamditherbw: Add -atkinson.
 
@@ -47,6 +31,16 @@ not yet  BJH  Release 10.38.0
 
               giftopnm: Add -repair option.
 
+              xwdtopnm: use pm_drain() to catch some format
+              misinterpretations.
+
+              pamtogif: Speed up for monochrome images.  Thanks
+              Prophet of the Way <afu@wta.att.ne.jp>.
+
+              pamtogif: Speed up for small images by using smaller
+              hash table (so smaller memory footprint).  Thanks
+              Prophet of the Way <afu@wta.att.ne.jp>.
+
               libnetpbm: add pm_drain().
               
               libnetpbm: shhopt: reject signed number as value for
@@ -59,6 +53,12 @@ not yet  BJH  Release 10.38.0
 
               pnmremap: fix incorrect output with map file deeper than
               input file.
+
+              xwdtopnm: fix right edge padding for 24 bit per pixel,
+              32 bit per item images.
+
+              xwdtopnm: update assumptions about format for direct color
+              images to match an image we found.
 
               pnmtopclxl: fix -feeder, -outtray options.  Thanks
               "Eric K. Olson" <olson@mauicomputing.com>.
