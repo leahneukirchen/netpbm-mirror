@@ -2,12 +2,18 @@
 
    Pamtogif replaced Ppmtogif in Netpbm 10.37 (December 2006).
 
-   The only significant way Pamtogif is not backward compatible with
-   old Ppmtogif is that Pamtogif does not have a -alpha option.
+   The only significant ways Pamtogif are not backward compatible with
+   old Ppmtogif are:
+
+     - Pamtogif does not have a -alpha option.
+
+     - Pamtogif requires a user-specififed map file (-mapfile) to
+       match the input in depth.
 */
 #define _BSD_SOURCE   /* Make sure strdup() is in string.h */
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 
+#include <assert.h>
 #include <string.h>
 #include <stdio.h>
 #include <sys/stat.h>
@@ -42,7 +48,7 @@ struct cmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *input_filespec; /* Filespec of input file */
+    const char *inputFileName;  /* Name of input file */
     const char *alpha_filespec; /* Filespec of alpha file; NULL if none */
     const char *alphacolor;     /* -alphacolor option value or default */
     unsigned int interlace;     /* -interlace option value */
@@ -146,15 +152,52 @@ parseCommandLine(int argc, char ** argv,
         handleLatex2htmlHack();
 
     if (argc-1 == 0) 
-        cmdlineP->input_filespec = "-";
+        cmdlineP->inputFileName = "-";
     else if (argc-1 != 1)
         pm_error("Program takes zero or one argument (filename).  You "
                  "specified %d", argc-1);
     else
-        cmdlineP->input_filespec = argv[1];
+        cmdlineP->inputFileName = argv[1];
 
     if (cmdlineP->alpha_filespec && cmdlineP->transparent)
         pm_error("You cannot specify both -alpha and -transparent.");
+}
+
+
+
+static void
+openPnmremapStream(const char * const inputFileName,
+                   const char * const mapFileName,
+                   bool         const verbose,
+                   FILE **      const pnmremapPipeP) {
+/*----------------------------------------------------------------------------
+   Create a process to run the image in file inputFileName[] through
+   Pnmremap, remapping it to the colors in mapFileName[].  Have it
+   write its output to a pipe and return as *pnmremapPipeP the other
+   end of that pipe.
+-----------------------------------------------------------------------------*/
+    FILE * pnmremapPipe;
+    const char * pnmremapCommand;
+
+    assert(inputFileName != NULL);
+    assert(mapFileName != NULL);
+
+    asprintfN(&pnmremapCommand, "pnmremap -mapfile='%s' %s",
+              mapFileName, inputFileName);
+
+    if (verbose)
+        pm_message("Preprocessing Pamtogif input with shell command '%s'",
+                   pnmremapCommand);
+
+    pnmremapPipe = popen(pnmremapCommand, "r");
+
+    if (pnmremapPipe == NULL)
+        pm_error("Shell command '%s', via popen(), to prepare the input "
+                 "for Pamtogif, failed.", pnmremapCommand);
+    else
+        *pnmremapPipeP = pnmremapPipe;
+
+    strfree(pnmremapCommand);
 }
 
 
@@ -168,7 +211,6 @@ pamtogifCommand(const char *       const arg0,
     const char * retval;
 
     const char * commandVerb;
-    const char * mapfileOpt;
     const char * transparentOpt;
     const char * commentOpt;
 
@@ -189,11 +231,6 @@ pamtogifCommand(const char *       const arg0,
     } else
         commandVerb = strdup(pamtogifName);
 
-    if (cmdline.mapfile)
-        asprintfN(&mapfileOpt, "-mapfile=%s", cmdline.mapfile);
-    else
-        mapfileOpt = strdup("");
-
     if (cmdline.transparent)
         asprintfN(&transparentOpt, "-transparent=%s", cmdline.transparent);
     else
@@ -204,18 +241,16 @@ pamtogifCommand(const char *       const arg0,
     else
         commentOpt = strdup("");
 
-    asprintfN(&retval, "%s - -alphacolor=%s %s %s %s %s %s %s %s",
+    asprintfN(&retval, "%s - -alphacolor=%s %s %s %s %s %s %s",
               commandVerb,
               cmdline.alphacolor,
               cmdline.interlace ? "-interlace" : "",
               cmdline.sort ? "-sort" : "",
-              mapfileOpt,
               transparentOpt,
               commentOpt,
               cmdline.nolzw ? "-nolzw" : "",
               cmdline.verbose ? "-verbose" : "");
     
-    strfree(mapfileOpt);
     strfree(transparentOpt);
     strfree(commentOpt);
 
@@ -352,6 +387,12 @@ main(int    argc,
 
     parseCommandLine(argc, argv, &cmdline);
 
+    if (cmdline.mapfile)
+        openPnmremapStream(cmdline.inputFileName, cmdline.mapfile,
+                           cmdline.verbose, &ifP);
+    else
+        ifP = pm_openr(cmdline.inputFileName);
+        
     command = pamtogifCommand(argv[0], cmdline);
 
     if (cmdline.verbose)
@@ -362,7 +403,6 @@ main(int    argc,
     if (pipeToPamtogif == NULL)
         pm_error("Shell command '%s', via popen(), failed.", command);
 
-    ifP = pm_openr(cmdline.input_filespec);
     pnm_readpaminit(ifP, &inPam, PAM_STRUCT_SIZE(allocation_depth));
 
     feedPamtogif(&inPam, cmdline.alpha_filespec, pipeToPamtogif);

@@ -4,6 +4,20 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+not yet  BJH  Release 10.37.06
+
+              ppmtogif: handle case that map file and input file are not
+              the same depth, as was the case with the original ppmtogif.
+              Run the input through pnmremap.
+
+              picttoppm: Fix wild memory reference in all use cases.
+
+              picttoppm: Fix for multi-pixel-per-byte image in which
+              it says the image has a row that is too long (because of
+              padding).
+
+              configure: fix choice of default library suffix.
+
 07.03.23 BJH  Release 10.37.05
 
               pnmremap: fix incorrect output with map file deeper than
