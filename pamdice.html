@@ -2,17 +2,27 @@
 <HTML><HEAD><TITLE>Pamdice User Manual</TITLE></HEAD>
 <BODY>
 <H1>pamdice</H1>
-Updated: 29 July 2005
+Updated: 1 April 2007
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
 pamdice - slice a Netpbm image into many horizontally and/or vertically
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<h2 id="example">EXAMPLE</h2>
+
+<pre>
+<kbd>
+    $ pamdice myimage.ppm -outstem=myimage_part -width=10 -height=8
+    $ pamundice myimage_part_%1d_%1a.ppm -across=10 -down=8 &gt;myimage.ppm
+
+    $ pamdice myimage.ppm -outstem=myimage_part -height=12 -voverlap=9
+</kbd>
+</pre>
+
+
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>pamdice</B>
 
@@ -34,8 +44,7 @@ pamdice - slice a Netpbm image into many horizontally and/or vertically
 two hyphens instead of one.  You can separate an option name from its value
 with white space instead of an equals sign.
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -50,7 +59,8 @@ output files.
 <P>The <B>-width</B> and <B>-height</B> options determine the size of
 the output pieces.
 
-<P><B>pnmcat</B> can rejoin the images.
+<p><b>pamundice</b> can rejoin the images.  For finer control, you can
+also use <P><B>pnmcat</B>.
 
 <p>One use for this is to make pieces that take less computer resources
 than the whole image to process.  For example, you might have an image
@@ -62,8 +72,11 @@ edit one a time, and then reassemble them.
 pieces that you can glue together.  <b>ppmglobe</b> does a similar thing;
 it lets you glue the pieces together into a sphere.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<p>If you want to cut pieces from an image individually, not in a regular
+grid, use <b>pamcut</b>.
+
+
+<H2 id="options">OPTIONS</H2>
 
 <DL COMPACT>
 <DT><B>-outstem=</B>filenamestem
@@ -116,9 +129,9 @@ pixels.  By default, there is no overlap.
 <p>Before Netpbm 10.29 (August 2005), there was a limit of 100 slices
 in each direction.
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
+<B><A HREF="pamundice.html">pamundice</A></B>,
 <B><A HREF="pamcut.html">pamcut</A></B>,
 <B><A HREF="pnmcat.html">pnmcat</A></B>,
 <B><A HREF="pgmslice.html">pgmslice</A></B>,
@@ -127,15 +140,14 @@ in each direction.
 <B><A HREF="pam.html">pnm</A></B>
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
+<LI><A HREF="#example">EXAMPLE</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
 <LI><A HREF="#history">HISTORY</A>
-<LI><A HREF="#lbAF">SEE ALSO</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
 </UL>
 </BODY>
 </HTML>
