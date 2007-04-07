@@ -13,6 +13,17 @@
   By Bryan Henderson, San Jose, California.  May 2006
 
   Contributed to the public domain.
+
+==============================================================================
+
+  Implementation notes:
+
+   We've seen a version of <libxml/xmlreader.h> that does not
+   define type 'xmlReaderTypes'.  The system claimed to have
+   Libxml2 2.6.16 installed, but another system that makes that
+   claim _does_ have 'xmlReaderTypes' defined, so I don't know what
+   version actually has the problem.
+
 ============================================================================*/
 
 #include <assert.h>
@@ -560,6 +571,8 @@ getPathAttributes(xmlTextReaderPtr const xmlReaderP,
 static void
 processSubPathNode(xmlTextReaderPtr const xmlReaderP,
                    bool *           const endOfPathP) {
+
+    /* See comment above about xmlReaderTypes not being defined */
 
     xmlReaderTypes const nodeType  = xmlTextReaderNodeType(xmlReaderP);
 
