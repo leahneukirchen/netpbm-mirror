@@ -1574,6 +1574,8 @@ allocPlanes(struct rgbPlanes * const planesP) {
     memset(planes.grn, 255, planelen * sizeof(word));
     memset(planes.blu, 255, planelen * sizeof(word));
 
+    *planesP = planes;
+
     /* Until we wean this program off of global variables, we have to
        set these:
     */
@@ -2170,15 +2172,11 @@ copyPixelGroup(unsigned char * const block,
         unpackBuf(&block[1], groupLen * pkpixsize, bitsPerPixel,
                   &bytePixels, &bytePixelLen);
         
-        if (bytePixelLen > destSize)
-            pm_error("Invalid PICT image.  It contains a row with more pixels "
-                     "than the width of the image");
-        
-        for (i = 0; i < bytePixelLen; ++i)
+        for (i = 0; i < MIN(bytePixelLen, destSize); ++i)
             dest[i] = bytePixels[i];
         
         *blockLengthP = blockLength;
-        *rasterBytesGeneratedP = bytePixelLen;
+        *rasterBytesGeneratedP = MIN(bytePixelLen, destSize);
     }
 }
 

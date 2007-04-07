@@ -584,9 +584,11 @@ sub libSuffix($) {
 #-----------------------------------------------------------------------------
     my $suffix;
 
-    if ($platform eq 'windows') {
+    if ($platform eq 'WINDOWS') {
+        $suffix = '.dll';
+    } elsif ($platform eq 'AIX') {
         $suffix = '.a';
-    } elsif ($platform eq 'darwin') {
+    } elsif ($platform eq 'DARWIN') {
         $suffix = '.dylib';
     } else {
         $suffix = '.so';

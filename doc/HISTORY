@@ -4,6 +4,16 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+07.04.07 BJH  Release 10.35.26
+
+              picttoppm: Fix wild memory reference in all use cases.
+
+              picttoppm: Fix for multi-pixel-per-byte image in which
+              it says the image has a row that is too long (because of
+              padding).
+
+              configure: fix choice of default library suffix.
+
 07.03.23 BJH  Release 10.35.25
 
               pnmremap: fix incorrect output with map file deeper than
