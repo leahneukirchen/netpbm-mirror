@@ -42,6 +42,18 @@ my ($TRUE, $FALSE) = (1,0);
 
 my $testCc;
 
+##############################################################################
+#
+#  Implementation note:
+#
+#  At one time, we thought we had to add /usr/local/lib and /usr/local/include
+#  to the path on some platforms because they needed it and didn't include
+#  it in the default compiler search path.  But then we had reason to doubt
+#  that was really required, so removed the function on 04.03.15 and never
+#  had any complaint in the next 3 years.
+##############################################################################
+
+
 #******************************************************************************
 #
 #  SUBROUTINES
@@ -167,8 +179,7 @@ sub chooseTestCompiler($$) {
 
 
 
-sub testCflags($) {
-    my ($needLocal) = @_;
+sub testCflags() {
 
     my $cflags;
 
@@ -184,9 +195,6 @@ sub testCflags($) {
         $cflags .= " " . $ENV{"CFLAGS"};
     }
     
-    if ($needLocal) {
-        $cflags .= " -I/usr/local/include";
-    }
     return $cflags;
 }    
 
@@ -724,7 +732,7 @@ sub inttypesDefault() {
         print("(Doing test compiles to choose a default for you -- " .
               "ignore errors)\n");
 
-        my $cflags = testCflags($FALSE);
+        my $cflags = testCflags();
 
         my $works;
 
@@ -814,7 +822,7 @@ sub getInt64($$) {
         print("(Doing test compiles to determine if you have int64 type -- " .
               "ignore errors)\n");
 
-        my $cflags = testCflags($FALSE);
+        my $cflags = testCflags();
 
         my $works;
 
@@ -1225,49 +1233,13 @@ sub gnuOptimizeOpt($) {
 
 
 
-sub needLocal($) {
-#-----------------------------------------------------------------------------
-#  Return wether or not /usr/local paths must be added to compiles and
-#  links.  In a properly configured system, those paths should be in
-#  the compiler and linker default search paths, e.g. the compiler
-#  should search /usr/local/include and then /usr/include without any
-#  -I options needed.  But we've seen some systems where it isn't.
-#
-#  Actually, I have doubts now as to whether these misconfigured systems
-#  really exist.  This subroutine was apparently always broken, because
-#  before 04.03.15, it had "netbsd", etc. in lower case.  So it always
-#  returned false.  I never had a complaint.  Plus, we had a bug in 
-#  Makefile.config.in wherein it wiped out the user's setting of the LDFLAGS
-#  environment variable.  This could explain /usr/local/lib not being in
-#  the path when it should have been.
-#
-#  So I've disabled this function; we'll see if we encounter any truly
-#  misconfigured systems.  04.03.15.
-#-----------------------------------------------------------------------------
-    my ($platform) = @_;
-
-    return $FALSE;  # See comments above.
-
-    my $needLocal;
-    
-    if ($platform eq "NETBSD" || $platform eq "OPENBSD" || 
-        $platform eq "FREEBSD") {
-        $needLocal = $TRUE;
-    } else {
-        $needLocal = $FALSE;
-    }
-    return $needLocal;
-}
-
-
-
 sub findProcessManagement($) {
     my ($dontHaveProcessMgmtR) = @_;
 #-----------------------------------------------------------------------------
 #  Return $TRUE iff the system does not have <sys/wait.h> in its default
 #  search path.
 #-----------------------------------------------------------------------------
-    my $cflags = testCflags($FALSE);
+    my $cflags = testCflags();
 
     my @cSourceCode = (
                        "#include <sys/wait.h>\n",
@@ -1404,13 +1376,13 @@ sub printOldJpegWarning() {
 
 
 
-sub testJpegHdr($$) {
+sub testJpegHdr($) {
 
-    my ($needLocal, $jpeghdr_dir) = @_;
+    my ($jpeghdr_dir) = @_;
 
     if (defined($testCc)) {
 
-        my $generalCflags = testCflags($needLocal);
+        my $generalCflags = testCflags();
 
         my $jpegIOpt = $jpeghdr_dir ? "-I$jpeghdr_dir" : "";
 
@@ -1463,15 +1435,15 @@ sub testCompilePngH($$) {
 
 
 
-sub testPngHdr($$$) {
+sub testPngHdr($$) {
 #-----------------------------------------------------------------------------
 #  Issue a warning if the compiler can't find png.h.
 #-----------------------------------------------------------------------------
-    my ($needLocal, $pnghdr_dir, $zhdr_dir) = @_;
+    my ($pnghdr_dir, $zhdr_dir) = @_;
 
     if (defined($testCc)) {
 
-        my $generalCflags = testCflags($needLocal);
+        my $generalCflags = testCflags();
 
         my $zlibIOpt = $zhdr_dir ? "-I$zhdr_dir" : "";
 
@@ -1491,6 +1463,42 @@ sub testPngHdr($$$) {
             }
         }
     }
+}
+
+
+
+sub printBadPngConfigLdflagsWarning($) {
+    my ($pngLdFlags) = @_;
+
+    print << 'EOF';
+WARNING: 'libpng-config' in this environment (a program in your PATH)
+gives instructions that don't work for linking with the PNG library.
+Our test link failed.
+
+This indicates Libpng is installed incorrectly on this system.  If so,
+your Netpbm build, which uses 'libpng-config', will fail.  But it
+might also just be our test that is broken.
+
+EOF
+
+}
+
+
+
+sub printBadPngConfigCFlagsWarning($) {
+    my ($pngCFlags) = @_;
+
+    print << 'EOF';
+WARNING: 'libpng-config' in this environment (a program in your PATH)
+gives instructions that don't work for compiling for the PNG library.
+Our test compile failed.
+
+This indicates Libpng is installed incorrectly on this system.  If so,
+your Netpbm build, which uses 'libpng-config', will fail.  But it
+might also just be our test that is broken.
+
+EOF
+
 }
 
 
@@ -1523,13 +1531,12 @@ sub testLinkPnglib($$) {
 
 
 
-sub testLibpngConfig($) {
-    my ($needLocal) = @_;
+sub testLibpngConfig() {
 #-----------------------------------------------------------------------------
 #  Issue a warning if the instructions 'libpng-config' give for compiling
 #  with Libpng don't work.
 #-----------------------------------------------------------------------------
-    my $generalCflags = testCflags($needLocal);
+    my $generalCflags = testCflags();
 
     my $pngCflags = qx{libpng-config --cflags};
     chomp($pngCflags);
@@ -1545,19 +1552,126 @@ sub testLibpngConfig($) {
 
 
 
-sub testConfiguration($$$$$$$) {
+sub testCompileXmlreaderH($$) {
+    my ($cflags, $successR) = @_;
+#-----------------------------------------------------------------------------
+#  Do a test compile to see if we can see xmlreader.h.
+#-----------------------------------------------------------------------------
+    my @cSourceCode = (
+                       "#include <libxml/xmlreader.h>\n",
+                       );
+    
+    testCompile($cflags, \@cSourceCode, $successR);
+}
 
-    my ($needLocal, $jpeglib, $jpeghdr_dir,
+
+
+sub printBadXml2CFlagsWarning($) {
+    my ($xml2CFlags) = @_;
+
+    print << 'EOF';
+
+WARNING: 'xml2-config' in this environment (a program in your PATH)
+gives instructions that don't work for compiling for the Libxml2 library.
+Our test compile failed.
+
+This indicates Libxml2 is installed incorrectly on this system.  If so,
+your Netpbm build, which uses 'xml2-config', will fail.  But it
+might also just be our test that is broken.
+
+EOF
+
+}
+
+
+
+sub testCompileXmlReaderTypes($$) {
+    my ($cflags, $successR) = @_;
+#-----------------------------------------------------------------------------
+#  Do a test compile to see if xmlreader.h defines xmlReaderTypes,
+#  assuming we can compile with xmlreader.h in general.
+#-----------------------------------------------------------------------------
+    my @cSourceCode = (
+                       "#include <libxml/xmlreader.h>\n",
+                       "xmlReaderTypes dummy;\n",
+                       );
+    
+    testCompile($cflags, \@cSourceCode, $successR);
+}
+
+
+
+sub printBadXml2XmlReaderTypesWarning($) {
+
+    print << 'EOF';
+
+WARNING: Your libxml2 interface header file does not define the type
+'xmlReaderTypes', which Netpbm needs.  In order to build Netpbm successfully,
+you must install a more recent version of Libxml2.
+
+EOF
+}
+
+
+
+sub printNoLibxml2Warning() {
+
+    print << 'EOF';
+
+WARNING: You appear not to have Libxml2 installed ('xml2-config' does not
+exist in your program search PATH).  If this is the case at build time,
+the build will skip building 'svtgtopam'.
+
+EOF
+}
+
+
+
+sub testLibxml2Hdr() {
+#-----------------------------------------------------------------------------
+#  Issue a warning if the instructions 'xml2-config' give for compiling
+#  with Libxml2 don't work.  In particular, note whether they get us a
+#  modern enough Libxml2 to have the 'xmlReaderTypes' type.
+#-----------------------------------------------------------------------------
+    if (commandExists('xml2-config')) {
+        my $generalCflags = testCflags();
+
+        my $xml2Cflags = qx{xml2-config --cflags};
+        chomp($xml2Cflags);
+
+        testCompileXmlreaderH("$generalCflags $xml2Cflags", \my $success);
+
+        if (!$success) {
+            printBadXml2CflagsWarning($xml2Cflags);
+        } else {
+            testCompileXmlReaderTypes("$generalCflags $xml2Cflags",
+                                      \my $success);
+
+            if (!$success) {
+                printMissingXmlReaderTypesWarning();
+            }
+        }
+    } else {
+        printNoLibxml2Warning();
+    }
+}
+
+
+
+sub testConfiguration($$$$$$) {
+
+    my ($jpeglib, $jpeghdr_dir,
         $pnglib, $pnghdr_dir, $zlib, $zhdr_dir) = @_;
 
     if (defined($jpeglib)) {
-        testJpegHdr($needLocal, $jpeghdr_dir);
+        testJpegHdr($jpeghdr_dir);
     }
     if (defined($pnglib) && defined($zlib)) {
-        testPngHdr($needLocal, $pnghdr_dir, $zhdr_dir);
+        testPngHdr($pnghdr_dir, $zhdr_dir);
     } elsif (commandExists('libpng-config')) {
-        testLibpngConfig($needLocal);
+        testLibpngConfig();
     }
+    testLibxml2Hdr();
 
     # TODO: We ought to validate other libraries too.  But it's not
     # that important, because in the vast majority of cases where the
@@ -1771,8 +1885,7 @@ validateLibraries($jpeglib, $tifflib, $pnglib, $zlib);
 
 warnJpegTiffDependency($jpeglib, $tifflib);
 
-testConfiguration(needLocal($platform), 
-                  $jpeglib, $jpeghdr_dir,
+testConfiguration($jpeglib, $jpeghdr_dir,
                   $pnglib, $pnghdr_dir,
                   $zlib, $zhdr_dir,
                   );
@@ -2034,11 +2147,6 @@ if ($platform eq "GNU") {
 #    push(@Makefile_config, "INSTALL = install\n");
 } else {
     die ("Internal error: invalid value for \$platform: '$platform'\n");
-}
-
-if (needLocal($platform)) {
-    push(@Makefile_config, "CFLAGS += -I/usr/local/include\n");
-    push(@Makefile_config, "LDFLAGS += -L/usr/local/lib\n");
 }
 
 if ($linkViaCompiler) {
