@@ -3,16 +3,14 @@
 <HEAD><TITLE>Pamarith User Manual</TITLE></HEAD>
 <BODY>
 <H1>pamarith</H1>
-Updated: 08 October 2005
+Updated: 08 April 2007
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 pamarith - perform arithmetic on two Netpbm images
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>pamarith</B>
 <B>-add</B> | <B>-subtract</B> | <B>-multiply</B> | <b>-divide</b> |
@@ -26,8 +24,7 @@ pamarith - perform arithmetic on two Netpbm images
 You may use two hyphens instead of one.  You may separate an option
 name and its value with white space instead of an equals sign.
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -102,6 +99,10 @@ the output sample value is 160.
 <P>For these functions, <b>pamarith</b> makes the output image's
 maxval the maximum of the two input maxvals, except with
 <b>-compare</b>, where <b>pamarith</b> uses an output maxval of 2.
+(Before Netpbm 10.14 (February 2003), there was no exception for
+<b>-compare</b>; in 10.14, the exception was just that the maxval
+was <em>at least</em> 2, and sometime between then and 10.26 (January
+2005), it changed to being exactly 2).
 
 <p>If the result of a calculation falls outside the range [0, 1),
 <b>pamarith</b> clips it -- i.e.  considers it to be zero or 1-.
@@ -195,8 +196,7 @@ the width of the frame within which you are shifting.
 <P>If you want to apply a unary function, e.g. "halve", to a single
 image, use <b>pamfunc</b>.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <A HREF="pamfunc.html"><b>pamfunc</b></A>,
 <A HREF="pamsummcol.html"><b>pamsummcol</b></A>,
@@ -211,8 +211,7 @@ image, use <b>pamfunc</b>.
 <A HREF="pam.html">pam</A>
 
 
-<A NAME="history"></A>
-<H2>HISTORY</h2>
+<H2 id="history">HISTORY</h2>
 
 <p><b>pamarith</b> replaced <b>pnmarith</b> in Netpbm 10.3 (June 2002).
 
@@ -236,18 +235,16 @@ that made it backward compatible with <b>pnmarith</b>.
 <P>The <b>-divide</b> option was added in Netpbm 10.30 (October 2005).
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
 <LI><A HREF="#maxval">MAXVAL</A>
 <LI><A HREF="#operations">THE OPERATIONS</A>
 <LI><A HREF="#notes">NOTES</A>
 <LI><A HREF="#history">HISTORY</A>
-<LI><A HREF="#lbAE">SEE ALSO</A>
-<LI><A HREF="#lbAF">AUTHOR</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
 </UL>
 </BODY>
 </HTML>

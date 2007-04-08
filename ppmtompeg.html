@@ -50,13 +50,13 @@ below.
 
 <P>To understand this program, you need to understand something about
 the complex MPEG-1 format.  One source of information about this
-standard format is the section Introduction to MPEG in the<a
+standard format is the section Introduction to MPEG in the <a
 href="http://www.faqs.org/faqs/compression-faq">Compression FAQ</a>.
 
 <H2 id="options">OPTIONS</H2>
 
 <p>The <b>-gop</b>, <b>-combine_gops</b>, <b>-frames</b>, and
-<b>-combine_frames</b> options are all exclusive.
+<b>-combine_frames</b> options are all mutually exclusive.
 
 <DL COMPACT>
 <DT><B>-stat stat_file</B>
@@ -251,7 +251,7 @@ system file tree.
 <p>To have <b>ppmtompeg</b> read all the frames serially from Standard 
 Input, specify
 <pre>
-  INPUT_DIR stdin
+    INPUT_DIR stdin
 </pre>
 
 <DT><B>INPUT</b>
@@ -280,13 +280,13 @@ line <b>football.*.ppm [001-130+4]</b> refers to the files
 football.001.ppm, football.005.ppm, football.009.ppm,
 football.013.ppm, etc.
 
-<p>Furthermore, a line may specify a shell command to execute to generate
-lines to be interpreted as described above, as if those lines were in the
-parameter file instead.  Use back ticks, like in the
+<p>Furthermore, a line may specify a shell command to execute to
+generate lines to be interpreted as described above, as if those lines
+were in the parameter file instead.  Use back ticks, like in the
 Bourne Shell, like this:
 
 <pre>
-  `cat myfilelist`
+    `cat myfilelist`
 </pre>
 
 <p>
@@ -1075,8 +1075,8 @@ summary="Comparison of I/P/B Frames">
 <p>Select the sequence with the <B>PATTERN</B> parameter file statement.
 
 <p>Since the last MPEG frame cannot be a B frame (see above), if the
-pattern you specify indicates B frames for the last movie frames,
-<b>ppmtompeg</b> makes it an I frame instead.
+pattern you specify indicates a B frame for the last movie frame of
+the movie, <b>ppmtompeg</b> makes it an I frame instead.
 
 <p>Before Netpbm 10.26 (January 2005), <b>ppmtompeg</b> instead drops
 the trailing B frames by default, and you need the
