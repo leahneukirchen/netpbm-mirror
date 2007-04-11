@@ -8,6 +8,9 @@ not yet  BJH  Release 10.39.00
 
               Add pamundice.
 
+              Configure: do test compile for missing Libxml2 and too old
+              Libxml2.
+
 07.03.30 BJH  Release 10.38.0
     
               Add pamfixtrunc.
