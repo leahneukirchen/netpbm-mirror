@@ -183,7 +183,7 @@ endif
 # ship a pre-made standardppmfont.c, so this rule will not normally be
 # used.
 standardppmdfont.c:standard.ppmdfont
-	ppmdcfont <$< >$@ || (rm $@ && false)
+	ppmdcfont <$< >$@
 
 # Note that we create a new compile.h only for the first make after a
 # make clean.  This is good enough.  We used to do stamp-date for
