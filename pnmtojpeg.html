@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pnmtojpeg User Manual</TITLE></HEAD>
 <BODY>
 <H1>PNMTOJPEG</H1>
-Updated: 27 September 2006
+Updated: 23 April 2007
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -276,6 +276,14 @@ This method is covered by patents owned by IBM, AT&amp;T, and Mitsubishi.
 <p>The author of the FAQ recommends against using arithmetic coding (and
 therefore this option) because the space savings is not great enough to
 justify the legal hassles.
+
+<p>Some JPEG libraries are not capable of arithmetic encoding.
+<b>pnmtojpeg</b> uses a JPEG library (either bound to it when the
+<b>pnmtojpeg</b> executable was built or accessed on your system at
+run time) to do the JPEG encoding.  If <b>pnmtojpeg</b> terminates
+with the message, &quot;Sorry, there are legal restrictions on
+arithmetic coding&quot; or &quot;Sorry, arithmetic coding not
+supported,&quot; this is the problem.
      
 <DT><B>-restart=</B><I>n</I>
 
