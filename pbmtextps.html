@@ -2,16 +2,13 @@
 <HTML><HEAD><title>Pbmtextps User Manual</title></HEAD>
 <BODY>
 <H1>pbmtextps</H1>
-Updated: 7 October 2003
+Updated: 24 April 2007
 <BR>
 <A HREF="#index">Table Of Contents</A>
-<A NAME="ixAAB"></A>
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 pbmtextps - render text into a PBM image using a postscript interpreter
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>pbmtextps</B>
 [<B>-font</B> <I>fontname</I>]
@@ -20,21 +17,25 @@ pbmtextps - render text into a PBM image using a postscript interpreter
 [<B>-stroke</B> <I>strokesize</I>]
 <I>text</I>
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <P><b>pbmtextps</b> takes a single line of text from the command line
-and renders it into a PBM image.
+and renders it into a PBM image.  The image is of a single line of text;
+newline characters in the input have no effect.
 
 <P>The image is cropped at the top and the right.  It is not cropped
 at the left or bottom so that the text begins at the same position
 relative to the origin.  You can use <b>pnmcrop</b> to crop it all the
 way.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<p>See <b>pbmtext</b> for a more sophisticated generator of text, but
+using less common font formats.  <b>pbmtext</b> can generate multiple
+lines of text.
+
+
+<H2 id="options">OPTIONS</H2>
 
 <DL COMPACT>
 <DT><B>-font</B>
@@ -68,11 +69,10 @@ dpi, then the font size is 50 pixels.
 <DT><B>-stroke</B>
 <DD>
 Width of line to use for stroke font.  There is no default stroke width
-because the letters are solid by default.
+because the characters are solid by default.
 </DL>
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>USAGE</H2>
+<H2 id="usage">USAGE</H2>
 
 You can generate antialiased text by using a larger resolution than the
 default and scaling the image down using <b>pamscale</b>.
@@ -80,14 +80,12 @@ default and scaling the image down using <b>pamscale</b>.
 <P>See the manual for the similar <B>pbmtext</B> for more advice on
 usage.
 
-<A NAME="history"></a>
-<H2>HISTORY</H2>
+<H2 id="history">HISTORY</H2>
 
 <p><b>pbmtextps</b> was added to Netpbm in Release 10.0 (June 2002).
 
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="pbmtext.html">pbmtext</A></B>,
 <B><A HREF="pamcut.html">pamcut</A></B>,
@@ -99,23 +97,20 @@ usage.
 <B><A HREF="ppmlabel.html">ppmlabel</A></B>,
 <B><A HREF="pbm.html">pbm</A></B>
 
-<A NAME="lbAH">&nbsp;</A>
-<H2>AUTHOR</H2>
+<H2 id="author">AUTHOR</H2>
 
 Copyright (C) 2002 by James McCann
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">USAGE</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#usage">USAGE</A>
 <LI><A HREF="#history">HISTORY</A>
-<LI><A HREF="#lbAG">SEE ALSO</A>
-<LI><A HREF="#lbAH">AUTHOR</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
 </UL>
 </BODY>
 </HTML>

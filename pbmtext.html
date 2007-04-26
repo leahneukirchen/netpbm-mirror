@@ -82,7 +82,8 @@ point type printed at 75 dpi).
 
 <p>To create a font as a PBM file (to use with the <b>-font</b>
 option), do this: In your window system of choice, display the
-following text in the desired (fixed-width) font:
+following text in the desired font (make sure it's a fixed width
+font!):
 
 <PRE>
 
@@ -103,10 +104,11 @@ following text in the desired (fixed-width) font:
 
 Do a screen grab or window dump of that text, using for instance
 <B>xwd</B>, <B>xgrabsc</B>, or <B>screendump</B>.  Convert the result
-into a pbm file.  If necessary, use <B>pamcut</B> to remove everything
-except the text.  Finally, run it through <B>pnmcrop</B>.  to make
-sure the edges are right up against the text.  <B>pbmtext</B>
-can figure out the sizes and spacings from that.
+into a pbm file.  If necessary, use <B>pamcut</B> to remove anything
+you grabbed in addition to the text pictured above (or be a wimp and
+use a graphical editor such as ImageMagick).  Finally, run it through
+<B>pnmcrop</B>.  to make sure the edges are right up against the text.
+<B>pbmtext</B> can figure out the sizes and spacings from that.
 
 <DT><B>-space</B> <I>pixels</I>
 
