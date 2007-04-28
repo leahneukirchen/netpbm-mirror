@@ -53,17 +53,17 @@ struct font {
         */
 	struct glyph * glyph[256];
         /* glyph[i] is the glyph for code point i */
-	bit** oldfont;
+	const bit ** oldfont;
 	    /* for compatibility with old pbmtext routines */
-	    /* oldfont is 0 if the font is BDF derived */
+	    /* oldfont is NULL if the font is BDF derived */
 	int fcols, frows;
 };
 
 struct font* pbm_defaultfont(const char* const which);
 struct font*
-pbm_dissectfont(bit ** const font,
-                int    const frows,
-                int    const fcols);
+pbm_dissectfont(const bit ** const font,
+                unsigned int const frows,
+                unsigned int const fcols);
 struct font* pbm_loadfont(const char * const filename);
 struct font* pbm_loadpbmfont(const char * const filename);
 struct font* pbm_loadbdffont(const char * const filename);

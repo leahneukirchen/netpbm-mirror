@@ -667,9 +667,9 @@ pbm_defaultfont(const char * const name) {
         unsigned int row;
 
         if (strcmp(name, "fixed") != 0)
-            pm_error( "built-in font name unknown, try 'bdf' or 'fixed'" );
+            pm_error( "built-in font name unknown, try 'bdf' or 'fixed'");
 
-        defaultfont = pbm_allocarray( DEFAULTFONT_COLS, DEFAULTFONT_ROWS );
+        defaultfont = pbm_allocarray(DEFAULTFONT_COLS, DEFAULTFONT_ROWS);
         for (row =  0; row < DEFAULTFONT_ROWS; ++row) {
             unsigned int col;
             for (col = 0; col < DEFAULTFONT_COLS; col += 32) {
@@ -689,104 +689,200 @@ pbm_defaultfont(const char * const name) {
                 }
             }
         }
-
         retval = 
-            pbm_dissectfont(defaultfont, DEFAULTFONT_ROWS, DEFAULTFONT_COLS);
+            pbm_dissectfont((const bit **)defaultfont,
+                            DEFAULTFONT_ROWS, DEFAULTFONT_COLS);
     }
     return retval;
 }
 
 
+
+static void
+findFirstBlankRow(const bit **   const font,
+                  unsigned int   const fcols,
+                  unsigned int   const frows,
+                  unsigned int * const browP) {
+
+    unsigned int row;
+    bool foundBlank;
+
+    for (row = 0, foundBlank = false; row < frows / 6 && !foundBlank; ++row) {
+        unsigned int col;
+        bit col0Value = font[row][0];
+        bool rowIsBlank;
+        rowIsBlank = true;  /* initial assumption */
+        for (col = 1; col < fcols; ++col)
+            if (font[row][col] != col0Value)
+                rowIsBlank = false;
+
+        if (rowIsBlank) {
+            foundBlank = true;
+            *browP = row;
+        }
+    }
+
+    if (!foundBlank)
+        pm_error("couldn't find blank pixel row in font");
+}
+
+
+
+static void
+findFirstBlankCol(const bit **   const font,
+                  unsigned int   const fcols,
+                  unsigned int   const frows,
+                  unsigned int * const bcolP) {
+
+    unsigned int col;
+    bool foundBlank;
+
+    for (col = 0, foundBlank = false; col < fcols / 6 && !foundBlank; ++col) {
+        unsigned int row;
+        bit row0Value = font[0][col];
+        bool colIsBlank;
+        colIsBlank = true;  /* initial assumption */
+        for (row = 1; row < frows; ++row)
+            if (font[row][col] != row0Value)
+                colIsBlank = false;
+
+        if (colIsBlank) {
+            foundBlank = true;
+            *bcolP = col;
+        }
+    }
+
+    if (!foundBlank)
+        pm_error("couldn't find blank pixel column in font");
+}
+
+
+
+static void
+computeCharacterSize(const bit **   const font,
+                     unsigned int   const fcols,
+                     unsigned int   const frows,
+                     unsigned int * const cellWidthP,
+                     unsigned int * const cellHeightP,
+                     unsigned int * const charWidthP,
+                     unsigned int * const charHeightP) {
+
+    unsigned int firstBlankRow;
+    unsigned int firstBlankCol;
+    unsigned int heightLast11Rows;
+
+    findFirstBlankRow(font, fcols, frows, &firstBlankRow);
+
+    findFirstBlankCol(font, fcols, frows, &firstBlankCol);
+
+    heightLast11Rows = frows - firstBlankRow;
+
+    if (heightLast11Rows % 11 != 0)
+        pm_error("The rows of characters in the font do not appear to "
+                 "be all the same height.  The last 11 rows are %u pixel "
+                 "rows high (from pixel row %u up to %u), "
+                 "which is not a multiple of 11.",
+                 heightLast11Rows, firstBlankRow, frows);
+    else {
+        unsigned int widthLast15Cols;
+
+        *cellHeightP = heightLast11Rows / 11;
+
+        widthLast15Cols = fcols - firstBlankCol;
+
+        if (widthLast15Cols % 15 != 0)
+            pm_error("The columns of characters in the font do not appear to "
+                     "be all the same width.  "
+                     "The last 15 columns are %u pixel "
+                     "columns wide (from pixel col %u up to %u), "
+                     "which is not a multiple of 15.",
+                     widthLast15Cols, firstBlankCol, fcols);
+        else {
+            *cellWidthP = widthLast15Cols / 15;
+
+            *charWidthP = firstBlankCol;
+            *charHeightP = firstBlankRow;
+        }
+    }
+}
+
+
+
 struct font*
-pbm_dissectfont(bit ** const font,
-                int    const frows,
-                int    const fcols) {
+pbm_dissectfont(const bit ** const font,
+                unsigned int const frows,
+                unsigned int const fcols) {
     /*
-    ** This routine expects a font bitmap representing the following text:
-    **
-    ** (0,0)
-    **    M ",/^_[`jpqy| M
-    **
-    **    /  !"#$%&'()*+ /
-    **    < ,-./01234567 <
-    **    > 89:;<=>?@ABC >
-    **    @ DEFGHIJKLMNO @
-    **    _ PQRSTUVWXYZ[ _
-    **    { \]^_`abcdefg {
-    **    } hijklmnopqrs }
-    **    ~ tuvwxyz{|}~  ~
-    **
-    **    M ",/^_[`jpqy| M
-    **
-    ** The bitmap must be cropped exactly to the edges.
-    **
-    ** The border you see is irrelevant.  The 12 x 8 array in the center is
-    ** the font.  The top left character there belongs to code point 0, and
-    ** the code points increase in standard reading order, so the bottom
-    ** right character is code point 127.  You can't define code points 
-    ** < 32 or > 127 with this font format.
-    **
-    ** The dissection works by finding the first blank row and column; that
-    ** gives the height and width of the maximum-sized character, which is
-    ** not too useful.  But the distance from there to the opposite side is
-    ** an integral multiple of the cell size, and that's what we need.  Then
-    ** it's just a matter of filling in all the coordinates.
-    **
-    ** The difference between cell_height, cell_width and char_height,
-    ** char_width is that the first is the size of the cell including
-    ** spacing, while the second is just the actual maximum-size character.
-    */
-    int cell_width, cell_height, char_width, char_height;
-    int brow, bcol, row, col, d, ch, r, c, i;
-    struct font* fn;
-    struct glyph* glyph;
+       This routine expects a font bitmap representing the following text:
+      
+       (0,0)
+          M ",/^_[`jpqy| M
+      
+          /  !"#$%&'()*+ /
+          < ,-./01234567 <
+          > 89:;<=>?@ABC >
+          @ DEFGHIJKLMNO @
+          _ PQRSTUVWXYZ[ _
+          { \]^_`abcdefg {
+          } hijklmnopqrs }
+          ~ tuvwxyz{|}~  ~
+      
+          M ",/^_[`jpqy| M
+      
+       The bitmap must be cropped exactly to the edges.
+      
+       The characters in the border you see are irrelevant except for
+       character size compuations.  The 12 x 8 array in the center is
+       the font.  The top left character there belongs to code point
+       0, and the code points increase in standard reading order, so
+       the bottom right character is code point 127.  You can't define
+       code points < 32 or > 127 with this font format.
+
+       The characters in the top and bottom border rows must include a
+       character with the lowest reach of any in the font (e.g. "y",
+       "_") and one with the highest reach (e.g. '"').  The characters
+       in the left and right border columns must include characters
+       with the rightmost and leftmost reach of any in the font
+       (e.g. "M" for both).
+
+       The border must be separated from the font by one blank text
+       row or text column.
+      
+       The dissection works by finding the first blank row and column;
+       i.e the lower right corner of the "M" in the upper left corner
+       of the matrix.  That gives the height and width of the
+       maximum-sized character, which is not too useful.  But the
+       distance from there to the opposite side is an integral
+       multiple of the cell size, and that's what we need.  Then it's
+       just a matter of filling in all the coordinates.  */
+    
+    unsigned int cellWidth, cellHeight;
+        /* Dimensions in pixels of each cell of the font -- that
+           includes the glyph and the white space above and to the
+           right of it.  Each cell is a tile of the font image.  The
+           top character row and left character row don't count --
+           those cells are smaller because they are missing the white
+           space.
+        */
+    unsigned int charWidth, charHeight;
+        /* Maximum dimensions of glyph itself, inside its cell */
+
+    int row, col, ch, r, c, i;
+    struct font * fn;
+    struct glyph * glyph;
     char* bmap;
-    bit b;
 
-    /* Find first blank row. */
-    for ( brow = 0; brow < frows / 6; ++brow ) {
-        b = font[brow][0];
-        for ( col = 1; col < fcols; ++col )
-            if ( font[brow][col] != b )
-                goto nextrow;
-        goto gotblankrow;
-    nextrow: ;
-    }
-    pm_error( "couldn't find blank row in font" );
-
- gotblankrow:
-    /* Find first blank col. */
-    for ( bcol = 0; bcol < fcols / 8; ++bcol ) {
-        b = font[0][bcol];
-        for ( row = 1; row < frows; ++row )
-            if ( font[row][bcol] != b )
-                goto nextcol;
-        goto gotblankcol;
-    nextcol: ;
-    }
-    pm_error( "couldn't find blank col in font" );
-
- gotblankcol:
-    /* Now compute character cell size. */
-    d = frows - brow;
-    cell_height = d / 11;
-    if ( cell_height * 11 != d )
-        pm_error( "problem computing character cell height" );
-    d = fcols - bcol;
-    cell_width = d / 15;
-    if ( cell_width * 15 != d )
-        pm_error( "problem computing character cell width" );
-    char_height = brow;
-    char_width = bcol;
+    computeCharacterSize(font, fcols, frows,
+                         &cellWidth, &cellHeight, &charWidth, &charHeight);
 
     /* Now convert to a general font */
 
     MALLOCVAR(fn);
-    if ( fn == NULL )
-        pm_error( "out of memory allocating font structure" );
+    if (fn == NULL)
+        pm_error("out of memory allocating font structure");
 
-    fn->maxwidth  = char_width;
-    fn->maxheight = char_height;
+    fn->maxwidth  = charWidth;
+    fn->maxheight = charHeight;
     fn->x = fn->y = 0;
 
     fn->oldfont = font;
@@ -808,8 +904,8 @@ pbm_dissectfont(bit ** const font,
         pm_error( "out of memory allocating glyph data" );
 
     /* Now fill in the 0,0 coords. */
-    row = cell_height * 2;
-    col = cell_width * 2;
+    row = cellHeight * 2;
+    col = cellWidth * 2;
     for (i = 0; i < firstCodePoint; ++i)
         fn->glyph[i] = NULL;
 
@@ -817,7 +913,7 @@ pbm_dissectfont(bit ** const font,
         glyph[ch].width = fn->maxwidth;
         glyph[ch].height = fn->maxheight;
         glyph[ch].x = glyph[ch].y = 0;
-        glyph[ch].xadd = cell_width;
+        glyph[ch].xadd = cellWidth;
 
         for ( r = 0; r < glyph[ch].height; ++r )
             for ( c = 0; c < glyph[ch].width; ++c )
@@ -828,10 +924,10 @@ pbm_dissectfont(bit ** const font,
 
         fn->glyph[firstCodePoint + ch] = &glyph[ch];
 
-        col += cell_width;
-        if ( col >= cell_width * 14 ) {
-            col = cell_width * 2;
-            row += cell_height;
+        col += cellWidth;
+        if ( col >= cellWidth * 14 ) {
+            col = cellWidth * 2;
+            row += cellHeight;
         }
     }
     for (i = firstCodePoint + nCharsInFont; i < 256; ++i)
@@ -868,17 +964,20 @@ pbm_loadfont(const char * const filename)
 
 
 
-struct font* pbm_loadpbmfont(const char * const filename)
-{
-    FILE* ifp;
-    bit** font;
+struct font *
+pbm_loadpbmfont(const char * const filename) {
+
+    FILE * ifP;
+    bit ** font;
     int fcols, frows;
 
-    ifp = pm_openr( filename );
-    font = pbm_readpbm( ifp, &fcols, &frows );
-    pm_close( ifp );
-    return pbm_dissectfont( font, frows, fcols );
+    ifP = pm_openr(filename);
+    font = pbm_readpbm(ifP, &fcols, &frows);
+    pm_close(ifP);
+    return pbm_dissectfont((const bit **)font, frows, fcols);
 }
+
+
 
 void
 pbm_dumpfont( fn )
