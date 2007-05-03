@@ -20,27 +20,28 @@
 #include "shhopt.h"
 #include "mallocvar.h"
 
-struct cmdline_info {
+struct cmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *text;    /* text from command line or NULL if none */
-    const char *font;    /* -font option value or NULL if none */
-    const char *builtin; /* -builtin option value or NULL if none */
+    const char * text;    /* text from command line or NULL if none */
+    const char * font;    /* -font option value or NULL if none */
+    const char * builtin; /* -builtin option value or NULL if none */
     unsigned int dump;   
         /* undocumented dump option for installing a new built-in font */
     float space;   /* -space option value or default */
     unsigned int width;     /* -width option value or zero */
     int lspace;    /* lspace option value or default */
     unsigned int nomargins;     /* -nomargins */
+    unsigned int verbose;
 };
 
 
 
 
 static void
-parse_command_line(int argc, char ** argv,
-                   struct cmdline_info *cmdline_p) {
+parseCommandLine(int argc, char ** argv,
+                 struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
@@ -53,30 +54,31 @@ parse_command_line(int argc, char ** argv,
     unsigned int option_def_index;
 
     option_def_index = 0;   /* incremented by OPTENTRY */
-    OPTENT3(0, "font",      OPT_STRING, &cmdline_p->font, NULL,        0);
-    OPTENT3(0, "builtin",   OPT_STRING, &cmdline_p->builtin, NULL,     0);
-    OPTENT3(0, "dump",      OPT_FLAG,   NULL, &cmdline_p->dump,        0);
-    OPTENT3(0, "space",     OPT_FLOAT,  &cmdline_p->space, NULL,       0);
-    OPTENT3(0, "width",     OPT_UINT,   &cmdline_p->width, NULL,       0);
-    OPTENT3(0, "lspace",    OPT_INT,    &cmdline_p->lspace, NULL,      0);
-    OPTENT3(0, "nomargins", OPT_FLAG,   NULL, &cmdline_p->nomargins,   0);
+    OPTENT3(0, "font",      OPT_STRING, &cmdlineP->font, NULL,        0);
+    OPTENT3(0, "builtin",   OPT_STRING, &cmdlineP->builtin, NULL,     0);
+    OPTENT3(0, "dump",      OPT_FLAG,   NULL, &cmdlineP->dump,        0);
+    OPTENT3(0, "space",     OPT_FLOAT,  &cmdlineP->space, NULL,       0);
+    OPTENT3(0, "width",     OPT_UINT,   &cmdlineP->width, NULL,       0);
+    OPTENT3(0, "lspace",    OPT_INT,    &cmdlineP->lspace, NULL,      0);
+    OPTENT3(0, "nomargins", OPT_FLAG,   NULL, &cmdlineP->nomargins,   0);
+    OPTENT3(0, "verbose",   OPT_FLAG,   NULL, &cmdlineP->verbose,     0);
 
     /* Set the defaults */
-    cmdline_p->font = NULL;
-    cmdline_p->builtin = NULL;
-    cmdline_p->space = 0.0;
-    cmdline_p->width = 0;
-    cmdline_p->lspace = 0;
+    cmdlineP->font = NULL;
+    cmdlineP->builtin = NULL;
+    cmdlineP->space = 0.0;
+    cmdlineP->width = 0;
+    cmdlineP->lspace = 0;
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
     optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
-        /* Uses and sets argc, argv, and some of *cmdline_p and others. */
+        /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (argc-1 == 0)
-        cmdline_p->text = NULL;
+        cmdlineP->text = NULL;
     else {
         char *text;
         int i;
@@ -87,7 +89,7 @@ parse_command_line(int argc, char ** argv,
         text = malloc(totaltextsize);  /* initial allocation */
         text[0] = '\0';
         
-        for (i = 1; i < argc; i++) {
+        for (i = 1; i < argc; ++i) {
             if (i > 1) {
                 totaltextsize += 1;
                 text = realloc(text, totaltextsize);
@@ -101,9 +103,57 @@ parse_command_line(int argc, char ** argv,
                 pm_error("out of memory allocating space for input text");
             strcat(text, argv[i]);
         }
-        cmdline_p->text = text;
+        cmdlineP->text = text;
     }
 }
+
+
+
+static void
+reportFont(struct font * const fontP) {
+
+    unsigned int n;
+    unsigned int c;
+
+    pm_message("FONT:");
+    pm_message("  character dimensions: %uw x %uh",
+               fontP->maxwidth, fontP->maxheight);
+    pm_message("  Additional vert white space: %d pixels", fontP->y);
+
+    for (c = 0, n = 0; c < ARRAY_SIZE(fontP->glyph); ++c)
+        if (fontP->glyph[c])
+            ++n;
+
+    pm_message("  # characters: %u", n);
+}
+
+
+
+static void
+computeFont(struct cmdlineInfo const cmdline,
+            struct font **     const fontPP) {
+
+    struct font * fontP;
+
+    if (cmdline.font)
+        fontP = pbm_loadfont(cmdline.font);
+    else {
+        if (cmdline.builtin)
+            fontP = pbm_defaultfont(cmdline.builtin);
+        else
+            fontP = pbm_defaultfont("bdf");
+    }
+
+    if (cmdline.verbose)
+        reportFont(fontP);
+
+    if (cmdline.dump) {
+        pbm_dumpfont(fontP);
+        exit(0);
+    }
+    *fontPP = fontP;
+}
+
 
 
 struct text {
@@ -145,27 +195,39 @@ freeTextArray(struct text const text) {
 
 
 static void
-fix_control_chars(char * const buf, struct font * const fn) {
+fixControlChars(char *        const buf,
+                struct font * const fontP) {
+/*----------------------------------------------------------------------------
+   Make buf[] something that can be rendered as glyphs in the font 'fontP'.
 
-    int i;
+   Expand tabs to spaces.
+
+   Remove any trailing newline.  (But leave intermediate ones as line
+   delimiters).
+
+   Turn anything that isn't a code point in the font to a single space
+   (which isn't guaranteed to be in the font either, of course).
+-----------------------------------------------------------------------------*/
+    unsigned int i;
 
     /* chop off terminating newline */
     if (strlen(buf) >= 1 && buf[strlen(buf)-1] == '\n')
         buf[strlen(buf)-1] = '\0';
     
-    for ( i = 0; buf[i] != '\0'; ++i ) {
-        if ( buf[i] == '\t' ) { 
+    for (i = 0; buf[i] != '\0'; ++i) {
+        if (buf[i] == '\t') { 
             /* Turn tabs into the right number of spaces. */
-            int j, n, l;
-            n = ( i + 8 ) / 8 * 8;
-            l = strlen( buf );
-            for ( j = l; j > i; --j )
-                buf[j + n - i - 1] = buf[j];
-            for ( ; i < n; ++i )
+            unsigned int const nextTabStop = (i + 8) / 8 * 8;
+            unsigned int const nSpaceToInsert = nextTabStop - i;
+            int j;
+            /* Move text right to make room for spaces */
+            for (j = strlen(buf); j > i; --j )
+                buf[j + nSpaceToInsert - 1] = buf[j];
+            /* insert the spaces */
+            for ( ; i < nextTabStop; ++i )
                 buf[i] = ' ';
             --i;
-        }
-        else if ( !fn->glyph[(unsigned char)buf[i]] )
+        } else if (!fontP->glyph[(unsigned char)buf[i]] )
             /* Turn unknown chars into a single space. */
             buf[i] = ' ';
     }
@@ -575,7 +637,7 @@ truncateText(struct text   const inputText,
 
 static void
 getText(const char          cmdline_text[], 
-        struct font * const fn, 
+        struct font * const fontP,
         struct text * const input_textP) {
 
     struct text input_text;
@@ -583,7 +645,7 @@ getText(const char          cmdline_text[],
     if (cmdline_text) {
         allocTextArray(&input_text, 1, strlen(cmdline_text));
         strcpy(input_text.textArray[0], cmdline_text);
-        fix_control_chars(input_text.textArray[0], fn);
+        fixControlChars(input_text.textArray[0], fontP);
         input_text.lineCount = 1;
     } else {
         /* Read text from stdin. */
@@ -601,7 +663,7 @@ getText(const char          cmdline_text[],
         
         lineCount = 0;  /* initial value */
         while (fgets(buf, sizeof(buf), stdin) != NULL) {
-            fix_control_chars(buf, fn);
+            fixControlChars(buf, fontP);
             if (lineCount >= maxlines) {
                 maxlines *= 2;
                 text_array = (char**) realloc((char*) text_array, 
@@ -649,10 +711,10 @@ compute_image_width(struct text         const lp,
 int
 main(int argc, char *argv[]) {
 
-    struct cmdline_info cmdline;
-    bit** bits;
+    struct cmdlineInfo cmdline;
+    bit ** bits;
     int rows, cols;
-    struct font* fontP;
+    struct font * fontP;
     int vmargin, hmargin;
     struct text inputText;
     struct text formattedText;
@@ -660,23 +722,11 @@ main(int argc, char *argv[]) {
         /* width in pixels of the longest line of text in the image */
     int maxleftb;
 
-    pbm_init( &argc, argv );
+    pbm_init(&argc, argv);
 
-    parse_command_line(argc, argv, &cmdline);
+    parseCommandLine(argc, argv, &cmdline);
     
-    if (cmdline.font)
-        fontP = pbm_loadfont(cmdline.font);
-    else {
-        if (cmdline.builtin)
-            fontP = pbm_defaultfont(cmdline.builtin);
-        else
-            fontP = pbm_defaultfont("bdf");
-    }
-
-    if (cmdline.dump) {
-        pbm_dumpfont(fontP);
-        exit(0);
-    }
+    computeFont(cmdline, &fontP);
 
     getText(cmdline.text, fontP, &inputText);
     
