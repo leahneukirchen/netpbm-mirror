@@ -1663,9 +1663,9 @@ pm_check(FILE *               const file,
 
 
 void
-pm_drain(FILE * const fileP,
-         uint   const limit,
-         uint * const bytesReadP) {
+pm_drain(FILE *         const fileP,
+         unsigned int   const limit,
+         unsigned int * const bytesReadP) {
 /*----------------------------------------------------------------------------
   Read bytes from *fileP until EOF and return as *bytesReadP how many there
   were.
@@ -1676,7 +1676,7 @@ pm_drain(FILE * const fileP,
   didn't leave some input behind, which could mean you didn't properly
   interpret the file.
 -----------------------------------------------------------------------------*/
-    uint bytesRead;
+    unsigned int bytesRead;
     bool eof;
 
     for (bytesRead = 0, eof = false; !eof && bytesRead < 4096;) {

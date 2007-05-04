@@ -4,6 +4,14 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+07.05.04 BJH  Release 10.38.01
+
+              Build: don't use 'uint' type.  Mac OSX apparently doesn't
+              have it.
+
+              Configure: build properly for Mac OSX when user says
+              libnetpbm will be in the default search path.
+
 07.03.30 BJH  Release 10.38.0
     
               Add pamfixtrunc.
