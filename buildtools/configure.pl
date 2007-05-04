@@ -2140,10 +2140,15 @@ if ($platform eq "GNU") {
 } elsif ($platform eq "DARWIN") {
     push(@Makefile_config, "CC = cc -no-cpp-precomp\n");
     push(@Makefile_config, 'CFLAGS_SHLIB = -fno-common', "\n");
-    push(@Makefile_config, "LDSHLIB = ",
-         "-dynamiclib ",
-         '-install_name $(NETPBMLIB_RUNTIME_PATH)/libnetpbm.$(MAJ).dylib', 
-         "\n");
+
+    my $installNameOpt;
+    if ($netpbmlib eq '') {
+        $installNameOpt = '';
+    } else {
+        $installNameOpt  =
+            '-install_name $(NETPBMLIB_RUNTIME_PATH)/libnetpbm.$(MAJ).dylib', 
+        }
+    push(@Makefile_config, "LDSHLIB = -dynamiclib $installNameOpt\n"
 #    push(@Makefile_config, "INSTALL = install\n");
 } else {
     die ("Internal error: invalid value for \$platform: '$platform'\n");

@@ -11,6 +11,14 @@ not yet  BJH  Release 10.39.00
               Configure: do test compile for missing Libxml2 and too old
               Libxml2.
 
+              pbmtext: improve error messages about fonts.
+
+              Build: don't use 'uint' type.  Mac OSX apparently doesn't
+              have it.
+
+              Configure: build properly for Mac OSX when user says
+              libnetpbm will be in the default search path.
+
 07.03.30 BJH  Release 10.38.0
     
               Add pamfixtrunc.
