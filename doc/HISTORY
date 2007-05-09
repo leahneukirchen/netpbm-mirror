@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+07.05.09 BJH  Release 10.38.02
+
+              Configure: fix bug detecting presence of libvga with
+              Ldconfig.
+
 07.05.04 BJH  Release 10.38.01
 
               Build: don't use 'uint' type.  Mac OSX apparently doesn't
