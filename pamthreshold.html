@@ -3,7 +3,7 @@
 <HEAD><TITLE>Pamthreshold User Manual</TITLE></HEAD>
 <BODY>
 <H1>pamthreshold</H1>
-Updated: 12 May 2006
+Updated: 09 May 2007
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -71,10 +71,11 @@ option <b>-quiet</b>).
 
 <dd>This selects simple or global thresholding,
 i.e. <b>pamthreshold</b> compares every pixel to the threshold you
-specify with <b>-threshold</b>.  This works well for black and white
-text pages scanned with a flatbed scanner and is faster than the
-default method that iteratively determines the thresholding value
-first.
+specify with <b>-threshold</b>.  Those with a value greater than or
+equal to the threshold become white; others become black.  This works
+well for black and white text pages scanned with a flatbed scanner and
+is faster than the default method that iteratively determines the
+thresholding value first.
 
 <dt><b>-local=</b><i>width</i><b>x</b><i>height</i></dt>
 
@@ -102,6 +103,10 @@ is black and 1 is the maxval of the image.
 <p>If you don't specify this option, <b>pamthreshold</b> uses a threshold
 of 0.5.  Without <b>-simple</b> or <b>-local</b> this option is
 meaningless.
+
+<p>The meaning of the threshold depends upon the kind of thresholding
+you do (as determined by other options).  Roughly, pixels brighter
+than the threshold become white in the output while others become black.
 
 <dt><b>-contrast=</b><i>threshold</i></dt>
 

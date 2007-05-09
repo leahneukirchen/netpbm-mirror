@@ -6,13 +6,11 @@ Updated: 8 May 2004
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="name">&nbsp;</A>
 <H2>NAME</H2>
 
 pamgauss - create a two dimensional gaussian function as a PAM image
 
-<A NAME="synopsis">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>pamgauss</B>
 <i>width</i>
@@ -36,8 +34,7 @@ space in place of the equals sign to separate an option name from its value.
      pnmconvol -nooffset gauss.pgm myimage.ppm &gt;blurred.ppm
 </pre>
 
-<A NAME="description">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -64,16 +61,13 @@ Gaussian function, make sure that you choose a sigma and image
 dimensions so that if you made it any larger, the sample values at the
 edges would be zero.
 
-<p>The output image is PAM.  To turn it into a PGM that you can use
-with <b>pnmconvol</b>, specify <b>-tupletype=GRAYSCALE</b> and pass
-the output through <b>pamtopnm</b>.  You must use the <b>-nooffset</b>
-option on <b>pnmconvol</b> because zero means zero in the PAM that
+<p>The output image is PAM.  To make it usable with <b>pnmconvol</b>,
+specify <b>-tupletype=GRAYSCALE</b> so <b>pnmconvol</b> can use it as
+if it were PGM.  You must use the <b>-nooffset</b> option on
+<b>pnmconvol</b> because zero means zero in the PAM that
 <b>pamgauss</b> generates.
 
-<A NAME="options">&nbsp;</A>
-<H2>DESCRIPTION</H2>
-
-<p>This program is part of <a href="index.html">Netpbm</a>.
+<H2 id="options">OPTIONS</H2>
 
 <dl>
 <dt><b>-sigma=</b><i>number</i>
