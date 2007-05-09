@@ -8,16 +8,19 @@ not yet  BJH  Release 10.39.00
 
               Add pamundice.
 
+              pbmtext: improve error messages about fonts.
+
               Configure: do test compile for missing Libxml2 and too old
               Libxml2.
 
-              pbmtext: improve error messages about fonts.
-
-              Build: don't use 'uint' type.  Mac OSX apparently doesn't
-              have it.
+              Configure: fix bug detecting presence of libvga with
+              Ldconfig.
 
               Configure: build properly for Mac OSX when user says
               libnetpbm will be in the default search path.
+
+              Build: don't use 'uint' type.  Mac OSX apparently doesn't
+              have it.
 
 07.03.30 BJH  Release 10.38.0
     
