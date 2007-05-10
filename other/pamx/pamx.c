@@ -298,7 +298,7 @@ determineTitle(struct cmdlineInfo const cmdline,
     if (cmdline.title)
         title = strdup(cmdline.title);
     else {
-        if (STREQ(cmdline.inputFileName, "-"))
+        if (streq(cmdline.inputFileName, "-"))
             title = NULL;
         else {
             title = pm_basename(cmdline.inputFileName);

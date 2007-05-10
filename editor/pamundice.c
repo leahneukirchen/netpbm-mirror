@@ -608,7 +608,7 @@ verifyRankFileAttributes(struct pam *       const inpam,
             pm_error("Rank %u, File %u image has format 0x%x, "
                      "which differs from others (0x%x)",
                      rank, file, inpamP->format, outpamP->format);
-        else if (!STREQ(inpamP->tuple_type, outpamP->tuple_type))
+        else if (!streq(inpamP->tuple_type, outpamP->tuple_type))
             pm_error("Rank %u, File %u image has tuple type '%s', "
                      "which differs from others ('%s')",
                      rank, file, inpamP->tuple_type, outpamP->tuple_type);

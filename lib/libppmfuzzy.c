@@ -425,7 +425,7 @@ ppm_bk_color_from_name(const char * const name) {
     bk_color i;
 
     for (i = 0; i < BKCOLOR_COUNT; ++i) {
-        if (STREQ(name, bkColorNameMap[i]))
+        if (streq(name, bkColorNameMap[i]))
             return i;
     }
     pm_error("Invalid Berlin-Kay color name: '%s'", name);

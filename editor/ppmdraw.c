@@ -515,7 +515,7 @@ parseDrawCommand(struct tokenSet             const commandTokens,
         if (drawCommandP == NULL)
             pm_error("Out of memory to parse '%s' command", verb);
 
-        if (STREQ(verb, "setpos")) {
+        if (streq(verb, "setpos")) {
             drawCommandP->verb = VERB_SETPOS;
             if (commandTokens.count < 3)
                 pm_error("Not enough tokens for a 'setpos' command.  "
@@ -524,22 +524,22 @@ parseDrawCommand(struct tokenSet             const commandTokens,
                 drawCommandP->u.setposArg.x = atoi(commandTokens.token[1]);
                 drawCommandP->u.setposArg.y = atoi(commandTokens.token[2]);
             }
-        } else if (STREQ(verb, "setlinetype")) {
+        } else if (streq(verb, "setlinetype")) {
             drawCommandP->verb = VERB_SETLINETYPE;
             if (commandTokens.count < 2)
                 pm_error("Not enough tokens for a 'setlinetype' command.  "
                          "Need %u.  Got %u", 2, commandTokens.count);
             else {
                 const char * const typeArg = commandTokens.token[1];
-                if (STREQ(typeArg, "normal"))
+                if (streq(typeArg, "normal"))
                     drawCommandP->u.setlinetypeArg.type = PPMD_LINETYPE_NORMAL;
-                else if (STREQ(typeArg, "normal"))
+                else if (streq(typeArg, "normal"))
                     drawCommandP->u.setlinetypeArg.type = 
                         PPMD_LINETYPE_NODIAGS;
                 else
                     pm_error("Invalid type");
             }
-        } else if (STREQ(verb, "setlineclip")) {
+        } else if (streq(verb, "setlineclip")) {
             drawCommandP->verb = VERB_SETLINECLIP;
             if (commandTokens.count < 2)
                 pm_error("Not enough tokens for a 'setlineclip' command.  "
@@ -547,7 +547,7 @@ parseDrawCommand(struct tokenSet             const commandTokens,
             else
                 drawCommandP->u.setlineclipArg.clip =
                     atoi(commandTokens.token[1]);
-        } else if (STREQ(verb, "setcolor")) {
+        } else if (streq(verb, "setcolor")) {
             drawCommandP->verb = VERB_SETCOLOR;
             if (commandTokens.count < 2)
                 pm_error("Not enough tokens for a 'setcolor' command.  "
@@ -555,7 +555,7 @@ parseDrawCommand(struct tokenSet             const commandTokens,
             else
                 drawCommandP->u.setcolorArg.colorName =
                     strdup(commandTokens.token[1]);
-        } else if (STREQ(verb, "setfont")) {
+        } else if (streq(verb, "setfont")) {
             drawCommandP->verb = VERB_SETFONT;
             if (commandTokens.count < 2)
                 pm_error("Not enough tokens for a 'setfont' command.  "
@@ -563,7 +563,7 @@ parseDrawCommand(struct tokenSet             const commandTokens,
             else
                 drawCommandP->u.setfontArg.fontFileName =
                     strdup(commandTokens.token[1]);
-        } else if (STREQ(verb, "line")) {
+        } else if (streq(verb, "line")) {
             drawCommandP->verb = VERB_LINE;
             if (commandTokens.count < 5)
                 pm_error("Not enough tokens for a 'line' command.  "
@@ -574,7 +574,7 @@ parseDrawCommand(struct tokenSet             const commandTokens,
                 drawCommandP->u.lineArg.x1 = atoi(commandTokens.token[3]);
                 drawCommandP->u.lineArg.y1 = atoi(commandTokens.token[4]);
             } 
-        } else if (STREQ(verb, "line_here")) {
+        } else if (streq(verb, "line_here")) {
             drawCommandP->verb = VERB_LINE_HERE;
             if (commandTokens.count < 3)
                 pm_error("Not enough tokens for a 'line_here' command.  "
@@ -585,7 +585,7 @@ parseDrawCommand(struct tokenSet             const commandTokens,
                 argP->right = atoi(commandTokens.token[1]);
                 argP->down = atoi(commandTokens.token[2]);
             } 
-       } else if (STREQ(verb, "spline3")) {
+       } else if (streq(verb, "spline3")) {
             drawCommandP->verb = VERB_SPLINE3;
             if (commandTokens.count < 7)
                 pm_error("Not enough tokens for a 'spline3' command.  "
@@ -600,7 +600,7 @@ parseDrawCommand(struct tokenSet             const commandTokens,
                 argP->x2 = atoi(commandTokens.token[5]);
                 argP->y2 = atoi(commandTokens.token[6]);
             } 
-        } else if (STREQ(verb, "circle")) {
+        } else if (streq(verb, "circle")) {
             drawCommandP->verb = VERB_CIRCLE;
             if (commandTokens.count < 4)
                 pm_error("Not enough tokens for a 'circle' command.  "
@@ -611,7 +611,7 @@ parseDrawCommand(struct tokenSet             const commandTokens,
                 argP->cy     = atoi(commandTokens.token[2]);
                 argP->radius = atoi(commandTokens.token[3]);
             } 
-        } else if (STREQ(verb, "filledrectangle")) {
+        } else if (streq(verb, "filledrectangle")) {
             drawCommandP->verb = VERB_FILLEDRECTANGLE;
             if (commandTokens.count < 5)
                 pm_error("Not enough tokens for a 'filledrectangle' command.  "
@@ -624,7 +624,7 @@ parseDrawCommand(struct tokenSet             const commandTokens,
                 argP->width  = atoi(commandTokens.token[3]);
                 argP->height = atoi(commandTokens.token[4]);
             } 
-        } else if (STREQ(verb, "text")) {
+        } else if (streq(verb, "text")) {
             drawCommandP->verb = VERB_TEXT;
             if (commandTokens.count < 6)
                 pm_error("Not enough tokens for a 'text' command.  "
@@ -638,7 +638,7 @@ parseDrawCommand(struct tokenSet             const commandTokens,
                 if (drawCommandP->u.textArg.text == NULL)
                     pm_error("Out of storage parsing 'text' command");
             }
-        } else if (STREQ(verb, "text_here")) {
+        } else if (streq(verb, "text_here")) {
             drawCommandP->verb = VERB_TEXT_HERE;
             if (commandTokens.count < 4)
                 pm_error("Not enough tokens for a 'text_here' command.  "
@@ -705,7 +705,7 @@ processToken(const char *      const scriptText,
     memcpy(token, &scriptText[tokenStart], tokenLength);
     token[tokenLength] = '\0';
     
-    if (STREQ(token, ";")) {
+    if (streq(token, ";")) {
         disposeOfCommandTokens(tokenSetP, scriptP);
         free(token);
     } else {
