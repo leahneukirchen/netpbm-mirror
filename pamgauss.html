@@ -26,8 +26,7 @@ space in place of the equals sign to separate an option name from its value.
 
 
 
-<A NAME="examples">&nbsp;</A>
-<H2>EXAMPLES</H2>
+<H2 id="examples">EXAMPLES</H2>
 
 <pre>
      pamgauss 3 3 -sigma=.5 -tupletype=GRAYSCALE | pamtopnm &gt;gauss.pgm
@@ -43,11 +42,11 @@ gaussian function of their distance from the center of the image.  I.e.
 the sample value is highest in the center and goes down, in a bell curve
 shape, as you move away from the center.
 
-<p>The values are scaled so that the area under the surface of the
+<p>The values are scaled so that the volume under the surface of the
 two-dimensional Gaussian function is the maxval of the image.
 
-<p>You can use this image, converted to PGM, as a convolution kernel
-with <b>pnmconvol</b> to blur an image.  (This technique is known as
+<p>You can use this image as a convolution kernel with
+<b>pnmconvol</b> to blur an image.  (This technique is known as
 Gaussian blurring).
 
 <i>width</i> and <i>height</i> are the dimensions of the image that
@@ -113,7 +112,7 @@ It can be any string up to 255 characters.  If you don't specify this,
 <UL>
 <LI><A HREF="#name">NAME</A>
 <LI><A HREF="#synopsis">SYNOPSIS</A>
-<LI><A HREF="#examples">SYNOPSIS</A>
+<LI><A HREF="#examples">EXAMPLES</A>
 <LI><A HREF="#description">DESCRIPTION</A>
 <LI><A HREF="#seealso">SEE ALSO</A>
 <LI><A HREF="#history">AUTHORS</A>
