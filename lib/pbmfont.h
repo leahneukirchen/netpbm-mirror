@@ -69,6 +69,9 @@ struct font* pbm_loadfont(const char * const filename);
 struct font* pbm_loadpbmfont(const char * const filename);
 struct font* pbm_loadbdffont(const char * const filename);
 void pbm_dumpfont ARGS(( struct font* fn ));
+unsigned int mk_argvn(char *        const s,
+                      const char ** const vec,
+                      unsigned int  const mk_max);
 
 #ifdef __cplusplus
 }

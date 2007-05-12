@@ -1072,7 +1072,7 @@ pbm_dumpfont( fn )
 /* Routines for loading a BDF font file */
 
 
-static unsigned int
+unsigned int
 mk_argvn(char *        const s,
          const char ** const vec,
          unsigned int  const mk_max) {
