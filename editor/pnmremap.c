@@ -43,9 +43,9 @@ enum missingMethod {
 #define FS_SCALE 1024
 
 struct fserr {
-    long** thiserr;
-    long** nexterr;
-    bool fsForward;
+    long ** thiserr;
+    long ** nexterr;
+    bool    fsForward;
 };
 
 
@@ -56,6 +56,7 @@ struct cmdlineInfo {
     const char * inputFilespec;  /* Filespec of input file */
     const char * mapFilespec;    /* Filespec of colormap file */
     unsigned int floyd;   /* Boolean: -floyd/-fs option */
+    unsigned int norandom;
     enum missingMethod missingMethod;
     char * missingcolor;      
         /* -missingcolor value.  Null if not specified */
@@ -98,6 +99,8 @@ parseCommandLine (int argc, char ** argv,
             NULL,                       &nofloyd, 0);
     OPTENT3(0,   "nofs",         OPT_FLAG,   
             NULL,                       &nofloyd, 0);
+    OPTENT3(0,   "norandom",     OPT_FLAG,   
+            NULL,                       &cmdlineP->norandom, 0);
     OPTENT3(0,   "firstisdefault", OPT_FLAG,   
             NULL,                       &firstisdefault, 0);
     OPTENT3(0,   "mapfile",      OPT_STRING, 
@@ -270,8 +273,30 @@ computeColorMapFromMap(struct pam *   const mappamP,
 
 
 static void
+randomizeError(long **      const err,
+               unsigned int const width,
+               unsigned int const depth) {
+/*----------------------------------------------------------------------------
+   Set a random error in the range [-1 .. 1] (normalized via FS_SCALE)
+   in the error array err[][].
+-----------------------------------------------------------------------------*/
+    unsigned int col;
+
+    srand(pm_randseed());
+
+    for (col = 0; col < width; ++col) {
+        unsigned int plane;
+        for (plane = 0; plane < depth; ++plane) 
+            err[plane][col] = rand() % (FS_SCALE * 2) - FS_SCALE;
+    }
+}
+
+
+
+static void
 initFserr(struct pam *   const pamP,
-          struct fserr * const fserrP) {
+          struct fserr * const fserrP,
+          bool           const initRandom) {
 /*----------------------------------------------------------------------------
    Initialize the Floyd-Steinberg error vectors
 -----------------------------------------------------------------------------*/
@@ -299,19 +324,9 @@ initFserr(struct pam *   const pamP,
                      "for Plane %u, size %u", plane, fserrSize);
     }
 
-    srand(pm_randseed());
+    if (initRandom)
+        randomizeError(fserrP->thiserr, fserrSize, pamP->depth);
 
-    {
-        int col;
-
-        for (col = 0; col < fserrSize; ++col) {
-            unsigned int plane;
-            for (plane = 0; plane < pamP->depth; ++plane) 
-                fserrP->thiserr[plane][col] = 
-                    rand() % (FS_SCALE * 2) - FS_SCALE;
-                    /* (random errors in [-1 .. 1]) */
-        }
-    }
     fserrP->fsForward = TRUE;
 }
 
@@ -703,14 +718,15 @@ convertRow(struct pam *            const pamP,
 
 
 static void
-copyRaster(struct pam *   const inpamP, 
-           struct pam *   const outpamP,
-           tupletable     const colormap, 
-           unsigned int   const colormapSize,
-           bool           const floyd, 
+copyRaster(struct pam *       const inpamP, 
+           struct pam *       const outpamP,
+           tupletable         const colormap, 
+           unsigned int       const colormapSize,
+           bool               const floyd, 
+           bool               const randomize,
            enum missingMethod const missingMethod,
-           tuple          const defaultColor, 
-           unsigned int * const missingCountP) {
+           tuple              const defaultColor, 
+           unsigned int *     const missingCountP) {
 
     tuplehash const colorhash = pnm_createtuplehash();
     struct colormapFinder * colorFinderP;
@@ -731,7 +747,7 @@ copyRaster(struct pam *   const inpamP,
     createColormapFinder(outpamP, colormap, colormapSize, &colorFinderP);
 
     if (floyd)
-        initFserr(inpamP, &fserr);
+        initFserr(inpamP, &fserr, randomize);
 
     *missingCountP = 0;  /* initial value */
 
@@ -771,6 +787,7 @@ remap(FILE * const ifP,
       tupletable         const colormap, 
       unsigned int       const colormapSize,
       bool               const floyd,
+      bool               const randomize,
       enum missingMethod const missingMethod,
       tuple              const defaultColor,
       bool               const verbose) {
@@ -798,7 +815,7 @@ remap(FILE * const ifP,
         pnm_setminallocationdepth(&inpam, outpam.depth);
     
         copyRaster(&inpam, &outpam, colormap, colormapSize, floyd,
-                   missingMethod, defaultColor, &missingCount);
+                   randomize, missingMethod, defaultColor, &missingCount);
         
         if (verbose)
             pm_message("%u pixels not matched in color map", missingCount);
@@ -858,7 +875,8 @@ main(int argc, char * argv[] ) {
     }
 
     remap(ifP, &outpamCommon, colormap, colormapSize, 
-          cmdline.floyd, cmdline.missingMethod, defaultColor,
+          cmdline.floyd, !cmdline.norandom, cmdline.missingMethod,
+          defaultColor,
           cmdline.verbose);
 
     pnm_freepamtuple(defaultColor);
