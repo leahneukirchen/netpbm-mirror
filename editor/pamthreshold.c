@@ -48,6 +48,13 @@ struct cmdlineInfo {
 
 
 
+static __inline__ bool
+betweenZeroAndOne(float const arg) {
+    return (arg >= 0.0 && arg <= 1.0);
+}
+
+
+
 struct range {
     /* A range of sample values, normalized to [0, 1] */
     samplen min;
@@ -72,6 +79,16 @@ addToRange(struct range * const rangeP,
 
     rangeP->min = MIN(newSample, rangeP->min);
     rangeP->max = MAX(newSample, rangeP->max);
+}
+
+
+
+static void
+assertRangeValid(struct range const range) {
+
+    assert(betweenZeroAndOne(range.min));
+    assert(betweenZeroAndOne(range.max));
+    assert(range.max >= range.min);
 }
 
 
@@ -416,6 +433,9 @@ computeGlobalThreshold(struct pam *         const inpamP,
     float oldthreshold;        /* stop if oldthreshold==threshold */
     unsigned int iter;         /* count of done iterations */
 
+    assert(betweenZeroAndOne(globalRange.min));
+    assert(betweenZeroAndOne(globalRange.max));
+
     /* Use middle value (halfway between min and max) as initial threshold */
     threshold = (globalRange.min + globalRange.max) / 2.0;
 
@@ -449,6 +469,8 @@ computeGlobalThreshold(struct pam *         const inpamP,
             (black * (globalRange.min + threshold) / 2.0 +
              white * (threshold + globalRange.max) / 2.0) /
             (black + white);
+        
+        assert(betweenZeroAndOne(threshold ));
     }
 
     *thresholdP = threshold;
