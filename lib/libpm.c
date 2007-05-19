@@ -1494,7 +1494,8 @@ pm_tell2(FILE *       const fileP,
     } else
         pm_error("File position size passed to pm_tell() is invalid: %u.  "
                  "Valid sizes are %u and %u", 
-                 fileposSize, sizeof(pm_filepos), sizeof(long));
+                 fileposSize, (unsigned int)sizeof(pm_filepos),
+                 (unsigned int) sizeof(long));
 }
 
 
@@ -1532,7 +1533,8 @@ pm_seek2(FILE *             const fileP,
     } else
         pm_error("File position size passed to pm_seek() is invalid: %u.  "
                  "Valid sizes are %u and %u", 
-                 fileposSize, sizeof(pm_filepos), sizeof(long));
+                 fileposSize, (unsigned int)sizeof(pm_filepos),
+                 (unsigned int) sizeof(long));
 }
 
 
