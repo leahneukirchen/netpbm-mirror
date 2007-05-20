@@ -300,6 +300,119 @@ analyzeDistribution(struct pam *          const inpamP,
 
 
 static void
+computeWhiteBlackMeans(const unsigned int * const histogram,
+                       sample               const maxval,
+                       float                const threshold,
+                       float *              const meanBlackP,
+                       float *              const meanWhiteP) {
+/*----------------------------------------------------------------------------
+  Assuming that histogram[] and 'maxval' describe the pixels of an image,
+  find the mean value of the pixels that are below 'threshold' and
+  that are above 'threshold'.
+-----------------------------------------------------------------------------*/
+    unsigned int nWhite, nBlack;
+        /* Number of would-be-black, would-be-white pixels */
+    uint64_t sumBlack, sumWhite;
+        /* Sum of all the would-be-black, would-be-white pixels */
+    sample gray;
+
+    assert(threshold * maxval <= maxval);
+
+    for (gray = 0, nBlack = 0, sumBlack = 0;
+         gray < threshold * maxval;
+         ++gray) {
+        nBlack += histogram[gray];
+        sumBlack += gray * histogram[gray];
+    }
+    for (nWhite = 0, sumWhite = 0; gray <= maxval; ++gray) {
+        nWhite += histogram[gray];
+        sumWhite += gray * histogram[gray];
+    }
+
+    *meanBlackP = (float)sumBlack / nBlack / maxval;
+    *meanWhiteP = (float)sumWhite / nWhite / maxval;
+}
+
+
+
+static void
+computeGlobalThreshold(struct pam *         const inpamP,
+                       const unsigned int * const histogram,
+                       struct range         const globalRange,
+                       float *              const thresholdP) {
+/*----------------------------------------------------------------------------
+   Compute the proper threshold to use for the image described by
+   *inpamP, whose file is positioned to the raster.
+
+   For our convenience:
+
+     'histogram' describes the frequency of occurence of the various sample
+     values in the image.
+
+     'globalRange' describes the range (minimum, maximum) of sample values
+     in the image.
+
+   Return the threshold (scaled to [0, 1]) as *thresholdP.
+-----------------------------------------------------------------------------*/
+    /* Found this algo in the wikipedia article "Thresholding (image
+       processing)."  It is said to be a special one-dimensional case
+       of the "k-means clustering algorithm."
+
+       The article claims it's proven to converge, by the way.
+       We have an interation limit just as a safety net.
+
+       This code originally implemented a rather different algorithm,
+       while nonetheless carrying the comment that it implemented the
+       Wikipedia article.  I changed it to match Wikipedia in May 2007
+       (at that time there was also a fatal bug in the code, so it
+       didn't implement any intentional algorithm).
+
+       In May 2007, the Wikipedia article described an enhancement of
+       the algorithm that uses a weighted average.  But that enhancement
+       actually reduces the entire thing to: set the threshold to the
+       mean pixel value.  It must be some kind of mistake.  We use the
+       unenhanced version of the algorithm.
+    */
+
+    float threshold;           /* threshold is iteratively determined */
+    float oldthreshold;        /* stop if oldthreshold==threshold */
+    unsigned int iter;         /* count of done iterations */
+
+    assert(betweenZeroAndOne(globalRange.min));
+    assert(betweenZeroAndOne(globalRange.max));
+
+    /* Use middle value (halfway between min and max) as initial threshold */
+    threshold = (globalRange.min + globalRange.max) / 2.0;
+
+    oldthreshold = -1.0;  /* initial value */
+    iter = 0; /* initial value */
+
+    /* adjust threshold to image */
+    while (fabs(oldthreshold - threshold) > 2.0/inpamP->maxval &&
+           iter < MAX_ITERATIONS) {
+        float meanBlack, meanWhite;
+
+        ++iter;
+
+        computeWhiteBlackMeans(histogram, inpamP->maxval, threshold,
+                               &meanBlack, &meanWhite);
+
+        assert(betweenZeroAndOne(meanBlack));
+        assert(betweenZeroAndOne(meanWhite));
+
+        oldthreshold = threshold;
+
+        threshold = (meanBlack + meanWhite) / 2;
+    }
+
+    assert(betweenZeroAndOne(threshold));
+
+    *thresholdP = threshold;
+}
+
+
+
+static void
 getLocalThreshold(tuplen **    const inrows,
                   unsigned int const windowWidth,
                   unsigned int const x,
@@ -383,75 +496,6 @@ thresholdLocalRow(struct pam *       const inpamP,
         
         outrow[col][0] = inrow[col][0] >= threshold ? PAM_BW_WHITE : PAM_BLACK;
     }
-}
-
-
-
-static void
-computeGlobalThreshold(struct pam *         const inpamP,
-                       const unsigned int * const histogram,
-                       struct range         const globalRange,
-                       float *              const thresholdP) {
-/*----------------------------------------------------------------------------
-   Compute the proper threshold to use for the image described by
-   *inpamP, whose file is positioned to the raster.
-
-   For our convenience:
-
-     'histogram' describes the frequency of occurence of the various sample
-     values in the image.
-
-     'globalRange' describes the range (minimum, maximum) of sample values
-     in the image.
-
-   Return the threshold (scaled to [0, 1]) as *thresholdP.
-
-   Leave the file positioned to the raster.
------------------------------------------------------------------------------*/
-    /* Found this algo in the wikipedia article "Thresholding (image
-       processing)"
-    */
-
-    float threshold;           /* threshold is iteratively determined */
-    float oldthreshold;        /* stop if oldthreshold==threshold */
-    unsigned int iter;         /* count of done iterations */
-
-    /* Use middle value (halfway between min and max) as initial threshold */
-    threshold = (globalRange.min + globalRange.max) / 2.0;
-
-    oldthreshold = -1.0;  /* initial value */
-    iter = 0; /* initial value */
-
-    /* adjust threshold to image */
-    while (fabs(oldthreshold - threshold) > 0.01 && iter < MAX_ITERATIONS) {
-        unsigned long white, black;   /* number of white, black pixels */
-        unsigned int row;
-
-        ++iter;
-
-        /* count black and white pixels */
-
-        for (row = 0, white = 0, black = 0; row < inpamP->height; ++row) {
-            unsigned int col;
-
-            for(col = 0; col < threshold * inpamP->maxval; ++col)
-                black += histogram[col];
-            for(; col <= inpamP->maxval; ++col)
-                white += histogram[col];
-        }
-
-        oldthreshold = threshold;
-
-        /* Use the weighted average of black and white pixels to calculate new
-           threshold
-        */
-        threshold =
-            (black * (globalRange.min + threshold) / 2.0 +
-             white * (threshold + globalRange.max) / 2.0) /
-            (black + white);
-    }
-
-    *thresholdP = threshold;
 }
 
 

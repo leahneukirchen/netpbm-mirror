@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+07.05.20 BJH  Release 10.35.27
+
+              pamthreshold: fix totally bogus threshold selection with
+              simple thresholding.
+
 07.04.07 BJH  Release 10.35.26
 
               picttoppm: Fix wild memory reference in all use cases.
