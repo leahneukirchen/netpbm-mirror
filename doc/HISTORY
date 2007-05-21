@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.39.00
 
+              PAM_STRUCT_SIZE: cast pointer to ulong instead of uint.
+
               pamthreshold: fix totally bogus threshold selection with
               simple thresholding.
 
