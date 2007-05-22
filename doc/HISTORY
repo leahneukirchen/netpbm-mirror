@@ -4,6 +4,13 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+07.05.22 BJH  Release 10.38.03
+
+              pamthreshold: fix totally bogus threshold selection with
+              simple thresholding.
+
+              PAM_STRUCT_SIZE: cast pointer to ulong instead of uint.
+
 07.05.09 BJH  Release 10.38.02
 
               Configure: fix bug detecting presence of libvga with
