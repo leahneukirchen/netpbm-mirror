@@ -39,10 +39,9 @@ struct cmdlineInfo {
 
 
 static void 
-parseCommandLine(int argc, 
-                 char ** argv, 
-                 struct cmdlineInfo  * const cmdlineP) {
-/* --------------------------------------------------------------------------
+parseCommandLine(int argc, char ** argv,
+                 struct cmdlineInfo * const cmdlineP) {
+/*--------------------------------------------------------------------------
    Parse program command line described in Unix standard form by argc
    and argv.  Return the information in the options as *cmdlineP.  
 
@@ -52,8 +51,8 @@ parseCommandLine(int argc,
    Note that the strings we return are stored in the storage that
    was passed to us as the argv array.  We also trash *argv.
 --------------------------------------------------------------------------*/
-    optEntry *option_def;
-    /* Instructions to optParseOptions3 on how to parse our options. */
+    optEntry * option_def;
+        /* Instructions to optParseOptions3 on how to parse our options. */
     optStruct3 opt;
 
     unsigned int minSpec;
@@ -95,7 +94,6 @@ parseCommandLine(int argc,
                      "is the input file name.", argc-1);
     }
 }
-
 
 
 
