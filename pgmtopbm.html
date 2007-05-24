@@ -41,8 +41,14 @@ directly proportional to light intensity, but they are actually
 gamma-adjusted.
 
 <p><b>pamditherbw</b> is backward compatible with <b>pgmtopbm</b>
-except that it does the correct gamma adjustments.  So use
-the manual for <b>pamditherbw</b> for <b>pgmtopbm</b>, except
+except that it 
+<ul>
+<li>does the correct gamma adjustments.
+<li>produced PAM output instead of PBM.  (Modern Netpbm programs that
+accept PBM input also accept PAM input, but if you need actual PBM,
+you can use <b>pamtopbm</b> with <b>pamditherbw</b>).
+</ul>
+So use the manual for <b>pamditherbw</b> for <b>pgmtopbm</b>, except
 ignore anything that says it was added after Netpbm Release 10.23
 and ignore any options that are not shown in the synopsis above.
 

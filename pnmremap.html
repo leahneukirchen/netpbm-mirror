@@ -18,6 +18,8 @@ pnmremap - replace colors in a PNM image with colors from another set
 
 [<B>-floyd</B>|<B>-fs</B>|<B>-nfloyd</B>|<B>-nofs</B>]
 
+[<b>-norand</b>]
+
 [<B>-firstisdefault</B>]
 
 [<B>-verbose</B>]
@@ -193,7 +195,6 @@ adjacent, to a palette that contains only black and white, it might
 result in an output of black, black, white, white.  Pixel-by-pixel
 mapping would instead map both the gray pixels to the same color.
 
-
 <p>Floyd-Steinberg gives vastly better results on images where
 unmodified quantization has banding or other artifacts, especially
 when going to a small number of colors such as the above IBM set.
@@ -203,6 +204,27 @@ However, it does take substantially more CPU time.
 synonym for <B>-nofloyd</B>.
 
 <P>The default is <B>-nofloyd</B>.
+
+
+<dt><b>-norandom</b>
+
+<dd>This option affects a detail of the Floyd-Steinberg dithering process.
+It has no effect if you aren't doing Floyd-Steinberg dithering.
+
+<p>By default, <b>pnmremap</b> initializes the error propagation
+accumulator to random values to avoid the appearance of unwanted
+patterns.  This is an extension of the original Floyd-Steinberg
+algorithm.
+
+<p>A drawback of this is that the same <b>pnmremap</b> on the same
+input produces slightly different output every time, which makes
+comparison difficult.
+
+<p>With <b>-norandom</b>, <b>pnmremap</b> initializes the error
+accumulators to zero and the output is completely predictable.
+
+<p><b>-norandom</b> was new in Netpbm 10.39 (June 2007).
+
 
 <DT><B>-firstisdefault</B>
 

@@ -2,27 +2,30 @@
 <HTML><HEAD><TITLE>Fitstopnm User Manual</TITLE></HEAD>
 <BODY>
 <H1>fitstopnm</H1>
-Updated: 20 September 89
+Updated: 22 May 2007
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 fitstopnm - convert a FITS file into a PNM image
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>fitstopnm</B>
-[<B>-image</B> <I>N</I>]
+[<B>-image=</B><I>N</I>]
 [<B>-scanmax</B>]
 [<B>-printmax</B>]
-[<B>-min</B> <I>f</I>]
-[<B>-max</B> <I>f</I>]
+[<B>-min=</B><I>f</I>]
+[<B>-max=</B><I>f</I>]
+[<b>-omaxval=</b><i>N</i>
 [<I>FITSfile</I>]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<p>Minimum unique abbreviation of option is acceptable.  You may use double
+hyphens instead of single hyphen to denote options.  You may use white
+space in place of the equals sign to separate an option name from its value.
+
+
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -33,44 +36,79 @@ planes (NAXIS = 2), or if you specify the <B>-image</B> option.  The
 results may need to be flipped top for bottom; if so, just pipe the
 output through <B>pamflip -tb</B>.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
-
-<P>All options may be abbreviated to their shortest unique prefix.
-
-<P>The <B>-image</B> option is for FITS files with three axes.  The
-assumption is that the third axis is for multiple images, and this
-option lets you select which one you want.
-
-<P>You can use options <B>-min</B> and <B>-max</B> to override the min
-and max values as read from the FITS header or the image data if no
-DATAMIN and DATAMAX keywords are found.
-
-<p>You can use the <B>-scanmax</B> option to force the program to scan
-the data even when DATAMIN and DATAMAX are found in the header. If you
-specify <B>-printmax</B>, the program will just print the min and max
-values and quit.
-
 <P>The program tells you what kind of PNM image it is writing.
 
+<H2 id="options">OPTIONS</H2>
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>REFERENCES</H2>
+<dl>
+
+<dt><b>-image=</b><i>N</i>
+
+<dd>This is for FITS files with three axes.  The assumption is that
+the third axis is for multiple images, and this option lets you select
+which one you want.
+
+<dd><b>-omaxval=</b><i>N</i>
+
+<P>This is the maxval that the output PNM image is to have.
+
+<p>By default, the maxval is the least possible to retain all the
+precision of the FITS input.  That means the difference between the
+highest and lowest sample value in the input.  If the values range
+from -5 to 100, for example, the default maxval would be 106 and each
+PNM sample value would correspond to one FITS sample value.
+
+<p>For a FITS input with floating point sample values, the precision is
+essentially unlimited, so this is not possible.  In that case, the default
+maxval is simply 255.
+
+<p>This option was new in Netpbm 10.39 (June 2007).  Before that, the
+output maxval is always the default.
+
+<dt><b>-min=</b><I>float</I>
+<dt><b>-max=</b><i>float</i>
+<dd>
+
+<P>You can use these options to override the min and max values as
+read from the FITS header or the image data if the header has no
+DATAMIN and DATAMAX keywords.
+
+<dt><b>-scanmax</b>
+<dd>
+Use this option to force the program to scan the data even when the
+header has DATAMIN and DATAMAX.
+
+<dt><b>-printmax</b>
+
+<dd>With this option, the program just prints the min and max values
+and quits without doing its normal job.
+
+<p>This is for use in shell programs.  Example:
+
+<pre>
+<code>
+    eval 'fitstopnm -printmax $filename | \
+    awk {min = $1; max = $2} \
+          END {print "min=" min; " max=" max}'
+</code>
+</pre>
+
+</dl>
+
+<H2 id="references">REFERENCES</H2>
 
 <p>FITS stands for Flexible Image Transport System.  A full description
 can be found in Astronomy &amp; Astrophysics Supplement Series 44 (1981),
 page 363.
 
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
-<A HREF="pnmtofits.html">pnmtofits</A>,
+<A HREF="pamtofits.html">pamtofits</A>,
 <A HREF="pamflip.html">pamflip</A>,
 <A HREF="pgm.html">pgm</A>
 
-<A NAME="lbAH">&nbsp;</A>
-<H2>AUTHOR</H2>
+<H2 id="author">AUTHOR</H2>
 
 Copyright (C) 1989 by Jef Poskanzer, with modifications by Daniel
 Briggs (<A HREF="mailto:dbriggs@nrao.edu">dbriggs@nrao.edu</A>) and
@@ -79,15 +117,14 @@ HREF="mailto:alberto@cfa.harvard.edu">alberto@cfa.harvard.edu</A>).
 
 
 <HR>
-<A NAME="index">&nbsp;</A><H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">REFERENCES</A>
-<LI><A HREF="#lbAG">SEE ALSO</A>
-<LI><A HREF="#lbAH">AUTHOR</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#references">REFERENCES</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
 </UL>
 </BODY>
 </HTML>
