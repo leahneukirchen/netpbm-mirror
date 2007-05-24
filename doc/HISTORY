@@ -6,16 +6,22 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.39.00
 
-              PAM_STRUCT_SIZE: cast pointer to ulong instead of uint.
-
-              pamthreshold: fix totally bogus threshold selection with
-              simple thresholding.
+              fitstopnm: add -omaxval.
 
               pnmremap: add -norand.
 
               Add pamundice.
 
               pbmtext: improve error messages about fonts.
+
+              pamtofits: fix -min, -max.
+
+              fitstopnm: fix BITPIX = -32.
+
+              PAM_STRUCT_SIZE: cast pointer to ulong instead of uint.
+
+              pamthreshold: fix totally bogus threshold selection with
+              simple thresholding.
 
               Configure: do test compile for missing Libxml2 and too old
               Libxml2.

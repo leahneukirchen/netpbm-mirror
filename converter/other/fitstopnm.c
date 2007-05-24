@@ -54,6 +54,8 @@ struct cmdlineInfo {
            -plain now.  (pnm_init() processes -plain).
         */
     unsigned int verbose;
+    unsigned int omaxval;
+    unsigned int omaxvalSpec;
 };
 
 
@@ -81,20 +83,22 @@ parseCommandLine(int argc, char ** argv,
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0, "image",   OPT_UINT,
-            &cmdlineP->image,  &imageSpec,                            0);
-    OPTENT3(0, "min",     OPT_FLOAT,
-            &cmdlineP->min,    &cmdlineP->minSpec,                    0);
-    OPTENT3(0, "max",     OPT_FLOAT,
-            &cmdlineP->max,    &cmdlineP->maxSpec,                    0);
-    OPTENT3(0, "scanmax", OPT_FLAG,
-            NULL,              &cmdlineP->scanmax,                    0);
+    OPTENT3(0, "image",    OPT_UINT,
+            &cmdlineP->image,   &imageSpec,                            0);
+    OPTENT3(0, "min",      OPT_FLOAT,
+            &cmdlineP->min,     &cmdlineP->minSpec,                    0);
+    OPTENT3(0, "max",      OPT_FLOAT,
+            &cmdlineP->max,     &cmdlineP->maxSpec,                    0);
+    OPTENT3(0, "scanmax",  OPT_FLAG,
+            NULL,               &cmdlineP->scanmax,                    0);
     OPTENT3(0, "printmax", OPT_FLAG,
-            NULL,              &cmdlineP->printmax,                   0);
+            NULL,               &cmdlineP->printmax,                   0);
     OPTENT3(0, "noraw",    OPT_FLAG,
-            NULL,              &cmdlineP->noraw,                      0);
+            NULL,               &cmdlineP->noraw,                      0);
     OPTENT3(0, "verbose",  OPT_FLAG,
-            NULL,              &cmdlineP->verbose,                    0);
+            NULL,               &cmdlineP->verbose,                    0);
+    OPTENT3(0, "omaxval",  OPT_UINT,
+            &cmdlineP->omaxval, &cmdlineP->omaxvalSpec,                0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -463,17 +467,29 @@ determineMaxval(struct cmdlineInfo const cmdline,
 
     xelval retval;
                 
-    if (fitsHeader.bitpix < 0) {
-        /* samples are floating point, which means the resolution could be
-           anything.  So we just pick a convenient maxval of 255.  We should
-           have a program option to choose the maxval.  Before Netpbm 10.20
-           (January 2004), we did maxval = max - min for floating point as
-           well as integer samples.
-        */
-        retval = 255;
-    } else
-        retval = MAX(1, MIN(PNM_OVERALLMAXVAL, datamax - datamin));
-
+    if (cmdline.omaxvalSpec)
+        retval = cmdline.omaxval;
+    else {
+        if (fitsHeader.bitpix < 0) {
+            /* samples are floating point, which means the resolution
+               could be anything.  So we just pick a convenient maxval
+               of 255.  Before Netpbm 10.20 (January 2004), we did
+               maxval = max - min for floating point as well as
+               integer samples.
+            */
+            retval = 255;
+            if (cmdline.verbose)
+                pm_message("FITS image has floating point samples.  "
+                           "Using maxval = %u.", (unsigned int)retval);
+        } else {
+            retval = MAX(1, MIN(PNM_OVERALLMAXVAL, datamax - datamin));
+            if (cmdline.verbose)
+                pm_message("FITS image has samples in the range %d-%d.  "
+                           "Using maxval %u.",
+                           (int)(datamin+0.5), (int)(datamax+0.5),
+                           (unsigned int)retval);
+        }
+    }
     return retval;
 }
 
