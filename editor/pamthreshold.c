@@ -368,9 +368,7 @@ computeGlobalThreshold(struct pam *         const inpamP,
                        float *              const thresholdP) {
 /*----------------------------------------------------------------------------
    Compute the proper threshold to use for the image described by
-   *inpamP, whose file is positioned to the raster.
-
-   For our convenience:
+   *inpamP, and:
 
      'histogram' describes the frequency of occurence of the various sample
      values in the image.
