@@ -668,46 +668,102 @@ static struct fontinfo** fontlist_ins = &fontlist;
 
 
 
+static void
+tokenize(char *         const s,
+         const char **  const vec,
+         unsigned int   const vecSize,
+         unsigned int * const nTokenP) {
+
+    unsigned int nToken;
+    char * p;
+
+    p = &s[0];   /* start at beginning of string */
+    nToken = 0;  /* no tokens yet */
+
+    while (*p && nToken < vecSize - 1) {
+        if (ISSPACE(*p))
+            *p++ = '\0';
+        else {
+            vec[nToken++] = p;
+            /* Skip to next non-space character or end */
+            while (*p && !ISSPACE(*p))
+                ++p;
+        }
+    }
+    vec[nToken] = NULL;
+
+    *nTokenP = nToken;
+}
+
+
+
+static void
+parseFontLine(const char **      const token,
+              struct fontinfo ** const fontinfoPP) {
+
+    struct fontinfo * fontinfoP;
+
+    MALLOCVAR(fontinfoP);
+    if (fontinfoP == NULL)
+        pm_error("out of memory for font information");
+    MALLOCARRAY(fontinfoP->filename, strlen(token[3] + 1));
+    if (fontinfoP->filename == NULL)
+        pm_error("out of memory for font information file name");
+
+    fontinfoP->font  = atoi(token[0]);
+    fontinfoP->size  = atoi(token[1]);
+    fontinfoP->style = atoi(token[2]);
+    strcpy(fontinfoP->filename, token[3]);
+    fontinfoP->loaded = 0;
+
+    *fontinfoPP = fontinfoP;
+}
+
+
+
 static int 
 load_fontdir(const char * const dirfile) {
 /*----------------------------------------------------------------------------
    Load the font directory from file named 'dirfile'.  Add its contents
    to the global list of fonts 'fontlist'.
 -----------------------------------------------------------------------------*/
-    FILE* fp;
-    int n, nfont;
-    char* arg[5], line[1024];
-    struct fontinfo* fontinfo;
+    int retval;
+    FILE * fp;
 
-    if (!(fp = fopen(dirfile, "rb")))
-        return -1;
-    
-    nfont = 0;
-    while (fgets(line, 1024, fp)) {
-        if ((n = mk_argvn(line, arg, 5)) == 0 || arg[0][0] == '#')
-            continue;
-        if (n != 4)
-            continue;
-        MALLOCVAR(fontinfo);
-        if (fontinfo == NULL)
-            pm_error("out of memory for font information");
-        MALLOCARRAY(fontinfo->filename, strlen(arg[3] + 1));
-        if (fontinfo->filename == NULL)
-            pm_error("out of memory for font information file name");
+    fp = fopen(dirfile, "rb");
+    if (!fp)
+        retval =  -1;
+    else {
+        unsigned int nFont;
+        char line[1024]; 
 
-        fontinfo->font = atoi(arg[0]);
-        fontinfo->size = atoi(arg[1]);
-        fontinfo->style = atoi(arg[2]);
-        strcpy(fontinfo->filename, arg[3]);
-        fontinfo->loaded = 0;
+        nFont = 0;
+        while (fgets(line, 1024, fp) && nFont < INT_MAX) {
+            const char * token[10];
+            unsigned int nToken;
 
-        fontinfo->next = 0;
-        *fontlist_ins = fontinfo;
-        fontlist_ins = &fontinfo->next;
-        nfont++;
+            tokenize(line, token, ARRAY_SIZE(token), &nToken);
+
+            if (nToken == 0) {
+                /* blank line - ignore */
+            } else if (token[0][0] == '#') {
+                /* comment - ignore */
+            } else if (nToken != 4) {
+                /* Unrecognized format - ignore */
+            } else {
+                struct fontinfo * fontinfoP;
+
+                parseFontLine(token, &fontinfoP);
+
+                fontinfoP->next = 0;
+                *fontlist_ins = fontinfoP;
+                fontlist_ins = &fontinfoP->next;
+                ++nFont;
+            }
+        }
+        retval = nFont;
     }
-
-    return nfont;
+    return retval;
 }
 
 
