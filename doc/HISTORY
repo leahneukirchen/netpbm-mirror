@@ -522,7 +522,7 @@ not yet  BJH  Release 10.39.00
 
               ppmglobe: fix bug: always says stripcount is zero
               because it looks at the wrong argument.  Thanks Urs Enke
-              <urs.enke@rwth-aachen.de>.
+              <urs.enke@web.de>.
 
               pnmtotiffcmyk: Fix inttypes conflict on AIX.
 
