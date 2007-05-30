@@ -100,7 +100,7 @@ struct canvas {
 
 typedef void (*transfer_func) (struct RGBColor* src, struct RGBColor* dst);
 
-static const char* stage;
+static const char * stage;
 static struct Rect picFrame;
 static word rowlen;
 static word collen;
