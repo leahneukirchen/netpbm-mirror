@@ -67,8 +67,8 @@ Whitespace.
 <LI>
 The maximum color value (Maxval), again in ASCII decimal.  Must be less
 than 65536 and more than zero.
-<LI>
-Newline or other single whitespace character.
+
+<LI>A single whitespace character (usually a newline).
 
 <LI>A raster of Height rows, in order from top to bottom.  Each row
 consists of Width pixels, in order from left to right.  Each pixel is
@@ -105,8 +105,8 @@ values be &quot;linear,&quot; i.e. as specified above except without
 the gamma adjustment.  <B>pnmgamma</B> takes such a PPM variant as
 input and produces a true PPM as output.
 
-<LI>Characters from a &quot;#&quot; to the next end-of-line, before
-the maxval line, are comments and are ignored.
+<LI>Strings starting with &quot;#&quot; may be comments, the same as
+with <a href="pbm.html">PBM</a>.
 
 </OL>
 

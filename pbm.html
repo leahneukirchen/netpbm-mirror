@@ -18,10 +18,10 @@ pbm - Netpbm bi-level image format
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<P>The PBM format is a lowest common denominator monochrome file format.
-<A NAME="ixAAB"></A> It serves as the common language of a large
-family of bitmap image conversion filters.  Because the format pays no heed
-to efficiency, it is simple and general enough that one can easily
+<P>The PBM format is a lowest common denominator monochrome file
+format.  It serves as the common language of a large family of bitmap
+image conversion filters.  Because the format pays no heed to
+efficiency, it is simple and general enough that one can easily
 develop programs to convert to and from just about any other graphics
 format, or to manipulate the image.
 
@@ -52,7 +52,7 @@ A pbm image's magic number is the two characters &quot;P4&quot;.
 
 <LI>The height in pixels of the image, again in ASCII decimal.
 
-<LI>Newline or other single whitespace character.
+<LI>A single whitespace character (usually a newline).
 
 <LI>A raster of Height rows, in order from top to bottom.  Each row is
 Width bits, packed 8 to a byte, with don't care bits to fill out the
@@ -66,13 +66,18 @@ the file toward the end of the file.
 <P>A row of an image is horizontal.  A column is vertical.  The pixels
 in the image are square and contiguous.
 
-<LI>Characters from a &quot;#&quot; to the next end-of-line, before
-the width/height line, are comments and are ignored.
+<li>Before the whitespace character that delimits the raster, any
+characters from a &quot;#&quot; through the next carriage return or
+newline character, is a comment and is ignored.  Note that this is
+rather unconventional, because a comment can actually be in the middle
+of what you might consider a token.  Note also that this means if you
+have a comment right before the raster, the newline at the end of the
+comment is not sufficient to delimit the raster.
 
 </OL>
 
 <P>
-There is actually another version of the PBM format, even more more
+There is actually another version of the PBM format, even more
 simplistic, more lavishly wasteful of space than PBM, called Plain
 PBM.  Plain PBM actually came first, but even its inventor couldn't
 stand its recklessly squanderous use of resources after a while and
