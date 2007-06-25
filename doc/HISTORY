@@ -6,11 +6,13 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.39.00
 
+              Add pamtooctave.  Thanks Scott Pakin (scott@pakin.org).
+
+              Add pamundice.
+
               fitstopnm: add -omaxval.
 
               pnmremap: add -norand.
-
-              Add pamundice.
 
               pbmtext: improve error messages about fonts.
 
