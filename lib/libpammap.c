@@ -438,8 +438,8 @@ pnm_alloctupletable(const struct pam * const pamP,
 
 
 void
-pnm_freetupletable(struct pam * const pamP,
-                   tupletable   const tupletable) {
+pnm_freetupletable(const struct pam * const pamP,
+                   tupletable         const tupletable) {
 
     /* Note that the address 'tupletable' is, to the operating system, 
        the address of a larger block of memory that contains not only 
@@ -453,8 +453,8 @@ pnm_freetupletable(struct pam * const pamP,
 
 
 void
-pnm_freetupletable2(struct pam * const pamP,
-                    tupletable2  const tupletable) {
+pnm_freetupletable2(const struct pam * const pamP,
+                    tupletable2        const tupletable) {
 
     pnm_freetupletable(pamP, tupletable.table);
 }
