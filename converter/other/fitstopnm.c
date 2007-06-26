@@ -418,6 +418,7 @@ read_val (fp, bitpix, vp)
         else
             lval = c[0]<<24 | c[1]<<16 | c[2]<<8 | c[3];
         *vp = lval;
+        break;
       
     case -32:
         for (i=0; i<4; i++) {

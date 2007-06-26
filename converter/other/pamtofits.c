@@ -32,8 +32,8 @@
 struct cmdlineInfo {
     const char * inputFileName;
     unsigned int maxSpec;
-    double max;
-    double min;
+    float max;
+    float min;
 };
 
 

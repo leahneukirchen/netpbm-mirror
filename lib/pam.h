@@ -116,8 +116,13 @@ struct pam {
    member named x.  This is useful in conjunction with the 'len' value
    to determine which fields are present in the structure.
 */
+
+/* Some compilers are really vigilant and recognize it as an error
+   to cast a 64 bit address to a 32 bit type.  Hence the roundabout
+   casting in PAM_MEMBER_OFFSET.
+*/
 #define PAM_MEMBER_OFFSET(mbrname) \
-  ((unsigned int)(char*)&((struct pam *)0)->mbrname)
+  ((size_t)(unsigned long)(char*)&((struct pam *)0)->mbrname)
 #define PAM_MEMBER_SIZE(mbrname) \
   sizeof(((struct pam *)0)->mbrname)
 #define PAM_STRUCT_SIZE(mbrname) \
