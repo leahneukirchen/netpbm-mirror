@@ -80,7 +80,8 @@ endif
 PORTBINARIES =  bmptopnm fitstopnm \
 		gemtopnm giftopnm hdifftopam infotopam \
 		pamtodjvurle pamtofits pamtogif \
-		pamtohdiff pamtohtmltbl pamtopfm pamtopnm pamtouil \
+		pamtohdiff pamtohtmltbl pamtooctave \
+		pamtopfm pamtopnm pamtouil \
 		pamtoxvmini \
 		pbmtopgm pfmtopam \
 	        pgmtopbm pgmtoppm ppmtopgm pnmtoddif \
