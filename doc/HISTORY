@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+not yet  BJH  Release 10.38.04
+
+              fitstopnm: fix BITPIX = -32.
+
+              pamtofits: fix -min, -max.
+
 07.05.22 BJH  Release 10.38.03
 
               pamthreshold: fix totally bogus threshold selection with
@@ -511,7 +517,7 @@ CHANGE HISTORY
 
               ppmglobe: fix bug: always says stripcount is zero
               because it looks at the wrong argument.  Thanks Urs Enke
-              <urs.enke@rwth-aachen.de>.
+              <urs.enke@web.de>.
 
               pnmtotiffcmyk: Fix inttypes conflict on AIX.
 
