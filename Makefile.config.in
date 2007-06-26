@@ -248,6 +248,17 @@ LDSHLIB = -shared -Wl,-soname,$(SONAME)
 #LDSHLIB = -shared
 #AIX Visual Age C:
 #LDSHLIB = -qmkshrobj
+#Mac OSX:
+# According to experiments done by Peter A Crowley in May 2007, if
+# libnetpbm goes in a standard place such as /usr/local/lib,
+# programs need not be built with libnetpbm's location included.
+# But if it goes elsewhere, the link-editor must include the
+# location in the executable.  It finds the runtime location by
+# looking inside the library.  The information in the library
+# comes from the install_name option with which the library was
+# built.  It's an alternative to the -rpath option on other systems.
+#LDSHLIB=-dynamiclib
+#LDSHLIB=-dynamiclib -install_name $(NETPBMLIB_RUNTIME_PATH)/libnetpbm.$(MAJ).dylib
 
 # LDRELOC is the command to combine two .o files (relocateable object files)
 # into a single .o file that can later be linked into something else.  NONE

@@ -631,7 +631,7 @@ validateCompatibleImage(struct pam * const inpamP,
     if (inpamP->format != firstPamP->format)
         pm_error("Image %u format (%d) is not the same as Image 0 (%d)",
                  imageSeq, inpamP->format, firstPamP->format);
-    if (!STREQ(inpamP->tuple_type, firstPamP->tuple_type))
+    if (!streq(inpamP->tuple_type, firstPamP->tuple_type))
         pm_error("Image %u tuple type (%s) is not the same as Image 0 (%s)",
                  imageSeq, inpamP->tuple_type, firstPamP->tuple_type);
 }

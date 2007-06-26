@@ -72,6 +72,12 @@
 
 include $(SRCDIR)/Makefile.version
 
+# .DELETE_ON_ERROR is a special predefined Make target that says to delete
+# the target if a command in the rule for it fails.  That's important,
+# because we don't want a half-made target sitting around looking like it's
+# fully made.
+.DELETE_ON_ERROR:
+
 NETPBM_INCLUDES := -I importinc -I$(SRCDIR)/$(SUBDIR)
 
 # -I. is needed when builddir != srcdir

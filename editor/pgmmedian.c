@@ -102,9 +102,9 @@ parseCommandLine(int argc, char ** argv,
         cmdlineP->cutoff = 250;
 
     if (typeSpec) {
-        if (STREQ(type, "histogram_sort"))
+        if (streq(type, "histogram_sort"))
             cmdlineP->type = HISTOGRAM_SORT_MEDIAN;
-        else if (STREQ(type, "select"))
+        else if (streq(type, "select"))
             cmdlineP->type = SELECT_MEDIAN;
         else
             pm_error("Invalid value '%s' for -type.  Valid values are "

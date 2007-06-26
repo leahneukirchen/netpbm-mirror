@@ -132,25 +132,37 @@ parseCommandLine(int argc, char ** argv,
 
 
 static const char *
-construct_postscript(struct cmdlineInfo const cmdl) {
+construct_postscript(struct cmdlineInfo const cmdline) {
 
     const char * retval;
     const char * template;
 
-    if (cmdl.stroke <= 0) 
-        template = "/%s findfont\n%d scalefont\nsetfont\n12 36 moveto\n"
-            "(%s) show\nshowpage\n";
+    if (cmdline.stroke < 0) 
+        template =
+            "/%s findfont\n"
+            "%d scalefont\n"
+            "setfont\n"
+            "12 36 moveto\n"
+            "(%s) show\n"
+            "showpage\n";
     else 
-        template = "/%s findfont\n%d scalefont\nsetfont\n12 36 moveto\n"
-            "%f setlinewidth\n0 setgray\n"
-            "(%s) true charpath\nstroke\nshowpage\n";
+        template =
+            "/%s findfont\n"
+            "%d scalefont\n"
+            "setfont\n"
+            "12 36 moveto\n"
+            "%f setlinewidth\n"
+            "0 setgray\n"
+            "(%s) true charpath\n"
+            "stroke\n"
+            "showpage\n";
 
-    if (cmdl.stroke < 0)
-        asprintfN(&retval, template, cmdl.font, cmdl.fontsize, 
-                  cmdl.text);
+    if (cmdline.stroke < 0)
+        asprintfN(&retval, template, cmdline.font, cmdline.fontsize, 
+                  cmdline.text);
     else
-        asprintfN(&retval, template, cmdl.font, cmdl.fontsize, 
-                  cmdl.stroke, cmdl.text);
+        asprintfN(&retval, template, cmdline.font, cmdline.fontsize, 
+                  cmdline.stroke, cmdline.text);
 
     return retval;
 }

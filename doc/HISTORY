@@ -4,31 +4,38 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-07.06.26 BJH  Release 10.38.04
+07.06.26 BJH  Release 10.39.00
 
-              fitstopnm: fix BITPIX = -32.
+              Add pamtooctave.  Thanks Scott Pakin (scott@pakin.org).
+
+              Add pamundice.
+
+              fitstopnm: add -omaxval.
+
+              pnmremap: add -norand.
+
+              pbmtext: improve error messages about fonts.
 
               pamtofits: fix -min, -max.
 
-07.05.22 BJH  Release 10.38.03
+              fitstopnm: fix BITPIX = -32.
+
+              PAM_STRUCT_SIZE: cast pointer to ulong instead of uint.
 
               pamthreshold: fix totally bogus threshold selection with
               simple thresholding.
 
-              PAM_STRUCT_SIZE: cast pointer to ulong instead of uint.
-
-07.05.09 BJH  Release 10.38.02
+              Configure: do test compile for missing Libxml2 and too old
+              Libxml2.
 
               Configure: fix bug detecting presence of libvga with
               Ldconfig.
 
-07.05.04 BJH  Release 10.38.01
+              Configure: build properly for Mac OSX when user says
+              libnetpbm will be in the default search path.
 
               Build: don't use 'uint' type.  Mac OSX apparently doesn't
               have it.
-
-              Configure: build properly for Mac OSX when user says
-              libnetpbm will be in the default search path.
 
 07.03.30 BJH  Release 10.38.0
     

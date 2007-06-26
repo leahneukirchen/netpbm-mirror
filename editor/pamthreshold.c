@@ -44,7 +44,15 @@ struct cmdlineInfo {
         /* geometry of local subimage.  Defined only if 'local' or 'dual'
            is true.
         */
+    unsigned int verbose;
 };
+
+
+
+static __inline__ bool
+betweenZeroAndOne(float const arg) {
+    return (arg >= 0.0 && arg <= 1.0);
+}
 
 
 
@@ -72,6 +80,16 @@ addToRange(struct range * const rangeP,
 
     rangeP->min = MIN(newSample, rangeP->min);
     rangeP->max = MAX(newSample, rangeP->max);
+}
+
+
+
+static void
+assertRangeValid(struct range const range) {
+
+    assert(betweenZeroAndOne(range.min));
+    assert(betweenZeroAndOne(range.max));
+    assert(range.max >= range.min);
 }
 
 
@@ -146,6 +164,8 @@ parseCommandLine(int                 argc,
             &thresholdSpec,         0);
     OPTENT3(0, "contrast",  OPT_FLOAT,  &cmdlineP->contrast,
             &contrastSpec,          0);
+    OPTENT3(0, "verbose",    OPT_FLAG,   NULL,               
+            &cmdlineP->verbose,     0);
 
     /* set the defaults */
     cmdlineP->width = cmdlineP->height = 0U;
@@ -244,6 +264,7 @@ thresholdSimple(struct pam * const inpamP,
 
 static void
 analyzeDistribution(struct pam *          const inpamP,
+                    bool                  const verbose,
                     const unsigned int ** const histogramP,
                     struct range *        const rangeP) {
 /*----------------------------------------------------------------------------
@@ -255,7 +276,8 @@ analyzeDistribution(struct pam *          const inpamP,
    distribution as *histogramP, an array such that histogram[i] is the
    number of pixels that have sample value i.
 
-   Leave the file positioned to the raster.
+   Assume the file is positioned to the raster upon entry and leave
+   it positioned at the same place.
 -----------------------------------------------------------------------------*/
     unsigned int row;
     tuple * inrow;
@@ -295,6 +317,10 @@ analyzeDistribution(struct pam *          const inpamP,
     pnm_freepamrown(inrown);
 
     pm_seek2(inpamP->file, &rasterPos, sizeof(rasterPos));
+
+    if (verbose)
+        pm_message("Pixel values range from %f to %f",
+                   rangeP->min, rangeP->max);
 }
 
 
@@ -342,9 +368,7 @@ computeGlobalThreshold(struct pam *         const inpamP,
                        float *              const thresholdP) {
 /*----------------------------------------------------------------------------
    Compute the proper threshold to use for the image described by
-   *inpamP, whose file is positioned to the raster.
-
-   For our convenience:
+   *inpamP, and:
 
      'histogram' describes the frequency of occurence of the various sample
      values in the image.
@@ -554,7 +578,7 @@ thresholdLocal(struct pam *       const inpamP,
 
     /* global information is needed for dual thresholding */
     if (cmdline.dual) {
-        analyzeDistribution(inpamP, &histogram, &globalRange);
+        analyzeDistribution(inpamP, cmdline.verbose, &histogram, &globalRange);
         computeGlobalThreshold(inpamP, histogram, globalRange,
                                &globalThreshold);
     } else {
@@ -602,13 +626,14 @@ thresholdLocal(struct pam *       const inpamP,
 
 static void
 thresholdIterative(struct pam * const inpamP,
-                   struct pam * const outpamP) {
+                   struct pam * const outpamP,
+                   bool         const verbose) {
 
     const unsigned int * histogram;
     struct range globalRange;
     samplen threshold;
 
-    analyzeDistribution(inpamP, &histogram, &globalRange);
+    analyzeDistribution(inpamP, verbose, &histogram, &globalRange);
 
     computeGlobalThreshold(inpamP, histogram, globalRange, &threshold);
 
@@ -663,7 +688,7 @@ main(int argc, char **argv) {
         else if (cmdline.local || cmdline.dual)
             thresholdLocal(&inpam, &outpam, cmdline);
         else
-            thresholdIterative(&inpam, &outpam);
+            thresholdIterative(&inpam, &outpam, cmdline.verbose);
 
         pnm_nextimage(ifP, &eof);
     }
