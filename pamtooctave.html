@@ -1,0 +1,73 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<title>Pamtooctave User Manual</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+</head>
+
+<body>
+
+<h1>pamtooctave</h1>
+
+<p>Updated: 24 June 2007<br />
+<a href="#index">Table Of Contents</a></p>
+
+<h2>NAME</h2>
+
+<p>pamtooctave - convert a Netpbm image to a GNU Octave image</p>
+
+<h2 id="synopsis">SYNOPSIS</h2>
+
+<p><b>pamtooctave</b>
+[<i>netpbmfile</i>]
+
+<h2 id="description">DESCRIPTION</h2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.</p>
+
+<p><b>pamtooctave</b> reads a Netpbm image as input and produces a <a
+href="http://www.octave.org/">GNU Octave</a> image file as output.
+An Octave image file is an ASCII representation of two matrices:</p>
+
+<ol>
+<li>the image itself as a list of indexes into a colormap, and</li>
+<li>the corresponding colormap as a list of {red, green, blue} triplets.</li>
+</ol>
+
+<p><i>netpbmfile</i> is the name of the file containing the input PNM
+or PAM image, or <b>-</b> to indicate Standard Input.  If you don't
+specify <i>netpbmfile</i>, the input is from Standard Input.
+<b>pamtooctave</b> converts only the first image in the input stream.
+<b>pamtooctave</b> writes the output Octave image to Standard Output.
+
+
+<h2 id="notes">NOTES</h2>
+
+<p>There is no <b>octavetopam</b> program.  However, GNU Octave's
+<b>saveimage</b> command can save images in PPM format.</p>
+
+
+<h2 id="history">HISTORY</h2>
+
+<p><b>pamtooctave</b> was new in Netpbm 10.39 (June 2007).
+
+
+<h2 id="seealso">SEE ALSO</h2>
+
+<p><a
+href="http://www.gnu.org/software/octave/doc/interpreter/index.html"><b>octave</b></a>,
+<a href="pam.html"><b>pam</b></a>.</p>
+
+<hr />
+
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a></li>
+<li><a href="#description">DESCRIPTION</a></li>
+<li><a href="#notes">NOTES</a></li>
+<li><a href="#history">HISTORY</a></li>
+<li><a href="#seealso">SEE ALSO</a></li>
+</ul>
+</body>
+</html>
+

@@ -3,7 +3,7 @@
 <HEAD><TITLE>Pamthreshold User Manual</TITLE></HEAD>
 <BODY>
 <H1>pamthreshold</H1>
-Updated: 09 May 2007
+Updated: 06 June 2007
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -20,6 +20,11 @@ pamthreshold - threshold grayscale image to black and white
 [<b>-threshold=</b><i>threshold</i>]
 [<b>-contrast=</b><i>threshold</i>]
 [<I>inputpamfile</I>]
+
+<P>Minimum unique abbreviations of options are acceptable. You may use
+double hyphens instead of a single hyphen to denote options. You may use
+white space in place of the equals sign to separate an option name
+from its value.
 
 <H2 id="description">DESCRIPTION</H2>
 
@@ -49,21 +54,19 @@ gray.  <B>pamditherbw</B> does dithering.
 
 <H2 id="options">OPTIONS</H2>
 
-<P>Minimum unique abbreviations of options are acceptable. You may use
-double hyphens instead of a single hyphen to denote options. You may use
-white space in place of the equals sign to separate an option name
-from its value.
-
 <p>Without any options, <b>pamthreshold</b> uses an iterative
 algorithm found in the <a
 href="http://www.wikipedia.org/">wikipedia</a> article
 <a href="http://en.wikipedia.org/wiki/Thresholding_%28image_processing%29">
-<i>Thresholding (image processing)</i></a> to compute the
-thresholding value.  It uses this threshold to globally threshold the
-image.  This should work well for most images.  The program issues a
-message telling you what threshold it used.  (Netpbm messages go to
-Standard Error, and you can turn them off with the Netpbm command
-option <b>-quiet</b>).
+<i>Thresholding (image processing)</i></a> to compute the thresholding
+value.  (<a
+href="http://en.wikipedia.org/w/index.php?title=Thresholding_%28image_processing%29&oldid=132306976">this
+version</a> of the Wikipedia article was current at the time of this
+writing).  It uses this threshold to globally threshold the image.
+This should work well for most images.  The program issues a message
+telling you what threshold it used.  (Netpbm messages go to Standard
+Error, and you can turn them off with the Netpbm common option
+<b>-quiet</b>).
 
 <DL COMPACT>
 
@@ -71,11 +74,11 @@ option <b>-quiet</b>).
 
 <dd>This selects simple or global thresholding,
 i.e. <b>pamthreshold</b> compares every pixel to the threshold you
-specify with <b>-threshold</b>.  Those with a value greater than or
-equal to the threshold become white; others become black.  This works
-well for black and white text pages scanned with a flatbed scanner and
-is faster than the default method that iteratively determines the
-thresholding value first.
+specify with <b>-threshold</b>.  Those with a brightness greater than
+or equal to the threshold become white; others become black.  This
+works well for black and white text pages scanned with a flatbed
+scanner and is faster than the default method that iteratively
+determines the thresholding value first.
 
 <dt><b>-local=</b><i>width</i><b>x</b><i>height</i></dt>
 
@@ -97,8 +100,9 @@ adaptive thresholding.  This algorithm was proposed in the paper
 <dt><b>-threshold=</b><i>threshold</i></dt>
 
 <dd>This sets the thresholding value for simple or local thresholding.
-The value is a floating point number in the range [0, 1], where 0
-is black and 1 is the maxval of the image.
+The value is a floating point number in the range [0, 1] directly
+proportional to the Netpbm sample values, , where 0 corresponds to
+black and 1 to the maxval of the image.
 
 <p>If you don't specify this option, <b>pamthreshold</b> uses a threshold
 of 0.5.  Without <b>-simple</b> or <b>-local</b> this option is
