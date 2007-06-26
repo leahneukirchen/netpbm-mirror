@@ -4,7 +4,7 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-not yet  BJH  Release 10.38.04
+07.06.26 BJH  Release 10.38.04
 
               fitstopnm: fix BITPIX = -32.
 
