@@ -9,7 +9,7 @@
 
 <h1>pamtooctave</h1>
 
-<p>Updated: 24 June 2007<br />
+<p>Updated: 27 June 2007<br />
 <a href="#index">Table Of Contents</a></p>
 
 <h2>NAME</h2>
@@ -27,18 +27,50 @@
 
 <p><b>pamtooctave</b> reads a Netpbm image as input and produces a <a
 href="http://www.octave.org/">GNU Octave</a> image file as output.
-An Octave image file is an ASCII representation of two matrices:</p>
+
+<p>An Octave image file (called &quot;Octave's image format&quot; in
+Octave documentation) is a particular kind of Octave data file.  It
+describes two matrices:
 
 <ol>
 <li>the image itself as a list of indexes into a colormap, and</li>
 <li>the corresponding colormap as a list of {red, green, blue} triplets.</li>
 </ol>
 
+<p>An Octave data file is an ASCII text file that you use to import data
+to Octave.
+
+<p>See the <a
+href="http://www.gnu.org/software/octave/doc/interpreter/Image-Processing.html#Image-Processing">
+Image Processing chapter</a> of the GNU Octave manual for details.
+
+<h2 id="arguments">Arguments</h2>
+
 <p><i>netpbmfile</i> is the name of the file containing the input PNM
 or PAM image, or <b>-</b> to indicate Standard Input.  If you don't
 specify <i>netpbmfile</i>, the input is from Standard Input.
 <b>pamtooctave</b> converts only the first image in the input stream.
 <b>pamtooctave</b> writes the output Octave image to Standard Output.
+
+
+<h2 id="examples">Examples</h2>
+
+<p>
+<kbd>
+   % pamtooctave myimage.ppm > myimage.img
+   % octave
+   > [img,map] = loadimage("myimage.img");
+
+   # (At this point, img is an X by Y matrix and map is a 3 by M matrix.)
+
+   > imshow(img,map);   # Displays img with colormap map
+   > [r,g,b] = ind2rgb(img,map);
+
+   # (r, g, and b are now each X by Y matrices of color levels [0 to 1].)
+
+   > [newimg,newmap] = rgb2ind(r,b,g);   # Swap the blue and green channels.
+   > saveimage("newimage.ppm", newimg, "ppm", newmap);  # Save as a PPM file.
+</kbd>
 
 
 <h2 id="notes">NOTES</h2>
@@ -54,7 +86,7 @@ specify <i>netpbmfile</i>, the input is from Standard Input.
 
 <h2 id="seealso">SEE ALSO</h2>
 
-<p><a
+<a
 href="http://www.gnu.org/software/octave/doc/interpreter/index.html"><b>octave</b></a>,
 <a href="pam.html"><b>pam</b></a>.</p>
 
@@ -64,6 +96,8 @@ href="http://www.gnu.org/software/octave/doc/interpreter/index.html"><b>octave</
 <ul>
 <li><a href="#synopsis">SYNOPSIS</a></li>
 <li><a href="#description">DESCRIPTION</a></li>
+<li><a href="#arguments">ARGUMENTS</a></li>
+<li><a href="#examples">EXAMPLES</a></li>
 <li><a href="#notes">NOTES</a></li>
 <li><a href="#history">HISTORY</a></li>
 <li><a href="#seealso">SEE ALSO</a></li>
