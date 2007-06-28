@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+not yet  BJH  Release 10.40.00
+
+              Rename pamtooctave to pamtooctaveimg.
+
 07.06.26 BJH  Release 10.39.00
 
               Add pamtooctave.  Thanks Scott Pakin (scott@pakin.org).
