@@ -1,31 +1,31 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
-<title>Pamtooctave User Manual</title>
+<title>Pamtooctaveimg User Manual</title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 </head>
 
 <body>
 
-<h1>pamtooctave</h1>
+<h1>pamtooctaveimg</h1>
 
 <p>Updated: 27 June 2007<br />
 <a href="#index">Table Of Contents</a></p>
 
 <h2>NAME</h2>
 
-<p>pamtooctave - convert a Netpbm image to a GNU Octave image</p>
+<p>pamtooctaveimg - convert a Netpbm image to a GNU Octave image</p>
 
 <h2 id="synopsis">SYNOPSIS</h2>
 
-<p><b>pamtooctave</b>
+<p><b>pamtooctaveimg</b>
 [<i>netpbmfile</i>]
 
 <h2 id="description">DESCRIPTION</h2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.</p>
 
-<p><b>pamtooctave</b> reads a Netpbm image as input and produces a <a
+<p><b>pamtooctaveimg</b> reads a Netpbm image as input and produces a <a
 href="http://www.octave.org/">GNU Octave</a> image file as output.
 
 <p>An Octave image file (called &quot;Octave's image format&quot; in
@@ -49,15 +49,15 @@ Image Processing chapter</a> of the GNU Octave manual for details.
 <p><i>netpbmfile</i> is the name of the file containing the input PNM
 or PAM image, or <b>-</b> to indicate Standard Input.  If you don't
 specify <i>netpbmfile</i>, the input is from Standard Input.
-<b>pamtooctave</b> converts only the first image in the input stream.
-<b>pamtooctave</b> writes the output Octave image to Standard Output.
+<b>pamtooctaveimg</b> converts only the first image in the input stream.
+<b>pamtooctaveimg</b> writes the output Octave image to Standard Output.
 
 
 <h2 id="examples">Examples</h2>
 
 <p>
 <kbd>
-   % pamtooctave myimage.ppm > myimage.img
+   % pamtooctaveimg myimage.ppm > myimage.img
    % octave
    > [img,map] = loadimage("myimage.img");
 
@@ -81,7 +81,7 @@ specify <i>netpbmfile</i>, the input is from Standard Input.
 
 <h2 id="history">HISTORY</h2>
 
-<p><b>pamtooctave</b> was new in Netpbm 10.39 (June 2007).
+<p><b>pamtooctaveimg</b> was new in Netpbm 10.39 (June 2007).
 
 
 <h2 id="seealso">SEE ALSO</h2>
