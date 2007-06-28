@@ -852,7 +852,7 @@ pixelReader_init(pixelReader *  const pixelReaderP,
 static void
 pixelReader_term(pixelReader * const pixelReaderP) {
 
-    uint remainingByteCount;
+    unsigned int remainingByteCount;
 
     if (pixelReaderP->nBitsLeft > 0)
         pm_message("Warning: %u unused bits left in the pixel reader "

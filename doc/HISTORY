@@ -12,6 +12,9 @@ not yet  BJH  Release 10.40.00
 
               Rename pamtooctave to pamtooctaveimg.
 
+              Build: don't use 'uint' type.  Solaris 10 apparently doesn't
+              have it.
+
 07.06.26 BJH  Release 10.39.00
 
               Add pamtooctave.  Thanks Scott Pakin (scott@pakin.org).
