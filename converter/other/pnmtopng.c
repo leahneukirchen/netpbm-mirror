@@ -1169,13 +1169,13 @@ computeUnsortedAlphaPalette(FILE *           const ifP,
                             xelval           const maxval,
                             int              const format,
                             pm_filepos       const rasterPos,
-                            gray **          const alpha_mask,
+                            gray **          const alphaMask,
                             unsigned int     const maxPaletteEntries,
                             colorhist_vector const chv,
                             int              const colors,
-                            gray *                 alphas_of_color[],
-                            unsigned int           alphas_first_index[],
-                            unsigned int           alphas_of_color_cnt[]) {
+                            gray *                 alphasOfColor[],
+                            unsigned int           alphasFirstIndex[],
+                            unsigned int           alphasOfColorCnt[]) {
 /*----------------------------------------------------------------------------
    Read the image at position 'rasterPos' in file *ifP, which is a PNM
    described by 'cols', 'rows', 'maxval', and 'format'.
@@ -1189,59 +1189,59 @@ computeUnsortedAlphaPalette(FILE *           const ifP,
    actual palette is an array with up to 'maxPaletteEntries elements.  Each
    array element contains a color index from the color palette and
    an alpha value.  All the elements with the same color index are
-   contiguous.  alphas_first_index[x] is the index in the
+   contiguous.  alphasFirstIndex[x] is the index in the
    alpha/color palette of the first element that has color index x.
-   alphas_of_color_cnt[x] is the number of elements that have color
-   index x.  alphas_of_color[x][y] is the yth alpha value that
+   alphasOfColorCnt[x] is the number of elements that have color
+   index x.  alphasOfColor[x][y] is the yth alpha value that
    appears with color index x (in order of appearance).
-   alpha_color_pair_count is the total number of elements, i.e. the
-   total number of combinations color and alpha.
+   alphaColorPairCount is the total number of elements, i.e. the
+   total number of combinations of color and alpha.
 -----------------------------------------------------------------------------*/
     colorhash_table cht;
-    int color_index;
+    int colorIndex;
     int row;
     xel * xelrow;
 
     cht = ppm_colorhisttocolorhash (chv, colors);
 
-    for (color_index = 0 ; color_index < colors + 1 ; ++color_index) {
+    for (colorIndex = 0; colorIndex < colors + 1; ++colorIndex) {
         /* TODO: It sure would be nice if we didn't have to allocate
            256 words here for what is normally only 0 or 1 different
            alpha values!  Maybe we should do some sophisticated reallocation.
         */
-        MALLOCARRAY(alphas_of_color[color_index], maxPaletteEntries);
-        if (alphas_of_color[color_index] == NULL)
-            pm_error ("out of memory allocating alpha/palette entries");
-        alphas_of_color_cnt[color_index] = 0;
+        MALLOCARRAY(alphasOfColor[colorIndex], maxPaletteEntries);
+        if (alphasOfColor[colorIndex] == NULL)
+            pm_error ("out of memory allocating alpha/color palette entries");
+        alphasOfColorCnt[colorIndex] = 0;
     }
  
     pm_seek2(ifP, &rasterPos, sizeof(rasterPos));
 
     xelrow = pnm_allocrow(cols);
 
-    for (row = 0 ; row < rows ; ++row) {
-        int col;
+    for (row = 0; row < rows; ++row) {
+        unsigned int col;
         pnm_readpnmrow(ifP, xelrow, cols, maxval, format);
         pnm_promoteformatrow(xelrow, cols, maxval, format, maxval, PPM_TYPE);
-        for (col = 0 ; col < cols ; ++col) {
-            int i;
+        for (col = 0; col < cols; ++col) {
+            unsigned int i;
             int const color = ppm_lookupcolor(cht, &xelrow[col]);
-            for (i = 0 ; i < alphas_of_color_cnt[color] ; ++i) {
-                if (alpha_mask[row][col] == alphas_of_color[color][i])
+            for (i = 0 ; i < alphasOfColorCnt[color] ; ++i) {
+                if (alphaMask[row][col] == alphasOfColor[color][i])
                     break;
             }
-            if (i == alphas_of_color_cnt[color]) {
-                alphas_of_color[color][i] = alpha_mask[row][col];
-                alphas_of_color_cnt[color]++;
+            if (i == alphasOfColorCnt[color]) {
+                alphasOfColor[color][i] = alphaMask[row][col];
+                ++alphasOfColorCnt[color];
             }
         }
     }
     {
-        int i;
-        alphas_first_index[0] = 0;
-        for (i = 1 ; i < colors ; i++)
-            alphas_first_index[i] = alphas_first_index[i-1] +
-                alphas_of_color_cnt[i-1];
+        unsigned int i;
+        alphasFirstIndex[0] = 0;
+        for (i = 1; i < colors; ++i)
+            alphasFirstIndex[i] = alphasFirstIndex[i-1] +
+                alphasOfColorCnt[i-1];
     }
     pnm_freerow(xelrow);
     ppm_freecolorhash(cht);
@@ -1258,6 +1258,8 @@ sortAlphaPalette(gray *alphas_of_color[],
                  unsigned int * const transSizeP) {
 /*----------------------------------------------------------------------------
    Remap the palette indices so opaque entries are last.
+
+   This is _not_ a sort in place -- we do not modify our inputs.
 
    alphas_of_color[], alphas_first_index[], and alphas_of_color_cnt[]
    describe an unsorted PNG (alpha/color) palette.  We generate
