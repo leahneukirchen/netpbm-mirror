@@ -13,8 +13,8 @@
 #include <math.h>
 #include <ctype.h>
 
-#include "shhopt.h"
 #include "mallocvar.h"
+#include "shhopt.h"
 #include "pnm.h"
 
 enum transferFunction {
@@ -103,13 +103,12 @@ getGammaFromOpts(struct cmdlineInfo * const cmdlineP,
 
     if (gammaSpec)
         if (gammaOpt < 0.0)
-            pm_error("Invalid gamma value.  "
-                         "Must be positive floating point number.");
+            pm_error("Invalid gamma value %f.  Must be positive.", gammaOpt);
     
     if (rgammaSpec) {
         if (cmdlineP->rgamma < 0.0)
-            pm_error("Invalid gamma value.  "
-                     "Must be positive floating point number.");
+            pm_error("Invalid red gamma value %f.  Must be positive.",
+                     cmdlineP->rgamma);
     } else {
         if (gammaSpec)
             cmdlineP->rgamma = gammaOpt;
@@ -118,8 +117,8 @@ getGammaFromOpts(struct cmdlineInfo * const cmdlineP,
     }
     if (ggammaSpec) {
         if (cmdlineP->ggamma < 0.0) 
-            pm_error("Invalid gamma value.  "
-                     "Must be positive floating point number.");
+            pm_error("Invalid green gamma value %f.  Must be positive.",
+                     cmdlineP->ggamma);
     } else {
         if (gammaSpec)
             cmdlineP->ggamma = gammaOpt;
@@ -128,8 +127,8 @@ getGammaFromOpts(struct cmdlineInfo * const cmdlineP,
     }
     if (bgammaSpec) {
         if (cmdlineP->bgamma < 0.0)
-            pm_error("Invalid gamma value.  "
-                     "Must be positive floating point number.");
+            pm_error("Invalid blue gamma value %f.  Must be positive.",
+                     cmdlineP->bgamma);
     } else {
         if (gammaSpec)
             cmdlineP->bgamma = gammaOpt;
