@@ -1280,7 +1280,7 @@ computeUnsortedAlphaPalette(FILE *           const ifP,
 
     xelrow = pnm_allocrow(cols);
 
-    tooBig = false;  /* initial value */
+    tooBig = false;  /* initial assumption */
 
     for (row = 0; row < rows && !tooBig; ++row) {
         unsigned int col;
@@ -1328,6 +1328,7 @@ sortAlphaPalette(gray *         const alphas_of_color[],
                  unsigned int   const alphas_first_index[],
                  unsigned int   const alphas_of_color_cnt[],
                  unsigned int   const colors,
+                 gray           const alphaMaxval,
                  unsigned int         mapping[],
                  unsigned int * const transSizeP) {
 /*----------------------------------------------------------------------------
@@ -1362,10 +1363,10 @@ sortAlphaPalette(gray *         const alphas_of_color[],
         for (j = 0; j < alphas_of_color_cnt[colorIndex]; ++j) {
             unsigned int const paletteIndex = 
                 alphas_first_index[colorIndex] + j;
-            if (alphas_of_color[colorIndex][j] == PALETTEOPAQUE)
+            if (alphas_of_color[colorIndex][j] == alphaMaxval)
                 mapping[paletteIndex] = top_idx--;
-                else
-                    mapping[paletteIndex] = bot_idx++;
+            else
+                mapping[paletteIndex] = bot_idx++;
         }
     }
     /* indices should have just crossed paths */
@@ -1387,6 +1388,7 @@ compute_alpha_palette(FILE *         const ifP,
                       int            const format,
                       pm_filepos     const rasterPos,
                       gray **        const alpha_mask,
+                      gray           const alphaMaxval,
                       pixel                palette_pnm[],
                       gray                 trans_pnm[],
                       unsigned int * const paletteSizeP,
@@ -1398,8 +1400,8 @@ compute_alpha_palette(FILE *         const ifP,
    alpha_mask[] is the Netpbm-style alpha mask for the image.
 
    Return the palette as the arrays palette_pnm[] and trans_pnm[].
-   The ith entry in the palette is the combination of palette[i],
-   which defines the color, and trans[i], which defines the
+   The ith entry in the palette is the combination of palette_pnm[i],
+   which defines the color, and trans_pnm[i], which defines the
    transparency.
 
    Return the number of entries in the palette as *paletteSizeP.
@@ -1449,7 +1451,7 @@ compute_alpha_palette(FILE *         const ifP,
 
         /* Make the opaque palette entries last */
         sortAlphaPalette(alphas_of_color, alphas_first_index,
-                         alphas_of_color_cnt, colors,
+                         alphas_of_color_cnt, colors, alphaMaxval,
                          mapping, transSizeP);
 
         {
@@ -1629,6 +1631,7 @@ buildColorLookup(pixel                   palette_pnm[],
 }
 
 
+
 static void 
 buildColorAlphaLookup(pixel              palette_pnm[], 
                       unsigned int const paletteSize,
@@ -1649,7 +1652,6 @@ buildColorAlphaLookup(pixel              palette_pnm[],
         else
             paletteTrans = trans_pnm[paletteIndex];
 
-
         addtocoloralphahash(caht, &palette_pnm[paletteIndex],
                             &trans_pnm[paletteIndex], paletteIndex);
     }
@@ -1666,6 +1668,7 @@ tryAlphaPalette(FILE *         const ifP,
                 int            const format,
                 pm_filepos     const rasterPos,
                 gray **        const alpha_mask,
+                gray           const alphaMaxval,
                 FILE *         const pfP,
                 pixel *        const palette_pnm,
                 unsigned int * const paletteSizeP,
@@ -1686,7 +1689,8 @@ tryAlphaPalette(FILE *         const ifP,
                  "the palette with -palette.");
 
     compute_alpha_palette(ifP, cols, rows, maxval, format, 
-                          rasterPos,  alpha_mask, palette_pnm, trans_pnm, 
+                          rasterPos,  alpha_mask, alphaMaxval,
+                          palette_pnm, trans_pnm, 
                           paletteSizeP, transSizeP, &tooBig);
     if (tooBig) {
         asprintfN(impossibleReasonP,
@@ -1795,6 +1799,7 @@ computeColorMap(FILE *         const ifP,
                 bool           const background,
                 pixel          const backcolor,
                 gray **        const alpha_mask,
+                gray           const alphaMaxval,
                 unsigned int   const pnm_meaningful_bits,
                 /* Outputs */
                 pixel *        const palette_pnm,
@@ -1867,7 +1872,8 @@ computeColorMap(FILE *         const ifP,
                     unsigned int transSize;
                     if (alpha)
                         tryAlphaPalette(ifP, cols, rows, maxval, format,
-                                        rasterPos, alpha_mask, pfP,
+                                        rasterPos, alpha_mask, alphaMaxval,
+                                        pfP,
                                         palette_pnm, &paletteSize, 
                                         trans_pnm, &transSize,
                                         noColormapReasonP);
@@ -2520,7 +2526,7 @@ convertpnm(struct cmdlineInfo const cmdline,
                   cmdline.force, pfp,
                   alpha, transparent >= 0, transcolor, transexact, 
                   !!cmdline.background, backcolor,
-                  alpha_mask, pnm_meaningful_bits,
+                  alpha_mask, alpha_maxval, pnm_meaningful_bits,
                   palette_pnm, &palette_size, trans_pnm, &trans_size,
                   &background_index, &noColormapReason);
 

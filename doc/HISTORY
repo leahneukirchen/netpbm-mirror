@@ -6,7 +6,15 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.40.00
 
-              pamtopfm: Fix wrong determination of machine endianness.
+              pnmtopng: Sort palette properly when alpha maxval != 255.
+
+              pnmtopng: Fix array bound violation with = 256 colors and -alpha.
+
+              pnmtopng: Fix array bound violation with > 256 alpha mask levels.
+
+              pnmgamma: improve error messages.
+
+              pamtopfm: Fix wrong selection of default endianness.
 
               Fix uninitialized variable in pnm_allocpamrown().
 
