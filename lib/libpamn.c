@@ -286,6 +286,7 @@ pnm_allocpamarrayn(const struct pam * const pamP) {
         unsigned int rowsDone;
 
         rowsDone = 0;
+        error = NULL;
 
         while (rowsDone < pamP->height && !error) {
             allocpamrown(pamP, &tuplenarray[rowsDone], &error);
