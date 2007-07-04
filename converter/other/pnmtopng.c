@@ -1254,6 +1254,10 @@ computeUnsortedAlphaPalette(FILE *           const ifP,
    have color index x.  alphasOfColor[x][y] is the yth alpha value
    that appears with color index x (in order of appearance).
 
+   The palette we produce does not go out of its way to include the
+   background color; unless the background color is also in the image,
+   Caller will have to add it.
+
    To save time, we give up as soon as we know there are more than
    'maxPaletteEntries' in the palette.  We return *tooBigP indicating
    whether that was the case.
@@ -1267,7 +1271,7 @@ computeUnsortedAlphaPalette(FILE *           const ifP,
 
     cht = ppm_colorhisttocolorhash(chv, colors);
 
-    for (colorIndex = 0; colorIndex < colors + 1; ++colorIndex) {
+    for (colorIndex = 0; colorIndex < colors; ++colorIndex) {
         alphasOfColor[colorIndex] = NULL;
         alphasOfColorCnt[colorIndex] = 0;
     }
@@ -1462,7 +1466,7 @@ compute_alpha_palette(FILE *         const ifP,
                 }
             }
         }
-        freeAlphasOfColor(alphas_of_color, colors + 1);
+        freeAlphasOfColor(alphas_of_color, colors);
     }
 } 
 
