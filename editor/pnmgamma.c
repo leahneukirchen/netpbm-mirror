@@ -32,7 +32,7 @@ struct cmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *filespec;  /* '-' if stdin */
+    const char * filespec;  /* '-' if stdin */
     enum transferFunction transferFunction;
     float rgamma, ggamma, bgamma;
     unsigned int maxval;
