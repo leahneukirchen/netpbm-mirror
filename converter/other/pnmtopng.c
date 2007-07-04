@@ -52,8 +52,6 @@
    because xels were only 24 bits.  Now they're 96.
 */
    
-#define GRR_GRAY_PALETTE_FIX
-
 #ifndef PNMTOPNG_WARNING_LEVEL
 #  define PNMTOPNG_WARNING_LEVEL 0   /* use 0 for backward compatibility, */
 #endif                               /*  2 for warnings (1 == error) */
