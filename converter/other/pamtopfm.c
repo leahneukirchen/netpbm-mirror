@@ -273,9 +273,9 @@ main(int argc, char **argv ) {
 
     pnm_init(&argc, argv);
 
-    parseCommandLine(argc, argv, &cmdline);
-
     machineEndianness = thisMachineEndianness();
+
+    parseCommandLine(argc, argv, &cmdline);
 
     ifP = pm_openr(cmdline.inputFilespec);
 
