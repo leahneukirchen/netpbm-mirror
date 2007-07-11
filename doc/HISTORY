@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.40.00
 
+              anytopnm, pnmmargin, pamstretch-gen, ppmquantall: fix
+              small temporary file security exposure.
+
               pnmmargin: add -plain option.    Thanks
               Prophet of the Way <afu@wta.att.ne.jp>.
 
