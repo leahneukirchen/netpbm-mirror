@@ -6,6 +6,12 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.40.00
 
+              pnmmargin: add -plain option.    Thanks
+              Prophet of the Way <afu@wta.att.ne.jp>.
+
+              pnmmargin: recognize invalid options better.    Thanks
+              Prophet of the Way <afu@wta.att.ne.jp>.
+
               pnmtopng: Sort palette properly when alpha maxval != 255.
 
               pnmtopng: Fix array bound violation with = 256 colors and -alpha.

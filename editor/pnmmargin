@@ -23,19 +23,24 @@ tmp3=$tempdir/pnmm3
 tmp4=$tempdir/pnmm4
 
 color="-gofigure"
+plainopt=""
 
 # Parse args.
 while true ; do
     case "$1" in
-	-w* )
+        -p|-pl|-pla|-plai|-plain )
+        plainopt="-plain"
+        shift
+        ;;
+	-w|-wh|-whi|-whit|-white )
 	color="-white"
 	shift
 	;;
-	-b* )
+	-b|-bl|-bla|-blac|-black )
 	color="-black"
 	shift
 	;;
-	-c* )
+	-c|-co|-col|-colo|-color )
 	shift
 	if [ ! ${1-""} ] ; then
 	    echo "usage: $0 [-white|-black|-color <colorspec>] <size> [pnmfile]" 1>&2
@@ -85,4 +90,5 @@ pamflip -rotate90 $tmp2 > $tmp3
 
 # Cat things together.
 pnmcat -lr $tmp2 $tmp1 $tmp2 > $tmp4
-pnmcat -tb $tmp3 $tmp4 $tmp3
+pnmcat -tb $plainopt $tmp3 $tmp4 $tmp3
+
