@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+07.07.19 BJH  Release 10.39.02
+
+              anytopnm, pnmmargin, pamstretch-gen, ppmquantall: fix
+              small temporary file security exposure.
+
 07.07.03 BJH  Release 10.39.01
 
               pnmtopng: Sort palette properly when alpha maxval != 255.
