@@ -3995,7 +3995,7 @@ interpret_pict(FILE * const ofP) {
         if (opcode < 0xa2) {
             stage = optable[opcode].name;
             if (verbose) {
-                if (STREQ(stage, "reserved"))
+                if (streq(stage, "reserved"))
                     pm_message("reserved opcode=0x%x", opcode);
                 else
                     pm_message("Opcode: %s", optable[opcode].name);

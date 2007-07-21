@@ -46,35 +46,35 @@ ReadIconFile(FILE *                const file,
         }
         variable[i] = '\0';
 
-        if ( STREQ( variable, "*/" )&& gotsome )
+        if ( streq( variable, "*/" )&& gotsome )
             break;
 
         if ( fscanf( file, "%d", &value ) != 1 )
             continue;
 
-        if ( STREQ( variable, "Width" ) )
+        if ( streq( variable, "Width" ) )
         {
             *widthP = value;
             gotsome = 1;
         }
-        else if ( STREQ( variable, "Height" ) )
+        else if ( streq( variable, "Height" ) )
         {
             *heightP = value;
             gotsome = 1;
         }
-        else if ( STREQ( variable, "Depth" )  )
+        else if ( streq( variable, "Depth" )  )
         {
             if ( value != 1 )
                 pm_error( "invalid depth" );
             gotsome = 1;
         }
-        else if ( STREQ( variable, "Format_version" ) )
+        else if ( streq( variable, "Format_version" ) )
         {
             if ( value != 1 )
                 pm_error( "invalid Format_version" );
             gotsome = 1;
         }
-        else if ( STREQ( variable, "Valid_bits_per_item" ) )
+        else if ( streq( variable, "Valid_bits_per_item" ) )
         {
             if ( value != 16 )
                 pm_error( "invalid Valid_bits_per_item" );

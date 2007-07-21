@@ -67,7 +67,7 @@ main( argc, argv )
 
     if ( argv[argn][0] == '-' )
     {
-        if ( STREQ( argv[argn], "-d" ) )
+        if ( streq( argv[argn], "-d" ) )
         {
             if ( argc == argn + 1 )
                 pm_usage( usage );
