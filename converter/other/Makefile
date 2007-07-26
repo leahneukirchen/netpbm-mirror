@@ -217,8 +217,10 @@ install.bin.local: $(PKGDIR)/bin
 	cd $(PKGDIR)/bin ; \
 	$(SYMLINK) gemtopnm$(EXE) gemtopbm
 # In October 2001, pnmtojpeg replaced ppmtojpeg
+ifneq ($(JPEGLIB),NONE)
 	cd $(PKGDIR)/bin ; \
 	$(SYMLINK) pnmtojpeg$(EXE) ppmtojpeg
+#endif
 # In March 2002, bmptopnm replaced bmptoppm
 	cd $(PKGDIR)/bin ; \
 	$(SYMLINK) bmptopnm$(EXE) bmptoppm
