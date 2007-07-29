@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.40.00
 
+              pamfunc: Add -andmask, -ormask, -xormask, -not,
+              -shiftleft, -shiftright.
+
               anytopnm, pnmmargin, pamstretch-gen, ppmquantall: fix
               small temporary file security exposure.
 
