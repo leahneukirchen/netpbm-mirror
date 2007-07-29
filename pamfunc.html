@@ -4,16 +4,14 @@
 
 <BODY>
 <H1>pamfunc</H1>
-Updated: June 2002
+Updated: July 2007
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
-pamfunc - Apply simple arithmetic functions to a Netpbm image
+pamfunc - Apply a simple monadic arithmetic function to a Netpbm image
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>pamfunc</B>
 {
@@ -23,6 +21,12 @@ pamfunc - Apply simple arithmetic functions to a Netpbm image
 <b>-subtractor=</b><i>integer</i> |
 <b>-min=</b><i>wholenum</i> |
 <b>-max=</b><i>wholenum</i>
+<b>-andmask=</b><i>hexmask</i>
+<b>-ormask=</b><i>hexmask</i>
+<b>-xormask=</b><i>hexmask</i>
+<b>-not</b>
+<b>-shiftleft=</b><i>count</i>
+<b>-shiftright=</b><i>count</i>
 }
 [<I>filespec</I>]
 
@@ -30,8 +34,7 @@ pamfunc - Apply simple arithmetic functions to a Netpbm image
 You may use two hyphens instead of one.  You may separate an option
 name and its value with white space instead of an equals sign.
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -47,8 +50,7 @@ specified simple arithmetic function (e.g. addition) on pairs of
 samples from the two to produce the single output image.
 
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<H2 id="options">OPTIONS</H2>
 
 <DL COMPACT>
 <DT><B>-multiplier=<i>realnum</i></B>
@@ -106,7 +108,7 @@ samples from the two to produce the single output image.
      &quot;subtrahend&quot; rather than a &quot;subtractor.&quot;  We
      use &quot;subtractor&quot; because it makes more sense.
 
-     <P>This is the same function as you would get with <b>-multiplier</b>,
+     <P>This is the same function as you would get with <b>-adder</b>,
      specifying the negative of <i>integer</i>.
      
 <DT><B>-min=<i>wholenum</i></B>
@@ -129,10 +131,106 @@ samples from the two to produce the single output image.
      If <i>wholenum</i> is greater than the maxval, the function is
      idempotent -- the output is identical to the input.
      
+<DT><B>-andmask=<i>hexmask</i></B>
+
+<DD>
+     <P>This option makes the transfer function that of bitwise anding
+     with <i>hexmask</i>.
+
+     <p><i>hexmask</i> is in hexadecimal.  Example: <kbd>0f</kbd>
+
+     <p>See section <a href="#maxval">Maxval</a> for the special
+     meaning of maxval with respect to bit string operations such as
+     this.
+
+     <p>This option was new in Netpbm 10.40 (September 2007).
+
+<DT><B>-ormask=<i>hexmask</i></B>
+
+<DD>
+     <P>This option makes the transfer function that of bitwise
+     inclusive oring with <i>hexmask</i>.
+
+     <p>This is analogous to <b>-andmask</b>.
+
+     <p>This option was new in Netpbm 10.40 (September 2007).
+
+<DT><B>-xormask=<i>hexmask</i></B>
+
+<DD>
+     <P>This option makes the transfer function that of bitwise
+     exclusive oring with <i>hexmask</i>.
+
+     <p>This is analogous to <b>-andmask</b>.
+
+     <p>This option was new in Netpbm 10.40 (September 2007).
+
+<dt><b>-not</b>
+
+<dd>
+     <p>This option makes the transfer function that of bitwise logical
+     inversion (e.g. sample value 0xAA becomes 0x55).
+
+     <p>See section <a href="#maxval">Maxval</a> for the special
+     meaning of maxval with respect to bit string operations such as
+     this.
+
+     <p><b>pnminvert</b> does the same thing for a bilevel visual image
+     which has maxval 1 or is of PBM type.
+
+     <p>This option was new in Netpbm 10.40 (September 2007).
+
+<DT><B>-shiftleft=<i>count</i></B>
+
+<DD>
+     <P>This option makes the transfer function that of bitwise shifting
+     left by <i>count</i> bits.
+
+     <p>See section <a href="#maxval">Maxval</a> for the special
+     meaning of maxval with respect to bit string operations such as
+     this.
+
+     <p>This option was new in Netpbm 10.40 (September 2007).
+
+<DT><B>-shiftright=<i>count</i></B>
+
+<DD>
+     <P>This option makes the transfer function that of bitwise shifting
+     right by <i>count</i> bits.
+
+     <p>This is analogous to <b>-shiftleft</b>.
+
+     <p>This option was new in Netpbm 10.40 (September 2007).
 </DL>
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>SEE ALSO</H2>
+
+<h2 id="maxval">MAXVAL</h3>
+
+<p>For the arithmetic functions, the maxval has no meaning.  The function
+applies to the sample value as an integer.  (Note that this differs from
+the usual interpretation of PAM samples as being a fraction of a maxval,
+but <em>does</em> produce more intuitive result: 2 times 5 is 10.
+
+<P>But with the bit string operations, the maxval has a special
+meaning.  The functions in question are: <B>-andmask</B>, <B>-ormask</B>,
+<B>-xormask</B>, <B>-not</B>, <b>-shiftleft</b>, and <b>-shiftright</b>.
+
+<p>With these, each sample value the input image, and in the output
+image, represents a bit string, not a number.  The maxval tells how
+wide the bit string is.  The maxval must be a full binary count (a
+power of two minus one, such as 0xff) and the number of ones in it is
+the width of the bit string.
+
+<p>For a masking function, the mask value you specify must not have
+more significant bits than the width indicated by the maxval.
+
+<p>For a shifting operation, the shift count you specify must not be
+greater than the width indicated by the maxval.
+
+<p>The maxval of the output image is the same as that of the input image.
+
+
+<H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="ppmdim.html">ppmdim</A></B>,
 <B><A HREF="ppmbrighten.html">ppmbrighten</A></B>,
@@ -141,13 +239,13 @@ samples from the two to produce the single output image.
 <b><A HREF="pamsummcol.html">pamsummcol</A></b>,
 <b><A HREF="pamsumm.html">pamsumm</A></b>,
 <B><A HREF="ppmfade.html">ppmfade</A></B>,
+<B><A HREF="pnminvert.html">pnminvert</A></B>,
 
 <B><A HREF="pam.html">pam</A></B>,
 
 <B><A HREF="pnm.html">pnm</A></B>,
 
-<A NAME="history">&nbsp;</A>
-<H2>HISTORY</H2>
+<H2 id="history">HISTORY</H2>
 
 <p>This program was added to Netpbm in Release 10.3 (June 2002).
 
@@ -155,11 +253,11 @@ samples from the two to produce the single output image.
 <A NAME="index">&nbsp;</A>
 <H2>Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">SEE ALSO</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#maxval">MAXVAL</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
 <LI><A HREF="#history">HISTORY</A>
 </UL>
 </BODY>

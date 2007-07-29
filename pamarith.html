@@ -145,7 +145,8 @@ maxval.
 
 <h3 id="operations">The Operations</h3>
 
-<p>Most of the operations are obvious from the option name.
+<p>Most of the operations are obvious from the option name.  The following
+paragraphs cover those that aren't.
 
 <P><B>-subtract</B> subtracts a value in the right input image from a
 value in the left input image.
@@ -178,8 +179,11 @@ say A is greater than B if A is less than B.
 <p><b>-compare</b> was new in Netpbm 10.13 (December 2002).
 
 <p><b>-and</b>, <b>-nand</b>, <b>-or</b>, <b>-nor</b>, and <b>-xor</b>
-consider the input and output images to contain bit strings; they compute
-bitwise logic operations.
+consider the input and output images to contain bit strings; they
+compute bitwise logic operations.  Note that if the maxval is 1, you
+can also look at these as logic operations on boolean input values.
+See section <a href="#maxval">Maxval</a> for the special meaning of
+maxval with respect to bit string operations such as these.
 
 <p><b>-shiftleft</b> and <b>-shiftright</b> consider the left input
 image and output image to contain bit strings.  They compute a bit
