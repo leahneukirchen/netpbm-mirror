@@ -275,6 +275,7 @@ putitem(void) {
         putchar('\n');
         itemsinline = 0;
     }
+    assert(item >> 8 == 0);
     putchar(hexits[item >> 4]);
     putchar(hexits[item & 15]);
     ++itemsinline;
@@ -971,16 +972,29 @@ computeDepth(xelval         const inputMaxval,
         *bitspersampleP = 2;
     else if (bitsRequiredByMaxval <= 4)
         *bitspersampleP = 4;
-    else if (bitsRequiredByMaxval <= 8 || postscriptLevel < 2)
+    else        
         *bitspersampleP = 8;
-    else
-        *bitspersampleP = 12;
 
-    if (*bitspersampleP < bitsRequiredByMaxval)
-        pm_message("Maxval of input requires %u bit samples for full "
-                   "resolution, but we are using the Postscript level %u "
-                   "maximum of %u",
-                   bitsRequiredByMaxval, postscriptLevel, *bitspersampleP);
+    /* There is supposedly a 12 bits per pixel Postscript format, but
+       what?  We produce a raster that is composed of bytes, each
+       coded as a pair of hexadecimal characters and representing 8,
+       4, 2, or 1 pixels.  We also have the RLE format, where some of
+       those bytes are run lengths.
+    */
+
+    if (*bitspersampleP < bitsRequiredByMaxval) {
+        if (bitsRequiredByMaxval <= 12 && postscriptLevel >= 2)
+            pm_message("Maxval of input requires %u bit samples for full "
+                       "resolution, and Postscript level %u is capable "
+                       "of representing that many, but this program "
+                       "doesn't know how.  So we are using %u",
+                       bitsRequiredByMaxval, postscriptLevel, *bitspersampleP);
+        else
+            pm_message("Maxval of input requires %u bit samples for full "
+                       "resolution, but we are using the Postscript level %u "
+                       "maximum of %u",
+                       bitsRequiredByMaxval, postscriptLevel, *bitspersampleP);
+    }
 
     *psMaxvalP = pm_bitstomaxval(*bitspersampleP);
 
@@ -1034,8 +1048,7 @@ convertRowPsFilter(struct pam *     const pamP,
     unsigned int const stragglers =
         (((bitsPerSample * pamP->depth) % 8) * pamP->width) % 8;
         /* Number of bits at the right edge that don't fill out a
-           whole byte
-        */
+           whole byte */
 
     unsigned int col;
     tuple scaledTuple;
