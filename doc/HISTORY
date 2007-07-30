@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+07.07.30 BJH  Release 10.35.30
+
+              pnmtops: fix crash when program attempts to write 12 bits per
+              sample Postscript.  It doesn't really know how to do that, so
+              now it just writes 8.
+
 07.07.10 BJH  Release 10.35.29
 
               pnmtopng: Sort palette properly when alpha maxval != 255.
