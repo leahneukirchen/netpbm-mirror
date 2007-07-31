@@ -969,9 +969,12 @@ warnUserAboutReducedDepth(unsigned int const bitsGot,
             pm_message("Postscript level %u has a maximum depth of 8 bits.  "
                        "You could get up to 12 with -level=2 and -psfilter.",
                        postscriptLevel);
-
-        if (postscriptLevel >= 2 && !psFilter)
-            pm_message("You can get up to 12 bits with -psfilter");
+        else {
+            if (!psFilter)
+                pm_message("You can get up to 12 bits with -psfilter");
+            else
+                pm_message("The Postscript maximum is 12.");
+        }
     }
 }
 
