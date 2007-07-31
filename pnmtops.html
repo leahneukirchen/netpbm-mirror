@@ -343,8 +343,11 @@ collection as it exits.
 <H2 id="limitations">LIMITATIONS</H2>
 
 <p>If the PNM image has a maxval greater than 255, <b>pnmtops</b> will
-probably produce incorrect output unless you use the <b>-psfilter</b>
-option or use the <b>-level</b> option to demand Postscript Level 1.
+produce output with 8 bits per sample resolution unless you specify
+-psfilter, even though Postscript Level 2 has a 12 bits per sample
+format.  <b>pnmtops</b>'s custom raster-generating code just doesn't
+know the 12 bit format.
+
 
 <H2 id="seealso">SEE ALSO</H2>
 
