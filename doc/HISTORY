@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+07.08.01 BJH  Release 10.39.03
+
+              pnmtops: fix crash when program attempts to write 12 bits per
+              sample Postscript.  It doesn't really know how to do that, so
+              now it just writes 8 unless you do -psfilter.
+
 07.07.19 BJH  Release 10.39.02
 
               anytopnm, pnmmargin, pamstretch-gen, ppmquantall: fix
