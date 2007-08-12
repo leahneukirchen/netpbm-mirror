@@ -1295,7 +1295,7 @@ main(int argc, char * argv[]) {
 
     ifp = pm_openr(cmdline.inputFileName);
 
-    if (STREQ(cmdline.inputFileName, "-"))
+    if (streq(cmdline.inputFileName, "-"))
         name = strdup("noname");
     else
         name = basebasename(cmdline.inputFileName);

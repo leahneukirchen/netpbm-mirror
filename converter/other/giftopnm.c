@@ -1336,7 +1336,7 @@ readGifHeader(FILE * const gifFile, struct gifScreen * const gifScreenP) {
     if (verbose)
         pm_message("GIF format version is '%s'", version);
     
-    if ((!STREQ(version, "87a")) && (!STREQ(version, "89a")))
+    if ((!streq(version, "87a")) && (!streq(version, "89a")))
         pm_error("bad version number, not '87a' or '89a'" );
     
     if (! ReadOK(gifFile,buf,7))
@@ -1658,7 +1658,7 @@ main(int argc, char **argv) {
     else
         alpha_file = pm_openw(cmdline.alpha_filename);
 
-    if (alpha_file && STREQ(cmdline.alpha_filename, "-"))
+    if (alpha_file && streq(cmdline.alpha_filename, "-"))
         imageout_file = NULL;
     else
         imageout_file = stdout;

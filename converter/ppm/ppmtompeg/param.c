@@ -684,7 +684,7 @@ processParamLine(char const input[],
         } else if (STRNEQ(input, "BASE_FILE_FORMAT", 16)) {
             const char * arg = SkipSpacesTabs(&input[16]);
             SetFileFormat(arg);
-            if (STRNEQ(arg, "YUV", 3) || STREQ(arg, "Y"))
+            if (STRNEQ(arg, "YUV", 3) || streq(arg, "Y"))
                 *yuvUsedP = TRUE;
             optionSeen[OPTION_BASE_FORMAT] = TRUE;
         } else if (STRNEQ(input, "BSEARCH_ALG", 11)) {
@@ -774,7 +774,7 @@ processParamLine(char const input[],
         } else if (STRNEQ(input, "INPUT_CONVERT", 13)) {
             strcpy(inputConversion, SkipSpacesTabs(&input[13]));
             optionSeen[OPTION_INPUT_CONVERT] = TRUE;
-        } else if (STREQ(input, "INPUT")) {
+        } else if (streq(input, "INPUT")) {
             ReadInputFileNames(fpointer, "END_INPUT", 
                                inputSourceP->stdinUsed ?
                                NULL : inputSourceP);

@@ -361,7 +361,7 @@ language_declaration(const char input_filespec[], int const verbose) {
 -----------------------------------------------------------------------------*/
     enum postscript_language language;
 
-    if (STREQ(input_filespec, "-"))
+    if (streq(input_filespec, "-"))
         /* Can't read stdin, because we need it to remain positioned for the 
            Ghostscript interpreter to read it.
         */
@@ -410,7 +410,7 @@ compute_box_to_extract(struct box const cmdline_extract_box,
         */
         struct box ps_bb;  /* Box described by %%BoundingBox stmt in input */
 
-        if (STREQ(input_filespec, "-"))
+        if (streq(input_filespec, "-"))
             /* Can't read stdin, because we need it to remain
                positioned for the Ghostscript interpreter to read it.  
             */
@@ -576,7 +576,7 @@ compute_outfile_arg(const struct cmdlineInfo cmdline) {
 
     if (cmdline.goto_stdout)
         retval = strdup("-");
-    else if (STREQ(cmdline.input_filespec, "-"))
+    else if (streq(cmdline.input_filespec, "-"))
         retval = strdup("-");
     else {
         char * basename;
@@ -584,7 +584,7 @@ compute_outfile_arg(const struct cmdlineInfo cmdline) {
         
         basename  = strdup(cmdline.input_filespec);
         if (strlen(basename) > 3 && 
-            STREQ(basename+strlen(basename)-3, ".ps")) 
+            streq(basename+strlen(basename)-3, ".ps")) 
             /* The input filespec ends in ".ps".  Chop it off. */
             basename[strlen(basename)-3] = '\0';
 

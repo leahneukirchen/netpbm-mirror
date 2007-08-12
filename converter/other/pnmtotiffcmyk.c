@@ -794,7 +794,7 @@ standardOpt( Conv *conv, Root *r, int *argn, int argc, char **argv ) {
   }
   /* handle the special case of -1 (no removal) */
   if ( oldn == *argn && pm_keymatch( argv[*argn], "-gammap", 7 ) &&
-       *argn + 1 < argc && STREQ(argv[*argn + 1], "-1") ) {
+       *argn + 1 < argc && streq(argv[*argn + 1], "-1") ) {
     p->remove = 0 ;
     *argn = (*argn) + 2 ;
   } 

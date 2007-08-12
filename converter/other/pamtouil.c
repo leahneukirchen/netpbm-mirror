@@ -95,10 +95,10 @@ parseCommandLine(int argc, char ** argv,
 
         /* Remove trailing "_icon" */
         barPos = strrchr(cmdlineP->outname, '_');
-        if (STREQ(barPos, "_icon")) 
+        if (streq(barPos, "_icon")) 
             *barPos = '\0';
     } else {
-        if (STREQ(cmdlineP->inputFilespec, "-"))
+        if (streq(cmdlineP->inputFilespec, "-"))
             cmdlineP->outname = strdup("noname");
         else {
             char * dotPos;
@@ -237,7 +237,7 @@ genCmap(struct pam *   const pamP,
         nameAlreadyInCmap = FALSE;   /* initial assumption */
         for (j = 0; j < colorIndex; ++j) {
             if (cmap[j].rgbname != NULL && 
-                STREQ(colorname, cmap[j].rgbname) &&
+                streq(colorname, cmap[j].rgbname) &&
                 cmap[j].transparent == transparent) {
                 nameAlreadyInCmap = TRUE;
                 indexOfName = j;
