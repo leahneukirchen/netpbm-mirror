@@ -36,6 +36,8 @@ not yet  BJH  Release 10.40.00
 
               Rename pamtooctave to pamtooctaveimg.
 
+              Build: put -l's after .o's in test links.
+
               Build: don't use 'uint' type.  Solaris 10 apparently doesn't
               have it.
 
