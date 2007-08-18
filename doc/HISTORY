@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+07.08.18 BJH  Release 10.39.04
+
+              Build: put -l's after .o's in test links.
+
 07.08.01 BJH  Release 10.39.03
 
               pnmtops: fix crash when program attempts to write 12 bits per
