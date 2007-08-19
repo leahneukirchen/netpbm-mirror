@@ -153,7 +153,7 @@ LEX = flex
 # -pedantic isn't a problem because it causes at worst a warning.
 #CFLAGS = -O3 -ffast-math -pedantic -fno-common \
 #          -Wall -Wno-uninitialized -Wmissing-declarations -Wimplicit \
-#          -Wwrite-string -Wmissing-prototypes -Wundef
+#          -Wwrite-strings -Wmissing-prototypes -Wundef
 # The merged programs have a main_XXX subroutine instead of main(),
 # which would cause a warning with -Wmissing-declarations or 
 # -Wmissing-prototypes.
