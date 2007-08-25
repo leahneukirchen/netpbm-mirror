@@ -32,9 +32,14 @@ not yet  BJH  Release 10.40.00
 
               pamtopfm: Fix wrong selection of default endianness.
 
-              Fix uninitialized variable in pnm_allocpamrown().
+              libnetpbm: Add pm_system_lp(), pm_system_vp().
+
+              libnetpbm: Fix uninitialized variable in pnm_allocpamrown().
 
               Rename pamtooctave to pamtooctaveimg.
+
+              Build: don't build pstopnm on system without unix process
+              management.
 
               Build: put -l's after .o's in test links.
 
