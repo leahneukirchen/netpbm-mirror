@@ -23,12 +23,12 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
-#include <sys/wait.h>
 
 #include "pm_c_util.h"
 #include "mallocvar.h"
 #include "shhopt.h"
 #include "nstring.h"
+#include "pm_system.h"
 #include "pnm.h"
 
 
@@ -36,7 +36,7 @@ struct cmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *inputFilespec;  /* Filespec of input file */
+    const char * inputFilespec;  /* Filespec of input file */
     unsigned int width;
     unsigned int height;
     const char * dump;
@@ -176,38 +176,6 @@ writeConvolutionImage(FILE *       const cofp,
 
 
 
-static void
-runPnmconvol(const char * const inputFilespec,
-             const char * const convolutionImageFilespec) {
-
-    /* fork a Pnmconvol process */
-    pid_t rc;
-
-    rc = fork();
-    if (rc < 0)
-        pm_error("fork() failed.  errno=%d (%s)", errno, strerror(errno));
-    else if (rc == 0) {
-        /* child process executes following code */
-
-        execlp("pnmconvol",
-               "pnmconvol", convolutionImageFilespec, inputFilespec,
-               NULL);
-
-        pm_error("error executing pnmconvol command.  errno=%d (%s)",
-                 errno, strerror(errno));
-    } else {
-        /* This is the parent */
-        pid_t const childPid = rc;
-
-        int status;
-
-        /* wait for child to finish */
-        while (wait(&status) != childPid);
-    }
-}
-
-
-
 int
 main(int argc, char ** argv) {
 
@@ -232,7 +200,8 @@ main(int argc, char ** argv) {
     if (cmdline.dump) {
         /* We're done.  Convolution image is in user's file */
     } else {
-        runPnmconvol(cmdline.inputFilespec, tempfileName);
+        pm_system_lp("pnmconvol", NULL, NULL, NULL, NULL,
+                     tempfileName, cmdline.inputFilespec, NULL);
 
         unlink(tempfileName);
         strfree(tempfileName);
