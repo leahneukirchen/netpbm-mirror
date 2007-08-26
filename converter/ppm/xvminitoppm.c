@@ -109,16 +109,16 @@ readXvHeader(FILE *         const ifP,
     
     getline(ifP, buf, sizeof(buf));
 
-    if (!STRNEQ(buf, "P7 332", 6))
+    if (!strneq(buf, "P7 332", 6))
         pm_error("Input is not a XV thumbnail picture.  It does not "
                  "begin with the characters 'P7 332'.");
 
     endOfComments = FALSE;
     while (!endOfComments) {
         getline(ifP, buf, sizeof(buf));
-        if (STRNEQ(buf, "#END_OF_COMMENTS", 16))
+        if (strneq(buf, "#END_OF_COMMENTS", 16))
             endOfComments = TRUE;
-        else if (STRNEQ(buf, "#BUILTIN", 8))
+        else if (strneq(buf, "#BUILTIN", 8))
             pm_error("This program does not know how to "
                      "convert builtin XV thumbnail pictures");
     }

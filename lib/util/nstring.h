@@ -26,20 +26,8 @@ extern "C" {
 	(strncmp((A), (B), sizeof(A)))
 #define STRSCAT(A,B) \
     (strncpy(A+strlen(A), B, sizeof(A)-strlen(A)), *((A)+sizeof(A)-1) = '\0')
-
-#define STREQ(A, B) \
-    (strcmp((A), (B)) == 0)
-#define STRNEQ(A, B, C) \
-    (strncmp((A), (B), (C)) == 0)
-#define STRCASEEQ(A, B) \
-    (strcasecmp((A), (B)) == 0)
-#define STRNCASEEQ(A, B, C) \
-    (strncasecmp((A), (B), (C)) == 0)
 #define STRSEQ(A, B) \
-	(strncmp((A), (B), sizeof(A)) == 0)
-
-#define MEMEQ(A, B, C) \
-    (memcmp((A), (B), (C)) == 0)
+	(streq((A), (B), sizeof(A)))
 #define MEMSZERO(A) \
     bzero((A), sizeof(A))
 
@@ -51,6 +39,34 @@ streq(const char * const comparand,
     return strcmp(comparand, comparator) == 0;
 }
 
+static __inline__ int
+strneq(const char * const comparand,
+       const char * const comparator,
+       size_t       const size) {
+
+    return strncmp(comparand, comparator, size) == 0;
+}
+
+/* The Standard C Library may not declare strcasecmp() if the including
+   source file doesn't request BSD functions, with _BSD_SOURCE.  So
+   we don't define functions that use strcasecmp() in that case.
+*/
+#ifdef _BSD_SOURCE
+static __inline__ int
+strcaseeq(const char * const comparand,
+          const char * const comparator) {
+
+    return strcasecmp(comparand, comparator) == 0;
+}
+
+static __inline__ int
+strncaseeq(const char * const comparand,
+           const char * const comparator,
+           size_t       const size) {
+
+    return strncasecmp(comparand, comparator, size) == 0;
+}
+#endif
 
 
 /* The standard C library routines isdigit(), for some weird 

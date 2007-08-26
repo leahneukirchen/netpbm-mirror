@@ -890,7 +890,7 @@ memmemN(const char * const haystack,
     const char * p;
 
     for (p = haystack; p <= haystack + haystacklen - needlelen; ++p)
-        if (MEMEQ(p, needle, needlelen))
+        if (memeq(p, needle, needlelen))
             return p;
 
     return NULL;

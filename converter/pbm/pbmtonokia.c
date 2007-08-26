@@ -4,7 +4,7 @@
    Copyright information is at end of file.
 */
 
-#define _BSD_SOURCE    /* Make sure strcasecmp() is in string.h */
+#define _BSD_SOURCE    /* Make sure strcaseeq() is in nstring.h */
 #include <string.h>
 #include <assert.h>
 
@@ -96,17 +96,17 @@ parseCommandLine(int argc, char ** argv,
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (fmtSpec) {
-        if (STRCASEEQ(fmtOpt, "HEX_NOL"))
+        if (strcaseeq(fmtOpt, "HEX_NOL"))
             cmdlineP->outputFormat = FMT_HEX_NOL;
-        else if (STRCASEEQ(fmtOpt, "HEX_NGG"))
+        else if (strcaseeq(fmtOpt, "HEX_NGG"))
             cmdlineP->outputFormat = FMT_HEX_NGG;
-        else if (STRCASEEQ(fmtOpt, "HEX_NPM"))
+        else if (strcaseeq(fmtOpt, "HEX_NPM"))
             cmdlineP->outputFormat = FMT_HEX_NPM;
-        else if (STRCASEEQ(fmtOpt, "NOL"))
+        else if (strcaseeq(fmtOpt, "NOL"))
             cmdlineP->outputFormat = FMT_NOL;
-        else if (STRCASEEQ(fmtOpt, "NGG"))
+        else if (strcaseeq(fmtOpt, "NGG"))
             cmdlineP->outputFormat = FMT_NGG;
-        else if (STRCASEEQ(fmtOpt, "NPM"))
+        else if (strcaseeq(fmtOpt, "NPM"))
             cmdlineP->outputFormat = FMT_NPM;
         else
             pm_error("-fmt option must be HEX_NGG, HEX_NOL, HEX_NPM, "
