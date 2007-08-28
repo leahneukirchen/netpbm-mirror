@@ -47,6 +47,14 @@ strneq(const char * const comparand,
     return strncmp(comparand, comparator, size) == 0;
 }
 
+static __inline__ int
+memeq(const void * const comparand,
+      const void * const comparator,
+      size_t       const size) {
+    
+    return memcmp(comparand, comparator, size) == 0;
+}
+
 /* The Standard C Library may not declare strcasecmp() if the including
    source file doesn't request BSD functions, with _BSD_SOURCE.  So
    we don't define functions that use strcasecmp() in that case.
@@ -166,10 +174,10 @@ int
 stripeq(const char * const comparand,
         const char * const comparator);
 
-const char *
-memmemN(const char * const haystack,
+const void *
+memmemN(const void * const haystackArg,
         size_t       const haystacklen,
-        const char * const needle,
+        const void * const needleArg,
         size_t       const needlelen);
 
 bool

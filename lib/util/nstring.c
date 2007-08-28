@@ -878,16 +878,19 @@ stripeq(const char * const comparand,
 
 
 
-const char *
-memmemN(const char * const haystack,
+const void *
+memmemN(const void * const haystackArg,
         size_t       const haystacklen,
-        const char * const needle,
+        const void * const needleArg,
         size_t       const needlelen) {
+
+    const unsigned char * const haystack = haystackArg;
+    const unsigned char * const needle   = needleArg;
 
     /* This does the same as the function of the same name in the GNU
        C library
     */
-    const char * p;
+    const unsigned char * p;
 
     for (p = haystack; p <= haystack + haystacklen - needlelen; ++p)
         if (memeq(p, needle, needlelen))
