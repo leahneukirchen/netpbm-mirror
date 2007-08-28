@@ -27,6 +27,7 @@ Netpbm image input and produce a Netpbm image output.
    #include &lt;pam.h&gt;
 
    struct pam inpam, outpam;
+   tuple * tuplerow;
    unsigned int row;
 
    pnm_init(&amp;argc, argv);
@@ -211,7 +212,7 @@ the type of a tuple to one with more or fewer planes.
 
 <p>0 means the allocation depth is the same as the image depth.
 
-<dt><b>comments_p</b>
+<dt><b>comment_p</b>
 
 <dd>Pointer to a pointer to a NUL-terminated ASCII string of comments.
 When reading an image, this contains the comments from the image's PAM

@@ -1,7 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
 <html> 
 <head>
-<title>Netpbm subroutine library: pm_system() subroutine</title>
+<title>Netpbm subroutine library: pm_system() subroutine, etc.</title>
 <meta name="manual_section" content="3">
 </head>
 
@@ -16,6 +16,7 @@ pm_system - run a Netpbm program with program input and output
 <h2>Synopsis</h2>
 
 <pre>
+<code>
 #include &lt;netpbm/pm_system.h&gt;
 
 pm_system(void                  stdinFeeder(int, void *),
@@ -23,6 +24,22 @@ pm_system(void                  stdinFeeder(int, void *),
           void                  stdoutAccepter(int, void *),
           void *          const accepterParm,
           const char *    const shellCommand);
+
+pm_system_vp(const char *  const progName,
+             void                stdinFeeder(int, void *),
+             void *        const feederParm,
+             void                stdoutAccepter(int, void *),
+             void *        const accepterParm,
+             ...);
+
+pm_system_vp(const char *  const progName,
+             const char ** const argArray,
+             void                stdinFeeder(int, void *),
+             void *        const feederParm,
+             void                stdoutAccepter(int, void *),
+             void *        const accepterParm);
+
+</code>
 </pre>
 
 <h2>Example</h2>
@@ -32,7 +49,9 @@ JFIF (JPEG) image on Standard Output.  In this case,
 <b>pm_system()</b> is doing no more than <b>system()</b> would do.
 
 <pre>
+<code>
     pm_system(NULL, NULL, NULL, NULL, "pnmtojpeg");
+</code>
 </pre>
 
 
@@ -101,7 +120,7 @@ pnm_writepam(&amp;outpam, outTuples);
 
 <h2>DESCRIPTION</H2>
 
-<p>This library function is part of <a href="index.html">Netpbm</a>.
+<p>These library functions are part of <a href="index.html">Netpbm</a>.
 
 <p><b>pm_system()</b> is a lot like the standard C library
 <b>system()</b> subroutine.  It runs a shell and has that shell
@@ -153,7 +172,7 @@ Standard Input and Output.  Example:
 
 <pre>
 <kbd>
-ppmbrighten -v 100 | pamdepth 255 | pamscale .5
+    ppmbrighten -v 100 | pamdepth 255 | pamscale .5
 </kbd>
 </pre>
 
@@ -161,23 +180,90 @@ ppmbrighten -v 100 | pamdepth 255 | pamscale .5
 for that process to terminate (and accepts its completion status)
 before returning.
 
+<h3>pm_system_lp()</h3>
+
+<p><b>pm_system_lp()</b> is like <b>pm_system()</b> except that instead
+of running a shell, which in turn typically runs another program, you
+run a program of your choice directly.
+
+<p>Argument <i>progName</i> identifies the program to run, the same way
+as with <b>execlp()</b> or a shell command: if it contains a slash
+(/), it is the full name of the file that contains the program.  If not,
+it is a name to be looked up in the system's program search path
+(determined by the PATH environment variable).
+
+<p>You identify the arguments to the program the same way as for
+<b>execlp()</b>: with the variable arguments at the end of the
+<b>pm_system_lp()</b> argument list.  Each is a NUL-terminated string.
+The last argument <em>must</em> be NULL to tell <b>pm_system_lp()</b>
+where the arguments end.
+
+<p>Note that the first argument (&quot;arg0&quot;) to a program is
+conventionally the first word of the command used to run the program,
+as if it were being run due to a shell command.  In other words,
+typically the name of the program.
+
+<p>Example:
+
+<pre>
+<code>
+    pm_system_lp(&quot;pnmtojpeg&quot;, NULL, NULL, NULL, NULL,
+                 &quot;pnmtojpeg&quot;, &quot;mypicture.jpg&quot;, &quot;-quality=50&quot;, NULL);
+</code>
+</pre>
+
+<p><b>pm_system_lp()</b> is much safer than <b>pm_system()</b> when
+your program computes the arguments or gets them from a user.  If you
+build a shell command using such arguments, unless you're really
+careful, you may end up building a shell command that does something
+very different from what you intended, because the argument could
+contain characters that mean something to the shell such as
+&quot;|&quot;.
+
+<p><b>pm_system_lp()</b> can also be considerably faster that
+<b>pm_system()</b>, since it skips the whole running of the shell.
+
+
+<h3>pm_system_vp()</h3>
+
+<p><b>pm_system_vp()</b> is like <b>pm_system_lp()</b> except that
+instead of supplying the program arguments as variable arguments, you
+supply them as an array, as with <b>execvp()</b>.  A NULL element in
+the array identifies the end of the arguments.
+
+<p>Example:
+
+<pre>
+<code>
+    const char * argArray[3];
+
+    argArray[0] = &quot;pnmtojpeg&quot;;
+    argArray[1] = &quot;-quality=50&quot;;
+    argArray[2] = NULL;
+
+    pm_system_lp(&quot;pnmtojpeg&quot;, argArray, NULL, NULL, NULL, NULL);
+</code>
+</pre>
+
 
 <h2>Applications</h2>
 
-<p>The point of <b>pm_system()</b> is to allow you write a C program that
-uses other programs internally, as a shell script would.  This is particularly
-desirable with Netpbm, because Netpbm consists of a lot of programs that
-perform basic graphic manipulations and you'd like to be able to build a
-program that does a more sophisticated graphic manipulation by calling the
-more basic Netpbm programs.  These building block programs typically take
-input from Standard Input and write output to Standard Output.
+<p>The point of <b>pm_system()</b> and friends is to allow you to
+write a C program that uses other programs internally, as a shell
+script would.  This is particularly desirable with Netpbm, because
+Netpbm consists of a lot of programs that perform basic graphic
+manipulations and you'd like to be able to build a program that does a
+more sophisticated graphic manipulation by calling the more basic
+Netpbm programs.  These building block programs typically take input
+from Standard Input and write output to Standard Output.
 
-<p>The obvious alternative is to use a higher level language -- Bourne Shell
-or Perl, for example.  But often you want your program to do manipulations
-of your graphical data that are easier and more efficient in C.  Or you want
-to use the Netpbm subroutine library in your program.  The Netpbm subroutine
-library is a C-linkage library; the subroutines in it are not usable from a
-Bourne Shell or Perl program.
+<p>The obvious alternative is to use a higher level language -- Bourne
+Shell or Perl, for example.  But often you want your program to do
+manipulations of your graphical data that are easier and more
+efficient in C.  Or you want to use the Netpbm subroutine library in
+your program.  The Netpbm subroutine library is a C-linkage library;
+the subroutines in it are not usable from a Bourne Shell or Perl
+program.
 
 <p>A typical use of <b>pm_system()</b> is to place the contents of
 some graphical image file in memory, run a Netpbm program against it,

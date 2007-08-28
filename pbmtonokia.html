@@ -34,7 +34,7 @@ pbmtonokia - convert a PBM image to Nokia Smart Messaging Formats
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>pbmtonokia</b> reads a PBM image as input and produces a Nokia
-Smart Messaging (hexcode, .nok, .ngg) file as output.
+Smart Messaging (hexcode, .ngg, .nol, .npm) file as output.
 
 <H2 id="options">OPTIONS</H2>
 
@@ -96,8 +96,10 @@ text message allowed by the format is 120 characters.
 
 <H2 id="limitations">LIMITATIONS</H2>
 
-Currently limited to rows&lt;=255 and columns&lt;=255.  Generates only
-black and white graphics, not animated.
+This program currently accepts all PBM images with up to 255 rows or up to 255
+columns.  (Valid Nokia Group Graphics or Operator Logos can be 72 columns by 14
+rows and 78 columns by 21 rows; valid Nokia Picture Messages are 72 columns by
+28 rows.)  This program generates black and white graphics, not animated.
 
 <H2 id="seealso">SEE ALSO</H2>
 

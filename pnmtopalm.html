@@ -275,15 +275,6 @@ together in a single file using <B>cat</B>.
 put the high density images last and when you create the last of the
 low density images, use the <b>-withdummy</b> option.
 
-<H2 id="limitations">LIMITATIONS</H2>
-
-<P>You cannot generate an alpha mask if the Palm pixmap has a
-transparent color.  However, you can still do this with
-<B>ppmcolormask</B> with a Netpbm pipe similar to:
-
-<P>
-<B>palmtopnm pixmap.palm | ppmcolormask `palmtopnm -transparent pixmap.palm`</B>
-
 <A NAME="lbAH">&nbsp;</A>
 <H2>AUTHORS</H2>
 

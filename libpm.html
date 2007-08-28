@@ -9,10 +9,6 @@ Updated: 27 August 2006
 <BR>
 <p><A HREF="#toc">Table Of Contents</A>
 
-<H2>NAME</H2>
-libpm - netpbm utility functions
-<H2>DESCRIPTION</H2>
-
 <p>These library functions are part of <a href="index.html">Netpbm</a>.
 
 <p>This page documents functions in the Netpbm subroutine library that
@@ -177,8 +173,7 @@ calling routine has to free the allocated buffer with <B>free()</B>.
 buffer.  The <B>nread</B> argument returns the number of bytes read.
 
 
-<a name="endian"></a>
-<h3>Endian I/O</h3>
+<h3 id="endian">Endian I/O</h3>
 
 <h4>Entry Points</h4>
 
@@ -325,8 +320,7 @@ if the I/O fails or encounters EOF.
 <p>The 1-byte routines were new in Netpbm 10.27 (March 2005).
 The unsigned versions were new somewhere around Netpbm 10.21 (2004).
 
-<A NAME="maxval">&nbsp;</A>
-<H3>Maxval Arithmetic</H3>
+<H3 id="maxval">Maxval Arithmetic</H3>
 
 <h4>Entry Points</h4>
 <P>
@@ -514,8 +508,10 @@ against <B>keyword</B>.  <B>str</B> can be a leading substring of
     <li><a href="#file">File Or Image Stream Access</a>
     <li><a href="#endian">Endian I/O</a>
     <li><a href="#maxval">Maxval Arithmetic</a>
+    <li><a href="#gamma">Gamma Arithmetic</a>
     <li><a href="#message">Messages</a>
-    <li><a href="#keyword">Keyword</a>
+    <li><a href="#system">System Utilities</a>
+    <li><a href="#keyword">Keyword Matching</a>
     </ul>
   </ul>
 
