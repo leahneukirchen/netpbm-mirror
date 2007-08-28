@@ -153,6 +153,21 @@ freeCmdline(struct cmdlineInfo const cmdline) {
 
 
 static void
+validateSize(unsigned int const cols,
+             unsigned int const rows){
+
+    if (cols > 255)
+        pm_error("This program cannot handle files with more than 255 "
+                 "columns");
+    if (rows > 255)
+        pm_error("This program cannot handle files with more than 255 "
+                 "rows");
+}
+
+
+
+
+static void
 convertToHexNol(bit **       const image,
                 unsigned int const cols,
                 unsigned int const rows,
@@ -455,6 +470,8 @@ main(int    argc,
     ifP = pm_openr(cmdline.inputFileName);
     bits = pbm_readpbm(ifP, &cols, &rows);
     pm_close(ifP);
+
+    validateSize(cols, rows);
 
     switch (cmdline.outputFormat) {
     case FMT_HEX_NGG:
