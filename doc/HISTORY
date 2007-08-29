@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.40.00
 
+              libnetpbm: pbm_readppminit: read PBM as maxval of 255, not 1.
+
               pbmtonokia: fail if input is > 255 x 255.  Thanks Paul Bolle
               <pebolle@tiscali.nl>.
 

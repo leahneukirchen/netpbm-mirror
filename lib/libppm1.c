@@ -135,7 +135,8 @@ ppm_readppminit(FILE *   const fileP,
 
     case PBM_TYPE:
         *formatP = realFormat;
-        *maxvalP = 1;
+        /* See comment in pgm_readpgminit() about this maxval */
+        *maxvalP = PPM_MAXMAXVAL;
         pbm_readpbminitrest(fileP, colsP, rowsP);
         break;
 
