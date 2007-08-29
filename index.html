@@ -291,14 +291,16 @@ It can tell exactly which format the input was and may respond
 accordingly.  For example, a PAM program typically produces output in
 the same format as its input.
 
-<p>A program that uses the PBM library subroutines to read an image
-can read a PAM image as well a PBM image, if the PAM is a black and
-white visual image.  That canonically means the PAM has a depth of 1,
-a maxval of 1, and a tuple type of BLACK_AND_WHITE, but most Netpbm
-programs are fairly liberal and will take anything with a maxval of 1.
+<p>A program that uses the PGM library subroutines to read an image
+can read a PAM image as well a PGM image, if the PAM is a grayscale or
+black and white visual image.  That canonically means the PAM has a
+depth of 1 and a tuple type of GRAYSCALE or BLACK_AND_WHITE, but
+most Netpbm programs are fairly liberal and will take any PAM at all,
+ignoring all but the first plane.
 
-<p>There is a similar implied conversion for PGM and PPM library
-subroutines reading PAM.
+<p>There is a similar implied conversion for PPM library subroutines
+reading PAM.  There is nothing similar for PBM, so if you need for a
+PBM program to read a PAM image, run it through <b>pamtopnm</b>.
 
 
 <H3 id="transparency">Netpbm and Transparency</H3>
