@@ -15,7 +15,7 @@ extern "C" {
 } /* to fake out automatic code indenters */
 #endif
 
-/* Here is are string functions that respect the size of the array
+/* Here are string functions that respect the size of the array
    into which you are copying -- E.g. STRSCPY truncates the source string as
    required so that it fits, with the terminating null, in the destination
    array.
@@ -27,7 +27,7 @@ extern "C" {
 #define STRSCAT(A,B) \
     (strncpy(A+strlen(A), B, sizeof(A)-strlen(A)), *((A)+sizeof(A)-1) = '\0')
 #define STRSEQ(A, B) \
-	(streq((A), (B), sizeof(A)))
+	(strneq((A), (B), sizeof(A)))
 #define MEMSZERO(A) \
     bzero((A), sizeof(A))
 
