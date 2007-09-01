@@ -6,17 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.40.00
 
-              libnetpbm: pbm_readppminit: read PBM as maxval of 255, not 1.
-
               pbmtonokia: fail if input is > 255 x 255.  Thanks Paul Bolle
               <pebolle@tiscali.nl>.
-
-              pnmtopalm: fix typo in error message.  Thanks Paul Bolle
-              <pebolle@tiscali.nl>.
-
-              pnmtops: fix crash when program attempts to write 12 bits per
-              sample Postscript.  It doesn't really know how to do that, so
-              now it just writes 8 unless you do -psfilter.
 
               pamfunc: Add -andmask, -ormask, -xormask, -not,
               -shiftleft, -shiftright.
@@ -27,6 +18,17 @@ not yet  BJH  Release 10.40.00
               pnmmargin: add -plain option.    Thanks
               Prophet of the Way <afu@wta.att.ne.jp>.
 
+              pnmgamma: improve error messages.
+
+              pamstack: accept Standard Input properly.
+
+              pnmtopalm: fix typo in error message.  Thanks Paul Bolle
+              <pebolle@tiscali.nl>.
+
+              pnmtops: fix crash when program attempts to write 12 bits per
+              sample Postscript.  It doesn't really know how to do that, so
+              now it just writes 8 unless you do -psfilter.
+
               pnmmargin: recognize invalid options better.    Thanks
               Prophet of the Way <afu@wta.att.ne.jp>.
 
@@ -36,11 +38,11 @@ not yet  BJH  Release 10.40.00
 
               pnmtopng: Fix array bound violation with > 256 alpha mask levels.
 
-              pnmgamma: improve error messages.
-
               pamtopfm: Fix wrong selection of default endianness.
 
               libnetpbm: Add pm_system_lp(), pm_system_vp().
+
+              libnetpbm: pbm_readppminit: read PBM as maxval of 255, not 1.
 
               libnetpbm: Fix uninitialized variable in pnm_allocpamrown().
 
