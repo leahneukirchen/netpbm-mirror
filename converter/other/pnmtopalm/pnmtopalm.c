@@ -365,7 +365,7 @@ writeCommonHeader(unsigned int         const cols,
         pm_error("Too many columns for Palm Bitmap: %u", cols);
     pm_writebigshort(stdout, cols);    /* width */
     if (rows > USHRT_MAX)
-        pm_error("Too many columns for Palm Bitmap: %u", rows);
+        pm_error("Too many rows for Palm Bitmap: %u", rows);
     pm_writebigshort(stdout, rows);    /* height */
     if (rowbytes > USHRT_MAX)
         pm_error("Too many bytes per row for Palm Bitmap: %u", rowbytes);

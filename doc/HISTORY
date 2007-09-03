@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+08.09.03 BJH  Release 10.35.31
+
+              pamstack: accept Standard Input properly.
+
+              pnmtopalm: fix typo in error message.
+
 07.07.30 BJH  Release 10.35.30
 
               pnmtops: fix crash when program attempts to write 12 bits per
