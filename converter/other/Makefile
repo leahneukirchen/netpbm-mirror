@@ -86,8 +86,12 @@ PORTBINARIES =  bmptopnm fitstopnm \
 		pbmtopgm pfmtopam \
 	        pgmtopbm pgmtoppm ppmtopgm pnmtoddif \
 		pnmtopclxl \
-		pnmtosgi pnmtosir pamtotga pnmtoxwd pstopnm \
+		pnmtosgi pnmtosir pamtotga pnmtoxwd \
 		rlatopam sgitopnm sirtopnm xwdtopnm zeisstopnm
+
+ifneq ($(DONT_HAVE_PROCESS_MGMT),Y)
+  PORTBINARIES += pstopnm
+endif
 
 BINARIES = $(PORTBINARIES) pnmtorast rasttopnm
 

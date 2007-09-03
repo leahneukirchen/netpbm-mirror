@@ -549,16 +549,20 @@ process_header_line(char                const buffer[],
             pamP->maxval = atoi(value);
             headerSeenP->maxval = TRUE;
         } else if (strcmp(label, "TUPLTYPE") == 0) {
-            int len = strlen(pamP->tuple_type);
-            if (len + strlen(value) + 1 > sizeof(pamP->tuple_type)-1)
-                pm_error("TUPLTYPE value too long in PAM header");
-            if (len == 0)
-                strcpy(pamP->tuple_type, value);
+            if (strlen(value) == 0)
+                pm_error("TUPLTYPE header does not have any tuple type text");
             else {
-                strcat(pamP->tuple_type, "\n");
-                strcat(pamP->tuple_type, value);
+                size_t const oldLen = strlen(pamP->tuple_type);
+                if (oldLen + strlen(value) + 1 > sizeof(pamP->tuple_type)-1)
+                    pm_error("TUPLTYPE value too long in PAM header");
+                if (oldLen == 0)
+                    strcpy(pamP->tuple_type, value);
+                else {
+                    strcat(pamP->tuple_type, " ");
+                    strcat(pamP->tuple_type, value);
+                }
+                pamP->tuple_type[sizeof(pamP->tuple_type)-1] = '\0';
             }
-            pamP->tuple_type[sizeof(pamP->tuple_type)-1] = '\0';
         } else 
             pm_error("Unrecognized header line: '%s'.  "
                      "Possible missing ENDHDR line?", label);
@@ -708,11 +712,10 @@ pnm_readpaminitrestaspnm(FILE * const fileP,
     case 1:
         *formatP = RPGM_FORMAT;
         break;
-    default: {
+    default:
         pm_error("Cannot treat PAM image as PPM or PGM, "
                  "because its depth (%u) "
                  "is not 1 or 3.", pam.depth);
-    }
     }
 
     *colsP   = pam.width;

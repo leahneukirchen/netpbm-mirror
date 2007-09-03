@@ -4,6 +4,25 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+08.09.03 BJH  Release 10.39.05
+
+              pamstack: accept Standard Input properly.
+
+              libnetpbm: pbm_readppminit: read PBM as maxval of 255, not 1.
+
+              libnetpbm: Reject empty TUPLTYPE header.
+
+              libnetpbm: Fix uninitialized variable in pnm_allocpamrown().
+
+              pbmtonokia: fail if input is > 255 x 255.  Thanks Paul Bolle
+              <pebolle@tiscali.nl>.
+
+              pnmtopalm: fix typo in error message.  Thanks Paul Bolle
+              <pebolle@tiscali.nl>.
+
+              Build: don't build pstopnm on system without unix process
+              management.
+
 07.08.18 BJH  Release 10.39.04
 
               Build: put -l's after .o's in test links.
@@ -152,7 +171,7 @@ CHANGE HISTORY
               libnetpbm: fix crash with PBM images < 8 columns on MMX/SSE
               machine.
 
-              pamtogif: fail properly if image to wide or high for GIF.
+              pamtogif: fail properly if image too wide or high for GIF.
 
               ppmdraw: fix crash with use of freed storage.  Thanks
               John Walker <kelvin@fourmilab.ch>.
