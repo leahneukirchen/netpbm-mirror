@@ -44,7 +44,13 @@ not yet  BJH  Release 10.40.00
 
               libnetpbm: pbm_readppminit: read PBM as maxval of 255, not 1.
 
-              libnetpbm: Fix uninitialized variable in pnm_allocpamrown().
+              libnetpbm: Fix multi-line TUPLTYPE interpretation:
+              separate lines with blank, not newline.  Thanks Paul
+              Bolle <pebolle@tiscali.nl>.
+
+              libnetpbm: Reject empty TUPLTYPE header.
+
+<screen>              libnetpbm: Fix uninitialized variable in pnm_allocpamrown().
 
               Rename pamtooctave to pamtooctaveimg.
 
