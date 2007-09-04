@@ -50,7 +50,11 @@ not yet  BJH  Release 10.40.00
 
               libnetpbm: Reject empty TUPLTYPE header.
 
-<screen>              libnetpbm: Fix uninitialized variable in pnm_allocpamrown().
+              libnetpbm: Fix uninitialized variable in pnm_allocpamrown().
+
+              libnetpbm: fix crash in REALLOCARRAY with advanced optimization.
+
+              libnetpbm: REALLOCARRAY frees memory if it fails.
 
               Rename pamtooctave to pamtooctaveimg.
 
