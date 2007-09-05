@@ -44,6 +44,9 @@ not yet  BJH  Release 10.40.00
 
               libnetpbm: pbm_readppminit: read PBM as maxval of 255, not 1.
 
+              libnetpbm: Fix pm_drain() to use the specified limit.
+              Thanks Paul Bolle <pebolle@tiscali.nl>.
+
               libnetpbm: Fix multi-line TUPLTYPE interpretation:
               separate lines with blank, not newline.  Thanks Paul
               Bolle <pebolle@tiscali.nl>.
