@@ -46,7 +46,7 @@ MANUALS3 = libnetpbm
 MANUALS5 = pbm pgm ppm pnm pam
 
 INTERFACE_HEADERS =  pm.h pbm.h bitio.h pbmfont.h \
-	pgm.h ppm.h ppm.h ppmcmap.h ppmfloyd.h colorname.h \
+	pgm.h ppm.h ppmcmap.h ppmfloyd.h colorname.h \
 	pnm.h pam.h pammap.h util/shhopt.h util/nstring.h util/mallocvar.h \
 	pm_system.h pm_gamma.h
 
