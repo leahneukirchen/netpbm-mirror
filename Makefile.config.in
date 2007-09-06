@@ -313,7 +313,7 @@ CFLAGS_SHLIB =
 
 SHLIB_CLIB = -lc
 # SCO:
-SHLIB_CLIB =
+#SHLIB_CLIB =
 
 # On some systems you have to build into an executable the list of
 # directories where its dynamically linked libraries can be found at
