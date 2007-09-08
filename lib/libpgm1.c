@@ -166,31 +166,6 @@ pgm_readpgminit(FILE * const fileP,
 
 
 
-gray
-pgm_getrawsample(FILE * const file,
-                 gray   const maxval) {
-
-    if (maxval < 256) {
-        /* The sample is just one byte.  Read it. */
-        return(pm_getrawbyte(file));
-    } else {
-        /* The sample is two bytes.  Read both. */
-        unsigned char byte_pair[2];
-        size_t pairs_read;
-
-        pairs_read = fread(&byte_pair, 2, 1, file);
-        if (pairs_read == 0) 
-            pm_error("EOF /read error while reading a long sample");
-        /* This could be a few instructions faster if exploited the internal
-           format (i.e. endianness) of a pixval.  Then we might be able to
-           skip the shifting and oring.
-           */
-        return((byte_pair[0]<<8) | byte_pair[1]);
-    }
-}
-
-
-
 static void
 readRpgmRow(FILE * const fileP,
                gray * const grayrow, 
