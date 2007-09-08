@@ -6,16 +6,14 @@
 </HEAD>
 <BODY>
 <H1>libppm</H1>
-Updated: 22 July 2004
+Updated: 8 September 2007
 <BR>
 <A HREF="#index">Table Of Contents</A>
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
 libppm - functions for PPM programs
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>#include &lt;<A HREF="file:/usr/include/ppm.h">ppm.h</A>&gt;</B>
 
@@ -177,13 +175,11 @@ libppm - functions for PPM programs
   <b>)</b>
 
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>These library functions are part of <a href="index.html">Netpbm</a>.
 
-<A NAME="lbAE">&nbsp;</A>
-<H3>TYPES AND CONSTANTS</H3>
+<H3 id="types">TYPES AND CONSTANTS</H3>
 
 Each <B>pixel</B> contains three <B>pixval</B>s, each of which should
 contain only the values between <B>0</B> and <B>PPM_MAXMAXVAL</B>.
@@ -223,13 +219,13 @@ significantly faster to do it with multiplication tables instead.
 Compute all the possible products once up front, then for each pixel,
 just look up the products in the tables.
 
-<A NAME="lbAG">&nbsp;</A>
-<H3>INITIALIZATION</H3>
+<H3 id="initialization">INITIALIZATION</H3>
 
-<P><b>ppm_init()</b> is identical to <b>pm_init</b>.
+<P><b>ppm_init()</b> is identical to <b>pm_proginit</b>.
 
-<A NAME="lbAH">&nbsp;</A>
-<H3>MEMORY MANAGEMENT</H3>
+<p><b>ppm_init()</b> is obsolete.  Use <b>pm_proginit()</b> instead.
+
+<H3 id="memorymanagement">MEMORY MANAGEMENT</H3>
 
 <B>ppm_allocarray()</B> allocates an array of pixels.
 
@@ -242,8 +238,7 @@ pixels.
 <P><B>ppm_freerow()</B> frees a row of pixelss allocated with
 <B>ppm_allocrow()</B>.
 
-<A NAME="lbAI">&nbsp;</A>
-<H3>READING FILES</H3>
+<H3 id="readingfiles">READING FILES</H3>
 
 <P>If a function in this section is called on a PBM or PGM format
 file, it translates the PBM or PGM file into a PPM file on the fly and
@@ -267,8 +262,7 @@ information from the header as <I>rows</I>, <I>cols</I>, and
 <B>ppm_allocarray()</B>, and <B>ppm_readppmrow()</B>.
 
 
-<A NAME="lbAJ">&nbsp;</A>
-<H3>WRITING FILES</H3>
+<H3 id="writingfiles">WRITING FILES</H3>
 
 <B>ppm_writeppminit()</B> writes the header for a PPM file and leaves
 it positioned just after the header.
@@ -304,7 +298,7 @@ on PPM, PGM, and PBM files.
 
 <h3 id="color">COLOR</h3>
 
-<H4>Luminance, Chrominance (YcbCr)</H4>
+<H4 id="luminance">Luminance, Chrominance (YcbCr)</H4>
 
 <pre>
 <code>
@@ -468,8 +462,7 @@ represents it.
 
 <H3 id="colorname">COLOR NAMES</H3>
 
-<A NAME="rgb.txt">&nbsp;</a>
-<h4>System Color Dictionary</h4>
+<h4 id="dictionary">System Color Dictionary</h4>
 
 <P>Netpbm uses the system's X11 color dictionary (usually in
 <b>/usr/lib/X11/rgb.txt</b>).  This is the same file the X Window
@@ -587,8 +580,7 @@ colors or names.
 <p><b>ppm_readcolornamefile()</b> was new in Netpbm 10.15 (April 2003).
 
 
-<A NAME="colorindex">&nbsp;</A>
-<H3>COLOR INDEXING</H3>
+<H3 id="colorindex">COLOR INDEXING</H3>
 
 <P>Sometimes in processing images, you want to associate a value with
 a particular color.  Most often, that's because you're generating a
@@ -699,8 +691,7 @@ message.
 <P>The return value is a new <B>colorhash_table</B> which you must
 eventually free with <B>ppm_freecolorhash()</B>.
 
-<A NAME="lbAN">&nbsp;</A>
-<H3>COLOR HISTOGRAMS</H3>
+<H3 id="histogram">COLOR HISTOGRAMS</H3>
 
 <P>The Netpbm libraries give you functions to examine a Netpbm image
 and determine what colors are in it and how many pixels of each color
@@ -784,40 +775,46 @@ open file stream and it reads the image from the file.  The file must
 be positioned after the header, at the raster.  Upon return, the file
 is still open, but its position is undefined.
 
-<A NAME="lbAO">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="pbm.html">pbm</A></B>,
 <B><A HREF="pgm.html">pgm</A></B>,
 <B><A HREF="libpbm.html">libpbm</A></B>
 
-<A NAME="lbAP">&nbsp;</A>
-<H2>AUTHOR</H2>
+<H2 id="author">AUTHOR</H2>
 
 Copyright (C) 1989, 1991 by Tony Hansen and Jef Poskanzer.
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<UL>
-<LI><A HREF="#lbAE">TYPES AND CONSTANTS</A>
-<LI><A HREF="#manipulating_pixels">MANIPULATING PIXELS</A>
-<LI><A HREF="#lbAG">INITIALIZATION</A>
-<LI><A HREF="#lbAH">MEMORY MANAGEMENT</A>
-<LI><A HREF="#lbAI">READING FILES</A>
-<LI><A HREF="#lbAJ">WRITING FILES</A>
-<LI><A HREF="#miscellaneous">MISCELLANEOUS</A>
-<LI><A HREF="#color">COLOR</A>
-<LI><A HREF="#colorname">COLOR NAMES</A>
-<LI><A HREF="#colorindex">COLOR INDEXING</A>
-<LI><A HREF="#lbAN">COLOR HISTOGRAMS</A>
-</UL>
-<LI><A HREF="#lbAO">SEE ALSO</A>
-<LI><A HREF="#lbAP">AUTHOR</A>
-</UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+  <UL>
+  <LI><A HREF="#types">TYPES AND CONSTANTS</A>
+  <LI><A HREF="#manipulating_pixels">MANIPULATING PIXELS</A>
+  <LI><A HREF="#initialization">INITIALIZATION</A>
+  <LI><A HREF="#memorymanagement">MEMORY MANAGEMENT</A>
+  <LI><A HREF="#readingfiles">READING FILES</A>
+  <LI><A HREF="#writingfiles">WRITING FILES</A>
+  <LI><A HREF="#miscellaneous">MISCELLANEOUS</A>
+  <LI><A HREF="#color">COLOR</A>
+    <ul>
+    <li><a href="#luminance">Luminance, Chrominance (YcbCr)</a>
+    <li><a href="#berlinkay">Berlin-Kay Color</a>
+    </ul>
+  <LI><A HREF="#colorname">COLOR NAMES</A>
+    <ul>
+    <li><a href="#dictionary">System Color Dictionary</a>
+    <li><a href="#ppm_parsecolor">ppm_parsecolor</a>
+    <li><a href="#ppm_colorname">ppm_colorname</a>
+    <li><a href="#ppm_readcolornamefile">ppm_readcolornamefile</a>
+    </ul>
+  <LI><A HREF="#colorindex">COLOR INDEXING</A>
+  <LI><A HREF="#histogram">COLOR HISTOGRAMS</A>
+  </UL>
+  <LI><A HREF="#seealso">SEE ALSO</A>
+  <LI><A HREF="#author">AUTHOR</A>
+  </UL>
 </BODY>
 </HTML>

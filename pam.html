@@ -175,11 +175,14 @@ The header must contain exactly one of these header lines.
 zero.  The rest of the line is part of the tuple type.  The rest of
 the line is not tokenized, but the tuple type does not include any
 white space immediately following <B>TUPLTYPE </B> or at the very end
-of the line.  It does not include a newline.  If there are multiple
-<B>TUPLTYPE</B> header lines, the tuple type is the concatenation of
-the values from each of them, separated by a single blank, in the
-order in which they appear in the header.  If there are no
-<B>TUPLTYPE</B> header lines the tuple type is the null string.  
+of the line.  It does not include a newline.  There must be something
+other than white space after the <b>TUPLETYPE</b> token.
+
+<p>If there are multiple <B>TUPLTYPE</B> header lines, the tuple type
+is the concatenation of the values from each of them, separated by a
+single blank, in the order in which they appear in the header.  If
+there are no <B>TUPLTYPE</B> header lines the tuple type is the null
+string.
 
 </DL>
 

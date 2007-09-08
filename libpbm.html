@@ -7,15 +7,13 @@
 <BODY>
 
 <H1>pbm Functions</H1>
-Updated: 22 July 2004
+Updated: 8 September 2007
 <BR>
 <A HREF="#index">Table Of Contents</A>
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 libpbm - libnetpbm functions to read and write PBM image files
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>#include &lt;pbm.h&gt;</B>
 
@@ -113,13 +111,11 @@ int </B><I>forceplain</I><B>);</B>
 <B>enum pm_check_code * const </B><I>retval</I><B>);</B>
 
 
-<A NAME="lbAK">&nbsp;</A>
-<H2>DESCRIPTION - PBM-SPECIFIC ROUTINES</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>These library functions are part of <a href="index.html">Netpbm</a>.
 
-<A NAME="lbAL">&nbsp;</A>
-<H3>TYPES AND CONSTANTS</H3>
+<H3 id="types">TYPES AND CONSTANTS</H3>
 
 <B>typedef ... bit;</B>
 
@@ -143,13 +139,13 @@ or <B>PBM_BLACK</B>.
 
 <P>These are for distinguishing different file formats and types.
 
-<A NAME="lbAM">&nbsp;</A>
-<H3>INITIALIZATION</H3>
+<H3 id="initialization">INITIALIZATION</H3>
 
-<p><b>pbm_init()</b> is identical to <b>pm_init()</b>.
+<P><b>pbm_init()</b> is identical to <b>pm_proginit</b>.
 
-<A NAME="lbAN">&nbsp;</A>
-<H3>MEMORY MANAGEMENT</H3>
+<p><b>pbm_init()</b> is obsolete.  Use <b>pm_proginit()</b> instead.
+
+<H3 id="memorymanagement">MEMORY MANAGEMENT</H3>
 
 <B>pbm_allocarray()</B> allocates an array of bits.
 <B>pbm_allocrow()</B> allocates a row of the given number of bits.
@@ -158,8 +154,7 @@ or <B>PBM_BLACK</B>.
 <B>pbm_freerow()</B> frees a row of bits.
 
 
-<A NAME="lbAO">&nbsp;</A>
-<H3>READING PBM IMAGE FILES</H3>
+<H3 id="reading">READING PBM IMAGE FILES</H3>
 
 <P><B>pbm_readpbminit()</B> reads the header from a PBM image in a PBM
 file, filling in the rows, cols and format variables.
@@ -194,8 +189,7 @@ valid, including if it contains a number too large to be processed using
 the system's normal data structures (to wit, a number that won't fit in
 a C 'int').
 
-<A NAME="lbAP">&nbsp;</A>
-<H3>WRITING PBM IMAGE FILES</H3>
+<H3 id="writing">WRITING PBM IMAGE FILES</H3>
 
 <B>pbm_writepbminit()</B> writes the header for a PBM image in a PBM
 file.  <I>forceplain</I> is a boolean value specifying that a plain
@@ -211,8 +205,7 @@ The format of <I>packed_bits </I> is the same as that returned by
 image to a PBM file.  This function combines <B>pbm_writepbminit()</B>
 and <B>pbm_writepbmrow()</B>.
 
-<A NAME="lbAQ">&nbsp;</A>
-<H3>MISCELLANEOUS</H3>
+<H3 id="miscellaneous">MISCELLANEOUS</H3>
 
 <P><B>pbm_nextimage()</B> positions a PBM input file to the next image
 in it (so that a subsequent <B>pbm_readpbminit()</B> reads its
@@ -274,36 +267,34 @@ Otherwise, the effect of <B>pbm_check()</B> is unpredictable.  This
 argument exists for future backward compatible expansion of the
 function of <B>pbm_check()</B>.
 
-<A NAME="lbAR">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="libpgm.html">libpgm</A></B>,
 <B><A HREF="libppm.html">libppm</A></B>,
 <B><A HREF="libpnm.html">libpnm</A></B>,
 <B><A HREF="pbm.html">pbm</A></B>
 
-<A NAME="lbAS">&nbsp;</A>
-<H2>AUTHOR</H2>
+<H2 id="author">AUTHOR</H2>
 
 Copyright (C) 1989, 1991 by Tony Hansen and Jef Poskanzer.
 
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 
 <UL>
-<LI><A HREF="#lbAK">DESCRIPTION - PBM-SPECIFIC ROUTINES</A>
-<UL>
-<LI><A HREF="#lbAL">TYPES AND CONSTANTS</A>
-<LI><A HREF="#lbAM">INITIALIZATION</A>
-<LI><A HREF="#lbAN">MEMORY MANAGEMENT</A>
-<LI><A HREF="#lbAO">READING PBM IMAGE FILES</A>
-<LI><A HREF="#lbAP">WRITING PBM IMAGE FILES</A>
-<LI><A HREF="#lbAQ">MISCELLANEOUS</A>
-</UL>
-<LI><A HREF="#lbAR">SEE ALSO</A>
-<LI><A HREF="#lbAS">AUTHOR</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+  <UL>
+  <LI><A HREF="#types">TYPES AND CONSTANTS</A>
+  <LI><A HREF="#initialization">INITIALIZATION</A>
+  <LI><A HREF="#memorymanagement">MEMORY MANAGEMENT</A>
+  <LI><A HREF="#reading">READING PBM IMAGE FILES</A>
+  <LI><A HREF="#writing">WRITING PBM IMAGE FILES</A>
+  <LI><A HREF="#miscellaneous">MISCELLANEOUS</A>
+  </UL>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
 </UL>
 </BODY>
 </HTML>

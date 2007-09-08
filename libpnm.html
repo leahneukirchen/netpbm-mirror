@@ -6,15 +6,13 @@
 </HEAD>
 <BODY>
 <H1>pnm Functions</H1>
-Updated: 22 July 2004
+Updated: 8 September 2007
 <BR>
 <A HREF="#index">Table Of Contents</A>
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 libpnm - libnetpbm functions to read and write PNM image files
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>#include &lt;pnm.h&gt;</B>
 
@@ -181,14 +179,12 @@ libpnm - libnetpbm functions to read and write PNM image files
 <B>PNM_FORMAT_TYPE(</B><I>format</I><B>)</B>
 <B>...</B>
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>These library functions are part of <a href="index.html">Netpbm</a>.
 
 
-<A NAME="lbAI">&nbsp;</A>
-<H3>PNM TYPES AND CONSTANTS</H3>
+<H3 id="types">TYPES AND CONSTANTS</H3>
 
 <P>Each <B>xel</B> contains three <B>xelval</B>s, each of which should
 contain only the values between <B>0</B> and <B>PNM_MAXMAXVAL</B>,
@@ -196,13 +192,10 @@ inclusive.  <B>pnm_pbmmaxval</B> is the maxval used when a PNM program
 reads a PBM file.  Normally it is 1; however, for some programs, a
 larger value gives better results.
 
-<A NAME="lbAJ">&nbsp;</A>
-<H3>PNM XEL MANIPULATIONS</H3>
-
-<A NAME="lbAK">&nbsp;</A>
+<H3 id="xel">XEL MANIPULATIONS</H3>
 
 <p>The <B>PNM_GET1</B> macro extracts a single value from an xel, when
-you know it's from a PBM or PGM file.  When it's from a PPM file, use
+ou know it's from a PBM or PGM file.  When it's from a PPM file, use
 <B>PPM_GETR()</B>, <B>PPM_GETG()</B>, and <B>PPM_GETB()</B>.
 
 <P>The <B>PNM_ASSIGN1</B> macro assigns a single value to an xel, when
@@ -217,13 +210,19 @@ formats: a plain one and a raw one.  So there are four format types,
 but seven formats.  <B>PNM_FORMAT_TYPE</B> does not work on the PAM
 format code.
 
-<A NAME="lbAL">&nbsp;</A>
-<H3>INITIALIZATION</H3>
+<B>pnm_whitexel()</B> and <B>pnm_blackxel()</B> return a white or
+black xel, respectively, for the given <I>maxval</I> and
+<I>format</I>.
 
-<p><b>pnm_init</b> is identical to <b>pm_init()</b>.
+<P><B>pnm_invertxel()</B> inverts an xel.
 
-<A NAME="lbAM">&nbsp;</A>
-<H3>MEMORY MANAGEMENT</H3>
+<H3 id="initialization">INITIALIZATION</H3>
+
+<P><b>pnm_init()</b> is identical to <b>pm_proginit</b>.
+
+<p><b>pnm_init()</b> is obsolete.  Use <b>pm_proginit()</b> instead.
+
+<H3 id="memorymanagement">MEMORY MANAGEMENT</H3>
 
 <P><B>pnm_allocarray()</B> allocates space for an array of xels.
 <B>pnm_freearray()</B> frees an array space allocated by
@@ -233,8 +232,7 @@ format code.
 <B>pnm_freerow()</B> frees it.
 
 
-<A NAME="lbAN">&nbsp;</A>
-<H3>READING PNM FILES</H3>
+<H3 id="reading">READING PNM FILES</H3>
 
 <P><B>pnm_readpnminit()</B> is similar to <B>pnm_readpaminit()</B>,
 but reads only PNM images and has a different parameter list.
@@ -249,8 +247,7 @@ returns an array of rows such that <B>pnm_readpnmrow()</B> would
 return rather than such that <B>pnm_readpamrow()</B> would return.
 
 
-<A NAME="lbAO">&nbsp;</A>
-<H3>WRITING FILES</H3>
+<H3 id="writing">WRITING FILES</H3>
 
 <P><B>pnm_writepnminit()</B> is similar to <B>pnm_writepaminit()</B>
 except that it can write only a PNM header and has a different
@@ -272,16 +269,7 @@ takes an array of rows of xels instead of an array of rows of tuples.
 See the description of <I>forceplain</I> above.
 
 
-<A NAME="lbAP">&nbsp;</A>
-<H3>MISCELLANEOUS</H3>
-
-<P> <B>pnm_check()</B> is similar to <B>pnm_checkpam()</B> except it
-works only on PNM images.
-
-<P><B>pnm_check()</B> is identical to <B>ppm_check()</B>.
-
-<A NAME="lbAQ">&nbsp;</A>
-<H3>PNM FORMAT PROMOTION</H3>
+<H3 id="promotion">FORMAT PROMOTION</H3>
 
 <B>pnm_promoteformatrow()</B> promotes a row of xels from one maxval
 and format to a new set.  Use this when you are combining multiple
@@ -290,15 +278,12 @@ the maximum of the formats, and promote them all to that.
 
 <P><B>pnm_promoteformat()</B> promotes an entire anymap.
 
+<H3 id="miscellaneous">MISCELLANEOUS</H3>
 
-<A NAME="lbAR">&nbsp;</A>
-<H3>PNM XEL MANIPULATION</H3>
+<P> <B>pnm_check()</B> is similar to <B>pnm_checkpam()</B> except it
+works only on PNM images.
 
-<B>pnm_whitexel()</B> and <B>pnm_blackxel()</B> return a white or
-black xel, respectively, for the given <I>maxval</I> and
-<I>format</I>.
-
-<P><B>pnm_invertxel()</B> inverts an xel.
+<P><B>pnm_check()</B> is identical to <B>ppm_check()</B>.
 
 <P><B>pnm_backgroundxelrow()</B> figures out an appropriate background
 xel based on the row of xels <I>xelrow</I>, which is <I>cols</I> xels
@@ -313,8 +298,7 @@ the image.
 of just one row.  This tends to do a slightly better job than
 <B>pnmbackgroundxelrow()</B>.
 
-<A NAME="lbAS">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="libnetpbm.html">Libnetpbm</A></B>,
 <B><A HREF="libnetpbm_ug.html">Libnetpbm User's Guide</A></B>,
@@ -327,31 +311,27 @@ of just one row.  This tends to do a slightly better job than
 <B><A HREF="libpgm.html">libpgm</A></B>,
 <B><A HREF="libppm.html">libppm</A></B>
 
-<A NAME="lbAT">&nbsp;</A>
-<H2>AUTHOR</H2>
+<H2 id="author">AUTHOR</H2>
 
 Copyright (C) 1989, 1991 by Tony Hansen and Jef Poskanzer.
 
 <HR>
-<A NAME="index">&nbsp;</A><H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-  <LI><A HREF="#lbAB">NAME</A>
-  <LI><A HREF="#lbAD">SYNOPSIS</A>
-  <LI><A HREF="#lbAE">DESCRIPTION</A>
+  <LI><A HREF="#synopsis">SYNOPSIS</A>
+  <LI><A HREF="#description">DESCRIPTION</A>
   <UL>
-    <LI><A HREF="#lbAI">PNM TYPES AND CONSTANTS</A>
-    <LI><A HREF="#lbAJ">PNM XEL MANIPULATIONS</A>
-    <LI><A HREF="#lbAK">The </A>
-    <LI><A HREF="#lbAL">INITIALIZATION</A>
-    <LI><A HREF="#lbAM">MEMORY MANAGEMENT</A>
-    <LI><A HREF="#lbAN">READING PNM FILES</A>
-    <LI><A HREF="#lbAO">WRITING FILES</A>
-    <LI><A HREF="#lbAP">MISCELLANEOUS</A>
-    <LI><A HREF="#lbAQ">PNM FORMAT PROMOTION</A>
-    <LI><A HREF="#lbAR">PNM XEL MANIPULATION</A>
+    <LI><A HREF="#types">TYPES AND CONSTANTS</A>
+    <LI><A HREF="#xel">XEL MANIPULATIONS</A>
+    <LI><A HREF="#initialization">INITIALIZATION</A>
+    <LI><A HREF="#memorymanagement">MEMORY MANAGEMENT</A>
+    <LI><A HREF="#reading">READING PNM FILES</A>
+    <LI><A HREF="#writing">WRITING FILES</A>
+    <LI><A HREF="#promotion">FORMAT PROMOTION</A>
+    <LI><A HREF="#miscellaneous">MISCELLANEOUS</A>
     </UL>
-  <LI><A HREF="#lbAS">SEE ALSO</A>
-  <LI><A HREF="#lbAT">AUTHOR</A>
+  <LI><A HREF="#seealso">SEE ALSO</A>
+  <LI><A HREF="#author">AUTHOR</A>
   </UL>
 </BODY>
 </HTML>

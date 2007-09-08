@@ -32,19 +32,61 @@ Manual</a>
 
 <p>
 <B>void pm_init(</B>
-<B>int *</B><I>argcP</I><B>,</B>
-<B>char *</B><I>argv</I><B>[]</B>
+<B>const char * </B><I>progname</I><B>,</B>
+<B>unsigned int </B><I>flags</I><B>[]</B>
+<B>);</B>
+
+<p>
+<B>void pm_proginit(</B>
+<B>int * </B><I>argcP</I><B>,</B>
+<B>char * </B><I>argv</I><B>[]</B>
 <B>);</B>
 
 <h4>Description</h4>
 
-<p>All Netpbm programs must call <b>pm_init()</b> just after
-startup, before they process their arguments.  <b>pm_init()</b>,
+<p>All Netpbm programs must call <b>pm_proginit()</b> just after
+startup, before they process their arguments.  <b>pm_proginit()</b>,
 among other things, processes Netpbm universal arguments and removes
 them from the argument list.
 
 <p>A program that isn't a Netpbm program, but just uses <b>libnetpbm</b>
-services, need not invoke <b>pm_init</b>.
+services, need not invoke <b>pm_proginit</b>.  But such a program
+must invoke <b>pm_init()</b>.
+
+<P>By &quot;Netpbm program,&quot; we mean a program that is part of
+the Netpbm package or is intended to act like one.  <b>pm_proginit()</b>
+does things that all Netpbm programs do by convention.  For example,
+it scans the argument list for <a href="index.html#commonoptions">
+common options</a>, handles them, and removes them from the argument
+list.  Ergo, if you want your program to have the same common options
+as those in the Netpbm package, you might use <b>pm_proginit()</b>,
+and if you don't, you must not.
+
+<p><b>pm_proginit()</b> is primarily intended for Netpbm developers,
+so you should not expect it to have stable function across releases,
+and you must go to the comments in the source code to see exactly what
+it does.
+
+<p>Any program that uses <b>libnetpbm</b> but does not call
+<b>pm_proginit</b> (i.e. is not a Netpbm program) must call
+<b>pm_init()</b>.  The conventional place to do this is at the very
+beginning of the program.  This sets up some program-global variables
+for use by the <b>libnetpbm</b> functions.
+
+<p>The <i>progname</i> argument is the program name for
+<b>libnetpbm</b> functions to use in messages they issue.  Normally,
+you would use argv[0] for this.
+
+<p><i>flags</i> is meaningless, but for forward compatibility, you
+must set it to zero.
+
+<p><b>pm_init()</b> and <b>pm_proginit()</b> have been around at least
+since Netpbm 9.25 (March 2002).  Another function named
+<b>pm_init()</b> exists in older Netpbm, but was for internal use.
+Netpbm programs of that era use <b>pbm_init()</b>, etc to do what
+<b>pm_proginit()</b> does today.  Today, <b>pbm_init()</b>, etc. exist
+for backward compatibility and are identical the <b>pm_proginit()</b>.
+
 
 <h3 id="file">File Or Image Stream Access</h3>
 

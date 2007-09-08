@@ -6,15 +6,13 @@
 </HEAD>
 <BODY>
 <H1>pgm Functions</H1>
-Updated: 22 July 2004
+Updated: 8 September 2007
 <BR>
 <A HREF="#index">Table Of Contents</A>
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 libpgm - libnetpbm functions to read and write PGM image files
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>#include &lt;pgm.h&gt;</B>
 
@@ -141,13 +139,11 @@ libpgm - libnetpbm functions to read and write PGM image files
 <B>PGM_FORMAT_TYPE(</B><I>format</I><B>)</B>
 <B>...</B>
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>These library functions are part of <a href="index.html">Netpbm</a>.
 
-<A NAME="lbAE">&nbsp;</A>
-<H3>TYPES AND CONSTANTS</H3>
+<H3 id="types">TYPES AND CONSTANTS</H3>
 
 <P>Each <B>gray</B> should contain only the values between <B>0</B>
 and <B>PGM_OVERALLMAXVAL</B>.  <B>pgm_pbmmaxval</B> is the maxval used
@@ -169,13 +165,13 @@ formats.  <B>PGM_FORMAT_TYPE</B> is a macro that generates code to
 compute the format type code of a PBM or PGM format from the format
 code which is its argument.
 
-<A NAME="lbAF">&nbsp;</A>
-<H3>INITIALIZATION</H3>
+<H3 id="initialization">INITIALIZATION</H3>
 
-<P><b>pgm_init</b> is identical to <b>pm_init()</b>.
+<P><b>pgm_init()</b> is identical to <b>pm_proginit</b>.
 
-<A NAME="lbAG">&nbsp;</A>
-<H3>MEMORY MANAGEMENT</H3>
+<p><b>pgm_init()</b> is obsolete.  Use <b>pm_proginit()</b> instead.
+
+<H3 id="memorymanagement">MEMORY MANAGEMENT</H3>
 
 <B>pgm_allocarray()</B> allocates an array of grays.
 
@@ -187,8 +183,7 @@ code which is its argument.
 <P><B>pgm_freerow()</B> frees a row of grays allocated with
 <B>pgm_allocrow()</B>.
 
-<A NAME="lbAH">&nbsp;</A>
-<H3>READING FILES</H3>
+<H3 id="reading">READING FILES</H3>
 
 <P>If a function in this section is called on a PBM format file, it
 translates the PBM file into a PGM file on the fly and functions as if
@@ -217,8 +212,7 @@ the system's normal data structures (to wit, a number that won't fit in
 a C 'int').
 
 
-<A NAME="lbAI">&nbsp;</A>
-<H3>WRITING FILES</H3>
+<H3 id="writing">WRITING FILES</H3>
 
 <B>pgm_writepgminit()</B> writes the header for a PGM file and leaves
 it positioned just after the header.
@@ -236,8 +230,7 @@ file.  For meaningful results, <I>cols</I>, <I>maxval</I>, and
 image.  This function combines <B>pgm_writepgminit()</B> and
 <B>pgm_writepgmrow()</B>.
 
-<A NAME="lbAJ">&nbsp;</A>
-<H3>MISCELLANEOUS</H3>
+<H3 id="miscellaneous">MISCELLANEOUS</H3>
 
 <P><B>pgm_nextimage()</B> positions a PGM input file to the next image
 in it (so that a subsequent <B>pgm_readpgminit()</B> reads its
@@ -252,28 +245,26 @@ where the file is the wrong size to contain all the image data.
 <P><B>pgm_check() </B> is analogous to <B>pbm_check()</B>, but works
 on PGM and PBM files.
 
-<A NAME="lbAK">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="libpbm.html">libpbm</A></B>,
 <B><A HREF="libppm.html">libppm</A></B>,
 <B><A HREF="libpnm.html">libpnm</A></B>
 
 <HR>
-<A NAME="index">&nbsp;</A><H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<UL>
-<LI><A HREF="#lbAE">TYPES AND CONSTANTS</A>
-<LI><A HREF="#lbAF">INITIALIZATION</A>
-<LI><A HREF="#lbAG">MEMORY MANAGEMENT</A>
-<LI><A HREF="#lbAH">READING FILES</A>
-<LI><A HREF="#lbAI">WRITING FILES</A>
-<LI><A HREF="#lbAJ">MISCELLANEOUS</A>
-</UL>
-<LI><A HREF="#lbAK">SEE ALSO</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+  <UL>
+  <LI><A HREF="#types">TYPES AND CONSTANTS</A>
+  <LI><A HREF="#initialization">INITIALIZATION</A>
+  <LI><A HREF="#memorymanagement">MEMORY MANAGEMENT</A>
+  <LI><A HREF="#reading">READING FILES</A>
+  <LI><A HREF="#writing">WRITING FILES</A>
+  <LI><A HREF="#miscellaneous">MISCELLANEOUS</A>
+  </UL>
+<LI><A HREF="#seealso">SEE ALSO</A>
 </UL>
 </BODY>
 </HTML>
