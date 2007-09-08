@@ -154,11 +154,11 @@ ppm_readppminit(FILE *   const fileP,
 
 
 static void
-readppm(FILE *       const fileP, 
-        pixel *      const pixelrow, 
-        unsigned int const cols, 
-        pixval       const maxval, 
-        int          const format) {
+readPpmRow(FILE *       const fileP, 
+           pixel *      const pixelrow, 
+           unsigned int const cols, 
+           pixval       const maxval, 
+           int          const format) {
 
     unsigned int col;
 
@@ -184,11 +184,11 @@ readppm(FILE *       const fileP,
 
 
 static void
-readrppm(FILE *       const fileP, 
-         pixel *      const pixelrow, 
-         unsigned int const cols, 
-         pixval       const maxval, 
-         int          const format) {
+readRppmRow(FILE *       const fileP, 
+            pixel *      const pixelrow, 
+            unsigned int const cols, 
+            pixval       const maxval, 
+            int          const format) {
 
     unsigned int const bytesPerSample = maxval < 256 ? 1 : 2;
     unsigned int const bytesPerRow    = cols * 3 * bytesPerSample;
@@ -260,11 +260,11 @@ readrppm(FILE *       const fileP,
 
 
 static void
-readpgm(FILE *       const fileP, 
-        pixel *      const pixelrow, 
-        unsigned int const cols, 
-        pixval       const maxval, 
-        int          const format) {
+readPgmRow(FILE *       const fileP, 
+           pixel *      const pixelrow, 
+           unsigned int const cols, 
+           pixval       const maxval, 
+           int          const format) {
 
     jmp_buf jmpbuf;
     jmp_buf * origJmpbufP;
@@ -295,11 +295,11 @@ readpgm(FILE *       const fileP,
 
 
 static void
-readpbm(FILE *       const fileP, 
-        pixel *      const pixelrow, 
-        unsigned int const cols, 
-        pixval       const maxval, 
-        int          const format) {
+readPbmRow(FILE *       const fileP, 
+           pixel *      const pixelrow, 
+           unsigned int const cols, 
+           pixval       const maxval, 
+           int          const format) {
 
     jmp_buf jmpbuf;
     jmp_buf * origJmpbufP;
@@ -338,7 +338,7 @@ ppm_readppmrow(FILE *  const fileP,
 
     switch (format) {
     case PPM_FORMAT:
-        readppm(fileP, pixelrow, cols, maxval, format);
+        readPpmRow(fileP, pixelrow, cols, maxval, format);
         break;
 
     /* For PAM, we require a depth of 3, which means the raster format
@@ -346,17 +346,17 @@ ppm_readppmrow(FILE *  const fileP,
     */
     case PAM_FORMAT:
     case RPPM_FORMAT:
-        readrppm(fileP, pixelrow, cols, maxval, format);
+        readRppmRow(fileP, pixelrow, cols, maxval, format);
         break;
 
     case PGM_FORMAT:
     case RPGM_FORMAT:
-        readpgm(fileP, pixelrow, cols, maxval, format);
+        readPgmRow(fileP, pixelrow, cols, maxval, format);
         break;
 
     case PBM_FORMAT:
     case RPBM_FORMAT:
-        readpbm(fileP, pixelrow, cols, maxval, format);
+        readPbmRow(fileP, pixelrow, cols, maxval, format);
         break;
 
     default:
