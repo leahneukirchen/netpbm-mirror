@@ -30,7 +30,7 @@ Netpbm image input and produce a Netpbm image output.
    tuple * tuplerow;
    unsigned int row;
 
-   pnm_init(&amp;argc, argv);
+   pm_init(argv[0], 0);
 
    pnm_readpaminit(stdin, &amp;inpam, PAM_STRUCT_SIZE(tuple_type));
 

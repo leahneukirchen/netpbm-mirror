@@ -461,16 +461,15 @@ using the ITU-R Recommendation BT.709 gamma transfer function.
 <p><B>pm_message()</B> is a <B>printf()</B> style routine to write an
 informational message to the Standard Error file stream.
 <B>pm_message()</B> suppresses the message, however, if the user
-specified the <B>-quiet</B> option on the command line.  See the
-initialization functions, e.g. <B>pnm_init()</B>, for information on
-the <B>-quiet</B> option.  Note that Netpbm programs are often used
-interactively, but also often used by programs.  In the interactive
-case, it is nice to issue messages about what the program is doing,
-but in the program case, such messages are usually undesirable.  By
-using <B>pm_message()</B> for all your messages, you make your program
-usable in both cases.  Without any effort on your part, program users
-of your program can avoid the messages by specifying the <B>-quiet</B>
-option.
+specified the <B>-quiet</B> <a href="index.html#commonoptions">common
+option</a> on the command line.  Note that Netpbm programs are often
+used interactively, but also often used by programs.  In the
+interactive case, it is nice to issue messages about what the program
+is doing, but in the program case, such messages are usually
+undesirable.  By using <B>pm_message()</B> for all your messages, you
+make your program usable in both cases.  Without any effort on your
+part, program users of your program can avoid the messages by
+specifying the <B>-quiet</B> option.
 
 <p>Netpbm distinguishes between error messages and information
 messages; <b>pm_message()</b> is just for informational messages.  To
