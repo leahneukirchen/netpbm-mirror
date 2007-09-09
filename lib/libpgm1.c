@@ -122,11 +122,6 @@ pgm_readpgminit(FILE * const fileP,
     /* Check magic number. */
     realFormat = pm_readmagicnumber(fileP);
     switch (PAM_FORMAT_TYPE(realFormat)) {
-    case PGM_TYPE:
-        *formatP = realFormat;
-        pgm_readpgminitrest(fileP, colsP, rowsP, maxvalP);
-        break;
-        
     case PBM_TYPE:
         *formatP = realFormat;
         pbm_readpbminitrest(fileP, colsP, rowsP);
@@ -150,6 +145,15 @@ pgm_readpgminit(FILE * const fileP,
         *maxvalP = PGM_MAXMAXVAL;
         break;
 
+    case PGM_TYPE:
+        *formatP = realFormat;
+        pgm_readpgminitrest(fileP, colsP, rowsP, maxvalP);
+        break;
+        
+    case PPM_TYPE:
+        pm_error("Input file is a PPM, which this program cannot process.  "
+                 "You may want to convert it to PGM with 'ppmtopgm'");
+
     case PAM_TYPE:
         pnm_readpaminitrestaspnm(fileP, colsP, rowsP, maxvalP, formatP);
 
@@ -159,7 +163,7 @@ pgm_readpgminit(FILE * const fileP,
         break;
 
     default:
-        pm_error("bad magic number - not a pgm or pbm file");
+        pm_error("bad magic number - not a Netpbm file");
     }
     validateComputableSize(*colsP, *rowsP);
 }

@@ -29,7 +29,7 @@ not yet  BJH  Release 10.40.00
               sample Postscript.  It doesn't really know how to do that, so
               now it just writes 8 unless you do -psfilter.
 
-              pnmmargin: recognize invalid options better.    Thanks
+              pnmmargin: recognize invalid options better.  Thanks
               Prophet of the Way <afu@wta.att.ne.jp>.
 
               pnmtopng: Sort palette properly when alpha maxval != 255.
@@ -41,6 +41,10 @@ not yet  BJH  Release 10.40.00
               pamtopfm: Fix wrong selection of default endianness.
 
               libnetpbm: Add pm_system_lp(), pm_system_vp().
+
+              libnetpbm: Make pbm_readpbminit() and pgm_readpgminit()
+              recognize incompatible Netpbm formats and issue a
+              helpful error message.
 
               libnetpbm: pbm_readppminit: read PBM as maxval of 255, not 1.
 
