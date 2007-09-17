@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+07.09.17 BJH  Release 10.39.06
+
+              libnetpbm: Fix pm_drain() to use the specified limit.
+              Thanks Paul Bolle <pebolle@tiscali.nl>.
+
 08.09.03 BJH  Release 10.39.05
 
               pamstack: accept Standard Input properly.

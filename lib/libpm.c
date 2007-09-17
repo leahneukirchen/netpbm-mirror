@@ -1681,7 +1681,7 @@ pm_drain(FILE *         const fileP,
     unsigned int bytesRead;
     bool eof;
 
-    for (bytesRead = 0, eof = false; !eof && bytesRead < 4096;) {
+    for (bytesRead = 0, eof = false; !eof && bytesRead < limit;) {
 
         int rc;
 
