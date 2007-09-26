@@ -4,16 +4,13 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-not yet  BJH  Release 10.40.00
-
-              pbmtonokia: fail if input is > 255 x 255.  Thanks Paul Bolle
-              <pebolle@tiscali.nl>.
+07.09.26 BJH  Release 10.40.00
 
               pamfunc: Add -andmask, -ormask, -xormask, -not,
               -shiftleft, -shiftright.
 
-              anytopnm, pnmmargin, pamstretch-gen, ppmquantall: fix
-              small temporary file security exposure.
+              pbmtonokia: fail if input is > 255 x 255.  Thanks Paul Bolle
+              <pebolle@tiscali.nl>.
 
               pnmmargin: add -plain option.    Thanks
               Prophet of the Way <afu@wta.att.ne.jp>.
@@ -22,15 +19,18 @@ not yet  BJH  Release 10.40.00
 
               pamstack: accept Standard Input properly.
 
+              pnmmargin: recognize invalid options better.  Thanks
+              Prophet of the Way <afu@wta.att.ne.jp>.
+
+              anytopnm, pnmmargin, pamstretch-gen, ppmquantall: fix
+              small temporary file security exposure.
+
               pnmtopalm: fix typo in error message.  Thanks Paul Bolle
               <pebolle@tiscali.nl>.
 
               pnmtops: fix crash when program attempts to write 12 bits per
               sample Postscript.  It doesn't really know how to do that, so
               now it just writes 8 unless you do -psfilter.
-
-              pnmmargin: recognize invalid options better.  Thanks
-              Prophet of the Way <afu@wta.att.ne.jp>.
 
               pnmtopng: Sort palette properly when alpha maxval != 255.
 
