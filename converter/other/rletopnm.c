@@ -124,7 +124,7 @@ parseCommandLine(int argc, char ** argv,
     if (argc - 1 == 0)
         cmdlineP->input_filename = NULL;  /* he wants stdin */
     else if (argc - 1 == 1) {
-        if (STREQ(argv[1], "-"))
+        if (streq(argv[1], "-"))
             cmdlineP->input_filename = NULL;  /* he wants stdin */
         else 
             cmdlineP->input_filename = strdup(argv[1]);
@@ -133,7 +133,7 @@ parseCommandLine(int argc, char ** argv,
                  "is the input file specification");
 
     if (cmdlineP->alpha_filename && 
-        STREQ(cmdlineP->alpha_filename, "-"))
+        streq(cmdlineP->alpha_filename, "-"))
         cmdlineP->alpha_stdout = TRUE;
     else 
         cmdlineP->alpha_stdout = FALSE;

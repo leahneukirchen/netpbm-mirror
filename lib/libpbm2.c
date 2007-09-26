@@ -13,6 +13,7 @@
 #include "pbm.h"
 #include "libpbm.h"
 #include "fileio.h"
+#include "pam.h"
 
 static bit 
 getbit (FILE * const file) {
@@ -54,25 +55,42 @@ pbm_readpbminitrest( file, colsP, rowsP )
         pm_error("Number of columns in header is too large.");
     }
 
-void
-pbm_readpbminit( file, colsP, rowsP, formatP )
-    FILE* file;
-    int* colsP;
-    int* rowsP;
-    int* formatP;
-    {
-    /* Check magic number. */
-    *formatP = pm_readmagicnumber( file );
-    switch ( PBM_FORMAT_TYPE(*formatP) )
-    {
-        case PBM_TYPE:
-    pbm_readpbminitrest( file, colsP, rowsP );
-    break;
 
+
+void
+pbm_readpbminit(FILE * const ifP,
+                int *  const colsP,
+                int *  const rowsP,
+                int *  const formatP) {
+
+    *formatP = pm_readmagicnumber(ifP);
+
+    switch (PAM_FORMAT_TYPE(*formatP)) {
+    case PBM_TYPE:
+        pbm_readpbminitrest(ifP, colsP, rowsP);
+        break;
+
+    case PGM_TYPE:
+        pm_error("The input file is a PGM, not a PBM.  You may want to "
+                 "convert it to PBM with 'pamditherbw | pamtopnm' or "
+                 "'pamthreshold | pamtopnm'");
+
+    case PPM_TYPE:
+        pm_error("The input file is a PPM, not a PBM.  You may want to "
+                 "convert it to PBM with 'ppmtopgm', 'pamditherbw', and "
+                 "'pamtopnm'");
+
+    case PAM_TYPE:
+        pm_error("The input file is a PAM, not a PBM.  "
+                 "If it is a black and white image, you can convert it "
+                 "to PBM with 'pamtopnm'");
+        break;
     default:
-    pm_error( "bad magic number - not a pbm file" );
+        pm_error("bad magic number - not a Netpbm file");
     }
-    }
+}
+
+
 
 void
 pbm_readpbmrow( file, bitrow, cols, format )

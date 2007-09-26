@@ -122,11 +122,6 @@ pgm_readpgminit(FILE * const fileP,
     /* Check magic number. */
     realFormat = pm_readmagicnumber(fileP);
     switch (PAM_FORMAT_TYPE(realFormat)) {
-    case PGM_TYPE:
-        *formatP = realFormat;
-        pgm_readpgminitrest(fileP, colsP, rowsP, maxvalP);
-        break;
-        
     case PBM_TYPE:
         *formatP = realFormat;
         pbm_readpbminitrest(fileP, colsP, rowsP);
@@ -150,6 +145,15 @@ pgm_readpgminit(FILE * const fileP,
         *maxvalP = PGM_MAXMAXVAL;
         break;
 
+    case PGM_TYPE:
+        *formatP = realFormat;
+        pgm_readpgminitrest(fileP, colsP, rowsP, maxvalP);
+        break;
+        
+    case PPM_TYPE:
+        pm_error("Input file is a PPM, which this program cannot process.  "
+                 "You may want to convert it to PGM with 'ppmtopgm'");
+
     case PAM_TYPE:
         pnm_readpaminitrestaspnm(fileP, colsP, rowsP, maxvalP, formatP);
 
@@ -159,34 +163,9 @@ pgm_readpgminit(FILE * const fileP,
         break;
 
     default:
-        pm_error("bad magic number - not a pgm or pbm file");
+        pm_error("bad magic number - not a Netpbm file");
     }
     validateComputableSize(*colsP, *rowsP);
-}
-
-
-
-gray
-pgm_getrawsample(FILE * const file,
-                 gray   const maxval) {
-
-    if (maxval < 256) {
-        /* The sample is just one byte.  Read it. */
-        return(pm_getrawbyte(file));
-    } else {
-        /* The sample is two bytes.  Read both. */
-        unsigned char byte_pair[2];
-        size_t pairs_read;
-
-        pairs_read = fread(&byte_pair, 2, 1, file);
-        if (pairs_read == 0) 
-            pm_error("EOF /read error while reading a long sample");
-        /* This could be a few instructions faster if exploited the internal
-           format (i.e. endianness) of a pixval.  Then we might be able to
-           skip the shifting and oring.
-           */
-        return((byte_pair[0]<<8) | byte_pair[1]);
-    }
 }
 
 

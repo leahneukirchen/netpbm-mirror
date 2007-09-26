@@ -18,6 +18,8 @@
   contributing their work to the public domain.
 ===========================================================================*/
 
+#define _BSD_SOURCE   /* Make nstring.h define strcaseeq() */
+
 #include "pbm.h"
 #include "shhopt.h"
 #include "nstring.h"
@@ -100,15 +102,15 @@ parseCommandLine(int argc, char ** const argv,
         if (cmdlineP->expectedLineSize < 1)
             pm_error("-width must be at least 1");
     } else if (paper_sizeSpec) {
-        if (STRCASEEQ(paperSize, "A6"))
+        if (strcaseeq(paperSize, "A6"))
             cmdlineP->expectedLineSize = 864;
-        else if (STRCASEEQ(paperSize, "A5"))
+        else if (strcaseeq(paperSize, "A5"))
             cmdlineP->expectedLineSize = 1216;
-        else if (STRCASEEQ(paperSize, "A4"))
+        else if (strcaseeq(paperSize, "A4"))
             cmdlineP->expectedLineSize = 1728;
-        else if (STRCASEEQ(paperSize, "B4"))
+        else if (strcaseeq(paperSize, "B4"))
             cmdlineP->expectedLineSize = 2048;
-        else if (STRCASEEQ(paperSize, "A3"))
+        else if (strcaseeq(paperSize, "A3"))
             cmdlineP->expectedLineSize = 2432;
         else
             pm_error("Unrecognized value for -paper_size '%s'.  "

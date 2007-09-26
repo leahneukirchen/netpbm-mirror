@@ -134,7 +134,7 @@ parseCommandLine(int argc, char ** argv,
     if (argc - 1 == 0)
         cmdlineP->inputFilename = NULL;  /* he wants stdin */
     else if (argc - 1 == 1) {
-        if (STREQ(argv[1], "-"))
+        if (streq(argv[1], "-"))
             cmdlineP->inputFilename = NULL;  /* he wants stdin */
         else 
             cmdlineP->inputFilename = strdup(argv[1]);
@@ -852,7 +852,7 @@ pixelReader_init(pixelReader *  const pixelReaderP,
 static void
 pixelReader_term(pixelReader * const pixelReaderP) {
 
-    uint remainingByteCount;
+    unsigned int remainingByteCount;
 
     if (pixelReaderP->nBitsLeft > 0)
         pm_message("Warning: %u unused bits left in the pixel reader "

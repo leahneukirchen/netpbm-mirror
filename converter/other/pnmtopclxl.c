@@ -153,7 +153,7 @@ parseCommandLine(int argc, char ** argv,
         bool found;
         int i;
         for (i = 0, found=FALSE; xlPaperFormats[i].name && !found; ++i) {
-            if (STREQ(xlPaperFormats[i].name, formatOpt)) {
+            if (streq(xlPaperFormats[i].name, formatOpt)) {
                 found = TRUE;
                 cmdlineP->format = xlPaperFormats[i].xl_nr;
             }

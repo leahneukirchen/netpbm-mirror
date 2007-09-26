@@ -15,6 +15,7 @@
 #include <string.h>
 
 #include "mallocvar.h"
+#include "nstring.h"
 #include "shhopt.h"
 #include "pam.h"
 
@@ -72,16 +73,23 @@ parseCommandLine(int argc, char ** argv,
 
     cmdlineP->nInput = 0;  /* initial value */
     { 
-        int argn;
-        for (argn = 1; argn < argc; argn++) {
+        unsigned int argn;
+        bool stdinUsed;
+        for (argn = 1, stdinUsed = false; argn < argc; ++argn) {
             if (cmdlineP->nInput >= MAX_INPUTS) 
-                pm_error("You may not specify more than %d input images.",
+                pm_error("You may not specify more than %u input images.",
                          MAX_INPUTS);
             cmdlineP->inputFileName[cmdlineP->nInput++] = argv[argn];
+            if (streq(argv[argn], "-")) {
+                if (stdinUsed)
+                    pm_error("You cannot specify Standard Input ('-') "
+                             "for more than one input file");
+                stdinUsed = true;
+            }
         }
     }
     if (cmdlineP->nInput < 1)
-        pm_error("You must specify at least one input PAM image.");
+        cmdlineP->inputFileName[cmdlineP->nInput++] = "-";
 }
 
 

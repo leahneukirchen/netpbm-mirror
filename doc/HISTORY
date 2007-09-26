@@ -4,13 +4,86 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-not yet  BJH  Release 10.39.00
+07.09.26 BJH  Release 10.40.00
+
+              pamfunc: Add -andmask, -ormask, -xormask, -not,
+              -shiftleft, -shiftright.
+
+              pbmtonokia: fail if input is > 255 x 255.  Thanks Paul Bolle
+              <pebolle@tiscali.nl>.
+
+              pnmmargin: add -plain option.    Thanks
+              Prophet of the Way <afu@wta.att.ne.jp>.
+
+              pnmgamma: improve error messages.
+
+              pamstack: accept Standard Input properly.
+
+              pnmmargin: recognize invalid options better.  Thanks
+              Prophet of the Way <afu@wta.att.ne.jp>.
+
+              anytopnm, pnmmargin, pamstretch-gen, ppmquantall: fix
+              small temporary file security exposure.
+
+              pnmtopalm: fix typo in error message.  Thanks Paul Bolle
+              <pebolle@tiscali.nl>.
+
+              pnmtops: fix crash when program attempts to write 12 bits per
+              sample Postscript.  It doesn't really know how to do that, so
+              now it just writes 8 unless you do -psfilter.
+
+              pnmtopng: Sort palette properly when alpha maxval != 255.
+
+              pnmtopng: Fix array bound violation with = 256 colors and -alpha.
+
+              pnmtopng: Fix array bound violation with > 256 alpha mask levels.
+
+              pamtopfm: Fix wrong selection of default endianness.
+
+              libnetpbm: Add pm_system_lp(), pm_system_vp().
+
+              libnetpbm: Make pbm_readpbminit() and pgm_readpgminit()
+              recognize incompatible Netpbm formats and issue a
+              helpful error message.
+
+              libnetpbm: pbm_readppminit: read PBM as maxval of 255, not 1.
+
+              libnetpbm: Fix pm_drain() to use the specified limit.
+              Thanks Paul Bolle <pebolle@tiscali.nl>.
+
+              libnetpbm: Fix multi-line TUPLTYPE interpretation:
+              separate lines with blank, not newline.  Thanks Paul
+              Bolle <pebolle@tiscali.nl>.
+
+              libnetpbm: Reject empty TUPLTYPE header.
+
+              libnetpbm: Fix uninitialized variable in pnm_allocpamrown().
+
+              libnetpbm: fix crash in REALLOCARRAY with advanced optimization.
+
+              libnetpbm: REALLOCARRAY frees memory if it fails.
+
+              Rename pamtooctave to pamtooctaveimg.
+
+              Build: don't build pstopnm on system without unix process
+              management.
+
+              Build: put -l's after .o's in test links.
+
+              Build: don't use 'uint' type.  Solaris 10 apparently doesn't
+              have it.
+
+              Build: Add missing <stdlib.h> to ppmrough.c.
+
+07.06.26 BJH  Release 10.39.00
+
+              Add pamtooctave.  Thanks Scott Pakin (scott@pakin.org).
+
+              Add pamundice.
 
               fitstopnm: add -omaxval.
 
               pnmremap: add -norand.
-
-              Add pamundice.
 
               pbmtext: improve error messages about fonts.
 

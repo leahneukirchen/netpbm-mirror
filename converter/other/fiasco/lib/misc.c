@@ -432,38 +432,6 @@ Log2 (double x)
    return log (x) / 0.69314718;
 }
 
-#ifndef HAVE_STRCASECMP
-bool_t
-strcaseeq (const char *s1, const char *s2)
-/*
- *  Compare strings 's1' and 's2', ignoring  the  case of the characters.
- *
- *  Return value:
- *	TRUE if strings match, else FALSE
- */
-{
-   bool_t  matched;
-   char	  *ls1, *ls2, *ptr;
-
-   assert (s1 && s2);
-   
-   ls1 = strdup (s1);
-   ls2 = strdup (s2);
-   
-   for (ptr = ls1; *ptr; ptr++)
-      *ptr = tolower (*ptr);
-   for (ptr = ls2; *ptr; ptr++)
-      *ptr = tolower (*ptr);
-
-   matched = streq (ls1, ls2) ? YES : NO;
-
-   Free (ls1);
-   Free (ls2);
-   
-   return matched;
-}
-#endif /* not HAVE_STRCASECMP */
-
 real_t
 variance (const word_t *pixels, unsigned x0, unsigned y0,
 	  unsigned width, unsigned height, unsigned cols)

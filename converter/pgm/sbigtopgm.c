@@ -140,7 +140,7 @@ int main(argc, argv)
 	    cols = atoi(hdr + 6);
         } else if (strncmp(hdr, "sat_level=", 10) == 0) {
 	    maxval = atoi(hdr + 10);
-        } else if (STREQ(hdr, "end")) {
+        } else if (streq(hdr, "end")) {
 	    break;
 	}
 	hdr = cp + 1;

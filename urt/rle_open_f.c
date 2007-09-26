@@ -1,10 +1,10 @@
 /* 
  * rle_open_f.c - Open a file with defaults.
  * 
- * Author : 	Jerry Winters 
- * 		EECS Dept.
- * 		University of Michigan
- * Date:	11/14/89
+ * Author :     Jerry Winters 
+ *      EECS Dept.
+ *      University of Michigan
+ * Date:    11/14/89
  * Copyright (c) 1990, University of Michigan
  */
 
@@ -43,55 +43,55 @@ my_popen(const char * const cmd,
     /* Check args. */
     if ( *mode != 'r' && *mode != 'w' )
     {
-	errno = EINVAL;
-	return NULL;
+        errno = EINVAL;
+        return NULL;
     }
 
     if ( pipe(pipefd) < 0 )
-	return NULL;
+        return NULL;
     
     /* Flush known files. */
     fflush(stdout);
     fflush(stderr);
     if ( (thepid = fork()) < 0 )
     {
-	close(pipefd[0]);
-	close(pipefd[1]);
-	return NULL;
+        close(pipefd[0]);
+        close(pipefd[1]);
+        return NULL;
     }
     else if (thepid == 0) {
-	/* In child. */
-	/* Rearrange file descriptors. */
-	if ( *mode == 'r' )
-	{
-	    /* Parent reads from pipe, so reset stdout. */
-	    close(1);
-	    dup2(pipefd[1],1);
-	} else {
-	    /* Parent writing to pipe. */
-	    close(0);
-	    dup2(pipefd[0],0);
-	}
-	/* Close anything above fd 2. (64 is an arbitrary magic number). */
-	for ( i = 3; i < 64; i++ )
-	    close(i);
+        /* In child. */
+        /* Rearrange file descriptors. */
+        if ( *mode == 'r' )
+        {
+            /* Parent reads from pipe, so reset stdout. */
+            close(1);
+            dup2(pipefd[1],1);
+        } else {
+            /* Parent writing to pipe. */
+            close(0);
+            dup2(pipefd[0],0);
+        }
+        /* Close anything above fd 2. (64 is an arbitrary magic number). */
+        for ( i = 3; i < 64; i++ )
+            close(i);
 
-	/* Finally, invoke the program. */
-	if ( execl("/bin/sh", "sh", "-c", cmd, NULL) < 0 )
-	    exit(127);
-	/* NOTREACHED */
-    }	
+        /* Finally, invoke the program. */
+        if ( execl("/bin/sh", "sh", "-c", cmd, NULL) < 0 )
+            exit(127);
+        /* NOTREACHED */
+    }   
 
     /* Close file descriptors, and gen up a FILE ptr */
     if ( *mode == 'r' )
     {
-	/* Parent reads from pipe. */
-	close(pipefd[1]);
-	retfile = fdopen( pipefd[0], mode );
+        /* Parent reads from pipe. */
+        close(pipefd[1]);
+        retfile = fdopen( pipefd[0], mode );
     } else {
-	/* Parent writing to pipe. */
-	close(pipefd[0]);
-	retfile = fdopen( pipefd[1], mode );
+        /* Parent writing to pipe. */
+        close(pipefd[0]);
+        retfile = fdopen( pipefd[1], mode );
     }
 
     /* Return the PID. */
@@ -113,10 +113,10 @@ my_popen(const char * const cmd,
  *
  *  parameters
  *   input:
- *     prog_name: 	name of the calling program.
- *     file_name : 	name of the file to open
- *     mode : 		either "r" for read or input file or "w" for write or
- *            		output file
+ *     prog_name:   name of the calling program.
+ *     file_name :  name of the file to open
+ *     mode :       either "r" for read or input file or "w" for write or
+ *                  output file
  *
  *   output:
  *     a file pointer
@@ -185,12 +185,12 @@ rle_open_f_noexit(const char * const prog_name,
          *  
          *  If it starts with "|", popen that command.
          */
-	    
+        
         cp = file_name + strlen( (char*) file_name ) - 2;
         /* Pipe case. */
         if ( *file_name == '|' )
         {
-            int thepid;		/* PID from my_popen */
+            int thepid;     /* PID from my_popen */
             if ( (fp = my_popen( file_name + 1, mode, &thepid )) == NULL )
             {
                 err_str = "%s: can't invoke <<%s>> for %s: ";
@@ -205,7 +205,7 @@ rle_open_f_noexit(const char * const prog_name,
         /* Compress case. */
         else if ( cp > file_name && *cp == '.' && *(cp + 1) == 'Z' )
         {
-            int thepid;		/* PID from my_popen. */
+            int thepid;     /* PID from my_popen. */
             combuf = (char *)malloc( 20 + strlen( file_name ) );
             if ( combuf == NULL )
             {
@@ -244,7 +244,7 @@ rle_open_f_noexit(const char * const prog_name,
                defined.  But for Netpbm, there is no need make a distinction;
                we always add the "b".  -BJH 2000.07.20.  
             */
-            char mode_string[32];	/* Should be enough. */
+            char mode_string[32];   /* Should be enough. */
 
             /* Concatenate a 'b' onto the mode. */
             mode_string[0] = mode[0];
@@ -261,14 +261,14 @@ rle_open_f_noexit(const char * const prog_name,
 
     return fp;
 
-err:
-	fprintf( stderr, err_str,
+                  err:
+    fprintf( stderr, err_str,
              prog_name, file_name,
              (*mode == 'w') ? "output" :
              (*mode == 'a') ? "append" :
              "input" );
-	perror( "" );
-	return NULL;
+    perror( "" );
+    return NULL;
 
 }
 
@@ -278,7 +278,7 @@ rle_open_f(const char * prog_name, const char * file_name, const char * mode)
     FILE *fp;
 
     if ( (fp = rle_open_f_noexit( prog_name, file_name, mode )) == NULL )
-	exit( -1 );
+        exit( -1 );
 
     return fp;
 }
@@ -290,21 +290,21 @@ rle_open_f(const char * prog_name, const char * file_name, const char * mode)
  * Close a file opened by rle_open_f.  If the file is stdin or stdout,
  * it will not be closed.
  * Inputs:
- * 	fd:	File to close.
+ *  fd: File to close.
  * Outputs:
- * 	None.
+ *  None.
  * Assumptions:
- * 	fd is open.
+ *  fd is open.
  * Algorithm:
- * 	If fd is NULL, just return.
- * 	If fd is stdin or stdout, don't close it.  Otherwise, call fclose.
+ *  If fd is NULL, just return.
+ *  If fd is stdin or stdout, don't close it.  Otherwise, call fclose.
  */
 void
 rle_close_f( fd )
-FILE *fd;
+    FILE *fd;
 {
     if ( fd == NULL || fd == stdin || fd == stdout )
-	return;
+        return;
     else
-	fclose( fd );
+        fclose( fd );
 }

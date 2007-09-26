@@ -14,6 +14,8 @@
 
 ******************************************************************************/
 
+#define _BSD_SOURCE    /* Make sure strcaseeq() is in nstring.h */
+
 #include <string.h>
 
 #include "mallocvar.h"
@@ -206,7 +208,7 @@ parseCommandLine(int argc, char ** argv,
         unsigned int i;
         cmdlineP->filterP = NULL;
         for (i = 0; i < sizeof filters / sizeof(struct filter); ++i) {
-            if (STRCASEEQ(filterName, filters[i].name)) {
+            if (strcaseeq(filterName, filters[i].name)) {
                 cmdlineP->filterP = &filters[i];
                 break;
             }

@@ -80,13 +80,18 @@ endif
 PORTBINARIES =  bmptopnm fitstopnm \
 		gemtopnm giftopnm hdifftopam infotopam \
 		pamtodjvurle pamtofits pamtogif \
-		pamtohdiff pamtohtmltbl pamtopfm pamtopnm pamtouil \
+		pamtohdiff pamtohtmltbl pamtooctaveimg \
+		pamtopfm pamtopnm pamtouil \
 		pamtoxvmini \
 		pbmtopgm pfmtopam \
 	        pgmtopbm pgmtoppm ppmtopgm pnmtoddif \
 		pnmtopclxl \
-		pnmtosgi pnmtosir pamtotga pnmtoxwd pstopnm \
+		pnmtosgi pnmtosir pamtotga pnmtoxwd \
 		rlatopam sgitopnm sirtopnm xwdtopnm zeisstopnm
+
+ifneq ($(DONT_HAVE_PROCESS_MGMT),Y)
+  PORTBINARIES += pstopnm
+endif
 
 BINARIES = $(PORTBINARIES) pnmtorast rasttopnm
 
@@ -216,8 +221,10 @@ install.bin.local: $(PKGDIR)/bin
 	cd $(PKGDIR)/bin ; \
 	$(SYMLINK) gemtopnm$(EXE) gemtopbm
 # In October 2001, pnmtojpeg replaced ppmtojpeg
+ifneq ($(JPEGLIB),NONE)
 	cd $(PKGDIR)/bin ; \
 	$(SYMLINK) pnmtojpeg$(EXE) ppmtojpeg
+endif
 # In March 2002, bmptopnm replaced bmptoppm
 	cd $(PKGDIR)/bin ; \
 	$(SYMLINK) bmptopnm$(EXE) bmptoppm

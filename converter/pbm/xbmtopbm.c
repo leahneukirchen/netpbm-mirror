@@ -80,10 +80,10 @@ parseWidthHeightLine(const char *   const line,
             type = underscorePos + 1;
         else
             type = nameAndType;
-        if (STREQ(type, "width")) {
+        if (streq(type, "width")) {
             *gotWidthP = TRUE;
             *widthP = value;
-        } else if (STREQ(type, "height")) {
+        } else if (streq(type, "height")) {
             *gotHeightP = TRUE;
             *heightP = value;
         }

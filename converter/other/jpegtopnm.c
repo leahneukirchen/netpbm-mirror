@@ -240,11 +240,11 @@ parseCommandLine(int                  const argc,
     if (!dctvalSpec)
         cmdlineP->dct_method = JDCT_DEFAULT;
     else {
-        if (STREQ(dctval, "int"))
+        if (streq(dctval, "int"))
             cmdlineP->dct_method = JDCT_ISLOW;
-        else if (STREQ(dctval, "fast"))
+        else if (streq(dctval, "fast"))
             cmdlineP->dct_method = JDCT_IFAST;
-        else if (STREQ(dctval, "float"))
+        else if (streq(dctval, "float"))
             cmdlineP->dct_method = JDCT_FLOAT;
         else pm_error("Invalid value for the --dct option: '%s'.", dctval);
     }
@@ -952,7 +952,7 @@ main(int argc, char **argv) {
 
     parseCommandLine(argc, argv, &cmdline);
 
-    if (cmdline.exif_filespec && STREQ(cmdline.exif_filespec, "-"))
+    if (cmdline.exif_filespec && streq(cmdline.exif_filespec, "-"))
         /* He's got exif going to stdout, so there can be no image output */
         ofP = NULL;
     else

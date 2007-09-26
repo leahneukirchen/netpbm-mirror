@@ -176,7 +176,7 @@ main(int argc, char *argv[]) {
 
     expandAll = FALSE;  /* initial assumption */
 
-    if (argc-1 >= 1 && STREQ(argv[1], "-a")) {
+    if (argc-1 >= 1 && streq(argv[1], "-a")) {
         expandAll = TRUE;
         argc--,argv++;
     }

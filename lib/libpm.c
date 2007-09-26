@@ -528,7 +528,8 @@ vmsProgname(int * const argcP, char * argv[]) {
 
 
 void
-pm_init(const char * const progname, unsigned int const flags) {
+pm_init(const char * const progname,
+        unsigned int const flags) {
 /*----------------------------------------------------------------------------
    Initialize static variables that Netpbm library routines use.
 
@@ -1681,7 +1682,7 @@ pm_drain(FILE *         const fileP,
     unsigned int bytesRead;
     bool eof;
 
-    for (bytesRead = 0, eof = false; !eof && bytesRead < 4096;) {
+    for (bytesRead = 0, eof = false; !eof && bytesRead < limit;) {
 
         int rc;
 

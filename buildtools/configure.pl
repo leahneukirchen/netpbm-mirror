@@ -241,8 +241,11 @@ sub testCompileLink($$$) {
     print $cFile @{$cSourceCodeR};
     
     my ($oFile, $oFileName) = tempFile('');
+
+    # Note that $flags may contain -l options, which where static linking
+    # is involved have to go _after_ the base object file ($oFileName).
     
-    my $compileCommand = "$testCc -o $oFileName $flags $cFileName";
+    my $compileCommand = "$testCc -o $oFileName $cFileName $flags";
     print ("Doing test compile/link: $compileCommand\n");
     my $rc = system($compileCommand);
     
