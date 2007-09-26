@@ -98,7 +98,7 @@ read_hips_header( fd, hP )
 	{
         read_line( fd, buf, 5000 );
 	}
-    while ( !STREQ( buf, ".\n" ) );
+    while ( !streq( buf, ".\n" ) );
 }
 
 

@@ -91,11 +91,11 @@ pamAlphaPlane(struct pam * const pamP) {
 
     unsigned int alphaPlane;
 
-    if (STREQ(pamP->tuple_type, "RGB_ALPHA"))
+    if (streq(pamP->tuple_type, "RGB_ALPHA"))
         alphaPlane = 3;
-    else if (STREQ(pamP->tuple_type, "GRAYSCALE_ALPHA"))
+    else if (streq(pamP->tuple_type, "GRAYSCALE_ALPHA"))
         alphaPlane = 2;
-    else if (STREQ(pamP->tuple_type, "BLACKANDWHITE_ALPHA"))
+    else if (streq(pamP->tuple_type, "BLACKANDWHITE_ALPHA"))
         alphaPlane = 2;
     else
         alphaPlane = 0;

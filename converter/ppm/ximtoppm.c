@@ -65,7 +65,7 @@ parseCommandLine(int argc, char ** argv,
                  "is the input file specification");
 
     if (cmdlineP->alpha_filename && 
-        STREQ(cmdlineP->alpha_filename, "-"))
+        streq(cmdlineP->alpha_filename, "-"))
         cmdlineP->alpha_stdout = TRUE;
     else 
         cmdlineP->alpha_stdout = FALSE;

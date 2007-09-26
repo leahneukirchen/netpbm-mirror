@@ -57,35 +57,6 @@ putus(unsigned short const n,
 
 
 
-void
-pgm_writerawsample(FILE * const fileP,
-                   gray   const val,
-                   gray   const maxval) {
-
-    if (maxval < 256) {
-        /* Samples fit in one byte, so write just one byte */
-        int rc;
-        rc = putc(val, fileP);
-        if (rc == EOF)
-            pm_error("Error writing single byte sample to file");
-    } else {
-        /* Samples are too big for one byte, so write two */
-        int n_written;
-        unsigned char outval[2];
-        /* We could save a few instructions if we exploited the internal
-           format of a gray, i.e. its endianness.  Then we might be able
-           to skip the shifting and anding.
-           */
-        outval[0] = val >> 8;
-        outval[1] = val & 0xFF;
-        n_written = fwrite(&outval, 2, 1, fileP);
-        if (n_written == 0) 
-            pm_error("Error writing double byte sample to file");
-    }
-}
-
-
-
 static void
 format1bpsRow(const gray *    const grayrow,
               unsigned int    const cols,

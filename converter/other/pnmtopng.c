@@ -52,8 +52,6 @@
    because xels were only 24 bits.  Now they're 96.
 */
    
-#define GRR_GRAY_PALETTE_FIX
-
 #ifndef PNMTOPNG_WARNING_LEVEL
 #  define PNMTOPNG_WARNING_LEVEL 0   /* use 0 for backward compatibility, */
 #endif                               /*  2 for warnings (1 == error) */
@@ -464,7 +462,7 @@ parseCommandLine(int argc, char ** argv,
     }
 
     if (cmdlineP->zlibCompression.methodSpec) {
-        if (STREQ(compMethod, "deflated"))
+        if (streq(compMethod, "deflated"))
             cmdlineP->zlibCompression.method = Z_DEFLATED;
         else
             pm_error("The only valid value for -method is 'deflated'.  "
@@ -472,9 +470,9 @@ parseCommandLine(int argc, char ** argv,
     }
 
     if (cmdlineP->zlibCompression.strategySpec) {
-        if (STREQ(compStrategy, "huffman_only"))
+        if (streq(compStrategy, "huffman_only"))
             cmdlineP->zlibCompression.strategy = Z_HUFFMAN_ONLY;
-        else if (STREQ(compStrategy, "filtered"))
+        else if (streq(compStrategy, "filtered"))
             cmdlineP->zlibCompression.strategy = Z_FILTERED;
         else
             pm_error("Valid values for -strategy are 'huffman_only' and "

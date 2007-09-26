@@ -50,7 +50,7 @@ pktopbm_add_suffix(char *       const name,
     char * const slash = strrchr(name, '/');
     char * const dot   = strrchr(name, '.');
     
-    if ((dot && slash ? dot < slash : !dot) && !STREQ(name, "-"))
+    if ((dot && slash ? dot < slash : !dot) && !streq(name, "-"))
         strcat(name, suffix);
 }
 

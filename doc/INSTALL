@@ -76,6 +76,14 @@ contents.  You can also run Configure interactively and use its output
 as an example.
 
 
+THE PREREQUISITE LIBRARIES
+--------------------------
+
+Netpbm uses lots of external libraries, but you don't necessarily have
+to install them all.  See http://netpbm.sourceforge.net/prereq.html .
+You do, however, have to tell Configure accurately whether you have the
+library installed and if so, where.
+
 
 INSTALLATION - WINDOWS
 ----------------------
@@ -105,9 +113,9 @@ just do
 It will build Pnmtojpeg and any of its dependencies, but nothing else.
 You have to install it manually.  
 
-When you build just one program, you should request static libraries
-in the configure step, because for just one program, the shared
-libraries would be pure masochism.
+When you build just one program, you should request a static Netpbm
+library in the configure step, because for just one program, the
+shared library would be pure masochism.
 
 
 CUSTOM BUILDING
@@ -128,7 +136,7 @@ your platform.
 
 If your system is even too exotic to accomodate with settings in
 Makefile.config, you may need to modify things in the main make files
-or pm_config.h.
+or pm_config.h.in.
 
 If you figure out how to install on other platforms, contact the
 Netpbm maintainer to have the 'configure' program or these

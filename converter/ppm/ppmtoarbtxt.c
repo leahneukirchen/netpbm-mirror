@@ -294,20 +294,20 @@ SKL_OBJ **skl;
    sscanf (objstr,"%s",typstr);
 
                    /* Check for integer colors */
-   if      (STREQ(typstr,"ired")  ) otyp = IRED;
-   else if (STREQ(typstr,"igreen")) otyp = IGREEN;
-   else if (STREQ(typstr,"iblue") ) otyp = IBLUE;
-   else if (STREQ(typstr,"ilum")  ) otyp = ILUM;
+   if      (streq(typstr,"ired")  ) otyp = IRED;
+   else if (streq(typstr,"igreen")) otyp = IGREEN;
+   else if (streq(typstr,"iblue") ) otyp = IBLUE;
+   else if (streq(typstr,"ilum")  ) otyp = ILUM;
                    /* Check for real colors */
-   else if (STREQ(typstr,"fred")  ) otyp = FRED;
-   else if (STREQ(typstr,"fgreen")) otyp = FGREEN;
-   else if (STREQ(typstr,"fblue") ) otyp = FBLUE;
-   else if (STREQ(typstr,"flum")  ) otyp = FLUM;
+   else if (streq(typstr,"fred")  ) otyp = FRED;
+   else if (streq(typstr,"fgreen")) otyp = FGREEN;
+   else if (streq(typstr,"fblue") ) otyp = FBLUE;
+   else if (streq(typstr,"flum")  ) otyp = FLUM;
                    /* Check for integer data */
-   else if (STREQ(typstr,"width") ) otyp = WIDTH;
-   else if (STREQ(typstr,"height")) otyp = HEIGHT;
-   else if (STREQ(typstr,"posx")  ) otyp = POSX;
-   else if (STREQ(typstr,"posy")  ) otyp = POSY;
+   else if (streq(typstr,"width") ) otyp = WIDTH;
+   else if (streq(typstr,"height")) otyp = HEIGHT;
+   else if (streq(typstr,"posx")  ) otyp = POSX;
+   else if (streq(typstr,"posy")  ) otyp = POSY;
    else                                    otyp = BDATA;
 
    if ((otyp == IRED) || (otyp == IGREEN) || (otyp == IBLUE) || (otyp == ILUM))

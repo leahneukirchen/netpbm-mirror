@@ -528,7 +528,8 @@ vmsProgname(int * const argcP, char * argv[]) {
 
 
 void
-pm_init(const char * const progname, unsigned int const flags) {
+pm_init(const char * const progname,
+        unsigned int const flags) {
 /*----------------------------------------------------------------------------
    Initialize static variables that Netpbm library routines use.
 

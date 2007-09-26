@@ -138,7 +138,7 @@ parseCommandLine(int argc, char ** argv,
                  "is the input file name");
 
     if (alphaSpec) {
-        if (STREQ(cmdlineP->alphaFilename, "-"))
+        if (streq(cmdlineP->alphaFilename, "-"))
             cmdlineP->alphaStdout = TRUE;
         else
             cmdlineP->alphaStdout = FALSE;
@@ -1024,7 +1024,7 @@ main(int argc, char * argv[]) {
 
     parseCommandLine(argc, argv, &cmdline);
 
-    if (!STREQ(cmdline.inputFilename, "-")) {
+    if (!streq(cmdline.inputFilename, "-")) {
         tif = TIFFOpen(cmdline.inputFilename, "r");
         if (tif == NULL)
             pm_error("error opening TIFF file %s", cmdline.inputFilename);

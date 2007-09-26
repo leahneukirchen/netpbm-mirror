@@ -130,7 +130,7 @@ generateName(char          const filenameArg[],
    "noname".  Also, if the argument is null or ends in a slash, we
    return "noname".
 -----------------------------------------------------------------------------*/
-    if (STREQ(filenameArg, "-"))
+    if (streq(filenameArg, "-"))
         *nameP = strdup("noname");
     else {
         int nameIndex, argIndex;

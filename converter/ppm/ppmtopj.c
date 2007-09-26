@@ -121,7 +121,7 @@ char *argv[];
 		{
 		++argn;
 		for (r = 0; rmode[r] != NULL; r++)
-		     if (STREQ(rmode[r], argv[argn]))
+		     if (streq(rmode[r], argv[argn]))
 			 break;
 		if (rmode[r] != NULL)
 		    render_mode = r;
@@ -131,9 +131,9 @@ char *argv[];
 	    else if ( pm_keymatch(argv[argn],"-back",2) && argn + 1 < argc )
 		{
 		++argn;
-		if (STREQ(argv[argn], "dark"))
+		if (streq(argv[argn], "dark"))
 		    back_scale = C_BACK_SCALE_DARK;
-		else if (STREQ(argv[argn], "lite"))
+		else if (streq(argv[argn], "lite"))
 		    back_scale = C_BACK_SCALE_LIGHT;
 		else
 		    pm_usage(usage);
