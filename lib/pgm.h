@@ -4,6 +4,7 @@
 #ifndef _PGM_H_
 #define _PGM_H_
 
+#include "pm.h"
 #include "pbm.h"
 
 #ifdef __cplusplus

@@ -4,6 +4,7 @@
 #ifndef _PNM_H_
 #define _PNM_H_
 
+#include "pm.h"
 #include "ppm.h"
 
 #ifdef __cplusplus

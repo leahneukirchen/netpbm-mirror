@@ -15,13 +15,10 @@
 #include "pnm.h"
 
 #include "ppm.h"
-#include "libppm.h"
 
 #include "pgm.h"
-#include "libpgm.h"
 
 #include "pbm.h"
-#include "libpbm.h"
 
 void
 pnm_writepnminit(FILE * const fileP, 

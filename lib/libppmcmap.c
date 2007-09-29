@@ -15,7 +15,6 @@
 #include "pm_c_util.h"
 #include "nstring.h"
 #include "mallocvar.h"
-#include "libppm.h"
 #include "ppm.h"
 #include "ppmcmap.h"
 

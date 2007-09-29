@@ -18,7 +18,6 @@
 
 #include <stdio.h>
 #include "pbm.h"
-#include "libpbm.h"
 #include "shhopt.h"
 
 void

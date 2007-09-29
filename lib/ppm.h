@@ -3,6 +3,7 @@
 #ifndef _PPM_H_
 #define _PPM_H_
 
+#include "pm.h"
 #include "pgm.h"
 
 #ifdef __cplusplus
