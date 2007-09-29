@@ -116,7 +116,7 @@ pm_nextimage(FILE * const file, int * const eofP);
 char** 
 pm_allocarray (int const cols, int const rows, int const size );
 
-char * 
+void * 
 pm_allocrow(unsigned int const cols,
             unsigned int const size);
 
@@ -124,7 +124,7 @@ void
 pm_freearray (char** const its, int const rows);
 
 void 
-pm_freerow(char* const itrow);
+pm_freerow(void * const row);
 
 
 /* Obsolete -- use shhopt instead */
