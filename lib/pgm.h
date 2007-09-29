@@ -69,7 +69,7 @@ pgm_init(int *   const argcP,
 gray *
 pgm_allocrow(unsigned int const cols);
 
-#define pgm_freerow(grayrow) free(grayrow)
+#define pgm_freerow(grayrow) pm_freerow(grayrow)
 
 #define pgm_allocarray( cols, rows ) \
   ((gray**) pm_allocarray( cols, rows, sizeof(gray) ))

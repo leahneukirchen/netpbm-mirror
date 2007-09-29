@@ -37,7 +37,7 @@ pnm_nextimage(FILE *file, int * const eofP);
 xel *
 pnm_allocrow(unsigned int const cols);
 
-#define pnm_freerow(xelrow) free(xelrow)
+#define pnm_freerow(xelrow) pm_freerow(xelrow)
 
 #define pnm_allocarray( cols, rows ) \
   ((xel**) pm_allocarray( cols, rows, sizeof(xel) ))

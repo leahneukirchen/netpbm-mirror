@@ -86,7 +86,7 @@ ppm_allocrow(unsigned int const cols);
 
 #define ppm_freearray(pixels, rows) pm_freearray((char**) pixels, rows)
 
-#define ppm_freerow(pixelrow) free(pixelrow);
+#define ppm_freerow(pixelrow) pm_freerow(pixelrow);
 
 pixel**
 ppm_readppm(FILE *   const fileP, 
