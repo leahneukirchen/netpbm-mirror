@@ -122,9 +122,6 @@ libpgm - libnetpbm functions to read and write PGM image files
 <B>#define PGM_OVERALLMAXVAL ...</B>
 
 <P>
-<B>extern gray pgm_pbmmaxval;</B>
-
-<P>
 <B>#define PGM_FORMAT ...</B>
 
 <P>
@@ -146,9 +143,7 @@ libpgm - libnetpbm functions to read and write PGM image files
 <H3 id="types">TYPES AND CONSTANTS</H3>
 
 <P>Each <B>gray</B> should contain only the values between <B>0</B>
-and <B>PGM_OVERALLMAXVAL</B>.  <B>pgm_pbmmaxval</B> is the maxval used
-when a PGM program reads a PBM file.  Normally it is 1; however, for
-some programs, a larger value gives better results.
+and <B>PGM_OVERALLMAXVAL</B>.
 
 <P><B>PGM_OVERALLMAXVAL</B> is the maximum value of a maxval in a PGM
 file.  <B>PGM_MAXMAXVAL</B> is the maximum value of a maxval in a PGM

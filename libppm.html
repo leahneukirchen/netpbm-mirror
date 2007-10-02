@@ -126,9 +126,6 @@ libppm - functions for PPM programs
 <B>#define</B> <B>PPM_FORMAT_TYPE(</B><I>format</I><B>)</B> <B>...</B>
 
 <P>
-<B>extern pixval ppm_pbmmaxval;</B>
-
-<P>
 <B>pixval PPM_GETR(pixel</B> <I>p</I><B>)</B>
 
 <p>
@@ -183,9 +180,6 @@ libppm - functions for PPM programs
 
 Each <B>pixel</B> contains three <B>pixval</B>s, each of which should
 contain only the values between <B>0</B> and <B>PPM_MAXMAXVAL</B>.
-<B>ppm_pbmmaxval</B> is the maxval used when a PPM program reads a PBM
-file.  Normally it is 1; however, for some programs, a larger value
-gives better results.
 
 
 <H3 id="manipulating_pixels">MANIPULATING PIXELS</H3>

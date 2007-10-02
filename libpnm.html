@@ -157,7 +157,6 @@ libpnm - libnetpbm functions to read and write PNM image files
 <B>int </B><I>format</I><B>);</B>
 <P><B>typedef ... xelval;</B>
 <P><B>typedef ... xel;</B>
-<P><B>extern xelval pnm_pbmmaxval;</B>
 
 <P>
 <B>#define </B>
@@ -188,9 +187,7 @@ libpnm - libnetpbm functions to read and write PNM image files
 
 <P>Each <B>xel</B> contains three <B>xelval</B>s, each of which should
 contain only the values between <B>0</B> and <B>PNM_MAXMAXVAL</B>,
-inclusive.  <B>pnm_pbmmaxval</B> is the maxval used when a PNM program
-reads a PBM file.  Normally it is 1; however, for some programs, a
-larger value gives better results.
+inclusive. 
 
 <H3 id="xel">XEL MANIPULATIONS</H3>
 
