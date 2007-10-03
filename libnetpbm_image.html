@@ -218,7 +218,6 @@ except that it allocates space for a PAM row in the normalized form.
 <B>tuple ** pnm_readpam(</B>
 <B>FILE *</B><I>file</I><B>,</B>
 <B>struct pam *</B><I>pamP</I><B>,</B>
-<BR>
 <B>int </B><I>size</I><B>);</B>
 
 <P>
@@ -322,8 +321,8 @@ that won't fit in a C 'int').
 <b>void pnm_formatpamrow(</b>
 <B>struct pam *</B><I>pamP</I><B>,</B>
 <B>const tuple *</B><I>tuplerow</I>
-<b>unsigned char * const <i>outbuf</i>,</b>
-<b>unsigned int * const <i>rowSizeP</i></b>
+<b>unsigned char * const </b><i>outbuf</i><b>,</b>
+<b>unsigned int * const </b><i>rowSizeP</i>
 <B>);</B>
 
 <h4>Description</h4>
@@ -390,150 +389,87 @@ C library string functions.
 
 <P>
 <B>void pnm_YCbCrtuple(</B>
-<br>
-<B>tuple</B><I>tuple</I><B>,</B>
+<B>tuple </B><I>tuple</I><B>,</B>
 <B>double *</B><I>YP</I><B>,</B>
 <B>double *</B><I>CrP</I><B>,</B>
 <B>double *</B><I>CbP</I><B>);</B>
 
-<p>
-<b>void pnm_YCbCr_to_rgbtuple(
-<br>
-const struct pam * const <i>pamP</i>,
-<br>
-   tuple              const <i>tuple</i>,
-<br>
-   double             const <i>Y</i>,
-   double             const <i>Cb</i>, 
-   double             const <i>Cr</i>,
-<br>
-   int *              const <i>overflowP</i>
-);
-</b>
+<P>
+<B>void pnm_YCbCr_to_rgbtuple(</B>
+<B>const struct pam * const </B><I>pamP</I><B>,</B>
+<B>tuple const </B><I>tuple</I><B>,</B>
+<B>double const </B><I>Y</I><B>,</B>
+<B>double const </B><I>Cb</I><B>,</B>
+<B>double const </B><I>Cr</I><B>,</B>
+<B>int * const </B><I>overflowP</I><B>);</B>
 
-<p>
-<b>extern double pnm_lumin_factor[3];</b>
+<P>
+<B>extern double pnm_lumin_factor[3];</B>
 
-<p>
-<b>
-void
-pnm_normalizetuple(
-<br>
-  struct pam * const <i>pamP</i>,
-  tuple        const <i>tuple</i>,
-  tuplen       const <i>tuplen</i>);
-</b>
+<P>
+<B>void pnm_normalizetuple(</B>
+<B>struct pam * const </B><I>pamP</I><B>,</B>
+<B>tuple        const </B><I>tuple</I><B>,</B>
+<B>tuplen       const </B><I>tuplen</I><B>);</B>
 
-<p>
-<b>
-void
-pnm_unnormalizetuple(
-<br>
-  struct pam * const <i>pamP</i>,
-  tuplen       const <i>tuplen</i>,
-  tuple        const <i>tuple</i>);
-</b>
+<P>
+<B>void pnm_unnormalizetuple(</B>
+<B>struct pam * const </B><I>pamP</I><B>,</B>
+<B>tuplen       const </B><I>tuplen</I><B>,</B>
+<B>tuple        const </B><I>tuple</I><B>);</B>
 
-<p>
-<b>
-void
-pnm_normalizeRow(
-<br>
-  struct pam *       const <i>pamP</i>,
-  const tuple *      const <i>tuplerow</i>,
-  pnm_transformMap * const <i>transform</i>,
-  tuplen *           const <i>tuplenrow</i>);
-</b>
+<P>
+<B>void pnm_normalizeRow(</B>
+<B>struct pam *       const </B><I>pamP</I><B>,</B>
+<B>const tuple *      const </B><I>tuplerow</I><B>,</B>
+<B>pnm_transformMap * const </B><I>transform</I><B>,</B>
+<B>tuplen *           const </B><I>tuplenrow</I><B>);</B>
 
-<p>
-<b>
-void
-pnm_unnormalizeRow(
-<br>
-  struct pam *       const <i>pamP</i>,
-  const tuplen *     const <i>tuplenrow</i>,
-  pnm_transformMap * const <i>transform</i>,
-  tuple *            const <i>tuplerow</i>);
-</b>
+<P>
+<B>void pnm_unnormalizeRow(</B>
+<B>struct pam *       const </B><I>pamP</I><B>,</B>
+<B>const tuplen *     const </B><I>tuplenrow</I><B>,</B>
+<B>pnm_transformMap * const </B><I>transform</I><B>,</B>
+<B>tuple *            const </B><I>tuplerow</I><B>);</B>
+</B>
 
-<p>
-<b>
-void
-pnm_gammarown(
-<br>
-  struct pam * const <i>pamP</i>,
-  tuplen *     const <i>row</i>
-);
-</b>
+<P>
+<B>void pnm_gammarown(</B>
+<B>struct pam * const </B><I>pamP</I><B>,</B>
+<B>tuplen *     const </B><I>row</I><B>);</B>
 
-<p>
-<b>
-void
-pnm_ungammarown(
-<br>
-  struct pam * const <i>pamP</i>,
-  tuplen *     const <i>row</i>
-);
-</b>
+<P>
+<B>void pnm_ungammarown(</B>
+<B>struct pam * const </B><I>pamP</I><B>,</B>
+<B>tuplen *     const </B><I>row</I><B>);</B>
 
-<p>
-<b>
-void
-pnm_applyopacityrown(
-<br>
-  struct pam * const <i>pamP</i>,
-  tuplen *     const <i>tuplenrow</i>
-);
-</b>
+<P>
+<B>void pnm_applyopacityrown(</B>
+<B>struct pam * const </B><I>pamP</I><B>,</B>
+<B>tuplen *     const </B><I>tuplenrow</I><B></B>);</B>
 
-<p>
-<b>
-void
-pnm_unapplyopacityrown(
-<br>
-  struct pam * const <i>pamP</i>,
-  tuplen *     const <i>tuplenrow</i>
-);
+<P>
+<B>void pnm_unapplyopacityrown(</B>
+<B>struct pam * const </B><I>pamP</I><B>,</B>
+<B>tuplen *     const </B><I>tuplenrow</I><B></B>);</B>
 
-</b>
+<P>
+<B>pnm_transformMap * pnm_creategammatransform(</B>
+<B>const struct pam * const </B><I>pamP</I><B>);</B>
 
-<p>
-<b>
-pnm_transformMap *
-pnm_creategammatransform(
-<br>
-  const struct pam * const <i>pamP</i>
-);
-</b>
+<P>
+<B>void pnm_freegammatransform(</B>
+<B>const pnm_transformMap * const </B><I>transform</I><B>,</B>
+<B>const struct pam *       const </B><I>pamP</I><B>);</B>
 
-<p>
-<b>
-void
-pnm_freegammatransform(
-<br>
-  const pnm_transformMap * const <i>transform</i>,
-  const struct pam *       const <i>pamP</i>
-);
-</b>
+<P>
+<B>pnm_transformMap * pnm_createungammatransform(</B>
+<B>const struct pam * const </B><I>pamP</I><B>);</B>
 
-<p>
-<b>
-pnm_transformMap *
-pnm_createungammatransform(
-<br>
-  const struct pam * const <i>pamP</i>
-);
-</b>
-
-<p>
-<b>
-void
-pnm_freeungammatransform(
-<br>
-  const pnm_transformMap * const <i>transform</i>,
-  const struct pam *       const <i>pamP</i>
-);
-</b>
+<P>
+<B>void pnm_freeungammatransform(</B>
+<B>const pnm_transformMap * const </B><I>transform</I><B>,</B>
+<B>const struct pam *       const </B><I>pamP</I><B>);</B>
 
 
 <h4>Description</h4>
@@ -564,46 +500,49 @@ green, and [2] is for the blue.  They add up to 1.
 
 <p><b>pnm_gammarown()</b> and <b>pnm_ungammarown()</b> apply and unapply
 gamma correction to a row of an image using the same transformation as
-<a href="libpm.html#gamma"><b>pm_gamma()</b> and <b>pm_ungamma()</b></a>.
+<a href="libpm.html#gamma"><b>pm_gamma709()</b> and <b>pm_ungamma709()</b></a>.
 Note that these operate on a row of normalized tuples (<b>tuplen</b>,
 not <b>tuple</b>).
 
-<p><b>pnm_applyopacity()</b> reduces the intensity of samples in accordance
+<p><b>pnm_applyopacityrown()</b> reduces the intensity of samples in accordance
 with the opacity plane of an image.  The opacity plane, if it exists, tells
 how much of the light from that pixel should show when the image is composed
-with another image.  You use <b>pnm_applyopacity()</b> in preparation for
+with another image.  You use <b>pnm_applyopacityrown()</b> in preparation for
 doing such a composition.  For example, if the opacity plane says that the
-top half of the image is 50% opaque and the bottom half 100% opaque,
-<b>pnm_applyopacity()</b> will reduce the intensity of each sample of each
-tuple (pixel) in the upper half of the image by 50%, and leave the rest
+left half of the image is 50% opaque and the right half 100% opaque,
+<b>pnm_applyopacityrown()</b> will reduce the intensity of each sample of each
+tuple (pixel) in the left half of the image by 50%, and leave the rest
 alone.
 
 <p>If the image does not have an opacity plane (i.e. its tuple type is
 not one that <b>libnetpbm</b> recognizes as having an opacity plane),
-<b>pnm_applyopacity()</b> does nothing (which is the same as assuming
+<b>pnm_applyopacityrown()</b> does nothing (which is the same as assuming
 opacity 100%).  The tuple types that <b>libnetpbm</b> recognizes as
 having opacity are <B>RGB_ALPHA</B> and <B>GRAYSCALE_ALPHA</B>.
 
-<p><b>pnm_unapplyopacity()</b> does the reverse.  It assumes the
+<p><b>pnm_unapplyopacityrown()</b> does the reverse.  It assumes the
 intensities are already reduced according to the opacity plane, and
 raises back to normal.
 
-<p><b>pnm_applyopacity()</b> works on (takes as input and produces as
+<p><b>pnm_applyopacityrown()</b> works on (takes as input and produces as
 output) <em>normalized</em>, <em>intensity-proportional</em> tuples.
 That means you will typically read the row from the image file with
 <b>pnm_readpamrown()</b> and then gamma-correct it with
-<b>pnm_ungammarown()</b>, and then do <b>pnm_applyopacity()</b>.  You
+<b>pnm_ungammarown()</b>, and then do <b>pnm_applyopacityrown()</b>.  You
 then manipulate the row further (perhaps add it with other rows you've
-processed similarly), then do <b>pnm_unapplyopacity()</b>, then
-<b>pnm_gammarown()</b>, then <b>pnm_writegammarown()</b>.
+processed similarly), then do <b>pnm_unapplyopacityrown()</b>, then
+<b>pnm_gammarown()</b>, then <b>pnm_writepamrown()</b>.
 
-<p><b>pnm_normalizeTuple()</b> and <b>pnm_unnormalizeTuple()</b>
+<p><b>pnm_applyopacityrown()</b> and <b>pnm_unapplyopacityrown()</b>
+were new in Netpbm 10.25 (October 2004).
+
+<p><b>pnm_normalizetuple()</b> and <b>pnm_unnormalizetuple()</b>
 convert between a <b>tuple</b> data type and a <b>tuplen</b> data
 type.  The former represents a sample value using the same unsigned
 integer that is in the PAM image, while the latter represents a
 sample value as a number scaled by the maxval to the range 0..1.
-I.e. <b>pnm_normalizeTuple()</b> divides every sample value by the
-maxval and <b>pnm_unnormalizeTuple()</b> multiples every sample by the
+I.e. <b>pnm_normalizetuple()</b> divides every sample value by the
+maxval and <b>pnm_unnormalizetuple()</b> multiples every sample by the
 maxval.
 
 <p><b>pnm_normalizeRow()</b> and <b>pnm_unnormalizeRow()</b> do the same
@@ -651,7 +590,7 @@ pnm_writepamrow(&amp;outpam, outrow);
 argument.  Typically, your transform is a gamma transformation because
 you want to work in intensity-proportional sample values and the PAM
 image format uses gamma-adjusted ones.  In that case, just use
-<b>pnm_creategammtransform()</b> and
+<b>pnm_creategammatransform()</b> and
 <b>pnm_createungammatransform()</b> to create this object and don't
 worry about what's inside it.
 
