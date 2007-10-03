@@ -216,14 +216,17 @@ be positioned either at its beginning (i.e. nothing has been read from
 the file yet) or just after an image (i.e. as left by a
 <B>pbm_readpbmrow() </B> of the last row in the image).
 
-<P>In effect, then, all <B>pbm_nextimage()</B> does is test whether
-there is a next image or the file is positioned at end-of-file.
+<p>Note that in the raw PNM and PAM format, the next image always
+starts immediately after the previous image, so all
+<b>pbm_nextimage()</b> really does is test whether there is a next
+image or the file is positioned at end-of-file.  In plain PNM, though,
+there may be white space between images.
 
 <P>If <B>pbm_nextimage() </B> successfully positions to the next
 image, it returns <B>*</B><I>eofP</I> false (0).  If there is no next
 image in the file, it returns <B>*</B><I>eofP</I> true .  If it can't
-position or determine the file status due to a file error, it issues
-an error message and exits the program with an error exit code.
+position or determine the file status due to a file error, it
+<a href="error.html#error">throws an error</a>.
 
 <P><B>pbm_check()</B> checks for the common file integrity error where
 the file is the wrong size to contain all the image data.
@@ -231,10 +234,10 @@ the file is the wrong size to contain all the image data.
 header (as if <B>pbm_readpbminit() </B> was the last operation on the
 file).  It checks the file size to see if the number of bytes left in
 the file are the number required to contain the image raster.  If the
-file is too short, <B>pbm_check()</B> causes the program to exit with
-an error message and error completion code.  Otherwise, it returns one
-of the following values (enumerations of the <B>enum pm_check_code</B>
-type) as <B>*</B><I>retval</I>:
+file is too short, <B>pbm_check()</B> causes the program t <a
+href="error.html#error">throws an error</a>.  Otherwise, it returns
+one of the following values (enumerations of the <B>enum
+pm_check_code</B> type) as <B>*</B><I>retval</I>:
 
 <DL COMPACT>
 <DT><B>PM_CHECK_OK</B>

@@ -535,7 +535,7 @@ color does not appear in it and <I>hexok</I> is false,
 <B>ppm_colorname()</B> returns the name of the closest matching color
 in the color file.  Finally, if there is no system color dictionary
 available and <I>hexok</I> is false, <B>ppm_colorname()</B> fails and
-exits the program with an error message.
+<a href="error.html#error">throws an error</a>.
 
 <P>The string returned is in static libppm library storage which is
 overwritten by every call to <B>ppm_colorname()</B>.
@@ -614,7 +614,7 @@ one of many things that could be represented by it).
 
 <P>This creates a <B>colorhash_table</B> using dynamically allocated
 storage.  There are no colors in it.  If there is not enough storage,
-it exits the program with an error message.
+<a href="error.html#error">throws an error</a>.
 
 <P><B>void ppm_freecolorhash()</B>
 
@@ -677,8 +677,8 @@ the index in the input <B>colorhist_vector</B> for that color.
 the input.
 
 <P>If the same color appears twice in the input,
-<B>ppm_colorhisttocolorhash() </B> exit the program with an error
-message.
+<B>ppm_colorhisttocolorhash()</B> <a href="error.html#error">throws an
+error</a>.
 
 <P><B>ncolors</B> is the number of colors in <B>chv</B>.
 
