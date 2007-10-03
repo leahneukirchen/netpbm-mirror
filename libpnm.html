@@ -14,7 +14,7 @@ libpnm - libnetpbm functions to read and write PNM image files
 
 <H2 id="synopsis">SYNOPSIS</H2>
 
-<B>#include &lt;pnm.h&gt;</B>
+<B>#include &lt;netpbm/pnm.h&gt;</B>
 
 <P>
 <B>void pnm_init(</B>
@@ -96,6 +96,10 @@ libpnm - libnetpbm functions to read and write PNM image files
 <B>xelval </B><I>maxval</I><B>,</B>
 <B>int </B><I>format</I><B>,</B>
 <B>int </B><I>forceplain</I><B> );</B>
+
+<P>
+<B>void pnm_nextimage(</B><B>FILE *</B> <I>file</I><B>,</B>
+  <B>int * const</B> <I>eofP</I><B>);</B>
 
 <P>
 <B>void pnm_check(</B>
@@ -276,6 +280,13 @@ the maximum of the formats, and promote them all to that.
 <P><B>pnm_promoteformat()</B> promotes an entire anymap.
 
 <H3 id="miscellaneous">MISCELLANEOUS</H3>
+
+<P><B>pnm_nextimage()</B> positions a PNM input file to the next image
+in it (so that a subsequent <B>pnm_readpnminit()</B> reads its
+header).
+
+<P><B>pnm_nextimage()</B> is analogous to <B>pbm_nextimage()</B>, but
+works on PPM, PGM, and PBM files.
 
 <P> <B>pnm_check()</B> is similar to <B>pnm_checkpam()</B> except it
 works only on PNM images.

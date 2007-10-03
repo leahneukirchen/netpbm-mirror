@@ -25,7 +25,7 @@ pm_system(void                  stdinFeeder(int, void *),
           void *          const accepterParm,
           const char *    const shellCommand);
 
-pm_system_vp(const char *  const progName,
+pm_system_lp(const char *  const progName,
              void                stdinFeeder(int, void *),
              void *        const feederParm,
              void                stdoutAccepter(int, void *),
@@ -241,7 +241,7 @@ the array identifies the end of the arguments.
     argArray[1] = &quot;-quality=50&quot;;
     argArray[2] = NULL;
 
-    pm_system_lp(&quot;pnmtojpeg&quot;, argArray, NULL, NULL, NULL, NULL);
+    pm_system_vp(&quot;pnmtojpeg&quot;, argArray, NULL, NULL, NULL, NULL);
 </code>
 </pre>
 

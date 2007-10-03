@@ -57,7 +57,7 @@ it issues an error message first.
 Netpbm function issues an error message by writing it to the Standard
 Error file, formatted into a single line with the program name prefixed.
 But you can register your own error message function to run instead with
-<b>pm_setErrorMsgFn()</b>.
+<b>pm_setusererrormsgfn()</b>.
 
 
 <h3 id="pm_setjmpbuf">pm_setjmpbuf()</h3>
@@ -75,7 +75,7 @@ setjmp() first, then tell the Netpbm programming library with
 <pre>
 <code>
   #include &lt;setjmp.h&gt;
-  #include &lt;pam.h&gt;
+  #include &lt;netpbm/pam.h&gt;
 
   jmp_buf jmpbuf;
   int rc;
@@ -215,7 +215,7 @@ newlines or tabs in it.
 </code>
 </pre>
 
-<P><B>pm_setusererrormsg()</B> registers a handler for error messages,
+<P><B>pm_setusererrormsgfn()</B> registers a handler for error messages,
 called a user error message routine.  Any library function that wants
 to issue an error message in the future will call that function with
 the message as an argument.
