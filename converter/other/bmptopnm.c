@@ -303,6 +303,36 @@ readOs2InfoHeader(FILE *                 const ifP,
 
 
 static void
+validateCompression(unsigned long const compression,
+                    enum rowOrder const rowOrder,
+                    unsigned int  const cBitCount) {
+    
+    if (compression != COMP_RGB && compression != COMP_BITFIELDS &&
+        compression != COMP_RLE4 && compression != COMP_RLE8 ) 
+        pm_error("Input has unknown encoding.  "
+                 "Compression type code = %ld.  The only ones we know "
+                 "are RGB (%u), BITFIELDS (%u), "
+                 "RLE4 (%u), and RLE8 (%u)",
+                 compression, COMP_RGB, COMP_BITFIELDS,
+                 COMP_RLE4, COMP_RLE8);
+                     
+    if ((compression == COMP_RLE4 || compression == COMP_RLE8) &&
+        rowOrder == TOPDOWN )                        
+        pm_error("Invalid BMP header.  Claims image is top-down and also "
+                 "compressed, which is an impossible combination.");
+
+    if ( (compression == COMP_RLE4 && cBitCount !=4) ||
+         (compression == COMP_RLE8 && cBitCount !=8) ) 
+        pm_error("Invalid BMP header.  " 
+                 "Compression type (%s) disagrees with "
+                 "number of bits per pixel (%u).",
+                 compression == COMP_RLE4 ? "RLE4" : "RLE8",
+                 cBitCount);
+}
+
+
+
+static void
 readWindowsBasic40ByteInfoHeader(FILE *                 const ifP,
                                  struct bmpInfoHeader * const headerP) {
 /*----------------------------------------------------------------------------
@@ -335,22 +365,9 @@ readWindowsBasic40ByteInfoHeader(FILE *                 const ifP,
         unsigned long int const compression = GetLong(ifP);
 
         headerP->bitFields = (compression == COMP_BITFIELDS);
-    
-        if (compression != COMP_RGB && compression != COMP_BITFIELDS &&
-            compression != COMP_RLE4 && compression != COMP_RLE8 ) 
-            pm_error("Input is compressed.  Unsupported encoding method.\n"
-                     "Compression type code = %ld", compression);
-                     
-        if ( (compression == COMP_RLE4 || compression == COMP_RLE8) &&
-              headerP->rowOrder == TOPDOWN )                        
-            pm_error("Invalid BMP header.  Top-down images cannot be compressed.");
 
-        if ( (compression == COMP_RLE4 && headerP->cBitCount !=4) ||
-             (compression == COMP_RLE8 && headerP->cBitCount !=8) )                        
-            pm_error("Invalid BMP header.\n" 
-                     "Compression type (%s) disagrees with number of bits per pixel (%u).",
-                      compression == COMP_RLE4 ? "RLE4" : "RLE8",
-                      headerP->cBitCount);
+        validateCompression(compression, headerP->rowOrder,
+                            headerP->cBitCount);
 
         headerP->compression = compression;             
     }
