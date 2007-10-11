@@ -42,6 +42,10 @@ struct bitPosition {
 
        Example: if 16 bits are laid out as XRRRRRGGGGGBBBBB then the shift
        count for the R component is 10 and the mask is 0000000000011111.
+
+       A 'mask' of zero denotes absence of any bits; e.g. in the example
+       above, the mask for the transparency component is zero because there
+       is no transparency component .  'shift' is arbitrary in that case.
     */
     unsigned int shift;
         /* How many bits right you have to shift the value to get the subject
@@ -667,11 +671,15 @@ extractBitFields(unsigned int       const rasterval,
         (rasterval >> pixelformat.blu.shift) & pixelformat.blu.mask;
     unsigned int const abits = 
         (rasterval >> pixelformat.trn.shift) & pixelformat.trn.mask;
-    
-    *rP = (unsigned int) rbits * maxval / pixelformat.red.mask;
-    *gP = (unsigned int) gbits * maxval / pixelformat.blu.mask;
-    *bP = (unsigned int) bbits * maxval / pixelformat.grn.mask;
-    *aP = (unsigned int) abits * maxval / pixelformat.trn.mask;
+
+    *rP = pixelformat.red.mask > 0 ?
+        (unsigned int) rbits * maxval / pixelformat.red.mask : 0;
+    *gP = pixelformat.grn.mask > 0 ?
+        (unsigned int) gbits * maxval / pixelformat.grn.mask : 0;
+    *bP = pixelformat.blu.mask > 0 ?
+        (unsigned int) bbits * maxval / pixelformat.blu.mask : 0;
+    *aP = pixelformat.trn.mask > 0 ?
+        (unsigned int) abits * maxval / pixelformat.trn.mask : 0;
 }        
 
 
