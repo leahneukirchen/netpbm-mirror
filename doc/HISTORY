@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.41.00
 
+              bmptopnm: fix crash with 16 bit images.
+
               pamlcolor8.map: Make it a 256 color map sorted by index,
               per Palm's spec.  Thanks Paul Bolle <pebolle@tiscali.nl>.
 
@@ -1204,7 +1206,9 @@ not yet  BJH  Release 10.41.00
               pamcut: major speedup.  Thanks Prophet of the Way
               <afu@wta.att.ne.jp> (Akira Urushibata ("Douso")).
 
-              Add pnm_getopacity().
+              libnetpbm: Add pnm_getopacity().
+
+              libnetpbm: Add pnm_applyopacityrown(), pnm_unapplyopacityrown().
 
               libnetpbm: "pam" read and write routines much more
               efficient.  Thanks Prophet of the Way
