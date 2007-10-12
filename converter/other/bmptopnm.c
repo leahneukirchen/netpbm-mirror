@@ -17,6 +17,11 @@
  in supporting documentation.  This software is provided "as is"
  without express or implied warranty.
 
+ Note: From mid-2003 to mid-2007, this program would crash on any 16
+ bit BMP without transparency and no one reported it.  Before that, it
+ refused to even try to read a 16 bit BMP.  I conclude that esentially
+ nobody is using 16 bit BMP.
+
 *****************************************************************************/
 #include <string.h>
 #include <limits.h>
@@ -479,6 +484,10 @@ defaultPixelformat(unsigned int const bitCount) {
 
     switch (bitCount) {
     case 16:
+        /* This layout is sometimes called "RGB555".  A document from
+           Microsoft says this is the default (when the "compression"
+           field of the header says COMP_BITFIELDS).
+        */
         retval.conventionalBgr = FALSE;
         retval.red.shift = 10;
         retval.grn.shift = 5;
@@ -516,6 +525,11 @@ readV4InfoHeaderExtension(FILE *                 const ifP,
                           struct bmpInfoHeader * const headerP) {
 
     if (headerP->bitFields) {
+        /* A document from Microsoft says on Windows 95 there is no
+           transparency plane and (red, green, blue) must be either
+           (5,5,5) or (5,6,5) for 16 bit and (8,8,8) for 32 bit.
+           It calls these RGB555, RGB565, RGB888.
+        */
         headerP->pixelformat.red = bitPositionFromMask(GetLong(ifP));
         headerP->pixelformat.grn = bitPositionFromMask(GetLong(ifP));
         headerP->pixelformat.blu = bitPositionFromMask(GetLong(ifP));
