@@ -2131,7 +2131,7 @@ main(int argc, char **argv ) {
         scaleWithoutMixing(&inpam, &outpam, xscale, yscale);
     } else if (!cmdline.filterFunction) {
         if (cmdline.verbose)
-            pm_message("Using regular rescaling method");
+            pm_message("Using simple pixel mixing rescaling method");
         scaleWithMixing(&inpam, &outpam, xscale, yscale, 
                         cmdline.linear, cmdline.verbose);
     } else {
