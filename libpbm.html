@@ -226,7 +226,7 @@ there may be white space between images.
 image, it returns <B>*</B><I>eofP</I> false (0).  If there is no next
 image in the file, it returns <B>*</B><I>eofP</I> true .  If it can't
 position or determine the file status due to a file error, it
-<a href="error.html#error">throws an error</a>.
+<a href="liberror.html#error">throws an error</a>.
 
 <P><B>pbm_check()</B> checks for the common file integrity error where
 the file is the wrong size to contain all the image data.
@@ -235,7 +235,7 @@ header (as if <B>pbm_readpbminit() </B> was the last operation on the
 file).  It checks the file size to see if the number of bytes left in
 the file are the number required to contain the image raster.  If the
 file is too short, <B>pbm_check()</B> causes the program t <a
-href="error.html#error">throws an error</a>.  Otherwise, it returns
+href="liberror.html#error">throws an error</a>.  Otherwise, it returns
 one of the following values (enumerations of the <B>enum
 pm_check_code</B> type) as <B>*</B><I>retval</I>:
 

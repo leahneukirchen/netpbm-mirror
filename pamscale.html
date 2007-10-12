@@ -383,7 +383,7 @@ function.  <b>pamscale</b> offers many other filter functions, though.
 Some of these approximate sinc and are faster to compute.  For most of
 them, I have no idea of the mathematical explanation for them, but
 people do find they give pleasing results.  They may not be based on
-resampling at all, but just exploit the fact the convolution that is
+resampling at all, but just exploit the convolution that is
 coincidentally part of a resampling calculation.
 
 <p>For some filter functions, you can tell just by looking at the
@@ -395,11 +395,12 @@ fact a step function -- the very one we computed as the first step in
 the resampling.  This is mathematically equivalent to the discrete
 sampling method.
 
-<p>The box (rectangle) filter assumes the original image is a piecewise
-linear function.  Its graph just looks like straight lines connecting
-the pixel values.  This is mathematically equivalent to the pixel mixing
-method when scaling down, and interpolation (ala <b>pamstretch</b>)
-when scaling up.
+<p>The box (rectangle) filter assumes the original image is a
+piecewise linear function.  Its graph just looks like straight lines
+connecting the pixel values.  This is mathematically equivalent to the
+pixel mixing method (but mixing brightness, not light intensity, so
+like <b>pamscale -linear</b>) when scaling down, and interpolation
+(ala <b>pamstretch</b>) when scaling up.
 
 <h4>Gamma</h4>
 

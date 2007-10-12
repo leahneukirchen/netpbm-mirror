@@ -42,8 +42,6 @@ in this facility.
 
 <h3><b>ppmd_filledrectangle</b></h3>
 
-<h3><b>ppmd_fill_init</b></h3>
-
 <h3><b>ppmd_fill_drawproc</b></h3>
 
 <h3><b>ppmd_fill</b></h3>
@@ -65,7 +63,7 @@ can create additional fonts and use them instead.
 <p>In a program that uses Netpbm drawing facilities, there is a
 &quot;current font.&quot; all drawing of text uses the current font.
 When the program starts, the current font is &quot;standard&quot;; you
-can change it after that by calling the <b>ppmd_setfont</b> function.
+can change it after that by calling the <b>ppmd_set_font</b> function.
 
 <p>Other than a built-in font, a font lives in file in a format
 special to Netpbm called Ppmdfont.  The file typically has a name that
@@ -86,7 +84,7 @@ example.  In Netpbm source code, you will find the C source file
 <b>standardppmdfont.c</b>, which was generated from the file
 <b>standard.ppmdfont</b> by <b>ppmdcfont</b>.  You simply use a
 pointer to the structure that the C file defines as a font handle,
-just like one you would get from <b>ppmd_readfont</b>.
+just like one you would get from <b>ppmd_read_font</b>.
 
 
 <h2>Font File Format</h2>
@@ -104,28 +102,28 @@ vector, not raster, font.
 
 <p>These functions are declared in the header file <b>ppmdfont.h</b>.
 
-<h3><b>ppmd_readfont</b></h3>
+<h3><b>ppmd_read_font</b></h3>
 
 <p>This function associates a Ppmdfont file, which you identify by
 naming the Ppmdfont file, with a handle that you can use to identify
 the font to other functions.  Technically, this function reads the
 font into memory.
 
-<h3><b>ppmd_freefont</b></h3>
+<h3><b>ppmd_free_font</b></h3>
 
 <p>This function releases the handle that you get from
-<b>ppmd_readfont</b>.  It frees resources associated with it; you
+<b>ppmd_read_font</b>.  It frees resources associated with it; you
 can't use the handle after this.
 
-<h3><b>ppmd_getfont</b></h3>
+<h3><b>ppmd_get_font</b></h3>
 
 <p>This function returns the handle of the currently selected font.
 
-<h3><b>ppmd_setfont</b></h3>
+<h3><b>ppmd_set_font</b></h3>
 
 <p>This function sets the currently selected font.  You identify the
 font to which to set it with a handle such as you get from
-<b>ppmd_readfont</b> or <b>ppmd_getfont</b>.
+<b>ppmd_read_font</b> or <b>ppmd_get_font</b>.
 
 <HR>
 <A NAME="toc">&nbsp;</A>
