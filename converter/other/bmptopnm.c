@@ -651,11 +651,15 @@ extractBitFields(unsigned int       const rasterval,
     unsigned int const abits = 
         (rasterval >> pixelformat.trn.shift) & pixelformat.trn.mask;
     
-    *rP = (unsigned int) rbits * maxval / pixelformat.red.mask;
-    *gP = (unsigned int) gbits * maxval / pixelformat.blu.mask;
-    *bP = (unsigned int) bbits * maxval / pixelformat.grn.mask;
-    *aP = (unsigned int) abits * maxval / pixelformat.trn.mask;
-}        
+    *rP = pixelformat.red.mask ?
+              (unsigned int) rbits * maxval / pixelformat.red.mask : 0;
+    *gP = pixelformat.grn.mask ?
+              (unsigned int) gbits * maxval / pixelformat.grn.mask : 0;
+    *bP = pixelformat.blu.mask ?
+              (unsigned int) bbits * maxval / pixelformat.blu.mask : 0;
+    *aP = pixelformat.trn.mask ?
+              (unsigned int) abits * maxval / pixelformat.trn.mask : 0;
+}
 
 
 
