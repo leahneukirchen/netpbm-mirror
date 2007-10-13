@@ -84,16 +84,6 @@ addToRange(struct range * const rangeP,
 
 
 
-static void
-assertRangeValid(struct range const range) {
-
-    assert(betweenZeroAndOne(range.min));
-    assert(betweenZeroAndOne(range.max));
-    assert(range.max >= range.min);
-}
-
-
-
 static float
 spread(struct range const range) {
 

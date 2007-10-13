@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+not yet  BJH  Release 10.40.01
+
+              bmptopnm: fix crash with 16 bit images.
+
 07.09.26 BJH  Release 10.40.00
 
               pamfunc: Add -andmask, -ormask, -xormask, -not,
