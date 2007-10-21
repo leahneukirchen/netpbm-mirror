@@ -3,8 +3,8 @@
 #ifndef _PPM_H_
 #define _PPM_H_
 
-#include "pm.h"
-#include "pgm.h"
+#include <netpbm/pm.h>
+#include <netpbm/pgm.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -51,7 +51,7 @@ typedef struct {
 #define PPM_TYPE PPM_FORMAT
 
 
-#include "ppmcmap.h"
+#include <netpbm/ppmcmap.h>
 
 /* Macro for turning a format number into a type number. */
 

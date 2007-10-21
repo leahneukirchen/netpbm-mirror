@@ -240,9 +240,11 @@ install.hdr: $(INTERFACE_HEADERS:%=%_installhdr)
 # prefer not to "install" them, but just to access the Netpbm source
 # directory when you compile your programs.
 
-%_installhdr: $(PKGDIR)/include
+.PHONY: $(INTERFACE_HEADERS:%=%_installhdr)
+
+$(INTERFACE_HEADERS:%=%_installhdr): $(PKGDIR)/include/netpbm
 	$(INSTALL) -c -m $(INSTALL_PERM_HDR) \
-	  $(SRCDIR)/lib/$(@:%_installhdr=%) $(PKGDIR)/include/;
+	  $(SRCDIR)/lib/$(@:%_installhdr=%) $(PKGDIR)/include/netpbm/
 
 .PHONY: install.staticlib
 install.staticlib: $(PKGDIR)/link

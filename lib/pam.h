@@ -6,8 +6,8 @@
 #ifndef PAM_H
 #define PAM_H
 
-#include "pm.h"
-#include "pnm.h"
+#include <netpbm/pm.h>
+#include <netpbm/pnm.h>
 
 #ifdef __cplusplus
 extern "C" {

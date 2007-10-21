@@ -1,7 +1,7 @@
 #ifndef PBM_H_INCLUDED
 #define PBM_H_INCLUDED
 
-#include "pm.h"
+#include <netpbm/pm.h>
 
 #ifdef __cplusplus
 extern "C" {

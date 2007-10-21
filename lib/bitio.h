@@ -32,7 +32,7 @@
 #ifndef _BITIO_H_
 #define _BITIO_H_
 
-#include "pm.h"
+#include <netpbm/pm.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -86,4 +86,4 @@ pm_bitwrite(BITSTREAM     b,
 #ifdef __cplusplus
 }
 #endif
-#endif /* _BITIO_H_ */
+#endif

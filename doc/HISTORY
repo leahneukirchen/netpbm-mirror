@@ -15,6 +15,11 @@ not yet  BJH  Release 10.41.00
               pm_freerow(); change row buffer type from char * to void *
               for pm_allocrow(), pm_freerow().
 
+              Fix bug: ppmdraw.h, ppmdfont.h not installed.
+
+              package, install: install interface header files as
+              <netpbm/xxx.h> instead of just <xxx.h>.
+
 07.09.26 BJH  Release 10.40.00
 
               pamfunc: Add -andmask, -ormask, -xormask, -not,

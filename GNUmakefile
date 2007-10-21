@@ -346,11 +346,14 @@ $(PKGDIR)/bin/doc.url: $(PKGDIR)/bin
 install-dev: install.hdr install.staticlib install.lib install.sharedlibstub
 
 .PHONY: install.hdr
-install.hdr: $(PKGDIR)/include
-	$(MAKE) -C lib -f $(SRCDIR)/lib/Makefile \
-	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) install.hdr
+install.hdr: lib/install.hdr $(PKGDIR)/include/netpbm
 	$(INSTALL) -c -m $(INSTALL_PERM_HDR) \
-	    $(BUILDDIR)/pm_config.h $(PKGDIR)/include
+	    $(BUILDDIR)/pm_config.h $(PKGDIR)/include/netpbm
+
+.PHONY: lib/install.hdr
+lib/install.hdr:
+	$(MAKE) -C $(dir $@) -f $(SRCDIR)/lib/Makefile \
+	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@)
 
 ifeq ($(STATICLIB_TOO),y)
 BUILD_STATIC = y

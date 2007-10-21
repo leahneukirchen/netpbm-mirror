@@ -36,7 +36,6 @@
 # INSTALL: command to use to copy files to where they belong
 # INSTALL_PERM_BIN: file permissions for installed binaries
 # INSTALL_PERM_LIB: ...same for libraries
-# INSTALL_PERM_HDR: ...same for headers
 # INSTALL_PERM_MAN: ...same for man pages
 # MERGE_OBJECTS: list of object files that go into the merged executable
 #   from the current directory (not subdirectories).  All of these are to
