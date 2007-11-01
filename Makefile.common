@@ -138,9 +138,15 @@ IMPORTINC_LIB_FILES := $(IMPORTINC_LIB_HEADERS:%=importinc/%)
 IMPORTINC_LIB_UTIL_FILES := $(IMPORTINC_LIB_UTIL_HEADERS:%=importinc/%)
 
 importinc: \
+  importinc/netpbm \
   $(IMPORTINC_ROOT_FILES) \
   $(IMPORTINC_LIB_FILES) \
   $(IMPORTINC_LIB_UTIL_FILES) \
+
+importinc/netpbm:
+	mkdir -p importinc
+	rm -f $@
+	$(SYMLINK) . $@
 
 $(IMPORTINC_ROOT_FILES):importinc/%:$(BUILDDIR)/%
 	mkdir -p importinc
