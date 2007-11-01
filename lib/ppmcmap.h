@@ -121,7 +121,7 @@ int
 ppm_addtocolorrow(pixel * const colorrow,
                   int *   const ncolorsP,
                   int     const maxcolors,
-                  pixel * const pixelP)x;
+                  pixel * const pixelP);
 
 int
 ppm_findclosestcolor(const pixel * const colormap, 
