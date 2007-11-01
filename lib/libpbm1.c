@@ -21,8 +21,8 @@
 #include "shhopt.h"
 
 void
-pbm_init(int *         const argcP,
-         const char ** const argv) {
+pbm_init(int *   const argcP,
+         char ** const argv) {
 
     pm_proginit(argcP, argv);
 }
