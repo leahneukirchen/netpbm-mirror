@@ -29,7 +29,9 @@ typedef pixval xelval;
 
 /* Declarations of routines. */
 
-void pnm_init ARGS(( int* argcP, char* argv[] ));
+void
+pnm_init(int *         const argcP,
+         const char ** const argv);
 
 void
 pnm_nextimage(FILE *file, int * const eofP);

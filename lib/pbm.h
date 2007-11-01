@@ -33,7 +33,10 @@ typedef unsigned char bit;
 
 /* Declarations of routines. */
 
-void pbm_init ARGS(( int* argcP, char* argv[] ));
+void
+pbm_init(int *         const argcP,
+         const char ** const argv);
+
 void
 pbm_nextimage(FILE *file, int * const eofP);
 
