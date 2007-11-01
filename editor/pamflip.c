@@ -25,7 +25,7 @@
    functions apply, it is capable of handling all cases.  (Only that it
    is slow, and uses more memory.)  In the same manner, transformPbm() is
    capable of handling all pbm transformations and transformRowByRowNonPbm()
-   transformRowsBottomTomNonPbm() are capable of handling pbm.
+   transformRowsBottomTopNonPbm() are capable of handling pbm.
 
 
    There is some fancy virtual memory management in transformGen() to avoid
