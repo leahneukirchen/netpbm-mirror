@@ -157,22 +157,14 @@ sub chooseTestCompiler($$) {
 
     my $cc;
 
-    if (!defined($compiler)) {
-        if ($ENV{'CC'}) {
-            $cc = $ENV{'CC'};
-        } else {
-            if (commandExists('cc')) {
-                $cc = 'cc';
-            } elsif (commandExists("gcc")) {
-                $cc = 'gcc';
-            }
-        }
-    } elsif ($compiler eq 'cc') {
-        $cc = "cc";
-    } elsif ($compiler eq 'gcc') {
-        $cc = 'gcc';
+    if ($ENV{'CC'}) {
+        $cc = $ENV{'CC'};
     } else {
-        die("Internal error: invalid value \"$compiler\" for \$compiler");
+        if (commandExists('cc')) {
+            $cc = 'cc';
+        } elsif (commandExists("gcc")) {
+            $cc = 'gcc';
+        }
     }
     $$testCcR = $cc;
 }
@@ -469,7 +461,8 @@ sub getCompiler($$) {
 #    need different options.
 #
 #  - There are basically two choices on any system:  native compiler or
-#    GNU compiler.  That's all this program recognizes, anyway.
+#    GNU compiler.  That's all this program recognizes, anyway.  On some,
+#    native _is_ GNU, and we return 'gcc'.
 #
 #  - A user may well have various compilers.  Different releases, using
 #    different standard libraries, for different target machines, etc.
@@ -488,15 +481,24 @@ sub getCompiler($$) {
 #
 # The value this subroutine returns is NOT the command name to invoke the
 # compiler.  It is simply "cc" to mean native compiler or "gcc" to mean
-# GNU compiler or undefined to express no preference.
+# GNU compiler.
 #-----------------------------------------------------------------------------
-    my %gccCapablePlatform = ("SOLARIS" => 1,
-                              "TRU64"   => 1,
-                              "SCO"     => 1,
-                              "AIX"     => 1,
-                              "HP"      => 1);
+    my %gccOptionalPlatform = ("SOLARIS" => 1,
+                               "TRU64"   => 1,
+                               "SCO"     => 1,
+                               "AIX"     => 1,
+                               "HP"      => 1);
 
-    if ($gccCapablePlatform{$platform}) {
+    my %gccUsualPlatform = ("GNU"     => 1,
+                            "NETBSD"  => 1,
+                            "OPENBSD" => 1,
+                            "FREEBSD" => 1,
+                            "DARWIN"  => 1,
+                            );
+
+    if ($gccUsualPlatform{$platform}) {
+        $$compilerR = "gcc";
+    } elsif ($gccOptionalPlatform{$platform}) {
         print("GNU compiler or native operating system compiler (cc)?\n");
         print("\n");
 
@@ -529,6 +531,8 @@ sub getCompiler($$) {
                   "makefile variable or install 'gcc'\n");
         }
         print("\n");
+    } else {
+        $$compilerR = 'cc';
     }
 }
 
@@ -2114,8 +2118,6 @@ if ($platform eq "GNU") {
          '-shared -Wl,--image-base=0x10000000 -Wl,--enable-auto-import', "\n");
 } elsif ($platform eq "BEOS") {
     push(@Makefile_config, "LDSHLIB = -nostart\n");
-} elsif ($platform eq "NETBSD") {
-    push(@Makefile_config, 'CFLAGS_SHLIB = -fpic', "\n");
 } elsif ($platform eq "OPENBSD") {
     # vedge@vedge.com.ar says on 2001.04.29 that there are a ton of 
     # undefined symbols in the Fiasco stuff on OpenBSD.  So we'll just
@@ -2132,13 +2134,12 @@ if ($platform eq "GNU") {
     if ($compiler eq "cc") {
         push(@Makefile_config, "CFLAGS = -O\n");
         push(@Makefile_config, "CFLAGS_SHLIB = -O -K pic\n");
-        push(@Makefile_config, "LD_SHLIB = -G\n");
+        push(@Makefile_config, "LDSHLIB = -G\n");
         push(@Makefile_config, "SHLIB_CLIB =\n");
     } else {
         makeCompilerGcc(\@Makefile_config);
+        push(@Makefile_config, "LDSHLIB = -shared\n"); 
     }
-    push(@Makefile_config, "CFLAGS_SHLIB = -fPIC\n");
-    push(@Makefile_config, "LDSHLIB = -shared\n"); 
     push(@Makefile_config, "NETWORKLD = -lsocket -lresolve\n");
 } elsif ($platform eq "DARWIN") {
     push(@Makefile_config, "CC = cc -no-cpp-precomp\n");
@@ -2190,6 +2191,10 @@ if (!$flex_result) {
 
         push(@Makefile_config, "LEX = lex\n"); 
     }
+}
+
+if ($compiler eq 'gcc') {
+    push(@Makefile_config, "CFLAGS_SHLIB += -fPIC\n");
 }
 
 if (defined($tiffhdr_dir)) {
