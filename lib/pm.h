@@ -34,6 +34,30 @@ extern "C" {
 #endif
 
 
+/* Definitions to make Netpbm programs work with either ANSI C or C
+   Classic.
+
+   This is obsolete, as all compilers recognize the ANSI syntax now.
+
+   We are slowly removing all the ARGS invocations from the programs
+   (and replacing them with explicit ANSI syntax), but we have a lot
+   of programs where we have removed ARGS from the definition but not
+   the prototype, and we have discovered that the Sun compiler
+   considers the resulting mismatch between definition and prototype
+   to be an error.  So we make ARGS create the ANSI syntax
+   unconditionally to avoid having to fix all those mismatches.  */
+
+#if 0
+#if __STDC__
+#define ARGS(alist) alist
+#else /*__STDC__*/
+#define ARGS(alist) ()
+#define const
+#endif /*__STDC__*/
+#endif
+#define ARGS(alist) alist
+
+
 /* PM_GNU_PRINTF_ATTR lets the GNU compiler check pm_message() and pm_error()
    calls to be sure the arguments match the format string, thus preventing
    runtime segmentation faults and incorrect messages.
