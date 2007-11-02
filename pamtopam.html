@@ -1,0 +1,61 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD><title>Pamtopam User Manual</title></HEAD>
+
+<BODY>
+<H1>pamtopam</H1>
+Updated: October 2007
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<H2>NAME</H2>
+pamtopam - copy PAM image
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>pamtopam</B>
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<P><b>pamtopam</b> simply copies a PAM image from Standard Input to
+Standard Output.  This may seem an unnecessary duplication of
+<b>cat</b>, but remember that a PAM program can read a PBM, PGM, or PPM
+image as if it were PAM.  So <b>pamtopam</b> can read either a PBM, PGM,
+PPM, or PAM image and produce a PAM image as output.
+
+<p>Even that is of limited usefulness because of the fact that almost
+any program to which you would feed the resulting PAM image could also
+just take the original image directly.  However, sometimes you really
+want a true PAM image.
+
+<p>You can do a more general job of translating PAM/PNM to PAM with
+<b>pamchannel</b>.
+
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<B><A HREF="pamtopnm.html">pamtopnm</A></B>,
+<B><A HREF="ppmtoppm.html">ppmtoppm</A></B>,
+<B><A HREF="pgmtopgm.html">pgmtopgm</A></B>,
+<B><A HREF="pam.html">pam</A></B>,
+<B><A HREF="pnm.html">pnm</A></B>,
+<B><A HREF="ppm.html">ppm</A></B>,
+<B><A HREF="pgm.html">pgm</A></B>,
+<B><A HREF="pbm.html">pbm</A></B>
+
+<H2 id="history">HISTORY</H2>
+
+<p>This program was added to Netpbm in Release 10.41 (December 2007).
+
+<HR>
+<H2 id="index">Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#history">HISTORY</A>
+</UL>
+</BODY>
+</HTML>
