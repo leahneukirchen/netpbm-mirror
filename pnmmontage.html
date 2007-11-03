@@ -2,17 +2,15 @@
 <HTML><HEAD><TITLE>Pnmmontage User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmmontage</H1>
-Updated: 31 December 2000
+Updated: 03 November 2007
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
 pnmmontage - create a montage of PNM images
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>pnmmontage</B>
 
@@ -24,10 +22,11 @@ pnmmontage - create a montage of PNM images
 
 [<B>-0</B>|<B>-1</B>|<B>-2</B>|<B>...</B>|<B>-9</B>]
 
+[<b>-data=</b><i>filename</i>]
+
 <i>pnmfile</I>...
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -35,19 +34,54 @@ pnmmontage - create a montage of PNM images
 minimum-area composite image, optionally producing a C header file
 with the locations of the subimages within the composite image.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<H2 id="options">OPTIONS</H2>
 
 <DL COMPACT>
 
-<DT><B>-header</B>
+<DT><b>-data=</b><i>filename</i>
+
+<dd>This option causes <b>pnmmontage</b> to write a file that describes
+in machine-readable form the positions of the original images within
+the packed image.  Here is an example:
+
+<pre>
+<tt>
+            :0:0:227:298
+            ../image1.ppm:0:0:227:149
+            ../image2.ppm:0:149:227:149
+</tt>
+</pre>
+
+
+<p>This option was new in Netpbm 10.6 (July 2002).
+
+<DT><B>-header=</B><i>filename</i>
 
 <DD>Tells <B>pnmmontage</B> to write a C header file of the locations
 of the original images within the packed image.  Each original image
 generates four #defines within the packed file: xxxX, xxxY, xxxSZX,
 and xxxSZY, where xxx is the name of the file, converted to all
-uppercase.  The ouput also includes #defines OVERALLX and OVERALLY, which
+uppercase.  The output also includes #defines OVERALLX and OVERALLY, which
 specifies the total size of the montage image.
+
+<p>Here is an example:
+
+<pre>
+<tt>
+            #define OVERALLX 227
+            #define OVERALLY 298
+            
+            #define X 0
+            #define Y 0
+            #define SZX 227
+            #define SZY 149
+            
+            #define X 0
+            #define Y 149
+            #define SZX 227
+            #define SZY 149
+</tt>
+</pre>
 
 <DT><B>-prefix</B>
 
@@ -63,9 +97,9 @@ subimage times the height of the tallest subimage, whichever is
 greater.  <B>pnmmontage</B> then initiates a problem-space search to
 find the best packing; if it finds a solution that is (at least) as
 good as the minimum area times the quality as a percent, it will break
-out of the search.  Thus, <B>-q 100</B> will find the best possible
+out of the search.  Thus, <B>-quality=100</B> will find the best possible
 solution; however, it may take a very long time to do so.  The default
-is <B>-q 200.</B>
+is <B>-quality=200.</B>
 
 <DT><B>-0</b>, <b>-1</b>, ... <b>-9</B>
 
@@ -77,16 +111,23 @@ The higher the number, the slower the computation.  The default is
 <B>-5</B>.
 
 </DL>
-<A NAME="lbAF">&nbsp;</A>
-<H2>NOTES</H2>
+
+
+<H2 id="notes">NOTES</H2>
 
 <p>Using <B>-9</B> is excessively slow on all but the smallest image
-sets.  If the anymaps differ in maxvals, then pnmmontage will pick the
+sets.  If the input images differ in maxvals, then pnmmontage will pick the
 smallest maxval which is evenly divisible by each of the maxvals of
 the original images.
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<p>The minimum area arrangement is often not a convenient shape.  For
+example, it might be a tall, thin column of images, when you'd rather
+have something more square.  To force a minimum width or height, you
+can include a strut image - a black image that wide and one pixel high.
+Similarly, you can use a vertical strut to force a minimum height.
+
+
+<H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="pnmcat.html">pnmcat</A></B>,
 
@@ -102,22 +143,25 @@ the original images.
 
 <B><A HREF="ppm.html">ppm</A></B>
 
-<A NAME="lbAH">&nbsp;</A>
-<H2>AUTHOR</H2>
+<H2 id="history">HISTORY</H2>
+
+<p><b>pnmmontage</b> was new in Netpbm 9.10 (January 2001).
+
+
+<H2 id="author">AUTHOR</H2>
 
 Copyright (C) 2000 by Ben Olmstead.
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">NOTES</A>
-<LI><A HREF="#lbAG">SEE ALSO</A>
-<LI><A HREF="#lbAH">AUTHOR</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#notes">NOTES</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#history">HISTORY</A>
+<LI><A HREF="#author">AUTHOR</A>
 </UL>
 </BODY>
 </HTML>
