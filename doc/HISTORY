@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.41.00
 
+              pnmmontage: new search algorithm to choose square
+              output quickly.  Thanks "Nic Roets" <nroets@gmail.com>.
+
               bmptopnm: fix crash with 16 bit images.
 
               pamlcolor8.map: Make it a 256 color map sorted by index,
