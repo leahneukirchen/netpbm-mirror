@@ -2060,7 +2060,7 @@ if ($platform eq "GNU") {
         # above does NOT work for HP native compiler.
     }
 } elsif ($platform eq "AIX") {
-    push(@Makefile_config, 'LDFLAGS = -L /usr/pubsw/lib', "\n");
+    push(@Makefile_config, 'LDFLAGS += -L /usr/pubsw/lib', "\n");
     if ($compiler eq "cc") {
         # Yes, the -L option implies the runtime as well as linktime library
         # search path.  There's no way to specify runtime path independently.
