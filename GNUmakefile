@@ -392,6 +392,14 @@ localdistclean: localclean
 	-rm -f `find -type l`
 	-rm -f Makefile.config
 
+# 'tags' generates/updates an Emacs tags file, anmed TAGS, in the current
+# directory.  Use with Emacs command 'find-tag'.
+
+.PHONY: tags
+tags:
+	find . -name "*.c" -o -name "*.h" -o -name "*.cpp" -o -name "*.hpp" | \
+	  etags -
+
 # The following endif is for the else block that contains virtually the
 # whole file, for the test of the existence of CURDIR.
 endif
