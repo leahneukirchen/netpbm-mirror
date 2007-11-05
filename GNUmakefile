@@ -390,6 +390,7 @@ distclean: localdistclean
 .PHONY: localdistclean
 localdistclean: localclean
 	-rm -f `find -type l`
+	-rm -f TAGS
 	-rm -f Makefile.config
 
 # 'tags' generates/updates an Emacs tags file, anmed TAGS, in the current
