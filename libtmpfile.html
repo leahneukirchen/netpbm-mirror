@@ -9,7 +9,8 @@
 Updated: 22 July 2004
 <br>
 <h2>NAME</h2>
-pm_tmpfile() - tempfile creation routine using TMPFILE
+
+pm_tmpfile() - create a temporary unnamed file
 <h2>SYNOPSIS</h2>
 
 <pre>
@@ -27,19 +28,19 @@ to it, then reads back and prints those contents.
 <pre>
 #include &lt;netpbm/pm.h&gt;
 
-FILE * myfile;
+FILE * myfileP;
 
 myfile = pm_tmpfile();
 
 fprintf(myfile, "hello world\n");
 
-fseek(myfile, 0, SEEK_SET);
+fseek(myfileP, 0, SEEK_SET);
 
-fread(buffer, sizeof(buffer), 1, myfile);
+fread(buffer, sizeof(buffer), 1, myfileP);
 
 fprintf(STDOUT, "temp file contains '%s'\n", buffer);
 
-fclose(myfile);
+fclose(myfileP);
 
 </pre>
 
@@ -58,6 +59,9 @@ standard C library symbol <b>P_tmpdir</b>, just like <b>tmpfile()</b>.
 <p>Unlike <b>tmpfile()</b>, <b>pm_tmpfile()</b> never returns NULL.
 If it fails, it issues a message to Standard Error and aborts the
 program, like most libnetpbm routines do.
+
+<p>If you need to refer to the temporary file by name, use
+<b>pm_make_tmpfile()</b> instead.
 
 <h2>HISTORY</h2>
 <b>pm_tmpfile()</b> was introduced in Netpbm 10.20 (January 2004).
