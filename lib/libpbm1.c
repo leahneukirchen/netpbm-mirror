@@ -17,6 +17,7 @@
 #define _LARGE_FILES  
 
 #include <stdio.h>
+
 #include "pbm.h"
 #include "shhopt.h"
 
@@ -24,7 +25,7 @@ void
 pbm_init(int *   const argcP,
          char ** const argv) {
 
-    pm_proginit(argcP, argv);
+    pm_proginit(argcP, (const char **)argv);
 }
 
 

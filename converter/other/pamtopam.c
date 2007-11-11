@@ -15,7 +15,7 @@
 #include "pam.h"
 
 int
-main(int argc, char *argv[]) {
+main(int argc, const char * argv[]) {
 
     bool       eof;     /* no more images in input stream */
     struct pam inpam;   /* Input PAM image */

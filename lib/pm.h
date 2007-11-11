@@ -96,7 +96,7 @@ void
 pm_init(const char * const progname, unsigned int const flags);
 
 void 
-pm_proginit(int* const argcP, char* argv[]);
+pm_proginit(int * const argcP, const char * argv[]);
 
 void
 pm_setMessage(int const newState, int * const oldStateP);
@@ -129,7 +129,9 @@ pm_freerow(void * const row);
 
 /* Obsolete -- use shhopt instead */
 int 
-pm_keymatch (char* const str, const char* const keyword, int const minchars);
+pm_keymatch(const char * const str,
+            const char * const keyword,
+            int          const minchars);
 
 
 int PURE_FN_ATTR

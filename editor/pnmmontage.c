@@ -430,7 +430,7 @@ struct cmdlineInfo {
 
 
 int 
-main(int argc, char **argv) {
+main(int argc, const char **argv) {
   struct cmdlineInfo cmdline;
   struct pam *imgs;
   struct pam outimg;
@@ -473,7 +473,7 @@ main(int argc, char **argv) {
   opt.allowNegNum = FALSE;
 
   /* Check for flags. */
-  optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+  optParseOptions3(&argc, (char**)argv, opt, sizeof(opt), 0);
 
   if (!dataSpec)
       cmdline.data = NULL;

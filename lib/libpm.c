@@ -385,12 +385,12 @@ pm_freearray(char ** const rowIndex,
 /* Case-insensitive keyword matcher. */
 
 int
-pm_keymatch(char *       const strarg, 
+pm_keymatch(const char *       const strarg, 
             const char * const keywordarg, 
             int          const minchars) {
     int len;
-    const char *keyword;
-    char *str;
+    const char * keyword;
+    const char * str;
 
     str = strarg;
     keyword = keywordarg;
@@ -660,7 +660,7 @@ showNetpbmHelp(const char progname[]) {
 
 
 void
-pm_proginit(int * const argcP, char * argv[]) {
+pm_proginit(int * const argcP, const char * argv[]) {
 /*----------------------------------------------------------------------------
    Do various initialization things that all programs in the Netpbm package,
    and programs that emulate such programs, should do.
