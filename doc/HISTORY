@@ -558,7 +558,7 @@ not yet  BJH  Release 10.41.00
               for superspeed operations.  Thanks
               Prophet of the Way <afu@wta.att.ne.jp>.
 
-              pm_make_tempfile(): Use TEMP and TMP environment variables if
+              pm_make_tmpfile(): Use TEMP and TMP environment variables if
               TMPDIR not set.
 
               pm_make_tempfile(): improve error message.
@@ -1119,6 +1119,8 @@ not yet  BJH  Release 10.41.00
               ppmforge: fix bug: crash due to wild pointer with -night.
               Thanks John Walker <kelvin@fourmilab.ch>.
 
+              libnetpbm: add pm_make_tmpfile().
+
 05.01.01 BJH  Release 10.26
 
               pnmhistmap: Add -dots, -nmax, -red, -green, -blue, -lval,
@@ -1555,6 +1557,8 @@ not yet  BJH  Release 10.41.00
               Stefan Nordhausen <nordhaus@informatik.hu-berlin.de>.
               
               tifftopnm: Do better validation of number of channels.
+
+              libnetpbm: Add pm_tmpfile().
               
               libnetpbm: Add "normalized" (floating point) read/write
               routines:  pnm_readpamrown(), pnm_writepamrown(), 
