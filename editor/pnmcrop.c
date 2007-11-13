@@ -219,10 +219,11 @@ computeBackground(FILE *         const ifP,
         break;
     }
 
-    if (verbose)
+    if (verbose) {
+        pixel const backgroundPixel = pnm_xeltopixel(background, format);
         pm_message("Background color is %s", 
-                   ppm_colorname(&background, maxval, TRUE /*hexok*/));
-
+                   ppm_colorname(&backgroundPixel, maxval, TRUE /*hexok*/));
+    }
     return(background);
 }
 
