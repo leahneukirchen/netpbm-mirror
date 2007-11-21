@@ -6,6 +6,11 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.41.00
 
+              pamenlarge: much faster for PBM.  Thanks Prophet of the
+              Way <afu@wta.att.ne.jp>.
+
+              pamenlarge: remove arithmetic overflow.
+
               pnmmontage: new search algorithm to choose square
               output quickly.  Thanks "Nic Roets" <nroets@gmail.com>.
 
@@ -13,6 +18,12 @@ not yet  BJH  Release 10.41.00
 
               pamlcolor8.map: Make it a 256 color map sorted by index,
               per Palm's spec.  Thanks Paul Bolle <pebolle@tiscali.nl>.
+
+              xwdtopnm: deal with too-large bits per pixel value in XWD 
+              header.
+
+              pnmcrop: fix -verbose message about background color with
+              -white.
 
               libnetpbm: make all row free operations go through
               pm_freerow(); change row buffer type from char * to void *
