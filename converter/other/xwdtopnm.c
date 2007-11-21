@@ -233,7 +233,15 @@ processX10Header(X10WDFileHeader *  const h10P,
         /* Must be grayscale. */
         *formatP = PGM_TYPE;
         *visualclassP = StaticGray;
-        *maxvalP = ( 1 << h10P->display_planes ) - 1;
+        if (h10P->display_planes > sizeof(*maxvalP) * 8 - 1)
+            pm_error("XWD header says display_planes = %u, which is "
+                     "too large for this program to compute",
+                     h10P->display_planes);
+        *maxvalP = ((xelval)1 << h10P->display_planes) - 1;
+        if (*maxvalP > PNM_OVERALLMAXVAL)
+            pm_error("XWD header says display_planes = %u, which is too "
+                     "large for maximum maxval of %u",
+                     h10P->display_planes, PNM_OVERALLMAXVAL);
         *colorsP = pnm_allocrow( *maxvalP + 1 );
         for ( i = 0; i <= *maxvalP; ++i )
             PNM_ASSIGN1( (*colorsP)[i], i );
@@ -571,7 +579,15 @@ processX11Header(X11WDFileHeader *  const h11P,
     } else if (*visualclassP == StaticGray) {
         unsigned int i;
         *formatP = PGM_TYPE;
-        *maxvalP = (1 << h11FixedP->bits_per_pixel) - 1;
+        if (h11FixedP->bits_per_pixel > sizeof(*maxvalP) * 8 - 1)
+            pm_error("XWD header says bits_per_pixel = %u, which is "
+                     "too large for this program to compute",
+                     h11FixedP->bits_per_pixel);
+        *maxvalP = ((xelval)1 << h11FixedP->bits_per_pixel) - 1;
+        if (*maxvalP > PNM_OVERALLMAXVAL)
+            pm_error("XWD header says bits_per_pixel = %u, which is too "
+                     "large for maximum maxval of %u",
+                     h11FixedP->bits_per_pixel, PNM_OVERALLMAXVAL);
         *colorsP = pnm_allocrow(*maxvalP + 1);
         for (i = 0; i <= *maxvalP; ++i)
             PNM_ASSIGN1((*colorsP)[i], i);
