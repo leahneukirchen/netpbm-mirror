@@ -137,7 +137,7 @@ main(int argc, char **argv) {
 
     ifP = pm_openr(cmdline.inputFilespec);
 
-	tuplenarray = pnm_readpamn(ifP, &inpam, sizeof(inpam));
+	tuplenarray = pnm_readpamn(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
 
     mappam = inpam;
     mappam.file = stdout;

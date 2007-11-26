@@ -279,7 +279,7 @@ main(int argc, char **argv ) {
 
     ifP = pm_openr(cmdline.inputFilespec);
 
-    tuplenArray = pnm_readpamn(ifP, &pam, sizeof(pam));
+    tuplenArray = pnm_readpamn(ifP, &pam, PAM_STRUCT_SIZE(tuple_type));
 
     writePfmHeader(stdout, 
                    makePfmHeader(&pam, cmdline.scale, cmdline.endian));

@@ -136,7 +136,7 @@ main(int argc, char **argv) {
 
     ifP = pm_openr(cmdline.inputFilespec);
 
-	tuplenarray = pnm_readpamn(ifP, &inpam, sizeof(inpam));
+	tuplenarray = pnm_readpamn(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
 
     if (inpam.height < 3 || inpam.width < 3)
         pm_error("sharpness is undefined for an image less than 3 pixels "
