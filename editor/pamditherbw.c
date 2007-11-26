@@ -145,6 +145,7 @@ parseCommandLine(int argc, char ** argv,
 }
 
 
+
 static struct pam
 makeOutputPam(unsigned int const width,
               unsigned int const height) {
@@ -331,7 +332,7 @@ doHilbert(FILE *       const ifP,
     int *x,*y;
     int sum;
 
-    grays = pnm_readpam(ifP, &graypam, sizeof(graypam));
+    grays = pnm_readpam(ifP, &graypam, PAM_STRUCT_SIZE(tuple_type));
 
     bitpam = makeOutputPam(graypam.width, graypam.height);
 
@@ -693,7 +694,7 @@ main(int argc, char *argv[]) {
         tuple * bitrow;
         int row;
 
-        pnm_readpaminit(ifP, &graypam, sizeof(graypam));
+        pnm_readpaminit(ifP, &graypam, PAM_STRUCT_SIZE(tuple_type));
 
         bitpam = makeOutputPam(graypam.width, graypam.height);
         

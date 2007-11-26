@@ -4,6 +4,14 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+07.11.26 BJH  Release 10.35.34
+
+              xwdtopnm: deal with too-large bits per pixel value in XWD 
+              header.
+
+              pamditherbw, pamsharpness, pamsharpmask, pamtopfm:
+              fix crash due to write to arbitrary memory.
+
 07.11.13 BJH  Release 10.35.33
 
               pnmcrop: fix -verbose message about background color with
