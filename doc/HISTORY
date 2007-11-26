@@ -22,6 +22,9 @@ not yet  BJH  Release 10.41.00
               xwdtopnm: deal with too-large bits per pixel value in XWD 
               header.
 
+              pamditherbw, pamsharpness, pamsharpmask, pamtopfm:
+              fix crash due to write to arbitrary memory.
+
               pnmcrop: fix -verbose message about background color with
               -white.
 
