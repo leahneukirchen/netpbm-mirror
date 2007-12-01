@@ -10,6 +10,8 @@
 ** implied warranty.
 */
 
+#include <limits.h>
+
 #include "pbm.h"
 #include "libpbm.h"
 #include "fileio.h"
@@ -57,6 +59,28 @@ pbm_readpbminitrest( file, colsP, rowsP )
 
 
 
+static void
+validateComputableSize(unsigned int const cols,
+                       unsigned int const rows) {
+/*----------------------------------------------------------------------------
+   Validate that the dimensions of the image are such that it can be
+   processed in typical ways on this machine without worrying about
+   overflows.  Note that in C, arithmetic is always modulus
+   arithmetic, so if your values are too big, the result is not what
+   you expect.  That failed expectation can be disastrous if you use
+   it to allocate memory.
+
+   A common operation is adding 1 or 2 to the highest row or
+   column number in the image, so we make sure that's possible.
+-----------------------------------------------------------------------------*/
+    if (cols > INT_MAX - 2)
+        pm_error("image width (%u) too large to be processed", cols);
+    if (rows > INT_MAX - 2)
+        pm_error("image height (%u) too large to be processed", rows);
+}
+
+
+
 void
 pbm_readpbminit(FILE * const ifP,
                 int *  const colsP,
@@ -88,6 +112,7 @@ pbm_readpbminit(FILE * const ifP,
     default:
         pm_error("bad magic number - not a Netpbm file");
     }
+    validateComputableSize(*colsP, *rowsP);
 }
 
 
