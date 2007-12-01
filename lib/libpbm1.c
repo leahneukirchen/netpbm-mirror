@@ -18,8 +18,26 @@
 
 #include <stdio.h>
 
-#include "pbm.h"
+#include "mallocvar.h"
 #include "shhopt.h"
+#include "pbm.h"
+
+
+
+bit *
+pbm_allocrow(unsigned int const cols) {
+
+    bit * bitrow;
+
+    MALLOCARRAY(bitrow, cols);
+
+    if (bitrow == NULL)
+        pm_error("Unable to allocate space for a %u-column bit row", cols);
+
+    return bitrow;
+}
+
+
 
 void
 pbm_init(int *   const argcP,

@@ -40,9 +40,11 @@ pbm_init(int *   const argcP,
 void
 pbm_nextimage(FILE *file, int * const eofP);
 
+bit *
+pbm_allocrow(unsigned int const cols);
+
 #define pbm_allocarray(cols, rows) \
   ((bit**) pm_allocarray(cols, rows, sizeof(bit)))
-#define pbm_allocrow(cols) ((bit*) pm_allocrow(cols, sizeof(bit)))
 #define pbm_freearray(bits, rows) pm_freearray((char**) bits, rows)
 #define pbm_freerow(bitrow) pm_freerow((char*) bitrow)
 #define pbm_packed_bytes(cols) (((cols)+7)/8)
