@@ -216,13 +216,12 @@ pm_error(const char format[], ...) {
 }
 
 
-/* Variable-sized arrays. */
 
 void *
 pm_allocrow(unsigned int const cols,
             unsigned int const size) {
 
-    char * itrow;
+    unsigned char * itrow;
 
     if (UINT_MAX / cols < size)
         pm_error("Arithmetic overflow multiplying %u by %u to get the "
