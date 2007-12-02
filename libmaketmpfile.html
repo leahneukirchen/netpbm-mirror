@@ -1,0 +1,89 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html> <head>
+<title>Netpbm subroutine library: pm_make_tmpfile() function</title>
+<meta name="manual_section" content="3">
+</head>
+
+<body>
+<h1>pm_make_tmpfile()</h1>
+Updated: 10 November 2007
+<br>
+<h2>NAME</h2>
+pm_make_tmpfile() - create a temporary named file
+
+<h2>SYNOPSIS</h2>
+
+<pre>
+#include &lt;netpbm/pm.h&gt;
+
+pm_make_tmpfile(FILE **       fileP,
+                const char ** filenameP);
+</pre>
+
+<h2>EXAMPLE</h2>
+
+<p>This simple example creates a temporary file, writes "hello world"
+to it, then writes some search patterns to it, then uses it as input
+to <b>grep</b>:
+
+<pre>
+#include &lt;netpbm/pm.h&gt;
+
+FILE * myfileP;
+const char * myfilename;
+
+pm_make_tmpfile(&amp;myfileP, &amp;myfilename);
+
+fprintf(myfile, &quot;^account:\\s.*\n&quot;);
+fprintf(myfile, &quot;^name:\\s.*\n&quot;);
+
+fclose(myFileP);
+
+asprintfN(&amp;grepCommand, &quot;grep --file='%s' /tmp/infile &gt;/tmp/outfile&quot;);
+
+system(grepCommand);
+
+strfree(grepCommand);
+
+unlink(myfilename);
+
+strfree(myfilename);
+
+</pre>
+
+<h2>DESCRIPTION</H2>
+
+<p>This library function is part of <a href="index.html">Netpbm</a>.
+
+<p><b>pm_make_tmpfile()</b> creates and opens a temporary file, returning
+to you a stream file handle for it and its name.
+
+<b>pm_make_tmpfile()</b> chooses a file name that is not already in use,
+with proper interlocking to make sure that it actually creates a file
+and opens the new file, as opposed to merely opening an existing file.
+
+<p>If you don't need to access the file by name, use
+<b>pm_tmpfile()</b> instead, because it's cleaner.  With
+<b>pm_tmpfile()</b>, the operating system always deletes the temporary
+file when your program exits, if the program failed to clean up after
+itself.
+
+<p>The temporary file goes in the directory named by the
+<b>TMPFILE</b> environment variable.  If <b>TMPFILE</b> is not set or
+is set to something unusable (e.g.  too long), <b>pm_tmpfile()</b>
+falls back to the value of the standard C library symbol
+<b>P_tmpdir</b> (like the standard C library's <b>tmpfile()</b>).
+
+<p>The name of the file within that directory is like
+<b>myprog_blrfx</b>, where <b>myprog</b> is the name of your program
+(arg 0) and the rest is an arbitrary discriminator.
+
+<p>If <b>pm_make_tmpfile()</b> is unable to create a temporary file,
+it issues a message to Standard Error and aborts the program.
+
+
+<h2>HISTORY</h2>
+<b>pm_tmpfile()</b> was introduced in Netpbm 10.27 (March 2005).
+
+</body>
+</html>
