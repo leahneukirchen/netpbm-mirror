@@ -915,3 +915,40 @@ strishex(const char * const subject) {
 
     return retval;
 }
+
+
+
+void
+interpret_uint(const char *   const string,
+               unsigned int * const valueP,
+               const char **  const errorP) {
+
+    if (string[0] == '\0')
+        asprintfN(errorP, "Null string.");
+    else {
+        /* strtoul() does a bizarre thing where if the number is out
+           of range, it returns a clamped value but tells you about it
+           by setting errno = ERANGE.  If it is not out of range,
+           strtoul() leaves errno alone.
+        */
+        char * tail;
+        unsigned long ulongValue;
+        
+        errno = 0;  // So we can tell if strtoul() overflowed
+
+        ulongValue = strtoul(string, &tail, 10);
+
+        if (tail[0] != '\0')
+            asprintfN(errorP, "Non-digit stuff in string: %s", tail);
+        else if (errno == ERANGE)
+            asprintfN(errorP, "Number too large");
+        else if (ulongValue > UINT_MAX)
+            asprintfN(errorP, "Number too large");
+        else {
+            *valueP = ulongValue;
+            *errorP = NULL;
+        }
+    }
+}
+
+

@@ -359,6 +359,12 @@ pm_arg0toprogname(const char arg0[]);
 unsigned int
 pm_randseed(void);
 
+unsigned int
+pm_parse_width(const char * const arg);
+
+unsigned int
+pm_parse_height(const char * const arg);
+
 #ifdef __cplusplus
 }
 #endif

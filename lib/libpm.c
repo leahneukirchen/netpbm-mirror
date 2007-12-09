@@ -17,6 +17,7 @@
 #include <errno.h>
 #include <setjmp.h>
 #include <time.h>
+#include <limits.h>
 
 #include "pm_c_util.h"
 #include "mallocvar.h"
@@ -764,3 +765,52 @@ pm_randseed(void) {
     return time(NULL) ^ getpid();
 
 }
+
+
+
+unsigned int
+pm_parse_width(const char * const arg) {
+/*----------------------------------------------------------------------------
+   Return the image width represented by the decimal ASCIIZ string
+   'arg'.  Fail if it doesn't validly represent a width or represents
+   a width that can't be conveniently used in computation.
+-----------------------------------------------------------------------------*/
+    unsigned int width;
+    const char * error;
+
+    interpret_uint(arg, &width, &error);
+
+    if (error) {
+        pm_error("'%s' is invalid as an image width.  %s", arg, error);
+        strfree(error);
+    } else {
+        if (width > INT_MAX-10)
+            pm_error("Width %u is too large for computations.", width);
+    }
+    return width;
+}
+
+
+
+unsigned int
+pm_parse_height(const char * const arg) {
+/*----------------------------------------------------------------------------
+  Same as pm_parse_width(), but for height.
+-----------------------------------------------------------------------------*/
+    unsigned int height;
+    const char * error;
+
+    interpret_uint(arg, &height, &error);
+
+    if (error) {
+        pm_error("'%s' is invalid as an image height.  %s", arg, error);
+        strfree(error);
+    } else {
+        if (height > INT_MAX-10)
+            pm_error("Height %u is too large for computations.", height);
+    }
+    return height;
+}
+
+
+

@@ -183,6 +183,11 @@ memmemN(const void * const haystackArg,
 bool
 strishex(const char * const subject);
 
+void
+interpret_uint(const char *   const string,
+               unsigned int * const valueP,
+               const char **  const errorP);
+
 #ifdef __cplusplus
 }
 #endif
