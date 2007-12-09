@@ -28,6 +28,13 @@ not yet  BJH  Release 10.41.00
               pnmcrop: fix -verbose message about background color with
               -white.
 
+              pbmmake: handle ridiculously large height, width arguments.
+
+              pnmcat: fix arithmetic overflow.
+
+              libnetpbm: Add arithmetic overflow protection to PBM
+              routines, like PGM/PPM/PNM have had for a long time.
+
               libnetpbm: make all row free operations go through
               pm_freerow(); change row buffer type from char * to void *
               for pm_allocrow(), pm_freerow().
