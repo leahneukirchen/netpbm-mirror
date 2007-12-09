@@ -746,12 +746,13 @@ pm_setMessage(int const newState, int * const oldStateP) {
 }
 
 
+
 char *
 pm_arg0toprogname(const char arg0[]) {
 /*----------------------------------------------------------------------------
    Given a value for argv[0] (a command name or file name passed to a 
    program in the standard C calling sequence), return the name of the
-   Netpbm program to which is refers.
+   Netpbm program to which it refers.
 
    In the most ordinary case, this is simply the argument itself.
 
@@ -759,7 +760,7 @@ pm_arg0toprogname(const char arg0[]) {
    after the last slash, and if there is a .exe on it (as there is for
    DJGPP), that is removed.
 
-   The return value is in static storage within.  It is null-terminated,
+   The return value is in static storage within.  It is NUL-terminated,
    but truncated at 64 characters.
 -----------------------------------------------------------------------------*/
     static char retval[64+1];
