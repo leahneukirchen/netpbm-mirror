@@ -1627,7 +1627,7 @@ sub printNoLibxml2Warning() {
 
 WARNING: You appear not to have Libxml2 installed ('xml2-config' does not
 exist in your program search PATH).  If this is the case at build time,
-the build will skip building 'svtgtopam'.
+the build will skip building 'svgtopam'.
 
 EOF
 }
