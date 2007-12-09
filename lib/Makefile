@@ -25,7 +25,7 @@ else
   LIBSYSTEM = libsystem.o
 endif
 
-LIBOBJECTS = libpm.o fileio.o bitio.o colorname.o \
+LIBOBJECTS = libpm.o pmfileio.o fileio.o bitio.o colorname.o \
 	libpbm1.o libpbm2.o libpbm3.o libpbmfont.o \
 	libpgm1.o libpgm2.o \
 	libppm1.o libppm2.o libppmcmap.o libppmcolor.o libppmfuzzy.o \

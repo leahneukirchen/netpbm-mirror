@@ -91,6 +91,7 @@ extern int pm_plain_output;
     /* Output functions are to produce plain (as opposed to raw) format
        regardless of their 'plainformat' arguments.
     */
+extern const char * pm_progname;
 
 void 
 pm_init(const char * const progname, unsigned int const flags);
