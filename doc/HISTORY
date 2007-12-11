@@ -25,6 +25,9 @@ not yet  BJH  Release 10.41.00
               pamditherbw, pamsharpness, pamsharpmask, pamtopfm:
               fix crash due to write to arbitrary memory.
 
+              pamtotiff: fix incorrect pixels with PNM maxval != TIFF
+              maxval.
+
               pnmcrop: fix -verbose message about background color with
               -white.
 
