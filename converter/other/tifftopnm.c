@@ -233,8 +233,8 @@ read_directory(TIFF * const tif,
         pm_error("Input Tiff file is invalid.  It has no IMAGELENGTH tag.");
 
     if (headerdump) {
-        pm_message( "%dx%dx%d image", *cols_p, *rows_p, *bps_p * *spp_p );
-        pm_message( "%d bits/sample, %d samples/pixel", *bps_p, *spp_p );
+        pm_message( "%ux%ux%u image", *cols_p, *rows_p, *bps_p * *spp_p );
+        pm_message( "%u bits/sample, %d samples/pixel", *bps_p, *spp_p );
     }
 }
 
@@ -266,11 +266,12 @@ readscanline(TIFF *         const tif,
     /* The TIFFReadScanline man page doesn't tell the format of its
        'buf' return value, but it is exactly the same format as the 'buf'
        input to TIFFWriteScanline.  The man page for that doesn't say 
-       anything either, but the source code for Pnmtotiff contains a
+       anything either, but the source code for Pamtotiff contains a
        specification.
     */
 
     rc = TIFFReadScanline(tif, scanbuf, row, plane);
+
     if (rc < 0)
         pm_error( "Unable to read row %d, plane %d of input Tiff image.  "
                   "TIFFReadScanline() failed.",
@@ -291,7 +292,7 @@ readscanline(TIFF *         const tif,
 
         for (sample = 0, bitsleft=8, inP=scanbuf; 
              sample < cols*spp; 
-             sample++) {
+             ++sample) {
             if (bitsleft == 0) {
                 ++inP; 
                 bitsleft = 8;
@@ -322,7 +323,7 @@ readscanline(TIFF *         const tif,
            bytes of each sample appear in a TIFF file, which is
            contrary to the TIFF spec.  
         */
-        uint16 * const scanbuf16 = (uint16 *) scanbuf;
+        const uint16 * const scanbuf16 = (const uint16 *) scanbuf;
         unsigned int sample;
 
         for (sample = 0; sample < cols*spp; ++sample)
