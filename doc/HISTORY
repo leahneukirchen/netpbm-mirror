@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+07.12.11 BJH  Release 10.35.35
+
+              pamtotiff: fix incorrect pixels with PNM maxval != TIFF
+              maxval.
+
 07.11.26 BJH  Release 10.35.34
 
               xwdtopnm: deal with too-large bits per pixel value in XWD 

@@ -351,10 +351,10 @@ putSample(sample           const s,
     if (maxval != tiff_maxval)
         s2 = s * tiff_maxval / maxval;
     if (bitspersample > 8) {
-        *((unsigned short *)(*tPP)) = s;
+        *((unsigned short *)(*tPP)) = s2;
         (*tPP) += sizeof(short);
     } else
-        *(*tPP)++ = s & 0xff;
+        *(*tPP)++ = s2 & 0xff;
 }
 
 
