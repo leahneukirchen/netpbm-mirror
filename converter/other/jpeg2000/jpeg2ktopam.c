@@ -9,7 +9,8 @@
 *****************************************************************************/
 
 #define _BSD_SOURCE 1      /* Make sure strdup() is in string.h */
-#define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
+/* Make sure strdup() is in string.h and int_fast32_t is in inttypes.h */
+#define _XOPEN_SOURCE 600
 #include <string.h>
 
 #include "pam.h"
