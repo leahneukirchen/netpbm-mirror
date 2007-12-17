@@ -46,6 +46,9 @@ not yet  BJH  Release 10.41.00
               compile on AIX (_XOPEN_SOURCE=500 keeps int_fast32_t from
               being defined).
 
+              pamperspective: Eliminate build-time symbol conflict
+              with 'nearest' on AIX.
+
               Fix bug: ppmdraw.h, ppmdfont.h not installed.
 
               package, install: install interface header files as
