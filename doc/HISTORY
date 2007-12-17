@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+07.12.17 BJH  Release 10.40.06
+
+              pamperspective: Eliminate build-time symbol conflict
+              with 'nearest' on AIX.
+
 07.12.14 BJH  Release 10.40.05
 
               set _XOPEN_SOURCE=600 so jpeg2ktopam and pamtojpeg2k
