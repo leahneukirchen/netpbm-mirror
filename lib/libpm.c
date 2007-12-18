@@ -786,6 +786,9 @@ pm_parse_width(const char * const arg) {
     } else {
         if (width > INT_MAX-10)
             pm_error("Width %u is too large for computations.", width);
+        if (width == 0)
+            pm_error("Width argument must be a positive number.  You "
+                     "specified 0.");
     }
     return width;
 }
@@ -808,6 +811,9 @@ pm_parse_height(const char * const arg) {
     } else {
         if (height > INT_MAX-10)
             pm_error("Height %u is too large for computations.", height);
+        if (height == 0)
+            pm_error("Height argument must be a positive number.  You "
+                     "specified 0.");
     }
     return height;
 }
