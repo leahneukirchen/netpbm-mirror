@@ -934,7 +934,7 @@ interpret_uint(const char *   const string,
         char * tail;
         unsigned long ulongValue;
         
-        errno = 0;  // So we can tell if strtoul() overflowed
+        errno = 0;  /* So we can tell if strtoul() overflowed */
 
         ulongValue = strtoul(string, &tail, 10);
 
@@ -944,6 +944,9 @@ interpret_uint(const char *   const string,
             asprintfN(errorP, "Number too large");
         else if (ulongValue > UINT_MAX)
             asprintfN(errorP, "Number too large");
+        else if (string[0] == '-')
+            asprintfN(errorP, "Negative number");
+            /* Sleazy code; string may have leading spaces. */
         else {
             *valueP = ulongValue;
             *errorP = NULL;
