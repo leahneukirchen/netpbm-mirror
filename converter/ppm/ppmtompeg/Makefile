@@ -50,14 +50,20 @@ MP_ENCODE_OBJS = \
 
 MP_OTHER_OBJS = mpeg.o subsample.o param.o rgbtoycc.o \
 	readframe.o combine.o jrevdct.o frame.o fsize.o frametype.o \
-	specifics.o rate.o opts.o input.o gethostname.o
+	specifics.o rate.o opts.o input.o
 ifeq ($(OMIT_NETWORK),y)
-  MP_PARALLEL_OBJS = noparallel.o
+  MP_OTHER_OBJS += noparallel.o
 else
-  MP_PARALLEL_OBJS = parallel.o psocket.o
+  MP_OTHER_OBJS += parallel.o psocket.o
 endif
+ifeq ($(WIN32),y)
+  MP_OTHER_OBJS += gethostname_win32.o
+else
+  MP_OTHER_OBJS += gethostname.o
+endif
+
 NONMAIN_OBJS = $(MP_BASE_OBJS) $(MP_OTHER_OBJS) $(MP_ENCODE_OBJS) \
-	      $(MP_PARALLEL_OBJS) $(JPEG_MODULE).o
+	      	$(JPEG_MODULE).o
 OBJECTS = ppmtompeg.o $(NONMAIN_OBJS)
 MERGE_OBJECTS = ppmtompeg.o2 $(NONMAIN_OBJS)
 MP_INCLUDE = mproto.h mtypes.h huff.h bitio.h
