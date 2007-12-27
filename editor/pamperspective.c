@@ -44,7 +44,10 @@ const char *const unit_token[3] = {"image", "pixel", NULL};
 typedef enum {lattice, pixel_s} coord_system;
 const char *const system_token[3] = {"lattice", "pixel", NULL};
 
-typedef enum {nearest, linear} interpolation;
+/* Note that 'nearest' is a function in AIX's math.h.  So don't use
+   that as a symbol.
+*/
+typedef enum {interp_nearest, interp_linear} interpolation;
 const char *const interpolation_token[3] = {"nearest", "linear", NULL};
 
 typedef enum {free_, fixed} proportion;
@@ -233,7 +236,7 @@ static void set_command_line_defaults (option *const options)
   options->enums[0] = lattice;          /* --input_system         */
   options->enums[1] = lattice;          /* --output_system        */
   options->enums[2] = pixel_u;          /* --input_unit           */
-  options->enums[3] = nearest;          /* --interpolation        */
+  options->enums[3] = interp_nearest;   /* --interpolation        */
   options->enums[4] = free_;            /* --proportion           */
   options->bools[0] = TRUE;             /* --frame_include        */
 }
@@ -1100,9 +1103,9 @@ static void init_buffer (buffer *const b, const world_data *const world,
                        diff (clean_y(yur,outpam), clean_y(y_min,outpam))))
     + 2;
   switch (options->enums[3]) {  /* --interpolation */
-  case nearest:
+  case interp_nearest:
     break;
-  case linear:
+  case interp_linear:
     num_rows += 1;
     break;
   };
@@ -1308,10 +1311,10 @@ int main (int argc, char* argv[])
   outrow = pnm_allocpamrow (&outpam);
   init_interpolation_global_vars (&inbuffer,&inpam,&outpam);
   switch (options.enums[3]) {   /* --interpolation */
-  case nearest:
+  case interp_nearest:
     interpolate = take_nearest;
     break;
-  case linear:
+  case interp_linear:
     interpolate = linear_interpolation;
     break;
   };

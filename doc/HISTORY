@@ -4,6 +4,15 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+07.12.27 BJH  Release 10.35.36
+
+              pamperspective: Eliminate build-time symbol conflict
+              with 'nearest' on AIX.
+
+              set _XOPEN_SOURCE=600 so jpeg2ktopam and pamtojpeg2k
+              compile on AIX (_XOPEN_SOURCE=500 keeps int_fast32_t from
+              being defined).
+
 07.12.11 BJH  Release 10.35.35
 
               pamtotiff: fix incorrect pixels with PNM maxval != TIFF
