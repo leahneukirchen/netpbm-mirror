@@ -19,7 +19,7 @@
 
  Note: From mid-2003 to mid-2007, this program would crash on any 16
  bit BMP without transparency and no one reported it.  Before that, it
- refused to even try to read a 16 bit BMP.  I conclude that esentially
+ refused to even try to read a 16 bit BMP.  I conclude that essentially
  nobody is using 16 bit BMP.
 
 *****************************************************************************/
