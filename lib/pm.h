@@ -13,7 +13,7 @@
 #ifndef PM_H_INCLUDED
 #define PM_H_INCLUDED
 
-#include "pm_config.h"
+#include <netpbm/pm_config.h>
 
 #include <sys/types.h>
 #include <ctype.h>
@@ -91,12 +91,13 @@ extern int pm_plain_output;
     /* Output functions are to produce plain (as opposed to raw) format
        regardless of their 'plainformat' arguments.
     */
+extern const char * pm_progname;
 
 void 
 pm_init(const char * const progname, unsigned int const flags);
 
 void 
-pm_proginit(int* const argcP, char* argv[]);
+pm_proginit(int * const argcP, const char * argv[]);
 
 void
 pm_setMessage(int const newState, int * const oldStateP);
@@ -116,7 +117,7 @@ pm_nextimage(FILE * const file, int * const eofP);
 char** 
 pm_allocarray (int const cols, int const rows, int const size );
 
-char * 
+void * 
 pm_allocrow(unsigned int const cols,
             unsigned int const size);
 
@@ -124,12 +125,14 @@ void
 pm_freearray (char** const its, int const rows);
 
 void 
-pm_freerow(char* const itrow);
+pm_freerow(void * const row);
 
 
 /* Obsolete -- use shhopt instead */
 int 
-pm_keymatch (char* const str, const char* const keyword, int const minchars);
+pm_keymatch(const char * const str,
+            const char * const keyword,
+            int          const minchars);
 
 
 int PURE_FN_ATTR
@@ -355,6 +358,12 @@ pm_arg0toprogname(const char arg0[]);
 
 unsigned int
 pm_randseed(void);
+
+unsigned int
+pm_parse_width(const char * const arg);
+
+unsigned int
+pm_parse_height(const char * const arg);
 
 #ifdef __cplusplus
 }

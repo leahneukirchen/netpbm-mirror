@@ -13,13 +13,10 @@
 #include "pnm.h"
 
 #include "ppm.h"
-#include "libppm.h"
 
 #include "pgm.h"
-#include "libpgm.h"
 
 #include "pbm.h"
-#include "libpbm.h"
 
 xel
 pnm_backgroundxel( xel** xels, int cols, int rows, xelval maxval, int format )

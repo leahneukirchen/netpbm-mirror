@@ -1,6 +1,9 @@
 #include <assert.h>
 #include <string.h>
+#include <limits.h>
 
+#include "pm_c_util.h"
+#include "mallocvar.h"
 #include "shhopt.h"
 #include "pam.h"
 
@@ -10,25 +13,59 @@ enum function {FN_ADD, FN_SUBTRACT, FN_MULTIPLY, FN_DIVIDE, FN_DIFFERENCE,
                FN_SHIFTLEFT, FN_SHIFTRIGHT
               };
 
+
+
+static bool
+isDyadic(enum function const function) {
+
+    bool retval;
+    
+    switch (function) {
+    case FN_ADD:
+    case FN_MEAN:
+    case FN_AND:
+    case FN_OR:
+    case FN_XOR:
+        retval = FALSE;
+        break;
+    case FN_SUBTRACT:
+    case FN_DIFFERENCE:
+    case FN_MINIMUM:
+    case FN_MAXIMUM:
+    case FN_COMPARE:
+    case FN_MULTIPLY:
+    case FN_DIVIDE:
+    case FN_NAND:
+    case FN_NOR:
+    case FN_SHIFTLEFT:
+    case FN_SHIFTRIGHT:
+        retval = TRUE;
+        break;
+    }
+    return retval;
+}
+
+
+
 struct cmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *input1Filespec;  
-    const char *input2Filespec;  
     enum function function;
+    unsigned int operandCt;
+    const char ** operandFileNames;
 };
 
 
 
 static void
-parseCommandLine(int argc, char ** const argv,
+parseCommandLine(int argc, const char ** const argv,
                  struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
 -----------------------------------------------------------------------------*/
-    optEntry *option_def = malloc(100*sizeof(optEntry));
+    optEntry * option_def;
         /* Instructions to OptParseOptions2 on how to parse our options.
          */
     optStruct3 opt;
@@ -40,6 +77,8 @@ parseCommandLine(int argc, char ** const argv,
         minimumSpec, maximumSpec, meanSpec, compareSpec,
         andSpec, orSpec, nandSpec, norSpec, xorSpec,
         shiftleftSpec, shiftrightSpec;
+
+    MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENTRY */
     OPTENT3(0, "add",         OPT_FLAG,   NULL, &addSpec,        0);
@@ -63,7 +102,7 @@ parseCommandLine(int argc, char ** const argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (addSpec + subtractSpec + multiplySpec + divideSpec + differenceSpec +
@@ -71,15 +110,6 @@ parseCommandLine(int argc, char ** const argv,
         andSpec + orSpec + nandSpec + norSpec + xorSpec +
         shiftleftSpec + shiftrightSpec > 1)
         pm_error("You may specify only one function");
-
-    if (argc-1 != 2)
-        pm_error("You must specify two arguments:  the files which are "
-                 "the operands of the "
-                 "dyadic function.  You specified %d", argc-1);
-    else {
-        cmdlineP->input1Filespec = argv[1];
-        cmdlineP->input2Filespec = argv[2];
-    }
 
     if (addSpec)
         cmdlineP->function = FN_ADD;
@@ -115,6 +145,21 @@ parseCommandLine(int argc, char ** const argv,
         cmdlineP->function = FN_SHIFTRIGHT;
     else
         pm_error("You must specify a function (e.g. '-add')");
+
+    if (argc-1 < 2)
+        pm_error("You must specify at least two arguments: the files which "
+                 "are the operands of the function.  You specified %u",
+                 argc-1);
+    else {
+        if (isDyadic(cmdlineP->function) && argc-1 > 2)
+            pm_error("You specified %u arguments, but a dyadic function.  "
+                     "For a dyadic function, you must specify 2 arguments:  "
+                     "the operands of the function", argc-1);
+        else {
+            cmdlineP->operandCt = argc-1;
+            cmdlineP->operandFileNames = &argv[1];
+        }
+    }
 }        
 
 
@@ -220,43 +265,124 @@ computeOutputType(struct pam *  const outpamP,
 
 
 
+static sample
+samplenSum(samplen      const operands[],
+           unsigned int const operandCt) {
+
+    unsigned int i;
+    samplen total;
+
+    for (i = 1, total = operands[0]; i < operandCt; ++i) {
+        total += operands[1];
+        if (total > 1.)
+            total = 1.;
+    }
+    return total;
+}
+
+
+
+static sample
+samplenMin(samplen      const operands[],
+           unsigned int const operandCt) {
+
+    unsigned int i;
+    samplen min;
+
+    for (i = 1, min = operands[0]; i < operandCt; ++i) {
+        if (operands[i] < min)
+            min = operands[i];
+    }
+    return min;
+}
+
+
+
+static sample
+samplenMax(samplen      const operands[],
+           unsigned int const operandCt) {
+
+    unsigned int i;
+    samplen max;
+
+    for (i = 1, max = operands[0]; i < operandCt; ++i) {
+        if (operands[i] > max)
+            max = operands[i];
+    }
+    return max;
+}
+
+
+
+static sample
+samplenMean(samplen      const operands[],
+            unsigned int const operandCt) {
+
+    unsigned int i;
+    double sum;
+
+    for (i = 0, sum = 0.; i < operandCt; ++i)
+        sum += operands[i];
+
+    return sum / operandCt;
+}
+
+
+
+static sample
+samplenProduct(samplen      const operands[],
+               unsigned int const operandCt) {
+
+    unsigned int i;
+    double product;
+
+    for (i = 1, product = operands[0]; i < operandCt; ++i)
+        product *= operands[i];
+
+    return product;
+}
+
+
+
 static samplen
 applyNormalizedFunction(enum function const function,
-                        samplen       const leftArg,
-                        samplen       const rightArg) {
+                        samplen       const operands[],
+                        unsigned int  const operandCt) {
 
     samplen result;
 
     switch (function) {
     case FN_ADD:
-        result = MIN(1., leftArg + rightArg);
+        result = samplenSum(operands, operandCt);
         break;
     case FN_SUBTRACT:
-        result = MAX(0., leftArg - rightArg);
+        result = MAX(0., operands[0] - operands[1]);
         break;
     case FN_MULTIPLY:
-        result = leftArg * rightArg;
+        result = samplenProduct(operands, operandCt);
         break;
     case FN_DIVIDE:
-        result = (rightArg > leftArg) ?
-        leftArg / rightArg : 1.;
+        result = (operands[1] > operands[0]) ?
+        operands[0] / operands[1] : 1.;
         break;
     case FN_DIFFERENCE:
-        result = leftArg > rightArg ? 
-            leftArg - rightArg : rightArg - leftArg;
+        result = operands[0] > operands[1] ? 
+            operands[0] - operands[1] : operands[1] - operands[0];
         break;
     case FN_MINIMUM:
-        result = MIN(leftArg, rightArg);
+        result = samplenMin(operands, operandCt);
         break;
     case FN_MAXIMUM:
-        result = MAX(leftArg, rightArg);
+        result = samplenMax(operands, operandCt);
         break;
     case FN_MEAN:
-        result = (leftArg + rightArg) / 2.0;
+        result = samplenMean(operands, operandCt);
         break;
     case FN_COMPARE:
         result = 
-            leftArg > rightArg ? 1. : leftArg < rightArg ? 0. : .5;
+            operands[0] > operands[1] ?
+            1. : operands[0] < operands[1] ?
+            0. : .5;
         break;
     default:
         pm_error("Internal error.  applyNormalizedFunction() called "
@@ -292,13 +418,19 @@ doNormalizedArith(struct pam *  const inpam1P,
             unsigned int outplane;
             
             for (outplane = 0; outplane < outpamP->depth; ++outplane) {
+                unsigned int const operandCt = 2;
                 unsigned int const plane1 = MIN(outplane, inpam1P->depth-1);
                 unsigned int const plane2 = MIN(outplane, inpam2P->depth-1);
 
+                samplen * operands;
+
+                MALLOCARRAY_NOFAIL(operands, operandCt);
+
+                operands[0] = tuplerown1[col][plane1];
+                operands[1] = tuplerown2[col][plane2];
+
                 tuplerownOut[col][outplane] = 
-                    applyNormalizedFunction(function, 
-                                            tuplerown1[col][plane1], 
-                                            tuplerown2[col][plane2]);
+                    applyNormalizedFunction(function, operands, operandCt); 
                 assert(tuplerownOut[col][outplane] >= 0.);
                 assert(tuplerownOut[col][outplane] <= 1.);
 
@@ -315,70 +447,238 @@ doNormalizedArith(struct pam *  const inpam1P,
 
 
 static sample
+sampleSum(sample       const operands[],
+          unsigned int const operandCt,
+          sample       const maxval) {
+
+    unsigned int i;
+    sample total;
+
+    for (i = 1, total = operands[0]; i < operandCt; ++i) {
+        total += operands[i];
+        if (total > maxval)
+            total = maxval;
+    }
+    return total;
+}
+
+
+
+static sample
+sampleMin(sample       const operands[],
+          unsigned int const operandCt) {
+
+    unsigned int i;
+    sample min;
+
+    for (i = 1, min = operands[0]; i < operandCt; ++i) {
+        if (operands[i] < min)
+            min = operands[i];
+    }
+    return min;
+}
+
+
+
+static sample
+sampleMax(sample       const operands[],
+          unsigned int const operandCt) {
+
+    unsigned int i;
+    sample max;
+
+    for (i = 1, max = operands[0]; i < operandCt; ++i) {
+        if (operands[i] > max)
+            max = operands[i];
+    }
+    return max;
+}
+
+
+
+static sample
+sampleMean(sample       const operands[],
+           unsigned int const operandCt) {
+
+    unsigned int i;
+    unsigned int sum;
+
+    for (i = 0, sum = 0; i < operandCt; ++i) {
+        sum += operands[i];
+        if (UINT_MAX - operands[i] < sum)
+            pm_error("Arithmetic overflow adding samples for mean");
+    }
+    return (sum + operandCt/2) / operandCt;
+}
+
+
+
+static sample
+sampleProduct(sample       const operands[],
+              unsigned int const operandCt,
+              sample       const maxval) {
+
+    unsigned int i;
+    double product;
+
+    for (i = 0, product = 1.0; i < operandCt; ++i) {
+        product *= ((double)operands[0]/maxval);
+    }
+    return (sample)(product * maxval + 0.5);
+}
+
+
+
+static sample
+sampleAnd(sample       const operands[],
+          unsigned int const operandCt) {
+
+    unsigned int i;
+    sample accum;
+
+    for (i = 1, accum = operands[0]; i < operandCt; ++i) {
+        accum &= operands[i];
+    }
+    return accum;
+}
+
+
+
+static sample
+sampleOr(sample       const operands[],
+         unsigned int const operandCt) {
+
+    unsigned int i;
+    sample accum;
+
+    for (i = 1, accum = operands[0]; i < operandCt; ++i) {
+        accum |= operands[i];
+    }
+    return accum;
+}
+
+
+
+static sample
+sampleNand(sample       const operands[],
+           unsigned int const operandCt,
+           sample       const maxval) {
+
+    unsigned int i;
+    sample accum;
+
+    for (i = 1, accum = operands[0]; i < operandCt; ++i) {
+        accum &= operands[i];
+    }
+    return ~accum & maxval;
+}
+
+
+
+static sample
+sampleNor(sample       const operands[],
+          unsigned int const operandCt,
+          sample       const maxval) {
+
+    unsigned int i;
+    sample accum;
+
+    for (i = 1, accum = operands[0]; i < operandCt; ++i) {
+        accum |= operands[i];
+    }
+    return ~accum & maxval;
+}
+
+
+
+static sample
+sampleXor(sample       const operands[],
+          unsigned int const operandCt) {
+
+    unsigned int i;
+    sample accum;
+
+    for (i = 1, accum = operands[0]; i < operandCt; ++i) {
+        accum ^= operands[i];
+    }
+    return accum;
+}
+
+
+
+static sample
 applyUnNormalizedFunction(enum function const function,
-                          sample        const leftArg,
-                          sample        const rightArg,
+                          sample        const operands[],
+                          unsigned int  const operandCt,
                           sample        const maxval) {
 /*----------------------------------------------------------------------------
-   Apply dyadic function 'function' to the arguments 'leftArg' and
-   'rightArg', assuming both are based on the same maxval 'maxval'.
-   Return a value which is also a fraction of 'maxval'.
+   Apply function 'function' to the arguments operands[] (there are
+   'operandCt' of them), assuming both are based on the same maxval
+   'maxval'.  Return a value which is also a fraction of 'maxval'.
 
-   Exception: for the shift operations, 'rightArg' is not based on any
+   Exception: for the shift operations, operands[1] is not based on any
    maxval.  It is an absolute bit count.
+
+   We assume 'operandCount' is sensible for 'function'.  E.g. if
+   'function' is FN_DIFFERENCE, 'operandCt' is 2.
+
+   For a function that has a concept of left and right argument,
+   operands[0] is the left and operands[1] is the right.
 -----------------------------------------------------------------------------*/
     sample result;
 
     switch (function) {
     case FN_ADD:
-        result = MIN(maxval, leftArg + rightArg);
+        result = sampleSum(operands, operandCt, maxval);
         break;
     case FN_SUBTRACT:
-        result = MAX(0, (int)leftArg - (int)rightArg);
+        result = MAX(0, (int)operands[0] - (int)operands[1]);
         break;
     case FN_DIFFERENCE:
-        result = leftArg > rightArg ? leftArg - rightArg : rightArg - leftArg;
+        result = operands[0] > operands[1] ?
+            operands[0] - operands[1] : operands[1] - operands[0];
         break;
     case FN_MINIMUM:
-        result = MIN(leftArg, rightArg);
+        result = sampleMin(operands, operandCt);
         break;
     case FN_MAXIMUM:
-        result = MAX(leftArg, rightArg);
+        result = sampleMax(operands, operandCt);
         break;
     case FN_MEAN:
-        result = (leftArg + rightArg + 1) / 2;
+        result = sampleMean(operands, operandCt);
         break;
     case FN_COMPARE:
-        result = leftArg > rightArg ? 2 : leftArg < rightArg ? 0 : 1;
+        result = operands[0] > operands[1] ?
+            2 : operands[0] < operands[1] ? 0 : 1;
         break;
     case FN_MULTIPLY:
-        result = (leftArg * rightArg + maxval/2) / maxval;
+        result = sampleProduct(operands, operandCt, maxval);
         break;
     case FN_DIVIDE:
-        result = (rightArg > leftArg) ?
-            (leftArg * maxval + rightArg/2) / rightArg : maxval;
+        result = (operands[1] > operands[0]) ?
+            (operands[0] * maxval + operands[1]/2) / operands[1] : maxval;
         break;
 
     case FN_AND:
-        result = leftArg & rightArg;
+        result = sampleAnd(operands, operandCt);
         break;
     case FN_OR:
-        result = leftArg | rightArg;
+        result = sampleOr(operands, operandCt);
         break;
     case FN_NAND:
-        result = ~(leftArg & rightArg) & maxval;
+        result = sampleNand(operands, operandCt, maxval);
         break;
     case FN_NOR:
-        result = ~(leftArg | rightArg) & maxval;
+        result = sampleNor(operands, operandCt, maxval);
         break;
     case FN_XOR:
-        result = leftArg ^ rightArg;
+        result = sampleXor(operands, operandCt);
         break;
     case FN_SHIFTLEFT:
-        result = (leftArg << rightArg) & maxval;
+        result = (operands[0] << operands[1]) & maxval;
         break;
     case FN_SHIFTRIGHT:
-        result = leftArg >> rightArg;
+        result = operands[0] >> operands[1];
         break;
     default:
         pm_error("Internal error.  applyUnNormalizedFunction() called "
@@ -425,13 +725,19 @@ doUnNormalizedArith(struct pam *  const inpam1P,
             unsigned int outplane;
             
             for (outplane = 0; outplane < outpamP->depth; ++outplane) {
+                unsigned int const operandCt = 2;
                 unsigned int const plane1 = MIN(outplane, inpam1P->depth-1);
                 unsigned int const plane2 = MIN(outplane, inpam2P->depth-1);
 
+                sample * operands;
+
+                MALLOCARRAY_NOFAIL(operands, operandCt);
+
+                operands[0] = tuplerow1[col][plane1];
+                operands[1] = tuplerow2[col][plane2];
+
                 tuplerowOut[col][outplane] = 
-                    applyUnNormalizedFunction(function, 
-                                              tuplerow1[col][plane1], 
-                                              tuplerow2[col][plane2],
+                    applyUnNormalizedFunction(function, operands, operandCt,
                                               maxval);
 
                 assert(tuplerowOut[col][outplane] >= 0);
@@ -449,7 +755,7 @@ doUnNormalizedArith(struct pam *  const inpam1P,
 
 
 int
-main(int argc, char *argv[]) {
+main(int argc, const char *argv[]) {
 
     struct cmdlineInfo cmdline;
     struct pam inpam1;
@@ -458,12 +764,17 @@ main(int argc, char *argv[]) {
     FILE * if1P;
     FILE * if2P;
     
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
-    if1P = pm_openr(cmdline.input1Filespec);
-    if2P = pm_openr(cmdline.input2Filespec);
+    if (cmdline.operandCt != 2)
+        /* Code for > 2 operands not written yet */
+        pm_error("You specified %u operands.  We understand only 2.",
+                 cmdline.operandCt);
+
+    if1P = pm_openr(cmdline.operandFileNames[0]);
+    if2P = pm_openr(cmdline.operandFileNames[1]);
 
     pnm_readpaminit(if1P, &inpam1, PAM_STRUCT_SIZE(tuple_type));
     pnm_readpaminit(if2P, &inpam2, PAM_STRUCT_SIZE(tuple_type));

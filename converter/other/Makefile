@@ -81,7 +81,7 @@ PORTBINARIES =  bmptopnm fitstopnm \
 		gemtopnm giftopnm hdifftopam infotopam \
 		pamtodjvurle pamtofits pamtogif \
 		pamtohdiff pamtohtmltbl pamtooctaveimg \
-		pamtopfm pamtopnm pamtouil \
+		pamtopam pamtopfm pamtopnm pamtouil \
 		pamtoxvmini \
 		pbmtopgm pfmtopam \
 	        pgmtopbm pgmtoppm ppmtopgm pnmtoddif \

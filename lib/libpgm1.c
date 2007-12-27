@@ -50,13 +50,14 @@ void
 pgm_init(int *   const argcP,
          char ** const argv) {
 
-    pbm_init( argcP, argv );
+    pbm_init(argcP, argv);
 }
 
 
 
 void
-pgm_nextimage(FILE * const file, int * const eofP) {
+pgm_nextimage(FILE * const file,
+              int *  const eofP) {
     pm_nextimage(file, eofP);
 }
 

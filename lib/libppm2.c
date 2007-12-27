@@ -17,7 +17,6 @@
 #include "pm_c_util.h"
 #include "mallocvar.h"
 #include "ppm.h"
-#include "libppm.h"
 
 void
 ppm_writeppminit(FILE*  const fileP, 

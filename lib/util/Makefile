@@ -17,7 +17,7 @@ all: $(UTILOBJECTS)
 
 include $(SRCDIR)/Makefile.common
 
-INCLUDES = -I $(BUILDDIR) -I $(SRCDIR)/$(SUBDIR)/..
+INCLUDES = -I$(SRCDIR)/$(SUBDIR) -I. -Iimportinc
 
 $(UTILOBJECTS):%.o:%.c importinc
 	$(CC) -c $(INCLUDES) -DNDEBUG $(CPPFLAGS) $(CFLAGS) $(CFLAGS_SHLIB) \

@@ -155,7 +155,7 @@ computeOutputParms(unsigned int     const nfiles,
                    xelval *         const newmaxvalP,
                    int *            const newformatP) {
 
-    int newcols, newrows;
+    double newcols, newrows;
     int newformat;
     xelval newmaxval;
 
@@ -187,8 +187,18 @@ computeOutputParms(unsigned int     const nfiles,
             break;
 	    }
 	}
-    *newrowsP   = newrows;
-    *newcolsP   = newcols;
+
+    /* Note that while 'double' is not in general a precise numerical type,
+       in the case of a sum of integers which is less than INT_MAX, it
+       is exact, because double's precision is greater than int's.
+    */
+    if (newcols > INT_MAX)
+       pm_error("Output width too large: %.0f.", newcols);
+    if (newrows > INT_MAX)
+       pm_error("Output height too large: %.0f.", newrows);
+	
+    *newrowsP   = (int) newrows;
+    *newcolsP   = (int) newcols;
     *newmaxvalP = newmaxval;
     *newformatP = newformat;
 }

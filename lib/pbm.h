@@ -1,7 +1,7 @@
 #ifndef PBM_H_INCLUDED
 #define PBM_H_INCLUDED
 
-#include "pm.h"
+#include <netpbm/pm.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,13 +33,18 @@ typedef unsigned char bit;
 
 /* Declarations of routines. */
 
-void pbm_init ARGS(( int* argcP, char* argv[] ));
+void
+pbm_init(int *   const argcP,
+         char ** const argv);
+
 void
 pbm_nextimage(FILE *file, int * const eofP);
 
+bit *
+pbm_allocrow(unsigned int const cols);
+
 #define pbm_allocarray(cols, rows) \
   ((bit**) pm_allocarray(cols, rows, sizeof(bit)))
-#define pbm_allocrow(cols) ((bit*) pm_allocrow(cols, sizeof(bit)))
 #define pbm_freearray(bits, rows) pm_freearray((char**) bits, rows)
 #define pbm_freerow(bitrow) pm_freerow((char*) bitrow)
 #define pbm_packed_bytes(cols) (((cols)+7)/8)

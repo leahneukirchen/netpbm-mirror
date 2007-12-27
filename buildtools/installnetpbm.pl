@@ -554,7 +554,19 @@ sub installHeader($$$) {
               "failed.\n");
         print("cp exit code is $rc\n");
     } else {
-        print("done.\n");
+        # Install symbolic links for backward compatibility (because the
+        # netpbm/ subdirectory wasn't used before Netpbm 10.41 (December
+        # 2007).
+
+        my $rc = system("cd $hdrDir; ln -s netpbm/* .");
+
+        if ($rc != 0) {
+            print("Failed to create backward compatibilty symlinks from " .
+                  "$hdrDir into $hdrDir/netpbm\n");
+            print("ln exit code is $rc\n");
+        } else {
+            print("done.\n");
+        }
     }
     $$includedirR = $hdrDir;
 }

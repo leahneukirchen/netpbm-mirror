@@ -4,7 +4,8 @@
 #ifndef _PGM_H_
 #define _PGM_H_
 
-#include "pbm.h"
+#include <netpbm/pm.h>
+#include <netpbm/pbm.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -68,7 +69,7 @@ pgm_init(int *   const argcP,
 gray *
 pgm_allocrow(unsigned int const cols);
 
-#define pgm_freerow(grayrow) free(grayrow)
+#define pgm_freerow(grayrow) pm_freerow(grayrow)
 
 #define pgm_allocarray( cols, rows ) \
   ((gray**) pm_allocarray( cols, rows, sizeof(gray) ))

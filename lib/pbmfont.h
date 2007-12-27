@@ -68,7 +68,7 @@ pbm_dissectfont(const bit ** const font,
 struct font* pbm_loadfont(const char * const filename);
 struct font* pbm_loadpbmfont(const char * const filename);
 struct font* pbm_loadbdffont(const char * const filename);
-void pbm_dumpfont ARGS(( struct font* fn ));
+void pbm_dumpfont(struct font * const fnP);
 
 #ifdef __cplusplus
 }

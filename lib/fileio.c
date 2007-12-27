@@ -85,10 +85,18 @@ pm_getuint(FILE * const ifP) {
     do {
         unsigned int const digitVal = ch - '0';
 
-        if (i > INT_MAX/10 - digitVal)
+        if (i > INT_MAX/10)
             pm_error("ASCII decimal integer in file is "
                      "too large to be processed.  ");
-        i = i * 10 + digitVal;
+        
+        i *= 10;
+
+        if (i > INT_MAX - digitVal)
+            pm_error("ASCII decimal integer in file is "
+                     "too large to be processed.  ");
+
+        i += digitVal;
+
         ch = pm_getc(ifP);
     } while (ch >= '0' && ch <= '9');
 

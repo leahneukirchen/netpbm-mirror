@@ -4,23 +4,20 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-07.12.17 BJH  Release 10.40.06
+07.12.27 BJH  Release 10.41.00
 
-              pamperspective: Eliminate build-time symbol conflict
-              with 'nearest' on AIX.
+              pamenlarge: much faster for PBM.  Thanks Prophet of the
+              Way <afu@wta.att.ne.jp>.
 
-07.12.14 BJH  Release 10.40.05
+              pamenlarge: remove arithmetic overflow.
 
-              set _XOPEN_SOURCE=600 so jpeg2ktopam and pamtojpeg2k
-              compile on AIX (_XOPEN_SOURCE=500 keeps int_fast32_t from
-              being defined).
+              pnmmontage: new search algorithm to choose square
+              output quickly.  Thanks "Nic Roets" <nroets@gmail.com>.
 
-07.12.11 BJH  Release 10.40.04
+              bmptopnm: fix crash with 16 bit images.
 
-              pamtotiff: fix incorrect pixels with PNM maxval != TIFF
-              maxval.
-
-07.11.26 BJH  Release 10.40.03
+              pamlcolor8.map: Make it a 256 color map sorted by index,
+              per Palm's spec.  Thanks Paul Bolle <pebolle@tiscali.nl>.
 
               xwdtopnm: deal with too-large bits per pixel value in XWD 
               header.
@@ -28,14 +25,34 @@ CHANGE HISTORY
               pamditherbw, pamsharpness, pamsharpmask, pamtopfm:
               fix crash due to write to arbitrary memory.
 
-07.11.13 BJH  Release 10.40.02
+              pamtotiff: fix incorrect pixels with PNM maxval != TIFF
+              maxval.
 
               pnmcrop: fix -verbose message about background color with
               -white.
 
-07.10.12 BJH  Release 10.40.01
+              pbmmake: handle ridiculously large height, width arguments.
 
-              bmptopnm: fix crash with 16 bit images.
+              pnmcat: fix arithmetic overflow.
+
+              libnetpbm: Add arithmetic overflow protection to PBM
+              routines, like PGM/PPM/PNM have had for a long time.
+
+              libnetpbm: make all row free operations go through
+              pm_freerow(); change row buffer type from char * to void *
+              for pm_allocrow(), pm_freerow().
+
+              set _XOPEN_SOURCE=600 so jpeg2ktopam and pamtojpeg2k
+              compile on AIX (_XOPEN_SOURCE=500 keeps int_fast32_t from
+              being defined).
+
+              pamperspective: Eliminate build-time symbol conflict
+              with 'nearest' on AIX.
+
+              Fix bug: ppmdraw.h, ppmdfont.h not installed.
+
+              package, install: install interface header files as
+              <netpbm/xxx.h> instead of just <xxx.h>.
 
 07.09.26 BJH  Release 10.40.00
 
@@ -572,7 +589,7 @@ CHANGE HISTORY
               for superspeed operations.  Thanks
               Prophet of the Way <afu@wta.att.ne.jp>.
 
-              pm_make_tempfile(): Use TEMP and TMP environment variables if
+              pm_make_tmpfile(): Use TEMP and TMP environment variables if
               TMPDIR not set.
 
               pm_make_tempfile(): improve error message.
@@ -1133,6 +1150,8 @@ CHANGE HISTORY
               ppmforge: fix bug: crash due to wild pointer with -night.
               Thanks John Walker <kelvin@fourmilab.ch>.
 
+              libnetpbm: add pm_make_tmpfile().
+
 05.01.01 BJH  Release 10.26
 
               pnmhistmap: Add -dots, -nmax, -red, -green, -blue, -lval,
@@ -1228,7 +1247,9 @@ CHANGE HISTORY
               pamcut: major speedup.  Thanks Prophet of the Way
               <afu@wta.att.ne.jp> (Akira Urushibata ("Douso")).
 
-              Add pnm_getopacity().
+              libnetpbm: Add pnm_getopacity().
+
+              libnetpbm: Add pnm_applyopacityrown(), pnm_unapplyopacityrown().
 
               libnetpbm: "pam" read and write routines much more
               efficient.  Thanks Prophet of the Way
@@ -1567,6 +1588,8 @@ CHANGE HISTORY
               Stefan Nordhausen <nordhaus@informatik.hu-berlin.de>.
               
               tifftopnm: Do better validation of number of channels.
+
+              libnetpbm: Add pm_tmpfile().
               
               libnetpbm: Add "normalized" (floating point) read/write
               routines:  pnm_readpamrown(), pnm_writepamrown(), 

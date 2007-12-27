@@ -4,7 +4,8 @@
 #ifndef _PNM_H_
 #define _PNM_H_
 
-#include "ppm.h"
+#include <netpbm/pm.h>
+#include <netpbm/ppm.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,7 +29,9 @@ typedef pixval xelval;
 
 /* Declarations of routines. */
 
-void pnm_init ARGS(( int* argcP, char* argv[] ));
+void
+pnm_init(int *   const argcP,
+         char ** const argv);
 
 void
 pnm_nextimage(FILE *file, int * const eofP);
@@ -36,7 +39,7 @@ pnm_nextimage(FILE *file, int * const eofP);
 xel *
 pnm_allocrow(unsigned int const cols);
 
-#define pnm_freerow(xelrow) free(xelrow)
+#define pnm_freerow(xelrow) pm_freerow(xelrow)
 
 #define pnm_allocarray( cols, rows ) \
   ((xel**) pm_allocarray( cols, rows, sizeof(xel) ))

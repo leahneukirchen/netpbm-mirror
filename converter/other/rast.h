@@ -97,15 +97,33 @@ typedef struct {
 
 /* And the routine definitions. */
 
-struct pixrect* mem_create ARGS(( int w, int h, int depth ));
-void mem_free ARGS(( struct pixrect* p ));
+struct pixrect *
+mem_create(int const w,
+           int const h,
+           int const depth);
 
-int pr_dump ARGS(( struct pixrect* p, FILE* out, colormap_t* colormap, int type, int copy_flag ));
+void
+mem_free(struct pixrect * const p);
 
-int pr_load_header ARGS(( FILE* in, struct rasterfile* hP ));
+int
+pr_dump(struct pixrect * const p,
+        FILE *           const out,
+        colormap_t *     const colormap,
+        int              const type,
+        int              const copy_flag);
 
-int pr_load_colormap ARGS(( FILE* in, struct rasterfile* hP, colormap_t* colormap ));
+int
+pr_load_header(FILE *              const in,
+               struct rasterfile * const hP);
 
-struct pixrect* pr_load_image ARGS(( FILE* in, struct rasterfile* hP, colormap_t* colormap ));
+int
+pr_load_colormap(FILE *              const in,
+                 struct rasterfile * const hP,
+                 colormap_t *        const colormap);
+
+struct pixrect *
+pr_load_image(FILE *              const in,
+              struct rasterfile * const hP,
+              colormap_t *        const colormap);
 
 #endif

@@ -25,7 +25,7 @@ else
   LIBSYSTEM = libsystem.o
 endif
 
-LIBOBJECTS = libpm.o fileio.o bitio.o colorname.o \
+LIBOBJECTS = libpm.o pmfileio.o fileio.o bitio.o colorname.o \
 	libpbm1.o libpbm2.o libpbm3.o libpbmfont.o \
 	libpgm1.o libpgm2.o \
 	libppm1.o libppm2.o libppmcmap.o libppmcolor.o libppmfuzzy.o \
@@ -48,7 +48,7 @@ MANUALS5 = pbm pgm ppm pnm pam
 INTERFACE_HEADERS =  pm.h pbm.h bitio.h pbmfont.h \
 	pgm.h ppm.h ppmcmap.h ppmfloyd.h colorname.h \
 	pnm.h pam.h pammap.h util/shhopt.h util/nstring.h util/mallocvar.h \
-	pm_system.h pm_gamma.h
+	pm_system.h pm_gamma.h ppmdraw.h ppmdfont.h \
 
 DATAFILES = rgb.txt
 
@@ -240,9 +240,11 @@ install.hdr: $(INTERFACE_HEADERS:%=%_installhdr)
 # prefer not to "install" them, but just to access the Netpbm source
 # directory when you compile your programs.
 
-%_installhdr: $(PKGDIR)/include
+.PHONY: $(INTERFACE_HEADERS:%=%_installhdr)
+
+$(INTERFACE_HEADERS:%=%_installhdr): $(PKGDIR)/include/netpbm
 	$(INSTALL) -c -m $(INSTALL_PERM_HDR) \
-	  $(SRCDIR)/lib/$(@:%_installhdr=%) $(PKGDIR)/include/;
+	  $(SRCDIR)/lib/$(@:%_installhdr=%) $(PKGDIR)/include/netpbm/
 
 .PHONY: install.staticlib
 install.staticlib: $(PKGDIR)/link

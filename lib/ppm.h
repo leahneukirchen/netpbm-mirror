@@ -3,7 +3,8 @@
 #ifndef _PPM_H_
 #define _PPM_H_
 
-#include "pgm.h"
+#include <netpbm/pm.h>
+#include <netpbm/pgm.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -50,7 +51,7 @@ typedef struct {
 #define PPM_TYPE PPM_FORMAT
 
 
-#include "ppmcmap.h"
+#include <netpbm/ppmcmap.h>
 
 /* Macro for turning a format number into a type number. */
 
@@ -85,7 +86,7 @@ ppm_allocrow(unsigned int const cols);
 
 #define ppm_freearray(pixels, rows) pm_freearray((char**) pixels, rows)
 
-#define ppm_freerow(pixelrow) free(pixelrow);
+#define ppm_freerow(pixelrow) pm_freerow(pixelrow);
 
 pixel**
 ppm_readppm(FILE *   const fileP, 

@@ -11,7 +11,6 @@
 */
 
 #include "pbm.h"
-#include "libpbm.h"
 #include "bitreverse.h"
 
 #if defined(__GNUC__) && (__GNUC__ * 100 + __GNUC_MINOR__ >= 301) && defined (__SSE__)
