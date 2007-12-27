@@ -4,7 +4,9 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-not yet  BJH  Release 10.41.00
+not yet  BJH  Release 10.42.00
+
+07.12.27 BJH  Release 10.41.00
 
               pamenlarge: much faster for PBM.  Thanks Prophet of the
               Way <afu@wta.att.ne.jp>.
@@ -50,6 +52,9 @@ not yet  BJH  Release 10.41.00
               with 'nearest' on AIX.
 
               Fix bug: ppmdraw.h, ppmdfont.h not installed.
+
+              Add Windows version of gethostname to ppmtompeg; normal build
+              does not use it.
 
               package, install: install interface header files as
               <netpbm/xxx.h> instead of just <xxx.h>.
