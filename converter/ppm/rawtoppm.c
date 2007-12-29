@@ -13,39 +13,148 @@
 #include <math.h>
 #include "ppm.h"
 
-static void dorowskip ARGS(( FILE* ifp, int rowskip ));
+enum order { ORD_RGB, ORD_RBG, ORD_GRB, ORD_GBR, ORD_BRG, ORD_BGR };
+
+enum interleave { INT_PIX, INT_ROW };
+
+static void
+dorowskip(FILE * const ifP,
+          int    const rowskip) {
+
+    unsigned int i;
+
+    for (i = 0; i < rowskip; ++i) {
+        int const val = getc(ifP);
+        if (val == EOF)
+            pm_error("EOF / read error");
+    }
+}
+
+
+
+static void
+doRowPixInterleave(pixel *      const pixrow,
+                   unsigned int const cols,
+                   FILE *       const ifP,
+                   enum order   const order,
+                   int          const rowskip) {
+
+    unsigned int col;
+
+    for (col = 0; col < cols; ++col) {
+        int const val1 = getc(ifP);
+        int const val2 = getc(ifP);
+        int const val3 = getc(ifP);
+
+        if (val1 == EOF)
+            pm_error("EOF / read error");
+        if (val2 == EOF)
+            pm_error("EOF / read error");
+        if (val3 == EOF)
+            pm_error("EOF / read error");
+
+        switch (order) {
+        case ORD_RGB:
+            PPM_ASSIGN(pixrow[col], val1, val2, val3);
+            break;
+        case ORD_RBG:
+            PPM_ASSIGN(pixrow[col], val1, val3, val2);
+            break;
+        case ORD_GRB:
+            PPM_ASSIGN(pixrow[col], val2, val1, val3);
+            break;
+        case ORD_GBR:
+            PPM_ASSIGN(pixrow[col], val3, val1, val2);
+            break;
+        case ORD_BRG:
+            PPM_ASSIGN(pixrow[col], val2, val3, val1);
+            break;
+        case ORD_BGR:
+            PPM_ASSIGN(pixrow[col], val3, val2, val1);
+            break;
+        }
+    }
+    dorowskip(ifP, rowskip);
+}
+
+
+
+static void
+doRowRowInterleave(pixel *      const pixrow,
+                   unsigned int const cols,
+                   FILE *       const ifP,
+                   enum order   const order,
+                   int          const rowskip,
+                   pixval *     const grow1,
+                   pixval *     const grow2,
+                   pixval *     const grow3) {
+
+    unsigned int col;
+
+    for (col = 0; col < cols; ++col) {
+        int const val1 = getc(ifP);
+        if (val1 == EOF)
+            pm_error("EOF / read error");
+        grow1[col] = val1;
+    }
+    dorowskip(ifP, rowskip);
+    for (col = 0; col < cols; ++col) {
+        int const val2 = getc(ifP);
+        if (val2 == EOF)
+            pm_error( "EOF / read error" );
+        grow2[col] = val2;
+    }
+    dorowskip(ifP, rowskip);
+    for (col = 0; col < cols; ++col) {
+        int const val3 = getc(ifP);
+        if (val3 == EOF)
+            pm_error( "EOF / read error" );
+        grow3[col] = val3;
+    }
+    dorowskip(ifP, rowskip);
+
+    for (col = 0; col < cols; ++col) {
+        switch (order) {
+        case ORD_RGB:
+            PPM_ASSIGN(pixrow[col], grow1[col], grow2[col], grow3[col]);
+            break;
+        case ORD_RBG:
+            PPM_ASSIGN(pixrow[col], grow1[col], grow3[col], grow2[col]);
+            break;
+        case ORD_GRB:
+            PPM_ASSIGN(pixrow[col], grow2[col], grow1[col], grow3[col]);
+            break;
+        case ORD_GBR:
+            PPM_ASSIGN(pixrow[col], grow3[col], grow1[col], grow2[col]);
+            break;
+        case ORD_BRG:
+            PPM_ASSIGN(pixrow[col], grow2[col], grow3[col], grow1[col]);
+            break;
+        case ORD_BGR:
+            PPM_ASSIGN(pixrow[col], grow3[col], grow2[col], grow1[col]);
+            break;
+        }
+    }
+}
+
+
 
 int
-main( argc, argv )
-    int argc;
-    char* argv[];
-    {
-    FILE* ifp;
-    pixel* pixrow;
-    register pixel* pP;
+main(int argc, const char * argv[]) {
+
+    pixval const maxval = 255;
+
+    FILE * ifP;
+    pixel * pixrow;
     int argn, headerskip, rowskip, rows, cols, row, i;
-    register int col;
-    int order;
-#define ORD_RGB 1
-#define ORD_RBG 2
-#define ORD_GRB 3
-#define ORD_GBR 4
-#define ORD_BRG 5
-#define ORD_BGR 6
-int interleave;
-#define INT_PIX 1
-#define INT_ROW 2
-    int val1, val2, val3;
-    gray* grow1;
-    gray* grow2;
-    gray* grow3;
-    register gray* g1P;
-    register gray* g2P;
-    register gray* g3P;
+    enum order order;
+    enum interleave interleave;
+    gray * grow1;
+    gray * grow2;
+    gray * grow3;
     const char* const usage = "[-headerskip N] [-rowskip N] [-rgb|-rbg|-grb|-gbr|-brg|-bgr] [-interpixel|-interrow] <width> <height> [rawfile]";
 
-
-    ppm_init( &argc, argv );
+    pm_proginit(&argc, argv);
 
     argn = 1;
     headerskip = 0;
@@ -54,191 +163,90 @@ int interleave;
     interleave = INT_PIX;
 
     while ( argn < argc && argv[argn][0] == '-' && argv[argn][1] != '\0' )
-	{
-	if ( pm_keymatch( argv[argn], "-headerskip", 2 ) )
-	    {
-	    ++argn;
-	    if ( argn >= argc )
-		pm_usage( usage );
-	    headerskip = atoi( argv[argn] );
-	    }
-	else if ( pm_keymatch( argv[argn], "-rowskip", 3 ) )
-	    {
-	    ++argn;
-	    if ( argn >= argc )
-		pm_usage( usage );
-	    rowskip = atoi( argv[argn] );
-	    }
-	else if ( pm_keymatch( argv[argn], "-rgb", 3 ) )
-	    order = ORD_RGB;
-	else if ( pm_keymatch( argv[argn], "-rbg", 3 ) )
-	    order = ORD_RBG;
-	else if ( pm_keymatch( argv[argn], "-grb", 3 ) )
-	    order = ORD_GRB;
-	else if ( pm_keymatch( argv[argn], "-gbr", 3 ) )
-	    order = ORD_GBR;
-	else if ( pm_keymatch( argv[argn], "-brg", 3 ) )
-	    order = ORD_BRG;
-	else if ( pm_keymatch( argv[argn], "-bgr", 3 ) )
-	    order = ORD_BGR;
-	else if ( pm_keymatch( argv[argn], "-interpixel", 7 ) )
-	    interleave = INT_PIX;
-	else if ( pm_keymatch( argv[argn], "-interrow", 7 ) )
-	    interleave = INT_ROW;
-	else
-	    pm_usage( usage );
-	++argn;
-	}
+        {
+        if ( pm_keymatch( argv[argn], "-headerskip", 2 ) )
+            {
+            ++argn;
+            if ( argn >= argc )
+                pm_usage( usage );
+            headerskip = atoi( argv[argn] );
+            }
+        else if ( pm_keymatch( argv[argn], "-rowskip", 3 ) )
+            {
+            ++argn;
+            if ( argn >= argc )
+                pm_usage( usage );
+            rowskip = atoi( argv[argn] );
+            }
+        else if ( pm_keymatch( argv[argn], "-rgb", 3 ) )
+            order = ORD_RGB;
+        else if ( pm_keymatch( argv[argn], "-rbg", 3 ) )
+            order = ORD_RBG;
+        else if ( pm_keymatch( argv[argn], "-grb", 3 ) )
+            order = ORD_GRB;
+        else if ( pm_keymatch( argv[argn], "-gbr", 3 ) )
+            order = ORD_GBR;
+        else if ( pm_keymatch( argv[argn], "-brg", 3 ) )
+            order = ORD_BRG;
+        else if ( pm_keymatch( argv[argn], "-bgr", 3 ) )
+            order = ORD_BGR;
+        else if ( pm_keymatch( argv[argn], "-interpixel", 7 ) )
+            interleave = INT_PIX;
+        else if ( pm_keymatch( argv[argn], "-interrow", 7 ) )
+            interleave = INT_ROW;
+        else
+            pm_usage( usage );
+        ++argn;
+        }
 
     if ( argn + 2 > argc )
-	pm_usage( usage );
-
-    cols = atoi( argv[argn++] );
-    rows = atoi( argv[argn++] );
-    if ( cols <= 0 || rows <= 0 )
-	pm_usage( usage );
+        pm_usage( usage );
+    
+    cols = pm_parse_width(argv[argn++]);
+    rows = pm_parse_height(argv[argn++]);
 
     if ( argn < argc )
-	{
-	ifp = pm_openr( argv[argn] );
-	++argn;
-	}
+        {
+        ifP = pm_openr( argv[argn] );
+        ++argn;
+        }
     else
-	ifp = stdin;
+        ifP = stdin;
 
     if ( argn != argc )
-	pm_usage( usage );
+        pm_usage( usage );
 
-    ppm_writeppminit( stdout, cols, rows, (pixval) 255, 0 );
-    pixrow = ppm_allocrow( cols );
+    ppm_writeppminit(stdout, cols, rows, (pixval) 255, 0);
+    pixrow = ppm_allocrow(cols);
 
-    if ( interleave == INT_ROW )
-	{
-	grow1 = pgm_allocrow( cols );
-	grow2 = pgm_allocrow( cols );
-	grow3 = pgm_allocrow( cols );
-	}
+    if (interleave == INT_ROW) {
+        grow1 = pgm_allocrow(cols);
+        grow2 = pgm_allocrow(cols);
+        grow3 = pgm_allocrow(cols);
+    }
 
-    for ( i = 0; i < headerskip; ++i )
-	{
-	val1 = getc( ifp );
-	if ( val1 == EOF )
-	    pm_error( "EOF / read error" );
-	}
+    for (i = 0; i < headerskip; ++i) {
+        int const val = getc(ifP);
+        if (val == EOF)
+            pm_error("EOF / read error");
+    }
 
-    for ( row = 0; row < rows; ++row)
-	{
-	switch ( interleave )
-	    {
-	    case INT_PIX:
-	    for ( col = 0, pP = pixrow; col < cols; ++col, ++pP )
-		{
-		val1 = getc( ifp );
-		if ( val1 == EOF )
-		    pm_error( "EOF / read error" );
-		val2 = getc( ifp );
-		if ( val2 == EOF )
-		    pm_error( "EOF / read error" );
-		val3 = getc( ifp );
-		if ( val3 == EOF )
-		    pm_error( "EOF / read error" );
-		switch ( order )
-		    {
-		    case ORD_RGB:
-		    PPM_ASSIGN( *pP, val1, val2, val3 );
-		    break;
-		    case ORD_RBG:
-		    PPM_ASSIGN( *pP, val1, val3, val2 );
-		    break;
-		    case ORD_GRB:
-		    PPM_ASSIGN( *pP, val2, val1, val3 );
-		    break;
-		    case ORD_GBR:
-		    PPM_ASSIGN( *pP, val3, val1, val2 );
-		    break;
-		    case ORD_BRG:
-		    PPM_ASSIGN( *pP, val2, val3, val1 );
-		    break;
-		    case ORD_BGR:
-		    PPM_ASSIGN( *pP, val3, val2, val1 );
-		    break;
-		    }
-		}
-	    dorowskip( ifp, rowskip );
-	    break;
+    for (row = 0; row < rows; ++row) {
+        switch (interleave) {
+        case INT_PIX:
+            doRowPixInterleave(pixrow, cols, ifP, order, rowskip);
+            break;
 
-	    case INT_ROW:
-	    for ( col = 0, g1P = grow1; col < cols; ++col, ++g1P )
-		{
-		val1 = getc( ifp );
-		if ( val1 == EOF )
-		    pm_error( "EOF / read error" );
-		*g1P = val1;
-		}
-	    dorowskip( ifp, rowskip );
-	    for ( col = 0, g2P = grow2; col < cols; ++col, ++g2P )
-		{
-		val2 = getc( ifp );
-		if ( val2 == EOF )
-		    pm_error( "EOF / read error" );
-		*g2P = val2;
-		}
-	    dorowskip( ifp, rowskip );
-	    for ( col = 0, g3P = grow3; col < cols; ++col, ++g3P )
-		{
-		val3 = getc( ifp );
-		if ( val3 == EOF )
-		    pm_error( "EOF / read error" );
-		*g3P = val3;
-		}
-	    dorowskip( ifp, rowskip );
-	    for ( col = 0, pP = pixrow, g1P = grow1, g2P = grow2, g3P = grow3;
-		  col < cols; ++col, ++pP, ++g1P, ++g2P, ++g3P )
-		{
-		switch ( order )
-		    {
-		    case ORD_RGB:
-		    PPM_ASSIGN( *pP, *g1P, *g2P, *g3P );
-		    break;
-		    case ORD_RBG:
-		    PPM_ASSIGN( *pP, *g1P, *g3P, *g2P );
-		    break;
-		    case ORD_GRB:
-		    PPM_ASSIGN( *pP, *g2P, *g1P, *g3P );
-		    break;
-		    case ORD_GBR:
-		    PPM_ASSIGN( *pP, *g3P, *g1P, *g2P );
-		    break;
-		    case ORD_BRG:
-		    PPM_ASSIGN( *pP, *g2P, *g3P, *g1P );
-		    break;
-		    case ORD_BGR:
-		    PPM_ASSIGN( *pP, *g3P, *g2P, *g1P );
-		    break;
-		    }
-		}
-	    break;
-	    }
-	ppm_writeppmrow( stdout, pixrow, cols, (pixval) 255, 0 );
-	}
+        case INT_ROW:
+            doRowRowInterleave(pixrow, cols, ifP, order, rowskip,
+                               grow1, grow2, grow3);
+            break;
+        }
+        ppm_writeppmrow(stdout, pixrow, cols, maxval, 0);
+    }
 
-    pm_close( ifp );
+    pm_close( ifP );
     pm_close( stdout );
 
     exit( 0 );
-    }
-
-static void
-dorowskip( ifp, rowskip )
-    FILE* ifp;
-    int rowskip;
-    {
-    int i, val;
-
-    for ( i = 0; i < rowskip; ++i )
-	{
-	val = getc( ifp );
-	if ( val == EOF )
-	    pm_error( "EOF / read error" );
-	}
     }
