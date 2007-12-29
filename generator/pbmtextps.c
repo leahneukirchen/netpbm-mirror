@@ -42,21 +42,50 @@ static const char *pnmcrop_exe_path =
 #ifdef PNMCROP_EXECUTABLE_PATH
 PNMCROP_EXECUTABLE_PATH;
 #else
-0;
+NULL;
 #endif
 
 struct cmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    int          res;         /* resolution, DPI */
-    int          fontsize;    /* Size of font in points */
+    unsigned int res;         /* resolution, DPI */
+    unsigned int fontsize;    /* Size of font in points */
     const char * font;      /* Name of postscript font */
     float        stroke;
         /* Width of stroke in points (only for outline font) */
     unsigned int verbose;
     const char * text;
 };
+
+
+
+static void
+writeFileToStdout(const char * const fileName){
+    /* simple pbmtopbm */
+
+    FILE * ifP;
+    int format;
+    int cols, rows, row ;
+    unsigned char * bitrow; 
+    
+    ifP = pm_openr(fileName);
+    pbm_readpbminit(ifP, &cols, &rows, &format);
+
+    if (cols==0 || rows==0 || cols>INT_MAX-10 || rows>INT_MAX-10)
+      pm_error("Abnormal output from gs program.  "
+               "width x height = %u x %u", cols, rows);
+               
+    pbm_writepbminit(stdout, cols, rows, 0);           
+               
+    bitrow = pbm_allocrow_packed(cols);
+    
+    for (row = 0; row < rows; ++row) {
+        pbm_readpbmrow_packed(ifP, bitrow, cols, format);
+        pbm_writepbmrow_packed(stdout, bitrow, cols, 0);
+    }
+    pbm_freerow_packed(bitrow);
+}
 
 
 
@@ -108,9 +137,9 @@ parseCommandLine(int argc, char ** argv,
     MALLOCARRAY(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENTRY */
-    OPTENT3(0, "resolution", OPT_INT,    &cmdlineP->res,            NULL,  0);
+    OPTENT3(0, "resolution", OPT_UINT,   &cmdlineP->res,            NULL,  0);
     OPTENT3(0, "font",       OPT_STRING, &cmdlineP->font,           NULL,  0);
-    OPTENT3(0, "fontsize",   OPT_INT,    &cmdlineP->fontsize,       NULL,  0);
+    OPTENT3(0, "fontsize",   OPT_UINT,   &cmdlineP->fontsize,       NULL,  0);
     OPTENT3(0, "stroke",     OPT_FLOAT,  &cmdlineP->stroke,         NULL,  0);
     OPTENT3(0, "verbose",    OPT_FLAG,   NULL, &cmdlineP->verbose,         0);
 
@@ -195,30 +224,39 @@ gs_executable_name()
 
 
 static const char *
-crop_executable_name()
-{
-    static char buffer[BUFFER_SIZE];
-    if(! pnmcrop_exe_path) {
-        const char * const which = "which pnmcrop";
-        FILE *f;
-        memset(buffer, 0, BUFFER_SIZE);
-        if(!(f = popen(which, "r"))) {
-            return 0;
-        }
-    
-        fread(buffer, 1, BUFFER_SIZE, f);
-        if(buffer[strlen(buffer) - 1] == '\n')
-            buffer[strlen(buffer) - 1] = 0;
-        pclose(f);
-        if(buffer[0] != '/' && buffer[0] != '.') {
-            buffer[0] = 0;
-            pm_message("Can't find pnmcrop");
-        }
-    }
-    else
-        strcpy(buffer, pnmcrop_exe_path);
+crop_executable_name(void) {
 
-    return buffer;
+    static char buffer[BUFFER_SIZE];
+    const char * retval;
+
+    if (!pnmcrop_exe_path) {
+        const char * const which = "which pnmcrop";
+
+        FILE * f;
+
+        memset(buffer, 0, BUFFER_SIZE);
+
+        f = popen(which, "r");
+        if (!f)
+            retval = NULL;
+        else {
+            fread(buffer, 1, BUFFER_SIZE, f);
+            if (buffer[strlen(buffer) - 1] == '\n')
+                buffer[strlen(buffer) - 1] = 0;
+            pclose(f);
+            
+            if (buffer[0] != '/' && buffer[0] != '.') {
+                retval = NULL;
+                pm_message("Can't find pnmcrop");
+            } else
+                retval = buffer;
+        }
+    } else {
+        strcpy(buffer, pnmcrop_exe_path);
+        
+        retval = buffer;
+    }
+    return retval;
 }
 
 
@@ -229,12 +267,33 @@ gsCommand(const char *       const psFname,
           struct cmdlineInfo const cmdline) {
 
     const char * retval;
-    int const x = cmdline.res * 11;
-    int const y = cmdline.res * (cmdline.fontsize * 2 + 72)  / 72.;
+    double const x = (double) cmdline.res * 11;
+    double const y = (double) cmdline.res * 
+                     ((double) cmdline.fontsize * 2 + 72)  / 72;
+    
+    if (cmdline.res <= 0)
+         pm_error("Resolution (dpi) must be positive.");
+    
+    if (cmdline.fontsize <= 0)
+         pm_error("Font size must be positive.");
+    
+    /* The following checks are for guarding against overflows in this 
+       function.  Huge x,y values that pass these checks may be
+       rejected by the 'gs' program.
+    */
+    
+    if (x > (double) INT_MAX-10)
+         pm_error("Absurdly fine resolution: %u. Output width too large.",
+                   cmdline.res );
+    if (y > (double) INT_MAX-10)
+         pm_error("Absurdly fine resolution (%u) and/or huge font size (%u). "
+                  "Output height too large.", cmdline.res, cmdline.fontsize);
+         
     asprintfN(&retval, "%s -g%dx%d -r%d -sDEVICE=pbm "
               "-sOutputFile=%s -q -dBATCH -dNOPAUSE %s </dev/null >/dev/null", 
-              gs_executable_name(), x, y, cmdline.res, 
+              gs_executable_name(), (int) x, (int) y, cmdline.res, 
               outputFilename, psFname);
+
     return retval;
 }
 
@@ -244,11 +303,12 @@ static const char *
 cropCommand(const char * const inputFileName) {
 
     const char * retval;
+    const char * plainOpt = pm_plain_output ? "-plain" : "" ;
     
     if (crop_executable_name()) {
-        asprintfN(&retval, "%s -top -right %s", 
-                  crop_executable_name(), inputFileName);
-        if (retval == NULL)
+        asprintfN(&retval, "%s -top -right %s %s", 
+                  crop_executable_name(), plainOpt, inputFileName);
+        if (retval == strsol)
             pm_error("Unable to allocate memory");
     } else
         retval = NULL;
@@ -316,14 +376,13 @@ cropToStdout(const char * const inputFileName,
     const char * com;
 
     com = cropCommand(inputFileName);
+
     if (com == NULL) {
         /* No pnmcrop.  So don't crop. */
         pm_message("Can't find pnmcrop command, image will be large");
-        asprintfN(&com, "cat %s", inputFileName);
-        if (com == NULL) 
-            pm_error("Unable to allocate memory.");
+        writeFileToStdout(inputFileName);
     } else {
-        FILE *pnmcrop;
+        FILE * pnmcrop;
 
         if (verbose)
             pm_message("Running crop command '%s'", com);
@@ -354,8 +413,8 @@ cropToStdout(const char * const inputFileName,
             }
             fclose(pnmcrop);
         }
+        strfree(com);
     }
-    strfree(com);
 }
 
 
