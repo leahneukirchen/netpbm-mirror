@@ -10,54 +10,102 @@
 ** implied warranty.
 */
 
+#include "mallocvar.h"
+#include "shhopt.h"
 #include "pnm.h"
 
-int
-main( argc, argv )
-    int argc;
-    char* argv[];
-    {
-    FILE* ifp;
-    xel** xels;
-    register xel* xelrow;
-    xelval maxval;
-    int rows, cols, format, width, height, row, col;
-    const char* const usage = "width height [pnmfile]";
 
-    pnm_init( &argc, argv );
 
-    if ( argc < 3 || argc > 4 )
-	pm_usage( usage );
+struct cmdlineInfo {
+    /* All the information the user supplied in the command line,
+       in a form easy for the program to use.
+    */
+    const char * inputFileName;
+    unsigned int width;
+    unsigned int height;
+};
 
-    if ( sscanf( argv[1], "%d", &width ) != 1 )
-	pm_usage( usage );
-    if ( sscanf( argv[2], "%d", &height ) != 1 )
-	pm_usage( usage );
 
-    if ( width < 1 )
-	pm_error( "width is less than 1" );
-    if ( height < 1 )
-	pm_error( "height is less than 1" );
 
-    if ( argc == 4 )
-	ifp = pm_openr( argv[3] );
-    else
-	ifp = stdin;
+static void
+parseCommandLine(int argc, const char ** argv,
+                 struct cmdlineInfo * const cmdlineP) {
+/*----------------------------------------------------------------------------
+   Note that the file spec array we return is stored in the storage that
+   was passed to us as the argv array.
+-----------------------------------------------------------------------------*/
+    optEntry *option_def;
+        /* Instructions to OptParseOptions3 on how to parse our options.
+         */
+    optStruct3 opt;
 
-    xels = pnm_readpnm( ifp, &cols, &rows, &maxval, &format );
-    pm_close( ifp );
+    unsigned int option_def_index;
 
-    xelrow = pnm_allocrow( width );
+    MALLOCARRAY_NOFAIL(option_def, 100);
 
-    pnm_writepnminit( stdout, width, height, maxval, format, 0 );
-    for ( row = 0; row < height; ++row )
-	{
-	for ( col = 0; col < width; ++col )
-	    xelrow[col] = xels[row % rows][col % cols];
-	pnm_writepnmrow( stdout, xelrow, width, maxval, format, 0 );
-	}
+    option_def_index = 0;   /* incremented by OPTENT3 */
 
-    pm_close( stdout );
+    opt.opt_table = option_def;
+    opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    exit( 0 );
+    optParseOptions3(&argc, (char**)argv, opt, sizeof opt, 0);
+        /* Uses and sets argc, argv, and some of *cmdlineP and others. */
+
+    if (argc-1 < 2)
+        pm_error("You must specify at least two parameters: "
+                 "width and height.  You specified %u",
+                 argc-1);
+    else {
+        cmdlineP->width  = pm_parse_width(argv[1]);
+        cmdlineP->height = pm_parse_height(argv[2]);
+
+        if (argc-1 > 2) {
+            cmdlineP->inputFileName = argv[3];
+
+            if (argc-1 > 3)
+                pm_error("There are at most three arguments: "
+                         "width, height, file name.  You specified %u",
+                         argc-1);
+        } else 
+            cmdlineP->inputFileName = "-";
     }
+}
+
+
+
+int
+main(int argc, const char ** argv) {
+
+    struct cmdlineInfo cmdline;
+    FILE * ifP;
+    xel ** xels;
+    xel * xelrow;
+    xelval maxval;
+    int rows, cols;
+    int format;
+    unsigned int row;
+
+    pm_proginit(&argc, argv);
+
+    parseCommandLine(argc, argv, &cmdline);
+
+    ifP = pm_openr(cmdline.inputFileName);
+
+    xels = pnm_readpnm(ifP, &cols, &rows, &maxval, &format);
+    pm_close(ifP);
+
+    xelrow = pnm_allocrow(cmdline.width);
+
+    pnm_writepnminit(stdout, cmdline.width, cmdline.height, maxval, format, 0);
+    for (row = 0; row < cmdline.height; ++row) {
+        unsigned int col;
+        for (col = 0; col < cmdline.width; ++col)
+            xelrow[col] = xels[row % rows][col % cols];
+        pnm_writepnmrow(stdout, xelrow, cmdline.width, maxval, format, 0);
+    }
+
+    pm_close(stdout);
+
+    return 0;
+}
