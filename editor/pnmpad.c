@@ -2,14 +2,6 @@
  ** AJCD 4/9/90
  */
 
-/*
- * Changelog
- *
- * 2002/01/25 - Rewrote options parsing code.
- *      Added pad-to-width and pad-to-height with custom
- *      alignment.  MVB.
- */
-
 #include <string.h>
 #include <stdio.h>
 
@@ -17,12 +9,13 @@
 #include "shhopt.h"
 #include "mallocvar.h"
 
+#define MAX_WIDTHHEIGHT INT_MAX-10
 
 struct cmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *input_filespec;  /* Filespecs of input files */
+    const char * input_filespec;  /* Filespecs of input files */
     unsigned int xsize;
     unsigned int xsizeSpec;
     unsigned int ysize;
@@ -103,6 +96,24 @@ parseCommandLine(int argc, char ** argv,
     if (blackOpt && cmdlineP->white)
         pm_error("You cannot specify both -black and -white");
 
+    if (cmdlineP->topSpec > 1)
+       pm_error("You can specify -top only once");
+
+    if (cmdlineP->bottomSpec > 1)
+       pm_error("You can specify -bottom only once");
+
+    if (cmdlineP->leftSpec > 1)
+       pm_error("You can specify -left only once");
+
+    if (cmdlineP->rightSpec > 1)
+       pm_error("You can specify -right only once");
+
+    if (cmdlineP->xsizeSpec > 1)
+       pm_error("You can specify -width only once");
+
+    if (cmdlineP->ysizeSpec > 1)
+       pm_error("You can specify -height only once");
+
     if (xalignSpec && (cmdlineP->leftSpec || cmdlineP->rightSpec))
         pm_error("You cannot specify both -xalign and -left or -right");
 
@@ -166,24 +177,32 @@ parseCommandLineOld(int argc, char ** argv,
         case 'l':
             if (atoi(argv[1]+2) < 0)
                 pm_error("left border too small");
+	    else if (atoi(argv[1]+2) > MAX_WIDTHHEIGHT)
+                pm_error("left border too large");
             else
                 cmdlineP->left = atoi(argv[1]+2);
             break;
         case 'r':
             if (atoi(argv[1]+2) < 0)
                 pm_error("right border too small");
+	    else if (atoi(argv[1]+2) > MAX_WIDTHHEIGHT)
+                pm_error("right border too large");
             else
                 cmdlineP->right = atoi(argv[1]+2);
             break;
         case 'b':
             if (atoi(argv[1]+2) < 0)
                 pm_error("bottom border too small");
+	    else if (atoi(argv[1]+2) > MAX_WIDTHHEIGHT)
+                pm_error("bottom border too large");
             else
                 cmdlineP->bottom = atoi(argv[1]+2);
             break;
         case 't':
             if (atoi(argv[1]+2) < 0)
                 pm_error("top border too small");
+	    else if (atoi(argv[1]+2) > MAX_WIDTHHEIGHT)
+                pm_error("top border too large");
             else
                 cmdlineP->top = atoi(argv[1]+2);
             break;
@@ -208,11 +227,36 @@ parseCommandLineOld(int argc, char ** argv,
 
 
 static void
+validateHorizontalSize(struct cmdlineInfo const cmdline,
+                       unsigned int const cols) {
+
+    unsigned int const xsize = cmdline.xsizeSpec ? cmdline.xsize : 0;
+    unsigned int const lpad  = cmdline.leftSpec  ? cmdline.left  : 0;
+    unsigned int const rpad  = cmdline.rightSpec ? cmdline.right : 0;
+
+    if (xsize > MAX_WIDTHHEIGHT)
+        pm_error("The width value you specified is too large.");
+
+    if (lpad > MAX_WIDTHHEIGHT)
+        pm_error("The left padding value you specified is too large.");
+    
+    if (rpad > MAX_WIDTHHEIGHT)
+        pm_error("The right padding value you specified is too large.");
+    
+    if ((double) cols + (double) lpad + (double) rpad > MAX_WIDTHHEIGHT)
+        pm_error("Given padding value(s) makes output width too large."); 
+}
+
+
+
+static void
 computeHorizontalPadSizes(struct cmdlineInfo const cmdline,
-                          int                const cols,
+                          unsigned int       const cols,
                           unsigned int *     const lpadP,
                           unsigned int *     const rpadP) {
 
+    validateHorizontalSize(cmdline, cols);
+    
     if (cmdline.xsizeSpec) {
         if (cmdline.leftSpec && cmdline.rightSpec) {
             if (cmdline.left + cols + cmdline.right < cmdline.xsize) {
@@ -242,9 +286,32 @@ computeHorizontalPadSizes(struct cmdlineInfo const cmdline,
             }
         }
     } else {
-        *lpadP = cmdline.leftSpec ? cmdline.left : 0;
+        *lpadP = cmdline.leftSpec  ? cmdline.left  : 0;
         *rpadP = cmdline.rightSpec ? cmdline.right : 0;
     }
+}
+
+
+
+static void
+validateVerticalSize(struct cmdlineInfo const cmdline,
+                     unsigned int       const rows) {
+
+    unsigned int const ysize = cmdline.ysizeSpec  ? cmdline.ysize  : 0;
+    unsigned int const tpad  = cmdline.topSpec    ? cmdline.top    : 0;
+    unsigned int const bpad  = cmdline.bottomSpec ? cmdline.bottom : 0;
+
+    if (ysize > MAX_WIDTHHEIGHT)
+        pm_error("The height value you specified is too large.");
+    
+    if (tpad > MAX_WIDTHHEIGHT)
+        pm_error("The top padding value you specified is too large.");
+    
+    if (bpad > MAX_WIDTHHEIGHT)
+        pm_error("The bottom padding value you specified is too large.");
+    
+    if ((double) rows + (double) tpad + (double) bpad > MAX_WIDTHHEIGHT)
+        pm_error("Given padding value(s) makes output height too large."); 
 }
 
 
@@ -254,6 +321,8 @@ computeVerticalPadSizes(struct cmdlineInfo const cmdline,
                         int                const rows,
                         unsigned int *     const tpadP,
                         unsigned int *     const bpadP) {
+
+    validateVerticalSize(cmdline, rows);
 
     if (cmdline.ysizeSpec) {
         if (cmdline.topSpec && cmdline.bottomSpec) {
@@ -285,7 +354,7 @@ computeVerticalPadSizes(struct cmdlineInfo const cmdline,
         }
     } else {
         *bpadP = cmdline.bottomSpec ? cmdline.bottom : 0;
-        *tpadP = cmdline.topSpec ? cmdline.top : 0;
+        *tpadP = cmdline.topSpec    ? cmdline.top    : 0;
     }
 }
 
