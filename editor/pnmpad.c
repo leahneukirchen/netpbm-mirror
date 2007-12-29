@@ -37,7 +37,7 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine(int argc, char ** argv,
+parseCommandLine(int argc, const char ** argv,
                  struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
@@ -381,7 +381,7 @@ computePadSizes(struct cmdlineInfo const cmdline,
 
 
 int
-main(int argc, char ** argv) {
+main(int argc, const char ** argv) {
 
     struct cmdlineInfo cmdline;
     FILE *ifP;
@@ -391,7 +391,7 @@ main(int argc, char ** argv) {
     bool depr_cmd; /* use deprecated commandline interface */
     unsigned int lpad, rpad, tpad, bpad;
 
-    pnm_init( &argc, argv );
+    pm_proginit(&argc, argv);
 
     /* detect deprecated options */
     depr_cmd = FALSE;  /* initial assumption */
