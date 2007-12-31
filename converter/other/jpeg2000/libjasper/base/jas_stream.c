@@ -130,6 +130,8 @@
 #include <io.h>
 #endif
 
+#include "pm.h"
+
 #include "jasper/jas_types.h"
 #include "jasper/jas_stream.h"
 #include "jasper/jas_malloc.h"
@@ -380,51 +382,6 @@ jas_stream_t *jas_stream_freopen(const char *path, const char *mode, FILE *fp)
 }
 
 
-static int
-tmpfilex(void) {
-/*----------------------------------------------------------------------------
-   This is a copy of pm_tmpfile() without the libnetpbm dependencies
-   and returning a file descriptor instead of stream.
------------------------------------------------------------------------------*/
-    const char libname[] = "jasper";
-
-    int fd;
-    char buf[FILENAME_MAX];
-    const char * tbuf;
-    unsigned int fnamelen;
-
-    fnamelen = strlen(libname) + 10; /* "/" + "_XXXXXX\0" */
-
-    tbuf = getenv("TMPDIR");
-
-    if ((tbuf != NULL) && (strlen(tbuf) > FILENAME_MAX - fnamelen))
-        /* length of TMPDIR value too big for buf */
-        tbuf = NULL;
-
-    buf[FILENAME_MAX - fnamelen -1] = 0;
-
-    if ((tbuf == NULL) || (strlen(tbuf) == 0))
-        /* environment variable not suitable to construct file name.
-           Use default.
-        */
-        strncpy(buf, TMPDIR, sizeof(buf) - fnamelen);
-    else
-        strncpy(buf, tbuf, sizeof(buf) - fnamelen);
-
-    if (buf[strlen(buf) - 1] != '/')
-        strcat (buf, "/");
-    
-    strcat(buf, libname);
-    strcat(buf, "_XXXXXX");
-
-    fd = mkstemp(buf);
-
-    if (fd >= 0)
-        unlink(buf);
-
-    return fd;
-}
-
 jas_stream_t *jas_stream_tmpfile()
 {
 	jas_stream_t *stream;
@@ -444,13 +401,23 @@ jas_stream_t *jas_stream_tmpfile()
 		return 0;
 	}
 	stream->obj_ = obj;
-    
-    /* This is a Netpbm enhancement.  Original Jasper library uses
-       tmpnam(), which is unsafe.
-    */
-    if ((*obj = tmpfilex()) < 0) {
-		jas_stream_destroy(stream);
-		return 0;
+
+    {
+        /* This is a Netpbm enhancement.  Original Jasper library uses
+           tmpnam(), which is unsafe.
+        */
+        jmp_buf jmpbuf;
+        int rc;
+        
+        rc = setjmp(jmpbuf);
+        if (rc == 0) {
+            pm_setjmpbuf(&jmpbuf);
+            *obj = pm_tmpfile_fd();
+        } else {
+            /* pm_tmpfile_fd() threw an error */
+            jas_stream_destroy(stream);
+            return 0;
+        }
     }
 	/* Use full buffering. */
 	jas_stream_initbuf(stream, JAS_STREAM_FULLBUF, 0, 0);
