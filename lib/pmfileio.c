@@ -192,7 +192,7 @@ mkstemp2(char * const filenameBuffer) {
 
 static void
 makeTmpfileWithTemplate(const char *  const filenameTemplate,
-                        FILE **       const filePP,
+                        int *         const fdP,
                         const char ** const filenameP,
                         const char ** const errorP) {
     
@@ -214,24 +214,9 @@ makeTmpfileWithTemplate(const char *  const filenameTemplate,
                       "pattern '%s'.  mkstemp() failed with errno %d (%s)",
                       filenameTemplate, errno, strerror(errno));
         else {
-            int const fd = rc;
-            
-            FILE * fileP;
-            fileP = fdopen(fd, "w+b");
-            
-            if (fileP == NULL)
-                asprintfN(errorP, "Unable to create temporary file.  "
-                          "fdopen() failed with errno %d (%s)",
-                          errno, strerror(errno));
-            else {
-                *errorP = NULL;
-                *filePP = fileP;
-                *filenameP = filenameBuffer;
-            }
-            if (*errorP) {
-                unlink(filenameBuffer);
-                close(fd);
-            }
+            *fdP = rc;
+            *filenameP = filenameBuffer;
+            *errorP = NULL;
         }
         if (*errorP)
             strfree(filenameBuffer);
@@ -240,9 +225,41 @@ makeTmpfileWithTemplate(const char *  const filenameTemplate,
 
 
 
+static void
+fMakeTmpfileWithTemplate(const char *  const filenameTemplate,
+                         FILE **       const filePP,
+                         const char ** const filenameP,
+                         const char ** const errorP) {
+    
+    int fd;
+
+    makeTmpfileWithTemplate(filenameTemplate, &fd, filenameP, errorP);
+
+    if (!*errorP) {
+        FILE * fileP;
+        fileP = fdopen(fd, "w+b");
+            
+        if (fileP == NULL)
+            asprintfN(errorP, "Unable to create temporary file.  "
+                      "fdopen() failed with errno %d (%s)",
+                      errno, strerror(errno));
+        else {
+            *errorP = NULL;
+            *filePP = fileP;
+        }
+        if (*errorP) {
+            unlink(*filenameP);
+            strfree(*filenameP);
+            close(fd);
+        }
+    }
+}
+
+
+
 void
-pm_make_tmpfile(FILE **       const filePP,
-                const char ** const filenameP) {
+pm_make_tmpfile_fd(int *         const fdP,
+                   const char ** const filenameP) {
 
     const char * filenameTemplate;
     unsigned int fnamelen;
@@ -266,7 +283,7 @@ pm_make_tmpfile(FILE **       const filePP,
         asprintfN(&error,
                   "Unable to allocate storage for temporary file name");
     else {
-        makeTmpfileWithTemplate(filenameTemplate, filePP, filenameP, &error);
+        makeTmpfileWithTemplate(filenameTemplate, fdP, filenameP, &error);
 
         strfree(filenameTemplate);
     }
@@ -274,6 +291,29 @@ pm_make_tmpfile(FILE **       const filePP,
         pm_errormsg("%s", error);
         strfree(error);
         pm_longjmp();
+    }
+}
+
+
+
+void
+pm_make_tmpfile(FILE **       const filePP,
+                const char ** const filenameP) {
+
+    int fd;
+
+    pm_make_tmpfile_fd(&fd, filenameP);
+
+    *filePP = fdopen(fd, "w+b");
+    
+    if (*filePP == NULL) {
+        close(fd);
+        unlink(*filenameP);
+        strfree(*filenameP);
+
+        pm_error("Unable to create temporary file.  "
+                 "fdopen() failed with errno %d (%s)",
+                 errno, strerror(errno));
     }
 }
 
@@ -292,6 +332,23 @@ pm_tmpfile(void) {
     strfree(tmpfile);
 
     return fileP;
+}
+
+
+
+int
+pm_tmpfile_fd(void) {
+
+    int fd;
+    const char * tmpfile;
+
+    pm_make_tmpfile_fd(&fd, &tmpfile);
+
+    unlink(tmpfile);
+
+    strfree(tmpfile);
+
+    return fd;
 }
 
 

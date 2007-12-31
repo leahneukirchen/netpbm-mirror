@@ -105,9 +105,16 @@ pm_setMessage(int const newState, int * const oldStateP);
 FILE * 
 pm_tmpfile(void);
 
+int
+pm_tmpfile_fd(void);
+
 void
 pm_make_tmpfile(FILE **       const filePP,
                 const char ** const filenameP);
+
+void
+pm_make_tmpfile_fd(int *         const fdP,
+                   const char ** const filenameP);
 
 void
 pm_nextimage(FILE * const file, int * const eofP);
