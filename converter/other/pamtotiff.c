@@ -1024,6 +1024,8 @@ validateReadableStdout(void) {
   error message about a file I/O error.  We, on the other hand, produce
   a helpful error message.
 -----------------------------------------------------------------------------*/
+#if defined(WIN32) && !defined(__CYGWIN__)
+
     int flags;
 
     flags = fcntl(STDOUT_FILENO, F_GETFL);
@@ -1038,6 +1040,7 @@ validateReadableStdout(void) {
                      "In order to create a multi-image TIFF stream, "
                      "Standard Output must be both readable and writable.");
     }
+#endif
 }
 
 
