@@ -205,16 +205,6 @@ static void jpc_qmfb1d_split(jpc_fix_t *startptr, int startind, int endind,
 	llen = lendind - lstartind;
 	hlen = hendind - hstartind;
 
-#if defined(WIN32)
-	/* Get a buffer. */
-	if (bufsize > QMFB_SPLITBUFSIZE) {
-		if (!(buf = jas_malloc(bufsize * sizeof(jpc_fix_t)))) {
-			/* We have no choice but to commit suicide in this case. */
-			abort();
-		}
-	}
-#endif
-
 	if (hstartind < lstartind) {
 		/* The first sample in the input signal is to appear
 		  in the highpass subband signal. */
@@ -294,13 +284,6 @@ static void jpc_qmfb1d_split(jpc_fix_t *startptr, int startind, int endind,
 			hptr -= step;
 		}
 	}
-
-#if defined(WIN32)
-	/* If the split buffer was allocated on the heap, free this memory. */
-	if (buf != splitbuf) {
-		jas_free(buf);
-	}
-#endif
 }
 
 static void jpc_qmfb1d_join(jpc_fix_t *startptr, int startind, int endind,
@@ -319,16 +302,6 @@ static void jpc_qmfb1d_join(jpc_fix_t *startptr, int startind, int endind,
 	register jpc_fix_t *lptr;
 	register int n;
 	int state;
-
-#if defined(WIN32)
-	/* Allocate memory for the join buffer from the heap. */
-	if (bufsize > QMFB_JOINBUFSIZE) {
-		if (!(buf = jas_malloc(bufsize * sizeof(jpc_fix_t)))) {
-			/* We have no choice but to commit suicide. */
-			abort();
-		}
-	}
-#endif
 
 	twostep = step << 1;
 	llen = lendind - lstartind;
@@ -414,13 +387,6 @@ static void jpc_qmfb1d_join(jpc_fix_t *startptr, int startind, int endind,
 			state ^= 1;
 		}
 	}
-
-#if defined(WIN32)
-	/* If the join buffer was allocated on the heap, free this memory. */
-	if (buf != joinbuf) {
-		jas_free(buf);
-	}
-#endif
 }
 
 /******************************************************************************\
