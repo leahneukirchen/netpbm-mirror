@@ -200,7 +200,7 @@ makeTempDir(const char ** const tempDirP) {
 
     asprintfN(&mytmpdir, "%s/pnmindex_%d", tmpdir, getpid());
 
-    rc = mkdir(mytmpdir, 0700);
+    rc = pm_mkdir(mytmpdir, 0700);
     if (rc != 0)
         pm_error("Unable to create temporary file directory '%s'.  mkdir() "
                  "fails with errno %d (%s)",
