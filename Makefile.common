@@ -77,7 +77,7 @@ include $(SRCDIR)/Makefile.version
 # fully made.
 .DELETE_ON_ERROR:
 
-NETPBM_INCLUDES := -I importinc -I$(SRCDIR)/$(SUBDIR)
+NETPBM_INCLUDES := -Iimportinc -I$(SRCDIR)/$(SUBDIR)
 
 # -I. is needed when builddir != srcdir
 INCLUDES = -I. $(COMP_INCLUDES) $(NETPBM_INCLUDES) $(EXTERN_INCLUDES)
