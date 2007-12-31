@@ -31,14 +31,14 @@
 
 #define BUFFER_SIZE 2048
 
-static const char *gs_exe_path = 
+static const char * const gs_exe_path = 
 #ifdef GHOSTSCRIPT_EXECUTABLE_PATH
 GHOSTSCRIPT_EXECUTABLE_PATH;
 #else
-0;
+NULL;
 #endif
 
-static const char *pnmcrop_exe_path = 
+static const char * const pnmcrop_exe_path = 
 #ifdef PNMCROP_EXECUTABLE_PATH
 PNMCROP_EXECUTABLE_PATH;
 #else
@@ -199,23 +199,29 @@ construct_postscript(struct cmdlineInfo const cmdline) {
 
 
 static const char *
-gs_executable_name()
-{
+gs_executable_name() {
+
     static char buffer[BUFFER_SIZE];
-    if(! gs_exe_path) {
+
+    if (!gs_exe_path) {
         const char * const which = "which gs";
-        FILE *f;
+
+        FILE * f;
+
         memset(buffer, 0, BUFFER_SIZE);
-        if(!(f = popen(which, "r")))
+
+        f = popen(which, "r");
+        if (!f)
             pm_error("Can't find ghostscript");
+
         fread(buffer, 1, BUFFER_SIZE, f);
-        if(buffer[strlen(buffer) - 1] == '\n')
-            buffer[strlen(buffer) - 1] = 0;
+        if (buffer[strlen(buffer) - 1] == '\n')
+            buffer[strlen(buffer) - 1] = '\0';
         pclose(f);
-        if(buffer[0] != '/' && buffer[0] != '.')
+
+        if (buffer[0] != '/' && buffer[0] != '.')
             pm_error("Can't find ghostscript");
-    }
-    else
+    } else
         strcpy(buffer, gs_exe_path);
 
     return buffer;
