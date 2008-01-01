@@ -15,18 +15,20 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+#include "pm_c_util.h"
+#include "nstring.h"
+#include "rle.h"
+
+
+
 #ifndef NO_OPEN_PIPES
-/* Need to have a SIGCLD signal catcher. */
+/* Need to have a SIGCHLD signal catcher. */
 #include <signal.h>
 #include <sys/wait.h>
 #include <errno.h>
 
-#include "rle.h"
-
 /* Count outstanding children.  Assume no more than 100 possible. */
 #define MAX_CHILDREN 100
-static int catching_children = 0;
-static int pids[MAX_CHILDREN];
 
 
 
@@ -99,7 +101,127 @@ my_popen(const char * const cmd,
 
     return retfile;
 }
+
+
+
+static void
+reapChildren(int *   const catchingChildrenP,
+             pid_t * const pids) {
+
+    /* Check for dead children. */
+
+    if (*catchingChildrenP > 0) {
+        unsigned int i;
+
+        /* Check all children to see if any are dead, reap them if so. */
+        for (i = 0; i < *catchingChildrenP; ++i) {
+            /* The assumption here is that if it's dead, the kill
+             * will fail, but, because we haven't waited for
+             * it yet, it's a zombie.
+             */
+            if (kill(pids[i], 0) < 0) {
+                int opid = pids[i], pid = 0;
+                /* Wait for processes & delete them from the list,
+                 * until we get the one we know is dead.
+                 * When removing one earlier in the list than
+                 * the one we found, decrement our loop index.
+                 */
+                while (pid != opid) {
+                    unsigned int j;
+                    pid = wait(NULL);
+                    for (j = 0;
+                         j < *catchingChildrenP && pids[j] != pid;
+                         ++j)
+                        ;
+                    if (pid < 0)
+                        break;
+                    if (j < *catchingChildrenP) {
+                        if (i >= j)
+                            --i;
+                        for (++j; j < *catchingChildrenP; ++j)
+                            pids[j-1] = pids[j];
+                        --*catchingChildrenP;
+                    }
+                }
+            }
+        }
+    }
+}
 #endif  /* !NO_OPEN_PIPES */
+
+
+
+static void
+dealWithSubprocess(const char *  const file_name,
+                   const char *  const mode,
+                   int *         const catchingChildrenP,
+                   pid_t *       const pids,
+                   FILE **       const fpP,
+                   bool *        const noSubprocessP,
+                   const char ** const errorP) {
+
+#ifdef NO_OPEN_PIPES
+    *noSubprocessP = TRUE;
+#else
+    const char *cp;
+
+    reapChildren(catchingChildrenP, pids);
+
+    /*  Real file, not stdin or stdout.  If name ends in ".Z",
+     *  pipe from/to un/compress (depending on r/w mode).
+     *  
+     *  If it starts with "|", popen that command.
+     */
+        
+    cp = file_name + strlen(file_name) - 2;
+    /* Pipe case. */
+    if (file_name[0] == '|') {
+        pid_t thepid;     /* PID from my_popen */
+
+        *noSubprocessP = FALSE;
+
+        *fpP = my_popen(file_name + 1, mode, &thepid);
+        if (*fpP == NULL)
+            *errorP = "%s: can't invoke <<%s>> for %s: ";
+        else {
+            /* One more child to catch, eventually. */
+            if (*catchingChildrenP < MAX_CHILDREN)
+                pids[(*catchingChildrenP)++] = thepid;
+        }
+    } else if (cp > file_name && *cp == '.' && *(cp + 1) == 'Z' ) {
+        /* Compress case. */
+        pid_t thepid;     /* PID from my_popen. */
+        const char * command;
+
+        *noSubprocessP = FALSE;
+        
+        if (*mode == 'w')
+            asprintfN(&command, "compress > %s", file_name);
+        else if (*mode == 'a')
+            asprintfN(&command, "compress >> %s", file_name);
+        else
+            asprintfN(&command, "compress -d < %s", file_name);
+        
+        *fpP = my_popen(command, mode, &thepid);
+
+        if (*fpP == NULL)
+            *errorP = "%s: can't invoke 'compress' program, "
+                "trying to open %s for %s";
+        else {
+            /* One more child to catch, eventually. */
+            if (*catchingChildrenP < MAX_CHILDREN)
+                pids[(*catchingChildrenP)++] = thepid;
+        }
+        strfree(command);
+    } else {
+        *noSubprocessP = TRUE;
+        *errorP = NULL;
+    }
+#endif
+}
+
+
+
 
 /* 
  *  Purpose : Open a file for input or ouput as controlled by the mode
@@ -127,150 +249,63 @@ rle_open_f_noexit(const char * const prog_name,
                   const char * const file_name, 
                   const char * const mode ) {
 
-    FILE *fp;
-    void perror();
-    CONST_DECL char *err_str;
-    const char *cp;
-    char *combuf;
+    FILE * retval;
+    FILE * fp;
+    const char * err_str;
+    int catching_children;
+    pid_t pids[MAX_CHILDREN];
 
-    if ( *mode == 'w' || *mode == 'a' )
+    catching_children = 0;
+
+    if (*mode == 'w' || *mode == 'a')
         fp = stdout;     /* Set the default value */
     else
         fp = stdin;
     
-    if ( file_name != NULL && strcmp( file_name, "-" ) != 0 )
-    {
-#ifndef NO_OPEN_PIPES
-        /* Check for dead children. */
-        if ( catching_children > 0 )
-        {
-            int i, j;
-
-            /* Check all children to see if any are dead, reap them if so. */
-            for ( i = 0; i < catching_children; i++ )
-            {
-                /* The assumption here is that if it's dead, the kill
-                 * will fail, but, because we haven't waited for
-                 * it yet, it's a zombie.
-                 */
-                if (kill(pids[i], 0) < 0) {
-                    int opid = pids[i], pid = 0;
-                    /* Wait for processes & delete them from the list,
-                     * until we get the one we know is dead.
-                     * When removing one earlier in the list than
-                     * the one we found, decrement our loop index.
-                     */
-                    while (pid != opid) {
-                        pid = wait( NULL );
-                        for ( j = 0;
-                              j < catching_children && pids[j] != pid;
-                              j++ )
-                            ;
-                        if ( pid < 0 )
-                            break;
-                        if ( j < catching_children ) {
-                            if ( i >= j )
-                                i--;
-                            for ( j++; j < catching_children; j++ )
-                                pids[j-1] = pids[j];
-                            catching_children--;
-                        }
-                    }
-                }
-            }
-        }
-
-        /*  Real file, not stdin or stdout.  If name ends in ".Z",
-         *  pipe from/to un/compress (depending on r/w mode).
-         *  
-         *  If it starts with "|", popen that command.
-         */
+    if (file_name != NULL && !streq(file_name, "-")) {
+        bool noSubprocess;
+        dealWithSubprocess(file_name, mode, &catching_children, pids,
+                           &fp, &noSubprocess, &err_str);
         
-        cp = file_name + strlen( (char*) file_name ) - 2;
-        /* Pipe case. */
-        if ( *file_name == '|' )
-        {
-            int thepid;     /* PID from my_popen */
-            if ( (fp = my_popen( file_name + 1, mode, &thepid )) == NULL )
-            {
-                err_str = "%s: can't invoke <<%s>> for %s: ";
-                goto err;
-            }
-            /* One more child to catch, eventually. */
-            if (catching_children < MAX_CHILDREN) {
-                pids[catching_children++] = thepid;
-            }
-        }
+        if (!err_str) {
+            if (noSubprocess) {
+                /* Ordinary, boring file case. */
+                /* In the original code, the code to add the "b" was
+                   conditionally included only if the macro
+                   STDIO_NEEDS_BINARY was defined.  But for Netpbm,
+                   there is no need make a distinction; we always add
+                   the "b".  -BJH 2000.07.20.
+                */
+                char mode_string[32];   /* Should be enough. */
 
-        /* Compress case. */
-        else if ( cp > file_name && *cp == '.' && *(cp + 1) == 'Z' )
-        {
-            int thepid;     /* PID from my_popen. */
-            combuf = (char *)malloc( 20 + strlen( file_name ) );
-            if ( combuf == NULL )
-            {
-                err_str = "%s: out of memory opening (compressed) %s for %s";
-                goto err;
-            }
-
-            if ( *mode == 'w' )
-                sprintf( combuf, "compress > %s", file_name );
-            else if ( *mode == 'a' )
-                sprintf( combuf, "compress >> %s", file_name );
-            else
-                sprintf( combuf, "compress -d < %s", file_name );
-
-            fp = my_popen( combuf, mode, &thepid );
-            free( combuf );
-
-            if ( fp == NULL )
-            {
-                err_str =
-                    "%s: can't invoke 'compress' program, "
-                    "trying to open %s for %s";
-                goto err;
-            }
-            /* One more child to catch, eventually. */
-            if (catching_children < MAX_CHILDREN) {
-                pids[catching_children++] = thepid;
-            }
-        }
-        else
-#endif /* !NO_OPEN_PIPES */
-        {
-            /* Ordinary, boring file case. */
-            /* In the original code, the code to add the "b" was
-               conditionally included only if the macro STDIO_NEEDS_BINARY was
-               defined.  But for Netpbm, there is no need make a distinction;
-               we always add the "b".  -BJH 2000.07.20.  
-            */
-            char mode_string[32];   /* Should be enough. */
-
-            /* Concatenate a 'b' onto the mode. */
-            mode_string[0] = mode[0];
-            mode_string[1] = 'b';
-            strcpy( mode_string + 2, mode + 1 );
+                /* Concatenate a 'b' onto the mode. */
+                mode_string[0] = mode[0];
+                mode_string[1] = 'b';
+                strcpy( mode_string + 2, mode + 1 );
         
-            if ( (fp = fopen(file_name, mode_string)) == NULL )
-            {
-                err_str = "%s: can't open %s for %s: ";
-                goto err;
+                fp = fopen(file_name, mode_string);
+                if (fp == NULL )
+                    err_str = "%s: can't open %s for %s: ";
             }
         }
-    }
+    } else
+        err_str = NULL;
 
-    return fp;
+    if (err_str) {
+        fprintf(stderr, err_str,
+                prog_name, file_name,
+                (*mode == 'w') ? "output" :
+                (*mode == 'a') ? "append" :
+                "input" );
+        fprintf(stderr, "errno = %d (%s)\n", errno, strerror(errno));
+        retval = NULL;
+    } else
+        retval = fp;
 
-                  err:
-    fprintf( stderr, err_str,
-             prog_name, file_name,
-             (*mode == 'w') ? "output" :
-             (*mode == 'a') ? "append" :
-             "input" );
-    perror( "" );
-    return NULL;
-
+    return retval;
 }
+
+
 
 FILE *
 rle_open_f(const char * prog_name, const char * file_name, const char * mode)
