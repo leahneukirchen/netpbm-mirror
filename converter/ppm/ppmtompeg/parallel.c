@@ -128,7 +128,7 @@ boolean niceProcesses = FALSE;
 boolean forceIalign = FALSE;
 int     machineNumber = -1;
 boolean remoteIO = FALSE;
-bool separateConversion;
+boolean separateConversion;
     /* The I/O server will convert from the input format to the base format,
        and the slave will convert from the base format to the YUV internal
        format.  If false, the I/O server assumes the input format is the
@@ -630,7 +630,7 @@ static int safe_fork(command)       /* fork child process and remember its PID *
  *
  *===========================================================================*/
 void
-SetIOConvert(bool const separate) {
+SetIOConvert(boolean const separate) {
     separateConversion = separate;
 }
 
@@ -648,8 +648,7 @@ SetIOConvert(bool const separate) {
  *
  *===========================================================================*/
 void
-SetParallelPerfect(val)
-boolean val;
+SetParallelPerfect(boolean val)
 {
     parallelPerfect = val;
 }
