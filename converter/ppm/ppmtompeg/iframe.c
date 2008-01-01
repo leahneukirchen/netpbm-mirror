@@ -42,11 +42,11 @@
  * HEADER FILES *
  *==============*/
 
+#include <time.h>  /* Defines CLOCKS_PER_SEC, if this system has clock() */
 
-#ifdef CLOCKS_PER_SEC
-#include <times.h>
-#else
-#include <sys/times.h>
+#ifndef CLOCKS_PER_SEC
+  /* System doesn't have clock(); we assume it has times() instead */
+  #include <sys/times.h>
 #endif
 
 #include <sys/types.h>
