@@ -72,6 +72,8 @@
 #else
     /* let in.h handle it, if possible */		   
 #include <sys/types.h>
+#if !defined(WIN32) || defined(__CYGWIN__)
 #include <netinet/in.h>
+#endif
 #endif /* FORCE_LITTLE_ENDIAN */
 #endif /* FORCE_BIG_ENDIAN */
