@@ -6,6 +6,11 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.42.00
 
+              Add pm_tmpfile_fd() and pm_make_tmpfile_fd().
+
+              Various things to make it build on Windows without POSIX
+              emulation.
+
 07.12.27 BJH  Release 10.41.00
 
               pamenlarge: much faster for PBM.  Thanks Prophet of the
