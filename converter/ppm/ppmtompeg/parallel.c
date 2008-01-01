@@ -41,6 +41,7 @@
 
 #include "mallocvar.h"
 #include "nstring.h"
+#include "nsleep.h"
 
 #include "pm.h"
 
@@ -1208,7 +1209,7 @@ openInputFile(const char * const fileName,
             pm_message("ERROR  Couldn't read frame file '%s' errno = %d (%s)"
                        "attempt %d", 
                        fileName, errno, strerror(errno), attempts);
-            sleep(1);
+            sleepN(1000);
         }
         ++attempts;
     }

@@ -35,8 +35,8 @@
 #include <errno.h>
 #include <unistd.h>
 
-#include "ppm.h"
 #include "nstring.h"
+#include "nsleep.h"
 
 #include "mtypes.h"
 #include "frames.h"
