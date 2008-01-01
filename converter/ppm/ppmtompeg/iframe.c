@@ -72,8 +72,8 @@
  * STATIC VARIABLES *
  *==================*/
 
-static  int lastNumBits = 0;
-static  int lastIFrame = 0;
+static int lastNumBits = 0;
+static int lastIFrame = 0;
 static int numBlocks = 0;
 static int numBits;
 static int numFrames = 0;
@@ -979,7 +979,3 @@ int32 time_elapsed(void) {
     return timeBuffer.tms_utime + timeBuffer.tms_stime;
 #endif
 }
-
-
-
-
