@@ -9,7 +9,7 @@ include $(BUILDDIR)/Makefile.config
 
 # nstring is required for asprintf(), etc.  Also some systems don't have
 # snprintf(), e.g. Solaris 2.5.1.  2002.03.29.
-UTILOBJECTS = shhopt.o nstring.o vasprintf.o filename.o
+UTILOBJECTS = shhopt.o nstring.o vasprintf.o filename.o nsleep.o
 
 MERGE_OBJECTS =
 

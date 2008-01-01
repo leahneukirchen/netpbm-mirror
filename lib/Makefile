@@ -40,7 +40,12 @@ ifneq (${VMS}x,x)
 LIBOBJECTS += libpbmvms.o
 endif
 # Library objects to be linked but not built by Makefile.common:
-LIBOBJECTS_X = util/shhopt.o util/nstring.o util/vasprintf.o util/filename.o
+LIBOBJECTS_X = \
+  util/shhopt.o \
+  util/nstring.o \
+  util/vasprintf.o \
+  util/filename.o \
+  util/nsleep.o \
 
 MANUALS3 = libnetpbm
 MANUALS5 = pbm pgm ppm pnm pam
