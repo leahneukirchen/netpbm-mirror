@@ -163,7 +163,8 @@ MasterServer(struct inputSource * const inputSourceP,
 void
 CombineServer(int          const numFrames, 
               const char * const masterHostName, 
-              int          const masterPortNum) {
+              int          const masterPortNum,
+              const char*  const outputFileName) {
 
     pm_error("This version of Ppmtompeg cannot run combine server because "
              "it does not have socket capability.");
