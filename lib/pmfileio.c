@@ -225,38 +225,6 @@ makeTmpfileWithTemplate(const char *  const filenameTemplate,
 
 
 
-static void
-fMakeTmpfileWithTemplate(const char *  const filenameTemplate,
-                         FILE **       const filePP,
-                         const char ** const filenameP,
-                         const char ** const errorP) {
-    
-    int fd;
-
-    makeTmpfileWithTemplate(filenameTemplate, &fd, filenameP, errorP);
-
-    if (!*errorP) {
-        FILE * fileP;
-        fileP = fdopen(fd, "w+b");
-            
-        if (fileP == NULL)
-            asprintfN(errorP, "Unable to create temporary file.  "
-                      "fdopen() failed with errno %d (%s)",
-                      errno, strerror(errno));
-        else {
-            *errorP = NULL;
-            *filePP = fileP;
-        }
-        if (*errorP) {
-            unlink(*filenameP);
-            strfree(*filenameP);
-            close(fd);
-        }
-    }
-}
-
-
-
 void
 pm_make_tmpfile_fd(int *         const fdP,
                    const char ** const filenameP) {
