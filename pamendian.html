@@ -6,18 +6,15 @@ Updated: 16 March 2002
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
 pamendian - reverse endianness of a Netpbm image
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>pamendian</B>
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -35,6 +32,12 @@ output is the little endian variation on that format, and vice versa.
 <P>Programs that come with the Independent Jpeg Group's JPEG library
 are known to use the little endian variation of PGM and PPM.
 
+<p>The reason some programs use this variant is that at one time
+during Netpbm's <a
+href="http://netpbm.sourceforge.net/history.html">dark age</a>, there
+was a version of Netpbm around that used it.  But it was never
+formally specified.
+
 <P>This program takes input only on Standard Input.  Its output is
 always on Standard Output.
 
@@ -50,8 +53,7 @@ using <B>rawtopgm</B> or <B>rawtoppm</B>, use options on those
 programs to declare the endianness of your input, thus creating
 correct endianness in your PGM or PPM output.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="pamdepth.html">pamdepth</A></B>,
 <B><A HREF="rawtopgm.html">rawtopgm</A></B>,
@@ -59,12 +61,11 @@ correct endianness in your PGM or PPM output.
 <B><A HREF="pnm.html">pnm</A></B>
 
 <HR>
-<A NAME="Table Of Contents">&nbsp;</A><H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">SEE ALSO</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
 </UL>
 </BODY>
 </HTML>
