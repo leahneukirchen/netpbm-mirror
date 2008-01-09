@@ -2,30 +2,28 @@
 <HTML><HEAD><TITLE>Tifftopnm User Manual</TITLE></HEAD>
 <BODY>
 <H1>tifftopnm</H1>
-Updated: 27 March 2005
+Updated: 08 January 2008
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
 tifftopnm - convert a TIFF file into a PNM image
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>tifftopnm</B>
 
 [<B>-alphaout=</B>{<I>alpha-filename</I>,<B>-</B>}]
 [<B>-headerdump</B>]
+[<b>-verbose</b>]
 <br>
 [<B>-respectfillorder</B>]
 [<B>-byrow</B>]
 [<I>tiff-filename</I>]
 
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -94,8 +92,7 @@ file is fine.
 
 
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<H2 id="options">OPTIONS</H2>
 
 <P>You may abbreviate any option to its shortest unique prefix.  You may use
 two hyphens instead of one in options.  You may separate an option and
@@ -176,6 +173,10 @@ your results.
 By Row.  Netpbm 10.12 always tried Whole Image first.  <b>-byrow</b>
 came in with Netpbm 10.13 (January 2003).
 
+<dt><b>-verbose</b>
+
+<dd>Print extra messages to Standard Error about the conversion.
+
 <DT><B>-headerdump</B>
 
 <DD>Dump TIFF file information to stderr.  This information may be useful 
@@ -183,20 +184,19 @@ in debugging TIFF file conversion problems.
 
 </DL>
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>NOTES</H2>
+<H2 id="notes">NOTES</H2>
 
-<A NAME="lbAG">&nbsp;</A>
-<H3>Fillorder</H3>
+<H3 id="fillorder">Fillorder</H3>
 
 <P>
 There is a piece of information in the header of a TIFF image called
-&quot;fillorder.&quot;  The TIFF specification quite clearly states that this value
-tells the order in which bits are arranged in a byte in the description
-of the image's pixels.  There are two options, assuming that the image has
-a format where more than one pixel can be represented by a single byte:
-1) the byte is filled from most significant bit to least significant bit
-going left to right in the image; and 2) the opposite.
+&quot;fillorder.&quot; The TIFF specification quite clearly states
+that this value tells the order in which bits are arranged in a byte
+in the description of the image's pixels.  There are two options,
+assuming that the image has a format where more than one pixel can be
+represented by a single byte: 1) the byte is filled from most
+significant bit to least significant bit going left to right in the
+image; and 2) the opposite.
 <P>
 However, there is confusion in the world as to the meaning of
 fillorder.  Evidence shows that some people believe it has to do with
@@ -207,44 +207,32 @@ MSB-to-LSB fillorder, have a fillorder tag that says they used LSB-to-MSB.
 A program that properly interprets a TIFF image will not end up with the
 image that the author intended in this case.
 <P>
-For a long time, 
-<B>tifftopnm</B>
-
-did not understand fillorder itself and assumed the fillorder was 
-MSB-to-LSB regardless of the fillorder tag in the TIFF header.  And as
-far as I know, there is no legitimate reason to use a fillorder other
-than MSB-to-LSB.  So users of
-<B>tifftopnm</B>
-
-were happily using those TIFF images that had incorrect fillorder tags.
+For a long time, <B>tifftopnm</B> did not understand fillorder itself
+and assumed the fillorder was MSB-to-LSB regardless of the fillorder
+tag in the TIFF header.  And as far as I know, there is no legitimate
+reason to use a fillorder other than MSB-to-LSB.  So users of
+<B>tifftopnm</B> were happily using those TIFF images that had
+incorrect fillorder tags.
 <P>
-So that those users can continue to be happy, 
-<B>tifftopnm</B>
-
-today continues to ignore the fillorder tag unless you tell it not to.
-(It does, however, warn you when the fillorder tag does not say
-MSB-to-LSB that the tag is being ignored).
+So that those users can continue to be happy, <B>tifftopnm</B> today
+continues to ignore the fillorder tag unless you tell it not to.  (It
+does, however, warn you when the fillorder tag does not say MSB-to-LSB
+that the tag is being ignored).
 <P>
-If for some reason you have a TIFF image that actually has LSB-to-MSB 
-fillorder, and its fillorder tag correctly indicates that, you must use
-the 
-<B>-respectfillorder</B>
-
-option on
-<B>tifftopnm</B>
-
-to get proper results.
+If for some reason you have a TIFF image that actually has LSB-to-MSB
+fillorder, and its fillorder tag correctly indicates that, you must
+use the <B>-respectfillorder</B> option on <B>tifftopnm</B> to get
+proper results.
 <P>
-Examples of incorrect TIFF images are at <A HREF="ftp://weather.noaa.gov.">ftp://weather.noaa.gov.</A>  They
-are apparently created by a program called 
-<B>faxtotiff</B>.
+Examples of incorrect TIFF images are at <A
+HREF="ftp://weather.noaa.gov.">ftp://weather.noaa.gov.</A> They are
+apparently created by a program called <B>faxtotiff</B>.
 
 <P>
 This note was written on January 1, 2002.
 
 
-<a name="cmyk"></a>
-<h3>Color Separation (CMYK) TIFFs</H3>
+<h3 id="cmyk">Color Separation (CMYK) TIFFs</H3>
 
 <p>Some TIFF images contain color information in CMYK form, whereas PNM
 images use RGB.  There are various formulas for converting between these
@@ -266,36 +254,32 @@ Row By Row mode.
 Y=(1-K)*(1-B) formula always.
 
 
-<A NAME="lbAH">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="pnmtotiff.html">pnmtotiff</A></B>,
 <B><A HREF="pnmtotiffcmyk.html">pnmtotiffcmyk</A></B>,
 <B><A HREF="pamcomp.html">pamcomp</A></B>,
 <B><A HREF="pnm.html">pnm</A></B>
 
-<A NAME="lbAI">&nbsp;</A>
-<H2>AUTHOR</H2>
+<H2 id="author">AUTHOR</H2>
 
 <p>Derived by Jef Poskanzer from tif2ras.c, which is Copyright (c)
 1990 by Sun Microsystems, Inc.  Author: Patrick J. Naughton (<A
 HREF="mailto:naughton@wind.sun.com">naughton@wind.sun.com</A>).
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-  <LI><A HREF="#lbAB">NAME</A>
-  <LI><A HREF="#lbAC">SYNOPSIS</A>
-  <LI><A HREF="#lbAD">DESCRIPTION</A>
-  <LI><A HREF="#lbAE">OPTIONS</A>
-  <LI><A HREF="#lbAF">NOTES</A>
+  <LI><A HREF="#synopsis">SYNOPSIS</A>
+  <LI><A HREF="#description">DESCRIPTION</A>
+  <LI><A HREF="#options">OPTIONS</A>
+  <LI><A HREF="#notes">NOTES</A>
     <UL>
-      <LI><A HREF="#lbAG">Fillorder</A>
+      <LI><A HREF="#fillorder">Fillorder</A>
       <LI><A HREF="#cmyk">Color Separation (CMYK) TIFFs</A>
       </UL>
-  <LI><A HREF="#lbAH">SEE ALSO</A>
-  <LI><A HREF="#lbAI">AUTHOR</A>
+  <LI><A HREF="#seealso">SEE ALSO</A>
+  <LI><A HREF="#author">AUTHOR</A>
   </UL>
 </BODY>
 </HTML>
