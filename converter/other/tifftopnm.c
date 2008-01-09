@@ -96,7 +96,7 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine(int argc, char ** argv,
+parseCommandLine(int argc, const char ** const argv,
                  struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that many of the strings that this function returns in the
@@ -127,7 +127,7 @@ parseCommandLine(int argc, char ** argv,
     OPTENT3(0,   "alphaout",   
             OPT_STRING, &cmdlineP->alphaFilename, &alphaSpec,  0);
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
 
     if (argc - 1 == 0)
         cmdlineP->inputFilename = strdup("-");  /* he wants stdin */
@@ -150,16 +150,42 @@ parseCommandLine(int argc, char ** argv,
 
 
 
+static void
+getBps(TIFF *           const tif,
+       unsigned short * const bpsP) {
+
+    unsigned short tiffBps;
+    unsigned short bps;
+    int rc;
+
+    rc = TIFFGetField(tif, TIFFTAG_BITSPERSAMPLE, &tiffBps);
+    bps = (rc == 0) ? 1 : tiffBps;
+
+    if (bps < 1 || (bps > 8 && bps != 16 && bps != 32))
+        pm_error("This program can process Tiff images with only "
+                 "1-8 or 16 bits per sample.  The input Tiff image "
+                 "has %hu bits per sample.", bps);
+    else
+        *bpsP = bps;
+}
+
+
+
+struct tiffDirInfo {
+    unsigned short bps;
+    unsigned short spp;
+    unsigned short photomet;
+    unsigned short planarconfig;
+    unsigned short fillorder;
+    unsigned int   cols;
+    unsigned int   rows;
+};
+
+
 static void 
-read_directory(TIFF * const tif,
-               unsigned short * const bps_p,
-               unsigned short * const spp_p,
-               unsigned short * const photomet_p,
-               unsigned short * const planarconfig_p,
-               unsigned short * const fillorder_p,
-               unsigned int *   const cols_p,
-               unsigned int *   const rows_p,
-               bool             const headerdump) {
+readDirectory(TIFF *               const tif,
+              bool                 const headerdump,
+              struct tiffDirInfo * const headerP) {
 /*----------------------------------------------------------------------------
    Read various values of TIFF tags from the TIFF directory, and
    default them if not in there and make guesses where values are
@@ -173,68 +199,63 @@ read_directory(TIFF * const tif,
    invalid values to our caller.
 -----------------------------------------------------------------------------*/
     int rc;
-    unsigned short tiff_bps;
-    unsigned short tiff_spp;
+    unsigned short tiffSpp;
 
     if (headerdump)
         TIFFPrintDirectory(tif, stderr, TIFFPRINT_NONE);
 
-    rc = TIFFGetField(tif, TIFFTAG_BITSPERSAMPLE, &tiff_bps);
-    *bps_p = (rc == 0) ? 1 : tiff_bps;
+    getBps(tif, &headerP->bps);
 
-    if (*bps_p < 1 || (*bps_p > 8 && *bps_p != 16 && *bps_p != 32))
-        pm_error("This program can process Tiff images with only "
-                 "1-8 or 16 bits per sample.  The input Tiff image "
-                 "has %d bits per sample.", *bps_p);
+    rc = TIFFGetFieldDefaulted(tif, TIFFTAG_FILLORDER, &headerP->fillorder);
+    rc = TIFFGetField(tif, TIFFTAG_SAMPLESPERPIXEL, &tiffSpp);
+    headerP->spp = (rc == 0) ? 1 : tiffSpp;
 
-    rc = TIFFGetFieldDefaulted(tif, TIFFTAG_FILLORDER, fillorder_p);
-    rc = TIFFGetField(tif, TIFFTAG_SAMPLESPERPIXEL, &tiff_spp);
-    *spp_p = (rc == 0) ? 1: tiff_spp;
-
-    rc = TIFFGetField(tif, TIFFTAG_PHOTOMETRIC, photomet_p);
+    rc = TIFFGetField(tif, TIFFTAG_PHOTOMETRIC, &headerP->photomet);
     if (rc == 0)
         pm_error("PHOTOMETRIC tag is not in Tiff file.  "
                  "TIFFGetField() of it failed.\n"
                  "This means the input is not valid Tiff.");
 
-    if (*spp_p > 1) {
-        rc = TIFFGetField(tif, TIFFTAG_PLANARCONFIG, planarconfig_p);
+    if (headerP->spp > 1) {
+        rc = TIFFGetField(tif, TIFFTAG_PLANARCONFIG, &headerP->planarconfig);
         if (rc == 0)
             pm_error("PLANARCONFIG tag is not in Tiff file, though it "
                      "has more than one sample per pixel.  "
                      "TIFFGetField() of it failed.  This means the input "
                      "is not valid Tiff.");
-    } else {
-        *planarconfig_p = PLANARCONFIG_CONTIG;
-    }
+    } else
+        headerP->planarconfig = PLANARCONFIG_CONTIG;
 
-    switch(*planarconfig_p) {
+    switch (headerP->planarconfig) {
     case PLANARCONFIG_CONTIG:
         break;
     case PLANARCONFIG_SEPARATE:
-        if (*photomet_p != PHOTOMETRIC_RGB && 
-            *photomet_p != PHOTOMETRIC_SEPARATED)
+        if (headerP->photomet != PHOTOMETRIC_RGB && 
+            headerP->photomet != PHOTOMETRIC_SEPARATED)
             pm_error("This program can handle separate planes only "
-                     "with RGB (PHOTOMETRIC tag = %d) or SEPARATED "
-                     "(PHOTOMETRIC tag = %d) data.  The input Tiff file " 
-                     "has PHOTOMETRIC tag = %d.",
-                     PHOTOMETRIC_RGB, PHOTOMETRIC_SEPARATED, *photomet_p);
+                     "with RGB (PHOTOMETRIC tag = %u) or SEPARATED "
+                     "(PHOTOMETRIC tag = %u) data.  The input Tiff file " 
+                     "has PHOTOMETRIC tag = %hu.",
+                     PHOTOMETRIC_RGB, PHOTOMETRIC_SEPARATED,
+                     headerP->photomet);
         break;
     default:
-        pm_error("Unrecognized PLANARCONFIG tag value in Tiff input: %d.\n",
-                 *planarconfig_p);
+        pm_error("Unrecognized PLANARCONFIG tag value in Tiff input: %u.\n",
+                 headerP->planarconfig);
     }
 
-    rc = TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, cols_p);
+    rc = TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &headerP->cols);
     if (rc == 0)
         pm_error("Input Tiff file is invalid.  It has no IMAGEWIDTH tag.");
-    rc = TIFFGetField( tif, TIFFTAG_IMAGELENGTH, rows_p );
+    rc = TIFFGetField( tif, TIFFTAG_IMAGELENGTH, &headerP->rows);
     if (rc == 0)
         pm_error("Input Tiff file is invalid.  It has no IMAGELENGTH tag.");
 
     if (headerdump) {
-        pm_message( "%ux%ux%u image", *cols_p, *rows_p, *bps_p * *spp_p );
-        pm_message( "%u bits/sample, %d samples/pixel", *bps_p, *spp_p );
+        pm_message("%ux%ux%u image",
+                   headerP->cols, headerP->rows, headerP->bps * headerP->spp);
+        pm_message("%hu bits/sample, %hu samples/pixel",
+                   headerP->bps, headerP->spp);
     }
 }
 
@@ -932,30 +953,26 @@ convertImage(TIFF *             const tifP,
              FILE *             const imageoutFile,
              struct cmdlineInfo const cmdline) {
 
+    struct tiffDirInfo tiffDir;
     unsigned int cols, rows;
     int format;
     xelval maxval;
-    unsigned short bps, spp;
-
     xel colormap[MAXCOLORS];
-    unsigned short photomet, planarconfig, fillorderTag;
     unsigned short fillorder;
 
-    read_directory(tifP, &bps, &spp, &photomet, &planarconfig, &fillorderTag,
-                   &cols, &rows, 
-                   cmdline.headerdump);
+    readDirectory(tifP, cmdline.headerdump, &tiffDir);
 
+    cols = tiffDir.cols; rows = tiffDir.rows;
 
-    computeFillorder(fillorderTag, &fillorder, cmdline.respectfillorder);
+    computeFillorder(tiffDir.fillorder, &fillorder, cmdline.respectfillorder);
 
-    analyzeImageType(tifP, bps, spp, photomet, 
+    analyzeImageType(tifP, tiffDir.bps, tiffDir.spp, tiffDir.photomet, 
                      &maxval, &format, colormap, cmdline.headerdump, cmdline);
 
     if (imageoutFile != NULL) 
-        pnm_writepnminit( imageoutFile, 
-                          cols, rows, (xelval) maxval, format, 0 );
+        pnm_writepnminit(imageoutFile, cols, rows, maxval, format, 0);
     if (alphaFile != NULL) 
-        pgm_writepgminit( alphaFile, cols, rows, (gray) maxval, 0 );
+        pgm_writepgminit(alphaFile, cols, rows, maxval, 0);
 
     {
         enum convertDisp status;
@@ -964,15 +981,16 @@ convertImage(TIFF *             const tifP,
         else {
             convertRasterInMemory(
                 imageoutFile, alphaFile, cols, rows, maxval, format, 
-                tifP, photomet, planarconfig, bps, spp, fillorder,
+                tifP, tiffDir.photomet, tiffDir.planarconfig, 
+                tiffDir.bps, tiffDir.spp, fillorder,
                 colormap, &status);
         }
         if (status == CONV_DONE) {
-            if (bps > 8)
+            if (tiffDir.bps > 8)
                 pm_message("actual resolution has been reduced to 24 bits "
                            "per pixel in the conversion.  You can get the "
                            "full %u bits that are in the TIFF with the "
-                           "-byrow option.", bps);
+                           "-byrow option.", tiffDir.bps);
         } else {
             if (status != CONV_NOTATTEMPTED)
                 pm_message("In-memory conversion failed; "
@@ -980,7 +998,8 @@ convertImage(TIFF *             const tifP,
             
             convertRasterByRows(
                 imageoutFile, alphaFile, cols, rows, maxval, format, 
-                tifP, photomet, planarconfig, bps, spp, fillorder, colormap);
+                tifP, tiffDir.photomet, tiffDir.planarconfig,
+                tiffDir.bps, tiffDir.spp, fillorder, colormap);
         }
     }
 }
@@ -1014,14 +1033,14 @@ convertIt(TIFF *             const tifP,
 
 
 int
-main(int argc, char * argv[]) {
+main(int argc, const char * argv[]) {
 
     struct cmdlineInfo cmdline;
     TIFF * tif;
     FILE * alphaFile;
     FILE * imageoutFile;
 
-    pnm_init( &argc, argv );
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
