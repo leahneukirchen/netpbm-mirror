@@ -23,10 +23,11 @@
 #include <sys/stat.h>
 
 
-#include "pnm.h"
+#include "pm_config.h"
 #include "shhopt.h"
 #include "mallocvar.h"
 #include "nstring.h"
+#include "pnm.h"
 
 struct cmdlineInfo {
     /* All the information the user supplied in the command line,
