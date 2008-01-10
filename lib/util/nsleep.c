@@ -13,7 +13,7 @@ void
 sleepN(unsigned int const milliseconds) {
 
 #ifdef WIN32
-    SleepEx(milliseconds, true);
+    SleepEx(milliseconds, TRUE);
 #else
 
     /* We could use usleep() here if millisecond resolution is really
