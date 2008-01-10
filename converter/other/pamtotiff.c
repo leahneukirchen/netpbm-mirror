@@ -1024,7 +1024,7 @@ validateReadableStdout(void) {
   error message about a file I/O error.  We, on the other hand, produce
   a helpful error message.
 -----------------------------------------------------------------------------*/
-#if defined(WIN32) && !defined(__CYGWIN__)
+#if !defined(WIN32) || defined(__CYGWIN__)
 
     int flags;
 
