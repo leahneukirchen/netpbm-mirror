@@ -21,14 +21,17 @@
 
 
 
+#define MAX_CHILDREN 100
+    /* Maximum number of children we track; any more than this remain
+       zombies.
+    */
+
+
 #ifndef NO_OPEN_PIPES
 /* Need to have a SIGCHLD signal catcher. */
 #include <signal.h>
 #include <sys/wait.h>
 #include <errno.h>
-
-/* Count outstanding children.  Assume no more than 100 possible. */
-#define MAX_CHILDREN 100
 
 
 
