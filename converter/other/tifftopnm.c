@@ -50,10 +50,11 @@
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 
 #include <string.h>
-#include "pnm.h"
+
 #include "shhopt.h"
 #include "mallocvar.h"
 #include "nstring.h"
+#include "pnm.h"
 
 #ifdef VMS
 #ifdef SYSV
@@ -172,18 +173,20 @@ getBps(TIFF *           const tif,
 
 
 struct tiffDirInfo {
+    unsigned int   cols;
+    unsigned int   rows;
     unsigned short bps;
     unsigned short spp;
     unsigned short photomet;
     unsigned short planarconfig;
     unsigned short fillorder;
-    unsigned int   cols;
-    unsigned int   rows;
+    unsigned short orientation;
 };
 
 
+
 static void 
-readDirectory(TIFF *               const tif,
+readDirectory(TIFF *               const tiffP,
               bool                 const headerdump,
               struct tiffDirInfo * const headerP) {
 /*----------------------------------------------------------------------------
@@ -202,22 +205,22 @@ readDirectory(TIFF *               const tif,
     unsigned short tiffSpp;
 
     if (headerdump)
-        TIFFPrintDirectory(tif, stderr, TIFFPRINT_NONE);
+        TIFFPrintDirectory(tiffP, stderr, TIFFPRINT_NONE);
 
-    getBps(tif, &headerP->bps);
+    getBps(tiffP, &headerP->bps);
 
-    rc = TIFFGetFieldDefaulted(tif, TIFFTAG_FILLORDER, &headerP->fillorder);
-    rc = TIFFGetField(tif, TIFFTAG_SAMPLESPERPIXEL, &tiffSpp);
+    rc = TIFFGetFieldDefaulted(tiffP, TIFFTAG_FILLORDER, &headerP->fillorder);
+    rc = TIFFGetField(tiffP, TIFFTAG_SAMPLESPERPIXEL, &tiffSpp);
     headerP->spp = (rc == 0) ? 1 : tiffSpp;
 
-    rc = TIFFGetField(tif, TIFFTAG_PHOTOMETRIC, &headerP->photomet);
+    rc = TIFFGetField(tiffP, TIFFTAG_PHOTOMETRIC, &headerP->photomet);
     if (rc == 0)
         pm_error("PHOTOMETRIC tag is not in Tiff file.  "
                  "TIFFGetField() of it failed.\n"
                  "This means the input is not valid Tiff.");
 
     if (headerP->spp > 1) {
-        rc = TIFFGetField(tif, TIFFTAG_PLANARCONFIG, &headerP->planarconfig);
+        rc = TIFFGetField(tiffP, TIFFTAG_PLANARCONFIG, &headerP->planarconfig);
         if (rc == 0)
             pm_error("PLANARCONFIG tag is not in Tiff file, though it "
                      "has more than one sample per pixel.  "
@@ -244,13 +247,18 @@ readDirectory(TIFF *               const tif,
                  headerP->planarconfig);
     }
 
-    rc = TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &headerP->cols);
+    rc = TIFFGetField(tiffP, TIFFTAG_IMAGEWIDTH, &headerP->cols);
     if (rc == 0)
         pm_error("Input Tiff file is invalid.  It has no IMAGEWIDTH tag.");
-    rc = TIFFGetField( tif, TIFFTAG_IMAGELENGTH, &headerP->rows);
+    rc = TIFFGetField(tiffP, TIFFTAG_IMAGELENGTH, &headerP->rows);
     if (rc == 0)
         pm_error("Input Tiff file is invalid.  It has no IMAGELENGTH tag.");
 
+    {
+        unsigned short tiffOrientation;
+        rc = TIFFGetField(tiffP, TIFFTAG_ORIENTATION, &tiffOrientation);
+        headerP->orientation = (rc == 0) ? tiffOrientation : 1;
+    }
     if (headerdump) {
         pm_message("%ux%ux%u image",
                    headerP->cols, headerP->rows, headerP->bps * headerP->spp);
@@ -281,7 +289,7 @@ readscanline(TIFF *         const tif,
    a Tiff scanline.
 -----------------------------------------------------------------------------*/
     int rc;
-    const unsigned int bpsmask = (1 << bps) - 1;
+    unsigned int const bpsmask = (1 << bps) - 1;
       /* A mask for taking the lowest 'bps' bits of a number */
 
     /* The TIFFReadScanline man page doesn't tell the format of its
@@ -869,8 +877,8 @@ enum convertDisp {CONV_DONE, CONV_OOM, CONV_UNABLE, CONV_FAILED,
                   CONV_NOTATTEMPTED};
 
 static void
-convertRasterInMemory(FILE *         const imageoutFile, 
-                      FILE *         const alphaFile,
+convertRasterInMemory(FILE *         const imageoutFileP,
+                      FILE *         const alphaFileP,
                       unsigned int   const cols, 
                       unsigned int   const rows,
                       xelval         const maxval,
@@ -884,9 +892,9 @@ convertRasterInMemory(FILE *         const imageoutFile,
                       xel                  colormap[],
                       enum convertDisp * const statusP) {
 /*----------------------------------------------------------------------------
-   With the TIFF header all processed (and relevant information from it in 
-   our arguments), write out the TIFF raster to the file images *imageoutFile
-   and *alphaFile.
+   With the TIFF header all processed (and relevant information from
+   it in our arguments), write out the TIFF raster to the file images
+   *imageoutFileP and *alphaFileP.
 
    Do this by reading the entire TIFF image into memory at once and formatting
    it with the TIFF library's TIFFRGBAImageGet().
@@ -900,7 +908,7 @@ convertRasterInMemory(FILE *         const imageoutFile,
     if (rows == 0 || cols == 0) 
         *statusP = CONV_DONE;
     else {
-        char emsg[1024] ;
+        char emsg[1024];
         int ok;
         ok = TIFFRGBAImageOK(tif, emsg);
         if (!ok) {
@@ -936,7 +944,7 @@ convertRasterInMemory(FILE *         const imageoutFile,
                     } else {
                         *statusP = CONV_DONE;
                         convertTiffRaster(raster, cols, rows, maxval, format, 
-                                          imageoutFile, alphaFile);
+                                          imageoutFileP, alphaFileP);
                     }
                 } 
                 free(raster);
