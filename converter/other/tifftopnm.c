@@ -49,6 +49,7 @@
 #define _BSD_SOURCE 1      /* Make sure strdup() is in string.h */
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 
+#include <assert.h>
 #include <string.h>
 
 #include "shhopt.h"
@@ -91,6 +92,7 @@ struct cmdlineInfo {
     bool alphaStdout;
     unsigned int respectfillorder;   /* -respectfillorder option */
     unsigned int byrow;
+    unsigned int orientraw;
     unsigned int verbose;
 };
 
@@ -123,6 +125,8 @@ parseCommandLine(int argc, const char ** const argv,
             OPT_FLAG,   NULL, &cmdlineP->respectfillorder,     0);
     OPTENT3(0,   "byrow",   
             OPT_FLAG,   NULL, &cmdlineP->byrow,                0);
+    OPTENT3(0,   "orientraw",   
+            OPT_FLAG,   NULL, &cmdlineP->orientraw,            0);
     OPTENT3('h', "headerdump", 
             OPT_FLAG,   NULL, &cmdlineP->headerdump,           0);
     OPTENT3(0,   "alphaout",   
@@ -173,8 +177,14 @@ getBps(TIFF *           const tif,
 
 
 struct tiffDirInfo {
-    unsigned int   cols;
-    unsigned int   rows;
+    /* 'width' and 'height' are the dimensions of the raster matrix in
+       the TIFF stream -- what the TIFF spec calls the image.  The
+       dimensions of the actual visual image represented may be the
+       reverse, because the raster can represent the visual image in
+       various orientations, as described by 'orientation'.
+    */
+    unsigned int   width;
+    unsigned int   height;
     unsigned short bps;
     unsigned short spp;
     unsigned short photomet;
@@ -182,6 +192,65 @@ struct tiffDirInfo {
     unsigned short fillorder;
     unsigned short orientation;
 };
+
+
+
+static void
+tiffToImageDim(unsigned int   const tiffCols,
+               unsigned int   const tiffRows,
+               unsigned short const orientation,
+               unsigned int * const imageColsP,
+               unsigned int * const imageRowsP) {
+
+    switch (orientation) {
+    case ORIENTATION_TOPLEFT:
+    case ORIENTATION_TOPRIGHT:
+    case ORIENTATION_BOTRIGHT:
+    case ORIENTATION_BOTLEFT:
+        *imageColsP = tiffCols;
+        *imageRowsP = tiffRows;
+        break;
+    case ORIENTATION_LEFTTOP:
+    case ORIENTATION_RIGHTTOP:
+    case ORIENTATION_RIGHTBOT:
+    case ORIENTATION_LEFTBOT:
+        *imageColsP = tiffRows;
+        *imageRowsP = tiffCols;
+        break;
+    default:
+        pm_error("Invalid value for orientation tag in TIFF directory: %u",
+                 orientation);
+    }
+}
+
+static void
+getTiffDimensions(TIFF *         const tiffP,
+                  unsigned int * const colsP,
+                  unsigned int * const rowsP) {
+/*----------------------------------------------------------------------------
+   Return the dimensions of the image represented by *tiffP.  Not the
+   dimensions of the internal raster matrix -- the dimensions of the
+   actual visual image.
+-----------------------------------------------------------------------------*/
+    int ok;
+
+    unsigned int width, length;
+    unsigned int tiffOrientation;
+    unsigned short orientation;
+    int present;
+
+    ok = TIFFGetField(tiffP, TIFFTAG_IMAGEWIDTH, &width);
+    if (!ok)
+        pm_error("Input Tiff file is invalid.  It has no IMAGEWIDTH tag.");
+    ok = TIFFGetField(tiffP, TIFFTAG_IMAGELENGTH, &length);
+    if (!ok)
+        pm_error("Input Tiff file is invalid.  It has no IMAGELENGTH tag.");
+
+    present = TIFFGetField(tiffP, TIFFTAG_ORIENTATION, &tiffOrientation);
+    orientation = present ? tiffOrientation : ORIENTATION_TOPLEFT;
+
+    tiffToImageDim(width, length, orientation, colsP, rowsP);
+}
 
 
 
@@ -247,21 +316,23 @@ readDirectory(TIFF *               const tiffP,
                  headerP->planarconfig);
     }
 
-    rc = TIFFGetField(tiffP, TIFFTAG_IMAGEWIDTH, &headerP->cols);
+    rc = TIFFGetField(tiffP, TIFFTAG_IMAGEWIDTH, &headerP->width);
     if (rc == 0)
         pm_error("Input Tiff file is invalid.  It has no IMAGEWIDTH tag.");
-    rc = TIFFGetField(tiffP, TIFFTAG_IMAGELENGTH, &headerP->rows);
+    rc = TIFFGetField(tiffP, TIFFTAG_IMAGELENGTH, &headerP->height);
     if (rc == 0)
         pm_error("Input Tiff file is invalid.  It has no IMAGELENGTH tag.");
 
     {
         unsigned short tiffOrientation;
         rc = TIFFGetField(tiffP, TIFFTAG_ORIENTATION, &tiffOrientation);
-        headerP->orientation = (rc == 0) ? tiffOrientation : 1;
+        headerP->orientation =
+            (rc == 0) ? ORIENTATION_TOPLEFT : tiffOrientation;
     }
     if (headerdump) {
-        pm_message("%ux%ux%u image",
-                   headerP->cols, headerP->rows, headerP->bps * headerP->spp);
+        pm_message("%ux%ux%u raster matrix, oriented %u",
+                   headerP->width, headerP->height,
+                   headerP->bps * headerP->spp, headerP->orientation);
         pm_message("%hu bits/sample, %hu samples/pixel",
                    headerP->bps, headerP->spp);
     }
@@ -577,6 +648,290 @@ analyzeImageType(TIFF *             const tif,
 
 
 
+typedef struct {
+    FILE *       imageoutFileP;
+        /* The stream to which we write the PNM image.  Null for none. */
+    FILE *       alphaFileP;
+        /* The stream to which we write the alpha channel.  Null for none. */
+    unsigned int inCols;
+        /* Width of each row that gets passed to this object */
+    unsigned int inRows;
+        /* Number of rows that get passed to this object */
+    unsigned int outCols;
+        /* Width of each row this object writes out to the file */
+    unsigned int outRows;
+        /* Number of rows this object writes out */
+    xelval       maxval;
+        /* Maxval of the output image */
+    int          format;
+        /* Format of the output image */
+    gray         alphaMaxval;
+        /* Maxval of the alpha channel */
+    bool         flipping;
+        /* We're passing rows through a Pamflip process, rather than writing
+           them directly to *imageoutFileP, *alphaFileP.
+        */
+    FILE *       imagePipeP;
+        /* Stream hooked up to pipe that goes to a Pamflip process.
+           Meaningful only when 'flipping' is true.
+        */
+    FILE *       alphaPipeP;
+        /* Stream hooked up to pipe that goes to a Pamflip process.
+           Meaningful only when 'flipping' is true.
+        */
+} pnmOut;
+
+
+
+static void
+createFlipProcess(FILE *  const imageoutFileP,
+                  FILE *  const alphaFileP,
+                  FILE ** const imagePipePP,
+                  FILE ** const alphaPipePP) {
+
+    pm_error("%s: The TIFF has nonstandard raster orientation and "
+             "the code to flip raster is not written yet.  "
+             "Use -orientraw or don't use -byrow", __FUNCTION__);
+}
+
+
+
+static void
+setupFlipper(pnmOut *       const pnmOutP,
+             unsigned short const orientation,
+             bool           const flipIfNeeded,
+             bool           const orientraw,
+             bool           const verbose,
+             bool *         const flipOkP,
+             bool *         const noflipOkP) {
+/*----------------------------------------------------------------------------
+   Set up the Pamflip processes to flip the raster, where needed.
+
+   Whether we need a Pamflip process is a complex decision.  For
+   reasons of efficiency and robustness, we don't want one unless
+   flipping is actually required.  Flipping is not required if the
+   TIFF image is already oriented like a PNM.  It also isn't required
+   if the user explicitly asks for raw orientation.  Finally, it's not
+   required when the user is using the TIFF library whole-image
+   conversion services, because they do the flipping and thus the
+   'pnmOut' object will see properly oriented pixels as input.
+
+   'flipIfNeeded' says to set up the flipping pipe if 'orientation'
+   indicates something other than standard PNM orientation.
+
+   'orientation' is the orientation of the TIFF raster.
+
+   'orientraw' says the final output should be in the same
+   orientation, 'orientation', not the proper PNM orientation.
+
+   *flipOkP means that as we set up the pnmOut object,
+   it is OK if Caller flips the raster on his own.  *noflipOk means
+   is is OK if Caller does not flip the raster on his own.  Note
+   that they are both true if the raster is already in the PNM
+   orientation, because then flipping is idempotent.
+-----------------------------------------------------------------------------*/
+
+    if (orientation == ORIENTATION_TOPLEFT) {
+        /* Ah, the easy case.  Flipping and not flipping are identical,
+           so none of the other parameters matter.  Just write directly
+           to the output file and let Caller flip or not flip as he
+           wishes.
+        */
+        pnmOutP->flipping = FALSE;
+        *flipOkP   = TRUE;
+        *noflipOkP = TRUE;
+    } else {
+        if (orientraw) {
+            /* Raster is not to be flipped, so go directly to file,
+               and tell Caller not to flip it either.
+            */
+            pnmOutP->flipping = FALSE;
+            *flipOkP   = FALSE;
+            *noflipOkP = TRUE;
+        } else {            
+            if (flipIfNeeded) {
+                if (verbose)
+                    pm_message("Transforming raster with Pamflip");
+
+                createFlipProcess(pnmOutP->imageoutFileP, pnmOutP->alphaFileP,
+                                  &pnmOutP->imagePipeP, &pnmOutP->alphaPipeP);
+                
+                /* The stream will flip it, so Caller must not: */
+                pnmOutP->flipping = TRUE;
+                *flipOkP   = FALSE;
+                *noflipOkP = TRUE;
+            } else {
+                /* It needs flipping, but Caller doesn't want us to do it.
+                   So Caller must do it:
+                */
+                pnmOutP->flipping = FALSE;
+                *flipOkP   = TRUE;
+                *noflipOkP = FALSE;
+            }
+        }
+    }
+}
+
+
+
+static void
+computeOutputDimensions(unsigned int       const tiffCols,
+                        unsigned int       const tiffRows,
+                        unsigned short     const orientation,
+                        bool               const orientraw,
+                        unsigned int *     const colsP,
+                        unsigned int *     const rowsP,
+                        bool               const verbose) {
+/*----------------------------------------------------------------------------
+   Compute the dimensions of the image.  We're talking about the
+   actual image, not what the TIFF spec calls the image.  What the
+   TIFF spec calls the image is matrix of pixels within the TIFF file.
+   That matrix can represent the actual image in various ways.
+   E.g. the first row of the matrix might be the right edge of the
+   image.
+
+   'tiffCols' and 'tiffRows' are the images of the TIFF matrix and
+   'orientation' is the orientation of that matrix.
+
+   'orientraw' says we want to output the matrix in its natural
+   orientation, not the true image.
+-----------------------------------------------------------------------------*/
+    if (orientraw) {
+        *colsP = tiffCols;
+        *rowsP = tiffRows;
+    } else
+        tiffToImageDim(tiffCols, tiffRows, orientation, colsP, rowsP);
+
+    if (verbose)
+        pm_message("Generating %uw x %uh PNM image", *colsP, *rowsP);
+}
+
+
+
+static void
+pnmOut_init(FILE *         const imageoutFileP,
+            FILE *         const alphaFileP,
+            unsigned int   const cols,
+            unsigned int   const rows,
+            unsigned short const orientation,
+            xelval         const maxval,
+            int            const format,
+            gray           const alphaMaxval,
+            bool           const flipIfNeeded,
+            bool           const orientraw,
+            bool           const verbose,
+            bool *         const flipOkP,
+            bool *         const noflipOkP,
+            pnmOut *       const pnmOutP) {
+/*----------------------------------------------------------------------------
+   'cols' and 'rows' are the dimensions of the raster matrix which is
+   oriented according to 'orientation' with respect to the image.
+
+   If the user flips the data before giving it to the pnmOut object,
+   pnmOut may see the inverse dimensions; if the pnmOut object flips the
+   data, pnmOut get 'cols' x 'rows' data, but its output file may be
+   'rows x cols'.
+
+   Because the pnmOut object must be set up to receive flipped or not
+   flipped input, we have *flipOkP and *noflipOkP outputs that tell
+   Caller whether he has to flip or not.  In the unique case that
+   the TIFF matrix is already oriented the way the output PNM file needs
+   to be, flipping is idempotent, so both *flipOkP and *noflipOkP are
+   true.
+-----------------------------------------------------------------------------*/
+    pnmOutP->imageoutFileP = imageoutFileP;
+    pnmOutP->alphaFileP    = alphaFileP;
+    pnmOutP->maxval        = maxval;
+    pnmOutP->format        = format;
+    pnmOutP->alphaMaxval   = alphaMaxval;
+
+    setupFlipper(pnmOutP, orientation, flipIfNeeded, orientraw, verbose,
+                 flipOkP, noflipOkP);
+
+    computeOutputDimensions(cols, rows, orientation, orientraw,
+                            &pnmOutP->outCols, &pnmOutP->outRows, verbose);
+
+    if (pnmOutP->flipping) {
+        pnmOutP->inCols = cols;         /* Caller won't flip */
+        pnmOutP->inRows = rows;
+    } else {
+        pnmOutP->inCols = pnmOutP->outCols;  /* Caller will flip */
+        pnmOutP->inRows = pnmOutP->outRows;
+    }    
+    if (pnmOutP->flipping) {
+        if (pnmOutP->imagePipeP != NULL) 
+            pnm_writepnminit(pnmOutP->imagePipeP,
+                             pnmOutP->inCols, pnmOutP->inRows,
+                             pnmOutP->maxval, pnmOutP->format, 0);
+        if (pnmOutP->alphaPipeP != NULL) 
+            pgm_writepgminit(pnmOutP->alphaPipeP,
+                             pnmOutP->inCols, pnmOutP->inRows,
+                             pnmOutP->alphaMaxval, 0);
+    } else {
+        if (imageoutFileP != NULL) 
+            pnm_writepnminit(pnmOutP->imageoutFileP,
+                             pnmOutP->outCols, pnmOutP->outRows,
+                             pnmOutP->maxval, pnmOutP->format, 0);
+        if (alphaFileP != NULL) 
+            pgm_writepgminit(pnmOutP->alphaFileP,
+                             pnmOutP->outCols, pnmOutP->outRows,
+                             pnmOutP->alphaMaxval, 0);
+    }
+}
+
+
+
+static void
+pnmOut_term(pnmOut * const pnmOutP) {
+
+    if (pnmOutP->flipping) {
+        /* Closing the pipes also terminates the Pamflip processes and
+           they consequently flush their output to pnmOutP->imageoutFileP
+           and pnmOutP->alphaFileP .
+        */
+        if (pnmOutP->imagePipeP)
+            fclose(pnmOutP->imagePipeP);
+        if (pnmOutP->alphaPipeP)
+            fclose(pnmOutP->alphaPipeP);
+    } else {
+        if (pnmOutP->imageoutFileP)
+            fflush(pnmOutP->imageoutFileP);
+        if (pnmOutP->alphaFileP)
+            fflush(pnmOutP->alphaFileP);
+    }
+}
+
+
+
+static void
+pnmOut_writeRow(pnmOut *     const pnmOutP,
+                unsigned int const cols,
+                const xel *  const imageRow,
+                const gray * const alphaRow) {
+
+    assert(cols == pnmOutP->inCols);
+
+    if (pnmOutP->flipping) {
+        if (pnmOutP->imagePipeP != NULL) 
+            pnm_writepnmrow(pnmOutP->imagePipeP, (xel *)imageRow,
+                            pnmOutP->inCols, pnmOutP->maxval,
+                            pnmOutP->format, 0);
+        if (pnmOutP->alphaPipeP != NULL) 
+            pgm_writepgmrow(pnmOutP->alphaPipeP, alphaRow,
+                            pnmOutP->inCols, pnmOutP->alphaMaxval, 0);
+    } else {
+        if (pnmOutP->imageoutFileP != NULL) 
+            pnm_writepnmrow(pnmOutP->imageoutFileP, (xel *)imageRow,
+                            pnmOutP->outCols, pnmOutP->maxval,
+                            pnmOutP->format, 0);
+        if (pnmOutP->alphaFileP != NULL) 
+            pgm_writepgmrow(pnmOutP->alphaFileP, alphaRow,
+                            pnmOutP->outCols, pnmOutP->alphaMaxval, 0);
+    }
+}
+
+
+
 static void
 convertRow(unsigned int   const samplebuf[], 
            xel                  xelrow[], 
@@ -736,19 +1091,18 @@ convertMultiPlaneRow(TIFF *         const tif,
 
 
 static void
-convertRasterByRows(FILE *         const imageoutFile, 
-                    FILE *         const alphaFile,
+convertRasterByRows(pnmOut *       const pnmOutP,
                     unsigned int   const cols, 
                     unsigned int   const rows,
                     xelval         const maxval,
-                    int            const format, 
                     TIFF *         const tif,
                     unsigned short const photomet, 
                     unsigned short const planarconfig,
                     unsigned short const bps,
                     unsigned short const spp,
                     unsigned short const fillorder,
-                    xel                  colormap[]) {
+                    xel            const colormap[],
+                    bool           const verbose) {
 /*----------------------------------------------------------------------------
    With the TIFF header all processed (and relevant information from it in 
    our arguments), write out the TIFF raster to the file images *imageoutFile
@@ -765,14 +1119,17 @@ convertRasterByRows(FILE *         const imageoutFile,
         /* Same info as 'scanbuf' above, but with each raster column (sample)
            represented as single array element, so it's easy to work with.
         */
-    xel* xelrow;
+    xel * xelrow;
         /* The ppm-format row of the image row we are presently converting */
-    gray* alpharow;
+    gray * alpharow;
         /* The pgm-format row representing the alpha values for the image 
            row we are presently converting.
         */
 
     int row;
+
+    if (verbose)
+        pm_message("Converting row by row ...");
 
     scanbuf = (unsigned char *) malloc(TIFFScanlineSize(tif));
     if (scanbuf == NULL)
@@ -780,12 +1137,12 @@ convertRasterByRows(FILE *         const imageoutFile,
 
     MALLOCARRAY(samplebuf, cols * spp);
     if (samplebuf == NULL)
-        pm_error ("can't allocate memory for row buffer");
+        pm_error("can't allocate memory for row buffer");
 
     xelrow = pnm_allocrow(cols);
     alpharow = pgm_allocrow(cols);
 
-    for ( row = 0; row < rows; ++row ) {
+    for (row = 0; row < rows; ++row) {
         /* Read one row of samples into samplebuf[] */
 
         if (planarconfig == PLANARCONFIG_CONTIG) {
@@ -799,12 +1156,8 @@ convertRasterByRows(FILE *         const imageoutFile,
             convertMultiPlaneRow(tif, xelrow, alpharow, cols, maxval, row,
                                  photomet, bps, spp, fillorder,
                                  scanbuf, samplebuf);
-            
-        if (imageoutFile != NULL) 
-            pnm_writepnmrow( imageoutFile, 
-                             xelrow, cols, (xelval) maxval, format, 0 );
-        if (alphaFile != NULL) 
-            pgm_writepgmrow( alphaFile, alpharow, cols, (gray) maxval, 0);
+
+        pnmOut_writeRow(pnmOutP, cols, xelrow, alpharow);
     }
     pgm_freerow(alpharow);
     pnm_freerow(xelrow);
@@ -821,32 +1174,29 @@ convertTiffRaster(uint32 *        const raster,
                   unsigned int    const cols,
                   unsigned int    const rows,
                   xelval          const maxval,
-                  int             const format,
-                  FILE *          const imageoutFile,
-                  FILE *          const alphaFile) {
+                  pnmOut *        const pnmOutP) {
 /*----------------------------------------------------------------------------
    Convert the raster 'raster' from the format generated by the TIFF library
    to PPM (plus PGM alpha mask where applicable) and output it to
-   the files *imageoutFile and *alphaFile in format 'format' with maxval
-   'maxval'.  The raster is 'cols' wide by 'rows' high.
+   the object *pnmOutP.  The raster is 'cols' wide by 'rows' high.
 -----------------------------------------------------------------------------*/
-    xel* xelrow;
+    xel * xelrow;
         /* The ppm-format row of the image row we are
            presently converting 
         */
-    gray* alpharow;
+    gray * alpharow;
         /* The pgm-format row representing the alpha values
            for the image row we are presently converting.  
         */
-    int row;
+    unsigned int row;
 
     xelrow = pnm_allocrow(cols);
     alpharow = pgm_allocrow(cols);
 
     for (row = 0; row < rows; ++row) {
-        uint32* rp;  
+        uint32 * rp;  
             /* Address of pixel in 'raster' we are presently converting */
-        int col;
+        unsigned int col;
 
         /* Start at beginning of row: */
         rp = raster + (rows - row - 1) * cols;
@@ -860,11 +1210,7 @@ convertTiffRaster(uint32 *        const raster,
                        TIFFGetB(tiffPixel) * maxval / 255);
             alpharow[col] = TIFFGetA(tiffPixel) * maxval / 255 ;
         }
-        
-        if (imageoutFile != NULL) 
-            pnm_writepnmrow(imageoutFile, xelrow, cols, maxval, format, 0);
-        if (alphaFile != NULL) 
-            pgm_writepgmrow(alphaFile, alpharow, cols, maxval, 0);
+        pnmOut_writeRow(pnmOutP, cols, xelrow, alpharow);
     }
     
     pgm_freerow(alpharow);
@@ -877,19 +1223,16 @@ enum convertDisp {CONV_DONE, CONV_OOM, CONV_UNABLE, CONV_FAILED,
                   CONV_NOTATTEMPTED};
 
 static void
-convertRasterInMemory(FILE *         const imageoutFileP,
-                      FILE *         const alphaFileP,
-                      unsigned int   const cols, 
-                      unsigned int   const rows,
+convertRasterInMemory(pnmOut *       const pnmOutP,
                       xelval         const maxval,
-                      int            const format, 
                       TIFF *         const tif,
                       unsigned short const photomet, 
                       unsigned short const planarconfig,
                       unsigned short const bps,
                       unsigned short const spp,
                       unsigned short const fillorder,
-                      xel                  colormap[],
+                      xel            const colormap[],
+                      bool           const verbose,
                       enum convertDisp * const statusP) {
 /*----------------------------------------------------------------------------
    With the TIFF header all processed (and relevant information from
@@ -899,12 +1242,22 @@ convertRasterInMemory(FILE *         const imageoutFileP,
    Do this by reading the entire TIFF image into memory at once and formatting
    it with the TIFF library's TIFFRGBAImageGet().
 
+   'cols' and 'rows' are the dimensions of the actual image, not of the
+   TIFF raster matrix; ('tif' knows the TIFF raster matrix dimensions).
+
    Return *statusP == CONV_OOM iff we are unable to proceed because we cannot
    get memory to store the entire raster.  This means Caller may still be able
    to do the conversion using a row-by-row strategy.  Like typical Netpbm
    programs, we simply abort the program if we are unable to allocate
    memory for other things.
 -----------------------------------------------------------------------------*/
+    unsigned int cols, rows;  /* Dimensions of output image */
+
+    if (verbose)
+        pm_message("Converting in memory ...");
+
+    getTiffDimensions(tif, &cols, &rows);
+
     if (rows == 0 || cols == 0) 
         *statusP = CONV_DONE;
     else {
@@ -915,7 +1268,7 @@ convertRasterInMemory(FILE *         const imageoutFileP,
             pm_message(emsg);
             *statusP = CONV_UNABLE;
         } else {
-            uint32* raster ;
+            uint32 * raster;
 
             /* Note that TIFFRGBAImageGet() converts any bits per sample
                to 8.  Maxval of the raster it returns is always 255.
@@ -927,14 +1280,15 @@ convertRasterInMemory(FILE *         const imageoutFileP,
                 *statusP = CONV_OOM;
             } else {
                 int const stopOnErrorFalse = FALSE;
-                TIFFRGBAImage img ;
+                TIFFRGBAImage img;
                 int ok;
                 
-                ok = TIFFRGBAImageBegin(&img, tif, stopOnErrorFalse, emsg) ;
+                ok = TIFFRGBAImageBegin(&img, tif, stopOnErrorFalse, emsg);
                 if (!ok) {
                     pm_message(emsg);
                     *statusP = CONV_FAILED;
                 } else {
+                    /* See explanation below of TIFF library bug */
                     int ok;
                     ok = TIFFRGBAImageGet(&img, raster, cols, rows);
                     TIFFRGBAImageEnd(&img) ;
@@ -943,8 +1297,7 @@ convertRasterInMemory(FILE *         const imageoutFileP,
                         *statusP = CONV_FAILED;
                     } else {
                         *statusP = CONV_DONE;
-                        convertTiffRaster(raster, cols, rows, maxval, format, 
-                                          imageoutFileP, alphaFileP);
+                        convertTiffRaster(raster, cols, rows, maxval, pnmOutP);
                     }
                 } 
                 free(raster);
@@ -955,61 +1308,114 @@ convertRasterInMemory(FILE *         const imageoutFileP,
 
 
 
+/* TIFF library bug:
+
+   In every version of the TIFF library we've seen, TIFFRGBAImageGet()
+   fails when the raster orientation (per the TIFF_ORIENTATION tag)
+   requires a transposition, e.g. ORIENTATION_LEFTBOT.  It simply omits
+   the transposition part, so e.g. it treats ORIENTATION_LEFTBOT as
+   ORIENTATION_BOTLEFT.  And because we provide a raster buffer dimensioned
+   for the properly transposed image, the result is somewhat of a mess.
+   
+   We have found no documentation of the TIFF library that suggests
+   this behavior is as designed, so it's probably not a good idea to
+   work around it; it might be fixed somewhere.
+
+   The user can of course work around just by using -byrow and therefore
+   not using TIFFRGBAImageGet().
+
+   There is some evidence of an interface in the TIFF library that
+   lets you request that TIFFRGBAImageGet() produce a raster in the
+   same orientation as the one in the TIFF image.
+   (tiff.req_orientation).  We could conceivably use that and then do
+   a Pamflip to get the proper orientation, but that somewhat defeats
+   the philosophy of using TIFFRGBAImageGet(), so I would like to wait
+   until there's a good practical reason to do it.
+*/
+
+
+
+static void
+convertRaster(pnmOut *           const pnmOutP,
+              TIFF *             const tifP,
+              struct tiffDirInfo const tiffDir,
+              xelval             const maxval,
+              unsigned short     const fillorder,
+              const xel *        const colormap,
+              bool               const byrow,
+              bool               const flipOk,
+              bool               const noflipOk,
+              bool               const verbose) {
+
+    enum convertDisp status;
+    if (byrow || !flipOk)
+        status = CONV_NOTATTEMPTED;
+    else {
+        convertRasterInMemory(
+            pnmOutP, maxval,
+            tifP, tiffDir.photomet, tiffDir.planarconfig, 
+            tiffDir.bps, tiffDir.spp, fillorder,
+            colormap, verbose, &status);
+    }
+    if (status == CONV_DONE) {
+        if (tiffDir.bps > 8)
+            pm_message("actual resolution has been reduced to 24 bits "
+                       "per pixel in the conversion.  You can get the "
+                       "full %u bits that are in the TIFF with the "
+                       "-byrow option.", tiffDir.bps);
+    } else {
+        if (status != CONV_NOTATTEMPTED) {
+            pm_message("In-memory conversion failed; "
+                       "using more primitive row-by-row conversion.");
+
+            if (!noflipOk)
+                pm_error("TIFF raster is in nonstandard orientation, "
+                         "and we already committed to in-memory "
+                         "conversion.  To avoid this failure, "
+                         "use -byrow .");
+        }            
+        convertRasterByRows(
+            pnmOutP, tiffDir.width, tiffDir.height, maxval,
+            tifP, tiffDir.photomet, tiffDir.planarconfig,
+            tiffDir.bps, tiffDir.spp, fillorder, colormap, verbose);
+    }
+}
+
+
+
 static void
 convertImage(TIFF *             const tifP,
-             FILE *             const alphaFile, 
-             FILE *             const imageoutFile,
+             FILE *             const alphaFileP,
+             FILE *             const imageoutFileP,
              struct cmdlineInfo const cmdline) {
 
     struct tiffDirInfo tiffDir;
-    unsigned int cols, rows;
     int format;
     xelval maxval;
     xel colormap[MAXCOLORS];
     unsigned short fillorder;
+    bool flipOk, noflipOk;
+    pnmOut pnmOut;
 
     readDirectory(tifP, cmdline.headerdump, &tiffDir);
-
-    cols = tiffDir.cols; rows = tiffDir.rows;
 
     computeFillorder(tiffDir.fillorder, &fillorder, cmdline.respectfillorder);
 
     analyzeImageType(tifP, tiffDir.bps, tiffDir.spp, tiffDir.photomet, 
                      &maxval, &format, colormap, cmdline.headerdump, cmdline);
 
-    if (imageoutFile != NULL) 
-        pnm_writepnminit(imageoutFile, cols, rows, maxval, format, 0);
-    if (alphaFile != NULL) 
-        pgm_writepgminit(alphaFile, cols, rows, maxval, 0);
+    pnmOut_init(imageoutFileP, alphaFileP, tiffDir.width, tiffDir.height,
+                tiffDir.orientation, maxval, format, maxval,
+                cmdline.byrow, cmdline.orientraw,
+                cmdline.verbose,
+                &flipOk, &noflipOk,
+                &pnmOut);
 
-    {
-        enum convertDisp status;
-        if (cmdline.byrow)
-            status = CONV_NOTATTEMPTED;
-        else {
-            convertRasterInMemory(
-                imageoutFile, alphaFile, cols, rows, maxval, format, 
-                tifP, tiffDir.photomet, tiffDir.planarconfig, 
-                tiffDir.bps, tiffDir.spp, fillorder,
-                colormap, &status);
-        }
-        if (status == CONV_DONE) {
-            if (tiffDir.bps > 8)
-                pm_message("actual resolution has been reduced to 24 bits "
-                           "per pixel in the conversion.  You can get the "
-                           "full %u bits that are in the TIFF with the "
-                           "-byrow option.", tiffDir.bps);
-        } else {
-            if (status != CONV_NOTATTEMPTED)
-                pm_message("In-memory conversion failed; "
-                           "using more primitive row-by-row conversion.");
-            
-            convertRasterByRows(
-                imageoutFile, alphaFile, cols, rows, maxval, format, 
-                tifP, tiffDir.photomet, tiffDir.planarconfig,
-                tiffDir.bps, tiffDir.spp, fillorder, colormap);
-        }
-    }
+    convertRaster(&pnmOut, tifP, tiffDir, maxval,
+                  fillorder, colormap, cmdline.byrow, flipOk, noflipOk,
+                  cmdline.verbose);
+
+    pnmOut_term(&pnmOut);
 }
 
 
@@ -1035,6 +1441,7 @@ convertIt(TIFF *             const tifP,
         success = TIFFReadDirectory(tifP);
         eof = !success;
         ++imageSeq;
+exit(5);
     }
 }
 
@@ -1084,7 +1491,6 @@ main(int argc, const char * argv[]) {
     strfree(cmdline.inputFilename);
 
     /* If the program failed, it previously aborted with nonzero completion
-       code, via various function calls.
-    */
+       code, via various function calls.  */
     return 0;
 }
