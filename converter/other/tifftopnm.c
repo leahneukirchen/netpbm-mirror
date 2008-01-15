@@ -325,9 +325,10 @@ readDirectory(TIFF *               const tiffP,
 
     {
         unsigned short tiffOrientation;
-        rc = TIFFGetField(tiffP, TIFFTAG_ORIENTATION, &tiffOrientation);
+        int present;
+        present = TIFFGetField(tiffP, TIFFTAG_ORIENTATION, &tiffOrientation);
         headerP->orientation =
-            (rc == 0) ? ORIENTATION_TOPLEFT : tiffOrientation;
+            present ? tiffOrientation : ORIENTATION_TOPLEFT;
     }
     if (headerdump) {
         pm_message("%ux%ux%u raster matrix, oriented %u",
@@ -1168,6 +1169,52 @@ convertRasterByRows(pnmOut *       const pnmOutP,
 
 
 
+static void
+warnBrokenTiffLibrary(TIFF * const tiffP) {
+
+/* TIFF library bug:
+
+   In every version of the TIFF library we've seen, TIFFRGBAImageGet()
+   fails when the raster orientation (per the TIFF_ORIENTATION tag)
+   requires a transposition, e.g. ORIENTATION_LEFTBOT.  It simply omits
+   the transposition part, so e.g. it treats ORIENTATION_LEFTBOT as
+   ORIENTATION_BOTLEFT.  And because we provide a raster buffer dimensioned
+   for the properly transposed image, the result is somewhat of a mess.
+   
+   We have found no documentation of the TIFF library that suggests
+   this behavior is as designed, so it's probably not a good idea to
+   work around it; it might be fixed somewhere.
+
+   The user can of course work around just by using -byrow and therefore
+   not using TIFFRGBAImageGet().
+
+   There is some evidence of an interface in the TIFF library that
+   lets you request that TIFFRGBAImageGet() produce a raster in the
+   same orientation as the one in the TIFF image.
+   (tiff.req_orientation).  We could conceivably use that and then do
+   a Pamflip to get the proper orientation, but that somewhat defeats
+   the philosophy of using TIFFRGBAImageGet(), so I would like to wait
+   until there's a good practical reason to do it.
+*/
+
+    unsigned short tiffOrientation;
+    int present;
+    present = TIFFGetField(tiffP, TIFFTAG_ORIENTATION, &tiffOrientation);
+    if (present) {
+        switch (tiffOrientation) {
+        case ORIENTATION_LEFTTOP:
+        case ORIENTATION_RIGHTTOP:
+        case ORIENTATION_RIGHTBOT:
+        case ORIENTATION_LEFTBOT:
+            pm_message("WARNING: This TIFF image has an orientation that "
+                       "most TIFF libraries converts incorrectly.  "
+                       "Use -byrow to circumvent.");
+            break;
+        }
+    }
+}
+
+
 
 static void 
 convertTiffRaster(uint32 *        const raster, 
@@ -1256,6 +1303,8 @@ convertRasterInMemory(pnmOut *       const pnmOutP,
     if (verbose)
         pm_message("Converting in memory ...");
 
+    warnBrokenTiffLibrary(tif);
+
     getTiffDimensions(tif, &cols, &rows);
 
     if (rows == 0 || cols == 0) 
@@ -1288,7 +1337,6 @@ convertRasterInMemory(pnmOut *       const pnmOutP,
                     pm_message(emsg);
                     *statusP = CONV_FAILED;
                 } else {
-                    /* See explanation below of TIFF library bug */
                     int ok;
                     ok = TIFFRGBAImageGet(&img, raster, cols, rows);
                     TIFFRGBAImageEnd(&img) ;
@@ -1305,33 +1353,6 @@ convertRasterInMemory(pnmOut *       const pnmOutP,
         }
     }
 }
-
-
-
-/* TIFF library bug:
-
-   In every version of the TIFF library we've seen, TIFFRGBAImageGet()
-   fails when the raster orientation (per the TIFF_ORIENTATION tag)
-   requires a transposition, e.g. ORIENTATION_LEFTBOT.  It simply omits
-   the transposition part, so e.g. it treats ORIENTATION_LEFTBOT as
-   ORIENTATION_BOTLEFT.  And because we provide a raster buffer dimensioned
-   for the properly transposed image, the result is somewhat of a mess.
-   
-   We have found no documentation of the TIFF library that suggests
-   this behavior is as designed, so it's probably not a good idea to
-   work around it; it might be fixed somewhere.
-
-   The user can of course work around just by using -byrow and therefore
-   not using TIFFRGBAImageGet().
-
-   There is some evidence of an interface in the TIFF library that
-   lets you request that TIFFRGBAImageGet() produce a raster in the
-   same orientation as the one in the TIFF image.
-   (tiff.req_orientation).  We could conceivably use that and then do
-   a Pamflip to get the proper orientation, but that somewhat defeats
-   the philosophy of using TIFFRGBAImageGet(), so I would like to wait
-   until there's a good practical reason to do it.
-*/
 
 
 
