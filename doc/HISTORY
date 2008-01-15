@@ -3,6 +3,12 @@ Netpbm.
 
 CHANGE HISTORY 
 --------------
+08.01.15 BJH  Release 10.35.37
+
+              Fix fast endianness stuff for 64 bit LE; bypass a compiler
+              bug that causes compile failure.
+
+              Build: remove use of "uint" type in pamtosvg.
 
 07.12.27 BJH  Release 10.35.36
 

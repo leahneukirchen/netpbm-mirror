@@ -44,7 +44,7 @@ wordintClz(wordint const x){
 
     /* Find the data type closest to 64 bits, and file off any extra. */
     else if ((s=sizeof(long int)) >= 8)
-        return (__builtin_clzl((int)x << (s - 8) * 8));
+        return (__builtin_clzl((long int)x << (s - 8) * 8));
     else if ((s=sizeof(long long int)) >= 8)
         return (__builtin_clzll((long long int)x << (s - 8) * 8));
     else
