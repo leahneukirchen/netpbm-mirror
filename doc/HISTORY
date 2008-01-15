@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.42.00
 
+              pamundice: Fix bogus error about missing "-instem" option.
+
               Add pm_tmpfile_fd() and pm_make_tmpfile_fd().
 
               Various things to make it build on Windows without POSIX

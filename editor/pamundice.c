@@ -54,7 +54,7 @@ parseCommandLine(int argc, char ** argv,
     optStruct3 opt;
     
     unsigned int acrossSpec, downSpec;
-    unsigned int instemSpec, hoverlapSpec, voverlapSpec;
+    unsigned int hoverlapSpec, voverlapSpec;
     unsigned int option_def_index;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
@@ -89,10 +89,6 @@ parseCommandLine(int argc, char ** argv,
 
     if (!voverlapSpec)
         cmdlineP->voverlap = 0;
-
-    if (!instemSpec)
-        pm_error("You must specify the -instem option to indicate where to "
-                 "get the input images.");
 
     if (argc-1 < 1)
         pm_error("You must specify one argument: the input file name "
