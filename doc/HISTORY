@@ -13,6 +13,9 @@ not yet  BJH  Release 10.42.00
               Various things to make it build on Windows without POSIX
               emulation.
 
+              Build: Include LDFLAGS environment variable in link of
+              build tools.
+              
 07.12.27 BJH  Release 10.41.00
 
               pamenlarge: much faster for PBM.  Thanks Prophet of the
