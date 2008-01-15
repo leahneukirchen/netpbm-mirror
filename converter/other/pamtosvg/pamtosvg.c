@@ -27,7 +27,7 @@ readImageToBitmap(FILE *            const ifP,
     at_bitmap_type * bitmapP;
     struct pam pam;
     tuple ** tuples;
-    uint row;
+    unsigned int row;
     tuple * row255;
 
     MALLOCVAR_NOFAIL(bitmapP);
