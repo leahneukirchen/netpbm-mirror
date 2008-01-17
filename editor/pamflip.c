@@ -92,6 +92,7 @@
 #define _BSD_SOURCE 1      /* Make sure strdup() is in string.h */
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 
+#include <assert.h>
 #include <limits.h>
 #include <string.h>
 
@@ -272,31 +273,44 @@ parseCommandLine(int argc, char ** const argv,
 
 
 
+/* See transformPoint() for an explanation of the transform matrix types.
+   The difference between the two types is that 'xformMatrix' is particular
+   to the source image dimensions and can be used to do the transformation,
+   while 'normalizedXformMatrix' is independent of the source image.
+*/
+
+struct normalizedXformMatrix {
+    int a;  /* -1, 0, or 1 */
+    int b;  /* -1, 0, or 1 */
+    int c;  /* -1, 0, or 1 */
+    int d;  /* -1, 0, or 1 */
+};
+
+
+
 struct xformMatrix {
-    int a;
-    int b;
-    int c;
-    int d;
-    int e;
-    int f;
+    int a;  /* -1, 0, or 1 */
+    int b;  /* -1, 0, or 1 */
+    int c;  /* -1, 0, or 1 */
+    int d;  /* -1, 0, or 1 */
+    int e;  /* 0 or maximum column number in target image */
+    int f;  /* 0 or maximum row number in target image */
 };
 
 
 
 static void
-leftright(struct xformMatrix * const xformP) {
+leftright(struct normalizedXformMatrix * const xformP) {
     xformP->a = - xformP->a;
     xformP->c = - xformP->c;
-    xformP->e = - xformP->e + 1;
 }
 
 
 
 static void
-topbottom(struct xformMatrix * const xformP) {
+topbottom(struct normalizedXformMatrix * const xformP) {
     xformP->b = - xformP->b;
     xformP->d = - xformP->d;
-    xformP->f = - xformP->f + 1;
 }
 
 
@@ -313,37 +327,50 @@ swap(int * const xP, int * const yP) {
 
 
 static void
-transpose(struct xformMatrix * const xformP) {
+transpose(struct normalizedXformMatrix * const xformP) {
     swap(&xformP->a, &xformP->b);
     swap(&xformP->c, &xformP->d);
-    swap(&xformP->e, &xformP->f);
 }
 
 
 
 static void
 computeXformMatrix(struct xformMatrix * const xformP, 
+                   unsigned int         const sourceCols,
+                   unsigned int         const sourceRows,
                    unsigned int         const xformCount,
-                   enum xformType             xformType[]) {
+                   enum xformType       const xformType[]) {
 
-    struct xformMatrix const nullTransform = {1, 0, 0, 1, 0, 0};
+    struct normalizedXformMatrix const nullTransform = {1, 0, 0, 1};
 
+    struct normalizedXformMatrix nXform;
     unsigned int i;
 
-    *xformP = nullTransform;   /* initial value */
+    nXform = nullTransform;   /* initial value */
 
     for (i = 0; i < xformCount; ++i) {
         switch (xformType[i]) {
         case LEFTRIGHT: 
-            leftright(xformP);
+            leftright(&nXform);
             break;
         case TOPBOTTOM:
-            topbottom(xformP);
+            topbottom(&nXform);
             break;
         case TRANSPOSE:
-            transpose(xformP);
+            transpose(&nXform);
             break;
         }
+    }
+    {
+        int colMax = nXform.a * (sourceCols-1) + nXform.c * (sourceRows-1);
+        int rowMax = nXform.b * (sourceCols-1) + nXform.d * (sourceRows-1);
+
+        xformP->a = nXform.a;
+        xformP->b = nXform.b;
+        xformP->c = nXform.c;
+        xformP->d = nXform.d;
+        xformP->e = colMax < 0 ? -colMax : 0;
+        xformP->f = rowMax < 0 ? -rowMax : 0;
     }
 }
 
@@ -549,7 +576,7 @@ transformRowsBottomTopNonPbm(struct pam * const inpamP,
   on any type of image, but is slower and uses more memory than the 
   PBM-only transformRowsBottomTopPbm().
 -----------------------------------------------------------------------------*/
-    tuple** tuplerows;
+    tuple ** tuplerows;
     tuple * scratchTuplerow;
         /* This is not a full tuple row -- just an array of pointers to
            the tuples in 'tuplerows'.
@@ -610,9 +637,7 @@ transformRowsBottomTop(struct pam * const inpamP,
 
 static void __inline__
 transformPoint(int                const col, 
-               int                const newcols,
                int                const row, 
-               int                const newrows, 
                struct xformMatrix const xform, 
                int *              const newcolP, 
                int *              const newrowP ) {
@@ -628,9 +653,19 @@ transformPoint(int                const col,
                  [ a b 0 ]
        [ x y 1 ] [ c d 0 ] = [ x2 y2 1 ]
                  [ e f 1 ]
+
+       Where (x, y) is the source pixel location and (x2, y2) is the
+       target pixel location.
+
+       Note that this is more of a logical computation than an arithmetic
+       one: a, b, c, and d are -1, 0, or 1.  e is the maximum column number
+       in the target image or 0; f is the maximum row number or 0.
     */
-    *newcolP = xform.a * col + xform.c * row + xform.e * (newcols - 1);
-    *newrowP = xform.b * col + xform.d * row + xform.f * (newrows - 1);
+    *newcolP = xform.a * col + xform.c * row + xform.e * 1;
+    *newrowP = xform.b * col + xform.d * row + xform.f * 1;
+
+    assert(*newcolP >= 0);
+    assert(*newrowP >= 0);
 }
 
 
@@ -668,8 +703,7 @@ transformPbm(struct pam *       const inpamP,
         pbm_readpbmrow(inpamP->file, bitrow, inpamP->width, inpamP->format);
         for (col = 0; col < inpamP->width; ++col) {
             int newcol, newrow;
-            transformPoint(col, outpamP->width, row, outpamP->height, xform,
-                           &newcol, &newrow);
+            transformPoint(col, row, xform, &newcol, &newrow);
             newbits[newrow][newcol/8] |= bitrow[col] << (7 - newcol % 8);
                 /* Use of "|=" patterned after pbm_readpbmrow_packed. */
          }
@@ -801,9 +835,7 @@ transformNonPbm(struct pam *       const inpamP,
 
             for (col = startCol; col < endCol; ++col) {
                 int newcol, newrow;
-                transformPoint(col, outpamP->width, row, outpamP->height, 
-                               xform,
-                               &newcol, &newrow);
+                transformPoint(col, row, xform, &newcol, &newrow);
                 pnm_assigntuple(inpamP, newtuples[newrow][newcol],
                                 tuplerow[col]);
             }
@@ -876,14 +908,15 @@ main(int argc, char * argv[]) {
     
     pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
 
-    computeXformMatrix(&xform, cmdline.xformCount, cmdline.xformList);
+    computeXformMatrix(&xform, inpam.width, inpam.height,
+                       cmdline.xformCount, cmdline.xformList);
 
     outpam = inpam;  /* initial value */
 
     outpam.file = stdout;
-    outpam.width  = abs(xform.a) * inpam.width + abs(xform.c) * inpam.height;
-    outpam.height = abs(xform.b) * inpam.width + abs(xform.d) * inpam.height;
-    
+    outpam.width  = abs(xform.a * inpam.width + xform.c * inpam.height);
+    outpam.height = abs(xform.b * inpam.width + xform.d * inpam.height);
+
     if (xform.b == 0 && xform.d == 1 && xform.f == 0)
         /* In this case Row N of the output is based only on Row N of
            the input, so we can transform row by row and avoid
@@ -898,7 +931,7 @@ main(int argc, char * argv[]) {
         transformRowsBottomTop(&inpam, &outpam, xform.a == -1, 
                                cmdline.verbose);
     else
-        /* This is a colum-for-row type of transformation, which requires
+        /* This is a column-for-row type of transformation, which requires
            complex traversal of an in-memory image.
         */
         transformGen(&inpam, &outpam, xform,
