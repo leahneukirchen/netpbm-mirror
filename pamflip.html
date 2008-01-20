@@ -2,17 +2,15 @@
 <HTML><HEAD><TITLE>Pamflip User Manual</TITLE></HEAD>
 <BODY>
 <H1>pamflip</H1>
-Updated: 18 February 2005
+Updated: 20 January 2008
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
 pamflip - flip or rotate a PAM or PNM image
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>pamflip</B>
 {
@@ -30,8 +28,7 @@ pamflip - flip or rotate a PAM or PNM image
 [<I>pamfile</I>]
 
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -55,8 +52,7 @@ hand, can do this particular transformation directly on the compressed
 data without loss.
 
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<H2 id="options">OPTIONS</H2>
 
 <P>All options can be abbreviated to their shortest unique prefix.  You
 may use two hyphens instead of one to designate an option.  You may
@@ -139,33 +135,74 @@ a complete explanation in comments in the source code.
 <dt><b>-memsize=</b><i>mebibytes</i>
 
 <dd><i>mebibytes</i> is the size in mebibytes (aka megabytes) of
-<em>real</em> memory (not virtual) available for <b>pamflip</b>.
+memory available for <b>pamflip</b>.  It is the lesser of the amount
+of real or virtual memory available.
+
 <b>pamflip</b> does nothing special to allocate real memory or control
 it's allocation -- it gets whatever it gets just by referencing
-virtual memory normally.  This is the maximum amount that
-<b>pamflip</b> can be expected to end up with by doing that.  This is
-just about impossible for you to know, of course, but you can
-estimate.  The total real memory in your system should be a major
-factor in your estimate.
+virtual memory normally.  The real memory figure in question is the
+maximum amount that <b>pamflip</b> can be expected to end up with by
+doing that.  This is just about impossible for you to know, of course,
+but you can estimate.  The total real memory in your system should be
+a major factor in your estimate.
 
-<p>When you specify <b>-memsize</b> and are doing a row for column type
-of transformation, <b>pamflip</b> does the transformation in multiple
-passes, each one with a working set size less than the specified value.
+<p>If <b>pamflip</b> cannot fit the entire image in the amount of
+memory you specify, it does the transformation in chunks, using temporary
+files for intermediate results.
 
-<p>If your estimate is even slightly too large, it's the same as
-infinity.  If you estimate too small, <b>pamflip</b> will use more
-passes than it needs to, and thus will slow down proportional to the
-underestimate.
+<p>Strict horizontal transformations (either left for right or null),
+<b>pamflip</b> never keeps more than one row in memory, so the memory
+size is irrelevant and <b>pamflip</b> doesn't use temporary files.
 
-<p>If you do not specify <b>-memsize</b>, <b>pamflip</b> assumes infinite
-real memory and does the entire transformation in one pass.
+<p>The real memory is important when you do a column for row type of
+transformation (e.g. <b>-rotate90</b>).  In that case, even if
+<b>pamflip</b> can fit the entire image in virtual memory at once, if
+it does not also fit in real memory, the program will thrash like
+crazy because of the order in which <b>pamflip</b> accesses the
+pixels, and that means it will take a ridiculously long time to run.
+A proper <b>-memsize</b> drastically reduces the paging.
+
+<p>If you specify <b>-memsize</b> too large, <b>pamflip</b> may
+attempt to get more virtual memory than the system allows it and fail.
+If it can get the virtual memory, but <b>-memsize</b> is larger than
+the amount of real memory the system allows it and the transformation
+is row for column, it will page thrash and run very slowly.  A value
+even slightly too high is the same as infinity.
+
+<p>If you specify <b>-memsize</b> too small, the program will run
+slightly more slowly due to extra overhead in manipulating temporary
+files.  Also, if your environment isn't set up to make temporary files
+possible, <b>pamflip</b> will fail.
+
+<p>Doing the entire transformation &quot;in memory&quot; doesn't speed
+things up as much as you might think, because even with the temporary
+files, the data is just as likely to be in memory.  Virtual memory
+gets paged to disk and disk files get cached in memory.  In fact, the
+pixels fit much more compactly into memory when stored in a temporary
+file than when stored &quot;in memory&quot; because <b>pamflip</b>
+uses a more efficient format.  So you're likely to have <em>less</em>
+disk I/O when you allow <b>pamflip</b> less memory.
+
+<p>If you do not specify <b>-memsize</b>, <b>pamflip</b> assumes
+infinity.
 
 <p>This option did not exist before Netpbm 10.7 (August 2002).
+
+<p>Before Netpbm 10.42 (March 2008), this option applied only to real
+memory.  <b>pamflip</b> would always keep the entire image in virtual
+memory and if it could not get enough virtual memory, it failed.
+<b>pamflip</b> accessed the pixels in an order designed to keep real
+memory use within the specified amount.
      
 <dt><b>-pagesize=</b><i>bytes</i>
 <dd><i>bytes</i> is the size in bytes of a paging unit -- the amount of
 memory that gets paged in or out as an indivisible unit -- in your system.
 The default is 4KiB.
+
+<p>This option has no effect.
+
+<p>Before Netpbm 10.42 (March 2008), <b>pamflip</b> used it to control its
+use of real memory.
 
 <p>This option did not exist before Netpbm 10.7 (August 2002).
 
@@ -179,36 +216,32 @@ about its progress.
 </dl>
 
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <A HREF="pnmrotate.html">pnmrotate</A>, 
 <A HREF="pnm.html">pnm</A>,
+<A HREF="pam.html">pam</A>,
 <b>jpegtran</b> manual
-<A NAME="lbAG">&nbsp;</A>
 
-<A NAME="history"></A>
-<H2>HISTORY</H2>
+<H2 id="history">HISTORY</H2>
 
 <P><b>pamflip</b> replaced <b>pnmflip</b> in Netpbm 10.13 (December 2002).
 <b>pamflip</b> is backward compatible, but also works on PAM images.
 
 
-<H2>AUTHOR</H2>
+<H2 id="author">AUTHOR</H2>
 
 Copyright (C) 1989 by Jef Poskanzer.
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<li><A HREF="#lbAB">NAME</A>
-<li><A HREF="#lbAC">SYNOPSIS</A>
-<li><A HREF="#lbAD">DESCRIPTION</A>
-<li><A HREF="#lbAE">OPTIONS</A>
-<li><A HREF="#lbAF">SEE ALSO</A>
+<li><A HREF="#synopsis">SYNOPSIS</A>
+<li><A HREF="#description">DESCRIPTION</A>
+<li><A HREF="#options">OPTIONS</A>
+<li><A HREF="#seealso">SEE ALSO</A>
 <li><A HREF="#history">HISTORY</A>
-<li><A HREF="#lbAG">AUTHOR</A>
+<li><A HREF="#author">AUTHOR</A>
 </UL>
 </BODY>
 </HTML>
