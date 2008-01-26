@@ -1462,7 +1462,6 @@ convertIt(TIFF *             const tifP,
         success = TIFFReadDirectory(tifP);
         eof = !success;
         ++imageSeq;
-exit(5);
     }
 }
 
