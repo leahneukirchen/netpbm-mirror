@@ -6,6 +6,10 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.42.00
 
+              tifftopnm: orient raster properly in row-by-row operation
+              when TIFF uses nonstandard raster orientation.  (ORIENTATION
+              tag).
+
               pamflip: Rewrite low-memory algorithm; use temp files and
               conserve virtual as well as real memory.
 
@@ -31,7 +35,7 @@ not yet  BJH  Release 10.42.00
 
               bmptopnm: fix crash with 16 bit images.
 
-              pamlcolor8.map: Make it a 256 color map sorted by index,
+              palmcolor8.map: Make it a 256 color map sorted by index,
               per Palm's spec.  Thanks Paul Bolle <pebolle@tiscali.nl>.
 
               xwdtopnm: deal with too-large bits per pixel value in XWD 

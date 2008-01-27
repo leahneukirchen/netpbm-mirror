@@ -51,6 +51,7 @@
 
 #include <assert.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "shhopt.h"
 #include "mallocvar.h"
@@ -684,15 +685,74 @@ typedef struct {
 
 
 
-static void
-createFlipProcess(FILE *  const imageoutFileP,
-                  FILE *  const alphaFileP,
-                  FILE ** const imagePipePP,
-                  FILE ** const alphaPipePP) {
+static const char *
+xformNeeded(unsigned short const tiffOrientation) {
+/*----------------------------------------------------------------------------
+   Return the value of the Pamflip -xform option that causes Pamflip
+   to change a raster from orienation 'tiffOrientation' to Row 0 top,
+   Column 0 left.
+-----------------------------------------------------------------------------*/
+    switch (tiffOrientation) {
+    case ORIENTATION_TOPLEFT:  return "";
+    case ORIENTATION_TOPRIGHT: return "leftright";
+    case ORIENTATION_BOTRIGHT: return "topbottom,leftright";
+    case ORIENTATION_BOTLEFT:  return "topbottom";
+    case ORIENTATION_LEFTTOP:  return "transpose";
+    case ORIENTATION_RIGHTTOP: return "transpose,leftright";
+    case ORIENTATION_RIGHTBOT: return "transpose,topbottom,leftright";
+    case ORIENTATION_LEFTBOT:  return "transpose,topbottom";
+    default:
+        pm_error("Invalid value for orientation tag in TIFF directory: %u",
+                 tiffOrientation);
+        return "";
+    }
+}
 
-    pm_error("%s: The TIFF has nonstandard raster orientation and "
-             "the code to flip raster is not written yet.  "
-             "Use -orientraw or don't use -byrow", __FUNCTION__);
+
+
+static void
+createFlipProcess(FILE *         const outFileP,
+                  unsigned short const orientation,
+                  bool           const verbose,
+                  FILE **        const inPipePP) {
+/*----------------------------------------------------------------------------
+   Create a process that runs the program Pamflip and writes its output
+   to *imageoutFileP.
+
+   The process takes it input from a pipe that we create.  We return as
+   *inPipePP a file stream connected to the other end of that pipe.
+
+   I.e. Caller will write a Netpbm file stream to **inPipePP and a flipped
+   version of it will go to *outFileP.
+
+   The flipping it does turns the input from orientation 'orientation'
+   to Netpbm orientation, i.e. raster row 0 top, raster column 0 left,
+   where the raster stream is divided into rows, with row 0 being first
+   in the stream, and column 0 being first within each row.
+
+   Caller must close *inPipePP when he is done.
+-----------------------------------------------------------------------------*/
+    const char * pamflipCmd;
+
+    /* Hooking up the process to the output stream is kind of tricky
+       because the stream (FILE *) is an entity local to this process.
+       We just assume that nothing in this process actually touches
+       the stream so that having the process write to the underlying
+       file descriptor is equivalent to writing to the stream.
+    */
+
+    asprintfN(&pamflipCmd, "pamflip -xform=%s >&%u",
+              xformNeeded(orientation), fileno(outFileP));
+
+    if (verbose)
+        pm_message("Reorienting raster with shell command '%s'", pamflipCmd);
+
+    *inPipePP = popen(pamflipCmd, "w");
+
+    if (*inPipePP == NULL)
+        pm_error("Shell command '%s', via popen(), to reorient the TIFF "
+                 "raster, failed.  To work around this, you can use "
+                 "the -orientraw option.", pamflipCmd);
 }
 
 
@@ -754,8 +814,12 @@ setupFlipper(pnmOut *       const pnmOutP,
                 if (verbose)
                     pm_message("Transforming raster with Pamflip");
 
-                createFlipProcess(pnmOutP->imageoutFileP, pnmOutP->alphaFileP,
-                                  &pnmOutP->imagePipeP, &pnmOutP->alphaPipeP);
+                if (pnmOutP->alphaFileP)
+                    createFlipProcess(pnmOutP->alphaFileP, orientation,
+                                      verbose, &pnmOutP->alphaPipeP);
+                if (pnmOutP->imageoutFileP)
+                    createFlipProcess(pnmOutP->imageoutFileP, orientation,
+                                      verbose, &pnmOutP->imagePipeP);
                 
                 /* The stream will flip it, so Caller must not: */
                 pnmOutP->flipping = TRUE;
