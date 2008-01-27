@@ -5,7 +5,7 @@
    that deal with colors in the PAM image format.
 -----------------------------------------------------------------------------*/
 
-/* See libpbm.c for the complicated explanation of this 32/64 bit file
+/* See pmfileio.c for the complicated explanation of this 32/64 bit file
    offset stuff.
 */
 #define _FILE_OFFSET_BITS 64
