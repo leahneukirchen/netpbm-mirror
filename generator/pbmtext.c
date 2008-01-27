@@ -14,6 +14,7 @@
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 
 #include <string.h>
+#include <limits.h>
 
 #include "pbm.h"
 #include "pbmfont.h"
@@ -257,35 +258,34 @@ fill_rect(bit** const bits,
 static void
 get_line_dimensions(const char line[], const struct font * const font_p, 
                     const float intercharacter_space,
-                    int * const bwid_p, int * const backup_space_needed_p) {
+                    double * const bwidP, int * const backup_space_needed_p) {
 /*----------------------------------------------------------------------------
    Determine the width in pixels of the line of text line[] in the font
-   *font_p, and return it as *bwid_p.  Also determine how much of this
+   *font_p, and return it as *bwidP.  Also determine how much of this
    width goes to the left of the nominal starting point of the line because
    the first character in the line has a "backup" distance.  Return that
    as *backup_space_needed_p.
 -----------------------------------------------------------------------------*/
     int cursor;  /* cursor into the line of text */
-    float accumulated_ics;
+    double accumulatedIcs;
         /* accumulated intercharacter space so far in the line we are 
            stepping through.  Because the intercharacter space might not be
            an integer, we accumulate it here and realize full pixels whenever
-           we have more than one pixel.
-           */
-
-    int no_chars_yet; 
-        /* logical: we haven't seen any renderable characters yet in 
-           the line.
+           we have more than one pixel.  Note that this can be negative
+           (which means were crowding, rather than spreading, text).
         */
+    double bwid;
+    bool no_chars_yet; 
+        /* We haven't seen any renderable characters yet in the line. */
     struct glyph * lastGlyphP;
         /* Glyph of last character processed so far.  Undefined if
            'no_chars_yet'.
         */
 
     no_chars_yet = TRUE;   /* initial value */
-    *bwid_p = 0;  /* initial value */
-    accumulated_ics = 0.0;  /* initial value */
-
+    accumulatedIcs = 0.0;  /* initial value */
+    bwid = 0.0;  /* initial value */
+    
     for (cursor = 0; line[cursor] != '\0'; cursor++) {
         struct glyph * const glyphP = 
             font_p->glyph[(unsigned char)line[cursor]];
@@ -297,20 +297,23 @@ get_line_dimensions(const char line[], const struct font * const font_p,
                     *backup_space_needed_p = -glyphP->x;
                 else {
                     *backup_space_needed_p = 0;
-                    *bwid_p += glyphP->x;
+                    bwid += glyphP->x;
                 }
             } else {
                 /* handle extra intercharacter space (-space option) */
-                int full_pixels;  /* integer part of accumulated_ics */
-                accumulated_ics += intercharacter_space;
-                full_pixels = (int) accumulated_ics;
-                if (full_pixels > 0) {
-                    *bwid_p += full_pixels;
-                    accumulated_ics -= full_pixels;
+                accumulatedIcs += intercharacter_space;
+                if (accumulatedIcs >= INT_MAX)
+                    pm_error("Image width too large.");
+                if (accumulatedIcs <= INT_MIN)
+                    pm_error("Absurdly large negative -space value.");
+                {
+                    int const fullPixels = (int) accumulatedIcs;
+                    bwid           += fullPixels;
+                    accumulatedIcs -= fullPixels;
                 }
             }
             lastGlyphP = glyphP;
-            *bwid_p += glyphP->xadd;
+            bwid += glyphP->xadd;
         }
     }
     if (no_chars_yet)
@@ -322,9 +325,13 @@ get_line_dimensions(const char line[], const struct font * const font_p,
            right at the right edge of the glyph (no extra space to
            anticipate another character).
         */
-        *bwid_p -= lastGlyphP->xadd;
-        *bwid_p += lastGlyphP->width + lastGlyphP->x;
+        bwid -= lastGlyphP->xadd;
+        bwid += lastGlyphP->width + lastGlyphP->x;
     }
+    if (bwid > INT_MAX)
+        pm_error("Image width too large.");
+    else
+        *bwidP = bwid; 
 }
 
 
@@ -441,7 +448,8 @@ struct outputTextCursor {
            are stepping through.  Because the intercharacter space
            might not be an integer, we accumulate it here and
            realize full pixels whenever we have more than one
-           pixel.  
+           pixel.  Note that this is negative if we're crowding, rather
+           than spreading, characters.
         */
 };
 
@@ -506,11 +514,10 @@ placeCharacterInOutput(char                      const lastch,
                     cursorP->widthSoFar += fontP->glyph[glyphIndex]->x;
             } else {
                 /* handle extra intercharacter space (-space option) */
-                unsigned int fullPixels;  /* integer part of accumulatedIcs */
                 cursorP->accumulatedIcs += cursorP->intercharacterSpace;
-                fullPixels = (int) cursorP->accumulatedIcs;
-                if (fullPixels > 0) {
-                    cursorP->widthSoFar += fullPixels;
+                {
+                    int const fullPixels = (int)cursorP->accumulatedIcs;
+                    cursorP->widthSoFar     += fullPixels;
                     cursorP->accumulatedIcs -= fullPixels;
                 }
             }
@@ -588,8 +595,9 @@ truncateText(struct text   const inputText,
         /* accumulated intercharacter space so far in the line we are 
            stepping through.  Because the intercharacter space might not be
            an integer, we accumulate it here and realize full pixels whenever
-           we have more than one pixel.
-           */
+           we have more than one pixel.  Note that this is negative if we're
+           crowding, not spreading, characters.
+        */
 
         int noCharsYet; 
         /* logical: we haven't seen any renderable characters yet in 
@@ -612,11 +620,10 @@ truncateText(struct text   const inputText,
                         widthSoFar += fontP->glyph[lastch]->x;
                 } else {
                     /* handle extra intercharacter space (-space option) */
-                    int fullPixels;  /* integer part of accumulatedIcs */
                     accumulatedIcs += intercharacterSpace;
-                    fullPixels = (int) intercharacterSpace;
-                    if (fullPixels > 0) {
-                        widthSoFar += fullPixels;
+                    {
+                        int const fullPixels = (int) intercharacterSpace;
+                        widthSoFar     += fullPixels;
                         accumulatedIcs -= fullPixels;
                     }
                 }
@@ -663,6 +670,9 @@ getText(const char          cmdline_text[],
         
         lineCount = 0;  /* initial value */
         while (fgets(buf, sizeof(buf), stdin) != NULL) {
+            if (strlen(buf) + 1 >= sizeof(buf))
+                pm_error("A line of input text is longer than %u characters."
+                         "Cannot process.", sizeof(buf)-1);
             fixControlChars(buf, fontP);
             if (lineCount >= maxlines) {
                 maxlines *= 2;
@@ -686,23 +696,72 @@ getText(const char          cmdline_text[],
 
 
 static void
-compute_image_width(struct text         const lp, 
-                    const struct font * const fn,
-                    float               const intercharacter_space,
-                    int *               const maxwidthP, 
-                    int *               const maxleftbP) {
-    int line;
+computeImageHeight(struct text         const formattedText, 
+                   const struct font * const fontP,
+                   int                 const interlineSpace,
+                   unsigned int        const vmargin,
+                   unsigned int *      const rowsP) {
+
+    if (interlineSpace < 0 && fontP->maxheight < -interlineSpace)
+        pm_error("-lspace value (%d) negative and exceeds font height. "
+                 "No output.", interlineSpace);     
+    else {
+        double const rowsD = 2 * (double) vmargin + 
+            (double) formattedText.lineCount * fontP->maxheight + 
+            (double) (formattedText.lineCount-1) * interlineSpace;
+        
+        if (rowsD > INT_MAX-10)
+            pm_error("Image height too large.");
+        else
+            *rowsP = (unsigned int) rowsD;
+    }
+}
+
+
+
+static void
+computeImageWidth(struct text         const formattedText, 
+                  const struct font * const fontP,
+                  float               const intercharacterSpace,
+                  unsigned int        const hmargin,
+                  unsigned int *      const colsP,
+                  int *               const maxleftbP) {
+
+    if (intercharacterSpace < 0 && fontP->maxwidth < -intercharacterSpace)
+        pm_error("-space value (%f) negative; exceeds font width. "
+                 "No output.", intercharacterSpace);     
+    else {
+        /* Find the widest line, and the one that backs up the most past
+           the nominal start of the line.
+        */
     
-    *maxwidthP = 0;  /* initial value */
-    *maxleftbP = 0;  /* initial value */
-    for (line = 0; line < lp.lineCount; ++line) {
-        int bwid, backup_space_needed;
-        
-        get_line_dimensions(lp.textArray[line], fn, intercharacter_space,
-                            &bwid, &backup_space_needed);
-        
-        *maxwidthP = MAX(*maxwidthP, bwid);
-        *maxleftbP = MAX(*maxleftbP, backup_space_needed);
+        unsigned int line;
+        double maxwidth;
+        int maxleftb;
+        double colsD;
+
+        for (line = 0, maxwidth = 0.0, maxleftb = 0;
+             line < formattedText.lineCount;
+             ++line) {
+
+            double bwid;
+            int backupSpaceNeeded;
+            
+            get_line_dimensions(formattedText.textArray[line], fontP,
+                                intercharacterSpace,
+                                &bwid, &backupSpaceNeeded);
+            
+            maxwidth = MAX(maxwidth, bwid);
+            maxleftb = MAX(maxleftb, backupSpaceNeeded);
+        }
+        colsD = 2 * (double) hmargin + (double) maxwidth;
+    
+        if (colsD > INT_MAX-10)
+            pm_error("Image width too large.");
+        else
+            *colsP = (unsigned int) colsD;
+    
+        *maxleftbP = maxleftb;
     }
 }
 
@@ -713,13 +772,11 @@ main(int argc, char *argv[]) {
 
     struct cmdlineInfo cmdline;
     bit ** bits;
-    int rows, cols;
+    unsigned int rows, cols;
     struct font * fontP;
-    int vmargin, hmargin;
+    unsigned int vmargin, hmargin;
     struct text inputText;
     struct text formattedText;
-    int maxwidth;
-        /* width in pixels of the longest line of text in the image */
     int maxleftb;
 
     pbm_init(&argc, argv);
@@ -729,7 +786,7 @@ main(int argc, char *argv[]) {
     computeFont(cmdline, &fontP);
 
     getText(cmdline.text, fontP, &inputText);
-    
+       
     if (cmdline.nomargins) {
         vmargin = 0;
         hmargin = 0;
@@ -742,8 +799,11 @@ main(int argc, char *argv[]) {
             hmargin = 2 * fontP->maxwidth;
         }
     }
-
+    
     if (cmdline.width > 0) {
+        if (cmdline.width > INT_MAX -10)
+            pm_error("-width value too large: %u", cmdline.width);
+            
         /* Flow or truncate lines to meet user's width request */
         if (inputText.lineCount == 1) 
             flowText(inputText, cmdline.width, fontP, cmdline.space,
@@ -754,15 +814,16 @@ main(int argc, char *argv[]) {
         freeTextArray(inputText);
     } else
         formattedText = inputText;
+        
+    if (formattedText.lineCount == 0)
+        pm_error("No input text.");
     
-    rows = 2 * vmargin + 
-        formattedText.lineCount * fontP->maxheight + 
-        (formattedText.lineCount-1) * cmdline.lspace;
+    computeImageHeight(formattedText, fontP, cmdline.lspace, vmargin,
+                       &rows);
 
-    compute_image_width(formattedText, fontP, cmdline.space,
-                        &maxwidth, &maxleftb);
-
-    cols = 2 * hmargin + maxwidth;
+    computeImageWidth(formattedText, fontP, cmdline.space, hmargin,
+                      &cols, &maxleftb);
+                        
     bits = pbm_allocarray(cols, rows);
 
     /* Fill background with white */

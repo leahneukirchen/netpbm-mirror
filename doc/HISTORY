@@ -17,6 +17,14 @@ not yet  BJH  Release 10.42.00
 
               Add pm_tmpfile_fd() and pm_make_tmpfile_fd().
 
+              pbmtext: fail cleanly if input line is > 5000 characters.
+
+              pbmtext: fail cleanly if -width, -space, or -lspace is
+              too large for computation.  Thanks Prophet of the Way
+              <afu@wta.att.ne.jp>.
+
+              pbmtext: fix negative -space.
+
               Various things to make it build on Windows without POSIX
               emulation.
 
