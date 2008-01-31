@@ -4,6 +4,17 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+08.01.31 BJH  Release 10.41.02
+
+              pnmnlfilt: fix internal error "impossible alpha value".
+
+              pbmtext: fail cleanly if input line is > 5000 characters.
+
+              pbmtext: fix negative -space .
+
+              Fix fast endianness stuff for 64 bit LE; bypass a compiler
+              bug that causes compile failure.
+
 08.01.15 BJH  Release 10.41.01
 
               pamundice: Fix bogus error about missing "-instem" option.

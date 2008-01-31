@@ -133,7 +133,6 @@ int noisevariance;
 */
 static  xel *irows[3];
 static  xel *irow0, *irow1, *irow2, *orow;
-static  double radius=0.0,alpha= -1.0;
 static  int rows, cols, format, oformat, row, col;
 static  int (*atfunc)(int *);
 static  xelval maxval;
@@ -1011,7 +1010,7 @@ main(int argc, char *argv[]) {
     /* force output to max precision without forcing new 2-byte format */
     omaxval = MIN(maxval, PPM_MAXMAXVAL);
         
-    atfunc = atfuncs[atfilt_setup(alpha, radius,
+    atfunc = atfuncs[atfilt_setup(cmdline.alpha, cmdline.radius,
                                   (double)omaxval/(double)maxval)];
 
     if (oformat < PGM_TYPE) {
@@ -1030,10 +1029,6 @@ main(int argc, char *argv[]) {
     eof = FALSE;  /* We're already in the middle of the first image */
     imageSeq = 0;
     while (!eof) {
-        /* Set the ugly global variables, until we can fix this */
-        alpha = cmdline.alpha;
-        radius = cmdline.radius;
-
         do_one_frame(ifP);
         pm_nextimage(ifP, &eof);
         if (!eof) {
