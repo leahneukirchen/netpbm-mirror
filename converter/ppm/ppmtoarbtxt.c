@@ -276,7 +276,7 @@ SKL_OBJ **skl;
    objlen = 0;
    for (;;)   /* Read replacement string up to ')' */
    {
-     if (objlen == sizeof (objstr)) break; /* ')' not found */
+     if (objlen == sizeof (objstr)-1) break; /* ')' not found */
      if ((chr = getc (sklfile)) == EOF) break;
      if (chr == meta3) break;
      objstr[objlen++] = chr;

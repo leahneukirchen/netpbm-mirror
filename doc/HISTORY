@@ -3,6 +3,15 @@ Netpbm.
 
 CHANGE HISTORY 
 --------------
+
+08.02.01 BJH  Release 10.35.38
+
+              ppmtoarbtxt: fix array overflow.
+
+              pbmtext: fail cleanly if input line is > 5000 characters.
+
+              pbmtext: fix negative -space .
+
 08.01.15 BJH  Release 10.35.37
 
               Fix fast endianness stuff for 64 bit LE; bypass a compiler

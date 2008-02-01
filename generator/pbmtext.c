@@ -242,10 +242,8 @@ get_line_dimensions(const char line[], const struct font * const font_p,
                 int full_pixels;  /* integer part of accumulated_ics */
                 accumulated_ics += intercharacter_space;
                 full_pixels = (int) accumulated_ics;
-                if (full_pixels > 0) {
-                    *bwid_p += full_pixels;
-                    accumulated_ics -= full_pixels;
-                }
+                *bwid_p += full_pixels;
+                accumulated_ics -= full_pixels;
             }
             lastGlyphP = glyphP;
             *bwid_p += glyphP->xadd;
@@ -444,13 +442,11 @@ placeCharacterInOutput(char                      const lastch,
                     cursorP->widthSoFar += fontP->glyph[glyphIndex]->x;
             } else {
                 /* handle extra intercharacter space (-space option) */
-                unsigned int fullPixels;  /* integer part of accumulatedIcs */
+                int fullPixels;  /* integer part of accumulatedIcs */
                 cursorP->accumulatedIcs += cursorP->intercharacterSpace;
                 fullPixels = (int) cursorP->accumulatedIcs;
-                if (fullPixels > 0) {
-                    cursorP->widthSoFar += fullPixels;
-                    cursorP->accumulatedIcs -= fullPixels;
-                }
+                cursorP->widthSoFar     += fullPixels;
+                cursorP->accumulatedIcs -= fullPixels;
             }
             cursorP->widthSoFar += fontP->glyph[glyphIndex]->xadd;
         }
@@ -553,10 +549,8 @@ truncateText(struct text   const inputText,
                     int fullPixels;  /* integer part of accumulatedIcs */
                     accumulatedIcs += intercharacterSpace;
                     fullPixels = (int) intercharacterSpace;
-                    if (fullPixels > 0) {
-                        widthSoFar += fullPixels;
-                        accumulatedIcs -= fullPixels;
-                    }
+                    widthSoFar     += fullPixels;
+                    accumulatedIcs -= fullPixels;
                 }
                 widthSoFar += fontP->glyph[lastch]->xadd;
             }
@@ -601,6 +595,9 @@ getText(const char          cmdline_text[],
         
         lineCount = 0;  /* initial value */
         while (fgets(buf, sizeof(buf), stdin) != NULL) {
+            if (strlen(buf) + 1 >= sizeof(buf))
+                pm_error("A line of input text is longer than %u characters."
+                         "Cannot process.", sizeof(buf)-1);
             fix_control_chars(buf, fn);
             if (lineCount >= maxlines) {
                 maxlines *= 2;
