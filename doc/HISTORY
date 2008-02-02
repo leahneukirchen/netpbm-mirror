@@ -6,6 +6,14 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.42.00
 
+              ppmtoarbtxt: fix array bounds violation with really large
+              replacement sequence.
+
+              ppmtoarbtxt: fix missing right parenthesis with impostor
+              replacement sequence.
+
+              pnmnlfilt: fix internal error "impossible alpha value".
+
               tifftopnm: orient raster properly in row-by-row operation
               when TIFF uses nonstandard raster orientation.  (ORIENTATION
               tag).
