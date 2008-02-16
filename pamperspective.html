@@ -8,13 +8,11 @@ Updated: 2 September 2004
 <br>
 <a href="#index">Table Of Contents</a>
 
-<a name="name"></a>
 <h2>NAME</h2>
 
 pamperspective - a reverse scanline renderer for Netpbm images
 
-<a name="synopsis"></a>
-<h2>SYNOPSIS</h2>
+<h2 id="synopsis">SYNOPSIS</h2>
 
 <pre>
 <b>pamperspective</b> 
@@ -64,8 +62,7 @@ to separate an option name from its value. All options starting with
 hyphens may be given in any order. 
 
 
-<a name="description"></a>
-<h2>DESCRIPTION</H2>
+<h2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -86,8 +83,7 @@ renderer.
 <i>infile</i> is not specified.  The output is to Standard Output.
 
 
-<a name="options"></a>
-<h2>OPTIONS</h2>
+<h2 id="options">OPTIONS</h2>
 
 <p>For options of the form <b>--name=</b><i>num</i>, You can specify
 the value <i>num</i> in any of the traditional ways.  Additionally,
@@ -209,7 +205,7 @@ number, <b>pamperspective</b> does not allow this format.
 
   </dl>
 
-<h3>Frame options</h3>
+<h3 id="frameoptions">Frame Options</h3>
 
 By default <b>pamperspective</b> outputs exactly the above
 parallelogram, sheared to a rectangle.  With the following options, it
@@ -299,7 +295,7 @@ part.
 
   <p>The frame options were new in Netpbm 10.25 (October 2004).
 
-<h3>Output size options</h3>
+<h3 id="outputsizeoptions">Output Size Options</h3>
 
 <dl>
   <dt><b>--width=</b><i>width</i></dt>
@@ -340,7 +336,7 @@ part.
 
   </dl>
 
-<h3>Output options</h3>
+<h3 id="outputoptions">Output Options</h3>
 
 <dl>
   <dt><b>--output_system=</b><i>spec</i></dt>
@@ -392,8 +388,7 @@ part.
 
   </dl>
 
-<a name="hints"></a>
-<h2>HINTS</h2>
+<h2 id="hints">HINTS</h2>
 
 <p>It might be tempting always to use the options
 <b>--include 0,0;0,1;1,0;1,1</b> 
@@ -449,8 +444,7 @@ pamflip -rotate90 infile |
 </b>
 </pre>
   
-<a name="seealso"></a>
-<h2>SEE ALSO</h2>
+<h2 id="seealso">SEE ALSO</h2>
 
 <a href="http://netpbm.sourceforge.net/doc/index.html"><b>netpbm</b></a>,
 <a href="http://netpbm.sourceforge.net/doc/pam.html"><b>pam</b></a>,
@@ -462,16 +456,14 @@ pamflip -rotate90 infile |
 <a href="http://netpbm.sourceforge.net/doc/pnmshear.html"><b>pnmshear</b></a>,
 <a href="http://netpbm.sourceforge.net/doc/pnmstitch.html"><b>pnmstitch</b></a>
 
-<a name="history"></a>
-<h2>HISTORY</h2>
+<h2 id="history">HISTORY</h2>
 
 <p>Mark Weyer wrote <b>pamperspective</b> in March 2004.
 
 <p>It was new in Netpbm 10.22 (April 2004).
 
 
-<a name="author"></a>
-</p><h2>AUTHOR</h2>
+<h2 id="author">AUTHOR</h2>
 
 This documentation was written by Mark Weyer.  Permission is granted
 to copy, distribute and/or modify this document under the terms of the
@@ -479,18 +471,21 @@ GNU General Public License, Version 2 or any later version published
 by the Free Software Foundation.
 
 <HR>
-<a name="index"></a>
-<h2>Table Of Contents</h2>
+<h2 id="index">Table Of Contents</h2>
 <ul>
-  <li><a href="#name">NAME</a>
-  </li><li><a href="#synopsis">SYNOPSIS</a>
-  </li><li><a href="#description">DESCRIPTION</a>
-  </li><li><a href="#options">OPTIONS</a>
-  </li><li><a href="#hints">HINTS</a>  
-  </li><li><a href="#seealso">SEE ALSO</a>  
-  </li><li><a href="#history">HISTORY</a>  
-  </li><li><a href="#author">AUTHOR</a>  
-  </li></ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+  <ul>
+  <li><a href="#frameoptions">Frame Options</a>
+  <li><a href="#outputsizeoptions">Output Size Options</a>
+  <li><a href="#outputoptions">Output Options</a>
+  </ul>
+<li><a href="#hints">HINTS</a>  
+<li><a href="#seealso">SEE ALSO</a>  
+<li><a href="#history">HISTORY</a>  
+<li><a href="#author">AUTHOR</a>  
+</ul>
 
 </body></html>
 
