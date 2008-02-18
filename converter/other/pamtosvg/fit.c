@@ -1231,7 +1231,7 @@ fit_one_spline(curve *             const curveP,
     float X_C1_det, C0_X_det, C0_C1_det;
     float alpha1, alpha2;
     spline_type spline;
-    vector_type start_vector, end_vector;
+    vector_type startVector, endVector;
     unsigned i;
     vector_type * A;
     vector_type t1_hat;
@@ -1246,8 +1246,8 @@ fit_one_spline(curve *             const curveP,
 
     START_POINT(spline) = CURVE_POINT(curveP, 0);
     END_POINT(spline)   = LAST_CURVE_POINT(curveP);
-    start_vector = make_vector(START_POINT(spline));
-    end_vector   = make_vector(END_POINT(spline));
+    startVector = make_vector(START_POINT(spline));
+    endVector   = make_vector(END_POINT(spline));
 
     for (i = 0; i < CURVE_LENGTH(curveP); ++i) {
         A[(i << 1) + 0] = Vmult_scalar(t1_hat, B1(CURVE_T(curveP, i)));
@@ -1264,10 +1264,10 @@ fit_one_spline(curve *             const curveP,
         C[1][1] += Vdot(Ai[1], Ai[1]);
 
         /* Now the right-hand side of the equation in the paper.  */
-        temp0 = Vmult_scalar(start_vector, B0(CURVE_T(curveP, i)));
-        temp1 = Vmult_scalar(start_vector, B1(CURVE_T(curveP, i)));
-        temp2 = Vmult_scalar(end_vector, B2(CURVE_T(curveP, i)));
-        temp3 = Vmult_scalar(end_vector, B3(CURVE_T(curveP, i)));
+        temp0 = Vmult_scalar(startVector, B0(CURVE_T(curveP, i)));
+        temp1 = Vmult_scalar(startVector, B1(CURVE_T(curveP, i)));
+        temp2 = Vmult_scalar(endVector, B2(CURVE_T(curveP, i)));
+        temp3 = Vmult_scalar(endVector, B3(CURVE_T(curveP, i)));
 
         temp = make_vector(
             Vsubtract_point(CURVE_POINT(curveP, i),
@@ -1280,25 +1280,22 @@ fit_one_spline(curve *             const curveP,
 
     C[1][0] = C[0][1];
     
-    X_C1_det = X[0] * C[1][1] - X[1] * C[0][1];
-    C0_X_det = C[0][0] * X[1] - C[0][1] * X[0];
+    X_C1_det  = X[0] * C[1][1] - X[1] * C[0][1];
+    C0_X_det  = C[0][0] * X[1] - C[0][1] * X[0];
     C0_C1_det = C[0][0] * C[1][1] - C[1][0] * C[0][1];
     if (C0_C1_det == 0.0) {
-        LOG ("zero determinant of C0*C1");
+        LOG("zero determinant of C0*C1");
         at_exception_fatal(exceptionP, "zero determinant of C0*C1");
-        goto cleanup;
-    }
+    } else {
+        alpha1 = X_C1_det / C0_C1_det;
+        alpha2 = C0_X_det / C0_C1_det;
 
-    alpha1 = X_C1_det / C0_C1_det;
-    alpha2 = C0_X_det / C0_C1_det;
-
-    CONTROL1(spline) = Vadd_point(START_POINT(spline),
-                                  Vmult_scalar(t1_hat, alpha1));
-    CONTROL2(spline) = Vadd_point(END_POINT(spline),
-                                  Vmult_scalar(t2_hat, alpha2));
-    SPLINE_DEGREE(spline) = CUBICTYPE;
-
-cleanup:
+        CONTROL1(spline) = Vadd_point(START_POINT(spline),
+                                      Vmult_scalar(t1_hat, alpha1));
+        CONTROL2(spline) = Vadd_point(END_POINT(spline),
+                                      Vmult_scalar(t2_hat, alpha2));
+        SPLINE_DEGREE(spline) = CUBICTYPE;
+    }        
     return spline;
 }
 
