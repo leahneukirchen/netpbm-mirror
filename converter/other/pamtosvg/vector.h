@@ -64,6 +64,10 @@ float_coord
 Vsubtract_point(float_coord const,
                 vector_type const);
 
+vector_type
+Pdirection(float_coord const final,
+           float_coord const initial);
+
 /* This returns the rounded sum.  */
 #define IPadd_vector Vadd_int_point
 

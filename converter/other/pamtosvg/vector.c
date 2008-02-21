@@ -235,6 +235,15 @@ Psubtract(float_coord const c1,
 
 
 
+vector_type
+Pdirection(float_coord const final,
+           float_coord const initial) {
+
+    return normalize(Psubtract(final, initial));
+}
+
+
+
 /* Operations on integer points.  */
 
 vector_type
