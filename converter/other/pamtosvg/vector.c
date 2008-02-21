@@ -17,134 +17,147 @@ static float acos_d (float, at_exception_type * excep);
 /* Given the point COORD, return the corresponding vector.  */
 
 vector_type
-make_vector (const float_coord c)
-{
-  vector_type v;
+make_vector(float_coord const c) {
 
-  v.dx = c.x;
-  v.dy = c.y;
-  v.dz = c.z;
+    vector_type v;
 
-  return v;
+    v.dx = c.x;
+    v.dy = c.y;
+    v.dz = c.z;
+
+    return v;
 }
+
 
 
 /* And the converse: given a vector, return the corresponding point.  */
 
 float_coord
-vector_to_point (const vector_type v)
-{
-  float_coord coord;
+vector_to_point(vector_type const v) {
 
-  coord.x = v.dx;
-  coord.y = v.dy;
+    float_coord coord;
 
-  return coord;
+    coord.x = v.dx;
+    coord.y = v.dy;
+
+    return coord;
 }
+
 
 
 float
-magnitude (const vector_type v)
-{
-  return (float) sqrt (v.dx * v.dx + v.dy * v.dy + v.dz * v.dz);
+magnitude(vector_type const v) {
+
+    return sqrt(SQR(v.dx) + SQR(v.dy) + SQR(v.dz));
 }
+
 
 
 vector_type
-normalize (const vector_type v)
-{
-  vector_type new_v;
-  float m = magnitude (v);
+normalize(vector_type const v) {
 
-  /* assert (m > 0.0); */
+    vector_type new_v;
+    float const m = magnitude(v);
 
-  if (m > 0.0)
-  {
-    new_v.dx = v.dx / m;
-    new_v.dy = v.dy / m;
-    new_v.dz = v.dz / m;
-  }
-  else
-  {
-	new_v.dx = v.dx;
-    new_v.dy = v.dy;
-    new_v.dz = v.dz;
-  }
-
-  return new_v;
+    if (m > 0.0) {
+        new_v.dx = v.dx / m;
+        new_v.dy = v.dy / m;
+        new_v.dz = v.dz / m;
+    } else {
+        new_v.dx = v.dx;
+        new_v.dy = v.dy;
+        new_v.dz = v.dz;
+    }
+    
+    return new_v;
 }
+
 
 
 vector_type
-Vadd (const vector_type v1, const vector_type v2)
-{
-  vector_type new_v;
+Vadd(vector_type const v1,
+     vector_type const v2) {
 
-  new_v.dx = v1.dx + v2.dx;
-  new_v.dy = v1.dy + v2.dy;
-  new_v.dz = v1.dz + v2.dz;
+    vector_type new_v;
 
-  return new_v;
+    new_v.dx = v1.dx + v2.dx;
+    new_v.dy = v1.dy + v2.dy;
+    new_v.dz = v1.dz + v2.dz;
+
+    return new_v;
 }
+
 
 
 float
-Vdot (const vector_type v1, const vector_type v2)
-{
-  return v1.dx * v2.dx + v1.dy * v2.dy + v1.dz * v2.dz;
+Vdot(vector_type const v1,
+     vector_type const v2) {
+
+    return v1.dx * v2.dx + v1.dy * v2.dy + v1.dz * v2.dz;
 }
+
 
 
 vector_type
-Vmult_scalar (const vector_type v, const float r)
-{
-  vector_type new_v;
+Vmult_scalar(vector_type const v,
+             float       const r) {
 
-  new_v.dx = v.dx * r;
-  new_v.dy = v.dy * r;
-  new_v.dz = v.dz * r;
+    vector_type new_v;
 
-  return new_v;
+    new_v.dx = v.dx * r;
+    new_v.dy = v.dy * r;
+    new_v.dz = v.dz * r;
+
+    return new_v;
 }
+
 
 
 /* Given the IN_VECTOR and OUT_VECTOR, return the angle between them in
-   degrees, in the range zero to 180.  */
+   degrees, in the range zero to 180.
+*/
 
 float
-Vangle (const vector_type in_vector, 
-	const vector_type out_vector,
-	at_exception_type * exp)
-{
-  vector_type v1 = normalize (in_vector);
-  vector_type v2 = normalize (out_vector);
+Vangle(vector_type         const in_vector, 
+       vector_type         const out_vector,
+       at_exception_type * const exP) {
 
-  return acos_d (Vdot (v2, v1), exp);
+    vector_type const v1 = normalize(in_vector);
+    vector_type const v2 = normalize(out_vector);
+
+    return acos_d(Vdot(v2, v1), exP);
 }
+
 
 
 float_coord
-Vadd_point (const float_coord c, const vector_type v)
-{
-  float_coord new_c;
+Vadd_point(float_coord const c,
+           vector_type const v) {
 
-  new_c.x = c.x + v.dx;
-  new_c.y = c.y + v.dy;
-  new_c.z = c.z + v.dz;
-  return new_c;
+    float_coord new_c;
+
+    new_c.x = c.x + v.dx;
+    new_c.y = c.y + v.dy;
+    new_c.z = c.z + v.dz;
+
+    return new_c;
 }
+
 
 
 float_coord
-Vsubtract_point (const float_coord c, const vector_type v)
-{
-  float_coord new_c;
+Vsubtract_point(float_coord const c,
+                vector_type const v) {
 
-  new_c.x = c.x - v.dx;
-  new_c.y = c.y - v.dy;
-  new_c.z = c.z - v.dz;
-  return new_c;
+    float_coord new_c;
+
+    new_c.x = c.x - v.dx;
+    new_c.y = c.y - v.dy;
+    new_c.z = c.z - v.dz;
+
+    return new_c;
 }
+
 
 
 pm_pixelcoord
@@ -160,56 +173,64 @@ Vadd_int_point(pm_pixelcoord const c,
 }
 
 
-vector_type
-Vabs (const vector_type v)
-{
-  vector_type new_v;
 
-  new_v.dx = (float) fabs (v.dx);
-  new_v.dy = (float) fabs (v.dy);
-  new_v.dz = (float) fabs (v.dz);
-  return new_v;
+vector_type
+Vabs(vector_type const v) {
+
+    vector_type new_v;
+
+    new_v.dx = (float) fabs (v.dx);
+    new_v.dy = (float) fabs (v.dy);
+    new_v.dz = (float) fabs (v.dz);
+
+    return new_v;
 }
+
 
 
 /* Operations on points.  */
 
 float_coord
-Padd (const float_coord coord1, const float_coord coord2)
-{
-  float_coord sum;
+Padd(float_coord const coord1,
+     float_coord const coord2) {
 
-  sum.x = coord1.x + coord2.x;
-  sum.y = coord1.y + coord2.y;
-  sum.z = coord1.z + coord2.z;
+    float_coord sum;
 
-  return sum;
+    sum.x = coord1.x + coord2.x;
+    sum.y = coord1.y + coord2.y;
+    sum.z = coord1.z + coord2.z;
+
+    return sum;
 }
+
 
 
 float_coord
-Pmult_scalar (const float_coord coord, const float r)
-{
-  float_coord answer;
+Pmult_scalar(float_coord const coord,
+             float       const r) {
 
-  answer.x = coord.x * r;
-  answer.y = coord.y * r;
-  answer.z = coord.z * r;
+    float_coord answer;
 
-  return answer;
+    answer.x = coord.x * r;
+    answer.y = coord.y * r;
+    answer.z = coord.z * r;
+
+    return answer;
 }
 
 
+
 vector_type
-Psubtract (const float_coord c1, const float_coord c2)
-{
-  vector_type v;
+Psubtract(float_coord const c1,
+          float_coord const c2) {
 
-  v.dx = c1.x - c2.x;
-  v.dy = c1.y - c2.y;
-  v.dz = c1.z - c2.z;
+    vector_type v;
 
-  return v;
+    v.dx = c1.x - c2.x;
+    v.dy = c1.y - c2.y;
+    v.dz = c1.z - c2.z;
+
+    return v;
 }
 
 
@@ -232,23 +253,27 @@ IPsubtract(pm_pixelcoord const coord1,
 
 
 static float
-acos_d (float v, at_exception_type * excep)
-{
-  float a;
+acos_d(float               const v,
+       at_exception_type * const excepP) {
 
-  if (epsilon_equal (v, 1.0))
-    v = 1.0;
-  else if (epsilon_equal (v, -1.0))
-    v = -1.0;
+    float vAdj;
+    float a;
+    float retval;
 
-  errno = 0;
-  a = (float) acos (v);
-  if (errno == ERANGE || errno == EDOM)
-    {
-      at_exception_fatal(excep, strerror(errno));
-      return 0.0;
-    }
-  
-  
-  return a * (float) 180.0 / (float) M_PI;
+    if (epsilon_equal(v, 1.0))
+        vAdj = 1.0;
+    else if (epsilon_equal(v, -1.0))
+        vAdj = -1.0;
+    else
+        vAdj = v;
+
+    errno = 0;
+    a = acos(v);
+    if (errno == ERANGE || errno == EDOM) {
+        at_exception_fatal(excepP, strerror(errno));
+        retval = 0.0;
+    } else
+        retval = a * 180.0 / M_PI;
+
+    return retval;
 }
