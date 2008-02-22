@@ -260,7 +260,7 @@ find_one_centerline(bitmap_type    const bitmap,
 
     outline = new_pixel_outline();
     outline.open  = false;
-    outline.color = getBitmapColor(bitmap, row, col);
+    outline.color = getBitmapColor(bitmap, original_row, original_col);
 
     /* Add the starting pixel to the output list, changing from bitmap
        to Cartesian coordinates and specifying the left edge so that

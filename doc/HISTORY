@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+08.02.22 BJH  Release 10.35.39
+
+              pamtosvg: fix crash with -centerline.
+
 08.02.01 BJH  Release 10.35.38
 
               ppmtoarbtxt: fix array overflow.
