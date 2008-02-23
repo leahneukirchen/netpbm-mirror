@@ -33,10 +33,6 @@ typedef struct curve {
     unsigned       length;
         /* Number of points in the curve */
     bool           cyclic;
-    vector_type    begSlope;
-        /* Slope of the curve (i.e. of tangent line) at its end point */
-    vector_type    endSlope;
-        /* Slope of the curve (i.e. of tangent line) at its start point */
 
     /* 'previous' and 'next' links are for the doubly linked list which is
        a chain of all curves in an outline.  The chain is a cycle for a
@@ -72,9 +68,6 @@ typedef struct curve * curve_type;
   ((signed int) (n) - 1 < 0							\
   ? CURVE_CYCLIC (c) ? (signed int) CURVE_LENGTH (c) + (signed int) (n) - 1 : -1\
   : (signed int) (n) - 1)
-
-#define CURVE_BEG_SLOPE(c) ((c)->begSlope)
-#define CURVE_END_SLOPE(c) ((c)->endSlope)
 
 static __inline__ vector_type
 curve_slope_none(void) {

@@ -690,6 +690,8 @@ makeOutlineOneCurve(pixel_outline_type const outline,
                     curve_list_type *  const curveListP) {
 /*----------------------------------------------------------------------------
    Add to *curveListP a single curve that represents the outline 'outline'.
+
+   That curve does not have beginning and ending slope information.
 -----------------------------------------------------------------------------*/
     curve * curveP;
     unsigned int pixelSeq;
@@ -726,6 +728,8 @@ addCurveStartingAtCorner(pixel_outline_type const outline,
 
    Furthermore, add that curve to the curve chain whose end is pointed
    to by *curCurvePP (NULL means chain is empty).
+
+   Don't include beginning and ending slope information for that curve.
 -----------------------------------------------------------------------------*/
     unsigned int const cornerPixelSeq = GET_INDEX(cornerList, cornerSeq);
     
@@ -782,6 +786,8 @@ divideOutlineWithCorners(pixel_outline_type const outline,
    corner).
 
    Assume there is at least one corner.
+
+   The curves do not have beginning and ending slope information.
 -----------------------------------------------------------------------------*/
     unsigned int const firstCurveSeq = CURVE_LIST_LENGTH(*curveListP);
         /* Index in curve list of the first curve we add */
@@ -867,6 +873,9 @@ split_at_corners(pixel_outline_list_type const pixel_list,
    To preserve this information, we return an array of curve_lists, one
    element (which in turn consists of several curves, one between each
    pair of corners) for each element in PIXEL_LIST.
+
+   The curves we return do not have beginning and ending slope
+   information.
 -----------------------------------------------------------------------------*/
     unsigned outlineSeq;
     curve_list_array_type curve_array;
@@ -1164,9 +1173,9 @@ spline_linear_enough(spline_type *             const spline,
 
 static spline_list_type *
 fitCurve(curve *                   const curveP,
+         vector_type               const begSlope,
+         vector_type               const endSlope,
          const fitting_opts_type * const fittingOptsP,
-         curve *                   const prevCurveP,
-         curve *                   const nextCurveP,
          at_exception_type *       const exceptionP);
 
 
@@ -1207,65 +1216,92 @@ fitWithLine(curve * const curveP) {
 #define B3(t) CUBE (t)
 
 static spline_type
-fit_one_spline(curve *             const curveP, 
-               at_exception_type * const exceptionP) {
+fitOneSpline(curve *             const curveP, 
+             vector_type         const begSlope,
+             vector_type         const endSlope,
+             at_exception_type * const exceptionP) {
 /*----------------------------------------------------------------------------
-   Our job here is to find alpha1 (and alpha2), where t1_hat (t2_hat) is
-   the slope of *curveP at the starting (ending) point, such that:
+  Return a spline that fits the points of curve *curveP,
+  with slope 'begSlope' at its beginning and 'endSlope' at its end.
 
-   control1 = alpha1 * t1_hat + starting point
-   control2 = alpha2 * t2_hat + ending_point
-
-   and the resulting spline (starting_point .. control1 and control2 ..
-   ending_point) minimizes the least-square error from CURVE.
-
-   See pp.57--59 of the Phoenix thesis.
-
-   The B?(t) here corresponds to B_i^3(U_i) there.
-   The Bernshte\u in polynomials of degree n are defined by
-   B_i^n(t) = { n \choose i } t^i (1-t)^{n-i}, i = 0..n
+  Make it a cubic spline.
 -----------------------------------------------------------------------------*/
-    /* Since our arrays are zero-based, the `C0' and `C1' here correspond
-       to `C1' and `C2' in the paper. 
+    /* We already have the start and end points of the spline, so all
+      we need are the control points.  And we know in what direction
+      each control point is from its respective end point, so all we
+      need to figure out is its distance.  (The control point's
+      distance from the end point is an indication of how long the
+      curve goes in its direction).
+
+      We call the distance from an end point to the associated control
+      point "alpha".
+
+      We want to find starting and ending alpha that minimize the
+      least-square error in approximating *curveP with the spline.
+
+      How we do that is a complete mystery to me, but the original author
+      said to see pp.57--59 of the Phoenix thesis.  I haven't seen that.
+
+      In our expression of the math here, we use a struct with "beg" and
+      "end" members where the paper uses a matrix with "1" and "2"
+      subscripts, respectively.  A C array is a closer match to a math
+      matrix, but we think the struct is easier to read.
+
+      The B?(t) here corresponds to B_i^3(U_i) there.
+      The Bernstein polynomials of degree n are defined by
+      B_i^n(t) = { n \choose i } t^i (1-t)^{n-i}, i = 0..n
+
     */
-    float X_C1_det, C0_X_det, C0_C1_det;
-    float alpha1, alpha2;
+    struct vectorPair {
+        vector_type beg;
+        vector_type end;
+    };
+    struct vectorPair tang;
+
+    float X_Cend_det, Cbeg_X_det, C_det;
     spline_type spline;
-    vector_type startVector, endVector;
+    vector_type begVector, endVector;
     unsigned i;
-    vector_type * A;
-    vector_type t1_hat;
-    vector_type t2_hat;
-    float C[2][2] = { { 0.0, 0.0 }, { 0.0, 0.0 } };
-    float X[2] = { 0.0, 0.0 };
+    struct vectorPair * A;  /* malloc'ed array */
+        /* I don't know the meaning of this array, but it is one entry for
+           each point in the curve (A[i] is for the ith point in the curve).
+        */
+    struct {
+        struct { float beg; float end; } beg;
+        struct { float beg; float end; } end;
+    } C;
+    struct { float beg; float end; } X;
 
-    t1_hat = CURVE_BEG_SLOPE(curveP);  /* initial value */
-    t2_hat = CURVE_END_SLOPE(curveP);  /* initial value */
+    tang.beg = begSlope; tang.end = endSlope;
 
-    MALLOCARRAY_NOFAIL(A, CURVE_LENGTH(curveP) * 2);
+    MALLOCARRAY_NOFAIL(A, CURVE_LENGTH(curveP));
 
-    START_POINT(spline) = CURVE_POINT(curveP, 0);
-    END_POINT(spline)   = LAST_CURVE_POINT(curveP);
-    startVector = make_vector(START_POINT(spline));
-    endVector   = make_vector(END_POINT(spline));
+    BEG_POINT(spline) = CURVE_POINT(curveP, 0);
+    END_POINT(spline) = LAST_CURVE_POINT(curveP);
+    begVector = make_vector(BEG_POINT(spline));
+    endVector = make_vector(END_POINT(spline));
 
     for (i = 0; i < CURVE_LENGTH(curveP); ++i) {
-        A[(i << 1) + 0] = Vmult_scalar(t1_hat, B1(CURVE_T(curveP, i)));
-        A[(i << 1) + 1] = Vmult_scalar(t2_hat, B2(CURVE_T(curveP, i)));
+        A[i].beg = Vmult_scalar(tang.beg, B1(CURVE_T(curveP, i)));
+        A[i].end = Vmult_scalar(tang.end, B2(CURVE_T(curveP, i)));
     }
 
-    for (i = 0; i < CURVE_LENGTH(curveP); ++i) {
-        vector_type temp, temp0, temp1, temp2, temp3;
-        vector_type * Ai = A + (i << 1);
+    C.beg.beg = 0.0; C.beg.end = 0.0; C.end.end = 0.0;  /* initial value */
 
-        C[0][0] += Vdot(Ai[0], Ai[0]);
-        C[0][1] += Vdot(Ai[0], Ai[1]);
-        /* C[1][0] = C[0][1] (this is assigned outside the loop)  */
-        C[1][1] += Vdot(Ai[1], Ai[1]);
+    X.beg = 0.0; X.end = 0.0; /* initial value */
+
+    for (i = 0; i < CURVE_LENGTH(curveP); ++i) {
+        struct vectorPair * const AP = &A[i];
+        vector_type temp, temp0, temp1, temp2, temp3;
+
+        C.beg.beg += Vdot(AP->beg, AP->beg);
+        C.beg.end += Vdot(AP->beg, AP->end);
+        /* C.end.beg = Vdot(AP->end, AP->beg) is done outside of loop */
+        C.end.end += Vdot(AP->end, AP->end);
 
         /* Now the right-hand side of the equation in the paper.  */
-        temp0 = Vmult_scalar(startVector, B0(CURVE_T(curveP, i)));
-        temp1 = Vmult_scalar(startVector, B1(CURVE_T(curveP, i)));
+        temp0 = Vmult_scalar(begVector, B0(CURVE_T(curveP, i)));
+        temp1 = Vmult_scalar(begVector, B1(CURVE_T(curveP, i)));
         temp2 = Vmult_scalar(endVector, B2(CURVE_T(curveP, i)));
         temp3 = Vmult_scalar(endVector, B3(CURVE_T(curveP, i)));
 
@@ -1273,27 +1309,28 @@ fit_one_spline(curve *             const curveP,
             Vsubtract_point(CURVE_POINT(curveP, i),
                             Vadd(temp0, Vadd(temp1, Vadd(temp2, temp3)))));
 
-        X[0] += Vdot(temp, Ai[0]);
-        X[1] += Vdot(temp, Ai[1]);
+        X.beg += Vdot(temp, AP->beg);
+        X.end += Vdot(temp, AP->end);
     }
     free(A);
 
-    C[1][0] = C[0][1];
+    C.end.beg = C.beg.end;
     
-    X_C1_det  = X[0] * C[1][1] - X[1] * C[0][1];
-    C0_X_det  = C[0][0] * X[1] - C[0][1] * X[0];
-    C0_C1_det = C[0][0] * C[1][1] - C[1][0] * C[0][1];
-    if (C0_C1_det == 0.0) {
-        LOG("zero determinant of C0*C1");
-        at_exception_fatal(exceptionP, "zero determinant of C0*C1");
+    X_Cend_det  = X.beg * C.end.end - X.end * C.beg.end;
+    Cbeg_X_det  = C.beg.beg * X.end - C.beg.end * X.beg;
+    C_det = C.beg.beg * C.end.end - C.end.beg * C.beg.end;
+    if (C_det == 0.0) {
+        LOG("zero determinant of C matrix");
+        at_exception_fatal(exceptionP, "zero determinant of C matrix");
     } else {
-        alpha1 = X_C1_det / C0_C1_det;
-        alpha2 = C0_X_det / C0_C1_det;
+        struct { float beg; float end; } alpha;  /* constant */
+        alpha.beg = X_Cend_det / C_det;
+        alpha.end = Cbeg_X_det / C_det;
 
-        CONTROL1(spline) = Vadd_point(START_POINT(spline),
-                                      Vmult_scalar(t1_hat, alpha1));
+        CONTROL1(spline) = Vadd_point(BEG_POINT(spline),
+                                      Vmult_scalar(tang.beg, alpha.beg));
         CONTROL2(spline) = Vadd_point(END_POINT(spline),
-                                      Vmult_scalar(t2_hat, alpha2));
+                                      Vmult_scalar(tang.end, alpha.end));
         SPLINE_DEGREE(spline) = CUBICTYPE;
     }        
     return spline;
@@ -1318,54 +1355,103 @@ logSplineFit(spline_type const spline) {
 
 
 static vector_type
-findHalfTangent(curve *        const curveP,
-                bool           const toStartPoint,
-                unsigned int * const nPointsP,
-                unsigned int   const tangentSurround) {
+findHalfTangentBeg(curve *      const curveP,
+                   unsigned int const tangentSurround) {
 /*----------------------------------------------------------------------------
-  Find the change in y and change in x for 'tangentSurround'
-  points along *curveP.  Increment *nPointsP by the number of points at
-  which we actually look.
+  Find the slope in the vicinity of the beginning of the curve
+  *curveP.
+
+  To wit, this is the mean slope between the first point on the curve and
+  each of the 'tangentSurround' following points, up to half the curve.
+
+  For example, if 'tangentSurround' is 3 and the curve is 10 points
+  long, we imagine a line through Point 0 and Point 1, another through
+  Point 0 and Point 2, and a third through Point 0 and Point 3.  We
+  return the mean of the slopes of those 3 lines.
 -----------------------------------------------------------------------------*/
-    int const factor = toStartPoint ? 1 : -1;
-    unsigned int const tangentIndex = toStartPoint ? 0 : curveP->length - 1;
-    float_coord const tangentPoint = CURVE_POINT(curveP, tangentIndex);
+    float_coord const tangentPoint = CURVE_POINT(curveP, 0);
     vector_type const zeroZero = { 0.0, 0.0 };
     unsigned int const surround =
         MIN(CURVE_LENGTH(curveP) / 2, tangentSurround);
 
     unsigned int p;
-    vector_type slope;
-    unsigned int nPoints;
+    vector_type sum;
+    vector_type mean;
+    unsigned int n;
 
-    for (p = 1, nPoints = 0, slope = zeroZero; p <= surround; ++p) {
-        int const thisIndex = p * factor + tangentIndex;
-        float_coord thisPoint;
-        
-        if (thisIndex < 0 || thisIndex >= (int) curveP->length)
-            break;
-
-        thisPoint = CURVE_POINT(curveP, p * factor + tangentIndex);
+    for (p = 0, n = 0, sum = zeroZero; p < surround; ++p) {
+        unsigned int const thisIndex = p + 1;
+        float_coord  const thisPoint = CURVE_POINT(curveP, thisIndex);
 
         /* Perhaps we should weight the tangent from `thisPoint' by some
            factor dependent on the distance from the tangent point.
         */
-        slope = Vadd(slope, Vmult_scalar(Psubtract(thisPoint, tangentPoint),
-                                         (float) factor));
-        ++nPoints;
+        sum = Vadd(sum, Pdirection(thisPoint, tangentPoint));
+        ++n;
     }
-    *nPointsP += nPoints;
-    return slope;
+
+    mean = Vmult_scalar(sum, 1.0 / n);
+
+    return mean;
+}
+
+
+
+static vector_type
+findHalfTangentEnd(curve *      const curveP,
+                   unsigned int const tangentSurround) {
+/*----------------------------------------------------------------------------
+  Find the slope in the vicinity of the end of the curve
+  *curveP.
+
+  This is analogous to findHalfTangentBeg(), but at the other end of the
+  curve.
+-----------------------------------------------------------------------------*/
+    float_coord const tangentPoint =
+        CURVE_POINT(curveP, CURVE_LENGTH(curveP) - 1);
+    vector_type const zeroZero = { 0.0, 0.0 };
+    unsigned int const surround =
+        MIN(CURVE_LENGTH(curveP) / 2, tangentSurround);
+
+    unsigned int p;
+    vector_type sum;
+    vector_type mean;
+    unsigned int n;
+
+    for (p = 0, n = 0, sum = zeroZero; p < surround; ++p) {
+        unsigned int const thisIndex = CURVE_LENGTH(curveP) - 1 - p;
+        float_coord  const thisPoint = CURVE_POINT(curveP, thisIndex);
+
+        sum = Vadd(sum, Pdirection(tangentPoint, thisPoint));
+        ++n;
+    }
+
+    mean = Vmult_scalar(sum, 1.0 / n);
+
+    return mean;
+}
+
+
+
+static vector_type
+findHalfTangent(bool         const toStartPoint,
+                curve *      const curveP,
+                unsigned int const tangentSurround) {
+
+    if (toStartPoint)
+        return findHalfTangentBeg(curveP, tangentSurround);
+    else
+        return findHalfTangentEnd(curveP, tangentSurround);
 }
 
 
 
 static void
-findTangent(curve *      const curveP,
-            bool         const toStartPoint,
-            bool         const crossCurve,
-            curve *      const adjacentCurveP,
-            unsigned int const tangentSurroundArg) {
+findTangent(curve *       const curveP,
+            bool          const toStartPoint,
+            curve *       const adjacentCurveP,
+            unsigned int  const tangentSurroundArg,
+            vector_type * const tangentP) {
 /*----------------------------------------------------------------------------
   Find an approximation to the slope of *curveP (i.e. slope of tangent
   line) at an endpoint (the first point if 'toStartPoint' is true,
@@ -1382,59 +1468,32 @@ findTangent(curve *      const curveP,
   be placed on the half-lines defined by the slopes and endpoints, and
   we never recompute the tangent after this.
 -----------------------------------------------------------------------------*/
-    vector_type * curveSlopeP;
-        /* Pointer to one of the slope members of *curveP: the one for
-           the point at which we're asked to find the tangent (according
-           to 'toStartPoint')
-        */
-    unsigned nPoints;
+    vector_type slope;
+    unsigned int tangentSurround;
 
     LOG2("  tangent to %s of curve %lx: ",
          toStartPoint ? "start" : "end", (unsigned long)curveP);
 
-    nPoints = 0;  /* initial value */
+    tangentSurround = tangentSurroundArg;  /* initial value */
+    do {
+        slope = findHalfTangent(toStartPoint, curveP, tangentSurround);
 
-    curveSlopeP = toStartPoint ?
-        &CURVE_BEG_SLOPE(curveP) : &CURVE_END_SLOPE(curveP);
-
-    if (!curve_slope_is_present(*curveSlopeP)) {
-        vector_type slope;
-        vector_type normalizedSlope;
-        unsigned int tangentSurround;
-
-        tangentSurround = tangentSurroundArg;  /* initial value */
-        do {
-            slope = findHalfTangent(curveP, toStartPoint, &nPoints,
-                                    tangentSurround);
-
-            if (adjacentCurveP) {
-                vector_type const slope2 =
-                    findHalfTangent(adjacentCurveP, !toStartPoint, &nPoints,
-                                    tangentSurround);
+        if (adjacentCurveP) {
+            vector_type const slopeAdj =
+                findHalfTangent(!toStartPoint, adjacentCurveP,
+                                tangentSurround);
                
-                LOG3("(adjacent curve half tangent (%.3f,%.3f,%.3f)) ",
-                     slope2.dx, slope2.dy, slope2.dz);
-                slope = Vadd(slope, slope2);
-            }
-            --tangentSurround;
-        } while (slope.dx == 0.0 && slope.dy == 0.0);
-
-        assert(nPoints > 0);
-
-        normalizedSlope = Vmult_scalar(slope, (float)(1.0 / nPoints));
-        if (CURVE_CYCLIC(curveP)) {
-            /* I have no idea what this is */
-            if (curve_slope_is_present(CURVE_BEG_SLOPE(curveP)))
-                CURVE_BEG_SLOPE(curveP) = normalizedSlope;
-            if (curve_slope_is_present(CURVE_END_SLOPE(curveP)))
-                CURVE_END_SLOPE(curveP) = normalizedSlope;
+            LOG3("(adjacent curve half tangent (%.3f,%.3f,%.3f)) ",
+                 slopeAdj.dx, slopeAdj.dy, slopeAdj.dz);
+            slope = Vmult_scalar(Vadd(slope, slopeAdj), 0.5);
         }
-        *curveSlopeP = normalizedSlope;
-    } else
-        LOG("(already computed) ");
+        --tangentSurround;
+    } while (slope.dx == 0.0 && slope.dy == 0.0);
+
+    *tangentP = slope;
     
     LOG3("(%.3f,%.3f,%.3f).\n",
-         curveSlopeP->dx, curveSlopeP->dy, curveSlopeP->dz);
+         tangentP->dx, tangentP->dy, tangentP->dz);
 }
 
 
@@ -1503,11 +1562,19 @@ setInitialParameterValues(curve * const curveP) {
 /*----------------------------------------------------------------------------
    Fill in the 't' values in *curveP.
 
-   To find reasonable values for t for each point on *curveP, we use
-   the "chord-length parameterization" method, which is described in
-   Plass & Stone.  The basic idea is just to use the distance from one
-   point to the next as the t value, normalized to produce values that
-   increase from zero for the first point to one for the last point.
+   The t value for point P on a curve is the distance P is along the
+   curve from the initial point, normalized so the entire curve is
+   length 1.0 (i.e. t of the initial point is 0.0; t of the final
+   point is 1.0).
+
+   There are a lot of curves that pass through the points indicated by
+   *curveP, but for practical computation of t, we just take the
+   piecewise linear locus that runs through all of them.  That means
+   we can just step through *curveP, adding up the distance from one
+   point to the next to get the t value for each point.
+
+   This is the "chord-length parameterization" method, which is
+   described in Plass & Stone.
 -----------------------------------------------------------------------------*/
     unsigned int p;
 
@@ -1524,6 +1591,8 @@ setInitialParameterValues(curve * const curveP) {
 
     assert(LAST_CURVE_T(curveP) != 0.0);
 
+    /* Normalize to a curve length of 1.0 */
+
     for (p = 1; p < CURVE_LENGTH(curveP); ++p)
         CURVE_T(curveP, p) = CURVE_T(curveP, p) / LAST_CURVE_T(curveP);
 
@@ -1537,11 +1606,16 @@ subdivideCurve(curve *                   const curveP,
                unsigned int              const subdivisionIndex,
                const fitting_opts_type * const fittingOptsP,
                curve **                  const leftCurvePP,
-               curve **                  const rghtCurvePP) {
+               curve **                  const rghtCurvePP,
+               vector_type *             const joinSlopeP) {
 /*----------------------------------------------------------------------------
   Split curve *curveP into two, at 'subdivisionIndex'.  (Actually,
   leave *curveP alone, but return as *leftCurvePP and *rghtCurvePP
   two new curves that are the pieces).
+  
+  Return as *joinSlopeP what should be the slope where the subcurves
+  join, i.e. the slope of the end of the left subcurve and of the start
+  of the right subcurve.
 
   To be precise, the point with sequence number 'subdivisionIndex'
   becomes the first pixel of the right-hand curve.
@@ -1552,9 +1626,10 @@ subdivideCurve(curve *                   const curveP,
     leftCurveP = new_curve();
     rghtCurveP = new_curve();
 
-    LOG3("  Final point: (%.3f,%.3f), #%u.\n",
-         CURVE_POINT(curveP, subdivisionIndex).x,
-         CURVE_POINT(curveP, subdivisionIndex).y, subdivisionIndex);
+    LOG4("  Subdividing curve %lx into %lx and %lx at point #%u\n",
+         (unsigned long)curveP,
+         (unsigned long)leftCurveP, (unsigned long)rghtCurveP,
+         subdivisionIndex);
 
     /* The last point of the left-hand curve will also be the first
        point of the right-hand curve.
@@ -1571,26 +1646,16 @@ subdivideCurve(curve *                   const curveP,
     memcpy(rghtCurveP->point_list, &curveP->point_list[subdivisionIndex],
            CURVE_LENGTH(rghtCurveP) * sizeof(curveP->point_list[0]));
 
-    /* We want to use the tangents of the curve which we are
-       subdividing for the start tangent for *leftCurveP and the
-       end tangent for rightCurveP.
-    */
-    CURVE_BEG_SLOPE(leftCurveP) = CURVE_BEG_SLOPE(curveP);
-    CURVE_END_SLOPE(rghtCurveP) = CURVE_END_SLOPE(curveP);
-
     /* We have to set up the two curves before finding the slope at
        the subdivision point.  The slope at that point must be the
        same for both curves, or noticeable bumps will occur in the
        character.  But we want to use information on both sides of the
-       point to compute the slope, hence cross_curve = true.
+       point to compute the slope, hence we use adjacentCurveP.
     */
     findTangent(leftCurveP,
                 /* toStartPoint: */   false,
-                /* crossCurve: */     true,
                 /* adjacentCurveP: */ rghtCurveP,
-                fittingOptsP->tangent_surround);
-
-    CURVE_BEG_SLOPE(rghtCurveP) = CURVE_END_SLOPE(leftCurveP);
+                fittingOptsP->tangent_surround, joinSlopeP);
 
     *leftCurvePP = leftCurveP;
     *rghtCurvePP = rghtCurveP;
@@ -1655,10 +1720,10 @@ divisionPoint(curve *      const curveP,
 
 static spline_list_type *
 divideAndFit(curve *                   const curveP,
+             vector_type               const begSlope,
+             vector_type               const endSlope,
              unsigned int              const subdivisionIndex,
              const fitting_opts_type * const fittingOptsP,
-             curve *                   const prevCurveP,
-             curve *                   const nextCurveP,
              at_exception_type *       const exceptionP) {
 /*----------------------------------------------------------------------------
   Same as fitWithLeastSquares() (i.e. return a list of splines that fit
@@ -1672,23 +1737,28 @@ divideAndFit(curve *                   const curveP,
   Assume 'subdivisionIndex' leaves at least two pixels on each side.
 -----------------------------------------------------------------------------*/
     spline_list_type * retval;
-    spline_list_type * leftSplineListP;
     curve * leftCurveP;
+        // The beginning (lower indexes) subcurve
     curve * rghtCurveP;
-
+        // The other subcurve
+    vector_type joinSlope;
+        // The slope of the end of the left subcurve and start of the right
+        // subcurve.
+    spline_list_type * leftSplineListP;
+    
     assert(subdivisionIndex > 1);
     assert(subdivisionIndex < CURVE_LENGTH(curveP)-1);
     subdivideCurve(curveP, subdivisionIndex, fittingOptsP,
-                   &leftCurveP, &rghtCurveP);
+                   &leftCurveP, &rghtCurveP, &joinSlope);
 
-    leftSplineListP = fitCurve(leftCurveP, fittingOptsP,
-                               prevCurveP, rghtCurveP, exceptionP);
+    leftSplineListP = fitCurve(leftCurveP, begSlope, joinSlope,
+                               fittingOptsP, exceptionP);
 
     if (!at_exception_got_fatal(exceptionP)) {
         spline_list_type * rghtSplineListP;
 
-        rghtSplineListP = fitCurve(rghtCurveP, fittingOptsP,
-                                   leftCurveP, nextCurveP, exceptionP);
+        rghtSplineListP = fitCurve(rghtCurveP, joinSlope, endSlope,
+                                   fittingOptsP, exceptionP);
 
         if (!at_exception_got_fatal(exceptionP)) {
             if (leftSplineListP == NULL && rghtSplineListP == NULL)
@@ -1718,9 +1788,9 @@ divideAndFit(curve *                   const curveP,
 
 static spline_list_type *
 fitWithLeastSquares(curve *                   const curveP,
+                    vector_type               const begSlope,
+                    vector_type               const endSlope,
                     const fitting_opts_type * const fittingOptsP,
-                    curve *                   const prevCurveP,
-                    curve *                   const nextCurveP,
                     at_exception_type *       const exceptionP) {
 /*----------------------------------------------------------------------------
   The least squares method is well described in Schneider's thesis.
@@ -1737,19 +1807,6 @@ fitWithLeastSquares(curve *                   const curveP,
        inappropriate.  We want all the points we can get.
     */
     
-    /* It makes no difference whether we first set the `t' values or
-       find the tangents.  This order makes the documentation a little
-       more coherent.
-    */
-
-    LOG("Finding tangents:\n");
-    findTangent(curveP, /* toStart */ true,  /* crossCurve */ false,
-                CURVE_CYCLIC(curveP) ? curveP : NULL,
-                fittingOptsP->tangent_surround);
-    findTangent(curveP, /* toStart */ false, /* crossCurve */ false,
-                CURVE_CYCLIC(curveP) ? curveP : NULL,
-                fittingOptsP->tangent_surround);
-
     setInitialParameterValues(curveP);
 
     if (CURVE_CYCLIC(curveP) && CURVE_LENGTH(curveP) < 4) {
@@ -1762,7 +1819,7 @@ fitWithLeastSquares(curve *                   const curveP,
 
     /* Try a single spline over whole curve */
 
-    spline = fit_one_spline(curveP, exceptionP);
+    spline = fitOneSpline(curveP, begSlope, endSlope, exceptionP);
     if (!at_exception_got_fatal(exceptionP)) {
         float error;
         unsigned int worstPoint;
@@ -1793,9 +1850,8 @@ fitWithLeastSquares(curve *                   const curveP,
                  CURVE_POINT(curveP, worstPoint).x,
                  CURVE_POINT(curveP, worstPoint).y, worstPoint, error);
 
-            retval = divideAndFit(curveP, divIndex, fittingOptsP,
-                                  prevCurveP, nextCurveP,
-                                  exceptionP);
+            retval = divideAndFit(curveP, begSlope, endSlope, divIndex,
+                                  fittingOptsP, exceptionP);
         }
     } else
         retval = NULL; /* quiet compiler warning */
@@ -1807,9 +1863,9 @@ fitWithLeastSquares(curve *                   const curveP,
 
 static spline_list_type *
 fitCurve(curve *                   const curveP,
+         vector_type               const begSlope,
+         vector_type               const endSlope,
          const fitting_opts_type * const fittingOptsP,
-         curve *                   const prevCurveP,
-         curve *                   const nextCurveP,
          at_exception_type *       const exceptionP) {
 /*----------------------------------------------------------------------------
   Transform a set of locations to a list of splines (the fewer the
@@ -1827,7 +1883,7 @@ fitCurve(curve *                   const curveP,
         fittedSplinesP = fitWithLine(curveP);
     else
         fittedSplinesP =
-            fitWithLeastSquares(curveP, fittingOptsP, prevCurveP, nextCurveP,
+            fitWithLeastSquares(curveP, begSlope, endSlope, fittingOptsP,
                                 exceptionP);
 
     return fittedSplinesP;
@@ -1857,13 +1913,22 @@ fitCurves(curve_list_type           const curveList,
 
         curve * const curveP = CURVE_LIST_ELT(curveList, curveSeq);
 
+        vector_type begSlope, endSlope;
         spline_list_type * curveSplinesP;
 
         LOG2("\nFitting curve #%u (%lx):\n", curveSeq, (unsigned long)curveP);
 
-        curveSplinesP = fitCurve(curveP, fittingOptsP,
-                                 PREVIOUS_CURVE(curveP),
-                                 NEXT_CURVE(curveP), exceptionP);
+        LOG("Finding tangents:\n");
+        findTangent(curveP, /* toStart */ true,
+                    CURVE_CYCLIC(curveP) ? curveP : NULL,
+                    fittingOptsP->tangent_surround,
+                    &begSlope);
+        findTangent(curveP, /* toStart */ false,
+                    CURVE_CYCLIC(curveP) ? curveP : NULL,
+                    fittingOptsP->tangent_surround, &endSlope);
+
+        curveSplinesP = fitCurve(curveP, begSlope, endSlope, fittingOptsP,
+                                 exceptionP);
         if (!at_exception_got_fatal(exceptionP)) {
             if (curveSplinesP == NULL) {
                 LOG1("Could not fit curve #%u", curveSeq);

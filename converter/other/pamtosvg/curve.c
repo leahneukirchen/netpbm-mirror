@@ -51,8 +51,6 @@ new_curve(void) {
   curveP->point_list = NULL;
   CURVE_LENGTH(curveP) = 0;
   CURVE_CYCLIC(curveP) = false;
-  CURVE_BEG_SLOPE(curveP) = curve_slope_none();
-  CURVE_END_SLOPE(curveP) = curve_slope_none();
   PREVIOUS_CURVE(curveP)  = NULL;
   NEXT_CURVE(curveP)      = NULL;
 
@@ -156,14 +154,6 @@ log_curve(curve * const curveP,
     if (CURVE_CYCLIC(curveP))
         LOG("  cyclic.\n");
 
-    /* It should suffice to check just one of the tangents for being present
-       -- either they both should be, or neither should be.
-    */
-    if (curve_slope_is_present(CURVE_BEG_SLOPE(curveP)))
-        LOG4("  tangents = (%.3f,%.3f) & (%.3f,%.3f).\n",
-             CURVE_BEG_SLOPE(curveP).dx, CURVE_BEG_SLOPE(curveP).dy,
-             CURVE_END_SLOPE(curveP).dx, CURVE_END_SLOPE(curveP).dy);
-
     LOG("  ");
 
     /* If the curve is short enough, don't use ellipses.  */
@@ -215,13 +205,6 @@ log_entire_curve(curve * const curveP) {
     if (CURVE_CYCLIC(curveP))
         LOG("  cyclic.\n");
 
-    /* It should suffice to check just one of the tangents for being present
-       -- either they both should be, or neither should be.  */
-    if (curve_slope_is_present(CURVE_BEG_SLOPE(curveP)))
-        LOG4("  tangents = (%.3f,%.3f) & (%.3f,%.3f).\n",
-             CURVE_BEG_SLOPE(curveP).dx, CURVE_BEG_SLOPE(curveP).dy,
-             CURVE_END_SLOPE(curveP).dx, CURVE_END_SLOPE(curveP).dy);
-    
     LOG(" ");
 
     for (thisPoint = 0; thisPoint < CURVE_LENGTH(curveP); ++thisPoint) {
