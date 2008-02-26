@@ -328,11 +328,24 @@ filenameRoot(const char * const filename) {
 
 static void
 openLogFile(FILE **      const logFileP,
-            const char * const inputRootName) {
+            const char * const inputFileArg) {
 
     const char * logfileName;
 
-    asprintfN(&logfileName, "%s.log", inputRootName);
+    if (streq(inputFileArg, "-"))
+        asprintfN(&logfileName, "pamtosvg.log");
+    else {
+        const char * inputRootName;
+
+        inputRootName = filenameRoot(inputFileArg);
+        if (inputRootName == NULL)
+            pm_error("Can't find the root portion of file name '%s'",
+                     inputFileArg);
+    
+        asprintfN(&logfileName, "%s.log", inputRootName);
+
+        strfree(inputRootName);
+    }
 
     *logFileP = pm_openw(logfileName);
 
@@ -349,7 +362,6 @@ main(int argc, char * argv[]) {
     at_bitmap_type * bitmapP;
     at_spline_list_array_type * splinesP;
     at_progress_func progressReporter;
-    const char * inputRootName;
 
     pnm_init(&argc, argv);
 
@@ -357,13 +369,8 @@ main(int argc, char * argv[]) {
 
     ifP = pm_openr(cmdline.inputFileName);
 
-    inputRootName = filenameRoot(cmdline.inputFileName);
-    if (inputRootName == NULL)
-        pm_error("Can't find the root portion of file name '%s'",
-                 cmdline.inputFileName);
-    
     if (cmdline.log)
-        openLogFile(&log_file, inputRootName);
+        openLogFile(&log_file, cmdline.inputFileName);
 
     readImageToBitmap(ifP, &bitmapP);
     
@@ -378,8 +385,6 @@ main(int argc, char * argv[]) {
 
     writeSplines(splinesP, cmdline, output_svg_writer, stdout,
                  exceptionHandler);
-
-    strfree(inputRootName);
 
     pm_close(stdout);
     pm_close(ifP);
