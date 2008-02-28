@@ -20,19 +20,31 @@ typedef struct {
 
 
 
-struct curve {
+typedef struct curve {
 /*----------------------------------------------------------------------------
   An ordered list of contiguous points in the raster, with no corners
   in it.  I.e. something that could reasonably be fit to a spline.
 -----------------------------------------------------------------------------*/
     point_type *   point_list;
+        /* Array of the points in the curve.  Malloc'ed.  Size is 'length'.
+           if 'length' is zero, this is meaningless and no memory is
+           allocated.
+        */
     unsigned       length;
+        /* Number of points in the curve */
     bool           cyclic;
-    vector_type *  start_tangent;
-    vector_type *  end_tangent;
+    vector_type    begSlope;
+        /* Slope of the curve (i.e. of tangent line) at its end point */
+    vector_type    endSlope;
+        /* Slope of the curve (i.e. of tangent line) at its start point */
+
+    /* 'previous' and 'next' links are for the doubly linked list which is
+       a chain of all curves in an outline.  The chain is a cycle for a
+       closed outline and linear for an open outline.
+    */
     struct curve * previous;
     struct curve * next;
-};
+} curve;
 
 typedef struct curve * curve_type;
 
@@ -61,9 +73,20 @@ typedef struct curve * curve_type;
   ? CURVE_CYCLIC (c) ? (signed int) CURVE_LENGTH (c) + (signed int) (n) - 1 : -1\
   : (signed int) (n) - 1)
 
-/* The tangents at the endpoints are computed using the neighboring curves.  */
-#define CURVE_START_TANGENT(c) ((c)->start_tangent)
-#define CURVE_END_TANGENT(c) ((c)->end_tangent)
+#define CURVE_BEG_SLOPE(c) ((c)->begSlope)
+#define CURVE_END_SLOPE(c) ((c)->endSlope)
+
+static __inline__ vector_type
+curve_slope_none(void) {
+    vector_type const retval = {0.0, 0.0, 0.0};
+    return retval;
+}
+
+static bool
+curve_slope_is_present(vector_type const slope) {
+    return slope.dx != 0.0 || slope.dy != 0.0;
+}
+
 #define PREVIOUS_CURVE(c) ((c)->previous)
 #define NEXT_CURVE(c) ((c)->next)
 
@@ -74,8 +97,12 @@ extern curve_type new_curve (void);
 /* Return a curve the same as C, except without any points.  */
 extern curve_type copy_most_of_curve (curve_type c);
 
-/* Free the memory C uses.  */
-extern void free_curve (curve_type c);
+void
+move_curve(curve * const dstP,
+           curve * const srcP);
+
+void
+free_curve(curve * const curveP);
 
 /* Like `append_pixel', for a point in real coordinates.  */
 void
@@ -101,11 +128,12 @@ typedef struct {
 /*----------------------------------------------------------------------------
    An ordered list of contiguous curves of a particular color.
 -----------------------------------------------------------------------------*/
-    curve_type * data;
-    unsigned     length;
-    bool         clockwise;
-    pixel        color;
-    bool         open;
+    curve ** data;
+        /* data[i] is the handle of the ith curve in the list */
+    unsigned length;
+    bool     clockwise;
+    pixel    color;
+    bool     open;
         /* The curve list does not form a closed shape;  i.e. the last
            curve doesn't end where the first one starts.
         */

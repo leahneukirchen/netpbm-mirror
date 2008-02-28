@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+08.02.28 BJH  Release 10.41.04
+
+              pamtosvg: fix various bugs: crash, poor tracing, memory leaks.
+
+              pamtosvg: fix log file name with Standard Input.
+              
 08.02.14 BJH  Release 10.41.03
 
               ppmtoarbtxt: fix array overflow.
