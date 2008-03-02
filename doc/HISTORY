@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.42.00
 
+              pgmbentley: fix output; black areas not black.
+
               pamtosvg: fix various bugs: crash, poor tracing, memory leaks.
 
               pamtosvg: fix log file name with Standard Input.

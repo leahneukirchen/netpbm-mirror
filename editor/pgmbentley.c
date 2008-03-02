@@ -11,54 +11,64 @@
 */
 
 #include <stdio.h>
+
+#include "pm_c_util.h"
 #include "pgm.h"
 
+
+static unsigned int const N = 4;
+
+
 int
-main( argc, argv )
-    int argc;
-    char* argv[];
-    {
-    FILE* ifp;
+main(int argc, const char * argv[]) {
+
+    FILE * ifP;
+    int rows, cols;
     gray maxval;
-    gray** gin;
-    gray** gout;
-    int argn, rows, cols, row;
-    register int brow, col;
-    const char* const usage = "[pgmfile]";
+    gray ** gin;
+    gray ** gout;
+    unsigned int row;
+    const char * inputFileName;
 
+    pm_proginit(&argc, argv);
 
-    pgm_init( &argc, argv );
+    if (argc-1 < 1)
+        inputFileName = "-";
+    else {
+        inputFileName = argv[1];
 
-    argn = 1;
-
-    if ( argn < argc )
-	{
-	ifp = pm_openr( argv[argn] );
-	++argn;
-	}
-    else
-	ifp = stdin;
-
-    if ( argn != argc )
-	pm_usage( usage );
-
-    gin = pgm_readpgm( ifp, &cols, &rows, &maxval );
-    pm_close( ifp );
-    gout = pgm_allocarray( cols, rows );
-
-#define N 4
-    for ( row = 0; row < rows; ++row )
-	for ( col = 0; col < cols; ++col )
-	    {
-	    brow = row + (int) (gin[row][col]) / N;
-	    if ( brow >= rows )
-		brow = rows - 1;
-	    gout[brow][col] = gin[row][col];
-	    }
-
-    pgm_writepgm( stdout, gout, cols, rows, maxval, 0 );
-    pm_close( stdout );
-    pgm_freearray( gout, rows );
-
-    exit( 0 );
+        if (argc-1 > 1)
+            pm_error("There are no options and only one argument.  "
+                     "You specified %u", argc-1);
     }
+	ifP = pm_openr(inputFileName);
+
+    gin = pgm_readpgm(ifP, &cols, &rows, &maxval);
+
+    pm_close(ifP);
+
+    gout = pgm_allocarray(cols, rows);
+
+    for (row = 0; row < rows; ++row) {
+        unsigned int col;
+        for (col = 0; col < cols; ++col)
+            gout[row][col] = 0;
+    }
+
+    for (row = 0; row < rows; ++row) {
+        unsigned int col;
+
+        for (col = 0; col < cols; ++col) {
+            unsigned int const brow = MIN(rows-1, row + gin[row][col] / N);
+
+            gout[brow][col] = gin[row][col];
+	    }
+    }
+     
+    pgm_writepgm(stdout, gout, cols, rows, maxval, 0);
+
+    pm_close(stdout);
+    pgm_freearray(gout, rows);
+
+    return 0;
+}
