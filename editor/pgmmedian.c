@@ -52,7 +52,6 @@ static int format;
 static gray maxval;
 static gray **grays;
 static gray *grayrow;
-static gray **rowptr;
 static int ccolso2, crowso2;
 static int row;
 
@@ -125,10 +124,10 @@ parseCommandLine(int argc, char ** argv,
 
 
 static void
-select_489(gray * const a,
-           int *  const parray,
-           int    const n,
-           int    const k) {
+select489(gray * const a,
+          int *  const parray,
+          int    const n,
+          int    const k) {
 
     gray t;
     int i, j, l, r;
@@ -180,206 +179,220 @@ select_489(gray * const a,
 
 
 static void
-select_median(FILE * const ifp,
-              int    const ccols,
-              int    const crows,
-              int    const cols,
-              int    const rows,
-              int    const median) {
+selectMedian(FILE *       const ifP,
+             unsigned int const ccols,
+             unsigned int const crows,
+             unsigned int const cols,
+             unsigned int const rows,
+             unsigned int const median) {
 
-    int ccol, col;
-    int crow;
-    int rownum, irow, temprow;
-    gray *temprptr;
-    int i, leftcol;
-    int num_values;
-    gray *garray;
+    unsigned int const numValues = crows * ccols;
 
-    int *parray;
-    int addcol;
-    int *subcol;
-    int tsum;
+    unsigned int col;
+    gray * garray;
+        /* Array of the currenty gray values */
+    int * parray;
+    int * subcol;
+    gray ** rowptr;
+    
+    garray = pgm_allocrow(numValues);
 
-    /* Allocate storage for array of the current gray values. */
-    garray = pgm_allocrow( crows * ccols );
+    MALLOCARRAY(rowptr, crows);
+    MALLOCARRAY(parray, numValues);
+    MALLOCARRAY(subcol, cols);
 
-    num_values = crows * ccols;
+    if (rowptr == NULL || parray == NULL || subcol == NULL)
+        pm_error("Unable to allocate memory");
 
-    parray = (int *) pm_allocrow( crows * ccols, sizeof(int) );
-    subcol = (int *) pm_allocrow( cols, sizeof(int) );
-
-    for ( i = 0; i < cols; ++i )
-        subcol[i] = ( i - (ccolso2 + 1) ) % ccols;
+    for (col = 0; col < cols; ++col)
+        subcol[col] = (col - (ccolso2 + 1)) % ccols;
 
     /* Apply median to main part of image. */
-    for ( ; row < rows; ++row ) {
-        temprow = row % crows;
-        pgm_readpgmrow( ifp, grays[temprow], cols, maxval, format );
+    for ( ; row < rows; ++row) {
+        int crow;
+        int rownum, irow, temprow;
+        unsigned int col;
+    
+        pgm_readpgmrow(ifP, grays[row % crows], cols, maxval, format);
 
         /* Rotate pointers to rows, so rows can be accessed in order. */
-        temprow = ( row + 1 ) % crows;
+        temprow = (row + 1) % crows;
         rownum = 0;
-        for ( irow = temprow; irow < crows; ++rownum, ++irow )
+        for (irow = temprow; irow < crows; ++rownum, ++irow)
             rowptr[rownum] = grays[irow];
-        for ( irow = 0; irow < temprow; ++rownum, ++irow )
+        for (irow = 0; irow < temprow; ++rownum, ++irow)
             rowptr[rownum] = grays[irow];
 
-        for ( col = 0; col < cols; ++col ) {
-            if ( col < ccolso2 || col >= cols - ccolso2 ) {
+        for (col = 0; col < cols; ++col) {
+            if (col < ccolso2 || col >= cols - ccolso2) {
                 grayrow[col] = rowptr[crowso2][col];
-            } else if ( col == ccolso2 ) {
-                leftcol = col - ccolso2;
+            } else if (col == ccolso2) {
+                unsigned int const leftcol = col - ccolso2;
+                unsigned int i;
                 i = 0;
-                for ( crow = 0; crow < crows; ++crow ) {
-                    temprptr = rowptr[crow] + leftcol;
-                    for ( ccol = 0; ccol < ccols; ++ccol ) {
-                        garray[i] = *( temprptr + ccol );
+                for (crow = 0; crow < crows; ++crow) {
+                    gray * const temprptr = rowptr[crow] + leftcol;
+                    unsigned int ccol;
+                    for (ccol = 0; ccol < ccols; ++ccol) {
+                        garray[i] = *(temprptr + ccol);
                         parray[i] = i;
                         ++i;
                     }
                 }
-                select_489( garray, parray, num_values, median );
+                select489(garray, parray, numValues, median);
                 grayrow[col] = garray[parray[median]];
             } else {
-                addcol = col + ccolso2;
+                unsigned int const addcol = col + ccolso2;
+                unsigned int crow;
+                unsigned int tsum;
                 for (crow = 0, tsum = 0; crow < crows; ++crow, tsum += ccols)
                     garray[tsum + subcol[col]] = *(rowptr[crow] + addcol );
-                select_489( garray, parray, num_values, median );
+                select489( garray, parray, numValues, median );
                 grayrow[col] = garray[parray[median]];
-            }
-        }
-        pgm_writepgmrow( stdout, grayrow, cols, maxval, forceplain );
-    }
-
-    /* Write out remaining unchanged rows. */
-    for ( irow = crowso2 + 1; irow < crows; ++irow )
-        pgm_writepgmrow( stdout, rowptr[irow], cols, maxval, forceplain );
-
-    pgm_freerow( garray );
-    pm_freerow( (char *) parray );
-    pm_freerow( (char *) subcol );
-}
-
-
-
-static void
-histogram_sort_median(FILE * const ifp,
-                      int    const ccols,
-                      int    const crows,
-                      int    const cols,
-                      int    const rows,
-                      int    const median) {
-
-    int const histmax = maxval + 1;
-
-    int *hist;
-    int mdn, ltmdn;
-    gray *left_col, *right_col;
-
-    hist = (int *) pm_allocrow( histmax, sizeof( int ) );
-    left_col = pgm_allocrow( crows );
-    right_col = pgm_allocrow( crows );
-
-    /* Apply median to main part of image. */
-    for ( ; row < rows; ++row ) {
-        int col;
-        int temprow;
-        int rownum;
-        int irow;
-        int i;
-        /* initialize hist[] */
-        for ( i = 0; i < histmax; ++i )
-            hist[i] = 0;
-
-        temprow = row % crows;
-        pgm_readpgmrow( ifp, grays[temprow], cols, maxval, format );
-
-        /* Rotate pointers to rows, so rows can be accessed in order. */
-        temprow = ( row + 1 ) % crows;
-        rownum = 0;
-        for ( irow = temprow; irow < crows; ++rownum, ++irow )
-            rowptr[rownum] = grays[irow];
-        for ( irow = 0; irow < temprow; ++rownum, ++irow )
-            rowptr[rownum] = grays[irow];
-
-        for ( col = 0; col < cols; ++col ) {
-            if ( col < ccolso2 || col >= cols - ccolso2 )
-                grayrow[col] = rowptr[crowso2][col];
-            else if ( col == ccolso2 ) {
-                int crow;
-                int const leftcol = col - ccolso2;
-                i = 0;
-                for ( crow = 0; crow < crows; ++crow ) {
-                    int ccol;
-                    gray * const temprptr = rowptr[crow] + leftcol;
-                    for ( ccol = 0; ccol < ccols; ++ccol ) {
-                        gray const g = *( temprptr + ccol );
-                        ++hist[g];
-                        ++i;
-                    }
-                }
-                ltmdn = 0;
-                for ( mdn = 0; ltmdn <= median; ++mdn )
-                    ltmdn += hist[mdn];
-                mdn--;
-                if ( ltmdn > median ) 
-                    ltmdn -= hist[mdn];
-
-                grayrow[col] = mdn;
-            } else {
-                int crow;
-                int const subcol = col - ( ccolso2 + 1 );
-                int const addcol = col + ccolso2;
-                for ( crow = 0; crow < crows; ++crow ) {
-                    left_col[crow] = *( rowptr[crow] + subcol );
-                    right_col[crow] = *( rowptr[crow] + addcol );
-                }
-                for ( crow = 0; crow < crows; ++crow ) {
-                    {
-                        gray const g = left_col[crow];
-                        hist[(int) g]--;
-                        if ( (int) g < mdn )
-                            ltmdn--;
-                    }
-                    {
-                        gray const g = right_col[crow];
-                        hist[(int) g]++;
-                        if ( (int) g < mdn )
-                            ltmdn++;
-                    }
-                }
-                if ( ltmdn > median )
-                    do {
-                        mdn--;
-                        ltmdn -= hist[mdn];
-                    } while ( ltmdn > median );
-                else {
-                    /* This one change from Pitas algorithm can reduce run
-                    ** time by up to 10%.
-                    */
-                    while ( ltmdn <= median ) {
-                        ltmdn += hist[mdn];
-                        mdn++;
-                    }
-                    mdn--;
-                    if ( ltmdn > median ) 
-                        ltmdn -= hist[mdn];
-                }
-                grayrow[col] = mdn;
             }
         }
         pgm_writepgmrow( stdout, grayrow, cols, maxval, forceplain );
     }
 
     {
+        unsigned int irow;
         /* Write out remaining unchanged rows. */
-        int irow;
-        for ( irow = crowso2 + 1; irow < crows; ++irow )
-            pgm_writepgmrow( stdout, rowptr[irow], cols, maxval, forceplain );
+        for (irow = crowso2 + 1; irow < crows; ++irow)
+            pgm_writepgmrow(stdout, rowptr[irow], cols, maxval, forceplain);
     }
-    pm_freerow( (char *) hist );
-    pgm_freerow( left_col );
-    pgm_freerow( right_col );
+    free(subcol);
+    free(parray);
+    free(rowptr);
+    pgm_freerow(garray);
+}
+
+
+
+static void
+histogramSortMedian(FILE *       const ifP,
+                    unsigned int const ccols,
+                    unsigned int const crows,
+                    unsigned int const cols,
+                    unsigned int const rows,
+                    unsigned int const median) {
+
+    unsigned int const histmax = maxval + 1;
+
+    unsigned int * hist;
+    unsigned int mdn, ltmdn;
+    gray * leftCol;
+    gray * rghtCol;
+    gray ** rowptr;
+
+    MALLOCARRAY(rowptr, crows);
+    MALLOCARRAY(hist, histmax);
+
+    if (rowptr == NULL || hist == NULL)
+        pm_error("Unable to allocate memory");
+
+    leftCol = pgm_allocrow(crows);
+    rghtCol = pgm_allocrow(crows);
+
+    /* Apply median to main part of image. */
+    for ( ; row < rows; ++row) {
+        unsigned int col;
+        unsigned int temprow;
+        unsigned int rownum;
+        unsigned int irow;
+        unsigned int i;
+        /* initialize hist[] */
+        for (i = 0; i < histmax; ++i)
+            hist[i] = 0;
+
+        pgm_readpgmrow(ifP, grays[row % crows], cols, maxval, format);
+
+        /* Rotate pointers to rows, so rows can be accessed in order. */
+        temprow = (row + 1) % crows;
+        rownum = 0;
+        for (irow = temprow; irow < crows; ++rownum, ++irow)
+            rowptr[rownum] = grays[irow];
+        for (irow = 0; irow < temprow; ++rownum, ++irow)
+            rowptr[rownum] = grays[irow];
+
+        for (col = 0; col < cols; ++col) {
+            if (col < ccolso2 || col >= cols - ccolso2)
+                grayrow[col] = rowptr[crowso2][col];
+            else if (col == ccolso2) {
+                unsigned int crow;
+                unsigned int const leftcol = col - ccolso2;
+                i = 0;
+                for (crow = 0; crow < crows; ++crow) {
+                    unsigned int ccol;
+                    gray * const temprptr = rowptr[crow] + leftcol;
+                    for (ccol = 0; ccol < ccols; ++ccol) {
+                        gray const g = *(temprptr + ccol);
+                        ++hist[g];
+                        ++i;
+                    }
+                }
+                ltmdn = 0;
+                for (mdn = 0; ltmdn <= median; ++mdn)
+                    ltmdn += hist[mdn];
+                --mdn;
+                if (ltmdn > median) 
+                    ltmdn -= hist[mdn];
+
+                grayrow[col] = mdn;
+            } else {
+                unsigned int crow;
+                unsigned int const subcol = col - (ccolso2 + 1);
+                unsigned int const addcol = col + ccolso2;
+                for (crow = 0; crow < crows; ++crow) {
+                    leftCol[crow] = *(rowptr[crow] + subcol);
+                    rghtCol[crow] = *(rowptr[crow] + addcol);
+                }
+                for (crow = 0; crow < crows; ++crow) {
+                    {
+                        gray const g = leftCol[crow];
+                        --hist[(unsigned int) g];
+                        if ((unsigned int) g < mdn)
+                            --ltmdn;
+                    }
+                    {
+                        gray const g = rghtCol[crow];
+                        ++hist[(unsigned int) g];
+                        if ((unsigned int) g < mdn)
+                            ++ltmdn;
+                    }
+                }
+                if (ltmdn > median)
+                    do {
+                        --mdn;
+                        ltmdn -= hist[mdn];
+                    } while (ltmdn > median);
+                else {
+                    /* This one change from Pitas algorithm can reduce run
+                    ** time by up to 10%.
+                    */
+                    while (ltmdn <= median) {
+                        ltmdn += hist[mdn];
+                        ++mdn;
+                    }
+                    --mdn;
+                    if (ltmdn > median) 
+                        ltmdn -= hist[mdn];
+                }
+                grayrow[col] = mdn;
+            }
+        }
+        pgm_writepgmrow(stdout, grayrow, cols, maxval, forceplain);
+    }
+
+    {
+        /* Write out remaining unchanged rows. */
+        unsigned int irow;
+        for (irow = crowso2 + 1; irow < crows; ++irow)
+            pgm_writepgmrow(stdout, rowptr[irow], cols, maxval, forceplain);
+    }
+    pgm_freerow(leftCol);
+    pgm_freerow(rghtCol);
+    free(hist);
+    free(rowptr);
 }
 
 
@@ -410,9 +423,6 @@ main(int    argc,
     grays = pgm_allocarray(cols, cmdline.height);
     grayrow = pgm_allocrow(cols);
 
-    /* Allocate pointers to mask row buffer. */
-    rowptr = pgm_allocarray(1, cmdline.height);
-
     /* Read in and write out initial rows that won't get changed. */
     for (row = 0; row < cmdline.height - 1; ++row) {
         pgm_readpgmrow(ifP, grays[row], cols, maxval, format);
@@ -434,12 +444,12 @@ main(int    argc,
 
     switch (medianMethod) {
     case SELECT_MEDIAN:
-        select_median(ifP, cmdline.width, cmdline.height, cols, rows, median);
+        selectMedian(ifP, cmdline.width, cmdline.height, cols, rows, median);
         break;
         
     case HISTOGRAM_SORT_MEDIAN:
-        histogram_sort_median(ifP, cmdline.width, cmdline.height,
-                              cols, rows, median);
+        histogramSortMedian(ifP, cmdline.width, cmdline.height,
+                            cols, rows, median);
         break;
     case MEDIAN_UNSPECIFIED:
         pm_error("INTERNAL ERROR: median unspecified");
@@ -450,13 +460,6 @@ main(int    argc,
 
     pgm_freearray(grays, cmdline.height);
     pgm_freerow(grayrow);
-    pgm_freearray(rowptr, cmdline.height);
 
     return 0;
 }
-
-
-
-
-
-
