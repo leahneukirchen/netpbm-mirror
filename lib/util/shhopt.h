@@ -191,7 +191,7 @@ typedef struct {
    Here is an example:
 
        unsigned int option_def_index = 0;
-       optEntry *option_def = malloc(100*sizeof(optEntry));
+       MALLOCARRAY_NOFAIL(option_def, 100);
        OPTENT3('h', "help",     OPT_FLAG, &help_flag, 0);
        OPTENT3(0,   "alphaout", OPT_STRING, &alpha_filename, 0);
 */
