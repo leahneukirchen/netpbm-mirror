@@ -6,6 +6,10 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.42.00
 
+              anytopnm: Recognize xwd image by 'file' type.
+
+              pgmdeshadow: fix crash in option processing.
+
               pgmmedian: fix crash.
 
               pgmbentley: fix output; black areas not black.
