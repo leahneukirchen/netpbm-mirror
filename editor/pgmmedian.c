@@ -411,7 +411,7 @@ main(int    argc,
     grayrow = pgm_allocrow(cols);
 
     /* Allocate pointers to mask row buffer. */
-    rowptr = pgm_allocarray(1, cmdline.height);
+    rowptr = (gray **) pm_allocrow(cmdline.height, sizeof(gray *));
 
     /* Read in and write out initial rows that won't get changed. */
     for (row = 0; row < cmdline.height - 1; ++row) {
@@ -450,7 +450,7 @@ main(int    argc,
 
     pgm_freearray(grays, cmdline.height);
     pgm_freerow(grayrow);
-    pgm_freearray(rowptr, cmdline.height);
+    pm_freerow(rowptr);
 
     return 0;
 }

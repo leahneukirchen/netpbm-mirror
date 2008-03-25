@@ -47,6 +47,10 @@ main( argc, argv )
     gout = pgm_allocarray( cols, rows );
 
 #define N 4
+    for (row = 0; row < rows; ++row)
+        for (col = 0; col < cols; ++col)
+            gout[row][col] = 0;
+
     for ( row = 0; row < rows; ++row )
 	for ( col = 0; col < cols; ++col )
 	    {
