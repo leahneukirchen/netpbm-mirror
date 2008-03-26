@@ -4,9 +4,26 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-not yet  BJH  Release 10.42.00
+08.03.26 BJH  Release 10.42.00
 
               anytopnm: Recognize xwd image by 'file' type.
+
+              pamflip: Rewrite low-memory algorithm; use temp files and
+              conserve virtual as well as real memory.
+
+              tifftopnm: orient raster properly in row-by-row operation
+              when TIFF uses nonstandard raster orientation.  (ORIENTATION
+              tag).
+
+              pbmtext: fail cleanly if -width, -space, or -lspace is
+              too large for computation.  Thanks Prophet of the Way
+              <afu@wta.att.ne.jp>.
+
+              pbmtext: fix negative -space.
+
+              pbmtext: fail cleanly if input line is > 5000 characters.
+
+              pamundice: Fix bogus error about missing "-instem" option.
 
               pgmdeshadow: fix crash in option processing.
 
@@ -26,24 +43,7 @@ not yet  BJH  Release 10.42.00
 
               pnmnlfilt: fix internal error "impossible alpha value".
 
-              tifftopnm: orient raster properly in row-by-row operation
-              when TIFF uses nonstandard raster orientation.  (ORIENTATION
-              tag).
-
-              pamflip: Rewrite low-memory algorithm; use temp files and
-              conserve virtual as well as real memory.
-
-              pamundice: Fix bogus error about missing "-instem" option.
-
               Add pm_tmpfile_fd() and pm_make_tmpfile_fd().
-
-              pbmtext: fail cleanly if input line is > 5000 characters.
-
-              pbmtext: fail cleanly if -width, -space, or -lspace is
-              too large for computation.  Thanks Prophet of the Way
-              <afu@wta.att.ne.jp>.
-
-              pbmtext: fix negative -space.
 
               Various things to make it build on Windows without POSIX
               emulation.
