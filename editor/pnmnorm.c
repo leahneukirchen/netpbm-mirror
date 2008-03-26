@@ -29,9 +29,10 @@
 
 #include <assert.h>
 
-#include "pnm.h"
-#include "shhopt.h"
+#include "pm_c_util.h"
 #include "mallocvar.h"
+#include "shhopt.h"
+#include "pnm.h"
 
 enum brightMethod {BRIGHT_LUMINOSITY, BRIGHT_COLORVALUE, BRIGHT_SATURATION};
 
@@ -60,8 +61,8 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine (int argc, char ** argv,
-                  struct cmdlineInfo *cmdlineP) {
+parseCommandLine(int argc, const char ** argv,
+                 struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
    and argv.  Return the information in the options as *cmdlineP.  
@@ -116,7 +117,7 @@ parseCommandLine (int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3( &argc, argv, opt, sizeof(opt), 0 );
+    optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdline_p and others. */
 
     if (!cmdlineP->wpercentSpec)
@@ -545,9 +546,9 @@ writeRowNormalized(xel *             const xelrow,
                 float const scaler =
                     brightScaler(p, maxval, newBrightness, brightMethod);
 
-                xelval const r = MIN((int)(PPM_GETR(p)*scaler+0.5), maxval);
-                xelval const g = MIN((int)(PPM_GETG(p)*scaler+0.5), maxval);
-                xelval const b = MIN((int)(PPM_GETB(p)*scaler+0.5), maxval);
+                xelval const r = MIN(ROUNDU(PPM_GETR(p)*scaler), maxval);
+                xelval const g = MIN(ROUNDU(PPM_GETG(p)*scaler), maxval);
+                xelval const b = MIN(ROUNDU(PPM_GETB(p)*scaler), maxval);
                 PNM_ASSIGN(outrow[col], r, g, b);
             } else 
                 PNM_ASSIGN(outrow[col], 
@@ -563,7 +564,7 @@ writeRowNormalized(xel *             const xelrow,
 
 
 int
-main(int argc, char *argv[]) {
+main(int argc, const char *argv[]) {
 
     struct cmdlineInfo cmdline;
     FILE *ifP;
@@ -572,7 +573,7 @@ main(int argc, char *argv[]) {
     int rows, cols, format;
     xelval bvalue, wvalue;
     
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
@@ -608,7 +609,7 @@ main(int argc, char *argv[]) {
         for (row = 0; row < rows; ++row) {
             pnm_readpnmrow(ifP, xelrow, cols, maxval, format);
             writeRowNormalized(xelrow, cols, maxval, format,
-                               cmdline.keephues, cmdline.brightMethod,
+                               cmdline.brightMethod, cmdline.keephues,
                                newBrightness, rowbuf);
         }
         free(newBrightness);
