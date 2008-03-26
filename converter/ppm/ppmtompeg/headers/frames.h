@@ -255,7 +255,7 @@ extern int gopSize;
 extern int slicesPerFrame;
 extern int blocksPerSlice;
 extern int referenceFrame;
-extern int specificsOn;
+extern boolean specificsOn;
 extern int quietTime;       /* shut up for at least quietTime seconds;
                  * negative means shut up forever
                  */

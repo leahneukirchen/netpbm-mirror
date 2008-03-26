@@ -43,8 +43,8 @@
 #endif
 #include <sys/stat.h>
 
-#include "ppm.h"
 #include "nstring.h"
+#include "nsleep.h"
 
 #include "mtypes.h"
 #include "frames.h"
@@ -1680,7 +1680,7 @@ ReadDecodedRefFrame(MpegFrame *  const frameP,
     }
 
     if ((fpointer = fopen(fileName, "rb")) == NULL) {
-        sleep(1);
+        sleepN(1000);
         if ((fpointer = fopen(fileName, "rb")) == NULL) {
             fprintf(stderr, "Cannot open %s\n", fileName);
             exit(1);

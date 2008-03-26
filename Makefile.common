@@ -77,7 +77,7 @@ include $(SRCDIR)/Makefile.version
 # fully made.
 .DELETE_ON_ERROR:
 
-NETPBM_INCLUDES := -I importinc -I$(SRCDIR)/$(SUBDIR)
+NETPBM_INCLUDES := -Iimportinc -I$(SRCDIR)/$(SUBDIR)
 
 # -I. is needed when builddir != srcdir
 INCLUDES = -I. $(COMP_INCLUDES) $(NETPBM_INCLUDES) $(EXTERN_INCLUDES)
@@ -124,7 +124,7 @@ IMPORTINC_LIB_HEADERS := \
   pm_gamma.h lum.h
 
 IMPORTINC_LIB_UTIL_HEADERS := \
-  bitreverse.h mallocvar.h nstring.h filename.h pm_c_util.h shhopt.h \
+  bitreverse.h filename.h mallocvar.h nsleep.h nstring.h pm_c_util.h shhopt.h \
   wordaccess.h wordaccess_64_le.h wordaccess_gcc3_be.h wordaccess_gcc3_le.h \
   wordaccess_generic.h intcode.h \
 

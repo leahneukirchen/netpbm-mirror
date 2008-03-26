@@ -149,6 +149,10 @@ computeTypeFromTypeDescription () {
             filetype=gzip
             ;;
     
+        *XWD*X*Window*Dump* ) 
+            filetype=xwd
+            ;;
+
         *compress* )
             filetype=compress
             ;;

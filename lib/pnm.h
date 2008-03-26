@@ -86,12 +86,12 @@ pnm_writepnminit(FILE * const fileP,
                  int    const forceplain);
 
 void
-pnm_writepnmrow(FILE * const fileP, 
-                xel *  const xelrow, 
-                int    const cols, 
-                xelval const maxval, 
-                int    const format, 
-                int    const forceplain);
+pnm_writepnmrow(FILE *      const fileP, 
+                const xel * const xelrow, 
+                int         const cols, 
+                xelval      const maxval, 
+                int         const format, 
+                int         const forceplain);
 
 void
 pnm_writepnm(FILE * const fileP,

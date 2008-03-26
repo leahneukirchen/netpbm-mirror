@@ -79,10 +79,10 @@ pbm_writepbm(FILE * const fileP,
              int    const forceplain);
 
 void
-pbm_writepbmrow(FILE * const fileP, 
-                bit *  const bitrow, 
-                int    const cols, 
-                int    const forceplain);
+pbm_writepbmrow(FILE *      const fileP, 
+                const bit * const bitrow, 
+                int         const cols, 
+                int         const forceplain);
 
 void
 pbm_writepbmrow_packed(FILE *                const fileP, 

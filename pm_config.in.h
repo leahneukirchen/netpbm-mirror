@@ -273,3 +273,10 @@ typedef long int pm_filepos;
 
 typedef int qsort_comparison_fn(const void *, const void *);
     /* A compare function to pass to <stdlib.h>'s qsort() */
+
+#if defined(WIN32) && !defined(__CYGWIN__)
+  #define pm_mkdir(dir, perm) _mkdir(dir)
+#else
+  #define pm_mkdir(dir, perm) mkdir(dir, perm) 
+#endif
+

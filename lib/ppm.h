@@ -124,11 +124,11 @@ ppm_writeppminit(FILE*  const fileP,
                  int    const forceplain);
 
 void
-ppm_writeppmrow(FILE *  const fileP, 
-                pixel * const pixelrow, 
-                int     const cols, 
-                pixval  const maxval, 
-                int     const forceplain);
+ppm_writeppmrow(FILE *        const fileP, 
+                const pixel * const pixelrow, 
+                int           const cols, 
+                pixval        const maxval, 
+                int           const forceplain);
 
 void
 ppm_check(FILE *               const fileP, 

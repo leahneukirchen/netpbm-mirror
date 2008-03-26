@@ -28,16 +28,16 @@ EXPLICIT=-DEXPLICIT
 endif
 
 libopt.o: libopt.c
-	$(CC_FOR_BUILD) -c $(CFLAGS_FOR_BUILD) \
+	$(CC_FOR_BUILD) -c -o $@ $(CFLAGS_FOR_BUILD) \
 	  -DSHLIBPREFIXLIST="\"$(SHLIBPREFIXLIST)\"" \
 	  $(STRIP_DLL_VERSION) $(EXPLICIT) $(CFLAGS_PERSONAL) $(CADD) \
-	  -o $@ $<
+	  $<
 
 typegen.o endiangen.o:%.o:%.c
-	$(CC_FOR_BUILD) -c $(CFLAGS_FOR_BUILD) -o $@ $<
+	$(CC_FOR_BUILD) -c -o $@ $(CFLAGS_FOR_BUILD) $<
 
 $(PROGS):%:%.o
-	$(LD_FOR_BUILD) -o $@ $<
+	$(LD_FOR_BUILD) -o $@ $(LDFLAGS_FOR_BUILD) $<
 
 distclean clean: cleanlocal
 .PHONY: cleanlocal

@@ -87,7 +87,7 @@ void
 NoteFrameDone(int frameStart, int frameEnd);
 
 void
-SetIOConvert(bool const separate);
+SetIOConvert(boolean const separate);
 
 void
 SetRemoteShell(const char * const shell);

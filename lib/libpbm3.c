@@ -236,9 +236,9 @@ writePbmRowRaw(FILE *      const fileP,
 
 
 static void
-writePbmRowPlain(FILE * const fileP,
-                 bit *  const bitrow, 
-                 int    const cols) {
+writePbmRowPlain(FILE *      const fileP,
+                 const bit * const bitrow, 
+                 int         const cols) {
     
     int col, charcount;
 
@@ -257,10 +257,10 @@ writePbmRowPlain(FILE * const fileP,
 
 
 void
-pbm_writepbmrow(FILE * const fileP, 
-                bit *  const bitrow, 
-                int    const cols, 
-                int    const forceplain) {
+pbm_writepbmrow(FILE *       const fileP, 
+                const bit *  const bitrow, 
+                int          const cols, 
+                int          const forceplain) {
 
     if (!forceplain && !pm_plain_output)
         writePbmRowRaw(fileP, bitrow, cols);

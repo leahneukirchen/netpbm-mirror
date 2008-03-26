@@ -54,7 +54,7 @@ pnm_writepnminit(FILE * const fileP,
 
 static void
 writepgmrow(FILE *       const fileP, 
-            xel *        const xelrow, 
+            const xel *  const xelrow, 
             unsigned int const cols, 
             xelval       const maxval, 
             int          const format, 
@@ -89,7 +89,7 @@ writepgmrow(FILE *       const fileP,
 
 static void
 writepbmrow(FILE *       const fileP,
-            xel *        const xelrow,
+            const xel *  const xelrow,
             unsigned int const cols,
             bool         const plainFormat) {
 
@@ -121,12 +121,12 @@ writepbmrow(FILE *       const fileP,
 
 
 void
-pnm_writepnmrow(FILE * const fileP, 
-                xel *  const xelrow, 
-                int    const cols, 
-                xelval const maxval, 
-                int    const format, 
-                int    const forceplain) {
+pnm_writepnmrow(FILE *      const fileP, 
+                const xel * const xelrow, 
+                int         const cols, 
+                xelval      const maxval, 
+                int         const format, 
+                int         const forceplain) {
 
     bool const plainFormat = forceplain || pm_plain_output;
     

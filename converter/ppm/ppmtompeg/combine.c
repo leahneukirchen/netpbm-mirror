@@ -35,8 +35,8 @@
 #include <errno.h>
 #include <unistd.h>
 
-#include "ppm.h"
 #include "nstring.h"
+#include "nsleep.h"
 
 #include "mtypes.h"
 #include "frames.h"
@@ -111,11 +111,9 @@ appendSpecifiedGopFiles(struct inputSource * const inputSourceP,
              ++nAttempts) {
 
             ifP = fopen(fileName, "rb");
-            if (ifP == NULL) {
+            if (ifP == NULL)
                 pm_message("ERROR:  Couldn't read file '%s'.  retry %u", 
                            fileName, nAttempts);
-                sleep(1);
-            }
         }
         if (ifP) {
             if (!realQuiet)

@@ -42,11 +42,11 @@
  * HEADER FILES *
  *==============*/
 
+#include <time.h>  /* Defines CLOCKS_PER_SEC, if this system has clock() */
 
-#ifdef CLOCKS_PER_SEC
-#include <times.h>
-#else
-#include <sys/times.h>
+#ifndef CLOCKS_PER_SEC
+  /* System doesn't have clock(); we assume it has times() instead */
+  #include <sys/times.h>
 #endif
 
 #include <sys/types.h>
@@ -72,8 +72,8 @@
  * STATIC VARIABLES *
  *==================*/
 
-static  int lastNumBits = 0;
-static  int lastIFrame = 0;
+static int lastNumBits = 0;
+static int lastIFrame = 0;
 static int numBlocks = 0;
 static int numBits;
 static int numFrames = 0;
@@ -979,7 +979,3 @@ int32 time_elapsed(void) {
     return timeBuffer.tms_utime + timeBuffer.tms_stime;
 #endif
 }
-
-
-
-

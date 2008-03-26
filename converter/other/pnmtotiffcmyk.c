@@ -542,10 +542,6 @@ tiffOpen( Out* out, Root *r ) {
   short photometric = PHOTOMETRIC_SEPARATED ; /* ie cmyk */
   int bytesperrow = r->nCols ;
 
-  /* if i don't set stdout non-blocking on my machine then the read
-     that is called inside TIFFFdOpen hangs until the users types ^D.
-     this is also true for pnmtotiff */
-  fcntl( 1, F_SETFL, O_NONBLOCK ) ;
   t->tiff = TIFFFdOpen( 1, "Standard Output", "w" ) ;
   if ( ! t->tiff ) {
     fprintf( stderr, "cannot open tiff stream to standard output\n" ) ;

@@ -1,5 +1,5 @@
-// define this macro for activating debugging version
-//#define GETHOSTNAME_LOCAL_DEBUG     1
+/* define this macro for activating debugging version */
+/* #define GETHOSTNAME_LOCAL_DEBUG     1*/
 
 #include <windows.h>
 #include <tchar.h>
@@ -21,7 +21,7 @@ typedef struct {
 } push_string_t;
 
 static void
-pushString(push_string_t *p, char *fmt, ...)
+pushString(push_string_t *p, const char *fmt, ...)
 {
     va_list args;
 
@@ -37,36 +37,36 @@ pushString(push_string_t *p, char *fmt, ...)
  * GetProductInfo() Function
  * http://msdn2.microsoft.com/en-us/library/ms724358.aspx
  */
-#define PRODUCT_BUSINESS                        0x00000006  // Business Edition
-#define PRODUCT_BUSINESS_N                      0x00000010  // Business Edition
-#define PRODUCT_CLUSTER_SERVER                  0x00000012  // Cluster Server Edition
-#define PRODUCT_DATACENTER_SERVER               0x00000008  // Server Datacenter Edition (full installation)
-#define PRODUCT_DATACENTER_SERVER_CORE          0x0000000C  // Server Datacenter Edition (core installation)
-#define PRODUCT_ENTERPRISE                      0x00000004  // Enterprise Edition
-#define PRODUCT_ENTERPRISE_N                    0x0000001B  // Enterprise Edition
-#define PRODUCT_ENTERPRISE_SERVER               0x0000000A  // Server Enterprise Edition (full installation)
-#define PRODUCT_ENTERPRISE_SERVER_CORE          0x0000000E  // Server Enterprise Edition (core installation)
-#define PRODUCT_ENTERPRISE_SERVER_IA64          0x0000000F  // Server Enterprise Edition for Itanium-based Systems
-#define PRODUCT_HOME_BASIC                      0x00000002  // Home Basic Edition
-#define PRODUCT_HOME_BASIC_N                    0x00000005  // Home Basic Edition
-#define PRODUCT_HOME_PREMIUM                    0x00000003  // Home Premium Edition
-#define PRODUCT_HOME_PREMIUM_N                  0x0000001A  // Home Premium Edition
-#define PRODUCT_HOME_SERVER                     0x00000013  // Home Server Edition
-#define PRODUCT_SERVER_FOR_SMALLBUSINESS        0x00000018  // Server for Small Business Edition
-#define PRODUCT_SMALLBUSINESS_SERVER            0x00000009  // Small Business Server
-#define PRODUCT_SMALLBUSINESS_SERVER_PREMIUM    0x00000019  // Small Business Server Premium Edition
-#define PRODUCT_STANDARD_SERVER                 0x00000007  // Server Standard Edition (full installation)
-#define PRODUCT_STANDARD_SERVER_CORE            0x0000000D  // Server Standard Edition (core installation)
-#define PRODUCT_STARTER                         0x0000000B  // Starter Edition
-#define PRODUCT_STORAGE_ENTERPRISE_SERVER       0x00000017  // Storage Server Enterprise Edition
-#define PRODUCT_STORAGE_EXPRESS_SERVER          0x00000014  // Storage Server Express Edition
-#define PRODUCT_STORAGE_STANDARD_SERVER         0x00000015  // Storage Server Standard Edition
-#define PRODUCT_STORAGE_WORKGROUP_SERVER        0x00000016  // Storage Server Workgroup Edition
-#define PRODUCT_UNDEFINED                       0x00000000  // An unknown product
-#define PRODUCT_ULTIMATE                        0x00000001  // Ultimate Edition
-#define PRODUCT_ULTIMATE_N                      0x0000001C  // Ultimate Edition
-#define PRODUCT_WEB_SERVER                      0x00000011  // Web Server Edition (full installation)
-#define PRODUCT_WEB_SERVER_CORE                 0x0000001D  // Web Server Edition (core installation)
+#define PRODUCT_BUSINESS                        0x00000006  /* Business Edition */
+#define PRODUCT_BUSINESS_N                      0x00000010  /* Business Edition */
+#define PRODUCT_CLUSTER_SERVER                  0x00000012  /* Cluster Server Edition */
+#define PRODUCT_DATACENTER_SERVER               0x00000008  /* Server Datacenter Edition (full installation) */
+#define PRODUCT_DATACENTER_SERVER_CORE          0x0000000C  /* Server Datacenter Edition (core installation) */
+#define PRODUCT_ENTERPRISE                      0x00000004  /* Enterprise Edition */
+#define PRODUCT_ENTERPRISE_N                    0x0000001B  /* Enterprise Edition */
+#define PRODUCT_ENTERPRISE_SERVER               0x0000000A  /* Server Enterprise Edition (full installation) */
+#define PRODUCT_ENTERPRISE_SERVER_CORE          0x0000000E  /* Server Enterprise Edition (core installation) */
+#define PRODUCT_ENTERPRISE_SERVER_IA64          0x0000000F  /* Server Enterprise Edition for Itanium-based Systems */
+#define PRODUCT_HOME_BASIC                      0x00000002  /* Home Basic Edition */
+#define PRODUCT_HOME_BASIC_N                    0x00000005  /* Home Basic Edition */
+#define PRODUCT_HOME_PREMIUM                    0x00000003  /* Home Premium Edition */
+#define PRODUCT_HOME_PREMIUM_N                  0x0000001A  /* Home Premium Edition */
+#define PRODUCT_HOME_SERVER                     0x00000013  /* Home Server Edition */
+#define PRODUCT_SERVER_FOR_SMALLBUSINESS        0x00000018  /* Server for Small Business Edition */
+#define PRODUCT_SMALLBUSINESS_SERVER            0x00000009  /* Small Business Server */
+#define PRODUCT_SMALLBUSINESS_SERVER_PREMIUM    0x00000019  /* Small Business Server Premium Edition */
+#define PRODUCT_STANDARD_SERVER                 0x00000007  /* Server Standard Edition (full installation) */
+#define PRODUCT_STANDARD_SERVER_CORE            0x0000000D  /* Server Standard Edition (core installation) */
+#define PRODUCT_STARTER                         0x0000000B  /* Starter Edition */
+#define PRODUCT_STORAGE_ENTERPRISE_SERVER       0x00000017  /* Storage Server Enterprise Edition */
+#define PRODUCT_STORAGE_EXPRESS_SERVER          0x00000014  /* Storage Server Express Edition */
+#define PRODUCT_STORAGE_STANDARD_SERVER         0x00000015  /* Storage Server Standard Edition */
+#define PRODUCT_STORAGE_WORKGROUP_SERVER        0x00000016  /* Storage Server Workgroup Edition */
+#define PRODUCT_UNDEFINED                       0x00000000  /* An unknown product */
+#define PRODUCT_ULTIMATE                        0x00000001  /* Ultimate Edition */
+#define PRODUCT_ULTIMATE_N                      0x0000001C  /* Ultimate Edition */
+#define PRODUCT_WEB_SERVER                      0x00000011  /* Web Server Edition (full installation) */
+#define PRODUCT_WEB_SERVER_CORE                 0x0000001D  /* Web Server Edition (core installation) */
 #endif
 
 static BOOL
@@ -82,8 +82,10 @@ get_string_version(push_string_t *str)
     ZeroMemory(&si, sizeof(SYSTEM_INFO));
     ZeroMemory(&osvi, sizeof(OSVERSIONINFOEX));
 
-    // Try calling GetVersionEx using the OSVERSIONINFOEX structure.
-    // If that fails, try using the OSVERSIONINFO structure.
+    /*
+     * Try calling GetVersionEx using the OSVERSIONINFOEX structure.
+     * If that fails, try using the OSVERSIONINFO structure.
+     */
     osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
     if( !(bOsVersionInfoEx = GetVersionEx ((OSVERSIONINFO *) &osvi)) )
     {
@@ -92,7 +94,7 @@ get_string_version(push_string_t *str)
             return FALSE;
     }
 
-    // Call GetNativeSystemInfo if supported or GetSystemInfo otherwise.
+    /* Call GetNativeSystemInfo if supported or GetSystemInfo otherwise. */
     pGNSI = (PGNSI)
             GetProcAddress(GetModuleHandle(TEXT("kernel32.dll")), 
             "GetNativeSystemInfo");
@@ -103,9 +105,9 @@ get_string_version(push_string_t *str)
 
     switch (osvi.dwPlatformId)
     {
-    // Test for the Windows NT product family.
+    /* Test for the Windows NT product family. */
     case VER_PLATFORM_WIN32_NT:
-        // Test for the specific product.
+        /* Test for the specific product. */
         if (osvi.dwMajorVersion == 6 && osvi.dwMinorVersion == 0)
         {
             if (osvi.wProductType == VER_NT_WORKSTATION)
@@ -196,7 +198,7 @@ get_string_version(push_string_t *str)
             else
                 pushString(str, "Microsoft Windows Server 2003, ");
 
-            // Test for the server type.
+            /* Test for the server type. */
             if ( osvi.wProductType != VER_NT_WORKSTATION )
             {
                 switch (si.wProcessorArchitecture)
@@ -264,10 +266,10 @@ get_string_version(push_string_t *str)
         if ( osvi.dwMajorVersion <= 4 )
             pushString(str, "Microsoft Windows NT ");
 
-        // Test for specific product on Windows NT 4.0 SP6 and later.
+        /* Test for specific product on Windows NT 4.0 SP6 and later. */
         if (bOsVersionInfoEx)
         {
-            // Test for the workstation type.
+            /* Test for the workstation type. */
             switch (osvi.wProductType)
             {
             case VER_NT_WORKSTATION:
@@ -285,7 +287,7 @@ get_string_version(push_string_t *str)
                 break;
             }
         }
-        // Test for specific product on Windows NT 4.0 SP5 and earlier
+        /* Test for specific product on Windows NT 4.0 SP5 and earlier */
         else  
         {
             HKEY hKey;
@@ -318,31 +320,31 @@ get_string_version(push_string_t *str)
                 pushString(str, "%d.%d ", osvi.dwMajorVersion, osvi.dwMinorVersion);
         }
 
-        // Display service pack (if any) and build number.
+        /* Display service pack (if any) and build number. */
         if (osvi.dwMajorVersion == 4 && 
             lstrcmpi(osvi.szCSDVersion, TEXT("Service Pack 6")) == 0)
         { 
             HKEY hKey;
             LONG lRet;
 
-            // Test for SP6 versus SP6a.
+            /* Test for SP6 versus SP6a. */
             lRet = RegOpenKeyEx( HKEY_LOCAL_MACHINE,
                 TEXT("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Hotfix\\Q246009"),
                 0, KEY_QUERY_VALUE, &hKey );
             if( lRet == ERROR_SUCCESS )
                 pushString(str, "Service Pack 6a (Build %d)\n", osvi.dwBuildNumber & 0xFFFF );         
             else
-                // Windows NT 4.0 prior to SP6a
+                /* Windows NT 4.0 prior to SP6a */
                 pushString(str, "%s (Build %d)\n", osvi.szCSDVersion, osvi.dwBuildNumber & 0xFFFF);
 
              RegCloseKey( hKey );
         }
-        else // not Windows NT 4.0 
+        else /* not Windows NT 4.0 */
             pushString(str, "%s (Build %d)\n", osvi.szCSDVersion, osvi.dwBuildNumber & 0xFFFF);
 
         break;
 
-    // Test for the Windows Me/98/95.
+    /* Test for the Windows Me/98/95. */
     case VER_PLATFORM_WIN32_WINDOWS:
         if (osvi.dwMajorVersion == 4 && osvi.dwMinorVersion == 0)
         {
