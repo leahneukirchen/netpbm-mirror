@@ -31,20 +31,6 @@
 
 #define BUFFER_SIZE 2048
 
-static const char * const gs_exe_path = 
-#ifdef GHOSTSCRIPT_EXECUTABLE_PATH
-GHOSTSCRIPT_EXECUTABLE_PATH;
-#else
-NULL;
-#endif
-
-static const char * const pnmcrop_exe_path = 
-#ifdef PNMCROP_EXECUTABLE_PATH
-PNMCROP_EXECUTABLE_PATH;
-#else
-NULL;
-#endif
-
 struct cmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
@@ -199,30 +185,27 @@ construct_postscript(struct cmdlineInfo const cmdline) {
 
 
 static const char *
-gs_executable_name() {
+gsExecutableName() {
+
+    const char * const which = "which gs";
 
     static char buffer[BUFFER_SIZE];
 
-    if (!gs_exe_path) {
-        const char * const which = "which gs";
+    FILE * f;
 
-        FILE * f;
+    memset(buffer, 0, BUFFER_SIZE);
 
-        memset(buffer, 0, BUFFER_SIZE);
+    f = popen(which, "r");
+    if (!f)
+        pm_error("Can't find ghostscript");
 
-        f = popen(which, "r");
-        if (!f)
-            pm_error("Can't find ghostscript");
-
-        fread(buffer, 1, BUFFER_SIZE, f);
-        if (buffer[strlen(buffer) - 1] == '\n')
-            buffer[strlen(buffer) - 1] = '\0';
-        pclose(f);
-
-        if (buffer[0] != '/' && buffer[0] != '.')
-            pm_error("Can't find ghostscript");
-    } else
-        strcpy(buffer, gs_exe_path);
+    fread(buffer, 1, BUFFER_SIZE, f);
+    if (buffer[strlen(buffer) - 1] == '\n')
+        buffer[strlen(buffer) - 1] = '\0';
+    pclose(f);
+    
+    if (buffer[0] != '/' && buffer[0] != '.')
+        pm_error("Can't find ghostscript");
 
     return buffer;
 }
@@ -230,37 +213,31 @@ gs_executable_name() {
 
 
 static const char *
-crop_executable_name(void) {
+cropExecutableName(void) {
+
+    const char * const which = "which pnmcrop";
 
     static char buffer[BUFFER_SIZE];
     const char * retval;
 
-    if (!pnmcrop_exe_path) {
-        const char * const which = "which pnmcrop";
+    FILE * f;
 
-        FILE * f;
+    memset(buffer, 0, BUFFER_SIZE);
 
-        memset(buffer, 0, BUFFER_SIZE);
-
-        f = popen(which, "r");
-        if (!f)
-            retval = NULL;
-        else {
-            fread(buffer, 1, BUFFER_SIZE, f);
-            if (buffer[strlen(buffer) - 1] == '\n')
-                buffer[strlen(buffer) - 1] = 0;
-            pclose(f);
+    f = popen(which, "r");
+    if (!f)
+        retval = NULL;
+    else {
+        fread(buffer, 1, BUFFER_SIZE, f);
+        if (buffer[strlen(buffer) - 1] == '\n')
+            buffer[strlen(buffer) - 1] = 0;
+        pclose(f);
             
-            if (buffer[0] != '/' && buffer[0] != '.') {
-                retval = NULL;
-                pm_message("Can't find pnmcrop");
-            } else
-                retval = buffer;
-        }
-    } else {
-        strcpy(buffer, pnmcrop_exe_path);
-        
-        retval = buffer;
+        if (buffer[0] != '/' && buffer[0] != '.') {
+            retval = NULL;
+            pm_message("Can't find pnmcrop");
+        } else
+            retval = buffer;
     }
     return retval;
 }
@@ -297,7 +274,7 @@ gsCommand(const char *       const psFname,
          
     asprintfN(&retval, "%s -g%dx%d -r%d -sDEVICE=pbm "
               "-sOutputFile=%s -q -dBATCH -dNOPAUSE %s </dev/null >/dev/null", 
-              gs_executable_name(), (int) x, (int) y, cmdline.res, 
+              gsExecutableName(), (int) x, (int) y, cmdline.res, 
               outputFilename, psFname);
 
     return retval;
@@ -311,9 +288,9 @@ cropCommand(const char * const inputFileName) {
     const char * retval;
     const char * plainOpt = pm_plain_output ? "-plain" : "" ;
     
-    if (crop_executable_name()) {
+    if (cropExecutableName()) {
         asprintfN(&retval, "%s -top -right %s %s", 
-                  crop_executable_name(), plainOpt, inputFileName);
+                  cropExecutableName(), plainOpt, inputFileName);
         if (retval == strsol)
             pm_error("Unable to allocate memory");
     } else

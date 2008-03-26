@@ -69,17 +69,6 @@ typedef struct curve * curve_type;
   ? CURVE_CYCLIC (c) ? (signed int) CURVE_LENGTH (c) + (signed int) (n) - 1 : -1\
   : (signed int) (n) - 1)
 
-static __inline__ vector_type
-curve_slope_none(void) {
-    vector_type const retval = {0.0, 0.0, 0.0};
-    return retval;
-}
-
-static bool
-curve_slope_is_present(vector_type const slope) {
-    return slope.dx != 0.0 || slope.dy != 0.0;
-}
-
 #define PREVIOUS_CURVE(c) ((c)->previous)
 #define NEXT_CURVE(c) ((c)->next)
 

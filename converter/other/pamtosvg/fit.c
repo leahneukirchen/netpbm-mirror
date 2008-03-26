@@ -1738,12 +1738,13 @@ divideAndFit(curve *                   const curveP,
 -----------------------------------------------------------------------------*/
     spline_list_type * retval;
     curve * leftCurveP;
-        // The beginning (lower indexes) subcurve
+        /* The beginning (lower indexes) subcurve */
     curve * rghtCurveP;
-        // The other subcurve
+        /* The other subcurve */
     vector_type joinSlope;
-        // The slope of the end of the left subcurve and start of the right
-        // subcurve.
+        /* The slope of the end of the left subcurve and start of the right
+           subcurve.
+        */
     spline_list_type * leftSplineListP;
     
     assert(subdivisionIndex > 1);

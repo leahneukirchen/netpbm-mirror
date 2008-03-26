@@ -162,60 +162,64 @@ save_bin_data(int    const ndat,
 
 
 
+static SKL_OBJ *
+save_icol_data(SKL_OBJ_TYP  const ctyp,
+               const char * const format,
+               int          const icolmin,
+               int          const icolmax) {
 /* Save integer color data in Object */
-static SKL_OBJ *save_icol_data (ctyp,format,icolmin,icolmax)
-SKL_OBJ_TYP ctyp;
-char *format;
-int icolmin, icolmax;
 
-{SKL_OBJ *obj;
+    SKL_OBJ * objP;
 
- obj = (SKL_OBJ *)malloc (sizeof (SKL_OBJ));
- if (obj != NULL)
- {
-   obj->otyp = ctyp;
-   strcpy (obj->odata.icol_data.icformat,format);
-   obj->odata.icol_data.icolmin = icolmin;
-   obj->odata.icol_data.icolmax = icolmax;
- }
- return (obj);
+    MALLOCVAR(objP);
+
+    if (objP) {
+        objP->otyp = ctyp;
+        strcpy(objP->odata.icol_data.icformat, format);
+        objP->odata.icol_data.icolmin = icolmin;
+        objP->odata.icol_data.icolmax = icolmax;
+    }
+    return objP;
 }
 
 
+
+static SKL_OBJ *
+save_fcol_data(SKL_OBJ_TYP  const ctyp,
+               const char * const format,
+               double       const fcolmin,
+               double       const fcolmax) {
 /* Save float color data in Object */
-static SKL_OBJ *save_fcol_data (ctyp,format,fcolmin,fcolmax)
-SKL_OBJ_TYP ctyp;
-char *format;
-double fcolmin, fcolmax;
 
-{SKL_OBJ *obj;
+    SKL_OBJ * objP;
 
- obj = (SKL_OBJ *)malloc (sizeof (SKL_OBJ));
- if (obj != NULL)
- {
-   obj->otyp = ctyp;
-   strcpy (obj->odata.fcol_data.fcformat,format);
-   obj->odata.fcol_data.fcolmin = fcolmin;
-   obj->odata.fcol_data.fcolmax = fcolmax;
- }
- return (obj);
+    MALLOCVAR(objP);
+
+    if (objP) {
+        objP->otyp = ctyp;
+        strcpy(objP->odata.fcol_data.fcformat, format);
+        objP->odata.fcol_data.fcolmin = fcolmin;
+        objP->odata.fcol_data.fcolmax = fcolmax;
+    }
+    return objP;
 }
 
+
+
+static SKL_OBJ *
+save_i_data(SKL_OBJ_TYP  const ctyp,
+            const char * const format) {
 
 /* Save universal data in Object */
-static SKL_OBJ *save_i_data (ctyp,format)
-SKL_OBJ_TYP ctyp;
-char *format;
 
-{SKL_OBJ *obj;
+    SKL_OBJ * objP;
 
- obj = (SKL_OBJ *)malloc (sizeof (SKL_OBJ));
- if (obj != NULL)
- {
-   obj->otyp = ctyp;
-   strcpy (obj->odata.i_data.iformat,format);
- }
- return (obj);
+    MALLOCVAR(objP);
+    if (objP) {
+        objP->otyp = ctyp;
+        strcpy(objP->odata.i_data.iformat, format);
+    }
+    return objP;
 }
 
 
