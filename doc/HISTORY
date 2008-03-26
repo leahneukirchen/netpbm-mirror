@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+08.03.26 BJH  Release 10.42.01
+
+              pnmnorm: fix -colorvalue, -saturation, -keephues options.
+
 08.03.26 BJH  Release 10.42.00
 
               anytopnm: Recognize xwd image by 'file' type.
