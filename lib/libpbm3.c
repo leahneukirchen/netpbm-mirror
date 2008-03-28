@@ -14,9 +14,21 @@
 #include "libpbm.h"
 #include "bitreverse.h"
 
-#if defined(__GNUC__) && (__GNUC__ * 100 + __GNUC_MINOR__ >= 301) && defined (__SSE__)
-/* intel MMX-SSE enhancement for pbm_writepbmowraw() */
-/* GCC only.  Turn on with -msse */
+/* HAVE_MMX_SSE means we have the means to use MMX and SSE CPU facilities
+   to make PBM raster processing faster.
+
+   The GNU Compiler -msse option makes SSE available.
+*/
+
+#if defined(__GNUC__) && \
+  (__GNUC__ * 100 + __GNUC_MINOR__ >= 301) && \
+  (__GNUC__ * 100 + __GNUC_MINOR__ < 403) && \
+  defined (__SSE__)
+/* GCC 4.3 does have the facility, but it is different from what this
+   code knows how to use.  In particular, the calls to
+   __builtin_ia32_pcmpeqb() and __builtin_ia32_pmovmskb() fail to
+   compile, with complaints of improper argument types.
+*/
 
 #define HAVE_MMX_SSE 1
 #else

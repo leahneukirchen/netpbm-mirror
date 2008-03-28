@@ -4,6 +4,13 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+08.03.28 BJH  Release 10.35.41
+
+              pnmnorm: fix -colorvalue, -saturation, -keephues options.
+
+              Build: make it work with Gcc 4.3 and -sse by omitting
+              MMX/SSE optimizations.
+
 08.03.08 BJH  Release 10.35.40
 
               pgmdeshadow: fix crash in option processing.

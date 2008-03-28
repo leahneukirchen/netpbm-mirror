@@ -608,7 +608,7 @@ main(int argc, char *argv[]) {
         for (row = 0; row < rows; ++row) {
             pnm_readpnmrow(ifP, xelrow, cols, maxval, format);
             writeRowNormalized(xelrow, cols, maxval, format,
-                               cmdline.keephues, cmdline.brightMethod,
+                               cmdline.brightMethod, cmdline.keephues,
                                newBrightness, rowbuf);
         }
         free(newBrightness);
