@@ -8,8 +8,7 @@ not yet  BJH  Release 10.43.00
 
               pnmnorm: fix -colorvalue, -saturation, -keephues options.
 
-              Build: make it work with Gcc 4.3 and -sse by omitting
-              MMX/SSE optimizations.
+              Build: make it work with Gcc 4.3 and -sse.
 
 08.03.26 BJH  Release 10.42.00
 
