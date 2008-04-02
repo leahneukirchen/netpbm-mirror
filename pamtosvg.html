@@ -141,10 +141,11 @@ as a straight line.
 
 <dt><b>-log</b>
 
-<dd>Send a detailed progress report to the file named
-<i>inputfile</i><b>.log</b>, where <i>inputfile</i> is the root of the
-input file name, or &quot;pamtosvg&quot; if the input is from 
-Standard Input or a file with a weird name.
+<dd>Create a log of the curve tracing process (suitable for
+debugging).  Put it in the file named <i>inputfile</i><b>.log</b> in
+the current directory, where <i>inputfile</i> is the root of the input
+file name, or &quot;pamtosvg&quot; if the input is from Standard Input
+or a file with a weird name.
 
 <dt><b>-preserve-width</b>
 
@@ -169,6 +170,13 @@ when computing the tangent at that point.  Default is 3.
 <dd>Weight factor for fitting the linewidth.
 
 </DL>
+
+
+<H2 id="applicationnotes">Application Notes</H2>
+
+<p>A convenient way to view an SVG document is with a web browser.  Many
+understand a file whose name ends in &quot;.svg&quot; to be an SVG
+image and can render it.
 
 
 <H2 id="seealso">SEE ALSO</H2>

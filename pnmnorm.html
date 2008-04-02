@@ -94,7 +94,9 @@ darken the image, set <I>wvalue</I> to maxval and play with
 
 <p>If you specify both <b>-bvalue</b> and <b>-bpercent</b>, <b>pnmnorm</b>
 uses the one that produces the least change.  The same goes for
-<b>-wvalue</b> and <b>-wpercent</b>.
+<b>-wvalue</b> and <b>-wpercent</b>.  (In Neptbm 10.26 (January 2005),
+the <b>-bvalue</b>/<b>-wvalue</b> takes precedence, and before that,
+it's a syntax error to specify both).
 
 <p>If you want to maximize the change instead of minimizing it, just
 cascade two runs of <b>pnmnorm</b>, specifying values for the first
@@ -229,13 +231,12 @@ intense RGB component (all intensities gamma-adjusted).
 <B><A HREF="pnm.html">pnm</A></B>
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">SEE ALSO</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
 </UL>
 </BODY>
 </HTML>
