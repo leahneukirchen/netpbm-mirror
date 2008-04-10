@@ -4,6 +4,13 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+not yet  BJH  Release 10.42.02
+
+              pnmnorm: fix resolution of conflicting -wpercent and -wvalue.
+
+              Build: make it work with Gcc 4.3 and -sse by omitting
+              MMX/SSE optimizations.
+
 08.03.26 BJH  Release 10.42.01
 
               pnmnorm: fix -colorvalue, -saturation, -keephues options.

@@ -402,7 +402,7 @@ computeEndValues(FILE *             const ifp,
             computeTopPercentile(hist, maxval, cols*rows, cmdline.wpercent, 
                                  &percentWvalue);
             if (cmdline.wvalueSpec)
-                unlimitedWvalue = MIN(percentWvalue, cmdline.wvalue);
+                unlimitedWvalue = MAX(percentWvalue, cmdline.wvalue);
             else
                 unlimitedWvalue = percentWvalue;
         }
