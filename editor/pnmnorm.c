@@ -355,7 +355,127 @@ computeAdjustmentForExpansionLimit(xelval   const maxval,
 
 
 static void
-computeEndValues(FILE *             const ifp,
+disOverlap(xelval   const reqBvalue,
+           xelval   const reqWvalue,
+           bool     const bIsFixed,
+           bool     const wIsFixed,
+           xelval   const maxval,
+           xelval * const nonOlapBvalueP,
+           xelval * const nonOlapWvalueP) {
+/*----------------------------------------------------------------------------
+   Compute black and white end values that don't overlap, i.e. the
+   black value is darker than the white, from an initial attempt that
+   might overlap.
+
+   'req{B|W}value' is that initial attempt.  We return the
+   nonoverlapping version as *nonOlap{B|W}valueP.
+
+   '{b|w}IsFixed' means we cannot change that endpoint.
+
+   If both ends are fixed 'reqBvalue' and 'reqWvalue' overlap, we just
+   fail the program -- the user asked for the impossible.
+
+   Where one end is fixed and the other is not, we move the unfixed end
+   to be one unit above or below the fixed end, as appropriate.
+
+   Where both ends are free, we move them to the point halfway between them,
+   the white end being one more than the black end.
+-----------------------------------------------------------------------------*/
+    assert(maxval > 0);
+
+    if (reqBvalue < reqWvalue) {
+        /* No overlap; initial attempt is fine. */
+        *nonOlapBvalueP = reqBvalue;
+        *nonOlapWvalueP = reqWvalue;
+    } else {
+        if (bIsFixed && wIsFixed)
+            pm_error("The colors which become black (value <= %u) "
+                     "would overlap the "
+                     "colors which become white (value >= %u).",
+                     reqBvalue, reqWvalue);
+        else if (bIsFixed) {
+            if (reqBvalue >= maxval)
+                pm_error("The black value must be less than the maxval");
+            else {
+                *nonOlapBvalueP = reqBvalue;
+                *nonOlapWvalueP = reqBvalue + 1;
+            }
+        } else if (wIsFixed) {
+            if (reqWvalue == 0)
+                pm_error("The white value must be greater than 0");
+            else {
+                *nonOlapBvalueP = reqWvalue - 1;
+                *nonOlapWvalueP = reqWvalue;
+            }
+        } else {
+            /* Both ends are free; use the point halfway between them. */
+            xelval const midPoint = (reqWvalue + reqBvalue + maxval/2)/2;
+            *nonOlapBvalueP = MIN(midPoint, maxval-1);
+            *nonOlapWvalueP = *nonOlapBvalueP + 1;
+        }
+    }
+}
+
+
+
+static void
+resolvePercentParams(FILE *             const ifP,
+                     unsigned int       const cols,
+                     unsigned int       const rows,
+                     xelval             const maxval,
+                     int                const format,
+                     struct cmdlineInfo const cmdline,
+                     xelval *           const bvalueP,
+                     xelval *           const wvalueP) {
+/*----------------------------------------------------------------------------
+   Figure out the endpoint of the stretch (the value that is to be stretched
+   to black and the one that is to be stretched to white) as requested
+   by the -bvalue, -bpercent, -wvalue, and -wpercent options.
+
+   These values may be invalid due to overlapping, and they may exceed
+   the maximum allowed stretch; Caller must deal with that.
+-----------------------------------------------------------------------------*/
+    unsigned int * hist;  /* malloc'ed */
+
+    MALLOCARRAY(hist, PNM_OVERALLMAXVAL+1);
+
+    if (hist == NULL)
+        pm_error("Unable to allocate storage for intensity histogram.");
+    else {
+        buildHistogram(ifP, cols, rows, maxval, format, hist,
+                       cmdline.brightMethod);
+
+        if (cmdline.bvalueSpec && !cmdline.bpercentSpec) {
+            *bvalueP = cmdline.bvalue;
+        } else {
+            xelval percentBvalue;
+            computeBottomPercentile(hist, maxval, cols*rows, cmdline.bpercent, 
+                                    &percentBvalue);
+            if (cmdline.bvalueSpec)
+                *bvalueP = MIN(percentBvalue, cmdline.bvalue);
+            else
+                *bvalueP = percentBvalue;
+        }
+
+        if (cmdline.wvalueSpec && !cmdline.wpercentSpec) {
+            *wvalueP = cmdline.wvalue;
+        } else {
+            xelval percentWvalue;
+            computeTopPercentile(hist, maxval, cols*rows, cmdline.wpercent, 
+                                 &percentWvalue);
+            if (cmdline.wvalueSpec)
+                *wvalueP = MAX(percentWvalue, cmdline.wvalue);
+            else
+                *wvalueP = percentWvalue;
+        }
+        free(hist);
+    }
+}
+
+
+
+static void
+computeEndValues(FILE *             const ifP,
                  int                const cols,
                  int                const rows,
                  xelval             const maxval,
@@ -371,52 +491,22 @@ computeEndValues(FILE *             const ifp,
    'ifp', which is positioned just past the header (at the raster).
    Leave it positioned arbitrarily.
 -----------------------------------------------------------------------------*/
-    unsigned int * hist;  /* malloc'ed */
+    xelval reqBvalue, reqWvalue, nonOlapBvalue, nonOlapWvalue;
+    unsigned int bLower, wRaise;
 
-    MALLOCARRAY(hist, PNM_OVERALLMAXVAL+1);
+    resolvePercentParams(ifP, cols, rows, maxval, format, cmdline,
+                         &reqBvalue, &reqWvalue);
 
-    if (hist == NULL)
-        pm_error("Unable to allocate storage for intensity histogram.");
-    else {
-        xelval unlimitedBvalue, unlimitedWvalue;
-        unsigned int bLower, wRaise;
+    disOverlap(reqBvalue, reqWvalue,
+               cmdline.bvalueSpec, cmdline.wvalueSpec, maxval,
+               &nonOlapBvalue, &nonOlapWvalue);
 
-        buildHistogram(ifp, cols, rows, maxval, format, hist,
-                       cmdline.brightMethod);
+    computeAdjustmentForExpansionLimit(
+        maxval, nonOlapBvalue, nonOlapWvalue, cmdline.maxExpansion,
+        &bLower, &wRaise);
 
-        if (cmdline.bvalueSpec && !cmdline.bpercentSpec) {
-            unlimitedBvalue = cmdline.bvalue;
-        } else {
-            xelval percentBvalue;
-            computeBottomPercentile(hist, maxval, cols*rows, cmdline.bpercent, 
-                                    &percentBvalue);
-            if (cmdline.bvalueSpec)
-                unlimitedBvalue = MIN(percentBvalue, cmdline.bvalue);
-            else
-                unlimitedBvalue = percentBvalue;
-        }
-
-        if (cmdline.wvalueSpec && !cmdline.wpercentSpec) {
-            unlimitedWvalue = cmdline.wvalue;
-        } else {
-            xelval percentWvalue;
-            computeTopPercentile(hist, maxval, cols*rows, cmdline.wpercent, 
-                                 &percentWvalue);
-            if (cmdline.wvalueSpec)
-                unlimitedWvalue = MAX(percentWvalue, cmdline.wvalue);
-            else
-                unlimitedWvalue = percentWvalue;
-        }
-
-        computeAdjustmentForExpansionLimit(
-            maxval, unlimitedBvalue, unlimitedWvalue, cmdline.maxExpansion,
-            &bLower, &wRaise);
-
-        *bvalueP = unlimitedBvalue - bLower;
-        *wvalueP = unlimitedWvalue + wRaise;
-
-        free(hist);
-    }
+    *bvalueP = nonOlapBvalue - bLower;
+    *wvalueP = nonOlapWvalue + wRaise;
 }
 
 
@@ -585,19 +675,17 @@ main(int argc, const char *argv[]) {
 
     computeEndValues(ifP, cols, rows, maxval, format, cmdline, 
                      &bvalue, &wvalue);
-        
-    if (wvalue <= bvalue)
-        pm_error("The colors which become black would overlap the "
-                 "colors which become white.");
-    else {
+    {
         xelval * newBrightness;
         int row;
         xel * xelrow;
         xel * rowbuf;
         
+        assert(wvalue > bvalue);
+
         xelrow = pnm_allocrow(cols);
 
-        pm_message("remapping %d..%d to %d..%d", bvalue, wvalue, 0, maxval);
+        pm_message("remapping %u..%u to %u..%u", bvalue, wvalue, 0, maxval);
 
         computeTransferFunction(bvalue, wvalue, maxval, &newBrightness);
 
@@ -615,7 +703,7 @@ main(int argc, const char *argv[]) {
         free(newBrightness);
         pnm_freerow(rowbuf);
         pnm_freerow(xelrow);
-    }
-    pm_close(ifP);
+    } 
+   pm_close(ifP);
     return 0;
 }

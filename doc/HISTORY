@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.43.00
 
+              pnmnorm: adjust bvalue, wvalue when -bpercent and/or -wpercent
+              would cause an overlap, instead of failing.
+
               pnmnorm: fix -colorvalue, -saturation, -keephues options.
 
               pnmnorm: fix resolution of conflicting -wpercent and -wvalue.
