@@ -94,7 +94,7 @@ darken the image, set <I>wvalue</I> to maxval and play with
 
 <p>If you specify both <b>-bvalue</b> and <b>-bpercent</b>, <b>pnmnorm</b>
 uses the one that produces the least change.  The same goes for
-<b>-wvalue</b> and <b>-wpercent</b>.  (In Neptbm 10.26 (January 2005),
+<b>-wvalue</b> and <b>-wpercent</b>.  (In Netpbm 10.26 (January 2005),
 the <b>-bvalue</b>/<b>-wvalue</b> takes precedence, and before that,
 it's a syntax error to specify both).
 
@@ -102,9 +102,30 @@ it's a syntax error to specify both).
 cascade two runs of <b>pnmnorm</b>, specifying values for the first
 and percentages for the second.
 
-<p>This is further constrained by the <b>-maxexpand</b> option.
-Sometimes, too much contrast is a bad thing.  If your intensities are
-all concentrated in the middle, <b>-bpercent=2</b> and
+<p>It is possible for your <b>-bpercent</b> or <b>-wpercent</b>
+to overlap your <b>-wvalue</b> or <b>-bvalue</b>, respectively.  For
+example, you say <b>-bpercent=20</b> and <b>-wvalue=100</b> for an
+image in which only 10 per cent of the pixels are darker than 100.
+In that case, <b>pnmnorm</b> adjusts the per centile value as
+required.  In the example, it uses 99 as the black value (like
+<b>-bvalue=99</b>).
+
+<P>It is also possible for your <b>-bpercent</b> and <b>-wpercent</b>
+options to select the same brightness value for the stretch-to-white
+and stretch-to-black value because of the fact that <b>pnmnorm</b>
+can't subdivide a histogram cell.  E.g. if an image is all brightness
+100, then no matter what <b>-bpercent</b> and <b>-wpercent</b>
+values you choose, it's the same as saying <b>-bvalue=100 -wvalue=100</b>.
+In that case, <b>pnmnorm</b> changes one of the values by 1 to make it
+legal.  In the example, <b>pnmnorm</b> would either make the black
+value 99 or the white value 101.
+
+<p>Before Netpbm 10.43 (June 2008), <b>pnmnorm</b> fails if the
+<b>-wpercent</b> and/or <b>-bpercent</b> values specify an overlap.
+
+<p>The stretch points are further constrained by the <b>-maxexpand</b>
+option.  Sometimes, too much contrast is a bad thing.  If your
+intensities are all concentrated in the middle, <b>-bpercent=2</b> and
 <b>-wpercent=1</b> might mean that an intensity of 60 gets stretched
 up to 100 and and intensity of 40 gets stretched down to zero, for a
 range expansion of 150% (from a range of 40 to a range of 100).  That
