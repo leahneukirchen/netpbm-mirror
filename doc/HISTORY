@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+08.05.10 BJH  Release 10.35.43
+
+              pbmtext: fail properly if input contains no text.
+
 08.04.11 BJH  Release 10.35.42
 
               pnmnorm: fix resolution of conflicting -wpercent and -wvalue.

@@ -710,6 +710,11 @@ main(int argc, char *argv[]) {
                         &maxwidth, &maxleftb);
 
     cols = 2 * hmargin + maxwidth;
+
+    if (cols == 0 || rows == 0)
+        pm_error("Input is all whitespace and/or non-renderable characters.  "
+                 "No output.");
+
     bits = pbm_allocarray(cols, rows);
 
     /* Fill background with white */
