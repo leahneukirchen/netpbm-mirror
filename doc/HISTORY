@@ -9,6 +9,10 @@ not yet  BJH  Release 10.43.00
               pnmnorm: adjust bvalue, wvalue when -bpercent and/or -wpercent
               would cause an overlap, instead of failing.
 
+              pbm_loadbdffont(): handle zero size glyph.  Affects pbmtext.
+
+              pbmtext: fail properly if input contains no text.
+
               pnmnorm: fix -colorvalue, -saturation, -keephues options.
 
               pnmnorm: fix resolution of conflicting -wpercent and -wvalue.
