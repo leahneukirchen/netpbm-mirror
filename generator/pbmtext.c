@@ -823,7 +823,11 @@ main(int argc, char *argv[]) {
 
     computeImageWidth(formattedText, fontP, cmdline.space, hmargin,
                       &cols, &maxleftb);
-                        
+
+    if (cols == 0 || rows == 0)
+        pm_error("Input is all whitespace and/or non-renderable characters.  "
+                 "No output.");
+
     bits = pbm_allocarray(cols, rows);
 
     /* Fill background with white */

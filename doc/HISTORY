@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+08.05.10 BJH  Release 10.42.03
+
+              pbmtext: fail properly if input contains no text.
+
+              pbm_loadbdffont(): handle zero size glyph.  Affects pbmtext.
+
 08.04.09 BJH  Release 10.42.02
 
               pnmnorm: fix resolution of conflicting -wpercent and -wvalue.

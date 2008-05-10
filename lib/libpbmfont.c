@@ -1187,7 +1187,7 @@ createBmap(unsigned int  const glyphWidth,
     unsigned char * bmap;
     int rc;
 
-    if (UINT_MAX / glyphWidth < glyphHeight)
+    if (glyphWidth > 0 && UINT_MAX / glyphWidth < glyphHeight)
         pm_error("Ridiculously large glyph");
 
     MALLOCARRAY(bmap, glyphWidth * glyphHeight);
