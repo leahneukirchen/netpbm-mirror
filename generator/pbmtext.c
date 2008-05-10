@@ -703,8 +703,8 @@ computeImageHeight(struct text         const formattedText,
                    unsigned int *      const rowsP) {
 
     if (interlineSpace < 0 && fontP->maxheight < -interlineSpace)
-        pm_error("-lspace value (%d) negative and exceeds font height. "
-                 "No output.", interlineSpace);     
+        pm_error("-lspace value (%d) negative and exceeds font height.",
+                 interlineSpace);     
     else {
         double const rowsD = 2 * (double) vmargin + 
             (double) formattedText.lineCount * fontP->maxheight + 
@@ -728,8 +728,8 @@ computeImageWidth(struct text         const formattedText,
                   int *               const maxleftbP) {
 
     if (intercharacterSpace < 0 && fontP->maxwidth < -intercharacterSpace)
-        pm_error("-space value (%f) negative; exceeds font width. "
-                 "No output.", intercharacterSpace);     
+        pm_error("-space value (%f) negative; exceeds font width.",
+                 intercharacterSpace);     
     else {
         /* Find the widest line, and the one that backs up the most past
            the nominal start of the line.
@@ -825,8 +825,7 @@ main(int argc, char *argv[]) {
                       &cols, &maxleftb);
 
     if (cols == 0 || rows == 0)
-        pm_error("Input is all whitespace and/or non-renderable characters.  "
-                 "No output.");
+        pm_error("Input is all whitespace and/or non-renderable characters.");
 
     bits = pbm_allocarray(cols, rows);
 

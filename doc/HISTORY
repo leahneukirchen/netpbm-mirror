@@ -13,6 +13,8 @@ not yet  BJH  Release 10.43.00
 
               pbmtext: fail properly if input contains no text.
 
+              pbmtext: remove meaningless "no output" from error messages.
+
               pnmnorm: fix -colorvalue, -saturation, -keephues options.
 
               pnmnorm: fix resolution of conflicting -wpercent and -wvalue.
