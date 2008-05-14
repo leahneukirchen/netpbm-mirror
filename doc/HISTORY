@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.43.00
 
+              pamthreshold: copy transparency information from input to
+              output.
+
               pnmnorm: adjust bvalue, wvalue when -bpercent and/or -wpercent
               would cause an overlap, instead of failing.
 
@@ -18,6 +21,12 @@ not yet  BJH  Release 10.43.00
               pnmnorm: fix -colorvalue, -saturation, -keephues options.
 
               pnmnorm: fix resolution of conflicting -wpercent and -wvalue.
+
+              ppmd_filledrectangle: fail properly on negative image
+              height, width.
+
+              Add back ppmd_fill_init() for backward compatibility;
+              removed in 10.29.
 
               Build: make it work with Gcc 4.3 and -sse.
 

@@ -33,6 +33,17 @@ struct penpos {
     int y;
 };
 
+struct rectangle {
+    /* ((0,0),(0,0)) means empty. */
+    /* 'lr' is guaranteed not to be left of or above 'ul' */
+    struct penpos ul;
+    struct penpos lr;
+};
+
+static struct rectangle const emptyRectangle = {
+    {0, 0},
+    {0, 0},
+};
 
 
 
@@ -76,7 +87,32 @@ ppmd_point_drawproc(pixel**     const pixels,
 }
 
 
-/* Simple fill routine. */
+static void
+findRectangleIntersection(struct rectangle   const rect1,
+                          struct rectangle   const rect2,
+                          struct rectangle * const intersectionP) {
+/*----------------------------------------------------------------------------
+   Find the intersection between rectangles 'rect1' and 'rect2'.
+   Return it as *intersectionP.
+-----------------------------------------------------------------------------*/
+    struct penpos tentativeUl, tentativeLr;
+
+    tentativeUl.x = MAX(rect1.ul.x, rect2.ul.x);
+    tentativeUl.y = MAX(rect1.ul.y, rect2.ul.y);
+    tentativeLr.x = MIN(rect1.lr.x, rect2.lr.x);
+    tentativeLr.y = MIN(rect1.lr.y, rect2.lr.y);
+
+    if (tentativeLr.x <= tentativeUl.x ||
+        tentativeLr.y <= tentativeUl.y) {
+        /* No intersection */
+        *intersectionP = emptyRectangle;
+    } else {
+        intersectionP->ul = tentativeUl;
+        intersectionP->lr = tentativeLr;
+    }
+}
+
+
 
 void
 ppmd_filledrectangle(pixel **      const pixels, 
@@ -87,35 +123,39 @@ ppmd_filledrectangle(pixel **      const pixels,
                      int           const y, 
                      int           const width, 
                      int           const height, 
-                     ppmd_drawproc      drawProc,
+                     ppmd_drawproc       drawProc,
                      const void *  const clientdata) {
 
-    int cx, cy, cwidth, cheight, row;
+    struct rectangle image, request, intersection;
+    unsigned int row;
 
-    /* Clip. */
-    cx = x;
-    cy = y;
-    cwidth = width;
-    cheight = height;
+    if (width < 0)
+        pm_error("negative width %d passed to ppmd_filledrectangle", width);
+    if (height < 0)
+        pm_error("negative height %d passed to ppmd_filledrectangle", height);
+    if (cols < 0)
+        pm_error("negative image width %d passed to ppmd_filledrectangle",
+                 cols);
+    if (rows < 0)
+        pm_error("negative image height %d passed to ppmd_filledrectangle",
+                 rows);
 
-    if (cx < 0) {
-        cx = 0;
-        cwidth += x;
-    }
-    if (cy < 0) {
-        cy = 0;
-        cheight += y;
-    }
-    if (cx + cwidth > cols)
-        cwidth = cols - cx;
+    request.ul.x = x;
+    request.ul.y = y;
+    request.lr.x = x + width;
+    request.lr.y = y + height;
 
-    if (cy + cheight > rows)
-        cheight = rows - cy;
+    image.ul.x = 0;
+    image.ul.y = 0;
+    image.lr.x = cols;
+    image.lr.y = rows;
+
+    findRectangleIntersection(image, request, &intersection);
 
     /* Draw. */
-    for (row = cy; row < cy + cheight; ++row) {
+    for (row = intersection.ul.y; row < intersection.lr.y; ++row) {
         unsigned int col;
-        for (col = cx; col < cx + cwidth; ++col)
+        for (col = intersection.ul.x; col < intersection.lr.x; ++col)
             drawPoint(drawProc, clientdata,
                       pixels, cols, rows, maxval, col, row);
     }
@@ -672,6 +712,22 @@ ppmd_fill_create(void) {
     oldclip = ppmd_setlineclip(0);
     
     return fillObjP;
+}
+
+
+
+char *
+ppmd_fill_init(void) {
+/*----------------------------------------------------------------------------
+   Backward compatibility interface.  This is what was used before
+   ppmd_fill_create() existed.
+
+   Note that old programs treat a fill handle as a pointer to char
+   rather than a pointer to fillObj, and backward compatibility
+   depends upon the fact that these are implemented as identical types
+   (an address).
+-----------------------------------------------------------------------------*/
+    return (char *)ppmd_fill_create();
 }
 
 
