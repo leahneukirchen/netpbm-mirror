@@ -12,11 +12,13 @@ not yet  BJH  Release 10.43.00
               pnmnorm: adjust bvalue, wvalue when -bpercent and/or -wpercent
               would cause an overlap, instead of failing.
 
+              pamscale: fix PBM input + -nomix.
+
+              pbmtext: remove meaningless "no output" from error messages.
+
               pbm_loadbdffont(): handle zero size glyph.  Affects pbmtext.
 
               pbmtext: fail properly if input contains no text.
-
-              pbmtext: remove meaningless "no output" from error messages.
 
               pnmnorm: fix -colorvalue, -saturation, -keephues options.
 

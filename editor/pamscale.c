@@ -2049,6 +2049,9 @@ scaleWithoutMixing(const struct pam * const inpamP,
     int row;
     int rowInInput;
 
+    assert(outpamP->maxval == inpamP->maxval);
+    assert(outpamP->depth  == inpamP->depth);
+
     tuplerow = pnm_allocpamrow(inpamP); 
     rowInInput = -1;
 
@@ -2095,7 +2098,7 @@ main(int argc, char **argv ) {
     outpam = inpam;  /* initial value */
     outpam.file = stdout;
 
-    if (PNM_FORMAT_TYPE(inpam.format) == PBM_TYPE) {
+    if (PNM_FORMAT_TYPE(inpam.format) == PBM_TYPE && !cmdline.nomix) {
         outpam.format = PGM_TYPE;
         outpam.maxval = PGM_MAXMAXVAL;
         pm_message("promoting from PBM to PGM");
