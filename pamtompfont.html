@@ -1,0 +1,69 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Pamtompfont User Manual</TITLE></HEAD>
+<BODY>
+<H1>pamtompfont</H1>
+Updated: 18 May 2008
+
+<A HREF="#index">Table Of Contents</A>
+
+<H2>NAME</H2>
+pamtompfont - Convert Netpbm image to Mplayer bitmap font file
+
+<H2 id="synopsis">SYNOPSIS</H2>
+<B>pamtompfont</B>
+[<I>imagefile</I>]
+
+<P>All options can be abbreviated to their shortest unique prefix.
+You may use two hyphens instead of one.  You may separate an option
+name and its value with white space instead of an equals sign.
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>pamtompfont</b> reads a Netpbm image (PNM or PAM) and converts it
+to an Mplayer bitmap font raster file.
+
+<p>This is the original font format used by Mplayer (for subtitles,
+on-screen messages, etc.), before it had the ability to use Freetype
+to access standard fonts.
+
+<p>The format was apparently an image format before Mplayer adopted it
+for fonts, but I have no idea where it came from or where else it might
+be used.
+
+<p>An Mplayer bitmap font consists of a font descriptor file and
+raster files.  The font descriptor file identifies the raster files by
+file name.  A raster file contains a single rectangular raster image
+which contains an arrangement of a bunch of glyphs.  Each glyph is a
+rectangular image and the font descriptor indicates where in the image
+the glyph for each codepoint is.  Every glyph in the font has the same
+height, so the font descriptor just indicates the file position in the
+raster file of the to left corner of the glyph, and the width of the
+glyph in pixels.
+
+
+<H2 id="options">OPTIONS</H2>
+
+<p>None.
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<B><A HREF="pam.html">pam</A></B>
+
+<h2 id="history">HISTORY</h2>
+
+<p><b>pamtompfont</b> was added to Netpbm in Release 10.43 (June 2008).
+
+
+<HR>
+<H2 id="index">Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#history">HISTORY</A>
+</UL>
+</BODY>
+</HTML>

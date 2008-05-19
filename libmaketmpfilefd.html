@@ -1,0 +1,77 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html> <head>
+<title>Netpbm subroutine library: pm_make_tmpfile_fd() function</title>
+<meta name="manual_section" content="3">
+</head>
+
+<body>
+<h1>pm_make_tmpfile_fd()</h1>
+Updated: 31 December 2007
+<br>
+
+<h2>NAME</h2>
+
+pm_make_tmpfile_fd() - create a temporary named file
+
+<h2>SYNOPSIS</h2>
+
+<pre>
+#include &lt;netpbm/pm.h&gt;
+
+pm_make_tmpfile(int *         fdP,
+                const char ** filenameP);
+</pre>
+
+<h2>EXAMPLE</h2>
+
+<p>This simple example creates a temporary file, writes &quot;hello
+world&quot; to it, then writes some search patterns to it, then uses
+it as input to <b>grep</b>:
+
+<pre>
+#include &lt;netpbm/pm.h&gt;
+
+int fd;
+const char * myfilename;
+
+pm_make_tmpfile_fd(&amp;fdP, &amp;myfilename);
+
+write(fd, &quot;^account:\\s.*\n&quot;, 16);
+fprintf(fd, &quot;^name:\\s.*\n&quot;, 13);
+
+close(fd);
+
+asprintfN(&amp;grepCommand, &quot;grep --file='%s' /tmp/infile &gt;/tmp/outfile&quot;);
+
+system(grepCommand);
+
+strfree(grepCommand);
+
+unlink(myfilename);
+
+strfree(myfilename);
+
+</pre>
+
+<h2>DESCRIPTION</H2>
+
+<p>This library function is part of <a href="index.html">Netpbm</a>.
+
+<p><b>pm_make_tmpfile_fd()</b> is analogous to <a
+href="libmaketmpfile.html"><b>pm_make_tmpfile()</b></a>.  The only
+difference is that it opens the file as a low level file, as
+<b>open()</b> would, rather than as a stream, as <b>fopen()</b> would.
+
+<p>If you don't need to access the file by name, use
+<b>pm_tmpfile_fd()</b> instead, because it's cleaner.  With
+<b>pm_tmpfile_fd()</b>, the operating system always deletes the
+temporary file when your program exits, if the program failed to clean
+up after itself.
+
+
+<h2>HISTORY</h2>
+
+<p><b>pm_tmpfile()</b> was introduced in Netpbm 10.42 (March 2008).
+
+</body>
+</html>
