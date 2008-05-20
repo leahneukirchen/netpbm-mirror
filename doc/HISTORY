@@ -14,6 +14,8 @@ not yet  BJH  Release 10.43.00
 
               pamscale: fix PBM input + -nomix.
 
+              pamtilt: fix crash with excessive angle.
+
               pbmtext: remove meaningless "no output" from error messages.
 
               pbm_loadbdffont(): handle zero size glyph.  Affects pbmtext.

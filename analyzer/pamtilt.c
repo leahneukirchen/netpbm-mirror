@@ -10,6 +10,7 @@
   All work has been contributed to the public domain by its authors.
 =============================================================================*/
 
+#include <assert.h>
 #include <math.h>
 
 #include "pam.h"
@@ -211,40 +212,39 @@ replacePixelValuesWithScaledDiffs(
 
 
 static void
-scoreAngle(const struct pam * const pamP,
-           sample **          const pixels,
-           unsigned int       const hstep,
-           unsigned int       const vstep,
-           unsigned int       const hsamples,
-           float              const deg,
-           float *            const scoreP) {
+scoreAngleRegion(
+    sample **    const pixels,
+    unsigned int const hsamples,
+    unsigned int const startRow,
+    unsigned int const endRow,
+    unsigned int const vstep,
+    float        const dy,
+    float *      const scoreP) {
 /*----------------------------------------------------------------------------
-  calculate score for a given angle
+   Same as scoreAngle(), but we look only at the region from 'startRow'
+   to 'endRow', which we assume is enough inside the image that tilted
+   lines starting at the left within that region don't run off the top
+   or bottom of the image.
+
+   We assume 'startRow' and 'endRow' are within the image and denote at
+   least one row.
+
+   Instead of a tilt angle, we have 'dy', the slope (downward) of the lines
+   in our assumed tilt.
 -----------------------------------------------------------------------------*/
-    float  const radians = (float)deg/360 * 2 * M_PI;
-    float  const dy      = hstep * tan(radians);
-    int    const dtotal  = pamP->width * tan(radians);
     double const tscale  = 1.0 / hsamples;
 
-    double total;
-    int first;
-    int last;
-    
     unsigned int row;
+    double sum;
+        // Sum of brightness measure of all sampled lines which are
+        // (assuming tilt) contained within image.
+    unsigned int n;
+        // Number of lines that went into 'total'
 
-    total = 0.0; /* initial value */
-
-    if (dtotal > 0) {
-        first = 0;
-        last = pamP->height - 1 - (dtotal + 1);
-    } else {
-        first = -(dtotal - 1);
-        last = pamP->height - 1;
-    }
-    for (row = first; row < last; row += vstep) {
+    for (row = startRow, sum = 0.0, n = 0; row < endRow; row += vstep) {
         float o;
-        long t;
-        double dt;
+        long t;     // total brightness of the samples in the line
+        double dt;  // mean brightness of the samples in the line
 
         unsigned int i;
 
@@ -253,9 +253,78 @@ scoreAngle(const struct pam * const pamP,
              ++i, t += pixels[(int)(row + o)][i], o += dy) {
         }
         dt = tscale * t;
-        total += dt * dt;
+        sum += dt * dt;
+        n += 1;
     }
-    *scoreP = total / (last - first);
+    assert(n > 0);  /* Because we assume there's at least one row */
+    *scoreP = sum / n;
+}
+
+
+
+static void
+scoreAngle(const struct pam * const pamP,
+           sample **          const pixels,
+           unsigned int       const hstep,
+           unsigned int       const vstep,
+           unsigned int       const hsamples,
+           float              const angle,
+           float *            const scoreP) {
+/*----------------------------------------------------------------------------
+  Calculate the score for assuming the image described by *pamP and
+  'pixels' is tilted down by angle 'angle' (in degrees) from what it
+  should be.  I.e. the angle from the top edge of the paper to the
+  lines of text in the image is 'angle'.
+
+  The score is a measure of how bright the lines of the image are if
+  we assume this angle.  If the angle is right, there should be lots
+  of lines that are all white, because they are between lines of text.
+  If the angle is wrong, many lines will cross over lines of text and
+  thus be less that all white.  A higher score indicates 'angle' is more
+  likely to be the angle at which the image is tilted.
+
+  If 'angle' is so great that not a single line goes all the way across the
+  page without running off the top or bottom, we call the score -1.  In
+  every other case, it is nonnegative.
+  
+  'pixels' is NOT all the pixels in the image; it is just a sampling.
+  In each row, it contains only 'hsamples' pixels, sampled from the
+  image at intervals of 'hstep' pixels.  E.g if the image is 1000
+  pixels wide, pixels might be only 10 pixels wide, containing columns
+  0, 100, 200, etc. of the image.
+
+  Return the score as *scoreP.
+-----------------------------------------------------------------------------*/
+    float  const radians = (float)angle/360 * 2 * M_PI;
+    float  const dy      = hstep * tan(radians);
+        // How much a line sinks due to the tilt when we move one sample
+        // ('hstep' columns of the image) to the right.
+
+    if (fabs(dy * hsamples) > pamP->height) {
+        // This is so tilted that not a single line of the image fits
+        // entirely on the page, so we can't do the measurement.
+        *scoreP = -1.0;
+    } else {
+        unsigned int startRow, endRow;
+
+        if (dy > 0) {
+            /* Lines of image drop as you go right, so the bottommost lines go
+               off the page and we can't follow them.
+            */
+            startRow = 0;
+            endRow = pamP->height - dy * hsamples;
+        } else {
+            /* Lines of image rise as you go right, so the topmost lines go
+           off the page and we can't follow them.
+        */
+            startRow = 0 - dy * hsamples;
+            endRow = pamP->height;
+        }
+        assert(endRow > startRow);  // because of 'if (fabs(dy ...'
+
+        scoreAngleRegion(pixels, hsamples, startRow, endRow, vstep, dy,
+                         scoreP);
+    }
 }
 
 
