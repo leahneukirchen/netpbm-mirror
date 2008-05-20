@@ -1,7 +1,7 @@
 /*=============================================================================
-                             pgmtilt
+                             pamtilt
 ===============================================================================
-  Print the tilt angle of a PGM file
+  Print the tilt angle of an image (typically black and white text).
 
   Based on pgmskew by Gregg Townsend, August 2005.
 
@@ -212,14 +212,13 @@ replacePixelValuesWithScaledDiffs(
 
 
 static void
-scoreAngleRegion(
-    sample **    const pixels,
-    unsigned int const hsamples,
-    unsigned int const startRow,
-    unsigned int const endRow,
-    unsigned int const vstep,
-    float        const dy,
-    float *      const scoreP) {
+scoreAngleRegion(sample **    const pixels,
+                 unsigned int const hsamples,
+                 unsigned int const startRow,
+                 unsigned int const endRow,
+                 unsigned int const vstep,
+                 float        const dy,
+                 float *      const scoreP) {
 /*----------------------------------------------------------------------------
    Same as scoreAngle(), but we look only at the region from 'startRow'
    to 'endRow', which we assume is enough inside the image that tilted
@@ -236,15 +235,16 @@ scoreAngleRegion(
 
     unsigned int row;
     double sum;
-        // Sum of brightness measure of all sampled lines which are
-        // (assuming tilt) contained within image.
+        /* Sum of brightness measure of all sampled lines which are
+           (assuming tilt) contained within image.
+        */
     unsigned int n;
-        // Number of lines that went into 'total'
+        /* Number of lines that went into 'total' */
 
     for (row = startRow, sum = 0.0, n = 0; row < endRow; row += vstep) {
         float o;
-        long t;     // total brightness of the samples in the line
-        double dt;  // mean brightness of the samples in the line
+        long t;     /* total brightness of the samples in the line */
+        double dt;  /* mean brightness of the samples in the line */
 
         unsigned int i;
 
@@ -297,12 +297,13 @@ scoreAngle(const struct pam * const pamP,
 -----------------------------------------------------------------------------*/
     float  const radians = (float)angle/360 * 2 * M_PI;
     float  const dy      = hstep * tan(radians);
-        // How much a line sinks due to the tilt when we move one sample
-        // ('hstep' columns of the image) to the right.
-
+        /* How much a line sinks due to the tilt when we move one sample
+           ('hstep' columns of the image) to the right.
+        */
     if (fabs(dy * hsamples) > pamP->height) {
-        // This is so tilted that not a single line of the image fits
-        // entirely on the page, so we can't do the measurement.
+        /* This is so tilted that not a single line of the image fits
+           entirely on the page, so we can't do the measurement.
+        */
         *scoreP = -1.0;
     } else {
         unsigned int startRow, endRow;
@@ -315,12 +316,12 @@ scoreAngle(const struct pam * const pamP,
             endRow = pamP->height - dy * hsamples;
         } else {
             /* Lines of image rise as you go right, so the topmost lines go
-           off the page and we can't follow them.
-        */
+               off the page and we can't follow them.
+            */
             startRow = 0 - dy * hsamples;
             endRow = pamP->height;
         }
-        assert(endRow > startRow);  // because of 'if (fabs(dy ...'
+        assert(endRow > startRow);  /* because of 'if (fabs(dy ...' */
 
         scoreAngleRegion(pixels, hsamples, startRow, endRow, vstep, dy,
                          scoreP);
