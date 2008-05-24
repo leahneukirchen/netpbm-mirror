@@ -237,6 +237,10 @@ ppmd_fill_create(void);
 void
 ppmd_fill_destroy(struct fillobj * fillObjP);
 
+/* For backward compatibility only: */
+char *
+ppmd_fill_init(void);
+
 void
 ppmd_fill_drawproc(pixel ** const pixels, 
                    int      const cols, 
