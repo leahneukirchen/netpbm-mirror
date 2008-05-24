@@ -114,7 +114,7 @@ ppmd_filledrectangle(pixel **      const pixels,
 
     /* Draw. */
     for (row = cy; row < cy + cheight; ++row) {
-        unsigned int col;
+        int col;
         for (col = cx; col < cx + cwidth; ++col)
             drawPoint(drawProc, clientdata,
                       pixels, cols, rows, maxval, col, row);
@@ -672,6 +672,22 @@ ppmd_fill_create(void) {
     oldclip = ppmd_setlineclip(0);
     
     return fillObjP;
+}
+
+
+
+char *
+ppmd_fill_init(void) {
+/*----------------------------------------------------------------------------
+   Backward compatibility interface.  This is what was used before
+   ppmd_fill_create() existed.
+
+   Note that old programs treat a fill handle as a pointer to char
+   rather than a pointer to fillObj, and backward compatibility
+   depends upon the fact that these are implemented as identical types
+   (an address).
+-----------------------------------------------------------------------------*/
+    return (char *)ppmd_fill_create();
 }
 
 

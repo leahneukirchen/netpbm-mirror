@@ -4,6 +4,18 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+08.05.24 BJH  Release 10.35.44
+
+              pamscale: fix PBM input + -nomix.
+
+              pamtilt: fix crash with excessive angle.
+
+              ppmd_filledrectangle(): fix crash with rectangle that is
+              entirely left or right of the image.
+
+              Add back ppmd_fill_init() for backward compatibility;
+              removed in 10.29.
+
 08.05.10 BJH  Release 10.35.43
 
               pbmtext: fail properly if input contains no text.

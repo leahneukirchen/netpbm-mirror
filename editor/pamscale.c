@@ -2095,7 +2095,7 @@ main(int argc, char **argv ) {
     outpam = inpam;  /* initial value */
     outpam.file = stdout;
 
-    if (PNM_FORMAT_TYPE(inpam.format) == PBM_TYPE) {
+    if (PNM_FORMAT_TYPE(inpam.format) == PBM_TYPE && !cmdline.nomix) {
         outpam.format = PGM_TYPE;
         outpam.maxval = PGM_MAXMAXVAL;
         pm_message("promoting from PBM to PGM");
