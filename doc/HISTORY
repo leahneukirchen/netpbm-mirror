@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.43.00
 
+              Add pamtompfont: Mplayer bitmap font.
+
               pamthreshold: copy transparency information from input to
               output.
 
