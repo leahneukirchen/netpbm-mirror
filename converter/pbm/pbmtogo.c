@@ -1,11 +1,11 @@
 /* pbmtogo.c - read a PBM image and produce a GraphOn terminal raster file
-**	
-**	Rev 1.1 was based on pbmtolj.c
+**      
+**      Rev 1.1 was based on pbmtolj.c
 **
-**	Bo Thide', Swedish Institute of Space Physics, bt@irfu.se
-**				   
+**      Bo Thide', Swedish Institute of Space Physics, bt@irfu.se
+**                                 
 **
-** $Log:	pbmtogo.c,v $
+** $Log:        pbmtogo.c,v $
  * Revision 1.5  89/11/25  00:24:12  00:24:12  root (Bo Thide)
  * Bug found: The byte after 64 repeated bytes sometimes lost. Fixed.
  * 
@@ -35,59 +35,126 @@
 ** implied warranty.
 */
 
+#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "pm_c_util.h"
 #include "pbm.h"
 
-#define BUFSIZE 132	/* GraphOn has 132 byte/1056 bit wide raster lines */
-#define REPEAT_CURRENT_LINE_MASK	0x00 
-#define SKIP_AND_PLOT_MASK		0x40 
-#define REPEAT_PLOT_MASK		0x80 
-#define PLOT_ARBITRARY_DATA_MASK	0xc0 
+#define GRAPHON_WIDTH 1056 /* GraphOn has 1056 bit wide raster lines */
+#define GRAPHON_WIDTH_BYTES (GRAPHON_WIDTH / 8)
+#define REPEAT_CURRENT_LINE_MASK        0x00 
+#define SKIP_AND_PLOT_MASK              0x40 
+#define REPEAT_PLOT_MASK                0x80 
+#define PLOT_ARBITRARY_DATA_MASK        0xc0 
 #define MAX_REPEAT 64
 
-static unsigned char *scanlineptr;		/* Pointer to current scan line byte */
+static unsigned char * scanlineptr;
+    /* Pointer to current scan line byte */
 
-static void putinit ARGS(( void ));
-static void putbit ARGS(( bit b ));
-static void putrest ARGS(( void ));
-static void putitem ARGS(( void ));
+static int item, bitsperitem, bitshift;
+
+static void
+putinit(void) {
+
+    /* Enter graphics window */
+    printf("\0331");
+
+    /* Erase graphics window */
+    printf("\033\014");
+
+    /* Set graphics window in raster mode */
+    printf("\033r");
+
+    /* Select standard Tek coding **/
+    printf("\033[=11l");
+
+    bitsperitem = 1;
+    item = 0;
+    bitshift = 7;
+}
+
+
+
+static void
+putitem(void) {
+
+    *scanlineptr++ = item;
+    bitsperitem = 0;
+    item = 0;
+}
+
+
+
+static void
+putbit(bit const b) {
+
+    if (b == PBM_BLACK)
+        item += 1 << bitshift;
+
+    bitshift--;
+
+    if (bitsperitem == 8)
+    {
+        putitem();
+        bitshift = 7;
+    }
+    bitsperitem++;
+}
+
+
+
+static void
+putrest(void) {
+
+    if (bitsperitem > 1)
+        putitem();
+
+    /* end raster downloading */
+    printf("\033\134");
+
+    /* Exit raster mode */
+    printf("\033t");
+
+    /* Exit graphics window
+       printf("\0332"); */
+}
+
+
 
 int
-main( argc, argv )
-     int argc;
-     char* argv[];
-{
-    FILE* ifp;
-    bit* bitrow;
-    register bit* bP;
-    int argn, rows, cols, format, rucols, padright, row, col;
+main(int           argc,
+     const char ** argv) {
+
+    FILE * ifP;
+    bit * bitrow;
+    bit * bP;
+    int rows, cols, format, rucols, padright, row, col;
     int nbyte, bytesperrow, ecount, ucount, nout, i, linerepeat;
-    int	olditem;
-    unsigned char oldscanline[BUFSIZE];
-    unsigned char newscanline[BUFSIZE];
-    unsigned char diff[BUFSIZE];
-    unsigned char buffer[BUFSIZE];
-    unsigned char outbuffer[2*(BUFSIZE+1)];	/* Worst case.  Should malloc */
-    const char* usage = "[-c] [pbmfile]";
+    int olditem;
+    unsigned char oldscanline[GRAPHON_WIDTH_BYTES];
+    unsigned char newscanline[GRAPHON_WIDTH_BYTES];
+    unsigned char diff[GRAPHON_WIDTH_BYTES];
+    unsigned char buffer[GRAPHON_WIDTH_BYTES];
+    unsigned char outbuffer[2*(GRAPHON_WIDTH_BYTES+1)];     /* Worst case. */
 
+    pm_proginit(&argc, argv);
 
-    pbm_init( &argc, argv );
-
-    argn = 2;
-
-    /* Check for flags. */
-    if (argc > argn + 1)
-      pm_usage(usage);
-
-    if (argc == argn)
-      ifp = pm_openr( argv[argn-1] );
+    if (argc-1 == 0)
+      ifP = stdin;
+    else if (argc-1 == 1)
+      ifP = pm_openr(argv[1]);
     else
-      ifp = stdin;
+        pm_error("There is at most one argument: input file name.  "
+                 "You specified %u", argc-1);
 
-    pbm_readpbminit(ifp, &cols, &rows, &format);
+    pbm_readpbminit(ifP, &cols, &rows, &format);
+
+    if (cols > GRAPHON_WIDTH)
+        pm_error("Image is wider (%u pixels) than a Graphon terminal "
+                 "(%u pixels)", cols, GRAPHON_WIDTH);
+
     bitrow = pbm_allocrow(cols);
 
     /* Round cols up to the nearest multiple of 8. */
@@ -96,7 +163,7 @@ main( argc, argv )
     rucols = rucols * 8;
     padright = rucols - cols;
 
-    for (i = 0; i < BUFSIZE; ++i )
+    for (i = 0; i < GRAPHON_WIDTH_BYTES; ++i )
       buffer[i] = 0;
     putinit();
 
@@ -108,12 +175,14 @@ main( argc, argv )
     for (row = 0; row < rows; row++) {
         /* Store scan line data in the new scan line vector */
         scanlineptr = newscanline;
-        pbm_readpbmrow(ifp, bitrow, cols, format);
+        pbm_readpbmrow(ifP, bitrow, cols, format);
         /* Transfer raster graphics */
         for (col = 0, bP = bitrow; col < cols; col++, bP++)
           putbit(*bP);
         for (col = 0; col < padright; col++)
           putbit(0);
+
+        assert(bytesperrow <= GRAPHON_WIDTH_BYTES);
         
         /* XOR data from the new scan line with data from old scan line */
         for (i = 0; i < bytesperrow; i++)
@@ -235,69 +304,11 @@ main( argc, argv )
           oldscanline[i] = newscanline[i];
     }
     putchar(linerepeat);        /* For the last line(s) to be plotted */
-    pm_close(ifp);
+    pm_close(ifP);
     putrest();
-    exit(0);
+
+    return 0;
 }
 
 
 
-static int item, bitsperitem, bitshift;
-
-static void
-putinit()
-{
-  /* Enter graphics window */
-  printf("\0331");
-
-  /* Erase graphics window */
-  printf("\033\014");
-
-  /* Set graphics window in raster mode */
-  printf("\033r");
-
-  /* Select standard Tek coding **/
-  printf("\033[=11l");
-
-  bitsperitem = 1;
-  item = 0;
-  bitshift = 7;
-}
-
-static void
-putbit(bit b)
-{
-  if (b == PBM_BLACK)
-    item += 1 << bitshift;
-  bitshift--;
-  if (bitsperitem == 8)
-  {
-    putitem();
-    bitshift = 7;
-  }
-  bitsperitem++;
-}
-
-static void
-putrest()
-{
-  if (bitsperitem > 1)
-      putitem();
-
-  /* end raster downloading */
-  printf("\033\134");
-
-  /* Exit raster mode */
-  printf("\033t");
-
-  /* Exit graphics window
-  printf("\0332"); */
-}
-
-static void
-putitem()
-  {
-  *scanlineptr++ = item;
-  bitsperitem = 0;
-  item = 0;
-  }

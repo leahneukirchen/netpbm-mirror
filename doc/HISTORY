@@ -28,6 +28,8 @@ not yet  BJH  Release 10.43.00
 
               pnmnorm: fix resolution of conflicting -wpercent and -wvalue.
 
+              pbmtogo: fix buffer overrun with too wide image.
+
               ppmd_filledrectangle: fail properly on negative image
               height, width.
 
