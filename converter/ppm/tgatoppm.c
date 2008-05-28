@@ -73,7 +73,7 @@ parseCommandLine(int argc, char ** argv,
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (argc - 1 == 0)
-        cmdlineP->input_filename = "=";  /* he wants stdin */
+        cmdlineP->input_filename = "-";  /* he wants stdin */
     else if (argc - 1 == 1)
         cmdlineP->input_filename = strdup(argv[1]);
     else 

@@ -30,6 +30,8 @@ not yet  BJH  Release 10.43.00
 
               pbmtogo: fix buffer overrun with too wide image.
 
+              tgatoppm: fix standard input invocation.
+
               ppmd_filledrectangle: fail properly on negative image
               height, width.
 
