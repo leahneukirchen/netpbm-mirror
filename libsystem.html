@@ -302,7 +302,7 @@ normally close the reading end of the pipe, since it is no longer useful.
 end-of-file indication and the writer subsequently tries to write to
 the pipe, that is an error condition for the writer.  In a typical
 default Unix environment, that error causes the writer to receive a
-SIGPIP signal and that signal causes the writer process to terminate
+SIGPIPE signal and that signal causes the writer process to terminate
 abnormally.  But if, alternatively, the writer has ordered that SIGPIPE
 be blocked, ignored, or handled, the signal does not cause the death of
 the writer.  Instead, the write operation simply completes with an error

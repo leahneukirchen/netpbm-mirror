@@ -6,19 +6,23 @@ Updated: 12 July 2000
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 fiascotopnm - Convert compressed FIASCO image to PGM, or PPM
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>fiascotopnm </B>
 [<I>option</I>]...
 [<I>filename</I>]...
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<p>All option names may be abbreviated; for example, --output may be
+written --outp or --ou. For all options an one letter short option
+is provided. Mandatory or optional arguments to long options are
+mandatory or optional for short options, too. Both short and long
+options are case sensitive.
+
+
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -27,14 +31,7 @@ Standard Input if no file is named, and writes the images as PGM, or
 PPM files, depending on whether the FIASCO image is black and white or
 color.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
-
-<p>All option names may be abbreviated; for example, --output may be
-written --outp or --ou. For all options an one letter short option
-is provided. Mandatory or optional arguments to long options are
-mandatory or optional for short options, too. Both short and long
-options are case sensitive.
+<H2 id="options">OPTIONS</H2>
 
 <DL COMPACT>
 <DT><B>-o</B>[<I>name</I>], <B>--output=</B>[<I>name</I>]
@@ -123,8 +120,7 @@ Print detailed help, then exit.
 </DL>
 
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>EXAMPLES</H2>
+<H2 id="examples">EXAMPLES</H2>
 
 <PRE>
 fiascotopnm foo.wfa &gt;foo.ppm
@@ -158,8 +154,7 @@ decompression speed is as fast as possible: the image is decompressed
 (in 4:2:0 format) at a quarter of its original size; then the image is
 enlarged again by pixel doubling.
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>FILES</H2>
+<H2 id="files">FILES</H2>
 
 <DL COMPACT>
 <DT><B>/etc/system.fiascorc</B>
@@ -172,8 +167,7 @@ enlarged again by pixel doubling.
 
 </DL>
 
-<A NAME="lbAH">&nbsp;</A>
-<H2>ENVIRONMENT</H2>
+<H2 id="environment">ENVIRONMENT</H2>
 
 <DL COMPACT>
 <DT><B>FIASCO_IMAGES</B>
@@ -187,8 +181,7 @@ enlarged again by pixel doubling.
 </DL>
 
 
-<A NAME="lbAI">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="pnmtofiasco.html">pnmtofiasco</A></B>,
 <B><A HREF="pnm.html">pnm</A></B>
@@ -203,23 +196,21 @@ Ullrich Hafner. <B>Low Bit-Rate Image and Video Coding with Weighted
 Finite Automata</B>, Ph.D. thesis, Mensch &amp; Buch Verlag, ISBN
 3-89820-002-7, October 1999.
 
-<A NAME="lbAJ">&nbsp;</A>
-<H2>AUTHOR</H2>
+<H2 id="author">AUTHOR</H2>
 
 Ullrich Hafner &lt;<A HREF="mailto:hafner@bigfoot.de">hafner@bigfoot.de</A>&gt;
 
 <HR>
-<A NAME="index">&nbsp;</A><H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">EXAMPLES</A>
-<LI><A HREF="#lbAG">FILES</A>
-<LI><A HREF="#lbAH">ENVIRONMENT</A>
-<LI><A HREF="#lbAI">SEE ALSO</A>
-<LI><A HREF="#lbAJ">AUTHOR</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#examples">EXAMPLES</A>
+<LI><A HREF="#files">FILES</A>
+<LI><A HREF="#environment">ENVIRONMENT</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
 </UL>
 </BODY>
 </HTML>
