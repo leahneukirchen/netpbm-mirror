@@ -2,16 +2,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "pam.h"
-#include "shhopt.h"
 #include "mallocvar.h"
+#include "shhopt.h"
+#include "pam.h"
 
 struct cmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *inputFilespec;  /* '-' if stdin */
-    const char *transparent;  /* NULL if none */
+    const char * inputFileName;  /* '-' if stdin */
+    const char * transparent;  /* NULL if none */
     unsigned int verbose;
 };
 
@@ -19,8 +19,8 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine ( int argc, char ** argv,
-                   struct cmdlineInfo *cmdlineP ) {
+parseCommandLine(int argc, char ** argv,
+                 struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
    and argv.  Return the information in the options as *cmdlineP.  
@@ -31,7 +31,7 @@ parseCommandLine ( int argc, char ** argv,
    Note that the strings we return are stored in the storage that
    was passed to us as the argv array.  We also trash *argv.
 -----------------------------------------------------------------------------*/
-    optEntry *option_def = malloc(100*sizeof(optEntry));
+    optEntry * option_def;
         /* Instructions to optParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
@@ -39,6 +39,8 @@ parseCommandLine ( int argc, char ** argv,
     unsigned int option_def_index;
 
     unsigned int transparentSpec;
+
+    MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
     OPTENT3(0, "verbose",     OPT_FLAG,   NULL,                  
@@ -58,9 +60,9 @@ parseCommandLine ( int argc, char ** argv,
         cmdlineP->transparent = NULL;
 
     if (argc-1 < 1)
-        cmdlineP->inputFilespec = "-";
+        cmdlineP->inputFileName = "-";
     else if (argc-1 == 1)
-        cmdlineP->inputFilespec = argv[1];
+        cmdlineP->inputFileName = argv[1];
     else
         pm_error("Too many arguments.  Program takes at most one argument: "
                  "input file name");
@@ -135,31 +137,30 @@ findSameColorRectangle(struct pam *   const pamP,
     mx=0; my=0;
     cnx = pamP->width - col; cny = pamP->height - row;
 
-    for (i=0; (!mx)||(!my); i++) {
+    for (i = 0; !mx || !my; ++i) {
         int j;
-        /*fprintf(stderr,"\n[%d]",i);*/
-        for (j=0; j<=i; j++) {
+        for (j = 0; j <= i; ++j) {
             if (!my) {
-                if (i>=cny) 
-                    my=cny;
-                else
-                    if (((!mx) || (j<mx)) && (j < cnx)) {
-                        /*fprintf(stderr,"%d/%d ",j,i);*/
+                if (i >= cny) 
+                    my = cny;
+                else {
+                    if ((!mx || j < mx) && (j < cnx)) {
                         if (!pnm_tupleequal(pamP, tuples[row+i][col+j],
                                             rectangleColor)) 
                             my = i;
                     }
+                }
             }
             if (!mx) {
-                if (i>=cnx) 
-                    mx=cnx;
-                else
-                    if (((!my) || (j<my)) && (j < cny)) {
-                        /*fprintf(stderr,"%d/%d ",i,j);*/
+                if (i >= cnx) 
+                    mx = cnx;
+                else {
+                    if ((!my || (j < my)) && (j < cny)) {
                         if (!pnm_tupleequal(pamP, tuples[row+j][col+i],
                                             rectangleColor)) 
                             mx = i;
                     }
+                }
             }
         }
     }
@@ -170,7 +171,8 @@ findSameColorRectangle(struct pam *   const pamP,
 
 
 static bool **
-allocOutputtedArray(unsigned int const width, unsigned int const height) {
+allocOutputtedArray(unsigned int const width,
+                    unsigned int const height) {
 
     bool ** outputted;
     unsigned int row;
@@ -190,7 +192,8 @@ allocOutputtedArray(unsigned int const width, unsigned int const height) {
 
 
 static void
-freeOutputtedArray(bool ** const outputted, unsigned int const height) {
+freeOutputtedArray(bool **       const outputted,
+                   unsigned int const height) {
 
     unsigned int row;
 
@@ -200,13 +203,40 @@ freeOutputtedArray(bool ** const outputted, unsigned int const height) {
 
 
 
+                       
 static void
-markOutputted(bool ** const outputted,
+markNotOutputted(bool **      const outputted,
+                 unsigned int const upperLeftCol,
+                 unsigned int const upperLeftRow,
+                 unsigned int const width,
+                 unsigned int const height) {
+/*----------------------------------------------------------------------------
+   Mark every pixel in the specified rectangle as not having been output
+   yet.
+-----------------------------------------------------------------------------*/
+    unsigned int const lowerRightCol = upperLeftCol + width;
+    unsigned int const lowerRightRow = upperLeftRow + height;
+    unsigned int row;
+    
+    for (row = upperLeftRow; row < lowerRightRow; ++row) {
+        unsigned int col;
+        for (col = upperLeftCol; col < lowerRightCol; ++col) 
+            outputted[row][col] = FALSE;
+    }
+}
+
+
+
+static void
+markOutputted(bool **      const outputted,
               unsigned int const upperLeftCol,
               unsigned int const upperLeftRow,
               unsigned int const width,
               unsigned int const height) {
-
+/*----------------------------------------------------------------------------
+   Mark every pixel in the specified rectangle as having been output
+   already.
+-----------------------------------------------------------------------------*/
     unsigned int const lowerRightCol = upperLeftCol + width;
     unsigned int const lowerRightRow = upperLeftRow + height;
     unsigned int row;
@@ -226,16 +256,19 @@ main(int argc, char **argv) {
     FILE * ifP;
     struct pam inpam;
     tuple ** tuples;
-    int row;
+    unsigned int row;
     unsigned int rectWidth, rectHeight;
     bool ** outputted;
+        /* Two dimensional array.  outputted[ROW][COL] means the pixel
+           at row ROW, column COL has already been outputted.
+        */
     tuple transparentColor;
 
     pnm_init(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
-    ifP = pm_openr(cmdline.inputFilespec);
+    ifP = pm_openr(cmdline.inputFileName);
 
     tuples = pnm_readpam(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
 
@@ -253,8 +286,12 @@ main(int argc, char **argv) {
 
     printf("<TABLE WIDTH=%d HEIGHT=%d BORDER=0 CELLSPACING=0 CELLPADDING=0>\n",
            inpam.width, inpam.height);
+
+    markNotOutputted(outputted, 0, 0, inpam.width, inpam.height);
+        /* No pixel has been outputted yet */
+
     for (row = 0; row < inpam.height; ++row) {
-        int col;
+        unsigned int col;
         printf("<TR>\n");
         pripix(&inpam, tuples[row][0], 1, 1, transparentColor); 
         markOutputted(outputted, 0, row, 1, 1);
@@ -264,7 +301,7 @@ main(int argc, char **argv) {
                 findSameColorRectangle(&inpam, tuples, row, col, 
                                        &rectWidth, &rectHeight);
                 if (cmdline.verbose)
-                    pm_message("[%d/%d] [%d/%d]",
+                    pm_message("[%u/%u] [%u/%u]",
                                col, row, rectWidth, rectHeight);
                 pripix(&inpam, tuples[row][col], rectWidth, rectHeight, 
                        transparentColor);
@@ -280,5 +317,5 @@ main(int argc, char **argv) {
     pnm_freepamarray(tuples, &inpam);
     freeOutputtedArray(outputted, inpam.height);
 
-    exit(0);
+    return 0;
 }
