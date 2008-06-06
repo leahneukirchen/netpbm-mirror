@@ -16,6 +16,8 @@ not yet  BJH  Release 10.43.00
 
               pamscale: fix PBM input + -nomix.
 
+              anytopnm: fix parsing of type description.
+
               pamtilt: fix crash with excessive angle.
 
               pbmtext: remove meaningless "no output" from error messages.
@@ -27,6 +29,11 @@ not yet  BJH  Release 10.43.00
               pnmnorm: fix -colorvalue, -saturation, -keephues options.
 
               pnmnorm: fix resolution of conflicting -wpercent and -wvalue.
+
+              pamtohtmltbl: fix output error: contains holes due to
+              uninitialized memory.
+
+              xvminitoppm: fix.  Totally broken since 10.34.
 
               pbmtogo: fix buffer overrun with too wide image.
 
