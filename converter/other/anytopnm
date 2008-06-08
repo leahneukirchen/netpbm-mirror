@@ -531,7 +531,7 @@ putInputIntoTempfile "$inputFile" "$file"
 
 setMimeType "$file"
 
-typeDescription=`file "$file" | cut -d: -f2- | cut -c2`
+typeDescription=`file "$file" | cut -d: -f2- | cut -c2-`
 
 determineType "$file" "$mimeType" "$typeDescription" "$fileExtension"
 

@@ -88,6 +88,11 @@ main( argc, argv )
       ifp = stdin;
 
     pbm_readpbminit(ifp, &cols, &rows, &format);
+
+    if (cols > 1056)
+        pm_error("Image is wider (%u pixels) than a Graphon terminal "
+                 "(%u pixels)", cols, 1056);
+
     bitrow = pbm_allocrow(cols);
 
     /* Round cols up to the nearest multiple of 8. */
