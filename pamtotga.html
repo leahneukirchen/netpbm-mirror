@@ -7,22 +7,25 @@ Updated: 21 July 2002
 
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
 pamtotga - convert a Netpbm image to a TrueVision Targa file
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>pamtotga</B>
 [<B>-mono|-cmap|-rgb</B>]
 [<B>-norle</B>]
 [<I>pamfile</I>]
 
+<P>All options can be abbreviated to their shortest unique prefix.  You
+may use two hyphens instead of one to designate an option.  You may
+use either white space or equals signs between an option name and its
+value.
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<DL COMPACT>
+
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -44,13 +47,7 @@ instead of 24 and the raster has an extra byte added to each pixel, at
 the tail end.  The value of that byte has the same meaning as in a PAM
 image with maxval 255.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
-
-<P>All options can be abbreviated to their shortest unique prefix.  You
-may use two hyphens instead of one to designate an option.  You may
-use either white space or equals signs between an option name and its
-value.
+<H2 id="options">OPTIONS</H2>
 
 <DL COMPACT>
 <DT><B>-cmap</B>
@@ -81,8 +78,7 @@ read run-length encoded files.
 
 </DL>
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <A HREF="tgatoppm.html">tgatoppm</A>,
 <A HREF="pnmquant.html">pnmquant</a>,
@@ -90,8 +86,7 @@ read run-length encoded files.
 <A HREF="pam.html">pam</A>
 <A HREF="pnm.html">pnm</A>
 
-<A NAME="history"></A>
-<H2>HISTORY</H2>
+<H2 id="history">HISTORY</H2>
 
 <p>This program was called <b>ppmtotga</b> until Netpbm 10.6 (July 2002).
 That was always a misnomer, though, because a PPM class program would not be
@@ -107,21 +102,18 @@ added to the PAM specification, it was specified with tuple type
 &quot;RGB_ALPHA&quot;.  So in Netpbm 10-26 (January 2005), <b>pamtotga</b>
 changed to recognize &quot;RGB_ALPHA&quot; instead of &quot;RGBA&quot;.
 
-<A NAME="lbAH">&nbsp;</A>
-<H2>AUTHOR</H2>
+<H2 id="author">AUTHOR</H2>
 
 Copyright (C) 1989, 1991 by Mark Shand and Jef Poskanzer.
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAG">SEE ALSO</A>
-<LI><A HREF="#lbAH">AUTHOR</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
 </UL>
 </BODY>
 </HTML>

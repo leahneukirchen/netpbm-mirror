@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Tifftopnm User Manual</TITLE></HEAD>
 <BODY>
 <H1>tifftopnm</H1>
-Updated: 08 January 2008
+Updated: 02 June 2008
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -39,6 +39,18 @@ which type it is writing.
 output stream.  Before Netpbm 10.27 (March 2005), however, it would
 just ignore all but the first input image.
 
+<P>The <I>tiff-filename</I> argument names the regular file that
+contains the Tiff image.  If you specify &quot;-&quot; or don't
+specify this argument, <B>tfftopnm</B> uses Standard Input. In either
+case, the file must be seekable.  That means no pipe, but any regular
+file is fine.
+
+<h3 id="library">TIFF Capability</h3>
+
+<p><b>pamtotiff</b> uses the Libtiff.org TIFF library (or whatever
+equivalent you provide) to interpret the TIFF input.  So the set of files
+it is able to interpret is determined mostly by that library.
+
 <P>This program cannot read every possible TIFF file -- there are
 myriad variations of the TIFF format.  However, it does understand
 monochrome and gray scale, RGB, RGBA (red/green/blue with alpha
@@ -69,6 +81,8 @@ other kinds of TIFF files even when they don't fit in memory all at
 once.  The existing limitations are mainly because no one has asked
 for more.
 
+<h3 id="output">Output Image</h3>
+
 <P>The PNM output has the same maxval as the Tiff input, except that
 if the Tiff input is colormapped (which implies a maxval of 65535) the
 PNM output has a maxval of 255.  Though this may result in lost
@@ -84,13 +98,6 @@ matching output maxval.
 which is the maximum allowed by the Netpbm formats.  In that case,
 <b>tifftopnm</b> uses a maxval of 65535, and you lose some information
 in the conversion.
-
-<P>The <I>tiff-filename</I> argument names the regular file that
-contains the Tiff image.  If you specify &quot;-&quot; or don't
-specify this argument, <B>tfftopnm</B> uses Standard Input. In either
-case, the file must be seekable.  That means no pipe, but any regular
-file is fine.
-
 
 
 <H2 id="options">OPTIONS</H2>
@@ -312,6 +319,10 @@ HREF="mailto:naughton@wind.sun.com">naughton@wind.sun.com</A>).
 <UL>
   <LI><A HREF="#synopsis">SYNOPSIS</A>
   <LI><A HREF="#description">DESCRIPTION</A>
+  <ul>
+    <LI><A HREF="#library">Tiff Capability</A>
+    <LI><A HREF="#output">Output Image</A>
+    </ul>
   <LI><A HREF="#options">OPTIONS</A>
   <LI><A HREF="#notes">NOTES</A>
     <UL>

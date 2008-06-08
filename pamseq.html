@@ -11,13 +11,19 @@ Updated: 8 May 2002
 
 pamseq - generate PAM image of all possible tuple values, in sequence
 
-<A NAME="lbAC">&nbsp;</A>
 <H2>SYNOPSIS</H2>
 
-<B>pamseq</B> [<B>-tupletype</B> <I>tupletype</I>] <I>depth</I> <I>maxval</I>
+<B>pamseq</B>
+[<B>-tupletype=</B><I>tupletype</I>]
+<I>depth</I>
+<I>maxval</I>
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<P>All options can be abbreviated to their shortest unique prefix.  You
+may use two hyphens instead of one to designate an option.  You may
+use either white space or an equals sign between an option name and its
+value.
+
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -31,13 +37,7 @@ left to right.  For higher depths, the highest numbered plane goes from
 Then the sequence repeats except with the next highest plane set to a value
 of 1, then 2, etc.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
-
-<P>All options can be abbreviated to their shortest unique prefix.  You
-may use two hyphens instead of one to designate an option.  You may
-use either white space or an equals sign between an option name and its
-value.
+<H2 id="options">OPTIONS</H2>
 
 <DL COMPACT>
 <DT><B>-tupletype</B>
@@ -47,8 +47,7 @@ It can be any string up to 255 characters.
 </DL>
 
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>USAGE</H2>
+<H2 id="usage">USAGE</H2>
 
 <p>To create a simple ramp of the values 0..255, for input to various matrix
 calculations, try
@@ -78,27 +77,23 @@ of the set of "web safe" colors as defined by Netscape.  Most web
 browsers guarantee that they can produce at least these 216 colors
 (215 plus black).
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="pnmremap.html">pnmremap</A></B>,
 <B><A HREF="pamtopnm.html">pamtopnm</A></B>,
 <B><A HREF="pam.html">pam</A></B>
 
-<A NAME="history">&nbsp;</A>
-<H2>HISTORY</H2>
+<H2 id="history">HISTORY</H2>
 <b>pamseq</b> was added to Netpbm in June 2002.
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">USAGE</A>
-<LI><A HREF="#lbAG">SEE ALSO</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#usage">USAGE</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
 <LI><A HREF="#history">HISTORY</A>
 </UL>
 </BODY>

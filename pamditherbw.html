@@ -28,6 +28,8 @@ pamditherbw - dither grayscale image to black and white
 
 [<I>pamfile</I>]
 
+<P>All options can be abbreviated to their shortest unique prefix.
+
 <H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
@@ -109,8 +111,6 @@ postscript file.  A printing pipeline might look something like:
     pamscale -xysize 2400 3000 image.pgm | pamditherbw -hilbert |  \
       pamtopnm | pnmtops -scale 0.25 &gt; image.ps 
 </pre>
-
-<P>All options can be abbreviated to their shortest unique prefix.
 
 <H2 id="references">REFERENCES</H2>
 

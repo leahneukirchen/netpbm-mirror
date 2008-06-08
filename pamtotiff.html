@@ -6,13 +6,10 @@ Updated: 27 March 2005
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
-
 pamtotiff - convert a Netpbm image to a TIFF file
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>pamtotiff</B>
 
@@ -58,8 +55,7 @@ pamtotiff - convert a Netpbm image to a TIFF file
 can use two hyphens instead of one.  You can separate an option name
 from its value with white space instead of an equals sign.
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -71,7 +67,7 @@ TIFF streams (i.e. a TIFF stream with multiple
 &quot;directories&quot;).  But before Netpbm 10.27 (March 2005), it
 ignored all but the first Netpbm image in the input stream.
 
-<h3>The Output File</h3>
+<h3 id="output">The Output File</h3>
 
 <P>The output goes to Standard Output.  <b>pamtotiff</b> approaches
 this output file differently from Unix and Netpbm convention.  This is
@@ -115,10 +111,15 @@ In Bash, you would set up a read/write Standard Output to the file
 </tt>
 </pre>
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<h3 id="library">TIFF Capability</h3>
 
-<h3>Compression</h3>
+<p><b>pamtotiff</b> uses the Libtiff.org TIFF library (or whatever
+equivalent you provide) to generate the TIFF output.  Details of the
+format it produces are therefore controlled by that library.
+
+<H2 id="options">OPTIONS</H2>
+
+<h3 id="compression">Compression</h3>
 
 <P>By default, <B>pamtotiff</B> creates a TIFF file with no
 compression.  This is your best bet most of the time.  If you want to
@@ -162,7 +163,7 @@ patent-free compression common in the Unix world implemented by the
 &quot;Z&quot; library.  It is what the PNG format uses.
 
 
-<h3>Fill Order</h3>
+<h3 id="fillorder">Fill Order</h3>
 <p>The <b>-msb2lsb</b> and <b>lsb2msb</b> options control the fill order.
 
 <P>The fill order is the order in which pixels are packed into a byte in
@@ -181,7 +182,7 @@ effect other than to set the value of the FILLORDER tag in the Tiff
 image (which may be useful for those programs that misinterpret the
 tag with reference to 16 bit samples).
 
-<h3>Color Space</h3>
+<h3 id="colorspace">Color Space</h3>
 
 <P><B>-color</B> tells <B>pamtotiff</B> to produce a color, as
 opposed to grayscale, TIFF image if the input is PPM, even if it
@@ -249,7 +250,7 @@ standards that allow any other values.
 <P>This option was added in June 2002.  Before that, only 8 bit indices were
 possible.
 
-<h3>Extra Tags</h3>
+<h3 id="extratags">Extra Tags</h3>
 
 <p>There are lots of tag types in the TIFF format that don't correspond to
 any information in the PNM format or to anything in the conversion process.
@@ -310,7 +311,7 @@ an IMAGEWIDTH tag that gives the actual width of the image.
 
 <p><b>-tag</b> was new in Netpbm 10.31 (December 2005).
 
-<h3>Other</h3>
+<h3 id="other">Other</h3>
 
 <P>You can use the <B>-rowsperstrip</B> option to set the number of
 rows (scanlines) in each strip of data in the output file.  By
@@ -324,8 +325,7 @@ instead of the default, which is to replace the output file.
 <p><b>-append</b> was new in Netpbm 10.27 (March 2005).
 
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>NOTES</H2>
+<H2 id="notes">NOTES</H2>
 
 <P>There are myriad variations of the TIFF format, and this program
 generates only a few of them.  <B>pamtotiff</B> creates a grayscale
@@ -469,8 +469,7 @@ exist and the resolution unit was always inches.
 PAM input.  It was extended and renamed in Netpbm 10.30 (October 2005).
 
 
-<A NAME="lbAH">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="tifftopnm.html">tifftopnm</A></B>,
 
@@ -482,29 +481,37 @@ PAM input.  It was extended and renamed in Netpbm 10.30 (October 2005).
 
 <B><A HREF="pam.html">pam</A></B>
 
-<A NAME="lbAI">&nbsp;</A>
-<H2>AUTHOR</H2>
+<H2 id="author">AUTHOR</H2>
 
 Derived by Jef Poskanzer from ras2tiff.c, which is
 Copyright (c) 1990 by Sun Microsystems, Inc.
 Author: Patrick J. Naughton (<A HREF="mailto:naughton@wind.sun.com">naughton@wind.sun.com</A>).
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">NOTES</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+  <ul>
+  <li><a href="#outputfile">The Output File</a>
+  <li><a href="#library">TIFF Capability</a>
+  </ul>
+<LI><A HREF="#options">OPTIONS</A>
+  <ul>
+  <li><a href="#compression">Compression</a>
+  <li><a href="#fillorder">Fill Order</a>
+  <li><a href="#colorspacer">Color Space</a>
+  <li><a href="#extratags">Extra Tags</a>
+  <li><a href="#other">Other</a>
+  </ul>
+<LI><A HREF="#notes">NOTES</A>
 <UL>
 <LI><A HREF="#multipass">Multiple Passes</A>
 <LI><A HREF="#extrachannel">Extra Channels</A>
 </UL>
 <LI><A HREF="#history">HISTORY</A>
-<LI><A HREF="#lbAH">SEE ALSO</A>
-<LI><A HREF="#lbAI">AUTHOR</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
 </UL>
 </BODY>
 </HTML>

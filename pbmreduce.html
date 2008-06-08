@@ -6,21 +6,20 @@ Updated: 02 August 1989
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
 pbmreduce - read a PBM image and reduce it N times
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>pbmreduce</B>
 [<B>-floyd</B>|<B>-fs</B>|<B>-threshold</B>]
 [<B>-value</B> <I>val</I>] <I>N</I>
 [<I>pbmfile</I>]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<P>You can abbreviate any option to its shortest unique prefix.
+
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -39,10 +38,7 @@ scan at the highest possible resolution, say 300 dpi, and then reduce
 by a factor of three or so using <b>pbmreduce</b>.  You can even
 correct the brightness of an image, by using the <B>-value</B> option.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
-
-<P>You can abbreviate any option to its shortest unique prefix.
+<H2 id="options">OPTIONS</H2>
 
 <P>By default, <b>pbmreduce</b> does the halftoning after the
 reduction via boustrophedonic Floyd-Steinberg error diffusion;
@@ -53,29 +49,25 @@ thresholding.  This gives better results when reducing line drawings.
 quantizations.  It should be a real number between 0 and 1.  Above 0.5
 means darker images; below 0.5 means lighter.
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <A HREF="pamenlarge.html">pamenlarge</A>,
 <A HREF="pamscale.html">pamscale</A>,
 <A HREF="pamditherbw.html">pamditherbw</A>,
 <A HREF="pbm.html">pbm</A>
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>AUTHOR</H2>
+<H2 id="author">AUTHOR</H2>
 
 Copyright (C) 1988 by Jef Poskanzer.
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">SEE ALSO</A>
-<LI><A HREF="#lbAG">AUTHOR</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
 </UL>
 </BODY>
 </HTML>
