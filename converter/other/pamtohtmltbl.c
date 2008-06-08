@@ -180,9 +180,15 @@ allocOutputtedArray(unsigned int const width, unsigned int const height) {
         pm_error("Unable to allocate space for 'outputted' array");
 
     for (row = 0; row < height; ++row) {
+        unsigned int col;
+
         MALLOCARRAY(outputted[row], width);
         if (outputted[row] == NULL)
             pm_error("Unable to allocate space for 'outputted' array");
+
+        for (col = 0; col < width ; ++col)
+          outputted[row][col] = FALSE;
+
     }
     return outputted;
 }

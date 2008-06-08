@@ -127,6 +127,9 @@ readXvHeader(FILE *         const ifP,
                  "It does not consist of 3 decimal numbers.", buf);
     if (maxval != 255)
         pm_error("bogus XV thumbnail maxval %u.  Should be 255", maxval);
+    *colsP = cols;
+    *rowsP = rows;
+    *maxvalP = maxval;
 }
 
 
@@ -160,7 +163,7 @@ writePpm(FILE *             const ifP,
                 pm_error("unexpected EOF");
             else {
                 unsigned int const paletteIndex = byte;
-                assert(byte > 0);
+                assert(byte >= 0);
                 
                 PPM_ASSIGN(pixrow[col],
                            xvPaletteP->red[paletteIndex],

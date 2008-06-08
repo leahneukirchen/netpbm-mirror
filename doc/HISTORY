@@ -4,6 +4,19 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+08.06.08 BJH  Release 10.35.45
+
+              anytopnm: fix parsing of type description.
+
+              pamtohtmltbl: fix output error: contains holes due to
+              uninitialized memory.
+
+              xvminitoppm: fix.  Totally broken since 10.34.
+
+              pbmtogo: fix buffer overrun on too wide image.
+
+              tgatoppm: fix standard input invocation.
+
 08.05.24 BJH  Release 10.35.44
 
               pamscale: fix PBM input + -nomix.
