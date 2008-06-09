@@ -461,7 +461,8 @@ computeTgaHeader(struct pam *          const pamP,
 static void
 releaseTgaHeader(struct ImageHeader const tgaHeader) {
 
-    strfree(tgaHeader.Id);
+    if (tgaHeader.IdLength > 0)
+        strfree(tgaHeader.Id);
 }
 
 
