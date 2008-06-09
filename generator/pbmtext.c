@@ -836,8 +836,9 @@ main(int argc, char *argv[]) {
     insert_characters(bits, formattedText, fontP, vmargin, hmargin + maxleftb, 
                       cmdline.space, cmdline.lspace);
 
-    /* All done. */
     pbm_writepbm(stdout, bits, cols, rows, 0);
+
+    pbm_freearray(bits, rows);
 
     freeTextArray(formattedText);
     pm_close(stdout);
