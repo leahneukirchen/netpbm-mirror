@@ -39,6 +39,10 @@ not yet  BJH  Release 10.43.00
 
               tgatoppm: fix standard input invocation.
 
+              pamtotga: fix free of unallocated memory with no -name option.
+
+              pamtouil: fix double free of memory.
+
               ppmd_filledrectangle: fail properly on negative image
               height, width.
 
