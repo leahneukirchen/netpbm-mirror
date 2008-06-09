@@ -176,8 +176,9 @@ parseCommandLine(int argc, char ** argv,
     if (argc-1 < 1) {
         MALLOCVAR(cmdlineP->sourceP);
         cmdlineP->sourceP->name = "-";
+        cmdlineP->sourceP->next = NULL;
     } else {
-        int i;
+        unsigned int i;
         InputSource ** nextLinkP;
 
         nextLinkP = &cmdlineP->sourceP;
