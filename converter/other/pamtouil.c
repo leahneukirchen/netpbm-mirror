@@ -380,7 +380,7 @@ freeCmap(cixel_map cmap[], unsigned int const ncolors) {
         if (cmapEntry.uilname)
             freeString(cmapEntry.uilname);
         if (cmapEntry.rgbname)
-            freeString(cmapEntry.uilname);
+            freeString(cmapEntry.rgbname);
     }
 }
 
