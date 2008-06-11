@@ -26,6 +26,8 @@ not yet  BJH  Release 10.43.00
 
               pbmtext: fail properly if input contains no text.
 
+              pbmtext: fix buffer overrun with tab characters.
+
               pnmnorm: fix -colorvalue, -saturation, -keephues options.
 
               pnmnorm: fix resolution of conflicting -wpercent and -wvalue.
@@ -34,6 +36,8 @@ not yet  BJH  Release 10.43.00
               uninitialized memory.
 
               xvminitoppm: fix.  Totally broken since 10.34.
+
+              pnmtopclxl: fix crash with Standard Input input.
 
               pbmtogo: fix buffer overrun with too wide image.
 

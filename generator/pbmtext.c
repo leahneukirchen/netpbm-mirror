@@ -15,11 +15,12 @@
 
 #include <string.h>
 #include <limits.h>
+#include <assert.h>
 
+#include "mallocvar.h"
+#include "shhopt.h"
 #include "pbm.h"
 #include "pbmfont.h"
-#include "shhopt.h"
-#include "mallocvar.h"
 
 struct cmdlineInfo {
     /* All the information the user supplied in the command line,
@@ -164,6 +165,7 @@ struct text {
 };
 
 
+
 static void
 allocTextArray(struct text * const textP,
                unsigned int  const maxLineCount,
@@ -182,6 +184,7 @@ allocTextArray(struct text * const textP,
 }
 
 
+
 static void
 freeTextArray(struct text const text) {
 
@@ -196,10 +199,12 @@ freeTextArray(struct text const text) {
 
 
 static void
-fixControlChars(char *        const buf,
-                struct font * const fontP) {
+fixControlChars(const char *  const input,
+                struct font * const fontP,
+                const char ** const outputP) {
 /*----------------------------------------------------------------------------
-   Make buf[] something that can be rendered as glyphs in the font 'fontP'.
+   Return a translation of input[] that can be rendered as glyphs in
+   the font 'fontP'.  Return it as newly malloced *outputP.
 
    Expand tabs to spaces.
 
@@ -209,29 +214,57 @@ fixControlChars(char *        const buf,
    Turn anything that isn't a code point in the font to a single space
    (which isn't guaranteed to be in the font either, of course).
 -----------------------------------------------------------------------------*/
-    unsigned int i;
+    /* We don't know in advance how big the output will be because of the
+       tab expansions.  So we make sure before processing each input
+       character that there is space in the output buffer for a worst
+       case tab expansion, plus a terminating NUL, reallocating as
+       necessary.  And we originally allocate enough for the entire line
+       assuming no tabs.
+    */
 
-    /* chop off terminating newline */
-    if (strlen(buf) >= 1 && buf[strlen(buf)-1] == '\n')
-        buf[strlen(buf)-1] = '\0';
-    
-    for (i = 0; buf[i] != '\0'; ++i) {
-        if (buf[i] == '\t') { 
-            /* Turn tabs into the right number of spaces. */
-            unsigned int const nextTabStop = (i + 8) / 8 * 8;
-            unsigned int const nSpaceToInsert = nextTabStop - i;
-            int j;
-            /* Move text right to make room for spaces */
-            for (j = strlen(buf); j > i; --j )
-                buf[j + nSpaceToInsert - 1] = buf[j];
-            /* insert the spaces */
-            for ( ; i < nextTabStop; ++i )
-                buf[i] = ' ';
-            --i;
-        } else if (!fontP->glyph[(unsigned char)buf[i]] )
-            /* Turn unknown chars into a single space. */
-            buf[i] = ' ';
+    unsigned int const tabSize = 8;
+
+    unsigned int inCursor, outCursor;
+    char * output;      /* Output buffer.  Malloced */
+    size_t outputSize;  /* Currently allocated size of 'output' */
+
+    outputSize = strlen(input) + 1 + tabSize;
+        /* Leave room for one worst case tab expansion and NUL terminator */
+    MALLOCARRAY(output, outputSize);
+
+    if (output == NULL)
+        pm_error("Couldn't allocate %u bytes for a line of text.", outputSize);
+
+    for (inCursor = 0, outCursor = 0; input[inCursor] != '\0'; ++inCursor) {
+        if (outCursor + 1 + tabSize > outputSize) {
+            outputSize = outCursor + 1 + 4 * tabSize;
+            REALLOCARRAY(output, outputSize);
+            if (output == NULL)
+                pm_error("Couldn't allocate %u bytes for a line of text.",
+                         outputSize);
+        }
+        if (input[inCursor] == '\n' && input[inCursor+1] == '\0') {
+            /* This is a terminating newline.  We don't do those. */
+        } else if (input[inCursor] == '\t') { 
+            /* Expand this tab into the right number of spaces. */
+            unsigned int const nextTabStop =
+                (outCursor + tabSize) / tabSize * tabSize;
+
+            while (outCursor < nextTabStop)
+                output[outCursor++] = ' ';
+        } else if (!fontP->glyph[(unsigned char)input[inCursor]]) {
+            /* Turn this unknown char into a single space. */
+            output[outCursor++] = ' ';
+        } else
+            output[outCursor++] = input[inCursor];
+
+        assert(outCursor <= outputSize);
     }
+    output[outCursor++] = '\0';
+
+    assert(outCursor <= outputSize);
+
+    *outputP = output;
 }
 
 
@@ -650,10 +683,11 @@ getText(const char          cmdline_text[],
     struct text input_text;
 
     if (cmdline_text) {
-        allocTextArray(&input_text, 1, strlen(cmdline_text));
-        strcpy(input_text.textArray[0], cmdline_text);
-        fixControlChars(input_text.textArray[0], fontP);
+        MALLOCARRAY_NOFAIL(input_text.textArray, 1);
+        input_text.allocatedLineCount = 1;
         input_text.lineCount = 1;
+        fixControlChars(cmdline_text, fontP,
+                        (const char**)&input_text.textArray[0]);
     } else {
         /* Read text from stdin. */
 
@@ -673,15 +707,13 @@ getText(const char          cmdline_text[],
             if (strlen(buf) + 1 >= sizeof(buf))
                 pm_error("A line of input text is longer than %u characters."
                          "Cannot process.", sizeof(buf)-1);
-            fixControlChars(buf, fontP);
             if (lineCount >= maxlines) {
                 maxlines *= 2;
-                text_array = (char**) realloc((char*) text_array, 
-                                              maxlines * sizeof(char*));
+                REALLOCARRAY(text_array, maxlines);
                 if (text_array == NULL)
                     pm_error("out of memory");
             }
-            text_array[lineCount] = strdup(buf);
+            fixControlChars(buf, fontP, (const char **)&text_array[lineCount]);
             if (text_array[lineCount] == NULL)
                 pm_error("out of memory");
             ++lineCount;
