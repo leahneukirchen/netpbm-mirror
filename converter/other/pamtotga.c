@@ -270,7 +270,7 @@ computeRunlengths(struct pam * const pamP,
 
 static void
 computeOutName(struct cmdlineInfo const cmdline, 
-               const char ** const outNameP) {
+               const char **      const outNameP) {
     
     char * workarea;
 
