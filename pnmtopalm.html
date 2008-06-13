@@ -6,12 +6,10 @@ Updated: 05 October 2003
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 pnmtopalm - convert a PNM image to a Palm Bitmap
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>pnmtopalm</B>
 
@@ -38,8 +36,12 @@ pnmtopalm - convert a PNM image to a Palm Bitmap
 
 [<I>pnmfile</I>]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<P>Minimum unique abbreviation of option is acceptable.  You may use
+double hyphens instead of single hyphen to denote options.  You may use
+white space in place of the equals sign to separate an option name
+from its value.
+
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -101,13 +103,7 @@ later can read a Version 1 bitmap.  Palm OS 3.5 and later can read a
 Version 2 bitmap.  To read a Version 3 bitmap, you need Palm OS Garnet
 or a handheld running the High Density Display Feature Set.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
-
-<P>Minimum unique abbreviation of option is acceptable.  You may use
-double hyphens instead of single hyphen to denote options.  You may use
-white space in place of the equals sign to separate an option name
-from its value.
+<H2 id="options">OPTIONS</H2>
 
 <DL COMPACT>
 <DT><B>-verbose</B>
@@ -245,8 +241,7 @@ as density.
 </DL>
 
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="palmtopnm.html">palmtopnm</A></B>,
 <B><A HREF="pnmquant.html">pnmquant</A></B>,
@@ -261,8 +256,7 @@ href="http://www.access-company.com/developers/documents/docs/palmos/PalmOSCompa
 Companion</a>.
 
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>NOTES</H2>
+<H2 id="notes">NOTES</H2>
 
 <P>Palm Bitmaps may contains multiple renditions of the same bitmap,
 in different depths.  To construct an N-multiple-rendition Palm Bitmap
@@ -275,8 +269,7 @@ together in a single file using <B>cat</B>.
 put the high density images last and when you create the last of the
 low density images, use the <b>-withdummy</b> option.
 
-<A NAME="lbAH">&nbsp;</A>
-<H2>AUTHORS</H2>
+<H2 id="authors">AUTHORS</H2>
 
 This program was originally written as ppmtoTbmp.c, by Ian Goldberg
 and George Caswell.  It was completely re-written by Bill Janssen to
@@ -286,18 +279,16 @@ add color, compression, and transparency function.
 Copyright 1995-2001 by Ian Goldberg, George Caswell, and Bill Janssen.
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
 <LI><A HREF="#version">PALM BITMAP VERSION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">SEE ALSO</A>
-<LI><A HREF="#lbAG">NOTES</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#notes">NOTES</A>
 <LI><A HREF="#limitations">NOTES</A>
-<LI><A HREF="#lbAH">AUTHORS</A>
+<LI><A HREF="#authors">AUTHORS</A>
 </UL>
 </BODY>
 </HTML>

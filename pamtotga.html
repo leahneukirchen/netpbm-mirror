@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pamtotga User Manual</TITLE></HEAD>
 <BODY>
 <H1>pamtotga</H1>
-Updated: 21 July 2002
+Updated: 12 June 2008
 <BR>
 
 <A HREF="#index">Table Of Contents</A>
@@ -16,6 +16,7 @@ pamtotga - convert a Netpbm image to a TrueVision Targa file
 <B>pamtotga</B>
 [<B>-mono|-cmap|-rgb</B>]
 [<B>-norle</B>]
+[<b>-name=</b><i>name</i>
 [<I>pamfile</I>]
 
 <P>All options can be abbreviated to their shortest unique prefix.  You
@@ -75,6 +76,17 @@ Make output Targa file of type 24 bit unmapped color.  See <b>-cmap</b>.
 <DD>Do not use run-length encoding in the output Targa file.
 Run-length encoded files are smaller, but Some Targa readers can't
 read run-length encoded files.
+
+<dt><b>-name=</b><i>name</i>
+
+<dd>This is the value for the image ID stated in the header of the TGA
+output file.  <b>pamtotga</b> truncates it as necessary to meet TGA
+standards.
+
+<p>By default, <b>pamtotga</b> uses the input file name argument, up to
+the first period (or the whole thing if there is no period).  It truncates
+it as necessary to meet TGA standards.  If you specify (or default to)
+Standard Input, <b>pamtotga</b> omits the image ID from the TGA header.
 
 </DL>
 
