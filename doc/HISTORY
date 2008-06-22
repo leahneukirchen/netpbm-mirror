@@ -4,6 +4,16 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+08.06.22 BJH  Release 10.35.46
+
+              pbmtext: fix buffer overrun with tab characters.
+
+              pamtotga: fix free of unallocated memory with no -name option.
+
+              pamtouil: fix double free of memory.
+
+              pnmtopclxl: fix crash with Standard Input input.
+
 08.06.08 BJH  Release 10.35.45
 
               anytopnm: fix parsing of type description.

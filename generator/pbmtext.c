@@ -575,7 +575,7 @@ getText(const char          cmdline_text[],
     struct text input_text;
 
     if (cmdline_text) {
-        allocTextArray(&input_text, 1, strlen(cmdline_text));
+        allocTextArray(&input_text, 1, strlen(cmdline_text)*8);
         strcpy(input_text.textArray[0], cmdline_text);
         fix_control_chars(input_text.textArray[0], fn);
         input_text.lineCount = 1;
@@ -595,9 +595,9 @@ getText(const char          cmdline_text[],
         
         lineCount = 0;  /* initial value */
         while (fgets(buf, sizeof(buf), stdin) != NULL) {
-            if (strlen(buf) + 1 >= sizeof(buf))
+            if (strlen(buf)*8 + 1 >= sizeof(buf))
                 pm_error("A line of input text is longer than %u characters."
-                         "Cannot process.", sizeof(buf)-1);
+                         "Cannot process.", (sizeof(buf)-1)/8);
             fix_control_chars(buf, fn);
             if (lineCount >= maxlines) {
                 maxlines *= 2;
