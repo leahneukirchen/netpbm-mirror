@@ -4,57 +4,56 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-08.06.11 BJH  Release 10.42.06
+08.06.27 BJH  Release 10.43.00
+
+              Add pamtompfont: Mplayer bitmap font.
+
+              pamthreshold: copy transparency information from input to
+              output.
+
+              pnmnorm: adjust bvalue, wvalue when -bpercent and/or -wpercent
+              would cause an overlap, instead of failing.
+
+              pamscale: fix PBM input + -nomix.
+
+              anytopnm: fix parsing of type description.
+
+              pamtilt: fix crash with excessive angle.
+
+              pbmtext: remove meaningless "no output" from error messages.
+
+              pbm_loadbdffont(): handle zero size glyph.  Affects pbmtext.
+
+              pbmtext: fail properly if input contains no text.
 
               pbmtext: fix buffer overrun with tab characters.
 
-              pamtotga: fix free of unallocated memory with no -name option.
+              pnmnorm: fix -colorvalue, -saturation, -keephues options.
 
-              pamtouil: fix double free of memory.
-
-              pnmtopclxl: fix crash with Standard Input input.
-
-08.06.08 BJH  Release 10.42.05
-
-              anytopnm: fix parsing of type description.
+              pnmnorm: fix resolution of conflicting -wpercent and -wvalue.
 
               pamtohtmltbl: fix output error: contains holes due to
               uninitialized memory.
 
               xvminitoppm: fix.  Totally broken since 10.34.
 
-              pbmtogo: fix buffer overrun on too wide image.
+              pnmtopclxl: fix crash with Standard Input input.
+
+              pbmtogo: fix buffer overrun with too wide image.
 
               tgatoppm: fix standard input invocation.
 
-08.05.24 BJH  Release 10.42.04
+              pamtotga: fix free of unallocated memory with no -name option.
 
-              pamscale: fix PBM input + -nomix.
+              pamtouil: fix double free of memory.
 
-              pamtilt: fix crash with excessive angle.
-
-              ppmd_filledrectangle(): fix crash with rectangle that is
-              entirely left or right of the image.
+              ppmd_filledrectangle: fail properly on negative image
+              height, width.
 
               Add back ppmd_fill_init() for backward compatibility;
               removed in 10.29.
 
-08.05.10 BJH  Release 10.42.03
-
-              pbmtext: fail properly if input contains no text.
-
-              pbm_loadbdffont(): handle zero size glyph.  Affects pbmtext.
-
-08.04.09 BJH  Release 10.42.02
-
-              pnmnorm: fix resolution of conflicting -wpercent and -wvalue.
-
-              Build: make it work with Gcc 4.3 and -sse by omitting
-              MMX/SSE optimizations.
-
-08.03.26 BJH  Release 10.42.01
-
-              pnmnorm: fix -colorvalue, -saturation, -keephues options.
+              Build: make it work with Gcc 4.3 and -sse.
 
 08.03.26 BJH  Release 10.42.00
 

@@ -2049,6 +2049,9 @@ scaleWithoutMixing(const struct pam * const inpamP,
     int row;
     int rowInInput;
 
+    assert(outpamP->maxval == inpamP->maxval);
+    assert(outpamP->depth  == inpamP->depth);
+
     tuplerow = pnm_allocpamrow(inpamP); 
     rowInInput = -1;
 

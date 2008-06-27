@@ -116,7 +116,11 @@ packBitsWithMmxSse(FILE *          const fileP,
             ) ];
     */
 
+#if (__GNUC__ * 100 + __GNUC_MINOR__ >= 403)
+    typedef char v8qi __attribute__ ((vector_size(8)));
+#else
     typedef int v8qi __attribute__ ((mode(V8QI)));
+#endif
     typedef int di __attribute__ ((mode(DI)));
 
     di const zero64 = 0;        /* to clear with PXOR */

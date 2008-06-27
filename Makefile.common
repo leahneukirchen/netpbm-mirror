@@ -263,36 +263,41 @@ endif
 #   
 #   Notice that SGI and Sun support two such flavors.
 #
-#   Plus, Scott Schwartz observed on March 25, 2003 that while his
-#   compiler understands -Wl, his linker does not understand -rpath.
-#   His compiler is "Sun WorkShop 6 update 2 C 5.3 2001/05/15".
+# Plus, Scott Schwartz observed on March 25, 2003 that while his
+# compiler understands -Wl, his linker does not understand -rpath.
+# His compiler is "Sun WorkShop 6 update 2 C 5.3 2001/05/15".
 #
-#   Plus, Mike Saunders found in December 2003 that his Solaris 8 system
-#   (uname -a says 'SunOS cannonball.method.cx 5.8 Generic_108528-14 
-#   sun4u sparc SUNW,Ultra-1') with Gcc 2.95.3 requires the syntax
+# Plus, Mike Saunders found in December 2003 that his Solaris 8 system
+# (uname -a says 'SunOS cannonball.method.cx 5.8 Generic_108528-14 
+# sun4u sparc SUNW,Ultra-1') with Gcc 2.95.3 requires the syntax
 #
-#         -Wl,-R,/path/to/dir
-#   
-#   This is apparently because Gcc invokes this linker for Saunders:
+#       -Wl,-R,/path/to/dir
+# 
+# This is apparently because Gcc invokes this linker for Saunders:
 #
-#      ld: Software Generation Utilities - Solaris Link Editors: 5.8-1.273
+#    ld: Software Generation Utilities - Solaris Link Editors: 5.8-1.273
 #
-#   I'd say there are also Solaris systems where Gcc invokes the GNU linker
-#   and then the option would be -Wl,-rpath...
+# I'd say there are also Solaris systems where Gcc invokes the GNU linker
+# and then the option would be -Wl,-rpath...
 #
-#   On IA32 Linux, at least, GNU ld takes -rpath.  It also has a -R option,
-#   but it is something else.
+# The Sun Ld fails in a weird way when you pass it -rpath instead of -R:
 #
-#   Alan Fry and Snowcrash demonstrated in 2006.11 that neither -rpath
-#   nor -R are recognized options on Mac OS X 'ld'.
+#   ld: Software Generation Utilities - Solaris Link Editors: 5.9-1.382
+#   ld: fatal: option -dn and -P are incompatible
 #
-#   http://developer.apple.com/releasenotes/DeveloperTools/RN-dyld/index.html
-#   says that on Mac OS X, libraries aren't searched for in directories,
-#   but rather specified by full name, so that rpath doesn't make any
-#   sense.  On Mac OS X, you use -install_name when you linkedit shared
-#   library S to give the complete installed name of S.  This goes into
-#   S so that when something linkedits with S, the complete installed
-#   name of S goes into the object that uses S.
+# On IA32 Linux, at least, GNU ld takes -rpath.  It also has a -R option,
+# but it is something else.
+#
+# Alan Fry and Snowcrash demonstrated in 2006.11 that neither -rpath
+# nor -R are recognized options on Mac OS X 'ld'.
+#
+# http://developer.apple.com/releasenotes/DeveloperTools/RN-dyld/index.html
+# says that on Mac OS X, libraries aren't searched for in directories,
+# but rather specified by full name, so that rpath doesn't make any
+# sense.  On Mac OS X, you use -install_name when you linkedit shared
+# library S to give the complete installed name of S.  This goes into
+# S so that when something linkedits with S, the complete installed
+# name of S goes into the object that uses S.
 
 ifeq ($(NEED_RUNTIME_PATH),Y)
   ifneq ($(NETPBMLIB_RUNTIME_PATH)x,x)
