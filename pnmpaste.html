@@ -6,22 +6,22 @@ Updated: 21 February 1991
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
 pnmpaste - paste a rectangle into a PNM image
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>pnmpaste</B>
 
 [<B>-replace</B>|<B>-or</B>|<B>-and</B>|<B>-xor</B>]
 
-<I>frompnmfile x y</I> [<I>intopnmfile</I>]
+<I>frompnmfile</i> <i>x</i> <i>y</I>
+[<I>intopnmfile</I>]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<P>You can abbreviate all options to their shortest unique prefix.
+
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -57,18 +57,25 @@ need not be a rectangle.  You can also have the inserted image be
 translucent, so the resulting image is a mixture of the inserted image
 and the base image.
 
-<A NAME="options">&nbsp;</A>
-<H2>OPTIONS</H2>
+<H2 id="options">OPTIONS</H2>
 
-<P>The option specifies the operation to use when doing the
-paste.  The default is <B>-replace</B>.  The other logical operations
-are only allowed if both input images are PBM images.  These operations
-act as if white is TRUE and black is FALSE.
+<P>The option specifies the operation to use when doing the paste.
+The default is <B>-replace</B>, which means to do the obvious paste:
+replace pixels of the &quot;into&quot; image with those of the
+&quot;from&quot; image.
 
-<P>You can abbreviate all options to their shortest unique prefix.
+<p><b>-and</b>, <b>-or</b>, and <b>-xor</b> are allowed only if both
+input images are PBM images.  They say to combine the &quot;from&quot; and
+&quot;into&quot; images by performing boolean operations:  Each pixel of
+the output image is the result of the boolean operation on the corresponding
+pixels of the two input image, where white is TRUE and black is FALSE.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<p>Note that this is different from what you would get by doing a bit
+arithmetic on the bits in the PBM images, because in PBM, white is
+represented by a 0 bit, and 0 in bit arithmetic corresponds to FALSE
+in boolean arithmetic.
+
+<H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="pamcomp.html">pamcomp</A></B>,
 <B><A HREF="pamcut.html">pamcut</A></B>,
@@ -77,22 +84,19 @@ act as if white is TRUE and black is FALSE.
 <B><A HREF="pbmmask.html">pbmmask</A></B>,
 <B><A HREF="pnm.html">pnm</A></B>
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>AUTHOR</H2>
+<H2 id="author">AUTHOR</H2>
 
 Copyright (C) 1989, 1991 by Jef Poskanzer.
 
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
 <LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#lbAE">SEE ALSO</A>
-<LI><A HREF="#lbAF">AUTHOR</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
 </UL>
 </BODY>
 </HTML>
