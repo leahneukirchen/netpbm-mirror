@@ -61,9 +61,19 @@ pbm_allocrow(unsigned int const cols);
 bit** pbm_readpbm(FILE* file, int* colsP, int* rowsP);
 void pbm_readpbminit(FILE* file, int* colsP, int* rowsP, int* formatP);
 void pbm_readpbmrow(FILE* file, bit* bitrow, int cols, int format);
-void pbm_readpbmrow_packed(
-    FILE* const file, unsigned char * const packed_bits, 
-    const int cols, const int format);
+
+void
+pbm_readpbmrow_packed(FILE *          const file, 
+                      unsigned char * const packedBits,
+                      int             const cols, 
+                      int             const format);
+
+void
+pbm_readpbmrow_bitoffset(FILE *          const fileP,
+                         unsigned char * const packedBits, 
+                         int             const cols,
+                         int             const format,
+                         unsigned int    const offset);
 
 void
 pbm_writepbminit(FILE * const fileP, 
