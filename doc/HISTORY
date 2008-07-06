@@ -9,6 +9,8 @@ not yet  BJH  Release 10.44.00
               pnmpad: Add fast PBM path.  Thanks Prophet of the Way
               <afu@wta.att.ne.jp>.
 
+              Build: fix bug: pbmminkowski not getting built.
+
 08.06.27 BJH  Release 10.43.00
 
               Add pamtompfont: Mplayer bitmap font.
