@@ -6,10 +6,16 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.44.00
 
+              pnmpaste: Add fast PBM path.  Thanks Prophet of the Way
+              <afu@wta.att.ne.jp>.
+
+              pnmpaste: fail if user specified stdin for both images.
+
               pnmpad: Add fast PBM path.  Thanks Prophet of the Way
               <afu@wta.att.ne.jp>.
 
-              Build: fix bug: pbmminkowski not getting built.
+              Add pbmminkowski (source code has been in package since 10.12
+              but not documented or built by default).
 
 08.06.27 BJH  Release 10.43.00
 
