@@ -144,7 +144,7 @@ insertDirect(FILE *          const ifP,
    'cols' and 'format' describe the 'ifP' image.
 
    'buffer' is a scratch buffer for our use, at least wide enough to hold
-   a packed PBM row.
+   a packed PBM row of 'ifP'.
 -----------------------------------------------------------------------------*/
     unsigned int  const colBytes  = pbm_packed_bytes(cols);
     unsigned int  const last      = colBytes - 1;
@@ -190,6 +190,9 @@ insertShift(FILE *          const ifP,
 /*----------------------------------------------------------------------------
    Same as insertDirect(), but start merging 'offset' bits from the left
    end of 'destrow'.  'offset' is less than 8.
+
+   buffer[] is wide enough to hold a packed PBM row of *ifP plus one
+   byte of margin.
 -----------------------------------------------------------------------------*/
     unsigned int const shiftBytes = pbm_packed_bytes(cols + offset);
     unsigned int const last = shiftBytes - 1;
@@ -202,12 +205,14 @@ insertShift(FILE *          const ifP,
 
     assert(offset < 8);
 
-    pbm_readpbmrow_packed(ifP, buffer, cols, format);
+    pbm_readpbmrow_packed(ifP, &buffer[1], cols, format);
+
+    /* Note that buffer[0] is undefined. */
 
     for (i = 0; i < shiftBytes; ++i) {
         unsigned int  const rsh = offset;
         unsigned int  const lsh = 8-rsh;
-        unsigned char const t = buffer[i-1] << lsh | buffer[i] >> rsh;
+        unsigned char const t = buffer[i] << lsh | buffer[i+1] >> rsh;
 
         switch (operation) {
         case REPLACE: destrow[i] = t; break;
@@ -221,6 +226,11 @@ insertShift(FILE *          const ifP,
         */
         }
     }
+
+    /* destrow[] now contains garbage in the 'offset' leftmost bits
+       and 8-offset rightmost bits.  Those are supposed to be unchanged
+       from the input, so we restore them now.
+    */
 
     destrow[0] = leftBits(origLeft, offset) |
         rightBits(destrow[0], 8-offset);
@@ -248,8 +258,7 @@ pastePbm(FILE *       const fpInset,
   Fast paste for PBM
 -----------------------------------------------------------------------------*/
     unsigned char * const baserow = pbm_allocrow_packed(baseCols);
-    unsigned char * const buffer0 = pbm_allocrow_packed(insetCols+8);
-    unsigned char * const buffer = buffer0 + 1;
+    unsigned char * const buffer = pbm_allocrow_packed(insetCols+8);
     int const shiftBytes = insertCol / 8;
     unsigned int const shiftOffset = insertCol % 8;
     int const baseColBytes = pbm_packed_bytes(baseCols);
@@ -276,7 +285,7 @@ pastePbm(FILE *       const fpInset,
 
         pbm_writepbmrow_packed(stdout, baserow, baseCols, 0);
     }
-    pbm_freerow_packed(buffer0);
+    pbm_freerow_packed(buffer);
     pbm_freerow_packed(baserow);
 }
 
