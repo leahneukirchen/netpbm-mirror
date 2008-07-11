@@ -1032,7 +1032,7 @@ findRedundantBits(FILE *         const ifp,
 /*----------------------------------------------------------------------------
    Find out if we can use just a subset of the bits from each input
    sample.  Often, people create an image with e.g. 8 bit samples from
-   one that has e.g. only 4 bit samples by scaling by 256/16, which is
+   one that has e.g. only 4 bit samples by scaling by 255/15, which is
    the same as repeating the bits.  E.g.  1011 becomes 10111011.  We
    detect this case.  We return as *meaningfulBitsP the minimum number
    of bits, starting from the least significant end, that contain
@@ -2369,7 +2369,7 @@ convertpnm(struct cmdlineInfo const cmdline,
       */
   unsigned int fulldepth;
       /* The total number of bits per pixel in the (uncompressed) png
-         raster, including all channels 
+         raster, including all channels.
       */
   pm_filepos rasterPos;  
       /* file position in input image file of start of image (i.e. after
@@ -2442,8 +2442,8 @@ convertpnm(struct cmdlineInfo const cmdline,
          to ppm_parsecolor() because ppm_parsecolor() does a cheap maxval
          scaling, and this is more precise.
       */
-      PPM_DEPTH (transcolor, ppm_parsecolor(transstring2, maxmaxval),
-                 maxmaxval, maxval);
+      PPM_DEPTH(transcolor, ppm_parsecolor(transstring2, maxmaxval),
+                maxmaxval, maxval);
   }
   if (cmdline.alpha) {
     pixel alpha_transcolor;
