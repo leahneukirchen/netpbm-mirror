@@ -26,11 +26,12 @@
 #include <math.h>
 
 #include "pm_config.h"
-#include "pam.h"
-#include "pammap.h"
-#include "shhopt.h"
+#include "pm_c_util.h"
 #include "mallocvar.h"
 #include "nstring.h"
+#include "shhopt.h"
+#include "pam.h"
+#include "pammap.h"
 
 enum methodForLargest {LARGE_NORM, LARGE_LUM};
 
@@ -380,7 +381,7 @@ averageColors(int          const boxStart,
         for (i = 0; i < boxSize; ++i) 
             sum += colorfreqtable.table[boxStart+i]->tuple[plane];
 
-        newTuple[plane] = sum / boxSize;
+        newTuple[plane] = ROUNDDIV(sum, boxSize);
     }
 }
 
@@ -414,7 +415,7 @@ averagePixels(int          const boxStart,
             sum += colorfreqtable.table[boxStart+i]->tuple[plane]
                 * colorfreqtable.table[boxStart+i]->value;
 
-        newTuple[plane] = sum / n;
+        newTuple[plane] = ROUNDDIV(sum, n);
     }
 }
 

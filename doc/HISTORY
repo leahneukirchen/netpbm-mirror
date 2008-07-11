@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.44.00
 
+              pnmcolormap (pnmquant): round instead of truncating when
+              computing means.
+
               pnmpaste: Add fast PBM path.  Thanks Prophet of the Way
               <afu@wta.att.ne.jp>.
 
