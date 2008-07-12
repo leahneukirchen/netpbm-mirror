@@ -2014,7 +2014,7 @@ createPngPalette(pixel              palette_pnm[],
     for (i = 0; i < transSize; ++i) {
         unsigned int const newmv = PALETTEMAXVAL;
         unsigned int const oldmv = alpha_maxval;
-        trans[i] = (trans_pnm[i] * newmv + (oldmv/2)) / oldmv;
+        trans[i] = ROUNDDIV(trans_pnm[i] * newmv, oldmv);
     }
 }
 

@@ -508,7 +508,7 @@ sampleMean(sample       const operands[],
         if (UINT_MAX - operands[i] < sum)
             pm_error("Arithmetic overflow adding samples for mean");
     }
-    return (sum + operandCt/2) / operandCt;
+    return ROUNDDIV(sum, operandCt);
 }
 
 
@@ -656,7 +656,7 @@ applyUnNormalizedFunction(enum function const function,
         break;
     case FN_DIVIDE:
         result = (operands[1] > operands[0]) ?
-            (operands[0] * maxval + operands[1]/2) / operands[1] : maxval;
+            ROUNDDIV(operands[0] * maxval, operands[1]) : maxval;
         break;
 
     case FN_AND:

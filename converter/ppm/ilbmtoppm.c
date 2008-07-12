@@ -1252,7 +1252,7 @@ dcol_to_ppm(FILE *         const ifP,
     unsigned int const greenplanes = dcol->g;
     unsigned int const blueplanes  = dcol->b;
     
-    int col, row, i;
+    int col, row;
     rawtype *Rrow, *Grow, *Brow;
     pixval maxval, redmaxval, greenmaxval, bluemaxval;
     pixval *redtable, *greentable, *bluetable;
@@ -1298,13 +1298,15 @@ dcol_to_ppm(FILE *         const ifP,
     MALLOCARRAY_NOFAIL(greentable, greenmaxval +1);
     MALLOCARRAY_NOFAIL(bluetable,  bluemaxval  +1);
 
-    for( i = 0; i <= redmaxval; i++ )
-        redtable[i] = (i * maxval + redmaxval/2)/redmaxval;
-    for( i = 0; i <= greenmaxval; i++ )
-        greentable[i] = (i * maxval + greenmaxval/2)/greenmaxval;
-    for( i = 0; i <= bluemaxval; i++ )
-        bluetable[i] = (i * maxval + bluemaxval/2)/bluemaxval;
-
+    {
+        unsigned int i;
+        for (i = 0; i <= redmaxval; ++i)
+            redtable[i] = ROUNDDIV(i * maxval, redmaxval);
+        for (i = 0; i <= greenmaxval; ++i)
+            greentable[i] = ROUNDDIV(i * maxval, greenmaxval);
+        for (i = 0; i <= bluemaxval; ++i)
+            bluetable[i] = ROUNDDIV(i * maxval, bluemaxval);
+    }
     if( transpName ) {
         MALLOCVAR_NOFAIL(transpColor);
         *transpColor = ppm_parsecolor(transpName, maxval);

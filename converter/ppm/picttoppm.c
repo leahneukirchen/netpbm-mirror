@@ -1112,7 +1112,7 @@ static pixval
 redepth(pixval const c,
         pixval const oldMaxval) {
     
-    return (c * PPM_MAXMAXVAL + oldMaxval / 2) / oldMaxval;
+    return ROUNDDIV(c * PPM_MAXMAXVAL, oldMaxval);
 }
 
 
