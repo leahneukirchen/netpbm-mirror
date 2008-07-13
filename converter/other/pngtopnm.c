@@ -200,6 +200,14 @@ _get_png_val (png_byte ** const pp,
 
 
 
+static bool
+isGrayscale(pngcolor const color) {
+
+    return color.r == color.g && color.r == color.b;
+}
+
+
+
 static void 
 setXel(xel *               const xelP, 
        pngcolor            const foreground,
@@ -745,10 +753,12 @@ imageHasColor(png_info * const info_ptr) {
 static void
 determineOutputType(png_info *          const info_ptr,
                     enum alpha_handling const alphaHandling,
+                    pngcolor            const bgColor,
                     xelval              const maxval,
                     int *               const pnmTypeP) {
 
-    if (alphaHandling != ALPHA_ONLY && imageHasColor(info_ptr))
+    if (alphaHandling != ALPHA_ONLY &&
+        (imageHasColor(info_ptr) || !isGrayscale(bgColor)))
         *pnmTypeP = PPM_TYPE;
     else {
         if (maxval > 1)
@@ -778,19 +788,11 @@ getBackgroundColor(png_info *        const info_ptr,
            which is a bit arbitrary.  
         */
         pixel const backcolor = ppm_parsecolor(requestedColor, maxval);
-        switch (info_ptr->color_type) {
-        case PNG_COLOR_TYPE_GRAY:
-        case PNG_COLOR_TYPE_GRAY_ALPHA:
-            bgColorP->r = bgColorP->g = bgColorP->b = PNM_GET1(backcolor);
-            break;
-        case PNG_COLOR_TYPE_PALETTE:
-        case PNG_COLOR_TYPE_RGB:
-        case PNG_COLOR_TYPE_RGB_ALPHA:
-            bgColorP->r = PPM_GETR(backcolor);
-            bgColorP->g = PPM_GETG(backcolor);
-            bgColorP->b = PPM_GETB(backcolor);
-            break;
-        }
+
+        bgColorP->r = PPM_GETR(backcolor);
+        bgColorP->g = PPM_GETG(backcolor);
+        bgColorP->b = PPM_GETB(backcolor);
+
     } else if (info_ptr->valid & PNG_INFO_bKGD) {
         /* didn't manage to get libpng to work (bugs?) concerning background
            processing, therefore we do our own.
@@ -1049,7 +1051,7 @@ convertpng(FILE *             const ifp,
         }
     }
 
-    determineOutputType(info_ptr, cmdline.alpha, maxval, &pnm_type);
+    determineOutputType(info_ptr, cmdline.alpha, bgColor, maxval, &pnm_type);
 
     writePnm(stdout, maxval, pnm_type, info_ptr, png_image, bgColor, 
              cmdline.alpha, totalgamma);

@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+08.07.13 BJH  Release 10.35.47
+
+              pngtopnm: fix bug: when background is color, output
+              should be PPM.
+
 08.06.22 BJH  Release 10.35.46
 
               pbmtext: fix buffer overrun with tab characters.
