@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+08.07.13 BJH  Release 10.43.01
+
+              pngtopnm: fix bug: when background is color, output
+              should be PPM.
+
 08.06.27 BJH  Release 10.43.00
 
               Add pamtompfont: Mplayer bitmap font.
