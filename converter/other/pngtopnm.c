@@ -450,7 +450,7 @@ computePngLineSize(png_info * const pngInfoP) {
     default:                        samplesPerPixel = 1;
     }
 
-    if (UINT_MAX / bytesPerSample / samplesPerPixel > pngInfoP->width)
+    if (UINT_MAX / bytesPerSample / samplesPerPixel < pngInfoP->width)
         pm_error("Width %u of PNG is uncomputably large",
                  (unsigned int)pngInfoP->width);
        
