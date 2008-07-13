@@ -38,10 +38,10 @@
 #include <png.h>    /* includes zlib.h and setjmp.h */
 #define VERSION "2.37.4 (5 December 1999) +netpbm"
 
-#include "pnm.h"
 #include "mallocvar.h"
 #include "nstring.h"
 #include "shhopt.h"
+#include "pnm.h"
 
 typedef struct _jmpbuf_wrapper {
   jmp_buf jmpbuf;
@@ -101,9 +101,9 @@ static jmpbuf_wrapper pngtopnm_jmpbuf_struct;
 
 
 static void
-parseCommandLine(int                 argc, 
-                 char **             argv,
-                 struct cmdlineInfo *cmdlineP ) {
+parseCommandLine(int                  argc, 
+                 const char **        argv,
+                 struct cmdlineInfo * cmdlineP ) {
 /*----------------------------------------------------------------------------
    Parse program command line described in Unix standard form by argc
    and argv.  Return the information in the options as *cmdlineP.  
@@ -114,7 +114,7 @@ parseCommandLine(int                 argc,
    Note that the strings we return are stored in the storage that
    was passed to us as the argv array.  We also trash *argv.
 -----------------------------------------------------------------------------*/
-    optEntry *option_def = malloc(100*sizeof(optEntry));
+    optEntry * option_def;
         /* Instructions to optParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
@@ -122,6 +122,8 @@ parseCommandLine(int                 argc,
     unsigned int option_def_index;
 
     unsigned int alphaSpec, mixSpec, backgroundSpec, gammaSpec, textSpec;
+
+    MALLOCARRAY(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
     OPTENT3(0, "verbose",     OPT_FLAG,   NULL,                  
@@ -143,7 +145,7 @@ parseCommandLine(int                 argc,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3( &argc, argv, opt, sizeof(opt), 0);
+    optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
 
@@ -430,6 +432,56 @@ dump_png_info(png_info *info_ptr) {
         pm_message("sRGB chunk: present");
     else
         pm_message("sRGB chunk: not present");
+}
+
+
+
+static unsigned int
+computePngLineSize(png_info * const pngInfoP) {
+
+    unsigned int const bytesPerSample = pngInfoP->bit_depth == 16 ? 2 : 1;
+
+    unsigned int samplesPerPixel;
+
+    switch (pngInfoP->bit_depth) {
+    case PNG_COLOR_TYPE_GRAY_ALPHA: samplesPerPixel = 2; break;
+    case PNG_COLOR_TYPE_RGB:        samplesPerPixel = 3; break;
+    case PNG_COLOR_TYPE_RGB_ALPHA:  samplesPerPixel = 4; break;
+    default:                        samplesPerPixel = 1;
+    }
+
+    if (UINT_MAX / bytesPerSample / samplesPerPixel > pngInfoP->width)
+        pm_error("Width %u of PNG is uncomputably large",
+                 (unsigned int)pngInfoP->width);
+       
+    return pngInfoP->width * bytesPerSample * samplesPerPixel;
+}
+
+
+
+static void
+readPngRaster(png_info *   const pngInfoP,
+              png_byte *** const pngImageP) {
+
+    unsigned int const lineSize = computePngLineSize(pngInfoP);
+
+    png_byte ** pngImage;
+    unsigned int row;
+
+    MALLOCARRAY(pngImage, pngInfoP->height);
+
+    if (pngImage == NULL)
+        pm_error("couldn't allocate space for %u PNG raster rows",
+                 (unsigned int)pngInfoP->height);
+
+    for (row = 0 ; row < pngInfoP->height; ++row) {
+        MALLOCARRAY(pngImage[row], lineSize);
+        if (pngImage[row] == NULL) {
+            pm_error("couldn't allocate space for %uth row of PNG raster",
+                     row);
+        }
+    }
+    *pngImageP = pngImage;
 }
 
 
@@ -827,12 +879,12 @@ writePnm(FILE *              const ofP,
     unsigned int row;
 
     if (verbose)
-        pm_message ("writing a %s file (maxval=%u)",
-                    pnm_type == PBM_TYPE ? "PBM" :
-                    pnm_type == PGM_TYPE ? "PGM" :
-                    pnm_type == PPM_TYPE ? "PPM" :
-                    "UNKNOWN!", 
-                    maxval);
+        pm_message("writing a %s file (maxval=%u)",
+                   pnm_type == PBM_TYPE ? "PBM" :
+                   pnm_type == PGM_TYPE ? "PGM" :
+                   pnm_type == PPM_TYPE ? "PPM" :
+                   "UNKNOWN!", 
+                   maxval);
     
     xelrow = pnm_allocrow(info_ptr->width);
 
@@ -929,8 +981,7 @@ convertpng(FILE *             const ifp,
     png_struct *png_ptr;
     png_info *info_ptr;
     png_byte **png_image;
-    int x, y;
-    int linesize;
+    int y;
     int pnm_type;
     pngcolor bgColor;
     float totalgamma;
@@ -956,38 +1007,7 @@ convertpng(FILE *             const ifp,
     png_set_sig_bytes (png_ptr, SIG_CHECK_SIZE);
     png_read_info (png_ptr, info_ptr);
 
-    MALLOCARRAY(png_image, info_ptr->height);
-    if (png_image == NULL) {
-        png_destroy_read_struct (&png_ptr, &info_ptr, (png_infopp)NULL);
-        pm_closer (ifp);
-        pm_error ("couldn't allocate space for image");
-    }
-
-    if (info_ptr->bit_depth == 16)
-        linesize = 2 * info_ptr->width;
-    else
-        linesize = info_ptr->width;
-
-    if (info_ptr->color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
-        linesize *= 2;
-    else
-        if (info_ptr->color_type == PNG_COLOR_TYPE_RGB)
-            linesize *= 3;
-        else
-            if (info_ptr->color_type == PNG_COLOR_TYPE_RGB_ALPHA)
-                linesize *= 4;
-
-    for (y = 0 ; y < info_ptr->height ; y++) {
-        png_image[y] = malloc (linesize);
-        if (png_image[y] == NULL) {
-            for (x = 0 ; x < y ; x++)
-                free (png_image[x]);
-            free (png_image);
-            png_destroy_read_struct (&png_ptr, &info_ptr, (png_infopp)NULL);
-            pm_closer (ifp);
-            pm_error ("couldn't allocate space for image");
-        }
-    }
+    readPngRaster(info_ptr, &png_image);
 
     if (info_ptr->bit_depth < 8)
         png_set_packing (png_ptr);
@@ -1042,33 +1062,35 @@ convertpng(FILE *             const ifp,
 
 
 int 
-main(int argc, char *argv[]) {
+main(int argc, const char *argv[]) {
 
     struct cmdlineInfo cmdline;
-    FILE *ifp, *tfp;
+    FILE * ifP;
+    FILE * tfP;
     int errorlevel;
 
-    pnm_init (&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
     verbose = cmdline.verbose;
     mtime = cmdline.time;
 
-    ifp = pm_openr(cmdline.inputFilespec);
+    ifP = pm_openr(cmdline.inputFilespec);
 
     if (cmdline.text)
-        tfp = pm_openw(cmdline.text);
+        tfP = pm_openw(cmdline.text);
     else
-        tfp = NULL;
+        tfP = NULL;
 
-    convertpng (ifp, tfp, cmdline, &errorlevel);
+    convertpng(ifP, tfP, cmdline, &errorlevel);
 
-    if (tfp)
-        pm_close(tfp);
+    if (tfP)
+        pm_close(tfP);
 
-    pm_close(ifp);
+    pm_close(ifP);
     pm_close(stdout);
 
     return errorlevel;
 }
+
