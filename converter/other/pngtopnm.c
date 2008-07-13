@@ -486,6 +486,20 @@ readPngRaster(png_info *   const pngInfoP,
 
 
 
+static void
+freePngRaster(png_byte **  const pngRaster,
+              unsigned int const rows) {
+
+    unsigned int row;
+
+    for (row = 0; row < rows; ++row)
+        free(pngRaster[row]);
+
+    free(pngRaster);
+}
+
+
+
 static bool
 isTransparentColor(pngcolor   const color,
                    png_info * const info_ptr,
@@ -981,7 +995,6 @@ convertpng(FILE *             const ifp,
     png_struct *png_ptr;
     png_info *info_ptr;
     png_byte **png_image;
-    int y;
     int pnm_type;
     pngcolor bgColor;
     float totalgamma;
@@ -1053,9 +1066,9 @@ convertpng(FILE *             const ifp,
              cmdline.alpha, totalgamma);
 
     fflush(stdout);
-    for (y = 0 ; y < info_ptr->height ; y++)
-        free (png_image[y]);
-    free (png_image);
+
+    freePngRaster(png_image, info_ptr->height);
+
     png_destroy_read_struct (&png_ptr, &info_ptr, (png_infopp)NULL);
 }
 
