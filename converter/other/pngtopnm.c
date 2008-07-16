@@ -451,7 +451,7 @@ computePngLineSize(png_info * const pngInfoP) {
 
     unsigned int samplesPerPixel;
 
-    switch (pngInfoP->bit_depth) {
+    switch (pngInfoP->color_type) {
     case PNG_COLOR_TYPE_GRAY_ALPHA: samplesPerPixel = 2; break;
     case PNG_COLOR_TYPE_RGB:        samplesPerPixel = 3; break;
     case PNG_COLOR_TYPE_RGB_ALPHA:  samplesPerPixel = 4; break;
@@ -468,8 +468,8 @@ computePngLineSize(png_info * const pngInfoP) {
 
 
 static void
-readPngRaster(png_info *   const pngInfoP,
-              png_byte *** const pngImageP) {
+allocPngRaster(png_info *   const pngInfoP,
+               png_byte *** const pngImageP) {
 
     unsigned int const lineSize = computePngLineSize(pngInfoP);
 
@@ -482,12 +482,11 @@ readPngRaster(png_info *   const pngInfoP,
         pm_error("couldn't allocate space for %u PNG raster rows",
                  (unsigned int)pngInfoP->height);
 
-    for (row = 0 ; row < pngInfoP->height; ++row) {
+    for (row = 0; row < pngInfoP->height; ++row) {
         MALLOCARRAY(pngImage[row], lineSize);
-        if (pngImage[row] == NULL) {
+        if (pngImage[row] == NULL)
             pm_error("couldn't allocate space for %uth row of PNG raster",
                      row);
-        }
     }
     *pngImageP = pngImage;
 }
@@ -495,12 +494,12 @@ readPngRaster(png_info *   const pngInfoP,
 
 
 static void
-freePngRaster(png_byte **  const pngRaster,
-              unsigned int const rows) {
+freePngRaster(png_byte ** const pngRaster,
+              png_info *  const pngInfoP) {
 
     unsigned int row;
 
-    for (row = 0; row < rows; ++row)
+    for (row = 0; row < pngInfoP->height; ++row)
         free(pngRaster[row]);
 
     free(pngRaster);
@@ -1022,7 +1021,7 @@ convertpng(FILE *             const ifp,
     png_set_sig_bytes (png_ptr, SIG_CHECK_SIZE);
     png_read_info (png_ptr, info_ptr);
 
-    readPngRaster(info_ptr, &png_image);
+    allocPngRaster(info_ptr, &png_image);
 
     if (info_ptr->bit_depth < 8)
         png_set_packing (png_ptr);
@@ -1069,7 +1068,7 @@ convertpng(FILE *             const ifp,
 
     fflush(stdout);
 
-    freePngRaster(png_image, info_ptr->height);
+    freePngRaster(png_image, info_ptr);
 
     png_destroy_read_struct (&png_ptr, &info_ptr, (png_infopp)NULL);
 }
