@@ -20,6 +20,11 @@ not yet  BJH  Release 10.44.00
               Add pbmminkowski (source code has been in package since 10.12
               but not documented or built by default).
 
+              pamflip: fix bug: garbage output for PBMs, since 10.42.
+
+              pngtopnm: fix bug: when background is color, output
+              should be PPM.
+
 08.06.27 BJH  Release 10.43.00
 
               Add pamtompfont: Mplayer bitmap font.
