@@ -16,20 +16,6 @@
 ** with lots of bits pasted from libpng.txt by Guy Eric Schalnat
 */
 
-/* 
-   BJH 20000408:  rename PPM_MAXMAXVAL to PPM_OVERALLMAXVAL
-   BJH 20000303:  fix include statement so dependencies work out right.
-*/
-/* GRR 19991203:  moved VERSION to new version.h header file */
-
-/* GRR 19990713:  fixed redundant freeing of png_ptr and info_ptr in setjmp()
- *  blocks and added "pm_close(ifp)" in each.  */
-
-/* GRR 19990317:  declared "clobberable" automatic variables in convertpng()
- *  static to fix Solaris/gcc stack-corruption bug.  Also installed custom
- *  error-handler to avoid jmp_buf size-related problems (i.e., jmp_buf
- *  compiled with one size in libpng and another size here).  */
-
 #ifndef PNMTOPNG_WARNING_LEVEL
 #  define PNMTOPNG_WARNING_LEVEL 0   /* use 0 for backward compatibility, */
 #endif                               /*  2 for warnings (1 == error) */
@@ -47,24 +33,6 @@
 typedef struct _jmpbuf_wrapper {
   jmp_buf jmpbuf;
 } jmpbuf_wrapper;
-
-/* GRR 19991205:  this is used as a test for pre-1999 versions of netpbm and
- *   pbmplus vs. 1999 or later (in which pm_close was split into two)
- */
-#ifdef PBMPLUS_RAWBITS
-#  define pm_closer pm_close
-#  define pm_closew pm_close
-#endif
-
-#ifndef TRUE
-#  define TRUE 1
-#endif
-#ifndef FALSE
-#  define FALSE 0
-#endif
-#ifndef NONE
-#  define NONE 0
-#endif
 
 enum alpha_handling {ALPHA_NONE, ALPHA_ONLY, ALPHA_MIX};
 
@@ -96,8 +64,7 @@ typedef struct {
 
 
 static png_uint_16 maxval;
-static int verbose = FALSE;
-static int mtime;
+static bool verbose;
 static jmpbuf_wrapper pngtopnm_jmpbuf_struct;
 
 
@@ -182,12 +149,9 @@ parseCommandLine(int                  argc,
 
 
 
-
-#define get_png_val(p) _get_png_val (&(p), info_ptr->bit_depth)
-
 static png_uint_16
-_get_png_val (png_byte ** const pp,
-              int         const bit_depth) {
+get_png_val(const png_byte ** const pp,
+            int               const bit_depth) {
 
     png_uint_16 c;
     
@@ -510,7 +474,7 @@ freePngRaster(png_byte ** const pngRaster,
 
 static bool
 isTransparentColor(pngcolor   const color,
-                   png_info * const info_ptr,
+                   png_info * const pngInfoP,
                    double     const totalgamma) {
 /*----------------------------------------------------------------------------
    Return TRUE iff pixels of color 'color' are supposed to be transparent
@@ -518,8 +482,8 @@ isTransparentColor(pngcolor   const color,
 -----------------------------------------------------------------------------*/
     bool retval;
 
-    if (info_ptr->valid & PNG_INFO_tRNS) {
-        const png_color_16 * const transColorP = &info_ptr->trans_values;
+    if (pngInfoP->valid & PNG_INFO_tRNS) {
+        const png_color_16 * const transColorP = &pngInfoP->trans_values;
     
 
         /* There seems to be a problem here: you can't compare real
@@ -874,21 +838,111 @@ getBackgroundColor(png_info *   const info_ptr,
 
 
 
+#define GET_PNG_VAL(p) get_png_val(&(p), pngInfoP->bit_depth)
+
+
+
+static void
+makeXelRow(xel *               const xelrow,
+           xelval              const maxval,
+           int                 const pnmType,
+           png_info *          const pngInfoP,
+           const png_byte *    const pngRasterRow,
+           pngcolor            const bgColor,
+           enum alpha_handling const alphaHandling,
+           double              const totalgamma) {
+
+    const png_byte * pngPixelP;
+    unsigned int col;
+
+    pngPixelP = &pngRasterRow[0];  /* initial value */
+    for (col = 0; col < pngInfoP->width; ++col) {
+        switch (pngInfoP->color_type) {
+        case PNG_COLOR_TYPE_GRAY: {
+            pngcolor fgColor;
+            fgColor.r = fgColor.g = fgColor.b = GET_PNG_VAL(pngPixelP);
+            setXel(&xelrow[col], fgColor, bgColor, alphaHandling,
+                   ((pngInfoP->valid & PNG_INFO_tRNS) &&
+                    (fgColor.r == 
+                     gamma_correct(pngInfoP->trans_values.gray, totalgamma))) ?
+                   0 : maxval);
+        }
+        break;
+
+        case PNG_COLOR_TYPE_GRAY_ALPHA: {
+            pngcolor fgColor;
+            png_uint_16 alpha;
+
+            fgColor.r = fgColor.g = fgColor.b = GET_PNG_VAL(pngPixelP);
+            alpha = GET_PNG_VAL(pngPixelP);
+            setXel(&xelrow[col], fgColor, bgColor, alphaHandling, alpha);
+        }
+        break;
+
+        case PNG_COLOR_TYPE_PALETTE: {
+            png_uint_16 const index        = GET_PNG_VAL(pngPixelP);
+            png_color   const paletteColor = pngInfoP->palette[index];
+
+            pngcolor fgColor;
+
+            fgColor.r = paletteColor.red;
+            fgColor.g = paletteColor.green;
+            fgColor.b = paletteColor.blue;
+
+            setXel(&xelrow[col], fgColor, bgColor, alphaHandling,
+                   (pngInfoP->valid & PNG_INFO_tRNS) &&
+                   index < pngInfoP->num_trans ?
+                   pngInfoP->trans[index] : maxval);
+        }
+        break;
+                
+        case PNG_COLOR_TYPE_RGB: {
+            pngcolor fgColor;
+
+            fgColor.r = GET_PNG_VAL(pngPixelP);
+            fgColor.g = GET_PNG_VAL(pngPixelP);
+            fgColor.b = GET_PNG_VAL(pngPixelP);
+            setXel(&xelrow[col], fgColor, bgColor, alphaHandling,
+                   isTransparentColor(fgColor, pngInfoP, totalgamma) ?
+                   0 : maxval);
+        }
+        break;
+
+        case PNG_COLOR_TYPE_RGB_ALPHA: {
+            pngcolor fgColor;
+            png_uint_16 alpha;
+
+            fgColor.r = GET_PNG_VAL(pngPixelP);
+            fgColor.g = GET_PNG_VAL(pngPixelP);
+            fgColor.b = GET_PNG_VAL(pngPixelP);
+            alpha     = GET_PNG_VAL(pngPixelP);
+            setXel(&xelrow[col], fgColor, bgColor, alphaHandling, alpha);
+        }
+        break;
+
+        default:
+            pm_error("unknown PNG color type: %d", pngInfoP->color_type);
+        }
+    }
+}
+
+
+
 static void
 writePnm(FILE *              const ofP,
          xelval              const maxval,
-         int                 const pnm_type,
-         png_info *          const info_ptr,
-         png_byte **         const png_image,
+         int                 const pnmType,
+         png_info *          const pngInfoP,
+         png_byte **         const pngRaster,
          pngcolor            const bgColor,
-         enum alpha_handling const alpha_handling,
+         enum alpha_handling const alphaHandling,
          double              const totalgamma) {
 /*----------------------------------------------------------------------------
    Write a PNM of either the image or the alpha mask, according to
-   'alpha_handling' that is in the PNG image described by 'info_ptr' and
-   png_image.
+   'alphaHandling' that is in the PNG image described by 'pngInfoP' and
+   pngRaster.
 
-   'pnm_type' and 'maxval' are of the output image.
+   'pnmType' and 'maxval' are of the output image.
 
    Use background color 'bgColor' in the output if the PNG is such that a
    background color is needed.
@@ -898,92 +952,22 @@ writePnm(FILE *              const ofP,
 
     if (verbose)
         pm_message("writing a %s file (maxval=%u)",
-                   pnm_type == PBM_TYPE ? "PBM" :
-                   pnm_type == PGM_TYPE ? "PGM" :
-                   pnm_type == PPM_TYPE ? "PPM" :
+                   pnmType == PBM_TYPE ? "PBM" :
+                   pnmType == PGM_TYPE ? "PGM" :
+                   pnmType == PPM_TYPE ? "PPM" :
                    "UNKNOWN!", 
                    maxval);
     
-    xelrow = pnm_allocrow(info_ptr->width);
+    xelrow = pnm_allocrow(pngInfoP->width);
 
-    pnm_writepnminit(stdout, info_ptr->width, info_ptr->height, maxval,
-                     pnm_type, FALSE);
+    pnm_writepnminit(stdout, pngInfoP->width, pngInfoP->height, maxval,
+                     pnmType, FALSE);
 
-    for (row = 0; row < info_ptr->height; ++row) {
-        png_byte * png_pixelP;
-        int col;
+    for (row = 0; row < pngInfoP->height; ++row) {
+        makeXelRow(xelrow, maxval, pnmType, pngInfoP, pngRaster[row], bgColor,
+                   alphaHandling, totalgamma);
 
-        png_pixelP = &png_image[row][0];  /* initial value */
-        for (col = 0; col < info_ptr->width; ++col) {
-            switch (info_ptr->color_type) {
-            case PNG_COLOR_TYPE_GRAY: {
-                pngcolor fgColor;
-                fgColor.r = fgColor.g = fgColor.b = get_png_val(png_pixelP);
-                setXel(&xelrow[col], fgColor, bgColor, alpha_handling,
-                       ((info_ptr->valid & PNG_INFO_tRNS) &&
-                        (fgColor.r == 
-                         gamma_correct(info_ptr->trans_values.gray,
-                                       totalgamma))) ?
-                       0 : maxval);
-            }
-            break;
-
-            case PNG_COLOR_TYPE_GRAY_ALPHA: {
-                pngcolor fgColor;
-                png_uint_16 alpha;
-
-                fgColor.r = fgColor.g = fgColor.b = get_png_val(png_pixelP);
-                alpha = get_png_val(png_pixelP);
-                setXel(&xelrow[col], fgColor, bgColor, alpha_handling, alpha);
-            }
-            break;
-
-            case PNG_COLOR_TYPE_PALETTE: {
-                png_uint_16 const index        = get_png_val(png_pixelP);
-                png_color   const paletteColor = info_ptr->palette[index];
-
-                pngcolor fgColor;
-
-                fgColor.r = paletteColor.red;
-                fgColor.g = paletteColor.green;
-                fgColor.b = paletteColor.blue;
-
-                setXel(&xelrow[col], fgColor, bgColor, alpha_handling,
-                       (info_ptr->valid & PNG_INFO_tRNS) &&
-                       index < info_ptr->num_trans ?
-                       info_ptr->trans[index] : maxval);
-            }
-            break;
-                
-            case PNG_COLOR_TYPE_RGB: {
-                pngcolor fgColor;
-
-                fgColor.r = get_png_val(png_pixelP);
-                fgColor.g = get_png_val(png_pixelP);
-                fgColor.b = get_png_val(png_pixelP);
-                setXel(&xelrow[col], fgColor, bgColor, alpha_handling,
-                       isTransparentColor(fgColor, info_ptr, totalgamma) ?
-                       0 : maxval);
-            }
-            break;
-
-            case PNG_COLOR_TYPE_RGB_ALPHA: {
-                pngcolor fgColor;
-                png_uint_16 alpha;
-
-                fgColor.r = get_png_val(png_pixelP);
-                fgColor.g = get_png_val(png_pixelP);
-                fgColor.b = get_png_val(png_pixelP);
-                alpha     = get_png_val(png_pixelP);
-                setXel(&xelrow[col], fgColor, bgColor, alpha_handling, alpha);
-            }
-            break;
-
-            default:
-                pm_error ("unknown PNG color type: %d", info_ptr->color_type);
-            }
-        }
-        pnm_writepnmrow(ofP, xelrow, info_ptr->width, maxval, pnm_type, FALSE);
+        pnm_writepnmrow(ofP, xelrow, pngInfoP->width, maxval, pnmType, FALSE);
     }
     pnm_freerow (xelrow);
 }
@@ -996,9 +980,9 @@ convertpng(FILE *             const ifp,
            struct cmdlineInfo const cmdline,
            int *              const errorlevelP) {
 
-    png_struct *png_ptr;
-    png_info *info_ptr;
-    png_byte **png_image;
+    png_struct * png_ptr;
+    png_info * info_ptr;
+    png_byte ** png_image;
     int pnm_type;
     pngcolor bgColor;
     float totalgamma;
@@ -1047,14 +1031,14 @@ convertpng(FILE *             const ifp,
         */
         dump_png_info(info_ptr);
 
-    if (mtime)
-        show_time (info_ptr);
+    if (cmdline.time)
+        show_time(info_ptr);
     if (tfp)
-        save_text (info_ptr, tfp);
+        save_text(info_ptr, tfp);
 
     if (info_ptr->valid & PNG_INFO_pHYs) {
-        float r;
-        r = (float)info_ptr->x_pixels_per_unit / info_ptr->y_pixels_per_unit;
+        float const r =
+            (float)info_ptr->x_pixels_per_unit / info_ptr->y_pixels_per_unit;
         if (r != 1.0) {
             pm_message ("warning - non-square pixels; "
                         "to fix do a 'pamscale -%cscale %g'",
@@ -1073,7 +1057,7 @@ convertpng(FILE *             const ifp,
 
     freePngRaster(png_image, info_ptr);
 
-    png_destroy_read_struct (&png_ptr, &info_ptr, (png_infopp)NULL);
+    png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 }
 
 
@@ -1091,7 +1075,6 @@ main(int argc, const char *argv[]) {
     parseCommandLine(argc, argv, &cmdline);
 
     verbose = cmdline.verbose;
-    mtime = cmdline.time;
 
     ifP = pm_openr(cmdline.inputFilespec);
 
