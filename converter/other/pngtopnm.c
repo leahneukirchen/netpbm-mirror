@@ -479,22 +479,38 @@ isTransparentColor(pngcolor   const color,
 /*----------------------------------------------------------------------------
    Return TRUE iff pixels of color 'color' are supposed to be transparent
    everywhere they occur.  Assume it's an RGB image.
+
+   'color' has been gamma-corrected.
 -----------------------------------------------------------------------------*/
     bool retval;
 
     if (pngInfoP->valid & PNG_INFO_tRNS) {
         const png_color_16 * const transColorP = &pngInfoP->trans_values;
-    
 
-        /* There seems to be a problem here: you can't compare real
-           numbers for equality.  Also, I'm not sure the gamma
-           corrected/uncorrected color spaces are right here.  
+        /* It seems odd that libpng lets you get gamma-corrected pixel
+           values, but not gamma-corrected transparency or background
+           values.  But as that is the case, we have to gamma-correct
+           the transparency values.
+
+           Note that because we compare the gamma-corrected values and
+           there may be many-to-one mapping of uncorrected to corrected
+           values, more pixels may be transparent than what the user
+           intended.
+
+           We could fix this by not letting libpng gamma-correct the
+           pixels, and just do it ourselves.
         */
-
-        retval = 
-            color.r == gamma_correct(transColorP->red,   totalgamma) &&
-            color.g == gamma_correct(transColorP->green, totalgamma) &&
-            color.b == gamma_correct(transColorP->blue,  totalgamma);
+    
+        switch (pngInfoP->color_type) {
+        case PNG_COLOR_TYPE_GRAY:
+            retval = color.r == gamma_correct(transColorP->gray, totalgamma);
+            break;
+        default:
+            retval = 
+                color.r == gamma_correct(transColorP->red,   totalgamma) &&
+                color.g == gamma_correct(transColorP->green, totalgamma) &&
+                color.b == gamma_correct(transColorP->blue,  totalgamma);
+        }
     } else 
         retval = FALSE;
 
@@ -862,9 +878,7 @@ makeXelRow(xel *               const xelrow,
             pngcolor fgColor;
             fgColor.r = fgColor.g = fgColor.b = GET_PNG_VAL(pngPixelP);
             setXel(&xelrow[col], fgColor, bgColor, alphaHandling,
-                   ((pngInfoP->valid & PNG_INFO_tRNS) &&
-                    (fgColor.r == 
-                     gamma_correct(pngInfoP->trans_values.gray, totalgamma))) ?
+                   isTransparentColor(fgColor, pngInfoP, totalgamma) ?
                    0 : maxval);
         }
         break;
@@ -1021,8 +1035,8 @@ convertpng(FILE *             const ifp,
     getBackgroundColor(info_ptr, cmdline.background, totalgamma, maxval,
                        &bgColor);
 
-    png_read_image (png_ptr, png_image);
-    png_read_end (png_ptr, info_ptr);
+    png_read_image(png_ptr, png_image);
+    png_read_end(png_ptr, info_ptr);
 
     if (verbose)
         /* Note that some of info_ptr is not defined until png_read_end() 
@@ -1093,4 +1107,3 @@ main(int argc, const char *argv[]) {
 
     return errorlevel;
 }
-
