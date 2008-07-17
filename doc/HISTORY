@@ -22,6 +22,8 @@ not yet  BJH  Release 10.44.00
 
               pamflip: fix bug: garbage output for PBMs, since 10.42.
 
+              pngtopnm: fix gamma correction.
+
               pngtopnm: fix bug: when background is color, output
               should be PPM.
 

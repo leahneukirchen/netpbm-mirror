@@ -35,6 +35,7 @@
 #endif                               /*  2 for warnings (1 == error) */
 
 #include <math.h>
+#include <float.h>
 #include <png.h>    /* includes zlib.h and setjmp.h */
 #define VERSION "2.37.4 (5 December 1999) +netpbm"
 
@@ -242,8 +243,8 @@ gamma_correct(png_uint_16 const v,
               float       const g) {
 
     if (g != -1.0)
-        return (png_uint_16) (pow ((double) v / maxval, 
-                                   (1.0 / g)) * maxval + 0.5);
+        return (png_uint_16) ROUNDU(pow((double) v / maxval, (1.0 / g)) *
+                                    maxval);
     else
         return v;
 }
@@ -566,30 +567,32 @@ setupGammaCorrection(png_struct * const png_ptr,
     if (displaygamma == -1.0)
         *totalgammaP = -1.0;
     else {
-        if (info_ptr->valid & PNG_INFO_gAMA) {
-            if (displaygamma != info_ptr->gamma) {
-                png_set_gamma(png_ptr, displaygamma, info_ptr->gamma);
-                *totalgammaP =
-                    (double) info_ptr->gamma * (double) displaygamma;
-                /* in case of gamma-corrections, sBIT's as in the
-                   PNG-file are not valid anymore 
-                */
-                info_ptr->valid &= ~PNG_INFO_sBIT;
-                if (verbose)
-                    pm_message("image gamma is %4.2f, "
-                               "converted for display gamma of %4.2f",
-                               info_ptr->gamma, displaygamma);
-            }
+        float imageGamma;
+        if (info_ptr->valid & PNG_INFO_gAMA)
+            imageGamma = info_ptr->gamma;
+        else {
+            if (verbose)
+                pm_message("PNG doesn't specify image gamma.  Assuming 1.0");
+            imageGamma = 1.0;
+        }
+
+        if (fabs(displaygamma * imageGamma - 1.0) < .01) {
+            *totalgammaP = -1.0;
+            if (verbose)
+                pm_message("image gamma %4.2f matches "
+                           "display gamma %4.2f.  No conversion.",
+                           imageGamma, displaygamma);
         } else {
-            if (displaygamma != info_ptr->gamma) {
-                png_set_gamma (png_ptr, displaygamma, 1.0);
-                *totalgammaP = (double) displaygamma;
-                info_ptr->valid &= ~PNG_INFO_sBIT;
-                if (verbose)
-                    pm_message("image gamma assumed 1.0, "
-                               "converted for display gamma of %4.2f",
-                               displaygamma);
-            }
+            png_set_gamma(png_ptr, displaygamma, imageGamma);
+            *totalgammaP = imageGamma * displaygamma;
+            /* in case of gamma-corrections, sBIT's as in the
+               PNG-file are not valid anymore 
+            */
+            info_ptr->valid &= ~PNG_INFO_sBIT;
+            if (verbose)
+                pm_message("image gamma is %4.2f, "
+                           "converted for display gamma of %4.2f",
+                           imageGamma, displaygamma);
         }
     }
 }
@@ -1039,9 +1042,9 @@ convertpng(FILE *             const ifp,
 
     if (verbose)
         /* Note that some of info_ptr is not defined until png_read_end() 
-       completes.  That's because it comes from chunks that are at the
-       end of the stream.
-    */
+           completes.  That's because it comes from chunks that are at the
+           end of the stream.
+        */
         dump_png_info(info_ptr);
 
     if (mtime)
