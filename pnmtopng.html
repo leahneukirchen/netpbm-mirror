@@ -3,7 +3,7 @@
 <HEAD><TITLE>Pnmtopng User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmtopng</H1>
-Updated: June 2002
+Updated: July 2008
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -73,10 +73,29 @@ space in place of the equals sign to separate an option name from its value.
 <p><b>pnmtopng</b> reads a PNM image as input and produces a PNG image as
 output.
 
-<P>Color values in PNG files are either eight or sixteen bits wide, so
-<I>pnmtopng</I> will automatically scale colors to have a maxval of
-255 or 65535.  Grayscale files will be produced with bit depths 1, 2,
-4, 8 or 16.  An extra <B>pamdepth</B> step is not necessary.
+<P>Color component values in PNG files are either eight or sixteen
+bits wide, so <b>pnmtopng</b> will automatically scale colors to have
+a maxval of 255 or 65535.
+
+<p>For a grayscale image, <b>pnmtopng</b> produces a PNG bit depth 1,
+2, 4, 8 or 16.  When the input image has a small maxval, the output
+PNG image has a correspondingly small bit depth.  But in mapping the
+PNM maxval to the PNG maxval (which is by definition the maximum value
+that can be represented in the number of bits), a fair amount of
+distortion happens with these low maxvals.  For example, with a PNM
+maxval of 5 and a PNG maxval of 7, the input sample 2 becomes the
+output sample 3.  The input brightness is 2/5 = .40, while the output
+brightness is 3/7 = .43.  Note that this is not a problem if you view
+the maxval as a precision, because in .4 and .43 are identical within
+the precision implied by maxval 5.  Indeed, if you convert this PNG
+back to a maxval 5 PGM, the pixel's value will again be 2, exactly as
+it was originally.  But if you need precisely the same colors in the
+output PNG as in the input PNM, make sure your input PNM has a maxval
+which is a power of two minus one.  If you can't do that, then convert
+it with <b>pamdepth</b> to something with a large maxval that is a
+power of two minus one (255 and 65535 are good choices) to minimize
+the error.
+
 
 <H2 id="options">OPTIONS</H2>
 
@@ -119,8 +138,8 @@ with &quot;unrecognized option,&quot; fall back to the old syntax.
 <DT><B>-downscale</B>
 <DD>
      Enables scaling of maxvalues of more then 65535 to 16 bit. Since
-     this means loss of image data, the step is not performed by default.
-<DT><B>-interlace</B>
+     this means loss of image data, <b>pnmtopng</b> does not do it by
+     default.  <DT><B>-interlace</B>
 <DD>
      Creates an interlaced PNG file (Adam7).
 <DT><B>-alpha=</b><i>filename</i>
@@ -152,8 +171,9 @@ equidistant, <B>pnmtopng</B> chooses one of them arbitrarily.
 &quot;=&quot;, e.g.
 
 <pre>
+<kbd>
                     -transparent =red
-
+</kbd>
 </pre>
 
 <P> only the exact color you specify will be transparent.  If that
@@ -196,7 +216,7 @@ think it would, using <b>-palette</b> in this case wouldn't even save
 describe how the color values in the PNG must be interpreted.  Without
 the gAMA chunk, whatever interprets the PNG must get this information
 separately (or just assume something standard).  If your input is a true
-PPM or PGM image, you should specify <b>-gamma .45</b>.  But sometimes 
+PPM or PGM image, you should specify <b>-gamma=.45</b>.  But sometimes 
 people generate images which are ostensibly PPM except the image uses a 
 different gamma transfer function than the one specified for PPM.  A common
 case of this is when the image is created by simple hardware that doesn't

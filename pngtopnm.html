@@ -2,17 +2,15 @@
 <HTML><HEAD><TITLE>Pngtopnm User Manual</TITLE></HEAD>
 <BODY>
 <H1>pngtopnm</H1>
-Updated: 24 March 2005
+Updated: 17 July 2008
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
 pngtopnm - convert a PNG image into a PNM image
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>pngtopnm</B>
 [<b>-verbose</b>]
@@ -28,8 +26,7 @@ pngtopnm - convert a PNG image into a PNM image
 hyphens instead of single hyphen to denote options.  You may use white
 space in place of the equals sign to separate an option name from its value.
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -39,8 +36,7 @@ depends on the input file - if it's black &amp; white, <b>pngtopnm</b>
 creates a PBM file.  If it's grayscale, <b>pngtopnm</b> creates a PGM
 file.  Otherwise, it creates a PPM file.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<H2 id="options">OPTIONS</H2>
 
 <DL COMPACT>
 <DT><B>-verbose</B>
@@ -88,11 +84,11 @@ white.
 
 <p>You cannot specify <b>-background</b> unless you also specify
 <b>-mix</b>.  Before Netpbm 10.27 (March 2005), you could specify
-<b>-background</b> with <b>-mix</b> and it was just ignored.  (This caused
-a usability problem).
+<b>-background</b> without <b>-mix</b> and it was just ignored.  (This
+caused a usability problem).
 
 
-<DT><B>-gamma=</b> <i>value</i>
+<DT><B>-gamma=</b><i>value</i>
 
 <DD>Converts the image to a new display-gamma value.  If a gAMA chunk
 is present in the <I>png-file</I>, <b>pngtopnm</b> uses the specified
@@ -108,6 +104,21 @@ light, your system is gamma-corrected, so convert with &quot;-gamma 1.0&quot;.
 When no gAMA chunk is present or the image-gamma is 1.0, use 2.2 to make the 
 picture lighter and 0.45 to make the picture darker.
 
+<p>One oddity to be aware of when using <b>-gamma</b> on an image with
+transparency: The PNG image specifies that a certain color is
+transparent, i.e. every pixel in the image of that color is
+transparent.  But <b>pngtopnm</b> interprets this as applying to the
+gamma-corrected space, and there may be less precision in that space
+than in the original, which means multiple uncorrected colors map to
+the same corrected color.  So imagine that the image contains 3 shades
+of white and specifies that one of them is transparent.  After gamma
+correction, those three shades are indistinguishable, so
+<b>pngtopnm</b> considers pixels of all three shades to be transparent.
+
+<p>If this is not what you want, don't use <b>gamma</b>.  Instead,
+use <b>pnmgamma</b> on the output.
+
+
 <DT><B>-text=</b><i>file</i>
 
 <DD>Writes the tEXt and zTXt chunks to a file, in a format as
@@ -120,8 +131,7 @@ text comments or annotations.
 
 </DL>
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <A HREF="pnmtopng.html">pnmtopng</A>,
 <b>ptot</b>,
@@ -131,8 +141,7 @@ text comments or annotations.
 <p>For information on the PNG format, see <a
 href="http://schaik.com/png">http://schaik.com/png</a>.
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>NOTE</H2>
+<H2 id="note">NOTE</H2>
 
 <p>A PNG image contains a lot of information that can't be represented in 
 Netpbm formats.  Therefore, you lose information when you convert to 
@@ -140,8 +149,7 @@ another format with "pngtopnm | pnmtoxxx".  If there is a specialized
 converter that converts directly to the other format, e.g. <b>ptot</b>
 to convert from PNG to TIFF, you'll get better results using that.
 
-<A NAME="lbAH">&nbsp;</A>
-<H2>LIMITATIONS</H2>
+<H2 id="limitations">LIMITATIONS</H2>
 
 There could be an option to read the comment text from pnm comments instead
 of a separate file.
@@ -150,8 +158,7 @@ of a separate file.
 As with any Netpbm program, speed always takes a back seat to quick
 present and future development.
 
-<A NAME="lbAI">&nbsp;</A>
-<H2>AUTHORS</H2>
+<H2 id="authors">AUTHORS</H2>
 
 Copyright (C) 1995-1997 by Alexander Lehmann and Willem van Schaik.
 
@@ -159,14 +166,13 @@ Copyright (C) 1995-1997 by Alexander Lehmann and Willem van Schaik.
 <A NAME="index">&nbsp;</A>
 <H2>Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">SEE ALSO</A>
-<LI><A HREF="#lbAG">NOTE</A>
-<LI><A HREF="#lbAH">LIMITATIONS</A>
-<LI><A HREF="#lbAI">AUTHORS</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#note">NOTE</A>
+<LI><A HREF="#limitations">LIMITATIONS</A>
+<LI><A HREF="#authors">AUTHORS</A>
 </UL>
 </BODY>
 </HTML>

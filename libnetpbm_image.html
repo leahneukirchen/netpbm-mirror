@@ -181,7 +181,7 @@ format codes for the plain and raw subformats of each format.
 
 <P>
 <B>void pnm_freepamrown(</B>
-<B>tuple *</B><I>tuplenrow</I><B>);</B>
+<B>tuplen *</B><I>tuplenrow</I><B>);</B>
 
 
 
@@ -335,7 +335,8 @@ and computes some of the fields of the pam structure.
 <P>The following members of the <B>*</B><I>pamP</I> structure must be
 set upon invocation to tell the function how and what to write.
 <B>size</B>, <B>len</B>, <B>file</B>, <B>format</B>, <B>height</B>,
-<B>width</B>, <B>depth</B>, <B>maxval</B>, <B>tuple_type</B>.
+<B>width</B>, <B>depth</B>, <B>maxval</B>.  Furthermore, if
+<b>format</b> is <b>PAM_FORMAT</b>, <B>tuple_type</B> must be set.
 
 <P><B>pnm_writepaminit()</B> sets the <B>plainformat</B> and
 <B>bytes_per_sample</B> members based on the information supplied.
