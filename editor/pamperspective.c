@@ -1125,17 +1125,15 @@ init_buffer(buffer *           const bufferP,
 
     MALLOCARRAY_SAFE(bufferP->rows, num_rows);
     bufferP->num_rows = num_rows;
-    bufferP->last_logical = 0;
-    bufferP->last_physical = 0;
     {
         unsigned int row;
         for (row = 0; row < num_rows; ++row) {
             bufferP->rows[row] = pnm_allocpamrow(inpamP);
             pnm_readpamrow(inpamP, bufferP->rows[row]);
-            ++bufferP->last_logical;
-            ++bufferP->last_physical;
         }
     }
+    bufferP->last_logical = num_rows-1;
+    bufferP->last_physical = num_rows-1;
     bufferP->inpamP = inpamP;
 }
 
@@ -1145,7 +1143,7 @@ static tuple *
 read_buffer(buffer *     const bufferP,
             unsigned int const logical_y) {
 
-    unsigned int y;
+    int y;
     
     while (logical_y > bufferP->last_logical) {
         ++bufferP->last_physical;

@@ -4,6 +4,14 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+08.07.20 BJH  Release 10.43.02
+
+              pamflip: fix bug: garbage output for PBMs, since 10.42.
+
+              pngtopnm: fix gamma correction.
+
+              pamperspective: fix bug: array bounds violation crash.
+
 08.07.13 BJH  Release 10.43.01
 
               pngtopnm: fix bug: when background is color, output

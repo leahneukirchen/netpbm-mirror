@@ -443,8 +443,9 @@ transformRowByRowPbm(struct pam * const inpamP,
                      struct pam * const outpamP,
                      bool         const reverse) {
 /*----------------------------------------------------------------------------
-  Transform a PBM image either by flipping it left for right, or just leaving
-  it alone, as indicated by 'reverse'.
+  Transform a PBM raster either by flipping it left for right, or just
+  leaving it alone, as indicated by 'reverse'.  Read the raster from
+  *inpamP; write the transformed raster to *outpamP.
 
   Process the image one row at a time and use fast packed PBM bit
   reverse algorithm (where required).
@@ -453,8 +454,6 @@ transformRowByRowPbm(struct pam * const inpamP,
     unsigned int row;
 
     bitrow = pbm_allocrow_packed(outpamP->width); 
-
-    pbm_writepbminit(outpamP->file, outpamP->width, outpamP->height, 0);
 
     for (row = 0; row < inpamP->height; ++row) {
         pbm_readpbmrow_packed(inpamP->file,  bitrow, inpamP->width,
@@ -475,7 +474,8 @@ transformRowByRowNonPbm(struct pam * const inpamP,
                         struct pam * const outpamP,
                         bool         const reverse) {
 /*----------------------------------------------------------------------------
-  Flip an image left for right or leave it alone.
+  Flip a raster left for right or leave it alone.  Read the raster
+  from *inpamP; write the transformed raster to *outpamP.
 
   Process one row at a time.
 
@@ -526,7 +526,8 @@ transformRowsBottomTopPbm(struct pam * const inpamP,
                           struct pam * const outpamP,
                           bool         const reverse) { 
 /*----------------------------------------------------------------------------
-  Flip a PBM image top for bottom.
+  Flip a PBM raster top for bottom; read the raster from *inpamP;
+  write the flipped raster to *outpamP.
 
   Read complete image into memory in packed PBM format; Use fast
   packed PBM bit reverse algorithm (where required).
@@ -534,15 +535,13 @@ transformRowsBottomTopPbm(struct pam * const inpamP,
     unsigned int const rows=inpamP->height;
 
     unsigned char ** bitrow;
-    int row;
+    unsigned int row;
         
     bitrow = pbm_allocarray_packed(outpamP->width, outpamP->height);
         
     for (row = 0; row < rows; ++row)
         pbm_readpbmrow_packed(inpamP->file, bitrow[row], 
                               inpamP->width, inpamP->format);
-
-    pbm_writepbminit(outpamP->file, outpamP->width, outpamP->height, 0);
 
     for (row = 0; row < rows; ++row) {
         if (reverse) 
@@ -560,7 +559,8 @@ static void
 transformRowsBottomTopNonPbm(struct pam * const inpamP, 
                              struct pam * const outpamP) {
 /*----------------------------------------------------------------------------
-  Do a simple vertical flip.
+  Do a simple vertical flip.  Read the raster from *inpamP; write the
+  flipped raster to *outpamP.
 
   We do this faster than the more general subroutines because we just
   move the row pointers.
@@ -677,7 +677,6 @@ transformPbmGen(struct pam *     const inpamP,
          }
     }
     
-    pbm_writepbminit(outpamP->file, outpamP->width, outpamP->height, 0);
     for (row = 0; row < outpamP->height; ++row)
         pbm_writepbmrow_packed(outpamP->file, newbits[row], outpamP->width, 0);
     
@@ -695,6 +694,8 @@ transformNonPbmWhole(struct pam *     const inpamP,
 /*----------------------------------------------------------------------------
   Do the transform using "pam" library functions, as opposed to "pbm"
   ones.
+
+  Read the raster from *inpamP; write the transformed raster to *outpamP.
 
   Assume input file is positioned to the raster (just after the
   header).
