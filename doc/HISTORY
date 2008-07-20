@@ -27,6 +27,8 @@ not yet  BJH  Release 10.44.00
               pngtopnm: fix bug: when background is color, output
               should be PPM.
 
+              pamperspective: fix bug: array bounds violation crash.
+
 08.06.27 BJH  Release 10.43.00
 
               Add pamtompfont: Mplayer bitmap font.

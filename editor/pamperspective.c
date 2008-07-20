@@ -20,6 +20,7 @@
 
 #define _BSD_SOURCE   /* Make sure strdup is int string.h */
 
+#include <assert.h>
 #include <math.h>
 #include <string.h>
 
@@ -184,25 +185,26 @@ typedef struct {
 } world_data;
 
 
-/*
-  Internal infile buffer
-
-  This is a cyclic in random access out buffer, just large enough
-  to store all input lines that are still in use.
-*/
 
 typedef struct {
-
-    unsigned int num_rows;
-    unsigned int last_physical;
-    unsigned int last_logical;
-        /* Row number of the input row most recently read from input
-           file into buffer (i.e. one less than the number of rows we
-           have read from the input)
+/*----------------------------------------------------------------------------
+   A buffer of image input.  This holds a vertical window of the input.
+-----------------------------------------------------------------------------*/
+    unsigned int numRows;
+        /* Height of buffer window */
+    unsigned int nextImageRow;
+        /* Row number of the next image row that will go into the buffer.
+           The 'numRows' rows before (above) that are in the buffer now.
+        */
+    unsigned int nextBufferRow;
+        /* Row number in the physical buffer (index of rows[]) where
+           the next row read will go (hence where the oldest/highest
+           row in the buffer is now).
         */
     tuple ** rows;
+        /* The rows of the window, as a cyclic buffer */
     const struct pam * inpamP;
-
+        /* The image from which we fill the buffer */
 } buffer;
 
 
@@ -1092,15 +1094,17 @@ static int clean_y (int const y,  const struct pam *const outpam)
   return MIN(MAX(0, y), outpam->height-1);
 }
 
-static void
-init_buffer(buffer *           const bufferP,
-            const world_data * const worldP,
-            const option *     const optionsP,
-            const struct pam * const inpamP,
-            const struct pam * const outpamP) {
 
+
+
+static unsigned int
+windowHeight(const world_data * const worldP,
+             const struct pam * const inpamP,
+             const struct pam * const outpamP,
+             const option *     const optionsP) {
+
+    unsigned int numRows;
     unsigned int yul, yur, yll, ylr, y_min;
-    unsigned int num_rows;
 
     yul = outpixel_to_iny(0, 0, worldP);
     yur = outpixel_to_iny(outpamP->width-1, 0, worldP);
@@ -1108,34 +1112,49 @@ init_buffer(buffer *           const bufferP,
     ylr = outpixel_to_iny(outpamP->width-1, outpamP->height-1, worldP);
     
     y_min = MIN(MIN(yul, yur), MIN(yll, ylr));
-    num_rows = MAX(MAX(diff(yul, yur),
-                       diff(yll, ylr)),
-                   MAX(diff(clean_y(yul, outpamP), clean_y(y_min, outpamP)),
-                       diff(clean_y(yur, outpamP), clean_y(y_min, outpamP))))
+    numRows = MAX(MAX(diff(yul, yur),
+                      diff(yll, ylr)),
+                  MAX(diff(clean_y(yul, outpamP), clean_y(y_min, outpamP)),
+                      diff(clean_y(yur, outpamP), clean_y(y_min, outpamP))))
         + 2;
     switch (optionsP->enums[3]) {  /* --interpolation */
     case interp_nearest:
         break;
     case interp_linear:
-        num_rows += 1;
+        numRows += 1;
         break;
     }
-    if (num_rows > inpamP->height)
-        num_rows = inpamP->height;
+    if (numRows > inpamP->height)
+        numRows = inpamP->height;
 
-    MALLOCARRAY_SAFE(bufferP->rows, num_rows);
-    bufferP->num_rows = num_rows;
-    bufferP->last_logical = 0;
-    bufferP->last_physical = 0;
-    {
-        unsigned int row;
-        for (row = 0; row < num_rows; ++row) {
-            bufferP->rows[row] = pnm_allocpamrow(inpamP);
-            pnm_readpamrow(inpamP, bufferP->rows[row]);
-            ++bufferP->last_logical;
-            ++bufferP->last_physical;
-        }
+    return numRows;
+}
+
+
+
+static void
+init_buffer(buffer *           const bufferP,
+            const world_data * const worldP,
+            const option *     const optionsP,
+            const struct pam * const inpamP,
+            const struct pam * const outpamP) {
+
+    unsigned int const numRows =
+        windowHeight(worldP, inpamP, outpamP, optionsP);
+
+    unsigned int row;
+
+    MALLOCARRAY_SAFE(bufferP->rows, numRows);
+
+    for (row = 0; row < numRows; ++row) {
+        bufferP->rows[row] = pnm_allocpamrow(inpamP);
+        pnm_readpamrow(inpamP, bufferP->rows[row]);
     }
+
+    bufferP->nextImageRow  = numRows;
+    bufferP->nextBufferRow = 0;
+    bufferP->numRows       = numRows;
+
     bufferP->inpamP = inpamP;
 }
 
@@ -1143,23 +1162,40 @@ init_buffer(buffer *           const bufferP,
 
 static tuple *
 read_buffer(buffer *     const bufferP,
-            unsigned int const logical_y) {
+            unsigned int const imageRow) {
 
-    unsigned int y;
-    
-    while (logical_y > bufferP->last_logical) {
-        ++bufferP->last_physical;
-        if (bufferP->last_physical == bufferP->num_rows)
-            bufferP->last_physical = 0;
-        pnm_readpamrow(bufferP->inpamP, bufferP->rows[bufferP->last_physical]);
-        ++bufferP->last_logical;
+    unsigned int bufferRow;
+        /* The row of the buffer that holds row 'imageRow' of the image */
+    unsigned int n;
+        /* Number of rows our row is before the bottom of the window */
+
+    assert(imageRow >= bufferP->nextImageRow - bufferP->numRows);
+        /* The requested row is not one that's already been bumped out
+           of the buffer.
+        */
+
+    while (imageRow >= bufferP->nextImageRow) {
+        pnm_readpamrow(bufferP->inpamP, bufferP->rows[bufferP->nextBufferRow]);
+
+        ++bufferP->nextBufferRow;
+        if (bufferP->nextBufferRow == bufferP->numRows)
+            bufferP->nextBufferRow = 0;
+
+        ++bufferP->nextImageRow;
     }
-    
-    y = logical_y - bufferP->last_logical + bufferP->last_physical;
-    if (y < 0)
-        y += bufferP->num_rows;
 
-    return bufferP->rows[y];
+    n = bufferP->nextImageRow - imageRow;
+
+    assert(n <= bufferP->numRows);
+    
+    if (n <= bufferP->nextBufferRow)
+        bufferRow = bufferP->nextBufferRow - n;
+    else
+        bufferRow = bufferP->nextBufferRow + bufferP->numRows - n;
+
+    assert(bufferRow < bufferP->numRows);
+
+    return bufferP->rows[bufferRow];
 }
 
 
@@ -1175,12 +1211,12 @@ term_buffer(buffer * const bufferP) {
        through.
     */
 
-    while (bufferP->last_logical < bufferP->inpamP->height-1) {
+    while (bufferP->nextImageRow < bufferP->inpamP->height) {
         pnm_readpamrow(bufferP->inpamP, bufferP->rows[0]);
-        ++bufferP->last_logical;
+        ++bufferP->nextImageRow;
     }
 
-    for (i = 0; i < bufferP->num_rows; ++i)
+    for (i = 0; i < bufferP->numRows; ++i)
         pnm_freepamrow(bufferP->rows[i]);
     
     free(bufferP->rows);
