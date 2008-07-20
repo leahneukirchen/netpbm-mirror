@@ -6,6 +6,8 @@ HERE IS AN EXAMPLE OF THE USE OF SHHOPT:
 int 
 main ( int argc, char **argv ) {
 
+    // initial values here are just to demonstrate what gets set and
+    // what doesn't by the code below.
     int help_flag = 7;
     unsigned int help_spec =7;
     unsigned int height_spec =7;
@@ -186,7 +188,8 @@ typedef struct {
 
 /* OPTENT3 is the same as OPTENTRY except that it also sets the "specified"
    element of the table entry (so it assumes OPTION_DEF is a table of
-   optEntry instead of optStruct).
+   optEntry instead of optStruct).  It sets it to the number of times that
+   the option appears in the command line.
 
    Here is an example:
 
