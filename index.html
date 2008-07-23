@@ -149,7 +149,7 @@ have to pipeline many tools together.
 Here is an example of a shell command to convert all your of PNG files
 (named *.png) to JPEG files named *.jpg:
 <pre>
-for i in *.png; do pngtopnm $i | ppmtojpeg &gt;`basename $i .png`.jpg; done
+for i in *.png; do pngtopam $i | ppmtojpeg &gt;`basename $i .png`.jpg; done
 </pre>
 
 <P>
@@ -180,7 +180,7 @@ PNG file
 
 Try:
 <pre>
-printcmyk &lt;({ pngtopnm abc.png | pnmtotiffcmyk ; })
+printcmyk &lt;({ pngtopam abc.png | pnmtotiffcmyk ; })
 </pre>
 
 <P>It works in the other direction too, if you have a program that
@@ -612,9 +612,9 @@ href="http://jocr.sourceforge.net/">http://jocr.sourceforge.net/</a></b>.
 contains a PNG test suite -- a whole bunch of PNG images exploiting the
 various features of the PNG format.
 
-<P>Another version of Netpbm's <B>pnmtopng</B>/<B>pngtopnm</B> is at
-<B><A
-HREF="http://www.schaik.com/png/pnmtopng.html">http://www.schaik.com/png/pnmtopng.html</A></B>.
+<P>Other versions of Netpbm's <B>pnmtopng</B>/<B>pngtopam</B> are at
+<A HREF="http://www.schaik.com/png/pnmtopng.html">
+http://www.schaik.com/png/pnmtopng.html</A>.
 
 <p>The version in Netpbm was actually based on that package a long time
 ago, and you can expect to find better exploitation of the PNG format,

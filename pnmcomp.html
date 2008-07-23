@@ -6,13 +6,11 @@ Updated: 15 February 2004
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
 pnmcomp - composite (overlay) two PNM images together
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>pnmcomp</B>
 
@@ -37,8 +35,7 @@ hyphens instead of single hyphen to denote options.  You may use white
 space in place of the equals sign to separate an option name from its value.
 
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -49,15 +46,17 @@ href="pamcomp.html"><b>pamcomp</b></a>, introduced with Netpbm 10.21
 ability to process PAM images, and tends to produce better transparency
 results.
 
-<p><b>pnmcomp</b> remains in the Netpbm package because it probably
-has fewer bugs for now than <b>pamcomp</b>, and is faster.  Some day,
+<p><b>pnmcomp</b> remains in the Netpbm package because it may have
+fewer bugs for now than <b>pamcomp</b>, and is in some environments faster
+(but newer compilers have been seen to produce code for <b>pamcomp</b>
+significantly faster than that for <b>pnmcomp</b>).  Some day,
 <b>pnmcomp</b> will probably become an alias for <b>pamcomp</b>.
 
 <p>You can use the <b>pamcomp</b> documentation for <b>pnmcomp</b>,
 considering the following differences:
 
 <ul>
-<li><b>pnmcomp</b> options are a subset of <b>pamscale</b>'s, as
+<li><b>pnmcomp</b> options are a subset of <b>pamcomp</b>'s, as
      documented above.
 <li><b>pnmcomp</b> always assumes the input is linear, as <b>pamcomp</b>
      does when you specify its <b>-linear</b> option.
@@ -66,4 +65,3 @@ considering the following differences:
 
 </BODY>
 </HTML>
-
