@@ -4,6 +4,13 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+08.07.27 BJH  Release 10.35.48
+
+              pamperspective: change calculation of window height to avoid
+              buffer overrun.
+
+              pngtopnm: fix gamma correction.
+
 08.07.13 BJH  Release 10.35.47
 
               pngtopnm: fix bug: when background is color, output

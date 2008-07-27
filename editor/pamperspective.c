@@ -1083,45 +1083,81 @@ static int clean_y (int const y,  const struct pam *const outpam)
   return MIN(MAX(0, y), outpam->height-1);
 }
 
-static void init_buffer (buffer *const b, const world_data *const world,
-                         const option *const options,
-                         const struct pam *const inpam,
-                         const struct pam *const outpam)
-{
-  int yul, yur, yll, ylr, y_min;
-  int i, num_rows;
+static unsigned int
+distance(unsigned int const a,
+         unsigned int const b) {
 
-  yul = outpixel_to_iny (0,0,world);
-  yur = outpixel_to_iny (outpam->width-1,0,world);
-  yll = outpixel_to_iny (0,outpam->height-1,world);
-  ylr = outpixel_to_iny (outpam->width-1,outpam->height-1,world);
-
-  y_min = MIN (MIN (yul,yur), MIN (yll,ylr));
-  num_rows = MAX (MAX (diff (yul, yur),
-                       diff (yll, ylr)),
-                  MAX (diff (clean_y(yul,outpam), clean_y(y_min,outpam)),
-                       diff (clean_y(yur,outpam), clean_y(y_min,outpam))))
-    + 2;
-  switch (options->enums[3]) {  /* --interpolation */
-  case interp_nearest:
-    break;
-  case interp_linear:
-    num_rows += 1;
-    break;
-  };
-  if (num_rows > inpam->height)
-    num_rows = inpam->height;
-
-  b->num_rows = num_rows;
-  MALLOCARRAY_SAFE (b->rows, num_rows);
-  for (i=0; i<num_rows; i++) {
-    b->rows[i] = pnm_allocpamrow (inpam);
-    pnm_readpamrow (inpam, b->rows[i]);
-  };
-  b->last_physical = num_rows-1;
-  b->last_logical = num_rows-1;
-  b->inpam = inpam;
+    return a > b ? a - b : b - a;
 }
+
+
+
+static int
+boundedRow(int                const unboundedRow,
+           const struct pam * const outpamP) {
+
+    return MIN(MAX(0, unboundedRow), outpamP->height-1);
+}
+
+
+
+static unsigned int
+windowHeight(const world_data * const worldP,
+             const struct pam * const inpamP,
+             const struct pam * const outpamP,
+             const option *     const optionsP) {
+
+    unsigned int outRow;
+    unsigned int maxRowWindowHeight;
+    
+    maxRowWindowHeight = 1;  /* initial value */
+
+    for (outRow = 0; outRow < outpamP->height; ++outRow) {
+        unsigned int const leftCol = 0;
+        unsigned int const rghtCol = outpamP->width - 1;
+        unsigned int const leftInRow =
+            boundedRow(outpixel_to_iny(leftCol, outRow, worldP), outpamP);
+        unsigned int const rghtInRow =
+            boundedRow(outpixel_to_iny(rghtCol, outRow, worldP), outpamP);
+        
+        unsigned int const rowWindowHeight = distance(leftInRow, rghtInRow);
+
+        maxRowWindowHeight = MAX(maxRowWindowHeight, rowWindowHeight);
+    }
+    
+    /* We add 2 for rounding */
+
+    return maxRowWindowHeight + 2;
+}
+
+
+
+static void
+init_buffer(buffer *           const bufferP,
+            const world_data * const worldP,
+            const option *     const optionsP,
+            const struct pam * const inpamP,
+            const struct pam * const outpamP) {
+
+    unsigned int const num_rows =
+        windowHeight(worldP, inpamP, outpamP, optionsP);
+
+    MALLOCARRAY_SAFE(bufferP->rows, num_rows);
+    bufferP->num_rows = num_rows;
+    {
+        unsigned int row;
+        for (row = 0; row < num_rows; ++row) {
+            bufferP->rows[row] = pnm_allocpamrow(inpamP);
+            pnm_readpamrow(inpamP, bufferP->rows[row]);
+        }
+    }
+    bufferP->last_logical = num_rows-1;
+    bufferP->last_physical = num_rows-1;
+    bufferP->inpam = inpamP;
+}
+
+
+
 
 static tuple* read_buffer (buffer *const b, int const logical_y)
 {
