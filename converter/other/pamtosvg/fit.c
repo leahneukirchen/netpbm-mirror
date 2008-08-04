@@ -292,7 +292,7 @@ remove_adjacent_corners(index_list_type *   const list,
    pixel. We need this for checking the adjacency of the last corner.
 
    We need to do this because the adjacent corners turn into
-   two-pixel-long curves, which can only be fit by straight lines.
+   two-pixel-long curves, which can be fit only by straight lines.
 -----------------------------------------------------------------------------*/
   unsigned int j;
   unsigned int last;
@@ -314,10 +314,6 @@ remove_adjacent_corners(index_list_type *   const list,
           temp = GET_INDEX (*list, j);
           GET_INDEX (*list, j) = GET_INDEX (*list, max_index);
           GET_INDEX (*list, max_index) = temp;
-      
-      /* xx -- really have to sort?  */
-      LOG ("needed exchange");
-      at_exception_warning(exception, "needed exchange");
         }
     }
 
