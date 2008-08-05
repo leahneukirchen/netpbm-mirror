@@ -20,11 +20,101 @@
 #include "shhopt.h"
 #include "pam.h"
 
+
+
+struct cmdlineInfo {
+    const char * header;
+    const char * data;
+    const char * prefix;
+    unsigned int quality;
+    unsigned int quality2;
+    unsigned int nFiles;
+    const char ** inFileName;
+};
+
+
+
+static void
+parseCommandLine(int argc, const char ** argv,
+                 struct cmdlineInfo * const cmdlineP) {
+/*----------------------------------------------------------------------------
+   parse program command line described in Unix standard form by argc
+   and argv.  Return the information in the options as *cmdlineP.  
+
+   If command line is internally inconsistent (invalid options, etc.),
+   issue error message to stderr and abort program.
+
+   Note that the strings we return are stored in the storage that
+   was passed to us as the argv array.  We also trash *argv.
+-----------------------------------------------------------------------------*/
+    optEntry * option_def;
+        /* Instructions to OptParseOptions3 on how to parse our options. */
+    optStruct3 opt;
+    unsigned int dataSpec, headerSpec, prefixSpec, qualitySpec;
+    unsigned int option_def_index;
+    unsigned int i;
+    unsigned int q[10];
+
+    MALLOCARRAY_NOFAIL(option_def, 100);
+  
+    option_def_index = 0;   /* incremented by OPTENTRY */
+    OPTENT3( 0,  "data",    OPT_STRING, &cmdlineP->data, &dataSpec, 0);
+    OPTENT3( 0,  "header",  OPT_STRING, &cmdlineP->header, &headerSpec, 0);
+    OPTENT3('q', "quality", OPT_UINT,   &cmdlineP->quality,   &qualitySpec, 0);
+    OPTENT3('p', "prefix",  OPT_STRING, &cmdlineP->prefix,    &prefixSpec, 0);
+    OPTENT3('0', "0",       OPT_FLAG,   NULL, &q[0],      0);
+    OPTENT3('1', "1",       OPT_FLAG,   NULL, &q[1],      0);
+    OPTENT3('2', "2",       OPT_FLAG,   NULL, &q[2],      0);
+    OPTENT3('3', "3",       OPT_FLAG,   NULL, &q[3],      0);
+    OPTENT3('4', "4",       OPT_FLAG,   NULL, &q[4],      0);
+    OPTENT3('5', "5",       OPT_FLAG,   NULL, &q[5],      0);
+    OPTENT3('6', "6",       OPT_FLAG,   NULL, &q[6],      0);
+    OPTENT3('7', "7",       OPT_FLAG,   NULL, &q[7],      0);
+    OPTENT3('8', "8",       OPT_FLAG,   NULL, &q[8],      0);
+    OPTENT3('9', "9",       OPT_FLAG,   NULL, &q[9],      0);
+
+    opt.opt_table = option_def;
+    opt.short_allowed = FALSE;
+    opt.allowNegNum = FALSE;
+
+    optParseOptions3(&argc, (char**)argv, opt, sizeof(opt), 0);
+
+    if (!dataSpec)
+        cmdlineP->data = NULL;
+    if (!headerSpec)
+        cmdlineP->header = NULL;
+    if (!prefixSpec)
+        cmdlineP->prefix = "";
+    if (!qualitySpec)
+        cmdlineP->quality = 200;
+
+    
+    /* cmdlineP->quality2 is the greatest number from the --1, --2, etc.
+       options, or 5 if none of those are specified.
+    */
+    cmdlineP->quality2 = 5;  /* initial value */
+    for (i = 0; i < 10; ++i) {
+        if (q[i])
+            cmdlineP->quality2 = i;
+    }
+
+    cmdlineP->nFiles = argc-1;
+
+    MALLOCARRAY_NOFAIL(cmdlineP->inFileName, argc-1);
+
+    for (i = 0; i < argc-1; ++i) {
+        if (cmdlineP->data && strchr(argv[i+1], ':'))
+            pm_error("Filename '%s' contains a \":\", which is forbidden "
+                     "with -data", argv[i+1]);
+        else
+            cmdlineP->inFileName[i] = strdup(argv[1+1]);
+    }
+}
+
+
+
 typedef struct { int f[sizeof(int) * 8 + 1]; } factorset;
 typedef struct { int x; int y; } coord;
-
-static int qfactor;
-static int quality = 5;
 
 static factorset 
 factor(int n)
@@ -98,7 +188,9 @@ recursefindpack(coord *        const current,
                 unsigned int   const depth,
                 unsigned int   const n,
                 unsigned int   const xinc,
-                unsigned int   const yinc) {
+                unsigned int   const yinc,
+                unsigned int   const quality,
+                unsigned int   const qfactor) {
 
     if (depth == n) {
         if (currentsz.x * currentsz.y < *maxareaP) {
@@ -121,7 +213,8 @@ recursefindpack(coord *        const current,
                 if (!collides(current, set, &current[depth],
                               &set[depth], depth)) {
                     recursefindpack(current, c, set, best, minarea, maxareaP,
-                                    depth + 1, n, xinc, yinc);
+                                    depth + 1, n, xinc, yinc,
+                                    quality, qfactor);
                     if (*maxareaP <= minarea)
                         return;
                 }
@@ -139,52 +232,61 @@ recursefindpack(coord *        const current,
 
 
 static void 
-findpack(struct pam *imgs, int n, coord *coords)
-{
-  int minarea;
-  int i;
-  int rdiv;
-  int cdiv;
-  int minx = -1;
-  int miny = -1;
-  coord *current;
-  coord *set;
-  unsigned int z = UINT_MAX;
-  coord c = { 0, 0 };
+findpack(struct pam * const imgs,
+         unsigned int const n,
+         coord *      const coords,
+         unsigned int const quality,
+         unsigned int const qfactor) {
 
-  if (quality > 1)
-  {
-    for (minarea = i = 0; i < n; ++i)
-      minarea += imgs[i].height * imgs[i].width,
-      minx = MAX(minx, imgs[i].width),
-      miny = MAX(miny, imgs[i].height);
+    int minarea;
+    int i;
+    int rdiv;
+    int cdiv;
+    int minx;
+    int miny;
+    coord * current;
+    coord * set;
+    unsigned int z;
+    coord c;
 
-    minarea = minarea * qfactor / 100;
-  }
-  else
-  {
-    minarea = INT_MAX - 1;
-  }
+    minx = -1; miny = -1;  /* initial value */
+    z = UINT_MAX;  /* initial value */
+    c.x = 0; c.y = 0;  /* initial value */
 
-  /* It's relatively easy to show that, if all the images
-   * are multiples of a particular size, then a best
-   * packing will always align the images on a grid of
-   * that size.
-   *
-   * This speeds computation immensely.
-   */
-  for (rdiv = imgs[0].height, i = 1; i < n; ++i)
-    rdiv = gcd(imgs[i].height, rdiv);
+    if (quality > 1) {
+        unsigned int realMinarea;
+        for (realMinarea = i = 0; i < n; ++i)
+            realMinarea += imgs[i].height * imgs[i].width,
+                minx = MAX(minx, imgs[i].width),
+                miny = MAX(miny, imgs[i].height);
 
-  for (cdiv = imgs[0].width, i = 1; i < n; ++i)
-    cdiv = gcd(imgs[i].width, cdiv);
+        minarea = realMinarea * qfactor / 100;
+    } else {
+        minarea = INT_MAX - 1;
+    }
 
-  MALLOCARRAY(current, n);
-  MALLOCARRAY(set, n);
-  for (i = 0; i < n; ++i)
-    set[i].x = imgs[i].width,
-    set[i].y = imgs[i].height;
-  recursefindpack(current, c, set, coords, minarea, &z, 0, n, cdiv, rdiv);
+    /* It's relatively easy to show that, if all the images
+     * are multiples of a particular size, then a best
+     * packing will always align the images on a grid of
+     * that size.
+     *
+     * This speeds computation immensely.
+     */
+    for (rdiv = imgs[0].height, i = 1; i < n; ++i)
+        rdiv = gcd(imgs[i].height, rdiv);
+
+    for (cdiv = imgs[0].width, i = 1; i < n; ++i)
+        cdiv = gcd(imgs[i].width, cdiv);
+
+    MALLOCARRAY(current, n);
+    MALLOCARRAY(set, n);
+
+    for (i = 0; i < n; ++i)
+        set[i].x = imgs[i].width,
+            set[i].y = imgs[i].height;
+
+    recursefindpack(current, c, set, coords, minarea, &z, 0, n, cdiv, rdiv,
+                    quality, qfactor);
 }
 
 
@@ -419,165 +521,101 @@ computeOutputDimensions(int * const widthP,
 
 
 
-struct cmdlineInfo {
-    const char * header;
-    const char * data;
-    const char * prefix;
-    unsigned int quality;
-    unsigned int q[10];
-};
-
-
-
 int 
 main(int argc, const char **argv) {
-  struct cmdlineInfo cmdline;
-  struct pam *imgs;
-  struct pam outimg;
-  int nfiles;
-  coord *coords;
-  FILE *header;
-  FILE *data;
-  const char **names;
-  unsigned int i;
 
-  optEntry * option_def;
-      /* Instructions to OptParseOptions3 on how to parse our options.
-       */
-  optStruct3 opt;
-  unsigned int dataSpec, headerSpec, prefixSpec, qualitySpec;
-  unsigned int option_def_index;
+    struct cmdlineInfo cmdline;
+    struct pam * imgs;
+    struct pam outimg;
+    unsigned int nfiles;
+    coord * coords;
+    FILE * header;
+    FILE * data;
+    const char ** names;
+    unsigned int i;
+    unsigned int qfactor;  /* In per cent */
 
-  pm_proginit(&argc, argv);
+    pm_proginit(&argc, argv);
 
-  MALLOCARRAY_NOFAIL(option_def, 100);
-  
-  option_def_index = 0;   /* incremented by OPTENTRY */
-  OPTENT3( 0,  "data",    OPT_STRING, &cmdline.data, &dataSpec, 0);
-  OPTENT3( 0,  "header",  OPT_STRING, &cmdline.header, &headerSpec, 0);
-  OPTENT3('q', "quality", OPT_UINT,   &cmdline.quality,   &qualitySpec, 0);
-  OPTENT3('p', "prefix",  OPT_STRING, &cmdline.prefix,    &prefixSpec, 0);
-  OPTENT3('0', "0",       OPT_FLAG,   NULL, &cmdline.q[0],      0);
-  OPTENT3('1', "1",       OPT_FLAG,   NULL, &cmdline.q[1],      0);
-  OPTENT3('2', "2",       OPT_FLAG,   NULL, &cmdline.q[2],      0);
-  OPTENT3('3', "3",       OPT_FLAG,   NULL, &cmdline.q[3],      0);
-  OPTENT3('4', "4",       OPT_FLAG,   NULL, &cmdline.q[4],      0);
-  OPTENT3('5', "5",       OPT_FLAG,   NULL, &cmdline.q[5],      0);
-  OPTENT3('6', "6",       OPT_FLAG,   NULL, &cmdline.q[6],      0);
-  OPTENT3('7', "7",       OPT_FLAG,   NULL, &cmdline.q[7],      0);
-  OPTENT3('8', "8",       OPT_FLAG,   NULL, &cmdline.q[8],      0);
-  OPTENT3('9', "9",       OPT_FLAG,   NULL, &cmdline.q[9],      0);
+    parseCommandLine(argc, argv, &cmdline);
 
-  opt.opt_table = option_def;
-  opt.short_allowed = FALSE;
-  opt.allowNegNum = FALSE;
+    header = cmdline.header ? pm_openw(cmdline.header) : NULL;
+    data = cmdline.data ? pm_openw(cmdline.data) : NULL;
 
-  /* Check for flags. */
-  optParseOptions3(&argc, (char**)argv, opt, sizeof(opt), 0);
-
-  if (!dataSpec)
-      cmdline.data = NULL;
-  if (!headerSpec)
-      cmdline.header = NULL;
-  if (!prefixSpec)
-      cmdline.prefix = "";
-  if (!qualitySpec)
-      cmdline.quality = 200;
-
-  header = cmdline.header ? pm_openw(cmdline.header) : NULL;
-  data = cmdline.data ? pm_openw(cmdline.data) : NULL;
-  qfactor = cmdline.quality;
-
-  for (i = 0; i < 10; ++i)
-  {
-    if (cmdline.q[i])
-    {
-      quality = i;
-      switch (quality)
-      {
-        case 0: case 1: break;
-        case 2: case 3: case 4: case 5: case 6: 
-            qfactor = 100 * (8 - quality); 
-            break;
-        case 7: qfactor = 150; break;
-        case 8: qfactor = 125; break;
-        case 9: qfactor = 100; break;
-      }
+    switch (cmdline.quality2) {
+    case 0: case 1:
+        qfactor = cmdline.quality;
+        break;
+    case 2: case 3: case 4: case 5: case 6: 
+        qfactor = 100 * (8 - cmdline.quality2); 
+        break;
+    case 7: qfactor = 150; break;
+    case 8: qfactor = 125; break;
+    case 9: qfactor = 100; break;
+    default: pm_error("Internal error - impossible value of 'quality2': %u",
+                      cmdline.quality2);
     }
-  }
 
-  if (1 < argc)
-    nfiles = argc - 1;
-  else
-    nfiles = 1;
+    nfiles = cmdline.nFiles > 0 ? cmdline.nFiles : 1;
 
-  MALLOCARRAY(imgs, nfiles);
-  MALLOCARRAY(coords, nfiles);
-  MALLOCARRAY(names, nfiles);
+    MALLOCARRAY(imgs, nfiles);
+    MALLOCARRAY(coords, nfiles);
+    MALLOCARRAY(names, nfiles);
   
-  if (!imgs || !coords || !names)
-    pm_error("out of memory");
+    if (!imgs || !coords || !names)
+        pm_error("out of memory");
 
-  if (1 < argc)
-  {
+    if (cmdline.nFiles > 0) {
+        unsigned int i;
+
+        for (i = 0; i < cmdline.nFiles; ++i) {
+            imgs[i].file = pm_openr(cmdline.inFileName[i]);
+            names[i] = strdup(cmdline.inFileName[i]);
+        }
+    } else {
+        imgs[0].file = stdin;
+        names[0] = strdup("stdin");
+    }
+
     for (i = 0; i < nfiles; ++i)
-    {
-      if (strchr(argv[i+1], ':'))
-      {
-        imgs[i].file = pm_openr(strchr(argv[i+1], ':') + 1);
-        *strchr(argv[i+1], ':') = 0;
-        names[i] = argv[i+1];
-      }
-      else
-      {
-        imgs[i].file = pm_openr(argv[i+1]);
-        names[i] = argv[i+1];
-      }
-    }
-  }
-  else
-  {
-    imgs[0].file = stdin;
-  }
+        pnm_readpaminit(imgs[i].file, &imgs[i], PAM_STRUCT_SIZE(tuple_type));
 
-  for (i = 0; i < nfiles; ++i)
-      pnm_readpaminit(imgs[i].file, &imgs[i], PAM_STRUCT_SIZE(tuple_type));
+    sortImagesByArea(nfiles, imgs, names);
 
-  sortImagesByArea(nfiles, imgs, names);
+    findpack(imgs, nfiles, coords, cmdline.quality2, qfactor);
 
-  findpack(imgs, nfiles, coords);
+    computeOutputType(&outimg.maxval, &outimg.format, outimg.tuple_type,
+                      &outimg.depth, nfiles, imgs);
 
-  computeOutputType(&outimg.maxval, &outimg.format, outimg.tuple_type,
-                    &outimg.depth, nfiles, imgs);
+    computeOutputDimensions(&outimg.width, &outimg.height, nfiles,
+                            imgs, coords);
 
-  computeOutputDimensions(&outimg.width, &outimg.height, nfiles, imgs, coords);
+    pnm_setminallocationdepth(&outimg, outimg.depth);
 
-  pnm_setminallocationdepth(&outimg, outimg.depth);
-
-  outimg.size = sizeof(outimg);
-  outimg.len = sizeof(outimg);
-  outimg.file = stdout;
-  outimg.bytes_per_sample = 0;
-  for (i = outimg.maxval; i; i >>= 8)
-    ++outimg.bytes_per_sample;
+    outimg.size = sizeof(outimg);
+    outimg.len = sizeof(outimg);
+    outimg.file = stdout;
+    outimg.bytes_per_sample = 0;
+    for (i = outimg.maxval; i; i >>= 8)
+        ++outimg.bytes_per_sample;
  
-  writePam(&outimg, nfiles, coords, imgs);
+    writePam(&outimg, nfiles, coords, imgs);
 
-  if (data)
-      writeData(data, outimg.width, outimg.height,
-                nfiles, names, coords, imgs);
-
-  if (header)
-      writeHeader(header, cmdline.prefix, outimg.width, outimg.height,
+    if (data)
+        writeData(data, outimg.width, outimg.height,
                   nfiles, names, coords, imgs);
 
-  for (i = 0; i < nfiles; ++i)
-    pm_close(imgs[i].file);
-  pm_close(stdout);
-  if (header)
-    pm_close(header);
-  if (data)
-    pm_close(data);
+    if (header)
+        writeHeader(header, cmdline.prefix, outimg.width, outimg.height,
+                    nfiles, names, coords, imgs);
 
-  return 0;
+    for (i = 0; i < nfiles; ++i)
+        pm_close(imgs[i].file);
+    pm_close(stdout);
+    if (header)
+        pm_close(header);
+    if (data)
+        pm_close(data);
+
+    return 0;
 }
