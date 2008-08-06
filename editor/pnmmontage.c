@@ -113,8 +113,32 @@ parseCommandLine(int argc, const char ** argv,
 
 
 
-typedef struct { int f[sizeof(int) * 8 + 1]; } factorset;
-typedef struct { int x; int y; } coord;
+typedef struct {
+    int f[sizeof(int) * 8 + 1];
+} factorset;
+
+typedef struct {
+    int x; int y;
+} coord;
+
+typedef struct {
+    coord ul;
+    coord size;
+} rectangle;
+
+static coord
+lr(rectangle const r) {
+/*----------------------------------------------------------------------------
+   Return the coordinates of the lower right corner of 'r'
+   (i.e. the pixel just beyond the lowest rightmost one).
+-----------------------------------------------------------------------------*/
+    coord retval;
+
+    retval.x = r.ul.x + r.size.x;
+    retval.y = r.ul.y + r.size.y;
+
+    return retval;
+}
 
 static factorset 
 factor(int n)
@@ -158,30 +182,38 @@ gcd(int n, int m)
 
 
 static bool
-collides(const coord * const locs,
-         const coord * const szs,
-         const coord * const cloc,
-         const coord * const csz,
-         unsigned int  const n) {
+overlaps(rectangle const a,
+         rectangle const b) {
 
+    return
+        (a.ul.x < lr(b).x && a.ul.y < lr(b).y) &&
+        (lr(a).x > b.ul.x && lr(a).y > b.ul.y);
+}
+
+
+
+static bool
+collides(rectangle         const test,
+         const rectangle * const fieldList,
+         unsigned int      const n) {
+/*----------------------------------------------------------------------------
+   Return true iff the rectangle 'test' overlaps any of the 'n' rectangles
+   fieldList[].
+-----------------------------------------------------------------------------*/
     unsigned int i;
 
-    for (i = 0; i < n; ++i) {
-        if ((locs[i].x < cloc->x + csz->x) &&
-            (locs[i].y < cloc->y + csz->y) &&
-            (locs[i].x + szs[i].x > cloc->x) &&
-            (locs[i].y + szs[i].y > cloc->y))
+    for (i = 0; i < n; ++i)
+        if (overlaps(fieldList[i], test))
             return true;
-    }
+
     return false;
 }
 
 
 
 static void 
-recursefindpack(coord *        const current,
+recursefindpack(rectangle *    const current,
                 coord          const currentsz,
-                coord *        const set, 
                 coord *        const best,
                 unsigned int   const minarea,
                 unsigned int * const maxareaP, 
@@ -196,34 +228,41 @@ recursefindpack(coord *        const current,
         if (currentsz.x * currentsz.y < *maxareaP) {
             unsigned int i;
             for (i = 0; i < n; ++i)
-                best[i] = current[i];
+                best[i] = current[i].ul;
             *maxareaP = currentsz.x * currentsz.y;
         }
     } else {
         unsigned int i;
 
+        rectangle * const newP = &current[depth];
+
         for (i = 0; ; ++i) {
-            for (current[depth].x = 0, current[depth].y = i * yinc;
-                 current[depth].y <= i * yinc;) {
+            for (newP->ul.x = 0, newP->ul.y = i * yinc;
+                 newP->ul.y <= i * yinc;) {
 
                 coord c;
 
-                c.x = MAX(current[depth].x + set[depth].x, currentsz.x);
-                c.y = MAX(current[depth].y + set[depth].y, currentsz.y);
-                if (!collides(current, set, &current[depth],
-                              &set[depth], depth)) {
-                    recursefindpack(current, c, set, best, minarea, maxareaP,
+                c.x = MAX(lr(*newP).x, currentsz.x);
+                c.y = MAX(lr(*newP).y, currentsz.y);
+                pm_message("current = (%u.%u, %u.%u) new = (%u.%u, %u.%u)",
+                           current[0].ul.x, current[0].size.x,
+                           current[0].ul.y, current[0].size.y,
+                           newP->ul.x,   newP->size.x,
+                           newP->ul.y,   newP->size.y);
+                if (!collides(*newP, current, depth)) {
+                    pm_message("Depth %u: Doesn't collide at i=%u", depth,i);
+                    recursefindpack(current, c, best, minarea, maxareaP,
                                     depth + 1, n, xinc, yinc,
                                     quality, qfactor);
                     if (*maxareaP <= minarea)
                         return;
                 }
-                if (current[depth].x == (i - 1) * xinc)
-                    current[depth].y = 0;
-                if (current[depth].x < i * xinc)
-                    current[depth].x += xinc;
+                if (newP->ul.x == (i - 1) * xinc)
+                    newP->ul.y = 0;
+                if (newP->ul.x < i * xinc)
+                    newP->ul.x += xinc;
                 else
-                    current[depth].y += yinc;
+                    newP->ul.y += yinc;
             }
         }
     }
@@ -244,8 +283,7 @@ findpack(struct pam * const imgs,
     int cdiv;
     int minx;
     int miny;
-    coord * current;
-    coord * set;
+    rectangle * current;
     unsigned int z;
     coord c;
 
@@ -279,13 +317,12 @@ findpack(struct pam * const imgs,
         cdiv = gcd(imgs[i].width, cdiv);
 
     MALLOCARRAY(current, n);
-    MALLOCARRAY(set, n);
 
-    for (i = 0; i < n; ++i)
-        set[i].x = imgs[i].width,
-            set[i].y = imgs[i].height;
-
-    recursefindpack(current, c, set, coords, minarea, &z, 0, n, cdiv, rdiv,
+    for (i = 0; i < n; ++i) {
+        current[i].size.x = imgs[i].width;
+        current[i].size.y = imgs[i].height;
+    }
+    recursefindpack(current, c, coords, minarea, &z, 0, n, cdiv, rdiv,
                     quality, qfactor);
 }
 
