@@ -105,6 +105,11 @@ pbm_check(FILE * file, const enum pm_check_type check_type,
           const int format, const int cols, const int rows,
           enum pm_check_code * const retval_p);
 
+bit
+pbm_backgroundbitrow(const unsigned char * const packedBits,
+                     unsigned int          const cols,
+                     unsigned int          const offset);
+
 #ifdef __cplusplus
 }
 #endif
