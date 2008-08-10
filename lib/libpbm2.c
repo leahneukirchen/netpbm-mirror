@@ -227,13 +227,11 @@ pbm_readpbmrow_bitoffset(FILE *          const ifP,
     unsigned int const last = pbm_packed_bytes(cols+rsh) - 1;
         /* Position within window of rightmost byte after shift */
 
-    unsigned char origHead, origEnd;
-        /* The original leftmost and rightmost chars. */
+    /* The original leftmost and rightmost chars. */
+    unsigned char const origHead = window[0];
+    unsigned char const origEnd  = window[last];
 
     pbm_readpbmrow_packed(ifP, window, cols, format);
-
-    origHead = window[0];   
-    origEnd  = window[last];
 
     if (rsh > 0) {
         /* Target slot doesn't start on byte boundary; right-shift. */
