@@ -251,9 +251,12 @@ pbm_readpbmrow_bitoffset(FILE *          const ifP,
         /* Adjust rightmost char */
         unsigned int  const trs = (cols + rsh) % 8;
         unsigned int  const tls = 8 - trs;
-        unsigned char const origEndShift = (origEnd << trs) >> trs;
+        unsigned char const rightBits =
+            ((unsigned char)(origEnd << trs) >> trs);
+        unsigned char const leftBits =
+            ((unsigned char)(window[last] >> tls) << tls);
 
-        window[last] = (window[last] >> tls) << tls | origEndShift;
+        window[last] =  leftBits | rightBits;
     }
 } 
 
