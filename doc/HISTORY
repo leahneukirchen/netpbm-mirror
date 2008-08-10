@@ -13,13 +13,10 @@ not yet  BJH  Release 10.44.00
               pnmcolormap (pnmquant): round instead of truncating when
               computing means.
 
-              pnmpaste: Add fast PBM path.  Thanks Prophet of the Way
-              <afu@wta.att.ne.jp>.
+              pnmcat, pnmpaste, pnmpad: Add fast PBM path.  Thanks
+              Prophet of the Way <afu@wta.att.ne.jp>.
 
               pnmpaste: fail if user specified stdin for both images.
-
-              pnmpad: Add fast PBM path.  Thanks Prophet of the Way
-              <afu@wta.att.ne.jp>.
 
               pamtosvg: remove "needed exchange" debug trace.
 
