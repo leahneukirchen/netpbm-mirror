@@ -69,15 +69,20 @@ hyphens may be given in any order.
 <p><b>pamperspective</b> reads a Netpbm image as input and produces a
 Netpbm image of the same format as output.
 
-<p>The values <i>upper_left_x</i> ... <i>lower_right_y</i>, that are
-required on the command line, specify a quadrilateral in the input
-image.  <b>pamperspective</b> interprets the input image as a
-perspective projection of a three dimensional scene, for example a
-photograph.  <b>pamperspective</b> assumes the specified quadrilateral
-represents a parallelogram in that scene.  The output image consists
-of this parallelogram, sheared to a rectangle.  In this way
-<b>pamperspective</b> undoes the effect of a raytracer or scanline
+<p><b>pamperspective</b> interprets the input image as a perspective
+projection of another image which is in a plane oblique to that of the
+input image.  For example, a photograph of a painting, taken at an
+angle.  The arguments <i>upper_left_x</i> ... <i>lower_right_y</i>
+specify a quadrilateral in the photograph that <b>pamperspective</b>
+assumes corresponds to a parallelogram in the painting.  The output
+image consists of this parallelogram, sheared to a rectangle.  In this
+way <b>pamperspective</b> undoes the effect of a raytracer or scanline
 renderer.
+
+<p>Note that if the input image is a projection of a solid scene,
+rather than a plane, the result is like a different camera angle on
+that scene, to the extent that the scene is shallow from the other
+angle.
 
 <p>The input is from <i>infile</i>, or from Standard Input, if
 <i>infile</i> is not specified.  The output is to Standard Output.
@@ -187,13 +192,13 @@ number, <b>pamperspective</b> does not allow this format.
 
     <dt><i>system</i>=<b>pixel</b>, <i>unit</i>=<b>image</b></dt>
 
-    <dd>(0,0) refers to the centre of the upper left pixel and (1,1)
-    refers to the centre of the lower right pixel.</dd>
+    <dd>(0,0) refers to the center of the upper left pixel and (1,1)
+    refers to the center of the lower right pixel.</dd>
 
     <dt><i>system</i>=<b>pixel</b>, <i>unit</i>=<b>pixel</b></dt>
 
-    <dd>(0,0) refers to the centre of the upper left pixel and
-    (<i>width</i>-1,<i>height</i>-1) refers to the centre of the lower
+    <dd>(0,0) refers to the center of the upper left pixel and
+    (<i>width</i>-1,<i>height</i>-1) refers to the center of the lower
     right pixel.  Here <i>width</i> and <i>height</i> are the width
     and height of the input image.</dd>
 
@@ -356,8 +361,8 @@ part.
 
     <dt><b>pixel</b></dt>
 
-    <dd>The upper left vertex corresponds to the centre of the upper
-    left pixel and The lower right vertex corresponds to the centre of
+    <dd>The upper left vertex corresponds to the center of the upper
+    left pixel and The lower right vertex corresponds to the center of
     the lower right pixel.</dd>
 
     </dl>
@@ -367,8 +372,8 @@ part.
 
   <dt><b>--interpolation=</b><i>spec</i></dt>
 
-  <dd>Usually (centres of) output pixels do not exactly correspond to
-  (centres of) input pixels.  This option determines how the program
+  <dd>Usually (centers of) output pixels do not exactly correspond to
+  (centers of) input pixels.  This option determines how the program
   will choose the new pixels.  Valid values for <i>spec</i> are:
 
   <dl>
@@ -397,16 +402,16 @@ so that no part of the input image is missing in the output.
 There are problems with that:
 
 <ul>
-  <li>If the threedimensional plane defined by the quadrilateral has a
+  <li>If the three dimensional plane defined by the quadrilateral has a
   visible horizon in the input image, then the above asks <b>pamperspective</b>
   to include points that cannot ever be part of the output.
 
-  <li>If the horizon is not visible, but close to the border of the input
-  image, this may result in <em>very</em> large output files. Consider a
-  picture of a road. If you ask a point close to the horizon to be included,
-  then this point is far away from the viewer. The output will cover many
-  kilometers of road, while <b>--detail</b> perhaps makes a pixel equal to a
-  square centimeter.
+  <li>If the horizon is not visible, but close to the border of the
+  input image, this may result in <em>very</em> large output
+  files. Consider a picture of a road. If you ask for a point close to
+  the horizon to be included, then this point is far away from the
+  viewer. The output will cover many kilometers of road, while
+  <b>--detail</b> perhaps makes a pixel represent a square centimeter.
 
   </ul>
 
