@@ -18,6 +18,9 @@ not yet  BJH  Release 10.44.00
 
               pnmpaste: fail if user specified stdin for both images.
 
+              pamcut: don't crash when cutting a region entirely to the
+              left or right of the input image, with -pad.
+
               pamtosvg: remove "needed exchange" debug trace.
 
               Add pbmminkowski (source code has been in package since 10.12

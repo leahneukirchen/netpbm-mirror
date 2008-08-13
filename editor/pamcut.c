@@ -400,13 +400,15 @@ struct rowCutter {
    create a new one then.
 */
 
+
+
 static void
 createRowCutter(struct pam *        const inpamP,
                 struct pam *        const outpamP,
                 int                 const leftcol,
                 int                 const rightcol,
                 struct rowCutter ** const rowCutterPP) {
-    
+
     struct rowCutter * rowCutterP;
     tuple * inputPointers;
     tuple * outputPointers;
@@ -414,7 +416,7 @@ createRowCutter(struct pam *        const inpamP,
     tuple blackTuple;
     tuple discardTuple;
     int col;
-    
+
     assert(inpamP->depth >= outpamP->depth);
         /* Entry condition.  If this weren't true, we could not simply
            treat an input tuple as an output tuple.
@@ -428,12 +430,12 @@ createRowCutter(struct pam *        const inpamP,
     MALLOCARRAY_NOFAIL(outputPointers, outpamP->width);
 
     /* Put in left padding */
-    for (col = leftcol; col < 0; ++col)
+    for (col = leftcol; col < 0 && col-leftcol < outpamP->width; ++col)
         outputPointers[col-leftcol] = blackTuple;
- 
+
     /* Put in extracted columns */
-    for (col = MAX(leftcol, 0); 
-         col <= MIN(rightcol, inpamP->width-1); 
+    for (col = MAX(leftcol, 0);
+         col <= MIN(rightcol, inpamP->width-1);
          ++col) {
         int const outcol = col - leftcol;
 
@@ -441,15 +443,18 @@ createRowCutter(struct pam *        const inpamP,
     }
 
     /* Put in right padding */
-    for (col = MIN(rightcol, inpamP->width-1) + 1; col <= rightcol; ++col)
-        outputPointers[col-leftcol] = blackTuple;
-    
+    for (col = MIN(rightcol, inpamP->width-1) + 1; col <= rightcol; ++col) {
+        if (col - leftcol >= 0) {
+            outputPointers[col-leftcol] = blackTuple;
+        }
+    }
+
     /* Direct input pixels that are getting cut off to the discard tuple */
 
-    for (col = 0; col < leftcol; ++col)
+    for (col = 0; col < MIN(leftcol, inpamP->width); ++col)
         inputPointers[col] = discardTuple;
 
-    for (col = rightcol + 1; col < inpamP->width; ++col)
+    for (col = MAX(0, rightcol + 1); col < inpamP->width; ++col)
         inputPointers[col] = discardTuple;
 
     MALLOCVAR_NOFAIL(rowCutterP);
