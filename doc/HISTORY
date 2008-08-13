@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+08.08.13 BJH  Release 10.35.49
+
+              pamcut: don't crash when cutting a region entirely to the
+              left or right of the input image, with -pad.
+
 08.07.27 BJH  Release 10.35.48
 
               pamperspective: change calculation of window height to avoid
