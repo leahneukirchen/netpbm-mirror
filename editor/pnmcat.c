@@ -12,9 +12,13 @@
 
 #include <assert.h>
 
-#include "pnm.h"
 #include "mallocvar.h"
 #include "shhopt.h"
+#include "bitarith.h"
+#include "pnm.h"
+
+#define LEFTBITS pm_byteLeftBits
+#define RIGHTBITS pm_byteRightBits
 
 enum backcolor {BACK_WHITE, BACK_BLACK, BACK_AUTO};
 
@@ -219,43 +223,6 @@ computeOutputParms(unsigned int     const nfiles,
 }
 
 
-static unsigned char
-leftBits(unsigned char const x,
-         unsigned int  const n) {
-/*----------------------------------------------------------------------------
-  Clear rightmost (8-n) bits, retain leftmost (=high) n bits.
------------------------------------------------------------------------------*/
-    unsigned char retval;
-
-    assert(n < 8);
-
-    retval = x;
-    retval >>= (8-n);
-    retval <<= (8-n);
-
-    return retval;
-}
-
-
-
-static unsigned char
-rightBits(unsigned char const x,
-          unsigned int  const n){
-/*----------------------------------------------------------------------------
-  Return rightmost (=low) n bits of x.
------------------------------------------------------------------------------*/
-    unsigned char retval;
-
-    assert(n < 8);
-
-    retval = x;
-    retval <<= (8-n);
-    retval >>= (8-n);
-
-    return retval;
-}
-
-
 
 static void
 copyBitrow(const unsigned char * const source,
@@ -289,10 +256,10 @@ copyBitrow(const unsigned char * const source,
         dest[i] = source[i];
 
     if (rs > 0)
-        dest[0] = leftBits(origHead, rs) | rightBits(dest[0], 8-rs);
+        dest[0] = LEFTBITS(origHead, rs) | RIGHTBITS(dest[0], 8-rs);
 
     if (trs > 0)
-        dest[last] = leftBits(dest[last], trs) | rightBits(origEnd, 8-trs);
+        dest[last] = LEFTBITS(dest[last], trs) | RIGHTBITS(origEnd, 8-trs);
 }
 
 
@@ -323,10 +290,10 @@ padFillBitrow(unsigned char * const destBitrow,
         dest[i] = padColor;
 
     if (rs > 0)
-        dest[0] = leftBits(origHead, rs) | rightBits(dest[0], 8-rs);
+        dest[0] = LEFTBITS(origHead, rs) | RIGHTBITS(dest[0], 8-rs);
 
     if (trs > 0)
-        dest[last] = leftBits(dest[last], trs) | rightBits(origEnd, 8-trs);
+        dest[last] = LEFTBITS(dest[last], trs) | RIGHTBITS(origEnd, 8-trs);
 }
 
 
