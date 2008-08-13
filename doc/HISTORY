@@ -4,6 +4,16 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+not yet  BJH  Release 10.43.03
+
+              pamcut: don't crash when cutting a region entirely to the
+              left or right of the input image, with -pad.
+
+              pnmmontage: don't corrupt file names when they contain
+              colons.
+
+              pamtosvg: remove "needed exchange" debug trace.
+
 08.07.20 BJH  Release 10.43.02
 
               pamflip: fix bug: garbage output for PBMs, since 10.42.

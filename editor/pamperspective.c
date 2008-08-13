@@ -1092,6 +1092,55 @@ static int clean_y (int const y,  const struct pam *const outpam)
   return MIN(MAX(0, y), outpam->height-1);
 }
 
+static unsigned int
+distance(unsigned int const a,
+         unsigned int const b) {
+
+    return a > b ? a - b : b - a;
+}
+
+
+
+static int
+boundedRow(int                const unboundedRow,
+           const struct pam * const outpamP) {
+
+    return MIN(MAX(0, unboundedRow), outpamP->height-1);
+}
+
+
+
+static unsigned int
+windowHeight(const world_data * const worldP,
+             const struct pam * const inpamP,
+             const struct pam * const outpamP,
+             const option *     const optionsP) {
+
+    unsigned int outRow;
+    unsigned int maxRowWindowHeight;
+    
+    maxRowWindowHeight = 1;  /* initial value */
+
+    for (outRow = 0; outRow < outpamP->height; ++outRow) {
+        unsigned int const leftCol = 0;
+        unsigned int const rghtCol = outpamP->width - 1;
+        unsigned int const leftInRow =
+            boundedRow(outpixel_to_iny(leftCol, outRow, worldP), outpamP);
+        unsigned int const rghtInRow =
+            boundedRow(outpixel_to_iny(rghtCol, outRow, worldP), outpamP);
+        
+        unsigned int const rowWindowHeight = distance(leftInRow, rghtInRow);
+
+        maxRowWindowHeight = MAX(maxRowWindowHeight, rowWindowHeight);
+    }
+    
+    /* We add 2 for rounding */
+
+    return maxRowWindowHeight + 2;
+}
+
+
+
 static void
 init_buffer(buffer *           const bufferP,
             const world_data * const worldP,
@@ -1099,29 +1148,8 @@ init_buffer(buffer *           const bufferP,
             const struct pam * const inpamP,
             const struct pam * const outpamP) {
 
-    unsigned int yul, yur, yll, ylr, y_min;
-    unsigned int num_rows;
-
-    yul = outpixel_to_iny(0, 0, worldP);
-    yur = outpixel_to_iny(outpamP->width-1, 0, worldP);
-    yll = outpixel_to_iny(0, outpamP->height-1, worldP);
-    ylr = outpixel_to_iny(outpamP->width-1, outpamP->height-1, worldP);
-    
-    y_min = MIN(MIN(yul, yur), MIN(yll, ylr));
-    num_rows = MAX(MAX(diff(yul, yur),
-                       diff(yll, ylr)),
-                   MAX(diff(clean_y(yul, outpamP), clean_y(y_min, outpamP)),
-                       diff(clean_y(yur, outpamP), clean_y(y_min, outpamP))))
-        + 2;
-    switch (optionsP->enums[3]) {  /* --interpolation */
-    case interp_nearest:
-        break;
-    case interp_linear:
-        num_rows += 1;
-        break;
-    }
-    if (num_rows > inpamP->height)
-        num_rows = inpamP->height;
+    unsigned int const num_rows =
+        windowHeight(worldP, inpamP, outpamP, optionsP);
 
     MALLOCARRAY_SAFE(bufferP->rows, num_rows);
     bufferP->num_rows = num_rows;

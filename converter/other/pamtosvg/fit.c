@@ -314,10 +314,6 @@ remove_adjacent_corners(index_list_type *   const list,
           temp = GET_INDEX (*list, j);
           GET_INDEX (*list, j) = GET_INDEX (*list, max_index);
           GET_INDEX (*list, max_index) = temp;
-      
-      /* xx -- really have to sort?  */
-      LOG ("needed exchange");
-      at_exception_warning(exception, "needed exchange");
         }
     }
 

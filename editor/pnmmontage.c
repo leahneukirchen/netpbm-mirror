@@ -522,17 +522,11 @@ main(int argc, const char **argv) {
   {
     for (i = 0; i < nfiles; ++i)
     {
-      if (strchr(argv[i+1], ':'))
-      {
-        imgs[i].file = pm_openr(strchr(argv[i+1], ':') + 1);
-        *strchr(argv[i+1], ':') = 0;
-        names[i] = argv[i+1];
-      }
-      else
-      {
-        imgs[i].file = pm_openr(argv[i+1]);
-        names[i] = argv[i+1];
-      }
+      if (cmdline.data && strchr(argv[i+1], ':'))
+	pm_error("filenames containing \":\" (%s) are forbidden when -data is specified",
+		 argv[i+1]);
+      imgs[i].file = pm_openr(argv[i+1]);
+      names[i] = argv[i+1];
     }
   }
   else
