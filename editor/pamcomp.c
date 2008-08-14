@@ -22,15 +22,16 @@
    additional work by multiple authors.
 -----------------------------------------------------------------------------*/
 
-#define _BSD_SOURCE    /* Make sure strcasecmp() is in string.h */
+#define _BSD_SOURCE    /* Make sure strcaseceq() is in nstring.h */
 #include <assert.h>
 #include <string.h>
 #include <math.h>
 
-#include "pam.h"
-#include "pm_gamma.h"
-#include "shhopt.h"
 #include "mallocvar.h"
+#include "nstring.h"
+#include "shhopt.h"
+#include "pm_gamma.h"
+#include "pam.h"
 
 enum horizPos {BEYONDLEFT, LEFT, CENTER, RIGHT, BEYONDRIGHT};
 enum vertPos {ABOVE, TOP, MIDDLE, BOTTOM, BELOW};
@@ -65,7 +66,7 @@ struct cmdlineInfo {
 
 static void
 parseCommandLine(int                        argc, 
-                 char **                    argv,
+                 const char **              argv,
                  struct cmdlineInfo * const cmdlineP ) {
 /*----------------------------------------------------------------------------
    Parse program command line described in Unix standard form by argc
@@ -112,7 +113,7 @@ parseCommandLine(int                        argc,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
 
@@ -124,15 +125,15 @@ parseCommandLine(int                        argc,
         cmdlineP->alphaFilespec = NULL;
 
     if (alignSpec) {
-        if (strcasecmp(align, "BEYONDLEFT") == 0)
+        if (strcaseeq(align, "BEYONDLEFT"))
             cmdlineP->align = BEYONDLEFT;
-        else if (strcasecmp(align, "LEFT") == 0)
+        else if (strcaseeq(align, "LEFT"))
             cmdlineP->align = LEFT;
-        else if (strcasecmp(align, "CENTER") == 0)
+        else if (strcaseeq(align, "CENTER"))
             cmdlineP->align = CENTER;
-        else if (strcasecmp(align, "RIGHT") == 0)
+        else if (strcaseeq(align, "RIGHT"))
             cmdlineP->align = RIGHT;
-        else if (strcasecmp(align, "BEYONDRIGHT") == 0)
+        else if (strcaseeq(align, "BEYONDRIGHT"))
             cmdlineP->align = BEYONDRIGHT;
         else
             pm_error("Invalid value for align option: '%s'.  Only LEFT, "
@@ -142,15 +143,15 @@ parseCommandLine(int                        argc,
         cmdlineP->align = LEFT;
 
     if (valignSpec) {
-        if (strcasecmp(valign, "ABOVE") == 0)
+        if (strcaseeq(valign, "ABOVE"))
             cmdlineP->valign = ABOVE;
-        else if (strcasecmp(valign, "TOP") == 0)
+        else if (strcaseeq(valign, "TOP"))
             cmdlineP->valign = TOP;
-        else if (strcasecmp(valign, "MIDDLE") == 0)
+        else if (strcaseeq(valign, "MIDDLE"))
             cmdlineP->valign = MIDDLE;
-        else if (strcasecmp(valign, "BOTTOM") == 0)
+        else if (strcaseeq(valign, "BOTTOM"))
             cmdlineP->valign = BOTTOM;
-        else if (strcasecmp(valign, "BELOW") == 0)
+        else if (strcaseeq(valign, "BELOW"))
             cmdlineP->valign = BELOW;
         else
             pm_error("Invalid value for valign option: '%s'.  Only TOP, "
@@ -566,6 +567,8 @@ composite(int          const originleft,
 
     pnm_writepaminit(composedPamP);
 
+    assert(INT_MAX - overlayPamP->height > origintop); /* arg constraint */
+
     for (underlayRow = MIN(0, origintop), overlayRow = MIN(0, -origintop);
          underlayRow < MAX(underlayPamP->height, 
                            origintop + overlayPamP->height);
@@ -598,8 +601,6 @@ composite(int          const originleft,
                 pnm_writepamrow(composedPamP, composedTuplerow);
             }
         }
-        /* Because of limits on our arguments: */
-        assert(underlayRow < INT_MAX); assert(overlayRow < INT_MAX);
     }
     pnm_freepamrow(composedTuplerow);
     pnm_freepamrow(underlayTuplerow);
@@ -611,7 +612,7 @@ composite(int          const originleft,
 
 
 int
-main(int argc, char *argv[]) {
+main(int argc, const char *argv[]) {
 
     struct cmdlineInfo cmdline;
     FILE * underlayFileP;
@@ -623,7 +624,7 @@ main(int argc, char *argv[]) {
     struct pam composedPam;
     int originLeft, originTop;
 
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
