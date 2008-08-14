@@ -23,6 +23,7 @@
 -----------------------------------------------------------------------------*/
 
 #define _BSD_SOURCE    /* Make sure strcasecmp() is in string.h */
+#include <assert.h>
 #include <string.h>
 #include <math.h>
 
@@ -268,12 +269,12 @@ determineOutputType(struct pam * const composedPamP,
 
 
 static void
-warnOutOfFrame( int const originLeft,
-                int const originTop, 
-                int const overCols,
-                int const overRows,
-                int const underCols,
-                int const underRows ) {
+warnOutOfFrame(int const originLeft,
+               int const originTop, 
+               int const overCols,
+               int const overRows,
+               int const underCols,
+               int const underRows) {
 
     if (originLeft >= underCols)
         pm_message("WARNING: the overlay is entirely off the right edge "
@@ -306,6 +307,25 @@ warnOutOfFrame( int const originLeft,
 
 
 static void
+validateComputableHeight(int const originTop, 
+                         int const overRows) {
+
+    if (originTop < 0) {
+        if (originTop < -INT_MAX)
+            pm_error("Overlay starts too far above the underlay image to be "
+                     "computable.  Overlay can be at most %d rows above "
+                     "the underlay.", INT_MAX);
+    } else {
+        if (INT_MAX - originTop <= overRows)
+            pm_error("Too many total rows involved to be computable.  "
+                     "You must have a shorter overlay image or compose it "
+                     "higher on the underlay image.");
+    }
+}
+
+
+
+static void
 computeOverlayPosition(int                const underCols, 
                        int                const underRows,
                        int                const overCols, 
@@ -320,6 +340,10 @@ computeOverlayPosition(int                const underCols,
    The origin may be outside the underlying image (so e.g. *originLeftP may
    be negative or > image width).  That means not all of the overlay image
    actually gets used.  In fact, there may be no overlap at all.
+
+   But we insist that the span from the topmost row of the two images
+   to the bottommost row be less than INT_MAX so that Caller can
+   use an integer for a row number in the combination.
 -----------------------------------------------------------------------------*/
     int xalign, yalign;
 
@@ -339,6 +363,8 @@ computeOverlayPosition(int                const underCols,
     }
     *originLeftP = xalign + cmdline.xoff;
     *originTopP  = yalign + cmdline.yoff;
+
+    validateComputableHeight(*originTopP, overRows);
 
     warnOutOfFrame(*originLeftP, *originTopP, 
                    overCols, overRows, underCols, underRows);    
@@ -449,6 +475,44 @@ adaptRowToOutputFormat(struct pam * const inpamP,
 
 
 static void
+composeRow(int              const originleft, 
+           struct pam *     const underlayPamP,
+           struct pam *     const overlayPamP,
+           bool             const invertAlpha,
+           float            const masterOpacity,
+           bool             const overlayHasOpacity,
+           unsigned int     const opacityPlane,
+           struct pam *     const composedPamP,
+           enum sampleScale const sampleScale,
+           const tuple *    const underlayTuplerow,
+           const tuple *    const overlayTuplerow,
+           const tuplen *   const alphaTuplerown,
+           tuple *          const composedTuplerow) {
+
+    unsigned int col;
+    for (col = 0; col < composedPamP->width; ++col) {
+        int const ovlcol = col - originleft;
+
+        if (ovlcol >= 0 && ovlcol < overlayPamP->width) {
+            tuplen const alphaTuplen = 
+                alphaTuplerown ? alphaTuplerown[ovlcol] : NULL;
+
+            overlayPixel(overlayTuplerow[ovlcol], overlayPamP,
+                         underlayTuplerow[col], underlayPamP,
+                         alphaTuplen, invertAlpha,
+                         overlayHasOpacity, opacityPlane,
+                         composedTuplerow[col], composedPamP,
+                         masterOpacity, sampleScale);
+        } else
+            /* Overlay image does not touch this column. */
+            pnm_assigntuple(composedPamP, composedTuplerow[col],
+                            underlayTuplerow[col]);
+    }
+}
+
+
+
+static void
 composite(int          const originleft, 
           int          const origintop, 
           struct pam * const underlayPamP,
@@ -474,6 +538,9 @@ composite(int          const originleft,
    go.  It is not necessarily inside the underlying image (in fact,
    may be negative).  Only the part of the overlay that actually
    intersects the underlying image, if any, gets into the output.
+
+   We assume that the span from the topmost row of the two images to
+   the bottommost row is less than INT_MAX.
 -----------------------------------------------------------------------------*/
     enum sampleScale const sampleScale = 
         assumeLinear ? INTENSITY_SAMPLE : GAMMA_SAMPLE;
@@ -494,6 +561,8 @@ composite(int          const originleft,
     overlayTuplerow  = pnm_allocpamrow(overlayPamP);
     if (alphaPamP)
         alphaTuplerown = pnm_allocpamrown(alphaPamP);
+    else
+        alphaTuplerown = NULL;
 
     pnm_writepaminit(composedPamP);
 
@@ -520,28 +589,17 @@ composite(int          const originleft,
 
                 pnm_writepamrow(composedPamP, underlayTuplerow);
             } else {
-                unsigned int col;
-                for (col = 0; col < composedPamP->width; ++col) {
-                    int const ovlcol = col - originleft;
-
-                    if (ovlcol >= 0 && ovlcol < overlayPamP->width) {
-                        tuplen const alphaTuplen = 
-                            alphaPamP ? alphaTuplerown[ovlcol] : NULL;
-
-                        overlayPixel(overlayTuplerow[ovlcol], overlayPamP,
-                                     underlayTuplerow[col], underlayPamP,
-                                     alphaTuplen, invertAlpha,
-                                     overlayHasOpacity, opacityPlane,
-                                     composedTuplerow[col], composedPamP,
-                                     masterOpacity, sampleScale);
-                    } else
-                        /* Overlay image does not touch this column. */
-                        pnm_assigntuple(composedPamP, composedTuplerow[col],
-                                        underlayTuplerow[col]);
-                }
+                composeRow(originleft, underlayPamP, overlayPamP,
+                           invertAlpha, masterOpacity, overlayHasOpacity,
+                           opacityPlane, composedPamP, sampleScale,
+                           underlayTuplerow, overlayTuplerow, alphaTuplerown,
+                           composedTuplerow);
+                
                 pnm_writepamrow(composedPamP, composedTuplerow);
             }
         }
+        /* Because of limits on our arguments: */
+        assert(underlayRow < INT_MAX); assert(overlayRow < INT_MAX);
     }
     pnm_freepamrow(composedTuplerow);
     pnm_freepamrow(underlayTuplerow);
