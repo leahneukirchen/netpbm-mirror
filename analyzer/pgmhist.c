@@ -11,6 +11,7 @@
 */
 
 #include <assert.h>
+#include <limits.h>
 
 #include "mallocvar.h"
 #include "shhopt.h"
