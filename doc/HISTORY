@@ -18,8 +18,18 @@ not yet  BJH  Release 10.44.00
 
               pnmpaste: fail if user specified stdin for both images.
 
+              pnm_backgroundxel(), pnm_backgroundxelrow() (affects
+              pnmrotate, pnmshear, pnmcrop, pnmcat: correctly average
+              corner colors to determine background (fill) color.
+
               pamcut: don't crash when cutting a region entirely to the
               left or right of the input image, with -pad.
+
+              pgmhist: arbitrary output when total pixels doesn't fit in an
+              integer.
+
+              pamcomp: fix bug: arbitrary output when combined number of rows
+              doesn't fit in an integer.
 
               pamtosvg: remove "needed exchange" debug trace.
 
