@@ -271,44 +271,51 @@ computeCutBounds(const int cols, const int rows,
 
 
 static void
-rejectOutOfBounds(const int cols, const int rows, 
-                  const int leftcol, const int rightcol, 
-                  const int toprow, const int bottomrow) {
+rejectOutOfBounds(unsigned int const cols,
+                  unsigned int const rows,
+                  int          const leftcol,
+                  int          const rightcol,
+                  int          const toprow,
+                  int          const bottomrow,
+                  bool         const pad) {
 
-    /* Reject coordinates off the edge */
+     /* Reject coordinates off the edge */
 
-    if (leftcol < 0)
-        pm_error("You have specified a left edge (%d) that is beyond\n"
-                 "the left edge of the image (0)", leftcol);
-    if (leftcol > cols-1)
-        pm_error("You have specified a left edge (%d) that is beyond\n"
-                 "the right edge of the image (%d)", leftcol, cols-1);
-    if (rightcol < 0)
-        pm_error("You have specified a right edge (%d) that is beyond\n"
-                 "the left edge of the image (0)", rightcol);
-    if (rightcol > cols-1)
-        pm_error("You have specified a right edge (%d) that is beyond\n"
-                 "the right edge of the image (%d)", rightcol, cols-1);
-    if (leftcol > rightcol) 
-        pm_error("You have specified a left edge (%d) that is to the right\n"
-                 "of the right edge you specified (%d)", 
+    if (!pad) {
+        if (leftcol < 0)
+            pm_error("You have specified a left edge (%d) that is beyond "
+                     "the left edge of the image (0)", leftcol);
+        if (leftcol > (int)(cols-1))
+            pm_error("You have specified a left edge (%d) that is beyond "
+                     "the right edge of the image (%u)", leftcol, cols-1);
+        if (rightcol < 0)
+            pm_error("You have specified a right edge (%d) that is beyond "
+                     "the left edge of the image (0)", rightcol);
+        if (rightcol > (int)(cols-1))
+            pm_error("You have specified a right edge (%d) that is beyond "
+                     "the right edge of the image (%u)", rightcol, cols-1);
+        if (toprow < 0)
+            pm_error("You have specified a top edge (%d) that is above "
+                     "the top edge of the image (0)", toprow);
+        if (toprow > (int)(rows-1))
+            pm_error("You have specified a top edge (%d) that is below "
+                     "the bottom edge of the image (%u)", toprow, rows-1);
+        if (bottomrow < 0)
+            pm_error("You have specified a bottom edge (%d) that is above "
+                     "the top edge of the image (0)", bottomrow);
+        if (bottomrow > (int)(rows-1))
+            pm_error("You have specified a bottom edge (%d) that is below "
+                     "the bottom edge of the image (%u)", bottomrow, rows-1);
+    }
+
+    if (leftcol > rightcol)
+        pm_error("You have specified a left edge (%d) that is to the right of "
+                 "the right edge you specified (%d)",
                  leftcol, rightcol);
-    
-    if (toprow < 0)
-        pm_error("You have specified a top edge (%d) that is above the top "
-                 "edge of the image (0)", toprow);
-    if (toprow > rows-1)
-        pm_error("You have specified a top edge (%d) that is below the\n"
-                 "bottom edge of the image (%d)", toprow, rows-1);
-    if (bottomrow < 0)
-        pm_error("You have specified a bottom edge (%d) that is above the\n"
-                 "top edge of the image (0)", bottomrow);
-    if (bottomrow > rows-1)
-        pm_error("You have specified a bottom edge (%d) that is below the\n"
-                 "bottom edge of the image (%d)", bottomrow, rows-1);
-    if (toprow > bottomrow) 
-        pm_error("You have specified a top edge (%d) that is below\n"
-                 "the bottom edge you specified (%d)", 
+
+    if (toprow > bottomrow)
+        pm_error("You have specified a top edge (%d) that is below "
+                 "the bottom edge you specified (%d)",
                  toprow, bottomrow);
 }
 
@@ -505,12 +512,11 @@ cutOneImage(FILE *             const ifP,
                      cmdline.width, cmdline.height, 
                      &leftcol, &rightcol, &toprow, &bottomrow);
 
-    if (!cmdline.pad)
-        rejectOutOfBounds(inpam.width, inpam.height, leftcol, rightcol, 
-                          toprow, bottomrow);
+    rejectOutOfBounds(inpam.width, inpam.height, leftcol, rightcol, 
+                      toprow, bottomrow, cmdline.pad);
 
     if (cmdline.verbose) {
-        pm_message("Image goes from Row 0, Column 0 through Row %d, Column %d",
+        pm_message("Image goes from Row 0, Column 0 through Row %u, Column %u",
                    inpam.height-1, inpam.width-1);
         pm_message("Cutting from Row %d, Column %d through Row %d Column %d",
                    toprow, leftcol, bottomrow, rightcol);

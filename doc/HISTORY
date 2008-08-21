@@ -22,8 +22,12 @@ not yet  BJH  Release 10.44.00
               pnmrotate, pnmshear, pnmcrop, pnmcat: correctly average
               corner colors to determine background (fill) color.
 
-              pamcut: don't crash when cutting a region entirely to the
-              left or right of the input image, with -pad.
+              pamcut: don't crash when cutting a region entirely to
+              the left or right of the input image, with -pad.  Thanks
+              Prophet of the Way <afu@wta.att.ne.jp>.
+
+              pamcut: don't crash when left > right or top > bottom with
+              -pad.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
 
               pgmhist: arbitrary output when total pixels doesn't fit in an
               integer.
