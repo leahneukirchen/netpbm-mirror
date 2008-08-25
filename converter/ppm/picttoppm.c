@@ -727,43 +727,39 @@ load_fontdir(const char * const dirfile) {
    Load the font directory from file named 'dirfile'.  Add its contents
    to the global list of fonts 'fontlist'.
 -----------------------------------------------------------------------------*/
-    int retval;
-    FILE * fp;
+    FILE * ifP;
+    unsigned int nFont;
+    char line[1024]; 
 
-    fp = fopen(dirfile, "rb");
-    if (!fp)
-        retval =  -1;
-    else {
-        unsigned int nFont;
-        char line[1024]; 
+    ifP = pm_openr(dirfile);
 
-        nFont = 0;
-        while (fgets(line, 1024, fp) && nFont < INT_MAX) {
-            const char * token[10];
-            unsigned int nToken;
+    nFont = 0;
+    while (fgets(line, 1024, ifP) && nFont < INT_MAX) {
+        const char * token[10];
+        unsigned int nToken;
 
-            tokenize(line, token, ARRAY_SIZE(token), &nToken);
+        tokenize(line, token, ARRAY_SIZE(token), &nToken);
 
-            if (nToken == 0) {
-                /* blank line - ignore */
-            } else if (token[0][0] == '#') {
-                /* comment - ignore */
-            } else if (nToken != 4) {
-                /* Unrecognized format - ignore */
-            } else {
-                struct fontinfo * fontinfoP;
+        if (nToken == 0) {
+            /* blank line - ignore */
+        } else if (token[0][0] == '#') {
+            /* comment - ignore */
+        } else if (nToken != 4) {
+            /* Unrecognized format - ignore */
+        } else {
+            struct fontinfo * fontinfoP;
 
-                parseFontLine(token, &fontinfoP);
+            parseFontLine(token, &fontinfoP);
 
-                fontinfoP->next = 0;
-                *fontlist_ins = fontinfoP;
-                fontlist_ins = &fontinfoP->next;
-                ++nFont;
-            }
+            fontinfoP->next = 0;
+            *fontlist_ins = fontinfoP;
+            fontlist_ins = &fontinfoP->next;
+            ++nFont;
         }
-        retval = nFont;
     }
-    return retval;
+    pm_close(ifP);
+
+    return nFont;
 }
 
 
