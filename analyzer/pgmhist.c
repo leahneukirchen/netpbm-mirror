@@ -10,6 +10,8 @@
 ** implied warranty.
 */
 
+#include <limits.h>
+
 #include "pgm.h"
 #include "mallocvar.h"
 
@@ -42,6 +44,12 @@ main( argc, argv )
         pm_usage( usage );
 
     pgm_readpgminit( ifp, &cols, &rows, &maxval, &format );
+
+    if (UINT_MAX / cols < rows)
+        pm_error("Too many pixels (%u x %u) in image.  "
+                 "Maximum computable is %u",
+                 cols, rows, UINT_MAX);
+
     grayrow = pgm_allocrow( cols );
 
     /* Build histogram. */

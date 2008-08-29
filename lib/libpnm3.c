@@ -65,9 +65,9 @@ pnm_backgroundxel( xels, cols, rows, maxval, format )
         {
         case PPM_TYPE:
         PPM_ASSIGN( bgxel,
-        PPM_GETR(ul) + PPM_GETR(ur) + PPM_GETR(ll) + PPM_GETR(lr) / 4,
-        PPM_GETG(ul) + PPM_GETG(ur) + PPM_GETG(ll) + PPM_GETG(lr) / 4,
-        PPM_GETB(ul) + PPM_GETB(ur) + PPM_GETB(ll) + PPM_GETB(lr) / 4 );
+        (PPM_GETR(ul) + PPM_GETR(ur) + PPM_GETR(ll) + PPM_GETR(lr)) / 4,
+        (PPM_GETG(ul) + PPM_GETG(ur) + PPM_GETG(ll) + PPM_GETG(lr)) / 4,
+        (PPM_GETB(ul) + PPM_GETB(ur) + PPM_GETB(ll) + PPM_GETB(lr)) / 4 );
         break;
 
         case PGM_TYPE:
@@ -120,8 +120,11 @@ pnm_backgroundxelrow( xelrow, cols, maxval, format )
     switch ( PNM_FORMAT_TYPE(format) )
         {
         case PPM_TYPE:
-        PPM_ASSIGN( bgxel, PPM_GETR(l) + PPM_GETR(r) / 2,
-        PPM_GETG(l) + PPM_GETG(r) / 2, PPM_GETB(l) + PPM_GETB(r) / 2 );
+        PPM_ASSIGN(bgxel,
+                   (PPM_GETR(l) + PPM_GETR(r)) / 2,
+                   (PPM_GETG(l) + PPM_GETG(r)) / 2,
+                   (PPM_GETB(l) + PPM_GETB(r)) / 2
+            );
         break;
 
         case PGM_TYPE:

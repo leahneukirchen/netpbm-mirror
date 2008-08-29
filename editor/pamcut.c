@@ -504,7 +504,17 @@ cutOneImage(FILE *             const ifP,
     if (!cmdline.pad)
         rejectOutOfBounds(inpam.width, inpam.height, leftcol, rightcol, 
                           toprow, bottomrow);
-
+    else {
+        if (cmdline.left > cmdline.right) 
+            pm_error("You have specified a left edge (%d) that is to the right\n"
+                     "of the right edge you specified (%d)", 
+                     cmdline.left, cmdline.right);
+        
+        if (cmdline.top > cmdline.bottom) 
+            pm_error("You have specified a top edge (%d) that is below\n"
+                     "the bottom edge you specified (%d)", 
+                     cmdline.top, cmdline.bottom);
+    }
     if (cmdline.verbose) {
         pm_message("Image goes from Row 0, Column 0 through Row %d, Column %d",
                    inpam.height-1, inpam.width-1);

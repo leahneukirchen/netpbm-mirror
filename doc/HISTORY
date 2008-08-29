@@ -4,6 +4,21 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+08.08.29 BJH  Release 10.35.50
+
+              pnm_backgroundxel(), pnm_backgroundxelrow() (affects
+              pnmrotate, pnmshear, pnmcrop, pnmcat: correctly average
+              corner colors to determine background (fill) color.
+
+              pgmhist: arbitrary output when total pixels doesn't fit in an
+              integer.
+
+              pamcomp: fix bug: arbitrary output when combined number of rows
+              doesn't fit in an integer.
+
+              pamcut: don't crash when left > right or top > bottom with
+              -pad.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
 08.08.13 BJH  Release 10.35.49
 
               pamcut: don't crash when cutting a region entirely to the
