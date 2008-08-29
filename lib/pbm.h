@@ -101,6 +101,13 @@ pbm_writepbmrow_packed(FILE *                const fileP,
                        int                   const forceplain);
 
 void
+pbm_writepbmrow_bitoffset(FILE *          const ifP,
+                          unsigned char * const packedBits,
+                          unsigned int    const cols,
+                          int             const format,
+                          unsigned int    const offset);
+
+void
 pbm_check(FILE * file, const enum pm_check_type check_type, 
           const int format, const int cols, const int rows,
           enum pm_check_code * const retval_p);

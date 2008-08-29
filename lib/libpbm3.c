@@ -10,8 +10,11 @@
 ** implied warranty.
 */
 
-#include "pbm.h"
+#include <assert.h>
+
+#include "pm_c_util.h"
 #include "bitreverse.h"
+#include "pbm.h"
 
 /* HAVE_MMX_SSE means we have the means to use MMX and SSE CPU facilities
    to make PBM raster processing faster.
@@ -321,6 +324,82 @@ pbm_writepbmrow_packed(FILE *                const fileP,
         }
         pbm_freerow(bitrow);
     }
+}
+
+
+
+static unsigned char
+leftBits(unsigned char const x,
+         unsigned int  const n) {
+/*----------------------------------------------------------------------------
+   Clear rightmost (8-n) bits, retain leftmost (=high) n bits.
+-----------------------------------------------------------------------------*/
+    unsigned char buffer;
+
+    assert(n < 8);
+
+    buffer = x;
+
+    buffer >>= (8-n);
+    buffer <<= (8-n);
+
+    return buffer;
+}
+
+
+
+void
+pbm_writepbmrow_bitoffset(FILE *          const fileP,
+                          unsigned char * const packedBits,
+                          unsigned int    const cols,
+                          int             const format,
+                          unsigned int    const offset) {
+/*----------------------------------------------------------------------------
+   Write PBM row from a packed bit buffer 'packedBits, starting at the
+   specified offset 'offset' in the buffer.
+
+   We destroy the buffer.
+-----------------------------------------------------------------------------*/
+    unsigned int const rsh = offset % 8;
+    unsigned int const lsh = (8 - rsh) % 8;
+    unsigned int const csh = cols % 8;
+    unsigned char * const window = &packedBits[offset/8];
+        /* Area of packed row buffer from which we take the image data.
+           Aligned to nearest byte boundary to the left, so the first
+           few bits might be irrelvant.
+
+           Also our work buffer, in which we shift bits and from which we
+           ultimately write the bits to the file.
+        */
+    unsigned int const colByteCnt = pbm_packed_bytes(cols);
+    unsigned int const last = colByteCnt - 1;
+        /* Position within window of rightmost byte after shift */
+
+    bool const carryover = (csh == 0 || rsh + csh > 8);
+        /* TRUE:  Input comes from colByteCnt bytes and one extra byte.
+           FALSE: Input comes from colByteCnt bytes.  For example:
+           TRUE:  xxxxxxii iiiiiiii iiiiiiii iiixxxxx  cols=21, offset=6 
+           FALSE: xiiiiiii iiiiiiii iiiiiixx ________  cols=21, offset=1
+
+           We treat these differently for in the FALSE case the byte after
+           last (indicated by ________) may not exist.
+        */
+       
+    if (rsh > 0) {
+        unsigned int const shiftBytes =  carryover ? colByteCnt : colByteCnt-1;
+
+        unsigned int i;
+        for (i = 0; i < shiftBytes; ++i)
+            window[i] = window[i] << rsh | window[i+1] >> lsh;
+
+        if (!carryover)
+            window[last] = window[last] << rsh;
+    }
+      
+    if (csh > 0)
+        window[last] = leftBits(window[last], csh);
+          
+    pbm_writepbmrow_packed(fileP, window, cols, 0);
 }
 
 

@@ -410,8 +410,8 @@ struct rowCutter {
 
 
 static void
-createRowCutter(struct pam *        const inpamP,
-                struct pam *        const outpamP,
+createRowCutter(const struct pam *  const inpamP,
+                const struct pam *  const outpamP,
                 int                 const leftcol,
                 int                 const rightcol,
                 struct rowCutter ** const rowCutterPP) {
@@ -494,15 +494,144 @@ destroyRowCutter(struct rowCutter * const rowCutterP) {
 
 
 static void
+extractRowsGen(const struct pam * const inpamP,
+               const struct pam * const outpamP,
+               int                const leftcol,
+               int                const rightcol,
+               int                const toprow,
+               int                const bottomrow) {
+
+    struct rowCutter * rowCutterP;
+    int row;
+
+    /* Write out top padding */
+    if (0 - toprow > 0)
+        writeBlackRows(outpamP, 0 - toprow);
+
+    createRowCutter(inpamP, outpamP, leftcol, rightcol, &rowCutterP);
+
+    /* Read input and write out rows extracted from it */
+    for (row = 0; row < inpamP->height; ++row) {
+        if (row >= toprow && row <= bottomrow){
+            pnm_readpamrow(inpamP, rowCutterP->inputPointers);
+            pnm_writepamrow(outpamP, rowCutterP->outputPointers);
+        } else  /* row < toprow || row > bottomrow */
+            pnm_readpamrow(inpamP, NULL);
+        
+        /* Note that we may be tempted just to quit after reaching the bottom
+           of the extracted image, but that would cause a broken pipe problem
+           for the process that's feeding us the image.
+        */
+    }
+
+    destroyRowCutter(rowCutterP);
+    
+    /* Write out bottom padding */
+    if ((bottomrow - (inpamP->height-1)) > 0)
+        writeBlackRows(outpamP, bottomrow - (inpamP->height-1));
+}
+
+
+
+static void
+makeBlackPBMRow(unsigned char * const bitrow,
+                unsigned int    const cols) {
+
+    unsigned int const colByteCnt = pbm_packed_bytes(cols);
+
+    unsigned int i;
+
+    for (i = 0; i < colByteCnt; ++i)
+        bitrow[i] = PBM_BLACK * 0xff;
+
+    if (PBM_BLACK != 0 && cols % 8 > 0)
+        bitrow[colByteCnt-1] <<= (8 - cols % 8);
+}
+
+
+
+static void
+extractRowsPBM(const struct pam * const inpamP,
+               const struct pam * const outpamP,
+               int                const leftcol,
+               int                const rightcol,
+               int                const toprow,
+               int                const bottomrow) {
+
+    unsigned char * bitrow;
+    int             readOffset, writeOffset;
+    int             row;
+    unsigned int    totalWidth;
+
+    assert(0 <= leftcol && leftcol <= rightcol && rightcol < inpamP->width);
+    assert(toprow <= bottomrow);
+
+    if (leftcol > 0) {
+        totalWidth = MAX(rightcol+1, inpamP->width) + 7;
+        if (totalWidth > INT_MAX)
+            /* Prevent overflows in pbm_allocrow_packed() */
+            pm_error("Specified right edge is too far "
+                     "from the right end of input image");
+        
+        readOffset  = 0;
+        writeOffset = leftcol;
+    } else {
+        totalWidth = -leftcol + MAX(rightcol+1, inpamP->width);
+        if (totalWidth > INT_MAX)
+            pm_error("Specified left/right edge is too far "
+                     "from the left/right end of input image");
+        
+        readOffset = -leftcol;
+        writeOffset = 0;
+    }
+
+    bitrow = pbm_allocrow_packed(totalWidth);
+
+    if (toprow < 0 || leftcol < 0 || rightcol >= inpamP->width){
+        makeBlackPBMRow(bitrow, totalWidth);
+        if (toprow < 0) {
+            int row;
+            for (row=0; row < 0 - toprow; ++row)
+                pbm_writepbmrow_packed(outpamP->file, bitrow,
+                                       outpamP->width, 0);
+        }
+    }
+
+    for (row = 0; row < inpamP->height; ++row){
+        if (row >= toprow && row <= bottomrow) {
+            pbm_readpbmrow_bitoffset(inpamP->file, bitrow, inpamP->width,
+                                     inpamP->format, readOffset);
+
+            pbm_writepbmrow_bitoffset(outpamP->file, bitrow, outpamP->width,
+                                      0, writeOffset);
+  
+            if (rightcol >= inpamP->width)
+                /* repair right padding */
+                bitrow[writeOffset/8 + pbm_packed_bytes(outpamP->width) - 1] =
+                    0xff * PBM_BLACK;
+        } else
+            pnm_readpamrow(inpamP, NULL);    /* read and discard */
+    }
+
+    if (bottomrow - (inpamP->height-1) > 0) {
+        int row;
+        makeBlackPBMRow(bitrow, outpamP->width);
+        for (row = 0; row < bottomrow - (inpamP->height-1); ++row)
+            pbm_writepbmrow_packed(outpamP->file, bitrow, outpamP->width, 0);
+    }
+    pbm_freerow_packed(bitrow);
+}
+
+
+
+static void
 cutOneImage(FILE *             const ifP,
             struct cmdlineInfo const cmdline,
             FILE *             const ofP) {
 
-    int row;
     int leftcol, rightcol, toprow, bottomrow;
     struct pam inpam;   /* Input PAM image */
     struct pam outpam;  /* Output PAM image */
-    struct rowCutter * rowCutterP;
 
     pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
     
@@ -524,36 +653,15 @@ cutOneImage(FILE *             const ifP,
 
     outpam = inpam;    /* Initial value -- most fields should be same */
     outpam.file   = ofP;
-    outpam.width  = rightcol-leftcol+1;
-    outpam.height = bottomrow-toprow+1;
+    outpam.width  = rightcol - leftcol + 1;
+    outpam.height = bottomrow - toprow + 1;
 
     pnm_writepaminit(&outpam);
 
-    /* Write out top padding */
-    if (0 - toprow > 0)
-        writeBlackRows(&outpam, 0 - toprow);
-
-    createRowCutter(&inpam, &outpam, leftcol, rightcol, &rowCutterP);
-
-    /* Read input and write out rows extracted from it */
-    for (row = 0; row < inpam.height; ++row) {
-        if (row >= toprow && row <= bottomrow){
-            pnm_readpamrow(&inpam, rowCutterP->inputPointers);
-            pnm_writepamrow(&outpam, rowCutterP->outputPointers);
-        } else  /* row < toprow || row > bottomrow */
-            pnm_readpamrow(&inpam, NULL);
-        
-        /* Note that we may be tempted just to quit after reaching the bottom
-           of the extracted image, but that would cause a broken pipe problem
-           for the process that's feeding us the image.
-        */
-    }
-
-    destroyRowCutter(rowCutterP);
-    
-    /* Write out bottom padding */
-    if ((bottomrow - (inpam.height-1)) > 0)
-        writeBlackRows(&outpam, bottomrow - (inpam.height-1));
+    if (PNM_FORMAT_TYPE(outpam.format) == PBM_TYPE)
+        extractRowsPBM(&inpam, &outpam, leftcol, rightcol, toprow, bottomrow);
+    else
+        extractRowsGen(&inpam, &outpam, leftcol, rightcol, toprow, bottomrow);
 }
 
 

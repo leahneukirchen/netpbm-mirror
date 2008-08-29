@@ -13,8 +13,8 @@ not yet  BJH  Release 10.44.00
               pnmcolormap (pnmquant): round instead of truncating when
               computing means.
 
-              pnmcat, pnmpaste, pnmpad, g3topbm: Add fast PBM path.  Thanks
-              Prophet of the Way <afu@wta.att.ne.jp>.
+              pamcut, pnmcat, pnmpaste, pnmpad, g3topbm: Add fast PBM
+              path.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
 
               pnmpaste: fail if user specified stdin for both images.
 
