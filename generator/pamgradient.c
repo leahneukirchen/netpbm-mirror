@@ -11,7 +11,6 @@ struct cmdlineInfo {
     tuple colorTopRight;
     tuple colorBottomLeft;
     tuple colorBottomRight;
-    unsigned depth;
     unsigned int cols;
     unsigned int rows;
     unsigned int maxval;
