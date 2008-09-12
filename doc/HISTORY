@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+08.09.12 BJH  Release 10.35.51
+
+              pamgradient: fix bug: always produces color, not grayscale.
+
 08.08.29 BJH  Release 10.35.50
 
               pnm_backgroundxel(), pnm_backgroundxelrow() (affects

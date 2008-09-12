@@ -124,10 +124,8 @@ static int
 isgray(struct pam * const pamP,
        tuple        const color) {
 
-    return (pamP->depth == 1)
-        || ((pamP->depth == 3)
-        && (color[PAM_RED_PLANE] == color[PAM_GRN_PLANE])
-        && (color[PAM_RED_PLANE] == color[PAM_BLU_PLANE])); 
+    return (color[PAM_RED_PLANE] == color[PAM_GRN_PLANE])
+            && (color[PAM_RED_PLANE] == color[PAM_BLU_PLANE]);
 }
 
 
