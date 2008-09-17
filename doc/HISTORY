@@ -18,6 +18,9 @@ not yet  BJH  Release 10.44.00
 
               pnmpaste: fail if user specified stdin for both images.
 
+              libppmd/ppmdraw: fix crash when line is completely out of
+              frame.
+
               pamgradient: fix bug: always produces color, not grayscale.
 
               pnm_backgroundxel(), pnm_backgroundxelrow() (affects
