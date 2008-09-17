@@ -255,7 +255,9 @@ findBordersInImage(FILE *         const ifP,
     int row;
     bool gottop;
     int left, right, bottom, top;
-        /* leftmost, etc. nonbackground pixel found so far; -1 for none */
+        /* leftmost, etc. nonbackground pixel found so far.
+           Can be just off the edge of the image, so -1 or 'cols' or 'rows'
+        */
 
     xelrow = pnm_allocrow(cols);
     
