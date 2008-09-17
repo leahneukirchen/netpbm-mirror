@@ -18,6 +18,8 @@ not yet  BJH  Release 10.44.00
 
               pnmpaste: fail if user specified stdin for both images.
 
+              pamgradient: fix bug: always produces color, not grayscale.
+
               pnm_backgroundxel(), pnm_backgroundxelrow() (affects
               pnmrotate, pnmshear, pnmcrop, pnmcat: correctly average
               corner colors to determine background (fill) color.
