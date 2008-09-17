@@ -1,4 +1,4 @@
-/* pnmcat.c - concatenate portable anymaps
+/* pnmcat.c - concatenate PNM images
 **
 ** Copyright (C) 1989, 1991 by Jef Poskanzer.
 **
@@ -266,7 +266,7 @@ copyBitrow(const unsigned char * const source,
 
 static void
 padFillBitrow(unsigned char * const destBitrow,
-              char            const padColor,
+              unsigned char   const padColor,
               unsigned int    const cols,
               unsigned int    const offset) {
 /*----------------------------------------------------------------------------
@@ -428,7 +428,6 @@ concatenateLeftRightPbm(FILE *             const ofP,
                 /* This row begins a run of padding, either above or below
                    file 'i', so set 'outrow' to padding.
                 */
-                
                 padFillBitrow(outrow, img2[i].background, img[i].cols,
                               img2[i].offset);
             }
@@ -470,9 +469,9 @@ concatenateTopBottomPbm(FILE *             const ofP,
                         enum backcolor     const backcolor) {
 
     unsigned char * const outrow = pbm_allocrow_packed(newcols);
-      /* Like the left-right PBM case, all padding and image data
-         goes directly into outrow.  There is no proberow.
-      */
+        /* Like the left-right PBM case, all padding and image data
+           goes directly into outrow.  There is no proberow.
+        */
     unsigned char background, backgroundPrev;
         /* 0x00 means white; 0xff means black */
     unsigned int  padleft;
