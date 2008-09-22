@@ -250,7 +250,8 @@ a new program that just doesn't want to deal with the added
 complexity).  At a minimum, this size must contain the members up
 through <b>tuple_type</b>.  You should use the <b>PAM_STRUCT_SIZE</B>
 macro to compute this argument.
-E.g. <b>PAM_STRUCT_SIZE(tuple_type)</b>.
+E.g. <b>PAM_STRUCT_SIZE(tuple_type)</b>.  (This macro was introduced
+in Netpbm 10.23 (July 2004).  In older Netpbm, just use sizeof()).
 
 <P>The function expects to find the image file positioned to the start
 of the header and leaves it positioned to the start of the raster.
