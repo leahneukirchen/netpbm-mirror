@@ -1081,10 +1081,10 @@ reportOutputFormat(const struct pam * const pamP) {
         pm_message("Writing a PBM file");
         break;
     case PGM_FORMAT:
-        pm_message("Writing a PGM file with maxval %u", pamP->maxval);
+        pm_message("Writing a PGM file with maxval %lu", pamP->maxval);
         break;
     case PPM_FORMAT:
-        pm_message("Writing a PPM file with maxval %u", pamP->maxval);
+        pm_message("Writing a PPM file with maxval %lu", pamP->maxval);
         break;
     case PAM_FORMAT:
         pm_message("Writing a PAM file with tuple type %s, maxval %u",
