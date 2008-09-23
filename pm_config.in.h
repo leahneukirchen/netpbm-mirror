@@ -111,14 +111,6 @@ extern int rand();
 
 #endif /*SYSV or Amiga*/
 
-/* We should change all of Netpbm to use uint32_t instead of uint32n,
-   because we now have a strategy for ensuring that uint32_t is defined.
-   But we're going to wait a while in case our uint32_t strategy doesn't
-   work.  04.08.24.
-*/
-typedef uint32_t uint32n;
-typedef int32_t int32n;
-
 /* CONFIGURE: On most BSD systems, malloc() gets declared in stdlib.h, on
 ** system V, it gets declared in malloc.h. On some systems, malloc.h
 ** doesn't declare these, so we have to do it here. On other systems,

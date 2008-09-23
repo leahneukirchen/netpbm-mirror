@@ -700,7 +700,7 @@ pm_read_unknown_size(FILE * const file,
 
 
 union cheat {
-    uint32n l;
+    uint32_t l;
     short s;
     unsigned char c[4];
 };
