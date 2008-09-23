@@ -50,91 +50,97 @@ writebyte(FILE *        const ofP,
 
 /* Write a run length to the RLE file. */
 static void 
-write_rle (FILE *rlefile, uint32n tally)
-{
-  do {
-    /* Output a single run. */
-    if (tally < 192) {
-      /* Single-byte runs */
-      writebyte (rlefile, tally);
-      tally >>= 8;
-    }
-    else {
-      /* Two-byte runs */
-      writebyte (rlefile, ((tally>>8)&0x3F) + 0xC0);
-      writebyte (rlefile, tally&0xFF);
-      tally >>= 14;
-    }
+write_rle(FILE *   const rlefile,
+          uint32_t const tallyArg) {
 
-    /* Very large runs need to be split into smaller runs.  We
-     * therefore need to toggle back to the same color we had for the
-     * previous smaller run. */
-    if (tally > 0)
-      writebyte (rlefile, 0);
-  }
-  while (tally > 0);
+    uint32_t remainingTally;
+
+    remainingTally = tallyArg;  /* initial value */
+
+    do {
+        /* Output a single run. */
+        if (remainingTally < 192) {
+            /* Single-byte runs */
+            writebyte (rlefile, remainingTally);
+            remainingTally >>= 8;
+        }
+        else {
+            /* Two-byte runs */
+            writebyte (rlefile, ((remainingTally>>8) & 0x3F) + 0xC0);
+            writebyte (rlefile, remainingTally & 0xFF);
+            remainingTally >>= 14;
+        }
+
+        /* Very large runs need to be split into smaller runs.  We
+           therefore need to toggle back to the same color we had for the
+           previous smaller run.
+        */
+        if (remainingTally > 0)
+            writebyte (rlefile, 0);
+    }
+    while (remainingTally > 0);
 }
 
 
 
 int 
-main (int argc, char *argv[])
-{
-  FILE * const rlefile = stdout;    /* Generated Bitonal RLE file */
+main (int argc, const char * argv[]) {
 
-  FILE *pbmfile;             /* PBM file to convert */
-  int numcols, numrows;      /* Width and height in pixels of the PBM file */
-  int format;                /* Original image type before conversion to PBM */
-  bit *pbmrow;               /* One row of the PBM file */
-  uint32n pixeltally = 0;    /* Run length of the current color */
-  int row, col;              /* Row and column loop variables */
-  const char * pbmfilename;  /* Name of input file */
+    FILE * const rlefile = stdout; /* Generated Bitonal RLE file */
 
-  /* Parse the command line. */
-  pbm_init (&argc, argv);
+    FILE * pbmfile;          /* PBM file to convert */
+    int numcols, numrows;    /* Width and height in pixels of the PBM file */
+    int format;              /* Original image type before conversion to PBM */
+    bit * pbmrow;            /* One row of the PBM file */
+    unsigned int row;
+    const char * pbmfilename;  /* Name of input file */
 
-  if (argc-1 < 1)
-      pbmfilename = "-";
-  else if (argc-1 == 1)
-      pbmfilename = argv[1];
-  else
-      pm_error("Program takes at most 1 argument -- the input file name.  "
-               "You specified %d", argc-1);
+    pm_proginit(&argc, argv);
 
-  pbmfile = pm_openr(pbmfilename);
+    if (argc-1 < 1)
+        pbmfilename = "-";
+    else if (argc-1 == 1)
+        pbmfilename = argv[1];
+    else
+        pm_error("Program takes at most 1 argument -- the input file name.  "
+                 "You specified %d", argc-1);
 
-  /* Write an RLE header. */
-  pbm_readpbminit (pbmfile, &numcols, &numrows, &format);
-  fprintf (rlefile, "R4\n");
-  fprintf (rlefile, "%d %d\n", numcols, numrows);
+    pbmfile = pm_openr(pbmfilename);
 
-  /* Write the RLE data. */
-  pbmrow = pbm_allocrow (numcols);
-  for (row=0; row<numrows; row++) {
-    bit prevpixel;        /* Previous pixel seen */
+    /* Write an RLE header. */
+    pbm_readpbminit(pbmfile, &numcols, &numrows, &format);
+    fprintf(rlefile, "R4\n");
+    fprintf(rlefile, "%d %d\n", numcols, numrows);
 
-    pbm_readpbmrow (pbmfile, pbmrow, numcols, format);
-    prevpixel = PBM_WHITE;   /* Bitonal RLE rows always start with white */
-    pixeltally = 0;
-    for (col=0; col<numcols; col++) {
-      bit newpixel = pbmrow[col];      /* Current pixel color */
+    /* Write the RLE data. */
+    pbmrow = pbm_allocrow(numcols);
+    for (row = 0; row < numrows; ++row) {
+        unsigned int col;
+        uint32_t pixeltally;   /* Run length of the current color */
+        bit prevpixel;         /* Previous pixel seen */
 
-      if (newpixel == prevpixel)
-        pixeltally++;
-      else {
-        write_rle (rlefile, pixeltally);
-        pixeltally = 1;
-        prevpixel = newpixel;
-      }
+        pbm_readpbmrow(pbmfile, pbmrow, numcols, format);
+        prevpixel = PBM_WHITE;   /* Bitonal RLE rows always start with white */
+        pixeltally = 0;
+        for (col = 0; col < numcols; ++col) {
+            bit newpixel = pbmrow[col];      /* Current pixel color */
+
+            if (newpixel == prevpixel)
+                ++pixeltally;
+            else {
+                write_rle(rlefile, pixeltally);
+                pixeltally = 1;
+                prevpixel = newpixel;
+            }
+        }
+        write_rle(rlefile, pixeltally);
     }
-    write_rle (rlefile, pixeltally);
-  }
 
-  /* Finish up cleanly. */
-  pbm_freerow (pbmrow);
-  if (rlefile != stdout)
-    pm_close (rlefile);
-  if (pbmfile != stdin)
-    pm_close (pbmfile);
-  exit (0);
+    pbm_freerow(pbmrow);
+    if (rlefile != stdout)
+        pm_close(rlefile);
+    if (pbmfile != stdin)
+        pm_close(pbmfile);
+
+    return 0;
 }
