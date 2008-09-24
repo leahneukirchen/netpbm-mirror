@@ -57,6 +57,9 @@ not yet  BJH  Release 10.44.00
 
               pamperspective: fix bug: array bounds violation crash.
 
+              Build: add dependencies so parallel make of top level
+              "all" works.
+
 08.06.27 BJH  Release 10.43.00
 
               Add pamtompfont: Mplayer bitmap font.

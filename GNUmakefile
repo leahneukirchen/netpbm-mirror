@@ -59,7 +59,8 @@ VPATH=.:$(SRCDIR)
 
 include $(BUILDDIR)/Makefile.config
 
-PRODUCT_SUBDIRS = lib converter analyzer editor generator other
+PROG_SUBDIRS = converter analyzer editor generator other
+PRODUCT_SUBDIRS = lib $(PROG_SUBDIRS)
 SUPPORT_SUBDIRS = urt buildtools
 
 SUBDIRS = $(PRODUCT_SUBDIRS) $(SUPPORT_SUBDIRS)
@@ -86,6 +87,18 @@ all: nonmerge
 
 .PHONY: nonmerge
 nonmerge: $(PRODUCT_SUBDIRS:%=%/all)
+
+# Parallel make (make --jobs) is not smart enough to coordinate builds
+# between submakes, so a naive parallel make would cause certain
+# targets to get built multiple times simultaneously.  That is usually
+# unacceptable.  So we introduce extra dependencies here just to make
+# sure such targets are already up to date before the submake starts,
+# for the benefit of parallel make.  Note that we ensure that parallel
+# make works for 'make all' in the top directory, but it may still fail
+# for the aforementioned reason for other invocations.
+
+$(SUBDIRS:%=%/all): pm_config.h inttypes_netpbm.h version.h
+$(PROG_SUBDIRS:%=%/all): lib/all $(SUPPORT_SUBDIRS:%=%/all)
 
 OMIT_CONFIG_RULE = 1
 OMIT_VERSION_H_RULE = 1
