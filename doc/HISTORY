@@ -4,7 +4,7 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-not yet  BJH  Release 10.44.00
+08.09.27 BJH  Release 10.44.00
 
               Add pngtopam as a replacement for pngtopnm.  Has ability
               to generate image with alpha channel.  Thanks 
