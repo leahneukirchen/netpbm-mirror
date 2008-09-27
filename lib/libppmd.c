@@ -220,6 +220,14 @@ clipEnd0(int    const x0,
         }
     }
 
+    /* Clipping vertically may have moved the endpoint out of frame
+       horizontally.  If so, we know the other endpoint is also out of
+       frame horizontally and the line misses the frame entirely.
+    */
+    if (cx0 < 0 || cx0 >= cols) {
+        assert(x1 < 0 || x1 >= cols);
+        noLine = TRUE;
+    }
     *cx0P = cx0;
     *cy0P = cy0;
     *noLineP = noLine;

@@ -4,6 +4,14 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+08.09.27 BJH  Release 10.35.52
+
+              libppmd/ppmdraw: fix crash when line is completely out of
+              frame.
+
+              Build: add dependencies so parallel make of top level
+              "all" works.
+
 08.09.12 BJH  Release 10.35.51
 
               pamgradient: fix bug: always produces color, not grayscale.
