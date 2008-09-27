@@ -934,26 +934,21 @@ processParamLine(char const input[],
 
 
 
-/*===========================================================================*
- *
- * ReadParamFile
- *
- *	read the parameter file
- *	function is ENCODE_FRAMES, COMBINE_GOPS, or COMBINE_FRAMES, and
- *	    will slightly modify the procedure's behavior as to what it
- *	    is looking for in the parameter file
- *
- * SIDE EFFECTS:    sets parameters accordingly, as well as machine info for
- *		    parallel execution and input file names
- *
- *===========================================================================*/
 void
-ReadParamFile(const char *    const fileName, 
-              int             const function,
-              struct params * const paramP) {
+ReadParamFile(const char *         const fileName, 
+              majorProgramFunction const function,
+              struct params *      const paramP) {
+/*----------------------------------------------------------------------------
+   Read the parameter file 'fileName' as *paramP.
 
-  FILE *fpointer;
-  char    buffer[256];
+   'function' slightly modifies our behavior as to what it is looking for
+   in the parameter file.
+
+   As a side effect, set machine info for parallel execution and input
+   file names
+-----------------------------------------------------------------------------*/
+  FILE * fpointer;
+  char buffer[256];
   bool yuvUsed;
   struct inputSource * inputSourceP;
       /* Contents of INPUT section */

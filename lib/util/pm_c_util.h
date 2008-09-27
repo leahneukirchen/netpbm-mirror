@@ -23,6 +23,8 @@
 #undef ROUNDDN
 #define ROUNDDN(X,M) ((X)/(M)*(M))
 
+#define ROUNDDIV(DIVIDEND,DIVISOR) (((DIVIDEND) + (DIVISOR)/2)/(DIVISOR))
+
 #undef SQR
 #define SQR(a) ((a)*(a))
 

@@ -1,7 +1,4 @@
 /*
-** pngtopnm.c -
-** read a Portable Network Graphics file and produce a portable anymap
-**
 ** Copyright (C) 1995,1998 by Alexander Lehmann <alex@hal.rhein-main.de>
 **                        and Willem van Schaik <willem@schaik.com>
 **
@@ -20,6 +17,8 @@
 #  define PNMTOPNG_WARNING_LEVEL 0   /* use 0 for backward compatibility, */
 #endif                               /*  2 for warnings (1 == error) */
 
+
+#include <assert.h>
 #include <math.h>
 #include <float.h>
 #include <png.h>    /* includes zlib.h and setjmp.h */
@@ -28,13 +27,13 @@
 #include "mallocvar.h"
 #include "nstring.h"
 #include "shhopt.h"
-#include "pnm.h"
+#include "pam.h"
 
 typedef struct _jmpbuf_wrapper {
   jmp_buf jmpbuf;
 } jmpbuf_wrapper;
 
-enum alpha_handling {ALPHA_NONE, ALPHA_ONLY, ALPHA_MIX};
+enum alpha_handling {ALPHA_NONE, ALPHA_ONLY, ALPHA_MIX, ALPHA_IN};
 
 struct cmdlineInfo {
     /* All the information the user supplied in the command line,
@@ -89,7 +88,8 @@ parseCommandLine(int                  argc,
 
     unsigned int option_def_index;
 
-    unsigned int alphaSpec, mixSpec, backgroundSpec, gammaSpec, textSpec;
+    unsigned int alphaSpec, alphapamSpec, mixSpec,
+        backgroundSpec, gammaSpec, textSpec;
 
     MALLOCARRAY(option_def, 100);
 
@@ -98,6 +98,8 @@ parseCommandLine(int                  argc,
             &cmdlineP->verbose,       0);
     OPTENT3(0, "alpha",       OPT_FLAG,   NULL,                  
             &alphaSpec,               0);
+    OPTENT3(0, "alphapam",    OPT_FLAG,   NULL,                  
+            &alphapamSpec,            0);
     OPTENT3(0, "mix",         OPT_FLAG,   NULL,                  
             &mixSpec,                 0);
     OPTENT3(0, "background",  OPT_STRING, &cmdlineP->background,
@@ -117,12 +119,14 @@ parseCommandLine(int                  argc,
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
 
-    if (alphaSpec && mixSpec)
-        pm_error("You cannot specify both -alpha and -mix");
+    if (alphaSpec + mixSpec + alphapamSpec > 1)
+        pm_error("You cannot specify more than one of -alpha -alphapam -mix");
     else if (alphaSpec)
         cmdlineP->alpha = ALPHA_ONLY;
     else if (mixSpec)
         cmdlineP->alpha = ALPHA_MIX;
+    else if (alphapamSpec)
+        cmdlineP->alpha = ALPHA_IN;
     else
         cmdlineP->alpha = ALPHA_NONE;
 
@@ -175,28 +179,63 @@ isGrayscale(pngcolor const color) {
 
 
 
-static void 
-setXel(xel *               const xelP, 
-       pngcolor            const foreground,
-       pngcolor            const background,
-       enum alpha_handling const alpha_handling,
-       png_uint_16         const alpha) {
+static sample
+alphaMix(png_uint_16 const foreground,
+         png_uint_16 const background,
+         png_uint_16 const alpha,
+         sample      const maxval) {
 
-    if (alpha_handling == ALPHA_ONLY) {
-        PNM_ASSIGN1(*xelP, alpha);
+    double const opacity      = (double)alpha / maxval;
+    double const transparency = 1.0 - opacity;
+
+    return ROUNDU(foreground * opacity + background * transparency);
+}
+
+
+
+static void
+setTuple(const struct pam *  const pamP,
+         tuple               const tuple,
+         pngcolor            const foreground,
+         pngcolor            const background,
+         enum alpha_handling const alphaHandling,
+         png_uint_16         const alpha) {
+
+    if (alphaHandling == ALPHA_ONLY)
+        tuple[0] = alpha;
+    else if (alphaHandling == ALPHA_NONE ||
+             (alphaHandling == ALPHA_MIX && alpha == maxval)) {
+        if (pamP->depth < 3)
+            tuple[0] = foreground.r;
+        else {
+            tuple[PAM_RED_PLANE] = foreground.r;
+            tuple[PAM_GRN_PLANE] = foreground.g;
+            tuple[PAM_BLU_PLANE] = foreground.b;
+        }
+    } else if (alphaHandling == ALPHA_IN) {
+        if (pamP->depth < 4) {
+            tuple[0] = foreground.r;
+            tuple[PAM_GRAY_TRN_PLANE] = alpha;
+        } else {
+            tuple[PAM_RED_PLANE] = foreground.r;
+            tuple[PAM_GRN_PLANE] = foreground.g;
+            tuple[PAM_BLU_PLANE] = foreground.b;
+            tuple[PAM_TRN_PLANE] = alpha;
+        }    
     } else {
-        if ((alpha_handling == ALPHA_MIX) && (alpha != maxval)) {
-            double const opacity      = (double)alpha / maxval;
-            double const transparency = 1.0 - opacity;
+        assert(alphaHandling == ALPHA_MIX);
 
-            pngcolor mix;
-
-            mix.r = foreground.r * opacity + background.r * transparency + 0.5;
-            mix.g = foreground.g * opacity + background.g * transparency + 0.5;
-            mix.b = foreground.b * opacity + background.b * transparency + 0.5;
-            PPM_ASSIGN(*xelP, mix.r, mix.g, mix.b);
-        } else
-            PPM_ASSIGN(*xelP, foreground.r, foreground.g, foreground.b);
+        if (pamP->depth < 3)
+            tuple[0] =
+                alphaMix(foreground.r, background.r, alpha, maxval);
+        else {
+            tuple[PAM_RED_PLANE] =
+                alphaMix(foreground.r, background.r, alpha, maxval);
+            tuple[PAM_GRN_PLANE] =
+                alphaMix(foreground.g, background.g, alpha, maxval);
+            tuple[PAM_BLU_PLANE] =
+                alphaMix(foreground.b, background.b, alpha, maxval);
+        }
     }
 }
 
@@ -609,37 +648,104 @@ paletteHasPartialTransparency(png_info * const info_ptr) {
 
 
 static void
-setupSignificantBits(png_struct *        const png_ptr,
-                     png_info *          const info_ptr,
-                     enum alpha_handling const alpha,
-                     png_uint_16 *       const maxvalP,
-                     int *               const errorlevelP) {
-/*----------------------------------------------------------------------------
-  Figure out what maxval would best express the information in the PNG
-  described by 'png_ptr' and 'info_ptr', with 'alpha' telling which
-  information in the PNG we care about (image or alpha mask).
+getComponentSbitFg(png_info * const pngInfoP,
+                   png_byte * const fgSbitP,
+                   bool *     const notUniformP) {
 
-  Return the result as *maxvalP.
------------------------------------------------------------------------------*/
-    /* Initial assumption of maxval */
-    if (info_ptr->color_type == PNG_COLOR_TYPE_PALETTE) {
-        if (alpha == ALPHA_ONLY) {
-            if (info_ptr->color_type == PNG_COLOR_TYPE_GRAY ||
-                info_ptr->color_type == PNG_COLOR_TYPE_RGB)
-                /* The alpha mask will be all opaque, so maxval 1 is plenty */
-                *maxvalP = 1;
-            else if (paletteHasPartialTransparency(info_ptr))
-                /* Use same maxval as PNG transparency palette for simplicity*/
-                *maxvalP = 255;
-            else
-                /* A common case, so we conserve bits */
-                *maxvalP = 1;
+    if (pngInfoP->color_type == PNG_COLOR_TYPE_RGB ||
+        pngInfoP->color_type == PNG_COLOR_TYPE_RGB_ALPHA ||
+        pngInfoP->color_type == PNG_COLOR_TYPE_PALETTE) {
+        if (pngInfoP->sig_bit.red == pngInfoP->sig_bit.blue &&
+            pngInfoP->sig_bit.red == pngInfoP->sig_bit.green) {
+            *notUniformP = false;
+            *fgSbitP     = pngInfoP->sig_bit.red;
         } else
-            /* Use same maxval as PNG palette for simplicity */
-            *maxvalP = 255;
+            *notUniformP = true;
     } else {
-        *maxvalP = (1l << info_ptr->bit_depth) - 1;
+        /* It has only a gray channel so it's obviously uniform */
+        *notUniformP = false;
+        *fgSbitP     = pngInfoP->sig_bit.gray;
     }
+}
+
+
+
+static void
+getComponentSbit(png_info *          const pngInfoP,
+                 enum alpha_handling const alphaHandling,
+                 png_byte *          const componentSbitP,
+                 bool *              const notUniformP) {
+
+    switch (alphaHandling) {
+
+    case ALPHA_ONLY:
+        /* We care only about the alpha channel, so the uniform Sbit is
+           the alpha Sbit
+        */
+        *notUniformP = false;
+        *componentSbitP = pngInfoP->sig_bit.alpha;
+        break;
+    case ALPHA_NONE:
+    case ALPHA_MIX:
+        /* We aren't going to produce an alpha channel, so we care only
+           about the uniformity of the foreground channels.
+        */
+        getComponentSbitFg(pngInfoP, componentSbitP, notUniformP);
+        break;
+    case ALPHA_IN: {
+        /* We care about both the foreground and the alpha */
+        bool fgNotUniform;
+        png_byte fgSbit;
+        
+        getComponentSbitFg(pngInfoP, &fgSbit, &fgNotUniform);
+
+        if (fgNotUniform)
+            *notUniformP = true;
+        else {
+            if (fgSbit == pngInfoP->sig_bit.alpha) {
+                *notUniformP    = false;
+                *componentSbitP = fgSbit;
+            } else
+                *notUniformP = true;
+        }
+    } break;
+    }
+}
+
+                 
+
+static void
+shiftPalette(png_info *   const pngInfoP,
+             unsigned int const shift) {
+/*----------------------------------------------------------------------------
+   Shift every component of every color in the PNG palette right by
+   'shift' bits because sBIT chunk says only those are significant.
+-----------------------------------------------------------------------------*/
+    if (shift > 7)
+        pm_error("Invalid PNG: paletted image can't have "
+                 "more than 8 significant bits per component, "
+                 "but sBIT chunk says %u bits",
+                 shift);
+    else {
+        unsigned int i;
+        
+        for (i = 0; i < pngInfoP->num_palette; ++i) {
+            pngInfoP->palette[i].red   >>= (8 - shift);
+            pngInfoP->palette[i].green >>= (8 - shift);
+            pngInfoP->palette[i].blue  >>= (8 - shift);
+        }
+    }
+}
+
+
+
+static void
+computeMaxvalFromSbit(png_struct *        const pngP,
+                      png_info *          const pngInfoP,
+                      enum alpha_handling const alphaHandling,
+                      png_uint_16 *       const maxvalP,
+                      bool *              const succeededP,
+                      int *               const errorlevelP) {
 
     /* sBIT handling is very tricky. If we are extracting only the
        image, we can use the sBIT info for grayscale and color images,
@@ -650,98 +756,100 @@ setupSignificantBits(png_struct *        const png_ptr,
        transparency, if we know that only solid and fully transparent
        is used 
     */
+
+    bool notUniform;
+        /* The sBIT chunk says the number of significant high-order bits
+           in each component varies among the components we care about.
+        */
+    png_byte componentSigBit;
+        /* The number of high-order significant bits in each RGB component.
+           Meaningless if they aren't all the same (i.e. 'notUniform')
+        */
+
+    getComponentSbit(pngInfoP, alphaHandling, &componentSigBit, &notUniform);
+
+    if (notUniform) {
+        pm_message("This program cannot handle "
+                   "different bit depths for color channels");
+        pm_message("writing file with %u bit resolution", pngInfoP->bit_depth);
+        *succeededP = false;
+        *errorlevelP = PNMTOPNG_WARNING_LEVEL;
+    } else if (componentSigBit > 15) {
+        pm_message("Invalid PNG: says %u significant bits for a component; "
+                   "max possible is 16.  Ignoring sBIT chunk.",
+                   componentSigBit);
+        *succeededP = false;
+        *errorlevelP = PNMTOPNG_WARNING_LEVEL;
+    } else {
+        if (alphaHandling == ALPHA_MIX &&
+            (pngInfoP->color_type == PNG_COLOR_TYPE_RGB_ALPHA ||
+             pngInfoP->color_type == PNG_COLOR_TYPE_GRAY_ALPHA ||
+             paletteHasPartialTransparency(pngInfoP)))
+            *succeededP = false;
+        else {
+            if (componentSigBit < pngInfoP->bit_depth) {
+                pm_message("Image has fewer significant bits, "
+                           "writing file with %u bits", componentSigBit);
+                *maxvalP = (1l << componentSigBit) - 1;
+                *succeededP = true;
+
+                if (pngInfoP->color_type == PNG_COLOR_TYPE_PALETTE)
+                    shiftPalette(pngInfoP, componentSigBit);
+                else
+                    png_set_shift(pngP, &pngInfoP->sig_bit);
+            } else
+                *succeededP = false;
+        }
+    }
+}
+
+
+
+static void
+setupSignificantBits(png_struct *        const pngP,
+                     png_info *          const pngInfoP,
+                     enum alpha_handling const alphaHandling,
+                     png_uint_16 *       const maxvalP,
+                     int *               const errorlevelP) {
+/*----------------------------------------------------------------------------
+  Figure out what maxval would best express the information in the PNG
+  described by *pngP and *pngInfoP, with 'alpha' telling which
+  information in the PNG we care about (image or alpha mask).
+
+  Return the result as *maxvalP.
+
+  Also set up *pngP for the corresponding significant bits.
+-----------------------------------------------------------------------------*/
+    bool gotItFromSbit;
     
-    if (info_ptr->valid & PNG_INFO_sBIT) {
-        switch (alpha) {
-        case ALPHA_MIX:
-            if (info_ptr->color_type == PNG_COLOR_TYPE_RGB_ALPHA ||
-                info_ptr->color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
-                break;
-            if (info_ptr->color_type == PNG_COLOR_TYPE_PALETTE &&
-                (info_ptr->valid & PNG_INFO_tRNS)) {
+    if (pngInfoP->valid & PNG_INFO_sBIT)
+        computeMaxvalFromSbit(pngP, pngInfoP, alphaHandling,
+                              maxvalP, &gotItFromSbit, errorlevelP);
+    else
+        gotItFromSbit = false;
 
-                bool trans_mix;
-                unsigned int i;
-                trans_mix = TRUE;
-                for (i = 0; i < info_ptr->num_trans; ++i)
-                    if (info_ptr->trans[i] != 0 && info_ptr->trans[i] != 255) {
-                        trans_mix = FALSE;
-                        break;
-                    }
-                if (!trans_mix)
-                    break;
-            }
-
-            /* else fall though to normal case */
-
-        case ALPHA_NONE:
-            if ((info_ptr->color_type == PNG_COLOR_TYPE_PALETTE ||
-                 info_ptr->color_type == PNG_COLOR_TYPE_RGB ||
-                 info_ptr->color_type == PNG_COLOR_TYPE_RGB_ALPHA) &&
-                (info_ptr->sig_bit.red != info_ptr->sig_bit.green ||
-                 info_ptr->sig_bit.red != info_ptr->sig_bit.blue) &&
-                alpha == ALPHA_NONE) {
-                pm_message("This program cannot handle "
-                           "different bit depths for color channels");
-                pm_message("writing file with %d bit resolution",
-                           info_ptr->bit_depth);
-                *errorlevelP = PNMTOPNG_WARNING_LEVEL;
-            } else {
-                if ((info_ptr->color_type == PNG_COLOR_TYPE_PALETTE) &&
-                    (info_ptr->sig_bit.red < 255)) {
-                    unsigned int i;
-                    for (i = 0; i < info_ptr->num_palette; ++i) {
-                        info_ptr->palette[i].red   >>=
-                            (8 - info_ptr->sig_bit.red);
-                        info_ptr->palette[i].green >>=
-                            (8 - info_ptr->sig_bit.green);
-                        info_ptr->palette[i].blue  >>=
-                            (8 - info_ptr->sig_bit.blue);
-                    }
-                    *maxvalP = (1l << info_ptr->sig_bit.red) - 1;
-                    if (verbose)
-                        pm_message ("image has fewer significant bits, "
-                                    "writing file with %d bits per channel", 
-                                    info_ptr->sig_bit.red);
-                } else
-                    if ((info_ptr->color_type == PNG_COLOR_TYPE_RGB ||
-                         info_ptr->color_type == PNG_COLOR_TYPE_RGB_ALPHA) &&
-                        (info_ptr->sig_bit.red < info_ptr->bit_depth)) {
-                        png_set_shift (png_ptr, &(info_ptr->sig_bit));
-                        *maxvalP = (1l << info_ptr->sig_bit.red) - 1;
-                        if (verbose)
-                            pm_message("image has fewer significant bits, "
-                                       "writing file with %d "
-                                       "bits per channel", 
-                                       info_ptr->sig_bit.red);
-                    } else 
-                        if ((info_ptr->color_type == PNG_COLOR_TYPE_GRAY ||
-                             info_ptr->color_type ==
-                                 PNG_COLOR_TYPE_GRAY_ALPHA) &&
-                            (info_ptr->sig_bit.gray < info_ptr->bit_depth)) {
-                            png_set_shift (png_ptr, &(info_ptr->sig_bit));
-                            *maxvalP = (1l << info_ptr->sig_bit.gray) - 1;
-                            if (verbose)
-                                pm_message("image has fewer significant bits, "
-                                           "writing file with %d bits",
-                                           info_ptr->sig_bit.gray);
-                        }
-            }
-            break;
-
-        case ALPHA_ONLY:
-            if ((info_ptr->color_type == PNG_COLOR_TYPE_RGB_ALPHA ||
-                 info_ptr->color_type == PNG_COLOR_TYPE_GRAY_ALPHA) && 
-                (info_ptr->sig_bit.gray < info_ptr->bit_depth)) {
-                png_set_shift (png_ptr, &(info_ptr->sig_bit));
-                if (verbose)
-                    pm_message ("image has fewer significant bits, "
-                                "writing file with %d bits", 
-                                info_ptr->sig_bit.alpha);
-                *maxvalP = (1l << info_ptr->sig_bit.alpha) - 1;
-            }
-            break;
-
+    if (!gotItFromSbit) {
+        if (pngInfoP->color_type == PNG_COLOR_TYPE_PALETTE) {
+            if (alphaHandling == ALPHA_ONLY) {
+                if (pngInfoP->color_type == PNG_COLOR_TYPE_GRAY ||
+                    pngInfoP->color_type == PNG_COLOR_TYPE_RGB)
+                    /* The alpha mask will be all opaque, so maxval 1
+                       is plenty
+                    */
+                    *maxvalP = 1;
+                else if (paletteHasPartialTransparency(pngInfoP))
+                    /* Use same maxval as PNG transparency palette for
+                       simplicity
+                    */
+                    *maxvalP = 255;
+                else
+                    /* A common case, so we conserve bits */
+                    *maxvalP = 1;
+            } else
+                /* Use same maxval as PNG palette for simplicity */
+                *maxvalP = 255;
+        } else {
+            *maxvalP = (1l << pngInfoP->bit_depth) - 1;
         }
     }
 }
@@ -777,20 +885,41 @@ imageHasColor(png_info * const info_ptr) {
 
 
 static void
-determineOutputType(png_info *          const info_ptr,
+determineOutputType(png_info *          const pngInfoP,
                     enum alpha_handling const alphaHandling,
                     pngcolor            const bgColor,
                     xelval              const maxval,
-                    int *               const pnmTypeP) {
+                    int *               const formatP,
+                    unsigned int *      const depthP,
+                    char *              const tupleType) {
 
-    if (alphaHandling != ALPHA_ONLY &&
-        (imageHasColor(info_ptr) || !isGrayscale(bgColor)))
-        *pnmTypeP = PPM_TYPE;
-    else {
-        if (maxval > 1)
-            *pnmTypeP = PGM_TYPE;
-        else
-            *pnmTypeP = PBM_TYPE;
+    if (alphaHandling == ALPHA_ONLY) {
+        /* The output is a old style pseudo-PNM transparency image */
+        *depthP = 1;
+        *formatP = maxval > 1 ? PGM_FORMAT : PBM_FORMAT;
+    } else {            
+        /* The output is a normal Netpbm image */
+        bool const outputIsColor =
+            imageHasColor(pngInfoP) || !isGrayscale(bgColor);
+
+        if (alphaHandling == ALPHA_IN) {
+            *formatP = PAM_FORMAT;
+            if (outputIsColor) {
+                *depthP = 4;
+                strcpy(tupleType, "RGB_ALPHA");
+            } else {
+                *depthP = 1;
+                strcpy(tupleType, "GRAYSCALE_ALPHA");
+            }
+        } else {
+            if (outputIsColor) {
+                *formatP = PPM_FORMAT;
+                *depthP = 3;
+            } else {
+                *depthP = 1;
+                *formatP = maxval > 1 ? PGM_FORMAT : PBM_FORMAT;
+            }
+        }
     }
 }
 
@@ -859,14 +988,13 @@ getBackgroundColor(png_info *   const info_ptr,
 
 
 static void
-makeXelRow(xel *               const xelrow,
-           xelval              const maxval,
-           int                 const pnmType,
-           png_info *          const pngInfoP,
-           const png_byte *    const pngRasterRow,
-           pngcolor            const bgColor,
-           enum alpha_handling const alphaHandling,
-           double              const totalgamma) {
+makeTupleRow(const struct pam *  const pamP,
+             const tuple *       const tuplerow,
+             png_info *          const pngInfoP,
+             const png_byte *    const pngRasterRow,
+             pngcolor            const bgColor,
+             enum alpha_handling const alphaHandling,
+             double              const totalgamma) {
 
     const png_byte * pngPixelP;
     unsigned int col;
@@ -877,7 +1005,7 @@ makeXelRow(xel *               const xelrow,
         case PNG_COLOR_TYPE_GRAY: {
             pngcolor fgColor;
             fgColor.r = fgColor.g = fgColor.b = GET_PNG_VAL(pngPixelP);
-            setXel(&xelrow[col], fgColor, bgColor, alphaHandling,
+            setTuple(pamP, tuplerow[col], fgColor, bgColor, alphaHandling,
                    isTransparentColor(fgColor, pngInfoP, totalgamma) ?
                    0 : maxval);
         }
@@ -889,7 +1017,8 @@ makeXelRow(xel *               const xelrow,
 
             fgColor.r = fgColor.g = fgColor.b = GET_PNG_VAL(pngPixelP);
             alpha = GET_PNG_VAL(pngPixelP);
-            setXel(&xelrow[col], fgColor, bgColor, alphaHandling, alpha);
+            setTuple(pamP, tuplerow[col], fgColor, bgColor,
+                     alphaHandling, alpha);
         }
         break;
 
@@ -903,10 +1032,10 @@ makeXelRow(xel *               const xelrow,
             fgColor.g = paletteColor.green;
             fgColor.b = paletteColor.blue;
 
-            setXel(&xelrow[col], fgColor, bgColor, alphaHandling,
-                   (pngInfoP->valid & PNG_INFO_tRNS) &&
-                   index < pngInfoP->num_trans ?
-                   pngInfoP->trans[index] : maxval);
+            setTuple(pamP, tuplerow[col], fgColor, bgColor, alphaHandling,
+                     (pngInfoP->valid & PNG_INFO_tRNS) &&
+                     index < pngInfoP->num_trans ?
+                     pngInfoP->trans[index] : maxval);
         }
         break;
                 
@@ -916,9 +1045,9 @@ makeXelRow(xel *               const xelrow,
             fgColor.r = GET_PNG_VAL(pngPixelP);
             fgColor.g = GET_PNG_VAL(pngPixelP);
             fgColor.b = GET_PNG_VAL(pngPixelP);
-            setXel(&xelrow[col], fgColor, bgColor, alphaHandling,
-                   isTransparentColor(fgColor, pngInfoP, totalgamma) ?
-                   0 : maxval);
+            setTuple(pamP, tuplerow[col], fgColor, bgColor, alphaHandling,
+                     isTransparentColor(fgColor, pngInfoP, totalgamma) ?
+                     0 : maxval);
         }
         break;
 
@@ -930,7 +1059,8 @@ makeXelRow(xel *               const xelrow,
             fgColor.g = GET_PNG_VAL(pngPixelP);
             fgColor.b = GET_PNG_VAL(pngPixelP);
             alpha     = GET_PNG_VAL(pngPixelP);
-            setXel(&xelrow[col], fgColor, bgColor, alphaHandling, alpha);
+            setTuple(pamP, tuplerow[col], fgColor, bgColor,
+                     alphaHandling, alpha);
         }
         break;
 
@@ -943,47 +1073,65 @@ makeXelRow(xel *               const xelrow,
 
 
 static void
-writePnm(FILE *              const ofP,
-         xelval              const maxval,
-         int                 const pnmType,
-         png_info *          const pngInfoP,
-         png_byte **         const pngRaster,
-         pngcolor            const bgColor,
-         enum alpha_handling const alphaHandling,
-         double              const totalgamma) {
+reportOutputFormat(const struct pam * const pamP) {
+
+    switch (pamP->format) {
+
+    case PBM_FORMAT:
+        pm_message("Writing a PBM file");
+        break;
+    case PGM_FORMAT:
+        pm_message("Writing a PGM file with maxval %lu", pamP->maxval);
+        break;
+    case PPM_FORMAT:
+        pm_message("Writing a PPM file with maxval %lu", pamP->maxval);
+        break;
+    case PAM_FORMAT:
+        pm_message("Writing a PAM file with tuple type %s, maxval %u",
+                   pamP->tuple_type, maxval);
+        break;
+    default:
+        assert(false); /* Every possible value handled above */
+    }
+}
+    
+
+
+static void
+writeNetpbm(struct pam *        const pamP,
+            png_info *          const pngInfoP,
+            png_byte **         const pngRaster,
+            pngcolor            const bgColor,
+            enum alpha_handling const alphaHandling,
+            double              const totalgamma) {
 /*----------------------------------------------------------------------------
-   Write a PNM of either the image or the alpha mask, according to
+   Write a Netpbm image of either the image or the alpha mask, according to
    'alphaHandling' that is in the PNG image described by 'pngInfoP' and
    pngRaster.
 
-   'pnmType' and 'maxval' are of the output image.
+   *pamP describes the required output image and is consistent with
+   *pngInfoP.
 
    Use background color 'bgColor' in the output if the PNG is such that a
    background color is needed.
 -----------------------------------------------------------------------------*/
-    xel * xelrow;
+    tuple * tuplerow;
     unsigned int row;
 
     if (verbose)
-        pm_message("writing a %s file (maxval=%u)",
-                   pnmType == PBM_TYPE ? "PBM" :
-                   pnmType == PGM_TYPE ? "PGM" :
-                   pnmType == PPM_TYPE ? "PPM" :
-                   "UNKNOWN!", 
-                   maxval);
-    
-    xelrow = pnm_allocrow(pngInfoP->width);
+        reportOutputFormat(pamP);
 
-    pnm_writepnminit(stdout, pngInfoP->width, pngInfoP->height, maxval,
-                     pnmType, FALSE);
+    pnm_writepaminit(pamP);
+
+    tuplerow = pnm_allocpamrow(pamP);
 
     for (row = 0; row < pngInfoP->height; ++row) {
-        makeXelRow(xelrow, maxval, pnmType, pngInfoP, pngRaster[row], bgColor,
-                   alphaHandling, totalgamma);
+        makeTupleRow(pamP, tuplerow, pngInfoP, pngRaster[row], bgColor,
+                     alphaHandling, totalgamma);
 
-        pnm_writepnmrow(ofP, xelrow, pngInfoP->width, maxval, pnmType, FALSE);
+        pnm_writepamrow(pamP, tuplerow);
     }
-    pnm_freerow (xelrow);
+    pnm_freepamrow(tuplerow);
 }
 
 
@@ -997,9 +1145,9 @@ convertpng(FILE *             const ifp,
     png_struct * png_ptr;
     png_info * info_ptr;
     png_byte ** png_image;
-    int pnm_type;
     pngcolor bgColor;
     float totalgamma;
+    struct pam pam;
 
     *errorlevelP = 0;
 
@@ -1062,10 +1210,18 @@ convertpng(FILE *             const ifp,
         }
     }
 
-    determineOutputType(info_ptr, cmdline.alpha, bgColor, maxval, &pnm_type);
+    pam.size        = sizeof(pam);
+    pam.len         = PAM_STRUCT_SIZE(maxval);
+    pam.file        = stdout;
+    pam.plainformat = 0;
+    pam.height      = info_ptr->height;
+    pam.width       = info_ptr->width;
+    pam.maxval      = maxval;
 
-    writePnm(stdout, maxval, pnm_type, info_ptr, png_image, bgColor, 
-             cmdline.alpha, totalgamma);
+    determineOutputType(info_ptr, cmdline.alpha, bgColor, maxval,
+                        &pam.format, &pam.depth, pam.tuple_type);
+
+    writeNetpbm(&pam, info_ptr, png_image, bgColor, cmdline.alpha, totalgamma);
 
     fflush(stdout);
 

@@ -124,9 +124,10 @@ IMPORTINC_LIB_HEADERS := \
   pm_gamma.h lum.h
 
 IMPORTINC_LIB_UTIL_HEADERS := \
-  bitreverse.h filename.h mallocvar.h nsleep.h nstring.h pm_c_util.h shhopt.h \
+  bitarith.h bitreverse.h filename.h intcode.h mallocvar.h\
+  nsleep.h nstring.h pm_c_util.h shhopt.h \
   wordaccess.h wordaccess_64_le.h wordaccess_gcc3_be.h wordaccess_gcc3_le.h \
-  wordaccess_generic.h intcode.h \
+  wordaccess_generic.h \
 
 IMPORTINC_HEADERS := \
   $(IMPORTINC_ROOT_HEADERS) \

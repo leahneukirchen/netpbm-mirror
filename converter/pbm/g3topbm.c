@@ -26,6 +26,10 @@
 #include "mallocvar.h"
 #include "g3.h"
 #include "bitreverse.h"
+#include "bitarith.h"
+
+#define LEFTBITS pm_byteLeftBits
+#define RIGHTBITS pm_byteRightBits
 
 #define MAXCOLS 10800
 #define MAXROWS 14400   /* this allows up to two pages of image */
@@ -297,12 +301,12 @@ buildHashes(g3TableEntry * (*whashP)[HASHSIZE],
 
 
 static void
-makeRowWhite(bit *        const bitrow,
-             unsigned int const cols) {
+makeRowWhite(unsigned char * const packedBitrow,
+             unsigned int    const cols) {
 
-    unsigned int col;
-    for (col = 0; col < MAXCOLS; ++col)
-        bitrow[col] = PBM_WHITE;
+    unsigned int colByte;
+    for (colByte = 0; colByte < pbm_packed_bytes(cols); ++colByte)
+        packedBitrow[colByte] = PBM_WHITE * 0xff;
 }
 
 
@@ -335,16 +339,45 @@ g3code(unsigned int const curcode,
 
 
 
+static void
+writeBlackBitSpan(unsigned char * const packedBitrow,
+                  int             const cols,
+                  int             const offset) {
+/*----------------------------------------------------------------------------
+   Write black (="1") bits into packedBitrow[], starting at 'offset',
+   length 'cols'.
+-----------------------------------------------------------------------------*/
+    unsigned char * const dest = & packedBitrow[offset/8];
+    unsigned int const rs  = offset % 8;
+    unsigned int const trs = (cols + rs) % 8;
+    unsigned int const colBytes = pbm_packed_bytes(cols + rs);
+    unsigned int const last = colBytes - 1;
+
+    unsigned char const origHead = dest[0];
+    unsigned char const origEnd =  0x00;
+
+    unsigned int i;
+
+    for( i = 0; i < colBytes; ++i)
+        dest[i] = PBM_BLACK * 0xff;
+
+    if (rs > 0)
+        dest[0] = LEFTBITS(origHead, rs) | RIGHTBITS(dest[0], 8-rs);
+
+    if (trs > 0)
+        dest[last] = LEFTBITS(dest[last], trs) | RIGHTBITS(origEnd, 8-trs);
+}
+
+
+
 enum g3tableId {TERMWHITE, TERMBLACK, MKUPWHITE, MKUPBLACK};
 
-
-
 static void
-processG3Code(g3TableEntry * const teP,
-              bit *          const bitrow,
-              unsigned int * const colP,
-              bit *          const colorP,
-              unsigned int * const countP) {
+processG3Code(const g3TableEntry * const teP,
+              unsigned char *      const packedBitrow,
+              unsigned int *       const colP,
+              bit *                const colorP,
+              unsigned int *       const countP) {
               
     enum g3tableId const teId =
         (teP > mtable ? 2 : 0) + (teP - ttable) % 2;
@@ -368,14 +401,10 @@ processG3Code(g3TableEntry * const teP,
         runLengthSoFar = MIN(*countP + teCount, MAXCOLS - col);
 
         if (runLengthSoFar > 0) {
-            if (*colorP == PBM_WHITE) {
-                /* Row was initialized to white, so we just skip */
-                col += runLengthSoFar;
-            } else {
-                unsigned int i;
-                for (i = 0; i < runLengthSoFar; ++i)
-                    bitrow[col++] = PBM_BLACK;
-            }
+            if (*colorP == PBM_BLACK)
+                writeBlackBitSpan(packedBitrow, runLengthSoFar, col);
+            /* else : Row was initialized to white, so we just skip */
+            col += runLengthSoFar;
         }
         *colorP = !*colorP;
         *countP = 0;
@@ -410,13 +439,13 @@ formatBadCodeException(const char ** const exceptionP,
 
 static void
 readFaxRow(struct bitStream * const bitStreamP,
-           bit *              const bitrow,
+           unsigned char *    const packedBitrow,
            unsigned int *     const lineLengthP,
            const char **      const exceptionP,
            const char **      const errorP) {
 /*----------------------------------------------------------------------------
   Read one line of G3 fax from the bit stream *bitStreamP into 
-  bitrow[].  Return the length of the line, in pixels, as *lineLengthP.
+  packedBitrow[].  Return the length of the line, in pixels, as *lineLengthP.
 
   If there's a problem with the line, return as much of it as we can,
   advance the input stream past the next EOL mark, and put a text
@@ -440,11 +469,9 @@ readFaxRow(struct bitStream * const bitStreamP,
         /* Number of consecutive pixels of the same color */
     bit currentColor;
         /* The color of the current run of pixels */
-    g3TableEntry * te;
-        /* Address of structure that describes the current G3 code */
     bool done;
 
-    makeRowWhite(bitrow, MAXCOLS);  /* initialize row */
+    makeRowWhite(packedBitrow, MAXCOLS);  /* initialize row */
 
     col = 0;
     curlen = 0;
@@ -485,10 +512,14 @@ readFaxRow(struct bitStream * const bitStreamP,
                     formatBadCodeException(exceptionP, col, curlen, curcode);
                     done = TRUE;
                 } else if (curcode != 0) {
-                    te = g3code(curcode, curlen, currentColor);
-                    
-                    if (te) {
-                        processG3Code(te, bitrow, &col, &currentColor, &count);
+                    const g3TableEntry * const teP =
+                        g3code(curcode, curlen, currentColor);
+                        /* Address of structure that describes the 
+                           current G3 code
+                        */
+                    if (teP) {
+                        processG3Code(teP, packedBitrow,
+                                      &col, &currentColor, &count);
                         
                         curcode = 0;
                         curlen = 0;
@@ -506,9 +537,9 @@ readFaxRow(struct bitStream * const bitStreamP,
 
 
 static void
-freeBits(bit **       const bits,
-         unsigned int const rows,
-         bool         const stretched) {
+freeBits(unsigned char ** const packedBits,
+         unsigned int     const rows,
+         bool             const stretched) {
 
     unsigned int row;
 
@@ -518,9 +549,9 @@ freeBits(bit **       const bits,
                free it twice.
             */
         } else 
-            pbm_freerow(bits[row]);
+            pbm_freerow_packed(packedBits[row]);
     }
-    free(bits);
+    free(packedBits);
 }
 
 
@@ -638,17 +669,17 @@ readFax(struct bitStream * const bitStreamP,
         bool               const stretch,
         unsigned int       const expectedLineSize,
         bool               const tolerateErrors,
-        bit ***            const bitsP,
+        unsigned char ***  const packedBitsP,
         unsigned int *     const colsP,
         unsigned int *     const rowsP) {
 
     lineSizeAnalyzer lineSizeAnalyzer;
-    bit ** bits;
+    unsigned char ** packedBits;
     const char * error;
     bool eof;
     unsigned int row;
     
-    MALLOCARRAY_NOFAIL(bits, MAXROWS);
+    MALLOCARRAY_NOFAIL(packedBits, MAXROWS);
 
     initializeLineSizeAnalyzer(&lineSizeAnalyzer,
                                expectedLineSize, tolerateErrors);
@@ -666,8 +697,9 @@ readFax(struct bitStream * const bitStreamP,
         else {
             const char * exception;
 
-            bits[row] = pbm_allocrow(MAXCOLS);
-            readFaxRow(bitStreamP, bits[row], &lineSize, &exception, &error);
+            packedBits[row] = pbm_allocrow_packed(MAXCOLS);
+            readFaxRow(bitStreamP, packedBits[row],
+                       &lineSize, &exception, &error);
 
             handleRowException(exception, error, row, tolerateErrors);
 
@@ -685,16 +717,16 @@ readFax(struct bitStream * const bitStreamP,
                                       "program can handle at most %u rows "
                                       "after stretching", MAXROWS);
                         else
-                            bits[row] = bits[row-1];
+                            packedBits[row] = packedBits[row-1];
                     }
                     ++row;
                 }
             }
         }
     }
-    *rowsP  = row;
-    *colsP  = lineSizeAnalyzer.maxLineSize;
-    *bitsP  = bits;
+    *rowsP        = row;
+    *colsP        = lineSizeAnalyzer.maxLineSize;
+    *packedBitsP  = packedBits;
 }
 
 
@@ -706,7 +738,8 @@ main(int argc, char * argv[]) {
     FILE * ifP;
     struct bitStream bitStream;
     unsigned int rows, cols;
-    bit ** bits;
+    unsigned char ** packedBits;
+    int row;
 
     pbm_init(&argc, argv);
 
@@ -728,14 +761,17 @@ main(int argc, char * argv[]) {
 
     readFax(&bitStream, cmdline.stretch, cmdline.expectedLineSize,
             !cmdline.stop_error, 
-            &bits, &cols, &rows);
+            &packedBits, &cols, &rows);
 
     pm_close(ifP);
 
-    pbm_writepbm(stdout, bits, cols, rows, 0);
+    pbm_writepbminit(stdout, cols, rows, 0);
+    for (row = 0; row < rows; ++row)
+        pbm_writepbmrow_packed(stdout, packedBits[row], cols, 0);
+
     pm_close(stdout);
 
-    freeBits(bits, rows, cmdline.stretch);
+    freeBits(packedBits, rows, cmdline.stretch);
 
     return 0;
 }

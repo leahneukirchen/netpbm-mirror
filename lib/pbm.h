@@ -61,9 +61,19 @@ pbm_allocrow(unsigned int const cols);
 bit** pbm_readpbm(FILE* file, int* colsP, int* rowsP);
 void pbm_readpbminit(FILE* file, int* colsP, int* rowsP, int* formatP);
 void pbm_readpbmrow(FILE* file, bit* bitrow, int cols, int format);
-void pbm_readpbmrow_packed(
-    FILE* const file, unsigned char * const packed_bits, 
-    const int cols, const int format);
+
+void
+pbm_readpbmrow_packed(FILE *          const file, 
+                      unsigned char * const packedBits,
+                      int             const cols, 
+                      int             const format);
+
+void
+pbm_readpbmrow_bitoffset(FILE *          const fileP,
+                         unsigned char * const packedBits, 
+                         int             const cols,
+                         int             const format,
+                         unsigned int    const offset);
 
 void
 pbm_writepbminit(FILE * const fileP, 
@@ -91,9 +101,21 @@ pbm_writepbmrow_packed(FILE *                const fileP,
                        int                   const forceplain);
 
 void
+pbm_writepbmrow_bitoffset(FILE *          const ifP,
+                          unsigned char * const packedBits,
+                          unsigned int    const cols,
+                          int             const format,
+                          unsigned int    const offset);
+
+void
 pbm_check(FILE * file, const enum pm_check_type check_type, 
           const int format, const int cols, const int rows,
           enum pm_check_code * const retval_p);
+
+bit
+pbm_backgroundbitrow(const unsigned char * const packedBits,
+                     unsigned int          const cols,
+                     unsigned int          const offset);
 
 #ifdef __cplusplus
 }

@@ -4,23 +4,35 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-08.09.27 BJH  Release 10.43.06
+08.09.27 BJH  Release 10.44.00
+
+              Add pngtopam as a replacement for pngtopnm.  Has ability
+              to generate image with alpha channel.  Thanks 
+              David Jones <drj@ravenbrook.com>.
+
+              pnmcolormap (pnmquant): round instead of truncating when
+              computing means.
+
+              pamcut, pnmcat, pnmpaste, pnmpad, g3topbm: Add fast PBM
+              path.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
+              pnmpaste: fail if user specified stdin for both images.
 
               libppmd/ppmdraw: fix crash when line is completely out of
               frame.
 
-              Build: add dependencies so parallel make of top level
-              "all" works.
-
-08.09.12 BJH  Release 10.43.05
-
               pamgradient: fix bug: always produces color, not grayscale.
-
-08.08.29 BJH  Release 10.43.04
 
               pnm_backgroundxel(), pnm_backgroundxelrow() (affects
               pnmrotate, pnmshear, pnmcrop, pnmcat: correctly average
               corner colors to determine background (fill) color.
+
+              pamcut: don't crash when cutting a region entirely to
+              the left or right of the input image, with -pad.  Thanks
+              Prophet of the Way <afu@wta.att.ne.jp>.
+
+              pamcut: don't crash when left > right or top > bottom with
+              -pad.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
 
               pgmhist: arbitrary output when total pixels doesn't fit in an
               integer.
@@ -28,31 +40,25 @@ CHANGE HISTORY
               pamcomp: fix bug: arbitrary output when combined number of rows
               doesn't fit in an integer.
 
-              pamcut: don't crash when left > right or top > bottom with
-              -pad.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+              pamtosvg: remove "needed exchange" debug trace.
 
-08.08.13 BJH  Release 10.43.03
-
-              pamcut: don't crash when cutting a region entirely to the
-              left or right of the input image, with -pad.
+              Add pbmminkowski (source code has been in package since 10.12
+              but not documented or built by default).
 
               pnmmontage: don't corrupt file names when they contain
               colons.
-
-              pamtosvg: remove "needed exchange" debug trace.
-
-08.07.20 BJH  Release 10.43.02
 
               pamflip: fix bug: garbage output for PBMs, since 10.42.
 
               pngtopnm: fix gamma correction.
 
-              pamperspective: fix bug: array bounds violation crash.
-
-08.07.13 BJH  Release 10.43.01
-
               pngtopnm: fix bug: when background is color, output
               should be PPM.
+
+              pamperspective: fix bug: array bounds violation crash.
+
+              Build: add dependencies so parallel make of top level
+              "all" works.
 
 08.06.27 BJH  Release 10.43.00
 

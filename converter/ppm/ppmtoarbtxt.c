@@ -341,9 +341,7 @@ read_skeleton(const char *   const filename,
     { if (slen > 0 && (skl[nskl] = save_bin_data(slen,line)) != NULL) ++nskl; \
       slen = 0; }
 
-    sklfile = fopen(filename,"r");
-    if (sklfile == NULL)
-        return -1;
+    sklfile = pm_openr(filename);
 
     /* Parse skeleton file */
     nskl = 0;  /* initial value */

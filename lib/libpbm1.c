@@ -80,3 +80,92 @@ pbm_check(FILE * file, const enum pm_check_type check_type,
     }
 }
 
+
+
+static unsigned int
+bitpop8(unsigned char const x) {
+/*----------------------------------------------------------------------------
+   Return the number of 1 bits in 'x'
+-----------------------------------------------------------------------------*/
+static unsigned int const p[256] = {
+    0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4,
+    1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
+    1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
+    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+    1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
+    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+    3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
+    1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
+    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+    3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
+    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+    3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
+    3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
+    4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8 };
+
+    return p[x];
+}
+
+
+
+static int
+bitpop(const unsigned char * const packedRow,
+       unsigned int          const cols) {
+/*----------------------------------------------------------------------------
+  Return the number of 1 bits in 'packedRow'.
+-----------------------------------------------------------------------------*/
+    unsigned int const colByteCnt  = pbm_packed_bytes(cols);
+    unsigned int const fullByteCnt = cols/8;
+
+    unsigned int i;
+    unsigned int sum;
+
+    sum = 0;  /* initial value */
+
+    for (i = 0; i < fullByteCnt; ++i)
+        sum += bitpop8(packedRow[i]);
+
+    if (colByteCnt > fullByteCnt)
+        sum += bitpop8(packedRow[i] >> (8-cols%8));
+
+    return sum;
+}
+
+
+
+bit
+pbm_backgroundbitrow(unsigned const char * const packedBits,
+                     unsigned int          const cols,
+                     unsigned int          const offset) {
+/*----------------------------------------------------------------------------
+  PBM version of pnm_backgroundxelrow() with additional offset parameter.
+  When offset == 0, produces the same return value as does
+  pnm_backgroundxelrow(promoted_bitrow, cols, ...)
+-----------------------------------------------------------------------------*/
+    const unsigned char * const row = &packedBits[offset/8];
+    unsigned int const rs = offset % 8;
+    unsigned int const last = pbm_packed_bytes(cols + rs) - 1;
+
+    unsigned int retval;
+
+    unsigned int firstbit, lastbit;
+    unsigned int totalBitpop, headBitpop;
+
+    firstbit = (row[0] >> (7-rs)) & 0x01;
+    lastbit  = (row[last] >> (7- (cols+rs-1)%8)) & 0x01;
+
+    if (firstbit == lastbit)
+        retval = firstbit;
+    else {
+        totalBitpop = bitpop(row, cols + rs);
+        headBitpop  = (rs == 0) ? 0 : bitpop(row, rs);
+
+        if (totalBitpop - headBitpop >= cols/2)
+            retval = PBM_BLACK;
+        else
+            retval = PBM_WHITE;
+    }
+    return retval;
+}

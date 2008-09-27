@@ -433,14 +433,14 @@ compute_ham_cmap(cols, rows, maxval, maxcolors, colorsP, hbits)
                     tmp = hmap[i].b - b; dist += tmp * tmp;
 
                     if( dist <= maxdist ) {
-                        int sum = hmap[i].count + hmap[col].count;
+                        unsigned int sum = hmap[i].count + hmap[col].count;
 
-                        hmap[i].r = (hmap[i].r * hmap[i].count + 
-                                     r * hmap[col].count + sum/2)/sum;
-                        hmap[i].g = (hmap[i].g * hmap[i].count + 
-                                     g * hmap[col].count + sum/2)/sum;
-                        hmap[i].b = (hmap[i].b * hmap[i].count + 
-                                     b * hmap[col].count + sum/2)/sum;
+                        hmap[i].r = ROUNDDIV(hmap[i].r * hmap[i].count + 
+                                             r * hmap[col].count, sum);
+                        hmap[i].g = ROUNDDIV(hmap[i].g * hmap[i].count + 
+                                             g * hmap[col].count, sum);
+                        hmap[i].b = ROUNDDIV(hmap[i].b * hmap[i].count + 
+                                             b * hmap[col].count, sum);
                         hmap[i].count = sum;
 
                         hmap[col] = hmap[i];    /* temp store */
@@ -1776,12 +1776,12 @@ static int *
 make_val_table(oldmaxval, newmaxval)
     int oldmaxval, newmaxval;
 {
-    int i;
-    int *table;
+    unsigned int i;
+    int * table;
 
     MALLOCARRAY_NOFAIL(table, oldmaxval + 1);
-    for(i = 0; i <= oldmaxval; i++ )
-        table[i] = (i * newmaxval + oldmaxval/2) / oldmaxval;
+    for (i = 0; i <= oldmaxval; ++i)
+        table[i] = ROUNDDIV(i * newmaxval, oldmaxval);
 
     return table;
 }

@@ -179,7 +179,7 @@ writeRleRun(FILE *       const ofP,
   
   'transcolor' is a 3-deep tuple with the same maxval as the image.
 -----------------------------------------------------------------------------*/
-    uint32n rlevalue;         /* RLE-encoded color/valuex */
+    uint32_t rlevalue;         /* RLE-encoded color/valuex */
     int index;
 
     if (count > 0) {

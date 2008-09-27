@@ -15,7 +15,7 @@ include $(BUILDDIR)/Makefile.config
 # build.
 
 PORTBINARIES = pamfile pamslice pamsumm pamtilt \
-               pgmhist pnmhistmap ppmhist pgmminkowski
+               pbmminkowski pgmhist pnmhistmap ppmhist pgmminkowski
 MATHBINARIES = pamsharpmap pamsharpness pgmtexture pnmpsnr 
 
 BINARIES = $(PORTBINARIES) $(MATHBINARIES)

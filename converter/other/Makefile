@@ -96,7 +96,7 @@ endif
 BINARIES = $(PORTBINARIES) pnmtorast rasttopnm
 
 ifeq ($(HAVE_PNGLIB),Y)
-  BINARIES += pnmtopng pngtopnm pamrgbatopng
+  BINARIES += pnmtopng pngtopnm pngtopam pamrgbatopng
 endif
 ifneq ($(JPEGLIB),NONE)
   BINARIES += jpegtopnm pnmtojpeg
@@ -155,7 +155,7 @@ else
   PNGLIB_LIBOPTS = $(shell libpng-config --ldflags)
 endif
 
-pngtopnm: %: %.o $(NETPBMLIB) $(LIBOPT)
+pngtopnm pngtopam: %: %.o $(NETPBMLIB) $(LIBOPT)
 	$(LD) $(LDFLAGS) -o $@ $@.o \
 	  $(shell $(LIBOPT) $(NETPBMLIB)) \
 	  $(PNGLIB_LIBOPTS) $(MATHLIB) $(LDLIBS) $(RPATH) $(LADD)

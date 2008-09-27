@@ -869,9 +869,9 @@ pnm_writepaminit(struct pam * const pamP) {
 
     if (pamP->size < pamP->len)
         pm_error("pam object passed to pnm_writepaminit() is smaller "
-                 "(%d bytes, according to its 'size' element) "
+                 "(%u bytes, according to its 'size' element) "
                  "than the amount of data in it "
-                 "(%d bytes, according to its 'len' element).",
+                 "(%u bytes, according to its 'len' element).",
                  pamP->size, pamP->len);
 
     if (pamP->size < PAM_STRUCT_SIZE(bytes_per_sample))
@@ -879,7 +879,7 @@ pnm_writepaminit(struct pam * const pamP) {
                  "It must be large\n"
                  "enough to hold at least up through the "
                  "'bytes_per_sample' member, but according\n"
-                 "to its 'size' member, it is only %d bytes long.", 
+                 "to its 'size' member, it is only %u bytes long.", 
                  pamP->size);
     if (pamP->len < PAM_STRUCT_SIZE(maxval))
         pm_error("pam object must contain members at least through 'maxval', "
