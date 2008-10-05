@@ -7,7 +7,7 @@ SUBDIR = $(FIASCOSUBDIR)/input
 BUILDDIR = ../../../..
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 OBJECTS =  basis.o matrices.o mc.o nd.o read.o tree.o weights.o
 

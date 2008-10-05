@@ -5,7 +5,7 @@ endif
 SUBDIR = lib
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 DLLTOOL=dlltool
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 ifeq ($(NETPBMLIBTYPE),unixstatic)
 LIBNETPBM = libnetpbm.$(STATICLIBSUFFIX)

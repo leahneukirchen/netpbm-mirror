@@ -5,7 +5,7 @@ endif
 SUBDIR = other
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 SUBDIRS = pamx
 

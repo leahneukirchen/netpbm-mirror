@@ -7,7 +7,7 @@ VPATH=.:$(SRCDIR)/$(SUBDIR)
 
 SUBDIRS = libjasper
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 EXTERN_INCLUDES =
 ifneq ($(JASPERHDR_DIR),NONE)

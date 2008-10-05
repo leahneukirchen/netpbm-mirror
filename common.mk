@@ -178,7 +178,7 @@ $(BUILDDIR)/version.h:
 endif
 
 ifneq ($(OMIT_CONFIG_RULE),1)
-$(BUILDDIR)/Makefile.config: $(SRCDIR)/Makefile.config.in
+$(BUILDDIR)/config.mk: $(SRCDIR)/config.mk.in
 	$(MAKE) -C $(dir $@) $(notdir $@)
 
 $(BUILDDIR)/pm_config.h:
@@ -191,13 +191,13 @@ $(BUILDDIR)/inttypes_netpbm.h:
 endif
 
 # Note that any time you do a make on a fresh Netpbm source tree,
-# Make notices that 'Makefile.config', which the make files include, does not
-# exist and runs the "Makefile.config" target, which runs Configure.
+# Make notices that 'config.mk', which the make files include, does not
+# exist and runs the "config.mk" target, which runs Configure.
 # If the "config" target were to run Configure as well, it would get run
 # twice in a row if you did a 'make config' on a fresh Netpbm source tree.
 # But we don't want to make "config" just a no-op, because someone might
-# try it after Makefile.config already exists, in order to make a new
-# Makefile.config.  Issuing a message as follows seems to make sense in 
+# try it after config.mk already exists, in order to make a new
+# config.mk.  Issuing a message as follows seems to make sense in 
 # both cases.
 .PHONY: config
 config:

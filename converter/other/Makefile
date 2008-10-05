@@ -5,7 +5,7 @@ endif
 SUBDIR = converter/other
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 ifeq ($(shell xml2-config --version),)
   XML2_LIBS=NONE

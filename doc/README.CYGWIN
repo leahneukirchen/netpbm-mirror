@@ -66,7 +66,7 @@ search for include files and link libraries in a different place,
 which is basically just a -mno-cygwin option and -I and -L options.
 
 You can easily add the compiler options you need at the bottom of
-Makefile.config after you create it with the automatic configurator
+config.mk after you create it with the automatic configurator
 ('configure').
 
 Mingw does not have the Unix process management facilities (fork/wait,

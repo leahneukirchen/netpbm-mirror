@@ -4,7 +4,7 @@ ifeq ($(SRCDIR)x,x)
 endif
 SUBDIR = buildtools
 VPATH = .:$(SRCDIR)/$(SUBDIR)
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 MERGE_OBJECTS =
 

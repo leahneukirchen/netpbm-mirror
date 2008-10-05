@@ -5,7 +5,7 @@ endif
 SUBDIR = converter/pgm
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 PORTBINARIES =	asciitopgm bioradtopgm fstopgm hipstopgm \
 		lispmtopgm pgmtofs pgmtolispm pgmtopgm \

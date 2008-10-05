@@ -5,7 +5,7 @@ endif
 SUBDIR = urt
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 LIBOBJECTS = Runput.o cmd_name.o \
 	rle_addhist.o rle_error.o rle_getcom.o rle_getrow.o rle_getskip.o \

@@ -5,7 +5,7 @@ endif
 SUBDIR = converter/ppm/ppmtompeg
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 ifeq ($(JPEGLIB),NONE)
   # 'nojpeg' is a module that implements all the jpeg access routines as

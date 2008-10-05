@@ -5,7 +5,7 @@ endif
 SUBDIR = converter/ppm
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 SUBDIRS = hpcdtoppm ppmtompeg
 

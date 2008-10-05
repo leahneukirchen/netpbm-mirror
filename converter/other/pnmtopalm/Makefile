@@ -5,7 +5,7 @@ endif
 SUBDIR = converter/other/pnmtopalm
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 BINARIES = palmtopnm pnmtopalm
 SCRIPTS =

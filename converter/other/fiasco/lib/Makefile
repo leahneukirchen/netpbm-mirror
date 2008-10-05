@@ -6,7 +6,7 @@ FIASCOSUBDIR = converter/other/fiasco
 SUBDIR = $(FIASCOSUBDIR)/lib
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 OBJECTS = \
   arith.o \

@@ -5,7 +5,7 @@ endif
 SUBDIR = converter/pbm/pbmtoppa
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 all: pbmtoppa
 

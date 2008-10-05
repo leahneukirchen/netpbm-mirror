@@ -13,7 +13,7 @@ ifneq ($(JPEGLIB),NONE)
   endif
 endif
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 
 .PHONY: all

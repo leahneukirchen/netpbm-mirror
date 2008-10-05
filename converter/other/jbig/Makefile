@@ -5,7 +5,7 @@ endif
 SUBDIR = converter/other/jbig
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 LIBJBIG_OBJECTS = jbig.o jbig_tab.o
 

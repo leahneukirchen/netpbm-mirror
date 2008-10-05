@@ -7,7 +7,7 @@ VPATH=.:$(SRCDIR)/$(SUBDIR)
 
 JASPERSRCDIR=$(SRCDIR)/$(SUBDIR)/..
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 LIB_OBJECTS = jas_debug.o jas_getopt.o jas_image.o jas_init.o \
 	      jas_malloc.o jas_seq.o jas_stream.o jas_string.o \

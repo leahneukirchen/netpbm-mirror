@@ -4,9 +4,9 @@
 # This file is meant to contain variable settings that customize the
 # build for a particular target system configuration.
 
-# The distribution contains the file Makefile.config.in.  You edit
-# Makefile.config.in in ways relevant to your particular environment 
-# to create Makefile.config.  The "configure" program will do this
+# The distribution contains the file config.mk.in.  You edit
+# config.mk.in in ways relevant to your particular environment 
+# to create config.mk.  The "configure" program will do this
 # for you in simple cases.
 
 # Some of the variables that the including make file must set for this

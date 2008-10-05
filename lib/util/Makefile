@@ -5,7 +5,7 @@ endif
 SUBDIR = lib/util
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 # nstring is required for asprintf(), etc.  Also some systems don't have
 # snprintf(), e.g. Solaris 2.5.1.  2002.03.29.

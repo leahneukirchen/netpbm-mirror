@@ -5,7 +5,7 @@ endif
 SUBDIR = converter/pbm
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 PORTBINARIES =	atktopbm brushtopbm cmuwmtopbm ddbugtopbm g3topbm escp2topbm \
 		icontopbm macptopbm mdatopbm mgrtopbm mrftopbm \

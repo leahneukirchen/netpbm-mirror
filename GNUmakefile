@@ -1,6 +1,6 @@
 # Makefile for Netpbm
  
-# Configuration should normally be done in the included file Makefile.config.
+# Configuration should normally be done in the included file config.mk.
 
 # Targets in this file:
 #
@@ -9,7 +9,7 @@
 #   package:      Make a package of Netpbm files ready to install
 #   
 #   The default target is either "merge" or "nonmerge", as determined by
-#   the DEFAULT_TARGET variable set by Makefile.config.
+#   the DEFAULT_TARGET variable set by config.mk.
 
 # About the "merge" target: Normally the Makefiles build separate
 # executables for each program.  However, on some systems (especially
@@ -27,7 +27,7 @@
 # 2949K to 1663K.
 
 # To build a "merge" system, just set DEFAULT_TARGET to "merge" instead
-# of "nomerge" in Makefile.config.  In that case, you should probably also
+# of "nomerge" in config.mk.  In that case, you should probably also
 # set NETPBMLIBTYPE to "unixstatic", since a shared library doesn't do you 
 # much good.
 
@@ -57,7 +57,7 @@ BUILDDIR = $(CURDIR)
 SUBDIR = 
 VPATH=.:$(SRCDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 PROG_SUBDIRS = converter analyzer editor generator other
 PRODUCT_SUBDIRS = lib $(PROG_SUBDIRS)
@@ -105,8 +105,8 @@ OMIT_VERSION_H_RULE = 1
 OMIT_INTTYPES_RULE = 1
 include $(SRCDIR)/common.mk
 
-$(BUILDDIR)/Makefile.config: $(SRCDIR)/Makefile.config.in
-	$(SRCDIR)/configure $(SRCDIR)/Makefile.config.in
+$(BUILDDIR)/config.mk: $(SRCDIR)/config.mk.in
+	$(SRCDIR)/configure $(SRCDIR)/config.mk.in
 
 
 # typegen is a utility program used by the make file below.
@@ -128,7 +128,7 @@ inttypes_netpbm.h: $(TYPEGEN)
 # cross compiling.
 
 pm_config.h: \
-  $(SRCDIR)/pm_config.in.h Makefile.config inttypes_netpbm.h \
+  $(SRCDIR)/pm_config.in.h config.mk inttypes_netpbm.h \
   $(ENDIANGEN)
 # Note that this rule depends on the effect of the .DELETE_ON_ERROR
 # target we get from common.mk
@@ -397,14 +397,14 @@ localclean:
 	rm -f netpbm build_started build_complete
 	rm -f pm_config.h inttypes_netpbm.h version.h
 
-# Note that removing Makefile.config must be the last thing we do,
+# Note that removing config.mk must be the last thing we do,
 # because no other makes will work after that is done.
 distclean: localdistclean
 .PHONY: localdistclean
 localdistclean: localclean
 	-rm -f `find -type l`
 	-rm -f TAGS
-	-rm -f Makefile.config
+	-rm -f config.mk
 
 # 'tags' generates/updates an Emacs tags file, anmed TAGS, in the current
 # directory.  Use with Emacs command 'find-tag'.

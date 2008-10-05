@@ -5,7 +5,7 @@ endif
 SUBDIR = other/pamx
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 EXTERN_INCLUDE =
 ifneq ($(X11LIB),NONE)

@@ -5,7 +5,7 @@ endif
 SUBDIR = converter/other/jpeg2000/libjasper
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 SUBDIRS = base jp2 jpc
 LIB_OBJECTS =

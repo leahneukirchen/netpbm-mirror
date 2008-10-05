@@ -5,7 +5,7 @@ endif
 SUBDIR = converter
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 SUBDIRS = pbm pgm ppm other
 
