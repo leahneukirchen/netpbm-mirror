@@ -18,5 +18,5 @@ MERGE_OBJECTS =
 
 all: partlist $(LIB_OBJECTS)
 
-include $(JASPERSRCDIR)/Makefile.common
+include $(JASPERSRCDIR)/common.mk
 

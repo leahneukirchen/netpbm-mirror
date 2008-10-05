@@ -19,7 +19,7 @@ COMP_INCLUDES = \
 
 all: libfiasco_output.a
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 libfiasco_output.a: $(OBJECTS)
 	$(AR) -rc $@ $(OBJECTS)

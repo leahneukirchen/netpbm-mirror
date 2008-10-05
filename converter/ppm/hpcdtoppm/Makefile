@@ -12,7 +12,7 @@ all: hpcdtoppm
 SCRIPTS = hpcdtoppm pcdovtoppm
 MERGE_OBJECTS =
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 install: install.bin.local
 .PHONY: install.bin.local

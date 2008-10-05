@@ -28,7 +28,7 @@ BINARIES = cameratopam
 MERGEBINARIES = 
 SCRIPTS = 
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 cameratopam: $(OBJECTS) $(NETPBMLIB) $(LIBOPT)
 	$(LD) -o $@ $(LDFLAGS) \

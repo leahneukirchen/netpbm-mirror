@@ -17,7 +17,7 @@ JASPERSRCDIR = $(SRCDIR)/$(SUBDIR)
 
 all: libjasper.a
 
-include $(SRCDIR)/$(SUBDIR)/Makefile.common
+include $(SRCDIR)/$(SUBDIR)/common.mk
 
 # We cheat a bit here -- the real dependencies are all the .o files listed
 # in the part list, but since we don't know what those are, we just do a

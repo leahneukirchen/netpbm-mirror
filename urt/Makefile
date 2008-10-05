@@ -31,4 +31,4 @@ BINARIES =
 SCRIPTS =
 
 OMIT_URT_RULE = 1
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk

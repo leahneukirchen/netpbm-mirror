@@ -47,7 +47,7 @@ MERGEBINARIES = $(BINARIES)
 
 all: $(BINARIES)
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 pamtosvg: $(PAMTOSVG_OBJECTS) $(NETPBMLIB) $(LIBOPT)
 	$(LD) $(LDFLAGS) -o $@ $(PAMTOSVG_OBJECTS) \

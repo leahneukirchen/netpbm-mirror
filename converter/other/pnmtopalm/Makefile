@@ -16,7 +16,7 @@ DATAFILES = palmcolor8.map palmgray1.map palmgray2.map palmgray4.map
 
 all: $(BINARIES)
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 LIBOPTS = $(shell $(LIBOPT) $(NETPBMLIB))
 

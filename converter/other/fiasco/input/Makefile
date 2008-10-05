@@ -18,7 +18,7 @@ COMP_INCLUDES = -I$(SRCDIR)/$(FIASCOSUBDIR) -I$(SRCDIR)/$(FIASCOSUBDIR)/lib \
 
 all: libfiasco_input.a
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 libfiasco_input.a: $(OBJECTS)
 	$(AR) -rc $@ $(OBJECTS)

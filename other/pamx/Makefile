@@ -37,7 +37,7 @@ MERGEBINARIES = $(BINARIES)
 
 all: $(BINARIES)
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 pamx: $(PAMX_OBJECTS) $(NETPBMLIB) $(LIBOPT)
 	$(LD) $(LDFLAGS) -o $@ $(PAMX_OBJECTS) \

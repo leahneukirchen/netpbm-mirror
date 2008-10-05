@@ -76,7 +76,7 @@ SCRIPTS =
 .PHONY: all
 all: ppmtompeg
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 ifeq ($(NEED_RUNTIME_PATH),Y)
   LIBOPTR = -runtime

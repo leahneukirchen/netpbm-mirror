@@ -15,7 +15,7 @@ MERGE_OBJECTS =
 
 all: $(UTILOBJECTS)
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 INCLUDES = -I$(SRCDIR)/$(SUBDIR) -I. -Iimportinc
 

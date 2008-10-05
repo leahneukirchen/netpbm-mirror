@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.45.00
 
+              Build: rename Makefile.common to common.mk
+
 08.09.27 BJH  Release 10.44.00
 
               Add pngtopam as a replacement for pngtopnm.  Has ability

@@ -55,7 +55,7 @@ MERGEBINARIES = $(BINARIES)
 .PHONY: all
 all: $(BINARIES)
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 LIBOPTS = $(shell $(LIBOPT) $(NETPBMLIB) $(JASPERLIB_USE))
 

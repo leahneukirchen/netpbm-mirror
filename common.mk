@@ -1,4 +1,3 @@
-# -*-makefile-*-    <-- an Emacs control
 # This is a make file inclusion, to be included in all the
 # Netpbm make files.
 

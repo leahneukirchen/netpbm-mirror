@@ -19,7 +19,7 @@ MERGE_OBJECTS = $(OBJECTS)
 
 all: libfiasco_codec.a
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 libfiasco_codec.a: $(OBJECTS)
 	$(AR) -rc $@ $(OBJECTS)

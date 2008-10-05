@@ -14,4 +14,4 @@ all: $(SUBDIRS:%=%/all)
 SCRIPTS = 
 BINARIES =
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk

@@ -37,4 +37,4 @@ MERGE_OBJECTS = $(MERGEBINARIES:%=%.o2)
 .PHONY: all
 all: $(BINARIES)
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk

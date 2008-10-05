@@ -134,7 +134,7 @@ SCRIPTS = anytopnm pnmtoplainpnm
 .PHONY: all
 all:	$(BINARIES) $(SUBDIRS:%=%/all)
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 ifeq ($(NEED_RUNTIME_PATH),Y)
   LIBOPTR = -runtime

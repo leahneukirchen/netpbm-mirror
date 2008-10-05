@@ -41,7 +41,7 @@ SUBDIRS=pbmtoppa
 .PHONY: all
 all: $(BINARIES) $(SUBDIRS:%=%/all)
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 ifneq ($(LEX)x,x)
 thinkjettopbm.c1:%.c1:%.l

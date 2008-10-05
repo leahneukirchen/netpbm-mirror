@@ -33,7 +33,7 @@ MERGE_OBJECTS = $(BINARIES:%=%.o2) $(LIBJBIG_OBJECTS)
 
 all: $(BINARIES)
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 $(BINARIES): %: %.o $(JBIGLIB_DEP) $(NETPBMLIB) $(LIBOPT)
 	$(LD) $(LDFLAGS) -o $@ $< \

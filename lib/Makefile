@@ -39,7 +39,7 @@ LIBOBJECTS = libpm.o pmfileio.o fileio.o bitio.o colorname.o \
 ifneq (${VMS}x,x)
 LIBOBJECTS += libpbmvms.o
 endif
-# Library objects to be linked but not built by Makefile.common:
+# Library objects to be linked but not built by common.mk:
 LIBOBJECTS_X = \
   util/shhopt.o \
   util/nstring.o \
@@ -65,11 +65,11 @@ SCRIPTS =
 BINARIES = 
 
 OMIT_LIBRARY_RULE = 1
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 INCLUDES = -I$(SRCDIR)/$(SUBDIR) -I. -Iimportinc
 
-# The following must go after Makefile.common because $(LIBNETPBM) may 
+# The following must go after common.mk because $(LIBNETPBM) may 
 # contain a reference to $(NETPBM_MAJOR_RELEASE).
 .PHONY: libnetpbm
 libnetpbm: $(LIBNETPBM)

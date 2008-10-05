@@ -32,7 +32,7 @@ MERGE_OBJECTS = $(BINARIES:%=%.o2) $(COMMON_OBJECTS)  $(FIASCOLIBS)
 
 SUBDIRS = codec input output lib
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 $(BINARIES):%:%.o $(COMMON_OBJECTS) $(FIASCOLIBS) $(NETPBMLIB) \
    $(LIBOPT)
