@@ -1933,7 +1933,7 @@ if (-f("GNUmakefile")) {
     unlink("Makefile");
     symlink("$srcdir/Makefile", "Makefile");
 
-    open(SRCDIR, ">Makefile.srcdir");
+    open(SRCDIR, ">srcdir.mk");
     print(SRCDIR "SRCDIR = $srcdir\n");
     close(SRCDIR);
     
