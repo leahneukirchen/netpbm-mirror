@@ -68,7 +68,7 @@
 # for options that are particular to the person doing the build and not
 # specific to Netpbm.
 
-include $(SRCDIR)/Makefile.version
+include $(SRCDIR)/version.mk
 
 # .DELETE_ON_ERROR is a special predefined Make target that says to delete
 # the target if a command in the rule for it fails.  That's important,
