@@ -52,7 +52,8 @@ all package install:
 else
 
 
-include Makefile.srcdir
+# srcdir.mk defines SRCDIR .
+include srcdir.mk
 BUILDDIR = $(CURDIR)
 SUBDIR = 
 VPATH=.:$(SRCDIR)
