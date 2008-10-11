@@ -1,5 +1,3 @@
-# -*-makefile-*-    <-- an Emacs control
-
 # Make Unix man pages from Netpbm HTML user manual
 
 MAKEMAN = makeman
