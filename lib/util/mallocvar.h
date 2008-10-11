@@ -87,6 +87,8 @@ reallocProduct(void **      const blockP,
     void * array; \
     array = arrayName; \
     reallocProduct(&array, nElements, sizeof(arrayName[0])); \
+    if (!array) \
+        free(arrayName); \
     arrayName = array; \
 } while (0)
 
