@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+08.10.12 BJH  Release 10.44.01
+
+              pamditherbw: Fix -value other than .5 work for -fs, -atkinson.
+
 08.09.27 BJH  Release 10.44.00
 
               Add pngtopam as a replacement for pngtopnm.  Has ability

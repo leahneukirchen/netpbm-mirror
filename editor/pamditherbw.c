@@ -440,7 +440,8 @@ fsConvertRow(struct converter * const converterP,
     do {
         samplen sum;
 
-        sum = pm_ungamma709(grayrow[col][0]) + thiserr[col + 1];
+        sum = MIN(2*stateP->threshval, pm_ungamma709(grayrow[col][0])) +
+            thiserr[col + 1];
         if (sum >= stateP->threshval) {
             /* We've accumulated enough light (power) to justify a
                white output pixel.
@@ -584,7 +585,8 @@ atkinsonConvertRow(struct converter * const converterP,
     for (col = 0; col < converterP->cols; ++col) {
         samplen sum;
 
-        sum = pm_ungamma709(grayrow[col][0]) + error[0][col + 1];
+        sum = MIN(2*stateP->threshval, pm_ungamma709(grayrow[col][0])) +
+            error[0][col + 1];
         if (sum >= stateP->threshval) {
             /* We've accumulated enough light (power) to justify a
                white output pixel.
