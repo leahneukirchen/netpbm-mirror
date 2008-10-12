@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+08.10.12 BJH  Release 10.35.53
+
+              pamditherbw: Fix -value other than .5 with -fs .
+
 08.09.27 BJH  Release 10.35.52
 
               libppmd/ppmdraw: fix crash when line is completely out of

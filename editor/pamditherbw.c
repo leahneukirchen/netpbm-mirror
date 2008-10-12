@@ -425,7 +425,8 @@ fsConvertRow(struct converter * const converterP,
     do {
         samplen sum;
 
-        sum = pm_ungamma709(grayrow[col][0]) + thiserr[col + 1];
+        sum = MIN(2*stateP->threshval, pm_ungamma709(grayrow[col][0])) +
+            thiserr[col + 1];
         if (sum >= stateP->threshval) {
             /* We've accumulated enough light to justify a white output
                pixel.
