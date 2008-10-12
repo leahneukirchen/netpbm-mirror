@@ -407,8 +407,13 @@ struct fsState {
         */
     bool fs_forward;
         /* We're going forward (left to right) through the current row */
-    samplen threshval;
-        /* The power value we consider to be half white */
+    samplen white;
+        /* The power value we consider to be white (normally 1.0).
+           Constant. */
+    samplen halfWhite;
+        /* The power value we consider to be half white (always half of
+           'white'; carried separately to save computation)
+        */
 };
 
 
@@ -438,36 +443,39 @@ fsConvertRow(struct converter * const converterP,
     }
 
     do {
-        samplen sum;
+        samplen const thisPixelPower =
+            MIN(pm_ungamma709(grayrow[col][0]), stateP->white);
+        samplen accum;
 
-        sum = pm_ungamma709(grayrow[col][0]) + thiserr[col + 1];
-        if (sum >= stateP->threshval) {
+        accum = thisPixelPower + thiserr[col + 1];
+
+        if (accum >= stateP->halfWhite) {
             /* We've accumulated enough light (power) to justify a
                white output pixel.
             */
             bitrow[col][0] = PAM_BW_WHITE;
             /* Remove from sum the power of this white output pixel */
-            sum -= 2*stateP->threshval;
+            accum -= stateP->white;
         } else
             bitrow[col][0] = PAM_BLACK;
-        
+
         /* Forward to future output pixels the power from current
            input pixel and the power forwarded from previous input
            pixels to the current pixel, less any power we put into the
            current output pixel.
         */
         if (stateP->fs_forward) {
-            thiserr[col + 2] += (sum * 7) / 16;
-            nexterr[col    ] += (sum * 3) / 16;
-            nexterr[col + 1] += (sum * 5) / 16;
-            nexterr[col + 2] += (sum * 1) / 16;
+            thiserr[col + 2] += (accum * 7) / 16;
+            nexterr[col    ] += (accum * 3) / 16;
+            nexterr[col + 1] += (accum * 5) / 16;
+            nexterr[col + 2] += (accum * 1) / 16;
             
             ++col;
         } else {
-            thiserr[col    ] += (sum * 7) / 16;
-            nexterr[col + 2] += (sum * 3) / 16;
-            nexterr[col + 1] += (sum * 5) / 16;
-            nexterr[col    ] += (sum * 1) / 16;
+            thiserr[col    ] += (accum * 7) / 16;
+            nexterr[col + 2] += (accum * 3) / 16;
+            nexterr[col + 1] += (accum * 5) / 16;
+            nexterr[col    ] += (accum * 1) / 16;
             
             --col;
         }
@@ -518,7 +526,8 @@ createFsConverter(struct pam * const graypamP,
             stateP->thiserr[col] = ((float)rand()/RAND_MAX - 0.5) / 4;
     }
 
-    stateP->threshval  = threshFraction;
+    stateP->halfWhite = threshFraction;
+    stateP->white = 2 * threshFraction;
 
     stateP->fs_forward = TRUE;
 
@@ -539,8 +548,13 @@ struct atkinsonState {
 
            For R == 0, C is a column we haven't done yet.
         */
-    samplen threshval;
-        /* The power value we consider to be half white */
+    samplen white;
+        /* The power value we consider to be white (normally 1.0).
+           Constant. */
+    samplen halfWhite;
+        /* The power value we consider to be half white (always half of
+           'white'; carried separately to save computation)
+        */
 };
 
 
@@ -582,16 +596,16 @@ atkinsonConvertRow(struct converter * const converterP,
     unsigned int col;
 
     for (col = 0; col < converterP->cols; ++col) {
-        samplen sum;
+        samplen accum;
 
-        sum = pm_ungamma709(grayrow[col][0]) + error[0][col + 1];
-        if (sum >= stateP->threshval) {
+        accum = pm_ungamma709(grayrow[col][0]) + error[0][col + 1];
+        if (accum >= stateP->halfWhite) {
             /* We've accumulated enough light (power) to justify a
                white output pixel.
             */
             bitrow[col][0] = PAM_BW_WHITE;
-            /* Remove from sum the power of this white output pixel */
-            sum -= 2*stateP->threshval;
+            /* Remove from accum the power of this white output pixel */
+            accum -= stateP->white;
         } else
             bitrow[col][0] = PAM_BLACK;
         
@@ -600,13 +614,13 @@ atkinsonConvertRow(struct converter * const converterP,
            pixels to the current pixel, less any power we put into the
            current output pixel.
         */
-        error[0][col+1] += sum/8;
-        error[0][col+2] += sum/8;
+        error[0][col+1] += accum/8;
+        error[0][col+2] += accum/8;
         if (col > 0)
-            error[1][col-1] += sum/8;
-        error[1][col  ] += sum/8;
-        error[1][col+1] += sum/8;
-        error[2][col  ] += sum/8;
+            error[1][col-1] += accum/8;
+        error[1][col  ] += accum/8;
+        error[1][col+1] += accum/8;
+        error[2][col  ] += accum/8;
     }
     
     moveAtkinsonErrorWindowDown(converterP);
@@ -658,7 +672,8 @@ createAtkinsonConverter(struct pam * const graypamP,
         }
     }
 
-    stateP->threshval  = threshFraction;
+    stateP->halfWhite = threshFraction;
+    stateP->white = 2 * threshFraction;
 
     converter.stateP = stateP;
 

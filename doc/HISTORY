@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.45.00
 
+              pamditherbw: Fix -value other than .5 work for -fs, -atkinson.
+
               Build: rename Makefile.common, Makefile.config, to common.mk,
               etc.
 
