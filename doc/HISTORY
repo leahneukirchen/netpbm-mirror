@@ -435,6 +435,10 @@ not yet  BJH  Release 10.45.00
               pbmtoxbm: add -name option.
               Thanks Prophet of the Way <afu@wta.att.ne.jp>.
 
+              ppmshift, ppmspread, ppmforge, pgmnoise, pgmcrater: better
+              randomization; won't produce the same image if you run it
+              twice within the same second.
+
               pbmtoxbm: Use packed PBM functions for efficiency.
               Thanks Prophet of the Way <afu@wta.att.ne.jp>.
               
