@@ -1,50 +1,45 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
-<HTML><HEAD><TITLE>Pgmnoise User Manual</TITLE>
-</HEAD><BODY>
+<HTML>
+<HEAD><TITLE>Pgmnoise User Manual</TITLE></HEAD>
+<BODY>
 <H1>pgmnoise</H1>
-Updated: 16 November 1993
+Updated: 13 October 2008
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
 pgmnoise - create a graymap made up of white noise
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
-<B>pgmnoise </B> <I>width</i> <i>height</I>
+<B>pgmnoise</B> <I>width</i> <i>height</I>
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><B>pgmnoise</b> creates a portable graymap that is made up of
-random pixels with gray values in the range of 0 to PGM_MAXMAXVAL
-(depends on the compilation, either 255 or 65535). The graymap has a
-size of width * height pixels.
+<p><B>pgmnoise</b> creates a PGM image that is made up of pixels
+of random brightness.  The maxval is 255.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<p>You specify the dimensions of the image with the <i>width</i>
+and <i>height</i> arguments.
+
+<H2 id="seealso">SEE ALSO</H2>
 
 <A HREF="pgm.html">pgm</A>
-<A NAME="lbAF">&nbsp;</A>
 
-<H2>AUTHOR</H2>
+<H2 id="author">AUTHOR</H2>
 
 Copyright (C) 1993 by Frank Neumann
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">SEE ALSO</A>
-<LI><A HREF="#lbAF">AUTHOR</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
 </UL>
 </BODY>
 </HTML>

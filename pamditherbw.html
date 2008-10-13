@@ -58,7 +58,7 @@ use <b>ppmdither</b>.
 
 <p>Another way to convert a grayscale image to a black and white image
 is thresholding.  Thresholding is simply replacing each grayscale pixel
-with a black or white pixel depending on wether its brightness is above or
+with a black or white pixel depending on whether its brightness is above or
 below a threshold.  That threshold might vary.  Simple thresholding is a
 degenerate case of dithering, so <b>pamditherbw</b> does very simple
 thresholding with its <b>-threshold</b> option.  But <b>pamthreshold</b>
@@ -81,19 +81,19 @@ also available (<B>-hilbert</B>).
 
 <P>Floyd-Steinberg or Atkinson will almost always give the best
 looking results; however, looking good is not always what you want.
-For instance, thresholding can be used in a pipeline with the
-<b>pnmconvol</b> tool, for tasks like edge and peak detection.  And
+For instance, you can use thresholding in a pipeline with the
+<b>pnmconvol</b>, for tasks such as edge and peak detection.  And
 clustered-dot dithering gives a newspaper-ish look, a useful special
 effect.
 
-<p>Floyd-Steinberg is by for the more traditional, but
+<p>Floyd-Steinberg is by far the more traditional, but
 <a href="http://www.tinrocket.com/projects/programming/graphics/00158/">
 some claim</a> Atkinson works better.
 
 <P>The <B>-value</B> option alters the thresholding value for
-Floyd-Steinberg and simple thresholding.  It should be a real number
-between 0 and 1.  Above 0.5 means darker images; below 0.5 means
-lighter.
+Floyd-Steinberg, Atkinson, and simple thresholding.  It should be a
+real number between 0 and 1.  Above 0.5 means darker images; below 0.5
+means lighter.
 
 <P>The Hilbert curve method is useful for processing images before
 display on devices that do not render individual pixels distinctly
