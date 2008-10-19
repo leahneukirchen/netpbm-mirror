@@ -1082,7 +1082,7 @@ main(int     argc,
 
     /* Close files, if we opened them */
     if (input_file != stdin)
-        fclose(input_file);
+        pm_close(input_file);
 
     /* Program may have exited with non-zero completion code via
        various function calls above. 
