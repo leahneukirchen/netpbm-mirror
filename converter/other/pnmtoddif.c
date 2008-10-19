@@ -1,14 +1,4 @@
 /*
- * $Log: pnmtoddif.c,v $
- * Revision 1.6  1993/01/25  08:14:06  neideck
- * Placed into public use form.
- *
- * Revision 1.5  1992/12/02  08:15:18  neideck
- *  Added RCS id.
- *
- */
-
-/*
  * Author:      Burkhard Neidecker-Lutz
  *              Digital CEC Karlsruhe
  *      neideck@nestvx.enet.dec.com 
@@ -31,6 +21,8 @@
 */
 
 #include <string.h>
+
+#include "mallocvar.h"
 #include "pnm.h"
 
 /* The structure we use to convey all sorts of "magic" data to the DDIF */
@@ -414,21 +406,181 @@ write_trailer(FILE * file)
 
 
 
-int main(int argc, char *argv[])
-{
+
+static void
+convertPbmRaster(FILE *          const ifP,
+                 int             const format,
+                 unsigned int    const cols,
+                 unsigned int    const rows,
+                 FILE *          const ofP,
+                 unsigned int    const bytesPerLine,
+                 unsigned char * const data) {
+                 
+    bit * const pixels = pbm_allocrow(cols);
+
+    unsigned int row;
+
+    for (row = 0; row < rows; ++row) {
+        unsigned int col;
+        unsigned int k;
+        unsigned int mask;
+        unsigned char * p;
+        size_t bytesWritten;
+
+        pbm_readpbmrow(ifP, pixels, cols, format);
+
+        mask = 0x00;
+        p = &data[0];
+        for (col = 0, k = 0; col < cols; ++col) {
+            if (pixels[col] == PBM_BLACK)
+                mask |= 1 << k;
+            if (k == 7) {
+                *p++ = mask;
+                mask = 0x00;
+                k = 0;
+            } else
+                ++k;
+        }
+        if (k != 7)
+            /* Flush the rest of the column */
+            *p = mask;
+
+        bytesWritten =  fwrite(data, 1, bytesPerLine, ofP);
+        if (bytesWritten != bytesPerLine)
+            pm_error("File write error on Row %u", row);
+    }
+
+    pbm_freerow(pixels);
+}
+
+
+
+static void
+convertPgmRaster(FILE *          const ifP,
+                 int             const format,
+                 xelval          const maxval,
+                 unsigned int    const cols,
+                 unsigned int    const rows,
+                 FILE *          const ofP,
+                 unsigned int    const bytesPerLine,
+                 unsigned char * const data) {
+
+    gray * const pixels = pgm_allocrow(cols);
+
+    unsigned int row;
+
+    for (row = 0; row < rows; ++row) {
+        unsigned char * p;
+        unsigned int col;
+        size_t bytesWritten;
+
+        p = &data[0];
+
+        pgm_readpgmrow(ifP, pixels, cols, maxval, format);
+
+        for (col = 0; col < cols; ++col)
+            *p++ = (unsigned char) pixels[col];
+
+        bytesWritten = fwrite(data, 1, bytesPerLine, ofP);
+        if (bytesWritten != bytesPerLine)
+            pm_error("File write error on Row %u", row);
+    }
+    pgm_freerow(pixels);
+}
+
+
+
+
+static void
+convertPpmRaster(FILE *          const ifP,
+                 int             const format,
+                 xelval          const maxval,
+                 unsigned int    const cols,
+                 unsigned int    const rows,
+                 FILE *          const ofP,
+                 unsigned int    const bytesPerLine,
+                 unsigned char * const data) {
+
+    pixel * const pixels = ppm_allocrow(cols);
+
+    unsigned int row;
+
+    for (row = 0; row < rows; ++row) {
+        unsigned char * p;
+        unsigned int col;
+        size_t bytesWritten;
+
+        p = &data[0];
+
+        ppm_readppmrow(ifP, pixels, cols, maxval, format);
+
+        for (col = 0; col < cols; ++col) {
+            *p++ = PPM_GETR(pixels[col]);
+            *p++ = PPM_GETG(pixels[col]);
+            *p++ = PPM_GETB(pixels[col]);
+        }
+        bytesWritten =  fwrite(data, 1, bytesPerLine, ofP);
+        if (bytesWritten != bytesPerLine)
+            pm_error("File write error on Row %u", row);
+    }
+    ppm_freerow(pixels);
+}
+
+
+
+static void
+convertRaster(FILE *       const ifP,
+              int          const format,
+              xelval       const maxval,
+              unsigned int const cols,
+              unsigned int const rows,
+              FILE *       const ofP,
+              unsigned int const bytesPerLine) {
+
+    unsigned char * data;
+    unsigned char * p;
+
+    MALLOCARRAY(data, bytesPerLine);
+
+    if (data == NULL)
+        pm_error("Couldn't allocate %u-byte line buffer", bytesPerLine);
+
+    p = data;  /* initial value */
+
+    switch (PNM_FORMAT_TYPE(format)) {
+    case PBM_TYPE:
+        convertPbmRaster(ifP, format, cols, rows, ofP, bytesPerLine, data);
+        break;
+    case PGM_TYPE:
+        convertPgmRaster(ifP, format, maxval, cols, rows, ofP, bytesPerLine,
+                         data);
+        break;
+    case PPM_TYPE:
+        convertPpmRaster(ifP, format, maxval, cols, rows, ofP, bytesPerLine,
+                         data);
+        break;
+    default:
+        pm_error("INTERNAL ERROR: impossible format value");
+    }
+
+    free(data);
+}
+
+
+
+int
+main(int argc, char *argv[]) {
     FILE           *ifd;
-    FILE       *ofd;
+    FILE           *ofd;
     int             rows, cols;
     xelval          maxval;
     int             format;
     const char     * const usage = "[-resolution x y] [pnmfile [ddiffile]]";
-    int             i, j;
     char           *outfile;
     int       argn;
     int hor_resolution = 75;
     int ver_resolution = 75;
     imageparams ip;
-    unsigned char  *data, *p;
 
     pnm_init(&argc, argv);
 
@@ -512,86 +664,9 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    if (!(p = data = (unsigned char*)  malloc(ip.bytes_per_line))) {
-        perror("allocating line buffer");
-        exit(1);
-    }
-
-    switch (PNM_FORMAT_TYPE(format)) {
-    case PBM_TYPE:
-    {
-        bit            *pixels;
-        int             mask;
-        int             k;
-
-        pixels = pbm_allocrow(cols);
-
-        for (i = 0; i < rows; i++) {
-            pbm_readpbmrow(ifd, pixels, cols, format);
-            mask = 0;
-            p = data;
-            for (j = 0, k = 0; j < cols; j++) {
-                if (pixels[j] == PBM_BLACK) {
-                    mask |= 1 << k;
-                }
-                if (k == 7) {
-                    *p++ = mask;
-                    mask = 0;
-                    k = 0;
-                } else {
-                    k++;
-                }
-            }
-            if (k != 7) {       /* Flush the rest of the column */
-                *p = mask;
-            }
-            if (fwrite(data,1,ip.bytes_per_line,ofd) != ip.bytes_per_line) {
-                perror("Writing image data\n");
-                exit(1);
-            }
-        }
-    }
-    break;
-    case PGM_TYPE:
-    {
-        gray           *pixels;
-
-        pixels = (gray *) data;
-
-        for (i = 0; i < rows; i++) {
-            pgm_readpgmrow(ifd, pixels, cols, maxval, format);
-            if (fwrite(data,1,ip.bytes_per_line,ofd) != ip.bytes_per_line) {
-                perror("Writing image data\n");
-                exit(1);
-            }
-        }
-    }
-    break;
-    case PPM_TYPE:
-    {
-        pixel          *pixels = ppm_allocrow(cols);
-
-        for (i = 0; i < rows; i++) {
-            p = data;
-            ppm_readppmrow(ifd, pixels, cols, maxval, format);
-            for (j = 0; j < cols; j++) {
-                *p++ = PPM_GETR(pixels[j]);
-                *p++ = PPM_GETG(pixels[j]);
-                *p++ = PPM_GETB(pixels[j]);
-            }
-            if (fwrite(data,1,ip.bytes_per_line,ofd) != ip.bytes_per_line) {
-                perror("Writing image data\n");
-                exit(1);
-            }
-        }
-        ppm_freerow(pixels);
-    }
-    break;
-    }
+    convertRaster(ifd, format, maxval, cols, rows, ofd, ip.bytes_per_line);
 
     pm_close(ifd);
-
-    free(data);
 
     if (!write_trailer(ofd)) {
         perror("Writing trailer");
