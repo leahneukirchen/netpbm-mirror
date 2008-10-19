@@ -435,49 +435,56 @@ text_getc (FILE * file)
 
 
 static boolean
-read_text_integer (FILE * file, long * result, int * termchar)
-/* Read an unsigned decimal integer from a file, store it in result */
-/* Reads one trailing character after the integer; returns it in termchar */
-{
-    register int ch;
-    register long val;
+readTextInteger(FILE * const fileP,
+                long * const resultP,
+                int *  const termcharP) {
+/*----------------------------------------------------------------------------
+   Read the next unsigned decimal integer from file 'fileP', skipping
+   white space as necessary.  Return it as *resultP.
+
+   Also read one character after the integer and return it as *termcharP.
+
+   If there is no character after the integer, return *termcharP == EOF.
+
+   Iff the next thing in the file is not a valid unsigned decimal integer,
+   return FALSE.
+-----------------------------------------------------------------------------*/
+    int ch;
+    boolean retval;
   
     /* Skip any leading whitespace, detect EOF */
     do {
-        ch = text_getc(file);
-        if (ch == EOF) {
-            *termchar = ch;
-            return FALSE;
-        }
+        ch = text_getc(fileP);
     } while (isspace(ch));
   
-    if (! isdigit(ch)) {
-        *termchar = ch;
-        return FALSE;
+    if (!isdigit(ch))
+        retval = FALSE;
+    else {
+        long val;
+        val = ch - '0';  /* initial value */
+        while ((ch = text_getc(fileP)) != EOF) {
+            if (! isdigit(ch))
+                break;
+            val *= 10;
+            val += ch - '0';
+        }
+        *resultP = val;
+        retval = TRUE;
     }
-
-    val = ch - '0';
-    while ((ch = text_getc(file)) != EOF) {
-        if (! isdigit(ch))
-            break;
-        val *= 10;
-        val += ch - '0';
-    }
-    *result = val;
-    *termchar = ch;
-    return TRUE;
+    *termcharP = ch;
+    return retval;
 }
 
 
 static boolean
 read_scan_integer (FILE * file, long * result, int * termchar)
-/* Variant of read_text_integer that always looks for a non-space termchar;
+/* Variant of readTextInteger that always looks for a non-space termchar;
  * this simplifies parsing of punctuation in scan scripts.
  */
 {
     register int ch;
 
-    if (! read_text_integer(file, result, termchar))
+    if (! readTextInteger(file, result, termchar))
         return FALSE;
     ch = *termchar;
     while (ch != EOF && isspace(ch))
@@ -625,45 +632,59 @@ read_quant_tables (j_compress_ptr cinfo, char * filename,
  */
 {
     FILE * fp;
-    int tblno, i, termchar;
-    long val;
-    unsigned int table[DCTSIZE2];
+    boolean retval;
 
-    if ((fp = fopen(filename, "rb")) == NULL) {
+    fp = fopen(filename, "rb");
+    if (fp == NULL) {
         pm_message("Can't open table file %s", filename);
-        return FALSE;
-    }
-    tblno = 0;
+        retval = FALSE;
+    } else {
+        boolean eof, error;
+        unsigned int tblno;
 
-    while (read_text_integer(fp, &val, &termchar)) {
-        /* read 1st element of table */
-        if (tblno >= NUM_QUANT_TBLS) {
-            pm_message("Too many tables in file %s", filename);
-            fclose(fp);
-            return FALSE;
-        }
-        table[0] = (unsigned int) val;
-        for (i = 1; i < DCTSIZE2; i++) {
-            if (! read_text_integer(fp, &val, &termchar)) {
-                pm_message("Invalid table data in file %s", filename);
-                fclose(fp);
-                return FALSE;
+        for (tblno = 0, eof = FALSE, error = FALSE; !eof && !error; ++tblno) {
+            long val;
+            int termchar;
+            boolean gotOne;
+
+            gotOne = readTextInteger(fp, &val, &termchar);
+            if (gotOne) {
+                /* read 1st element of table */
+                if (tblno >= NUM_QUANT_TBLS) {
+                    pm_message("Too many tables in file %s", filename);
+                    error = TRUE;
+                } else { 
+                    unsigned int table[DCTSIZE2];
+                    unsigned int i;
+
+                    table[0] = (unsigned int) val;
+                    for (i = 1; i < DCTSIZE2 && !error; ++i) {
+                        if (! readTextInteger(fp, &val, &termchar)) {
+                            pm_message("Invalid table data in file %s",
+                                       filename);
+                            error = TRUE;
+                        } else
+                            table[i] = (unsigned int) val;
+                    }
+                    if (!error)
+                        jpeg_add_quant_table(
+                            cinfo, tblno, table, scale_factor, force_baseline);
+                }
+            } else {
+                if (termchar == EOF)
+                    eof = TRUE;
+                else {
+                    pm_message("Non-numeric data in file %s", filename);
+                    error = TRUE;
+                }
             }
-            table[i] = (unsigned int) val;
         }
-        jpeg_add_quant_table(cinfo, tblno, table, scale_factor, 
-                             force_baseline);
-        tblno++;
-    }
 
-    if (termchar != EOF) {
-        pm_message("Non-numeric data in file %s", filename);
         fclose(fp);
-        return FALSE;
+        retval = !error;
     }
-
-    fclose(fp);
-    return TRUE;
+        
+    return retval;
 }
 
 
