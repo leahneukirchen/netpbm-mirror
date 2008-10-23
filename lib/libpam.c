@@ -195,21 +195,12 @@ pnm_createBlackTuple(const struct pam * const pamP,
    Create a "black" tuple.  By that we mean a tuple all of whose elements
    are zero.  If it's an RGB, grayscale, or b&w pixel, that means it's black.
 -----------------------------------------------------------------------------*/
+    unsigned int i;
+
     *blackTupleP = pnm_allocpamtuple(pamP);
-    if (pamP->format == PAM_FORMAT) {
-        /* In this format, we don't know the meaning of "black", so we
-           just punt.
-           */
-        int i;
-        for (i = 0; i < pamP->depth; i++) 
-            (*blackTupleP)[i] = 0;
-    } else {
-        xel black_xel;
-        black_xel = pnm_blackxel(pamP->maxval, pamP->format);
-        (*blackTupleP)[0] = PPM_GETR(black_xel);
-        (*blackTupleP)[1] = PPM_GETG(black_xel);
-        (*blackTupleP)[2] = PPM_GETB(black_xel);
-    }
+
+    for (i = 0; i < pamP->depth; ++i) 
+        (*blackTupleP)[i] = 0;
 }
 
 
