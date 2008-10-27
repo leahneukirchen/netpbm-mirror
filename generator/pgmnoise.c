@@ -55,7 +55,7 @@ int main(int    argc,
     for (row = 0; row < rows; ++row) {
         unsigned int col;
         for (col = 0; col < cols; ++col)
-            destrow[col] = rand() % PGM_MAXMAXVAL;
+            destrow[col] = rand() % (PGM_MAXMAXVAL + 1);
 
         pgm_writepgmrow(stdout, destrow, cols, PGM_MAXMAXVAL, 0);
     }
