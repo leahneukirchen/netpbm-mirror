@@ -53,6 +53,7 @@
 
 #include <assert.h>
 #include <math.h>
+#include <unistd.h>
 
 #include "pm_c_util.h"
 #include "pgm.h"
@@ -108,7 +109,7 @@ static void initseed()
 {
     int i;
 
-    i = time(NULL) * 0xF37C;
+    i = time(NULL) ^ getpid();
     srand(i);
     for (i = 0; i < 7; i++) 
         V rand();

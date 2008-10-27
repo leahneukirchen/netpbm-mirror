@@ -558,17 +558,20 @@ int main(int argc, char *argv[])
     break;
     case PGM_TYPE:
     {
-        gray           *pixels;
-
-        pixels = (gray *) data;
+        gray          *pixels = pgm_allocrow(cols);
 
         for (i = 0; i < rows; i++) {
+            p = data;
             pgm_readpgmrow(ifd, pixels, cols, maxval, format);
+            for (j = 0; j < cols; j++) {
+                *p++ = (unsigned char) pixels[j];
+            }
             if (fwrite(data,1,ip.bytes_per_line,ofd) != ip.bytes_per_line) {
                 perror("Writing image data\n");
                 exit(1);
             }
         }
+        pgm_freerow(pixels);
     }
     break;
     case PPM_TYPE:

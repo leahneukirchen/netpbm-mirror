@@ -35,6 +35,7 @@
 
 #include <math.h>
 #include <assert.h>
+#include <unistd.h>
 
 #include "pm_c_util.h"
 #include "ppm.h"
@@ -284,7 +285,7 @@ initseed(void) {
 
     int i;
 
-    i = time(NULL) ^ 0xF37C;
+    i = time(NULL) ^ getpid();
     srand(i);
     for (i = 0; i < 7; ++i)
         rand();

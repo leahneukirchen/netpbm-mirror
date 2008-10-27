@@ -4,6 +4,19 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+08.10.27 BJH  Release 10.35.54
+
+              pnm_createBlackTuple(): fix array bounds violation with
+              PBM, PGM.
+
+              ppmforge, pgmnoise, pgmcrater: better randomization;
+              won't produce the same image if you run it twice within
+              the same second.
+
+              pnmtoddif: fix crash with any PGM input.
+
+              pgmnoise: fix bug: never generates full white pixel.
+
 08.10.12 BJH  Release 10.35.53
 
               pamditherbw: Fix -value other than .5 with -fs .

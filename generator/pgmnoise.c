@@ -9,6 +9,8 @@
 /* V1.1 16.11.1993  Rewritten to be NetPBM.programming conforming    */
 /*********************************************************************/
 
+#include <unistd.h>
+
 #include "pgm.h"
 
 /* global variables */
@@ -58,13 +60,13 @@ char *argv[];
 
 	/* get time of day to feed the random number generator */
 	timenow = time(NULL);
-	srand(timenow);
+	srand(timenow ^ getpid());
 
 	/* create the (gray) noise */
 	for (i = 0; i < rows; i++)
 	{
 		for (j = 0; j < cols; j++)
-			destrow[j] = rand() % PGM_MAXMAXVAL;
+			destrow[j] = rand() % (PGM_MAXMAXVAL+1);
 
 		/* write out one line of graphic data */
 		pgm_writepgmrow(stdout, destrow, cols, PGM_MAXMAXVAL, 0);
