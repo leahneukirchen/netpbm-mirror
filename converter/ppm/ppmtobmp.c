@@ -27,6 +27,12 @@
 
 enum colortype {TRUECOLOR, PALETTE};
 
+struct rgb {
+    unsigned char red;
+    unsigned char grn;
+    unsigned char blu;
+};
+
 typedef struct {
 /*----------------------------------------------------------------------------
    A color map for a BMP file.
@@ -34,13 +40,13 @@ typedef struct {
     unsigned int count;
         /* Number of colors in the map.  The first 'count' elements of these
            arrays are defined; all others are not.
+
+           At most MAXCOLORS.
         */
     colorhash_table cht;
 
-    /* Indices in the following arrays are the same as in 'cht', above. */
-    unsigned char red[MAXCOLORS];
-    unsigned char grn[MAXCOLORS];
-    unsigned char blu[MAXCOLORS];
+    /* Indices in the following array are the same as in 'cht', above. */
+    struct rgb bmpMap[MAXCOLORS];
 } colorMap;
 
 
@@ -108,7 +114,7 @@ parse_command_line(int argc, char ** argv,
     if (cmdline_p->bppSpec) {
         if (cmdline_p->bpp != 1 && cmdline_p->bpp != 4 && 
             cmdline_p->bpp != 8 && cmdline_p->bpp != 24)
-        pm_error("Invalid -bpp value specified: %u.  The only values valid\n"
+        pm_error("Invalid -bpp value specified: %u.  The only values valid "
                  "in the BMP format are 1, 4, 8, and 24 bits per pixel",
                  cmdline_p->bpp);
     }
@@ -118,7 +124,7 @@ parse_command_line(int argc, char ** argv,
     else if (argc - 1 == 1)
         cmdline_p->input_filename = strdup(argv[1]);
     else 
-        pm_error("Too many arguments.  The only argument accepted\n"
+        pm_error("Too many arguments.  The only argument accepted "
                  "is the input file specificaton");
 
 }
@@ -243,7 +249,7 @@ BMPwriteinfoheader(FILE *        const fp,
 
 
 static int
-BMPwritergb(FILE * const fp, 
+BMPwriteRgb(FILE * const fp, 
             int    const class, 
             pixval const R, 
             pixval const G, 
@@ -264,7 +270,7 @@ BMPwritergb(FILE * const fp,
         PutByte(fp, R);
         return 3;
     default:
-        pm_error(er_internal, "BMPwritergb");
+        pm_error(er_internal, "BMPwriteRgb");
     }
     return -1;
 }
@@ -272,27 +278,29 @@ BMPwritergb(FILE * const fp,
 
 
 static int
-BMPwritecolormap(FILE *           const ifP, 
+BMPwriteColormap(FILE *           const ifP, 
                  int              const class, 
                  int              const bpp,
                  const colorMap * const colorMapP) {
 /*----------------------------------------------------------------------------
   Return the number of bytes written, or -1 on error.
 -----------------------------------------------------------------------------*/
-    long const ncolors = (1 << bpp);
+    unsigned int const ncolors = (1 << bpp);
 
-    unsigned int  nbyte;
-    unsigned int  i;
+    unsigned int nbyte;
+    unsigned int i;
+
+    assert(ncolors <= MAXCOLORS);
+    assert(ncolors <= ARRAY_SIZE(colorMapP->bmpMap));
 
     nbyte = 0;
-    for (i = 0; i < colorMapP->count; ++i)
-        nbyte += BMPwritergb(ifP, class,
-                             colorMapP->red[i],
-                             colorMapP->grn[i],
-                             colorMapP->blu[i]);
-
+    for (i = 0; i < colorMapP->count; ++i) {
+        const struct rgb * const mapEntryP = &colorMapP->bmpMap[i];
+        nbyte += BMPwriteRgb(ifP, class,
+                             mapEntryP->red, mapEntryP->grn, mapEntryP->blu);
+    }
     for (; i < ncolors; ++i)
-        nbyte += BMPwritergb(ifP, class, 0, 0, 0);
+        nbyte += BMPwriteRgb(ifP, class, 0, 0, 0);
 
     return nbyte;
 }
@@ -444,10 +452,10 @@ BMPwritebits(FILE *          const fp,
 
 
 static void
-BMPEncode(FILE *           const ifP, 
+bmpEncode(FILE *           const ifP, 
           int              const class, 
           enum colortype   const colortype,
-          int              const bpp,
+          unsigned int     const bpp,
           int              const x, 
           int              const y, 
           const pixel **   const pixels, 
@@ -459,25 +467,25 @@ BMPEncode(FILE *           const ifP,
     unsigned long nbyte;
 
     if (colortype == PALETTE)
-        pm_message("Writing %d bits per pixel with a color palette", bpp);
+        pm_message("Writing %u bits per pixel with a color palette", bpp);
     else
-        pm_message("Writing %d bits per pixel truecolor (no palette)", bpp);
+        pm_message("Writing %u bits per pixel truecolor (no palette)", bpp);
 
     nbyte = 0;  /* initial value */
     nbyte += BMPwritefileheader(ifP, class, bpp, x, y);
     nbyte += BMPwriteinfoheader(ifP, class, bpp, x, y);
     if (colortype == PALETTE)
-        nbyte += BMPwritecolormap(ifP, class, bpp, colorMapP);
+        nbyte += BMPwriteColormap(ifP, class, bpp, colorMapP);
 
     if (nbyte != (BMPlenfileheader(class)
                   + BMPleninfoheader(class)
                   + BMPlencolormap(class, bpp, -1)))
-        pm_error(er_internal, "BMPEncode 1");
+        pm_error(er_internal, "BmpEncode 1");
 
     nbyte += BMPwritebits(ifP, x, y, colortype, bpp, pixels, maxval,
                           colorMapP->cht);
     if (nbyte != BMPlenfile(class, bpp, -1, x, y))
-        pm_error(er_internal, "BMPEncode 2");
+        pm_error(er_internal, "BmpEncode 2");
 }
 
 
@@ -487,18 +495,18 @@ makeBilevelColorMap(colorMap * const colorMapP) {
 
     colorMapP->count  = 2;
     colorMapP->cht    = NULL;
-    colorMapP->red[0] = 0;
-    colorMapP->grn[0] = 0;
-    colorMapP->blu[0] = 0;
-    colorMapP->red[1] = 255;
-    colorMapP->grn[1] = 255;
-    colorMapP->blu[1] = 255;
+    colorMapP->bmpMap[0].red = 0;
+    colorMapP->bmpMap[0].grn = 0;
+    colorMapP->bmpMap[0].blu = 0;
+    colorMapP->bmpMap[1].red = 255;
+    colorMapP->bmpMap[1].grn = 255;
+    colorMapP->bmpMap[1].blu = 255;
 }
 
 
 
 static void
-BMPEncodePBM(FILE *           const ifP, 
+bmpEncodePbm(FILE *           const ifP, 
              int              const class, 
              int              const cols, 
              int              const rows, 
@@ -508,7 +516,7 @@ BMPEncodePBM(FILE *           const ifP,
 -----------------------------------------------------------------------------*/
     /* Note:
        Only PBM input uses this routine.  Color images represented by 1 bpp via
-       color palette use the general BMPEncode().
+       color palette use the general bmpEncode().
     */
     unsigned int const adjustedCols = (cols + 31) / 32 * 32;
     unsigned int const packedBytes  = adjustedCols / 8;
@@ -526,12 +534,12 @@ BMPEncodePBM(FILE *           const ifP,
 
     makeBilevelColorMap(&bilevelColorMap);
 
-    nbyte += BMPwritecolormap(ifP, class, 1, &bilevelColorMap);
+    nbyte += BMPwriteColormap(ifP, class, 1, &bilevelColorMap);
 
     if (nbyte != (BMPlenfileheader(class)
                   + BMPleninfoheader(class)
                   + BMPlencolormap(class, 1, -1)))
-        pm_error(er_internal, "BMPEncodePBM 1");
+        pm_error(er_internal, "bmpEncodePBM 1");
    
     for (row = 0; row < rows; ++row){
         size_t bytesWritten;
@@ -548,23 +556,23 @@ BMPEncodePBM(FILE *           const ifP,
     }
 
     if (nbyte != BMPlenfile(class, 1, -1, cols, rows))
-        pm_error(er_internal, "BMPEncodePBM 2");
+        pm_error(er_internal, "bmpEncodePbm 2");
 }
 
 
 
 static void
-analyze_colors(const pixel **    const pixels, 
-               int               const cols, 
-               int               const rows, 
-               pixval            const maxval, 
-               int *             const minimum_bpp_p,
-               colorMap *        const colorMapP) {
+analyzeColors(const pixel **    const pixels, 
+              int               const cols, 
+              int               const rows, 
+              pixval            const maxval, 
+              unsigned int *    const minimumBppP,
+              colorMap *        const colorMapP) {
 /*----------------------------------------------------------------------------
   Look at the colors in the image 'pixels' and compute values to use in
   representing those colors in a BMP image.  
 
-  First of all, count the distinct colors.  Return as *minimum_bpp_p
+  First of all, count the distinct colors.  Return as *minimumBppP
   the minimum number of bits per pixel it will take to represent all
   the colors in BMP format.
 
@@ -589,7 +597,7 @@ analyze_colors(const pixel **    const pixels,
     colorMapP->count = colorCount;
     if (chv == NULL) {
         pm_message("More than %u colors found", MAXCOLORS);
-        *minimum_bpp_p = 24;
+        *minimumBppP = 24;
         colorMapP->cht = NULL;
     } else {
         unsigned int const minbits = pm_maxvaltobits(colorMapP->count - 1);
@@ -605,21 +613,22 @@ analyze_colors(const pixel **    const pixels,
            (see Bmptopnm.c, though).  
         */
         if (minbits == 1)
-            *minimum_bpp_p = 1;
+            *minimumBppP = 1;
         else if (minbits <= 4)
-            *minimum_bpp_p = 4;
+            *minimumBppP = 4;
         else if (minbits <= 8)
-            *minimum_bpp_p = 8;
+            *minimumBppP = 8;
         else
-            *minimum_bpp_p = 24;
+            *minimumBppP = 24;
 
         /*
          * Now scale the maxval to 255 as required by BMP format.
          */
         for (i = 0; i < colorMapP->count; ++i) {
-            colorMapP->red[i] = (pixval) PPM_GETR(chv[i].color) * 255 / maxval;
-            colorMapP->grn[i] = (pixval) PPM_GETG(chv[i].color) * 255 / maxval;
-            colorMapP->blu[i] = (pixval) PPM_GETB(chv[i].color) * 255 / maxval;
+            struct rgb * const mapEntryP = &colorMapP->bmpMap[i];
+            mapEntryP->red = (pixval) PPM_GETR(chv[i].color) * 255 / maxval;
+            mapEntryP->grn = (pixval) PPM_GETG(chv[i].color) * 255 / maxval;
+            mapEntryP->blu = (pixval) PPM_GETB(chv[i].color) * 255 / maxval;
         }
     
         /* And make a hash table for fast lookup. */
@@ -631,38 +640,39 @@ analyze_colors(const pixel **    const pixels,
 
 
 static void
-choose_colortype_bpp(struct cmdline_info const cmdline,
-                     unsigned int        const colors, 
-                     unsigned int        const minimum_bpp,
-                     enum colortype *    const colortype_p, 
-                     unsigned int *      const bits_per_pixel_p) {
+chooseColortypeBpp(bool             const userRequestsBpp,
+                   unsigned int     const requestedBpp,
+                   unsigned int     const colors, 
+                   unsigned int     const minimumBpp,
+                   enum colortype * const colortypeP, 
+                   unsigned int *   const bitsPerPixelP) {
 
-    if (!cmdline.bppSpec) {
+    if (!userRequestsBpp) {
         /* User has no preference as to bits per pixel.  Choose the
            smallest number possible for this image.
         */
-        *bits_per_pixel_p = minimum_bpp;
+        *bitsPerPixelP = minimumBpp;
     } else {
-        if (cmdline.bpp < minimum_bpp)
+        if (requestedBpp < minimumBpp)
             pm_error("There are too many colors in the image to "
-                     "represent in the\n"
-                     "number of bits per pixel you requested: %d.\n"
+                     "represent in the "
+                     "number of bits per pixel you requested: %d.  "
                      "You may use Pnmquant to reduce the number of "
                      "colors in the image.",
                      cmdline.bpp);
         else
-            *bits_per_pixel_p = cmdline.bpp;
+            *bitsPerPixelP = requestedBpp;
     }
 
-    assert(*bits_per_pixel_p == 1 || 
-           *bits_per_pixel_p == 4 || 
-           *bits_per_pixel_p == 8 || 
-           *bits_per_pixel_p == 24);
+    assert(*bitsPerPixelP == 1 || 
+           *bitsPerPixelP == 4 || 
+           *bitsPerPixelP == 8 || 
+           *bitsPerPixelP == 24);
 
-    if (*bits_per_pixel_p > 8) 
-        *colortype_p = TRUECOLOR;
+    if (*bitsPerPixelP > 8) 
+        *colortypeP = TRUECOLOR;
     else {
-        *colortype_p = PALETTE;
+        *colortypeP = PALETTE;
     }
 }
 
@@ -676,12 +686,12 @@ doPbm(FILE *       const ifP,
       int          const class,
       FILE *       const ofP) {
     
-    /*  In the PBM case the raster is read directly from the input by 
-        pbm_readpbmrow_packed.  The raster format is almost identical,
-        except that BMP specifies rows to be zero-filled to 32 bit borders 
-        and that in BMP the bottom row comes first in order.
+    /* We read the raster directly from the input with
+        pbm_readpbmrow_packed().  The raster format is almost
+        identical, except that BMP specifies rows to be zero-filled to
+        32 bit borders and that in BMP the bottom row comes first in
+        order.
     */
-
     int const CHARBITS = (sizeof(unsigned char)*8); 
     int const colChars = pbm_packed_bytes(cols);
     int const adjustedCols = (cols+31) /32 * 32;
@@ -709,7 +719,7 @@ doPbm(FILE *       const ifP,
                 thisRow[i] = ~thisRow[i]; /* flip all pixels */
         }
         /* This may seem unnecessary, because the color palette 
-           (RGB[] in BMPEncodePBM) can be inverted for the same effect.
+           (RGB[] in bmpEncodePbm) can be inverted for the same effect.
            However we take this precaution, for there is indication that
            some BMP viewers may get confused with that.
         */
@@ -721,25 +731,27 @@ doPbm(FILE *       const ifP,
         }
     }
 
-    BMPEncodePBM(ofP, class, cols, rows, bitrow);
+    bmpEncodePbm(ofP, class, cols, rows, bitrow);
 }            
 
 
 
 static void
-doPgmPpm(FILE * const ifP,
+doPgmPpm(FILE *       const ifP,
          unsigned int const cols,
          unsigned int const rows,
          pixval       const maxval,
          int          const ppmFormat,
          int          const class,
+         bool         const userRequestsBpp,
+         unsigned int const requestedBpp,
          FILE *       const ofP) {
 
-    /* PGM and PPM.  The input image is read into a PPM array, scanned
-       for color analysis and converted to a BMP raster.
-       Logic works for PBM.
+    /* PGM and PPM.  We read the input image into a PPM array, scan it
+       to analyze the colors, and convert it to a BMP raster.  Logic
+       works for PBM.
     */
-    int minimumBpp;
+    unsigned int minimumBpp;
     unsigned int bitsPerPixel;
     enum colortype colortype;
     unsigned int row;
@@ -752,13 +764,14 @@ doPgmPpm(FILE * const ifP,
     for (row = 0; row < rows; ++row)
         ppm_readppmrow(ifP, pixels[row], cols, maxval, ppmFormat);
     
-    analyze_colors((const pixel**)pixels, cols, rows, maxval, 
-                   &minimumBpp, &colorMap);
+    analyzeColors((const pixel**)pixels, cols, rows, maxval, 
+                  &minimumBpp, &colorMap);
     
-    choose_colortype_bpp(cmdline, colorMap.count, minimumBpp, &colortype, 
-                         &bitsPerPixel);
+    chooseColortypeBpp(cmdline.bppSpec, cmdline.bpp,
+                       colorMap.count, minimumBpp, &colortype, 
+                       &bitsPerPixel);
     
-    BMPEncode(stdout, class, colortype, bitsPerPixel,
+    bmpEncode(ofP, class, colortype, bitsPerPixel,
               cols, rows, (const pixel**)pixels, maxval, &colorMap);
     
     freeColorMap(&colorMap);
@@ -786,7 +799,8 @@ main(int argc, char **argv) {
     if (PPM_FORMAT_TYPE(ppmFormat) == PBM_TYPE)
         doPbm(ifP, cols, rows, ppmFormat, cmdline.class, stdout);
     else
-        doPgmPpm(ifP, cols, rows, maxval, ppmFormat, cmdline.class, stdout);
+        doPgmPpm(ifP, cols, rows, maxval, ppmFormat,
+                 cmdline.class, cmdline.bppSpec, cmdline.bpp, stdout);
 
     pm_close(ifP);
     pm_close(stdout);
