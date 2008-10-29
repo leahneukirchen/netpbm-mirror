@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.45.00
 
+              ppmtobmp: Add -mapfile option.
+
               pnm_createBlackTuple(): fix array bounds violation with
               PBM, PGM.
 
