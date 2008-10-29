@@ -2,17 +2,15 @@
 <HTML><HEAD><TITLE>Ppmtobmp User Manual</TITLE>
 </HEAD><BODY>
 <H1>ppmtobmp</H1>
-Updated: 13 June 2000
+Updated: 29 October 2008
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
 ppmtobmp - convert a PPM image into a BMP file
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>ppmtobmp</B>
 
@@ -22,6 +20,8 @@ ppmtobmp - convert a PPM image into a BMP file
 
 [<B>-bpp=</B><I>bits_per_pixel</I>]
 
+[<b>-mapfile=</b><i>filename</i>]
+
 [<I>ppmfile</I>]
 
 <p>Minimum unique abbreviation of option is acceptable.  You may use double
@@ -29,16 +29,14 @@ hyphens instead of single hyphen to denote options.  You may use white
 space in place of the equals sign to separate an option name from its value.
 
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>ppmtobmp</b> reads a PPM image as input and produces a Microsoft
 Windows or OS/2 BMP file as output.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<H2 id="options">OPTIONS</H2>
 
 <DL COMPACT>
 <DT><B>-windows</B>
@@ -61,11 +59,43 @@ too small to represent all the colors in the input image,
 <B>ppmtobmp</B> tells you and terminates.  You can use <B>pnmquant</B>
 or <B>ppmdither</B> to reduce the number of colors in the image.
 
+<dt><b>-mapfile=</b><i>filename</i>
+
+<dd>This identifies a file to use as the BMP palette (aka
+&quot;colormap&quot;).  In one BMP subformat, the BMP stream contains
+a palette of up to 256 colors, and represents the image raster as
+indices into that palette.  Normally, <b>ppmtobmp</b> takes care of
+computing a suitable palette, but if you are going to dissect the BMP
+output in some way, you may want certain values for the palette
+indices.  E.g. you might want red to be 13, where <b>ppmtobmp</b>
+would (arbitrarily) choose 39.  In that case, you can construct the
+palette yourself and use this option to tell <b>ppmtobmp</b> to use
+your palette.
+
+<p>This option does <em>not</em> control what colors are in the
+output.  The colors in the output are exactly those in the input, and
+the palette you supply must contain at least all the colors that are
+in the input.  You can use <b>pnmremap</b> to adjust your input image
+so that it contains only colors from your palette.
+
+<p>The palette file is a Netpbm format file with one pixel per
+palette entry.  Each pixel must have a distinct color (no repeats).
+The order of the BMP palette <b>ppmtobmp</b> generates is the order
+of the pixels in the palette file, going from top to bottom, left
+to right.
+
+<p>A BMP palette may have at most 256 colors, so the palette file
+must have at most 256 pixels.
+
+<p>You may find <b>pnmcolormap</b> useful in generating the palette
+file.  <b>pgmramp</b> too.
+
+<p>This option was new in Netpbm 10.45 (December 2008).
+
 </DL>
 
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>NOTES</H2>
+<H2 id="notes">NOTES</H2>
 
 <P>To get a faithful reproduction of the input image, the maxval of the
 input image must be 255.  If it is something else, 
@@ -75,8 +105,7 @@ in the input.
 <P>Windows icons are not BMP files.  Use <B>ppmtowinicon</B> to
 create those.
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="bmptoppm.html">bmptoppm</A></B>,
 
@@ -86,24 +115,23 @@ create those.
 
 <B><A HREF="ppmdither.html">ppmdither</A></B>,
 
+<B><A HREF="pnmremap.html">pnmremap</A></B>,
+
 <B><A HREF="ppm.html">ppm</A></B>
 
-<A NAME="lbAH">&nbsp;</A>
-<H2>AUTHOR</H2>
+<H2 id="author">AUTHOR</H2>
 
 Copyright (C) 1992 by David W. Sanderson.
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">NOTES</A>
-<LI><A HREF="#lbAG">SEE ALSO</A>
-<LI><A HREF="#lbAH">AUTHOR</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#notes">NOTES</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
 </UL>
 </BODY>
 </HTML>

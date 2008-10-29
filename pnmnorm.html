@@ -102,6 +102,15 @@ it's a syntax error to specify both).
 cascade two runs of <b>pnmnorm</b>, specifying values for the first
 and percentages for the second.
 
+<p><b>-bpercent</b> and <b>-wpercent</b> values are floating point
+decimal.  Zero is valid and is the same as <b>-bvalue=0</b> or
+<b>-wvalue=</b><i>maxval</i>, respectively.
+
+<p>Because there are whole numbers of pixels at each brightness,
+<b>pnmnorm</b> obviously can't guarantee the exact per centage, so it
+arranges that <em>at least</em> the per centage of pixels you specify
+get remapped as promised.
+
 <p>It is possible for your <b>-bpercent</b> or <b>-wpercent</b>
 to overlap your <b>-wvalue</b> or <b>-bvalue</b>, respectively.  For
 example, you say <b>-bpercent=20</b> and <b>-wvalue=100</b> for an
