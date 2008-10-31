@@ -325,25 +325,6 @@ validateComputableHeight(int const originTop,
 
 
 static void
-validateComputableHeight(int const originTop, 
-                         int const overRows) {
-
-    if (originTop < 0) {
-        if (originTop < -INT_MAX)
-            pm_error("Overlay starts too far above the underlay image to be "
-                     "computable.  Overlay can be at most %d rows above "
-                     "the underlay.", INT_MAX);
-    } else {
-        if (INT_MAX - originTop <= overRows)
-            pm_error("Too many total rows involved to be computable.  "
-                     "You must have a shorter overlay image or compose it "
-                     "higher on the underlay image.");
-    }
-}
-
-
-
-static void
 computeOverlayPosition(int                const underCols, 
                        int                const underRows,
                        int                const overCols, 
@@ -377,8 +358,6 @@ computeOverlayPosition(int                const underCols,
     }
     *originLeftP = xalign + cmdline.xoff;
     *originTopP  = yalign + cmdline.yoff;
-
-    validateComputableHeight(*originTopP, overRows);
 
     validateComputableHeight(*originTopP, overRows);
 

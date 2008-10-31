@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+08.10.31 BJH  Release 10.35.55
+
+              pamcomp: Fix mysterious doubling of code introduced in 10.35.50
+              which causes build to fail.
+
 08.10.27 BJH  Release 10.35.54
 
               pnm_createBlackTuple(): fix array bounds violation with
