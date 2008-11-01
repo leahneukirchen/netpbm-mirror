@@ -25,5 +25,3 @@ $(UTILOBJECTS):%.o:%.c importinc
 
 testnstring: test.c nstring.h nstring.o
 	$(CC) $(CFLAGS) $(CADD) -o $@ nstring.o $<
-
-include Makefile.depend

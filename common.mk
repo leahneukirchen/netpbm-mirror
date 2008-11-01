@@ -491,7 +491,7 @@ thisdirclean:
 
 .PHONY: distclean
 distclean: $(SUBDIRS:%=%/distclean) thisdirclean
-	rm -f Makefile.depend
+	rm -f depend.mk
 
 DEP_SOURCES = $(wildcard *.c *.cpp *.cc)
 
@@ -501,7 +501,7 @@ dep: $(SUBDIRS:%=%/dep) importinc
 # before the first make after a clean.
 
 ifneq ($(DEP_SOURCES)x,x)
-	$(CC) -MM -MG $(INCLUDES) $(DEP_SOURCES) >Makefile.depend
+	$(CC) -MM -MG $(INCLUDES) $(DEP_SOURCES) >depend.mk
 endif
 
 # Note: if I stack all these subdirectory targets into one rule, I get
@@ -563,13 +563,13 @@ $(SUBDIRS:%=$(CURDIR)/%) $(DIRS2):
 # The automatic dependency generation is a pain in the butt and
 # totally unnecessary for people just installing the distributed code,
 # so to avoid needless failures in the field and a complex build, the
-# rule to generate Makefile.depend automatically simply creates an
+# rule to generate depend.mk automatically simply creates an
 # empty file.  A developer may do 'make dep' to create a
-# Makefile.depend full of real dependencies.
+# depend.mk full of real dependencies.
 
-Makefile.depend:
-	cat /dev/null >Makefile.depend
+depend.mk:
+	cat /dev/null >$@
 
-include Makefile.depend
+include depend.mk
 
 FORCE:
