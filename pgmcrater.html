@@ -2,18 +2,15 @@
 <HTML><HEAD><TITLE>Pgmcrater User Manual</TITLE></HEAD>
 <BODY>
 <H1>pgmcrater</H1>
-Updated: 15 October 1991
+Updated: 20 November 2008
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
 pgmcrater - create cratered terrain by fractal forgery
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
-
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>pgmcrater</B>
 
@@ -26,8 +23,7 @@ pgmcrater - create cratered terrain by fractal forgery
 [<B>-gamma</B> <I>g</I>]
 
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -65,8 +61,11 @@ plain'' shape with a cross-section more like:
 Larger craters should really use this profile, including the central
 peak, and totally obliterate the pre-existing terrain.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<p>The randomness in the image is limited before Netpbm 10.37 (December
+2006) -- if you run the program twice in the same second, you may get
+identical output.
+
+<H2 id="options">OPTIONS</H2>
 
 <P>All options can be abbreviated to their shortest unique prefix.
 
@@ -118,8 +117,7 @@ device that does not correctly render PGM images.
 
 </DL>
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>DESIGN NOTES</H2>
+<H2 id="designnotes">DESIGN NOTES</H2>
 
 The<B>-gamma</B> option isn't really necessary since you can achieve
 the same effect by piping the output from <B>pgmcrater</B> through
@@ -130,8 +128,7 @@ additional gamma adjustment.
 
 <P>Real craters have two distinct morphologies.
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="pnmgamma.html">pnmgamma</A></B>,
 
@@ -165,8 +162,7 @@ its documentation for any purpose and without fee is hereby granted,
 without any conditions or restrictions.  This software is provided
 &quot;as is&quot; without express or implied warranty.
 
-<a name="history"></a>
-<H2>HISTORY</H2>
+<H2 id="history">HISTORY</H2>
 
 
 <P>The original 1991 version of this manual contains the following:
@@ -187,16 +183,14 @@ detailed explanations by Rudy Rucker of the mathematics and algorithms
 used by each program.
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">DESIGN NOTES</A>
-<LI><A HREF="#lbAG">SEE ALSO</A>
-<LI><A HREF="#lbAH">AUTHOR</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#designnotes">DESIGN NOTES</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
 <LI><A HREF="#history">HISTORY</A>
 </UL>
 </BODY>
