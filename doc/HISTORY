@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.45.00
 
+              pgmnoise: Add -randomseed.
+
               ppmtobmp: Add -mapfile option.
 
               pnm_createBlackTuple(): fix array bounds violation with
@@ -220,6 +222,9 @@ not yet  BJH  Release 10.45.00
               with 'nearest' on AIX.
 
               Fix bug: ppmdraw.h, ppmdfont.h not installed.
+
+              Add -fPIC to all Gcc compiles of library modules, so it works
+              on AMD64, IA64.
 
               Add Windows version of gethostname to ppmtompeg; normal build
               does not use it.
