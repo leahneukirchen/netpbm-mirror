@@ -85,15 +85,15 @@ else
 endif
 
 ppmtompeg: $(OBJECTS) $(NETPBMLIB) $(LIBOPT)
-	$(LD) -o $@ $(LDFLAGS) \
+	$(LD) -o $@ \
           $(OBJECTS) $(shell $(LIBOPT) $(NETPBMLIB) $(LIBOPTR) $(JPEGLIBX)) \
-	  $(NETWORKLD) $(MATHLIB) $(LDLIBS) \
+	  $(NETWORKLD) $(MATHLIB) $(LDFLAGS) $(LDLIBS) \
 	  $(RPATH) $(LADD)
 
 profile: $(OBJECTS) $(NETPBMLIB) $(LIBOPT)
-	$(LD) -o $@ -Bstatic -pg $(LDFLAGS) \
+	$(LD) -o $@ -Bstatic -pg \
           $(OBJECTS) $(shell $(LIBOPT) $(NETPBMLIB) $(LIBOPTR) $(JPEGLIBX)) \
-	  $(NETWORKLD) $(MATHLIB) $(LDLIBS) \
+	  $(NETWORKLD) $(MATHLIB) $(LDFLAGS) $(LDLIBS) \
 	  $(RPATH) $(LADD)
 
 

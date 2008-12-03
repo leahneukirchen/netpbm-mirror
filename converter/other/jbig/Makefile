@@ -36,9 +36,9 @@ all: $(BINARIES)
 include $(SRCDIR)/Makefile.common
 
 $(BINARIES): %: %.o $(JBIGLIB_DEP) $(NETPBMLIB) $(LIBOPT)
-	$(LD) $(LDFLAGS) -o $@ $< \
-	  $(shell $(LIBOPT) $(NETPBMLIB) $(JBIGLIB)) $(MATHLIB) $(LDLIBS) \
-	  $(RPATH) $(LADD)
+	$(LD) -o $@ $< \
+	  $(shell $(LIBOPT) $(NETPBMLIB) $(JBIGLIB)) $(MATHLIB) \
+	  $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
 
 $(BUILDDIR)/$(SUBDIR)/libjbig.a: $(LIBJBIG_OBJECTS)
