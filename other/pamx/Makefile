@@ -40,6 +40,6 @@ all: $(BINARIES)
 include $(SRCDIR)/common.mk
 
 pamx: $(PAMX_OBJECTS) $(NETPBMLIB) $(LIBOPT)
-	$(LD) $(LDFLAGS) -o $@ $(PAMX_OBJECTS) \
+	$(LD) -o $@ $(PAMX_OBJECTS) \
 	  $(shell $(LIBOPT) $(NETPBMLIB) $(X11LIB)) \
-	  $(LDLIBS) $(MATHLIB) $(RPATH) $(LADD)
+	  $(LDFLAGS) $(LDLIBS) $(MATHLIB) $(RPATH) $(LADD)

@@ -19,7 +19,7 @@ MERGE_OBJECTS = pbmtoppa.o2 ppa.o pbm.o cutswath.o
 include $(SRCDIR)/common.mk
 
 pbmtoppa: $(OBJECTS) $(NETPBMLIB) $(LIBOPT)
-	$(LD) $(LDFLAGS) -o pbmtoppa $(OBJECTS) \
-	  -lm $(shell $(LIBOPT) $(NETPBMLIB)) $(LDLIBS) \
+	$(LD) -o pbmtoppa $(OBJECTS) \
+	  -lm $(shell $(LIBOPT) $(NETPBMLIB)) $(LDFLAGS) $(LDLIBS) \
 	  $(RPATH) $(LADD)
 

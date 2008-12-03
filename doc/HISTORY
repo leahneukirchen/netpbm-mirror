@@ -10,16 +10,21 @@ not yet  BJH  Release 10.45.00
 
               ppmtobmp: Add -mapfile option.
 
-              pnm_createBlackTuple(): fix array bounds violation with
+              pnm_createBlackTuple(): Fix array bounds violation with
               PBM, PGM.
 
-              pnmtoddif: fix crash with any PGM input.
+              pnmtoddif: Fix crash with any PGM input.
 
-              pgmnoise: fix bug: never generates full white pixel.
+              pgmnoise: Fix bug: never generates full white pixel.
 
               pamditherbw: Fix -value other than .5 with -fs, -atkinson.
 
-              Build: rename Makefile.common, Makefile.config, to common.mk,
+              Build: Move LDFLAGS later so that a -L in LDFLAGS doesn't
+              interfere with finding the built libnetpbm.  (The common
+              link rule is already this way in 10.44.00; all the other
+              link rules are now the same).
+
+              Build: Rename Makefile.common, Makefile.config, to common.mk,
               etc.
 
 08.09.27 BJH  Release 10.44.00

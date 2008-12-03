@@ -50,6 +50,6 @@ all: $(BINARIES)
 include $(SRCDIR)/common.mk
 
 pamtosvg: $(PAMTOSVG_OBJECTS) $(NETPBMLIB) $(LIBOPT)
-	$(LD) $(LDFLAGS) -o $@ $(PAMTOSVG_OBJECTS) \
+	$(LD) -o $@ $(PAMTOSVG_OBJECTS) \
 	  $(shell $(LIBOPT) $(NETPBMLIB)) \
-	  $(MATHLIB) $(LDLIBS) $(RPATH) $(LADD)
+	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)

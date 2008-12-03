@@ -36,9 +36,9 @@ include $(SRCDIR)/common.mk
 
 $(BINARIES):%:%.o $(COMMON_OBJECTS) $(FIASCOLIBS) $(NETPBMLIB) \
    $(LIBOPT)
-	$(LD) $(LDFLAGS) -o $@ $< $(COMMON_OBJECTS) \
-	$(shell $(LIBOPT) $(FIASCOLIBS) $(NETPBMLIB)) $(MATHLIB) $(LDLIBS) \
-	$(RPATH) $(LADD)
+	$(LD) -o $@ $< $(COMMON_OBJECTS) \
+	$(shell $(LIBOPT) $(FIASCOLIBS) $(NETPBMLIB)) $(MATHLIB) \
+	$(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
 codec/libfiasco_codec.a: $(BUILDDIR)/$(SUBDIR)/codec FORCE
 	$(MAKE) -C codec -f $(SRCDIR)/$(SUBDIR)/codec/Makefile \
