@@ -1240,6 +1240,26 @@ sub gnuOptimizeOpt($) {
 
 
 
+sub gnuCflags($) {
+    my ($gccCommandName) = @_;
+
+    return("CFLAGS = " . gnuOptimizeOpt($gccCommandName) . " -ffast-math " .
+           " -pedantic -fno-common " . 
+           "-Wall -Wno-uninitialized -Wmissing-declarations -Wimplicit " .
+           "-Wwrite-strings -Wmissing-prototypes -Wundef\n");
+}
+
+
+
+sub makeCompilerGcc($) {
+    my ($config_mkR) = @_;
+    my $compileCommand = 'gcc';
+    push(@{$config_mkR}, "CC = $compileCommand\n");
+    push(@{$config_mkR}, gnuCflags($compileCommand));
+}
+
+
+
 sub findProcessManagement($) {
     my ($dontHaveProcessMgmtR) = @_;
 #-----------------------------------------------------------------------------
@@ -1940,28 +1960,11 @@ if (-f("GNUmakefile")) {
     $defaultConfigInPath = "$srcdir/config.mk.in";
 }
 
-sub makeCompilerGcc($) {
-    my ($config_mkR) = @_;
-    my $compileCommand = 'gcc';
-    push(@{$config_mkR}, "CC = $compileCommand\n");
-    push(@{$config_mkR}, gnuCflags($compileCommand));
-}
-
-
 #******************************************************************************
 #
 #  BUILD config.mk
 #
 #*****************************************************************************
-
-sub gnuCflags($) {
-    my ($gccCommandName) = @_;
-
-    return("CFLAGS = " . gnuOptimizeOpt($gccCommandName) . " -ffast-math " .
-           " -pedantic -fno-common " . 
-           "-Wall -Wno-uninitialized -Wmissing-declarations -Wimplicit " .
-           "-Wwrite-strings -Wmissing-prototypes -Wundef\n");
-}
 
 my @config_mk;
     # This is the complete config.mk contents.  We construct it here
@@ -2014,14 +2017,11 @@ if (defined($netpbmlib_runtime_path)) {
 }
 
 if ($platform eq "GNU") {
-    my $compileCommand;
     if (!commandExists("cc") && commandExists("gcc")) {
-        $compileCommand = "gcc";
-        push(@config_mk, "CC = $compileCommand\n");
+        makeCompilerGcc(\@config_mk);
     } else {
-        $compileCommand = "cc";
+        push(@config_mk, gnuCflags('cc'));
     }
-    push(@config_mk, gnuCflags($compileCommand));
 # The merged programs have a main_XXX subroutine instead of main(),
 # which would cause a warning with -Wmissing-declarations or 
 # -Wmissing-prototypes.
