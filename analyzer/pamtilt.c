@@ -10,6 +10,8 @@
   All work has been contributed to the public domain by its authors.
 =============================================================================*/
 
+#define _XOPEN_SOURCE   /* get M_PI in math.h */
+
 #include <assert.h>
 #include <math.h>
 
