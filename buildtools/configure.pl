@@ -2143,6 +2143,7 @@ if ($platform eq "GNU") {
     push(@config_mk, "NETWORKLD = -lsocket -lresolve\n");
 } elsif ($platform eq "DARWIN") {
     push(@config_mk, "CC = cc -no-cpp-precomp\n");
+    push(@config_mk, gnuCflags('cc'));
     push(@config_mk, 'CFLAGS_SHLIB = -fno-common', "\n");
 
     my $installNameOpt;
