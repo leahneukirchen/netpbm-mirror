@@ -24,8 +24,8 @@ librle.a: $(LIBOBJECTS)
 
 # Rule for objects.
 $(LIBOBJECTS): %.o: %.c importinc
-	$(CC) -c $(CPPFLAGS) $(CFLAGS) -I importinc -o $@ \
-	  $< $(CFLAGS_PERSONAL) $(CADD)
+	$(CC) -c -I importinc -o $@ \
+	  $< $(CPPFLAGS) $(CFLAGS) $(CFLAGS_PERSONAL) $(CADD)
 
 BINARIES =
 SCRIPTS =
