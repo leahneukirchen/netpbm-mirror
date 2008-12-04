@@ -60,8 +60,9 @@ include $(SRCDIR)/common.mk
 LIBOPTS = $(shell $(LIBOPT) $(NETPBMLIB) $(JASPERLIB_USE))
 
 $(BINARIES): %: %.o $(JASPERLIB_DEP) $(NETPBMLIB) $(LIBOPT)
-	$(LD) $(LDFLAGS) $(MATHLIB) $(LDLIBS) -o $@ $< \
-	  $(LIBOPTS) $(JASPERDEPLIBS) -lm $(RPATH) $(LADD)
+	$(LD) -o $@ $< \
+	  $(LIBOPTS) $(JASPERDEPLIBS) $(MATHLIB) $(RPATH) \
+	  $(LDFLAGS) $(LDLIBS) $(LADD)
 
 $(INTERNAL_JASPERLIB): $(BUILDDIR)/$(SUBDIR)/libjasper FORCE
 	$(MAKE) -f $(SRCDIR)/$(SUBDIR)/libjasper/Makefile \
