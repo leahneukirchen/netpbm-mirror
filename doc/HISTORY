@@ -19,6 +19,10 @@ not yet  BJH  Release 10.45.00
 
               pamditherbw: Fix -value other than .5 with -fs, -atkinson.
 
+              Build: Move CFLAGS later in libjasper build so that a -I in
+              CFLAGS doesn't interfere with finding the local libjasper
+              header files.
+
               Build: Move LDFLAGS later so that a -L in LDFLAGS doesn't
               interfere with finding the built libnetpbm.  (The common
               link rule is already this way in 10.44.00; all the other
