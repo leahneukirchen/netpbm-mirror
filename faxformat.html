@@ -1,0 +1,98 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Fax Formats</TITLE></HEAD>
+<BODY>
+<H1>Fax Formats</H1>
+Updated: 03 December 2008
+<BR>
+
+<p>This page, part of the <a href="index.html">Netpbm user's guide</a>,
+describes FAX formats in relation to Netpbm facilities.
+
+
+<p>The ITU (formerly CCITT) publishes standards for operation of fax machines
+(the idea is to provide a way to be sure that a fax machine is able to receive
+a fax sent by another).  These standards incidentally specify graphics file
+formats -- a protocol for representing a visual image in sequences of bits.
+
+<p>The two relevant standards are called Group 3 (G3) and Group 4 (G4) (Groups
+1 and 2 are analog standards no longer in use).  Virtually every fax machine
+in existence conforms at least generally to at least one of these standards.
+
+
+<p>The standard for Group 3 fax is defined in ITU Recommendation T.4.  In the
+U.S., that is implemented by EIA standards EIA-465 and EIA-466.  These
+standards cover more than the file format as well, including how to transmit
+bits over a telephone line and procedures for handling document transmissions.
+
+<p>G3 faxes are 204 dots per inch (dpi) horizontally and 98 dpi (196
+dpi optionally, in fine-detail mode) vertically.
+
+<p>The standards specify three file formats (also called coding methods and
+compression schemes -- remember the standard doesn't mention computer files;
+it talks about the format of a stream of bits travelling over a telephone
+line):
+
+<dl>
+
+<dt>MH
+
+<dd>This compresses in one dimension: it compresses individual raster lines
+but makes no attempt to compress redundancy between lines.
+
+<p>One dimensional compression is traditionally the best a fax machine could
+handle because G3 neither assumes error free transmission not retransmits when
+errors occur, and receiving fax machines traditionally could not afford to
+buffer much of a page.  It's important that when there is an error in a raster
+line, its impact not spread to many lines after it.
+
+<p>All Group 3 and Group 4 fax machines must be able to send and receive MH.
+
+<p>MH is sometimes called &quot;G3,&quot; but that is a poor name because
+while the Group 3 standard does specify MH, it has always specified other
+formats too.
+
+<p>MH is sometimes called &quot;T4&quot; based on the name of the
+document that specifies it, ITU T.4.  But this is a poor name because
+T.4 also specifies MR.
+
+
+<dt>MR
+
+<dd>This compresses in two dimensions, horizontally and vertically.
+
+<p>MR has always been part of the Group 3 standard, but is optional
+(a Group 3 fax machine may or may not be able to send and receive it).
+
+<dt>MMR
+
+<dd>This is a more advanced format than the others.  It is even more
+two-dimensional than MR.  It is optional in the Group 3 standard, and didn't
+even exist in earlier versions of it.  It was developed specifically for the
+Group 4 standard, but then added to an extended Group 3 standard as well.
+
+<p>MMR is sometimes called Group 4, but that is a poor name because of
+the fact that it is also part of the current Group 3 standard.
+
+<p>MMR is sometimes called &quot;T6&quot; based on the name of the document
+ that specifies it, ITU T.6.
+
+</dl>
+
+<p><b>g3topbm</b> converts the MH format to PBM.  <b>pbmtog3</b> converts
+PBM to MH.
+
+<p>There is no Netpbm program to convert to or from other fax formats.
+
+<h2>TIFF</h2>
+
+<p>The TIFF format is flexible enough to allow lots of different coding
+methods, within it.  There are TIFF subformats for MH, MR, and MMR, among
+others.  These are particularly useful when you receive a fax as a TIFF file.
+
+<p><b>tifftopnm</b> recognizes and can convert from any of these.
+
+<p><b>pamtotiff</b> can convert to any of these; you use command options
+to choose which.
+
+</BODY>
+</HTML>

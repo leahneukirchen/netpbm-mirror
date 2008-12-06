@@ -1,0 +1,226 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Pngtopam User Manual</TITLE></HEAD>
+<BODY>
+<H1>pngtopam</H1>
+Updated: 22 July 2008
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<H2>NAME</H2>
+
+pngtopam - convert a PNG image into a Netpbm image
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>pngtopam</B>
+[<b>-verbose</b>]
+[<b>-alphapam</b> | <b>-alpha</b> | <b>-mix</b>]
+[<b>-background</b>=<i>color</i>]
+<BR>
+[<b>-gamma</b>=<i>value</i>]
+[<b>-text</b>=<i>filename</i>]
+[<b>-time</b>]
+[<I>pngfile</I>]
+
+<P>Minimum unique abbreviation of option is acceptable.  You may use double
+hyphens instead of single hyphen to denote options.  You may use white
+space in place of the equals sign to separate an option name from its value.
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>pngtopam</b> reads a PNG image (Portable Network Graphics) as
+input and produces a Netpbm image as output.  The type of the output file
+depends on the input file - if it's black &amp; white, <b>pngtopam</b>
+creates a PBM file.  If it's grayscale, <b>pngtopam</b> creates a PGM
+file.  Otherwise, it creates a PPM file.  Except that with the
+<b>-alphapam</b> option, it always creates a PAM file.  That file has
+tuple type GRAYSCALE_ALPHA or RGB_ALPHA depending on whether the input
+has color or not.
+
+<H2 id="options">OPTIONS</H2>
+
+<DL COMPACT>
+<DT><B>-verbose</B>
+
+<DD>Display various information about the input PNG image and the
+conversion process.
+
+<p>If you want even more information about the PNG image, use
+<b>pngcheck</b> (not part of Netpbm).
+     
+<DT><B>-alphapam</B>
+
+<DD>Produce a single output image containing the main image (foreground)
+and the alpha channel or transparency mask.  This image is in the PAM
+format with tuple type of either GRAYSCALE_ALPHA (which has a depth of
+2 channels) or RGB_ALPHA (which has a depth of 4 channels).
+
+<p>You can specify only one of <b>-alphapam</b>, <b>-alpha</b>, and
+<b>-mix</b>.  With none of them, <b>pngtopam</b> produces an image of
+the foreground of the input image and discards transparency information.
+
+<P>This option was new in Netpbm 10.44 (September 2008).
+
+<DT><B>-alpha</B>
+
+<DD>Output the alpha channel or transparency mask of the image. The
+result is either a PBM file or a PGM file, depending on whether
+different levels of transparency appear.
+
+<p><b>pngtopam</b> discards the main image (the foreground).
+
+<p>You can specify only one of <b>-alphapam</b>, <b>-alpha</b>, and
+<b>-mix</b>.  With none of them, <b>pngtopam</b> produces an image of
+the foreground of the input image and discards transparency information.
+
+<DT><B>-mix</B>
+
+<DD>Compose the image with the transparency or alpha mask against a
+background.  The background color is determined by the bKGD chunk in
+the PNG, except that you can override it with <b>-background</b>.
+If the PNG has no bKGD chunk and you don't specify <b>-background</b>,
+the background color is white.
+
+<p>You can specify only one of <b>-alphapam</b>, <b>-alpha</b>, and
+<b>-mix</b>.  With none of them, <b>pngtopam</b> produces an image of
+the foreground of the input image and discards transparency information.
+
+<DT><B>-background=</b><i>color</i>
+
+<DD>
+This option specifies the background color with which to mix the image
+when you specify <b>-mix</b>.  
+
+<P><i>color</i> is as described for the <a
+href="libppm.html#colorname">argument of the <b>ppm_parsecolor()</b>
+library routine</a>.
+
+<p>Examples:
+
+<ul>
+<li><tt>-background=rgb:01/ff/80</tt>
+<li><tt>-background=rgbi:1/255/128</tt>
+</ul>
+
+<p>If you don't specify <b>-background</b>, the background color is what
+is specified in the PNG image, and if the PNG doesn't specify anything,
+white.
+
+<p>You cannot specify <b>-background</b> unless you also specify
+<b>-mix</b>.  Before Netpbm 10.27 (March 2005), you could specify
+<b>-background</b> without <b>-mix</b> and it was just ignored.  (This
+caused a usability problem).
+
+
+<DT><B>-gamma=</b><i>value</i>
+
+<DD>Converts the image to a new display-gamma value.  If a gAMA chunk
+is present in the <I>png-file</I>, <b>pngtopam</b> uses the specified
+image-gamma value.  If not, <b>pngtopam</b> considers the image-gamma
+to be 1.0.  Based on the image-gamma and the display-gamma given with
+this option, <b>pngtopam</b> adjusts the colors written to the
+<I>pnm-file</I>.
+
+<p>Because the gammas of uncompensated monitors are around 2.6, which results 
+in an image-gamma of 0.45, some typical situations are: 
+when the image-gamma is 0.45 (use -verbose to check) and the picture is too 
+light, your system is gamma-corrected, so convert with &quot;-gamma 1.0&quot;. 
+When no gAMA chunk is present or the image-gamma is 1.0, use 2.2 to make the 
+picture lighter and 0.45 to make the picture darker.
+
+<p>One oddity to be aware of when using <b>-gamma</b> on an image with
+transparency: The PNG image specifies that a certain color is
+transparent, i.e. every pixel in the image of that color is
+transparent.  But <b>pngtopam</b> interprets this as applying to the
+gamma-corrected space, and there may be less precision in that space
+than in the original, which means multiple uncorrected colors map to
+the same corrected color.  So imagine that the image contains 3 shades
+of white and specifies that one of them is transparent.  After gamma
+correction, those three shades are indistinguishable, so
+<b>pngtopam</b> considers pixels of all three shades to be transparent.
+
+<p>If this is not what you want, don't use <b>gamma</b>.  Instead,
+use <b>pnmgamma</b> on the output.
+
+
+<DT><B>-text=</b><i>file</i>
+
+<DD>Writes the tEXt and zTXt chunks to a file, in a format as
+described in the <b>pnmtopng</b> user manual.  These chunks contain
+text comments or annotations.
+
+<DT><B>-time</B>
+
+<DD>Prints the tIME chunk to stderr.
+
+</DL>
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<A HREF="pnmtopng.html">pnmtopng</A>,
+<A HREF="pngtopnm.html">pnmtopng</A>,
+<b>ptot</b>,
+<A HREF="pnmgamma.html">pnmgamma</A>, 
+<A HREF="pnm.html">pnm</A>
+
+<p>For information on the PNG format, see <a
+href="http://schaik.com/png">http://schaik.com/png</a>.
+
+<H2 id="note">NOTE</H2>
+
+<p>A PNG image contains a lot of information that can't be represented in 
+Netpbm formats.  Therefore, you lose information when you convert to 
+another format with "pngtopam | pnmtoxxx".  If there is a specialized 
+converter that converts directly to the other format, e.g. <b>ptot</b>
+to convert from PNG to TIFF, you'll get better results using that.
+
+<H2 id="limitations">LIMITATIONS</H2>
+
+<p>There could be an option to include PNG comment chunks in the output
+image as PNM comments instead of putting them in a separate file.
+
+<P>The program could be much faster, with a bit of code optimizing.
+As with any Netpbm program, speed always takes a back seat to quick
+present and future development.
+
+<h2 id="history">HISTORY</h2>
+
+<p><b>pngtopam</b> was new in Netpbm 10.44, as a replacement for
+<b>pngtopnm</b>.  The main improvement over <b>pngtopnm</b> was that
+it could generate a PAM image with a transparency channel, whereas
+with <b>pngtopnm</b>, you would have to extrac the transparency
+channel as a separate file, in a separate run.
+
+<p><b>pngtopnm</b> was new in Netpbm 8.1 (March 2000), the first big
+change to the package in Netpbm's renaissance.  It and <b>pnmtopng</b>
+were simply copied from the <a
+href="http://www.libpng.org/pub/png/apps/pnmtopng.html">
+<b>pnmtopng</b> package</a> by Greg Roelofs.  Those were based on
+simpler reference applications by by Alexander Lehmann
+&lt;alex@hal.rhein-main.de&gt; and Willem van Schaik
+&lt;willem@schaik.com&gt; and distributed with their PNG library.
+
+<p>Nearly all of the code has changed since it was copied from the
+<b>pnmtopng</b> package, most of it just to improve maintainability.
+
+
+<H2 id="authors">AUTHORS</H2>
+
+Copyright (C) 1995-1997 by Alexander Lehmann and Willem van Schaik.
+
+<HR>
+<H2 id="index">Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#note">NOTE</A>
+<LI><A HREF="#limitations">LIMITATIONS</A>
+<LI><A HREF="#history">HISTORY</A>
+<LI><A HREF="#authors">AUTHORS</A>
+</UL>
+</BODY>
+</HTML>
