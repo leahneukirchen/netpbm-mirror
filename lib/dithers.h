@@ -1,6 +1,5 @@
 #ifndef DITHERS_H_INCLUDED
 #define DITHERS_H_INCLUDED
-
 /*
 ** dithers.h
 **
@@ -14,7 +13,7 @@
 ** Order-6 ordered dithering matrix.  Note that smaller ordered dithers
 ** have no advantage over larger ones, so use dither8 instead.
 */
-static int dither6[8][8] = {
+static int const dither6[8][8] = {
   {  1, 59, 15, 55,  2, 56, 12, 52 },
   { 33, 17, 47, 31, 34, 18, 44, 28 },
   {  9, 49,  5, 63, 10, 50,  6, 60 },
@@ -27,7 +26,7 @@ static int dither6[8][8] = {
 #endif
 
 /* Order-8 ordered dithering matrix. */
-static int dither8[16][16] = {
+static int const dither8[16][16] = {
   {   1,235, 59,219, 15,231, 55,215,  2,232, 56,216, 12,228, 52,212},
   { 129, 65,187,123,143, 79,183,119,130, 66,184,120,140, 76,180,116},
   {  33,193, 17,251, 47,207, 31,247, 34,194, 18,248, 44,204, 28,244},
@@ -47,7 +46,7 @@ static int dither8[16][16] = {
 };
 
 /* Order-3 clustered dithering matrix. */
-static int cluster3[6][6] = {
+static int const cluster3[6][6] = {
   {  9,11,10, 8, 6, 7},
   { 12,17,16, 5, 0, 1},
   { 13,14,15, 4, 3, 2},
@@ -57,7 +56,7 @@ static int cluster3[6][6] = {
 };
 
 /* Order-4 clustered dithering matrix. */
-static int cluster4[8][8] = {
+static int const cluster4[8][8] = {
   { 18,20,19,16,13,11,12,15},
   { 27,28,29,22, 4, 3, 2, 9},
   { 26,31,30,21, 5, 0, 1,10},
@@ -69,7 +68,7 @@ static int cluster4[8][8] = {
 };
 
 /* Order-8 clustered dithering matrix. */
-static int cluster8[16][16] = {
+static int const cluster8[16][16] = {
    { 64, 69, 77, 87, 86, 76, 68, 67, 63, 58, 50, 40, 41, 51, 59, 60},
    { 70, 94,100,109,108, 99, 93, 75, 57, 33, 27, 18, 19, 28, 34, 52},
    { 78,101,114,116,115,112, 98, 83, 49, 26, 13, 11, 12, 15, 29, 44},
