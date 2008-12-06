@@ -6,13 +6,11 @@ Updated: 26 January 2005
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
 palmtopnm - convert a Palm Bitmap to a PNM image
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>palmtopnm</B>
 
@@ -36,8 +34,7 @@ palmtopnm - convert a Palm Bitmap to a PNM image
 
 [<I>palmfile</I>]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -62,8 +59,7 @@ the ones we found worth mentioning.
 <li>Packbits compression (new in Netpbm 10.27 (March 2005))
 </ul>
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<H2 id="options">OPTIONS</H2>
 
 <DL COMPACT>
 <DT><B>-verbose</B>
@@ -99,20 +95,11 @@ write a histogram of colors in the input file to Standard Error.
 
 </DL>
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="pnmtopalm.html">pnmtopalm</A></B>,
 
 <A HREF="pnm.html">pnm</A>,
-
-<a
-href="http://www.access-company.com/developers/documents/docs/palmos/PalmOSReference/Bitmap.html">PalmOS
-Reference</a>,
-
-<a
-href="http://www.access-company.com/developers/documents/docs/palmos/PalmOSCompanion/UserInterface.html#1010236">PalmOS
-Companion</a>.
 
 <H2 id="limitations">LIMITATIONS</H2>
 
@@ -124,15 +111,13 @@ transparent color.  However, you can still do this with
 <B>palmtopnm bitmap.palm | 
 ppmcolormask `palmtopnm -transparent bitmap.palm`</B>
 
-<A name="history"></A>
-<h2>HISTORY</h2>
+<h2 id="history">HISTORY</h2>
 
 <p>Before Netpbm 10.23 (July 2004), there was a <b>-forceplain</b>
 option.  But that had been redundant for a long time, since the Netpbm 
 common option <b>-plain</b> does the same thing.
 
-<A NAME="lbAH">&nbsp;</A>
-<H2>AUTHORS</H2>
+<H2 id="authors">AUTHORS</H2>
 
 This program was originally written as Tbmptopnm.c, by Ian Goldberg.
 It was heavily modified by Bill Janssen to add color, compression, and
@@ -141,17 +126,15 @@ transparency function.
 <p>Copyright 1995-2001 by Ian Goldberg and Bill Janssen.
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">SEE ALSO</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
 <LI><A HREF="#limitations">LIMITATIONS</A>
 <LI><A HREF="#history">HISTORY</A>
-<LI><A HREF="#lbAH">AUTHORS</A>
+<LI><A HREF="#authors">AUTHORS</A>
 </UL>
 </BODY>
 </HTML>

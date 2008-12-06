@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pamtotiff User Manual</TITLE></HEAD>
 <BODY>
 <H1>pamtotiff</H1>
-Updated: 27 March 2005
+Updated: 03 December 2008
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -138,18 +138,15 @@ and applications of <b>pamtotiff</b>.
 <P>The <B>-none</B>, <B>-packbits</B>, <B>-lzw</B>, <B>-g3</B>,
 <B>-g4</B>, <B>-flate</B>, and <B>-adobeflate</B> options are used to
 override the default and set the compression scheme used in creating
-the output file.  The CCITT Group 3 and Group 4 compression algorithms
-can be used only with bilevel data.  The <B>-2d</B> and <B>-fill</B>
-options are meaningful only with Group 3 compression: <B>-2d</B>
-requests 2-dimensional encoding, while <B>-fill</B> requests that each
-encoded scanline be zero-filled to a byte boundary.  The
-<B>-predictor</B> option is meaningful only with LZW compression: a
-predictor value of 2 causes each scanline of the output image to
-undergo horizontal differencing before it is encoded; a value of 1
-forces each scanline to be encoded without differencing.  By default,
-<B>pamtotiff</B> creates a TIFF file with msb-to-lsb fill order.  The
-<B>-msb2lsb</B> and <B>-lsb2msb</B> options are used to override the
-default and set the fill order used in creating the file.
+the output file.
+
+The <B>-predictor</B> option is meaningful only with LZW compression: a
+predictor value of 2 causes each scanline of the output image to undergo
+horizontal differencing before it is encoded; a value of 1 forces each
+scanline to be encoded without differencing.  By default, <B>pamtotiff</B>
+creates a TIFF file with msb-to-lsb fill order.  The <B>-msb2lsb</B> and
+<B>-lsb2msb</B> options are used to override the default and set the fill
+order used in creating the file.
 
 <P>With some older TIFF libraries, <B>-lzw</B> doesn't work because
 the TIFF library doesn't do LZW compression.  This is because of
@@ -161,6 +158,28 @@ issue.
 <p><b>-flate</b> chooses &quot;flate&quot; compression, which is the
 patent-free compression common in the Unix world implemented by the 
 &quot;Z&quot; library.  It is what the PNG format uses.
+
+<H4 id="faxcompression">Fax Compression</H4>
+
+<p>If you have bilevel data (e.g. PBM), you can generate a TIFF that uses the
+same compression scheme specified for use by fax machines.  See the <a
+href="faxformat.html">Fax Format</a> page for more information on these
+compression schemes.
+
+<p>These formats all relate to ITU Group 3 and Group 4 fax machine
+standards.
+
+<p>The <b>-g3</b> option chooses MH or MR compression: MR with the additional
+option <b>-2d</b>; MH without it.  <b>-g4</b> selects MMR.  The option names
+are a little unfortunate and historical, but are consistent with the TIFF
+specification.
+
+<p>MMR has a better compression ratio than the other two.
+
+<p><b>-fill</b> specifies that for MH or MR compression, each encoded scanline
+shall be zero-filled to a byte boundary.
+
+<p><b>-2d</b> and <b>-fill</b> are meaningful only with <b>-g3</b>.
 
 
 <h3 id="fillorder">Fill Order</h3>
@@ -499,6 +518,9 @@ Author: Patrick J. Naughton (<A HREF="mailto:naughton@wind.sun.com">naughton@win
 <LI><A HREF="#options">OPTIONS</A>
   <ul>
   <li><a href="#compression">Compression</a>
+    <ul>
+    <li><a href="#faxcompression">Fax Compression</a>
+    </ul>
   <li><a href="#fillorder">Fill Order</a>
   <li><a href="#colorspacer">Color Space</a>
   <li><a href="#extratags">Extra Tags</a>

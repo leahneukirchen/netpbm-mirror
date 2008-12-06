@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>G3topbm User Manual</TITLE></HEAD>
 <BODY>
 <H1>g3topbm</H1>
-Updated: 28 February 2006
+Updated: 03 December 2008
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -27,8 +27,8 @@ space in place of the equals sign to separate an option name from its value.
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><b>g3topbm</b> reads a Group 3 fax file as input and produces a PBM
-image as output.
+<p><b>g3topbm</b> reads a Group 3 fax file in MH format as input and produces
+a PBM image as output.
 
 <p><b>g3topbm</b> tolerates various deviations from the standard,
 so as to recover some of the image if there was a transmission error.
@@ -39,6 +39,12 @@ the right.  It warns you when it does this.
 
 <p>You can use the <b>stop_error</b> option to make <b>g3topbm</b>
 insist on valid input.
+
+<p>There is no Netpbm program that understands the other command fax
+formats, MR and MMR.
+
+<p>There are subformats of TIFF that use the Group 3 fax encodings
+inside.  See <b>tifftopnm</b>.
 
 <H2 id="options">OPTIONS</H2>
 
@@ -107,29 +113,14 @@ never failed when it encountered other problems.
 
 </DL>
 
-<H2 id="g3">ABOUT G3</H2>
-
-<P>G3 is the near universal format used by fax machines.  There is also
-a newer, more capable G4.
-
-<p>The standard for Group 3 fax is defined in CCITT Recommendation T.4.
-In the U.S., that is implemented by EIA standards EIA-465 and EIA-466.
-These standards cover the layers below the image format (which are
-irrelevant to <b>g3topbm</b> as well.
-
-<p>G3 faxes are 204 dots per inch (dpi) horizontally and 98 dpi (196
-dpi optionally, in fine-detail mode) vertically.  Since G3 neither
-assumes error free transmission nor retransmits when errors occur, the
-encoding scheme used is differential only over small segments never
-exceeding 2 lines at standard resolution or 4 lines for fine-detail.
-(The incremental G3 encoding scheme is called two-dimensional and the
-number of lines so encoded is specified by a parameter called k.)
-
 
 <H2 id="seealso">SEE ALSO</H2>
 
 <A HREF="pbmtog3.html">pbmtog3</A>,
+<A HREF="tifftopnm.html">tifftopnm</A>,
 <A HREF="pbm.html">pbm</A>
+<A HREF="faxformat.html">fax formats</A>
+
 
 <HR>
 <H2 id="index">Table Of Contents</H2>
@@ -137,7 +128,6 @@ number of lines so encoded is specified by a parameter called k.)
 <LI><A HREF="#synopsis">SYNOPSIS</A>
 <LI><A HREF="#description">DESCRIPTION</A>
 <LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#g3">ABOUT G3</A>
 <LI><A HREF="#seealso">SEE ALSO</A>
 </UL>
 </BODY>

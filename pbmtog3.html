@@ -2,33 +2,36 @@
 <HTML><HEAD><TITLE>Pbmtog3 User Manual</TITLE></HEAD>
 <BODY>
 <H1>pbmtog3</H1>
-Updated: July 2002
+Updated: 03 December 2008
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
-pbmtog3 - convert a PBM image into a Group 3 fax file
+pbmtog3 - convert a PBM image into a Group 3 MH fax file
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>pbmtog3</B>
 [<b>-reversebits</b>]
 [<b>-nofixedwidth</b>]
 [<I>pbmfile</I>]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><b>pbmtog3</b> reads a PBM image as input and produces a Group 3
+<p><b>pbmtog3</b> reads a PBM image as input and produces a Group 3 MH
 fax file as output.
 
-<A NAME="options"></A>
-<H2>OPTIONS</H2>
+<p>You can also generate a TIFF file that uses the same encoding
+inside, with <b>pamtotiff</b>.
+
+<P>There is no program in Netpbm that generates other fax formats,
+such as MR and MMR, but <b>pamtotiff</b> can generate TIFF files that
+use those encodings.
+
+<H2 id="options">OPTIONS</H2>
 <dl>
 <dt><b>-reversebits</b>
 
@@ -51,34 +54,27 @@ keep the width of the original image, use this option.
      
 </dl>
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>REFERENCES</H2>
-
-<p>The standard for Group 3 fax is defined in CCITT Recommendation T.4.
-
-<A NAME="lbAG">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <A HREF="g3topbm.html">g3topbm</A>,
+<A HREF="pamtotiff.html">pamtotiff</A>,
 <A HREF="pbm.html">pbm</A>
+<A HREF="faxformat.html">fax formats</A>
 
 
-<A NAME="lbAH">&nbsp;</A>
-<H2>AUTHOR</H2>
+<H2 id="author">AUTHOR</H2>
 
 Copyright (C) 1989 by Paul Haeberli &lt;<A
 HREF="mailto:paul@manray.sgi.com">paul@manray.sgi.com</A>&gt;.
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">REFERENCES</A>
-<LI><A HREF="#lbAG">SEE ALSO</A>
-<LI><A HREF="#lbAH">AUTHOR</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#references">REFERENCES</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
 </UL>
 </BODY>
 </HTML>
