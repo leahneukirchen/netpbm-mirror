@@ -15,6 +15,7 @@
   Contributed to the public domain.
 ============================================================================*/
 
+#define _BSD_SOURCE  /* Make sure strdup() is in <string.h> */
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>

@@ -281,7 +281,7 @@ LDRELOC = NONE
 # know why -- history seems to be repeating itself.  2005.02.23.
 
 CFLAGS_SHLIB = 
-# Solaris or SunOS with gcc, and NetBSD:
+# Gcc:
 #CFLAGS_SHLIB = -fpic
 #CFLAGS_SHLIB = -fPIC
 # Sun compiler:

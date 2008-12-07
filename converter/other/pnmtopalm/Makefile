@@ -21,12 +21,12 @@ include $(SRCDIR)/Makefile.common
 LIBOPTS = $(shell $(LIBOPT) $(NETPBMLIB))
 
 $(BINARIES): %: %.o palmcolormap.o $(NETPBMLIB) $(LIBOPT)
-	$(LD) $(LDFLAGS) -o $@ $< palmcolormap.o $(LIBOPTS) \
-	  $(MATHLIB) $(LDLIBS) $(RPATH) $(LADD)
+	$(LD) -o $@ $< palmcolormap.o $(LIBOPTS) \
+	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
 gen_palm_colormap : $(SUBDIR)/gen_palm_colormap.c palmcolormap.o
-	$(CC) $(INCLUDES) $(CFLAGS) $(LDFLAGS) -o $@ $< palmcolormap.o \
-	  $(LIBOPTS) $(MATHLIB) $(LDLIBS) $(LADD)
+	$(CC) $(INCLUDES) $(CFLAGS) -o $@ $< palmcolormap.o \
+	  $(LIBOPTS) $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(LADD)
 
 
 clean: cleanspecial

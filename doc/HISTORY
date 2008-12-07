@@ -4,6 +4,27 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+08.12.07 BJH  Release 10.35.57
+
+              Build: Move CFLAGS later in libjasper build so that a -I in
+              CFLAGS doesn't interfere with finding the local libjasper
+              header files.
+
+              Build: Move LDFLAGS later so that a -L in LDFLAGS doesn't
+              interfere with finding the built libnetpbm.  (The common
+              link rule is already this way in 10.35.56; all the other
+              link rules are now the same).
+
+              Build: Add source type declarations to make -ansi compile work.
+
+              Build: Add -fPIC to all Gcc compiles of library modules, so it
+              works on AMD64, IA64.
+
+08.11.09 BJH  Release 10.35.56
+
+              Add -fPIC to all Gcc compiles of library modules, so it
+              works on AMD64, IA64.
+
 08.10.31 BJH  Release 10.35.55
 
               pamcomp: Fix mysterious doubling of code introduced in 10.35.50
@@ -11,16 +32,16 @@ CHANGE HISTORY
 
 08.10.27 BJH  Release 10.35.54
 
-              pnm_createBlackTuple(): fix array bounds violation with
+              pnm_createBlackTuple(): Fix array bounds violation with
               PBM, PGM.
 
               ppmforge, pgmnoise, pgmcrater: better randomization;
               won't produce the same image if you run it twice within
               the same second.
 
-              pnmtoddif: fix crash with any PGM input.
+              pnmtoddif: Fix crash with any PGM input.
 
-              pgmnoise: fix bug: never generates full white pixel.
+              pgmnoise: Fix bug: never generates full white pixel.
 
 08.10.12 BJH  Release 10.35.53
 

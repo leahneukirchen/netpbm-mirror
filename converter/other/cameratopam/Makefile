@@ -30,8 +30,8 @@ SCRIPTS =
 include $(SRCDIR)/Makefile.common
 
 cameratopam: $(OBJECTS) $(NETPBMLIB) $(LIBOPT)
-	$(LD) -o $@ $(LDFLAGS) \
+	$(LD) -o $@ \
           $(OBJECTS) $(shell $(LIBOPT) $(NETPBMLIB) $(LIBOPTR)) \
-	  $(MATHLIB) $(LDLIBS) \
+	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) \
 	  $(RPATH) $(LADD)
 

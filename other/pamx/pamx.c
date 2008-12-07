@@ -3,6 +3,7 @@
    Copyright information is in the file COPYRIGHT
 */
 
+#define _BSD_SOURCE  /* Make sure strdup() is in <string.h> */
 #include <signal.h>
 #include <unistd.h>
 #include <errno.h>

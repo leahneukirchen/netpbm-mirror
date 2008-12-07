@@ -50,10 +50,9 @@ all: $(BINARIES) $(SUBDIRS:%=%/all)
 include $(SRCDIR)/Makefile.common
 
 ppmsvgalib: %: %.o $(NETPBMLIB) $(LIBOPT)
-	$(LD) $(LDFLAGS) -o $@ $< \
+	$(LD) -o $@ $< \
 	  $(shell $(LIBOPT) $(NETPBMLIB) $(LINUXSVGALIB)) \
-	  $(MATHLIB) $(LDLIBS) \
-	  $(LADD) 
+	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(LADD) 
 
 install.bin: install.bin.local
 .PHONY: install.bin.local

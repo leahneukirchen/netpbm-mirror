@@ -142,8 +142,8 @@ LIBOPTS_TIFF = $(shell $(LIBOPT) $(NETPBMLIB) \
   $(LIBOPTR) $(TIFFLIB) $(TIFFLIB_EXTRALIBS))
 
 tifftopnm pamtotiff pnmtotiffcmyk: %: %.o tiff.o $(NETPBMLIB) $(LIBOPT)
-	$(LD) $(LDFLAGS) -o $@ $@.o tiff.o \
-	  $(LIBOPTS_TIFF) $(MATHLIB) $(LDLIBS) $(RPATH) $(LADD)
+	$(LD) -o $@ $@.o tiff.o \
+	  $(LIBOPTS_TIFF) $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
 ifeq ($(shell libpng-config --version),)
   PNGLIB_LIBOPTS = $(shell $(LIBOPT) $(LIBOPTR) $(PNGLIB) $(ZLIB))
@@ -152,34 +152,34 @@ else
 endif
 
 pngtopnm: %: %.o $(NETPBMLIB) $(LIBOPT)
-	$(LD) $(LDFLAGS) -o $@ $@.o \
+	$(LD) -o $@ $@.o \
 	  $(shell $(LIBOPT) $(NETPBMLIB)) \
-	  $(PNGLIB_LIBOPTS) $(MATHLIB) $(LDLIBS) $(RPATH) $(LADD)
+	  $(PNGLIB_LIBOPTS) $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
 pnmtopng: %: %.o pngtxt.o $(NETPBMLIB) $(LIBOPT)
-	$(LD) $(LDFLAGS) -o $@ $@.o pngtxt.o \
+	$(LD) -o $@ $@.o pngtxt.o \
 	  $(shell $(LIBOPT) $(NETPBMLIB)) \
-	  $(PNGLIB_LIBOPTS) $(MATHLIB) $(LDLIBS) $(RPATH) $(LADD)
+	  $(PNGLIB_LIBOPTS) $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
 pamrgbatopng: %: %.o $(NETPBMLIB) $(LIBOPT)
-	$(LD) $(LDFLAGS) -o $@ $@.o \
+	$(LD) -o $@ $@.o \
 	  $(shell $(LIBOPT) $(NETPBMLIB)) $(PNGLIB_LIBOPTS) \
-	  $(MATHLIB) $(LDLIBS) $(RPATH) $(LADD)
+	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
 jpegtopnm: %: %.o jpegdatasource.o exif.o $(NETPBMLIB) $(LIBOPT)
-	$(LD) $(LDFLAGS) -o $@ $< jpegdatasource.o exif.o \
+	$(LD) -o $@ $< jpegdatasource.o exif.o \
 	  $(shell $(LIBOPT) $(NETPBMLIB) $(LIBOPTR) $(JPEGLIB)) \
-	  $(MATHLIB) $(LDLIBS) $(RPATH) $(LADD) 
+	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD) 
 
 pnmtojpeg: %: %.o $(NETPBMLIB) $(LIBOPT)
-	$(LD) $(LDFLAGS) -o $@ $@.o \
+	$(LD) -o $@ $@.o \
 	  $(shell $(LIBOPT) $(NETPBMLIB) $(LIBOPTR) $(JPEGLIB)) \
-	  $(MATHLIB) $(LDLIBS) $(RPATH) $(LADD)
+	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
 svgtopam: %: %.o $(NETPBMLIB) $(LIBOPT)
-	$(LD) $(LDFLAGS) -o $@ $@.o \
+	$(LD) -o $@ $@.o \
 	  $(shell $(LIBOPT) $(NETPBMLIB) $(LIBOPTR)) \
-	  $(XML2_LIBS) $(MATHLIB) $(LDLIBS) $(RPATH) $(LADD)
+	  $(XML2_LIBS) $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
 # If URTLIB is BUNDLED_URTLIB, then we're responsible for building it, which
 # means it needs to be a dependency:
@@ -188,19 +188,19 @@ ifeq ($(URTLIB), $(BUNDLED_URTLIB))
 endif
 
 rletopnm pnmtorle: %: %.o $(NETPBMLIB) $(URTLIBDEP) $(LIBOPT)
-	$(LD) $(LDFLAGS) -o $@ $@.o \
+	$(LD) -o $@ $@.o \
 	  $(shell $(LIBOPT) $(URTLIB) $(NETPBMLIB)) \
-	  $(MATHLIB) $(LDLIBS) $(RPATH) $(LADD)
+	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
 pnmtops: %: %.o bmepsoe.o $(NETPBMLIB) $(LIBOPT)
-	$(LD) $(LDFLAGS) -o $@ $@.o bmepsoe.o \
+	$(LD) -o $@ $@.o bmepsoe.o \
 	  $(shell $(LIBOPT) $(NETPBMLIB) $(ZLIB)) \
-	  $(MATHLIB) $(LDLIBS) $(RPATH) $(LADD)
+	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
 pnmtorast rasttopnm: %: %.o rast.o $(NETPBMLIB) $(LIBOPT)
-	$(LD) $(LDFLAGS) -o $@ $@.o rast.o \
+	$(LD) -o $@ $@.o rast.o \
 	  $(shell $(LIBOPT) $(NETPBMLIB)) \
-	  $(MATHLIB) $(LDLIBS) $(RPATH) $(LADD)
+	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
 bmptopnm.o bmptopnm.o2: bmp.h
 
