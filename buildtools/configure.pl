@@ -1586,6 +1586,8 @@ This indicates Libxml2 is installed incorrectly on this system.  If so,
 your Netpbm build, which uses 'xml2-config', will fail.  But it
 might also just be our test that is broken.
 
+'xml2-config' says to use compiler options '$xml2CFlags'.
+
 EOF
 
 }
@@ -1608,7 +1610,7 @@ sub testCompileXmlReaderTypes($$) {
 
 
 
-sub printBadXml2XmlReaderTypesWarning($) {
+sub printMissingXmlReaderTypesWarning() {
 
     print << 'EOF';
 

@@ -4,11 +4,22 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+08.12.17 BJH  Release 10.44.04
+
+              Configure: fix crash when Libxml2 is installed, but not new
+              enough version.
+
+              Build: Move CFLAGS later in libjasper and librle build so that a
+              -I in CFLAGS doesn't interfere with finding the local libjasper
+              and Netpbm header files.
+
+              Build: Add source type declarations to make -ansi compile work.
+
 08.12.03 BJH  Release 10.44.03
 
               Build: Move LDFLAGS later so that a -L in LDFLAGS doesn't
               interfere with finding the built libnetpbm.  (The common
-              link rule is already this way in 10.44.00; all the other
+              link rule is already this way in 10.44.02; all the other
               link rules are now the same).
 
 08.10.27 BJH  Release 10.44.02

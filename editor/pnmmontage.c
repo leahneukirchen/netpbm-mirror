@@ -10,6 +10,7 @@
  * implied warranty.
  */
 
+#define _BSD_SOURCE  /* Make sure strdup() is in <string.h> */
 #include <assert.h>
 #include <limits.h>
 #include <string.h>
