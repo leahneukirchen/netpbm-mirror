@@ -19,6 +19,9 @@ not yet  BJH  Release 10.45.00
 
               pamditherbw: Fix -value other than .5 with -fs, -atkinson.
 
+              Configure: fix crash when Libxml2 is installed, but not new
+              enough version.
+
               Build: Use GNU compile options for Darwin.
 
               Build: Move CFLAGS later in libjasper and librle build so that a
