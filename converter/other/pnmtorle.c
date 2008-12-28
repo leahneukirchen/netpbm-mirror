@@ -59,8 +59,8 @@ static gray    maxval;
  *                                        Read the pnm image file header.
  */
 static void 
-read_pnm_header()
-{
+read_pnm_header(void) {
+
     pnm_readpnminit(fp, &width, &height, &maxval, &format);
     switch (format) {
     case PBM_FORMAT:
@@ -87,12 +87,12 @@ read_pnm_header()
     if (do_alpha)
         VPRINTF(stderr, "Computing alpha channel...\n");
 }
-/*-----------------------------------------------------------------------------
- *                                             Write the rle image file header.
- */
+
+
+
 static void 
-write_rle_header()
-{
+write_rle_header(void) {
+
     hdr.xmin    = 0;
     hdr.xmax    = width-1;
     hdr.ymin    = 0;
@@ -120,102 +120,107 @@ write_rle_header()
     }
     rle_put_setup(&hdr);
 }
-/*-----------------------------------------------------------------------------
- *                                      Write the rle data portion of the file.
- */
-static void 
-write_rle_data()
-{
-    register int     x;
-    register int     scan;
-    register xel     *xelrow, *pP;
-    rle_pixel        ***scanlines, **scanline;
-/*
- * Allocate some memory.
- */
-    /*xelrow = pnm_allowcrow(width);*/
-    xelrow = (xel*) pm_allocrow( width, sizeof(xel) );
-    MALLOCARRAY(scanlines, height);
-    RLE_CHECK_ALLOC( hdr.cmd, scanlines, "scanline pointers" );
 
-    for ( scan = 0; scan < height; scan++ )
-        RLE_CHECK_ALLOC( hdr.cmd, (rle_row_alloc(&hdr, &scanlines[scan]) >= 0),
-                         "pixel memory" );
-/*
- * Loop through the pnm files image window, read data and flip vertically.
- */
+
+
+static void 
+write_rle_data(void) {
+
+    unsigned int scan;
+    xel * xelrow;
+    rle_pixel *** scanlines;
+
+    MALLOCARRAY(xelrow, width);
+    MALLOCARRAY(scanlines, height);
+
+    RLE_CHECK_ALLOC(hdr.cmd, scanlines, "scanline pointers");
+
+    for (scan = 0; scan < height; ++scan) {
+        int rc;
+        rc = rle_row_alloc(&hdr, &scanlines[scan]);
+        RLE_CHECK_ALLOC(hdr.cmd, rc >= 0, "pixel memory");
+    }
+    /* Loop through the pnm files image window, read data and flip vertically.
+     */
     switch (format) {
     case PBM_FORMAT:
-    case RPBM_FORMAT:
-        for (scan = 0; scan < height; scan++) {
-            scanline = scanlines[height - scan - 1];
+    case RPBM_FORMAT: {
+        unsigned int scan;
+        for (scan = 0; scan < height; ++scan) {
+            rle_pixel ** const scanline = scanlines[height - scan - 1];
+            unsigned int col;
             pnm_readpnmrow(fp, xelrow, width, maxval, format);
-            for (x = 0, pP = xelrow; x < width; x++, pP++) {
-                scanline[RLE_RED][x]   = (PNM_GET1(*pP) ? 255 : 0);
-                if (do_alpha) {
-                    scanline[RLE_ALPHA][x] = scanline[RLE_RED][x];
-                }
+            for (col = 0; col < width; ++col) {
+                scanline[RLE_RED][col] = PNM_GET1(xelrow[col]) ? 255 : 0;
+                if (do_alpha)
+                    scanline[RLE_ALPHA][col] = scanline[RLE_RED][col];
             }
         }
-        break;
+    } break;
     case PGM_FORMAT:
-    case RPGM_FORMAT:
-        for (scan = 0; scan < height; scan++) {
-            scanline = scanlines[height - scan - 1];
+    case RPGM_FORMAT: {
+        unsigned int scan;
+        for (scan = 0; scan < height; ++scan) {
+            rle_pixel ** const scanline = scanlines[height - scan - 1];
+            unsigned int col;
             pnm_readpnmrow(fp, xelrow, width, maxval, format);
-            for (x = 0, pP = xelrow; x < width; x++, pP++) {
-                scanline[RLE_RED][x]   = PNM_GET1(*pP);
-                if (do_alpha) {
-                    scanline[RLE_ALPHA][x] = (scanline[RLE_RED][x] ? 255 : 0);
-                }
+            for (col = 0; col < width; ++col) {
+                scanline[RLE_RED][col] = PNM_GET1(xelrow[col]);
+                if (do_alpha)
+                    scanline[RLE_ALPHA][col] =
+                        scanline[RLE_RED][col] ? 255 : 0;
             }
         }
-        break;
+    } break;
     case PPM_FORMAT:
-    case RPPM_FORMAT:
+    case RPPM_FORMAT: {
+        unsigned int scan;
         for (scan = 0; scan < height; scan++) {
-            scanline = scanlines[height - scan - 1];
+            rle_pixel ** const scanline = scanlines[height - scan - 1];
+            unsigned int col;
             pnm_readpnmrow(fp, xelrow, width, maxval, format);
-            for (x = 0, pP = xelrow; x < width; x++, pP++) {
-                scanline[RLE_RED][x]   = PPM_GETR(*pP);
-                scanline[RLE_GREEN][x] = PPM_GETG(*pP);
-                scanline[RLE_BLUE][x]  = PPM_GETB(*pP);
-                if (do_alpha) {
-                    scanline[RLE_ALPHA][x] = (scanline[RLE_RED][x] ||
-                                              scanline[RLE_GREEN][x] ||
-                                              scanline[RLE_BLUE][x] ? 255 : 0);
-                }
+            for (col = 0; col < width; ++col) {
+                scanline[RLE_RED][col]   = PPM_GETR(xelrow[col]);
+                scanline[RLE_GREEN][col] = PPM_GETG(xelrow[col]);
+                scanline[RLE_BLUE][col]  = PPM_GETB(xelrow[col]);
+                if (do_alpha)
+                    scanline[RLE_ALPHA][col] =
+                        (scanline[RLE_RED][col] ||
+                         scanline[RLE_GREEN][col] ||
+                         scanline[RLE_BLUE][col] ? 255 : 0);
             }
         }
-        break;
+        } break;
     }
-/*
- * Write out data in URT order (bottom to top).
- */
-    for ( scan = 0; scan < height; scan++ ) {
+    /* Write out data in URT order (bottom to top). */
+    for (scan = 0; scan < height; ++scan)
         rle_putrow(scanlines[scan], width, &hdr);
-        rle_row_free( &hdr, scanlines[scan] );
-    }
-    free( scanlines );
+
+    for (scan = 0; scan < height; ++scan)
+        rle_row_free(&hdr, scanlines[scan]);
+    free(scanlines);
+    free(xelrow);
 
     VPRINTF(stderr, "Done -- write eof to RLE data.\n");
     rle_puteof(&hdr);
 }
 
+
+
 int
-main(argc, argv)
-    int argc;
-    char **argv;
-{
-    char     *pnmname = NULL, *outname = NULL;
-    static char  filename[BUFSIZ];
-    int      oflag, c;
+main(int argc, char **  argv) {
+
+    const char * pnmname;
+    const char * outname;
+    static char filename[BUFSIZ];
+    int oflag;
 
     pnm_init(&argc, argv);
 
-/*
- * Get those options.
- */
+    pnmname = NULL;  /* initial value */
+    outname = NULL;  /* initial value */
+
+    /* Get those options. */
     if (!scanargs(argc,argv,
                   "% v%- h%- a%- o%-outfile!s pnmfile%s\n(\
 \tConvert a PNM file to URT RLE format.\n\
@@ -229,39 +234,34 @@ main(argc, argv)
                   &pnmname))
         exit(-1);
 
-    hdr = *rle_hdr_init( (rle_hdr *)NULL );
-    rle_names( &hdr, cmd_name( argv ), outname, 0 );
-/*
- * Open the file.
- */
+    hdr = *rle_hdr_init(NULL);
+    rle_names(&hdr, cmd_name(argv), outname, 0);
+
+    /* Open the file. */
     if (pnmname == NULL) {
         strcpy(filename, "stdin");
-        fp = stdin;
-    }
-    else {
+        fp = pm_openr("-");
+    } else {
         strcpy(filename, pnmname);
         fp = pm_openr(filename);
     }
 
     hdr.rle_file = rle_open_f( hdr.cmd, outname, "wb" );
-    while ( (c = getc( fp )) != EOF ) {
-        ungetc( c, fp );
-/*
- * Read the PPM file header.
- */
+
+    if (header)
         read_pnm_header();
-        if (header)
-            break;
-/*
- * Write the rle file header.
- */
-        rle_addhist(argv, (rle_hdr *)NULL, &hdr);
-        write_rle_header();
-/*
- * Write the rle file data.
- */
-        write_rle_data();
+    else {
+        int eof;
+        for (eof = 0; !eof; ) {
+            read_pnm_header();
+            rle_addhist(argv, NULL, &hdr);
+            write_rle_header();
+            write_rle_data();
+            
+            pnm_nextimage(fp, &eof);
+        }
     }
-    fclose(fp);
+    pm_close(fp);
+
     return 0;
 }
