@@ -1,4 +1,3 @@
-# -*-makefile-*-    <-- an Emacs control
 # This is a make file inclusion, to be included in all the
 # Netpbm make files.
 
@@ -69,7 +68,7 @@
 # for options that are particular to the person doing the build and not
 # specific to Netpbm.
 
-include $(SRCDIR)/Makefile.version
+include $(SRCDIR)/version.mk
 
 # .DELETE_ON_ERROR is a special predefined Make target that says to delete
 # the target if a command in the rule for it fails.  That's important,
@@ -121,7 +120,7 @@ IMPORTINC_ROOT_HEADERS := pm_config.h inttypes_netpbm.h version.h
 IMPORTINC_LIB_HEADERS := \
   pm.h pbm.h pgm.h ppm.h pnm.h pam.h bitio.h pbmfont.h ppmcmap.h \
   pammap.h colorname.h ppmfloyd.h ppmdraw.h pm_system.h ppmdfont.h \
-  pm_gamma.h lum.h
+  pm_gamma.h lum.h dithers.h
 
 IMPORTINC_LIB_UTIL_HEADERS := \
   bitarith.h bitreverse.h filename.h intcode.h mallocvar.h\
@@ -179,7 +178,7 @@ $(BUILDDIR)/version.h:
 endif
 
 ifneq ($(OMIT_CONFIG_RULE),1)
-$(BUILDDIR)/Makefile.config: $(SRCDIR)/Makefile.config.in
+$(BUILDDIR)/config.mk: $(SRCDIR)/config.mk.in
 	$(MAKE) -C $(dir $@) $(notdir $@)
 
 $(BUILDDIR)/pm_config.h:
@@ -192,13 +191,13 @@ $(BUILDDIR)/inttypes_netpbm.h:
 endif
 
 # Note that any time you do a make on a fresh Netpbm source tree,
-# Make notices that 'Makefile.config', which the make files include, does not
-# exist and runs the "Makefile.config" target, which runs Configure.
+# Make notices that 'config.mk', which the make files include, does not
+# exist and runs the "config.mk" target, which runs Configure.
 # If the "config" target were to run Configure as well, it would get run
 # twice in a row if you did a 'make config' on a fresh Netpbm source tree.
 # But we don't want to make "config" just a no-op, because someone might
-# try it after Makefile.config already exists, in order to make a new
-# Makefile.config.  Issuing a message as follows seems to make sense in 
+# try it after config.mk already exists, in order to make a new
+# config.mk.  Issuing a message as follows seems to make sense in 
 # both cases.
 .PHONY: config
 config:
@@ -492,7 +491,7 @@ thisdirclean:
 
 .PHONY: distclean
 distclean: $(SUBDIRS:%=%/distclean) thisdirclean
-	rm -f Makefile.depend
+	rm -f depend.mk
 
 DEP_SOURCES = $(wildcard *.c *.cpp *.cc)
 
@@ -502,7 +501,7 @@ dep: $(SUBDIRS:%=%/dep) importinc
 # before the first make after a clean.
 
 ifneq ($(DEP_SOURCES)x,x)
-	$(CC) -MM -MG $(INCLUDES) $(DEP_SOURCES) >Makefile.depend
+	$(CC) -MM -MG $(INCLUDES) $(DEP_SOURCES) >depend.mk
 endif
 
 # Note: if I stack all these subdirectory targets into one rule, I get
@@ -564,13 +563,13 @@ $(SUBDIRS:%=$(CURDIR)/%) $(DIRS2):
 # The automatic dependency generation is a pain in the butt and
 # totally unnecessary for people just installing the distributed code,
 # so to avoid needless failures in the field and a complex build, the
-# rule to generate Makefile.depend automatically simply creates an
+# rule to generate depend.mk automatically simply creates an
 # empty file.  A developer may do 'make dep' to create a
-# Makefile.depend full of real dependencies.
+# depend.mk full of real dependencies.
 
-Makefile.depend:
-	cat /dev/null >Makefile.depend
+depend.mk:
+	cat /dev/null >$@
 
-include Makefile.depend
+include depend.mk
 
 FORCE:

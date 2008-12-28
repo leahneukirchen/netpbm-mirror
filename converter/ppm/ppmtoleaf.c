@@ -1,4 +1,4 @@
-/* ppmtoleaf.c - read a portable pixmap and produce a ileaf img file
+/* ppmtoleaf.c - read a PPM and produce a ileaf img file
  *
  * Copyright (C) 1994 by Bill O'Donnell.
  *
@@ -15,57 +15,60 @@
  */
 
 #include <stdio.h>
+
 #include "ppm.h"
 
 #define MAXCOLORS 256
 
-pixel **pixels;
+pixel ** pixels;
 colorhash_table cht;
 
-int Red[MAXCOLORS], Green[MAXCOLORS], Blue[MAXCOLORS];
+static int Red[MAXCOLORS], Green[MAXCOLORS], Blue[MAXCOLORS];
 
 
 
 static int
-colorstobpp( colors )
-int colors;
-{
+colorstobpp(unsigned int const colors) {
+
     int bpp;
     
-    if ( colors <= 2 )
-	bpp = 1;
-    else if ( colors <= 256 )
-	bpp = 8;
+    if (colors <= 2)
+        bpp = 1;
+    else if (colors <= 256)
+        bpp = 8;
     else
-	bpp = 24;
+        bpp = 24;
+
     return bpp;
 }
 
 
 
 static int
-GetPixel( x, y )
-int x, y;
-{
+GetPixel(int const x,
+         int const y) {
+
     int color;
     
-    color = ppm_lookupcolor( cht, &pixels[y][x] );
+    color = ppm_lookupcolor(cht, &pixels[y][x]);
+    
     return color;
 }
 
 
 
-/* OK, this routine is not wicked efficient, but it is simple to follow
-   and it works. */
+
 static void
-leaf_writeimg(width, height, depth, ncolors, maxval)
-int width;
-int height;
-int depth;
-int ncolors;
-{
-    int i,row,col;
-    
+leaf_writeimg(unsigned int const width,
+              unsigned int const height,
+              unsigned int const depth,
+              unsigned int const ncolors,
+              pixval       const maxval) {
+
+    /* OK, this routine is not wicked efficient, but it is simple to follow
+       and it works.
+    */
+
     /* NOTE: byte order in ileaf img file fmt is big-endian, always! */
     
     /* magic */
@@ -115,136 +118,142 @@ int ncolors;
     
     /* format, mono/gray = 0x20000000, RGB=0x29000000 */
     if (depth == 1)
-	fputc(0x20, stdout);
+        fputc(0x20, stdout);
     else
-	fputc(0x29, stdout);
+        fputc(0x29, stdout);
+
     fputc(0x00, stdout);
     fputc(0x00, stdout);
     fputc(0x00, stdout);
     
     /* colormap size */
-    if (depth == 8)
-    {
-	fputc((unsigned char)((ncolors >> 8) & 0x00ff), stdout);
-	fputc((unsigned char)(ncolors  & 0x00ff), stdout);
-	for (i=0; i<256; i++)
-	    fputc((unsigned char) Red[i]*255/maxval, stdout);
-	for (i=0; i<256; i++)
-	    fputc((unsigned char) Green[i]*255/maxval, stdout);
-	for (i=0; i<256; i++)
-	    fputc((unsigned char) Blue[i]*255/maxval, stdout);
-	
-	for (row=0; row<height; row++) 
-	{
-	    for (col=0; col<width; col++) 
-		fputc(GetPixel(col, row), stdout);
-	    if (width % 2)
-		fputc(0x00, stdout); /* pad to 2-bytes */
-	}
-    } else if (depth == 1) {
-	/* mono image */
-	/* no colormap */
-	fputc(0x00, stdout);
-	fputc(0x00, stdout);
+    if (depth == 8) {
+        unsigned int i;
+        unsigned int row;
 
-	for (row=0; row<height; row++) 
-	{
-	    unsigned char bits = 0;
-	    for (col=0; col<width; col++) {
-		if (GetPixel(col,row))
-		    bits |= (unsigned char) (0x0080 >> (col % 8));
-		if (((col + 1) % 8) == 0)  {
-		    fputc(bits, stdout);
-		    bits = 0;
-		}
-	    }
-	    if ((width % 8) != 0)
-		fputc(bits, stdout);
-	    if ((width % 16) && (width % 16) <= 8)
-		fputc(0x00, stdout);  /* 16 bit pad */
-	}
+        fputc((unsigned char)((ncolors >> 8) & 0x00ff), stdout);
+        fputc((unsigned char)(ncolors  & 0x00ff), stdout);
+        for (i = 0; i < 256; ++i)
+            fputc((unsigned char) Red[i]*255/maxval, stdout);
+        for (i=0; i < 256; ++i)
+            fputc((unsigned char) Green[i]*255/maxval, stdout);
+        for (i = 0; i < 256; ++i)
+            fputc((unsigned char) Blue[i]*255/maxval, stdout);
+    
+        for (row=0; row < height; ++row) {
+            unsigned int col;
+            for (col = 0; col < width; ++col) 
+                fputc(GetPixel(col, row), stdout);
+            if ((width % 2) != 0)
+                fputc(0x00, stdout); /* pad to 2-bytes */
+        }
+    } else if (depth == 1) {
+        /* mono image */
+        /* no colormap */
+
+        unsigned int row;
+
+        fputc(0x00, stdout);
+        fputc(0x00, stdout);
+
+        for (row = 0; row < height; ++row) {
+            unsigned char bits;
+            unsigned int col;
+            bits = 0;
+            for (col = 0; col < width; ++col) {
+                if (GetPixel(col,row))
+                    bits |= (unsigned char) (0x0080 >> (col % 8));
+                if (((col + 1) % 8) == 0)  {
+                    fputc(bits, stdout);
+                    bits = 0;
+                }
+            }
+            if ((width % 8) != 0)
+                fputc(bits, stdout);
+            if ((width % 16) && (width % 16) <= 8)
+                fputc(0x00, stdout);  /* 16 bit pad */
+        }
     } else {
-	/* no colormap, direct or true color (24 bit) image */
-	fputc(0x00, stdout);
-	fputc(0x00, stdout);
-	
-	for (row=0; row<height; row++) 
-	{
-	    for (col=0; col<width; col++) 
-		fputc(pixels[row][col].r * 255 / maxval, stdout);
-	    if (width % 2)
-		fputc(0x00, stdout); /* pad to 2-bytes */
-	    for (col=0; col<width; col++) 
-		fputc(pixels[row][col].g * 255 / maxval, stdout);
-	    if (width % 2)
-		fputc(0x00, stdout); /* pad to 2-bytes */
-	    for (col=0; col<width; col++) 
-		fputc(pixels[row][col].b * 255 / maxval, stdout);
-	    if (width % 2)
-		fputc(0x00, stdout); /* pad to 2-bytes */
-	}
+        /* no colormap, direct or true color (24 bit) image */
+
+        unsigned int row;
+
+        fputc(0x00, stdout);
+        fputc(0x00, stdout);
+        
+        for (row = 0; row < height; ++row) {
+            unsigned int col;
+            for (col = 0; col < width; ++col) 
+                fputc(pixels[row][col].r * 255 / maxval, stdout);
+            if (width % 2 != 0)
+                fputc(0x00, stdout); /* pad to 2-bytes */
+            for (col = 0; col < width; ++col) 
+                fputc(pixels[row][col].g * 255 / maxval, stdout);
+            if (width % 2 != 0)
+                fputc(0x00, stdout); /* pad to 2-bytes */
+            for (col = 0; col < width; ++col) 
+                fputc(pixels[row][col].b * 255 / maxval, stdout);
+            if (width % 2 != 0)
+                fputc(0x00, stdout); /* pad to 2-bytes */
+        }
     }
 }
 
 
 
 int
-main( argc, argv )
-int argc;
-char *argv[];
-{
-    FILE *ifd;
-    int argn, rows, cols, colors, i, BitsPerPixel;
+main(int argc, const char * argv[]) {
+
+    FILE * ifP;
+    int argn;
+    int rows, cols;
+    unsigned int BitsPerPixel;
+    int colors;
     pixval maxval;
     colorhist_vector chv;
     const char * const usage = "[ppmfile]";
     
-    ppm_init(&argc, argv);
+    pm_proginit(&argc, argv);
     
     argn = 1;
     
-    if ( argn < argc )
-    {
-	ifd = pm_openr( argv[argn] );
-	argn++;
+    if (argn < argc) {
+        ifP = pm_openr(argv[argn]);
+        argn++;
     } else
-	ifd = stdin;
+        ifP = stdin;
     
-    if ( argn != argc )
-	pm_usage( usage );
+    if (argn != argc)
+        pm_usage(usage);
     
-    pixels = ppm_readppm( ifd, &cols, &rows, &maxval );
+    pixels = ppm_readppm(ifP, &cols, &rows, &maxval);
     
-    pm_close( ifd );
+    pm_close(ifP);
     
     /* Figure out the colormap. */
-    fprintf( stderr, "(Computing colormap..." );
-    fflush( stderr );
-    chv = ppm_computecolorhist( pixels, cols, rows, MAXCOLORS, &colors );
-    if ( chv != (colorhist_vector) 0 )
-    {
-	fprintf( stderr, "  Done.  %d colors found.)\n", colors );
-	
-	for ( i = 0; i < colors; i++ )
-	{
-	    Red[i] = (int) PPM_GETR( chv[i].color );
-	    Green[i] = (int) PPM_GETG( chv[i].color );
-	    Blue[i] = (int) PPM_GETB( chv[i].color );
-	}
-	BitsPerPixel = colorstobpp( colors );
-	
-	/* And make a hash table for fast lookup. */
-	cht = ppm_colorhisttocolorhash( chv, colors );
-	ppm_freecolorhist( chv );
+    pm_message("Computing colormap...");
+    chv = ppm_computecolorhist(pixels, cols, rows, MAXCOLORS, &colors);
+    if (chv) {
+        unsigned int i;
+
+        pm_message("... Done.  %u colors found.", colors);
+    
+        for (i = 0; i < colors; ++i) {
+            Red[i]   = (int) PPM_GETR( chv[i].color);
+            Green[i] = (int) PPM_GETG( chv[i].color);
+            Blue[i]  = (int) PPM_GETB( chv[i].color);
+        }
+        BitsPerPixel = colorstobpp(colors);
+    
+        /* And make a hash table for fast lookup. */
+        cht = ppm_colorhisttocolorhash(chv, colors);
+        ppm_freecolorhist(chv);
     } else {
-	BitsPerPixel = 24;
-	fprintf( stderr, "  Done.  24-bit true color %d color image.)\n", colors );
+        BitsPerPixel = 24;
+        pm_message("  ... Done.  24-bit true color %u color image.", colors);
     }
     
     leaf_writeimg(cols, rows, BitsPerPixel, colors, maxval);
     
-    return( 0 );
+    return 0;
 }
-
-
-

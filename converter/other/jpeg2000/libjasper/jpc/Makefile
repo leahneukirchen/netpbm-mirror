@@ -7,7 +7,7 @@ VPATH=.:$(SRCDIR)/$(SUBDIR)
 
 JASPERSRCDIR=$(SRCDIR)/$(SUBDIR)/..
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 LIB_OBJECTS = jpc_bs.o jpc_cs.o jpc_dec.o jpc_enc.o \
 	jpc_math.o jpc_mct.o jpc_mqcod.o jpc_mqdec.o jpc_mqenc.o \
@@ -18,5 +18,5 @@ MERGE_OBJECTS =
 
 all: partlist $(LIB_OBJECTS)
 
-include $(JASPERSRCDIR)/Makefile.common
+include $(JASPERSRCDIR)/common.mk
 

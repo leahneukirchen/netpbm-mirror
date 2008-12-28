@@ -656,8 +656,8 @@ analyzeLineSize(lineSizeAnalyzer * const analyzerP,
 
 
 /* An empty line means EOF.  An ancient comment in the code said there
-   is supposed to 6 EOL marks in a row to indicate EOF, but the code
-   checked for 3 and considered 2 in row just to mean a zero length
+   is supposed to be 6 EOL marks in a row to indicate EOF, but the code
+   checked for 3 and considered 2 in a row just to mean a zero length
    line.  Starting in Netpbm 10.24 (August 2004), we assume there is
    no valid reason to have an empty line and recognize EOF as any
    empty line.  Alternatively, we could read off and ignore two empty

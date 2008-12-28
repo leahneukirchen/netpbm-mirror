@@ -5,7 +5,7 @@ endif
 SUBDIR = generator
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 # We tend to separate out the build targets so that we don't have
 # any more dependencies for a given target than it really needs.
@@ -37,4 +37,4 @@ MERGE_OBJECTS = $(MERGEBINARIES:%=%.o2)
 .PHONY: all
 all: $(BINARIES)
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk

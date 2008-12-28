@@ -6,7 +6,7 @@ FIASCOSUBDIR = converter/other/fiasco
 SUBDIR = $(FIASCOSUBDIR)/output
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 OBJECTS =  matrices.o mc.o nd.o tree.o weights.o write.o
 
@@ -19,7 +19,7 @@ COMP_INCLUDES = \
 
 all: libfiasco_output.a
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 libfiasco_output.a: $(OBJECTS)
 	$(AR) -rc $@ $(OBJECTS)

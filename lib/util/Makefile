@@ -5,7 +5,7 @@ endif
 SUBDIR = lib/util
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 # nstring is required for asprintf(), etc.  Also some systems don't have
 # snprintf(), e.g. Solaris 2.5.1.  2002.03.29.
@@ -15,7 +15,7 @@ MERGE_OBJECTS =
 
 all: $(UTILOBJECTS)
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 INCLUDES = -I$(SRCDIR)/$(SUBDIR) -I. -Iimportinc
 
@@ -25,5 +25,3 @@ $(UTILOBJECTS):%.o:%.c importinc
 
 testnstring: test.c nstring.h nstring.o
 	$(CC) $(CFLAGS) $(CADD) -o $@ nstring.o $<
-
-include Makefile.depend

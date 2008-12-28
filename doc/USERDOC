@@ -60,7 +60,7 @@ to go straight to the Ppmtogif documentation.
 
 Installnetpbm normally installs Manweb and the netpbm.url file that
 Manweb needs to find the Netpbm documentation.  Through the Configure
-dialog, or editing Makefile.config, you determine whether Manweb
+dialog, or editing config.mk, you determine whether Manweb
 accesses the master web copy or a local copy you installed.
 
 Installnetpbm installs the program as 'manweb'.  If you want to invoke

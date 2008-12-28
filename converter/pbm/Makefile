@@ -5,7 +5,7 @@ endif
 SUBDIR = converter/pbm
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 PORTBINARIES =	atktopbm brushtopbm cmuwmtopbm ddbugtopbm g3topbm escp2topbm \
 		icontopbm macptopbm mdatopbm mgrtopbm mrftopbm \
@@ -41,7 +41,7 @@ SUBDIRS=pbmtoppa
 .PHONY: all
 all: $(BINARIES) $(SUBDIRS:%=%/all)
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 ifneq ($(LEX)x,x)
 thinkjettopbm.c1:%.c1:%.l

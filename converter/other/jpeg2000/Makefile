@@ -7,7 +7,7 @@ VPATH=.:$(SRCDIR)/$(SUBDIR)
 
 SUBDIRS = libjasper
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 EXTERN_INCLUDES =
 ifneq ($(JASPERHDR_DIR),NONE)
@@ -55,7 +55,7 @@ MERGEBINARIES = $(BINARIES)
 .PHONY: all
 all: $(BINARIES)
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 LIBOPTS = $(shell $(LIBOPT) $(NETPBMLIB) $(JASPERLIB_USE))
 

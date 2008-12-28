@@ -67,11 +67,11 @@ than you need to do and you will be disappointed with Configure's
 unpredictability, especially from one release to the next.  Configure is
 specifically intended to talk to an intelligent human being.
 
-Rather, just write a program to generate the file Makefile.config.  That's
+Rather, just write a program to generate the file config.mk.  That's
 all Configure does in the end anyway.  Like Configure, your program can
-simply copy Makefile.config.in and add overrides to the bottom.  Or you
-can just package up a complete Makefile.config and not run any program at
-all at build time.  Comments in Makefile.config.in explain the entire
+simply copy config.mk.in and add overrides to the bottom.  Or you
+can just package up a complete config.mk and not run any program at
+all at build time.  Comments in config.mk.in explain the entire
 contents.  You can also run Configure interactively and use its output
 as an example.
 
@@ -92,8 +92,7 @@ For notes on building Netpbm on Windows using Cygwin, see the file
 README.CYGWIN.  With Cygwin, you can build Netpbm programs that use
 Cygwin or Netpbm programs that use Mingw.
 
-For notes on building Netpbm on Windows using Djgpp, see the file
-README.DJGPP.
+Netpbm has also been built for Windows using Djgpp, as late as 2001.
 
 See also the general installation instructions above.
 
@@ -124,18 +123,18 @@ CUSTOM BUILDING
 This section explains how to customize the installation in the case
 that your platform is, or your requirements are, not among the simple
 cases that 'configure' understands.  'configure' is really just a
-convenient way to build the Makefile.config file, and in the most
+convenient way to build the config.mk file, and in the most
 general case, you build that file manually.
 
-Makefile.config contains settings for various things that vary from
+config.mk contains settings for various things that vary from
 one system to the next, like file paths.  Start with the distributed
-file Makefile.config.in.  Copy it as Makefile.config, then edit it.
+file config.mk.in.  Copy it as config.mk, then edit it.
 Search for your platform name (Solaris, SunOS, NetBSD, Cygwin, BeOS,
 and Tru64 are among those mentioned) to see recommended settings for
 your platform.
 
 If your system is even too exotic to accomodate with settings in
-Makefile.config, you may need to modify things in the main make files
+config.mk, you may need to modify things in the main make files
 or pm_config.h.in.
 
 If you figure out how to install on other platforms, contact the
@@ -193,8 +192,8 @@ Netpbm build to statically bind the libraries into the Netpbm programs).
 Another thing you can do is forget about library search paths and just
 build into each Netpbm executable the location of the Netpbm shared
 library.  (I'm talking about the classic -R linker option) You set
-this up with variables in Makefile.config.  If you use Configure to
-build Makefile.config, then for some platforms where this method is
+this up with variables in config.mk.  If you use Configure to
+build config.mk, then for some platforms where this method is
 common, the Configure dialog asks you what directory, if any, you want
 built into Netpbm executables.
 
@@ -214,7 +213,7 @@ Since shared libraries can be such a pain, and in fact some systems
 don't even have them, you can build Netpbm with a static library
 instead.  Just answer "static" to the static/shared question when you
 run 'configure' (if you don't use 'configure', set NETPBMLIBTYPE as
-directed in Makefile.config.in).
+directed in config.mk.in).
 
 If you do this, you probably want to do a merge build instead of the
 normal build (there's a question for that in the Configure program).
@@ -257,7 +256,7 @@ MERGE BUILD
 There are two ways to build Netpbm: the standard or nonmerge build,
 and the merge build.  There are different make file targets for them
 and which one is default is controlled by the DEFAULT_TARGET make
-variable in Makefile.config, and its value is one of the choices you
+variable in config.mk, and its value is one of the choices you
 make via the Configure dialog.
 
 The standard build is the conventional one.  The merge build is a way

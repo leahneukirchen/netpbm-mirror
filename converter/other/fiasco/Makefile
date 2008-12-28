@@ -5,7 +5,7 @@ endif
 SUBDIR = converter/other/fiasco
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 COMP_INCLUDES = \
 	-I$(SRCDIR)/$(SUBDIR)/codec -I$(SRCDIR)/$(SUBDIR)/input \
@@ -32,7 +32,7 @@ MERGE_OBJECTS = $(BINARIES:%=%.o2) $(COMMON_OBJECTS)  $(FIASCOLIBS)
 
 SUBDIRS = codec input output lib
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 $(BINARIES):%:%.o $(COMMON_OBJECTS) $(FIASCOLIBS) $(NETPBMLIB) \
    $(LIBOPT)

@@ -4,7 +4,7 @@ ifeq ($(SRCDIR)x,x)
 endif
 SUBDIR = buildtools
 VPATH = .:$(SRCDIR)/$(SUBDIR)
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 MERGE_OBJECTS =
 
@@ -17,7 +17,7 @@ BINARIES =
 SCRIPTS =
 
 OMIT_BUILDTOOL_RULE = 1
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 ifdef DLLVER
 STRIP_DLL_VERSION=-DDLLVERSTR="\"$(DLLVER)\""

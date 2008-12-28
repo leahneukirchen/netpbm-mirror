@@ -5,7 +5,7 @@ endif
 SUBDIR = converter/other/pamtosvg
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 BINARIES = pamtosvg
 
@@ -47,7 +47,7 @@ MERGEBINARIES = $(BINARIES)
 
 all: $(BINARIES)
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 pamtosvg: $(PAMTOSVG_OBJECTS) $(NETPBMLIB) $(LIBOPT)
 	$(LD) -o $@ $(PAMTOSVG_OBJECTS) \

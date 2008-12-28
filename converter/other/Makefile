@@ -5,7 +5,7 @@ endif
 SUBDIR = converter/other
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 ifeq ($(shell xml2-config --version),)
   XML2_LIBS=NONE
@@ -134,7 +134,7 @@ SCRIPTS = anytopnm pnmtoplainpnm
 .PHONY: all
 all:	$(BINARIES) $(SUBDIRS:%=%/all)
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 ifeq ($(NEED_RUNTIME_PATH),Y)
   LIBOPTR = -runtime

@@ -1,4 +1,3 @@
-# -*-makefile-*-    <-- an Emacs control
 # This is common rules for the libjasper subdirectories.
 #
 # Set the following variables before including this:
@@ -19,7 +18,7 @@ $(SUBDIRS:%=%/partlist): %/partlist: $(CURDIR)/%
 	$(MAKE) -C $(dir $@) -f $(SRCDIR)/$(SUBDIR)/$(dir $@)Makefile \
 	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@) 
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 INCLUDES = -I$(JASPERSRCDIR)/include -Iimportinc
 

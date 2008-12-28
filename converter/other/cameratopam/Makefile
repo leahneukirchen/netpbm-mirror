@@ -13,7 +13,7 @@ ifneq ($(JPEGLIB),NONE)
   endif
 endif
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 
 .PHONY: all
@@ -28,7 +28,7 @@ BINARIES = cameratopam
 MERGEBINARIES = 
 SCRIPTS = 
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 cameratopam: $(OBJECTS) $(NETPBMLIB) $(LIBOPT)
 	$(LD) -o $@ \

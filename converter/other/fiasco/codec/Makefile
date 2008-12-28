@@ -6,7 +6,7 @@ FIASCOSUBDIR = converter/other/fiasco
 SUBDIR = $(FIASCOSUBDIR)/codec
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 COMP_INCLUDES = -I$(SRCDIR)/$(FIASCOSUBDIR) -I$(SRCDIR)/$(FIASCOSUBDIR)/lib \
 	 -I$(SRCDIR)/$(FIASCOSUBDIR)/input -I$(SRCDIR)/$(FIASCOSUBDIR)/output 
@@ -19,7 +19,7 @@ MERGE_OBJECTS = $(OBJECTS)
 
 all: libfiasco_codec.a
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 libfiasco_codec.a: $(OBJECTS)
 	$(AR) -rc $@ $(OBJECTS)

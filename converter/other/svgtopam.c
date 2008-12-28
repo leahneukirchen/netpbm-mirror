@@ -18,12 +18,12 @@
 
   Implementation notes:
 
-   We've seen a version of <libxml/xmlreader.h> that does not
-   define type 'xmlReaderTypes'.  The system claimed to have
-   Libxml2 2.6.16 installed, but another system that makes that
-   claim _does_ have 'xmlReaderTypes' defined, so I don't know what
-   version actually has the problem.
-
+   A look at Libxml2 Subversion source code change history says the type
+   'xmlReaderTypes' was added (in <libxml/xmlreader.h>) in 2.5.9.  But a MacOS
+   10.3.9 user reports in April 2007 that he has 2.6.16 installed and it
+   doesn't have xmlReaderTypes.  Another MacOS user reported that in December
+   2008.  Apparently that OS has a broken libxml2 installation.
+   
 ============================================================================*/
 
 #define _BSD_SOURCE  /* Make sure strdup() is in <string.h> */

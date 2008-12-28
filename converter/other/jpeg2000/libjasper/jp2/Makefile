@@ -7,7 +7,7 @@ VPATH=.:$(SRCDIR)/$(SUBDIR)
 
 JASPERSRCDIR=$(SRCDIR)/$(SUBDIR)/..
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 LIB_OBJECTS = jp2_cod.o jp2_dec.o jp2_enc.o
 
@@ -15,5 +15,5 @@ MERGE_OBJECTS =
 
 all: partlist $(LIB_OBJECTS)
 
-include $(JASPERSRCDIR)/Makefile.common
+include $(JASPERSRCDIR)/common.mk
 

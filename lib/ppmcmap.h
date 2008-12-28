@@ -36,10 +36,10 @@ ppm_computecolorhist2(FILE * const ifp,
                       const int maxcolors, int * const colorsP );
 
 void
-ppm_addtocolorhist( colorhist_vector chv, 
-                    int * const colorsP, const int maxcolors, 
-                    const pixel * const colorP, 
-                    const int value, const int position );
+ppm_addtocolorhist(colorhist_vector chv, 
+                   int * const colorsP, const int maxcolors, 
+                   const pixel * const colorP, 
+                   const int value, const int position );
 
 void
 ppm_freecolorhist(colorhist_vector const chv);
