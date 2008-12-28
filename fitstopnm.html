@@ -29,12 +29,10 @@ space in place of the equals sign to separate an option name from its value.
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><b>fitstopnm</b> reads a FITS file as input and produces a PPM
-image if the FITS file consists of 3 image planes (NAXIS = 3 and
-NAXIS3 = 3), or a PGM image if the FITS file consists of 2 image
-planes (NAXIS = 2), or if you specify the <B>-image</B> option.  The
-results may need to be flipped top for bottom; if so, just pipe the
-output through <B>pamflip -tb</B>.
+<p><b>fitstopnm</b> reads a FITS (Flexible Image Transport System) file as
+input and produces a PPM image if the FITS file consists of 3 image planes
+(NAXIS = 3 and NAXIS3 = 3), or a PGM image if the FITS file consists of 2
+image planes (NAXIS = 2), or if you specify the <B>-image</B> option.
 
 <P>The program tells you what kind of PNM image it is writing.
 
@@ -95,11 +93,12 @@ and quits without doing its normal job.
 
 </dl>
 
-<H2 id="references">REFERENCES</H2>
+<h2 id="notes">NOTES</h2>
 
-<p>FITS stands for Flexible Image Transport System.  A full description
-can be found in Astronomy &amp; Astrophysics Supplement Series 44 (1981),
-page 363.
+<h3 id="pixelorder">Pixel Order</h3>
+
+<p>You may need to pass the output of <b>fitstopnm</b> through <b>pamflip
+-topbottom</b>.  See <a href="pamtofits.html#pixelorder"><b>pamtofits</b></a>
 
 
 <H2 id="seealso">SEE ALSO</H2>
@@ -107,6 +106,7 @@ page 363.
 <A HREF="pamtofits.html">pamtofits</A>,
 <A HREF="pamflip.html">pamflip</A>,
 <A HREF="pgm.html">pgm</A>
+<a href="http://fits.gsfc.nasa.gov/fits_intro.html">FITS</a>
 
 <H2 id="author">AUTHOR</H2>
 
@@ -122,7 +122,10 @@ HREF="mailto:alberto@cfa.harvard.edu">alberto@cfa.harvard.edu</A>).
 <LI><A HREF="#synopsis">SYNOPSIS</A>
 <LI><A HREF="#description">DESCRIPTION</A>
 <LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#references">REFERENCES</A>
+<LI><A HREF="#notes">NOTES</A>
+  <ul>
+  <li><a href="#pixelorder">Pixel Order</a>
+  </ul>
 <LI><A HREF="#seealso">SEE ALSO</A>
 <LI><A HREF="#author">AUTHOR</A>
 </UL>
