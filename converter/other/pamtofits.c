@@ -20,6 +20,12 @@
 ** in the FITS header, but do not cause the data to be rescaled.
 */
 
+/*
+  The official specification of FITS format (which is for more than
+  just visual images) is at
+  ftp://legacy.gsfc.nasa.gov/fits_info/fits_office/fits_standard.pdf
+*/
+
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
@@ -200,6 +206,14 @@ writeRaster(struct pam * const pamP,
             tuple **     const tuples,
             unsigned int const bitpix,
             int          const offset) {
+
+    /* Note: the FITS specification does not give the association between
+       file position and image position (i.e. is the first pixel in the
+       file the top left, bottom left, etc.).  We use the common sense,
+       popular order of row major, top to bottom, left to right.  This
+       has been the case and accepted since 1989, but in 2008, we discovered
+       that Gimp and ImageMagick do bottom to top.
+    */
 
     unsigned int plane;
 
