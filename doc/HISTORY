@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.46.00
 
+              pbmtomrf, mrftopbm: fix crashes, incorrect output in all
+              cases.  Broken forever.
+
               pamcut: fix bug with PBM and -pad.
 
 08.12.28 BJH  Release 10.45.00
@@ -1869,6 +1872,8 @@ not yet  BJH  Release 10.46.00
               installnetpbm: don't crash on mkdir on old Perl.
 
 03.09.19 BJH  Release 10.18
+
+              Add pbmtomrf, mrftopbm.
 
               Add escp2topbm, pbmtoescp2.  Thanks Ulrich Walcher
               <u.walcher@gmx.de>
