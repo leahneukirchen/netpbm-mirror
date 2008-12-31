@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+not yet  BJH  Release 10.46.00
+
+              pamcut: fix bug with PBM and -pad.
+
 08.12.28 BJH  Release 10.45.00
 
               pgmnoise: Add -randomseed.
