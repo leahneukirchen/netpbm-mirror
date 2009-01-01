@@ -13,10 +13,17 @@ ilbmtoppm - convert an ILBM file into a PPM image
 <H2 id="synopsis">SYNOPSIS</H2>
 
 <B>ilbmtoppm</B>
-[<B>-verbose</B>]
 [<B>-ignore</B>&lt;chunkID&gt;<B>]</B>
-[<B>-isham</B>|<B>-isehb</B>]
+[
+<B>-isham</B> | <b>-isnotham</b> |
+<B>-isehb</B> | <b>-isnotehb</b> |
+<b>-isdeep</b> | <b>-isnotdeep</b>
+]
+[<B>-cmaponly</B>]
 [<B>-adjustcolors</B>]
+[<b>-transparent </b><i>color</i>]
+[<b>-maskfile</b> <i>filename</i>
+[<B>-verbose</B>]
 [<I>ILBMfile</I>]
 
 <H2 id="description">DESCRIPTION</H2>
@@ -62,6 +69,16 @@ of the chunk to be skipped.
 <DD>Treat the input file as a HAM or Extra_Halfbrite picture, even if
 these flags are not set in the CAMG chunk (or if there is no CAMG
 chunk).
+
+<dt><b>-cmaponly</b>
+
+<dd>With this option, <b>ilbmtoppm</b> generates a PPM of the ILBM's <em>color
+map</em>, not the image itself.
+
+<p><b>ilbmtoppm</b> does the same thing even without <b>-cmaponly</b> if the
+ILBM is a pure color map stream (it has a bitmap header with an <i>nplanes</i>
+value of zero or has no BODY chunk.
+
 
 <DT><B>-adjustcolors</B>
 
