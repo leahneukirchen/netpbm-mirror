@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.46.00
 
+              leaftoppm: fix bug: uses red channel as all three channels;
+              (produces grayscale output).
+
               pbmtomrf, mrftopbm: fix crashes, incorrect output in all
               cases.  Broken forever.
 
