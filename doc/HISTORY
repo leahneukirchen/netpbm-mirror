@@ -1,4 +1,4 @@
-See http://netpbm.sourceforge.net/history.html for a general history of
+ee http://netpbm.sourceforge.net/history.html for a general history of
 Netpbm.
 
 CHANGE HISTORY 
@@ -6,8 +6,13 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.46.00
 
+              ilbmtoppm: fix bug: appends color map PPM to output if input
+              has color map; fails if input doesn't have color map.  Broken
+              in 10.18.
+
               leaftoppm: fix bug: uses red channel as all three channels;
-              (produces grayscale output).
+              (produces grayscale output).  Broken between 10.19 and 10.26,
+              inclusive.
 
               pbmtomrf, mrftopbm: fix crashes, incorrect output in all
               cases.  Broken forever.

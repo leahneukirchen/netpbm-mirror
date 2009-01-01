@@ -1,4 +1,4 @@
-/* ilbmtoppm.c - read an IFF ILBM file and produce a portable pixmap
+/* ilbmtoppm.c - read an IFF ILBM file and produce a PPM
 **
 ** Copyright (C) 1989 by Jef Poskanzer.
 **
@@ -46,8 +46,6 @@
 #include "ppm.h"
 #include "ilbm.h"
 #include "mallocvar.h"
-
-/*#define DEBUG*/
 
 typedef struct {
     int reg;            /* color register to change */
@@ -765,10 +763,15 @@ multi_free(cmap)
  ****************************************************************************/
 
 static void
-check_cmap(bmhd, cmap)
-    BitMapHeader *bmhd;
-    ColorMap *cmap;
-{
+prepareCmap(const BitMapHeader * const bmhd,
+            ColorMap *           const cmap) {
+/*----------------------------------------------------------------------------
+   This is a really ugly subroutine that 1) analyzes a colormap and its
+   context (returning the analysis in global variables); and 2) modifies that
+   color map, because it's really one type of data structure as input and
+   another as output.
+
+-----------------------------------------------------------------------------*/
     pixval colmaxval = 0;
     int shifted = 1;
     int i, r, g, b;
@@ -986,6 +989,8 @@ std_to_ppm(FILE *         const ifp,
            BitMapHeader * const bmhd, 
            ColorMap *     const cmap, 
            long           const viewportmodes);
+
+
 
 static void
 ham_to_ppm(FILE *         const ifp, 
@@ -1342,16 +1347,10 @@ dcol_to_ppm(FILE *         const ifP,
 
 
 static void
-cmap_to_ppm(cmap)
-    ColorMap *cmap;
-{
-    ppm_colorrowtomapfile(stdout, cmap->color, cmap->ncolors, MAXCOLVAL);
-#if 0
-    int i;
-    ppm_writeppminit(stdout, cmap->ncolors, 1, MAXCOLVAL, 1);
-    for( i = 0; i < cmap->ncolors; i++ )
-        ppm_writeppmrow(stdout, &(cmap->color[i]), 1, MAXCOLVAL, 1);
-#endif
+cmapToPpm(FILE *     const ofP,
+            ColorMap * const cmapP) {
+
+    ppm_colorrowtomapfile(ofP, cmapP->color, cmapP->ncolors, MAXCOLVAL);
 }
 
 
@@ -2032,7 +2031,7 @@ process_body( FILE *          const ifp,
         pm_error("%s chunk without %s chunk", 
                  ID2string(ID_BODY), ID2string(ID_BMHD));
 
-    check_cmap(bmhdP, cmap);
+    prepareCmap(bmhdP, cmap);
 
     pixelrow = ppm_allocrow(bmhdP->w);
     if( maskfile ) {
@@ -2080,21 +2079,21 @@ process_body( FILE *          const ifp,
 
 
 static void 
-process_chunk(FILE *          const ifp,
-              long            const formsize,
-              IFF_ID          const ignorelist[],
-              unsigned int    const ignorecount,
-              int             const fakeviewport,
-              int             const viewportmask,
-              int             const isdeepopt,
-              bool            const cmaponly,
-              bool *          const bodyChunkProcessedP,
-              bool *          const endchunkP,
-              BitMapHeader ** const bmhdP,
-              ColorMap *      const cmap,
-              DirectColor **  const dcolP,
-              int *           const viewportmodesP,
-              long *          const bytesReadP
+processChunk(FILE *          const ifP,
+             long            const formsize,
+             IFF_ID          const ignorelist[],
+             unsigned int    const ignorecount,
+             int             const fakeviewport,
+             int             const viewportmask,
+             int             const isdeepopt,
+             bool            const cmaponly,
+             bool *          const bodyChunkProcessedP,
+             bool *          const endchunkP,
+             BitMapHeader ** const bmhdP,
+             ColorMap *      const cmap,
+             DirectColor **  const dcolP,
+             int *           const viewportmodesP,
+             long *          const bytesReadP
     ) {
 
     IFF_ID iffid;
@@ -2103,129 +2102,168 @@ process_chunk(FILE *          const ifp,
 
     bytesread = 0;
 
-    iffid = get_big_long(ifp, ID_FORM, NULL);
-    chunksize = get_big_long(ifp, iffid, NULL);
+    iffid = get_big_long(ifP, ID_FORM, NULL);
+    chunksize = get_big_long(ifP, iffid, NULL);
     bytesread += 8;
 
     if (debug)
-        pm_message("reading %s chunk: %ld bytes", 
-                   ID2string(iffid), chunksize);
+        pm_message("reading %s chunk: %ld bytes", ID2string(iffid), chunksize);
 
-    if( ignored_iffid(iffid, ignorelist, ignorecount) ) {
+    if (ignored_iffid(iffid, ignorelist, ignorecount)) {
         pm_message("ignoring %s chunk", ID2string(iffid));
-        skip_chunk(ifp, iffid, chunksize);
-    } else if( iffid == ID_END ) {
+        skip_chunk(ifP, iffid, chunksize);
+    } else if (iffid == ID_END) {
         /* END chunks are not officially valid in IFF, but
            suggested as a future expansion for stream-writing,
            see Amiga RKM Devices, 3rd Ed, page 376 
         */
-        if( chunksize != 0 ) {
+        if (chunksize != 0 ) {
             pm_message("warning - non-0 %s chunk", ID2string(iffid));
-            skip_chunk(ifp, iffid, chunksize);
+            skip_chunk(ifP, iffid, chunksize);
         }
-        if( formsize != 0xffffffff )
+        if (formsize != 0xffffffff)
             pm_message("warning - %s chunk with FORM size 0x%08lx "
                        "(should be 0x%08x)",
                        ID2string(iffid), formsize, 0xffffffff);
         *endchunkP = 1;
-    } else if( *bodyChunkProcessedP ) {
+    } else if (*bodyChunkProcessedP) {
         pm_message("%s chunk found after %s chunk - skipping", 
                    ID2string(iffid), ID2string(ID_BODY));
-        skip_chunk(ifp, iffid, chunksize);
+        skip_chunk(ifP, iffid, chunksize);
     } else
-        switch( iffid ) {
+        switch (iffid) {
         case ID_BMHD:
-            *bmhdP = read_bmhd(ifp, iffid, chunksize);
+            *bmhdP = read_bmhd(ifP, iffid, chunksize);
             break;
         case ID_CMAP:
-            read_cmap(ifp, iffid, chunksize, cmap);
+            read_cmap(ifP, iffid, chunksize, cmap);
             break;
         case ID_CMYK:
-            read_cmyk(ifp, iffid, chunksize, cmap);
+            read_cmyk(ifP, iffid, chunksize, cmap);
             break;
         case ID_CLUT:
-            read_clut(ifp, iffid, chunksize, cmap);
+            read_clut(ifP, iffid, chunksize, cmap);
             break;
         case ID_CAMG:
-            if( chunksize != CAMGChunkSize )
+            if (chunksize != CAMGChunkSize)
                 pm_error("%s chunk size mismatch", ID2string(iffid));
-            *viewportmodesP = get_big_long(ifp, ID_CAMG, NULL);
+            *viewportmodesP = get_big_long(ifP, ID_CAMG, NULL);
             *viewportmodesP &= viewportmask;      /* -isnotham/-isnotehb */
             break;
         case ID_PCHG:
-            read_pchg(ifp, iffid, chunksize, cmap);
+            read_pchg(ifP, iffid, chunksize, cmap);
             break;
         case ID_CTBL:
         case ID_SHAM:
-            read_4bit_mp(ifp, iffid, chunksize, cmap);
+            read_4bit_mp(ifP, iffid, chunksize, cmap);
             break;
         case ID_DCOL:
-            if( chunksize != DirectColorSize )
+            if (chunksize != DirectColorSize)
                 pm_error("%s chunk size mismatch", ID2string(iffid));
             MALLOCVAR_NOFAIL(*dcolP);
-            (*dcolP)->r = get_byte(ifp, iffid, NULL);
-            (*dcolP)->g = get_byte(ifp, iffid, NULL);
-            (*dcolP)->b = get_byte(ifp, iffid, NULL);
-            (void)get_byte(ifp, iffid, NULL);       /* skip pad byte */
+            (*dcolP)->r = get_byte(ifP, iffid, NULL);
+            (*dcolP)->g = get_byte(ifP, iffid, NULL);
+            (*dcolP)->b = get_byte(ifP, iffid, NULL);
+            get_byte(ifP, iffid, NULL);       /* skip pad byte */
             break;
         case ID_BODY: 
-            if( cmaponly || (*bmhdP && (*bmhdP)->nPlanes == 0 )) {
-                skip_chunk(ifp, ID_BODY,  chunksize);
-                return;
-            }
-    
-            process_body(ifp, chunksize, *bmhdP, cmap, 
-                         maskfile, fakeviewport, isdeepopt, *dcolP,
-                         viewportmodesP);
+            if (cmaponly || (*bmhdP && (*bmhdP)->nPlanes == 0))
+                skip_chunk(ifP, ID_BODY,  chunksize);
+            else {
+                process_body(ifP, chunksize, *bmhdP, cmap, 
+                             maskfile, fakeviewport, isdeepopt, *dcolP,
+                             viewportmodesP);
 
-            *bodyChunkProcessedP = TRUE;
-
-            break;
+                *bodyChunkProcessedP = TRUE;
+            } break;
         case ID_GRAB:   case ID_DEST:   case ID_SPRT:   case ID_CRNG:
         case ID_CCRT:   case ID_DYCP:   case ID_DPPV:   case ID_DRNG:
         case ID_EPSF:   case ID_JUNK:   case ID_CNAM:   case ID_PRVW:
         case ID_TINY:   case ID_DPPS:
-            skip_chunk(ifp, iffid, chunksize);
+            skip_chunk(ifP, iffid, chunksize);
             break;
         case ID_copy:   case ID_AUTH:   case ID_NAME:   case ID_ANNO:
         case ID_TEXT:   case ID_FVER:
-            if( verbose )
-                display_chunk(ifp, iffid, chunksize);
+            if (verbose)
+                display_chunk(ifP, iffid, chunksize);
             else
-                skip_chunk(ifp, iffid, chunksize);
+                skip_chunk(ifP, iffid, chunksize);
             break;
-        case ID_DPI:
-        {
+        case ID_DPI: {
             int x, y;
 
-            x = get_big_short(ifp, ID_DPI, NULL);
-            y = get_big_short(ifp, ID_DPI, NULL);
-            if( verbose )
+            x = get_big_short(ifP, ID_DPI, NULL);
+            y = get_big_short(ifP, ID_DPI, NULL);
+            if (verbose)
                 pm_message("%s chunk:  dpi_x = %d    dpi_y = %d", 
                            ID2string(ID_DPI), x, y);
-        }
-        break;
+        } break;
         default:
             pm_message("unknown chunk type %s - skipping", 
                        ID2string(iffid));
-            skip_chunk(ifp, iffid, chunksize);
+            skip_chunk(ifP, iffid, chunksize);
             break;
         }
 
     bytesread += chunksize;
 
-    if( ODD(chunksize) ) {
-        (void) get_byte(ifp, iffid, NULL);
+    if (ODD(chunksize)) {
+        get_byte(ifP, iffid, NULL);
         bytesread += 1;
     } 
     *bytesReadP = bytesread;
 }
 
 
+
+static void
+maybeWriteColorMap(FILE *               const ofP,
+                   const BitMapHeader * const bmhdP,
+                   ColorMap *           const cmapP,
+                   bool                 const bodyChunkProcessed,
+                   bool                 const cmaponly) {
+/*----------------------------------------------------------------------------
+   Write to file *ofP the color map *cmapP as a PPM, if appropriate.
+
+   The logic (not just here -- in the program as a whole) for deciding whether
+   to write the image or the colormap is quite twisted.  If I thought anyone
+   was actually using this program, I would take the time to straighten it
+   out.
+
+   What's really sick about this subroutine is that in choosing to write
+   a color map, it has to know that Caller hasn't already written
+   the image.  Huge modularity violation.
+-----------------------------------------------------------------------------*/
+    if (cmaponly) {
+        if (HAS_COLORMAP(cmapP)) {
+            prepareCmap(bmhdP, cmapP);
+            cmapToPpm(ofP, cmapP);
+        } else
+            pm_error("You specified -cmaponly, but the ILBM "
+                     "has no colormap");
+    } else if (bmhdP && bmhdP->nPlanes == 0) {
+        if (HAS_COLORMAP(cmapP)) {
+            prepareCmap(bmhdP, cmapP);
+            cmapToPpm(ofP, cmapP);
+        } else
+            pm_error("ILBM has neither a color map nor color planes");
+    } else if (!bodyChunkProcessed) {
+        if (HAS_COLORMAP(cmapP)) {
+            pm_message("input is a colormap file");
+            prepareCmap(bmhdP, cmapP);
+            cmapToPpm(ofP, cmapP);
+        } else
+            pm_error("ILBM has neither %s or %s chunk", 
+                     ID2string(ID_BODY), ID2string(ID_CMAP));
+    }
+}
+
+
+
 int
 main(int argc, char *argv[]) {
 
-    FILE *ifp;
+    FILE * ifP;
     int argn;
     short cmaponly = 0, isdeepopt = 0;
     bool endchunk;
@@ -2299,25 +2337,25 @@ main(int argc, char *argv[]) {
     }    
 
     if( argn < argc ) {
-        ifp = pm_openr( argv[argn] );
+        ifP = pm_openr( argv[argn] );
         argn++;
     } else
-        ifp = stdin;
+        ifP = stdin;
 
     if( argn != argc )
         pm_usage(usage);
 
     /* Read in the ILBM file. */
 
-    firstIffid = get_big_long(ifp, ID_FORM, NULL);
-    if( firstIffid != ID_FORM )
+    firstIffid = get_big_long(ifP, ID_FORM, NULL);
+    if (firstIffid != ID_FORM)
         pm_error("input is not a FORM type IFF file");
-    formsize = get_big_long(ifp, ID_FORM, NULL);
-    typeid = get_big_long(ifp, ID_FORM, NULL);
-    if( typeid != ID_ILBM && typeid != ID_RGBN && typeid != ID_RGB8 && 
-        typeid != ID_PBM )
-        pm_error( "input is not an ILBM, RGBN, RGB8 or PBM "
-                  "type FORM IFF file" );
+    formsize = get_big_long(ifP, ID_FORM, NULL);
+    typeid = get_big_long(ifP, ID_FORM, NULL);
+    if (typeid != ID_ILBM && typeid != ID_RGBN && typeid != ID_RGB8 && 
+        typeid != ID_PBM)
+        pm_error("input is not an ILBM, RGBN, RGB8 or PBM "
+                 "type FORM IFF file");
     bytesread = 4;  /* FORM and formsize do not count */
 
     cmap = alloc_cmap();
@@ -2325,55 +2363,41 @@ main(int argc, char *argv[]) {
     /* Main loop, parsing the IFF FORM. */
     bodyChunkProcessed = FALSE;
     endchunk = FALSE;
-    while( !endchunk && formsize-bytesread >= 8 ) {
-        long bytes_read_for_chunk;
+    while (!endchunk && formsize-bytesread >= 8) {
+        long bytesReadForChunk;
 
-        process_chunk(ifp, formsize, ignorelist, ignorecount,
-                      fakeviewport, viewportmask,
-                      isdeepopt, cmaponly,
-                      &bodyChunkProcessed,
-                      &endchunk, &bmhdP, cmap, &dcol,
-                      &viewportmodes, &bytes_read_for_chunk);
+        processChunk(ifP, formsize, ignorelist, ignorecount,
+                     fakeviewport, viewportmask,
+                     isdeepopt, cmaponly,
+                     &bodyChunkProcessed,
+                     &endchunk, &bmhdP, cmap, &dcol,
+                     &viewportmodes, &bytesReadForChunk);
 
-        bytesread += bytes_read_for_chunk;
+        bytesread += bytesReadForChunk;
     }
 
-    if( maskfile ) {
+    if (maskfile) {
         pm_close(maskfile);
-        if( !wrotemask )
+        if (!wrotemask)
             remove(maskname);
         pbm_freerow(maskrow);
     }
 
-    if( cmaponly || (bmhdP && bmhdP->nPlanes == 0 )) {
-        if( HAS_COLORMAP(cmap) ) {
-            check_cmap(bmhdP, cmap);
-            cmap_to_ppm(cmap);
-        } else
-            pm_error("no colormap");
-    } else if( bodyChunkProcessed ) {
-        if( HAS_COLORMAP(cmap) ) {
-            pm_message("input is a colormap file");
-            check_cmap(bmhdP, cmap);
-            cmap_to_ppm(cmap);
-        } else
-            pm_error("no %s or %s chunk found", 
-                     ID2string(ID_BODY), ID2string(ID_CMAP));
-    }
+    maybeWriteColorMap(stdout, bmhdP, cmap, bodyChunkProcessed, cmaponly);
 
     {
         unsigned int skipped;
         
-        for( skipped = 0; fgetc(ifp) != EOF; ++skipped )
-            bytesread++;
+        for (skipped = 0; fgetc(ifP) != EOF; ++skipped)
+            ++bytesread;
 
-        if( skipped > 0 )
+        if (skipped > 0)
             pm_message("skipped %u extraneous byte%s after last chunk",
                        skipped, (skipped == 1 ? "" : "s"));
     }
-    pm_close(ifp);
+    pm_close(ifP);
 
-    if( !endchunk && bytesread != formsize ) {
+    if (!endchunk && bytesread != formsize) {
         pm_message("warning - file length/FORM size field mismatch "
                    "(%ld != %ld+8)",
                    bytesread+8 /* FORM+size */, formsize);
