@@ -1,10 +1,13 @@
-ee http://netpbm.sourceforge.net/history.html for a general history of
+See http://netpbm.sourceforge.net/history.html for a general history of
 Netpbm.
 
 CHANGE HISTORY 
 --------------
 
 not yet  BJH  Release 10.46.00
+
+              picttoppm: Don't fail if 'fontdir' file doesn't exist.  Bug
+              from 10.44.
 
               ilbmtoppm: fix bug: appends color map PPM to output if input
               has color map; fails if input doesn't have color map.  Broken
