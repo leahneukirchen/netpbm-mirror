@@ -784,10 +784,10 @@ read_rect(struct Rect * const r) {
     r->bottom = read_word();
     r->right  = read_word();
 
-    if (r->top < r->bottom || r->right < r->left)
+    if (r->top > r->bottom || r->right < r->left)
         dumpRect("Invalid rectangle", *r);
 
-    if (r->top < r->bottom)
+    if (r->top > r->bottom)
         pm_error("Invalid PICT: a rectangle has a top below its bottom");
     if (r->right < r->left)
         pm_error("Invalid PICT: a rectangle has a right edge "
