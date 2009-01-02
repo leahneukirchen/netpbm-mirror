@@ -2184,6 +2184,42 @@ unpackUncompressedBits(FILE *          const ifP,
 
 
 static void
+reportValidateCompressedLineLen(unsigned int const row,
+                                unsigned int const linelen,
+                                unsigned int const rowSize) {
+/*----------------------------------------------------------------------------
+   'row' is a row number in the raster.
+
+   'linelen' is the number of bytes of PICT that the PICT says hold the
+   compressed version of that row.
+
+   'rowSize' is the number of bytes we expect the uncompressed line to
+   be (includes pad pixels on the right).
+-----------------------------------------------------------------------------*/
+    if (verbose > 1)
+        pm_message("Row %u: %u-byte compressed line", row, linelen);
+
+    /* When the line length value is garbage, it often causes the program to
+       try to read beyond EOF.  To make that failure easier to diagnose,
+       we sanity check the line length now.
+    */
+
+    /* In the worst case, a pixel is represented by two bytes: a one byte
+       repeat count of one followed by a one byte pixel value (the byte could
+       be up to 8 pixels) or a one byte block length of one followed by the
+       pixel value.  So expansion factor two.
+    */
+
+    if (linelen > rowSize * 2)
+        pm_error("Invalid PICT: compressed line of %u bytes for Row %u "
+                 "is too big "
+                 "to represent a %u-byte padded row, even with worse case "
+                 "compression.", linelen, row, rowSize);
+}
+
+
+
+static void
 expandRun(unsigned char * const block,
           unsigned int    const blockLimit,
           unsigned int    const bitsPerPixel,
@@ -2386,7 +2422,7 @@ interpretCompressedLine(unsigned char * const linebuf,
         
         assert(lineCursor <= linelen);
             
-        if (verbose > 1)
+        if (verbose > 2)
             pm_message("At Byte %u of line, Column %u of row",
                        lineCursor, rasterCursor);
 
@@ -2405,6 +2441,32 @@ interpretCompressedLine(unsigned char * const linebuf,
 }
 
 
+/* There is some confusion about when, in PICT, a line length is one byte and
+  when it is two.  An Apple document says it is two bytes when the number of
+  pixels in the row, padded, is > 250.  Ppmtopict generated PICTs that way
+  until January 2009.  Picttoppm assumed something similar until March 2004:
+  It assumed the line length is two bytes when the number of pixels > 250 _or_
+  bits per pixel > 8.  But in March 2004, Steve Summit did a bunch of
+  experiments on existing PICT files and found that they all worked with the
+  rule "pixels per row > 200 => 2 byte line length" and some did not work
+  with the original rule.
+
+  So in March 2004, Picttoppm changed to pixels per row > 200.  Ppmtopict
+  didn't catch up until January 2009.
+
+  http://developer.apple.com/documentation/mac/QuickDraw/QuickDraw-460.html#HEADING460-0
+
+  Of course, neither 200 nor 250 make any logical sense.  In the worst case,
+  you can represent 254 pixels of 8 bpp or less in a 255 byte line.
+  In the worst case, you can represent 127 16bpp pixels in a 255 byte line.
+  So with 200 being the cutoff, it's actually impossible to represent some 
+  16 bpp images with 200 pixels per row.
+
+  We have not been able to find an offical spec for PICT.
+
+  Some day, we may have to make a user option for this.
+*/
+
 
 static void
 unpackCompressedBits(FILE *          const ifP,
@@ -2421,14 +2483,13 @@ unpackCompressedBits(FILE *          const ifP,
    "packing" and I don't know what packing is called.  But we don't
    use that confusing terminology in this program, except when talking
    to the user.
-
-   *boundsP describes the rectangle.
 -----------------------------------------------------------------------------*/
     unsigned int const llsize = rowBytes > 200 ? 2 : 1;
         /* Width in bytes of the field at the beginning of a line that tells
-           how long (in bytes) the line is.
+           how long (in bytes) the line is.  See notes above about this
+           computation.
         */
-    unsigned int rowOfRect;
+    unsigned int row;
     unsigned char * linebuf;
     unsigned int linebufSize;
 
@@ -2437,9 +2498,9 @@ unpackCompressedBits(FILE *          const ifP,
     if (linebuf == NULL)
         pm_error("can't allocate memory for line buffer");
 
-    for (rowOfRect = 0; rowOfRect < raster.rowCount; ++rowOfRect) {
+    for (row = 0; row < raster.rowCount; ++row) {
         unsigned char * const rowRaster =
-            &raster.bytes[rowOfRect * raster.rowSize];
+            &raster.bytes[row * raster.rowSize];
         unsigned int linelen;
 
         if (llsize == 2)
@@ -2447,8 +2508,7 @@ unpackCompressedBits(FILE *          const ifP,
         else
             linelen = read_byte();
 
-        if (verbose > 1)
-            pm_message("Row %u: %u-byte line", rowOfRect, linelen);
+        reportValidateCompressedLineLen(row, linelen, raster.rowSize);
 
         if (linelen > linebufSize) {
             linebufSize = linelen;
@@ -4131,6 +4191,7 @@ main(int argc, char * argv[]) {
 
     if (header) {
         stage = "Reading 512 byte header";
+        /* Note that the "header" in PICT is entirely comment! */
         skip(512);
     }
 
