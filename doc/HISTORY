@@ -4,6 +4,23 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+09.01.02 BJH  Release 10.45.01
+
+              picttoppm: Don't fail if 'fontdir' file doesn't exist.  Bug
+              from 10.44.
+
+              pamcut: fix bug with PBM and -pad.
+
+              ilbmtoppm: fix bug: appends color map PPM to output if input
+              has color map; fails if input doesn't have color map.  Broken
+              in 10.18.
+
+              leaftoppm: fix bug: uses red channel as all three channels;
+              (produces grayscale output).
+
+              pbmtomrf, mrftopbm: fix crashes, incorrect output in all
+              cases.  Broken forever.
+
 08.12.28 BJH  Release 10.45.00
 
               pgmnoise: Add -randomseed.

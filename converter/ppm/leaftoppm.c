@@ -88,9 +88,9 @@ leaf_init(FILE *  const fp,
                 for (i=0; i < 256; ++i)
                     PPM_PUTR(colors[i], fgetc(fp));
                 for (i=0; i < 256; ++i)
-                    PPM_PUTR(colors[i], fgetc(fp));
+                    PPM_PUTG(colors[i], fgetc(fp));
                 for (i=0; i < 256; ++i)
-                    PPM_PUTR(colors[i], fgetc(fp));
+                    PPM_PUTB(colors[i], fgetc(fp));
                 *ncolorsP = ncolors;
             } else {
                 /* 24-bit image */

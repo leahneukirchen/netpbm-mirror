@@ -83,11 +83,13 @@ doSquare(unsigned char * const image,
     
     /* otherwise, if our square is greater than 1x1, we need to recurse. */
     if(size > 1) {
+        int halfsize = size >> 1;
+
         bit_output(0);    /* not all same */
-        doSquare(image, ox,      oy,      w, size>>1);
-        doSquare(image, ox+size, oy,      w, size>>1);
-        doSquare(image, ox,      oy+size, w, size>>1);
-        doSquare(image, ox+size, oy+size, w, size>>1);
+        doSquare(image, ox,          oy,          w, halfsize);
+        doSquare(image, ox+halfsize, oy,          w, halfsize);
+        doSquare(image, ox,          oy+halfsize, w, halfsize);
+        doSquare(image, ox+halfsize, oy+halfsize, w, halfsize);
     }
 }
     

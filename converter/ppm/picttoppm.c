@@ -4056,6 +4056,23 @@ interpret_pict(FILE * const ofP) {
 
 
 
+static void
+loadDefaultFontDir(void) {
+/*----------------------------------------------------------------------------
+   Load the fonts from the font directory file "fontdir" (in the current
+   directory), if it exists.
+-----------------------------------------------------------------------------*/
+    struct stat statbuf;
+    int rc;
+
+    rc = stat("fontdir", &statbuf);
+    
+    if (rc == 0)
+        load_fontdir("fontdir");
+}
+
+
+
 int
 main(int argc, char * argv[]) {
     int argn;
@@ -4092,8 +4109,6 @@ main(int argc, char * argv[]) {
         ++argn;
     }
 
-    load_fontdir("fontdir");
-
     if (argn < argc) {
         ifp = pm_openr(argv[argn]);
         ++argn;
@@ -4102,6 +4117,8 @@ main(int argc, char * argv[]) {
 
     if (argn != argc)
         pm_usage(usage);
+
+    loadDefaultFontDir();
 
     if (header) {
         stage = "Reading 512 byte header";

@@ -658,7 +658,8 @@ cutOneImage(FILE *             const ifP,
 
     pnm_writepaminit(&outpam);
 
-    if (PNM_FORMAT_TYPE(outpam.format) == PBM_TYPE)
+    if (PNM_FORMAT_TYPE(outpam.format) == PBM_TYPE &&
+        leftcol >= 0 && rightcol < inpam.width)
         extractRowsPBM(&inpam, &outpam, leftcol, rightcol, toprow, bottomrow);
     else
         extractRowsGen(&inpam, &outpam, leftcol, rightcol, toprow, bottomrow);
