@@ -765,17 +765,6 @@ load_fontdir(const char * const dirfile) {
 
 
 static void
-read_rect(struct Rect * const r) {
-
-    r->top    = read_word();
-    r->left   = read_word();
-    r->bottom = read_word();
-    r->right  = read_word();
-}
-
-
-
-static void
 dumpRect(const char * const label,
          struct Rect  const rectangle) {
 
@@ -783,6 +772,26 @@ dumpRect(const char * const label,
                label,
                rectangle.left,  rectangle.top,
                rectangle.right, rectangle.bottom);
+}
+
+
+
+static void
+read_rect(struct Rect * const r) {
+
+    r->top    = read_word();
+    r->left   = read_word();
+    r->bottom = read_word();
+    r->right  = read_word();
+
+    if (r->top < r->bottom || r->right < r->left)
+        dumpRect("Invalid rectangle", *r);
+
+    if (r->top < r->bottom)
+        pm_error("Invalid PICT: a rectangle has a top below its bottom");
+    if (r->right < r->left)
+        pm_error("Invalid PICT: a rectangle has a right edge "
+                 "left of its left edge");
 }
 
 
@@ -3942,14 +3951,14 @@ interpret_pict(FILE * const ofP) {
     picSize = read_word();
 
     if (verbose)
-        pm_message("picture size = %d (0x%x)", picSize, picSize);
+        pm_message("picture size = %u (0x%x)", picSize, picSize);
 
     stage = "reading picture frame";
     read_rect(&picFrame);
 
     if (verbose) {
         dumpRect("Picture frame:", picFrame);
-        pm_message("Picture size is %d x %d",
+        pm_message("Picture size is %u x %u",
             picFrame.right - picFrame.left,
             picFrame.bottom - picFrame.top);
     }
