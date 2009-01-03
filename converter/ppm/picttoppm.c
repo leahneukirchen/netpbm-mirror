@@ -142,15 +142,6 @@ static int ps_cent_x;
 static int ps_cent_y;
 static int ps_cent_set;
 
-typedef void (drawFn)(struct canvas *, int);
-
-struct opdef {
-    const char* name;
-    int len;
-    drawFn * impl;
-    const char* description;
-};
-
 struct raster {
 /*----------------------------------------------------------------------------
    An image raster.  May be either truecolor or paletted.
@@ -265,13 +256,30 @@ struct blit_info {
     struct raster      srcplane;
     int                pixSize;
     struct Rect        dstRect;
-    struct RGBColor *  color_map;
+    struct RGBColor *  colorMap;
     int                mode;
     struct blit_info * next;
 };
 
-static struct blit_info* blit_list = 0;
-static struct blit_info** last_bl = &blit_list;
+typedef struct {
+    struct blit_info * firstP;
+    struct blit_info ** connectorP;
+    bool unblittableText;
+        /* The image contains text opcodes, and we don't know how to put that
+           in a blit list (I really don't even know what a blit _is_), so
+           the image information here is incomplete.
+        */
+} blitList;
+
+
+typedef void (drawFn)(struct canvas *, blitList *, int);
+
+struct opdef {
+    const char* name;
+    int len;
+    drawFn * impl;
+    const char* description;
+};
 
 #define WORD_LEN (-1)
 
@@ -610,6 +618,7 @@ static drawFn ShortComment;
 
 static void
 ShortComment(struct canvas * const canvasP,
+             blitList *      const blitListP,
              int             const version) {
 
     picComment(read_word(), 0);
@@ -621,6 +630,7 @@ static drawFn LongComment;
 
 static void
 LongComment(struct canvas * const canvasP,
+            blitList *      const blitListP,
             int             const version) {
 
     word type;
@@ -635,6 +645,7 @@ static drawFn skip_poly_or_region;
 
 static void
 skip_poly_or_region(struct canvas * const canvasP,
+                    blitList *      const blitListP,
                     int             const version) {
 
     stage = "skipping polygon or region";
@@ -811,10 +822,10 @@ rectheight(const struct Rect * const r) {
 
 
 static bool
-rectsamesize(const struct Rect * const r1, 
-             const struct Rect * const r2) {
-    return r1->right - r1->left == r2->right - r2->left &&
-           r1->bottom - r1->top == r2->bottom - r2->top ;
+rectsamesize(struct Rect const r1, 
+             struct Rect const r2) {
+    return r1.right - r1.left == r2.right - r2.left &&
+           r1.bottom - r1.top == r2.bottom - r2.top ;
 }
 
 
@@ -844,20 +855,45 @@ rectscale(struct Rect * const r,
 
 
 
-static struct blit_info* 
-add_blit_list(void) {
+static void
+    initBlitList(blitList * const blitListP) {
 
-    struct blit_info * bi;
+    blitListP->firstP          = NULL;
+    blitListP->connectorP      = &blitListP->firstP;
+    blitListP->unblittableText = false;
+}
+
+
+
+static void
+addBlitList(blitList *        const blitListP,
+            struct Rect       const srcRect,
+            struct Rect       const srcBounds,
+            struct raster     const srcplane,
+            int               const pixSize,
+            struct Rect       const dstRect,
+            struct RGBColor * const colorMap,
+            int               const mode) {
+
+    struct blit_info * biP;
     
-    MALLOCVAR(bi);
-    if (bi == NULL)
+    MALLOCVAR(biP);
+    if (biP == NULL)
         pm_error("out of memory for blit list");
-    
-    bi->next = 0;
-    *last_bl = bi;
-    last_bl = &bi->next;
-    
-    return bi;
+    else {
+        biP->srcRect   = srcRect;
+        biP->srcBounds = srcBounds;
+        biP->srcplane  = srcplane;
+        biP->pixSize   = pixSize;
+        biP->dstRect   = dstRect;
+        biP->colorMap  = colorMap;
+        biP->mode      = mode;
+
+        biP->next = NULL;
+
+        *blitListP->connectorP = biP;
+        blitListP->connectorP = &biP->next;
+    }
 }
 
 
@@ -1336,8 +1372,6 @@ doSameSize(transfer_func           trf,
            struct rgbPlanes  const dst,
            unsigned int      const dstwid) {
 /*----------------------------------------------------------------------------
-   Generalized (but slow) blit.
-
    Transfer pixels from 'src' to 'dst', applying the transfer function
    'trf'.
 
@@ -1510,19 +1544,30 @@ blitIdempotent(unsigned int          const pixSize,
 
 
 static void
-generalBlit(struct Rect       const srcRect, 
-            struct Rect       const srcBounds, 
-            struct raster     const srcplane,
-            struct rgbPlanes  const planes,
-            int               const pixSize, 
-            struct Rect       const dstRect, 
-            struct Rect       const dstBounds, 
-            int               const dstwid, 
-            struct RGBColor * const color_map, 
-            int               const mode,
-            struct Rect       const clipsrc,
-            struct Rect       const clipdst) {
-    
+doBlit(struct Rect       const srcRect, 
+       struct Rect       const dstRect, 
+       struct Rect       const srcBounds, 
+       struct raster     const srcplane,
+       struct Rect       const dstBounds, 
+       struct rgbPlanes  const canvasPlanes,
+       int               const pixSize, 
+       int               const dstwid, 
+       struct RGBColor * const color_map, 
+       int               const mode) {
+/*----------------------------------------------------------------------------
+   Transfer some pixels from 'srcplane' to 'canvasPlanes', applying the
+   transfer function 'trf'.
+
+   'srcplane' contains the rectangle 'srcBounds' of the image.
+   'canvasPlanes' contains the rectangle 'dstRect' of the image.
+
+   Take the rectangle 'srcRect' of the source image and copy it to the
+   rectangle 'dstRec' of the destination image.
+
+   Each plane of 'canvasPlanes' is one word per pixel and contains actual
+   colors, never a palette index.  It is an array in row-major order
+   with 'dstwid' words per row.
+-----------------------------------------------------------------------------*/
     unsigned char * src;
     struct rgbPlanes dst;
     int dstoff;
@@ -1532,31 +1577,31 @@ generalBlit(struct Rect       const srcRect,
     transfer_func trf;
 
     if (verbose) {
-        dumpRect("copying from:", clipsrc);
-        dumpRect("to:          ", clipdst);
+        dumpRect("copying from:", srcRect);
+        dumpRect("to:          ", dstRect);
         pm_message("a %u x %u area to a %u x %u area",
-                   rectwidth(&clipsrc), rectheight(&clipsrc),
-                   rectwidth(&clipdst), rectheight(&clipdst));
+                   rectwidth(&srcRect), rectheight(&srcRect),
+                   rectwidth(&dstRect), rectheight(&dstRect));
     }
 
     {
         unsigned int const pkpixsize = pixSize == 16 ? 2 : 1;
-        unsigned int const srcRowNumber = clipsrc.top - srcBounds.top;
+        unsigned int const srcRowNumber = srcRect.top - srcBounds.top;
         unsigned int const srcRowOffset =
-            (clipsrc.left - srcBounds.left) * pkpixsize;
+            (srcRect.left - srcBounds.left) * pkpixsize;
         assert(srcRowNumber < srcplane.rowCount);
         assert(srcRowOffset < srcplane.rowSize);
         src = srcplane.bytes + srcRowNumber * srcplane.rowSize + srcRowOffset;
-        xsize = clipsrc.right - clipsrc.left;
-        ysize = clipsrc.bottom - clipsrc.top;
+        xsize = rectwidth(&srcRect);
+        ysize = rectheight(&srcRect);
         srcadd = srcplane.rowSize - xsize * pkpixsize;
     }
 
-    dstoff = (clipdst.top - dstBounds.top) * dstwid +
-        (clipdst.left - dstBounds.left);
-    dst.red = planes.red + dstoff;
-    dst.grn = planes.grn + dstoff;
-    dst.blu = planes.blu + dstoff;
+    dstoff = (dstRect.top - dstBounds.top) * dstwid +
+        (dstRect.left - dstBounds.left);
+    dst.red = canvasPlanes.red + dstoff;
+    dst.grn = canvasPlanes.grn + dstoff;
+    dst.blu = canvasPlanes.blu + dstoff;
 
     /* get rid of Text mask mode bit, if (erroneously) set */
     if ((mode & ~64) == 0)
@@ -1564,8 +1609,8 @@ generalBlit(struct Rect       const srcRect,
     else
         trf = transfer(mode & ~64);
 
-    if (!rectsamesize(&clipsrc, &clipdst))
-        doDiffSize(clipsrc, clipdst, pixSize, xsize, ysize,
+    if (!rectsamesize(srcRect, dstRect))
+        doDiffSize(srcRect, dstRect, pixSize, xsize, ysize,
                    trf, color_map, src, srcplane.rowSize, dst, dstwid);
     else {
         if (trf == NULL)
@@ -1584,12 +1629,21 @@ blit(struct Rect       const srcRect,
      struct Rect       const srcBounds, 
      struct raster     const srcplane,
      struct canvas *   const canvasP,
+     blitList *        const blitListP,
      int               const pixSize, 
      struct Rect       const dstRect, 
      struct Rect       const dstBounds, 
      int               const dstwid, 
      struct RGBColor * const color_map, 
      int               const mode) {
+/*----------------------------------------------------------------------------
+   'srcplane' contains the rectangle 'srcBounds' of the image.
+
+   We transfer rectangle 'srcRect' from that.
+
+   if 'blitListP' is non-null, we don't draw anything on 'canvasP'; instead,
+   we add to the list *blitlistP a description of what needs to be drawn.
+-----------------------------------------------------------------------------*/
 
     /* I can't tell what the result value of this function is supposed to mean,
        but I found several return statements that did not set it to anything,
@@ -1604,9 +1658,7 @@ blit(struct Rect       const srcRect,
         retval = 1;
     else {
         /* Almost got it.  Clip source rect with source bounds.
-           clip dest rect with dest bounds.  If source and
-           destination are not the same size, use Pnmscale
-           to get a nicely sized rectangle.
+           clip dest rect with dest bounds.
         */
         struct Rect clipsrc;
         struct Rect clipdst;
@@ -1614,22 +1666,16 @@ blit(struct Rect       const srcRect,
         rectinter(srcBounds, srcRect, &clipsrc);
         rectinter(dstBounds, dstRect, &clipdst);
 
-        if (fullres) {
-            struct blit_info * bi;
-            bi = add_blit_list();
-            bi->srcRect   = clipsrc;
-            bi->srcBounds = srcBounds;
-            bi->srcplane  = srcplane;
-            bi->pixSize   = pixSize;
-            bi->dstRect   = clipdst;
-            bi->color_map = color_map;
-            bi->mode      = mode;
+        if (blitListP) {
+            addBlitList(blitListP,
+                        clipsrc, srcBounds, srcplane, pixSize,
+                        clipdst, color_map, mode);
 
             retval = 0;
         } else {
-            generalBlit(srcRect, srcBounds, srcplane, canvasP->planes, pixSize,
-                        dstRect, dstBounds, dstwid, color_map, mode,
-                        clipsrc, clipdst);
+            doBlit(clipsrc, clipdst,
+                   srcBounds, srcplane, dstBounds, canvasP->planes,
+                   pixSize, dstwid, color_map, mode);
 
             retval = 1;
         }
@@ -1689,9 +1735,31 @@ compact(word const input) {
 
 
 static void
-do_blits(struct canvas * const canvasP) {
+reportBlitList(blitList * const blitListP) {
 
-    struct blit_info* bi;
+    if (verbose) {
+        unsigned int count;
+        struct blit_info * biP;
+
+        for (count = 0, biP = blitListP->firstP; biP; biP = biP->next)
+            ++count;
+
+        pm_message("# blits: %u", count);
+    }
+}
+
+
+
+static void
+doBlitList(struct canvas * const canvasP,
+           blitList *      const blitListP) {
+/*----------------------------------------------------------------------------
+   Do the list of blits *blitListP, drawing on canvas *canvasP.
+
+   We allocate new plane data structures in *canvasP.  We assume it doesn't
+   have them already.
+-----------------------------------------------------------------------------*/
+    struct blit_info * bi;
     int srcwidth, dstwidth, srcheight, dstheight;
     double  scale, scalelow, scalehigh;
     double  xscale = 1.0;
@@ -1699,11 +1767,11 @@ do_blits(struct canvas * const canvasP) {
     double  lowxscale, highxscale, lowyscale, highyscale;
     int     xscalecalc = 0, yscalecalc = 0;
 
-    if (!blit_list) return;
+    reportBlitList(blitListP);
 
     fullres = 0;
 
-    for (bi = blit_list; bi; bi = bi->next) {
+    for (bi = blitListP->firstP; bi; bi = bi->next) {
         srcwidth = rectwidth(&bi->srcRect);
         dstwidth = rectwidth(&bi->dstRect);
         srcheight = rectheight(&bi->srcRect);
@@ -1779,11 +1847,12 @@ do_blits(struct canvas * const canvasP) {
     }
 
     if (xscale != 1.0 || yscale != 1.0) {
-        for (bi = blit_list; bi; bi = bi->next)
-            rectscale(&bi->dstRect, xscale, yscale);
+        struct blit_info * biP;
+        
+        for (biP = blitListP->firstP; biP; biP = biP->next)
+            rectscale(&biP->dstRect, xscale, yscale);
 
-        pm_message("Scaling output by %f in X and %f in Y",
-                   xscale, yscale);
+        pm_message("Scaling output by %f in X and %f in Y", xscale, yscale);
         rectscale(&picFrame, xscale, yscale);
     }
 
@@ -1794,12 +1863,10 @@ do_blits(struct canvas * const canvasP) {
 
     clip_rect = picFrame;
 
-    for (bi = blit_list; bi; bi = bi->next) {
-        blit(bi->srcRect, bi->srcBounds, bi->srcplane, canvasP,
-             bi->pixSize,
-             bi->dstRect, picFrame, rowlen,
-             bi->color_map,
-             bi->mode);
+    for (bi = blitListP->firstP; bi; bi = bi->next) {
+        doBlit(bi->srcRect, bi->dstRect,
+               bi->srcBounds, bi->srcplane, picFrame, canvasP->planes,
+               bi->pixSize, rowlen, bi->colorMap, bi->mode);
     }
 }
 
@@ -1867,6 +1934,7 @@ static drawFn Clip;
 
 static void
 Clip(struct canvas * const canvasP,
+     blitList *      const blitListP,
      int             const version) {
 
     word len;
@@ -1889,6 +1957,7 @@ static drawFn OpColor;
 
 static void
 OpColor(struct canvas * const canvasP,
+        blitList *      const blitListP,
         int             const version) {
 
     op_color.red = read_word();
@@ -1978,7 +2047,7 @@ read_color_table(void) {
         color_table[val].blu = read_word();
 
         if (verbose > 1)
-            pm_message("%d: [%d,%d,%d]", val,
+            pm_message("Color %3u: [%u,%u,%u]", val,
                 color_table[val].red,
                 color_table[val].grn,
                 color_table[val].blu);
@@ -2625,6 +2694,7 @@ static drawFn BkPixPat;
 
 static void
 BkPixPat(struct canvas * const canvasP,
+         blitList *      const blitListP,
          int             const version) {
 
     read_pattern();
@@ -2636,6 +2706,7 @@ static drawFn PnPixPat;
 
 static void
 PnPixPat(struct canvas * const canvasP,
+         blitList *      const blitListP,
          int             const version) {
 
     read_pattern();
@@ -2647,6 +2718,7 @@ static drawFn FillPixPat;
 
 static void
 FillPixPat(struct canvas * const canvasP,
+           blitList *      const blitListP,
            int             const version) {
 
     read_pattern();
@@ -2681,6 +2753,7 @@ static drawFn BkPat;
 
 static void 
 BkPat(struct canvas * const canvasP,
+      blitList *      const blitListP,
       int             const version) {
 
     read_8x8_pattern(&bkpat);
@@ -2692,6 +2765,7 @@ static drawFn PnPat;
 
 static void 
 PnPat(struct canvas * const canvasP,
+      blitList *      const blitListP,
       int             const version) {
 
     read_8x8_pattern(&pen_pat);
@@ -2703,6 +2777,7 @@ static drawFn FillPat;
 
 static void 
 FillPat(struct canvas * const canvasP,
+        blitList *      const blitListP,
         int             const version) {
 
     read_8x8_pattern(&fillpat);
@@ -2714,6 +2789,7 @@ static drawFn PnSize;
 
 static void 
 PnSize(struct canvas * const canvasP,
+       blitList *      const blitListP,
        int             const version) {
 
     pen_height = read_word();
@@ -2728,6 +2804,7 @@ static drawFn PnSize;
 
 static void 
 PnMode(struct canvas * const canvasP,
+       blitList *      const blitListP,
        int             const version) {
 
     pen_mode = read_word();
@@ -2756,6 +2833,7 @@ static drawFn RGBFgCol;
 
 static void 
 RGBFgCol(struct canvas * const canvasP,
+         blitList *      const blitListP,
          int             const version) {
 
     read_rgb(&foreground);
@@ -2770,6 +2848,7 @@ static drawFn RGBBkCol;
 
 static void 
 RGBBkCol(struct canvas * const canvasP,
+         blitList *      const blitListP,
          int             const version) {
 
     read_rgb(&background);
@@ -2928,6 +3007,7 @@ static drawFn Line;
 
 static void 
 Line(struct canvas * const canvasP,
+     blitList *      const blitListP,
      int             const version) {
 
   struct Point p1;
@@ -2945,6 +3025,7 @@ static drawFn LineFrom;
 
 static void 
 LineFrom(struct canvas * const canvasP,
+         blitList *      const blitListP,
          int             const version) {
 
     struct Point p1;
@@ -2952,7 +3033,7 @@ LineFrom(struct canvas * const canvasP,
     if (verbose)
         pm_message("(%d,%d) to (%d, %d)", current.x, current.y, p1.x, p1.y);
 
-    if (!fullres)
+    if (!blitListP)
         scan_line(canvasP, current.x, current.y, p1.x, p1.y);
 
     current.x = p1.x;
@@ -2965,6 +3046,7 @@ static drawFn ShortLine;
 
 static void 
 ShortLine(struct canvas * const canvasP,
+          blitList *      const blitListP,
           int             const version) {
 
     struct Point p1;
@@ -2975,7 +3057,7 @@ ShortLine(struct canvas * const canvasP,
     current.x += p1.x;
     current.y += p1.y;
     
-    if (!fullres)
+    if (!blitListP)
         scan_line(canvasP, p1.x, p1.y, current.x, current.y);
 }
 
@@ -2985,6 +3067,7 @@ static drawFn ShortLineFrom;
 
 static void 
 ShortLineFrom(struct canvas * const canvasP,
+              blitList *      const blitListP,
               int             const version) {
 
     struct Point p1;
@@ -2994,7 +3077,7 @@ ShortLineFrom(struct canvas * const canvasP,
                    current.x,current.y,p1.x,p1.y);
     p1.x += current.x;
     p1.y += current.y;
-    if (!fullres)
+    if (!blitListP)
         scan_line(canvasP, current.x, current.y, p1.x, p1.y);
     current.x = p1.x;
     current.y = p1.y;
@@ -3008,9 +3091,6 @@ do_paintRect(struct canvas * const canvasP,
 
     struct Rect rect;
   
-    if (fullres)
-        return;
-
     if (verbose)
         dumpRect("painting", prect);
 
@@ -3025,10 +3105,12 @@ static drawFn paintRect;
 
 static void 
 paintRect(struct canvas * const canvasP,
+          blitList *      const blitListP,
           int             const version) {
 
     read_rect(&cur_rect);
-    do_paintRect(canvasP, cur_rect);
+    if (!blitListP)
+        do_paintRect(canvasP, cur_rect);
 }
 
 
@@ -3037,9 +3119,11 @@ static drawFn paintSameRect;
 
 static void 
 paintSameRect(struct canvas * const canvasP,
+              blitList *      const blitListP,
               int             const version) {
 
-    do_paintRect(canvasP, cur_rect);
+    if (!blitListP)
+        do_paintRect(canvasP, cur_rect);
 }
 
 
@@ -3047,25 +3131,22 @@ paintSameRect(struct canvas * const canvasP,
 static void 
 do_frameRect(struct canvas * const canvasP,
              struct Rect     const rect) {
-    int x, y;
 
-    if (fullres)
-        return;
-  
     if (verbose)
         dumpRect("framing", rect);
 
-    if (pen_width == 0 || pen_height == 0)
-        return;
+    if (pen_width > 0 && pen_height > 0) {
+        unsigned int x, y;
 
-    for (x = rect.left; x <= rect.right - pen_width; x += pen_width) {
-        draw_pen(canvasP, x, rect.top);
-        draw_pen(canvasP, x, rect.bottom - pen_height);
-    }
-
-    for (y = rect.top; y <= rect.bottom - pen_height ; y += pen_height) {
-        draw_pen(canvasP, rect.left, y);
-        draw_pen(canvasP, rect.right - pen_width, y);
+        for (x = rect.left; x <= rect.right - pen_width; x += pen_width) {
+            draw_pen(canvasP, x, rect.top);
+            draw_pen(canvasP, x, rect.bottom - pen_height);
+        }
+        
+        for (y = rect.top; y <= rect.bottom - pen_height ; y += pen_height) {
+            draw_pen(canvasP, rect.left, y);
+            draw_pen(canvasP, rect.right - pen_width, y);
+        }
     }
 }
 
@@ -3075,10 +3156,12 @@ static drawFn frameRect;
 
 static void 
 frameRect(struct canvas * const canvasP,
+          blitList *      const blitListP,
           int             const version) {
 
     read_rect(&cur_rect);
-    do_frameRect(canvasP, cur_rect);
+    if (!blitListP)
+        do_frameRect(canvasP, cur_rect);
 }
 
 
@@ -3087,9 +3170,11 @@ static drawFn frameSameRect;
 
 static void 
 frameSameRect(struct canvas * const canvasP,
+              blitList *      const blitListP,
               int             const version) {
 
-    do_frameRect(canvasP, cur_rect);
+    if (!blitListP)
+        do_frameRect(canvasP, cur_rect);
 }
 
 
@@ -3236,6 +3321,7 @@ static drawFn paintPoly;
   
 static void 
 paintPoly(struct canvas * const canvasP,
+          blitList *      const blitListP,
           int             const version) {
 
   struct Rect bb;
@@ -3247,7 +3333,7 @@ paintPoly(struct canvas * const canvasP,
     read_point(&pts[i]);
 
   /* scan convert poly ... */
-  if (!fullres)
+  if (!blitListP)
       scan_poly(canvasP, np, pts);
 }
 
@@ -3257,6 +3343,7 @@ static drawFn PnLocHFrac;
 
 static void 
 PnLocHFrac(struct canvas * const canvasP,
+           blitList *      const blitListP,
            int             const version) {
 
     word frac = read_word();
@@ -3271,6 +3358,7 @@ static drawFn TxMode;
 
 static void 
 TxMode(struct canvas * const canvasP,
+       blitList *      const blitListP,
        int             const version) {
 
     text_mode = read_word();
@@ -3291,6 +3379,7 @@ static drawFn TxFont;
 
 static void 
 TxFont(struct canvas * const canvasP,
+       blitList *      const blitListP,
        int             const version) {
 
     text_font = read_word();
@@ -3304,6 +3393,7 @@ static drawFn TxFace;
 
 static void 
 TxFace(struct canvas * const canvasP,
+       blitList *      const blitListP,
        int             const version) {
 
     text_face = read_byte();
@@ -3317,6 +3407,7 @@ static drawFn TxSize;
 
 static void 
 TxSize(struct canvas * const canvasP,
+       blitList *      const blitListP,
        int             const version) {
 
     text_size = read_word();
@@ -3327,8 +3418,11 @@ TxSize(struct canvas * const canvasP,
 
 
 static void
-skip_text(void) {
+skip_text(blitList * const blitListP) {
+
     skip(read_byte());
+
+    blitListP->unblittableText = true;
 }
 
 
@@ -3347,6 +3441,7 @@ static struct font*
 get_font(int const font, 
          int const size, 
          int const style) {
+
     int closeness, bestcloseness;
     struct fontinfo* fi, *best;
 
@@ -3478,11 +3573,12 @@ do_ps_text(struct canvas * const canvasP,
 
 static void
 do_text(struct canvas *  const canvasP,
+        blitList *       const blitListP,
         word             const startx, 
         word             const starty) {
 
-    if (fullres)
-        skip_text();
+    if (blitListP)
+        skip_text(blitListP);
     else {
         if (!(tfont = get_font(text_font, text_size, text_face)))
             tfont = pbm_defaultfont("bdf");
@@ -3527,13 +3623,14 @@ static drawFn LongText;
 
 static void
 LongText(struct canvas * const canvasP,
+         blitList *      const blitListP,
          int             const version) {
 
     struct Point p;
 
     read_point(&p);
 
-    do_text(canvasP, p.x, p.y);
+    do_text(canvasP, blitListP, p.x, p.y);
 }
 
 
@@ -3542,10 +3639,12 @@ static drawFn DHText;
 
 static void
 DHText(struct canvas * const canvasP,
+       blitList *      const blitListP,
        int             const version) {
 
     current.x += read_byte();
-    do_text(canvasP, current.x, current.y);
+
+    do_text(canvasP, blitListP, current.x, current.y);
 }
 
 
@@ -3554,10 +3653,12 @@ static drawFn DVText;
 
 static void
 DVText(struct canvas * const canvasP,
+       blitList *      const blitListP,
        int             const version) {
 
     current.y += read_byte();
-    do_text(canvasP, current.x, current.y);
+
+    do_text(canvasP, blitListP, current.x, current.y);
 }
 
 
@@ -3566,6 +3667,7 @@ static drawFn DHDVText;
 
 static void
 DHDVText(struct canvas * const canvasP,
+         blitList *      const blitListP,
          int             const version) {
     byte dh, dv;
 
@@ -3577,7 +3679,8 @@ DHDVText(struct canvas * const canvasP,
 
     current.x += dh;
     current.y += dv;
-    do_text(canvasP, current.x, current.y);
+
+    do_text(canvasP, blitListP, current.x, current.y);
 }
 
 
@@ -3588,6 +3691,7 @@ DHDVText(struct canvas * const canvasP,
 
 static void
 directBits(struct canvas * const canvasP,
+           blitList *      const blitListP,
            unsigned int    const pictVersion, 
            bool            const skipRegion) {
 
@@ -3629,11 +3733,11 @@ directBits(struct canvas * const canvasP,
         pm_message("transfer mode = %s", const_name(transfer_name, mode));
 
     if (skipRegion) 
-        skip_poly_or_region(canvasP, pictVersion);
+        skip_poly_or_region(canvasP, blitListP, pictVersion);
 
     unpackbits(ifp, &p.Bounds, 0, p.pixelSize, &raster);
 
-    blit(srcRect, p.Bounds, raster, canvasP, p.pixelSize,
+    blit(srcRect, p.Bounds, raster, canvasP, blitListP, p.pixelSize,
          dstRect, picFrame, rowlen, NULL, mode);
 
     freeRaster(raster);
@@ -3648,9 +3752,10 @@ static drawFn DirectBitsRect;
 
 static void
 DirectBitsRect(struct canvas * const canvasP,
+               blitList *      const blitListP,
                int             const version) {
 
-    directBits(canvasP, version, SKIP_REGION_FALSE);
+    directBits(canvasP, blitListP, version, SKIP_REGION_FALSE);
 }
 
 
@@ -3659,15 +3764,17 @@ static drawFn DirectBitsRgn;
 
 static void
 DirectBitsRgn(struct canvas * const canvasP,
+              blitList *      const blitListP,
               int             const version) {
 
-    directBits(canvasP, version, SKIP_REGION_TRUE);
+    directBits(canvasP, blitListP, version, SKIP_REGION_TRUE);
 }
 
 
 
 static void
 do_pixmap(struct canvas * const canvasP,
+          blitList *      const blitListP,
           int             const version, 
           word            const rowBytes, 
           int             const is_region) {
@@ -3706,13 +3813,13 @@ do_pixmap(struct canvas * const canvasP,
         pm_message("transfer mode = %s", const_name(transfer_name, mode));
 
     if (is_region)
-        skip_poly_or_region(canvasP, version);
+        skip_poly_or_region(canvasP, blitListP, version);
 
     stage = "unpacking rectangle";
 
     unpackbits(ifp, &p.Bounds, rowBytes, p.pixelSize, &raster);
 
-    blit(srcRect, p.Bounds, raster, canvasP, 8,
+    blit(srcRect, p.Bounds, raster, canvasP, blitListP, 8,
          dstRect, picFrame, rowlen, color_table, mode);
 
     free(color_table);
@@ -3724,6 +3831,7 @@ do_pixmap(struct canvas * const canvasP,
 static void
 do_bitmap(FILE *          const ifP,
           struct canvas * const canvasP,
+          blitList *      const blitListP,
           int             const version, 
           int             const rowBytes, 
           int             const is_region) {
@@ -3751,13 +3859,13 @@ do_bitmap(FILE *          const ifP,
         pm_message("transfer mode = %s", const_name(transfer_name, mode));
 
     if (is_region)
-        skip_poly_or_region(canvasP, version);
+        skip_poly_or_region(canvasP, blitListP, version);
 
     stage = "unpacking rectangle";
 
     unpackbits(ifP, &Bounds, rowBytes, 1, &raster);
 
-    blit(srcRect, Bounds, raster, canvasP, 8,
+    blit(srcRect, Bounds, raster, canvasP, blitListP, 8,
          dstRect, picFrame, rowlen, color_table, mode);
 
     freeRaster(raster);
@@ -3769,6 +3877,7 @@ static drawFn BitsRect;
 
 static void
 BitsRect(struct canvas * const canvasP,
+         blitList *      const blitListP,
          int             const version) {
 
     word rowBytesWord;
@@ -3781,9 +3890,9 @@ BitsRect(struct canvas * const canvasP,
     interpretRowBytesWord(rowBytesWord, &pixMap, &rowBytes);
 
     if (pixMap)
-        do_pixmap(canvasP, version, rowBytes, 0);
+        do_pixmap(canvasP, blitListP, version, rowBytes, 0);
     else
-        do_bitmap(ifp, canvasP, version, rowBytes, 0);
+        do_bitmap(ifp, canvasP, blitListP, version, rowBytes, 0);
 }
 
 
@@ -3792,6 +3901,7 @@ static drawFn BitsRegion;
 
 static void
 BitsRegion(struct canvas * const canvasP,
+           blitList *      const blitListP,
            int             const version) {
     
     word rowBytesWord;
@@ -3804,9 +3914,9 @@ BitsRegion(struct canvas * const canvasP,
     interpretRowBytesWord(rowBytesWord, &pixMap, &rowBytes);
 
     if (pixMap)
-        do_pixmap(canvasP, version, rowBytes, 1);
+        do_pixmap(canvasP, blitListP, version, rowBytes, 1);
     else
-        do_bitmap(ifp, canvasP, version, rowBytes, 1);
+        do_bitmap(ifp, canvasP, blitListP, version, rowBytes, 1);
 }
 
 
@@ -3989,15 +4099,85 @@ static struct opdef const optable[] = {
 
 
 static void
+processOpcode(word const opcode, 
+              struct canvas * const canvasP,
+              blitList *      const blitListP,
+              unsigned int    const version) {
+
+    if (opcode < 0xa2) {
+        stage = optable[opcode].name;
+        if (verbose) {
+            if (streq(stage, "reserved"))
+                pm_message("reserved opcode=0x%x", opcode);
+            else
+                pm_message("Opcode: %s", optable[opcode].name);
+        }
+
+        if (optable[opcode].impl != NULL)
+            (*optable[opcode].impl)(canvasP, blitListP, version);
+        else if (optable[opcode].len >= 0)
+            skip(optable[opcode].len);
+        else {
+            switch (optable[opcode].len) {
+            case WORD_LEN: {
+                word const len = read_word();
+                skip(len);
+                } break;
+            default:
+                pm_error("can't do length %u", optable[opcode].len);
+            }
+        }
+    } else if (opcode == 0xc00) {
+        if (verbose)
+            pm_message("HeaderOp");
+        stage = "HeaderOp";
+        skip(24);
+    } else if (opcode >= 0xa2 && opcode <= 0xaf) {
+        stage = "skipping reserved";
+        if (verbose)
+            pm_message("%s 0x%x", stage, opcode);
+        skip(read_word());
+    } else if (opcode >= 0xb0 && opcode <= 0xcf) {
+        /* just a reserved opcode, no data */
+        if (verbose)
+            pm_message("reserved 0x%x", opcode);
+    } else if (opcode >= 0xd0 && opcode <= 0xfe) {
+        stage = "skipping reserved";
+        if (verbose)
+            pm_message("%s 0x%x", stage, opcode);
+        skip(read_long());
+    } else if (opcode >= 0x100 && opcode <= 0x7fff) {
+        stage = "skipping reserved";
+        if (verbose)
+            pm_message("%s 0x%x", stage, opcode);
+        skip((opcode >> 7) & 255);
+    } else if (opcode >= 0x8000 && opcode <= 0x80ff) {
+        /* just a reserved opcode */
+        if (verbose)
+            pm_message("reserved 0x%x", opcode);
+    } else if (opcode >= 0x8100) {
+        stage = "skipping reserved";
+        if (verbose)
+            pm_message("%s 0x%x", stage, opcode);
+        skip(read_long());
+    } else
+        pm_error("This program does not understand opcode 0x%04x", opcode);
+}
+
+
+
+static void
 interpret_pict(FILE * const ofP) {
 
     byte ch;
     word picSize;
     word opcode;
-    word len;
     unsigned int version;
     int i;
     struct canvas canvas;
+    blitList blitList;
+
+    initBlitList(&blitList);
 
     for (i = 0; i < 64; i++)
         pen_pat.pix[i] = bkpat.pix[i] = fillpat.pix[i] = 1;
@@ -4019,8 +4199,8 @@ interpret_pict(FILE * const ofP) {
     if (verbose) {
         dumpRect("Picture frame:", picFrame);
         pm_message("Picture size is %u x %u",
-            picFrame.right - picFrame.left,
-            picFrame.bottom - picFrame.top);
+                   picFrame.right - picFrame.left,
+                   picFrame.bottom - picFrame.top);
     }
 
     if (!fullres) {
@@ -4056,68 +4236,15 @@ interpret_pict(FILE * const ofP) {
     if (verbose)
         pm_message("PICT version %u", version);
 
-    while((opcode = get_op(version)) != 0xff) {
-        if (opcode < 0xa2) {
-            stage = optable[opcode].name;
-            if (verbose) {
-                if (streq(stage, "reserved"))
-                    pm_message("reserved opcode=0x%x", opcode);
-                else
-                    pm_message("Opcode: %s", optable[opcode].name);
-            }
-
-            if (optable[opcode].impl != NULL)
-                (*optable[opcode].impl)(&canvas, version);
-            else if (optable[opcode].len >= 0)
-                skip(optable[opcode].len);
-            else switch (optable[opcode].len) {
-            case WORD_LEN:
-                len = read_word();
-                skip(len);
-                break;
-            default:
-                pm_error("can't do length %u", optable[opcode].len);
-            }
-        } else if (opcode == 0xc00) {
-            if (verbose)
-                pm_message("HeaderOp");
-            stage = "HeaderOp";
-            skip(24);
-        } else if (opcode >= 0xa2 && opcode <= 0xaf) {
-            stage = "skipping reserved";
-            if (verbose)
-                pm_message("%s 0x%x", stage, opcode);
-            skip(read_word());
-        } else if (opcode >= 0xb0 && opcode <= 0xcf) {
-            /* just a reserved opcode, no data */
-            if (verbose)
-                pm_message("reserved 0x%x", opcode);
-        } else if (opcode >= 0xd0 && opcode <= 0xfe) {
-            stage = "skipping reserved";
-            if (verbose)
-                pm_message("%s 0x%x", stage, opcode);
-            skip(read_long());
-        } else if (opcode >= 0x100 && opcode <= 0x7fff) {
-            stage = "skipping reserved";
-            if (verbose)
-                pm_message("%s 0x%x", stage, opcode);
-            skip((opcode >> 7) & 255);
-        } else if (opcode >= 0x8000 && opcode <= 0x80ff) {
-            /* just a reserved opcode */
-            if (verbose)
-                pm_message("reserved 0x%x", opcode);
-        } else if (opcode >= 0x8100) {
-            stage = "skipping reserved";
-            if (verbose)
-                pm_message("%s 0x%x", stage, opcode);
-            skip(read_long());
-        } else
-            pm_error("This program does not understand opcode 0x%04x", opcode);
-    }
+    while((opcode = get_op(version)) != 0xff)
+        processOpcode(opcode, &canvas, fullres ? &blitList : NULL, version);
     
-    if (fullres)
-        do_blits(&canvas);
-
+    if (fullres) {
+        if (blitList.unblittableText)
+            pm_message("Warning: text is omitted from the output because "
+                       "we don't know how to do text with -fullres.");
+        doBlitList(&canvas, &blitList);
+    }
     outputPpm(ofP, canvas.planes);
 
     freePlanes(canvas.planes);
