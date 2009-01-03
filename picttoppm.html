@@ -35,10 +35,11 @@ picttoppm - convert a Macintosh PICT file to a PPM
 <p><b>picttoppm</b> reads a PICT file (version 1 or 2) and outputs a PPM
 image.
 
-<p>PICT is an image format that was developed by Apple Computer in
-1984 as the native format for Macintosh graphics.  A PICT image is
-encoded in QuickDraw commands.  The PICT format is a meta-format that
-can be used for both bitmap images and vector images.
+<p>PICT is an image format that was developed by Apple Computer in 1984 as the
+native format for Macintosh graphics.  A PICT image is encoded in QuickDraw
+commands.  The PICT format is a meta-format that can be used for both bitmap
+images and vector images.  PICT is also known as &quot;Macintosh Picture&quot;
+format, or the QuickDraw Picture format.
 
 <p>PICT files are primarily used to exchange graphics between various
 Macintosh applications.
@@ -89,6 +90,10 @@ does not recognize all the drawing commands, but it does fully
 implement all image commands and mostly implement line, rectangle,
 polgon and text drawing.  It is useful for converting scanned images
 and some drawing conversion.
+
+<p>With <b>-fullres</b>, <b>picttoppm</b> ignores text drawing commands.
+Beginning in Netpbm 10.45 (December 2008), it issues a warning message
+when it omits text for this reason.
 
 <P>Memory is used very liberally with at least 6 bytes needed for
 every pixel.  Large bitmap PICT files will likely run your computer
@@ -169,8 +174,7 @@ Inside Macintosh volumes 1 and 5,
 Copyright 1993 George Phillips
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="inedex">Table Of Contents</H2>
 <UL>
 <LI><A HREF="#synopsis">SYNOPSIS</A>
 <LI><A HREF="#description">DESCRIPTION</A>
