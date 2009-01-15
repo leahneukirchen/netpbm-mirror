@@ -4,6 +4,13 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+09.01.15 BJH  Release 10.45.02
+
+              picttoppm: fix crash when image is all text with -fullres.
+
+              picttoppm: issue warning when text omitted because of 
+              -fullres.
+
 09.01.02 BJH  Release 10.45.01
 
               picttoppm: Don't fail if 'fontdir' file doesn't exist.  Bug

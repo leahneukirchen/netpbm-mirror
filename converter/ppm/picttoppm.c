@@ -1690,8 +1690,6 @@ do_blits(struct canvas * const canvasP) {
     double  lowxscale, highxscale, lowyscale, highyscale;
     int     xscalecalc = 0, yscalecalc = 0;
 
-    if (!blit_list) return;
-
     fullres = 0;
 
     for (bi = blit_list; bi; bi = bi->next) {
@@ -3259,6 +3257,9 @@ TxSize(struct canvas * const canvasP,
 
 static void
 skip_text(void) {
+
+    pm_message("Warning: text is omitted from the output because "
+               "we don't know how to do text with -fullres.");
     skip(read_byte());
 }
 
