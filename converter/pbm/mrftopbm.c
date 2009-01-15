@@ -62,10 +62,13 @@ doSquare(FILE *          const in,
         }
     } else {
         /* not all one color, so recurse. */
-        doSquare(in, image, ox,      oy,     w, size >> 1);
-        doSquare(in, image, ox+size, oy,     w, size >> 1);
-        doSquare(in, image, ox,      oy+size,w, size >> 1);
-        doSquare(in, image, ox+size, oy+size,w, size >> 1);
+
+        int halfsize = size >> 1;
+
+        doSquare(in, image, ox,          oy,          w, halfsize);
+        doSquare(in, image, ox+halfsize, oy,          w, halfsize);
+        doSquare(in, image, ox,          oy+halfsize, w, halfsize);
+        doSquare(in, image, ox+halfsize, oy+halfsize, w, halfsize);
     }
 }
 

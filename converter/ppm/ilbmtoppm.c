@@ -2349,7 +2349,7 @@ main(int argc, char *argv[]) {
             cmap_to_ppm(cmap);
         } else
             pm_error("no colormap");
-    } else if( bodyChunkProcessed ) {
+    } else if( !bodyChunkProcessed ) {
         if( HAS_COLORMAP(cmap) ) {
             pm_message("input is a colormap file");
             check_cmap(bmhdP, cmap);

@@ -1616,8 +1616,6 @@ do_blits(struct rgbPlanes * const planesP) {
     double  lowxscale, highxscale, lowyscale, highyscale;
     int     xscalecalc = 0, yscalecalc = 0;
 
-    if (!blit_list) return;
-
     fullres = 0;
 
     for (bi = blit_list; bi; bi = bi->next) {

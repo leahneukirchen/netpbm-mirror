@@ -4,6 +4,20 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+09.01.15 BJH  Release 10.35.58
+
+              picttoppm: fix crash when image is all text with -fullres.
+
+              ilbmtoppm: fix bug: appends color map PPM to output if input
+              has color map; fails if input doesn't have color map.  Broken
+              in 10.18.
+
+              leaftoppm: fix bug: uses red channel as all three channels;
+              (produces grayscale output).
+
+              pbmtomrf, mrftopbm: fix crashes, incorrect output in all
+              cases.  Broken forever.
+
 08.12.07 BJH  Release 10.35.57
 
               Build: Move CFLAGS later in libjasper build so that a -I in
