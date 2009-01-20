@@ -238,20 +238,25 @@ the <B>*</B><I>pamP</I> structure.  It does not require any members of
 and sets all of those members.  It expects all members after
 <b>tuple_type</b> to be meaningful.
 
-<p><I>size</I> is the size of the <B>*</B><I>pamP</I> structure as
-understood by the program processing the image.
-<b>pnm_readpaminit()</B> does not attempt to use or set any members of
-the structure beyond that.  The point of this argument is that the
-definition of the structure may change over time, with additional
-fields being added to the end.  This argument allows
-<b>pnm_readpaminit</b> to distinguish between a new program that wants
-to exploit the additional features and an old program that cannot (or
-a new program that just doesn't want to deal with the added
-complexity).  At a minimum, this size must contain the members up
-through <b>tuple_type</b>.  You should use the <b>PAM_STRUCT_SIZE</B>
-macro to compute this argument.
-E.g. <b>PAM_STRUCT_SIZE(tuple_type)</b>.  (This macro was introduced
-in Netpbm 10.23 (July 2004).  In older Netpbm, just use sizeof()).
+<p><I>size</I> is the size of the <B>*</B><I>pamP</I> structure as understood
+by the program processing the image.  <b>pnm_readpaminit()</B> does not
+attempt to use or set any members of the structure beyond that.  The point of
+this argument is that the definition of the structure may change over time,
+with additional fields being added to the end.  This argument allows
+<b>pnm_readpaminit</b> to distinguish between a new program that wants to
+exploit the additional features and an old program that cannot (or a new
+program that just doesn't want to deal with the added complexity).  At a
+minimum, this size must contain the members up through <b>tuple_type</b>.  You
+should use the <b>PAM_STRUCT_SIZE</B> macro to compute this argument.
+E.g. <b>PAM_STRUCT_SIZE(tuple_type)</b>.
+
+<B>PAM_STRUCT_SIZE</B> was introduced in Netpbm 10.23 (July 2004).  In older
+Netpbm, you can just use sizeof(), but then your code is <em>not</em> forward
+compatible at the source code level with newer libnetpbm (because when you
+compile it with newer libnetpbm header files, you'll be saying your structure
+contains all the new members that have been invented, but your code doesn't
+actually initialize them).  So you might want to compute a proper size
+yourself.
 
 <P>The function expects to find the image file positioned to the start
 of the header and leaves it positioned to the start of the raster.

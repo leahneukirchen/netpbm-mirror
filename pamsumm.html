@@ -87,10 +87,11 @@ extract it and then <b>pamsumm</b>.
      200 and all the samples have value 50, <b>pamsumm</b> will give you
      50 as an answer.  But <b>pamsumm -normalize</b> will give you .25.
 
-     <p>If you want a result that is independent of maxval but still in
-     integers, and your input is PNM, you can use <b>pamdepth</b> to
-     convert to some standard maxval.  For example, if you want the mean
-     intensity of a PPM image, on a scale of 0 to 99, do
+     <p>If instead you want a result that is independent of maxval but still
+     in integers, and your input is PNM, you can use <b>pamdepth</b> to
+     convert the input to some standard maxval and not use <b>-normalize</b>.
+     For example, if you want the mean intensity of a PPM image, on a scale of
+     0 to 99, do
 
 <pre>
 <kbd>
