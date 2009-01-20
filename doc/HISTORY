@@ -5,11 +5,22 @@ CHANGE HISTORY
 --------------
 
 not yet  BJH  Release 10.46.00
+         
+              pnmcut: finally make it just an alias of pamcut, which
+              obsoleted it in 9.20.
+
+              picttoppm: Fix crash with -fullres and all-text PICT image.
+              Also issue warning that program omits text with -fullres.
 
               picttoppm: Improve error/informational messages.
 
               picttoppm: Don't fail if 'fontdir' file doesn't exist.  Bug
               from 10.44.
+
+              ppmtopict: Use two-byte length field when image width > 200
+              instead of > 250.  Former is what Picttoppm has been assuming
+              since March 2004, when it was found to work better than 250,
+              which is the number documented as right.
 
               ilbmtoppm: fix bug: appends color map PPM to output if input
               has color map; fails if input doesn't have color map.  Broken

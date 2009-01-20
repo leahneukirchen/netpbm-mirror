@@ -23,7 +23,7 @@ PORTBINARIES = pamaddnoise pambackground pamcomp pamcut \
 	       pbmclean pbmlife pbmmask pbmpscale pbmreduce \
 	       pgmabel pgmbentley pgmdeshadow pgmenhance \
 	       pgmmedian pgmmorphconv \
-	       pnmalias pnmcat pnmcomp pnmconvol pnmcrop pnmcut \
+	       pnmalias pnmcat pnmcomp pnmconvol pnmcrop \
 	       pnmgamma \
 	       pnmhisteq pnmindex pnminvert pnmmontage \
 	       pnmnlfilt pnmnorm pnmpad pnmpaste \
@@ -84,3 +84,8 @@ install.bin.local: $(PKGDIR)/bin
 	cd $(PKGDIR)/bin ; \
 	rm -f pnmenlarge ; \
 	$(SYMLINK) pamenlarge$(EXE) pnmenlarge
+# In March 2009, pamcut replaced pnmcut (but pamcut is much older -- pnmcut
+# was obsoleted by pamcut long before this).
+	cd $(PKGDIR)/bin ; \
+	rm -f pnmcut ; \
+	$(SYMLINK) pamcut$(EXE) pnmcut
