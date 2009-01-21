@@ -166,9 +166,7 @@ processX10Header(X10WDFileHeader *  const h10P,
     bool grayscale;
     bool byte_swap;
 
-    *maxvalP = 65535;   /* Initial assumption */
-
-    if ( h10P->file_version != X10WD_FILE_VERSION ) {
+    if (h10P->file_version != X10WD_FILE_VERSION) {
         byte_swap = TRUE;
         h10P->header_size     = pm_bs_long(h10P->header_size);
         h10P->file_version    = pm_bs_long(h10P->file_version);
@@ -186,51 +184,53 @@ processX10Header(X10WDFileHeader *  const h10P,
     } else
         byte_swap = FALSE;
 
-    for ( i = 0; i < h10P->header_size - sizeof(*h10P); ++i )
-        if ( getc( file ) == EOF )
-            pm_error( "couldn't read rest of X10 XWD file header" );
+    for (i = 0; i < h10P->header_size - sizeof(*h10P); ++i)
+        if (getc(file) == EOF)
+            pm_error("couldn't read rest of X10 XWD file header");
 
     /* Check whether we can handle this dump. */
-    if ( h10P->window_ncolors > 256 )
-        pm_error( "can't handle X10 window_ncolors > %d", 256 );
-    if ( h10P->pixmap_format != ZFormat && h10P->display_planes != 1 )
-        pm_error(
-            "can't handle X10 pixmap_format %d with planes != 1",
-            h10P->pixmap_format );
+    if (h10P->window_ncolors > 256)
+        pm_error("can't handle X10 window_ncolors > %d", 256);
+    if (h10P->pixmap_format != ZFormat && h10P->display_planes != 1)
+        pm_error("can't handle X10 pixmap_format %d with planes != 1",
+                 h10P->pixmap_format);
 
     grayscale = TRUE;  /* initial assumption */
-    if ( h10P->window_ncolors != 0 ) {
+    if (h10P->window_ncolors != 0) {
         /* Read X10 colormap. */
-        MALLOCARRAY( x10colors, h10P->window_ncolors );
-        if ( x10colors == NULL )
-            pm_error( "out of memory" );
-        for ( i = 0; i < h10P->window_ncolors; ++i ) {
-            if ( fread( &x10colors[i], sizeof(X10Color), 1, file ) != 1 )
-                pm_error( "couldn't read X10 XWD colormap" );
-            if ( byte_swap ) {
+        MALLOCARRAY(x10colors, h10P->window_ncolors);
+        if (x10colors == NULL)
+            pm_error("out of memory");
+        for (i = 0; i < h10P->window_ncolors; ++i) {
+            size_t bytesRead;
+            bytesRead = fread(&x10colors[i], sizeof(X10Color), 1, file);
+            if (bytesRead != 1)
+                pm_error("couldn't read X10 XWD colormap");
+            if (byte_swap) {
                 x10colors[i].red   = pm_bs_short(x10colors[i].red);
                 x10colors[i].green = pm_bs_short(x10colors[i].green);
                 x10colors[i].blue  = pm_bs_short(x10colors[i].blue);
             }
-            if ( x10colors[i].red != x10colors[i].green ||
-                 x10colors[i].green != x10colors[i].blue )
+            if (x10colors[i].red != x10colors[i].green ||
+                x10colors[i].green != x10colors[i].blue)
                 grayscale = FALSE;
         }
     }
 
-    if ( h10P->display_planes == 1 ) {
+    if (h10P->display_planes == 1) {
         *formatP = PBM_TYPE;
         *visualclassP = StaticGray;
         *maxvalP = 1;
-        *colorsP = pnm_allocrow( 2 );
-        PNM_ASSIGN1( (*colorsP)[0], 0 );
-        PNM_ASSIGN1( (*colorsP)[1], *maxvalP );
+        *colorsP = pnm_allocrow(2);
+        PNM_ASSIGN1((*colorsP)[0], 0);
+        PNM_ASSIGN1((*colorsP)[1], *maxvalP);
         *padrightP =
             (((h10P->pixmap_width + 15) / 16) * 16 - h10P->pixmap_width) * 8;
         *bits_per_itemP = 16;
         *bits_per_pixelP = 1;
-    } else if ( h10P->window_ncolors == 0 ) { 
+    } else if (h10P->window_ncolors == 0) { 
         /* Must be grayscale. */
+        unsigned int i;
         *formatP = PGM_TYPE;
         *visualclassP = StaticGray;
         if (h10P->display_planes > sizeof(*maxvalP) * 8 - 1)
@@ -242,23 +242,27 @@ processX10Header(X10WDFileHeader *  const h10P,
             pm_error("XWD header says display_planes = %u, which is too "
                      "large for maximum maxval of %u",
                      h10P->display_planes, PNM_OVERALLMAXVAL);
-        *colorsP = pnm_allocrow( *maxvalP + 1 );
-        for ( i = 0; i <= *maxvalP; ++i )
-            PNM_ASSIGN1( (*colorsP)[i], i );
+        *colorsP = pnm_allocrow(*maxvalP + 1);
+        for (i = 0; i <= *maxvalP; ++i)
+            PNM_ASSIGN1((*colorsP)[i], i);
         *padrightP =
             (((h10P->pixmap_width + 15) / 16) * 16 - h10P->pixmap_width) * 8;
         *bits_per_itemP = 16;
         *bits_per_pixelP = 1;
     } else {
-        *colorsP = pnm_allocrow( h10P->window_ncolors );
+        *maxvalP = 65535;
+
+        *colorsP = pnm_allocrow(h10P->window_ncolors);
         *visualclassP = PseudoColor;
-        if ( grayscale ) {
+        if (grayscale) {
+            unsigned int i;
             *formatP = PGM_TYPE;
-            for ( i = 0; i < h10P->window_ncolors; ++i )
-                PNM_ASSIGN1( (*colorsP)[i], x10colors[i].red );
+            for (i = 0; i < h10P->window_ncolors; ++i)
+                PNM_ASSIGN1((*colorsP)[i], x10colors[i].red);
         } else {
+            unsigned int i;
             *formatP = PPM_TYPE;
-            for ( i = 0; i < h10P->window_ncolors; ++i )
+            for (i = 0; i < h10P->window_ncolors; ++i)
                 PPM_ASSIGN(
                     (*colorsP)[i], x10colors[i].red, x10colors[i].green,
                     x10colors[i].blue);
