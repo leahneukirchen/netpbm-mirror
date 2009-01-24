@@ -11,6 +11,9 @@ not yet  BJH  Release 10.46.00
               pnmcut: finally make it just an alias of pamcut, which
               obsoleted it in 9.20.
 
+              fitstopnm: fix garbage output when input is little endian
+              floating point FITS.
+
               picttoppm: Fix crash with -fullres and all-text PICT image.
               Also issue warning that program omits text with -fullres.
 
