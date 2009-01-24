@@ -1130,6 +1130,28 @@ reportInfo(int              const cols,
 
 
 
+static void
+warn16Bit(xelval const maxval) {
+/*----------------------------------------------------------------------------
+   This program is often used by users of X, and those users often use
+   'xv', which doesn't properly interpret PNM files with 16 bit samples.
+   Furthermore, the maxval is often much larger than the user assumes
+   because of PNM's need to use the same maxval for all color components,
+   while XWD often uses different resolution for each.
+
+   Users get really frustrated when Xv displays something other than the
+   original mimage, almost always assuming that means Xwdtopnm converted
+   incorrectly.
+-----------------------------------------------------------------------------*/
+
+    if (pm_maxvaltobits(maxval) > 8)
+        pm_message("WARNING: Producing maxval %u output.  This involves "
+                   "multiple bytes per sample, which some programs, e.g. "
+                   "'xv', can't handle.  See manual.", maxval);
+}
+
+
+
 static void 
 convertRowSimpleIndex(pixelReader *  const pixelReaderP,
                       int            const cols,
@@ -1323,6 +1345,8 @@ main(int argc, char *argv[]) {
             &colors, &bitsPerPixel, &bitsPerItem, 
             &compMask, &byteOrder, &bitOrder,
             cmdline.headerdump);
+
+    warn16Bit(maxval);
     
     if (verbose) 
         reportInfo(cols, rows, padright, maxval, visualclass,

@@ -5,6 +5,8 @@ CHANGE HISTORY
 --------------
 
 not yet  BJH  Release 10.46.00
+
+              xwdtopnm: Add warning about 2 byte sample output.
          
               pnmcut: finally make it just an alias of pamcut, which
               obsoleted it in 9.20.
