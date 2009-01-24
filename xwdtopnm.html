@@ -84,12 +84,13 @@ happens because in XWD, byte not PNM, each color component of a pixel can have
 different resolution, for example 5 bits for blue (maxval 31), 5 bits for red
 (maxval 31), and 6 bits for green (maxval 63), for a total of 16 bits per
 pixel.  In order to reproduce the colors as closely as possible,
-<b>xwdtopnm</b> has to use a large maxval.  In this example, it would use 31 *
-31 * 63 = 60543, and use 48 bits per pixel.
+<b>xwdtopnm</b> has to use a large maxval.  In this example, it would use
+31 * 63 = 1953, and use 48 bits per pixel.
 
 <p>Because this is a common and frustrating problem when using <b>xwdtopnm</b>,
 the program issues a warning whenever it generates output with two byte
-samples.  You can quiet this warning with the <b>-quiet</b> <a href="index.html#commonoptions">common option</a>.
+samples.  You can quiet this warning with the <b>-quiet</b> <a href="index.html#commonoptions">common option</a>.  The warning was new in Netpbm 10.46
+(March 2009).
 
 
 <H2 id="seealso">SEE ALSO</H2>
