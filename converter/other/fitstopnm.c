@@ -171,14 +171,13 @@ swapbytes(void *       const p,
 }
 
 
-/*
- ** This code will deal properly with integers, no matter what the byte order
- ** or integer size of the host machine.  Sign extension is handled manually
- ** to prevent problems with signed/unsigned characters.  Floating point
- ** values will only be read properly when the host architecture is IEEE-754
- ** conformant.  If you need to tweak this code for other machines, you might
- ** want to snag a copy of the FITS documentation from nssdca.gsfc.nasa.gov
- */
+/* This code will deal properly with integers, no matter what the byte order
+   or integer size of the host machine.  We handle sign extension manually to
+   prevent problems with signed/unsigned characters.  We read floating point
+   values properly only when the host architecture conforms to IEEE-754.  If
+   you need to tweak this code for other machines, you might want to get a
+   copy of the FITS documentation from nssdca.gsfc.nasa.gov
+*/
 
 static void
 readVal(FILE *   const ifP,
