@@ -43,9 +43,10 @@
 #include <string.h>
 
 #include "pm_c_util.h"
-#include "ppm.h"
-#include "ilbm.h"
 #include "mallocvar.h"
+#include "intcode.h"
+#include "ilbm.h"
+#include "ppm.h"
 
 typedef struct {
     int reg;            /* color register to change */
@@ -1655,39 +1656,41 @@ PCHG_DecompHuff(src, dest, tree, origsize)
 }
 
 
+
 static void
-PCHG_Decompress(PCHG, CompHdr, compdata, compsize, comptree, data)
-    PCHGHeader *PCHG;
-    PCHGCompHeader *CompHdr;
-    unsigned char *compdata;
-    unsigned long compsize;
-    unsigned char *comptree;
-    unsigned char *data;
-{
-    short *hufftree;
-    unsigned long huffsize, i;
-    unsigned long treesize = CompHdr->CompInfoSize;
+PCHG_Decompress(PCHGHeader *     const PCHG,
+                PCHGCompHeader * const CompHdr,
+                unsigned char *  const compdata,
+                unsigned long    const compsize,
+                unsigned char *  const comptree,
+                unsigned char *  const data) {
 
-    switch( PCHG->Compression ) {
-        case PCHG_COMP_HUFFMAN:
+    switch(PCHG->Compression) {
+    case PCHG_COMP_HUFFMAN: {
+        unsigned long const treesize = CompHdr->CompInfoSize;
+        unsigned long const huffsize = treesize / 2;
+        const bigend16 * const bigendComptree = (const void *)comptree;
 
-#ifdef DEBUG
-            pm_message("PCHG Huffman compression");
-#endif
-            /* turn big-endian 2-byte shorts into native format */
-            huffsize = treesize/2;
-            MALLOCVAR_NOFAIL(hufftree);
-            for( i = 0; i < huffsize; i++ ) {
-                hufftree[i] = (short)BIG_WORD(comptree);
-                comptree += 2;
-            }
+        short * hufftree;
+        unsigned long i;
 
-            /* decompress the change structure data */
-            PCHG_DecompHuff(compdata, data, &hufftree[huffsize-1], 
-                            CompHdr->OriginalDataSize);
+        /* Convert big-endian 2-byte shorts to C shorts */
 
-            free(hufftree);
-            break;
+        MALLOCARRAY(hufftree, huffsize);
+
+        if (!hufftree)
+            pm_error("Couldn't get memory for %lu-byte Huffman tree",
+                     huffsize);
+
+        for (i = 0; i < huffsize; ++i)
+            hufftree[i] = pm_uintFromBigend16(bigendComptree[i]);
+
+        /* decompress the change structure data */
+        PCHG_DecompHuff(compdata, data, &hufftree[huffsize-1], 
+                        CompHdr->OriginalDataSize);
+        
+        free(hufftree);
+    } break;
         default:
             pm_error("unknown PCHG compression type %d", PCHG->Compression);
     }
@@ -1796,92 +1799,117 @@ fail2:
 }
 
 
+
 static void
-PCHG_ConvertBig(PCHG, cmap, mask, datasize)
-    PCHGHeader *PCHG;
-    ColorMap *cmap;
-    unsigned char *mask;
-    unsigned long datasize;
-{
-    unsigned char *data;
+PCHG_ConvertBig(PCHGHeader *    const PCHG,
+                ColorMap *      const cmap,
+                unsigned char * const maskStart,
+                unsigned long   const datasize) {
+
+    unsigned char * data;
     unsigned char thismask;
-    int bits, row, i, changes, masklen, reg;
-    unsigned long totalchanges = 0;
-    int changedlines = PCHG->ChangedLines;
+    int bits;
+    unsigned int row;
+    int changes;
+    int masklen;
+    int reg;
+    unsigned long totalchanges;
+    int changedlines;
+    unsigned long dataRemaining;
+    unsigned char * mask;
+
+    mask = maskStart;  /* initial value */
+    dataRemaining = datasize;  /* initial value */
+    changedlines = PCHG->ChangedLines;  /* initial value */
+    totalchanges = 0;  /* initial value */
 
     masklen = 4 * MaskLongWords(PCHG->LineCount);
-    data = mask + masklen; datasize -= masklen;
+    data = mask + masklen; dataRemaining -= masklen;
 
-    bits = 0;
-    for( row = PCHG->StartLine; changedlines && row < 0; row++ ) {
-        if( bits == 0 ) {
-            if( masklen == 0 ) goto fail2;
+    for (row = PCHG->StartLine, bits = 0; changedlines && row < 0; ++row) {
+        if (bits == 0) {
+            if (masklen == 0)
+                pm_error("insufficient data in line mask");
             thismask = *mask++;
             --masklen;
             bits = 8;
         }
-        if( thismask & (1<<7) ) {
-            if( datasize < 2 ) goto fail;
-            changes = BIG_WORD(data); data += 2; datasize -= 2;
+        if (thismask & (1<<7)) {
+            unsigned int i;
 
-            for( i = 0; i < changes; i++ ) {
-                if( totalchanges >= PCHG->TotalChanges ) goto fail;
-                if( datasize < 6 ) goto fail;
+            if (dataRemaining < 2)
+                pm_error("insufficient data in BigLineChanges structures");
+
+            changes = BIG_WORD(data); data += 2; dataRemaining -= 2;
+
+            for (i = 0; i < changes; ++i) {
+                if (totalchanges >= PCHG->TotalChanges)
+                    pm_error("insufficient data in BigLineChanges structures");
+
+                if (dataRemaining < 6)
+                    pm_error("insufficient data in BigLineChanges structures");
+
                 reg = BIG_WORD(data); data += 2;
                 cmap->mp_init[reg - PCHG->MinReg].reg = reg;
                 ++data; /* skip alpha */
                 cmap->mp_init[reg - PCHG->MinReg].r = *data++;
                 cmap->mp_init[reg - PCHG->MinReg].b = *data++;  /* yes, RBG */
                 cmap->mp_init[reg - PCHG->MinReg].g = *data++;
-                datasize -= 6;
+                dataRemaining -= 6;
                 ++totalchanges;
             }
             --changedlines;
         }
         thismask <<= 1;
-        bits--;
+        --bits;
     }
 
-    for( row = PCHG->StartLine; changedlines && row < cmap->mp_rows; row++ ) {
-        if( bits == 0 ) {
-            if( masklen == 0 ) goto fail2;
+    for (row = PCHG->StartLine; changedlines && row < cmap->mp_rows; ++row) {
+        if (bits == 0) {
+            if (masklen == 0)
+                pm_error("insufficient data in line mask");
+
             thismask = *mask++;
             --masklen;
             bits = 8;
         }
-        if( thismask & (1<<7) ) {
-            if( datasize < 2 ) goto fail;
-            changes = BIG_WORD(data); data += 2; datasize -= 2;
+        if (thismask & (1<<7)) {
+            unsigned int i;
+
+            if (dataRemaining < 2)
+                pm_error("insufficient data in BigLineChanges structures");
+
+            changes = BIG_WORD(data); data += 2; dataRemaining -= 2;
 
             MALLOCARRAY_NOFAIL(cmap->mp_change[row], changes + 1);
-            for( i = 0; i < changes; i++ ) {
-                if( totalchanges >= PCHG->TotalChanges ) goto fail;
-                if( datasize < 6 ) goto fail;
+            for (i = 0; i < changes; ++i) {
+                if (totalchanges >= PCHG->TotalChanges)
+                    pm_error("insufficient data in BigLineChanges structures");
+
+                if (dataRemaining < 6)
+                    pm_error("insufficient data in BigLineChanges structures");
+
                 reg = BIG_WORD(data); data += 2;
                 cmap->mp_change[row][i].reg = reg;
                 ++data; /* skip alpha */
                 cmap->mp_change[row][i].r = *data++;
                 cmap->mp_change[row][i].b = *data++;    /* yes, RBG */
                 cmap->mp_change[row][i].g = *data++;
-                datasize -= 6;
+                dataRemaining -= 6;
                 ++totalchanges;
             }
             cmap->mp_change[row][changes].reg = MP_REG_END;
             --changedlines;
         }
         thismask <<= 1;
-        bits--;
+        --bits;
     }
-    if( totalchanges != PCHG->TotalChanges )
+    if (totalchanges != PCHG->TotalChanges)
         pm_message("warning - got %ld change structures, "
                    "chunk header reports %ld", 
                    totalchanges, PCHG->TotalChanges);
-    return;
-fail:
-    pm_error("insufficient data in BigLineChanges structures");
-fail2:
-    pm_error("insufficient data in line mask");
 }
+
 
 
 static void
@@ -1933,11 +1961,11 @@ read_pchg(FILE *     const ifp,
                 get_big_long(ifp, iffid, &remainingChunksize);
 
             treesize = CompHdr.CompInfoSize;
-            MALLOCVAR_NOFAIL(comptree);
+            MALLOCARRAY_NOFAIL(comptree, treesize);
             read_bytes(ifp, treesize, comptree, iffid, &remainingChunksize);
 
             compsize = remainingChunksize;
-            MALLOCARRAY_NOFAIL(compdata, remainingChunksize);
+            MALLOCARRAY_NOFAIL(compdata, compsize);
             read_bytes(ifp, compsize, compdata, iffid, &remainingChunksize);
 
             datasize = CompHdr.OriginalDataSize;
