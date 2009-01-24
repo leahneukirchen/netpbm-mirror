@@ -39,11 +39,12 @@
 #include <string.h>
 #include <float.h>
 
+#include "pm_config.h"
 #include "pm_c_util.h"
 #include "mallocvar.h"
+#include "floatcode.h"
 #include "shhopt.h"
 #include "pnm.h"
-#include "pm_config.h"
 
 
 
@@ -156,22 +157,7 @@ struct FITS_Header {
 };
 
 
-static void
-swapbytes(void *       const p,
-          unsigned int const nbytes) {
-#if BYTE_ORDER == LITTLE_ENDIAN
-    unsigned char * const c = p;
-    unsigned int i;
-    for (i = 0; i < nbytes/2; ++i) {
-        unsigned char const orig = c[i];
-        c[i] = c[nbytes-(i+1)];
-        c[nbytes-(i+1)] = orig;
-    }
-#endif
-}
-
-
-/* This code will deal properly with integers, no matter what the byte order
+/* This code deals properly with integers, no matter what the byte order
    or integer size of the host machine.  We handle sign extension manually to
    prevent problems with signed/unsigned characters.  We read floating point
    values properly only when the host architecture conforms to IEEE-754.  If
@@ -180,84 +166,141 @@ swapbytes(void *       const p,
 */
 
 static void
+readFitsChar(FILE *   const ifP,
+             double * const vP) {
+
+    /* 8 bit FITS integers are unsigned */
+
+    int const ich = getc(ifP);
+
+    if (ich == EOF)
+        pm_error("EOF / read error");
+    else
+        *vP = ich;
+}
+
+
+
+static void
+readFitsShort(FILE *   const ifP,
+              double * const vP) {
+
+    int ich;
+    int ival;
+    unsigned char c[8];
+
+    ich = getc(ifP);
+
+    if (ich == EOF)
+        pm_error("EOF / read error");
+
+    c[0] = ich;
+
+    ich = getc(ifP);
+
+    if (ich == EOF)
+        pm_error("EOF / read error");
+
+    c[1] = ich;
+
+    if (c[0] & 0x80)
+        ival = ~0xFFFF | c[0] << 8 | c[1];
+    else
+        ival = c[0] << 8 | c[1];
+
+    *vP = ival;
+}
+
+
+
+static void
+readFitsLong(FILE *   const ifP,
+             double * const vP) {
+
+    unsigned int i;
+    long int lval;
+    unsigned char c[4];
+
+    for (i = 0; i < 4; ++i) {
+        int const ich = getc(ifP);
+        if (ich == EOF)
+            pm_error("EOF / read error");
+        c[i] = ich;
+    }
+
+    if (c[0] & 0x80)
+        lval = ~0xFFFFFFFF | c[0] << 24 | c[1] << 16 | c[2] << 8 | c[3];
+    else
+        lval = c[0] << 24 | c[1] << 16 | c[2] << 8 | c[3] << 0;
+
+    *vP = lval;
+}
+
+
+
+static void
+readFitsFloat(FILE *   const ifP,
+              double * const vP) {
+
+    unsigned int i;
+    pm_bigendFloat bigend;
+
+    for (i = 0; i < 4; ++i) {
+        int const ich = getc(ifP);
+        if (ich == EOF)
+            pm_error("EOF / read error");
+        bigend.bytes[i] = ich;
+    }
+
+    *vP = pm_floatFromBigendFloat(bigend);
+}
+
+
+
+static void
+readFitsDouble(FILE *   const ifP,
+               double * const vP) {
+
+    unsigned int i;
+    pm_bigendDouble bigend;
+
+    for (i = 0; i < 8; ++i) {
+        int const ich = getc(ifP);
+        if (ich == EOF)
+            pm_error("EOF / read error");
+        bigend.bytes[i] = ich;
+    }
+
+    *vP = pm_doubleFromBigendDouble(bigend);
+}
+
+
+
+static void
 readVal(FILE *   const ifP,
         int      const bitpix,
         double * const vP) {
 
     switch (bitpix) {
-        /* 8 bit FITS integers are unsigned */
-    case 8: {
-        int const ich = getc(ifP);
-        if (ich == EOF)
-            pm_error("EOF / read error");
-        *vP = ich;
-    } break;
+    case 8:
+        readFitsChar(ifP, vP);
+        break;
 
-    case 16: {
-        int ich;
-        int ival;
-        unsigned char c[8];
-
-        ich = getc(ifP);
-        if (ich == EOF)
-            pm_error("EOF / read error");
-        c[0] = ich;
-        ich = getc(ifP);
-        if (ich == EOF)
-            pm_error("EOF / read error");
-        c[1] = ich;
-        if (c[0] & 0x80)
-            ival = ~0xFFFF | c[0] << 8 | c[1];
-        else
-            ival = c[0] << 8 | c[1];
-        *vP = ival;
-    } break;
+    case 16:
+        readFitsShort(ifP, vP);
+        break;
       
-    case 32: {
-        unsigned int i;
-        long int lval;
-        unsigned char c[4];
-
-        for (i = 0; i < 4; ++i) {
-            int const ich = getc(ifP);
-            if (ich == EOF)
-                pm_error("EOF / read error");
-            c[i] = ich;
-        }
-        if (c[0] & 0x80)
-            lval = ~0xFFFFFFFF | c[0] << 24 | c[1] << 16 | c[2] << 8 | c[3];
-        else
-            lval = c[0] << 24 | c[1] << 16 | c[2] << 8 | c[3] << 0;
-        *vP = lval;
-    } break;
+    case 32:
+        readFitsLong(ifP, vP);
+        break;
       
-    case -32: {
-        unsigned int i;
-        unsigned char c[4];
-
-        for (i = 0; i < 4; ++i) {
-            int const ich = getc(ifP);
-            if (ich == EOF)
-                pm_error("EOF / read error");
-            c[i] = ich;
-        }
-        swapbytes(c, 4);
-        *vP = *((float *)c);
-    } break;
+    case -32:
+        readFitsFloat(ifP, vP);
+        break;
       
-    case -64: {
-        unsigned int i;
-        unsigned char c[8];
-
-        for (i = 0; i < 8; ++i) {
-            int const ich = getc(ifP);
-            if (ich == EOF)
-                pm_error("EOF / read error");
-            c[i] = ich;
-        }
-        swapbytes(c, 8);
-        *vP = *((double *)c);
-    } break;
+    case -64:
+        readFitsDouble(ifP, vP);
+        break;
       
     default:
         pm_error("Strange bitpix value %d in readVal()", bitpix);
