@@ -4,12 +4,23 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+09.01.29 BJH  Release 10.45.03
+
+              ilbmtoppm: Fix array bound violation with compressed ILBM.
+              Introduced in 10.18.
+
+              fitstopnm: fix garbage output when input is little endian
+              floating point FITS.
+
 09.01.15 BJH  Release 10.45.02
 
               picttoppm: fix crash when image is all text with -fullres.
 
               picttoppm: issue warning when text omitted because of 
               -fullres.
+
+              picttoppm: Fix crash with -fullres and all-text PICT image.
+              Also issue warning that program omits text with -fullres.
 
 09.01.02 BJH  Release 10.45.01
 

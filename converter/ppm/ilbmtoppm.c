@@ -1677,7 +1677,7 @@ PCHG_Decompress(PCHG, CompHdr, compdata, compsize, comptree, data)
 #endif
             /* turn big-endian 2-byte shorts into native format */
             huffsize = treesize/2;
-            MALLOCVAR_NOFAIL(hufftree);
+            MALLOCARRAY_NOFAIL(hufftree, huffsize);
             for( i = 0; i < huffsize; i++ ) {
                 hufftree[i] = (short)BIG_WORD(comptree);
                 comptree += 2;
@@ -1934,7 +1934,7 @@ read_pchg(FILE *     const ifp,
                 get_big_long(ifp, iffid, &remainingChunksize);
 
             treesize = CompHdr.CompInfoSize;
-            MALLOCVAR_NOFAIL(comptree);
+            MALLOCARRAY_NOFAIL(comptree, treesize);
             read_bytes(ifp, treesize, comptree, iffid, &remainingChunksize);
 
             compsize = remainingChunksize;
