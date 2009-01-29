@@ -359,6 +359,22 @@ main(int argc, char * argv[]) {
     exit( 0 );
 }
 
+
+static void
+swapbytes(void *       const p,
+          unsigned int const nbytes) {
+#if BYTE_ORDER == LITTLE_ENDIAN
+    unsigned char * const c = p;
+    unsigned int i;
+    for (i = 0; i < nbytes/2; ++i) {
+        unsigned char const orig = c[i];
+        c[i] = c[nbytes-(i+1)];
+        c[nbytes-(i+1)] = orig;
+    }
+#endif
+}
+
+
 /*
  ** This code will deal properly with integers, no matter what the byte order
  ** or integer size of the host machine.  Sign extension is handled manually
@@ -427,6 +443,7 @@ read_val (fp, bitpix, vp)
                 pm_error( "EOF / read error" );
             c[i] = ich;
         }
+        swapbytes(c, 4);
         *vp = *( (float *) c);
         break;
       
@@ -437,6 +454,7 @@ read_val (fp, bitpix, vp)
                 pm_error( "EOF / read error" );
             c[i] = ich;
         }
+        swapbytes(c, 8);
         *vp = *( (double *) c);
         break;
       
