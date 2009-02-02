@@ -494,6 +494,31 @@ computeComponentMasks(X11WDFileHeader * const h11P,
 }
 
 
+/* About TrueColor maxval:
+
+   The X11 spec says that in TrueColor, you use the bits in the raster for a
+   particular color component of a particular pixel to index the server's
+   colormap for that component, which contains 'bits_per_rgb' significant bits
+   of intensity information.  'bits_per_rgb' is in the XWD header, and in
+   practice is normally 8 or 16, usually 8.
+
+   We don't have the server's colormap, so we assume the most ordinary
+   one, a linear-as-possible distribution over the indices.
+
+   That means the maxval is that implied by 'bits_per_rgb' bits and we get
+   the proper sample value by scaling the value from the raster to that
+   maxval.
+
+   We (mostly Julian Bradfield <jcb@inf.ed.ac.uk>) figured this out in Netpbm
+   10.46 (March 2009).  Between ca. 2000 and 10.46, we instead assumed the
+   value in the XWD raster to be the exact brightness value, and chose a
+   maxval that would best allow us to represent that exact value for all
+   three components (e.g. if the XWD had 5 bits for blue, 5 for red, and
+   6 for red, we'd use maxval 31*63=1953).  Before that, the maxval was
+   31 if bits per pixel was 16 and 255 otherwise.
+*/
+
+
 
 static void
 processX11Header(X11WDFileHeader *  const h11P, 
@@ -569,11 +594,8 @@ processX11Header(X11WDFileHeader *  const h11P,
     } else if (*visualclassP == TrueColor) {
         *formatP = PPM_TYPE;
 
-        *maxvalP = pm_lcm(pm_bitstomaxval(one_bits(h11FixedP->red_mask)),
-                          pm_bitstomaxval(one_bits(h11FixedP->green_mask)),
-                          pm_bitstomaxval(one_bits(h11FixedP->blue_mask)),
-                          PPM_OVERALLMAXVAL
-            );
+        /* See discussion above about this maxval */
+        *maxvalP = pm_bitstomaxval(h11FixedP->bits_per_rgb);
     } else if (*visualclassP == StaticGray && h11FixedP->bits_per_pixel == 1) {
         *formatP = PBM_TYPE;
         *maxvalP = 1;
