@@ -80,7 +80,7 @@ significant byte is first.
 <P>A row of an image is horizontal.  A column is vertical.  The pixels
 in the image are square and contiguous.
      
-<LI>In the raster, the sample values are &quot;nonlinear.&quot; They are
+<p>In the raster, the sample values are &quot;nonlinear.&quot; They are
 proportional to the intensity of the ITU-R Recommendation BT.709 red,
 green, and blue in the pixel, adjusted by the BT.709 gamma transfer
 function.  (That transfer function specifies a gamma number of 2.2 and
@@ -97,18 +97,18 @@ document once referred to the standard as CIE Rec. 709, but it isn't
 clear now that CIE ever sponsored such a standard.
 
 <P>Note that another popular color space is the newer sRGB.  A common
-variation on PPM is to subsitute this color space for the one specified.
+variation on PPM is to substitute this color space for the one specified.
 
-<LI>
+<p>
 Note that a common variation on the PPM format is to have the sample
 values be &quot;linear,&quot; i.e. as specified above except without
 the gamma adjustment.  <B>pnmgamma</B> takes such a PPM variant as
 input and produces a true PPM as output.
 
-<LI>Strings starting with &quot;#&quot; may be comments, the same as
-with <a href="pbm.html">PBM</a>.
-
 </OL>
+
+<p>Strings starting with &quot;#&quot; may be comments, the same as
+with <a href="pbm.html">PBM</a>.
 
 <P>Note that you can use <B>pamdepth</B> to convert between a the
 format with 1 byte per sample and the one with 2 bytes per sample.

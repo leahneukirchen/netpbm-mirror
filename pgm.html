@@ -75,7 +75,7 @@ Otherwise, it is 2 bytes.  The most significant byte is first.
 <P>A row of an image is horizontal.  A column is vertical.  The pixels
 in the image are square and contiguous.
 
-<LI>Each gray value is a number proportional to the intensity of the
+<p>Each gray value is a number proportional to the intensity of the
 pixel, adjusted by the ITU-R Recommendation BT.709 gamma transfer
 function.  (That transfer function specifies a gamma number of 2.2 and
 has a linear section for small intensities).  A value of zero is
@@ -83,12 +83,12 @@ therefore black.  A value of Maxval represents CIE D65 white and the
 most intense value in the image and any other image to which the image
 might be compared.
 
-<LI>Note that a common variation on the PGM format is to have the
+<p>Note that a common variation on the PGM format is to have the
 gray value be &quot;linear,&quot; i.e. as specified above except
 without the gamma adjustment.  <B>pnmgamma</B> takes such a PGM
 variant as input and produces a true PGM as output.
 
-<LI>In the transparency mask variation on PGM, the value represents
+<p>In the transparency mask variation on PGM, the value represents
 opaqueness.  It is proportional to the fraction of intensity of a
 pixel that would show in place of an underlying pixel.  So what
 normally means white represents total opaqueness and what normally
@@ -98,10 +98,10 @@ compute the intensity of a composite pixel of an &quot;under&quot; and
 (alpha/alpha_maxval).  Note that there is no gamma transfer function
 in the transparency mask.
 
-<LI>Strings starting with &quot;#&quot; may be comments, the same as
-with <a href="pbm.html">PBM</a>.
-
 </OL> 
+
+<p>Strings starting with &quot;#&quot; may be comments, the same as
+with <a href="pbm.html">PBM</a>.
 
 <P>Note that you can use <B>pamdepth</B> to convert between a the
 format with 1 byte per gray value and the one with 2 bytes per gray

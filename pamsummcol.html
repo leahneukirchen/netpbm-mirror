@@ -2,17 +2,15 @@
 <HTML><HEAD><TITLE>Pamsummcol User Manual</TITLE></HEAD>
 <BODY>
 <H1>pamsummcol</H1>
-Updated: 07 February 2004
+Updated: 25 January 2009
 <BR>
 
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 pamsummcol - summarize (sum, average, etc) a Netpbm image by column
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 <B>pamsummcol</B>
 {
 <b>-sum</b> |
@@ -26,8 +24,7 @@ pamsummcol - summarize (sum, average, etc) a Netpbm image by column
 You may use two hyphens instead of one.  You may separate an option
 name and its value with white space instead of an equals sign.
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -48,8 +45,13 @@ image is a PGM or PPM image.
 through <b>pamflip</b> first (and if you want the output to be a single
 column instead of a single row, use <b>pamflip</b> again).
 
-<p>If you want to summarize over the entire image instead of over columns
-separately, use <b>pamsumm</b>.
+<p>If you want to summarize over the entire image (getting a one-tuple
+output image), use <b>pamsumm</b> to get a summary row, <b>pamflip</b>
+to turn that into a column, the <b>pamsumm</b> again to summarize the
+column.
+
+<p>If you want to summarize the individual samples in an entire image,
+instead of by tuple, use <b>pamsumm</b>.
 
 <p><b>pamsummcol</b> performs the operation on the actual sample values,
 not on the light intensities represented by them in the case that the
@@ -62,8 +64,7 @@ to light intensity, and then use <b>pamsummcol</b> on the result.
 horizontally at all.  Use the pixel mixing method.
 
 
-<A NAME="options">&nbsp;</A>
-<H2>OPTIONS</H2>
+<H2 id="options">OPTIONS</H2>
 
 <p>You must specify exactly one of <b>-sum</b>, <b>-mean</b>,
 <b>-min</b>, or <b>-max</b>.
@@ -103,8 +104,7 @@ horizontally at all.  Use the pixel mixing method.
 
 </DL>
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="pamsumm.html">pamsumm</A></B>,
 <B><A HREF="pamflip.html">pamscale</A></B>,
@@ -113,16 +113,14 @@ horizontally at all.  Use the pixel mixing method.
 <B><A HREF="pamscale.html">pamscale</A></B>,
 <B><A HREF="pam.html">pam</A></B>,
 
-<A NAME="history"></a>
-<h2>HISTORY</h2>
+<h2 id="history">HISTORY</h2>
 
 <p><b>pamsummcol</b> was added to Netpbm in Release 10.21 (March
 2004).
 
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
 <LI><A HREF="#lbAB">NAME</A>
 <LI><A HREF="#lbAC">SYNOPSIS</A>
