@@ -30,7 +30,7 @@ PORTBINARIES = pamaddnoise pambackground pamcomp pamcut \
 	       pnmhisteq pnminvert pnmmontage \
 	       pnmnlfilt pnmnorm pnmpad pnmpaste \
 	       pnmremap pnmrotate \
-	       pnmscale pnmscalefixed pnmshear pnmsmooth pnmstitch pnmtile \
+	       pnmscalefixed pnmshear pnmsmooth pnmstitch pnmtile \
 	       ppmbrighten ppmchange ppmcolormask \
 	       ppmdim ppmdist ppmdither ppmdraw \
 	       ppmflash ppmlabel ppmmix \
@@ -85,3 +85,8 @@ install.bin.local: $(PKGDIR)/bin
 	cd $(PKGDIR)/bin ; \
 	rm -f pnmcut ; \
 	$(SYMLINK) pamcut$(EXE) pnmcut
+# In March 2009, pamscale replaced pnmscale (but pamscale is much older --
+# pnmscale was obsoleted by pamscale long before this).
+	cd $(PKGDIR)/bin ; \
+	rm -f pnmscale ; \
+	$(SYMLINK) pamscale$(EXE) pnmscale

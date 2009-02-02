@@ -6,10 +6,19 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.46.00
 
+              xwdtopnm: Change maxval calculation for truecolor to fit
+              X11 spec.  Now it's determined by bits_per_rgb.
+
               xwdtopnm: Add warning about 2 byte sample output.
          
+              pnmscale: finally make it just an alias of pamscale, which
+              obsoleted it in 10.20.
+              
               pnmcut: finally make it just an alias of pamcut, which
               obsoleted it in 9.20.
+
+              ilbmtoppm: Fix array bound violation with compressed ILBM.
+              Introduced in 10.18.
 
               fitstopnm: fix garbage output when input is little endian
               floating point FITS.
@@ -39,6 +48,9 @@ not yet  BJH  Release 10.46.00
               cases.  Broken forever.
 
               pamcut: fix bug with PBM and -pad.
+
+              Source tree: split out some of editor/ directory into new
+              editor/specialty directory.
 
 08.12.28 BJH  Release 10.45.00
 
