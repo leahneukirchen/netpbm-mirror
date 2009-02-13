@@ -49,6 +49,10 @@ not yet  BJH  Release 10.46.00
 
               pamcut: fix bug with PBM and -pad.
 
+              pnm_alloctupletable, pnm_tuplehashtotable,
+              pnm_computetuplefreqtable3: fix crash when out of memory,
+              memory leak with uncomputably large numbers.
+
               Source tree: split out some of editor/ directory into new
               editor/specialty directory.
 
