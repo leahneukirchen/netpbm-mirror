@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.46.00
 
+              xwdtopnm: Add -cmapdump .
+
               xwdtopnm: Change maxval calculation for truecolor to fit
               X11 spec.  Now it's determined by bits_per_rgb.
 
@@ -1186,7 +1188,7 @@ not yet  BJH  Release 10.46.00
 
               anytopnm: remove apparently redundant traps of signals.
 
-              pnm_alloctupletable(): fix bug - returns random value.
+              pnm_alloctupletable(): fix bug from 10.27: returns random value.
               (affects pnmcolormap, pnmremap, pnmquant, others).
          
               jpeg2ktopam: fix array bounds violation on 64 bit machines.

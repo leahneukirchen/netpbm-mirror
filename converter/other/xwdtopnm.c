@@ -53,6 +53,7 @@ struct cmdlineInfo {
     unsigned int verbose;
     unsigned int debug;
     unsigned int headerdump;
+    unsigned int cmapdump;
 };
 
 
@@ -123,6 +124,7 @@ parseCommandLine(int argc, char ** argv,
     OPTENT3(0,   "verbose",    OPT_FLAG,   NULL, &cmdlineP->verbose,       0);
     OPTENT3(0,   "debug",      OPT_FLAG,   NULL, &cmdlineP->debug,         0);
     OPTENT3(0,   "headerdump", OPT_FLAG,   NULL, &cmdlineP->headerdump,    0);
+    OPTENT3(0,   "cmapdump",   OPT_FLAG,   NULL, &cmdlineP->cmapdump,      0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -323,36 +325,46 @@ fixH11ByteOrder(X11WDFileHeader *  const h11P,
 
 
 static void
-readX11Colormap(FILE *      const file,
-                int         const ncolors, 
-                bool        const byteSwap,
-                X11XColor** const x11colorsP) {
+dumpX11Cmap(unsigned int       const nColors,
+            const X11XColor *  const x11colors) {
+
+    unsigned int i;
+    for (i = 0; i < nColors; ++i)
+        pm_message("Color %u r/g/b = %u/%u/%u", i, 
+                   x11colors[i].red, x11colors[i].green, 
+                   x11colors[i].blue);
+}
+
+
+
+static void
+readX11Colormap(FILE *       const file,
+                unsigned int const nColors, 
+                bool         const byteSwap,
+                bool         const cmapDump,
+                X11XColor**  const x11colorsP) {
                 
     X11XColor * x11colors;
     int rc;
 
     /* Read X11 colormap. */
-    MALLOCARRAY(x11colors, ncolors);
+    MALLOCARRAY(x11colors, nColors);
     if (x11colors == NULL)
         pm_error("out of memory");
-    rc = fread(x11colors, sizeof(x11colors[0]), ncolors, file);
-    if (rc != ncolors)
+    rc = fread(x11colors, sizeof(x11colors[0]), nColors, file);
+    if (rc != nColors)
         pm_error("couldn't read X11 XWD colormap");
     if (byteSwap) {
         unsigned int i;
-        for (i = 0; i < ncolors; ++i) {
+        for (i = 0; i < nColors; ++i) {
             x11colors[i].red   = pm_bs_short(x11colors[i].red);
             x11colors[i].green = pm_bs_short(x11colors[i].green);
             x11colors[i].blue  = pm_bs_short(x11colors[i].blue);
         }
     }
-    if (debug) {
-        unsigned int i;
-        for (i = 0; i < ncolors && i < 8; ++i)
-            pm_message("Color %d r/g/b = %d/%d/%d", i, 
-                       x11colors[i].red, x11colors[i].green, 
-                       x11colors[i].blue);
-    }
+    if (cmapDump)
+        dumpX11Cmap(nColors, x11colors);
+
     *x11colorsP = x11colors;
 }
 
@@ -522,7 +534,8 @@ computeComponentMasks(X11WDFileHeader * const h11P,
 
 static void
 processX11Header(X11WDFileHeader *  const h11P, 
-                 FILE *             const file,
+                 FILE *             const fileP,
+                 bool               const cmapDump,
                  int *              const colsP, 
                  int *              const rowsP, 
                  unsigned int *     const padrightP, 
@@ -548,7 +561,7 @@ processX11Header(X11WDFileHeader *  const h11P,
         pm_message("Header is different endianness from this machine.");
     
     for (i = 0; i < h11FixedP->header_size - sizeof(*h11FixedP); ++i)
-        if (getc(file) == EOF)
+        if (getc(fileP) == EOF)
             pm_error("couldn't read rest of X11 XWD file header");
 
     /* Check whether we can handle this dump. */
@@ -570,7 +583,8 @@ processX11Header(X11WDFileHeader *  const h11P,
                  h11FixedP->bitmap_unit);
 
     if (h11FixedP->ncolors > 0) {
-        readX11Colormap(file, h11FixedP->ncolors, byte_swap, &x11colors);
+        readX11Colormap(fileP, h11FixedP->ncolors, byte_swap, cmapDump,
+                        &x11colors);
         grayscale = colormapAllGray(x11colors, h11FixedP->ncolors);
     } else
         grayscale = TRUE;
@@ -707,7 +721,8 @@ getinit(FILE *             const ifP,
         struct compMask *  const compMaskP,
         enum byteorder *   const byte_orderP,
         enum byteorder *   const bit_orderP,
-        bool               const headerDump) {
+        bool               const headerDump,
+        bool               const cmapDump) {
 /*----------------------------------------------------------------------------
    Read the header from the XWD image in input stream 'ifP'.  Leave
    the stream positioned to the beginning of the raster.
@@ -769,7 +784,8 @@ getinit(FILE *             const ifP,
         if (headerDump)
             dumpX11Header(h11P);
 
-        processX11Header(h11P, ifP, colsP, rowsP, padrightP, maxvalP, 
+        processX11Header(h11P, ifP, cmapDump,
+                         colsP, rowsP, padrightP, maxvalP, 
                          visualclassP, formatP, 
                          colorsP, bits_per_pixelP, bits_per_itemP, 
                          compMaskP, byte_orderP, bit_orderP);
@@ -1366,7 +1382,7 @@ main(int argc, char *argv[]) {
     getinit(ifP, &cols, &rows, &padright, &maxval, &visualclass, &format, 
             &colors, &bitsPerPixel, &bitsPerItem, 
             &compMask, &byteOrder, &bitOrder,
-            cmdline.headerdump);
+            cmdline.headerdump, cmdline.cmapdump);
 
     warn16Bit(maxval);
     
