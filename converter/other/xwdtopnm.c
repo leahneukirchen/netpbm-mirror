@@ -215,7 +215,7 @@ processX10Header(X10WDFileHeader *  const h10P,
         PNM_ASSIGN1( (*colorsP)[0], 0 );
         PNM_ASSIGN1( (*colorsP)[1], *maxvalP );
         *padrightP =
-            ( ( h10P->pixmap_width + 15 ) / 16 ) * 16 - h10P->pixmap_width;
+            (((h10P->pixmap_width + 15) / 16) * 16 - h10P->pixmap_width) * 8;
         *bits_per_itemP = 16;
         *bits_per_pixelP = 1;
     } else if ( h10P->window_ncolors == 0 ) { 
@@ -235,7 +235,7 @@ processX10Header(X10WDFileHeader *  const h10P,
         for ( i = 0; i <= *maxvalP; ++i )
             PNM_ASSIGN1( (*colorsP)[i], i );
         *padrightP =
-            ( ( h10P->pixmap_width + 15 ) / 16 ) * 16 - h10P->pixmap_width;
+            (((h10P->pixmap_width + 15) / 16) * 16 - h10P->pixmap_width) * 8;
         *bits_per_itemP = 16;
         *bits_per_pixelP = 1;
     } else {
@@ -253,7 +253,7 @@ processX10Header(X10WDFileHeader *  const h10P,
                     x10colors[i].blue);
         }
 
-        *padrightP = h10P->pixmap_width & 1;
+        *padrightP = (h10P->pixmap_width & 1) * 8;
         *bits_per_itemP = 8;
         *bits_per_pixelP = 8;
     }
@@ -434,6 +434,54 @@ dumpX11Header(X11WDFileHeader * const h11P) {
 
 
 
+static unsigned long
+reverseBits(unsigned long arg,
+            unsigned int nSigBits) {
+
+    unsigned long input;
+    unsigned long output;
+    unsigned int i;
+
+    for (i = 0, input = arg, output = 0; i < nSigBits; ++i) {
+        output <<= 1;
+
+        output |= (input & 0x1);
+
+        input >>= 1;
+    }
+    return output;
+}
+
+
+
+static void
+computeComponentMasks(X11WDFileHeader * const h11P,
+                      unsigned long *   const redMaskP,
+                      unsigned long *   const grnMaskP,
+                      unsigned long *   const bluMaskP) {
+/*----------------------------------------------------------------------------
+   You'd think the component (red, green, blue) masks in the header
+   would just be right.  But we've seen a direct color image which has
+   BGR layout even though the masks say RGB.  It also says bit order
+   is LSB first, even though the pixels within the items are arranged
+   MSB first.  So we're guessing that LSB first bit order in that
+   particular case means the bits within each the pixel are backwards.
+   So we reverse the masks to compensate.
+-----------------------------------------------------------------------------*/
+    if (h11P->visual_class == DirectColor &&
+        h11P->bits_per_pixel == 24 && h11P->bitmap_bit_order == LSBFirst) {
+        *redMaskP = reverseBits(h11P->red_mask, 24);
+        *grnMaskP = reverseBits(h11P->green_mask, 24);
+        *bluMaskP = reverseBits(h11P->blue_mask, 24);
+    } else {
+        *redMaskP = h11P->red_mask;
+        *grnMaskP = h11P->green_mask;
+        *bluMaskP = h11P->blue_mask;
+    }
+}
+
+
+
 static void
 processX11Header(X11WDFileHeader *  const h11P, 
                  FILE *             const file,
@@ -561,8 +609,8 @@ processX11Header(X11WDFileHeader *  const h11P,
     *colsP = h11FixedP->pixmap_width;
     *rowsP = h11FixedP->pixmap_height;
     *padrightP =
-        h11FixedP->bytes_per_line * 8 / h11FixedP->bits_per_pixel -
-        h11FixedP->pixmap_width;
+        h11FixedP->bytes_per_line * 8 -
+        h11FixedP->pixmap_width * h11FixedP->bits_per_pixel;
     /* According to X11/XWDFile.h, the item size is 'bitmap_pad' for some
        images and 'bitmap_unit' for others.  This is strange, so there may
        be some subtlety of their definitions that we're missing.
@@ -577,6 +625,16 @@ processX11Header(X11WDFileHeader *  const h11P,
        bit-per-pixel direct color window that had bitmap_unit = 32 and
        bitmap_pad = 8.  This was made by Xwd in Red Hat Xfree86 4.3.0-2.
 
+       In March 2007, Darren Frith present an xwd file like this:
+       Header says direct color, bits_per_pixel = 24, bitmap_unit =
+       32, bitmap_pad = 8, byte order and bit order LSB first.  The
+       bytes in each item are in fact MSB first and the pixels spread
+       across the items MSB first.  The raster is consecutive 24 bit
+       pixel units, but each row is padded on the right with enough
+       bits to make the total line size 32 x width.  Really strange.
+       Xwud, ImageMagick, and Gimp render this image
+       correctly, so it's not broken.
+
        Before Netpbm 9.23 (January 2002), we used bitmap_unit as the
        item size always.  Then, until 10.19 (November 2003), we used
        bitmap_pad when pixmap_depth > 1 and pixmap_format == ZPixmap.
@@ -588,11 +646,17 @@ processX11Header(X11WDFileHeader *  const h11P,
 
     *bits_per_pixelP = h11FixedP->bits_per_pixel;
 
-    *byte_orderP = (enum byteorder) h11FixedP->byte_order;
-    *bit_orderP = (enum byteorder) h11FixedP->bitmap_bit_order;
-    *red_maskP = h11FixedP->red_mask;
-    *green_maskP = h11FixedP->green_mask;
-    *blue_maskP = h11FixedP->blue_mask;
+    if (*visualclassP == DirectColor) {
+        /* Strange, but we've seen a Direct Color 24/32 image that
+           says LSBFirst and it's a lie.  And Xwud renders it correctly.
+        */
+        *byte_orderP = MSBFirst;
+        *bit_orderP = MSBFirst;
+    } else {
+        *byte_orderP = (enum byteorder) h11FixedP->byte_order;
+        *bit_orderP  = (enum byteorder) h11FixedP->bitmap_bit_order;
+    }
+    computeComponentMasks(h11FixedP, red_maskP, green_maskP, blue_maskP);
 
     free(h11FixedP);
 } 
@@ -876,56 +940,18 @@ static unsigned long const lsbmask[] = {
 };
 
 
+
 static unsigned long
-getpix(pixelReader * const rdrP) {
+pixelReader_getbits(pixelReader * const rdrP,
+                    unsigned int  const nBits) {
 /*----------------------------------------------------------------------------
-   Get a pixel from the input image.
-
-   A pixel is a bit string.  It may be either an rgb triplet or an index
-   into the colormap (or even an rgb triplet of indices into the colormaps!).
-   We don't care -- it's just a bit string.
-
-   We return an integer.  It's the integer that the pixel represents as
-   pure binary cipher, with the first bit the most significant bit.
-   
-   The basic unit of storage in the input file is an "item."  An item
-   can be 1, 2, or 4 bytes, and 'bits_per_item' tells us which.  Each
-   item can have its bytes stored in forward or reverse order, and
-   'byte_order' tells us which.
-
-   Each item can contain one or more pixels, and may contain
-   fractional pixels.  'bits_per_pixel' tells us how many bits each
-   pixel has, and 'bits_per_pixel' is always less than or equal to
-   'bits_per_item', but not necessarily a factor of it.  Within an item,
-   after taking care of the endianness of its storage format, the pixels
-   may be arranged from left to right or right to left.  'bit_order' tells
-   us which.
-
-   But it's not that simple.  Sometimes dummy pixels are added to the
-   right edge of the image in order to make an integral number of
-   items in each row of the raster.  getpix() doesn't know anything
-   about that, though -- it gets the dummy pixels the same as any
-   other pixel.  (This program is written as if it is always whole
-   pixels that get added for padding, but I wonder.  When pixels are 3
-   or 4 bytes and items are 4 bytes, sub-pixel padding would make
-   sense.  But then, maybe in formats with 3 or 4 bytes pixels,
-   there's never padding.  That seems to be the case so far...).  The
-   XWD header has a field that tells how many bytes there are per XWD
-   raster line, so that's the final word on how much padding there is.
-   
-   The most difficult part of getting the pixel is the ones that span
-   items.  We detect when an item has part, but not all, of the next
-   pixel (after the one we return) in it and store the fragment as
-   "carryover" bits for use in the next call to this function.
-
-   All this state information (carryover bits, etc.) is kept in 
-   *row_controlP.
-
+  Get the next 'nBits' bits from the stream, and return the last 32
+  of them.
 -----------------------------------------------------------------------------*/
     unsigned long pixel;
         /* Accumulator for the value we ultimately return.  We shift in
            bits from the right end.  The number of bits presently in the
-           accumulator is rdrP->bitsPerPixel - bitsStillNeeded .
+           accumulator is rdrP->bitsPerPixel - nBitsStillNeeded .
         */
     
     unsigned int nBitsStillNeeded;
@@ -935,10 +961,8 @@ getpix(pixelReader * const rdrP) {
            it -- additional bits will shift in from the right.
         */
 
-    assert(rdrP->bitsPerPixel <= 32);
-
     pixel = 0;
-    nBitsStillNeeded = rdrP->bitsPerPixel;
+    nBitsStillNeeded = nBits;
 
     while (nBitsStillNeeded > 0) {
         if (rdrP->nBitsLeft == 0)
@@ -976,6 +1000,55 @@ getpix(pixelReader * const rdrP) {
         }
     }
     return pixel;
+}
+
+
+
+static unsigned long
+getpix(pixelReader * const rdrP) {
+/*----------------------------------------------------------------------------
+   Get a pixel from the input image.
+
+   A pixel is a bit string.  It may be either an rgb triplet or an index
+   into the colormap (or even an rgb triplet of indices into the colormaps!).
+   We don't care -- it's just a bit string.
+
+   We return an integer.  It's the integer that the pixel represents as
+   pure binary cipher, with the first bit the most significant bit.
+   
+   The basic unit of storage in the input file is an "item."  An item
+   can be 1, 2, or 4 bytes, and 'bits_per_item' tells us which.  Each
+   item can have its bytes stored in forward or reverse order, and
+   'byte_order' tells us which.  We have seen a Direct Color 24 bpp/32 bpi
+   image which said 'byte_order' == LSBFirst, but the byte order is
+   nonetheless MSB first.
+
+   Each item can contain one or more pixels, and may contain
+   fractional pixels.  'bits_per_pixel' tells us how many bits each
+   pixel has, and 'bits_per_pixel' is always less than or equal to
+   'bits_per_item', but not necessarily a factor of it.  Within an item,
+   after taking care of the endianness of its storage format, the pixels
+   may be arranged from left to right or right to left.  'bit_order' tells
+   us which.  We have also seen images in which the pixels are arranged
+   from left to right within the items, but the RGB components within
+   each pixel are right to left and 'bit_order' is LSBFirst.
+
+   But it's not that simple.  Sometimes dummy bits are added to the
+   right edge of the image in order to make an integral number of
+   items in each row of the raster.  And we've even seen images where
+   there are a ridiculous number of padding bits on the right so as to
+   make the number of items per line equal the number of pixels per
+   line, even though items are 32 bits and pixels are 24 bits!  The
+   XWD header has a field that tells how many bytes there are per XWD
+   raster line, so that's the final word on how much padding there is.
+
+   We maintain a 32 bit buffer to decouple reading of whole items from
+   the file and reading of an arbitrary number of bits from the
+   pixelReader.
+-----------------------------------------------------------------------------*/
+    assert(rdrP->bitsPerPixel <= 32);
+
+    return pixelReader_getbits(rdrP, rdrP->bitsPerPixel);
 }
 
 
@@ -1169,11 +1242,8 @@ convertRow(pixelReader *    const pixelReaderP,
     default:
         pm_error("unknown visual class");
     }
-    {
-        unsigned int col;
-        for (col = 0; col < padright; ++col)
-            getpix(pixelReaderP);
-    }
+    pixelReader_getbits(pixelReaderP, padright);
+
     pnm_writepnmrow(ofP, xelrow, cols, maxval, format, 0);
     pnm_freerow(xelrow);
 }
