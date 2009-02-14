@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+09.02.14 BJH  Release 10.45.04
+
+              pnm_alloctupletable, pnm_tuplehashtotable,
+              pnm_computetuplefreqtable3: fix crash when out of memory,
+              memory leak with uncomputably large numbers.
+
 09.01.29 BJH  Release 10.45.03
 
               ilbmtoppm: Fix array bound violation with compressed ILBM.
