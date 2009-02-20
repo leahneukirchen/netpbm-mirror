@@ -49,8 +49,6 @@ not yet  BJH  Release 10.46.00
               pbmtomrf, mrftopbm: fix crashes, incorrect output in all
               cases.  Broken forever.
 
-              pamcut: fix bug with PBM and -pad.
-
               pnm_alloctupletable, pnm_tuplehashtotable,
               pnm_computetuplefreqtable3: fix crash when out of memory,
               memory leak with uncomputably large numbers.
