@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pnmremap User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmremap</H1>
-Updated: 01 January 2002
+Updated: 19 February 2009
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -117,7 +117,8 @@ issue only if you're using some exotic PAM image.
 
 <p>Before Netpbm 10.27 (March 2005), <b>pnmremap</b> could not handle
 the case of a palette of greater depth than the input image.  (It would
-issue an error message and fail in that case).
+issue an error message and fail in that case).  You can use <b>ppmtoppm</b>
+to increase the depth of the input image to work around this limitation.
 
 <p>In any case, the output image has the same tuple type and depth as
 the palette image.
