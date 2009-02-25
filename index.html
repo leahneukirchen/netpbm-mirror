@@ -45,6 +45,7 @@ the <a href="http://sourceforge.net/projects/netpbm">Sourceforge
 <LI><A HREF="#config">netpbm-config</A>
 <li><a href="#memoryusage">Memory Usage</a>
 <li><a href="#cpuusage">CPU Usage</a>
+<LI><A HREF="#netpbm2gimp">Netpbm For Gimp</A>
 <LI><A HREF="#companion">Companion Software</A>
 <ul>
   <LI><A HREF="#phpnetpbm">PHP-NetPBM</A>
@@ -355,32 +356,6 @@ The library has the conventional C linkage.  Virtually all programs
 in the Netpbm package are based on the Netpbm library.
 
 
-<H2 id="netbpm2gimp">Netpbm For Gimp</H2>
-
-<P>The Gimp is a visual image editor for Unix and X, so it does the kinds
-of things that Netpbm does, but interactively in a user-friendly way.
-The Gimp knows a variety of graphics file formats and image transformations,
-but you can extend it with plugins.
-
-<p>A particularly easy way to write a Gimp plugin is to write a Netpbm program
-(remember that a fundamental mission of Netpbm is make writing image
-manipulation programs easy) and then use <b><a
-href="http://netpbm2gimp.sourceforge.net/">netpbm2gimp</a></b> to compile
-that same source code into a Gimp plugin.
-
-<p>You can turn a program that converts from a certain graphics file format
-to Netpbm format into a Gimp <i>load</i> plugin.  Likewise, you
-can turn a program that converts <em>to</em> a certain graphics format
-<em>from</em> Netpbm format into a Gimp <i>store</i> plugin.  Finally,
-a program that transforms images in Netpbm format can become a
-<i>process</i> plugin.
-
-<p>And the <b>netpbm2gimp</b> project has already packaged for you a few
-hundred of the Netpbm programs as Gimp plugins.  With this package you can,
-for example, edit an image in any of the arcane graphics file formats that
-Netpbm understands but no other image editor in existence does.
-
-
 <h2 id="config">netpbm-config</h2>
 
 <p>In a standard installation of Netpbm, there is a program named
@@ -507,6 +482,32 @@ image that approximates a grayscale image).
 
 <p>The Netpbm image formats use 16 bit integers.  The Netpbm code uses
 &quot;unsigned int&quot; size integers to work with them.
+
+
+<H2 id="netbpm2gimp">Netpbm For Gimp</H2>
+
+<P>The Gimp is a visual image editor for Unix and X, so it does the kinds
+of things that Netpbm does, but interactively in a user-friendly way.
+The Gimp knows a variety of graphics file formats and image transformations,
+but you can extend it with plugins.
+
+<p>A particularly easy way to write a Gimp plugin is to write a Netpbm program
+(remember that a fundamental mission of Netpbm is make writing image
+manipulation programs easy) and then use <b><a
+href="http://netpbm2gimp.sourceforge.net/">netpbm2gimp</a></b> to compile
+that same source code into a Gimp plugin.
+
+<p>You can turn a program that converts from a certain graphics file format
+to Netpbm format into a Gimp <i>load</i> plugin.  Likewise, you
+can turn a program that converts <em>to</em> a certain graphics format
+<em>from</em> Netpbm format into a Gimp <i>store</i> plugin.  Finally,
+a program that transforms images in Netpbm format can become a
+<i>process</i> plugin.
+
+<p>And the <b>netpbm2gimp</b> project has already packaged for you a few
+hundred of the Netpbm programs as Gimp plugins.  With this package you can,
+for example, edit an image in any of the arcane graphics file formats that
+Netpbm understands but no other image editor in existence does.
 
 
 <h2 id="companion">Companion Software</h2>
