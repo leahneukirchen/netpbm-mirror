@@ -497,7 +497,7 @@ concatenateTopBottomPbm(FILE *             const ofP,
             startRow = 0;
             backChange = FALSE;
             padleft = 0;
-            outrow[newcols-1] = 0x00;
+            outrow[pbm_packed_bytes(newcols)-1] = 0x00;
         } else {
             /* Determine amount of padding and color */
             switch (justification) {

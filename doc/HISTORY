@@ -19,6 +19,9 @@ not yet  BJH  Release 10.46.00
               pnmcut: finally make it just an alias of pamcut, which
               obsoleted it in 9.20.
 
+              pnmcat: fix array bound violation with PBM top/bottom
+              concatenation.  Introduced in 10.44.
+
               ilbmtoppm: Fix array bound violation with compressed ILBM.
               Introduced in 10.18.
 
