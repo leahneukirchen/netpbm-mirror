@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+09.02.26 BJH  Release 10.45.05
+
+              pnmcat: fix array bound violation with PBM top/bottom
+              concatenation.  Introduced in 10.44.
+
 09.02.14 BJH  Release 10.45.04
 
               pnm_alloctupletable, pnm_tuplehashtotable,
