@@ -13,11 +13,15 @@ not yet  BJH  Release 10.46.00
 
               xwdtopnm: Add warning about 2 byte sample output.
          
+              pnmcrop: fast path for PBM.
+
               pnmscale: finally make it just an alias of pamscale, which
               obsoleted it in 10.20.
               
               pnmcut: finally make it just an alias of pamcut, which
               obsoleted it in 9.20.
+
+              pnmcrop: various fixes.
 
               pnmcat: fix array bound violation with PBM top/bottom
               concatenation.  Introduced in 10.44.
