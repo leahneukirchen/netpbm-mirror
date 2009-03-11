@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pnmcrop User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmcrop</H1>
-Updated: 30 November 2006
+Updated: 11 March 2009
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -131,28 +131,35 @@ if necessary.
 <dt><b>-borderfile=</b><i>filename</i>
 
 <dd>Use the image in the file named <i>filename</i> instead of the input
-image to determine where the borders of the input image are.
+image to determine where the borders of the input image are and the
+background color.
 
-<p>Without this option, <b>pnmcrop</b> examines the input image and
-figures out what part of the image is border and what part is
-foreground (not border).  With this option, <b>pnmcrop</b> finds the
-borders in one image, then uses the those four border sizes (left,
-right, top, bottom) in cropping a different image.
+<p>Without this option, <b>pnmcrop</b> examines the input image and figures
+out what part of the image is border and what part is foreground (not border),
+as well as the background color.  With this option, <b>pnmcrop</b> finds the
+borders in one image, then uses the those four border sizes (left, right, top,
+bottom) in cropping a different image.  Furthermore, if you use
+<b>-margin</b> to add borders, the color of those borders is the background
+color <b>pnmcrop</b> detects in the border file.
 
-<p>The point of this is that you may want to help <b>pnmcrop</b> to
-come to a different conclusion as to where the border are by
-preprocessing the input image.  For example, consider an image that
-has speckles of noise in its borders.  <b>pnmcrop</b> isn't smart
-enough to recognize these as noise; it sees them as foreground image.
-So <b>pnmcrop</b> considers most of your borders to be foreground and
-does not crop them off as you want.  To fix this, run the image
-through a despeckler such as <b>pbmclean</b> and tell <b>pnmcrop</b>
-to use the despeckled version of the image as the <b>-borderfile</b>
-image, but the original speckled version as the input image.  That
-way, you crop the borders, but retain the true foreground image,
-speckles and all.
+<p>The point of this is that you may want to help <b>pnmcrop</b> to come to a
+different conclusion as to where the borders are and what the background color
+is by preprocessing the input image.  For example, consider an image that has
+speckles of noise in its borders.  <b>pnmcrop</b> isn't smart enough to
+recognize these as noise; it sees them as foreground image.  So <b>pnmcrop</b>
+considers most of your borders to be foreground and does not crop them off as
+you want.  To fix this, run the image through a despeckler such as
+<b>pbmclean</b> and tell <b>pnmcrop</b> to use the despeckled version of the
+image as the <b>-borderfile</b> image, but the original speckled version as
+the input image.  That way, you crop the borders, but retain the true
+foreground image, speckles and all.
 
 <p>This option was new in Netpbm 10.29 (August 2005).
+
+<p>Before Netpbm 10.46 (March 2009), the original image and not the
+border file determines the background color.  <b>pnmcrop</b>
+fails if there is no apparent background color in the original image
+(i.e. the corners of the image don't have a common color).
 
 <DT><B>-verbose</B>
 
