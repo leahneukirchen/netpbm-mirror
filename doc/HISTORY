@@ -15,6 +15,9 @@ not yet  BJH  Release 10.46.00
          
               pnmcrop: fast path for PBM.
 
+              pnmcrop: Use border file instead of original image to determine
+              the background color (i.e. the color of added margins).
+
               pnmscale: finally make it just an alias of pamscale, which
               obsoleted it in 10.20.
               

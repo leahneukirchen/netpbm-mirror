@@ -40,7 +40,17 @@ static const char * const edgeName[] = {
     "bottom"
 };
 
+typedef struct {
+    unsigned int size[4];
+} borderSet;
 
+typedef enum {
+    /* A position in a PNM image file stream */
+    FILEPOS_BEG,
+        /* Immediately before the raster */
+    FILEPOS_END
+        /* Immediately after the raster */
+} imageFilePos;
 
 struct cmdlineInfo {
     /* All the information the user supplied in the command line,
@@ -155,6 +165,11 @@ typedef struct {
 } cropOp;
 
 
+typedef struct {
+    cropOp op[4];
+} cropSet;
+
+
 
 static xel
 background3Corners(FILE * const ifP,
@@ -223,8 +238,7 @@ computeBackground(FILE *         const ifP,
                   int            const rows,
                   xelval         const maxval,
                   int            const format,
-                  enum bg_choice const backgroundChoice,
-                  bool           const verbose) {
+                  enum bg_choice const backgroundChoice) {
 /*----------------------------------------------------------------------------
    Determine what color is the background color of the image in file
    *ifP, which is described by 'cols', 'rows', 'maxval', and 'format'.
@@ -254,11 +268,6 @@ computeBackground(FILE *         const ifP,
         break;
     }
 
-    if (verbose) {
-        pixel const backgroundPixel = pnm_xeltopixel(background, format);
-        pm_message("Background color is %s", 
-                   ppm_colorname(&backgroundPixel, maxval, TRUE /*hexok*/));
-    }
     return(background);
 }
 
@@ -271,9 +280,8 @@ findBordersInImage(FILE *         const ifP,
                    xelval         const maxval,
                    int            const format,
                    xel            const backgroundColor,
-                   bool           const verbose, 
                    bool *         const hasBordersP,
-                   unsigned int * const borderSize) {
+                   borderSet *    const borderSizeP) {
 /*----------------------------------------------------------------------------
    Find the left, right, top, and bottom borders in the image 'ifP'.
    Return their sizes in pixels as borderSize[n].
@@ -335,38 +343,58 @@ findBordersInImage(FILE *         const ifP,
     else {
         *hasBordersP = TRUE;
         assert(right <= cols); assert(bottom <= rows);
-        borderSize[LEFT]   = left - 0;
-        borderSize[RIGHT]  = cols - right;
-        borderSize[TOP]    = top - 0;
-        borderSize[BOTTOM] = rows - bottom;
+        borderSizeP->size[LEFT]   = left - 0;
+        borderSizeP->size[RIGHT]  = cols - right;
+        borderSizeP->size[TOP]    = top - 0;
+        borderSizeP->size[BOTTOM] = rows - bottom;
     }
 }
 
 
 
 static void
-findBordersInFile(unsigned int   const icols,
-                  unsigned int   const irows,
-                  FILE *         const borderFileP, 
-                  xel            const backgroundColor,
-                  bool           const verbose, 
-                  bool *         const hasBordersP,
-                  unsigned int * const borderSize) {
+analyzeImage(FILE *         const ifP,
+             unsigned int   const cols,
+             unsigned int   const rows,
+             xelval         const maxval,
+             int            const format,
+             enum bg_choice const backgroundReq,
+             imageFilePos   const newFilePos,
+             xel *          const backgroundColorP,
+             bool *         const hasBordersP,
+             borderSet *    const borderSizeP) {
+/*----------------------------------------------------------------------------
+   Analyze the PNM image on file stream *ifP to determine its borders
+   and the color of those borders (the assumed background color).
 
-    int bcols;  /* cols and rows in the borderfile */
-    int brows;
-    xelval maxval;
-    int format;
-    
-    pnm_readpnminit(borderFileP, &bcols, &brows, &maxval, &format);
+   Return as *backgroundColorP the background color.
 
-    if (bcols != icols || brows != irows)
-      pm_error("Image file and border file differ in size: %ux%u %ux%u",
-           icols, irows, bcols, brows);
-    
-    findBordersInImage(borderFileP, bcols, brows, maxval, format, 
-                       backgroundColor, verbose, hasBordersP, borderSize);
-} 
+   Return as *borderSizeP the set of border sizes (one for each of the
+   four edges).  But iff there are no borders, don't return anything as
+   *borderSizeP and return *hasBordersP == false.
+
+   Expect *ifP to be positioned right after the header and seekable.
+   Return with it positioned either before or after the raster, as
+   requested by 'newFilePos'.
+-----------------------------------------------------------------------------*/
+    pm_filepos rasterpos;
+    xel background;
+
+    pm_tell2(ifP, &rasterpos, sizeof(rasterpos));
+
+    background = computeBackground(ifP, cols, rows, maxval, format,
+                                   backgroundReq);
+
+    pm_seek2(ifP, &rasterpos, sizeof(rasterpos));
+
+    findBordersInImage(ifP, cols, rows, maxval, format, 
+                       background, hasBordersP, borderSizeP);
+
+    if (newFilePos == FILEPOS_BEG)
+        pm_seek2(ifP, &rasterpos, sizeof(rasterpos));
+
+    *backgroundColorP = background;
+}
 
 
 
@@ -379,21 +407,22 @@ ending(unsigned int const n) {
 
 
 static void
-reportCroppingParameters(cropOp const crop[]) {
+reportCroppingParameters(cropSet const crop) {
 
     unsigned int i;
 
     for (i = 0; i < 4; ++i) {
-        if (crop[i].removeSize == 0 && crop[i].padSize == 0)
+        if (crop.op[i].removeSize == 0 && crop.op[i].padSize == 0)
             pm_message("Not cropping %s edge", edgeName[i]);
         else {
-            if (crop[i].padSize > 0)
+            if (crop.op[i].padSize > 0)
                 pm_message("Adding %u pixel%s to the %s border",
-                           crop[i].padSize, ending(crop[i].padSize),
+                           crop.op[i].padSize, ending(crop.op[i].padSize),
                            edgeName[i]);
-            if (crop[i].removeSize > 0)
+            if (crop.op[i].removeSize > 0)
                 pm_message("Cropping %u pixel%s from the %s border",
-                           crop[i].removeSize, ending(crop[i].removeSize),
+                           crop.op[i].removeSize,
+                           ending(crop.op[i].removeSize),
                            edgeName[i]);
         }
     }
@@ -467,7 +496,7 @@ writeCroppedNonPbm(FILE *       const ifP,
                    unsigned int const rows,
                    xelval       const maxval,
                    int          const format,
-                   cropOp       const crop[],
+                   cropSet      const crop,
                    xel          const backgroundColor,
                    FILE *       const ofP) {
 
@@ -511,22 +540,23 @@ writeCroppedNonPbm(FILE *       const ifP,
     */
 
     unsigned int const foregroundCols =
-        cols - crop[LEFT].removeSize - crop[RIGHT].removeSize;
+        cols - crop.op[LEFT].removeSize - crop.op[RIGHT].removeSize;
     unsigned int const outputCols     = 
-        foregroundCols + crop[LEFT].padSize + crop[RIGHT].padSize;
+        foregroundCols + crop.op[LEFT].padSize + crop.op[RIGHT].padSize;
     unsigned int const foregroundRows =
-        rows - crop[TOP].removeSize - crop[BOTTOM].removeSize;
+        rows - crop.op[TOP].removeSize - crop.op[BOTTOM].removeSize;
     unsigned int const outputRows     =
-        foregroundRows + crop[TOP].padSize + crop[BOTTOM].padSize;
+        foregroundRows + crop.op[TOP].padSize + crop.op[BOTTOM].padSize;
 
     unsigned int const foregroundLeft  =
-        MAX(crop[LEFT].removeSize, crop[LEFT].padSize);
+        MAX(crop.op[LEFT].removeSize, crop.op[LEFT].padSize);
         /* Index into xelrow[] of leftmost pixel of foreground */
     unsigned int const foregroundRight = foregroundLeft + foregroundCols;
         /* Index into xelrow[] just past rightmost pixel of foreground */
 
     unsigned int const allocCols =
-        foregroundRight + MAX(crop[RIGHT].removeSize, crop[RIGHT].padSize);
+        foregroundRight + MAX(crop.op[RIGHT].removeSize,
+                              crop.op[RIGHT].padSize);
 
     xel * xelrow;
     unsigned int i;
@@ -535,33 +565,35 @@ writeCroppedNonPbm(FILE *       const ifP,
 
     xelrow = pnm_allocrow(allocCols);
 
-    readOffBorderNonPbm(crop[TOP].removeSize, ifP, cols, maxval, format);
+    readOffBorderNonPbm(crop.op[TOP].removeSize, ifP, cols, maxval, format);
 
-    outputNewBorderNonPbm(crop[TOP].padSize, outputCols, backgroundColor,
+    outputNewBorderNonPbm(crop.op[TOP].padSize, outputCols, backgroundColor,
                           ofP, maxval, format);
 
     /* Set left border pixels */
-    fillRow(&xelrow[foregroundLeft - crop[LEFT].padSize], crop[LEFT].padSize,
+    fillRow(&xelrow[foregroundLeft - crop.op[LEFT].padSize],
+            crop.op[LEFT].padSize,
             backgroundColor);
 
     /* Set right border pixels */
-    fillRow(&xelrow[foregroundRight], crop[RIGHT].padSize, backgroundColor);
+    fillRow(&xelrow[foregroundRight], crop.op[RIGHT].padSize, backgroundColor);
 
     /* Read and output foreground rows */
     for (i = 0; i < foregroundRows; ++i) {
  
         /* Read foreground pixels */
-        pnm_readpnmrow(ifP, &(xelrow[foregroundLeft - crop[LEFT].removeSize]),
+        pnm_readpnmrow(ifP,
+                       &(xelrow[foregroundLeft - crop.op[LEFT].removeSize]),
                        cols, maxval, format);
         
         pnm_writepnmrow(ofP,
-                        &(xelrow[foregroundLeft - crop[LEFT].padSize]),
+                        &(xelrow[foregroundLeft - crop.op[LEFT].padSize]),
                         outputCols, maxval, format, 0);
     }
 
-    readOffBorderNonPbm(crop[BOTTOM].removeSize, ifP, cols, maxval, format);
+    readOffBorderNonPbm(crop.op[BOTTOM].removeSize, ifP, cols, maxval, format);
     
-    outputNewBorderNonPbm(crop[BOTTOM].padSize, outputCols,
+    outputNewBorderNonPbm(crop.op[BOTTOM].padSize, outputCols,
                           backgroundColor,
                           ofP, maxval, format);
 
@@ -642,7 +674,7 @@ writeCroppedPBM(FILE *       const ifP,
                 unsigned int const cols,
                 unsigned int const rows,
                 int          const format,
-                cropOp       const crop[],
+                cropSet      const crop,
                 xel          const backgroundColor,
                 FILE *       const ofP) {
     
@@ -651,26 +683,28 @@ writeCroppedPBM(FILE *       const ifP,
     */
 
     unsigned int const foregroundCols =
-        cols - crop[LEFT].removeSize - crop[RIGHT].removeSize;
+        cols - crop.op[LEFT].removeSize - crop.op[RIGHT].removeSize;
     unsigned int const outputCols     = 
-        foregroundCols + crop[LEFT].padSize + crop[RIGHT].padSize;
+        foregroundCols + crop.op[LEFT].padSize + crop.op[RIGHT].padSize;
     unsigned int const foregroundRows =
-        rows - crop[TOP].removeSize - crop[BOTTOM].removeSize;
+        rows - crop.op[TOP].removeSize - crop.op[BOTTOM].removeSize;
     unsigned int const outputRows     =
-        foregroundRows + crop[TOP].padSize + crop[BOTTOM].padSize;
+        foregroundRows + crop.op[TOP].padSize + crop.op[BOTTOM].padSize;
 
     unsigned int const foregroundLeft  =
-        MAX(crop[LEFT].removeSize, crop[LEFT].padSize);
+        MAX(crop.op[LEFT].removeSize, crop.op[LEFT].padSize);
     unsigned int const foregroundRight = foregroundLeft + foregroundCols;
 
     unsigned int const allocCols =
-        foregroundRight + MAX(crop[RIGHT].removeSize, crop[RIGHT].padSize);
+        foregroundRight + 
+        MAX(crop.op[RIGHT].removeSize, crop.op[RIGHT].padSize);
 
     unsigned int const backgroundBlackWhite =
         PNM_EQUAL(backgroundColor, pnm_whitexel(1, PBM_TYPE)) ? 0: 1;
 
-    unsigned int const readOffset    = foregroundLeft - crop[LEFT].removeSize;
-    unsigned int const writeOffset   = foregroundLeft - crop[LEFT].padSize;
+    unsigned int const readOffset    =
+        foregroundLeft - crop.op[LEFT].removeSize;
+    unsigned int const writeOffset   = foregroundLeft - crop.op[LEFT].padSize;
     unsigned int const lastWriteChar = writeOffset/8 + (outputCols-1)/8;
     unsigned char * bitrow;
     unsigned int i;
@@ -679,9 +713,9 @@ writeCroppedPBM(FILE *       const ifP,
 
     bitrow = pbm_allocrow_packed(allocCols);
 
-    readOffBorderPbm(crop[TOP].removeSize, ifP, cols, format);
+    readOffBorderPbm(crop.op[TOP].removeSize, ifP, cols, format);
 
-    outputNewBorderPbm(crop[TOP].padSize, outputCols, backgroundBlackWhite,
+    outputNewBorderPbm(crop.op[TOP].padSize, outputCols, backgroundBlackWhite,
                        ofP);
 
     /* Prepare padding: left and/or right */
@@ -699,13 +733,14 @@ writeCroppedPBM(FILE *       const ifP,
            distorted by pbm_writepbmrow_bitoffset() 
            (No need to mend any left-side padding)
         */
-        if (crop[RIGHT].padSize > 0)    
+        if (crop.op[RIGHT].padSize > 0)    
             bitrow[lastWriteChar] = backgroundBlackWhite * 0xff;
     }
 
-    readOffBorderPbm(crop[BOTTOM].removeSize, ifP, cols, format);
+    readOffBorderPbm(crop.op[BOTTOM].removeSize, ifP, cols, format);
 
-    outputNewBorderPbm(crop[BOTTOM].padSize, outputCols, backgroundBlackWhite,
+    outputNewBorderPbm(crop.op[BOTTOM].padSize, outputCols,
+                       backgroundBlackWhite,
                        ofP);
 
     pbm_freerow_packed(bitrow);
@@ -715,23 +750,25 @@ writeCroppedPBM(FILE *       const ifP,
 
 static void
 determineCrops(struct cmdlineInfo const cmdline,
-               unsigned int       const oldBorderSize[],
-               cropOp *           const cropArray) {
+               borderSet *        const oldBorderSizeP,
+               cropSet *          const cropP) {
 
     edgeLocation i;
 
     for (i = 0; i < 4; ++i) {
         if (cmdline.wantCrop[i]) {
-            if (oldBorderSize[i] > cmdline.margin) {
-                cropArray[i].removeSize = oldBorderSize[i] - cmdline.margin;
-                cropArray[i].padSize    = 0;
+            if (oldBorderSizeP->size[i] > cmdline.margin) {
+                cropP->op[i].removeSize =
+                    oldBorderSizeP->size[i] - cmdline.margin;
+                cropP->op[i].padSize    = 0;
             } else {
-                cropArray[i].removeSize = 0;
-                cropArray[i].padSize    = cmdline.margin - oldBorderSize[i];
+                cropP->op[i].removeSize = 0;
+                cropP->op[i].padSize    =
+                    cmdline.margin - oldBorderSizeP->size[i];
             }
         } else {
-            cropArray[i].removeSize = 0;
-            cropArray[i].padSize    = 0;
+            cropP->op[i].removeSize = 0;
+            cropP->op[i].padSize    = 0;
         }
     }
 }
@@ -741,15 +778,15 @@ determineCrops(struct cmdlineInfo const cmdline,
 static void
 validateComputableSize(unsigned int const cols,
                        unsigned int const rows,
-                       cropOp       const crop[]) {
+                       cropSet      const crop) {
 
     double const newcols =
         (double)cols +
-        (double)crop[LEFT].padSize + (double)crop[RIGHT].padSize;
+        (double)crop.op[LEFT].padSize + (double)crop.op[RIGHT].padSize;
 
     double const newrows =
         (double)rows +
-        (double)crop[TOP].padSize + (double)crop[BOTTOM].padSize;
+        (double)crop.op[TOP].padSize + (double)crop.op[BOTTOM].padSize;
 
     if (newcols > INT_MAX)
        pm_error("Output width too large: %.0f.", newcols);
@@ -771,49 +808,47 @@ cropOneImage(struct cmdlineInfo const cmdline,
    (the file that tells us where the existing borders are in the input
    image).  Leave *ifP and *bdfP positioned after the image.
 
-   *ifP is seekable; *bdfP may not be.
+   Both files are seekable.
 -----------------------------------------------------------------------------*/
-    xelval maxval;
-    int format;
-    int rows, cols;   /* dimensions of input image */
+    xelval maxval, bmaxval;
+    int format, bformat;
+    int rows, cols, brows, bcols;
     bool hasBorders;
-    unsigned int oldBorder[4];
+    borderSet oldBorder;
         /* The sizes of the borders in the input image */
-    cropOp crop[4];
+    cropSet crop;
         /* The crops we have to do on each side */
-    
     xel background;
-    pm_filepos rasterpos;
 
     pnm_readpnminit(ifP, &cols, &rows, &maxval, &format);
 
-    pm_tell2(ifP, &rasterpos, sizeof(rasterpos));
+    if (bdfP)
+        pnm_readpnminit(bdfP, &bcols, &brows, &bmaxval, &bformat);
 
-    background = computeBackground(ifP, cols, rows, maxval, format,
-                                   cmdline.background, cmdline.verbose);
+    if (bdfP)
+        analyzeImage(bdfP, bcols, brows, bmaxval, bformat, cmdline.background,
+                     FILEPOS_END,
+                     &background, &hasBorders, &oldBorder);
+    else
+        analyzeImage(ifP, cols, rows, maxval, format, cmdline.background,
+                     FILEPOS_BEG,
+                     &background, &hasBorders, &oldBorder);
 
-    if (cmdline.borderfile) {
-        findBordersInFile(cols, rows, bdfP, background,
-                          cmdline.verbose, &hasBorders, oldBorder);
-    } else {
-        pm_seek2(ifP, &rasterpos, sizeof(rasterpos));
-
-        findBordersInImage(ifP, cols, rows, maxval, format, 
-                           background, cmdline.verbose, &hasBorders,
-                           oldBorder);
+    if (cmdline.verbose) {
+        pixel const backgroundPixel = pnm_xeltopixel(background, format);
+        pm_message("Background color is %s", 
+                   ppm_colorname(&backgroundPixel, maxval, TRUE /*hexok*/));
     }
     if (!hasBorders)
         pm_error("The image is entirely background; "
                  "there is nothing to crop.");
 
-    determineCrops(cmdline, oldBorder, crop);
+    determineCrops(cmdline, &oldBorder, &crop);
 
     validateComputableSize(cols, rows, crop);
 
     if (cmdline.verbose) 
         reportCroppingParameters(crop);
-
-    pm_seek2(ifP, &rasterpos, sizeof(rasterpos));
 
     if (PNM_FORMAT_TYPE(format) == PBM_TYPE)
         writeCroppedPBM(ifP, cols, rows, format, crop, background, ofP);
@@ -832,7 +867,8 @@ main(int argc, const char *argv[]) {
         /* The program's regular input file.  Could be a seekable copy of
            it in a temporary file.
         */
-    FILE * bdfP; /* The borderfile; NULL if none.  No seeks.  */
+    FILE * bdfP;
+        /* The border file.  NULL if none. */
     bool eof;    /* no more images in input stream */
     bool beof;   /* no more images in borderfile stream */
 
