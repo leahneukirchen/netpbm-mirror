@@ -2,17 +2,15 @@
 <HTML><HEAD><TITLE>Pnmpad User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmpad</H1>
-Updated: 26 January 2002
+Updated: 20 March 2009
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
 pnmpad - add borders to a PNM image
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>pnmpad </B>
 [<B>-verbose</B>]
@@ -32,8 +30,8 @@ pnmpad - add borders to a PNM image
 <BR>
 [<I>pnmfile</I>]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -45,8 +43,12 @@ specified.
 of the original dimensions, <B>pamcut</B> with the <B>-pad</B> option
 may be a better choice.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<p><b>pnmmargin</b> does essentially the same thing, but allows you to
+add borders of any color and requires all four borders to be the same
+size.
+
+
+<H2 id="options">OPTIONS</H2>
 
 <P>All options can be abbreviated to their shortest unique prefix.  You
 may use two hyphens instead of one to designate an option.  You may
@@ -117,26 +119,27 @@ to the horizontal padding options above.
 
 </dl>
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>HISTORY</H2>
+
+<H2 id="history">HISTORY</H2>
 
 <p>Before February 2002, <B>pnmpad</B> had a different option syntax
 which was less expressive and not like conventional Netpbm programs.
 That syntax is still understood by <B>pnmpad</B> for backward
 compatibility, but not documented or supported for future use.
 
-<A NAME="lbAG">&nbsp;</A> 
-<H2>SEE ALSO</H2>
+
+<H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="pbmmake.html">pbmmake</A></B>,
 <B><A HREF="pnmpaste.html">pnmpaste</A></B>,
 <B><A HREF="pamcut.html">pamcut</A></B>,
 <B><A HREF="pnmcrop.html">pnmcrop</A></B>,
 <B><A HREF="pamcomp.html">pamcomp</A></B>,
+<B><A HREF="pnmmargin.html">pnmmargin</A></B>,
 <B><A HREF="pbm.html">pbm</A></B>
 
-<A NAME="lbAH">&nbsp;</A>
-<H2>AUTHOR</H2>
+
+<H2 id="author">AUTHOR</H2>
 
 <p>Copyright (C) 2002 by Martin van Beilen
 
@@ -152,16 +155,14 @@ supporting documentation.  This software is provided &quot;as is&quot;
 without express or implied warranty.
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">HISTORY</A>
-<LI><A HREF="#lbAG">SEE ALSO</A>
-<LI><A HREF="#lbAH">AUTHOR</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#history">HISTORY</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
 </UL>
 </BODY>
 </HTML>

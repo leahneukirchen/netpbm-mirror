@@ -410,12 +410,12 @@ implementing the programs easier -- it uses the same format regardless
 of the type of image.
 
 <p>Newer programs use the &quot;pam&quot; family of library functions
-internally, which use memory a little differently.  These functions
-are designed to handle generic tuples with a variable numbers of
-planes, so no fixed size per-tuple storage is possible.  A program of
-this type uses 4 bytes per sample (a tuple is composed of samples),
-plus another 4 bytes per tuple.  In a graphic image, a tuple is a
-pixel.  So an ordinary color image takes 16 bytes per pixel.
+internally, which use memory a little differently.  These functions are
+designed to handle generic tuples with a variable numbers of planes, so no
+fixed size per-tuple storage is possible.  A program of this type uses 4 bytes
+per sample (a tuple is composed of samples), plus a pointer (4-8 bytes) per
+tuple.  In a graphic image, a tuple is a pixel.  So an ordinary color image
+takes 16-20 bytes per pixel.
 
 <p>When considering memory usage, it is important to remember that
 memory and disk storage are equivalent in two ways:
@@ -460,6 +460,25 @@ than the CPU can use it.
 Netpbm programming library use.  The programs never depend on particular
 features existing (assuming they're compiled properly), but the speed
 and cost of running a program varies depending upon the CPU features.
+
+<p>Note that when you download a binary that someone else compiled, even
+though it appears to be compiled properly for your machine, it may be compiled
+improperly for that machine if it is old, because the person who compiled it
+may have chosen to exploit features of newer CPUs in the line.  For example,
+an x86 program may be compiled to use instructions that are present on an
+80486, but not on an 80386.  You would probably not know this until you run
+the program and it crashes.
+
+<p>But the default build options almost always build binaries that are as
+backward compatible with old CPUs as possible.  An exception is a build for a
+64 bit x86 CPU.  While the builder could build a program that runs on a 32 bit
+x86, it does not do so by default.  A default build builds a program will not
+run on an older 32-bit-only x86 CPU.
+
+<p>One common build option is to use MMX/SSE operands with x86 CPUs.
+Those are not available on older x86 CPUs.  The builder by default does not
+generate code that uses MMX/SSE when building for 32 bit x86 CPUs, but
+does when building for 64 bit x86. 
 
 <p>One area of particular importance is floating point arithmetic.
 The Netpbm image formats are based on integers, and Netpbm arithmetic
@@ -787,12 +806,18 @@ and extendable vector graphic shell.  It uses the Netpbm facilities.
 See <B><A
 HREF="http://www.ivtools.org">http://www.ivtools.org</A></B>.
 
+<p>Senri Yamauchi has written a free c/Fortran graphic library.  He says he
+tried to write the ultimate easy-to-use graphic kit for X.  It is for drawing
+upon X11, but for storage, it outputs PPM.  He suggests Netpbm to convert to
+other formats.  The manual is only in Japanese.
+
 <P>The program <B>morph</B> morphs one image into another.  It uses
 Targa format images, but you can use <B>tgatoppm</B> and
 <B>ppmtotga</B> to deal with that format.  You have to use the
 graphical (X/Tk) Xmorph to create the mesh files that you must feed to
 <B>morph</B>.  <B>morph</B> is part of the Xmorph package.  See <B><A
 HREF="http://xmorph.sourceforge.net/">http://xmorph.sourceforge.net/</A></B>.
+
 
 <H2 id="otherfmt">Other Graphics Formats</H2>
 
@@ -824,7 +849,7 @@ href="http://www.web3d.org/x3d/specifications/vrml">VRML
 
 <LI>
 CALS (originated by US Department Of Defense, favored by architects).
-It is described in this 1997 listing of graphicas formats:
+It is described in this 1997 listing of graphics formats:
 <A HREF="http://www.faqs.org/faqs/graphics/fileformats-faq/part3/">
 http://www.faqs.org/faqs/graphics/fileformats-faq/part3/</A>.  CALS
 has at times been an abbreviation of various things, all of which appear
@@ -844,8 +869,7 @@ for it.
 
 <p>The web page <a
 href="http://www.sollers.ca/projects/cals2tiff/">http://www.sollers.ca</a>
-describes a program for converting from CALS to TIFF.  The source code is from
-1999.  There is no makefile or compilation instructions.
+describes a program for converting from CALS to TIFF.
 
 <LI>
 array formats dx, general, netcdf, CDF, hdf, cm
@@ -909,9 +933,10 @@ ultimately MPEG2.
 package in 1988.  See the <a
 href="http://netpbm.sourceforge.net/history.html">Netpbm web site</a>
 for details.
-<p>
-The file <B>doc/HISTORY</B> in the Netpbm source code contains a
+
+<p>The file <B>doc/HISTORY</B> in the Netpbm source code contains a
 detailed change history release by release.
+
 
 <H2 id="author">Author</H2>
 
