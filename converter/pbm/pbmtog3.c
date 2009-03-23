@@ -371,7 +371,7 @@ convertRowToRunLengths(unsigned char * const bitrow,
                 r2 <<= c++; r2 <<= 1;  k += c; 
             } 
         }
-        if (milepost[n - 1] != cols) 
+        if (n == 0 || milepost[n - 1] != cols) 
             milepost[n++] = cols;
         *lengthP = n;
     }
