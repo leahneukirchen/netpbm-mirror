@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+09.03.22 BJH  Release 10.35.61
+
+              g3topbm: fix array bound violation.  Introduced in 10.32.
+
 09.02.14 BJH  Release 10.35.60
 
               xwdtopnm: Fix for at least some direct color 24/32 images.
