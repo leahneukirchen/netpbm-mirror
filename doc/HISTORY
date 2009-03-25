@@ -26,6 +26,8 @@ not yet  BJH  Release 10.46.00
 
               pnmcrop: various fixes.
 
+              g3topbm: fix array bound violation.  Introduced in 10.32.
+
               pnmcat: fix array bound violation with PBM top/bottom
               concatenation.  Introduced in 10.44.
 
@@ -753,6 +755,11 @@ not yet  BJH  Release 10.46.00
 
               picttoppm: fix bug - interprets some images wrong because of
               bogus "rowBytes" value.
+
+              libnetpbm: add ppm_fastlumin().  Change ppmtopgm, ppmtoilbm,
+              and ppm3d to use this, which results in higher quality output,
+              because ppm_fastlumin() rounds to nearest, whereas these
+              programs rounded down.  Otherwise, it's the same calculation.
 
               Redo asprintfN(), etc. so as not to use va_list in a way
               that doesn't work on some machines.
