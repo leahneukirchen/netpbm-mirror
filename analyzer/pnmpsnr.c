@@ -47,7 +47,7 @@ validate_input(const struct pam pam1, const struct pam pam2) {
         pm_error("images do not have the same maxval.  This programs works "
                  "only on like maxvals.  "
                  "The first image has maxval %u, "
-                 "while the second has %u.  Use Pnmdepth to change the "
+                 "while the second has %u.  Use Pamdepth to change the "
                  "maxval of one of them.",
                  (unsigned int) pam1.maxval, (unsigned int) pam2.maxval);
 
@@ -66,16 +66,18 @@ validate_input(const struct pam pam1, const struct pam pam2) {
 
 
 static void
-psnr_color(tuple const tuple1, tuple const tuple2,
+psnr_color(tuple    const tuple1,
+           tuple    const tuple2,
            double * const ySqDiffP, 
-           double * const cbSqDiffP, double * const crSqDiffP) {
+           double * const cbSqDiffP,
+           double * const crSqDiffP) {
 
     double y1, y2, cb1, cb2, cr1, cr2;
     
     pnm_YCbCrtuple(tuple1, &y1, &cb1, &cr1);
     pnm_YCbCrtuple(tuple2, &y2, &cb2, &cr2);
     
-    *ySqDiffP =  square(y1  - y2);
+    *ySqDiffP  = square(y1  - y2);
     *cbSqDiffP = square(cb1 - cb2);
     *crSqDiffP = square(cr1 - cr2);
 }
@@ -83,45 +85,44 @@ psnr_color(tuple const tuple1, tuple const tuple2,
 
 
 static void
-reportPsnr(struct pam const pam1, struct pam const pam2, 
-           double const ySumSqDiff, 
-           double const crSumSqDiff, double const cbSumSqDiff,
-           const char filespec1[], const char filespec2[]) {
+reportPsnr(struct pam const pam,
+           double     const ySumSqDiff, 
+           double     const crSumSqDiff,
+           double     const cbSumSqDiff,
+           char       const filespec1[],
+           char       const filespec2[]) {
 
-    bool const color = (strcmp(pam1.tuple_type, PAM_PPM_TUPLETYPE) == 0);
+    bool const color = (strcmp(pam.tuple_type, PAM_PPM_TUPLETYPE) == 0);
 
-    /* The PSNR is the mean of the sum of squares of the differences,
-       normalized to the range 0..1
+    /* The PSNR is the ratio of the maximum possible mean square difference
+       to the actual mean square difference.
     */
-    double const yPsnr = ySumSqDiff 
-        / (pam1.width * pam1.height) 
-        / square(pam1.maxval);
+    double const yPsnr =
+        square(pam.maxval) / (ySumSqDiff / (pam.width * pam.height));
 
     if (color) {
-        double const cbPsnr = cbSumSqDiff 
-            / (pam1.width * pam1.height) 
-            / square(pam1.maxval);
-        double const crPsnr = crSumSqDiff 
-            / (pam1.width * pam1.height) 
-            / (pam1.maxval * pam2.maxval);
+        double const cbPsnr =
+            square(pam.maxval) / (cbSumSqDiff / (pam.width * pam.height));
+        double const crPsnr =
+            square(pam.maxval) / (crSumSqDiff / (pam.width * pam.height));
 
         pm_message("PSNR between %s and %s:", filespec1, filespec2);
-        if (yPsnr > 1e-9)
-            pm_message("Y  color component: %.2f dB", 10 * log10(1/yPsnr));
+        if (yPsnr < 1e10)
+            pm_message("Y  color component: %.2f dB", 10 * log10(yPsnr));
         else
             pm_message("Y color component does not differ.");
-        if (cbPsnr > 1e-9)
-            pm_message("Cb color component: %.2f dB", 10 * log10(1/cbPsnr));
+        if (cbPsnr < 1e10)
+            pm_message("Cb color component: %.2f dB", 10 * log10(cbPsnr));
         else
         pm_message("Cb color component does not differ.");
-        if (crPsnr > 1e-9)
-            pm_message("Cr color component: %.2f dB", 10 * log10(1/crPsnr));
+        if (crPsnr < 1e10)
+            pm_message("Cr color component: %.2f dB", 10 * log10(crPsnr));
         else
             pm_message("Cr color component does not differ.");
     } else {
-        if (yPsnr > 1e-9)
+        if (yPsnr < 1e10)
             pm_message("PSNR between %s and %s: %.2f dB",
-                       filespec1, filespec2, 10 * log10(1/yPsnr));
+                       filespec1, filespec2, 10 * log10(yPsnr));
         else
             pm_message("Images %s and %s don't differ.",
                        filespec1, filespec2);
@@ -166,7 +167,7 @@ main (int argc, char **argv) {
     tuplerow1 = pnm_allocpamrow(&pam1);
     tuplerow2 = pnm_allocpamrow(&pam2);
     
-    ySumSqDiff = 0.0;
+    ySumSqDiff  = 0.0;
     cbSumSqDiff = 0.0;
     crSumSqDiff = 0.0;
 
@@ -181,7 +182,7 @@ main (int argc, char **argv) {
                 double ySqDiff, cbSqDiff, crSqDiff;
                 psnr_color(tuplerow1[col], tuplerow2[col], 
                            &ySqDiff, &cbSqDiff, &crSqDiff);
-                ySumSqDiff += ySqDiff;
+                ySumSqDiff  += ySqDiff;
                 cbSumSqDiff += cbSqDiff;
                 crSumSqDiff += crSqDiff;
                 
@@ -193,7 +194,7 @@ main (int argc, char **argv) {
         }
     }
 
-    reportPsnr(pam1, pam2, ySumSqDiff, crSumSqDiff, cbSumSqDiff,
+    reportPsnr(pam1, ySumSqDiff, crSumSqDiff, cbSumSqDiff,
                filespec1, filespec2);
 
     pnm_freepamrow(tuplerow1);
@@ -201,9 +202,3 @@ main (int argc, char **argv) {
 
     return 0;
 }
-
-
-
-
-
-
