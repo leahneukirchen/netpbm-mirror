@@ -25,20 +25,19 @@ pnmpsnr - compute the difference between two images (the PSNR)
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><b>pnmpsnr</b> reads two PBM, PGM, or PPM files, or PAM
-equivalents, as input and prints the peak signal-to-noise ratio (PSNR)
-difference between the two images.  This metric is typically used in
-image compression papers to rate the distortion between original and
-decoded image.
+<p><b>pnmpsnr</b> reads two PBM, PGM, or PPM files, or PAM equivalents, as
+input and prints the magnitude of difference between the two images as a peak
+signal-to-noise ratio (PSNR) This metric is typically used in image
+compression papers to rate the distortion between original and decoded image.
 
 <P>If the inputs are PBM or PGM, <B>pnmpsnr</B> prints the PSNR of the
 luminance only.  Otherwise, it prints the separate PSNRs of the
 luminance, and chrominance (Cb and Cr) components of the colors.
 
-<P>The PSNR of a given component is the ratio of the mean square
-difference of the component for the two images to the maximum mean
-square difference that can exist between any two images.  It is
-expressed as a decibel value.
+<P>The PSNR of a given component is the ratio of the maximum mean square
+difference of component values that could exist between the two images (a
+measure of the information content in an image) to the actual mean square
+difference for the two subject images.  It is expressed as a decibel value.
 
 <P>The mean square difference of a component for two images is the
 mean square difference of the component value, comparing each pixel

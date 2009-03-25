@@ -2,17 +2,15 @@
 <HTML><HEAD><TITLE>Ppmtomitsu User Manual</TITLE></HEAD>
 <BODY>
 <H1>ppmtomitsu</H1>
-Updated: 29 Jan 1992
+Updated: 24 March 2009
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
 ppmtomitsu - convert a PPM image to a Mitsubishi S340-10 file
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>ppmtomitsu</B>
 
@@ -30,8 +28,7 @@ ppmtomitsu - convert a PPM image to a Mitsubishi S340-10 file
 
 [<I>ppmfile</I>]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -57,8 +54,17 @@ resolution printers there's the dpi300 option. The other printers also
 support higher values for enlarge eg, but I don't think that's
 essential enough to warrant a change in the program.
 
-<A NAME="options">&nbsp;</A>
-<h2>OPTIONS</h2>
+<p>For proper results, the input maxval must be 255.  Use <b>pamdepth</b>
+to ensure that it is.
+
+<p>Before Netpbm 10.40 (September 2007), all Netpbm PPM programs, including
+<b>ppmtomitsu</b>, see a PBM image as having maxval 1, so <b>ppmtomitsu</b>
+does not function properly with PBM input.  You can use <b>ppmtoppm</b>
+together with <b>pamdepth</b> to turn your PBM input into maxval 255
+PPM input that <b>ppmtomitsu</b> will use properly.
+
+
+<h2 id="options">OPTIONS</h2>
 
 <DL COMPACT>
 <DT><B>-sharpness</B> <I>1-4</I>
@@ -94,14 +100,13 @@ compatibility mode.  (The S3600-30 has 300 dpi).
 <DT><B>-tiny</B>
 
 <DD>
-Memory-safing, but always slow. The printer will get the data
+Memory-saving, but always slow. The printer will get the data
 line-by-line in 24bit. It's probably a good idea to use this if your
 machine starts paging a lot without this option.
 
 </DL>
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>REFERENCES</H2>
+<H2 id="references">REFERENCES</H2>
 
 Mitsubishi Sublimation Full Color Printer S340-10 Specifications of
 Parallel Interface LSP-F0232F
@@ -113,23 +118,20 @@ Parallel Interface LSP-F0232F
 <A HREF="pamscale.html">pamscale</A>, 
 <A HREF="ppm.html">ppm</A>
 
-<A NAME="lbAH">&nbsp;</A>
-<H2>AUTHOR</H2>
+<H2 id="author">AUTHOR</H2>
 
 Copyright (C) 1992, 93 by S.Petra Zeidler, MPIfR Bonn, Germany.  (<A
 HREF="mailto:spz@specklec.mpifr-bonn.mpg.de">spz@specklec.mpifr-bonn.mpg.de</A>)
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
 <LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#lbAE">REFERENCES</A>
-<LI><A HREF="#lbAF">SEE ALSO</A>
-<LI><A HREF="#lbAH">AUTHOR</A>
+<LI><A HREF="#references">REFERENCES</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
 </UL>
 </BODY>
 </HTML>
