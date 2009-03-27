@@ -236,7 +236,7 @@ getTiffDimensions(TIFF *         const tiffP,
     int ok;
 
     unsigned int width, length;
-    unsigned int tiffOrientation;
+    unsigned short tiffOrientation;
     unsigned short orientation;
     int present;
 

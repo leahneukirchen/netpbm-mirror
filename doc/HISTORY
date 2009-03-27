@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+09.03.27 BJH  Release 10.45.07
+
+              tifftopnm: fix orientation problem on big-endian machines.
+
 09.03.22 BJH  Release 10.45.06
 
               g3topbm: fix array bound violation.  Introduced in 10.32.
