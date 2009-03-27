@@ -24,6 +24,8 @@ not yet  BJH  Release 10.46.00
               pnmcut: finally make it just an alias of pamcut, which
               obsoleted it in 9.20.
 
+              tifftopnm: fix orientation problem on big-endian machines.
+
               pnmcrop: various fixes.
 
               g3topbm: fix array bound violation.  Introduced in 10.32.
