@@ -3,7 +3,7 @@
 
 #include "pm_config.h"  /* For uint32_t, BYTE_ORDER */
 
-unsigned int const pm_byteOrder = BYTE_ORDER;
+static unsigned int const pm_byteOrder = BYTE_ORDER;
 
 
 typedef struct {
