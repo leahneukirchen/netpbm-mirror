@@ -1,7 +1,6 @@
 #ifndef MITSU_H_INCLUDED
 #define MITSU_H_INCLUDED
 
-/* static char SCCSid[] = "@(#)mitsu.h\t\t1.3\t(SPZ)\t3/11/92\n"; */
 #define MAXLUTCOL   255
 
 #define A4_MAXCOLS  1184

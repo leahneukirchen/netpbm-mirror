@@ -53,6 +53,7 @@ struct cmdlineInfo {
     unsigned int verbose;
     unsigned int debug;
     unsigned int headerdump;
+    unsigned int cmapdump;
 };
 
 
@@ -123,6 +124,7 @@ parseCommandLine(int argc, char ** argv,
     OPTENT3(0,   "verbose",    OPT_FLAG,   NULL, &cmdlineP->verbose,       0);
     OPTENT3(0,   "debug",      OPT_FLAG,   NULL, &cmdlineP->debug,         0);
     OPTENT3(0,   "headerdump", OPT_FLAG,   NULL, &cmdlineP->headerdump,    0);
+    OPTENT3(0,   "cmapdump",   OPT_FLAG,   NULL, &cmdlineP->cmapdump,      0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -166,9 +168,7 @@ processX10Header(X10WDFileHeader *  const h10P,
     bool grayscale;
     bool byte_swap;
 
-    *maxvalP = 65535;   /* Initial assumption */
-
-    if ( h10P->file_version != X10WD_FILE_VERSION ) {
+    if (h10P->file_version != X10WD_FILE_VERSION) {
         byte_swap = TRUE;
         h10P->header_size     = pm_bs_long(h10P->header_size);
         h10P->file_version    = pm_bs_long(h10P->file_version);
@@ -186,51 +186,53 @@ processX10Header(X10WDFileHeader *  const h10P,
     } else
         byte_swap = FALSE;
 
-    for ( i = 0; i < h10P->header_size - sizeof(*h10P); ++i )
-        if ( getc( file ) == EOF )
-            pm_error( "couldn't read rest of X10 XWD file header" );
+    for (i = 0; i < h10P->header_size - sizeof(*h10P); ++i)
+        if (getc(file) == EOF)
+            pm_error("couldn't read rest of X10 XWD file header");
 
     /* Check whether we can handle this dump. */
-    if ( h10P->window_ncolors > 256 )
-        pm_error( "can't handle X10 window_ncolors > %d", 256 );
-    if ( h10P->pixmap_format != ZFormat && h10P->display_planes != 1 )
-        pm_error(
-            "can't handle X10 pixmap_format %d with planes != 1",
-            h10P->pixmap_format );
+    if (h10P->window_ncolors > 256)
+        pm_error("can't handle X10 window_ncolors > %d", 256);
+    if (h10P->pixmap_format != ZFormat && h10P->display_planes != 1)
+        pm_error("can't handle X10 pixmap_format %d with planes != 1",
+                 h10P->pixmap_format);
 
     grayscale = TRUE;  /* initial assumption */
-    if ( h10P->window_ncolors != 0 ) {
+    if (h10P->window_ncolors != 0) {
         /* Read X10 colormap. */
-        MALLOCARRAY( x10colors, h10P->window_ncolors );
-        if ( x10colors == NULL )
-            pm_error( "out of memory" );
-        for ( i = 0; i < h10P->window_ncolors; ++i ) {
-            if ( fread( &x10colors[i], sizeof(X10Color), 1, file ) != 1 )
-                pm_error( "couldn't read X10 XWD colormap" );
-            if ( byte_swap ) {
+        MALLOCARRAY(x10colors, h10P->window_ncolors);
+        if (x10colors == NULL)
+            pm_error("out of memory");
+        for (i = 0; i < h10P->window_ncolors; ++i) {
+            size_t bytesRead;
+            bytesRead = fread(&x10colors[i], sizeof(X10Color), 1, file);
+            if (bytesRead != 1)
+                pm_error("couldn't read X10 XWD colormap");
+            if (byte_swap) {
                 x10colors[i].red   = pm_bs_short(x10colors[i].red);
                 x10colors[i].green = pm_bs_short(x10colors[i].green);
                 x10colors[i].blue  = pm_bs_short(x10colors[i].blue);
             }
-            if ( x10colors[i].red != x10colors[i].green ||
-                 x10colors[i].green != x10colors[i].blue )
+            if (x10colors[i].red != x10colors[i].green ||
+                x10colors[i].green != x10colors[i].blue)
                 grayscale = FALSE;
         }
     }
 
-    if ( h10P->display_planes == 1 ) {
+    if (h10P->display_planes == 1) {
         *formatP = PBM_TYPE;
         *visualclassP = StaticGray;
         *maxvalP = 1;
-        *colorsP = pnm_allocrow( 2 );
-        PNM_ASSIGN1( (*colorsP)[0], 0 );
-        PNM_ASSIGN1( (*colorsP)[1], *maxvalP );
+        *colorsP = pnm_allocrow(2);
+        PNM_ASSIGN1((*colorsP)[0], 0);
+        PNM_ASSIGN1((*colorsP)[1], *maxvalP);
         *padrightP =
             (((h10P->pixmap_width + 15) / 16) * 16 - h10P->pixmap_width) * 8;
         *bits_per_itemP = 16;
         *bits_per_pixelP = 1;
-    } else if ( h10P->window_ncolors == 0 ) { 
+    } else if (h10P->window_ncolors == 0) { 
         /* Must be grayscale. */
+        unsigned int i;
         *formatP = PGM_TYPE;
         *visualclassP = StaticGray;
         if (h10P->display_planes > sizeof(*maxvalP) * 8 - 1)
@@ -242,23 +244,27 @@ processX10Header(X10WDFileHeader *  const h10P,
             pm_error("XWD header says display_planes = %u, which is too "
                      "large for maximum maxval of %u",
                      h10P->display_planes, PNM_OVERALLMAXVAL);
-        *colorsP = pnm_allocrow( *maxvalP + 1 );
-        for ( i = 0; i <= *maxvalP; ++i )
-            PNM_ASSIGN1( (*colorsP)[i], i );
+        *colorsP = pnm_allocrow(*maxvalP + 1);
+        for (i = 0; i <= *maxvalP; ++i)
+            PNM_ASSIGN1((*colorsP)[i], i);
         *padrightP =
             (((h10P->pixmap_width + 15) / 16) * 16 - h10P->pixmap_width) * 8;
         *bits_per_itemP = 16;
         *bits_per_pixelP = 1;
     } else {
-        *colorsP = pnm_allocrow( h10P->window_ncolors );
+        *maxvalP = 65535;
+
+        *colorsP = pnm_allocrow(h10P->window_ncolors);
         *visualclassP = PseudoColor;
-        if ( grayscale ) {
+        if (grayscale) {
+            unsigned int i;
             *formatP = PGM_TYPE;
-            for ( i = 0; i < h10P->window_ncolors; ++i )
-                PNM_ASSIGN1( (*colorsP)[i], x10colors[i].red );
+            for (i = 0; i < h10P->window_ncolors; ++i)
+                PNM_ASSIGN1((*colorsP)[i], x10colors[i].red);
         } else {
+            unsigned int i;
             *formatP = PPM_TYPE;
-            for ( i = 0; i < h10P->window_ncolors; ++i )
+            for (i = 0; i < h10P->window_ncolors; ++i)
                 PPM_ASSIGN(
                     (*colorsP)[i], x10colors[i].red, x10colors[i].green,
                     x10colors[i].blue);
@@ -319,36 +325,46 @@ fixH11ByteOrder(X11WDFileHeader *  const h11P,
 
 
 static void
-readX11Colormap(FILE *      const file,
-                int         const ncolors, 
-                bool        const byteSwap,
-                X11XColor** const x11colorsP) {
+dumpX11Cmap(unsigned int       const nColors,
+            const X11XColor *  const x11colors) {
+
+    unsigned int i;
+    for (i = 0; i < nColors; ++i)
+        pm_message("Color %u r/g/b = %u/%u/%u", i, 
+                   x11colors[i].red, x11colors[i].green, 
+                   x11colors[i].blue);
+}
+
+
+
+static void
+readX11Colormap(FILE *       const file,
+                unsigned int const nColors, 
+                bool         const byteSwap,
+                bool         const cmapDump,
+                X11XColor**  const x11colorsP) {
                 
     X11XColor * x11colors;
     int rc;
 
     /* Read X11 colormap. */
-    MALLOCARRAY(x11colors, ncolors);
+    MALLOCARRAY(x11colors, nColors);
     if (x11colors == NULL)
         pm_error("out of memory");
-    rc = fread(x11colors, sizeof(x11colors[0]), ncolors, file);
-    if (rc != ncolors)
+    rc = fread(x11colors, sizeof(x11colors[0]), nColors, file);
+    if (rc != nColors)
         pm_error("couldn't read X11 XWD colormap");
     if (byteSwap) {
         unsigned int i;
-        for (i = 0; i < ncolors; ++i) {
+        for (i = 0; i < nColors; ++i) {
             x11colors[i].red   = pm_bs_short(x11colors[i].red);
             x11colors[i].green = pm_bs_short(x11colors[i].green);
             x11colors[i].blue  = pm_bs_short(x11colors[i].blue);
         }
     }
-    if (debug) {
-        unsigned int i;
-        for (i = 0; i < ncolors && i < 8; ++i)
-            pm_message("Color %d r/g/b = %d/%d/%d", i, 
-                       x11colors[i].red, x11colors[i].green, 
-                       x11colors[i].blue);
-    }
+    if (cmapDump)
+        dumpX11Cmap(nColors, x11colors);
+
     *x11colorsP = x11colors;
 }
 
@@ -490,10 +506,36 @@ computeComponentMasks(X11WDFileHeader * const h11P,
 }
 
 
+/* About TrueColor maxval:
+
+   The X11 spec says that in TrueColor, you use the bits in the raster for a
+   particular color component of a particular pixel to index the server's
+   colormap for that component, which contains 'bits_per_rgb' significant bits
+   of intensity information.  'bits_per_rgb' is in the XWD header, and in
+   practice is normally 8 or 16, usually 8.
+
+   We don't have the server's colormap, so we assume the most ordinary
+   one, a linear-as-possible distribution over the indices.
+
+   That means the maxval is that implied by 'bits_per_rgb' bits and we get
+   the proper sample value by scaling the value from the raster to that
+   maxval.
+
+   We (mostly Julian Bradfield <jcb@inf.ed.ac.uk>) figured this out in Netpbm
+   10.46 (March 2009).  Between ca. 2000 and 10.46, we instead assumed the
+   value in the XWD raster to be the exact brightness value, and chose a
+   maxval that would best allow us to represent that exact value for all
+   three components (e.g. if the XWD had 5 bits for blue, 5 for red, and
+   6 for red, we'd use maxval 31*63=1953).  Before that, the maxval was
+   31 if bits per pixel was 16 and 255 otherwise.
+*/
+
+
 
 static void
 processX11Header(X11WDFileHeader *  const h11P, 
-                 FILE *             const file,
+                 FILE *             const fileP,
+                 bool               const cmapDump,
                  int *              const colsP, 
                  int *              const rowsP, 
                  unsigned int *     const padrightP, 
@@ -519,7 +561,7 @@ processX11Header(X11WDFileHeader *  const h11P,
         pm_message("Header is different endianness from this machine.");
     
     for (i = 0; i < h11FixedP->header_size - sizeof(*h11FixedP); ++i)
-        if (getc(file) == EOF)
+        if (getc(fileP) == EOF)
             pm_error("couldn't read rest of X11 XWD file header");
 
     /* Check whether we can handle this dump. */
@@ -541,7 +583,8 @@ processX11Header(X11WDFileHeader *  const h11P,
                  h11FixedP->bitmap_unit);
 
     if (h11FixedP->ncolors > 0) {
-        readX11Colormap(file, h11FixedP->ncolors, byte_swap, &x11colors);
+        readX11Colormap(fileP, h11FixedP->ncolors, byte_swap, cmapDump,
+                        &x11colors);
         grayscale = colormapAllGray(x11colors, h11FixedP->ncolors);
     } else
         grayscale = TRUE;
@@ -565,11 +608,8 @@ processX11Header(X11WDFileHeader *  const h11P,
     } else if (*visualclassP == TrueColor) {
         *formatP = PPM_TYPE;
 
-        *maxvalP = pm_lcm(pm_bitstomaxval(one_bits(h11FixedP->red_mask)),
-                          pm_bitstomaxval(one_bits(h11FixedP->green_mask)),
-                          pm_bitstomaxval(one_bits(h11FixedP->blue_mask)),
-                          PPM_OVERALLMAXVAL
-            );
+        /* See discussion above about this maxval */
+        *maxvalP = pm_bitstomaxval(h11FixedP->bits_per_rgb);
     } else if (*visualclassP == StaticGray && h11FixedP->bits_per_pixel == 1) {
         *formatP = PBM_TYPE;
         *maxvalP = 1;
@@ -681,7 +721,8 @@ getinit(FILE *             const ifP,
         struct compMask *  const compMaskP,
         enum byteorder *   const byte_orderP,
         enum byteorder *   const bit_orderP,
-        bool               const headerDump) {
+        bool               const headerDump,
+        bool               const cmapDump) {
 /*----------------------------------------------------------------------------
    Read the header from the XWD image in input stream 'ifP'.  Leave
    the stream positioned to the beginning of the raster.
@@ -743,7 +784,8 @@ getinit(FILE *             const ifP,
         if (headerDump)
             dumpX11Header(h11P);
 
-        processX11Header(h11P, ifP, colsP, rowsP, padrightP, maxvalP, 
+        processX11Header(h11P, ifP, cmapDump,
+                         colsP, rowsP, padrightP, maxvalP, 
                          visualclassP, formatP, 
                          colorsP, bits_per_pixelP, bits_per_itemP, 
                          compMaskP, byte_orderP, bit_orderP);
@@ -1126,6 +1168,28 @@ reportInfo(int              const cols,
 
 
 
+static void
+warn16Bit(xelval const maxval) {
+/*----------------------------------------------------------------------------
+   This program is often used by users of X, and those users often use
+   'xv', which doesn't properly interpret PNM files with 16 bit samples.
+   Furthermore, the maxval is often much larger than the user assumes
+   because of PNM's need to use the same maxval for all color components,
+   while XWD often uses different resolution for each.
+
+   Users get really frustrated when Xv displays something other than the
+   original mimage, almost always assuming that means Xwdtopnm converted
+   incorrectly.
+-----------------------------------------------------------------------------*/
+
+    if (pm_maxvaltobits(maxval) > 8)
+        pm_message("WARNING: Producing maxval %u output.  This involves "
+                   "multiple bytes per sample, which some programs, e.g. "
+                   "'xv', can't handle.  See manual.", maxval);
+}
+
+
+
 static void 
 convertRowSimpleIndex(pixelReader *  const pixelReaderP,
                       int            const cols,
@@ -1318,7 +1382,9 @@ main(int argc, char *argv[]) {
     getinit(ifP, &cols, &rows, &padright, &maxval, &visualclass, &format, 
             &colors, &bitsPerPixel, &bitsPerItem, 
             &compMask, &byteOrder, &bitOrder,
-            cmdline.headerdump);
+            cmdline.headerdump, cmdline.cmapdump);
+
+    warn16Bit(maxval);
     
     if (verbose) 
         reportInfo(cols, rows, padright, maxval, visualclass,

@@ -123,7 +123,7 @@ IMPORTINC_LIB_HEADERS := \
   pm_gamma.h lum.h dithers.h
 
 IMPORTINC_LIB_UTIL_HEADERS := \
-  bitarith.h bitreverse.h filename.h intcode.h mallocvar.h\
+  bitarith.h bitreverse.h filename.h intcode.h floatcode.h mallocvar.h\
   nsleep.h nstring.h pm_c_util.h shhopt.h \
   wordaccess.h wordaccess_64_le.h wordaccess_gcc3_be.h wordaccess_gcc3_le.h \
   wordaccess_generic.h \

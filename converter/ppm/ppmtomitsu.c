@@ -1,10 +1,10 @@
-/* ppmtomitsu.c - read a portable pixmap and produce output for the
+/* ppmtomitsu.c - read a PPM image and produce output for the
 **                Mitsubishi S340-10 Thermo-Sublimation Printer
 **                (or the S3410-30 parallel interface)
 **
 ** Copyright (C) 1992,93 by S.Petra Zeidler
 ** Minor modifications by Ingo Wilken:
-x**  - mymalloc() and check_and_rotate() functions for often used
+**  - mymalloc() and check_and_rotate() functions for often used
 **    code fragments.  Reduces code size by a few KB.
 **  - use pm_error() instead of fprintf(stderr)
 **  - localized allocation of colorhastable
@@ -271,12 +271,12 @@ frametransferinit(int              const cols,
 
 
 static void
-colorRow(colorhist_vector const table,
-         unsigned int     const colanz,
-         hashinfo *       const colorhashtable) {
+doLookupTableColors(colorhist_vector const table,
+                    unsigned int     const nColor,
+                    hashinfo *       const colorhashtable) {
                 
     unsigned int colval;
-    for (colval = 0; colval < colanz; ++colval) {
+    for (colval = 0; colval < nColor; ++colval) {
         struct hashinfo * const hashchain =
             &colorhashtable[myhash((table[colval]).color)];
 
@@ -308,12 +308,12 @@ colorRow(colorhist_vector const table,
 
 
 static void
-grayRow(colorhist_vector const table,
-        unsigned int     const colanz,
-        hashinfo *       const colorhashtable) {
+doLookupTableGrays(colorhist_vector const table,
+                   unsigned int     const nColor,
+                   hashinfo *       const colorhashtable) {
 
     unsigned int colval;
-    for (colval = 0; colval < colanz; ++colval) {
+    for (colval = 0; colval < nColor; ++colval) {
         struct hashinfo * const hashchain =
             &colorhashtable[myhash((table[colval]).color)];
         struct hashinfo * hashrun;
@@ -329,8 +329,7 @@ grayRow(colorhist_vector const table,
         if (hashrun->flag == -1) {
             hashrun->color = (table[colval]).color;
             hashrun->flag  = colval;
-                    }
-        else {
+        } else {
             while (hashrun->next != NULL)
                 hashrun = hashrun->next;
             MALLOCVAR_NOFAIL(hashrun->next);
@@ -338,6 +337,86 @@ grayRow(colorhist_vector const table,
             hashrun->color = (table[colval]).color;
             hashrun->flag  = colval;
             hashrun->next  = NULL;
+        }
+    }
+}
+
+
+
+static void
+generateLookupTable(colorhist_vector const table,
+                    unsigned int     const nColor,
+                    unsigned int     const cols,
+                    unsigned int     const rows,
+                    int              const format,
+                    int              const sharpness,
+                    int              const enlarge,
+                    int              const copy,
+                    struct mediasize const medias,
+                    hashinfo **      const colorhashtableP) {
+/*----------------------------------------------------------------------------
+   Write to the output file the palette (color lookup table) indicated by
+   'table' and generate a hash table to use with it: *colorhashtableP.
+
+   Also write the various properties 'sharpness', 'enlarge', 'copy', and
+   'medias' to the output file.
+-----------------------------------------------------------------------------*/
+    hashinfo * colorhashtable;
+
+    lookuptableinit(sharpness, enlarge, copy, medias);
+
+    /* Initialize the hash table to empty */
+
+    MALLOCARRAY_NOFAIL(colorhashtable, HASHSIZE);
+    {
+        unsigned int i;
+        for (i = 0; i < HASHSIZE; ++i) {
+            colorhashtable[i].flag = -1;
+                    colorhashtable[i].next = NULL;
+        }
+    }
+
+    switch(PPM_FORMAT_TYPE(format)) {
+    case PPM_TYPE:
+        doLookupTableColors(table, nColor, colorhashtable);
+        break;
+    default:
+        doLookupTableGrays(table, nColor, colorhashtable);
+    }
+    lookuptabledata(cols, rows, enlarge, medias);
+
+    *colorhashtableP = colorhashtable;
+}
+
+
+
+static void
+writeColormapRaster(pixel **         const pixels,
+                    unsigned int     const cols,
+                    unsigned int     const rows,
+                    hashinfo *       const colorhashtable) {
+/*----------------------------------------------------------------------------
+   Write a colormapped raster: write the pixels pixels[][] (dimensions cols x
+   rows) as indices into the colormap (palette; lookup table) indicated by
+   'colorhashtable'.
+-----------------------------------------------------------------------------*/
+    unsigned int row;
+
+    for (row = 0; row < rows; ++row) {
+        unsigned int col;
+
+        for (col = 0; col < cols; ++col) {
+            pixel * const pixrow = pixels[row];
+            struct hashinfo * const hashchain =
+                &colorhashtable[myhash(pixrow[col])];
+            struct hashinfo * p;
+                
+            p = hashchain;
+            while (!PPM_EQUAL((p->color), pixrow[col])) {
+                assert(p->next);
+                p = p->next;
+            }
+            datum(p->flag);
         }
     }
 }
@@ -354,49 +433,18 @@ useLookupTable(pixel **         const pixels,
                unsigned int     const cols,
                unsigned int     const rows,
                int              const format,
-               unsigned int     const colanz) {
+               unsigned int     const nColor) {
 
     hashinfo * colorhashtable;
 
-    pm_message("found %u colors - using the lookuptable-method", colanz);
+    pm_message("found %u colors - using the lookuptable-method", nColor);
 
-    MALLOCARRAY_NOFAIL(colorhashtable, HASHSIZE);
-    {
-        unsigned int i;
-        for (i = 0; i < HASHSIZE; ++i) {
-            colorhashtable[i].flag = -1;
-                    colorhashtable[i].next = NULL;
-        }
-    }
+    generateLookupTable(table, nColor, cols, rows, format,
+                        sharpness, enlarge, copy, medias,
+                        &colorhashtable);
 
-    lookuptableinit(sharpness, enlarge, copy, medias);
-    switch(PPM_FORMAT_TYPE(format)) {
-    case PPM_TYPE:
-        colorRow(table, colanz, colorhashtable);
-        break;
-    default:
-        grayRow(table, colanz, colorhashtable);
-    }
-    lookuptabledata(cols, rows, enlarge, medias);
-    {
-        unsigned int row;
-        for (row = 0; row < rows; ++row) {
-            unsigned int col;
-            for (col = 0; col < cols; ++col) {
-                pixel * const pixrow = pixels[row];
-                struct hashinfo * const hashchain =
-                    &colorhashtable[myhash(pixrow[col])];
-                struct hashinfo * p;
-                
-                p = hashchain;
-                while (!PPM_EQUAL((p->color), pixrow[col])) {
-                    assert(p->next);
-                    p = p->next;
-                }
-                datum(p->flag);
-            }
-        }
-    }
+    writeColormapRaster(pixels, cols, rows, colorhashtable);
+
     free(colorhashtable);
 }
 
@@ -540,7 +588,7 @@ doTiny(FILE *           const ifP,
             data(blurow, cols);
             data(blurow, cols);
             data(blurow, cols);
-            }
+        }
         }
     }
 }
@@ -649,21 +697,21 @@ main(int argc, char * argv[]) {
 
     } else {
         pixel ** pixels;
-        int colanz;
+        int nColor;
         colorhist_vector table;
         unsigned int row;
 
         pixels = ppm_allocarray(cols, rows);
-        for (row = 0; row < rows; row++)
+        for (row = 0; row < rows; ++row)
             ppm_readppmrow(ifP, pixels[row], cols, maxval, format);
 
         /* first check wether we can use the lut transfer */
 
         table = ppm_computecolorhist(pixels, cols, rows, MAXLUTCOL+1, 
-                                     &colanz);
+                                     &nColor);
         if (table)
             useLookupTable(pixels, table, sharpness, enlarge, copy, medias,
-                           cols, rows, format, colanz);
+                           cols, rows, format, nColor);
         else
             useNoLookupTable(pixels, sharpness, enlarge, copy, medias,
                              cols, rows, format);
@@ -673,4 +721,3 @@ main(int argc, char * argv[]) {
     pm_close(ifP);
     return 0;
 }
-

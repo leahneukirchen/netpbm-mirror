@@ -4,31 +4,35 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-09.03.27 BJH  Release 10.45.07
+09.03.29 BJH  Release 10.46.00
+
+              xwdtopnm: Add -cmapdump .
+
+              xwdtopnm: Change maxval calculation for truecolor to fit
+              X11 spec.  Now it's determined by bits_per_rgb.
+
+              xwdtopnm: Add warning about 2 byte sample output.
+         
+              pnmcrop: fast path for PBM.
+
+              pnmcrop: Use border file instead of original image to determine
+              the background color (i.e. the color of added margins).
+
+              pnmscale: finally make it just an alias of pamscale, which
+              obsoleted it in 10.20.
+              
+              pnmcut: finally make it just an alias of pamcut, which
+              obsoleted it in 9.20.
 
               tifftopnm: fix orientation problem on big-endian machines.
-
-09.03.22 BJH  Release 10.45.06
-
-              g3topbm: fix array bound violation.  Introduced in 10.32.
+              Introduced in 10.42.
 
               pnmcrop: various fixes.
 
-              pnmcrop: add PBM fastpath (just because it was all integrated
-              with the above fixes).
-
-09.02.26 BJH  Release 10.45.05
+              g3topbm: fix array bound violation.  Introduced in 10.32.
 
               pnmcat: fix array bound violation with PBM top/bottom
               concatenation.  Introduced in 10.44.
-
-09.02.14 BJH  Release 10.45.04
-
-              pnm_alloctupletable, pnm_tuplehashtotable,
-              pnm_computetuplefreqtable3: fix crash when out of memory,
-              memory leak with uncomputably large numbers.
-
-09.01.29 BJH  Release 10.45.03
 
               ilbmtoppm: Fix array bound violation with compressed ILBM.
               Introduced in 10.18.
@@ -36,32 +40,36 @@ CHANGE HISTORY
               fitstopnm: fix garbage output when input is little endian
               floating point FITS.
 
-09.01.15 BJH  Release 10.45.02
-
-              picttoppm: fix crash when image is all text with -fullres.
-
-              picttoppm: issue warning when text omitted because of 
-              -fullres.
-
               picttoppm: Fix crash with -fullres and all-text PICT image.
               Also issue warning that program omits text with -fullres.
 
-09.01.02 BJH  Release 10.45.01
+              picttoppm: Improve error/informational messages.
 
               picttoppm: Don't fail if 'fontdir' file doesn't exist.  Bug
               from 10.44.
 
-              pamcut: fix bug with PBM and -pad.
+              ppmtopict: Use two-byte length field when image width > 200
+              instead of > 250.  Former is what Picttoppm has been assuming
+              since March 2004, when it was found to work better than 250,
+              which is the number documented as right.
 
               ilbmtoppm: fix bug: appends color map PPM to output if input
               has color map; fails if input doesn't have color map.  Broken
               in 10.18.
 
               leaftoppm: fix bug: uses red channel as all three channels;
-              (produces grayscale output).
+              (produces grayscale output).  Broken between 10.19 and 10.26,
+              inclusive.
 
               pbmtomrf, mrftopbm: fix crashes, incorrect output in all
               cases.  Broken forever.
+
+              pnm_alloctupletable, pnm_tuplehashtotable,
+              pnm_computetuplefreqtable3: fix crash when out of memory,
+              memory leak with uncomputably large numbers.
+
+              Source tree: split out some of editor/ directory into new
+              editor/specialty directory.
 
 08.12.28 BJH  Release 10.45.00
 
@@ -751,6 +759,11 @@ CHANGE HISTORY
               picttoppm: fix bug - interprets some images wrong because of
               bogus "rowBytes" value.
 
+              libnetpbm: add ppm_fastlumin().  Change ppmtopgm, ppmtoilbm,
+              and ppm3d to use this, which results in higher quality output,
+              because ppm_fastlumin() rounds to nearest, whereas these
+              programs rounded down.  Otherwise, it's the same calculation.
+
               Redo asprintfN(), etc. so as not to use va_list in a way
               that doesn't work on some machines.
 
@@ -1193,7 +1206,7 @@ CHANGE HISTORY
 
               anytopnm: remove apparently redundant traps of signals.
 
-              pnm_alloctupletable(): fix bug - returns random value.
+              pnm_alloctupletable(): fix bug from 10.27: returns random value.
               (affects pnmcolormap, pnmremap, pnmquant, others).
          
               jpeg2ktopam: fix array bounds violation on 64 bit machines.
@@ -1924,6 +1937,8 @@ CHANGE HISTORY
               installnetpbm: don't crash on mkdir on old Perl.
 
 03.09.19 BJH  Release 10.18
+
+              Add pbmtomrf, mrftopbm.
 
               Add escp2topbm, pbmtoescp2.  Thanks Ulrich Walcher
               <u.walcher@gmx.de>

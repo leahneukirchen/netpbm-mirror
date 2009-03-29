@@ -563,7 +563,7 @@ extractRowsPBM(const struct pam * const inpamP,
     int             row;
     unsigned int    totalWidth;
 
-    assert(0 <= leftcol && leftcol <= rightcol && rightcol < inpamP->width);
+    assert(leftcol <= rightcol);
     assert(toprow <= bottomrow);
 
     if (leftcol > 0) {
@@ -658,8 +658,7 @@ cutOneImage(FILE *             const ifP,
 
     pnm_writepaminit(&outpam);
 
-    if (PNM_FORMAT_TYPE(outpam.format) == PBM_TYPE &&
-        leftcol >= 0 && rightcol < inpam.width)
+    if (PNM_FORMAT_TYPE(outpam.format) == PBM_TYPE)
         extractRowsPBM(&inpam, &outpam, leftcol, rightcol, toprow, bottomrow);
     else
         extractRowsGen(&inpam, &outpam, leftcol, rightcol, toprow, bottomrow);

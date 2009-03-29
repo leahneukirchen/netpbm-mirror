@@ -13,83 +13,139 @@
 #include "pm_c_util.h"
 #include "pbm.h"
 
-static int bitbox;
-static int bitsleft;
 
-static FILE *bit_out;
+
+typedef struct bitOut {
+    int bitbox;
+    int bitsleft;
+    FILE * fileP;
+} bitOut;
+
 
 
 static void 
-bit_init(FILE * const out) {
-    bitbox = 0; 
-    bitsleft = 8;
-    bit_out = out;
+bit_init(struct bitOut * const bitOutP,
+         FILE *          const ofP) {
+
+    bitOutP->bitbox = 0; 
+    bitOutP->bitsleft = 8;
+    bitOutP->fileP = ofP;
 }
 
 
 
 static void 
-bit_output(int const bit) {
-    --bitsleft;
-    bitbox |= (bit << bitsleft);
-    if (bitsleft == 0) {
-        fputc(bitbox, bit_out);
-        bitbox = 0;
-        bitsleft = 8;
+bit_output(struct bitOut * const bitOutP,
+           int             const bit) {
+
+    --bitOutP->bitsleft;
+    bitOutP->bitbox |= (bit << bitOutP->bitsleft);
+    if (bitOutP->bitsleft == 0) {
+        fputc(bitOutP->bitbox, bitOutP->fileP);
+        bitOutP->bitbox = 0;
+        bitOutP->bitsleft = 8;
     }
 }
 
 
 
 static void 
-bit_flush(void) {
+bit_flush(struct bitOut * const bitOutP) {
     /* there are never 0 bits left outside of bit_output, but
      * if 8 bits are left here there's nothing to flush, so
      * only do it if bitsleft!=8.
      */
-    if (bitsleft != 8) {
-        bitsleft = 1;
-        bit_output(0);    /* yes, really. This will always work. */
+    if (bitOutP->bitsleft != 8) {
+        bitOutP->bitsleft = 1;
+        bit_output(bitOutP, 0);    /* yes, really. This will always work. */
     }
 }
 
 
 
-static void 
-doSquare(unsigned char * const image,
-         int             const ox,
-         int             const oy,
-         int             const w,
-         int             const size) {
-
-    unsigned int y;
+static void
+determineBlackWhiteOrMix(const unsigned char * const image,
+                         unsigned int          const ulCol,
+                         unsigned int          const ulRow,
+                         unsigned int          const imageWidth,
+                         unsigned int          const size,
+                         bool *                const oneColorP,
+                         int *                 const colorP) {
+/*----------------------------------------------------------------------------
+   Determine whether a square within 'image' is all white, all black,
+   or a mix.
+-----------------------------------------------------------------------------*/
+    unsigned int rowOfSquare;
     unsigned int t;
 
-    /* check square to see if it's all black or all white. */
+    for (rowOfSquare = 0, t = 0; rowOfSquare < size; ++rowOfSquare) {
+        unsigned int colOfSquare;
+        for (colOfSquare = 0; colOfSquare < size; ++colOfSquare) {
+            unsigned int rowOfImage = ulRow + rowOfSquare;
+            unsigned int colOfImage = ulCol + colOfSquare;
 
-    t = 0;
-    for (y = 0; y < size; ++y) {
-        unsigned int x;
-        for (x = 0; x < size; ++x)
-            t += image[(oy+y)*w + ox + x];
+            t += image[rowOfImage * imageWidth + colOfImage];
+        }
     }        
     /* if the total's 0, it's black. if it's size*size, it's white. */
-    if (t == 0 || t == size*size) {
-        if (size != 1)     /* (it's implicit when size is 1, of course) */
-            bit_output(1);  /* all same color */
-        bit_output(t?1:0);
-        return;
-    }
-    
-    /* otherwise, if our square is greater than 1x1, we need to recurse. */
-    if(size > 1) {
-        int halfsize = size >> 1;
+    if (t == 0) {
+        *oneColorP = TRUE;
+        *colorP = 0;
+    } else if (t == SQR(size)) {
+        *oneColorP = TRUE;
+        *colorP = 1;
+    } else
+        *oneColorP = FALSE;
+}
 
-        bit_output(0);    /* not all same */
-        doSquare(image, ox,          oy,          w, halfsize);
-        doSquare(image, ox+halfsize, oy,          w, halfsize);
-        doSquare(image, ox,          oy+halfsize, w, halfsize);
-        doSquare(image, ox+halfsize, oy+halfsize, w, halfsize);
+
+
+static void 
+doSquare(bitOut *              const bitOutP,
+         const unsigned char * const image,
+         unsigned int          const ulCol,
+         unsigned int          const ulRow,
+         unsigned int          const imageWidth,
+         unsigned int          const size) {
+/*----------------------------------------------------------------------------
+   Do a square of side 'size', whose upper left corner is at (ulCol, ulRow).
+   This is a square within 'image', which is a concatenation of rows
+   'imageWidth' pixels wide, one byte per pixel.
+
+   Write the pixel values out to the bit stream *bitOutP, in MRF format.
+-----------------------------------------------------------------------------*/
+    if (size == 1) {
+        /* The fact that it is all one color is implied because the square is
+           just one pixel; no bit goes in MRF output to state that.
+        */
+        bit_output(bitOutP, image[ulRow * imageWidth + ulCol] ? 1 : 0);
+    } else {
+        bool oneColor;
+        int color;
+
+        determineBlackWhiteOrMix(image, ulCol, ulRow, imageWidth, size,
+                                 &oneColor, &color);
+
+        if (oneColor) {
+            bit_output(bitOutP, 1);  /* all same color */
+            bit_output(bitOutP, color);
+        } else {
+            /* Square is not all the same color, so recurse.  Do each
+               of the four quadrants of this square individually.
+            */
+            unsigned int const quadSize = size/2;
+
+            bit_output(bitOutP, 0);    /* not all same color */
+
+            doSquare(bitOutP, image, ulCol,            ulRow,
+                     imageWidth, quadSize);
+            doSquare(bitOutP, image, ulCol + quadSize, ulRow,
+                     imageWidth, quadSize);
+            doSquare(bitOutP, image, ulCol,            ulRow + quadSize,
+                     imageWidth, quadSize);
+            doSquare(bitOutP, image, ulCol + quadSize, ulRow + quadSize,
+                     imageWidth, quadSize);
+        }
     }
 }
     
@@ -243,7 +299,7 @@ readPbmImage(FILE *           const ifP,
         pm_error("Ridiculously large, unprocessable image: %u cols x %u rows",
                  cols, rows);
 
-    image = calloc(w64*h64*64*64,1);
+    image = calloc(w64*h64*64*64, 1);
     if (image == NULL)
         pm_error("Unable to get memory for raster");
                  
@@ -276,6 +332,8 @@ outputMrf(FILE *          const ofP,
     unsigned int const w64 = (cols + 63) / 64;
     unsigned int const h64 = (rows + 63) / 64;
 
+    bitOut bitOut;
+
     unsigned int row;
 
     fprintf(ofP, "MRF1");
@@ -285,14 +343,14 @@ outputMrf(FILE *          const ofP,
     
     /* now recursively check squares. */
 
-    bit_init(ofP);
+    bit_init(&bitOut, ofP);
 
     for (row = 0; row < h64; ++row) {
         unsigned int col;
         for (col = 0; col < w64; ++col)
-            doSquare(image, col*64, row*64, w64*64, 64);
+            doSquare(&bitOut, image, col*64, row*64, w64*64, 64);
     }
-    bit_flush();
+    bit_flush(&bitOut);
 }
 
 

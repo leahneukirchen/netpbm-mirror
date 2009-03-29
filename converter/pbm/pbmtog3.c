@@ -55,7 +55,7 @@ struct bitString {
 
 struct outStream {
     struct bitString buffer;
-    
+
     bool reverseBits;
 };
 
@@ -109,6 +109,8 @@ parseCommandLine(int argc, char ** const argv,
     optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
+    free(option_def);
+
     if (argc-1 == 0) 
         cmdlineP->inputFileName = "-";
     else if (argc-1 != 1)
@@ -142,7 +144,7 @@ makeBs(wordint      const bits,
     return retval;
 }
 
-    
+
 
 static __inline__ void
 putbits(struct bitString const newBits) {
@@ -153,7 +155,7 @@ putbits(struct bitString const newBits) {
    Flush the buffer to stdout as necessary to make room.
 
    'newBits' must be shorter than a whole word.
-   
+
    N.B. the definition of struct bitString requires upper bits to be zero.
 -----------------------------------------------------------------------------*/
     unsigned int const spaceLeft = 
@@ -182,11 +184,11 @@ putbits(struct bitString const newBits) {
                        | (newBits.intBuffer >> nextBufBitCount));
         if (out.reverseBits)
             reversebuffer(outbytes, sizeof(outbytes));
-            
+
         rc = fwrite(outbytes, 1, sizeof(outbytes), stdout);
         if (rc != sizeof(outbytes))
             pm_error("Output error.  Unable to fwrite() to stdout");
-        
+
         out.buffer.intBuffer = newBits.intBuffer & ((1<<nextBufBitCount) - 1); 
         out.buffer.bitCount = nextBufBitCount;
     }
@@ -237,7 +239,7 @@ putcode2(int const clr,
 
     if (sizeof(wordint) * 8 > 24) {
         unsigned int const l1 = ttable[loIndex].length;
-        
+
         putbits(
             makeBs(mtable[hiIndex].code << l1 | ttable[loIndex].code,
                    mtable[hiIndex].length + l1)
@@ -299,7 +301,7 @@ puteol(void) {
         puts("EOL");
     else {
         struct bitString const eol = {12, 1};
-            
+
         putbits(eol);
     }
 }
@@ -341,7 +343,7 @@ convertRowToRunLengths(unsigned char * const bitrow,
     wordint      * const bitrowByWord = (wordint *) bitrow;
     int            const wordCount    = (cols + bitsPerWord - 1)/bitsPerWord; 
         /* Number of full and partial words in the row */
-        
+
 
     if (cols % bitsPerWord != 0) {
         /* Clean final word in row.  For loop simplicity */
@@ -411,7 +413,7 @@ main(int    argc,
            a word of zero padding on the high (right) end for the convenience
            of code that accesses this buffer in word-size bites.
         */
-     
+
     int rows;
     int cols;
     int readcols;
@@ -423,7 +425,7 @@ main(int    argc,
     pbm_init(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
-     
+
     ifP = pm_openr(cmdline.inputFileName);
 
     pbm_readpbminit(ifP, &cols, &rows, &format);
@@ -447,9 +449,9 @@ main(int    argc,
         unsigned int i;
 
         pbm_readpbmrow_packed(ifP, bitrow, cols, format);
-        
+
         convertRowToRunLengths(bitrow, readcols, milepost, &nRun);
-        
+
         padToDesiredWidth(milepost, &nRun, readcols, outwidth);
 
         for (i = p = 0; i < nRun; p = milepost[i++])
@@ -459,6 +461,8 @@ main(int    argc,
     }
 
     free(milepost);
+    pbm_freerow_packed(bitrow);
+
     {
         unsigned int i;  
         for( i = 0; i < 6; ++i)
@@ -467,7 +471,7 @@ main(int    argc,
     if (out.buffer.bitCount > 0) {
         /* flush final partial buffer */
         unsigned int const bytesToWrite = (out.buffer.bitCount+7)/8;
-        
+
         unsigned char outbytes[sizeof(wordint)];
         size_t rc;
         wordintToBytes(&outbytes, 
