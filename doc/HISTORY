@@ -4,7 +4,7 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-not yet  BJH  Release 10.46.00
+09.03.29 BJH  Release 10.46.00
 
               xwdtopnm: Add -cmapdump .
 
@@ -25,6 +25,7 @@ not yet  BJH  Release 10.46.00
               obsoleted it in 9.20.
 
               tifftopnm: fix orientation problem on big-endian machines.
+              Introduced in 10.42.
 
               pnmcrop: various fixes.
 
