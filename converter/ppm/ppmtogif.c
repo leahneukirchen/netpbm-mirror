@@ -19,6 +19,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "pm_c_util.h"
 #include "mallocvar.h"
 #include "shhopt.h"
 #include "nstring.h"

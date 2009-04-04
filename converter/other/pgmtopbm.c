@@ -12,6 +12,7 @@
 
 #include <assert.h>
 
+#include "pm_c_util.h"
 #include "shhopt.h"
 #include "pgm.h"
 #include "dithers.h"

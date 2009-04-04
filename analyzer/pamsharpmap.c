@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <math.h>
 
+#include "pm_c_util.h"
 #include "pam.h"
 #include "shhopt.h"
 #include "mallocvar.h"

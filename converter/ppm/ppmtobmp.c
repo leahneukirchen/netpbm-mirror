@@ -19,6 +19,7 @@
 #include <assert.h>
 #include <string.h>
 
+#include "pm_c_util.h"
 #include "mallocvar.h"
 #include "shhopt.h"
 #include "bmp.h"

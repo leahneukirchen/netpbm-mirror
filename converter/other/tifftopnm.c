@@ -53,6 +53,7 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "pm_c_util.h"
 #include "shhopt.h"
 #include "mallocvar.h"
 #include "nstring.h"

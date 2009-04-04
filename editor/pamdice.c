@@ -11,6 +11,7 @@
 
 #include <string.h>
 
+#include "pm_c_util.h"
 #include "pam.h"
 #include "shhopt.h"
 #include "nstring.h"

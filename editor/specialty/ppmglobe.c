@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include <math.h>
 
+#include "pm_c_util.h"
 #include "ppm.h"
 #include "colorname.h"
 #include "shhopt.h"

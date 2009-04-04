@@ -4,6 +4,13 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+not yet  BJH  Release 10.47.00
+
+              Remove nstring.h from exported interfaces.
+
+              Fix: remove inclusion of pm_c_util.h from sshopt.h, which is
+              an exported interface header file, whereas pm_c_util.h is not.
+
 09.03.29 BJH  Release 10.46.00
 
               xwdtopnm: Add -cmapdump .

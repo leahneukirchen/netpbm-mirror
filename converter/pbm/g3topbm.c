@@ -20,6 +20,7 @@
 
 #define _BSD_SOURCE   /* Make nstring.h define strcaseeq() */
 
+#include "pm_c_util.h"
 #include "pbm.h"
 #include "shhopt.h"
 #include "nstring.h"

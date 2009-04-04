@@ -27,6 +27,7 @@
 #include <string.h>
 #include <math.h>
 
+#include "pm_c_util.h"
 #include "mallocvar.h"
 #include "nstring.h"
 #include "shhopt.h"

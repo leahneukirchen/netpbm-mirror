@@ -61,6 +61,8 @@
    itself, but doesn't.
 */
 #include <jpeglib.h>
+
+#include "pm_c_util.h"
 #include "pnm.h"
 #include "shhopt.h"
 #include "mallocvar.h"

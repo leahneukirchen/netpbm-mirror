@@ -13,6 +13,7 @@
 #include <assert.h>
 #include <string.h>
 
+#include "pm_c_util.h"
 #include "pam.h"
 #include "dithers.h"
 #include "mallocvar.h"

@@ -16,6 +16,8 @@
 #include <errno.h>
 #include <signal.h>
 #include <unistd.h>
+
+#include "pm_c_util.h"
 #include "ppm.h"
 #include "shhopt.h"
 

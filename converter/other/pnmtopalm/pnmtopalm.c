@@ -21,6 +21,7 @@
 #include <assert.h>
 #include <limits.h>
 
+#include "pm_c_util.h"
 #include "pnm.h"
 #include "palm.h"
 #include "shhopt.h"

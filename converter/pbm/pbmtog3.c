@@ -18,12 +18,13 @@
 
 #include <assert.h>
 
-#include "pbm.h"
+#include "pm_c_util.h"
 #include "shhopt.h"
 #include "mallocvar.h"
 #include "bitreverse.h"
 #include "wordaccess.h"
 #include "g3.h"
+#include "pbm.h"
 
 #define TC_MC 64
 
