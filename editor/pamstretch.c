@@ -24,6 +24,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+
+#include "pm_c_util.h"
 #include "pam.h"
 #include "shhopt.h"
 

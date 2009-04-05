@@ -60,6 +60,8 @@
 #include <string.h> /* strcat() */
 #include <limits.h>
 #include <png.h>    /* includes zlib.h and setjmp.h */
+
+#include "pm_c_util.h"
 #include "pnm.h"
 #include "pngtxt.h"
 #include "shhopt.h"

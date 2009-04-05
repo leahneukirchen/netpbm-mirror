@@ -15,6 +15,7 @@
 
 #include <string.h>
 
+#include "pm_c_util.h"
 #include "pam.h"
 #include "pammap.h"
 #include "shhopt.h"

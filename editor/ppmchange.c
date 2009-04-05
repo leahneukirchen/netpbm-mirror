@@ -13,6 +13,7 @@
 **     28 Jan 94 -  Added multiple color substitution function.
 */
 
+#include "pm_c_util.h"
 #include "ppm.h"
 #include "shhopt.h"
 #include "mallocvar.h"

@@ -14,6 +14,8 @@
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 
 #include <string.h>
+
+#include "pm_c_util.h"
 #include "ppm.h"
 #include "xim.h"
 #include "shhopt.h"

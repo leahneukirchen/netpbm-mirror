@@ -11,6 +11,8 @@
 */
 
 #include <math.h>
+
+#include "pm_c_util.h"
 #include "pgm.h"
 #include "shhopt.h"
 

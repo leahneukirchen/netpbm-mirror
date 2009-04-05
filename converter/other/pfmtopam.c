@@ -15,6 +15,7 @@
 #include <string.h>
 #include <assert.h>
 
+#include "pm_c_util.h"
 #include "pam.h"
 #include "pm_gamma.h"
 #include "shhopt.h"

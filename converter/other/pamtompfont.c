@@ -21,6 +21,7 @@
 #include <string.h>
 #include <assert.h>
 
+#include "pm_c_util.h"
 #include "mallocvar.h"
 #include "shhopt.h"
 #include "pm.h"

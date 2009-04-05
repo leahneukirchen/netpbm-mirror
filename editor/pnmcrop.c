@@ -25,6 +25,7 @@
 #include <errno.h>
 #include <assert.h>
 
+#include "pm_c_util.h"
 #include "pnm.h"
 #include "shhopt.h"
 #include "mallocvar.h"

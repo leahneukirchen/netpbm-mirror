@@ -50,6 +50,7 @@
 #include <assert.h>
 
 #include "pm_config.h"
+#include "pm_c_util.h"
 #include "pam.h"
 #include "shhopt.h"
 #include "mallocvar.h"

@@ -25,6 +25,7 @@
 #include <png.h>    /* includes zlib.h and setjmp.h */
 #define VERSION "2.37.4 (5 December 1999) +netpbm"
 
+#include "pm_c_util.h"
 #include "mallocvar.h"
 #include "nstring.h"
 #include "shhopt.h"

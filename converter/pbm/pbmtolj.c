@@ -27,6 +27,7 @@
 ** implied warranty.
 */
 
+#include "pm_c_util.h"
 #include "pbm.h"
 #include "shhopt.h"
 #include "mallocvar.h"

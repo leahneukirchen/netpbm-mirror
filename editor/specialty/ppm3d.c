@@ -8,6 +8,7 @@
 
 #include <assert.h>
 
+#include "pm_c_util.h"
 #include "shhopt.h"
 #include "mallocvar.h"
 #include "ppm.h"

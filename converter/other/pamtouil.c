@@ -17,6 +17,8 @@
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 #include <ctype.h>
 #include <string.h>
+
+#include "pm_c_util.h"
 #include "pam.h"
 #include "pammap.h"
 #include "colorname.h"

@@ -1,4 +1,4 @@
-/*==============================================================================
+/*=============================================================================
 HERE IS AN EXAMPLE OF THE USE OF SHHOPT:
 
 
@@ -231,15 +231,5 @@ optDestroyNameValueList(struct optNameValue * const list);
 #ifdef __cplusplus
 }
 #endif
-
-/* Here's a hack to help us introduce pm_c_util.h.  That should be
-   #included in nearly every Netpbm program, but we're too lazy to insert
-   it into hundreds of files right now.  But shhopt.h is included into
-   most of those files, so we #include it here!
-
-   Before 2005.12.03, the stuff that is now in pm_c_util.h was in pm.h,
-   but that's a bad place for it because pm.h is an external header file.
-*/
-#include "pm_c_util.h"
 
 #endif

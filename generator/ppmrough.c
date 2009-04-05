@@ -14,6 +14,7 @@
 #include <math.h>
 #include <sys/time.h>
 
+#include "pm_c_util.h"
 #include "shhopt.h"
 #include "ppm.h"
 
