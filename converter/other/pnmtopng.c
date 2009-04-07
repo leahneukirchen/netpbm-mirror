@@ -1326,9 +1326,9 @@ computeUnsortedAlphaPalette(FILE *           const ifP,
 
 
 static void
-sortAlphaPalette(gray *         const alphas_of_color[],
-                 unsigned int   const alphas_first_index[],
-                 unsigned int   const alphas_of_color_cnt[],
+sortAlphaPalette(gray *         const alphasOfColor[],
+                 unsigned int   const alphasFirstIndex[],
+                 unsigned int   const alphasOfColorCnt[],
                  unsigned int   const colors,
                  gray           const alphaMaxval,
                  unsigned int         mapping[],
@@ -1344,40 +1344,56 @@ sortAlphaPalette(gray *         const alphas_of_color[],
    palette of the alpha/color pair whose index is x in the unsorted
    PNG palette.  This mapping sorts the palette so that opaque entries
    are last.
+
+   The unsorted PNG palette is sorted enough that all entries for a particular
+   color (with varying transparencies) are contiguous.  alphasFirstIndex[x] is
+   the index in the unsorted PNG palette of the first entry with color x
+   (where x is an index into some other palette).  alphasOfColorCnt[x] is the
+   number of non-opaque entries in the unsorted PNG palette with color x.
+
+   alphasOfColor[x][y] is the y'th alpha value for color x, in no particular
+   order.
+
+   Return as *transSizeP the number of non-opaque entries in the palette
+   (i.e. the index in the palette of the first opaque entry).
 -----------------------------------------------------------------------------*/
-    unsigned int bot_idx;
-    unsigned int top_idx;
-    unsigned int colorIndex;
+    if (colors == 0)
+        *transSizeP = 0;
+    else {
+        unsigned int bot_idx;
+        unsigned int top_idx;
+        unsigned int colorIndex;
     
-    /* We start one index at the bottom of the palette index range
-       and another at the top.  We run through the unsorted palette,
-       and when we see an opaque entry, we map it to the current top
-       cursor and bump it down.  When we see a non-opaque entry, we map 
-       it to the current bottom cursor and bump it up.  Because the input
-       and output palettes are the same size, the two cursors should meet
-       right when we process the last entry of the unsorted palette.
-    */    
-    bot_idx = 0;
-    top_idx = alphas_first_index[colors-1] + alphas_of_color_cnt[colors-1] - 1;
+        /* We start one index at the bottom of the palette index range
+           and another at the top.  We run through the unsorted palette,
+           and when we see an opaque entry, we map it to the current top
+           cursor and bump it down.  When we see a non-opaque entry, we map 
+           it to the current bottom cursor and bump it up.  Because the input
+           and output palettes are the same size, the two cursors should meet
+           right when we process the last entry of the unsorted palette.
+        */    
+        bot_idx = 0;
+        top_idx = alphasFirstIndex[colors-1] + alphasOfColorCnt[colors-1] - 1;
     
-    for (colorIndex = 0;  colorIndex < colors;  ++colorIndex) {
-        unsigned int j;
-        for (j = 0; j < alphas_of_color_cnt[colorIndex]; ++j) {
-            unsigned int const paletteIndex = 
-                alphas_first_index[colorIndex] + j;
-            if (alphas_of_color[colorIndex][j] == alphaMaxval)
-                mapping[paletteIndex] = top_idx--;
-            else
-                mapping[paletteIndex] = bot_idx++;
+        for (colorIndex = 0;  colorIndex < colors;  ++colorIndex) {
+            unsigned int j;
+            for (j = 0; j < alphasOfColorCnt[colorIndex]; ++j) {
+                unsigned int const paletteIndex = 
+                    alphasFirstIndex[colorIndex] + j;
+                if (alphasOfColor[colorIndex][j] == alphaMaxval)
+                    mapping[paletteIndex] = top_idx--;
+                else
+                    mapping[paletteIndex] = bot_idx++;
+            }
         }
+        /* indices should have just crossed paths */
+        if (bot_idx != top_idx + 1) {
+            pm_error ("internal inconsistency: "
+                      "remapped bot_idx = %u, top_idx = %u",
+                      bot_idx, top_idx);
+        }
+        *transSizeP = bot_idx;
     }
-    /* indices should have just crossed paths */
-    if (bot_idx != top_idx + 1) {
-        pm_error ("internal inconsistency: "
-                  "remapped bot_idx = %u, top_idx = %u",
-                  bot_idx, top_idx);
-    }
-    *transSizeP = bot_idx;
 }
 
 
@@ -1427,7 +1443,7 @@ compute_alpha_palette(FILE *         const ifP,
     getChv(ifP, rasterPos, cols, rows, maxval, format, MAXCOLORS, 
            &chv, &colors);
 
-    assert(colors < ARRAY_SIZE(alphas_of_color));
+    assert(colors <= ARRAY_SIZE(alphas_of_color));
 
     computeUnsortedAlphaPalette(ifP, cols, rows, maxval, format, rasterPos,
                                 alpha_mask, chv, colors,
