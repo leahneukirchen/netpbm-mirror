@@ -437,7 +437,7 @@ convertToNpm(bit **       const image,
         byteNumber = 0;
         bitNumber = 7;
 
-        MEMSZERO(buffer);
+        memset(buffer, 0, sizeof(buffer));
 
         for (col = 0; col < cols; ++col) {
             if (image[row][col] == PBM_BLACK)
