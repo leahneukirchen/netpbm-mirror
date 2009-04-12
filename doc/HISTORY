@@ -4,6 +4,13 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+09.04.12 BJH  Release 10.46.02
+
+              pamstereogram: fix tuple type in output file (and crash
+              with -verbose) with -patfile .
+
+              pamstereogram: fix uninitialized bytes per sample value.
+
 09.04.05 BJH  Release 10.46.01
 
               Remove nstring.h from exported interfaces.
