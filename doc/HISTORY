@@ -4,6 +4,13 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+09.04.12 BJH  Release 10.35.62
+
+              pamstereogram: fix tuple type in output file (and crash
+              with -verbose) with -patfile .
+
+              pamstereogram: fix uninitialized bytes per sample value.
+
 09.03.22 BJH  Release 10.35.61
 
               g3topbm: fix array bound violation.  Introduced in 10.32.

@@ -480,6 +480,7 @@ initPatternPixel(outGenerator *     const outGenP,
     outGenP->pam.plainformat = stateP->patPam.plainformat;
     outGenP->pam.depth       = stateP->patPam.depth;
     outGenP->pam.maxval      = stateP->patPam.maxval;
+    strcpy(outGenP->pam.tuple_type, stateP->patPam.tuple_type);
 
     if (cmdline.verbose)
         reportImageParameters("Pattern file", &stateP->patPam);
@@ -498,7 +499,6 @@ createoutputGenerator(struct cmdlineInfo const cmdline,
 
     outGenP->pam.size   = sizeof(struct pam);
     outGenP->pam.len    = PAM_STRUCT_SIZE(tuple_type);
-    outGenP->pam.bytes_per_sample = pnm_bytespersample(outGenP->pam.maxval);
     outGenP->pam.file   = stdout;
     outGenP->pam.height = inPamP->height + 3 * abs(cmdline.guidesize);
         /* Allow room for guides. */
@@ -513,6 +513,8 @@ createoutputGenerator(struct cmdlineInfo const cmdline,
 
         initRandomColor(outGenP, inPamP, cmdline);
     }
+
+    outGenP->pam.bytes_per_sample = pnm_bytespersample(outGenP->pam.maxval);
 
     *outputGeneratorPP = outGenP;
 }
