@@ -456,12 +456,17 @@ termPatternPixel(outGenerator * const outGenP) {
 static void
 initPatternPixel(outGenerator *     const outGenP,
                  struct cmdlineInfo const cmdline) {
-
+/*----------------------------------------------------------------------------
+   Initialize parts of output generator *outGenP that are based on the
+   supplied pattern file, assuming there is one.
+-----------------------------------------------------------------------------*/
     struct patternPixelState * stateP;
     FILE * patternFileP;
 
     MALLOCVAR_NOFAIL(stateP);
-        
+
+    assert(cmdline.patFilespec);
+    
     patternFileP = pm_openr(cmdline.patFilespec);
 
     stateP->patTuples =
@@ -481,6 +486,7 @@ initPatternPixel(outGenerator *     const outGenP,
     outGenP->pam.plainformat = stateP->patPam.plainformat;
     outGenP->pam.depth       = stateP->patPam.depth;
     outGenP->pam.maxval      = stateP->patPam.maxval;
+    strcpy(outGenP->pam.tuple_type, stateP->patPam.tuple_type);
 
     if (cmdline.verbose)
         reportImageParameters("Pattern file", &stateP->patPam);
