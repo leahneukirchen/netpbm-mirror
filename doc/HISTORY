@@ -10,6 +10,9 @@ not yet  BJH  Release 10.47.00
 
               Remove nstring.h from exported interfaces.
 
+              pnmtile: fix reference to arbitrary storage in option
+              processing.
+
               pamstereogram: fix tuple type in output file (and crash
               with -verbose) with -patfile .
 
