@@ -8,15 +8,30 @@ not yet  BJH  Release 10.47.00
 
               Add pamsistoaglyph.  Thanks Scott Pakin.
 
+              Add /usr/share/netpbm/rgb.txt to search path for color
+              dictionary.
+
               Remove nstring.h from exported interfaces.
 
+              ximtoppm: fix crash in command line processing.
+
+              ppmrainbow: exit with proper exit status upon failure.
+              
+              ppmfade: eliminate reference to undeclared subroutine.
+
+              ppmquantall: don't use 'set' to set Bourne shell variable.
+
               pnmtile: fix reference to arbitrary storage in option
-              processing.
+              processing.  Introduced in 10.42.
 
               pamstereogram: fix tuple type in output file (and crash
               with -verbose) with -patfile .
 
               pamstereogram: fix uninitialized bytes per sample value.
+
+              pbmtomacp: fix buffer overflow.
+
+              libnetpbm (ppmd): fix: don't ignore failure to read font file.
 
               Fix: remove inclusion of pm_c_util.h from sshopt.h, which is
               an exported interface header file, whereas pm_c_util.h is not.
@@ -84,6 +99,9 @@ not yet  BJH  Release 10.47.00
               pnm_alloctupletable, pnm_tuplehashtotable,
               pnm_computetuplefreqtable3: fix crash when out of memory,
               memory leak with uncomputably large numbers.
+
+              build: rename getline() in xvminitoppm.c to avoid collision
+              with libc.
 
               Source tree: split out some of editor/ directory into new
               editor/specialty directory.
@@ -243,6 +261,8 @@ not yet  BJH  Release 10.47.00
               pbmtext: fail cleanly if -width, -space, or -lspace is
               too large for computation.  Thanks Prophet of the Way
               <afu@wta.att.ne.jp>.
+
+              pnmtile: deal with zero width/height.
 
               pbmtext: fix negative -space.
 
