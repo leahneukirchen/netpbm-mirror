@@ -58,19 +58,12 @@
 ** path here.  This is used by PPM to parse color names into rgb values.
 ** If you don't have such a file, comment this out and use the alternative
 ** hex and decimal forms to specify colors (see ppm/pgmtoppm.1 for details).  */
-/* There was some evidence before Netpbm 9.1 that the rgb database macros
-   might be already set right now.  I couldn't figure out how, so I changed
-   their meanings and they are now set unconditionally.  -Bryan 00.05.03.
-*/
-#ifdef VMS
-#define RGB_DB1 "PBMplus_Dir:RGB.TXT"
-#define RGB_DB2 "PBMplus_Dir:RGB.TXT"
-#define RGB_DB3 "PBMplus_Dir:RGB.TXT"
-#else
-#define RGB_DB1 "/usr/lib/X11/rgb.txt"
-#define RGB_DB2 "/usr/share/X11/rgb.txt"
-#define RGB_DB3 "/usr/X11R6/lib/X11/rgb.txt"
-#endif
+
+#define RGB_DB_PATH \
+"/usr/share/netpbm/rgb.txt:" \
+"/usr/lib/X11/rgb.txt:" \
+"/usr/share/X11/rgb.txt:" \
+"/usr/X11R6/lib/X11/rgb.txt"
 
 /* CONFIGURE: This is the name of an environment variable that tells
 ** where the color names database is.  If the environment variable isn't

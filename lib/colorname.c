@@ -43,6 +43,41 @@ pm_canonstr(char * const str) {
 
 
 
+static void
+openColornameFileSearch(const char * const searchPath,
+                        FILE **      const filePP) {
+/*----------------------------------------------------------------------------
+   Open the color name file, finding it via the search path 'searchPath'.
+
+   Return as *filePP the stream handle for it, but if we don't find it
+   (or just can open it) anywhere, return *filePP == NULL.
+-----------------------------------------------------------------------------*/
+    char * buffer;
+
+    buffer = strdup(searchPath);
+
+    if (buffer) {
+        char * cursor;
+        bool eol;
+
+        cursor = &buffer[0];
+        eol = FALSE;    /* initial value */
+        *filePP = NULL;  /* initial value */
+        while (!eol && !*filePP) {
+            const char * token;
+            token = strsepN(&cursor, ":");
+            if (token) {
+                *filePP = fopen(token, "r");
+            } else
+                eol = TRUE;
+        }
+        free(buffer);
+    } else
+        *filePP = NULL;
+}
+
+
+
 FILE *
 pm_openColornameFile(const char * const fileName, const int must_open) {
 /*----------------------------------------------------------------------------
@@ -57,31 +92,32 @@ pm_openColornameFile(const char * const fileName, const int must_open) {
    exist), exit the program with an error message.  If 'must_open' is
    false and we can't open the file, just return a null pointer.
 -----------------------------------------------------------------------------*/
-    const char *rgbdef;
     FILE *f;
 
     if (fileName == NULL) {
-        if ((rgbdef = getenv(RGBENV))==NULL) {
-            /* The environment variable isn't set, so try the hardcoded
-               default color name dictionary locations.
-            */
-            if ((f = fopen(RGB_DB1, "r")) == NULL &&
-                (f = fopen(RGB_DB2, "r")) == NULL &&
-                (f = fopen(RGB_DB3, "r")) == NULL && must_open) {
-                pm_error("can't open color names dictionary file named "
-                         "%s, %s, or %s "
-                         "and Environment variable %s not set.  Set %s to "
-                         "the pathname of your rgb.txt file or don't use "
-                         "color names.", 
-                         RGB_DB1, RGB_DB2, RGB_DB3, RGBENV, RGBENV);
-            }
-        } else {            
+        const char * rgbdef = getenv(RGBENV);
+        if (rgbdef) {
             /* The environment variable is set */
-            if ((f = fopen(rgbdef, "r")) == NULL && must_open)
+            f = fopen(rgbdef, "r");
+            if (f == NULL && must_open)
                 pm_error("Can't open the color names dictionary file "
                          "named %s, per the %s environment variable.  "
                          "errno = %d (%s)",
                          rgbdef, RGBENV, errno, strerror(errno));
+        } else {            
+            /* The environment variable isn't set, so try the hardcoded
+               default color name dictionary locations.
+            */
+            openColornameFileSearch(RGB_DB_PATH, &f);
+
+            if (f == NULL && must_open) {
+                pm_error("can't open color names dictionary file from the "
+                         "path '%s' "
+                         "and Environment variable %s not set.  Set %s to "
+                         "the pathname of your rgb.txt file or don't use "
+                         "color names.", 
+                         RGB_DB_PATH, RGBENV, RGBENV);
+            }
         }
     } else {
         f = fopen(fileName, "r");
