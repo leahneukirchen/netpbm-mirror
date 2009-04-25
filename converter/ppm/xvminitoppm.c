@@ -53,7 +53,7 @@ parseCommandLine(int const argc,
 
 
 static void
-getline(FILE * const ifP,
+getLine(FILE * const ifP,
         char * const buf,
         size_t const size) {
 
@@ -107,7 +107,7 @@ readXvHeader(FILE *         const ifP,
     int rc;
     bool endOfComments;
     
-    getline(ifP, buf, sizeof(buf));
+    getLine(ifP, buf, sizeof(buf));
 
     if (!strneq(buf, "P7 332", 6))
         pm_error("Input is not a XV thumbnail picture.  It does not "
@@ -115,14 +115,14 @@ readXvHeader(FILE *         const ifP,
 
     endOfComments = FALSE;
     while (!endOfComments) {
-        getline(ifP, buf, sizeof(buf));
+        getLine(ifP, buf, sizeof(buf));
         if (strneq(buf, "#END_OF_COMMENTS", 16))
             endOfComments = TRUE;
         else if (strneq(buf, "#BUILTIN", 8))
             pm_error("This program does not know how to "
                      "convert builtin XV thumbnail pictures");
     }
-    getline(ifP, buf, sizeof(buf));
+    getLine(ifP, buf, sizeof(buf));
     rc = sscanf(buf, "%u %u %u", &cols, &rows, &maxval);
     if (rc != 3)
         pm_error("error parsing dimension info '%s'.  "
