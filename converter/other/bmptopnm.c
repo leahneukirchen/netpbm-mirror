@@ -1251,7 +1251,7 @@ readColorMap(FILE *               const ifP,
                    bytesRead,
                    BMPlencolormap(BMPheader.class, BMPheader.cBitCount, 
                                   BMPheader.cmapsize));
-}
+    }
 }
 
 
