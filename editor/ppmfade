@@ -32,12 +32,7 @@ my $last_file = "undefined";
 my $base_name = "fade";		# default base name of output files
 my $image = "ppm";		# default output storage format
 my $mode = $SPREAD;		# default fading mode
-#
-#  Check those command line args.
-#
-if (@ARGV == 0) {
-    usage();
-}
+
 
 my $n;  # argument number
 
@@ -47,7 +42,7 @@ for ($n = 0; $n < @ARGV; $n++) {
         $first_file = $ARGV[$n];
         if (-e $first_file) {
         } else {
-            print "I can't find $first_file\n";
+            print "I can't find first file '$first_file'\n";
             exit 20;
         }
     } elsif ($ARGV[$n] eq "-l") {
@@ -55,7 +50,7 @@ for ($n = 0; $n < @ARGV; $n++) {
         $last_file = $ARGV[$n];
         if (-e $last_file) {
         } else {
-            print "I can't find $last_file\n";
+            print "I can't find last file '$last_file'\n";
             exit 20;
         }
     } elsif ($ARGV[$n] eq "-base") {
@@ -296,14 +291,3 @@ for ($i = 1; $i <= $nframes; $i++) {
 system("rm junk*$$.ppm");
 
 exit(0);
-
-
-
-sub usage() {
-   print "Usage: ppmfade [-f first_file] [-l last_file]\n";
-   print "               [-spread|-relief|-oil|-edge|-bentley|-block]\n";
-   print "               [-base basename]\n";
-   print "Notes: Default base: fade\n";
-   print "       The resulting image files will be named fade.NNNN.ppm.\n";
-   exit(100);
-}
