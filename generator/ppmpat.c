@@ -12,12 +12,131 @@
 
 #define _XOPEN_SOURCE  /* get M_PI in math.h */
 
+#include <assert.h>
 #include <math.h>
 
 #include "pm_c_util.h"
+#include "mallocvar.h"
+#include "shhopt.h"
 #include "ppm.h"
 #include "ppmdraw.h"
 
+
+typedef enum {
+    PAT_GINGHAM2,
+    PAT_GINGHAM3,
+    PAT_MADRAS,
+    PAT_TARTAN,
+    PAT_POLES,
+    PAT_SQUIG,
+    PAT_CAMO,
+    PAT_ANTICAMO,
+    PAT_TEST
+} pattern;
+
+struct cmdlineInfo {
+    /* All the information the user supplied in the command line,
+       in a form easy for the program to use.
+    */
+    pattern basePattern;
+    unsigned int width;
+    unsigned int height;
+};
+
+
+
+static void
+parseCommandLine(int argc, const char ** argv,
+                 struct cmdlineInfo * const cmdlineP) {
+/*----------------------------------------------------------------------------
+   Note that the file spec array we return is stored in the storage that
+   was passed to us as the argv array.
+-----------------------------------------------------------------------------*/
+    optEntry * option_def;
+        /* Instructions to OptParseOptions3 on how to parse our options.
+         */
+    optStruct3 opt;
+
+    unsigned int option_def_index;
+    unsigned int basePatternCount;
+    unsigned int gingham2;
+    unsigned int gingham3;
+    unsigned int madras;
+    unsigned int tartan;
+    unsigned int poles;
+    unsigned int squig;
+    unsigned int camo;
+    unsigned int anticamo;
+    unsigned int test;
+
+    MALLOCARRAY_NOFAIL(option_def, 100);
+
+    option_def_index = 0;   /* incremented by OPTENTRY */
+    OPTENT3(0, "gingham2",  OPT_FLAG,   NULL, &gingham2,   0);
+    OPTENT3(0, "g2",        OPT_FLAG,   NULL, &gingham2,   0);
+    OPTENT3(0, "gingham3",  OPT_FLAG,   NULL, &gingham3,   0);
+    OPTENT3(0, "g3",        OPT_FLAG,   NULL, &gingham3,   0);
+    OPTENT3(0, "madras",    OPT_FLAG,   NULL, &madras,     0);
+    OPTENT3(0, "tartan",    OPT_FLAG,   NULL, &tartan,     0);
+    OPTENT3(0, "poles",     OPT_FLAG,   NULL, &poles,      0);
+    OPTENT3(0, "squig",     OPT_FLAG,   NULL, &squig,      0);
+    OPTENT3(0, "camo",      OPT_FLAG,   NULL, &camo,       0);
+    OPTENT3(0, "anticamo",  OPT_FLAG,   NULL, &anticamo,   0);
+    OPTENT3(0, "test",      OPT_FLAG,   NULL, &test,       0);
+
+    opt.opt_table = option_def;
+    opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
+
+    optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+        /* Uses and sets argc, argv, and some of *cmdlineP and others. */
+
+    basePatternCount =
+        gingham2 +
+        gingham3 +
+        madras +
+        tartan +
+        poles +
+        squig +
+        camo +
+        anticamo +
+        test;
+
+    if (basePatternCount < 1)
+        pm_error("You must specify a base pattern option such as -gingham2");
+    else if (basePatternCount > 1)
+        pm_error("You may not specify more than one base pattern option.  "
+                 "You specified %u", basePatternCount);
+    else {
+        if (gingham2)
+            cmdlineP->basePattern = PAT_GINGHAM2;
+        else if (gingham3)
+            cmdlineP->basePattern = PAT_GINGHAM3;
+        else if (madras)
+            cmdlineP->basePattern = PAT_MADRAS;
+        else if (tartan)
+            cmdlineP->basePattern = PAT_TARTAN;
+        else if (poles)
+            cmdlineP->basePattern = PAT_POLES;
+        else if (squig)
+            cmdlineP->basePattern = PAT_SQUIG;
+        else if (camo)
+            cmdlineP->basePattern = PAT_CAMO;
+        else if (anticamo)
+            cmdlineP->basePattern = PAT_ANTICAMO;
+        else if (test)
+            cmdlineP->basePattern = PAT_TEST;
+        else
+            assert(false);  /* Every possibility is accounted for */
+    }
+    if (argc-1 != 2)
+        pm_error("You must specify 2 non-option arguments: width and height "
+                 "in pixels.  You specified %u", argc-1);
+    else {
+        cmdlineP->width  = atoi(argv[1]);
+        cmdlineP->height = atoi(argv[2]);
+    }
+}
 
 
 
@@ -853,156 +972,62 @@ test(pixel **     const pixels,
 
 
 int
-main(int argc, char ** argv) {
+main(int argc, const char ** argv) {
 
-    pixel** pixels;
-    int argn, pattern, cols, rows;
-#define PAT_NONE 0
-#define PAT_GINGHAM2 1
-#define PAT_GINGHAM3 2
-#define PAT_MADRAS 3
-#define PAT_TARTAN 4
-#define PAT_POLES 5
-#define PAT_SQUIG 6
-#define PAT_CAMO 7
-#define PAT_ANTICAMO 8
-#define PAT_TEST 9
-    const char* const usage = "-gingham|-g2|-gingham3|-g3|-madras|-tartan|-poles|-squig|-camo|-anticamo <width> <height>";
+    struct cmdlineInfo cmdline;
+    pixel ** pixels;
 
-
-    ppm_init(&argc, argv);
-
-    argn = 1;
-    pattern = PAT_NONE;
-
-    while ( argn < argc && argv[argn][0] == '-' && argv[argn][1] != '\0' )
-    {
-        if ( pm_keymatch( argv[argn], "-gingham2", 9 ) ||
-             pm_keymatch( argv[argn], "-g2", 3 ) )
-        {
-            if ( pattern != PAT_NONE )
-                pm_error( "only one base pattern may be specified" );
-            pattern = PAT_GINGHAM2;
-        }
-        else if ( pm_keymatch( argv[argn], "-gingham3", 9 ) ||
-                  pm_keymatch( argv[argn], "-g3", 3 ) )
-        {
-            if ( pattern != PAT_NONE )
-                pm_error( "only one base pattern may be specified" );
-            pattern = PAT_GINGHAM3;
-        }
-        else if ( pm_keymatch( argv[argn], "-madras", 2 ) )
-        {
-            if ( pattern != PAT_NONE )
-                pm_error( "only one base pattern may be specified" );
-            pattern = PAT_MADRAS;
-        }
-        else if ( pm_keymatch( argv[argn], "-tartan", 2 ) )
-        {
-            if ( pattern != PAT_NONE )
-                pm_error( "only one base pattern may be specified" );
-            pattern = PAT_TARTAN;
-        }
-        else if ( pm_keymatch( argv[argn], "-poles", 2 ) )
-        {
-            if ( pattern != PAT_NONE )
-                pm_error( "only one base pattern may be specified" );
-            pattern = PAT_POLES;
-        }
-        else if ( pm_keymatch( argv[argn], "-squig", 2 ) )
-        {
-            if ( pattern != PAT_NONE )
-                pm_error( "only one base pattern may be specified" );
-            pattern = PAT_SQUIG;
-        }
-        else if ( pm_keymatch( argv[argn], "-camo", 2 ) )
-        {
-            if ( pattern != PAT_NONE )
-                pm_error( "only one base pattern may be specified" );
-            pattern = PAT_CAMO;
-        }
-        else if ( pm_keymatch( argv[argn], "-anticamo", 2 ) )
-        {
-            if ( pattern != PAT_NONE )
-                pm_error( "only one base pattern may be specified" );
-            pattern = PAT_ANTICAMO;
-        }
-        else if ( pm_keymatch( argv[argn], "-test", 3 ) )
-        {
-            if ( pattern != PAT_NONE )
-                pm_error( "only one base pattern may be specified" );
-            pattern = PAT_TEST;
-        }
-        else
-            pm_usage( usage );
-        ++argn;
-    }
-    if ( pattern == PAT_NONE )
-        pm_error( "a base pattern must be specified" );
-
-    if ( argn == argc )
-        pm_usage( usage);
-    if ( sscanf( argv[argn], "%d", &cols ) != 1 )
-        pm_usage( usage );
-    ++argn;
-    if ( argn == argc )
-        pm_usage( usage);
-    if ( sscanf( argv[argn], "%d", &rows ) != 1 )
-        pm_usage( usage );
-    ++argn;
-
-    if ( argn != argc )
-        pm_usage( usage);
-
+    pm_proginit(&argc, argv);
+    
+    parseCommandLine(argc, argv, &cmdline);
+    
     srand(pm_randseed());
-    pixels = ppm_allocarray( cols, rows );
+    pixels = ppm_allocarray(cmdline.width, cmdline.height);
 
-    switch ( pattern )
-    {
+    switch (cmdline.basePattern) {
     case PAT_GINGHAM2:
-        gingham2( pixels, cols, rows, PPM_MAXMAXVAL );
+        gingham2(pixels, cmdline.width, cmdline.height, PPM_MAXMAXVAL);
         break;
 
     case PAT_GINGHAM3:
-        gingham3( pixels, cols, rows, PPM_MAXMAXVAL );
+        gingham3(pixels, cmdline.width, cmdline.height, PPM_MAXMAXVAL);
         break;
 
     case PAT_MADRAS:
-        madras( pixels, cols, rows, PPM_MAXMAXVAL );
+        madras(pixels, cmdline.width, cmdline.height, PPM_MAXMAXVAL);
         break;
 
     case PAT_TARTAN:
-        tartan( pixels, cols, rows, PPM_MAXMAXVAL );
+        tartan(pixels, cmdline.width, cmdline.height, PPM_MAXMAXVAL);
         break;
 
     case PAT_POLES:
-        poles( pixels, cols, rows, PPM_MAXMAXVAL );
+        poles(pixels, cmdline.width, cmdline.height, PPM_MAXMAXVAL);
         break;
 
     case PAT_SQUIG:
-        squig( pixels, cols, rows, PPM_MAXMAXVAL );
+        squig(pixels, cmdline.width, cmdline.height, PPM_MAXMAXVAL);
         break;
 
     case PAT_CAMO:
-        camo( pixels, cols, rows, PPM_MAXMAXVAL, 0 );
+        camo(pixels, cmdline.width, cmdline.height, PPM_MAXMAXVAL, 0);
         break;
 
     case PAT_ANTICAMO:
-        camo( pixels, cols, rows, PPM_MAXMAXVAL, 1 );
+        camo(pixels, cmdline.width, cmdline.height, PPM_MAXMAXVAL, 1);
         break;
 
     case PAT_TEST:
-        test( pixels, cols, rows, PPM_MAXMAXVAL );
+        test(pixels, cmdline.width, cmdline.height, PPM_MAXMAXVAL);
         break;
 
     default:
-        pm_error( "can't happen!" );
+        pm_error("can't happen!");
     }
 
-    /* All done, write it out. */
-    ppm_writeppm( stdout, pixels, cols, rows, PPM_MAXMAXVAL, 0 );
-    pm_close( stdout );
+    ppm_writeppm(stdout, pixels, cmdline.width, cmdline.height,
+                 PPM_MAXMAXVAL, 0);
 
-    exit( 0 );
+    return 0;
 }
 
