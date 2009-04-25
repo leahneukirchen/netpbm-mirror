@@ -38,7 +38,6 @@ char *argv[];
   int argn, rows, cols;
   int left,bottom,right,top;
   int lflg, rflg, tflg, bflg;
-  char name[100];
   const char * const usage = "[-l left] [-r right] [-b bottom] [-t top] [pbmfile]";
 
 
@@ -84,11 +83,9 @@ char *argv[];
 
   if ( argn == argc )
   { ifp = stdin;
-    strcpy( name, "noname" );
   }
   else
   { ifp = pm_openr( argv[argn] );
-    strcpy( name, argv[argn] );
     ++argn;
   }
 
