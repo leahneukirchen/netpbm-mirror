@@ -21,7 +21,7 @@ GetOptions("width=i"   => \$Twid,
            "norepeat!" => \$norepeat,
            "verbose!"  => \$verbose);
 
-die "invalid width and/or height\n" unless $Twid >= 1 && $Thgt >= 1;
+die "invalid width and/or height" unless $Twid >= 1 && $Thgt >= 1;
 
 my $verboseCommand = $verbose ? "set -x;" : "";
 
