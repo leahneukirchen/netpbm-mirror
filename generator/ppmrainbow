@@ -6,6 +6,13 @@ my ($FALSE, $TRUE) = (0,1);
 
 (my $myname = $0) =~ s#\A.*/##;
 
+sub fatal($) {
+    my ($msg) = @_;
+
+    print(STDERR "$msg\n");
+    exit(1);
+}
+
 my ($Twid, $Thgt, $tmpdir, $norepeat, $verbose);
 
 # set defaults
@@ -21,15 +28,16 @@ GetOptions("width=i"   => \$Twid,
            "norepeat!" => \$norepeat,
            "verbose!"  => \$verbose);
 
-die "invalid width and/or height" unless $Twid >= 1 && $Thgt >= 1;
-
+if ($Twid < 1 || $Thgt < 1) {
+    fatal("invalid width and/or height");
+}
 my $verboseCommand = $verbose ? "set -x;" : "";
 
 if (@ARGV < 1) {
-    die("You must specify at least one color as an argument");
+    fatal("You must specify at least one color as an argument");
 } elsif (@ARGV < 2 && $norepeat) {
-    die("With the -norepeat option, you must specify at least two colors " .
-        "as arguments.");
+    fatal("With the -norepeat option, you must specify at least two colors " .
+          "as arguments.");
 }
 
 my @colorlist;
@@ -57,7 +65,7 @@ while (@colorlist >= 2) {
     my $rc = system("$verboseCommand pgmramp -lr $w $Thgt | " .
                     "pgmtoppm \"$colorlist[0]-$colorlist[1]\" >$outfile");
     if ($rc != 0) {
-        die("pgmramp|pgmtoppm failed.");
+        fatal("pgmramp|pgmtoppm failed.");
     }
     $widthRemaining -= $w;
     $n++;
