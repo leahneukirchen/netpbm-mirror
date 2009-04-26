@@ -13,6 +13,10 @@ not yet  BJH  Release 10.47.00
 
               Remove nstring.h from exported interfaces.
 
+              pnmremap: fix loss of dithering when the map (and thus the
+              output) has lower maxval than the input.  (Old code scales down
+              to the new maxval before dithering).
+
               ximtoppm: fix crash in command line processing.
 
               ppmrainbow: exit with proper exit status upon failure.
