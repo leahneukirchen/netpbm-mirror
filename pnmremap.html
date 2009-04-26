@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pnmremap User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmremap</H1>
-Updated: 19 February 2009
+Updated: 26 April 2009
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -185,16 +185,22 @@ This names the file that contains the palette image.
 <DT><B>-fs</B>
 <DT><B>-nofloyd</B>
 <DT><B>-nofs</B>
+
 <DD>
-These options determine whether Floyd-Steinberg dithering is done.
-Without Floyd-Steinberg, the selection of output color of a pixel is based
-on the color of only the corresponding input pixel.  With Floyd-Steinberg,
-multiple input pixels are considered so that the average color of an area
-tends to stay more the same than without Floyd-Steinberg.  For example, 
-if you map an image with a black, gray, gray, and white pixel
-adjacent, to a palette that contains only black and white, it might 
-result in an output of black, black, white, white.  Pixel-by-pixel
-mapping would instead map both the gray pixels to the same color.
+These options determine whether <b>pnmremap</b> does Floyd-Steinberg
+dithering.  Without Floyd-Steinberg, <b>pnmremap</b> selects the output color
+of a pixel based on the color of only the corresponding input pixel.  With
+Floyd-Steinberg, <b>pnmremap</b> considers regions of pixels such that the
+average color of a region is the same in the output as in the input.  The
+dithering effect appears as a dot pattern up close, but from a distance, the
+dots blend so that you see more colors than are present in the color map.
+
+<p>As an example, if your color map contains only black and white, and
+the input image has 4 adjacent pixels of gray, <b>pnmremap</b> with
+Floyd-Steinberg would generate output pixels black, white, black, white,
+which from a distance looks gray.  But without Floyd-Steinberg,
+<b>pnmremap</b> would generate 4 white pixels, white being the single-pixel
+approximation of gray.
 
 <p>Floyd-Steinberg gives vastly better results on images where
 unmodified quantization has banding or other artifacts, especially
@@ -206,6 +212,12 @@ synonym for <B>-nofloyd</B>.
 
 <P>The default is <B>-nofloyd</B>.
 
+<p>Before Netpbm 10.46 (March 2009), dithering doesn't work quite as you
+expect if the color map has a lower maxval than the input.  <b>pnmremap</b>
+reduces the color resolution to the color map's maxval before doing any
+dithering, so the dithering does not have the effect of making the image,
+at a distance, appear to have the original maxval.  In current Netpbm, it
+does.
 
 <dt><b>-norandom</b>
 
