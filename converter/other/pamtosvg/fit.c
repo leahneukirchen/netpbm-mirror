@@ -1852,6 +1852,7 @@ find_error (curve_type curve, spline_type spline, unsigned *worst_point,
 
   if (*worst_point == CURVE_LENGTH (curve) + 1)
     { /* Didn't have any ``worst point''; the error should be zero.  */
+      *worst_point = 0;
       if (epsilon_equal (total_error, 0.0))
         LOG ("  Every point fit perfectly.\n");
       else

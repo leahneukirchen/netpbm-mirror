@@ -50,6 +50,10 @@ parseCommandLine(int argc, char ** argv,
     OPTENT3(0,   "alphaout",   OPT_STRING, 
             &cmdlineP->alpha_filename, &alphaoutSpec, 0);
 
+    opt.opt_table = option_def;
+    opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
+
     optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and all of *cmdlineP. */
 

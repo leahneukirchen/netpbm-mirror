@@ -4,6 +4,27 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+09.04.28 BJH  Release 10.35.63
+
+              ximtoppm: fix crash in command line processing.
+
+              ppmrainbow: exit with proper exit status upon failure.
+              
+              ppmfade: eliminate reference to undeclared subroutine.
+
+              ppmquantall: don't use 'set' to set Bourne shell variable.
+
+              pbmtomacp: fix buffer overflow.
+
+              pamtosvg: some fix.
+
+              ppmpat: fix usage statement.
+
+              libnetpbm (ppmd): fix: don't ignore failure to read font file.
+
+              build: rename getline() in xvminitoppm.c to avoid collision
+              with libc.
+
 09.04.12 BJH  Release 10.35.62
 
               pamstereogram: fix tuple type in output file (and crash

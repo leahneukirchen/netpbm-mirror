@@ -35,6 +35,8 @@ my $mode = $SPREAD;		# default fading mode
 #
 #  Check those command line args.
 #
+sub usage();
+
 if (@ARGV == 0) {
     usage();
 }

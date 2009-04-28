@@ -919,7 +919,7 @@ main(int argc, char ** argv) {
 #define PAT_CAMO 7
 #define PAT_ANTICAMO 8
 #define PAT_TEST 9
-    const char* const usage = "-gingham|-g2|-gingham3|-g3|-madras|-tartan|-poles|-squig|-camo|-anticamo <width> <height>";
+    const char* const usage = "-gingham2|-g2|-gingham3|-g3|-madras|-tartan|-poles|-squig|-camo|-anticamo <width> <height>";
 
 
     ppm_init(&argc, argv);
