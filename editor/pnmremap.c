@@ -40,15 +40,6 @@ enum missingMethod {
     MISSING_CLOSE
 };
 
-#define FS_SCALE 1024
-
-struct fserr {
-    long ** thiserr;
-    long ** nexterr;
-    bool    fsForward;
-};
-
-
 struct cmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
@@ -146,53 +137,112 @@ parseCommandLine (int argc, char ** argv,
 }
 
 
+typedef enum {
+    ADJUST_NONE,
+    ADJUST_RGBTO1,
+    ADJUST_GRAYSCALETO3
+} depthAdjustment;
+
+
 
 static void
-rgbToDepth1(const struct pam * const pamP,
-            tuple *            const tupleRow) {
-    
-    unsigned int col;
+rgbToDepth1(tuple const tuple) {
 
-    for (col = 0; col < pamP->width; ++col) {
-        unsigned int plane;
-        double grayvalue;
-        grayvalue = 0.0;  /* initial value */
-        for (plane = 0; plane < pamP->depth; ++plane)
-            grayvalue += pnm_lumin_factor[plane] * tupleRow[col][plane];
-        tupleRow[col][0] = (sample) (grayvalue + 0.5);
+    unsigned int plane;
+    double grayvalue;
+
+    grayvalue = 0.0;  /* initial value */
+
+    for (plane = 0; plane < 3; ++plane)
+        grayvalue += pnm_lumin_factor[plane] * tuple[plane];
+
+    tuple[0] = (sample) (grayvalue + 0.5);
+}
+
+
+
+static void
+grayscaleToDepth3(tuple const tuple) {
+
+    tuple[1] = tuple[0];
+    tuple[2] = tuple[0];
+}
+
+
+
+static void
+adjustDepthTuple(tuple           const tuple,
+                 depthAdjustment const adjustment) {
+    
+    switch (adjustment) {
+    case ADJUST_NONE:
+        break;
+    case ADJUST_RGBTO1:
+        rgbToDepth1(tuple);
+        break;
+    case ADJUST_GRAYSCALETO3:
+        grayscaleToDepth3(tuple);
+        break;
     }
 }
 
 
 
 static void
-grayscaleToDepth3(const struct pam * const pamP,
-                  tuple *            const tupleRow) {
+inverseAdjustDepthTuple(tuple           const tuple,
+                        depthAdjustment const adjustment) {
     
-    unsigned int col;
-
-    assert(pamP->allocation_depth >= 3);
-
-    for (col = 0; col < pamP->width; ++col) {
-        tupleRow[col][1] = tupleRow[col][0];
-        tupleRow[col][2] = tupleRow[col][0];
+    switch (adjustment) {
+    case ADJUST_NONE:
+        break;
+    case ADJUST_RGBTO1:
+        grayscaleToDepth3(tuple);
+        break;
+    case ADJUST_GRAYSCALETO3:
+        rgbToDepth1(tuple);
+        break;
     }
 }
 
 
 
 static void
-adjustDepth(const struct pam * const pamP,
-            tuple *            const tupleRow,
-            unsigned int       const newDepth) {
+adjustDepthRow(tuple *         const tupleRow,
+               unsigned int    const width,
+               depthAdjustment const adjustment) {
 /*----------------------------------------------------------------------------
-   Change the depth of the raster row tupleRow[] of the image
-   described by 'pamP' to newDepth.
+   Change tupleRow[] depth as indicated by 'adjustment',
+   i.e. turned from RGB to grayscale or grayscale to RGB.
 
-   We don't change the memory allocation; tupleRow[] must already have
-   space allocated for at least 'newDepth' planes.  When we're done,
-   all but the first 'newDepth' planes are meaningless, but the space is
-   still there.
+   We assume tupleRow[] is consistent with 'adjustment' -- i.e. if
+   'adjustment' says grayscale to RGB, tupleRow[] has an allocation depth of
+   at least 3 and if 'adjustment' says from RGB to grayscale, tupleRow[] has
+   RGB tuples.
+-----------------------------------------------------------------------------*/
+    if (adjustment == ADJUST_NONE) {
+    } else {
+        unsigned int col;
+
+        for (col = 0; col < width; ++col) {
+            if (adjustment == ADJUST_RGBTO1)
+                rgbToDepth1(tupleRow[col]);
+            else {
+                assert(adjustment == ADJUST_GRAYSCALETO3);
+                grayscaleToDepth3(tupleRow[col]);
+            }
+        }
+    }
+}
+
+
+
+static void
+selectDepthAdjustment(const struct pam * const pamP,
+                      unsigned int       const newDepth,
+                      depthAdjustment *  const adjustmentP) {
+/*----------------------------------------------------------------------------
+   Determine what kind of depth adjustment the pixels of an image described
+   by 'pamP' need to be comparable to pixels with depth 'newDepth'.
 
    The only depth changes we know how to do are:
 
@@ -200,15 +250,23 @@ adjustDepth(const struct pam * const pamP,
 
        We change it to grayscale or black and white.
 
+       For this, we return *adjustmentP == ADJUST_RGBTO1.
+
      - from tuple type GRAYSCALE or BLACKANDWHITE depth 1 to depth 3.
 
        We change it to RGB.
 
+       For this, we return *adjustmentP == ADJUST_GRAYSCALETO3.
+
    For any other depth change request, we issue an error message and abort
    the program.
------------------------------------------------------------------------------*/
-    if (newDepth != pamP->depth) {
 
+   If 'newDepth' is the same depth as the original (no depth change required),
+   we return *adjustmentP == ADJUST_NONE.
+-----------------------------------------------------------------------------*/
+    if (newDepth == pamP->depth)
+        *adjustmentP = ADJUST_NONE;
+    else {
         if (stripeq(pamP->tuple_type, "RGB")) {
             if (newDepth != 1) {
                 pm_error("Map image depth of %u differs from input image "
@@ -217,7 +275,7 @@ adjustDepth(const struct pam * const pamP,
                          "an RGB tuple is 1.",
                          newDepth, pamP->depth);
             } else
-                rgbToDepth1(pamP, tupleRow);
+                *adjustmentP = ADJUST_RGBTO1;
         } else if (stripeq(pamP->tuple_type, "GRAYSCALE") ||
                    stripeq(pamP->tuple_type, "BLACKANDWHITE")) {
             if (newDepth != 3) {
@@ -228,7 +286,7 @@ adjustDepth(const struct pam * const pamP,
                          "a GRAYSCALE or BLACKANDWHITE tuple is 3.",
                          newDepth, pamP->depth);
             } else
-                grayscaleToDepth3(pamP, tupleRow);
+                *adjustmentP = ADJUST_GRAYSCALETO3;
         } else {
             pm_error("Map image depth of %u differs from input image depth "
                      "of %u, and the input image does not have a tuple type "
@@ -240,7 +298,6 @@ adjustDepth(const struct pam * const pamP,
         }
     }
 }
-
 
 
 
@@ -266,9 +323,35 @@ computeColorMapFromMap(struct pam *   const mappamP,
         pnm_computetuplefreqtable(mappamP, maptuples, MAXCOLORS, &colors);
     if (*colormapP == NULL)
         pm_error("too many colors in colormap!");
-    pm_message("%d colors found in colormap", colors);
+    pm_message("%u colors found in colormap", colors);
     *newcolorsP = colors;
 }
+
+
+
+#define FS_SCALE 1024
+
+struct fserr {
+    unsigned int width;
+        /* Width of the image being dithered */
+    long ** thiserr;
+    long ** nexterr;
+    bool    fsForward;
+        /* We are in a left-to-right row */
+    int     begCol;
+        /* First column in the sweep.  Determined by 'fsForward': either
+           the leftmost or rightmost column in the row
+        */
+    int     endCol;
+        /* Column after the last column in the sweep.  Determined by
+           'fsForward': either one past the left end or one past the right
+           end of the row.
+        */
+    int     step;
+        /* What we add to a column number to get the next one in the sweep.
+           Determined by 'fsForward': +1 or -1.
+        */
+};
 
 
 
@@ -294,6 +377,28 @@ randomizeError(long **      const err,
 
 
 static void
+fserrSetForward(struct fserr * const fserrP) {
+
+    fserrP->fsForward = TRUE;
+    fserrP->begCol = 0;
+    fserrP->endCol = fserrP->width;
+    fserrP->step   = +1;
+}
+
+
+
+static void
+fserrSetBackward(struct fserr * const fserrP) {
+
+    fserrP->fsForward = FALSE;
+    fserrP->begCol = fserrP->width - 1;
+    fserrP->endCol = -1;
+    fserrP->step   = -1;
+}
+
+
+
+static void
 initFserr(struct pam *   const pamP,
           struct fserr * const fserrP,
           bool           const initRandom) {
@@ -303,6 +408,8 @@ initFserr(struct pam *   const pamP,
     unsigned int plane;
 
     unsigned int const fserrSize = pamP->width + 2;
+
+    fserrP->width = pamP->width;
 
     MALLOCARRAY(fserrP->thiserr, pamP->depth);
     if (fserrP->thiserr == NULL)
@@ -327,7 +434,7 @@ initFserr(struct pam *   const pamP,
     if (initRandom)
         randomizeError(fserrP->thiserr, fserrSize, pamP->depth);
 
-    fserrP->fsForward = TRUE;
+    fserrSetForward(fserrP);
 }
 
 
@@ -348,7 +455,8 @@ floydInitRow(struct pam * const pamP, struct fserr * const fserrP) {
 
 static void
 floydAdjustColor(struct pam *   const pamP, 
-                 tuple          const tuple, 
+                 tuple          const intuple, 
+                 tuple          const outtuple, 
                  struct fserr * const fserrP, 
                  int            const col) {
 /*----------------------------------------------------------------------------
@@ -358,8 +466,8 @@ floydAdjustColor(struct pam *   const pamP,
 
     for (plane = 0; plane < pamP->depth; ++plane) {
         long int const s =
-            tuple[plane] + fserrP->thiserr[plane][col+1] / FS_SCALE;
-        tuple[plane] = MIN(pamP->maxval, MAX(0,s));
+            intuple[plane] + fserrP->thiserr[plane][col+1] / FS_SCALE;
+        outtuple[plane] = MIN(pamP->maxval, MAX(0,s));
     }
 }
 
@@ -411,7 +519,11 @@ floydSwitchDir(struct pam * const pamP, struct fserr * const fserrP) {
         fserrP->thiserr[plane] = fserrP->nexterr[plane];
         fserrP->nexterr[plane] = temperr;
     }
-    fserrP->fsForward = ! fserrP->fsForward;
+
+    if (fserrP->fsForward)
+        fserrSetBackward(fserrP);
+    else
+        fserrSetForward(fserrP);
 }
 
 
@@ -631,8 +743,177 @@ lookupThroughHash(struct pam *            const pamP,
 
 
 static void
-convertRow(struct pam *            const pamP, 
-           tuple                         tuplerow[],
+mapTuple(struct pam *            const pamP,
+         tuple                   const inTuple,
+         enum missingMethod      const missingMethod, 
+         tuple                   const defaultColor,
+         tupletable              const colormap,
+         struct colormapFinder * const colorFinderP,
+         tuplehash               const colorhash, 
+         bool *                  const usehashP,
+         tuple                   const outTuple,
+         bool *                  const missingP) {
+
+    int colormapIndex;
+        /* Index into the colormap of the replacement color, or -1 if
+           there is no usable color in the color map.
+        */
+
+    lookupThroughHash(pamP, inTuple, 
+                      missingMethod != MISSING_CLOSE, colorFinderP, 
+                      colorhash, &colormapIndex, usehashP);
+
+    if (colormapIndex == -1) {
+        *missingP = TRUE;
+        switch (missingMethod) {
+        case MISSING_SPECIFIED:
+            pnm_assigntuple(pamP, outTuple, defaultColor);
+            break;
+        case MISSING_FIRST:
+            pnm_assigntuple(pamP, outTuple, colormap[0]->tuple);
+            break;
+        default:
+            pm_error("Internal error: invalid value of missingMethod");
+        }
+    } else {
+        *missingP = FALSE;
+        pnm_assigntuple(pamP, outTuple, colormap[colormapIndex]->tuple);
+    }
+}
+
+
+
+static void
+convertRowStraight(struct pam *            const inpamP,
+                   struct pam *            const outpamP, 
+                   tuple                         inrow[],
+                   depthAdjustment         const depthAdjustment,
+                   tupletable              const colormap,
+                   struct colormapFinder * const colorFinderP,
+                   tuplehash               const colorhash, 
+                   bool *                  const usehashP,
+                   enum missingMethod      const missingMethod, 
+                   tuple                   const defaultColor,
+                   tuple                         outrow[],
+                   unsigned int *          const missingCountP) {
+/*----------------------------------------------------------------------------
+  Like convertRow(), compute outrow[] from inrow[], replacing each pixel with
+  the new colors.  Do a straight pixel for pixel remap; no dithering.
+
+  Return the number of pixels that were not matched in the color map as
+  *missingCountP.
+
+  *colorFinderP is a color finder based on 'colormap' -- it tells us what
+  index of 'colormap' corresponds to a certain color.
+-----------------------------------------------------------------------------*/
+    unsigned int col;
+    unsigned int missingCount;
+    
+    /* The following modify tuplerow, to make it consistent with
+     *outpamP instead of *inpamP.
+     */
+    assert(outpamP->allocation_depth >= inpamP->depth);
+
+    pnm_scaletuplerow(inpamP, outrow, inrow, outpamP->maxval);
+
+    adjustDepthRow(outrow, outpamP->width, depthAdjustment);
+
+    missingCount = 0;  /* initial value */
+    
+    for (col = 0; col < outpamP->width; ++col) {
+        bool missing;
+        mapTuple(outpamP, outrow[col], missingMethod, defaultColor,
+                 colormap, colorFinderP,
+                 colorhash, usehashP, outrow[col], &missing);
+
+        if (missing)
+            ++missingCount;
+    }
+
+    *missingCountP = missingCount;
+}
+
+
+
+static void
+convertRowDither(struct pam *            const inpamP,
+                 struct pam *            const outpamP,
+                 tuple                   const inrow[],
+                 depthAdjustment         const depthAdjustment,
+                 tupletable              const colormap,
+                 struct colormapFinder * const colorFinderP,
+                 tuplehash               const colorhash, 
+                 bool *                  const usehashP,
+                 enum missingMethod      const missingMethod, 
+                 tuple                   const defaultColor,
+                 struct fserr *          const fserrP,
+                 tuple                         outrow[],
+                 unsigned int *          const missingCountP) {
+/*----------------------------------------------------------------------------
+  Like convertRow(), compute outrow[] from inrow[], replacing each pixel with
+  the new colors.  Do a Floyd-Steinberg dither, using and updating the error
+  accumulator *fserrP.
+
+  Return the number of pixels that were not matched in the color map as
+  *missingCountP.
+
+  *colorFinderP is a color finder based on 'colormap' -- it tells us what
+  index of 'colormap' corresponds to a certain color.
+-----------------------------------------------------------------------------*/
+    tuple const ditheredTuple = pnm_allocpamtuple(inpamP);
+        /* The input tuple we're converting, adjusted by the dither */
+    tuple const normTuple = pnm_allocpamtuple(outpamP);
+        /* Same as above, normalized to the maxval of the output file /
+           colormap.
+        */
+    unsigned int missingCount;
+    int col;
+
+    floydInitRow(inpamP, fserrP);
+
+    missingCount = 0;  /* initial value */
+    
+    for (col = fserrP->begCol; col != fserrP->endCol; col += fserrP->step) {
+        bool missing;
+
+        floydAdjustColor(inpamP, inrow[col], ditheredTuple, fserrP, col);
+
+        /* Convert tuple to the form of those in the colormap */
+        assert(outpamP->allocation_depth >= inpamP->depth);
+        pnm_scaletuple(inpamP, normTuple, ditheredTuple, outpamP->maxval);
+        adjustDepthTuple(normTuple, depthAdjustment);
+
+        mapTuple(outpamP, normTuple, missingMethod, defaultColor,
+                 colormap, colorFinderP,
+                 colorhash, usehashP, outrow[col], &missing);
+
+        if (missing)
+            ++missingCount;
+
+        /* Convert tuple back to the form of the input, where dithering
+           takes place.
+        */
+        pnm_scaletuple(outpamP, normTuple, outrow[col], inpamP->maxval);
+        inverseAdjustDepthTuple(normTuple, depthAdjustment);
+
+        floydPropagateErr(inpamP, fserrP, col, inrow[col], normTuple);
+    }
+
+    floydSwitchDir(inpamP, fserrP);
+
+    pnm_freepamtuple(normTuple);
+    pnm_freepamtuple(ditheredTuple);
+
+    *missingCountP = missingCount;
+}
+
+
+
+static void
+convertRow(struct pam *            const inpamP,
+           struct pam *            const outpamP,
+           tuple                         inrow[],
+           depthAdjustment               depthAdjustment,
            tupletable              const colormap,
            struct colormapFinder * const colorFinderP,
            tuplehash               const colorhash, 
@@ -641,10 +922,11 @@ convertRow(struct pam *            const pamP,
            enum missingMethod      const missingMethod, 
            tuple                   const defaultColor,
            struct fserr *          const fserrP,
+           tuple                         outrow[],
            unsigned int *          const missingCountP) {
 /*----------------------------------------------------------------------------
-  Replace the colors in row tuplerow[] (described by *pamP) with the
-  new colors.
+  Replace the colors in row tuplerow[] (described by *inpamP) with the
+  new colors and convert so it is described by *outpamP.
 
   Use and update the Floyd-Steinberg state *fserrP.
 
@@ -653,66 +935,25 @@ convertRow(struct pam *            const pamP,
 
   *colorFinderP is a color finder based on 'colormap' -- it tells us what
   index of 'colormap' corresponds to a certain color.
+
+  outrow[] doubles as a work space, so we require it to have an allocation
+  depth at least as great as that of inrow[].
 -----------------------------------------------------------------------------*/
-    int col;
-    int limitcol;
-        /* The column at which to stop processing the row.  If we're scanning
-           forwards, this is the rightmost column.  If we're scanning 
-           backward, this is the leftmost column.
-        */
-    
+    /* The following both consults and adds to 'colorhash' and
+       its associated '*usehashP'.  It modifies 'tuplerow' too.
+    */
     if (floyd)
-        floydInitRow(pamP, fserrP);
-
-    *missingCountP = 0;  /* initial value */
-    
-    if ((!floyd) || fserrP->fsForward) {
-        col = 0;
-        limitcol = pamP->width;
-    } else {
-        col = pamP->width - 1;
-        limitcol = -1;
-    }
-    do {
-        int colormapIndex;
-            /* Index into the colormap of the replacement color, or -1 if
-               there is no usable color in the color map.
-            */
-
-        if (floyd) 
-            floydAdjustColor(pamP, tuplerow[col], fserrP, col);
-
-        lookupThroughHash(pamP, tuplerow[col], 
-                          missingMethod != MISSING_CLOSE, colorFinderP, 
-                          colorhash, &colormapIndex, usehashP);
-        if (floyd)
-            floydPropagateErr(pamP, fserrP, col, tuplerow[col], 
-                              colormap[colormapIndex]->tuple);
-
-        if (colormapIndex == -1) {
-            ++*missingCountP;
-            switch (missingMethod) {
-            case MISSING_SPECIFIED:
-                pnm_assigntuple(pamP, tuplerow[col], defaultColor);
-                break;
-            case MISSING_FIRST:
-                pnm_assigntuple(pamP, tuplerow[col], colormap[0]->tuple);
-                break;
-            default:
-                pm_error("Internal error: invalid value of missingMethod");
-            }
-        } else 
-            pnm_assigntuple(pamP, tuplerow[col], 
-                            colormap[colormapIndex]->tuple);
-
-        if (floyd && !fserrP->fsForward) 
-            --col;
-        else
-            ++col;
-    } while (col != limitcol);
-
-    if (floyd)
-        floydSwitchDir(pamP, fserrP);
+        convertRowDither(inpamP, outpamP, inrow,
+                         depthAdjustment, colormap, colorFinderP, colorhash,
+                         usehashP,
+                         missingMethod, defaultColor,
+                         fserrP, outrow, missingCountP);
+    else 
+        convertRowStraight(inpamP, outpamP, inrow,
+                           depthAdjustment, colormap, colorFinderP, colorhash,
+                           usehashP,
+                           missingMethod, defaultColor,
+                           outrow, missingCountP);
 }
 
 
@@ -729,11 +970,29 @@ copyRaster(struct pam *       const inpamP,
            unsigned int *     const missingCountP) {
 
     tuplehash const colorhash = pnm_createtuplehash();
+
+    tuple * inrow;
+    tuple * outrow;
+    struct pam workpam;
+        /* This is for work space we use for building up the output
+           pixels.  To save time and memory, we modify them in place in a
+           buffer, which ultimately holds the output pixels.  This pam
+           structure is thus the same as the *outpamP, but with a tuple
+           allocation depth large enough to handle intermediate results.
+        */
+    depthAdjustment depthAdjustment;
     struct colormapFinder * colorFinderP;
     bool usehash;
     struct fserr fserr;
-    tuple * tuplerow = pnm_allocpamrow(inpamP);
     int row;
+
+    workpam = *outpamP;
+    workpam.allocation_depth = MAX(workpam.depth, inpamP->depth);
+    workpam.size             = sizeof(workpam);
+    workpam.len              = PAM_STRUCT_SIZE(allocation_depth);
+
+    inrow  = pnm_allocpamrow(inpamP);
+    outrow = pnm_allocpamrow(&workpam);
 
     if (outpamP->maxval != inpamP->maxval && missingMethod != MISSING_CLOSE)
         pm_error("The maxval of the colormap (%u) is not equal to the "
@@ -741,6 +1000,8 @@ copyRaster(struct pam *       const inpamP,
                  "if you are doing an approximate mapping (i.e. you don't "
                  "specify -firstisdefault or -missingcolor)",
                  (unsigned int)outpamP->maxval, (unsigned int)inpamP->maxval);
+
+    selectDepthAdjustment(inpamP, outpamP->depth, &depthAdjustment);
 
     usehash = TRUE;
 
@@ -754,28 +1015,21 @@ copyRaster(struct pam *       const inpamP,
     for (row = 0; row < inpamP->height; ++row) {
         unsigned int missingCount;
 
-        pnm_readpamrow(inpamP, tuplerow);
+        pnm_readpamrow(inpamP, inrow);
 
-        /* The following modify tuplerow, to make it consistent with
-           *outpamP instead of *inpamP.
-        */
-        assert(inpamP->allocation_depth >= outpamP->depth);
-        pnm_scaletuplerow(inpamP, tuplerow, tuplerow, outpamP->maxval);
-        adjustDepth(inpamP, tuplerow, outpamP->depth); 
-
-        /* The following both consults and adds to 'colorhash' and
-           its associated 'usehash'.  It modifies 'tuplerow' too.
-        */
-        convertRow(outpamP, tuplerow, colormap, colorFinderP, colorhash, 
+        convertRow(inpamP, &workpam, inrow,
+                   depthAdjustment, colormap, colorFinderP, colorhash,
                    &usehash,
-                   floyd, missingMethod, defaultColor, &fserr, &missingCount);
+                   floyd, missingMethod, defaultColor,
+                   &fserr,  outrow, &missingCount);
         
         *missingCountP += missingCount;
         
-        pnm_writepamrow(outpamP, tuplerow);
+        pnm_writepamrow(outpamP, outrow);
     }
     destroyColormapFinder(colorFinderP);
-    pnm_freepamrow(tuplerow);
+    pnm_freepamrow(inrow);
+    pnm_freepamrow(outrow);
     pnm_destroytuplehash(colorhash);
 }
 

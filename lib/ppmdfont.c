@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <assert.h>
+#include <errno.h>
+#include <string.h>
 
 #include "pm.h"
 #include "mallocvar.h"
@@ -62,7 +64,15 @@ static void
 readFontHeader(FILE *                   const ifP,
                struct ppmd_fontHeader * const fontHeaderP) {
     
-    fread(&fontHeaderP->signature, 1, sizeof(fontHeaderP->signature), ifP);
+    size_t rc;
+
+    rc = fread(&fontHeaderP->signature, 1, sizeof(fontHeaderP->signature),
+               ifP);
+
+    if (rc != sizeof(fontHeaderP->signature))
+        pm_error("Unable to read the header from the font file.  "
+                 "errno=%d (%s)", errno, strerror(errno));
+
     fontHeaderP->format         = fgetc(ifP);
     fontHeaderP->characterCount = fgetc(ifP);
     fontHeaderP->firstCodePoint = fgetc(ifP);
