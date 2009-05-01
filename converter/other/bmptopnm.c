@@ -421,7 +421,7 @@ lsbZeroCount(unsigned int const mask)
    Use GCC built-in when available.
 -----------------------------------------------------------------------------*/
 
-#if ( defined(__GNUC__) && (__GNUC__ * 100 + __GNUC_MINOR__ >= 304) )
+#if HAVE_GCC_BITCOUNT 
 {
       return ( mask==0 ? sizeof(mask)*8 : __builtin_ctz(mask) );
 }

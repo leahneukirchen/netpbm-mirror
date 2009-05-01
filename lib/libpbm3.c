@@ -13,30 +13,19 @@
 #include <assert.h>
 
 #include "pm_c_util.h"
-#include "bitreverse.h"
 #include "pbm.h"
 
-/* HAVE_MMX_SSE means we have the means to use MMX and SSE CPU facilities
-   to make PBM raster processing faster.
-
-   The GNU Compiler -msse option makes SSE available.
-*/
-
-#if defined(__GNUC__) && \
-  (__GNUC__ * 100 + __GNUC_MINOR__ >= 301) && \
-  (__GNUC__ * 100 + __GNUC_MINOR__ < 403) && \
-  defined (__SSE__)
-/* GCC 4.3 does have the facility, but it is different from what this
-   code knows how to use.  In particular, the calls to
-   __builtin_ia32_pcmpeqb() and __builtin_ia32_pmovmskb() fail to
-   compile, with complaints of improper argument types.
-*/
-
-#define HAVE_MMX_SSE 1
-#else
-#define HAVE_MMX_SSE 0
+#if HAVE_GCC_MMXSSE
+#include "bitreverse.h"
 #endif
 
+/* HAVE_GCC_MMXSSE means we have the means to use MMX and SSE CPU facilities
+   to make PBM raster processing faster.  GCC only.
+
+   The GNU Compiler -msse option makes SSE available.
+   For x86-32 with MMX/SSE, "-msse" must be explicitly given.
+   For x86-64 and AMD64, "-msse" is on by default.
+*/
 
 void
 pbm_writepbminit(FILE * const fileP, 
@@ -67,7 +56,7 @@ writePackedRawRow(FILE *                const fileP,
 } 
 
 
-
+#if HAVE_GCC_MMXSSE
 static void
 packBitsWithMmxSse(FILE *          const fileP,
                    const bit *     const bitrow,
@@ -83,7 +72,6 @@ packBitsWithMmxSse(FILE *          const fileP,
    Use the Pentium MMX and SSE facilities to pack the bits quickly, but
    perform the exact same function as the simpler packBitsGeneric().
 -----------------------------------------------------------------------------*/
-#if HAVE_MMX_SSE
     /*
       We use MMX/SSE facilities that operate on 8 bytes at once to pack
       the bits quickly.
@@ -93,49 +81,37 @@ packBitsWithMmxSse(FILE *          const fileP,
       The key machine instructions are:
     
     
-      PCMPEQB  Packed CoMPare EQual Byte
+      PCMPGTB  Packed CoMPare Greater Than Byte
     
         Compares 8 bytes in parallel
-        Result is x00 if equal, xFF if unequal for each byte       
+        Result is x00 if greater than, xFF if not for each byte       
     
       PMOVMSKB Packed MOVe MaSK Byte 
     
         Result is a byte of the MSBs of 8 bytes
-        x00 xFF x00 xFF xFF xFF x00 x00 --> 01011100B = 0x5C     
-    
+        x00 xFF x00 xFF xFF xFF x00 x00 --> 01011100B = 0x5C
+        
+        The result is actually a 32 bit int, but the higher bits are
+        always 0.  (0x0000005C in the above case)
     
       EMMS     Empty MMx State
     
         Free MMX registers  
     
-    
-      Here's a one-statement version of the code in our foor loop.  It's harder 
-      to read, but if we find out this generates more efficient code, we could 
-      use this.
-    
-        packedBits[col/8] 
-          = bitreverse [ ~ (unsigned char) __builtin_ia32_pmovmskb (
-            __builtin_ia32_pcmpeqb ( *(v8qi*) (&bitrow[col]), *(v8qi*) &zero64)
-            ) ];
     */
 
-#if (__GNUC__ * 100 + __GNUC_MINOR__ >= 403)
+
     typedef char v8qi __attribute__ ((vector_size(8)));
-#else
-    typedef int v8qi __attribute__ ((mode(V8QI)));
-#endif
     typedef int di __attribute__ ((mode(DI)));
 
-    di const zero64 = 0;        /* to clear with PXOR */
-
     unsigned int col;
+    v8qi const zero64 =(v8qi)((di)0);  /* clear to zero */
 
     for (col = 0; col + 7 < cols; col += 8) {
+
         v8qi const compare =
-            __builtin_ia32_pcmpeqb(*(v8qi*) (&bitrow[col]), *(v8qi*) &zero64);
-        unsigned char const backwardWhiteMask = (unsigned char)
-            __builtin_ia32_pmovmskb(compare);
-        unsigned char const backwardBlackMask = ~backwardWhiteMask;
+            __builtin_ia32_pcmpgtb(*(v8qi*) (&bitrow[col]), (v8qi) zero64);
+        uint32_t const backwardBlackMask =  __builtin_ia32_pmovmskb(compare);
         unsigned char const blackMask = bitreverse[backwardBlackMask];
 
         packedBits[col/8] = blackMask;
@@ -144,10 +120,13 @@ packBitsWithMmxSse(FILE *          const fileP,
 
     __builtin_ia32_emms();
 
-#else
-    if (bitreverse == bitreverse) {}; /* avoid unused vbl compiler warning */
-#endif
 }
+#else
+/* Avoid undefined function warning; never actually called */
+
+#define packBitsWithMmxSse(a,b,c,d,e) packBitsGeneric(a,b,c,d,e)
+#endif
+
 
 
 
@@ -237,7 +216,7 @@ writePbmRowRaw(FILE *      const fileP,
 
         pm_setjmpbufsave(&jmpbuf, &origJmpbufP);
 
-        if (HAVE_MMX_SSE)
+        if (HAVE_GCC_MMXSSE)
             packBitsWithMmxSse(fileP, bitrow, packedBits, cols, &nextCol);
         else 
             packBitsGeneric(fileP, bitrow, packedBits, cols, &nextCol);
