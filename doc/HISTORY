@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+
+09.05.01 BJH  Release 10.46.04
+
+              ilbmtoppm: fix some bug in interpreting ILBM input.
+              (due to wrong pm_uintFromBigend16()).  From 10.46.00.
+
 09.04.28 BJH  Release 10.46.03
 
               pnmremap: fix loss of dithering when the map (and thus the

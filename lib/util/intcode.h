@@ -118,8 +118,8 @@ pm_uintFromBigend16(bigend16 const arg) {
     }; break;
     case LITTLE_ENDIAN: {
         retval =
-            (arg.bytes[0] << 16) |
-            (arg.bytes[1] <<  8);
+            (arg.bytes[0] << 8) |
+            (arg.bytes[1] << 0);
     } break;
     }
     return retval;
