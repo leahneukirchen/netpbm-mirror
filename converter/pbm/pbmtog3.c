@@ -23,6 +23,7 @@
 #include "mallocvar.h"
 #include "bitreverse.h"
 #include "wordaccess.h"
+#include "wordintclz.h"
 #include "g3.h"
 #include "pbm.h"
 
