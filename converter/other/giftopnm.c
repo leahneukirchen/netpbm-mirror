@@ -75,7 +75,8 @@ readFile(FILE *          const ifP,
         else if (feof(ifP))
             asprintfN(errorP, "End of file encountered");
         else
-            asprintfN(errorP, "Short read -- %u bytes of %u", bytesRead, len);
+            asprintfN(errorP, "Short read -- %u bytes of %u",
+                              (unsigned)bytesRead, (unsigned)len);
     }
 }
 
@@ -582,16 +583,22 @@ getCode_get(struct getCodeState * const gsP,
   Return the code read (assuming *eofP == FALSE and *errorP == NULL)
   as *codeP.
 -----------------------------------------------------------------------------*/
-    if ((gsP->curbit+codeSize) > gsP->bufCount*8 && !gsP->streamExhausted) 
+
+    *errorP = NULL;
+
+    while (gsP->curbit + codeSize > gsP->bufCount * 8 &&
+           !gsP->streamExhausted && !*errorP) 
         /* Not enough left in buffer to satisfy request.  Get the next
            data block into the buffer.
+
+           Note that a data block may be as small as one byte, so we may need
+           to do this multiple times to get the full code.  (This probably
+           never happens in practice).
         */
         getAnotherBlock(ifP, gsP, errorP);
-    else
-        *errorP = NULL;
 
     if (!*errorP) {
-        if ((gsP->curbit+codeSize) > gsP->bufCount*8) {
+        if (gsP->curbit + codeSize > gsP->bufCount * 8) {
             /* The buffer still doesn't have enough bits in it; that means
                there were no data blocks left to read.
             */

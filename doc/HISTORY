@@ -17,6 +17,11 @@ not yet  BJH  Release 10.47.00
               output) has lower maxval than the input.  (Old code scales down
               to the new maxval before dithering).
 
+              giftopnm: fix for unlikely case of a block smaller than a code.
+
+              ilbmtoppm: fix some bug in interpreting ILBM input.
+              (due to wrong pm_uintFromBigend16()).  From 10.46.
+
               ximtoppm: fix crash in command line processing.
 
               ppmrainbow: exit with proper exit status upon failure.
@@ -39,6 +44,9 @@ not yet  BJH  Release 10.47.00
 
               Fix: remove inclusion of pm_c_util.h from sshopt.h, which is
               an exported interface header file, whereas pm_c_util.h is not.
+
+              Lots of changes to integer code, bit access, word access, etc.
+              None functional.  Some speedup.
 
 09.03.29 BJH  Release 10.46.00
 
