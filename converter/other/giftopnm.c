@@ -42,6 +42,13 @@
 #define LOCALCOLORMAP  0x80
 #define BitSet(byte, bit)      (((byte) & (bit)) == (bit))
 
+#if !defined(BYTE_ORDER) || !defined(LITTLE_ENDIAN)
+  /* make sure (BYTE_ORDER == LITTLE_ENDIAN) is FALSE */ 
+  #define BYTE_ORDER    0
+  #define LITTLE_ENDIAN 1
+#endif
+
+
 static __inline__ bool
 ReadOK(FILE *          const fileP,
        unsigned char * const buffer,
@@ -561,6 +568,45 @@ getCode_init(struct getCodeState * const getCodeStateP) {
 
 
 
+static unsigned int
+bitsOfLeBuffer(const unsigned char * const buf,
+               unsigned int          const start,
+               unsigned int          const len) {
+/*----------------------------------------------------------------------------
+   Return a string of 'len' bits (up to 16) starting at bit 'start' of buffer
+   buf[].
+
+   In the buffer, the bits are numbered Intel-style, with the first bit of a
+   byte being the least significant bit.  So bit 3 is the "16" bit of the
+   first byte of buf[].
+
+   We return the string as an integer such that its pure binary encoding with
+   the bits numbered Intel-style is the string.  E.g. the string 0,1,1 
+   yields six.
+-----------------------------------------------------------------------------*/
+    uint32_t codeBlock;
+        /* The 3 whole bytes of the buffer that contain the requested
+           bit string
+        */
+
+    assert(len <= 16);
+
+    if (BYTE_ORDER == LITTLE_ENDIAN)
+        /* Fast path */
+        codeBlock = *(uint32_t *) & buf[start/8];
+    else
+        /* logic works for little endian too */
+        codeBlock =
+            (buf[start/8+0] <<  0) |
+            (buf[start/8+1] <<  8) |
+            (buf[start/8+2] << 16);
+            
+    return (unsigned int) 
+        (codeBlock >> (start % 8)) & ((1 << len) - 1);
+}
+
+
+
 static void
 getCode_get(struct getCodeState * const gsP,
             FILE *                const ifP, 
@@ -613,16 +659,10 @@ getCode_get(struct getCodeState * const gsP,
                                bitsUnused, codeSize);
             }
         } else {
-            int i, j;
-            unsigned int code;
-            unsigned char * const buf = gsP->buf;
-            
-            code = 0;  /* initial value */
-            for (i = gsP->curbit, j = 0; j < codeSize; ++i, ++j)
-                code |= ((buf[ i / 8 ] & (1 << (i % 8))) != 0) << j;
+            *codeP = bitsOfLeBuffer(gsP->buf, gsP->curbit, codeSize);
+
             gsP->curbit += codeSize;
             *eofP = FALSE;
-            *codeP = code;
         }
     }
 }
