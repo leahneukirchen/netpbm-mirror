@@ -140,6 +140,28 @@ parseCommandLine(int argc, const char ** argv,
 
 
 
+static void
+validateComputableDimensions(unsigned int const cols,
+                             unsigned int const rows) {
+
+    /*
+      Notes on width and height limits:
+
+      cols * 3, rows * 3 appear in madras, tartan
+      cols*rows appears in poles
+      cols+rows appears in squig
+
+      PPMD functions use signed integers for pixel positions
+      (because they allow you to specify points off the canvas).
+    */
+      
+    if (cols > INT_MAX/4 || rows > INT_MAX/4 || rows > INT_MAX/cols)
+        pm_error("Width and/or height are way too large: %u x %u",
+                 cols, rows);
+}
+
+
+
 static pixel
 randomColor(pixval const maxval) {
 
@@ -759,17 +781,22 @@ placeAndColorPolesRandomly(int *        const xs,
 static void
 assignInterpolatedColor(pixel * const resultP,
                         pixel   const color1,
-                        long    const dist1,
+                        double  const dist1,
                         pixel   const color2,
-                        long    const dist2) {
+                        double  const dist2) {
+    
+    if (dist1 == 0) 
+        /* pixel is a pole */
+        *resultP = color1;
+    else {
+        double const sum = dist1 + dist2;
 
-    long const sum = dist1 + dist2;
-
-    pixval const r = PPM_GETR(color1)*dist2/sum + PPM_GETR(color2)*dist1/sum;
-    pixval const g = PPM_GETG(color1)*dist2/sum + PPM_GETG(color2)*dist1/sum;
-    pixval const b = PPM_GETB(color1)*dist2/sum + PPM_GETB(color2)*dist1/sum;
-
-    PPM_ASSIGN(*resultP, r, g, b);
+        pixval const r = (PPM_GETR(color1)*dist2 + PPM_GETR(color2)*dist1)/sum;
+        pixval const g = (PPM_GETG(color1)*dist2 + PPM_GETG(color2)*dist1)/sum;
+        pixval const b = (PPM_GETB(color1)*dist2 + PPM_GETB(color2)*dist1)/sum;
+        
+        PPM_ASSIGN(*resultP, r, g, b);
+    }
 }
 
 
@@ -780,7 +807,7 @@ poles(pixel **     const pixels,
       unsigned int const rows,
       pixval       const maxval) {
 
-    unsigned int const poleCt = cols * rows / 30000;
+    unsigned int const poleCt = MAX(2, MIN(MAXPOLES, cols * rows / 30000));
     
     int xs[MAXPOLES], ys[MAXPOLES];
     pixel colors[MAXPOLES];
@@ -793,21 +820,23 @@ poles(pixel **     const pixels,
     for (row = 0; row < rows; ++row) {
         unsigned int col;
         for (col = 0; col < cols; ++col) {
-            long dist1, dist2;
+            double dist1, dist2;
             pixel color1, color2;
             unsigned int i;
 
             /* Find two closest poles. */
-            dist1 = dist2 = 2000000000;
+            dist1 = dist2 = (SQR((double)cols) + SQR((double)rows));
             for (i = 0; i < poleCt; ++i) {
-                long const newdist =
-                    (col - xs[i]) * (col - xs[i]) +
-                    (row - ys[i]) * (row - ys[i]);
+                double const newdist =
+                    (double)(col - xs[i]) * (col - xs[i]) +
+                    (double)(row - ys[i]) * (row - ys[i]);
                 if (newdist < dist1) {
-                    dist1 = newdist;
+                    dist2  = dist1;
+                    color2 = color1;
+                    dist1  = newdist;
                     color1 = colors[i];
                 } else if (newdist < dist2) {
-                    dist2 = newdist;
+                    dist2  = newdist;
                     color2 = colors[i];
                 }
             }
@@ -1090,6 +1119,8 @@ main(int argc, const char ** argv) {
     pm_proginit(&argc, argv);
     
     parseCommandLine(argc, argv, &cmdline);
+
+    validateComputableDimensions(cmdline.width, cmdline.height);
     
     srand(pm_randseed());
     pixels = ppm_allocarray(cmdline.width, cmdline.height);
@@ -1133,6 +1164,8 @@ main(int argc, const char ** argv) {
 
     ppm_writeppm(stdout, pixels, cmdline.width, cmdline.height,
                  PPM_MAXMAXVAL, 0);
+
+    ppm_freearray(pixels, cmdline.height);
 
     return 0;
 }

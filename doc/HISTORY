@@ -21,6 +21,12 @@ not yet  BJH  Release 10.47.00
 
               giftopnm: fix for unlikely case of a block smaller than a code.
 
+              ppmpat: fix crash in -squig.
+
+              ppmpat: fix crash when width or height is zero.
+
+              ppmpat: fix wrong output with -poles.
+
               ilbmtoppm: fix some bug in interpreting ILBM input.
               (due to wrong pm_uintFromBigend16()).  From 10.46.
 
