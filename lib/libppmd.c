@@ -46,16 +46,54 @@ static struct rectangle const emptyRectangle = {
 };
 
 
+static ppmd_point
+makePoint(int const x,
+          int const y) {
+
+    return ppmd_makePoint(x, y);
+}
+
+
+static ppmd_point
+middlePoint(ppmd_point const a,
+            ppmd_point const b) {
+
+    ppmd_point retval;
+
+    retval.x = (a.x + b.x) / 2;
+    retval.y = (a.y + b.y) / 2;
+
+    return retval;
+}
+
+
+
+static bool
+pointsEqual(ppmd_point const a,
+            ppmd_point const b) {
+
+    return a.x == b.x && a.y == b.y;
+}
+
+
+
+static ppmd_point
+vectorSum(ppmd_point const a,
+          ppmd_point const b) {
+
+    return makePoint(a.x + b.x, a.y + b.y);
+}
+
+
 
 static void
-drawPoint(ppmd_drawproc       drawproc,
-          const void *  const clientdata,
-          pixel **      const pixels, 
-          int           const cols, 
-          int           const rows, 
-          pixval        const maxval, 
-          int           const x, 
-          int           const y) {
+drawPoint(ppmd_drawprocp       drawproc,
+          const void *   const clientdata,
+          pixel **       const pixels, 
+          int            const cols, 
+          int            const rows, 
+          pixval         const maxval, 
+          ppmd_point     const p) {
 /*----------------------------------------------------------------------------
    Draw a single point, assuming that it is within the bounds of the
    image.
@@ -63,12 +101,85 @@ drawPoint(ppmd_drawproc       drawproc,
     if (drawproc == PPMD_NULLDRAWPROC) {
         const pixel * const pixelP = clientdata;
         
-        assert(x >= 0); assert(x < cols);
-        assert(y >= 0); assert(y < rows);
+        assert(p.x >= 0); assert(p.x < cols);
+        assert(p.y >= 0); assert(p.y < rows);
 
-        pixels[y][x] = *pixelP;
+        pixels[p.y][p.x] = *pixelP;
     } else
-        drawproc(pixels, cols, rows, maxval, x, y, clientdata);
+        drawproc(pixels, cols, rows, maxval, p, clientdata);
+}
+
+
+
+struct drawProcXY {
+    ppmd_drawproc * drawProc;
+    const void *    clientData;
+};
+
+static struct drawProcXY
+makeDrawProcXY(ppmd_drawproc * const drawProc,
+               const void *    const clientData) {
+
+    struct drawProcXY retval;
+
+    retval.drawProc   = drawProc;
+    retval.clientData = clientData;
+    
+    return retval;
+}
+
+
+
+static ppmd_drawprocp drawProcPointXY;
+
+static void
+drawProcPointXY(pixel **     const pixels,
+                unsigned int const cols,
+                unsigned int const rows,
+                pixval       const maxval,
+                ppmd_point   const p,
+                const void * const clientdata) {
+
+    const struct drawProcXY * const xyP = clientdata;
+
+    xyP->drawProc(pixels, cols, rows, maxval, p.x, p.y, xyP->clientData);
+}
+
+
+
+static void
+drawPointXY(ppmd_drawproc        drawproc,
+            const void *   const clientdata,
+            pixel **       const pixels, 
+            int            const cols, 
+            int            const rows, 
+            pixval         const maxval, 
+            int            const x,
+            int            const y) {
+
+    if (drawproc == PPMD_NULLDRAWPROC)
+        drawPoint(PPMD_NULLDRAWPROC, clientdata, pixels, cols, rows, maxval,
+                  makePoint(x,y));
+    else {
+        struct drawProcXY const xy = makeDrawProcXY(drawproc, clientdata);
+
+        drawPoint(drawProcPointXY, &xy, pixels, cols, rows, maxval,
+                  makePoint(x, y));
+    }
+}
+
+
+
+void
+ppmd_point_drawprocp(pixel **     const pixels, 
+                     unsigned int const cols, 
+                     unsigned int const rows, 
+                     pixval       const maxval, 
+                     ppmd_point   const p,
+                     const void * const clientdata) {
+
+    if (p.x >= 0 && p.x < cols && p.y >= 0 && p.y < rows)
+        pixels[p.y][p.x] = *((pixel*)clientdata);
 }
 
 
@@ -82,9 +193,14 @@ ppmd_point_drawproc(pixel**     const pixels,
                     int         const y, 
                     const void* const clientdata) {
 
-    if (x >= 0 && x < cols && y >= 0 && y < rows)
-        pixels[y][x] = *((pixel*)clientdata);
+    ppmd_point p;
+    
+    p.x = x;
+    p.y = y;
+
+    ppmd_point_drawprocp(pixels, cols, rows, maxval, p, clientdata);
 }
+
 
 
 static void
@@ -156,7 +272,7 @@ ppmd_filledrectangle(pixel **      const pixels,
     for (row = intersection.ul.y; row < intersection.lr.y; ++row) {
         unsigned int col;
         for (col = intersection.ul.x; col < intersection.lr.x; ++col)
-            drawPoint(drawProc, clientdata,
+            drawPointXY(drawProc, clientdata,
                       pixels, cols, rows, maxval, col, row);
     }
 }
@@ -197,20 +313,16 @@ ppmd_setlineclip(int const newSetting) {
 
 
 static void
-clipEnd0(int    const x0,
-         int    const y0,
-         int    const x1,
-         int    const y1,
-         int    const cols,
-         int    const rows,
-         int *  const cx0P,
-         int *  const cy0P,
-         bool * const noLineP) {
+clipEnd0(ppmd_point   const p0,
+         ppmd_point   const p1,
+         int          const cols,
+         int          const rows,
+         ppmd_point * const c0P,
+         bool *       const noLineP) {
 /*----------------------------------------------------------------------------
-   Given a line that goes from (x0, y0) to (x1, y1), where any of
-   these coordinates may be anywhere in space -- not just in the frame,
-   clip the (x0, y0) end to bring it into the frame.  
-   Return the clipped-to location as (*cx0P, *cy0P).
+   Given a line that goes from p0 to p1, where any of these coordinates may be
+   anywhere in space -- not just in the frame, clip the p0 end to bring it
+   into the frame.  Return the clipped-to location as *c0P.
 
    Iff this is not possible because the entire line described is
    outside the frame, return *nolineP == true.
@@ -218,45 +330,43 @@ clipEnd0(int    const x0,
    The frame is 'cols' columns starting at 0, by 'rows' rows starting
    at 0.
 -----------------------------------------------------------------------------*/
-
-    int cx0, cy0;
+    ppmd_point c0;
     bool noLine;
 
-    cx0 = x0;        /* initial value */
-    cy0 = y0;        /* initial value */
+    c0 = p0;         /* initial value */
     noLine = FALSE;  /* initial value */
 
     /* Clip End 0 of the line horizontally */
-    if (cx0 < 0) {
-        if (x1 < 0)
+    if (c0.x < 0) {
+        if (p1.x < 0)
             noLine = TRUE;
         else {
-            cy0 = cy0 + (y1 - cy0) * (-cx0) / (x1 - cx0);
-            cx0 = 0;
+            c0.y = c0.y + (p1.y - c0.y) * (-c0.x) / (p1.x - c0.x);
+            c0.x = 0;
         }
-    } else if (cx0 >= cols) {
-        if (x1 >= cols)
+    } else if (c0.x >= cols) {
+        if (p1.x >= cols)
             noLine = TRUE;
         else {
-            cy0 = cy0 + (y1 - cy0) * (cols - 1 - cx0) / (x1 - cx0);
-            cx0 = cols - 1;
+            c0.y = c0.y + (p1.y - c0.y) * (cols - 1 - c0.x) / (p1.x - c0.x);
+            c0.x = cols - 1;
         }
     }
 
     /* Clip End 0 of the line vertically */
-    if (cy0 < 0) {
-        if (y1 < 0)
+    if (c0.y < 0) {
+        if (p1.y < 0)
             noLine = TRUE;
         else {
-            cx0 = cx0 + (x1 - cx0) * (-cy0) / (y1 - cy0);
-            cy0 = 0;
+            c0.x = c0.x + (p1.x - c0.x) * (-c0.y) / (p1.y - c0.y);
+            c0.y = 0;
         }
-    } else if (cy0 >= rows) {
-        if (y1 >= rows)
+    } else if (c0.y >= rows) {
+        if (p1.y >= rows)
             noLine = TRUE;
         else {
-            cx0 = cx0 + (x1 - cx0) * (rows - 1 - cy0) / (y1 - cy0);
-            cy0 = rows - 1;
+            c0.x = c0.x + (p1.x - c0.x) * (rows - 1 - c0.y) / (p1.y - c0.y);
+            c0.y = rows - 1;
         }
     }
 
@@ -264,140 +374,127 @@ clipEnd0(int    const x0,
        horizontally.  If so, we know the other endpoint is also out of
        frame horizontally and the line misses the frame entirely.
     */
-    if (cx0 < 0 || cx0 >= cols) {
-        assert(x1 < 0 || x1 >= cols);
+    if (c0.x < 0 || c0.x >= cols) {
+        assert(p1.x < 0 || p1.x >= cols);
         noLine = TRUE;
     }
-    *cx0P = cx0;
-    *cy0P = cy0;
+    *c0P = c0;
     *noLineP = noLine;
 }
 
 
 
 static void
-clipEnd1(int    const x0,
-         int    const y0,
-         int    const x1,
-         int    const y1,
-         int    const cols,
-         int    const rows,
-         int *  const cx1P,
-         int *  const cy1P) {
+clipEnd1(ppmd_point   const p0,
+         ppmd_point   const p1,
+         int          const cols,
+         int          const rows,
+         ppmd_point * const c1P) {
 /*----------------------------------------------------------------------------
-   Given a line that goes from (x0, y0) to (x1, y1), where (x0, y0) is
-   within the frame, but (x1, y1) can be anywhere in space, clip the
-   (x1, y1) end to bring it into the frame.  Return the clipped-to
-   location as (*cx1P, *cy1P).
+   Given a line that goes from p0 to p1, where p0 is within the frame, but p1
+   can be anywhere in space, clip the p1 end to bring it into the frame.
+   Return the clipped-to location as *c1P.
 
-   This is guaranteed to be possible, since we already know at least one
-   point (i.e. (x0, y0)) is in the frame.
+   This is guaranteed to be possible, since we already know at least one point
+   (i.e. p0) is in the frame.
 
    The frame is 'cols' columns starting at 0, by 'rows' rows starting
    at 0.
 -----------------------------------------------------------------------------*/
-    int cx1, cy1;
+    ppmd_point c1;
 
-    assert(x0 >= 0 && y0 < cols);
-    assert(y0 >= 0 && y0 < rows);
+    assert(p1.x >= 0 && p0.y < cols);
+    assert(p1.y >= 0 && p0.y < rows);
     
     /* Clip End 1 of the line horizontally */
-    cx1 = x1;  /* initial value */
-    cy1 = y1;  /* initial value */
+    c1 = p1;  /* initial value */
     
-    if (cx1 < 0) {
+    if (c1.x < 0) {
         /* We know the line isn't vertical, since End 0 is in the frame
            and End 1 is left of frame.
         */
-        cy1 = cy1 + (y0 - cy1) * (-cx1) / (x0 - cx1);
-        cx1 = 0;
-    } else if (cx1 >= cols) {
+        c1.y = c1.y + (p0.y - c1.y) * (-c1.x) / (p0.x - c1.x);
+        c1.x = 0;
+    } else if (c1.x >= cols) {
         /* We know the line isn't vertical, since End 0 is in the frame
            and End 1 is right of frame.
         */
-        cy1 = cy1 + (y0 - cy1) * (cols - 1 - cx1) / (x0 - cx1);
-        cx1 = cols - 1;
+        c1.y = c1.y + (p0.y - c1.y) * (cols - 1 - c1.x) / (p0.x - c1.x);
+        c1.x = cols - 1;
     }
     
     /* Clip End 1 of the line vertically */
-    if (cy1 < 0) {
+    if (c1.y < 0) {
         /* We know the line isn't horizontal, since End 0 is in the frame
            and End 1 is above frame.
         */
-        cx1 = cx1 + (x0 - cx1) * (-cy1) / (y0 - cy1);
-        cy1 = 0;
-    } else if (cy1 >= rows) {
+        c1.x = c1.x + (p0.x - c1.x) * (-c1.y) / (p0.y - c1.y);
+        c1.y = 0;
+    } else if (c1.y >= rows) {
         /* We know the line isn't horizontal, since End 0 is in the frame
            and End 1 is below frame.
         */
-        cx1 = cx1 + (x0 - cx1) * (rows - 1 - cy1) / (y0 - cy1);
-        cy1 = rows - 1;
+        c1.x = c1.x + (p0.x - c1.x) * (rows - 1 - c1.y) / (p0.y - c1.y);
+        c1.y = rows - 1;
     }
 
-    *cx1P = cx1;
-    *cy1P = cy1;
+    *c1P = c1;
 }
 
 
 
 static void
-clipLine(int    const x0,
-         int    const y0,
-         int    const x1,
-         int    const y1,
-         int    const cols,
-         int    const rows,
-         int *  const cx0P,
-         int *  const cy0P,
-         int *  const cx1P,
-         int *  const cy1P,
-         bool * const noLineP) {
+clipLine(ppmd_point   const p0,
+         ppmd_point   const p1,
+         int          const cols,
+         int          const rows,
+         ppmd_point * const c0P,
+         ppmd_point * const c1P,
+         bool *       const noLineP) {
 /*----------------------------------------------------------------------------
-   Clip the line that goes from (x0, y0) to (x1, y1) so that none of it
-   is outside the boundaries of the raster with width 'cols' and height
-   'rows'
+   Clip the line that goes from p0 to p1 so that none of it is outside the
+   boundaries of the raster with width 'cols' and height 'rows'
 
-   The clipped line goes from (*cx0P, *cy0P) to (*cx1P, *cy1P).
+   The clipped line goes from *c0P to *c1P.
 
    But if the entire line is outside the boundaries (i.e. we clip the
    entire line), return *noLineP true and the other values undefined.
 -----------------------------------------------------------------------------*/
-    int cx0, cy0, cx1, cy1;
+    ppmd_point c0, c1;
         /* The line we successively modify.  Starts out as the input
            line and ends up as the output line.
         */
     bool noLine;
 
-    clipEnd0(x0, y0, x1, y1, cols, rows, &cx0, &cy0, &noLine);
+    clipEnd0(p0, p1, cols, rows, &c0, &noLine);
 
     if (!noLine) {
-        /* (cx0, cy0) is in the frame: */
-        assert(cx0 >= 0 && cy0 < cols);
-        assert(cy0 >= 0 && cy0 < rows);
+        /* p0 is in the frame: */
+        assert(c0.x >= 0 && c0.x < cols);
+        assert(c0.y >= 0 && c0.y < rows);
 
-        clipEnd1(cx0, cy0, x1, y1, cols, rows, &cx1, &cy1);
+        clipEnd1(c0, p1, cols, rows, &c1);
     }
 
-    *cx0P = cx0;
-    *cy0P = cy0;
-    *cx1P = cx1;
-    *cy1P = cy1;
+    *c0P = c0;
+    *c1P = c1;
     *noLineP = noLine;
+
+    pm_message("input = (%d,%d)-(%d,%d) output = (%d,%d) = (%d,%d)",
+               p0.x, p0.y, p1.x, p1.y, c0.x, c0.y, c1.x, c1.y);
 }
 
 
 
 static void
-drawShallowLine(ppmd_drawproc       drawProc,
-                const void *  const clientdata,
-                pixel **      const pixels, 
-                int           const cols, 
-                int           const rows, 
-                pixval        const maxval, 
-                int           const x0, 
-                int           const y0,
-                int           const x1,
-                int           const y1) {
+drawShallowLine(ppmd_drawprocp       drawProc,
+                const void *   const clientdata,
+                pixel **       const pixels, 
+                int            const cols, 
+                int            const rows, 
+                pixval         const maxval, 
+                ppmd_point     const p0,
+                ppmd_point     const p1) {
 /*----------------------------------------------------------------------------
    Draw a line that is more horizontal than vertical.
 
@@ -406,27 +503,27 @@ drawShallowLine(ppmd_drawproc       drawProc,
    Assume the line has distinct start and end points (i.e. it's at least
    two points).
 -----------------------------------------------------------------------------*/
-
     /* Loop over X domain. */
     long dy, srow;
     int dx, col, row, prevrow;
 
-    if (x1 > x0)
+    if (p1.x > p0.x)
         dx = 1;
     else
         dx = -1;
-    dy = (y1 - y0) * DDA_SCALE / abs(x1 - x0);
-    prevrow = row = y0;
+    dy = (p1.y - p0.y) * DDA_SCALE / abs(p1.x - p0.x);
+    prevrow = row = p0.y;
     srow = row * DDA_SCALE + DDA_SCALE / 2;
-    col = x0;
+    col = p0.x;
     for ( ; ; ) {
         if (linetype == PPMD_LINETYPE_NODIAGS && row != prevrow) {
             drawPoint(drawProc, clientdata,
-                      pixels, cols, rows, maxval, col, prevrow);
+                      pixels, cols, rows, maxval, makePoint(col, prevrow));
             prevrow = row;
         }
-        drawPoint(drawProc, clientdata, pixels, cols, rows, maxval, col, row);
-        if (col == x1)
+        drawPoint(drawProc, clientdata, pixels, cols, rows, maxval,
+                  makePoint(col, row));
+        if (col == p1.x)
             break;
         srow += dy;
         row = srow / DDA_SCALE;
@@ -437,16 +534,14 @@ drawShallowLine(ppmd_drawproc       drawProc,
 
 
 static void
-drawSteepLine(ppmd_drawproc       drawProc,
-              const void *  const clientdata,
-              pixel **      const pixels, 
-              int           const cols, 
-              int           const rows, 
-              pixval        const maxval, 
-              int           const x0, 
-              int           const y0,
-              int           const x1,
-              int           const y1) {
+drawSteepLine(ppmd_drawprocp       drawProc,
+              const void *   const clientdata,
+              pixel **       const pixels, 
+              int            const cols, 
+              int            const rows, 
+              pixval         const maxval, 
+              ppmd_point     const p0,
+              ppmd_point     const p1) {
 /*----------------------------------------------------------------------------
    Draw a line that is more vertical than horizontal.
 
@@ -460,22 +555,23 @@ drawSteepLine(ppmd_drawproc       drawProc,
     long dx, scol;
     int dy, col, row, prevcol;
 
-    if (y1 > y0)
+    if (p1.y > p0.y)
         dy = 1;
     else
         dy = -1;
-    dx = (x1 - x0) * DDA_SCALE / abs(y1 - y0);
-    row = y0;
-    prevcol = col = x0;
+    dx = (p1.x - p0.x) * DDA_SCALE / abs(p1.y - p0.y);
+    row = p0.y;
+    prevcol = col = p0.x;
     scol = col * DDA_SCALE + DDA_SCALE / 2;
     for ( ; ; ) {
         if (linetype == PPMD_LINETYPE_NODIAGS && col != prevcol) {
             drawPoint(drawProc, clientdata,
-                      pixels, cols, rows, maxval, prevcol, row);
+                      pixels, cols, rows, maxval, makePoint(prevcol, row));
             prevcol = col;
         }
-        drawPoint(drawProc, clientdata, pixels, cols, rows, maxval, col, row);
-        if (row == y1)
+        drawPoint(drawProc, clientdata, pixels, cols, rows, maxval,
+                  makePoint(col, row));
+        if (row == p1.y)
             break;
         row += dy;
         scol += dx;
@@ -483,6 +579,46 @@ drawSteepLine(ppmd_drawproc       drawProc,
     }
 }
 
+
+
+void
+ppmd_linep(pixel **       const pixels, 
+           int            const cols, 
+           int            const rows, 
+           pixval         const maxval, 
+           ppmd_point     const p0,
+           ppmd_point     const p1,
+           ppmd_drawprocp       drawProc,
+           const void *   const clientdata) {
+
+    ppmd_point c0, c1;
+    bool noLine;  /* There's no line left after clipping */
+
+    if (lineclip) {
+        clipLine(p0, p1, cols, rows, &c0, &c1, &noLine);
+    } else {
+        c0 = p0;
+        c1 = p1;
+        noLine = FALSE;
+    }
+
+    if (noLine) {
+        /* Nothing to draw */
+    } else if (pointsEqual(c0, c1)) {
+        /* This line is just a point.  Because there aren't two
+           distinct endpoints, we have a special case.
+        */
+        drawPoint(drawProc, clientdata, pixels, cols, rows, maxval, c0);
+    } else {
+        /* Draw, using a simple DDA. */
+        if (abs(c1.x - c0.x) > abs(c1.y - c0.y))
+            drawShallowLine(drawProc, clientdata, pixels, cols, rows, maxval,
+                            c0, c1);
+        else
+            drawSteepLine(drawProc, clientdata, pixels, cols, rows, maxval,
+                          c0, c1);
+    }
+}
 
 
 void
@@ -495,42 +631,53 @@ ppmd_line(pixel **      const pixels,
           int           const x1, 
           int           const y1, 
           ppmd_drawproc       drawProc,
-          const void *  const clientdata) {
+          const void *  const clientData) {
 
-    int cx0, cy0, cx1, cy1;
-    bool noLine;  /* There's no line left after clipping */
+    struct drawProcXY const xy = makeDrawProcXY(drawProc, clientData);
 
-    if (lineclip) {
-        clipLine(x0, y0, x1, y1, cols, rows, &cx0, &cy0, &cx1, &cy1, &noLine);
-    } else {
-        cx0 = x0;
-        cy0 = y0;
-        cx1 = x1;
-        cy1 = y1;
-        noLine = FALSE;
-    }
-
-    if (noLine) {
-        /* Nothing to draw */
-    } else if (cx0 == cx1 && cy0 == cy1) {
-        /* This line is just a point.  Because there aren't two
-           distinct endpoints, we have a special case.
-        */
-        drawPoint(drawProc, clientdata, pixels, cols, rows, maxval, cx0, cy0);
-    } else {
-        /* Draw, using a simple DDA. */
-        if (abs(cx1 - cx0) > abs(cy1 - cy0))
-            drawShallowLine(drawProc, clientdata, pixels, cols, rows, maxval,
-                            cx0, cy0, cx1, cy1);
-        else
-            drawSteepLine(drawProc, clientdata, pixels, cols, rows, maxval,
-                          cx0, cy0, cx1, cy1);
-    }
+    ppmd_linep(pixels, cols, rows, maxval,
+               makePoint(x0, y0), makePoint(x1, y1), drawProcPointXY, &xy);
 }
 
 
 
 #define SPLINE_THRESH 3
+void
+ppmd_spline3p(pixel **       const pixels, 
+              int            const cols, 
+              int            const rows, 
+              pixval         const maxval, 
+              ppmd_point     const p0,
+              ppmd_point     const p1,
+              ppmd_point     const p2,
+              ppmd_drawprocp       drawProc,
+              const void *   const clientdata) {
+
+    ppmd_point a, b, c, p;
+
+    a = middlePoint(p0, p1);
+    c = middlePoint(p1, p2);
+    b = middlePoint(a, c);
+    p = middlePoint(p0, b);
+
+    if (abs(a.x - p.x) + abs(a.y - p.y) > SPLINE_THRESH)
+        ppmd_spline3p(
+            pixels, cols, rows, maxval, p0, a, b, drawProc, clientdata);
+    else
+        ppmd_linep(
+            pixels, cols, rows, maxval, p0, b, drawProc, clientdata);
+
+    p = middlePoint(p2, b);
+
+    if (abs(c.x - p.x) + abs(c.y - p.y) > SPLINE_THRESH)
+        ppmd_spline3p(
+            pixels, cols, rows, maxval, b, c, p2, drawProc, clientdata);
+    else
+        ppmd_linep(pixels, cols, rows, maxval, b, p2, drawProc, clientdata);
+}
+
+
+
 void
 ppmd_spline3(pixel **      const pixels, 
              int           const cols, 
@@ -545,35 +692,44 @@ ppmd_spline3(pixel **      const pixels,
              ppmd_drawproc       drawProc,
              const void *  const clientdata) {
 
-    register int xa, ya, xb, yb, xc, yc, xp, yp;
+    struct drawProcXY const xy = makeDrawProcXY(drawProc, clientdata);
 
-    xa = ( x0 + x1 ) / 2;
-    ya = ( y0 + y1 ) / 2;
-    xc = ( x1 + x2 ) / 2;
-    yc = ( y1 + y2 ) / 2;
-    xb = ( xa + xc ) / 2;
-    yb = ( ya + yc ) / 2;
+    ppmd_spline3p(pixels, cols, rows, maxval,
+                  makePoint(x0, y0),
+                  makePoint(x1, y1),
+                  makePoint(x2, y2),
+                  drawProcPointXY, &xy);
+}
 
-    xp = ( x0 + xb ) / 2;
-    yp = ( y0 + yb ) / 2;
-    if ( abs( xa - xp ) + abs( ya - yp ) > SPLINE_THRESH )
-        ppmd_spline3(
-            pixels, cols, rows, maxval, x0, y0, xa, ya, xb, yb, drawProc,
-            clientdata );
-    else
-        ppmd_line(
-            pixels, cols, rows, maxval, x0, y0, xb, yb, drawProc, clientdata);
 
-    xp = ( x2 + xb ) / 2;
-    yp = ( y2 + yb ) / 2;
-    if ( abs( xc - xp ) + abs( yc - yp ) > SPLINE_THRESH )
-        ppmd_spline3(
-            pixels, cols, rows, maxval, xb, yb, xc, yc, x2, y2, drawProc,
-            clientdata );
-    else
-        ppmd_line(
-            pixels, cols, rows, maxval, xb, yb, x2, y2,
-            drawProc, clientdata );
+
+void
+ppmd_polysplinep(pixel **       const pixels, 
+                 unsigned int   const cols, 
+                 unsigned int   const rows, 
+                 pixval         const maxval, 
+                 ppmd_point     const p0,
+                 unsigned int   const nc,
+                 ppmd_point *   const c,
+                 ppmd_point     const p1,
+                 ppmd_drawprocp       drawProc,
+                 const void *   const clientdata) {
+
+    ppmd_point p;
+    
+    unsigned int i;
+
+    assert(nc > 0);
+
+    p = p0;
+    for (i = 0; i < nc - 1; ++i) {
+        ppmd_point const n = middlePoint(c[i], c[i+1]);
+        ppmd_spline3p(
+            pixels, cols, rows, maxval, p, c[i], n, drawProc, clientdata);
+        p = n;
+    }
+    ppmd_spline3p(
+        pixels, cols, rows, maxval, p, c[nc - 1], p1, drawProc, clientdata);
 }
 
 
@@ -593,45 +749,74 @@ ppmd_polyspline(pixel **      const pixels,
                 ppmd_drawproc       drawProc,
                 const void *  const clientdata) {
 
-    register int i, x, y, xn, yn;
+    ppmd_point const p1 = makePoint(x1, y1);
+    ppmd_point const p0 = makePoint(x0, y0);
+    struct drawProcXY const xy = makeDrawProcXY(drawProc, clientdata);
 
-    x = x0;
-    y = y0;
-    for ( i = 0; i < nc - 1; ++i )
-    {
-        xn = ( xc[i] + xc[i + 1] ) / 2;
-        yn = ( yc[i] + yc[i + 1] ) / 2;
-        ppmd_spline3(
-            pixels, cols, rows, maxval, x, y, xc[i], yc[i], xn, yn, drawProc,
-            clientdata );
-        x = xn;
-        y = yn;
+    ppmd_point p;
+    unsigned int i;
+
+    p = p0;  /* initial value */
+
+    assert(nc > 0);
+
+    for (i = 0; i < nc - 1; ++i) {
+        ppmd_point const n = middlePoint(makePoint(xc[i], yc[i]),
+                                         makePoint(xc[i+1], yc[i+1]));
+        ppmd_spline3p(
+            pixels, cols, rows, maxval, p, makePoint(xc[i], yc[i]), n,
+            drawProcPointXY, &xy);
+        p = n;
     }
-    ppmd_spline3(
-        pixels, cols, rows, maxval, x, y, xc[nc - 1], yc[nc - 1], x1, y1,
-        drawProc, clientdata );
+    ppmd_spline3p(
+        pixels, cols, rows, maxval, p, makePoint(xc[nc - 1], yc[nc - 1]), p1,
+        drawProcPointXY, &xy);
 }
 
 
 
 void
-ppmd_spline4(pixel **      const pixels, 
-             int           const cols, 
-             int           const rows, 
-             pixval        const maxval, 
-             int           const x0, 
-             int           const y0, 
-             int           const x1, 
-             int           const y1, 
-             int           const x2, 
-             int           const y2, 
-             int           const x3, 
-             int           const y3, 
-             ppmd_drawproc       drawproc,
-             const void *  const clientdata) {
+ppmd_circlep(pixel **       const pixels, 
+             unsigned int   const cols, 
+             unsigned int   const rows, 
+             pixval         const maxval, 
+             ppmd_point     const center,
+             unsigned int   const radius, 
+             ppmd_drawprocp       drawProc,
+             const void *   const clientData) {
 
-    pm_error("ppmd_spline4() has not been written yet!");
+    if (radius > 0) {
+        long const e = DDA_SCALE / radius;
 
+        ppmd_point p0;  /* The starting point around the circle */
+        ppmd_point p;   /* Current drawing position in the circle */
+        bool nopointsyet;
+        long sx, sy;
+
+        p0.x = radius;
+        p0.y = 0;
+
+        p = p0;
+
+        sx = p.x * DDA_SCALE + DDA_SCALE / 2;
+        sy = p.y * DDA_SCALE + DDA_SCALE / 2;
+        drawPoint(drawProc, clientData,
+                  pixels, cols, rows, maxval, vectorSum(center, p));
+        nopointsyet = true;
+
+        do {
+            ppmd_point const prev = p;
+            sx += e * sy / DDA_SCALE;
+            sy -= e * sx / DDA_SCALE;
+            p = makePoint(sx / DDA_SCALE, sy / DDA_SCALE);
+            if (!pointsEqual(p, prev)) {
+                nopointsyet = false;
+                drawPoint(drawProc, clientData,
+                          pixels, cols, rows, maxval, vectorSum(center, p));
+            }
+        }
+        while (nopointsyet || !pointsEqual(p, p0));
+    }
 }
 
 
@@ -645,34 +830,12 @@ ppmd_circle(pixel **      const pixels,
             int           const cy, 
             int           const radius, 
             ppmd_drawproc       drawProc,
-            const void *  const clientdata) {
+            const void *  const clientData) {
 
-    int x0, y0, x, y, prevx, prevy, nopointsyet;
-    long sx, sy, e;
+    struct drawProcXY const xy = makeDrawProcXY(drawProc, clientData);
 
-    x0 = x = radius;
-    y0 = y = 0;
-    sx = x * DDA_SCALE + DDA_SCALE / 2;
-    sy = y * DDA_SCALE + DDA_SCALE / 2;
-    e = DDA_SCALE / radius;
-    drawPoint(drawProc, clientdata,
-              pixels, cols, rows, maxval, x + cx, y + cy);
-    nopointsyet = 1;
-
-    do {
-        prevx = x;
-        prevy = y;
-        sx += e * sy / DDA_SCALE;
-        sy -= e * sx / DDA_SCALE;
-        x = sx / DDA_SCALE;
-        y = sy / DDA_SCALE;
-        if (x != prevx || y != prevy) {
-            nopointsyet = 0;
-            drawPoint(drawProc, clientdata,
-                      pixels, cols, rows, maxval, x + cx, y + cy);
-        }
-    }
-    while (nopointsyet || x != x0 || y != y0);
+    ppmd_circlep(pixels, cols, rows, maxval, makePoint(cx, cy), radius,
+                 drawProcPointXY, &xy);
 }
 
 
@@ -748,14 +911,14 @@ ppmd_fill_destroy(struct fillobj * fillObjP) {
 }
 
 
+
 void
-ppmd_fill_drawproc(pixel**      const pixels, 
-                   int          const cols, 
-                   int          const rows, 
-                   pixval       const maxval, 
-                   int          const x, 
-                   int          const y, 
-                   const void * const clientdata) {
+ppmd_fill_drawprocp(pixel **     const pixels, 
+                    unsigned int const cols, 
+                    unsigned int const rows, 
+                    pixval       const maxval, 
+                    ppmd_point   const p,
+                    const void * const clientdata) {
 
     fillobj * fh;
     coord * cp;
@@ -766,7 +929,7 @@ ppmd_fill_drawproc(pixel**      const pixels,
     if (fh->n > 0) {
         /* If these are the same coords we saved last time, don't bother. */
         ocp = &(fh->coords[fh->n - 1]);
-        if ( x == ocp->x && y == ocp->y )
+        if (p.x == ocp->x && p.y == ocp->y)
             return;
     }
 
@@ -775,7 +938,7 @@ ppmd_fill_drawproc(pixel**      const pixels,
         fh->size += SOME;
         REALLOCARRAY(fh->coords, fh->size);
         if (fh->coords == NULL)
-            pm_error( "out of memory enlarging a fillhandle" );
+            pm_error("out of memory enlarging a fillhandle");
     }
 
     /* Check for extremum and set the edge number. */
@@ -787,8 +950,8 @@ ppmd_fill_drawproc(pixel**      const pixels,
     } else {
         int dx, dy;
 
-        dx = x - ocp->x;
-        dy = y - ocp->y;
+        dx = p.x - ocp->x;
+        dy = p.y - ocp->y;
         if (dx < -1 || dx > 1 || dy < -1 || dy > 1) {
             /* Segment break.  Close off old one. */
             if (fh->startydir != 0 && fh->ydir != 0)
@@ -832,10 +995,26 @@ ppmd_fill_drawproc(pixel**      const pixels,
 
     /* Save this coord. */
     cp = &fh->coords[fh->n];
-    cp->x = x;
-    cp->y = y;
+    cp->x = p.x;
+    cp->y = p.y;
     cp->edge = fh->curedge;
     ++fh->n;
+}
+
+
+
+
+void
+ppmd_fill_drawproc(pixel**      const pixels, 
+                   int          const cols, 
+                   int          const rows, 
+                   pixval       const maxval, 
+                   int          const x, 
+                   int          const y, 
+                   const void * const clientData) {
+
+    ppmd_fill_drawprocp(pixels, cols, rows, maxval, makePoint(x, y),
+                        clientData);
 }
 
 
