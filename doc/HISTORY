@@ -62,6 +62,10 @@ not yet  BJH  Release 10.47.00
               Lots of changes to integer code, bit access, word access, etc.
               None functional.  Some speedup.
 
+              configure: use TEMP environment variable for TMPDIR if TMPDIR
+              is not set.  Don't try different temp file names forever; the
+              problem may not be the filename.
+
 09.03.29 BJH  Release 10.46.00
 
               xwdtopnm: Add -cmapdump .
