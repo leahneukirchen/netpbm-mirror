@@ -18,7 +18,7 @@ not yet  BJH  Release 10.47.00
               pnmremap: fix: -firstisdefault uses an arbitrary color from the
               map as default.
 
-              pnmremap: fix -missing:  where map file (ergo output) is not
+              pnmremap: fix -missingcolor:  where map file (ergo output) is not
               depth 3, uses an arbitrary color.
 
               pnmremap: fix loss of dithering when the map (and thus the
