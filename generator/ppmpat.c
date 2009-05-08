@@ -718,7 +718,7 @@ squig( pixel** pixels, int cols, int rows, pixval maxval )
         x1 = rand() % cols;
         y1 = 0;
         if ( x1 < cols / 2 )
-        xc[0] = rand() % ( x1 * 2 );
+        xc[0] = rand() % ( x1 * 2 + 1);
         else
         xc[0] = cols - 1 - rand() % ( ( cols - x1 ) * 2 );
         yc[0] = rand() % rows;
@@ -736,7 +736,7 @@ squig( pixel** pixels, int cols, int rows, pixval maxval )
         x2 = rand() % cols;
         y2 = 0;
         if ( x2 < cols / 2 )
-        xc[SQ_POINTS - 1] = rand() % ( x2 * 2 );
+        xc[SQ_POINTS - 1] = rand() % ( x2 * 2 + 1);
         else
         xc[SQ_POINTS - 1] = cols - 1 - rand() % ( ( cols - x2 ) * 2 );
         yc[SQ_POINTS - 1] = rand() % rows;
@@ -755,7 +755,7 @@ squig( pixel** pixels, int cols, int rows, pixval maxval )
         y1 = rand() % rows;
         xc[0] = rand() % cols;
         if ( y1 < rows / 2 )
-        yc[0] = rand() % ( y1 * 2 );
+        yc[0] = rand() % ( y1 * 2 + 1);
         else
         yc[0] = rows - 1 - rand() % ( ( rows - y1 ) * 2 );
         x2 = cols - 1;
@@ -773,7 +773,7 @@ squig( pixel** pixels, int cols, int rows, pixval maxval )
         y2 = rand() % rows;
         xc[SQ_POINTS - 1] = rand() % cols;
         if ( y2 < rows / 2 )
-        yc[SQ_POINTS - 1] = rand() % ( y2 * 2 );
+        yc[SQ_POINTS - 1] = rand() % ( y2 * 2 + 1);
         else
         yc[SQ_POINTS - 1] = rows - 1 - rand() % ( ( rows - y2 ) * 2 );
         x1 = cols - 1;
@@ -953,6 +953,11 @@ main(int argc, char ** argv) {
 
     if ( argn != argc )
         pm_usage( usage);
+
+    if (cols < 1)
+        pm_error("width must be at least 1");
+    if (rows < 1)
+        pm_error("height must be at least 1");
 
     srand(pm_randseed());
     pixels = ppm_allocarray( cols, rows );

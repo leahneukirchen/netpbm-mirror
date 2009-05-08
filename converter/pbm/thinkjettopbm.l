@@ -37,6 +37,7 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
+#include "pm_c_util.h"
 #include "pbm.h"
 #include "shhopt.h"
 

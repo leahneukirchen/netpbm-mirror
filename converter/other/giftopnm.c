@@ -582,13 +582,19 @@ getCode_get(struct getCodeState * const gsP,
   Return the code read (assuming *eofP == FALSE and *errorP == NULL)
   as *codeP.
 -----------------------------------------------------------------------------*/
-    if ((gsP->curbit+codeSize) > gsP->bufCount*8 && !gsP->streamExhausted) 
+
+    *errorP = NULL;
+
+    while ((gsP->curbit+codeSize) > gsP->bufCount*8 
+           && !gsP->streamExhausted && !*errorP ) 
         /* Not enough left in buffer to satisfy request.  Get the next
            data block into the buffer.
+
+           Note that a data block may be as small as one byte, so we may need
+           to do this multiple times to get the full code.  (This probably
+           never happens in practice).
         */
         getAnotherBlock(ifP, gsP, errorP);
-    else
-        *errorP = NULL;
 
     if (!*errorP) {
         if ((gsP->curbit+codeSize) > gsP->bufCount*8) {

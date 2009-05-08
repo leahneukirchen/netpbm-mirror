@@ -647,6 +647,7 @@ ppmd_circle(pixel **      const pixels,
             ppmd_drawproc       drawProc,
             const void *  const clientdata) {
 
+    if (radius != 0) {
     int x0, y0, x, y, prevx, prevy, nopointsyet;
     long sx, sy, e;
 
@@ -673,6 +674,7 @@ ppmd_circle(pixel **      const pixels,
         }
     }
     while (nopointsyet || x != x0 || y != y0);
+    }
 }
 
 

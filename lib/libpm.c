@@ -190,17 +190,25 @@ pm_error(const char format[], ...) {
 
 
 
+static void *
+mallocz(size_t const size) {
+
+    return malloc(MAX(1, size));
+}
+
+
+
 void *
 pm_allocrow(unsigned int const cols,
             unsigned int const size) {
 
     unsigned char * itrow;
 
-    if (UINT_MAX / cols < size)
+    if (cols != 0 && UINT_MAX / cols < size)
         pm_error("Arithmetic overflow multiplying %u by %u to get the "
                  "size of a row to allocate.", cols, size);
 
-    itrow = malloc(cols * size);
+    itrow = mallocz(cols * size);
     if (itrow == NULL)
         pm_error("out of memory allocating a row");
 
@@ -223,7 +231,7 @@ allocarrayNoHeap(unsigned char ** const rowIndex,
                  unsigned int     const size,
                  const char **    const errorP) {
 
-    if (UINT_MAX / cols < size)
+    if (cols != 0 && UINT_MAX / cols < size)
         asprintfN(errorP,
                   "Arithmetic overflow multiplying %u by %u to get the "
                   "size of a row to allocate.", cols, size);
@@ -234,7 +242,7 @@ allocarrayNoHeap(unsigned char ** const rowIndex,
         *errorP = NULL;
 
         while (rowsDone < rows && !*errorP) {
-            unsigned char * const rowSpace = malloc(cols * size);
+            unsigned char * const rowSpace = mallocz(cols * size);
             if (rowSpace == NULL)
                 asprintfN(errorP,
                           "Unable to allocate a %u-column by %u byte row",
@@ -259,11 +267,11 @@ allocRowHeap(unsigned int const cols,
 
     unsigned char * retval;
 
-    if (UINT_MAX / cols / rows < size)
+    if (cols != 0 && rows != 0 && UINT_MAX / cols / rows < size)
         /* Too big even to request the memory ! */
         retval = NULL;
     else
-        retval = malloc(rows * cols * size);
+        retval = mallocz(rows * cols * size);
 
     return retval;
 }
