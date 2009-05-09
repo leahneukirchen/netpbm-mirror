@@ -142,30 +142,11 @@ drawProcPointXY(pixel **     const pixels,
 
     const struct drawProcXY * const xyP = clientdata;
 
-    xyP->drawProc(pixels, cols, rows, maxval, p.x, p.y, xyP->clientData);
-}
-
-
-
-static void
-drawPointXY(ppmd_drawproc        drawproc,
-            const void *   const clientdata,
-            pixel **       const pixels, 
-            int            const cols, 
-            int            const rows, 
-            pixval         const maxval, 
-            int            const x,
-            int            const y) {
-
-    if (drawproc == PPMD_NULLDRAWPROC)
-        drawPoint(PPMD_NULLDRAWPROC, clientdata, pixels, cols, rows, maxval,
-                  makePoint(x,y));
-    else {
-        struct drawProcXY const xy = makeDrawProcXY(drawproc, clientdata);
-
-        drawPoint(drawProcPointXY, &xy, pixels, cols, rows, maxval,
-                  makePoint(x, y));
-    }
+    if (xyP->drawProc == PPMD_NULLDRAWPROC)
+        drawPoint(PPMD_NULLDRAWPROC, xyP->clientData,
+                  pixels, cols, rows, maxval, p);
+    else
+        xyP->drawProc(pixels, cols, rows, maxval, p.x, p.y, xyP->clientData);
 }
 
 
@@ -242,6 +223,8 @@ ppmd_filledrectangle(pixel **      const pixels,
                      ppmd_drawproc       drawProc,
                      const void *  const clientdata) {
 
+    struct drawProcXY const xy = makeDrawProcXY(drawProc, clientdata);
+
     struct rectangle image, request, intersection;
     unsigned int row;
 
@@ -272,8 +255,8 @@ ppmd_filledrectangle(pixel **      const pixels,
     for (row = intersection.ul.y; row < intersection.lr.y; ++row) {
         unsigned int col;
         for (col = intersection.ul.x; col < intersection.lr.x; ++col)
-            drawPointXY(drawProc, clientdata,
-                      pixels, cols, rows, maxval, col, row);
+            drawPoint(drawProcPointXY, &xy,
+                      pixels, cols, rows, maxval, makePoint(col, row));
     }
 }
 
@@ -479,9 +462,6 @@ clipLine(ppmd_point   const p0,
     *c0P = c0;
     *c1P = c1;
     *noLineP = noLine;
-
-    pm_message("input = (%d,%d)-(%d,%d) output = (%d,%d) = (%d,%d)",
-               p0.x, p0.y, p1.x, p1.y, c0.x, c0.y, c1.x, c1.y);
 }
 
 
@@ -641,39 +621,60 @@ ppmd_line(pixel **      const pixels,
 
 
 
-#define SPLINE_THRESH 3
+static unsigned int
+    distanceFromLine(ppmd_point const p,
+                     ppmd_point const l0,
+                     ppmd_point const l1) {
+/*----------------------------------------------------------------------------
+  Compute, sort of, the distance between point 'p' and the line through
+  'l0' and 'l1'.
+
+  I don't really know the signficance of this measurement.
+-----------------------------------------------------------------------------*/
+
+    ppmd_point const middle = middlePoint(l0, l1);
+
+    return (abs(p.x - middle.x) + abs(p.y - middle.y));
+}
+
+
+
+
 void
 ppmd_spline3p(pixel **       const pixels, 
               int            const cols, 
               int            const rows, 
               pixval         const maxval, 
               ppmd_point     const p0,
+              ppmd_point     const ctl,
               ppmd_point     const p1,
-              ppmd_point     const p2,
               ppmd_drawprocp       drawProc,
               const void *   const clientdata) {
 
-    ppmd_point a, b, c, p;
+    static unsigned int const splineThresh = 3;
+        /* The limit of recursion */
 
-    a = middlePoint(p0, p1);
-    c = middlePoint(p1, p2);
-    b = middlePoint(a, c);
-    p = middlePoint(p0, b);
+    if (distanceFromLine(ctl, p0, p1) <= splineThresh) {
+        /* The control point is pretty close to the straight line that
+           joins the endpoints, so we'll just use a straight line.
+        */
+        ppmd_linep(
+            pixels, cols, rows, maxval, p0, p1, drawProc, clientdata);
+    } else {
+        /* We want some curvature, so pick a point (b) sort of between the
+           two endpoints and the control point and then compute a spline
+           between each of the endpoints and that between point (b):
+        */
+        ppmd_point const a = middlePoint(p0, ctl);
+        ppmd_point const c = middlePoint(ctl, p1);
+        ppmd_point const b = middlePoint(a, c);
 
-    if (abs(a.x - p.x) + abs(a.y - p.y) > SPLINE_THRESH)
         ppmd_spline3p(
             pixels, cols, rows, maxval, p0, a, b, drawProc, clientdata);
-    else
-        ppmd_linep(
-            pixels, cols, rows, maxval, p0, b, drawProc, clientdata);
 
-    p = middlePoint(p2, b);
-
-    if (abs(c.x - p.x) + abs(c.y - p.y) > SPLINE_THRESH)
         ppmd_spline3p(
-            pixels, cols, rows, maxval, b, c, p2, drawProc, clientdata);
-    else
-        ppmd_linep(pixels, cols, rows, maxval, b, p2, drawProc, clientdata);
+            pixels, cols, rows, maxval, b, c, p1, drawProc, clientdata);
+    }
 }
 
 
