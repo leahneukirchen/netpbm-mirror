@@ -190,9 +190,16 @@ The command moves the current position to the terminal point after drawing.
 <dt>spline3
 
 <dd>This draws a spline in the current color between 2 points, using a third
-as a control point in some arcane way.  The 6 arguments are the starting point
-column, starting point row, control point column, control point row, ending
-point column, and ending point row.
+as a control point.  It approximates a cubic spline segment.
+
+<p>The shape of the curve is such that it passes through the specified
+endpoints, and lines tangent to the curve at those endpoints intersect at the
+control point.  Controlling the tangents allows you to connect this curve to
+other curves generated the same way without having corners at the connection
+points.
+
+<p>The 6 arguments are the starting point column, starting point row, control
+point column, control point row, ending point column, and ending point row.
 
 <p>This command does not affect the current position.
 
