@@ -656,14 +656,14 @@ ppmd_spline3p(pixel **       const pixels,
 
     if (distanceFromLine(ctl, p0, p1) <= splineThresh) {
         /* The control point is pretty close to the straight line that
-           joins the endpoints, so we'll just use a straight line.
+           joins the endpoints, so we'll just draw a straight line.
         */
         ppmd_linep(
             pixels, cols, rows, maxval, p0, p1, drawProc, clientdata);
     } else {
         /* We want some curvature, so pick a point (b) sort of between the
-           two endpoints and the control point and then compute a spline
-           between each of the endpoints and that between point (b):
+           two endpoints and the control point and then draw a spline
+           between each of the endpoints and (b):
         */
         ppmd_point const a = middlePoint(p0, ctl);
         ppmd_point const c = middlePoint(ctl, p1);
