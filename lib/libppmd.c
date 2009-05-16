@@ -26,7 +26,6 @@
 #include "ppmdraw.h"
 
 
-#define DDA_SCALE 8192
 
 struct penpos {
     int x;
@@ -54,6 +53,7 @@ makePoint(int const x,
 }
 
 
+
 static ppmd_point
 middlePoint(ppmd_point const a,
             ppmd_point const b) {
@@ -77,11 +77,63 @@ pointsEqual(ppmd_point const a,
 
 
 
+static bool
+pointIsWithinBounds(ppmd_point   const p,
+                    unsigned int const cols,
+                    unsigned int const rows) {
+
+    return (p.x >= 0 && p.x < cols && p.y >= 0 && p.y < rows);
+}
+
+        
+
 static ppmd_point
 vectorSum(ppmd_point const a,
           ppmd_point const b) {
 
     return makePoint(a.x + b.x, a.y + b.y);
+}
+
+
+
+static long int const DDA_SCALE = 8192;
+
+#define PPMD_MAXCOORD 32767
+/*
+  Several factors govern the limit of x, y coordination values.
+
+  The limit must be representable as (signed) int for coordinates to 
+  be carried in struct penpos (immediately above).
+
+  The following calculation, done with long ints, must not overflow:
+  cy0 = cy0 + (y1 - cy0) * (cols - 1 - cx0) / (x1 - cx0);
+
+  The following must not overflow when DDA_SCALE is set to 8092:
+  dy = (y1 - y0) * DDA_SCALE / abs(x1 - x0);
+
+  Overflow conditions for ppmd_text are rather complicated, for commands
+  come from an external PPMD font file.  See comments below.  
+*/
+
+
+
+void
+ppmd_validateCoord(int const c) {
+
+    if (c < -PPMD_MAXCOORD || c > PPMD_MAXCOORD)
+        pm_error("Coordinate out of bounds: %d", c);
+}
+
+
+
+void
+ppmd_validatePoint(ppmd_point const p) {
+
+    if (p.x < -PPMD_MAXCOORD || p.x > PPMD_MAXCOORD)
+        pm_error("x coordinate of (%d, %d) out of bounds", p.x, p.y);
+
+    if (p.y < -PPMD_MAXCOORD || p.y > PPMD_MAXCOORD)
+        pm_error("y coordinate of (%d, %d) out of bounds", p.x, p.y);
 }
 
 
@@ -574,6 +626,11 @@ ppmd_linep(pixel **       const pixels,
     ppmd_point c0, c1;
     bool noLine;  /* There's no line left after clipping */
 
+    ppmd_validateCoord(cols);
+    ppmd_validateCoord(rows);
+    ppmd_validatePoint(p0);
+    ppmd_validatePoint(p1);
+
     if (lineclip) {
         clipLine(p0, p1, cols, rows, &c0, &c1, &noLine);
     } else {
@@ -785,38 +842,69 @@ ppmd_circlep(pixel **       const pixels,
              unsigned int   const radius, 
              ppmd_drawprocp       drawProc,
              const void *   const clientData) {
+/*----------------------------------------------------------------------------
+  If lineclip mode is on, draw only points within the image.
+  If lineclip is off, "draw" all points (by designated drawproc).  Note
+  that the drawproc can't actually draw a point outside the image, but
+  it might maintain state that is affected by imaginary points outside
+  the image.
+
+  Initial point is 3 o'clock. 
+-----------------------------------------------------------------------------*/
+    if (radius >= DDA_SCALE)
+        pm_error("Error drawing circle.  Radius %d is too large.", radius);
+
+    ppmd_validateCoord(center.x + radius);
+    ppmd_validateCoord(center.y + radius);
+    ppmd_validateCoord(center.x - radius);
+    ppmd_validateCoord(center.y - radius);
 
     if (radius > 0) {
         long const e = DDA_SCALE / radius;
 
-        ppmd_point p0;  /* The starting point around the circle */
-        ppmd_point p;   /* Current drawing position in the circle */
-        bool nopointsyet;
-        long sx, sy;
-
-        p0.x = radius;
-        p0.y = 0;
+        ppmd_point const p0 = makePoint(radius, 0);  /* 3 o'clock */
+            /* The starting point around the circle, assuming (0, 0) center */
+        ppmd_point p;
+            /* Current drawing position in the circle, assuming (0,0) center */
+        bool onFirstPoint;
+        bool prevPointExists;
+        ppmd_point prevPoint;
+            /* Previous drawing position, assuming (0, 0) center*/
+        long sx, sy;  /* 'p', scaled by DDA_SCALE */
 
         p = p0;
 
         sx = p.x * DDA_SCALE + DDA_SCALE / 2;
         sy = p.y * DDA_SCALE + DDA_SCALE / 2;
-        drawPoint(drawProc, clientData,
-                  pixels, cols, rows, maxval, vectorSum(center, p));
-        nopointsyet = true;
 
-        do {
-            ppmd_point const prev = p;
+        onFirstPoint = TRUE;
+        prevPointExists = FALSE;
+
+        while (onFirstPoint || !pointsEqual(p, p0)) {
+            pm_message("Doing point (%d, %d)", p.x, p.y);
+
+            if (prevPointExists && pointsEqual(p, prevPoint)) {
+                /* We're on the same point we were on last time (we moved less
+                   than a point's worth).  Just keep moving.
+                */
+            } else {
+                ppmd_point const imagePoint = vectorSum(center,p);
+                if (!lineclip || pointIsWithinBounds(imagePoint, cols, rows))
+                    drawPoint(drawProc, clientData,
+                              pixels, cols, rows, maxval, imagePoint);
+
+                prevPoint = p;
+                prevPointExists = TRUE;
+            }
+
+            if (!pointsEqual(p, p0))
+                onFirstPoint = FALSE;
+
             sx += e * sy / DDA_SCALE;
             sy -= e * sx / DDA_SCALE;
             p = makePoint(sx / DDA_SCALE, sy / DDA_SCALE);
-            if (!pointsEqual(p, prev)) {
-                nopointsyet = false;
-                drawPoint(drawProc, clientData,
-                          pixels, cols, rows, maxval, vectorSum(center, p));
-            }
+            pm_message("next point is (%d, %d)", p.x, p.y);
         }
-        while (nopointsyet || !pointsEqual(p, p0));
     }
 }
 
@@ -833,10 +921,14 @@ ppmd_circle(pixel **      const pixels,
             ppmd_drawproc       drawProc,
             const void *  const clientData) {
 
-    struct drawProcXY const xy = makeDrawProcXY(drawProc, clientData);
+    if (radius < 0)
+        pm_error("Error drawing circle.  Radius %d is negative.", radius);
+    else {
+        struct drawProcXY const xy = makeDrawProcXY(drawProc, clientData);
 
-    ppmd_circlep(pixels, cols, rows, maxval, makePoint(cx, cy), radius,
-                 drawProcPointXY, &xy);
+        ppmd_circlep(pixels, cols, rows, maxval, makePoint(cx, cy), radius,
+                     drawProcPointXY, &xy);
+    }
 }
 
 
@@ -845,9 +937,8 @@ ppmd_circle(pixel **      const pixels,
 
 typedef struct
 {
-    short x;
-    short y;
-    short edge;
+    ppmd_point point;
+    int edge;
 } coord;
 
 typedef struct fillobj {
@@ -927,19 +1018,21 @@ ppmd_fill_drawprocp(pixel **     const pixels,
 
     fh = (fillobj*) clientdata;
 
+    /* If these are the same coords we saved last time, don't bother. */
     if (fh->n > 0) {
-        /* If these are the same coords we saved last time, don't bother. */
-        ocp = &(fh->coords[fh->n - 1]);
-        if (p.x == ocp->x && p.y == ocp->y)
+        ppmd_point const lastPoint = fh->coords[fh->n - 1].point;
+        if (pointsEqual(p, lastPoint))
             return;
     }
 
-    /* Ok, these are new; check if there's room for two more coords. */
+    /* Ok, these are new; make room for two more coords. */
     if (fh->n + 1 >= fh->size) {
         fh->size += SOME;
         REALLOCARRAY(fh->coords, fh->size);
         if (fh->coords == NULL)
             pm_error("out of memory enlarging a fillhandle");
+
+        ocp = &(fh->coords[fh->n - 1]);
     }
 
     /* Check for extremum and set the edge number. */
@@ -951,8 +1044,8 @@ ppmd_fill_drawprocp(pixel **     const pixels,
     } else {
         int dx, dy;
 
-        dx = p.x - ocp->x;
-        dy = p.y - ocp->y;
+        dx = p.x - ocp->point.x;
+        dy = p.y - ocp->point.y;
         if (dx < -1 || dx > 1 || dy < -1 || dy > 1) {
             /* Segment break.  Close off old one. */
             if (fh->startydir != 0 && fh->ydir != 0)
@@ -960,12 +1053,14 @@ ppmd_fill_drawprocp(pixel **     const pixels,
                     /* Oops, first edge and last edge are the same.
                        Renumber the first edge in the old segment.
                     */
+                    const coord * const fcpLast= &(fh->coords[fh->n -1]); 
                     coord * fcp;
+
                     int oldedge;
 
                     fcp = &(fh->coords[fh->segstart]);
                     oldedge = fcp->edge;
-                    for ( ; fcp->edge == oldedge; ++fcp )
+                    for (; fcp <= fcpLast && fcp->edge == oldedge ; ++fcp)
                         fcp->edge = ocp->edge;
                 }
             /* And start new segment. */
@@ -982,8 +1077,7 @@ ppmd_fill_drawprocp(pixel **     const pixels,
                     */
                     ++fh->curedge;
                     cp = &fh->coords[fh->n];
-                    cp->x = ocp->x;
-                    cp->y = ocp->y;
+                    cp->point = ocp->point;
                     cp->edge = fh->curedge;
                     ++fh->n;
                 }
@@ -996,12 +1090,10 @@ ppmd_fill_drawprocp(pixel **     const pixels,
 
     /* Save this coord. */
     cp = &fh->coords[fh->n];
-    cp->x = p.x;
-    cp->y = p.y;
+    cp->point = p;
     cp->edge = fh->curedge;
     ++fh->n;
 }
-
 
 
 
@@ -1032,15 +1124,18 @@ yx_compare(const void * const c1Arg,
     const coord * const c1P = c1Arg;
     const coord * const c2P = c2Arg;
 
+    ppmd_point const p1 = c1P->point;
+    ppmd_point const p2 = c2P->point;
+
     int retval;
     
-    if (c1P->y > c2P->y)
+    if (p1.y > p2.y)
         retval = 1;
-    else if (c1P->y < c2P->y)
+    else if (p1.y < p2.y)
         retval = -1;
-    else if (c1P->x > c2P->x)
+    else if (p1.x > p2.x)
         retval = 1;
-    else if (c1P->x < c2P->x)
+    else if (p1.x < p2.x)
         retval = -1;
     else
         retval = 0;
@@ -1070,12 +1165,13 @@ ppmd_fill(pixel **         const pixels,
         if (fh->startydir == fh->ydir) {
             /* Oops, first edge and last edge are the same. */
             coord * fcp;
+            const coord * const fcpLast = & (fh->coords[fh->n - 1]);
             int lastedge, oldedge;
 
             lastedge = fh->coords[fh->n - 1].edge;
             fcp = &(fh->coords[fh->segstart]);
             oldedge = fcp->edge;
-            for ( ; fcp->edge == oldedge; ++fcp )
+            for ( ; fcp<=fcpLast && fcp->edge == oldedge; ++fcp )
                 fcp->edge = lastedge;
         }
     }
@@ -1098,7 +1194,7 @@ ppmd_fill(pixel **         const pixels,
             fh->coords[i-2] = t;
         }
         if (i > 0) {
-            if (cp->x == lx && cp->y == py) {
+            if (cp->point.x == lx && cp->point.y == py) {
                 eq = TRUE;
                 if (cp->edge != edge && cp->edge == pedge) {
                     /* Swap . and .-1. */
@@ -1111,8 +1207,8 @@ ppmd_fill(pixel **         const pixels,
             } else
                 eq = FALSE;
         }
-        lx    = cp->x;
-        py    = cp->y;
+        lx    = cp->point.x;
+        py    = cp->point.y;
         pedge = edge;
         edge  = cp->edge;
     }
@@ -1121,35 +1217,35 @@ ppmd_fill(pixel **         const pixels,
     for (i = 0; i < fh->n; ++i) {
         cp = &fh->coords[i];
         if (i == 0) {
-            lx       = rx = cp->x;
-            py       = cp->y;
+            lx       = rx = cp->point.x;
+            py       = cp->point.y;
             edge     = cp->edge;
             leftside = TRUE;
         } else {
-            if (cp->y != py) {
+            if (cp->point.y != py) {
                 /* Row changed.  Emit old span and start a new one. */
                 ppmd_filledrectangle(
                     pixels, cols, rows, maxval, lx, py, rx - lx + 1, 1,
                     drawProc, clientdata);
-                lx       = rx = cp->x;
-                py       = cp->y;
+                lx       = rx = cp->point.x;
+                py       = cp->point.y;
                 edge     = cp->edge;
                 leftside = TRUE;
             } else {
                 if (cp->edge == edge) {
                     /* Continuation of side. */
-                    rx = cp->x;
+                    rx = cp->point.x;
                 } else {
                     /* Edge changed.  Is it a span? */
                     if (leftside) {
-                        rx       = cp->x;
+                        rx       = cp->point.x;
                         leftside = FALSE;
                     } else {
                         /* Got a span to fill. */
                         ppmd_filledrectangle(
                             pixels, cols, rows, maxval, lx, py, rx - lx + 1,
                             1, drawProc, clientdata);
-                        lx       = rx = cp->x;
+                        lx       = rx = cp->point.x;
                         leftside = TRUE;
                     }
                     edge = cp->edge;
@@ -1224,39 +1320,31 @@ static long icos(int deg)
 
 static void
 drawGlyph(const struct ppmd_glyph * const glyphP,
-          int *                     const xP,
-          int                       const y,
+          ppmd_point *              const glyphCornerP,
           pixel **                  const pixels,
           unsigned int              const cols,
           unsigned int              const rows,
           pixval                    const maxval,
           int                       const height,
-          int                       const xpos,
-          int                       const ypos,
+          ppmd_point                const pos,
           long                      const rotcos,
           long                      const rotsin,
-          ppmd_drawproc                   drawProc,
+          ppmd_drawprocp                  drawProc,
           const void *              const clientdata
           ) {
 /*----------------------------------------------------------------------------
-   *xP is the column number of the left side of the glyph in the
-   output upon entry, and we update it to the left side of the next
-   glyph.
-
-   'y' is the row number of either the top or the bottom of the glyph
-   (I can't tell which right now) in the output.
+  *pP is either the top left or bottom left corner of the glyph cell
+  in the output upon entry, and we update it so as to move to the left
+  edge of the next glyph cell.
 -----------------------------------------------------------------------------*/
-    struct penpos penPos;
+    ppmd_point const glyphCorner = *glyphCornerP;
+    ppmd_point p;
     unsigned int commandNum;
-    int x;
     int u;  /* Used by the SCHAR macro */
 
-    x = *xP;  /* initial value */
-
-    x -= SCHAR(glyphP->header.skipBefore);
-
-    penPos.x = x;
-    penPos.y = y;
+    p = makePoint(glyphCorner.x - SCHAR(glyphP->header.skipBefore),
+                  glyphCorner.y);
+        /* initial value */
 
     for (commandNum = 0;
          commandNum < glyphP->header.commandCount;
@@ -1270,74 +1358,72 @@ drawGlyph(const struct ppmd_glyph * const glyphP,
             break;
         case CMD_DRAWLINE:
         {
-            int const nx = x + SCHAR(commandP->x);
-            int const ny = y + SCHAR(commandP->y);
+            ppmd_point const n = vectorSum(p, makePoint(SCHAR(commandP->x),
+                                                        SCHAR(commandP->y)));
+            int const mx1 = (p.x * height) / Scalef;
+            int const my1 = ((p.y - Descend) * height) / Scalef;
+            int const mx2 = (n.x * height) / Scalef;
+            int const my2 = ((n.y - Descend) * height) / Scalef;
 
-            int mx1, my1, mx2, my2;
-            int tx1, ty1, tx2, ty2;
-
-            /* Note that up until this  moment  we've  been
-               working  in  an  arbitrary model co-ordinate
-               system with  fixed  size  and  no  rotation.
-               Before  drawing  the  stroke,  transform  to
-               viewing co-ordinates to  honour  the  height
-               and angle specifications.
+            /* Note that all points above are with reference to an arbitrary
+               model co-ordinate system with fixed size and no rotation.
+               Following are the points that honor the height and angle
+               specifications.
             */
-
-            mx1 = (penPos.x * height) / Scalef;
-            my1 = ((penPos.y - Descend) * height) / Scalef;
-            mx2 = (nx * height) / Scalef;
-            my2 = ((ny - Descend) * height) / Scalef;
-            tx1 = xpos + (mx1 * rotcos - my1 * rotsin) / 65536;
-            ty1 = ypos + (mx1 * rotsin + my1 * rotcos) / 65536;
-            tx2 = xpos + (mx2 * rotcos - my2 * rotsin) / 65536;
-            ty2 = ypos + (mx2 * rotsin + my2 * rotcos) / 65536;
+            ppmd_point const t1 =
+                makePoint(pos.x + (mx1 * rotcos - my1 * rotsin) / 65536,
+                          pos.y + (mx1 * rotsin + my1 * rotcos) / 65536);
+            ppmd_point const t2 =
+                makePoint(pos.x + (mx2 * rotcos - my2 * rotsin) / 65536,
+                          pos.y + (mx2 * rotsin + my2 * rotcos) / 65536);
             
-            ppmd_line(pixels, cols, rows, maxval, tx1, ty1, tx2, ty2,
-                      drawProc, clientdata);
+            ppmd_validatePoint(t1);
+            ppmd_validatePoint(t2);
+            
+            ppmd_linep(pixels, cols, rows, maxval, t1, t2,
+                       drawProc, clientdata);
 
-            penPos.x = nx;
-            penPos.y = ny;
+            p = n;
         }
-            break;
+        break;
         case CMD_MOVEPEN:
-            penPos.x = x + SCHAR(commandP->x);
-            penPos.y = y + SCHAR(commandP->y);
+            p = vectorSum(p, makePoint(SCHAR(commandP->x),
+                                       SCHAR(commandP->y)));
             break;
         }
     }
-    x += glyphP->header.skipAfter; 
+    p.x += glyphP->header.skipAfter; 
 
-    *xP = x;
+    *glyphCornerP = makePoint(p.x + glyphP->header.skipAfter, glyphCorner.y);
 }
 
 
-/* PPMD_TEXT  --  Draw the zero-terminated  string  s,  with  its  baseline
-          starting  at  point  (x, y), inclined by angle degrees to
-          the X axis, with letters height pixels  high  (descenders
-          will  extend below the baseline).  The supplied drawproc
-          and cliendata are passed to ppmd_line which performs  the
-          actual drawing. */
 
 void
-ppmd_text(pixel**       const pixels, 
-          int           const cols, 
-          int           const rows, 
-          pixval        const maxval, 
-          int           const xpos, 
-          int           const ypos, 
-          int           const height, 
-          int           const angle, 
-          const char *  const sArg, 
-          ppmd_drawproc       drawProc,
-          const void *  const clientdata) {
-
+ppmd_textp(pixel**        const pixels, 
+           int            const cols, 
+           int            const rows, 
+           pixval         const maxval, 
+           ppmd_point     const pos,
+           int            const height, 
+           int            const angle, 
+           const char *   const sArg, 
+           ppmd_drawprocp       drawProc,
+           const void *   const clientdata) {
+/*----------------------------------------------------------------------------
+   Draw the zero-terminated string s, with its baseline starting at point
+   'pos', inclined by angle degrees to the X axis, with letters height pixels
+   high (descenders will extend below the baseline).  We pass the supplied
+   drawproc and clientdata to ppmd_linep, which performs the actual drawing.
+-----------------------------------------------------------------------------*/
     const struct ppmd_font * const fontP = ppmd_get_font();
     long rotsin, rotcos;
-    int x, y;
+    ppmd_point p;
     const char * s;
 
-    x = y = 0;
+    ppmd_validatePoint(pos);
+
+    p = makePoint(0, 0);
     rotsin = isin(-angle);
     rotcos = icos(-angle);
 
@@ -1351,16 +1437,41 @@ ppmd_text(pixel**       const pixels,
             const struct ppmd_glyph * const glyphP =
                 &fontP->glyphTable[ch - fontP->header.firstCodePoint];
 
-            drawGlyph(glyphP, &x, y, pixels, cols, rows, maxval,
-                      height, xpos, ypos, rotcos, rotsin,
+            ppmd_validatePoint(p); 
+
+            drawGlyph(glyphP, &p, pixels, cols, rows, maxval,
+                      height, pos, rotcos, rotsin,
                       drawProc, clientdata);
         } else if (ch == '\n') {
             /* Move to the left edge of the next line down */
-            y += Scalef + Descend;
-            x = 0;
+            p.y += Scalef + Descend;
+            p.x = 0;
         }
     }
 }
+
+
+
+void
+ppmd_text(pixel**       const pixels, 
+          int           const cols, 
+          int           const rows, 
+          pixval        const maxval, 
+          int           const xpos, 
+          int           const ypos, 
+          int           const height, 
+          int           const angle, 
+          const char *  const sArg, 
+          ppmd_drawproc       drawProc,
+          const void *  const clientData) {
+
+    struct drawProcXY const xy = makeDrawProcXY(drawProc, clientData);
+
+    ppmd_textp(pixels, cols, rows, maxval, makePoint(xpos, ypos),
+               height, angle, sArg, drawProcPointXY, &xy);
+}
+
+
 
 /* EXTENTS_DRAWPROC  --  Drawproc which just accumulates the extents
              rectangle bounding the text. */

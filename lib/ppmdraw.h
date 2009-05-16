@@ -33,6 +33,12 @@ ppmd_makePoint(int const x,
     return p;
 }
 
+void
+ppmd_validateCoord(int const c);
+
+void
+ppmd_validatePoint(ppmd_point const p);
+
 typedef enum {
     PPMD_PATHLEG_LINE
 } ppmd_pathlegtype;
@@ -315,6 +321,18 @@ ppmd_fill(pixel **         const pixels,
 */
 
 /* Text drawing routines. */
+
+void
+ppmd_textp(pixel**        const pixels, 
+           int            const cols, 
+           int            const rows, 
+           pixval         const maxval, 
+           ppmd_point     const pos,
+           int            const height, 
+           int            const angle, 
+           const char *   const sArg, 
+           ppmd_drawprocp       drawProc,
+           const void *   const clientdata);
 
 void
 ppmd_text(pixel**       const pixels, 
