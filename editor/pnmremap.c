@@ -623,7 +623,6 @@ convertRow(struct pam *            const pamP,
            tuplehash               const colorhash, 
            bool *                  const usehashP,
            bool                    const floyd, 
-           enum missingMethod      const missingMethod, 
            tuple                   const defaultColor,
            struct fserr *          const fserrP,
            unsigned int *          const missingCountP) {
@@ -668,7 +667,7 @@ convertRow(struct pam *            const pamP,
             floydAdjustColor(pamP, tuplerow[col], fserrP, col);
 
         lookupThroughHash(pamP, tuplerow[col], 
-                          missingMethod != MISSING_CLOSE, colorFinderP, 
+                          !!defaultColor, colorFinderP, 
                           colorhash, &colormapIndex, usehashP);
         if (floyd)
             floydPropagateErr(pamP, fserrP, col, tuplerow[col], 
@@ -676,16 +675,10 @@ convertRow(struct pam *            const pamP,
 
         if (colormapIndex == -1) {
             ++*missingCountP;
-            switch (missingMethod) {
-            case MISSING_SPECIFIED:
-                pnm_assigntuple(pamP, tuplerow[col], defaultColor);
-                break;
-            case MISSING_FIRST:
-                pnm_assigntuple(pamP, tuplerow[col], colormap[0]->tuple);
-                break;
-            default:
-                pm_error("Internal error: invalid value of missingMethod");
-            }
+
+            assert(defaultColor);  // Otherwise, lookup would have succeeded
+
+            pnm_assigntuple(pamP, tuplerow[col], defaultColor);
         } else 
             pnm_assigntuple(pamP, tuplerow[col], 
                             colormap[colormapIndex]->tuple);
@@ -708,7 +701,6 @@ copyRaster(struct pam *   const inpamP,
            tupletable     const colormap, 
            unsigned int   const colormapSize,
            bool           const floyd, 
-           enum missingMethod const missingMethod,
            tuple          const defaultColor, 
            unsigned int * const missingCountP) {
 
@@ -719,7 +711,7 @@ copyRaster(struct pam *   const inpamP,
     tuple * tuplerow = pnm_allocpamrow(inpamP);
     int row;
 
-    if (outpamP->maxval != inpamP->maxval && missingMethod != MISSING_CLOSE)
+    if (outpamP->maxval != inpamP->maxval && defaultColor)
         pm_error("The maxval of the colormap (%u) is not equal to the "
                  "maxval of the input image (%u).  This is allowable only "
                  "if you are doing an approximate mapping (i.e. you don't "
@@ -752,7 +744,7 @@ copyRaster(struct pam *   const inpamP,
         */
         convertRow(outpamP, tuplerow, colormap, colorFinderP, colorhash, 
                    &usehash,
-                   floyd, missingMethod, defaultColor, &fserr, &missingCount);
+                   floyd, defaultColor, &fserr, &missingCount);
         
         *missingCountP += missingCount;
         
@@ -766,22 +758,33 @@ copyRaster(struct pam *   const inpamP,
 
 
 static void
-remap(FILE * const ifP,
+remap(FILE *             const ifP,
       const struct pam * const outpamCommonP,
       tupletable         const colormap, 
       unsigned int       const colormapSize,
       bool               const floyd,
-      enum missingMethod const missingMethod,
       tuple              const defaultColor,
       bool               const verbose) {
+/*----------------------------------------------------------------------------
+   Remap the pixels from the raster on *ifP to the 'colormapSize' colors in
+   'colormap'.
 
+   Where the input pixel's color is in the map, just use that for the output.
+   Where it isn't, use 'defaultColor', except if that is NULL, use the
+   closest color in the map to the input color.
+
+   But if 'floyd' is true and 'defaultColor' is NULL, also do Floyd-Steinberg
+   dithering on the output so the aggregate color of a region is about the
+   same as that of the input even though the individual pixels have different
+   colors.
+-----------------------------------------------------------------------------*/
     bool eof;
     eof = FALSE;
     while (!eof) {
         struct pam inpam, outpam;
         unsigned int missingCount;
-            /* Number of pixels that were not matched in the color map (where
-               missingMethod is MISSING_CLOSE, this is always zero).
+            /* Number of pixels that were mapped to 'defaultColor' because
+               they weren't present in the color map.
             */
 
         pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(allocation_depth));
@@ -798,13 +801,71 @@ remap(FILE * const ifP,
         pnm_setminallocationdepth(&inpam, outpam.depth);
     
         copyRaster(&inpam, &outpam, colormap, colormapSize, floyd,
-                   missingMethod, defaultColor, &missingCount);
+                   defaultColor, &missingCount);
         
         if (verbose)
             pm_message("%u pixels not matched in color map", missingCount);
         
         pnm_nextimage(ifP, &eof);
     }
+}
+
+
+
+static void
+processMapFile(const char *   const mapFileName,
+               struct pam *   const outpamCommonP,
+               tupletable *   const colormapP,
+               unsigned int * const colormapSizeP,
+               tuple *        const firstColorP) {
+
+    FILE * mapfile;
+    struct pam mappam;
+    tuple ** maptuples;
+    tuple firstColor;
+
+    mapfile = pm_openr(mapFileName);
+    maptuples = pnm_readpam(mapfile, &mappam, PAM_STRUCT_SIZE(tuple_type));
+    pm_close(mapfile);
+
+    computeColorMapFromMap(&mappam, maptuples, colormapP, colormapSizeP);
+
+    firstColor = pnm_allocpamtuple(&mappam);
+    pnm_assigntuple(&mappam, firstColor, maptuples[0][0]);
+    *firstColorP = firstColor;
+
+    pnm_freepamarray(maptuples, &mappam);
+
+    *outpamCommonP = mappam; 
+    outpamCommonP->file = stdout;
+}
+
+
+
+static void
+getSpecifiedMissingColor(struct pam * const pamP,
+                         const char * const colorName,
+                         tuple *      const specColorP) {
+
+    tuple specColor;
+                             
+    specColor = pnm_allocpamtuple(pamP);
+
+    if (colorName) {
+        pixel const color = ppm_parsecolor(colorName, pamP->maxval);
+        if (pamP->depth == 3) {
+            specColor[PAM_RED_PLANE] = PPM_GETR(color);
+            specColor[PAM_GRN_PLANE] = PPM_GETG(color);
+            specColor[PAM_BLU_PLANE] = PPM_GETB(color);
+        } else if (pamP->depth == 1) {
+            specColor[0] = PPM_LUMIN(color);
+        } else {
+            pm_error("You may not use -missing with a colormap that is not "
+                     "of depth 1 or 3.  Yours has depth %u",
+                     pamP->depth);
+        }
+    }
+    *specColorP = specColor;
 }
 
 
@@ -822,9 +883,17 @@ main(int argc, char * argv[] ) {
         */
     tupletable colormap;
     unsigned int colormapSize;
+    tuple specColor;
+        /* A tuple of the color the user specified to use for input colors
+           that are not in the colormap.  Arbitrary tuple if he didn't
+           specify any.
+        */
+    tuple firstColor;
+        /* A tuple of the first color present in the map file */
     tuple defaultColor;
-        /* A tuple of the color that should replace any input color that is 
-           not in the colormap, if we're doing MISSING_SPECIFIED.
+        /* The color to which we will map an input color that is not in the
+           colormap.  NULL if we are not to map such a color to a particular
+           color (i.e. we'll choose an approximate match from the map).
         */
 
     pnm_init(&argc, argv);
@@ -832,36 +901,30 @@ main(int argc, char * argv[] ) {
     parseCommandLine(argc, argv, &cmdline);
 
     ifP = pm_openr(cmdline.inputFilespec);
-    {
-        FILE * mapfile;
-        struct pam mappam;
-        tuple ** maptuples;
 
-        mapfile = pm_openr(cmdline.mapFilespec);
-        maptuples = pnm_readpam(mapfile, &mappam, PAM_STRUCT_SIZE(tuple_type));
-        pm_close(mapfile);
+    processMapFile(cmdline.mapFilespec, &outpamCommon,
+                   &colormap, &colormapSize, &firstColor);
 
-        computeColorMapFromMap(&mappam, maptuples, &colormap, &colormapSize);
-        pnm_freepamarray(maptuples, &mappam);
+    getSpecifiedMissingColor(&outpamCommon, cmdline.missingcolor, &specColor);
 
-        outpamCommon = mappam; 
-        outpamCommon.file = stdout;
-    }
-
-    defaultColor = pnm_allocpamtuple(&outpamCommon);
-    if (cmdline.missingcolor && outpamCommon.depth == 3) {
-        pixel const color = 
-            ppm_parsecolor(cmdline.missingcolor, outpamCommon.maxval);
-        defaultColor[PAM_RED_PLANE] = PPM_GETR(color);
-        defaultColor[PAM_GRN_PLANE] = PPM_GETG(color);
-        defaultColor[PAM_BLU_PLANE] = PPM_GETB(color);
+    switch (cmdline.missingMethod) {
+    case MISSING_CLOSE:
+        defaultColor = NULL;
+        break;
+    case MISSING_FIRST:
+        defaultColor = firstColor;
+        break;
+    case MISSING_SPECIFIED:
+        defaultColor = specColor;
+        break;
     }
 
     remap(ifP, &outpamCommon, colormap, colormapSize, 
-          cmdline.floyd, cmdline.missingMethod, defaultColor,
+          cmdline.floyd, defaultColor,
           cmdline.verbose);
 
-    pnm_freepamtuple(defaultColor);
+    pnm_freepamtuple(firstColor);
+    pnm_freepamtuple(specColor);
 
     pm_close(stdout);
 

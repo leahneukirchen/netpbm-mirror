@@ -514,9 +514,14 @@ doGetCode(FILE *                const ifP,
           struct getCodeState * const gsP,
           int *                 const retvalP) {
 
-    if ((gsP->curbit+codeSize) > gsP->bufCount*8 && !gsP->streamExhausted) 
+    while (gsP->curbit + codeSize > gsP->bufCount * 8 &&
+           !gsP->streamExhausted) 
         /* Not enough left in buffer to satisfy request.  Get the next
            data block into the buffer.
+
+           Note that a data block may be as small as one byte, so we may need
+           to do this multiple times to get the full code.  (This probably
+           never happens in practice).
         */
         getAnotherBlock(ifP, gsP);
 

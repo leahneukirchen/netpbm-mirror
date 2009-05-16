@@ -26,13 +26,43 @@
 #include "ppmdraw.h"
 
 
-#define DDA_SCALE 8192
 
 struct penpos {
     int x;
     int y;
 };
 
+static long int const DDA_SCALE = 8192;
+
+#define PPMD_MAXCOORD 32767
+/*
+  Several factors govern the limit of x, y coordination values.
+
+  The limit must be representable as (signed) int for coordinates to 
+  be carried in struct penpos (immediately above).
+
+  The following calculation, done with long ints, must not overflow:
+  cy0 = cy0 + (y1 - cy0) * (cols - 1 - cx0) / (x1 - cx0);
+
+  The following must not overflow when DDA_SCALE is set to 8092:
+  dy = (y1 - y0) * DDA_SCALE / abs(x1 - x0);
+
+  Overflow conditions for ppmd_text are rather complicated, for commands
+  come from an external PPMD font file.  See comments below.  
+*/
+
+
+
+static void
+ppmd_validateCoords(int const x,
+                    int const y) {
+
+    if (x < -PPMD_MAXCOORD || x > PPMD_MAXCOORD)
+        pm_error("x coordinate out of bounds: %d", x);
+
+    if (y < -PPMD_MAXCOORD || y > PPMD_MAXCOORD)
+        pm_error("y coordinate out of bounds: %d", y);
+}
 
 
 
@@ -460,6 +490,10 @@ ppmd_line(pixel **      const pixels,
     int cx0, cy0, cx1, cy1;
     bool noLine;  /* There's no line left after clipping */
 
+    ppmd_validateCoords(cols, rows);
+    ppmd_validateCoords(x0, y0);
+    ppmd_validateCoords(x1, y1);
+
     if (lineclip) {
         clipLine(x0, y0, x1, y1, cols, rows, &cx0, &cy0, &cx1, &cy1, &noLine);
     } else {
@@ -610,13 +644,31 @@ ppmd_circle(pixel **      const pixels,
     int x0, y0, x, y, prevx, prevy, nopointsyet;
     long sx, sy, e;
 
+    if (radius < 0)
+        pm_error("Error drawing circle.  Radius must be positive: %d", radius);
+    else if (radius == 0)
+        return;
+    else if (radius >= DDA_SCALE)
+        pm_error("Error drawing circle.  Radius too large: %d", radius);
+
+    ppmd_validateCoords(cx + radius, cy + radius);
+    ppmd_validateCoords(cx - radius, cy - radius);
+
     x0 = x = radius;
     y0 = y = 0;
     sx = x * DDA_SCALE + DDA_SCALE / 2;
     sy = y * DDA_SCALE + DDA_SCALE / 2;
     e = DDA_SCALE / radius;
-    drawPoint(drawProc, clientdata,
-              pixels, cols, rows, maxval, x + cx, y + cy);
+
+    /* If lineclip is on, draw only points within pixmap.
+       Initial point is 3 o'clock. 
+       If lineclip is off, "draw" all points (by designated drawproc).
+    */
+
+    if ((x + cx >= 0 && x + cx < cols && y + cy >= 0 && y + cy < rows) ||
+        !lineclip)
+        drawPoint(drawProc, clientdata,
+                  pixels, cols, rows, maxval, x + cx, y + cy);
     nopointsyet = 1;
 
     do {
@@ -628,8 +680,10 @@ ppmd_circle(pixel **      const pixels,
         y = sy / DDA_SCALE;
         if (x != prevx || y != prevy) {
             nopointsyet = 0;
-            drawPoint(drawProc, clientdata,
-                      pixels, cols, rows, maxval, x + cx, y + cy);
+            if ((x + cx >= 0 && x + cx < cols && y + cy >= 0 && y + cy < rows)
+                || !lineclip) 
+                drawPoint(drawProc, clientdata,
+                          pixels, cols, rows, maxval, x + cx, y + cy);
         }
     }
     while (nopointsyet || x != x0 || y != y0);
@@ -641,9 +695,9 @@ ppmd_circle(pixel **      const pixels,
 
 typedef struct
 {
-    short x;
-    short y;
-    short edge;
+    int x;
+    int y;
+    int edge;
 } coord;
 
 typedef struct fillobj {
@@ -736,6 +790,8 @@ ppmd_fill_drawproc(pixel**      const pixels,
         REALLOCARRAY(fh->coords, fh->size);
         if (fh->coords == NULL)
             pm_error( "out of memory enlarging a fillhandle" );
+
+        ocp = &(fh->coords[fh->n - 1]);
     }
 
     /* Check for extremum and set the edge number. */
@@ -756,12 +812,14 @@ ppmd_fill_drawproc(pixel**      const pixels,
                     /* Oops, first edge and last edge are the same.
                        Renumber the first edge in the old segment.
                     */
+                    const coord * const fcpLast= &(fh->coords[fh->n -1]); 
                     coord * fcp;
+
                     int oldedge;
 
                     fcp = &(fh->coords[fh->segstart]);
                     oldedge = fcp->edge;
-                    for ( ; fcp->edge == oldedge; ++fcp )
+                    for (; fcp <= fcpLast && fcp->edge == oldedge ; ++fcp)
                         fcp->edge = ocp->edge;
                 }
             /* And start new segment. */
@@ -850,12 +908,13 @@ ppmd_fill(pixel **         const pixels,
         if (fh->startydir == fh->ydir) {
             /* Oops, first edge and last edge are the same. */
             coord * fcp;
+            const coord * const fcpLast = & (fh->coords[fh->n - 1]);
             int lastedge, oldedge;
 
             lastedge = fh->coords[fh->n - 1].edge;
             fcp = &(fh->coords[fh->segstart]);
             oldedge = fcp->edge;
-            for ( ; fcp->edge == oldedge; ++fcp )
+            for ( ; fcp<=fcpLast && fcp->edge == oldedge; ++fcp )
                 fcp->edge = lastedge;
         }
     }
@@ -1082,6 +1141,9 @@ drawGlyph(const struct ppmd_glyph * const glyphP,
             ty1 = ypos + (mx1 * rotsin + my1 * rotcos) / 65536;
             tx2 = xpos + (mx2 * rotcos - my2 * rotsin) / 65536;
             ty2 = ypos + (mx2 * rotsin + my2 * rotcos) / 65536;
+
+            ppmd_validateCoords(tx1, ty1);
+            ppmd_validateCoords(tx2, ty2);
             
             ppmd_line(pixels, cols, rows, maxval, tx1, ty1, tx2, ty2,
                       drawProc, clientdata);
@@ -1127,6 +1189,8 @@ ppmd_text(pixel**       const pixels,
     int x, y;
     const char * s;
 
+    ppmd_validateCoords(xpos, ypos);
+
     x = y = 0;
     rotsin = isin(-angle);
     rotcos = icos(-angle);
@@ -1140,6 +1204,8 @@ ppmd_text(pixel**       const pixels,
 
             const struct ppmd_glyph * const glyphP =
                 &fontP->glyphTable[ch - fontP->header.firstCodePoint];
+
+            ppmd_validateCoords(x, y); 
 
             drawGlyph(glyphP, &x, y, pixels, cols, rows, maxval,
                       height, xpos, ypos, rotcos, rotsin,
