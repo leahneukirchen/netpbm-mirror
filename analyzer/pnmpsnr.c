@@ -100,6 +100,11 @@ reportPsnr(struct pam const pam,
     double const yPsnr =
         square(pam.maxval) / (ySumSqDiff / (pam.width * pam.height));
 
+    /* Note that in the important special case that the images are
+       identical, the sum square differences are identically 0.0.  No
+       precision error; no rounding error.
+    */
+
     if (color) {
         double const cbPsnr =
             square(pam.maxval) / (cbSumSqDiff / (pam.width * pam.height));
@@ -107,20 +112,20 @@ reportPsnr(struct pam const pam,
             square(pam.maxval) / (crSumSqDiff / (pam.width * pam.height));
 
         pm_message("PSNR between %s and %s:", filespec1, filespec2);
-        if (yPsnr < 1e10)
+        if (ySumSqDiff > 0)
             pm_message("Y  color component: %.2f dB", 10 * log10(yPsnr));
         else
             pm_message("Y color component does not differ.");
-        if (cbPsnr < 1e10)
+        if (cbSumSqDiff > 0)
             pm_message("Cb color component: %.2f dB", 10 * log10(cbPsnr));
         else
-        pm_message("Cb color component does not differ.");
-        if (crPsnr < 1e10)
+            pm_message("Cb color component does not differ.");
+        if (crSumSqDiff > 0)
             pm_message("Cr color component: %.2f dB", 10 * log10(crPsnr));
         else
             pm_message("Cr color component does not differ.");
     } else {
-        if (yPsnr < 1e10)
+        if (ySumSqDiff == 0)
             pm_message("PSNR between %s and %s: %.2f dB",
                        filespec1, filespec2, 10 * log10(yPsnr));
         else
@@ -187,8 +192,8 @@ main (int argc, char **argv) {
                 crSumSqDiff += crSqDiff;
                 
             } else {
-                unsigned int yDiffSq;
-                yDiffSq = square(udiff(tuplerow1[col][0], tuplerow2[col][0]));
+                unsigned int const yDiffSq =
+                    square(udiff(tuplerow1[col][0], tuplerow2[col][0]));
                 ySumSqDiff += yDiffSq;
             }
         }
