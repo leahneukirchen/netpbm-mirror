@@ -13,6 +13,7 @@
 #include <math.h>
 
 #include "pm_c_util.h"
+#include "nstring.h"
 #include "pam.h"
 
 #define MAXFILES 16
@@ -92,7 +93,7 @@ reportPsnr(struct pam const pam,
            char       const filespec1[],
            char       const filespec2[]) {
 
-    bool const color = (strcmp(pam.tuple_type, PAM_PPM_TUPLETYPE) == 0);
+    bool const color = streq(pam.tuple_type, PAM_PPM_TUPLETYPE);
 
     /* The PSNR is the ratio of the maximum possible mean square difference
        to the actual mean square difference.
