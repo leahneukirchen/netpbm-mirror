@@ -8,6 +8,9 @@ not yet  BJH  Release 10.47.00
 
               Add pamsistoaglyph.  Thanks Scott Pakin.
 
+              pnmpsnr: Use more precise math to conclude that images are
+              identical.
+
               Add /usr/share/netpbm/rgb.txt to search path for color
               dictionary.
 
