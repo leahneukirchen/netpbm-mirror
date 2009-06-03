@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pnmremap User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmremap</H1>
-Updated: 26 April 2009
+Updated: 03 June 2009
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -277,6 +277,17 @@ match the maxval of your palette image.
 <B><A HREF="ppmdither.html">ppmdither</A></B>,
 <B><A HREF="ppmquant.html">ppmquant</A></B>,
 <B><A HREF="ppm.html">ppm</A></B>
+
+<H2 id="history">HISTORY</H2>
+
+<p><b>pnmremap</b> first appeared in Netpbm 9.23 (January 2002).
+Before that, its function was available only as part of the function
+of <b>pnmquant</b> (which was derived from the much older
+<b>ppmquant</b>).  Color quantization really has two main subfunctions, so
+Netpbm 9.23 split it out into two separate programs:
+<b>pnmcolormap</b> and <b>pnmremap</b> and then Netpbm 9.24 replaced
+<b>pnmquant</b> with a program that simply calls <b>pnmcolormap</b> and
+<b>pnmremap</b>.
 
 <H2 id="author">AUTHOR</H2>
 

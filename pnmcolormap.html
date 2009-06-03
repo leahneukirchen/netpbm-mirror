@@ -6,13 +6,11 @@ Updated: 23 October 2005
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
 pnmcolormap - create quantization color map for a Netpbm image
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>pnmcolormap</B>
 
@@ -28,8 +26,7 @@ pnmcolormap - create quantization color map for a Netpbm image
 
 [<I>pnmfile</I>]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -77,15 +74,13 @@ ignored any image after the first.
 an input image, <B>pamseq</B>, <b>ppmmake</b>, and <b>pnmcat</b> can
 be useful.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>PARAMETERS</H2>
+<H2 id="parameters">PARAMETERS</H2>
 
 <P>The single parameter, which is required, is the number of colors you want
 in the output colormap.  <B>pnmcolormap</B> may produce a color map with slightly fewer colors than that.  You may
 specify <B>all</B> to get a colormap of every color in the input image (no quantization).
 
-<A NAME="options">&nbsp;</A>
-<H2>OPTIONS</H2>
+<H2 id="options">OPTIONS</H2>
 
 <P>All options can be abbreviated to their shortest unique prefix.  You
 may use two hyphens instead of one to designate an option.  You may
@@ -128,8 +123,7 @@ href="#quant">QUANTIZATION METHOD</a>.
 </DL>
 
 
-<A NAME="quant">&nbsp;</A>
-<H2>QUANTIZATION METHOD</H2>
+<H2 id="quant">QUANTIZATION METHOD</H2>
 
 <P>A quantization method is a way to choose which colors, being fewer
 in number than in the input, you want in the output.
@@ -166,14 +160,12 @@ which do not appear in the input at all.
 <P>Select among these with the <B>-center</B>, <B>-meancolor</B>, and
 <B>-meanpixel</B> options.  The default is <B>-center</B>.
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>REFERENCES</H2>
+<H2 id="references">REFERENCES</H2>
 
 &quot;Color Image Quantization for Frame Buffer Display&quot; by Paul Heckbert,
 SIGGRAPH '82 Proceedings, page 297.
 
-<A NAME="lbAH">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="pnmremap.html">pnmremap</A></B>,
 <B><A HREF="pnmquant.html">pnmquant</A></B>,
@@ -185,8 +177,7 @@ SIGGRAPH '82 Proceedings, page 297.
 <B><A HREF="pnmcat.html">pnmcat</A></B>,
 <B><A HREF="ppm.html">ppm</A></B>
 
-<A NAME="history">&nbsp;</A>
-<H2>HISTORY</H2>
+<H2 id="history">HISTORY</H2>
 
 <P>Before Netpbm 10.15 (April 2003), <b>pnmcolormap</b> used a lot
 more memory for large images because it kept the entire input image in
@@ -204,26 +195,23 @@ Netpbm 9.23 split it out into two separate programs:
 <b>pnmquant</b> with a program that simply calls <b>pnmcolormap</b> and
 <b>pnmremap</b>.
 
-<A NAME="lbAI">&nbsp;</A>
-<H2>AUTHOR</H2>
+<H2 id="author">AUTHOR</H2>
 
 Copyright (C) 1989, 1991 by Jef Poskanzer.
 
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">PARAMETERS</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#parameters">PARAMETERS</A>
 <LI><A HREF="#options">OPTIONS</A>
 <LI><A HREF="#quant">QUANTIZATION METHOD</A>
-<LI><A HREF="#lbAG">REFERENCES</A>
-<LI><A HREF="#lbAH">SEE ALSO</A>
+<LI><A HREF="#references">REFERENCES</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
 <LI><A HREF="#history">HISTORY</A>
-<LI><A HREF="#lbAI">AUTHOR</A>
+<LI><A HREF="#author">AUTHOR</A>
 </UL>
 </BODY>
 </HTML>
