@@ -74,6 +74,8 @@ not yet  BJH  Release 10.47.00
               is not set.  Don't try different temp file names forever; the
               problem may not be the filename.
 
+              configure: offer Gcc as an optional compiler for HP-UX.
+
 09.03.29 BJH  Release 10.46.00
 
               xwdtopnm: Add -cmapdump .

@@ -520,7 +520,7 @@ sub getCompiler($$$) {
                                "TRU64"   => 1,
                                "SCO"     => 1,
                                "AIX"     => 1,
-                               "HP"      => 1);
+                               "HP-UX"   => 1);
 
     my %gccUsualPlatform = ("GNU"     => 1,
                             "NETBSD"  => 1,
