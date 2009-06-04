@@ -3,7 +3,7 @@ HOW TO INSTALL NETPBM
 
 For most typical platforms, you can just do
 
-    configure
+    ./configure
 
 followed by
 
@@ -16,7 +16,7 @@ To build all the programs.  Then
 to gather all the installable parts into a specified directory, and 
 finally
 
-    installnetpbm
+    ./installnetpbm
 
 to install it into your system.  
 
