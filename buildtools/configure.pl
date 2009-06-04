@@ -2096,6 +2096,7 @@ if ($platform eq "GNU") {
         # We don't know what to do here.  We used to (before 10.20) just
         # just assume the compiler was gcc.  We know that the gcc stuff
         # above does NOT work for HP native compiler.
+        push(@config_mk, "LDSHLIB =\n");
     }
 } elsif ($platform eq "AIX") {
     push(@config_mk, 'LDFLAGS += -L /usr/pubsw/lib', "\n");
