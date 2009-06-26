@@ -449,7 +449,7 @@ sub getCompiler($$) {
                                "TRU64"   => 1,
                                "SCO"     => 1,
                                "AIX"     => 1,
-                               "HP"      => 1);
+                               "HP-UX"   => 1);
 
     my %gccUsualPlatform = ("GNU"     => 1,
                             "NETBSD"  => 1,
@@ -1893,6 +1893,7 @@ if ($platform eq "GNU") {
         # We don't know what to do here.  We used to (before 10.20) just
         # just assume the compiler was gcc.  We know that the gcc stuff
         # above does NOT work for HP native compiler.
+        push(@config_mk, "LDSHLIB =\n");
     }
 } elsif ($platform eq "AIX") {
     push(@Makefile_config, 'LDFLAGS = -L /usr/pubsw/lib', "\n");
