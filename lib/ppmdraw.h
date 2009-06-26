@@ -219,6 +219,18 @@ ppmd_polyspline(pixel **     const pixels,
                 const void * const clientdata);
 
 void
+ppmd_spline4p(pixel **       const pixels, 
+              unsigned int   const cols, 
+              unsigned int   const rows, 
+              pixval         const maxval, 
+              ppmd_point     const endPt0,
+              ppmd_point     const endPt1,
+              ppmd_point     const ctlPt0,
+              ppmd_point     const ctlPt1,
+              ppmd_drawprocp       drawproc,
+              const void *   const clientdata);
+
+void
 ppmd_circlep(pixel **       const pixels, 
              unsigned int   const cols, 
              unsigned int   const rows, 

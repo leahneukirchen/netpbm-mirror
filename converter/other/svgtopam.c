@@ -216,7 +216,16 @@ makePoint(uint const x,
     return p;
 }
 
+static ppmd_point
+makePpmdPoint(point const arg) {
 
+    ppmd_point p;
+
+    p.x = arg.x;
+    p.y = arg.y;
+
+    return p;
+}
 
 typedef enum {
     PATH_MOVETO,
@@ -448,12 +457,12 @@ outlineObject(path *           const pathP,
                     pm_message("Doing cubic spline to (%u, %u)",
                                dest.x, dest.y);
                 /* We need to write ppmd_spline4() */
-                ppmd_spline4(NULL, 0, 0, 0,
-                             currentPos.x, currentPos.y,
-                             ctl1.x, ctl1.y,
-                             ctl2.x, ctl2.y,
-                             dest.x, dest.y,
-                             ppmd_fill_drawproc, fillObjP);
+                ppmd_spline4p(NULL, 0, 0, 0,
+                              makePpmdPoint(currentPos),
+                              makePpmdPoint(dest),
+                              makePpmdPoint(ctl1),
+                              makePpmdPoint(ctl2),
+                              ppmd_fill_drawprocp, fillObjP);
                 currentPos = dest;
             } break;
             }

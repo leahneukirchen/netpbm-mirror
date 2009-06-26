@@ -834,6 +834,31 @@ ppmd_polyspline(pixel **      const pixels,
 
 
 void
+ppmd_spline4p(pixel **       const pixels, 
+              unsigned int   const cols, 
+              unsigned int   const rows, 
+              pixval         const maxval, 
+              ppmd_point     const endPt0,
+              ppmd_point     const endPt1,
+              ppmd_point     const ctlPt0,
+              ppmd_point     const ctlPt1,
+              ppmd_drawprocp       drawproc,
+              const void *   const clientdata) {
+/*----------------------------------------------------------------------------
+   Draw a cubic spline from 'endPt0' to 'endPt1', using 'ctlPt0' and
+   'ctlPt1' as control points in the classic way: a line through
+   'endPt0' and 'ctlPt0' is tangent to the curve at 'entPt0' and the
+   length of that line controls "enthusiasm," whatever that is.
+   Same for 'endPt1' and 'ctlPt1'.
+-----------------------------------------------------------------------------*/
+
+    pm_error("ppmd_spline4p() has not been written yet!");
+
+}
+
+
+
+void
 ppmd_circlep(pixel **       const pixels, 
              unsigned int   const cols, 
              unsigned int   const rows, 
