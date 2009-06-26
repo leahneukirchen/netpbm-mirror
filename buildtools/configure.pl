@@ -99,13 +99,17 @@ sub tmpdir() {
 
     my $retval;
     
-    if ($ENV{"TMPDIR"}) {
-        $retval = $ENV{"TMPDIR"};
+    if ($ENV{'TMPDIR'}) {
+        $retval = $ENV{'TMPDIR'};
+    } elsif ($ENV{'TEMP'}) {
+        $retval = $ENV{'TEMP'};
     } else {
-        if ($Config{'osvers'} eq "djgpp") {
-            $retval = "/dev/env/DJDIR/tmp";
+        if ($Config{'osvers'} eq 'djgpp') {
+            $retval = '/dev/env/DJDIR/tmp';
         } else {
-            $retval =  "/tmp";
+            if (-d('/tmp')) {
+                $retval =  '/tmp';
+            }
         }
     }
     return $retval;
@@ -122,14 +126,43 @@ sub tempFile($) {
 #                                       DIR=>File::Spec->tmpdir(),
 #                                       UNLINK=>0);
     my ($suffix) = @_;
+
     my $fileName;
     local *file;  # For some inexplicable reason, must be local, not my
-    my $i;
-    $i = 0;
-    do {
-        $fileName = tmpdir() . "/netpbm" . $i++ . $suffix;
-    } until sysopen(*file, $fileName, O_RDWR|O_CREAT|O_EXCL);
 
+    my $tmpdir = tmpdir();
+
+    if (!defined($tmpdir)) {
+        print STDERR ("Cannot determine what directory to use for " .
+                      "temporary files.  " .
+                      "Set TMPDIR environment variable to fix this.\n");
+        exit(1);
+    } else {
+        if (!-d($tmpdir)) {
+            print STDERR ("Temporary file directory '$tmpdir' does not " .
+                          "exist.  Create it or set TMPDIR environment " .
+                          "variable appropriately\n");
+            exit(1);
+        } else {
+            for (my $i = 0; $i < 50 && !defined($fileName); ++$i) {
+                my $trialFileName = tmpdir() . "/netpbm" . $i . $suffix;
+
+                my $success = sysopen(*file,
+                                      $trialFileName,
+                                      O_RDWR|O_CREAT|O_EXCL);
+
+                if ($success) {
+                    $fileName = $trialFileName;
+                }
+            }
+
+            if (!defined($fileName)) {
+                print STDERR ("Unable to create a temporary file in " .
+                              "directory '$tmpdir'\n");
+                exit(1);
+            }
+        }
+    }
     return(*file, $fileName);
 }
 
@@ -487,7 +520,7 @@ sub getCompiler($$) {
                                "TRU64"   => 1,
                                "SCO"     => 1,
                                "AIX"     => 1,
-                               "HP"      => 1);
+                               "HP-UX"   => 1);
 
     my %gccUsualPlatform = ("GNU"     => 1,
                             "NETBSD"  => 1,
@@ -2060,6 +2093,7 @@ if ($platform eq "GNU") {
         # We don't know what to do here.  We used to (before 10.20) just
         # just assume the compiler was gcc.  We know that the gcc stuff
         # above does NOT work for HP native compiler.
+        push(@config_mk, "LDSHLIB =\n");
     }
 } elsif ($platform eq "AIX") {
     push(@config_mk, 'LDFLAGS += -L /usr/pubsw/lib', "\n");
