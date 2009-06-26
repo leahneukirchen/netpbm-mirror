@@ -1336,7 +1336,26 @@ static long icos(int deg)
     return isin(deg + 90);
 }  
 
-#define SCHAR(x) (u = (x), (((u) & 0x80) ? ((u) | (-1 ^ 0xFF)) : (u)))
+static int
+twosCompByteValue(unsigned char const c) {
+/*----------------------------------------------------------------------------
+   E.g. if 'c' is 0x5, return 5.  If 'c' is 0xF0, return -16.
+-----------------------------------------------------------------------------*/
+    return (char)c;
+}
+
+static int
+glyphSkipBefore(const struct ppmd_glyph * const glyphP) {
+
+    return twosCompByteValue(glyphP->header.skipBefore);
+}
+
+static ppmd_point
+commandPoint(const struct ppmd_glyphCommand * const commandP) {
+
+    return makePoint(twosCompByteValue(commandP->x),
+                     twosCompByteValue(commandP->y));
+}
 
 #define Scalef 21       /* Font design size */
 #define Descend 9       /* Descender offset */
@@ -1365,10 +1384,8 @@ drawGlyph(const struct ppmd_glyph * const glyphP,
     ppmd_point const glyphCorner = *glyphCornerP;
     ppmd_point p;
     unsigned int commandNum;
-    int u;  /* Used by the SCHAR macro */
 
-    p = makePoint(glyphCorner.x - SCHAR(glyphP->header.skipBefore),
-                  glyphCorner.y);
+    p = makePoint(glyphCorner.x - glyphSkipBefore(glyphP), glyphCorner.y);
         /* initial value */
 
     for (commandNum = 0;
@@ -1383,8 +1400,7 @@ drawGlyph(const struct ppmd_glyph * const glyphP,
             break;
         case CMD_DRAWLINE:
         {
-            ppmd_point const n = vectorSum(p, makePoint(SCHAR(commandP->x),
-                                                        SCHAR(commandP->y)));
+            ppmd_point const n = vectorSum(p, commandPoint(commandP));
             int const mx1 = (p.x * height) / Scalef;
             int const my1 = ((p.y - Descend) * height) / Scalef;
             int const mx2 = (n.x * height) / Scalef;
@@ -1412,8 +1428,7 @@ drawGlyph(const struct ppmd_glyph * const glyphP,
         }
         break;
         case CMD_MOVEPEN:
-            p = vectorSum(p, makePoint(SCHAR(commandP->x),
-                                       SCHAR(commandP->y)));
+            p = vectorSum(p, commandPoint(commandP));
             break;
         }
     }
