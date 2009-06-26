@@ -764,7 +764,7 @@ mapTuple(struct pam *            const pamP,
     if (colormapIndex == -1) {
         *missingP = TRUE;
 
-        assert(defaultColor);  // Otherwise, lookup would have succeeded
+        assert(defaultColor);  /* Otherwise, lookup would have succeeded */
 
         pnm_assigntuple(pamP, outTuple, defaultColor);
     } else {
