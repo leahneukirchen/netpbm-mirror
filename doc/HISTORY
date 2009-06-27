@@ -70,6 +70,8 @@ not yet  BJH  Release 10.47.00
               Lots of changes to integer code, bit access, word access, etc.
               None functional.  Some speedup.
 
+              make distclean: remove lib/compile.h.
+              
               configure: use TEMP environment variable for TMPDIR if TMPDIR
               is not set.  Don't try different temp file names forever; the
               problem may not be the filename.

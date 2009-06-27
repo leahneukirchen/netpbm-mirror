@@ -276,7 +276,7 @@ ifeq ($(NETPBMLIBTYPE),dylib)
 	$(SYMLINK) ../lib/libnetpbm.$(MAJ).$(MIN).dylib libnetpbm.dylib
 endif
 
-clean: localclean
+distclean clean: localclean
 
 .PHONY: localclean
 localclean:
