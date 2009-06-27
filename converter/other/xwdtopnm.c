@@ -84,23 +84,6 @@ zero_bits(const unsigned long mask) {
 
 
 
-static int
-one_bits(const unsigned long input) {
-/*----------------------------------------------------------------------------
-   Return the number of one bits in the binary representation of 'input'.
------------------------------------------------------------------------------*/
-    int one_bits;
-    unsigned long mask;
-
-    one_bits = 0;   /* initial value */
-    for (mask = 0x00000001; mask != 0x00000000; mask <<= 1)
-        if (input & mask) one_bits++;
-
-    return(one_bits);
-}
-
-
-
 static void
 parseCommandLine(int argc, char ** argv,
                  struct cmdlineInfo * const cmdlineP) {

@@ -485,8 +485,8 @@ sub getPlatform() {
 
 
 
-sub getCompiler($$) {
-    my ($platform, $compilerR) = @_;
+sub getCompiler($$$) {
+    my ($platform, $subplatform, $compilerR) = @_;
 #-----------------------------------------------------------------------------
 #  Here are some of the issues surrounding choosing a compiler:
 #
@@ -530,6 +530,8 @@ sub getCompiler($$) {
                             );
 
     if ($gccUsualPlatform{$platform}) {
+        $$compilerR = "gcc";
+    } elsif ($platform eq "WINDOWS" && $subplatform eq "cygwin") {
         $$compilerR = "gcc";
     } elsif ($gccOptionalPlatform{$platform}) {
         print("GNU compiler or native operating system compiler (cc)?\n");
@@ -1797,7 +1799,8 @@ if ($platform eq "NONE") {
     exit;
 }
 
-getCompiler($platform, \my $compiler);
+getCompiler($platform, $subplatform, \my $compiler);
+
 getLinker($platform, $compiler, \my $baseLinker, \my $linkViaCompiler);
 
 chooseTestCompiler($compiler, \$testCc);

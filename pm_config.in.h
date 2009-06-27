@@ -58,19 +58,12 @@
 ** path here.  This is used by PPM to parse color names into rgb values.
 ** If you don't have such a file, comment this out and use the alternative
 ** hex and decimal forms to specify colors (see ppm/pgmtoppm.1 for details).  */
-/* There was some evidence before Netpbm 9.1 that the rgb database macros
-   might be already set right now.  I couldn't figure out how, so I changed
-   their meanings and they are now set unconditionally.  -Bryan 00.05.03.
-*/
-#ifdef VMS
-#define RGB_DB1 "PBMplus_Dir:RGB.TXT"
-#define RGB_DB2 "PBMplus_Dir:RGB.TXT"
-#define RGB_DB3 "PBMplus_Dir:RGB.TXT"
-#else
-#define RGB_DB1 "/usr/lib/X11/rgb.txt"
-#define RGB_DB2 "/usr/share/X11/rgb.txt"
-#define RGB_DB3 "/usr/X11R6/lib/X11/rgb.txt"
-#endif
+
+#define RGB_DB_PATH \
+"/usr/share/netpbm/rgb.txt:" \
+"/usr/lib/X11/rgb.txt:" \
+"/usr/share/X11/rgb.txt:" \
+"/usr/X11R6/lib/X11/rgb.txt"
 
 /* CONFIGURE: This is the name of an environment variable that tells
 ** where the color names database is.  If the environment variable isn't
@@ -203,6 +196,60 @@ extern int rand();
   #else   
     #define LITERAL_FN_DEF_MATCH 0
   #endif
+#endif
+
+/* CONFIGURE: GNUC extensions are used in performance critical places
+   when available.  Test whether they exist.
+
+   Turn off by defining NO_GCC_BUILTINS.
+
+   Note that though these influence the code produced, the compiler
+   setting ultimately decides what operands are used.  If you
+   want a generic build, check the manual and adjust CFLAGS in
+   config.mk accordingly.
+
+   For example, if you want binaries that run on all Intel x86-32
+   family CPUs back to 80386, adding "-march=i386" to CFLAGS in
+   config.mk is much better than setting NO_GCC_BUILTINS to 1.
+   If you want to be extra sure use:
+   "-march=i386 -mno-mmx -mno-sse -DNO_GCC_BUILTINS"
+*/
+
+#if defined(__GNUC__) && !defined(NO_GCC_BUILTINS)
+  #define GCCVERSION __GNUC__*100 + __GNUC_MINOR__
+#else
+  #define GCCVERSION 0
+#endif
+
+#ifndef HAVE_GCC_MMXSSE
+#if GCCVERSION >=301 && defined(__MMX__) && defined(__SSE__)
+  #define HAVE_GCC_MMXSSE 1
+  /* Use GCC builtins to directly access MMX/SSE features */ 
+#else
+  #define HAVE_GCC_MMXSSE 0
+#endif
+#endif
+
+#ifndef HAVE_GCC_BITCOUNT
+#if GCCVERSION >=304
+  #define HAVE_GCC_BITCOUNT 1
+  /* Use __builtin_clz(),  __builtin_ctz() (and variants for long)
+     to count leading/trailing 0s in int (and long). */
+#else
+  #define HAVE_GCC_BITCOUNT 0
+#endif
+#endif
+
+#ifndef HAVE_GCC_BSWAP
+#if GCCVERSION >=403
+  #define HAVE_GCC_BSWAP 1
+  /* Use __builtin_bswap32(), __builtin_bswap64() for endian conversion.
+     Available from GCC v 4.3 onward.
+     NOTE: On intel CPUs this may produce the bswap operand which is not
+     available on 80386. */
+#else
+  #define HAVE_GCC_BSWAP 0
+#endif
 #endif
 
 

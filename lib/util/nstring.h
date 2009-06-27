@@ -28,8 +28,16 @@ extern "C" {
     (strncpy(A+strlen(A), B, sizeof(A)-strlen(A)), *((A)+sizeof(A)-1) = '\0')
 #define STRSEQ(A, B) \
 	(strneq((A), (B), sizeof(A)))
-#define MEMSZERO(A) \
-    bzero((A), sizeof(A))
+
+#define MEMEQ(a,b,c) (memcmp(a, b, c) == 0)
+
+#define MEMSEQ(a,b) (memeq(a, b, sizeof(*(a))) == 0)
+
+#define MEMSSET(a,b) (memset(a, b, sizeof(*(a))))
+
+#define MEMSCPY(a,b) (memcpy(a, b, sizeof(*(a))))
+
+#define MEMSZERO(a) (MEMSSET(a, 0))
 
 
 static __inline__ int

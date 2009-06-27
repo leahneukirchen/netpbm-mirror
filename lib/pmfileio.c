@@ -452,17 +452,26 @@ abortWithReadError(FILE * const ifP) {
 
 
 
+static unsigned char
+getcNofail(FILE * const ifP) {
+
+    int c;
+
+    c = getc(ifP);
+
+    if (c == EOF)
+        abortWithReadError(ifP);
+
+    return (unsigned char)c;
+}
+
+
+
 void
 pm_readchar(FILE * const ifP,
             char * const cP) {
     
-    int c;
-
-    c = getc(ifP);
-    if (c == EOF)
-        abortWithReadError(ifP);
-
-    *cP = c;
+    *cP = (char)getcNofail(ifP);
 }
 
 
@@ -479,18 +488,11 @@ pm_writechar(FILE * const ofP,
 int
 pm_readbigshort(FILE *  const ifP, 
                 short * const sP) {
-    int c;
 
     unsigned short s;
 
-    c = getc(ifP);
-    if (c == EOF)
-        abortWithReadError(ifP);
-    s = (c & 0xff) << 8;
-    c = getc(ifP);
-    if (c == EOF)
-        abortWithReadError(ifP);
-    s |= c & 0xff;
+    s  = getcNofail(ifP) << 8;
+    s |= getcNofail(ifP) << 0;
 
     *sP = s;
 
@@ -515,25 +517,12 @@ int
 pm_readbiglong(FILE * const ifP, 
                long * const lP) {
 
-    int c;
     unsigned long l;
 
-    c = getc(ifP);
-    if (c == EOF)
-        abortWithReadError(ifP);
-    l = c << 24;
-    c = getc(ifP);
-    if (c == EOF)
-        abortWithReadError(ifP);
-    l |= c << 16;
-    c = getc(ifP);
-    if (c == EOF)
-        abortWithReadError(ifP);
-    l |= c << 8;
-    c = getc(ifP);
-    if (c == EOF)
-        abortWithReadError(ifP);
-    l |= c;
+    l  = getcNofail(ifP) << 24;
+    l |= getcNofail(ifP) << 16;
+    l |= getcNofail(ifP) <<  8;
+    l |= getcNofail(ifP) <<  0;
 
     *lP = l;
 
@@ -559,18 +548,10 @@ pm_writebiglong(FILE * const ofP,
 int
 pm_readlittleshort(FILE *  const ifP, 
                    short * const sP) {
-    int c;
     unsigned short s;
 
-    c = getc(ifP);
-    if (c == EOF)
-        abortWithReadError(ifP);
-    s = c & 0xff;
-
-    c = getc(ifP);
-    if (c == EOF)
-        abortWithReadError(ifP);
-    s |= (c & 0xff) << 8;
+    s  = getcNofail(ifP) << 0;
+    s |= getcNofail(ifP) << 8;
 
     *sP = s;
 
@@ -594,25 +575,12 @@ pm_writelittleshort(FILE * const ofP,
 int
 pm_readlittlelong(FILE * const ifP, 
                   long * const lP) {
-    int c;
     unsigned long l;
 
-    c = getc(ifP);
-    if (c == EOF)
-        abortWithReadError(ifP);
-    l = c;
-    c = getc(ifP);
-    if (c == EOF)
-        abortWithReadError(ifP);
-    l |= c << 8;
-    c = getc(ifP);
-    if (c == EOF)
-        abortWithReadError(ifP);
-    l |= c << 16;
-    c = getc(ifP);
-    if (c == EOF)
-        abortWithReadError(ifP);
-    l |= c << 24;
+    l  = getcNofail(ifP) <<  0;
+    l |= getcNofail(ifP) <<  8;
+    l |= getcNofail(ifP) << 16;
+    l |= getcNofail(ifP) << 24;
 
     *lP = l;
 

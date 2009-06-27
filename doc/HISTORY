@@ -4,18 +4,21 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-09.06.26 BJH  Release 10.46.06
+09.06.27 BJH  Release 10.47.00
 
-              libppmd (ppmdraw, ppmpat): Fix bugs with coordinates too large.
-              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+              Add pamsistoaglyph.  Thanks Scott Pakin.
 
-              configure: use TEMP environment variable for TMPDIR if TMPDIR
-              is not set.  Don't try different temp file names forever; the
-              problem may not be the filename.
+              pnmpsnr: Use more precise math to conclude that images are
+              identical.
 
-              configure: offer Gcc as an optional compiler for HP-UX.
+              Add /usr/share/netpbm/rgb.txt to search path for color
+              dictionary.
 
-09.05.08 BJH  Release 10.46.05
+              Remove nstring.h from exported interfaces.
+
+              giftopnm: improve efficiency.
+
+              libppmd: Add ppmd_point-based functions (ppmd_linep(), etc).
 
               pnmremap: fix: -firstisdefault uses an arbitrary color from the
               map as default.
@@ -23,25 +26,23 @@ CHANGE HISTORY
               pnmremap: fix -missingcolor:  where map file (ergo output) is not
               depth 3, uses an arbitrary color.
 
+              pnmremap: fix loss of dithering when the map (and thus the
+              output) has lower maxval than the input.  (Old code scales down
+              to the new maxval before dithering).
+
               giftopnm: fix for unlikely case of a block smaller than a code.
 
               ppmpat: fix crash in -squig.
 
               ppmpat: fix crash when width or height is zero.
 
-              build: fix failure of thinkjettopbm to build, introduced
-              in 10.46.01.
-              
-09.05.01 BJH  Release 10.46.04
+              ppmpat: fix wrong output with -poles.
+
+              libppmd (ppmpat, ppmdraw): Fix various out of bounds number
+              problems.
 
               ilbmtoppm: fix some bug in interpreting ILBM input.
-              (due to wrong pm_uintFromBigend16()).  From 10.46.00.
-
-09.04.28 BJH  Release 10.46.03
-
-              pnmremap: fix loss of dithering when the map (and thus the
-              output) has lower maxval than the input.  (Old code scales down
-              to the new maxval before dithering).
+              (due to wrong pm_uintFromBigend16()).  From 10.46.
 
               ximtoppm: fix crash in command line processing.
 
@@ -51,31 +52,31 @@ CHANGE HISTORY
 
               ppmquantall: don't use 'set' to set Bourne shell variable.
 
-              pbmtomacp: fix buffer overflow.
-
-              ppmpat: fix usage statement.
-
               pnmtile: fix reference to arbitrary storage in option
               processing.  Introduced in 10.42.
-
-              libnetpbm (ppmd): fix: don't ignore failure to read font file.
-
-              build: rename getline() in xvminitoppm.c to avoid collision
-              with libc.
-
-09.04.12 BJH  Release 10.46.02
 
               pamstereogram: fix tuple type in output file (and crash
               with -verbose) with -patfile .
 
               pamstereogram: fix uninitialized bytes per sample value.
 
-09.04.05 BJH  Release 10.46.01
+              pbmtomacp: fix buffer overflow.
 
-              Remove nstring.h from exported interfaces.
+              libnetpbm (ppmd): fix: don't ignore failure to read font file.
 
               Fix: remove inclusion of pm_c_util.h from sshopt.h, which is
               an exported interface header file, whereas pm_c_util.h is not.
+
+              Lots of changes to integer code, bit access, word access, etc.
+              None functional.  Some speedup.
+
+              make distclean: remove lib/compile.h.
+              
+              configure: use TEMP environment variable for TMPDIR if TMPDIR
+              is not set.  Don't try different temp file names forever; the
+              problem may not be the filename.
+
+              configure: offer Gcc as an optional compiler for HP-UX.
 
 09.03.29 BJH  Release 10.46.00
 
@@ -140,6 +141,9 @@ CHANGE HISTORY
               pnm_alloctupletable, pnm_tuplehashtotable,
               pnm_computetuplefreqtable3: fix crash when out of memory,
               memory leak with uncomputably large numbers.
+
+              build: rename getline() in xvminitoppm.c to avoid collision
+              with libc.
 
               Source tree: split out some of editor/ directory into new
               editor/specialty directory.
@@ -299,6 +303,8 @@ CHANGE HISTORY
               pbmtext: fail cleanly if -width, -space, or -lspace is
               too large for computation.  Thanks Prophet of the Way
               <afu@wta.att.ne.jp>.
+
+              pnmtile: deal with zero width/height.
 
               pbmtext: fix negative -space.
 

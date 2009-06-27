@@ -864,7 +864,7 @@ typedef struct {
 static unsigned int
 nSignificantBits( unsigned int const arg ){
 
-#if defined(__GNUC__)  && (__GNUC__ * 100 + __GNUC_MINOR__ >= 304)
+#if HAVE_GCC_BITCOUNT
 
     return (arg == 0) ? 0 : 8 * sizeof(unsigned int) - __builtin_clz(arg);
 
