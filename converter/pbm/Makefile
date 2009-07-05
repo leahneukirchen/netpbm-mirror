@@ -7,10 +7,11 @@ VPATH=.:$(SRCDIR)/$(SUBDIR)
 
 include $(BUILDDIR)/config.mk
 
-PORTBINARIES =	atktopbm brushtopbm cmuwmtopbm ddbugtopbm g3topbm escp2topbm \
+PORTBINARIES =	atktopbm brushtopbm cistopbm cmuwmtopbm \
+		ddbugtopbm g3topbm escp2topbm \
 		icontopbm macptopbm mdatopbm mgrtopbm mrftopbm \
 		pbmto10x pbmto4425 pbmtoascii pbmtoatk \
-		pbmtobbnbg pbmtocmuwm pbmtodjvurle \
+		pbmtobbnbg pbmtocis pbmtocmuwm pbmtodjvurle \
 		pbmtoepsi pbmtoepson pbmtoescp2 \
 		pbmtog3 pbmtogem pbmtogo pbmtoibm23xx pbmtoicon pbmtolj \
 		pbmtoln03 pbmtolps \
