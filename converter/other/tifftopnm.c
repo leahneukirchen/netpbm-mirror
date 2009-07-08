@@ -380,8 +380,8 @@ readscanline(TIFF *         const tif,
                   "TIFFReadScanline() failed.",
                   row, plane);
     else if (bps == 8) {
-        int sample;
-        for (sample = 0; sample < cols*spp; sample++) 
+        unsigned int sample;
+        for (sample = 0; sample < cols * spp; ++sample) 
             samplebuf[sample] = scanbuf[sample];
     } else if (bps < 8) {
         /* Note that in this format, samples do not span bytes.  Rather,
@@ -389,12 +389,12 @@ readscanline(TIFF *         const tif,
            At least that's how I infer the format from reading pnmtotiff.c
            -Bryan 00.11.18
            */
-        int sample;
-        int bitsleft;
+        unsigned int sample;
+        unsigned int bitsleft;
         unsigned char * inP;
 
-        for (sample = 0, bitsleft=8, inP=scanbuf; 
-             sample < cols*spp; 
+        for (sample = 0, bitsleft = 8, inP = scanbuf; 
+             sample < cols * spp; 
              ++sample) {
             if (bitsleft == 0) {
                 ++inP; 
@@ -411,6 +411,7 @@ readscanline(TIFF *         const tif,
                 pm_error("Internal error: invalid value for fillorder: %u", 
                          fillorder);
             }
+            assert(bitsleft >= bps);
             bitsleft -= bps; 
             if (bitsleft < bps)
                 /* Don't count dregs at end of byte */
@@ -432,10 +433,10 @@ readscanline(TIFF *         const tif,
         for (sample = 0; sample < cols*spp; ++sample)
             samplebuf[sample] = scanbuf16[sample];
     } else if (bps == 32) {
-        uint32 * const scanbuf32 = (uint32 *) scanbuf;
+        const uint32 * const scanbuf32 = (const uint32 *) scanbuf;
         unsigned int sample;
         
-        for (sample = 0; sample < cols*spp; ++sample)
+        for (sample = 0; sample < cols * spp; ++sample)
             samplebuf[sample] = scanbuf32[sample];
     } else 
         pm_error("Internal error: invalid bits per sample passed to "
