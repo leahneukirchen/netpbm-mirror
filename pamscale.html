@@ -166,11 +166,14 @@ a bunch of them; you select among them with invocation options.
 
 <h4 id="mixing">Pixel Mixing</h4>
 
-<p>Pamscale's default method is pixel mixing.  To understand this,
-imagine the source image as composed of square tiles.  Each tile is a
-pixel and has uniform color.  The tiles are all the same size.  Now
-lay over that a transparent sheet of the same size, marked off in a
-square grid.  Each cell in the grid stands for a pixel of the target
+<p>Pamscale's default method is pixel mixing.  To understand this, imagine the
+source image as composed of square tiles.  Each tile is a pixel and has
+uniform color.  The tiles are all the same size.  Now take a transparent sheet
+the size of the target image, marked with a square grid of tiles the same
+size.  Stretch or compress the source image to the size of the sheet and lay
+the sheet over the source.
+
+<p>Each cell in the overlay grid stands for a pixel of the target
 image.  For example, if you are scaling a 100x200 image up by 1.5, the
 source image is 100 x 200 tiles, and the transparent sheet is marked
 off in 150 x 300 cells.

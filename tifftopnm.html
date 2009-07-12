@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Tifftopnm User Manual</TITLE></HEAD>
 <BODY>
 <H1>tifftopnm</H1>
-Updated: 02 June 2008
+Updated: 12 July 2009
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -98,7 +98,6 @@ matching output maxval.
 which is the maximum allowed by the Netpbm formats.  In that case,
 <b>tifftopnm</b> uses a maxval of 65535, and you lose some information
 in the conversion.
-
 
 <H2 id="options">OPTIONS</H2>
 
@@ -299,6 +298,42 @@ Row By Row mode.
 
 <p>Before Netpbm 10.21 (March 2004), <b>tifftopnm</b> used the
 Y=(1-K)*(1-B) formula always.
+
+<h3 id="outputsync">Output Synchronization</h3>
+
+<p>There is an oddity of <b>tifftopnm</b> that sometimes causes trouble:
+it may terminate before the output image has been completely written.
+(It starts another process and leaves it running after it terminates).
+
+<p><b>tifftopnm</b> sometimes starts a process running <b>pamflip</b> to do
+the final stage of conversion.  It does this when the pixels in the TIFF input
+are arranged in a different order than that required in the Netpbm output.
+See the <b>-orientraw</b> option for details.  When it does this, the original
+<b>tifftopnm</b> process exits as soon as it has transmitted all the image
+data to the <b>pamflip</b> process.  The latter may still have it in a buffer
+and continue working on it.  Even without any buffering, the process still
+needs finite time to notice that it has finished its job and terminate.
+
+<p>This means that after the <b>tifftopnm</b> process has terminated, the
+output file may still be open, and also that if you read it immediately, you
+may find the file's contents incomplete.
+
+<p>This is not an issue when you pipe the output (Standard Output) to another
+process.  If you want the output to go into a regular file, then, you can just
+pipe it to a <b>cat</b> process.  When the <b>cat</b> terminates, the file
+will be complete and closed:
+
+<pre>
+<kbd>
+    $ pnmtotiff myimage.tif | cat &gt;myimage.pnm
+    $ cp myimage.pnm myimage2.pnm
+</kbd>
+</pre>
+
+<p>You can prevent <b>tifftopnm</b> from using the <b>pamflip</b> process with
+the <b>-orientraw</b> option or by ensuring your TIFF image is oriented the
+same as a Netpbm image (it usually is).  The <b>-byrow</b> option increases
+the likelihood that <b>tifftopnm</b> will use a <b>pamflip</b> process.
 
 
 <H2 id="seealso">SEE ALSO</H2>
