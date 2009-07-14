@@ -73,7 +73,7 @@ parseCommandLine(int argc, char ** const argv,
     } else if (maxSpec) {
         cmdlineP->function = FN_MAX;
     } else 
-        pm_error("You must specify one of -sum, -min, or -max");
+        pm_error("You must specify one of -sum, -min, -max, or -mean");
         
     if (argc-1 > 1)
         pm_error("Too many arguments (%d).  File spec is the only argument.",
