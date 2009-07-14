@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pnmhistmap User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmhistmap</H1>
-Updated: 25 October 1993
+Updated: 13 July 2009
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -14,11 +14,17 @@ pnmhistmap - draw a histogram for a PGM or PPM file
 
 <B>pnmhistmap</B>
 
-[<B>-black</B>]
+[<B>-red</B>] [<B>-green</B>] [<B>-blue</B>]
 
-[<B>-white</B>]
+[<B>-black</B>] [<B>-white</B>]
 
 [<B>-max</B> <I>N</I>]
+
+[<b>-lval</b>] [<b>-rval</b>]
+
+[<b>-height</b>] [<b>-width</b>]
+
+[<b>-dots</b>]
 
 [<B>-verbose</B>]
 
@@ -106,10 +112,6 @@ some buckets represent no color (the count is zero).
 <p>This option was new in Netpbm 10.26 (January 2005).  Before that,
 the dimensions were always what the default is today.
 
-</dl>
-
-
-<DL COMPACT>
 <DT><B>-black </B>
 
 <DD>Ignore the count of black pixels when scaling the histogram.
@@ -117,8 +119,6 @@ the dimensions were always what the default is today.
 <DT><B>-white</B>
 
 <DD>Ignore the count of white pixels when scaling the histogram.
-
-</DL>
 
 <P>The -black and -white options, which can be used separately or
 together, are useful for images with a large percentage of pixels
@@ -128,7 +128,6 @@ options apply to all colors; if, for example, the input has a large
 number of bright-red areas, you will probably want to use the -white
 option.
 
-<DL COMPACT>
 <DT><B>-max N</B>
 
 <DD>Force the scaling of the histogram to use N as the largest-count value.
@@ -150,8 +149,6 @@ smaller maxval will only use the lower-value side of the histogram.
 You can overcome this either by piping the input through
 <b>pamdepth</b> or by cutting and scaling the lower-value side of the
 histogram.  Neither is a particularly elegant solution to the problem.
-
-<P>The program does not allow you to specify the output size.
 
 <H2 id="seealso">SEE ALSO</H2>
 
