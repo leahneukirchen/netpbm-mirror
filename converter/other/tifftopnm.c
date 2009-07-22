@@ -721,7 +721,7 @@ createFlipProcess(FILE *         const outFileP,
    Create a process that runs the program Pamflip and writes its output
    to *imageoutFileP.
 
-   The process takes it input from a pipe that we create.  We return as
+   The process takes its input from a pipe that we create.  We return as
    *inPipePP a file stream connected to the other end of that pipe.
 
    I.e. Caller will write a Netpbm file stream to **inPipePP and a flipped
@@ -952,9 +952,12 @@ static void
 pnmOut_term(pnmOut * const pnmOutP) {
 
     if (pnmOutP->flipping) {
-        /* Closing the pipes also terminates the Pamflip processes and
-           they consequently flush their output to pnmOutP->imageoutFileP
-           and pnmOutP->alphaFileP .
+        /* Closing the pipes also causes the Pamflip processes to terminate
+           and they consequently flush their output to pnmOutP->imageoutFileP
+           and pnmOutP->alphaFileP and close those file descriptors.
+
+           But this termination and flushing and closing completes some time
+           _after_ our close.
         */
         if (pnmOutP->imagePipeP)
             fclose(pnmOutP->imagePipeP);
