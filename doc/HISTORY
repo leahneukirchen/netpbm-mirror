@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+09.07.23 BJH  Release 10.47.01
+
+              Build: fix failure of a merge build on a system that doesn't
+              have the PNG library.
+
 09.06.27 BJH  Release 10.47.00
 
               Add pamsistoaglyph.  Thanks Scott Pakin.
