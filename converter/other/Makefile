@@ -113,7 +113,10 @@ endif
 
 MERGEBINARIES = $(BINARIES)
 
-EXTRA_OBJECTS = exif.o rast.o pngtxt.o bmepsoe.o
+EXTRA_OBJECTS = exif.o rast.o bmepsoe.o
+ifeq ($(HAVE_PNGLIB),Y)
+  EXTRA_OBJECTS += pngtxt.o
+endif
 ifneq ($(JPEGLIB),NONE)
   EXTRA_OBJECTS += jpegdatasource.o
 endif

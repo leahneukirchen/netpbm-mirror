@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+09.07.23 BJH  Release 10.35.66
+
+              Build: fix failure of a merge build on a system that doesn't
+              have the PNG library.
+
 09.06.26 BJH  Release 10.35.65
 
               configure: offer Gcc as an optional compiler for HP-UX.
