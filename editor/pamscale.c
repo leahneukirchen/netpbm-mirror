@@ -610,11 +610,11 @@ parseCommandLine(int argc,
     OPTENT3(0, "xysize",    OPT_FLAG,    NULL,       &xyfit,               0);
     OPTENT3(0, "xyfit",     OPT_FLAG,    NULL,       &xyfit,               0);
     OPTENT3(0, "xyfill",    OPT_FLAG,    NULL,       &xyfill,              0);
-    OPTENT3(0, "verbose",   OPT_FLAG,    NULL,       &cmdlineP->verbose,  0);
+    OPTENT3(0, "verbose",   OPT_FLAG,    NULL,       &cmdlineP->verbose,   0);
     OPTENT3(0, "filter",    OPT_STRING,  &filterOpt, &filterSpec,          0);
     OPTENT3(0, "window",    OPT_STRING,  &window,    &windowSpec,          0);
-    OPTENT3(0, "nomix",     OPT_FLAG,    NULL,       &cmdlineP->nomix,    0);
-    OPTENT3(0, "linear",    OPT_FLAG,    NULL,       &cmdlineP->linear,   0);
+    OPTENT3(0, "nomix",     OPT_FLAG,    NULL,       &cmdlineP->nomix,     0);
+    OPTENT3(0, "linear",    OPT_FLAG,    NULL,       &cmdlineP->linear,    0);
   
     /* Set the defaults. -1 = unspecified */
 
