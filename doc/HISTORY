@@ -11,6 +11,9 @@ not yet  BJH  Release 10.48.00
               Add pbmtocis, cistopbm.  Thanks John Elliott
               <jce@seasip.demon.co.uk>.
 
+              Build: Configure recognizes libvga.a installed without
+              libvga.so and offers that as default.
+
               Build: fix failure of a merge build on a system that doesn't
               have the PNG library.
 

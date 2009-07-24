@@ -1135,6 +1135,8 @@ sub getLinuxsvgaLibrary($@) {
             $default = '/usr/lib/svgalib/libvga.so';
         } elsif (system('ldconfig -p | grep libvga &>/dev/null') == 0) {
             $default = 'libvga.so';
+        } elsif (-f('/usr/lib/libvga.a')) {
+            $default = '/usr/lib/libvga.a';
         } else {
             $default = 'none';
         }
