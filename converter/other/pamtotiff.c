@@ -339,34 +339,6 @@ parseCommandLine(int                        argc,
 
 
 static void
-putSample(sample           const s,
-          sample           const maxval,
-          sample           const tiff_maxval,
-          unsigned int     const bitspersample,
-          unsigned char ** const tPP) {
-
-    xelval s2;
-
-    s2 = s;
-    if (maxval != tiff_maxval)
-        s2 = s * tiff_maxval / maxval;
-    if (bitspersample > 8) {
-        *((unsigned short *)(*tPP)) = s2;
-        (*tPP) += sizeof(short);
-    } else
-        *(*tPP)++ = s2 & 0xff;
-}
-
-
-
-
-/* Note: PUTSAMPLE doesn't work if bitspersample is 1-4. */
-
-#define PUTSAMPLE putSample(s, maxval, tiff_maxval, bitspersample, &tP);
-
-
-
-static void
 fillRowOfSubBytePixels(struct pam *    const pamP,
                        const tuple *   const tuplerow,
                        unsigned char * const buf,
@@ -443,12 +415,44 @@ fillRowOfSubBytePixels(struct pam *    const pamP,
 
 
 static void
+putSample(sample           const s,
+          sample           const maxval,
+          sample           const tiffMaxval,
+          unsigned int     const bitspersample,
+          bool             const minIsWhite,
+          unsigned char ** const tPP) {
+
+    /* Until release 10.48 (September 2009), we ignored the min-is-white
+       photometric (i.e. treated it like min-is-black).  Nobody has ever
+       complained, but it seems clear to me that that was wrong, so I
+       changed it.  We have always respected it for sub-byte samples,
+       and have always respected it going the other direction, in
+       Tifftopnm.
+       - Bryan.
+    */
+
+    xelval const s2 = maxval == tiffMaxval ? s : s * tiffMaxval / maxval;
+
+    xelval const s3 = minIsWhite ? tiffMaxval - s2 : s2;
+
+    if (bitspersample > 8) {
+        *((unsigned short *)(*tPP)) = s3;
+        (*tPP) += sizeof(short);
+    } else
+        *(*tPP)++ = s3 & 0xff;
+}
+
+
+
+static void
 fillRowOfWholeBytePixels(struct pam *    const pamP,
                          tuple *         const tuplerow,
                          unsigned char * const buf,
                          unsigned short  const photometric,
                          unsigned short  const tiffMaxval,
                          unsigned int    const bitsPerSample) {
+
+    bool const minIsWhite = (photometric == PHOTOMETRIC_MINISWHITE);
 
     unsigned int col;
     unsigned char * tP;
@@ -466,7 +470,7 @@ fillRowOfWholeBytePixels(struct pam *    const pamP,
         unsigned int plane;
         for (plane = 0; plane < planes; ++plane) {
             putSample(tuplerow[col][plane], pamP->maxval,
-                      tiffMaxval, bitsPerSample, &tP);
+                      tiffMaxval, bitsPerSample, minIsWhite, &tP);
             /* Advances tP */
         }
     }
@@ -495,15 +499,19 @@ writeScanLines(struct pam *   const pamP,
        it's 'buf' parameter, but here it is: Its format depends on the
        bits per pixel of the TIFF image.  If it's 16, 'buf' is an
        array of short (16 bit) integers, one per raster column.  If
-       it's 8, 'buf' is an array of characters (8 bit integers), one
-       per image column.  If it's less than 8, it's an array of characters,
-       each of which represents 1-8 raster columns, packed
+       it's 8, 'buf' is an array of 8 bit unsigned integers, one
+       per pixel sample.  If it's less than 8, it's an array of bytes,
+       each of which represents 1-8 pixel samples, packed
        into it in the order specified by the TIFF image's fill order,
        with don't-care bits on the right such that each byte contains only
-       whole pixels.
+       whole samples.
 
        In all cases, the array elements are in order left to right going
        from low array indices to high array indices.
+
+       The samples form pixel values according to the pixel format indicated
+       by the TIFF photometric.  E.g. if it is MINISWHITE, then a pixel is
+       one sample and a value of 0 for that sample means white.
     */
     MALLOCARRAY(buf, bytesperrow);
 
