@@ -6,12 +6,19 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.48.00
 
+              Remove pngtopnm from the package.  Pngtopnm is now an alias
+              for Pngtopam.
+
+              pngtopam, pnmtopng: Compiles with libpng 1.4 beta.
+
               pamtotiff: do miniswhite properly with 8 and 16 bit samples.
 
               pamsumm: fix syntax error message.
 
               Add pbmtocis, cistopbm.  Thanks John Elliott
               <jce@seasip.demon.co.uk>.
+
+              Build: work with JPEG library Version 7.
 
               Build: Configure recognizes libvga.a installed without
               libvga.so and offers that as default.
