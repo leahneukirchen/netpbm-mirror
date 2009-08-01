@@ -28,6 +28,7 @@
 #include "nstring.h"
 #include "shhopt.h"
 #include "pam.h"
+#include "pngx.h"
 
 enum alpha_handling {ALPHA_NONE, ALPHA_ONLY, ALPHA_MIX, ALPHA_IN};
 
@@ -144,92 +145,6 @@ parseCommandLine(int                  argc,
     else
         pm_error("Program takes at most one argument: input file name.  "
             "you specified %d", argc-1);
-}
-
-
-
-static void
-pngtopnmErrorHandler(png_structp     const png_ptr,
-                     png_const_charp const msg) {
-
-    jmp_buf * jmpbufP;
-
-    /* this function, aside from the extra step of retrieving the "error
-       pointer" (below) and the fact that it exists within the application
-       rather than within libpng, is essentially identical to libpng's
-       default error handler.  The second point is critical:  since both
-       setjmp() and longjmp() are called from the same code, they are
-       guaranteed to have compatible notions of how big a jmp_buf is,
-       regardless of whether _BSD_SOURCE or anything else has (or has not)
-       been defined.
-    */
-
-    pm_message("fatal libpng error: %s", msg);
-
-    jmpbufP = png_get_error_ptr(png_ptr);
-
-    if (!jmpbufP) {
-        /* we are completely hosed now */
-        pm_error("EXTREMELY fatal error: jmpbuf unrecoverable; terminating.");
-    }
-
-    longjmp(*jmpbufP, 1);
-}
-
-
-
-struct pngx {
-    png_structp png_ptr;
-    png_infop info_ptr;
-};
-
-
-
-static void
-pngx_createRead(struct pngx ** const pngxPP,
-                jmp_buf *      const jmpbufP) {
-
-    struct pngx * pngxP;
-
-    MALLOCVAR(pngxP);
-
-    if (!pngxP)
-        pm_error("Failed to allocate memory for PNG object");
-    else {
-        pngxP->png_ptr = png_create_read_struct(
-            PNG_LIBPNG_VER_STRING,
-            jmpbufP, pngtopnmErrorHandler, NULL);
-
-        if (!pngxP->png_ptr)
-            pm_error("cannot allocate main libpng structure (png_ptr)");
-        else {
-            pngxP->info_ptr = png_create_info_struct(pngxP->png_ptr);
-
-            if (!pngxP->info_ptr)
-                pm_error("cannot allocate libpng info structure (info_ptr)");
-            else
-                *pngxPP = pngxP;
-        }
-    }
-}
-
-
-
-static void
-pngx_destroy(struct pngx * const pngxP) {
-
-    png_destroy_read_struct(&pngxP->png_ptr, &pngxP->info_ptr, NULL);
-
-    free(pngxP);
-}
-
-
-
-static bool
-pngx_chunkIsPresent(struct pngx * const pngxP,
-                    uint32_t      const chunkType) {
-
-    return png_get_valid(pngxP->png_ptr, pngxP->info_ptr, chunkType);
 }
 
 
@@ -650,14 +565,14 @@ transColor(struct pngx * const pngxP) {
 
     png_bytep trans;
     int numTrans;
-    png_color_16 * transColor;
+    png_color_16 * transColorP;
 
     assert(pngx_chunkIsPresent(pngxP, PNG_INFO_tRNS));
     
     png_get_tRNS(pngxP->png_ptr, pngxP->info_ptr,
-                 &trans, &numTrans, &transColor);
+                 &trans, &numTrans, &transColorP);
 
-    return transColor;
+    return transColorP;
 }
 
 
@@ -1310,7 +1225,7 @@ convertpng(FILE *             const ifP,
     if (setjmp(jmpbuf))
         pm_error ("setjmp returns error condition");
 
-    pngx_createRead(&pngxP, &jmpbuf);
+    pngx_create(&pngxP, PNGX_READ, &jmpbuf);
 
     readPng(pngxP, ifP, &pngRaster);
 

@@ -120,6 +120,7 @@ MERGEBINARIES = $(BINARIES)
 EXTRA_OBJECTS = exif.o rast.o bmepsoe.o
 ifeq ($(HAVE_PNGLIB),Y)
   EXTRA_OBJECTS += pngtxt.o
+  EXTRA_OBJECTS += pngx.o
 endif
 ifneq ($(JPEGLIB),NONE)
   EXTRA_OBJECTS += jpegdatasource.o
@@ -158,13 +159,13 @@ else
   PNGLIB_LIBOPTS = $(shell libpng-config --ldflags)
 endif
 
-pngtopam: %: %.o $(NETPBMLIB) $(LIBOPT)
-	$(LD) -o $@ $@.o \
+pngtopam: %: %.o pngx.o $(NETPBMLIB) $(LIBOPT)
+	$(LD) -o $@ $@.o pngx.o \
 	  $(shell $(LIBOPT) $(NETPBMLIB)) \
 	  $(PNGLIB_LIBOPTS) $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
-pnmtopng: %: %.o pngtxt.o $(NETPBMLIB) $(LIBOPT)
-	$(LD) -o $@ $@.o pngtxt.o \
+pnmtopng: %: %.o pngx.o pngtxt.o $(NETPBMLIB) $(LIBOPT)
+	$(LD) -o $@ $@.o pngx.o pngtxt.o \
 	  $(shell $(LIBOPT) $(NETPBMLIB)) \
 	  $(PNGLIB_LIBOPTS) $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 

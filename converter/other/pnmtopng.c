@@ -1,6 +1,5 @@
 /*
-** pnmtopng.c -
-** read a portable anymap and produce a Portable Network Graphics file
+** read a PNM image and produce a Portable Network Graphics file
 **
 ** derived from pnmtorast.c (c) 1990,1991 by Jef Poskanzer and some
 ** parts derived from ppmtogif.c by Marcel Wijkstra <wijkstra@fwi.uva.nl>
@@ -63,6 +62,7 @@
 
 #include "pm_c_util.h"
 #include "pnm.h"
+#include "pngx.h"
 #include "pngtxt.h"
 #include "shhopt.h"
 #include "mallocvar.h"
@@ -625,36 +625,6 @@ lookupColorAlpha(coloralphahash_table const caht,
 
 
 
-static void
-pnmtopng_error_handler(png_structp     const png_ptr,
-                       png_const_charp const msg) {
-
-  jmpbuf_wrapper  *jmpbuf_ptr;
-
-  /* this function, aside from the extra step of retrieving the "error
-   * pointer" (below) and the fact that it exists within the application
-   * rather than within libpng, is essentially identical to libpng's
-   * default error handler.  The second point is critical:  since both
-   * setjmp() and longjmp() are called from the same code, they are
-   * guaranteed to have compatible notions of how big a jmp_buf is,
-   * regardless of whether _BSD_SOURCE or anything else has (or has not)
-   * been defined. */
-
-  fprintf(stderr, "pnmtopng:  fatal libpng error: %s\n", msg);
-  fflush(stderr);
-
-  jmpbuf_ptr = png_get_error_ptr(png_ptr);
-  if (jmpbuf_ptr == NULL) {         /* we are completely hosed now */
-    fprintf(stderr,
-      "pnmtopng:  EXTREMELY fatal error: jmpbuf unrecoverable; terminating.\n");
-    fflush(stderr);
-    exit(99);
-  }
-
-  longjmp(jmpbuf_ptr->jmpbuf, 1);
-}
-
-
 /* The following variables belong to getChv() and freeChv() */
 static bool getChv_computed = FALSE;
 static colorhist_vector getChv_chv;
@@ -1017,6 +987,123 @@ analyzeAlpha(FILE *     const ifp,
         *allOpaqueP   = TRUE;
         *singleColorIsTransP = FALSE;
     }
+}
+
+
+
+static void
+determineTransparency(struct cmdlineInfo const cmdline,
+                      FILE *             const ifP,
+                      pm_filepos         const rasterPos,
+                      unsigned int       const cols,
+                      unsigned int       const rows,
+                      xelval             const maxval,
+                      int                const format,
+                      FILE *             const afP,
+                      bool *             const alphaP,
+                      int *              const transparentP,
+                      pixel *            const transColorP,
+                      bool *             const transExactP,
+                      gray ***           const alphaMaskP,
+                      gray *             const alphaMaxvalP) {
+/*----------------------------------------------------------------------------
+   Determine the various aspects of transparency we need to generate the
+   PNG.
+
+   Note that there are two kinds of transparency: pixel-by-pixel
+   transparency/translucency with an alpha mask and all pixels of a certain
+   color being transparent.  Both these exist both in input from the user and
+   as representations in the PNG -- i.e. user may supply an alpha mask,
+   or identify a transparent color and the PNG may contain an alpha mask
+   or identify a transparent color.
+
+   We return as *transparentP:
+   
+     -1 PNG is not to have single-color transparency
+      1 PNG is to have single-color transparency as directed by user
+      2 PNG is to have single-color transparency that effects an alpha
+            mask that the user supplied.
+
+   In the cases where there is to be single-color transparency, *transColorP
+   is that color.
+-----------------------------------------------------------------------------*/
+    if (cmdline.alpha) {
+        pixel alphaTranscolor;
+        bool alphaCanBeTransparencyIndex;
+        bool allOpaque;
+        int alphaCols, alphaRows;
+        gray alphaMaxval;
+        gray ** alphaMask;
+
+        if (verbose)
+            pm_message("reading alpha-channel image...");
+        alphaMask = pgm_readpgm(afP, &alphaCols, &alphaRows, &alphaMaxval);
+
+        if (alphaCols != cols || alphaRows != rows) {
+            pm_error("dimensions for image and alpha mask do not agree");
+        }
+        analyzeAlpha(ifP, rasterPos, cols, rows, maxval, format, 
+                     alphaMask, alphaMaxval, &allOpaque,
+                     &alphaCanBeTransparencyIndex, &alphaTranscolor);
+
+        if (alphaCanBeTransparencyIndex && !cmdline.force) {
+            if (verbose)
+                pm_message("converting alpha mask to transparency index");
+            *alphaP       = FALSE;
+            *transparentP = 2;
+            *transColorP  = alphaTranscolor;
+        } else if (allOpaque) {
+            *alphaP       = FALSE;
+            *transparentP = -1;
+        } else {
+            *alphaP       = TRUE;
+            *transparentP = -1;
+        }
+        *alphaMaxvalP = alphaMaxval;
+        *alphaMaskP   = alphaMask;
+    } else {
+        /* Though there's no alpha_mask, we still need an alpha_maxval for
+           use with trans[], which can have stuff in it if the user specified
+           a transparent color.
+        */
+        *alphaP       = FALSE;
+        *alphaMaxvalP = 255;
+
+        if (cmdline.transparent) {
+            const char * transstring2;  
+            /* The -transparent value, but with possible leading '=' removed */
+            if (cmdline.transparent[0] == '=') {
+                *transExactP = TRUE;
+                transstring2 = &cmdline.transparent[1];
+            } else {
+                *transExactP = FALSE;
+                transstring2 = cmdline.transparent;
+            }  
+            /* We do this funny PPM_DEPTH thing instead of just passing 'maxval'
+               to ppm_parsecolor() because ppm_parsecolor() does a cheap maxval
+               scaling, and this is more precise.
+            */
+            PPM_DEPTH(*transColorP, 
+                      ppm_parsecolor(transstring2, PNM_OVERALLMAXVAL),
+                      PNM_OVERALLMAXVAL, maxval);
+
+            *transparentP = 1;
+        } else
+            *transparentP = -1;
+    }
+}
+
+
+
+static void
+determineBackground(struct cmdlineInfo const cmdline,
+                    xelval             const maxval,
+                    xel *              const backColorP) {
+
+  if (cmdline.background) 
+      PPM_DEPTH(*backColorP,
+                ppm_parsecolor(cmdline.background, PNM_OVERALLMAXVAL), 
+                PNM_OVERALLMAXVAL, maxval);;
 }
 
 
@@ -2139,8 +2226,7 @@ makePngLine(png_byte *           const line,
 
 
 static void
-writeRaster(png_struct *         const png_ptr,
-            png_info *           const info_ptr,
+writeRaster(struct pngx *        const pngxP,
             FILE *               const ifP,
             pm_filepos           const rasterPos,
             unsigned int         const cols,
@@ -2173,7 +2259,7 @@ writeRaster(png_struct *         const png_ptr,
     if (line == NULL)
         pm_error("out of memory allocating PNG row buffer");
 
-    for (pass = 0; pass < png_set_interlace_handling(png_ptr); ++pass) {
+    for (pass = 0; pass < png_set_interlace_handling(pngxP->png_ptr); ++pass) {
         unsigned int row;
         pm_seek2(ifP, &rasterPos, sizeof(rasterPos));
         for (row = 0; row < rows; ++row) {
@@ -2183,12 +2269,83 @@ writeRaster(png_struct *         const png_ptr,
             
             makePngLine(line, xelrow, cols, maxval,
                         alpha, alpha ? alpha_mask[row] : NULL,
-                        cht, caht, info_ptr, png_maxval, depth);
+                        cht, caht, pngxP->info_ptr, png_maxval, depth);
 
-            png_write_row(png_ptr, line);
+            png_write_row(pngxP->png_ptr, line);
         }
     }
     pnm_freerow(xelrow);
+}
+
+
+
+static void
+doHistChunk(bool         const histRequested,
+            pixel        const palettePnm[],
+            FILE *       const ifP,
+            pm_filepos   const rasterPos,
+            unsigned int const cols,
+            unsigned int const rows,
+            xelval       const maxval,
+            int          const format,
+            png_info *   const info_ptr,
+            bool         const verbose) {
+
+    if (histRequested) {
+        colorhist_vector chv;
+        unsigned int colorCt;
+        colorhash_table cht;
+        
+        getChv(ifP, rasterPos, cols, rows, maxval, format, MAXCOLORS, 
+               &chv, &colorCt);
+
+        cht = ppm_colorhisttocolorhash(chv, colorCt);
+                
+        { 
+            png_uint_16 * histogram;  /* malloc'ed */
+        
+            MALLOCARRAY(histogram, MAXCOLORS);
+
+            if (!histogram)
+                pm_error("Failed to allocate memory for %u-color histogram",
+                         MAXCOLORS);
+            else {
+                unsigned int i;
+                for (i = 0 ; i < MAXCOLORS; ++i) {
+                    int const chvIndex = ppm_lookupcolor(cht, &palettePnm[i]);
+                    if (chvIndex == -1)
+                        histogram[i] = 0;
+                    else
+                        histogram[i] = chv[chvIndex].value;
+                }
+            
+                info_ptr->valid |= PNG_INFO_hIST;
+                info_ptr->hist = histogram;
+                if (verbose)
+                    pm_message("histogram created in PNG stream");
+            }
+        }
+        ppm_freecolorhash(cht);
+    }
+}
+
+
+
+static void
+setColorType(struct pngx * const pngxP,
+             bool          const colorMapped,
+             int           const pnmType,
+             bool          const alpha) {
+
+    if (colorMapped)
+        pngxP->info_ptr->color_type = PNG_COLOR_TYPE_PALETTE;
+    else if (pnmType == PPM_TYPE)
+        pngxP->info_ptr->color_type = PNG_COLOR_TYPE_RGB;
+    else
+        pngxP->info_ptr->color_type = PNG_COLOR_TYPE_GRAY;
+
+    if (alpha && pngxP->info_ptr->color_type != PNG_COLOR_TYPE_PALETTE)
+        pngxP->info_ptr->color_type |= PNG_COLOR_MASK_ALPHA;
 }
 
 
@@ -2259,6 +2416,96 @@ doTimeChunk(struct cmdlineInfo const cmdline,
 
 
 static void
+reportTrans(struct pngx * const pngxP) {
+
+    if (pngx_chunkIsPresent(pngxP, PNG_INFO_tRNS)) {
+        png_bytep trans;
+        int numTrans;
+        png_color_16 * transColorP;
+
+        png_get_tRNS(pngxP->png_ptr, pngxP->info_ptr,
+                     &trans, &numTrans, &transColorP);
+
+        pm_message("Transparent color {gray, red, green, blue} = "
+                   "{%d, %d, %d, %d}",
+                   transColorP->gray,
+                   transColorP->red,
+                   transColorP->green,
+                   transColorP->blue);
+    } else
+        pm_message("No transparent color");
+}
+
+
+static void
+doTrnsChunk(struct pngx * const pngxP,
+            png_byte      const transPalette[],
+            unsigned int  const transPaletteSize,
+            int           const transparent,
+            pixel         const transColor,
+            xelval        const maxval,
+            xelval        const pngMaxval) {
+
+    switch (pngxP->info_ptr->color_type) {
+    case PNG_COLOR_TYPE_PALETTE:
+        if (transPaletteSize > 0) {
+            pngxP->info_ptr->valid |= PNG_INFO_tRNS;
+            pngxP->info_ptr->trans = (png_byte *)transPalette;
+            pngxP->info_ptr->num_trans = transPaletteSize;
+            /* omit opaque values */
+        }
+        break;
+    case PNG_COLOR_TYPE_GRAY:
+    case PNG_COLOR_TYPE_RGB:
+        if (transparent > 0) {
+            png_color_16 pngTransColor = 
+                xelToPngColor_16(transColor, maxval, pngMaxval);
+            png_set_tRNS(pngxP->png_ptr, pngxP->info_ptr,
+                         NULL, 0, &pngTransColor);
+        }
+        break;
+    default:
+        /* This is PNG_COLOR_MASK_ALPHA.  Transparency will be handled
+           by the alpha channel, not a transparency color.
+        */
+    {}
+    }
+    if (verbose)
+        reportTrans(pngxP);
+}
+
+
+
+static void
+doBkgdChunk(bool         const bkgdRequested,
+            png_info *   const info_ptr,
+            unsigned int const backgroundIndex,
+            pixel        const backColor,
+            xelval       const maxval,
+            xelval       const pngMaxval,
+            bool         const verbose) {
+    
+    if (bkgdRequested) {
+        info_ptr->valid |= PNG_INFO_bKGD;
+        if (info_ptr->color_type == PNG_COLOR_TYPE_PALETTE) {
+            info_ptr->background.index = backgroundIndex;
+        } else {
+            info_ptr->background = 
+                xelToPngColor_16(backColor, maxval, pngMaxval);
+            if (verbose)
+                pm_message("Writing bKGD chunk with background color "
+                           " {gray, red, green, blue} = {%d, %d, %d, %d}",
+                           info_ptr->background.gray, 
+                           info_ptr->background.red, 
+                           info_ptr->background.green, 
+                           info_ptr->background.blue ); 
+        }
+    }
+}
+
+
+
+static void
 doSbitChunk(png_info * const pngInfoP,
             xelval     const pngMaxval,
             xelval     const maxval,
@@ -2313,6 +2560,7 @@ doSbitChunk(png_info * const pngInfoP,
 static void 
 convertpnm(struct cmdlineInfo const cmdline,
            FILE *             const ifp,
+           FILE *             const ofp,
            FILE *             const afp,
            FILE *             const pfp,
            FILE *             const tfp,
@@ -2348,8 +2596,8 @@ convertpnm(struct cmdlineInfo const cmdline,
       /* The background color, with maxval equal to that of the input
          image.
       */
-  png_struct *png_ptr;
-  png_info *info_ptr;
+  jmp_buf jmpbuf;
+  struct pngx * pngxP;
 
   bool colorMapped;
   pixel palette_pnm[MAXCOLORS];
@@ -2372,10 +2620,7 @@ convertpnm(struct cmdlineInfo const cmdline,
   unsigned int background_index;
       /* Index into palette[] of the background color. */
 
-  png_uint_16 histogram[MAXCOLORS];
   gray alpha_maxval;
-  int alpha_rows;
-  int alpha_cols;
   const char * noColormapReason;
       /* The reason that we shouldn't make a colormapped PNG, or NULL if
          we should.  malloc'ed null-terminated string.
@@ -2397,38 +2642,21 @@ convertpnm(struct cmdlineInfo const cmdline,
       /* The row of the input image currently being processed */
 
   int pnm_type;
-  xelval maxmaxval;
   gray ** alpha_mask;
 
-  /* these guys are initialized to quiet compiler warnings: */
-  maxmaxval = 255;
-  alpha_mask = NULL;
+  /* We initialize these guys to quiet compiler warnings: */
   depth = 0;
+
   errorlevel = 0;
 
-  png_ptr = png_create_write_struct (PNG_LIBPNG_VER_STRING,
-    &pnmtopng_jmpbuf_struct, pnmtopng_error_handler, NULL);
-  if (png_ptr == NULL) {
-    pm_closer (ifp);
-    pm_error ("cannot allocate main libpng structure (png_ptr)");
-  }
+  if (setjmp(jmpbuf))
+      pm_error ("setjmp returns error condition");
 
-  info_ptr = png_create_info_struct (png_ptr);
-  if (info_ptr == NULL) {
-    png_destroy_write_struct (&png_ptr, (png_infopp)NULL);
-    pm_closer (ifp);
-    pm_error ("cannot allocate libpng info structure (info_ptr)");
-  }
+  pngx_create(&pngxP, PNGX_WRITE, &jmpbuf);
 
-  if (setjmp (pnmtopng_jmpbuf_struct.jmpbuf)) {
-    png_destroy_write_struct (&png_ptr, &info_ptr);
-    pm_closer (ifp);
-    pm_error ("setjmp returns error condition (1)");
-  }
-
-  pnm_readpnminit (ifp, &cols, &rows, &maxval, &format);
+  pnm_readpnminit(ifp, &cols, &rows, &maxval, &format);
   pm_tell2(ifp, &rasterPos, sizeof(rasterPos));
-  pnm_type = PNM_FORMAT_TYPE (format);
+  pnm_type = PNM_FORMAT_TYPE(format);
 
   xelrow = pnm_allocrow(cols);
 
@@ -2441,71 +2669,12 @@ convertpnm(struct cmdlineInfo const cmdline,
       pm_message ("reading a PPM file (maxval=%d)", maxval);
   }
 
-  if (pnm_type == PGM_TYPE)
-    maxmaxval = PGM_OVERALLMAXVAL;
-  else if (pnm_type == PPM_TYPE)
-    maxmaxval = PPM_OVERALLMAXVAL;
+  determineTransparency(cmdline, ifp, rasterPos, cols, rows, maxval, format,
+                        afp,
+                        &alpha, &transparent, &transcolor, &transexact,
+                        &alpha_mask, &alpha_maxval);
 
-  if (cmdline.transparent) {
-      const char * transstring2;  
-          /* The -transparent value, but with possible leading '=' removed */
-      if (cmdline.transparent[0] == '=') {
-          transexact = 1;
-          transstring2 = &cmdline.transparent[1];
-      } else {
-          transexact = 0;
-          transstring2 = cmdline.transparent;
-      }  
-      /* We do this funny PPM_DEPTH thing instead of just passing 'maxval'
-         to ppm_parsecolor() because ppm_parsecolor() does a cheap maxval
-         scaling, and this is more precise.
-      */
-      PPM_DEPTH(transcolor, ppm_parsecolor(transstring2, maxmaxval),
-                maxmaxval, maxval);
-  }
-  if (cmdline.alpha) {
-    pixel alpha_transcolor;
-    bool alpha_can_be_transparency_index;
-    bool all_opaque;
-
-    if (verbose)
-      pm_message ("reading alpha-channel image...");
-    alpha_mask = pgm_readpgm (afp, &alpha_cols, &alpha_rows, &alpha_maxval);
-
-    if (alpha_cols != cols || alpha_rows != rows) {
-      png_destroy_write_struct (&png_ptr, &info_ptr);
-      pm_closer (ifp);
-      pm_error ("dimensions for image and alpha mask do not agree");
-    }
-    analyzeAlpha(ifp, rasterPos, cols, rows, maxval, format, 
-                 alpha_mask, alpha_maxval, &all_opaque,
-                 &alpha_can_be_transparency_index, &alpha_transcolor);
-
-    if (alpha_can_be_transparency_index && !cmdline.force) {
-      if (verbose)
-        pm_message ("converting alpha mask to transparency index");
-      alpha = FALSE;
-      transparent = 2;
-      transcolor = alpha_transcolor;
-    } else if (all_opaque) {
-        alpha = FALSE;
-        transparent = -1;
-    } else {
-      alpha = TRUE;
-      transparent = -1;
-    }
-  } else {
-      /* Though there's no alpha_mask, we still need an alpha_maxval for
-         use with trans[], which can have stuff in it if the user specified
-         a transparent color.
-      */
-      alpha = FALSE;
-      alpha_maxval = 255;
-      transparent = cmdline.transparent ? 1 : -1;
-  }
-  if (cmdline.background) 
-      PPM_DEPTH(backcolor, ppm_parsecolor(cmdline.background, maxmaxval), 
-                maxmaxval, maxval);;
+  determineBackground(cmdline, maxval, &backcolor);
 
   /* first of all, check if we have a grayscale image written as PPM */
 
@@ -2531,8 +2700,6 @@ convertpnm(struct cmdlineInfo const cmdline,
   /* handle `odd' maxvalues */
 
   if (maxval > 65535 && !cmdline.downscale) {
-      png_destroy_write_struct(&png_ptr, &info_ptr);
-      pm_closer(ifp);
       pm_error("can only handle files up to 16-bit "
                "(use -downscale to override");
   }
@@ -2580,174 +2747,82 @@ convertpnm(struct cmdlineInfo const cmdline,
   png_maxval = pm_bitstomaxval(depth);
 
   if (setjmp (pnmtopng_jmpbuf_struct.jmpbuf)) {
-    png_destroy_write_struct (&png_ptr, &info_ptr);
-    pm_closer (ifp);
     pm_error ("setjmp returns error condition (2)");
   }
 
-  png_init_io (png_ptr, stdout);
-  info_ptr->width = cols;
-  info_ptr->height = rows;
-  info_ptr->bit_depth = depth;
+  pngxP->info_ptr->width = cols;
+  pngxP->info_ptr->height = rows;
+  pngxP->info_ptr->bit_depth = depth;
 
-  if (colorMapped)
-    info_ptr->color_type = PNG_COLOR_TYPE_PALETTE;
-  else if (pnm_type == PPM_TYPE)
-    info_ptr->color_type = PNG_COLOR_TYPE_RGB;
-  else
-    info_ptr->color_type = PNG_COLOR_TYPE_GRAY;
+  setColorType(pngxP, colorMapped, pnm_type, alpha);
 
-  if (alpha && info_ptr->color_type != PNG_COLOR_TYPE_PALETTE)
-    info_ptr->color_type |= PNG_COLOR_MASK_ALPHA;
+  pngxP->info_ptr->interlace_type = cmdline.interlace;
 
-  info_ptr->interlace_type = cmdline.interlace;
+  doGamaChunk(cmdline, pngxP->info_ptr);
 
-  doGamaChunk(cmdline, info_ptr);
+  doChrmChunk(cmdline, pngxP->info_ptr);
 
-  doChrmChunk(cmdline, info_ptr);
+  doPhysChunk(cmdline, pngxP->info_ptr);
 
-  doPhysChunk(cmdline, info_ptr);
+  if (pngxP->info_ptr->color_type == PNG_COLOR_TYPE_PALETTE) {
 
-  if (info_ptr->color_type == PNG_COLOR_TYPE_PALETTE) {
-
-    /* creating PNG palette  (PLTE and tRNS chunks) */
+    /* creating PNG palette (Not counting the transparency palette) */
 
     createPngPalette(palette_pnm, palette_size, maxval,
                      trans_pnm, trans_size, alpha_maxval, 
                      palette, trans);
-    info_ptr->valid |= PNG_INFO_PLTE;
-    info_ptr->palette = palette;
-    info_ptr->num_palette = palette_size;
-    if (trans_size > 0) {
-        info_ptr->valid |= PNG_INFO_tRNS;
-        info_ptr->trans = trans;
-        info_ptr->num_trans = trans_size;   /* omit opaque values */
-    }
-    /* creating hIST chunk */
-    if (cmdline.hist) {
-        colorhist_vector chv;
-        unsigned int colors;
-        colorhash_table cht;
-        
-        getChv(ifp, rasterPos, cols, rows, maxval, format, MAXCOLORS, 
-               &chv, &colors);
+    pngxP->info_ptr->valid |= PNG_INFO_PLTE;
+    pngxP->info_ptr->palette = palette;
+    pngxP->info_ptr->num_palette = palette_size;
 
-        cht = ppm_colorhisttocolorhash (chv, colors);
-                
-        { 
-            unsigned int i;
-            for (i = 0 ; i < MAXCOLORS; ++i) {
-                int const chvIndex = ppm_lookupcolor(cht, &palette_pnm[i]);
-                if (chvIndex == -1)
-                    histogram[i] = 0;
-                else
-                    histogram[i] = chv[chvIndex].value;
-            }
-        }
-
-        ppm_freecolorhash(cht);
-
-        info_ptr->valid |= PNG_INFO_hIST;
-        info_ptr->hist = histogram;
-        if (verbose)
-            pm_message("histogram created");
-    }
-  } else { /* color_type != PNG_COLOR_TYPE_PALETTE */
-    if (info_ptr->color_type == PNG_COLOR_TYPE_GRAY ||
-        info_ptr->color_type == PNG_COLOR_TYPE_RGB) {
-        if (transparent > 0) {
-            info_ptr->valid |= PNG_INFO_tRNS;
-            info_ptr->trans_values = 
-                xelToPngColor_16(transcolor, maxval, png_maxval);
-        }
-    } else {
-        /* This is PNG_COLOR_MASK_ALPHA.  Transparency will be handled
-           by the alpha channel, not a transparency color.
-        */
-    }
-    if (verbose) {
-        if (info_ptr->valid && PNG_INFO_tRNS) 
-            pm_message("Transparent color {gray, red, green, blue} = "
-                       "{%d, %d, %d, %d}",
-                       info_ptr->trans_values.gray,
-                       info_ptr->trans_values.red,
-                       info_ptr->trans_values.green,
-                       info_ptr->trans_values.blue);
-        else
-            pm_message("No transparent color");
-    }
+    doHistChunk(cmdline.hist, palette_pnm, ifp, rasterPos,
+                cols, rows, maxval, format,
+                pngxP->info_ptr, cmdline.verbose);
   }
 
-  /* bKGD chunk */
-  if (cmdline.background) {
-      info_ptr->valid |= PNG_INFO_bKGD;
-      if (info_ptr->color_type == PNG_COLOR_TYPE_PALETTE) {
-          info_ptr->background.index = background_index;
-      } else {
-          info_ptr->background = 
-              xelToPngColor_16(backcolor, maxval, png_maxval);
-          if (verbose)
-              pm_message("Writing bKGD chunk with background color "
-                         " {gray, red, green, blue} = {%d, %d, %d, %d}",
-                         info_ptr->background.gray, 
-                         info_ptr->background.red, 
-                         info_ptr->background.green, 
-                         info_ptr->background.blue ); 
-      }
-  }
+  doTrnsChunk(pngxP, trans, trans_size,
+              transparent, transcolor, maxval, png_maxval);
 
-  doSbitChunk(info_ptr, png_maxval, maxval, alpha, alpha_maxval);
+  doBkgdChunk(!!cmdline.background, pngxP->info_ptr,
+              background_index, backcolor,
+              maxval, png_maxval, cmdline.verbose);
+
+  doSbitChunk(pngxP->info_ptr, png_maxval, maxval, alpha, alpha_maxval);
 
   /* tEXT and zTXT chunks */
   if (cmdline.text || cmdline.ztxt)
-      pnmpng_read_text(info_ptr, tfp, !!cmdline.ztxt, cmdline.verbose);
+      pnmpng_read_text(pngxP->info_ptr, tfp, !!cmdline.ztxt, cmdline.verbose);
 
-  doTimeChunk(cmdline, info_ptr);
+  doTimeChunk(cmdline, pngxP->info_ptr);
 
   if (cmdline.filterSet != 0)
-      png_set_filter(png_ptr, 0, cmdline.filterSet);
+      png_set_filter(pngxP->png_ptr, 0, cmdline.filterSet);
 
-  setZlibCompression(png_ptr, cmdline.zlibCompression);
+  setZlibCompression(pngxP->png_ptr, cmdline.zlibCompression);
+
+  png_init_io(pngxP->png_ptr, ofp);
 
   /* write the png-info struct */
-  png_write_info(png_ptr, info_ptr);
+  png_write_info(pngxP->png_ptr, pngxP->info_ptr);
 
   if (cmdline.text || cmdline.ztxt)
       /* prevent from being written twice with png_write_end */
-      info_ptr->num_text = 0;
+      pngxP->info_ptr->num_text = 0;
 
   if (cmdline.modtime)
       /* prevent from being written twice with png_write_end */
-      info_ptr->valid &= ~PNG_INFO_tIME;
+      pngxP->info_ptr->valid &= ~PNG_INFO_tIME;
 
   /* let libpng take care of, e.g., bit-depth conversions */
-  png_set_packing (png_ptr);
+  png_set_packing(pngxP->png_ptr);
 
-  writeRaster(png_ptr, info_ptr, ifp, rasterPos, cols, rows, maxval, format,
+  writeRaster(pngxP, ifp, rasterPos,
+              cols, rows, maxval, format,
               png_maxval, depth, alpha, alpha_mask, cht, caht);
 
-  png_write_end (png_ptr, info_ptr);
+  png_write_end(pngxP->png_ptr, pngxP->info_ptr);
 
-
-#if 0
-  /* The following code may be intended to solve some segfault problem
-     that arises with png_destroy_write_struct().  The latter is the
-     method recommended in the libpng documentation and this program 
-     will not compile under Cygwin because the Windows DLL for libpng
-     does not contain png_write_destroy() at all.  Since the author's
-     comment below does not make it clear what the segfault issue is,
-     we cannot consider it.  -Bryan 00.09.15
-*/
-
-  png_write_destroy (png_ptr);
-  /* flush first because free(png_ptr) can segfault due to jmpbuf problems
-     in png_write_destroy */
-  fflush (stdout);
-  free (png_ptr);
-  free (info_ptr);
-#else
-  png_destroy_write_struct(&png_ptr, &info_ptr);
-#endif
+  pngx_destroy(pngxP);
 
   pnm_freerow(xelrow);
 
@@ -2828,7 +2903,7 @@ main(int argc, char *argv[]) {
     else
         tfP = NULL;
 
-    convertpnm(cmdline, ifP, afP, pfP, tfP, &errorlevel);
+    convertpnm(cmdline, ifP, stdout, afP, pfP, tfP, &errorlevel);
     
     if (afP)
         pm_close(afP);
