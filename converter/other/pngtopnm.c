@@ -1,6 +1,6 @@
 /*
 ** pngtopnm.c -
-** read a Portable Network Graphics file and produce a portable anymap
+** read a Portable Network Graphics file and produce a PNM.
 **
 ** Copyright (C) 1995,1998 by Alexander Lehmann <alex@hal.rhein-main.de>
 **                        and Willem van Schaik <willem@schaik.com>
@@ -218,6 +218,15 @@ pngx_destroy(struct pngx * const pngxP) {
     png_destroy_read_struct(&pngxP->png_ptr, &pngxP->info_ptr, NULL);
 
     free(pngxP);
+}
+
+
+
+static bool
+pngx_chunkIsPresent(struct pngx * const pngxP,
+                    uint32_t      const chunkType) {
+
+    return png_get_valid(pngxP->png_ptr, pngxP->info_ptr, chunkType);
 }
 
 
@@ -598,6 +607,23 @@ dumpPngInfo(struct pngx * const pngxP) {
 
 
 
+static const png_color_16 *
+transColor(struct pngx * const pngxP) {
+
+    png_bytep trans;
+    int numTrans;
+    png_color_16 * transColor;
+
+    assert(chunkIsPresent(PNG_INFO_tRNS));
+    
+    png_get_tRNS(pngxP->png_ptr, pngxP->info_ptr,
+                 &trans, &numTrans, &transColor);
+
+    return transColor;
+}
+
+
+
 static bool
 isTransparentColor(pngcolor      const color,
                    struct pngx * const pngxP,
@@ -610,9 +636,8 @@ isTransparentColor(pngcolor      const color,
 -----------------------------------------------------------------------------*/
     bool retval;
 
-    if (pngxP->info_ptr->valid & PNG_INFO_tRNS) {
-        const png_color_16 * const transColorP =
-            &pngxP->info_ptr->trans_values;
+    if (pngx_chunkIsPresent(PNG_INFO_tRNS)) {
+        const png_color_16 * const transColorP = transColor(pngxP);
 
         /* It seems odd that libpng lets you get gamma-corrected pixel
            values, but not gamma-corrected transparency or background
