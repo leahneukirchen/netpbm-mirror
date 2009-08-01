@@ -96,7 +96,7 @@ endif
 BINARIES = $(PORTBINARIES) pnmtorast rasttopnm
 
 ifeq ($(HAVE_PNGLIB),Y)
-  BINARIES += pnmtopng pngtopnm pngtopam pamrgbatopng
+  BINARIES += pnmtopng pngtopam pamrgbatopng
 endif
 ifneq ($(JPEGLIB),NONE)
   BINARIES += jpegtopnm pnmtojpeg
@@ -158,7 +158,7 @@ else
   PNGLIB_LIBOPTS = $(shell libpng-config --ldflags)
 endif
 
-pngtopnm pngtopam: %: %.o $(NETPBMLIB) $(LIBOPT)
+pngtopam: %: %.o $(NETPBMLIB) $(LIBOPT)
 	$(LD) -o $@ $@.o \
 	  $(shell $(LIBOPT) $(NETPBMLIB)) \
 	  $(PNGLIB_LIBOPTS) $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
@@ -244,4 +244,9 @@ ifneq ($(TIFF_PREREQ_MISSING),Y)
 # In October 2005, pamtotiff replaced pnmtotiff
 	cd $(PKGDIR)/bin ; \
 	$(SYMLINK) pamtotiff$(EXE) pnmtotiff
+endif
+ifeq ($(HAVE_PNGLIB),Y)
+# In September 2009, pngtopam replaced pngtopnm
+	cd $(PKGDIR)/bin ; \
+	$(SYMLINK) pngtopam$(EXE) pngtopnm
 endif
