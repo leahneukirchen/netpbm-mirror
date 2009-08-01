@@ -20,6 +20,7 @@
 #  define PNMTOPNG_WARNING_LEVEL 0   /* use 0 for backward compatibility, */
 #endif                               /*  2 for warnings (1 == error) */
 
+#include <assert.h>
 #include <math.h>
 #include <float.h>
 #include <png.h>    /* includes zlib.h and setjmp.h */
@@ -614,7 +615,7 @@ transColor(struct pngx * const pngxP) {
     int numTrans;
     png_color_16 * transColor;
 
-    assert(chunkIsPresent(PNG_INFO_tRNS));
+    assert(pngx_chunkIsPresent(pngxP, PNG_INFO_tRNS));
     
     png_get_tRNS(pngxP->png_ptr, pngxP->info_ptr,
                  &trans, &numTrans, &transColor);
@@ -636,7 +637,7 @@ isTransparentColor(pngcolor      const color,
 -----------------------------------------------------------------------------*/
     bool retval;
 
-    if (pngx_chunkIsPresent(PNG_INFO_tRNS)) {
+    if (pngx_chunkIsPresent(pngxP, PNG_INFO_tRNS)) {
         const png_color_16 * const transColorP = transColor(pngxP);
 
         /* It seems odd that libpng lets you get gamma-corrected pixel
