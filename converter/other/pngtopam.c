@@ -355,17 +355,17 @@ readPng(struct pngx * const pngxP,
 
 
 static png_uint_16
-get_png_val(const png_byte ** const pp,
-            int               const bit_depth) {
+getPngVal(const png_byte ** const pp,
+          int               const bitDepth) {
 
     png_uint_16 c;
     
-    if (bit_depth == 16)
-        c = (*((*pp)++)) << 8;
+    if (bitDepth == 16)
+        c = *(*pp)++ << 8;
     else
         c = 0;
 
-    c |= (*((*pp)++));
+    c |= *(*pp)++;
     
     return c;
 }
@@ -443,8 +443,8 @@ setTuple(const struct pam *  const pamP,
 
 
 static png_uint_16
-gamma_correct(png_uint_16 const v,
-              float       const g) {
+gammaCorrect(png_uint_16 const v,
+             float       const g) {
 
     if (g != -1.0)
         return (png_uint_16) ROUNDU(pow((double) v / maxval, (1.0 / g)) *
@@ -456,7 +456,7 @@ gamma_correct(png_uint_16 const v,
 
 
 static bool
-iscolor(png_color const c) {
+isColor(png_color const c) {
 
     return c.red != c.green || c.green != c.blue;
 }
@@ -693,13 +693,13 @@ isTransparentColor(pngcolor      const color,
     
         switch (pngxP->info_ptr->color_type) {
         case PNG_COLOR_TYPE_GRAY:
-            retval = color.r == gamma_correct(transColorP->gray, totalgamma);
+            retval = color.r == gammaCorrect(transColorP->gray, totalgamma);
             break;
         default:
             retval = 
-                color.r == gamma_correct(transColorP->red,   totalgamma) &&
-                color.g == gamma_correct(transColorP->green, totalgamma) &&
-                color.b == gamma_correct(transColorP->blue,  totalgamma);
+                color.r == gammaCorrect(transColorP->red,   totalgamma) &&
+                color.g == gammaCorrect(transColorP->green, totalgamma) &&
+                color.b == gammaCorrect(transColorP->blue,  totalgamma);
         }
     } else 
         retval = FALSE;
@@ -1006,7 +1006,7 @@ imageHasColor(struct pngx * const pngxP) {
         for (i = 0, foundColor = FALSE;
              i < pngxP->info_ptr->num_palette && !foundColor;
              ++i) {
-            if (iscolor(pngxP->info_ptr->palette[i]))
+            if (isColor(pngxP->info_ptr->palette[i]))
                 foundColor = TRUE;
         }
         retval = foundColor;
@@ -1090,23 +1090,23 @@ getBackgroundColor(struct pngx * const pngxP,
         case PNG_COLOR_TYPE_GRAY:
         case PNG_COLOR_TYPE_GRAY_ALPHA:
             bgColorP->r = bgColorP->g = bgColorP->b = 
-                gamma_correct(pngxP->info_ptr->background.gray, totalgamma);
+                gammaCorrect(pngxP->info_ptr->background.gray, totalgamma);
             break;
         case PNG_COLOR_TYPE_PALETTE: {
             png_color const rawBgcolor = 
                 pngxP->info_ptr->palette[pngxP->info_ptr->background.index];
-            bgColorP->r = gamma_correct(rawBgcolor.red, totalgamma);
-            bgColorP->g = gamma_correct(rawBgcolor.green, totalgamma);
-            bgColorP->b = gamma_correct(rawBgcolor.blue, totalgamma);
+            bgColorP->r = gammaCorrect(rawBgcolor.red, totalgamma);
+            bgColorP->g = gammaCorrect(rawBgcolor.green, totalgamma);
+            bgColorP->b = gammaCorrect(rawBgcolor.blue, totalgamma);
         }
         break;
         case PNG_COLOR_TYPE_RGB:
         case PNG_COLOR_TYPE_RGB_ALPHA: {
             png_color_16 const rawBgcolor = pngxP->info_ptr->background;
             
-            bgColorP->r = gamma_correct(rawBgcolor.red,   totalgamma);
-            bgColorP->g = gamma_correct(rawBgcolor.green, totalgamma);
-            bgColorP->b = gamma_correct(rawBgcolor.blue,  totalgamma);
+            bgColorP->r = gammaCorrect(rawBgcolor.red,   totalgamma);
+            bgColorP->g = gammaCorrect(rawBgcolor.green, totalgamma);
+            bgColorP->b = gammaCorrect(rawBgcolor.blue,  totalgamma);
         }
         break;
         }
@@ -1138,7 +1138,7 @@ warnNonsquarePixels(struct pngx * const pngxP,
 
 
 
-#define GET_PNG_VAL(p) get_png_val(&(p), pngxP->info_ptr->bit_depth)
+#define GET_PNG_VAL(p) getPngVal(&(p), pngxP->info_ptr->bit_depth)
 
 
 
