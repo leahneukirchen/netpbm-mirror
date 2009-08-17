@@ -30,6 +30,11 @@
 #include "shhopt.h"
 #include "pam.h"
 
+/* A hack until we can remove direct access to png_info from the program */
+#if PNG_LIBPNG_VER >= 10400
+#define trans_values trans_color
+#endif
+
 typedef struct _jmpbuf_wrapper {
   jmp_buf jmpbuf;
 } jmpbuf_wrapper;

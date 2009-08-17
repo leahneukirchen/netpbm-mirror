@@ -69,6 +69,12 @@
 #include "nstring.h"
 #include "version.h"
 
+/* A hack until we can remove direct access to png_info from the program */
+#if PNG_LIBPNG_VER >= 10400
+#define trans_values trans_color
+#endif
+
+
 struct zlibCompression {
     /* These are parameters that describe a form of zlib compression.
        Values have the same meaning as the similarly named arguments to
