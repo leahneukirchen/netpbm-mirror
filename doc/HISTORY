@@ -6,6 +6,14 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.48.00
 
+              ppmsvgalib: Wait to initialize Svgalib to prevent it from
+              interfering with error messages early code might issue, and
+              leaving the console in an undesirable state if the failures
+              cause the program to abort early.
+
+              tifftopnm: wait for Pamflip processes to terminate before
+              exiting.
+
               Remove pngtopnm from the package.  Pngtopnm is now an alias
               for Pngtopam.
 
