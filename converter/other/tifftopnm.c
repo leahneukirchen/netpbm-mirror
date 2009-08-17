@@ -52,6 +52,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
+#include <sys/wait.h>
 
 #include "pm_c_util.h"
 #include "shhopt.h"
@@ -683,6 +684,14 @@ typedef struct {
         /* Stream hooked up to pipe that goes to a Pamflip process.
            Meaningful only when 'flipping' is true.
         */
+    pid_t        imageFlipPid;
+        /* Process ID of the Pamflip process.
+           Meaningful only when 'flipping' is true.
+        */
+    pid_t        alphaFlipPid;
+        /* Process ID of the Pamflip process.
+           Meaningful only when 'flipping' is true.
+        */
 } pnmOut;
 
 
@@ -712,11 +721,69 @@ xformNeeded(unsigned short const tiffOrientation) {
 
 
 
+/* File descriptors array indices for use with pipe() */
+#define PIPE_READ 0
+#define PIPE_WRITE 1
+
+static void
+spawnWithInputPipe(const char *  const shellCmd,
+                   FILE **       const pipePP,
+                   pid_t *       const pidP,
+                   const char ** const errorP) {
+
+    int fd[2];
+    int rc;
+
+    rc = pipe(fd);
+
+    if (rc != 0)
+        asprintfN(errorP, "Failed to create pipe for process input.  "
+                  "Errno=%d (%s)", errno, strerror(errno));
+    else {
+        int rc;
+
+        rc = fork();
+
+        if (rc < 0) {
+            asprintfN(errorP, "Failed to fork a process.  errno=%d (%s)",
+                      errno, strerror(errno));
+        } else if (rc == 0) {
+            /* This is the child */
+            int rc;
+            close(fd[PIPE_WRITE]);
+            close(STDIN_FILENO);
+            dup2(fd[PIPE_READ], STDIN_FILENO);
+
+            rc = system(shellCmd);
+
+            exit(rc);
+        } else {
+            /* Parent */
+            pid_t const childPid = rc;
+
+            close(fd[PIPE_READ]);
+
+            *pidP   = childPid;
+            *pipePP = fdopen(fd[PIPE_WRITE], "w");
+
+            if (*pipePP == NULL)
+                asprintfN(errorP,"Unable to create stream from pipe.  "
+                          "fdopen() fails with errno=%d (%s)",
+                          errno, strerror(errno));
+            else
+                *errorP = NULL;
+        }
+    }
+}
+
+                  
+
 static void
 createFlipProcess(FILE *         const outFileP,
                   unsigned short const orientation,
                   bool           const verbose,
-                  FILE **        const inPipePP) {
+                  FILE **        const inPipePP,
+                  pid_t *        const pidP) {
 /*----------------------------------------------------------------------------
    Create a process that runs the program Pamflip and writes its output
    to *imageoutFileP.
@@ -735,6 +802,7 @@ createFlipProcess(FILE *         const outFileP,
    Caller must close *inPipePP when he is done.
 -----------------------------------------------------------------------------*/
     const char * pamflipCmd;
+    const char * error;
 
     /* Hooking up the process to the output stream is kind of tricky
        because the stream (FILE *) is an entity local to this process.
@@ -749,12 +817,15 @@ createFlipProcess(FILE *         const outFileP,
     if (verbose)
         pm_message("Reorienting raster with shell command '%s'", pamflipCmd);
 
-    *inPipePP = popen(pamflipCmd, "w");
+    spawnWithInputPipe(pamflipCmd, inPipePP, pidP, &error);
 
-    if (*inPipePP == NULL)
-        pm_error("Shell command '%s', via popen(), to reorient the TIFF "
-                 "raster, failed.  To work around this, you can use "
-                 "the -orientraw option.", pamflipCmd);
+    if (error) {
+        pm_error("Shell command '%s', to reorient the TIFF "
+                 "raster, failed.  %s.  To work around this, you can use "
+                 "the -orientraw option.", pamflipCmd, error);
+
+        strfree(error);
+    }
 }
 
 
@@ -818,10 +889,14 @@ setupFlipper(pnmOut *       const pnmOutP,
 
                 if (pnmOutP->alphaFileP)
                     createFlipProcess(pnmOutP->alphaFileP, orientation,
-                                      verbose, &pnmOutP->alphaPipeP);
+                                      verbose,
+                                      &pnmOutP->alphaPipeP,
+                                      &pnmOutP->alphaFlipPid);
                 if (pnmOutP->imageoutFileP)
                     createFlipProcess(pnmOutP->imageoutFileP, orientation,
-                                      verbose, &pnmOutP->imagePipeP);
+                                      verbose,
+                                      &pnmOutP->imagePipeP,
+                                      &pnmOutP->imageFlipPid);
                 
                 /* The stream will flip it, so Caller must not: */
                 pnmOutP->flipping = TRUE;
@@ -949,20 +1024,32 @@ pnmOut_init(FILE *         const imageoutFileP,
 
 
 static void
-pnmOut_term(pnmOut * const pnmOutP) {
+pnmOut_term(pnmOut * const pnmOutP,
+            bool     const verbose) {
 
     if (pnmOutP->flipping) {
         /* Closing the pipes also causes the Pamflip processes to terminate
            and they consequently flush their output to pnmOutP->imageoutFileP
            and pnmOutP->alphaFileP and close those file descriptors.
 
-           But this termination and flushing and closing completes some time
-           _after_ our close.
+           We wait for the processes to exit before returning so that we
+           know everything is flushed, so the invoker of Tifftopnm is free
+           to use its output.
         */
-        if (pnmOutP->imagePipeP)
+        if (verbose)
+            pm_message("Flushing data through Pamflip process, "
+                       "waiting for Pamflip to terminate");
+
+        if (pnmOutP->imagePipeP) {
+            int status;
             fclose(pnmOutP->imagePipeP);
-        if (pnmOutP->alphaPipeP)
+            waitpid(pnmOutP->imageFlipPid, &status, 0);
+        }
+        if (pnmOutP->alphaPipeP) {
+            int status;
             fclose(pnmOutP->alphaPipeP);
+            waitpid(pnmOutP->alphaFlipPid, &status, 0);
+        }
     } else {
         if (pnmOutP->imageoutFileP)
             fflush(pnmOutP->imageoutFileP);
@@ -1505,7 +1592,7 @@ convertImage(TIFF *             const tifP,
                   fillorder, colormap, cmdline.byrow, flipOk, noflipOk,
                   cmdline.verbose);
 
-    pnmOut_term(&pnmOut);
+    pnmOut_term(&pnmOut, cmdline.verbose);
 }
 
 
