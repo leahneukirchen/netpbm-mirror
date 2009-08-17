@@ -253,10 +253,6 @@ main(int argc, char *argv[]) {
 
     ppm_init(&argc, argv);
 
-    rc = vga_init();         /* Initialize. */
-    if (rc < 0)
-        pm_error("Svgalib unable to allocate a virtual console.");
-
     parseCommandLine(argc, argv, &cmdline);
 
     ifP = pm_openr(cmdline.inputFilespec);
@@ -268,6 +264,14 @@ main(int argc, char *argv[]) {
         ppm_check(ifP, PM_CHECK_BASIC, format, cols, rows, maxval, 
                   &checkResult);
     }
+
+    /* We wait to initialize Svgalib to prevent it from interfering with
+       error messages the code above might issue, and leaving the console
+       in an undesirable state if the above code aborts the program.
+    */
+    rc = vga_init();         /* Initialize. */
+    if (rc < 0)
+        pm_error("Svgalib unable to allocate a virtual console.");
 
     if (vga_hasmode(cmdline.mode))
         display(ifP, cols, rows, maxval, format, 
