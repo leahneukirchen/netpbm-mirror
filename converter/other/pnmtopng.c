@@ -69,6 +69,13 @@
 #include "nstring.h"
 #include "version.h"
 
+#if PNG_LIBPNG_VER >= 10400
+#error Your PNG library (<png.h>) is incompatible with this Netpbm source code.
+#error You need either an older PNG library (older than 1.4)
+#error newer Netpbm source code (at least 10.48)
+#endif
+
+
 struct zlibCompression {
     /* These are parameters that describe a form of zlib compression.
        Values have the same meaning as the similarly named arguments to

@@ -468,6 +468,8 @@ ReadJPEG(MpegFrame * const mf,
     */
 #ifdef JPEG4
     buffer_height = 8;  /* could be 2, 4,8 rows high */
+#elif JPEG_LIB_VERSION >= 70
+    buffer_height = cinfo.max_v_samp_factor * cinfo.min_DCT_v_scaled_size;
 #else
     buffer_height = cinfo.max_v_samp_factor * cinfo.min_DCT_scaled_size;
 #endif

@@ -4,6 +4,17 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+09.09.03 BJH  Release 10.35.67
+
+              Build: fix failure to recognize static library in omitting
+              -R from link.
+
+              Build: Make compile of pnmtopng and pngtopnm fail with helpful
+              error message when PNG library is incompatibly new (version 1.4
+              or later).
+
+              Build: work with JPEG library Version 7.
+
 09.07.23 BJH  Release 10.35.66
 
               Build: fix failure of a merge build on a system that doesn't
