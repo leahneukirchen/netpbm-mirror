@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+09.09.03 BJH  Release 10.47.03
+
+              Build: fix failure to recognize static library in omitting
+              -R from link.
+
 09.08.17 BJH  Release 10.47.02
 
               tifftopnm: wait for Pamflip processes to terminate before

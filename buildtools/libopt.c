@@ -310,7 +310,7 @@ parse_filename(const char *  const filename,
         unsigned int prefix_length;
         bool prefix_good;
 
-        if (strcmp(lastdot, "a") == 0)
+        if (strcmp(lastdot + 1, "a") == 0)
             *static_p = TRUE;
         else
             *static_p = FALSE;
