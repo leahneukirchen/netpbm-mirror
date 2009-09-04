@@ -34,6 +34,9 @@ not yet  BJH  Release 10.48.00
               Build: fix failure of a merge build on a system that doesn't
               have the PNG library.
 
+              Build: fix failure to recognize static library in omitting
+              -R from link.
+
 09.06.27 BJH  Release 10.47.00
 
               Add pamsistoaglyph.  Thanks Scott Pakin.
