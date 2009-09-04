@@ -670,15 +670,20 @@ paletteHasPartialTransparency(struct pngx * const pngxP) {
     bool retval;
 
     if (pngxP->info_ptr->color_type == PNG_COLOR_TYPE_PALETTE) {
-        if (pngxP->info_ptr->valid & PNG_INFO_tRNS) {
+        if (pngx_chunkIsPresent(pngxP, PNG_INFO_tRNS)) {
             bool foundGray;
             unsigned int i;
+            png_bytep trans;
+            int numTrans;
+            png_color_16 * transColorP;
             
+            png_get_tRNS(pngxP->png_ptr, pngxP->info_ptr,
+                         &trans, &numTrans, &transColorP);
+
             for (i = 0, foundGray = FALSE;
-                 i < pngxP->info_ptr->num_trans && !foundGray;
+                 i < numTrans && !foundGray;
                  ++i) {
-                if (pngxP->info_ptr->trans[i] != 0 &&
-                    pngxP->info_ptr->trans[i] != maxval) {
+                if (trans[i] != 0 && trans[i] != maxval) {
                     foundGray = TRUE;
                 }
             }
@@ -1053,6 +1058,33 @@ warnNonsquarePixels(struct pngx * const pngxP,
 
 
 
+static png_uint_16
+paletteAlpha(struct pngx * const pngxP,
+             png_uint_16   const index,
+             sample        const maxval) {
+
+    png_uint_16 retval;
+
+    if (pngx_chunkIsPresent(pngxP, PNG_INFO_tRNS)) {
+        png_bytep      trans;
+        int            numTrans;
+        png_color_16 * transColorP;
+
+        png_get_tRNS(pngxP->png_ptr, pngxP->info_ptr,
+                     &trans, &numTrans, &transColorP);
+
+        if (index < numTrans)
+            retval = trans[index];
+        else
+            retval = maxval;
+    } else
+        retval = maxval;
+
+    return retval;
+}
+
+
+
 #define GET_PNG_VAL(p) getPngVal(&(p), pngxP->info_ptr->bit_depth)
 
 
@@ -1103,9 +1135,7 @@ makeTupleRow(const struct pam *  const pamP,
             fgColor.b = paletteColor.blue;
 
             setTuple(pamP, tuplerow[col], fgColor, bgColor, alphaHandling,
-                     (pngxP->info_ptr->valid & PNG_INFO_tRNS) &&
-                     index < pngxP->info_ptr->num_trans ?
-                     pngxP->info_ptr->trans[index] : maxval);
+                     paletteAlpha(pngxP, index, maxval));
         }
         break;
                 

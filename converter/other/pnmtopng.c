@@ -2449,10 +2449,10 @@ doTrnsChunk(struct pngx * const pngxP,
     switch (pngxP->info_ptr->color_type) {
     case PNG_COLOR_TYPE_PALETTE:
         if (transPaletteSize > 0) {
-            pngxP->info_ptr->valid |= PNG_INFO_tRNS;
-            pngxP->info_ptr->trans = (png_byte *)transPalette;
-            pngxP->info_ptr->num_trans = transPaletteSize;
-            /* omit opaque values */
+            png_set_tRNS(pngxP->png_ptr, pngxP->info_ptr,
+                         (png_byte *)transPalette,
+                         transPaletteSize /* omit opaque values */,
+                         0);
         }
         break;
     case PNG_COLOR_TYPE_GRAY:
