@@ -49,8 +49,8 @@
 #include <stdarg.h>
 #endif
 
-#include "pm_c_util.h"
-#include "nstring.h"
+#include "netpbm/pm_c_util.h"
+#include "netpbm/nstring.h"
 
 /* 
  * An explicit assumption is made in this code that all pointers look

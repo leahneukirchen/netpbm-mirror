@@ -123,7 +123,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#include "pm_c_util.h"
+#include "netpbm/pm_c_util.h"
 
 #include "jasper/jas_stream.h"
 #include "jasper/jas_malloc.h"

@@ -33,8 +33,8 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "pm.h"
-#include "mallocvar.h"
+#include "netpbm/pm.h"
+#include "netpbm/mallocvar.h"
 
 #include "rle.h"
 #include "rle_code.h"

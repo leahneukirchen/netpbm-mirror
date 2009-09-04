@@ -37,7 +37,7 @@
 #include <sys/time.h>
 #endif
 
-#include "mallocvar.h"
+#include "netpbm/mallocvar.h"
 
 /*****************************************************************
  * TAG( rle_addhist )

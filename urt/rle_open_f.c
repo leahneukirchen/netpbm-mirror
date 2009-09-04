@@ -15,8 +15,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#include "pm_c_util.h"
-#include "nstring.h"
+#include "netpbm/pm_c_util.h"
+#include "netpbm/nstring.h"
 #include "rle.h"
 
 

@@ -27,8 +27,8 @@
 
 #include <stdio.h>
 
-#include "mallocvar.h"
-#include "pm.h"
+#include "netpbm/mallocvar.h"
+#include "netpbm/pm.h"
 #include "rle.h"
 
 /*****************************************************************
