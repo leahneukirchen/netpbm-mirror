@@ -23,6 +23,9 @@ not yet  BJH  Release 10.48.00
 
               pamsumm: fix syntax error message.
 
+              pambayer: fix unconditional crash/failure when you aren't using
+              Standard Input.
+
               Add pbmtocis, cistopbm.  Thanks John Elliott
               <jce@seasip.demon.co.uk>.
 
