@@ -29,6 +29,8 @@ not yet  BJH  Release 10.48.00
               Add pbmtocis, cistopbm.  Thanks John Elliott
               <jce@seasip.demon.co.uk>.
 
+              Build: tifftopnm builds on systems without fork().
+
               Build: work with JPEG library Version 7.
 
               Build: Configure recognizes libvga.a installed without
