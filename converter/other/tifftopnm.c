@@ -52,7 +52,6 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
-#include <sys/wait.h>
 
 #include "pm_c_util.h"
 #include "shhopt.h"
@@ -740,38 +739,34 @@ spawnWithInputPipe(const char *  const shellCmd,
         asprintfN(errorP, "Failed to create pipe for process input.  "
                   "Errno=%d (%s)", errno, strerror(errno));
     else {
-        int rc;
+        int iAmParent;
+        pid_t childPid;
 
-        rc = fork();
+        pm_fork(&iAmParent, &childPid, errorP);
 
-        if (rc < 0) {
-            asprintfN(errorP, "Failed to fork a process.  errno=%d (%s)",
-                      errno, strerror(errno));
-        } else if (rc == 0) {
-            /* This is the child */
-            int rc;
-            close(fd[PIPE_WRITE]);
-            close(STDIN_FILENO);
-            dup2(fd[PIPE_READ], STDIN_FILENO);
+        if (!*errorP) {
+            if (iAmParent) {
+                close(fd[PIPE_READ]);
 
-            rc = system(shellCmd);
+                *pidP   = childPid;
+                *pipePP = fdopen(fd[PIPE_WRITE], "w");
+                
+                if (*pipePP == NULL)
+                    asprintfN(errorP,"Unable to create stream from pipe.  "
+                              "fdopen() fails with errno=%d (%s)",
+                              errno, strerror(errno));
+                else
+                    *errorP = NULL;
+            } else {
+                int rc;
+                close(fd[PIPE_WRITE]);
+                close(STDIN_FILENO);
+                dup2(fd[PIPE_READ], STDIN_FILENO);
 
-            exit(rc);
-        } else {
-            /* Parent */
-            pid_t const childPid = rc;
+                rc = system(shellCmd);
 
-            close(fd[PIPE_READ]);
-
-            *pidP   = childPid;
-            *pipePP = fdopen(fd[PIPE_WRITE], "w");
-
-            if (*pipePP == NULL)
-                asprintfN(errorP,"Unable to create stream from pipe.  "
-                          "fdopen() fails with errno=%d (%s)",
-                          errno, strerror(errno));
-            else
-                *errorP = NULL;
+                exit(rc);
+            }
         }
     }
 }
@@ -974,12 +969,12 @@ pnmOut_init(FILE *         const imageoutFileP,
    data, pnmOut get 'cols' x 'rows' data, but its output file may be
    'rows x cols'.
 
-   Because the pnmOut object must be set up to receive flipped or not
-   flipped input, we have *flipOkP and *noflipOkP outputs that tell
-   Caller whether he has to flip or not.  In the unique case that
-   the TIFF matrix is already oriented the way the output PNM file needs
-   to be, flipping is idempotent, so both *flipOkP and *noflipOkP are
-   true.
+   Because we must set up the pnmOut object either to receive flipped or not
+   flipped input, we have *flipOkP and *noflipOkP outputs that tell Caller
+   whether he has to flip or not.  Note that Caller also influences which way
+   we set up pnmOut, with his 'flipIfNeeded' argument.  In the unique case
+   that the TIFF matrix is already oriented the way the output PNM file needs
+   to be, flipping is idempotent, so both *flipOkP and *noflipOkP are true.
 -----------------------------------------------------------------------------*/
     pnmOutP->imageoutFileP = imageoutFileP;
     pnmOutP->alphaFileP    = alphaFileP;
@@ -1041,14 +1036,12 @@ pnmOut_term(pnmOut * const pnmOutP,
                        "waiting for Pamflip to terminate");
 
         if (pnmOutP->imagePipeP) {
-            int status;
             fclose(pnmOutP->imagePipeP);
-            waitpid(pnmOutP->imageFlipPid, &status, 0);
+            pm_waitpidSimple(pnmOutP->imageFlipPid);
         }
         if (pnmOutP->alphaPipeP) {
-            int status;
             fclose(pnmOutP->alphaPipeP);
-            waitpid(pnmOutP->alphaFlipPid, &status, 0);
+            pm_waitpidSimple(pnmOutP->alphaFlipPid);
         }
     } else {
         if (pnmOutP->imageoutFileP)
