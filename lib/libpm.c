@@ -10,6 +10,9 @@
 
 #define _XOPEN_SOURCE 500    /* Make sure ftello, fseeko are defined */
 
+#include "netpbm/pm_config.h"
+
+#include <assert.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -18,15 +21,19 @@
 #include <setjmp.h>
 #include <time.h>
 #include <limits.h>
+#if HAVE_FORK
+#include <sys/wait.h>
+#endif
+#include <sys/types.h>
 
-#include "pm_c_util.h"
-#include "mallocvar.h"
-#include "version.h"
+#include "netpbm/pm_c_util.h"
+#include "netpbm/mallocvar.h"
+#include "netpbm/version.h"
+#include "netpbm/nstring.h"
+#include "netpbm/shhopt.h"
 #include "compile.h"
-#include "nstring.h"
-#include "shhopt.h"
 
-#include "pm.h"
+#include "netpbm/pm.h"
 
 /* The following are set by pm_init(), then used by subsequent calls to other
    pm_xxx() functions.
@@ -90,6 +97,86 @@ pm_longjmp(void) {
         longjmp(*pm_jmpbufP, 1);
     else
         exit(1);
+}
+
+
+
+void
+pm_fork(int *         const iAmParentP,
+        pid_t *       const childPidP,
+        const char ** const errorP) {
+/*----------------------------------------------------------------------------
+   Same as POSIX fork, except with a nicer interface and works
+   (fails cleanly) on systems that don't have POSIX fork().
+-----------------------------------------------------------------------------*/
+#if HAVE_FORK
+    int rc;
+
+    rc = fork();
+
+    if (rc < 0) {
+        asprintfN(errorP, "Failed to fork a process.  errno=%d (%s)",
+                  errno, strerror(errno));
+    } else {
+        *errorP = NULL;
+
+        if (rc == 0) {
+            *iAmParentP = FALSE;
+        } else {
+            *iAmParentP = TRUE;
+            *childPidP = rc;
+        }
+    }
+#else
+    asprintfN(errorP, "Cannot fork a process, because this system does "
+              "not have POSIX fork()");
+#endif
+}
+
+
+
+void
+pm_waitpid(pid_t         const pid,
+           int *         const statusP,
+           int           const options,
+           pid_t *       const exitedPidP,
+           const char ** const errorP) {
+
+#if HAVE_FORK
+    pid_t rc;
+    rc = waitpid(pid, statusP, options);
+    if (rc == (pid_t)-1) {
+        asprintfN(errorP, "Failed to wait for process exit.  "
+                  "waitpid() errno = %d (%s)",
+                  errno, strerror(errno));
+    } else {
+        *exitedPidP = rc;
+        *errorP = NULL;
+    }
+#else
+    pm_error("INTERNAL ERROR: Attempt to wait for a process we created on "
+             "a system on which we can't create processes");
+#endif
+}
+
+
+
+void
+pm_waitpidSimple(pid_t const pid) {
+
+    int status;
+    pid_t exitedPid;
+    const char * error;
+
+    pm_waitpid(pid, &status, 0, &exitedPid, &error);
+
+    if (error) {
+        pm_errormsg("%s", error);
+        strfree(error);
+        pm_longjmp();
+    } else {
+        assert(exitedPid != 0);
+    }
 }
 
 
