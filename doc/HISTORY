@@ -29,6 +29,9 @@ not yet  BJH  Release 10.48.00
               Add pbmtocis, cistopbm.  Thanks John Elliott
               <jce@seasip.demon.co.uk>.
 
+              Build: use AR from config.mk instead of "ar" to build static
+              libraries: libnetpbm, librle, libjasper.
+
               Build: tifftopnm builds on systems without fork().
 
               Build: work with JPEG library Version 7.

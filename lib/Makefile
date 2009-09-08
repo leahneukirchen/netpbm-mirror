@@ -177,7 +177,7 @@ endif
 ifeq ($(BUILD_STATICLIB),y)
 libnetpbm.$(STATICLIBSUFFIX): $(LIBOBJECTS) $(LIBOBJECTS_X)
 	-rm -f $@
-	ar rc $@ $(LIBOBJECTS) $(LIBOBJECTS_X)
+	$(AR) rc $@ $(LIBOBJECTS) $(LIBOBJECTS_X)
 	-$(RANLIB) $@
 endif
 
