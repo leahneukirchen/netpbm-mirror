@@ -47,6 +47,8 @@ not yet  BJH  Release 10.48.00
 
               Build: don't use "uint".
 
+              Package: fix installation of pnmplain on Windows (.exe suffix).
+
 09.06.27 BJH  Release 10.47.00
 
               Add pamsistoaglyph.  Thanks Scott Pakin.
