@@ -72,6 +72,9 @@
 /* A hack until we can remove direct access to png_info from the program */
 #if PNG_LIBPNG_VER >= 10400
 #define trans_values trans_color
+#define TRANS_ALPHA trans_alpha
+#else
+#define TRANS_ALPHA trans
 #endif
 
 
@@ -2626,7 +2629,7 @@ convertpnm(struct cmdlineInfo const cmdline,
     info_ptr->num_palette = palette_size;
     if (trans_size > 0) {
         info_ptr->valid |= PNG_INFO_tRNS;
-        info_ptr->trans = trans;
+        info_ptr->TRANS_ALPHA = trans;
         info_ptr->num_trans = trans_size;   /* omit opaque values */
     }
     /* creating hIST chunk */

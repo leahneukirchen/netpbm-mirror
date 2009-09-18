@@ -33,6 +33,9 @@
 /* A hack until we can remove direct access to png_info from the program */
 #if PNG_LIBPNG_VER >= 10400
 #define trans_values trans_color
+#define TRANS_ALPHA trans_alpha
+#else
+#define TRANS_ALPHA trans
 #endif
 
 typedef struct _jmpbuf_wrapper {
@@ -637,8 +640,8 @@ paletteHasPartialTransparency(png_info * const info_ptr) {
             for (i = 0, foundGray = FALSE;
                  i < info_ptr->num_trans && !foundGray;
                  ++i) {
-                if (info_ptr->trans[i] != 0 &&
-                    info_ptr->trans[i] != maxval) {
+                if (info_ptr->TRANS_ALPHA[i] != 0 &&
+                    info_ptr->TRANS_ALPHA[i] != maxval) {
                     foundGray = TRUE;
                 }
             }
@@ -1041,7 +1044,7 @@ makeTupleRow(const struct pam *  const pamP,
             setTuple(pamP, tuplerow[col], fgColor, bgColor, alphaHandling,
                      (pngInfoP->valid & PNG_INFO_tRNS) &&
                      index < pngInfoP->num_trans ?
-                     pngInfoP->trans[index] : maxval);
+                     pngInfoP->TRANS_ALPHA[index] : maxval);
         }
         break;
                 
