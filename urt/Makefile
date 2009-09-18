@@ -19,7 +19,7 @@ all: librle.a
 
 librle.a: $(LIBOBJECTS)
 	rm -f $@
-	ar rc $@ $^
+	$(AR) rc $@ $^
 	$(RANLIB) $@
 
 # Rule for objects.

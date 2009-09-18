@@ -189,13 +189,13 @@ destroyPath(path * const pathP) {
 
 
 typedef struct {
-    uint x;
-    uint y;
+    unsigned int x;
+    unsigned int y;
 } point;
 
 static point
-makePoint(uint const x,
-          uint const y) {
+makePoint(unsigned int const x,
+          unsigned int const y) {
 
     point p;
     
@@ -296,8 +296,8 @@ skipWhiteSpace(pathReader * const pathReaderP) {
 
 
 static void
-getNumber(pathReader * const pathReaderP,
-          uint *       const numberP) {
+getNumber(pathReader *   const pathReaderP,
+          unsigned int * const numberP) {
 
     const path * const pathP          = pathReaderP->pathP;
     const char * const pathText       = pathP->pathText;
@@ -308,7 +308,7 @@ getNumber(pathReader * const pathReaderP,
     if (pathReaderP->cursor >= pathTextLength)
         pm_error("Path description ends where a number was expected.");
     else {
-        uint number;
+        unsigned int number;
 
         number = 0;  /* initial value */
 

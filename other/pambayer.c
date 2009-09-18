@@ -79,6 +79,8 @@ parseCommandLine(int argc, char ** argv,
     else if (argc-1 > 1)
         pm_error("There is at most one argument -- the input file.  "
                  "You specified %u", argc-1);
+    else
+        cmdlineP->inputFilespec = argv[1];
 
     if (!typeSpec)
         pm_error("You must specify the -type option");

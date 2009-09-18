@@ -25,6 +25,6 @@ include $(SRCDIR)/$(SUBDIR)/Makefile.common
 # looks like dependencies were rebuilt and libjasper.a gets rebuilt every
 # time.
 libjasper.a: $(SUBDIRS:%=%/all) partlist 
-	ar rc $@ $(shell cat partlist)
+	$(AR) rc $@ $(shell cat partlist)
 	$(RANLIB) $@
 

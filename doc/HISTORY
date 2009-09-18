@@ -4,6 +4,20 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+09.09.18 BJH  Release 10.35.68
+
+              pambayer: fix unconditional crash/failure when you aren't using
+              Standard Input.
+
+              Build: use AR from config.mk instead of "ar" to build static
+              libraries: libnetpbm, librle, libjasper.
+
+              Build: don't use "uint".
+
+              Package: fix installation of pnmplain on Windows (.exe suffix).
+
+              Configure: fix wrong variable name for HP-UX.
+
 09.09.03 BJH  Release 10.35.67
 
               Build: fix failure to recognize static library in omitting
