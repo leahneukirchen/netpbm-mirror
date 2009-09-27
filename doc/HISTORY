@@ -36,6 +36,8 @@ not yet  BJH  Release 10.48.00
               Build: Configure recognizes libvga.a installed without
               libvga.so and offers that as default.
 
+              Build: Configure recognizes the Mingw-64 compiler.
+
               Build: fix failure of a merge build on a system that doesn't
               have the PNG library.
 
