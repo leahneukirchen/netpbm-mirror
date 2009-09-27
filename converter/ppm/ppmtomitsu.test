@@ -1,0 +1,12 @@
+echo Test 1.  Should print 3110813682 101562
+./ppmtomitsu ../../testimg.ppm | cksum 
+echo Test 2.  Should print 239186803 34399
+pnmquant 100 ../../testimg.ppm | ./ppmtomitsu | cksum 
+echo Test 3.  Should print 3201293405 310
+./ppmtomitsu ../../testgrid.pbm | cksum 
+echo Test 4.  Should print 3354679572 752
+./ppmtomitsu -tiny ../../testgrid.pbm | cksum 
+echo Test 5.  Should print 3999654426 101549
+./ppmtomitsu -tiny ../../testimg.ppm | cksum 
+echo Test 2.  Should print 3078685526 101549
+pnmquant 100 ../../testimg.ppm | ./ppmtomitsu -tiny | cksum 

@@ -791,16 +791,6 @@ createTiffGenerator(int          const ofd,
 
     const char * option;
 
-    /* Before 10.12 (November 2002), we set O_NONBLOCK here:
-
-       fcntl( 1, F_SETFL, O_NONBLOCK ) ; 
-   
-       I have no idea why.  The comment attached said, 
-
-         acooke dec99 - otherwise blocks on read inside 
-         next line (Linux i386) 
-    */
-
     validateSeekableOutputFile(ofd, outFileName);
 
     if (append)
@@ -1034,6 +1024,8 @@ validateReadableStdout(void) {
   error message about a file I/O error.  We, on the other hand, produce
   a helpful error message.
 -----------------------------------------------------------------------------*/
+#if !defined(WIN32) || defined(__CYGWIN__)
+
     int flags;
 
     flags = fcntl(STDOUT_FILENO, F_GETFL);
@@ -1048,6 +1040,7 @@ validateReadableStdout(void) {
                      "In order to create a multi-image TIFF stream, "
                      "Standard Output must be both readable and writable.");
     }
+#endif
 }
 
 

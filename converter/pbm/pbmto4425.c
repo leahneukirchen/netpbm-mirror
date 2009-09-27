@@ -145,7 +145,7 @@ main(int argc, char * argv[]) {
         pbmfile = argv[argn];
     }
 
-    if(STREQ(pbmfile, "-"))
+    if(streq(pbmfile, "-"))
     {
         pbmfp = stdin;
     }

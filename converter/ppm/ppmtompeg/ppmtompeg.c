@@ -33,7 +33,6 @@
 #define _BSD_SOURCE   /* Make sure strdup() is in string.h */
 
 #include <assert.h>
-#include <sys/utsname.h>
 
 #include "all.h"
 #include "mtypes.h"
@@ -98,7 +97,7 @@ void init_fdct _ANSI_ARGS_((void));
 
 struct cmdlineInfo {
     bool         childProcess;
-    int          function;
+    majorProgramFunction function;
     const char * masterHostname;
     int          masterPortNumber;
     unsigned int outputFrames;
@@ -130,36 +129,33 @@ parseArgs(int     const argc,
     
     /* parse the arguments */
     idx = 1;
-    while ( idx < argc-1 ) {
-        if ( argv[idx][0] != '-' )
+    while (idx < argc-1) {
+        if (argv[idx][0] != '-')
             pm_error("argument '%s', which must be an option because "
                      "it is not the last argument, "
                      "does not start with '-'", argv[idx]);
 
-        if ( strcmp(argv[idx], "-stat") == 0 ) {
-            if ( idx+1 < argc-1 ) {
+        if (streq(argv[idx], "-stat")) {
+            if (idx+1 < argc-1) {
                 SetStatFileName(argv[idx+1]);
                 idx += 2;
-            } else {
+            } else
                 pm_error("Invalid -stat option");
-            }
-        } else if ( strcmp(argv[idx], "-gop") == 0 ) {
-            if ((cmdlineP->function != ENCODE_FRAMES) || 
-                (cmdlineP->specificFrames))
+        } else if (streq(argv[idx], "-gop")) {
+            if (cmdlineP->function != ENCODE_FRAMES || 
+                cmdlineP->specificFrames)
                 pm_error("Invalid -gop option");
             
-            if ( idx+1 < argc-1 ) {
+            if (idx+1 < argc-1) {
                 whichGOP = atoi(argv[idx+1]);
                 idx += 2;
-            } else {
+            } else
                 pm_error("Invalid -gop option");
-            }
-        } else if ( strcmp(argv[idx], "-frames") == 0 ) {
-            if ( (cmdlineP->function != ENCODE_FRAMES) || (whichGOP != -1) ) {
+        } else if (streq(argv[idx], "-frames")) {
+            if (cmdlineP->function != ENCODE_FRAMES || whichGOP != -1)
                 pm_error("invalid -frames option");
-            }
 
-            if ( idx+2 < argc-1 ) {
+            if (idx+2 < argc-1) {
                 int const frameStart = atoi(argv[idx+1]);
                 int const frameEnd = atoi(argv[idx+2]);
 
@@ -177,23 +173,23 @@ parseArgs(int     const argc,
                 idx += 3;
             } else
                 pm_error("-frames needs to be followed by two values");
-        } else if (strcmp(argv[idx], "-combine_gops") == 0) {
-            if ((cmdlineP->function != ENCODE_FRAMES) || (whichGOP != -1) || 
-                (cmdlineP->specificFrames)) {
+        } else if (streq(argv[idx], "-combine_gops")) {
+            if (cmdlineP->function != ENCODE_FRAMES || whichGOP != -1 || 
+                cmdlineP->specificFrames) {
                 pm_error("Invalid -combine_gops option");
             }
 
             cmdlineP->function = COMBINE_GOPS;
-            idx++;
-        } else if (strcmp(argv[idx], "-combine_frames") == 0) {
-            if ((cmdlineP->function != ENCODE_FRAMES) || (whichGOP != -1) ||
-                (cmdlineP->specificFrames))
+            ++idx;
+        } else if (streq(argv[idx], "-combine_frames")) {
+            if (cmdlineP->function != ENCODE_FRAMES || whichGOP != -1 ||
+                cmdlineP->specificFrames)
                 pm_error("Invalid -combine_frames option");
 
             cmdlineP->function = COMBINE_FRAMES;
-            idx++;
-        } else if ( strcmp(argv[idx], "-child") == 0 ) {
-            if ( idx+7 < argc-1 ) {
+            ++idx;
+        } else if (streq(argv[idx], "-child")) {
+            if (idx+7 < argc-1) {
                 int combinePortNumber;
                     /* This used to be important information, when the child
                        notified the combine server.  Now the master notifies
@@ -215,104 +211,94 @@ parseArgs(int     const argc,
 
             cmdlineP->childProcess = TRUE;
             idx += 8;
-        } else if ( strcmp(argv[idx], "-io_server") == 0 ) {
-            if ( idx+2 < argc-1 ) {
-                cmdlineP->masterHostname = argv[idx+1];
+        } else if (streq(argv[idx], "-io_server")) {
+            if (idx+2 < argc-1) {
+                cmdlineP->masterHostname   = argv[idx+1];
                 cmdlineP->masterPortNumber = atoi(argv[idx+2]);
-            } else {
+            } else
                 pm_error("Invalid -io_server option");
-            }
 
             ioServer = TRUE;
             idx += 3;
-        } else if ( strcmp(argv[idx], "-output_server") == 0 ) {
-            if ( idx+3 < argc-1 ) {
-                cmdlineP->masterHostname = argv[idx+1];
+        } else if (streq(argv[idx], "-output_server")) {
+            if (idx+3 < argc-1) {
+                cmdlineP->masterHostname   = argv[idx+1];
                 cmdlineP->masterPortNumber = atoi(argv[idx+2]);
-                cmdlineP->outputFrames = atoi(argv[idx+3]);
-            } else {
+                cmdlineP->outputFrames     = atoi(argv[idx+3]);
+            } else
                 pm_error("-output_server option requires 3 option values.  "
-                         "You specified %d", argc-1 - idx);
-            }
+                         "You specified %u", argc-1 - idx);
 
             outputServer = TRUE;
             idx += 4;
-        } else if ( strcmp(argv[idx], "-decode_server") == 0 ) {
-            if ( idx+3 < argc-1 ) {
-                cmdlineP->masterHostname = argv[idx+1];
+        } else if (streq(argv[idx], "-decode_server")) {
+            if (idx+3 < argc-1) {
+                cmdlineP->masterHostname   = argv[idx+1];
                 cmdlineP->masterPortNumber = atoi(argv[idx+2]);
-                cmdlineP->outputFrames = atoi(argv[idx+3]);
-            } else {
+                cmdlineP->outputFrames     = atoi(argv[idx+3]);
+            } else
                 pm_error("Invalid -decode_server option");
-            }
 
             cmdlineP->function = COMBINE_FRAMES;
             decodeServer = TRUE;
             idx += 4;
-        } else if ( strcmp(argv[idx], "-nice") == 0 ) {
+        } else if (streq(argv[idx], "-nice")) {
             niceProcesses = TRUE;
             idx++;
-        } else if ( strcmp(argv[idx], "-max_machines") == 0 ) {
-            if ( idx+1 < argc-1 ) {
+        } else if (streq(argv[idx], "-max_machines")) {
+            if (idx+1 < argc-1) {
                 cmdlineP->maxMachines = atoi(argv[idx+1]);
-            } else {
+            } else
                 pm_error("Invalid -max_machines option");
-            }
 
             idx += 2;
-        } else if ( strcmp(argv[idx], "-quiet") == 0 ) {
-            if ( idx+1 < argc-1 ) {
+        } else if (streq(argv[idx], "-quiet")) {
+            if (idx+1 < argc-1)
                 quietTime = atoi(argv[idx+1]);
-            } else {
+            else
                 pm_error("Invalid -quiet option");
-            }
 
             idx += 2;
-        } else if ( strcmp(argv[idx], "-realquiet") == 0 ) {
+        } else if (streq(argv[idx], "-realquiet")) {
             realQuiet = TRUE;
-            idx++;
-        } else if (( strcmp(argv[idx], "-float_dct") == 0 ) ||
-                   ( strcmp(argv[idx], "-float-dct") == 0 )) {
+            ++idx;
+        } else if (streq(argv[idx], "-float_dct") ||
+                   streq(argv[idx], "-float-dct")) {
             pureDCT = TRUE;
             init_idctref();
             init_fdct();
-            idx++;
-        } else if ( strcmp(argv[idx], "-no_frame_summary") == 0 ) {
-            if ( idx < argc-1 ) {
+            ++idx;
+        } else if (streq(argv[idx], "-no_frame_summary")) {
+            if (idx < argc-1)
                 noFrameSummaryOption = TRUE;
-            } else {
+            else
                 pm_error("Invalid -no_frame_summary option");
-            }
-
-            idx++;
-        } else if ( strcmp(argv[idx], "-snr") == 0 ) {
+            ++idx;
+        } else if (streq(argv[idx], "-snr")) {
             printSNR = TRUE;
-            idx++;
-        } else if ( strcmp(argv[idx], "-mse") == 0 ) {
-            printSNR =  printMSE = TRUE;
-            idx++;
-        } else if ( strcmp(argv[idx], "-debug_sockets") == 0 ) {
+            ++idx;
+        } else if (streq(argv[idx], "-mse")) {
+            printSNR = printMSE = TRUE;
+            ++idx;
+        } else if (streq(argv[idx], "-debug_sockets")) {
             debugSockets = TRUE;
-            idx++;
-        } else if ( strcmp(argv[idx], "-debug_machines") == 0 ) {
+            ++idx;
+        } else if (streq(argv[idx], "-debug_machines")) {
             debugMachines = TRUE;
-            idx++;
-        } else if ( strcmp(argv[idx], "-bit_rate_info") == 0 ) {
-            if ( idx+1 < argc-1 ) {
+            ++idx;
+        } else if (streq(argv[idx], "-bit_rate_info")) {
+            if (idx+1 < argc-1) {
                 bitRateInfoOption = TRUE;
                 SetBitRateFileName(argv[idx+1]);
                 idx += 2;
-            } else {
+            } else
                 pm_error("Invalid -bit_rate_info option");
-            }
-        } else if ( strcmp(argv[idx], "-mv_histogram") == 0 ) {
+        } else if (streq(argv[idx], "-mv_histogram")) {
             computeMVHist = TRUE;
-            idx++;
-        } else {
+            ++idx;
+        } else
             pm_error("Unrecognized option: '%s'", argv[idx]);
-        }
     }
-
     cmdlineP->paramFileName = argv[argc-1];
 }
 
@@ -686,8 +672,8 @@ main(int argc, char **argv) {
         DecodeServer(cmdline.outputFrames, outputFileName, 
                      cmdline.masterHostname, cmdline.masterPortNumber);
     } else {
-        if ((!cmdline.specificFrames) &&
-            ((numMachines == 0) || (cmdline.function != ENCODE_FRAMES)) ) {
+        if (!cmdline.specificFrames &&
+            (numMachines == 0 || cmdline.function != ENCODE_FRAMES) ) {
             ofP = fopen(outputFileName, "wb");
             if (ofP == NULL)
                 pm_error("Could not open output file!");
@@ -695,7 +681,7 @@ main(int argc, char **argv) {
             ofP = NULL;
         
         if (cmdline.function == ENCODE_FRAMES) {
-            if ((numMachines == 0) || (cmdline.specificFrames)) {
+            if (numMachines == 0 || cmdline.specificFrames) {
                 encodeFrames(params.inputSourceP,
                              cmdline.childProcess, 
                              cmdline.masterHostname, cmdline.masterPortNumber,

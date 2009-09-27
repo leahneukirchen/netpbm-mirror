@@ -83,8 +83,9 @@ getBitmapColor(bitmap_type  const bitmap,
                unsigned int const row,
                unsigned int const col) {
 
+    unsigned char * const p = BITMAP_PIXEL(bitmap, row, col);
+
     pixel pix;
-    unsigned char *p = BITMAP_PIXEL (bitmap, row, col);
   
     if (bitmap.np >= 3)
         PPM_ASSIGN(pix, p[0], p[1], p[2]);
@@ -248,19 +249,19 @@ next_unmarked_pixel(unsigned int *   const row,
 
 
 static pixel_outline_type
-find_one_centerline(bitmap_type    const bitmap,
-                    direction_type const original_dir,
-                    unsigned int   const original_row,
-                    unsigned int   const original_col,
-                    bitmap_type *  const marked) {
+findOneCenterline(bitmap_type    const bitmap,
+                  direction_type const originalDir,
+                  unsigned int   const originalRow,
+                  unsigned int   const originalCol,
+                  bitmap_type *  const marked) {
 
-    direction_type search_dir;
+    direction_type searchDir;
     unsigned int row, col;
     pixel_outline_type outline;
 
     outline = new_pixel_outline();
     outline.open  = false;
-    outline.color = getBitmapColor(bitmap, original_row, original_col);
+    outline.color = getBitmapColor(bitmap, originalRow, originalCol);
 
     /* Add the starting pixel to the output list, changing from bitmap
        to Cartesian coordinates and specifying the left edge so that
@@ -272,18 +273,18 @@ find_one_centerline(bitmap_type    const bitmap,
         LOG2(" (%d,%d)", pos.col, pos.row);
         append_outline_pixel(&outline, pos);
     }
-    search_dir = original_dir;  /* initial value */
-    row = original_row;         /* initial value */
-    col = original_col;         /* initial values */
+    searchDir = originalDir;  /* initial value */
+    row = originalRow;         /* initial value */
+    col = originalCol;         /* initial values */
 
     for ( ; ; ) {
-        unsigned int const prev_row = row;
-        unsigned int const prev_col = col;
+        unsigned int const prevRow = row;
+        unsigned int const prevCol = col;
 
         /* If there is no adjacent, unmarked pixel, we can't proceed
            any further, so return an open outline.
         */
-        if (!next_unmarked_pixel(&row, &col, &search_dir, bitmap, marked)) {
+        if (!next_unmarked_pixel(&row, &col, &searchDir, bitmap, marked)) {
             outline.open = true;
             break;
         }
@@ -291,12 +292,12 @@ find_one_centerline(bitmap_type    const bitmap,
         /* If we've moved to a new pixel, mark all edges of the previous
            pixel so that it won't be revisited.
         */
-        if (!(prev_row == original_row && prev_col == original_col))
-            mark_dir(prev_row, prev_col, search_dir, marked);
-        mark_dir(row, col, (search_dir + 4) % 8, marked);
+        if (!(prevRow == originalRow && prevCol == originalCol))
+            mark_dir(prevRow, prevCol, searchDir, marked);
+        mark_dir(row, col, (searchDir + 4) % 8, marked);
 
         /* If we've returned to the starting pixel, we're done. */
-        if (row == original_row && col == original_col)
+        if (row == originalRow && col == originalCol)
             break;
 
         
@@ -308,7 +309,7 @@ find_one_centerline(bitmap_type    const bitmap,
             append_outline_pixel(&outline, pos);
         }
     }
-    mark_dir(original_row, original_col, original_dir, marked);
+    mark_dir(originalRow, originalCol, originalDir, marked);
 
     return outline;
 }
@@ -392,7 +393,7 @@ find_centerline_pixels(bitmap_type         const bitmap,
           LOG2("#%u: (%sclockwise) ", O_LIST_LENGTH(outline_list),
                clockwise ? "" : "counter");
 
-          outline = find_one_centerline(bitmap, dir, row, col, &marked);
+          outline = findOneCenterline(bitmap, dir, row, col, &marked);
 
           /* If the outline is open (i.e., we didn't return to the
              starting pixel), search from the starting pixel in the
@@ -450,7 +451,7 @@ find_centerline_pixels(bitmap_type         const bitmap,
               }
               if (okay) {
                   partial_outline =
-                      find_one_centerline(bitmap, dir, row, col, &marked);
+                      findOneCenterline(bitmap, dir, row, col, &marked);
                   concat_pixel_outline(&outline, &partial_outline);
                   if (partial_outline.data)
                       free(partial_outline.data);

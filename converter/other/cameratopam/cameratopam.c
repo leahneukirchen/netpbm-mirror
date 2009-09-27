@@ -24,18 +24,13 @@
 #include <string.h>
 
 #ifdef __CYGWIN__
-#include <io.h>
+  #include <io.h>
 #endif
-#ifdef WIN32
-  #include <winsock2.h>
-  #pragma comment(lib, "ws2_32.lib")
-  #define strcasecmp stricmp
-  typedef __int64 INT64;
-  static bool const have64BitArithmetic = true;
-#else
+#if !defined(WIN32) || defined(__CYGWIN__)
   #include <unistd.h>
 #endif
 
+#include "pm_c_util.h"
 #include "mallocvar.h"
 #include "shhopt.h"
 #include "pam.h"
@@ -47,17 +42,6 @@
 #include "bayer.h"
 #include "foveon.h"
 #include "dng.h"
-
-#if HAVE_INT64
-   typedef int64_t INT64;
-   static bool const have64BitArithmetic = true;
-#else
-   /* We define INT64 to something that lets the code compile, but we
-      should not execute any INT64 code, because it will get the wrong
-      result.  */
-   typedef int INT64;
-   static bool const have64BitArithmetic = false;
-#endif
 
 /*
    All global variables are defined here, and all functions that

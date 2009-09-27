@@ -433,14 +433,14 @@ compute_ham_cmap(cols, rows, maxval, maxcolors, colorsP, hbits)
                     tmp = hmap[i].b - b; dist += tmp * tmp;
 
                     if( dist <= maxdist ) {
-                        int sum = hmap[i].count + hmap[col].count;
+                        unsigned int sum = hmap[i].count + hmap[col].count;
 
-                        hmap[i].r = (hmap[i].r * hmap[i].count + 
-                                     r * hmap[col].count + sum/2)/sum;
-                        hmap[i].g = (hmap[i].g * hmap[i].count + 
-                                     g * hmap[col].count + sum/2)/sum;
-                        hmap[i].b = (hmap[i].b * hmap[i].count + 
-                                     b * hmap[col].count + sum/2)/sum;
+                        hmap[i].r = ROUNDDIV(hmap[i].r * hmap[i].count + 
+                                             r * hmap[col].count, sum);
+                        hmap[i].g = ROUNDDIV(hmap[i].g * hmap[i].count + 
+                                             g * hmap[col].count, sum);
+                        hmap[i].b = ROUNDDIV(hmap[i].b * hmap[i].count + 
+                                             b * hmap[col].count, sum);
                         hmap[i].count = sum;
 
                         hmap[col] = hmap[i];    /* temp store */
@@ -635,20 +635,9 @@ ppm_to_ham(fp, cols, rows, maxval, colormap, colors, cmapmaxval, hamplanes)
 
 
 static long
-#ifdef __STDC__
 do_ham_body(FILE *ifP, FILE *ofp, int cols, int rows,
             pixval maxval, pixval hammaxval, int nPlanes,
             pixel *colormap, int colors)
-#else
-do_ham_body(ifP, ofp, cols, rows, maxval, hammaxval, nPlanes, colormap, colors)
-    FILE *ifP, *ofp;
-    int cols, rows;
-    pixval maxval;      /* maxval of image color components */
-    pixval hammaxval;   /* maxval of HAM color changes */
-    int nPlanes;
-    pixel *colormap;
-    int colors;
-#endif
 {
     register int col, row, i;
     rawtype *raw_rowbuf;
@@ -876,16 +865,8 @@ ppm_to_deep(fp, cols, rows, maxval, bitspercolor)
 
 
 static long
-#if __STDC__
 do_deep_body(FILE *ifP, FILE *ofp, int cols, int rows, pixval maxval, 
              int bitspercolor)
-#else
-do_deep_body(ifP, ofp, cols, rows, maxval, bitspercolor)
-    FILE *ifP, *ofp;
-    int cols, rows;
-    pixval maxval;
-    int bitspercolor;
-#endif
 {
     register int row, col;
     pixel *pP;
@@ -1014,16 +995,8 @@ ppm_to_dcol(fp, cols, rows, maxval, dcol)
 
 
 static long
-#if __STDC__
 do_dcol_body(FILE *ifP, FILE *ofp, int cols, int rows, pixval maxval, 
              DirectColor *dcol)
-#else
-do_dcol_body(ifP, ofp, cols, rows, maxval, dcol)
-    FILE *ifP, *ofp;
-    int cols, rows;
-    pixval maxval;
-    DirectColor *dcol;
-#endif
 {
     register int row, col;
     pixel *pP;
@@ -1161,18 +1134,8 @@ ppm_to_std(fp, cols, rows, maxval, colormap, colors, cmapmaxval,
 
 
 static long
-#if __STDC__
 do_std_body(FILE *ifP, FILE *ofp, int cols, int rows, pixval maxval,
             pixel *colormap, int colors, int nPlanes)
-#else
-do_std_body(ifP, ofp, cols, rows, maxval, colormap, colors, nPlanes)
-    FILE *ifP, *ofp;
-    int cols, rows;
-    pixval maxval;
-    pixel *colormap;
-    int colors;
-    int nPlanes;
-#endif
 {
     register int row, col, i;
     pixel *pP;
@@ -1783,12 +1746,7 @@ runbyte1(size)
 /************ other utility functions ************/
 
 static void
-#if __STDC__
 put_big_short(short s)
-#else
-put_big_short(s)
-    short s;
-#endif
 {
     if ( pm_writebigshort( stdout, s ) == -1 )
         pm_error( "write error" );
@@ -1818,12 +1776,12 @@ static int *
 make_val_table(oldmaxval, newmaxval)
     int oldmaxval, newmaxval;
 {
-    int i;
-    int *table;
+    unsigned int i;
+    int * table;
 
     MALLOCARRAY_NOFAIL(table, oldmaxval + 1);
-    for(i = 0; i <= oldmaxval; i++ )
-        table[i] = (i * newmaxval + oldmaxval/2) / oldmaxval;
+    for (i = 0; i <= oldmaxval; ++i)
+        table[i] = ROUNDDIV(i * newmaxval, oldmaxval);
 
     return table;
 }

@@ -8,6 +8,7 @@
   This is meant to replace Ppmdither by Christos Zoulas, 1991.
 =============================================================================*/
 
+#include "pm_c_util.h"
 #include "mallocvar.h"
 #include "shhopt.h"
 #include "pam.h"

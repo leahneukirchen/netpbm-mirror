@@ -58,19 +58,12 @@
 ** path here.  This is used by PPM to parse color names into rgb values.
 ** If you don't have such a file, comment this out and use the alternative
 ** hex and decimal forms to specify colors (see ppm/pgmtoppm.1 for details).  */
-/* There was some evidence before Netpbm 9.1 that the rgb database macros
-   might be already set right now.  I couldn't figure out how, so I changed
-   their meanings and they are now set unconditionally.  -Bryan 00.05.03.
-*/
-#ifdef VMS
-#define RGB_DB1 "PBMplus_Dir:RGB.TXT"
-#define RGB_DB2 "PBMplus_Dir:RGB.TXT"
-#define RGB_DB3 "PBMplus_Dir:RGB.TXT"
-#else
-#define RGB_DB1 "/usr/lib/X11/rgb.txt"
-#define RGB_DB2 "/usr/share/X11/rgb.txt"
-#define RGB_DB3 "/usr/X11R6/lib/X11/rgb.txt"
-#endif
+
+#define RGB_DB_PATH \
+"/usr/share/netpbm/rgb.txt:" \
+"/usr/lib/X11/rgb.txt:" \
+"/usr/share/X11/rgb.txt:" \
+"/usr/X11R6/lib/X11/rgb.txt"
 
 /* CONFIGURE: This is the name of an environment variable that tells
 ** where the color names database is.  If the environment variable isn't
@@ -110,41 +103,6 @@ extern int rand();
 #endif /* __SASC */
 
 #endif /*SYSV or Amiga*/
-
-/* We should change all of Netpbm to use uint32_t instead of uint32n,
-   because we now have a strategy for ensuring that uint32_t is defined.
-   But we're going to wait a while in case our uint32_t strategy doesn't
-   work.  04.08.24.
-*/
-typedef uint32_t uint32n;
-typedef int32_t int32n;
-
-#include <fcntl.h>
-#include <time.h>
-#include <stdlib.h>
-#include <unistd.h>
-/* 
-   Before Netpbm 9.0, atoi() and exit() were declared for everybody
-   except MSDOS and Amiga, and time() and write() were declared for
-   everybody except MSDOS, Amiga, and __osf__.  fcntl.h, time.h, and
-   stlib.h were included for MSDOS and Amiga, and unistd.h was included
-   for everyone except VMS, MSDOS, and Amiga.  With the netbsd patches,
-   atoi(), exit(), time(), and write() were not declared for __NetBSD__.
-
-   We're hoping that all current systems have the standard header
-   files, and will reinstate some of these explicit declarations if we
-   hear otherwise.  
-
-   If it turns out to be this easy, we should just move these inclusions
-   to the source files that actually need them.
-   
-   -Bryan 2000.04.13
-
-extern int atoi();
-extern void exit();
-extern long time();
-extern int write(); 
-*/
 
 /* CONFIGURE: On most BSD systems, malloc() gets declared in stdlib.h, on
 ** system V, it gets declared in malloc.h. On some systems, malloc.h
@@ -240,6 +198,60 @@ extern int write();
   #endif
 #endif
 
+/* CONFIGURE: GNUC extensions are used in performance critical places
+   when available.  Test whether they exist.
+
+   Turn off by defining NO_GCC_BUILTINS.
+
+   Note that though these influence the code produced, the compiler
+   setting ultimately decides what operands are used.  If you
+   want a generic build, check the manual and adjust CFLAGS in
+   config.mk accordingly.
+
+   For example, if you want binaries that run on all Intel x86-32
+   family CPUs back to 80386, adding "-march=i386" to CFLAGS in
+   config.mk is much better than setting NO_GCC_BUILTINS to 1.
+   If you want to be extra sure use:
+   "-march=i386 -mno-mmx -mno-sse -DNO_GCC_BUILTINS"
+*/
+
+#if defined(__GNUC__) && !defined(NO_GCC_BUILTINS)
+  #define GCCVERSION __GNUC__*100 + __GNUC_MINOR__
+#else
+  #define GCCVERSION 0
+#endif
+
+#ifndef HAVE_GCC_MMXSSE
+#if GCCVERSION >=301 && defined(__MMX__) && defined(__SSE__)
+  #define HAVE_GCC_MMXSSE 1
+  /* Use GCC builtins to directly access MMX/SSE features */ 
+#else
+  #define HAVE_GCC_MMXSSE 0
+#endif
+#endif
+
+#ifndef HAVE_GCC_BITCOUNT
+#if GCCVERSION >=304
+  #define HAVE_GCC_BITCOUNT 1
+  /* Use __builtin_clz(),  __builtin_ctz() (and variants for long)
+     to count leading/trailing 0s in int (and long). */
+#else
+  #define HAVE_GCC_BITCOUNT 0
+#endif
+#endif
+
+#ifndef HAVE_GCC_BSWAP
+#if GCCVERSION >=403
+  #define HAVE_GCC_BSWAP 1
+  /* Use __builtin_bswap32(), __builtin_bswap64() for endian conversion.
+     Available from GCC v 4.3 onward.
+     NOTE: On intel CPUs this may produce the bswap operand which is not
+     available on 80386. */
+#else
+  #define HAVE_GCC_BSWAP 0
+#endif
+#endif
+
 
 
 /* CONFIGURE: Some systems seem to need more than standard program linkage
@@ -263,6 +275,8 @@ extern int write();
 # endif
 #endif
 
+#include <unistd.h>  /* Get _LFS_LARGEFILE defined */
+#include <sys/types.h>
 /* In GNU, _LFS_LARGEFILE means the "off_t" functions (ftello, etc.) are
    available.  In AIX, _AIXVERSION_430 means it's AIX Version 4.3.0 or
    better, which seems to mean the "off_t" functions are available.
@@ -298,3 +312,10 @@ typedef long int pm_filepos;
 
 typedef int qsort_comparison_fn(const void *, const void *);
     /* A compare function to pass to <stdlib.h>'s qsort() */
+
+#if defined(WIN32) && !defined(__CYGWIN__)
+  #define pm_mkdir(dir, perm) _mkdir(dir)
+#else
+  #define pm_mkdir(dir, perm) mkdir(dir, perm) 
+#endif
+

@@ -671,66 +671,66 @@ processParamLine(char const input[],
 
     switch(input[0]) {
     case 'A':
-        if (STRNEQ(input, "ASPECT_RATIO", 12)) {
+        if (strneq(input, "ASPECT_RATIO", 12)) {
             aspectRatio = GetAspectRatio(SkipSpacesTabs(&input[12]));
             optionSeen[OPTION_ASPECT_RATIO] = TRUE;
         }
         break;
         
     case 'B':
-        if (STRNEQ(input, "BQSCALE", 7)) {
+        if (strneq(input, "BQSCALE", 7)) {
             SetBQScale(atoi(SkipSpacesTabs(&input[7])));
             optionSeen[OPTION_BQSCALE] = TRUE;
-        } else if (STRNEQ(input, "BASE_FILE_FORMAT", 16)) {
+        } else if (strneq(input, "BASE_FILE_FORMAT", 16)) {
             const char * arg = SkipSpacesTabs(&input[16]);
             SetFileFormat(arg);
-            if (STRNEQ(arg, "YUV", 3) || STREQ(arg, "Y"))
+            if (strneq(arg, "YUV", 3) || streq(arg, "Y"))
                 *yuvUsedP = TRUE;
             optionSeen[OPTION_BASE_FORMAT] = TRUE;
-        } else if (STRNEQ(input, "BSEARCH_ALG", 11)) {
+        } else if (strneq(input, "BSEARCH_ALG", 11)) {
             SetBSearchAlg(SkipSpacesTabs(&input[11]));
             optionSeen[OPTION_BSEARCH_ALG] = TRUE;
-        } else if (STRNEQ(input, "BIT_RATE", 8)) {
+        } else if (strneq(input, "BIT_RATE", 8)) {
             setBitRate(SkipSpacesTabs(&input[8]));
             optionSeen[OPTION_BIT_RATE] = TRUE;
-        } else if (STRNEQ(input, "BUFFER_SIZE", 11)) {
+        } else if (strneq(input, "BUFFER_SIZE", 11)) {
             setBufferSize(SkipSpacesTabs(&input[11]));
             optionSeen[OPTION_BUFFER_SIZE] = TRUE;                  
         }
         break;
 
     case 'C':
-        if (STRNEQ(input, "CDL_FILE", 8)) {
+        if (strneq(input, "CDL_FILE", 8)) {
             strcpy(specificsFile, SkipSpacesTabs(&input[8]));
             specificsOn = TRUE;
             optionSeen[OPTION_SPECIFICS] = TRUE;
-        } else if (STRNEQ(input, "CDL_DEFINES", 11)) {
+        } else if (strneq(input, "CDL_DEFINES", 11)) {
             strcpy(specificsDefines, SkipSpacesTabs(&input[11]));
             optionSeen[OPTION_DEFS_SPECIFICS] = TRUE;
         }
         break;
 
     case 'F':
-        if (STRNEQ(input, "FRAME_INPUT_DIR", 15)) {
+        if (strneq(input, "FRAME_INPUT_DIR", 15)) {
             const char * const arg = SkipSpacesTabs(&input[15]);
-            if (STRNCASEEQ(arg, "stdin", 5))
+            if (strncaseeq(arg, "stdin", 5))
                 SetStdinInput(frameInputSourceP);
 
             strcpy(currentFramePath, arg);
-        } else if (STRNEQ(input, "FRAME_INPUT", 11)) {
+        } else if (strneq(input, "FRAME_INPUT", 11)) {
             ReadInputFileNames(fpointer, "FRAME_END_INPUT", 
                                frameInputSourceP->stdinUsed ? 
                                NULL : frameInputSourceP);
             optionSeen[OPTION_FRAME_INPUT] = TRUE;
-        } else if (STRNEQ(input, "FORCE_I_ALIGN", 13)) {
+        } else if (strneq(input, "FORCE_I_ALIGN", 13)) {
             forceIalign = TRUE;
-        } else if (STRNEQ(input, "FORCE_ENCODE_LAST_FRAME", 23)) {
+        } else if (strneq(input, "FORCE_ENCODE_LAST_FRAME", 23)) {
             /* NO-OP.  We used to drop trailing B frames by default and you
                needed this option to change the last frame to I so you could
                encode all the frames.  Now we just do that all the time.  
                Why wouldn't we?
             */
-        } else if (STRNEQ(input, "FRAME_RATE", 10)) {
+        } else if (strneq(input, "FRAME_RATE", 10)) {
             frameRate = GetFrameRate(SkipSpacesTabs(&input[10]));
             frameRateRounded = (int) VidRateNum[frameRate];
             if ((frameRate % 3) == 1)
@@ -740,21 +740,21 @@ processParamLine(char const input[],
         break;
         
     case 'G':
-        if (STRNEQ(input, "GOP_SIZE", 8)) {
+        if (strneq(input, "GOP_SIZE", 8)) {
             SetGOPSize(atoi(SkipSpacesTabs(&input[8])));
             optionSeen[OPTION_GOP] = TRUE;
-        } else if (STRNEQ(input, "GOP_INPUT_DIR", 13)) {
+        } else if (strneq(input, "GOP_INPUT_DIR", 13)) {
             const char * const arg = SkipSpacesTabs(&input[13]);
-            if (STRNCASEEQ(arg, "stdin", 5))
+            if (strncaseeq(arg, "stdin", 5))
                 SetStdinInput(gopInputSourceP);
 
             strcpy(currentGOPPath, arg);
-        } else if (STRNEQ(input, "GOP_INPUT", 9)) {
+        } else if (strneq(input, "GOP_INPUT", 9)) {
             ReadInputFileNames(fpointer, "GOP_END_INPUT", 
                                gopInputSourceP->stdinUsed ? 
                                NULL : gopInputSourceP);
             optionSeen[OPTION_GOP_INPUT] = TRUE;
-        } else if (STRNEQ(input, "GAMMA", 5)) {
+        } else if (strneq(input, "GAMMA", 5)) {
             GammaCorrection = TRUE;
             sscanf(SkipSpacesTabs(&input[5]), "%f", &GammaValue);
             optionSeen[OPTION_GAMMA] = TRUE;
@@ -762,27 +762,27 @@ processParamLine(char const input[],
         break;
         
     case 'I':
-        if (STRNEQ(input, "IQSCALE", 7)) {
+        if (strneq(input, "IQSCALE", 7)) {
             SetIQScale(atoi(SkipSpacesTabs(&input[7])));
             optionSeen[OPTION_IQSCALE] = TRUE;
-        } else if (STRNEQ(input, "INPUT_DIR", 9)) {
+        } else if (strneq(input, "INPUT_DIR", 9)) {
             const char * const arg = SkipSpacesTabs(&input[9]);
-            if (STRNCASEEQ(arg, "stdin", 5))
+            if (strncaseeq(arg, "stdin", 5))
                 SetStdinInput(inputSourceP);
             strcpy(currentPath, arg);
             optionSeen[OPTION_INPUT_DIR] = TRUE;
-        } else if (STRNEQ(input, "INPUT_CONVERT", 13)) {
+        } else if (strneq(input, "INPUT_CONVERT", 13)) {
             strcpy(inputConversion, SkipSpacesTabs(&input[13]));
             optionSeen[OPTION_INPUT_CONVERT] = TRUE;
-        } else if (STREQ(input, "INPUT")) {
+        } else if (streq(input, "INPUT")) {
             ReadInputFileNames(fpointer, "END_INPUT", 
                                inputSourceP->stdinUsed ?
                                NULL : inputSourceP);
             optionSeen[OPTION_INPUT] = TRUE;
-        } else if (STRNEQ(input, "IO_SERVER_CONVERT", 17)) {
+        } else if (strneq(input, "IO_SERVER_CONVERT", 17)) {
             strcpy(ioConversion, SkipSpacesTabs(&input[17]));
             optionSeen[OPTION_IO_CONVERT] = TRUE;
-        } else if (STRNEQ(input, "IQTABLE", 7)) {
+        } else if (strneq(input, "IQTABLE", 7)) {
             processIqtable(fpointer);
 
             optionSeen[OPTION_IQTABLE] = TRUE;
@@ -790,12 +790,12 @@ processParamLine(char const input[],
         break;
 
     case 'K':
-        if (STRNEQ(input, "KEEP_TEMP_FILES", 15))
+        if (strneq(input, "KEEP_TEMP_FILES", 15))
             keepTempFiles = TRUE;
         break;
         
     case 'N':
-      if (STRNEQ(input, "NIQTABLE", 8)) {
+      if (strneq(input, "NIQTABLE", 8)) {
           readNiqTable(fpointer);
 
           optionSeen[OPTION_NIQTABLE] = TRUE;
@@ -803,7 +803,7 @@ processParamLine(char const input[],
       break;
 
     case 'O':
-        if (STRNEQ(input, "OUTPUT", 6)) {
+        if (strneq(input, "OUTPUT", 6)) {
             const char * const arg = SkipSpacesTabs(&input[6]);
             if ( whichGOP == -1 )
                 strcpy(outputFileName, arg);
@@ -815,45 +815,45 @@ processParamLine(char const input[],
         break;
         
     case 'P':
-        if (STRNEQ(input, "PATTERN", 7)) {
+        if (strneq(input, "PATTERN", 7)) {
             SetFramePattern(SkipSpacesTabs(&input[7]));
             optionSeen[OPTION_PATTERN] = TRUE;
-        } else if (STRNEQ(input, "PIXEL", 5)) {
+        } else if (strneq(input, "PIXEL", 5)) {
             SetPixelSearch(SkipSpacesTabs(&input[5]));
             optionSeen[OPTION_PIXEL] = TRUE;
-        } else if (STRNEQ(input, "PQSCALE", 7)) {
+        } else if (strneq(input, "PQSCALE", 7)) {
             SetPQScale(atoi(SkipSpacesTabs(&input[7])));
             optionSeen[OPTION_PQSCALE] = TRUE;
-        } else if (STRNEQ(input, "PSEARCH_ALG", 11)) {
+        } else if (strneq(input, "PSEARCH_ALG", 11)) {
             SetPSearchAlg(SkipSpacesTabs(&input[11]));
             optionSeen[OPTION_PSEARCH_ALG] = TRUE;
-        } else if (STRNEQ(input, "PARALLEL_TEST_FRAMES", 20)) {
+        } else if (strneq(input, "PARALLEL_TEST_FRAMES", 20)) {
             SetParallelPerfect(FALSE);
             parallelTestFrames = atoi(SkipSpacesTabs(&input[20]));
-        } else if (STRNEQ(input, "PARALLEL_TIME_CHUNKS", 20)) {
+        } else if (strneq(input, "PARALLEL_TIME_CHUNKS", 20)) {
             SetParallelPerfect(FALSE);
             parallelTimeChunks = atoi(SkipSpacesTabs(&input[20]));
-        } else if (STRNEQ(input, "PARALLEL_CHUNK_TAPER", 20)) {
+        } else if (strneq(input, "PARALLEL_CHUNK_TAPER", 20)) {
             SetParallelPerfect(FALSE);
             parallelTimeChunks = -1;
-        } else if (STRNEQ(input, "PARALLEL_PERFECT", 16)) {
+        } else if (strneq(input, "PARALLEL_PERFECT", 16)) {
             SetParallelPerfect(TRUE);
-        } else if (STRNEQ(input, "PARALLEL", 8)) {
+        } else if (strneq(input, "PARALLEL", 8)) {
             ReadMachineNames(fpointer);
             optionSeen[OPTION_PARALLEL] = TRUE;
         }
         break;
         
     case 'R':
-        if (STRNEQ(input, "RANGE", 5)) {
+        if (strneq(input, "RANGE", 5)) {
             processRanges(SkipSpacesTabs(&input[5]));
             optionSeen[OPTION_RANGE] = TRUE;
-        } else if (STRNEQ(input, "REFERENCE_FRAME", 15)) {
+        } else if (strneq(input, "REFERENCE_FRAME", 15)) {
             SetReferenceFrameType(SkipSpacesTabs(&input[15]));
             optionSeen[OPTION_REF_FRAME] = TRUE;
-        } else if (STRNEQ(input, "RSH", 3)) {
+        } else if (strneq(input, "RSH", 3)) {
             SetRemoteShell(SkipSpacesTabs(&input[3]));
-        } else if (STRNEQ(input, "RESIZE", 6)) {
+        } else if (strneq(input, "RESIZE", 6)) {
             const char * const arg = SkipSpacesTabs(&input[6]);
             sscanf(arg, "%dx%d", &outputWidth, &outputHeight);
             outputWidth &= ~(DCTSIZE * 2 - 1);
@@ -863,22 +863,22 @@ processParamLine(char const input[],
         break;
 
     case 'S':
-        if (STRNEQ(input, "SLICES_PER_FRAME", 16)) {
+        if (strneq(input, "SLICES_PER_FRAME", 16)) {
             SetSlicesPerFrame(atoi(SkipSpacesTabs(&input[16])));
             optionSeen[OPTION_SPF] = TRUE;
-        } else if (STRNEQ(input, "SLAVE_CONVERT", 13)) {
+        } else if (strneq(input, "SLAVE_CONVERT", 13)) {
             strcpy(slaveConversion, SkipSpacesTabs(&input[13]));
             optionSeen[OPTION_SLAVE_CONVERT] = TRUE;
-        } else if (STRNEQ(input, "SPECIFICS_FILE", 14)) {
+        } else if (strneq(input, "SPECIFICS_FILE", 14)) {
             strcpy(specificsFile, SkipSpacesTabs(&input[14]));
             specificsOn = TRUE;
             optionSeen[OPTION_SPECIFICS] = TRUE;
-        } else if (STRNEQ(input, "SPECIFICS_DEFINES", 16)) {
+        } else if (strneq(input, "SPECIFICS_DEFINES", 16)) {
             strcpy(specificsDefines, SkipSpacesTabs(&input[17]));
             optionSeen[OPTION_DEFS_SPECIFICS] = TRUE;
-        } else if (STRNEQ(input, "SEQUENCE_SIZE", 13)) {
+        } else if (strneq(input, "SEQUENCE_SIZE", 13)) {
             mult_seq_headers = atoi(SkipSpacesTabs(&input[13]));
-        } else if (STRNEQ(input, "SIZE", 4)) {
+        } else if (strneq(input, "SIZE", 4)) {
             const char * const arg = SkipSpacesTabs(&input[4]);
             sscanf(arg, "%dx%d", &yuvWidth, &yuvHeight);
             realWidth = yuvWidth;
@@ -889,42 +889,42 @@ processParamLine(char const input[],
         break;
 
     case 'T':
-        if (STRNEQ(input, "TUNE", 4)) {
+        if (strneq(input, "TUNE", 4)) {
             tuneingOn = TRUE;
             ParseTuneParam(SkipSpacesTabs(&input[4]));
         }
         break;
 
     case 'U':
-        if (STRNEQ(input, "USER_DATA", 9)) {
+        if (strneq(input, "USER_DATA", 9)) {
             strcpy(userDataFileName, SkipSpacesTabs(&input[9]));
             optionSeen[OPTION_USER_DATA] = TRUE;
         }
         break;
         
     case 'W':
-        if (STRNEQ(input, "WARN_UNDERFLOW", 14))
+        if (strneq(input, "WARN_UNDERFLOW", 14))
             paramP->warnUnderflow = TRUE;
-        if (STRNEQ(input, "WARN_OVERFLOW", 13))
+        if (strneq(input, "WARN_OVERFLOW", 13))
             paramP->warnOverflow = TRUE;
         break;
         
     case 'Y':
-        if (STRNEQ(input, "YUV_SIZE", 8)) {
+        if (strneq(input, "YUV_SIZE", 8)) {
             const char * const arg = SkipSpacesTabs(&input[8]);
             sscanf(arg, "%dx%d", &yuvWidth, &yuvHeight);
             realWidth = yuvWidth;
             realHeight = yuvHeight;
             Fsize_Validate(&yuvWidth, &yuvHeight);
             optionSeen[OPTION_YUV_SIZE] = TRUE;
-        } else if (STRNEQ(input, "Y_SIZE", 6)) {
+        } else if (strneq(input, "Y_SIZE", 6)) {
             const char * const arg = SkipSpacesTabs(&input[6]);
             sscanf(arg, "%dx%d", &yuvWidth, &yuvHeight);
             realWidth = yuvWidth;
             realHeight = yuvHeight;
             Fsize_Validate(&yuvWidth, &yuvHeight);
             optionSeen[OPTION_YUV_SIZE] = TRUE;
-        } else if (STRNEQ(input, "YUV_FORMAT", 10)) {
+        } else if (strneq(input, "YUV_FORMAT", 10)) {
             strcpy(yuvConversion,  SkipSpacesTabs(&input[10]));
             optionSeen[OPTION_YUV_FORMAT] = TRUE;
         }
@@ -934,26 +934,21 @@ processParamLine(char const input[],
 
 
 
-/*===========================================================================*
- *
- * ReadParamFile
- *
- *	read the parameter file
- *	function is ENCODE_FRAMES, COMBINE_GOPS, or COMBINE_FRAMES, and
- *	    will slightly modify the procedure's behavior as to what it
- *	    is looking for in the parameter file
- *
- * SIDE EFFECTS:    sets parameters accordingly, as well as machine info for
- *		    parallel execution and input file names
- *
- *===========================================================================*/
 void
-ReadParamFile(const char *    const fileName, 
-              int             const function,
-              struct params * const paramP) {
+ReadParamFile(const char *         const fileName, 
+              majorProgramFunction const function,
+              struct params *      const paramP) {
+/*----------------------------------------------------------------------------
+   Read the parameter file 'fileName' as *paramP.
 
-  FILE *fpointer;
-  char    buffer[256];
+   'function' slightly modifies our behavior as to what it is looking for
+   in the parameter file.
+
+   As a side effect, set machine info for parallel execution and input
+   file names
+-----------------------------------------------------------------------------*/
+  FILE * fpointer;
+  char buffer[256];
   bool yuvUsed;
   struct inputSource * inputSourceP;
       /* Contents of INPUT section */

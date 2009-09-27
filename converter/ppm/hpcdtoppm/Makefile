@@ -5,14 +5,14 @@ endif
 SUBDIR = converter/ppm/hpcdtoppm
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 all: hpcdtoppm
 
 SCRIPTS = hpcdtoppm pcdovtoppm
 MERGE_OBJECTS =
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 install: install.bin.local
 .PHONY: install.bin.local

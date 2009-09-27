@@ -5,13 +5,14 @@ endif
 SUBDIR = other
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 SUBDIRS = pamx
 
+EXTERN_INCLUDES =
 ifneq ($(LINUXSVGALIB),NONE)
   ifneq ($(LINUXSVGAHDR_DIR),)
-    INCLUDES += -I$(LINUXSVGAHDR_DIR)
+    EXTERN_INCLUDES += -I$(LINUXSVGAHDR_DIR)
   endif
 endif
 
@@ -23,7 +24,7 @@ endif
 # build.
 
 PORTBINARIES = pamarith pambayer pamchannel pamdepth \
-	pamendian pamlookup pampick pamsplit \
+	pamendian pamfixtrunc pamlookup pampick pamsplit \
 	pamstack pamsummcol pnmcolormap \
 	ppmdcfont ppmddumpfont ppmdmkfont 
 
@@ -47,7 +48,7 @@ MERGE_OBJECTS = $(MERGEBINARIES:%=%.o2)
 .PHONY: all
 all: $(BINARIES) $(SUBDIRS:%=%/all)
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 ppmsvgalib: %: %.o $(NETPBMLIB) $(LIBOPT)
 	$(LD) -o $@ $< \

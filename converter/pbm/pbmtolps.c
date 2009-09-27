@@ -112,7 +112,7 @@ main(int argc, char ** argv) {
 	pbm_init(&argc, argv);
 
     i = 1;
-    if (i < argc && STREQ(argv[i], "-dpi")) {
+    if (i < argc && streq(argv[i], "-dpi")) {
         if (i == argc - 1)
             pm_usage(usage);
         sscanf(argv[i + 1], "%f", &dpi);

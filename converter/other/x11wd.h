@@ -27,7 +27,7 @@ enum visualclass {StaticGray=0,GrayScale=1,StaticColor=2,PseudoColor=3,
 #define DirectColor 5
 */
 
-typedef uint32n xwdval;
+typedef uint32_t xwdval;
 #define XWDVAL_MAX ((xwdval)(-1))
 #define X11WD_FILE_VERSION 7
 typedef struct {
@@ -67,13 +67,13 @@ typedef struct {
         */
     xwdval window_width;    /* Window width */
     xwdval window_height;   /* Window height */
-    int32n window_x;        /* Window upper left X coordinate */
-    int32n window_y;        /* Window upper left Y coordinate */
+    int32_t window_x;        /* Window upper left X coordinate */
+    int32_t window_y;        /* Window upper left Y coordinate */
     xwdval window_bdrwidth; /* Window border width */
     } X11WDFileHeader;
 
 typedef struct {
-    uint32n num;
+    uint32_t num;
     unsigned short red, green, blue;
     char flags;         /* do_red, do_green, do_blue */
     char pad;

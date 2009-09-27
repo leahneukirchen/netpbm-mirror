@@ -31,6 +31,7 @@
  *  - moved check of 16-color-palette into pcx_16col_to_ppm(),
  *    now checks if it contains only a single color
  */
+#include "pm_c_util.h"
 #include "mallocvar.h"
 #include "shhopt.h"
 #include "ppm.h"

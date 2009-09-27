@@ -100,6 +100,9 @@ PMotionSearch(const LumBlock * const currentBlockP,
               int              const bx, 
               vector *         const motionP);
 
+void
+MotionSearchPreComputation(MpegFrame * const frameP);
+
 /*==================*
  * GLOBAL VARIABLES *
  *==================*/

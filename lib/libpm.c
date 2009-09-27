@@ -1,69 +1,45 @@
 /**************************************************************************
                                   libpm.c
 ***************************************************************************
-  This is the most fundamental Netpbm library.  It contains routines
-  not specific to any particular Netpbm format.
+  This file contains fundamental libnetpbm services.
 
   Some of the subroutines in this library are intended and documented
   for use by Netpbm users, but most of them are just used by other
   Netpbm library subroutines.
-
-  Before May 2001, this function was served by the libpbm library
-  (in addition to being the library for handling the PBM format).
-
 **************************************************************************/
-#define _SVID_SOURCE
-    /* Make sure P_tmpdir is defined in GNU libc 2.0.7 (_XOPEN_SOURCE 500
-       does it in other libc's).  pm_config.h defines TMPDIR as P_tmpdir
-       in some environments.
-    */
+
 #define _XOPEN_SOURCE 500    /* Make sure ftello, fseeko are defined */
-#define _LARGEFILE_SOURCE 1  /* Make sure ftello, fseeko are defined */
-#define _LARGEFILE64_SOURCE 1 
-#define _FILE_OFFSET_BITS 64
-    /* This means ftello() is really ftello64() and returns a 64 bit file
-       position.  Unless the C library doesn't have ftello64(), in which 
-       case ftello() is still just ftello().
 
-       Likewise for all the other C library file functions.
-
-       And off_t and fpos_t are 64 bit types instead of 32.  Consequently,
-       pm_filepos_t might be 64 bits instead of 32.
-    */
-#define _LARGE_FILES  
-    /* This does for AIX what _FILE_OFFSET_BITS=64 does for GNU */
-#define _LARGE_FILE_API
-    /* This makes the the x64() functions available on AIX */
-
+#include <unistd.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
 #include <errno.h>
 #include <setjmp.h>
-#ifdef __DJGPP__
-  #include <io.h>
-#endif
+#include <time.h>
+#include <limits.h>
 
 #include "pm_c_util.h"
+#include "mallocvar.h"
 #include "version.h"
 #include "compile.h"
 #include "nstring.h"
 #include "shhopt.h"
-#include "mallocvar.h"
+
 #include "pm.h"
 
 /* The following are set by pm_init(), then used by subsequent calls to other
    pm_xxx() functions.
    */
-static const char* pm_progname;
-static bool pm_showmessages;  
-    /* Programs should display informational messages (because the user didn't
-       specify the --quiet option).
-    */
+const char * pm_progname;
 
 int pm_plain_output;
     /* Boolean: programs should produce output in plain format */
 
+static bool pm_showmessages;  
+    /* Programs should display informational messages (because the user didn't
+       specify the --quiet option).
+    */
 static jmp_buf * pm_jmpbufP = NULL;
     /* A description of the point to which the program should hyperjump
        if a libnetpbm function encounters an error (libnetpbm functions
@@ -75,6 +51,17 @@ static jmp_buf * pm_jmpbufP = NULL;
 
        NULL, which is the default value, means when a libnetpbm function
        encounters an error, it causes the process to exit.
+    */
+static pm_usererrormsgfn * userErrorMsgFn = NULL;
+    /* A function to call to issue an error message.
+
+       NULL means use the library default: print to Standard Error
+    */
+
+static pm_usermessagefn * userMessageFn = NULL;
+    /* A function to call to issue an error message.
+
+       NULL means use the library default: print to Standard Error
     */
 
 
@@ -108,20 +95,24 @@ pm_longjmp(void) {
 
 
 void
-pm_usage(const char usage[]) {
-    pm_error("usage:  %s %s", pm_progname, usage);
+pm_setusererrormsgfn(pm_usererrormsgfn * fn) {
+
+    userErrorMsgFn = fn;
 }
 
 
 
 void
-pm_perror(const char reason[] ) {
+pm_setusermessagefn(pm_usermessagefn * fn) {
 
-    if (reason != NULL && strlen(reason) != 0)
-        pm_error("%s - errno=%d (%s)", reason, errno, strerror(errno));
-    else
-        pm_error("Something failed with errno=%d (%s)", 
-                 errno, strerror(errno));
+    userMessageFn = fn;
+}
+
+
+
+void
+pm_usage(const char usage[]) {
+    pm_error("usage:  %s %s", pm_progname, usage);
 }
 
 
@@ -134,10 +125,46 @@ pm_message(const char format[], ...) {
     va_start(args, format);
 
     if (pm_showmessages) {
-        fprintf(stderr, "%s: ", pm_progname);
-        vfprintf(stderr, format, args);
-        fputc('\n', stderr);
+        const char * msg;
+        vasprintfN(&msg, format, args);
+
+        if (userMessageFn)
+            userMessageFn(msg);
+        else
+            fprintf(stderr, "%s: %s\n", pm_progname, msg);
+
+        strfree(msg);
     }
+    va_end(args);
+}
+
+
+
+static void
+errormsg(const char * const msg) {
+
+    if (userErrorMsgFn)
+        userErrorMsgFn(msg);
+    else
+        fprintf(stderr, "%s: %s\n", pm_progname, msg);
+}
+
+
+
+void PM_GNU_PRINTF_ATTR(1,2)
+pm_errormsg(const char format[], ...) {
+
+    va_list args;
+    const char * msg;
+
+    va_start(args, format);
+
+    vasprintfN(&msg, format, args);
+    
+    errormsg(msg);
+
+    strfree(msg);
+
     va_end(args);
 }
 
@@ -146,31 +173,42 @@ pm_message(const char format[], ...) {
 void PM_GNU_PRINTF_ATTR(1,2)
 pm_error(const char format[], ...) {
     va_list args;
+    const char * msg;
 
     va_start(args, format);
 
-    fprintf(stderr, "%s: ", pm_progname);
-    vfprintf(stderr, format, args);
-    fputc('\n', stderr);
+    vasprintfN(&msg, format, args);
+    
+    errormsg(msg);
+
+    strfree(msg);
+
     va_end(args);
 
     pm_longjmp();
 }
 
 
-/* Variable-sized arrays. */
 
-char *
+static void *
+mallocz(size_t const size) {
+
+    return malloc(MAX(1, size));
+}
+
+
+
+void *
 pm_allocrow(unsigned int const cols,
             unsigned int const size) {
 
-    char * itrow;
+    unsigned char * itrow;
 
-    if (UINT_MAX / cols < size)
+    if (cols != 0 && UINT_MAX / cols < size)
         pm_error("Arithmetic overflow multiplying %u by %u to get the "
                  "size of a row to allocate.", cols, size);
 
-    itrow = malloc(cols * size);
+    itrow = mallocz(cols * size);
     if (itrow == NULL)
         pm_error("out of memory allocating a row");
 
@@ -180,14 +218,70 @@ pm_allocrow(unsigned int const cols,
 
 
 void
-pm_freerow(char * const itrow) {
+pm_freerow(void * const itrow) {
     free(itrow);
 }
 
 
 
-char**
-pm_allocarray(int const cols, int const rows, int const size )  {
+static void
+allocarrayNoHeap(unsigned char ** const rowIndex,
+                 unsigned int     const cols,
+                 unsigned int     const rows,
+                 unsigned int     const size,
+                 const char **    const errorP) {
+
+    if (cols != 0 && UINT_MAX / cols < size)
+        asprintfN(errorP,
+                  "Arithmetic overflow multiplying %u by %u to get the "
+                  "size of a row to allocate.", cols, size);
+    else {
+        unsigned int rowsDone;
+
+        rowsDone = 0;
+        *errorP = NULL;
+
+        while (rowsDone < rows && !*errorP) {
+            unsigned char * const rowSpace = mallocz(cols * size);
+            if (rowSpace == NULL)
+                asprintfN(errorP,
+                          "Unable to allocate a %u-column by %u byte row",
+                          cols, size);
+            else
+                rowIndex[rowsDone++] = rowSpace;
+        }
+        if (*errorP) {
+            unsigned int row;
+            for (row = 0; row < rowsDone; ++row)
+                free(rowIndex[row]);
+        }
+    }
+}
+
+
+
+static unsigned char *
+allocRowHeap(unsigned int const cols,
+             unsigned int const rows,
+             unsigned int const size) {
+
+    unsigned char * retval;
+
+    if (cols != 0 && rows != 0 && UINT_MAX / cols / rows < size)
+        /* Too big even to request the memory ! */
+        retval = NULL;
+    else
+        retval = mallocz(rows * cols * size);
+
+    return retval;
+}
+
+
+
+char **
+pm_allocarray(int const cols,
+              int const rows,
+              int const size )  {
 /*----------------------------------------------------------------------------
    Allocate an array of 'rows' rows of 'cols' columns each, with each
    element 'size' bytes.
@@ -206,38 +300,46 @@ pm_allocarray(int const cols, int const rows, int const size )  {
    We use unfragmented format if possible, but if the allocation of the
    row heap fails, we fall back to fragmented.
 -----------------------------------------------------------------------------*/
-    char** rowIndex;
-    char * rowheap;
+    unsigned char ** rowIndex;
+    const char * error;
 
     MALLOCARRAY(rowIndex, rows + 1);
     if (rowIndex == NULL)
-        pm_error("out of memory allocating row index (%u rows) for an array",
-                 rows);
-    rowheap = malloc(rows * cols * size);
-    if (rowheap == NULL) {
-        /* We couldn't get the whole heap in one block, so try fragmented
-           format.
-        */
-        unsigned int row;
-        
-        rowIndex[rows] = NULL;   /* Declare it fragmented format */
+        asprintfN(&error,
+                  "out of memory allocating row index (%u rows) for an array",
+                  rows);
+    else {
+        unsigned char * rowheap;
 
-        for (row = 0; row < rows; ++row) {
-            rowIndex[row] = pm_allocrow(cols, size);
-            if (rowIndex[row] == NULL)
-                pm_error("out of memory allocating Row %u "
-                         "(%u columns, %u bytes per tuple) "
-                         "of an array", row, cols, size);
+        rowheap = allocRowHeap(cols, rows, size);
+
+        if (rowheap) {
+            /* It's unfragmented format */
+
+            rowIndex[rows] = rowheap;  /* Declare it unfragmented format */
+
+            if (rowheap) {
+                unsigned int row;
+                
+                for (row = 0; row < rows; ++row)
+                    rowIndex[row] = &(rowheap[row * cols * size]);
+            }
+            error = NULL;
+        } else {
+            /* We couldn't get the whole heap in one block, so try fragmented
+               format.
+            */
+            rowIndex[rows] = NULL;   /* Declare it fragmented format */
+            
+            allocarrayNoHeap(rowIndex, cols, rows, size, &error);
         }
-    } else {
-        /* It's unfragmented format */
-        unsigned int row;
-        rowIndex[rows] = rowheap;  /* Declare it unfragmented format */
-
-        for (row = 0; row < rows; ++row)
-            rowIndex[row] = &(rowheap[row * cols * size]);
     }
-    return rowIndex;
+    if (error) {
+        pm_errormsg("Couldn't allocate %u-row array.  %s", rows, error);
+        strfree(error);
+        pm_longjmp();
+    }
+    return (char **)rowIndex;
 }
 
 
@@ -263,12 +365,12 @@ pm_freearray(char ** const rowIndex,
 /* Case-insensitive keyword matcher. */
 
 int
-pm_keymatch(char *       const strarg, 
+pm_keymatch(const char *       const strarg, 
             const char * const keywordarg, 
             int          const minchars) {
     int len;
-    const char *keyword;
-    char *str;
+    const char * keyword;
+    const char * str;
 
     str = strarg;
     keyword = keywordarg;
@@ -406,7 +508,8 @@ vmsProgname(int * const argcP, char * argv[]) {
 
 
 void
-pm_init(const char * const progname, unsigned int const flags) {
+pm_init(const char * const progname,
+        unsigned int const flags) {
 /*----------------------------------------------------------------------------
    Initialize static variables that Netpbm library routines use.
 
@@ -537,7 +640,7 @@ showNetpbmHelp(const char progname[]) {
 
 
 void
-pm_proginit(int * const argcP, char * argv[]) {
+pm_proginit(int * const argcP, const char * argv[]) {
 /*----------------------------------------------------------------------------
    Do various initialization things that all programs in the Netpbm package,
    and programs that emulate such programs, should do.
@@ -624,12 +727,13 @@ pm_setMessage(int const newState, int * const oldStateP) {
 }
 
 
+
 char *
 pm_arg0toprogname(const char arg0[]) {
 /*----------------------------------------------------------------------------
    Given a value for argv[0] (a command name or file name passed to a 
    program in the standard C calling sequence), return the name of the
-   Netpbm program to which is refers.
+   Netpbm program to which it refers.
 
    In the most ordinary case, this is simply the argument itself.
 
@@ -637,7 +741,7 @@ pm_arg0toprogname(const char arg0[]) {
    after the last slash, and if there is a .exe on it (as there is for
    DJGPP), that is removed.
 
-   The return value is in static storage within.  It is null-terminated,
+   The return value is in static storage within.  It is NUL-terminated,
    but truncated at 64 characters.
 -----------------------------------------------------------------------------*/
     static char retval[64+1];
@@ -663,831 +767,63 @@ pm_arg0toprogname(const char arg0[]) {
 
 
 
-/* File open/close that handles "-" as stdin/stdout and checks errors. */
+unsigned int
+pm_randseed(void) {
 
-FILE*
-pm_openr(const char * const name) {
-    FILE* f;
+    return time(NULL) ^ getpid();
 
-    if (strcmp(name, "-") == 0)
-        f = stdin;
-    else {
-#ifndef VMS
-        f = fopen(name, "rb");
-#else
-        f = fopen(name, "r", "ctx=stm");
-#endif
-        if (f == NULL) 
-            pm_error("Unable to open file '%s' for reading.  "
-                     "fopen() returns errno %d (%s)", 
-                     name, errno, strerror(errno));
-    }
-    return f;
-}
-
-
-
-FILE*
-pm_openw(const char * const name) {
-    FILE* f;
-
-    if (strcmp(name, "-") == 0)
-        f = stdout;
-    else {
-#ifndef VMS
-        f = fopen(name, "wb");
-#else
-        f = fopen(name, "w", "mbc=32", "mbf=2");  /* set buffer factors */
-#endif
-        if (f == NULL) 
-            pm_error("Unable to open file '%s' for writing.  "
-                     "fopen() returns errno %d (%s)", 
-                     name, errno, strerror(errno));
-    }
-    return f;
-}
-
-
-
-static const char *
-tmpDir(void) {
-/*----------------------------------------------------------------------------
-   Return the name of the directory in which we should create temporary
-   files.
-
-   The name is a constant in static storage.
------------------------------------------------------------------------------*/
-    const char * tmpdir;
-        /* running approximation of the result */
-
-    tmpdir = getenv("TMPDIR");   /* Unix convention */
-
-    if (!tmpdir || strlen(tmpdir) == 0)
-        tmpdir = getenv("TMP");  /* Windows convention */
-
-    if (!tmpdir || strlen(tmpdir) == 0)
-        tmpdir = getenv("TEMP"); /* Windows convention */
-
-    if (!tmpdir || strlen(tmpdir) == 0)
-        tmpdir = TMPDIR;
-
-    return tmpdir;
-}
-
-
-
-static int
-mkstempx(char * const filenameBuffer) {
-/*----------------------------------------------------------------------------
-  This is meant to be equivalent to POSIX mkstemp().
-
-  On some old systems, mktemp() is a security hazard that allows a hacker
-  to read or write our temporary file or cause us to read or write some
-  unintended file.  On other systems, mkstemp() does not exist.
-
-  A Windows/mingw environment is one which doesn't have mkstemp()
-  (2006.06.15).
-
-  We assume that if a system doesn't have mkstemp() that its mktemp()
-  is safe, or that the total situation is such that the problems of
-  mktemp() are not a problem for the user.
------------------------------------------------------------------------------*/
-    int retval;
-    int fd;
-    unsigned int attempts;
-    bool gotFile;
-    bool error;
-
-    for (attempts = 0, gotFile = FALSE, error = FALSE;
-         !gotFile && !error && attempts < 100;
-         ++attempts) {
-
-        char * rc;
-        rc = mktemp(filenameBuffer);
-
-        if (rc == NULL)
-            error = TRUE;
-        else {
-            int rc;
-
-            rc = open(filenameBuffer, O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
-
-            if (rc == 0) {
-                fd = rc;
-                gotFile = TRUE;
-            } else {
-                if (errno == EEXIST) {
-                    /* We'll just have to keep trying */
-                } else 
-                    error = TRUE;
-            }
-        }
-    }    
-    if (gotFile)
-        retval = fd;
-    else
-        retval = -1;
-
-    return retval;
-}
-
-
-
-static int
-mkstemp2(char * const filenameBuffer) {
-
-#if HAVE_MKSTEMP
-    if (0)
-        mkstempx(NULL);  /* defeat compiler unused function warning */
-    return mkstemp(filenameBuffer);
-#else
-    return mkstempx(filenameBuffer);
-#endif
-}
-
-
-
-void
-pm_make_tmpfile(FILE **       const filePP,
-                const char ** const filenameP) {
-
-    int fd;
-    FILE * fileP;
-    const char * filenameTemplate;
-    char * filenameBuffer;  /* malloc'ed */
-    unsigned int fnamelen;
-    const char * tmpdir;
-    const char * dirseparator;
-
-    fnamelen = strlen (pm_progname) + 10; /* "/" + "_XXXXXX\0" */
-
-    tmpdir = tmpDir();
-
-    if (tmpdir[strlen(tmpdir) - 1] == '/')
-        dirseparator = "";
-    else
-        dirseparator = "/";
-    
-    asprintfN(&filenameTemplate, "%s%s%s%s", 
-              tmpdir, dirseparator, pm_progname, "_XXXXXX");
-
-    if (filenameTemplate == NULL)
-        pm_error("Unable to allocate storage for temporary file name");
-
-    filenameBuffer = strdup(filenameTemplate);
-
-    fd = mkstemp2(filenameBuffer);
-
-    if (fd < 0)
-        pm_error("Unable to create temporary file according to name "
-                 "pattern '%s'.  mkstemp() failed with "
-                 "errno %d (%s)", filenameTemplate, errno, strerror(errno));
-    else {
-        fileP = fdopen(fd, "w+b");
-
-        if (fileP == NULL)
-            pm_error("Unable to create temporary file.  fdopen() failed "
-                     "with errno %d (%s)", errno, strerror(errno));
-    }
-    strfree(filenameTemplate);
-
-    *filenameP = filenameBuffer;
-    *filePP = fileP;
-}
-
-
-
-FILE * 
-pm_tmpfile(void) {
-
-    FILE * fileP;
-    const char * tmpfile;
-
-    pm_make_tmpfile(&fileP, &tmpfile);
-
-    unlink(tmpfile);
-
-    strfree(tmpfile);
-
-    return fileP;
-}
-
-
-
-FILE *
-pm_openr_seekable(const char name[]) {
-/*----------------------------------------------------------------------------
-  Open the file named by name[] such that it is seekable (i.e. it can be
-  rewound and read in multiple passes with fseek()).
-
-  If the file is actually seekable, this reduces to the same as
-  pm_openr().  If not, we copy the named file to a temporary file
-  and return that file's stream descriptor.
-
-  We use a file that the operating system recognizes as temporary, so
-  it picks the filename and deletes the file when Caller closes it.
------------------------------------------------------------------------------*/
-    int stat_rc;
-    int seekable;  /* logical: file is seekable */
-    struct stat statbuf;
-    FILE * original_file;
-    FILE * seekable_file;
-
-    original_file = pm_openr((char *) name);
-
-    /* I would use fseek() to determine if the file is seekable and 
-       be a little more general than checking the type of file, but I
-       don't have reliable information on how to do that.  I have seen
-       streams be partially seekable -- you can, for example seek to
-       0 if the file is positioned at 0 but you can't actually back up
-       to 0.  I have seen documentation that says the errno for an
-       unseekable stream is EBADF and in practice seen ESPIPE.
-
-       On the other hand, regular files are always seekable and even if
-       some other file is, it doesn't hurt much to assume it isn't.
-    */
-
-    stat_rc = fstat(fileno(original_file), &statbuf);
-    if (stat_rc == 0 && S_ISREG(statbuf.st_mode))
-        seekable = TRUE;
-    else 
-        seekable = FALSE;
-
-    if (seekable) {
-        seekable_file = original_file;
-    } else {
-        seekable_file = pm_tmpfile();
-        
-        /* Copy the input into the temporary seekable file */
-        while (!feof(original_file) && !ferror(original_file) 
-               && !ferror(seekable_file)) {
-            char buffer[4096];
-            int bytes_read;
-            bytes_read = fread(buffer, 1, sizeof(buffer), original_file);
-            fwrite(buffer, 1, bytes_read, seekable_file);
-        }
-        if (ferror(original_file))
-            pm_error("Error reading input file into temporary file.  "
-                     "Errno = %s (%d)", strerror(errno), errno);
-        if (ferror(seekable_file))
-            pm_error("Error writing input into temporary file.  "
-                     "Errno = %s (%d)", strerror(errno), errno);
-        pm_close(original_file);
-        {
-            int seek_rc;
-            seek_rc = fseek(seekable_file, 0, SEEK_SET);
-            if (seek_rc != 0)
-                pm_error("fseek() failed to rewind temporary file.  "
-                         "Errno = %s (%d)", strerror(errno), errno);
-        }
-    }
-    return seekable_file;
-}
-
-
-
-void
-pm_close(FILE * const f) {
-    fflush(f);
-    if (ferror(f))
-        pm_message("A file read or write error occurred at some point");
-    if (f != stdin)
-        if (fclose(f) != 0)
-            pm_error("close of file failed with errno %d (%s)",
-                     errno, strerror(errno));
-}
-
-
-
-/* The pnmtopng package uses pm_closer() and pm_closew() instead of 
-   pm_close(), apparently because the 1999 Pbmplus package has them.
-   I don't know what the difference is supposed to be.
-*/
-
-void
-pm_closer(FILE * const f) {
-    pm_close(f);
-}
-
-
-
-void
-pm_closew(FILE * const f) {
-    pm_close(f);
-}
-
-
-
-/* Endian I/O.
-
-   Before Netpbm 10.27 (March 2005), these would return failure on EOF
-   or I/O failure.  For backward compatibility, they still have the return
-   code, but it is always zero and the routines abort the program in case
-   of EOF or I/O failure.  A program that wants to handle failure differently
-   must use lower level (C library) interfaces.  But that level of detail
-   is uncharacteristic of a Netpbm program; the ease of programming that
-   comes with not checking a return code is more Netpbm.
-
-   It is also for historical reasons that these return signed values,
-   when clearly unsigned would make more sense.
-*/
-
-
-
-static void
-abortWithReadError(FILE * const ifP) {
-
-    if (feof(ifP))
-        pm_error("Unexpected end of input file");
-    else
-        pm_error("Error (not EOF) reading file.");
-}
-
-
-
-void
-pm_readchar(FILE * const ifP,
-            char * const cP) {
-    
-    int c;
-
-    c = getc(ifP);
-    if (c == EOF)
-        abortWithReadError(ifP);
-
-    *cP = c;
-}
-
-
-
-void
-pm_writechar(FILE * const ofP,
-             char   const c) {
-
-    putc(c, ofP);
-}
-
-
-
-int
-pm_readbigshort(FILE *  const ifP, 
-                short * const sP) {
-    int c;
-
-    unsigned short s;
-
-    c = getc(ifP);
-    if (c == EOF)
-        abortWithReadError(ifP);
-    s = (c & 0xff) << 8;
-    c = getc(ifP);
-    if (c == EOF)
-        abortWithReadError(ifP);
-    s |= c & 0xff;
-
-    *sP = s;
-
-    return 0;
-}
-
-
-
-int
-pm_writebigshort(FILE * const ofP, 
-                 short  const s) {
-
-    putc((s >> 8) & 0xff, ofP);
-    putc(s & 0xff, ofP);
-
-    return 0;
-}
-
-
-
-int
-pm_readbiglong(FILE * const ifP, 
-               long * const lP) {
-
-    int c;
-    unsigned long l;
-
-    c = getc(ifP);
-    if (c == EOF)
-        abortWithReadError(ifP);
-    l = c << 24;
-    c = getc(ifP);
-    if (c == EOF)
-        abortWithReadError(ifP);
-    l |= c << 16;
-    c = getc(ifP);
-    if (c == EOF)
-        abortWithReadError(ifP);
-    l |= c << 8;
-    c = getc(ifP);
-    if (c == EOF)
-        abortWithReadError(ifP);
-    l |= c;
-
-    *lP = l;
-
-    return 0;
-}
-
-
-
-int
-pm_writebiglong(FILE * const ofP, 
-                long   const l) {
-
-    putc((l >> 24) & 0xff, ofP);
-    putc((l >> 16) & 0xff, ofP);
-    putc((l >>  8) & 0xff, ofP);
-    putc((l >>  0) & 0xff, ofP);
-
-    return 0;
-}
-
-
-
-int
-pm_readlittleshort(FILE *  const ifP, 
-                   short * const sP) {
-    int c;
-    unsigned short s;
-
-    c = getc(ifP);
-    if (c == EOF)
-        abortWithReadError(ifP);
-    s = c & 0xff;
-
-    c = getc(ifP);
-    if (c == EOF)
-        abortWithReadError(ifP);
-    s |= (c & 0xff) << 8;
-
-    *sP = s;
-
-    return 0;
-}
-
-
-
-int
-pm_writelittleshort(FILE * const ofP, 
-                    short  const s) {
-
-    putc((s >> 0) & 0xff, ofP);
-    putc((s >> 8) & 0xff, ofP);
-
-    return 0;
-}
-
-
-
-int
-pm_readlittlelong(FILE * const ifP, 
-                  long * const lP) {
-    int c;
-    unsigned long l;
-
-    c = getc(ifP);
-    if (c == EOF)
-        abortWithReadError(ifP);
-    l = c;
-    c = getc(ifP);
-    if (c == EOF)
-        abortWithReadError(ifP);
-    l |= c << 8;
-    c = getc(ifP);
-    if (c == EOF)
-        abortWithReadError(ifP);
-    l |= c << 16;
-    c = getc(ifP);
-    if (c == EOF)
-        abortWithReadError(ifP);
-    l |= c << 24;
-
-    *lP = l;
-
-    return 0;
-}
-
-
-
-int
-pm_writelittlelong(FILE * const ofP, 
-                   long   const l) {
-
-    putc((l >>  0) & 0xff, ofP);
-    putc((l >>  8) & 0xff, ofP);
-    putc((l >> 16) & 0xff, ofP);
-    putc((l >> 24) & 0xff, ofP);
-
-    return 0;
-}
-
-
-
-int 
-pm_readmagicnumber(FILE * const ifP) {
-
-    int ich1, ich2;
-
-    ich1 = getc(ifP);
-    ich2 = getc(ifP);
-    if (ich1 == EOF || ich2 == EOF)
-        pm_error( "Error reading magic number from Netpbm image stream.  "
-                  "Most often, this "
-                  "means your input file is empty." );
-
-    return ich1 * 256 + ich2;
-}
-
-
-
-/* Read a file of unknown size to a buffer. Return the number of bytes
-   read. Allocate more memory as we need it. The calling routine has
-   to free() the buffer.
-
-   Oliver Trepte, oliver@fysik4.kth.se, 930613 */
-
-#define PM_BUF_SIZE 16384      /* First try this size of the buffer, then
-                                   double this until we reach PM_MAX_BUF_INC */
-#define PM_MAX_BUF_INC 65536   /* Don't allocate more memory in larger blocks
-                                   than this. */
-
-char *
-pm_read_unknown_size(FILE * const file, 
-                     long * const nread) {
-    long nalloc;
-    char * buf;
-    bool eof;
-
-    *nread = 0;
-    nalloc = PM_BUF_SIZE;
-    MALLOCARRAY(buf, nalloc);
-
-    eof = FALSE;  /* initial value */
-
-    while(!eof) {
-        int val;
-
-        if (*nread >= nalloc) { /* We need a larger buffer */
-            if (nalloc > PM_MAX_BUF_INC)
-                nalloc += PM_MAX_BUF_INC;
-            else
-                nalloc += nalloc;
-            REALLOCARRAY_NOFAIL(buf, nalloc);
-        }
-
-        val = getc(file);
-        if (val == EOF)
-            eof = TRUE;
-        else 
-            buf[(*nread)++] = val;
-    }
-    return buf;
-}
-
-
-
-union cheat {
-    uint32n l;
-    short s;
-    unsigned char c[4];
-};
-
-
-
-short
-pm_bs_short(short const s) {
-    union cheat u;
-    unsigned char t;
-
-    u.s = s;
-    t = u.c[0];
-    u.c[0] = u.c[1];
-    u.c[1] = t;
-    return u.s;
-}
-
-
-
-long
-pm_bs_long(long const l) {
-    union cheat u;
-    unsigned char t;
-
-    u.l = l;
-    t = u.c[0];
-    u.c[0] = u.c[3];
-    u.c[3] = t;
-    t = u.c[1];
-    u.c[1] = u.c[2];
-    u.c[2] = t;
-    return u.l;
-}
-
-
-
-void
-pm_tell2(FILE *       const fileP, 
-         void *       const fileposP,
-         unsigned int const fileposSize) {
-/*----------------------------------------------------------------------------
-   Return the current file position as *filePosP, which is a buffer
-   'fileposSize' bytes long.  Abort the program if error, including if
-   *fileP isn't a file that has a position.
------------------------------------------------------------------------------*/
-    /* Note: FTELLO() is either ftello() or ftell(), depending on the
-       capabilities of the underlying C library.  It is defined in
-       pm_config.h.  ftello(), in turn, may be either ftell() or
-       ftello64(), as implemented by the C library.
-    */
-    pm_filepos const filepos = FTELLO(fileP);
-    if (filepos < 0)
-        pm_error("ftello() to get current file position failed.  "
-                 "Errno = %s (%d)\n", strerror(errno), errno);
-
-    if (fileposSize == sizeof(pm_filepos)) {
-        pm_filepos * const fileposP_filepos = fileposP;
-        *fileposP_filepos = filepos;
-    } else if (fileposSize == sizeof(long)) {
-        if (sizeof(pm_filepos) > sizeof(long) &&
-            filepos >= (pm_filepos) 1 << (sizeof(long)*8))
-            pm_error("File size is too large to represent in the %u bytes "
-                     "that were provided to pm_tell2()", fileposSize);
-        else {
-            long * const fileposP_long = fileposP;
-            *fileposP_long = (long)filepos;
-        }
-    } else
-        pm_error("File position size passed to pm_tell() is invalid: %u.  "
-                 "Valid sizes are %u and %u", 
-                 fileposSize, sizeof(pm_filepos), sizeof(long));
 }
 
 
 
 unsigned int
-pm_tell(FILE * const fileP) {
-    
-    long filepos;
-
-    pm_tell2(fileP, &filepos, sizeof(filepos));
-
-    return filepos;
-}
-
-
-
-void
-pm_seek2(FILE *             const fileP, 
-         const pm_filepos * const fileposP,
-         unsigned int       const fileposSize) {
+pm_parse_width(const char * const arg) {
 /*----------------------------------------------------------------------------
-   Position file *fileP to position *fileposP.  Abort if error, including
-   if *fileP isn't a seekable file.
+   Return the image width represented by the decimal ASCIIZ string
+   'arg'.  Fail if it doesn't validly represent a width or represents
+   a width that can't be conveniently used in computation.
 -----------------------------------------------------------------------------*/
-    if (fileposSize == sizeof(pm_filepos)) 
-        /* Note: FSEEKO() is either fseeko() or fseek(), depending on the
-           capabilities of the underlying C library.  It is defined in
-           pm_config.h.  fseeko(), in turn, may be either fseek() or
-           fseeko64(), as implemented by the C library.
-        */
-        FSEEKO(fileP, *fileposP, SEEK_SET);
-    else if (fileposSize == sizeof(long)) {
-        long const fileposLong = *(long *)fileposP;
-        fseek(fileP, fileposLong, SEEK_SET);
-    } else
-        pm_error("File position size passed to pm_seek() is invalid: %u.  "
-                 "Valid sizes are %u and %u", 
-                 fileposSize, sizeof(pm_filepos), sizeof(long));
-}
+    unsigned int width;
+    const char * error;
 
+    interpret_uint(arg, &width, &error);
 
-
-void
-pm_seek(FILE * const fileP, unsigned long filepos) {
-/*----------------------------------------------------------------------------
------------------------------------------------------------------------------*/
-
-    pm_filepos fileposBuff;
-
-    fileposBuff = filepos;
-
-    pm_seek2(fileP, &fileposBuff, sizeof(fileposBuff));
-}
-
-
-
-void
-pm_nextimage(FILE * const file, int * const eofP) {
-/*----------------------------------------------------------------------------
-   Position the file 'file' to the next image in the stream, assuming it is
-   now positioned just after the current image.  I.e. read off any white
-   space at the end of the current image's raster.  Note that the raw formats
-   don't permit such white space, but this routine tolerates it anyway, 
-   because the plain formats do permit white space after the raster.
-
-   Iff there is no next image, return *eofP == TRUE.
-
-   Note that in practice, we will not normally see white space here in
-   a plain PPM or plain PGM stream because the routine to read a
-   sample from the image reads one character of white space after the
-   sample in order to know where the sample ends.  There is not
-   normally more than one character of white space (a newline) after
-   the last sample in the raster.  But plain PBM is another story.  No white
-   space is required between samples of a plain PBM image.  But the raster
-   normally ends with a newline nonetheless.  Since the sample reading code
-   will not have read that newline, it is there for us to read now.
------------------------------------------------------------------------------*/
-    bool eof;
-    bool nonWhitespaceFound;
-
-    eof = FALSE;
-    nonWhitespaceFound = FALSE;
-
-    while (!eof && !nonWhitespaceFound) {
-        int c;
-        c = getc(file);
-        if (c == EOF) {
-            if (feof(file)) 
-                eof = TRUE;
-            else
-                pm_error("File error on getc() to position to image");
-        } else {
-            if (!isspace(c)) {
-                int rc;
-
-                nonWhitespaceFound = TRUE;
-
-                /* Have to put the non-whitespace character back in
-                   the stream -- it's part of the next image.  
-                */
-                rc = ungetc(c, file);
-                if (rc == EOF) 
-                    pm_error("File error doing ungetc() "
-                             "to position to image.");
-            }
-        }
+    if (error) {
+        pm_error("'%s' is invalid as an image width.  %s", arg, error);
+        strfree(error);
+    } else {
+        if (width > INT_MAX-10)
+            pm_error("Width %u is too large for computations.", width);
+        if (width == 0)
+            pm_error("Width argument must be a positive number.  You "
+                     "specified 0.");
     }
-    *eofP = eof;
+    return width;
 }
 
 
 
-void
-pm_check(FILE *               const file, 
-         enum pm_check_type   const check_type, 
-         pm_filepos           const need_raster_size,
-         enum pm_check_code * const retval_p) {
+unsigned int
+pm_parse_height(const char * const arg) {
 /*----------------------------------------------------------------------------
-   This is not defined for use outside of libnetpbm.
+  Same as pm_parse_width(), but for height.
 -----------------------------------------------------------------------------*/
-    struct stat statbuf;
-    pm_filepos curpos;  /* Current position of file; -1 if none */
-    int rc;
+    unsigned int height;
+    const char * error;
 
-#ifdef LARGEFILEDEBUG
-    pm_message("pm_filepos received by pm_check() is %u bytes.",
-               sizeof(pm_filepos));
-#endif
-    /* Note: FTELLO() is either ftello() or ftell(), depending on the
-       capabilities of the underlying C library.  It is defined in
-       pm_config.h.  ftello(), in turn, may be either ftell() or
-       ftello64(), as implemented by the C library.
-    */
-    curpos = FTELLO(file);
-    if (curpos >= 0) {
-        /* This type of file has a current position */
-            
-        rc = fstat(fileno(file), &statbuf);
-        if (rc != 0) 
-            pm_error("fstat() failed to get size of file, though ftello() "
-                     "successfully identified\n"
-                     "the current position.  Errno=%s (%d)",
-                     strerror(errno), errno);
-        else if (!S_ISREG(statbuf.st_mode)) {
-            /* Not a regular file; we can't know its size */
-            if (retval_p) *retval_p = PM_CHECK_UNCHECKABLE;
-        } else {
-            pm_filepos const have_raster_size = statbuf.st_size - curpos;
-            
-            if (have_raster_size < need_raster_size)
-                pm_error("File has invalid format.  The raster should "
-                         "contain %u bytes, but\n"
-                         "the file ends after only %u bytes.",
-                         (unsigned int) need_raster_size, 
-                         (unsigned int) have_raster_size);
-            else if (have_raster_size > need_raster_size) {
-                if (retval_p) *retval_p = PM_CHECK_TOO_LONG;
-            } else {
-                if (retval_p) *retval_p = PM_CHECK_OK;
-            }
-        }
-    } else
-        if (retval_p) *retval_p = PM_CHECK_UNCHECKABLE;
+    interpret_uint(arg, &height, &error);
+
+    if (error) {
+        pm_error("'%s' is invalid as an image height.  %s", arg, error);
+        strfree(error);
+    } else {
+        if (height > INT_MAX-10)
+            pm_error("Height %u is too large for computations.", height);
+        if (height == 0)
+            pm_error("Height argument must be a positive number.  You "
+                     "specified 0.");
+    }
+    return height;
 }
 
 

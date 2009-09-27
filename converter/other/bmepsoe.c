@@ -209,75 +209,84 @@ static void after_flate_add(Output_Encoder *o, int b)
   
 }
 
-static void do_flate_flush(Output_Encoder *o, int final)
-{
-  Bytef *iptr, *optr, *xptr;
-  uLong  is, os, xs;
-  int err, must_continue;
+
+
+static void
+do_flate_flush(Output_Encoder * const oP,
+               int              const final) {
+
+    Bytef *iptr, *optr, *xptr;
+    unsigned long is;
+    unsigned long os;
+    unsigned long xs;
+    int err;
+    int mustContinue;
   
-  iptr = o->fl_i_buffer; optr = o->fl_o_buffer;
-  is = o->fl_i_size; os = o->fl_o_size;
+    iptr = oP->fl_i_buffer; optr = oP->fl_o_buffer;
+    is = oP->fl_i_size; os = oP->fl_o_size;
   
-  if(iptr && optr && is && os) {
-    is = o->fl_i_used;
-    if(is) {
-      (o->flate_stream).next_in = iptr;
-      (o->flate_stream).avail_in = is;
-      if(final) { 
-    must_continue = 1;
-    while(must_continue) {
-      (o->flate_stream).next_out = optr;
-      (o->flate_stream).avail_out = os;
-      must_continue = 0;
-      err = deflate(&(o->flate_stream), Z_FINISH);
-      switch(err) {
-        case Z_STREAM_END: { 
-              xptr = optr;
+    if (iptr && optr && is && os) {
+        is = oP->fl_i_used;
+        if (is) {
+            oP->flate_stream.next_in = iptr;
+            oP->flate_stream.avail_in = is;
+            if (final) { 
+                mustContinue = 1;
+                while (mustContinue) {
+                    oP->flate_stream.next_out = optr;
+                    oP->flate_stream.avail_out = os;
+                    mustContinue = 0;
+                    err = deflate(&oP->flate_stream, Z_FINISH);
+                    switch (err) {
+                    case Z_STREAM_END: { 
+                        xptr = optr;
           
-          xs = os - ((o->flate_stream).avail_out);
-          while(xs--) {
-        after_flate_add(o, (*(xptr++)));
-          }
-        } break;
-        case Z_OK : {
-          must_continue = 1;
-              xptr = optr;
+                        xs = os - (oP->flate_stream.avail_out);
+                        while (xs--) {
+                            after_flate_add(oP, *(xptr++));
+                        }
+                    } break;
+                    case Z_OK : {
+                        mustContinue = 1;
+                        xptr = optr;
           
-          xs = os - ((o->flate_stream).avail_out);
-          while(xs--) {
-        after_flate_add(o, (*(xptr++)));
-          }
-        } break;
-        default : { 
-        } break;
-      }
-    }
-      } else { 
-    must_continue = 1;
-    while(must_continue) {
-      must_continue = 0;
-      (o->flate_stream).avail_out = os; (o->flate_stream).next_out = optr;
-      err = deflate(&(o->flate_stream), 0);
-      switch(err) {
-        case Z_OK: {
-          if((o->flate_stream).avail_in) {
-        must_continue = 1;
-          }
+                        xs = os - (oP->flate_stream.avail_out);
+                        while (xs--) {
+                            after_flate_add(oP, *(xptr++));
+                        }
+                    } break;
+                    default : { 
+                    } break;
+                    }
+                }
+            } else { 
+                mustContinue = 1;
+                while (mustContinue) {
+                    mustContinue = 0;
+                    oP->flate_stream.avail_out = os;
+                    oP->flate_stream.next_out = optr;
+                    err = deflate(&oP->flate_stream, 0);
+                    switch (err) {
+                    case Z_OK: {
+                        if (oP->flate_stream.avail_in) {
+                            mustContinue = 1;
+                        }
           
-          xptr = optr; xs = os - ((o->flate_stream).avail_out);
-          while(xs--) {
-        after_flate_add(o, (*(xptr++)));
-          }
-        } break;
-        default : { 
-        } break;
-      }
+                        xptr = optr; xs = os - (oP->flate_stream.avail_out);
+                        while (xs--) {
+                            after_flate_add(oP, *(xptr++));
+                        }
+                    } break;
+                    default : { 
+                    } break;
+                    }
+                }
+            }
+        }
     }
-      }
-    }
-  }
-  
 }
+
+
 
 static void flate_add(Output_Encoder *o, int b)
 {
@@ -457,16 +466,19 @@ static void rl_flush(Output_Encoder *o)
   
 }
 
-static void internal_byte_add(Output_Encoder *o, int b)
-{
+
+
+static void
+internal_byte_add(Output_Encoder * const oP,
+                  int              const b) {
   
-  if((o->mode) & OE_RL) {
-    rl_add(o,b);
-  } else {
-    after_rl_add(o,b);
-  }
-  
+    if (oP->mode & OE_RL)
+        rl_add(oP, b);
+    else
+        after_rl_add(oP, b);
 }
+
+
 
 static void internal_byte_flush(Output_Encoder *o)
 {
@@ -479,18 +491,22 @@ static void internal_byte_flush(Output_Encoder *o)
   
 }
 
-void oe_bit_add(Output_Encoder *o, int b)
-{
+
+
+void
+oe_bit_add(Output_Encoder * const oP,
+           int              const b) {
   
-  o->bit_value = 2 * o->bit_value + (b ? 1 : 0);
-  o->bit_consumed = o->bit_consumed + 1;
-  if(o->bit_consumed >= 8) {
-    o->bit_consumed = 0;
-    internal_byte_add(o, (o->bit_value));
-    o->bit_value = 0;
-  }
-  
+    oP->bit_value = 2 * oP->bit_value + (b ? 1 : 0);
+    oP->bit_consumed = oP->bit_consumed + 1;
+    if (oP->bit_consumed >= 8) {
+        oP->bit_consumed = 0;
+        internal_byte_add(oP, oP->bit_value);
+        oP->bit_value = 0;
+    }
 }
+
+
 
 void oe_bit_flush(Output_Encoder *o)
 {
@@ -511,25 +527,30 @@ void oe_bit_flush(Output_Encoder *o)
   
 }
 
-void oe_byte_add(Output_Encoder *o, int b)
-{
+
+
+void
+oe_byte_add(Output_Encoder * const oP,
+            int              const b) {
   
-  if(o->bit_consumed) {
-    int testval,i;
-    testval = 128;
-    for(i = 0; i < 8; i++) {
-      if(b & testval) {
-    oe_bit_add(o,1);
-      } else {
-    oe_bit_add(o,0);
-      }
-      testval = testval / 2;
+    if (oP->bit_consumed) {
+        int testval;
+        int i;
+        testval = 128;
+        for (i = 0; i < 8; ++i) {
+            if (b & testval) {
+                oe_bit_add(oP, 1);
+            } else {
+                oe_bit_add(oP, 0);
+            }
+            testval = testval / 2;
+        }
+    } else {
+        internal_byte_add(oP, b);
     }
-  } else {
-    internal_byte_add(o,b);
-  }
-  
 }
+
+
 
 void oe_byte_flush(Output_Encoder *o)
 {

@@ -1,10 +1,8 @@
-# -*-makefile-*-    <-- an Emacs control
-
 # Make Unix man pages from Netpbm HTML user manual
 
 MAKEMAN = makeman
 
-MANDIR = /usr/share/man/man1
+MANDIR = /usr/share/man/
 
 # These can convert to man pages cleanly
 MAN1 = \
@@ -16,6 +14,7 @@ MAN1 = \
 	bmptopnm.1 \
 	bmptoppm.1 \
 	brushtopbm.1 \
+	cameratopam.1 \
 	cmuwmtopbm.1 \
 	ddbugtopbm.1 \
 	escp2topbm.1 \
@@ -41,6 +40,7 @@ MAN1 = \
 	leaftoppm.1 \
 	lispmtopgm.1 \
 	macptopbm.1 \
+	manweb.1 \
 	mdatopbm.1 \
 	mgrtopbm.1 \
 	mrf.1 \
@@ -58,6 +58,7 @@ MAN1 = \
 	pamedge.1 \
 	pamendian.1 \
 	pamfile.1 \
+	pamfixtrunc.1 \
 	pamflip.1 \
 	pamfunc.1 \
 	pamgauss.1 \
@@ -74,8 +75,8 @@ MAN1 = \
 	pamstereogram.1 \
 	pamstretch-gen.1 \
 	pamstretch.1 \
-	pamsummcol.1 \
 	pamsumm.1 \
+	pamsummcol.1 \
 	pamtodjvurle.1 \
 	pamtohdiff.1 \
 	pamtohtmltbl.1 \
@@ -186,8 +187,8 @@ MAN1 = \
 	pnmquant.1 \
 	pnmremap.1 \
 	pnmrotate.1 \
-	pnmscalefixed.1 \
 	pnmscale.1 \
+	pnmscalefixed.1 \
 	pnmshear.1 \
 	pnmsmooth.1 \
 	pnmsplit.1 \
@@ -208,8 +209,8 @@ MAN1 = \
 	pnmtorle.1 \
 	pnmtosgi.1 \
 	pnmtosir.1 \
-	pnmtotiffcmyk.1 \
 	pnmtotiff.1 \
+	pnmtotiffcmyk.1 \
 	pnmtoxwd.1 \
 	ppm3d.1 \
 	ppmbrighten.1 \
@@ -230,8 +231,8 @@ MAN1 = \
 	ppmnorm.1 \
 	ppmntsc.1 \
 	ppmpat.1 \
-	ppmquantall.1 \
 	ppmquant.1 \
+	ppmquantall.1 \
 	ppmrainbow.1 \
 	ppmrelief.1 \
 	ppmrough.1 \
@@ -243,12 +244,12 @@ MAN1 = \
 	ppmtoarbtxt.1 \
 	ppmtobmp.1 \
 	ppmtoeyuv.1 \
-	ppmtogif.1 \
 	ppmtoicr.1 \
 	ppmtoilbm.1 \
 	ppmtojpeg.1 \
 	ppmtoleaf.1 \
 	ppmtolj.1 \
+	ppmtomap.1 \
 	ppmtomitsu.1 \
 	ppmtompeg.1 \
 	ppmtoneo.1 \
@@ -301,6 +302,35 @@ MAN1 = \
 	yuvsplittoppm.1 \
 	yuvtoppm.1 \
 	zeisstopnm.1 \
+        pamaddnoise.1 \
+        pambackground.1 \
+        pambayer.1 \
+        pamdepth.1 \
+        pamenlarge.1 \
+        pamgradient.1 \
+        pammasksharpen.1 \
+        pammixinterlace.1 \
+        pampick.1 \
+        pamrgbatopng.1 \
+        pamsplit.1 \
+        pamthreshold.1 \
+        pamtilt.1 \
+        pamtofits.1 \
+        pamtogif.1 \
+        pamtosvg.1 \
+        pamtotiff.1 \
+        pamtoxvmini.1 \
+        pamx.1 \
+        pbmtoibm23xx.1 \
+        pbmtomatrixorbital.1 \
+        pgmdeshadow.1 \
+        pgmmake.1 \
+        pgmmedian.1 \
+        ppmdcfont.1 \
+        ppmddumpfont.1 \
+        ppmdmkfont.1 \
+        ppmdraw.1 \
+        rlatopam.1 \
 
 MAN3 = \
 	libnetpbm.3 \
@@ -318,39 +348,57 @@ MAN5 = \
 	extendedopacity.5 \
 	pam.5 \
 	pbm.5 \
+        pfm.5 \
 	pgm.5 \
 	pnm.5 \
 	ppm.5 \
 
+# These things do get converted to man pages and installed.
 MANPAGES = $(MAN1) netpbm.1 $(MAN3) $(MAN5)
 HTMLMANUALS = $(MAN1:.1=.html) $(MAN3:.3=.html) $(MAN5:.5=.html)
+
+# These things don't get converted to manual pages.
+EXCEPTIONS = directory.html libnetpbm_dir.html libnetpbm_draw.html error.html
+STUBS = pcdindex.1 ppmcolors.1 pnmflip.1 ppmtogif.1
+
+# This works if you've done a full SVN checkout.
+USERGUIDE= ../../userguide
+
 XML = $(HTMLMANUALS:.html=.xml) netpbm.xml
 
-# These things don't get converted to manual pages
-# They're basically link lists, not useful in the man hierarchy.
-EXCEPTIONS = directory.html libnetpbm_dir.html
+# List everything in the userguide directory that is not categorized above.
+# Use this to check that 'make manpages' converts as much as possible
+# of the HTML documentation.
+uncategorized:
+	@echo $(HTMLMANUALS) $(EXCEPTIONS) $(STUBS) | tr " " "\n" | sort >LIST1
+	@(cd $(USERGUIDE); ls | sort) >LIST2
+	@comm -3 LIST1 LIST2
+	@rm LIST1 LIST2
 
-# Make man pages -- reports bad lines to standard error
+# Make man pages -- reports bad lines to standard error.
 manpages:
-	@python $(MAKEMAN) index.html $(HTMLMANUALS) 
-	mv index.1 netpbm.1
+	@python $(MAKEMAN) -d $(USERGUIDE) index.html $(HTMLMANUALS) 
+	@mv index.1 netpbm.1
 
 # Make XML pages, and validate them.
 xmlpages:
-	@for x in $(MANPAGES); do doclifter $$x; done
-	@for x in $(XML); do xmllint -xinclude --postvalid $$x >/dev/null; done
+	@for x in $(MANPAGES); do doclifter -v $$x; done
+	@for x in $(MANPAGES); do xmllint -xinclude --postvalid $$x.xml >/dev/null; done
 
 # This will install the generated man pages
-installman: manpages
-	for f in $(MAN1); do \
-	  if [ -f $$f ]; then gzip <$$f >$(MANDIR)/man1/$$f.gz; fi; \
-	  done
-	for f in $(MAN3); do \
-	  if [ -f $$f ]; then gzip <$$f >$(MANDIR)/man3/$$f.gz; fi; \
-	  done
-	for f in $(MAN5); do \
-	  if [ -f $$f ]; then gzip <$$f >$(MANDIR)/man5/$$f.gz; fi; \
-	  done
+installman:
+	set -x
+	for f in $(MAN1); do if [ -f $$f ]; then gzip <$$f >$(MANDIR)/man1/$$f.gz; fi; done
+	for f in $(MAN3); do if [ -f $$f ]; then gzip <$$f >$(MANDIR)/man3/$$f.gz; fi; done
+	for f in $(MAN5); do if [ -f $$f ]; then gzip <$$f >$(MANDIR)/man5/$$f.gz; fi; done
+
+# This will uninstall them
+uninstallman:
+	for f in $(MAN1); do rm -f $(MANDIR)/man1/$$f.gz; fi; done
+	for f in $(MAN3); do rm -f $(MANDIR)/man3/$$f.gz; fi; done
+	for f in $(MAN5); do rm -f $(MANDIR)/man5/$$f.gz; fi; done
+
+oldclean:
 	# Clean up old locations on Fedora Core 2
 	rm -f $(MANDIR)/man1/extendedopacity.1.gz 
 	rm -f $(MANDIR)/man3/directory.3.gz

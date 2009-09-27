@@ -13,7 +13,7 @@
 #ifndef PM_H_INCLUDED
 #define PM_H_INCLUDED
 
-#include "pm_config.h"
+#include <netpbm/pm_config.h>
 
 #include <sys/types.h>
 #include <ctype.h>
@@ -91,12 +91,13 @@ extern int pm_plain_output;
     /* Output functions are to produce plain (as opposed to raw) format
        regardless of their 'plainformat' arguments.
     */
+extern const char * pm_progname;
 
 void 
 pm_init(const char * const progname, unsigned int const flags);
 
 void 
-pm_proginit(int* const argcP, char* argv[]);
+pm_proginit(int * const argcP, const char * argv[]);
 
 void
 pm_setMessage(int const newState, int * const oldStateP);
@@ -104,9 +105,16 @@ pm_setMessage(int const newState, int * const oldStateP);
 FILE * 
 pm_tmpfile(void);
 
+int
+pm_tmpfile_fd(void);
+
 void
 pm_make_tmpfile(FILE **       const filePP,
                 const char ** const filenameP);
+
+void
+pm_make_tmpfile_fd(int *         const fdP,
+                   const char ** const filenameP);
 
 void
 pm_nextimage(FILE * const file, int * const eofP);
@@ -116,7 +124,7 @@ pm_nextimage(FILE * const file, int * const eofP);
 char** 
 pm_allocarray (int const cols, int const rows, int const size );
 
-char * 
+void * 
 pm_allocrow(unsigned int const cols,
             unsigned int const size);
 
@@ -124,12 +132,14 @@ void
 pm_freearray (char** const its, int const rows);
 
 void 
-pm_freerow(char* const itrow);
+pm_freerow(void * const row);
 
 
 /* Obsolete -- use shhopt instead */
 int 
-pm_keymatch (char* const str, const char* const keyword, int const minchars);
+pm_keymatch(const char * const str,
+            const char * const keyword,
+            int          const minchars);
 
 
 int PURE_FN_ATTR
@@ -154,15 +164,25 @@ pm_setjmpbufsave(jmp_buf *  const jmpbufP,
 void
 pm_longjmp(void);
 
+
+typedef void pm_usermessagefn(const char * msg);
+
+void
+pm_setusermessagefn(pm_usermessagefn * fn);
+
+typedef void pm_usererrormsgfn(const char * msg);
+
+void
+pm_setusererrormsgfn(pm_usererrormsgfn * fn);
+
 void PM_GNU_PRINTF_ATTR(1,2)
 pm_message (const char format[], ...);     
 
 void PM_GNU_PRINTF_ATTR(1,2)
-pm_error (const char reason[], ...);       
+pm_errormsg(const char format[], ...);
 
-/* Obsolete - use helpful error message instead */
-void
-pm_perror (const char reason[]);           
+void PM_GNU_PRINTF_ATTR(1,2)
+pm_error (const char reason[], ...);       
 
 /* Obsolete - use shhopt and user's manual instead */
 void 
@@ -335,8 +355,22 @@ pm_check(FILE *               const file,
          pm_filepos           const need_raster_size,
          enum pm_check_code * const retval_p);
 
+void
+pm_drain(FILE *         const fileP,
+         unsigned int   const limit,
+         unsigned int * const bytesReadP);
+
 char *
 pm_arg0toprogname(const char arg0[]);
+
+unsigned int
+pm_randseed(void);
+
+unsigned int
+pm_parse_width(const char * const arg);
+
+unsigned int
+pm_parse_height(const char * const arg);
 
 #ifdef __cplusplus
 }

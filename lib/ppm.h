@@ -3,7 +3,8 @@
 #ifndef _PPM_H_
 #define _PPM_H_
 
-#include "pgm.h"
+#include <netpbm/pm.h>
+#include <netpbm/pgm.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -50,7 +51,7 @@ typedef struct {
 #define PPM_TYPE PPM_FORMAT
 
 
-#include "ppmcmap.h"
+#include <netpbm/ppmcmap.h>
 
 /* Macro for turning a format number into a type number. */
 
@@ -58,7 +59,22 @@ typedef struct {
   ((f) == PPM_FORMAT || (f) == RPPM_FORMAT ? PPM_TYPE : PGM_FORMAT_TYPE(f))
 
 
-/* Declarations of routines. */
+static __inline__ pixel
+ppm_whitepixel(pixval maxval) {
+
+    pixel retval;
+    PPM_ASSIGN(retval, maxval, maxval, maxval);
+
+    return retval;
+}
+
+static __inline__ pixel
+ppm_blackpixel(void) {
+
+    pixel const retval = {0, 0, 0};
+
+    return retval;
+}
 
 void ppm_init(int * argcP, char* argv[]);
 
@@ -70,7 +86,7 @@ ppm_allocrow(unsigned int const cols);
 
 #define ppm_freearray(pixels, rows) pm_freearray((char**) pixels, rows)
 
-#define ppm_freerow(pixelrow) free(pixelrow);
+#define ppm_freerow(pixelrow) pm_freerow(pixelrow);
 
 pixel**
 ppm_readppm(FILE *   const fileP, 
@@ -108,11 +124,11 @@ ppm_writeppminit(FILE*  const fileP,
                  int    const forceplain);
 
 void
-ppm_writeppmrow(FILE *  const fileP, 
-                pixel * const pixelrow, 
-                int     const cols, 
-                pixval  const maxval, 
-                int     const forceplain);
+ppm_writeppmrow(FILE *        const fileP, 
+                const pixel * const pixelrow, 
+                int           const cols, 
+                pixval        const maxval, 
+                int           const forceplain);
 
 void
 ppm_check(FILE *               const fileP, 
@@ -259,22 +275,25 @@ ppm_saturation(pixel const p,
 
 typedef enum {
     /* A color from the set of universally understood colors developed
-       by Brent Berlin and Paul Kay
+       by Brent Berlin and Paul Kay.
+
+       Algorithms in libnetpbm depend on the numerical representations
+       of these values being as follows.
     */
-    BKCOLOR_BLACK = 0,
-    BKCOLOR_GRAY,
-    BKCOLOR_WHITE,
-    BKCOLOR_RED,
+    BKCOLOR_GRAY = 0,
+    BKCOLOR_BROWN,
     BKCOLOR_ORANGE,
+    BKCOLOR_RED,
     BKCOLOR_YELLOW,
     BKCOLOR_GREEN,
     BKCOLOR_BLUE,
     BKCOLOR_VIOLET,
     BKCOLOR_PURPLE,
-    BKCOLOR_BROWN
+    BKCOLOR_WHITE,
+    BKCOLOR_BLACK
 } bk_color;
 
-#define BKCOLOR_COUNT (BKCOLOR_BROWN+1)
+#define BKCOLOR_COUNT (BKCOLOR_BLACK+1)
 
 bk_color
 ppm_bk_color_from_color(pixel  const color,

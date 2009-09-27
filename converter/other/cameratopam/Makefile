@@ -5,14 +5,15 @@ endif
 SUBDIR = converter/other/cameratopam
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
+EXTERN_INCLUDES =
 ifneq ($(JPEGLIB),NONE)
   ifneq ($(JPEGHDR_DIR)x,x)
-    INCLUDES += -I$(JPEGHDR_DIR)
+    EXTERN_INCLUDES += -I$(JPEGHDR_DIR)
     CFLAGS += -DHAVE_JPEG
   endif
 endif
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 
 .PHONY: all
@@ -27,7 +28,7 @@ BINARIES = cameratopam
 MERGEBINARIES = 
 SCRIPTS = 
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 cameratopam: $(OBJECTS) $(NETPBMLIB) $(LIBOPT)
 	$(LD) -o $@ \

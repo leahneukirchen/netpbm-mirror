@@ -17,11 +17,17 @@
  in supporting documentation.  This software is provided "as is"
  without express or implied warranty.
 
+ Note: From mid-2003 to mid-2007, this program would crash on any 16
+ bit BMP without transparency and no one reported it.  Before that, it
+ refused to even try to read a 16 bit BMP.  I conclude that essentially
+ nobody is using 16 bit BMP.
+
 *****************************************************************************/
 #include <string.h>
 #include <limits.h>
 #include <assert.h>
 
+#include "pm_c_util.h"
 #include "pnm.h"
 #include "shhopt.h"
 #include "nstring.h"
@@ -42,6 +48,10 @@ struct bitPosition {
 
        Example: if 16 bits are laid out as XRRRRRGGGGGBBBBB then the shift
        count for the R component is 10 and the mask is 0000000000011111.
+
+       A 'mask' of zero denotes absence of any bits; e.g. in the example
+       above, the mask for the transparency component is zero because there
+       is no transparency component .  'shift' is arbitrary in that case.
     */
     unsigned int shift;
         /* How many bits right you have to shift the value to get the subject
@@ -303,6 +313,36 @@ readOs2InfoHeader(FILE *                 const ifP,
 
 
 static void
+validateCompression(unsigned long const compression,
+                    enum rowOrder const rowOrder,
+                    unsigned int  const cBitCount) {
+    
+    if (compression != COMP_RGB && compression != COMP_BITFIELDS &&
+        compression != COMP_RLE4 && compression != COMP_RLE8 ) 
+        pm_error("Input has unknown encoding.  "
+                 "Compression type code = %ld.  The only ones we know "
+                 "are RGB (%u), BITFIELDS (%u), "
+                 "RLE4 (%u), and RLE8 (%u)",
+                 compression, COMP_RGB, COMP_BITFIELDS,
+                 COMP_RLE4, COMP_RLE8);
+                     
+    if ((compression == COMP_RLE4 || compression == COMP_RLE8) &&
+        rowOrder == TOPDOWN )                        
+        pm_error("Invalid BMP header.  Claims image is top-down and also "
+                 "compressed, which is an impossible combination.");
+
+    if ( (compression == COMP_RLE4 && cBitCount !=4) ||
+         (compression == COMP_RLE8 && cBitCount !=8) ) 
+        pm_error("Invalid BMP header.  " 
+                 "Compression type (%s) disagrees with "
+                 "number of bits per pixel (%u).",
+                 compression == COMP_RLE4 ? "RLE4" : "RLE8",
+                 cBitCount);
+}
+
+
+
+static void
 readWindowsBasic40ByteInfoHeader(FILE *                 const ifP,
                                  struct bmpInfoHeader * const headerP) {
 /*----------------------------------------------------------------------------
@@ -335,22 +375,9 @@ readWindowsBasic40ByteInfoHeader(FILE *                 const ifP,
         unsigned long int const compression = GetLong(ifP);
 
         headerP->bitFields = (compression == COMP_BITFIELDS);
-    
-        if (compression != COMP_RGB && compression != COMP_BITFIELDS &&
-            compression != COMP_RLE4 && compression != COMP_RLE8 ) 
-            pm_error("Input is compressed.  Unsupported encoding method.\n"
-                     "Compression type code = %ld", compression);
-                     
-        if ( (compression == COMP_RLE4 || compression == COMP_RLE8) &&
-              headerP->rowOrder == TOPDOWN )                        
-            pm_error("Invalid BMP header.  Top-down images cannot be compressed.");
 
-        if ( (compression == COMP_RLE4 && headerP->cBitCount !=4) ||
-             (compression == COMP_RLE8 && headerP->cBitCount !=8) )                        
-            pm_error("Invalid BMP header.\n" 
-                     "Compression type (%s) disagrees with number of bits per pixel (%u).",
-                      compression == COMP_RLE4 ? "RLE4" : "RLE8",
-                      headerP->cBitCount);
+        validateCompression(compression, headerP->rowOrder,
+                            headerP->cBitCount);
 
         headerP->compression = compression;             
     }
@@ -394,7 +421,7 @@ lsbZeroCount(unsigned int const mask)
    Use GCC built-in when available.
 -----------------------------------------------------------------------------*/
 
-#if ( defined(__GNUC__) && (__GNUC__ * 100 + __GNUC_MINOR__ >= 304) )
+#if HAVE_GCC_BITCOUNT 
 {
       return ( mask==0 ? sizeof(mask)*8 : __builtin_ctz(mask) );
 }
@@ -458,6 +485,10 @@ defaultPixelformat(unsigned int const bitCount) {
 
     switch (bitCount) {
     case 16:
+        /* This layout is sometimes called "RGB555".  A document from
+           Microsoft says this is the default (when the "compression"
+           field of the header says COMP_BITFIELDS).
+        */
         retval.conventionalBgr = FALSE;
         retval.red.shift = 10;
         retval.grn.shift = 5;
@@ -495,6 +526,11 @@ readV4InfoHeaderExtension(FILE *                 const ifP,
                           struct bmpInfoHeader * const headerP) {
 
     if (headerP->bitFields) {
+        /* A document from Microsoft says on Windows 95 there is no
+           transparency plane and (red, green, blue) must be either
+           (5,5,5) or (5,6,5) for 16 bit and (8,8,8) for 32 bit.
+           It calls these RGB555, RGB565, RGB888.
+        */
         headerP->pixelformat.red = bitPositionFromMask(GetLong(ifP));
         headerP->pixelformat.grn = bitPositionFromMask(GetLong(ifP));
         headerP->pixelformat.blu = bitPositionFromMask(GetLong(ifP));
@@ -650,16 +686,16 @@ extractBitFields(unsigned int       const rasterval,
         (rasterval >> pixelformat.blu.shift) & pixelformat.blu.mask;
     unsigned int const abits = 
         (rasterval >> pixelformat.trn.shift) & pixelformat.trn.mask;
-    
-    *rP = pixelformat.red.mask ?
-              (unsigned int) rbits * maxval / pixelformat.red.mask : 0;
-    *gP = pixelformat.grn.mask ?
-              (unsigned int) gbits * maxval / pixelformat.grn.mask : 0;
-    *bP = pixelformat.blu.mask ?
-              (unsigned int) bbits * maxval / pixelformat.blu.mask : 0;
-    *aP = pixelformat.trn.mask ?
-              (unsigned int) abits * maxval / pixelformat.trn.mask : 0;
-}
+
+    *rP = pixelformat.red.mask > 0 ?
+        (unsigned int) rbits * maxval / pixelformat.red.mask : 0;
+    *gP = pixelformat.grn.mask > 0 ?
+        (unsigned int) gbits * maxval / pixelformat.grn.mask : 0;
+    *bP = pixelformat.blu.mask > 0 ?
+        (unsigned int) bbits * maxval / pixelformat.blu.mask : 0;
+    *aP = pixelformat.trn.mask > 0 ?
+        (unsigned int) abits * maxval / pixelformat.trn.mask : 0;
+}        
 
 
 
@@ -1215,7 +1251,7 @@ readColorMap(FILE *               const ifP,
                    bytesRead,
                    BMPlencolormap(BMPheader.class, BMPheader.cBitCount, 
                                   BMPheader.cmapsize));
-}
+    }
 }
 
 

@@ -5,7 +5,7 @@ endif
 SUBDIR = converter/pgm
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 PORTBINARIES =	asciitopgm bioradtopgm fstopgm hipstopgm \
 		lispmtopgm pgmtofs pgmtolispm pgmtopgm \
@@ -20,4 +20,4 @@ MERGE_OBJECTS = $(MERGEBINARIES:%=%.o2)
 .PHONY: all
 all: $(BINARIES)
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk

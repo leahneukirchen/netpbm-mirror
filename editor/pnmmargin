@@ -12,9 +12,8 @@
 # implied warranty.
 
 tempdir="${TMPDIR-/tmp}/pnmmargin.$$"
-mkdir $tempdir || { echo "Could not create temporary file. Exiting."; exit 1;}
-chmod 700 $tempdir
-
+mkdir -m 0700 $tempdir || \
+  { echo "Could not create temporary file. Exiting." 1>&2; exit 1;}
 trap 'rm -rf $tempdir' 0 1 3 15
 
 tmp1=$tempdir/pnmm1
@@ -23,22 +22,27 @@ tmp3=$tempdir/pnmm3
 tmp4=$tempdir/pnmm4
 
 color="-gofigure"
+plainopt=""
 
 # Parse args.
 while true ; do
     case "$1" in
-	-w* )
+        -p|-pl|-pla|-plai|-plain )
+        plainopt="-plain"
+        shift
+        ;;
+	-w|-wh|-whi|-whit|-white )
 	color="-white"
 	shift
 	;;
-	-b* )
+	-b|-bl|-bla|-blac|-black )
 	color="-black"
 	shift
 	;;
-	-c* )
+	-c|-co|-col|-colo|-color )
 	shift
 	if [ ! ${1-""} ] ; then
-	    echo "usage: $0 [-white|-black|-color <colorspec>] <size> [pnmfile]" 1>&2
+       	    echo "usage: $0 [-white|-black|-color <colorspec>] <size> [pnmfile]" 1>&2
 	    exit 1
 	fi
 	color="$1"
@@ -67,22 +71,38 @@ if [ ${2-""} ] ; then
 fi
 
 # Capture input file in a tmp file, in case it's a pipe.
+# TODO: This code does not consider the case when the input file is specified
+# and there is also input coming in from a pipe.
+
 cat $@ > $tmp1
 
-# Construct spacer files.
-case "$color" in
-    -gofigure )
-    pnmcut 0 0 1 1 $tmp1 | pnmtile $size 1 > $tmp2
-    ;;
-    -white | -black )
-    pbmmake $color $size 1 > $tmp2
-    ;;
-    * )
-    ppmmake $color $size 1 > $tmp2
-    ;;
-esac
-pamflip -rotate90 $tmp2 > $tmp3
+if [ $size == 0 ] ; then
+    # Zero margin; just copy input to output
+    pamtopnm $plainopt $tmp1;
+else
+    # If -white or -black, write output with pnmpad and exit.
+    # Otherwise construct spacer files.
+    
+    case "$color" in
+        -gofigure )
+        pnmcut 0 0 1 1 $tmp1 | pnmtile $size 1 > $tmp2
+        ;;
+        -white | -black )
+        pnmpad $plainopt $color \
+            -left=$size -right=$size -top=$size -bottom=$size $tmp1
+        exit
+        ;;
+        * )
+        ppmmake $color $size 1 > $tmp2
+        ;;
+    esac
+    pamflip -rotate90 $tmp2 > $tmp3
+    
+    # Cat things together.
+    pnmcat -lr $tmp2 $tmp1 $tmp2 > $tmp4
+    pnmcat -tb $plainopt $tmp3 $tmp4 $tmp3
+fi
 
-# Cat things together.
-pnmcat -lr $tmp2 $tmp1 $tmp2 > $tmp4
-pnmcat -tb $tmp3 $tmp4 $tmp3
+
+
+

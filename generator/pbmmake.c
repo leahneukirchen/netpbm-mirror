@@ -11,6 +11,7 @@
 **
 */
 
+#include "pm_c_util.h"
 #include "shhopt.h"
 #include "mallocvar.h"
 #include "pbm.h"
@@ -75,16 +76,8 @@ parseCommandLine(int argc, char ** argv,
                  "non-option arguments: width and height in pixels",
                  argc-1);
     else {
-        cmdlineP->width  = atoi(argv[1]);
-        cmdlineP->height = atoi(argv[2]);
-
-        if (cmdlineP->width < 1) 
-            pm_error("Width must be positive.  You specified %d.", 
-                     cmdlineP->width);
-
-        if (cmdlineP->height < 1) 
-            pm_error("Height must be positive.  You specified %d.",
-                     cmdlineP->height);
+        cmdlineP->width  = pm_parse_width(argv[1]);
+        cmdlineP->height = pm_parse_height(argv[2]);
     }
 }
 

@@ -39,6 +39,8 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
+
+#include "pm_c_util.h"
 #include "ppm.h"
 #include "shhopt.h"
 #include "nstring.h"
@@ -138,7 +140,7 @@ parseCommandLine(int argc, char ** argv,
     /* If output filename not specified, use input filename as default. */
     if (nameSpec)
         cmdlineP->name = nameOpt;
-    else if (STREQ(cmdlineP->inputFilename, "-"))
+    else if (streq(cmdlineP->inputFilename, "-"))
         cmdlineP->name = "noname";
     else {
         static char name[80+1];

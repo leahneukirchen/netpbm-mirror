@@ -16,6 +16,8 @@
 #include "prototypes.h"
 #include "fsize.h"
 #include "param.h"
+#include "subsample.h"
+#include "block.h"
 
 
 /*==================*

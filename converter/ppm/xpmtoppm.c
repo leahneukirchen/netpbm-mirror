@@ -33,6 +33,7 @@
 
 #include <string.h>
 
+#include "pm_c_util.h"
 #include "ppm.h"
 #include "shhopt.h"
 #include "nstring.h"
@@ -104,7 +105,7 @@ parse_command_line(int argc, char ** argv,
                  "is the input file specification");
 
     if (cmdline_p->alpha_filename && 
-        STREQ(cmdline_p->alpha_filename, "-"))
+        streq(cmdline_p->alpha_filename, "-"))
         cmdline_p->alpha_stdout = TRUE;
     else 
         cmdline_p->alpha_stdout = FALSE;
@@ -293,7 +294,7 @@ interpretXpm3ColorTableLine(char line[], int const seqNum,
                number if so)
             */
             for (key = 1; 
-                 key <= NKEYS && !STREQ(xpmColorKeys[key - 1], str2); 
+                 key <= NKEYS && !streq(xpmColorKeys[key - 1], str2); 
                  key++);
             isKey = (key <= NKEYS);
 
@@ -483,15 +484,15 @@ readXpm1Header(FILE * const stream, int * const widthP, int * const heightP,
                 t1 = str1;
             else
                 ++t1;
-            if (STREQ(t1, "format"))
+            if (streq(t1, "format"))
                 format = v;
-            else if (STREQ(t1, "width"))
+            else if (streq(t1, "width"))
                 *widthP = v;
-            else if (STREQ(t1, "height"))
+            else if (streq(t1, "height"))
                 *heightP = v;
-            else if (STREQ(t1, "ncolors"))
+            else if (streq(t1, "ncolors"))
                 *ncolorsP = v;
-            else if (STREQ(t1, "pixel"))
+            else if (streq(t1, "pixel"))
                 *chars_per_pixelP = v;
         } else if (!strncmp(line, "static char", 11)) {
             if ((t1 = strrchr(line, '_')) == NULL)

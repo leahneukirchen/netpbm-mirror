@@ -6,6 +6,8 @@
 
 ============================================================================*/
 
+#define _BSD_SOURCE    /* Make sure strcaseeq() is in nstring.h */
+
 #include <string.h>
 
 #ifdef VMS
@@ -40,7 +42,7 @@ number(const char * const value,
         /* It's not a numeric string, so it must be an enumerated value name */
         unsigned int i;
         for (i = 0; tagvallist[i].name; ++i) {
-            if (STRCASEEQ(value, tagvallist[i].name))
+            if (strcaseeq(value, tagvallist[i].name))
                 return tagvallist[i].value;
         }
         pm_error("'%s' is neither a number nor a valid value name", value);
@@ -460,7 +462,7 @@ tagDefFind(const char * const name) {
     for (i = 0;
          i < ARRAY_SIZE(tagDefinitions) && tagDefinitions[i].name;
          ++i) {
-        if (STRCASEEQ(tagDefinitions[i].name, name))
+        if (strcaseeq(tagDefinitions[i].name, name))
             return &tagDefinitions[i];
     }
 

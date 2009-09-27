@@ -35,7 +35,6 @@
 
 #include <math.h>
 #include <assert.h>
-#include <unistd.h>
 
 #include "pm_c_util.h"
 #include "ppm.h"
@@ -283,10 +282,9 @@ static unsigned int
 initseed(void) {
     /*  Generate initial random seed.  */
 
-    int i;
+    unsigned int i;
 
-    i = time(NULL) ^ getpid();
-    srand(i);
+    srand(pm_randseed());
     for (i = 0; i < 7; ++i)
         rand();
     return rand();

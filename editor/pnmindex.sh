@@ -90,9 +90,8 @@ if [ $# -eq 0 ]; then
 fi
 
 tempdir="${TMPDIR-/tmp}/pnmindex.$$"
-mkdir $tempdir || { echo "Could not create temporary file. Exiting."; exit 1;}
-chmod 700 $tempdir
-
+mkdir -m 0700 $tempdir || \
+  { echo "Could not create temporary file. Exiting."; exit 1;}
 trap 'rm -rf $tempdir' 0 1 3 15
 
 tmpfile=$tempdir/pi.tmp

@@ -14,6 +14,7 @@
 =============================================================================*/
 #define _XOPEN_SOURCE
 
+#include <stdarg.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -22,6 +23,8 @@
 #include <signal.h>
 #include <sys/wait.h>
 
+#include "pm_c_util.h"
+#include "mallocvar.h"
 #include "pm.h"
 #include "pm_system.h"
 
@@ -30,21 +33,25 @@
 
 
 static void
-execProgram(const char * const shellCommand,
-            int          const inputPipeFd,
-            int          const outputPipeFd) {
+execProgram(const char *  const progName,
+            const char ** const argArray,
+            int           const stdinFd,
+            int           const stdoutFd) {
 /*----------------------------------------------------------------------------
-   Run the shell command 'shellCommand', supplying to the shell
-   'inputPipeFd' as its Standard Input and 'outputPipeFd' as its 
+   Run the program 'progName' with arguments argArray[], in a child process
+   with 'stdinFd' as its Standard Input and 'stdoutFd' as its
    Standard Output.
 
    But leave Standard Input and Standard Output as we found them.
+
+   Note that stdinFd or stdoutFd may actually be Standard Input and
+   Standard Output already.
 -----------------------------------------------------------------------------*/
     int stdinSaveFd, stdoutSaveFd;
     int rc;
 
-    /* Make inputPipeFd Standard Input.
-       Make outputPipeFd Standard Output.
+    /* Make stdinFd Standard Input.
+       Make stdoutFd Standard Output.
     */
     stdinSaveFd = dup(STDIN);
     stdoutSaveFd = dup(STDOUT);
@@ -52,10 +59,10 @@ execProgram(const char * const shellCommand,
     close(STDIN);
     close(STDOUT);
 
-    dup2(inputPipeFd, STDIN);
-    dup2(outputPipeFd, STDOUT);
+    dup2(stdinFd, STDIN);
+    dup2(stdoutFd, STDOUT);
 
-    rc = execl("/bin/sh", "sh", "-c", shellCommand, NULL);
+    rc = execvp(progName, (char **)argArray);
 
     close(STDIN);
     close(STDOUT);
@@ -65,10 +72,12 @@ execProgram(const char * const shellCommand,
     close(stdoutSaveFd);
 
     if (rc < 0)
-        pm_error("Unable to exec the shell.  Errno=%d (%s)",
-                 errno, strerror(errno));
+        pm_error("Unable to exec '%s' "
+                 "(i.e. the program did not run at all).  "
+                 "execvp() errno=%d (%s)",
+                 progName, errno, strerror(errno));
     else
-        pm_error("INTERNAL ERROR.  execl() returns, but does not fail.");
+        pm_error("INTERNAL ERROR.  execvp() returns, but does not fail.");
 }
 
 
@@ -84,21 +93,21 @@ createPipeFeeder(void          pipeFeederRtn(int, void *),
    other end of the pipe as *fdP.
 -----------------------------------------------------------------------------*/
     int pipeToFeed[2];
-    pid_t feederPid;
+    pid_t rc;
 
     pipe(pipeToFeed);
-    feederPid = fork();
-    if (feederPid < 0) {
+    rc = fork();
+    if (rc < 0) {
         pm_error("fork() of stdin feeder failed.  errno=%d (%s)", 
                  errno, strerror(errno));
-    } else if (feederPid == 0) {
+    } else if (rc == 0) {
         /* This is the child -- the stdin feeder process */
         close(pipeToFeed[0]);
         (*pipeFeederRtn)(pipeToFeed[1], feederParm);
         exit(0);
-    }
-    else {
+    } else {
         /* This is the parent */
+        pid_t const feederPid = rc;
         close(pipeToFeed[1]);
         *fdP = pipeToFeed[0];
         *pidP = feederPid;
@@ -108,39 +117,59 @@ createPipeFeeder(void          pipeFeederRtn(int, void *),
 
 
 static void
-spawnProcessor(const char * const shellCommand, 
-               int          const stdinFd,
-               int *        const stdoutFdP,
-               pid_t *      const pidP) {
+spawnProcessor(const char *  const progName,
+               const char ** const argArray,
+               int           const stdinFd,
+               int *         const stdoutFdP,
+               pid_t *       const pidP) {
 /*----------------------------------------------------------------------------
-   Create a process to run a shell that runs command 'shellCommand'.
-   Pass file descriptor 'stdinFd' to the shell as Standard Input.
-   Set up a pipe and pass it to the shell as Standard Output.  Return
-   as *stdoutFdP the file descriptor of the other end of that pipe,
-   from which Caller can suck the shell's Standard Output.
------------------------------------------------------------------------------*/
-    int stdoutpipe[2];
-    pid_t processorpid;
-        
-    pipe(stdoutpipe);
+   Create a process to run program 'progName' with arguments
+   argArray[] (terminated by NULL element).  Pass file descriptor
+   'stdinFd' to the shell as Standard Input.
 
-    processorpid = fork();
-    if (processorpid < 0) {
+   if 'stdoutFdP' is NULL, have that process write its Standard Output to
+   the current process' Standard Output.
+
+   If 'stdoutFdP' is non-NULL, set up a pipe and pass it to the new
+   process as Standard Output.  Return as *stdoutFdP the file
+   descriptor of the other end of that pipe, from which Caller can
+   suck the program's Standard Output.
+-----------------------------------------------------------------------------*/
+    bool const pipeStdout = !stdoutFdP;
+    int stdoutpipe[2];
+    pid_t rc;
+
+    if (pipeStdout)
+        pipe(stdoutpipe);
+
+    rc = fork();
+    if (rc < 0) {
         pm_error("fork() of processor process failed.  errno=%d (%s)\n", 
                  errno, strerror(errno));
-    } else if (processorpid == 0) {
-        /* The second child */
-        close(stdoutpipe[0]);
+    } else if (rc == 0) {
+        /* The program child */
 
-        execProgram(shellCommand, stdinFd, stdoutpipe[1]);
+        int stdoutFd;
+        
+        if (pipeStdout) {
+            close(stdoutpipe[0]);
+            stdoutFd = stdoutpipe[1];
+        } else
+            stdoutFd = STDOUT;
+
+        execProgram(progName, argArray, stdinFd, stdoutFd);
 
         close(stdinFd);
         close(stdoutpipe[1]);
         pm_error("INTERNAL ERROR: execProgram() returns.");
     } else {
         /* The parent */
-        close(stdoutpipe[1]);
-        *stdoutFdP = stdoutpipe[0];
+        pid_t const processorpid = rc;
+
+        if (pipeStdout) {
+            close(stdoutpipe[1]);
+            *stdoutFdP = stdoutpipe[0];
+        }
         *pidP = processorpid;
     }
 }
@@ -190,6 +219,128 @@ cleanupFeederProcess(pid_t const feederPid) {
 
 
 void
+pm_system_vp(const char *    const progName,
+             const char **   const argArray,
+             void stdinFeeder(int, void *),
+             void *          const feederParm,
+             void stdoutAccepter(int, void *),
+             void *          const accepterParm) {
+/*----------------------------------------------------------------------------
+   Run a program in a child process.  Feed its Standard Input with a
+   pipe, which is fed by the routine 'stdinFeeder' with parameter
+   'feederParm'.  Process its Standard Output with the routine
+   'stdoutAccepter' with parameter 'accepterParm'.
+
+   But if 'stdinFeeder' is NULL, just feed the program our own Standard
+   Input.  And if 'stdoutFeeder' is NULL, just send its Standard Output
+   to our own Standard Output.
+-----------------------------------------------------------------------------*/
+
+    /* If 'stdinFeeder' is non-NULL, we create a child process to run
+       'stdinFeeder' and create a pipe from that process as the
+       program's Standard Input.
+
+       We create another child process to run the program.
+
+       If 'stdoutFeeder' is non-NULL, we create a pipe between the
+       program process and the current process and have the program
+       write its Standard Output to that pipe.  The current process
+       runs 'stdoutAccepter' to read the data from that pipe.
+       
+       But if 'stdoutFeeder' is NULL, we just tell the program process
+       to write to the current process' Standard Output.
+
+       So there are two processes when stdinFeeder is NULL and three when
+       stdinFeeder is non-null.
+    */
+    
+    int progStdinFd;
+    pid_t feederPid;
+    pid_t processorPid;
+
+    if (stdinFeeder) 
+        createPipeFeeder(stdinFeeder, feederParm, &progStdinFd, &feederPid);
+    else {
+        progStdinFd = STDIN;
+        feederPid = 0;
+    }
+
+    if (stdoutAccepter) {
+        int progStdoutFd;
+
+        /* Make a child process to run the program and pipe back to us its
+           Standard Output 
+        */
+        spawnProcessor(progName, argArray, progStdinFd, 
+                       &progStdoutFd, &processorPid);
+
+        /* The child process has cloned our 'progStdinFd'; we have no
+           more use for our copy.
+        */
+        close(progStdinFd);
+        /* Dispose of the stdout from that child */
+        (*stdoutAccepter)(progStdoutFd, accepterParm);
+        close(progStdoutFd);
+    } else {
+        /* Run a child process for the program that sends its Standard Output
+           to our Standard Output
+        */
+        spawnProcessor(progName, argArray, STDIN, NULL, &processorPid);
+    }
+
+    cleanupProcessorProcess(processorPid);
+
+    if (feederPid) 
+        cleanupFeederProcess(feederPid);
+}
+
+
+
+void
+pm_system_lp(const char *    const progName,
+             void stdinFeeder(int, void *),
+             void *          const feederParm,
+             void stdoutAccepter(int, void *),
+             void *          const accepterParm,
+             ...) {
+/*----------------------------------------------------------------------------
+  same as pm_system_vp() except with arguments as variable arguments
+  instead of an array.
+-----------------------------------------------------------------------------*/
+    va_list args;
+    bool endOfArgs;
+    const char ** argArray;
+    unsigned int n;
+
+    va_start(args, accepterParm);
+
+    endOfArgs = FALSE;
+    argArray = NULL;
+
+    for (endOfArgs = FALSE, argArray = NULL, n = 0;
+         !endOfArgs;
+        ) {
+        const char * const arg = va_arg(args, const char *);
+        
+        REALLOCARRAY(argArray, n+1);
+
+        argArray[n++] = arg;
+
+        if (!arg)
+            endOfArgs = TRUE;
+    }
+
+    va_end(args);
+
+    pm_system_vp(progName, argArray,
+                 stdinFeeder, feederParm, stdoutAccepter, accepterParm);
+
+    free(argArray);
+}
+
+
+
+void
 pm_system(void stdinFeeder(int, void *),
           void *          const feederParm,
           void stdoutAccepter(int, void *),
@@ -206,76 +357,10 @@ pm_system(void stdinFeeder(int, void *),
    to our own Standard Output.
 -----------------------------------------------------------------------------*/
 
-    /* If 'stdinFeeder' is non-NULL, we create a child process to run
-       'stdinFeeder' and create a pipe between from that process as the
-       shell's Standard Input.
-
-       If 'stdoutFeeder' is non-NULL, we create a child process to run
-       the shell and create a pipe between the shell's Standard Output
-       and this process, and then this process runs 'stdoutAccepter'
-       to read the data from that pipe.
-       
-       But if 'stdoutFeeder' is NULL, we just run the shell in this
-       process.
-
-       So there can be 1, 2, or 3 processes involved depending on 
-       parameters.
-    */
-    
-    int shellStdinFd;
-    pid_t feederPid;
-
-    if (stdinFeeder) 
-        createPipeFeeder(stdinFeeder, feederParm, &shellStdinFd, &feederPid);
-    else {
-        shellStdinFd = STDIN;
-        feederPid = 0;
-    }
-
-    if (stdoutAccepter) {
-        int shellStdoutFd;
-        pid_t processorPid;
-
-        /* Make a child process to run the shell and pipe back to us its
-           Standard Output 
-        */
-        spawnProcessor(shellCommand, shellStdinFd, 
-                       &shellStdoutFd, &processorPid);
-
-        /* The shell process has cloned our 'shellStdinFd'; we have no
-           more use for our copy.
-        */
-        close(shellStdinFd);
-        /* Dispose of the stdout from that shell */
-        (*stdoutAccepter)(shellStdoutFd, accepterParm);
-        close(shellStdoutFd);
-
-        cleanupProcessorProcess(processorPid);
-    } else {
-        /* Run a child process for the shell that sends its Standard Output
-           to our Standard Output
-        */
-        int const stdinSaveFd = dup(STDIN);
-        int rc;
-
-        dup2(shellStdinFd, STDIN);
-        
-        rc = system(shellCommand);
-
-        close(STDIN);
-        dup2(stdinSaveFd, STDIN);
-        
-        if (rc < 0)
-            pm_error("Unable to invoke the shell.  Errno=%d (%s)",
-                     errno, strerror(errno));
-        else if (rc != 0)
-            pm_message("WARNING: Shell process completion code = %d", rc);
-    }
-
-    if (feederPid) 
-        cleanupFeederProcess(feederPid);
+    pm_system_lp("/bin/sh", 
+                 stdinFeeder, feederParm, stdoutAccepter, accepterParm,
+                 "sh", "-c", shellCommand, NULL);
 }
-
 
 
 

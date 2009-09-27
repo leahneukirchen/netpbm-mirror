@@ -12,6 +12,7 @@
 
 #include <string.h>
 
+#include "pm_c_util.h"
 #include "pam.h"
 #include "shhopt.h"
 #include "mallocvar.h"
@@ -108,6 +109,7 @@ main(int argc, char *argv[]) {
 
     struct cmdlineInfo cmdline;
     FILE* ifP;
+    bool eof;   /* no more images in input stream */
     struct pam inpam;   /* Input PAM image */
     struct pam outpam;  /* Output PNM image */
 
@@ -117,39 +119,45 @@ main(int argc, char *argv[]) {
 
     ifP = pm_openr(cmdline.inputFilespec);
 
-    pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
+    eof = FALSE;
+    while (!eof) {
+        pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
 
-    validateTupleType(inpam, cmdline.assume);
+        validateTupleType(inpam, cmdline.assume);
 
-    outpam = inpam;
-    outpam.file = stdout;
-    
-    if (inpam.depth < 3) {
-        outpam.depth = 1;
-        if (inpam.maxval == 1)
-            outpam.format = PBM_FORMAT;
-        else 
-            outpam.format = PGM_FORMAT;
-    } else {
-        outpam.depth = 3;
-        outpam.format = PPM_FORMAT;
-    }
-
-    pnm_writepaminit(&outpam);
-
-    {
-        tuple *tuplerow;
+        outpam = inpam;
+        outpam.file = stdout;
         
-        tuplerow = pnm_allocpamrow(&inpam);      
-        { 
-            int row;
-            
-            for (row = 0; row < inpam.height; row++) {
-                pnm_readpamrow(&inpam, tuplerow);
-                pnm_writepamrow(&outpam, tuplerow);
-            }
+        if (inpam.depth < 3) {
+            outpam.depth = 1;
+            if (inpam.maxval == 1)
+                outpam.format = PBM_FORMAT;
+            else 
+                outpam.format = PGM_FORMAT;
+        } else {
+            outpam.depth = 3;
+            outpam.format = PPM_FORMAT;
         }
-        pnm_freepamrow(tuplerow);        
+
+        pnm_writepaminit(&outpam);
+
+        {
+            tuple *tuplerow;
+            
+            tuplerow = pnm_allocpamrow(&inpam);      
+            { 
+                int row;
+                
+                for (row = 0; row < inpam.height; row++) {
+                    pnm_readpamrow(&inpam, tuplerow);
+                    pnm_writepamrow(&outpam, tuplerow);
+                }
+            }
+            pnm_freepamrow(tuplerow);        
+        }
+
+        pnm_nextimage(ifP, &eof);
     }
+
     return 0;
 }

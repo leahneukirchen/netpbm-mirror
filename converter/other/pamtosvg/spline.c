@@ -105,11 +105,13 @@ new_spline_list_with_spline (spline_type spline)
    elements, since they are arrays in automatic storage.  And we don't
    want to free the list if it was empty.  */
 
+
+
 void
-free_spline_list (spline_list_type spline_list)
-{
-  if (SPLINE_LIST_DATA (spline_list) != NULL)
-    free (SPLINE_LIST_DATA (spline_list));
+free_spline_list(spline_list_type spline_list) {
+
+    if (SPLINE_LIST_DATA(spline_list) != NULL)
+        free(SPLINE_LIST_DATA(spline_list));
 }
 
 

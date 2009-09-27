@@ -7,8 +7,11 @@
 # GNU Make uses a make file named "GNUmakefile" in preference to "Makefile"
 # if it exists.  Netpbm is shipped with a "GNUmakefile".
 
+default: all
+
 all merge install clean dep:
 	@echo "You must use GNU Make to build Netpbm.  You are running some "
 	@echo "other Make.  GNU Make may be installed on your system with "
 	@echo "the name 'gmake'.  If not, see http://www.gnu.org/software ."
 	@echo
+	false

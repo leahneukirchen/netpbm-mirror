@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "pm_c_util.h"
 #include "mallocvar.h"
 #include "nstring.h"
 #include "shhopt.h"
@@ -44,7 +45,15 @@ struct cmdlineInfo {
         /* geometry of local subimage.  Defined only if 'local' or 'dual'
            is true.
         */
+    unsigned int verbose;
 };
+
+
+
+static __inline__ bool
+betweenZeroAndOne(float const arg) {
+    return (arg >= 0.0 && arg <= 1.0);
+}
 
 
 
@@ -146,6 +155,8 @@ parseCommandLine(int                 argc,
             &thresholdSpec,         0);
     OPTENT3(0, "contrast",  OPT_FLOAT,  &cmdlineP->contrast,
             &contrastSpec,          0);
+    OPTENT3(0, "verbose",    OPT_FLAG,   NULL,               
+            &cmdlineP->verbose,     0);
 
     /* set the defaults */
     cmdlineP->width = cmdlineP->height = 0U;
@@ -212,6 +223,21 @@ parseCommandLine(int                 argc,
 
 
 
+static void
+thresholdPixel(struct pam * const outpamP,
+               tuplen       const inTuplen,
+               tuple        const outTuple,
+               float        const threshold) {
+
+    outTuple[0] = inTuplen[0] >= threshold ? PAM_BW_WHITE : PAM_BLACK;
+    if (outpamP->depth > 1) {
+        /* Do alpha */
+        outTuple[1] = inTuplen[1] > 0.5 ? 1 : 0;
+    }
+}
+
+
+
 /* simple thresholding (the same as in pamditherbw) */
 
 static void
@@ -230,9 +256,9 @@ thresholdSimple(struct pam * const inpamP,
     for (row = 0; row < inpamP->height; ++row) {
         unsigned int col;
         pnm_readpamrown(inpamP, inrow);
-        for (col = 0; col < inpamP->width; ++col)
-            outrow[col][0] =
-                inrow[col][0] >= threshold ? PAM_BW_WHITE : PAM_BLACK;
+        for (col = 0; col < inpamP->width; ++col) {
+            thresholdPixel(outpamP, inrow[col], outrow[col], threshold);
+        }
         pnm_writepamrow(outpamP, outrow);
     }
 
@@ -244,6 +270,7 @@ thresholdSimple(struct pam * const inpamP,
 
 static void
 analyzeDistribution(struct pam *          const inpamP,
+                    bool                  const verbose,
                     const unsigned int ** const histogramP,
                     struct range *        const rangeP) {
 /*----------------------------------------------------------------------------
@@ -255,7 +282,8 @@ analyzeDistribution(struct pam *          const inpamP,
    distribution as *histogramP, an array such that histogram[i] is the
    number of pixels that have sample value i.
 
-   Leave the file positioned to the raster.
+   Assume the file is positioned to the raster upon entry and leave
+   it positioned at the same place.
 -----------------------------------------------------------------------------*/
     unsigned int row;
     tuple * inrow;
@@ -295,6 +323,10 @@ analyzeDistribution(struct pam *          const inpamP,
     pnm_freepamrown(inrown);
 
     pm_seek2(inpamP->file, &rasterPos, sizeof(rasterPos));
+
+    if (verbose)
+        pm_message("Pixel values range from %f to %f",
+                   rangeP->min, rangeP->max);
 }
 
 
@@ -342,9 +374,7 @@ computeGlobalThreshold(struct pam *         const inpamP,
                        float *              const thresholdP) {
 /*----------------------------------------------------------------------------
    Compute the proper threshold to use for the image described by
-   *inpamP, whose file is positioned to the raster.
-
-   For our convenience:
+   *inpamP, and:
 
      'histogram' describes the frequency of occurence of the various sample
      values in the image.
@@ -475,6 +505,7 @@ thresholdLocalRow(struct pam *       const inpamP,
                   struct cmdlineInfo const cmdline,
                   struct range       const globalRange,
                   samplen            const globalThreshold,
+                  struct pam *       const outpamP,
                   tuple *            const outrow) {
 
     tuplen * const inrow = inrows[row % windowHeight];
@@ -494,7 +525,7 @@ thresholdLocalRow(struct pam *       const inpamP,
                           cmdline.threshold, minSpread, globalThreshold,
                           &threshold);
         
-        outrow[col][0] = inrow[col][0] >= threshold ? PAM_BW_WHITE : PAM_BLACK;
+        thresholdPixel(outpamP, inrow[col], outrow[col], threshold);
     }
 }
 
@@ -552,9 +583,16 @@ thresholdLocal(struct pam *       const inpamP,
 
     windowHeight = MIN(oddLocalHeight, inpamP->height);
 
-    analyzeDistribution(inpamP, &histogram, &globalRange);
-
-    computeGlobalThreshold(inpamP, histogram, globalRange, &globalThreshold);
+    /* global information is needed for dual thresholding */
+    if (cmdline.dual) {
+        analyzeDistribution(inpamP, cmdline.verbose, &histogram, &globalRange);
+        computeGlobalThreshold(inpamP, histogram, globalRange,
+                               &globalThreshold);
+    } else {
+        histogram = NULL;
+        initRange(&globalRange);
+        globalThreshold = 1.0;
+    }
 
     outrow = pnm_allocpamrow(outpamP);
 
@@ -574,7 +612,8 @@ thresholdLocal(struct pam *       const inpamP,
 
     for (row = 0; row < inpamP->height; ++row) {
         thresholdLocalRow(inpamP, inrows, oddLocalWidth, windowHeight, row,
-                          cmdline, globalRange, globalThreshold, outrow);
+                          cmdline, globalRange, globalThreshold,
+                          outpamP, outrow);
 
         pnm_writepamrow(outpamP, outrow);
         
@@ -595,13 +634,14 @@ thresholdLocal(struct pam *       const inpamP,
 
 static void
 thresholdIterative(struct pam * const inpamP,
-                   struct pam * const outpamP) {
+                   struct pam * const outpamP,
+                   bool         const verbose) {
 
     const unsigned int * histogram;
     struct range globalRange;
     samplen threshold;
 
-    analyzeDistribution(inpamP, &histogram, &globalRange);
+    analyzeDistribution(inpamP, verbose, &histogram, &globalRange);
 
     computeGlobalThreshold(inpamP, histogram, globalRange, &threshold);
 
@@ -624,17 +664,17 @@ main(int argc, char **argv) {
 
     parseCommandLine(argc, argv, &cmdline);
 
-    if (cmdline.simple)
+    if (cmdline.simple || cmdline.local)
         ifP = pm_openr(cmdline.inputFileName);
     else
         ifP = pm_openr_seekable(cmdline.inputFileName);
 
-    /* threshold each image in the PAM file */
+    /* Threshold each image in the PAM file */
     eof = FALSE;
     while (!eof) {
         pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
 
-        /* set output image parameters for a bilevel image */
+        /* Set output image parameters for a bilevel image */
         outpam.size        = sizeof(outpam);
         outpam.len         = PAM_STRUCT_SIZE(tuple_type);
         outpam.file        = stdout;
@@ -642,21 +682,27 @@ main(int argc, char **argv) {
         outpam.plainformat = 0;
         outpam.height      = inpam.height;
         outpam.width       = inpam.width;
-        outpam.depth       = 1;
         outpam.maxval      = 1;
         outpam.bytes_per_sample = 1;
-        strcpy(outpam.tuple_type, "BLACKANDWHITE");
+
+        if (inpam.depth > 1) {
+            strcpy(outpam.tuple_type, "BLACKANDWHITE_ALPHA");
+            outpam.depth = 2;
+        } else {
+            strcpy(outpam.tuple_type, "BLACKANDWHITE");
+            outpam.depth = 1;
+        }
 
         pnm_writepaminit(&outpam);
 
-        /* do the thresholding */
+        /* Do the thresholding */
 
         if (cmdline.simple)
             thresholdSimple(&inpam, &outpam, cmdline.threshold);
         else if (cmdline.local || cmdline.dual)
             thresholdLocal(&inpam, &outpam, cmdline);
         else
-            thresholdIterative(&inpam, &outpam);
+            thresholdIterative(&inpam, &outpam, cmdline.verbose);
 
         pnm_nextimage(ifP, &eof);
     }

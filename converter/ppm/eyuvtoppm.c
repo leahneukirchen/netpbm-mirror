@@ -34,6 +34,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+
+#include "pm_c_util.h"
 #include "ppm.h"
 #include "shhopt.h"
 #include "mallocvar.h"

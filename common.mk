@@ -1,4 +1,3 @@
-# -*-makefile-*-    <-- an Emacs control
 # This is a make file inclusion, to be included in all the
 # Netpbm make files.
 
@@ -36,7 +35,6 @@
 # INSTALL: command to use to copy files to where they belong
 # INSTALL_PERM_BIN: file permissions for installed binaries
 # INSTALL_PERM_LIB: ...same for libraries
-# INSTALL_PERM_HDR: ...same for headers
 # INSTALL_PERM_MAN: ...same for man pages
 # MERGE_OBJECTS: list of object files that go into the merged executable
 #   from the current directory (not subdirectories).  All of these are to
@@ -52,23 +50,36 @@
 #   front end, so takes linker options in a different format
 # LDFLAGS: linker options 
 # LIBS or LOADLIBES: names of libraries to be added to all links
-# INCLUDES: Compiler option string to establish the search path for include
-#   files when compiling things or computing dependencies (make dep).
-#   current directory, corresponding source tree directory, and ./importinc
-#   are implied, so should not be in here.
+# COMP_INCLUDES: Compiler option string to establish the search path for
+#   component-specific include files when compiling things or computing
+#   dependencies (make dep).  Header files from this part of the search
+#   path take precedence over general Netpbm header files and external
+#   library header files.
+# EXTERN_INCLUDES: Like COMP_INCLUDES, but for external libraries, e.g.
+#   libjpeg.  All header files from the Netpbm source tree take precedence
+#   over these.
 
-# In addition, there is CADD, which is extra C compilation flags and
+# In addition, there is CADD, which is extra C compilation options and
 # is intended to be set on a make command line (e.g. 'make CADD=-g')
-# for flags that apply just to a particular build.
+# for options that apply just to a particular build.
 
 # In addition, there is CFLAGS_PERSONAL, which is extra C
-# compilation flags and is expected to be set via environment variable
-# for flags that are particular to the person doing the build and not
+# compilation options and is expected to be set via environment variable
+# for options that are particular to the person doing the build and not
 # specific to Netpbm.
 
-include $(SRCDIR)/Makefile.version
+include $(SRCDIR)/version.mk
 
-INCLUDES2 := $(INCLUDES) -I$(SRCDIR)/$(SUBDIR) -I. -I importinc
+# .DELETE_ON_ERROR is a special predefined Make target that says to delete
+# the target if a command in the rule for it fails.  That's important,
+# because we don't want a half-made target sitting around looking like it's
+# fully made.
+.DELETE_ON_ERROR:
+
+NETPBM_INCLUDES := -Iimportinc -I$(SRCDIR)/$(SUBDIR)
+
+# -I. is needed when builddir != srcdir
+INCLUDES = -I. $(COMP_INCLUDES) $(NETPBM_INCLUDES) $(EXTERN_INCLUDES)
 
 ifeq ($(NETPBMLIBTYPE),unixstatic)
   NETPBMLIBFNAME = libnetpbm.$(STATICLIBSUFFIX)
@@ -109,12 +120,13 @@ IMPORTINC_ROOT_HEADERS := pm_config.h inttypes_netpbm.h version.h
 IMPORTINC_LIB_HEADERS := \
   pm.h pbm.h pgm.h ppm.h pnm.h pam.h bitio.h pbmfont.h ppmcmap.h \
   pammap.h colorname.h ppmfloyd.h ppmdraw.h pm_system.h ppmdfont.h \
-  pm_gamma.h lum.h
+  pm_gamma.h lum.h dithers.h
 
 IMPORTINC_LIB_UTIL_HEADERS := \
-  bitreverse.h mallocvar.h nstring.h filename.h pm_c_util.h shhopt.h \
-  wordaccess.h wordaccess_64_le.h wordaccess_gcc3_be.h wordaccess_gcc3_le.h \
-  wordaccess_generic.h intcode.h \
+  bitarith.h bitreverse.h filename.h intcode.h floatcode.h mallocvar.h\
+  nsleep.h nstring.h pm_c_util.h shhopt.h \
+  wordaccess.h wordaccess_64_le.h wordaccess_gcc3_be.h wordaccess_generic.h \
+  wordintclz.h
 
 IMPORTINC_HEADERS := \
   $(IMPORTINC_ROOT_HEADERS) \
@@ -126,9 +138,15 @@ IMPORTINC_LIB_FILES := $(IMPORTINC_LIB_HEADERS:%=importinc/%)
 IMPORTINC_LIB_UTIL_FILES := $(IMPORTINC_LIB_UTIL_HEADERS:%=importinc/%)
 
 importinc: \
+  importinc/netpbm \
   $(IMPORTINC_ROOT_FILES) \
   $(IMPORTINC_LIB_FILES) \
   $(IMPORTINC_LIB_UTIL_FILES) \
+
+importinc/netpbm:
+	mkdir -p importinc
+	rm -f $@
+	$(SYMLINK) . $@
 
 $(IMPORTINC_ROOT_FILES):importinc/%:$(BUILDDIR)/%
 	mkdir -p importinc
@@ -160,7 +178,7 @@ $(BUILDDIR)/version.h:
 endif
 
 ifneq ($(OMIT_CONFIG_RULE),1)
-$(BUILDDIR)/Makefile.config: $(SRCDIR)/Makefile.config.in
+$(BUILDDIR)/config.mk: $(SRCDIR)/config.mk.in
 	$(MAKE) -C $(dir $@) $(notdir $@)
 
 $(BUILDDIR)/pm_config.h:
@@ -173,13 +191,13 @@ $(BUILDDIR)/inttypes_netpbm.h:
 endif
 
 # Note that any time you do a make on a fresh Netpbm source tree,
-# Make notices that 'Makefile.config', which the make files include, does not
-# exist and runs the "Makefile.config" target, which runs Configure.
+# Make notices that 'config.mk', which the make files include, does not
+# exist and runs the "config.mk" target, which runs Configure.
 # If the "config" target were to run Configure as well, it would get run
 # twice in a row if you did a 'make config' on a fresh Netpbm source tree.
 # But we don't want to make "config" just a no-op, because someone might
-# try it after Makefile.config already exists, in order to make a new
-# Makefile.config.  Issuing a message as follows seems to make sense in 
+# try it after config.mk already exists, in order to make a new
+# config.mk.  Issuing a message as follows seems to make sense in 
 # both cases.
 .PHONY: config
 config:
@@ -194,7 +212,6 @@ config:
 $(OBJECTS): %.o: %.c importinc
 #############################################################################
 # Note that the user may have configured -I options into CFLAGS or CPPFLAGS.
-# -I. is needed when builddir != srcdir
 # Note about -o: There used to be systems that couldn't handle a space
 # between flag and value.  But we found a Solaris gcc on 2003.09.02 that
 # actually fails _without_ the space (it invokes Solaris 'as' with the
@@ -210,7 +227,7 @@ $(OBJECTS): %.o: %.c importinc
 # assertion and crash the program if it isn't really true.  You can add
 # -UNDEBUG (in any of various ways) to override this.
 #
-	$(CC) -c $(INCLUDES2) -DNDEBUG \
+	$(CC) -c $(INCLUDES) -DNDEBUG \
 	    $(CPPFLAGS) $(CFLAGS) $(CFLAGS_PERSONAL) $(CADD) -o $@ $<
 
 # libopt is a utility program used in the make file below.
@@ -246,36 +263,41 @@ endif
 #   
 #   Notice that SGI and Sun support two such flavors.
 #
-#   Plus, Scott Schwartz observed on March 25, 2003 that while his
-#   compiler understands -Wl, his linker does not understand -rpath.
-#   His compiler is "Sun WorkShop 6 update 2 C 5.3 2001/05/15".
+# Plus, Scott Schwartz observed on March 25, 2003 that while his
+# compiler understands -Wl, his linker does not understand -rpath.
+# His compiler is "Sun WorkShop 6 update 2 C 5.3 2001/05/15".
 #
-#   Plus, Mike Saunders found in December 2003 that his Solaris 8 system
-#   (uname -a says 'SunOS cannonball.method.cx 5.8 Generic_108528-14 
-#   sun4u sparc SUNW,Ultra-1') with Gcc 2.95.3 requires the syntax
+# Plus, Mike Saunders found in December 2003 that his Solaris 8 system
+# (uname -a says 'SunOS cannonball.method.cx 5.8 Generic_108528-14 
+# sun4u sparc SUNW,Ultra-1') with Gcc 2.95.3 requires the syntax
 #
-#         -Wl,-R,/path/to/dir
-#   
-#   This is apparently because Gcc invokes this linker for Saunders:
+#       -Wl,-R,/path/to/dir
+# 
+# This is apparently because Gcc invokes this linker for Saunders:
 #
-#      ld: Software Generation Utilities - Solaris Link Editors: 5.8-1.273
+#    ld: Software Generation Utilities - Solaris Link Editors: 5.8-1.273
 #
-#   I'd say there are also Solaris systems where Gcc invokes the GNU linker
-#   and then the option would be -Wl,-rpath...
+# I'd say there are also Solaris systems where Gcc invokes the GNU linker
+# and then the option would be -Wl,-rpath...
 #
-#   On IA32 Linux, at least, GNU ld takes -rpath.  It also has a -R option,
-#   but it is something else.
+# The Sun Ld fails in a weird way when you pass it -rpath instead of -R:
 #
-#   Alan Fry and Snowcrash demonstrated in 2006.11 that neither -rpath
-#   nor -R are recognized options on Mac OS X 'ld'.
+#   ld: Software Generation Utilities - Solaris Link Editors: 5.9-1.382
+#   ld: fatal: option -dn and -P are incompatible
 #
-#   http://developer.apple.com/releasenotes/DeveloperTools/RN-dyld/index.html
-#   says that on Mac OS X, libraries aren't searched for in directories,
-#   but rather specified by full name, so that rpath doesn't make any
-#   sense.  On Mac OS X, you use -install_name when you linkedit shared
-#   library S to give the complete installed name of S.  This goes into
-#   S so that when something linkedits with S, the complete installed
-#   name of S goes into the object that uses S.
+# On IA32 Linux, at least, GNU ld takes -rpath.  It also has a -R option,
+# but it is something else.
+#
+# Alan Fry and Snowcrash demonstrated in 2006.11 that neither -rpath
+# nor -R are recognized options on Mac OS X 'ld'.
+#
+# http://developer.apple.com/releasenotes/DeveloperTools/RN-dyld/index.html
+# says that on Mac OS X, libraries aren't searched for in directories,
+# but rather specified by full name, so that rpath doesn't make any
+# sense.  On Mac OS X, you use -install_name when you linkedit shared
+# library S to give the complete installed name of S.  This goes into
+# S so that when something linkedits with S, the complete installed
+# name of S goes into the object that uses S.
 
 ifeq ($(NEED_RUNTIME_PATH),Y)
   ifneq ($(NETPBMLIB_RUNTIME_PATH)x,x)
@@ -324,7 +346,7 @@ $(PORTBINARIES) $(MATHBINARIES): %: %.o $(NETPBMLIB) $(LIBOPT)
 
 %.o2: %.c importinc
 # Note that the user may have configured -I options into CFLAGS.
-	$(CC) -c $(INCLUDES2) -DNDEBUG $(CFLAGS) \
+	$(CC) -c $(INCLUDES) -DNDEBUG $(CPPFLAGS) $(CFLAGS) \
 	  "-Dmain=main_$*" \
           $(CFLAGS_MERGE) $(CFLAGS_PERSONAL) $(CADD) -o $@ $<
 
@@ -469,7 +491,7 @@ thisdirclean:
 
 .PHONY: distclean
 distclean: $(SUBDIRS:%=%/distclean) thisdirclean
-	rm -f Makefile.depend
+	rm -f depend.mk
 
 DEP_SOURCES = $(wildcard *.c *.cpp *.cc)
 
@@ -479,7 +501,7 @@ dep: $(SUBDIRS:%=%/dep) importinc
 # before the first make after a clean.
 
 ifneq ($(DEP_SOURCES)x,x)
-	$(CC) -MM -MG $(INCLUDES2) $(DEP_SOURCES) >Makefile.depend
+	$(CC) -MM -MG $(INCLUDES) $(DEP_SOURCES) >depend.mk
 endif
 
 # Note: if I stack all these subdirectory targets into one rule, I get
@@ -541,13 +563,13 @@ $(SUBDIRS:%=$(CURDIR)/%) $(DIRS2):
 # The automatic dependency generation is a pain in the butt and
 # totally unnecessary for people just installing the distributed code,
 # so to avoid needless failures in the field and a complex build, the
-# rule to generate Makefile.depend automatically simply creates an
+# rule to generate depend.mk automatically simply creates an
 # empty file.  A developer may do 'make dep' to create a
-# Makefile.depend full of real dependencies.
+# depend.mk full of real dependencies.
 
-Makefile.depend:
-	cat /dev/null >Makefile.depend
+depend.mk:
+	cat /dev/null >$@
 
-include Makefile.depend
+include depend.mk
 
 FORCE:

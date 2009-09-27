@@ -13,26 +13,26 @@ use Config;
 
 my ($TRUE, $FALSE) = (1,0);
 
-# This program generates Makefile.config, which is included by all of the
+# This program generates config.mk, which is included by all of the
 # Netpbm makefiles.  You run this program as the first step in building 
 # Netpbm.  (The second step is 'make').
 
 # This program is only a convenience.  It is supported to create 
-# Makefile.config any way you want.  In fact, an easy way is to copy
-# Makefile.config.in and follow the instructions in the comments therein
+# config.mk any way you want.  In fact, an easy way is to copy
+# config.mk.in and follow the instructions in the comments therein
 # to uncomment certain lines and make other changes.
 
 # Note that if you invoke 'make' without having first run 'configure',
 # the make will call 'configure' itself when it finds
-# 'Makefile.config' missing.  That might look a little messy to the
+# 'config.mk' missing.  That might look a little messy to the
 # user, but it isn't the normal build process.
 
-# The argument to this program is the filepath of the Makefile.config.in
-# file.  If unspecified, the default is 'Makefile.config.in' in the 
+# The argument to this program is the filepath of the config.mk.in
+# file.  If unspecified, the default is 'config.mk.in' in the 
 # Netpbm source directory.
 
 # For explanations of the stuff we put in the make files, see the comments
-# in Makefile.config.in.
+# in config.mk.in.
 
 
 # $testCc is the command we use to do test compiles.  Note that test
@@ -41,6 +41,18 @@ my ($TRUE, $FALSE) = (1,0);
 # programs to run on a third system.
 
 my $testCc;
+
+##############################################################################
+#
+#  Implementation note:
+#
+#  At one time, we thought we had to add /usr/local/lib and /usr/local/include
+#  to the path on some platforms because they needed it and didn't include
+#  it in the default compiler search path.  But then we had reason to doubt
+#  that was really required, so removed the function on 04.03.15 and never
+#  had any complaint in the next 3 years.
+##############################################################################
+
 
 #******************************************************************************
 #
@@ -87,13 +99,17 @@ sub tmpdir() {
 
     my $retval;
     
-    if ($ENV{"TMPDIR"}) {
-        $retval = $ENV{"TMPDIR"};
+    if ($ENV{'TMPDIR'}) {
+        $retval = $ENV{'TMPDIR'};
+    } elsif ($ENV{'TEMP'}) {
+        $retval = $ENV{'TEMP'};
     } else {
-        if ($Config{'osvers'} eq "djgpp") {
-            $retval = "/dev/env/DJDIR/tmp";
+        if ($Config{'osvers'} eq 'djgpp') {
+            $retval = '/dev/env/DJDIR/tmp';
         } else {
-            $retval =  "/tmp";
+            if (-d('/tmp')) {
+                $retval =  '/tmp';
+            }
         }
     }
     return $retval;
@@ -110,14 +126,43 @@ sub tempFile($) {
 #                                       DIR=>File::Spec->tmpdir(),
 #                                       UNLINK=>0);
     my ($suffix) = @_;
+
     my $fileName;
     local *file;  # For some inexplicable reason, must be local, not my
-    my $i;
-    $i = 0;
-    do {
-        $fileName = tmpdir() . "/netpbm" . $i++ . $suffix;
-    } until sysopen(*file, $fileName, O_RDWR|O_CREAT|O_EXCL);
 
+    my $tmpdir = tmpdir();
+
+    if (!defined($tmpdir)) {
+        print STDERR ("Cannot determine what directory to use for " .
+                      "temporary files.  " .
+                      "Set TMPDIR environment variable to fix this.\n");
+        exit(1);
+    } else {
+        if (!-d($tmpdir)) {
+            print STDERR ("Temporary file directory '$tmpdir' does not " .
+                          "exist.  Create it or set TMPDIR environment " .
+                          "variable appropriately\n");
+            exit(1);
+        } else {
+            for (my $i = 0; $i < 50 && !defined($fileName); ++$i) {
+                my $trialFileName = tmpdir() . "/netpbm" . $i . $suffix;
+
+                my $success = sysopen(*file,
+                                      $trialFileName,
+                                      O_RDWR|O_CREAT|O_EXCL);
+
+                if ($success) {
+                    $fileName = $trialFileName;
+                }
+            }
+
+            if (!defined($fileName)) {
+                print STDERR ("Unable to create a temporary file in " .
+                              "directory '$tmpdir'\n");
+                exit(1);
+            }
+        }
+    }
     return(*file, $fileName);
 }
 
@@ -159,8 +204,7 @@ sub chooseTestCompiler($$) {
 
 
 
-sub testCflags($) {
-    my ($needLocal) = @_;
+sub testCflags() {
 
     my $cflags;
 
@@ -176,9 +220,6 @@ sub testCflags($) {
         $cflags .= " " . $ENV{"CFLAGS"};
     }
     
-    if ($needLocal) {
-        $cflags .= " -I/usr/local/include";
-    }
     return $cflags;
 }    
 
@@ -213,10 +254,40 @@ sub testCompile($$$) {
 
 
 
+sub testCompileLink($$$) {
+    my ($flags, $cSourceCodeR, $successR) = @_;
+#-----------------------------------------------------------------------------
+#  Do a test compile of the program in @{$cSourceCodeR}.
+#  
+#  Return $$successR == $TRUE iff the compile succeeds (exit code 0).
+#-----------------------------------------------------------------------------
+    my ($cFile, $cFileName) = tempFile('.c');
+
+    print $cFile @{$cSourceCodeR};
+    
+    my ($oFile, $oFileName) = tempFile('');
+
+    # Note that $flags may contain -l options, which where static linking
+    # is involved have to go _after_ the base object file ($oFileName).
+    
+    my $compileCommand = "$testCc -o $oFileName $cFileName $flags";
+    print ("Doing test compile/link: $compileCommand\n");
+    my $rc = system($compileCommand);
+    
+    unlink($oFileName);
+    close($oFile);
+    unlink($cFileName);
+    close($cFile);
+
+    $$successR = ($rc == 0);
+}
+
+
+
 sub displayIntroduction() {
     print("This is the Netpbm configurator.  It is an interactive dialog " .
           "that\n");
-    print("helps you build the file 'Makefile.config' and prepare to build ");
+    print("helps you build the file 'config.mk' and prepare to build ");
     print("Netpbm.\n");
     print("\n");
 
@@ -414,8 +485,8 @@ sub getPlatform() {
 
 
 
-sub getCompiler($$) {
-    my ($platform, $compilerR) = @_;
+sub getCompiler($$$) {
+    my ($platform, $subplatform, $compilerR) = @_;
 #-----------------------------------------------------------------------------
 #  Here are some of the issues surrounding choosing a compiler:
 #
@@ -459,6 +530,8 @@ sub getCompiler($$) {
                             );
 
     if ($gccUsualPlatform{$platform}) {
+        $$compilerR = "gcc";
+    } elsif ($platform eq "WINDOWS" && $subplatform eq "cygwin") {
         $$compilerR = "gcc";
     } elsif ($gccOptionalPlatform{$platform}) {
         print("GNU compiler or native operating system compiler (cc)?\n");
@@ -701,7 +774,7 @@ sub inttypesDefault() {
         print("(Doing test compiles to choose a default for you -- " .
               "ignore errors)\n");
 
-        my $cflags = testCflags($FALSE);
+        my $cflags = testCflags();
 
         my $works;
 
@@ -791,7 +864,7 @@ sub getInt64($$) {
         print("(Doing test compiles to determine if you have int64 type -- " .
               "ignore errors)\n");
 
-        my $cflags = testCflags($FALSE);
+        my $cflags = testCflags();
 
         my $works;
 
@@ -822,7 +895,7 @@ sub getInt64($$) {
 # warning after user has chosen.  Also test links to test the link library.
 
 # It looks like these should all be in the default search paths and were there
-# just to override defaults in Makefile.config.in.  Since Configure now
+# just to override defaults in config.mk.in.  Since Configure now
 # creates a default of "standard search path," I'm guessing we don't need
 # to set these anymore.
 
@@ -1054,27 +1127,27 @@ sub getLinuxsvgaLibrary($@) {
     my ($svgalib, $svgalibhdr_dir);
 
     if ($platform eq "GNU") {
-        {
-            my $default;
+        my $default;
 
-            if (-d('/usr/link/svgalib')) {
-                $default = '/usr/link/svgalib/libvga.so';
-            } elsif (-d('/usr/lib/svgalib')) {
-                $default = '/usr/lib/svgalib/libvga.so';
-            } else {
-                $default = 'libvga.so';
-            }
+        if (-d('/usr/link/svgalib')) {
+            $default = '/usr/link/svgalib/libvga.so';
+        } elsif (-d('/usr/lib/svgalib')) {
+            $default = '/usr/lib/svgalib/libvga.so';
+        } elsif (system('ldconfig -p | grep libvga &>/dev/null') == 0) {
+            $default = 'libvga.so';
+        } else {
+            $default = 'none';
+        }
             
-            print("What is your Svgalib library?\n");
+        print("What is your Svgalib library?\n");
+        
+        my $response = prompt("library filename or 'none'", $default);
             
-            my $response = prompt("library filename or 'none'", $default);
-            
-            if ($response ne "none") {
-                $svgalib = $response;
-            }
+        if ($response ne 'none') {
+            $svgalib = $response;
         }
     }
-    if (defined($svgalib)) {
+    if (defined($svgalib) && $svgalib ne 'none') {
         my $default;
         
         if (-d('/usr/include/svgalib')) {
@@ -1138,8 +1211,8 @@ sub help() {
     print("It is not GNU Configure.\n");
     print("\n");
     print("There is one optional argument to this program:  The " .
-          "name of the file to use as the basis for the Makefile.config " .
-          "file.  Default is 'Makefile.config.in'\n");
+          "name of the file to use as the basis for the config.mk " .
+          "file.  Default is 'config.mk.in'\n");
     print("\n");
     print("Otherwise, the program is interactive.\n");
 }
@@ -1186,7 +1259,7 @@ sub gnuOptimizeOpt($) {
         print("Therefore, I am configuring the build to not do inline \n");
         print("optimization.  This will make some Netpbm programs \n");
         print("noticeably slower.  If I am wrong about your compiler, just\n");
-        print("edit Makefile.config and change -O0 to -O3 near the bottom.\n");
+        print("edit config.mk and change -O0 to -O3 near the bottom.\n");
         print("\n");
         print("The problem is known to exist in the GNU Compiler \n");
         print("release 2.96.  If you upgrade, you will not have this \n");
@@ -1202,38 +1275,22 @@ sub gnuOptimizeOpt($) {
 
 
 
-sub needLocal($) {
-#-----------------------------------------------------------------------------
-#  Return wether or not /usr/local paths must be added to compiles and
-#  links.  In a properly configured system, those paths should be in
-#  the compiler and linker default search paths, e.g. the compiler
-#  should search /usr/local/include and then /usr/include without any
-#  -I options needed.  But we've seen some systems where it isn't.
-#
-#  Actually, I have doubts now as to whether these misconfigured systems
-#  really exist.  This subroutine was apparently always broken, because
-#  before 04.03.15, it had "netbsd", etc. in lower case.  So it always
-#  returned false.  I never had a complaint.  Plus, we had a bug in 
-#  Makefile.config.in wherein it wiped out the user's setting of the LDFLAGS
-#  environment variable.  This could explain /usr/local/lib not being in
-#  the path when it should have been.
-#
-#  So I've disabled this function; we'll see if we encounter any truly
-#  misconfigured systems.  04.03.15.
-#-----------------------------------------------------------------------------
-    my ($platform) = @_;
+sub gnuCflags($) {
+    my ($gccCommandName) = @_;
 
-    return $FALSE;  # See comments above.
+    return("CFLAGS = " . gnuOptimizeOpt($gccCommandName) . " -ffast-math " .
+           " -pedantic -fno-common " . 
+           "-Wall -Wno-uninitialized -Wmissing-declarations -Wimplicit " .
+           "-Wwrite-strings -Wmissing-prototypes -Wundef\n");
+}
 
-    my $needLocal;
-    
-    if ($platform eq "NETBSD" || $platform eq "OPENBSD" || 
-        $platform eq "FREEBSD") {
-        $needLocal = $TRUE;
-    } else {
-        $needLocal = $FALSE;
-    }
-    return $needLocal;
+
+
+sub makeCompilerGcc($) {
+    my ($config_mkR) = @_;
+    my $compileCommand = 'gcc';
+    push(@{$config_mkR}, "CC = $compileCommand\n");
+    push(@{$config_mkR}, gnuCflags($compileCommand));
 }
 
 
@@ -1244,7 +1301,7 @@ sub findProcessManagement($) {
 #  Return $TRUE iff the system does not have <sys/wait.h> in its default
 #  search path.
 #-----------------------------------------------------------------------------
-    my $cflags = testCflags($FALSE);
+    my $cflags = testCflags();
 
     my @cSourceCode = (
                        "#include <sys/wait.h>\n",
@@ -1381,13 +1438,13 @@ sub printOldJpegWarning() {
 
 
 
-sub testJpegHdr($$) {
+sub testJpegHdr($) {
 
-    my ($needLocal, $jpeghdr_dir) = @_;
+    my ($jpeghdr_dir) = @_;
 
     if (defined($testCc)) {
 
-        my $generalCflags = testCflags($needLocal);
+        my $generalCflags = testCflags();
 
         my $jpegIOpt = $jpeghdr_dir ? "-I$jpeghdr_dir" : "";
 
@@ -1440,15 +1497,15 @@ sub testCompilePngH($$) {
 
 
 
-sub testPngHdr($$$) {
+sub testPngHdr($$) {
 #-----------------------------------------------------------------------------
 #  Issue a warning if the compiler can't find png.h.
 #-----------------------------------------------------------------------------
-    my ($needLocal, $pnghdr_dir, $zhdr_dir) = @_;
+    my ($pnghdr_dir, $zhdr_dir) = @_;
 
     if (defined($testCc)) {
 
-        my $generalCflags = testCflags($needLocal);
+        my $generalCflags = testCflags();
 
         my $zlibIOpt = $zhdr_dir ? "-I$zhdr_dir" : "";
 
@@ -1472,13 +1529,76 @@ sub testPngHdr($$$) {
 
 
 
-sub testLibpngConfig($) {
-    my ($needLocal) = @_;
+sub printBadPngConfigLdflagsWarning($) {
+    my ($pngLdFlags) = @_;
+
+    print << 'EOF';
+WARNING: 'libpng-config' in this environment (a program in your PATH)
+gives instructions that don't work for linking with the PNG library.
+Our test link failed.
+
+This indicates Libpng is installed incorrectly on this system.  If so,
+your Netpbm build, which uses 'libpng-config', will fail.  But it
+might also just be our test that is broken.
+
+EOF
+
+}
+
+
+
+sub printBadPngConfigCFlagsWarning($) {
+    my ($pngCFlags) = @_;
+
+    print << 'EOF';
+WARNING: 'libpng-config' in this environment (a program in your PATH)
+gives instructions that don't work for compiling for the PNG library.
+Our test compile failed.
+
+This indicates Libpng is installed incorrectly on this system.  If so,
+your Netpbm build, which uses 'libpng-config', will fail.  But it
+might also just be our test that is broken.
+
+EOF
+
+}
+
+
+
+sub testLinkPnglib($$) {
+    my ($generalCflags, $pngCflags) = @_;
+
+    my @cSourceCode = (
+                       "#include <png.h>\n",
+                       "int main() {\n",
+                       "png_create_write_struct(0, NULL, NULL, NULL);\n",
+                       "}\n",
+                       );
+
+    testCompile("$generalCflags $pngCflags", \@cSourceCode, \my $success);
+    if (!$success) {
+        # Since it won't compile, we can't test the link
+    } else {
+        my $pngLdflags = qx{libpng-config --ldflags};
+        chomp($pngLdflags);
+        
+        testCompileLink("$generalCflags $pngCflags $pngLdflags",
+                        \@cSourceCode, \my $success);
+        
+        if (!$success) {
+            printBadPngConfigLdflagsWarning($pngLdflags);
+        }
+    }
+}
+
+
+
+sub testLibpngConfig() {
 #-----------------------------------------------------------------------------
 #  Issue a warning if the instructions 'libpng-config' give for compiling
 #  with Libpng don't work.
 #-----------------------------------------------------------------------------
-    my $generalCflags = testCflags($needLocal);
+    my $generalCflags = testCflags();
 
     my $pngCflags = qx{libpng-config --cflags};
     chomp($pngCflags);
@@ -1486,33 +1606,136 @@ sub testLibpngConfig($) {
     testCompilePngH("$generalCflags $pngCflags", \my $success);
 
     if (!$success) {
-        print("\n");
-        print("Unable to compile a test PNG program using the compiler " .
-              "flags that libpng-config says to use: '$pngCflags'.\n");
-        print("This indicates that you have Libpng installed incorrectly.\n");
-        print("libpng-config gets installed as part of the Libpng package.\n");
+        printBadPngConfigCflagsWarning($pngCflags);
     } else {
-        
-
-
+        testLinkPnglib($generalCflags, $pngCflags);
     }
 }
 
 
 
-sub testConfiguration($$$$$$$) {
+sub testCompileXmlreaderH($$) {
+    my ($cflags, $successR) = @_;
+#-----------------------------------------------------------------------------
+#  Do a test compile to see if we can see xmlreader.h.
+#-----------------------------------------------------------------------------
+    my @cSourceCode = (
+                       "#include <libxml/xmlreader.h>\n",
+                       );
+    
+    testCompile($cflags, \@cSourceCode, $successR);
+}
 
-    my ($needLocal, $jpeglib, $jpeghdr_dir,
+
+
+sub printBadXml2CFlagsWarning($) {
+    my ($xml2CFlags) = @_;
+
+    print << 'EOF';
+
+WARNING: 'xml2-config' in this environment (a program in your PATH)
+gives instructions that don't work for compiling for the Libxml2 library.
+Our test compile failed.
+
+This indicates Libxml2 is installed incorrectly on this system.  If so,
+your Netpbm build, which uses 'xml2-config', will fail.  But it
+might also just be our test that is broken.
+
+'xml2-config' says to use compiler options '$xml2CFlags'.
+
+EOF
+
+}
+
+
+
+sub testCompileXmlReaderTypes($$) {
+    my ($cflags, $successR) = @_;
+#-----------------------------------------------------------------------------
+#  Do a test compile to see if xmlreader.h defines xmlReaderTypes,
+#  assuming we can compile with xmlreader.h in general.
+#-----------------------------------------------------------------------------
+    my @cSourceCode = (
+                       "#include <libxml/xmlreader.h>\n",
+                       "xmlReaderTypes dummy;\n",
+                       );
+    
+    testCompile($cflags, \@cSourceCode, $successR);
+}
+
+
+
+sub printMissingXmlReaderTypesWarning() {
+
+    print << 'EOF';
+
+WARNING: Your libxml2 interface header file does not define the type
+'xmlReaderTypes', which Netpbm needs.  In order to build Netpbm successfully,
+you must install a more recent version of Libxml2.
+
+EOF
+}
+
+
+
+sub printNoLibxml2Warning() {
+
+    print << 'EOF';
+
+WARNING: You appear not to have Libxml2 installed ('xml2-config' does not
+exist in your program search PATH).  If this is the case at build time,
+the build will skip building 'svgtopam'.
+
+EOF
+}
+
+
+
+sub testLibxml2Hdr() {
+#-----------------------------------------------------------------------------
+#  Issue a warning if the instructions 'xml2-config' give for compiling
+#  with Libxml2 don't work.  In particular, note whether they get us a
+#  modern enough Libxml2 to have the 'xmlReaderTypes' type.
+#-----------------------------------------------------------------------------
+    if (commandExists('xml2-config')) {
+        my $generalCflags = testCflags();
+
+        my $xml2Cflags = qx{xml2-config --cflags};
+        chomp($xml2Cflags);
+
+        testCompileXmlreaderH("$generalCflags $xml2Cflags", \my $success);
+
+        if (!$success) {
+            printBadXml2CflagsWarning($xml2Cflags);
+        } else {
+            testCompileXmlReaderTypes("$generalCflags $xml2Cflags",
+                                      \my $success);
+
+            if (!$success) {
+                printMissingXmlReaderTypesWarning();
+            }
+        }
+    } else {
+        printNoLibxml2Warning();
+    }
+}
+
+
+
+sub testConfiguration($$$$$$) {
+
+    my ($jpeglib, $jpeghdr_dir,
         $pnglib, $pnghdr_dir, $zlib, $zhdr_dir) = @_;
 
     if (defined($jpeglib)) {
-        testJpegHdr($needLocal, $jpeghdr_dir);
+        testJpegHdr($jpeghdr_dir);
     }
     if (defined($pnglib) && defined($zlib)) {
-        testPngHdr($needLocal, $pnghdr_dir, $zhdr_dir);
+        testPngHdr($pnghdr_dir, $zhdr_dir);
     } elsif (commandExists('libpng-config')) {
-        testLibpngConfig($needLocal);
+        testLibpngConfig();
     }
+    testLibxml2Hdr();
 
     # TODO: We ought to validate other libraries too.  But it's not
     # that important, because in the vast majority of cases where the
@@ -1544,8 +1767,8 @@ if (@ARGV > 0) {
     $configInPathArg = $ARGV[0];
 }
 
-if (stat("Makefile.config")) {
-    print("Discard existing Makefile.config?\n");
+if (stat("config.mk")) {
+    print("Discard existing config.mk?\n");
     print("Y or N (N) ==> ");
 
     my $answer = <STDIN>;
@@ -1568,21 +1791,22 @@ my ($platform, $subplatform) = getPlatform();
 print("\n");
 
 if ($platform eq "NONE") {
-    print("You will have to construct Makefile.config manually.  To do \n");
-    print("this, copy Makefile.config.in as Makefile.config, and then \n");
+    print("You will have to construct config.mk manually.  To do \n");
+    print("this, copy config.mk.in as config.mk, and then \n");
     print("edit it.  Follow the instructions and examples in the file. \n");
     print("Please report your results to the Netpbm maintainer so he \n");
     print("can improve the configure program. \n");
     exit;
 }
 
-getCompiler($platform, \my $compiler);
+getCompiler($platform, $subplatform, \my $compiler);
+
 getLinker($platform, $compiler, \my $baseLinker, \my $linkViaCompiler);
 
 chooseTestCompiler($compiler, \$testCc);
 
 my $netpbmlib_runtime_path;
-    # Undefined if the default from Makefile.config.in is acceptable.
+    # Undefined if the default from config.mk.in is acceptable.
 
 if ($platform eq "SOLARIS" or $platform eq "IRIX" or
     $platform eq "DARWIN" or $platform eq "NETBSD" or
@@ -1726,8 +1950,7 @@ validateLibraries($jpeglib, $tifflib, $pnglib, $zlib);
 
 warnJpegTiffDependency($jpeglib, $tifflib);
 
-testConfiguration(needLocal($platform), 
-                  $jpeglib, $jpeghdr_dir,
+testConfiguration($jpeglib, $jpeghdr_dir,
                   $pnglib, $pnghdr_dir,
                   $zlib, $zhdr_dir,
                   );
@@ -1743,7 +1966,7 @@ my $defaultConfigInPath;
 if (-f("GNUmakefile")) {
     # He's apparently running us in the source tree or an already set up
     # build directory.
-    $defaultConfigInPath = "Makefile.config.in";
+    $defaultConfigInPath = "config.mk.in";
 } else {
     my $srcdir;
     my $done;
@@ -1768,41 +1991,24 @@ if (-f("GNUmakefile")) {
     unlink("Makefile");
     symlink("$srcdir/Makefile", "Makefile");
 
-    open(SRCDIR, ">Makefile.srcdir");
+    open(SRCDIR, ">srcdir.mk");
     print(SRCDIR "SRCDIR = $srcdir\n");
     close(SRCDIR);
     
-    $defaultConfigInPath = "$srcdir/Makefile.config.in";
+    $defaultConfigInPath = "$srcdir/config.mk.in";
 }
-
-sub makeCompilerGcc($) {
-    my ($Makefile_configR) = @_;
-    my $compileCommand = 'gcc';
-    push(@{$Makefile_configR}, "CC = $compileCommand\n");
-    push(@{$Makefile_configR}, gnuCflags($compileCommand));
-}
-
 
 #******************************************************************************
 #
-#  BUILD Makefile.config
+#  BUILD config.mk
 #
 #*****************************************************************************
 
-sub gnuCflags($) {
-    my ($gccCommandName) = @_;
+my @config_mk;
+    # This is the complete config.mk contents.  We construct it here
+    # and ultimately write the whole thing out as config.mk.
 
-    return("CFLAGS = " . gnuOptimizeOpt($gccCommandName) . " -ffast-math " .
-           " -pedantic -fno-common " . 
-           "-Wall -Wno-uninitialized -Wmissing-declarations -Wimplicit " .
-           "-Wwrite-strings -Wmissing-prototypes -Wundef\n");
-}
-
-my @Makefile_config;
-    # This is the complete Makefile.config contents.  We construct it here
-    # and ultimately write the whole thing out as Makefile.config.
-
-# First, we just read the 'Makefile.config.in' in
+# First, we just read the 'config.mk.in' in
 
 my $configInPath;
 if (defined($configInPathArg)) {
@@ -1813,9 +2019,9 @@ if (defined($configInPathArg)) {
 open (CONFIG_IN,"<$configInPath") or
     die("Unable to open file '$configInPath' for input.");
 
-@Makefile_config = <CONFIG_IN>;
+@config_mk = <CONFIG_IN>;
 
-unshift(@Makefile_config, 
+unshift(@config_mk, 
         "####This file was automatically created by 'configure.'\n",
         "####Many variables are set twice -- a generic setting, then \n",
         "####a system-specific override at the bottom of the file.\n",
@@ -1824,101 +2030,98 @@ unshift(@Makefile_config,
 close(CONFIG_IN);
 
 # Now, add the variable settings that override the default settings that are
-# done by the Makefile.config.in contents.
+# done by the config.mk.in contents.
 
-push(@Makefile_config, "\n\n\n\n");
-push(@Makefile_config, "####Lines above were copied from Makefile.config.in " .
+push(@config_mk, "\n\n\n\n");
+push(@config_mk, "####Lines above were copied from config.mk.in " .
      "by 'configure'.\n");
-push(@Makefile_config, "####Lines below were added by 'configure' based on " .
+push(@config_mk, "####Lines below were added by 'configure' based on " .
      "the $platform platform.\n");
 if (defined($subplatform)) {
-    push(@Makefile_config, "####subplatform '$subplatform'\n");
+    push(@config_mk, "####subplatform '$subplatform'\n");
 }
 
-push(@Makefile_config, "DEFAULT_TARGET = $default_target\n");
+push(@config_mk, "DEFAULT_TARGET = $default_target\n");
 
-push(@Makefile_config, "NETPBMLIBTYPE=$netpbmlibtype\n");
-push(@Makefile_config, "NETPBMLIBSUFFIX=$netpbmlibsuffix\n");
+push(@config_mk, "NETPBMLIBTYPE=$netpbmlibtype\n");
+push(@config_mk, "NETPBMLIBSUFFIX=$netpbmlibsuffix\n");
 if (defined($shlibprefixlist)) {
-    push(@Makefile_config, "SHLIBPREFIXLIST=$shlibprefixlist\n");
+    push(@config_mk, "SHLIBPREFIXLIST=$shlibprefixlist\n");
 }
-push(@Makefile_config, "STATICLIB_TOO=$staticlib_too\n");
+push(@config_mk, "STATICLIB_TOO=$staticlib_too\n");
 
 if (defined($netpbmlib_runtime_path)) {
-    push(@Makefile_config, "NETPBMLIB_RUNTIME_PATH=$netpbmlib_runtime_path\n");
+    push(@config_mk, "NETPBMLIB_RUNTIME_PATH=$netpbmlib_runtime_path\n");
 }
 
 if ($platform eq "GNU") {
-    my $compileCommand;
     if (!commandExists("cc") && commandExists("gcc")) {
-        $compileCommand = "gcc";
-        push(@Makefile_config, "CC = $compileCommand\n");
+        makeCompilerGcc(\@config_mk);
     } else {
-        $compileCommand = "cc";
+        push(@config_mk, gnuCflags('cc'));
     }
-    push(@Makefile_config, gnuCflags($compileCommand));
 # The merged programs have a main_XXX subroutine instead of main(),
 # which would cause a warning with -Wmissing-declarations or 
 # -Wmissing-prototypes.
-    push(@Makefile_config, "CFLAGS_MERGE = " .
+    push(@config_mk, "CFLAGS_MERGE = " .
          "-Wno-missing-declarations -Wno-missing-prototypes\n");
-    push(@Makefile_config, "LDRELOC = ld --reloc\n");
-    push(@Makefile_config, "LINKER_CAN_DO_EXPLICIT_LIBRARY=Y\n");
+    push(@config_mk, "LDRELOC = ld --reloc\n");
+    push(@config_mk, "LINKER_CAN_DO_EXPLICIT_LIBRARY=Y\n");
 } elsif ($platform eq "SOLARIS") {
-    push(@Makefile_config, 'LDSHLIB = -Wl,-Bdynamic,-G,-h,$(SONAME)', "\n");
+    push(@config_mk, 'LDSHLIB = -Wl,-Bdynamic,-G,-h,$(SONAME)', "\n");
 
-    push(@Makefile_config, 'NEED_RUNTIME_PATH = Y', "\n");
+    push(@config_mk, 'NEED_RUNTIME_PATH = Y', "\n");
     if ($compiler eq "cc") {
-        push(@Makefile_config, "CFLAGS = -O\n");
-        push(@Makefile_config, "CFLAGS_SHLIB = -Kpic\n");
+        push(@config_mk, "CFLAGS = -O\n");
+        push(@config_mk, "CFLAGS_SHLIB = -Kpic\n");
     } else {
-        makeCompilerGcc(\@Makefile_config);
+        makeCompilerGcc(\@config_mk);
     }
     # Before Netpbm 10.20 (January 2004), we set this to -R for 
     # $compiler == cc and -rpath otherwise.  But now we know that the GNU
     # compiler can also invoke a linker that needs -R, so we're more flexible.
     if ($baseLinker eq "GNU") {
-        push(@Makefile_config, "RPATHOPTNAME = -rpath\n");
+        push(@config_mk, "RPATHOPTNAME = -rpath\n");
     } else {
-        push(@Makefile_config, "RPATHOPTNAME = -R\n");
+        push(@config_mk, "RPATHOPTNAME = -R\n");
     }
-    push(@Makefile_config, "NETWORKLD = -lsocket -lnsl\n");
+    push(@config_mk, "NETWORKLD = -lsocket -lnsl\n");
 } elsif ($platform eq "HP-UX") {
     if ($compiler eq "gcc") {
-        makeCompilerGcc(\@Makefile_config);
-        push(@Makefile_config, "CFLAGS += -fPIC\n");
-        push(@Makefile_config, "LDSHLIB = -shared -fPIC\n");
-        push(@Makefile_config, 'LDFLAGS += -Wl,+b,/usr/pubsw/lib', "\n");
+        makeCompilerGcc(\@config_mk);
+        push(@config_mk, "CFLAGS += -fPIC\n");
+        push(@config_mk, "LDSHLIB = -shared -fPIC\n");
+        push(@config_mk, 'LDFLAGS += -Wl,+b,/usr/pubsw/lib', "\n");
     } else {
         # We don't know what to do here.  We used to (before 10.20) just
         # just assume the compiler was gcc.  We know that the gcc stuff
         # above does NOT work for HP native compiler.
-        push(@Makefile_config, "LDSHLIB =\n");
+        push(@config_mk, "LDSHLIB =\n");
     }
 } elsif ($platform eq "AIX") {
-    push(@Makefile_config, 'LDFLAGS = -L /usr/pubsw/lib', "\n");
+    push(@config_mk, 'LDFLAGS += -L /usr/pubsw/lib', "\n");
     if ($compiler eq "cc") {
         # Yes, the -L option implies the runtime as well as linktime library
         # search path.  There's no way to specify runtime path independently.
-        push(@Makefile_config, "RPATHOPTNAME = -L\n");
-        push(@Makefile_config, "LDSHLIB = -qmkshrobj\n");
+        push(@config_mk, "RPATHOPTNAME = -L\n");
+        push(@config_mk, "LDSHLIB = -qmkshrobj\n");
     } else {
-        makeCompilerGcc(\@Makefile_config);
-        push(@Makefile_config, "LDSHLIB = -shared\n");
+        makeCompilerGcc(\@config_mk);
+        push(@config_mk, "LDSHLIB = -shared\n");
     }
 } elsif ($platform eq "TRU64") {
-#    push(@Makefile_config, "INSTALL = installbsd\n");
+#    push(@config_mk, "INSTALL = installbsd\n");
     if ($compiler eq "cc") {
-        push(@Makefile_config, 'CFLAGS = -O2 -std1', "\n");
-        push(@Makefile_config, "LDFLAGS = -call_shared -oldstyle_liblookup " .
+        push(@config_mk, 'CFLAGS = -O2 -std1', "\n");
+        push(@config_mk, "LDFLAGS = -call_shared -oldstyle_liblookup " .
              "-L/usr/local/lib\n");
-        push(@Makefile_config, "LDSHLIB = -shared -expect_unresolved \"*\"\n");
+        push(@config_mk, "LDSHLIB = -shared -expect_unresolved \"*\"\n");
     } else {
         # We've never tested this.  This is just here to give a user a 
         # headstart on submitting to us the necessary information.  2002.07.04.
-        push(@Makefile_config, "CC = gcc\n");
-        push(@Makefile_config, 'CFLAGS = -O3', "\n");
-        push(@Makefile_config, "LDSHLIB = -shared\n");
+        push(@config_mk, "CC = gcc\n");
+        push(@config_mk, 'CFLAGS = -O3', "\n");
+        push(@config_mk, "LDSHLIB = -shared\n");
     }
     # Between May 2000 and July 2003, we had -DLONG_32 in these options.
     # We took it out because it generated bad code for a TRU64 user in
@@ -1926,76 +2129,77 @@ if ($platform eq "GNU") {
     # only Ppmtompeg and it isn't clear that using long instead of int is
     # ever right anyway.
 
-    push(@Makefile_config, "OMIT_NETWORK = y\n");
-    push(@Makefile_config, "LINKER_CAN_DO_EXPLICIT_LIBRARY=Y\n");
+    push(@config_mk, "OMIT_NETWORK = y\n");
+    push(@config_mk, "LINKER_CAN_DO_EXPLICIT_LIBRARY=Y\n");
 } elsif ($platform eq "IRIX") {
-#    push(@Makefile_config, "INSTALL = install\n");
-    push(@Makefile_config, "MANPAGE_FORMAT = cat\n");
-    push(@Makefile_config, "RANLIB = true\n");
-    push(@Makefile_config, "CFLAGS = -n32 -O3 -fullwarn\n");
-    push(@Makefile_config, "LDFLAGS = -n32\n");
-    push(@Makefile_config, "LDSHLIB = -shared -n32\n");
+#    push(@config_mk, "INSTALL = install\n");
+    push(@config_mk, "MANPAGE_FORMAT = cat\n");
+    push(@config_mk, "RANLIB = true\n");
+    push(@config_mk, "CFLAGS = -n32 -O3 -fullwarn\n");
+    push(@config_mk, "LDFLAGS = -n32\n");
+    push(@config_mk, "LDSHLIB = -shared -n32\n");
 } elsif ($platform eq "WINDOWS") {
     if ($subplatform eq "cygwin") {
-        makeCompilerGcc(\@Makefile_config);
+        makeCompilerGcc(\@config_mk);
     }
-    push(@Makefile_config, "EXE = .exe\n");
-    push(@Makefile_config, "OMIT_NETWORK = y\n");
+    push(@config_mk, "EXE = .exe\n");
+    push(@config_mk, "OMIT_NETWORK = y\n");
 #    # Though it may not have the link as "ginstall", "install" in a Windows
 #    # Unix environment is usually GNU install.
 #    my $ginstall_result = `ginstall --version 2>/dev/null`;
 #    if (!$ginstall_result) {
 #        # System doesn't have 'ginstall', so use 'install' instead.
-#        push(@Makefile_config, "INSTALL = install\n");
+#        push(@config_mk, "INSTALL = install\n");
 #    }
-    push(@Makefile_config, 'SYMLINK = ', symlink_command(), "\n");
-    push(@Makefile_config, 'DLLVER=$(NETPBM_MAJOR_RELEASE)', "\n");
-    push(@Makefile_config, "LDSHLIB = " . 
+    push(@config_mk, 'SYMLINK = ', symlink_command(), "\n");
+    push(@config_mk, 'DLLVER=$(NETPBM_MAJOR_RELEASE)', "\n");
+    push(@config_mk, "LDSHLIB = " . 
          '-shared -Wl,--image-base=0x10000000 -Wl,--enable-auto-import', "\n");
 } elsif ($platform eq "BEOS") {
-    push(@Makefile_config, "LDSHLIB = -nostart\n");
+    push(@config_mk, "LDSHLIB = -nostart\n");
 } elsif ($platform eq "OPENBSD") {
     # vedge@vedge.com.ar says on 2001.04.29 that there are a ton of 
     # undefined symbols in the Fiasco stuff on OpenBSD.  So we'll just
     # cut it out of the build until someone feels like fixing it.
-    push(@Makefile_config, "BUILD_FIASCO = N\n");
+    push(@config_mk, "BUILD_FIASCO = N\n");
 } elsif ($platform eq "FREEBSD") {
 } elsif ($platform eq "AMIGA") {
-    push(@Makefile_config, "CFLAGS = -m68020-60 -ffast-math -mstackextend\n");
+    push(@config_mk, "CFLAGS = -m68020-60 -ffast-math -mstackextend\n");
 } elsif ($platform eq "UNIXWARE") {
     # Nothing to do.
 } elsif ($platform eq "SCO") {
     # Got this from "John H. DuBois III" <spcecdt@armory.com> 2002.09.27:
-    push(@Makefile_config, "RANLIB = true\n");
+    push(@config_mk, "RANLIB = true\n");
     if ($compiler eq "cc") {
-        push(@Makefile_config, "CFLAGS = -O\n");
-        push(@Makefile_config, "CFLAGS_SHLIB = -O -K pic\n");
-        push(@Makefile_config, "LDSHLIB = -G\n");
-        push(@Makefile_config, "SHLIB_CLIB =\n");
+        push(@config_mk, "CFLAGS = -O\n");
+        push(@config_mk, "CFLAGS_SHLIB = -O -K pic\n");
+        push(@config_mk, "LDSHLIB = -G\n");
+        push(@config_mk, "SHLIB_CLIB =\n");
     } else {
-        makeCompilerGcc(\@Makefile_config);
-        push(@Makefile_config, "LDSHLIB = -shared\n"); 
+        makeCompilerGcc(\@config_mk);
+        push(@config_mk, "LDSHLIB = -shared\n"); 
     }
-    push(@Makefile_config, "NETWORKLD = -lsocket -lresolve\n");
+    push(@config_mk, "NETWORKLD = -lsocket -lresolve\n");
 } elsif ($platform eq "DARWIN") {
-    push(@Makefile_config, "CC = cc -no-cpp-precomp\n");
-    push(@Makefile_config, 'CFLAGS_SHLIB = -fno-common', "\n");
-    push(@Makefile_config, "LDSHLIB = ",
-         "-dynamiclib ",
-         '-install_name $(NETPBMLIB_RUNTIME_PATH)/libnetpbm.$(MAJ).dylib', 
-         "\n");
-#    push(@Makefile_config, "INSTALL = install\n");
+    push(@config_mk, "CC = cc -no-cpp-precomp\n");
+    push(@config_mk, gnuCflags('cc'));
+    push(@config_mk, 'CFLAGS_SHLIB = -fno-common', "\n");
+
+    my $installNameOpt;
+    if ($netpbmlib_runtime_path eq '') {
+        $installNameOpt = '';
+    } else {
+        $installNameOpt  =
+            '-install_name $(NETPBMLIB_RUNTIME_PATH)/libnetpbm.$(MAJ).dylib';
+    }
+    push(@config_mk, "LDSHLIB = -dynamiclib $installNameOpt\n");
+#    push(@config_mk, "INSTALL = install\n");
 } else {
     die ("Internal error: invalid value for \$platform: '$platform'\n");
 }
 
-if (needLocal($platform)) {
-    push(@Makefile_config, "CFLAGS += -I/usr/local/include\n");
-    push(@Makefile_config, "LDFLAGS += -L/usr/local/lib\n");
-}
-
 if ($linkViaCompiler) {
-    push(@Makefile_config, "LINKERISCOMPILER = Y\n");
+    push(@config_mk, "LINKERISCOMPILER = Y\n");
 }
 
 my $flex_result = `flex --version`;
@@ -2017,7 +2221,7 @@ if (!$flex_result) {
         my $key = <STDIN>;
         print("\n");
 
-        push(@Makefile_config, "LEX=\n");
+        push(@config_mk, "LEX=\n");
     } else {
         print("\n");
         print("Using 'lex' as the pattern matcher generator, " .
@@ -2025,70 +2229,70 @@ if (!$flex_result) {
         print("find 'flex' on your system.\n");
         print("\n");
 
-        push(@Makefile_config, "LEX = lex\n"); 
+        push(@config_mk, "LEX = lex\n"); 
     }
 }
 
 if ($compiler eq 'gcc') {
-    push(@Makefile_config, "CFLAGS_SHLIB += -fPIC\n");
+    push(@config_mk, "CFLAGS_SHLIB += -fPIC\n");
 }
 
 if (defined($tiffhdr_dir)) {
-    push(@Makefile_config, "TIFFHDR_DIR = $tiffhdr_dir\n");
+    push(@config_mk, "TIFFHDR_DIR = $tiffhdr_dir\n");
 }
 if (defined($tifflib)) {
-    push(@Makefile_config, "TIFFLIB = $tifflib\n");
+    push(@config_mk, "TIFFLIB = $tifflib\n");
 }
 
 if (defined($jpeghdr_dir)) {
-    push(@Makefile_config, "JPEGHDR_DIR = $jpeghdr_dir\n");
+    push(@config_mk, "JPEGHDR_DIR = $jpeghdr_dir\n");
 }
 if (defined($jpeglib)) {
-    push(@Makefile_config, "JPEGLIB = $jpeglib\n");
+    push(@config_mk, "JPEGLIB = $jpeglib\n");
 }
 
 if (defined($pnghdr_dir)) {
-    push(@Makefile_config, "PNGHDR_DIR = $pnghdr_dir\n");
+    push(@config_mk, "PNGHDR_DIR = $pnghdr_dir\n");
 }
 if (defined($pnglib)) {
-    push(@Makefile_config, "PNGLIB = $pnglib\n");
+    push(@config_mk, "PNGLIB = $pnglib\n");
 }
 
 if (defined($zhdr_dir)) {
-    push(@Makefile_config, "ZHDR_DIR = $zhdr_dir\n");
+    push(@config_mk, "ZHDR_DIR = $zhdr_dir\n");
 }
 if (defined($zlib)) {
-    push(@Makefile_config, "ZLIB = $zlib\n");
+    push(@config_mk, "ZLIB = $zlib\n");
 }
 
 if (defined($x11hdr_dir)) {
-    push(@Makefile_config, "X11HDR_DIR = $x11hdr_dir\n");
+    push(@config_mk, "X11HDR_DIR = $x11hdr_dir\n");
 }
 if (defined($x11lib)) {
-    push(@Makefile_config, "X11LIB = $x11lib\n");
+    push(@config_mk, "X11LIB = $x11lib\n");
 }
 
 if (defined($linuxsvgahdr_dir)) {
-    push(@Makefile_config, "LINUXSVGAHDR_DIR = $linuxsvgahdr_dir\n");
+    push(@config_mk, "LINUXSVGAHDR_DIR = $linuxsvgahdr_dir\n");
 }
 if (defined($linuxsvgalib)) {
-    push(@Makefile_config, "LINUXSVGALIB = $linuxsvgalib\n");
+    push(@config_mk, "LINUXSVGALIB = $linuxsvgalib\n");
 }
 
 if (defined($netpbm_docurl)) {
-    push(@Makefile_config, "NETPBM_DOCURL = $netpbm_docurl\n");
+    push(@config_mk, "NETPBM_DOCURL = $netpbm_docurl\n");
 }
 
 if ($inttypesHeaderFile ne '<inttypes.h>') {
-    push(@Makefile_config, "INTTYPES_H = $inttypesHeaderFile\n");
+    push(@config_mk, "INTTYPES_H = $inttypesHeaderFile\n");
 }
 
 if ($haveInt64 ne 'Y') {
-    push(@Makefile_config, "HAVE_INT64 = $haveInt64\n");
+    push(@config_mk, "HAVE_INT64 = $haveInt64\n");
 }
 
 if ($dontHaveProcessMgmt) {
-    push(@Makefile_config, "DONT_HAVE_PROCESS_MGMT = Y\n");
+    push(@config_mk, "DONT_HAVE_PROCESS_MGMT = Y\n");
 }
 
 #******************************************************************************
@@ -2097,22 +2301,20 @@ if ($dontHaveProcessMgmt) {
 #
 #*****************************************************************************
 
-open(MAKEFILE_CONFIG, ">Makefile.config") or
-    die("Unable to open Makefile.config for writing in the current " .
+open(config_mk, ">config.mk") or
+    die("Unable to open config.mk for writing in the current " .
         "directory.");
 
-print MAKEFILE_CONFIG @Makefile_config;
+print config_mk @config_mk;
 
-close(MAKEFILE_CONFIG) or
-    die("Error:  Close of Makefile.config failed.\n");
+close(config_mk) or
+    die("Error:  Close of config.mk failed.\n");
 
 print("\n");
-print("We have created the file 'Makefile.config'.  Note, however, that \n");
-print("we guessed a lot at your configuration and you may want to look \n");
-print("at Makefile.config and edit it to your requirements and taste \n");
-print("before doing the make.\n");
+print("We have created the file 'config.mk'.  You may want to look \n");
+print("at it and edit it to your requirements and taste before doing the \n");
+print("make.\n");
 print("\n");
-
 
 print("Now you may proceed with 'make'\n");
 print("\n");

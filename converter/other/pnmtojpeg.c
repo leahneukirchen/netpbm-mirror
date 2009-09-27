@@ -29,6 +29,8 @@
    itself, but doesn't.
 */
 #include <jpeglib.h>
+
+#include "pm_c_util.h"
 #include "pnm.h"
 #include "shhopt.h"
 #include "mallocvar.h"
@@ -330,23 +332,6 @@ parseCommandLine(const int argc, char ** argv,
 }
 
 
-static void
-compute_rescaling_array(JSAMPLE ** const rescale_p, const pixval maxval,
-                        const struct jpeg_compress_struct cinfo);
-static void
-convert_scanlines(struct jpeg_compress_struct * const cinfo_p, FILE * const input_file,
-                  const pixval maxval, const int input_fmt,
-                  JSAMPLE xlate_table[]);
-
-static boolean read_quant_tables (j_compress_ptr cinfo, char * filename,
-                                  int scale_factor, boolean force_baseline);
-
-static boolean read_scan_script (j_compress_ptr cinfo, char * filename);
-
-static boolean set_quant_slots (j_compress_ptr cinfo, char *arg);
-
-static boolean set_sample_factors (j_compress_ptr cinfo, char *arg);
-
 
 static void
 report_compressor(const struct jpeg_compress_struct cinfo) {
@@ -419,6 +404,370 @@ setup_jpeg_density(struct jpeg_compress_struct * const cinfoP,
     
     cinfoP->X_density = density.horiz;
     cinfoP->Y_density = density.vert;
+}
+
+
+
+/*----------------------------------------------------------------------------
+   The functions below here are essentially the file rdswitch.c from
+   the JPEG library.  They perform the functions specifed by the following
+   pnmtojpeg options:
+
+   -qtables file          Read quantization tables from text file
+   -scans file            Read scan script from text file
+   -qslots N[,N,...]      Set component quantization table selectors
+   -sample HxV[,HxV,...]  Set component sampling factors
+-----------------------------------------------------------------------------*/
+
+static int
+text_getc (FILE * file)
+/* Read next char, skipping over any comments (# to end of line) */
+/* A comment/newline sequence is returned as a newline */
+{
+    register int ch;
+  
+    ch = getc(file);
+    if (ch == '#') {
+        do {
+            ch = getc(file);
+        } while (ch != '\n' && ch != EOF);
+    }
+    return ch;
+}
+
+
+static boolean
+readTextInteger(FILE * const fileP,
+                long * const resultP,
+                int *  const termcharP) {
+/*----------------------------------------------------------------------------
+   Read the next unsigned decimal integer from file 'fileP', skipping
+   white space as necessary.  Return it as *resultP.
+
+   Also read one character after the integer and return it as *termcharP.
+
+   If there is no character after the integer, return *termcharP == EOF.
+
+   Iff the next thing in the file is not a valid unsigned decimal integer,
+   return FALSE.
+-----------------------------------------------------------------------------*/
+    int ch;
+    boolean retval;
+  
+    /* Skip any leading whitespace, detect EOF */
+    do {
+        ch = text_getc(fileP);
+    } while (isspace(ch));
+  
+    if (!isdigit(ch))
+        retval = FALSE;
+    else {
+        long val;
+        val = ch - '0';  /* initial value */
+        while ((ch = text_getc(fileP)) != EOF) {
+            if (! isdigit(ch))
+                break;
+            val *= 10;
+            val += ch - '0';
+        }
+        *resultP = val;
+        retval = TRUE;
+    }
+    *termcharP = ch;
+    return retval;
+}
+
+
+static boolean
+read_scan_integer (FILE * file, long * result, int * termchar)
+/* Variant of readTextInteger that always looks for a non-space termchar;
+ * this simplifies parsing of punctuation in scan scripts.
+ */
+{
+    register int ch;
+
+    if (! readTextInteger(file, result, termchar))
+        return FALSE;
+    ch = *termchar;
+    while (ch != EOF && isspace(ch))
+        ch = text_getc(file);
+    if (isdigit(ch)) {		/* oops, put it back */
+        if (ungetc(ch, file) == EOF)
+            return FALSE;
+        ch = ' ';
+    } else {
+        /* Any separators other than ';' and ':' are ignored;
+         * this allows user to insert commas, etc, if desired.
+         */
+        if (ch != EOF && ch != ';' && ch != ':')
+            ch = ' ';
+    }
+    *termchar = ch;
+    return TRUE;
+}
+
+
+
+static boolean
+read_scan_script(j_compress_ptr const cinfo,
+                 const char *   const filename) {
+/*----------------------------------------------------------------------------
+  Read a scan script from the specified text file.
+  Each entry in the file defines one scan to be emitted.
+  Entries are separated by semicolons ';'.
+  An entry contains one to four component indexes,
+  optionally followed by a colon ':' and four progressive-JPEG parameters.
+  The component indexes denote which component(s) are to be transmitted
+  in the current scan.  The first component has index 0.
+  Sequential JPEG is used if the progressive-JPEG parameters are omitted.
+  The file is free format text: any whitespace may appear between numbers
+  and the ':' and ';' punctuation marks.  Also, other punctuation (such
+  as commas or dashes) can be placed between numbers if desired.
+  Comments preceded by '#' may be included in the file.
+  Note: we do very little validity checking here;
+  jcmaster.c will validate the script parameters.
+-----------------------------------------------------------------------------*/
+    FILE * fp;
+    unsigned int nscans;
+    unsigned int ncomps;
+    int termchar;
+    long val;
+#define MAX_SCANS  100      /* quite arbitrary limit */
+    jpeg_scan_info scans[MAX_SCANS];
+
+    fp = fopen(filename, "r");
+    if (fp == NULL) {
+        pm_message("Can't open scan definition file %s", filename);
+        return FALSE;
+    }
+    nscans = 0;
+
+    while (read_scan_integer(fp, &val, &termchar)) {
+        ++nscans;  /* We got another scan */
+        if (nscans > MAX_SCANS) {
+            pm_message("Too many scans defined in file %s", filename);
+            fclose(fp);
+            return FALSE;
+        }
+        scans[nscans-1].component_index[0] = (int) val;
+        ncomps = 1;
+        while (termchar == ' ') {
+            if (ncomps >= MAX_COMPS_IN_SCAN) {
+                pm_message("Too many components in one scan in file %s", 
+                           filename);
+                fclose(fp);
+                return FALSE;
+            }
+            if (! read_scan_integer(fp, &val, &termchar))
+                goto bogus;
+            scans[nscans-1].component_index[ncomps] = (int) val;
+            ++ncomps;
+        }
+        scans[nscans-1].comps_in_scan = ncomps;
+        if (termchar == ':') {
+            if (! read_scan_integer(fp, &val, &termchar) || termchar != ' ')
+                goto bogus;
+            scans[nscans-1].Ss = (int) val;
+            if (! read_scan_integer(fp, &val, &termchar) || termchar != ' ')
+                goto bogus;
+            scans[nscans-1].Se = (int) val;
+            if (! read_scan_integer(fp, &val, &termchar) || termchar != ' ')
+                goto bogus;
+            scans[nscans-1].Ah = (int) val;
+            if (! read_scan_integer(fp, &val, &termchar))
+                goto bogus;
+            scans[nscans-1].Al = (int) val;
+        } else {
+            /* set non-progressive parameters */
+            scans[nscans-1].Ss = 0;
+            scans[nscans-1].Se = DCTSIZE2-1;
+            scans[nscans-1].Ah = 0;
+            scans[nscans-1].Al = 0;
+        }
+        if (termchar != ';' && termchar != EOF) {
+        bogus:
+            pm_message("Invalid scan entry format in file %s", filename);
+            fclose(fp);
+            return FALSE;
+        }
+    }
+
+    if (termchar != EOF) {
+        pm_message("Non-numeric data in file %s", filename);
+        fclose(fp);
+        return FALSE;
+    }
+
+    if (nscans > 0) {
+        /* Stash completed scan list in cinfo structure.  NOTE: in
+           this program, JPOOL_IMAGE is the right lifetime for this
+           data, but if you want to compress multiple images you'd
+           want JPOOL_PERMANENT.  
+        */
+        const unsigned int scan_info_size = nscans * sizeof(jpeg_scan_info);
+        jpeg_scan_info * const scan_info = 
+            (jpeg_scan_info *)
+            (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
+                                        scan_info_size);
+        memcpy(scan_info, scans, scan_info_size);
+        cinfo->scan_info = scan_info;
+        cinfo->num_scans = nscans;
+    }
+
+    fclose(fp);
+    return TRUE;
+}
+
+
+
+static boolean
+read_quant_tables (j_compress_ptr cinfo, char * filename,
+                   int scale_factor, boolean force_baseline)
+/* Read a set of quantization tables from the specified file.
+ * The file is plain ASCII text: decimal numbers with whitespace between.
+ * Comments preceded by '#' may be included in the file.
+ * There may be one to NUM_QUANT_TBLS tables in the file, each of 64 values.
+ * The tables are implicitly numbered 0,1,etc.
+ * NOTE: does not affect the qslots mapping, which will default to selecting
+ * table 0 for luminance (or primary) components, 1 for chrominance components.
+ * You must use -qslots if you want a different component->table mapping.
+ */
+{
+    FILE * fp;
+    boolean retval;
+
+    fp = fopen(filename, "rb");
+    if (fp == NULL) {
+        pm_message("Can't open table file %s", filename);
+        retval = FALSE;
+    } else {
+        boolean eof, error;
+        unsigned int tblno;
+
+        for (tblno = 0, eof = FALSE, error = FALSE; !eof && !error; ++tblno) {
+            long val;
+            int termchar;
+            boolean gotOne;
+
+            gotOne = readTextInteger(fp, &val, &termchar);
+            if (gotOne) {
+                /* read 1st element of table */
+                if (tblno >= NUM_QUANT_TBLS) {
+                    pm_message("Too many tables in file %s", filename);
+                    error = TRUE;
+                } else { 
+                    unsigned int table[DCTSIZE2];
+                    unsigned int i;
+
+                    table[0] = (unsigned int) val;
+                    for (i = 1; i < DCTSIZE2 && !error; ++i) {
+                        if (! readTextInteger(fp, &val, &termchar)) {
+                            pm_message("Invalid table data in file %s",
+                                       filename);
+                            error = TRUE;
+                        } else
+                            table[i] = (unsigned int) val;
+                    }
+                    if (!error)
+                        jpeg_add_quant_table(
+                            cinfo, tblno, table, scale_factor, force_baseline);
+                }
+            } else {
+                if (termchar == EOF)
+                    eof = TRUE;
+                else {
+                    pm_message("Non-numeric data in file %s", filename);
+                    error = TRUE;
+                }
+            }
+        }
+
+        fclose(fp);
+        retval = !error;
+    }
+        
+    return retval;
+}
+
+
+
+static boolean
+set_quant_slots (j_compress_ptr cinfo, char *arg)
+/* Process a quantization-table-selectors parameter string, of the form
+ *     N[,N,...]
+ * If there are more components than parameters, the last value is replicated.
+ */
+{
+    int val = 0;			/* default table # */
+    int ci;
+    char ch;
+
+    for (ci = 0; ci < MAX_COMPONENTS; ci++) {
+        if (*arg) {
+            ch = ',';			/* if not set by sscanf, will be ',' */
+            if (sscanf(arg, "%d%c", &val, &ch) < 1)
+                return FALSE;
+            if (ch != ',')		/* syntax check */
+                return FALSE;
+            if (val < 0 || val >= NUM_QUANT_TBLS) {
+                pm_message("Invalid quantization table number: %d.  "
+                           "JPEG quantization tables are numbered 0..%d",
+                           val, NUM_QUANT_TBLS - 1);
+                return FALSE;
+            }
+            cinfo->comp_info[ci].quant_tbl_no = val;
+            while (*arg && *arg++ != ',') 
+                /* advance to next segment of arg string */
+                ;
+        } else {
+            /* reached end of parameter, set remaining components to last tbl*/
+            cinfo->comp_info[ci].quant_tbl_no = val;
+        }
+    }
+    return TRUE;
+}
+
+
+static boolean
+set_sample_factors (j_compress_ptr cinfo, char *arg)
+/* Process a sample-factors parameter string, of the form
+ *     HxV[,HxV,...]
+ * If there are more components than parameters, "1x1" is assumed for the rest.
+ */
+{
+    int ci, val1, val2;
+    char ch1, ch2;
+
+    for (ci = 0; ci < MAX_COMPONENTS; ci++) {
+        if (*arg) {
+            ch2 = ',';		/* if not set by sscanf, will be ',' */
+            if (sscanf(arg, "%d%c%d%c", &val1, &ch1, &val2, &ch2) < 3)
+                return FALSE;
+            if ((ch1 != 'x' && ch1 != 'X') || ch2 != ',') /* syntax check */
+                return FALSE;
+            if (val1 <= 0 || val1 > 4) {
+                pm_message("Invalid sampling factor: %d.  " 
+                           "JPEG sampling factors must be 1..4", val1);
+                return FALSE;
+            }
+            if (val2 <= 0 || val2 > 4) {
+                pm_message("Invalid sampling factor: %d.  "
+                           "JPEG sampling factors must be 1..4", val2);
+                return FALSE;
+            }
+            cinfo->comp_info[ci].h_samp_factor = val1;
+            cinfo->comp_info[ci].v_samp_factor = val2;
+            while (*arg && *arg++ != ',') 
+                /* advance to next segment of arg string */
+                ;
+        } else {
+            /* reached end of parameter, set remaining components 
+               to 1x1 sampling */
+            cinfo->comp_info[ci].h_samp_factor = 1;
+            cinfo->comp_info[ci].v_samp_factor = 1;
+        }
+    }
+    return TRUE;
 }
 
 
@@ -686,354 +1035,21 @@ convert_scanlines(struct jpeg_compress_struct * const cinfo_p,
   }
 
   pnm_freerow(pnm_buffer);
-  /* Dont' worry about the compressor input buffer; it gets freed 
+  /* Don't worry about the compressor input buffer; it gets freed 
      automatically
   */
-
-}
-
-/*----------------------------------------------------------------------------
-   The functions below here are essentially the file rdswitch.c from
-   the JPEG library.  They perform the functions specifed by the following
-   pnmtojpeg options:
-
-   -qtables file          Read quantization tables from text file
-   -scans file            Read scan script from text file
-   -qslots N[,N,...]      Set component quantization table selectors
-   -sample HxV[,HxV,...]  Set component sampling factors
------------------------------------------------------------------------------*/
-
-static int
-text_getc (FILE * file)
-/* Read next char, skipping over any comments (# to end of line) */
-/* A comment/newline sequence is returned as a newline */
-{
-    register int ch;
-  
-    ch = getc(file);
-    if (ch == '#') {
-        do {
-            ch = getc(file);
-        } while (ch != '\n' && ch != EOF);
-    }
-    return ch;
-}
-
-
-static boolean
-read_text_integer (FILE * file, long * result, int * termchar)
-/* Read an unsigned decimal integer from a file, store it in result */
-/* Reads one trailing character after the integer; returns it in termchar */
-{
-    register int ch;
-    register long val;
-  
-    /* Skip any leading whitespace, detect EOF */
-    do {
-        ch = text_getc(file);
-        if (ch == EOF) {
-            *termchar = ch;
-            return FALSE;
-        }
-    } while (isspace(ch));
-  
-    if (! isdigit(ch)) {
-        *termchar = ch;
-        return FALSE;
-    }
-
-    val = ch - '0';
-    while ((ch = text_getc(file)) != EOF) {
-        if (! isdigit(ch))
-            break;
-        val *= 10;
-        val += ch - '0';
-    }
-    *result = val;
-    *termchar = ch;
-    return TRUE;
-}
-
-
-static boolean
-read_quant_tables (j_compress_ptr cinfo, char * filename,
-                   int scale_factor, boolean force_baseline)
-/* Read a set of quantization tables from the specified file.
- * The file is plain ASCII text: decimal numbers with whitespace between.
- * Comments preceded by '#' may be included in the file.
- * There may be one to NUM_QUANT_TBLS tables in the file, each of 64 values.
- * The tables are implicitly numbered 0,1,etc.
- * NOTE: does not affect the qslots mapping, which will default to selecting
- * table 0 for luminance (or primary) components, 1 for chrominance components.
- * You must use -qslots if you want a different component->table mapping.
- */
-{
-    FILE * fp;
-    int tblno, i, termchar;
-    long val;
-    unsigned int table[DCTSIZE2];
-
-    if ((fp = fopen(filename, "rb")) == NULL) {
-        pm_message("Can't open table file %s", filename);
-        return FALSE;
-    }
-    tblno = 0;
-
-    while (read_text_integer(fp, &val, &termchar)) { /* read 1st element of table */
-        if (tblno >= NUM_QUANT_TBLS) {
-            pm_message("Too many tables in file %s", filename);
-            fclose(fp);
-            return FALSE;
-        }
-        table[0] = (unsigned int) val;
-        for (i = 1; i < DCTSIZE2; i++) {
-            if (! read_text_integer(fp, &val, &termchar)) {
-                pm_message("Invalid table data in file %s", filename);
-                fclose(fp);
-                return FALSE;
-            }
-            table[i] = (unsigned int) val;
-        }
-        jpeg_add_quant_table(cinfo, tblno, table, scale_factor, 
-                             force_baseline);
-        tblno++;
-    }
-
-    if (termchar != EOF) {
-        pm_message("Non-numeric data in file %s", filename);
-        fclose(fp);
-        return FALSE;
-    }
-
-    fclose(fp);
-    return TRUE;
-}
-
-
-static boolean
-read_scan_integer (FILE * file, long * result, int * termchar)
-/* Variant of read_text_integer that always looks for a non-space termchar;
- * this simplifies parsing of punctuation in scan scripts.
- */
-{
-    register int ch;
-
-    if (! read_text_integer(file, result, termchar))
-        return FALSE;
-    ch = *termchar;
-    while (ch != EOF && isspace(ch))
-        ch = text_getc(file);
-    if (isdigit(ch)) {		/* oops, put it back */
-        if (ungetc(ch, file) == EOF)
-            return FALSE;
-        ch = ' ';
-    } else {
-        /* Any separators other than ';' and ':' are ignored;
-         * this allows user to insert commas, etc, if desired.
-         */
-        if (ch != EOF && ch != ';' && ch != ':')
-            ch = ' ';
-    }
-    *termchar = ch;
-    return TRUE;
-}
-
-
-boolean
-read_scan_script (j_compress_ptr cinfo, char * filename)
-/* Read a scan script from the specified text file.
- * Each entry in the file defines one scan to be emitted.
- * Entries are separated by semicolons ';'.
- * An entry contains one to four component indexes,
- * optionally followed by a colon ':' and four progressive-JPEG parameters.
- * The component indexes denote which component(s) are to be transmitted
- * in the current scan.  The first component has index 0.
- * Sequential JPEG is used if the progressive-JPEG parameters are omitted.
- * The file is free format text: any whitespace may appear between numbers
- * and the ':' and ';' punctuation marks.  Also, other punctuation (such
- * as commas or dashes) can be placed between numbers if desired.
- * Comments preceded by '#' may be included in the file.
- * Note: we do very little validity checking here;
- * jcmaster.c will validate the script parameters.
- */
-{
-    FILE * fp;
-    int nscans, ncomps, termchar;
-    long val;
-#define MAX_SCANS  100      /* quite arbitrary limit */
-    jpeg_scan_info scans[MAX_SCANS];
-
-    if ((fp = fopen(filename, "r")) == NULL) {
-        pm_message("Can't open scan definition file %s", filename);
-        return FALSE;
-    }
-    nscans = 0;
-
-    while (read_scan_integer(fp, &val, &termchar)) {
-        nscans++;  /* We got another scan */
-        if (nscans > MAX_SCANS) {
-            pm_message("Too many scans defined in file %s", filename);
-            fclose(fp);
-            return FALSE;
-        }
-        scans[nscans-1].component_index[0] = (int) val;
-        ncomps = 1;
-        while (termchar == ' ') {
-            if (ncomps >= MAX_COMPS_IN_SCAN) {
-                pm_message("Too many components in one scan in file %s", 
-                           filename);
-                fclose(fp);
-                return FALSE;
-            }
-            if (! read_scan_integer(fp, &val, &termchar))
-                goto bogus;
-            scans[nscans-1].component_index[ncomps] = (int) val;
-            ncomps++;
-        }
-        scans[nscans-1].comps_in_scan = ncomps;
-        if (termchar == ':') {
-            if (! read_scan_integer(fp, &val, &termchar) || termchar != ' ')
-                goto bogus;
-            scans[nscans-1].Ss = (int) val;
-            if (! read_scan_integer(fp, &val, &termchar) || termchar != ' ')
-                goto bogus;
-            scans[nscans-1].Se = (int) val;
-            if (! read_scan_integer(fp, &val, &termchar) || termchar != ' ')
-                goto bogus;
-            scans[nscans-1].Ah = (int) val;
-            if (! read_scan_integer(fp, &val, &termchar))
-                goto bogus;
-            scans[nscans-1].Al = (int) val;
-        } else {
-            /* set non-progressive parameters */
-            scans[nscans-1].Ss = 0;
-            scans[nscans-1].Se = DCTSIZE2-1;
-            scans[nscans-1].Ah = 0;
-            scans[nscans-1].Al = 0;
-        }
-        if (termchar != ';' && termchar != EOF) {
-        bogus:
-            pm_message("Invalid scan entry format in file %s", filename);
-            fclose(fp);
-            return FALSE;
-        }
-    }
-
-    if (termchar != EOF) {
-        pm_message("Non-numeric data in file %s", filename);
-        fclose(fp);
-        return FALSE;
-    }
-
-    if (nscans > 0) {
-        /* Stash completed scan list in cinfo structure.  NOTE: in
-         * this program, JPOOL_IMAGE is the right lifetime for this
-         * data, but if you want to compress multiple images you'd
-         * want JPOOL_PERMANENT.  
-         */
-        const unsigned int scan_info_size = nscans * sizeof(jpeg_scan_info);
-        jpeg_scan_info * const scan_info = 
-            (jpeg_scan_info *)
-            (*cinfo->mem->alloc_small) ((j_common_ptr) cinfo, JPOOL_IMAGE,
-                                        scan_info_size);
-        memcpy(scan_info, scans, scan_info_size);
-        cinfo->scan_info = scan_info;
-        cinfo->num_scans = nscans;
-    }
-
-    fclose(fp);
-    return TRUE;
-}
-
-
-static boolean
-set_quant_slots (j_compress_ptr cinfo, char *arg)
-/* Process a quantization-table-selectors parameter string, of the form
- *     N[,N,...]
- * If there are more components than parameters, the last value is replicated.
- */
-{
-    int val = 0;			/* default table # */
-    int ci;
-    char ch;
-
-    for (ci = 0; ci < MAX_COMPONENTS; ci++) {
-        if (*arg) {
-            ch = ',';			/* if not set by sscanf, will be ',' */
-            if (sscanf(arg, "%d%c", &val, &ch) < 1)
-                return FALSE;
-            if (ch != ',')		/* syntax check */
-                return FALSE;
-            if (val < 0 || val >= NUM_QUANT_TBLS) {
-                pm_message("Invalid quantization table number: %d.  "
-                           "JPEG quantization tables are numbered 0..%d",
-                           val, NUM_QUANT_TBLS - 1);
-                return FALSE;
-            }
-            cinfo->comp_info[ci].quant_tbl_no = val;
-            while (*arg && *arg++ != ',') 
-                /* advance to next segment of arg string */
-                ;
-        } else {
-            /* reached end of parameter, set remaining components to last tbl*/
-            cinfo->comp_info[ci].quant_tbl_no = val;
-        }
-    }
-    return TRUE;
-}
-
-
-static boolean
-set_sample_factors (j_compress_ptr cinfo, char *arg)
-/* Process a sample-factors parameter string, of the form
- *     HxV[,HxV,...]
- * If there are more components than parameters, "1x1" is assumed for the rest.
- */
-{
-    int ci, val1, val2;
-    char ch1, ch2;
-
-    for (ci = 0; ci < MAX_COMPONENTS; ci++) {
-        if (*arg) {
-            ch2 = ',';		/* if not set by sscanf, will be ',' */
-            if (sscanf(arg, "%d%c%d%c", &val1, &ch1, &val2, &ch2) < 3)
-                return FALSE;
-            if ((ch1 != 'x' && ch1 != 'X') || ch2 != ',') /* syntax check */
-                return FALSE;
-            if (val1 <= 0 || val1 > 4) {
-                pm_message("Invalid sampling factor: %d.  " 
-                           "JPEG sampling factors must be 1..4", val1);
-                return FALSE;
-            }
-            if (val2 <= 0 || val2 > 4) {
-                pm_message("Invalid sampling factor: %d.  "
-                           "JPEG sampling factors must be 1..4", val2);
-                return FALSE;
-            }
-            cinfo->comp_info[ci].h_samp_factor = val1;
-            cinfo->comp_info[ci].v_samp_factor = val2;
-            while (*arg && *arg++ != ',') 
-                /* advance to next segment of arg string */
-                ;
-        } else {
-            /* reached end of parameter, set remaining components 
-               to 1x1 sampling */
-            cinfo->comp_info[ci].h_samp_factor = 1;
-            cinfo->comp_info[ci].v_samp_factor = 1;
-        }
-    }
-    return TRUE;
 }
 
 
 
 int
-main(int argc, char ** argv) {
+main(int     argc,
+     char ** argv) {
 
     struct cmdlineInfo cmdline;
     struct jpeg_compress_struct cinfo;
     struct jpeg_error_mgr jerr;
-    FILE *input_file;
+    FILE * input_file;
     FILE * output_file;
     int height;  
         /* height of the input image in rows, as specified by its header */
@@ -1089,7 +1105,7 @@ main(int argc, char ** argv) {
 
     /* Close files, if we opened them */
     if (input_file != stdin)
-        fclose(input_file);
+        pm_close(input_file);
 
     /* Program may have exited with non-zero completion code via
        various function calls above. 

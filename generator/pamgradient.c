@@ -1,5 +1,6 @@
 #include <string.h>
 
+#include "pm_c_util.h"
 #include "pam.h"
 #include "shhopt.h"
 #include "mallocvar.h"
@@ -11,7 +12,6 @@ struct cmdlineInfo {
     tuple colorTopRight;
     tuple colorBottomLeft;
     tuple colorBottomRight;
-    unsigned depth;
     unsigned int cols;
     unsigned int rows;
     unsigned int maxval;
@@ -121,8 +121,7 @@ interpolate(struct pam * const pamP,
 
 
 static int
-isgray(struct pam * const pamP,
-       tuple        const color) {
+isgray(tuple const color) {
 
     return (color[PAM_RED_PLANE] == color[PAM_GRN_PLANE])
             && (color[PAM_RED_PLANE] == color[PAM_BLU_PLANE]);
@@ -176,10 +175,10 @@ main(int argc, char *argv[]) {
     pam.maxval           = cmdline.maxval;
     pam.bytes_per_sample = pnm_bytespersample(pam.maxval);
     pam.format           = PAM_FORMAT;
-    if (isgray(&pam, cmdline.colorTopLeft)
-            && isgray(&pam, cmdline.colorTopRight)
-            && isgray(&pam, cmdline.colorBottomLeft)
-            && isgray(&pam, cmdline.colorBottomRight)) {
+    if (isgray(cmdline.colorTopLeft)
+            && isgray(cmdline.colorTopRight)
+            && isgray(cmdline.colorBottomLeft)
+            && isgray(cmdline.colorBottomRight)) {
         pam.depth = 1;
         strcpy(pam.tuple_type, PAM_PGM_TUPLETYPE);
     } else {

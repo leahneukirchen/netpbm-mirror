@@ -5,11 +5,12 @@ endif
 SUBDIR = other/pamx
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
+EXTERN_INCLUDE =
 ifneq ($(X11LIB),NONE)
   ifneq ($(X11HDR_DIR),)
-    INCLUDES += -I$(X11HDR_DIR)
+    EXTERN_INCLUDES += -I$(X11HDR_DIR)
   endif
 endif
 
@@ -36,7 +37,7 @@ MERGEBINARIES = $(BINARIES)
 
 all: $(BINARIES)
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 pamx: $(PAMX_OBJECTS) $(NETPBMLIB) $(LIBOPT)
 	$(LD) -o $@ $(PAMX_OBJECTS) \

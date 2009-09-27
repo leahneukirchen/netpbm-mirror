@@ -24,6 +24,10 @@ typedef enum {
     WIDTH, HEIGHT, POSX, POSY
 } SKL_OBJ_TYP;
 
+typedef enum {
+    OBJTYP_ICOLOR, OBJTYP_FCOLOR, OBJTYP_INT, OBJTYP_BDATA
+} SKL_OBJ_CLASS;
+
 /* Maximum size for a format string ("%d" etc.) */
 #define MAXFORMAT 16
 
@@ -158,255 +162,326 @@ save_bin_data(int    const ndat,
 
 
 
+static SKL_OBJ *
+save_icol_data(SKL_OBJ_TYP  const ctyp,
+               const char * const format,
+               int          const icolmin,
+               int          const icolmax) {
 /* Save integer color data in Object */
-static SKL_OBJ *save_icol_data (ctyp,format,icolmin,icolmax)
-SKL_OBJ_TYP ctyp;
-char *format;
-int icolmin, icolmax;
 
-{SKL_OBJ *obj;
+    SKL_OBJ * objP;
 
- obj = (SKL_OBJ *)malloc (sizeof (SKL_OBJ));
- if (obj != NULL)
- {
-   obj->otyp = ctyp;
-   strcpy (obj->odata.icol_data.icformat,format);
-   obj->odata.icol_data.icolmin = icolmin;
-   obj->odata.icol_data.icolmax = icolmax;
- }
- return (obj);
+    MALLOCVAR(objP);
+
+    if (objP) {
+        objP->otyp = ctyp;
+        strcpy(objP->odata.icol_data.icformat, format);
+        objP->odata.icol_data.icolmin = icolmin;
+        objP->odata.icol_data.icolmax = icolmax;
+    }
+    return objP;
 }
 
 
+
+static SKL_OBJ *
+save_fcol_data(SKL_OBJ_TYP  const ctyp,
+               const char * const format,
+               double       const fcolmin,
+               double       const fcolmax) {
 /* Save float color data in Object */
-static SKL_OBJ *save_fcol_data (ctyp,format,fcolmin,fcolmax)
-SKL_OBJ_TYP ctyp;
-char *format;
-double fcolmin, fcolmax;
 
-{SKL_OBJ *obj;
+    SKL_OBJ * objP;
 
- obj = (SKL_OBJ *)malloc (sizeof (SKL_OBJ));
- if (obj != NULL)
- {
-   obj->otyp = ctyp;
-   strcpy (obj->odata.fcol_data.fcformat,format);
-   obj->odata.fcol_data.fcolmin = fcolmin;
-   obj->odata.fcol_data.fcolmax = fcolmax;
- }
- return (obj);
+    MALLOCVAR(objP);
+
+    if (objP) {
+        objP->otyp = ctyp;
+        strcpy(objP->odata.fcol_data.fcformat, format);
+        objP->odata.fcol_data.fcolmin = fcolmin;
+        objP->odata.fcol_data.fcolmax = fcolmax;
+    }
+    return objP;
 }
 
+
+
+static SKL_OBJ *
+save_i_data(SKL_OBJ_TYP  const ctyp,
+            const char * const format) {
 
 /* Save universal data in Object */
-static SKL_OBJ *save_i_data (ctyp,format)
-SKL_OBJ_TYP ctyp;
-char *format;
 
-{SKL_OBJ *obj;
+    SKL_OBJ * objP;
 
- obj = (SKL_OBJ *)malloc (sizeof (SKL_OBJ));
- if (obj != NULL)
- {
-   obj->otyp = ctyp;
-   strcpy (obj->odata.i_data.iformat,format);
- }
- return (obj);
+    MALLOCVAR(objP);
+    if (objP) {
+        objP->otyp = ctyp;
+        strcpy(objP->odata.i_data.iformat, format);
+    }
+    return objP;
 }
 
 
-/* Read skeleton file */
-static int read_skeleton (filename,maxskl,nskl,skl)
-char *filename;
-int maxskl,*nskl;
-SKL_OBJ **skl;
 
-{FILE *sklfile;
- int slen, objlen, chr, n_odata;
- int icolmin,icolmax;
- double fcolmin,fcolmax;
- SKL_OBJ_TYP otyp;
- char line[MAX_LINE_BUF+MAX_OBJ_BUF+16];
- char objstr[MAX_OBJ_BUF],typstr[MAX_OBJ_BUF];
- char formstr[MAX_OBJ_BUF];
- char meta1 = '#', meta2 = '(', meta3 = ')';
+static char const escape = '#';
+
+
+
+static SKL_OBJ_TYP
+interpretObjType(const char * const typstr) {
+
+    SKL_OBJ_TYP otyp;
+
+    /* Check for integer colors */
+    if      (streq(typstr, "ired")  ) otyp = IRED;
+    else if (streq(typstr, "igreen")) otyp = IGREEN;
+    else if (streq(typstr, "iblue") ) otyp = IBLUE;
+    else if (streq(typstr, "ilum")  ) otyp = ILUM;
+    /* Check for real colors */
+    else if (streq(typstr, "fred")  ) otyp = FRED;
+    else if (streq(typstr, "fgreen")) otyp = FGREEN;
+    else if (streq(typstr, "fblue") ) otyp = FBLUE;
+    else if (streq(typstr, "flum")  ) otyp = FLUM;
+    /* Check for integer data */
+    else if (streq(typstr, "width") ) otyp = WIDTH;
+    else if (streq(typstr, "height")) otyp = HEIGHT;
+    else if (streq(typstr, "posx")  ) otyp = POSX;
+    else if (streq(typstr, "posy")  ) otyp = POSY;
+    else                              otyp = BDATA;
+
+    return otyp;
+}
+
+
+
+static SKL_OBJ_CLASS
+objClass(SKL_OBJ_TYP const otyp) {
+
+    switch (otyp) {
+    case IRED:
+    case IGREEN:
+    case IBLUE:
+    case ILUM:
+        return OBJTYP_ICOLOR;
+
+    case FRED:
+    case FGREEN:
+    case FBLUE:
+    case FLUM:
+        return OBJTYP_FCOLOR;
+
+    case WIDTH:
+    case HEIGHT:
+    case POSX:
+    case POSY:
+        return OBJTYP_INT;
+    case BDATA:
+        return OBJTYP_BDATA;
+    }
+    return 999; /* quiet compiler warning */
+}
+
+
+
+static void
+addImpostorReplacementSeq(char *         const line,
+                          unsigned int   const startCursor,
+                          const char *   const seqContents,
+                          unsigned int   const seqContentsLen,
+                          unsigned int * const newCursorP) {
+/*----------------------------------------------------------------------------
+   Add to line line[], at position 'startCursor', text that looks like a
+   replacement sequence but doesn't have the proper contents (the
+   stuff between the parentheses) to be one.  For example,
+
+     "#(fread x)"
+
+   seqContents[] is the contents; 'seqContentsLen' its length.
+
+   Return as *newCursorP where the line[] cursor ends up after adding
+   the sequence.
+-----------------------------------------------------------------------------*/
+    unsigned int cursor;
+    unsigned int i;
+
+    cursor = startCursor;
+
+    line[cursor++] = escape;
+    line[cursor++] = '(';
+
+    for (i = 0; i < seqContentsLen; ++i)
+        line[cursor++] = seqContents[i];
+
+    line[cursor++] = ')';
+
+    *newCursorP = cursor;
+}
+
+
+
+static int
+read_skeleton(const char *   const filename,
+              unsigned int   const maxskl,
+              unsigned int * const nsklP,
+              SKL_OBJ **     const skl) {
+/*----------------------------------------------------------------------------
+  Read skeleton file
+-----------------------------------------------------------------------------*/
+    FILE * sklfile;
+    unsigned int slen;
+    unsigned int objlen;
+    int chr;
+    SKL_OBJ_TYP otyp;
+    char line[MAX_LINE_BUF+MAX_OBJ_BUF+16];
+    char objstr[MAX_OBJ_BUF],typstr[MAX_OBJ_BUF];
+    unsigned int nskl;
 
 #define SAVE_BIN(slen,line) \
- { if ((skl[*nskl] = save_bin_data (slen,line)) != NULL) (*nskl)++; \
-   slen = 0; }
+    { if (slen > 0 && (skl[nskl] = save_bin_data(slen,line)) != NULL) ++nskl; \
+      slen = 0; }
 
-#define ADD_STR(slen,line,addlen,addstr) \
- {int count=0; line[slen++] = meta1; line[slen++] = meta2; \
-  while (count++ < addlen) line[slen++] = addstr[count]; }
+    sklfile = pm_openr(filename);
 
- if ((sklfile = fopen (filename,"r")) == NULL)
-   return (-1);
+    /* Parse skeleton file */
+    nskl = 0;  /* initial value */
 
- /* Parse skeleton file */
- *nskl = 0;
+    slen = 0;
+    while ((chr = getc (sklfile)) != EOF) {  /* Up to end of skeleton file */
+        if (nskl >= maxskl)
+            return -1;
 
- slen = 0;
- while ((chr = getc (sklfile)) != EOF)   /* Up to end of skeleton file */
- {
-   if (*nskl >= maxskl) return (-1);
+        if (slen+1 >= MAX_LINE_BUF) {
+            /* Buffer finished.  Save as binary object */
+            SAVE_BIN(slen,line);
+        }
 
-   if (slen+1 >= MAX_LINE_BUF)   /* Buffer finished ? Save as binary object */
-   {
-     SAVE_BIN (slen,line);
-   }
+        if (chr != escape) {
+            /* Not a replacement sequence; just a literal character */
+            line[slen++] = chr;
+            continue;
+        }
 
-   if (chr != meta1)      /* Look for start of replacement string */
-   {
-     line[slen++] = chr;
-     continue;
-   }
+        chr = getc(sklfile);
+        if (chr == EOF) {
+            /* Not a valid replacement sequence */
+            line[slen++] = escape;
+            break;
+        }
+        if (chr != '(') {
+            /* Not a valid replacement sequence */
+            line[slen++] = escape;
+            line[slen++] = chr;
+            continue;
+        }
+        /* Read replacement string up through ')'.  Put contents of
+           parentheses in objstr[].
+        */
+        for (objlen = 0; objlen < sizeof(objstr)-1; ++objlen) {
+            chr = getc(sklfile);
+            if (chr == EOF) break;
+            if (chr == ')') break;
+            objstr[objlen] = chr;
+        }
+        objstr[objlen] = '\0';
 
-   if ((chr = getc (sklfile)) == EOF)
-   {
-     line[slen++] = meta1;
-     break;
-   }
-   if (chr != meta2) /* '(' ? Otherwise no replacement */
-   {
-     line[slen++] = meta1;
-     line[slen++] = chr;
-     continue;
-   }
+        if (chr != ')') {
+            /* Not valid replacement sequence */
+            unsigned int i;
+            line[slen++] = escape;
+            line[slen++] = chr;
+            for (i = 0; i < objlen; ++i)
+                line[slen++] = objstr[i];
+            if (chr == EOF)
+                break;
+            continue;
+        }
 
-   objlen = 0;
-   for (;;)   /* Read replacement string up to ')' */
-   {
-     if (objlen == sizeof (objstr)-1) break; /* ')' not found */
-     if ((chr = getc (sklfile)) == EOF) break;
-     if (chr == meta3) break;
-     objstr[objlen++] = chr;
-   }
-   objstr[objlen] = '\0'; /* Now objstr keeps data without metas */
+        typstr[0] = '\0';           /* Get typ of data */
+        sscanf(objstr, "%s", typstr);
 
-   if (chr != meta3)    /* Object not found ? */
-   {
-     ADD_STR (slen,line,objlen,objstr);   /* Save what we already read */
-     if (chr == EOF) break;
-     continue;
-   }
+        otyp = interpretObjType(typstr);
 
-   typstr[0] = '\0';           /* Get typ of data */
-   sscanf (objstr,"%s",typstr);
+        switch (objClass(otyp)) {
+        case OBJTYP_ICOLOR: {
+            int icolmin, icolmax;
+            char formstr[MAX_OBJ_BUF];
+            int n_odata;
 
-                   /* Check for integer colors */
-   if      (STREQ(typstr,"ired")  ) otyp = IRED;
-   else if (STREQ(typstr,"igreen")) otyp = IGREEN;
-   else if (STREQ(typstr,"iblue") ) otyp = IBLUE;
-   else if (STREQ(typstr,"ilum")  ) otyp = ILUM;
-                   /* Check for real colors */
-   else if (STREQ(typstr,"fred")  ) otyp = FRED;
-   else if (STREQ(typstr,"fgreen")) otyp = FGREEN;
-   else if (STREQ(typstr,"fblue") ) otyp = FBLUE;
-   else if (STREQ(typstr,"flum")  ) otyp = FLUM;
-                   /* Check for integer data */
-   else if (STREQ(typstr,"width") ) otyp = WIDTH;
-   else if (STREQ(typstr,"height")) otyp = HEIGHT;
-   else if (STREQ(typstr,"posx")  ) otyp = POSX;
-   else if (STREQ(typstr,"posy")  ) otyp = POSY;
-   else                                    otyp = BDATA;
+            n_odata = sscanf(objstr, "%*s%s%d%d", formstr, &icolmin, &icolmax);
 
-   if ((otyp == IRED) || (otyp == IGREEN) || (otyp == IBLUE) || (otyp == ILUM))
-   {
-     n_odata = sscanf (objstr,"%*s%s%d%d",formstr,&icolmin,&icolmax);
+            if (n_odata == 3) {
+                SAVE_BIN(slen, line);
+                skl[nskl] = save_icol_data(otyp, formstr, icolmin, icolmax);
+                if (skl[nskl] != NULL)
+                    ++nskl;
+            } else if (n_odata == EOF) {
+                /* No arguments specified.  Use defaults */
+                SAVE_BIN(slen, line);
+                skl[nskl] = save_icol_data(otyp, "%d", 0, 255);
+                if (skl[nskl] != NULL)
+                    ++nskl;
+            } else
+                addImpostorReplacementSeq(line, slen, objstr, objlen, &slen);
+        } break;
+        case OBJTYP_FCOLOR: {
+            double fcolmin, fcolmax;
+            char formstr[MAX_OBJ_BUF];
+            int n_odata;
 
-     if (n_odata == EOF)  /* No arguments specified ? Use defaults */
-     {
-       strcpy (formstr,"%d"); icolmin = 0; icolmax = 255;
-     }
-     else if (n_odata != 3)  /* Wrong specification */
-     {
-       otyp = BDATA;
-     }
-   }
+            n_odata = sscanf(objstr, "%*s%s%lf%lf", formstr,
+                             &fcolmin, &fcolmax);
 
-   if ((otyp == FRED) || (otyp == FGREEN) || (otyp == FBLUE) || (otyp == FLUM))
-   {
-     n_odata = sscanf (objstr,"%*s%s%lf%lf",formstr,&fcolmin,&fcolmax);
+            if (n_odata == 3) {
+                SAVE_BIN(slen, line);
+                skl[nskl] = save_fcol_data(otyp, formstr, fcolmin, fcolmax);
+                if (skl[nskl] != NULL)
+                    ++nskl;
+            } else if (n_odata == EOF) {
+                /* No arguments specified.  Use defaults */
+                SAVE_BIN(slen, line);
+                skl[nskl] = save_fcol_data(otyp, "%f", 0.0, 1.0);
+                if (skl[nskl] != NULL)
+                    ++nskl;
+            } else
+                addImpostorReplacementSeq(line, slen, objstr, objlen, &slen);
+        } break;
 
-     if (n_odata == EOF)  /* No arguments specified ? Use defaults */
-     {
-       strcpy (formstr,"%f"); fcolmin = 0.0; fcolmax = 1.0;
-     }
-     else if (n_odata != 3)  /* Wrong specification */
-     {
-       otyp = BDATA;
-     }
-   }
+        case OBJTYP_INT: {
+            char formstr[MAX_OBJ_BUF];
+            int const n_odata = sscanf(objstr, "%*s%s", formstr);
 
-   if (   (otyp == WIDTH) || (otyp == HEIGHT)
-       || (otyp == POSX) || (otyp == POSY))
-   {
-     n_odata = sscanf (objstr,"%*s%s",formstr);
+            if (n_odata == 1) {
+                SAVE_BIN(slen, line);
+                skl[nskl] = save_i_data(otyp, formstr);
+                if (skl[nskl] != NULL)
+                    ++nskl;
+            } else if (n_odata == EOF) {
+                /* No arguments specified.  Use defaults */
+                SAVE_BIN(slen, line);
+                skl[nskl] = save_i_data(otyp, "%d");
+                if (skl[nskl] != NULL)
+                    ++nskl;
+            } else
+                addImpostorReplacementSeq(line, slen, objstr, objlen, &slen);
+        } break;
+        case OBJTYP_BDATA:
+            addImpostorReplacementSeq(line, slen, objstr, objlen, &slen);
+        }
+    } /* EOF of skeleton file */
 
-     if (n_odata == EOF)  /* No arguments specified ? Use defaults */
-     {
-       strcpy (formstr,"%d");
-     }
-     else if (n_odata != 1)  /* Wrong specification */
-     {
-       otyp = BDATA;
-     }
-   }
+    if (slen >= 1 && line[slen-1] == '\n')
+        /* Drop finishing newline character */
+        --slen;
 
-   if (otyp != BDATA)   /* Got an object definition ? */
-   {
-     if (slen > 0)      /* Save what we already found */
-     {
-       SAVE_BIN (slen,line);
-     }
-   }
+    SAVE_BIN(slen, line);  /* Save whatever is left */
 
-   /* Now process the object in objstr */
-   switch (otyp)
-   {
-     case BDATA:   /* Bad object definition ? Save as text */
-       ADD_STR (slen,line,objlen,objstr);
-       break;
+    *nsklP = nskl;
 
-     case IRED:
-     case IGREEN:
-     case IBLUE:
-     case ILUM:
-       skl[*nskl] = save_icol_data (otyp,formstr,icolmin,icolmax);
-       if (skl[*nskl] != NULL) (*nskl)++;
-       break;
-
-     case FRED:
-     case FGREEN:
-     case FBLUE:
-     case FLUM:
-       skl[*nskl] = save_fcol_data (otyp,formstr,fcolmin,fcolmax);
-       if (skl[*nskl] != NULL) (*nskl)++;
-       break;
-
-     case WIDTH:
-     case HEIGHT:
-     case POSX:
-     case POSY:
-       skl[*nskl] = save_i_data (otyp,formstr);
-       if (skl[*nskl] != NULL) (*nskl)++;
-       break;
-   }
- } /* EOF of skeleton file */
-
- if (slen > 0)      /* Drop finishing newline character */
- {
-   if (line[slen-1] == '\n') slen--;
- }
-
- if (slen > 0)      /* Something left ? */
- {
-   SAVE_BIN (slen,line);   /* Save it */
- }
-
- fclose (sklfile);
- return (0);
+    fclose(sklfile);
+    return 0;
 }
+
 
 
 int main( argc, argv )
@@ -419,7 +494,7 @@ char* argv[];
  pixval maxval,red,green,blue;
  double dmaxval;
  int argn, rows, cols, format, row;
- int head_nskl,body_nskl,tail_nskl;
+ unsigned int head_nskl,body_nskl,tail_nskl;
  SKL_OBJ *head_skl[MAX_SKL_HEAD_OBJ];
  SKL_OBJ *body_skl[MAX_SKL_BODY_OBJ];
  SKL_OBJ *tail_skl[MAX_SKL_TAIL_OBJ];

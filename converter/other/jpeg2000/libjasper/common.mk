@@ -1,4 +1,3 @@
-# -*-makefile-*-    <-- an Emacs control
 # This is common rules for the libjasper subdirectories.
 #
 # Set the following variables before including this:
@@ -19,14 +18,14 @@ $(SUBDIRS:%=%/partlist): %/partlist: $(CURDIR)/%
 	$(MAKE) -C $(dir $@) -f $(SRCDIR)/$(SUBDIR)/$(dir $@)Makefile \
 	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@) 
 
-INCLUDES = -I$(JASPERSRCDIR)/include -Iimportinc
+include $(SRCDIR)/common.mk
 
-include $(SRCDIR)/Makefile.common
+INCLUDES = -I$(JASPERSRCDIR)/include -Iimportinc
 
 DEFS = -DHAVE_LIBM=1 -DSTDC_HEADERS=1 -DHAVE_FCNTL_H=1 -DHAVE_LIMITS_H=1 -DHAVE_UNISTD_H=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STDDEF_H=1 -DEXCLUDE_BMP_SUPPORT -DEXCLUDE_RAS_SUPPORT -DEXCLUDE_MIF_SUPPORT -DEXCLUDE_JPG_SUPPORT -DEXCLUDE_PGX_SUPPORT -DEXCLUDE_PNM_SUPPORT
 
 $(LIB_OBJECTS):%.o:%.c
-	$(CC) -c $(INCLUDES) $(DEFS) $(CFLAGS) $(CADD) $<
+	$(CC) -c $(INCLUDES) $(DEFS) $(CPPFLAGS) $(CFLAGS) $(CADD) $<
 
 $(LIB_OBJECTS): importinc
 

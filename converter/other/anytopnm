@@ -149,6 +149,10 @@ computeTypeFromTypeDescription () {
             filetype=gzip
             ;;
     
+        *XWD*X*Window*Dump* ) 
+            filetype=xwd
+            ;;
+
         *compress* )
             filetype=compress
             ;;
@@ -507,9 +511,8 @@ else
 fi
 
 tempdir="${TMPDIR-/tmp}/anytopnm.$$"
-mkdir $tempdir || { echo "Could not create temporary file. Exiting."; exit 1;}
-chmod 700 $tempdir
-
+mkdir -m 0700 $tempdir || \
+  { echo "Could not create temporary file. Exiting."; exit 1;}
 trap 'rm -rf $tempdir' 0
 
 # Take out all spaces

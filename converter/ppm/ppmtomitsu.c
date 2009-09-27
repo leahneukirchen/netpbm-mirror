@@ -1,10 +1,10 @@
-/* ppmtomitsu.c - read a portable pixmap and produce output for the
+/* ppmtomitsu.c - read a PPM image and produce output for the
 **                Mitsubishi S340-10 Thermo-Sublimation Printer
 **                (or the S3410-30 parallel interface)
 **
 ** Copyright (C) 1992,93 by S.Petra Zeidler
 ** Minor modifications by Ingo Wilken:
-x**  - mymalloc() and check_and_rotate() functions for often used
+**  - mymalloc() and check_and_rotate() functions for often used
 **    code fragments.  Reduces code size by a few KB.
 **  - use pm_error() instead of fprintf(stderr)
 **  - localized allocation of colorhastable
@@ -20,17 +20,17 @@ x**  - mymalloc() and check_and_rotate() functions for often used
 ** implied warranty.
 */
 
+#include <assert.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "pm_c_util.h"
-#include "ppm.h"
 #include "nstring.h"
 #include "mallocvar.h"
+#include "ppm.h"
 
 #include "mitsu.h"
 
-
-#include <stdio.h>
 
 #define HASHSIZE 2048
 #define myhash(x) ((PPM_GETR(x)*3 + PPM_GETG(x)*5 + PPM_GETB(x)*7) % HASHSIZE)
@@ -38,52 +38,571 @@ x**  - mymalloc() and check_and_rotate() functions for often used
 typedef struct hashinfo {
         pixel     color;
         long      flag;
-        struct hashinfo *next;
+        struct hashinfo * next;
 } hashinfo;
-
-#ifdef __STDC__
-static void lineputinit(int cols, int rows, int sharpness, int enlarge, int
-                        copy, struct mediasize medias);
-static void frametransferinit(int cols, int rows, int sharpness, int enlarge,
-                              int copy, struct mediasize medias);
-static void lookuptableinit(int sharpness, int enlarge, int copy,
-                            struct mediasize medias);
-static void lookuptabledata(int cols, int rows, int enlarge,
-                            struct mediasize medias);
-static void check_and_rotate(int cols, int rows, int enlarge,
-                             struct mediasize medias);
-#define CONST const
-#else /*__STDC__*/
-static int lineputinit();
-static int lookuptableinit();
-static int lookuptabledata();
-static int frametransferinit();
-static int check_and_rotate();
-#define CONST
-#endif
 
 #define cmd(arg)           fputc((arg), stdout)
 #define datum(arg)         fputc((char)(arg), stdout)
 #define data(arg,num)      fwrite((arg), sizeof(char), (num), stdout)
 
 
-#ifdef __STDC__
-int main(int argc, char *argv[] )
-#else
-int main( argc, argv )
-    int argc;
-    char* argv[];
-#endif
+
+static void
+check_and_rotate(int              const cols,
+                 int              const rows,
+                 int              const enlarge,
+                 struct mediasize const medias) {
+
+    if (cols > rows) {
+        ROTATEIMG(DOROTATE);                        /* rotate image */
+        if (enlarge * rows > medias.maxcols || enlarge * cols > medias.maxrows)
+            pm_error("Image too large, MaxPixels = %u x %u",
+                     medias.maxrows, medias.maxcols);
+        HPIXELS(cols);
+        VPIXELS(rows);
+        HPIXELSOFF((medias.maxcols/enlarge - rows)/2);
+        VPIXELSOFF((medias.maxrows/enlarge - cols)/2);
+        pm_message("rotating image for output");
+    } else {
+        ROTATEIMG(DONTROTATE);
+        if (enlarge * rows > medias.maxrows || enlarge * cols > medias.maxcols)
+            pm_error("Image too large, MaxPixels = %u x %u",
+                     medias.maxrows, medias.maxcols);
+        HPIXELS(cols);
+        VPIXELS(rows);
+        HPIXELSOFF((medias.maxcols/enlarge - cols)/2);
+        VPIXELSOFF((medias.maxrows/enlarge - rows)/2);
+    }
+}
+
+
+
+static void
+lineputinit(int              const cols,
+            int              const rows,
+            int              const sharpness,
+            int              const enlarge,
+            int              const copy,
+            struct mediasize const medias) {
+    ONLINE;
+    CLRMEM;
+    MEDIASIZE(medias);
+
+    switch (enlarge) {
+    case 2:
+        HENLARGE(ENLARGEx2); /* enlarge horizontal */
+        VENLARGE(ENLARGEx2); /* enlarge vertical */
+        break;
+    case 3:
+        HENLARGE(ENLARGEx3); /* enlarge horizontal */
+        VENLARGE(ENLARGEx3); /* enlarge vertical */
+        break;
+    default:
+        HENLARGE(NOENLARGE); /* enlarge horizontal */
+        VENLARGE(NOENLARGE); /* enlarge vertical */
+    }
+
+    COLREVERSION(DONTREVERTCOLOR);
+    NUMCOPY(copy);
+
+    HOFFINCH('\000');
+    VOFFINCH('\000');
+    CENTERING(DONTCENTER);
+
+    TRANSFERFORMAT(LINEORDER);
+    COLORSYSTEM(RGB);
+    GRAYSCALELVL(BIT_8);
+
+    switch (sharpness) {          /* sharpness :-) */
+    case 0:
+        SHARPNESS(SP_NONE);
+        break;
+    case 1:
+        SHARPNESS(SP_LOW);
+        break;
+    case 2:
+        SHARPNESS(SP_MIDLOW);
+        break;
+    case 3:
+        SHARPNESS(SP_MIDHIGH);
+        break;
+    case 4:
+        SHARPNESS(SP_HIGH);
+        break;
+    default:
+        SHARPNESS(SP_USER);
+    }
+    check_and_rotate(cols, rows, enlarge, medias);
+    DATASTART;
+}
+
+
+
+static void
+lookuptableinit(int              const sharpness,
+                int              const enlarge,
+                int              const copy,
+                struct mediasize const medias) {
+
+    ONLINE;
+    CLRMEM;
+    MEDIASIZE(medias);
+
+    switch (enlarge) {
+    case 2:
+        HENLARGE(ENLARGEx2); /* enlarge horizontal */
+        VENLARGE(ENLARGEx2); /* enlarge vertical */
+        break;
+    case 3:
+        HENLARGE(ENLARGEx3); /* enlarge horizontal */
+        VENLARGE(ENLARGEx3); /* enlarge vertical */
+        break;
+    default:
+        HENLARGE(NOENLARGE); /* enlarge horizontal */
+        VENLARGE(NOENLARGE); /* enlarge vertical */
+    }
+
+    COLREVERSION(DONTREVERTCOLOR);
+    NUMCOPY(copy);
+
+    HOFFINCH('\000');
+    VOFFINCH('\000');
+    CENTERING(DONTCENTER);
+
+    TRANSFERFORMAT(LOOKUPTABLE);
+
+    switch (sharpness) {          /* sharpness :-) */
+    case 0:
+        SHARPNESS(SP_NONE);
+        break;
+    case 1:
+        SHARPNESS(SP_LOW);
+        break;
+    case 2:
+        SHARPNESS(SP_MIDLOW);
+        break;
+    case 3:
+        SHARPNESS(SP_MIDHIGH);
+        break;
+    case 4:
+        SHARPNESS(SP_HIGH);
+        break;
+    default:
+        SHARPNESS(SP_USER);
+    }
+
+    LOADLOOKUPTABLE;
+}
+
+
+
+static void
+lookuptabledata(int              const cols,
+                int              const rows,
+                int              const enlarge,
+                struct mediasize const medias) {
+
+    DONELOOKUPTABLE;
+    check_and_rotate(cols, rows, enlarge, medias);
+    DATASTART;
+}
+
+
+
+static void
+frametransferinit(int              const cols,
+                  int              const rows,
+                  int              const sharpness,
+                  int              const enlarge,
+                  int              const copy,
+                  struct mediasize const medias) {
+
+    ONLINE;
+    CLRMEM;
+    MEDIASIZE(medias);
+
+    switch (enlarge) {
+    case 2:
+        HENLARGE(ENLARGEx2); /* enlarge horizontal */
+        VENLARGE(ENLARGEx2); /* enlarge vertical */
+        break;
+    case 3:
+        HENLARGE(ENLARGEx3); /* enlarge horizontal */
+        VENLARGE(ENLARGEx3); /* enlarge vertical */
+        break;
+    default:
+        HENLARGE(NOENLARGE); /* enlarge horizontal */
+        VENLARGE(NOENLARGE); /* enlarge vertical */
+    }
+
+    COLREVERSION(DONTREVERTCOLOR);
+    NUMCOPY(copy);
+
+    HOFFINCH('\000');
+    VOFFINCH('\000');
+    CENTERING(DONTCENTER);
+
+    TRANSFERFORMAT(FRAMEORDER);
+    COLORSYSTEM(RGB);
+    GRAYSCALELVL(BIT_8);
+
+    switch (sharpness) {          /* sharpness :-) */
+    case 0:
+        SHARPNESS(SP_NONE);
+        break;
+    case 1:
+        SHARPNESS(SP_LOW);
+        break;
+    case 2:
+        SHARPNESS(SP_MIDLOW);
+        break;
+    case 3:
+        SHARPNESS(SP_MIDHIGH);
+        break;
+    case 4:
+        SHARPNESS(SP_HIGH);
+        break;
+    default:
+        SHARPNESS(SP_USER);
+    }
+    check_and_rotate(cols, rows, enlarge, medias);
+}
+
+
+
+static void
+doLookupTableColors(colorhist_vector const table,
+                    unsigned int     const nColor,
+                    hashinfo *       const colorhashtable) {
+                
+    unsigned int colval;
+    for (colval = 0; colval < nColor; ++colval) {
+        struct hashinfo * const hashchain =
+            &colorhashtable[myhash((table[colval]).color)];
+
+        struct hashinfo * hashrun;
+
+        cmd('$');
+        datum(colval);
+        datum(PPM_GETR((table[colval]).color));
+        datum(PPM_GETG((table[colval]).color));
+        datum(PPM_GETB((table[colval]).color));
+        
+        hashrun = hashchain;  /* start at beginning of chain */
+
+        if (hashrun->flag == -1) {
+            hashrun->color = (table[colval]).color;
+            hashrun->flag  = colval;
+        } else {
+            while (hashrun->next != NULL)
+                hashrun = hashrun->next;
+            MALLOCVAR_NOFAIL(hashrun->next);
+            hashrun = hashrun->next;
+            hashrun->color = (table[colval]).color;
+            hashrun->flag  = colval;
+            hashrun->next  = NULL;
+        }
+    }
+}
+
+
+
+static void
+doLookupTableGrays(colorhist_vector const table,
+                   unsigned int     const nColor,
+                   hashinfo *       const colorhashtable) {
+
+    unsigned int colval;
+    for (colval = 0; colval < nColor; ++colval) {
+        struct hashinfo * const hashchain =
+            &colorhashtable[myhash((table[colval]).color)];
+        struct hashinfo * hashrun;
+
+        cmd('$');
+        datum(colval);
+        datum(PPM_GETB((table[colval]).color));
+        datum(PPM_GETB((table[colval]).color));
+        datum(PPM_GETB((table[colval]).color));
+        
+        hashrun = hashchain;  /* start at beginning of chain */
+
+        if (hashrun->flag == -1) {
+            hashrun->color = (table[colval]).color;
+            hashrun->flag  = colval;
+        } else {
+            while (hashrun->next != NULL)
+                hashrun = hashrun->next;
+            MALLOCVAR_NOFAIL(hashrun->next);
+            hashrun = hashrun->next;
+            hashrun->color = (table[colval]).color;
+            hashrun->flag  = colval;
+            hashrun->next  = NULL;
+        }
+    }
+}
+
+
+
+static void
+generateLookupTable(colorhist_vector const table,
+                    unsigned int     const nColor,
+                    unsigned int     const cols,
+                    unsigned int     const rows,
+                    int              const format,
+                    int              const sharpness,
+                    int              const enlarge,
+                    int              const copy,
+                    struct mediasize const medias,
+                    hashinfo **      const colorhashtableP) {
+/*----------------------------------------------------------------------------
+   Write to the output file the palette (color lookup table) indicated by
+   'table' and generate a hash table to use with it: *colorhashtableP.
+
+   Also write the various properties 'sharpness', 'enlarge', 'copy', and
+   'medias' to the output file.
+-----------------------------------------------------------------------------*/
+    hashinfo * colorhashtable;
+
+    lookuptableinit(sharpness, enlarge, copy, medias);
+
+    /* Initialize the hash table to empty */
+
+    MALLOCARRAY_NOFAIL(colorhashtable, HASHSIZE);
     {
-    FILE             *ifp;
-    /*hashinfo         colorhashtable[HASHSIZE];*/
-    struct hashinfo  *hashrun;
-    pixel            *xP;
+        unsigned int i;
+        for (i = 0; i < HASHSIZE; ++i) {
+            colorhashtable[i].flag = -1;
+                    colorhashtable[i].next = NULL;
+        }
+    }
+
+    switch(PPM_FORMAT_TYPE(format)) {
+    case PPM_TYPE:
+        doLookupTableColors(table, nColor, colorhashtable);
+        break;
+    default:
+        doLookupTableGrays(table, nColor, colorhashtable);
+    }
+    lookuptabledata(cols, rows, enlarge, medias);
+
+    *colorhashtableP = colorhashtable;
+}
+
+
+
+static void
+writeColormapRaster(pixel **         const pixels,
+                    unsigned int     const cols,
+                    unsigned int     const rows,
+                    hashinfo *       const colorhashtable) {
+/*----------------------------------------------------------------------------
+   Write a colormapped raster: write the pixels pixels[][] (dimensions cols x
+   rows) as indices into the colormap (palette; lookup table) indicated by
+   'colorhashtable'.
+-----------------------------------------------------------------------------*/
+    unsigned int row;
+
+    for (row = 0; row < rows; ++row) {
+        unsigned int col;
+
+        for (col = 0; col < cols; ++col) {
+            pixel * const pixrow = pixels[row];
+            struct hashinfo * const hashchain =
+                &colorhashtable[myhash(pixrow[col])];
+            struct hashinfo * p;
+                
+            p = hashchain;
+            while (!PPM_EQUAL((p->color), pixrow[col])) {
+                assert(p->next);
+                p = p->next;
+            }
+            datum(p->flag);
+        }
+    }
+}
+
+
+
+static void
+useLookupTable(pixel **         const pixels,
+               colorhist_vector const table,
+               int              const sharpness,
+               int              const enlarge,
+               int              const copy,
+               struct mediasize const medias,
+               unsigned int     const cols,
+               unsigned int     const rows,
+               int              const format,
+               unsigned int     const nColor) {
+
+    hashinfo * colorhashtable;
+
+    pm_message("found %u colors - using the lookuptable-method", nColor);
+
+    generateLookupTable(table, nColor, cols, rows, format,
+                        sharpness, enlarge, copy, medias,
+                        &colorhashtable);
+
+    writeColormapRaster(pixels, cols, rows, colorhashtable);
+
+    free(colorhashtable);
+}
+
+
+
+static void
+noLookupColor(pixel **     const pixels,
+              unsigned int const cols,
+              unsigned int const rows) {
+
+    unsigned int row;
+    COLORDES(RED);
+    DATASTART;                    /* red coming */
+    for (row = 0; row < rows; ++row) {
+        pixel * const pixrow = pixels[row];
+        unsigned int col;
+        for (col = 0; col < cols; ++col)
+            datum(PPM_GETR(pixrow[col]));
+    }
+    COLORDES(GREEN);
+    DATASTART;                    /* green coming */
+    for (row = 0; row < rows; ++row) {
+        pixel * const pixrow = pixels[row];
+        unsigned int col;
+        for (col = 0; col < cols; ++col)
+            datum(PPM_GETG(pixrow[col]));
+    }
+    COLORDES(BLUE);
+    DATASTART;                    /* blue coming */
+    for (row = 0; row < rows; ++row) {
+        pixel * const pixrow = pixels[row];
+        unsigned int col;
+        for (col = 0; col < cols; ++col)
+            datum(PPM_GETB(pixrow[col]));
+    }
+}
+
+
+
+static void
+noLookupGray(pixel **     const pixels,
+             unsigned int const cols,
+             unsigned int const rows) {
+
+    unsigned int row;
+    COLORDES(RED);
+    DATASTART;                    /* red coming */
+    for (row = 0; row < rows; ++row) {
+        pixel * const pixrow = pixels[row];
+        unsigned int col;
+        for (col = 0; col < cols; ++col)
+            datum(PPM_GETB(pixrow[col]));
+    }
+    COLORDES(GREEN);
+    DATASTART;                    /* green coming */
+    for (row = 0; row < rows; ++row) {
+        pixel * const pixrow = pixels[row];
+        unsigned int col;
+        for (col = 0; col < cols; ++col)
+            datum(PPM_GETB(pixrow[col]));
+    }
+    COLORDES(BLUE);
+    DATASTART;                    /* blue coming */
+    for (row = 0; row < rows; ++row) {
+        pixel * const pixrow = pixels[row];
+        unsigned int col;
+        for (col = 0; col < cols; ++col)
+            datum(PPM_GETB(pixrow[col]));
+    }
+}
+
+
+
+static void
+useNoLookupTable(pixel **         const pixels,
+                 int              const sharpness,
+                 int              const enlarge,
+                 int              const copy,
+                 struct mediasize const medias,
+                 unsigned int     const cols,
+                 unsigned int     const rows,
+                 int              const format) {
+
+    /* $#%@^!& no lut possible, so send the pic as 24bit */
+
+    pm_message("found too many colors for fast lookuptable mode");
+
+    frametransferinit(cols, rows, sharpness, enlarge, copy, medias);
+    switch(PPM_FORMAT_TYPE(format)) {
+    case PPM_TYPE:
+        noLookupColor(pixels, cols, rows);
+        break;
+    default:
+        noLookupGray(pixels, cols, rows);
+    }
+}
+
+
+
+static void
+doTiny(FILE *           const ifP,
+       unsigned int     const cols,
+       unsigned int     const rows,
+       pixval           const maxval,
+       int              const format,
+       int              const sharpness,
+       int              const enlarge,
+       int              const copy,
+       struct mediasize const medias) {
+       
+    pixel * pixelrow;
+    unsigned char * redrow;
+    unsigned char * grnrow;
+    unsigned char * blurow;
+    unsigned int row;
+
+    pixelrow = ppm_allocrow(cols);
+    MALLOCARRAY_NOFAIL(redrow, cols);
+    MALLOCARRAY_NOFAIL(grnrow, cols);
+    MALLOCARRAY_NOFAIL(blurow, cols);
+    lineputinit(cols, rows, sharpness, enlarge, copy, medias);
+
+    for (row = 0; row < rows; ++row) {
+        ppm_readppmrow(ifP, pixelrow, cols, maxval, format);
+        switch(PPM_FORMAT_TYPE(format)) {
+        case PPM_TYPE: {            /* color */
+            unsigned int col;
+            for (col = 0; col < cols; ++col) {
+                redrow[col] = PPM_GETR(pixelrow[col]);
+                grnrow[col] = PPM_GETG(pixelrow[col]);
+                blurow[col] = PPM_GETB(pixelrow[col]);
+            }
+            data(redrow, cols);
+            data(grnrow, cols);
+            data(blurow, cols);
+        } break;
+        default: {           /* grayscale */
+            unsigned int col;
+            for (col = 0; col < cols; ++col)
+                blurow[col] = PPM_GETB(pixelrow[col]);
+            data(blurow, cols);
+            data(blurow, cols);
+            data(blurow, cols);
+        }
+        }
+    }
+}
+
+
+
+int
+main(int argc, char * argv[]) {
+    FILE * ifP;
     int              argn;
     bool             dpi300;
-    int              cols, rows, format, col, row;
-    int              sharpness, enlarge, copy, tiny;
+    int              cols, rows, format;
     pixval           maxval;
+    int              sharpness, enlarge, copy, tiny;
     struct mediasize medias;
     char             media[16];
     const char * const usage = "[-sharpness <1-4>] [-enlarge <1-3>] [-media <a,a4,as,a4s>] [-copy <1-9>] [-tiny] [-dpi300] [ppmfile]";
@@ -138,11 +657,11 @@ int main( argc, argv )
     }
 
     if (argn < argc) {
-        ifp = pm_openr(argv[argn]);
+        ifP = pm_openr(argv[argn]);
         ++argn;
     }
     else
-        ifp = stdin;
+        ifP = stdin;
 
     if (argn != argc)
         pm_usage(usage);
@@ -165,440 +684,40 @@ int main( argc, argv )
     else
         medias = MSize_User;
 
-        if (dpi300) {
-                medias.maxcols *= 2;
-                medias.maxrows *= 2;
-        }
-
-    if (tiny) {
-        pixel            *pixelrow;
-        char             *redrow, *greenrow, *bluerow;
-
-        ppm_readppminit(ifp, &cols, &rows, &maxval, &format);
-        pixelrow = (pixel *) ppm_allocrow(cols);
-        MALLOCARRAY_NOFAIL(redrow, cols);
-        MALLOCARRAY_NOFAIL(greenrow, cols);
-        MALLOCARRAY_NOFAIL(bluerow, cols);
-        lineputinit(cols, rows, sharpness, enlarge, copy, medias);
-
-        for ( row = 0; row < rows; ++row ) {
-            ppm_readppmrow(ifp, pixelrow, cols, maxval, format);
-            switch(PPM_FORMAT_TYPE(format)) {
-            /* color */
-            case PPM_TYPE:
-                for (col = 0, xP = pixelrow; col < cols; col++, xP++) {
-                    /* First red. */
-                    redrow[col] = PPM_GETR(*xP);
-                    /* Then green. */
-                    greenrow[col] = PPM_GETG(*xP);
-                    /* And blue. */
-                    bluerow[col] = PPM_GETB(*xP);
-                }
-                data(redrow,   cols);
-                data(greenrow, cols);
-                data(bluerow,  cols);
-                break;
-            /* grayscale */
-            default:
-                for (col = 0, xP = pixelrow; col < cols; col++, xP++)
-                    bluerow[col] = PPM_GETB(*xP);
-                data(bluerow, cols);
-                data(bluerow, cols);
-                data(bluerow, cols);
-                break;
-            }
-        }
-        pm_close(ifp);
+    if (dpi300) {
+        medias.maxcols *= 2;
+        medias.maxrows *= 2;
     }
-    else {
-        pixel            **pixelpic;
-        int              colanz, colval;
-        int                 i;
-        colorhist_vector table;
 
-        ppm_readppminit( ifp, &cols, &rows, &maxval, &format );
-        pixelpic = ppm_allocarray( cols, rows );
-        for (row = 0; row < rows; row++)
-            ppm_readppmrow( ifp, pixelpic[row], cols, maxval, format );
-        pm_close(ifp);
+    ppm_readppminit(ifP, &cols, &rows, &maxval, &format);
+    
+    if (tiny) {
+        doTiny(ifP, cols, rows, maxval, format,
+               sharpness, enlarge, copy, medias);
+
+    } else {
+        pixel ** pixels;
+        int nColor;
+        colorhist_vector table;
+        unsigned int row;
+
+        pixels = ppm_allocarray(cols, rows);
+        for (row = 0; row < rows; ++row)
+            ppm_readppmrow(ifP, pixels[row], cols, maxval, format);
 
         /* first check wether we can use the lut transfer */
 
-        table = ppm_computecolorhist(pixelpic, cols, rows, MAXLUTCOL+1, 
-                                     &colanz);
-        if (table != NULL) {
-            hashinfo *colorhashtable;
-
-            MALLOCARRAY_NOFAIL(colorhashtable, HASHSIZE);
-            for (i=0; i<HASHSIZE; i++) {
-                colorhashtable[i].flag = -1;
-                colorhashtable[i].next = NULL;
-            }
-
-            /* we can use the lookuptable */
-            pm_message("found %d colors - using the lookuptable-method",
-                       colanz);
-            lookuptableinit(sharpness, enlarge, copy, medias);
-            switch(PPM_FORMAT_TYPE(format)) {
-            /* color */
-            case PPM_TYPE:
-                for (colval=0; colval<colanz; colval++) {
-                    cmd('$');
-                    datum(colval);
-                    datum(PPM_GETR((table[colval]).color));
-                    datum(PPM_GETG((table[colval]).color));
-                    datum(PPM_GETB((table[colval]).color));
-
-                    hashrun = &colorhashtable[myhash((table[colval]).color)];
-                    if (hashrun->flag == -1) {
-                        hashrun->color = (table[colval]).color;
-                        hashrun->flag  = colval;
-                    }
-                    else {
-                        while (hashrun->next != NULL)
-                            hashrun = hashrun->next;
-                        MALLOCVAR_NOFAIL(hashrun->next);
-                        hashrun = hashrun->next;
-                        hashrun->color = (table[colval]).color;
-                        hashrun->flag  = colval;
-                        hashrun->next  = NULL;
-                    }
-                }
-                break;
-            /* other */
-            default:
-                for (colval=0; colval<colanz; colval++) {
-                    cmd('$');
-                    datum(colval);
-                    datum(PPM_GETB((table[colval]).color));
-                    datum(PPM_GETB((table[colval]).color));
-                    datum(PPM_GETB((table[colval]).color));
-
-                    hashrun = &colorhashtable[myhash((table[colval]).color)];
-                    if (hashrun->flag == -1) {
-                        hashrun->color = (table[colval]).color;
-                        hashrun->flag  = colval;
-                    }
-                    else {
-                        while (hashrun->next != NULL)
-                            hashrun = hashrun->next;
-                        MALLOCVAR_NOFAIL(hashrun->next);
-                        hashrun = hashrun->next;
-                        hashrun->color = (table[colval]).color;
-                        hashrun->flag  = colval;
-                        hashrun->next  = NULL;
-                    }
-                }
-            }
-            lookuptabledata(cols, rows, enlarge, medias);
-            for (row=0; row<rows; row++) {
-                xP = pixelpic[row];
-                for (col=0; col<cols; col++, xP++) {
-                    hashrun = &colorhashtable[myhash(*xP)];
-                    while (!PPM_EQUAL((hashrun->color), *xP))
-                        if (hashrun->next != NULL)
-                            hashrun = hashrun->next;
-                        else {
-                            pm_error("you just found a lethal bug.");
-                        }
-                    datum(hashrun->flag);
-                }
-            }
-            free(colorhashtable);
-        }
-        else {
-        /* $#%@^!& no lut possible, so send the pic as 24bit */
-            pm_message("found too many colors for fast lookuptable mode");
-            frametransferinit(cols, rows, sharpness, enlarge, copy, medias);
-            switch(PPM_FORMAT_TYPE(format)) {
-            /* color */
-            case PPM_TYPE:
-                COLORDES(RED);
-                DATASTART;                    /* red coming */
-                for (row=0; row<rows; row++) {
-                    xP = pixelpic[row];
-                    for (col=0; col<cols; col++, xP++)
-                        datum(PPM_GETR(*xP));
-                }
-                COLORDES(GREEN);
-                DATASTART;                    /* green coming */
-                for (row=0; row<rows; row++) {
-                    xP = pixelpic[row];
-                    for (col=0; col<cols; col++, xP++)
-                        datum(PPM_GETG(*xP));
-                }
-                COLORDES(BLUE);
-                DATASTART;                    /* blue coming */
-                for (row=0; row<rows; row++) {
-                    xP = pixelpic[row];
-                    for (col=0; col<cols; col++, xP++)
-                        datum(PPM_GETB(*xP));
-                }
-                break;
-            /* grayscale */
-            default:
-                COLORDES(RED);
-                DATASTART;                    /* red coming */
-                for (row=0; row<rows; row++) {
-                    xP = pixelpic[row];
-                    for (col=0; col<cols; col++, xP++)
-                        datum(PPM_GETB(*xP));
-                }
-                COLORDES(GREEN);
-                DATASTART;                    /* green coming */
-                for (row=0; row<rows; row++) {
-                    xP = pixelpic[row];
-                    for (col=0; col<cols; col++, xP++)
-                        datum(PPM_GETB(*xP));
-                }
-                COLORDES(BLUE);
-                DATASTART;                    /* blue coming */
-                for (row=0; row<rows; row++) {
-                    xP = pixelpic[row];
-                    for (col=0; col<cols; col++, xP++)
-                        datum(PPM_GETB(*xP));
-                }
-            }
-        }
+        table = ppm_computecolorhist(pixels, cols, rows, MAXLUTCOL+1, 
+                                     &nColor);
+        if (table)
+            useLookupTable(pixels, table, sharpness, enlarge, copy, medias,
+                           cols, rows, format, nColor);
+        else
+            useNoLookupTable(pixels, sharpness, enlarge, copy, medias,
+                             cols, rows, format);
+        ppm_freearray(pixels, rows);
     }
     PRINTIT;
-    exit(0);
+    pm_close(ifP);
+    return 0;
 }
-
-#ifdef __STDC__
-static void lineputinit(int cols, int rows,
-                        int sharpness, int enlarge, int copy,
-                        struct mediasize medias)
-#else /*__STDC__*/
-static int lineputinit(cols, rows, sharpness, enlarge, copy, medias)
-    int cols, rows;
-    int sharpness, enlarge, copy;
-    struct mediasize medias;
-#endif /*__STDC__*/
-{
-    ONLINE;
-    CLRMEM;
-    MEDIASIZE(medias);
-
-    switch (enlarge) {
-    case 2:
-        HENLARGE(ENLARGEx2); /* enlarge horizontal */
-        VENLARGE(ENLARGEx2); /* enlarge vertical */
-        break;
-    case 3:
-        HENLARGE(ENLARGEx3); /* enlarge horizontal */
-        VENLARGE(ENLARGEx3); /* enlarge vertical */
-        break;
-    default:
-        HENLARGE(NOENLARGE); /* enlarge horizontal */
-        VENLARGE(NOENLARGE); /* enlarge vertical */
-    }
-
-    COLREVERSION(DONTREVERTCOLOR);
-    NUMCOPY(copy);
-
-    HOFFINCH('\000');
-    VOFFINCH('\000');
-    CENTERING(DONTCENTER);
-
-    TRANSFERFORMAT(LINEORDER);
-    COLORSYSTEM(RGB);
-    GRAYSCALELVL(BIT_8);
-
-    switch (sharpness) {          /* sharpness :-) */
-    case 0:
-        SHARPNESS(SP_NONE);
-        break;
-    case 1:
-        SHARPNESS(SP_LOW);
-        break;
-    case 2:
-        SHARPNESS(SP_MIDLOW);
-        break;
-    case 3:
-        SHARPNESS(SP_MIDHIGH);
-        break;
-    case 4:
-        SHARPNESS(SP_HIGH);
-        break;
-    default:
-        SHARPNESS(SP_USER);
-    }
-    check_and_rotate(cols, rows, enlarge, medias);
-    DATASTART;
-    return;
-}
-
-#ifdef __STDC__
-static void lookuptableinit(int sharpness, int enlarge, int copy,
-                            struct mediasize medias)
-#else /*__STDC__*/
-static int lookuptableinit(sharpness, enlarge, copy, medias)
-    int sharpness, enlarge, copy;
-    struct mediasize medias;
-#endif /*__STDC__*/
-{
-    ONLINE;
-    CLRMEM;
-    MEDIASIZE(medias);
-
-    switch (enlarge) {
-    case 2:
-        HENLARGE(ENLARGEx2); /* enlarge horizontal */
-        VENLARGE(ENLARGEx2); /* enlarge vertical */
-        break;
-    case 3:
-        HENLARGE(ENLARGEx3); /* enlarge horizontal */
-        VENLARGE(ENLARGEx3); /* enlarge vertical */
-        break;
-    default:
-        HENLARGE(NOENLARGE); /* enlarge horizontal */
-        VENLARGE(NOENLARGE); /* enlarge vertical */
-    }
-
-    COLREVERSION(DONTREVERTCOLOR);
-    NUMCOPY(copy);
-
-    HOFFINCH('\000');
-    VOFFINCH('\000');
-    CENTERING(DONTCENTER);
-
-    TRANSFERFORMAT(LOOKUPTABLE);
-
-    switch (sharpness) {          /* sharpness :-) */
-    case 0:
-        SHARPNESS(SP_NONE);
-        break;
-    case 1:
-        SHARPNESS(SP_LOW);
-        break;
-    case 2:
-        SHARPNESS(SP_MIDLOW);
-        break;
-    case 3:
-        SHARPNESS(SP_MIDHIGH);
-        break;
-    case 4:
-        SHARPNESS(SP_HIGH);
-        break;
-    default:
-        SHARPNESS(SP_USER);
-    }
-
-    LOADLOOKUPTABLE;
-    return;
-}
-
-#ifdef __STDC__
-static void lookuptabledata(int cols, int rows, int enlarge,
-                                                        struct mediasize medias)
-#else /*__STDC__*/
-static int lookuptabledata(cols, rows, enlarge, medias)
-    int   rows, cols;
-    int   enlarge;
-    struct mediasize medias;
-#endif /*__STDC__*/
-{
-    DONELOOKUPTABLE;
-    check_and_rotate(cols, rows, enlarge, medias);
-    DATASTART;
-    return;
-}
-
-#ifdef __STDC__
-static void frametransferinit(int cols, int rows, int sharpness,
-                              int enlarge, int copy, struct mediasize medias)
-#else
-static int frametransferinit(cols, rows, sharpness, enlarge, copy, medias)
-
-    int     rows, cols;
-    int     sharpness, enlarge, copy;
-    struct mediasize medias;
-#endif
-{
-    ONLINE;
-    CLRMEM;
-    MEDIASIZE(medias);
-
-    switch (enlarge) {
-    case 2:
-        HENLARGE(ENLARGEx2); /* enlarge horizontal */
-        VENLARGE(ENLARGEx2); /* enlarge vertical */
-        break;
-    case 3:
-        HENLARGE(ENLARGEx3); /* enlarge horizontal */
-        VENLARGE(ENLARGEx3); /* enlarge vertical */
-        break;
-    default:
-        HENLARGE(NOENLARGE); /* enlarge horizontal */
-        VENLARGE(NOENLARGE); /* enlarge vertical */
-    }
-
-    COLREVERSION(DONTREVERTCOLOR);
-    NUMCOPY(copy);
-
-    HOFFINCH('\000');
-    VOFFINCH('\000');
-    CENTERING(DONTCENTER);
-
-    TRANSFERFORMAT(FRAMEORDER);
-    COLORSYSTEM(RGB);
-    GRAYSCALELVL(BIT_8);
-
-    switch (sharpness) {          /* sharpness :-) */
-    case 0:
-        SHARPNESS(SP_NONE);
-        break;
-    case 1:
-        SHARPNESS(SP_LOW);
-        break;
-    case 2:
-        SHARPNESS(SP_MIDLOW);
-        break;
-    case 3:
-        SHARPNESS(SP_MIDHIGH);
-        break;
-    case 4:
-        SHARPNESS(SP_HIGH);
-        break;
-    default:
-        SHARPNESS(SP_USER);
-    }
-    check_and_rotate(cols, rows, enlarge, medias);
-    return;
-}
-
-
-#ifdef __STDC__
-static void
-check_and_rotate(int cols, int rows, int enlarge, struct mediasize medias)
-#else
-static int
-check_and_rotate(cols, rows, enlarge, medias)
-    int cols, rows, enlarge;
-    struct mediasize medias;
-#endif
-{
-    if (cols > rows) {
-        ROTATEIMG(DOROTATE);                        /* rotate image */
-        if (enlarge*rows > medias.maxcols || enlarge*cols > medias.maxrows) {
-            pm_error("Image too large, MaxPixels = %d x %d", medias.maxrows, medias.maxcols);
-        }
-        HPIXELS(cols);
-        VPIXELS(rows);
-        HPIXELSOFF((medias.maxcols/enlarge - rows)/2);
-        VPIXELSOFF((medias.maxrows/enlarge - cols)/2);
-        pm_message("rotating image for output");
-    }
-    else {
-        ROTATEIMG(DONTROTATE);
-        if (enlarge*rows > medias.maxrows || enlarge*cols > medias.maxcols) {
-            pm_error("Image too large, MaxPixels = %d x %d", medias.maxrows, medias.maxcols);
-        }
-        HPIXELS(cols);
-        VPIXELS(rows);
-        HPIXELSOFF((medias.maxcols/enlarge - cols)/2);
-        VPIXELSOFF((medias.maxrows/enlarge - rows)/2);
-    }
-}
-

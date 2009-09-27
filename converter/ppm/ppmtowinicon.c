@@ -13,6 +13,7 @@
 #include <math.h>
 #include <string.h>
 
+#include "pm_c_util.h"
 #include "winico.h"
 #include "ppm.h"
 #include "mallocvar.h"

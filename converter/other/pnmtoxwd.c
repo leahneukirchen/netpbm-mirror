@@ -11,6 +11,8 @@
 */
 
 #include <string.h>
+
+#include "pm_c_util.h"
 #include "pnm.h"
 #include "shhopt.h"
 #include "mallocvar.h"
@@ -471,7 +473,7 @@ main(int argc, char * argv[]) {
         }
     }
 
-    if (STREQ(cmdline.inputFilespec, "-"))
+    if (streq(cmdline.inputFilespec, "-"))
         dumpname = "stdin";
     else {
         if (strlen(cmdline.inputFilespec) > XWDVAL_MAX - sizeof(h11) - 1)

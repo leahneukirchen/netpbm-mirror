@@ -15,15 +15,79 @@
 #include "mallocvar.h"
 
 #define MAXCOLORS 256
-static colormap_t* make_pr_colormap ARGS(( colorhist_vector chv, int colors ));
-static colormap_t* make_gray_pr_colormap ARGS(( void ));
-static colormap_t* alloc_pr_colormap ARGS(( void ));
+
+
+
+static colormap_t *
+alloc_pr_colormap(void) {
+
+    colormap_t* pr_colormapP;
+
+    MALLOCVAR(pr_colormapP);
+    if ( pr_colormapP == NULL )
+        pm_error( "out of memory" );
+    pr_colormapP->type = RMT_EQUAL_RGB;
+    pr_colormapP->length = MAXCOLORS;
+    MALLOCARRAY(pr_colormapP->map[0], MAXCOLORS);
+    MALLOCARRAY(pr_colormapP->map[1], MAXCOLORS);
+    MALLOCARRAY(pr_colormapP->map[2], MAXCOLORS);
+    if ( pr_colormapP->map[0] == NULL || 
+         pr_colormapP->map[1] == NULL ||
+         pr_colormapP->map[2] == NULL )
+        pm_error( "out of memory" );
+
+    return pr_colormapP;
+}
+
+
+
+static colormap_t*
+make_pr_colormap(colorhist_vector const chv,
+                 int              const colors) {
+
+    colormap_t* pr_colormapP;
+    int i;
+
+    pr_colormapP = alloc_pr_colormap( );
+
+    for ( i = 0; i < colors; ++i )
+    {
+        pr_colormapP->map[0][i] = PPM_GETR( chv[i].color );
+        pr_colormapP->map[1][i] = PPM_GETG( chv[i].color );
+        pr_colormapP->map[2][i] = PPM_GETB( chv[i].color );
+    }
+    for ( ; i < MAXCOLORS; ++i )
+        pr_colormapP->map[0][i] = pr_colormapP->map[1][i] =
+            pr_colormapP->map[2][i] = 0;
+
+    return pr_colormapP;
+}
+
+
+
+static colormap_t *
+make_gray_pr_colormap(void) {
+
+    colormap_t* pr_colormapP;
+    int i;
+
+    pr_colormapP = alloc_pr_colormap( );
+
+    for ( i = 0; i < MAXCOLORS; ++i )
+    {
+        pr_colormapP->map[0][i] = i;
+        pr_colormapP->map[1][i] = i;
+        pr_colormapP->map[2][i] = i;
+    }
+
+    return pr_colormapP;
+}
+
+
 
 int
-main( argc, argv )
-    int argc;
-    char* argv[];
-{
+main(int argc, char ** argv) {
+
     FILE* ifp;
     xel** xels;
     xel* xelrow;
@@ -247,64 +311,3 @@ main( argc, argv )
     exit( 0 );
 }
 
-static colormap_t*
-make_pr_colormap( chv, colors )
-    colorhist_vector chv;
-    int colors;
-{
-    colormap_t* pr_colormapP;
-    int i;
-
-    pr_colormapP = alloc_pr_colormap( );
-
-    for ( i = 0; i < colors; ++i )
-    {
-        pr_colormapP->map[0][i] = PPM_GETR( chv[i].color );
-        pr_colormapP->map[1][i] = PPM_GETG( chv[i].color );
-        pr_colormapP->map[2][i] = PPM_GETB( chv[i].color );
-    }
-    for ( ; i < MAXCOLORS; ++i )
-        pr_colormapP->map[0][i] = pr_colormapP->map[1][i] =
-            pr_colormapP->map[2][i] = 0;
-
-    return pr_colormapP;
-}
-
-static colormap_t*
-make_gray_pr_colormap( )
-{
-    colormap_t* pr_colormapP;
-    int i;
-
-    pr_colormapP = alloc_pr_colormap( );
-
-    for ( i = 0; i < MAXCOLORS; ++i )
-    {
-        pr_colormapP->map[0][i] = i;
-        pr_colormapP->map[1][i] = i;
-        pr_colormapP->map[2][i] = i;
-    }
-
-    return pr_colormapP;
-}
-
-static colormap_t*
-alloc_pr_colormap( )
-{
-    colormap_t* pr_colormapP;
-
-    MALLOCVAR(pr_colormapP);
-    if ( pr_colormapP == NULL )
-        pm_error( "out of memory" );
-    pr_colormapP->type = RMT_EQUAL_RGB;
-    pr_colormapP->length = MAXCOLORS;
-    MALLOCARRAY(pr_colormapP->map[0], MAXCOLORS);
-    MALLOCARRAY(pr_colormapP->map[1], MAXCOLORS);
-    MALLOCARRAY(pr_colormapP->map[2], MAXCOLORS);
-    if ( pr_colormapP->map[0] == NULL || 
-         pr_colormapP->map[1] == NULL ||
-         pr_colormapP->map[2] == NULL )
-        pm_error( "out of memory" );
-
-    return pr_colormapP;
-}

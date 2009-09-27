@@ -13,6 +13,17 @@
   By Bryan Henderson, San Jose, California.  May 2006
 
   Contributed to the public domain.
+
+==============================================================================
+
+  Implementation notes:
+
+   A look at Libxml2 Subversion source code change history says the type
+   'xmlReaderTypes' was added (in <libxml/xmlreader.h>) in 2.5.9.  But a MacOS
+   10.3.9 user reports in April 2007 that he has 2.6.16 installed and it
+   doesn't have xmlReaderTypes.  Another MacOS user reported that in December
+   2008.  Apparently that OS has a broken libxml2 installation.
+   
 ============================================================================*/
 
 #define _BSD_SOURCE  /* Make sure strdup() is in <string.h> */
@@ -205,7 +216,16 @@ makePoint(unsigned int const x,
     return p;
 }
 
+static ppmd_point
+makePpmdPoint(point const arg) {
 
+    ppmd_point p;
+
+    p.x = arg.x;
+    p.y = arg.y;
+
+    return p;
+}
 
 typedef enum {
     PATH_MOVETO,
@@ -437,12 +457,12 @@ outlineObject(path *           const pathP,
                     pm_message("Doing cubic spline to (%u, %u)",
                                dest.x, dest.y);
                 /* We need to write ppmd_spline4() */
-                ppmd_spline4(NULL, 0, 0, 0,
-                             currentPos.x, currentPos.y,
-                             ctl1.x, ctl1.y,
-                             ctl2.x, ctl2.y,
-                             dest.x, dest.y,
-                             ppmd_fill_drawproc, fillObjP);
+                ppmd_spline4p(NULL, 0, 0, 0,
+                              makePpmdPoint(currentPos),
+                              makePpmdPoint(dest),
+                              makePpmdPoint(ctl1),
+                              makePpmdPoint(ctl2),
+                              ppmd_fill_drawprocp, fillObjP);
                 currentPos = dest;
             } break;
             }
@@ -561,6 +581,8 @@ getPathAttributes(xmlTextReaderPtr const xmlReaderP,
 static void
 processSubPathNode(xmlTextReaderPtr const xmlReaderP,
                    bool *           const endOfPathP) {
+
+    /* See comment above about xmlReaderTypes not being defined */
 
     xmlReaderTypes const nodeType  = xmlTextReaderNodeType(xmlReaderP);
 

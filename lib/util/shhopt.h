@@ -1,4 +1,4 @@
-/*==============================================================================
+/*=============================================================================
 HERE IS AN EXAMPLE OF THE USE OF SHHOPT:
 
 
@@ -6,6 +6,8 @@ HERE IS AN EXAMPLE OF THE USE OF SHHOPT:
 int 
 main ( int argc, char **argv ) {
 
+    // initial values here are just to demonstrate what gets set and
+    // what doesn't by the code below.
     int help_flag = 7;
     unsigned int help_spec =7;
     unsigned int height_spec =7;
@@ -186,12 +188,13 @@ typedef struct {
 
 /* OPTENT3 is the same as OPTENTRY except that it also sets the "specified"
    element of the table entry (so it assumes OPTION_DEF is a table of
-   optEntry instead of optStruct).
+   optEntry instead of optStruct).  It sets it to the number of times that
+   the option appears in the command line.
 
    Here is an example:
 
        unsigned int option_def_index = 0;
-       optEntry *option_def = malloc(100*sizeof(optEntry));
+       MALLOCARRAY_NOFAIL(option_def, 100);
        OPTENT3('h', "help",     OPT_FLAG, &help_flag, 0);
        OPTENT3(0,   "alphaout", OPT_STRING, &alpha_filename, 0);
 */
@@ -201,6 +204,8 @@ typedef struct {
     OPTION_DEF[OPTION_DEF_INDEX].specified = (specifiedvalue); \
     OPTENTRY(shortvalue, longvalue, typevalue, outputvalue, flagvalue) \
     }
+
+#define OPTENTINIT OPTION_DEF[0].type = OPT_END
 
 
 struct optNameValue {
@@ -226,15 +231,5 @@ optDestroyNameValueList(struct optNameValue * const list);
 #ifdef __cplusplus
 }
 #endif
-
-/* Here's a hack to help us introduce pm_c_util.h.  That should be
-   #included in nearly every Netpbm program, but we're too lazy to insert
-   it into hundreds of files right now.  But shhopt.h is included into
-   most of those files, so we #include it here!
-
-   Before 2005.12.03, the stuff that is now in pm_c_util.h was in pm.h,
-   but that's a bad place for it because pm.h is an external header file.
-*/
-#include "pm_c_util.h"
 
 #endif

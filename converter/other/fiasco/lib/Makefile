@@ -6,7 +6,7 @@ FIASCOSUBDIR = converter/other/fiasco
 SUBDIR = $(FIASCOSUBDIR)/lib
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 OBJECTS = \
   arith.o \
@@ -21,11 +21,11 @@ OBJECTS = \
 
 MERGE_OBJECTS = $(OBJECTS)
 
-INCLUDES = -I$(SRCDIR)/$(FIASCOSUBDIR)
+COMP_INCLUDES = -I$(SRCDIR)/$(FIASCOSUBDIR)
 
 all: libfiasco_lib.a
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 libfiasco_lib.a: $(OBJECTS)
 	$(AR) -rc $@ $(OBJECTS)

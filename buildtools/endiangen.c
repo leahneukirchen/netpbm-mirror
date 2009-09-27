@@ -59,9 +59,9 @@ byteOrder(void) {
 
 
 static unsigned int
-bitsPerWord(void) {
+bitsPerLong(void) {
 
-    return MAX(sizeof(long), sizeof(int)) * 8;
+    return sizeof(long) * 8;
 }
 
 
@@ -87,7 +87,7 @@ main(int argc, char **argv) {
            byteOrder() == ENDIAN_LITTLE ? "LITTLE_ENDIAN" : "BIG_ENDIAN");
     printf("#endif\n");
     printf("\n");
-    printf("#define BITS_PER_WORD %u\n", bitsPerWord());
+    printf("#define BITS_PER_LONG %u\n", bitsPerLong());
 
     return 0;
 }

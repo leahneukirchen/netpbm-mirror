@@ -1,6 +1,6 @@
 /*
 ** pngtopnm.c -
-** read a Portable Network Graphics file and produce a portable anymap
+** read a Portable Network Graphics file and produce a PNM.
 **
 ** Copyright (C) 1995,1998 by Alexander Lehmann <alex@hal.rhein-main.de>
 **                        and Willem van Schaik <willem@schaik.com>
@@ -16,61 +16,21 @@
 ** with lots of bits pasted from libpng.txt by Guy Eric Schalnat
 */
 
-/* 
-   BJH 20000408:  rename PPM_MAXMAXVAL to PPM_OVERALLMAXVAL
-   BJH 20000303:  fix include statement so dependencies work out right.
-*/
-/* GRR 19991203:  moved VERSION to new version.h header file */
-
-/* GRR 19990713:  fixed redundant freeing of png_ptr and info_ptr in setjmp()
- *  blocks and added "pm_close(ifp)" in each.  */
-
-/* GRR 19990317:  declared "clobberable" automatic variables in convertpng()
- *  static to fix Solaris/gcc stack-corruption bug.  Also installed custom
- *  error-handler to avoid jmp_buf size-related problems (i.e., jmp_buf
- *  compiled with one size in libpng and another size here).  */
-
 #ifndef PNMTOPNG_WARNING_LEVEL
 #  define PNMTOPNG_WARNING_LEVEL 0   /* use 0 for backward compatibility, */
 #endif                               /*  2 for warnings (1 == error) */
 
+#include <assert.h>
 #include <math.h>
 #include <float.h>
 #include <png.h>    /* includes zlib.h and setjmp.h */
 #define VERSION "2.37.4 (5 December 1999) +netpbm"
 
-#include "pnm.h"
+#include "pm_c_util.h"
 #include "mallocvar.h"
 #include "nstring.h"
 #include "shhopt.h"
-
-#if PNG_LIBPNG_VER >= 10400
-#error Your PNG library (<png.h>) is incompatible with this Netpbm source code.
-#error You need either an older PNG library (older than 1.4)
-#error newer Netpbm source code (at least 10.48)
-#endif
-
-typedef struct _jmpbuf_wrapper {
-  jmp_buf jmpbuf;
-} jmpbuf_wrapper;
-
-/* GRR 19991205:  this is used as a test for pre-1999 versions of netpbm and
- *   pbmplus vs. 1999 or later (in which pm_close was split into two)
- */
-#ifdef PBMPLUS_RAWBITS
-#  define pm_closer pm_close
-#  define pm_closew pm_close
-#endif
-
-#ifndef TRUE
-#  define TRUE 1
-#endif
-#ifndef FALSE
-#  define FALSE 0
-#endif
-#ifndef NONE
-#  define NONE 0
-#endif
+#include "pnm.h"
 
 enum alpha_handling {ALPHA_NONE, ALPHA_ONLY, ALPHA_MIX};
 
@@ -88,7 +48,7 @@ struct cmdlineInfo {
 };
 
 
-typedef struct pngcolor {
+typedef struct {
 /*----------------------------------------------------------------------------
    A color in a format compatible with the PNG library.
 
@@ -102,15 +62,13 @@ typedef struct pngcolor {
 
 
 static png_uint_16 maxval;
-static int verbose = FALSE;
-static int mtime;
-static jmpbuf_wrapper pngtopnm_jmpbuf_struct;
+static bool verbose;
 
 
 static void
-parseCommandLine(int                 argc, 
-                 char **             argv,
-                 struct cmdlineInfo *cmdlineP ) {
+parseCommandLine(int                  argc, 
+                 const char **        argv,
+                 struct cmdlineInfo * cmdlineP ) {
 /*----------------------------------------------------------------------------
    Parse program command line described in Unix standard form by argc
    and argv.  Return the information in the options as *cmdlineP.  
@@ -121,7 +79,7 @@ parseCommandLine(int                 argc,
    Note that the strings we return are stored in the storage that
    was passed to us as the argv array.  We also trash *argv.
 -----------------------------------------------------------------------------*/
-    optEntry *option_def = malloc(100*sizeof(optEntry));
+    optEntry * option_def;
         /* Instructions to optParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
@@ -129,6 +87,8 @@ parseCommandLine(int                 argc,
     unsigned int option_def_index;
 
     unsigned int alphaSpec, mixSpec, backgroundSpec, gammaSpec, textSpec;
+
+    MALLOCARRAY(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
     OPTENT3(0, "verbose",     OPT_FLAG,   NULL,                  
@@ -150,7 +110,7 @@ parseCommandLine(int                 argc,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3( &argc, argv, opt, sizeof(opt), 0);
+    optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
 
@@ -186,12 +146,215 @@ parseCommandLine(int                 argc,
 
 
 
+static void
+pngtopnmErrorHandler(png_structp     const png_ptr,
+                     png_const_charp const msg) {
 
-#define get_png_val(p) _get_png_val (&(p), info_ptr->bit_depth)
+    jmp_buf * jmpbufP;
+
+    /* this function, aside from the extra step of retrieving the "error
+       pointer" (below) and the fact that it exists within the application
+       rather than within libpng, is essentially identical to libpng's
+       default error handler.  The second point is critical:  since both
+       setjmp() and longjmp() are called from the same code, they are
+       guaranteed to have compatible notions of how big a jmp_buf is,
+       regardless of whether _BSD_SOURCE or anything else has (or has not)
+       been defined.
+    */
+
+    pm_message("fatal libpng error: %s", msg);
+
+    jmpbufP = png_get_error_ptr(png_ptr);
+
+    if (!jmpbufP) {
+        /* we are completely hosed now */
+        pm_error("EXTREMELY fatal error: jmpbuf unrecoverable; terminating.");
+    }
+
+    longjmp(*jmpbufP, 1);
+}
+
+
+
+struct pngx {
+    png_structp png_ptr;
+    png_infop info_ptr;
+};
+
+
+
+static void
+pngx_createRead(struct pngx ** const pngxPP,
+                jmp_buf *      const jmpbufP) {
+
+    struct pngx * pngxP;
+
+    MALLOCVAR(pngxP);
+
+    if (!pngxP)
+        pm_error("Failed to allocate memory for PNG object");
+    else {
+        pngxP->png_ptr = png_create_read_struct(
+            PNG_LIBPNG_VER_STRING,
+            jmpbufP, pngtopnmErrorHandler, NULL);
+
+        if (!pngxP->png_ptr)
+            pm_error("cannot allocate main libpng structure (png_ptr)");
+        else {
+            pngxP->info_ptr = png_create_info_struct(pngxP->png_ptr);
+
+            if (!pngxP->info_ptr)
+                pm_error("cannot allocate libpng info structure (info_ptr)");
+            else
+                *pngxPP = pngxP;
+        }
+    }
+}
+
+
+
+static void
+pngx_destroy(struct pngx * const pngxP) {
+
+    png_destroy_read_struct(&pngxP->png_ptr, &pngxP->info_ptr, NULL);
+
+    free(pngxP);
+}
+
+
+
+static bool
+pngx_chunkIsPresent(struct pngx * const pngxP,
+                    uint32_t      const chunkType) {
+
+    return png_get_valid(pngxP->png_ptr, pngxP->info_ptr, chunkType);
+}
+
+
+
+static void
+verifyFileIsPng(FILE *   const ifP,
+                size_t * const consumedByteCtP) {
+
+    unsigned char buffer[4];
+    size_t bytesRead;
+
+    bytesRead = fread(buffer, 1, sizeof(buffer), ifP);
+    if (bytesRead != sizeof(buffer))
+        pm_error("input file is empty or too short");
+
+    if (png_sig_cmp(buffer, (png_size_t) 0, (png_size_t) sizeof(buffer)) != 0)
+        pm_error("input file is not a PNG file "
+                 "(does not have the PNG signature in its first 4 bytes)");
+    else
+        *consumedByteCtP = bytesRead;
+}
+
+
+
+static unsigned int
+computePngLineSize(struct pngx * const pngxP) {
+
+    unsigned int const bytesPerSample =
+        pngxP->info_ptr->bit_depth == 16 ? 2 : 1;
+
+    unsigned int samplesPerPixel;
+
+    switch (pngxP->info_ptr->color_type) {
+    case PNG_COLOR_TYPE_GRAY_ALPHA: samplesPerPixel = 2; break;
+    case PNG_COLOR_TYPE_RGB:        samplesPerPixel = 3; break;
+    case PNG_COLOR_TYPE_RGB_ALPHA:  samplesPerPixel = 4; break;
+    default:                        samplesPerPixel = 1;
+    }
+
+    if (UINT_MAX / bytesPerSample / samplesPerPixel < pngxP->info_ptr->width)
+        pm_error("Width %u of PNG is uncomputably large",
+                 (unsigned int)pngxP->info_ptr->width);
+       
+    return pngxP->info_ptr->width * bytesPerSample * samplesPerPixel;
+}
+
+
+
+static void
+allocPngRaster(struct pngx * const pngxP,
+               png_byte ***  const pngImageP) {
+
+    unsigned int const lineSize = computePngLineSize(pngxP);
+
+    png_byte ** pngImage;
+    unsigned int row;
+
+    MALLOCARRAY(pngImage, pngxP->info_ptr->height);
+
+    if (pngImage == NULL)
+        pm_error("couldn't allocate space for %u PNG raster rows",
+                 (unsigned int)pngxP->info_ptr->height);
+
+    for (row = 0; row < pngxP->info_ptr->height; ++row) {
+        MALLOCARRAY(pngImage[row], lineSize);
+        if (pngImage[row] == NULL)
+            pm_error("couldn't allocate space for %uth row of PNG raster",
+                     row);
+    }
+    *pngImageP = pngImage;
+}
+
+
+
+static void
+freePngRaster(png_byte **   const pngRaster,
+              struct pngx * const pngxP) {
+
+    unsigned int row;
+
+    for (row = 0; row < pngxP->info_ptr->height; ++row)
+        free(pngRaster[row]);
+
+    free(pngRaster);
+}
+
+
+
+static void
+readPng(struct pngx * const pngxP,
+        FILE *        const ifP,
+        png_byte ***  const pngRasterP) {
+
+    size_t sigByteCt;
+    png_byte ** pngRaster;
+            
+    verifyFileIsPng(ifP, &sigByteCt);
+
+    /* Declare that we already read the signature bytes */
+    png_set_sig_bytes(pngxP->png_ptr, (int)sigByteCt);
+
+    png_init_io(pngxP->png_ptr, ifP);
+
+    png_read_info(pngxP->png_ptr, pngxP->info_ptr);
+
+    allocPngRaster(pngxP, &pngRaster);
+
+    if (pngxP->info_ptr->bit_depth < 8)
+        png_set_packing(pngxP->png_ptr);
+
+    png_read_image(pngxP->png_ptr, pngRaster);
+
+    png_read_end(pngxP->png_ptr, pngxP->info_ptr);
+
+    /* Note that some of info_ptr is not defined until png_read_end() 
+       completes.  That's because it comes from chunks that are at the
+       end of the stream.
+    */
+
+    *pngRasterP = pngRaster;
+}
+
+
 
 static png_uint_16
-_get_png_val (png_byte ** const pp,
-              int         const bit_depth) {
+get_png_val(const png_byte ** const pp,
+            int               const bit_depth) {
 
     png_uint_16 c;
     
@@ -247,114 +410,88 @@ gamma_correct(png_uint_16 const v,
               float       const g) {
 
     if (g != -1.0)
-        return (png_uint_16) (pow ((double) v / maxval, 
-                                   (1.0 / g)) * maxval + 0.5);
+        return (png_uint_16) ROUNDU(pow((double) v / maxval, (1.0 / g)) *
+                                    maxval);
     else
         return v;
 }
 
 
 
-#ifdef __STDC__
-static int iscolor (png_color c)
-#else
-static int iscolor (c)
-png_color c;
-#endif
-{
-  return c.red != c.green || c.green != c.blue;
-}
+static bool
+iscolor(png_color const c) {
 
-#ifdef __STDC__
-static void save_text (png_info *info_ptr, FILE *tfp)
-#else
-static void save_text (info_ptr, tfp)
-png_info *info_ptr;
-FILE *tfp;
-#endif
-{
-  int i, j, k;
-
-  for (i = 0 ; i < info_ptr->num_text ; i++) {
-    j = 0;
-    while (info_ptr->text[i].key[j] != '\0' && info_ptr->text[i].key[j] != ' ')
-      j++;    
-    if (info_ptr->text[i].key[j] != ' ') {
-      fprintf (tfp, "%s", info_ptr->text[i].key);
-      for (j = strlen (info_ptr->text[i].key) ; j < 15 ; j++)
-        putc (' ', tfp);
-    } else {
-      fprintf (tfp, "\"%s\"", info_ptr->text[i].key);
-      for (j = strlen (info_ptr->text[i].key) ; j < 13 ; j++)
-        putc (' ', tfp);
-    }
-    putc (' ', tfp); /* at least one space between key and text */
-    
-    for (j = 0 ; j < info_ptr->text[i].text_length ; j++) {
-      putc (info_ptr->text[i].text[j], tfp);
-      if (info_ptr->text[i].text[j] == '\n')
-        for (k = 0 ; k < 16 ; k++)
-          putc ((int)' ', tfp);
-    }
-    putc ((int)'\n', tfp);
-  }
-}
-
-#ifdef __STDC__
-static void show_time (png_info *info_ptr)
-#else
-static void show_time (info_ptr)
-png_info *info_ptr;
-#endif
-{
-    static const char * const month[] = {
-        "", "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"
-    };
-
-  if (info_ptr->valid & PNG_INFO_tIME) {
-    pm_message ("modification time: %02d %s %d %02d:%02d:%02d",
-                info_ptr->mod_time.day, month[info_ptr->mod_time.month],
-                info_ptr->mod_time.year, info_ptr->mod_time.hour,
-                info_ptr->mod_time.minute, info_ptr->mod_time.second);
-  }
-}
-
-#ifdef __STDC__
-static void pngtopnm_error_handler (png_structp png_ptr, png_const_charp msg)
-#else
-static void pngtopnm_error_handler (png_ptr, msg)
-png_structp png_ptr;
-png_const_charp msg;
-#endif
-{
-  jmpbuf_wrapper  *jmpbuf_ptr;
-
-  /* this function, aside from the extra step of retrieving the "error
-   * pointer" (below) and the fact that it exists within the application
-   * rather than within libpng, is essentially identical to libpng's
-   * default error handler.  The second point is critical:  since both
-   * setjmp() and longjmp() are called from the same code, they are
-   * guaranteed to have compatible notions of how big a jmp_buf is,
-   * regardless of whether _BSD_SOURCE or anything else has (or has not)
-   * been defined. */
-
-  pm_message("fatal libpng error: %s", msg);
-
-  jmpbuf_ptr = png_get_error_ptr(png_ptr);
-  if (jmpbuf_ptr == NULL) {
-      /* we are completely hosed now */
-      pm_error("EXTREMELY fatal error: jmpbuf unrecoverable; terminating.");
-  }
-
-  longjmp(jmpbuf_ptr->jmpbuf, 1);
+    return c.red != c.green || c.green != c.blue;
 }
 
 
 
 static void
-dump_png_info(png_info *info_ptr) {
+saveText(struct pngx * const pngxP,
+         FILE *        const tfP) {
 
+    png_info * const info_ptr = pngxP->info_ptr;
+
+    unsigned int i;
+
+    for (i = 0 ; i < info_ptr->num_text; ++i) {
+        unsigned int j;
+        j = 0;
+
+        while (info_ptr->text[i].key[j] != '\0' &&
+               info_ptr->text[i].key[j] != ' ')
+            ++j;    
+
+        if (info_ptr->text[i].key[j] != ' ') {
+            fprintf(tfP, "%s", info_ptr->text[i].key);
+            for (j = strlen (info_ptr->text[i].key); j < 15; ++j)
+                putc(' ', tfP);
+        } else {
+            fprintf(tfP, "\"%s\"", info_ptr->text[i].key);
+            for (j = strlen (info_ptr->text[i].key); j < 13; ++j)
+                putc(' ', tfP);
+        }
+        putc(' ', tfP); /* at least one space between key and text */
+    
+        for (j = 0; j < info_ptr->text[i].text_length; ++j) {
+            putc(info_ptr->text[i].text[j], tfP);
+            if (info_ptr->text[i].text[j] == '\n') {
+                unsigned int k;
+                for (k = 0; k < 16; ++k)
+                    putc(' ', tfP);
+            }
+        }
+        putc('\n', tfP);
+    }
+}
+
+
+
+static void
+showTime(struct pngx * const pngxP) {
+
+    static const char * const month[] = {
+        "", "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    };
+
+    if (pngxP->info_ptr->valid & PNG_INFO_tIME) {
+        pm_message("modification time: %02d %s %d %02d:%02d:%02d",
+                   pngxP->info_ptr->mod_time.day,
+                   month[pngxP->info_ptr->mod_time.month],
+                   pngxP->info_ptr->mod_time.year,
+                   pngxP->info_ptr->mod_time.hour,
+                   pngxP->info_ptr->mod_time.minute,
+                   pngxP->info_ptr->mod_time.second);
+    }
+}
+
+
+
+static void
+dumpPngInfo(struct pngx * const pngxP) {
+
+    png_info * const info_ptr = pngxP->info_ptr;
     const char *type_string;
     const char *filter_string;
 
@@ -471,29 +608,62 @@ dump_png_info(png_info *info_ptr) {
 
 
 
+static const png_color_16 *
+transColor(struct pngx * const pngxP) {
+
+    png_bytep trans;
+    int numTrans;
+    png_color_16 * transColor;
+
+    assert(pngx_chunkIsPresent(pngxP, PNG_INFO_tRNS));
+    
+    png_get_tRNS(pngxP->png_ptr, pngxP->info_ptr,
+                 &trans, &numTrans, &transColor);
+
+    return transColor;
+}
+
+
+
 static bool
-isTransparentColor(pngcolor   const color,
-                   png_info * const info_ptr,
-                   double     const totalgamma) {
+isTransparentColor(pngcolor      const color,
+                   struct pngx * const pngxP,
+                   double        const totalgamma) {
 /*----------------------------------------------------------------------------
    Return TRUE iff pixels of color 'color' are supposed to be transparent
    everywhere they occur.  Assume it's an RGB image.
+
+   'color' has been gamma-corrected.
 -----------------------------------------------------------------------------*/
     bool retval;
 
-    if (info_ptr->valid & PNG_INFO_tRNS) {
-        const png_color_16 * const transColorP = &info_ptr->trans_values;
-    
+    if (pngx_chunkIsPresent(pngxP, PNG_INFO_tRNS)) {
+        const png_color_16 * const transColorP = transColor(pngxP);
 
-        /* There seems to be a problem here: you can't compare real
-           numbers for equality.  Also, I'm not sure the gamma
-           corrected/uncorrected color spaces are right here.  
+        /* It seems odd that libpng lets you get gamma-corrected pixel
+           values, but not gamma-corrected transparency or background
+           values.  But as that is the case, we have to gamma-correct
+           the transparency values.
+
+           Note that because we compare the gamma-corrected values and
+           there may be many-to-one mapping of uncorrected to corrected
+           values, more pixels may be transparent than what the user
+           intended.
+
+           We could fix this by not letting libpng gamma-correct the
+           pixels, and just do it ourselves.
         */
-
-        retval = 
-            color.r == gamma_correct(transColorP->red,   totalgamma) &&
-            color.g == gamma_correct(transColorP->green, totalgamma) &&
-            color.b == gamma_correct(transColorP->blue,  totalgamma);
+    
+        switch (pngxP->info_ptr->color_type) {
+        case PNG_COLOR_TYPE_GRAY:
+            retval = color.r == gamma_correct(transColorP->gray, totalgamma);
+            break;
+        default:
+            retval = 
+                color.r == gamma_correct(transColorP->red,   totalgamma) &&
+                color.g == gamma_correct(transColorP->green, totalgamma) &&
+                color.b == gamma_correct(transColorP->blue,  totalgamma);
+        }
     } else 
         retval = FALSE;
 
@@ -502,37 +672,17 @@ isTransparentColor(pngcolor   const color,
 
 
 
-#define SIG_CHECK_SIZE 4
-
 static void
-read_sig_buf(FILE * const ifP) {
-
-    unsigned char sig_buf[SIG_CHECK_SIZE];
-    size_t bytesRead;
-
-    bytesRead = fread(sig_buf, 1, SIG_CHECK_SIZE, ifP);
-    if (bytesRead != SIG_CHECK_SIZE)
-        pm_error ("input file is empty or too short");
-
-    if (png_sig_cmp(sig_buf, (png_size_t) 0, (png_size_t) SIG_CHECK_SIZE)
-        != 0)
-        pm_error ("input file is not a PNG file");
-}
-
-
-
-static void
-setupGammaCorrection(png_struct * const png_ptr,
-                     png_info *   const info_ptr,
-                     float        const displaygamma,
-                     float *      const totalgammaP) {
+setupGammaCorrection(struct pngx * const pngxP,
+                     float         const displaygamma,
+                     float *       const totalgammaP) {
 
     if (displaygamma == -1.0)
         *totalgammaP = -1.0;
     else {
         float imageGamma;
-        if (info_ptr->valid & PNG_INFO_gAMA)
-            imageGamma = info_ptr->gamma;
+        if (pngxP->info_ptr->valid & PNG_INFO_gAMA)
+            imageGamma = pngxP->info_ptr->gamma;
         else {
             if (verbose)
                 pm_message("PNG doesn't specify image gamma.  Assuming 1.0");
@@ -546,12 +696,12 @@ setupGammaCorrection(png_struct * const png_ptr,
                            "display gamma %4.2f.  No conversion.",
                            imageGamma, displaygamma);
         } else {
-            png_set_gamma(png_ptr, displaygamma, imageGamma);
+            png_set_gamma(pngxP->png_ptr, displaygamma, imageGamma);
             *totalgammaP = imageGamma * displaygamma;
             /* in case of gamma-corrections, sBIT's as in the
                PNG-file are not valid anymore 
             */
-            info_ptr->valid &= ~PNG_INFO_sBIT;
+            pngxP->info_ptr->valid &= ~PNG_INFO_sBIT;
             if (verbose)
                 pm_message("image gamma is %4.2f, "
                            "converted for display gamma of %4.2f",
@@ -592,18 +742,19 @@ paletteHasPartialTransparency(png_info * const info_ptr) {
 
 
 static void
-setupSignificantBits(png_struct *        const png_ptr,
-                     png_info *          const info_ptr,
+setupSignificantBits(struct pngx *       const pngxP,
                      enum alpha_handling const alpha,
                      png_uint_16 *       const maxvalP,
-                     int *               const errorlevelP) {
+                     int *               const errorLevelP) {
 /*----------------------------------------------------------------------------
   Figure out what maxval would best express the information in the PNG
-  described by 'png_ptr' and 'info_ptr', with 'alpha' telling which
-  information in the PNG we care about (image or alpha mask).
+  described by *pngxP, with 'alpha' telling which information in the PNG we
+  care about (image or alpha mask).
 
   Return the result as *maxvalP.
 -----------------------------------------------------------------------------*/
+    png_info * const info_ptr = pngxP->info_ptr;
+
     /* Initial assumption of maxval */
     if (info_ptr->color_type == PNG_COLOR_TYPE_PALETTE) {
         if (alpha == ALPHA_ONLY) {
@@ -668,7 +819,7 @@ setupSignificantBits(png_struct *        const png_ptr,
                            "different bit depths for color channels");
                 pm_message("writing file with %d bit resolution",
                            info_ptr->bit_depth);
-                *errorlevelP = PNMTOPNG_WARNING_LEVEL;
+                *errorLevelP = PNMTOPNG_WARNING_LEVEL;
             } else {
                 if ((info_ptr->color_type == PNG_COLOR_TYPE_PALETTE) &&
                     (info_ptr->sig_bit.red < 255)) {
@@ -690,7 +841,7 @@ setupSignificantBits(png_struct *        const png_ptr,
                     if ((info_ptr->color_type == PNG_COLOR_TYPE_RGB ||
                          info_ptr->color_type == PNG_COLOR_TYPE_RGB_ALPHA) &&
                         (info_ptr->sig_bit.red < info_ptr->bit_depth)) {
-                        png_set_shift (png_ptr, &(info_ptr->sig_bit));
+                        png_set_shift(pngxP->png_ptr, &(info_ptr->sig_bit));
                         *maxvalP = (1l << info_ptr->sig_bit.red) - 1;
                         if (verbose)
                             pm_message("image has fewer significant bits, "
@@ -702,7 +853,7 @@ setupSignificantBits(png_struct *        const png_ptr,
                              info_ptr->color_type ==
                                  PNG_COLOR_TYPE_GRAY_ALPHA) &&
                             (info_ptr->sig_bit.gray < info_ptr->bit_depth)) {
-                            png_set_shift (png_ptr, &(info_ptr->sig_bit));
+                            png_set_shift(pngxP->png_ptr, &info_ptr->sig_bit);
                             *maxvalP = (1l << info_ptr->sig_bit.gray) - 1;
                             if (verbose)
                                 pm_message("image has fewer significant bits, "
@@ -716,7 +867,7 @@ setupSignificantBits(png_struct *        const png_ptr,
             if ((info_ptr->color_type == PNG_COLOR_TYPE_RGB_ALPHA ||
                  info_ptr->color_type == PNG_COLOR_TYPE_GRAY_ALPHA) && 
                 (info_ptr->sig_bit.gray < info_ptr->bit_depth)) {
-                png_set_shift (png_ptr, &(info_ptr->sig_bit));
+                png_set_shift(pngxP->png_ptr, &info_ptr->sig_bit);
                 if (verbose)
                     pm_message ("image has fewer significant bits, "
                                 "writing file with %d bits", 
@@ -732,22 +883,22 @@ setupSignificantBits(png_struct *        const png_ptr,
 
 
 static bool
-imageHasColor(png_info * const info_ptr) {
+imageHasColor(struct pngx * const pngxP) {
 
     bool retval;
 
-    if (info_ptr->color_type == PNG_COLOR_TYPE_GRAY ||
-        info_ptr->color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
+    if (pngxP->info_ptr->color_type == PNG_COLOR_TYPE_GRAY ||
+        pngxP->info_ptr->color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
 
         retval = FALSE;
-    else if (info_ptr->color_type == PNG_COLOR_TYPE_PALETTE) {
+    else if (pngxP->info_ptr->color_type == PNG_COLOR_TYPE_PALETTE) {
         bool foundColor;
         unsigned int i;
             
         for (i = 0, foundColor = FALSE;
-             i < info_ptr->num_palette && !foundColor;
+             i < pngxP->info_ptr->num_palette && !foundColor;
              ++i) {
-            if (iscolor(info_ptr->palette[i]))
+            if (iscolor(pngxP->info_ptr->palette[i]))
                 foundColor = TRUE;
         }
         retval = foundColor;
@@ -760,14 +911,14 @@ imageHasColor(png_info * const info_ptr) {
 
 
 static void
-determineOutputType(png_info *          const info_ptr,
+determineOutputType(struct pngx *       const pngxP,
                     enum alpha_handling const alphaHandling,
                     pngcolor            const bgColor,
                     xelval              const maxval,
                     int *               const pnmTypeP) {
 
     if (alphaHandling != ALPHA_ONLY &&
-        (imageHasColor(info_ptr) || !isGrayscale(bgColor)))
+        (imageHasColor(pngxP) || !isGrayscale(bgColor)))
         *pnmTypeP = PPM_TYPE;
     else {
         if (maxval > 1)
@@ -780,11 +931,11 @@ determineOutputType(png_info *          const info_ptr,
 
 
 static void
-getBackgroundColor(png_info *        const info_ptr,
-                   const char *      const requestedColor,
-                   float             const totalgamma,
-                   xelval            const maxval,
-                   struct pngcolor * const bgColorP) {
+getBackgroundColor(struct pngx * const pngxP,
+                   const char *  const requestedColor,
+                   float         const totalgamma,
+                   xelval        const maxval,
+                   pngcolor *    const bgColorP) {
 /*----------------------------------------------------------------------------
    Figure out what the background color should be.  If the user requested
    a particular color ('requestedColor' not null), that's the one.
@@ -802,19 +953,19 @@ getBackgroundColor(png_info *        const info_ptr,
         bgColorP->g = PPM_GETG(backcolor);
         bgColorP->b = PPM_GETB(backcolor);
 
-    } else if (info_ptr->valid & PNG_INFO_bKGD) {
+    } else if (pngxP->info_ptr->valid & PNG_INFO_bKGD) {
         /* didn't manage to get libpng to work (bugs?) concerning background
            processing, therefore we do our own.
         */
-        switch (info_ptr->color_type) {
+        switch (pngxP->info_ptr->color_type) {
         case PNG_COLOR_TYPE_GRAY:
         case PNG_COLOR_TYPE_GRAY_ALPHA:
             bgColorP->r = bgColorP->g = bgColorP->b = 
-                gamma_correct(info_ptr->background.gray, totalgamma);
+                gamma_correct(pngxP->info_ptr->background.gray, totalgamma);
             break;
         case PNG_COLOR_TYPE_PALETTE: {
             png_color const rawBgcolor = 
-                info_ptr->palette[info_ptr->background.index];
+                pngxP->info_ptr->palette[pngxP->info_ptr->background.index];
             bgColorP->r = gamma_correct(rawBgcolor.red, totalgamma);
             bgColorP->g = gamma_correct(rawBgcolor.green, totalgamma);
             bgColorP->b = gamma_correct(rawBgcolor.blue, totalgamma);
@@ -822,7 +973,7 @@ getBackgroundColor(png_info *        const info_ptr,
         break;
         case PNG_COLOR_TYPE_RGB:
         case PNG_COLOR_TYPE_RGB_ALPHA: {
-            png_color_16 const rawBgcolor = info_ptr->background;
+            png_color_16 const rawBgcolor = pngxP->info_ptr->background;
             
             bgColorP->r = gamma_correct(rawBgcolor.red,   totalgamma);
             bgColorP->g = gamma_correct(rawBgcolor.green, totalgamma);
@@ -838,115 +989,159 @@ getBackgroundColor(png_info *        const info_ptr,
 
 
 static void
+warnNonsquarePixels(struct pngx * const pngxP,
+                    int *         const errorLevelP) {
+
+    if (pngxP->info_ptr->valid & PNG_INFO_pHYs) {
+        float const r =
+            (float)pngxP->info_ptr->x_pixels_per_unit /
+            pngxP->info_ptr->y_pixels_per_unit;
+
+        if (r != 1.0) {
+            pm_message ("warning - non-square pixels; "
+                        "to fix do a 'pamscale -%cscale %g'",
+                        r < 1.0 ? 'x' : 'y',
+                        r < 1.0 ? 1.0 / r : r );
+            *errorLevelP = PNMTOPNG_WARNING_LEVEL;
+        }
+    }
+}
+
+
+
+#define GET_PNG_VAL(p) get_png_val(&(p), pngxP->info_ptr->bit_depth)
+
+
+
+static void
+makeXelRow(xel *               const xelrow,
+           xelval              const maxval,
+           int                 const pnmType,
+           struct pngx *       const pngxP,
+           const png_byte *    const pngRasterRow,
+           pngcolor            const bgColor,
+           enum alpha_handling const alphaHandling,
+           double              const totalgamma) {
+
+    const png_byte * pngPixelP;
+    unsigned int col;
+
+    pngPixelP = &pngRasterRow[0];  /* initial value */
+    for (col = 0; col < pngxP->info_ptr->width; ++col) {
+        switch (pngxP->info_ptr->color_type) {
+        case PNG_COLOR_TYPE_GRAY: {
+            pngcolor fgColor;
+            fgColor.r = fgColor.g = fgColor.b = GET_PNG_VAL(pngPixelP);
+            setXel(&xelrow[col], fgColor, bgColor, alphaHandling,
+                   isTransparentColor(fgColor, pngxP, totalgamma) ?
+                   0 : maxval);
+        }
+        break;
+
+        case PNG_COLOR_TYPE_GRAY_ALPHA: {
+            pngcolor fgColor;
+            png_uint_16 alpha;
+
+            fgColor.r = fgColor.g = fgColor.b = GET_PNG_VAL(pngPixelP);
+            alpha = GET_PNG_VAL(pngPixelP);
+            setXel(&xelrow[col], fgColor, bgColor, alphaHandling, alpha);
+        }
+        break;
+
+        case PNG_COLOR_TYPE_PALETTE: {
+            png_uint_16 const index        = GET_PNG_VAL(pngPixelP);
+            png_color   const paletteColor = pngxP->info_ptr->palette[index];
+
+            pngcolor fgColor;
+
+            fgColor.r = paletteColor.red;
+            fgColor.g = paletteColor.green;
+            fgColor.b = paletteColor.blue;
+
+            setXel(&xelrow[col], fgColor, bgColor, alphaHandling,
+                   (pngxP->info_ptr->valid & PNG_INFO_tRNS) &&
+                   index < pngxP->info_ptr->num_trans ?
+                   pngxP->info_ptr->trans[index] : maxval);
+        }
+        break;
+                
+        case PNG_COLOR_TYPE_RGB: {
+            pngcolor fgColor;
+
+            fgColor.r = GET_PNG_VAL(pngPixelP);
+            fgColor.g = GET_PNG_VAL(pngPixelP);
+            fgColor.b = GET_PNG_VAL(pngPixelP);
+            setXel(&xelrow[col], fgColor, bgColor, alphaHandling,
+                   isTransparentColor(fgColor, pngxP, totalgamma) ?
+                   0 : maxval);
+        }
+        break;
+
+        case PNG_COLOR_TYPE_RGB_ALPHA: {
+            pngcolor fgColor;
+            png_uint_16 alpha;
+
+            fgColor.r = GET_PNG_VAL(pngPixelP);
+            fgColor.g = GET_PNG_VAL(pngPixelP);
+            fgColor.b = GET_PNG_VAL(pngPixelP);
+            alpha     = GET_PNG_VAL(pngPixelP);
+            setXel(&xelrow[col], fgColor, bgColor, alphaHandling, alpha);
+        }
+        break;
+
+        default:
+            pm_error("unknown PNG color type: %d",
+                     pngxP->info_ptr->color_type);
+        }
+    }
+}
+
+
+
+static void
 writePnm(FILE *              const ofP,
          xelval              const maxval,
-         int                 const pnm_type,
-         png_info *          const info_ptr,
-         png_byte **         const png_image,
+         int                 const pnmType,
+         struct pngx *       const pngxP,
+         png_byte **         const pngRaster,
          pngcolor            const bgColor,
-         enum alpha_handling const alpha_handling,
+         enum alpha_handling const alphaHandling,
          double              const totalgamma) {
 /*----------------------------------------------------------------------------
    Write a PNM of either the image or the alpha mask, according to
-   'alpha_handling' that is in the PNG image described by 'info_ptr' and
-   png_image.
+   'alphaHandling' that is in the PNG image described by *pngxP and
+   pngRaster[][].
 
-   'pnm_type' and 'maxval' are of the output image.
+   'pnmType' and 'maxval' are of the output image.
 
    Use background color 'bgColor' in the output if the PNG is such that a
    background color is needed.
 -----------------------------------------------------------------------------*/
+    int const plainFalse = 0;
+
     xel * xelrow;
     unsigned int row;
 
     if (verbose)
-        pm_message ("writing a %s file (maxval=%u)",
-                    pnm_type == PBM_TYPE ? "PBM" :
-                    pnm_type == PGM_TYPE ? "PGM" :
-                    pnm_type == PPM_TYPE ? "PPM" :
-                    "UNKNOWN!", 
-                    maxval);
+        pm_message("writing a %s file (maxval=%u)",
+                   pnmType == PBM_TYPE ? "PBM" :
+                   pnmType == PGM_TYPE ? "PGM" :
+                   pnmType == PPM_TYPE ? "PPM" :
+                   "UNKNOWN!", 
+                   maxval);
     
-    xelrow = pnm_allocrow(info_ptr->width);
+    xelrow = pnm_allocrow(pngxP->info_ptr->width);
 
-    pnm_writepnminit(stdout, info_ptr->width, info_ptr->height, maxval,
-                     pnm_type, FALSE);
+    pnm_writepnminit(stdout,
+                     pngxP->info_ptr->width, pngxP->info_ptr->height, maxval,
+                     pnmType, plainFalse);
 
-    for (row = 0; row < info_ptr->height; ++row) {
-        png_byte * png_pixelP;
-        int col;
+    for (row = 0; row < pngxP->info_ptr->height; ++row) {
+        makeXelRow(xelrow, maxval, pnmType, pngxP, pngRaster[row], bgColor,
+                   alphaHandling, totalgamma);
 
-        png_pixelP = &png_image[row][0];  /* initial value */
-        for (col = 0; col < info_ptr->width; ++col) {
-            switch (info_ptr->color_type) {
-            case PNG_COLOR_TYPE_GRAY: {
-                pngcolor fgColor;
-                fgColor.r = fgColor.g = fgColor.b = get_png_val(png_pixelP);
-                setXel(&xelrow[col], fgColor, bgColor, alpha_handling,
-                       ((info_ptr->valid & PNG_INFO_tRNS) &&
-                        (fgColor.r == 
-                         gamma_correct(info_ptr->trans_values.gray,
-                                       totalgamma))) ?
-                       0 : maxval);
-            }
-            break;
-
-            case PNG_COLOR_TYPE_GRAY_ALPHA: {
-                pngcolor fgColor;
-                png_uint_16 alpha;
-
-                fgColor.r = fgColor.g = fgColor.b = get_png_val(png_pixelP);
-                alpha = get_png_val(png_pixelP);
-                setXel(&xelrow[col], fgColor, bgColor, alpha_handling, alpha);
-            }
-            break;
-
-            case PNG_COLOR_TYPE_PALETTE: {
-                png_uint_16 const index        = get_png_val(png_pixelP);
-                png_color   const paletteColor = info_ptr->palette[index];
-
-                pngcolor fgColor;
-
-                fgColor.r = paletteColor.red;
-                fgColor.g = paletteColor.green;
-                fgColor.b = paletteColor.blue;
-
-                setXel(&xelrow[col], fgColor, bgColor, alpha_handling,
-                       (info_ptr->valid & PNG_INFO_tRNS) &&
-                       index < info_ptr->num_trans ?
-                       info_ptr->trans[index] : maxval);
-            }
-            break;
-                
-            case PNG_COLOR_TYPE_RGB: {
-                pngcolor fgColor;
-
-                fgColor.r = get_png_val(png_pixelP);
-                fgColor.g = get_png_val(png_pixelP);
-                fgColor.b = get_png_val(png_pixelP);
-                setXel(&xelrow[col], fgColor, bgColor, alpha_handling,
-                       isTransparentColor(fgColor, info_ptr, totalgamma) ?
-                       0 : maxval);
-            }
-            break;
-
-            case PNG_COLOR_TYPE_RGB_ALPHA: {
-                pngcolor fgColor;
-                png_uint_16 alpha;
-
-                fgColor.r = get_png_val(png_pixelP);
-                fgColor.g = get_png_val(png_pixelP);
-                fgColor.b = get_png_val(png_pixelP);
-                alpha     = get_png_val(png_pixelP);
-                setXel(&xelrow[col], fgColor, bgColor, alpha_handling, alpha);
-            }
-            break;
-
-            default:
-                pm_error ("unknown PNG color type: %d", info_ptr->color_type);
-            }
-        }
-        pnm_writepnmrow(ofP, xelrow, info_ptr->width, maxval, pnm_type, FALSE);
+        pnm_writepnmrow(ofP, xelrow, pngxP->info_ptr->width, maxval,
+                        pnmType, plainFalse);
     }
     pnm_freerow (xelrow);
 }
@@ -954,154 +1149,86 @@ writePnm(FILE *              const ofP,
 
 
 static void 
-convertpng(FILE *             const ifp, 
-           FILE *             const tfp, 
+convertpng(FILE *             const ifP, 
+           FILE *             const tfP, 
            struct cmdlineInfo const cmdline,
-           int *              const errorlevelP) {
+           int *              const errorLevelP) {
 
-    png_struct *png_ptr;
-    png_info *info_ptr;
-    png_byte **png_image;
-    int x, y;
-    int linesize;
-    int pnm_type;
+    png_byte ** pngRaster;
+    int pnmType;
     pngcolor bgColor;
     float totalgamma;
+    jmp_buf jmpbuf;
+    struct pngx * pngxP;
 
-    *errorlevelP = 0;
+    *errorLevelP = 0;
 
-    read_sig_buf(ifp);
-
-    png_ptr = png_create_read_struct(
-        PNG_LIBPNG_VER_STRING,
-        &pngtopnm_jmpbuf_struct, pngtopnm_error_handler, NULL);
-    if (png_ptr == NULL)
-        pm_error("cannot allocate main libpng structure (png_ptr)");
-
-    info_ptr = png_create_info_struct (png_ptr);
-    if (info_ptr == NULL)
-        pm_error("cannot allocate LIBPNG structures");
-
-    if (setjmp(pngtopnm_jmpbuf_struct.jmpbuf))
+    if (setjmp(jmpbuf))
         pm_error ("setjmp returns error condition");
 
-    png_init_io (png_ptr, ifp);
-    png_set_sig_bytes (png_ptr, SIG_CHECK_SIZE);
-    png_read_info (png_ptr, info_ptr);
+    pngx_createRead(&pngxP, &jmpbuf);
 
-    MALLOCARRAY(png_image, info_ptr->height);
-    if (png_image == NULL) {
-        png_destroy_read_struct (&png_ptr, &info_ptr, (png_infopp)NULL);
-        pm_closer (ifp);
-        pm_error ("couldn't allocate space for image");
-    }
-
-    if (info_ptr->bit_depth == 16)
-        linesize = 2 * info_ptr->width;
-    else
-        linesize = info_ptr->width;
-
-    if (info_ptr->color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
-        linesize *= 2;
-    else
-        if (info_ptr->color_type == PNG_COLOR_TYPE_RGB)
-            linesize *= 3;
-        else
-            if (info_ptr->color_type == PNG_COLOR_TYPE_RGB_ALPHA)
-                linesize *= 4;
-
-    for (y = 0 ; y < info_ptr->height ; y++) {
-        png_image[y] = malloc (linesize);
-        if (png_image[y] == NULL) {
-            for (x = 0 ; x < y ; x++)
-                free (png_image[x]);
-            free (png_image);
-            png_destroy_read_struct (&png_ptr, &info_ptr, (png_infopp)NULL);
-            pm_closer (ifp);
-            pm_error ("couldn't allocate space for image");
-        }
-    }
-
-    if (info_ptr->bit_depth < 8)
-        png_set_packing (png_ptr);
-
-    setupGammaCorrection(png_ptr, info_ptr, cmdline.gamma, &totalgamma);
-
-    setupSignificantBits(png_ptr, info_ptr, cmdline.alpha,
-                         &maxval, errorlevelP);
-
-    getBackgroundColor(info_ptr, cmdline.background, totalgamma, maxval,
-                       &bgColor);
-
-    png_read_image (png_ptr, png_image);
-    png_read_end (png_ptr, info_ptr);
+    readPng(pngxP, ifP, &pngRaster);
 
     if (verbose)
-        /* Note that some of info_ptr is not defined until png_read_end() 
-       completes.  That's because it comes from chunks that are at the
-       end of the stream.
-    */
-        dump_png_info(info_ptr);
+        dumpPngInfo(pngxP);
 
-    if (mtime)
-        show_time (info_ptr);
-    if (tfp)
-        save_text (info_ptr, tfp);
+    if (cmdline.time)
+        showTime(pngxP);
+    if (tfP)
+        saveText(pngxP, tfP);
 
-    if (info_ptr->valid & PNG_INFO_pHYs) {
-        float r;
-        r = (float)info_ptr->x_pixels_per_unit / info_ptr->y_pixels_per_unit;
-        if (r != 1.0) {
-            pm_message ("warning - non-square pixels; "
-                        "to fix do a 'pamscale -%cscale %g'",
-                        r < 1.0 ? 'x' : 'y',
-                        r < 1.0 ? 1.0 / r : r );
-            *errorlevelP = PNMTOPNG_WARNING_LEVEL;
-        }
-    }
+    warnNonsquarePixels(pngxP, errorLevelP);
 
-    determineOutputType(info_ptr, cmdline.alpha, bgColor, maxval, &pnm_type);
+    setupGammaCorrection(pngxP, cmdline.gamma, &totalgamma);
 
-    writePnm(stdout, maxval, pnm_type, info_ptr, png_image, bgColor, 
+    setupSignificantBits(pngxP, cmdline.alpha, &maxval, errorLevelP);
+
+    getBackgroundColor(pngxP, cmdline.background, totalgamma, maxval,
+                       &bgColor);
+
+    determineOutputType(pngxP, cmdline.alpha, bgColor, maxval, &pnmType);
+
+    writePnm(stdout, maxval, pnmType, pngxP, pngRaster, bgColor, 
              cmdline.alpha, totalgamma);
 
     fflush(stdout);
-    for (y = 0 ; y < info_ptr->height ; y++)
-        free (png_image[y]);
-    free (png_image);
-    png_destroy_read_struct (&png_ptr, &info_ptr, (png_infopp)NULL);
+
+    freePngRaster(pngRaster, pngxP);
+
+    pngx_destroy(pngxP);
 }
 
 
 
 int 
-main(int argc, char *argv[]) {
+main(int argc, const char *argv[]) {
 
     struct cmdlineInfo cmdline;
-    FILE *ifp, *tfp;
-    int errorlevel;
+    FILE * ifP;
+    FILE * tfP;
+    int errorLevel;
 
-    pnm_init (&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
     verbose = cmdline.verbose;
-    mtime = cmdline.time;
 
-    ifp = pm_openr(cmdline.inputFilespec);
+    ifP = pm_openr(cmdline.inputFilespec);
 
     if (cmdline.text)
-        tfp = pm_openw(cmdline.text);
+        tfP = pm_openw(cmdline.text);
     else
-        tfp = NULL;
+        tfP = NULL;
 
-    convertpng (ifp, tfp, cmdline, &errorlevel);
+    convertpng(ifP, tfP, cmdline, &errorLevel);
 
-    if (tfp)
-        pm_close(tfp);
+    if (tfP)
+        pm_close(tfP);
 
-    pm_close(ifp);
+    pm_close(ifP);
     pm_close(stdout);
 
-    return errorlevel;
+    return errorLevel;
 }

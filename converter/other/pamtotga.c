@@ -15,6 +15,7 @@
 
 #include <string.h>
 
+#include "pm_c_util.h"
 #include "pam.h"
 #include "pammap.h"
 #include "shhopt.h"
@@ -270,7 +271,7 @@ computeRunlengths(struct pam * const pamP,
 
 static void
 computeOutName(struct cmdlineInfo const cmdline, 
-               const char ** const outNameP) {
+               const char **      const outNameP) {
     
     char * workarea;
 

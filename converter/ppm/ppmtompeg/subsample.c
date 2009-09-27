@@ -43,6 +43,7 @@
 #include "bitio.h"
 #include "prototypes.h"
 
+#include "subsample.h"
 
 
 static void

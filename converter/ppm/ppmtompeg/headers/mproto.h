@@ -74,7 +74,6 @@
 #include "bitio.h"
 
 
-#define DCTSIZE2    DCTSIZE*DCTSIZE
 typedef short DCTELEM;
 typedef DCTELEM DCTBLOCK[DCTSIZE2];
 
@@ -111,9 +110,6 @@ void	ReadEYUV _ANSI_ARGS_((MpegFrame * mf, FILE *fpointer, int width,
 boolean	ReadPPM _ANSI_ARGS_((MpegFrame *mf, FILE *fpointer));
 void PPMtoYCC _ANSI_ARGS_((MpegFrame * mf));
 
-void	MotionSearchPreComputation _ANSI_ARGS_((MpegFrame *frame));
-boolean	PMotionSearch _ANSI_ARGS_((LumBlock currentBlock, MpegFrame *prev,
-				   int by, int bx, int *motionY, int *motionX));
 void	ComputeHalfPixelData _ANSI_ARGS_((MpegFrame *frame));
 void mp_validate_size _ANSI_ARGS_((int *x, int *y));
 void AllocYCC _ANSI_ARGS_((MpegFrame * mf));
@@ -126,7 +122,3 @@ void j_rev_dct _ANSI_ARGS_((DCTBLOCK data ));
 void j_rev_dct_sparse _ANSI_ARGS_((DCTBLOCK data , int pos ));
 void j_rev_dct _ANSI_ARGS_((DCTBLOCK data ));
 
-/* block.c */
-void	BlockToData _ANSI_ARGS_((uint8 **data, Block block, int by, int bx));
-void	AddMotionBlock _ANSI_ARGS_((Block block, uint8 **prev, int by, int bx,
-		       int my, int mx));

@@ -34,6 +34,8 @@
 
 #include <string.h>
 #include <assert.h>
+
+#include "pm_c_util.h"
 #include "pam.h"
 #include "mallocvar.h"
 #include "shhopt.h"
@@ -275,6 +277,7 @@ putitem(void) {
         putchar('\n');
         itemsinline = 0;
     }
+    assert(item >> 8 == 0);
     putchar(hexits[item >> 4]);
     putchar(hexits[item & 15]);
     ++itemsinline;
@@ -496,7 +499,7 @@ destroyBmepsOutputEncoder(struct bmepsoe * const bmepsoeP) {
 static void
 outputBmepsSample(struct bmepsoe * const bmepsoeP,
                   unsigned int     const sampleValue,
-          unsigned int     const bitsPerSample) {
+                  unsigned int     const bitsPerSample) {
 
     if (bitsPerSample == 8)
         oe_byte_add(bmepsoeP->oeP, sampleValue);
@@ -954,8 +957,35 @@ putEnd(bool         const showpage,
 
 
 static void
+warnUserAboutReducedDepth(unsigned int const bitsGot,
+                          unsigned int const bitsWanted,
+                          unsigned int const postscriptLevel,
+                          bool         const psFilter) {
+
+    if (bitsGot < bitsWanted) {
+        pm_message("Postscript will have %u bits of color resolution, "
+                   "though the input has %u bits.",
+                   bitsGot, bitsWanted);
+
+        if (postscriptLevel < 2)
+            pm_message("Postscript level %u has a maximum depth of 8 bits.  "
+                       "You could get up to 12 with -level=2 and -psfilter.",
+                       postscriptLevel);
+        else {
+            if (!psFilter)
+                pm_message("You can get up to 12 bits with -psfilter");
+            else
+                pm_message("The Postscript maximum is 12.");
+        }
+    }
+}
+
+
+
+static void
 computeDepth(xelval         const inputMaxval,
              unsigned int   const postscriptLevel, 
+             bool           const psFilter,
              unsigned int * const bitspersampleP,
              unsigned int * const psMaxvalP) {
 /*----------------------------------------------------------------------------
@@ -971,29 +1001,21 @@ computeDepth(xelval         const inputMaxval,
         *bitspersampleP = 2;
     else if (bitsRequiredByMaxval <= 4)
         *bitspersampleP = 4;
-    else        
-        *bitspersampleP = 8;
-
-    /* There is supposedly a 12 bits per pixel Postscript format, but
-       what?  We produce a raster that is composed of bytes, each
-       coded as a pair of hexadecimal characters and representing 8,
-       4, 2, or 1 pixels.  We also have the RLE format, where some of
-       those bytes are run lengths.
-    */
-
-    if (*bitspersampleP < bitsRequiredByMaxval) {
-        if (bitsRequiredByMaxval <= 12 && postscriptLevel >= 2)
-            pm_message("Maxval of input requires %u bit samples for full "
-                       "resolution, and Postscript level %u is capable "
-                       "of representing that many, but this program "
-                       "doesn't know how.  So we are using %u",
-                       bitsRequiredByMaxval, postscriptLevel, *bitspersampleP);
+    else {
+        /* Post script level 2 defines a format with 12 bits per sample,
+           but I don't know the details of that format (both RLE and
+           non-RLE variations) and existing native raster generation code
+           simply can't handle bps > 8.  But the built-in filters know
+           how to do 12 bps.
+        */
+        if (postscriptLevel >= 2 && psFilter)
+            *bitspersampleP = 12;
         else
-            pm_message("Maxval of input requires %u bit samples for full "
-                       "resolution, but we are using the Postscript level %u "
-                       "maximum of %u",
-                       bitsRequiredByMaxval, postscriptLevel, *bitspersampleP);
+            *bitspersampleP = 8;
     }
+
+    warnUserAboutReducedDepth(*bitspersampleP, bitsRequiredByMaxval,
+                              postscriptLevel, psFilter);
 
     *psMaxvalP = pm_bitstomaxval(*bitspersampleP);
 
@@ -1047,8 +1069,7 @@ convertRowPsFilter(struct pam *     const pamP,
     unsigned int const stragglers =
         (((bitsPerSample * pamP->depth) % 8) * pamP->width) % 8;
         /* Number of bits at the right edge that don't fill out a
-           whole byte
-        */
+           whole byte */
 
     unsigned int col;
     tuple scaledTuple;
@@ -1183,7 +1204,8 @@ convertPage(FILE * const ifP,
     if (color)
         pm_message("generating color Postscript program.");
 
-    computeDepth(inpam.maxval, postscriptLevel, &bitspersample, &psMaxval);
+    computeDepth(inpam.maxval, postscriptLevel, psFilter,
+                 &bitspersample, &psMaxval);
     {
         unsigned int const realBitsPerLine = inpam.width * bitspersample;
         unsigned int const paddedBitsPerLine = ((realBitsPerLine + 7) / 8) * 8;
@@ -1275,7 +1297,7 @@ main(int argc, char * argv[]) {
 
     ifp = pm_openr(cmdline.inputFileName);
 
-    if (STREQ(cmdline.inputFileName, "-"))
+    if (streq(cmdline.inputFileName, "-"))
         name = strdup("noname");
     else
         name = basebasename(cmdline.inputFileName);
@@ -1313,7 +1335,7 @@ main(int argc, char * argv[]) {
     strfree(name);
 
     pm_close(ifp);
-    
+
     return 0;
 }
 

@@ -740,15 +740,6 @@ const char * const strsol = "NO MEMORY TO CREATE STRING!";
 
 
 
-/* We would like to have vasprintfN(), but it is difficult because you
-   can't run through a va_list twice, which we would want to do: once
-   to measure the length; once actually to build the string.  On some
-   machines, you can simply make two copies of the va_list variable in
-   normal C fashion, but on others you need va_copy, which is a
-   relatively recent invention.  In particular, the simple va_list copy
-   failed on an AMD64 Gcc Linux system in March 2006.
-*/
-
 void PM_GNU_PRINTF_ATTR(2,3)
 asprintfN(const char ** const resultP,
           const char *  const fmt, 
@@ -887,20 +878,80 @@ stripeq(const char * const comparand,
 
 
 
-const char *
-memmemN(const char * const haystack,
+const void *
+memmemN(const void * const haystackArg,
         size_t       const haystacklen,
-        const char * const needle,
+        const void * const needleArg,
         size_t       const needlelen) {
+
+    const unsigned char * const haystack = haystackArg;
+    const unsigned char * const needle   = needleArg;
 
     /* This does the same as the function of the same name in the GNU
        C library
     */
-    const char * p;
+    const unsigned char * p;
 
     for (p = haystack; p <= haystack + haystacklen - needlelen; ++p)
-        if (MEMEQ(p, needle, needlelen))
+        if (memeq(p, needle, needlelen))
             return p;
 
     return NULL;
 }
+
+
+
+bool
+strishex(const char * const subject) {
+
+    bool retval;
+    unsigned int i;
+
+    retval = TRUE;  /* initial assumption */
+
+    for (i = 0; i < strlen(subject); ++i)
+        if (!ISXDIGIT(subject[i]))
+            retval = FALSE;
+
+    return retval;
+}
+
+
+
+void
+interpret_uint(const char *   const string,
+               unsigned int * const valueP,
+               const char **  const errorP) {
+
+    if (string[0] == '\0')
+        asprintfN(errorP, "Null string.");
+    else {
+        /* strtoul() does a bizarre thing where if the number is out
+           of range, it returns a clamped value but tells you about it
+           by setting errno = ERANGE.  If it is not out of range,
+           strtoul() leaves errno alone.
+        */
+        char * tail;
+        unsigned long ulongValue;
+        
+        errno = 0;  /* So we can tell if strtoul() overflowed */
+
+        ulongValue = strtoul(string, &tail, 10);
+
+        if (tail[0] != '\0')
+            asprintfN(errorP, "Non-digit stuff in string: %s", tail);
+        else if (errno == ERANGE)
+            asprintfN(errorP, "Number too large");
+        else if (ulongValue > UINT_MAX)
+            asprintfN(errorP, "Number too large");
+        else if (string[0] == '-')
+            asprintfN(errorP, "Negative number");
+            /* Sleazy code; string may have leading spaces. */
+        else {
+            *valueP = ulongValue;
+            *errorP = NULL;
+        }
+    }
+}
+
+

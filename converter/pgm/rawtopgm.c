@@ -11,6 +11,8 @@
 */
 
 #include <math.h>
+
+#include "pm_c_util.h"
 #include "pgm.h"
 #include "shhopt.h"
 
@@ -18,13 +20,13 @@ struct cmdline_info {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *input_filespec;  /* Filespec of input file */
+    const char * inputFileName;
     unsigned int headerskip;
     float rowskip;
     int bottomfirst;  /* the -bottomfirst/-bt option */
     int autosize;  /* User wants us to figure out the size */
-    int width;
-    int height;
+    unsigned int width;
+    unsigned int height;
     int bpp;
       /* bytes per pixel in input format.  1 or 2 */
     int littleendian;
@@ -74,21 +76,21 @@ parse_command_line(int argc, char ** argv,
         /* Uses and sets argc, argv, and some of *cmdline_p and others. */
 
     if (argc-1 == 0) {
-        cmdline_p->input_filespec = "-";
+        cmdline_p->inputFileName = "-";
         cmdline_p->autosize = TRUE;
     } else if (argc-1 == 1) {
-        cmdline_p->input_filespec = argv[1];
+        cmdline_p->inputFileName = argv[1];
         cmdline_p->autosize = TRUE;
     } else if (argc-1 == 2) {
-        cmdline_p->input_filespec = "-";
+        cmdline_p->inputFileName = "-";
         cmdline_p->autosize = FALSE;
-        cmdline_p->width = atoi(argv[1]);
-        cmdline_p->height = atoi(argv[2]);
+        cmdline_p->width = pm_parse_width(argv[1]);
+        cmdline_p->height = pm_parse_height(argv[2]);
     } else if (argc-1 == 3) {
-        cmdline_p->input_filespec = argv[3];
+        cmdline_p->inputFileName = argv[3];
         cmdline_p->autosize = FALSE;
-        cmdline_p->width = atoi(argv[1]);
-        cmdline_p->height = atoi(argv[2]);
+        cmdline_p->width = pm_parse_width(argv[1]);
+        cmdline_p->height = pm_parse_height(argv[2]);
     } else
         pm_error("Program takes zero, one, two, or three arguments.  You "
                  "specified %d", argc-1);
@@ -106,11 +108,6 @@ parse_command_line(int argc, char ** argv,
     if (cmdline_p->maxval > 65535)
         pm_error("Maxval must be less than 65536.  You specified %d.",
                  cmdline_p->maxval);
-
-    if (cmdline_p->width <= 0) 
-        pm_error("Width must be a positive number.");
-    if (cmdline_p->height <= 0) 
-        pm_error("Height must be a positive number.");
 
     if (cmdline_p->rowskip && cmdline_p->autosize)
         pm_error("If you specify -rowskip, you must also give the image "
@@ -221,7 +218,7 @@ main(int argc, char *argv[] ) {
 
     parse_command_line(argc, argv, &cmdline);
 
-    ifp = pm_openr(cmdline.input_filespec);
+    ifp = pm_openr(cmdline.inputFileName);
 
     if (cmdline.autosize || cmdline.bottomfirst) {
         buf = pm_read_unknown_size( ifp, &nread );

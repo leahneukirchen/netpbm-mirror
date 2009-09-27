@@ -5,7 +5,7 @@ endif
 SUBDIR = converter/ppm/ppmtompeg
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 ifeq ($(JPEGLIB),NONE)
   # 'nojpeg' is a module that implements all the jpeg access routines as
@@ -18,11 +18,12 @@ else
   JPEGLIBX = $(JPEGLIB)
 endif
 
-INCLUDES = -I$(SRCDIR)/$(SUBDIR)/headers 
+COMP_INCLUDES = -I$(SRCDIR)/$(SUBDIR)/headers 
 
+EXTERN_INCLUDES =
 ifneq ($(JPEGHDR_DIR),NONE)
   ifneq ($(JPEGHDR_DIR)x,x)
-    INCLUDES += -I$(JPEGHDR_DIR)
+    EXTERN_INCLUDES += -I$(JPEGHDR_DIR)
   endif
 endif
 
@@ -38,17 +39,31 @@ endif
 #
 
 MP_BASE_OBJS = mfwddct.o postdct.o huff.o bitio.o mheaders.o
-MP_ENCODE_OBJS = iframe.o pframe.o bframe.o psearch.o bsearch.o block.o 
+MP_ENCODE_OBJS = \
+  frames.o \
+  iframe.o \
+  pframe.o \
+  bframe.o \
+  psearch.o \
+  bsearch.o \
+  block.o 
+
 MP_OTHER_OBJS = mpeg.o subsample.o param.o rgbtoycc.o \
 	readframe.o combine.o jrevdct.o frame.o fsize.o frametype.o \
-	specifics.o rate.o opts.o input.o gethostname.o
+	specifics.o rate.o opts.o input.o
 ifeq ($(OMIT_NETWORK),y)
-  MP_PARALLEL_OBJS = noparallel.o
+  MP_OTHER_OBJS += noparallel.o
 else
-  MP_PARALLEL_OBJS = parallel.o psocket.o
+  MP_OTHER_OBJS += parallel.o psocket.o
 endif
+ifeq ($(WIN32),y)
+  MP_OTHER_OBJS += gethostname_win32.o
+else
+  MP_OTHER_OBJS += gethostname.o
+endif
+
 NONMAIN_OBJS = $(MP_BASE_OBJS) $(MP_OTHER_OBJS) $(MP_ENCODE_OBJS) \
-	      $(MP_PARALLEL_OBJS) $(JPEG_MODULE).o
+	      	$(JPEG_MODULE).o
 OBJECTS = ppmtompeg.o $(NONMAIN_OBJS)
 MERGE_OBJECTS = ppmtompeg.o2 $(NONMAIN_OBJS)
 MP_INCLUDE = mproto.h mtypes.h huff.h bitio.h
@@ -61,7 +76,7 @@ SCRIPTS =
 .PHONY: all
 all: ppmtompeg
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 ifeq ($(NEED_RUNTIME_PATH),Y)
   LIBOPTR = -runtime

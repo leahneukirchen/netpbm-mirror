@@ -17,6 +17,7 @@
 
 /* A change history is at the bottom */
 
+#include "pm_c_util.h"
 #include "pnm.h"
 #include "shhopt.h"
 #include "mallocvar.h"
@@ -32,7 +33,7 @@ struct cmdlineInfo {
 
 static void
 parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo *cmdlineP) {
+                 struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
    and argv.  Return the information in the options as *cmdlineP.  
@@ -83,23 +84,23 @@ parseCommandLine(int argc, char ** argv,
 /* Macros to verify that r,g,b values are within proper range */
 
 #define CHECK_GRAY \
-    if ( tempgsum < 0L ) g = 0; \
-    else if ( tempgsum > maxval ) g = maxval; \
+    if (tempgsum < 0L) g = 0; \
+    else if (tempgsum > maxval) g = maxval; \
     else g = tempgsum;
 
 #define CHECK_RED \
-    if ( temprsum < 0L ) r = 0; \
-    else if ( temprsum > maxval ) r = maxval; \
+    if (temprsum < 0L) r = 0; \
+    else if (temprsum > maxval) r = maxval; \
     else r = temprsum;
 
 #define CHECK_GREEN \
-    if ( tempgsum < 0L ) g = 0; \
-    else if ( tempgsum > maxval ) g = maxval; \
+    if (tempgsum < 0L) g = 0; \
+    else if (tempgsum > maxval) g = maxval; \
     else g = tempgsum;
 
 #define CHECK_BLUE \
-    if ( tempbsum < 0L ) b = 0; \
-    else if ( tempbsum > maxval ) b = maxval; \
+    if (tempbsum < 0L) b = 0; \
+    else if (tempbsum > maxval) b = maxval; \
     else b = tempbsum;
 
 struct convolveType {
@@ -109,7 +110,7 @@ struct convolveType {
     void (*pgmConvolver)(const float ** const weights);
 };
 
-static FILE* ifp;
+static FILE * ifp;
 static int crows, ccols, ccolso2, crowso2;
 static int cols, rows;
 static xelval maxval;

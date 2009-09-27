@@ -89,7 +89,7 @@ getinit( file, colsP, rowsP, depthP, padrightP )
     for ( i = 0; i < sizeof(magic)-1; ++i )
         magic[i] = getc( file );
     magic[i]='\0';
-    if (!STREQ(LISPM_MAGIC, magic))
+    if (!streq(LISPM_MAGIC, magic))
         pm_error( "bad id string in Lispm file" );
     
     if ( pm_readlittleshort( file, colsP ) == -1 )

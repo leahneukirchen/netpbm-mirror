@@ -5,7 +5,7 @@ endif
 SUBDIR = lib
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 DLLTOOL=dlltool
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 ifeq ($(NETPBMLIBTYPE),unixstatic)
 LIBNETPBM = libnetpbm.$(STATICLIBSUFFIX)
@@ -25,7 +25,7 @@ else
   LIBSYSTEM = libsystem.o
 endif
 
-LIBOBJECTS = libpm.o fileio.o bitio.o colorname.o \
+LIBOBJECTS = libpm.o pmfileio.o fileio.o bitio.o colorname.o \
 	libpbm1.o libpbm2.o libpbm3.o libpbmfont.o \
 	libpgm1.o libpgm2.o \
 	libppm1.o libppm2.o libppmcmap.o libppmcolor.o libppmfuzzy.o \
@@ -39,32 +39,37 @@ LIBOBJECTS = libpm.o fileio.o bitio.o colorname.o \
 ifneq (${VMS}x,x)
 LIBOBJECTS += libpbmvms.o
 endif
-# Library objects to be linked but not built by Makefile.common:
-LIBOBJECTS_X = util/shhopt.o util/nstring.o util/filename.o
+# Library objects to be linked but not built by common.mk:
+LIBOBJECTS_X = \
+  util/shhopt.o \
+  util/nstring.o \
+  util/vasprintf.o \
+  util/filename.o \
+  util/nsleep.o \
 
 MANUALS3 = libnetpbm
 MANUALS5 = pbm pgm ppm pnm pam
 
 INTERFACE_HEADERS =  pm.h pbm.h bitio.h pbmfont.h \
-	pgm.h ppm.h ppm.h ppmcmap.h ppmfloyd.h colorname.h \
-	pnm.h pam.h pammap.h util/shhopt.h util/nstring.h util/mallocvar.h \
-	pm_system.h pm_gamma.h
+	pgm.h ppm.h ppmcmap.h ppmfloyd.h colorname.h \
+	pnm.h pam.h pammap.h util/shhopt.h util/mallocvar.h \
+	pm_system.h pm_gamma.h ppmdraw.h ppmdfont.h \
 
 DATAFILES = rgb.txt
 
 .PHONY: all
 all: libnetpbm extra_staticlib
 
-INCLUDES = -I$(SRCDIR)/$(SUBDIR) -I. -Iimportinc
-
 SUBDIRS = util
 SCRIPTS = 
 BINARIES = 
 
 OMIT_LIBRARY_RULE = 1
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
-# The following must go after Makefile.common because $(LIBNETPBM) may 
+INCLUDES = -I$(SRCDIR)/$(SUBDIR) -I. -Iimportinc
+
+# The following must go after common.mk because $(LIBNETPBM) may 
 # contain a reference to $(NETPBM_MAJOR_RELEASE).
 .PHONY: libnetpbm
 libnetpbm: $(LIBNETPBM)
@@ -79,8 +84,8 @@ extra_staticlib: $(EXTRA_STATICLIB)
 #----------------------------------------------------------------------------
 
 $(LIBOBJECTS): %.o: %.c importinc
-# Note that the user may have configured -I options into CFLAGS.
-	$(CC) -c $(INCLUDES) -DNDEBUG $(CFLAGS) $(CFLAGS_SHLIB) \
+# Note that the user may have configured -I options into CPPFLAGS/CFLAGS.
+	$(CC) -c $(INCLUDES) -DNDEBUG $(CPPFLAGS) $(CFLAGS) $(CFLAGS_SHLIB) \
 	  $(CFLAGS_PERSONAL) $(CADD) -o $@ $<
 
 MAJ = $(NETPBM_MAJOR_RELEASE)
@@ -183,7 +188,7 @@ endif
 # ship a pre-made standardppmfont.c, so this rule will not normally be
 # used.
 standardppmdfont.c:standard.ppmdfont
-	ppmdcfont <$< >$@ || (rm $@ && false)
+	ppmdcfont <$< >$@
 
 # Note that we create a new compile.h only for the first make after a
 # make clean.  This is good enough.  We used to do stamp-date for
@@ -240,9 +245,11 @@ install.hdr: $(INTERFACE_HEADERS:%=%_installhdr)
 # prefer not to "install" them, but just to access the Netpbm source
 # directory when you compile your programs.
 
-%_installhdr: $(PKGDIR)/include
+.PHONY: $(INTERFACE_HEADERS:%=%_installhdr)
+
+$(INTERFACE_HEADERS:%=%_installhdr): $(PKGDIR)/include/netpbm
 	$(INSTALL) -c -m $(INSTALL_PERM_HDR) \
-	  $(SRCDIR)/lib/$(@:%_installhdr=%) $(PKGDIR)/include/;
+	  $(SRCDIR)/lib/$(@:%_installhdr=%) $(PKGDIR)/include/netpbm/
 
 .PHONY: install.staticlib
 install.staticlib: $(PKGDIR)/link
@@ -269,7 +276,7 @@ ifeq ($(NETPBMLIBTYPE),dylib)
 	$(SYMLINK) ../lib/libnetpbm.$(MAJ).$(MIN).dylib libnetpbm.dylib
 endif
 
-clean: localclean
+distclean clean: localclean
 
 .PHONY: localclean
 localclean:

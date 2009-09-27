@@ -5,7 +5,7 @@ endif
 SUBDIR = converter/other
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 ifeq ($(shell xml2-config --version),)
   XML2_LIBS=NONE
@@ -20,10 +20,9 @@ ifneq ($(BUILD_FIASCO), N)
   SUBDIRS += fiasco
 endif
 
-INCLUDES = -I$(SRCDIR)/util 
 ifneq ($(TIFFLIB),NONE)
   ifneq ($(TIFFHDR_DIR)x,x)
-    INCLUDES += -I$(TIFFHDR_DIR)
+    EXTERN_INCLUDES += -I$(TIFFHDR_DIR)
   endif
 endif
 
@@ -31,30 +30,30 @@ ifeq ($(shell libpng-config --version),)
   ifneq ($(PNGLIB),NONE)
     HAVE_PNGLIB = Y
     ifneq ($(PNGHDR_DIR)x,x)
-      INCLUDES += -I$(PNGHDR_DIR)
+      EXTERN_INCLUDES += -I$(PNGHDR_DIR)
     endif
     ifneq ($(ZHDR_DIR)x,x)
-      INCLUDES += -I$(ZHDR_DIR)
+      EXTERN_INCLUDES += -I$(ZHDR_DIR)
     endif
   endif
 else
   HAVE_PNGLIB = Y
-  INCLUDES += $(shell libpng-config --cflags)
+  EXTERN_INCLUDES += $(shell libpng-config --cflags)
 endif
 
 ifneq ($(JPEGLIB),NONE)
   ifneq ($(JPEGHDR_DIR)x,x)
-    INCLUDES += -I$(JPEGHDR_DIR)
+    EXTERN_INCLUDES += -I$(JPEGHDR_DIR)
   endif
 endif
 ifneq ($(URTLIB),NONE)
   ifneq ($(URTHDR_DIR)x,x)
-    INCLUDES += -I$(URTHDR_DIR)
+    EXTERN_INCLUDES += -I$(URTHDR_DIR)
   endif
 endif
 ifneq ($(XML2_LIBS),NONE)
   ifneq ($(XML2_CFLAGS),NONE)
-    INCLUDES += $(XML2_CFLAGS)
+    EXTERN_INCLUDES += $(XML2_CFLAGS)
   endif
 endif
 
@@ -80,19 +79,24 @@ endif
 
 PORTBINARIES =  bmptopnm fitstopnm \
 		gemtopnm giftopnm hdifftopam infotopam \
-		pamtodjvurle pamtofits \
-		pamtohdiff pamtohtmltbl pamtopfm pamtopnm pamtouil \
+		pamtodjvurle pamtofits pamtogif \
+		pamtohdiff pamtohtmltbl pamtompfont pamtooctaveimg \
+		pamtopam pamtopfm pamtopnm pamtouil \
 		pamtoxvmini \
 		pbmtopgm pfmtopam \
 	        pgmtopbm pgmtoppm ppmtopgm pnmtoddif \
 		pnmtopclxl \
-		pnmtosgi pnmtosir pamtotga pnmtoxwd pstopnm \
+		pnmtosgi pnmtosir pamtotga pnmtoxwd \
 		rlatopam sgitopnm sirtopnm xwdtopnm zeisstopnm
+
+ifneq ($(DONT_HAVE_PROCESS_MGMT),Y)
+  PORTBINARIES += pstopnm
+endif
 
 BINARIES = $(PORTBINARIES) pnmtorast rasttopnm
 
 ifeq ($(HAVE_PNGLIB),Y)
-  BINARIES += pnmtopng pngtopnm pamrgbatopng
+  BINARIES += pnmtopng pngtopnm pngtopam pamrgbatopng
 endif
 ifneq ($(JPEGLIB),NONE)
   BINARIES += jpegtopnm pnmtojpeg
@@ -133,7 +137,7 @@ SCRIPTS = anytopnm pnmtoplainpnm
 .PHONY: all
 all:	$(BINARIES) $(SUBDIRS:%=%/all)
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 ifeq ($(NEED_RUNTIME_PATH),Y)
   LIBOPTR = -runtime
@@ -154,7 +158,7 @@ else
   PNGLIB_LIBOPTS = $(shell libpng-config --ldflags)
 endif
 
-pngtopnm: %: %.o $(NETPBMLIB) $(LIBOPT)
+pngtopnm pngtopam: %: %.o $(NETPBMLIB) $(LIBOPT)
 	$(LD) -o $@ $@.o \
 	  $(shell $(LIBOPT) $(NETPBMLIB)) \
 	  $(PNGLIB_LIBOPTS) $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
@@ -220,8 +224,10 @@ install.bin.local: $(PKGDIR)/bin
 	cd $(PKGDIR)/bin ; \
 	$(SYMLINK) gemtopnm$(EXE) gemtopbm
 # In October 2001, pnmtojpeg replaced ppmtojpeg
+ifneq ($(JPEGLIB),NONE)
 	cd $(PKGDIR)/bin ; \
 	$(SYMLINK) pnmtojpeg$(EXE) ppmtojpeg
+endif
 # In March 2002, bmptopnm replaced bmptoppm
 	cd $(PKGDIR)/bin ; \
 	$(SYMLINK) bmptopnm$(EXE) bmptoppm

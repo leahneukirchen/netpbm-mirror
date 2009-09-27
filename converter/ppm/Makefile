@@ -5,7 +5,7 @@ endif
 SUBDIR = converter/ppm
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 SUBDIRS = hpcdtoppm ppmtompeg
 
@@ -42,7 +42,7 @@ MERGE_OBJECTS = $(BINARIES:%=%.o2)
 .PHONY: all
 all: $(BINARIES) $(SUBDIRS:%=%/all)
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 ppmtobmp.o ppmtobmp.o2: bmp.h
 

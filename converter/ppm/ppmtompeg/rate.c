@@ -50,7 +50,6 @@
 
 #include <assert.h>
 #include <sys/types.h>
-#include <sys/times.h>
 
 #include "ppm.h"
 #include "nstring.h"

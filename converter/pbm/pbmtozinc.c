@@ -49,7 +49,7 @@ main(int argc, char * argv[]) {
 	{
         ifp = pm_openr( argv[1] );
         strcpy( name, argv[1] );
-        if ( STREQ( name, "-" ) )
+        if ( streq( name, "-" ) )
             strcpy( name, "noname" );
 
         if ( ( cp = strchr( name, '.' ) ) != 0 )

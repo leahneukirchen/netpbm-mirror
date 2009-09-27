@@ -3,7 +3,7 @@ HOW TO INSTALL NETPBM
 
 For most typical platforms, you can just do
 
-    configure
+    ./configure
 
 followed by
 
@@ -16,7 +16,7 @@ To build all the programs.  Then
 to gather all the installable parts into a specified directory, and 
 finally
 
-    installnetpbm
+    ./installnetpbm
 
 to install it into your system.  
 
@@ -67,14 +67,22 @@ than you need to do and you will be disappointed with Configure's
 unpredictability, especially from one release to the next.  Configure is
 specifically intended to talk to an intelligent human being.
 
-Rather, just write a program to generate the file Makefile.config.  That's
+Rather, just write a program to generate the file config.mk.  That's
 all Configure does in the end anyway.  Like Configure, your program can
-simply copy Makefile.config.in and add overrides to the bottom.  Or you
-can just package up a complete Makefile.config and not run any program at
-all at build time.  Comments in Makefile.config.in explain the entire
+simply copy config.mk.in and add overrides to the bottom.  Or you
+can just package up a complete config.mk and not run any program at
+all at build time.  Comments in config.mk.in explain the entire
 contents.  You can also run Configure interactively and use its output
 as an example.
 
+
+THE PREREQUISITE LIBRARIES
+--------------------------
+
+Netpbm uses lots of external libraries, but you don't necessarily have
+to install them all.  See http://netpbm.sourceforge.net/prereq.html .
+You do, however, have to tell Configure accurately whether you have the
+library installed and if so, where.
 
 
 INSTALLATION - WINDOWS
@@ -84,8 +92,7 @@ For notes on building Netpbm on Windows using Cygwin, see the file
 README.CYGWIN.  With Cygwin, you can build Netpbm programs that use
 Cygwin or Netpbm programs that use Mingw.
 
-For notes on building Netpbm on Windows using Djgpp, see the file
-README.DJGPP.
+Netpbm has also been built for Windows using Djgpp, as late as 2001.
 
 See also the general installation instructions above.
 
@@ -105,9 +112,9 @@ just do
 It will build Pnmtojpeg and any of its dependencies, but nothing else.
 You have to install it manually.  
 
-When you build just one program, you should request static libraries
-in the configure step, because for just one program, the shared
-libraries would be pure masochism.
+When you build just one program, you should request a static Netpbm
+library in the configure step, because for just one program, the
+shared library would be pure masochism.
 
 
 CUSTOM BUILDING
@@ -116,19 +123,19 @@ CUSTOM BUILDING
 This section explains how to customize the installation in the case
 that your platform is, or your requirements are, not among the simple
 cases that 'configure' understands.  'configure' is really just a
-convenient way to build the Makefile.config file, and in the most
+convenient way to build the config.mk file, and in the most
 general case, you build that file manually.
 
-Makefile.config contains settings for various things that vary from
+config.mk contains settings for various things that vary from
 one system to the next, like file paths.  Start with the distributed
-file Makefile.config.in.  Copy it as Makefile.config, then edit it.
+file config.mk.in.  Copy it as config.mk, then edit it.
 Search for your platform name (Solaris, SunOS, NetBSD, Cygwin, BeOS,
 and Tru64 are among those mentioned) to see recommended settings for
 your platform.
 
 If your system is even too exotic to accomodate with settings in
-Makefile.config, you may need to modify things in the main make files
-or pm_config.h.
+config.mk, you may need to modify things in the main make files
+or pm_config.h.in.
 
 If you figure out how to install on other platforms, contact the
 Netpbm maintainer to have the 'configure' program or these
@@ -173,6 +180,9 @@ shared libraries (which is kept in /var/ld/ld.config).  Make sure that
 path includes the directory in which you installed the Netpbm shared
 library.  You can also use the LD_LIBRARY_PATH environment variable.
 
+On AIX, the environment variable LIBPATH affects the shared library search
+path.  On AIX 5.3 and newer, you can use LD_LIBRARY_PATH as well.
+
 Besides the Netpbm shared library, libnetpbm, several of the converter
 programs, e.g. Jpegtopnm, use separately distributed libraries that
 understand the graphics format involved.  You need to make sure your
@@ -182,8 +192,8 @@ Netpbm build to statically bind the libraries into the Netpbm programs).
 Another thing you can do is forget about library search paths and just
 build into each Netpbm executable the location of the Netpbm shared
 library.  (I'm talking about the classic -R linker option) You set
-this up with variables in Makefile.config.  If you use Configure to
-build Makefile.config, then for some platforms where this method is
+this up with variables in config.mk.  If you use Configure to
+build config.mk, then for some platforms where this method is
 common, the Configure dialog asks you what directory, if any, you want
 built into Netpbm executables.
 
@@ -203,11 +213,41 @@ Since shared libraries can be such a pain, and in fact some systems
 don't even have them, you can build Netpbm with a static library
 instead.  Just answer "static" to the static/shared question when you
 run 'configure' (if you don't use 'configure', set NETPBMLIBTYPE as
-directed in Makefile.config.in).
+directed in config.mk.in).
 
 If you do this, you probably want to do a merge build instead of the
 normal build (there's a question for that in the Configure program).
 See below.
+
+
+SEPARATE BUILD TREE
+-------------------
+
+While it's traditional to build a Unix package by adding object files
+to the same tree with the source files, it's actually much cleaner to
+keep your source tree exactly as you got it and put the built files in
+a separate directory, called the build tree.
+
+To do this, just create an empty directory and run 'configure' in it,
+then 'make':
+
+  mkdir netpbmbuild
+  cd netpbmbuild
+  /usr/src/netpbm/configure
+  ...
+  make
+
+But if you plan to work on Netpbm source code, you'll probably find it
+more convenient to build the traditional way, with a single tree for
+source and build.
+
+In the source tree, you can type 'make' in any directory to do the
+default make for that directory, or make FILENAME to make the file of
+that name there.  In the separate build tree, there are special
+facilities to allow you to do a simple make from the _top level
+directory_, but if you want to make a subcomponent or individual part,
+you have to have a -f option and set SRCDIR and BLDDIR on your 'make'
+command.
 
 
 MERGE BUILD
@@ -216,7 +256,7 @@ MERGE BUILD
 There are two ways to build Netpbm: the standard or nonmerge build,
 and the merge build.  There are different make file targets for them
 and which one is default is controlled by the DEFAULT_TARGET make
-variable in Makefile.config, and its value is one of the choices you
+variable in config.mk, and its value is one of the choices you
 make via the Configure dialog.
 
 The standard build is the conventional one.  The merge build is a way

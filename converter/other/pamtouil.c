@@ -17,6 +17,8 @@
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 #include <ctype.h>
 #include <string.h>
+
+#include "pm_c_util.h"
 #include "pam.h"
 #include "pammap.h"
 #include "colorname.h"
@@ -34,18 +36,18 @@ struct cmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *inputFilespec;  /* Filespecs of input files */
-    char *outname;         /* output filename, less "_icon" */
+    const char * inputFilespec;  /* Filespecs of input files */
+    char * outname;         /* output filename, less "_icon" */
     unsigned int verbose;
 };
 
 
 
 typedef struct {    /* character-pixel mapping */
-    const char* cixel;    /* character string printed for pixel */
-    const char* rgbname;  /* ascii rgb color, either mnemonic or #rgb value */
-    const char* uilname;  /* same, with spaces replaced by underbars */
-    bool        transparent;
+    const char * cixel;    /* character string printed for pixel */
+    const char * rgbname;  /* ascii rgb color, either mnemonic or #rgb value */
+    const char * uilname;  /* same, with spaces replaced by underbars */
+    bool         transparent;
 } cixel_map;
 
 
@@ -95,10 +97,10 @@ parseCommandLine(int argc, char ** argv,
 
         /* Remove trailing "_icon" */
         barPos = strrchr(cmdlineP->outname, '_');
-        if (STREQ(barPos, "_icon")) 
+        if (streq(barPos, "_icon")) 
             *barPos = '\0';
     } else {
-        if (STREQ(cmdlineP->inputFilespec, "-"))
+        if (streq(cmdlineP->inputFilespec, "-"))
             cmdlineP->outname = strdup("noname");
         else {
             char * dotPos;
@@ -154,7 +156,8 @@ genNumstr(int  const number,
 
 
 static const char * 
-uilName(const char * const rgbname, bool const transparent) {
+uilName(const char * const rgbname,
+        bool         const transparent) {
 /*----------------------------------------------------------------------------
    Return a string in newly malloc'ed storage which is an appropriate 
    color name for the UIL palette.  It is the same as the rgb name,
@@ -200,8 +203,8 @@ genCmap(struct pam *   const pamP,
     unsigned int colorIndex;
     {
         /* Figure out how many characters per pixel we'll be using.
-        ** Don't want to be forced to link with libm.a, so using a
-        ** division loop rather than a log function.  
+           Don't want to be forced to link with libm.a, so using a
+           division loop rather than a log function.  
         */
         unsigned int i;
         for (*charsppP = 0, i = ncolors; i > 0; ++(*charsppP))
@@ -209,7 +212,7 @@ genCmap(struct pam *   const pamP,
     }
 
     /* Generate the character-pixel string and the rgb name for each colormap
-    ** entry.
+       entry.
     */
     for (colorIndex = 0; colorIndex < ncolors; ++colorIndex) {
         bool nameAlreadyInCmap;
@@ -237,7 +240,7 @@ genCmap(struct pam *   const pamP,
         nameAlreadyInCmap = FALSE;   /* initial assumption */
         for (j = 0; j < colorIndex; ++j) {
             if (cmap[j].rgbname != NULL && 
-                STREQ(colorname, cmap[j].rgbname) &&
+                streq(colorname, cmap[j].rgbname) &&
                 cmap[j].transparent == transparent) {
                 nameAlreadyInCmap = TRUE;
                 indexOfName = j;
@@ -247,12 +250,12 @@ genCmap(struct pam *   const pamP,
             /* Make the entry a cross-reference to the earlier entry */
             cmap[colorIndex].uilname = NULL;
             cmap[colorIndex].rgbname = NULL;
-            cmap[colorIndex].cixel = cmap[indexOfName].cixel;
+            cmap[colorIndex].cixel   = cmap[indexOfName].cixel;
         } else {
             cmap[colorIndex].uilname = uilName(colorname, transparent);
             cmap[colorIndex].rgbname = strdup(colorname);
             if (cmap[colorIndex].rgbname == NULL)
-                pm_error( "out of memory allocating color name" );
+                pm_error("out of memory allocating color name");
             
             cmap[colorIndex].transparent = transparent;
             
@@ -329,15 +332,16 @@ writeRaster(struct pam *  const pamP,
             unsigned int  const ncolors,
             tuplehash     const cht, 
             unsigned int  const charspp) {
-    
-    int row;
-    /* Write out the ascii character-pixel image. */
+/*----------------------------------------------------------------------------
+   Write out the ascii character-pixel image.
+-----------------------------------------------------------------------------*/
+    unsigned int row;
 
     printf("\n");
     printf("%s_icon : exported icon( color_table = %s_rgb,\n",
            outname, outname);
     for (row = 0; row < pamP->height; ++row) {
-        int col;
+        unsigned int col;
 
         printf("    '");
         for (col = 0; col < pamP->width; ++col) {
@@ -360,27 +364,19 @@ writeRaster(struct pam *  const pamP,
 }
 
 
-static void
-freeString(const char * const s) {
-/*----------------------------------------------------------------------------
-   This is just free(), but with type checking for const char *.
------------------------------------------------------------------------------*/
-    free((void *)s);
-}
-
-
 
 static void
-freeCmap(cixel_map cmap[], unsigned int const ncolors) {
+freeCmap(cixel_map    const cmap[],
+         unsigned int const ncolors) {
 
-    int i;
+    unsigned int i;
 
     for (i = 0; i < ncolors; ++i) {
         cixel_map const cmapEntry = cmap[i];
         if (cmapEntry.uilname)
-            freeString(cmapEntry.uilname);
+            strfree(cmapEntry.uilname);
         if (cmapEntry.rgbname)
-            freeString(cmapEntry.rgbname);
+            strfree(cmapEntry.rgbname);
     }
 }
 
@@ -391,8 +387,8 @@ main(int argc, char *argv[]) {
 
     struct cmdlineInfo cmdline;
     struct pam pam;   /* Input PAM image */
-    FILE* ifP;
-    tuple** tuples;
+    FILE * ifP;
+    tuple ** tuples;
     unsigned int ncolors;
     tuplehash cht;
     tupletable chv;

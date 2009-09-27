@@ -23,10 +23,12 @@
 #include <sys/stat.h>
 
 
-#include "pnm.h"
+#include "pm_config.h"
+#include "pm_c_util.h"
 #include "shhopt.h"
 #include "mallocvar.h"
 #include "nstring.h"
+#include "pnm.h"
 
 struct cmdlineInfo {
     /* All the information the user supplied in the command line,
@@ -200,7 +202,7 @@ makeTempDir(const char ** const tempDirP) {
 
     asprintfN(&mytmpdir, "%s/pnmindex_%d", tmpdir, getpid());
 
-    rc = mkdir(mytmpdir, 0700);
+    rc = pm_mkdir(mytmpdir, 0700);
     if (rc != 0)
         pm_error("Unable to create temporary file directory '%s'.  mkdir() "
                  "fails with errno %d (%s)",

@@ -23,10 +23,11 @@
 #include <string.h>
 #include <assert.h>
 
-#include "pnm.h"
-#include "shhopt.h"
+#include "pm_c_util.h"
 #include "mallocvar.h"
 #include "nstring.h"
+#include "shhopt.h"
+#include "pnm.h"
 
 #define GIFMAXVAL 255
 #define MAXCOLORMAPSIZE 256
@@ -41,6 +42,13 @@
 #define LOCALCOLORMAP  0x80
 #define BitSet(byte, bit)      (((byte) & (bit)) == (bit))
 
+#if !defined(BYTE_ORDER) || !defined(LITTLE_ENDIAN)
+  /* make sure (BYTE_ORDER == LITTLE_ENDIAN) is FALSE */ 
+  #define BYTE_ORDER    0
+  #define LITTLE_ENDIAN 1
+#endif
+
+
 static __inline__ bool
 ReadOK(FILE *          const fileP,
        unsigned char * const buffer,
@@ -52,6 +60,33 @@ ReadOK(FILE *          const fileP,
 
     return (bytesRead != 0);
 }
+
+
+
+static void
+readFile(FILE *          const ifP,
+         unsigned char * const buffer,
+         size_t          const len,
+         const char **   const errorP) {
+
+    size_t bytesRead;
+
+    bytesRead = fread(buffer, len, 1, ifP);
+
+    if (bytesRead == len)
+        *errorP = NULL;
+    else {
+        if (ferror(ifP))
+            asprintfN(errorP, "Error reading file.  errno=%d (%s)",
+                      errno, strerror(errno));
+        else if (feof(ifP))
+            asprintfN(errorP, "End of file encountered");
+        else
+            asprintfN(errorP, "Short read -- %u bytes of %u",
+                              (unsigned)bytesRead, (unsigned)len);
+    }
+}
+
 
 
 #define LM_to_uint(a,b)                        (((b)<<8)|(a))
@@ -72,6 +107,7 @@ struct cmdlineInfo {
         */
     const char * alpha_filename;
     unsigned int quitearly;
+    unsigned int repair;
 };
 
 
@@ -101,8 +137,10 @@ parseCommandLine(int argc, char ** argv,
             &cmdlineP->verbose,         0);
     OPTENT3(0, "comments",    OPT_FLAG, NULL,
             &cmdlineP->comments,        0);
-    OPTENT3(0, "quitearly",    OPT_FLAG, NULL,
+    OPTENT3(0, "quitearly",   OPT_FLAG, NULL,
             &cmdlineP->quitearly,       0);
+    OPTENT3(0, "repair",      OPT_FLAG, NULL,
+            &cmdlineP->repair,          0);
     OPTENT3(0, "image",       OPT_STRING, &image,
             &imageSpec,                 0);
     OPTENT3(0, "alphaout",    OPT_STRING, &cmdlineP->alpha_filename, 
@@ -232,13 +270,15 @@ readColorMap(FILE *ifP, const int colormapsize,
 
 static bool zeroDataBlock = FALSE;
     /* the most recently read DataBlock was an EOD marker, i.e. had
-       zero length */
+       zero length
+    */
 
 static void
 getDataBlock(FILE *          const ifP, 
              unsigned char * const buf, 
              bool *          const eofP,
-             unsigned int *  const lengthP) {
+             unsigned int *  const lengthP,
+             const char **   const errorP) {
 /*----------------------------------------------------------------------------
    Read a DataBlock from file 'ifP', return it at 'buf'.
 
@@ -258,10 +298,11 @@ getDataBlock(FILE *          const ifP,
     unsigned char count;
     bool successfulRead;
     
-    long const pos=ftell(ifP);
+    long const pos = ftell(ifP);
     successfulRead = ReadOK(ifP, &count, 1);
     if (!successfulRead) {
         pm_message("EOF or error in reading DataBlock size from file" );
+        *errorP = FALSE;
         *eofP = TRUE;
         *lengthP = 0;
     } else {
@@ -270,17 +311,21 @@ getDataBlock(FILE *          const ifP,
         *eofP = FALSE;
         *lengthP = count;
 
-        if (count == 0) 
+        if (count == 0) {
+            *errorP = NULL;
             zeroDataBlock = TRUE;
-        else {
+        } else {
             bool successfulRead;
 
             zeroDataBlock = FALSE;
             successfulRead = ReadOK(ifP, buf, count); 
-            
-            if (!successfulRead) 
-                pm_error("EOF or error reading data portion of %d byte "
-                         "DataBlock from file", count);
+
+            if (successfulRead) 
+                *errorP = NULL;
+            else
+                asprintfN(errorP,
+                          "EOF or error reading data portion of %u byte "
+                          "DataBlock from file", count);
         }
     }
 }
@@ -303,14 +348,15 @@ readThroughEod(FILE * const ifP) {
     while (!eod) {
         bool eof;
         unsigned int count;
+        const char * error;
 
-        getDataBlock(ifP, buf, &eof, &count);
-        if (eof)
+        getDataBlock(ifP, buf, &eof, &count, &error);
+        if (error || eof)
             pm_message("EOF encountered before EOD marker.  The GIF "
                        "file is malformed, but we are proceeding "
                        "anyway as if an EOD marker were at the end "
                        "of the file.");
-        if (eof || count == 0)
+        if (error || eof || count == 0)
             eod = TRUE;
     }
 }
@@ -334,7 +380,11 @@ doCommentExtension(FILE * const ifP) {
     done = FALSE;
     while (!done) {
         bool eof;
-        getDataBlock(ifP, (unsigned char*) buf, &eof, &blocklen); 
+        const char * error;
+        getDataBlock(ifP, (unsigned char*) buf, &eof, &blocklen, &error); 
+        if (error)
+            pm_error("Error reading a data block in a comment extension.  %s",
+                     error);
         if (blocklen == 0 || eof)
             done = TRUE;
         else {
@@ -355,8 +405,11 @@ doGraphicControlExtension(FILE *         const ifP,
     bool eof;
     unsigned int length;
     static unsigned char buf[256];
+    const char * error;
 
-    getDataBlock(ifP, buf, &eof, &length);
+    getDataBlock(ifP, buf, &eof, &length, &error);
+    if (error)
+        pm_error("Error reading 1st data block of Graphic Control Extension");
     if (eof)
         pm_error("EOF/error encountered reading "
                  "1st DataBlock of Graphic Control Extension.");
@@ -451,28 +504,16 @@ struct getCodeState {
         */
     bool streamExhausted;
         /* The last time we read from the input stream, we got an EOD marker
-           or EOF
+           or EOF or an error that prevents further reading of the stream.
         */
 };
 
 
 
 static void
-initGetCode(struct getCodeState * const getCodeStateP) {
-    
-    /* Fake a previous data block */
-    getCodeStateP->buf[0] = 0;
-    getCodeStateP->buf[1] = 0;
-    getCodeStateP->bufCount = 2;
-    getCodeStateP->curbit = getCodeStateP->bufCount * 8;
-    getCodeStateP->streamExhausted = FALSE;
-}
-
-
-
-static void
-getAnotherBlock(FILE * const ifP, 
-                struct getCodeState * const gsP) {
+getAnotherBlock(FILE *                const ifP, 
+                struct getCodeState * const gsP,
+                const char **         const errorP) {
 
     unsigned int count;
     unsigned int assumed_count;
@@ -490,32 +531,109 @@ getAnotherBlock(FILE * const ifP,
     gsP->bufCount = 2;
         
     /* Add the next block to the buffer */
-    getDataBlock(ifP, &gsP->buf[gsP->bufCount], &eof, &count);
-    if (eof) {
-        pm_message("EOF encountered in image "
-                   "before EOD marker.  The GIF "
-                   "file is malformed, but we are proceeding "
-                   "anyway as if an EOD marker were at the end "
-                   "of the file.");
-        assumed_count = 0;
-    } else
-        assumed_count = count;
+    getDataBlock(ifP, &gsP->buf[gsP->bufCount], &eof, &count, errorP);
+    if (*errorP)
+        gsP->streamExhausted = TRUE;
+    else {
+        if (eof) {
+            pm_message("EOF encountered in image "
+                       "before EOD marker.  The GIF "
+                       "file is malformed, but we are proceeding "
+                       "anyway as if an EOD marker were at the end "
+                       "of the file.");
+            assumed_count = 0;
+        } else
+            assumed_count = count;
 
-    gsP->streamExhausted = (assumed_count == 0);
+        gsP->streamExhausted = (assumed_count == 0);
+        
+        gsP->bufCount += assumed_count;
+    }
+}
 
-    gsP->bufCount += assumed_count;
+
+
+static struct getCodeState getCodeState;
+
+static void
+getCode_init(struct getCodeState * const getCodeStateP) {
+    
+    /* Fake a previous data block */
+    getCodeStateP->buf[0] = 0;
+    getCodeStateP->buf[1] = 0;
+    getCodeStateP->bufCount = 2;
+    getCodeStateP->curbit = getCodeStateP->bufCount * 8;
+    getCodeStateP->streamExhausted = FALSE;
+}
+
+
+
+static unsigned int
+bitsOfLeBuffer(const unsigned char * const buf,
+               unsigned int          const start,
+               unsigned int          const len) {
+/*----------------------------------------------------------------------------
+   Return a string of 'len' bits (up to 16) starting at bit 'start' of buffer
+   buf[].
+
+   In the buffer, the bits are numbered Intel-style, with the first bit of a
+   byte being the least significant bit.  So bit 3 is the "16" bit of the
+   first byte of buf[].
+
+   We return the string as an integer such that its pure binary encoding with
+   the bits numbered Intel-style is the string.  E.g. the string 0,1,1 
+   yields six.
+-----------------------------------------------------------------------------*/
+    uint32_t codeBlock;
+        /* The 3 whole bytes of the buffer that contain the requested
+           bit string
+        */
+
+    assert(len <= 16);
+
+    if (BYTE_ORDER == LITTLE_ENDIAN)
+        /* Fast path */
+        codeBlock = *(uint32_t *) & buf[start/8];
+    else
+        /* logic works for little endian too */
+        codeBlock =
+            (buf[start/8+0] <<  0) |
+            (buf[start/8+1] <<  8) |
+            (buf[start/8+2] << 16);
+            
+    return (unsigned int) 
+        (codeBlock >> (start % 8)) & ((1 << len) - 1);
 }
 
 
 
 static void
-doGetCode(FILE *                const ifP, 
-          int                   const codeSize,
-          struct getCodeState * const gsP,
-          int *                 const retvalP) {
+getCode_get(struct getCodeState * const gsP,
+            FILE *                const ifP, 
+            int                   const codeSize,
+            bool *                const eofP,
+            unsigned int *        const codeP,
+            const char **         const errorP) {
+/*----------------------------------------------------------------------------
+  Read and return the next lzw code from the file *ifP.
+
+  'codeSize' is the number of bits in the code we are to get.
+
+  Return *eofP == TRUE iff we hit the end of the stream.  That means a legal
+  end of stream, marked by an EOD marker, not just end of file.  An end of
+  file in the middle of the GIF stream is an error.
+
+  If there are bits left in the stream, but not 'codeSize' of them, we
+  call that a success with *eofP == TRUE.
+
+  Return the code read (assuming *eofP == FALSE and *errorP == NULL)
+  as *codeP.
+-----------------------------------------------------------------------------*/
+
+    *errorP = NULL;
 
     while (gsP->curbit + codeSize > gsP->bufCount * 8 &&
-           !gsP->streamExhausted) 
+           !gsP->streamExhausted && !*errorP) 
         /* Not enough left in buffer to satisfy request.  Get the next
            data block into the buffer.
 
@@ -523,63 +641,33 @@ doGetCode(FILE *                const ifP,
            to do this multiple times to get the full code.  (This probably
            never happens in practice).
         */
-        getAnotherBlock(ifP, gsP);
+        getAnotherBlock(ifP, gsP, errorP);
 
-    if ((gsP->curbit+codeSize) > gsP->bufCount*8) {
-        /* If the buffer still doesn't have enough bits in it, that means
-           there were no data blocks left to read.
-        */
-        *retvalP = -1;  /* EOF */
+    if (!*errorP) {
+        if (gsP->curbit + codeSize > gsP->bufCount * 8) {
+            /* The buffer still doesn't have enough bits in it; that means
+               there were no data blocks left to read.
+            */
+            *eofP = TRUE;
 
-        {
-            int const bitsUnused = gsP->bufCount*8 - gsP->curbit;
-            if (bitsUnused > 0)
-                pm_message("Stream ends with a partial code "
-                           "(%d bits left in file; "
-                           "expected a %d bit code).  Ignoring.",
-                           bitsUnused, codeSize);
+            {
+                int const bitsUnused = gsP->bufCount * 8 - gsP->curbit;
+                if (bitsUnused > 0)
+                    pm_message("Stream ends with a partial code "
+                               "(%d bits left in file; "
+                               "expected a %d bit code).  Ignoring.",
+                               bitsUnused, codeSize);
+            }
+        } else {
+            *codeP = bitsOfLeBuffer(gsP->buf, gsP->curbit, codeSize);
+
+            gsP->curbit += codeSize;
+            *eofP = FALSE;
         }
-    } else {
-        int i, j;
-        int code;
-        unsigned char * const buf = gsP->buf;
-
-        code = 0;  /* initial value */
-        for (i = gsP->curbit, j = 0; j < codeSize; ++i, ++j)
-            code |= ((buf[ i / 8 ] & (1 << (i % 8))) != 0) << j;
-        gsP->curbit += codeSize;
-        *retvalP = code;
     }
 }
 
 
-
-static int
-getCode(FILE * const ifP, 
-        int    const codeSize, 
-        bool   const init)
-{
-/*----------------------------------------------------------------------------
-   If 'init', initialize the code getter.
-
-   Otherwise, read and return the next lzw code from the file *ifP.
-
-   'codeSize' is the number of bits in the code we are to get.
-
-   Return -1 instead of a code if we encounter the end of the file.
------------------------------------------------------------------------------*/
-    static struct getCodeState getCodeState;
-
-    int retval;
-
-    if (init) {
-        initGetCode(&getCodeState);
-        retval = 0;
-    } else 
-        doGetCode(ifP, codeSize, &getCodeState, &retval);
-
-    return retval;
-}
 
 
 struct stack {
@@ -638,6 +726,7 @@ termStack(struct stack * const stackP) {
     stackP->stack = NULL;
 }
 
+    
 
 /*----------------------------------------------------------------------------
    Some notes on LZW.
@@ -657,7 +746,7 @@ termStack(struct stack * const stackP) {
    max_dataVal.  The first byte in the stream tells you what dataWidth
    is.
 
-   LZW codes 0 - max_dataVal are direct codes.  Each on represents
+   LZW codes 0 - max_dataVal are direct codes.  Each one represents
    the true data element whose value is that of the LZW code itself.
    No decompression is required.
 
@@ -694,7 +783,7 @@ struct decompressor {
         */
     int      next_tableSlot;
         /* Index in the code translation table of the next free entry */
-    int      firstcode;
+    unsigned int firstcode;
         /* This is always a true data element code */
     int      prevcode;
         /* The code just before, in the image, the one we're processing now */
@@ -759,7 +848,7 @@ lzwInit(struct decompressor * const decompP,
     }
     resetDecompressor(decompP);
 
-    getCode(decompP->ifP, 0, TRUE);
+    getCode_init(&getCodeState);
     
     decompP->fresh = TRUE;
     
@@ -779,7 +868,7 @@ lzwTerm(struct decompressor * const decompP) {
 static void
 expandCodeOntoStack(struct decompressor * const decompP,
                     int                   const incode,
-                    bool *                const errorP) {
+                    const char **         const errorP) {
 /*----------------------------------------------------------------------------
    'incode' is an LZW string code.  It represents a string of true data
    elements, as defined by the string translation table in *decompP.
@@ -790,12 +879,13 @@ expandCodeOntoStack(struct decompressor * const decompP,
    Also add to the translation table where appropriate.
 
    Iff the translation table contains a cycle (which means the LZW stream
-   from which it was built is invalid), return *errorP == TRUE.
+   from which it was built is invalid), fail (return text explanation
+   as *errorP).
 -----------------------------------------------------------------------------*/
     int code;
-    bool error;
+    const char * error;
 
-    error = FALSE;
+    error = NULL; /* Initial value */
 
     if (incode < decompP->next_tableSlot) 
         code = incode;
@@ -810,15 +900,15 @@ expandCodeOntoStack(struct decompressor * const decompP,
            represents and push it onto the code stack so the
            leftmost code is on top.  Set decompP->firstcode to the
            first (leftmost) code in that string.
-            */
+        */
 
         unsigned int stringCount;
         stringCount = 0;
 
         while (code > decompP->max_dataVal && !error) {
             if (stringCount > maxnum_lzwCode) {
-                pm_message("Error in GIF image: contains LZW string loop");
-                error = TRUE;
+                asprintfN(&error,
+                          "Error in GIF image: contains LZW string loop");
             } else {
                 ++stringCount;
                 pushStack(&decompP->stack, decompP->table[1][code]);
@@ -847,78 +937,105 @@ expandCodeOntoStack(struct decompressor * const decompP,
         }
     }
 
-    decompP->prevcode = incode;
     *errorP = error;
+
+    decompP->prevcode = incode;
 }
 
 
 
-static int
-lzwReadByte(struct decompressor * const decompP) {
+static void
+lzwReadByteFresh(struct getCodeState * const getCodeStateP,
+                 struct decompressor * const decompP,
+                 bool *                const endOfImageP,
+                 unsigned int *        const dataReadP,
+                 const char **         const errorP) {
+                     
+    /* Read off all initial clear codes, read the first non-clear code,
+       and return it.  There are no strings in the table yet, so the next
+       code must be a direct true data code.
+    */
+    bool eof;
+    do {
+        getCode_get(getCodeStateP, decompP->ifP, decompP->codeSize,
+                    &eof, &decompP->firstcode, errorP);
+        decompP->prevcode = decompP->firstcode;
+    } while (decompP->firstcode == decompP->clear_code && !*errorP && !eof);
+
+    if (!*errorP) {
+        if (eof)
+            *endOfImageP = TRUE;
+        else if (decompP->firstcode == decompP->end_code) {
+            if (!zeroDataBlock)
+                readThroughEod(decompP->ifP);
+            *endOfImageP = TRUE;
+        } else {
+            *endOfImageP = FALSE;
+            *dataReadP = decompP->firstcode;
+        }
+    }
+}
+
+
+
+static void
+lzwReadByte(struct decompressor * const decompP,
+            unsigned int *        const dataReadP,
+            bool *                const endOfImageP,
+            const char **         const errorP) {
 /*----------------------------------------------------------------------------
   Return the next data element of the decompressed image.  In the context
   of a GIF, a data element is the color table index of one pixel.
 
-  We read and return the next byte of the decompressed image, or:
+  We read and return the next byte of the decompressed image.
 
-    Return -1 if we hit EOF prematurely (i.e. before an "end" code.  We
-    forgive the case that the "end" code is followed by EOF instead of
-    an EOD marker (zero length DataBlock)).
+  If we can't, because the stream is too corrupted to make sense out of
+  it or the stream ends, we fail (return text description of why as
+  *errorP).
 
-    Return -2 if there are no more bytes in the image.  In that case,
-    make sure the file is positioned immediately after the image (i.e.
-    after the EOD marker that marks the end of the image or EOF).
+  We forgive the case that the "end" code is the end of the stream --
+  not followed by an EOD marker (zero length DataBlock).
 
-    Return -3 if we encounter errors in the LZW stream.
+  Iff we can't read a byte because we've hit the end of the image,
+  we return *endOfImageP = true.
 -----------------------------------------------------------------------------*/
-    int retval;
-
-    if (!stackIsEmpty(&decompP->stack))
-        retval = popStack(&decompP->stack);
-    else if (decompP->fresh) {
+    if (!stackIsEmpty(&decompP->stack)) {
+        *errorP = NULL;
+        *endOfImageP = FALSE;
+        *dataReadP = popStack(&decompP->stack);
+    } else if (decompP->fresh) {
         decompP->fresh = FALSE;
-        /* Read off all initial clear codes, read the first non-clear code,
-           and return it.  There are no strings in the table yet, so the next
-           code must be a direct true data code.
-        */
-        do {
-            decompP->firstcode =
-                getCode(decompP->ifP, decompP->codeSize, FALSE);
-            decompP->prevcode = decompP->firstcode;
-        } while (decompP->firstcode == decompP->clear_code);
-        if (decompP->firstcode == decompP->end_code) {
-            if (!zeroDataBlock)
-                readThroughEod(decompP->ifP);
-            retval = -2;
-        } else
-            retval = decompP->firstcode;
+
+        lzwReadByteFresh(&getCodeState, decompP, endOfImageP, dataReadP,
+                         errorP);
     } else {
-        int code;
-        code = getCode(decompP->ifP, decompP->codeSize, FALSE);
-        if (code == -1)
-            retval = -1;
-        else {
-            assert(code >= 0);  /* -1 is only possible error return */
-            if (code == decompP->clear_code) {
-                resetDecompressor(decompP);
-                retval = lzwReadByte(decompP);
-            } else {
-                if (code == decompP->end_code) {
-                    if (!zeroDataBlock)
-                        readThroughEod(decompP->ifP);
-                    retval = -2;
+        unsigned int code;
+        bool eof;
+        getCode_get(&getCodeState, decompP->ifP, decompP->codeSize,
+                    &eof, &code, errorP);
+        if (!*errorP) {
+            if (eof)
+                asprintfN(errorP,
+                          "Premature end of file; no proper GIF closing");
+            else {
+                if (code == decompP->clear_code) {
+                    resetDecompressor(decompP);
+                    lzwReadByte(decompP, dataReadP, endOfImageP, errorP);
                 } else {
-                    bool error;
-                    expandCodeOntoStack(decompP, code, &error);
-                    if (error)
-                        retval = -3;
-                    else
-                        retval = popStack(&decompP->stack);
+                    if (code == decompP->end_code) {
+                        if (!zeroDataBlock)
+                            readThroughEod(decompP->ifP);
+                        *endOfImageP = TRUE;
+                        *errorP = NULL;
+                    } else {
+                        expandCodeOntoStack(decompP, code, errorP);
+                        if (!*errorP)
+                            *dataReadP = popStack(&decompP->stack);
+                    }
                 }
             }
         }
     }
-    return retval;
 }
 
 
@@ -1027,6 +1144,124 @@ addPixelToRaster(unsigned int       const cmapIndex,
 
 
 static void
+verifyPixelRead(bool          const endOfImage,
+                const char *  const readError,
+                unsigned int  const cols,
+                unsigned int  const rows,
+                unsigned int  const failedRowNum,
+                const char ** const errorP) {
+
+    if (readError)
+        *errorP = strdup(readError);
+    else {
+        if (endOfImage)
+            asprintfN(errorP,
+                      "Error in GIF image: Not enough raster data to fill "
+                      "%u x %u dimensions.  Ran out of raster data in "
+                      "row %u.  The image has proper ending sequence, so "
+                      "this is not just a truncated file.",
+                      cols, rows, failedRowNum);
+        else
+            *errorP = NULL;
+    }
+}
+
+
+
+static void
+readRaster(struct decompressor * const decompP,
+           xel **                const xels, 
+           unsigned int          const cols,
+           unsigned int          const rows,
+           gifColorMap                 cmap, 
+           unsigned int          const cmapSize,
+           bool                  const interlace,
+           int                   const transparentIndex,
+           bit **                const alphabits,
+           bool                  const tolerateBadInput) {
+                   
+    struct pnmBuffer pnmBuffer;
+    enum pass pass;
+    bool fillingMissingPixels;
+
+    pass = MULT8PLUS0;
+    pnmBuffer.xels = xels;
+    pnmBuffer.col  = 0;
+    pnmBuffer.row  = 0;
+    fillingMissingPixels = false;  /* initial value */
+
+    while (pnmBuffer.row < rows) {
+        unsigned int colorIndex;
+
+        if (fillingMissingPixels)
+            colorIndex = 0;
+        else {
+            const char * error;
+
+            const char * readError;
+            unsigned int readColorIndex;
+            bool endOfImage;
+
+            lzwReadByte(decompP, &readColorIndex, &endOfImage, &readError);
+
+            verifyPixelRead(endOfImage, readError, cols, rows, pnmBuffer.row,
+                            &error);
+
+            if (readError)
+                strfree(readError);
+
+            if (error) {
+                if (tolerateBadInput) {
+                    pm_message("WARNING: %s.  "
+                               "Filling bottom %u rows with arbitrary color",
+                               error, rows - pnmBuffer.row);
+                    fillingMissingPixels = true;
+                } else
+                    pm_error("Unable to read input image.  %s.  Use the "
+                             "-repair option to try to salvage some of "
+                             "the image",
+                             error);
+
+                colorIndex = 0;
+            } else
+                colorIndex = readColorIndex;
+        }
+        addPixelToRaster(colorIndex, &pnmBuffer, cols, rows, cmap, cmapSize,
+                         interlace, transparentIndex, alphabits, &pass);
+    }
+}
+
+
+
+static void
+skipExtraneousData(struct decompressor * const decompP) {
+
+    unsigned int byteRead;
+    bool endOfImage;
+    const char * error;
+
+    lzwReadByte(decompP, &byteRead, &endOfImage, &error);
+
+    if (error)
+        strfree(error);
+    else if (!endOfImage) {
+        pm_message("Extraneous data at end of image.  "
+                   "Skipped to end of image");
+
+        while (!endOfImage && !error)
+            lzwReadByte(decompP, &byteRead, &endOfImage, &error);
+
+        if (error) {
+            pm_message("Error encountered skipping to end of image: %s",
+                       error);
+            strfree(error);
+        }
+    }
+}
+
+
+
+static void
 readImageData(FILE *       const ifP, 
               xel **       const xels, 
               unsigned int const cols,
@@ -1035,19 +1270,12 @@ readImageData(FILE *       const ifP,
               unsigned int const cmapSize,
               bool         const interlace,
               int          const transparentIndex,
-              bit **       const alphabits) {
+              bit **       const alphabits,
+              bool         const tolerateBadInput) {
 
     unsigned char lzwMinCodeSize;      
-    enum pass pass;
     struct decompressor decomp;
-    struct pnmBuffer pnmBuffer;
     bool gotMinCodeSize;
-
-    pass = MULT8PLUS0;
-
-    pnmBuffer.xels = xels;
-    pnmBuffer.col  = 0;
-    pnmBuffer.row  = 0;
 
     gotMinCodeSize =  ReadOK(ifP, &lzwMinCodeSize, 1);
     if (!gotMinCodeSize)
@@ -1062,29 +1290,10 @@ readImageData(FILE *       const ifP,
 
     lzwInit(&decomp, ifP, lzwMinCodeSize);
 
-    while (pnmBuffer.row < rows) {
-        int const rc = lzwReadByte(&decomp);
+    readRaster(&decomp, xels, cols, rows, cmap, cmapSize, interlace,
+               transparentIndex, alphabits, tolerateBadInput);
 
-        switch (rc) {
-        case -3:
-            pm_error("Error in GIF input stream");
-            break;
-        case -2:
-            pm_error("Error in GIF image: Not enough raster data to fill "
-                     "%u x %u dimensions.  Ran out of raster data in "
-                     "row %u", cols, rows, pnmBuffer.row);
-            break;
-        case -1:
-            pm_error("Premature end of file; no proper GIF closing");
-            break;
-        default:
-            addPixelToRaster(rc, &pnmBuffer, cols, rows, cmap, cmapSize,
-                             interlace, transparentIndex, alphabits, &pass);
-        }
-    }
-    if (lzwReadByte(&decomp) >= 0)
-        pm_message("Extraneous data at end of image.  "
-                   "Skipped to end of image");
+    skipExtraneousData(&decomp);
 
     lzwTerm(&decomp);
 }
@@ -1092,33 +1301,36 @@ readImageData(FILE *       const ifP,
 
 
 static void
-writePnm(FILE *outfile, xel ** const xels, 
-         const int cols, const int rows,
-         const int hasGray, const int hasColor) {
+writePnm(FILE * const outfileP,
+         xel ** const xels, 
+         int    const cols,
+         int    const rows,
+         int    const hasGray,
+         int    const hasColor) {
 /*----------------------------------------------------------------------------
-   Write a PNM image to the current position of file 'outfile' with
+   Write a PNM image to the current position of file *outfileP with
    dimensions 'cols' x 'rows' and raster 'xels'.
    
    Make it PBM, PGM, or PBM according to 'hasGray' and 'hasColor'.
 -----------------------------------------------------------------------------*/
     int format;
-    const char *format_name;
+    const char * formatName;
            
     if (hasColor) {
         format = PPM_FORMAT;
-        format_name = "PPM";
+        formatName = "PPM";
     } else if (hasGray) {
         format = PGM_FORMAT;
-        format_name = "PGM";
+        formatName = "PGM";
     } else {
         format = PBM_FORMAT;
-        format_name = "PBM";
+        formatName = "PBM";
     }
     if (verbose) 
-        pm_message("writing a %s file", format_name);
+        pm_message("writing a %s file", formatName);
     
-    if (outfile) 
-        pnm_writepnm(outfile, xels, cols, rows,
+    if (outfileP) 
+        pnm_writepnm(outfileP, xels, cols, rows,
                      (xelval) GIFMAXVAL, format, FALSE);
 }
 
@@ -1172,7 +1384,7 @@ readGifHeader(FILE * const gifFile, struct gifScreen * const gifScreenP) {
     if (verbose)
         pm_message("GIF format version is '%s'", version);
     
-    if ((!STREQ(version, "87a")) && (!STREQ(version, "89a")))
+    if ((!streq(version, "87a")) && (!streq(version, "89a")))
         pm_error("bad version number, not '87a' or '89a'" );
     
     if (! ReadOK(gifFile,buf,7))
@@ -1223,7 +1435,8 @@ readGifHeader(FILE * const gifFile, struct gifScreen * const gifScreenP) {
 static void
 readExtensions(FILE*          const ifP, 
                struct gif89 * const gif89P,
-               bool *         const eodP) {
+               bool *         const eodP,
+               const char **  const errorP) {
 /*----------------------------------------------------------------------------
    Read extension blocks from the GIF stream to which the file *ifP is
    positioned.  Read up through the image separator that begins the
@@ -1232,33 +1445,50 @@ readExtensions(FILE*          const ifP,
    If we encounter EOD (end of GIF stream) before we find an image 
    separator, we return *eodP == TRUE.  Else *eodP == FALSE.
 
-   If we hit end of file before an EOD marker, we abort the program with
-   an error message.
+   If we hit end of file before an EOD marker, we fail.
 -----------------------------------------------------------------------------*/
     bool imageStart;
     bool eod;
+
+    *errorP = NULL;  /* initial value */
 
     eod = FALSE;
     imageStart = FALSE;
 
     /* Read the image descriptor */
-    while (!imageStart && !eod) {
+    while (!imageStart && !eod && !*errorP) {
         unsigned char c;
+        const char * error;
 
-        if (! ReadOK(ifP,&c,1))
-            pm_error("EOF / read error on image data" );
+        readFile(ifP, &c, 1, &error);
 
-        if (c == ';') {         /* GIF terminator */
-            eod = TRUE;
-        } else if (c == '!') {         /* Extension */
-            if (! ReadOK(ifP,&c,1))
-                pm_error("EOF / "
-                         "read error on extension function code");
-            doExtension(ifP, c, gif89P);
-        } else if (c == ',') 
-            imageStart = TRUE;
-        else 
-            pm_message("bogus character 0x%02x, ignoring", (int) c );
+        if (error) {
+            asprintfN(errorP, "File read error where start of image "
+                      "descriptor or end of GIF expected.  %s",
+                      error);
+            strfree(error);
+        } else {
+            if (c == ';') {         /* GIF terminator */
+                eod = TRUE;
+            } else if (c == '!') {         /* Extension */
+                unsigned char functionCode;
+                const char * error;
+
+                readFile(ifP, &functionCode, 1, &error);
+
+                if (error) {
+                    asprintfN(errorP, "Failed to read function code "
+                              "of GIF extension (immediately after the '!' "
+                              "extension delimiter) from input.  %s", error);
+                    strfree(error);
+                } else {
+                    doExtension(ifP, functionCode, gif89P);
+                }
+            } else if (c == ',') 
+                imageStart = TRUE;
+            else 
+                pm_message("bogus character 0x%02x, ignoring", (int)c);
+        }
     }
     *eodP = eod;
 }
@@ -1272,9 +1502,9 @@ reportImageInfo(unsigned int const cols,
                 unsigned int const localColorMapSize,
                 bool         const interlaced) {
 
-
     pm_message("reading %u by %u%s GIF image",
                cols, rows, interlaced ? " interlaced" : "" );
+
     if (useGlobalColormap)
         pm_message("  Uses global colormap");
     else
@@ -1289,7 +1519,8 @@ convertImage(FILE *           const ifP,
              FILE *           const imageout_file, 
              FILE *           const alphafile, 
              struct gifScreen       gifScreen,
-             struct gif89     const gif89) {
+             struct gif89     const gif89,
+             bool             const tolerateBadInput) {
 /*----------------------------------------------------------------------------
    Read a single GIF image from the current position of file 'ifP'.
 
@@ -1340,7 +1571,8 @@ convertImage(FILE *           const ifP,
                      &hasGray, &hasColor);
         transparencyMessage(gif89.transparent, localColorMap);
         readImageData(ifP, xels, cols, rows, localColorMap, localColorMapSize,
-                      interlaced, gif89.transparent, alphabits);
+                      interlaced, gif89.transparent, alphabits,
+                      tolerateBadInput);
         if (!skipIt) {
             writePnm(imageout_file, xels, cols, rows,
                      hasGray, hasColor);
@@ -1349,7 +1581,8 @@ convertImage(FILE *           const ifP,
         transparencyMessage(gif89.transparent, gifScreen.ColorMap);
         readImageData(ifP, xels, cols, rows, 
                       gifScreen.ColorMap, gifScreen.ColorMapSize,
-                      interlaced, gif89.transparent, alphabits);
+                      interlaced, gif89.transparent, alphabits,
+                      tolerateBadInput);
         if (!skipIt) {
             writePnm(imageout_file, xels, cols, rows,
                      gifScreen.hasGray, gifScreen.hasColor);
@@ -1367,12 +1600,33 @@ convertImage(FILE *           const ifP,
 
 
 static void
+disposeOfReadExtensionsError(const char * const error,
+                             bool         const tolerateBadInput,
+                             unsigned int const imageSeq,
+                             bool *       const eodP) {
+    if (error) {
+        if (tolerateBadInput)
+            pm_message("Error accessing Image %u of stream; no further "
+                       "images can be accessed.  %s",
+                       imageSeq, error);
+        else
+            pm_error("Error accessing Image %u of stream.  %s",
+                     imageSeq, error);
+        strfree(error);
+        *eodP = TRUE;
+    }
+}
+
+
+
+static void
 convertImages(FILE * const ifP, 
               bool   const allImages,
               int    const requestedImageSeq, 
               bool   const drainStream,
               FILE * const imageout_file, 
-              FILE * const alphafile) {
+              FILE * const alphafile,
+              bool   const tolerateBadInput) {
 /*----------------------------------------------------------------------------
    Read a GIF stream from file 'ifP' and write one or more images from
    it as PNM images to file 'imageout_file'.  If the images have transparency
@@ -1407,20 +1661,25 @@ convertImages(FILE * const ifP,
          !eod && (imageSeq <= requestedImageSeq || allImages || drainStream);
          ++imageSeq) {
 
-        readExtensions(ifP, &gif89, &eod);
+        const char * error;
+
+        readExtensions(ifP, &gif89, &eod, &error);
+
+        disposeOfReadExtensionsError(error, tolerateBadInput, imageSeq, &eod);
 
         if (eod) {
             /* GIF stream ends before image with sequence imageSeq */
             if (!allImages && (imageSeq <= requestedImageSeq))
                 pm_error("You requested Image %d, but "
                          "only %d image%s found in GIF stream",
-                         requestedImageSeq+1,
-                         imageSeq, imageSeq>1?"s":"" );
+                         requestedImageSeq + 1,
+                         imageSeq, imageSeq > 1 ? "s" : "");
         } else {
             if (verbose)
                 pm_message("Reading Image Sequence %d", imageSeq);
             convertImage(ifP, !allImages && (imageSeq != requestedImageSeq), 
-                         imageout_file, alphafile, gifScreen, gif89);
+                         imageout_file, alphafile, gifScreen, gif89,
+                         tolerateBadInput);
         }
     }
 }
@@ -1447,19 +1706,20 @@ main(int argc, char **argv) {
     else
         alpha_file = pm_openw(cmdline.alpha_filename);
 
-    if (alpha_file && STREQ(cmdline.alpha_filename, "-"))
+    if (alpha_file && streq(cmdline.alpha_filename, "-"))
         imageout_file = NULL;
     else
         imageout_file = stdout;
 
     convertImages(ifP, cmdline.all_images, cmdline.image_no, 
-                  !cmdline.quitearly, imageout_file, alpha_file);
+                  !cmdline.quitearly, imageout_file, alpha_file,
+                  cmdline.repair);
 
     pm_close(ifP);
     if (imageout_file != NULL) 
-        pm_close( imageout_file );
+        pm_close(imageout_file);
     if (alpha_file != NULL)
-        pm_close( alpha_file );
+        pm_close(alpha_file);
 
     return 0;
 }

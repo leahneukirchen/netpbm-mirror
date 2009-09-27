@@ -208,7 +208,7 @@ main(int argc, char * argv[]) {
     int argn;
     const char * inputFilename;
     int noise_type;
-    int seed;
+    unsigned int seed;
     int i;
     const char * const usage = "[-type noise_type] [-lsigma x] [-mgsigma x] "
         "[-sigma1 x] [-sigma2 x] [-lambda x] [-seed n] "
@@ -247,7 +247,7 @@ main(int argc, char * argv[]) {
 
     pnm_init(&argc, argv);
 
-    seed = time(NULL) ^ getpid();
+    seed = pm_randseed();
     noise_type = GAUSSIAN;
 
     argn = 1;
