@@ -96,7 +96,7 @@ endif
 BINARIES = $(PORTBINARIES) pnmtorast rasttopnm
 
 ifeq ($(HAVE_PNGLIB),Y)
-  BINARIES += pnmtopng pngtopnm pngtopam pamrgbatopng
+  BINARIES += pnmtopng pngtopam pamrgbatopng
 endif
 ifneq ($(JPEGLIB),NONE)
   BINARIES += jpegtopnm pnmtojpeg
@@ -120,6 +120,7 @@ MERGEBINARIES = $(BINARIES)
 EXTRA_OBJECTS = exif.o rast.o bmepsoe.o
 ifeq ($(HAVE_PNGLIB),Y)
   EXTRA_OBJECTS += pngtxt.o
+  EXTRA_OBJECTS += pngx.o
 endif
 ifneq ($(JPEGLIB),NONE)
   EXTRA_OBJECTS += jpegdatasource.o
@@ -158,13 +159,13 @@ else
   PNGLIB_LIBOPTS = $(shell libpng-config --ldflags)
 endif
 
-pngtopnm pngtopam: %: %.o $(NETPBMLIB) $(LIBOPT)
-	$(LD) -o $@ $@.o \
+pngtopam: %: %.o pngx.o $(NETPBMLIB) $(LIBOPT)
+	$(LD) -o $@ $@.o pngx.o \
 	  $(shell $(LIBOPT) $(NETPBMLIB)) \
 	  $(PNGLIB_LIBOPTS) $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
-pnmtopng: %: %.o pngtxt.o $(NETPBMLIB) $(LIBOPT)
-	$(LD) -o $@ $@.o pngtxt.o \
+pnmtopng: %: %.o pngx.o pngtxt.o $(NETPBMLIB) $(LIBOPT)
+	$(LD) -o $@ $@.o pngx.o pngtxt.o \
 	  $(shell $(LIBOPT) $(NETPBMLIB)) \
 	  $(PNGLIB_LIBOPTS) $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
@@ -244,4 +245,9 @@ ifneq ($(TIFF_PREREQ_MISSING),Y)
 # In October 2005, pamtotiff replaced pnmtotiff
 	cd $(PKGDIR)/bin ; \
 	$(SYMLINK) pamtotiff$(EXE) pnmtotiff
+endif
+ifeq ($(HAVE_PNGLIB),Y)
+# In September 2009, pngtopam replaced pngtopnm
+	cd $(PKGDIR)/bin ; \
+	$(SYMLINK) pngtopam$(EXE) pngtopnm
 endif

@@ -17,8 +17,6 @@ all: $(UTILOBJECTS)
 
 include $(SRCDIR)/common.mk
 
-INCLUDES = -I$(SRCDIR)/$(SUBDIR) -I. -Iimportinc
-
 $(UTILOBJECTS):%.o:%.c importinc
 	$(CC) -c $(INCLUDES) -DNDEBUG $(CPPFLAGS) $(CFLAGS) $(CFLAGS_SHLIB) \
 	  $(CFLAGS_PERSONAL) $(CADD) -o $@ $<

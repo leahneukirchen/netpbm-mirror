@@ -4,38 +4,52 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-09.09.18 BJH  Release 10.47.04
+09.09.27 BJH  Release 10.48.00
 
-              pambayer: fix unconditional crash/failure when you aren't using
-              Standard Input.
-
-              Build: use AR from config.mk instead of "ar" to build static
-              libraries: libnetpbm, librle, libjasper.
-
-              Build: compiles with libpng 1.4 beta.
-
-              Build: don't use "uint".
-
-              Package: fix installation of pnmplain on Windows (.exe suffix).
-
-09.09.03 BJH  Release 10.47.03
-
-              Build: fix failure to recognize static library in omitting
-              -R from link.
-
-09.08.17 BJH  Release 10.47.02
+              ppmsvgalib: Wait to initialize Svgalib to prevent it from
+              interfering with error messages early code might issue, and
+              leaving the console in an undesirable state if the failures
+              cause the program to abort early.
 
               tifftopnm: wait for Pamflip processes to terminate before
               exiting.
 
-              Build: Compiles with libpng 1.4 beta.
+              Remove pngtopnm from the package.  Pngtopnm is now an alias
+              for Pngtopam.
+
+              pngtopam, pnmtopng: Compiles with libpng 1.4 beta.
+
+              pamtotiff: do miniswhite properly with 8 and 16 bit samples.
+
+              pamsumm: fix syntax error message.
+
+              pambayer: fix unconditional crash/failure when you aren't using
+              Standard Input.
+
+              Add pbmtocis, cistopbm.  Thanks John Elliott
+              <jce@seasip.demon.co.uk>.
+
+              Build: tifftopnm builds on systems without fork().
 
               Build: work with JPEG library Version 7.
 
-09.07.23 BJH  Release 10.47.01
+              Build: Configure recognizes libvga.a installed without
+              libvga.so and offers that as default.
+
+              Build: Configure recognizes the Mingw-64 compiler.
 
               Build: fix failure of a merge build on a system that doesn't
               have the PNG library.
+
+              Build: fix failure to recognize static library in omitting
+              -R from link.
+
+              Build: use AR from config.mk instead of "ar" to build static
+              libraries: libnetpbm, librle, libjasper.
+
+              Build: don't use "uint".
+
+              Package: fix installation of pnmplain on Windows (.exe suffix).
 
 09.06.27 BJH  Release 10.47.00
 

@@ -164,6 +164,21 @@ pm_setjmpbufsave(jmp_buf *  const jmpbufP,
 void
 pm_longjmp(void);
 
+void
+pm_fork(int *         const iAmParentP,
+        pid_t *       const childPidP,
+        const char ** const errorP);
+
+void
+pm_waitpid(pid_t         const pid,
+           int *         const statusP,
+           int           const options,
+           pid_t *       const exitedPidP,
+           const char ** const errorP);
+
+
+void
+pm_waitpidSimple(pid_t const pid);
 
 typedef void pm_usermessagefn(const char * msg);
 

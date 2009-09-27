@@ -4,7 +4,7 @@
   This is a dummy version of libsystem.c, for use on systems that don't
   have the kind of process control that libsystem.c needs.
 
-  With this module, program will build cleanly, but if a program actually
+  With this module, programs will build cleanly, but if a program actually
   calls pm_system(), it will die with an error message saying that
   the facility is not available.
 =============================================================================*/

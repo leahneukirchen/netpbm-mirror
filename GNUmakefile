@@ -150,6 +150,11 @@ ifeq ($(HAVE_INT64),Y)
 else
 	echo "#define HAVE_INT64 0" >>$@
 endif	
+ifeq ($(DONT_HAVE_PROCESS_MGMT),Y)
+	echo "#define HAVE_FORK 0" >>$@
+else
+	echo "#define HAVE_FORK 1" >>$@
+endif
 	echo '/* pm_config.h.in FOLLOWS ... */' >>$@
 	cat $(SRCDIR)/pm_config.in.h >>$@
 	$(ENDIANGEN) >>$@

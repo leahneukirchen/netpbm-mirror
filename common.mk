@@ -76,7 +76,15 @@ include $(SRCDIR)/version.mk
 # fully made.
 .DELETE_ON_ERROR:
 
-NETPBM_INCLUDES := -Iimportinc -I$(SRCDIR)/$(SUBDIR)
+# -I importinc/netpbm is a backward compatibility thing.  Really, the source
+# file should refer to e.g. "netpbm/pam.h" but for historical reasons, most
+# refer to "pam.h" and we'll probably never have the energy to convert them
+# all.  The reason the file exists as importinc/netpbm/pam.h rather than just
+# importinc/pam.h (as it did originally) is that it lives on a user's system
+# as <netpbm/pam.h>, and therefore all _exported_ header files do say
+# "<netpbm/pam.h>.
+
+NETPBM_INCLUDES := -Iimportinc -Iimportinc/netpbm -I$(SRCDIR)/$(SUBDIR)
 
 # -I. is needed when builddir != srcdir
 INCLUDES = -I. $(COMP_INCLUDES) $(NETPBM_INCLUDES) $(EXTERN_INCLUDES)
@@ -133,33 +141,27 @@ IMPORTINC_HEADERS := \
   $(IMPORTINC_LIB_HEADERS) \
   $(IMPORTINC_LIB_UTIL_HEADERS)
 
-IMPORTINC_ROOT_FILES := $(IMPORTINC_ROOT_HEADERS:%=importinc/%)
-IMPORTINC_LIB_FILES := $(IMPORTINC_LIB_HEADERS:%=importinc/%)
-IMPORTINC_LIB_UTIL_FILES := $(IMPORTINC_LIB_UTIL_HEADERS:%=importinc/%)
+IMPORTINC_ROOT_FILES := $(IMPORTINC_ROOT_HEADERS:%=importinc/netpbm/%)
+IMPORTINC_LIB_FILES := $(IMPORTINC_LIB_HEADERS:%=importinc/netpbm/%)
+IMPORTINC_LIB_UTIL_FILES := $(IMPORTINC_LIB_UTIL_HEADERS:%=importinc/netpbm/%)
 
 importinc: \
-  importinc/netpbm \
   $(IMPORTINC_ROOT_FILES) \
   $(IMPORTINC_LIB_FILES) \
   $(IMPORTINC_LIB_UTIL_FILES) \
 
-importinc/netpbm:
-	mkdir -p importinc
-	rm -f $@
-	$(SYMLINK) . $@
-
-$(IMPORTINC_ROOT_FILES):importinc/%:$(BUILDDIR)/%
-	mkdir -p importinc
+$(IMPORTINC_ROOT_FILES):importinc/netpbm/%:$(BUILDDIR)/%
+	mkdir -p importinc/netpbm
 	rm -f $@
 	$(SYMLINK) $< $@
 
-$(IMPORTINC_LIB_FILES):importinc/%:$(SRCDIR)/lib/%
-	mkdir -p importinc
+$(IMPORTINC_LIB_FILES):importinc/netpbm/%:$(SRCDIR)/lib/%
+	mkdir -p importinc/netpbm
 	rm -f $@
 	$(SYMLINK) $< $@
 
-$(IMPORTINC_LIB_UTIL_FILES):importinc/%:$(SRCDIR)/lib/util/%
-	mkdir -p importinc
+$(IMPORTINC_LIB_UTIL_FILES):importinc/netpbm/%:$(SRCDIR)/lib/util/%
+	mkdir -p importinc/netpbm
 	rm -f $@
 	$(SYMLINK) $< $@
 

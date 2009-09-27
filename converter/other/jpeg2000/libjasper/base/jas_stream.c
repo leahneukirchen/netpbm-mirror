@@ -130,7 +130,7 @@
 #include <io.h>
 #endif
 
-#include "pm.h"
+#include "netpbm/pm.h"
 
 #include "jasper/jas_types.h"
 #include "jasper/jas_stream.h"

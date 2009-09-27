@@ -52,7 +52,6 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
-#include <sys/wait.h>
 
 #include "pm_c_util.h"
 #include "shhopt.h"
@@ -381,8 +380,8 @@ readscanline(TIFF *         const tif,
                   "TIFFReadScanline() failed.",
                   row, plane);
     else if (bps == 8) {
-        int sample;
-        for (sample = 0; sample < cols*spp; sample++) 
+        unsigned int sample;
+        for (sample = 0; sample < cols * spp; ++sample) 
             samplebuf[sample] = scanbuf[sample];
     } else if (bps < 8) {
         /* Note that in this format, samples do not span bytes.  Rather,
@@ -390,12 +389,12 @@ readscanline(TIFF *         const tif,
            At least that's how I infer the format from reading pnmtotiff.c
            -Bryan 00.11.18
            */
-        int sample;
-        int bitsleft;
+        unsigned int sample;
+        unsigned int bitsleft;
         unsigned char * inP;
 
-        for (sample = 0, bitsleft=8, inP=scanbuf; 
-             sample < cols*spp; 
+        for (sample = 0, bitsleft = 8, inP = scanbuf; 
+             sample < cols * spp; 
              ++sample) {
             if (bitsleft == 0) {
                 ++inP; 
@@ -412,6 +411,7 @@ readscanline(TIFF *         const tif,
                 pm_error("Internal error: invalid value for fillorder: %u", 
                          fillorder);
             }
+            assert(bitsleft >= bps);
             bitsleft -= bps; 
             if (bitsleft < bps)
                 /* Don't count dregs at end of byte */
@@ -433,10 +433,10 @@ readscanline(TIFF *         const tif,
         for (sample = 0; sample < cols*spp; ++sample)
             samplebuf[sample] = scanbuf16[sample];
     } else if (bps == 32) {
-        uint32 * const scanbuf32 = (uint32 *) scanbuf;
+        const uint32 * const scanbuf32 = (const uint32 *) scanbuf;
         unsigned int sample;
         
-        for (sample = 0; sample < cols*spp; ++sample)
+        for (sample = 0; sample < cols * spp; ++sample)
             samplebuf[sample] = scanbuf32[sample];
     } else 
         pm_error("Internal error: invalid bits per sample passed to "
@@ -739,38 +739,34 @@ spawnWithInputPipe(const char *  const shellCmd,
         asprintfN(errorP, "Failed to create pipe for process input.  "
                   "Errno=%d (%s)", errno, strerror(errno));
     else {
-        int rc;
+        int iAmParent;
+        pid_t childPid;
 
-        rc = fork();
+        pm_fork(&iAmParent, &childPid, errorP);
 
-        if (rc < 0) {
-            asprintfN(errorP, "Failed to fork a process.  errno=%d (%s)",
-                      errno, strerror(errno));
-        } else if (rc == 0) {
-            /* This is the child */
-            int rc;
-            close(fd[PIPE_WRITE]);
-            close(STDIN_FILENO);
-            dup2(fd[PIPE_READ], STDIN_FILENO);
+        if (!*errorP) {
+            if (iAmParent) {
+                close(fd[PIPE_READ]);
 
-            rc = system(shellCmd);
+                *pidP   = childPid;
+                *pipePP = fdopen(fd[PIPE_WRITE], "w");
+                
+                if (*pipePP == NULL)
+                    asprintfN(errorP,"Unable to create stream from pipe.  "
+                              "fdopen() fails with errno=%d (%s)",
+                              errno, strerror(errno));
+                else
+                    *errorP = NULL;
+            } else {
+                int rc;
+                close(fd[PIPE_WRITE]);
+                close(STDIN_FILENO);
+                dup2(fd[PIPE_READ], STDIN_FILENO);
 
-            exit(rc);
-        } else {
-            /* Parent */
-            pid_t const childPid = rc;
+                rc = system(shellCmd);
 
-            close(fd[PIPE_READ]);
-
-            *pidP   = childPid;
-            *pipePP = fdopen(fd[PIPE_WRITE], "w");
-
-            if (*pipePP == NULL)
-                asprintfN(errorP,"Unable to create stream from pipe.  "
-                          "fdopen() fails with errno=%d (%s)",
-                          errno, strerror(errno));
-            else
-                *errorP = NULL;
+                exit(rc);
+            }
         }
     }
 }
@@ -787,7 +783,7 @@ createFlipProcess(FILE *         const outFileP,
    Create a process that runs the program Pamflip and writes its output
    to *imageoutFileP.
 
-   The process takes it input from a pipe that we create.  We return as
+   The process takes its input from a pipe that we create.  We return as
    *inPipePP a file stream connected to the other end of that pipe.
 
    I.e. Caller will write a Netpbm file stream to **inPipePP and a flipped
@@ -973,12 +969,12 @@ pnmOut_init(FILE *         const imageoutFileP,
    data, pnmOut get 'cols' x 'rows' data, but its output file may be
    'rows x cols'.
 
-   Because the pnmOut object must be set up to receive flipped or not
-   flipped input, we have *flipOkP and *noflipOkP outputs that tell
-   Caller whether he has to flip or not.  In the unique case that
-   the TIFF matrix is already oriented the way the output PNM file needs
-   to be, flipping is idempotent, so both *flipOkP and *noflipOkP are
-   true.
+   Because we must set up the pnmOut object either to receive flipped or not
+   flipped input, we have *flipOkP and *noflipOkP outputs that tell Caller
+   whether he has to flip or not.  Note that Caller also influences which way
+   we set up pnmOut, with his 'flipIfNeeded' argument.  In the unique case
+   that the TIFF matrix is already oriented the way the output PNM file needs
+   to be, flipping is idempotent, so both *flipOkP and *noflipOkP are true.
 -----------------------------------------------------------------------------*/
     pnmOutP->imageoutFileP = imageoutFileP;
     pnmOutP->alphaFileP    = alphaFileP;
@@ -1040,14 +1036,12 @@ pnmOut_term(pnmOut * const pnmOutP,
                        "waiting for Pamflip to terminate");
 
         if (pnmOutP->imagePipeP) {
-            int status;
             fclose(pnmOutP->imagePipeP);
-            waitpid(pnmOutP->imageFlipPid, &status, 0);
+            pm_waitpidSimple(pnmOutP->imageFlipPid);
         }
         if (pnmOutP->alphaPipeP) {
-            int status;
             fclose(pnmOutP->alphaPipeP);
-            waitpid(pnmOutP->alphaFlipPid, &status, 0);
+            pm_waitpidSimple(pnmOutP->alphaFlipPid);
         }
     } else {
         if (pnmOutP->imageoutFileP)

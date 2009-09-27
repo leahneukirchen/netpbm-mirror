@@ -67,8 +67,6 @@ BINARIES =
 OMIT_LIBRARY_RULE = 1
 include $(SRCDIR)/common.mk
 
-INCLUDES = -I$(SRCDIR)/$(SUBDIR) -I. -Iimportinc
-
 # The following must go after common.mk because $(LIBNETPBM) may 
 # contain a reference to $(NETPBM_MAJOR_RELEASE).
 .PHONY: libnetpbm
