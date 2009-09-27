@@ -93,6 +93,29 @@ sub prompt($$) {
 
 
 
+sub promptYesNo($) {
+    my ($default) = $@;
+
+    my $retval;
+
+    while (!defined($retval)) {
+        my $response = prompt("(y)es or (n)o", $default);
+        
+        if (uc($response) =~ m{ ^ (Y|YES) $ }x)  {
+            $retval = $TRUE;
+        } elsif (uc($response) =~ m{ ^ (N|NO) $ }x)  {
+            $retval = $FALSE;
+        } else {
+            print("'$response' isn't one of the choices.  \n" .
+                  "You must choose 'yes' or 'no' (or 'y' or 'n').\n");
+        }
+    }
+
+    return $retval;
+}
+
+
+
 sub tmpdir() {
 # This is our approximation of File::Spec->tmpdir(), which became part of
 # basic Perl some time after Perl 5.005_03.
@@ -322,20 +345,8 @@ sub askAboutCygwin() {
         $default = "n";
     }
     
-    my $retval;
+    my $retval = promptYesNo($default);
 
-    while (!defined($retval)) {
-        my $response = prompt("(y)es or (n)o", $default);
-    
-        if (uc($response) =~ /^(Y|YES)$/)  {
-            $retval = $TRUE;
-        } elsif (uc($response) =~ /^(N|NO)$/)  {
-            $retval = $FALSE;
-        } else {
-            print("'$response' isn't one of the choices.  \n" .
-                  "You must choose 'yes' or 'no' (or 'y' or 'n').\n");
-        }
-    }
     return $retval;
 }
 
@@ -353,20 +364,7 @@ sub askAboutDjgpp() {
         $default = "n";
     }
     
-    my $retval;
-
-    while (!defined($retval)) {
-        my $response = prompt("(y)es or (n)o", $default);
-    
-        if (uc($response) =~ /^(Y|YES)$/)  {
-            $retval = $TRUE;
-        } elsif (uc($response) =~ /^(N|NO)$/)  {
-            $retval = $FALSE;
-        } else {
-            print("'$response' isn't one of the choices.  \n" .
-                  "You must choose 'yes' or 'no' (or 'y' or 'n').\n");
-        }
-    }
+    my $retval = promptYesNo($default);
 }
 
 
@@ -485,6 +483,49 @@ sub getPlatform() {
 
 
 
+sub getGccChoiceFromUser($) {
+    my ($platform) = @_;
+
+    my $retval;
+
+    print("GNU compiler or native operating system compiler (cc)?\n");
+    print("\n");
+
+    my $default;
+
+    if ($platform eq "SOLARIS" || $platform eq "SCO" ) {
+        $default = "gcc";
+    } else {
+        $default = "cc";
+    }
+
+    while (!defined($retval)) {
+        my $response = prompt("gcc or cc", $default);
+
+        if ($response eq "gcc") {
+            $retval = "gcc";
+        } elsif ($response eq "cc") {
+            $retval = "cc";
+        } else {
+            print("'$response' isn't one of the choices.  \n" .
+                  "You must choose 'gcc' or 'cc'.\n");
+        }
+    }
+    if ($retval eq 'gcc' && !commandExists('gcc')) {
+        print("WARNING: You selected the GNU compiler, " .
+              "but do not appear to have a program " .
+              "named 'gcc' in your PATH.  This may " .
+              "cause trouble later.  You may need to " .
+              "set the CC environment variable or CC " .
+              "makefile variable or install 'gcc'\n");
+    }
+    print("\n");
+
+    return $retval;
+}
+
+
+
 sub getCompiler($$$) {
     my ($platform, $subplatform, $compilerR) = @_;
 #-----------------------------------------------------------------------------
@@ -529,45 +570,23 @@ sub getCompiler($$$) {
                             "DARWIN"  => 1,
                             );
 
-    if ($gccUsualPlatform{$platform}) {
-        $$compilerR = "gcc";
-    } elsif ($platform eq "WINDOWS" && $subplatform eq "cygwin") {
-        $$compilerR = "gcc";
-    } elsif ($gccOptionalPlatform{$platform}) {
-        print("GNU compiler or native operating system compiler (cc)?\n");
-        print("\n");
+    if (commandExists('x86_64-w64-mingw32-gcc')) {
+        printf("Do you want to use the Mingw-w64 Cross-Compiler?\n");
 
-        my $default;
-
-        if ($platform eq "SOLARIS" || $platform eq "SCO" ) {
-            $default = "gcc";
-        } else {
-            $default = "cc";
+        if (promptYesNo('y') == "y") {
+            $$compilerR = 'x86_64-w64-mingw32-gcc';
         }
-
-        my $response = prompt("gcc or cc", $default);
-
-        if ($response eq "gcc") {
+    }
+    if (!defined($$compilerR)) {
+        if ($gccUsualPlatform{$platform}) {
             $$compilerR = "gcc";
-        } elsif ($response eq "cc") {
-            $$compilerR = "cc";
+        } elsif ($platform eq "WINDOWS" && $subplatform eq "cygwin") {
+            $$compilerR = "gcc";
+        } elsif ($gccOptionalPlatform{$platform}) {
+            $$compilerR = getGccChoiceFromUser($platform);
         } else {
-            print("'$response' isn't one of the choices.  \n" .
-                  "You must choose 'gcc' or 'cc'.\n");
-            exit 12;
+            $$compilerR = 'cc';
         }
-
-        if ($$compilerR eq 'gcc' && !commandExists('gcc')) {
-            print("WARNING: You selected the GNU compiler, " .
-                  "but do not appear to have a program " .
-                  "named 'gcc' in your PATH.  This may " .
-                  "cause trouble later.  You may need to " .
-                  "set the CC environment variable or CC " .
-                  "makefile variable or install 'gcc'\n");
-        }
-        print("\n");
-    } else {
-        $$compilerR = 'cc';
     }
 }
 
