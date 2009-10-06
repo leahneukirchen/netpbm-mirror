@@ -99,10 +99,10 @@ readJpc(const char *   const inputFilename,
         if (instream == NULL )
             pm_error("cannot open input image file '%s'", inputFilename);
     } 
-
-    if (jas_image_getfmt(instream) != jas_image_strtofmt((char*)"jpc"))
+    assert(jas_image_lookupfmtbyname("jpc"));
+    if (jas_image_lookupfmtbyname("jpc")->ops.validate(instream) != 0)
         pm_error("Input is not JPEG-2000 code stream");
-
+        
     options = "";
 
     jasperP = jas_image_decode(instream, jas_image_strtofmt((char*)"jpc"), 
