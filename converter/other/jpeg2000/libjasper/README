@@ -6,7 +6,7 @@ The adaptation was done by Bryan Henderson on 2002.10.26.
 
 The adaptation involved:
 
-  - remove stuff for formats other than PNM.
+  - remove stuff for formats other than JPEG-2000.
 
   - Replace build stuff (Jasper uses GNU Autoconf/Automake/Libtool).
 
