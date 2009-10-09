@@ -6,9 +6,11 @@ The adaptation was done by Bryan Henderson on 2002.10.26.
 
 The adaptation involved:
 
-  - remove stuff for formats other than JPEG-2000.
+  - Remove stuff for formats other than JPEG-2000.
 
   - Replace build stuff (Jasper uses GNU Autoconf/Automake/Libtool).
+
+  - Make JP2 decoder not dump the box to stderr unless debug is turned on.
 
 See <http://www.ece.uvic.ca/~mdadams/jasper/>.
 

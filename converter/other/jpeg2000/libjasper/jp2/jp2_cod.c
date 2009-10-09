@@ -337,8 +337,9 @@ jp2_box_t *jp2_box_get(jas_stream_t *in)
 		jas_stream_close(tmpstream);
 	}
 
-	jp2_box_dump(box, stderr);
-
+	if (jas_getdbglevel() > 0) {
+        jp2_box_dump(box, stderr);
+    }
 	return box;
 	abort();
 
