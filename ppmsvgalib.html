@@ -26,7 +26,7 @@ value.
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<B>ppmsvgalib</B> displays a PPM image on a Linux virtual console
+<p><B>ppmsvgalib</B> displays a PPM image on a Linux virtual console
 using the Svgalib facility.  Svgalib is a popular means of displaying
 Graphics in Linux without the use of the X Window System.  (To display
 a Netpbm image in an X window, see <b>pamx</b>).
@@ -67,11 +67,11 @@ fit.
 <P>If you want to play with <B>ppmsvgalib</B>, <B>ppmcie</B> is a good
 way to generate a test image.
 
-<P>To be pedantic, we must observe that <B>ppmsvgalib</B> displays a
-PPM image in the correct colors only if the display has a transfer
-function which is the exact inverse of the gamma function that is
-specified in the PPM specification.  Happily, most CRT displays are
-pretty close.
+<P>To be pedantic, we must observe that <B>ppmsvgalib</B> displays a PPM image
+in the correct colors only if the display has a transfer function which is the
+exact inverse of the gamma function that is specified in the PPM
+specification.  Happily, most CRT displays and the modern displays that
+emulate them, are pretty close.
 
 <P>Running the PPM image through <B>pnmgamma</B> can help cause
 <B>ppmsvgalib</B> to display the correct colors.
@@ -95,10 +95,10 @@ columns by 768 rows with 8 bit red, green, and blue components for
 each pixel and no fancy options.  28 is the same, but with the popular
 higher resolution of 1280 x 1024.
 
-<P>But if you have an older video controller (with less than 4MB of
-memory), those modes aren't available and you might like mode 19,
-which is 640 x 480 and takes less than a megabyte of video memory.
-This is a standard VGA video mode.
+<P>But if you have an older video controller (with less than 4MB of memory),
+those modes aren't available, you might like mode 19, which is 640 x 480 and
+takes less than a megabyte of video memory.  This is a standard VGA video
+mode.
 
 </DL>
 

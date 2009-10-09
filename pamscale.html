@@ -55,6 +55,25 @@ scales individually horizontally and vertically by specified factors.
 
 <h3 id="scalefactor">The Scale Factors</h3>
 
+<p>The options <b>-width</b>, <b>-height</b>, <b>-xsize</b>, <b>-ysize</b>,
+<b>-xscale</b>, <b>-yscale</b>, <b>-xyfit</b>, <b>-xyfill</b>, <b>-reduce</b>,
+and <b>-pixels</b> control the amount of scaling.  For backward compatibility,
+there is also <b>-xysize</b> and the <i>scale_factor</i> argument, but you
+shouldn't use those.
+
+<P><b>-width</b> and <b>-height</b> specify the width and height in pixels
+you want the resulting image to be.  See below for rules when you specify
+one and not the other.
+
+<p><b>-xsize</b> and <b>-ysize</b> are synonyms for <b>-width</b> and
+<b>-height</b>, respectively.
+
+<p><b>-xscale</b> and <b>-yscale</b> tell the factor by which you want the
+width and height of the image to change from source to result (e.g.
+<b>-xscale 2</b> means you want to double the width; <b>-xscale .5</b>
+means you want to halve it).  See below for rules when you specify one and
+not the other.
+
 <P>When you specify an absolute size or scale factor for both
 dimensions, <B>pamscale</B> scales each dimension independently
 without consideration of the aspect ratio.
@@ -472,14 +491,13 @@ proportional to intensity.  If so, use the <b>-linear</b> option to
 tell <b>pamscale</b> this.  <b>pamscale</B> then will skip the
 conversions.
 
-<p>The conversion takes time.  In one experiment, it increased the
-time required to reduce an image by a factor of 10.  And the
-difference between intensity-proportional values and gamma-adjusted
-values may be small enough that you would barely see a difference in
-the result if you just pretended that the gamma-adjusted values were
-in fact intensity-proportional.  So just to save time, at the expense
-of some image quality, you can specify <b>-linear</b> even when you
-have true PPM input and expect true PPM output.
+<p>The conversion takes time.  In one experiment, it increased by a factor of
+10 the time required to reduce an image.  And the difference between
+intensity-proportional values and gamma-adjusted values may be small enough
+that you would barely see a difference in the result if you just pretended
+that the gamma-adjusted values were in fact intensity-proportional.  So just
+to save time, at the expense of some image quality, you can specify
+<b>-linear</b> even when you have true PPM input and expect true PPM output.
 
 <p>For the first 13 years of Netpbm's life, until Netpbm 10.20
 (January 2004), <b>pamscale</b>'s predecessor <b>pnmscale</b> always

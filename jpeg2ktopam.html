@@ -2,15 +2,14 @@
 <HTML><HEAD><TITLE>Jpeg2ktopam User Manual</TITLE></HEAD>
 <BODY>
 <H1>Jpeg2ktopam</H1>
-Updated: 27 October 2002
+Updated: 08 October 2009
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
 <H2>NAME</H2>
 jpeg2ktopam - convert JPEG-2000 code stream to PAM/PNM
 
-<A NAME="synopsis">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>jpeg2ktopam</B>
 [<B>-verbose</B>]
@@ -23,26 +22,26 @@ jpeg2ktopam - convert JPEG-2000 code stream to PAM/PNM
 hyphens instead of single hyphen to denote options.  You may use white
 space in place of the equals sign to separate an option name from its value.
 
-<A NAME="description">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<P><B>jpeg2ktopam</b> converts the named JPEG-2000 code stream file,
+<P><B>jpeg2ktopam</b> converts the named JPEG-2000 file (JP2 or JPC),
 or Standard Input if no file is named, to a PBM, PGM, PPM, or PAM
 file on Standard Output.
 
-<P>The JPEG-2000 specification specifies two different formats: JP2
-and JPEG-2000 code stream (JPC).  JP2 represents a visual image quite
-specifically, whereas JPC is a more or less arbitrary array of
-codes.  JP2 images are a subset of JPC images.  <b>jpeg2ktopam</b>
-converts any JPC image.  If the color space identified in the image is
-grayscale (JAS_IMAGE_CS_GRAY), <B>jpeg2ktopam</b> generates a PGM
-image, unless the image contains only one bit per pixel, in which case
-<b>jpeg2ktopam</b> generates PBM.  If the color space is RGB
-(JAS_IMAGE_CS_RGB), <b>jpeg2ktopam</b> generates a PPM image.  If the
-input image is anything else, <b>jpeg2ktopam</b> generates a PAM image
-with no tuple type identified.
+<P>The JPEG-2000 specification specifies two different formats: JP2 and
+JPEG-2000 code stream (JPC).  JP2 represents a visual image quite
+specifically, whereas JPC is a more or less arbitrary array of codes.  A JP2
+image contains a JPC stream and metadata describing how that stream represents
+a visual image.  <b>jpeg2ktopam</b> converts both.
+
+<p>If the color space identified in the image is grayscale
+(JAS_IMAGE_CS_GRAY), <B>jpeg2ktopam</b> generates a PGM image, unless the
+image contains only one bit per pixel, in which case <b>jpeg2ktopam</b>
+generates PBM.  If the color space is RGB (JAS_IMAGE_CS_RGB),
+<b>jpeg2ktopam</b> generates a PPM image.  If the input image is anything
+else, <b>jpeg2ktopam</b> generates a PAM image with no tuple type identified.
 
 <P>In the PGM and PPM cases, <b>jpeg2ktopam</b> assumes the intensity
 values in the input image have the same meaning as for PGM and PPM.
@@ -58,17 +57,17 @@ represented in two's complement form in the output (because PAM
 samples are always unsigned).  The PAM plane numbers are identical to
 the JPC component numbers.
 
-<p>A JPC image has a "precision," which is the number of bits used for
+<p>A JPEG-2000 image has a "precision," which is the number of bits used for
 each code (in Netpbm lingo, "sample").  Actually, each component has a
 separate precision.  The maxval of a PGM, PPM, or PAM output is the
-largest number you can represent in the JPC precision of the JPC
+largest number you can represent in the JPEG-2000 precision of the JPEG-2000
 component with the greatest precision.  The samples in all components are
 scaled to that maxval.  So if the red component has a precision of 4 bits
 and the green component has a precision of 6 bits, the maxval is 63 and
-the red component codes from the JPC image are multiplied by 63/15 to
+the red component codes from the JPEG-2000 image are multiplied by 63/15 to
 generate the output samples.
 
-<P><b>jpeg2ktopam</b> interprets the JPC input with the <a
+<P><b>jpeg2ktopam</b> interprets the JPEG-2000 input with the <a
 href="http://www.ece.uvic.ca/~mdadams/jasper/">Jasper JPEG-2000
 library</a>.  See documentation of the library for details on what
 <b>jpeg2ktopam</b> handles.  Note that the Jasper library contains
@@ -87,8 +86,7 @@ especially recently added features.  However, since it does not use the
 Netpbm library to read and write the Netpbm formats, it doesn't do as
 good a job on that side.
 
-<A NAME="options">&nbsp;</A>
-<H2>OPTIONS</H2>
+<H2 id="options">OPTIONS</H2>
 
 <DL COMPACT>
 
@@ -101,29 +99,25 @@ messages about the conversion process.
 
 <DD>This option controls debug messages from the Jasper library.  
 <b>jpeg2ktopam</b> passes <i>number</i> as the debug level to the Jasper
-JPC decoder.
+JPEG-2000 decoder.
 
 </DL>
      
-<A NAME="examples">&nbsp;</A>
-<H2>EXAMPLES</H2>
+<H2 id="examples">EXAMPLES</H2>
 
 <pre>
   jpeg2ktopam myimg.jpc &gt;myimg.ppm
 </pre>
 
 
-<A NAME="jpeg2000">&nbsp;</A>
-<H2>ABOUT JPEG-2000</H2>
+<H2 id="jpeg2000">ABOUT JPEG-2000</H2>
 
 <p>See <a href="pamtojpeg2k.html">the <b>pamtojpeg2k</b> manual</a>
 for general information on JPEG-2000 compression and the
 JPEG-2000 formats.
 
 
-
-<A NAME="seealso">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 kd="seealso">SEE ALSO</H2>
 
 <B><A HREF="pamtojpeg2k.html">jpctopam</A></B>,
 <B><A HREF="jpegtopnm.html">pnmtopeg</A></B>,
@@ -136,8 +130,11 @@ JPEG-2000 formats.
 
 <p><b>jpeg2ktopam</b> was added to Netpbm in Release 10.12 (November 2002).
 
+<p>Before Netpbm 10.49 (December 2009), <b>jpeg2ktopam</b> could not convert
+a JP2 file -- only JPC.
+
 <HR>
-<A NAME="index">&nbsp;</A><H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
 <LI><A HREF="#synopsis">SYNOPSIS</A>
 <LI><A HREF="#description">DESCRIPTION</A>

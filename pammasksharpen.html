@@ -25,7 +25,7 @@ name and its value with white space instead of an equals sign.
 
 <pre>
    pamgauss 5 5 -sigma=.7 -tupletype=GRAYSCALE | pamtopnm >gauss.pgm
-   pnmconvol gauss.pgm myimage.ppm >blurred.ppm
+   pnmconvol -noffset gauss.pgm myimage.ppm >blurred.ppm
    pammasksharpen blurred.ppm myimage.ppm >sharpened.ppm
 </pre>
 

@@ -12,7 +12,7 @@ pngtopnm - convert a PNG image into a PNM image
 
 <H2 id="synopsis">SYNOPSIS</H2>
 
-<B>pngtopam</B>
+<B>pngtopnm</B>
 [<b>-verbose</b>]
 [<b>-alpha</b> | <b>-mix</b>]
 [<b>-background</b>=<i>color</i>]
@@ -38,13 +38,17 @@ href="pngtopam.html"><b>pngtopam</b></a>, introduced with Netpbm 10.44
 ability to produce a PAM image that includes an alpha (transparency)
 channel.
 
-<p><b>pngtopnm</b> remains in the Netpbm package because it may have
-fewer bugs for now than <b>pngtopam</b>, and may be faster in some
-environments.  Some day, <b>pngtopnm</b> will probably become an alias
-for <b>pngtopam</b>.
+Starting in Release 10.48, <b>pngtopnm</b> is just an alias for
+<b>pngtopam</b>.
 
-<p>You can use the <b>pngtopam</b> documentation for <b>pngtopnm</b>,
-considering the following differences:
+<p><b>pngtopnm</b> remained in the Netpbm package through Release 10.47
+because it may have fewer bugs than <b>pngtopam</b> in those releases, and may
+be faster in some environments.  But <b>pngtopnm</b>'s incompatibility with
+the most current PNG libraries makes it impractical to maintain along with
+<b>pngtopam</b> now.
+
+<p>In releases before 10.48, you can use the <b>pngtopam</b> documentation for
+<b>pngtopnm</b>, considering the following differences:
 
 <ul>
 

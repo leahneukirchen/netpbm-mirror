@@ -196,21 +196,22 @@ stream various ways.  Most commonly, it is arranged by rows, with the
 top row first, and the pixels left to right within each row, but many
 other orientations are possible.
 
-<p>This option says to produce an output image that represents the raw
-raster in the TIFF stream rather than the image the TIFF stream is
-supposed to represent.  In the output, the top left corner corresponds
-to the start of the TIFF raster, the next pixel to the right is the
-next pixel in the TIFF raster, etc.
+<p>The common orientation is the same on the Netpbm formats use, so
+<b>tifftopnm</b> can do its jobs quite efficiently when the TIFF raster
+is oriented that way.
 
-<p>This orientation is the same as the Netpbm formats use for their
-rasters, so it is easy for <b>tifftopnm</b> to do the conversion
-with <b>-orientraw</b>.  On the other hand, if the TIFF raster is not
-in that orientation and you don't use <b>-orientraw</b>, it can
-take a considerable amount of processing for <b>tifftopnm</b> to
-produce the output image.
+<p>But if the TIFF raster is oriented any other way, it can take a
+considerable amount of processing for <b>tifftopnm</b> to convert it to
+Netpbm format.
 
-<p>You can use <b>pamflip</b> to turn the output into the image the
-TIFF stream represents.
+<p><b>-orientraw</b> says to produce an output image that represents the raw
+raster in the TIFF stream rather than the image the TIFF stream is supposed to
+represent.  In the output, the top left corner corresponds to the start of the
+TIFF raster, the next pixel to the right is the next pixel in the TIFF raster,
+etc.  <b>tifftopnm</b> can do this easily, but you don't get the right image
+out.  You can use <b>pamflip</b> to turn the output into the image the TIFF
+stream represents (but if you do that, you pretty much lose the benefit of
+<b>-orientraw</b>).
 
 <p>With this option, <b>tifftopnm</b> always uses the Row By Row method
 (see <b>-byrow</b>).
@@ -298,42 +299,6 @@ Row By Row mode.
 
 <p>Before Netpbm 10.21 (March 2004), <b>tifftopnm</b> used the
 Y=(1-K)*(1-B) formula always.
-
-<h3 id="outputsync">Output Synchronization</h3>
-
-<p>There is an oddity of <b>tifftopnm</b> that sometimes causes trouble:
-it may terminate before the output image has been completely written.
-(It starts another process and leaves it running after it terminates).
-
-<p><b>tifftopnm</b> sometimes starts a process running <b>pamflip</b> to do
-the final stage of conversion.  It does this when the pixels in the TIFF input
-are arranged in a different order than that required in the Netpbm output.
-See the <b>-orientraw</b> option for details.  When it does this, the original
-<b>tifftopnm</b> process exits as soon as it has transmitted all the image
-data to the <b>pamflip</b> process.  The latter may still have it in a buffer
-and continue working on it.  Even without any buffering, the process still
-needs finite time to notice that it has finished its job and terminate.
-
-<p>This means that after the <b>tifftopnm</b> process has terminated, the
-output file may still be open, and also that if you read it immediately, you
-may find the file's contents incomplete.
-
-<p>This is not an issue when you pipe the output (Standard Output) to another
-process.  If you want the output to go into a regular file, then, you can just
-pipe it to a <b>cat</b> process.  When the <b>cat</b> terminates, the file
-will be complete and closed:
-
-<pre>
-<kbd>
-    $ pnmtotiff myimage.tif | cat &gt;myimage.pnm
-    $ cp myimage.pnm myimage2.pnm
-</kbd>
-</pre>
-
-<p>You can prevent <b>tifftopnm</b> from using the <b>pamflip</b> process with
-the <b>-orientraw</b> option or by ensuring your TIFF image is oriented the
-same as a Netpbm image (it usually is).  The <b>-byrow</b> option increases
-the likelihood that <b>tifftopnm</b> will use a <b>pamflip</b> process.
 
 
 <H2 id="seealso">SEE ALSO</H2>
