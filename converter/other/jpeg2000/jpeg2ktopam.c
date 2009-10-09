@@ -41,7 +41,7 @@ parseCommandLine(int argc, char ** argv,
                  struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that many of the strings that this function returns in the
-   *cmdline_p structure are actually in the supplied argv array.  And
+   *cmdlineP structure are actually in the supplied argv array.  And
    sometimes, one of these strings is actually just a suffix of an entry
    in argv!
 -----------------------------------------------------------------------------*/
@@ -82,36 +82,57 @@ parseCommandLine(int argc, char ** argv,
 
 
 static void
-readJpc(const char *   const inputFilename, 
+validateJ2k(jas_stream_t * const instreamP) {
+/*----------------------------------------------------------------------------
+   Abort program with error message if *instreamP is not a JPEG-2000 code
+   stream (JPC) or image file (JP2).
+-----------------------------------------------------------------------------*/
+    assert(jas_image_lookupfmtbyname("jpc"));
+    assert(jas_image_lookupfmtbyname("jp2"));
+
+    if (jas_image_lookupfmtbyname("jpc")->ops.validate(instreamP) != 0 &&
+        jas_image_lookupfmtbyname("jp2")->ops.validate(instreamP) != 0) {
+
+        pm_error("Input is not JPEG-2000 image file (JP2) "
+                 "or code stream (JPC).  "
+                 "(the first few bytes of the file are not the required "
+                 "signature)");
+    }
+}
+
+        
+
+
+static void
+readJ2k(const char *   const inputFilename, 
         jas_image_t ** const jasperPP) {
 
     jas_image_t * jasperP;
-    jas_stream_t *instream;
+    jas_stream_t * instreamP;
     const char * options;
 
     if ( strcmp(inputFilename, "-") == 0) {
         /* The input image is to be read from standard input. */
-        instream = jas_stream_fdopen(fileno(stdin), "rb");
-        if (instream == NULL)
+        instreamP = jas_stream_fdopen(fileno(stdin), "rb");
+        if (instreamP == NULL)
             pm_error("error: cannot reopen standard input");
     } else {
-        instream = jas_stream_fopen(inputFilename, "rb");
-        if (instream == NULL )
+        instreamP = jas_stream_fopen(inputFilename, "rb");
+        if (instreamP == NULL )
             pm_error("cannot open input image file '%s'", inputFilename);
     } 
-    assert(jas_image_lookupfmtbyname("jpc"));
-    if (jas_image_lookupfmtbyname("jpc")->ops.validate(instream) != 0)
-        pm_error("Input is not JPEG-2000 code stream");
-        
+
+    validateJ2k(instreamP);
+
     options = "";
 
-    jasperP = jas_image_decode(instream, jas_image_strtofmt((char*)"jpc"), 
+    jasperP = jas_image_decode(instreamP, jas_image_getfmt(instreamP),
                                (char*)options);
     if (jasperP == NULL)
         pm_error("Unable to interpret JPEG-2000 input.  "
                  "The Jasper library jas_image_decode() subroutine failed.");
 
-	jas_stream_close(instream);
+	jas_stream_close(instreamP);
 
     *jasperPP = jasperP;
 }
@@ -189,7 +210,7 @@ static void
 validateComponentsAlike(jas_image_t * const jasperP) {
 /*----------------------------------------------------------------------------
    JPC allows each component to have its own width and height.  But
-   PAM requires all planes to the same shape.  So we validate now that
+   PAM requires all planes to have the same shape.  So we validate now that
    all the channels are the same, and abort the program if not.
 -----------------------------------------------------------------------------*/
     int cmptNo;
@@ -479,7 +500,7 @@ main(int argc, char **argv)
     
     jas_setdbglevel(cmdline.debuglevel);
     
-    readJpc(cmdline.inputFilename, &jasperP);
+    readJ2k(cmdline.inputFilename, &jasperP);
 
     outpam.file = stdout;
     outpam.size = sizeof(outpam);

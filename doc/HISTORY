@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.49.00
 
+              jpeg2ktopam: Work with JP2 input as well as JPC.
+
 09.09.27 BJH  Release 10.48.00
 
               ppmsvgalib: Wait to initialize Svgalib to prevent it from
