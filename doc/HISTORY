@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+09.10.18 BJH  Release 10.35.69
+
+              Build: fix build failure with no-network build of Ppmtompeg.
+
 09.09.18 BJH  Release 10.35.68
 
               pambayer: fix unconditional crash/failure when you aren't using
