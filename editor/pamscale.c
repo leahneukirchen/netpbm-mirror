@@ -31,9 +31,9 @@
 #include <assert.h>
 
 #include "pm_c_util.h"
-#include "pam.h"
-#include "shhopt.h"
 #include "mallocvar.h"
+#include "shhopt.h"
+#include "pam.h"
 
 
 /****************************/
@@ -52,18 +52,20 @@
 #define EPSILON 1e-7
 
 
+
 /* x^2 and x^3 helper functions */
 static __inline__ double 
-pow2 (double x)
-{
-  return x*x;
+pow2(double const x) {
+    return x * x;
 }
 
+
+
 static __inline__ double 
-pow3 (double x) 
-{
-  return x*x*x;
+pow3(double const x) {
+    return x * x * x;
 }
+
 
 
 /* box, pulse, Fourier window, */
@@ -74,12 +76,13 @@ pow3 (double x)
 #define radius_box (0.5)
 
 static double 
-filter_box (double x)
-{
-    if (x <  0.0) x = -x;
-    if (x <= 0.5) return 1.0;
-    return 0.0;
+filter_box(double const x) {
+
+    double const absx = x < 0.0 ? -x : x;
+
+    return (absx <= 0.5) ? 1.0 : 0.0;
 }
+
 
 
 /* triangle, Bartlett window, */
@@ -89,12 +92,13 @@ filter_box (double x)
 #define radius_triangle (1.0)
 
 static double 
-filter_triangle (double x)
-{
-    if (x <  0.0) x = -x;
-    if (x < 1.0) return 1.0-x;
-    return 0.0;
+filter_triangle(double const x) {
+
+    double const absx = x < 0.0 ? -x : x;
+
+    return absx < 1.0 ? 1.0 - absx : 0.0;
 }
+
 
 
 /* 3rd order (quadratic) b-spline */
@@ -102,13 +106,16 @@ filter_triangle (double x)
 #define radius_quadratic (1.5)
 
 static double 
-filter_quadratic(double x)
-{
-    if (x <  0.0) x = -x;
-    if (x < 0.5) return 0.75-pow2(x);
-    if (x < 1.5) return 0.50*pow2(x-1.5);
-    return 0.0;
+filter_quadratic(double const x) {
+
+    double const absx = x < 0.0 ? -x : x;
+
+    return
+        absx < 0.5 ? 0.75 - pow2(absx) :
+        absx < 1.5 ? 0.50 * pow2(absx - 1.5) :
+        0.0;
 }
+
 
 
 /* 4th order (cubic) b-spline */
@@ -116,13 +123,16 @@ filter_quadratic(double x)
 #define radius_cubic (2.0)
 
 static double 
-filter_cubic(double x)
-{
-    if (x <  0.0) x = -x;
-    if (x < 1.0) return 0.5*pow3(x) - pow2(x) + 2.0/3.0;
-    if (x < 2.0) return pow3(2.0-x)/6.0;
-    return 0.0;
+filter_cubic(double const x) {
+
+    double const absx = x < 0.0 ? -x : x;
+
+    return
+        absx < 1.0 ? 0.5 * pow3(absx) - pow2(absx) + 2.0/3.0 :
+        absx < 2.0 ? pow3(2.0-absx)/6.0 :
+        0.0;
 }
+
 
 
 /* Catmull-Rom spline, Overhauser spline */
@@ -130,13 +140,16 @@ filter_cubic(double x)
 #define radius_catrom (2.0)
 
 static double 
-filter_catrom(double x)
-{
-    if (x <  0.0) x = -x;
-    if (x < 1.0) return  1.5*pow3(x) - 2.5*pow2(x)         + 1.0;
-    if (x < 2.0) return -0.5*pow3(x) + 2.5*pow2(x) - 4.0*x + 2.0;
-    return 0.0;
+filter_catrom(double const x) {
+
+    double const absx = x < 0.0 ? -x : x;
+
+    return
+        absx < 1.0 ?  1.5 * pow3(absx) - 2.5 * pow2(absx)         + 1.0 :
+        absx < 2.0 ? -0.5 * pow3(absx) + 2.5 * pow2(absx) - 4.0 * absx + 2.0 :
+        0.0;
 }
+
 
 
 /* Mitchell & Netravali's two-param cubic */
@@ -149,22 +162,25 @@ static double
 filter_mitchell(double x)
 {
 
-    double b = 1.0/3.0;
-    double c = 1.0/3.0;
+    double const b = 1.0/3.0;
+    double const c = 1.0/3.0;
 
-    double p0 = (  6.0 -  2.0*b         ) / 6.0;
-    double p2 = (-18.0 + 12.0*b +  6.0*c) / 6.0;
-    double p3 = ( 12.0 -  9.0*b -  6.0*c) / 6.0;
-    double q0 = (         8.0*b + 24.0*c) / 6.0;
-    double q1 = (      - 12.0*b - 48.0*c) / 6.0;
-    double q2 = (         6.0*b + 30.0*c) / 6.0;
-    double q3 = (      -      b -  6.0*c) / 6.0;
+    double const p0 = (  6.0 -  2.0*b         ) / 6.0;
+    double const p2 = (-18.0 + 12.0*b +  6.0*c) / 6.0;
+    double const p3 = ( 12.0 -  9.0*b -  6.0*c) / 6.0;
+    double const q0 = (         8.0*b + 24.0*c) / 6.0;
+    double const q1 = (      - 12.0*b - 48.0*c) / 6.0;
+    double const q2 = (         6.0*b + 30.0*c) / 6.0;
+    double const q3 = (      -      b -  6.0*c) / 6.0;
 
-    if (x <  0.0) x = -x;
-    if (x <  1.0) return p3*pow3(x) + p2*pow2(x)        + p0;
-    if (x < 2.0) return q3*pow3(x) + q2*pow2(x) + q1*x + q0;
-    return 0.0;
+    double const absx = x < 0.0 ? -x : x;
+
+    return
+        absx <  1.0 ? p3 * pow3(absx) + p2 * pow2(absx)        + p0 :
+        absx < 2.0 ? q3 * pow3(absx) + q2 * pow2(absx) + q1 * absx + q0 :
+        0.0;
 }
+
 
 
 /* Gaussian filter (infinite) */
@@ -172,10 +188,11 @@ filter_mitchell(double x)
 #define radius_gauss (1.25)
 
 static double 
-filter_gauss(double x)
-{
+filter_gauss(double const x) {
+
     return exp(-2.0*pow2(x)) * sqrt(2.0/M_PI);
 }
+
 
 
 /* sinc, perfect lowpass filter (infinite) */
@@ -183,16 +200,17 @@ filter_gauss(double x)
 #define radius_sinc (4.0)
 
 static double 
-filter_sinc(double x)
-{
+filter_sinc(double const x) {
     /* Note: Some people say sinc(x) is sin(x)/x.  Others say it's
        sin(PI*x)/(PI*x), a horizontal compression of the former which is
        zero at integer values.  We use the latter, whose Fourier transform
        is a canonical rectangle function (edges at -1/2, +1/2, height 1).
     */
-    if (x == 0.0) return 1.0;
-    return sin(M_PI*x)/(M_PI*x);
+    return 
+        x == 0.0 ? 1.0 :
+        sin(M_PI*x)/(M_PI*x);
 }
+
 
 
 /* Bessel (for circularly symm. 2-d filt, infinite) */
@@ -201,11 +219,13 @@ filter_sinc(double x)
 #define radius_bessel (3.2383)
 
 static double 
-filter_bessel(double x)
-{
-    if (x == 0.0) return M_PI/4.0;
-    return j1(M_PI*x)/(2.0*x);
+filter_bessel(double const x) {
+
+    return 
+        x == 0.0 ? M_PI/4.0 :
+        j1(M_PI * x) / (2.0 * x);
 }
+
 
 
 /* Hanning window (infinite) */
@@ -213,10 +233,11 @@ filter_bessel(double x)
 #define radius_hanning (1.0)
 
 static double 
-filter_hanning(double x)
-{
-    return 0.5*cos(M_PI*x) + 0.5;
+filter_hanning(double const x) {
+
+    return 0.5 * cos(M_PI * x) + 0.5;
 }
+
 
 
 /* Hamming window (infinite) */
@@ -224,10 +245,10 @@ filter_hanning(double x)
 #define radius_hamming (1.0)
 
 static double 
-filter_hamming(double x)
-{
-  return 0.46*cos(M_PI*x) + 0.54;
+filter_hamming(double const x) {
+    return 0.46 * cos(M_PI * x) + 0.54;
 }
+
 
 
 /* Blackman window (infinite) */
@@ -235,10 +256,10 @@ filter_hamming(double x)
 #define radius_blackman (1.0)
 
 static double 
-filter_blackman(double x)
-{
-    return 0.5*cos(M_PI*x) + 0.08*cos(2.0*M_PI*x) + 0.42;
+filter_blackman(double const x) {
+    return 0.5 * cos(M_PI * x) + 0.08 * cos(2.0 * M_PI * x) + 0.42;
 }
+
 
 
 /* parameterized Kaiser window (infinite) */
@@ -248,8 +269,7 @@ filter_blackman(double x)
 
 /* modified zeroth order Bessel function of the first kind. */
 static double 
-bessel_i0(double x)
-{
+bessel_i0(double const x) {
   
     int i;
     double sum, y, t;
@@ -257,25 +277,27 @@ bessel_i0(double x)
     sum = 1.0;
     y = pow2(x)/4.0;
     t = y;
-    for (i=2; t>EPSILON; i++) {
+    for (i=2; t>EPSILON; ++i) {
         sum += t;
         t   *= (double)y/pow2(i);
     }
     return sum;
 }
 
+
+
 static double 
-filter_kaiser(double x)
-{
-    /* typically 4<a<9 */
+filter_kaiser(double const x) {
+    /* typically 4 < a < 9 */
     /* param a trades off main lobe width (sharpness) */
     /* for side lobe amplitude (ringing) */
   
-    double a   = 6.5;
-    double i0a = 1.0/bessel_i0(a);
+    double const a   = 6.5;
+    double const i0a = 1.0/bessel_i0(a);
   
-    return i0a*bessel_i0(a*sqrt(1.0-pow2(x)));
+    return i0a * bessel_i0(a * sqrt(1.0-pow2(x)));
 }
+
 
 
 /* normal distribution (infinite) */
@@ -284,11 +306,10 @@ filter_kaiser(double x)
 #define radius_normal (1.0)
 
 static double 
-filter_normal(double x)
-{
+filter_normal(double const x) {
     return exp(-pow2(x)/2.0) / sqrt(2.0*M_PI);
-    return 0.0;
 }
+
 
 
 /* Hermite filter */
@@ -296,13 +317,16 @@ filter_normal(double x)
 #define radius_hermite  (1.0)
 
 static double 
-filter_hermite(double x)
-{
+filter_hermite(double const x) {
     /* f(x) = 2|x|^3 - 3|x|^2 + 1, -1 <= x <= 1 */
-    if (x <  0.0) x = -x;
-    if (x <  1.0) return 2.0*pow3(x) - 3.0*pow2(x) + 1.0;
-    return 0.0;
+
+    double const absx = x < 0.0 ? -x : x;
+
+    return
+        absx <  1.0 ? 2.0 * pow3(absx) - 3.0 * pow2(absx) + 1.0 :
+        0.0;
 }
+
 
 
 /* Lanczos filter */
@@ -310,11 +334,13 @@ filter_hermite(double x)
 #define radius_lanczos (3.0)
 
 static double 
-filter_lanczos(double x)
-{
-    if (x <  0.0) x = -x;
-    if (x <  3.0) return filter_sinc(x) * filter_sinc(x/3.0);
-    return(0.0);
+filter_lanczos(double const x) {
+
+    double const absx = x < 0.0 ? -x : x;
+
+    return
+        x <  3.0 ? filter_sinc(absx) * filter_sinc(absx/3.0) :
+        0.0;
 }
 
 
@@ -491,7 +517,7 @@ processFilterOptions(unsigned int const         filterSpec,
 
 static void
 parseXyParms(int                  const argc, 
-             char **              const argv,
+             const char **        const argv,
              struct cmdlineInfo * const cmdlineP) {
 
     /* parameters are box width (columns), box height (rows), and
@@ -533,7 +559,7 @@ parseXyParms(int                  const argc,
 
 static void
 parseScaleParms(int                   const argc, 
-                char **               const argv,
+                const char **         const argv,
                 struct cmdlineInfo  * const cmdlineP) {
 
     /* parameters are scale factor and optional filespec */
@@ -559,7 +585,7 @@ parseScaleParms(int                   const argc,
 
 static void
 parseFilespecOnlyParms(int                   const argc, 
-                       char **               const argv,
+                       const char **         const argv,
                        struct cmdlineInfo  * const cmdlineP) {
 
     /* Only parameter allowed is optional filespec */
@@ -572,7 +598,7 @@ parseFilespecOnlyParms(int                   const argc,
 
 static void 
 parseCommandLine(int argc, 
-                 char ** argv, 
+                 const char ** argv, 
                  struct cmdlineInfo  * const cmdlineP) {
 /* --------------------------------------------------------------------------
    Parse program command line described in Unix standard form by argc
@@ -585,8 +611,8 @@ parseCommandLine(int argc,
    was passed to us as the argv array.  We also trash *argv.
 --------------------------------------------------------------------------*/
     optEntry *option_def;
-    /* Instructions to optParseOptions3 on how to parse our options. */
     optStruct3 opt;
+        /* Instructions to optParseOptions3 on how to parse our options. */
   
     unsigned int option_def_index;
     unsigned int xyfit, xyfill;
@@ -633,7 +659,7 @@ parseCommandLine(int argc,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;   /* We have no parms that are negative numbers */
 
-    optParseOptions3( &argc, argv, opt, sizeof(opt), 0 );
+    optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
     /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (cmdlineP->nomix && filterSpec) 
@@ -2081,14 +2107,14 @@ scaleWithoutMixing(const struct pam * const inpamP,
 
 
 int
-main(int argc, char **argv ) {
+main(int argc, const char **argv ) {
 
     struct cmdlineInfo cmdline;
     FILE* ifP;
     struct pam inpam, outpam;
     float xscale, yscale;
 
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
