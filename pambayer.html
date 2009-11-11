@@ -15,6 +15,7 @@ pambayer - interpret Bayer patterns
 
 <B>pambayer</B>
 <b>-type=</b>{<b>1</b>|<b>2</b>|<b>3</b>|<b>4</b>}
+[<b>-nointerpolate</b>]
 [<I>pamfile</I>]
 
 <P>Minimum unique abbreviation of option is acceptable.  You may use
@@ -38,6 +39,16 @@ The pattern in which they are laid out is the Bayer pattern.  The
 input to <b>pambayer</b> is one sample value for each of those
 sensors, so some samples are red, some are green, and some are blue.
 
+<p><b>pambayer</b> turns that into a regular visual image with one pixel
+per sensor.  For the two components of each pixel that are missing in the
+corresponding Bayer input, <b>pambayer</b> averages the sample values from
+the adjacent pixels that do have that component.
+
+<p>But you can have <b>pambayer</b> fill in black instead (see the
+<b>-noninterpolate</b> option), which gives you a simpler representation of
+what the camera saw, on which you might do further processing.  Such an image
+still looks right, though considerably dimmer, if you stand far enough away
+and let your eyes do the interpolation.
 
 <p>The input image is a pseudo-PNM image (pseudo- because while the structure
 is the same, the sample values have different meanings) or PAM image of
@@ -56,7 +67,7 @@ a standard color image.  You can convert this to PPM with
 
 <DL COMPACT>
 
-<dt><b>type=</b><i>n</i>
+<dt><b>-type=</b><i>n</i>
 
 <dd>This tells which Bayer pattern the input is:
 
@@ -72,6 +83,16 @@ a standard color image.  You can convert this to PPM with
 </dl>
 
 This option is mandatory.
+
+<dt><b>-nointerpolate</b>
+
+<dd>Each output pixel position corresponds to one position in the input
+Bayer pattern, which means only one of the three color components is
+supplied by the input.  For the other two, this option says to user zero.
+Without it, <b>pambayer</b> instead interpolates from the adjacent pixels
+that do have that color component.
+
+<p>This option was new in Netpbm 10.49 (December 2009).
 
 </DL>
 
