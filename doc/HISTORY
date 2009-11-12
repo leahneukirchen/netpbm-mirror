@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.49.00
 
+              pambayer: add -nointerpolate.
+
               Add pnmmercator.
 
               jpeg2ktopam: Work with JP2 input as well as JPC.

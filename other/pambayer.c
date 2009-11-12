@@ -42,18 +42,19 @@ enum bayerType {
 struct cmdlineInfo {
     const char * inputFilespec;
     enum bayerType bayerType;
+    unsigned int nointerpolate;
 };
 
 
 
 static void
-parseCommandLine(int argc, char ** argv,
+parseCommandLine(int argc, const char ** argv,
                  struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
 -----------------------------------------------------------------------------*/
-    optEntry *option_def;
+    optEntry * option_def;
         /* Instructions to optParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
@@ -67,12 +68,14 @@ parseCommandLine(int argc, char ** argv,
     option_def_index = 0;   /* incremented by OPTENT3 */
     OPTENT3(0, "type",     OPT_UINT, &type,
             &typeSpec, 0);
+    OPTENT3(0, "nointerpolate", OPT_FLAG, NULL,
+            &cmdlineP->nointerpolate, 0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We may have parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (argc-1 < 1)
@@ -102,28 +105,47 @@ calc_4(const struct pam * const pamP,
        tuple **           const intuples,
        tuple **           const outtuples,
        unsigned int       const plane,
+       bool               const noInterpolation,
        unsigned int       const xoffset,
        unsigned int       const yoffset) {
 /*----------------------------------------------------------------------------
     X . X
     . . .
     X . X
+
+  For the Plane 'plane' sample values, an even pixel of outtuples[] gets the
+  same value as intuples[][].  An odd pixel of outtuples[] gets the mean of
+  the four surrounding even pixels, north, south, east, and west.  But zero if
+  Caller says 'noInterpolation'.
+
+  (even/odd is with respect to ('xoffset', 'yoffset')).
 -----------------------------------------------------------------------------*/
-    unsigned int y;
+    unsigned int row;
     
-    for (y = yoffset; y < pamP->height; y += 2) {
-        unsigned int x;
-        for (x = xoffset; x + 2 < pamP->width; x += 2) {
-            outtuples[y][x][plane] = intuples[y][x][0];
-            outtuples[y][x + 1][plane] =
-                (intuples[y][x][0] + intuples[y][x + 2][0]) / 2;
+    /* Do the even rows -- the even column pixels get copied from the input,
+       while the odd column pixels get the mean of adjacent even ones
+    */
+    for (row = yoffset; row < pamP->height; row += 2) {
+        unsigned int col;
+        for (col = xoffset; col + 2 < pamP->width; col += 2) {
+            outtuples[row][col][plane] = intuples[row][col][0];
+            outtuples[row][col + 1][plane] =
+                noInterpolation ?
+                0 :
+                (intuples[row][col][0] + intuples[row][col + 2][0]) / 2;
         }
     }
-    for (y = yoffset; y + 2 < pamP->height; y += 2) {
-        unsigned int x;
-        for (x = xoffset; x < pamP->width; ++x)
-            outtuples[y + 1][x][plane] =
-                (outtuples[y][x][plane] + outtuples[y + 2][x][plane]) / 2;
+
+    /* Do the odd rows -- every pixel is the mean of the one above and below */
+    for (row = yoffset; row + 2 < pamP->height; row += 2) {
+        unsigned int col;
+        for (col = xoffset; col < pamP->width; ++col) {
+            outtuples[row + 1][col][plane] = 
+                noInterpolation ?
+                0 :
+                (outtuples[row][col][plane] +
+                 outtuples[row + 2][col][plane]) / 2;
+        }
     }
 }
 
@@ -134,25 +156,37 @@ calc_5(const struct pam * const pamP,
        tuple **           const intuples,
        tuple **           const outtuples,
        unsigned int       const plane,
+       bool               const noInterpolation,
        unsigned int       const xoffset,
        unsigned int       const yoffset) {
 /*----------------------------------------------------------------------------
    . X .
    X . X
    . X .
+
+  For the Plane 'plane' sample values, an pixel on an even diagonal of
+  outtuples[] gets the same value as intuples[][].  An pixel on an odd
+  diagonal gets the mean of the four surrounding even pixels, north,
+  south, east, and west.  But zero if Caller says 'noInterpolation'.
+
+  (even/odd is with respect to ('xoffset', 'yoffset')).
 -----------------------------------------------------------------------------*/
-    unsigned int y;
+    unsigned int row;
     unsigned int j;
 
     j = 0;  /* initial value */
 
-    for (y = yoffset; y + 2 < pamP->height; ++y) {
-        unsigned int x;
-        for (x = xoffset + j; x + 2 < pamP->width; x += 2) {
-            outtuples[y][x + 1][plane] = intuples[y][x + 1][0];
-            outtuples[y + 1][x + 1][plane] = 
-                (intuples[y][x + 1][0] + intuples[y + 1][x][0] +
-                 intuples[y + 2][x + 1][0] + intuples[y + 1][x + 2][0]) / 4;
+    for (row = yoffset; row + 2 < pamP->height; ++row) {
+        unsigned int col;
+        for (col = xoffset + j; col + 2 < pamP->width; col += 2) {
+            outtuples[row][col + 1][plane] = intuples[row][col + 1][0];
+            outtuples[row + 1][col + 1][plane] =
+                noInterpolation ?
+                0 :
+                (intuples[row][col + 1][0] +
+                 intuples[row + 1][col][0] +
+                 intuples[row + 2][col + 1][0] +
+                 intuples[row + 1][col + 2][0]) / 4;
         }
         j = 1 - j;
     }
@@ -167,6 +201,7 @@ struct compAction {
                  tuple **           const intuples,
                  tuple **           const outtuples,
                  unsigned int       const plane,
+                 bool               const noInterpolation,
                  unsigned int       const xoffset,
                  unsigned int       const yoffset);
 };
@@ -260,7 +295,7 @@ actionTableForType(enum bayerType const bayerType) {
 
 
 int
-main(int argc, char **argv) {
+main(int argc, const char **argv) {
 
     struct cmdlineInfo cmdline;
     FILE * ifP;
@@ -271,8 +306,8 @@ main(int argc, char **argv) {
     const struct compAction * compActionTable;
     unsigned int plane;
 
-    pnm_init(&argc, argv);
-
+    pm_proginit(&argc, argv);
+    
     parseCommandLine(argc, argv, &cmdline);
     
     ifP = pm_openr(cmdline.inputFilespec);
@@ -289,6 +324,7 @@ main(int argc, char **argv) {
         struct compAction const compAction = compActionTable[plane];
 
         compAction.calc(&inpam, intuples, outtuples, plane,
+                        cmdline.nointerpolate,
                         compAction.xoffset, compAction.yoffset);
     }
     pnm_writepam(&outpam, outtuples);
