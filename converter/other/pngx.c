@@ -49,7 +49,7 @@ pngx_create(struct pngx ** const pngxPP,
     else {
         switch(rw) {
         case PNGX_READ:
-            pngxP->png_ptr = png_create_write_struct(
+            pngxP->png_ptr = png_create_read_struct(
                 PNG_LIBPNG_VER_STRING,
                 jmpbufP, errorHandler, NULL);
             break;
