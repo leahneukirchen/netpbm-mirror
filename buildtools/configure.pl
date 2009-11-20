@@ -1550,13 +1550,14 @@ sub testPngHdr($$) {
 
 
 
-sub printBadPngConfigLdflagsWarning($) {
-    my ($pngLdFlags) = @_;
+sub printBadPngConfigCFlagsWarning($) {
+    my ($pngCFlags) = @_;
 
     print << 'EOF';
-WARNING: 'libpng-config' in this environment (a program in your PATH)
-gives instructions that don't work for linking with the PNG library.
-Our test link failed.
+
+WARNING: 'libpng-config' in this environment (a program in your PATH) gives
+instructions that don't work for compiling for (not linking with) the PNG
+library.  Our test compile failed.
 
 This indicates Libpng is installed incorrectly on this system.  If so,
 your Netpbm build, which uses 'libpng-config', will fail.  But it
@@ -1568,13 +1569,29 @@ EOF
 
 
 
-sub printBadPngConfigCFlagsWarning($) {
-    my ($pngCFlags) = @_;
+sub printPngLinkWorksWithLzLm() {
 
     print << 'EOF';
+When we added "-lz -lm" to the linker flags, the link worked.  That means the
+fix for this may be to modify 'libpng-config' so that 'libpng-config
+--ldflags' includes "-lz -lm" in its output.  But the right fix may actually
+be to build libpng differently so that it specifies its dependency on those
+libraries, or to put those libraries in a different place, or to create
+missing symbolic links.
+
+EOF
+}
+
+
+
+sub printBadPngConfigLdflagsWarning($$) {
+    my ($pngLdFlags, $lzLmSuccess) = @_;
+
+    print << 'EOF';
+*****************************************************************************
 WARNING: 'libpng-config' in this environment (a program in your PATH)
-gives instructions that don't work for compiling for the PNG library.
-Our test compile failed.
+gives instructions that don't work for linking with the PNG library.
+Our test link failed.
 
 This indicates Libpng is installed incorrectly on this system.  If so,
 your Netpbm build, which uses 'libpng-config', will fail.  But it
@@ -1582,6 +1599,14 @@ might also just be our test that is broken.
 
 EOF
 
+    if ($lzLmSuccess) {
+        printPngLinkWorksWithLzLm();
+    }
+
+    print << 'EOF';
+*****************************************************************************
+
+EOF
 }
 
 
@@ -1607,7 +1632,10 @@ sub testLinkPnglib($$) {
                         \@cSourceCode, \my $success);
         
         if (!$success) {
-            printBadPngConfigLdflagsWarning($pngLdflags);
+            testCompileLink("$generalCflags $pngCflags $pngLdflags -lz -lm",
+                        \@cSourceCode, \my $lzLmSuccess);
+
+            printBadPngConfigLdflagsWarning($pngLdflags, $lzLmSuccess);
         }
     }
 }
