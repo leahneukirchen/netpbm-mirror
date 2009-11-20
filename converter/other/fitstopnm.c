@@ -38,6 +38,7 @@
 
 #include <string.h>
 #include <float.h>
+#include <assert.h>
 
 #include "pm_config.h"
 #include "pm_c_util.h"
@@ -145,7 +146,10 @@ parseCommandLine(int argc, char ** argv,
 
 struct FITS_Header {
   int simple;       /* basic format or not */
-  int bitpix;       /* number of bits per pixel */
+  int bitpix;
+      /* number of bits per pixel, positive for integer, negative 
+         for floating point
+      */
   int naxis;        /* number of axes */
   int naxis1;       /* number of points on axis 1 */
   int naxis2;       /* number of points on axis 2 */
@@ -156,6 +160,16 @@ struct FITS_Header {
   double bscale;
 };
 
+
+typedef enum {
+    VF_CHAR, VF_SHORT, VF_LONG, VF_FLOAT, VF_DOUBLE
+} valFmt;
+
+struct fitsRasterInfo {
+    valFmt valFmt;
+    double bzer;
+    double bscale;
+};
 
 /* This code deals properly with integers, no matter what the byte order
    or integer size of the host machine.  We handle sign extension manually to
@@ -276,34 +290,56 @@ readFitsDouble(FILE *   const ifP,
 
 
 
+static valFmt
+valFmtFromBitpix(int const bitpix) {
+/*----------------------------------------------------------------------------
+   Return the format of a "value" in the FITS file, given the value
+   of the BITPIX header in the FITS file.
+
+   BITPIX has a stupid format wherein it is fundamentally the number
+   of bits per value, but its sign indicates whether it is integer
+   or floating point.
+-----------------------------------------------------------------------------*/
+    switch (bitpix) {
+    case  +8: return VF_CHAR;
+    case +16: return VF_SHORT;
+    case +32: return VF_LONG;
+    case -32: return VF_FLOAT;
+    case -64: return VF_DOUBLE;
+    default:
+        /* Every possibility is covered above. */
+        assert(false);
+        return 0;  /* quiet compiler warning */
+    }
+}
+
+
+
 static void
 readVal(FILE *   const ifP,
-        int      const bitpix,
+        valFmt   const fmt,
         double * const vP) {
 
-    switch (bitpix) {
-    case 8:
+    switch (fmt) {
+    case VF_CHAR:
         readFitsChar(ifP, vP);
         break;
 
-    case 16:
+    case VF_SHORT:
         readFitsShort(ifP, vP);
         break;
       
-    case 32:
+    case VF_LONG:
         readFitsLong(ifP, vP);
         break;
       
-    case -32:
+    case VF_FLOAT:
         readFitsFloat(ifP, vP);
         break;
       
-    case -64:
+    case VF_DOUBLE:
         readFitsDouble(ifP, vP);
         break;
-      
-    default:
-        pm_error("Strange bitpix value %d in readVal()", bitpix);
     }
 }
 
@@ -419,7 +455,7 @@ scanImageForMinMax(FILE *       const ifP,
                    unsigned int const images,
                    int          const cols,
                    int          const rows,
-                   unsigned int const bitpix,
+                   valFmt       const valFmt,
                    double       const bscale,
                    double       const bzer,
                    unsigned int const imagenum,
@@ -436,14 +472,12 @@ scanImageForMinMax(FILE *       const ifP,
 
     pm_message("Scanning file for scaling parameters");
 
-    switch (bitpix) {
-    case   8: fmaxval = 255.0;        break;
-    case  16: fmaxval = 65535.0;      break;
-    case  32: fmaxval = 4294967295.0; break;
-    case -32: fmaxval = FLT_MAX;      break;
-    case -64: fmaxval = DBL_MAX;      break;
-    default:
-        pm_error("unusual bits per pixel (%u), can't read", bitpix);
+    switch (valFmt) {
+    case VF_CHAR:   fmaxval = 255.0;        break;
+    case VF_SHORT:  fmaxval = 65535.0;      break;
+    case VF_LONG:   fmaxval = 4294967295.0; break;
+    case VF_FLOAT:  fmaxval = FLT_MAX;      break;
+    case VF_DOUBLE: fmaxval = DBL_MAX;      break;
     }
 
     dmax = -fmaxval;
@@ -454,7 +488,7 @@ scanImageForMinMax(FILE *       const ifP,
             unsigned int col;
             for (col = 0; col < cols; ++col) {
                 double val;
-                readVal(ifP, bitpix, &val);
+                readVal(ifP, valFmt, &val);
                 if (image == imagenum || multiplane ) {
                     dmax = MAX(dmax, val);
                     dmin = MIN(dmin, val);
@@ -509,7 +543,8 @@ computeMinMax(FILE *             const ifP,
 
     if (datamin == -DBL_MAX || datamax == DBL_MAX) {
         double scannedDatamin, scannedDatamax;
-        scanImageForMinMax(ifP, images, cols, rows, h.bitpix, h.bscale, h.bzer,
+        scanImageForMinMax(ifP, images, cols, rows,
+                           valFmtFromBitpix(h.bitpix), h.bscale, h.bzer,
                            imagenum, multiplane,
                            &scannedDatamin, &scannedDatamax);
 
@@ -526,7 +561,7 @@ computeMinMax(FILE *             const ifP,
 
 static xelval
 determineMaxval(struct cmdlineInfo const cmdline,
-                struct FITS_Header const fitsHeader,
+                valFmt             const valFmt,
                 double             const datamax,
                 double             const datamin) {
 
@@ -535,7 +570,7 @@ determineMaxval(struct cmdlineInfo const cmdline,
     if (cmdline.omaxvalSpec)
         retval = cmdline.omaxval;
     else {
-        if (fitsHeader.bitpix < 0) {
+        if (valFmt == VF_FLOAT || valFmt == VF_DOUBLE) {
             /* samples are floating point, which means the resolution
                could be anything.  So we just pick a convenient maxval
                of 255.  Before Netpbm 10.20 (January 2004), we did
@@ -561,16 +596,16 @@ determineMaxval(struct cmdlineInfo const cmdline,
 
 
 static void
-convertPgmRaster(FILE *             const ifP,
-                 unsigned int       const cols,
-                 unsigned int       const rows,
-                 xelval             const maxval,
-                 unsigned int       const desiredImage,
-                 unsigned int       const imageCount,
-                 struct FITS_Header const fitsHdr,
-                 double             const scale,
-                 double             const datamin,
-                 xel **             const xels) {
+convertPgmRaster(FILE *                const ifP,
+                 unsigned int          const cols,
+                 unsigned int          const rows,
+                 xelval                const maxval,
+                 unsigned int          const desiredImage,
+                 unsigned int          const imageCount,
+                 struct fitsRasterInfo const rasterInfo,
+                 double                const scale,
+                 double                const datamin,
+                 xel **                const xels) {
         
     /* Note: the FITS specification does not give the association between
        file position and image position (i.e. is the first pixel in the
@@ -593,10 +628,10 @@ convertPgmRaster(FILE *             const ifP,
             unsigned int col;
             for (col = 0; col < cols; ++col) {
                 double val;
-                readVal(ifP, fitsHdr.bitpix, &val);
+                readVal(ifP, rasterInfo.valFmt, &val);
                 {
                     double const t = scale *
-                        (val * fitsHdr.bscale + fitsHdr.bzer - datamin);
+                        (val * rasterInfo.bscale + rasterInfo.bzer - datamin);
                     xelval const tx = MAX(0, MIN(t, maxval));
                     if (image == desiredImage)
                         PNM_ASSIGN1(xels[row][col], tx);
@@ -609,14 +644,14 @@ convertPgmRaster(FILE *             const ifP,
 
 
 static void
-convertPpmRaster(FILE *             const ifP,
-                 unsigned int       const cols,
-                 unsigned int       const rows,
-                 xelval             const maxval,
-                 struct FITS_Header const fitsHdr,
-                 double             const scale,
-                 double             const datamin,
-                 xel **             const xels) {
+convertPpmRaster(FILE *                const ifP,
+                 unsigned int          const cols,
+                 unsigned int          const rows,
+                 xelval                const maxval,
+                 struct fitsRasterInfo const rasterInfo,
+                 double                const scale,
+                 double                const datamin,
+                 xel **                const xels) {
 /*----------------------------------------------------------------------------
    Read the FITS raster from file *ifP into xels[][].  Image dimensions
    are 'cols' by 'rows'.  The FITS raster is 3 planes composing one
@@ -634,10 +669,10 @@ convertPpmRaster(FILE *             const ifP,
             unsigned int col;
             for (col = 0; col < cols; ++col) {
                 double val;
-                readVal(ifP, fitsHdr.bitpix, &val);
+                readVal(ifP, rasterInfo.valFmt, &val);
                 {
                     double const t = scale *
-                        (val * fitsHdr.bscale + fitsHdr.bzer - datamin);
+                        (val * rasterInfo.bscale + rasterInfo.bzer - datamin);
                     xelval const sample = MAX(0, MIN(t, maxval));
 
                     switch (plane) {
@@ -654,17 +689,17 @@ convertPpmRaster(FILE *             const ifP,
 
 
 static void
-convertRaster(FILE *             const ifP,
-              unsigned int       const cols,
-              unsigned int       const rows,
-              xelval             const maxval,
-              bool               const forceplain,
-              bool               const multiplane,
-              unsigned int       const desiredImage,
-              unsigned int       const imageCount,
-              struct FITS_Header const fitsHdr,
-              double             const scale,
-              double             const datamin) {
+convertRaster(FILE *                const ifP,
+              unsigned int          const cols,
+              unsigned int          const rows,
+              xelval                const maxval,
+              bool                  const forceplain,
+              bool                  const multiplane,
+              unsigned int          const desiredImage,
+              unsigned int          const imageCount,
+              struct fitsRasterInfo const rasterInfo,
+              double                const scale,
+              double                const datamin) {
 
     xel ** xels;
     int format;
@@ -673,12 +708,12 @@ convertRaster(FILE *             const ifP,
 
     if (multiplane) {
         format = PPM_FORMAT;
-        convertPpmRaster(ifP, cols, rows, maxval, fitsHdr, scale, datamin,
+        convertPpmRaster(ifP, cols, rows, maxval, rasterInfo, scale, datamin,
                          xels);
     } else {
         format = PGM_FORMAT;
         convertPgmRaster(ifP, cols, rows, maxval,
-                         desiredImage, imageCount, fitsHdr, scale, datamin,
+                         desiredImage, imageCount, rasterInfo, scale, datamin,
                          xels);
     }
     pnm_writepnm(stdout, xels, cols, rows, maxval, format, forceplain);
@@ -697,6 +732,7 @@ main(int argc, char * argv[]) {
     double scale;
     double datamin, datamax;
     struct FITS_Header fitsHeader;
+    struct fitsRasterInfo rasterInfo;
 
     unsigned int imageCount;
     unsigned int desiredImage;
@@ -725,6 +761,10 @@ main(int argc, char * argv[]) {
     cols = fitsHeader.naxis1;
     rows = fitsHeader.naxis2;
 
+    rasterInfo.bscale = fitsHeader.bscale;
+    rasterInfo.bzer   = fitsHeader.bzer;
+    rasterInfo.valFmt = valFmtFromBitpix(fitsHeader.bitpix);
+
     interpretPlanes(fitsHeader, cmdline.image, cmdline.verbose,
                     &imageCount, &multiplane, &desiredImage);
 
@@ -734,7 +774,7 @@ main(int argc, char * argv[]) {
                   cmdline.min, cmdline.max,
                   &datamin, &datamax);
 
-    maxval = determineMaxval(cmdline, fitsHeader, datamax, datamin);
+    maxval = determineMaxval(cmdline, rasterInfo.valFmt, datamax, datamin);
 
     if (datamax - datamin == 0)
         scale = 1.0;
@@ -746,7 +786,7 @@ main(int argc, char * argv[]) {
     else
         convertRaster(ifP, cols, rows, maxval, cmdline.noraw,
                       multiplane, desiredImage, imageCount,
-                      fitsHeader, scale, datamin);
+                      rasterInfo, scale, datamin);
 
     pm_close(ifP);
     pm_close(stdout);
