@@ -12,6 +12,8 @@ not yet  BJH  Release 10.49.00
 
               jpeg2ktopam: Work with JP2 input as well as JPC.
 
+              pnmtofiasco, fiascotopnm: fix bug on bigendian machine.
+
               pngtopam: use png_create_read_struct() instead of
               png_create_write_struct().  Doesn't seem to affect anything.
 
