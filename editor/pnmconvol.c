@@ -15,8 +15,10 @@
 
 /* A change history is at the bottom */
 
+#include <assert.h>
+
 #include "pm_c_util.h"
-#include "pnm.h"
+#include "pam.h"
 #include "shhopt.h"
 #include "mallocvar.h"
 
@@ -81,78 +83,51 @@ parseCommandLine(int argc, char ** argv,
 
 
 struct convKernel {
-    unsigned int const cols;
-    unsigned int const rows;
+    unsigned int cols;
+        /* Width of the convolution window */
+    unsigned int rows;
+        /* Height of the convolution window */
+    unsigned int planes;
+        /* Depth of the kernel -- this had better be the same as the
+           depth of the image being convolved.
+        */
     float ** weight[3];
-};
+        /* weight[PLANE][ROW][COL] is the weight to give to Plane PLANE
+           of the pixel at row ROW, column COL within the convolution window.
+           
+           One means full weight.
 
-convKernelDestroy(struct convKernel * const convKernelP) {
-
-    unsigned int plane;
-
-    for (plane = 0; plane < 3; ++plane)
-        pm_freearray(convKernelP->weight[plane]);
-
-    free(convKernelP);
-}
-
-struct convolveType {
-    void (*convolver)(struct pam *       const inpamP,
-                      struct pam *       const outpamP,
-                      const convKernel * const convKernelP);
+           It can have magnitude greater than or less than one.  It can be
+           positive or negative.  
+        */
 };
 
 
 
 static void
-computeKernel(struct pam *         const cpamP
-              tuple * const *      const ctuples, 
-              bool                 const offsetPgm,
-              struct convKernel ** const convKernelP) {
-/*----------------------------------------------------------------------------
-   Compute the convolution matrix in normalized form from the PGM
-   form.  Each element of the output matrix is the actual weight we give an
-   input pixel -- i.e. the thing by which we multiple a value from the
-   input image.
+warnBadKernel(struct convKernel * const convKernelP) {
 
-   'offsetPgm' means the PGM convolution matrix is defined in offset form so
-   that it can represent negative values.  E.g. with maxval 100, 50 means
-   0, 100 means 50, and 0 means -50.  If 'offsetPgm' is false, 0 means 0
-   and there are no negative weights.
------------------------------------------------------------------------------*/
-    double const scale = (offsetPgm ? 2.0 : 1.0) / cpamP->maxval;
-    double const offset = offsetPgm ? - 1.0 : 0.0;
-
-    struct convKernel * convKernelP;
     float sum[3];
     unsigned int plane;
     unsigned int row;
 
-    MALLOCVAR_NOFAIL(convKernelP);
-    
-    convKernelP->weight[PAM_RED_PLANE] =
-        pm_allocarray(cpamP->width, cpamP->height,
-                      sizeof(convKernelP->weight[PAM_RED_PLANE][0][0]));
-    
-    for (plane = 0; plane < 3; ++plane)
+    for (plane = 0; plane < convKernelP->planes; ++plane)
         sum[plane] = 0.0; /* initial value */
     
-    for (row = 0; row < cpamP->height; ++row) {
+    for (row = 0; row < convKernelP->rows; ++row) {
         unsigned int col;
-        for (col = 0; col < cpamP->width; ++col) {
+        for (col = 0; col < convKernelP->cols; ++col) {
             unsigned int plane;
-            for (plane = 0; plane < cpamP->depth; ++plane) {
-                sum += convKernelP->weight[plane][row][col] =
-                    ctuples[row][col][plane] * scale + offset);
+            for (plane = 0; plane < convKernelP->planes; ++plane)
+                sum[plane] += convKernelP->weight[plane][row][col];
         }
     }
 
-    switch (PNM_FORMAT_TYPE(cpamP->format)) {
-    case PPM_TYPE: {
+    if (convKernelP->planes == 3) {
         unsigned int plane;
         bool biased, negative;
         for (plane = 0, biased = false, negative = false;
-             plane < cpamP->depth;
+             plane < convKernelP->planes;
              ++plane) {
             if (sum[plane] < 0.9 || sum[plane] > 1.1)
                 biased = true;
@@ -171,15 +146,123 @@ computeKernel(struct pam *         const cpamP
             if (negative)
                 pm_message("Maybe you want the -nooffset option?");
         }
-    } break;
-
-    default:
+    } else if (convKernelP->planes == 1) {
         if (sum[0] < 0.9 || sum[0] > 1.1)
             pm_message("WARNING - this convolution matrix is biased.  "
                        "average weight = %f (unbiased would be 1)",
                        sum[0]);
-        break;
+        if (sum[0] < 0.0)
+            pm_message("Maybe you want the -nooffset option?");
     }
+}
+
+
+
+static void
+convKernelCreate(struct pam *         const cpamP,
+                 tuple * const *      const ctuples, 
+                 unsigned int         const depth,
+                 bool                 const offsetPgm,
+                 struct convKernel ** const convKernelPP) {
+/*----------------------------------------------------------------------------
+   Compute the convolution matrix in normalized form from the PGM
+   form.  Each element of the output matrix is the actual weight we give an
+   input pixel -- i.e. the thing by which we multiple a value from the
+   input image.
+
+   'depth' is the required number of planes in the kernel.  If 'ctuples' has
+   fewer planes than that, we duplicate as necessary.  E.g. if 'ctuples' is
+   from a PGM input file and we're convolving a PPM image, we'll make a
+   3-plane convolution kernel by repeating the one plane in 'ctuples'.  If
+   'ctuples' has more planes than specified, we ignore the higher numbered
+   ones.
+
+   'offsetPgm' means the PGM convolution matrix is defined in offset form so
+   that it can represent negative values.  E.g. with maxval 100, 50 means
+   0, 100 means 50, and 0 means -50.  If 'offsetPgm' is false, 0 means 0
+   and there are no negative weights.
+-----------------------------------------------------------------------------*/
+    double const scale = (offsetPgm ? 2.0 : 1.0) / cpamP->maxval;
+    double const offset = offsetPgm ? - 1.0 : 0.0;
+    unsigned int const planes = MIN(3, depth);
+
+    struct convKernel * convKernelP;
+    unsigned int plane;
+
+    MALLOCVAR_NOFAIL(convKernelP);
+
+    convKernelP->cols   = cpamP->width;
+    convKernelP->rows   = cpamP->height;
+    convKernelP->planes = planes;
+
+    for (plane = 0; plane < planes; ++plane) {
+        unsigned int row;
+
+        MALLOCARRAY_NOFAIL(convKernelP->weight[plane], cpamP->height);
+    
+        for (row = 0; row < cpamP->height; ++row) {
+            unsigned int col;
+
+            MALLOCARRAY_NOFAIL(convKernelP->weight[plane][row], cpamP->width);
+
+            for (col = 0; col < cpamP->width; ++col) {
+                sample const inValue = plane < cpamP->depth ?
+                    ctuples[row][col][plane] : ctuples[row][col][0];
+
+                convKernelP->weight[plane][row][col] =
+                    inValue * scale + offset;
+            }
+        }
+    }
+    warnBadKernel(convKernelP);
+        
+    *convKernelPP = convKernelP;
+}
+
+
+
+static void
+convKernelDestroy(struct convKernel * const convKernelP) {
+
+    unsigned int plane;
+
+    for (plane = 0; plane < convKernelP->planes; ++plane) {
+        unsigned int row;
+
+        for (row = 0; row < convKernelP->rows; ++row)
+            free(convKernelP->weight[plane][row]);
+
+        free(convKernelP->weight[plane]);
+    }
+    free(convKernelP);
+}
+
+
+
+static void
+validateEnoughImageToConvolve(const struct pam *        const inpamP,
+                              const struct convKernel * const convKernelP) {
+/*----------------------------------------------------------------------------
+   Abort program if the image isn't big enough in both directions to have
+   at least one convolved pixel.
+
+   The program could theoretically operate with an image smaller than that by
+   simply outputting the input unchanged (like it does with the edges of an
+   image anyway), but we're too lazy to write code for this special case.  The
+   simple code expects the unconvolved edges to exist full-size and some of it
+   convolves the first convolveable row and/or column specially and expects it
+   to exist.
+-----------------------------------------------------------------------------*/
+
+    if (inpamP->height < convKernelP->rows + 1)
+        pm_error("Image is too short (%u rows) to convolve with this "
+                 "%u-row convolution kernel.",
+                 inpamP->height, convKernelP->rows);
+    
+    if (inpamP->width < convKernelP->cols + 1)
+        pm_error("Image is too narrow (%u columns) to convolve with this "
+                 "%u-column convolution kernel.",
+                 inpamP->width, convKernelP->cols);
 }
 
 
@@ -193,12 +276,12 @@ allocRowbuf(struct pam * const pamP,
     MALLOCARRAY(rowbuf, height);
 
     if (rowbuf == NULL)
-        pm_error("Failed to allocate %u-row buffer");
+        pm_error("Failed to allocate %u-row buffer", height);
     else {
         unsigned int row;
     
         for (row = 0; row < height; ++row)
-            rowbuf[i] = pnm_allocpamrow(pamP);
+            rowbuf[row] = pnm_allocpamrow(pamP);
     }
 
     return rowbuf;
@@ -238,29 +321,29 @@ readAndScaleRow(struct pam * const inpamP,
 
 
 static void
-readInitialRowbuf(struct pam *        const inpamP,
-                  struct convKernel * const convKernelP,
-                  tuple **            const rowbuf,
-                  sample              const outputMaxval,
-                  unsigned int        const outputDepth) {
+readAndScaleRows(struct pam *              const inpamP,
+                 unsigned int              const count,
+                 tuple **                  const rowbuf,
+                 sample                    const outputMaxval,
+                 unsigned int              const outputDepth) {
 /*----------------------------------------------------------------------------
-  Read in one convolution kernel's worth of image, less one row,
-  into the row buffer rowbuf[], starting at the beginning of the buffer.
+  Read in 'count' rows into rowbuf[].
   
-  Scale the contents to maxval 'outputMaxval'.
+  Scale the contents to maxval 'outputMaxval' and expand to depth
+  'outputDepth'.
 -----------------------------------------------------------------------------*/
     unsigned int row;
 
-    for (row = 0; row < convKernelP->rows - 1; ++row)
+    for (row = 0; row < count; ++row)
         readAndScaleRow(inpamP, rowbuf[row], outputMaxval, outputDepth);
 }
 
 
 
 static void
-writeUnconvolvedTop(struct pam *        const outpamP,
-                    struct convKernel * const convKernelP,
-                    tuple **            const rowbuf) {
+writeUnconvolvedTop(struct pam *              const outpamP,
+                    const struct convKernel * const convKernelP,
+                    tuple **                  const rowbuf) {
 /*----------------------------------------------------------------------------
    Write out the top part that we can't convolve because the convolution
    kernel runs off the top of the image.
@@ -277,20 +360,25 @@ writeUnconvolvedTop(struct pam *        const outpamP,
 
 
 static void
-writeUnconvolvedBottom(struct pam *        const outpamP,
-                       struct convKernel * const convKernelP,
-                       tuple **            const circMap) {
+writeUnconvolvedBottom(struct pam *              const outpamP,
+                       const struct convKernel * const convKernelP,
+                       unsigned int              const windowHeight,
+                       tuple **                  const circMap) {
 /*----------------------------------------------------------------------------
   Write out the bottom part that we can't convolve because the convolution
   kernel runs off the bottom of the image.
 
-  Assume the end of the image is in the row buffer, mapped by 'circMap'
-  such that the top of the window is circMap[0].
+  Assume the 'windowHeight' rows at the bottom of the image is in the row
+  buffer, mapped by 'circMap' such that the top of the window is circMap[0].
 -----------------------------------------------------------------------------*/
     unsigned int row;
 
-    for (row = convKernelP->rows / 2 + 1; row < convKernelP->rows; ++row)
+    for (row = windowHeight - convKernelP->rows / 2;
+         row < windowHeight;
+         ++row) {
+
         pnm_writepamrow(outpamP, circMap[row]);
+    }
 }
 
 
@@ -298,6 +386,7 @@ writeUnconvolvedBottom(struct pam *        const outpamP,
 static void
 setupCircMap(tuple **     const circMap,
              tuple **     const rowbuf,
+             unsigned int const windowHeight,
              unsigned int const topRowbufRow) {
 /*----------------------------------------------------------------------------
   Set up circMap[] to reflect the case that index 'topRowbufRow' of rowbuf[]
@@ -308,7 +397,7 @@ setupCircMap(tuple **     const circMap,
 
     i = 0;
 
-    for (row = topRowbufRow; row < convKernelP->rows; ++i, ++row)
+    for (row = topRowbufRow; row < windowHeight; ++i, ++row)
         circMap[i] = rowbuf[row];
 
     for (row = 0; row < topRowbufRow; ++row, ++i)
@@ -318,12 +407,22 @@ setupCircMap(tuple **     const circMap,
 
 
 static void
-convolveGeneralRowPlane(struct pam *        const pamP,
-                        tuple **            const circMap,
-                        struct convKernel * const convKernelP,
-                        unsigned int        const plane,
-                        tuple *             const outputrow) {
+convolveGeneralRowPlane(struct pam *              const pamP,
+                        tuple **                  const window,
+                        const struct convKernel * const convKernelP,
+                        unsigned int              const plane,
+                        tuple *                   const outputrow) {
+/*----------------------------------------------------------------------------
+   Given a window of input window[], where window[0] is the top row of the
+   window and the window is the height of the convolution kernel, convolve
+   Plane 'plane' of the row at the center of the window.
 
+   Return the convolved row as outputrow[].
+
+   *pamP describes the rows in window[] (but not the number of rows).
+
+   *convKernelP is the convolution kernel to use.
+-----------------------------------------------------------------------------*/
     unsigned int const crowso2 = convKernelP->rows / 2;
     unsigned int const ccolso2 = convKernelP->cols / 2;
 
@@ -331,14 +430,14 @@ convolveGeneralRowPlane(struct pam *        const pamP,
     
     for (col = 0; col < pamP->width; ++col) {
         if (col < ccolso2 || col >= pamP->width - ccolso2)
-            outputrow[col][plane] = circMap[crowso2][col][plane];
+            outputrow[col][plane] = window[crowso2][col][plane];
         else {
             unsigned int const leftcol = col - ccolso2;
             unsigned int crow;
             float sum;
             sum = 0.0;
-            for (crow = 0; crow < crows; ++crow) {
-                tuple ** const leftrptr = &circMap[crow][leftcol];
+            for (crow = 0; crow < convKernelP->rows; ++crow) {
+                const tuple * const leftrptr = &window[crow][leftcol];
                 unsigned int ccol;
                 for (ccol = 0; ccol < convKernelP->cols; ++ccol)
                     sum += leftrptr[ccol][plane] *
@@ -352,9 +451,9 @@ convolveGeneralRowPlane(struct pam *        const pamP,
 
 
 static void
-convolveGeneral(struct pam *        const inpamP,
-                struct pam *        const outpamP,
-                struct convKernel * const convKernelP) {
+convolveGeneral(struct pam *              const inpamP,
+                struct pam *              const outpamP,
+                const struct convKernel * const convKernelP) {
 /*----------------------------------------------------------------------------
    Do the convolution without taking advantage of any useful redundancy in the
    convolution matrix.
@@ -374,8 +473,11 @@ convolveGeneral(struct pam *        const inpamP,
     tuple * outputrow;
         /* The convolved row to be output */
     unsigned int row;
+        /* Row number of the bottom of the current convolution window;
+           i.e. the row to be read or just read from the input file.
+        */
 
-    rowbuf = allocRowbuf(pamP, convKernelP->rows);
+    rowbuf = allocRowbuf(outpamP, convKernelP->rows);
     MALLOCARRAY_NOFAIL(circMap, convKernelP->rows);
     outputrow = pnm_allocpamrow(outpamP);
 
@@ -383,7 +485,8 @@ convolveGeneral(struct pam *        const inpamP,
 
     assert(convKernelP->rows > 0);
 
-    readInitialRowbuf(inpamP, convKernelP, rowbuf, outpamP->maxval);
+    readAndScaleRows(inpamP, convKernelP->rows - 1, rowbuf,
+                      outpamP->maxval, outpamP->depth);
 
     writeUnconvolvedTop(outpamP, convKernelP, rowbuf);
 
@@ -394,7 +497,10 @@ convolveGeneral(struct pam *        const inpamP,
     for (row = convKernelP->rows - 1; row < inpamP->height; ++row) {
         unsigned int const rowbufRow = row % convKernelP->rows;
 
-        setupCircMap(circMap, rowbuf, (row + 1) % convKernelP->rows);
+        unsigned int plane;
+
+        setupCircMap(circMap, rowbuf, convKernelP->rows,
+                     (row + 1) % convKernelP->rows);
 
         readAndScaleRow(inpamP, rowbuf[rowbufRow],
                         outpamP->maxval, outpamP->depth);
@@ -405,7 +511,7 @@ convolveGeneral(struct pam *        const inpamP,
 
         pnm_writepamrow(outpamP, outputrow);
     }
-    writeUnconvolvedBottom(outpamP, convKernelP, circMap);
+    writeUnconvolvedBottom(outpamP, convKernelP, convKernelP->rows, circMap);
 
     freeRowbuf(rowbuf, convKernelP->rows);
 }
@@ -452,51 +558,90 @@ freeSum(sample **    const sum,
 
 
 static void
-convolveAndComputeColumnSums(struct pam *        const inpamP,
-                             struct pam *        const outpamP,
-                             tuple **            const rows,
-                             struct convKernel * const convKernelP,
-                             unsigned int        conts plane,
-                             tuple *             const outputrow,
-                             sample **           const convColumnSum) {
+computeInitialColumnSums(struct pam *              const pamP,
+                         tuple **                  const window,
+                         const struct convKernel * const convKernelP,
+                         sample **                 const convColumnSum) {
+/*----------------------------------------------------------------------------
+  Add up the sum of each column of window[][], whose rows are described
+  by *inpamP.  The window's height is that of tthe convolution kernel
+  *convKernelP.
 
-    unsigned int const ccolso2 = convKernelP->cols / 2;
-    float        const weight  = convKernelP->weight[plane][0][0];
+  Return it as convColumnSum[][].
+-----------------------------------------------------------------------------*/
+    unsigned int plane;
 
-    unsigned int col;
-    sample matrixSum;
+    for (plane = 0; plane < pamP->depth; ++plane) {
+        unsigned int col;
 
-    for (col = 0; col < inpamP->width; ++col)
-        convColumnSum[col] = 0;      /* Initial value */
+        for (col = 0; col < pamP->width; ++col) {
+            unsigned int row;
+            for (row = 0, convColumnSum[plane][col] = 0;
+                 row < convKernelP->rows;
+                 ++row)
+                convColumnSum[plane][col] += window[row][col][plane];
+        }            
+    }
+}
 
-    for (col = 0, matrixSum = 0; col < inpamP->width; ++col) {
-        if (col < ccolso2 || col >= inpamP->width - ccolso2)
-            outputrow[col] = circMap[crowso2][col];
-        else if (col == ccolso2) {
-            unsigned int const leftcol = col - ccolso2;
-            unsigned int crow;
-            unsigned int ccol;
-            for (crow = 0; crow < convKernelP->rows; ++crow) {
-                tuple ** const temprptr = &circMap[crow][leftcol];
+
+
+static void
+convolveRowWithColumnSumsMean(const struct convKernel * const convKernelP,
+                              struct pam *              const pamP,
+                              tuple **                  const window,
+                              tuple *                   const outputrow,
+                              sample **                 const convColumnSum) {
+/*----------------------------------------------------------------------------
+  Convolve the rows in window[][] -- one convolution kernel's worth, where
+  window[0] is the top.  Put the result in outputrow[].
+
+  Use convColumnSum[][]: the sum of the pixels in each column over the
+  convolution window, where convColumnSum[P][C] is the sum for Plane P of
+  Column C.
+
+  Assume the convolution weight is the same everywhere within the convolution
+  matrix.  Ergo, we don't need any more information about the contents of a
+  column than the sum of its pixels.
+
+  Except that we need the individual input pixels for the edges (which can't
+  be convolved because the convolution window runs off the edge).
+-----------------------------------------------------------------------------*/
+    unsigned int plane;
+    
+    for (plane = 0; plane < pamP->depth; ++plane) {
+        unsigned int const crowso2 = convKernelP->rows / 2;
+        unsigned int const ccolso2 = convKernelP->cols / 2;
+        float const weight = convKernelP->weight[plane][0][0];
+
+        unsigned int col;
+        sample gisum;
+
+        gisum = 0;
+        for (col = 0; col < pamP->width; ++col) {
+            if (col < ccolso2 || col >= pamP->width - ccolso2)
+                outputrow[col][plane] = window[crowso2][col][plane];
+            else if (col == ccolso2) {
+                unsigned int const leftcol = col - ccolso2;
+
                 unsigned int ccol;
+
                 for (ccol = 0; ccol < convKernelP->cols; ++ccol)
-                    convColumnSum[leftcol + ccol] += temprptr[ccol][plane];
+                    gisum += convColumnSum[plane][leftcol + ccol];
+
+                outputrow[col][plane] =
+                    MIN(pamP->maxval, MAX(0, gisum * weight + 0.5));
+            } else {
+                /* Column numbers to subtract or add to isum */
+                unsigned int const subcol = col - ccolso2 - 1;
+                unsigned int const addcol = col + ccolso2;  
+
+                gisum -= convColumnSum[plane][subcol];
+                gisum += convColumnSum[plane][addcol];
+
+                outputrow[col][plane] =
+                    MIN(pamP->maxval, MAX(0, gisum * weight + 0.5));
             }
-            for (ccol = 0; ccol < convKernelP->cols; ++ccol)
-                matrixSum += convColumnSum[leftcol + ccol];
-            outputrow[col][plane] =
-                MIN(outpamP->maxval, MAX(0, matrixSum * weight + 0.5));
-        } else {
-            /* Column numbers to subtract or add to isum */
-            unsigned int const subcol = col - ccolso2 - 1;
-            unsigned int const addcol = col + ccolso2;  
-            unsigned int crow;
-            for (crow = 0; crow < convKernelP->rows; ++crow)
-                convColumnSum[addcol] += circMap[crow][addcol][plane];
-            matrixSum =
-                matrixSum - convColumnSum[subcol] + convColumnSum[addcol];
-            outputrow[col][plane] =
-                MIN(outpamP->maxval, MAX(0, matrixSum * weight + 0.5));
         }
     }
 }
@@ -504,47 +649,94 @@ convolveAndComputeColumnSums(struct pam *        const inpamP,
 
 
 static void
-convolveAndComputeColumnSums(struct pam *        const inpamP,
-                             struct pam *        const outpamP,
-                             tuple **            const rows,
-                             struct convKernel * const convKernelP,
-                             tuple *             const outputrow,
-                             sample **           const convColumnSum) {
+convolveRowWithColumnSumsVertical(
+    const struct convKernel * const convKernelP,
+    struct pam *              const pamP,
+    tuple **                  const window,
+    tuple *                   const outputrow,
+    sample **                 const convColumnSum) {
 /*----------------------------------------------------------------------------
-  Convolve the rows in rows[] -- one convolution kernel's worth, where
-  rows[0] is the top.  Put the result in outputrow[].
+  Convolve the rows in window[][] -- one convolution kernel's worth, where
+  window[0] is the top.  Put the result in outputrow[].
 
-  Along the way, add up the sum of each column and return that as
-  convColumnSum[].
+  Use convColumnSum[][]: the sum of the pixels in each column over the
+  convolution window, where convColumnSum[P][C] is the sum for Plane P of
+  Column C.
+
+  Assume the convolution weight is the same everywhere within a column.  Ergo,
+  we don't need any more information about the contents of a column than the
+  sum of its pixels.
+
+  Except that we need the individual input pixels for the edges (which can't
+  be convolved because the convolution window runs off the edge).
 -----------------------------------------------------------------------------*/
+    unsigned int const crowso2 = convKernelP->rows / 2;
+    unsigned int const ccolso2 = convKernelP->cols / 2;
+
     unsigned int plane;
 
-    for (plane = 0; plane < outpamP->depth; ++plane) 
-        convolveAndComputeColumnSumsPlane(inpamP, outpamP,
-                                          rows, convKernelP, plane,
-                                          outputrow, convColumnSum[plane]);
+    for (plane = 0; plane < pamP->depth; ++plane) {
+        unsigned int col;
+    
+        for (col = 0; col < pamP->width; ++col) {
+            if (col < ccolso2 || col >= pamP->width - ccolso2)
+                outputrow[col][plane] = window[crowso2][col][plane];
+            else {
+                unsigned int const leftcol = col - ccolso2;
+                unsigned int ccol;
+                float sum;
+
+                sum = 0.0;
+
+                for (ccol = 0; ccol < convKernelP->cols; ++ccol)
+                    sum += convColumnSum[plane][leftcol + ccol] *
+                        convKernelP->weight[plane][0][ccol];
+
+                outputrow[col][plane] = MIN(pamP->maxval, MAX(0, sum + 0.5));
+            }
+        }
+    }
 }
 
 
 
 static void
-convolveMeanRowPlane(struct pam *        const pamP,
-                     tuple **            const circMap,
-                     struct convKernel * const convKernelP,
-                     unsigned int        const plane,
-                     tuple *             const outputrow,
-                     sample *            const convColumnSum) {
+convolveMeanRowPlane(struct pam *              const pamP,
+                     tuple **                  const window,
+                     const struct convKernel * const convKernelP,
+                     unsigned int              const plane,
+                     tuple *                   const outputrow,
+                     sample *                  const convColumnSum) {
+/*----------------------------------------------------------------------------
+  Convolve plane 'plane' of one row of the image.  window[] is a vertical
+  window of the input image, one convolution kernel plus one row high.  The
+  top row (window[0] is the row that just passed out of the convolution
+  window, whereas the bottom row is the row that just entered it.
 
+  *pamP describes the tuple rows in window[] and also 'outputrow' (they are
+  the same).
+
+  Return the convolution result as outputrow[].
+
+  We update convColumnSum[] for use in convolving later rows.
+-----------------------------------------------------------------------------*/
+    unsigned int const crowso2 = convKernelP->rows / 2;
     unsigned int const ccolso2 = convKernelP->cols / 2;
     float const weight = convKernelP->weight[plane][0][0];
+    unsigned int const subrow = 0;
+        /* Row just above convolution window -- what we subtract from
+           running sum
+        */
+    unsigned int const addrow = 1 + (convKernelP->rows - 1);
+        /* Bottom row of convolution window: What we add to running sum */
 
     unsigned int col;
     sample gisum;
 
     gisum = 0;
-    for (col = 0; col < cols; ++col) {
-        if (col < ccolso2 || col >= cols - ccolso2)
-            outputrow[col] = circMap[crowso2][col];
+    for (col = 0; col < pamP->width; ++col) {
+        if (col < ccolso2 || col >= pamP->width - ccolso2)
+            outputrow[col][plane] = window[crowso2][col][plane];
         else if (col == ccolso2) {
             unsigned int const leftcol = col - ccolso2;
 
@@ -554,34 +746,43 @@ convolveMeanRowPlane(struct pam *        const pamP,
                 sample * const thisColumnSumP =
                     &convColumnSum[leftcol + ccol];
                 *thisColumnSumP = *thisColumnSumP
-                    - circMap[subrow][ccol][plane]
-                    + circMap[addrow][ccol][plane];
+                    - window[subrow][ccol][plane]
+                    + window[addrow][ccol][plane];
                 gisum += *thisColumnSumP;
             }
             outputrow[col][plane] =
-                MIN(outpamP->maxval, MAX(0, gisum * weight + 0.5));
+                MIN(pamP->maxval, MAX(0, gisum * weight + 0.5));
         } else {
             /* Column numbers to subtract or add to isum */
             unsigned int const subcol = col - ccolso2 - 1;
             unsigned int const addcol = col + ccolso2;  
 
             convColumnSum[addcol] = convColumnSum[addcol]
-                - circMap[subrow][addcol][plane]
-                + circMap[addrow][addcol][plane];
+                - window[subrow][addcol][plane]
+                + window[addrow][addcol][plane];
+
             gisum = gisum - convColumnSum[subcol] + convColumnSum[addcol];
 
             outputrow[col][plane] =
-                MIN(outpamP->maxval, MAX(0, gisum * weight + 0.5));
+                MIN(pamP->maxval, MAX(0, gisum * weight + 0.5));
         }
     }
 }
 
 
 
+typedef void convolver(struct pam *              const inpamP,
+                       struct pam *              const outpamP,
+                       const struct convKernel * const convKernelP);
+
+
+
+static convolver convolveMean;
+
 static void
-convolveMean(struct pam *        const inpamP,
-             struct pam *        const outpamP,
-             struct convKernel * const convKernelP) {
+convolveMean(struct pam *              const inpamP,
+             struct pam *              const outpamP,
+             const struct convKernel * const convKernelP) {
 /*----------------------------------------------------------------------------
   Mean Convolution
 
@@ -613,17 +814,22 @@ convolveMean(struct pam *        const inpamP,
            the sliding mean, we need to subtract off the row that the
            convolution kernel just slid past.
         */
-
+    unsigned int const crowso2 = convKernelP->rows / 2;
+        /* Number of rows of the convolution window above/below the current
+           row.  Note that the convolution window is always an odd number
+           of rows, so this rounds down.
+        */
     tuple ** rowbuf;
-        /* Same as in convolvePgmGeneral */
+        /* Same as in convolveGeneral */
     tuple ** circMap;
-        /* Same as in convolvePgmGeneral */
+        /* Same as in convolveGeneral */
     tuple * outputrow;
-        /* Same as in convolvePgmGeneral */
+        /* Same as in convolveGeneral */
     unsigned int row;
-        /* Row number of next row to read in from the file */
-    sample matrixSum;
-        /* Sum of all pixels in current convolution window */
+        /* Row number of the row currently being convolved; i.e. the row
+           at the center of the current convolution window and the row of
+           the output file to be output next.
+        */
     sample ** convColumnSum;  /* Malloc'd */
         /* convColumnSum[plane][col] is the sum of Plane 'plane' of all the
            pixels in the Column 'col' of the image within the current vertical
@@ -631,9 +837,8 @@ convolveMean(struct pam *        const inpamP,
            and we're now looking at Rows 10-15, convColumn[0][3] is the sum of
            Plane 0 of Column 3, Rows 10-15.
         */
-    unsigned int col;
 
-    rowbuf = allocRowbuf(pamP, windowHeight);
+    rowbuf = allocRowbuf(outpamP, windowHeight);
     MALLOCARRAY_NOFAIL(circMap, windowHeight);
     outputrow = pnm_allocpamrow(outpamP);
 
@@ -641,42 +846,45 @@ convolveMean(struct pam *        const inpamP,
 
     pnm_writepaminit(outpamP);
 
-    readInitialRowbuf(inpamP, convKernelP, rowbuf, outpamP->maxval);
+    readAndScaleRows(inpamP, convKernelP->rows, rowbuf,
+                      outpamP->maxval, outpamP->depth);
 
     writeUnconvolvedTop(outpamP, convKernelP, rowbuf);
 
-    /* Add a row to the window to have enough to convolve */
-    readAndScaleRow(inpamP, rowbuf[convKernelP->rows - 1],
-                    outpamP->maxval, outpamP->depth);
-
-    setupCircMap(circMap, rowbuf, 0);
+    setupCircMap(circMap, rowbuf, windowHeight, 0);
 
     /* Convolve the first window the long way */
-    convolveAndComputeColumnSums(inpamP, outpamP, circMap, convKernelP,
-                                 outputrow, convColumnSum);
+    computeInitialColumnSums(inpamP, circMap, convKernelP, convColumnSum);
 
-    /* Write that first convolved row */
+    convolveRowWithColumnSumsMean(convKernelP, outpamP, circMap,
+                                  outputrow, convColumnSum);
+
     pnm_writepamrow(outpamP, outputrow);
 
     /* For all subsequent rows do it this way as the columnsums have been
-       generated.  Now we can use them to reduce further calculations.
+       generated.  Now we can use them to reduce further calculations.  We
+       slide the window down a row at a time by reading a row into the bottom
+       of the circular buffer, adding it to the column sums, then subtracting
+       out the row at the top of the circular buffer.
     */
-    for (row = convKernelP->rows; row < inpamP->height; ++row) {
-        unsigned int const subrow = 0;
-            /* Row just above convolution window -- what we subtract from
-               running sum
+    for (row = crowso2 + 1; row < inpamP->height - crowso2; ++row) {
+        unsigned int const windowBotRow = row + crowso2;
+            /* Row number of bottom-most row present in rowbuf[],
+               which is the bottom of the convolution window for the current
+               row.
             */
-        unsigned int const addrow = 1 + (convKernelP->rows - 1);
-            /* Bottom row of convolution window: What we add to running sum */
+        unsigned int const windowTopRow = row - crowso2 - 1;
+            /* Row number of top-most row present in rowbuf[], which is
+               the top row of the convolution window for the previous row:
+               just above the convolution window for the current row.
+            */
+        unsigned int plane;
 
-        readAndScaleRow(inpamP, rowbuf[row % windowHeight],
+        readAndScaleRow(inpamP, rowbuf[windowBotRow % windowHeight],
                         outpamP->maxval, outpamP->depth);
 
-        /* Remember the window is one row higher than the convolution
-           kernel.  The top row in the window is not part of this convolution.
-        */
-
-        setupCircMap(circMap, rowbuf, (row + 1) % windowHeight);
+        setupCircMap(circMap, rowbuf, windowHeight,
+                     windowTopRow % windowHeight);
 
         for (plane = 0; plane < outpamP->depth; ++plane)
             convolveMeanRowPlane(outpamP, circMap, convKernelP, plane,
@@ -684,64 +892,129 @@ convolveMean(struct pam *        const inpamP,
 
         pnm_writepamrow(outpamP, outputrow);
     }
-    writeUnconvolvedBottom(outpamP, convKernelP, circMap);
+    writeUnconvolvedBottom(outpamP, convKernelP, windowHeight, circMap);
 
-    freeColumnSum(convColumnSum, outpamP->depth);
+    freeSum(convColumnSum, outpamP->depth);
     freeRowbuf(rowbuf, windowHeight);
 }
 
 
 
+static sample ***
+allocRowSum(unsigned int const depth,
+            unsigned int const height,
+            unsigned int const width) {
+
+    sample *** sum;
+
+    MALLOCARRAY(sum, depth);
+
+    if (!sum)
+        pm_error("Could not allocate memory for %u planes of sums", depth);
+    else {
+        unsigned int plane;
+
+        for (plane = 0; plane < depth; ++plane) {
+            MALLOCARRAY(sum[plane], height);
+            
+            if (!sum[plane])
+                pm_error("Could not allocate memory for %u rows of sums",
+                         height);
+            else {
+                unsigned int row;
+
+                for (row = 0; row < height; ++row) {
+                    MALLOCARRAY(sum[plane][row], width);
+                    
+                    if (!sum[plane][row])
+                        pm_error("Could not allocate memory "
+                                 "for a row of sums");
+                }
+            }
+        }
+    }
+    return sum;
+}
+
+
+
 static void
-convolveHorizontalRowPlane(struct pam *        const outpamP,
-                           tuple **            const circMap,
-                           struct convKernel * const convKernelP,
-                           unsigned int        const plane,
-                           tuple *             const outputrow,
-                           sample *            const sumCircMap) {
+freeRowSum(sample ***   const sum,
+           unsigned int const depth,
+           unsigned int const height) {
+
+    unsigned int plane;
+
+    for (plane = 0; plane < depth; ++plane) {
+        unsigned int row;
+
+        for (row = 0; row < height; ++row)
+            free(sum[plane][row]);
+
+        free(sum[plane]);
+    }
+    free(sum);
+}
+
+
+
+static void
+convolveHorizontalRowPlane0(struct pam *              const outpamP,
+                            tuple **                  const window,
+                            const struct convKernel * const convKernelP,
+                            unsigned int              const plane,
+                            tuple *                   const outputrow,
+                            sample **                 const sumWindow) {
+/*----------------------------------------------------------------------------
+   Convolve the first convolvable row and generate the row sums from scratch.
+   (For subsequent rows, Caller can just incrementally modify the row sums).
+-----------------------------------------------------------------------------*/
+    unsigned int const crowso2 = convKernelP->rows / 2;
+    unsigned int const ccolso2 = convKernelP->cols / 2;
 
     unsigned int col;
 
-    for (col = 0; col < cols; ++col) {
-        if (col < ccolso2 || col >= cols - ccolso2)
-            outputrow[col][0] = circMap[crowso2][col][0];
+    for (col = 0; col < outpamP->width; ++col) {
+        if (col < ccolso2 || col >= outpamP->width - ccolso2)
+            outputrow[col][plane] = window[crowso2][col][plane];
         else if (col == ccolso2) {
-            unsigned int const leftcol = col - ccolso2;
+            /* This is the first column for which the entire convolution
+               kernel fits within the image horizontally.  I.e. the window
+               starts at the left edge of the image.
+            */
+            unsigned int const leftcol = 0;
             
             float matrixSum;
             unsigned int crow;
 
-            for (crow = 0, matrixSum = 0.0; crow < crows; ++crow) {
-                tuple ** const temprptr = circMap[crow] + leftcol;
+            for (crow = 0, matrixSum = 0.0; crow < convKernelP->rows; ++crow) {
+                tuple * const tuplesInWindow = &window[crow][leftcol];
 
                 unsigned int ccol;
                 
-                sumCircMap[crow][leftcol] = 0L;
+                sumWindow[crow][col] = 0;
                 for (ccol = 0; ccol < convKernelP->cols; ++ccol)
-                    sumCircMap[crow][leftcol] += temprptr[ccol][0];
-                matrixSum += sumCircMap[crow][leftcol] *
-                    convKernelP->weight[crow][0][0];
+                    sumWindow[crow][col] += tuplesInWindow[ccol][plane];
+                matrixSum +=
+                    sumWindow[crow][col] * convKernelP->weight[plane][crow][0];
             }
-            outputrow[col][0] =
+            outputrow[col][plane] =
                 MIN(outpamP->maxval, MAX(0, matrixSum + 0.5));
         } else {
-            unsigned int const leftcol = col - ccolso2;
             unsigned int const subcol  = col - ccolso2 - 1;
-            usnigned int const addcol  = col + ccolso2;
+            unsigned int const addcol  = col + ccolso2;
 
             float matrixSum;
             unsigned int crow;
 
-            matrixSum = 0.0;
-
-            for (crow = 0; crow < crows; ++crow) {
-                sumCircMap[crow][leftcol] = sumCircMap[crow][subcol]
-                    - circMap[crow][subcol][0]
-                    + circMap[crow][addcol][0];
-                matrixSum += sumCircMap[crow][leftcol] *
-                    convKernelP->weight[crow][0][0];
+            for (crow = 0, matrixSum = 0.0; crow < convKernelP->rows; ++crow) {
+                sumWindow[crow][col] = sumWindow[crow][col-1] +
+                    + window[crow][addcol][plane]
+                    - window[crow][subcol][plane];
+                matrixSum +=
+                    sumWindow[crow][col] * convKernelP->weight[plane][crow][0];
             }
-            outputrow[col][0] =
+            outputrow[col][plane] =
                 MIN(outpamP->maxval, MAX(0, matrixSum + 0.5));
         }
     }
@@ -750,1231 +1023,440 @@ convolveHorizontalRowPlane(struct pam *        const outpamP,
 
 
 static void
-convolveHorizontal(struct pam *        const inpamP,
-                   struct pam *        const outpamP,
-                   struct convKernel * const convKernelP) {
-/*----------------------------------------------------------------------------
-  Horizontal Convolution
+setupCircMap2(tuple **     const rowbuf,
+              sample **    const convRowSum,
+              tuple **     const circMap,
+              sample **    const sumCircMap,
+              unsigned int const windowTopRow,
+              unsigned int const windowHeight) {
 
-  Similar idea to using columnsums of the Mean and Vertical convolution,
-  but uses temporary sums of row values.  Need to multiply by weights crows
-  number of times.  Each time a new line is started, must recalculate the
-  initials rowsums for the newest row only.  Uses queue to still access
-  previous row sums.
+    unsigned int const toprow = windowTopRow % windowHeight;
+    
+    unsigned int crow;
+    unsigned int i;
+
+
+    i = 0;
+
+    for (crow = toprow; crow < windowHeight; ++i, ++crow) {
+        circMap[i] = rowbuf[crow];
+        sumCircMap[i] = convRowSum[crow];
+    }
+    for (crow = 0; crow < toprow; ++crow, ++i) {
+        circMap[i] = rowbuf[crow];
+        sumCircMap[i] = convRowSum[crow];
+    }
+}
+
+
+
+static void
+convolveHorizontalRowPlane(struct pam *              const pamP,
+                           tuple **                  const window,
+                           const struct convKernel * const convKernelP,
+                           unsigned int              const plane,
+                           tuple *                   const outputrow,
+                           sample **                 const sumWindow) {
+/*----------------------------------------------------------------------------
+   Convolve the row at the center of the convolution window described
+   by *convKernelP, where window[][] contains the input image tuples
+   for the window.  *pamP describes the rows in it, but its height is
+   one convolution window.
+
+   Convolve only the Plane 'plane' samples.
+
+   sumWindow[][] mirrors window[].  sumWindow[R] applies to window[R].
+   sumWindow[R][C] is the sum of samples in row R of the convolution window
+   centered on Column C.  We assume the convolution weights are the same
+   everywhere within a row of the kernel, so that we can generate these
+   sums incrementally, moving to the right through the image.
 -----------------------------------------------------------------------------*/
     unsigned int const ccolso2 = convKernelP->cols / 2;
     unsigned int const crowso2 = convKernelP->rows / 2;
-    unsigned int const windowHeight = convKernelP->rows + 1;
-        /* Same as in convolvePgmMean */
+
+    unsigned int const newrow  = convKernelP->rows - 1;
+
+    unsigned int col;
+
+    for (col = 0; col < pamP->width; ++col) {
+        if (col < ccolso2 || col >= pamP->width - ccolso2)
+            outputrow[col][plane] = window[crowso2][col][plane];
+        else if (col == ccolso2) {
+            unsigned int const leftcol = 0;
+                // Window is up againt left edge of image
+
+            float matrixSum;
+
+            {
+                unsigned int ccol;
+                sumWindow[newrow][col] = 0;
+                for (ccol = 0; ccol < convKernelP->cols; ++ccol)
+                    sumWindow[newrow][col] +=
+                        window[newrow][leftcol + ccol][plane];
+            }
+            {
+                unsigned int crow;
+                for (crow = 0, matrixSum = 0.0;
+                     crow < convKernelP->rows;
+                     ++crow) {
+                    matrixSum += sumWindow[crow][col] *
+                        convKernelP->weight[plane][crow][0];
+                }
+            }
+            outputrow[col][plane] =
+                MIN(pamP->maxval, MAX(0, matrixSum + 0.5));
+        } else {
+            unsigned int const subcol  = col - ccolso2 - 1;
+            unsigned int const addcol  = col + ccolso2;  
+
+            float matrixSum;
+            unsigned int crow;
+
+            sumWindow[newrow][col] =
+                sumWindow[newrow][col-1]
+                + window[newrow][addcol][plane]
+                - window[newrow][subcol][plane];
+
+            for (crow = 0, matrixSum = 0.0; crow < convKernelP->rows; ++crow) {
+                matrixSum += sumWindow[crow][col] *
+                    convKernelP->weight[plane][crow][0];
+            }
+            outputrow[col][plane] =
+                MIN(pamP->maxval, MAX(0, matrixSum + 0.5));
+        }
+    }
+}
+
+
+
+static convolver convolveHorizontal;
+
+static void
+convolveHorizontal(struct pam *              const inpamP,
+                   struct pam *              const outpamP,
+                   const struct convKernel * const convKernelP) {
+/*----------------------------------------------------------------------------
+  Horizontal Convolution
+
+  Similar idea to using columnsums of the Mean and Vertical convolution, but
+  uses temporary sums of row values.  Need to multiply by weights once for
+  each row in the convolution kernel.  Each time we start a new line, we must
+  recalculate the initials rowsums for the newest row only.  Uses queue to
+  still access previous row sums.
+-----------------------------------------------------------------------------*/
+    unsigned int const crowso2 = convKernelP->rows / 2;
+        /* Same as in convolveMean */
+    unsigned int const windowHeight = convKernelP->rows;
+        /* Same as in convolveMean */
 
     tuple ** rowbuf;
-        /* Same as in convolvePgmGeneral */
+        /* Same as in convolveGeneral */
     tuple ** circMap;
-        /* Same as in convolvePgmGeneral */
+        /* Same as in convolveGeneral */
     tuple * outputrow;
-        /* Same as in convolvePgmGeneral */
-    unsigned int row;
-        /* Row number of next row to read in from the file */
+        /* Same as in convolveGeneral */
     unsigned int plane;
-    sample ** convRowSum;  /* Malloc'd */
-    sample * sumCircMap;  /* Malloc'd */
-    unsigned int plane;
+    sample *** convRowSum;  /* Malloc'd */
+    sample ** sumCircMap;  /* Malloc'd */
 
-    rowbuf = allocRowbuf(pamP, windowHeight);
+    rowbuf = allocRowbuf(inpamP, windowHeight);
     MALLOCARRAY_NOFAIL(circMap, windowHeight);
     outputrow = pnm_allocpamrow(outpamP);
 
-    convRowSum = allocSum(outpamP->depth, windowHeight);
+    convRowSum = allocRowSum(outpamP->depth, windowHeight, outpamP->width);
     MALLOCARRAY_NOFAIL(sumCircMap, windowHeight);
 
     pnm_writepaminit(outpamP);
 
-    readInitialRowbuf(inpamP, convKernelP, rowbuf, outpamP->maxval);
+    readAndScaleRows(inpamP, convKernelP->rows, rowbuf,
+                      outpamP->maxval, outpamP->depth);
 
     writeUnconvolvedTop(outpamP, convKernelP, rowbuf);
 
-    /* Add a row to the window to have enough to convolve */
-    readAndScaleRow(inpamP, rowbuf[convKernelP->rows - 1],
-                    outpamP->maxval, outpamP->depth);
+    setupCircMap(circMap, rowbuf, windowHeight, 0);
 
-    setupCircMap(circMap, rowbuf, 0);
-
+    /* Convolve the first convolvable row and generate convRowSum[][] */
     for (plane = 0; plane < outpamP->depth; ++plane) {
         unsigned int crow;
 
-        for (crow = 0; crow < crows; ++crow)
+        for (crow = 0; crow < convKernelP->rows; ++crow)
             sumCircMap[crow] = convRowSum[plane][crow];
  
-        convolveHorizontalRowPlane(outpamP, circMap, convKernelP, plane,
-                                   outputrow, sumCircMap);
+        convolveHorizontalRowPlane0(outpamP, circMap, convKernelP, plane,
+                                    outputrow, sumCircMap);
     }
     pnm_writepamrow(outpamP, outputrow);
 
-    {
-        /* For all subsequent rows */
+    /* Convolve the rest of the rows, using convRowSum[] */
 
-        unsigned int const addrow = crows - 1;
-        unsigned int const windowHeight = crows + 1;
+    for (plane = 0; plane < outpamP->depth; ++plane) {
+        unsigned int row;
+            /* Same as in convolveMean */
 
-        for (row = convKernelP->rows ; row < rows; ++row) {
-            unsigned int const toprow = (row + 2) % windowHeight;
+        for (row = convKernelP->rows/2 + 1;
+             row < inpamP->height - convKernelP->rows/2;
+             ++row) {
 
-            unsigned int col;
+            unsigned int const windowBotRow = row + crowso2;
+            unsigned int const windowTopRow = row - crowso2;
+                /* Same as in convolveMean */
 
-            readAndScaleRow(inpamP, rowbuf[row % windowHeight],
+            readAndScaleRow(inpamP, rowbuf[windowBotRow % windowHeight],
                             outpamP->maxval, outpamP->depth);
             
-            i = 0;
-            for (irow = toprow; irow < windowHeight; ++i, ++irow) {
-                circMap[i] = rowbuf[irow];
-                sumCircMap[i] = convRowSum[plane][irow];
-            }
-            for (irow = 0; irow < toprow; ++irow, ++i) {
-                circMap[i] = rowbuf[irow];
-                sumCircMap[i] = convRowSum[plane][irow];
-            }
+            setupCircMap2(rowbuf, convRowSum[plane], circMap, sumCircMap,
+                          windowTopRow, windowHeight);
+
+            convolveHorizontalRowPlane(outpamP, circMap, convKernelP, plane,
+                                       outputrow, sumCircMap);
             
-            for (col = 0; col < cols; ++col) {
-                if (col < ccolso2 || col >= cols - ccolso2)
-                    outputrow[col] = circMap[crowso2][col];
-                else if (col == ccolso2) {
-                    unsigned int const leftcol = col - ccolso2;
-
-                    float matrixSum;
-
-                    {
-                        unsigned int ccol;
-                        sumCircMap[addrow][leftcol] = 0L;
-                        for (ccol = 0; ccol < convKernelP->cols; ++ccol)
-                            sumCircMap[addrow][leftcol] += 
-                                circMap[addrow][leftcol + ccol][0];
-                    }
-                    {
-                        unsigned int crow;
-                        for (crow = 0, matrixSum = 0.0; crow < crows; ++crow)
-                            matrixSum += sumCircMap[crow][leftcol] *
-                                convKernelP->weight[crow][0][0];
-                    }
-                    outputrow[col][0] =
-                        MIN(outpamP->maxval, MAX(0, matrixSum + 0.5));
-                } else {
-                    unsigned int const leftcol = col - ccolso2;
-                    unsigned int const subcol  = col - ccolso2 - 1;
-                    unsigned int const addcol  = col + ccolso2;  
-
-                    float matrixSum;
-                    unsigned int crow;
-
-                    sumCircMap[addrow][leftcol] = sumCircMap[addrow][subcol]
-                        - circMap[addrow][subcol][0]
-                        + circMap[addrow][addcol][0];
-
-                    for (crow = 0, matrixSum = 0.0; crow < crows; ++crow)
-                        matrixSum += sumCircMap[crow][leftcol] *
-                            convKernelP->weight[crow][0][0];
-
-                    outputrow[col][0] =
-                        MIN(outpamP->maxval, MAX(0, matrixSum + 0.5));
-                }
-            }
             pnm_writepamrow(outpamP, outputrow);
         }
     }
-    writeUnconvolvedBottom(outpamP, convKernelP, circMap);
 
+    writeUnconvolvedBottom(outpamP, convKernelP, windowHeight, circMap);
+
+    freeRowSum(convRowSum, outpamP->depth, windowHeight);
     freeRowbuf(rowbuf, windowHeight);
 }
 
 
 
 static void
-convolvePgmVertical(struct pam *        const inpamP,
-                    struct pam *        const outpamP,
-                    struct convKernel * const convKernelP) {
+convolveVerticalRowPlane(struct pam *              const pamP,
+                         tuple **                  const circMap,
+                         const struct convKernel * const convKernelP,
+                         unsigned int              const plane,
+                         tuple *                   const outputrow,
+                         sample *                  const convColumnSum) {
+
+    unsigned int const crowso2 = convKernelP->rows / 2;
+    unsigned int const ccolso2 = convKernelP->cols / 2;
+
+    unsigned int const subrow = 0;
+        /* Row just above convolution window -- what we subtract from
+           running sum
+        */
+    unsigned int const addrow = 1 + (convKernelP->rows - 1);
+        /* Bottom row of convolution window: What we add to running sum */
+    
+    unsigned int col;
+
+    for (col = 0; col < pamP->width; ++col) {
+        if (col < ccolso2 || col >= pamP->width - ccolso2)
+            outputrow[col][plane] = circMap[crowso2][col][plane];
+        else if (col == ccolso2) {
+            unsigned int const leftcol = 0;
+                // Convolution window is againt left edge of image
+
+            float matrixSum;
+            unsigned int ccol;
+
+            // Slide window down in the first kernel's worth of columns
+            for (ccol = 0; ccol < convKernelP->cols; ++ccol) {
+                convColumnSum[leftcol + ccol] +=
+                    circMap[addrow][leftcol + ccol][plane];
+                convColumnSum[leftcol + ccol] -=
+                    circMap[subrow][leftcol + ccol][plane];
+            }
+            for (ccol = 0, matrixSum = 0.0; ccol < convKernelP->cols; ++ccol) {
+                matrixSum += convColumnSum[leftcol + ccol] *
+                    convKernelP->weight[plane][0][ccol];
+            }
+            outputrow[col][plane] =
+                MIN(pamP->maxval, MAX(0, matrixSum + 0.5));
+        } else {
+            unsigned int const leftcol = col - ccolso2;
+            unsigned int const addcol  = col + ccolso2;
+
+            float matrixSum;
+            unsigned int ccol;
+
+            // Slide window down in the column that just entered the window
+            convColumnSum[addcol] += circMap[addrow][addcol][plane];
+            convColumnSum[addcol] -= circMap[subrow][addcol][plane];
+
+            for (ccol = 0, matrixSum = 0.0; ccol < convKernelP->cols; ++ccol) {
+                matrixSum += convColumnSum[leftcol + ccol] *
+                    convKernelP->weight[plane][0][ccol];
+            }
+            outputrow[col][plane] =
+                MIN(pamP->maxval, MAX(0, matrixSum + 0.5));
+        }
+    }
+}
+
+
+
+static convolver convolveVertical;
+
+static void
+convolveVertical(struct pam *              const inpamP,
+                 struct pam *              const outpamP,
+                 const struct convKernel * const convKernelP) {
 
     /* Uses column sums as in mean convolution, above */
 
-    unsigned int const ccolso2 = convKernelP->cols / 2;
-    float const weight = convKernelP->weight[0][0][0];
     unsigned int const windowHeight = convKernelP->rows + 1;
-        /* The height of the window we keep in the row buffer.  The buffer
-           contains the rows covered by the convolution kernel, plus the row
-           immediately above that.  The latter is there because to compute
-           the sliding mean, we need to subtract off the row that the
-           convolution kernel just slid past.
-        */
+        /* Same as in convolveMean */
+    unsigned int const crowso2 = convKernelP->rows / 2;
+        /* Same as in convolveMean */
 
     tuple ** rowbuf;
-        /* Same as in convolvePgmGeneral */
+        /* Same as in convolveGeneral */
     tuple ** circMap;
-        /* Same as in convolvePgmGeneral */
+        /* Same as in convolveGeneral */
     tuple * outputrow;
-        /* Same as in convolvePgmGeneral */
+        /* Same as in convolveGeneral */
     unsigned int row;
         /* Row number of next row to read in from the file */
-    sample * convColumnSum;  /* Malloc'd */
-        /* convColumnSum[col] is the sum of all the pixels in the Column 'col'
-           of the image within the current vertical convolution window.
-           I.e. if our convolution kernel is 5 rows high and we're now looking
-           at Rows 10-15, convColumn[3] is the sum of Column 3, Rows 10-15.
-        */
-    sample matrixSum;
-    unsigned int col;
+    sample ** convColumnSum;  /* Malloc'd */
+        /* Same as in convolveMean() */
 
-    rowbuf = allocRowbuf(pamP, windowHeight);
+    rowbuf = allocRowbuf(inpamP, windowHeight);
     MALLOCARRAY_NOFAIL(circMap, windowHeight);
     outputrow = pnm_allocpamrow(outpamP);
 
-    MALLOCARRAY_NOFAIL(convColumnSum, inpamP->width);
+    convColumnSum = allocSum(outpamP->depth, outpamP->width);
 
     pnm_writepaminit(outpamP);
 
-    readInitialRowbuf(inpamP, convKernelP, rowbuf, outpamP->maxval);
+    readAndScaleRows(inpamP, convKernelP->rows, rowbuf,
+                      outpamP->maxval, outpamP->depth);
 
     writeUnconvolvedTop(outpamP, convKernelP, rowbuf);
 
-    setupCircMap(circMap, rowbuf, 0);
+    setupCircMap(circMap, rowbuf, windowHeight, 0);
 
     /* Convolve the first window the long way */
-    convolveAndComputeColumnSums(inpamP, outpamP, circMap, convKernelP,
-                                 outputrow, convColumnSum);
+    computeInitialColumnSums(inpamP, circMap, convKernelP, convColumnSum);
 
-    /* Write that first convolved row */
+    convolveRowWithColumnSumsVertical(convKernelP, outpamP, circMap,
+                                      outputrow, convColumnSum);
+
     pnm_writepamrow(outpamP, outputrow);
 
-    for (row = convKernelP->rows; row < inpamP->height; ++row) {
-        unsigned int const subrow = 0;
-            /* Row just above convolution window -- what we subtract from
-               running sum
-            */
-        unsigned int const addrow = 1 + (convKernelP->rows - 1);
-            /* Bottom row of convolution window: What we add to running sum */
+    for (row = crowso2 + 1; row < inpamP->height - crowso2; ++row) {
+        unsigned int const windowBotRow = row + crowso2;
+            /* Same as in convolveMean */
+        unsigned int const windowTopRow = row - crowso2 - 1;
+            /* Same as in convolveMean */
+        unsigned int plane;
 
-        unsigned int col;
-
-        readAndScaleRow(inpamP, rowbuf[row % windowHeight],
+        readAndScaleRow(inpamP, rowbuf[windowBotRow % windowHeight],
                         outpamP->maxval, outpamP->depth);
 
         /* Remember the window is one row higher than the convolution
            kernel.  The top row in the window is not part of this convolution.
         */
 
-        setupCircMap(circMap, rowbuf, (row + 1) % windowHeight);
+        setupCircMap(circMap, rowbuf, windowHeight,
+                     windowTopRow % windowHeight);
 
-        for (col = 0; col < cols; ++col) {
-            if (col < ccolso2 || col >= cols - ccolso2)
-                outputrow[col] = circMap[crowso2][col];
-            else if (col == ccolso2) {
-                unsigned int const leftcol = col - ccolso2;
+        for (plane = 0; plane < outpamP->depth; ++plane)
+            convolveVerticalRowPlane(outpamP, circMap, convKernelP, plane,
+                                     outputrow, convColumnSum[plane]);
 
-                float matrixSum;
-                unsigned int crow;
-                unsigned int ccol;
-
-                for (crow = 0; crow < convKernelP->rows; ++crow) {
-                    unsigned int ccol;
-
-                    for (ccol = 0; ccol < convKernelP->cols; ++ccol)
-                        convColumnSum[leftcol + ccol] +=
-                            circMap[crow][ccol][0];
-                }
-                for (ccol = 0, matrixSum = 0.0;
-                     ccol < convKernelP->cols;
-                     ++ccol) {
-                    matrixSum += convColumnSum[leftcol + ccol] *
-                        convKernelP->weight[0][ccol][0];
-                }
-                outputrow[col][0] =
-                    MIN(outpamP->maxval, MAX(0, matrixSum + 0.5));
-            } else {
-                unsigned int const leftcol = col - ccolso2;
-                unsigned int const addcol  = col + ccolso2;
-
-                float matrixSum;
-                unsigned int ccol;
-
-                convColumnSum[addcol] = convColumnSum[addcol]
-                    - circMap[subrow][addcol][0]
-                    + circMap[addrow][addcol][0];
-
-                for (ccol = 0, matrixSum = 0.0;
-                     ccol < convKernelP->cols;
-                     ++ccol) {
-                    matrixSum += convColumnSum[leftcol + ccol] *
-                        convKernelP->weight[0][ccol][0];
-                }
-                outputrow[col][0] =
-                    MIN(outpamP->maxval, MAX(0, matrixSum + 0.5));
-            }
-        }
         pnm_writepamrow(outpamP, outputrow);
     }
-    writeUnconvolvedBottom(outpamP, convKernelP, circMap);
+    writeUnconvolvedBottom(outpamP, convKernelP, windowHeight, circMap);
 
+    freeSum(convColumnSum, outpamP->depth);
     freeRowbuf(rowbuf, windowHeight);
 }
 
 
 
-/* PPM General Convolution Algorithm
-**
-** No redundancy in convolution matrix.  Just use brute force.
-** See convolvePgmGeneral() for more details.
-*/
-
-static void
-ppm_general_convolve(const float ** const rweights,
-                     const float ** const gweights,
-                     const float ** const bweights) {
-    int ccol, col;
-    xel** xelbuf;
-    xel* outputrow;
-    xelval r, g, b;
-    int row, crow;
-    float rsum, gsum, bsum;
-    xel **rowptr, *temprptr;
-    int toprow, temprow;
-    int i, irow;
-    int leftcol;
-    long temprsum, tempgsum, tempbsum;
-
-    /* Allocate space for one convolution-matrix's worth of rows, plus
-    ** a row output buffer. */
-    xelbuf = pnm_allocarray( cols, crows );
-    outputrow = pnm_allocrow( cols );
-
-    /* Allocate array of pointers to xelbuf */
-    rowptr = (xel **) pnm_allocarray( 1, crows );
-
-    pnm_writepnminit( stdout, cols, rows, maxval, newformat, 0 );
-
-    /* Read in one convolution-matrix's worth of image, less one row. */
-    for ( row = 0; row < crows - 1; ++row )
-    {
-    pnm_readpnmrow( ifp, xelbuf[row], cols, maxval, format );
-    if ( PNM_FORMAT_TYPE(format) != newformat )
-        pnm_promoteformatrow(
-        xelbuf[row], cols, maxval, format, maxval, newformat );
-    /* Write out just the part we're not going to convolve. */
-    if ( row < crowso2 )
-        pnm_writepnmrow( stdout, xelbuf[row], cols, maxval, newformat, 0 );
-    }
-
-    /* Now the rest of the image - read in the row at the end of
-    ** xelbuf, and convolve and write out the row in the middle.
-    */
-    for ( ; row < rows; ++row )
-    {
-    toprow = row + 1;
-    temprow = row % crows;
-    pnm_readpnmrow( ifp, xelbuf[temprow], cols, maxval, format );
-    if ( PNM_FORMAT_TYPE(format) != newformat )
-        pnm_promoteformatrow(
-        xelbuf[temprow], cols, maxval, format, maxval, newformat );
-
-    /* Arrange rowptr to eliminate the use of mod function to determine
-    ** which row of xelbuf is 0...crows.  Mod function can be very costly.
-    */
-    temprow = toprow % crows;
-    i = 0;
-    for (irow = temprow; irow < crows; ++i, ++irow)
-        rowptr[i] = xelbuf[irow];
-    for (irow = 0; irow < temprow; ++irow, ++i)
-        rowptr[i] = xelbuf[irow];
-
-    for ( col = 0; col < cols; ++col )
-        {
-        if ( col < ccolso2 || col >= cols - ccolso2 )
-        outputrow[col] = rowptr[crowso2][col];
-        else
-        {
-        leftcol = col - ccolso2;
-        rsum = gsum = bsum = 0.0;
-        for ( crow = 0; crow < crows; ++crow )
-            {
-            temprptr = rowptr[crow] + leftcol;
-            for ( ccol = 0; ccol < ccols; ++ccol )
-            {
-            rsum += PPM_GETR( *(temprptr + ccol) )
-                * rweights[crow][ccol];
-            gsum += PPM_GETG( *(temprptr + ccol) )
-                * gweights[crow][ccol];
-            bsum += PPM_GETB( *(temprptr + ccol) )
-                * bweights[crow][ccol];
-            }
-            }
-            temprsum = rsum + 0.5;
-            tempgsum = gsum + 0.5;
-            tempbsum = bsum + 0.5;
-            CHECK_RED;
-            CHECK_GREEN;
-            CHECK_BLUE;
-            PPM_ASSIGN( outputrow[col], r, g, b );
-        }
-        }
-    pnm_writepnmrow( stdout, outputrow, cols, maxval, newformat, 0 );
-    }
-
-    /* Now write out the remaining unconvolved rows in xelbuf. */
-    for ( irow = crowso2 + 1; irow < crows; ++irow )
-    pnm_writepnmrow(
-            stdout, rowptr[irow], cols, maxval, newformat, 0 );
-
-    }
-
-
-/* PPM Mean Convolution
-**
-** Same as pgm_mean_convolve() but for PPM.
-**
-*/
-
-static void
-ppm_mean_convolve(const float ** const rweights,
-                  const float ** const gweights,
-                  const float ** const bweights) {
-    /* All weights of a single color are the same so just grab any one
-       of them.  
-    */
-    float const rmeanweight = rweights[0][0];
-    float const gmeanweight = gweights[0][0];
-    float const bmeanweight = bweights[0][0];
-
-    int ccol, col;
-    xel** xelbuf;
-    xel* outputrow;
-    xelval r, g, b;
-    int row, crow;
-    xel **rowptr, *temprptr;
-    int leftcol;
-    int i, irow;
-    int toprow, temprow;
-    int subrow, addrow;
-    int subcol, addcol;
-    long risum, gisum, bisum;
-    long temprsum, tempgsum, tempbsum;
-    int tempcol, crowsp1;
-    long *rcolumnsum, *gcolumnsum, *bcolumnsum;
+struct convolveType {
+    convolver * convolve;
+};
 
 
 
-    /* Allocate space for one convolution-matrix's worth of rows, plus
-    ** a row output buffer.  MEAN uses an extra row. */
-    xelbuf = pnm_allocarray( cols, crows + 1 );
-    outputrow = pnm_allocrow( cols );
+static bool
+convolutionIncludesHorizontal(tuple **                  const tuples,
+                              const struct convKernel * const convKernelP) {
 
-    /* Allocate array of pointers to xelbuf. MEAN uses an extra row. */
-    rowptr = (xel **) pnm_allocarray( 1, crows + 1);
+    bool horizontal;
+    unsigned int row;
 
-    /* Allocate space for intermediate column sums */
-    rcolumnsum = (long *) pm_allocrow( cols, sizeof(long) );
-    gcolumnsum = (long *) pm_allocrow( cols, sizeof(long) );
-    bcolumnsum = (long *) pm_allocrow( cols, sizeof(long) );
-    for ( col = 0; col < cols; ++col )
-    {
-    rcolumnsum[col] = 0L;
-    gcolumnsum[col] = 0L;
-    bcolumnsum[col] = 0L;
-    }
+    for (row = 0, horizontal = TRUE;
+         row < convKernelP->rows && horizontal;
+        ++row) {
+        unsigned int col;
+        for (col = 1, horizontal = TRUE;
+             col < convKernelP->cols && horizontal;
+             ++col) {
 
-    pnm_writepnminit( stdout, cols, rows, maxval, newformat, 0 );
+            unsigned int plane;
 
-    /* Read in one convolution-matrix's worth of image, less one row. */
-    for ( row = 0; row < crows - 1; ++row )
-    {
-    pnm_readpnmrow( ifp, xelbuf[row], cols, maxval, format );
-    if ( PNM_FORMAT_TYPE(format) != newformat )
-        pnm_promoteformatrow(
-        xelbuf[row], cols, maxval, format, maxval, newformat );
-    /* Write out just the part we're not going to convolve. */
-    if ( row < crowso2 )
-        pnm_writepnmrow( stdout, xelbuf[row], cols, maxval, newformat, 0 );
-    }
-
-    /* Do first real row only */
-    subrow = crows;
-    addrow = crows - 1;
-    toprow = row + 1;
-    temprow = row % crows;
-    pnm_readpnmrow( ifp, xelbuf[temprow], cols, maxval, format );
-    if ( PNM_FORMAT_TYPE(format) != newformat )
-    pnm_promoteformatrow(
-        xelbuf[temprow], cols, maxval, format, maxval, newformat );
-
-    temprow = toprow % crows;
-    i = 0;
-    for (irow = temprow; irow < crows; ++i, ++irow)
-    rowptr[i] = xelbuf[irow];
-    for (irow = 0; irow < temprow; ++irow, ++i)
-    rowptr[i] = xelbuf[irow];
-
-    risum = 0L;
-    gisum = 0L;
-    bisum = 0L;
-    for ( col = 0; col < cols; ++col )
-    {
-    if ( col < ccolso2 || col >= cols - ccolso2 )
-        outputrow[col] = rowptr[crowso2][col];
-    else if ( col == ccolso2 )
-        {
-        leftcol = col - ccolso2;
-        for ( crow = 0; crow < crows; ++crow )
-        {
-        temprptr = rowptr[crow] + leftcol;
-        for ( ccol = 0; ccol < ccols; ++ccol )
-            {
-            rcolumnsum[leftcol + ccol] += 
-            PPM_GETR( *(temprptr + ccol) );
-            gcolumnsum[leftcol + ccol] += 
-            PPM_GETG( *(temprptr + ccol) );
-            bcolumnsum[leftcol + ccol] += 
-            PPM_GETB( *(temprptr + ccol) );
+            for (plane = 0; plane < convKernelP->planes; ++plane) {
+                if (tuples[row][col][plane] != tuples[row][0][plane])
+                    horizontal = FALSE;
             }
         }
-        for ( ccol = 0; ccol < ccols; ++ccol)
-        {
-        risum += rcolumnsum[leftcol + ccol];
-        gisum += gcolumnsum[leftcol + ccol];
-        bisum += bcolumnsum[leftcol + ccol];
-        }
-        temprsum = (float) risum * rmeanweight + 0.5;
-        tempgsum = (float) gisum * gmeanweight + 0.5;
-        tempbsum = (float) bisum * bmeanweight + 0.5;
-        CHECK_RED;
-        CHECK_GREEN;
-        CHECK_BLUE;
-        PPM_ASSIGN( outputrow[col], r, g, b );
-        }
-    else
-        {
-        /* Column numbers to subtract or add to isum */
-        subcol = col - ccolso2 - 1;
-        addcol = col + ccolso2;  
-        for ( crow = 0; crow < crows; ++crow )
-        {
-        rcolumnsum[addcol] += PPM_GETR( rowptr[crow][addcol] );
-        gcolumnsum[addcol] += PPM_GETG( rowptr[crow][addcol] );
-        bcolumnsum[addcol] += PPM_GETB( rowptr[crow][addcol] );
-        }
-        risum = risum - rcolumnsum[subcol] + rcolumnsum[addcol];
-        gisum = gisum - gcolumnsum[subcol] + gcolumnsum[addcol];
-        bisum = bisum - bcolumnsum[subcol] + bcolumnsum[addcol];
-        temprsum = (float) risum * rmeanweight + 0.5;
-        tempgsum = (float) gisum * gmeanweight + 0.5;
-        tempbsum = (float) bisum * bmeanweight + 0.5;
-        CHECK_RED;
-        CHECK_GREEN;
-        CHECK_BLUE;
-        PPM_ASSIGN( outputrow[col], r, g, b );
-        }
     }
-    pnm_writepnmrow( stdout, outputrow, cols, maxval, newformat, 0 );
-
-    ++row;
-    /* For all subsequent rows do it this way as the columnsums have been
-    ** generated.  Now we can use them to reduce further calculations.
-    */
-    crowsp1 = crows + 1;
-    for ( ; row < rows; ++row )
-    {
-    toprow = row + 1;
-    temprow = row % (crows + 1);
-    pnm_readpnmrow( ifp, xelbuf[temprow], cols, maxval, format );
-    if ( PNM_FORMAT_TYPE(format) != newformat )
-        pnm_promoteformatrow(
-        xelbuf[temprow], cols, maxval, format, maxval, newformat );
-
-    /* This rearrangement using crows+1 rowptrs and xelbufs will cause
-    ** rowptr[0..crows-1] to always hold active xelbufs and for 
-    ** rowptr[crows] to always hold the oldest (top most) xelbuf.
-    */
-    temprow = (toprow + 1) % crowsp1;
-    i = 0;
-    for (irow = temprow; irow < crowsp1; ++i, ++irow)
-        rowptr[i] = xelbuf[irow];
-    for (irow = 0; irow < temprow; ++irow, ++i)
-        rowptr[i] = xelbuf[irow];
-
-    risum = 0L;
-    gisum = 0L;
-    bisum = 0L;
-    for ( col = 0; col < cols; ++col )
-        {
-        if ( col < ccolso2 || col >= cols - ccolso2 )
-        outputrow[col] = rowptr[crowso2][col];
-        else if ( col == ccolso2 )
-        {
-        leftcol = col - ccolso2;
-        for ( ccol = 0; ccol < ccols; ++ccol )
-            {
-            tempcol = leftcol + ccol;
-            rcolumnsum[tempcol] = rcolumnsum[tempcol]
-            - PPM_GETR( rowptr[subrow][ccol] )
-            + PPM_GETR( rowptr[addrow][ccol] );
-            risum += rcolumnsum[tempcol];
-            gcolumnsum[tempcol] = gcolumnsum[tempcol]
-            - PPM_GETG( rowptr[subrow][ccol] )
-            + PPM_GETG( rowptr[addrow][ccol] );
-            gisum += gcolumnsum[tempcol];
-            bcolumnsum[tempcol] = bcolumnsum[tempcol]
-            - PPM_GETB( rowptr[subrow][ccol] )
-            + PPM_GETB( rowptr[addrow][ccol] );
-            bisum += bcolumnsum[tempcol];
-            }
-        temprsum = (float) risum * rmeanweight + 0.5;
-        tempgsum = (float) gisum * gmeanweight + 0.5;
-        tempbsum = (float) bisum * bmeanweight + 0.5;
-        CHECK_RED;
-        CHECK_GREEN;
-        CHECK_BLUE;
-        PPM_ASSIGN( outputrow[col], r, g, b );
-        }
-        else
-        {
-        /* Column numbers to subtract or add to isum */
-        subcol = col - ccolso2 - 1;
-        addcol = col + ccolso2;  
-        rcolumnsum[addcol] = rcolumnsum[addcol]
-            - PPM_GETR( rowptr[subrow][addcol] )
-            + PPM_GETR( rowptr[addrow][addcol] );
-        risum = risum - rcolumnsum[subcol] + rcolumnsum[addcol];
-        gcolumnsum[addcol] = gcolumnsum[addcol]
-            - PPM_GETG( rowptr[subrow][addcol] )
-            + PPM_GETG( rowptr[addrow][addcol] );
-        gisum = gisum - gcolumnsum[subcol] + gcolumnsum[addcol];
-        bcolumnsum[addcol] = bcolumnsum[addcol]
-            - PPM_GETB( rowptr[subrow][addcol] )
-            + PPM_GETB( rowptr[addrow][addcol] );
-        bisum = bisum - bcolumnsum[subcol] + bcolumnsum[addcol];
-        temprsum = (float) risum * rmeanweight + 0.5;
-        tempgsum = (float) gisum * gmeanweight + 0.5;
-        tempbsum = (float) bisum * bmeanweight + 0.5;
-        CHECK_RED;
-        CHECK_GREEN;
-        CHECK_BLUE;
-        PPM_ASSIGN( outputrow[col], r, g, b );
-        }
-        }
-    pnm_writepnmrow( stdout, outputrow, cols, maxval, newformat, 0 );
-    }
-
-    /* Now write out the remaining unconvolved rows in xelbuf. */
-    for ( irow = crowso2 + 1; irow < crows; ++irow )
-    pnm_writepnmrow(
-            stdout, rowptr[irow], cols, maxval, newformat, 0 );
-
-    }
+    return horizontal;
+}
 
 
-/* PPM Horizontal Convolution
-**
-** Same as pgm_horizontal_convolve()
-**
-**/
 
-static void
-ppm_horizontal_convolve(const float ** const rweights,
-                        const float ** const gweights,
-                        const float ** const bweights) {
-    int ccol, col;
-    xel** xelbuf;
-    xel* outputrow;
-    xelval r, g, b;
-    int row, crow;
-    xel **rowptr, *temprptr;
-    int leftcol;
-    int i, irow;
-    int temprow;
-    int subcol, addcol;
-    float rsum, gsum, bsum;
-    int addrow, subrow;
-    long **rrowsum, **rrowsumptr;
-    long **growsum, **growsumptr;
-    long **browsum, **browsumptr;
-    int crowsp1;
-    long temprsum, tempgsum, tempbsum;
+static bool
+convolutionIncludesVertical(tuple **                  const tuples,
+                            const struct convKernel * const convKernelP) {
 
-    /* Allocate space for one convolution-matrix's worth of rows, plus
-    ** a row output buffer. */
-    xelbuf = pnm_allocarray( cols, crows + 1 );
-    outputrow = pnm_allocrow( cols );
+    bool vertical;
+    unsigned int col;
 
-    /* Allocate array of pointers to xelbuf */
-    rowptr = (xel **) pnm_allocarray( 1, crows + 1);
+    for (col = 0, vertical = TRUE;
+         col < convKernelP->cols && vertical;
+        ++col) {
+        unsigned int row;
+        for (row = 1, vertical = TRUE;
+             row < convKernelP->rows && vertical;
+             ++row) {
 
-    /* Allocate intermediate row sums.  HORIZONTAL uses an extra row */
-    rrowsum = (long **) pm_allocarray( cols, crows + 1, sizeof(long) );
-    rrowsumptr = (long **) pnm_allocarray( 1, crows + 1);
-    growsum = (long **) pm_allocarray( cols, crows + 1, sizeof(long) );
-    growsumptr = (long **) pnm_allocarray( 1, crows + 1);
-    browsum = (long **) pm_allocarray( cols, crows + 1, sizeof(long) );
-    browsumptr = (long **) pnm_allocarray( 1, crows + 1);
+            unsigned int plane;
 
-    pnm_writepnminit( stdout, cols, rows, maxval, newformat, 0 );
-
-    /* Read in one convolution-matrix's worth of image, less one row. */
-    for ( row = 0; row < crows - 1; ++row )
-    {
-    pnm_readpnmrow( ifp, xelbuf[row], cols, maxval, format );
-    if ( PNM_FORMAT_TYPE(format) != newformat )
-        pnm_promoteformatrow(
-        xelbuf[row], cols, maxval, format, maxval, newformat );
-    /* Write out just the part we're not going to convolve. */
-    if ( row < crowso2 )
-        pnm_writepnmrow( stdout, xelbuf[row], cols, maxval, newformat, 0 );
-    }
-
-    /* First row only */
-    temprow = row % crows;
-    pnm_readpnmrow( ifp, xelbuf[temprow], cols, maxval, format );
-    if ( PNM_FORMAT_TYPE(format) != newformat )
-    pnm_promoteformatrow(
-        xelbuf[temprow], cols, maxval, format, maxval, newformat );
-
-    temprow = (row + 1) % crows;
-    i = 0;
-    for (irow = temprow; irow < crows; ++i, ++irow)
-    rowptr[i] = xelbuf[irow];
-    for (irow = 0; irow < temprow; ++irow, ++i)
-    rowptr[i] = xelbuf[irow];
-
-    for ( crow = 0; crow < crows; ++crow )
-    {
-    rrowsumptr[crow] = rrowsum[crow];
-    growsumptr[crow] = growsum[crow];
-    browsumptr[crow] = browsum[crow];
-    }
- 
-    for ( col = 0; col < cols; ++col )
-    {
-    if ( col < ccolso2 || col >= cols - ccolso2 )
-        outputrow[col] = rowptr[crowso2][col];
-    else if ( col == ccolso2 )
-        {
-        leftcol = col - ccolso2;
-        rsum = 0.0;
-        gsum = 0.0;
-        bsum = 0.0;
-        for ( crow = 0; crow < crows; ++crow )
-        {
-        temprptr = rowptr[crow] + leftcol;
-        rrowsumptr[crow][leftcol] = 0L;
-        growsumptr[crow][leftcol] = 0L;
-        browsumptr[crow][leftcol] = 0L;
-        for ( ccol = 0; ccol < ccols; ++ccol )
-            {
-            rrowsumptr[crow][leftcol] += 
-                PPM_GETR( *(temprptr + ccol) );
-            growsumptr[crow][leftcol] += 
-                PPM_GETG( *(temprptr + ccol) );
-            browsumptr[crow][leftcol] += 
-                PPM_GETB( *(temprptr + ccol) );
-            }
-        rsum += rrowsumptr[crow][leftcol] * rweights[crow][0];
-        gsum += growsumptr[crow][leftcol] * gweights[crow][0];
-        bsum += browsumptr[crow][leftcol] * bweights[crow][0];
-        }
-        temprsum = rsum + 0.5;
-        tempgsum = gsum + 0.5;
-        tempbsum = bsum + 0.5;
-        CHECK_RED;
-        CHECK_GREEN;
-        CHECK_BLUE;
-        PPM_ASSIGN( outputrow[col], r, g, b );
-        }
-    else
-        {
-        rsum = 0.0;
-        gsum = 0.0;
-        bsum = 0.0;
-        leftcol = col - ccolso2;
-        subcol = col - ccolso2 - 1;
-        addcol = col + ccolso2;
-        for ( crow = 0; crow < crows; ++crow )
-        {
-        rrowsumptr[crow][leftcol] = rrowsumptr[crow][subcol]
-            - PPM_GETR( rowptr[crow][subcol] )
-            + PPM_GETR( rowptr[crow][addcol] );
-        rsum += rrowsumptr[crow][leftcol] * rweights[crow][0];
-        growsumptr[crow][leftcol] = growsumptr[crow][subcol]
-            - PPM_GETG( rowptr[crow][subcol] )
-            + PPM_GETG( rowptr[crow][addcol] );
-        gsum += growsumptr[crow][leftcol] * gweights[crow][0];
-        browsumptr[crow][leftcol] = browsumptr[crow][subcol]
-            - PPM_GETB( rowptr[crow][subcol] )
-            + PPM_GETB( rowptr[crow][addcol] );
-        bsum += browsumptr[crow][leftcol] * bweights[crow][0];
-        }
-        temprsum = rsum + 0.5;
-        tempgsum = gsum + 0.5;
-        tempbsum = bsum + 0.5;
-        CHECK_RED;
-        CHECK_GREEN;
-        CHECK_BLUE;
-        PPM_ASSIGN( outputrow[col], r, g, b );
-        }
-        }
-    pnm_writepnmrow( stdout, outputrow, cols, maxval, newformat, 0 );
-
-
-    /* For all subsequent rows */
-
-    subrow = crows;
-    addrow = crows - 1;
-    crowsp1 = crows + 1;
-    ++row;
-    for ( ; row < rows; ++row )
-    {
-    temprow = row % crowsp1;
-    pnm_readpnmrow( ifp, xelbuf[temprow], cols, maxval, format );
-    if ( PNM_FORMAT_TYPE(format) != newformat )
-        pnm_promoteformatrow(
-        xelbuf[temprow], cols, maxval, format, maxval, newformat );
-
-    temprow = (row + 2) % crowsp1;
-    i = 0;
-    for (irow = temprow; irow < crowsp1; ++i, ++irow)
-        {
-        rowptr[i] = xelbuf[irow];
-        rrowsumptr[i] = rrowsum[irow];
-        growsumptr[i] = growsum[irow];
-        browsumptr[i] = browsum[irow];
-        }
-    for (irow = 0; irow < temprow; ++irow, ++i)
-        {
-        rowptr[i] = xelbuf[irow];
-        rrowsumptr[i] = rrowsum[irow];
-        growsumptr[i] = growsum[irow];
-        browsumptr[i] = browsum[irow];
-        }
-
-    for ( col = 0; col < cols; ++col )
-        {
-        if ( col < ccolso2 || col >= cols - ccolso2 )
-        outputrow[col] = rowptr[crowso2][col];
-        else if ( col == ccolso2 )
-        {
-        rsum = 0.0;
-        gsum = 0.0;
-        bsum = 0.0;
-        leftcol = col - ccolso2;
-        rrowsumptr[addrow][leftcol] = 0L;
-        growsumptr[addrow][leftcol] = 0L;
-        browsumptr[addrow][leftcol] = 0L;
-        for ( ccol = 0; ccol < ccols; ++ccol )
-            {
-            rrowsumptr[addrow][leftcol] += 
-            PPM_GETR( rowptr[addrow][leftcol + ccol] );
-            growsumptr[addrow][leftcol] += 
-            PPM_GETG( rowptr[addrow][leftcol + ccol] );
-            browsumptr[addrow][leftcol] += 
-            PPM_GETB( rowptr[addrow][leftcol + ccol] );
-            }
-        for ( crow = 0; crow < crows; ++crow )
-            {
-            rsum += rrowsumptr[crow][leftcol] * rweights[crow][0];
-            gsum += growsumptr[crow][leftcol] * gweights[crow][0];
-            bsum += browsumptr[crow][leftcol] * bweights[crow][0];
-            }
-        temprsum = rsum + 0.5;
-        tempgsum = gsum + 0.5;
-        tempbsum = bsum + 0.5;
-        CHECK_RED;
-        CHECK_GREEN;
-        CHECK_BLUE;
-        PPM_ASSIGN( outputrow[col], r, g, b );
-        }
-        else
-        {
-        rsum = 0.0;
-        gsum = 0.0;
-        bsum = 0.0;
-        leftcol = col - ccolso2;
-        subcol = col - ccolso2 - 1;
-        addcol = col + ccolso2;  
-        rrowsumptr[addrow][leftcol] = rrowsumptr[addrow][subcol]
-            - PPM_GETR( rowptr[addrow][subcol] )
-            + PPM_GETR( rowptr[addrow][addcol] );
-        growsumptr[addrow][leftcol] = growsumptr[addrow][subcol]
-            - PPM_GETG( rowptr[addrow][subcol] )
-            + PPM_GETG( rowptr[addrow][addcol] );
-        browsumptr[addrow][leftcol] = browsumptr[addrow][subcol]
-            - PPM_GETB( rowptr[addrow][subcol] )
-            + PPM_GETB( rowptr[addrow][addcol] );
-        for ( crow = 0; crow < crows; ++crow )
-            {
-            rsum += rrowsumptr[crow][leftcol] * rweights[crow][0];
-            gsum += growsumptr[crow][leftcol] * gweights[crow][0];
-            bsum += browsumptr[crow][leftcol] * bweights[crow][0];
-            }
-        temprsum = rsum + 0.5;
-        tempgsum = gsum + 0.5;
-        tempbsum = bsum + 0.5;
-        CHECK_RED;
-        CHECK_GREEN;
-        CHECK_BLUE;
-        PPM_ASSIGN( outputrow[col], r, g, b );
-        }
-        }
-    pnm_writepnmrow( stdout, outputrow, cols, maxval, newformat, 0 );
-    }
-
-    /* Now write out the remaining unconvolved rows in xelbuf. */
-    for ( irow = crowso2 + 1; irow < crows; ++irow )
-    pnm_writepnmrow(
-            stdout, rowptr[irow], cols, maxval, newformat, 0 );
-
-    }
-
-
-/* PPM Vertical Convolution
-**
-** Same as pgm_vertical_convolve()
-**
-*/
-
-static void
-ppm_vertical_convolve(const float ** const rweights,
-                      const float ** const gweights,
-                      const float ** const bweights) {
-    int ccol, col;
-    xel** xelbuf;
-    xel* outputrow;
-    xelval r, g, b;
-    int row, crow;
-    xel **rowptr, *temprptr;
-    int i, irow;
-    int toprow, temprow;
-    int subrow, addrow;
-    int tempcol;
-    long *rcolumnsum, *gcolumnsum, *bcolumnsum;
-    int crowsp1;
-    int addcol;
-    long temprsum, tempgsum, tempbsum;
-
-    /* Allocate space for one convolution-matrix's worth of rows, plus
-    ** a row output buffer. VERTICAL uses an extra row. */
-    xelbuf = pnm_allocarray(cols, crows + 1);
-    outputrow = pnm_allocrow(cols);
-
-    /* Allocate array of pointers to xelbuf */
-    rowptr = (xel **) pnm_allocarray(1, crows + 1);
-
-    /* Allocate space for intermediate column sums */
-    MALLOCARRAY_NOFAIL(rcolumnsum, cols);
-    MALLOCARRAY_NOFAIL(gcolumnsum, cols);
-    MALLOCARRAY_NOFAIL(bcolumnsum, cols);
-
-    for (col = 0; col < cols; ++col) {
-        rcolumnsum[col] = 0L;
-        gcolumnsum[col] = 0L;
-        bcolumnsum[col] = 0L;
-    }
-
-    pnm_writepnminit(stdout, cols, rows, maxval, newformat, 0);
-
-    /* Read in one convolution-matrix's worth of image, less one row. */
-    for (row = 0; row < crows - 1; ++row) {
-        pnm_readpnmrow(ifp, xelbuf[row], cols, maxval, format);
-        if (PNM_FORMAT_TYPE(format) != newformat)
-            pnm_promoteformatrow(xelbuf[row], cols, maxval, format, 
-                                 maxval, newformat);
-        /* Write out just the part we're not going to convolve. */
-        if (row < crowso2)
-            pnm_writepnmrow(stdout, xelbuf[row], cols, maxval, newformat, 0);
-    }
-
-    /* Now the rest of the image - read in the row at the end of
-    ** xelbuf, and convolve and write out the row in the middle.
-    */
-    /* For first row only */
-
-    toprow = row + 1;
-    temprow = row % crows;
-    pnm_readpnmrow(ifp, xelbuf[temprow], cols, maxval, format);
-    if (PNM_FORMAT_TYPE(format) != newformat)
-        pnm_promoteformatrow(xelbuf[temprow], cols, maxval, format, maxval, 
-                             newformat);
-
-    /* Arrange rowptr to eliminate the use of mod function to determine
-    ** which row of xelbuf is 0...crows.  Mod function can be very costly.
-    */
-    temprow = toprow % crows;
-    i = 0;
-    for (irow = temprow; irow < crows; ++i, ++irow)
-        rowptr[i] = xelbuf[irow];
-    for (irow = 0; irow < temprow; ++irow, ++i)
-        rowptr[i] = xelbuf[irow];
-
-    for (col = 0; col < cols; ++col) {
-        if (col < ccolso2 || col >= cols - ccolso2)
-            outputrow[col] = rowptr[crowso2][col];
-        else if (col == ccolso2) {
-            int const leftcol = col - ccolso2;
-            float rsum, gsum, bsum;
-            rsum = 0.0;
-            gsum = 0.0;
-            bsum = 0.0;
-            for (crow = 0; crow < crows; ++crow) {
-                temprptr = rowptr[crow] + leftcol;
-                for (ccol = 0; ccol < ccols; ++ccol) {
-                    rcolumnsum[leftcol + ccol] += 
-                        PPM_GETR(*(temprptr + ccol));
-                    gcolumnsum[leftcol + ccol] += 
-                        PPM_GETG(*(temprptr + ccol));
-                    bcolumnsum[leftcol + ccol] += 
-                        PPM_GETB(*(temprptr + ccol));
-                }
-            }
-            for (ccol = 0; ccol < ccols; ++ccol) {
-                rsum += rcolumnsum[leftcol + ccol] * rweights[0][ccol];
-                gsum += gcolumnsum[leftcol + ccol] * gweights[0][ccol];
-                bsum += bcolumnsum[leftcol + ccol] * bweights[0][ccol];
-            }
-            temprsum = rsum + 0.5;
-            tempgsum = gsum + 0.5;
-            tempbsum = bsum + 0.5;
-            CHECK_RED;
-            CHECK_GREEN;
-            CHECK_BLUE;
-            PPM_ASSIGN(outputrow[col], r, g, b);
-        } else {
-            int const leftcol = col - ccolso2;
-            float rsum, gsum, bsum;
-            rsum = 0.0;
-            gsum = 0.0;
-            bsum = 0.0;
-            addcol = col + ccolso2;  
-            for (crow = 0; crow < crows; ++crow) {
-                rcolumnsum[addcol] += PPM_GETR( rowptr[crow][addcol]);
-                gcolumnsum[addcol] += PPM_GETG( rowptr[crow][addcol]);
-                bcolumnsum[addcol] += PPM_GETB( rowptr[crow][addcol]);
-            }
-            for (ccol = 0; ccol < ccols; ++ccol) {
-                rsum += rcolumnsum[leftcol + ccol] * rweights[0][ccol];
-                gsum += gcolumnsum[leftcol + ccol] * gweights[0][ccol];
-                bsum += bcolumnsum[leftcol + ccol] * bweights[0][ccol];
-            }
-            temprsum = rsum + 0.5;
-            tempgsum = gsum + 0.5;
-            tempbsum = bsum + 0.5;
-            CHECK_RED;
-            CHECK_GREEN;
-            CHECK_BLUE;
-            PPM_ASSIGN(outputrow[col], r, g, b);
-        }
-    }
-    pnm_writepnmrow(stdout, outputrow, cols, maxval, newformat, 0);
-    
-    /* For all subsequent rows */
-    subrow = crows;
-    addrow = crows - 1;
-    crowsp1 = crows + 1;
-    ++row;
-    for (; row < rows; ++row) {
-        toprow = row + 1;
-        temprow = row % (crows +1);
-        pnm_readpnmrow(ifp, xelbuf[temprow], cols, maxval, format);
-        if (PNM_FORMAT_TYPE(format) != newformat)
-            pnm_promoteformatrow(xelbuf[temprow], cols, maxval, format, 
-                                 maxval, newformat);
-
-        /* Arrange rowptr to eliminate the use of mod function to determine
-        ** which row of xelbuf is 0...crows.  Mod function can be very costly.
-        */
-        temprow = (toprow + 1) % crowsp1;
-        i = 0;
-        for (irow = temprow; irow < crowsp1; ++i, ++irow)
-            rowptr[i] = xelbuf[irow];
-        for (irow = 0; irow < temprow; ++irow, ++i)
-            rowptr[i] = xelbuf[irow];
-
-        for (col = 0; col < cols; ++col) {
-            if (col < ccolso2 || col >= cols - ccolso2)
-                outputrow[col] = rowptr[crowso2][col];
-            else if (col == ccolso2) {
-                int const leftcol = col - ccolso2;
-                float rsum, gsum, bsum;
-                rsum = 0.0;
-                gsum = 0.0;
-                bsum = 0.0;
-
-                for (ccol = 0; ccol < ccols; ++ccol) {
-                    tempcol = leftcol + ccol;
-                    rcolumnsum[tempcol] = rcolumnsum[tempcol] 
-                        - PPM_GETR(rowptr[subrow][ccol])
-                        + PPM_GETR(rowptr[addrow][ccol]);
-                    rsum = rsum + rcolumnsum[tempcol] * rweights[0][ccol];
-                    gcolumnsum[tempcol] = gcolumnsum[tempcol] 
-                        - PPM_GETG(rowptr[subrow][ccol])
-                        + PPM_GETG(rowptr[addrow][ccol]);
-                    gsum = gsum + gcolumnsum[tempcol] * gweights[0][ccol];
-                    bcolumnsum[tempcol] = bcolumnsum[tempcol] 
-                        - PPM_GETB(rowptr[subrow][ccol])
-                        + PPM_GETB(rowptr[addrow][ccol]);
-                    bsum = bsum + bcolumnsum[tempcol] * bweights[0][ccol];
-                }
-                temprsum = rsum + 0.5;
-                tempgsum = gsum + 0.5;
-                tempbsum = bsum + 0.5;
-                CHECK_RED;
-                CHECK_GREEN;
-                CHECK_BLUE;
-                PPM_ASSIGN(outputrow[col], r, g, b);
-            } else {
-                int const leftcol = col - ccolso2;
-                float rsum, gsum, bsum;
-                rsum = 0.0;
-                gsum = 0.0;
-                bsum = 0.0;
-                addcol = col + ccolso2;
-                rcolumnsum[addcol] = rcolumnsum[addcol]
-                    - PPM_GETR(rowptr[subrow][addcol])
-                    + PPM_GETR(rowptr[addrow][addcol]);
-                gcolumnsum[addcol] = gcolumnsum[addcol]
-                    - PPM_GETG(rowptr[subrow][addcol])
-                    + PPM_GETG(rowptr[addrow][addcol]);
-                bcolumnsum[addcol] = bcolumnsum[addcol]
-                    - PPM_GETB(rowptr[subrow][addcol])
-                    + PPM_GETB(rowptr[addrow][addcol]);
-                for (ccol = 0; ccol < ccols; ++ccol) {
-                    rsum += rcolumnsum[leftcol + ccol] * rweights[0][ccol];
-                    gsum += gcolumnsum[leftcol + ccol] * gweights[0][ccol];
-                    bsum += bcolumnsum[leftcol + ccol] * bweights[0][ccol];
-                }
-                temprsum = rsum + 0.5;
-                tempgsum = gsum + 0.5;
-                tempbsum = bsum + 0.5;
-                CHECK_RED;
-                CHECK_GREEN;
-                CHECK_BLUE;
-                PPM_ASSIGN(outputrow[col], r, g, b);
+            for (plane = 0; plane < convKernelP->planes; ++plane) {
+                if (tuples[row][col][plane] != tuples[0][col][plane])
+                    vertical = FALSE;
             }
         }
-        pnm_writepnmrow(stdout, outputrow, cols, maxval, newformat, 0);
     }
-
-    /* Now write out the remaining unconvolved rows in xelbuf. */
-    for (irow = crowso2 + 1; irow < crows; ++irow)
-        pnm_writepnmrow(stdout, rowptr[irow], cols, maxval, newformat, 0);
-
+    return vertical;
 }
 
 
 
 static void
-determineConvolveType(xel * const *         const cxels,
-                      struct convolveType * const typeP) {
+determineConvolveType(tuple **                  const tuples,
+                      const struct convKernel * const convKernelP,
+                      struct convolveType *     const typeP) {
 /*----------------------------------------------------------------------------
-   Determine which form of convolution is best.  The general form always
-   works, but with some special case convolution matrices, faster forms
-   of convolution are possible.
+   *Determine which form of convolution is best to convolve the kernel
+   *convKernelP over tuples[][].  The general form always works, but with some
+   *special case convolution matrices, faster forms of convolution are
+   *possible.
 
    We don't check for the case that one of the PPM colors can have 
    differing types.  We handle only cases where all PPMs are of the same
    special case.
 -----------------------------------------------------------------------------*/
-    int horizontal, vertical;
-    int tempcxel, rtempcxel, gtempcxel, btempcxel;
-    int crow, ccol;
+    bool const horizontal = convolutionIncludesHorizontal(tuples, convKernelP);
+    bool const vertical   = convolutionIncludesVertical(tuples, convKernelP);
 
-    switch (PNM_FORMAT_TYPE(format)) {
-    case PPM_TYPE:
-        horizontal = TRUE;  /* initial assumption */
-        crow = 0;
-        while (horizontal && (crow < crows)) {
-            ccol = 1;
-            rtempcxel = PPM_GETR(cxels[crow][0]);
-            gtempcxel = PPM_GETG(cxels[crow][0]);
-            btempcxel = PPM_GETB(cxels[crow][0]);
-            while (horizontal && (ccol < ccols)) {
-                if ((PPM_GETR(cxels[crow][ccol]) != rtempcxel) ||
-                    (PPM_GETG(cxels[crow][ccol]) != gtempcxel) ||
-                    (PPM_GETB(cxels[crow][ccol]) != btempcxel)) 
-                    horizontal = FALSE;
-                ++ccol;
-            }
-            ++crow;
-        }
-
-        vertical = TRUE;   /* initial assumption */
-        ccol = 0;
-        while (vertical && (ccol < ccols)) {
-            crow = 1;
-            rtempcxel = PPM_GETR(cxels[0][ccol]);
-            gtempcxel = PPM_GETG(cxels[0][ccol]);
-            btempcxel = PPM_GETB(cxels[0][ccol]);
-            while (vertical && (crow < crows)) {
-                if ((PPM_GETR(cxels[crow][ccol]) != rtempcxel) |
-                    (PPM_GETG(cxels[crow][ccol]) != gtempcxel) |
-                    (PPM_GETB(cxels[crow][ccol]) != btempcxel))
-                    vertical = FALSE;
-                ++crow;
-            }
-            ++ccol;
-        }
-        break;
-        
-    default:
-        horizontal = TRUE; /* initial assumption */
-        crow = 0;
-        while (horizontal && (crow < crows)) {
-            ccol = 1;
-            tempcxel = PNM_GET1(cxels[crow][0]);
-            while (horizontal && (ccol < ccols)) {
-                if (PNM_GET1(cxels[crow][ccol]) != tempcxel)
-                    horizontal = FALSE;
-                ++ccol;
-            }
-            ++crow;
-        }
-        
-        vertical = TRUE;  /* initial assumption */
-        ccol = 0;
-        while (vertical && (ccol < ccols)) {
-            crow = 1;
-            tempcxel = PNM_GET1(cxels[0][ccol]);
-            while (vertical && (crow < crows)) {
-                if (PNM_GET1(cxels[crow][ccol]) != tempcxel)
-                    vertical = FALSE;
-                ++crow;
-            }
-            ++ccol;
-        }
-        break;
-    }
-    
-    /* Which type do we have? */
     if (horizontal && vertical) {
-        typeP->ppmConvolver = convolvePpmMean;
-        typeP->pgmConvolver = convolvePgmMean;
+        pm_message("Convolution is a simple mean horizontally and vertically");
+        typeP->convolve = convolveMean;
     } else if (horizontal) {
-        typeP->ppmConvolver = convolvePpmHorizontal;
-        typeP->pgmConvolver = convolvePgmHorizontal;
+        pm_message("Convolution is a simple mean horizontally");
+        typeP->convolve = convolveHorizontal;
     } else if (vertical) {
-        typeP->ppmConvolver = convolvePpmVertical;
-        typeP->pgmConvolver = convolvePgmVertical;
+        pm_message("Convolution is a simple mean vertically");
+        typeP->convolve = convolveVertical;
     } else {
-        typeP->ppmConvolver = convolvePpmGeneral;
-        typeP->pgmConvolver = convolvePgmGeneral;
-    }
-}
-
-
-
-static void
-convolveIt(struct pam *        const inpamP,
-           struct pam *        const outpamP,
-           struct convolveType const convolveType,
-           struct convKernel * const convKernelP) {
-
-    switch (PNM_FORMAT_TYPE(inpamP->format)) {
-    case PPM_TYPE:
-        convolveType.ppmConvolver(inpamP, outpamP, convKernelP);
-        break;
-
-    default:
-        convolveType.pgmConvolver(inpamP, outpamP, convKernelP);
+        typeP->convolve = convolveGeneral;
     }
 }
 
@@ -1987,12 +1469,11 @@ main(int argc, char * argv[]) {
     FILE * ifP;
     FILE * cifP;
     tuple ** ctuples;
-    int cformat;
-    xelval cmaxval;
     struct convolveType convolveType;
     struct convKernel * convKernelP;
     struct pam inpam;
-    sturct pam cpam;
+    struct pam outpam;
+    struct pam cpam;
 
     pnm_init(&argc, argv);
 
@@ -2004,26 +1485,23 @@ main(int argc, char * argv[]) {
     ctuples = pnm_readpam(cifP, &cpam, PAM_STRUCT_SIZE(tuple_type));
     pm_close(cifP);
 
-    if (ccols % 2 != 1 || crows % 2 != 1)
+    if (cpam.width % 2 != 1 || cpam.height % 2 != 1)
         pm_error("the convolution matrix must have an odd number of "
                  "rows and columns" );
-
-    ccolso2 = ccols / 2;
-    crowso2 = crows / 2;
 
     ifP = pm_openr(cmdline.inputFilespec);
 
     pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(allocation_depth));
-    if (inpam.cols < cpam.cols || inpam.rows < cpam.rows)
+    if (inpam.width < cpam.width || inpam.height < cpam.height)
         pm_error("the image is smaller than the convolution matrix" );
 
-    outpam = inpam;
+    outpam = inpam;  /* initial value */
+
+    outpam.file = stdout;
 
     outpam.format = MAX(PNM_FORMAT_TYPE(cpam.format),
                         PNM_FORMAT_TYPE(inpam.format));
-    if (PNM_FORMAT_TYPE(cpam.format) != outpam.format)
-        pnm_promoteformat(cxels, ccols, crows, cmaxval, cformat, 
-                          cmaxval, outpam.format);
+
     if (PNM_FORMAT_TYPE(inpam.format) != outpam.format) {
         switch (PNM_FORMAT_TYPE(outpam.format)) {
         case PPM_TYPE:
@@ -2039,14 +1517,16 @@ main(int argc, char * argv[]) {
 
     pnm_setminallocationdepth(&inpam, MAX(inpam.depth, outpam.depth));
 
-    computeKernel(cpam, ctuples, outpam.format, !cmdline.nooffset,
-                  &convKernelP);
+    convKernelCreate(&cpam, ctuples, outpam.depth, !cmdline.nooffset,
+                     &convKernelP);
+
+    validateEnoughImageToConvolve(&inpam, convKernelP);
 
     /* Handle certain special cases when runtime can be improved. */
 
-    determineConvolveType(ctuples, &convolveType);
+    determineConvolveType(ctuples, convKernelP, &convolveType);
 
-    convolveIt(&inpam, &outpam, convolveType, convKernelP);
+    convolveType.convolve(&inpam, &outpam, convKernelP);
 
     convKernelDestroy(convKernelP);
     pm_close(stdout);
