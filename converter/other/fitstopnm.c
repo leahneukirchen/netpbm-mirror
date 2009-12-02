@@ -34,6 +34,11 @@
   The official specification of FITS format (which is for more than
   just visual images) is at
   ftp://legacy.gsfc.nasa.gov/fits_info/fits_office/fits_standard.pdf
+
+  An example FITS file is at
+
+    http://fits.gsfc.nasa.gov/nrao_data/tests/incunabula/mndrll-8.fits
+
 */
 
 #include <string.h>
