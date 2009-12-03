@@ -35,6 +35,7 @@
  *  $State: Exp $
  */
 
+#include "pm_config.h"
 #include "config.h"
 
 #if HAVE_STRING_H
@@ -665,15 +666,15 @@ display_16_bit (const struct fiasco_renderer *this, unsigned char *ximage,
 	 
 	 for (n = image->width * image->height / 2; n; n--, src += 2)
 #ifdef HAVE_SIGNED_SHIFT
-#	ifndef WORDS_BIGENDIAN
+#	if BYTE_ORDER == LITTLE_ENDIAN
 	    *dst++ = (y_table [src [1] >> 4] << 16) | y_table [src [0] >> 4];
-#	else /* not WORDS_BIGENDIAN  */
+#	else
 	    *dst++ = (y_table [src [0] >> 4] << 16) | y_table [src [1] >> 4];
 #	endif
 #else /* not HAVE_SIGNED_SHIFT */
-#	ifndef WORDS_BIGENDIAN
+#	if BYTE_ORDER == LITTLE_ENDIAN
 	    *dst++ = (y_table [src [1] / 16] << 16) | y_table [src [0] / 16];
-#	else /* not WORDS_BIGENDIAN  */
+#	else
 	    *dst++ = (y_table [src [0] / 16] << 16) | y_table [src [1] / 16];
 #	endif
 #endif /* not HAVE_SIGNED_SHIFT */

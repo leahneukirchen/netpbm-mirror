@@ -4,6 +4,14 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+09.12.03 BJH  Release 10.48.01
+
+              pnmtofiasco, fiascotopnm: fix bug on bigendian machine.
+
+              pngtopam: use png_create_read_struct() instead of
+              png_create_write_struct().  Fixes "call to NULL read
+              function" failure.
+
 09.09.27 BJH  Release 10.48.00
 
               ppmsvgalib: Wait to initialize Svgalib to prevent it from

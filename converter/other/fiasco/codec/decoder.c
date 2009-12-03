@@ -1271,28 +1271,28 @@ compute_state_images (unsigned max_level, word_t **simg,
  			      {
 				 int tmp; /* temp. value of adjacent pixels */
 #ifdef HAVE_SIGNED_SHIFT
-#	ifndef WORDS_BIGENDIAN
+#	if BYTE_ORDER == LITTLE_ENDIAN
                                  tmp = (((weight * (int) src [1]) >> 10) << 17)
 				       | (((weight * (int) src [0]) >> 9)
 					  & 0xfffe);
-#	else /* not WORDS_BIGENDIAN */
+#	else
                                  tmp = (((weight * (int) src [0]) >> 10) << 17)
 				       | (((weight * (int) src [1]) >> 9)
 					  & 0xfffe);
-#	endif /* not WORDS_BIGENDIAN */
+#	endif
 #else /* not HAVE_SIGNED_SHIFT */
-#	ifndef WORDS_BIGENDIAN
+#	if BYTE_ORDER == LITTLE_ENDIAN
                                  tmp = (((weight * (int) src [1]) / 1024)
 					* 131072)
 				       | (((weight * (int) src [0])/ 512)
 					  & 0xfffe);
-#	else /* not WORDS_BIGENDIAN */
+#	else
                                  tmp = (((weight * (int) src [0]) / 1024)
 					* 131072)
 				       | (((weight * (int) src [1]) / 512)
 					  & 0xfffe);
 #	endif /* not WORDS_BIGENDIAN */
-#endif /* not HAVE_SIGNED_SHIFT */
+#endif
 				 src    +=  2;
 				 *idst++ = tmp & 0xfffefffe;
 			      }
@@ -1415,28 +1415,28 @@ compute_state_images (unsigned max_level, word_t **simg,
  			      {
 				 int tmp; /* temp. value of adjacent pixels */
 #ifdef HAVE_SIGNED_SHIFT
-#	ifndef WORDS_BIGENDIAN
+#	if BYTE_ORDER == LITTLE_ENDIAN
                                  tmp = (((weight * (int) src [1]) >> 10) << 17)
 				       | (((weight * (int) src [0]) >> 9)
 					  & 0xfffe);
-#	else /* not WORDS_BIGENDIAN */
+#	else
                                  tmp = (((weight * (int)src [0]) >> 10) << 17)
 				       | (((weight * (int)src [1]) >> 9)
 					  & 0xfffe);
-#	endif /* not WORDS_BIGENDIAN */
+#	endif
 #else /* not HAVE_SIGNED_SHIFT */
-#	ifndef WORDS_BIGENDIAN
+#	if BYTE_ORDER == LITTLE_ENDIAN
                                  tmp = (((weight * (int) src [1]) / 1024)
 					* 131072)
 				       | (((weight * (int) src [0])/ 512)
 					  & 0xfffe);
-#	else /* not WORDS_BIGENDIAN */
+#	else
                                  tmp = (((weight * (int) src [0]) / 1024)
 					* 131072)
 				       | (((weight * (int) src [1])/ 512)
 					  & 0xfffe);
 #	endif /* not WORDS_BIGENDIAN */
-#endif /* not HAVE_SIGNED_SHIFT */
+#endif
 				 src +=  2;
 				 *idst = (*idst + tmp) & 0xfffefffe;
 				 idst++;

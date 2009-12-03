@@ -49,7 +49,7 @@ pngx_create(struct pngx ** const pngxPP,
     else {
         switch(rw) {
         case PNGX_READ:
-            pngxP->png_ptr = png_create_write_struct(
+            pngxP->png_ptr = png_create_read_struct(
                 PNG_LIBPNG_VER_STRING,
                 jmpbufP, errorHandler, NULL);
             break;
@@ -69,6 +69,7 @@ pngx_create(struct pngx ** const pngxPP,
             else
                 *pngxPP = pngxP;
         }
+        pngxP->rw = rw;
     }
 }
 
@@ -77,7 +78,14 @@ pngx_create(struct pngx ** const pngxPP,
 void
 pngx_destroy(struct pngx * const pngxP) {
 
-    png_destroy_write_struct(&pngxP->png_ptr, &pngxP->info_ptr);
+    switch(pngxP->rw) {
+    case PNGX_READ:
+        png_destroy_read_struct(&pngxP->png_ptr, &pngxP->info_ptr, NULL);
+        break;
+    case PNGX_WRITE:
+        png_destroy_write_struct(&pngxP->png_ptr, &pngxP->info_ptr);
+        break;
+    }
 
     free(pngxP);
 }
