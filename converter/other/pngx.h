@@ -5,13 +5,13 @@
    the PNG library easier and cleaner.
 */
 
-struct pngx {
-    png_structp png_ptr;
-    png_infop info_ptr;
-};
-
 typedef enum {PNGX_READ, PNGX_WRITE} pngx_rw;
 
+struct pngx {
+    png_structp png_ptr;
+    png_infop   info_ptr;
+    pngx_rw     rw;
+};
 
 void
 pngx_create(struct pngx ** const pngxPP,
