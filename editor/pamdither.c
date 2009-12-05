@@ -21,19 +21,15 @@
 #define MAX_DITH_POWER ((sizeof(unsigned int)*8 - 1) / 2)
 
 
-/* COLOR():
- *	returns the index in the colormap for the
- *      r, g, b values specified.
- */
-#define COLOR(r,g,b) (((r) * dith_ng + (g)) * dith_nb + (b))
-
 struct cmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
     const char * inputFileName;  /* File name of input file */
-    const char * mapFileName;    /* File name of colormap file */
     unsigned int dim;
+    unsigned int red;
+    unsigned int green;
+    unsigned int blue;
     unsigned int verbose;
 };
 
@@ -59,17 +55,21 @@ parseCommandLine (int argc, char ** argv,
 
     unsigned int option_def_index;
 
-    unsigned int dimSpec, mapfileSpec;
+    unsigned int dimSpec, redSpec, grnSpec, bluSpec;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
     
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0,   "dim",      OPT_UINT, 
-            &cmdlineP->dim,    &dimSpec, 0);
-    OPTENT3(0,   "mapfile",      OPT_STRING, 
-            &cmdlineP->mapFilespec,    &mapfileSpec, 0);
-    OPTENT3(0, "verbose",        OPT_FLAG,   NULL,                  
-            &cmdlineP->verbose,        0 );
+    OPTENT3(0, "dim",          OPT_UINT, 
+            &cmdlineP->dim,            &dimSpec,                  0);
+    OPTENT3(0, "red",          OPT_UINT, 
+            &cmdlineP->red,            &redSpec,                  0);
+    OPTENT3(0, "green",        OPT_UINT, 
+            &cmdlineP->green,          &greenSpec,                  0);
+    OPTENT3(0, "blue",         OPT_UINT, 
+            &cmdlineP->blue,           &blueSpec,                  0);
+    OPTENT3(0, "verbose",      OPT_FLAG,   NULL,                  
+            NULL,                      &cmdlineP->verbose,        0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -86,8 +86,12 @@ parseCommandLine (int argc, char ** argv,
                  "Must be <= %d",
                  dithPower, MAX_DITH_POWER);
         
-    if (!mapfileSpec)
-        pm_error("You must specify the -mapfile option.");
+    if (!redSpec)
+        cmdlineP->red = 2;
+    if (!greenSpec)
+        cmdlineP->green = 2;
+    if (!blueSpec)
+        cmdlineP->blue = 2;
 
     if (argc-1 > 1)
         pm_error("Program takes at most one argument: the input file "
@@ -97,6 +101,91 @@ parseCommandLine (int argc, char ** argv,
         cmdlineP->inputFilespec = "-";
     else
         cmdlineP->inputFilespec = argv[1];
+}
+
+
+
+typedef struct {
+    tuple * out;
+    unsigned int redCt;
+    unsigned int grnCt;
+    unsigned int bluCt;
+} scaler;    
+
+
+static unsigned int
+scaler_index(unsigned int red,
+             unsigned int grn,
+             unsigned int blu) {
+
+    return ((red * scalerP->grnCt) + grn) * scalerP->bluCt;
+}
+
+
+
+static void
+scaler_create(sample       const outputMaxval,
+              unsigned int const redCt,
+              unsigned int const grnCt,
+              unsigned int const bluCt,
+              scaler **    const scalerPP) {
+
+    scaler * scalerP;
+    
+    if (UINT_MAX / redCt / grnCt / bluCt < 1)
+        pm_error("red/green/blue dimensions %u/%u/%u is uncomputably large",
+                 redCt, grnCt, bluCt);
+
+    MALLOCVAR_NOFAIL(scalerP);
+
+    MALLOCARRAY(scalerP->out, redCt * grnCt * bluCt);
+
+    if (scalerP->out == NULL)
+        pm_error("Unable to allocate memory for %u colors "
+                 "(%u red x %u green x %u blue)",
+                 redCt * grnCt * bluCt, redCt, grnCt, bluCt);
+
+    {
+        unsigned int r;
+        for (r = 0; r < redCt; ++r) {
+            unsigned int g;
+            for (g = 0; g < grnCt; ++g) {
+                unsigned int b;
+                for (b = 0; b < bluCt; ++b) {
+                    unsigned int const index = ((r * grnCt) + g) * bluCt;
+                    tuple const t = scalerP->out[index];
+
+                    t[PAM_RED_PLANE] = r * outputMaxval / (redCt - 1);
+                    t[PAM_GRN_PLANE] = g * outputMaxval / (grnCt - 1);
+                    t[PAM_BLU_PLANE] = b * outputMaxval / (bluCt - 1);
+                }
+            }
+        }
+    }
+    *scalerPP = scalerP;
+}
+
+
+
+static void
+scaler_destroy(scaler * const scalerP) {
+
+    free(scalerP->out);
+
+    free(scalerP);
+}
+
+
+
+sample
+scaler_scale(const scaler * const scalerP,
+             unsigned int   const red,
+             unsigned int   const grn,
+             unsigned int   const blu) {
+
+    unsigned int const index = ((red * scalerP->grnCt) + grn) * scalerP->bluCt;
+
+    return scalerP->out[index];
 }
 
 
@@ -172,7 +261,7 @@ dithMatrix(unsigned int const dithPower) {
 
    Return it in newly malloc'ed storage.
 
-   Note that we assume 'dith_dim' is small enough that the dith_mat_sz
+   Note that we assume 'dithPower' is small enough that the 'dithMatSize'
    computed within fits in an int.  Otherwise, results are undefined.
 -----------------------------------------------------------------------------*/
     unsigned int const dithDim = 1 << dithPower;
@@ -190,7 +279,7 @@ dithMatrix(unsigned int const dithPower) {
         
         if (dithMat == NULL) 
             pm_error("Out of memory.  "
-                     "Cannot allocate %d bytes for dithering matrix.",
+                     "Cannot allocate %u bytes for dithering matrix.",
                      dithMatSize);
     }
     {
@@ -210,15 +299,14 @@ dithMatrix(unsigned int const dithPower) {
     return dithMat;
 }
 
-    
 
 static void
-ditherImage(struct pam   const inpam,
-            tuple *      const colormap, 
-            unsigned int const dithPower,
-            struct pam   const outpam;
-            tuple **     const inTuples,
-            tuple ***    const outTuplesP) {
+ditherImage(struct pam *   const inpamP,
+            const scaler * const scalerP,
+            unsigned int   const dithPower,
+            struct pam *   const outpamP;
+            tuple **       const inTuples,
+            tuple ***      const outTuplesP) {
 
     unsigned int const dithDim = 1 << dithPower;
     unsigned int const ditherMatrixArea = SQR(dithDim);
@@ -235,29 +323,31 @@ ditherImage(struct pam   const inpam,
     assert(dithPower < sizeof(unsigned int) * 8);
     assert(UINT_MAX / dithDim >= dithDim);
 
-    outTuples = ppm_allocpamarray(outpam);
+    outTuples = ppm_allocpamarray(outpamP);
 
-    for (row = 0; row < inpam.height; ++row) {
+    for (row = 0; row < inpamP->height; ++row) {
         unsigned int col;
-        for (col = 0; col < inpam.width; ++col) {
+        for (col = 0; col < inpamP->width; ++col) {
             unsigned int const d =
                 ditherMatrix[row & modMask][(width-col-1) & modMask];
             tuple const inputTuple = inTuples[row][col];
-            unsigned int dithered[3];
 
+            unsigned int dithered[3];
             unsigned int plane;
 
-            assert(inpam.depth >= 3);
+            assert(inpamP->depth >= 3);
 
             for (plane = 0; plane < 3; ++plane)
                 dithered[plane] =
-                    dither(inputTuple[plane], inpam.maxval, d, outpam.maxval,
-                           ditherMatrixArea);
+                    dither(inputTuple[plane], inpamP->maxval, d,
+                           outpamP->maxval, ditherMatrixArea);
 
-            outTuples[row][col] = 
-                colormap[COLOR(dithered[RED_PLANE],
-                               dithered[GRN_PLANE],
-                               dithered[BLU_PLANE])];
+            pnm_assignTuple(outpamP,
+                            outTuples[row][col],
+                            scaler_scale(scalerP,
+                                         dithered[RED_PLANE],
+                                         dithered[GRN_PLANE],
+                                         dithered[BLU_PLANE]));
         }
     }
     free(ditherMatrix);
@@ -284,34 +374,31 @@ main(int argc,
     FILE * ifP;
     tuple ** inTuples;        /* Input image */
     tuple ** outTuples;        /* Output image */
-    tuple * colormap;
+    scaler * scalerP;
     int cols, rows;
     pixval maxval;  /* Maxval of the input image */
 
-    struct pam outpamCommon;
-        /* Describes the output images.  Width and height fields are
-           not meaningful, because different output images might have
-           different dimensions.  The rest of the information is common
-           across all output images.
-        */
-
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(&argc, &argv);
 
-    pm_openr(cmdline.inputFileName);
+    ifP = pm_openr(cmdline.inputFileName);
 
     inTuples = pnm_readpam(ifP, &inpam, PAM_STRUCT_SIZE(allocation_depth));
+
     pm_close(ifP);
 
-    getColormap(cmdline.mapFileName, &colormap);
+    outpam = inpam;
+    outpam.file = stdout;
 
-    ditherImage(inpam, colormap, dithPower, inTuples, &outTuples);
+    scaler_create(outpam.maxval, cmdline.red, cmdline.green, cmdline.blue,
+                  &scalerP);
 
-    ppm_writeppm(stdout, opixels, cols, rows, outputMaxval, 0);
-    pm_close(stdout);
+    ditherImage(inpam, scalerP, dithPower, inTuples, &outTuples);
 
-    free(colormap);
+    pnm_writepam(&outpam, outTuples);
+
+    scaler_destroy(scalerP);
 
     pnm_freepamarray(inTuples, &inpam);
     pnm_freepamarray(outTuples, &outpam);
