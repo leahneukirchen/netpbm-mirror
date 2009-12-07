@@ -2,21 +2,31 @@
 <HTML><HEAD><TITLE>Pnmconvol User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmconvol</H1>
-Updated: 29 June 2005
+Updated: 07 December 2009
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
 <H2>NAME</H2>
 
-pnmconvol - general MxN convolution on a PNM image
+pnmconvol - general MxN convolution on a Netpbm image
 
 <H2 id="synopsis">SYNOPSIS</H2>
 
-<B>pnmconvol</B>
+<b>pnmconvol</b>
+{
+<b>-matrix=</b><i>convolution_matrix</i>
+|
+<B>-matrixfile=</B><i>filename</i>[<b>,</b><i>filename</i>[<b>,</b> ...]]
+}
+[<I>netpbmfile</I>]
 
+<p>
+
+<B>pnmconvol</B>
 <I>convolution_matrix_file</I>
 [-nooffset]
-[<I>pnmfile</I>]
+[<I>netpbmfile</I>]
+
 
 <p>Minimum unique abbreviation of option is acceptable.  You may use double
 hyphens instead of single hyphen to denote options.  You may use white
@@ -27,16 +37,146 @@ space in place of the equals sign to separate an option name from its value.
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><b>pnmconvol</b> reads two PNM images as input, convolves the
-second using the first, and writes a PNM image as output.
+<p><b>pnmconvol</b> reads a Netpbm images as input, convolves it with
+a specified convolution matrix, and writes a Netpbm image as output.
 
 <P>Convolution means replacing each pixel with a weighted average of
 the nearby pixels.  The weights and the area to average are determined
 by the convolution matrix (sometimes called a convolution kernel),
-which you supply by way of the PNM image in the file you identify with
-the <i>convolution_matrix_file</i> argument.  There are two ways
-<b>pnmconvol</b> interprets the PNM convolution matrix image pixels as
-weights: with offsets, and without offsets.
+which you supply in one of several ways.  See <a href="#convolutionmatrix">
+Convolution Matrix</a>.
+
+<P>At the edges of the convolved image, where the convolution matrix
+would extend over the edge of the image, <B>pnmconvol</B> just copies
+the input pixels directly to the output.
+
+<p>The convolution computation can result in a value which is outside the
+range representable in the output.  When that happens, <b>pnmconvol</b> just
+clips the output, which means brightness is not conserved.
+
+
+<h3 id="convolutionmatrix">Convolution Matrix</h3>
+
+<p>There are three ways to specify the convolution matrix:
+
+<ul>
+<li>directly with a <b>-matrix</b> option.
+
+<li>In a file (or set of them) named by a <b>-matrixfile</b> option, whose
+contents are similar to a <b>-matrix</b> option value.
+
+<li>With a special PNM file.
+</ul>
+
+<p>The PNM file option is the hardest, and exists only because
+until Netpbm 10.49 (December 2009), it was the only way.
+
+<p>The regular convolution matrix file is slightly easier to read
+than the <b>-matrix</b> option value, and makes your command line
+less messy, but requires you to manage a separate file.  With the file,
+you can have separate convolution matrices for the individual color
+components, which you can't do with <b>-matrix</b>.
+
+<p>In any case, the convolution matrix <b>pnmconvol</b> uses is a
+matrix of real numbers.  They can be whole or fractional, positive,
+negative, or zero.
+
+<p>The convolution matrix always has an odd width and height, so that
+there is a center element.  <b>pnmconvol</b> figuratively places that
+center element over a pixel of the input image and weights that pixel
+and its neighbors as indicated by the convolution matrix to produce the
+pixel in the same location of the output image.
+
+<p>For a normal convolution, where you're neither adding nor subtracting total
+value from the image, but merely moving it around, you'll want to make sure
+that all the numbers in the matrix add up to 1.  If they don't,
+<b>pnmconvol</b> warns you.
+
+<p>The elements of the matrix are actually tuples, one for each sample in the
+input.  (I.e. if the input is an RGB image, each element of the convolution
+matrix has one weight for red, one for green, and one for blue.
+
+
+<h4 id="matrixopt">Directly On the Command Line</h4>
+
+<p>An example of a <b>-matrixopt</b> option is
+
+<pre>
+<tt>
+    -matrixopt=.1,.1,.1;.1,0,.1;.1,.1,.1
+</tt>
+</pre>
+
+
+<p>The value consists of each row of the matrix from top to bottom, separated
+by semicolons.  Each row consists of the elements of the row from left to
+right, separated by commas.  You must of course have the same number of
+elements in each row.  Each element is a decimal floating point number
+and is the weight to give to each component of a pixel that corresponds to
+that matrix location.
+
+<p>There is no way with this method to have different weights for different
+components of a pixel.
+
+
+<h4 id="matrixfile">Regular Matrix File</h4>
+
+<p>Specify the name of the matrix file with a <b>-matrixfile</b>
+option.  Or specify a list of them, one for each plane of the image.
+
+<p>Examples:
+
+<pre>
+<tt>
+    -matrixfile=mymatrix
+</tt>
+
+<tt>
+    -matrixfile=myred,mygreen,myblue
+</tt>
+</pre>
+
+<p>Each file applies to one plane of the image (e.g. red, green, or blue), in
+order.  The matrix in each file must have the same dimensions.  If the
+input image has more planes than the number of files you specify, the first
+file applies to the extra planes as well.
+
+<p><b>pnmconvol</b> interprets the file as text, with lines delimited by Unix
+newline characters (line feeds).
+
+<p>Each line of the file is one row of the matrix, in order from top to
+bottom.
+
+<p>For each row, the file contains a floating point decimal number for each
+element in the row, from left to right, separated by spaces.  This is not just
+any old white space -- it is exactly one space.  Two spaces in a row mean
+you've specified a null string for an element (which is invalid).  If you
+want to line up your matrix visually, use leading and trailing zeroes
+in the floating point numbers to do it.
+
+<p>There is no way to put comments in the file.  There is no signature
+or any other metadata in the file.
+
+
+<h4 id="matrixpnm">PNM File</h4>
+
+<p>Before Netpbm 10.49 (December 2009), this was the only way to 
+specify a convolution matrix.  <b>pnmconvol</b> used this method in
+an attempt to exploit the generic matrix processing capabilities of
+Netpbm, but as the Netpbm formats don't directly allow matrices with
+the kinds of numbers you need in a convolution matrix, it is quite
+cumbersome.  In fact, there simply is no way to specify some convolution
+matrices with a legal Netpbm image, so make it work, <b>pnmconvol</b> has
+to relax the Netpbm file requirement that sample values be no greater
+than the image's maxval.  I.e. it isn't even a real PNM file.
+
+<p>The way you select this method of supplying the convolution matrix is to
+<em>not</em> specify <b>-matrix</b> or <b>-matrixfile</b>.  When you do that,
+you must specify a second non-option argument -- that is the name of the PNM
+file (or PNM equivalent PAM file).
+
+<p>There are two ways <b>pnmconvol</b> interprets the PNM convolution matrix
+image pixels as weights: with offsets, and without offsets.
 
 <p>The simpler of the two is without offsets.  That is what happens
 when you specify the <b>-nooffset</b> option.  In that case,
@@ -100,28 +240,52 @@ would have maxval 50 and be filled with 26.
 <p>Note that with maxval 18, the range of possible values is 0 to 18.
 After offset, that's -9 to 9, and after normalizing, the range is -1 to 1.
 
-<p>For a normal convolution, where you're neither adding nor
-subtracting total value from the image, but merely moving it around,
-you'll want to make sure that all the offset, scaled values in (each
-plane of) your convolution PNM add up to 1.  That means the actual
-sample values, less half the maxval, add up to half the maxval as in
-the example above.
-
 <P>The convolution file will usually be a PGM, so that the same
 convolution gets applied to each color component.  However, if you
 want to use a PPM and do a different convolution to different
 colors, you can certainly do that.
 
-<P>At the edges of the convolved image, where the convolution matrix
-would extend over the edge of the image, <B>pnmconvol</B> just copies
-the input pixels directly to the output.
+<H2 id="options">OPTIONS</H2>
 
-<p>The convolution computation can result in a value which is outside the
-range representable in the output.  When that happens, <b>pnmconvol</b> just
-clips the output, which means brightness is not conserved.
+<DL COMPACT>
 
-<H2 id="history">HISTORY</H2>
-<p>The <b>-nooffset</b> option was new in Netpbm 10.23 (July 2004).
+<DT><B>-matrix=</b><i>convolution_matrix</i>
+<DD>The value of the convolution matrix.  See
+<a href="#matrixopt">Convolution Matrix</a>.
+
+<p>You may not specify both this and <b>-matrixfile</b>.
+
+<P>This option was new in Netpbm 10.49 (December 2009).  Before
+that, use a PNM file for the convolution matrix.
+
+<DT><B>-matrixfile=</b><i>filename</i>
+<DD>This specifies that you are supplying the convolution matrix in
+a file and names that file.  See
+<a href="#matrixfile">Convolution Matrix</a>.
+
+<p>You may not specify both this and <b>-matrix</b>.
+
+<P>This option was new in Netpbm 10.49 (December 2009).  Before
+that, use a PNM file for the convolution matrix.
+
+
+<DT><B>-nooffset=</b>
+<DD>This is part of the obsolete PNM image method of specifying the
+convolution matrix.  See
+<a href="#matrixpnm">Convolution Matrix</a>.
+
+</dl>
+
+<H2 id="history">HISTORY</H2> <p>The <b>-nooffset</b> option was new in Netpbm
+10.23 (July 2004), making it substantially easier to specify a convolution
+matrix, but still hard.  In Netpbm 10.49 (December 2009), the PNM convolution
+matrix tyranny was finally ended with the <b>-matrix</b> and
+<b>-matrixfile</b> options.  In between, <b>pnmconvol</b> was broken for a
+while because the Netpbm library started enforcing the requirement that a
+sample value not exceed the maxval of the image.  <b>pnmconvol</b> used the
+Netpbm library to read the PNM convolution matrix file, but in the pseudo-PNM
+format that <b>pnmconvol</b> uses, a sample value sometimes has to exceed
+the maxval.
 
 
 <H2 id="seealso">SEE ALSO</H2>
@@ -148,6 +312,14 @@ HREF="mailto:burns@chem.psu.edu">burns@chem.psu.edu</A>
 <UL>
 <LI><A HREF="#synopsis">SYNOPSIS</A>
 <LI><A HREF="#description">DESCRIPTION</A>
+  <ul>
+  <li><a href="#convolutionmatrix">Convolution Matrix</a>
+    <ul>
+    <li><a href="#matrixopt">Directly On the Command Line</a>
+    <li><a href="#matrixfile">Regular Matrix File</a>
+    <li><a href="#matrixpnm">PNM File</a>
+    </ul>
+  </ul>
 <LI><A HREF="#seealso">SEE ALSO</A>
 <LI><A HREF="#history">HISTORY</A>
 <LI><A HREF="#authors">AUTHORS</A>
