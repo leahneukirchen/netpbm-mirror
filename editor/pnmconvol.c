@@ -15,22 +15,272 @@
 
 /* A change history is at the bottom */
 
+#include <stdlib.h>
 #include <assert.h>
 
 #include "pm_c_util.h"
-#include "pam.h"
-#include "shhopt.h"
 #include "mallocvar.h"
+#include "nstring.h"
+#include "token.h"
+#include "io.h"
+#include "shhopt.h"
+#include "pam.h"
+
+
+static void
+validateKernelDimensions(unsigned int const width,
+                         unsigned int const height) {
+
+    if (height == 0)
+        pm_error("Convolution matrix height is zero");
+    if (width == 0)
+        pm_error("Convolution matrix width is zero");
+
+    if (height % 2 != 1)
+        pm_error("The convolution matrix must have an odd number of rows.  "
+                 "Yours has %u", height);
+
+    if (width % 2 != 1)
+        pm_error("The convolution matrix must have an odd number of columns.  "
+                 "Yours has %u", width);
+}
+
+
+
+struct matrixOpt {
+    unsigned int width;
+    unsigned int height;
+    float ** weight;
+};
+
+
 
 
 struct cmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *inputFilespec;  /* '-' if stdin */
-    const char *kernelFilespec;
+    const char * inputFileName;  /* '-' if stdin */
+    const char * pnmMatrixFileName;
     unsigned int nooffset;
+    const char ** matrixfile;
+    unsigned int matrixSpec;
+    struct matrixOpt matrix;
 };
+
+
+
+static void
+countMatrixOptColumns(const char *   const rowString,
+                      unsigned int * const colCtP) {
+
+    const char * cursor;
+    unsigned int colCt;
+
+    for (cursor = &rowString[0], colCt = 0; *cursor; ) {
+        const char * colString;
+        const char * next;
+        const char * error;
+
+        pm_gettoken(cursor, ',', &colString, &next, &error);
+
+        if (error) {
+            pm_error("Unable to parse -matrix value row '%s'.  %s",
+                     rowString, error);
+            strfree(error);
+        } else {
+            ++colCt;
+
+            cursor = next;
+            if (*cursor) {
+                assert(*cursor == ',');
+                ++cursor;  /* advance over comma to next column */
+            }
+            strfree(colString);
+        }
+    }
+    *colCtP = colCt;
+}
+
+
+
+static void
+getMatrixOptDimensions(const char *   const matrixOptString,
+                       unsigned int * const widthP,
+                       unsigned int * const heightP) {
+/*----------------------------------------------------------------------------
+   Given the value of a -matrix option, 'matrixOptString', return the
+   height and width of the matrix it describes.
+
+   If it's not valid enough to determine that (e.g. it has rows of different
+   widths), abort.
+
+   An example of 'matrixOptString':
+
+     ".04,.15,.04;.15,.24,.15;.04,.15,.04"
+-----------------------------------------------------------------------------*/
+    unsigned int rowCt;
+    const char * cursor;
+
+    for (cursor = &matrixOptString[0], rowCt = 0; *cursor; ) {
+        const char * rowString;
+        const char * next;
+        const char * error;
+
+        pm_gettoken(cursor, ';', &rowString, &next, &error);
+
+        if (error) {
+            pm_error("Unable to parse -matrix value '%s'.  %s",
+                     matrixOptString, error);
+            strfree(error);
+        } else {
+            unsigned int colCt;
+            ++rowCt;
+
+            countMatrixOptColumns(rowString, &colCt);
+
+            if (rowCt == 1)
+                *widthP = colCt;
+            else {
+                if (colCt != *widthP)
+                pm_error("-matrix option value contains rows of different "
+                         "widths: %u and %u", *widthP, colCt);
+            }            
+            strfree(rowString);
+            cursor = next;
+
+            if (*cursor) {
+                assert(*cursor == ';');
+                ++cursor;  /* advance cursor over semicolon to next row */
+            }
+        }
+    }
+    *heightP = rowCt;
+}
+
+
+
+static void
+parseMatrixRow(const char * const matrixOptRowString,
+               unsigned int const width,
+               float *      const weight) {
+
+    unsigned int col;
+    const char * cursor;
+
+    for (col = 0, cursor = &matrixOptRowString[0]; col < width; ++col) {
+        const char * colString;
+        const char * next;
+        const char * error;
+
+        pm_gettoken(cursor, ',', &colString, &next, &error);
+
+        if (error) {
+            pm_error("Failed parsing a row in the -matrix value.  %s", error);
+            strfree(error);
+        } else {
+            if (colString[0] == '\0')
+                pm_error("The Column %u element of the row '%s' in the "
+                         "-matrix value is a null string", col,
+                         matrixOptRowString);
+            else {
+                char * trailingJunk;
+                weight[col] = strtod(colString, &trailingJunk);
+
+                if (*trailingJunk != '\0') 
+                    pm_error("The Column %u element of the row '%s' in the "
+                             "-matrix value is not a valid floating point "
+                             "number", col, matrixOptRowString);
+            }
+            strfree(colString);
+
+            cursor = next;
+
+            if (*cursor) {
+                assert(*cursor == ',');
+                ++cursor;  /* advance over comma to next column */
+            }
+        }
+    }
+}
+
+
+
+static void
+parseMatrixOptWithDimensions(const char * const matrixOptString,
+                             unsigned int const width,
+                             unsigned int const height,
+                             float **     const weight) {
+    
+    unsigned int row;
+    const char * cursor;
+
+    for (row = 0, cursor = &matrixOptString[0]; row < height; ++row) {
+        const char * rowString;
+        const char * next;
+        const char * error;
+
+        pm_gettoken(cursor, ';', &rowString, &next, &error);
+
+        if (error) {
+            pm_error("Failed parsing -matrix value.  %s", error);
+            strfree(error);
+        } else {
+            parseMatrixRow(rowString, width, weight[row]);
+
+            strfree(rowString);
+
+            cursor = next;
+
+            if (*cursor) {
+                assert(*cursor == ';');
+                ++cursor;  /* advance over semicolon to next row */
+            }
+        }
+    }
+}    
+
+
+
+static void
+parseMatrixOpt(const char *         const matrixOptString,
+               struct matrixOpt *   const matrixOptP) {
+/*----------------------------------------------------------------------------
+   An example of 'matrixOptString':
+
+     ".04,.15,.04;.15,.24,.15;.04,.15,.04"
+
+-----------------------------------------------------------------------------*/
+    unsigned int width, height;
+
+    getMatrixOptDimensions(matrixOptString, &width, &height);
+
+    validateKernelDimensions(width, height);
+
+    matrixOptP->height = height;
+    matrixOptP->width  = width;
+
+    {
+        unsigned int row;
+        MALLOCARRAY_NOFAIL(matrixOptP->weight, height);
+        for (row = 0; row < height; ++row)
+            MALLOCARRAY_NOFAIL(matrixOptP->weight[row], width);
+    }
+    parseMatrixOptWithDimensions(matrixOptString, width, height,
+                                 matrixOptP->weight);
+}
+
+
+
+static void
+validateMatrixfileOpt(const char ** const matrixFileOpt) {
+
+    if (matrixFileOpt[0] == NULL)
+        pm_error("You specified an empty string as the value of "
+                 "-matrixfile.  You must specify at least one file name");
+}
+
+
 
 static void
 parseCommandLine(int argc, char ** argv,
@@ -51,12 +301,18 @@ parseCommandLine(int argc, char ** argv,
     optStruct3 opt;
 
     unsigned int option_def_index;
+    unsigned int matrixfileSpec;
+    const char * matrixOpt;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
+    OPTENT3(0, "matrix",       OPT_STRING, &matrixOpt,
+            &cmdlineP->matrixSpec,     0)
+    OPTENT3(0, "matrixfile",   OPT_STRINGLIST, &cmdlineP->matrixfile,
+            &matrixfileSpec,           0)
     OPTENT3(0, "nooffset",     OPT_FLAG,   NULL,                  
-            &cmdlineP->nooffset,       0 );
+            &cmdlineP->nooffset,       0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -65,21 +321,55 @@ parseCommandLine(int argc, char ** argv,
     optParseOptions3( &argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
-    if (argc-1 < 1)
-        pm_error("Need at least one argument: file specification of the "
-                 "convolution kernel image.");
+    if (matrixfileSpec && cmdlineP->matrixSpec)
+        pm_error("You can't specify by -matrix and -matrixfile");
 
-    cmdlineP->kernelFilespec = argv[1];
+    if (cmdlineP->matrixSpec)
+        parseMatrixOpt(matrixOpt, &cmdlineP->matrix);
 
-    if (argc-1 >= 2)
-        cmdlineP->inputFilespec = argv[2];
+    if (matrixfileSpec)
+        validateMatrixfileOpt(cmdlineP->matrixfile);
     else
-        cmdlineP->inputFilespec = "-";
+        cmdlineP->matrixfile = NULL;
 
-    if (argc-1 > 2)
-        pm_error("Too many arguments.  Only acceptable arguments are: "
-                 "convolution file name and input file name");
+    if (matrixfileSpec || cmdlineP->matrixSpec) {
+        if (cmdlineP->nooffset)
+            pm_error("-nooffset is meaningless and not allowed with "
+                     "-matrix or -matrixfile");
+
+        cmdlineP->pnmMatrixFileName = NULL;
+
+        if (argc-1 >= 1)
+            cmdlineP->inputFileName = argv[1];
+        else
+            cmdlineP->inputFileName = "-";
+
+        if (argc-1 > 1)
+            pm_error("Too many arguments.  When you specify -matrix "
+                     "or -matrixfile, the only allowable non-option "
+                     "argument is the input file name");
+    } else {
+        /* It's an old style invocation we accept for backward compatibility */
+        
+        if (argc-1 < 1)
+            pm_error("You must specify either -matrix or -matrixfile "
+                     "at least one argument which names an old-style PGM "
+                     "convolution matrix file.");
+        else {
+            cmdlineP->pnmMatrixFileName = argv[1];
+
+            if (argc-1 >= 2)
+                cmdlineP->inputFileName = argv[2];
+            else
+                cmdlineP->inputFileName = "-";
+            
+            if (argc-1 > 2)
+                pm_error("Too many arguments.  Only acceptable arguments are: "
+                         "convolution matrix file name and input file name");
+        }
+    }
 }
+
 
 
 struct convKernel {
@@ -159,11 +449,11 @@ warnBadKernel(struct convKernel * const convKernelP) {
 
 
 static void
-convKernelCreate(struct pam *         const cpamP,
-                 tuple * const *      const ctuples, 
-                 unsigned int         const depth,
-                 bool                 const offsetPgm,
-                 struct convKernel ** const convKernelPP) {
+convKernelCreatePnm(struct pam *         const cpamP,
+                    tuple * const *      const ctuples, 
+                    unsigned int         const depth,
+                    bool                 const offsetPgm,
+                    struct convKernel ** const convKernelPP) {
 /*----------------------------------------------------------------------------
    Compute the convolution matrix in normalized form from the PGM
    form.  Each element of the output matrix is the actual weight we give an
@@ -214,8 +504,6 @@ convKernelCreate(struct pam *         const cpamP,
             }
         }
     }
-    warnBadKernel(convKernelP);
-        
     *convKernelPP = convKernelP;
 }
 
@@ -235,6 +523,300 @@ convKernelDestroy(struct convKernel * const convKernelP) {
         free(convKernelP->weight[plane]);
     }
     free(convKernelP);
+}
+
+
+
+static void
+getKernelPnm(const char *         const fileName,
+             unsigned int         const depth,
+             bool                 const nooffset,
+             struct convKernel ** const convKernelPP) {
+
+    struct pam cpam;
+    FILE * cifP;
+    tuple ** ctuples;
+
+    cifP = pm_openr(fileName);
+
+    /* Read in the convolution matrix. */
+    ctuples = pnm_readpam(cifP, &cpam, PAM_STRUCT_SIZE(tuple_type));
+    pm_close(cifP);
+    
+    validateKernelDimensions(cpam.width, cpam.height);
+
+    convKernelCreatePnm(&cpam, ctuples, depth, nooffset, convKernelPP);
+}
+
+
+
+static void
+convKernelCreateMatrixOpt(struct matrixOpt     const matrixOpt,
+                          unsigned int         const depth,
+                          struct convKernel ** const convKernelPP) {
+
+    struct convKernel * convKernelP;
+    unsigned int plane;
+
+    MALLOCVAR(convKernelP);
+
+    convKernelP->cols = matrixOpt.width;
+    convKernelP->rows = matrixOpt.height;
+    convKernelP->planes = depth;
+
+    for (plane = 0; plane < depth; ++plane) {
+        unsigned int row;
+        MALLOCARRAY_NOFAIL(convKernelP->weight[plane], matrixOpt.height);
+
+        for (row = 0; row < matrixOpt.height; ++row) {
+            unsigned int col;
+
+            MALLOCARRAY_NOFAIL(convKernelP->weight[plane][row],
+                               matrixOpt.width);
+    
+            for (col = 0; col < matrixOpt.width; ++col)
+                convKernelP->weight[plane][row][col] =
+                    matrixOpt.weight[row][col];
+        }
+    }
+    *convKernelPP = convKernelP;
+}
+
+
+
+static void
+parsePlaneFileLine(const char *   const line,
+                   unsigned int * const widthP,
+                   float **       const weightP) {
+
+    unsigned int colCt;
+    const char * error;
+    float * weight;
+    const char * cursor;
+
+    colCt = 0;  /* initial value */
+    weight = NULL;
+
+    for (cursor = &line[0]; *cursor; ) {
+        const char * token;
+        const char * next;
+
+        REALLOCARRAY(weight, colCt + 1);
+
+        pm_gettoken(cursor, ' ', &token, &next, &error);
+
+        if (error)
+            pm_error("Invalid format of line in convolution matrix file: "
+                     "'%s'.  %s", line, error);
+
+        cursor = next;
+
+        if (*cursor) {
+            assert(*next == ' ');
+            ++cursor;  /* advance over space */
+        }
+        if (strlen(token) == 0)
+            pm_error("Column %u value in line '%s' of convolution matrix file "
+                     "is null string.", colCt, line);
+        else {
+            char * trailingJunk;
+            weight[colCt] = strtod(token, &trailingJunk);
+            if (*trailingJunk != '\0') 
+                pm_error("The Column %u element of the row '%s' in the "
+                         "-matrix value is not a valid floating point "
+                         "number", colCt, line);
+
+                ++colCt;
+        }
+        strfree(token);
+    }
+    *weightP = weight;
+    *widthP = colCt;
+}
+
+
+
+static void
+readPlaneFile(FILE *         const ifP, 
+              float ***      const weightP,
+              unsigned int * const widthP,
+              unsigned int * const heightP) {
+/*----------------------------------------------------------------------------
+   Read weights of one plane from a file.
+
+   The file is a simple matrix, one line per row, with columns separated
+   by a single space.
+
+   Each column is a floating point decimal ASCII number, positive zero,
+   or negative, with any magnitude.
+
+   If the rows don't all have the same number of columns, we abort.
+
+   Return the dimensions seen in the file as *widthP and *heightP.
+-----------------------------------------------------------------------------*/
+    unsigned int rowCt;
+    float ** weight;
+    unsigned int width;
+    bool eof;
+
+    weight = NULL;  /* initial value */
+
+    for (eof = false, rowCt = 0; !eof; ) {
+        const char * error;
+        const char * line;
+
+        pm_freadline(ifP, &line, &error);
+
+        if (error)
+            pm_error("Failed to read row %u "
+                     "from the convolutionmatrix file.  %s",
+                     rowCt, error);
+        else {
+            if (line == NULL)
+                eof = true;
+            else {
+                REALLOCARRAY(weight, rowCt + 1);
+            
+                if (weight == NULL)
+                    pm_error("Unable to allocate memory for "
+                             "convolution matrix");
+                else {
+                    unsigned int thisWidth;
+
+                    parsePlaneFileLine(line, &thisWidth, &weight[rowCt]);
+
+                    if (rowCt == 0)
+                        width = thisWidth;
+                    else {
+                        if (thisWidth != width)
+                            pm_error("Multiple row widths in the convolution "
+                                     "matrix file: %u columns and %u columns.",
+                                     width, thisWidth);
+                    }                    
+                    ++rowCt;
+                }
+                strfree(line);
+            }
+        }
+    }
+    validateKernelDimensions(width, rowCt);
+
+    *weightP = weight;
+    *heightP = rowCt;
+    *widthP = width;
+}
+
+
+
+static void
+copyWeight(float **       const srcWeight,
+           unsigned int   const width,
+           unsigned int   const height, 
+           float ***      const dstWeightP) {
+
+    unsigned int row;
+    float ** dstWeight;
+
+    MALLOCARRAY(dstWeight, height);
+
+    if (dstWeight == NULL)
+        pm_error("Could not allocate memory for convolution matrix");
+   
+    for (row = 0; row < height; ++row) {
+        unsigned int col;
+
+        MALLOCARRAY(dstWeight[row], width);
+
+        if (dstWeight[row] == NULL)
+            pm_error("Could not allocation memory for a "
+                     "convolution matrix row");
+
+        for (col = 0; col < width; ++col) {
+            dstWeight[row][col] = srcWeight[row][col];
+        }
+    }
+    *dstWeightP = dstWeight;
+}
+
+
+
+static void
+convKernelCreateSimpleFile(const char **        const fileNameList,
+                           unsigned int         const depth,
+                           struct convKernel ** const convKernelPP) {
+
+    struct convKernel * convKernelP;
+    unsigned int fileCt;
+    unsigned int planeCt;
+    unsigned int plane;
+    unsigned int width, height;
+
+    fileCt = 0;
+    while (fileNameList[fileCt])
+        ++fileCt;
+    assert(fileCt > 0);
+
+    planeCt = MIN(3, depth);
+
+    MALLOCVAR_NOFAIL(convKernelP);
+
+    convKernelP->planes = planeCt;
+
+    for (plane = 0; plane < planeCt; ++plane) {
+        if (plane < fileCt) {
+            const char * const fileName = fileNameList[plane];
+
+            FILE * ifP;
+            unsigned int thisWidth, thisHeight;
+
+            ifP = pm_openr(fileName);
+
+            readPlaneFile(ifP, &convKernelP->weight[plane],
+                          &thisWidth, &thisHeight);
+
+            if (plane == 0) {
+                width = thisWidth;
+                height = thisHeight;
+            } else {
+                if (thisWidth != width)
+                    pm_error("Convolution matrix files show two different "
+                             "widths: %u and %u", width, thisWidth);
+                if (thisHeight != height)
+                    pm_error("Convolution matrix files show two different "
+                             "heights: %u and %u", height, thisHeight);
+            }
+            pm_close(ifP);
+        } else {
+            assert(plane > 0);
+            copyWeight(convKernelP->weight[0], width, height,
+                       &convKernelP->weight[plane]);
+        }
+    }
+    convKernelP->cols = width;
+    convKernelP->rows = height;
+    *convKernelPP = convKernelP;
+}
+
+
+
+static void
+getKernel(struct cmdlineInfo   const cmdline,
+          unsigned int         const depth,
+          struct convKernel ** const convKernelPP) {
+
+    struct convKernel * convKernelP;
+
+    if (cmdline.pnmMatrixFileName)
+        getKernelPnm(cmdline.pnmMatrixFileName, depth, cmdline.nooffset,
+                     &convKernelP);
+    else if (cmdline.matrixfile)
+        convKernelCreateSimpleFile(cmdline.matrixfile, depth, &convKernelP);
+    else if (cmdline.matrixSpec)
+        convKernelCreateMatrixOpt(cmdline.matrix, depth, &convKernelP);
+
+    warnBadKernel(convKernelP);
+
+    *convKernelPP = convKernelP;
 }
 
 
@@ -1374,8 +1956,7 @@ struct convolveType {
 
 
 static bool
-convolutionIncludesHorizontal(tuple **                  const tuples,
-                              const struct convKernel * const convKernelP) {
+convolutionIncludesHorizontal(const struct convKernel * const convKernelP) {
 
     bool horizontal;
     unsigned int row;
@@ -1391,7 +1972,8 @@ convolutionIncludesHorizontal(tuple **                  const tuples,
             unsigned int plane;
 
             for (plane = 0; plane < convKernelP->planes; ++plane) {
-                if (tuples[row][col][plane] != tuples[row][0][plane])
+                if (convKernelP->weight[plane][row][col] !=
+                    convKernelP->weight[plane][row][0])
                     horizontal = FALSE;
             }
         }
@@ -1402,8 +1984,7 @@ convolutionIncludesHorizontal(tuple **                  const tuples,
 
 
 static bool
-convolutionIncludesVertical(tuple **                  const tuples,
-                            const struct convKernel * const convKernelP) {
+convolutionIncludesVertical(const struct convKernel * const convKernelP) {
 
     bool vertical;
     unsigned int col;
@@ -1419,7 +2000,8 @@ convolutionIncludesVertical(tuple **                  const tuples,
             unsigned int plane;
 
             for (plane = 0; plane < convKernelP->planes; ++plane) {
-                if (tuples[row][col][plane] != tuples[0][col][plane])
+                if (convKernelP->weight[plane][row][col] !=
+                    convKernelP->weight[plane][0][col])
                     vertical = FALSE;
             }
         }
@@ -1430,21 +2012,19 @@ convolutionIncludesVertical(tuple **                  const tuples,
 
 
 static void
-determineConvolveType(tuple **                  const tuples,
-                      const struct convKernel * const convKernelP,
+determineConvolveType(const struct convKernel * const convKernelP,
                       struct convolveType *     const typeP) {
 /*----------------------------------------------------------------------------
-   *Determine which form of convolution is best to convolve the kernel
+   Determine which form of convolution is best to convolve the kernel
    *convKernelP over tuples[][].  The general form always works, but with some
-   *special case convolution matrices, faster forms of convolution are
-   *possible.
+   special case convolution matrices, faster forms of convolution are
+   possible.
 
-   We don't check for the case that one of the PPM colors can have 
-   differing types.  We handle only cases where all PPMs are of the same
-   special case.
+   We don't check for the case that the planes can have differing types.  We
+   handle only cases where all planes are of the same special case.
 -----------------------------------------------------------------------------*/
-    bool const horizontal = convolutionIncludesHorizontal(tuples, convKernelP);
-    bool const vertical   = convolutionIncludesVertical(tuples, convKernelP);
+    bool const horizontal = convolutionIncludesHorizontal(convKernelP);
+    bool const vertical   = convolutionIncludesVertical(convKernelP);
 
     if (horizontal && vertical) {
         pm_message("Convolution is a simple mean horizontally and vertically");
@@ -1467,64 +2047,42 @@ main(int argc, char * argv[]) {
 
     struct cmdlineInfo cmdline;
     FILE * ifP;
-    FILE * cifP;
-    tuple ** ctuples;
     struct convolveType convolveType;
     struct convKernel * convKernelP;
     struct pam inpam;
     struct pam outpam;
-    struct pam cpam;
 
     pnm_init(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
-    cifP = pm_openr(cmdline.kernelFilespec);
-
-    /* Read in the convolution matrix. */
-    ctuples = pnm_readpam(cifP, &cpam, PAM_STRUCT_SIZE(tuple_type));
-    pm_close(cifP);
-
-    if (cpam.width % 2 != 1 || cpam.height % 2 != 1)
-        pm_error("the convolution matrix must have an odd number of "
-                 "rows and columns" );
-
-    ifP = pm_openr(cmdline.inputFilespec);
+    ifP = pm_openr(cmdline.inputFileName);
 
     pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(allocation_depth));
-    if (inpam.width < cpam.width || inpam.height < cpam.height)
-        pm_error("the image is smaller than the convolution matrix" );
+
+    getKernel(cmdline, inpam.depth, &convKernelP);
 
     outpam = inpam;  /* initial value */
 
     outpam.file = stdout;
 
-    outpam.format = MAX(PNM_FORMAT_TYPE(cpam.format),
-                        PNM_FORMAT_TYPE(inpam.format));
+    if ((PNM_FORMAT_TYPE(inpam.format) == PBM_TYPE ||
+         PNM_FORMAT_TYPE(inpam.format) == PGM_TYPE) &&
+        convKernelP->planes == 3) {
 
-    if (PNM_FORMAT_TYPE(inpam.format) != outpam.format) {
-        switch (PNM_FORMAT_TYPE(outpam.format)) {
-        case PPM_TYPE:
-            if (PNM_FORMAT_TYPE(inpam.format) != outpam.format)
-                pm_message("promoting to PPM");
-            break;
-        case PGM_TYPE:
-            if (PNM_FORMAT_TYPE(inpam.format) != outpam.format)
-                pm_message("promoting to PGM");
-            break;
-        }
+        pm_message("promoting to PPM");
+        outpam.format = PPM_FORMAT;
     }
 
-    pnm_setminallocationdepth(&inpam, MAX(inpam.depth, outpam.depth));
+    outpam.depth = MAX(inpam.depth, convKernelP->planes);
 
-    convKernelCreate(&cpam, ctuples, outpam.depth, !cmdline.nooffset,
-                     &convKernelP);
+    pnm_setminallocationdepth(&inpam, MAX(inpam.depth, outpam.depth));
 
     validateEnoughImageToConvolve(&inpam, convKernelP);
 
     /* Handle certain special cases when runtime can be improved. */
 
-    determineConvolveType(ctuples, convKernelP, &convolveType);
+    determineConvolveType(convKernelP, &convolveType);
 
     convolveType.convolve(&inpam, &outpam, convKernelP);
 
