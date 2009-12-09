@@ -14,6 +14,9 @@ not yet  BJH  Release 10.49.00
 
               jpeg2ktopam: Work with JP2 input as well as JPC.
 
+              pamtouil: fix crash when -name option doesn't contain an
+              underscore.
+              
               pamtosvg: fix some bug with unset Z coordinate.
 
               pnmtofiasco, fiascotopnm: fix bug on bigendian machine.
