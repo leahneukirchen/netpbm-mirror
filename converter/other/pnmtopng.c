@@ -493,9 +493,10 @@ parseCommandLine(int argc, char ** argv,
 
 
 static png_color_16
-xelToPngColor_16(xel const input, 
+xelToPngColor_16(xel    const input, 
                  xelval const maxval, 
                  xelval const pngMaxval) {
+
     png_color_16 retval;
 
     xel scaled;
