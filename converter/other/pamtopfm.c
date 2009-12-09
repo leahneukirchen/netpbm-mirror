@@ -150,12 +150,12 @@ floatToPfmSample(float       const input,
    Type converter
 -----------------------------------------------------------------------------*/
     if (machineEndianness == pfmEndianness) {
-        *(float *)outputP->bytes = input;
+        MEMSCPY(&outputP->bytes, &input);
     } else {
         unsigned char reversed[sizeof(pfmSample)];
         unsigned int i, j;
 
-        *(float *)reversed = input;
+        MEMSCPY(&reversed, &input);
         
         for (i = 0, j = sizeof(pfmSample)-1; 
              i < sizeof(pfmSample); 
