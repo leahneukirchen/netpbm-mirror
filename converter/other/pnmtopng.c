@@ -1927,6 +1927,10 @@ computeColorMap(FILE *         const ifP,
   palette_pnm[] and trans_pnm[], allocated by Caller, with sizes
   *paletteSizeP and *transSizeP.
 
+  'pfP' is a handle to the file that the user requested be used for the
+  palette (it's a Netpbm image whose colors are the colors of the palette).
+  'pfP' is null if the user did not request a particular palette.
+
   'background' means the image is to have a background color, and that
   color is 'backcolor'.  'backcolor' is meaningless when 'background'
   is false.
