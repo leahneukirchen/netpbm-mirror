@@ -18,6 +18,8 @@
 
 #include <string.h>
 
+#include "nstring.h"
+
 #include "types.h"
 #include "macros.h"
 #include "error.h"

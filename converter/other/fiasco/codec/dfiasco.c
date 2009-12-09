@@ -16,6 +16,8 @@
 
 #include <string.h>
 
+#include "nstring.h"
+
 #include "config.h"
 
 #include "types.h"

@@ -24,6 +24,8 @@
 #   include <stdlib.h>
 #endif /* not STDC_HEADERS */
 
+#include "nstring.h"
+
 #include "macros.h"
 #include "types.h"
 #include "error.h"
