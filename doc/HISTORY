@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.49.00
 
+              pnmconvol: Add -matrix, -matrixfile.
+
               pambayer: add -nointerpolate.
 
               Add pnmmercator.
@@ -15,7 +17,7 @@ not yet  BJH  Release 10.49.00
               pnmtofiasco, fiascotopnm: fix bug on bigendian machine.
 
               pngtopam: use png_create_read_struct() instead of
-              png_create_write_struct().  Doesn't seem to affect anything.
+              png_create_write_struct().  Broken since 10.48.
 
               configure: advise if adding -lz -lm fixes libpng link problem.
 
