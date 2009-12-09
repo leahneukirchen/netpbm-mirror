@@ -81,5 +81,10 @@ while (@colorlist >= 2) {
 exit 0;
 
 END {
-    unlink @outlist if @outlist;
+    if (@outlist) {
+        unlink(@outlist);
+    }
+    if (defined($ourtmp)) {
+        rmdir($ourtmp);
+    }
 }
