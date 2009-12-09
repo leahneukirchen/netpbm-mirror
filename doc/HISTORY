@@ -23,6 +23,8 @@ not yet  BJH  Release 10.49.00
 
               configure: advise if adding -lz -lm fixes libpng link problem.
 
+              makeman: some fixes or enhancements.
+
 09.09.27 BJH  Release 10.48.00
 
               ppmsvgalib: Wait to initialize Svgalib to prevent it from
