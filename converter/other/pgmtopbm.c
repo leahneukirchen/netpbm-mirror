@@ -585,6 +585,7 @@ createDither8Converter(unsigned int const cols,
     converter.convertRow = &dither8ConvertRow;
     converter.destroy = dither8Destroy;
     converter.stateP = stateP;
+    converter.maxval = maxval;
 
     /* Scale dither matrix. */
     for (row = 0; row < 16; ++row) {
@@ -660,6 +661,7 @@ createClusterConverter(unsigned int const radius,
     unsigned int row;
 
     converter.cols = cols;
+    converter.maxval = maxval;
     converter.convertRow = &clusterConvertRow;
     converter.destroy = &clusterDestroy;
 
