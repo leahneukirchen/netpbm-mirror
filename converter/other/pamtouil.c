@@ -95,7 +95,7 @@ parseCommandLine(int argc, char ** argv,
 
         /* Remove trailing "_icon" */
         barPos = strrchr(cmdlineP->outname, '_');
-        if (STREQ(barPos, "_icon")) 
+        if (barPos && STREQ(barPos, "_icon")) 
             *barPos = '\0';
     } else {
         if (STREQ(cmdlineP->inputFilespec, "-"))

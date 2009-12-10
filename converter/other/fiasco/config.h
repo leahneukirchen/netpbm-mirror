@@ -21,10 +21,6 @@
 /* Define if you can safely include both <sys/time.h> and <time.h>.  */
 #define TIME_WITH_SYS_TIME 1
 
-/* Define if your processor stores words with the most significant
-   byte first (like Motorola and SPARC, unlike Intel and VAX).  */
-/* #undef WORDS_BIGENDIAN */
-
 /* Define if the X Window System is missing or not being used.  */
 #define X_DISPLAY_MISSING 1
 

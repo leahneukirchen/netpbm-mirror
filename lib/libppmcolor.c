@@ -535,6 +535,11 @@ readcolordict(const char *    const fileName,
             colornames[colornameIndex++] = NULL;
 
         fclose(colorFile);
+    } else {
+        unsigned int i;
+        *nColorsP = 0;
+        for (i = 0; i < MAXCOLORNAMES; ++i)
+            colornames[i] = NULL;
     }
 }
 

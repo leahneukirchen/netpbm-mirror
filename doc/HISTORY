@@ -4,6 +4,18 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+09.12.10 BJH  Release 10.35.70
+
+              pamtouil: fix crash when -name option doesn't contain an
+              underscore.
+              
+              pamtosvg: fix some bug with unset Z coordinate.
+
+              pnmtofiasco, fiascotopnm: fix bug on bigendian machine.
+
+              Fix bug in ppm_readcolordict(), ppm_readcolornamefile() where
+              the file is not readable.
+
 09.10.18 BJH  Release 10.35.69
 
               Build: fix build failure with no-network build of Ppmtompeg.

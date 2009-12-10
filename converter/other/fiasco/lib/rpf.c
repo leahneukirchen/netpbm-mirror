@@ -16,6 +16,7 @@
  *  $State: Exp $
  */
 
+#include "pm_config.h"
 #include "config.h"
 
 #include "types.h"
@@ -30,7 +31,7 @@
  *          or all following code is void!
  */
 
-#ifdef WORDS_BIGENDIAN
+#if BYTE_ORDER == BIG_ENDIAN
 /*
  *  Big-Endian Architecture (e.g. SUN, Motorola)
  *  Memory representation of integer 0x00112233 is 00,11,22,33
@@ -38,7 +39,7 @@
 
 enum real_bytes {BYTE_0, BYTE_1, BYTE_2, BYTE_3};
 
-#else  /* not WORDS_BIGENDIAN */
+#else
 /*
  *  Little-Endian Architecture (e.g. Intel, VAX, Alpha)
  *  Memory representation of integer 0x00112233 is 33,22,11,00
@@ -46,7 +47,7 @@ enum real_bytes {BYTE_0, BYTE_1, BYTE_2, BYTE_3};
 
 enum real_bytes {BYTE_3, BYTE_2, BYTE_1, BYTE_0};
 
-#endif /* not WORDS_BIGENDIAN */
+#endif
 
 const int RPF_ZERO = -1;
 
