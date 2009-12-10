@@ -38,7 +38,7 @@ vector_to_point (const vector_type v)
 
   coord.x = v.dx;
   coord.y = v.dy;
-  coord.z = v.dz
+  coord.z = v.dz;
 
   return coord;
 }
