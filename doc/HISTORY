@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+09.12.10 BJH  Release 10.40.03
+
+              pamtosvg: fix compile failure from 10.48.02.
+
 09.12.10 BJH  Release 10.48.02
 
               ppmrainbow: Make new directory for temporary files.
