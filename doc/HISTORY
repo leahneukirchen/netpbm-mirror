@@ -14,6 +14,10 @@ not yet  BJH  Release 10.49.00
 
               jpeg2ktopam: Work with JP2 input as well as JPC.
 
+              ppmrainbow: Make new directory for temporary files.
+              Prevents interference by other user who shares the main
+              temporary file directory.
+
               pamtouil: fix crash when -name option doesn't contain an
               underscore.
               
