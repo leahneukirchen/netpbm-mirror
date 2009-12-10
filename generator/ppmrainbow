@@ -47,7 +47,10 @@ if (!$norepeat) {
     push @colorlist, $ARGV[0];
 }
 
-my $tmpprefix = $tmpdir . "/$myname.$$.";
+my $ourtmp = "$tmpdir/ppmrainbow$$";
+mkdir($ourtmp, 0777) or
+    die("Unable to create directory for temporary files '$ourtmp");
+
 
 my $widthRemaining;
 my $n;
@@ -58,7 +61,7 @@ $widthRemaining = $Twid;
 @outlist = ();
 
 while (@colorlist >= 2) {
-    my $outfile = sprintf("%s%03u.ppm", $tmpprefix, $n);
+    my $outfile = sprintf("%s/file.%03u.ppm", $ourtmp, $n);
     push(@outlist, $outfile);
 
     my $w = int(($widthRemaining-1)/(@colorlist-1))+1;
@@ -78,5 +81,10 @@ while (@colorlist >= 2) {
 exit 0;
 
 END {
-    unlink @outlist if @outlist;
+    if (@outlist) {
+        unlink(@outlist);
+    }
+    if (defined($ourtmp)) {
+        rmdir($ourtmp);
+    }
 }
