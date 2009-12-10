@@ -39,6 +39,7 @@ vector_to_point(vector_type const v) {
 
     coord.x = v.dx;
     coord.y = v.dy;
+    coord.z = v.dz
 
     return coord;
 }

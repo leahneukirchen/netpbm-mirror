@@ -4,6 +4,19 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+09.12.10 BJH  Release 10.47.05
+
+              ppmrainbow: Make new directory for temporary files.
+              Prevents interference by other user who shares the main
+              temporary file directory.
+
+              pamtouil: fix crash when -name option doesn't contain an
+              underscore.
+              
+              pamtosvg: fix some bug with unset Z coordinate.
+
+              pnmtofiasco, fiascotopnm: fix bug on bigendian machine.
+
 09.09.18 BJH  Release 10.47.04
 
               pambayer: fix unconditional crash/failure when you aren't using
