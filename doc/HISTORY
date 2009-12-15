@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.49.00
 
+              Add pamdither - replacement for ppmdither.
+
               pnmconvol: Add -matrix, -matrixfile.
 
               pambayer: add -nointerpolate.
