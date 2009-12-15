@@ -227,12 +227,11 @@ allocPamRow(const struct pam * const pamP) {
    overflow will not occur in our calculations.  NOTE: pnm_readpaminit()
    ensures this assumption is valid.
 -----------------------------------------------------------------------------*/
-    /* The tuple row data structure starts with 'width' pointers to
-       the tuples, immediately followed by the 'width' tuples
-       themselves.  Each tuple consists of 'depth' samples.  
+    /* The tuple row data structure starts with pointers to the tuples,
+       immediately followed by the tuples themselves.
     */
 
-    int const bytesPerTuple = allocationDepth(pamP) * sizeof(sample);
+    unsigned int const bytesPerTuple = allocationDepth(pamP) * sizeof(sample);
     tuple * tuplerow;
 
     tuplerow = malloc(pamP->width * (sizeof(tuple *) + bytesPerTuple));
