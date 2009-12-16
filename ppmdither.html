@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Ppmdither User Manual</TITLE></HEAD>
 <BODY>
 <H1>ppmdither</H1>
-Updated: 14 July 1991
+Updated: 16 December 2009
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -14,26 +14,33 @@ ppmdither - ordered dither for color images
 
 <B>ppmdither</B>
 
-[<B>-dim</B> <I>power</I>]
+[<B>-dim</B>=<I>power</I>]
 
-[<B>-red</B> <I>shades</I>]
+[<B>-red</B>=<I>n</I>]
 
-[<B>-green</B> <I>shades</I>]
+[<B>-green</B>=<I>n</I>]
 
-[<B>-blue</B> <I>shades</I>]
+[<B>-blue</B>=<I>n</I>]
 
-[<I>ppmfile</I>]
+[<I>netpbmfile</I>]
+
+<P>All options can be abbreviated to their shortest unique prefix.
+You may use two hyphens instead of one to designate an option.  You
+may use either white space or an equals sign between an option name
+and its value.
+
 
 <H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><b>ppmdither</b> reads a PPM image as input, and applies dithering
+<p><b>ppmdither</b> reads a Netpbm image as input, and applies dithering
 to it to reduce the number of colors used down to the specified number
-of shades for each primary.  The default number of shades is red=5,
-green=9, blue=5, for a total of 225 colors.  To convert the image to a
-binary rgb format suitable for color printers, use -red 2 -green 2
--blue 2.
+of shades for each primary.  It produces a PPM image as output.
+
+<p>The default number of shades is 5 red, 9 green, and 5 blue, for a total of
+225 colors.  To convert the image to a binary rgb format suitable for
+primitive color printers, use <b>-red=2 -green=2 -blue=2</b>.
 
 <p>You can do another kind of dither -- Floyd-Steinberg -- with 
 <b>pnmquant</b> or <b>pnmremap</b>.
@@ -47,24 +54,31 @@ binary rgb format suitable for color printers, use -red 2 -green 2
 square whose dimension is a power of 2.  <I>power</I> is that power of
 2.  The default is 4, for a 16 by 16 matrix.
 
-<DT><B>-red</B> <I>shades</I>
+<DT><B>-red</B>=<I>n</I>
 
 <DD>
 The number of red shades to be used, including black; minimum of 2.
 
-<DT><B>-green</B> <I>shades</I>
+<p>Default is 5.
+
+<DT><B>-green</B> <I>n</I>
 
 <DD>
 The number of green shades to be used, including black; minimum of 2.
 
-<DT><B>-blue</B> <I>shades</I>
+<p>Default is 9.
+
+<DT><B>-blue</B> <I>n</I>
 
 <DD>
 The number of blue shades to be used, including black; minimum of 2.
 
+<p>Default is 5.
+
 </DL>
 <H2 id="seealso">SEE ALSO</H2>
 
+<A HREF="pamditherbw.html">pamditherbw</A>,
 <A HREF="pamdepth.html">pamdepth</A>,
 <A HREF="pnmquant.html">pnmquant</A>,
 <A href="pnmremap.html">pnmremap</A>,
@@ -75,8 +89,7 @@ The number of blue shades to be used, including black; minimum of 2.
 Copyright (C) 1991 by Christos Zoulas.
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
 <LI><A HREF="#synopsis">SYNOPSIS</A>
 <LI><A HREF="#description">DESCRIPTION</A>

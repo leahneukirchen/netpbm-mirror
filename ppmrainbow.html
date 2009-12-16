@@ -2,17 +2,15 @@
 <HTML><HEAD><TITLE>Ppmrainbow User Manual</TITLE></HEAD>
 <BODY>
 <H1>ppmrainbow</H1>
-Updated: 14 October 2005
+Updated: 09 December 2009
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
 ppmrainbow - Generate a rainbow
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>ppmrainbow</B>
 
@@ -22,8 +20,7 @@ ppmrainbow - Generate a rainbow
 
 [<B>-tmpdir=</B><I>directory</I>] [<B>-norepeat</B>] [<B>-verbose</B>] <I>color</I> ...
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -46,8 +43,7 @@ In fact, you can make rainbow-colored text by using <B>pbmtext</B>,
 <p>If you just want an image containing all the possible colors (for some
 kind of processing; not to look at), see <b>pamseq</b>.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<H2 id="options">OPTIONS</H2>
 
 <P>All options can be abbreviated to their shortest unique prefix.
 You may use two hyphens instead of one to designate an option.  You
@@ -85,6 +81,9 @@ to use for temporary files.
 <P>Default is the value of the <B>TMPDIR</B> environment variable, or
 <b>/tmp</b> if <B>TMPDIR</B> is not set.
 
+<p><b>ppmrainbow</b> always creates a directory within this directory
+and creates all its files within that directory.
+
 <DT><B>-verbose</B>
 
 <DD>Print the &quot;commands&quot; (invocations of other Netpbm
@@ -92,8 +91,7 @@ programs) that <B>ppmrainbow</B> uses to create the image.
 
 </DL>
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="pgmramp.html">pgmramp</A></B>,
 <B><A HREF="pamseq.html">pamseq</A></B>,
@@ -102,23 +100,20 @@ programs) that <B>ppmrainbow</B> uses to create the image.
 <B><A HREF="ppmfade.html">ppmfade</A></B>,
 <B><A HREF="ppm.html">ppm</A></B>.
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>AUTHOR</H2>
+<H2 id="author">AUTHOR</H2>
 
 <P>Arjen Bax wrote <B>ppmrainbow</B> in June 2001 and contributed it
 to the Netpbm package.  Bryan Henderson wrote this manual in July
 2001.
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">SEE ALSO</A>
-<LI><A HREF="#lbAG">AUTHOR</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
 </UL>
 </BODY>
 </HTML>
