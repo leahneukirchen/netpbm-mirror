@@ -17,7 +17,7 @@ SUBDIRS = specialty
 # build.
 
 PORTBINARIES = pamaddnoise pambackground pamcomp pamcut \
-	       pamdice pamdither pamditherbw pamedge \
+	       pamdice pamditherbw pamedge \
 	       pamenlarge \
 	       pamflip pamfunc pammasksharpen \
 	       pamperspective \
