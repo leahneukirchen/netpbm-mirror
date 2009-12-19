@@ -71,9 +71,14 @@ readPlainNonPbmRow(const struct pam * const pamP,
     for (col = 0; col < pamP->width; ++col) {
         unsigned int plane;
         for (plane = 0; plane < pamP->depth; ++plane)
-            if (tuplerow)
+            if (tuplerow) {
                 tuplerow[col][plane] = pm_getuint(pamP->file);
-            else
+
+                if (tuplerow[col][plane] > pamP->maxval)
+                    pm_error("Plane %u sample value %lu exceeds the "
+                             "image maxval of %lu",
+                             plane, tuplerow[col][plane], pamP->maxval);
+            } else
                 pm_getuint(pamP->file);  /* read data and discard */
     }
 }
