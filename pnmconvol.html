@@ -99,11 +99,11 @@ matrix has one weight for red, one for green, and one for blue.
 
 <h4 id="matrixopt">Directly On the Command Line</h4>
 
-<p>An example of a <b>-matrixopt</b> option is
+<p>An example of a <b>-matrix</b> option is
 
 <pre>
 <tt>
-    -matrixopt=0,.2,0;.2,.2,..2;0,.2,0
+    -matrix=0,.2,0;.2,.2,..2;0,.2,0
 </tt>
 </pre>
 
@@ -114,6 +114,10 @@ right, separated by commas.  You must of course have the same number of
 elements in each row.  Each element is a decimal floating point number
 and is the weight to give to each component of a pixel that corresponds to
 that matrix location.
+
+<p>Note that when you supply this option via a shell, semicolon
+(&quot;&semi;&quot;) probably means something to the shell, so use quotation
+marks.
 
 <p>There is no way with this method to have different weights for different
 components of a pixel.

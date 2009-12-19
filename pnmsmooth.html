@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pnmsmooth User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmsmooth</H1>
-Updated: 4 December 1994
+Updated: 19 December 2009
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -14,7 +14,7 @@ pnmsmooth - smooth out an image
 
 <B>pnmsmooth</B>
 [<b>-width=</b><i>cols</i>] [<b>-height=</b><i>rows</i>]
-[<B>-dump</B>=<I>dumpfile</I>]
+[<B>-dump=</b><I>dumpfile</I>]
 [<I>pnmfile</I>] [<b>-size</b>]
 
 <p>Minimum unique abbreviations of options is acceptable.  You may use double
@@ -25,23 +25,24 @@ space in place of the equals sign to separate an option name from its value.
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><b>pnmsmooth</b> smoothes out an image by replacing each pixel with
-the average of its width X height neighbors.  It is implemented as a
-progam that generates a PGM convolution matrix and then invokes
-<b>pnmconvol</b> with it.
+<p><b>pnmsmooth</b> smoothes out an image by replacing each pixel with the
+average of its width X height neighbors.  It is implemented as a progam that
+invokes <b>pnmconvol</b> with an appropriate convolution matrix.
 
 <H2 id="options">OPTIONS</H2>
 
 <DL COMPACT>
 <dt><b>-width=</b><i>cols</i>
-<dt><b>-height</b>=<i>rows</i>
+<dt><b>-height=</b><i>rows</i>
 
 <dd>
 These options specify the dimensions of the convolution matrix.
-Default dimensions are 3 wide and 3 high.  Each dimension must be odd.
-The maximum size of the convolution matrix is limited by the maxval of
-the image such that width * height * 2 must not exceed the maxval.
-(use <b>pamdepth</b> to increase the maxval if necessary).
+Default dimensions are 3 wide and 3 high.
+
+<p>Before Netpbm 10.49 (December 2009), the maximum size of the convolution
+matrix is limited by the maxval of the image such that width * height * 2 must
+not exceed the maxval.  (use <b>pamdepth</b> to increase the maxval if
+necessary).
 
 <p>These options were new in Netpbm 10.32 (February 2006).  Before that,
 use <b>-size</b>.
@@ -71,9 +72,15 @@ mean the same in current <b>pnmsmooth</b> as in old <b>pnmsmooth</b>:
 
 <DT><B>-dump=</b><i>dumpfile</i>
 
-<DD>This options makes <b>pnmsmooth</b> only generate and save the
-convolution file.  It does not invoke <b>pnmconvol</B> and does not
-produce an output image.
+<DD>This options makes <b>pnmsmooth</b> only show you the
+convolution matrix.  It writes to Standard Output a <b>pnmconvol</b>
+<b>-matrix</b> option value that represents the matrix.  It does not
+invoke <b>pnmconvol</b> and does not produce an output image.
+
+<p>Before Neptbm 10.49 (December 2009), this option is rather different.
+It takes a file name as a value, and it writes to that file the
+convolution matrix as a PGM file (as used to be the normal input for
+<b>pnmconvol</b>).
 
 </DL>
 
@@ -88,12 +95,11 @@ produce an output image.
 
 <p>Before Netpbm 10.32 (February 2006), <b>pnmsmooth</b> did not use
 the modern Netpbm command line parser, so had an unconventional command line
-syntax.  Most importantly, you could not use an equal size or double
+syntax.  Most importantly, you could not use an equal sign or double
 hyphens in the options.
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
 <LI><A HREF="#synopsis">SYNOPSIS</A>
 <LI><A HREF="#description">DESCRIPTION</A>
