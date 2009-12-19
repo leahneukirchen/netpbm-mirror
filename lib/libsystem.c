@@ -153,7 +153,7 @@ spawnProcessor(const char *  const progName,
 
     rc = fork();
     if (rc < 0) {
-        pm_error("fork() of processor process failed.  errno=%d (%s)\n", 
+        pm_error("fork() of processor process failed.  errno=%d (%s)", 
                  errno, strerror(errno));
     } else if (rc == 0) {
         /* The program child */
@@ -243,8 +243,10 @@ pm_system_vp(const char *    const progName,
    But if 'stdinFeeder' is NULL, just feed the program our own Standard
    Input.  And if 'stdoutFeeder' is NULL, just send its Standard Output
    to our own Standard Output.
------------------------------------------------------------------------------*/
 
+   Run the program 'progName' with arguments argArray[] (terminated by NULL
+   element).  That includes arg0.
+-----------------------------------------------------------------------------*/
     /* If 'stdinFeeder' is non-NULL, we create a child process to run
        'stdinFeeder' and create a pipe from that process as the
        program's Standard Input.
