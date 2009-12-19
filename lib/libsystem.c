@@ -271,7 +271,7 @@ cleanupProcessorProcess(pid_t const processorPid) {
         int const exitStatus = WEXITSTATUS(terminationStatus);
 
         if (exitStatus != 0)
-            pm_message("Shell process exited with abnormal exist status %u.  ",
+            pm_message("Shell process exited with abnormal exit status %u.  ",
                        exitStatus);
     } else if (WIFSIGNALED(terminationStatus)) {
         pm_message("Shell process was killed by a Class %u (%s) signal.",
