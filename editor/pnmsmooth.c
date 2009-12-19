@@ -202,7 +202,7 @@ main(int argc, const char ** argv) {
         /* We're done.  Convolution image is in user's file */
     } else {
         pm_system_lp("pnmconvol", NULL, NULL, NULL, NULL,
-                     tempfileName, cmdline.inputFilespec, NULL);
+                     "pnmconvol", tempfileName, cmdline.inputFilespec, NULL);
 
         unlink(tempfileName);
         strfree(tempfileName);
