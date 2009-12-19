@@ -2066,6 +2066,7 @@ main(int argc, char * argv[]) {
 
     outpam.file = stdout;
 
+pm_message("pnmconvol running");
     if ((PNM_FORMAT_TYPE(inpam.format) == PBM_TYPE ||
          PNM_FORMAT_TYPE(inpam.format) == PGM_TYPE) &&
         convKernelP->planes == 3) {

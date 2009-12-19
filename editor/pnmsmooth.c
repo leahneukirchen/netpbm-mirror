@@ -45,7 +45,7 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine (int argc, char ** argv,
+parseCommandLine (int argc, const char ** argv,
                   struct cmdlineInfo *cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
@@ -82,7 +82,7 @@ parseCommandLine (int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3( &argc, argv, opt, sizeof(opt), 0 );
+    optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdline_p and others. */
 
     if (!widthSpec)
@@ -153,13 +153,14 @@ writeConvolutionImage(FILE *       const cofp,
         /* normalizing factor for our convolution matrix */
     xelval const g = rows * cols + 1;
         /* weight of all pixels in our convolution matrix */
+
     int row;
-    xel *outputrow;
+    xel * outputrow;
 
     if (convmaxval > PNM_OVERALLMAXVAL)
         pm_error("The convolution matrix is too large.  "
-                 "Width x Height x 2\n"
-                 "must not exceed %d and it is %d.",
+                 "Width x Height x 2 "
+                 "must not exceed %u and it is %u.",
                  PNM_OVERALLMAXVAL, convmaxval);
 
     pnm_writepnminit(cofp, cols, rows, convmaxval, format, 0);
@@ -177,13 +178,13 @@ writeConvolutionImage(FILE *       const cofp,
 
 
 int
-main(int argc, char ** argv) {
+main(int argc, const char ** argv) {
 
     struct cmdlineInfo cmdline;
     FILE * convFileP;
     const char * tempfileName;
 
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
