@@ -135,7 +135,8 @@ spawnProcessor(const char *  const progName,
    descriptor of the other end of that pipe, from which Caller can
    suck the program's Standard Output.
 -----------------------------------------------------------------------------*/
-    bool const pipeStdout = !stdoutFdP;
+    bool const pipeStdout = !!stdoutFdP;
+
     int stdoutpipe[2];
     pid_t rc;
 
