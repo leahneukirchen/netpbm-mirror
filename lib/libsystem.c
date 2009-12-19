@@ -49,11 +49,12 @@ execProgram(const char *  const progName,
 -----------------------------------------------------------------------------*/
     int stdinSaveFd, stdoutSaveFd;
     int rc;
+    int execErrno;
 
     /* Make stdinFd Standard Input.
        Make stdoutFd Standard Output.
     */
-    stdinSaveFd = dup(STDIN);
+    stdinSaveFd  = dup(STDIN);
     stdoutSaveFd = dup(STDOUT);
     
     close(STDIN);
@@ -63,6 +64,8 @@ execProgram(const char *  const progName,
     dup2(stdoutFd, STDOUT);
 
     rc = execvp(progName, (char **)argArray);
+
+    execErrno = errno;
 
     close(STDIN);
     close(STDOUT);
@@ -75,7 +78,7 @@ execProgram(const char *  const progName,
         pm_error("Unable to exec '%s' "
                  "(i.e. the program did not run at all).  "
                  "execvp() errno=%d (%s)",
-                 progName, errno, strerror(errno));
+                 progName, execErrno, strerror(execErrno));
     else
         pm_error("INTERNAL ERROR.  execvp() returns, but does not fail.");
 }
