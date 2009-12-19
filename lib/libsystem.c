@@ -54,26 +54,31 @@ execProgram(const char *  const progName,
     /* Make stdinFd Standard Input.
        Make stdoutFd Standard Output.
     */
-    stdinSaveFd  = dup(STDIN);
-    stdoutSaveFd = dup(STDOUT);
-    
-    close(STDIN);
-    close(STDOUT);
-
-    dup2(stdinFd, STDIN);
-    dup2(stdoutFd, STDOUT);
+    if (stdinFd != STDIN) {
+        stdinSaveFd  = dup(STDIN);
+        close(STDIN);
+        dup2(stdinFd, STDIN);
+    }
+    if (stdoutFd != STDOUT) {
+        stdoutSaveFd = dup(STDOUT);
+        close(STDOUT);
+        dup2(stdoutFd, STDOUT);
+    }
 
     rc = execvp(progName, (char **)argArray);
 
     execErrno = errno;
 
-    close(STDIN);
-    close(STDOUT);
-    dup2(stdinSaveFd, STDIN);
-    dup2(stdoutSaveFd, STDOUT);
-    close(stdinSaveFd);
-    close(stdoutSaveFd);
-
+    if (stdinFd != STDIN) {
+        close(STDIN);
+        dup2(stdinSaveFd, STDIN);
+        close(stdinSaveFd);
+    }
+    if (stdoutFd != STDOUT) {
+        close(STDOUT);
+        dup2(stdoutSaveFd, STDOUT);
+        close(stdoutSaveFd);
+    }
     if (rc < 0)
         pm_error("Unable to exec '%s' "
                  "(i.e. the program did not run at all).  "
