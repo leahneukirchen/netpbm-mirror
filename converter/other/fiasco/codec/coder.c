@@ -195,8 +195,9 @@ fiasco_coder (char const * const *inputname, const char *outputname,
 *****************************************************************************/
 
 static coding_t *
-alloc_coder (char const * const *inputname, const c_options_t *options,
-	     wfa_info_t *wi)
+alloc_coder (char const * const * const inputname,
+             const c_options_t *  const options,
+             wfa_info_t *         const wi)
 /*
  *  Coder structure constructor.
  *  Allocate memory for the FIASCO coder structure and
@@ -206,174 +207,180 @@ alloc_coder (char const * const *inputname, const c_options_t *options,
  *	pointer to the new coder structure or NULL on error
  */
 {
-   coding_t *c = NULL;
+    coding_t * c;
+
+    c = NULL;  /* initial value */
    
    /*
     *  Check whether all specified image frames are readable and of same type
     */
-   {
-      char     *filename;
-      int   	width, w = 0, height, h = 0;
-      bool_t	color, c = NO;
-      unsigned 	n;
+    {
+        char     *filename;
+        int   	width, w = 0, height, h = 0;
+        bool_t	color, c = NO;
+        unsigned 	n;
       
-      for (n = 0; (filename = get_input_image_name (inputname, n)); n++)
-      {
-          FILE *file;
-          xelval maxval;
-          int format;
-          if (filename == NULL)
-              file = stdin;
-          else
-              file = pm_openr(filename);
-          pnm_readpnminit(file, &width, &height, &maxval, &format);
-          color = (PNM_FORMAT_TYPE(format) == PPM_FORMAT) ? TRUE: FALSE;
+        for (n = 0; (filename = get_input_image_name (inputname, n)); n++)
+        {
+            FILE *file;
+            xelval maxval;
+            int format;
+            if (filename == NULL)
+                file = stdin;
+            else
+                file = pm_openr(filename);
 
-          pm_close(file);
-	 if (n)
-	 {
-	    if (w != width || h != height || c != color)
-	    {
-	       set_error (_("Format of image frame `%s' doesn't match."),
-			  filename ? filename : "<stdin>");
-	       return NULL;
-	    }
-	 }
-	 else
-	 {
-	    w = width;
-	    h = height;
-	    c = color;
-	 }
-	 Free (filename);
-      }
-      wi->frames = n;
-      wi->width  = w;
-      wi->height = h;
-      wi->color  = c;
-   }
+            pnm_readpnminit(file, &width, &height, &maxval, &format);
 
-   /*
+            color = (PNM_FORMAT_TYPE(format) == PPM_FORMAT) ? TRUE: FALSE;
+
+            pm_close(file);
+            if (n)
+            {
+                if (w != width || h != height || c != color)
+                {
+                    set_error (_("Format of image frame `%s' doesn't match."),
+                               filename ? filename : "<stdin>");
+                    return NULL;
+                }
+            }
+            else
+            {
+                w = width;
+                h = height;
+                c = color;
+            }
+            Free (filename);
+        }
+        wi->frames = n;
+        wi->width  = w;
+        wi->height = h;
+        wi->color  = c;
+    }
+
+    /*
     *  Levels ...
     */
-   {
-      unsigned lx, ly;
+    {
+        unsigned lx, ly;
       
-      lx = (unsigned) (log2 (wi->width - 1) + 1);
-      ly = (unsigned) (log2 (wi->height - 1) + 1);
+        lx = (unsigned) (log2 (wi->width - 1) + 1);
+        ly = (unsigned) (log2 (wi->height - 1) + 1);
       
-      wi->level = max (lx, ly) * 2 - ((ly == lx + 1) ? 1 : 0);
-   }
+        wi->level = max (lx, ly) * 2 - ((ly == lx + 1) ? 1 : 0);
+    }
    
-   c = Calloc (1, sizeof (coding_t));
+    c = Calloc (1, sizeof (coding_t));
 
-   c->options 	      	   = *options;
-   c->options.lc_min_level = max (options->lc_min_level, 3);
-   c->options.lc_max_level = min (options->lc_max_level, wi->level - 1);
+    c->options 	      	   = *options;
+    c->options.lc_min_level = max (options->lc_min_level, 3);
+    c->options.lc_max_level = min (options->lc_max_level, wi->level - 1);
 
-   c->tiling = alloc_tiling (options->tiling_method,
-			     options->tiling_exponent, wi->level);
+    c->tiling = alloc_tiling (options->tiling_method,
+                              options->tiling_exponent, wi->level);
 
-   if (wi->frames > 1 && c->tiling->exponent > 0)
-   {
-      c->tiling->exponent = 0;
-      warning (_("Image tiling valid only with still image compression."));
-   }
+    if (wi->frames > 1 && c->tiling->exponent > 0)
+    {
+        c->tiling->exponent = 0;
+        warning (_("Image tiling valid only with still image compression."));
+    }
 
-   if (c->options.lc_max_level >= wi->level - c->tiling->exponent)
-   {
-      message ("'max_level' changed from %d to %d due to image tiling level.",
-	       c->options.lc_max_level, wi->level - c->tiling->exponent - 1);
-      c->options.lc_max_level = wi->level - c->tiling->exponent - 1;
-   }
+    if (c->options.lc_max_level >= wi->level - c->tiling->exponent)
+    {
+        message ("'max_level' changed from %d to %d due to image tiling level.",
+                 c->options.lc_max_level, wi->level - c->tiling->exponent - 1);
+        c->options.lc_max_level = wi->level - c->tiling->exponent - 1;
+    }
    
-   if (c->options.lc_min_level > c->options.lc_max_level)
-      c->options.lc_min_level = c->options.lc_max_level;
+    if (c->options.lc_min_level > c->options.lc_max_level)
+        c->options.lc_min_level = c->options.lc_max_level;
    
-   /*
-    *  p_min_level, p_max_level min and max level for ND/MC prediction
-    *  [p_min_level, p_max_level] must be a subset of [min_level, max_level] !
-    */
-   wi->p_min_level = max (options->p_min_level, c->options.lc_min_level);
-   wi->p_max_level = min (options->p_max_level, c->options.lc_max_level);
-   if (wi->p_min_level > wi->p_max_level)
-      wi->p_min_level = wi->p_max_level;
+    /*
+     *  p_min_level, p_max_level min and max level for ND/MC prediction
+     *  [p_min_level, p_max_level] must be a subset of [min_level, max_level] !
+     */
+    wi->p_min_level = max (options->p_min_level, c->options.lc_min_level);
+    wi->p_max_level = min (options->p_max_level, c->options.lc_max_level);
+    if (wi->p_min_level > wi->p_max_level)
+        wi->p_min_level = wi->p_max_level;
 
-   c->options.images_level = min (c->options.images_level,
-				  c->options.lc_max_level - 1);
+    c->options.images_level = min (c->options.images_level,
+                                   c->options.lc_max_level - 1);
    
-   c->products_level  = max (0, ((signed int) c->options.lc_max_level
-				 - (signed int) c->options.images_level - 1));
-   c->pixels 	      = Calloc (size_of_level (c->options.lc_max_level),
-				sizeof (real_t));
-   c->images_of_state = Calloc (MAXSTATES, sizeof (real_t *));
-   c->ip_images_state = Calloc (MAXSTATES, sizeof (real_t *));
-   c->ip_states_state = Calloc (MAXSTATES * MAXLEVEL, sizeof (real_t *));
+    c->products_level  = max (0, ((signed int) c->options.lc_max_level
+                                  - (signed int) c->options.images_level - 1));
+    c->pixels 	      = Calloc (size_of_level (c->options.lc_max_level),
+                                sizeof (real_t));
+    c->images_of_state = Calloc (MAXSTATES, sizeof (real_t *));
+    c->ip_images_state = Calloc (MAXSTATES, sizeof (real_t *));
+    c->ip_states_state = Calloc (MAXSTATES * MAXLEVEL, sizeof (real_t *));
    
-   debug_message ("Imageslevel :%d, Productslevel :%d",
-		  c->options.images_level, c->products_level);
-   debug_message ("Memory : (%d + %d + %d * 'states') * 'states' + %d",
-		  size_of_tree (c->options.images_level) * 4,
-		  size_of_tree (c->products_level) * 4,
-		  (c->options.lc_max_level - c->options.images_level),
-		  size_of_level (c->options.lc_max_level));
+    debug_message ("Imageslevel :%d, Productslevel :%d",
+                   c->options.images_level, c->products_level);
+    debug_message ("Memory : (%d + %d + %d * 'states') * 'states' + %d",
+                   size_of_tree (c->options.images_level) * 4,
+                   size_of_tree (c->products_level) * 4,
+                   (c->options.lc_max_level - c->options.images_level),
+                   size_of_level (c->options.lc_max_level));
    
-   /*
+    /*
     *  Domain pools ...
     */
-   c->domain_pool   = NULL;
-   c->d_domain_pool = NULL;
+    c->domain_pool   = NULL;
+    c->d_domain_pool = NULL;
 
-   /*
-    *  Coefficients model ...
-    */
-   c->coeff   = NULL;
-   c->d_coeff = NULL;
+    /*
+     *  Coefficients model ...
+     */
+    c->coeff   = NULL;
+    c->d_coeff = NULL;
 
-   /*
-    *  Max. number of states and edges
-    */
-   wi->max_states   	   = max (min (options->max_states, MAXSTATES), 1);
-   c->options.max_elements = max (min (options->max_elements, MAXEDGES), 1);
+    /*
+     *  Max. number of states and edges
+     */
+    wi->max_states   	   = max (min (options->max_states, MAXSTATES), 1);
+    c->options.max_elements = max (min (options->max_elements, MAXEDGES), 1);
 
-   /*
-    *  Title and comment strings
-    */
-   wi->title   = strdup (options->title);
-   wi->comment = strdup (options->comment);
+    /*
+     *  Title and comment strings
+     */
+    wi->title   = strdup (options->title);
+    wi->comment = strdup (options->comment);
    
-   /*
-    *  Reduced precision format
-    */
-   wi->rpf
-      = alloc_rpf (options->rpf_mantissa, options->rpf_range);
-   wi->dc_rpf
-      = alloc_rpf (options->dc_rpf_mantissa, options->dc_rpf_range);
-   wi->d_rpf
-      = alloc_rpf (options->d_rpf_mantissa, options->d_rpf_range);
-   wi->d_dc_rpf
-      = alloc_rpf (options->d_dc_rpf_mantissa, options->d_dc_rpf_range);
+    /*
+     *  Reduced precision format
+     */
+    wi->rpf
+        = alloc_rpf (options->rpf_mantissa, options->rpf_range);
+    wi->dc_rpf
+        = alloc_rpf (options->dc_rpf_mantissa, options->dc_rpf_range);
+    wi->d_rpf
+        = alloc_rpf (options->d_rpf_mantissa, options->d_rpf_range);
+    wi->d_dc_rpf
+        = alloc_rpf (options->d_dc_rpf_mantissa, options->d_dc_rpf_range);
    
-   /*
-    *  Color image options ...
-    */
-   wi->chroma_max_states = max (1, options->chroma_max_states);
+    /*
+     *  Color image options ...
+     */
+    wi->chroma_max_states = max (1, options->chroma_max_states);
 
-   /*
+    /*
     *  Set up motion compensation struct.
     *  p_min_level, p_max_level are also used for ND prediction
     */
-   wi->search_range   = options->search_range;
-   wi->fps 	      = options->fps;
-   wi->half_pixel     = options->half_pixel_prediction;
-   wi->cross_B_search = options->half_pixel_prediction;
-   wi->B_as_past_ref  = options->B_as_past_ref;
-   wi->smoothing      = options->smoothing;
+    wi->search_range   = options->search_range;
+    wi->fps 	      = options->fps;
+    wi->half_pixel     = options->half_pixel_prediction;
+    wi->cross_B_search = options->half_pixel_prediction;
+    wi->B_as_past_ref  = options->B_as_past_ref;
+    wi->smoothing      = options->smoothing;
    
-   c->mt = alloc_motion (wi);
+    c->mt = alloc_motion (wi);
 
-   return c;
+    return c;
 }
+
+
 
 static void
 free_coder (coding_t *c)
