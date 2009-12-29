@@ -31,8 +31,8 @@
 
 static void
 execProgram(const char * const shellCommand,
-            int          const inputPipeFd,
-            int          const outputPipeFd) {
+            int          const stdinFd,
+            int          const stdoutFd) {
 /*----------------------------------------------------------------------------
    Run the shell command 'shellCommand', supplying to the shell
    'inputPipeFd' as its Standard Input and 'outputPipeFd' as its 
@@ -42,31 +42,39 @@ execProgram(const char * const shellCommand,
 -----------------------------------------------------------------------------*/
     int stdinSaveFd, stdoutSaveFd;
     int rc;
+    int execErrno;
 
     /* Make inputPipeFd Standard Input.
        Make outputPipeFd Standard Output.
     */
-    stdinSaveFd = dup(STDIN);
-    stdoutSaveFd = dup(STDOUT);
-    
-    close(STDIN);
-    close(STDOUT);
-
-    dup2(inputPipeFd, STDIN);
-    dup2(outputPipeFd, STDOUT);
+    if (stdinFd != STDIN) {
+        stdinSaveFd  = dup(STDIN);
+        close(STDIN);
+        dup2(stdinFd, STDIN);
+    }
+    if (stdoutFd != STDOUT) {
+        stdoutSaveFd = dup(STDOUT);
+        close(STDOUT);
+        dup2(stdoutFd, STDOUT);
+    }
 
     rc = execl("/bin/sh", "sh", "-c", shellCommand, NULL);
 
-    close(STDIN);
-    close(STDOUT);
-    dup2(stdinSaveFd, STDIN);
-    dup2(stdoutSaveFd, STDOUT);
-    close(stdinSaveFd);
-    close(stdoutSaveFd);
+    execErrno = errno;
 
+    if (stdinFd != STDIN) {
+        close(STDIN);
+        dup2(stdinSaveFd, STDIN);
+        close(stdinSaveFd);
+    }
+    if (stdoutFd != STDOUT) {
+        close(STDOUT);
+        dup2(stdoutSaveFd, STDOUT);
+        close(stdoutSaveFd);
+    }
     if (rc < 0)
         pm_error("Unable to exec the shell.  Errno=%d (%s)",
-                 errno, strerror(errno));
+                 execErrno, strerror(execErrno));
     else
         pm_error("INTERNAL ERROR.  execl() returns, but does not fail.");
 }
@@ -126,7 +134,7 @@ spawnProcessor(const char * const shellCommand,
 
     processorpid = fork();
     if (processorpid < 0) {
-        pm_error("fork() of processor process failed.  errno=%d (%s)\n", 
+        pm_error("fork() of processor process failed.  errno=%d (%s)", 
                  errno, strerror(errno));
     } else if (processorpid == 0) {
         /* The second child */
@@ -146,14 +154,103 @@ spawnProcessor(const char * const shellCommand,
 }
 
 
+
+static const char *
+signalName(unsigned int const signalClass) {
+
+    if (signalClass <= SIGSYS) {
+        switch (signalClass) {
+        case SIGHUP:
+            return "SIGHUP";
+        case SIGINT:
+            return "SIGINT";
+        case SIGQUIT:
+            return "SIGQUIT";
+        case SIGILL:
+            return "SIGILL";
+        case SIGTRAP:
+            return "SIGTRAP";
+        case SIGABRT:
+            return "SIGABRT";
+        case SIGBUS:
+            return "SIGBUS";
+        case SIGFPE:
+            return "SIGFPE";
+        case SIGKILL:
+            return "SIGKILL";
+        case SIGUSR1:
+            return "SIGUSR1";
+        case SIGSEGV:
+            return "SIGSEGV";
+        case SIGUSR2:
+            return "SIGUSR2";
+        case SIGPIPE:
+            return "SIGPIPE";
+        case SIGALRM:
+            return "SIGALRM";
+        case SIGTERM:
+            return "SIGTERM";
+        case SIGCHLD:
+            return "SIGCHLD";
+        case SIGCONT:
+            return "SIGCONT";
+        case SIGSTOP:
+            return "SIGSTOP";
+        case SIGTSTP:
+            return "SIGTSTP";
+        case SIGTTIN:
+            return "SIGTTIN";
+        case SIGTTOU:
+            return "SIGTTOU";
+        case SIGURG:
+            return "SIGURG";
+        case SIGXCPU:
+            return "SIGXCPU";
+        case SIGXFSZ:
+            return "SIGXFSZ";
+        case SIGVTALRM:
+            return "SIGVTALRM";
+        case SIGPROF:
+            return "SIGPROF";
+        case SIGWINCH:
+            return "SIGWINCH";
+        case SIGIO:
+            return "SIGIO";
+        case SIGPWR:
+            return "SIGPWR";
+        case SIGSYS:
+            return "SIGSYS";
+        default:
+            return "???";
+        }
+    } else if ((int)signalClass >= SIGRTMIN && (int)signalClass <= SIGRTMAX)
+        return "SIGRTxxx";
+    else
+        return "???";
+}
+
+
+
 static void
 cleanupProcessorProcess(pid_t const processorPid) {
 
-    int status;
-    waitpid(processorPid, &status, 0);
-    if (status != 0) 
-        pm_message("Shell process ended abnormally.  "
-                   "completion code = %d", status);
+    int terminationStatus;
+    waitpid(processorPid, &terminationStatus, 0);
+
+    if (WIFEXITED(terminationStatus)) {
+        int const exitStatus = WEXITSTATUS(terminationStatus);
+
+        if (exitStatus != 0)
+            pm_message("Shell process exited with abnormal exist status %u.  ",
+                       exitStatus);
+    } else if (WIFSIGNALED(terminationStatus)) {
+        pm_message("Shell process was killed by a Class %u (%s) signal.",
+                   WTERMSIG(terminationStatus),
+                   signalName(WTERMSIG(terminationStatus)));
+    } else {
+        pm_message("Shell process died, but its termination status "
+                   "0x%x  doesn't make sense", terminationStatus);
+    }
 }
 
 
@@ -204,8 +301,10 @@ pm_system(void stdinFeeder(int, void *),
    But if 'stdinFeeder' is NULL, just feed the shell our own Standard
    Input.  And if 'stdoutFeeder' is NULL, just send its Standard Output
    to our own Standard Output.
------------------------------------------------------------------------------*/
 
+   Run the program 'progName' with arguments argArray[] (terminated by NULL
+   element).  That includes arg0.
+-----------------------------------------------------------------------------*/
     /* If 'stdinFeeder' is non-NULL, we create a child process to run
        'stdinFeeder' and create a pipe between from that process as the
        shell's Standard Input.
