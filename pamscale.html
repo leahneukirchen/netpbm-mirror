@@ -2,13 +2,14 @@
 <HTML><HEAD><TITLE>Pamscale User Manual</TITLE></HEAD>
 <BODY>
 <H1>pamscale</H1>
-Updated: 18 February 2005
+Updated: 29 Deceber 2009
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
 <H2>NAME</H2>
 
 pamscale - scale a Netpbm image
+
 <H2 id="synopsis">SYNOPSIS</H2>
 
 <pre>
@@ -52,6 +53,10 @@ scales individually horizontally and vertically by specified factors.
 
 <P>You can either enlarge (scale factor &gt; 1) or reduce (scale factor
 &lt; 1).
+
+<p><b>pamscale</b> work on multi-image streams, scaling each one independently.
+But before Netpbm 10.49 (December 2009), it scales only the first image and
+ignores the rest of the stream.
 
 <h3 id="scalefactor">The Scale Factors</h3>
 
