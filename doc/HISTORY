@@ -6,7 +6,7 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.49.00
 
-              Add pamdither - replacement for ppmdither.
+              pamscale: Work on multi image stream.
 
               pnmconvol: Add -matrix, -matrixfile.
 
@@ -19,6 +19,26 @@ not yet  BJH  Release 10.49.00
               ppmrainbow: Make new directory for temporary files.
               Prevents interference by other user who shares the main
               temporary file directory.
+
+              libnetpbm: When reading plain format PNM with PAM routines,
+              validate pixel against maxval (necessary for integer non-overrun
+              guarantees).
+
+              pnmsmooth: change -dump option to output a new pnmconvol
+              -matrix option instead of a PGM file (because pnmsmooth now
+              uses -matrix).
+
+              pnmsmooth: fix incorrect call to pm_system_lp() that makes
+              it never work (but it wouldn't anyway because pm_system_lp()
+              was broken -- see below).
+
+              pm_system*: fix various bugs making it never work.
+
+              xpmtoppm: fix wild pointer with color index > 127.
+
+              xpmtoppm: fix wild pointer when the input has a color index
+              value that is too large to be consistent with the number of
+              colors and bytes per pixel.
 
               pamtouil: fix crash when -name option doesn't contain an
               underscore.
