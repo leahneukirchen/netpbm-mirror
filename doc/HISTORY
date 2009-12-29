@@ -4,7 +4,21 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-09.12.10 BJH  Release 10.40.03
+09.12.29 BJH  Release 10.48.04
+
+              libnetpbm: When reading plain format PNM with PAM routines,
+              validate pixel against maxval (necessary for integer non-overrun
+              guarantees).
+
+              xpmtoppm: fix wild pointer with color index > 127.
+
+              pnmsmooth: fix incorrect call to pm_system_lp() that makes
+              it never work (but it wouldn't anyway because pm_system_lp()
+              was broken -- see below).
+
+              pm_system*: fix various bugs that make it never work.
+
+09.12.10 BJH  Release 10.48.03
 
               pamtosvg: fix compile failure from 10.48.02.
 
