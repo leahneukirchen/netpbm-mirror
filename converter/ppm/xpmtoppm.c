@@ -162,7 +162,7 @@ static unsigned int
 getNumber(char * const p, unsigned int const size) {
 
     unsigned int retval;
-    char * q;
+    unsigned char * q;
     
     retval = 0;
     for (q = p; q < p+size; ++q)
@@ -466,7 +466,8 @@ readXpm1Header(FILE * const stream, int * const widthP, int * const heightP,
     char line[MAX_LINE+1], str1[MAX_LINE+1], str2[MAX_LINE+1];
     char *t1;
     char *t2;
-    int format, v;
+    int format;
+    unsigned int v;
     int i, j;
     bool processedStaticChar;  
         /* We have read up to and interpreted the "static char..." line */
