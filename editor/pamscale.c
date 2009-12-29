@@ -2175,6 +2175,7 @@ main(int argc, const char **argv ) {
 
     struct cmdlineInfo cmdline;
     FILE * ifP;
+    bool eof;
 
     pm_proginit(&argc, argv);
 
@@ -2182,7 +2183,11 @@ main(int argc, const char **argv ) {
 
     ifP = pm_openr(cmdline.inputFileName);
 
-    pamscale(ifP, stdout, cmdline);
+    eof = FALSE;
+    while (!eof) {
+        pamscale(ifP, stdout, cmdline);
+        pnm_nextimage(ifP, &eof);
+    }
 
     pm_close(ifP);
     pm_close(stdout);
