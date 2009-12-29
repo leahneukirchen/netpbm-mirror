@@ -674,7 +674,7 @@ main(int argc, char *argv[]) {
     FILE * const ofP = stdout;
 
     struct cmdlineInfo cmdline;
-    FILE* ifP;
+    FILE * ifP;
     bool eof;
 
     pnm_init(&argc, argv);
