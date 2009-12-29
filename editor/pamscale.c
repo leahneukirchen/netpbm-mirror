@@ -2106,24 +2106,18 @@ scaleWithoutMixing(const struct pam * const inpamP,
 
 
 
-int
-main(int argc, const char **argv ) {
-
-    struct cmdlineInfo cmdline;
-    FILE* ifP;
+static void
+pamscale(FILE *             const ifP,
+         FILE *             const ofP,
+         struct cmdlineInfo const cmdline) {
+    
     struct pam inpam, outpam;
     float xscale, yscale;
-
-    pm_proginit(&argc, argv);
-
-    parseCommandLine(argc, argv, &cmdline);
-
-    ifP = pm_openr(cmdline.inputFileName);
 
     pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
 
     outpam = inpam;  /* initial value */
-    outpam.file = stdout;
+    outpam.file = ofP;
 
     if (PNM_FORMAT_TYPE(inpam.format) == PBM_TYPE && !cmdline.nomix) {
         outpam.format = PGM_TYPE;
@@ -2172,6 +2166,24 @@ main(int argc, const char **argv ) {
                  cmdline.windowFunction, cmdline.verbose,
                  cmdline.linear);
     }
+}
+
+
+
+int
+main(int argc, const char **argv ) {
+
+    struct cmdlineInfo cmdline;
+    FILE * ifP;
+
+    pm_proginit(&argc, argv);
+
+    parseCommandLine(argc, argv, &cmdline);
+
+    ifP = pm_openr(cmdline.inputFileName);
+
+    pamscale(ifP, stdout, cmdline);
+
     pm_close(ifP);
     pm_close(stdout);
     
