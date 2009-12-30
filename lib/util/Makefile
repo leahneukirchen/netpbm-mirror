@@ -13,6 +13,7 @@ UTILOBJECTS = \
   filename.o \
   io.o \
   nsleep.o \
+  nstring.o \
   shhopt.o \
   token.o \
   vasprintf.o \
