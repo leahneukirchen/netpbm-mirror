@@ -28,6 +28,8 @@ not yet  BJH  Release 10.49.00
               -matrix option instead of a PGM file (because pnmsmooth now
               uses -matrix).
 
+              pnmtofiasco: fix bug: doesn't work with Standard Input.
+
               pnmsmooth: fix incorrect call to pm_system_lp() that makes
               it never work (but it wouldn't anyway because pm_system_lp()
               was broken -- see below).

@@ -224,7 +224,7 @@ get_next_frame (bool_t store_wfa, int enlarge_factor,
               "reference frame is given.",
               video->wfa->frame_type == B_FRAME ? 'B' : 'P');
 
-        video->frame  = read_image (reference_frame);
+        video->frame  = read_image_file (reference_frame);
         video->sframe = NULL;
      }
    
