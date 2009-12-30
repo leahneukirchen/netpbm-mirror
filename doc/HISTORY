@@ -4,17 +4,17 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-not yet  BJH  Release 10.49.00
+09.12.30 BJH  Release 10.49.00
 
-              pamscale: Work on multi image stream.
+              Add pnmmercator.
 
               pnmconvol: Add -matrix, -matrixfile.
 
               pambayer: add -nointerpolate.
 
-              Add pnmmercator.
-
               jpeg2ktopam: Work with JP2 input as well as JPC.
+
+              pamscale: Work on multi image stream.
 
               ppmrainbow: Make new directory for temporary files.
               Prevents interference by other user who shares the main
