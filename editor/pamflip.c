@@ -745,7 +745,7 @@ typedef struct {
 /*----------------------------------------------------------------------------
    A description of the quilt of cells that make up the output image.
 -----------------------------------------------------------------------------*/
-    unsigned int ranks, files;
+    unsigned int rankCt, fileCt;
         /* Dimensions of the output image in cells */
     struct pam ** pam;
         /* pam[y][x] is the pam structure for the cell at rank y, file x
@@ -769,8 +769,12 @@ initOutCell(struct pam *     const outCellPamP,
             unsigned int     const inCellHeight,
             struct pam *     const inpamP,
             struct xformCore const xformCore) {
-
-    unsigned int outCellFiles, outCellRanks;
+/*----------------------------------------------------------------------------
+   Set up an output cell.  Create and open a temporary file to hold its
+   raster.  Figure out the dimensions of the cell.  Return a PAM structure
+   that describes the cell (including identifying that temporary file).
+-----------------------------------------------------------------------------*/
+    unsigned int outCellFileCt, outCellRankCt;
 
     *outCellPamP = *inpamP;  /* initial value */
 
@@ -779,10 +783,10 @@ initOutCell(struct pam *     const outCellPamP,
     outCellPamP->file = pm_tmpfile();
 
     xformDimensions(xformCore, inCellWidth, inCellHeight,
-                    &outCellFiles, &outCellRanks);
+                    &outCellFileCt, &outCellRankCt);
 
-    outCellPamP->width = outCellFiles;
-    outCellPamP->height = outCellRanks;
+    outCellPamP->width = outCellFileCt;
+    outCellPamP->height = outCellRankCt;
 }
 
 
@@ -792,9 +796,26 @@ createOutputMap(struct pam *       const inpamP,
                 unsigned int       const maxRows,
                 struct xformMatrix const cellXform,
                 struct xformCore   const xformCore) {
+/*----------------------------------------------------------------------------
+   Create and return the output map.  That's a map of all the output cells
+   (from which the output image can be assembled, once those cells are filled
+   in).
 
-    unsigned int const inCellFiles = 1;
-    unsigned int const inCellRanks = (inpamP->height + maxRows - 1) / maxRows;
+   The map contains the dimensions of each output cell as well as file
+   stream handles for the temporary files containing the pixels of each
+   cell.  We create and open those files.
+
+   Note that a complexity of determining cell dimensions (which we handle)
+   is that the input image isn't necessarily a whole multiple of the input
+   cell size, so the last cell may be short.
+
+   The map does not contain the mapping from input cells to output cells
+   (e.g. in a top-bottom transformation of a 10-cell image, input cell
+   0 maps to output cell 9); caller can compute that when needed from
+   'cellXform'.
+-----------------------------------------------------------------------------*/
+    unsigned int const inCellFileCt = 1;
+    unsigned int const inCellRankCt = (inpamP->height + maxRows - 1) / maxRows;
 
     outputMap * mapP;
     unsigned int outCellRank;
@@ -802,27 +823,27 @@ createOutputMap(struct pam *       const inpamP,
 
     MALLOCVAR_NOFAIL(mapP);
 
-    xformDimensions(xformCore, inCellFiles, inCellRanks,
-                    &mapP->files, &mapP->ranks);
+    xformDimensions(xformCore, inCellFileCt, inCellRankCt,
+                    &mapP->fileCt, &mapP->rankCt);
 
-    MALLOCARRAY(mapP->pam, mapP->ranks);
+    MALLOCARRAY(mapP->pam, mapP->rankCt);
     if (mapP->pam == NULL)
         pm_error("Could not allocate a cell array for %u ranks of cells.",
-                 mapP->ranks);
+                 mapP->rankCt);
 
-    for (outCellRank = 0; outCellRank < mapP->ranks; ++outCellRank) {
+    for (outCellRank = 0; outCellRank < mapP->rankCt; ++outCellRank) {
 
-        MALLOCARRAY(mapP->pam[outCellRank], mapP->files);
+        MALLOCARRAY(mapP->pam[outCellRank], mapP->fileCt);
 
         if (mapP->pam[outCellRank] == NULL)
             pm_error("Failed to allocate rank %u of the cell array, "
-                     "%u cells wide", outCellRank, mapP->files);
+                     "%u cells wide", outCellRank, mapP->fileCt);
     }
 
-    for (inCellRank = 0; inCellRank < inCellRanks; ++inCellRank) {
+    for (inCellRank = 0; inCellRank < inCellRankCt; ++inCellRank) {
         unsigned int const inCellFile = 0;
         unsigned int const inCellStartRow = inCellRank * maxRows;
-        unsigned int const inCellRows =
+        unsigned int const inCellRowCt =
             MIN(inpamP->height - inCellStartRow, maxRows);
 
         unsigned int outCellFile, outCellRank;
@@ -830,7 +851,7 @@ createOutputMap(struct pam *       const inpamP,
                        &outCellFile, &outCellRank);
     
         initOutCell(&mapP->pam[outCellRank][outCellFile],
-                    inpamP->width, inCellRows,
+                    inpamP->width, inCellRowCt,
                     inpamP, xformCore);
     }
     return mapP;
@@ -843,7 +864,7 @@ destroyOutputMap(outputMap * const mapP) {
 
     unsigned int outCellRank;
 
-    for (outCellRank = 0; outCellRank < mapP->ranks; ++outCellRank)
+    for (outCellRank = 0; outCellRank < mapP->rankCt; ++outCellRank)
         free(mapP->pam[outCellRank]);
 
     free(mapP->pam);
@@ -858,9 +879,9 @@ rewindCellFiles(outputMap * const outputMapP) {
 
     unsigned int outCellRank;
 
-    for (outCellRank = 0; outCellRank < outputMapP->ranks; ++outCellRank) {
+    for (outCellRank = 0; outCellRank < outputMapP->rankCt; ++outCellRank) {
         unsigned int outCellFile;
-        for (outCellFile = 0; outCellFile < outputMapP->files; ++outCellFile)
+        for (outCellFile = 0; outCellFile < outputMapP->fileCt; ++outCellFile)
             pm_seek(outputMapP->pam[outCellRank][outCellFile].file, 0);
     }
 }
@@ -872,9 +893,9 @@ closeCellFiles(outputMap * const outputMapP) {
 
     unsigned int outCellRank;
 
-    for (outCellRank = 0; outCellRank < outputMapP->ranks; ++outCellRank) {
+    for (outCellRank = 0; outCellRank < outputMapP->rankCt; ++outCellRank) {
         unsigned int outCellFile;
-        for (outCellFile = 0; outCellFile < outputMapP->files; ++outCellFile)
+        for (outCellFile = 0; outCellFile < outputMapP->fileCt; ++outCellFile)
             pm_close(outputMapP->pam[outCellRank][outCellFile].file);
     }
 }
@@ -932,7 +953,7 @@ stitchCellsToOutput(outputMap *  const outputMapP,
 
     tupleRow = pnm_allocpamrow(outpamP);
 
-    for (outRank = 0; outRank < outputMapP->ranks; ++outRank) {
+    for (outRank = 0; outRank < outputMapP->rankCt; ++outRank) {
         unsigned int const cellRows = outputMapP->pam[outRank][0].height;
             /* Number of rows in every cell in this rank */
 
@@ -944,7 +965,7 @@ stitchCellsToOutput(outputMap *  const outputMapP,
 
             outCol = 0;
 
-            for (outFile = 0; outFile < outputMapP->files; ++outFile) {
+            for (outFile = 0; outFile < outputMapP->fileCt; ++outFile) {
                 struct pam * const outCellPamP = 
                     &outputMapP->pam[outRank][outFile];
 
@@ -973,7 +994,7 @@ transformNonPbmChunk(struct pam *     const inpamP,
                      unsigned int     const maxRows,
                      bool             const verbose) {
 /*----------------------------------------------------------------------------
-  Same as transformNonPbmChunk(), except we read 'maxRows' rows of the
+  Same as transformNonPbmWhole(), except we read 'maxRows' rows of the
   input into memory at a time, storing intermediate results in temporary
   files, to limit our use of virtual and real memory.
 
@@ -981,28 +1002,33 @@ transformNonPbmChunk(struct pam *     const inpamP,
   header).
 
   We call the strip of 'maxRows' rows that we read a source cell.  We
-  transform that cell according to 'xformCore' to create to create a
+  transform that cell according to 'xformCore' to create a
   target cell.  We store all the target cells in temporary files.
   We consider the target cells to be arranged in a column matrix the
   same as the source cells within the source image; we transform that
   matrix according to 'xformCore'.  The resulting cell matrix is the
   target image.
 -----------------------------------------------------------------------------*/
-    unsigned int const inCellFiles = 1;
-    unsigned int const inCellRanks = (inpamP->height + maxRows - 1) / maxRows;
+    /* The cells of the source image ("inCell") are in a 1-column matrix.
+       "rank" is the vertical position of a cell in that matrix; "file" is
+       the horizontal position (always 0, of course).
+    */
+    unsigned int const inCellFileCt = 1;
+    unsigned int const inCellRankCt = (inpamP->height + maxRows - 1) / maxRows;
 
     struct xformMatrix cellXform;
     unsigned int inCellRank;
     outputMap * outputMapP;
 
     if (verbose)
-        pm_message("Transforming in %u chunks, using temp files", inCellRanks);
+        pm_message("Transforming in %u chunks, using temp files",
+                   inCellRankCt);
 
-    computeXformMatrix(&cellXform, inCellFiles, inCellRanks, xformCore);
+    computeXformMatrix(&cellXform, inCellFileCt, inCellRankCt, xformCore);
 
     outputMapP = createOutputMap(inpamP, maxRows, cellXform, xformCore);
 
-    for (inCellRank = 0; inCellRank < inCellRanks; ++inCellRank) {
+    for (inCellRank = 0; inCellRank < inCellRankCt; ++inCellRank) {
         unsigned int const inCellFile = 0;
         unsigned int const inCellStartRow = inCellRank * maxRows;
         unsigned int const inCellRows =

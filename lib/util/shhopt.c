@@ -31,6 +31,7 @@
 
 #include "mallocvar.h"
 #include "nstring.h"
+#include "token.h"
 #include "shhopt.h"
 
 /*-----------------------------------------------------------------------+
@@ -237,6 +238,7 @@ optNeedsArgument(const optEntry opt)
 	|| opt.type == OPT_ULONG
     || opt.type == OPT_FLOAT
     || opt.type == OPT_NAMELIST
+    || opt.type == OPT_STRINGLIST
         ;
 }
 
@@ -281,46 +283,12 @@ getToken(const char *  const tokenStart,
    we return an empty string and *nextP == tokenStart, i.e. *nextP
    doesn't necessarily advance.
 -----------------------------------------------------------------------------*/
-    char * token;
-    const char * cursor;
-    unsigned int charCount;
-
-    /* Run through the token, counting characters */
-
-    charCount = 0;
-    cursor = tokenStart;
-
-    while (*cursor != delimiter && *cursor != '\0') {
-        if (*cursor == '\\') {
-            ++cursor;
-            if (*cursor == '\0')
-                optFatal("string ends with an escape character (\\)");
-        }
-        ++cursor;
-        ++charCount;
-    }
+    const char * error;
     
-    token = malloc(charCount + 1);
-    if (token == NULL)
-        optFatal("Could not allocate %u bytes of memory to parse a string",
-                 charCount + 1);
+    pm_gettoken(tokenStart, delimiter, tokenP, nextP, &error);
 
-    /* Go back and do it again, this time copying the characters */
-    charCount = 0;
-    cursor = tokenStart;
-
-    while (*cursor != delimiter && *cursor != '\0') {
-        if (*cursor == '\\')
-            ++cursor;
-
-        assert(*cursor != '\0');
-
-        token[charCount++] = *cursor++;
-    }
-    token[charCount] = '\0';
-
-    *tokenP = token;
-    *nextP = cursor;
+    if (error)
+        optFatal("error parsing a token: %s", error);
 }
 
 
@@ -369,6 +337,41 @@ parseNameList(const char *           const listText,
     }
     list[optionCount].name  = NULL;
     list[optionCount].value = NULL;
+
+    *listP = list;
+}
+
+
+
+static void
+parseStringList(const char *   const listText,
+                const char *** const listP) {
+
+    unsigned int const maxStringCount = 100;
+
+    const char * cursor;
+    unsigned int stringCount;
+    const char ** list;
+
+    MALLOCARRAY_NOFAIL(list, maxStringCount+1);
+
+    cursor = &listText[0];  /* initial value */
+
+    stringCount = 0;  /* initial value */
+
+    while (stringCount < maxStringCount && *cursor != '\0') {
+        const char * next;
+
+        getToken(cursor, ',', &list[stringCount++], &next);
+
+        cursor = next;
+
+        if (*cursor != '\0') {
+            assert(*cursor == ',');
+            ++cursor;
+        }
+    }
+    list[stringCount] = NULL;
 
     *listP = list;
 }
@@ -477,6 +480,15 @@ optExecute(optEntry  const opt, char *arg, int lng)
 
         if (opt.arg)
             parseNameList(arg, (struct optNameValue **)opt.arg);
+
+    } break;
+    case OPT_STRINGLIST: {
+        if (arg == NULL)
+            optFatal("internal error: optExecute() called with NULL argument "
+                     "'%s'", optString(opt, lng));
+
+        if (opt.arg)
+            parseStringList(arg, (const char ***)opt.arg);
 
     } break;
     default:

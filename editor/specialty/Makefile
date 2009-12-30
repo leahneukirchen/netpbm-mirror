@@ -16,6 +16,7 @@ PORTBINARIES = pamdeinterlace \
 	       pgmbentley \
 	       pgmmorphconv \
 	       pnmindex \
+	       pnmmercator \
 	       ppm3d \
 	       ppmglobe \
 	       ppmntsc \

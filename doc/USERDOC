@@ -35,6 +35,12 @@ Subversion repository using the Subversion client program 'svn':
 This creates a directory "userguide" in your current directory containing
 all the same files that are on the web site.
 
+And a sometimes more convenient way to get those files from the
+Subversion repository is to get Sourceforge's Viewvc service to make a
+tarball of them:
+
+  wget http://netpbm.svn.sourceforge.net/viewvc/netpbm/userguide.tar.gz?view=tar --output-document=/tmp/userguide.tgz
+
 
 GETTING COMMAND HELP WITH A "MAN" COMMAND
 -----------------------------------------

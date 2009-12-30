@@ -493,9 +493,10 @@ parseCommandLine(int argc, char ** argv,
 
 
 static png_color_16
-xelToPngColor_16(xel const input, 
+xelToPngColor_16(xel    const input, 
                  xelval const maxval, 
                  xelval const pngMaxval) {
+
     png_color_16 retval;
 
     xel scaled;
@@ -1926,6 +1927,10 @@ computeColorMap(FILE *         const ifP,
   palette_pnm[] and trans_pnm[], allocated by Caller, with sizes
   *paletteSizeP and *transSizeP.
 
+  'pfP' is a handle to the file that the user requested be used for the
+  palette (it's a Netpbm image whose colors are the colors of the palette).
+  'pfP' is null if the user did not request a particular palette.
+
   'background' means the image is to have a background color, and that
   color is 'backcolor'.  'backcolor' is meaningless when 'background'
   is false.
@@ -2559,11 +2564,11 @@ doSbitChunk(png_info * const pngInfoP,
 
 static void 
 convertpnm(struct cmdlineInfo const cmdline,
-           FILE *             const ifp,
-           FILE *             const ofp,
-           FILE *             const afp,
-           FILE *             const pfp,
-           FILE *             const tfp,
+           FILE *             const ifP,
+           FILE *             const ofP,
+           FILE *             const afP,
+           FILE *             const pfP,
+           FILE *             const tfP,
            int *              const errorLevelP
     ) {
 /*----------------------------------------------------------------------------
@@ -2654,8 +2659,8 @@ convertpnm(struct cmdlineInfo const cmdline,
 
   pngx_create(&pngxP, PNGX_WRITE, &jmpbuf);
 
-  pnm_readpnminit(ifp, &cols, &rows, &maxval, &format);
-  pm_tell2(ifp, &rasterPos, sizeof(rasterPos));
+  pnm_readpnminit(ifP, &cols, &rows, &maxval, &format);
+  pm_tell2(ifP, &rasterPos, sizeof(rasterPos));
   pnm_type = PNM_FORMAT_TYPE(format);
 
   xelrow = pnm_allocrow(cols);
@@ -2669,8 +2674,8 @@ convertpnm(struct cmdlineInfo const cmdline,
       pm_message ("reading a PPM file (maxval=%d)", maxval);
   }
 
-  determineTransparency(cmdline, ifp, rasterPos, cols, rows, maxval, format,
-                        afp,
+  determineTransparency(cmdline, ifP, rasterPos, cols, rows, maxval, format,
+                        afP,
                         &alpha, &transparent, &transcolor, &transexact,
                         &alpha_mask, &alpha_maxval);
 
@@ -2683,10 +2688,10 @@ convertpnm(struct cmdlineInfo const cmdline,
       bool isgray;
 
       isgray = TRUE;  /* initial assumption */
-      pm_seek2(ifp, &rasterPos, sizeof(rasterPos));
+      pm_seek2(ifP, &rasterPos, sizeof(rasterPos));
       for (row = 0; row < rows && isgray; ++row) {
           unsigned int col;
-          pnm_readpnmrow(ifp, xelrow, cols, maxval, format);
+          pnm_readpnmrow(ifP, xelrow, cols, maxval, format);
           for (col = 0; col < cols && isgray; ++col) {
               p = xelrow[col];
               if (PPM_GETR(p) != PPM_GETG(p) || PPM_GETG(p) != PPM_GETB(p))
@@ -2704,11 +2709,11 @@ convertpnm(struct cmdlineInfo const cmdline,
                "(use -downscale to override");
   }
 
-  findRedundantBits(ifp, rasterPos, cols, rows, maxval, format, alpha,
+  findRedundantBits(ifP, rasterPos, cols, rows, maxval, format, alpha,
                     cmdline.force, &pnm_meaningful_bits);
   
-  computeColorMap(ifp, rasterPos, cols, rows, maxval, format,
-                  cmdline.force, pfp,
+  computeColorMap(ifP, rasterPos, cols, rows, maxval, format,
+                  cmdline.force, pfP,
                   alpha, transparent >= 0, transcolor, transexact, 
                   !!cmdline.background, backcolor,
                   alpha_mask, alpha_maxval, pnm_meaningful_bits,
@@ -2716,7 +2721,7 @@ convertpnm(struct cmdlineInfo const cmdline,
                   &background_index, &noColormapReason);
 
   if (noColormapReason) {
-      if (pfp)
+      if (pfP)
           pm_error("You specified a particular palette, but this image "
                    "cannot be represented by any palette.  %s",
                    noColormapReason);
@@ -2775,7 +2780,7 @@ convertpnm(struct cmdlineInfo const cmdline,
     pngxP->info_ptr->palette = palette;
     pngxP->info_ptr->num_palette = palette_size;
 
-    doHistChunk(cmdline.hist, palette_pnm, ifp, rasterPos,
+    doHistChunk(cmdline.hist, palette_pnm, ifP, rasterPos,
                 cols, rows, maxval, format,
                 pngxP->info_ptr, cmdline.verbose);
   }
@@ -2791,7 +2796,7 @@ convertpnm(struct cmdlineInfo const cmdline,
 
   /* tEXT and zTXT chunks */
   if (cmdline.text || cmdline.ztxt)
-      pnmpng_read_text(pngxP->info_ptr, tfp, !!cmdline.ztxt, cmdline.verbose);
+      pnmpng_read_text(pngxP->info_ptr, tfP, !!cmdline.ztxt, cmdline.verbose);
 
   doTimeChunk(cmdline, pngxP->info_ptr);
 
@@ -2800,7 +2805,7 @@ convertpnm(struct cmdlineInfo const cmdline,
 
   setZlibCompression(pngxP->png_ptr, cmdline.zlibCompression);
 
-  png_init_io(pngxP->png_ptr, ofp);
+  png_init_io(pngxP->png_ptr, ofP);
 
   /* write the png-info struct */
   png_write_info(pngxP->png_ptr, pngxP->info_ptr);
@@ -2816,7 +2821,7 @@ convertpnm(struct cmdlineInfo const cmdline,
   /* let libpng take care of, e.g., bit-depth conversions */
   png_set_packing(pngxP->png_ptr);
 
-  writeRaster(pngxP, ifp, rasterPos,
+  writeRaster(pngxP, ifP, rasterPos,
               cols, rows, maxval, format,
               png_maxval, depth, alpha, alpha_mask, cht, caht);
 

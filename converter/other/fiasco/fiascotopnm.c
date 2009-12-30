@@ -25,6 +25,8 @@
 #include <string.h>
 #include <math.h>
 
+#include "nstring.h"
+
 #include "types.h"
 #include "macros.h"
 

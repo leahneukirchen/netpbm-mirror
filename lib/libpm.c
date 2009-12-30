@@ -713,6 +713,8 @@ showNetpbmHelp(const char progname[]) {
         if (docurl == NULL)
             pm_message("No 'docurl=' line in Netpbm configuration file '%s'.",
                        netpbmConfigFileName);
+
+        fclose(netpbmConfigFile);
     }
     if (docurl == NULL)
         pm_message("We have no reliable indication of where the Netpbm "

@@ -41,11 +41,13 @@ LIBOBJECTS += libpbmvms.o
 endif
 # Library objects to be linked but not built by common.mk:
 LIBOBJECTS_X = \
-  util/shhopt.o \
-  util/nstring.o \
-  util/vasprintf.o \
   util/filename.o \
+  util/io.o \
   util/nsleep.o \
+  util/nstring.o \
+  util/shhopt.o \
+  util/token.o \
+  util/vasprintf.o \
 
 MANUALS3 = libnetpbm
 MANUALS5 = pbm pgm ppm pnm pam

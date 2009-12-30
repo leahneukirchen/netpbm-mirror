@@ -156,11 +156,12 @@ writeMiddleRows(struct pam * const inpamP,
 
 
 int
-main(int argc, char *argv[]) {
+main(int argc, const char ** argv) {
+
     FILE *ifP;
     struct pam inpam, outpam;
 
-    pnm_init( &argc, argv );
+    pm_proginit(&argc, argv);
 
     if (argc-1 == 1) 
         ifP = pm_openr(argv[1]);

@@ -21,6 +21,7 @@
 
 
 #include <unistd.h>
+#include <assert.h>
 #include <string.h>
 #include <errno.h>
 
@@ -39,13 +40,13 @@ struct cmdlineInfo {
     const char * inputFilespec;  /* Filespec of input file */
     unsigned int width;
     unsigned int height;
-    const char * dump;
+    unsigned int dump;
 };
 
 
 
 static void
-parseCommandLine (int argc, char ** argv,
+parseCommandLine (int argc, const char ** argv,
                   struct cmdlineInfo *cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
@@ -64,13 +65,13 @@ parseCommandLine (int argc, char ** argv,
 
     unsigned int option_def_index;
 
-    unsigned int widthSpec, heightSpec, dumpSpec, sizeSpec;
+    unsigned int widthSpec, heightSpec, sizeSpec;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
     
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0,   "dump",          OPT_STRING,   
-            &cmdlineP->dump,            &dumpSpec, 0);
+    OPTENT3(0,   "dump",          OPT_FLAG,   
+            NULL,                       &cmdlineP->dump, 0);
     OPTENT3(0,   "width",         OPT_UINT,
             &cmdlineP->width,           &widthSpec, 0);
     OPTENT3(0,   "height",        OPT_UINT,
@@ -82,7 +83,7 @@ parseCommandLine (int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3( &argc, argv, opt, sizeof(opt), 0 );
+    optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdline_p and others. */
 
     if (!widthSpec)
@@ -90,9 +91,6 @@ parseCommandLine (int argc, char ** argv,
 
     if (!heightSpec)
         cmdlineP->height = 3;
-
-    if (!dumpSpec)
-        cmdlineP->dump = NULL;
 
     if (sizeSpec) {
         /* -size is strictly for backward compatibility.  This program
@@ -143,68 +141,82 @@ parseCommandLine (int argc, char ** argv,
 
 
 
-static void
-writeConvolutionImage(FILE *       const cofp,
-                      unsigned int const cols,
-                      unsigned int const rows,
-                      int          const format) {
+static const char *
+makeConvolutionKernel(unsigned int const cols,
+                      unsigned int const rows) {
+/*----------------------------------------------------------------------------
+   Return a convolution kernel with dimensions 'cols' by 'rows' that is
+   uniform.  Make it in the form of the value of a Pnmconvol '-matrix'
+   option.
+-----------------------------------------------------------------------------*/
+    double const weight = 1.0/(rows * cols);
 
-    xelval const convmaxval = rows * cols * 2;
-        /* normalizing factor for our convolution matrix */
-    xelval const g = rows * cols + 1;
-        /* weight of all pixels in our convolution matrix */
-    int row;
-    xel *outputrow;
+    char * matrix;
 
-    if (convmaxval > PNM_OVERALLMAXVAL)
-        pm_error("The convolution matrix is too large.  "
-                 "Width x Height x 2\n"
-                 "must not exceed %d and it is %d.",
-                 PNM_OVERALLMAXVAL, convmaxval);
+    unsigned int const maxOptSize = (cols * 10 + 1) * rows + 1;
 
-    pnm_writepnminit(cofp, cols, rows, convmaxval, format, 0);
-    outputrow = pnm_allocrow(cols);
+    MALLOCARRAY(matrix, maxOptSize);
 
-    for (row = 0; row < rows; ++row) {
-        unsigned int col;
-        for (col = 0; col < cols; ++col)
-            PNM_ASSIGN1(outputrow[col], g);
-        pnm_writepnmrow(cofp, outputrow, cols, convmaxval, format, 0);
+    if (matrix == NULL)
+        pm_error("Could not get memory for a %u x %u convolution matrix",
+                 rows, cols);
+    else {
+        unsigned int row;
+        char * cursor;
+        
+        cursor = &matrix[0];  /* Start at beginning of string */
+
+        for (row = 0; row < rows; ++row) {
+            unsigned int col;
+
+            if (row > 0)
+                *cursor++ = ';';
+
+            for (col = 0; col < cols; ++col) {
+                char weightStr[20];
+                unsigned int i;
+
+                assert(cursor - matrix + 10 < maxOptSize);
+
+                if (col > 0)
+                    *cursor++ = ',';
+
+                snprintf(weightStr, sizeof(weightStr), "%f", weight);
+
+                for (i = 0; weightStr[i]; ++i)
+                    *cursor++ = weightStr[i];
+            }
+        }
     }
-    pnm_freerow(outputrow);
+    return matrix;
 }
 
 
 
 int
-main(int argc, char ** argv) {
+main(int argc, const char ** argv) {
 
     struct cmdlineInfo cmdline;
-    FILE * convFileP;
-    const char * tempfileName;
+    const char * matrixOptValue;
 
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
-    if (cmdline.dump)
-        convFileP = pm_openw(cmdline.dump);
-    else
-        pm_make_tmpfile(&convFileP, &tempfileName);
-        
-    writeConvolutionImage(convFileP, cmdline.width, cmdline.height,
-                          PGM_FORMAT);
-
-    pm_close(convFileP);
+    matrixOptValue = makeConvolutionKernel(cmdline.width, cmdline.height);
 
     if (cmdline.dump) {
-        /* We're done.  Convolution image is in user's file */
+        fprintf(stdout, "%s\n", matrixOptValue);
     } else {
-        pm_system_lp("pnmconvol", NULL, NULL, NULL, NULL,
-                     "pnmconvol", tempfileName, cmdline.inputFilespec, NULL);
+        const char * matrixOpt;
+        asprintfN(&matrixOpt, "-matrix=%s", matrixOptValue);
 
-        unlink(tempfileName);
-        strfree(tempfileName);
+        pm_system_lp("pnmconvol", NULL, NULL, NULL, NULL,
+                     "pnmconvol", matrixOpt, cmdline.inputFilespec, NULL);
+
+        strfree(matrixOpt);
     }
+    strfree(matrixOptValue);
+
     return 0;
 }

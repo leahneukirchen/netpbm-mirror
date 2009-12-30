@@ -90,6 +90,7 @@ typedef enum {
     OPT_LONG,              /* signed long integer argument. */
     OPT_ULONG,             /* unsigned long integer argument. */
     OPT_FLOAT,             /* floating point argument. */
+    OPT_STRINGLIST,        /* list like "arg1,arg2.arg3" */
     OPT_NAMELIST           /* list like "key1=val1,key2=val2" */
 } optArgType;
 
