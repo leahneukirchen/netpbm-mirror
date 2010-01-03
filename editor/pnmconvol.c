@@ -66,6 +66,7 @@ struct cmdlineInfo {
     const char ** matrixfile;
     unsigned int matrixSpec;
     struct matrixOpt matrix;
+    unsigned int normalize;
 };
 
 
@@ -313,6 +314,8 @@ parseCommandLine(int argc, char ** argv,
             &matrixfileSpec,           0)
     OPTENT3(0, "nooffset",     OPT_FLAG,   NULL,                  
             &cmdlineP->nooffset,       0);
+    OPTENT3(0, "normalize",    OPT_FLAG,   NULL,                  
+            &cmdlineP->normalize,      0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -528,6 +531,52 @@ convKernelDestroy(struct convKernel * const convKernelP) {
 
 
 static void
+normalizeKernelPlane(struct convKernel * const convKernelP,
+                     unsigned int        const plane) {
+
+    unsigned int row;
+    float sum;
+
+    for (row = 0, sum = 0.0; row < convKernelP->rows; ++row) {
+        unsigned int col;
+            
+        for (col = 0; col < convKernelP->cols; ++col) {
+                
+            sum += convKernelP->weight[plane][row][col];
+        }
+    }
+
+    {
+        float const scaler = 1.0/sum;
+
+        unsigned int row;
+
+        for (row = 0; row < convKernelP->rows; ++row) {
+            unsigned int col;
+                
+            for (col = 0; col < convKernelP->cols; ++col)
+                convKernelP->weight[plane][row][col] *= scaler;
+        }
+    }
+}
+
+
+
+static void
+normalizeKernel(struct convKernel * const convKernelP) {
+/*----------------------------------------------------------------------------
+   Modify *convKernelP by scaling every weight in a plane by the same factor
+   such that the weights in the plane all add up to 1.
+-----------------------------------------------------------------------------*/
+    unsigned int plane;
+
+    for (plane = 0; plane < convKernelP->planes; ++plane)
+        normalizeKernelPlane(convKernelP, plane);
+}
+
+
+
+static void
 getKernelPnm(const char *         const fileName,
              unsigned int         const depth,
              bool                 const nooffset,
@@ -552,9 +601,20 @@ getKernelPnm(const char *         const fileName,
 
 static void
 convKernelCreateMatrixOpt(struct matrixOpt     const matrixOpt,
+                          bool                 const normalize,
                           unsigned int         const depth,
                           struct convKernel ** const convKernelPP) {
+/*----------------------------------------------------------------------------
+   Create a convolution kernel as described by a -matrix command line
+   option.
+   
+   The option value is 'matrixOpt'.
 
+   If 'normalize' is true, we normalize whatever numbers the option specifies
+   so that they add up to one; otherwise, we take the numbers as we find them,
+   so they may form a biased matrix -- i.e. one which brightens or dims the
+   image overall.
+-----------------------------------------------------------------------------*/
     struct convKernel * convKernelP;
     unsigned int plane;
 
@@ -579,6 +639,9 @@ convKernelCreateMatrixOpt(struct matrixOpt     const matrixOpt,
                     matrixOpt.weight[row][col];
         }
     }
+    if (normalize)
+        normalizeKernel(convKernelP);
+
     *convKernelPP = convKernelP;
 }
 
@@ -742,9 +805,21 @@ copyWeight(float **       const srcWeight,
 
 static void
 convKernelCreateSimpleFile(const char **        const fileNameList,
+                           bool                 const normalize,
                            unsigned int         const depth,
                            struct convKernel ** const convKernelPP) {
+/*----------------------------------------------------------------------------
+   Create a convolution kernel as described by a convolution matrix file.
+   This is the simple file with floating point numbers in it, not the
+   legacy pseudo-PNM thing.
 
+   The name of the file is 'fileNameList'.
+
+   If 'normalize' is true, we normalize whatever numbers we find in the file
+   so that they add up to one; otherwise, we take the numbers as we find them,
+   so they may form a biased matrix -- i.e. one which brightens or dims the
+   image overall.
+-----------------------------------------------------------------------------*/
     struct convKernel * convKernelP;
     unsigned int fileCt;
     unsigned int planeCt;
@@ -792,6 +867,10 @@ convKernelCreateSimpleFile(const char **        const fileNameList,
                        &convKernelP->weight[plane]);
         }
     }
+
+    if (normalize)
+        normalizeKernel(convKernelP);
+
     convKernelP->cols = width;
     convKernelP->rows = height;
     *convKernelPP = convKernelP;
@@ -803,16 +882,25 @@ static void
 getKernel(struct cmdlineInfo   const cmdline,
           unsigned int         const depth,
           struct convKernel ** const convKernelPP) {
+/*----------------------------------------------------------------------------
+   Figure out what the convolution kernel is.  It can come from various
+   sources in various forms, as described on the command line, represented
+   by 'cmdline'.
 
+   We generate a kernel object in standard form (free of any indication of
+   where it came from) and return a handle to it as *convKernelPP.
+-----------------------------------------------------------------------------*/
     struct convKernel * convKernelP;
 
     if (cmdline.pnmMatrixFileName)
         getKernelPnm(cmdline.pnmMatrixFileName, depth, cmdline.nooffset,
                      &convKernelP);
     else if (cmdline.matrixfile)
-        convKernelCreateSimpleFile(cmdline.matrixfile, depth, &convKernelP);
+        convKernelCreateSimpleFile(cmdline.matrixfile, cmdline.normalize,
+                                   depth, &convKernelP);
     else if (cmdline.matrixSpec)
-        convKernelCreateMatrixOpt(cmdline.matrix, depth, &convKernelP);
+        convKernelCreateMatrixOpt(cmdline.matrix, cmdline.normalize,
+                                  depth, &convKernelP);
 
     warnBadKernel(convKernelP);
 

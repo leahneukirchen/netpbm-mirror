@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.50.00
 
+              pnmconvol: Add -normalize .
+
               palmtopnm: fix incorrect "PALM_DIRECT_COLOR_FLAG is not valid
               for version 3 encoding type" failure.  Thanks Paul Bolle
               <pebolle@tiscali.nl>.
