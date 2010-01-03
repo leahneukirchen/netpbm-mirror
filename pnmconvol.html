@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pnmconvol User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmconvol</H1>
-Updated: 07 December 2009
+Updated: 03 January 2010
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -24,7 +24,8 @@ pnmconvol - general MxN convolution on a Netpbm image
 
 <B>pnmconvol</B>
 <I>convolution_matrix_file</I>
-[-nooffset]
+[<b>-normalize</b>
+[<b>-nooffset</b>]
 [<I>netpbmfile</I>]
 
 
@@ -103,7 +104,7 @@ matrix has one weight for red, one for green, and one for blue.
 
 <pre>
 <tt>
-    -matrix=0,.2,0;.2,.2,..2;0,.2,0
+    -matrix=0,.2,0;.2,.2,.2;0,.2,0
 </tt>
 </pre>
 
@@ -116,11 +117,17 @@ and is the weight to give to each component of a pixel that corresponds to
 that matrix location.
 
 <p>Note that when you supply this option via a shell, semicolon
-(&quot;&semi;&quot;) probably means something to the shell, so use quotation
+(&quot;;&quot;) probably means something to the shell, so use quotation
 marks.
 
 <p>There is no way with this method to have different weights for different
 components of a pixel.
+
+<p>The <b>-normalize</b> option is often quite handy with <b>-matrix</b>
+because it lets you quickly throw together the command without working out the
+math to make sure the matrix isn't biased.  Note that if you use the
+<b>-normalize</b> option, the weights in the matrix aren't actually the
+numbers you specify in the <b>-matrix</b> option.
 
 
 <h4 id="matrixfile">Regular Matrix File</h4>
@@ -160,6 +167,9 @@ in the floating point numbers to do it.
 
 <p>There is no way to put comments in the file.  There is no signature
 or any other metadata in the file.
+
+<p>Note that if you use the <b>-normalize</b> option, the weights in the
+matrix aren't actually what is in the file.
 
 
 <h4 id="matrixpnm">PNM File</h4>
@@ -272,6 +282,35 @@ a file and names that file.  See
 <P>This option was new in Netpbm 10.49 (December 2009).  Before
 that, use a PNM file for the convolution matrix.
 
+<DT><B>-normalize</B>
+
+<dd>This option says to adjust the weights in your convolution matrix so they
+all add up to one.  You usually want them to add up to one so that the
+convolved result tends to have the same overall brightness as the input.  With
+<b>-normalize</b>, <b>pnmconvol</b> scales all the weights by the same factor
+to make the sum one.  It does this for each plane.
+
+<p>This can be quite convenient because you can just throw numbers into
+the matrix that have roughly the right relationship to each other and let
+<b>pnmconvol</b> do the work of normalizing them.  And you can adjust a matrix
+by raising or lowering certain weights without having to modify all the other
+weights to maintain normalcy.  And you can use friendly integers.
+
+<p>Example:
+
+<pre>
+<kbd>
+    $ pnmconvol myimage.ppm -normalize -matrix=1,1,1;1,1,1;1,1,1
+</kbd>
+</pre>
+
+<p>This is of course a basic 3x3 average, but without you having to
+specify 1/9 (.1111111) for each weight.
+
+<p>This option has no effect when you specify the convolution matrix
+via pseudo-PNM file.
+
+<p>This option was new in Netpbm 10.50 (March 2010).
 
 <DT><B>-nooffset=</b>
 <DD>This is part of the obsolete PNM image method of specifying the
