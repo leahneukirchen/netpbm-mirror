@@ -968,6 +968,7 @@ typedef struct
 
 typedef struct fillobj {
     int n;
+        /* Number of elements in 'coords' */
     int size;
     int curedge;
     int segstart;
@@ -1029,6 +1030,20 @@ ppmd_fill_destroy(struct fillobj * fillObjP) {
 
 
 
+static void
+addCoord(fillobj *  const fhP,
+         ppmd_point const point) {
+
+    coord * const cp = &fhP->coords[fhP->n];
+
+    cp->point = point;
+    cp->edge  = fhP->curedge;
+
+    ++fhP->n;
+}
+
+
+
 void
 ppmd_fill_drawprocp(pixel **     const pixels, 
                     unsigned int const cols, 
@@ -1038,7 +1053,6 @@ ppmd_fill_drawprocp(pixel **     const pixels,
                     const void * const clientdata) {
 
     fillobj * fh;
-    coord * cp;
     coord * ocp;
 
     fh = (fillobj*) clientdata;
@@ -1067,10 +1081,9 @@ ppmd_fill_drawprocp(pixel **     const pixels,
         fh->ydir = 0;
         fh->startydir = 0;
     } else {
-        int dx, dy;
+        int const dx = p.x - ocp->point.x;
+        int const dy = p.y - ocp->point.y;
 
-        dx = p.x - ocp->point.x;
-        dy = p.y - ocp->point.y;
         if (dx < -1 || dx > 1 || dy < -1 || dy > 1) {
             /* Segment break.  Close off old one. */
             if (fh->startydir != 0 && fh->ydir != 0)
@@ -1078,7 +1091,7 @@ ppmd_fill_drawprocp(pixel **     const pixels,
                     /* Oops, first edge and last edge are the same.
                        Renumber the first edge in the old segment.
                     */
-                    const coord * const fcpLast= &(fh->coords[fh->n -1]); 
+                    const coord * const fcpLast= &(fh->coords[fh->n - 1]); 
                     coord * fcp;
 
                     int oldedge;
@@ -1101,10 +1114,7 @@ ppmd_fill_drawprocp(pixel **     const pixels,
                        position but new edge number.
                     */
                     ++fh->curedge;
-                    cp = &fh->coords[fh->n];
-                    cp->point = ocp->point;
-                    cp->edge = fh->curedge;
-                    ++fh->n;
+                    addCoord(fh, ocp->point);
                 }
                 fh->ydir = dy;
                 if (fh->startydir == 0)
@@ -1112,12 +1122,7 @@ ppmd_fill_drawprocp(pixel **     const pixels,
             }
         }
     }
-
-    /* Save this coord. */
-    cp = &fh->coords[fh->n];
-    cp->point = p;
-    cp->edge = fh->curedge;
-    ++fh->n;
+    addCoord(fh, p);
 }
 
 
