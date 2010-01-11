@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Xwdtopnm User Manual</TITLE></HEAD>
 <BODY>
 <H1>xwdtopnm</H1>
-Updated: 21 January 2009
+Updated: 8 January 2010
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -41,6 +41,12 @@ to handle a PNM image with maxval greater than 255 (because there are
 two bytes instead of one for each sample in the image).  So you may
 want to run the output of <b>xwdtopnm</b> through <b>pamdepth</b>
 before feeding it to one of these old programs.
+
+<p><b>xwdtopnm</b> can't convert every kind of XWD image (which essentially
+means it can't convert an XWD created from every kind of X display
+configuration).  In particular, it cannot convert one with more than 24 bits
+per pixel.
+
 
 <H2 id="options">OPTIONS</H2>
 
