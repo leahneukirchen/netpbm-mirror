@@ -17,6 +17,8 @@
 
 /* A change history is at the bottom */
 
+#include <assert.h>
+
 #include "pm_c_util.h"
 #include "pnm.h"
 #include "shhopt.h"
@@ -1822,11 +1824,86 @@ convolveIt(int                 const format,
 
 
 
+static void
+readKernel(const char * const fileName,
+           int *        const colsP,
+           int *        const rowsP,
+           xelval *     const maxvalP,
+           int *        const formatP,
+           xel ***      const xelsP) {
+/*----------------------------------------------------------------------------
+   Read in the pseudo-PNM that is the convolution matrix.
+
+   This is essentially pnm_readpnm(), except that it can take sample values
+   that exceed the maxval, which is not legal in PNM.  That's why it's
+   psuedo-PNM and not true PNM.
+-----------------------------------------------------------------------------*/
+
+    /* pm_getuint() is supposed to be internal to libnetpbm, but since we're
+       doing this backward compatibility hack here, we use it anyway.
+    */
+
+    unsigned int
+    pm_getuint(FILE * const file);
+
+    FILE * fileP;
+    xel ** xels;
+    int cols, rows;
+    xelval maxval;
+    int format;
+    unsigned int row;
+
+    fileP = pm_openr(fileName);
+
+    pnm_readpnminit(fileP, &cols, &rows, &maxval, &format);
+
+    xels = pnm_allocarray(cols, rows);
+
+    for (row = 0; row < rows; ++row) {
+        if (format == PGM_FORMAT || format == PPM_FORMAT) {
+            /* Plain format -- can't use pnm_readpnmrow() because it will
+               reject a sample > maxval
+            */
+            unsigned int col;
+            for (col = 0; col < cols; ++col) {
+                switch (format) {
+                case PGM_FORMAT: {
+                    gray const g = pm_getuint(fileP);
+                    PNM_ASSIGN1(xels[row][col], g);
+                    } break;
+                case PPM_FORMAT: {
+                    pixval const r = pm_getuint(fileP);
+                    pixval const g = pm_getuint(fileP);
+                    pixval const b = pm_getuint(fileP);
+
+                    PNM_ASSIGN(xels[row][col], r, g, b);
+                } break;
+                default:
+                    assert(false);
+                }
+            }
+        } else {
+            /* Raw or PBM format -- pnm_readpnmrow() won't do any maxval
+               checking
+            */
+            pnm_readpnmrow(fileP, xels[row], cols, maxval, format);
+        }
+    }
+    *colsP   = cols;
+    *rowsP   = rows;
+    *maxvalP = maxval;
+    *formatP = format;
+    *xelsP   = xels;
+
+    pm_close(fileP);
+}
+
+
+
 int
 main(int argc, char * argv[]) {
 
     struct cmdlineInfo cmdline;
-    FILE* cifp;
     xel** cxels;
     int cformat;
     xelval cmaxval;
@@ -1839,11 +1916,8 @@ main(int argc, char * argv[]) {
 
     parseCommandLine(argc, argv, &cmdline);
 
-    cifp = pm_openr(cmdline.kernelFilespec);
-
-    /* Read in the convolution matrix. */
-    cxels = pnm_readpnm(cifp, &ccols, &crows, &cmaxval, &cformat);
-    pm_close(cifp);
+    readKernel(cmdline.kernelFilespec,
+               &ccols, &crows, &cmaxval, &cformat, &cxels);
 
     if (ccols % 2 != 1 || crows % 2 != 1)
         pm_error("the convolution matrix must have an odd number of "

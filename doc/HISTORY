@@ -4,6 +4,19 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+10.01.11 BJH  Release 10.47.08
+
+              Restore ability of Pnmconvol convolution matrix to be a
+              pseudo-plain-PNM with samples that exceed the maxval.  Lost in
+              10.30 due to addition of maxval-checking code to libnetpbm.
+
+              pnmtofiasco: fix bug: doesn't work with Standard Input.
+
+              palmtopnm: fix incorrect "PALM_DIRECT_COLOR_FLAG is not valid
+              for version 3 encoding type" failure.
+
+              palmtopnm: fix incorrect output with version 3 direct color.
+
 09.12.29 BJH  Release 10.47.07
 
               libnetpbm: When reading plain format PNM with PAM routines,

@@ -322,10 +322,13 @@ interpretHeader(struct palmHeader * const palmHeaderP,
     palmHeaderP->transparentValue = transparentValue;
     palmHeaderP->transparentIndex = transparentIndex;
 
-    if (palmHeaderP->version == 3 && (flags & PALM_DIRECT_COLOR_FLAG))
-        /* There's no directColorInfoType section in a version 3 Palm Bitmap */
-        pm_error("PALM_DIRECT_COLOR_FLAG is not valid for version 3 "
-                 "encoding type.");
+    if (palmHeaderP->version == 3 && ((flags & PALM_DIRECT_COLOR_FLAG) &&
+                                      (pixelFormat != PALM_FORMAT_565)))
+        /* There's no directColorInfoType section in a version 3 Palm Bitmap
+           so we also need PALM_FORMAT_565 for this flag to make sense
+        */
+        pm_error("PALM_DIRECT_COLOR_FLAG is set but pixelFormat is not"
+                 "PALM_FORMAT_565.");
         
     palmHeaderP->directColor = ((flags & PALM_DIRECT_COLOR_FLAG) || 
                                 palmHeaderP->pixelFormat == PALM_FORMAT_565);
@@ -630,11 +633,18 @@ getColorInfo(struct palmHeader        const palmHeader,
         directColorInfoP->pixelFormat.redbits   = 5;
         directColorInfoP->pixelFormat.greenbits = 6;
         directColorInfoP->pixelFormat.bluebits  = 5;
-        /* FIXME Just guessing here ... */
         directColorInfoP->transparentColor = 
-            (((palmHeader.transparentValue >> 11) & 0x1F) << 16) |
-            (((palmHeader.transparentValue >>  5) & 0x3F) <<  8) |
-            (((palmHeader.transparentValue >>  0) & 0x1F) <<  0);
+            /* See convertRowToPnmDirect for this trick
+
+               This will break once maxval isn't always set 255 for
+               directColor
+            */
+            ((((palmHeader.transparentValue >> 11) & 0x1F) * 255 / 0x1F)
+             << 16) |
+            ((((palmHeader.transparentValue >>  5) & 0x3F) * 255 / 0x3F)
+             <<  8) |
+            ((((palmHeader.transparentValue >>  0) & 0x1F) * 255 / 0x1F)
+             <<  0);
     } else if (palmHeader.directColor) {
         *colormapP = NULL;
         *directColorInfoP = directInfoType;

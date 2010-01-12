@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include "types.h"
 #include "fiasco.h"
+#include "pnm.h"
 
 typedef enum {FORMAT_4_4_4, FORMAT_4_2_0} format_e;
 
@@ -48,8 +49,17 @@ free_image (image_t *image);
 FILE *
 read_pnmheader (const char *image_name, unsigned *width, unsigned *height,
 		bool_t *color);
+
 image_t *
-read_image (const char *image_name);
+read_image_stream(FILE *       const ifP,
+                  unsigned int const width,
+                  unsigned int const height,
+                  xelval       const maxval,
+                  int          const format);
+
+image_t *
+read_image_file(const char * const filename);
+
 void
 write_image (const char *image_name, const image_t *image);
 bool_t
