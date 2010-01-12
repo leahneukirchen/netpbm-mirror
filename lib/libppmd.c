@@ -1039,7 +1039,6 @@ ppmd_fill_drawprocp(pixel **     const pixels,
 
     fillobj * fh;
     coord * cp;
-    coord * ocp;
 
     fh = (fillobj*) clientdata;
 
@@ -1056,8 +1055,6 @@ ppmd_fill_drawprocp(pixel **     const pixels,
         REALLOCARRAY(fh->coords, fh->size);
         if (fh->coords == NULL)
             pm_error("out of memory enlarging a fillhandle");
-
-        ocp = &(fh->coords[fh->n - 1]);
     }
 
     /* Check for extremum and set the edge number. */
@@ -1067,6 +1064,7 @@ ppmd_fill_drawprocp(pixel **     const pixels,
         fh->ydir = 0;
         fh->startydir = 0;
     } else {
+        coord * const ocp = &(fh->coords[fh->n - 1]);
         int dx, dy;
 
         dx = p.x - ocp->point.x;
