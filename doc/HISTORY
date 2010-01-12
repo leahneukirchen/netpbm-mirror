@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.50.00
 
+              libppmd/ppmpat: fix wild pointer in ppmd_fill_drawprocp().
+
               pnmconvol: Add -normalize .
 
               palmtopnm: fix incorrect "PALM_DIRECT_COLOR_FLAG is not valid
