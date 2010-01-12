@@ -20,7 +20,7 @@ PORTBINARIES = pamaddnoise pambackground pamcomp pamcut \
 	       pamdice pamditherbw pamedge \
 	       pamenlarge \
 	       pamflip pamfunc pammasksharpen \
-	       pamperspective \
+	       pampaintspill pamperspective \
 	       pamscale pamsistoaglyph pamstretch pamthreshold pamundice \
 	       pbmclean pbmmask pbmpscale pbmreduce \
 	       pgmdeshadow pgmenhance \
