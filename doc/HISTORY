@@ -8,7 +8,8 @@ not yet  BJH  Release 10.50.00
 
               Add pampaintspill.
 
-              libppmd/ppmpat: fix wild pointer in ppmd_fill_drawprocp().
+              libppmd/ppmpat: fix wild pointer in ppmd_fill_drawprocp();
+              broken in 10.47.
 
               pnmconvol: Add -normalize .
 
@@ -16,6 +17,7 @@ not yet  BJH  Release 10.50.00
               for version 3 encoding type" failure.  Thanks Paul Bolle
               <pebolle@tiscali.nl>.
 
+              pamtosvg: fix bug: occasional crash with out of range error.
 
               palmtopnm: fix incorrect output with version 3 direct color.
               Thanks Paul Bolle <pebolle@tiscali.nl>.
@@ -613,7 +615,7 @@ not yet  BJH  Release 10.50.00
               Build: don't use 'uint' type.  Mac OSX apparently doesn't
               have it.
 
-07.03.30 BJH  Release 10.38.0
+07.03.30 BJH  Release 10.38.00
     
               Add pamfixtrunc.
 
@@ -708,7 +710,7 @@ not yet  BJH  Release 10.50.00
               configure: default to 'none' for Svgalib if it doesn't appear
               to be installed.
 
-06.12.31 BJH  Release 10.37.0
+06.12.31 BJH  Release 10.37.00
 
               Add pambackground.  But doesn't find mid-row background yet.
 
@@ -804,7 +806,7 @@ not yet  BJH  Release 10.50.00
 
               Build: fix merge build with no X11 library.
 
-06.09.21 BJH  Release 10.36.0
+06.09.21 BJH  Release 10.36.00
 
               pbmtonokia: Add plain NPM output capability.  Thanks Paul Bolle
               <pebolle@tiscali.nl>.
@@ -849,7 +851,7 @@ not yet  BJH  Release 10.50.00
 
               Remove general history from change file
 
-06.08.19 BJH  Release 10.35.0
+06.08.19 BJH  Release 10.35.00
 
               Add pgmdeshadow.
 
