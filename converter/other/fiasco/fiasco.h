@@ -28,6 +28,8 @@
  *  $State: Exp $
  */
 
+#include "pnm.h"
+
 #undef __BEGIN_DECLS
 #undef __END_DECLS
 #ifdef __cplusplus
@@ -260,8 +262,17 @@ fiasco_decoder_get_comment (fiasco_decoder_t *decoder);
 			  image functions
 ****************************************************************************/
 
-/* Read FIASCO image (raw ppm or pgm format) */
-fiasco_image_t * fiasco_image_new (const char *filename);
+/* Create FIASCO image (from PNM image file) */
+fiasco_image_t *
+fiasco_image_new_file(const char * const filename);
+
+/* Create FIASCO image (from PNM image stream) */
+fiasco_image_t *
+fiasco_image_new_stream(FILE *       const ifP,
+                        unsigned int const width,
+                        unsigned int const height,
+                        xelval       const maxval,
+                        int          const format);
 
 /* Discard FIASCO image */
 void fiasco_image_delete (fiasco_image_t *image); 

@@ -1,8 +1,8 @@
 /*
- *  image.c:		Input and output of PNM images.
+ *  image.c:        Input and output of PNM images.
  *
- *  Written by:		Ullrich Hafner
- *		
+ *  Written by:     Ullrich Hafner
+ *      
  *  This file is part of FIASCO («F»ractal «I»mage «A»nd «S»equence «CO»dec)
  *  Copyright (C) 1994-2000 Ullrich Hafner <hafner@bigfoot.de>
  */
@@ -28,7 +28,7 @@
 
 /*****************************************************************************
 
-				prototypes
+                prototypes
   
 *****************************************************************************/
 
@@ -37,7 +37,7 @@ init_chroma_tables (void);
 
 /*****************************************************************************
 
-				local variables
+                local variables
   
 *****************************************************************************/
 static int *Cr_r_tab = NULL;
@@ -47,40 +47,79 @@ static int *Cb_b_tab = NULL;
 
 /*****************************************************************************
 
-				public code
+                public code
   
 *****************************************************************************/
 
+static fiasco_image_t *
+make_image_base(void)
+{
+    fiasco_image_t * const imageP = Calloc (1, sizeof (fiasco_image_t));
+
+    if (imageP == NULL)
+        pm_error("Failed to allocate memory for image object");
+    else {
+        imageP->delete     = fiasco_image_delete;
+        imageP->get_width  = fiasco_image_get_width;
+        imageP->get_height = fiasco_image_get_height;
+        imageP->is_color   = fiasco_image_is_color;
+    }
+    return imageP;
+}
+
+
+
 fiasco_image_t *
-fiasco_image_new (const char *filename)
+fiasco_image_new_file(const char * const filename)
 /*
  *  FIASCO image constructor.
  *  Allocate memory for the FIASCO image structure and
- *  load the specified image `filename'. The image has to be in
- *  raw pgm or ppm format.
+ *  load the image from PNM file `filename'.
  *
  *  Return value:
- *	pointer to the new image structure
- *	or NULL in case of an error
+ *  pointer to the new image structure
+ *  or NULL in case of an error
  */
 {
-   try
-   {
-      fiasco_image_t *image = Calloc (1, sizeof (fiasco_image_t));
+    fiasco_image_t * imageP;
 
-      image->private 	= read_image (filename);
-      image->delete  	= fiasco_image_delete;
-      image->get_width  = fiasco_image_get_width;
-      image->get_height = fiasco_image_get_height;
-      image->is_color  	= fiasco_image_is_color;
+    imageP = make_image_base();
 
-      return image;
-   }
-   catch
-   {
-      return NULL;
-   }
+    imageP->private = read_image_file(filename);
+
+    return imageP;
 }
+
+
+
+fiasco_image_t *
+fiasco_image_new_stream(FILE *       const ifP,
+                        unsigned int const width,
+                        unsigned int const height,
+                        xelval       const maxval,
+                        int          const format)
+/*
+ *  FIASCO image constructor.
+ *  Allocate memory for the FIASCO image structure and
+ *  load the image from the PNM stream in *ifP, which is positioned just
+ *  after the header.  'width', 'height', 'maxval', and 'format' are the
+ *  parameters of the image, i.e. the contents of that header.
+ *
+ *  Return value:
+ *  pointer to the new image structure
+ *  or NULL in case of an error
+ */
+{
+    fiasco_image_t * imageP;
+
+    imageP = make_image_base();
+
+    imageP->private = read_image_stream(ifP, width, height, maxval, format);
+
+    return imageP;
+}
+
+
 
 void
 fiasco_image_delete (fiasco_image_t *image)
@@ -91,7 +130,7 @@ fiasco_image_delete (fiasco_image_t *image)
  *  No return value.
  *
  *  Side effects:
- *	structure 'image' is discarded.
+ *  structure 'image' is discarded.
  */
 {
    image_t *this = cast_image (image);
@@ -149,7 +188,7 @@ cast_image (fiasco_image_t *image)
  *  Check whether `image' is a valid object of type image_t.
  *
  *  Return value:
- *	pointer to dfiasco_t struct on success
+ *  pointer to dfiasco_t struct on success
  *      NULL otherwise
  */
 {
@@ -158,8 +197,8 @@ cast_image (fiasco_image_t *image)
    {
       if (!streq (this->id, "IFIASCO"))
       {
-	 set_error (_("Parameter `image' doesn't match required type."));
-	 return NULL;
+     set_error (_("Parameter `image' doesn't match required type."));
+     return NULL;
       }
    }
    else
@@ -182,7 +221,7 @@ alloc_image (unsigned width, unsigned height, bool_t color, format_e format)
  *  are stored in 4:4:4 or 4:2:0 format.
  *
  *  Return value:
- *	pointer to the new image structure.
+ *  pointer to the new image structure.
  */
 {
    image_t *image;
@@ -193,21 +232,21 @@ alloc_image (unsigned width, unsigned height, bool_t color, format_e format)
    if (!color)
       format = FORMAT_4_4_4;
 
-   image         	  = Calloc (1, sizeof (image_t));
-   image->width  	  = width;
-   image->height 	  = height;
-   image->color  	  = color;
-   image->format 	  = format;
+   image              = Calloc (1, sizeof (image_t));
+   image->width       = width;
+   image->height      = height;
+   image->color       = color;
+   image->format      = format;
    image->reference_count = 1;
    
    strcpy (image->id, "IFIASCO");
 
    for (band = first_band (color); band <= last_band (color); band++)
       if (format == FORMAT_4_2_0 && band != Y)
-	 image->pixels [band] = Calloc ((width * height) >> 2,
-					sizeof (word_t));
+     image->pixels [band] = Calloc ((width * height) >> 2,
+                    sizeof (word_t));
       else
-	 image->pixels [band] = Calloc (width * height, sizeof (word_t));
+     image->pixels [band] = Calloc (width * height, sizeof (word_t));
    
    return image;
 }
@@ -219,23 +258,23 @@ clone_image (image_t *image)
  *  Construct new image by copying the given `image'.
  *
  *  Return value:
- *	pointer to the new image structure.
+ *  pointer to the new image structure.
  */
 {
    image_t *new = alloc_image (image->width, image->height, image->color,
-			       image->format);
+                   image->format);
    color_e band;
    
    for (band = first_band (new->color); band <= last_band (new->color); band++)
       if (new->format == FORMAT_4_2_0 && band != Y)
       {
-	 memcpy (new->pixels [band], image->pixels [band],
-		 ((new->width * new->height) >> 2) * sizeof (word_t));
+     memcpy (new->pixels [band], image->pixels [band],
+         ((new->width * new->height) >> 2) * sizeof (word_t));
       }
       else
       {
-	 memcpy (new->pixels [band], image->pixels [band],
-		 new->width * new->height * sizeof (word_t));
+     memcpy (new->pixels [band], image->pixels [band],
+         new->width * new->height * sizeof (word_t));
       }
 
    return new;
@@ -250,22 +289,22 @@ free_image (image_t *image)
  *  No return value.
  *
  *  Side effects:
- *	structure 'image' is discarded.
+ *  structure 'image' is discarded.
  */
 {
    if (image != NULL)
    {
       if (--image->reference_count)
-	 return;			/* image is still referenced */
+     return;            /* image is still referenced */
       else
       {
-	 color_e band;
+     color_e band;
 
-	 for (band  = first_band (image->color);
-	      band <= last_band (image->color); band++)
-	    if (image->pixels [band])
-	       Free (image->pixels [band]);
-	 Free (image);
+     for (band  = first_band (image->color);
+          band <= last_band (image->color); band++)
+        if (image->pixels [band])
+           Free (image->pixels [band]);
+     Free (image);
       }
    }
    else
@@ -327,27 +366,19 @@ read_image_data(image_t * const image, FILE *input, const bool_t color,
 
 
 image_t *
-read_image (const char *image_name)
+read_image_stream(FILE *       const ifP,
+                  unsigned int const width,
+                  unsigned int const height,
+                  xelval       const maxval,
+                  int          const format)
 /*
- *  Read image 'image_name'.
- *  
- *  Return value:
- *	pointer to the image structure.
+ * Read one PNM image from stream *ifP, which is positioned just after the
+ *  header.  'width', 'height', 'maxval', and 'format' are the parameters of
+ *  the image (i.e. the contents of that header).
  */
 {
-   FILE	    *input;			/* input stream */
-   image_t  *image;			/* pointer to new image structure */
-   int  width, height;		/* image size */
-   xelval   maxval;         /* Maxval of image */
-   int format;              /* Image's format code */
-   bool_t    color;			/* color image ? (YES/NO) */
-
-   if (image_name == NULL)
-       input = stdin;
-   else
-       input = pm_openr((char*)image_name);
-
-   pnm_readpnminit(input, &width, &height, &maxval, &format);
+   image_t  *image;         /* pointer to new image structure */
+   bool_t    color;         /* color image ? (YES/NO) */
 
    if (PNM_FORMAT_TYPE(format) == PPM_FORMAT)
        color = YES;
@@ -362,12 +393,40 @@ read_image (const char *image_name)
 
    image = alloc_image (width, height, color, FORMAT_4_4_4);
 
-   read_image_data(image, input, color, width, height, maxval, format);
+   read_image_data(image, ifP, color, width, height, maxval, format);
 
-   pm_close(input);
-   
    return image;
-}   
+}
+
+
+
+image_t *
+read_image_file(const char * const filename)
+/*
+ *  Read the PNM image from the file named 'filename'.
+ *
+ *  Return value:
+ *  pointer to the image structure.
+ */
+{
+    FILE * ifP;
+    int    width, height;    /* image dimensions */
+    xelval   maxval;         /* Maxval of image */
+    int format;              /* Image's format code */
+    image_t * imageP;        /* pointer to new image structure */
+
+    ifP = pm_openr(filename);
+
+    pnm_readpnminit(ifP, &width, &height, &maxval, &format);
+
+    imageP = read_image_stream(ifP, width, height, maxval, format);
+
+    pm_close(ifP);
+
+    return imageP;
+}
+
+
 
 void
 write_image (const char *image_name, const image_t *image)
@@ -377,12 +436,12 @@ write_image (const char *image_name, const image_t *image)
  *  No return value.
  */
 {
-   FILE	*output;			/* output stream */
+   FILE *output;            /* output stream */
    int format;
    int row;
    int i;     /* Cursor into image->pixel arrays */
    xel * xelrow;
-   unsigned *gray_clip;			/* clipping table */
+   unsigned *gray_clip;         /* clipping table */
 
    assert (image && image_name);
    
@@ -394,12 +453,12 @@ write_image (const char *image_name, const image_t *image)
    
    if (image_name == NULL)
        output = stdout;
-   else if (strcmp(image_name, "-") == 0)
+   else if (streq(image_name, "-"))
        output = stdout;
    else
        output = pm_openw((char*)image_name);
 
-   gray_clip  = init_clipping ();	/* mapping of int -> unsigned */
+   gray_clip  = init_clipping ();   /* mapping of int -> unsigned */
    if (!gray_clip)
       error (fiasco_get_error_message ());
    init_chroma_tables ();
@@ -445,21 +504,21 @@ same_image_type (const image_t *img1, const image_t *img2)
  *  Check whether the given images 'img1' and `img2' are of the same type.
  *
  *  Return value:
- *	YES	if images 'img1' and `img2' are of the same type
- *	NO	otherwise.
+ *  YES if images 'img1' and `img2' are of the same type
+ *  NO  otherwise.
  */
 {
    assert (img1 && img2);
    
    return ((img1->width == img2->width)
-	   && (img1->height == img2->height)
-	   && (img1->color == img2->color)
-	   && (img1->format == img2->format));
+       && (img1->height == img2->height)
+       && (img1->color == img2->color)
+       && (img1->format == img2->format));
 }
 
 /*****************************************************************************
 
-				private code
+                private code
   
 *****************************************************************************/
 
@@ -509,4 +568,3 @@ init_chroma_tables (void)
    Cb_g_tab += 256 + 128;
    Cb_b_tab += 256 + 128;
 }
-
