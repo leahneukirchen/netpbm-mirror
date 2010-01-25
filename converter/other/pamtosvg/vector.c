@@ -278,7 +278,7 @@ acos_d(float               const v,
         vAdj = v;
 
     errno = 0;
-    a = acos(v);
+    a = acos(vAdj);
     if (errno == ERANGE || errno == EDOM) {
         at_exception_fatal(excepP, strerror(errno));
         retval = 0.0;

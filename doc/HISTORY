@@ -4,7 +4,14 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+10.01.25 BJH  Release 10.47.09
+
+              pamtosvg: fix bug: occasional crash with out of range error.
+
 10.01.11 BJH  Release 10.47.08
+
+              libppmd/ppmpat: fix wild pointer in ppmd_fill_drawprocp();
+              broken in 10.47.00.
 
               Restore ability of Pnmconvol convolution matrix to be a
               pseudo-plain-PNM with samples that exceed the maxval.  Lost in
@@ -575,7 +582,7 @@ CHANGE HISTORY
               Build: don't use 'uint' type.  Mac OSX apparently doesn't
               have it.
 
-07.03.30 BJH  Release 10.38.0
+07.03.30 BJH  Release 10.38.00
     
               Add pamfixtrunc.
 
@@ -670,7 +677,7 @@ CHANGE HISTORY
               configure: default to 'none' for Svgalib if it doesn't appear
               to be installed.
 
-06.12.31 BJH  Release 10.37.0
+06.12.31 BJH  Release 10.37.00
 
               Add pambackground.  But doesn't find mid-row background yet.
 
@@ -766,7 +773,7 @@ CHANGE HISTORY
 
               Build: fix merge build with no X11 library.
 
-06.09.21 BJH  Release 10.36.0
+06.09.21 BJH  Release 10.36.00
 
               pbmtonokia: Add plain NPM output capability.  Thanks Paul Bolle
               <pebolle@tiscali.nl>.
@@ -811,7 +818,7 @@ CHANGE HISTORY
 
               Remove general history from change file
 
-06.08.19 BJH  Release 10.35.0
+06.08.19 BJH  Release 10.35.00
 
               Add pgmdeshadow.
 
