@@ -8,16 +8,19 @@ not yet  BJH  Release 10.50.00
 
               Add pampaintspill.
 
+              pnmconvol: Add -normalize .
+
+              pnmhisteq: slight speedup.  Thanks Thomas Baruchel.
+
               libppmd/ppmpat: fix wild pointer in ppmd_fill_drawprocp();
               broken in 10.47.
-
-              pnmconvol: Add -normalize .
 
               palmtopnm: fix incorrect "PALM_DIRECT_COLOR_FLAG is not valid
               for version 3 encoding type" failure.  Thanks Paul Bolle
               <pebolle@tiscali.nl>.
 
               pamtosvg: fix bug: occasional crash with out of range error.
+              Introduced in 10.42.
 
               palmtopnm: fix incorrect output with version 3 direct color.
               Thanks Paul Bolle <pebolle@tiscali.nl>.
