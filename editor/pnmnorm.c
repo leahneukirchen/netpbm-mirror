@@ -589,7 +589,7 @@ brightScaler(xel               const p,
              
     switch (brightMethod) {
     case BRIGHT_LUMINOSITY:
-        oldBrightness = PPM_LUMIN(p);
+        oldBrightness = ppm_luminosity(p);
         break;
     case BRIGHT_COLORVALUE:
         oldBrightness = ppm_colorvalue(p);
