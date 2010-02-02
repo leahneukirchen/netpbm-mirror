@@ -144,7 +144,7 @@ computeLuminosityHistogram(xel * const *   const xels,
             for (col = 0; col < cols; ++col) {
                 xel const thisXel = xels[row][col];
                 if (!monoOnly || PPM_ISGRAY(thisXel)) {
-                    xelval const l = PPM_LUMIN(thisXel);
+                    xelval const l = ppm_luminosity(thisXel);
 
                     lmin = MIN(lmin, l);
                     lmax = MAX(lmax, l);
