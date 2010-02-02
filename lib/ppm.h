@@ -250,6 +250,12 @@ ppm_hsv_from_color(pixel  const color,
                    pixval const maxval);
 
 static __inline pixval
+ppm_luminosity(pixel const p) {
+
+    return (pixval)(PPM_LUMIN(p) + 0.5);
+}
+
+static __inline pixval
 ppm_colorvalue(pixel const p) {
 /*----------------------------------------------------------------------------
   The color value (V is HSV) as a pixval
