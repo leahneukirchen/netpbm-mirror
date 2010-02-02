@@ -211,7 +211,7 @@ buildHistogram(FILE *   const ifp,
             if (PNM_FORMAT_TYPE(format) == PPM_TYPE) {
                 switch(brightMethod) {
                 case BRIGHT_LUMINOSITY:
-                    brightness = PPM_LUMIN(p);
+                    brightness = ppm_luminosity(p);
                     break;
                 case BRIGHT_COLORVALUE:
                     brightness = ppm_colorvalue(p);
