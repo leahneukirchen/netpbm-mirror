@@ -29,13 +29,17 @@
 int
 main(int argc, char *argv[]) {
 
-    char* cp;
+    const char * cp;
     
     if (strcmp(pm_arg0toprogname(argv[0]), "netpbm") == 0) {
         ++argv;
         --argc;
         if (argc < 1 || !*argv)	{
-            fprintf(stderr, "Usage: netpbm netpbm_program_name [args ...]\n");
+            fprintf(stderr,
+                    "When you invoke this program by the name 'netpbm', "
+                    "You must supply at least one argument: the name of "
+                    "the Netpbm program to run, e.g. "
+                    "'netpbm pamfile /tmp/myfile.ppm'\n");
             exit(1);
 		}
 	}
