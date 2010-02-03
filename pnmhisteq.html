@@ -2,17 +2,15 @@
 <HTML><HEAD><TITLE>Pnmhisteq User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmhisteq</H1>
-Updated: 10 September 2005
+Updated: 02 February 2010
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
 pnmhisteq - histogram equalize a PNM image
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>pnmhisteq</B>
 
@@ -27,8 +25,7 @@ pnmhisteq - histogram equalize a PNM image
 [<I>pnmfile</I>]
 
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -69,6 +66,13 @@ bucket <i>j</i> with one whose luminosity is:
 pixels in the most luminous bucket become white.  Pixels in the 10th
 per centile of luminosity become 10% of white.
 
+<p><b>pnmhisteq</b> maps a single luminosity in the input to a single
+luminosity in the output.  That means if pixels A and B both have luminosity
+.2 in the input, and pixel A has luminosity .4 in the output, pixel B also has
+luminosity .4 in the output.  And since the luminosities in the input are not
+continuous, the luminosities in the output aren't either and <b>pnmhisteq</b>
+doesn't meet the ideal of having exactly the same number of pixels of each
+luminosity in the output.
 
 <P>If you're processing a related set of images, for example frames of
 an animation, it's generally best to apply the same luminosity mapping
@@ -84,9 +88,15 @@ Then, you can run <b>pnmisteq</b> with <b>-rmap</b> on each of the
 individual images, using the luminosity map you generated from the
 composite.
 
+<p>Use <b>pnmhistmap</b> to see the result.  Run a color image through
+<b>ppmtopgm</b> first so that you see a histogram of the luminosity instead of
+histograms of the three color components.  It should generally show a flat
+histogram.  But due to the quantization effects described above, you might see
+high bars interleaved with low bars, with the local average being flat.  To
+see local averages, use the <b>-width</b> option of <b>pnmhistmap</b>.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+
+<H2 id="options">OPTIONS</H2>
 
 <P>You can abbreviate any option to its shortest unique prefix.
 
@@ -127,8 +137,7 @@ map.
 
 </DL>
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>LIMITATIONS</H2>
+<H2 id="limitations">LIMITATIONS</H2>
 
 <p>Histogram equalization is effective for increasing the visible
 detail in scientific imagery and in some continuous-tone pictures.  It
@@ -148,8 +157,7 @@ image.
 identity operation), the only effect of passing the file through
 <B>pnmhisteq</B> will be the passage of time.
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="pnmnorm.html">pnmnorm</A></B>,
 
@@ -169,29 +177,15 @@ Press, 1992.  Pages 105-110.
 
 </DL>
 
-<A NAME="lbAH">&nbsp;</A>
-<H2>AUTHOR</H2>
-
-<p>Copyright (C) 1995 by John Walker (<A
-HREF="mailto:kelvin@fourmilab.ch">kelvin@fourmilab.ch</A>).  WWW home
-page: <A HREF="http://www.fourmilab.ch/">http://www.fourmilab.ch/</A>
-
-<P>Permission to use, copy, modify, and distribute this software and
-its documentation for any purpose and without fee is hereby granted,
-without any conditions or restrictions.  This software is provided
-&quot;as is&quot; without express or implied warranty.
-
 <HR>
 <A NAME="index">&nbsp;</A>
 <H2>Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">BUGS</A>
-<LI><A HREF="#lbAG">SEE ALSO</A>
-<LI><A HREF="#lbAH">AUTHOR</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#limitations">LIMITATIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
 </UL>
 </BODY>
 </HTML>
