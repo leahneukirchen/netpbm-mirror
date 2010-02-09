@@ -131,20 +131,18 @@ int
 main(int argc, const char *argv[]) {
     struct pam   inPam;
     const char * inputFilename;
-    const char * outputFilename;
     FILE       * inFileP;
-    FILE       * outFileP;
 
     pm_proginit(&argc, argv);
+
     inputFilename = (argc > 1) ? argv[1] : "-";
-    outputFilename = (argc > 2) ? argv[2] : "-";
+
     inFileP = pm_openr(inputFilename);
+
     pnm_readpaminit(inFileP, &inPam, PAM_STRUCT_SIZE(tuple_type));
-    outFileP = pm_openw(outputFilename);
 
-    produceAvs(&inPam, outFileP);
+    produceAvs(&inPam, stdout);
 
-    pm_closew(outFileP);
     pm_closer(inFileP);
 
     return 0;

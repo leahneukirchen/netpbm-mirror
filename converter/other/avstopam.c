@@ -63,27 +63,22 @@ main(int argc, const char *argv[]) {
 
     struct pam   outPam;
     const char * inputFilename;
-    const char * outputFilename;
     FILE       * inFileP;
-    FILE       * outFileP;
     long         width;
     long         height;
 
     pm_proginit(&argc, argv);
 
     inputFilename = (argc > 1) ? argv[1] : "-";
-    outputFilename = (argc > 2) ? argv[2] : "-";
 
     inFileP = pm_openr(inputFilename);
 
     pm_readbiglong(inFileP, &width);
     pm_readbiglong(inFileP, &height);
 
-    outFileP = pm_openw(outputFilename);
-
     outPam.size             = sizeof(struct pam);
     outPam.len              = PAM_STRUCT_SIZE(comment_p);
-    outPam.file             = outFileP;
+    outPam.file             = stdout;
     outPam.format           = PAM_FORMAT;
     outPam.plainformat      = 0;
     outPam.width            = width;
@@ -102,9 +97,7 @@ main(int argc, const char *argv[]) {
 
     producePam(inFileP, &outPam);
 
-    pm_closew(outFileP);
     pm_closer(inFileP);
 
     return 0;
 }
-
