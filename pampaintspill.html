@@ -1,0 +1,143 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Pampaintspill User Manual</title>
+<meta http-equiv="content-type" content="text/html; charset=us-ascii" />
+</head>
+
+<body>
+
+<h1>pampaintspill</h1>
+
+<p><a href="#index">Table Of Contents</a></p>
+
+<p>pampaintspill - smoothly spill colors into the background</p>
+
+<h2><a name="synopsis">SYNOPSIS</a></h2>
+
+<p>
+<b>pampaintspill</b>
+[<b>--bgcolor</b>=<i>color</i>]
+[<b>--wrap</b>] [<b>--all</b>]
+[<b>--downsample</b>=<i>number</i>]
+[<b>--power</b>=<i>number</i>] [<i>filename</i>]</p>
+
+<P>Minimum unique abbreviations of option are acceptable.  You may use
+double hyphens instead of single hyphen to denote options.  You may use
+white space in place of the equals sign to separate an option name
+from its value.
+
+<h2 id="description">DESCRIPTION</h2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.</p>
+
+<p><b>pampaintspill</b> produces a smooth color gradient from all of the
+non-background-colored pixels in an input image, effectively <q>spilling
+paint</q> onto the background.  <b>pampaintspill</b> is similar to
+<b>pamgradient</b> but differs in the following characteristics:</p>
+
+<ul>
+  <li><b>pampaintspill</b> accepts any number of paint
+      sources (non-background-colored pixels), which can lie anywhere
+      on the canvas.  <b>pamgradient</b> accepts exactly
+      four paint sources, one in each corner of the image.</li>
+
+  <li><b>pampaintspill</b> requires an input image while
+      <b>pamgradient</b> generates a new image from
+      scratch.</li>
+
+  <li><b>pampaintspill</b> can produce tileable output and
+      can control how tightly the gradient colors bind to their source
+      pixels.
+</ul>
+
+<p>Results are generally best when the input image contains just a few, crisp
+spots of color. Use your drawing program's pencil tool &mdash; as opposed to a
+paintbrush or airbrush tool &mdash; with a small nib.</p>
+
+<h2 id="options">OPTIONS</h2>
+
+<dl>
+  <dt><b>--bgcolor</b>=<i>color</i></dt>
+  <dd>Explicitly specify the background color. <i>color</i> can be
+      specified using any of the formats accepted by the <a
+      href="libppm.html#colorname"><code>ppm_parsecolor()</code> library
+      routine</a> such as <code>red</code> or <code>#ff0000</code>.  If
+      <b>--bgcolor</b> is not specified, <b>pampaintspill</b> makes an
+      educated guess about the background color based on the colors in the
+      image's corners.</dd>
+
+  <dt><b>--wrap</b></dt>
+  <dd>Allow gradients to wrap around image borders. That is, colors
+      that spill off the right side of the image reappear on the left side of
+      the image and likewise for left/right, top/bottom, and
+      bottom/top. <b>--wrap</b> makes images tileable, which is nice for
+      producing desktop backgrounds.</dd>
+
+  <dt><b>--all</b></dt>
+  <dd>Recolor all pixels, not just background pixels. Normally,
+      non-background-colored pixels in the input image appear unmodified in
+      the output image. With <b>--all</b>, <em>all</em> pixels are colored
+      based on their distance from all of the (other) non-background-colored
+      pixels.</dd>
+
+  <dt><b>--downsample</b>=<i>number</i></dt>
+  <dd>Ignore all but <i>number</i> non-background-colored pixels.
+      When a large number of pixels in the input image differ in color from
+      the background, <b>pampaintspill</b> runs very slowly. The
+      <b>--downsample</b> option randomly selects a given number of colored
+      pixels to use as paint sources for the gradients and ignores the rest,
+      thereby trading off image quality for speed of execution.</dd>
+
+  <dt><b>--power</b>=<i>number</i></dt>
+  <dd>Control how color intensity changes as a function of the
+      distance from a paint source. The default value for <i>number</i> is
+      -2.0, which means that intensity drops (because of the minus sign) with
+      the square (because of the 2.0) of the distance from each paint
+      source. -2.0 generally works well in practice, but other values can be
+      specified for various special effects. With very small numbers of paint
+      sources, -1.0 may produce subtler gradients, but these get muddier as
+      the number of paint sources increases. Positive numbers (e.g., 1.0 and
+      2.0) make the paint sources stand out in the output image by pushing the
+      gradients away from them.</dd>
+</dl>
+
+
+<h2 id="see_also">SEE ALSO</h2>
+
+<ul>
+<li><a href="pamgradient.html">pamgradient</a>
+<li><A href="ppmmake.html"><b>ppmmake</b></A>,
+<li><A href="ppmrainbow.html"><b>ppmrainbow</b></A>,
+<li><A href="pgmramp.html"><b>pgmramp</b></A>,
+<li><A href="ppmpat.html"><b>ppmpat</b></A>,
+<li><a href="pam.html">pam</a>
+</ul>
+
+<h2 id="history">HISTORY</h2>
+
+<p><b>pampaintspill</b> was new in Netpbm 10.50 (March 2010).
+
+
+<h2 id="copyright">COPYRIGHT</h2>
+
+<p>Copyright&nbsp;&copy; 2010 Scott Pakin, <a href=
+"mailto:scott+pbm@pakin.org"><i>scott+pbm@pakin.org</i></a>.</p>
+
+<hr />
+
+<h2 id="index">Table Of Contents</h2>
+
+<ul>
+  <li><a href="#name">NAME</a></li>
+  <li><a href="#synopsis">SYNOPSIS</a></li>
+  <li><a href="#description">DESCRIPTION</a></li>
+  <li><a href="#options">OPTIONS</a></li>
+  <li><a href="#see_also">SEE ALSO</a></li>
+  <li><a href="#history">HISTORY</a></li>
+  <li><a href="#copyright">COPYRIGHT</a></li>
+</ul>
+
+</body>
+</html>
+

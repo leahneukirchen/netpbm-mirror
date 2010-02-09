@@ -3,16 +3,14 @@
 <HEAD><TITLE>Pamslice User Manual</TITLE></HEAD>
 <BODY>
 <H1>pamslice</H1>
-Updated: 22 June 2002
+Updated: 8 February 2010
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 pamslice - extract one line of values out of a Netpbm image
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>pamslice</B>
 {<B>-row=</B><i>rownumber</i> | <B>-column=</B><i>columnnumber</i>}
@@ -24,8 +22,7 @@ pamslice - extract one line of values out of a Netpbm image
 You may use two hyphens instead of one.  You may separate an option
 name and its value with white space instead of an equals sign.
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -46,10 +43,9 @@ specifications of the image formats for details on exactly what these
 numbers mean.
 
 If you want to see all the pixels in a PPM, PGM, or PBM image in ASCII
-decimal, <b>pnmtoplainpnm</b> is a good way to do that.
+decimal, <b>pnmtopnm -plain</b> is a good way to do that.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<H2 id="options">OPTIONS</H2>
 
 <DL COMPACT>
 <DT><B>-row=</B><i>rownumber</i>
@@ -88,14 +84,12 @@ decimal, <b>pnmtoplainpnm</b> is a good way to do that.
 
 </DL>
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <A HREF="pamcut.html">pamcut</A>
-<A HREF="pnmtoplainpnm.html">pnmtoplainpnm</A>
+<A HREF="pnmtopnm.html">pnmtopnm</A>
 <A HREF="pamchannel.html">pnmtoplainpnm</A>
 <A HREF="pnm.html">pnm</A>
-<A NAME="lbAG">&nbsp;</A>
 
 <a name="history">&nbsp;</a>
 <H2>HISTORY</H2>
@@ -104,8 +98,7 @@ decimal, <b>pnmtoplainpnm</b> is a good way to do that.
 It was backward compatible, but worked on Netpbm images other than PGM and
 PBM and added the <b>-plane</b> and <b>-xmgr</b> options.
 
-<a name="author"></a>
-<H2>AUTHOR</H2>
+<H2 id="author">AUTHOR</H2>
 
 <P>Jos Dingjan &lt;<A
 HREF="mailto:jos@tuatha.org">jos@tuatha.org</A>&gt; wrote
@@ -114,14 +107,12 @@ Beijersbergen's program with the same name.  Bryan Henderson converted it
 to <b>pamslice</b>.
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">SEE ALSO</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
 <LI><A HREF="#history">HISTORY</A>
 <LI><A HREF="#author">AUTHOR</A>
 </UL>

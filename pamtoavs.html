@@ -1,0 +1,76 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<title>Pamtoavs User Manual</title>
+<meta http-equiv="content-type" content="text/html; charset=us-ascii" />
+</head>
+
+<body>
+
+<h1>pamtoavs</h1>
+
+<p>Updated: 7 February 2010</p>
+
+<p><a href="#index">Table Of Contents</a></p>
+
+
+<h2>NAME</h2>
+
+<p>pamtoavs - convert a Netpbm image to an AVS X image</p>
+
+
+<h2><a id="synopsis">SYNOPSIS</a></h2>
+
+<p><b>pamtoavs</b>
+[<i>netpbmfile</i>]
+
+
+<h2><a id="description">DESCRIPTION</a></h2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.</p>
+
+<p><b>pamtoavs</b> reads a Netpbm image as input and produces a Stardent
+<acronym xml:lang="en" title="Application Visualization System">AVS</acronym>
+X image as output. AVS X images are one of the few image formats <a
+href="http://www.gnuplot.info/">Gnuplot</a>&nbsp;v4.2 and later can use.
+
+<p><i>netpbmfile</i> is the input file, which defaults to Standard Input.
+Output is always on Standard Output.
+
+<p>Try the following:</p>
+
+<pre>
+    gnuplot&gt; plot 'myimage.avs' binary filetype=avs with rgbimage
+</pre>
+
+<p>See the <a href="http://www.gnuplot.info/documentation.html">Gnuplot
+manual</a> for more information.</p>
+
+
+<h2><a id="author">AUTHOR</a></h2>
+
+<p>Copyright&nbsp;&copy; 2010 Scott Pakin,
+<a href="mailto:scott+pbm@pakin.org.">scott+pbm@pakin.org.</a></p>
+
+
+<h2><a id="see_also">SEE ALSO</a></h2>
+
+<p><a href="avstopam.html">avstopam</a>,
+<a href="http://www.gnuplot.info/">gnuplot</a>,
+<a href="pam.html">pam</a></p>
+
+
+<hr />
+
+<h2 id="index">Table Of Contents</h2>
+
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a></li>
+<li><a href="#description">DESCRIPTION</a></li>
+<li><a href="#author">AUTHOR</a></li>
+<li><a href="#see_also">SEE ALSO</a></li>
+</ul>
+
+</body>
+</html>
+
