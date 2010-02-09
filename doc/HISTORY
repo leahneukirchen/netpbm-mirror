@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.50.00
 
+              Add pamtoavs, avstopam.  Thanks Scott Pakin.
+
               Add pampaintspill.
 
               pnmconvol: Add -normalize .
@@ -16,7 +18,8 @@ not yet  BJH  Release 10.50.00
               libnetpbm: Add ppm_luminosity().  Same as PPM_LUMIN, but
               returns pixval.
 
-              pnmhisteq: slight speedup.  Thanks Thomas Baruchel.
+              pnmhisteq: Equalize based on luminosity alone, rather than a
+              strange combination of luminosity and HSV value.
 
               libppmd/ppmpat: fix wild pointer in ppmd_fill_drawprocp();
               broken in 10.47.

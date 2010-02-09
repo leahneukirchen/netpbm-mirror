@@ -77,9 +77,9 @@ ifeq ($(TIFFLIB_NEEDS_Z),Y)
   endif
 endif
 
-PORTBINARIES =  bmptopnm fitstopnm \
+PORTBINARIES =  avstopam bmptopnm fitstopnm \
 		gemtopnm giftopnm hdifftopam infotopam \
-		pamtodjvurle pamtofits pamtogif \
+		pamtoavs pamtodjvurle pamtofits pamtogif \
 		pamtohdiff pamtohtmltbl pamtompfont pamtooctaveimg \
 		pamtopam pamtopfm pamtopnm pamtouil \
 		pamtoxvmini \
