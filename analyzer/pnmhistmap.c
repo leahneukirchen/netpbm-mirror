@@ -210,7 +210,7 @@ pgmHist(FILE *       const ifP,
         for (j = cols-1; j >= 0; --j) {
             int const value = grayrow[j];
 
-            if (value >= startval && value <= endval)
+            if (value >= startval && value < endval)
                 ++ghist[SCALE_H(value-startval)];
         }
     }
@@ -323,9 +323,9 @@ countComp(xelval         const value,
           unsigned int   const histWidth,
           unsigned int * const hist) {
 
-    double const hscale = (float)histWidth / (endval - startval + 1);
+    double const hscale = (float)histWidth / (endval - startval);
 
-    if (value >= startval && value <= endval) {
+    if (value >= startval && value < endval) {
         unsigned int const bin = ROUNDU((value-startval) * hscale);
         assert(bin < histWidth);
         ++hist[bin];
@@ -347,10 +347,10 @@ fillPpmBins(FILE *          const ifP,
             unsigned int    const histWidth,
             unsigned int ** const hist) {
 /*----------------------------------------------------------------------------
-   For each wanted color component, given by colorWanted[],
-   hist[color] is the histogram.  Each histogram as 'histWidth' bins;
-   we ignore color component values less than 'startval' and greater
-   than 'endval' and spread the rest evenly across the 'histWidth' bins.
+   For each wanted color component, given by colorWanted[], hist[color] is the
+   histogram.  Each histogram as 'histWidth' bins; we ignore color component
+   values less than 'startval' and greater than or equal to 'endval' and
+   spread the rest evenly across the 'histWidth' bins.
 
    We get the color component values from the PNM image on *ifP,
    which is positioned to the raster, whose format is described
@@ -501,9 +501,9 @@ main(int argc, const char ** argv) {
     pnm_readpnminit(ifP, &cols, &rows, &maxval, &format);
 
     startval = cmdline.lval;
-    endval   = MIN(maxval, cmdline.rval);
+    endval   = MIN(maxval, cmdline.rval) + 1;
 
-    range = endval - startval + 1;
+    range = endval - startval;
 
     if (cmdline.widthSpec)
         histWidth = cmdline.width;
