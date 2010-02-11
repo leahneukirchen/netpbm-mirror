@@ -17,6 +17,7 @@
  * - Deal properly with maxvals other than 256
  */
 
+#include <assert.h>
 #include <string.h>
 
 #include "pm_c_util.h"
@@ -223,6 +224,8 @@ pgmHist(FILE *       const ifP,
     else 
         hmax = maxSlotCount(ghist, histWidth, no_white, no_black);
 
+    assert(hmax > 0);
+
     if (verbose)
         pm_message("Done: height = %u", hmax);
 
@@ -280,20 +283,21 @@ createHist(bool             const colorWanted[3],
 -----------------------------------------------------------------------------*/
     unsigned int color;
 
-    for (color = 0; color < 3; ++color)
+    for (color = 0; color < 3; ++color) {
         if (colorWanted[color]) {
             unsigned int * hist;
             unsigned int i;
             MALLOCARRAY(hist, histWidth);
             if (hist == NULL)
                 pm_error ("Not enough memory for histogram arrays (%u bytes)",
-                          histWidth * sizeof(int) * 3);
+                          histWidth * sizeof(hist[0]) * 3);
 
             for (i = 0; i < histWidth; ++i)
                 hist[i] = 0;
             (*histP)[color] = hist;
         } else
             (*histP)[color] = NULL;
+    }
 }
 
 
@@ -313,6 +317,24 @@ clipHistogramAll(unsigned int * const hist[3],
 
 
 static void
+countComp(xelval         const value,
+          xelval         const startval,
+          xelval         const endval,
+          unsigned int   const histWidth,
+          unsigned int * const hist) {
+
+    double const hscale = (float)histWidth / (endval - startval + 1);
+
+    if (value >= startval && value <= endval) {
+        unsigned int const bin = ROUNDU((value-startval) * hscale);
+        assert(bin < histWidth);
+        ++hist[bin];
+    }
+}
+
+
+
+static void
 fillPpmBins(FILE *          const ifP,
             unsigned int    const cols,
             unsigned int    const rows,
@@ -322,37 +344,41 @@ fillPpmBins(FILE *          const ifP,
             bool            const verbose,
             xelval          const startval,
             xelval          const endval,
-            double          const hscale,
+            unsigned int    const histWidth,
             unsigned int ** const hist) {
-         
-    bool const hscale_unity = hscale - 1 < epsilon;
+/*----------------------------------------------------------------------------
+   For each wanted color component, given by colorWanted[],
+   hist[color] is the histogram.  Each histogram as 'histWidth' bins;
+   we ignore color component values less than 'startval' and greater
+   than 'endval' and spread the rest evenly across the 'histWidth' bins.
 
+   We get the color component values from the PNM image on *ifP,
+   which is positioned to the raster, whose format is described
+   by 'cols', 'rows', 'maxval', and 'format'.
+-----------------------------------------------------------------------------*/
     pixel * pixrow;
-    unsigned int i;
+    unsigned int row;
 
     pixrow = ppm_allocrow(cols);
 
     if (verbose)
         pm_message("making histogram...");
 
-    for (i = rows; i > 0; --i) {
-        unsigned int j;
+    for (row = 0; row < rows; ++row) {
+        unsigned int col;
         ppm_readppmrow(ifP, pixrow, cols, maxval, format);
-        for (j = cols; j > 0; --j) {
-            xelval value;
+        for (col = 0; col < cols; ++col) {
+            if (colorWanted[WANT_RED])
+                countComp(PPM_GETR(pixrow[col]),
+                          startval, endval, histWidth, hist[WANT_RED]);
 
-            if (colorWanted[WANT_RED] && 
-                (value = PPM_GETR(pixrow[j-1])) >= startval && 
-                value <= endval)
-                ++hist[WANT_RED][SCALE_H(value-startval)];
-            if (colorWanted[WANT_GRN] && 
-                (value = PPM_GETG(pixrow[j-1])) >= startval && 
-                value <= endval)
-                ++hist[WANT_GRN][SCALE_H(value-startval)];
-            if (colorWanted[WANT_BLU] && 
-                (value = PPM_GETB(pixrow[j-1])) >= startval && 
-                value <= endval)
-                ++hist[WANT_BLU][SCALE_H(value-startval)];
+            if (colorWanted[WANT_GRN])
+                countComp(PPM_GETG(pixrow[col]),
+                          startval, endval, histWidth, hist[WANT_GRN]);
+
+            if (colorWanted[WANT_BLU])
+                countComp(PPM_GETB(pixrow[col]),
+                          startval, endval, histWidth, hist[WANT_BLU]);
         }
     }
     ppm_freerow(pixrow);
@@ -376,8 +402,7 @@ ppmHist(FILE *       const ifP,
         unsigned int const histWidth,
         unsigned int const histHeight,
         bool         const clipSpec,
-        unsigned int const clipCount,
-        double       const hscale) {
+        unsigned int const clipCount) {
 
     pixel ** pixels;
     unsigned int i;
@@ -394,7 +419,7 @@ ppmHist(FILE *       const ifP,
         memset(pixels[i], 0, histWidth * sizeof(pixels[i][0]));
 
     fillPpmBins(ifP, cols, rows, maxval, format, colorWanted, verbose,
-                startval, endval, hscale, hist);
+                startval, endval, histWidth, hist);
 
     /* find the highest-valued slot and set the vertical scale value */
     if (verbose)
@@ -404,11 +429,13 @@ ppmHist(FILE *       const ifP,
     else 
         hmax = maxSlotCountAll(hist, histWidth, no_white, no_black);
 
+    assert(hmax > 0);
+
     clipHistogramAll(hist, histWidth, hmax);
 
     vscale = (double) histHeight / hmax;
     if (verbose)
-        pm_message("Done: height = %d, vertical scale factor = %g", 
+        pm_message("Done: height = %u, vertical scale factor = %g", 
                    hmax, vscale);
 
     for (i = 0; i < histWidth; ++i) {
@@ -463,6 +490,7 @@ main(int argc, const char ** argv) {
     unsigned int range;
     double hscale;
     int hmax;
+    xelval startval, endval;
 
     pm_proginit(&argc, argv);
 
@@ -472,7 +500,10 @@ main(int argc, const char ** argv) {
 
     pnm_readpnminit(ifP, &cols, &rows, &maxval, &format);
 
-    range = MIN(maxval, cmdline.rval) - cmdline.lval + 1;
+    startval = cmdline.lval;
+    endval   = MIN(maxval, cmdline.rval);
+
+    range = endval - startval + 1;
 
     if (cmdline.widthSpec)
         histWidth = cmdline.width;
@@ -492,13 +523,13 @@ main(int argc, const char ** argv) {
         ppmHist(ifP, cols, rows, maxval, format,
                 cmdline.dots, cmdline.white, cmdline.black,
                 cmdline.colorWanted,
-                cmdline.verbose, cmdline.lval, cmdline.rval, 
-                histWidth, cmdline.height, cmdline.nmaxSpec, hmax, hscale);
+                cmdline.verbose, startval, endval,
+                histWidth, cmdline.height, cmdline.nmaxSpec, hmax);
         break;
     case PGM_TYPE:
         pgmHist(ifP, cols, rows, maxval, format,
                 cmdline.dots, cmdline.white, cmdline.black,
-                cmdline.verbose, cmdline.lval, cmdline.rval,
+                cmdline.verbose, startval, endval,
                 histWidth, cmdline.height, cmdline.nmaxSpec, hmax, hscale);
         break;
     case PBM_TYPE:
