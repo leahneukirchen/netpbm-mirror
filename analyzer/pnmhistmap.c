@@ -27,8 +27,6 @@
 
 static double const epsilon = .00001;
 
-#define SCALE_H(value) (hscale_unity ? (value) : (int)((value) * hscale))
-
 enum wantedColor {WANT_RED=0, WANT_GRN=1, WANT_BLU=2};
 
 struct cmdlineInfo {
@@ -163,6 +161,25 @@ clipHistogram(unsigned int * const hist,
 
 
 static void
+countComp(xelval         const value,
+          xelval         const startval,
+          xelval         const endval,
+          unsigned int   const histWidth,
+          unsigned int * const hist) {
+
+    double const hscale = (float)(histWidth-1) / (endval - startval - 1);
+
+    if (value >= startval && value < endval) {
+        unsigned int const bin = ROUNDU((value-startval) * hscale);
+
+        assert(bin < histWidth);
+        ++hist[bin];
+    }
+}
+
+
+
+static void
 pgmHist(FILE *       const ifP,
         int          const cols,
         int          const rows,
@@ -177,10 +194,7 @@ pgmHist(FILE *       const ifP,
         unsigned int const histWidth,
         unsigned int const histHeight,
         bool         const clipSpec,
-        unsigned int const clipCount,
-        double       const hscale) {
-
-    bool const hscale_unity = hscale - 1 < epsilon;
+        unsigned int const clipCount) {
 
     gray * grayrow;
     bit ** bits;
@@ -207,12 +221,8 @@ pgmHist(FILE *       const ifP,
 
     for (i = rows; i > 0; --i) {
         pgm_readpgmrow (ifP, grayrow, cols, maxval, format);
-        for (j = cols-1; j >= 0; --j) {
-            int const value = grayrow[j];
-
-            if (value >= startval && value < endval)
-                ++ghist[SCALE_H(value-startval)];
-        }
+        for (j = cols-1; j >= 0; --j)
+            countComp(grayrow[j], startval, endval, histWidth, ghist);
     }
     pgm_freerow(grayrow);
 
@@ -312,24 +322,6 @@ clipHistogramAll(unsigned int * const hist[3],
     for (color = 0; color < 3; ++color)
         if (hist[color])
             clipHistogram(hist[color], histWidth, hmax);
-}
-
-
-
-static void
-countComp(xelval         const value,
-          xelval         const startval,
-          xelval         const endval,
-          unsigned int   const histWidth,
-          unsigned int * const hist) {
-
-    double const hscale = (float)histWidth / (endval - startval);
-
-    if (value >= startval && value < endval) {
-        unsigned int const bin = ROUNDU((value-startval) * hscale);
-        assert(bin < histWidth);
-        ++hist[bin];
-    }
 }
 
 
@@ -478,6 +470,19 @@ ppmHist(FILE *       const ifP,
 
 
 
+static void
+reportScale(unsigned int const histWidth,
+            unsigned int const range,
+            bool         const verbose) {
+
+    double const hscale = (float)(histWidth-1) / (range-1);
+
+    if (hscale - 1.0 < epsilon && verbose)
+        pm_message("Horizontal scale factor: %g", hscale);
+}
+
+
+
 int
 main(int argc, const char ** argv) {
 
@@ -488,8 +493,7 @@ main(int argc, const char ** argv) {
     int format;
     unsigned int histWidth;
     unsigned int range;
-    double hscale;
-    int hmax;
+    unsigned int hmax;
     xelval startval, endval;
 
     pm_proginit(&argc, argv);
@@ -510,11 +514,7 @@ main(int argc, const char ** argv) {
     else
         histWidth = range;
 
-    hscale = (float)histWidth / range;
-    if (hscale - 1.0 < epsilon && cmdline.verbose)
-        pm_message("Horizontal scale factor: %g (maxval = %u)", 
-                   hscale, maxval);
-
+    reportScale(histWidth, range, cmdline.verbose);
     if (cmdline.nmaxSpec)
         hmax = cols * rows / histWidth * cmdline.nmax;
 
@@ -530,7 +530,7 @@ main(int argc, const char ** argv) {
         pgmHist(ifP, cols, rows, maxval, format,
                 cmdline.dots, cmdline.white, cmdline.black,
                 cmdline.verbose, startval, endval,
-                histWidth, cmdline.height, cmdline.nmaxSpec, hmax, hscale);
+                histWidth, cmdline.height, cmdline.nmaxSpec, hmax);
         break;
     case PBM_TYPE:
         pm_error("Cannot do a histogram of a a PBM file");
