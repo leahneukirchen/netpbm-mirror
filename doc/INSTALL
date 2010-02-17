@@ -261,6 +261,8 @@ make via the Configure dialog.
 
 The standard build is the conventional one.  The merge build is a way
 to reduce disk space and other resource usage in some configurations.
+These are rare configurations, mostly antique ones.  The advent of
+shared libraries largely obsoleted the merge build.
 
 In the standard build, hundreds of separate programs get built: ppmtogif,
 pamcomp, etc.
