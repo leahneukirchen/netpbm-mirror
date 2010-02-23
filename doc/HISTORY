@@ -4,6 +4,13 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+10.02.23 BJH  Release 10.47.10
+
+              pnmhistmap: Fix crash with -width.  Always broken.
+
+              pm_system(): Close extraneous file descriptors that, among
+              other things, prevent child from seeing EOF.
+
 10.01.25 BJH  Release 10.47.09
 
               pamtosvg: fix bug: occasional crash with out of range error.
