@@ -33,16 +33,44 @@
 
 
 static void
+closeUninheritableFds(int const stdinFd,
+                      int const stdoutFd) {
+/*----------------------------------------------------------------------------
+  Close all the file descriptors that we declare uninheritable -- files Parent
+  has open that Child has no business accessing.
+
+  Closing an extra file descriptor is essential to allow the file to close
+  when Parent closes it.
+
+  We define uninheritable as less than 64 and not Standard Input, Output,
+  or Error, or 'stdinFd' or 'stdoutFd'.
+-----------------------------------------------------------------------------*/
+    int fd;
+
+    for (fd = 0; fd < 64; ++fd) {
+        if (fd == stdinFd) {
+        } else if (fd == stdoutFd) {
+        } else if (fd == STDIN_FILENO) {
+        } else if (fd == STDOUT_FILENO) {
+        } else if (fd == STDERR_FILENO) {
+        } else {
+            close(fd);
+        }
+    }
+}
+
+
+
+static void
 execProgram(const char *  const progName,
             const char ** const argArray,
             int           const stdinFd,
             int           const stdoutFd) {
 /*----------------------------------------------------------------------------
-   Run the program 'progName' with arguments argArray[], in a child process
-   with 'stdinFd' as its Standard Input and 'stdoutFd' as its
-   Standard Output.
+   Exec the program 'progName' with arguments argArray[], with 'stdinFd' as
+   its Standard Input and 'stdoutFd' as its Standard Output.
 
-   But leave Standard Input and Standard Output as we found them.
+   But if the exec fails, leave all file descriptors as we found them.
 
    Note that stdinFd or stdoutFd may actually be Standard Input and
    Standard Output already.
@@ -58,11 +86,13 @@ execProgram(const char *  const progName,
         stdinSaveFd  = dup(STDIN);
         close(STDIN);
         dup2(stdinFd, STDIN);
+        close(stdinFd);
     }
     if (stdoutFd != STDOUT) {
         stdoutSaveFd = dup(STDOUT);
         close(STDOUT);
         dup2(stdoutFd, STDOUT);
+        close(stdoutFd);
     }
 
     rc = execvp(progName, (char **)argArray);
@@ -165,6 +195,8 @@ spawnProcessor(const char *  const progName,
             stdoutFd = stdoutpipe[1];
         } else
             stdoutFd = STDOUT;
+
+        closeUninheritableFds(stdinFd, stdoutFd);
 
         execProgram(progName, argArray, stdinFd, stdoutFd);
 

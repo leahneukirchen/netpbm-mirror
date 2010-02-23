@@ -12,6 +12,9 @@ not yet  BJH  Release 10.50.00
 
               pnmconvol: Add -normalize .
 
+              pm_system(): Close extraneous file descriptors that, among
+              other things, prevent child from seeing EOF.
+
               libnetpbm: Add PNM_GETR(), PNM_GETG(), PNM_GETB().  Same
               as PPM_GETR(), etc.
 
