@@ -458,7 +458,7 @@ main(int argc, char ** argv) {
     else
         hist_width = range;
 
-    hscale = (float)hist_width / range;
+    hscale = (float)(hist_width-1) / (range-1);
     if (hscale - 1.0 < epsilon && cmdline.verbose)
         pm_message("Horizontal scale factor: %g (maxval = %u)", 
                    hscale, maxval);
