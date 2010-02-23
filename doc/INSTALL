@@ -259,10 +259,11 @@ and which one is default is controlled by the DEFAULT_TARGET make
 variable in config.mk, and its value is one of the choices you
 make via the Configure dialog.
 
-The standard build is the conventional one.  The merge build is a way
-to reduce disk space and other resource usage in some configurations.
-These are rare configurations, mostly antique ones.  The advent of
-shared libraries largely obsoleted the merge build.
+The standard build is the conventional one.  The merge build is a way to
+reduce disk space and other resource usage in some configurations.  These are
+rare configurations, mostly antique ones.  The advent of shared libraries
+largely obsoleted the merge build.  In some configurations, Netpbm uses _more_
+resources with the merge build.
 
 In the standard build, hundreds of separate programs get built: ppmtogif,
 pamcomp, etc.
