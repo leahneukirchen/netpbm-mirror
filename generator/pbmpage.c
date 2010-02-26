@@ -33,8 +33,7 @@
 struct bitmap {
     int Width;      /* width and height in 600ths of an inch */
     int Height;
-    int Pwidth;     /* width in bytes */
-    char *bitmap;
+    bit ** bitmap;
 };
 
 static struct bitmap bitmap;
@@ -46,7 +45,6 @@ setpixel(int const x,
          int const y,
          int const c) {
 
-    int const charidx = y * bitmap.Pwidth + x/8;
     char const bitmask = 128 >> (x % 8);
 
     if (x < 0 || x >= bitmap.Width)
@@ -55,9 +53,9 @@ setpixel(int const x,
         return;
 
     if (c)
-        bitmap.bitmap[charidx] |= bitmask;
+        bitmap.bitmap[y][x/8] |= bitmask;
     else
-        bitmap.bitmap[charidx] &= ~bitmask;
+        bitmap.bitmap[y][x/8] &= ~bitmask;
 }
 
 
@@ -161,36 +159,15 @@ outputPbm(FILE *        const file,
   Create a pbm file containing the image from the global variable bitmap[].
 -----------------------------------------------------------------------------*/
     int const forceplain = 0;
-    bit *pbmrow;
     int row;
-    int bitmap_cursor;
     
     pbm_writepbminit(file, bitmap.Width, bitmap.Height, forceplain);
-  
-    /* We round the allocated row space up to a multiple of 8 so the ugly
-       fast code below can work.
-       */
-    pbmrow = pbm_allocrow(((bitmap.Width+7)/8)*8);
     
-    bitmap_cursor = 0;
-    for (row = 0; row < bitmap.Height; row++) {
-        int col;
-        for (col = 0; col < bitmap.Width;) {
-            /* A little ugliness makes a big speed difference here. */
-            pbmrow[col++] = bitmap.bitmap[bitmap_cursor] & (1<<7);
-            pbmrow[col++] = bitmap.bitmap[bitmap_cursor] & (1<<6);
-            pbmrow[col++] = bitmap.bitmap[bitmap_cursor] & (1<<5);
-            pbmrow[col++] = bitmap.bitmap[bitmap_cursor] & (1<<4);
-            pbmrow[col++] = bitmap.bitmap[bitmap_cursor] & (1<<3);
-            pbmrow[col++] = bitmap.bitmap[bitmap_cursor] & (1<<2);
-            pbmrow[col++] = bitmap.bitmap[bitmap_cursor] & (1<<1);
-            pbmrow[col++] = bitmap.bitmap[bitmap_cursor] & (1<<0);
-                
-            bitmap_cursor++;
-        }
-        pbm_writepbmrow(file, pbmrow, bitmap.Width, forceplain); 
+    for (row = 0; row < bitmap.Height; row++ ) {
+      pbm_writepbmrow_packed(file, bitmap.bitmap[row],
+                             bitmap.Width, forceplain); 
     }
-    pbm_freerow(pbmrow);
+
     pm_close(file);
 }
 
@@ -243,8 +220,12 @@ main(int argc,char** argv) {
 
     bitmap.Width = Width;
     bitmap.Height = Height;
-    bitmap.Pwidth = (Width + 7) / 8;
-    bitmap.bitmap = malloc(bitmap.Pwidth * bitmap.Height);
+    bitmap.bitmap = pbm_allocarray_packed(Width, bitmap.Height);
+
+    for (y = 0; y < bitmap.Height; ++y) {
+        for (x = 0; x < pbm_packed_bytes(bitmap.Width); ++x) 
+            bitmap.bitmap[y][x] = 0x00; 
+    }
 
     if (argc>1)
         TP = atoi(argv[1]);
@@ -286,6 +267,8 @@ main(int argc,char** argv) {
     }
 
     outputPbm(stdout, bitmap);
+
+    pbm_freearray(bitmap.bitmap, Height);
 
     return 0;
 }
