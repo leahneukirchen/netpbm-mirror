@@ -238,6 +238,11 @@ main(int argc, const char** argv) {
         Height = USHEIGHT;
     }
 
+    if (argc > 1)
+        TP = atoi(argv[1]);
+    else
+        TP = 1;
+
     bitmap.Width  = Width;
     bitmap.Height = Height;
     bitmap.bitmap = pbm_allocarray_packed(Width, bitmap.Height);
@@ -247,11 +252,6 @@ main(int argc, const char** argv) {
         for (x = 0; x < pbm_packed_bytes(bitmap.Width); ++x) 
             bitmap.bitmap[y][x] = 0x00; 
     }
-
-    if (argc > 1)
-        TP = atoi(argv[1]);
-    else
-        TP = 1;
 
     switch (TP) {
     case 1:
