@@ -27,6 +27,8 @@ not yet  BJH  Release 10.50.00
               pamflip: Speed up for most images.  Thanks Prophet of the Way
               <afu@wta.att.ne.jp>.
 
+              pbmpage: fix garbage output.
+
               pnmhistmap: Fix crash with -width.  Always broken.
 
               libppmd/ppmpat: fix wild pointer in ppmd_fill_drawprocp();
