@@ -9,68 +9,33 @@
 ** copyright notice and this permission notice appear in supporting
 ** documentation.  This software is provided "as is" without express or
 ** implied warranty.
+**
+** Feb 2010 afu
+** Added dimension check to prevent short int from overflowing
+** Changed code style (ANSI-style function definitions, etc.)
 */
 
 #include <stdio.h>
 #include "pbm.h"
 
 #define YBM_MAGIC  ( ( '!' << 8 ) | '!' )
-
-static void putinit ARGS(( int cols, int rows ));
-static void putbit ARGS(( bit b ));
-static void putrest ARGS(( void ));
-static void putitem ARGS(( void ));
-
-int
-main( argc, argv )
-    int argc;
-    char* argv[];
-    {
-    FILE* ifp;
-    bit* bitrow;
-    register bit* bP;
-    int rows, cols, format, padright, row, col;
-
-
-    pbm_init( &argc, argv );
-
-    if ( argc > 2 )
-	pm_usage( "[pbmfile]" );
-    if ( argc == 2 )
-	ifp = pm_openr( argv[1] );
-    else
-	ifp = stdin;
-
-    pbm_readpbminit( ifp, &cols, &rows, &format );
-    bitrow = pbm_allocrow( cols );
-    
-    /* Compute padding to round cols up to the nearest multiple of 16. */
-    padright = ( ( cols + 15 ) / 16 ) * 16 - cols;
-
-    putinit( cols, rows );
-    for ( row = 0; row < rows; ++row )
-	{
-	pbm_readpbmrow( ifp, bitrow, cols, format );
-        for ( col = 0, bP = bitrow; col < cols; ++col, ++bP )
-	    putbit( *bP );
-	for ( col = 0; col < padright; ++col )
-	    putbit( 0 );
-        }
-
-    if ( ifp != stdin )
-	fclose( ifp );
-
-    putrest( );
-
-    exit( 0 );
-    }
+#define INT16MAX 32767
 
 static long item;
 static int bitsperitem, bitshift;
 
+
 static void
-putinit( cols, rows )
-    int cols, rows;
+putitem( )
+    {
+    pm_writebigshort( stdout, item );
+    item = 0;
+    bitsperitem = 0;
+    bitshift = 0;
+    }
+
+static void
+putinit(int const cols, int const rows )
     {
     pm_writebigshort( stdout, YBM_MAGIC );
     pm_writebigshort( stdout, cols );
@@ -81,13 +46,13 @@ putinit( cols, rows )
     }
 
 static void
-putbit( bit b )
+putbit( bit const b )
     {
     if ( bitsperitem == 16 )
-	putitem( );
+        putitem( );
     ++bitsperitem;
     if ( b == PBM_BLACK )
-	item += 1 << bitshift;
+        item += 1 << bitshift;
     ++bitshift;
     }
 
@@ -95,14 +60,50 @@ static void
 putrest( )
     {
     if ( bitsperitem > 0 )
-	putitem( );
+        putitem( );
     }
 
-static void
-putitem( )
+
+int
+main( int argc, char *argv[] )
     {
-    pm_writebigshort( stdout, item );
-    item = 0;
-    bitsperitem = 0;
-    bitshift = 0;
+    FILE* ifp;
+    bit* bitrow;
+    int rows, cols, format, padright, row, col;
+
+    pbm_init( &argc, argv );
+
+    if ( argc > 2 )
+        pm_usage( "[pbmfile]" );
+    if ( argc == 2 )
+        ifp = pm_openr( argv[1] );
+    else
+        ifp = stdin;
+
+    pbm_readpbminit( ifp, &cols, &rows, &format );
+
+    if( rows>INT16MAX || cols>INT16MAX )
+      pm_error ("Input image is too large.");
+
+    bitrow = pbm_allocrow( cols );
+    
+    /* Compute padding to round cols up to the nearest multiple of 16. */
+    padright = ( ( cols + 15 ) / 16 ) * 16 - cols;
+
+    putinit( cols, rows );
+    for ( row = 0; row < rows; ++row )
+        {
+        pbm_readpbmrow( ifp, bitrow, cols, format );
+        for ( col = 0; col < cols; ++col )
+            putbit(  bitrow[col] );
+        for ( col = 0; col < padright; ++col )
+            putbit( 0 );
+        }
+
+    if ( ifp != stdin )
+        fclose( ifp );
+
+    putrest( );
+
+    exit( 0 );
     }
