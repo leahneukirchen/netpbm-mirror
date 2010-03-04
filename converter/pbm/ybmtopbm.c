@@ -19,7 +19,7 @@ static short const ybmMagic = ( ( '!' << 8 ) | '!' );
 
 
 static int item;
-static int bitsperitem, bitshift;
+static int bitsInBuffer, bitshift;
 
 
 
@@ -50,7 +50,6 @@ getinit(FILE *  const ifP,
 
     *depthP = 1;
     *padrightP = ((*colsP + 15) / 16) * 16 - *colsP;
-    bitsperitem = 0;
 }
 
 
@@ -60,16 +59,18 @@ getbit(FILE * const ifP) {
 
     bit b;
 
-    if (bitsperitem == 0) {
+    if (bitsInBuffer == 0) {
         item = getc(ifP) | getc(ifP) << 8;
+
         if (item == EOF)
             pm_error("EOF / read error");
-        bitsperitem = 16;
+
+        bitsInBuffer = 16;
         bitshift = 0;
     }
 
     b = ((item >> bitshift) & 1 ) ? PBM_BLACK : PBM_WHITE;
-    --bitsperitem;
+    --bitsInBuffer;
     ++bitshift;
     return b;
 }
@@ -100,6 +101,8 @@ main(int argc, const char * argv[]) {
 
     ifP = pm_openr(inputFile);
 
+    bitsInBuffer = 0;
+
     getinit(ifP, &cols, &rows, &depth, &padright);
     if (depth != 1)
         pm_error("YBM file has depth of %u, must be 1", (unsigned)depth);
@@ -109,10 +112,12 @@ main(int argc, const char * argv[]) {
     bitrow = pbm_allocrow(cols);
 
     for (row = 0; row < rows; ++row) {
-        /* Get data. */
+        /* Get raster. */
         unsigned int col;
+
         for (col = 0; col < cols; ++col)
             bitrow[col] = getbit(ifP);
+
         /* Discard line padding */
         for (col = 0; col < padright; ++col)
             getbit(ifP);
