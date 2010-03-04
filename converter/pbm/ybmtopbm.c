@@ -60,7 +60,7 @@ getbit(FILE * const ifP) {
     bit b;
 
     if (bitsInBuffer == 0) {
-        item = getc(ifP) | getc(ifP) << 8;
+        item = (getc(ifP) << 8) | (getc(ifP) << 0);
 
         if (item == EOF)
             pm_error("EOF / read error");

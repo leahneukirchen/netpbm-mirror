@@ -27,6 +27,11 @@ not yet  BJH  Release 10.50.00
               pamflip: Speed up for most images.  Thanks Prophet of the Way
               <afu@wta.att.ne.jp>.
 
+              ybmtopbm: Assume YBM format has raster in natural order
+              instead of byte-reversed.  This is what pbmtoybm creates,
+              and is most logical.  We don't know if there are any existing
+              YBM images or generators of them other than pbmtoybm.
+
               pbmtogem, pbmtoybm, pgmtolispm, ppmtoilbm, pnmtosgi: fix
               arithmetic overflow with image dimension represented as
               16 bit integer.
