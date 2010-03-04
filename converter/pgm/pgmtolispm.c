@@ -20,8 +20,6 @@
 ** Changed code style (ANSI-style function definitions, etc.)
 */
 
-#include <stdio.h>
-
 #include "pm.h"
 #include "pgm.h"
 
@@ -149,6 +147,8 @@ main(int argc, const char * argv[]) {
             pm_error("Too many arguments.  The only argument is the optional "
                      "input file name");
     }
+
+    ifP = pm_openr(inputFile);
 
     pgm_readpgminit(ifP, &cols, &rows, &maxval, &format);
 
