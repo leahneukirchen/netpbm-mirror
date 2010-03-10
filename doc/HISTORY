@@ -32,6 +32,12 @@ not yet  BJH  Release 10.50.00
               and is most logical.  We don't know if there are any existing
               YBM images or generators of them other than pbmtoybm.
 
+              pbmpscale: speedup.
+
+              pbmclean: speedup.
+              
+              pbmpscale: fix arithmetic overflow on output image dimensions.
+
               pbmtogem, pbmtoybm, pgmtolispm, ppmtoilbm, pnmtosgi: fix
               arithmetic overflow with image dimension represented as
               16 bit integer.
