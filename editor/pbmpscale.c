@@ -3,8 +3,10 @@
  */
 
 #include <stdio.h>
-#include "pbm.h"
+#include "pm_c_util.h"
 #include "mallocvar.h"
+#include "shhopt.h"
+#include "pbm.h"
 #include "bitarith.h"
 
 #define LEFTBITS pm_byteLeftBits
@@ -65,7 +67,66 @@ transTable[512] = {
 #define SW(f) (((f) >> 4) & 3)
 #define NW(f) (((f) >> 6) & 3)
 
-#define MAX(x,y) ((x) > (y) ? (x) : (y))
+
+
+struct cmdlineInfo {
+    /* All the information the user supplied in the command line,
+       in a form easy for the program to use.
+    */
+    unsigned int scale;
+    const char * inputFileName;  /* File name of input file */
+};
+
+
+
+static void
+parseCommandLine(int argc, const char ** const argv,
+                 struct cmdlineInfo * const cmdlineP) {
+/*----------------------------------------------------------------------------
+   Note that the file spec array we return is stored in the storage that
+   was passed to us as the argv array.
+-----------------------------------------------------------------------------*/
+    optEntry * option_def;
+        /* Instructions to OptParseOptions3 on how to parse our options.
+         */
+    optStruct3 opt;
+    unsigned int option_def_index;
+
+    MALLOCARRAY_NOFAIL(option_def, 100);
+
+    option_def_index = 0;   /* incremented by OPTENT3 */
+
+    opt.opt_table = option_def;
+    opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = FALSE;  /* We may have parms that are negative numbers */
+
+    optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+        /* Uses and sets argc, argv, and some of *cmdlineP and others. */
+
+    if (argc-1 < 1)
+        pm_error("You must specify the scale factor as an argument");
+    else {
+        int const scale = atoi(argv[1]);
+        if (scale < 1)
+            pm_error("Scale argument must be at least one.  You specified %d",
+                     scale);
+        else
+            cmdlineP->scale = scale;
+
+        if (argc-1 < 2)
+            cmdlineP->inputFileName = "-";
+        else {
+            cmdlineP->inputFileName = argv[2];
+
+            if (argc-1 > 2)
+                pm_error("Too many arguments.  The only arguments are the "
+                         "scale factor and optional input file name.  "
+                         "You specified %u", argc-1);
+        }
+    }
+}
+
+
 
 static void
 validateComputableDimensions(unsigned int const width,
@@ -97,18 +158,18 @@ writeBitSpan(unsigned char * const packedBitrow,
    Write white (color="0") or black (="1") bits into packedBitrow[],
    starting at 'offset', length 'cols'.
 -----------------------------------------------------------------------------*/
-    unsigned char * const dest = & packedBitrow[offset/8];
-    unsigned int const rs  = offset % 8;
-    unsigned int const trs = (cols + rs) % 8;
-    unsigned int const colBytes = pbm_packed_bytes(cols + rs);
-    unsigned int const last = colBytes - 1;
+    unsigned char * const dest     = &packedBitrow[offset/8];
+    unsigned int    const rs       = offset % 8;
+    unsigned int    const trs      = (cols + rs) % 8;
+    unsigned int    const colBytes = pbm_packed_bytes(cols + rs);
+    unsigned int    const last     = colBytes - 1;
 
     unsigned char const origHead = dest[0];
     unsigned char const origEnd =  dest[last];
 
     unsigned int i;
 
-    for( i = 0; i < colBytes; ++i)
+    for (i = 0; i < colBytes; ++i)
         dest[i] = color * 0xff;
 
     if (rs > 0)
@@ -119,12 +180,13 @@ writeBitSpan(unsigned char * const packedBitrow,
 }
 
 
+
 static void
-setFlags( const bit * const prevrow,
-          const bit * const thisrow,
-          const bit * const nextrow,
-	  unsigned char * const flags,
-	  unsigned int const cols ) {
+setFlags(const bit *     const prevrow,
+         const bit *     const thisrow,
+         const bit *     const nextrow,
+         unsigned char * const flags,
+         unsigned int    const cols ) {
 /*----------------------------------------------------------------------------
    Scan one row, examining the row above and row below, and determine 
    whether there are "corners" for each pixel.  Feed a 9 bit sample into 
@@ -143,6 +205,9 @@ setFlags( const bit * const prevrow,
 
    Most transTable[] entries are "no corners".
    0x00 appears 180 times, 0xff 109 times.
+-----------------------------------------------------------------------------*/
+
+/*---------------------------------------------------------------------------
 
    The following code is from the previous version, which examined
    the corners one by one:
@@ -154,116 +219,129 @@ setFlags( const bit * const prevrow,
 
 uint16_t const patterns[] 
       = { 0x0000,   0xd555,            // no corner
-  	  0x0001,   0xffc1, 0xd514,    // normal corner
-	  0x0002,   0xd554, 0xd515, 0xbea2, 0xdfc0, 0xfd81, 0xfd80, 0xdf80,
+      0x0001,   0xffc1, 0xd514,    // normal corner
+      0x0002,   0xd554, 0xd515, 0xbea2, 0xdfc0, 0xfd81, 0xfd80, 0xdf80,
                                        // reduced corners
- 	  0x0003,   0xbfa1, 0xfec2 };  // reduced if cutoff > 1 
+      0x0003,   0xbfa1, 0xfec2 };  // reduced if cutoff > 1 
 
   For example, the NE corner is examined with the following 8 bit sample:
      Current : W : NW : N : NE : E : SE : S
      (SW is the "square behind") 
 
 -----------------------------------------------------------------------------*/
-        uint32_t prevrow24 = prevrow[0];  /* higher bits are set to 0 */
-        uint32_t thisrow24 = thisrow[0];
-        uint32_t nextrow24 = nextrow[0];
-        unsigned int col;
+    uint32_t prevrow24, thisrow24, nextrow24;
+    unsigned int col;
 
-        for (col = 0; col < cols; ++col) {
-	  unsigned int sample;
-          unsigned int const col8=col/8;
-          unsigned int const offset=col%8;
+    /* higher bits are set to 0 */
+    prevrow24 = prevrow[0];  /* initial value */
+    thisrow24 = thisrow[0];  /* initial value */
+    nextrow24 = nextrow[0];  /* initial value */
 
-	  if(offset ==0){
-	    prevrow24 = prevrow24 << 8 | prevrow[ col8 +1 ];
-	    thisrow24 = thisrow24 << 8 | thisrow[ col8 +1 ];
-	    nextrow24 = nextrow24 << 8 | nextrow[ col8 +1 ];
-	  }
+    for (col = 0; col < cols; ++col) {
+        unsigned int const col8   = col / 8;
+        unsigned int const offset = col % 8;
 
-	  sample= ( ( prevrow24 >> ( 8 -offset) ) & 0x01c0 )
-	        | ( ( thisrow24 >> (11 -offset) ) & 0x0038 )
-	        | ( ( nextrow24 >> (14 -offset) ) & 0x0007 );
+        unsigned int sample;
 
-	  flags[col] =  transTable[sample];
+        if (offset == 0) {
+            prevrow24 = prevrow24 << 8 | prevrow[col8 + 1];
+            thisrow24 = thisrow24 << 8 | thisrow[col8 + 1];
+            nextrow24 = nextrow24 << 8 | nextrow[col8 + 1];
         }
+
+        sample = ( ( prevrow24 >> ( 8 -offset) ) & 0x01c0 )
+            | ( ( thisrow24 >> (11 -offset) ) & 0x0038 )
+            | ( ( nextrow24 >> (14 -offset) ) & 0x0007 );
+        
+        flags[col] =  transTable[sample];
+    }
 }
 
 
+
 static void
-expandRow(const bit * const thisrow,
-          const bit * const prevrow,
-          bit * const outrow,
-	  unsigned char * const flags,
-	  unsigned int const cols,
-          int const scale,
-          int const cutoff,
-          int const ucutoff) {
+expandRow(const bit *     const thisrow,
+          const bit *     const prevrow,
+          bit *           const outrow,
+          unsigned char * const flags,
+          unsigned int    const cols,
+          int             const scale,
+          int             const cutoff,
+          int             const ucutoff) {
 /*----------------------------------------------------------------------------
   Process one row, using flags array as reference.  If pixel has no corners
   output a NxN square of the given color, otherwise output with the 
   specified corner area(s) clipped off.
 -----------------------------------------------------------------------------*/
-    unsigned int i, col;
     unsigned int const outcols = cols * scale;
 
-    for (i = 0; i < scale; i++) {
-        unsigned int outcol=0;
+    unsigned int i;
+    unsigned int col;
+    
+    for (i = 0; i < scale; ++i) {
+        int const zone = (i > ucutoff) - (i < cutoff);
+        int const cut1 =
+            (zone < 0) ? (cutoff - i) : (zone > 0) ? (i - ucutoff) : 0;
 
-        int const zone = (i > ucutoff) - (i < cutoff) ;
-        int const cut1 = (zone < 0) ? (cutoff - i) :
-                        (zone > 0) ? (i - ucutoff) : 0 ;
+        unsigned int outcol;
         int cut[4];
+
+        outcol = 0; /* initial value */
+
         cut[0] = 0;
         cut[1] = cut1;
-        cut[2] = cut1 ? cut1-1 : 0;
-        cut[3] = (cut1 && cutoff > 1) ? cut1-1 : cut1 ;
+        cut[2] = cut1 ? cut1 - 1 : 0;
+        cut[3] = (cut1 && cutoff > 1) ? cut1 - 1 : cut1;
       
         for (col = 0; col < cols; ++col) {
-            unsigned int const col8=col/8;
-            unsigned int const offset=col%8;
-            int const pix =  ( thisrow[col8] >> (7-offset) ) &0x01 ;
-            int const flag = flags[col] ;
+            unsigned int const col8 = col / 8;
+            unsigned int const offset = col % 8;
+            int const pix = (thisrow[col8] >> (7-offset) ) & 0x01;
+            int const flag = flags[col];
+
             int cutl, cutr;
 
-            if( flag == 0x00 ) {
-              /* There are no corners, no color change */
-              outcol += scale;
+            if (flag == 0x00) {
+                /* There are no corners, no color change */
+                outcol += scale;
             } else { 
+                switch (zone) {
+                case -1:
+                    if (i==0 && flag == 0xff) {
+                        /* No corners, color changed */ 
+                        cutl = cutr = 0;
+                        flags[col] = 0x00;
+                            /* Use above skip procedure next cycle */
+                    } else {
+                        cutl = cut[NW(flag)];
+                        cutr = cut[NE(flag)];
+                    }
+                    break;
+                case 0:
+                    cutl = cutr = 0;
+                    break ;
+                case 1:
+                    cutl = cut[SW(flag)];
+                    cutr = cut[SE(flag)];
+                    break;
+                }
+                
+                if (cutl > 0) {
+                    writeBitSpan(outrow, cutl, outcol, !pix);
+                    outcol += cutl;
+                }
+                {
+                    unsigned int const center = scale - cutl - cutr;
 
-            switch (zone) {
-            case -1:
-	      if( i==0 && flag == 0xff ) {  /* No corners, color changed */ 
-                cutl = cutr = 0;
-                flags[col]=0x00;  /* Use above skip procedure next cycle */
-	      } else {
-  	        cutl = cut[ NW(flag) ];
-	        cutr = cut[ NE(flag) ];
-	      }
-                break;
-            case 0:
-                cutl = cutr = 0;
-                break ;
-            case 1:
- 	        cutl = cut[ SW(flag) ];
-                cutr = cut[ SE(flag) ];
-                break;
-            }
-
-            if (cutl>0){
-              writeBitSpan(outrow, cutl, outcol, !pix);
-              outcol +=cutl;
-            }
-            {
-            unsigned int const center =  scale-cutl-cutr;
-            if (center > 0){
-              writeBitSpan(outrow, center, outcol,  pix);
-              outcol +=center;
-              }
-            }
-            if (cutr>0){
-              writeBitSpan(outrow, cutr, outcol, !pix);
-              outcol +=cutr;
-            }
+                    if (center > 0) {
+                        writeBitSpan(outrow, center, outcol,  pix);
+                        outcol += center;
+                    }
+                }
+                if (cutr > 0) {
+                    writeBitSpan(outrow, cutr, outcol, !pix);
+                    outcol += cutr;
+                }
             }
         }
         pbm_writepbmrow_packed(stdout, outrow, outcols, 0) ;
@@ -271,8 +349,11 @@ expandRow(const bit * const thisrow,
 }
 
 
+
 int
-main(int argc, char ** argv) {
+main(int argc, const char ** argv) {
+
+    struct cmdlineInfo cmdline;
     FILE * ifP;
     bit ** buffer;
     bit * prevrow;
@@ -280,29 +361,28 @@ main(int argc, char ** argv) {
     bit * nextrow;
     bit * edgerow;
     bit * outrow;
-    unsigned int row, i;
-    int scale, cols, rows, format, outcols, outrows, cutoff, ucutoff ;
-    unsigned char *flags;
+    unsigned int row;
+    unsigned int i;
+    int cols, rows;
+    int format;
+    unsigned int outcols;
+    unsigned int outrows;
+    int cutoff;
+    int ucutoff ;
+    unsigned char * flags;  /* malloc'ed */
 
-    pbm_init( &argc, argv );
+    pm_proginit(&argc, argv);
 
-    if (argc < 2)
-        pm_usage("scale [pbmfile]");
+    parseCommandLine(argc, argv, &cmdline);
 
-    scale = atoi(argv[1]);
-    if (scale < 1)
-        pm_error("Scale argument must be at least one.  You specified '%s'",
-                 argv[1]);
-
-    if (argc == 3)
-        ifP = pm_openr(argv[2]);
-    else
-        ifP = stdin ;
+    ifP = pm_openr(cmdline.inputFileName);
 
     pbm_readpbminit(ifP, &cols, &rows, &format) ;
 
-    validateComputableDimensions(cols, rows, scale); 
-    outcols= cols * scale;     outrows= rows * scale; 
+    validateComputableDimensions(cols, rows, cmdline.scale); 
+
+    outcols = cols * cmdline.scale;
+    outrows = rows * cmdline.scale; 
 
     /* Initialize input buffers.
        We add a margin of 8 bits on the right of the three rows.
@@ -311,14 +391,15 @@ main(int argc, char ** argv) {
        ("edgerow") to facilitate the process.
     */
 
-    buffer  = pbm_allocarray_packed(cols+8, 3);
-    edgerow = pbm_allocrow_packed(cols+8);
+    buffer  = pbm_allocarray_packed(cols + 8, 3);
+    edgerow = pbm_allocrow_packed(cols + 8);
 
-    for(i=0; i < pbm_packed_bytes(cols+8); ++i)
-      edgerow[i] = 0x00;
+    for (i = 0; i < pbm_packed_bytes(cols + 8); ++i)
+        edgerow[i] = 0x00;
 
-    for(i=0; i < 3; ++i)  /* Add blank bytes at right edges */ 
-      buffer[i][ pbm_packed_bytes( cols +8 ) -1 ] = 0x00;
+    /* Add blank bytes at right edges */ 
+    for (i = 0; i < 3; ++i)
+        buffer[i][pbm_packed_bytes(cols + 8) - 1] = 0x00;
 
     thisrow = edgerow;
     nextrow = buffer[0];
@@ -326,42 +407,45 @@ main(int argc, char ** argv) {
     /* Read the top line into nextrow and clean the right end. */
 
     pbm_readpbmrow_packed(ifP, nextrow, cols, format);
-    if (cols%8>0){
-	    nextrow[pbm_packed_bytes(cols) -1 ] >>= (8 - cols%8);
-     	    nextrow[pbm_packed_bytes(cols) -1 ] <<= (8 - cols%8);
+
+    if (cols % 8 > 0) {
+        nextrow[pbm_packed_bytes(cols) - 1] >>= (8 - cols % 8);
+        nextrow[pbm_packed_bytes(cols) - 1] <<= (8 - cols % 8);
     }
 
     outrow = pbm_allocrow_packed(outcols);
-    for(i=0; i < pbm_packed_bytes(outcols); ++i)
-      outrow[i] = 0x00;
+    for (i = 0; i < pbm_packed_bytes(outcols); ++i)
+        outrow[i] = 0x00;
 
-    MALLOCARRAY_NOFAIL(flags, cols);
+    MALLOCARRAY(flags, cols);
+    if (flags == NULL)
+        pm_error("Couldn't get memory for %u columns of flags", cols);
 
     pbm_writepbminit(stdout, outcols, outrows, 0) ;
 
-    cutoff = scale / 2;
-    ucutoff = scale - 1 - cutoff;
+    cutoff = cmdline.scale / 2;
+    ucutoff = cmdline.scale - 1 - cutoff;
 
     for (row = 0; row < rows; ++row) {
         prevrow = thisrow;  /* Slide up the input row window */
         thisrow = nextrow;
-        if( row < rows -1){
-	  nextrow = buffer[(row+1)%3];
-          /* We take the address directly instead of shuffling the rows.
-             This provision is for proper handling of the initial edgerow. */
+        if (row < rows - 1) {
+            nextrow = buffer[(row + 1) % 3];
+            /* We take the address directly instead of shuffling the rows.
+               This provision is for proper handling of the initial edgerow.
+            */
+            pbm_readpbmrow_packed(ifP, nextrow, cols, format);
+            if (cols % 8 > 0) {
+                nextrow[pbm_packed_bytes(cols) - 1] >>= (8 - cols % 8);
+                nextrow[pbm_packed_bytes(cols) - 1] <<= (8 - cols % 8);
+            }
+        } else
+            /* Bottom of image.  */
+            nextrow = edgerow;
 
-          pbm_readpbmrow_packed(ifP, nextrow, cols, format);
-          if (cols%8>0){
-	    nextrow[pbm_packed_bytes(cols) -1 ] >>= (8 - cols%8);
-	    nextrow[pbm_packed_bytes(cols) -1 ] <<= (8 - cols%8);
-	  }
-	}
-	else  /* Bottom of image.  */
-          nextrow = edgerow;
+        setFlags(prevrow, thisrow, nextrow, flags, cols);
 
-        setFlags( prevrow, thisrow, nextrow, flags, cols);
-
-        expandRow(thisrow, prevrow, outrow, flags, cols, scale,
+        expandRow(thisrow, prevrow, outrow, flags, cols, cmdline.scale,
                   cutoff, ucutoff);
     }
     pbm_freearray(buffer,3);
