@@ -246,6 +246,9 @@ main(int argc,char** argv) {
     bitmap.Pwidth = (Width + 7) / 8;
     bitmap.bitmap = malloc(bitmap.Pwidth * bitmap.Height);
 
+    for (x = 0; x < bitmap.Pwidth * bitmap.Height; ++x)
+        bitmap.bitmap[x] = 0x00;
+    
     if (argc>1)
         TP = atoi(argv[1]);
 
