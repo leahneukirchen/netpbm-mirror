@@ -37,6 +37,10 @@
 **  - added HAM colormap "rgb4" and "rgb5" (compute with 4/5-bit table)
 **  - added IFF text chunks
 **
+**  Feb 2010: afu
+**  Added dimension check to prevent short int from overflowing.
+**  
+**
 **  TODO:
 **  - multipalette capability (PCHG chunk) for std and HAM
 **
@@ -99,6 +103,8 @@
 #define DEF_DEEPPLANES  8
 #define DEF_DCOLPLANES  5
 #define DEF_IFMODE      MODE_DEEP
+
+#define INT16MAX 32767
 
 static void put_big_short ARGS((short s));
 static void put_big_long ARGS((long l));
@@ -1801,6 +1807,10 @@ init_read(fp, colsP, rowsP, maxvalP, formatP, readall)
     int readall;
 {
     ppm_readppminit(fp, colsP, rowsP, maxvalP, formatP);
+
+    if( *rowsP >INT16MAX || *colsP >INT16MAX )
+      pm_error ("Input image is too large.");
+
     if( readall ) {
         int row;
 

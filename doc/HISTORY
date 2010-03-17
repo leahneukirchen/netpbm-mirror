@@ -4,6 +4,15 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+10.03.17 BJH  Release 10.47.11
+
+              ppmtoilbm: fix arithmetic overflow with image dimension
+              represented as 16 bit integer.
+
+              pbmpage: fix garbage output.
+
+              Build: don't fail due to SIGPWR being undefined.
+
 10.02.23 BJH  Release 10.47.10
 
               pnmhistmap: Fix crash with -width.  Always broken.
