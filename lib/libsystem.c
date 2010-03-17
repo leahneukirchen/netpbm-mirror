@@ -278,12 +278,14 @@ signalName(unsigned int const signalClass) {
             return "SIGWINCH";
         case SIGIO:
             return "SIGIO";
-        case SIGPWR:
-            return "SIGPWR";
         case SIGSYS:
             return "SIGSYS";
         default:
             return "???";
+
+            /* There are various other signal classes on some systems, but
+               not defined by POSIX, including: SIGPWR, SIGLOST, SIGINFO
+            */
         }
     } else if ((int)signalClass >= SIGRTMIN && (int)signalClass <= SIGRTMAX)
         return "SIGRTxxx";
