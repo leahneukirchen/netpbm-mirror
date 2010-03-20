@@ -24,6 +24,10 @@ not yet  BJH  Release 10.50.00
               pnmhisteq: Equalize based on luminosity alone, rather than a
               strange combination of luminosity and HSV value.
 
+              pamenlarge: Make special fast path for scale factors up to 10
+              (2, 3, and 5 already existed).  Thanks Prophet of the Way
+              <afu@wta.att.ne.jp>.
+
               pamflip: Speed up for most images.  Thanks Prophet of the Way
               <afu@wta.att.ne.jp>.
 
@@ -58,6 +62,8 @@ not yet  BJH  Release 10.50.00
 
               palmtopnm: fix incorrect output with version 3 direct color.
               Thanks Paul Bolle <pebolle@tiscali.nl>.
+
+              Build: don't fail due to SIGPWR being undefined.
 
 09.12.30 BJH  Release 10.49.00
 
