@@ -1267,9 +1267,9 @@ skipCharacter(FILE * const fp) {
 
 
 static void
-validateEncoding(const char **  const arg,
-                 unsigned int * const codepointP,
-                 bool *         const badCodepointP) {
+interpEncoding(const char **  const arg,
+               unsigned int * const codepointP,
+               bool *         const badCodepointP) {
 /*----------------------------------------------------------------------------
    With arg[] being the ENCODING statement from the font, return as
    *codepointP the codepoint that it indicates (code point is the character
@@ -1307,12 +1307,29 @@ validateEncoding(const char **  const arg,
 
 
 
+static void
+readEncoding(FILE *         const ifP,
+             unsigned int * const codepointP,
+             bool *         const badCodepointP) {
+
+    const char * arg[32];
+
+    expect(ifP, "ENCODING", arg);
+    
+    interpEncoding(arg, codepointP, badCodepointP);
+}
+
+
 
 static void
-processCharsLine(FILE *        const fp,
-                 const char ** const arg,
-                 struct font * const fontP) {
-
+processChars(FILE *        const fp,
+             const char ** const arg,
+             struct font * const fontP) {
+/*----------------------------------------------------------------------------
+   Process the CHARS block in a BDF font file, assuming the file is positioned
+   just after the CHARS line and 'arg' is the contents of that CHARS line.
+   Read the rest of the block and apply its contents to *fontP.
+-----------------------------------------------------------------------------*/
     unsigned int const nCharacters = atoi(arg[1]);
 
     unsigned int nCharsDone;
@@ -1346,12 +1363,8 @@ processCharsLine(FILE *        const fp,
                 pm_error("no memory for font glyph for '%s' character",
                          charName);
 
-            {
-                const char * arg[32];
-                expect(fp, "ENCODING", arg);
+            readEncoding(fp, &codepoint, &badCodepoint);
 
-                validateEncoding(arg, &codepoint, &badCodepoint);
-            }
             if (badCodepoint)
                 skipCharacter(fp);
             else {
@@ -1381,7 +1394,7 @@ processCharsLine(FILE *        const fp,
                     const char * arg[32];
                     expect(fp, "ENDCHAR", arg);
                 }
-                assert(codepoint < 256); /* Ensured by validateEncoding() */
+                assert(codepoint < 256); /* Ensured by readEncoding() */
 
                 fontP->glyph[codepoint] = glyphP;
             }
@@ -1398,7 +1411,11 @@ processBdfFontLine(FILE *        const fp,
                    const char ** const arg,
                    struct font * const fontP,
                    bool *        const endOfFontP) {
+/*----------------------------------------------------------------------------
+   Process a line just read from a BDF font file.
 
+   This processing may involve reading more lines.
+-----------------------------------------------------------------------------*/
     *endOfFontP = FALSE;  /* initial assumption */
 
     if (streq(arg[0], "COMMENT")) {
@@ -1425,7 +1442,7 @@ processBdfFontLine(FILE *        const fp,
     } else if (streq(arg[0], "ENDFONT")) {
         *endOfFontP = true;
     } else if (streq(arg[0], "CHARS"))
-        processCharsLine(fp, arg, fontP);
+        processChars(fp, arg, fontP);
 }
 
 
