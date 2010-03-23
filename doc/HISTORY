@@ -39,6 +39,9 @@ not yet  BJH  Release 10.50.00
               pbmpscale: speedup.
 
               pbmclean: speedup.
+
+              pbmtext: fix crash when BDF font file contains spurious
+              blank line.  Ignore such blank lines.
               
               pbmpscale: fix arithmetic overflow on output image dimensions.
 
