@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+10.03.23 BJH  Release 10.49.05
+
+              pbmtext: fix crash when BDF font file contains spurious
+              blank line.  Ignore such blank lines.
+              
 10.03.17 BJH  Release 10.49.04
 
               ppmtoilbm: fix arithmetic overflow with image dimension
