@@ -4,6 +4,20 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+10.03.24 BJH  Release 10.35.74
+
+              pbmtext: don't crash when font file contains a blank line.
+              Fail cleanly.
+
+              ppmtoilbm: fix arithmetic overflow with image dimension
+              represented as 16 bit integer.
+
+              pbmpage: fix garbage output.
+
+              pnmhistmap: Fix crash with -width.  Always broken.
+
+              Build: don't fail due to SIGPWR being undefined.
+
 10.01.23 BJH  Release 10.35.73
 
               Restore ability of Pnmconvol convolution matrix to be a

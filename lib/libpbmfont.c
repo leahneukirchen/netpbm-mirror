@@ -1132,5 +1132,17 @@ int mk_max;
             s++;
     }
     vec[n] = 0;
+
+    /* Caller expects there to be at least one element in vec[], so we
+       can't return an empty line.  More advanced releases of Netpbm
+       just ignore blank lines.  If important, we can fairly easily port
+       the required code back to this release, by replacing readline()
+       with a current one, modified somewhat so it compiles here.
+
+       - Bryan 2010.03.23 
+    */
+    if (n < 1)
+        pm_error("Invalid font file -- contains a blank line");
+
     return n;
 }
