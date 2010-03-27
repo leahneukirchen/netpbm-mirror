@@ -207,28 +207,30 @@ setFlags(const bit *     const prevrow,
    0x00 appears 180 times, 0xff 109 times.
 -----------------------------------------------------------------------------*/
 
-/*---------------------------------------------------------------------------
+#if 0
+    /* The following code is from the previous version, which examined
+       the corners one by one:
+    */
 
-   The following code is from the previous version, which examined
-   the corners one by one:
+    /* list of corner patterns; bit 7 is current color, bits 0-6 are squares
+       around (excluding square behind), going clockwise.
+       The high byte of the patterns is a mask, which determines which bits are
+       not ignored.
+    */
+    uint16_t const patterns[] 
+        = { 0x0000,   0xd555,            /* no corner */
+            0x0001,   0xffc1, 0xd514,    /* normal corner */
+            0x0002,   0xd554, 0xd515, 0xbea2, 0xdfc0, 0xfd81, 0xfd80, 0xdf80,
+            /* reduced corners */
+            0x0003,   0xbfa1, 0xfec2 };  /* reduced if cutoff > 1 */
 
-// list of corner patterns; bit 7 is current color, bits 0-6 are squares
-// around (excluding square behind), going clockwise.
-// The high byte of the patterns is a mask, which determines which bits are
-// not ignored.
+    /*
+      For example, the NE corner is examined with the following 8 bit sample:
+      Current : W : NW : N : NE : E : SE : S
+      (SW is the "square behind") 
+      */
+#endif
 
-uint16_t const patterns[] 
-      = { 0x0000,   0xd555,            // no corner
-      0x0001,   0xffc1, 0xd514,    // normal corner
-      0x0002,   0xd554, 0xd515, 0xbea2, 0xdfc0, 0xfd81, 0xfd80, 0xdf80,
-                                       // reduced corners
-      0x0003,   0xbfa1, 0xfec2 };  // reduced if cutoff > 1 
-
-  For example, the NE corner is examined with the following 8 bit sample:
-     Current : W : NW : N : NE : E : SE : S
-     (SW is the "square behind") 
-
------------------------------------------------------------------------------*/
     uint32_t prevrow24, thisrow24, nextrow24;
     unsigned int col;
 

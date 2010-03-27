@@ -1753,7 +1753,7 @@ convolveHorizontalRowPlane(struct pam *              const pamP,
             outputrow[col][plane] = window[crowso2][col][plane];
         else if (col == ccolso2) {
             unsigned int const leftcol = 0;
-                // Window is up againt left edge of image
+                /* Window is up againt left edge of image */
 
             float matrixSum;
 
@@ -1917,12 +1917,12 @@ convolveVerticalRowPlane(struct pam *              const pamP,
             outputrow[col][plane] = circMap[crowso2][col][plane];
         else if (col == ccolso2) {
             unsigned int const leftcol = 0;
-                // Convolution window is againt left edge of image
+                /* Convolution window is againt left edge of image */
 
             float matrixSum;
             unsigned int ccol;
 
-            // Slide window down in the first kernel's worth of columns
+            /* Slide window down in the first kernel's worth of columns */
             for (ccol = 0; ccol < convKernelP->cols; ++ccol) {
                 convColumnSum[leftcol + ccol] +=
                     circMap[addrow][leftcol + ccol][plane];
@@ -1942,7 +1942,7 @@ convolveVerticalRowPlane(struct pam *              const pamP,
             float matrixSum;
             unsigned int ccol;
 
-            // Slide window down in the column that just entered the window
+            /* Slide window down in the column that just entered the window */
             convColumnSum[addcol] += circMap[addrow][addcol][plane];
             convColumnSum[addcol] -= circMap[subrow][addcol][plane];
 

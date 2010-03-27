@@ -308,8 +308,9 @@ produceOutputImage(struct pam *          const pamP,
                                     pamP->width, pamP->height);
 
                     if (distSqr > 0.0) {
-                        // We do special cases for some common cases with code
-                        // that is much faster than pow().
+                        /* We do special cases for some common cases with code
+                           that is much faster than pow().
+                        */
                         double const weight =
                             distPower == -2.0 ? 1.0 / distSqr :
                             distPower == -1.0 ? 1.0 / sqrt(distSqr):

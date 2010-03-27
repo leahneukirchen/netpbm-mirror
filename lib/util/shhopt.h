@@ -1,4 +1,5 @@
-/*=============================================================================
+#if 0
+=============================================================================
 HERE IS AN EXAMPLE OF THE USE OF SHHOPT:
 
 
@@ -6,8 +7,9 @@ HERE IS AN EXAMPLE OF THE USE OF SHHOPT:
 int 
 main ( int argc, char **argv ) {
 
-    // initial values here are just to demonstrate what gets set and
-    // what doesn't by the code below.
+    /* initial values here are just to demonstrate what gets set and
+       what doesn't by the code below.
+    */
     int help_flag = 7;
     unsigned int help_spec =7;
     unsigned int height_spec =7;
@@ -67,8 +69,8 @@ Now run this program with something like
   myprog -v /etc/passwd -name=Bryan --hei=4
 
 
-========================================================================*/
-
+========================================================================
+#endif /* 0 */
 
 #ifndef SHHOPT_H
 #define SHHOPT_H
