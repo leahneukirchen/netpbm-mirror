@@ -4,40 +4,69 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-10.03.23 BJH  Release 10.49.05
+10.03.27 BJH  Release 10.50.00
 
-              pbmtext: fix crash when BDF font file contains spurious
-              blank line.  Ignore such blank lines.
-              
-10.03.17 BJH  Release 10.49.04
+              Add pamtoavs, avstopam.  Thanks Scott Pakin.
 
-              ppmtoilbm: fix arithmetic overflow with image dimension
-              represented as 16 bit integer.
+              Add pampaintspill.
 
-              pbmpage: fix garbage output.
-
-              Build: don't fail due to SIGPWR being undefined.
-
-10.02.23 BJH  Release 10.49.03
-
-              pnmhistmap: Fix crash with -width.  Always broken.
+              pnmconvol: Add -normalize .
 
               pm_system(): Close extraneous file descriptors that, among
               other things, prevent child from seeing EOF.
 
-10.01.25 BJH  Release 10.49.02
+              libnetpbm: Add PNM_GETR(), PNM_GETG(), PNM_GETB().  Same
+              as PPM_GETR(), etc.
 
-              pamtosvg: fix bug: occasional crash with out of range error.
+              libnetpbm: Add ppm_luminosity().  Same as PPM_LUMIN, but
+              returns pixval.
 
-10.01.11 BJH  Release 10.49.01
+              pnmhisteq: Equalize based on luminosity alone, rather than a
+              strange combination of luminosity and HSV value.
+
+              pamenlarge: Make special fast path for scale factors up to 10
+              (2, 3, and 5 already existed).  Thanks Prophet of the Way
+              <afu@wta.att.ne.jp>.
+
+              pamflip: Speed up for most images.  Thanks Prophet of the Way
+              <afu@wta.att.ne.jp>.
+
+              ybmtopbm: Assume YBM format has raster in natural order
+              instead of byte-reversed.  This is what pbmtoybm creates,
+              and is most logical.  We don't know if there are any existing
+              YBM images or generators of them other than pbmtoybm.
+
+              pbmpscale: speedup.
+
+              pbmclean: speedup.
+
+              pbmtext: fix crash when BDF font file contains spurious
+              blank line.  Ignore such blank lines.
+              
+              pbmpscale: fix arithmetic overflow on output image dimensions.
+
+              pbmtogem, pbmtoybm, pgmtolispm, ppmtoilbm, pnmtosgi: fix
+              arithmetic overflow with image dimension represented as
+              16 bit integer.
+
+              pbmpage: fix garbage output.
+
+              pnmhistmap: Fix crash with -width.  Always broken.
 
               libppmd/ppmpat: fix wild pointer in ppmd_fill_drawprocp();
-              broken in 10.47.00.
+              broken in 10.47.
 
               palmtopnm: fix incorrect "PALM_DIRECT_COLOR_FLAG is not valid
-              for version 3 encoding type" failure.
+              for version 3 encoding type" failure.  Thanks Paul Bolle
+              <pebolle@tiscali.nl>.
+
+              pamtosvg: fix bug: occasional crash with out of range error.
+              Introduced in 10.42.
 
               palmtopnm: fix incorrect output with version 3 direct color.
+              Thanks Paul Bolle <pebolle@tiscali.nl>.
+
+              Build: don't fail due to SIGPWR being undefined.
 
 09.12.30 BJH  Release 10.49.00
 

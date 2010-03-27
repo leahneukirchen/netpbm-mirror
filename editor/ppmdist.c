@@ -125,7 +125,7 @@ main(int argc, char *argv[]) {
          * by frequency - but again, for a small number of colors
          * it's a small matter.
          */
-        colorToGrayMap[color].gray = PPM_LUMIN(hist[color].color);
+        colorToGrayMap[color].gray = ppm_luminosity(hist[color].color);
     }
 
     /*

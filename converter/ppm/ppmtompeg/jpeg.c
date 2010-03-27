@@ -360,7 +360,7 @@ JMovie2JPEG(const char * const infilename,
  *
  *      allocate and initialize JPEG decompression object
  *      specify data source (eg, a file)
- *      jpeg_read_header();     // obtain image dimensions and other parameters
+ *      jpeg_read_header();      obtain image dimensions and other parameters
  *      set parameters for decompression
  *      jpeg_start_decompress();
  *      while (scan lines remain to be read)

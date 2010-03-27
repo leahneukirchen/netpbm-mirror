@@ -20,7 +20,7 @@ PORTBINARIES =	411toppm eyuvtoppm gouldtoppm ilbmtoppm imgtoppm \
 		ppmtowinicon ppmtoxpm ppmtoyuv ppmtoyuvsplit \
 		qrttoppm rawtoppm rgb3toppm spctoppm \
 		sputoppm tgatoppm winicontoppm ximtoppm xpmtoppm xvminitoppm \
-		yuvtoppm yuvsplittoppm
+		yuvsplittoppm yuvtoppm 
 
 MATHBINARIES = sldtoppm 
 

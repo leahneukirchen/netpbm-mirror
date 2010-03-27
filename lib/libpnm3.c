@@ -45,7 +45,7 @@ mean4(int const format,
         break;
 
     default:
-        pm_error( "Invalid format passed to pnm_backgroundxel()");
+        pm_error("Invalid format passed to pnm_backgroundxel()");
     }
     return retval;
 }

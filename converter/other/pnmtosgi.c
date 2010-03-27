@@ -13,10 +13,15 @@
 ** implied warranty.
 **
 ** 29Jan94: first version
+
+** Feb 2010 afu
+** Added dimension check to prevent short int from overflowing
 */
 #include "pnm.h"
 #include "sgi.h"
 #include "mallocvar.h"
+
+
 
 /*#define DEBUG*/
 
@@ -42,6 +47,7 @@ static int rle_compress ARGS((ScanElem *inbuf, int cols));
 
 #define MAXVAL_BYTE     255
 #define MAXVAL_WORD     65535
+#define INT16MAX        32767
 
 static char storage = STORAGE_RLE;
 static ScanLine * channel[3];
@@ -87,9 +93,7 @@ write_header(int const cols,
 
 
 int
-main(argc, argv)
-    int argc;
-    char *argv[];
+main(int argc,char * argv[])
 {
     FILE *ifp;
     int argn;
@@ -131,6 +135,9 @@ main(argc, argv)
         pm_usage(usage);
 
     pnm_readpnminit(ifp, &cols, &rows, &maxval, &format);
+    if( rows>INT16MAX || cols>INT16MAX )
+      pm_error ("Input image is too large.");
+
     pnmrow = pnm_allocrow(cols);
 
     switch( PNM_FORMAT_TYPE(format) ) {
@@ -172,9 +179,7 @@ main(argc, argv)
 
 
 static void
-write_table(table, tabsize)
-    long *table;
-    int tabsize;
+write_table(long * table, int const tabsize)
 {
     int i;
     long offset;
@@ -194,9 +199,8 @@ write_table(table, tabsize)
 
 
 static void
-write_channels(cols, rows, channels, put)
-    int cols, rows, channels;
-    void (*put) ARGS((short));
+write_channels(int const cols,int const rows, int const channels,
+               void (*put) (short))
 {
     int i, row, col;
 
@@ -214,7 +218,7 @@ write_channels(cols, rows, channels, put)
 }
 
 static void
-put_big_short(short s)
+put_big_short(short const s)
 {
     if ( pm_writebigshort( stdout, s ) == -1 )
         pm_error( "write error" );
@@ -222,8 +226,7 @@ put_big_short(short s)
 
 
 static void
-put_big_long(l)
-    long l;
+put_big_long(long const l)
 {
     if ( pm_writebiglong( stdout, l ) == -1 )
         pm_error( "write error" );
@@ -231,15 +234,16 @@ put_big_long(l)
 
 
 static void
-put_short_as_byte(short s)
+put_short_as_byte(short const s)
 {
     put_byte((unsigned char)s);
 }
 
 
 static long *
-build_channels(FILE *ifp, int cols, int rows, xelval maxval, 
-               int format, int bpc, int channels)
+build_channels(FILE * const ifp, int const cols, int const rows,
+               xelval const maxval, int const format,
+               int const bpc, int const channels)
 {
     int i, row, col, sgirow;
     long *table = NULL;
@@ -286,11 +290,10 @@ build_channels(FILE *ifp, int cols, int rows, xelval maxval,
 
 
 static ScanElem *
-compress(temp, row, rows, cols, chan_no, table, bpc)
-    ScanElem *temp;
-    int row, rows, cols, chan_no;
-    long *table;
-    int bpc;
+compress(ScanElem * temp,
+         int const row,  int const rows,
+         int const cols, int const chan_no,
+         long * table, int const bpc)
 {
     int len, i, tabrow;
     ScanElem *p;
@@ -323,9 +326,7 @@ slightly modified RLE algorithm from ppmtoilbm.c
 written by Robert A. Knop (rknop@mop.caltech.edu)
 */
 static int
-rle_compress(inbuf, size)
-    ScanElem *inbuf;
-    int size;
+rle_compress(ScanElem * const inbuf, int const size)
 {
     int in, out, hold, count;
     ScanElem *outbuf = rletemp;

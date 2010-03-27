@@ -1066,6 +1066,67 @@ pnm_getopacity(const struct pam * const pamP,
 
 
 
+tuple
+pnm_backgroundtuple(struct pam *  const pamP,
+                    tuple      ** const tuples) {
+/*--------------------------------------------------------------------
+  This function was copied from libpnm3.c's pnm_backgroundxel() and
+  modified to use tuples instead of xels.
+----------------------------------------------------------------------*/
+    tuple tuplePtr, bgtuple, ul, ur, ll, lr;
+
+    /* Guess a good background value. */
+    ul = tuples[0][0];
+    ur = tuples[0][pamP->width-1];
+    ll = tuples[pamP->height-1][0];
+    lr = tuples[pamP->height-1][pamP->width-1];
+    bgtuple = NULL;
+
+    /* We first recognize three corners equal.  If not, we look for any
+       two.  If not, we just average all four.
+    */
+    if (pnm_tupleequal(pamP, ul, ur) && pnm_tupleequal(pamP, ur, ll))
+        tuplePtr = ul;
+    else if (pnm_tupleequal(pamP, ul, ur) &&
+             pnm_tupleequal(pamP, ur, lr))
+        tuplePtr = ul;
+    else if (pnm_tupleequal(pamP, ul, ll) &&
+             pnm_tupleequal(pamP, ll, lr))
+        tuplePtr = ul;
+    else if (pnm_tupleequal(pamP, ur, ll) &&
+             pnm_tupleequal(pamP, ll, lr))
+        tuplePtr = ur;
+    else if (pnm_tupleequal(pamP, ul, ur))
+        tuplePtr = ul;
+    else if (pnm_tupleequal(pamP, ul, ll))
+        tuplePtr = ul;
+    else if (pnm_tupleequal(pamP, ul, lr))
+        tuplePtr = ul;
+    else if (pnm_tupleequal(pamP, ur, ll))
+        tuplePtr = ur;
+    else if (pnm_tupleequal(pamP, ur, lr))
+        tuplePtr = ur;
+    else if (pnm_tupleequal(pamP, ll, lr))
+        tuplePtr = ll;
+    else {
+        /* Reimplement libpnm3.c's mean4() but for tuples. */
+        unsigned int plane;
+        bgtuple = pnm_allocpamtuple(pamP);
+        for (plane = 0; plane < pamP->depth; ++plane)
+          bgtuple[plane] = (ul[plane] + ur[plane] + ll[plane] + lr[plane]) / 4;
+    }
+    if (!bgtuple) {
+        unsigned int plane;
+        bgtuple = pnm_allocpamtuple(pamP);
+        for (plane = 0; plane < pamP->depth; ++plane)
+          bgtuple[plane] = tuplePtr[plane];
+    }
+
+    return bgtuple;
+}
+
+
+
 /*=============================================================================
    pm_system() Standard Input feeder and Standard Output accepter functions.   
 =============================================================================*/

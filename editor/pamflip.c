@@ -656,28 +656,44 @@ transformPbmGen(struct pam *     const inpamP,
             
     computeXformMatrix(&xform, inpamP->width, inpamP->height, xformCore);
     
-    bitrow = pbm_allocrow(inpamP->width);
-    newbits = pbm_allocarray(pbm_packed_bytes(outpamP->width), 
-                             outpamP->height);
+    bitrow = pbm_allocrow_packed(inpamP->width);
+    newbits = pbm_allocarray_packed( outpamP->width, outpamP->height );
             
     /* Initialize entire array to zeroes.  One bits will be or'ed in later */
     for (row = 0; row < outpamP->height; ++row) {
         unsigned int col;
         for (col = 0; col < pbm_packed_bytes(outpamP->width); ++col) 
-             newbits[row][col] = 0; 
+            newbits[row][col] = 0; 
     }
     
     for (row = 0; row < inpamP->height; ++row) {
         unsigned int col;
-        pbm_readpbmrow(inpamP->file, bitrow, inpamP->width, inpamP->format);
-        for (col = 0; col < inpamP->width; ++col) {
-            unsigned int newcol, newrow;
-            transformPoint(col, row, xform, &newcol, &newrow);
-            newbits[newrow][newcol/8] |= bitrow[col] << (7 - newcol % 8);
-                /* Use of "|=" patterned after pbm_readpbmrow_packed. */
-         }
+
+        pbm_readpbmrow_packed(inpamP->file, bitrow,
+                              inpamP->width, inpamP->format);
+        for (col = 0; col < inpamP->width; ) {
+            if (bitrow[col/8] == 0x00) 
+                col += 8;  /* Blank.   Skip to next byte. */
+            else {      /* Examine each pixel. */
+                unsigned int const colLimit = MIN(col+8, inpamP->width);
+                unsigned int i;
+
+                for (i = 0; col < colLimit; ++i, ++col) {
+                    bool const bitIsOne = (bitrow[col/8] >> (7-i)) & 0x01;
+                    if (bitIsOne) {
+                        /* Write in only the one bits. */  
+                        unsigned int newcol, newrow;
+                        transformPoint(col, row, xform, &newcol, &newrow);
+                        newbits[newrow][newcol/8] |= 0x01 << (7 - newcol % 8);
+                            /* Use of "|=" patterned after
+                               pbm_readpbmrow_packed().
+                            */
+                    }
+                }
+            }
+        }
     }
-    
+
     for (row = 0; row < outpamP->height; ++row)
         pbm_writepbmrow_packed(outpamP->file, newbits[row], outpamP->width, 0);
     

@@ -1275,9 +1275,9 @@ skipCharacter(FILE * const fp) {
 
 
 static void
-validateEncoding(const char **  const arg,
-                 unsigned int * const codepointP,
-                 bool *         const badCodepointP) {
+interpEncoding(const char **  const arg,
+               unsigned int * const codepointP,
+               bool *         const badCodepointP) {
 /*----------------------------------------------------------------------------
    With arg[] being the ENCODING statement from the font, return as
    *codepointP the codepoint that it indicates (code point is the character
@@ -1315,12 +1315,29 @@ validateEncoding(const char **  const arg,
 
 
 
+static void
+readEncoding(FILE *         const ifP,
+             unsigned int * const codepointP,
+             bool *         const badCodepointP) {
+
+    const char * arg[32];
+
+    expect(ifP, "ENCODING", arg);
+    
+    interpEncoding(arg, codepointP, badCodepointP);
+}
+
+
 
 static void
-processCharsLine(FILE *        const fp,
-                 const char ** const arg,
-                 struct font * const fontP) {
-
+processChars(FILE *        const fp,
+             const char ** const arg,
+             struct font * const fontP) {
+/*----------------------------------------------------------------------------
+   Process the CHARS block in a BDF font file, assuming the file is positioned
+   just after the CHARS line and 'arg' is the contents of that CHARS line.
+   Read the rest of the block and apply its contents to *fontP.
+-----------------------------------------------------------------------------*/
     unsigned int const nCharacters = atoi(arg[1]);
 
     unsigned int nCharsDone;
@@ -1354,12 +1371,8 @@ processCharsLine(FILE *        const fp,
                 pm_error("no memory for font glyph for '%s' character",
                          charName);
 
-            {
-                const char * arg[32];
-                expect(fp, "ENCODING", arg);
+            readEncoding(fp, &codepoint, &badCodepoint);
 
-                validateEncoding(arg, &codepoint, &badCodepoint);
-            }
             if (badCodepoint)
                 skipCharacter(fp);
             else {
@@ -1389,7 +1402,7 @@ processCharsLine(FILE *        const fp,
                     const char * arg[32];
                     expect(fp, "ENDCHAR", arg);
                 }
-                assert(codepoint < 256); /* Ensured by validateEncoding() */
+                assert(codepoint < 256); /* Ensured by readEncoding() */
 
                 fontP->glyph[codepoint] = glyphP;
             }
@@ -1401,19 +1414,26 @@ processCharsLine(FILE *        const fp,
 
 
 static void
-processFontLine(FILE *        const fp,
-                const char *  const line,
-                const char ** const arg,
-                struct font * const fontP,
-                bool *        const endOfFontP) {
+processBdfFontLine(FILE *        const fp,
+                   const char *  const line,
+                   const char ** const arg,
+                   struct font * const fontP,
+                   bool *        const endOfFontP) {
+/*----------------------------------------------------------------------------
+   Process a nonblank line just read from a BDF font file.
 
+   This processing may involve reading more lines.
+-----------------------------------------------------------------------------*/
     *endOfFontP = FALSE;  /* initial assumption */
+
+    assert(arg[0] != NULL);  /* Entry condition */
 
     if (streq(arg[0], "COMMENT")) {
         /* ignore */
     } else if (streq(arg[0], "SIZE")) {
         /* ignore */
     } else if (streq(arg[0], "STARTPROPERTIES")) {
+        /* Read off the properties and ignore them all */
         unsigned int const propCount = atoi(arg[1]);
         unsigned int i;
         for (i = 0; i < propCount; ++i) {
@@ -1431,8 +1451,11 @@ processFontLine(FILE *        const fp,
         fontP->y         = atoi(arg[4]);
     } else if (streq(arg[0], "ENDFONT")) {
         *endOfFontP = true;
-    } else if (!strcmp(arg[0], "CHARS"))
-        processCharsLine(fp, arg, fontP);
+    } else if (streq(arg[0], "CHARS")) {
+        processChars(fp, arg, fontP);
+    } else {
+        /* ignore */
+    }
 }
 
 
@@ -1440,18 +1463,17 @@ processFontLine(FILE *        const fp,
 struct font *
 pbm_loadbdffont(const char * const name) {
 
-    FILE * fp;
-    char line[1024];
-    const char * arg[32];
+    FILE * ifP;
     struct font * fontP;
+    const char * wordList[32];
     bool endOfFont;
 
-    fp = fopen(name, "rb");
-    if (!fp)
+    ifP = fopen(name, "rb");
+    if (!ifP)
         pm_error("Unable to open BDF font file name '%s'.  errno=%d (%s)",
                  name, errno, strerror(errno));
 
-    expect(fp, "STARTFONT", arg);
+    expect(ifP, "STARTFONT", wordList);
 
     MALLOCVAR(fontP);
     if (fontP == NULL)
@@ -1471,12 +1493,14 @@ pbm_loadbdffont(const char * const name) {
     endOfFont = FALSE;
 
     while (!endOfFont) {
+        char line[1024];
+        const char * wordList[32];
         int rc;
-        rc = readline(fp, line, arg);
+        rc = readline(ifP, line, wordList);
         if (rc < 0)
             pm_error("End of file before ENDFONT statement in BDF font file");
 
-        processFontLine(fp, line, arg, fontP, &endOfFont);
+        processBdfFontLine(ifP, line, wordList, fontP, &endOfFont);
     }
     return fontP;
 }

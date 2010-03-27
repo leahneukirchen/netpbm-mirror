@@ -28,7 +28,7 @@ struct cmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *inputFilespec;  /* Filespec of input file */
+    const char *inputFileName;  /* File name of input file */
 
     /* The following describe the rectangle the user wants to cut out. 
        the value UNSPEC for any of them indicates that value was not
@@ -51,7 +51,7 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine(int argc, char ** const argv,
+parseCommandLine(int argc, const char ** const argv,
                  struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
@@ -87,7 +87,7 @@ parseCommandLine(int argc, char ** const argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = TRUE;  /* We may have parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (cmdlineP->width < 0)
@@ -103,10 +103,10 @@ parseCommandLine(int argc, char ** const argv,
 
     switch (argc-1) {
     case 0:
-        cmdlineP->inputFilespec = "-";
+        cmdlineP->inputFileName = "-";
         break;
     case 1:
-        cmdlineP->inputFilespec = argv[1];
+        cmdlineP->inputFileName = argv[1];
         break;
     case 4:
     case 5: {
@@ -137,9 +137,9 @@ parseCommandLine(int argc, char ** const argv,
         }
 
         if (argc-1 == 4)
-            cmdlineP->inputFilespec = "-";
+            cmdlineP->inputFileName = "-";
         else
-            cmdlineP->inputFilespec = argv[5];
+            cmdlineP->inputFileName = argv[5];
         break;
     }
     }
@@ -669,7 +669,7 @@ cutOneImage(FILE *             const ifP,
 
 
 int
-main(int argc, char *argv[]) {
+main(int argc, const char *argv[]) {
 
     FILE * const ofP = stdout;
 
@@ -677,11 +677,11 @@ main(int argc, char *argv[]) {
     FILE * ifP;
     bool eof;
 
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
-    ifP = pm_openr(cmdline.inputFilespec);
+    ifP = pm_openr(cmdline.inputFileName);
 
     eof = FALSE;
     while (!eof) {

@@ -171,7 +171,7 @@ thin_image(bitmap_type *image, bool bgSpec, pixel bg,
 	    if (PPM_ISGRAY(background))
             bg_color = PPM_GETR(background);
 	    else
-            bg_color = PPM_LUMIN(background);
+            bg_color = ppm_luminosity(background);
 
 	    for (n = num_pixels - 1; n >= 0L; --n)
 	    {
@@ -306,7 +306,7 @@ void thin1(bitmap_type *image, unsigned char colour)
       if (PPM_ISGRAY(background))
           bg_color = PPM_GETR(background);
       else
-          bg_color = PPM_LUMIN(background);
+          bg_color = ppm_luminosity(background);
 
       LOG (" Thinning image.....\n "); 
       xsize = image->width;

@@ -189,7 +189,7 @@ readRpgmRow(FILE * const fileP,
         asprintfN(&error, "Unable to allocate memory for row buffer "
                   "for %u columns", cols);
     else {
-        ssize_t rc;
+        size_t rc;
         rc = fread(rowBuffer, 1, bytesPerRow, fileP);
         if (rc == 0)
             asprintfN(&error, "Error reading row.  fread() errno=%d (%s)",

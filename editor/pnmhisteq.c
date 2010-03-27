@@ -144,7 +144,7 @@ computeLuminosityHistogram(xel * const *   const xels,
             for (col = 0; col < cols; ++col) {
                 xel const thisXel = xels[row][col];
                 if (!monoOnly || PPM_ISGRAY(thisXel)) {
-                    xelval const l = PPM_LUMIN(thisXel);
+                    xelval const l = ppm_luminosity(thisXel);
 
                     lmin = MIN(lmin, l);
                     lmax = MAX(lmax, l);
@@ -302,6 +302,48 @@ reportMap(const unsigned int * const lumahist,
 
 
 
+static xel
+scaleXel(xel    const thisXel,
+         double const scaler) {
+/*----------------------------------------------------------------------------
+   Scale the components of 'xel' by multiplying by 'scaler'.
+
+   Assume this doesn't cause it to exceed maxval.
+-----------------------------------------------------------------------------*/
+    xel retval;
+
+    PNM_ASSIGN(retval,
+               ((xelval)(PNM_GETR(thisXel) * scaler + 0.5)),
+               ((xelval)(PNM_GETG(thisXel) * scaler + 0.5)),
+               ((xelval)(PNM_GETB(thisXel) * scaler + 0.5)));
+    
+    return retval;
+}
+
+
+
+static xel
+remapRgbValue(xel          const thisXel,
+              xelval       const maxval,
+              const gray * const lumamap) {
+/*----------------------------------------------------------------------------
+  Return the color 'thisXel' with its HSV value changed per 'lumamap' but
+  the same hue and saturation.
+
+  'maxval' is the maxval for 'xel' and our return value.
+-----------------------------------------------------------------------------*/
+    struct hsv const hsv =
+        ppm_hsv_from_color(thisXel, maxval);
+    xelval const oldValue =
+        MIN(maxval, ROUNDU(hsv.v * maxval));
+    xelval const newValue =
+        lumamap[oldValue];
+    
+    return scaleXel(thisXel, (double)newValue/oldValue);
+}
+
+
+
 static void
 remap(xel **       const xels,
       unsigned int const cols,
@@ -323,16 +365,8 @@ remap(xel **       const xels,
                 if (monoOnly && PPM_ISGRAY(thisXel)) {
                     /* Leave this pixel alone */
                 } else {
-                    struct hsv hsv;
-                    xelval iv;
-
-                    hsv = ppm_hsv_from_color(thisXel, maxval);
-                    iv = MIN(maxval, ROUNDU(hsv.v * maxval));
-                    
-                    hsv.v = MIN(1.0, 
-                                ((double) lumamap[iv]) / ((double) maxval));
-
-                    xels[row][col] = ppm_color_from_hsv(hsv, maxval);
+                    xels[row][col] = remapRgbValue(xels[row][col],
+                                                   maxval, lumamap);
                 }
             }
         }

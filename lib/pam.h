@@ -483,6 +483,10 @@ pnm_YCbCr_to_rgbtuple(const struct pam * const pamP,
     ((tuple)[PAM_RED_PLANE] == (tuple)[PAM_GRN_PLANE] && \
      (tuple)[PAM_RED_PLANE] == (tuple)[PAM_BLU_PLANE])
 
+tuple
+pnm_backgroundtuple(struct pam *  const pamP,
+                    tuple      ** const tuples);
+
 /*----------------------------------------------------------------------------
    These are meant for passing to pm_system() as Standard Input feeder
    and Standard Output accepter.

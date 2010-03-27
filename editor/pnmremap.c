@@ -30,6 +30,7 @@
 #include "nstring.h"
 #include "shhopt.h"
 #include "pam.h"
+#include "ppm.h"
 #include "pammap.h"
 
 #define MAXCOLORS 32767u
@@ -1122,7 +1123,7 @@ getSpecifiedMissingColor(struct pam * const pamP,
             specColor[PAM_GRN_PLANE] = PPM_GETG(color);
             specColor[PAM_BLU_PLANE] = PPM_GETB(color);
         } else if (pamP->depth == 1) {
-            specColor[0] = PPM_LUMIN(color);
+            specColor[0] = ppm_luminosity(color);
         } else {
             pm_error("You may not use -missing with a colormap that is not "
                      "of depth 1 or 3.  Yours has depth %u",
