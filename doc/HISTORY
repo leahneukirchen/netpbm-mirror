@@ -12,6 +12,10 @@ not yet  BJH  Release 10.51.00
               pnmsmooth: Don't display pnmconvol messages (i.e. run
               pnmconvol with -quiet).
 
+              pnmsmooth: Fail politely when convolution matrix is so
+              large as to bust the system's program parameter size limit
+              on the invocation of pnmconvol.
+
               pnmsmooth: fix arithmetic overflow with absurdly large
               convolution matrix dimensions.  Thanks Prophet of the Way
               <afu@wta.att.ne.jp>.

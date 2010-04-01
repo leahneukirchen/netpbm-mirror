@@ -196,7 +196,29 @@ makeConvolutionKernel(unsigned int const cols,
         assert(cursor < maxOptSize);
         matrix[cursor] = '\0';
     }
+
     return matrix;
+}
+
+
+
+static void
+validateMatrixOptSize(unsigned int const rows,
+                      unsigned int const cols) {
+
+    /* If the user accidentally specifies absurdly large values for the
+       convolution matrix size, the failure mode can be a confusing message
+       resulting from the 'pnmconvol' arguments being too large.  To try
+       to be more polite in that case, we apply an arbitrary limit on the
+       size of the option here.
+    */
+
+    if (rows * cols > 5000)
+        pm_error("Convolution matrix dimensions %u x %u are too large "
+                 "to be useful, so we assume you made a mistake.  "
+                 "We refuse to use numbers this large because they might "
+                 "cause excessive resource use that would cause failures "
+                 "whose cause would not be obvious to you", cols, rows);
 }
 
 
@@ -212,6 +234,7 @@ main(int argc, const char ** argv) {
     parseCommandLine(argc, argv, &cmdline);
 
     validateComputableDimensions(cmdline.width, cmdline.height);
+    validateMatrixOptSize(cmdline.width, cmdline.height);
 
     matrixOptValue = makeConvolutionKernel(cmdline.width, cmdline.height);
 
