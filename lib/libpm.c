@@ -807,12 +807,21 @@ pm_proginit(int * const argcP, const char * argv[]) {
 
 
 void
-pm_setMessage(int const newState, int * const oldStateP) {
+pm_setMessage(int   const newState,
+              int * const oldStateP) {
     
     if (oldStateP)
         *oldStateP = pm_showmessages;
 
     pm_showmessages = !!newState;
+}
+
+
+
+int
+pm_getMessage(void) {
+
+    return pm_showmessages;
 }
 
 

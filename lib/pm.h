@@ -102,6 +102,9 @@ pm_proginit(int * const argcP, const char * argv[]);
 void
 pm_setMessage(int const newState, int * const oldStateP);
 
+int
+pm_getMessage(void);
+
 FILE * 
 pm_tmpfile(void);
 
