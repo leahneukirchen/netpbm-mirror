@@ -187,6 +187,7 @@ makeConvolutionKernel(unsigned int const cols,
                     *cursor++ = weightStr[i];
             }
         }
+        *cursor++ = '\0';
     }
     return matrix;
 }

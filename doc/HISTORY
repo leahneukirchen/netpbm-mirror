@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+10.04.01 BJH  Release 10.50.01
+
+              pnmsmooth: fix wild pointer: causes wrong arguments to
+              'pnmconvol'.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
 10.03.27 BJH  Release 10.50.00
 
               Add pamtoavs, avstopam.  Thanks Scott Pakin.
