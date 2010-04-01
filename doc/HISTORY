@@ -6,6 +6,14 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.51.00
 
+              pnmsmooth: Respect -plain.
+
+              pnmsmooth: fix arithmetic overflow with absurdly large
+              convolution matrix dimensions.
+
+              pnmsmooth: fix bug: wild pointer causes wrong arguments to
+              'pnmconvol'.
+
 10.03.27 BJH  Release 10.50.00
 
               Add pamtoavs, avstopam.  Thanks Scott Pakin.

@@ -29,6 +29,7 @@
 #include "mallocvar.h"
 #include "shhopt.h"
 #include "nstring.h"
+#include "pm.h"   /* For pm_plain_output */
 #include "pm_system.h"
 #include "pnm.h"
 
@@ -86,6 +87,8 @@ parseCommandLine (int argc, const char ** argv,
     optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdline_p and others. */
 
+    free(option_def);
+
     if (!widthSpec)
         cmdlineP->width = 3;
 
@@ -140,20 +143,33 @@ parseCommandLine (int argc, const char ** argv,
 }
 
 
+static void
+validateComputableDimensions(unsigned int const cols,
+                             unsigned int const rows){
+/*----------------------------------------------------------------------------
+   Make sure that convolution matrix dimensions are small enough to
+   represent in a string.
+-----------------------------------------------------------------------------*/
+    unsigned int const maxStringLength = INT_MAX - 2 -6;
+
+    if (cols >  maxStringLength / rows / 2 )
+       pm_error("The convolution matrix size %u x %u is too large.",
+                cols, rows);
+}
+
+
 
 static const char *
 makeConvolutionKernel(unsigned int const cols,
                       unsigned int const rows) {
 /*----------------------------------------------------------------------------
-   Return a convolution kernel with dimensions 'cols' by 'rows' that is
-   uniform.  Make it in the form of the value of a Pnmconvol '-matrix'
-   option.
+  Return a value for a Pnmconvol '-matrix' option that specifies a
+  convolution kernel with with dimensions 'cols' by 'rows' with 1
+  for every weight.  Caller can use this with Pnmconvol -normalize.
 -----------------------------------------------------------------------------*/
-    double const weight = 1.0/(rows * cols);
+    unsigned int const maxOptSize = cols * rows * 2;
 
     char * matrix;
-
-    unsigned int const maxOptSize = (cols * 10 + 1) * rows + 1;
 
     MALLOCARRAY(matrix, maxOptSize);
 
@@ -162,31 +178,23 @@ makeConvolutionKernel(unsigned int const cols,
                  rows, cols);
     else {
         unsigned int row;
-        char * cursor;
-        
-        cursor = &matrix[0];  /* Start at beginning of string */
-
-        for (row = 0; row < rows; ++row) {
+        unsigned int cursor;
+     
+        for (row = 0, cursor = 0; row < rows; ++row) {
             unsigned int col;
 
             if (row > 0)
-                *cursor++ = ';';
+                matrix[cursor++] = ';';
 
             for (col = 0; col < cols; ++col) {
-                char weightStr[20];
-                unsigned int i;
-
-                assert(cursor - matrix + 10 < maxOptSize);
-
                 if (col > 0)
-                    *cursor++ = ',';
+                    matrix[cursor++] = ',';
 
-                snprintf(weightStr, sizeof(weightStr), "%f", weight);
-
-                for (i = 0; weightStr[i]; ++i)
-                    *cursor++ = weightStr[i];
+                matrix[cursor++] = '1';
             }
         }
+        assert(cursor < maxOptSize);
+        matrix[cursor] = '\0';
     }
     return matrix;
 }
@@ -203,16 +211,27 @@ main(int argc, const char ** argv) {
 
     parseCommandLine(argc, argv, &cmdline);
 
+    validateComputableDimensions(cmdline.width, cmdline.height);
+
     matrixOptValue = makeConvolutionKernel(cmdline.width, cmdline.height);
 
     if (cmdline.dump) {
-        fprintf(stdout, "%s\n", matrixOptValue);
+        pm_error("-dump option no longer exists.  "
+                 "You don't need it because you can now do uniform "
+                 "convolution easily with the -matrix and -normalize "
+                 "options of 'pnmconvol'.");
     } else {
+        const char * const plainOpt = pm_plain_output ? "-plain" : NULL;
+
         const char * matrixOpt;
+
         asprintfN(&matrixOpt, "-matrix=%s", matrixOptValue);
 
+        pm_message("Running Pnmconvol -normalize %s", matrixOpt);
+
         pm_system_lp("pnmconvol", NULL, NULL, NULL, NULL,
-                     "pnmconvol", matrixOpt, cmdline.inputFilespec, NULL);
+                     "pnmconvol", matrixOpt, cmdline.inputFilespec,
+                     "-normalize", plainOpt, NULL);
 
         strfree(matrixOpt);
     }
