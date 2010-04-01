@@ -6,13 +6,18 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.51.00
 
-              pnmsmooth: Respect -plain.
+              pnmsmooth: Respect -plain.  Thanks Prophet of the Way
+              <afu@wta.att.ne.jp>.
+
+              pnmsmooth: Don't display pnmconvol messages (i.e. run
+              pnmconvol with -quiet).
 
               pnmsmooth: fix arithmetic overflow with absurdly large
-              convolution matrix dimensions.
+              convolution matrix dimensions.  Thanks Prophet of the Way
+              <afu@wta.att.ne.jp>.
 
-              pnmsmooth: fix bug: wild pointer causes wrong arguments to
-              'pnmconvol'.
+              pnmsmooth: fix wild pointer: causes wrong arguments to
+              'pnmconvol'.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
 
 10.03.27 BJH  Release 10.50.00
 

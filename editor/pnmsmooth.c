@@ -231,7 +231,7 @@ main(int argc, const char ** argv) {
 
         pm_system_lp("pnmconvol", NULL, NULL, NULL, NULL,
                      "pnmconvol", matrixOpt, cmdline.inputFilespec,
-                     "-normalize", plainOpt, NULL);
+                     "-normalize", "-quiet", plainOpt, NULL);
 
         strfree(matrixOpt);
     }
