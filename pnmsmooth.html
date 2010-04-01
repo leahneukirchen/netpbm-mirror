@@ -14,7 +14,6 @@ pnmsmooth - smooth out an image
 
 <B>pnmsmooth</B>
 [<b>-width=</b><i>cols</i>] [<b>-height=</b><i>rows</i>]
-[<B>-dump=</b><I>dumpfile</I>]
 [<I>pnmfile</I>] [<b>-size</b>]
 
 <p>Minimum unique abbreviations of options is acceptable.  You may use double
@@ -97,6 +96,30 @@ convolution matrix as a PGM file (as used to be the normal input for
 the modern Netpbm command line parser, so had an unconventional command line
 syntax.  Most importantly, you could not use an equal sign or double
 hyphens in the options.
+
+<p>Before Netpbm 10.49 (December 2009), there was a <b>-dump</b> option.
+This strange option caused <b>pnmsmooth</b> not to do any smoothing or
+produce any output image but instead write the convolution matrix it
+would have used, as PGM file such as <b>pnmconvol</b> used to use, to
+a file you specify.  The idea was you could then use that file with a
+separate invocation of <b>pnmconvol</b>.
+
+<p>Then, in Netpbm 10.49, there was a rather different <b>-dump</b>
+option with a similar purpose: It caused <b>pnmsmooth</b> to write to
+Standard Error a string suitable as a value for the <b>pnmconvol</b>
+<b>-matrix</b> option (an option that was new in Netpbm 10.49).
+
+<p>But in Netpbm 10.51 (June 2010), <b>pnmconvol</b> started using the even
+newer <b>pnmconvol</b> <b>-normalize</b> option (new in 10.50), which made
+specifying the convolution matrix for the kind of smoothing that
+<b>pnmsmooth</b> does trivial, so <b>-dump</b> disappeared from
+<b>pnmsmooth</b>.
+
+<p>(There were also ease of implementation issues that kept us from simply
+keeping the original <b>-dump</b> around for backward compatibility: As we
+modified <b>pnmsmooth</b> to take advantage of the new features of
+<b>pnmconvol</b>, which <b>pnmsmooth</b> uses internally, the information
+needed to implement <b>-dump</b> was no longer available in the program).
 
 <HR>
 <H2 id="index">Table Of Contents</H2>
