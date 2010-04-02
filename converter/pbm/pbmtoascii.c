@@ -1,4 +1,4 @@
-/* pbmtoascii.c - read a portable bitmap and produce ASCII graphics
+/* pbmtoascii.c - read a PBM image and produce ASCII graphics
 **
 ** Copyright (C) 1988, 1992 by Jef Poskanzer.
 **
@@ -10,6 +10,7 @@
 ** implied warranty.
 */
 
+#include "mallocvar.h"
 #include "pbm.h"
 
 #define SQQ '\''
@@ -19,7 +20,7 @@
 **     1
 **     2
 */
-static char carr1x2[4] = {
+static char const carr1x2[4] = {
 /*   0    1    2    3   */
     ' ', '"', 'o', 'M' };
 
@@ -35,7 +36,7 @@ static char carr1x2[4] = {
 #define D06 '&'
 #define D05 '$'
 #define D04 '?'
-static char carr2x4[256] = {
+static char const carr2x4[256] = {
 /*0  1    2   3    4   5    6   7    8   9    A   B    C   D    E   F  */
 ' ',SQQ, '`','"', '-',SQQ, SQQ,SQQ, '-','`', '`','`', '-','^', '^','"',/*00-0F*/
 '.',':', ':',':', '|','|', '/',D04, '/','>', '/','>', '~','+', '/','*',/*10-1F*/
@@ -53,29 +54,91 @@ BSQ,BSQ, ':',D04, BSQ,'|', '(',D05, '<','%', D04,'Z', '<',D05, D05,D06,/*90-9F*/
 BSQ,D04, D04,D05, D04,'L', D05,'[', '<','Z', '/','Z', 'c','k', D06,'R',/*D0-DF*/
 ',',D04, D04,D05, '>',BSQ, 'S','S', D04,D05, 'J',']', '>',D06, '1','9',/*E0-EF*/
 'o','b', 'd',D06, 'b','b', D06,'6', 'd',D06, 'd',D07, '#',D07, D07,D08 /*F0-FF*/
-    };
+};
+
+
+
+static void
+pbmtoascii(FILE *       const ifP,
+           unsigned int const gridx,
+           unsigned int const gridy,
+           const char * const carr) {
+
+    int cols, rows, format;
+    unsigned int ccols;
+    bit * bitrow;        /* malloc'ed array */
+    char * line;         /* malloc'ed array */
+    unsigned int row;
+    unsigned int * sig;  /* malloc'ed array */
+
+    pbm_readpbminit(ifP, &cols, &rows, &format);
+
+    ccols = (cols + gridx - 1) / gridx;
+
+    bitrow = pbm_allocrow(cols);
+    MALLOCARRAY(sig, ccols);
+    if (sig == NULL)
+        pm_error("No memory for %u columns", ccols);
+    MALLOCARRAY_NOFAIL(line, ccols+1);
+    if (line == NULL)
+        pm_error("No memory for %u columns", ccols);
+
+    for (row = 0; row < rows; row += gridy) {
+        /* Get a character-row's worth of sigs. */
+        unsigned int b;
+        unsigned int subrow;
+
+        {
+            unsigned int col;
+            for (col = 0; col < ccols; ++col)
+                sig[col] = 0;
+        }
+
+        b = 1;
+        for (subrow = 0; subrow < gridy; ++subrow) {
+            if (row + subrow < rows) {
+                unsigned int subcol;
+                pbm_readpbmrow(ifP, bitrow, cols, format);
+                for (subcol = 0; subcol < gridx; ++subcol) {
+                    unsigned int col, s;
+                    for (col = subcol, s = 0; col < cols; col += gridx, ++s) {
+                        if (bitrow[col] == PBM_BLACK)
+                            sig[s] |= b;
+                    }
+                    b <<= 1;
+                }
+            }
+        }
+        {
+            /* Ok, now remove trailing blanks.  */
+            unsigned int col;
+            unsigned int endcol;
+            for (endcol = ccols; endcol > 0; --endcol)
+                if (carr[sig[endcol-1]] != ' ')
+                    break;
+            /* Copy chars to an array and print. */
+            for (col = 0; col < endcol; ++col)
+                line[col] = carr[sig[col]];
+            line[endcol] = '\0';
+        }
+        puts(line);
+    }
+    pbm_freerow(bitrow);
+    free(sig);
+    free(line);
+}
 
 
 
 int
-main( argc, argv )
-int argc;
-char* argv[];
-    {
-    FILE* ifp;
-    int argn, gridx, gridy, rows, cols, format;
-    int ccols, lastcol, row, subrow, subcol;
-    register int col, b;
-    bit* bitrow;
-    register bit* bP;
-    int* sig;
-    register int* sP;
-    char* line;
-    register char* lP;
-    char* carr;
+main(int argc, const char ** argv) {
+
+    FILE * ifP;
+    int argn, gridx, gridy;
+    const char * carr;
     const char* usage = "[-1x2|-2x4] [pbmfile]";
 
-    pbm_init( &argc, argv );
+    pm_proginit(&argc, argv);
 
     /* Set up default parameters. */
     argn = 1;
@@ -85,81 +148,38 @@ char* argv[];
 
     /* Check for flags. */
     while ( argn < argc && argv[argn][0] == '-' && argv[argn][1] != '\0' )
-	{
-	if ( pm_keymatch( argv[argn], "-1x2", 2 ) )
-	    {
-	    gridx = 1;
-	    gridy = 2;
-	    carr = carr1x2;
-	    }
-	else if ( pm_keymatch( argv[argn], "-2x4", 2 ) )
-	    {
-	    gridx = 2;
-	    gridy = 4;
-	    carr = carr2x4;
-	    }
-	else
-	    pm_usage( usage );
-	++argn;
-	}
+    {
+        if ( pm_keymatch( argv[argn], "-1x2", 2 ) )
+        {
+            gridx = 1;
+            gridy = 2;
+            carr = carr1x2;
+        }
+        else if ( pm_keymatch( argv[argn], "-2x4", 2 ) )
+        {
+            gridx = 2;
+            gridy = 4;
+            carr = carr2x4;
+        }
+        else
+            pm_usage( usage );
+        ++argn;
+    }
 
     if ( argn < argc )
-	{
-	ifp = pm_openr( argv[argn] );
-	++argn;
-	}
+    {
+        ifP = pm_openr( argv[argn] );
+        ++argn;
+    }
     else
-	ifp = stdin;
+        ifP = stdin;
     
     if ( argn != argc )
         pm_usage( usage );
 
-    pbm_readpbminit( ifp, &cols, &rows, &format );
-    ccols = ( cols + gridx - 1 ) / gridx;
-    bitrow = pbm_allocrow( cols );
-    sig = (int*) pm_allocrow( ccols, sizeof(int) );
-    line = (char*) pm_allocrow( ccols + 1, sizeof(char) );
+    pbmtoascii(ifP, gridx, gridy, carr);
 
-    for ( row = 0; row < rows; row += gridy )
-	{
-	/* Get a character-row's worth of sigs. */
-	for ( col = 0; col < ccols; ++col )
-	    sig[col] = 0;
-	b = 1;
-	for ( subrow = 0; subrow < gridy; ++subrow )
-	    {
-	    if ( row + subrow < rows )
-		{
-		pbm_readpbmrow( ifp, bitrow, cols, format );
-		for ( subcol = 0; subcol < gridx; ++subcol )
-		    {
-		    for ( col = subcol, bP = &(bitrow[subcol]), sP = sig;
-			  col < cols;
-			  col += gridx, bP += gridx, ++sP )
-			if ( *bP == PBM_BLACK )
-			    *sP |= b;
-		    b <<= 1;
-		    }
-		}
-	    }
-	/* Ok, now remove trailing blanks.  */
-	for ( lastcol = ccols - 1; lastcol >= 0; --lastcol )
-	    if ( carr[sig[lastcol]] != ' ' )
-		break;
-	/* Copy chars to an array and print. */
-	for ( col = 0, sP = sig, lP = line; col <= lastcol; ++col, ++sP, ++lP )
-	    *lP = carr[*sP];
-	*lP++ = '\0';
-	puts( line );
-	}
+    pm_close(ifP);
 
-    pm_close( ifp );
-    pbm_freerow( bitrow );
-    pm_freerow( (char*) sig );
-    pm_freerow( (char*) line );
-
-    /* If the program failed, it previously aborted with nonzero completion
-       code, via various function calls.
-    */
     return 0;
-    }
+}
