@@ -196,7 +196,7 @@ readRpgmRow(FILE * const fileP,
                       errno, strerror(errno));
         else if (rc != bytesPerRow)
             asprintfN(&error, "Error reading row.  Short read of %u bytes "
-                      "instead of %u", rc, bytesPerRow);
+                      "instead of %u", (unsigned)rc, bytesPerRow);
         else {
             error = NULL;
             if (maxval < 256) {
