@@ -14,6 +14,7 @@
  *  $State: Exp $
  */
 
+#include <stdlib.h>
 #include <string.h>
 
 #include "nstring.h"
