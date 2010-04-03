@@ -1099,7 +1099,7 @@ sub getX11Library($@) {
 
         if (-d('/usr/link/X11')) {
             $default = '/usr/link/X11/libX11' . libSuffix($platform);
-        } elsif (-d('/usr/X11R6')) {
+        } elsif (-d('/usr/X11R6/lib')) {
             $default = '/usr/X11R6/lib/libX11' . libSuffix($platform);
         } else {
             $default = "libX11" . libSuffix($platform);
