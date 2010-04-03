@@ -710,6 +710,7 @@ parseCommandLine(int argc,
     } else if (reduce != -1) {
         cmdlineP->scaleType = SCALE_SEPARATE;
         parseFilespecOnlyParms(argc, argv, cmdlineP);
+        cmdlineP->xsize = cmdlineP->ysize = 0;
         cmdlineP->xscale = cmdlineP->yscale = 
             ((double) 1.0) / ((double) reduce);
         pm_message("reducing by %d gives scale factor of %f.", 
@@ -737,8 +738,8 @@ parseCommandLine(int argc,
 
 static void 
 computeOutputDimensions(struct cmdlineInfo  const cmdline, 
-                        int                 const rows, 
-                        int                 const cols, 
+                        unsigned int        const rows, 
+                        unsigned int        const cols, 
                         int *               const newrowsP, 
                         int *               const newcolsP) {
 

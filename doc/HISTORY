@@ -21,7 +21,13 @@ not yet  BJH  Release 10.51.00
               <afu@wta.att.ne.jp>.
 
               pnmsmooth: fix wild pointer: causes wrong arguments to
-              'pnmconvol'.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+              'pnmconvol'.  Introduced in 10.50.  Thanks Prophet of the Way
+              <afu@wta.att.ne.jp>.
+
+              pamscale: fix -reduce.  Introduced in 10.27.
+
+              configure: don't default to /usr/X11R6/lib/libX11.so just because
+              /usr/X11R6 exists.  /usr/X11R6/lib must exist.
 
 10.03.27 BJH  Release 10.50.00
 
