@@ -16,6 +16,8 @@ not yet  BJH  Release 10.51.00
               large as to bust the system's program parameter size limit
               on the invocation of pnmconvol.
 
+              avstopam: fix incorrect output.
+
               pnmsmooth: fix arithmetic overflow with absurdly large
               convolution matrix dimensions.  Thanks Prophet of the Way
               <afu@wta.att.ne.jp>.

@@ -43,11 +43,11 @@ producePam(FILE *       const avsFileP,
         unsigned int col;
         for (col = 0; col < pamP->width; ++col) {
             tuple const thisTuple = tuplerow[col];
-            char c;
-            pm_readchar(avsFileP, &c); thisTuple[3] = c;
-            pm_readchar(avsFileP, &c); thisTuple[0] = c;
-            pm_readchar(avsFileP, &c); thisTuple[1] = c;
-            pm_readchar(avsFileP, &c); thisTuple[2] = c;
+            unsigned char c;
+            pm_readcharu(avsFileP, &c); thisTuple[3] = c;
+            pm_readcharu(avsFileP, &c); thisTuple[0] = c;
+            pm_readcharu(avsFileP, &c); thisTuple[1] = c;
+            pm_readcharu(avsFileP, &c); thisTuple[2] = c;
         }
         pnm_writepamrow(pamP, tuplerow);
     }
