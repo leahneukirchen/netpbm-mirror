@@ -28,6 +28,8 @@ not yet  BJH  Release 10.51.00
 
               pamscale: fix -reduce.  Introduced in 10.27.
 
+              pampaintspill: fix incorrect output.
+
               configure: don't default to /usr/X11R6/lib/libX11.so just because
               /usr/X11R6 exists.  /usr/X11R6/lib must exist.
 

@@ -57,15 +57,17 @@ struct cmdlineInfo {
 };
 
 struct coords {
-    /* This structure represents an (x,y) coordinate within an image. */
+    /* This structure represents an (x,y) coordinate within an image and
+       the color at that coordinate. */
     unsigned int x;
     unsigned int y;
+    tuple        color;
 };
 
-typedef double distFunc_t(struct coords const p0,
-                          struct coords const p1,
-                          unsigned int  const width,
-                          unsigned int  const height);
+typedef double distFunc_t(const struct coords * const p0,
+                          const struct coords * const p1,
+                          unsigned int          const width,
+                          unsigned int          const height);
     /* Distance function */
 
 
@@ -120,6 +122,25 @@ parseCommandLine(int argc, const char ** const argv,
 }
 
 
+static bool
+tupleEqualColor(const struct pam * const pamP,
+                tuple              const comparand,
+                tuple              const comparator) {
+/*----------------------------------------------------------------------------
+  Report whether two tuples have equal color, regardless of alpha.
+----------------------------------------------------------------------------*/
+    unsigned int const nColorPlanes = pamP->depth >= 3 ? 3 : 1;
+
+    unsigned int plane;
+
+    for (plane = 0; plane < nColorPlanes; ++plane)
+        if (comparand[plane] != comparator[plane])
+            return false;
+
+    return true;
+}
+
+
 
 static void
 locatePaintSources(struct pam *     const pamP,
@@ -133,10 +154,14 @@ locatePaintSources(struct pam *     const pamP,
   represent a non-background color.
   ----------------------------------------------------------------------*/
     struct coords * paintSources;
-        /* List of paint-source indexes into inImage */
-    unsigned int numPaintSources;  /* Number of entries in the above */
-    unsigned int numAlloced;    /* Number of allocated coordinates. */
-    unsigned int row;
+        /* List of paint-source indexes into tuples */
+    unsigned int    numPaintSources;  /* Number of entries in the above */
+    unsigned int    numAlloced;       /* Number of allocated coordinates. */
+    unsigned int    row;
+    struct pam      pamPaint;
+        /* numAlloced-wide PAM for use by pnm_allocpamrow() */
+    tuple         * paintColor;       /* Color of each paint source */
+    unsigned int    i;
 
     paintSources = NULL;
     numAlloced = 0;
@@ -145,7 +170,7 @@ locatePaintSources(struct pam *     const pamP,
     for (row = 0; row < pamP->height; ++row) {
         unsigned int col;
         for (col = 0; col < pamP->width; ++col) {
-            if (!pnm_tupleequal(pamP, tuples[row][col], bgColor)) {
+            if (!tupleEqualColor(pamP, tuples[row][col], bgColor)) {
                 /* Add (row, col) to the list of paint sources. */
                 if (numPaintSources == numAlloced) {
                     numAlloced += pamP->width;
@@ -166,8 +191,6 @@ locatePaintSources(struct pam *     const pamP,
     
     /* Reduce the number of paint sources to reduce execution time. */
     if (downsample > 0 && downsample < numPaintSources) {
-        unsigned int i;
-
         srandom(time(NULL));
 
         for (i = 0; i < downsample; ++i) {
@@ -179,6 +202,20 @@ locatePaintSources(struct pam *     const pamP,
         }
         numPaintSources = downsample;
     }
+
+    /* Now that we know how many paint sources we have, allocate
+       a single block of memory in which to store the paint colors. */
+    pamPaint = *pamP;
+    pamPaint.width = numPaintSources;
+    paintColor = pnm_allocpamrow(&pamPaint);
+    for (i = 0; i < numPaintSources; ++i) {
+        struct coords * thisSource = &paintSources[i];
+
+        thisSource->color = paintColor[i];
+        pnm_assigntuple(pamP, thisSource->color,
+                        tuples[thisSource->y][thisSource->x]);
+    }
+
     *paintSourcesP    = paintSources;
     *numPaintSourcesP = numPaintSources;
 }
@@ -188,15 +225,15 @@ locatePaintSources(struct pam *     const pamP,
 static distFunc_t euclideanDistanceSqr;
 
 static double
-euclideanDistanceSqr(struct coords const p0,
-                     struct coords const p1,
-                     unsigned int  const width,
-                     unsigned int  const height) {
+euclideanDistanceSqr(const struct coords * const p0,
+                     const struct coords * const p1,
+                     unsigned int          const width,
+                     unsigned int          const height) {
 /*----------------------------------------------------------------------------
    Return the square of the Euclidian distance between p0 and p1.
 -----------------------------------------------------------------------------*/
-    double const deltax = (double) (p1.x - p0.x);
-    double const deltay = (double) (p1.y - p0.y);
+    double const deltax = (double) (int) (p1->x - p0->x);
+    double const deltay = (double) (int) (p1->y - p0->y);
 
     return SQR(deltax) + SQR(deltay);
 }
@@ -206,10 +243,10 @@ euclideanDistanceSqr(struct coords const p0,
 static distFunc_t euclideanDistanceTorusSqr;
 
 static double
-euclideanDistanceTorusSqr(struct coords const p0,
-                          struct coords const p1,
-                          unsigned int  const width,
-                          unsigned int  const height) {
+euclideanDistanceTorusSqr(const struct coords * const p0,
+                          const struct coords * const p1,
+                          unsigned int          const width,
+                          unsigned int          const height) {
 /*----------------------------------------------------------------------------
    Return the square of the Euclidian distance between p0 and p1, assuming
    it's a toroidal surface on which the top row curves around to meet the
@@ -217,28 +254,28 @@ euclideanDistanceTorusSqr(struct coords const p0,
 -----------------------------------------------------------------------------*/
     struct coords p0Adj, p1Adj;
 
-    if (p1.x >= p0.x + width / 2) {
-        p0Adj.x = p0.x + width;
-        p1Adj.x = p1.x;
-    } else if (p0.x >= p1.x + width / 2) {
-        p0Adj.x = p0.x;
-        p1Adj.x = p1.x + width;
+    if (p1->x >= p0->x + width / 2) {
+        p0Adj.x = p0->x + width;
+        p1Adj.x = p1->x;
+    } else if (p0->x >= p1->x + width / 2) {
+        p0Adj.x = p0->x;
+        p1Adj.x = p1->x + width;
     } else {
-        p0Adj.x = p0.x;
-        p1Adj.x = p1.x;
+        p0Adj.x = p0->x;
+        p1Adj.x = p1->x;
     }
-    if (p1.y >= p0.y + height / 2) {
-        p0Adj.y = p0.y + height;
-        p1Adj.y = p1.y;
-    } else if (p0.y >= p1.y + height / 2) {
-        p0Adj.y = p0.y;
-        p1Adj.y = p1.y + height;
+    if (p1->y >= p0->y + height / 2) {
+        p0Adj.y = p0->y + height;
+        p1Adj.y = p1->y;
+    } else if (p0->y >= p1->y + height / 2) {
+        p0Adj.y = p0->y;
+        p1Adj.y = p1->y + height;
     } else {
-        p0Adj.y = p0.y;
-        p1Adj.y = p1.y;
+        p0Adj.y = p0->y;
+        p1Adj.y = p1->y;
     }
 
-    return euclideanDistanceSqr(p0Adj, p1Adj, 0, 0);
+    return euclideanDistanceSqr(&p0Adj, &p1Adj, 0, 0);
 }
 
 
@@ -258,7 +295,7 @@ reportProgress(unsigned int const rowsComplete,
     if (prevOutputTime) {
         if (now - prevOutputTime >= timeUpdateDelta
             || rowsComplete % (height/minUpdates) == 0) {
-            pm_message("%.1f%% complete",
+            pm_message("%5.1f%% complete",
                        rowsComplete * 100.0 / height);
             prevOutputTime = now;
         }
@@ -282,17 +319,21 @@ produceOutputImage(struct pam *          const pamP,
   using a fraction of each paint source as determined by its distance
   to the background pixel.
 ----------------------------------------------------------------------*/
-    struct coords target;
+    unsigned int row;
+    unsigned int rowsComplete;
 
-    for (target.y = 0; target.y < pamP->height; ++target.y) {
-        double * newColor;
+    rowsComplete = 0;
+    for (row = 0; row < pamP->height; ++row) {
+        struct coords   target;
+        double        * newColor;
         
         MALLOCARRAY(newColor, pamP->depth);
 
+        target.y = row;
         for (target.x = 0; target.x < pamP->width; ++target.x) {
-            if (all ||
-                pnm_tupleequal(pamP, tuples[target.y][target.x], bgColor)) {
+        tuple targetTuple = tuples[target.y][target.x];
 
+            if (all || tupleEqualColor(pamP, targetTuple, bgColor)) {
                 unsigned int plane;
                 unsigned int ps;
                 double       totalWeight;
@@ -302,9 +343,8 @@ produceOutputImage(struct pam *          const pamP,
                 totalWeight = 0.0;
                 for (ps = 0; ps < numPaintSources; ++ps) {
                     struct coords const source = paintSources[ps];
-                    tuple const paintColor = tuples[source.y][source.x];
                     double const distSqr =
-                        (*distFunc)(target, source,
+                        (*distFunc)(&target, &source,
                                     pamP->width, pamP->height);
 
                     if (distSqr > 0.0) {
@@ -319,17 +359,17 @@ produceOutputImage(struct pam *          const pamP,
                         unsigned int plane;
 
                         for (plane = 0; plane < pamP->depth; ++plane)
-                            newColor[plane] += weight * paintColor[plane];
+                            newColor[plane] += weight * source.color[plane];
 
                         totalWeight += weight;
                     }
                 }
                 for (plane = 0; plane < pamP->depth; ++plane)
-                    tuples[target.y][target.x][plane] =
+                    targetTuple[plane] =
                         (sample) (newColor[plane] / totalWeight);
             }
         }
-        reportProgress(target.y, pamP->height);
+        reportProgress(++rowsComplete, pamP->height);
 
         free(newColor);
     }
@@ -343,7 +383,7 @@ main(int argc, const char *argv[]) {
     struct cmdlineInfo cmdline;          /* Command-line parameters */
     tuple              bgColor;          /* Input image's background color */
     struct coords *    paintSources;
-        /* List of paint-source indexes into inImage */
+        /* List of paint-source indexes into tuples */
     unsigned int       numPaintSources;  /* Number of entries in the above */
     distFunc_t *       distFunc;         /* The distance function */
     struct pam inpam;
