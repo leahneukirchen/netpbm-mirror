@@ -80,7 +80,7 @@ parseCommandLine(int argc, const char ** const argv,
         /* Instructions to OptParseOptions3 on how to parse our options */
     optStruct3     opt;
     unsigned int   option_def_index;
-    unsigned int bgcolorSpec, powerSpec,downsampleSpec;
+    unsigned int bgcolorSpec, powerSpec, downsampleSpec;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
     option_def_index = 0;          /* Incremented by OPTENTRY */
@@ -143,6 +143,41 @@ tupleEqualColor(const struct pam * const pamP,
 
 
 static void
+setPaintSourceColors(struct pam *    const pamP,
+                     tuple **        const tuples,
+                     struct coords * const paintSources,
+                     unsigned int    const numPaintSources) {
+/*----------------------------------------------------------------------------
+   Set the 'color' member of each source in paintSources[].
+
+   Set it to the color of the source pixel in tuples[][], indicated by
+   paintSources[].
+
+   Malloc memory to store these colors -- a contiguous block of member for all
+   of them.
+-----------------------------------------------------------------------------*/
+    struct pam pamPaint;
+        /* numPaintSources-wide PAM for use by pnm_allocpamrow() */
+    tuple * paintColor;
+        /* Points to storage for the color tuples */
+    unsigned int    i;
+
+    pamPaint = *pamP;
+    pamPaint.width = numPaintSources;
+    paintColor = pnm_allocpamrow(&pamPaint);
+
+    for (i = 0; i < numPaintSources; ++i) {
+        struct coords * const thisSourceP = &paintSources[i];
+
+        thisSourceP->color = paintColor[i];
+        pnm_assigntuple(pamP, thisSourceP->color,
+                        tuples[thisSourceP->y][thisSourceP->x]);
+    }
+}
+
+
+
+static void
 locatePaintSources(struct pam *     const pamP,
                    tuple **         const tuples,
                    tuple            const bgColor,
@@ -154,14 +189,9 @@ locatePaintSources(struct pam *     const pamP,
   represent a non-background color.
   ----------------------------------------------------------------------*/
     struct coords * paintSources;
-        /* List of paint-source indexes into tuples */
     unsigned int    numPaintSources;  /* Number of entries in the above */
     unsigned int    numAlloced;       /* Number of allocated coordinates. */
     unsigned int    row;
-    struct pam      pamPaint;
-        /* numAlloced-wide PAM for use by pnm_allocpamrow() */
-    tuple         * paintColor;       /* Color of each paint source */
-    unsigned int    i;
 
     paintSources = NULL;
     numAlloced = 0;
@@ -191,6 +221,8 @@ locatePaintSources(struct pam *     const pamP,
     
     /* Reduce the number of paint sources to reduce execution time. */
     if (downsample > 0 && downsample < numPaintSources) {
+        unsigned int i;
+
         srandom(time(NULL));
 
         for (i = 0; i < downsample; ++i) {
@@ -203,18 +235,7 @@ locatePaintSources(struct pam *     const pamP,
         numPaintSources = downsample;
     }
 
-    /* Now that we know how many paint sources we have, allocate
-       a single block of memory in which to store the paint colors. */
-    pamPaint = *pamP;
-    pamPaint.width = numPaintSources;
-    paintColor = pnm_allocpamrow(&pamPaint);
-    for (i = 0; i < numPaintSources; ++i) {
-        struct coords * thisSource = &paintSources[i];
-
-        thisSource->color = paintColor[i];
-        pnm_assigntuple(pamP, thisSource->color,
-                        tuples[thisSource->y][thisSource->x]);
-    }
+    setPaintSourceColors(pamP, tuples, paintSources, numPaintSources);
 
     *paintSourcesP    = paintSources;
     *numPaintSourcesP = numPaintSources;
