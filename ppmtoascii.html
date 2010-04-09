@@ -1,0 +1,82 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Ppmtoascii User Manual</TITLE></HEAD>
+<BODY>
+<H1>ppmtoascii</H1>
+Updated: 09 April 2010
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<H2>NAME</H2>
+ppmtoascii - convert a PPM image to ASCII graphics with ANSI terminal color
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>ppmtoascii</B>
+
+[<B>-1x2</B>|<B>-2x4</B>]
+
+[<I>ppmfile</I>]
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>ppmtoascii</b> reads a PPM image as input and produces a somewhat
+crude ASCII graphic image as output, with ANSI terminal control characters
+so it has crude color when sent to a color text terminal.
+
+<P>There is no converter for the other direction.
+
+<p><b>ppmtoterm</b> does a similar thing, but displays each character of the
+image as a single pixel (using the same dense character for every pixel),
+whereas <b>ppmtoascii</b> combines 2 or 8 pixels into one character, where
+the character roughly represents those particular pixels.
+
+<p>Note that ANSI provides for only eight colors (including black and white).
+
+<p>Note that an ANSI terminal can't display a single character in multiple
+colors, so where a character represents 8 pixels of differing colors, the
+color of the character is one that is the average of the colors of those
+pixels.
+
+<p><b>pbmtoascii</b> does the same thing for PBM images, with no terminal
+control characters (because none are needed for a strictly black and white
+image).
+
+
+<H2 id="options">OPTIONS</H2>
+
+<p>The <B>-1x2</B> and <B>-2x4</B> options give you two alternate ways for the
+pixels to get mapped to characters.  With <B>1x2</B>, the default, each
+character represents a group of 1 pixel across by 2 pixels down.  With
+<B>-2x4</B>, each character represents 2 pixels across by 4 pixels down.
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<A HREF="pbmtoascii.html">pbmtoascii</A>
+<a href="ppmtoterm.html">ppmtoterm</a>
+<A HREF="ppm.html">ppm</A>
+
+
+<h2 id="history">HISTORY</h2>
+
+<p><b>ppmtoascii</b> was new in Netpbm 10.51 (June 2010).  Frank Ch. Eigler
+derived it from <b>pbmtoascii</b>.
+
+
+<H2 id="author">AUTHOR</H2>
+
+Copyright (C) 2010 by Frank Ch. Eigler.
+
+<HR>
+<H2 id="index">Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#history">HISTORY</A>
+<LI><A HREF="#author">AUTHOR</A>
+</UL>
+</BODY>
+</HTML>
