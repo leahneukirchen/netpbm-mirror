@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.51.00
 
+              Add ppmtoascii.  Thanks "Frank Ch. Eigler" <fche@elastic.org>.
+
               pnmsmooth: Respect -plain.  Thanks Prophet of the Way
               <afu@wta.att.ne.jp>.
 
