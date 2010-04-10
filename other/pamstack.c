@@ -70,7 +70,8 @@ parseCommandLine(int argc, char ** argv,
     else
         if (strlen(cmdlineP->tupletype)+1 > sizeof(pam.tuple_type))
             pm_error("Tuple type name specified is too long.  Maximum of "
-                     "%u characters allowed.", sizeof(pam.tuple_type));
+                     "%u characters allowed.",
+                     (unsigned)sizeof(pam.tuple_type));
 
     cmdlineP->nInput = 0;  /* initial value */
     { 

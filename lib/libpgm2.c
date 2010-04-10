@@ -125,10 +125,12 @@ writepgmrowraw(FILE *       const fileP,
     if (rc < 0)
         pm_error("Error writing row.  fwrite() errno=%d (%s)",
                  errno, strerror(errno));
-    else if (rc != bytesPerRow)
-        pm_error("Error writing row.  Short write of %u bytes "
-                 "instead of %u", rc, bytesPerRow);
-
+    else {
+        size_t const bytesWritten = rc;
+        if (bytesWritten != bytesPerRow)
+            pm_error("Error writing row.  Short write of %u bytes "
+                     "instead of %u", (unsigned)bytesWritten, bytesPerRow);
+    }
     free(rowBuffer);
 }
 

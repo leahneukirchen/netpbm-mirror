@@ -68,7 +68,8 @@ parseCommandLine(int argc, char ** argv,
         struct pam pam;
         if (strlen(cmdlineP->tupletype)+1 > sizeof(pam.tuple_type))
             pm_error("The tuple type you specified is too long.  "
-                     "Maximum %d characters.", sizeof(pam.tuple_type)-1);
+                     "Maximum %u characters.",
+                     (unsigned)sizeof(pam.tuple_type)-1);
     }        
 
     if (!sigmaSpec)

@@ -261,9 +261,9 @@ pnm_allocpamrow(const struct pam * const pamP) {
     tuple * const tuplerow = allocPamRow(pamP);
 
     if (tuplerow == NULL)
-        pm_error("Out of memory allocating space for a tuple row of\n"
-                 "%d tuples by %d samples per tuple by %d bytes per sample.",
-                 pamP->width, allocationDepth(pamP), sizeof(sample));
+        pm_error("Out of memory allocating space for a tuple row of "
+                 "%d tuples by %d samples per tuple by %u bytes per sample.",
+                 pamP->width, allocationDepth(pamP), (unsigned)sizeof(sample));
 
     return tuplerow;
 }
@@ -400,7 +400,7 @@ pnm_setminallocationdepth(struct pam * const pamP,
         pm_error("Can't set minimum allocation depth in pam structure, "
                  "because the structure is only %u bytes long, and to "
                  "have an allocation_depth field, it must bea at least %u",
-                 pamP->len, PAM_STRUCT_SIZE(allocation_depth));
+                 pamP->len, (unsigned)PAM_STRUCT_SIZE(allocation_depth));
 
     pamP->allocation_depth = MAX(allocationDepth, pamP->depth);
         
@@ -575,7 +575,7 @@ appendComment(char **      const commentsP,
 
     if (*commentsP == NULL)
         pm_error("Couldn't get storage for %u characters of comments from "
-                 "the PAM header", commentLen);
+                 "the PAM header", (unsigned)commentLen);
 
     strcat(*commentsP, commentLine);
 }

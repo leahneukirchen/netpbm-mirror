@@ -83,7 +83,7 @@ parseCommandLine(int                 argc,
         cmdlineP->name = NULL;
     else if (strlen(cmdlineP->name) > 56)
         pm_error("Image name too long: %d chars. (max 56)",
-                 strlen(cmdlineP->name));
+                 (unsigned)strlen(cmdlineP->name));
     else if (!ISALPHA(cmdlineP->name[0]) && cmdlineP->name[0] !='_')
         pm_error("Image name '%s' starts with non-alphabet character.",
                   cmdlineP->name);

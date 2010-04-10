@@ -249,7 +249,7 @@ doSubstitution(const char *    const pattern,
                 pm_error("%s number %u is wider than "
                          "the %u characters specified in the "
                          "input file pattern",
-                         desc, strlen(substString), precision);
+                         desc, (unsigned)strlen(substString), precision);
             else
                 buffer_addString(bufferP, substString);
             

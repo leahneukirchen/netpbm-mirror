@@ -317,7 +317,7 @@ genCmap(colorhist_vector const chv,
     MALLOCARRAY(cmap, cmapSize);
     if (cmapP == NULL)
         pm_error("Out of memory allocating %u bytes for a color map.",
-                 sizeof(cixel_map) * (ncolors+1));
+                 (unsigned)sizeof(cixel_map) * (ncolors+1));
 
     xpmMaxval = xpmMaxvalFromMaxval(maxval);
 

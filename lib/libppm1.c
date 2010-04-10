@@ -184,6 +184,46 @@ readPpmRow(FILE *       const fileP,
 
 
 static void
+interpRasterRowRaw(const unsigned char * const rowBuffer,
+                   pixel *               const pixelrow,
+                   unsigned int          const cols,
+                   unsigned int          const bytesPerSample) {
+
+    unsigned int bufferCursor;
+
+    bufferCursor = 0;  /* start at beginning of rowBuffer[] */
+        
+    if (bytesPerSample == 1) {
+        unsigned int col;
+        for (col = 0; col < cols; ++col) {
+            pixval const r = rowBuffer[bufferCursor++];
+            pixval const g = rowBuffer[bufferCursor++];
+            pixval const b = rowBuffer[bufferCursor++];
+            PPM_ASSIGN(pixelrow[col], r, g, b);
+        }
+    } else  {
+        /* two byte samples */
+        unsigned int col;
+        for (col = 0; col < cols; ++col) {
+            pixval r, g, b;
+                    
+            r = rowBuffer[bufferCursor++] << 8;
+            r |= rowBuffer[bufferCursor++];
+                    
+            g = rowBuffer[bufferCursor++] << 8;
+            g |= rowBuffer[bufferCursor++];
+                    
+            b = rowBuffer[bufferCursor++] << 8;
+            b |= rowBuffer[bufferCursor++];
+                    
+            PPM_ASSIGN(pixelrow[col], r, g, b);
+        }
+    }
+}
+
+
+
+static void
 readRppmRow(FILE *       const fileP, 
             pixel *      const pixelrow, 
             unsigned int const cols, 
@@ -211,41 +251,14 @@ readRppmRow(FILE *       const fileP,
         else if (ferror(fileP))
             asprintfN(&error, "Error reading row.  fread() errno=%d (%s)",
                       errno, strerror(errno));
-        else if (rc != bytesPerRow)
-            asprintfN(&error, "Error reading row.  Short read of %u bytes "
-                      "instead of %u", rc, bytesPerRow);
         else {
-            unsigned int bufferCursor;
-
-            error = NULL;
-
-            bufferCursor = 0;  /* start at beginning of rowBuffer[] */
-        
-            if (bytesPerSample == 1) {
-                unsigned int col;
-                for (col = 0; col < cols; ++col) {
-                    pixval const r = rowBuffer[bufferCursor++];
-                    pixval const g = rowBuffer[bufferCursor++];
-                    pixval const b = rowBuffer[bufferCursor++];
-                    PPM_ASSIGN(pixelrow[col], r, g, b);
-                }
-            } else  {
-                /* two byte samples */
-                unsigned int col;
-                for (col = 0; col < cols; ++col) {
-                    pixval r, g, b;
-                    
-                    r = rowBuffer[bufferCursor++] << 8;
-                    r |= rowBuffer[bufferCursor++];
-                    
-                    g = rowBuffer[bufferCursor++] << 8;
-                    g |= rowBuffer[bufferCursor++];
-                    
-                    b = rowBuffer[bufferCursor++] << 8;
-                    b |= rowBuffer[bufferCursor++];
-                    
-                    PPM_ASSIGN(pixelrow[col], r, g, b);
-                }
+            size_t const bytesRead = rc;
+            if (bytesRead != bytesPerRow)
+                asprintfN(&error, "Error reading row.  Short read of %u bytes "
+                          "instead of %u", (unsigned)bytesRead, bytesPerRow);
+            else {
+                interpRasterRowRaw(rowBuffer, pixelrow, cols, bytesPerSample);
+                error = NULL;
             }
         }
         free(rowBuffer);

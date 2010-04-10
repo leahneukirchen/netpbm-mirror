@@ -72,7 +72,7 @@ systemf(const char * const fmt,
         shellCommand = malloc(allocSize);
         if (shellCommand == NULL)
             pm_error("Can't get storage for %u-character command",
-                     allocSize);
+                     (unsigned)allocSize);
         else {
             va_list varargs;
             size_t realLen;

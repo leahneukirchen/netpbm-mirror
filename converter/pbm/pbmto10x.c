@@ -60,7 +60,7 @@ res_60x72(void) {
     MALLOCARRAY(stripe, cols);
     if (stripe == NULL)
         pm_error("Unable to allocate %u bytes for a stripe buffer.",
-                 cols * sizeof(stripe[0]));
+                 (unsigned)(cols * sizeof(stripe[0])));
     for (i = 0; i < LOW_RES_ROWS; ++i)
         bitrows[i] = pbm_allocrow(cols);
     printf("\033A\010");        /* '\n' = 8/72 */
@@ -95,7 +95,7 @@ res_120x144(void) {
     MALLOCARRAY(stripe, cols);
     if (stripe == NULL)
         pm_error("Unable to allocate %u bytes for a stripe buffer.",
-                 cols * sizeof(stripe[0]));
+                 (unsigned)(cols * sizeof(stripe[0])));
     for (i = 0; i < HIGH_RES_ROWS; ++i)
         bitrows[i] = pbm_allocrow(cols);
     printf("\0333\001");            /* \n = 1/144" */

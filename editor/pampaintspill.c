@@ -24,6 +24,8 @@
  * ----------------------------------------------------------------------
  */
 
+#define _XOPEN_SOURCE 600  /* Make sure random(), srandom() are in <stdlib.h>*/
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <math.h>

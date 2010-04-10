@@ -117,7 +117,7 @@ parseCommandLine(int argc, const char ** argv,
         cmdlineP->inputFilespec = "-";
     else if (argc-1 != 1)
         pm_error("Program takes zero or one argument (filename).  You "
-                 "specified %d", argc-1);
+                 "specified %u", argc-1);
     else
         cmdlineP->inputFilespec = argv[1];
 }
@@ -205,11 +205,11 @@ pgmHist(FILE *       const ifP,
     
     MALLOCARRAY(ghist, histWidth);
     if (ghist == NULL)
-        pm_error("Not enough memory for histogram array (%d bytes)",
-                  histWidth * sizeof(int));
+        pm_error("Not enough memory for histogram array (%u bytes)",
+                 histWidth * (unsigned)sizeof(int));
     bits = pbm_allocarray(histWidth, histHeight);
     if (bits == NULL)
-        pm_error("no space for output array (%d bits)",
+        pm_error("no space for output array (%u bits)",
                  histWidth * histHeight);
     memset(ghist, 0, histWidth * sizeof(ghist[0]));
 
@@ -299,8 +299,8 @@ createHist(bool             const colorWanted[3],
             unsigned int i;
             MALLOCARRAY(hist, histWidth);
             if (hist == NULL)
-                pm_error ("Not enough memory for histogram arrays (%u bytes)",
-                          histWidth * sizeof(hist[0]) * 3);
+                pm_error("Not enough memory for histogram arrays (%u bytes)",
+                         histWidth * (unsigned)sizeof(hist[0]) * 3);
 
             for (i = 0; i < histWidth; ++i)
                 hist[i] = 0;

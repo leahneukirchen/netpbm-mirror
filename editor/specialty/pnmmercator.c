@@ -16,6 +16,7 @@
 **
 */
 
+#define _XOPEN_SOURCE  /* Make sure M_PI is in <math.h> */
 #include <math.h>
 #include <string.h>
 

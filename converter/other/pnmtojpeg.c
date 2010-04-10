@@ -898,7 +898,7 @@ write_exif_header(struct jpeg_compress_struct * const cinfoP,
         pm_error("Invalid length %u at start of exif file", length);
     else {
         unsigned char * exif_data;
-        int rc;
+        size_t rc;
         size_t const data_length = length - 2;  
             /* Subtract 2 byte length field*/
 
@@ -906,14 +906,15 @@ write_exif_header(struct jpeg_compress_struct * const cinfoP,
 
         exif_data = malloc(data_length);
         if (exif_data == NULL)
-            pm_error("Unable to allocate %d bytes for exif header buffer",
-                     data_length);
+            pm_error("Unable to allocate %u bytes for exif header buffer",
+                     (unsigned)data_length);
 
         rc = fread(exif_data, 1, data_length, exif_file);
 
         if (rc != data_length)
             pm_error("Premature end of file on exif header file.  Should be "
-                     "%d bytes of data, read only %d", data_length, rc);
+                     "%u bytes of data, read only %u",
+                     (unsigned)data_length, (unsigned)rc);
 
         jpeg_write_marker(cinfoP, JPEG_APP0+1, 
                           (const JOCTET *) exif_data, data_length);

@@ -65,19 +65,22 @@
 static int 
 display_16_bit (const struct fiasco_renderer *this, unsigned char *ximage,
 		const fiasco_image_t *fiasco_image);
+
 static int 
 display_24_bit_bgr (const struct fiasco_renderer *this, unsigned char *ximage,
 		    const fiasco_image_t *fiasco_image);
+
 static int 
 display_24_bit_rgb (const struct fiasco_renderer *this, unsigned char *ximage,
 		    const fiasco_image_t *fiasco_image);
+
 static int 
 display_32_bit (const struct fiasco_renderer *this, unsigned char *ximage,
 		const fiasco_image_t *fiasco_image);
+
 static int
 free_bits_at_bottom (unsigned long a);
-static int
-free_bits_at_top (unsigned long a);
+
 static int
 number_of_bits_set (unsigned long a);
 
@@ -342,21 +345,6 @@ number_of_bits_set (unsigned long a)
       return 1 + number_of_bits_set (a >> 1);
    else
       return (number_of_bits_set (a >> 1));
-}
-
-static int
-free_bits_at_top (unsigned long a)
-/*
- *  How many 0 bits are there at most significant end of longword.
- *  Low performance, do not call often.
- */
-{
-   if(!a)				/* assume char is 8 bits */
-      return sizeof (unsigned long) * 8;
-   else if (((long) a) < 0l)		/* assume twos complement */
-      return 0;
-   else
-      return 1 + free_bits_at_top ( a << 1);
 }
 
 static int

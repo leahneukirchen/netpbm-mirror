@@ -276,7 +276,7 @@ interpretMemorySize(unsigned int const memsizeSpec,
         if (memsizeOpt > sizeMax / Meg)
             pm_error("-memsize value too large: %u MiB.  Maximum this program "
                      "can handle is %u MiB", 
-                     memsizeOpt, sizeMax / Meg);
+                     memsizeOpt, (unsigned)sizeMax / Meg);
         *availableMemoryP = memsizeOpt * Meg;
     } else
         *availableMemoryP = sizeMax;

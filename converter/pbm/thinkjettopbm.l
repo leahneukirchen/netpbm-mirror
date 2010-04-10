@@ -49,6 +49,7 @@
    uses a macro he failed to define).
 */
 #define YY_NO_UNPUT
+#define YY_NO_INPUT 1
 #define YY_STACK_USED 0
 #define YY_ALWAYS_INTERACTIVE 0
 #define YY_NEVER_INTERACTIVE 0
@@ -200,6 +201,8 @@ main (int argc, char **argv)
     }
     debugFlag = cmdline.debug;
     yylex ();
+    if (0)
+        yyunput(0, NULL);  /* defeat compiler warning about unused fn */
     return 0;
 }
 
