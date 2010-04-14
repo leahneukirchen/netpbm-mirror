@@ -1302,7 +1302,8 @@ sub gnuCflags($) {
     return("CFLAGS = " . gnuOptimizeOpt($gccCommandName) . " -ffast-math " .
            " -pedantic -fno-common " . 
            "-Wall -Wno-uninitialized -Wmissing-declarations -Wimplicit " .
-           "-Wwrite-strings -Wmissing-prototypes -Wundef\n");
+           "-Wwrite-strings -Wmissing-prototypes -Wundef " .
+           "-Wno-unknown-pragmas\n");
 }
 
 
