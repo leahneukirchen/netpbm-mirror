@@ -224,10 +224,12 @@ locatePaintSources(struct pam *            const pamP,
     paintSources.size  = 0;
     paintSources.alloc = 0;
 
+    #pragma omp parallel for
     for (row = 0; row < pamP->height; ++row) {
         unsigned int col;
         for (col = 0; col < pamP->width; ++col) {
             if (!tupleEqualColor(pamP, tuples[row][col], bgColor))
+                #pragma omp critical (addPaintSource)
                 addPaintSource(row, col, &paintSources);
         }
     }
@@ -360,6 +362,7 @@ produceOutputImage(struct pam *          const pamP,
     unsigned int rowsComplete;
 
     rowsComplete = 0;
+    #pragma omp parallel for
     for (row = 0; row < pamP->height; ++row) {
         struct coords   target;
         double        * newColor;
@@ -406,6 +409,7 @@ produceOutputImage(struct pam *          const pamP,
                         (sample) (newColor[plane] / totalWeight);
             }
         }
+        #pragma omp critical (rowTally)
         reportProgress(++rowsComplete, pamP->height);
 
         free(newColor);
