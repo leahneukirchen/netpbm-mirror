@@ -789,11 +789,57 @@ readRleRow(FILE *          const ifP,
         if (j + incount > bytesPerRow)
             pm_error("Bytes in RLE compressed row exceed bytes per row.  "
                      "Bytes per row is %u.  A run length of %u bytes "
-                     "pushes the bytes in this row up to %u bytes (and then"
-                     "we gave up.", bytesPerRow, incount, j + incount);
+                     "pushes the bytes in this row up to %u bytes (and then "
+                     "we gave up).", bytesPerRow, incount, j + incount);
         pm_readcharu(ifP, &inval);
         memset(palmrow + j, inval, incount);
         j += incount;
+    }
+} 
+
+
+
+static void
+readPackBitsRow16(FILE *          const ifP,
+                  unsigned char * const palmrow,
+                  unsigned int    const bytesPerRow) {
+
+    /*  From the Palm OS Programmer's API Reference:
+  
+        Although the [...] spec is byte-oriented, the 16-bit algorithm is
+        identical [to the 8-bit algorithm]: just substitute "word" for "byte".
+    */
+    unsigned int j;
+
+    for (j = 0;  j < bytesPerRow; ) {
+        char incount;
+        pm_readchar(ifP, &incount);
+        if (incount < 0) { 
+            /* How do we handle incount == -128 ? */
+            unsigned int const runlength = (-incount + 1) * 2;
+            unsigned int k;
+            unsigned short inval;
+            pm_readlittleshortu(ifP, &inval);
+            for (k = 0; (k < runlength) && (j + k + 1 < bytesPerRow); k += 2) {
+                memcpy(palmrow + j + k, &inval, 2);
+            }
+            j += runlength;
+        } else {
+            /* We just read the stream of shorts as a stream of chars */
+            unsigned int const nonrunlength = (incount + 1) * 2;
+            unsigned int k;
+            for (k = 0; (k < nonrunlength) && (j + k < bytesPerRow); ++k) {
+                unsigned char inval;
+                pm_readcharu(ifP, &inval);
+                palmrow[j + k] = inval;
+            }
+            j += nonrunlength;
+        }
+        if (j > bytesPerRow) 
+            pm_error("Bytes in PackBits compressed row exceed bytes per row.  "
+                     "Bytes per row is %u.  "
+                     "The bytes in this row were pushed up to %u bytes "
+                     "(and then we gave up).", bytesPerRow, j);
     }
 } 
 
@@ -814,12 +860,13 @@ readPackBitsRow(FILE *          const ifP,
             unsigned int const runlength = -incount + 1;
             unsigned char inval;
             pm_readcharu(ifP, &inval);
-            memset(palmrow + j, inval, runlength);
+            if (j + runlength < bytesPerRow) 
+                memset(palmrow + j, inval, runlength);
             j += runlength;
         } else {
             unsigned int const nonrunlength = incount + 1;
             unsigned int k;
-            for (k = 0; k < nonrunlength; ++k) {
+            for (k = 0; k < nonrunlength && j + k < bytesPerRow; ++k) {
                 unsigned char inval;
                 pm_readcharu(ifP, &inval);
                 palmrow[j + k] = inval;
@@ -827,7 +874,10 @@ readPackBitsRow(FILE *          const ifP,
             j += nonrunlength;
         }
         if (j > bytesPerRow) 
-            pm_error("Bytes in PackBits compressed row exceed bytes per row.");
+            pm_error("Bytes in PackBits compressed row exceed bytes per row.  "
+                     "Bytes per row is %u.  "
+                     "The bytes in this row were pushed up to %u bytes "
+                     "(and then we gave up).", bytesPerRow, j);
     }
 } 
 
@@ -853,6 +903,7 @@ readDecompressedRow(FILE *                   const ifP,
                     unsigned char *          const lastrow,
                     enum palmCompressionType const compressionType,
                     unsigned int             const bytesPerRow,
+                    unsigned int             const pixelSize,
                     bool                     const firstRow) {
 /*----------------------------------------------------------------------------
    Read a row from Palm file 'ifP', in uncompressed form (i.e. decompress if
@@ -881,7 +932,10 @@ readDecompressedRow(FILE *                   const ifP,
         readScanlineRow(ifP, palmrow, lastrow, bytesPerRow, firstRow);
         break;
     case COMPRESSION_PACKBITS:
-        readPackBitsRow(ifP, palmrow, bytesPerRow);
+        if (pixelSize != 16)
+            readPackBitsRow(ifP, palmrow, bytesPerRow);
+        else
+            readPackBitsRow16(ifP, palmrow, bytesPerRow);
         break;
     case COMPRESSION_NONE:
         readUncompressedRow(ifP, palmrow, bytesPerRow);
@@ -1032,6 +1086,7 @@ writePnm(FILE *            const ofP,
         readDecompressedRow(ifP, palmrow, lastrow, 
                             palmHeader.compressionType, 
                             palmHeader.bytesPerRow,
+                            palmHeader.pixelSize,
                             row == 0);
 
         if (palmHeader.directColor) {
