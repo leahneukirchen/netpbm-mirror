@@ -684,6 +684,7 @@ parseCommandLine(int argc,
     } else if (reduce != -1) {
         cmdlineP->scaleType = SCALE_SEPARATE;
         parseFilespecOnlyParms(argc, argv, cmdlineP);
+        cmdlineP->xsize = cmdlineP->ysize = 0;
         cmdlineP->xscale = cmdlineP->yscale = 
             ((double) 1.0) / ((double) reduce);
         pm_message("reducing by %d gives scale factor of %f.", 

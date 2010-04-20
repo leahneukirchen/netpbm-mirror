@@ -4,6 +4,16 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+10.04.20 BJH  Release 10.47.12
+
+              palmtopnm: fix for pixel size 16.  Thanks Paul Bolle
+              <pebolle@tiscali.nl>.
+
+              pamscale: fix -reduce.  Introduced in 10.27.
+
+              pbmtext: fix crash when BDF font file contains spurious
+              blank line.  Ignore such blank lines.
+
 10.03.17 BJH  Release 10.47.11
 
               ppmtoilbm: fix arithmetic overflow with image dimension

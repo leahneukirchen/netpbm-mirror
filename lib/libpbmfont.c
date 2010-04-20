@@ -1102,20 +1102,32 @@ mk_argvn(char *        const s,
 
 
 static int
-readline(FILE *        const fp,
-         char *        const buf,
-         const char ** const arg) {
+readline(FILE *        const ifP,
+         char *        const line,
+         const char ** const wordList) {
+/*----------------------------------------------------------------------------
+   Read a nonblank line from file *ifP.  Return the value of the whole line
+   in *buf (must be at least 1024 bytes long), and parse it into words
+   in *wordList (must have at least 32 entries).
 
-    int retval;
-    char * rc;
+   If there is no nonblank line before EOF, return rc == -1.
+-----------------------------------------------------------------------------*/
+    bool gotLine;
+    bool error;
 
-    rc = fgets(buf, 1024, fp);
-    if (rc == NULL)
-        retval = -1;
-    else
-        retval = mk_argvn(buf, arg, 32);
+    for (gotLine = false, error = false; !gotLine && !error; ) {
+        char * rc;
 
-    return retval;
+        rc = fgets(line, 1024, ifP);
+        if (rc == NULL)
+            error = true;
+        else {
+            mk_argvn(line, wordList, 32);
+            if (wordList[0] != NULL)
+                gotLine = true;
+        }
+    }
+    return error ? -1 : 0;
 }
 
 
