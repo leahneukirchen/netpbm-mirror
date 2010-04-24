@@ -36,18 +36,17 @@ component, or it could contain annual rainfalls for places on the
 surface of the Earth.  Any process that uses the PAM format must 
 further define the format to specify the meanings of the data.
 
-<P>A PAM image describes a two dimensional grid of tuples.  The tuples
-are arranged in rows and columns.  The width of the image is the
-number of columns.  The height of the image is the number of rows.
-All rows are the same width and all columns are the same height.  The
-tuples may have any degree, but all tuples have the same degree.  The
-degree of the tuples is called the depth of the image.  Each member of
-a tuple is called a sample.  A sample is an unsigned integer which
-represents a locus along a scale which starts at zero and ends at a
-certain maximum value greater than zero called the maxval.  The maxval
-is the same for every sample in the image.  The two dimensional array
-of all the Nth samples of each tuple is called the Nth plane or Nth
-channel of the image.
+<P>A PAM image describes a two dimensional grid of tuples.  The tuples are
+arranged in rows and columns.  The width of the image is the number of
+columns.  The height of the image is the number of rows.  All rows are the
+same width and all columns are the same height.  The tuples may have any
+degree, but all tuples have the same degree.  The degree of the tuples is
+called the depth of the image.  Each member of a tuple is called a sample.  A
+sample is an unsigned integer which represents a locus along a scale which
+starts at zero and ends at a certain maximum value called the maxval.  The
+maxval is the same for every sample in the image.  The two dimensional array
+of all the Nth samples of each tuple is called the Nth plane or Nth channel of
+the image.
 
 <P>Though the basic format does not assign any meaning to the tuple values, it
 does include an optional string that describes that meaning.  The
@@ -93,32 +92,19 @@ no data, delimiters, or padding before, after, or between images.
 Each PAM image consists of a header followed immediately by a raster.
 <P>
 Here is an example header:
+
+<pre>
+<tt>
 <P>
-<B>P7</B>
-
-<BR>
-
-<B>WIDTH 227</B>
-
-<BR>
-
-<B>HEIGHT 149</B>
-
-<BR>
-
-<B>DEPTH 3</B>
-
-<BR>
-
-<B>MAXVAL 255</B>
-
-<BR>
-
-<B>TUPLTYPE RGB</B>
-
-<BR>
-
-<B>ENDHDR</B>
+>P7
+WIDTH 227
+HEIGHT 149
+DEPTH 3
+MAXVAL 255
+TUPLTYPE RGB
+ENDHDR
+</tt>
+</pre>
 
 <P>The header begins with the ASCII characters &quot;P7&quot; followed
 by newline.  This is the magic number.
@@ -207,16 +193,16 @@ character known in ASCII as Line Feed or LF.
 
 <H2 id="limitations">LIMITATIONS</H2>
 
+<p>Height, width, depth, and maxval are at least 1.
+
+<p>Height, width, and depth have no defined maximum, but processors and
+generators of images usually have their own limitations.
+
 <P>The maxval of an image is never greater than 65535.  (The reason it is
 limited is to make it easier to build an image processor, in which
 intermediate arithmetic values often have to fit within 31 or 32 bits).
 There was no specified limitation before October, 2005, but essentially
 all implementations have always observed it.
-
-<p>Height and width are at least 1.
-
-<p>Height and width have no defined maximum, but processors and generators
-of images usually have their own limitations.
 
 <H2 id="tupletype">DEFINED TUPLE TYPES</h2>
 
@@ -225,8 +211,7 @@ official subformats of PAM for especially popular applications of the
 format.  Users of the format may also define their own tuple types,
 and thus their own subformats.
 
-<A NAME="visual">&nbsp;</A>
-<H3>PAM Used For Visual Images</H3>
+<H3 id="visual">PAM Used For Visual Images</H3>
 
 <P>A common use of PAM images is to represent visual images such
 as are typically represented by images in the older and more concrete
