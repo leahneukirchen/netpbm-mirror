@@ -14,6 +14,9 @@ not yet  BJH  Release 10.51.00
               pnmsmooth: Don't display pnmconvol messages (i.e. run
               pnmconvol with -quiet).
 
+              pnmtops: fix bug: 12 bits per sample output when 8 would do.
+              Introduced in 10.40.
+
               palmtopnm: fix for pixel size 16.  Thanks Paul Bolle
               <pebolle@tiscali.nl>.
 

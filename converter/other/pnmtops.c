@@ -1001,6 +1001,8 @@ computeDepth(xelval         const inputMaxval,
         *bitspersampleP = 2;
     else if (bitsRequiredByMaxval <= 4)
         *bitspersampleP = 4;
+    else if (bitsRequiredByMaxval <= 8)
+        *bitspersampleP = 8;
     else {
         /* Post script level 2 defines a format with 12 bits per sample,
            but I don't know the details of that format (both RLE and
