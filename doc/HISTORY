@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+10.04.24 BJH  Release 10.50.04
+
+              pnmtops: fix bug: 12 bits per sample output when 8 would do.
+              Introduced in 10.40.
+
 10.04.20 BJH  Release 10.50.03
 
               pampaintspill: fix incorrect output.
