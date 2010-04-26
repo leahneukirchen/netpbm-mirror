@@ -8,6 +8,9 @@ not yet  BJH  Release 10.51.00
 
               Add ppmtoascii.  Thanks "Frank Ch. Eigler" <fche@elastic.org>.
 
+              pamx: Make exit status 0 instead of 10 when window manager
+              requests termination.
+
               pnmsmooth: Respect -plain.  Thanks Prophet of the Way
               <afu@wta.att.ne.jp>.
 
