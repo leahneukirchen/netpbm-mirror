@@ -8,6 +8,8 @@ not yet  BJH  Release 10.51.00
 
               Add ppmtoascii.  Thanks "Frank Ch. Eigler" <fche@elastic.org>.
 
+              pnmtops: Add -bitsperpixel option.
+
               pamx: Make exit status 0 instead of 10 when window manager
               requests termination.
 
