@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pnmtops User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmtops</H1>
-Updated: 21 January 2007
+Updated: 01 May 2010
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -20,15 +20,19 @@ pnmtops - convert PNM image to PostScript
 [<B>-width=</B><I>N</I>]
 [<B>-height=</B><I>N</I>]
 [<B>-equalpixels</B>]
+[<b>-bitspersample=</b><i>N</i>]
 [<B>-turn</B>|<B>-noturn</B>]
 [<B>-rle</B>|<B>-runlength</B>]
 [<b>-flate</b>]
 [<b>-ascii85</b>]
-[<B>-nocenter</B>]
-[<B>-nosetpage</B>]
+[<B>-nocenter</B>|<b>-center</b>]
+[<B>-nosetpage</B>|<b>-setpage</b>]
 [<b>-level=</b><i>N</i>]
+[<b>-dict</b>]
+[<b>-vmreclaim</b>]
 [<b>-psfilter</b>]
 [<B>-noshowpage</B>]
+[<b>-verbose</b>]
 [<I>pnmfile</I>]
 
 <P>All options can be abbreviated to their shortest unique prefix.
@@ -114,6 +118,21 @@ is 3000 pixels wide, the output image would be 5 inches wide.
 
 <P>You cannot use <B>-equalpixels</B> with <B>-imagewidth</B>,
 <B>-imageheight</B>, or <B>-scale</B>.
+
+<dt><b>-bitspersample=</b><i>N</i>
+
+<dd>
+This option selects the number of bits for each component of each pixel in
+the Postscript output.  By default, <b>pnmtops</b> chooses the value that
+corresponds to the maxval of the PNM input, subject to constraints of the
+Postscript language.  In particular, if you don't select Postscript level
+2 (<b>-level</b>) with built-in Postscript (<b>-psfilter</b>), the most
+bits per pixel you can have is 8.
+<p>
+The value must be 1, 2, 4, 8, or 12, with 12 being restricted to the
+case described above.
+
+<p>This option was new in Netpbm 10.51 (June 2010).
 
 <DT><B>-scale</B>
 <DD>
@@ -337,6 +356,10 @@ collection as it exits.
 
     <p>This option was new in Netpbm 10.27 (March 2005).
 
+<dt><b>-verbose</b>
+<dd>
+    This causes informational messages about the conversion process and
+    result.
 
 </DL>
 
