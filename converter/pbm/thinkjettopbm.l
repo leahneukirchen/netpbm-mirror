@@ -47,8 +47,14 @@
    undefined.  (Simply leaving them undefined typically works anyway, but it
    is a problem if you use compiler options that say to fail when someone
    uses a macro he failed to define).
+
+   We'd like to define YY_NO_UNPUT so as not to generate the unput function,
+   which we don't use, and avoid a compiler warning about defining and not
+   using it.  Alas, Flex 2.5.35 ignores YY_NO_UNPUT and generates the unput
+   function anyway.  So we have to have a bogus reference to silence the
+   unused function compiler warning.  And that means we have to generate
+   the function always.  Flex 2.5.4 does respect YY_NO_UNPUT.
 */
-#define YY_NO_UNPUT
 #define YY_NO_INPUT 1
 #define YY_STACK_USED 0
 #define YY_ALWAYS_INTERACTIVE 0
