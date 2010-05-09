@@ -123,8 +123,8 @@ main(int argc, char ** argv) {
         char *cp = strchr(hdr, '\n');
 
         if (cp == NULL) {
-            pm_error("malformed SBIG file header at character %lu",
-                     hdr - header);
+            pm_error("malformed SBIG file header at character %u",
+                     (unsigned)(hdr - header));
         }
         *cp = '\0';
         if (strncmp(hdr, "ST-", 3) == 0) {
