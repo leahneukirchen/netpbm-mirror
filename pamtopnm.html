@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pamtopnm User Manual</TITLE></HEAD>
 <BODY>
 <H1>pamtopnm</H1>
-Updated: 03 August 2000
+Updated: 10 May 2010
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -38,6 +38,14 @@ and its depth and maxval are appropriate.  If this is not the case,
 
 <P>However, you can override the tuple type requirement with the
 <B>-assume</B> option.
+
+<p><b>pamtopnm</b> produces a PPM image if the input PAM has depth 3 or 4; it
+produces PGM or PBM if the input PAM has depth 1 or 2.  Whether it produced
+PGM or PBM depends upon the maxval: PBM for 1, PGM for anything higher.  The
+tuple type does not play a role in determining the output type.  You can
+use Netpbm programs such as <b>pgmtopgm</b> to generate a different PNM
+output, but remember that Netpbm program that expects PGM input will take
+PBM and so on.
 
 <P>As with any Netpbm program that reads PAM images, <B>pamtopnm</B>
 also reads PNM images as if they were PAM.  In that case,
