@@ -198,14 +198,14 @@ extern int rand();
   #endif
 #endif
 
-/* CONFIGURE: GNUC extensions are used in performance critical places
+/* CONFIGURE: GNU Compiler extensions are used in performance critical places
    when available.  Test whether they exist.
 
    Turn off by defining NO_GCC_BUILTINS.
 
-   Note that though these influence the code produced, the compiler
-   setting ultimately decides what operands are used.  If you
-   want a generic build, check the manual and adjust CFLAGS in
+   Note that though these influence the resulting Netpbm machine code, the
+   compiler setting ultimately decides what instruction set the compiler uses.
+   If you want a generic build, check the manual and adjust CFLAGS in
    config.mk accordingly.
 
    For example, if you want binaries that run on all Intel x86-32
@@ -213,6 +213,10 @@ extern int rand();
    config.mk is much better than setting NO_GCC_BUILTINS to 1.
    If you want to be extra sure use:
    "-march=i386 -mno-mmx -mno-sse -DNO_GCC_BUILTINS"
+
+   Gcc uses SSE and SSE2 instructions by default for AMD/Intel x86-64.
+   Tinkering with "-mno-sse" is not recommended for these machines.  If you
+   don't want SSE code, set NO_GCC_BUILTINS to 1.
 */
 
 #if defined(__GNUC__) && !defined(NO_GCC_BUILTINS)
@@ -221,12 +225,16 @@ extern int rand();
   #define GCCVERSION 0
 #endif
 
-#ifndef HAVE_GCC_MMXSSE
-#if GCCVERSION >=301 && defined(__MMX__) && defined(__SSE__)
-  #define HAVE_GCC_MMXSSE 1
-  /* Use GCC builtins to directly access MMX/SSE features */ 
+/* HAVE_GCC_SSE2 means the compiler has GCC builtins to directly access
+   SSE/SSE2 features.  This is different from whether the compiler generates
+   code that uses these features at all.
+*/
+
+#ifndef HAVE_GCC_SSE2
+#if GCCVERSION >=401 && defined(__SSE__) && defined(__SSE2__)
+  #define HAVE_GCC_SSE2 1
 #else
-  #define HAVE_GCC_MMXSSE 0
+  #define HAVE_GCC_SSE2 0
 #endif
 #endif
 

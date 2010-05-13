@@ -19,6 +19,9 @@ not yet  BJH  Release 10.51.00
               pnmsmooth: Don't display pnmconvol messages (i.e. run
               pnmconvol with -quiet).
 
+              libnetpbm, various PBM programs: Use SSE insted of MMX.  Thanks
+              Prophet of the Way <afu@wta.att.ne.jp>.
+
               pnmtops: fix bug: 12 bits per sample output when 8 would do.
               Introduced in 10.40.
 
