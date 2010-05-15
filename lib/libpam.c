@@ -429,8 +429,9 @@ pnm_setpamrow(const struct pam * const pamP,
 #define MAX_VALUE_LENGTH 255
 
 static void
-parse_header_line(const char buffer[], char label[MAX_LABEL_LENGTH+1], 
-                  char value[MAX_VALUE_LENGTH+1]) {
+parseHeaderLine(const char buffer[],
+                char label[MAX_LABEL_LENGTH+1], 
+                char value[MAX_VALUE_LENGTH+1]) {
     
     int buffer_curs;
 
@@ -482,9 +483,69 @@ struct headerSeen {
 
 
 static void
-process_header_line(char                const buffer[],
-                    struct pam *        const pamP,
-                    struct headerSeen * const headerSeenP) {
+parseHeaderUint(const char *   const valueString,
+                unsigned int * const valueNumP,
+                const char *   const name) {
+/*----------------------------------------------------------------------------
+   Interpret 'valueString' as the number in a header such as
+   "WIDTH 200".
+
+   'name' is the header name ("WIDTH" in the example).
+-----------------------------------------------------------------------------*/
+
+    if (strlen(valueString) == 0)
+        pm_error("Missing value for %s in PAM file header.", name);
+    else {
+        char * endptr;
+        long int valueNum;
+        errno = 0;  /* Clear errno so we can detect strtol() failure */
+        valueNum = strtol(valueString, &endptr, 10);
+        if (errno != 0)
+            pm_error("Too-large value for %s in "
+                     "PAM file header: '%s'", name, valueString);
+        else if (*endptr != '\0') 
+            pm_error("Non-numeric value for %s in "
+                     "PAM file header: '%s'", name, valueString);
+        else if (valueNum < 0) 
+            pm_error("Negative value for %s in "
+                     "PAM file header: '%s'", name, valueString);
+        else if ((unsigned int)valueNum != valueNum)
+            pm_error("Ridiculously large value for %s in "
+                     "PAM file header: %lu", name, valueNum);
+        else
+            *valueNumP = (unsigned int)valueNum;
+    }
+}
+
+
+
+static void
+parseHeaderInt(const char * const valueString,
+               int *        const valueNumP,
+               const char * const name) {
+/*----------------------------------------------------------------------------
+  This is not what it seems.  It is the same thing as
+  parseHeaderUint, except that the type of the value it returns is
+  "int" instead of "unsigned int".  But that doesn't mean the value can
+  be negative.  We throw an error is it is not positive.
+-----------------------------------------------------------------------------*/
+    unsigned int valueNum;
+
+    parseHeaderUint(valueString, &valueNum, name);
+
+    if ((int)valueNum != valueNum)
+        pm_error("Ridiculously large value for %s in "
+                 "PAM file header: %u", name, valueNum);
+    else
+        *valueNumP = (int)valueNum;
+}
+
+
+
+static void
+processHeaderLine(char                const buffer[],
+                  struct pam *        const pamP,
+                  struct headerSeen * const headerSeenP) {
 /*----------------------------------------------------------------------------
    Process a line from the PAM header.  The line is buffer[], and it is not
    a comment or blank.
@@ -496,67 +557,44 @@ process_header_line(char                const buffer[],
     char label[MAX_LABEL_LENGTH+1];
     char value[MAX_VALUE_LENGTH+1];
 
-    parse_header_line(buffer, label, value);
+    parseHeaderLine(buffer, label, value);
 
-    if (strcmp(label, "ENDHDR") == 0)
+    if (streq(label, "ENDHDR"))
         headerSeenP->endhdr = TRUE;
-    else {
-        if (strcmp(label, "WIDTH") == 0 ||
-            strcmp(label, "HEIGHT") == 0 ||
-            strcmp(label, "DEPTH") == 0 ||
-            strcmp(label, "MAXVAL") == 0) {
-
-            if (strlen(value) == 0)
-                pm_error("Missing value for %s in PAM file header.",
-                         label);
+    else if (streq(label, "WIDTH")) {
+        parseHeaderInt(value, &pamP->width, label);
+        headerSeenP->width = TRUE;
+    } else if (streq(label, "HEIGHT")) {
+        parseHeaderInt(value, &pamP->height, label);
+        headerSeenP->height = TRUE;
+    } else if (streq(label, "DEPTH")) {
+        parseHeaderUint(value, &pamP->depth, label);
+        headerSeenP->depth = TRUE;
+    } else if (streq(label, "MAXVAL")) {
+        unsigned int maxval;
+        parseHeaderUint(value, &maxval, label);
+        if (maxval >= (1<<16))
+            pm_error("Maxval too large: %u.  Max is 65535", maxval);
+        pamP->maxval = maxval;
+        headerSeenP->maxval = TRUE;
+    } else if (streq(label, "TUPLTYPE")) {
+        if (strlen(value) == 0)
+            pm_error("TUPLTYPE header does not have any tuple type text");
+        else {
+            size_t const oldLen = strlen(pamP->tuple_type);
+            if (oldLen + strlen(value) + 1 > sizeof(pamP->tuple_type)-1)
+                pm_error("TUPLTYPE value too long in PAM header");
+            if (oldLen == 0)
+                strcpy(pamP->tuple_type, value);
             else {
-                char *endptr;
-                long int numeric_value;
-                errno = 0;  /* Clear errno so we can detect strtol() failure */
-                numeric_value = strtol(value, &endptr, 10);
-                if (errno != 0)
-                    pm_error("Too-large value for %s in "
-                             "PAM file header: '%s'", label, value);
-                if (*endptr != '\0') 
-                    pm_error("Non-numeric value for %s in "
-                             "PAM file header: '%s'", label, value);
-                else if (numeric_value < 0) 
-                    pm_error("Negative value for %s in "
-                             "PAM file header: '%s'", label, value);
+                strcat(pamP->tuple_type, " ");
+                strcat(pamP->tuple_type, value);
             }
+            pamP->tuple_type[sizeof(pamP->tuple_type)-1] = '\0';
         }
-    
-        if (strcmp(label, "WIDTH") == 0) {
-            pamP->width = atoi(value);
-            headerSeenP->width = TRUE;
-        } else if (strcmp(label, "HEIGHT") == 0) {
-            pamP->height = atoi(value);
-            headerSeenP->height = TRUE;
-        } else if (strcmp(label, "DEPTH") == 0) {
-            pamP->depth = atoi(value);
-            headerSeenP->depth = TRUE;
-        } else if (strcmp(label, "MAXVAL") == 0) {
-            pamP->maxval = atoi(value);
-            headerSeenP->maxval = TRUE;
-        } else if (strcmp(label, "TUPLTYPE") == 0) {
-            if (strlen(value) == 0)
-                pm_error("TUPLTYPE header does not have any tuple type text");
-            else {
-                size_t const oldLen = strlen(pamP->tuple_type);
-                if (oldLen + strlen(value) + 1 > sizeof(pamP->tuple_type)-1)
-                    pm_error("TUPLTYPE value too long in PAM header");
-                if (oldLen == 0)
-                    strcpy(pamP->tuple_type, value);
-                else {
-                    strcat(pamP->tuple_type, " ");
-                    strcat(pamP->tuple_type, value);
-                }
-                pamP->tuple_type[sizeof(pamP->tuple_type)-1] = '\0';
-            }
-        } else 
-            pm_error("Unrecognized header line: '%s'.  "
-                     "Possible missing ENDHDR line?", label);
-    }
+    } else 
+        pm_error("Unrecognized header line type: '%s'.  "
+                 "Possible missing ENDHDR line?", label);
 }
 
 
@@ -637,7 +675,7 @@ readpaminitrest(struct pam * const pamP) {
             else if (stripeq(buffer, ""));
                 /* Ignore it; it's a blank line */
             else 
-                process_header_line(buffer, pamP, &headerSeen);
+                processHeaderLine(buffer, pamP, &headerSeen);
         }
     }
 
@@ -1054,10 +1092,10 @@ pnm_getopacity(const struct pam * const pamP,
        probably add it to struct pam as convenience values analogous to
        bytes_per_sample.
     */
-    if (strcmp(pamP->tuple_type, "RGB_ALPHA") == 0) {
+    if (streq(pamP->tuple_type, "RGB_ALPHA")) {
         *haveOpacityP = TRUE;
         *opacityPlaneP = PAM_TRN_PLANE;
-    } else if (strcmp(pamP->tuple_type, "GRAYSCALE_ALPHA") == 0) {
+    } else if (streq(pamP->tuple_type, "GRAYSCALE_ALPHA")) {
         *haveOpacityP = TRUE;
         *opacityPlaneP = PAM_GRAY_TRN_PLANE;
     } else
