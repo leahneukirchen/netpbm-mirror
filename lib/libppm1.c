@@ -79,7 +79,7 @@ ppm_readppminitrest(FILE *   const fileP,
     maxval = pm_getuint(fileP);
     if (maxval > PPM_OVERALLMAXVAL)
         pm_error("maxval of input image (%u) is too large.  "
-                 "The maximum allowed by the PPM is %u.",
+                 "The maximum allowed by the PPM format is %u.",
                  maxval, PPM_OVERALLMAXVAL); 
     if (maxval == 0)
         pm_error("maxval of input image is zero.");
