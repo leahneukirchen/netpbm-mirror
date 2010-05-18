@@ -7,7 +7,7 @@ VPATH=.:$(SRCDIR)/$(SUBDIR)
 
 include $(BUILDDIR)/config.mk
 
-SUBDIRS = specialty
+SUBDIRS = pamflip specialty
 
 # We tend to separate out the build targets so that we don't have
 # any more dependencies for a given target than it really needs.
@@ -19,7 +19,7 @@ SUBDIRS = specialty
 PORTBINARIES = pamaddnoise pambackground pamcomp pamcut \
 	       pamdice pamditherbw pamedge \
 	       pamenlarge \
-	       pamflip pamfunc pammasksharpen \
+	       pamfunc pammasksharpen \
 	       pampaintspill pamperspective \
 	       pamscale pamsistoaglyph pamstretch pamthreshold pamundice \
 	       pbmclean pbmmask pbmpscale pbmreduce \
@@ -41,7 +41,6 @@ PORTBINARIES = pamaddnoise pambackground pamcomp pamcut \
 
 NOMERGEBINARIES = 
 MERGEBINARIES = $(PORTBINARIES)
-
 
 BINARIES = $(MERGEBINARIES) $(NOMERGEBINARIES)
 SCRIPTS = pnmflip ppmfade ppmquant ppmquantall ppmshadow \

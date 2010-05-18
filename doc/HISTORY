@@ -19,8 +19,13 @@ not yet  BJH  Release 10.51.00
               pnmsmooth: Don't display pnmconvol messages (i.e. run
               pnmconvol with -quiet).
 
+              pamflip: speedup for PBM.  Use SSE2 and skip some idempotent
+              pixel movement.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
               libnetpbm, various PBM programs: Use SSE insted of MMX.  Thanks
               Prophet of the Way <afu@wta.att.ne.jp>.
+
+              libnetpbm: remove bogus assertion.
 
               pnmtops: fix bug: 12 bits per sample output when 8 would do.
               Introduced in 10.40.

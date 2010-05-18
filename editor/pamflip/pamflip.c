@@ -26,6 +26,10 @@
      transformRowsBottomTopNonPbm()
        non-PBM image with bottom-top transformation
        (also works for PBM, but we don't use it)
+     transformRowsToColumnsPbmSse()
+       PBM image with column-for-row transformation
+       requires Intel/AMD x86 SSE2
+       (can only do 90 degree/xy flips)
      transformPbm()
        PBM image with column-for-row transformation
        (also works for all other transformations, but we don't use it)
@@ -68,7 +72,18 @@
 #include "nstring.h"
 #include "bitreverse.h"
 
+#include "flip.h"
+#include "pamflip_sse.h"
+
 enum xformType {LEFTRIGHT, TOPBOTTOM, TRANSPOSE};
+
+#ifndef SIMD_PBM_TRANSPOSITION
+  #if HAVE_GCC_SSE2 && defined(__SSE2__)
+    #define SIMD_PBM_TRANSPOSITION 1
+  #else
+    #define SIMD_PBM_TRANSPOSITION 0
+  #endif
+#endif
 
 static void
 parseXformOpt(const char *     const xformOpt,
@@ -115,24 +130,12 @@ parseXformOpt(const char *     const xformOpt,
 
 
 
-/* See transformPoint() for an explanation of the transform matrix types.
-   The difference between the two types is that 'xformCore' is particular
-   to the source image dimensions and can be used to do the transformation,
-   while 'xformCore' is independent of the source image and just
-   tells what kind of transformation.
+/* See transformPoint() for an explanation of the transform matrix types.  The
+   difference between xformCore and xformMatrix is that 'xformCore' is
+   particular to the source image dimensions and can be used to do the
+   transformation, while 'xformCore' is independent of the source image and
+   just tells what kind of transformation.
 */
-
-struct xformCore {
-    /* a b
-       c d
-    */
-    int a;  /* -1, 0, or 1 */
-    int b;  /* -1, 0, or 1 */
-    int c;  /* -1, 0, or 1 */
-    int d;  /* -1, 0, or 1 */
-};
-
-
 
 struct xformMatrix {
     /* a b 0
@@ -397,6 +400,9 @@ bitOrderReverse(unsigned char * const bitrow,
 /*----------------------------------------------------------------------------
   Reverse the bits in a packed pbm row (1 bit per pixel).  I.e. the leftmost
   bit becomes the rightmost, etc.
+
+  Exchange pixels in units of eight.  If both are zero, skip instead of
+  exchanging zeros.
 -----------------------------------------------------------------------------*/
     unsigned int const lastfullByteIdx = cols/8 - 1;
 
@@ -407,11 +413,14 @@ bitOrderReverse(unsigned char * const bitrow,
         bitrow[0] = bitreverse[bitrow[0]] << (8-cols);
     else if (cols % 8 == 0) {
         unsigned int i, j;
-        for (i = 0, j = lastfullByteIdx; i <= j; ++i, --j) {
-            unsigned char const t = bitreverse[bitrow[j]]; 
-            bitrow[j] = bitreverse[bitrow[i]];
-            bitrow[i] = t;
-        }
+        for (i = 0, j = lastfullByteIdx; i <= j; ++i, --j)
+            if ((bitrow[j] | bitrow[i]) == 0) {
+                /* Both are 0x00 - skip */
+            } else {
+                unsigned char const t = bitreverse[bitrow[j]]; 
+                bitrow[j] = bitreverse[bitrow[i]];
+                bitrow[i] = t;
+            }
     } else {
         unsigned int const m = cols % 8; 
 
@@ -422,18 +431,23 @@ bitOrderReverse(unsigned char * const bitrow,
         unsigned char th, tl;  /* 16 bit temp ( th << 8 | tl ) */
         tl = 0;
         for (i = 0, j = lastfullByteIdx+1; i <= lastfullByteIdx/2; ++i, --j) {
-            th = bitreverse[bitrow[i]];
-            bitrow[i] =
-                bitreverse[0xff & ((bitrow[j-1] << 8 | bitrow[j]) >> (8-m))];
-            bitrow[j] = 0xff & ((th << 8 | tl) >> m);
-            tl = th;
+            if( (tl | bitrow[i] | bitrow[j] | bitrow[j-1]) != 0) {
+                /* Skip if both are 0x00 */
+                th = bitreverse[bitrow[i]];
+                bitrow[i] =
+                    bitreverse[0xff & ((bitrow[j-1] << 8 
+                                        | bitrow[j]) >> (8-m))];
+                bitrow[j] = 0xff & ((th << 8 | tl) >> m);
+                tl = th;
+            }
         }
-        if (i == j) 
+        if (i == j && (bitrow[i] | tl) != 0) {
             /* bitrow[] has an odd number of bytes (an even number of
                full bytes; lastfullByteIdx is odd), so we did all but
                the center byte above.  We do the center byte now.
             */
             bitrow[j] = 0xff & ((bitreverse[bitrow[i]] << 8 | tl) >> m);
+        }
     }
 }
 
@@ -633,6 +647,10 @@ writeRaster(struct pam *    const pamP,
     for (outRow = 0; outRow < pamP->height; ++ outRow)
         pnm_writepamrow(pamP, tuples[outRow]);
 }
+
+
+
+
 
 
 
@@ -1125,11 +1143,15 @@ transformPbm(struct pam *     const inpamP,
                through them only twice, so there is no page thrashing concern.
             */
             transformRowsBottomTopPbm(inpamP, outpamP, xform.a == -1);
-    } else
+    } else {
         /* This is a column-for-row type of transformation, which requires
            complex traversal of an in-memory image.
         */
-        transformPbmGen(inpamP, outpamP, xform);
+        if (SIMD_PBM_TRANSPOSITION == 1)
+            pamflip_transformRowsToColumnsPbmSse(inpamP, outpamP, xform);
+        else
+            transformPbmGen(inpamP, outpamP, xform);
+    }
 }
 
 
