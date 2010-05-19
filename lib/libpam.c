@@ -755,13 +755,26 @@ pnm_readpaminitrestaspnm(FILE * const fileP,
                 
 unsigned int
 pnm_bytespersample(sample const maxval) {
+/*----------------------------------------------------------------------------
+   Return the number of bytes per sample in the PAM raster of a PAM image
+   with maxval 'maxval'.  It's defined to be the minimum number of bytes
+   needed for that maxval, i.e. 1 for maxval < 256, 2 otherwise.
+-----------------------------------------------------------------------------*/
 
-    assert(sizeof(maxval) * 8 <= 32);
+    /* The PAM format requires maxval to be greater than zero and less than
+       1<<16, but since that is a largely arbitrary restriction, we don't want
+       to rely on it.
+    */
 
-    if      (maxval >>  8 == 0) return 1;
-    else if (maxval >> 16 == 0) return 2;
-    else if (maxval >> 24 == 0) return 3;
-    else                        return 4;
+    unsigned int i;
+    sample a;
+
+    for (i = 0, a = maxval; i < sizeof(maxval)/8; ++i) {
+        if (a == 0)
+            return i;
+        a >>= 8;
+    }
+    return 0;  /* silence compiler warning */
 }
 
 
