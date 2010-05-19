@@ -506,10 +506,6 @@ NETWORKLD =
 # SCO:
 #NETWORKLD = -lsocket, -lresolv
 
-VMS = 
-#VMS:
-#VMS = yes
-
 # DONT_HAVE_PROCESS_MGMT is Y if this system doesn't have the usual
 # Unix process management stuff - fork, wait, etc.  N for a regular Unix
 # system.

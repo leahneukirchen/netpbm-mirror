@@ -562,37 +562,6 @@ pm_lcm(unsigned int const x,
 }
 
 
-/* Initialization. */
-
-
-#ifdef VMS
-static const char *
-vmsProgname(int * const argcP, char * argv[]) {   
-    char **temp_argv = argv;
-    int old_argc = *argcP;
-    int i;
-    const char * retval;
-    
-    getredirection( argcP, &temp_argv );
-    if (*argcP > old_argc) {
-        /* Number of command line arguments has increased */
-        fprintf( stderr, "Sorry!! getredirection() for VMS has "
-                 "changed the argument list!!!\n");
-        fprintf( stderr, "This is intolerable at the present time, "
-                 "so we must stop!!!\n");
-        exit(1);
-    }
-    for (i=0; i<*argcP; i++)
-        argv[i] = temp_argv[i];
-    retval = strrchr( argv[0], '/');
-    if ( retval == NULL ) retval = rindex( argv[0], ']');
-    if ( retval == NULL ) retval = rindex( argv[0], '>');
-
-    return retval;
-}
-#endif
-
-
 
 void
 pm_init(const char * const progname,
@@ -642,11 +611,7 @@ showVersion(void) {
     pm_message( "BSD defined" );
 #endif /*BSD*/
 #ifdef SYSV
-#ifdef VMS
-    pm_message( "VMS & SYSV defined" );
-#else
     pm_message( "SYSV defined" );
-#endif
 #endif /*SYSV*/
 #ifdef MSDOS
     pm_message( "MSDOS defined" );
@@ -751,11 +716,7 @@ pm_proginit(int * const argcP, const char * argv[]) {
         */
     
     /* Extract program name. */
-#ifdef VMS
-    progname = vmsProgname(argcP, argv);
-#else
     progname = strrchr( argv[0], '/');
-#endif
     if (progname == NULL)
         progname = argv[0];
     else

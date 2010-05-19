@@ -39,9 +39,6 @@ pbm_writepbminit(FILE * const fileP,
 
     if (!forceplain && !pm_plain_output) {
         fprintf(fileP, "%c%c\n%d %d\n", PBM_MAGIC1, RPBM_MAGIC2, cols, rows);
-#ifdef VMS
-        set_outfile_binary();
-#endif
     } else
         fprintf(fileP, "%c%c\n%d %d\n", PBM_MAGIC1, PBM_MAGIC2, cols, rows);
 }

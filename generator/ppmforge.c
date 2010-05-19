@@ -40,11 +40,7 @@
 #include "ppm.h"
 #include "mallocvar.h"
 
-#ifdef VMS
-static double const hugeVal = HUGE_VAL;
-#else
 static double const hugeVal = 1e50;
-#endif
 
 /* Definitions used to address real and imaginary parts in a two-dimensional
    array of complex numbers as stored by fourn(). */

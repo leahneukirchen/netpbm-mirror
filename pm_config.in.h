@@ -15,7 +15,7 @@
 
 **************************************************************************/
 
-#if defined(USG) || defined(SVR4) || defined(VMS) || defined(__SVR4)
+#if defined(USG) || defined(SVR4) || defined(__SVR4)
 #define SYSV
 #endif
 #if !( defined(BSD) || defined(SYSV) || defined(MSDOS) || defined(__amigaos__))
@@ -74,25 +74,6 @@
 #if (defined(SYSV) || defined(__amigaos__))
 
 #include <string.h>
-/* Before Netpbm 9.1, rand and srand were macros for random and
-   srandom here.  This caused a failure on a SunOS 5.6 system, which
-   is SYSV, but has both rand and random declared (with different
-   return types).  The macro caused the prototype for random to be a
-   second prototype for rand.  Before 9.1, Netpbm programs called
-   random() and on a SVID system, that was really a call to rand().
-   We assume all modern systems have rand() itself, so now Netpbm
-   always calls rand() and if we find a platform that doesn't have
-   rand(), we will add something here for that platform.  -Bryan 00.04.26
-#define random rand
-#define srandom(s) srand(s)
-extern void srand();
-extern int rand();
-*/
-/* Before Netpbm 9.15, there were macro definitions of index() and 
-   rindex() here, but there are no longer any invocations of those 
-   functions in Netpbm, except in the VMS-only code, so there's no
-   reason for them.
-*/
 
 #ifndef __SASC
 #ifndef _DCC    /* Amiga DICE Compiler */
@@ -115,7 +96,7 @@ extern int rand();
 #ifdef BSD
 #include <stdlib.h>
 #endif
-#if (defined(SYSV) && !defined(VMS))
+#if defined(SYSV)
 #include <malloc.h>
 #endif
 /* extern char* malloc(); */

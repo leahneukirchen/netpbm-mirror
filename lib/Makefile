@@ -36,9 +36,6 @@ LIBOBJECTS = libpm.o pmfileio.o fileio.o bitio.o colorname.o \
 	libpamn.o libpammap.o libpamcolor.o \
 	$(LIBSYSTEM) \
 
-ifneq (${VMS}x,x)
-LIBOBJECTS += libpbmvms.o
-endif
 # Library objects to be linked but not built by common.mk:
 LIBOBJECTS_X = \
   util/filename.o \

@@ -36,10 +36,6 @@ ppm_writeppminit(FILE*  const fileP,
             PPM_MAGIC1, 
             plainFormat || maxval >= 1<<16 ? PPM_MAGIC2 : RPPM_MAGIC2, 
             cols, rows, maxval );
-#ifdef VMS
-    if (!plainFormat)
-        set_outfile_binary();
-#endif
 }
 
 

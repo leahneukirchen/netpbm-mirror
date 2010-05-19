@@ -27,12 +27,6 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <fcntl.h>
-#ifdef VMS
-#ifdef SYSV
-#undef SYSV
-#endif
-#include <tiffioP.h>
-#endif
 /* tiffio.h has a weird problem on AIX.  tiffio.h wrongly typedefs
    "int32".  That's wrong because such a name is likely to be used in
    other parts of the program that includes tiffio.h.  And in fact, on

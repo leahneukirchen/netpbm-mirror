@@ -59,12 +59,6 @@
 #include "nstring.h"
 #include "pnm.h"
 
-#ifdef VMS
-#ifdef SYSV
-#undef SYSV
-#endif
-#include <tiffioP.h>
-#endif
 /* See warning about tiffio.h in pamtotiff.c */
 #include <tiffio.h>
 

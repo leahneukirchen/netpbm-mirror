@@ -22,10 +22,6 @@
 #include <setjmp.h>
 #include <sys/stat.h>
 
-#ifdef VMS
-#include <perror.h>
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif

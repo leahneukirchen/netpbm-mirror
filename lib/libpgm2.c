@@ -37,10 +37,6 @@ pgm_writepgminit(FILE * const fileP,
             PGM_MAGIC1, 
             plainFormat || maxval >= 1<<16 ? PGM_MAGIC2 : RPGM_MAGIC2, 
             cols, rows, maxval );
-#ifdef VMS
-    if (!plainFormat)
-        set_outfile_binary();
-#endif
 }
 
 
