@@ -28,6 +28,8 @@ not yet  BJH  Release 10.51.00
               libnetpbm, various PBM programs: Use SSE insted of MMX.  Thanks
               Prophet of the Way <afu@wta.att.ne.jp>.
 
+              pamarith: fix memory leak.
+
               pnm_bytespersample(): fix bogus assertion on 64 bit system.
 
               pnmtops: fix bug: 12 bits per sample output when 8 would do.
