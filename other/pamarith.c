@@ -400,10 +400,15 @@ doNormalizedArith(struct pam *  const inpam1P,
                   struct pam *  const outpamP,
                   enum function const function) {
 
+    unsigned int const operandCt = 2;
+
     tuplen * tuplerown1;
     tuplen * tuplerown2;
     tuplen * tuplerownOut;
     unsigned int row;
+    samplen * operands;
+
+    MALLOCARRAY_NOFAIL(operands, operandCt);
 
     tuplerown1   = pnm_allocpamrown(inpam1P);
     tuplerown2   = pnm_allocpamrown(inpam2P);
@@ -418,13 +423,8 @@ doNormalizedArith(struct pam *  const inpam1P,
             unsigned int outplane;
             
             for (outplane = 0; outplane < outpamP->depth; ++outplane) {
-                unsigned int const operandCt = 2;
                 unsigned int const plane1 = MIN(outplane, inpam1P->depth-1);
                 unsigned int const plane2 = MIN(outplane, inpam2P->depth-1);
-
-                samplen * operands;
-
-                MALLOCARRAY_NOFAIL(operands, operandCt);
 
                 operands[0] = tuplerown1[col][plane1];
                 operands[1] = tuplerown2[col][plane2];
@@ -442,6 +442,7 @@ doNormalizedArith(struct pam *  const inpam1P,
     pnm_freepamrown(tuplerown1);
     pnm_freepamrown(tuplerown2);
     pnm_freepamrown(tuplerownOut);
+    free(operands);
 }
 
 
@@ -700,17 +701,21 @@ doUnNormalizedArith(struct pam *  const inpam1P,
    maxval to do the computation without time-consuming normalization of
    sample values.
 -----------------------------------------------------------------------------*/
+    unsigned int const operandCt = 2;
     sample const maxval = outpamP->maxval;
 
     tuple * tuplerow1;
     tuple * tuplerow2;
     tuple * tuplerowOut;
     unsigned int row;
+    sample * operands;
 
     /* Input conditions: */
     assert(inpam1P->maxval == maxval);
     assert(inpam2P->maxval == maxval);
     assert(outpamP->maxval == maxval);
+
+    MALLOCARRAY_NOFAIL(operands, operandCt);
 
     tuplerow1   = pnm_allocpamrow(inpam1P);
     tuplerow2   = pnm_allocpamrow(inpam2P);
@@ -725,13 +730,8 @@ doUnNormalizedArith(struct pam *  const inpam1P,
             unsigned int outplane;
             
             for (outplane = 0; outplane < outpamP->depth; ++outplane) {
-                unsigned int const operandCt = 2;
                 unsigned int const plane1 = MIN(outplane, inpam1P->depth-1);
                 unsigned int const plane2 = MIN(outplane, inpam2P->depth-1);
-
-                sample * operands;
-
-                MALLOCARRAY_NOFAIL(operands, operandCt);
 
                 operands[0] = tuplerow1[col][plane1];
                 operands[1] = tuplerow2[col][plane2];
@@ -750,6 +750,8 @@ doUnNormalizedArith(struct pam *  const inpam1P,
     pnm_freepamrow(tuplerow1);
     pnm_freepamrow(tuplerow2);
     pnm_freepamrow(tuplerowOut);
+
+    free(operands);
 }
 
 

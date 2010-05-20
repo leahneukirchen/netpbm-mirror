@@ -1079,7 +1079,7 @@ retvalueFromExitReason(exitReason const exitReason) {
     switch (exitReason) {
     case EXIT_NONE:      assert(false); break;
     case EXIT_QUIT:      retval =  0;     break;
-    case EXIT_WM_KILL:   retval = 10;     break;
+    case EXIT_WM_KILL:   retval =  0;     break;
     case EXIT_DESTROYED: retval = 20;     break;
     }
     return retval;

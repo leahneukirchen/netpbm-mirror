@@ -718,8 +718,6 @@ pnm_readpaminitrestaspnm(FILE * const fileP,
 unsigned int
 pnm_bytespersample(sample const maxval) {
 
-    assert(sizeof(maxval) * 8 <= 32);
-
     if      (maxval >>  8 == 0) return 1;
     else if (maxval >> 16 == 0) return 2;
     else if (maxval >> 24 == 0) return 3;
