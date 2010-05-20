@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+10.05.20 BJH  Release 10.47.14
+
+              pamarith: fix memory leak.
+
 10.05.04 BJH  Release 10.47.13
 
               pnmtops: fix bug: 12 bits per sample output when 8 would do.
