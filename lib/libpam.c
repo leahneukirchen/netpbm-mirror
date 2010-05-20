@@ -769,7 +769,7 @@ pnm_bytespersample(sample const maxval) {
     unsigned int i;
     sample a;
 
-    for (i = 0, a = maxval; i < sizeof(maxval)/8; ++i) {
+    for (i = 0, a = maxval; i < sizeof(maxval); ++i) {
         if (a == 0)
             return i;
         a >>= 8;
