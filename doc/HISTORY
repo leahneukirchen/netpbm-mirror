@@ -22,6 +22,9 @@ not yet  BJH  Release 10.51.00
               pamflip: speedup for PBM.  Use SSE2 and skip some idempotent
               pixel movement.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
 
+              anytopnm: recognize "PC bitmap" in 'file' response as BMP.
+              (in addition to existing "PC bitmap data").
+
               libnetpbm, various PBM programs: Use SSE insted of MMX.  Thanks
               Prophet of the Way <afu@wta.att.ne.jp>.
 
