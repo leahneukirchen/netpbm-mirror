@@ -56,6 +56,9 @@ not yet  BJH  Release 10.51.00
 
               pampaintspill: fix incorrect output.
 
+              build: fix incorrect determination of when vasprintf() exists
+              in libc.
+
               configure: don't default to /usr/X11R6/lib/libX11.so just because
               /usr/X11R6 exists.  /usr/X11R6/lib must exist.
 
