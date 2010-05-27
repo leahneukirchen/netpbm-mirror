@@ -212,7 +212,12 @@
 */
 
 #ifndef HAVE_GCC_SSE2
-#if GCCVERSION >=401 && defined(__SSE__) && defined(__SSE2__)
+/* GCC 4.1 ostensibly has the feature, but experiments with 4.1.2 and
+   4.1.2 in May 2010 exposed an obscure compiler bug and the compiler got
+   stock with pamflip_sse.c.  So we say the feature exists only on 4.2
+   and up.
+*/
+#if GCCVERSION >=402 && defined(__SSE__) && defined(__SSE2__)
   #define HAVE_GCC_SSE2 1
 #else
   #define HAVE_GCC_SSE2 0
