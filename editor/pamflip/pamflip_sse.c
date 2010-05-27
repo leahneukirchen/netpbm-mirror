@@ -12,7 +12,7 @@
 
 /*----------------------------------------------------------------------------
    This is a specialized routine for row-for-column PBM transformations.
-   (-cw, -ccw, -xy).  It requires GCC (>= v. 4.0.4) and SSE2. 
+   (-cw, -ccw, -xy).  It requires GCC (>= v. 4.2.0) and SSE2. 
 
    In each cycle, we read sixteen rows from the input.  We process tbis band
    left to right in blocks 8 pixels wide.  We use the SSE2 instruction
