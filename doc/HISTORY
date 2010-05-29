@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+10.05.29 BJH  Release 10.50.06
+
+              build: fix incorrect determination of when vasprintf() exists
+              in libc.
+
 10.05.20 BJH  Release 10.50.05
 
               pamarith: fix memory leak.
