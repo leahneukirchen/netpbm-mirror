@@ -26,6 +26,7 @@
   Introduced option to plot 1976 u' v' chromaticities.
 */
 
+#include <assert.h>
 #include <math.h>
 
 #include "pm_c_util.h"
@@ -672,67 +673,161 @@ fillInTongue(pixel **                   const pixels,
 
 
 static void
-drawAxes(pixel ** const pixels,
-         int    const pixcols,
-         int    const pixrows,
-         pixval const maxval,
-         bool   const upvp,
-         int    const xBias,
-         int    const yBias) {
+drawYAxis(pixel **     const pixels,
+          unsigned int const pixcols,
+          unsigned int const pixrows,
+          pixval       const maxval,
+          unsigned int const xBias,
+          unsigned int const yBias,
+          pixel        const axisColor) {
+              
+    unsigned int const pxrows = pixrows - yBias;
 
-    int const pxcols = pixcols - xBias;
-    int const pxrows = pixrows - yBias;
-
-    pixel rgbcolor;  /* Color of axes */
-    int i;
-
-    PPM_ASSIGN(rgbcolor, maxval, maxval, maxval);
     ppmd_line(pixels, pixcols, pixrows, maxval,
               B(0, 0), B(0, pxrows - 1), PPMD_NULLDRAWPROC,
-              (char *) &rgbcolor);
+              (char *) &axisColor);
+}
+
+
+
+static void
+drawXAxis(pixel **     const pixels,
+          unsigned int const pixcols,
+          unsigned int const pixrows,
+          pixval       const maxval,
+          unsigned int const xBias,
+          unsigned int const yBias,
+          pixel        const axisColor) {
+              
+    unsigned int const pxcols = pixcols - xBias;
+    unsigned int const pxrows = pixrows - yBias;
+
     ppmd_line(pixels, pixcols, pixrows, maxval,
               B(0, pxrows - 1), B(pxcols - 1, pxrows - 1),
-              PPMD_NULLDRAWPROC, (char *) &rgbcolor);
-    
-    /* Draw tick marks on X and Y axes every 0.1 units.  Also
-       label axes.
-    */
-    
-    for (i = 1; i <= 9; i += 1) {
-        char s[20];
+              PPMD_NULLDRAWPROC, (char *) &axisColor);
+}
 
-        /* X axis tick */
 
-        sprintf(s, "0.%d", i);
-        ppmd_line(pixels, pixcols, pixrows, maxval,
-                  B((i * (pxcols - 1)) / 10, pxrows - Sz(1)),
-                  B((i * (pxcols - 1)) / 10, pxrows - Sz(4)),
-                  PPMD_NULLDRAWPROC, (char *) &rgbcolor);
-        ppmd_text(pixels, pixcols, pixrows, maxval,
-                  B((i * (pxcols - 1)) / 10 - Sz(11), pxrows + Sz(12)),
-                  Sz(10), 0, s, PPMD_NULLDRAWPROC, (char *) &rgbcolor);
 
-        /* Y axis tick */
+static void
+tickX(pixel **     const pixels,
+      unsigned int const pixcols,
+      unsigned int const pixrows,
+      pixval       const maxval,
+      unsigned int const xBias,
+      unsigned int const yBias,
+      pixel        const axisColor,
+      unsigned int const tenth) {
+/*----------------------------------------------------------------------------
+   Put a tick mark 'tenth' tenths of the way along the X axis
+   and label it.
+-----------------------------------------------------------------------------*/
+    unsigned int const pxcols = pixcols - xBias;
+    unsigned int const pxrows = pixrows - yBias;
 
-        sprintf(s, "0.%d", 10 - i);
-        ppmd_line(pixels, pixcols, pixrows, maxval,
-                  B(0, (i * (pxrows - 1)) / 10),
-                  B(Sz(3), (i * (pxrows - 1)) / 10),
-                  PPMD_NULLDRAWPROC, (char *) &rgbcolor);
+    char s[20];
 
-        ppmd_text(pixels, pixcols, pixrows, maxval,
-                  B(Sz(-30), (i * (pxrows - 1)) / 10 + Sz(5)),
-                  Sz(10), 0, s,
-                  PPMD_NULLDRAWPROC, (char *) &rgbcolor);
-    }
+    assert(tenth < 10);
+
+    sprintf(s, "0.%u", tenth);
+    ppmd_line(pixels, pixcols, pixrows, maxval,
+              B((tenth * (pxcols - 1)) / 10, pxrows - Sz(1)),
+              B((tenth * (pxcols - 1)) / 10, pxrows - Sz(4)),
+              PPMD_NULLDRAWPROC, (char *) &axisColor);
+    ppmd_text(pixels, pixcols, pixrows, maxval,
+              B((tenth * (pxcols - 1)) / 10 - Sz(11), pxrows + Sz(12)),
+              Sz(10), 0, s, PPMD_NULLDRAWPROC, (char *) &axisColor);
+}
+
+
+
+static void
+tickY(pixel **     const pixels,
+      unsigned int const pixcols,
+      unsigned int const pixrows,
+      pixval       const maxval,
+      unsigned int const xBias,
+      unsigned int const yBias,
+      pixel        const axisColor,
+      unsigned int const tenth) {
+/*----------------------------------------------------------------------------
+   Put a tick mark 'tenth' tenths of the way along the X axis
+   and label it.
+-----------------------------------------------------------------------------*/
+    unsigned int const pxrows = pixrows - yBias;
+
+    char s[20];
+
+    assert(tenth < 10);
+
+    sprintf(s, "0.%d", 10 - tenth);
+    ppmd_line(pixels, pixcols, pixrows, maxval,
+              B(0, (tenth * (pxrows - 1)) / 10),
+              B(Sz(3), (tenth * (pxrows - 1)) / 10),
+              PPMD_NULLDRAWPROC, (char *) &axisColor);
+
+    ppmd_text(pixels, pixcols, pixrows, maxval,
+              B(Sz(-30), (tenth * (pxrows - 1)) / 10 + Sz(5)),
+              Sz(10), 0, s,
+              PPMD_NULLDRAWPROC, (char *) &axisColor);
+}
+
+
+
+static void
+labelAxes(pixel **     const pixels,
+          unsigned int const pixcols,
+          unsigned int const pixrows,
+          pixval       const maxval,
+          unsigned int const xBias,
+          unsigned int const yBias,
+          pixel        const axisColor,
+          bool         const upvp) {
+/*----------------------------------------------------------------------------
+   Label the axes "x" and "y" or "u" and "v".
+-----------------------------------------------------------------------------*/
+    unsigned int const pxcols = pixcols - xBias;
+    unsigned int const pxrows = pixrows - yBias;
+
     ppmd_text(pixels, pixcols, pixrows, maxval,
               B((98 * (pxcols - 1)) / 100 - Sz(11), pxrows + Sz(12)),
               Sz(10), 0, (upvp ? "u'" : "x"),
-              PPMD_NULLDRAWPROC, (char *) &rgbcolor);
+              PPMD_NULLDRAWPROC, (char *) &axisColor);
     ppmd_text(pixels,  pixcols, pixrows, maxval,
               B(Sz(-22), (2 * (pxrows - 1)) / 100 + Sz(5)),
               Sz(10), 0, (upvp ? "v'" : "y"),
-              PPMD_NULLDRAWPROC, (char *) &rgbcolor);
+              PPMD_NULLDRAWPROC, (char *) &axisColor);
+}
+
+
+
+static void
+drawAxes(pixel **     const pixels,
+         unsigned int const pixcols,
+         unsigned int const pixrows,
+         pixval       const maxval,
+         bool         const upvp,
+         unsigned int const xBias,
+         unsigned int const yBias) {
+/*----------------------------------------------------------------------------
+   Draw the axes, with tick marks every .1 units and labels.
+-----------------------------------------------------------------------------*/
+    pixel axisColor;  /* Color of axes and labels */
+    unsigned int i;
+
+    PPM_ASSIGN(axisColor, maxval, maxval, maxval);
+
+    drawYAxis(pixels, pixcols, pixrows, maxval, xBias, yBias, axisColor);
+    drawXAxis(pixels, pixcols, pixrows, maxval, xBias, yBias, axisColor);
+
+    for (i = 1; i <= 9; i += 1) {
+        tickX(pixels, pixcols, pixrows, maxval, xBias, yBias, axisColor, i);
+
+        tickY(pixels, pixcols, pixrows, maxval, xBias, yBias, axisColor, i);
+    }
+
+    labelAxes(pixels, pixcols, pixrows, maxval, xBias, yBias, axisColor,
+              upvp);
 }
 
 
@@ -1028,7 +1123,7 @@ main(int argc,
     const struct colorSystem *cs;
 
     int widspec = FALSE, hgtspec = FALSE;
-    int xBias, yBias;
+    unsigned int xBias, yBias;
     int upvp = FALSE;             /* xy or u'v' color coordinates? */
     int showWhite = TRUE;             /* Show white point ? */
     int showBlack = TRUE;             /* Show black body curve ? */
