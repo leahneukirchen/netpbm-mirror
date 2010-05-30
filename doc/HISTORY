@@ -28,7 +28,7 @@ not yet  BJH  Release 10.51.00
               libnetpbm, various PBM programs: Use SSE insted of MMX.  Thanks
               Prophet of the Way <afu@wta.att.ne.jp>.
 
-              pamarith: fix memory leak.
+              pamarith: fix memory leak.  Introduced in 10.41.
 
               pnm_bytespersample(): fix bogus assertion on 64 bit system.
 
@@ -55,6 +55,8 @@ not yet  BJH  Release 10.51.00
               pamscale: fix -reduce.  Introduced in 10.27.
 
               pampaintspill: fix incorrect output.
+
+              libppmd: fix bogus assertion, introduced in 10.47.
 
               build: fix incorrect determination of when vasprintf() exists
               in libc.

@@ -437,9 +437,12 @@ clipEnd1(ppmd_point   const p0,
    at 0.
 -----------------------------------------------------------------------------*/
     ppmd_point c1;
-
-    assert(p1.x >= 0 && p0.y < cols);
-    assert(p1.y >= 0 && p0.y < rows);
+        /* The current clipped location of p1; we clip it multile times
+           to get the final location.
+        */
+    /* p0 is in the frame: */
+    assert(p0.x >= 0 && p0.x < cols);
+    assert(p0.y >= 0 && p0.y < rows);
     
     /* Clip End 1 of the line horizontally */
     c1 = p1;  /* initial value */
