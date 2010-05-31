@@ -4,6 +4,13 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+10.05.30 BJH  Release 10.50.07
+
+              libnetpbm line drawing: fix bogus assertion, introduced in 10.47.
+
+              libnetpbm text drawing: fix incorrect output in all cases.
+              Introduced in 10.47.
+
 10.05.29 BJH  Release 10.50.06
 
               build: fix incorrect determination of when vasprintf() exists
