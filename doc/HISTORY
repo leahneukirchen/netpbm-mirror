@@ -56,7 +56,10 @@ not yet  BJH  Release 10.51.00
 
               pampaintspill: fix incorrect output.
 
-              libppmd: fix bogus assertion, introduced in 10.47.
+              libnetpbm text drawing: fix incorrect output in all cases.
+              Introduced in 10.47.
+
+              libnetpbm line drawing: fix bogus assertion, introduced in 10.47.
 
               build: fix incorrect determination of when vasprintf() exists
               in libc.
