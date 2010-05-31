@@ -4,6 +4,17 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+10.05.31 BJH  Release 10.35.75
+
+              palmtopnm: fix for pixel size 16.  Thanks Paul Bolle
+              <pebolle@tiscali.nl>.
+
+              pamscale: fix -reduce.  Introduced in 10.27.
+
+              configure: default to 'none' for Svgalib if it doesn't appear to
+              be installed (per 'ldconfig').  Ported from 10.38, released
+              March 2007.
+
 10.03.24 BJH  Release 10.35.74
 
               pbmtext: don't crash when font file contains a blank line.
