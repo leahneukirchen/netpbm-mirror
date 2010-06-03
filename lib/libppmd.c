@@ -437,9 +437,12 @@ clipEnd1(ppmd_point   const p0,
    at 0.
 -----------------------------------------------------------------------------*/
     ppmd_point c1;
-
-    assert(p1.x >= 0 && p0.y < cols);
-    assert(p1.y >= 0 && p0.y < rows);
+        /* The current clipped location of p1; we clip it multile times
+           to get the final location.
+        */
+    /* p0 is in the frame: */
+    assert(p0.x >= 0 && p0.x < cols);
+    assert(p0.y >= 0 && p0.y < rows);
     
     /* Clip End 1 of the line horizontally */
     c1 = p1;  /* initial value */
@@ -906,8 +909,6 @@ ppmd_circlep(pixel **       const pixels,
         prevPointExists = FALSE;
 
         while (onFirstPoint || !pointsEqual(p, p0)) {
-            pm_message("Doing point (%d, %d)", p.x, p.y);
-
             if (prevPointExists && pointsEqual(p, prevPoint)) {
                 /* We're on the same point we were on last time (we moved less
                    than a point's worth).  Just keep moving.
@@ -928,7 +929,6 @@ ppmd_circlep(pixel **       const pixels,
             sx += e * sy / DDA_SCALE;
             sy -= e * sx / DDA_SCALE;
             p = makePoint(sx / DDA_SCALE, sy / DDA_SCALE);
-            pm_message("next point is (%d, %d)", p.x, p.y);
         }
     }
 }
@@ -1348,9 +1348,22 @@ glyphSkipBefore(const struct ppmd_glyph * const glyphP) {
     return twosCompByteValue(glyphP->header.skipBefore);
 }
 
+static int
+glyphWidth(const struct ppmd_glyph * const glyphP) {
+
+    return twosCompByteValue(glyphP->header.skipAfter) -
+        twosCompByteValue(glyphP->header.skipBefore);
+}
+
+
 static ppmd_point
 commandPoint(const struct ppmd_glyphCommand * const commandP) {
-
+/*----------------------------------------------------------------------------
+   Return the point which is the argument of glyph drawing command
+   *commandP.  The origin of the coordinate system for this point
+   is the center of the glyph cell and the scale is the scale of the
+   font, so (-10, -10) means the upper left corner of the glyph cell.
+-----------------------------------------------------------------------------*/
     return makePoint(twosCompByteValue(commandP->x),
                      twosCompByteValue(commandP->y));
 }
@@ -1359,32 +1372,102 @@ commandPoint(const struct ppmd_glyphCommand * const commandP) {
 #define Descend 9       /* Descender offset */
 
 
+static ppmd_point
+textPosFromFontPos(ppmd_point   const fontPos,
+                   ppmd_point   const textBoxOrigin,
+                   ppmd_point   const center,
+                   ppmd_point   const glyphOrigin,
+                   unsigned int const height,
+                   long         const rotcos,
+                   long         const rotsin) {
+/*----------------------------------------------------------------------------
+   'fontPos' is a position within a glyph as told by the font definition.
+   It is relative to the center of the glyph, in units of font pixels
+   (1/21 of a glyph cell).
+
+   We return the position on the canvas of that point.
+
+   That takes into account where in the text box we are, where the text box
+   is on the canvas, the size of the characters, and the rotation of the
+   text box.
+-----------------------------------------------------------------------------*/
+    ppmd_point const ptl = vectorSum(center, fontPos);
+        /* Position relative to the top left of the standard glyph cell */
+
+    ppmd_point const pl = vectorSum(glyphOrigin, ptl);
+        /* Position relative to the top left of the whole text box,
+           assuming the text box is horizontal and has font scale.
+        */
+    
+    ppmd_point const ps = makePoint((pl.x * (int)height) / Scalef,
+                                    (pl.y * (int)height) / Scalef);
+         /* Same as above, but with the text box its actual size */
+
+    ppmd_point const retval =
+        makePoint(textBoxOrigin.x +
+                  (ps.x * rotcos - (ps.y-(int)height) * rotsin) / 65536,
+                  textBoxOrigin.y +
+                  (ps.x * rotsin + (ps.y-(int)height) * rotcos) / 65536);
+
+    ppmd_validatePoint(retval);
+
+    return retval;
+}
+
+
 
 static void
 drawGlyph(const struct ppmd_glyph * const glyphP,
-          ppmd_point *              const glyphCornerP,
+          ppmd_point                const glyphOrigin,
           pixel **                  const pixels,
           unsigned int              const cols,
           unsigned int              const rows,
           pixval                    const maxval,
           int                       const height,
-          ppmd_point                const pos,
+          ppmd_point                const textBoxOrigin,
           long                      const rotcos,
           long                      const rotsin,
           ppmd_drawprocp                  drawProc,
-          const void *              const clientdata
-          ) {
+          const void *              const clientdata,
+          unsigned int *            const cursorAdvanceP
+    ) {
 /*----------------------------------------------------------------------------
-  *pP is either the top left or bottom left corner of the glyph cell
-  in the output upon entry, and we update it so as to move to the left
-  edge of the next glyph cell.
+  'glyphOrigin' is the position relative to the upper left corner of the text
+  box of the upper left corner of this glyph cell.  It is in units of font
+  pixels (so you have to scale it by the font size to actual distance on
+  the canvas).
+
+  We return as *cursorAdvanceP the amount to the right of this glyph cell
+  the next glyph cell on the line (if any) should be.
+
+  The actual glyph cell may be a little to the left of the nominal position
+  because of kerning.  The font says how much to shift the cell left.
+
+  'textBoxOrigin' is the left end of the baseline of the top line in the
+  text box, in the coordinate system of the canvas.  'rotcos' and 'rotsin'
+  tell how that text box is rotated with respect to the horizontal on the
+  canvas.
+  
+  'height' is the height in canvas pixels of a glyph.  This is a scale factor
+  to convert font coordinates to canvas coordinates.
 -----------------------------------------------------------------------------*/
-    ppmd_point const glyphCorner = *glyphCornerP;
+    ppmd_point const center = makePoint(-glyphSkipBefore(glyphP), Scalef/2);
+        /* This is what you have to add to the coordinates in a glyph
+           command, which are relative to the center of the glyph, to get
+           coordinates relative to the upper left corner of the glyph
+        */
     ppmd_point p;
+        /* Current drawing position within the glyph.  Origin is the top
+           left of the glyph cell.  Units are font pixels.
+        */
     unsigned int commandNum;
 
-    p = makePoint(glyphCorner.x - glyphSkipBefore(glyphP), glyphCorner.y);
-        /* initial value */
+    p = textPosFromFontPos(makePoint(0, 0),
+                           textBoxOrigin,
+                           center,
+                           glyphOrigin,
+                           height,
+                           rotcos, rotsin);   /* initial value */
 
     for (commandNum = 0;
          commandNum < glyphP->header.commandCount;
@@ -1398,41 +1481,30 @@ drawGlyph(const struct ppmd_glyph * const glyphP,
             break;
         case CMD_DRAWLINE:
         {
-            ppmd_point const n = vectorSum(p, commandPoint(commandP));
-            int const mx1 = (p.x * height) / Scalef;
-            int const my1 = ((p.y - Descend) * height) / Scalef;
-            int const mx2 = (n.x * height) / Scalef;
-            int const my2 = ((n.y - Descend) * height) / Scalef;
-
-            /* Note that all points above are with reference to an arbitrary
-               model co-ordinate system with fixed size and no rotation.
-               Following are the points that honor the height and angle
-               specifications.
-            */
-            ppmd_point const t1 =
-                makePoint(pos.x + (mx1 * rotcos - my1 * rotsin) / 65536,
-                          pos.y + (mx1 * rotsin + my1 * rotcos) / 65536);
-            ppmd_point const t2 =
-                makePoint(pos.x + (mx2 * rotcos - my2 * rotsin) / 65536,
-                          pos.y + (mx2 * rotsin + my2 * rotcos) / 65536);
-            
-            ppmd_validatePoint(t1);
-            ppmd_validatePoint(t2);
-            
-            ppmd_linep(pixels, cols, rows, maxval, t1, t2,
+            ppmd_point const n = textPosFromFontPos(commandPoint(commandP),
+                                                    textBoxOrigin,
+                                                    center,
+                                                    glyphOrigin,
+                                                    height,
+                                                    rotcos, rotsin);
+                                                    
+            ppmd_linep(pixels, cols, rows, maxval, p, n,
                        drawProc, clientdata);
 
             p = n;
         }
         break;
         case CMD_MOVEPEN:
-            p = vectorSum(p, commandPoint(commandP));
+            p = textPosFromFontPos(commandPoint(commandP),
+                                   textBoxOrigin,
+                                   center,
+                                   glyphOrigin,
+                                   height,
+                                   rotcos, rotsin);
             break;
         }
     }
-    p.x += glyphP->header.skipAfter; 
-
-    *glyphCornerP = makePoint(p.x + glyphP->header.skipAfter, glyphCorner.y);
+    *cursorAdvanceP = glyphWidth(glyphP);
 }
 
 
@@ -1449,12 +1521,17 @@ ppmd_textp(pixel**        const pixels,
            ppmd_drawprocp       drawProc,
            const void *   const clientdata) {
 /*----------------------------------------------------------------------------
-   Draw the zero-terminated string s, with its baseline starting at point
-   'pos', inclined by angle degrees to the X axis, with letters height pixels
-   high (descenders will extend below the baseline).  We pass the supplied
-   drawproc and clientdata to ppmd_linep, which performs the actual drawing.
+   Draw the zero-terminated string 'sArg', with its baseline starting at point
+   'pos', inclined by 'angle' degrees to the X axis, with letters 'height'
+   pixels high (descenders will extend below the baseline).  We pass the
+   supplied drawproc and clientdata to ppmd_linep, which performs the actual
+   drawing.
+
+   There may be multiple lines of text.  The baseline of the topmost line
+   starts at 'pos'.
 -----------------------------------------------------------------------------*/
     const struct ppmd_font * const fontP = ppmd_get_font();
+
     long rotsin, rotcos;
     ppmd_point p;
     const char * s;
@@ -1465,8 +1542,7 @@ ppmd_textp(pixel**        const pixels,
     rotsin = isin(-angle);
     rotcos = icos(-angle);
 
-    s = sArg;
-    while (*s) {
+    for (s = &sArg[0]; *s; ) {
         unsigned char const ch = *s++;
 
         if (ch >= fontP->header.firstCodePoint &&
@@ -1475,11 +1551,14 @@ ppmd_textp(pixel**        const pixels,
             const struct ppmd_glyph * const glyphP =
                 &fontP->glyphTable[ch - fontP->header.firstCodePoint];
 
+            unsigned int cursorAdvance;
+
             ppmd_validatePoint(p); 
 
-            drawGlyph(glyphP, &p, pixels, cols, rows, maxval,
+            drawGlyph(glyphP, p, pixels, cols, rows, maxval,
                       height, pos, rotcos, rotsin,
-                      drawProc, clientdata);
+                      drawProc, clientdata, &cursorAdvance);
+            p.x += cursorAdvance;
         } else if (ch == '\n') {
             /* Move to the left edge of the next line down */
             p.y += Scalef + Descend;

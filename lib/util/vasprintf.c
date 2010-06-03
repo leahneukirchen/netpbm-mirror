@@ -7,7 +7,7 @@
 
 #include "nstring.h"
 
-#if defined(__GNUC__) && !defined(__MINGW32__)
+#if (defined(__GLIBC__) || defined(__GNU_LIBRARY__))
   #define HAVE_VASPRINTF 1
 #else
   #define HAVE_VASPRINTF 0
