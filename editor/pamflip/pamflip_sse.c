@@ -1,3 +1,20 @@
+/*=============================================================================
+                                   pamflip_sse.c
+===============================================================================
+  This is part of the Pamflip program.  It contains code that exploits
+  the SSE facility of some CPUs.
+
+  This code was orginally written by Akira Urushibata ("Douso") in 2010 and is
+  contributed to the public domain by all authors.
+
+  The author makes the following request (which is not a reservation of legal
+  rights): Please study the code and make adjustments to meet specific needs.
+  This part is critical to performance.  I have seen code copied off from
+  poorly implemented.  Please put a comment in the code so people will know
+  where it came from.
+
+=============================================================================*/
+
 #include <assert.h>
 
 #include "pm_config.h"
