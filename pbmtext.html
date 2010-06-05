@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pbmtext User Manual</TITLE></HEAD>
 <BODY>
 <H1>pbmtext</H1>
-Updated: 26 April 2007
+Updated: 04 June 2010
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -143,9 +143,10 @@ truncates each line as needed to fit the specified width.
 
 <H2 id="usage">USAGE</H2>
 
-<P>Often, you want to place text over another image.  One way to do
-this is with <B>ppmlabel</B>.  <B>ppmlabel</B> does not give you the
-font options that <B>pbmtext</B> does, though.
+<P>Often, you want to place text over another image.  One way to do this is
+with <B>ppmlabel</B>.  For more flexible (but complex) drawing of text on an
+image, there is <b>ppmdraw</b>.  These do not give you the font options that
+<B>pbmtext</B> does, though.
 
 <P>Another way is to use <B>pbmtext</B> to create an image containing
 the text, then use <B>pamcomp</B> to overlay the text image onto your
@@ -250,16 +251,18 @@ use a graphical editor such as ImageMagick).  Finally, run it through
 <B><A HREF="ppmchange.html">ppmchange</A></B>,
 <B><A HREF="pnmrotate.html">pnmrotate</A></B>,
 <B><A HREF="ppmlabel.html">ppmlabel</A></B>,
+<B><A HREF="ppmdraw.html">ppmdraw</A></B>,
 <B><A HREF="pstopnm.html">pstopnm</A></B>,
 <B><A HREF="pbm.html">pbm</A></B>
+<b><a href="http://www.pango.org">Pango</a></b>
+<b><a href="http://cairographics.org"></a></b>
 
 <H2 id="author">AUTHOR</H2>
 
 Copyright (C) 1993 by Jef Poskanzer and George Phillips
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
 <LI><A HREF="#synopsis">SYNOPSIS</A>
 <LI><A HREF="#description">DESCRIPTION</A>

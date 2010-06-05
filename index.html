@@ -612,13 +612,15 @@ are specifically for KDE.
 
 <h3 id="programmingtools">Programming Tools</h3>
 
-<P>If you're writing a program in C to draw and manipulate images,
-check out <a href="http://www.boutell.com/gd">gd</a>.  Netpbm contains a
-C library for drawing images, but it is probably not as capable or
-documented as <b>gd</b>.  You can easily run any Netpbm program from a
-C program with the <b>pm_system</b> function from the Netpbm
-programming library, but that is less efficient than <b>gd</b>
+<P>If you're writing a program in C to draw and manipulate images, check out
+<a href="http://www.boutell.com/gd">gd</a>.  Netpbm contains a C library for
+drawing images (<b>libnetpbm</b>'s &quot;ppmd&quot; routines), but it is
+probably not as capable or documented as <b>gd</b>.  You can easily run any
+Netpbm program from a C program with the <b>pm_system</b> function from the
+Netpbm programming library, but that is less efficient than <b>gd</b>
 functions that do the same thing.
+
+<p><a href="http://cairographics.org/">Cairo</a> is similar.
 
 <P><B>Ilib</B> is a C subroutine library with functions for adding
 text to an image (as you might do at a higher level with
@@ -627,8 +629,13 @@ output.  Find it at <B><A
 HREF="http://www.k5n.us/Ilib.php">k5n.us</A></B>.
 Netpbm also includes character drawing functions in the <B><a
 href="libnetpbm.html">libnetpbm</a></B> library, but they do not have as
-fancy font capabilities (see <B><a href="ppmlabel.html">ppmlabel</a></B>
+fancy font capabilities (see <B><a href="ppmdraw.html">ppmdraw</a></B>
 for an example of use of the Netpbm character drawing functions).
+
+<p><a href="http://www.pango.org/">Pango</a> is another text rendering
+library, with an emphasis on internationalization.
+
+<p>Pango and Cairo complement each other and work well together.
 
 <P><B>GD</B> is a library of graphics routines that is part of PHP.
 It has a subset of Netpbm's functions and has been found to resize
@@ -800,7 +807,7 @@ group</a> in the Department of Computer Science at University of Utah
 used to (ca. 2002) have information on the Utah Raster Toolkit, but
 now it doesn't.
 
-<P><B>Ivtools</B> is a suite of free X Windows drawing editors for
+<P><B>Ivtools</B> is a suite of free X Window System drawing editors for
 Postscript, Tex, and web graphics production, as well as an embeddable
 and extendable vector graphic shell.  It uses the Netpbm facilities.
 See <B><A
