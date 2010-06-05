@@ -31,7 +31,7 @@
    This is a specialized routine for row-for-column PBM transformations.
    (-cw, -ccw, -xy).  It requires GCC (>= v. 4.2.0) and SSE2. 
 
-   In each cycle, we read sixteen rows from the input.  We process tbis band
+   In each cycle, we read sixteen rows from the input.  We process this band
    left to right in blocks 8 pixels wide.  We use the SSE2 instruction
    pmovmskb128, which reports the MSB of each byte in a 16 byte array, for
    fast processing.  We place the 8x16 block into a 16 byte array, and
@@ -40,11 +40,11 @@
 
    The following routines can write both in both directions (left and right)
    into the output rows.  They do this by controlling the vertical stacking
-   order when the make the 8x16 blocks.
+   order when they make the 8x16 blocks.
  
    Function transpose1to15Bitrows() is for handling the partial bits of each
    output row.  They can come from either the top or bottom of the vertical
-   input colunm, but they always go to the right end of the output rows.
+   input column, but they always go to the right end of the output rows.
 
    transformRowsToColumnsPbm() does not have any instructions unique to
    GCC or SSE.  It is possible to write a non-SSE version by providing
@@ -136,7 +136,7 @@ transpose16Bitrows(unsigned int const cols,
   GCC (4.2, 4.4) sees the suffix x of v16.i[x] and apparently decides that
   the variable has to be addressable and therefore needs to be placed into
   memory.)
-  ----------------------------------------------------------------------------*/
+---------------------------------------------------------------------------*/
     unsigned int col;
 
     for (col = 0; col + 7 < cols; col += 8) {    /* Unrolled loop */
