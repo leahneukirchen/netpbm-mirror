@@ -1159,28 +1159,34 @@ readBitmap(FILE *          const fp,
 
         hex = line;
         for (i = glyphWidth; i > 0; i -= 4) {
-            char hdig;
-            unsigned int hdigValue;
-            hdig = *hex++;
-            if (hdig >= '0' && hdig <= '9')
-                hdigValue = hdig - '0';
-            else if (hdig >= 'a' && hdig <= 'f')
-                hdigValue = 10 + (hdig - 'a');
-            else if (hdig >= 'A' && hdig <= 'F')
-                hdigValue = 10 + (hdig - 'A');
-            else
-                pm_error("Invalid hex digit '%c' in line '%s' of "
+            if (*hex == '\0')
+                pm_error("Premature end of line in line '%s' of "
                          "bitmap for character '%s' "
-                         "in BDF font file", hdig, line, charName);
+                         "in BDF font file", line, charName);
+            else {
+                char const hdig = *hex++;
+                unsigned int hdigValue;
+
+                if (hdig >= '0' && hdig <= '9')
+                    hdigValue = hdig - '0';
+                else if (hdig >= 'a' && hdig <= 'f')
+                    hdigValue = 10 + (hdig - 'a');
+                else if (hdig >= 'A' && hdig <= 'F')
+                    hdigValue = 10 + (hdig - 'A');
+                else 
+                    pm_error("Invalid hex digit '%c' in line '%s' of "
+                             "bitmap for character '%s' "
+                             "in BDF font file", hdig, line, charName);
                         
-            if (i > 0)
-                bmap[bmapIndex++] = hdigValue & 0x8 ? 1 : 0;
-            if (i > 1)
-                bmap[bmapIndex++] = hdigValue & 0x4 ? 1 : 0;
-            if (i > 2)
-                bmap[bmapIndex++] = hdigValue & 0x2 ? 1 : 0;
-            if (i > 3)
-                bmap[bmapIndex++] = hdigValue & 0x1 ? 1 : 0;
+                if (i > 0)
+                    bmap[bmapIndex++] = hdigValue & 0x8 ? 1 : 0;
+                if (i > 1)
+                    bmap[bmapIndex++] = hdigValue & 0x4 ? 1 : 0;
+                if (i > 2)
+                    bmap[bmapIndex++] = hdigValue & 0x2 ? 1 : 0;
+                if (i > 3)
+                    bmap[bmapIndex++] = hdigValue & 0x1 ? 1 : 0;
+            }
         }
     }
 }
