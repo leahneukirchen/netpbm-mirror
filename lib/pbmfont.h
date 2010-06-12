@@ -16,15 +16,17 @@ struct glyph {
     unsigned int width;
     unsigned int height;
         /* The dimensions of the central glyph, i.e. the 'bmap' array */
-    unsigned int x;
+    int x;
         /* Width in pixels of the white left border of this glyph.
            This can actually be negative to indicate that the central
            glyph backs up over the previous character in the line.  In
            that case, if there is no previous character in the line, it
            is as if 'x' is 0.
         */
-    unsigned int y;
-        /* Height in pixels of the white bottom border of this glyph */
+    int y;
+        /* Height in pixels of the white bottom border of this glyph.
+           Can be negative.
+        */
     unsigned int xadd;
         /* Width of glyph -- white left border plus central glyph
            plus white right border
