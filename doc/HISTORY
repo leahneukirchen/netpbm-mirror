@@ -28,6 +28,14 @@ not yet  BJH  Release 10.51.00
               libnetpbm, various PBM programs: Use SSE insted of MMX.  Thanks
               Prophet of the Way <afu@wta.att.ne.jp>.
 
+              pbmtext/libpbmfont: Fix wild pointer; probably asymptomatic.
+              Introduced in 10.39.
+
+              pbmtext/libpbmfont: Fix some error messages for bad fonts.
+
+              pbmtext/libpbmfont: fix crash with a BDF font with negative
+              left or bottom border.  Introduced in 10.39.
+
               pamarith: fix memory leak.  Introduced in 10.41.
 
               pnm_bytespersample(): fix bogus assertion on 64 bit system.
