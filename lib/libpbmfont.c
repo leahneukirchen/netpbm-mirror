@@ -16,6 +16,7 @@
 
 #include <assert.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "pm_c_util.h"
 #include "mallocvar.h"
@@ -1205,8 +1206,11 @@ parseBitmapRow(const char *    const hex,
             else if (hdig >= 'A' && hdig <= 'F')
                 hdigValue = 10 + (hdig - 'A');
             else 
-                asprintfN(errorP, "Invalid hex digit '%c' in bitmap data '%s'",
-                          hdig, hex);
+                asprintfN(errorP,
+                          "Invalid hex digit x%02x (%c) in bitmap data '%s'",
+                          (unsigned int)(unsigned char)hdig, 
+                          isprint(hdig) ? hdig : '.',
+                          hex);
 
             if (!*errorP) {
                 if (i > 0)
