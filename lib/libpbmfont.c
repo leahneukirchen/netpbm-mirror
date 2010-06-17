@@ -1159,28 +1159,34 @@ readBitmap(FILE *          const fp,
 
         hex = line;
         for (i = glyphWidth; i > 0; i -= 4) {
-            char hdig;
-            unsigned int hdigValue;
-            hdig = *hex++;
-            if (hdig >= '0' && hdig <= '9')
-                hdigValue = hdig - '0';
-            else if (hdig >= 'a' && hdig <= 'f')
-                hdigValue = 10 + (hdig - 'a');
-            else if (hdig >= 'A' && hdig <= 'F')
-                hdigValue = 10 + (hdig - 'A');
-            else
-                pm_error("Invalid hex digit '%c' in line '%s' of "
+            if (*hex == '\0')
+                pm_error("Premature end of line in line '%s' of "
                          "bitmap for character '%s' "
-                         "in BDF font file", hdig, line, charName);
+                         "in BDF font file", line, charName);
+            else {
+                char const hdig = *hex++;
+                unsigned int hdigValue;
+
+                if (hdig >= '0' && hdig <= '9')
+                    hdigValue = hdig - '0';
+                else if (hdig >= 'a' && hdig <= 'f')
+                    hdigValue = 10 + (hdig - 'a');
+                else if (hdig >= 'A' && hdig <= 'F')
+                    hdigValue = 10 + (hdig - 'A');
+                else 
+                    pm_error("Invalid hex digit '%c' in line '%s' of "
+                             "bitmap for character '%s' "
+                             "in BDF font file", hdig, line, charName);
                         
-            if (i > 0)
-                bmap[bmapIndex++] = hdigValue & 0x8 ? 1 : 0;
-            if (i > 1)
-                bmap[bmapIndex++] = hdigValue & 0x4 ? 1 : 0;
-            if (i > 2)
-                bmap[bmapIndex++] = hdigValue & 0x2 ? 1 : 0;
-            if (i > 3)
-                bmap[bmapIndex++] = hdigValue & 0x1 ? 1 : 0;
+                if (i > 0)
+                    bmap[bmapIndex++] = hdigValue & 0x8 ? 1 : 0;
+                if (i > 1)
+                    bmap[bmapIndex++] = hdigValue & 0x4 ? 1 : 0;
+                if (i > 2)
+                    bmap[bmapIndex++] = hdigValue & 0x2 ? 1 : 0;
+                if (i > 3)
+                    bmap[bmapIndex++] = hdigValue & 0x1 ? 1 : 0;
+            }
         }
     }
 }
@@ -1234,9 +1240,9 @@ createBmap(unsigned int  const glyphWidth,
 static void
 expect(FILE *        const fp,
        const char *  const expected,
-       const char ** const arg) {
+       const char ** const arg,
+       char *        const line) {
 
-    char line[1024];
     int rc;
 
     rc = readline(fp, line, arg);
@@ -1356,7 +1362,7 @@ processCharsLine(FILE *        const fp,
 
             {
                 const char * arg[32];
-                expect(fp, "ENCODING", arg);
+                expect(fp, "ENCODING", arg, line);
 
                 validateEncoding(arg, &codepoint, &badCodepoint);
             }
@@ -1365,18 +1371,18 @@ processCharsLine(FILE *        const fp,
             else {
                 {
                     const char * arg[32];
-                    expect(fp, "SWIDTH", arg);
+                    expect(fp, "SWIDTH", arg, line);
                 }
                 {
                     const char * arg[32];
                     
-                    expect(fp, "DWIDTH", arg);
+                    expect(fp, "DWIDTH", arg, line);
                     glyphP->xadd = atoi(arg[1]);
                 }
                 {
                     const char * arg[32];
                     
-                    expect(fp, "BBX", arg);
+                    expect(fp, "BBX", arg, line);
                     glyphP->width  = atoi(arg[1]);
                     glyphP->height = atoi(arg[2]);
                     glyphP->x      = atoi(arg[3]);
@@ -1387,7 +1393,7 @@ processCharsLine(FILE *        const fp,
                 
                 {
                     const char * arg[32];
-                    expect(fp, "ENDCHAR", arg);
+                    expect(fp, "ENDCHAR", arg, line);
                 }
                 assert(codepoint < 256); /* Ensured by validateEncoding() */
 
@@ -1451,7 +1457,7 @@ pbm_loadbdffont(const char * const name) {
         pm_error("Unable to open BDF font file name '%s'.  errno=%d (%s)",
                  name, errno, strerror(errno));
 
-    expect(fp, "STARTFONT", arg);
+    expect(fp, "STARTFONT", arg, line);
 
     MALLOCVAR(fontP);
     if (fontP == NULL)
