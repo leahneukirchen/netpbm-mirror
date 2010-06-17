@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pbmtext User Manual</TITLE></HEAD>
 <BODY>
 <H1>pbmtext</H1>
-Updated: 04 June 2010
+Updated: 14 June 2010
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -164,7 +164,7 @@ black and white image for the alpha mask.
 <P>If you want the text at an angle, use <B>pnmrotate</B> on the text
 image (and alpha mask) before overlaying.
 
-<h2 id="font">FONTS</h2>
+<h2 id="fonts">FONTS</h2>
 
 <p>There are three kinds of fonts you an use with <b>pbmtext</b>:
 
@@ -173,6 +173,21 @@ image (and alpha mask) before overlaying.
 <li>BDF
 <li>PBM
 </ul>
+
+<h3>Built In Fonts</h3>
+
+<p>There are two built in fonts: <b>bdf</b> and <b>fixed</b>.  You select
+these fonts with a <b>-builtin</b> option.
+
+<p><b>bdf</b> is the default when you specify no font information on the
+command line.
+
+<p><b>bdf</b> is encoded in ISO 8859-1 (Latin 1, 8-bit).  In addition to
+English it can handle most West European languages (Spanish, French, German,
+Swedish ...)  This set lacks the Euro currency sign.
+
+<p><b>fixed</b> is ASCII (7-bit) only.
+
 
 <h3>BDF Font</h3>
 
@@ -242,6 +257,105 @@ use a graphical editor such as ImageMagick).  Finally, run it through
 <B>pbmtext</B> can figure out the sizes and spacings from that.
 
 
+<h2 id="nonenglish">NON-ENGLISH TEXT</h2>
+
+<p><b>pbmtext</b> does little to accomodate the special needs of non-English
+text.
+
+<p><b>pbmtext</b> reads input in byte units.  Unicode (utf-7, utf-8, utf-16,
+etc.) text which contains multibyte characters does not work.
+
+<p><b>pbmtext</b> can handle 7-bit and 8-bit character sets.  Examples are
+ASCII, ISO 8859 family, koi8-r/u and VISCII.  It is up to the user to supply a
+BDF file covering the necessary glyphs with the "-font" option.  The font file
+must be in the right encoding.
+
+<p><b>pbmtext</b> does not recognize locale.  It ignores the associated
+environment variables.
+
+<p><b>pbmtext</b> cannot render vertically or right to left.
+
+
+<h2 id="tips">TIPS</h2>
+
+<p>If you get garbled output, check whether the font file encoding corresponds
+to the input text encoding.  Also make sure that your input is not in utf-* or
+any other mutli-byte format.
+
+<p>To dump characters in a BDF font file run this command:
+
+<pre>
+<tt>
+    $ awk 'BEGIN { for (i=0x01; i&lt;=0xFF; i++)  
+                    { printf(&quot;%c%s&quot;,i,i%16==15 ? &quot;\n&quot;:&quot;&quot;); } }' |\
+      pbmtext -f font.bdf &gt; dump.pbm
+</tt>
+</pre>
+
+<p>If you need only ASCII, change the for statement to:
+
+<pre>
+<tt>
+     for (i=0x20; i&lt;=0x7E; i++)  
+</tt>
+</pre>
+
+<p>To check the encoding of a BDF file, examine the CHARSET_REGISTRY
+line and the next line, which should be CHARSET_ENCODING:
+
+<pre>
+<tt>
+    $ grep -A1 CHARSET_REGISTRY font-a.bdf
+    CHARSET_REGISTRY &quot;ISO8859&quot;
+    CHARSET_ENCODING &quot;1&quot;
+    
+    $ grep -A1 CHARSET_REGISTRY font-b.bdf
+    CHARSET_REGISTRY &quot;ISO10646&quot;
+    CHARSET_ENCODING &quot;1&quot;
+</tt>
+</pre>
+
+<p>The latter is Unicode.  BDF files coded in ISO 16046-1 usually work for
+Western European languages, because ISO 16046-1 expands ISO 8859-1 (also
+called &quot;Latin-1&quot;) while maintaining the first 256 code points.  ISO
+8859-1 itself is a superset of ASCII.  Run the above command and verify the
+necessary glyphs are present.
+
+<p>It may sound strange that <b>pbmtext</b> accepts font files encoded in
+Unicode but not input text in Unicode.  This is because Unicode provides
+several &quot;numbering schemes&quot;.
+
+<p>When rendering text in character sets other than ISO 8859-1, one often has
+to produce a BDF file in the given encoding from a master BDF file encoded in
+ISO 10646-1.
+
+<p>In particular, 75% of the BDF files in the font collection available from
+<a href="http://netpbm.sourceforge.net/bdffont.tgz">the Netpbm website</a> are
+in ISO 10646-1.  Many have the Euro sign, Greek letters, etc, but they are
+placed in code points beyond what <b>pbmtext</b> sees.
+
+<p>There are several programs that perform BDF encoding conversion.  If you
+have the X Window System installed, first look for <b>ucs2any</b>.  If you
+don't, you can download <b>ucs2any.pl</b> from <a
+href="http://www.cl.cam.ac.uk/~mgk25/ucs-fonts.html">Unicode fonts and tools
+for X11</a>.  This website has much useful information on fonts.
+
+<p>Another converter is <b>trbdf</b>, included in the &quot;trscripts&quot;
+package, available in some GNU/Linux distributions.
+
+<p>BDF files encoded in ISO 8859-2, ISO 8859-7, koi8-r, etc. are available
+from <a href="http://czyborra.com/charsets/iso8859.html">ISO 8859 Alphabet
+Soup</a> and its sister page <a
+href="http://czyborra.com/charsets/cyrillic.html">The Cyrillic Charset
+Soup</a>.  Though the information is dated, these pages give a good overview
+of 8-bit character sets.
+
+<p>To convert OTF or TTF font files to BDF, use 
+
+<a href="http://www.math.nmsu.edu/~mleisher/Software/otf2bdf">
+<b>otf2bdf</b> by Mike Leisher</a>.
+
+
 <H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="pbmtextps.html">pbmtextps</A></B>,
@@ -253,9 +367,9 @@ use a graphical editor such as ImageMagick).  Finally, run it through
 <B><A HREF="ppmlabel.html">ppmlabel</A></B>,
 <B><A HREF="ppmdraw.html">ppmdraw</A></B>,
 <B><A HREF="pstopnm.html">pstopnm</A></B>,
-<B><A HREF="pbm.html">pbm</A></B>
-<b><a href="http://www.pango.org">Pango</a></b>
-<b><a href="http://cairographics.org"></a></b>
+<B><A HREF="pbm.html">pbm</A></B>,
+<b><a href="http://www.pango.org">Pango</a></b>,
+<b><a href="http://cairographics.org">Cairo</a></b>
 
 <H2 id="author">AUTHOR</H2>
 
@@ -269,6 +383,8 @@ Copyright (C) 1993 by Jef Poskanzer and George Phillips
 <LI><A HREF="#options">OPTIONS</A>
 <LI><A HREF="#usage">USAGE</A>
 <LI><A HREF="#fonts">FONTS</A>
+<LI><A HREF="#nonenglish">Non-English Text</A>
+<LI><A HREF="#tips">TIPS</A>
 <LI><A HREF="#seealso">SEE ALSO</A>
 <LI><A HREF="#author">AUTHOR</A>
 </UL>
