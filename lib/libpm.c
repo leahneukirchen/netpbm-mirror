@@ -351,7 +351,15 @@ static unsigned char *
 allocRowHeap(unsigned int const cols,
              unsigned int const rows,
              unsigned int const size) {
+/*----------------------------------------------------------------------------
+   Allocate a row heap.  That's a chunk of memory for use in a
+   pm_allocarray two-dimensional array to contain the rows.
 
+   The heap must fit 'rows' rows of 'cols' columns each of elements
+   'size' bytes in size.
+
+   Return NULL if we can't get the memory.
+-----------------------------------------------------------------------------*/
     unsigned char * retval;
 
     if (cols != 0 && rows != 0 && UINT_MAX / cols / rows < size)
@@ -373,8 +381,18 @@ pm_allocarray(int const cols,
    Allocate an array of 'rows' rows of 'cols' columns each, with each
    element 'size' bytes.
 
-   We use a special format where we tack on an extra element to the row
-   index to indicate the format of the array.
+   We use the C multidimensional array paradigm:  The array is a row
+   index (array of pointers to rows) plus an array of elements for each
+   of those rows.  So a[row][col] gives you the element of the two
+   dimensional array at Row 'row', Column 'col'.
+
+   But we use a special variation on that where we tack on an extra element to
+   the row index to indicate the format of the array.
+
+   We do NOT TAKE CARE OF ALIGNMENT.  Alignment of the elements is only one
+   byte even if 'size' indicates elements are 4 bytes each.  Normally, it
+   would be a good idea to align such elements to 4 byte boundaries (address
+   is a multiple of 4).  But we don't, so watch out.
 
    We have two ways of allocating the space: fragmented and
    unfragmented.  In both, the row index (plus the extra element) is
