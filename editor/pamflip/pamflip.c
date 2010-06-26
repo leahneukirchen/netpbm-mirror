@@ -390,6 +390,8 @@ parseCommandLine(int argc, char ** const argv,
                  "specified %d", argc-1);
     else
         cmdlineP->inputFilespec = argv[1];
+
+    free(option_def);
 }
 
 
