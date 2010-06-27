@@ -107,12 +107,33 @@ do { \
         abort(); \
 } while(0)
 
+#define MALLOCARRAY2(arrayName, nRows, nCols, elementSz) do { \
+    void * array; \
+    mallocarray2(&array, nRows, nCols, sizeof(arrayName[0][0]));  \
+    arrayName = array; \
+} while (0)
+
+#define MALLOCARRAY2_NOFAIL(arrayName, nRows, nCols, elementSz) do { \
+    MALLOCARRAY_NOFAIL(arrayName, nRows, nCols, elementSz);       \
+    if ((arrayName) == NULL) \
+        abort(); \
+} while (0)
+
+void
+pm_freearray2(void ** const rowIndex);
+
 
 #define MALLOCVAR(varName) \
     varName = malloc(sizeof(*varName))
 
 #define MALLOCVAR_NOFAIL(varName) \
     do {if ((varName = malloc(sizeof(*varName))) == NULL) abort();} while(0)
+
+void
+pm_mallocarray2(void **      const resultP,
+                unsigned int const cols,
+                unsigned int const rows,
+                unsigned int const elementSize);
 
 #ifdef __cplusplus
 }

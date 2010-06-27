@@ -12,6 +12,7 @@ include $(BUILDDIR)/config.mk
 UTILOBJECTS = \
   filename.o \
   io.o \
+  mallocvar.o \
   nsleep.o \
   nstring.o \
   shhopt.o \

@@ -40,6 +40,7 @@ LIBOBJECTS = libpm.o pmfileio.o fileio.o bitio.o colorname.o \
 LIBOBJECTS_X = \
   util/filename.o \
   util/io.o \
+  util/mallocvar.o \
   util/nsleep.o \
   util/nstring.o \
   util/shhopt.o \
