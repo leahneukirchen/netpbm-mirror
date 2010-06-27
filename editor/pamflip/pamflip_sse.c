@@ -19,6 +19,7 @@
 
 #include "pm_config.h"
 #include "pm_c_util.h"
+#include "mallocvar.h"
 #include "pam.h"
 
 #include "flip.h"
@@ -364,8 +365,10 @@ pamflip_transformRowsToColumnsPbmSse(const struct pam * const inpamP,
     unsigned int outcol16;
 
     inrow = pbm_allocarray_packed( inpamP->width, 16);
-    outplane =
-      (uint16_t **) pm_allocarray( blocksPerRow, outpamP->height + 7, 2);
+    MALLOCARRAY2(outplane, outpamP->height + 7, blocksPerRow);
+    if (outplane == NULL)
+        pm_error("Could not allocate %u x %u array of 16 bit units",
+                 blocksPerRow, outpamP->height + 7);
 
     /* We write to the output array in 16 bit units.  Add margin. */  
 
