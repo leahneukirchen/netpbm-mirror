@@ -59,8 +59,8 @@ at_bitmap_init(unsigned char * area,
             if (bitmap.bitmap == NULL)
                 pm_error("Unable to allocate %u x %u x %u bitmap array",
                          width, height, planes);
-            bzero(bitmap.bitmap,
-                  width * height * planes * sizeof(unsigned char));
+            memset(bitmap.bitmap,
+                   0, width * height * planes * sizeof(unsigned char));
         }
     }
     

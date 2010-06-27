@@ -818,6 +818,7 @@ rleCompressAndBufferRow(const unsigned char * const rowdata,
 
 
 
+/* FIXME Incorrect for images with pixelSize == 16 */
 static void
 computeNextPackbitsRun(const unsigned char * const rowdata,
                        unsigned int          const rowbytes,
@@ -895,7 +896,7 @@ packbitsCompressAndBufferRow(const unsigned char * const rowdata,
                              unsigned int          const rowbytes,
                              struct seqBuffer *    const rasterBufferP) {
 /*----------------------------------------------------------------------------
-   Take the raw Palm Bitmap row 'rowdata', which is 'rowbytess' bytes, and
+   Take the raw Palm Bitmap row 'rowdata', which is 'rowbytes' bytes, and
    add the packbits-compressed representation of it to the buffer 
    with handle 'rasterBufferP'.
 -----------------------------------------------------------------------------*/

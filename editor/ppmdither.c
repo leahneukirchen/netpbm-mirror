@@ -20,7 +20,7 @@
    We need 2*dith_power bits in an unsigned int.  We also reserve
    one bit to give headroom to do calculations with these numbers.
 */
-#define MAX_DITH_POWER ((sizeof(unsigned int)*8 - 1) / 2)
+#define MAX_DITH_POWER (((unsigned)sizeof(unsigned int)*8 - 1) / 2)
 
 
 struct colorResolution {

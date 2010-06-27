@@ -15,7 +15,7 @@
 
 **************************************************************************/
 
-#if defined(USG) || defined(SVR4) || defined(VMS) || defined(__SVR4)
+#if defined(USG) || defined(SVR4) || defined(__SVR4)
 #define SYSV
 #endif
 #if !( defined(BSD) || defined(SYSV) || defined(MSDOS) || defined(__amigaos__))
@@ -74,25 +74,6 @@
 #if (defined(SYSV) || defined(__amigaos__))
 
 #include <string.h>
-/* Before Netpbm 9.1, rand and srand were macros for random and
-   srandom here.  This caused a failure on a SunOS 5.6 system, which
-   is SYSV, but has both rand and random declared (with different
-   return types).  The macro caused the prototype for random to be a
-   second prototype for rand.  Before 9.1, Netpbm programs called
-   random() and on a SVID system, that was really a call to rand().
-   We assume all modern systems have rand() itself, so now Netpbm
-   always calls rand() and if we find a platform that doesn't have
-   rand(), we will add something here for that platform.  -Bryan 00.04.26
-#define random rand
-#define srandom(s) srand(s)
-extern void srand();
-extern int rand();
-*/
-/* Before Netpbm 9.15, there were macro definitions of index() and 
-   rindex() here, but there are no longer any invocations of those 
-   functions in Netpbm, except in the VMS-only code, so there's no
-   reason for them.
-*/
 
 #ifndef __SASC
 #ifndef _DCC    /* Amiga DICE Compiler */
@@ -115,7 +96,7 @@ extern int rand();
 #ifdef BSD
 #include <stdlib.h>
 #endif
-#if (defined(SYSV) && !defined(VMS))
+#if defined(SYSV)
 #include <malloc.h>
 #endif
 /* extern char* malloc(); */
@@ -198,14 +179,14 @@ extern int rand();
   #endif
 #endif
 
-/* CONFIGURE: GNUC extensions are used in performance critical places
+/* CONFIGURE: GNU Compiler extensions are used in performance critical places
    when available.  Test whether they exist.
 
    Turn off by defining NO_GCC_BUILTINS.
 
-   Note that though these influence the code produced, the compiler
-   setting ultimately decides what operands are used.  If you
-   want a generic build, check the manual and adjust CFLAGS in
+   Note that though these influence the resulting Netpbm machine code, the
+   compiler setting ultimately decides what instruction set the compiler uses.
+   If you want a generic build, check the manual and adjust CFLAGS in
    config.mk accordingly.
 
    For example, if you want binaries that run on all Intel x86-32
@@ -213,6 +194,10 @@ extern int rand();
    config.mk is much better than setting NO_GCC_BUILTINS to 1.
    If you want to be extra sure use:
    "-march=i386 -mno-mmx -mno-sse -DNO_GCC_BUILTINS"
+
+   Gcc uses SSE and SSE2 instructions by default for AMD/Intel x86-64.
+   Tinkering with "-mno-sse" is not recommended for these machines.  If you
+   don't want SSE code, set NO_GCC_BUILTINS to 1.
 */
 
 #if defined(__GNUC__) && !defined(NO_GCC_BUILTINS)
@@ -221,12 +206,21 @@ extern int rand();
   #define GCCVERSION 0
 #endif
 
-#ifndef HAVE_GCC_MMXSSE
-#if GCCVERSION >=301 && defined(__MMX__) && defined(__SSE__)
-  #define HAVE_GCC_MMXSSE 1
-  /* Use GCC builtins to directly access MMX/SSE features */ 
+/* HAVE_GCC_SSE2 means the compiler has GCC builtins to directly access
+   SSE/SSE2 features.  This is different from whether the compiler generates
+   code that uses these features at all.
+*/
+
+#ifndef HAVE_GCC_SSE2
+/* GCC 4.1 ostensibly has the feature, but experiments with 4.1.2 and
+   4.1.2 in May 2010 exposed an obscure compiler bug and the compiler got
+   stock with pamflip_sse.c.  So we say the feature exists only on 4.2
+   and up.
+*/
+#if GCCVERSION >=402 && defined(__SSE__) && defined(__SSE2__)
+  #define HAVE_GCC_SSE2 1
 #else
-  #define HAVE_GCC_MMXSSE 0
+  #define HAVE_GCC_SSE2 0
 #endif
 #endif
 

@@ -16,19 +16,10 @@
 ** 08Feb94: minor bugfix
 ** 29Jul00: added -channel option (smar@reptiles.org)
 */
+#include <unistd.h>
+#include "mallocvar.h"
 #include "pnm.h"
 #include "sgi.h"
-#include "mallocvar.h"
-#ifndef VMS
-#include <unistd.h>
-#endif
-
-/*#define DEBUG*/
-
-#ifndef SEEK_SET
-#define SEEK_SET    0
-#endif
-
 
 /* entry in RLE offset table */
 typedef struct {
@@ -58,6 +49,7 @@ static void       rle_decompress ARGS((ScanElem *src, int srclen, ScanElem *dest
 
 
 static short verbose = 0;
+
 
 
 int
@@ -199,10 +191,6 @@ read_header(ifp, channel)
         pm_message("compression: %d = %s", head->storage, compression_name(head->storage));
         head->name[79] = '\0';  /* just to be safe */
         pm_message("Image name: \"%s\"", head->name);
-#ifdef DEBUG
-        pm_message("bpc: %d    dimension: %d    zsize: %d", head->bpc, head->dimension, head->zsize);
-        pm_message("pixmin: %ld    pixmax: %ld    colormap: %ld", head->pixmin, head->pixmax, head->colormap);
-#endif
     }
 
     return head;
@@ -218,10 +206,6 @@ read_table(ifp, tablen)
     int i;
 
     MALLOCARRAY_NOFAIL(table, tablen);
-
-#ifdef DEBUG
-    pm_message("reading offset table");
-#endif
 
     for( i = 0; i < tablen; i++ )
         table[i].start = get_big_long(ifp);
@@ -243,12 +227,8 @@ read_channels(ifp, head, table, func, ochan)
 {
     ScanLine *image;
     ScanElem *temp;
-    int channel, maxchannel, row, sgi_index, i;
+    int channel, maxchannel, sgi_index, i;
     long offset, length;
-
-#ifdef DEBUG
-    pm_message("reading channels");
-#endif
 
     if (ochan < 0) {
         maxchannel = (head->zsize < 3) ? head->zsize : 3;
@@ -261,9 +241,7 @@ read_channels(ifp, head, table, func, ochan)
         MALLOCARRAY_NOFAIL(temp, WORSTCOMPR(head->xsize));
 
     for( channel = 0; channel < maxchannel;  channel++ ) {
-#ifdef DEBUG
-        pm_message("    channel %d", channel);
-#endif
+        unsigned int row;
         for( row = 0; row < head->ysize; row++ ) {
             int iindex;
 
@@ -300,6 +278,7 @@ read_channels(ifp, head, table, func, ochan)
 }
 
 
+
 static void
 image_to_pnm(Header *head, ScanLine *image, xelval maxval, int channel)
 {
@@ -333,6 +312,7 @@ image_to_pnm(Header *head, ScanLine *image, xelval maxval, int channel)
     }
     pnm_freerow(pnmrow);
 }
+
 
 
 static void

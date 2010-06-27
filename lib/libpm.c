@@ -311,122 +311,26 @@ pm_freerow(void * const itrow) {
 
 
 
-static void
-allocarrayNoHeap(unsigned char ** const rowIndex,
-                 unsigned int     const cols,
-                 unsigned int     const rows,
-                 unsigned int     const size,
-                 const char **    const errorP) {
-
-    if (cols != 0 && UINT_MAX / cols < size)
-        asprintfN(errorP,
-                  "Arithmetic overflow multiplying %u by %u to get the "
-                  "size of a row to allocate.", cols, size);
-    else {
-        unsigned int rowsDone;
-
-        rowsDone = 0;
-        *errorP = NULL;
-
-        while (rowsDone < rows && !*errorP) {
-            unsigned char * const rowSpace = mallocz(cols * size);
-            if (rowSpace == NULL)
-                asprintfN(errorP,
-                          "Unable to allocate a %u-column by %u byte row",
-                          cols, size);
-            else
-                rowIndex[rowsDone++] = rowSpace;
-        }
-        if (*errorP) {
-            unsigned int row;
-            for (row = 0; row < rowsDone; ++row)
-                free(rowIndex[row]);
-        }
-    }
-}
-
-
-
-static unsigned char *
-allocRowHeap(unsigned int const cols,
-             unsigned int const rows,
-             unsigned int const size) {
-
-    unsigned char * retval;
-
-    if (cols != 0 && rows != 0 && UINT_MAX / cols / rows < size)
-        /* Too big even to request the memory ! */
-        retval = NULL;
-    else
-        retval = mallocz(rows * cols * size);
-
-    return retval;
-}
-
-
-
 char **
 pm_allocarray(int const cols,
               int const rows,
-              int const size )  {
+              int const elementSize ) {
 /*----------------------------------------------------------------------------
-   Allocate an array of 'rows' rows of 'cols' columns each, with each
-   element 'size' bytes.
+   This is for backward compatibility.  MALLOCARRAY2 is usually better.
 
-   We use a special format where we tack on an extra element to the row
-   index to indicate the format of the array.
-
-   We have two ways of allocating the space: fragmented and
-   unfragmented.  In both, the row index (plus the extra element) is
-   in one block of memory.  In the fragmented format, each row is
-   also in an independent memory block, and the extra row pointer is
-   NULL.  In the unfragmented format, all the rows are in a single
-   block of memory called the row heap and the extra row pointer is
-   the address of that block.
-
-   We use unfragmented format if possible, but if the allocation of the
-   row heap fails, we fall back to fragmented.
+   A problem with pm_allocarray() is that its return type is char **
+   even though 'elementSize' can be other than 1.  So users have
+   traditionally type cast the result.  In the old days, that was just
+   messy; modern compilers can produce the wrong code if you do that.
 -----------------------------------------------------------------------------*/
-    unsigned char ** rowIndex;
-    const char * error;
+    char ** retval;
+    void * result;
 
-    MALLOCARRAY(rowIndex, rows + 1);
-    if (rowIndex == NULL)
-        asprintfN(&error,
-                  "out of memory allocating row index (%u rows) for an array",
-                  rows);
-    else {
-        unsigned char * rowheap;
+    pm_mallocarray2(&result, rows, cols, elementSize);
 
-        rowheap = allocRowHeap(cols, rows, size);
+    retval = result;
 
-        if (rowheap) {
-            /* It's unfragmented format */
-
-            rowIndex[rows] = rowheap;  /* Declare it unfragmented format */
-
-            if (rowheap) {
-                unsigned int row;
-                
-                for (row = 0; row < rows; ++row)
-                    rowIndex[row] = &(rowheap[row * cols * size]);
-            }
-            error = NULL;
-        } else {
-            /* We couldn't get the whole heap in one block, so try fragmented
-               format.
-            */
-            rowIndex[rows] = NULL;   /* Declare it fragmented format */
-            
-            allocarrayNoHeap(rowIndex, cols, rows, size, &error);
-        }
-    }
-    if (error) {
-        pm_errormsg("Couldn't allocate %u-row array.  %s", rows, error);
-        strfree(error);
-        pm_longjmp();
-    }
-    return (char **)rowIndex;
+    return retval;
 }
 
 
@@ -435,16 +339,9 @@ void
 pm_freearray(char ** const rowIndex, 
              int     const rows) {
 
-    void * const rowheap = rowIndex[rows];
+    void * const rowIndexVoid = rowIndex;
 
-    if (rowheap != NULL)
-        free(rowheap);
-    else {
-        unsigned int row;
-        for (row = 0; row < rows; ++row)
-            pm_freerow(rowIndex[row]);
-    }
-    free(rowIndex);
+    pm_freearray2(rowIndexVoid);
 }
 
 
@@ -562,37 +459,6 @@ pm_lcm(unsigned int const x,
 }
 
 
-/* Initialization. */
-
-
-#ifdef VMS
-static const char *
-vmsProgname(int * const argcP, char * argv[]) {   
-    char **temp_argv = argv;
-    int old_argc = *argcP;
-    int i;
-    const char * retval;
-    
-    getredirection( argcP, &temp_argv );
-    if (*argcP > old_argc) {
-        /* Number of command line arguments has increased */
-        fprintf( stderr, "Sorry!! getredirection() for VMS has "
-                 "changed the argument list!!!\n");
-        fprintf( stderr, "This is intolerable at the present time, "
-                 "so we must stop!!!\n");
-        exit(1);
-    }
-    for (i=0; i<*argcP; i++)
-        argv[i] = temp_argv[i];
-    retval = strrchr( argv[0], '/');
-    if ( retval == NULL ) retval = rindex( argv[0], ']');
-    if ( retval == NULL ) retval = rindex( argv[0], '>');
-
-    return retval;
-}
-#endif
-
-
 
 void
 pm_init(const char * const progname,
@@ -642,11 +508,7 @@ showVersion(void) {
     pm_message( "BSD defined" );
 #endif /*BSD*/
 #ifdef SYSV
-#ifdef VMS
-    pm_message( "VMS & SYSV defined" );
-#else
     pm_message( "SYSV defined" );
-#endif
 #endif /*SYSV*/
 #ifdef MSDOS
     pm_message( "MSDOS defined" );
@@ -751,11 +613,7 @@ pm_proginit(int * const argcP, const char * argv[]) {
         */
     
     /* Extract program name. */
-#ifdef VMS
-    progname = vmsProgname(argcP, argv);
-#else
     progname = strrchr( argv[0], '/');
-#endif
     if (progname == NULL)
         progname = argv[0];
     else
@@ -807,12 +665,21 @@ pm_proginit(int * const argcP, const char * argv[]) {
 
 
 void
-pm_setMessage(int const newState, int * const oldStateP) {
+pm_setMessage(int   const newState,
+              int * const oldStateP) {
     
     if (oldStateP)
         *oldStateP = pm_showmessages;
 
     pm_showmessages = !!newState;
+}
+
+
+
+int
+pm_getMessage(void) {
+
+    return pm_showmessages;
 }
 
 

@@ -4,7 +4,29 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-10.06.14 BJH  Release 10.50.08
+10.06.27 BJH  Release 10.51.00
+
+              Add ppmtoascii.  Thanks "Frank Ch. Eigler" <fche@elastic.org>.
+
+              pnmtops: Add -bitsperpixel option.
+
+              pamx: Make exit status 0 instead of 10 when window manager
+              requests termination.
+
+              pnmsmooth: Respect -plain.  Thanks Prophet of the Way
+              <afu@wta.att.ne.jp>.
+
+              pnmsmooth: Don't display pnmconvol messages (i.e. run
+              pnmconvol with -quiet).
+
+              pamflip: speedup for PBM.  Use SSE2 and skip some idempotent
+              pixel movement.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
+              anytopnm: recognize "PC bitmap" in 'file' response as BMP.
+              (in addition to existing "PC bitmap data").
+
+              libnetpbm, various PBM programs: Use SSE insted of MMX.  Thanks
+              Prophet of the Way <afu@wta.att.ne.jp>.
 
               pbmtext/libpbmfont: Fix wild pointer; probably asymptomatic.
               Introduced in 10.39.
@@ -14,50 +36,44 @@ CHANGE HISTORY
               pbmtext/libpbmfont: fix crash with a BDF font with negative
               left or bottom border.  Introduced in 10.39.
 
-10.05.30 BJH  Release 10.50.07
+              pamarith: fix memory leak.  Introduced in 10.41.
 
-              libnetpbm line drawing: fix bogus assertion, introduced in 10.47.
-
-              libnetpbm text drawing: fix incorrect output in all cases.
-              Introduced in 10.47.
-
-10.05.29 BJH  Release 10.50.06
-
-              build: fix incorrect determination of when vasprintf() exists
-              in libc.
-
-10.05.20 BJH  Release 10.50.05
-
-              pamarith: fix memory leak.
-
-              libnetpbm: remove bogus assertion.
-
-              pamx: Make exit status 0 instead of 10 when window manager
-              requests termination.
-
-10.04.24 BJH  Release 10.50.04
+              pnm_bytespersample(): fix bogus assertion on 64 bit system.
 
               pnmtops: fix bug: 12 bits per sample output when 8 would do.
               Introduced in 10.40.
 
-10.04.20 BJH  Release 10.50.03
-
-              pampaintspill: fix incorrect output.
-
               palmtopnm: fix for pixel size 16.  Thanks Paul Bolle
               <pebolle@tiscali.nl>.
 
-10.04.05 BJH  Release 10.50.02
+              pnmsmooth: Fail politely when convolution matrix is so
+              large as to bust the system's program parameter size limit
+              on the invocation of pnmconvol.
 
-              avstopam: fix incorrect output.  Introduced in 10.50.00
+              avstopam: fix incorrect output.
+
+              pnmsmooth: fix arithmetic overflow with absurdly large
+              convolution matrix dimensions.  Thanks Prophet of the Way
+              <afu@wta.att.ne.jp>.
+
+              pnmsmooth: fix wild pointer: causes wrong arguments to
+              'pnmconvol'.  Introduced in 10.50.  Thanks Prophet of the Way
+              <afu@wta.att.ne.jp>.
 
               pamscale: fix -reduce.  Introduced in 10.27.
 
-10.04.01 BJH  Release 10.50.01
+              pampaintspill: fix incorrect output.
 
-              pnmsmooth: fix wild pointer: causes wrong arguments to
-              'pnmconvol'.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
-              Introduced in 10.50.00.
+              libnetpbm text drawing: fix incorrect output in all cases.
+              Introduced in 10.47.
+
+              libnetpbm line drawing: fix bogus assertion, introduced in 10.47.
+
+              build: fix incorrect determination of when vasprintf() exists
+              in libc.
+
+              configure: don't default to /usr/X11R6/lib/libX11.so just because
+              /usr/X11R6 exists.  /usr/X11R6/lib must exist.
 
 10.03.27 BJH  Release 10.50.00
 

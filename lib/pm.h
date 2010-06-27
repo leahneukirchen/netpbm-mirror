@@ -22,10 +22,6 @@
 #include <setjmp.h>
 #include <sys/stat.h>
 
-#ifdef VMS
-#include <perror.h>
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -101,6 +97,9 @@ pm_proginit(int * const argcP, const char * argv[]);
 
 void
 pm_setMessage(int const newState, int * const oldStateP);
+
+int
+pm_getMessage(void);
 
 FILE * 
 pm_tmpfile(void);

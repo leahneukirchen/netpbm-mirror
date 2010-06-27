@@ -59,6 +59,8 @@ struct cmdlineInfo {
     unsigned int imagewidth;         /* in 1/72 inch; zero if unspec */
     unsigned int imageheight;        /* in 1/72 inch; zero if unspec */
     unsigned int equalpixels;
+    unsigned int bitspersampleSpec;
+    unsigned int bitspersample;
     unsigned int setpage;
     bool         showpage;
     unsigned int level;
@@ -110,6 +112,24 @@ parseDpi(const char *   const dpiOpt,
 
 
 static void
+validateBps_1_2_4_8_12(unsigned int const bitsPerSample) {
+
+    switch (bitsPerSample) {
+    case 1:
+    case 2:
+    case 4:
+    case 8:
+    case 12:
+        break;
+    default:
+        pm_error("Invalid -bitspersample value: %u.  Must be "
+                 "1, 2, 4, 8, or 12", bitsPerSample);
+    }
+}
+
+
+
+static void
 parseCommandLine(int argc, char ** argv,
                  struct cmdlineInfo * const cmdlineP) {
 
@@ -144,6 +164,8 @@ parseCommandLine(int argc, char ** argv,
     OPTENT3(0, "equalpixels", OPT_FLAG,  NULL, &cmdlineP->equalpixels,   0);
     OPTENT3(0, "imagewidth",  OPT_FLOAT, &imagewidth,  &imagewidthSpec,  0);
     OPTENT3(0, "imageheight", OPT_FLOAT, &imageheight, &imageheightSpec, 0);
+    OPTENT3(0, "bitspersample", OPT_UINT, &cmdlineP->bitspersample,
+            &cmdlineP->bitspersampleSpec, 0);
     OPTENT3(0, "nosetpage",   OPT_FLAG,  NULL, &nosetpage,               0);
     OPTENT3(0, "setpage",     OPT_FLAG,  NULL, &cmdlineP->setpage,       0);
     OPTENT3(0, "noshowpage",  OPT_FLAG,  NULL, &noshowpage,              0);
@@ -202,6 +224,9 @@ parseCommandLine(int argc, char ** argv,
         (cmdlineP->flate || cmdlineP->ascii85))
         pm_error("You must specify -psfilter in order to specify "
                  "-flate or -ascii85");
+
+    if (cmdlineP->bitspersampleSpec)
+        validateBps_1_2_4_8_12(cmdlineP->bitspersample);
 
     if (argc-1 == 0) 
         cmdlineP->inputFileName = "-";
@@ -957,8 +982,57 @@ putEnd(bool         const showpage,
 
 
 static void
+validateBpsRequest(unsigned int const bitsPerSampleReq,
+                   unsigned int const postscriptLevel,
+                   bool         const psFilter) {
+
+    if (postscriptLevel < 2 && bitsPerSampleReq > 8)
+        pm_error("You requested %u bits per sample, but in Postscript "
+                 "level 1, 8 is the maximum.  You can get 12 with "
+                 "-level 2 and -psfilter", bitsPerSampleReq);
+    else if (!psFilter && bitsPerSampleReq > 8)
+        pm_error("You requested %u bits per sample, but without "
+                 "-psfilter, the maximum is 8", bitsPerSampleReq);
+}
+
+    
+
+static unsigned int
+bpsFromInput(unsigned int const bitsRequiredByMaxval,
+             unsigned int const postscriptLevel,
+             bool         const psFilter) {
+
+    unsigned int retval;
+
+    if (bitsRequiredByMaxval <= 1)
+        retval = 1;
+    else if (bitsRequiredByMaxval <= 2)
+        retval = 2;
+    else if (bitsRequiredByMaxval <= 4)
+        retval = 4;
+    else if (bitsRequiredByMaxval <= 8)
+        retval = 8;
+    else {
+        /* Post script level 2 defines a format with 12 bits per sample,
+           but I don't know the details of that format (both RLE and
+           non-RLE variations) and existing native raster generation code
+           simply can't handle bps > 8.  But the built-in filters know
+           how to do 12 bps.
+        */
+        if (postscriptLevel >= 2 && psFilter)
+            retval = 12;
+        else
+            retval = 8;
+    }
+    return retval;
+}
+
+
+
+static void
 warnUserAboutReducedDepth(unsigned int const bitsGot,
                           unsigned int const bitsWanted,
+                          bool         const userRequested,
                           unsigned int const postscriptLevel,
                           bool         const psFilter) {
 
@@ -967,15 +1041,19 @@ warnUserAboutReducedDepth(unsigned int const bitsGot,
                    "though the input has %u bits.",
                    bitsGot, bitsWanted);
 
-        if (postscriptLevel < 2)
-            pm_message("Postscript level %u has a maximum depth of 8 bits.  "
-                       "You could get up to 12 with -level=2 and -psfilter.",
-                       postscriptLevel);
-        else {
-            if (!psFilter)
-                pm_message("You can get up to 12 bits with -psfilter");
-            else
-                pm_message("The Postscript maximum is 12.");
+        if (!userRequested) {
+            if (postscriptLevel < 2)
+                pm_message("Postscript level %u has a maximum depth of "
+                           "8 bits.  "
+                           "You could get up to 12 with -level=2 "
+                           "and -psfilter.",
+                           postscriptLevel);
+            else {
+                if (!psFilter)
+                    pm_message("You can get up to 12 bits with -psfilter");
+                else
+                    pm_message("The Postscript maximum is 12.");
+            }
         }
     }
 }
@@ -986,37 +1064,28 @@ static void
 computeDepth(xelval         const inputMaxval,
              unsigned int   const postscriptLevel, 
              bool           const psFilter,
+             unsigned int   const bitsPerSampleReq,
              unsigned int * const bitspersampleP,
              unsigned int * const psMaxvalP) {
 /*----------------------------------------------------------------------------
    Figure out how many bits will represent each sample in the Postscript
    program, and the maxval of the Postscript program samples.  The maxval
    is just the maximum value allowable in the number of bits.
+
+   'bitsPerSampleReq' is the bits per sample that the user requests, or
+   zero if he made no request.
 -----------------------------------------------------------------------------*/
     unsigned int const bitsRequiredByMaxval = pm_maxvaltobits(inputMaxval);
 
-    if (bitsRequiredByMaxval <= 1)
-        *bitspersampleP = 1;
-    else if (bitsRequiredByMaxval <= 2)
-        *bitspersampleP = 2;
-    else if (bitsRequiredByMaxval <= 4)
-        *bitspersampleP = 4;
-    else if (bitsRequiredByMaxval <= 8)
-        *bitspersampleP = 8;
-    else {
-        /* Post script level 2 defines a format with 12 bits per sample,
-           but I don't know the details of that format (both RLE and
-           non-RLE variations) and existing native raster generation code
-           simply can't handle bps > 8.  But the built-in filters know
-           how to do 12 bps.
-        */
-        if (postscriptLevel >= 2 && psFilter)
-            *bitspersampleP = 12;
-        else
-            *bitspersampleP = 8;
+    if (bitsPerSampleReq != 0) {
+        validateBpsRequest(bitsPerSampleReq, postscriptLevel, psFilter);
+        *bitspersampleP = bitsPerSampleReq;
+    } else {
+        *bitspersampleP = bpsFromInput(bitsRequiredByMaxval,
+                                       postscriptLevel, psFilter);
     }
-
     warnUserAboutReducedDepth(*bitspersampleP, bitsRequiredByMaxval,
+                              bitsPerSampleReq != 0,
                               postscriptLevel, psFilter);
 
     *psMaxvalP = pm_bitstomaxval(*bitspersampleP);
@@ -1146,29 +1215,30 @@ selectPostscriptLevel(bool           const levelIsGiven,
 
 
 static void
-convertPage(FILE * const ifP, 
-            int    const turnflag, 
-            int    const turnokflag, 
-            bool   const psFilter,
-            bool   const rle, 
-            bool   const flate,
-            bool   const ascii85,
-            bool   const setpage,
-            bool   const showpage,
-            bool   const center, 
-            float  const scale,
-            int    const dpiX, 
-            int    const dpiY, 
-            int    const pagewid, 
-            int    const pagehgt,
-            int    const imagewidth, 
-            int    const imageheight, 
-            bool   const equalpixels,
-            char   const name[],
-            bool   const dict,
-            bool   const vmreclaim,
-            bool   const levelIsGiven,
-            bool   const levelGiven) {
+convertPage(FILE *       const ifP, 
+            int          const turnflag, 
+            int          const turnokflag, 
+            bool         const psFilter,
+            bool         const rle, 
+            bool         const flate,
+            bool         const ascii85,
+            bool         const setpage,
+            bool         const showpage,
+            bool         const center, 
+            float        const scale,
+            int          const dpiX, 
+            int          const dpiY, 
+            int          const pagewid, 
+            int          const pagehgt,
+            int          const imagewidth, 
+            int          const imageheight, 
+            bool         const equalpixels,
+            unsigned int const bitsPerSampleReq,
+            char         const name[],
+            bool         const dict,
+            bool         const vmreclaim,
+            bool         const levelIsGiven,
+            bool         const levelGiven) {
     
     struct pam inpam;
     tuple* tuplerow;
@@ -1206,7 +1276,7 @@ convertPage(FILE * const ifP,
     if (color)
         pm_message("generating color Postscript program.");
 
-    computeDepth(inpam.maxval, postscriptLevel, psFilter,
+    computeDepth(inpam.maxval, postscriptLevel, psFilter, bitsPerSampleReq,
                  &bitspersample, &psMaxval);
     {
         unsigned int const realBitsPerLine = inpam.width * bitspersample;
@@ -1328,7 +1398,9 @@ main(int argc, char * argv[]) {
                         cmdline.dpiX, cmdline.dpiY,
                         cmdline.width, cmdline.height, 
                         cmdline.imagewidth, cmdline.imageheight, 
-                        cmdline.equalpixels, name, 
+                        cmdline.equalpixels,
+                        cmdline.bitspersampleSpec ? cmdline.bitspersample : 0,
+                        name, 
                         cmdline.dict, cmdline.vmreclaim,
                         cmdline.levelSpec, cmdline.level);
             pnm_nextimage(ifp, &eof);

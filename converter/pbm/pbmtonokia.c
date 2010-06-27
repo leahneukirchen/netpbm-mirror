@@ -45,7 +45,7 @@ uppercase(const char * const subject) {
 
     if (buffer == NULL)
         pm_error("Out of memory allocating buffer for uppercasing a "
-                 "%u-character string", strlen(subject));
+                 "%u-character string", (unsigned)strlen(subject));
     else {
         unsigned int i;
 
@@ -117,7 +117,7 @@ parseCommandLine(int argc, char ** argv,
     if (netSpec) {
         if (strlen(netOpt) != 6)
             pm_error("-net option must be 6 hex digits long.  "
-                     "You specified %u characters", strlen(netOpt));
+                     "You specified %u characters", (unsigned)strlen(netOpt));
         else if (!strishex(netOpt))
             pm_error("-net option must be hexadecimal.  You specified '%s'",
                      netOpt);
@@ -131,7 +131,7 @@ parseCommandLine(int argc, char ** argv,
     else if (strlen(cmdlineP->txt) > 120)
         pm_error("Text message is longer (%u characters) than "
                  "the 120 characters allowed by the format.",
-                 strlen(cmdlineP->txt));
+                 (unsigned)strlen(cmdlineP->txt));
 
     if (argc-1 == 0) 
         cmdlineP->inputFileName = "-";
@@ -253,7 +253,7 @@ convertToHexNpm(bit **       const image,
 
         unsigned int it;
 
-        fprintf(ofP, "00%04X", len);
+        fprintf(ofP, "00%04X", (unsigned)len);
 
         for (it = 0; it < len; ++it)
             fprintf(ofP, "%02X", text[it]);

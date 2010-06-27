@@ -24,6 +24,21 @@
  * ----------------------------------------------------------------------
  */
 
+/*
+  This program contains code to work with Openmp, so that it can process
+  multiple columns at once, using multiple threads on multiple CPU cores,
+  and thus take less elapsed time to run.
+
+  But that code is dead in a normal Netpbm build, as it does not use the
+  required compiler options or link with the required library in any
+  conventional environment we know of.  One can exploit this code with a
+  modified build, e.g. with CADD and LADD make variables.
+
+  10.04.14
+*/
+
+#define _XOPEN_SOURCE 600  /* Make sure random(), srandom() are in <stdlib.h>*/
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
@@ -80,7 +95,7 @@ parseCommandLine(int argc, const char ** const argv,
         /* Instructions to OptParseOptions3 on how to parse our options */
     optStruct3     opt;
     unsigned int   option_def_index;
-    unsigned int bgcolorSpec, powerSpec,downsampleSpec;
+    unsigned int bgcolorSpec, powerSpec, downsampleSpec;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
     option_def_index = 0;          /* Incremented by OPTENTRY */
@@ -142,82 +157,120 @@ tupleEqualColor(const struct pam * const pamP,
 
 
 
+struct paintSourceSet {
+    struct coords * list;  /* malloc'ed */
+        /* The list of places in the image from which paint comes */
+    unsigned int size;
+        /* Number of entries in sources[] */
+    unsigned int alloc;
+        /* Number of slots for entries of allocated memory */
+};
+
+
+
 static void
-locatePaintSources(struct pam *     const pamP,
-                   tuple **         const tuples,
-                   tuple            const bgColor,
-                   unsigned int     const downsample,
-                   struct coords ** const paintSourcesP,
-                   unsigned int *   const numPaintSourcesP) {
+setPaintSourceColors(struct pam *          const pamP,
+                     tuple **              const tuples,
+                     struct paintSourceSet const paintSources) {
+/*----------------------------------------------------------------------------
+   Set the 'color' member of each source in 'paintSources'.
+
+   Set it to the color of the source pixel in tuples[][], indicated by
+   'paintSources'.
+
+   Malloc memory to store these colors -- a contiguous block of memory for all
+   of them.
+-----------------------------------------------------------------------------*/
+    struct pam pamPaint;
+        /* numPaintSources-wide PAM for use by pnm_allocpamrow() */
+    tuple * paintColor;
+        /* Points to storage for the color tuples */
+    unsigned int    i;
+
+    pamPaint = *pamP;
+    pamPaint.width = paintSources.size;
+    paintColor = pnm_allocpamrow(&pamPaint);
+
+    for (i = 0; i < paintSources.size; ++i) {
+        struct coords * const thisSourceP = &paintSources.list[i];
+
+        thisSourceP->color = paintColor[i];
+        pnm_assigntuple(pamP, thisSourceP->color,
+                        tuples[thisSourceP->y][thisSourceP->x]);
+    }
+}
+
+
+
+static void
+addPaintSource(unsigned int            const row,
+               unsigned int            const col,
+               struct paintSourceSet * const paintSourcesP) {
+
+    if (paintSourcesP->size == paintSourcesP->alloc) {
+        paintSourcesP->alloc += 1024;
+        REALLOCARRAY(paintSourcesP->list, paintSourcesP->alloc);
+        if (!paintSourcesP->list)
+            pm_error("Out of memory");
+    }
+    paintSourcesP->list[paintSourcesP->size].x = col;
+    paintSourcesP->list[paintSourcesP->size].y = row;
+    ++paintSourcesP->size;
+}
+
+
+
+static void
+locatePaintSources(struct pam *            const pamP,
+                   tuple **                const tuples,
+                   tuple                   const bgColor,
+                   unsigned int            const downsample,
+                   struct paintSourceSet * const paintSourcesP) {
 /*--------------------------------------------------------------------
   Construct a list of all pixel coordinates in the input image that
   represent a non-background color.
   ----------------------------------------------------------------------*/
-    struct coords * paintSources;
-        /* List of paint-source indexes into tuples */
-    unsigned int    numPaintSources;  /* Number of entries in the above */
-    unsigned int    numAlloced;       /* Number of allocated coordinates. */
-    unsigned int    row;
-    struct pam      pamPaint;
-        /* numAlloced-wide PAM for use by pnm_allocpamrow() */
-    tuple         * paintColor;       /* Color of each paint source */
-    unsigned int    i;
+    struct paintSourceSet paintSources;
+    int row;  /* signed so it works with Openmp */
 
-    paintSources = NULL;
-    numAlloced = 0;
-    numPaintSources = 0;
+    paintSources.list  = NULL;
+    paintSources.size  = 0;
+    paintSources.alloc = 0;
 
+    #pragma omp parallel for
     for (row = 0; row < pamP->height; ++row) {
         unsigned int col;
         for (col = 0; col < pamP->width; ++col) {
-            if (!tupleEqualColor(pamP, tuples[row][col], bgColor)) {
-                /* Add (row, col) to the list of paint sources. */
-                if (numPaintSources == numAlloced) {
-                    numAlloced += pamP->width;
-                    REALLOCARRAY(paintSources, numAlloced);
-                    if (!paintSources)
-                        pm_error("Out of memory");
-                }
-                paintSources[numPaintSources].x = col;
-                paintSources[numPaintSources].y = row;
-                ++numPaintSources;
-            }
+            if (!tupleEqualColor(pamP, tuples[row][col], bgColor))
+                #pragma omp critical (addPaintSource)
+                addPaintSource(row, col, &paintSources);
         }
     }
 
     pm_message("Image contains %u background + %u non-background pixels",
-               pamP->width * pamP->height - numPaintSources,
-               numPaintSources);
+               pamP->width * pamP->height - paintSources.size,
+               paintSources.size);
     
     /* Reduce the number of paint sources to reduce execution time. */
-    if (downsample > 0 && downsample < numPaintSources) {
+    if (downsample > 0 && downsample < paintSources.size) {
+        unsigned int i;
+
         srandom(time(NULL));
 
         for (i = 0; i < downsample; ++i) {
-            unsigned int const swapIdx = i + random() % (numPaintSources - i);
-            struct coords const swapVal = paintSources[i];
+            unsigned int const swapIdx =
+                i + random() % (paintSources.size - i);
+            struct coords const swapVal = paintSources.list[i];
 
-            paintSources[i] = paintSources[swapIdx];
-            paintSources[swapIdx] = swapVal;
+            paintSources.list[i] = paintSources.list[swapIdx];
+            paintSources.list[swapIdx] = swapVal;
         }
-        numPaintSources = downsample;
+        paintSources.size = downsample;
     }
 
-    /* Now that we know how many paint sources we have, allocate
-       a single block of memory in which to store the paint colors. */
-    pamPaint = *pamP;
-    pamPaint.width = numPaintSources;
-    paintColor = pnm_allocpamrow(&pamPaint);
-    for (i = 0; i < numPaintSources; ++i) {
-        struct coords * thisSource = &paintSources[i];
-
-        thisSource->color = paintColor[i];
-        pnm_assigntuple(pamP, thisSource->color,
-                        tuples[thisSource->y][thisSource->x]);
-    }
+    setPaintSourceColors(pamP, tuples, paintSources);
 
     *paintSourcesP    = paintSources;
-    *numPaintSourcesP = numPaintSources;
 }
 
 
@@ -306,23 +359,72 @@ reportProgress(unsigned int const rowsComplete,
 
 
 static void
+spillOnePixel(struct pam *          const pamP,
+              struct coords         const target,
+              struct paintSourceSet const paintSources,
+              distFunc_t *          const distFunc,
+              double                const distPower,
+              tuple                 const outTuple,
+              double *              const newColor) {
+
+    unsigned int plane;
+    unsigned int ps;
+    double       totalWeight;
+
+    for (plane = 0; plane < pamP->depth; ++plane)
+        newColor[plane] = 0.0;
+    totalWeight = 0.0;
+    for (ps = 0; ps < paintSources.size; ++ps) {
+        struct coords const source = paintSources.list[ps];
+        double const distSqr =
+            (*distFunc)(&target, &source,
+                        pamP->width, pamP->height);
+
+        if (distSqr > 0.0) {
+            /* We do special cases for some common cases with code
+               that is much faster than pow().
+            */
+            double const weight =
+                distPower == -2.0 ? 1.0 / distSqr :
+                distPower == -1.0 ? 1.0 / sqrt(distSqr):
+                pow(distSqr, distPower/2);
+
+            unsigned int plane;
+
+            for (plane = 0; plane < pamP->depth; ++plane)
+                newColor[plane] += weight * source.color[plane];
+
+            totalWeight += weight;
+        }
+    }
+    for (plane = 0; plane < pamP->depth; ++plane)
+        outTuple[plane] = (sample) (newColor[plane] / totalWeight);
+}
+
+
+
+static void
 produceOutputImage(struct pam *          const pamP,
-                   tuple **              const tuples,
+                   tuple **              const intuples,
                    tuple                 const bgColor,
-                   const struct coords * const paintSources,
-                   unsigned int          const numPaintSources,
+                   struct paintSourceSet const paintSources,
                    distFunc_t *          const distFunc,
                    double                const distPower,
-                   bool                  const all) {
+                   bool                  const all,
+                   tuple ***             const outtuplesP) {
 /*--------------------------------------------------------------------
   Color each background pixel (or, if allPixels is 1, all pixels)
   using a fraction of each paint source as determined by its distance
   to the background pixel.
 ----------------------------------------------------------------------*/
-    unsigned int row;
+    int row;   /* signed so it works with Openmp */
     unsigned int rowsComplete;
+    tuple ** outtuples;
+
+    outtuples = pnm_allocpamarray(pamP);
 
     rowsComplete = 0;
+    #pragma omp parallel for
     for (row = 0; row < pamP->height; ++row) {
         struct coords   target;
         double        * newColor;
@@ -331,48 +433,21 @@ produceOutputImage(struct pam *          const pamP,
 
         target.y = row;
         for (target.x = 0; target.x < pamP->width; ++target.x) {
-        tuple targetTuple = tuples[target.y][target.x];
+            tuple const targetTuple = intuples[target.y][target.x];
+            tuple const outputTuple = outtuples[target.y][target.x];
 
-            if (all || tupleEqualColor(pamP, targetTuple, bgColor)) {
-                unsigned int plane;
-                unsigned int ps;
-                double       totalWeight;
-
-                for (plane = 0; plane < pamP->depth; ++plane)
-                    newColor[plane] = 0.0;
-                totalWeight = 0.0;
-                for (ps = 0; ps < numPaintSources; ++ps) {
-                    struct coords const source = paintSources[ps];
-                    double const distSqr =
-                        (*distFunc)(&target, &source,
-                                    pamP->width, pamP->height);
-
-                    if (distSqr > 0.0) {
-                        /* We do special cases for some common cases with code
-                           that is much faster than pow().
-                        */
-                        double const weight =
-                            distPower == -2.0 ? 1.0 / distSqr :
-                            distPower == -1.0 ? 1.0 / sqrt(distSqr):
-                            pow(distSqr, distPower/2);
-
-                        unsigned int plane;
-
-                        for (plane = 0; plane < pamP->depth; ++plane)
-                            newColor[plane] += weight * source.color[plane];
-
-                        totalWeight += weight;
-                    }
-                }
-                for (plane = 0; plane < pamP->depth; ++plane)
-                    targetTuple[plane] =
-                        (sample) (newColor[plane] / totalWeight);
-            }
+            if (all || tupleEqualColor(pamP, targetTuple, bgColor))
+                spillOnePixel(pamP, target, paintSources, distFunc, distPower,
+                              outputTuple, newColor);
+            else
+                pnm_assigntuple(pamP,  outputTuple, targetTuple);
         }
+        #pragma omp critical (rowTally)
         reportProgress(++rowsComplete, pamP->height);
 
         free(newColor);
     }
+    *outtuplesP = outtuples;
 }
 
 
@@ -382,13 +457,13 @@ main(int argc, const char *argv[]) {
     FILE *             ifP;
     struct cmdlineInfo cmdline;          /* Command-line parameters */
     tuple              bgColor;          /* Input image's background color */
-    struct coords *    paintSources;
-        /* List of paint-source indexes into tuples */
-    unsigned int       numPaintSources;  /* Number of entries in the above */
+    struct paintSourceSet paintSources;
+        /* The set of paint-source indexes into 'tuples' */
     distFunc_t *       distFunc;         /* The distance function */
-    struct pam inpam;
+    struct pam inPam;
     struct pam outPam;
-    tuple ** tuples;
+    tuple ** inTuples;
+    tuple ** outTuples;
 
     pm_proginit(&argc, argv);
 
@@ -396,31 +471,32 @@ main(int argc, const char *argv[]) {
 
     ifP = pm_openr(cmdline.inputFilename);
 
-    tuples = pnm_readpam(ifP, &inpam, PAM_STRUCT_SIZE(allocation_depth));
+    inTuples = pnm_readpam(ifP, &inPam, PAM_STRUCT_SIZE(allocation_depth));
 
     pm_close(ifP);
 
     distFunc = cmdline.wrap ? euclideanDistanceTorusSqr : euclideanDistanceSqr;
 
     if (cmdline.bgcolor)
-        bgColor = pnm_parsecolor(cmdline.bgcolor, inpam.maxval) ;
+        bgColor = pnm_parsecolor(cmdline.bgcolor, inPam.maxval) ;
     else
-        bgColor = pnm_backgroundtuple(&inpam, tuples);
+        bgColor = pnm_backgroundtuple(&inPam, inTuples);
 
     pm_message("Treating %s as the background color",
-               pnm_colorname(&inpam, bgColor, PAM_COLORNAME_HEXOK));
+               pnm_colorname(&inPam, bgColor, PAM_COLORNAME_HEXOK));
 
-    locatePaintSources(&inpam, tuples, bgColor, cmdline.downsample,
-                       &paintSources, &numPaintSources);
+    locatePaintSources(&inPam, inTuples, bgColor, cmdline.downsample,
+                       &paintSources);
 
-    produceOutputImage(&inpam, tuples,
-                       bgColor, paintSources, numPaintSources, distFunc,
-                       cmdline.power, cmdline.all);
+    produceOutputImage(&inPam, inTuples, bgColor, paintSources, distFunc,
+                       cmdline.power, cmdline.all, &outTuples);
 
-
-    outPam = inpam;
+    outPam = inPam;
     outPam.file = stdout;
-    pnm_writepam(&outPam, tuples);
+    pnm_writepam(&outPam, outTuples);
+
+    pnm_freepamarray(outTuples, &inPam);
+    pnm_freepamarray(inTuples, &outPam);
 
     return 0;
 }

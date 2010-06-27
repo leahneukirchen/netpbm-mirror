@@ -84,11 +84,11 @@ compute_mult_tables(const pixval maxval) {
         if (mult299 == NULL || mult587 == NULL || mult114 == NULL ||
             mult16874 == NULL || mult33126 == NULL || mult5 == NULL ||
             mult41869 == NULL || mult08131 == NULL) 
-            pm_error("Unable to allocate storage for arithmetic tables.\n"
+            pm_error("Unable to allocate storage for arithmetic tables.  "
                      "We need %d bytes, which is the maxval of the input "
-                     "image, plus 1,\n"
+                     "image, plus 1, "
                      "times the storage size of a floating point value.", 
-                     8 * (table_maxval+1)*sizeof(float));
+                     (unsigned)(8 * (table_maxval+1)*sizeof(float)));
 
         {
             int index;

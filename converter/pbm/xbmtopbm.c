@@ -170,7 +170,7 @@ getXbmHeader(FILE *         const ifP,
             if (strlen(line) == MAX_LINE - 1)
                 pm_error("A line in the input file is %u characters long.  "
                          "%u is the maximum we can handle",
-                         strlen(line), MAX_LINE-1);
+                         (unsigned)strlen(line), MAX_LINE-1);
 
             parseWidthHeightLine(line, &gotWidth, widthP, &gotHeight, heightP);
 

@@ -12,7 +12,7 @@ SUBDIRS = hpcdtoppm ppmtompeg
 PORTBINARIES =	411toppm eyuvtoppm gouldtoppm ilbmtoppm imgtoppm \
 		leaftoppm mtvtoppm neotoppm \
 		pcxtoppm pc1toppm pi1toppm picttoppm pjtoppm \
-		ppmtoacad ppmtoarbtxt \
+		ppmtoacad ppmtoarbtxt ppmtoascii \
 		ppmtobmp ppmtoeyuv ppmtogif ppmtoicr ppmtoilbm \
 		ppmtoleaf ppmtolj ppmtomitsu ppmtoneo \
 		ppmtopcx ppmtopi1 ppmtopict ppmtopj \

@@ -48,18 +48,14 @@
 
 /* File open/close that handles "-" as stdin/stdout and checks errors. */
 
-FILE*
+FILE *
 pm_openr(const char * const name) {
-    FILE* f;
+    FILE * f;
 
-    if (strcmp(name, "-") == 0)
+    if (streq(name, "-"))
         f = stdin;
     else {
-#ifndef VMS
         f = fopen(name, "rb");
-#else
-        f = fopen(name, "r", "ctx=stm");
-#endif
         if (f == NULL) 
             pm_error("Unable to open file '%s' for reading.  "
                      "fopen() returns errno %d (%s)", 
@@ -70,18 +66,14 @@ pm_openr(const char * const name) {
 
 
 
-FILE*
+FILE *
 pm_openw(const char * const name) {
-    FILE* f;
+    FILE * f;
 
-    if (strcmp(name, "-") == 0)
+    if (streq(name, "-"))
         f = stdout;
     else {
-#ifndef VMS
         f = fopen(name, "wb");
-#else
-        f = fopen(name, "w", "mbc=32", "mbf=2");  /* set buffer factors */
-#endif
         if (f == NULL) 
             pm_error("Unable to open file '%s' for writing.  "
                      "fopen() returns errno %d (%s)", 

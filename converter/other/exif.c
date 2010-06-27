@@ -818,8 +818,8 @@ process_EXIF(unsigned char * const ExifData,
             
         if (ShowTags){
             fprintf(stderr, 
-                    "Non-settings part of Exif header: %d bytes\n",
-                    ExifData+length-LastExifRefd);
+                    "Non-settings part of Exif header: %lu bytes\n",
+                    (unsigned long)(ExifData+length-LastExifRefd));
         }
     }
 }

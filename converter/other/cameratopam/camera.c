@@ -12,6 +12,7 @@
 #include <jpeglib.h>
 #endif
 
+#include "pm_config.h"
 #include "pm.h"
 #include "mallocvar.h"
 
@@ -686,67 +687,71 @@ static int  radc_token (int tree)
 void
 kodak_radc_load_raw()
 {
-  int row, col, tree, nreps, rep, step, i, c, s, r, x, y, val;
-  short last[3] = { 16,16,16 }, mul[3], buf[3][3][386];
+    int row, col, tree, nreps, rep, step, i, c, s, r, x, y, val;
+    short last[3] = { 16,16,16 }, mul[3], buf[3][3][386];
 
-  init_decoder();
-  getbits(ifp, -1);
-  for (i=0; i < sizeof(buf)/sizeof(short); i++)
-    buf[0][0][i] = 2048;
-  for (row=0; row < height; row+=4) {
-    for (i=0; i < 3; i++)
-      mul[i] = getbits(ifp, 6);
-    FORC3 {
-      val = ((0x1000000/last[c] + 0x7ff) >> 12) * mul[c];
-      s = val > 65564 ? 10:12;
-      x = ~(-1 << (s-1));
-      val <<= 12-s;
-      for (i=0; i < sizeof(buf[0])/sizeof(short); i++)
-    buf[c][0][i] = (buf[c][0][i] * val + x) >> s;
-      last[c] = mul[c];
-      for (r=0; r <= !c; r++) {
-    buf[c][1][width/2] = buf[c][2][width/2] = mul[c] << 7;
-    for (tree=1, col=width/2; col > 0; ) {
-      if ((tree = radc_token(tree))) {
-        col -= 2;
-        if (tree == 8)
-          FORYX buf[c][y][x] = radc_token(tree+10) * mul[c];
-        else
-          FORYX buf[c][y][x] = radc_token(tree+10) * 16 + PREDICTOR;
-      } else
-        do {
-          nreps = (col > 2) ? radc_token(9) + 1 : 1;
-          for (rep=0; rep < 8 && rep < nreps && col > 0; rep++) {
-        col -= 2;
-        FORYX buf[c][y][x] = PREDICTOR;
-        if (rep & 1) {
-          step = radc_token(10) << 4;
-          FORYX buf[c][y][x] += step;
+    init_decoder();
+    getbits(ifp, -1);
+    for (i=0; i < sizeof(buf)/sizeof(short); i++)
+        buf[0][0][i] = 2048;
+    for (row=0; row < height; row+=4) {
+        for (i=0; i < 3; i++)
+            mul[i] = getbits(ifp, 6);
+        FORC3 {
+            val = ((0x1000000/last[c] + 0x7ff) >> 12) * mul[c];
+            s = val > 65564 ? 10:12;
+            x = ~(-1 << (s-1));
+            val <<= 12-s;
+            for (i=0; i < ARRAY_SIZE(buf[c][0]); i++)
+                buf[c][0][i] = (buf[c][0][i] * val + x) >> s;
+            last[c] = mul[c];
+            for (r=0; r <= !c; r++) {
+                buf[c][1][width/2] = buf[c][2][width/2] = mul[c] << 7;
+                for (tree=1, col=width/2; col > 0; ) {
+                    if ((tree = radc_token(tree))) {
+                        col -= 2;
+                        if (tree == 8)
+                            FORYX buf[c][y][x] =
+                                radc_token(tree+10) * mul[c];
+                        else
+                            FORYX buf[c][y][x] =
+                                radc_token(tree+10) * 16 + PREDICTOR;
+                    } else
+                        do {
+                            nreps = (col > 2) ? radc_token(9) + 1 : 1;
+                            for (rep=0;
+                                 rep < 8 && rep < nreps && col > 0;
+                                 rep++) {
+                                col -= 2;
+                                FORYX buf[c][y][x] = PREDICTOR;
+                                if (rep & 1) {
+                                    step = radc_token(10) << 4;
+                                    FORYX buf[c][y][x] += step;
+                                }
+                            }
+                        } while (nreps == 9);
+                }
+                for (y=0; y < 2; y++)
+                    for (x=0; x < width/2; x++) {
+                        val = (buf[c][y+1][x] << 4) / mul[c];
+                        if (val < 0) val = 0;
+                        if (c)
+                            BAYER(row+y*2+c-1,x*2+2-c) = val;
+                        else
+                            BAYER(row+r*2+y,x*2+y) = val;
+                    }
+                memcpy (buf[c][0]+!c, buf[c][2], sizeof buf[c][0]-2*!c);
+            }
         }
-          }
-        } while (nreps == 9);
+        for (y=row; y < row+4; y++)
+            for (x=0; x < width; x++)
+                if ((x+y) & 1) {
+                    val = (BAYER(y,x)-2048)*2 + (BAYER(y,x-1)+BAYER(y,x+1))/2;
+                    if (val < 0) val = 0;
+                    BAYER(y,x) = val;
+                }
     }
-    for (y=0; y < 2; y++)
-      for (x=0; x < width/2; x++) {
-        val = (buf[c][y+1][x] << 4) / mul[c];
-        if (val < 0) val = 0;
-        if (c)
-          BAYER(row+y*2+c-1,x*2+2-c) = val;
-        else
-          BAYER(row+r*2+y,x*2+y) = val;
-      }
-    memcpy (buf[c][0]+!c, buf[c][2], sizeof buf[c][0]-2*!c);
-      }
-    }
-    for (y=row; y < row+4; y++)
-      for (x=0; x < width; x++)
-    if ((x+y) & 1) {
-      val = (BAYER(y,x)-2048)*2 + (BAYER(y,x-1)+BAYER(y,x+1))/2;
-      if (val < 0) val = 0;
-      BAYER(y,x) = val;
-    }
-  }
-  maximum = 0x1fff;     /* wild guess */
+    maximum = 0x1fff;     /* wild guess */
 }
 
 #undef FORYX

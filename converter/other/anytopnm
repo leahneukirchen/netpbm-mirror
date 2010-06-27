@@ -129,7 +129,8 @@ computeTypeFromTypeDescription () {
             filetype=tiff
             ;;
     
-        *PC*bitmap*data* )
+        # We have seen "PC bitmap" and "PC bitmap data"
+        *PC*bitmap* )
             filetype=bmp
             ;;
         

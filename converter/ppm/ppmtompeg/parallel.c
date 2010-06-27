@@ -1104,8 +1104,8 @@ GetRemoteFrame(MpegFrame * const frameP,
 
                 if (numBytes > sizeof(buffer))
                     errorExit("Invalid message received: numBytes = %d, "
-                              "which is greater than %d\n", 
-                              numBytes, sizeof(numBytes));
+                              "which is greater than %u", 
+                              numBytes, (unsigned)sizeof(numBytes));
                 ReadBytes(clientSocket, buffer, numBytes);
 
                 fwrite(buffer, 1, numBytes, filePtr);

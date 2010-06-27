@@ -42,7 +42,7 @@ allocpamrown(const struct pam * const pamP,
     if (tuplerown == NULL)
         asprintfN(&error, "Out of memory allocating space for a tuple row of"
                   "%u tuples by %u samples per tuple by %u bytes per sample.",
-                  pamP->width, pamP->depth, sizeof(samplen));
+                  pamP->width, pamP->depth, (unsigned)sizeof(samplen));
     else {
         /* Now we initialize the pointers to the individual tuples to make this
            a regulation C two dimensional array.

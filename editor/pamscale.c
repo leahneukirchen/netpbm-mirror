@@ -738,8 +738,8 @@ parseCommandLine(int argc,
 
 static void 
 computeOutputDimensions(struct cmdlineInfo  const cmdline, 
-                        int                 const rows, 
-                        int                 const cols, 
+                        unsigned int        const rows, 
+                        unsigned int        const cols, 
                         int *               const newrowsP, 
                         int *               const newcolsP) {
 

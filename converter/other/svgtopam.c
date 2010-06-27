@@ -27,6 +27,7 @@
 ============================================================================*/
 
 #define _BSD_SOURCE  /* Make sure strdup() is in <string.h> */
+#define _POSIX_SOURCE   /* Make sure fileno() is in <stdio.h> */
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>

@@ -1099,7 +1099,7 @@ sub getX11Library($@) {
 
         if (-d('/usr/link/X11')) {
             $default = '/usr/link/X11/libX11' . libSuffix($platform);
-        } elsif (-d('/usr/X11R6')) {
+        } elsif (-d('/usr/X11R6/lib')) {
             $default = '/usr/X11R6/lib/libX11' . libSuffix($platform);
         } else {
             $default = "libX11" . libSuffix($platform);
@@ -1302,7 +1302,8 @@ sub gnuCflags($) {
     return("CFLAGS = " . gnuOptimizeOpt($gccCommandName) . " -ffast-math " .
            " -pedantic -fno-common " . 
            "-Wall -Wno-uninitialized -Wmissing-declarations -Wimplicit " .
-           "-Wwrite-strings -Wmissing-prototypes -Wundef\n");
+           "-Wwrite-strings -Wmissing-prototypes -Wundef " .
+           "-Wno-unknown-pragmas\n");
 }
 
 
