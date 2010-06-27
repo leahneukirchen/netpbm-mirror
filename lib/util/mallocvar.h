@@ -107,14 +107,14 @@ do { \
         abort(); \
 } while(0)
 
-#define MALLOCARRAY2(arrayName, nRows, nCols, elementSz) do { \
+#define MALLOCARRAY2(arrayName, nRows, nCols) do { \
     void * array; \
     pm_mallocarray2(&array, nRows, nCols, sizeof(arrayName[0][0]));  \
     arrayName = array; \
 } while (0)
 
-#define MALLOCARRAY2_NOFAIL(arrayName, nRows, nCols, elementSz) do { \
-    MALLOCARRAY2(arrayName, nRows, nCols, elementSz);       \
+#define MALLOCARRAY2_NOFAIL(arrayName, nRows, nCols) do { \
+    MALLOCARRAY2(arrayName, nRows, nCols);       \
     if ((arrayName) == NULL) \
         abort(); \
 } while (0)
