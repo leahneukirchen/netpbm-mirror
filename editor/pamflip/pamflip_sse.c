@@ -9,9 +9,11 @@
 
   The author makes the following request (which is not a reservation of legal
   rights): Please study the code and make adjustments to meet specific needs.
-  This part is critical to performance.  I have seen code copied off from
-  poorly implemented.  Please put a comment in the code so people will know
-  where it came from.
+  This part is critical to performance.  I have seen code copied from
+  elsewhere poorly implemented.  A lot of work goes into the development of
+  free software.  It is sad to see derivative work which fails to reach its
+  potential.  Please put a comment in the code so people will know where it
+  came from.
 
 =============================================================================*/
 
