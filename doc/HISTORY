@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+10.07.06 BJH  Release 10.47.17
+
+              Build: don't fail due to SIGRTMIN, SIGRTMAX being undefined.
+
 10.06.17 BJH  Release 10.47.16
 
               pbmtext/libpbmfont: Fix wild pointer; probably asymptomatic.
