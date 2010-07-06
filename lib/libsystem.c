@@ -220,77 +220,74 @@ spawnProcessor(const char *  const progName,
 static const char *
 signalName(unsigned int const signalClass) {
 
-    if (signalClass <= SIGSYS) {
-        switch (signalClass) {
-        case SIGHUP:
-            return "SIGHUP";
-        case SIGINT:
-            return "SIGINT";
-        case SIGQUIT:
-            return "SIGQUIT";
-        case SIGILL:
-            return "SIGILL";
-        case SIGTRAP:
-            return "SIGTRAP";
-        case SIGABRT:
-            return "SIGABRT";
-        case SIGBUS:
-            return "SIGBUS";
-        case SIGFPE:
-            return "SIGFPE";
-        case SIGKILL:
-            return "SIGKILL";
-        case SIGUSR1:
-            return "SIGUSR1";
-        case SIGSEGV:
-            return "SIGSEGV";
-        case SIGUSR2:
-            return "SIGUSR2";
-        case SIGPIPE:
-            return "SIGPIPE";
-        case SIGALRM:
-            return "SIGALRM";
-        case SIGTERM:
-            return "SIGTERM";
-        case SIGCHLD:
-            return "SIGCHLD";
-        case SIGCONT:
-            return "SIGCONT";
-        case SIGSTOP:
-            return "SIGSTOP";
-        case SIGTSTP:
-            return "SIGTSTP";
-        case SIGTTIN:
-            return "SIGTTIN";
-        case SIGTTOU:
-            return "SIGTTOU";
-        case SIGURG:
-            return "SIGURG";
-        case SIGXCPU:
-            return "SIGXCPU";
-        case SIGXFSZ:
-            return "SIGXFSZ";
-        case SIGVTALRM:
-            return "SIGVTALRM";
-        case SIGPROF:
-            return "SIGPROF";
-        case SIGWINCH:
-            return "SIGWINCH";
-        case SIGIO:
-            return "SIGIO";
-        case SIGSYS:
-            return "SIGSYS";
-        default:
-            return "???";
-
-            /* There are various other signal classes on some systems, but
-               not defined by POSIX, including: SIGPWR, SIGLOST, SIGINFO
-            */
-        }
-    } else if ((int)signalClass >= SIGRTMIN && (int)signalClass <= SIGRTMAX)
-        return "SIGRTxxx";
-    else
+    switch (signalClass) {
+    case SIGHUP: /* POSIX.1 */
+        return "SIGHUP";
+    case SIGINT: /* POSIX.1 */
+        return "SIGINT";
+    case SIGQUIT: /* POSIX.1 */
+        return "SIGQUIT";
+    case SIGILL: /* POSIX.1 */
+        return "SIGILL";
+    case SIGTRAP:
+        return "SIGTRAP";
+    case SIGABRT: /* POSIX.1 */
+        return "SIGABRT";
+    case SIGBUS:
+        return "SIGBUS";
+    case SIGFPE: /* POSIX.1 */
+        return "SIGFPE";
+    case SIGKILL: /* POSIX.1 */
+        return "SIGKILL";
+    case SIGUSR1: /* POSIX.1 */
+        return "SIGUSR1";
+    case SIGSEGV: /* POSIX.1 */
+        return "SIGSEGV";
+    case SIGUSR2: /* POSIX.1 */
+        return "SIGUSR2";
+    case SIGPIPE: /* POSIX.1 */
+        return "SIGPIPE";
+    case SIGALRM: /* POSIX.1 */
+        return "SIGALRM";
+    case SIGTERM: /* POSIX.1 */
+        return "SIGTERM";
+    case SIGCHLD: /* POSIX.1 */
+        return "SIGCHLD";
+    case SIGCONT: /* POSIX.1 */
+        return "SIGCONT";
+    case SIGSTOP: /* POSIX.1 */
+        return "SIGSTOP";
+    case SIGTSTP: /* POSIX.1 */
+        return "SIGTSTP";
+    case SIGTTIN: /* POSIX.1 */
+        return "SIGTTIN";
+    case SIGTTOU: /* POSIX.1 */
+        return "SIGTTOU";
+    case SIGURG:
+        return "SIGURG";
+    case SIGXCPU:
+        return "SIGXCPU";
+    case SIGXFSZ:
+        return "SIGXFSZ";
+    case SIGVTALRM:
+        return "SIGVTALRM";
+    case SIGPROF:
+        return "SIGPROF";
+    case SIGWINCH:
+        return "SIGWINCH";
+    case SIGIO:
+        return "SIGIO";
+    case SIGSYS:
+        return "SIGSYS";
+    default:
         return "???";
+
+        /* There are various other signal classes on some systems, but
+           not defined by POSIX and not on at least one system we
+           know of for which someone wanted to compile Netpbm.  The
+           list includes: SIGPWR, SIGLOST, SIGINFO, SIGRTxx.
+        */
+    }
 }
 
 

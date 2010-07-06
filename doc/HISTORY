@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+10.07.06 BJH  Release 10.51.01
+
+              Build: don't fail due to SIGRTMIN, SIGRTMAX being undefined.
+
 10.06.27 BJH  Release 10.51.00
 
               Add ppmtoascii.  Thanks "Frank Ch. Eigler" <fche@elastic.org>.
