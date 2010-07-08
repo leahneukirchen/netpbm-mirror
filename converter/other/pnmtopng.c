@@ -2846,23 +2846,36 @@ displayVersion() {
 
     fprintf(stderr,"Pnmtopng version %s.\n", NETPBM_VERSION);
 
-    /* We'd like to display the version of libpng with which we're
-       linked, as we do for zlib, but it isn't practical.
-       While libpng is capable of telling you what it's level
-       is, different versions of it do it two different ways: with
-       png_libpng_ver or with png_get_header_ver.  So we have to be
-       compiled for a particular version just to find out what
-       version it is! It's not worth having a link failure, much
-       less a compile failure, if we choose wrong.
-       png_get_header_ver is not in anything older than libpng 1.0.2a
-       (Dec 1998).  png_libpng_ver is not there in libraries built
-       without USE_GLOBAL_ARRAYS.  Cygwin versions are normally built
-       without USE_GLOBAL_ARRAYS.  -bjh 2002.06.17.
+    /* We'd like to display the version of libpng with which we're _linked_ as
+       well as the one with which we're compiled, but it isn't practical.
+       While libpng is capable of telling you what it's level is, different
+       versions of it do it two different ways: with png_libpng_ver or with
+       png_get_header_ver.  So we have to be compiled for a particular version
+       just to find out what version it is! It's not worth having a link
+       failure, much less a compile failure, if we choose wrong.
+       png_get_header_ver is not in anything older than libpng 1.0.2a (Dec
+       1998).  png_libpng_ver is not there in libraries built without
+       USE_GLOBAL_ARRAYS.  Cygwin versions are normally built without
+       USE_GLOBAL_ARRAYS.  -bjh 2002.06.17.
+
+       We'd also like to display the version of libz with which we're linked,
+       with zlib_version (which nowadays is a macro for zlibVersion), but we
+       can't for reasons of modularity: We don't really link libz.  libpng
+       does.  It's none of our business whether libz is even present.  And at
+       least on Mac OS X, we can't access libz's symbols from here -- we get
+       undefined reference to zlibVersion.  We would have to explicitly link
+       libz just to find out its version.  The right way to do this is for a
+       subroutine in libpng to give us the information.  Until 10.07.08, we
+       did display zlib_version, but for years Mac OS X build was failing (and
+       we erroneously thought it was a libpng-config --ldflags bug).
+
+       We _do_ use the compile-time part of libpng (<png.h>), because it's
+       part of the interface to libpng.
     */
-    fprintf(stderr, "   Compiled with libpng %s.\n",
+    fprintf(stderr, "   Pnmtopng Compiled with libpng %s.\n",
             PNG_LIBPNG_VER_STRING);
-    fprintf(stderr, "   Compiled with zlib %s; using zlib %s.\n",
-            ZLIB_VERSION, zlib_version);
+    fprintf(stderr, "   Pnmtopng (not libpng) compiled with zlib %s.\n",
+            ZLIB_VERSION);
     fprintf(stderr, "\n");
 }
 

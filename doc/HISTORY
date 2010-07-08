@@ -6,6 +6,13 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.52.00
 
+              Pnmtopng:  -libversion doesn't report level of linked libz.
+              It was a modularity violation and caused build failures on
+              Mac OS X, because Pnmtopng per se doesn't know about libz --
+              it's used by libpng.
+
+              Build: don't fail due to SIGRTMIN, SIGRTMAX being undefined.
+
 10.06.27 BJH  Release 10.51.00
 
               Add ppmtoascii.  Thanks "Frank Ch. Eigler" <fche@elastic.org>.
