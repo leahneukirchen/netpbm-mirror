@@ -417,7 +417,7 @@ case "$2" in
         ;;
 
     png )
-        pngtopnm "$file"
+        pngtopam "$file"
         ;;
 
     mda )

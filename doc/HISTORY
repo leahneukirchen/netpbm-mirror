@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.52.00
 
+              Anytopnm: Use 'pngtopam' shell command instead of 'pngtopnm'.
+
               Pnmtopng:  -libversion doesn't report level of linked libz.
               It was a modularity violation and caused build failures on
               Mac OS X, because Pnmtopng per se doesn't know about libz --
