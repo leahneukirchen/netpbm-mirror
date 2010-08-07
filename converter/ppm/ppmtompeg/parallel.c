@@ -1340,12 +1340,12 @@ startCombineServer(const char * const encoderName,
     int          otherSock;
     const char * error;
 
-    snprintf(command, sizeof(command), 
-             "%s %s -max_machines %d -output_server %s %d %d %s",
-             encoderName, 
-             debugMachines ? "-debug_machines" : "",
-             numMachines, masterHostName, masterPortNum, 
-             numInputFiles, paramFileName);
+    snprintfN(command, sizeof(command), 
+              "%s %s -max_machines %d -output_server %s %d %d %s",
+              encoderName, 
+              debugMachines ? "-debug_machines" : "",
+              numMachines, masterHostName, masterPortNum, 
+              numInputFiles, paramFileName);
 
     machineDebug("MASTER: Starting combine server with shell command '%s'",
                  command);
@@ -1382,12 +1382,12 @@ startDecodeServer(const char * const encoderName,
     int          otherSock;
     const char * error;
 
-    snprintf(command, sizeof(command), 
-             "%s %s -max_machines %d -decode_server %s %d %d %s",
-             encoder_name, 
-             debugMachines ? "-debug_machines" : "",
-             numMachines, masterHostName, masterPortNum,
-             numInputFiles, paramFileName);
+    snprintfN(command, sizeof(command), 
+              "%s %s -max_machines %d -decode_server %s %d %d %s",
+              encoder_name, 
+              debugMachines ? "-debug_machines" : "",
+              numMachines, masterHostName, masterPortNum,
+              numInputFiles, paramFileName);
 
     machineDebug("MASTER: Starting decode server with shell command '%s'",
                  command);
@@ -1680,23 +1680,23 @@ startChildren(struct scheduler *   const schedulerP,
                 }
                 --childrenLeftCurrentIoServer;
             } 
-            snprintf(command, sizeof(command),
-                     "%s %s -l %s %s "
-                     "%s %s -child %s %d %d %d %d %d %d "
-                     "-frames %d %d %s",
-                     rsh,
-                     machineName[childNum], userName[childNum],
-                     beNice ? "nice" : "",
-                     executable[childNum],
-                     debugMachines ? "-debug_machines" : "",
-                     masterHostName, masterPortNum, 
-                     remote[childNum] ? ioPortNum[numIoServers-1] : 0,
-                     combinePortNum, decodePortNum, childNum,
-                     remote[childNum] ? 1 : 0,
-                     startFrame, startFrame + nFrames - 1,
-                     remote[childNum] ? 
-                         remoteParamFile[childNum] : paramFileName
-            );
+            snprintfN(command, sizeof(command),
+                      "%s %s -l %s %s "
+                      "%s %s -child %s %d %d %d %d %d %d "
+                      "-frames %d %d %s",
+                      rsh,
+                      machineName[childNum], userName[childNum],
+                      beNice ? "nice" : "",
+                      executable[childNum],
+                      debugMachines ? "-debug_machines" : "",
+                      masterHostName, masterPortNum, 
+                      remote[childNum] ? ioPortNum[numIoServers-1] : 0,
+                      combinePortNum, decodePortNum, childNum,
+                      remote[childNum] ? 1 : 0,
+                      startFrame, startFrame + nFrames - 1,
+                      remote[childNum] ? 
+                          remoteParamFile[childNum] : paramFileName
+                );
         
             machineDebug("MASTER: Starting child server "
                          "with shell command '%s'", command);
