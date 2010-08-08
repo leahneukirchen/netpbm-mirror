@@ -1,0 +1,251 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html>
+<head>
+<title>Pamrecolor User Manual</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+</head>
+
+<body>
+
+<h1>pamrecolor</h1>
+
+<p>Updated: 31 July 2010</p>
+
+<p><a href="#contents">Table Of Contents</a></p>
+
+
+<h2 id="name">NAME</h2>
+
+<p>pamrecolor - alter colors without affecting luminance</p>
+
+<h2 id="synopsis">SYNOPSIS</h2>
+
+<p>
+<b>pamrecolor</b>
+[<b>--colorspace</b>=<i>name</i>]
+[<b>--rmult</b>=<i>fraction</i>]
+[<b>--gmult</b>=<i>fraction</i>]
+[<b>--bmult</b>=<i>fraction</i>]
+[<b>--targetcolor</b>=<i>color</i>]
+[<b>--colorfile</b>=<i>file</i>]
+[<i>infile</i>]
+</p>
+
+
+<p>Minimum unique abbreviation of option is acceptable.  You may use double
+hyphens instead of single hyphen to denote options.  You may use white
+space in place of the equals sign to separate an option name from its value.
+
+<h2 id="description">DESCRIPTION</h2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.</p>
+
+<p><b>pamrecolor</b> changes an image's colors to be as close as
+possible to given target colors but with the constraint that the
+luminance not be modified.  That is, the original image and the target
+image will look identical if both are converted to grayscale
+(e.g. with
+<a href="ppmtopgm.html">ppmtopgm</a>).  You can have <b>pamrecolor</b> select
+target colors randomly, specify a single hue for the entire image, or take the
+target colors from a target image.</p>
+
+<p><b>pamrecolor</b> works on pseudo-Netpbm images based on arbitrary
+color spaces.  You can define the color space explicitly or choose on
+of many that <b>pamrecolor</b> knows by name.
+
+<p>The output is a PAM image on standard output.  Options control the
+exact format of the PAM.  If you want a PNM (PBM, PGM, or PPM) image,
+use <a href="pamtopnm.html">pamtopnm</a> on the output.  There is no
+need to convert if you will use the image as input to a current Netpbm
+program, but many other programs don't know what a PAM is.</p>
+
+
+<h2 id="options">OPTIONS</h2>
+
+<dl>
+
+<dt><b>--colorspace</b>=<i>name</i></dt>
+<dd>Designate the color space to use for determining the contribution
+to luminance of each of the red, green, and blue color channels.  For
+example, in the SMPTE-C color space an RGB color is converted to
+grayscale by multiplying the red channel by 0.2124132, the green
+channel by 0.7010437, and the blue channel by 0.0865432 and summing
+the resulting three products.
+
+<p>When you use this option, the input and output images are not true Netpbm
+images, because the Netpbm image format specifies a particular color space.
+Instead, you are using a variation on the format in which the sample values in
+the raster have different meaning.  Many programs that ostensibly use Netpbm
+images actually use a variation with a different color space, For example,
+<a href="http://www.gimp.org/">GIMP</a> uses sRGB internally and if you
+have GIMP generate a Netpbm image file, it really generates a variation of
+the format that uses sRGB.
+
+<p><b>pamrecolor</b> knows the following color spaces (<i>name</i> values):
+
+  <dl>
+  <dt>adobe</dt>
+  <dd>Adobe RGB (1998) with a D65 reference white</dd>
+
+  <dt>apple</dt>
+  <dd>Apple  RGB with a D65 reference white</dd>
+
+  <dt>cie</dt>
+  <dd>CIE with an Illuminant E reference white</dd>
+
+  <dt>ntsc</dt>
+  <dd>NTSC RGB with an Illuminant C reference white</dd>
+
+  <dt>pal</dt>
+  <dd>PAL/SECAM with a D65 reference white</dd>
+
+  <dt>smpte-c</dt>
+  <dd>SMPTE-C with a D65 reference white</dd>
+
+  <dt>srgb</dt>
+  <dd>sRGB with a D65 reference white</dd>
+
+  <dt>wide</dt>
+  <dd>Wide-gamut RGB with a D50 reference white</dd>
+  </dl>
+
+<p>The default is <q>ntsc</q> because this is the color space that the
+Netpbm format
+of Netpbm and many other graphics utilities.  As a counterexample,
+<a href="http://www.gimp.org/">GIMP</a> uses sRGB as its native color
+space.</p>
+
+<p>The luminance values <b>pamrecolor</b> uses for each of the above come from
+Bruce Lindbloom's
+<a href="http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html">
+Computing RGB-to-XYZ and XYZ-to-RGB matrices</a> page.</p></dd>
+
+<dt><b>--rmult</b>=<i>fraction</i></dt>
+<dt><b>--gmult</b>=<i>fraction</i></dt>
+<dt><b>--bmult</b>=<i>fraction</i></dt>
+
+<dd>Instead of selecting a color space by name, you can specify explicitly the
+contribution of each color channel to the overall luminance as red, green, and
+blue multipliers.  These three options must be used together, and the
+three <i>fraction</i> values must sum to 1.0.  For example, you can specify
+the ProPhoto (ROMM) RGB color space with
+<q><b>--rmult</b>=0.2880402 <b>--gmult</b>=0.7118741 <b>--bmult</b>=0.0000857</q>.</dd>
+
+<dt><b>--targetcolor</b>=<i>color</i></dt>
+<dd>Designate <i>color</i> as the target color for the
+image.  <b>pamrecolor</b> will make each pixel as close as possible
+to <i>color</i> subject to the constraint that the luminance must stay the
+same as in the original image.  Specify <i>color</i> as in
+the <a href="libppm.html#colorname">argument of the <b>ppm_parsecolor()</b>
+library routine</a> (e.g.,&nbsp;<q>hotpink</q> or <q>#ff69b4</q>).</dd>
+
+<p>If you specify neither <b>--targetcolor</b> nor
+<b>--colorfile</b>, <b>pamrecolor</b> will randomly select a target color for
+each pixel of the input image.</p>
+
+<p>You may not specify both <b>-targetcolor</b> and <b>-colorfile</b>.
+
+
+<dt><b>--colorfile</b>=<i>file</i></dt>
+<dd>Take per-pixel target colors from Netpbm file <i>file</i> instead
+of using a single target color for the entire image.
+<i>file</i> should be a PPM or color PAM image.
+If the image in the file wider or taller than the input image,
+<b>pamrecolor</b> uses only the left and top part of it.
+If the image is narrower or shorter, <b>pamrecolor</b> considers the
+image to be repeated in a tile pattern.
+
+<p>If you specify neither <b>--targetcolor</b> nor
+<b>--colorfile</b>, <b>pamrecolor</b> will randomly select a target color for
+each pixel of the input image.</p>
+
+<p>You may not specify both <b>-targetcolor</b> and <b>-colorfile</b>.
+
+</dl>
+
+
+<h2 id="examples">EXAMPLES</h2>
+
+<p>This command tints an image yellow:</p>
+
+<pre>
+    pamrecolor --targetcolor=yellow colorpic.pam > yellowpic.pam
+</pre>
+
+<p>This command takes the colors from <b>colorpicture.ppm</b> and applies
+them to <b>graypicture.pgm</b>:</p>
+
+<pre>
+    pamrecolor --colorfile=colorpic.ppm graypic.pgm > colorizedpic.pam
+</pre>
+
+<p>The grayscale version of <b>colorizedpic.pam</b> will look just like
+graypic.pgm.  Note that if you use a non-Netpbm tool to do the conversion to
+grayscale, you may additionally need to specify an
+appropriate <b>--colorspace</b> value for your conversion tool.</p>
+
+
+<h2 id="notes">NOTES</h2>
+
+<p>Here are a couple of fun special effects that can be produced using
+<b>pamrecolor</b>:<p>
+
+<ol>
+<li>Specify a color file that is identical to the input image but with
+some large, colored text added to it.  The text will <q>magically</q>
+vanish when the image is converted to grayscale.</li>
+
+<li>Provide a low-contrast grayscale image &mdash; perhaps a secret
+message written in similar shades of gray &mdash; as the input file and
+a colorful but completely different image as the color file.  If done
+carefully, the grayscale image can be hidden by the colorful image.
+Only people who know to convert the result to grayscale can recover
+the original grayscale image.</li>
+
+<li>Use <b>--targetcolor</b>=tan to make an image look like an
+old-timey photograph (or, more precisely, a
+<a href="http://en.wikipedia.org/wiki/Photographic_print_toning">sepia-toned
+photograph</a> of the late 1800s).</li>
+</ol>
+
+
+<h2 id="history">HISTORY</h2>
+
+<p>Scott Pakin wrote <b>pamrecolor</b> in July 2010.</p>
+
+<p><b>pamrecolor</b> was new in Netpbm 10.52 (September 2010).
+
+
+<h2 id="author">AUTHOR</h2>
+
+<p>Copyright (C) 2010 Scott
+Pakin, <a href="mailto:scott+pbm@pakin.org.">scott+pbm@pakin.org.</a></p>
+
+
+<h2 id="seealso">SEE ALSO</h2>
+
+<ul>
+<li><a href="ppmtopgm.html"><b>ppmtopgm</b></a>
+<li><a href="ppmchange.html"><b>ppmchange</b></a>
+<li><a href="pnmremap.html"><b>pnmremap</b></a>
+</ul>
+
+
+<hr>
+
+<h2 id="index">Table Of Contents</h2>
+
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a></li>
+<li><a href="#description">DESCRIPTION</a></li>
+<li><a href="#options">OPTIONS</a></li>
+<li><a href="#examples">EXAMPLES</a></li>
+<li><a href="#notes">NOTES</a></li>
+<li><a href="#history">HISTORY</a></li>
+<li><a href="#author">AUTHOR</a></li>
+<li><a href="#seealso">SEE ALSO</a></li>
+</ul>
+
+</body>
+</html>
+
