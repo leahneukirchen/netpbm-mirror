@@ -451,8 +451,8 @@ main(int argc, const char *argv[]) {
     const char *       comments;
     tuplen *           inRow;
     tuplen *           outRow;
-    tuplen *           colorRow;
     tuplen **          colorData;
+    tuplen *           colorRowBuffer;
     unsigned int       row;
 
     pm_proginit(&argc, argv);
@@ -486,21 +486,24 @@ main(int argc, const char *argv[]) {
 
     inRow = pnm_allocpamrown(&inPam);
     outRow = pnm_allocpamrown(&outPam);
-    if (cmdline.colorfile)
-        colorRow = NULL;
-    else
-        colorRow = pnm_allocpamrown(&outPam);
+
+    colorRowBuffer = pnm_allocpamrown(&outPam);
 
     for (row = 0; row < inPam.height; ++row) {
+        tuplen * colorRow;
+
         pnm_readpamrown(&inPam, inRow);
 
         if (cmdline.colorfile)
             colorRow = getColorRow(&colorPam, colorData, row, outPam.width);
-        else if (cmdline.targetcolorSpec)
-            explicitlyColorRow(&colorPam, colorRow, cmdline.targetcolor);
-        else
-            randomlyColorRow(&colorPam, colorRow);
+        else {
+            colorRow = colorRowBuffer;
 
+            if (cmdline.targetcolorSpec)
+                explicitlyColorRow(&colorPam, colorRow, cmdline.targetcolor);
+            else
+                randomlyColorRow(&colorPam, colorRow);
+        }
         recolorRow(&inPam, inRow,
                    &cmdline.color2gray, colorRow,
                    &outPam, outRow);
@@ -508,8 +511,7 @@ main(int argc, const char *argv[]) {
     }
     pnm_freepamrown(outRow);
     pnm_freepamrown(inRow);
-    if (colorRow)
-        pnm_freepamrown(colorRow);
+    pnm_freepamrown(colorRowBuffer);
 
     if (colorData)
         pnm_freepamarrayn(colorData, &colorPam);
