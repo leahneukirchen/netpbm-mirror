@@ -4,6 +4,15 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+10.08.28 BJH  Release 10.47.19
+
+              Build: don't expect snprintf() to exist.
+
+              Build: don't use <strings.h> or bzero().
+
+              Build: fix PNGVER.  Thanks Matthew Fischer
+              <futhark@users.sourceforge.net>.
+
 10.07.27 BJH  Release 10.47.18
 
               Pnmtopng:  -libversion doesn't report level of linked libz.

@@ -9,6 +9,7 @@
   See COPYRIGHT file for copyright information.
 */
 
+#include <string.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
@@ -131,7 +132,7 @@ itrueToRGB(Image *      const imageP,
 
     colors = 1 << ddepth;
   
-    bzero(pixel_counts, 32768 * sizeof(unsigned long));
+    memset(pixel_counts, 0, 32768 * sizeof(unsigned long));
   
     pixel= imageP->data;
     for (y= 0; y < imageP->height; y++) {
@@ -693,7 +694,7 @@ makeXImage(XImageInfo * const ximageinfoP,
                     pm_error("Unable to allocate space for %u x %x x %u "
                              "image", imageP->width, imageP->height, dpixlen);
                 ximageinfoP->ximageP->data = (char*)data;
-                bzero(data, size);
+                memset(data, 0, size);
                 ximageinfoP->ximageP->bitmap_bit_order = MSBFirst;
                 ximageinfoP->ximageP->byte_order = MSBFirst;
                 for (a= 0; a < dbits; ++a) {
