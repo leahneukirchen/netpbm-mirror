@@ -26,7 +26,7 @@ ifneq ($(TIFFLIB),NONE)
   endif
 endif
 
-ifeq ($(shell libpng-config --version),)
+ifeq ($(shell libpng$(PNGVER)-config --version),)
   ifneq ($(PNGLIB),NONE)
     HAVE_PNGLIB = Y
     ifneq ($(PNGHDR_DIR)x,x)
@@ -38,7 +38,7 @@ ifeq ($(shell libpng-config --version),)
   endif
 else
   HAVE_PNGLIB = Y
-  EXTERN_INCLUDES += $(shell libpng-config --cflags)
+  EXTERN_INCLUDES += $(shell libpng$(PNGVER)-config --cflags)
 endif
 
 ifneq ($(JPEGLIB),NONE)
@@ -153,10 +153,10 @@ tifftopnm pamtotiff pnmtotiffcmyk: %: %.o tiff.o $(NETPBMLIB) $(LIBOPT)
 	$(LD) -o $@ $@.o tiff.o \
 	  $(LIBOPTS_TIFF) $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
-ifeq ($(shell libpng-config --version),)
+ifeq ($(shell libpng$(PNGVER)-config --version),)
   PNGLIB_LIBOPTS = $(shell $(LIBOPT) $(LIBOPTR) $(PNGLIB) $(ZLIB))
 else
-  PNGLIB_LIBOPTS = $(shell libpng-config --ldflags)
+  PNGLIB_LIBOPTS = $(shell libpng$(PNGVER)-config --ldflags)
 endif
 
 pngtopam: %: %.o pngx.o $(NETPBMLIB) $(LIBOPT)

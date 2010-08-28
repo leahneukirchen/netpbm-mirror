@@ -21,6 +21,9 @@ not yet  BJH  Release 10.52.00
 
               Build: don't use <strings.h> or bzero().
 
+              Build: fix PNGVER.  Thanks Matthew Fischer
+              <futhark@users.sourceforge.net>.
+
 10.06.27 BJH  Release 10.51.00
 
               Add ppmtoascii.  Thanks "Frank Ch. Eigler" <fche@elastic.org>.
