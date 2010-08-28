@@ -270,10 +270,10 @@ ifneq ($(X11LIB),NONE)
   MERGELIBS += $(X11LIB)
 endif
 
-ifeq ($(shell libpng-config --version),)
+ifeq ($(shell libpng$(PNGVER)-config --version),)
   PNGLD = $(shell $(LIBOPT) $(LIBOPTR) $(PNGLIB) $(ZLIB))
 else
-  PNGLD = $(shell libpng-config --ldflags)
+  PNGLD = $(shell libpng$(PNGVER)-config --ldflags)
 endif
 
 ifeq ($(shell xml2-config --version),)

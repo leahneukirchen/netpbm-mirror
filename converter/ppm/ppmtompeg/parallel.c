@@ -1340,7 +1340,7 @@ startCombineServer(const char * const encoderName,
     int          otherSock;
     const char * error;
 
-    snprintf(command, sizeof(command), 
+    snprintfN(command, sizeof(command), 
              "%s %s -max_machines %d -output_server %s %d %d %s",
              encoderName, 
              debugMachines ? "-debug_machines" : "",
@@ -1382,7 +1382,7 @@ startDecodeServer(const char * const encoderName,
     int          otherSock;
     const char * error;
 
-    snprintf(command, sizeof(command), 
+    snprintfN(command, sizeof(command), 
              "%s %s -max_machines %d -decode_server %s %d %d %s",
              encoder_name, 
              debugMachines ? "-debug_machines" : "",
@@ -1680,7 +1680,7 @@ startChildren(struct scheduler *   const schedulerP,
                 }
                 --childrenLeftCurrentIoServer;
             } 
-            snprintf(command, sizeof(command),
+            snprintfN(command, sizeof(command),
                      "%s %s -l %s %s "
                      "%s %s -child %s %d %d %d %d %d %d "
                      "-frames %d %d %s",
