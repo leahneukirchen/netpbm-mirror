@@ -137,7 +137,7 @@ image.  <b>pamrecolor</b> will make each pixel as close as possible
 to <i>color</i> subject to the constraint that the luminance must stay the
 same as in the original image.  Specify <i>color</i> as in
 the <a href="libppm.html#colorname">argument of the <b>ppm_parsecolor()</b>
-library routine</a> (e.g.,&nbsp;<q>hotpink</q> or <q>#ff69b4</q>).</dd>
+library routine</a> (e.g.,&nbsp;<q>hotpink</q> or <q>#ff69b4</q>).
 
 <p>If you specify neither <b>--targetcolor</b> nor
 <b>--colorfile</b>, <b>pamrecolor</b> will randomly select a target color for
@@ -145,6 +145,7 @@ each pixel of the input image.</p>
 
 <p>You may not specify both <b>-targetcolor</b> and <b>-colorfile</b>.
 
+</dd>
 
 <dt><b>--colorfile</b>=<i>file</i></dt>
 <dd>Take per-pixel target colors from Netpbm file <i>file</i> instead
@@ -187,10 +188,10 @@ appropriate <b>--colorspace</b> value for your conversion tool.</p>
 
 <h2 id="notes">NOTES</h2>
 
-<p>Here are a couple of fun special effects that can be produced using
-<b>pamrecolor</b>:<p>
+<p>Here are a couple of fun special effects you can produce with
+<b>pamrecolor</b>:
 
-<ol>
+<ul>
 <li>Specify a color file that is identical to the input image but with
 some large, colored text added to it.  The text will <q>magically</q>
 vanish when the image is converted to grayscale.</li>
@@ -206,7 +207,7 @@ the original grayscale image.</li>
 old-timey photograph (or, more precisely, a
 <a href="http://en.wikipedia.org/wiki/Photographic_print_toning">sepia-toned
 photograph</a> of the late 1800s).</li>
-</ol>
+</ul>
 
 
 <h2 id="history">HISTORY</h2>
