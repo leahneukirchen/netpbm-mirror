@@ -17,7 +17,6 @@
    Retired bitwise transformation functions.
 */
 
-#include "wordaccess.h"
 #include "pbm.h"
 
 static unsigned short int itemBuff[8];
@@ -35,7 +34,7 @@ putinit(FILE * const ofP) {
 
 
 static void
-putitem(wordint const item) {
+putitem(uint16_t const item) {
 
     if (itemCnt == 8 ) {
         /* Buffer is full.  Write out one line. */
@@ -98,58 +97,31 @@ writeIcon(FILE *       const ifP,
           int          const format,
           FILE *       const ofP) {
 
-    unsigned int const wordintSize = sizeof(wordint) * 8;
-        /* wordintSize is usually 32 or 64 bits.  Must be at least 24. */
     unsigned int const items = (cols + 15) / 16;
-    unsigned int const bitrowBytes = pbm_packed_bytes(cols);
     unsigned int const pad = items * 16 - cols;
-    /* 'padleft' is added to the output.  'padbyte' is for cleaning
-       the input
-    */
-    unsigned int const padleft = pad / 2;
-    unsigned int const padbyte = bitrowBytes * 8 - cols;
-    unsigned int const shift   = (wordintSize - 24) + padleft;
-    
-    unsigned char * bitbuffer;
-    unsigned char * bitrow;
+
+    unsigned char * const bitrow = pbm_allocrow_packed(items * 16);
     unsigned int row;
 
-    bitbuffer = pbm_allocrow_packed(cols + wordintSize);
-    bitrow = &bitbuffer[1];
-    bitbuffer[0] = 0;
-    bitrow[bitrowBytes] = 0;
-    
+    bitrow[0] = bitrow[items * 2 - 1] = 0;
+
     writeIconHeader(ofP, cols + pad, rows);
 
     putinit(ofP);
 
     for (row = 0; row < rows; ++row) {
         unsigned int itemSeq;
-        pbm_readpbmrow_packed(ifP, bitrow, cols, format);
 
-        /* Clear post-data junk in final partial byte */
-        if (padbyte > 0) {
-            bitrow[bitrowBytes-1] >>= padbyte;
-            bitrow[bitrowBytes-1] <<= padbyte;
-        }
-        
+        pbm_readpbmrow_bitoffset(ifP, bitrow, cols, format, pad/2);
+
         for (itemSeq = 0; itemSeq < items; ++itemSeq) {
-            /* Scoop up bits, shift-align, send to format & print function.
-    
-               An item is 16 bits, typically spread over 3 bytes due to
-               left-padding.  We use wordint here to scoop up 4 (or more)
-               consecutive bytes.  An item always resides within the higher
-               24 bits of each scoop.  It is essential to use wordint
-               (or rather the wordaccess function bytesToWordInt() ); 
-               simple long, uint_32t, etc. do not work for they are not
-               shift-tolerant.
-            */
+            /* Read bits from bitrow, send to format & print function. */
             
-            wordint const scoop = bytesToWordint(&bitbuffer[itemSeq*2]);
-            putitem (scoop >> shift);
+            putitem((bitrow[itemSeq*2]<<8) + bitrow[itemSeq*2+1]);
         }
     }
-    putterm();    
+    putterm();
+    pbm_freerow_packed(bitrow);
 }
 
 
