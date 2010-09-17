@@ -17,18 +17,21 @@
    Retired bitwise transformation functions.
 */
 
+#include "pm_config.h"
 #include "pbm.h"
 
-static unsigned short int itemBuff[8];
-static unsigned int itemCnt;    /* takes values 0 to 8 */
-FILE * putFp;
+static struct ItemPutter {
+    unsigned short int itemBuff[8];
+    unsigned int       itemCnt;    /* takes values 0 to 8 */
+    FILE *             putFp;
+} ip;
 
 
 
 static void
 putinit(FILE * const ofP) {
-    putFp = ofP;
-    itemCnt = 0;
+    ip.putFp   = ofP;
+    ip.itemCnt = 0;
 }
 
 
@@ -36,21 +39,24 @@ putinit(FILE * const ofP) {
 static void
 putitem(uint16_t const item) {
 
-    if (itemCnt == 8 ) {
+    if (ip.itemCnt == 8 ) {
         /* Buffer is full.  Write out one line. */
         int rc;
     
-        rc = fprintf(putFp,
+        rc = fprintf(ip.putFp,
                      "\t0x%04x,0x%04x,0x%04x,0x%04x,"
                      "0x%04x,0x%04x,0x%04x,0x%04x,\n",
-                     itemBuff[0],itemBuff[1],itemBuff[2],itemBuff[3],
-                     itemBuff[4],itemBuff[5],itemBuff[6],itemBuff[7]);
+                     ip.itemBuff[0], ip.itemBuff[1],
+                     ip.itemBuff[2], ip.itemBuff[3],
+                     ip.itemBuff[4], ip.itemBuff[5],
+                     ip.itemBuff[6], ip.itemBuff[7]);
         if (rc < 0)        
            pm_error("fprintf() failed to write Icon bitmap");
            
-        itemCnt = 0;
+        ip.itemCnt = 0;
     }
-    itemBuff[itemCnt++] = item & 0xffff;  /* Only lower 16 bits are used */
+    ip.itemBuff[ip.itemCnt++] = item & 0xffff;
+        /* Only lower 16 bits are used */
 }
 
 
@@ -60,10 +66,11 @@ putterm(void) {
 
     unsigned int i;
 
-    for (i = 0; i < itemCnt; ++i) {
+    for (i = 0; i < ip.itemCnt; ++i) {
         int rc;
-        rc = fprintf(putFp, "%s0x%04x%c", i == 0  ? "\t" : "", itemBuff[i],
-                     i == itemCnt - 1 ? '\n' : ',');
+        rc = fprintf(ip.putFp, "%s0x%04x%c", i == 0  ? "\t" : "",
+                     ip.itemBuff[i],
+                     i == ip.itemCnt - 1 ? '\n' : ',');
         if (rc < 0)        
             pm_error("fprintf() failed to write Icon bitmap");
     }
