@@ -4,6 +4,14 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+10.09.18 BJH  Release 10.35.77
+
+              ppmtompeg: fix crash with free of unallocated memory.
+
+              Build: don't expect snprintf() to exist.
+
+              Build: don't use <strings.h> or bzero().
+
 10.07.10 BJH  Release 10.35.76
 
               Pnmtopng:  -libversion doesn't report level of linked libz.

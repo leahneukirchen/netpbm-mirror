@@ -1,6 +1,5 @@
 #ifndef IMAGE_H_INCLUDED
 #define IMAGE_H_INCLUDED
-#include <strings.h>
 
 #include "pm_c_util.h"
 

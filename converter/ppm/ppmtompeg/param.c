@@ -283,8 +283,8 @@ GetFrameRate(const char * const p)
 
 
 static void
-mergeInputSource(struct inputSource * const baseSourceP,
-                 struct inputSource * const addedSourceP) {
+mergeInputSource(struct inputSource *       const baseSourceP,
+                 const struct inputSource * const addedSourceP) {
 
     unsigned int i;
 
@@ -294,12 +294,6 @@ mergeInputSource(struct inputSource * const baseSourceP,
     for (i = 0; i < addedSourceP->numInputFileEntries; ++i)
         baseSourceP->inputFileEntries[baseSourceP->numInputFileEntries++] =
             addedSourceP->inputFileEntries[i];
-
-    free(addedSourceP);
-    /* Note the space allocated for the *addedSourceP input file
-       entries themselves is still allocated, and used by 
-       *baseSourceP.
-    */
 }
 
 
