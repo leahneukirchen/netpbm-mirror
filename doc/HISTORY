@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+10.09.18 BJH  RELEASE 10.51.04
+
+              ppmtompeg: fix crash with free of unallocated memory.
+
 10.08.28 BJH  Release 10.51.03
 
               Anytopnm: Use 'pngtopam' shell command instead of 'pngtopnm'.
