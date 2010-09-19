@@ -29,6 +29,7 @@
     /* This makes the the x64() functions available on AIX */
 
 #include <unistd.h>
+#include <assert.h>
 #include <stdio.h>
 #include <fcntl.h>
 #include <stdarg.h>
@@ -524,6 +525,23 @@ pm_readbiglong(FILE * const ifP,
 
 
 int
+pm_readbiglong2(FILE *    const ifP,
+                int32_t * const lP) {
+    int rc;
+    long l;
+
+    rc = pm_readbiglong(ifP, &l);
+
+    assert((int32_t)l == l);
+
+    *lP = (int32_t)l;
+
+    return rc;
+}
+
+
+
+int
 pm_writebiglong(FILE * const ofP, 
                 long   const l) {
 
@@ -577,6 +595,23 @@ pm_readlittlelong(FILE * const ifP,
     *lP = l;
 
     return 0;
+}
+
+
+
+int
+pm_readlittlelong2(FILE *    const ifP,
+                int32_t * const lP) {
+    int rc;
+    long l;
+
+    rc = pm_readlittlelong(ifP, &l);
+
+    assert((int32_t)l == l);
+
+    *lP = (int32_t)l;
+
+    return rc;
 }
 
 

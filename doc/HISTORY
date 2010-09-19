@@ -6,6 +6,13 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.52.00
 
+
+              libnetpbm: add pm_readbiglong2, pm_readbiglong2u,
+              pm_readlittlelong2, pm_readlittlelong2u: These use the proper
+              32 bit integer types instead of "long".  (But the old ones
+              still work in legacy code because long is always at least 32
+              bits).
+
               Add pamrecolor.  Thanks Scott Pakin.
 
               anytopnm: Use 'pngtopam' shell command instead of 'pngtopnm'.
