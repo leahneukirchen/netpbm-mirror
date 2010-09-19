@@ -6,12 +6,7 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.52.00
 
-
-              libnetpbm: add pm_readbiglong2, pm_readbiglong2u,
-              pm_readlittlelong2, pm_readlittlelong2u: These use the proper
-              32 bit integer types instead of "long".  (But the old ones
-              still work in legacy code because long is always at least 32
-              bits).
+              Add pamtopdbimg.
 
               Add pamrecolor.  Thanks Scott Pakin.
 
@@ -21,6 +16,12 @@ not yet  BJH  Release 10.52.00
               It was a modularity violation and caused build failures on
               Mac OS X, because pnmtopng per se doesn't know about libz --
               it's used by libpng.
+
+              libnetpbm: add pm_readbiglong2, pm_readbiglong2u,
+              pm_readlittlelong2, pm_readlittlelong2u: These use the proper
+              32 bit integer types instead of "long".  (But the old ones
+              still work in legacy code because long is always at least 32
+              bits).
 
               ppmtompeg: fix crash with free of unallocated memory.
               Broken after 10.18, not later than 10.26.
