@@ -118,7 +118,7 @@ struct cmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *  inputFilename;  /* '-' if stdin */
+    const char *  inputFileName;  /* '-' if stdin */
     const char *  alpha;
     unsigned int  verbose;
     unsigned int  downscale;
@@ -275,7 +275,7 @@ parseModtimeOpt(const char * const modtimeOpt,
 
 
 static void
-parseCommandLine(int argc, char ** argv,
+parseCommandLine(int argc, const char ** argv,
                  struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
@@ -383,7 +383,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
 
@@ -483,9 +483,9 @@ parseCommandLine(int argc, char ** argv,
 
 
     if (argc-1 < 1)
-        cmdlineP->inputFilename = "-";
+        cmdlineP->inputFileName = "-";
     else if (argc-1 == 1)
-        cmdlineP->inputFilename = argv[1];
+        cmdlineP->inputFileName = argv[1];
     else
         pm_error("Program takes at most one argument:  input file name");
 }
@@ -2882,7 +2882,7 @@ displayVersion() {
 
 
 int 
-main(int argc, char *argv[]) {
+main(int argc, const char * argv[]) {
 
     struct cmdlineInfo cmdline;
     FILE * ifP;
@@ -2892,7 +2892,7 @@ main(int argc, char *argv[]) {
 
     int errorlevel;
     
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
     
     parseCommandLine(argc, argv, &cmdline);
     
@@ -2902,7 +2902,7 @@ main(int argc, char *argv[]) {
     }
     verbose = cmdline.verbose;
     
-    ifP = pm_openr_seekable(cmdline.inputFilename);
+    ifP = pm_openr_seekable(cmdline.inputFileName);
     
     if (cmdline.alpha)
         afP = pm_openr(cmdline.alpha);
