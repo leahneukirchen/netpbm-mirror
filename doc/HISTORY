@@ -16,6 +16,7 @@ not yet  BJH  Release 10.52.00
               it's used by libpng.
 
               ppmtompeg: fix crash with free of unallocated memory.
+              Broken after 10.18, not later than 10.26.
 
               Build: don't fail due to SIGRTMIN, SIGRTMAX being undefined.
 
