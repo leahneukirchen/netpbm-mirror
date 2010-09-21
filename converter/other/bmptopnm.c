@@ -28,9 +28,10 @@
 #include <assert.h>
 
 #include "pm_c_util.h"
-#include "pnm.h"
+#include "mallocvar.h"
 #include "shhopt.h"
 #include "nstring.h"
+#include "pnm.h"
 #include "bmp.h"
 
 /* MAXCOLORS is the maximum size of a color map in a BMP image */
@@ -106,11 +107,11 @@ struct bmpInfoHeader {
 
 
 
-struct cmdline_info {
+struct cmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *input_filespec;  /* Filespecs of input files */
+    const char *inputFileName;  /* Filespecs of input files */
     int verbose;    /* -verbose option */
 };
 
@@ -119,39 +120,41 @@ static const char *ifname;
 
 
 static void
-parse_command_line(int argc, char ** argv,
-                   struct cmdline_info *cmdline_p) {
+parseCommandLine(int argc, char ** argv,
+                 struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
 -----------------------------------------------------------------------------*/
-    optStruct *option_def = malloc(100*sizeof(optStruct));
+    optEntry * option_def;
         /* Instructions to OptParseOptions2 on how to parse our options.
          */
-    optStruct2 opt;
+    optStruct3 opt;
 
     unsigned int option_def_index;
 
-    option_def_index = 0;   /* incremented by OPTENTRY */
-    OPTENTRY(0,   "verbose",     OPT_FLAG,   &cmdline_p->verbose,         0);
+    MALLOCARRAY_NOFAIL(option_def, 100);
+
+    option_def_index = 0;   /* incremented by OPTENT3 */
+    OPTENT3(0,   "verbose",     OPT_FLAG,   &cmdlineP->verbose, NULL,   0);
  
     /* Set the defaults */
-    cmdline_p->verbose = FALSE;
+    cmdlineP->verbose = FALSE;
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions2(&argc, argv, opt, 0);
-        /* Uses and sets argc, argv, and some of *cmdline_p and others. */
+    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+        /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (argc-1 == 0) 
-        cmdline_p->input_filespec = "-";
+        cmdlineP->inputFileName = "-";
     else if (argc-1 != 1)
         pm_error("Program takes zero or one argument (filename).  You "
                  "specified %d", argc-1);
     else
-        cmdline_p->input_filespec = argv[1];
+        cmdlineP->inputFileName = argv[1];
 
 }
 
@@ -1449,7 +1452,7 @@ writeRasterPbm(unsigned char ** const BMPraster,
 int
 main(int argc, char ** argv) {
 
-    struct cmdline_info cmdline;
+    struct cmdlineInfo cmdline;
     FILE * ifP;
     int outputType;
 
@@ -1476,13 +1479,13 @@ main(int argc, char ** argv) {
 
     pnm_init(&argc, argv);
 
-    parse_command_line(argc, argv, &cmdline);
+    parseCommandLine(argc, argv, &cmdline);
 
-    ifP = pm_openr(cmdline.input_filespec);
-    if (streq(cmdline.input_filespec, "-"))
+    ifP = pm_openr(cmdline.inputFileName);
+    if (streq(cmdline.inputFileName, "-"))
         ifname = "Standard Input";
     else 
-        ifname = cmdline.input_filespec;
+        ifname = cmdline.inputFileName;
 
     readBmp(ifP, &BMPraster, &cols, &rows, &grayPresent, &colorPresent, 
             &cBitCount, &pixelformat, &colormap,
