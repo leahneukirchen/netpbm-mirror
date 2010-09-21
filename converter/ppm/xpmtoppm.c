@@ -35,10 +35,10 @@
 #include <string.h>
 
 #include "pm_c_util.h"
-#include "ppm.h"
+#include "mallocvar.h"
 #include "shhopt.h"
 #include "nstring.h"
-#include "mallocvar.h"
+#include "ppm.h"
 
 #define MAX_LINE (8 * 1024)
   /* The maximum size XPM input line we can handle. */
@@ -55,12 +55,12 @@ const char *xpmColorKeys[] =
  "c",					/* key #5: color visual */
 };
 
-struct cmdline_info {
+struct cmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    char *input_filespec;  /* Filespecs of input files */
-    char *alpha_filename;
+    const char * input_filespec;  /* Filespecs of input files */
+    const char * alpha_filename;
     int alpha_stdout;
     int verbose;
 };
@@ -70,46 +70,50 @@ static int verbose;
 
 
 static void
-parse_command_line(int argc, char ** argv,
-                   struct cmdline_info *cmdline_p) {
+parseCommandLine(int argc, char ** argv,
+                 struct cmdlineInfo *cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
 -----------------------------------------------------------------------------*/
-    optStruct *option_def = malloc(100*sizeof(optStruct));
+    optEntry * option_def;
         /* Instructions to OptParseOptions2 on how to parse our options.
          */
-    optStruct2 opt;
+    optStruct3 opt;
 
     unsigned int option_def_index;
 
-    option_def_index = 0;   /* incremented by OPTENTRY */
-    OPTENTRY(0,   "alphaout",   OPT_STRING, &cmdline_p->alpha_filename, 0);
-    OPTENTRY(0,   "verbose",    OPT_FLAG,   &cmdline_p->verbose,        0);
+    MALLOCARRAY_NOFAIL(option_def, 100);
 
-    cmdline_p->alpha_filename = NULL;
-    cmdline_p->verbose = FALSE;
+    option_def_index = 0;   /* incremented by OPTENT3 */
+    OPTENT3(0,   "alphaout",   OPT_STRING, &cmdlineP->alpha_filename,
+            NULL, 0);
+    OPTENT3(0,   "verbose",    OPT_FLAG,   &cmdlineP->verbose,
+            NULL, 0);
+
+    cmdlineP->alpha_filename = NULL;
+    cmdlineP->verbose = FALSE;
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = TRUE;  /* We may have parms that are negative numbers */
 
-    optParseOptions2(&argc, argv, opt, 0);
-        /* Uses and sets argc, argv, and some of *cmdline_p and others. */
+    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+        /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (argc - 1 == 0)
-        cmdline_p->input_filespec = NULL;  /* he wants stdin */
+        cmdlineP->input_filespec = NULL;  /* he wants stdin */
     else if (argc - 1 == 1)
-        cmdline_p->input_filespec = strdup(argv[1]);
+        cmdlineP->input_filespec = strdup(argv[1]);
     else 
         pm_error("Too many arguments.  The only argument accepted\n"
                  "is the input file specification");
 
-    if (cmdline_p->alpha_filename && 
-        streq(cmdline_p->alpha_filename, "-"))
-        cmdline_p->alpha_stdout = TRUE;
+    if (cmdlineP->alpha_filename && 
+        streq(cmdlineP->alpha_filename, "-"))
+        cmdlineP->alpha_stdout = TRUE;
     else 
-        cmdline_p->alpha_stdout = FALSE;
+        cmdlineP->alpha_stdout = FALSE;
 
 }
 
@@ -848,11 +852,11 @@ main(int argc, char *argv[]) {
            being an index int colormap[].
         */
 
-    struct cmdline_info cmdline;
+    struct cmdlineInfo cmdline;
 
     ppm_init(&argc, argv);
 
-    parse_command_line(argc, argv, &cmdline);
+    parseCommandLine(argc, argv, &cmdline);
 
     verbose = cmdline.verbose;
 
