@@ -22,8 +22,9 @@
 #include <math.h>
 
 #include "pm_c_util.h"
-#include "pnm.h"
+#include "mallocvar.h"
 #include "shhopt.h"
+#include "pnm.h"
 
 /* The pnm library allows us to code this program without branching cases
    for PGM and PPM, but we do the branch anyway to speed up processing of 
@@ -61,27 +62,29 @@ parse_command_line(int argc, char ** argv,
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
 -----------------------------------------------------------------------------*/
-    optStruct *option_def = malloc(100*sizeof(optStruct));
-        /* Instructions to OptParseOptions2 on how to parse our options.
+    optEntry * option_def;
+        /* Instructions to OptParseOptions3 on how to parse our options.
          */
-    optStruct2 opt;
+    optStruct3 opt;
 
     unsigned int option_def_index;
     int xysize, xsize, ysize, pixels;
     int reduce;
     float xscale, yscale, scale_parm;
 
+    MALLOCARRAY_NOFAIL(option_def, 100);
+
     option_def_index = 0;   /* incremented by OPTENTRY */
-    OPTENTRY(0,   "xsize",     OPT_UINT,    &xsize,         0);
-    OPTENTRY(0,   "width",     OPT_UINT,    &xsize,         0);
-    OPTENTRY(0,   "ysize",     OPT_UINT,    &ysize,         0);
-    OPTENTRY(0,   "height",    OPT_UINT,    &ysize,         0);
-    OPTENTRY(0,   "xscale",    OPT_FLOAT,   &xscale,        0);
-    OPTENTRY(0,   "yscale",    OPT_FLOAT,   &yscale,        0);
-    OPTENTRY(0,   "pixels",    OPT_UINT,    &pixels,        0);
-    OPTENTRY(0,   "xysize",    OPT_FLAG,    &xysize,        0);
-    OPTENTRY(0,   "verbose",   OPT_FLAG,    &cmdline_p->verbose,        0);
-    OPTENTRY(0,   "reduce",    OPT_UINT,    &reduce,        0);
+    OPTENT3(0,   "xsize",     OPT_UINT,    &xsize,              NULL, 0);
+    OPTENT3(0,   "width",     OPT_UINT,    &xsize,              NULL, 0);
+    OPTENT3(0,   "ysize",     OPT_UINT,    &ysize,              NULL, 0);
+    OPTENT3(0,   "height",    OPT_UINT,    &ysize,              NULL, 0);
+    OPTENT3(0,   "xscale",    OPT_FLOAT,   &xscale,             NULL, 0);
+    OPTENT3(0,   "yscale",    OPT_FLOAT,   &yscale,             NULL, 0);
+    OPTENT3(0,   "pixels",    OPT_UINT,    &pixels,             NULL, 0);
+    OPTENT3(0,   "xysize",    OPT_FLAG,    &xysize,             NULL, 0);
+    OPTENT3(0,   "verbose",   OPT_FLAG,    &cmdline_p->verbose, NULL, 0);
+    OPTENT3(0,   "reduce",    OPT_UINT,    &reduce,             NULL, 0);
 
     /* Set the defaults. -1 = unspecified */
     xsize = -1;
@@ -97,7 +100,7 @@ parse_command_line(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions2(&argc, argv, opt, 0);
+    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdline_p and others. */
 
     if (xsize == 0)
