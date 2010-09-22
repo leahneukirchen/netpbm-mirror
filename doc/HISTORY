@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+10.09.22 BJH  RELEASE 10.51.05
+
+              pnmconvol: fix reversed sense of -nooffset.  Introduced in
+              10.49.
+
 10.09.18 BJH  RELEASE 10.51.04
 
               ppmtompeg: fix crash with free of unallocated memory.

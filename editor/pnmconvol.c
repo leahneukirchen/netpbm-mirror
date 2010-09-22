@@ -893,7 +893,7 @@ getKernel(struct cmdlineInfo   const cmdline,
     struct convKernel * convKernelP;
 
     if (cmdline.pnmMatrixFileName)
-        getKernelPnm(cmdline.pnmMatrixFileName, depth, cmdline.nooffset,
+        getKernelPnm(cmdline.pnmMatrixFileName, depth, !cmdline.nooffset,
                      &convKernelP);
     else if (cmdline.matrixfile)
         convKernelCreateSimpleFile(cmdline.matrixfile, cmdline.normalize,
