@@ -23,6 +23,9 @@ not yet  BJH  Release 10.52.00
               still work in legacy code because long is always at least 32
               bits).
 
+              pnmconvol: fix reversed sense of -nooffset.  Introduced in
+              10.49.
+
               ppmtompeg: fix crash with free of unallocated memory.
               Broken after 10.18, not later than 10.26.
 
