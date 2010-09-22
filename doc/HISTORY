@@ -26,6 +26,9 @@ not yet  BJH  Release 10.52.00
               ppmtompeg: fix crash with free of unallocated memory.
               Broken after 10.18, not later than 10.26.
 
+              Build: fix parallel make - multiple simultaneous attempts to
+              build lib/util/importinc.
+
               Build: don't fail due to SIGRTMIN, SIGRTMAX being undefined.
 
               Build: don't expect snprintf() to exist.
