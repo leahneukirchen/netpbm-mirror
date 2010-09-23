@@ -150,6 +150,11 @@ importinc: \
   $(IMPORTINC_LIB_FILES) \
   $(IMPORTINC_LIB_UTIL_FILES) \
 
+# The reason we mkdir importinc/netpbm every time instead of just having
+# importinc depend on it and a rule to make it is that as a dependency, it
+# would force importinc to rebuild when importinc/netpbm has a more recent
+# modification date, which it sometimes would.
+
 $(IMPORTINC_ROOT_FILES):importinc/netpbm/%:$(BUILDDIR)/%
 	mkdir -p importinc/netpbm
 	rm -f $@
@@ -211,6 +216,14 @@ config:
 
 # Rule to make regular object files, e.g. pnmtojpeg.o.
 
+# The NDEBUG macro says to build code that assumes there are no bugs.
+# This makes the code go faster.  The main thing it does is tell the C library
+# to make assert() a no-op as opposed to generating code to check the
+# assertion and crash the program if it isn't really true.  You can add
+# -UNDEBUG (in any of various ways) to override this.
+#
+CFLAGS_ALL =  -DNDEBUG $(CPPFLAGS) $(CFLAGS) $(CFLAGS_PERSONAL) $(CADD)
+
 $(OBJECTS): %.o: %.c importinc
 #############################################################################
 # Note that the user may have configured -I options into CFLAGS or CPPFLAGS.
@@ -223,14 +236,8 @@ $(OBJECTS): %.o: %.c importinc
 # the space is no longer a problem for anyone.
 #############################################################################
 #
-# The NDEBUG macro says not to build code that assumes there are no bugs.
-# This makes the code go faster.  The main thing it does is tell the C library
-# to make assert() a no-op as opposed to generating code to check the
-# assertion and crash the program if it isn't really true.  You can add
-# -UNDEBUG (in any of various ways) to override this.
-#
-	$(CC) -c $(INCLUDES) -DNDEBUG \
-	    $(CPPFLAGS) $(CFLAGS) $(CFLAGS_PERSONAL) $(CADD) -o $@ $<
+# We have to get this all on one line to make make messages neat
+	$(CC) -c $(INCLUDES) $(CFLAGS_ALL) -o $@ $<
 
 # libopt is a utility program used in the make file below.
 LIBOPT = $(BUILDDIR)/buildtools/libopt
@@ -334,11 +341,14 @@ endif
 # Earlier ones do it regardless of __FAST_MATH__.
 
 MATHLIB ?= -lm
-$(PORTBINARIES) $(MATHBINARIES): %: %.o $(NETPBMLIB) $(LIBOPT)
+
 # Note that LDFLAGS might contain -L options, so order is important.
 # LDFLAGS is commonly set as an environment variable.
-	$(LD) -o $@ $@.o $(MATHLIB) $(shell $(LIBOPT) $(NETPBMLIB)) \
-	  $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
+LDFLAGS_ALL = $(MATHLIB) $(shell $(LIBOPT) $(NETPBMLIB)) \
+ $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
+
+$(PORTBINARIES) $(MATHBINARIES): %: %.o $(NETPBMLIB) $(LIBOPT)
+	$(LD) -o $@ $@.o $(LDFLAGS_ALL)
 
 
 # MERGE STUFF
