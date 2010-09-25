@@ -6,7 +6,7 @@
   Pilot Image Viewer).
 
   Bryan Henderson derived this from Eric Howe's programs named
-  'pgmtoimgv' and 'pbmtoimgv'.
+  'pgmtoimgv' and 'pbmtoimgv' in September 2010.
 =============================================================================*/
 /*
  * Copyright (C) 1997 Eric A. Howe
@@ -157,7 +157,7 @@ readimg(IPDB * const pdbP,
         pnm_readpamrow(&inpam, tuplerow);
 
         for (col = 0; col < inpam.width; ++col)
-            imgRaster[row * inpam.height + col] = tuplerow[col][0];
+            imgRaster[row * inpam.width + col] = tuplerow[col][0];
     }
 
     if (inpam.maxval == 1)
