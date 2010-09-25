@@ -93,7 +93,7 @@ ifneq ($(DONT_HAVE_PROCESS_MGMT),Y)
   PORTBINARIES += pstopnm
 endif
 
-BINARIES = $(PORTBINARIES) pnmtorast rasttopnm pamtopdbimg
+BINARIES = $(PORTBINARIES) pnmtorast rasttopnm pamtopdbimg pdbimgtopam
 
 ifeq ($(HAVE_PNGLIB),Y)
   BINARIES += pnmtopng pngtopam pamrgbatopng
@@ -210,7 +210,7 @@ pnmtorast rasttopnm: %: %.o rast.o $(NETPBMLIB) $(LIBOPT)
 	  $(shell $(LIBOPT) $(NETPBMLIB)) \
 	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
-pamtopdbimg: %: %.o ipdb.o $(NETPBMLIB) $(LIBOPT)
+pdbimgtopam pamtopdbimg: %: %.o ipdb.o $(NETPBMLIB) $(LIBOPT)
 	$(LD) -o $@ $@.o ipdb.o \
 	  $(shell $(LIBOPT) $(NETPBMLIB)) \
 	  $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)

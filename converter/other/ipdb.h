@@ -127,6 +127,7 @@ typedef struct {
      */
     uint8_t  * data;
 } IMAGE;
+
 #define IMAGESIZE   (32 + 1 + 1 + 4 + 4 + 2*2 + 4 + 2*2 + 2*2)
 
 /*
@@ -135,6 +136,10 @@ typedef struct {
 #define IMG_GRAY16  ((uint8_t)2)
 #define IMG_GRAY    ((uint8_t)0)
 #define IMG_MONO    ((uint8_t)0xff)
+
+const char *
+ipdb_typeName(uint8_t const type);
+
 
 /*
  * Compression constants for IMAGE.version.
@@ -158,6 +163,16 @@ typedef struct {
     IMAGE   * i;
     TEXT    * t;
 } IPDB;
+
+/*
+ * Only use four bytes of these.
+ */
+#define IPDB_vIMG   "vIMG"
+#define IPDB_View   "View"
+/*
+ * Only use three bytes of this.
+ */
+#define IPDB_MYST   "\x40\x6f\x80"
 
 /*
  * Flags for ipdb_write().
@@ -185,43 +200,44 @@ typedef struct {
 const char *
 ipdb_err(int error);
 
-int
-ipdb_read(IPDB *, FILE *);
+size_t
+ipdb_img_size(IMAGE * const imgP);
 
-int
-ipdb_write(IPDB *, int, FILE *);
+unsigned int
+ipdb_img_ppb(IMAGE * const imgP);
 
-int
-ipdb_insert_g16image(IPDB *, int, int, const uint8_t *);
-
-int
-ipdb_insert_gimage(IPDB *, int, int, const uint8_t*);
-
-int
-ipdb_insert_mimage(IPDB *, int, int, const uint8_t *);
-
-int
-ipdb_insert_text(IPDB *, const char *);
-
-int
-ipdb_remove_image(IPDB *);
-
-int
-ipdb_remove_text(IPDB *);
-
-const uint8_t *
-ipdb_g16row(IPDB *, unsigned int, uint8_t *);
-
-const uint8_t *
-ipdb_grow(IPDB *, unsigned int, uint8_t *);
-
-const uint8_t *
-ipdb_mrow(IPDB *, unsigned int, uint8_t *);
+uint8_t *
+ipdb_img_row(IMAGE *      const imgP,
+             unsigned int const row);
 
 void
 ipdb_free(IPDB *);
 
 IPDB *
 ipdb_alloc(const char *);
+
+void
+ipdb_clear(IPDB * const pdbP);
+
+PDBHEAD *
+ipdb_pdbhead_alloc(const char * const name);
+
+void
+ipdb_pdbhead_free(PDBHEAD * const headP);
+
+IMAGE *
+ipdb_image_alloc(const char * const name,
+                 int          const type,
+                 int          const w,
+                 int          const h);
+
+void
+ipdb_image_free(IMAGE * const imgP);
+
+void
+ipdb_text_free(TEXT * const textP);
+
+TEXT *
+ipdb_text_alloc(const char * const content);
 
 #endif
