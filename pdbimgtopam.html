@@ -1,0 +1,76 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Pdbimgtopam User Manual</TITLE></HEAD>
+<BODY>
+<H1>pdbimgtopam</H1>
+Updated: 25 September 2010
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<H2>NAME</H2>
+
+pdbimgtopam - convert a Palm Pilot Image Viewer PDB Image to a PAM image
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>pdbimgtopam</B>
+
+[<b>-notefile=</b><i>filename</i>]
+[<b>-verbose</b>]
+
+[<I>pdbimgfile</I>]
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>pdbimgtopam</b> reads a Palm Pilot Image Viewer image (and Image
+record in a PDB file) as input, from Standard Input or
+<I>palmfile</I>, and produces a PAM image as output.
+
+<p>If the Pilot image is monochrome, the PAM output has maxval 1.
+Otherwise, it has maxval 255.  Note that Pilot images are always
+monochrome.  The PAM image has tuple type GRAYSCALE.
+
+
+<H2 id="options">OPTIONS</H2>
+
+<DL COMPACT>
+<DT><B>-verbose</B>
+
+<DD>
+Display various interesting information about the input file and process.
+
+<DT><B>-notefile=</B><i>filename</i>
+
+<DD>
+Write the image note (if any) to the specified file.
+<p>
+If you don't specify this, <b>pdbimgtopam</b> ignores any image note.
+
+</DL>
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<B><A HREF="pamtopdbimg.html">pamtopdbimg</A></B>,
+<B><A HREF="pnmtopalm.html">pnmtopalm</A></B>,
+
+<A HREF="pam.html">pam</A>,
+
+<h2 id="history">HISTORY</h2>
+
+<p><b>pdbimgtopam</b> was new in Netpbm 10.52 (September 2010).
+It was modelled after Eric A. Howe's <b>imgvtopbm</b> package, which
+dates back to September 1997.
+
+
+<HR>
+<H2 id="index">Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#history">HISTORY</A>
+</UL>
+</BODY>
+</HTML>

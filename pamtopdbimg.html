@@ -1,0 +1,101 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Pamtopdbimg User Manual</TITLE></HEAD>
+<BODY>
+<H1>pamtopdbimg</H1>
+Updated: 25 September 2010
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<H2>NAME</H2>
+
+pamtodbimg - convert a Netpbm image to a Palm Pilot Image Viewer PDB Image
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>pamtopdbimg</B>
+
+[<b>-notefile=</b><i>filename</i>]
+[<b>-title=</b><i>text</i>]
+[<b>-compressed</b>]
+[<b>-uncompressed</b>]
+[<b>-maybecompressed</b>]
+[<b>-4depth</b>]
+
+[<I>netpbmfile</I>]
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>pamtopdbimg</b> reads a Netpbm image as input and produced a Palm Pilot
+Image Viewer image (and Image record in a PDB file) as output.
+
+<p>If the Neptbm image is black and white, the Pilot image is monochrome.
+Otherwise, the Pilot image is either 4-level or 16-level grayscale, depending
+on the <b>-4depth</b> option.
+
+
+<H2 id="options">OPTIONS</H2>
+
+<DL COMPACT>
+
+<DT><B>-title=</B><i>text</i>
+
+<DD>
+The title of the image, to be included in the image.
+
+<DT><B>-compressed</B>
+<DT><B>-uncompressed</B>
+<DT><B>-maybecompressed</B>
+
+<DD>You may specify only one of these.
+<b>-compressed</b> says to generate the image in compressed format.
+<b>-uncompressed</b> says to generate the image in uncompressed format.
+<b>-maybecompressed</b> sasy to generate whichever format is smaller
+(the compression algorithm sometimes actually makes the data larger).
+
+<DT><B>-4depth</B>
+
+<DD>
+This option makes <b>pamtopdbimg</b> create the image in 16-level
+grayscale (4 bits per pixel) format.  If you don't specify this,
+<b>pamtopdbimg</b> uses 4-level (2 bits per pixel) format.
+
+<p>This option has no effect when the input is black and white
+(maxval 1).  In that case, <b>pamtopdbimg</b> generates the monochrome
+(1 bit per pixel) format regardless.
+
+<DT><B>-notefile=</B><i>filename</i>
+
+<DD>
+Attach the note in the specified file to the image.
+<p>
+If you don't specify this, <b>pamtopdbimg</b> does not attach any note.
+
+</DL>
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<B><A HREF="pdbimgtopam.html">pdbimgtopam</A></B>,
+<B><A HREF="palmtopnm.html">palmtopnm</A></B>,
+
+<A HREF="pam.html">pam</A>,
+
+<h2 id="history">HISTORY</h2>
+
+<p><b>pamtopdbimg</b> was new in Netpbm 10.52 (September 2010).
+It was modelled after Eric A. Howe's <b>imgvtopbm</b> package, which
+dates back to September 1997.
+
+
+<HR>
+<H2 id="index">Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#history">HISTORY</A>
+</UL>
+</BODY>
+</HTML>
