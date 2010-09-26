@@ -13,8 +13,9 @@
 #include <math.h>
 
 #include "pm_c_util.h"
-#include "pgm.h"
+#include "mallocvar.h"
 #include "shhopt.h"
+#include "pgm.h"
 
 struct cmdline_info {
     /* All the information the user supplied in the command line,
@@ -37,82 +38,93 @@ struct cmdline_info {
 
 static void
 parse_command_line(int argc, char ** argv,
-                   struct cmdline_info *cmdline_p) {
+                   struct cmdline_info *cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
 -----------------------------------------------------------------------------*/
-    optStruct *option_def = malloc(100*sizeof(optStruct));
-        /* Instructions to OptParseOptions2 on how to parse our options.
+    optEntry * option_def;
+        /* Instructions to OptParseOptions3 on how to parse our options.
          */
-    optStruct2 opt;
+    optStruct3 opt;
 
     unsigned int option_def_index;
 
-    option_def_index = 0;   /* incremented by OPTENTRY */
-    OPTENTRY(0,   "bottomfirst",   OPT_FLAG,   &cmdline_p->bottomfirst,    0);
-    OPTENTRY(0,   "bt",            OPT_FLAG,   &cmdline_p->bottomfirst,    0);
-    OPTENTRY(0,   "topbottom",     OPT_FLAG,   &cmdline_p->bottomfirst,    0);
-    OPTENTRY(0,   "tb",            OPT_FLAG,   &cmdline_p->bottomfirst,    0);
-    OPTENTRY(0,   "headerskip",    OPT_UINT,   &cmdline_p->headerskip,     0);
-    OPTENTRY(0,   "rowskip",       OPT_FLOAT,  &cmdline_p->rowskip,        0);
-    OPTENTRY(0,   "bpp",           OPT_INT,    &cmdline_p->bpp,            0);
-    OPTENTRY(0,   "littleendian",  OPT_FLAG,   &cmdline_p->littleendian,   0);
-    OPTENTRY(0,   "maxval",        OPT_UINT,   &cmdline_p->maxval,         0);
+    MALLOCARRAY_NOFAIL(option_def, 100);
+
+    option_def_index = 0;   /* incremented by OPTENT3 */
+    OPTENT3(0,   "bottomfirst",   OPT_FLAG,   &cmdlineP->bottomfirst,
+            NULL,   0);
+    OPTENT3(0,   "bt",            OPT_FLAG,   &cmdlineP->bottomfirst,
+            NULL,   0);
+    OPTENT3(0,   "topbottom",     OPT_FLAG,   &cmdlineP->bottomfirst,
+            NULL,   0);
+    OPTENT3(0,   "tb",            OPT_FLAG,   &cmdlineP->bottomfirst,
+            NULL,   0);
+    OPTENT3(0,   "headerskip",    OPT_UINT,   &cmdlineP->headerskip,
+            NULL,   0);
+    OPTENT3(0,   "rowskip",       OPT_FLOAT,  &cmdlineP->rowskip,
+            NULL,   0);
+    OPTENT3(0,   "bpp",           OPT_INT,    &cmdlineP->bpp,
+            NULL,   0);
+    OPTENT3(0,   "littleendian",  OPT_FLAG,   &cmdlineP->littleendian,
+            NULL,   0);
+    OPTENT3(0,   "maxval",        OPT_UINT,   &cmdlineP->maxval,
+            NULL,   0);
 
     /* Set the defaults */
-    cmdline_p->bottomfirst = FALSE;
-    cmdline_p->headerskip = 0;
-    cmdline_p->rowskip = 0.0;
-    cmdline_p->bpp = 1;
-    cmdline_p->littleendian = 0;
-    cmdline_p->maxval = -1;
+    cmdlineP->bottomfirst = FALSE;
+    cmdlineP->headerskip = 0;
+    cmdlineP->rowskip = 0.0;
+    cmdlineP->bpp = 1;
+    cmdlineP->littleendian = 0;
+    cmdlineP->maxval = -1;
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We may have parms that are negative numbers */
 
-    optParseOptions2(&argc, argv, opt, 0);
-        /* Uses and sets argc, argv, and some of *cmdline_p and others. */
+    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+        /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (argc-1 == 0) {
-        cmdline_p->inputFileName = "-";
-        cmdline_p->autosize = TRUE;
+        cmdlineP->inputFileName = "-";
+        cmdlineP->autosize = TRUE;
     } else if (argc-1 == 1) {
-        cmdline_p->inputFileName = argv[1];
-        cmdline_p->autosize = TRUE;
+        cmdlineP->inputFileName = argv[1];
+        cmdlineP->autosize = TRUE;
     } else if (argc-1 == 2) {
-        cmdline_p->inputFileName = "-";
-        cmdline_p->autosize = FALSE;
-        cmdline_p->width = pm_parse_width(argv[1]);
-        cmdline_p->height = pm_parse_height(argv[2]);
+        cmdlineP->inputFileName = "-";
+        cmdlineP->autosize = FALSE;
+        cmdlineP->width = pm_parse_width(argv[1]);
+        cmdlineP->height = pm_parse_height(argv[2]);
     } else if (argc-1 == 3) {
-        cmdline_p->inputFileName = argv[3];
-        cmdline_p->autosize = FALSE;
-        cmdline_p->width = pm_parse_width(argv[1]);
-        cmdline_p->height = pm_parse_height(argv[2]);
+        cmdlineP->inputFileName = argv[3];
+        cmdlineP->autosize = FALSE;
+        cmdlineP->width = pm_parse_width(argv[1]);
+        cmdlineP->height = pm_parse_height(argv[2]);
     } else
         pm_error("Program takes zero, one, two, or three arguments.  You "
                  "specified %d", argc-1);
 
-    if (cmdline_p->bpp != 1 && cmdline_p->bpp != 2) 
+    if (cmdlineP->bpp != 1 && cmdlineP->bpp != 2) 
         pm_error("Bytes per pixel (-bpp) must be 1 or 2.  You specified %d.",
-                 cmdline_p->bpp);
+                 cmdlineP->bpp);
 
-    if (cmdline_p->maxval == 0)
+    if (cmdlineP->maxval == 0)
         pm_error("Maxval (-maxval) may not be zero.");
 
-    if (cmdline_p->maxval > 255 && cmdline_p->bpp == 1)
+    if (cmdlineP->maxval > 255 && cmdlineP->bpp == 1)
         pm_error("You have specified one byte per pixel, but a maxval "
-                 "too large to fit in one byte: %d", cmdline_p->maxval);
-    if (cmdline_p->maxval > 65535)
+                 "too large to fit in one byte: %d", cmdlineP->maxval);
+    if (cmdlineP->maxval > 65535)
         pm_error("Maxval must be less than 65536.  You specified %d.",
-                 cmdline_p->maxval);
+                 cmdlineP->maxval);
 
-    if (cmdline_p->rowskip && cmdline_p->autosize)
+    if (cmdlineP->rowskip && cmdlineP->autosize)
         pm_error("If you specify -rowskip, you must also give the image "
                  "dimensions.");
-    if (cmdline_p->rowskip && cmdline_p->bottomfirst)
+    if (cmdlineP->rowskip && cmdlineP->bottomfirst)
         pm_error("You canot specify both -rowskip and -bottomfirst.  This is "
                  "a limitation of this program.");
 

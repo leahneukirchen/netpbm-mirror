@@ -59,19 +59,19 @@
 #include <stdlib.h>
 
 #include "pm_c_util.h"
-#include "ppm.h"
-#include "shhopt.h"
 #include "mallocvar.h"
+#include "shhopt.h"
+#include "ppm.h"
 
 typedef unsigned char uint8;
 
 #define CHOP(x)     ((x < 0) ? 0 : ((x > 255) ? 255 : x))
 
-struct cmdline_info {
+struct cmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *input_filespec;  /* Filespec of input file */
+    const char * inputFileName;
     int width;
     int height;
 };
@@ -79,38 +79,40 @@ struct cmdline_info {
 
 
 static void
-parse_command_line(int argc, char ** argv,
-                   struct cmdline_info *cmdline_p) {
+parseCommandLine(int argc, char ** argv,
+                 struct cmdlineInfo *cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
 -----------------------------------------------------------------------------*/
 
-    optStruct *option_def = malloc(100*sizeof(optStruct));
+    optEntry * option_def;
         /* Instructions to OptParseOptions2 on how to parse our options.
          */
-    optStruct2 opt;
+    optStruct3 opt;
 
     unsigned int option_def_index;
 
-    option_def_index = 0;   /* incremented by OPTENTRY */
-    OPTENTRY(0,   "width",      OPT_INT,    &cmdline_p->width,          0);
-    OPTENTRY(0,   "height",     OPT_INT,    &cmdline_p->height,         0);
+    MALLOCARRAY_NOFAIL(option_def, 100);
+
+    option_def_index = 0;   /* incremented by OPTENT3 */
+    OPTENT3(0,   "width",      OPT_INT,    &cmdlineP->width,  NULL,   0);
+    OPTENT3(0,   "height",     OPT_INT,    &cmdlineP->height, NULL,   0);
 
     /* Set the defaults */
-    cmdline_p->width = 64;
-    cmdline_p->height = 48;
+    cmdlineP->width = 64;
+    cmdlineP->height = 48;
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
     
-    optParseOptions2(&argc, argv, opt, 0);
-        /* Uses and sets argc, argv, and some of *cmdline_p and others. */
+    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+        /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
-    if (cmdline_p->width <= 0)
+    if (cmdlineP->width <= 0)
         pm_error("-width must be positive.");
-    if (cmdline_p->height <= 0)
+    if (cmdlineP->height <= 0)
         pm_error("-height must be positive.");
 
     if (argc > 2)
@@ -118,9 +120,9 @@ parse_command_line(int argc, char ** argv,
                  "You supplied %d", argc-1);
     else {
         if (argc > 1)
-            cmdline_p->input_filespec = argv[1];
+            cmdlineP->inputFileName = argv[1];
         else
-            cmdline_p->input_filespec = "-";
+            cmdlineP->inputFileName = "-";
     }
 }
 
@@ -233,20 +235,20 @@ YUVtoPPM(const int width, const int height,
 int
 main(int argc, char **argv) {
     FILE *infile;
-    struct cmdline_info cmdline;
+    struct cmdlineInfo cmdline;
     uint8 **orig_y, **orig_cb, **orig_cr;
     pixel **ppm_image;
 
     ppm_init(&argc, argv);
 
-    parse_command_line(argc, argv, &cmdline);
+    parseCommandLine(argc, argv, &cmdline);
 
     AllocYCC(cmdline.width, cmdline.height, &orig_y, &orig_cr, &orig_cb);
     ppm_image = ppm_allocarray(cmdline.width, cmdline.height);
 
     pm_message("Reading (%dx%d):  %s\n", cmdline.width, cmdline.height, 
-               cmdline.input_filespec);
-    infile = pm_openr(cmdline.input_filespec);
+               cmdline.inputFileName);
+    infile = pm_openr(cmdline.inputFileName);
     ReadYUV(infile, cmdline.width, cmdline.height, orig_y, orig_cb, orig_cr);
     pm_close(infile);
 

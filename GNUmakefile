@@ -98,8 +98,14 @@ nonmerge: $(PRODUCT_SUBDIRS:%=%/all)
 # make works for 'make all' in the top directory, but it may still fail
 # for the aforementioned reason for other invocations.
 
-$(SUBDIRS:%=%/all): pm_config.h inttypes_netpbm.h version.h
+$(SUBDIRS:%=%/all) lib/util/all: pm_config.h inttypes_netpbm.h version.h
 $(PROG_SUBDIRS:%=%/all): lib/all $(SUPPORT_SUBDIRS:%=%/all)
+lib/all: lib/util/all
+
+.PHONY: lib/util/all
+lib/util/all:
+	$(MAKE) -C lib/util -f $(SRCDIR)/lib/util/Makefile \
+	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) all
 
 OMIT_CONFIG_RULE = 1
 OMIT_VERSION_H_RULE = 1

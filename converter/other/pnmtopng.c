@@ -118,7 +118,7 @@ struct cmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *  inputFilename;  /* '-' if stdin */
+    const char *  inputFileName;  /* '-' if stdin */
     const char *  alpha;
     unsigned int  verbose;
     unsigned int  downscale;
@@ -275,7 +275,7 @@ parseModtimeOpt(const char * const modtimeOpt,
 
 
 static void
-parseCommandLine(int argc, char ** argv,
+parseCommandLine(int argc, const char ** argv,
                  struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
@@ -383,7 +383,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
 
@@ -483,9 +483,9 @@ parseCommandLine(int argc, char ** argv,
 
 
     if (argc-1 < 1)
-        cmdlineP->inputFilename = "-";
+        cmdlineP->inputFileName = "-";
     else if (argc-1 == 1)
-        cmdlineP->inputFilename = argv[1];
+        cmdlineP->inputFileName = argv[1];
     else
         pm_error("Program takes at most one argument:  input file name");
 }
@@ -2846,20 +2846,33 @@ displayVersion() {
 
     fprintf(stderr,"Pnmtopng version %s.\n", NETPBM_VERSION);
 
-    /* We'd like to display the version of libpng with which we're
-       linked, as we do for zlib, but it isn't practical.
-       While libpng is capable of telling you what it's level
-       is, different versions of it do it two different ways: with
-       png_libpng_ver or with png_get_header_ver.  So we have to be
-       compiled for a particular version just to find out what
-       version it is! It's not worth having a link failure, much
-       less a compile failure, if we choose wrong.
-       png_get_header_ver is not in anything older than libpng 1.0.2a
-       (Dec 1998).  png_libpng_ver is not there in libraries built
-       without USE_GLOBAL_ARRAYS.  Cygwin versions are normally built
-       without USE_GLOBAL_ARRAYS.  -bjh 2002.06.17.
+    /* We'd like to display the version of libpng with which we're _linked_ as
+       well as the one with which we're compiled, but it isn't practical.
+       While libpng is capable of telling you what it's level is, different
+       versions of it do it two different ways: with png_libpng_ver or with
+       png_get_header_ver.  So we have to be compiled for a particular version
+       just to find out what version it is! It's not worth having a link
+       failure, much less a compile failure, if we choose wrong.
+       png_get_header_ver is not in anything older than libpng 1.0.2a (Dec
+       1998).  png_libpng_ver is not there in libraries built without
+       USE_GLOBAL_ARRAYS.  Cygwin versions are normally built without
+       USE_GLOBAL_ARRAYS.  -bjh 2002.06.17.
+
+       We'd also like to display the version of libz with which we're linked,
+       with zlib_version (which nowadays is a macro for zlibVersion), but we
+       can't for reasons of modularity: We don't really link libz.  libpng
+       does.  It's none of our business whether libz is even present.  And at
+       least on Mac OS X, we can't access libz's symbols from here -- we get
+       undefined reference to zlibVersion.  We would have to explicitly link
+       libz just to find out its version.  The right way to do this is for a
+       subroutine in libpng to give us the information.  Until 10.07.08, we
+       did display zlib_version, but for years Mac OS X build was failing (and
+       we erroneously thought it was a libpng-config --ldflags bug).
+
+       We _do_ use the compile-time part of libpng (<png.h>), because it's
+       part of the interface to libpng.
     */
-    fprintf(stderr, "   Compiled with libpng %s.\n",
+    fprintf(stderr, "   Pnmtopng Compiled with libpng %s.\n",
             PNG_LIBPNG_VER_STRING);
     fprintf(stderr, "   Pnmtopng (not libpng) compiled with zlib %s.\n",
             ZLIB_VERSION);
@@ -2869,7 +2882,7 @@ displayVersion() {
 
 
 int 
-main(int argc, char *argv[]) {
+main(int argc, const char * argv[]) {
 
     struct cmdlineInfo cmdline;
     FILE * ifP;
@@ -2879,7 +2892,7 @@ main(int argc, char *argv[]) {
 
     int errorlevel;
     
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
     
     parseCommandLine(argc, argv, &cmdline);
     
@@ -2889,7 +2902,7 @@ main(int argc, char *argv[]) {
     }
     verbose = cmdline.verbose;
     
-    ifP = pm_openr_seekable(cmdline.inputFilename);
+    ifP = pm_openr_seekable(cmdline.inputFileName);
     
     if (cmdline.alpha)
         afP = pm_openr(cmdline.alpha);

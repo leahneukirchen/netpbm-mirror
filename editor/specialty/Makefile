@@ -11,6 +11,7 @@ PORTBINARIES = pamdeinterlace \
 	       pammixinterlace \
 	       pamoil \
 	       pampop9 \
+	       pampaintspill \
 	       pbmlife \
 	       pgmabel \
 	       pgmbentley \

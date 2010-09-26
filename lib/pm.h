@@ -273,6 +273,16 @@ pm_readbiglongu(FILE *          const ifP,
 }
 
 int
+pm_readbiglong2(FILE * const ifP, 
+                int32_t * const lP);
+
+static __inline__ int
+pm_readbiglongu2(FILE *     const ifP,
+                 uint32_t * const lP) {
+    return pm_readbiglong2(ifP, (int32_t *) lP);
+}
+
+int
 pm_writebiglong(FILE * const ofP,
                 long   const l);
 
@@ -310,6 +320,16 @@ static __inline__ int
 pm_readlittlelongu(FILE *          const ifP,
                    unsigned long * const lP) {
     return pm_readlittlelong(ifP, (long *) lP);
+}
+
+int
+pm_readlittlelong2(FILE *    const ifP,
+                   int32_t * const lP);
+
+static __inline__ int
+pm_readlittlelong2u(FILE *     const ifP,
+                    uint32_t * const lP) {
+    return pm_readlittlelong2(ifP, (int32_t *) lP);
 }
 
 int

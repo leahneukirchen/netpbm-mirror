@@ -81,10 +81,13 @@ extra_staticlib: $(EXTRA_STATICLIB)
 # type, but request a static library in addition.
 #----------------------------------------------------------------------------
 
-$(LIBOBJECTS): %.o: %.c importinc
 # Note that the user may have configured -I options into CPPFLAGS/CFLAGS.
-	$(CC) -c $(INCLUDES) -DNDEBUG $(CPPFLAGS) $(CFLAGS) $(CFLAGS_SHLIB) \
-	  $(CFLAGS_PERSONAL) $(CADD) -o $@ $<
+CFLAGS_ALL = $(INCLUDES) -DNDEBUG $(CPPFLAGS) $(CFLAGS) $(CFLAGS_SHLIB) \
+ $(CFLAGS_PERSONAL) $(CADD)
+
+$(LIBOBJECTS): %.o: %.c importinc
+# We have to get the command all on one line to avoid messy make messages
+	$(CC) -c $(CFLAGS_ALL) -o $@ $<
 
 MAJ = $(NETPBM_MAJOR_RELEASE)
 MIN = $(NETPBM_MINOR_RELEASE)

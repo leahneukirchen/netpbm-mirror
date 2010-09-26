@@ -19,10 +19,7 @@
 
 #include "config.h"
 
-#if STDC_HEADERS
-#	include <stdlib.h>
-#endif /* not STDC_HEADERS */
-
+#include <stdlib.h>
 #include <string.h>
 
 #include "types.h"

@@ -12,6 +12,17 @@
 
 #include "pnm.h"
 
+/* Implementation note: A suitably advanced compiler, such as Gcc 4,
+   implements the for statements in our algorithm with instructions that do 16
+   bytes at a time on CPUs that have them (movdqa on x86).  This is "tree
+   vectorization."  A more primitive compiler will do one byte at a time; we
+   could change the code to use libnetpbm's wordaccess.h facility and it will
+   do one word at a time.  (But we don't think it's worth complicating the
+   code for that).
+*/
+
+
+
 #define CHARBITS (sizeof(unsigned char)*8)
 
 
@@ -25,9 +36,6 @@ invertPbm(FILE * const ifP,
 /*----------------------------------------------------------------------------
    Invert a PBM image.  Use the "packed" PBM functions for speed.
 -----------------------------------------------------------------------------*/
-    /* We could make this faster by inverting whole words at a time,
-       using libnetpbm's wordaccess.h facility.
-    */
     int const colChars = pbm_packed_bytes(cols);
 
     unsigned char * bitrow; 

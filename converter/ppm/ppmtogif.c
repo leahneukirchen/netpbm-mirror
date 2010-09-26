@@ -68,7 +68,7 @@ handleLatex2htmlHack(void) {
   This program used to put out a "usage" message when it saw an option
   it didn't understand.  Latex2html's configure program does a
   ppmtogif -h (-h was never a valid option) to elicit that message and
-  then parses the message to see if it included the strings
+  then parses the message to see if it includes the strings
   "-interlace" and "-transparent".  That way it knows if the
   'ppmtogif' program it found has those options or not.  I don't think
   any 'ppmtogif' you're likely to find today lacks those options, but

@@ -20,9 +20,7 @@
 #include "config.h"
 
 #include <string.h>
-#if STDC_HEADERS
-#   include <stdlib.h>
-#endif /* not STDC_HEADERS */
+#include <stdlib.h>
 
 #include "nstring.h"
 

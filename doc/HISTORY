@@ -4,18 +4,35 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-10.09.22 BJH  RELEASE 10.51.05
+10.09.26 BJH  Release 10.52.00
+
+              Add pamtopdbimg, pdbimgtopam.
+
+              Add pamrecolor.  Thanks Scott Pakin.
+
+              anytopnm: Use 'pngtopam' shell command instead of 'pngtopnm'.
+
+              pnmtopng:  -libversion doesn't report level of linked libz.
+              It was a modularity violation and caused build failures on
+              Mac OS X, because pnmtopng per se doesn't know about libz --
+              it's used by libpng.
+
+              libnetpbm: add pm_readbiglong2, pm_readbiglong2u,
+              pm_readlittlelong2, pm_readlittlelong2u: These use the proper
+              32 bit integer types instead of "long".  (But the old ones
+              still work in legacy code because long is always at least 32
+              bits).
 
               pnmconvol: fix reversed sense of -nooffset.  Introduced in
               10.49.
 
-10.09.18 BJH  RELEASE 10.51.04
-
               ppmtompeg: fix crash with free of unallocated memory.
+              Broken after 10.18, not later than 10.26.
 
-10.08.28 BJH  Release 10.51.03
+              Build: fix parallel make - multiple simultaneous attempts to
+              build lib/util/importinc.
 
-              Anytopnm: Use 'pngtopam' shell command instead of 'pngtopnm'.
+              Build: don't fail due to SIGRTMIN, SIGRTMAX being undefined.
 
               Build: don't expect snprintf() to exist.
 
@@ -23,17 +40,6 @@ CHANGE HISTORY
 
               Build: fix PNGVER.  Thanks Matthew Fischer
               <futhark@users.sourceforge.net>.
-
-10.07.27 BJH  Release 10.51.02
-
-              Pnmtopng:  -libversion doesn't report level of linked libz.
-              It was a modularity violation and caused build failures on
-              Mac OS X, because Pnmtopng per se doesn't know about libz --
-              it's used by libpng.
-
-10.07.06 BJH  Release 10.51.01
-
-              Build: don't fail due to SIGRTMIN, SIGRTMAX being undefined.
 
 10.06.27 BJH  Release 10.51.00
 

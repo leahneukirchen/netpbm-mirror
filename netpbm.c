@@ -67,6 +67,7 @@ main(int argc, char *argv[]) {
        or not.  But that's too much work.
 
     TRY("ppmtojpeg", main_pnmtojpeg); 
+    TRY("pngtopnm", main_pngtopam); 
     */
     TRY("bmptoppm", main_bmptopnm);
     TRY("pgmnorm", main_pnmnorm);
