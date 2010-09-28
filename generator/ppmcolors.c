@@ -45,7 +45,7 @@ parseCommandLine(int argc, char ** argv, struct cmdlineInfo *cmdlineP) {
     /* defaults */
     cmdlineP->maxval = 5;
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (cmdlineP->maxval < 1)

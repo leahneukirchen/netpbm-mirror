@@ -175,7 +175,7 @@ parseCommandLine( int              argc,
     opt.allowNegNum   = FALSE;  /* No negative number parameters */
 
     /* Parse the command line */
-    optParseOptions3( &argc, argv, opt, sizeof( opt ), 0 );
+    pm_optParseOptions3( &argc, argv, opt, sizeof( opt ), 0 );
 
     infoP->forceColor = forceColorSpec;
     infoP->selected = selectedSpec;

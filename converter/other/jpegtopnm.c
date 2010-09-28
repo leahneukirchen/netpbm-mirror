@@ -173,7 +173,7 @@ parseCommandLine(int                  const argc,
    not change argv at all.
 -----------------------------------------------------------------------------*/
     optEntry *option_def;
-        /* Instructions to optParseOptions3 on how to parse our options.
+        /* Instructions to pm_optParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
 
@@ -216,12 +216,12 @@ parseCommandLine(int                  const argc,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We may have parms that are negative numbers */
 
-    /* Make private copy of arguments for optParseOptions to corrupt */
+    /* Make private copy of arguments for pm_optParseOptions to corrupt */
     argc_parse = argc;
     for (i=0; i < argc; ++i)
         argv_parse[i] = argv[i];
 
-    optParseOptions3( &argc_parse, argv_parse, opt, sizeof(opt), 0);
+    pm_optParseOptions3( &argc_parse, argv_parse, opt, sizeof(opt), 0);
         /* Uses and sets argc_parse, argv_parse, 
            and some of *cmdlineP and others. */
 

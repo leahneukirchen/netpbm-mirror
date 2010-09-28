@@ -48,7 +48,7 @@ parseCommandLine(int argc, char ** argv,
     OPTENT3(0, "resolution",   OPT_UINT,    &cmdlineP->resolution,  
             &resolutionSpec, 0);
     
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
     
     if (argc-1 > 1)
         pm_error("Too many arguments: %d.  "

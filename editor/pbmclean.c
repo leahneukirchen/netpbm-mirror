@@ -52,7 +52,7 @@ parseCommandLine(int argc, const char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = TRUE;  /* We sort of allow negative numbers as parms */
 
-    optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     free(option_def);
@@ -71,7 +71,7 @@ parseCommandLine(int argc, const char ** argv,
            backward compatibility, since Pbmclean used to have
            unconventional syntax where a -N option was used instead of
            the current -minneighbors option.  The only reason -N didn't
-           get processed by pm_optParseOptions3() is that it looked
+           get processed by pm_pm_optParseOptions3() is that it looked
            like a negative number parameter instead of an option.  
            If we find a -N, we make like it was a -minneighbors=N option.
         */

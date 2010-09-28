@@ -78,7 +78,7 @@ parseCommandLine(int argc, const char ** argv,
     opt.short_allowed = FALSE;
     opt.allowNegNum = FALSE;
 
-    optParseOptions3(&argc, (char**)argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char**)argv, opt, sizeof(opt), 0);
 
     if (!dataSpec)
         cmdlineP->data = NULL;

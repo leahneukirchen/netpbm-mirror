@@ -381,7 +381,7 @@ parseCommandLine(int argc, const char ** const argv,
     opt.short_allowed = 0;
     opt.allowNegNum = 0;
 
-    optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
 
     if (rmultSpec || gmultSpec || bmultSpec) {
         /* If the user explicitly specified RGB multipliers, ensure that

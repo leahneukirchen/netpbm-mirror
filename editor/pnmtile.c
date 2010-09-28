@@ -52,7 +52,7 @@ parseCommandLine(int argc, const char ** argv,
 
     OPTENTINIT;
 
-    optParseOptions3(&argc, (char**)argv, opt, sizeof opt, 0);
+    pm_optParseOptions3(&argc, (char**)argv, opt, sizeof opt, 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (argc-1 < 2)

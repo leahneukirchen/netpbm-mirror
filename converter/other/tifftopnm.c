@@ -128,7 +128,7 @@ parseCommandLine(int argc, const char ** const argv,
     OPTENT3(0,   "alphaout",   
             OPT_STRING, &cmdlineP->alphaFilename, &alphaSpec,  0);
 
-    optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
 
     if (argc - 1 == 0)
         cmdlineP->inputFilename = strdup("-");  /* he wants stdin */

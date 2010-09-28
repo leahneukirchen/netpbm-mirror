@@ -71,7 +71,7 @@ parseCommandLine (int argc, char ** argv,
    was passed to us as the argv array.  We also trash *argv.
 -----------------------------------------------------------------------------*/
     optEntry * option_def;
-        /* Instructions to optParseOptions3 on how to parse our options.
+        /* Instructions to pm_optParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
 
@@ -108,7 +108,7 @@ parseCommandLine (int argc, char ** argv,
 
     cmdlineP->missingcolor = NULL;  /* default value */
     
-    optParseOptions3( &argc, argv, opt, sizeof(opt), 0 );
+    pm_optParseOptions3( &argc, argv, opt, sizeof(opt), 0 );
         /* Uses and sets argc, argv, and some of *cmdline_p and others. */
 
     if (cmdlineP->floyd && nofloyd)

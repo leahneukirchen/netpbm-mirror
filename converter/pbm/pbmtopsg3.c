@@ -60,7 +60,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;
     opt.allowNegNum = FALSE;
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
 
     if (argc-1 == 0)
         cmdlineP->inputFilespec = "-";

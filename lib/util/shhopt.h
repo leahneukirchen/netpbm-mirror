@@ -36,7 +36,7 @@ main ( int argc, char **argv ) {
     opt.allowNegNum = 1;
 
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
     
 
     printf("argc=%d\n", argc);
@@ -99,7 +99,7 @@ typedef enum {
 
 typedef struct {
     /* This structure describes a single program option in a form for
-     use by the optParseOptions() or optParseOptions2() function.
+     use by the pm_optParseOptions() or pm_optParseOptions2() function.
     */
     char       shortName;  /* short option name. */
     const char *longName;  /* long option name, not including '--'. */
@@ -111,7 +111,7 @@ typedef struct {
     
 typedef struct {
     /* This structure describes a single program option in a form for
-     use by the optParseOptions3() function.
+     use by the pm_optParseOptions3() function.
     */
     char       shortName;  /* short option name. */
     const char *longName;  /* long option name, not including '--' or '-' */
@@ -132,7 +132,7 @@ typedef struct {
 
 typedef struct {
     /* This structure describes the options of a program in a form for
-       use with the optParseOptions2() function.
+       use with the pm_optParseOptions2() function.
        */
     unsigned char short_allowed;  /* boolean */
         /* The syntax may include short (i.e. one-character) options.
@@ -149,7 +149,7 @@ typedef struct {
 } optStruct2;
 
 typedef struct {
-    /* Same as optStruct2, but for optParseOptions3() */
+    /* Same as optStruct2, but for pm_optParseOptions3() */
     unsigned char short_allowed;  
     unsigned char allowNegNum;    
     optEntry *opt_table;
@@ -219,13 +219,13 @@ struct optNameValue {
 
         
 void optSetFatalFunc(void (*f)(const char *, ...));
-void optParseOptions(int *argc, char *argv[],
+void pm_optParseOptions(int *argc, char *argv[],
 		     optStruct opt[], int allowNegNum);
 void
-optParseOptions2(int * const argc_p, char *argv[], const optStruct2 opt, 
+pm_optParseOptions2(int * const argc_p, char *argv[], const optStruct2 opt, 
                  const unsigned long flags);
 void
-optParseOptions3(int * const argc_p, char *argv[], const optStruct3 opt, 
+pm_optParseOptions3(int * const argc_p, char *argv[], const optStruct3 opt, 
                  const unsigned int optStructSize, const unsigned long flags);
 
 void
