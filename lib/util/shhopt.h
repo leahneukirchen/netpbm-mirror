@@ -218,9 +218,12 @@ struct optNameValue {
 
 
         
-void optSetFatalFunc(void (*f)(const char *, ...));
-void pm_optParseOptions(int *argc, char *argv[],
-		     optStruct opt[], int allowNegNum);
+void
+pm_optSetFatalFunc(void (*f)(const char *, ...));
+
+void
+pm_optParseOptions(int *argc, char *argv[],
+                   optStruct opt[], int allowNegNum);
 void
 pm_optParseOptions2(int * const argc_p, char *argv[], const optStruct2 opt, 
                  const unsigned long flags);
@@ -229,7 +232,7 @@ pm_optParseOptions3(int * const argc_p, char *argv[], const optStruct3 opt,
                  const unsigned int optStructSize, const unsigned long flags);
 
 void
-optDestroyNameValueList(struct optNameValue * const list);
+pm_optDestroyNameValueList(struct optNameValue * const list);
 
 #ifdef __cplusplus
 }

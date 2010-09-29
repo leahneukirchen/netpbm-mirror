@@ -514,10 +514,11 @@ optExecute(optEntry  const opt, char *arg, int lng)
  |                        that _must_ abort the program.
  */
 void
-optSetFatalFunc(void (*f)(const char *, ...))
-{
+pm_optSetFatalFunc(void (*f)(const char *, ...)) {
+
     optFatal = f;
 }
+
 
 
 /*------------------------------------------------------------------------
@@ -1008,7 +1009,7 @@ pm_optParseOptions3(int * const argc_p, char *argv[], const optStruct3 opt,
 
 
 void
-optDestroyNameValueList(struct optNameValue * const list) {
+pm_optDestroyNameValueList(struct optNameValue * const list) {
 
     unsigned int i;
 
