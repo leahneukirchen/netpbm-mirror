@@ -6,6 +6,10 @@ CHANGE HISTORY
 
 Not yet  BJH  Release 10.53.00
 
+              pamtopdbimg: fix corrupted output image.  Thanks Scott Pakin.
+
+              pdbimgtopam: fix corrupted output image.  Thanks Scott Pakin.
+
               Rename optParseOptions3 to pm_optParseOptions3, etc.
 
 10.09.26 BJH  Release 10.52.00
