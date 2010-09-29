@@ -437,7 +437,7 @@ g16pack(tuple *         const tupleRow,
 
     for (col = 0, off = 0, seg = &outData[0]; col < paddedWidth; ++col) {
         if (col < pamP->width)
-            setg16pixel(*seg, 16 - tupleRow[col][0] * 16 / pamP->maxval, off);
+            setg16pixel(*seg, 15 - tupleRow[col][0] * 15 / pamP->maxval, off);
         else
             /* Pad on the right with white */
             setgpixel(*seg, 0, off);
@@ -468,7 +468,7 @@ gpack(tuple *         const tupleRow,
 
     for (col = 0, off = 0, seg = &outData[0]; col < paddedWidth; ++col) {
         if (col < pamP->width)
-            setgpixel(*seg, 4 - tupleRow[col][0] * 4 / pamP->maxval, off);
+            setgpixel(*seg, 3 - tupleRow[col][0] * 3 / pamP->maxval, off);
         else
             /* Pad on the right with white */
             setgpixel(*seg, 0, off);

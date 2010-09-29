@@ -618,7 +618,7 @@ munpack(const uint8_t * const p,
         uint8_t *       const b,
         int             const w) {
 
-    static const uint8_t pal[] = {0x00, 0x01};
+    static const uint8_t pal[] = {PAM_BW_WHITE, PAM_BLACK};
     const uint8_t * seg;
     unsigned int i;
 

@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+10.09.29 BJH  Release 10.52.01
+
+              pamtopdbimg: fix corrupted output image.  Thanks Scott Pakin.
+
+              pdbimgtopam: fix corrupted output image.  Thanks Scott Pakin.
+
 10.09.26 BJH  Release 10.52.00
 
               Add pamtopdbimg, pdbimgtopam.
