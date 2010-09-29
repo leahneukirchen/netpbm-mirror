@@ -13,7 +13,7 @@
  *
  * ----------------------------------------------------------------------
  *
- * Copyright (C) 2006 Scott Pakin <scott+pbm@pakin.org>
+ * Copyright (C) 2006, 2010 Scott Pakin <scott+pbm@pakin.org>
  *
  * All rights reserved.
  *
@@ -51,9 +51,10 @@
 
 #include "pm_config.h"
 #include "pm_c_util.h"
-#include "pam.h"
-#include "shhopt.h"
 #include "mallocvar.h"
+#include "nstring.h"
+#include "shhopt.h"
+#include "pam.h"
 
 /* Define a few helper macros. */
 #define round2int(X) ((int)((X)+0.5))      /* Nonnegative numbers only */
@@ -80,6 +81,9 @@ struct cmdlineInfo {
     unsigned int xshift;         /* -xshift option */
     unsigned int yshift;         /* -yshift option */
     const char * patFilespec;    /* -patfile option.  Null if none */
+    const char * texFilespec;    /* -texfile option.  Null if none */
+    const char * bgColorName;    /* -bgcolor option */
+    unsigned int smoothing;      /* -smoothing option */
     unsigned int randomseed;     /* -randomseed option */
     enum outputType outputType;  /* Type of output file */
 };
@@ -87,9 +91,9 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine(int                 argc,
-                 char **             argv,
-                 struct cmdlineInfo *cmdlineP ) {
+parseCommandLine(int                  argc,
+                 const char **        argv,
+                 struct cmdlineInfo * cmdlineP ) {
 /*----------------------------------------------------------------------------
    Parse program command line described in Unix standard form by argc
    and argv.  Return the information in the options as *cmdlineP.
@@ -107,8 +111,9 @@ parseCommandLine(int                 argc,
 
     unsigned int option_def_index;
 
-    unsigned int patfileSpec, dpiSpec, eyesepSpec, depthSpec,
-        guidesizeSpec, magnifypatSpec, xshiftSpec, yshiftSpec, randomseedSpec;
+    unsigned int patfileSpec, texfileSpec, dpiSpec, eyesepSpec, depthSpec,
+        guidesizeSpec, magnifypatSpec, xshiftSpec, yshiftSpec, randomseedSpec,
+        bgColorNameSpec, smoothingSpec;
 
     unsigned int blackandwhite, grayscale, color;
 
@@ -146,16 +151,21 @@ parseCommandLine(int                 argc,
             &yshiftSpec,              0);
     OPTENT3(0, "patfile",         OPT_STRING, &cmdlineP->patFilespec,
             &patfileSpec,             0);
+    OPTENT3(0, "texfile",         OPT_STRING, &cmdlineP->texFilespec,
+            &texfileSpec,             0);
+    OPTENT3(0, "bgcolor",         OPT_STRING, &cmdlineP->bgColorName,
+            &bgColorNameSpec,         0);
     OPTENT3(0, "randomseed",      OPT_UINT,   &cmdlineP->randomseed,
             &randomseedSpec,          0);
+    OPTENT3(0, "smoothing",       OPT_UINT,   &cmdlineP->smoothing,
+            &smoothingSpec,           0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3( &argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
-
 
     if (blackandwhite + grayscale + color == 0)
         cmdlineP->outputType = OUTPUT_BW;
@@ -174,14 +184,20 @@ parseCommandLine(int                 argc,
     }
     if (!patfileSpec)
         cmdlineP->patFilespec = NULL;
+    if (!texfileSpec)
+        cmdlineP->texFilespec = NULL;
+    if (!bgColorNameSpec)
+        cmdlineP->bgColorName = NULL;
+    if (!smoothingSpec)
+        cmdlineP->smoothing = 0;
 
     if (!dpiSpec)
-        cmdlineP->dpi = 96;
+        cmdlineP->dpi = 100;
     else if (cmdlineP->dpi < 1)
         pm_error("The argument to -dpi must be a positive integer");
 
     if (!eyesepSpec)
-        cmdlineP->eyesep = 2.5;
+        cmdlineP->eyesep = 2.56;
     else if (cmdlineP->eyesep <= 0.0)
         pm_error("The argument to -eyesep must be a positive number");
 
@@ -197,6 +213,13 @@ parseCommandLine(int                 argc,
             pm_error("-maxval must be at most %u.  You specified %u",
                      PNM_OVERALLMAXVAL, cmdlineP->maxval);
     }
+    if (bgColorNameSpec && !texfileSpec)
+        pm_message("warning: -bgcolor has no effect "
+                   "except in conjunction with -texfile");
+
+    if (smoothingSpec && !texfileSpec)
+        pm_message("warning: -smoothing has no effect "
+                   "except in conjunction with -texfile");
 
     if (!guidesizeSpec)
         cmdlineP->guidesize = 0;
@@ -232,6 +255,14 @@ parseCommandLine(int                 argc,
     if (cmdlineP->patFilespec && cmdlineP->maxvalSpec)
         pm_error("-maxval is not valid with -patfile");
 
+    if (cmdlineP->texFilespec && blackandwhite)
+        pm_error("-blackandwhite is not valid with -texfile");
+    if (cmdlineP->texFilespec && grayscale)
+        pm_error("-grayscale is not valid with -texfile");
+    if (cmdlineP->texFilespec && color)
+        pm_error("-color is not valid with -texfile");
+    if (cmdlineP->texFilespec && cmdlineP->maxvalSpec)
+        pm_error("-maxval is not valid with -texfile");
 
     if (argc-1 < 1)
         cmdlineP->inputFilespec = "-";
@@ -282,13 +313,23 @@ typedef tuple coord2Color(struct outGenerator *, int, int);
     /* A type to use for functions that map a 2-D coordinate to a color. */
 typedef void outGenStateTerm(struct outGenerator *);
 
+typedef struct {
+    struct pam   pam;
+    tuple **     imageData;
+    tuple        bgColor;
+    bool         replaceBgColor;
+        /* replace background color with pattern color */
+    unsigned int smoothing;
+        /* Number of background-smoothing iterations to perform */
+} texState;
 
 typedef struct outGenerator {
-    struct pam pam;
-    coord2Color * getTuple;
+    struct pam        pam;
+    coord2Color *     getTuple;
         /* Map from a height-map (x,y) coordinate to a tuple */
     outGenStateTerm * terminateState;
-    void * stateP;
+    void *            stateP;
+    texState *        textureP;
 } outGenerator;
 
 
@@ -466,7 +507,7 @@ initPatternPixel(outGenerator *     const outGenP,
     MALLOCVAR_NOFAIL(stateP);
 
     assert(cmdline.patFilespec);
-    
+
     patternFileP = pm_openr(cmdline.patFilespec);
 
     stateP->patTuples =
@@ -500,7 +541,7 @@ createoutputGenerator(struct cmdlineInfo const cmdline,
                       outGenerator **    const outputGeneratorPP) {
 
     outGenerator * outGenP;
-    
+
     MALLOCVAR_NOFAIL(outGenP);
 
     outGenP->pam.size   = sizeof(struct pam);
@@ -637,7 +678,7 @@ makeStereoRow(const struct pam * const inPamP,
               double             const eyesep,
               unsigned int       const dpi) {
 
-#define Z(X) (1.0-inRow[X][0]/(double)inPamP->maxval)
+#define Z(X) (inRow[X][0]/(double)inPamP->maxval)
 
     int const width       = inPamP->width;
     int const pixelEyesep = round2int(eyesep * dpi);
@@ -709,6 +750,209 @@ makeMaskRow(const struct pam * const outPamP,
 
 
 static void
+computeFixedPoint(const int *  const same,
+                  int *        const sameFp,
+                  unsigned int const width) {
+/*----------------------------------------------------------------------------
+  Compute the fixed point of same[] (i.e., sameFp[x] is
+  same[same[same[...[same[x]]...]]]).
+-----------------------------------------------------------------------------*/
+    int col;
+
+    for (col = width; col >= 0; --col) {
+        if (same[col] != col)
+            sameFp[col] = sameFp[same[col]];
+        else {
+            if (col < width-1)
+                sameFp[col] = sameFp[col + 1] - 1;
+            else
+                sameFp[col] = col;
+        }
+    }
+}
+
+
+
+static void
+averageFromPattern(outGenerator * const outGenP, 
+                   const tuple *  const textureRow,
+                   const int *    const same,
+                   int *          const sameFp,
+                   const tuple *  const outRow,
+                   unsigned int * const tuplesPerCol) {
+/*----------------------------------------------------------------------------
+  Average the color of each non-background pattern tuple to every column that
+  should have the same color.
+-----------------------------------------------------------------------------*/
+    const struct pam * const pamP = &outGenP->pam;
+    tuple const bgColor = outGenP->textureP->bgColor;
+
+    int col;
+
+    /* Initialize the tuple sums to zero. */
+
+    for (col = 0; col < pamP->width; ++col) {
+        unsigned int plane;
+        for (plane = 0; plane < pamP->depth; ++plane)
+            outRow[col][plane] = 0;
+        tuplesPerCol[col] = 0;
+    }
+
+    /* Accumulate the color of each non-background pattern tuple to
+       every column that should have the same color.
+    */
+    for (col = pamP->width-1; col >= 0; --col) {
+        tuple onetuple = textureRow[(col+same[col])/2];
+        int targetcol = sameFp[col];
+        int eqcol;
+
+        if (!pnm_tupleequal(pamP, onetuple, bgColor))
+            for (eqcol = pamP->width-1; eqcol >= 0; --eqcol)
+                if (sameFp[eqcol] == targetcol) {
+                    unsigned int plane;
+                    for (plane = 0; plane < pamP->depth; ++plane)
+                        outRow[eqcol][plane] += onetuple[plane];
+                    tuplesPerCol[eqcol]++;
+                }
+    }
+    /* Take the average of all colors associated with each column.
+       Tuples that can be any color are assigned the same color as was
+       previously assigned to their fixed-point column.
+    */
+    for (col = 0; col < pamP->width; ++col) {
+        if (tuplesPerCol[col] > 0) {
+            unsigned int plane;
+            for (plane = 0; plane < pamP->depth; ++plane)
+                outRow[col][plane] /= tuplesPerCol[col];
+        } else
+            pnm_assigntuple(pamP, outRow[col], bgColor);
+    }
+}
+
+
+
+static void
+smoothOutSpeckles(outGenerator * const outGenP,
+                  unsigned int * const tuplesPerCol,
+                  tuple *        const rowBuffer,
+                  const tuple *  const outRow) {
+/*----------------------------------------------------------------------------
+  Smooth out small speckles of the background color lying between other
+  colors.
+-----------------------------------------------------------------------------*/
+    const struct pam * const pamP = &outGenP->pam;
+    tuple const bgColor = outGenP->textureP->bgColor;
+
+    unsigned int i;
+                          
+    for (i = 0; i < outGenP->textureP->smoothing; ++i) {
+        int col;
+        tuple * const scratchrow = rowBuffer;
+        for (col = pamP->width-2; col >= 1; --col) {
+            if (tuplesPerCol[col] == 0) {
+                /* Replace a background tuple with the average of its
+                   left and right neighbors.
+                */
+                unsigned int plane;
+                for (plane = 0; plane < pamP->depth; ++plane)
+                    scratchrow[col][plane] = 0;
+                if (!pnm_tupleequal(pamP, outRow[col-1], bgColor)) {
+                    for (plane = 0; plane < pamP->depth; ++plane)
+                        scratchrow[col][plane] += outRow[col-1][plane];
+                    tuplesPerCol[col]++;
+                }
+                if (!pnm_tupleequal(pamP, outRow[col+1], bgColor)) {
+                    for (plane = 0; plane < pamP->depth; ++plane)
+                        scratchrow[col][plane] += outRow[col+1][plane];
+                    tuplesPerCol[col]++;
+                }
+                if (tuplesPerCol[col] > 0)
+                    for (plane = 0; plane < pamP->depth; ++plane)
+                        scratchrow[col][plane] /= tuplesPerCol[col];
+                else
+                    pnm_assigntuple(pamP, scratchrow[col], outRow[col]);
+            } else
+                pnm_assigntuple(pamP, scratchrow[col], outRow[col]);
+        }
+        for (col = 0; col < pamP->width-1; ++col)
+            pnm_assigntuple(pamP, outRow[col], scratchrow[col]);
+    }
+}
+
+
+
+static void
+replaceRemainingBackgroundWithPattern(outGenerator * const outGenP,
+                                      const int *    const same,
+                                      unsigned int   const row,
+                                      const tuple *  const outRow) {
+
+    const struct pam * const pamP = &outGenP->pam;
+    tuple const bgColor = outGenP->textureP->bgColor;
+
+    if (outGenP->textureP->replaceBgColor) {
+        int col;
+        for (col = outGenP->pam.width-1; col >= 0; --col) {
+            if (pnm_tupleequal(pamP, outRow[col], bgColor)) {
+                bool const duplicate = (same[col] != col);
+
+                tuple newtuple;
+
+                if (duplicate) {
+                    assert(same[col] > col);
+                    assert(same[col] < outGenP->pam.width);
+
+                    newtuple = outRow[same[col]];
+                } else
+                    newtuple = outGenP->getTuple(outGenP, col, row);
+
+                pnm_assigntuple(pamP, outRow[col], newtuple);
+            }
+        }
+    }
+}
+
+
+
+static void
+makeImageRowMts(outGenerator * const outGenP,
+                unsigned int   const row,
+                const int *    const same,
+                int *          const sameFp,
+                unsigned int * const tuplesPerCol,
+                tuple *        const rowBuffer,
+                const tuple *  const outRow) {
+/*----------------------------------------------------------------------------
+  Make a row of a mapped-texture stereogram.
+-----------------------------------------------------------------------------*/
+    /* This is an original algorithm by Scott Pakin. */
+
+    /*
+      Compute the fixed point of same[] (i.e., sameFp[x] is
+      same[same[same[...[same[x]]...]]]).
+    */
+    computeFixedPoint(same, sameFp, outGenP->pam.width);
+
+    /* Average the color of each non-background pattern tuple to
+       every column that should have the same color.
+    */
+    averageFromPattern(outGenP, outGenP->textureP->imageData[row],
+                       same, sameFp,
+                       outRow, tuplesPerCol);
+
+    /* Smooth out small speckles of the background color lying between
+       other colors.
+    */
+    smoothOutSpeckles(outGenP, tuplesPerCol, rowBuffer, outRow);
+
+    /* Replace any remaining background tuples with a pattern tuple. */
+
+    replaceRemainingBackgroundWithPattern(outGenP, same, row, outRow);
+}
+
+
+
+static void
 makeImageRow(outGenerator * const outGenP,
              int            const row,
              const int *    const same,
@@ -720,26 +964,24 @@ makeImageRow(outGenerator * const outGenP,
   other columns in the row.
 
   same[N] > N means Column N should be identical to Column same[N].
-  
+
   same[N] < N is not allowed.
 -----------------------------------------------------------------------------*/
     int col;
     for (col = outGenP->pam.width-1; col >= 0; --col) {
         bool const duplicate = (same[col] != col);
-        
+
         tuple newtuple;
-        unsigned int plane;
 
         if (duplicate) {
             assert(same[col] > col);
             assert(same[col] < outGenP->pam.width);
 
             newtuple = outRow[same[col]];
-        } else 
+        } else
             newtuple = outGenP->getTuple(outGenP, col, row);
 
-        for (plane = 0; plane < outGenP->pam.depth; ++plane)
-            outRow[col][plane] = newtuple[plane];
+        pnm_assigntuple(&outGenP->pam, outRow[col], newtuple);
     }
 }
 
@@ -772,6 +1014,10 @@ makeImageRows(const struct pam * const inPamP,
         /* Array: same[N] is the column number of a pixel to the right forced
            to have the same color as the one in column N
         */
+    int * sameFp;     /* Fixed point of same[] */
+    unsigned int * tuplesPerCol; 
+        /* Number of tuples averaged together in each column */
+    tuple * rowBuffer;     /* Scratch row needed for texture manipulation */
     int row;           /* Current row in the input and output files */
 
     inRow = pnm_allocpamrow(inPamP);
@@ -779,6 +1025,14 @@ makeImageRows(const struct pam * const inPamP,
     MALLOCARRAY(same, inPamP->width);
     if (same == NULL)
         pm_error("Unable to allocate space for \"same\" array.");
+
+    MALLOCARRAY(sameFp, inPamP->width);
+    if (sameFp == NULL)
+        pm_error("Unable to allocate space for \"sameFp\" array.");
+    MALLOCARRAY(tuplesPerCol, inPamP->width);
+    if (tuplesPerCol == NULL)
+        pm_error("Unable to allocate space for \"tuplesPerCol\" array.");
+    rowBuffer = pnm_allocpamrow(&outputGeneratorP->pam);
 
     /* See the paper cited above for code comments.  All I (Scott) did was
      * transcribe the code and make minimal changes for Netpbm.  And some
@@ -797,15 +1051,73 @@ makeImageRows(const struct pam * const inPamP,
 
         if (makeMask)
             makeMaskRow(&outputGeneratorP->pam, same, outRow);
-        else
-            makeImageRow(outputGeneratorP, row, same, outRow);
-
+        else {
+            if (outputGeneratorP->textureP)
+                makeImageRowMts(outputGeneratorP, row, same, sameFp,
+                                tuplesPerCol, rowBuffer, outRow);
+            else
+                makeImageRow(outputGeneratorP, row, same, outRow);
+        }
         /* Write the resulting row. */
         pnm_writepamrow(&outputGeneratorP->pam, outRow);
     }
+    
+    pnm_freepamrow(rowBuffer);
+    free(tuplesPerCol);
+    free(sameFp);
     free(same);
     pnm_freepamrow(outRow);
     pnm_freepamrow(inRow);
+}
+
+
+
+static void
+readTextureImage(struct cmdlineInfo const cmdline,
+                 const struct pam * const pamP,
+                 outGenerator *     const outGenP) {
+
+    FILE *       textureFileP;
+    struct pam * texPamP;
+
+    MALLOCVAR_NOFAIL(outGenP->textureP);
+    texPamP = &outGenP->textureP->pam;
+
+    textureFileP = pm_openr(cmdline.texFilespec);
+    outGenP->textureP->imageData =
+      pnm_readpam(textureFileP, texPamP, PAM_STRUCT_SIZE(tuple_type));
+    pm_close(textureFileP);
+
+    if (cmdline.bgColorName)
+        outGenP->textureP->bgColor =
+            pnm_parsecolor(cmdline.bgColorName, texPamP->maxval);
+    else
+        outGenP->textureP->bgColor =
+            pnm_backgroundtuple(texPamP, outGenP->textureP->imageData);
+    outGenP->textureP->replaceBgColor = (cmdline.patFilespec != NULL);
+    outGenP->textureP->smoothing = cmdline.smoothing;
+
+    if (cmdline.verbose) {
+        const char * const colorname =
+            pnm_colorname(texPamP, outGenP->textureP->bgColor, 1);
+
+        reportImageParameters("Texture file", texPamP);
+        if (cmdline.bgColorName && strcmp(colorname, cmdline.bgColorName))
+            pm_message("Texture background color: %s (%s)",
+                       cmdline.bgColorName, colorname);
+        else
+            pm_message("Texture background color: %s", colorname);
+        strfree(colorname);
+    }
+
+    if (texPamP->width != pamP->width || texPamP->height != pamP->height)
+        pm_error("The texture image must have the same width and height "
+                 "as the input image");
+    if (cmdline.patFilespec &&
+        (!streq(texPamP->tuple_type, outGenP->pam.tuple_type) ||
+         texPamP->maxval != outGenP->pam.maxval))
+        pm_error("The texture image must be of the same tuple type "
+                 "and maxval as the pattern image");
 }
 
 
@@ -817,11 +1129,17 @@ produceStereogram(FILE *             const ifP,
     struct pam inPam;    /* PAM information for the height-map file */
     outGenerator * outputGeneratorP;
         /* Handle of an object that generates background pixels */
-    
+
     pnm_readpaminit(ifP, &inPam, PAM_STRUCT_SIZE(tuple_type));
 
     createoutputGenerator(cmdline, &inPam, &outputGeneratorP);
+    if (cmdline.texFilespec)
+        readTextureImage(cmdline, &inPam, outputGeneratorP);
 
+    if (cmdline.texFilespec) {
+        outputGeneratorP->textureP->pam.file = outputGeneratorP->pam.file;
+        outputGeneratorP->pam = outputGeneratorP->textureP->pam;
+    }
     if (cmdline.verbose) {
         reportImageParameters("Input (height map) file", &inPam);
         if (inPam.depth > 1)
@@ -847,6 +1165,11 @@ produceStereogram(FILE *             const ifP,
         drawguides(cmdline.guidesize, &outputGeneratorP->pam,
                    cmdline.eyesep, cmdline.dpi, cmdline.depth);
 
+    if (cmdline.texFilespec) {
+        pnm_freepamarray(outputGeneratorP->textureP->imageData,
+                         &outputGeneratorP->textureP->pam);
+        free(outputGeneratorP->textureP);
+    }
     destroyoutputGenerator(outputGeneratorP);
 }
 
@@ -876,27 +1199,28 @@ reportParameters(struct cmdlineInfo const cmdline) {
 
 
 int
-main(int argc, char *argv[]) {
+main(int argc, const char *argv[]) {
 
     struct cmdlineInfo cmdline;      /* Parsed command line */
     FILE * ifP;
-    
-    /* Parse the command line. */
-    pnm_init(&argc, argv);
+
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
-    
+
     if (cmdline.verbose)
         reportParameters(cmdline);
-    
+
     srand(cmdline.randomseed);
 
     ifP = pm_openr(cmdline.inputFilespec);
-        
+
     /* Produce a stereogram. */
     produceStereogram(ifP, cmdline);
 
     pm_close(ifP);
-    
+
     return 0;
 }
+
+
