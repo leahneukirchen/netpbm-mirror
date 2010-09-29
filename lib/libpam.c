@@ -205,21 +205,6 @@ pnm_createBlackTuple(const struct pam * const pamP,
 
 
 
-void
-createBlackTuple(const struct pam * const pamP, 
-                 tuple *            const blackTupleP) {
-
-/* This is poorly named, because it lacks the "pnm" prefix.  But for some
-   reason, this is how we originally named this.  So to maintain backward
-   compatibility with binaries that refer to "createBlackTuple", we define
-   this.  The preferred name, pnm_createBlackTuple() was new in Netpbm 10.20,
-   January 2004.  We should eventually retire createBlackTuple().
-*/
-    pnm_createBlackTuple(pamP, blackTupleP);
-}
-
-
-
 static tuple *
 allocPamRow(const struct pam * const pamP) {
 /*----------------------------------------------------------------------------
