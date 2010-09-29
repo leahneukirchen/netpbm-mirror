@@ -532,8 +532,8 @@ pcx_256col_to_ppm(FILE *       const ifP,
     } else
         cols = headerCols;
 
-    image = (unsigned char **)pm_allocarray(BytesPerLine, rows, 
-                                            sizeof(unsigned char));
+    MALLOCARRAY2(image, rows, BytesPerLine);
+
     for (row = 0; row < rows; ++row)
         GetPCXRow(ifP, image[row], BytesPerLine);
 
