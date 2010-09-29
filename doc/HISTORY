@@ -16,7 +16,9 @@ Not yet  BJH  Release 10.53.00
 
               pdbimgtopam: fix corrupted output image.  Thanks Scott Pakin.
 
-              Rename optParseOptions3 to pm_optParseOptions3, etc.
+              Rename all external symbols that don't have a Netpbm prefix
+              to start with "pm_": shhopt, nstring, nsleep.  Eliminate
+              createBlackTuple -- pnmCreateBlackTuple already existed.
 
 10.09.26 BJH  Release 10.52.00
 
