@@ -737,13 +737,13 @@ fatalUnrecognizedLongOption(const char * const optionName,
         const char * entry;
 
         if (optEntryP->longName)
-            asprintfN(&entry, "-%s ", optEntryP->longName);
+            pm_asprintf(&entry, "-%s ", optEntryP->longName);
         else
-            asprintfN(&entry, "-%c ", optEntryP->shortName);
+            pm_asprintf(&entry, "-%c ", optEntryP->shortName);
 
         strncat(optList, entry, sizeof(optList) - strlen(optList) - 1);
 
-        strfree(entry);
+        pm_strfree(entry);
 
         if (strlen(optList) + 1 == sizeof(optList)) {
             /* Buffer is full.  Overwrite end of list with ellipsis */
@@ -1014,8 +1014,8 @@ pm_optDestroyNameValueList(struct optNameValue * const list) {
     unsigned int i;
 
     for (i = 0; list[i].name; ++i) {
-        strfree(list[i].name);
-        strfree(list[i].value);
+        pm_strfree(list[i].name);
+        pm_strfree(list[i].value);
     }
 
     free(list);

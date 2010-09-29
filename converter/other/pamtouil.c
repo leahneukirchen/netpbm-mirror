@@ -374,9 +374,9 @@ freeCmap(cixel_map    const cmap[],
     for (i = 0; i < ncolors; ++i) {
         cixel_map const cmapEntry = cmap[i];
         if (cmapEntry.uilname)
-            strfree(cmapEntry.uilname);
+            pm_strfree(cmapEntry.uilname);
         if (cmapEntry.rgbname)
-            strfree(cmapEntry.rgbname);
+            pm_strfree(cmapEntry.rgbname);
     }
 }
 

@@ -730,8 +730,8 @@ spawnWithInputPipe(const char *  const shellCmd,
     rc = pipe(fd);
 
     if (rc != 0)
-        asprintfN(errorP, "Failed to create pipe for process input.  "
-                  "Errno=%d (%s)", errno, strerror(errno));
+        pm_asprintf(errorP, "Failed to create pipe for process input.  "
+                    "Errno=%d (%s)", errno, strerror(errno));
     else {
         int iAmParent;
         pid_t childPid;
@@ -746,9 +746,9 @@ spawnWithInputPipe(const char *  const shellCmd,
                 *pipePP = fdopen(fd[PIPE_WRITE], "w");
                 
                 if (*pipePP == NULL)
-                    asprintfN(errorP,"Unable to create stream from pipe.  "
-                              "fdopen() fails with errno=%d (%s)",
-                              errno, strerror(errno));
+                    pm_asprintf(errorP,"Unable to create stream from pipe.  "
+                                "fdopen() fails with errno=%d (%s)",
+                                errno, strerror(errno));
                 else
                     *errorP = NULL;
             } else {
@@ -800,8 +800,8 @@ createFlipProcess(FILE *         const outFileP,
        file descriptor is equivalent to writing to the stream.
     */
 
-    asprintfN(&pamflipCmd, "pamflip -xform=%s >&%u",
-              xformNeeded(orientation), fileno(outFileP));
+    pm_asprintf(&pamflipCmd, "pamflip -xform=%s >&%u",
+                xformNeeded(orientation), fileno(outFileP));
 
     if (verbose)
         pm_message("Reorienting raster with shell command '%s'", pamflipCmd);
@@ -813,7 +813,7 @@ createFlipProcess(FILE *         const outFileP,
                  "raster, failed.  %s.  To work around this, you can use "
                  "the -orientraw option.", pamflipCmd, error);
 
-        strfree(error);
+        pm_strfree(error);
     }
 }
 
@@ -1651,7 +1651,7 @@ main(int argc, const char * argv[]) {
     if (alphaFile != NULL)
         pm_close( alphaFile );
 
-    strfree(cmdline.inputFilename);
+    pm_strfree(cmdline.inputFilename);
 
     /* If the program failed, it previously aborted with nonzero completion
        code, via various function calls.  */

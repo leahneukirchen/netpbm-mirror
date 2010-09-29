@@ -65,7 +65,7 @@ openColornameFileSearch(const char * const searchPath,
         *filePP = NULL;  /* initial value */
         while (!eol && !*filePP) {
             const char * token;
-            token = strsepN(&cursor, ":");
+            token = pm_strsep(&cursor, ":");
             if (token) {
                 *filePP = fopen(token, "r");
             } else

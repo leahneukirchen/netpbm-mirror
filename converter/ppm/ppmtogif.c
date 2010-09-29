@@ -183,8 +183,8 @@ openPnmremapStream(const char * const inputFileName,
     assert(inputFileName != NULL);
     assert(mapFileName != NULL);
 
-    asprintfN(&pnmremapCommand, "pnmremap -mapfile='%s' %s",
-              mapFileName, inputFileName);
+    pm_asprintf(&pnmremapCommand, "pnmremap -mapfile='%s' %s",
+                mapFileName, inputFileName);
 
     if (verbose)
         pm_message("Preprocessing Pamtogif input with shell command '%s'",
@@ -198,7 +198,7 @@ openPnmremapStream(const char * const inputFileName,
     else
         *pnmremapPipeP = pnmremapPipe;
 
-    strfree(pnmremapCommand);
+    pm_strfree(pnmremapCommand);
 }
 
 
@@ -221,39 +221,39 @@ pamtogifCommand(const char *       const arg0,
 
         struct stat statbuf;
 
-        asprintfN(&progName, "%s/%s", arg0DirName, pamtogifName);
+        pm_asprintf(&progName, "%s/%s", arg0DirName, pamtogifName);
 
         if (stat(progName, &statbuf) == 0)
             commandVerb = progName;
         else
             commandVerb = strdup(pamtogifName);
 
-        strfree(arg0DirName);
+        pm_strfree(arg0DirName);
     } else
         commandVerb = strdup(pamtogifName);
 
     if (cmdline.transparent)
-        asprintfN(&transparentOpt, "-transparent=%s", cmdline.transparent);
+        pm_asprintf(&transparentOpt, "-transparent=%s", cmdline.transparent);
     else
         transparentOpt = strdup("");
 
     if (cmdline.comment)
-        asprintfN(&commentOpt, "-comment=%s", cmdline.comment);
+        pm_asprintf(&commentOpt, "-comment=%s", cmdline.comment);
     else
         commentOpt = strdup("");
 
-    asprintfN(&retval, "%s - -alphacolor=%s %s %s %s %s %s %s",
-              commandVerb,
-              cmdline.alphacolor,
-              cmdline.interlace ? "-interlace" : "",
-              cmdline.sort ? "-sort" : "",
-              transparentOpt,
-              commentOpt,
-              cmdline.nolzw ? "-nolzw" : "",
-              cmdline.verbose ? "-verbose" : "");
+    pm_asprintf(&retval, "%s - -alphacolor=%s %s %s %s %s %s %s",
+                commandVerb,
+                cmdline.alphacolor,
+                cmdline.interlace ? "-interlace" : "",
+                cmdline.sort ? "-sort" : "",
+                transparentOpt,
+                commentOpt,
+                cmdline.nolzw ? "-nolzw" : "",
+                cmdline.verbose ? "-verbose" : "");
     
-    strfree(transparentOpt);
-    strfree(commentOpt);
+    pm_strfree(transparentOpt);
+    pm_strfree(commentOpt);
 
     return retval;
 }
@@ -413,7 +413,7 @@ main(int    argc,
     if (rc != 0)
         pm_error("Pamtogif process failed.  pclose() failed.");
 
-    strfree(command);
+    pm_strfree(command);
 
     pm_close(ifP);
     pm_close(stdout);

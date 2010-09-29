@@ -1799,10 +1799,10 @@ tryAlphaPalette(FILE *         const ifP,
                           palette_pnm, trans_pnm, 
                           paletteSizeP, transSizeP, &tooBig);
     if (tooBig) {
-        asprintfN(impossibleReasonP,
-                  "too many color/transparency pairs "
-                  "(more than the PNG maximum of %u", 
-                  MAXPALETTEENTRIES);
+        pm_asprintf(impossibleReasonP,
+                    "too many color/transparency pairs "
+                    "(more than the PNG maximum of %u", 
+                    MAXPALETTEENTRIES);
     } else
         *impossibleReasonP = NULL;
 } 
@@ -1939,11 +1939,11 @@ computeColorMap(FILE *         const ifP,
   of that color as *backgroundIndexP.
 -------------------------------------------------------------------------- */
     if (force)
-        asprintfN(noColormapReasonP, "You requested no color map");
+        pm_asprintf(noColormapReasonP, "You requested no color map");
     else if (maxval > PALETTEMAXVAL)
-        asprintfN(noColormapReasonP, "The maxval of the input image (%u) "
-                  "exceeds the PNG palette maxval (%u)", 
-                  maxval, PALETTEMAXVAL);
+        pm_asprintf(noColormapReasonP, "The maxval of the input image (%u) "
+                    "exceeds the PNG palette maxval (%u)", 
+                    maxval, PALETTEMAXVAL);
     else {
         unsigned int bitsPerPixel;
         computePixelWidth(PNM_FORMAT_TYPE(format), pnm_meaningful_bits, alpha,
@@ -1953,7 +1953,7 @@ computeColorMap(FILE *         const ifP,
             /* No palette can beat 1 bit per pixel -- no need to waste time
                counting the colors.
             */
-            asprintfN(noColormapReasonP, "pixel is already only 1 bit");
+            pm_asprintf(noColormapReasonP, "pixel is already only 1 bit");
         else {
             /* We'll have to count the colors ('colors') to know if a
                palette is possible and desirable.  Along the way, we'll
@@ -1967,16 +1967,16 @@ computeColorMap(FILE *         const ifP,
                    &chv, &colors);
 
             if (chv == NULL) {
-                asprintfN(noColormapReasonP, 
-                          "More than %u colors found -- too many for a "
-                          "colormapped PNG", MAXCOLORS);
+                pm_asprintf(noColormapReasonP, 
+                            "More than %u colors found -- too many for a "
+                            "colormapped PNG", MAXCOLORS);
             } else {
                 /* There are few enough colors that a palette is possible */
                 if (bitsPerPixel <= paletteIndexBits(colors) && !pfP)
-                    asprintfN(noColormapReasonP, 
-                              "palette index for %u colors would be "
-                              "no smaller than the indexed value (%u bits)", 
-                              colors, bitsPerPixel);
+                    pm_asprintf(noColormapReasonP, 
+                                "palette index for %u colors would be "
+                                "no smaller than the indexed value (%u bits)", 
+                                colors, bitsPerPixel);
                 else {
                     unsigned int paletteSize;
                     unsigned int transSize;
@@ -2727,7 +2727,7 @@ convertpnm(struct cmdlineInfo const cmdline,
                    noColormapReason);
       if (verbose)
           pm_message("Not using color map.  %s", noColormapReason);
-      strfree(noColormapReason);
+      pm_strfree(noColormapReason);
       colorMapped = FALSE;
   } else
       colorMapped = TRUE;

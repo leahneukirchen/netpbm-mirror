@@ -629,7 +629,7 @@ disposeOfComments(const struct pam * const pamP,
     if (retP)
         *retP = comments;
     else
-        strfree(comments);
+        pm_strfree(comments);
 }
 
 
@@ -672,7 +672,7 @@ readpaminitrest(struct pam * const pamP) {
             buffer[256-1-1] = '\n';  /* In case fgets() truncated */
             if (buffer[0] == '#')
                 appendComment(&comments, buffer);
-            else if (stripeq(buffer, ""));
+            else if (pm_stripeq(buffer, ""));
                 /* Ignore it; it's a blank line */
             else 
                 processHeaderLine(buffer, pamP, &headerSeen);
@@ -951,7 +951,7 @@ pnm_writepaminit(struct pam * const pamP) {
         fprintf(pamP->file, "HEIGHT %u\n",  (unsigned)pamP->height);
         fprintf(pamP->file, "DEPTH %u\n",   pamP->depth);
         fprintf(pamP->file, "MAXVAL %lu\n", pamP->maxval);
-        if (!stripeq(tupleType, ""))
+        if (!pm_stripeq(tupleType, ""))
             fprintf(pamP->file, "TUPLTYPE %s\n", pamP->tuple_type);
         fprintf(pamP->file, "ENDHDR\n");
         break;

@@ -14,9 +14,9 @@
 #endif
 
 void
-vasprintfN(const char ** const resultP,
-           const char *  const format,
-           va_list             varargs) {
+pm_vasprintf(const char ** const resultP,
+             const char *  const format,
+             va_list             varargs) {
 
     char * result;
 
@@ -24,7 +24,7 @@ vasprintfN(const char ** const resultP,
     vasprintf(&result, format, varargs);
 
     if (result == NULL)
-        *resultP = strsol;
+        *resultP = pm_strsol;
     else
         *resultP = result;
 #else

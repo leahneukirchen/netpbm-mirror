@@ -218,14 +218,14 @@ addPsToFilespec(char          const orig_filespec[],
     else {
         const char *filespec_plus_ps;
 
-        asprintfN(&filespec_plus_ps, "%s.ps", orig_filespec);
+        pm_asprintf(&filespec_plus_ps, "%s.ps", orig_filespec);
 
         stat_rc = lstat(filespec_plus_ps, &statbuf);
         if (stat_rc == 0)
             *new_filespec_p = strdup(filespec_plus_ps);
         else
             *new_filespec_p = strdup(orig_filespec);
-        strfree(filespec_plus_ps);
+        pm_strfree(filespec_plus_ps);
     }
     if (verbose)
         pm_message("Input file is %s", *new_filespec_p);
@@ -560,12 +560,12 @@ computePstrans(struct box       const box,
         int llx, lly;
         llx = box.llx - (xsize * 72 / xres - (box.urx - box.llx)) / 2;
         lly = box.lly - (ysize * 72 / yres - (box.ury - box.lly)) / 2;
-        asprintfN(&retval, "%d neg %d neg translate", llx, lly);
+        pm_asprintf(&retval, "%d neg %d neg translate", llx, lly);
     } else {
         int llx, ury;
         llx = box.llx - (ysize * 72 / yres - (box.urx - box.llx)) / 2;
         ury = box.ury + (xsize * 72 / xres - (box.ury - box.lly)) / 2;
-        asprintfN(&retval, "90 rotate %d neg %d neg translate", llx, ury);
+        pm_asprintf(&retval, "90 rotate %d neg %d neg translate", llx, ury);
     }
 
     if (retval == NULL)
@@ -602,9 +602,9 @@ computeOutfileArg(struct cmdlineInfo const cmdline) {
         default: pm_error("Internal error: invalid value for format_type: %d",
                           cmdline.format_type);
         }
-        asprintfN(&retval, "%s%%03d.%s", basename, suffix);
+        pm_asprintf(&retval, "%s%%03d.%s", basename, suffix);
 
-        strfree(basename);
+        pm_strfree(basename);
     }
     return(retval);
 }
@@ -627,7 +627,7 @@ computeGsDevice(int  const format_type,
     if (forceplain)
         retval = strdup(basetype);
     else
-        asprintfN(&retval, "%sraw", basetype);
+        pm_asprintf(&retval, "%sraw", basetype);
 
     if (retval == NULL)
         pm_error("Unable to allocate memory for gs device");
@@ -658,7 +658,7 @@ findGhostscriptProg(const char ** const retvalP) {
                 const char * filename;
                 int rc;
 
-                asprintfN(&filename, "%s/gs", candidate);
+                pm_asprintf(&filename, "%s/gs", candidate);
                 rc = stat(filename, &statbuf);
                 if (rc == 0) {
                     if (S_ISREG(statbuf.st_mode))
@@ -667,7 +667,7 @@ findGhostscriptProg(const char ** const retvalP) {
                     pm_error("Error looking for Ghostscript program.  "
                              "stat(\"%s\") returns errno %d (%s)",
                              filename, errno, strerror(errno));
-                strfree(filename);
+                pm_strfree(filename);
 
                 candidate = strtok(NULL, ":");
             }
@@ -705,11 +705,11 @@ execGhostscript(int  const inputPipeFd,
     rc = dup2(inputPipeFd, STDIN_FILENO);
     close(inputPipeFd);
 
-    asprintfN(&arg0, "gs");
-    asprintfN(&deviceopt, "-sDEVICE=%s", ghostscript_device);
-    asprintfN(&outfileopt, "-sOutputFile=%s", outfile_arg);
-    asprintfN(&gopt, "-g%dx%d", xsize, ysize);
-    asprintfN(&ropt, "-r%dx%d", xres, yres);
+    pm_asprintf(&arg0, "gs");
+    pm_asprintf(&deviceopt, "-sDEVICE=%s", ghostscript_device);
+    pm_asprintf(&outfileopt, "-sOutputFile=%s", outfile_arg);
+    pm_asprintf(&gopt, "-g%dx%d", xsize, ysize);
+    pm_asprintf(&ropt, "-r%dx%d", xres, yres);
 
     /* -dSAFER causes Postscript to disable %pipe and file operations,
        which are almost certainly not needed here.  This prevents our
@@ -901,9 +901,9 @@ main(int argc, char ** argv) {
                        xsize, ysize, xres, yres, input_filespec,
                        language, cmdline.verbose);
 
-    strfree(ghostscript_device);
-    strfree(outfile_arg);
-    strfree(pstrans);
+    pm_strfree(ghostscript_device);
+    pm_strfree(outfile_arg);
+    pm_strfree(pstrans);
     
     return 0;
 }

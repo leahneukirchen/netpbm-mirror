@@ -363,13 +363,13 @@ genCmap(colorhist_vector const chv,
 
             PPM_DEPTH(scaledColor, color, maxval, xpmMaxval);
 
-            asprintfN(&hexString, xpmMaxval == 0x000F ? "#%X%X%X" :
-                      xpmMaxval == 0x00FF ? "#%02X%02X%02X" :
-                      xpmMaxval == 0x0FFF ? "#%03X%03X%03X" :
-                      "#%04X%04X%04X", 
-                      PPM_GETR(scaledColor),
-                      PPM_GETG(scaledColor),
-                      PPM_GETB(scaledColor)
+            pm_asprintf(&hexString, xpmMaxval == 0x000F ? "#%X%X%X" :
+                        xpmMaxval == 0x00FF ? "#%02X%02X%02X" :
+                        xpmMaxval == 0x0FFF ? "#%03X%03X%03X" :
+                        "#%04X%04X%04X", 
+                        PPM_GETR(scaledColor),
+                        PPM_GETG(scaledColor),
+                        PPM_GETB(scaledColor)
                 );
 
             if (hexString == NULL)
@@ -399,7 +399,7 @@ destroyCmap(cixel_map *  const cmap,
     int i;
     /* Free the real color entries */
     for (i = 0; i < cmapSize; i++) {
-        strfree(cmap[i].rgbname);
+        pm_strfree(cmap[i].rgbname);
         free(cmap[i].cixel);
     }
     free(cmap);

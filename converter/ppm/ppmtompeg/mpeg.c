@@ -413,11 +413,11 @@ bitioNew(const char * const outputFileName,
     else {
         const char * fileName;
 
-        asprintfN(&fileName, "%s.frame.%d", outputFileName, frameNumber);
+        pm_asprintf(&fileName, "%s.frame.%d", outputFileName, frameNumber);
 
         bbP = Bitio_New_Filename(fileName);
 
-        strfree(fileName);
+        pm_strfree(fileName);
     }
     return bbP;
 }
@@ -771,12 +771,12 @@ doFirstFrameStuff(enum frameContext const context,
             time_t now;
                     
             time(&now);
-            asprintfN(&userDataString,"MPEG stream encoded by UCB Encoder "
-                      "(mpeg_encode) v%s on %s.",
-                      VERSION, ctime(&now));
+            pm_asprintf(&userDataString,"MPEG stream encoded by UCB Encoder "
+                        "(mpeg_encode) v%s on %s.",
+                        VERSION, ctime(&now));
             userData = strdup(userDataString);
             userDataSize = strlen(userData);
-            strfree(userDataString);
+            pm_strfree(userDataString);
         }
         Mhead_GenSequenceHeader(bbP, Fsize_x, Fsize_y,
                                 /* pratio */ aspectRatio,
@@ -1322,12 +1322,12 @@ PrintStartStats(time_t               const startTime,
             GetNthInputFileName(inputSourceP, 0, &inputFileName);
             fprintf(fpointer, "FIRST FILE:  %s/%s\n", 
                     currentPath, inputFileName);
-            strfree(inputFileName);
+            pm_strfree(inputFileName);
             GetNthInputFileName(inputSourceP, inputSourceP->numInputFiles-1, 
                                 &inputFileName);
             fprintf(fpointer, "LAST FILE:  %s/%s\n", 
                     currentPath, inputFileName);
-            strfree(inputFileName);
+            pm_strfree(inputFileName);
         }    
         fprintf(fpointer, "OUTPUT:  %s\n", outputFileName);
 

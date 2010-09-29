@@ -88,7 +88,7 @@ countMatrixOptColumns(const char *   const rowString,
         if (error) {
             pm_error("Unable to parse -matrix value row '%s'.  %s",
                      rowString, error);
-            strfree(error);
+            pm_strfree(error);
         } else {
             ++colCt;
 
@@ -97,7 +97,7 @@ countMatrixOptColumns(const char *   const rowString,
                 assert(*cursor == ',');
                 ++cursor;  /* advance over comma to next column */
             }
-            strfree(colString);
+            pm_strfree(colString);
         }
     }
     *colCtP = colCt;
@@ -133,7 +133,7 @@ getMatrixOptDimensions(const char *   const matrixOptString,
         if (error) {
             pm_error("Unable to parse -matrix value '%s'.  %s",
                      matrixOptString, error);
-            strfree(error);
+            pm_strfree(error);
         } else {
             unsigned int colCt;
             ++rowCt;
@@ -147,7 +147,7 @@ getMatrixOptDimensions(const char *   const matrixOptString,
                 pm_error("-matrix option value contains rows of different "
                          "widths: %u and %u", *widthP, colCt);
             }            
-            strfree(rowString);
+            pm_strfree(rowString);
             cursor = next;
 
             if (*cursor) {
@@ -178,7 +178,7 @@ parseMatrixRow(const char * const matrixOptRowString,
 
         if (error) {
             pm_error("Failed parsing a row in the -matrix value.  %s", error);
-            strfree(error);
+            pm_strfree(error);
         } else {
             if (colString[0] == '\0')
                 pm_error("The Column %u element of the row '%s' in the "
@@ -193,7 +193,7 @@ parseMatrixRow(const char * const matrixOptRowString,
                              "-matrix value is not a valid floating point "
                              "number", col, matrixOptRowString);
             }
-            strfree(colString);
+            pm_strfree(colString);
 
             cursor = next;
 
@@ -225,11 +225,11 @@ parseMatrixOptWithDimensions(const char * const matrixOptString,
 
         if (error) {
             pm_error("Failed parsing -matrix value.  %s", error);
-            strfree(error);
+            pm_strfree(error);
         } else {
             parseMatrixRow(rowString, width, weight[row]);
 
-            strfree(rowString);
+            pm_strfree(rowString);
 
             cursor = next;
 
@@ -701,7 +701,7 @@ parsePlaneFileLine(const char *   const line,
 
                 ++colCt;
         }
-        strfree(token);
+        pm_strfree(token);
     }
     *weightP = weight;
     *widthP = colCt;
@@ -768,7 +768,7 @@ readPlaneFile(FILE *         const ifP,
                     }                    
                     ++rowCt;
                 }
-                strfree(line);
+                pm_strfree(line);
             }
         }
     }

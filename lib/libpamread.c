@@ -214,13 +214,12 @@ readRawNonPbmRow(const struct pam * const pamP,
 
     if (bytesRead != rowImageSize) {
         if (feof(pamP->file))
-            asprintfN(&error,
-                      "End of file encountered when trying to read a row from "
-                      "input file.");
+            pm_asprintf(&error, "End of file encountered "
+                        "when trying to read a row from input file.");
         else 
-            asprintfN(&error, "Error reading a row from input file.  "
-                      "fread() fails with errno=%d (%s)",
-                      errno, strerror(errno));
+            pm_asprintf(&error, "Error reading a row from input file.  "
+                        "fread() fails with errno=%d (%s)",
+                        errno, strerror(errno));
     } else {
         error = NULL;  /* initial assumption */
         if (tuplerow) {
@@ -230,8 +229,8 @@ readRawNonPbmRow(const struct pam * const pamP,
             case 3: parse3BpsRow(pamP, tuplerow, inbuf); break;
             case 4: parse4BpsRow(pamP, tuplerow, inbuf); break;
             default:
-                asprintfN(&error, "invalid bytes per sample passed to "
-                          "pnm_formatpamrow(): %u",  pamP->bytes_per_sample);
+                pm_asprintf(&error, "invalid bytes per sample passed to "
+                            "pnm_formatpamrow(): %u",  pamP->bytes_per_sample);
             }
         }
     }
@@ -239,7 +238,7 @@ readRawNonPbmRow(const struct pam * const pamP,
 
     if (error) {
         pm_errormsg("%s", error);
-        strfree(error);
+        pm_strfree(error);
         pm_longjmp();
     }
 }

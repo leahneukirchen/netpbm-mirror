@@ -334,7 +334,7 @@ openLogFile(FILE **      const logFileP,
     const char * logfileName;
 
     if (streq(inputFileArg, "-"))
-        asprintfN(&logfileName, "pamtosvg.log");
+        pm_asprintf(&logfileName, "pamtosvg.log");
     else {
         const char * inputRootName;
 
@@ -343,14 +343,14 @@ openLogFile(FILE **      const logFileP,
             pm_error("Can't find the root portion of file name '%s'",
                      inputFileArg);
     
-        asprintfN(&logfileName, "%s.log", inputRootName);
+        pm_asprintf(&logfileName, "%s.log", inputRootName);
 
-        strfree(inputRootName);
+        pm_strfree(inputRootName);
     }
 
     *logFileP = pm_openw(logfileName);
 
-    strfree(logfileName);
+    pm_strfree(logfileName);
 }
     
 

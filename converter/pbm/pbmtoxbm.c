@@ -390,7 +390,7 @@ main(int    argc,
 
     convertRaster(ifP, cols, rows, format, stdout, cmdline.xbmVersion);
 
-    strfree(name);
+    pm_strfree(name);
     pm_close(ifP);
 
     return 0;

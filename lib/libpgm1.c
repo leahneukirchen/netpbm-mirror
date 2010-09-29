@@ -186,17 +186,17 @@ readRpgmRow(FILE * const fileP,
     
     MALLOCARRAY(rowBuffer, bytesPerRow);
     if (rowBuffer == NULL)
-        asprintfN(&error, "Unable to allocate memory for row buffer "
-                  "for %u columns", cols);
+        pm_asprintf(&error, "Unable to allocate memory for row buffer "
+                    "for %u columns", cols);
     else {
         size_t rc;
         rc = fread(rowBuffer, 1, bytesPerRow, fileP);
         if (rc == 0)
-            asprintfN(&error, "Error reading row.  fread() errno=%d (%s)",
-                      errno, strerror(errno));
+            pm_asprintf(&error, "Error reading row.  fread() errno=%d (%s)",
+                        errno, strerror(errno));
         else if (rc != bytesPerRow)
-            asprintfN(&error, "Error reading row.  Short read of %u bytes "
-                      "instead of %u", (unsigned)rc, bytesPerRow);
+            pm_asprintf(&error, "Error reading row.  Short read of %u bytes "
+                        "instead of %u", (unsigned)rc, bytesPerRow);
         else {
             error = NULL;
             if (maxval < 256) {
@@ -223,7 +223,7 @@ readRpgmRow(FILE * const fileP,
     }
     if (error) {
         pm_errormsg("%s", error);
-        strfree(error);
+        pm_strfree(error);
         pm_longjmp();
     }
 } 

@@ -107,7 +107,7 @@ parseXformOpt(const char *     const xformOpt,
     xformCount = 0; /* initial value */
     while (!eol && xformCount < 10) {
         const char * token;
-        token = strsepN(&cursor, ",");
+        token = pm_strsep(&cursor, ",");
         if (token) {
             if (streq(token, "leftright"))
                 xformList[xformCount++] = LEFTRIGHT;

@@ -223,9 +223,9 @@ computeOutputFilenameFormat(int           const format,
     default:       filenameSuffix = "";    break;
     }
     
-    asprintfN(filenameFormatP, "%s_%%0%uu_%%0%uu.%s",
-              outstem, ndigits(nHorizSlice), ndigits(nVertSlice),
-              filenameSuffix);
+    pm_asprintf(filenameFormatP, "%s_%%0%uu_%%0%uu.%s",
+                outstem, ndigits(nHorizSlice), ndigits(nVertSlice),
+                filenameSuffix);
 
     if (*filenameFormatP == NULL)
         pm_error("Unable to allocate memory for filename format string");
@@ -258,7 +258,7 @@ openOutStreams(struct pam   const inpam,
     for (vertSlice = 0; vertSlice < nVertSlice; ++vertSlice) {
         const char * filename;
 
-        asprintfN(&filename, filenameFormat, horizSlice, vertSlice);
+        pm_asprintf(&filename, filenameFormat, horizSlice, vertSlice);
 
         if (filename == NULL)
             pm_error("Unable to allocate memory for output filename");
@@ -273,10 +273,10 @@ openOutStreams(struct pam   const inpam,
             
             pnm_writepaminit(&outpam[vertSlice]);
 
-            strfree(filename);
+            pm_strfree(filename);
         }
     }        
-    strfree(filenameFormat);
+    pm_strfree(filenameFormat);
 }
 
 

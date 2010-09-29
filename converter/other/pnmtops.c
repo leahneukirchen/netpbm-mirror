@@ -1406,7 +1406,7 @@ main(int argc, char * argv[]) {
             pnm_nextimage(ifp, &eof);
         }
     }
-    strfree(name);
+    pm_strfree(name);
 
     pm_close(ifp);
 

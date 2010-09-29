@@ -471,11 +471,11 @@ dumpPngInfo(struct pngx * const pngxP) {
 
     switch (info_ptr->filter_type) {
     case PNG_FILTER_TYPE_BASE:
-        asprintfN(&filter_string, "base filter");
+        pm_asprintf(&filter_string, "base filter");
         break;
     default:
-        asprintfN(&filter_string, "unknown filter type %d", 
-                  info_ptr->filter_type);
+        pm_asprintf(&filter_string, "unknown filter type %d", 
+                    info_ptr->filter_type);
     }
 
     pm_message("reading a %ldw x %ldh image, %d bit%s",
@@ -494,7 +494,7 @@ dumpPngInfo(struct pngx * const pngxP) {
                info_ptr->background.green,
                info_ptr->background.blue);
 
-    strfree(filter_string);
+    pm_strfree(filter_string);
 
     if (info_ptr->valid & PNG_INFO_tRNS)
         pm_message("tRNS chunk (transparency): %u entries",

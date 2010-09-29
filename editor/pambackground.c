@@ -182,7 +182,7 @@ determineBackgroundColor(struct pam * const pamP,
             pnm_colorname(pamP, *bgColorP, hexokTrue);
         pm_message("Background color is %s", colorname);
 
-        strfree(colorname);
+        pm_strfree(colorname);
     }
 
     pnm_freepamtuple(lr);

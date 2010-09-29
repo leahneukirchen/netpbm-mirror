@@ -94,7 +94,7 @@ fitLookup(tuple **     const inputLookup,
     fitLookuppamP->width = cols;
     fitLookuppamP->height = rows;
 
-    asprintfN(&pamscaleCommand, "pamscale -width=%u -height=%u", cols, rows);
+    pm_asprintf(&pamscaleCommand, "pamscale -width=%u -height=%u", cols, rows);
 
     inPamtuples.pamP = (struct pam *) &inputLookuppam;
     inPamtuples.tuplesP = (tuple ***) &inputLookup;
@@ -105,7 +105,7 @@ fitLookup(tuple **     const inputLookup,
               &pm_accept_to_pamtuples, &outPamtuples,
               pamscaleCommand);
 
-    strfree(pamscaleCommand);
+    pm_strfree(pamscaleCommand);
 }
 
 

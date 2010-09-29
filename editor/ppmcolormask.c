@@ -59,7 +59,7 @@ parseColorOpt(const char *         const colorOpt,
     colorCount = 0; /* initial value */
     while (!eol && colorCount < ARRAY_SIZE(cmdlineP->maskColor)) {
         const char * token;
-        token = strsepN(&cursor, ",");
+        token = pm_strsep(&cursor, ",");
         if (token) {
             if (strneq(token, "bk:", 3)) {
                 cmdlineP->maskColor[colorCount].matchType = MATCH_BK;

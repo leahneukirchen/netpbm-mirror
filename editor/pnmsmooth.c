@@ -248,7 +248,7 @@ main(int argc, const char ** argv) {
 
         const char * matrixOpt;
 
-        asprintfN(&matrixOpt, "-matrix=%s", matrixOptValue);
+        pm_asprintf(&matrixOpt, "-matrix=%s", matrixOptValue);
 
         pm_message("Running Pnmconvol -normalize %s", matrixOpt);
 
@@ -256,9 +256,9 @@ main(int argc, const char ** argv) {
                      "pnmconvol", matrixOpt, cmdline.inputFilespec,
                      "-normalize", "-quiet", plainOpt, NULL);
 
-        strfree(matrixOpt);
+        pm_strfree(matrixOpt);
     }
-    strfree(matrixOptValue);
+    pm_strfree(matrixOptValue);
 
     return 0;
 }

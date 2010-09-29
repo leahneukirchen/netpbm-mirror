@@ -1107,7 +1107,7 @@ readTextureImage(struct cmdlineInfo const cmdline,
                        cmdline.bgColorName, colorname);
         else
             pm_message("Texture background color: %s", colorname);
-        strfree(colorname);
+        pm_strfree(colorname);
     }
 
     if (texPamP->width != pamP->width || texPamP->height != pamP->height)

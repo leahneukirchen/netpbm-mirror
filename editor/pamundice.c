@@ -232,12 +232,12 @@ doSubstitution(const char *    const pattern,
 
             switch (pattern[inCursor]) {
             case 'a':
-                asprintfN(&substString, "%0*u", precision, file);
-                asprintfN(&desc, "file (across)");
+                pm_asprintf(&substString, "%0*u", precision, file);
+                pm_asprintf(&desc, "file (across)");
                 break;
             case 'd':
-                asprintfN(&substString, "%0*u", precision, rank);
-                asprintfN(&desc, "rank (down)");
+                pm_asprintf(&substString, "%0*u", precision, rank);
+                pm_asprintf(&desc, "rank (down)");
                 break;
             default:
                 pm_error("Unknown format specifier '%c' in input file "
@@ -253,8 +253,8 @@ doSubstitution(const char *    const pattern,
             else
                 buffer_addString(bufferP, substString);
             
-            strfree(desc);
-            strfree(substString);
+            pm_strfree(desc);
+            pm_strfree(substString);
 
             ++inCursor;
         }
@@ -288,7 +288,7 @@ computeInputFileName(const char *  const pattern,
             buffer_addChar(&buffer, pattern[inCursor++]);
     }
 
-    asprintfN(fileNameP, "%s", buffer.string);
+    pm_asprintf(fileNameP, "%s", buffer.string);
 
     buffer_term(&buffer);
 }
@@ -327,7 +327,7 @@ getCommonInfo(const char *   const inputFilePattern,
 
     pm_close(ifP);
 
-    strfree(fileName);
+    pm_strfree(fileName);
 }
 
 
@@ -344,7 +344,7 @@ openInputImage(const char * const inputFilePattern,
 
     retval = pm_openr(fileName);
     
-    strfree(fileName);
+    pm_strfree(fileName);
 
     return retval;
 }

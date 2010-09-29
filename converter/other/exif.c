@@ -770,20 +770,20 @@ process_EXIF(unsigned char * const ExifData,
                 fprintf(stderr, "Exif header in Motorola order\n");
             MotorolaOrder = 1;
         } else {
-            asprintfN(errorP, "Invalid alignment marker in Exif "
-                      "data.  First two bytes are '%c%c' (0x%02x%02x) "
-                      "instead of 'II' or 'MM'.", 
-                      ExifData[0], ExifData[1], ExifData[0], ExifData[1]);
+            pm_asprintf(errorP, "Invalid alignment marker in Exif "
+                        "data.  First two bytes are '%c%c' (0x%02x%02x) "
+                        "instead of 'II' or 'MM'.", 
+                        ExifData[0], ExifData[1], ExifData[0], ExifData[1]);
         }
     }
     if (!*errorP) {
         unsigned short const start = Get16u(ExifData + 2);
         /* Check the next value for correctness. */
         if (start != 0x002a){
-            asprintfN(errorP, "Invalid Exif header start.  "
-                      "two bytes after the alignment marker "
-                      "should be 0x002a, but is 0x%04x",
-                      start);
+            pm_asprintf(errorP, "Invalid Exif header start.  "
+                        "two bytes after the alignment marker "
+                        "should be 0x002a, but is 0x%04x",
+                        start);
         }
     }
     if (!*errorP) {

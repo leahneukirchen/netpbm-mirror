@@ -1192,9 +1192,9 @@ parseBitmapRow(const char *    const hex,
          i -= 4) {
 
         if (*p == '\0')
-            asprintfN(errorP, "Not enough hexadecimal digits for glyph "
-                      "of width %u in '%s'",
-                      glyphWidth, hex);
+            pm_asprintf(errorP, "Not enough hexadecimal digits for glyph "
+                        "of width %u in '%s'",
+                        glyphWidth, hex);
         else {
             char const hdig = *p++;
             unsigned int hdigValue;
@@ -1206,11 +1206,11 @@ parseBitmapRow(const char *    const hex,
             else if (hdig >= 'A' && hdig <= 'F')
                 hdigValue = 10 + (hdig - 'A');
             else 
-                asprintfN(errorP,
-                          "Invalid hex digit x%02x (%c) in bitmap data '%s'",
-                          (unsigned int)(unsigned char)hdig, 
-                          isprint(hdig) ? hdig : '.',
-                          hex);
+                pm_asprintf(errorP,
+                            "Invalid hex digit x%02x (%c) in bitmap data '%s'",
+                            (unsigned int)(unsigned char)hdig, 
+                            isprint(hdig) ? hdig : '.',
+                            hex);
 
             if (!*errorP) {
                 if (i > 0)
@@ -1261,7 +1261,7 @@ readBitmap(readline *      const readlineP,
         if (error) {
             pm_error("Error in line %d of bitmap for character '%s': %s",
                      n, charName, error);
-            strfree(error);
+            pm_strfree(error);
         }
     }
 }

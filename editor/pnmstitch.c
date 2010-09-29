@@ -370,7 +370,7 @@ static void
 free_image(Image * image)
 {
     if (image->name) {
-        strfree(image->name);
+        pm_strfree(image->name);
         image->name = NULL;     
     }
     if (image->tuple) {
@@ -405,14 +405,14 @@ openWithPossibleExtension(const char *  const baseName,
         
         const char * trialName;
         
-        asprintfN(&trialName, "%s%s", baseName, extlist[extIndex]);
+        pm_asprintf(&trialName, "%s%s", baseName, extlist[extIndex]);
         
         ifP = fopen(trialName, "rb");
         
         if (ifP)
             *filenameP = trialName;
         else
-            strfree(trialName);
+            pm_strfree(trialName);
     }
     if (!ifP) 
         pm_error ("Failed to open input file named '%s' "
@@ -470,7 +470,7 @@ writeinit(Image * image)
 {
     if (streq(image->name, "-")) {
         image->pam.file = stdout;
-        strfree(image->name);
+        pm_strfree(image->name);
         image->name = strdup("<stdout>");
     } else {
         image->pam.file = pm_openw(image->name);

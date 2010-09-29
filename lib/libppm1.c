@@ -239,23 +239,24 @@ readRppmRow(FILE *       const fileP,
     MALLOCARRAY(rowBuffer, bytesPerRow);
         
     if (rowBuffer == NULL)
-        asprintfN(&error, "Unable to allocate memory for row buffer "
-                  "for %u columns", cols);
+        pm_asprintf(&error, "Unable to allocate memory for row buffer "
+                    "for %u columns", cols);
     else {
         ssize_t rc;
 
         rc = fread(rowBuffer, 1, bytesPerRow, fileP);
     
         if (feof(fileP))
-            asprintfN(&error, "Unexpected EOF reading row of PPM image.");
+            pm_asprintf(&error, "Unexpected EOF reading row of PPM image.");
         else if (ferror(fileP))
-            asprintfN(&error, "Error reading row.  fread() errno=%d (%s)",
-                      errno, strerror(errno));
+            pm_asprintf(&error, "Error reading row.  fread() errno=%d (%s)",
+                        errno, strerror(errno));
         else {
             size_t const bytesRead = rc;
             if (bytesRead != bytesPerRow)
-                asprintfN(&error, "Error reading row.  Short read of %u bytes "
-                          "instead of %u", (unsigned)bytesRead, bytesPerRow);
+                pm_asprintf(&error,
+                            "Error reading row.  Short read of %u bytes "
+                            "instead of %u", (unsigned)bytesRead, bytesPerRow);
             else {
                 interpRasterRowRaw(rowBuffer, pixelrow, cols, bytesPerSample);
                 error = NULL;
@@ -265,7 +266,7 @@ readRppmRow(FILE *       const fileP,
     }
     if (error) {
         pm_errormsg("%s", error);
-        strfree(error);
+        pm_strfree(error);
         pm_longjmp();
     }
 }

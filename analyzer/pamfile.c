@@ -157,7 +157,7 @@ doOneImage(const char * const name,
         if (wantComments)
             dumpComments(comments);
     }
-    strfree(comments);
+    pm_strfree(comments);
 
     pnm_checkpam(&pam, PM_CHECK_BASIC, &checkRetval);
     if (allimages) {

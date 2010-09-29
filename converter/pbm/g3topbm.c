@@ -169,7 +169,7 @@ readBit(struct bitStream * const bitStreamP,
     if ((bitStreamP->shbit & 0xff) == 0) {
         bitStreamP->shdata = getc(bitStreamP->fileP);
         if (bitStreamP->shdata == EOF)
-            asprintfN(errorP, "EOF or error reading file");
+            pm_asprintf(errorP, "EOF or error reading file");
         else {
             bitStreamP->shbit = 0x80;
             if ( bitStreamP->reversebits )
@@ -428,12 +428,12 @@ formatBadCodeException(const char ** const exceptionP,
                        unsigned int  const curlen,
                        unsigned int  const curcode) {
 
-    asprintfN(exceptionP,
-        "bad code word at Column %u.  "
-        "No prefix of the %u bits 0x%x matches any recognized "
-        "code word and no code words longer than 12 bits are "
-        "defined.  ",
-        col, curlen, curcode);
+    pm_asprintf(exceptionP,
+                "bad code word at Column %u.  "
+                "No prefix of the %u bits 0x%x matches any recognized "
+                "code word and no code words longer than 12 bits are "
+                "defined.  ",
+                col, curlen, curcode);
 }
 
 
@@ -485,8 +485,8 @@ readFaxRow(struct bitStream * const bitStreamP,
 
     while (!done) {
         if (col >= MAXCOLS) {
-            asprintfN(exceptionP, "Line is too long for this program to "
-                      "handle -- longer than %u columns", MAXCOLS);
+            pm_asprintf(exceptionP, "Line is too long for this program to "
+                        "handle -- longer than %u columns", MAXCOLS);
             done = TRUE;
         } else {
             unsigned int bit;
@@ -570,7 +570,7 @@ handleRowException(const char * const exception,
                        row, exception);
         else
             pm_error("Problem reading Row %u.  Aborting.  %s", row, exception);
-        strfree(exception);
+        pm_strfree(exception);
     }
 
     if (error) {
@@ -579,7 +579,7 @@ handleRowException(const char * const exception,
                        row, error);
         else
             pm_error("Unable to read Row %u.  Aborting.  %s", row, error);
-        strfree(error);
+        pm_strfree(error);
     }
 }
 
@@ -626,16 +626,16 @@ analyzeLineSize(lineSizeAnalyzer * const analyzerP,
 
     if (analyzerP->expectedLineSize &&
         thisLineSize != analyzerP->expectedLineSize)
-        asprintfN(&error, "Image contains a line of %u pixels.  "
-                  "You specified lines should be %u pixels.",
-                  thisLineSize, analyzerP->expectedLineSize);
+        pm_asprintf(&error, "Image contains a line of %u pixels.  "
+                    "You specified lines should be %u pixels.",
+                    thisLineSize, analyzerP->expectedLineSize);
     else {
         if (analyzerP->maxLineSize && thisLineSize != analyzerP->maxLineSize)
-            asprintfN(&error, "There are at least two different "
-                      "line lengths in this image, "
-                      "%u pixels and %u pixels.  "
-                      "This is a violation of the G3 standard.  ",
-                      thisLineSize, analyzerP->maxLineSize);
+            pm_asprintf(&error, "There are at least two different "
+                        "line lengths in this image, "
+                        "%u pixels and %u pixels.  "
+                        "This is a violation of the G3 standard.  ",
+                        thisLineSize, analyzerP->maxLineSize);
         else
             error = NULL;
     }
@@ -649,7 +649,7 @@ analyzeLineSize(lineSizeAnalyzer * const analyzerP,
         } else
             pm_error("%s", error);
 
-        strfree(error);
+        pm_strfree(error);
     }
     analyzerP->maxLineSize = MAX(thisLineSize, analyzerP->maxLineSize);
 }
@@ -693,8 +693,8 @@ readFax(struct bitStream * const bitStreamP,
         unsigned int lineSize;
 
         if (row >= MAXROWS)
-            asprintfN(&error, "Image is too tall.  This program can "
-                      "handle at most %u rows", MAXROWS);
+            pm_asprintf(&error, "Image is too tall.  This program can "
+                        "handle at most %u rows", MAXROWS);
         else {
             const char * exception;
 
@@ -714,9 +714,9 @@ readFax(struct bitStream * const bitStreamP,
                     if (stretch) {
                         ++row;
                         if (row >= MAXROWS)
-                            asprintfN(&error, "Image is too tall.  This "
-                                      "program can handle at most %u rows "
-                                      "after stretching", MAXROWS);
+                            pm_asprintf(&error, "Image is too tall.  This "
+                                        "program can handle at most %u rows "
+                                        "after stretching", MAXROWS);
                         else
                             packedBits[row] = packedBits[row-1];
                     }

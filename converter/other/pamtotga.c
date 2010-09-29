@@ -463,7 +463,7 @@ static void
 releaseTgaHeader(struct ImageHeader const tgaHeader) {
 
     if (tgaHeader.IdLength > 0)
-        strfree(tgaHeader.Id);
+        pm_strfree(tgaHeader.Id);
 }
 
 
@@ -567,7 +567,7 @@ main(int argc, char *argv[]) {
         pnm_freetupletable(&pam, chv);
 
     releaseTgaHeader(tgaHeader);
-    strfree(outName);
+    pm_strfree(outName);
     pnm_freepamarray(tuples, &pam);
 
     return 0;

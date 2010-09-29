@@ -529,9 +529,9 @@ makePalette(pixel **          const xorPPMarray,
     xorChv = ppm_computecolorhist(xorPPMarray, xorCols, xorRows, MAXCOLORS, 
                                   &colors);
     if (xorChv == NULL)
-        asprintfN(errorP,
-                  "image has too many colors - try doing a 'pnmquant %d'",
-                  MAXCOLORS);
+        pm_asprintf(errorP,
+                    "image has too many colors - try doing a 'pnmquant %d'",
+                    MAXCOLORS);
     else {
         *errorP = NULL;
 
@@ -589,10 +589,10 @@ getOrFakeAndMap(const char *      const andPgmFname,
         pm_close(andfile);
 
         if ((andCols != xorCols) || (andRows != xorRows)) {
-            asprintfN(errorP,
-                      "And mask and image have different dimensions "
-                     "(%d x %d vs %d x %d).  Aborting.",
-                     andCols, xorCols, andRows, xorRows);
+            pm_asprintf(errorP,
+                        "And mask and image have different dimensions "
+                        "(%d x %d vs %d x %d).  Aborting.",
+                        andCols, xorCols, andRows, xorRows);
         } else
             *errorP = NULL;
     }

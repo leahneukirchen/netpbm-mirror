@@ -77,13 +77,13 @@ readFile(FILE *          const ifP,
         *errorP = NULL;
     else {
         if (ferror(ifP))
-            asprintfN(errorP, "Error reading file.  errno=%d (%s)",
-                      errno, strerror(errno));
+            pm_asprintf(errorP, "Error reading file.  errno=%d (%s)",
+                        errno, strerror(errno));
         else if (feof(ifP))
-            asprintfN(errorP, "End of file encountered");
+            pm_asprintf(errorP, "End of file encountered");
         else
-            asprintfN(errorP, "Short read -- %u bytes of %u",
-                              (unsigned)bytesRead, (unsigned)len);
+            pm_asprintf(errorP, "Short read -- %u bytes of %u",
+                        (unsigned)bytesRead, (unsigned)len);
     }
 }
 
@@ -323,9 +323,9 @@ getDataBlock(FILE *          const ifP,
             if (successfulRead) 
                 *errorP = NULL;
             else
-                asprintfN(errorP,
-                          "EOF or error reading data portion of %u byte "
-                          "DataBlock from file", count);
+                pm_asprintf(errorP,
+                            "EOF or error reading data portion of %u byte "
+                            "DataBlock from file", count);
         }
     }
 }
@@ -907,8 +907,8 @@ expandCodeOntoStack(struct decompressor * const decompP,
 
         while (code > decompP->max_dataVal && !error) {
             if (stringCount > maxnum_lzwCode) {
-                asprintfN(&error,
-                          "Error in GIF image: contains LZW string loop");
+                pm_asprintf(&error,
+                            "Error in GIF image: contains LZW string loop");
             } else {
                 ++stringCount;
                 pushStack(&decompP->stack, decompP->table[1][code]);
@@ -1015,8 +1015,8 @@ lzwReadByte(struct decompressor * const decompP,
                     &eof, &code, errorP);
         if (!*errorP) {
             if (eof)
-                asprintfN(errorP,
-                          "Premature end of file; no proper GIF closing");
+                pm_asprintf(errorP,
+                            "Premature end of file; no proper GIF closing");
             else {
                 if (code == decompP->clear_code) {
                     resetDecompressor(decompP);
@@ -1155,12 +1155,12 @@ verifyPixelRead(bool          const endOfImage,
         *errorP = strdup(readError);
     else {
         if (endOfImage)
-            asprintfN(errorP,
-                      "Error in GIF image: Not enough raster data to fill "
-                      "%u x %u dimensions.  Ran out of raster data in "
-                      "row %u.  The image has proper ending sequence, so "
-                      "this is not just a truncated file.",
-                      cols, rows, failedRowNum);
+            pm_asprintf(errorP,
+                        "Error in GIF image: Not enough raster data to fill "
+                        "%u x %u dimensions.  Ran out of raster data in "
+                        "row %u.  The image has proper ending sequence, so "
+                        "this is not just a truncated file.",
+                        cols, rows, failedRowNum);
         else
             *errorP = NULL;
     }
@@ -1208,7 +1208,7 @@ readRaster(struct decompressor * const decompP,
                             &error);
 
             if (readError)
-                strfree(readError);
+                pm_strfree(readError);
 
             if (error) {
                 if (tolerateBadInput) {
@@ -1243,7 +1243,7 @@ skipExtraneousData(struct decompressor * const decompP) {
     lzwReadByte(decompP, &byteRead, &endOfImage, &error);
 
     if (error)
-        strfree(error);
+        pm_strfree(error);
     else if (!endOfImage) {
         pm_message("Extraneous data at end of image.  "
                    "Skipped to end of image");
@@ -1254,7 +1254,7 @@ skipExtraneousData(struct decompressor * const decompP) {
         if (error) {
             pm_message("Error encountered skipping to end of image: %s",
                        error);
-            strfree(error);
+            pm_strfree(error);
         }
     }
 }
@@ -1463,10 +1463,10 @@ readExtensions(FILE*          const ifP,
         readFile(ifP, &c, 1, &error);
 
         if (error) {
-            asprintfN(errorP, "File read error where start of image "
-                      "descriptor or end of GIF expected.  %s",
-                      error);
-            strfree(error);
+            pm_asprintf(errorP, "File read error where start of image "
+                        "descriptor or end of GIF expected.  %s",
+                        error);
+            pm_strfree(error);
         } else {
             if (c == ';') {         /* GIF terminator */
                 eod = TRUE;
@@ -1477,10 +1477,10 @@ readExtensions(FILE*          const ifP,
                 readFile(ifP, &functionCode, 1, &error);
 
                 if (error) {
-                    asprintfN(errorP, "Failed to read function code "
-                              "of GIF extension (immediately after the '!' "
-                              "extension delimiter) from input.  %s", error);
-                    strfree(error);
+                    pm_asprintf(errorP, "Failed to read function code "
+                                "of GIF extension (immediately after the '!' "
+                                "extension delimiter) from input.  %s", error);
+                    pm_strfree(error);
                 } else {
                     doExtension(ifP, functionCode, gif89P);
                 }
@@ -1612,7 +1612,7 @@ disposeOfReadExtensionsError(const char * const error,
         else
             pm_error("Error accessing Image %u of stream.  %s",
                      imageSeq, error);
-        strfree(error);
+        pm_strfree(error);
         *eodP = TRUE;
     }
 }

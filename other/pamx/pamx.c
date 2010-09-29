@@ -360,7 +360,7 @@ main(int     argc,
     destroyViewer(viewerP);
 
     if (title)
-        strfree(title);
+        pm_strfree(title);
 
     XCloseDisplay(dispP);
 

@@ -199,11 +199,11 @@ dealWithSubprocess(const char *  const file_name,
         *noSubprocessP = FALSE;
         
         if (*mode == 'w')
-            asprintfN(&command, "compress > %s", file_name);
+            pm_asprintf(&command, "compress > %s", file_name);
         else if (*mode == 'a')
-            asprintfN(&command, "compress >> %s", file_name);
+            pm_asprintf(&command, "compress >> %s", file_name);
         else
-            asprintfN(&command, "compress -d < %s", file_name);
+            pm_asprintf(&command, "compress -d < %s", file_name);
         
         *fpP = my_popen(command, mode, &thepid);
 
@@ -215,7 +215,7 @@ dealWithSubprocess(const char *  const file_name,
             if (*catchingChildrenP < MAX_CHILDREN)
                 pids[(*catchingChildrenP)++] = thepid;
         }
-        strfree(command);
+        pm_strfree(command);
     } else {
         *noSubprocessP = TRUE;
         *errorP = NULL;

@@ -72,15 +72,16 @@ main(int argc, char *argv[]) {
 
     parseCommandLine(argc, argv, &cmdline);
 
-    asprintfN(&cmd, "pamseq 3 %u -tupletype=RGB | pamtopnm", cmdline.maxval);
+    pm_asprintf(&cmd, "pamseq 3 %u -tupletype=RGB | pamtopnm", cmdline.maxval);
 
     rc = system(cmd);
 
     if (rc != 0) 
         pm_error("pamseq|pamtopnm pipeline failed.  system() rc = %d", rc);
 
-    strfree(cmd);
-    exit(rc);
+    pm_strfree(cmd);
+
+    return rc;
 }
 
 

@@ -111,11 +111,11 @@ writeHeaderCard(const char * const s) {
 -----------------------------------------------------------------------------*/
     const char * card;
 
-    asprintfN(&card, "%-80.80s", s);
+    pm_asprintf(&card, "%-80.80s", s);
 
     fwrite(card, sizeof(card[0]), 80, stdout);
 
-    strfree(card);
+    pm_strfree(card);
 }
 
 

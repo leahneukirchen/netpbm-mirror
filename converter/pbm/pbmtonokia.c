@@ -118,7 +118,7 @@ parseCommandLine(int argc, char ** argv,
         if (strlen(netOpt) != 6)
             pm_error("-net option must be 6 hex digits long.  "
                      "You specified %u characters", (unsigned)strlen(netOpt));
-        else if (!strishex(netOpt))
+        else if (!pm_strishex(netOpt))
             pm_error("-net option must be hexadecimal.  You specified '%s'",
                      netOpt);
         else
@@ -147,7 +147,7 @@ parseCommandLine(int argc, char ** argv,
 static void
 freeCmdline(struct cmdlineInfo const cmdline) {
 
-    strfree(cmdline.networkCode);
+    pm_strfree(cmdline.networkCode);
 }
 
 

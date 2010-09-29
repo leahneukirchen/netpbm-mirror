@@ -268,7 +268,7 @@ selectDepthAdjustment(const struct pam * const pamP,
     if (newDepth == pamP->depth)
         *adjustmentP = ADJUST_NONE;
     else {
-        if (stripeq(pamP->tuple_type, "RGB")) {
+        if (pm_stripeq(pamP->tuple_type, "RGB")) {
             if (newDepth != 1) {
                 pm_error("Map image depth of %u differs from input image "
                          "depth of %u, and the tuple type is RGB.  "
@@ -277,8 +277,8 @@ selectDepthAdjustment(const struct pam * const pamP,
                          newDepth, pamP->depth);
             } else
                 *adjustmentP = ADJUST_RGBTO1;
-        } else if (stripeq(pamP->tuple_type, "GRAYSCALE") ||
-                   stripeq(pamP->tuple_type, "BLACKANDWHITE")) {
+        } else if (pm_stripeq(pamP->tuple_type, "GRAYSCALE") ||
+                   pm_stripeq(pamP->tuple_type, "BLACKANDWHITE")) {
             if (newDepth != 3) {
                 pm_error("Map image depth of %u differs from input image "
                          "depth of %u, and the tuple type is GRAYSCALE "

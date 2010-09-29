@@ -104,17 +104,17 @@ GetNthInputFileName(struct inputSource * const inputSourceP,
         }
 
         if (mapNEntryP->repeat != TRUE)
-            asprintfN(fileNameP, "%s%s%s",
-                      mapNEntryP->left, &numBuffer[32-numPadding],
-                      mapNEntryP->right);
+            pm_asprintf(fileNameP, "%s%s%s",
+                        mapNEntryP->left, &numBuffer[32-numPadding],
+                        mapNEntryP->right);
         else
-            asprintfN(fileNameP, "%s", mapNEntryP->left);
+            pm_asprintf(fileNameP, "%s", mapNEntryP->left);
     } else {
         if (mapNEntryP->repeat != TRUE)
-            asprintfN(fileNameP, "%s%d%s",
-                      mapNEntryP->left, index, mapNEntryP->right);
+            pm_asprintf(fileNameP, "%s%d%s",
+                        mapNEntryP->left, index, mapNEntryP->right);
         else
-            asprintfN(fileNameP, "%s", mapNEntryP->left);
+            pm_asprintf(fileNameP, "%s", mapNEntryP->left);
     }
 
     lastN = n;

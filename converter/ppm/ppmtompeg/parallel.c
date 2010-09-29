@@ -156,7 +156,7 @@ machineDebug(const char format[], ...) {
     if (debugMachines) {
         const char * const hostname = GetHostName();
         fprintf(stderr, "%s: ---", hostname);
-        strfree(hostname);
+        pm_strfree(hostname);
         vfprintf(stderr, format, args);
         fputc('\n', stderr);
     }
@@ -175,7 +175,7 @@ errorExit(const char format[], ...) {
     va_start(args, format);
 
     fprintf(stderr, "%s: FATAL ERROR.  ", hostname);
-    strfree(hostname);
+    pm_strfree(hostname);
     vfprintf(stderr, format, args);
     fputc('\n', stderr);
 
@@ -767,13 +767,13 @@ routeFromSocketToDisk(int              const otherSock,
     ReadBytes(otherSock, bigBuffer, numBytes);
     
     /* open file to output this stuff to */
-    asprintfN(&fileName, "%s.frame.%d", outputFileName, frameNumber);
+    pm_asprintf(&fileName, "%s.frame.%d", outputFileName, frameNumber);
     filePtr = fopen(fileName, "wb");
 
     if (filePtr == NULL)
         errorExit("I/O SERVER: Could not open output file(3):  %s", fileName);
 
-    strfree(fileName);
+    pm_strfree(fileName);
 
     /* now write the bytes here */
     fwrite(bigBuffer, sizeof(char), numBytes, filePtr);
@@ -1246,11 +1246,11 @@ waitForOutputFile(void *        const inputHandle,
         }
         machineDebug("COMBINE SERVER: Wait for frame %u over", frameNumber);
 
-        asprintfN(&fileName, "%s.frame.%u", outputFileName, frameNumber);
+        pm_asprintf(&fileName, "%s.frame.%u", outputFileName, frameNumber);
 
         openInputFile(fileName, ifPP);
 
-        strfree(fileName);
+        pm_strfree(fileName);
     }
 }
 
@@ -1263,11 +1263,11 @@ unlinkFile(void *       const inputHandle,
     if (!keepTempFiles) {
         const char * fileName;
 
-        asprintfN(&fileName, "%s.frame.%u", outputFileName, frameNumber);
+        pm_asprintf(&fileName, "%s.frame.%u", outputFileName, frameNumber);
 
         unlink(fileName);
 
-        strfree(fileName);
+        pm_strfree(fileName);
     }
 }
 
@@ -1340,13 +1340,13 @@ startCombineServer(const char * const encoderName,
     int          otherSock;
     const char * error;
 
-    snprintfN(command, sizeof(command), 
-              "%s %s -max_machines %d -output_server %s %d %d %s",
-              encoderName, 
-              debugMachines ? "-debug_machines" : "",
-              numMachines, masterHostName, masterPortNum, 
-              numInputFiles, paramFileName);
-
+    pm_snprintf(command, sizeof(command), 
+                "%s %s -max_machines %d -output_server %s %d %d %s",
+                encoderName, 
+                debugMachines ? "-debug_machines" : "",
+                numMachines, masterHostName, masterPortNum, 
+                numInputFiles, paramFileName);
+    
     machineDebug("MASTER: Starting combine server with shell command '%s'",
                  command);
 
@@ -1382,12 +1382,12 @@ startDecodeServer(const char * const encoderName,
     int          otherSock;
     const char * error;
 
-    snprintfN(command, sizeof(command), 
-              "%s %s -max_machines %d -decode_server %s %d %d %s",
-              encoder_name, 
-              debugMachines ? "-debug_machines" : "",
-              numMachines, masterHostName, masterPortNum,
-              numInputFiles, paramFileName);
+    pm_snprintf(command, sizeof(command), 
+                "%s %s -max_machines %d -decode_server %s %d %d %s",
+                encoder_name, 
+                debugMachines ? "-debug_machines" : "",
+                numMachines, masterHostName, masterPortNum,
+                numInputFiles, paramFileName);
 
     machineDebug("MASTER: Starting decode server with shell command '%s'",
                  command);
@@ -1680,21 +1680,21 @@ startChildren(struct scheduler *   const schedulerP,
                 }
                 --childrenLeftCurrentIoServer;
             } 
-            snprintfN(command, sizeof(command),
-                      "%s %s -l %s %s "
-                      "%s %s -child %s %d %d %d %d %d %d "
-                      "-frames %d %d %s",
-                      rsh,
-                      machineName[childNum], userName[childNum],
-                      beNice ? "nice" : "",
-                      executable[childNum],
-                      debugMachines ? "-debug_machines" : "",
-                      masterHostName, masterPortNum, 
-                      remote[childNum] ? ioPortNum[numIoServers-1] : 0,
-                      combinePortNum, decodePortNum, childNum,
-                      remote[childNum] ? 1 : 0,
-                      startFrame, startFrame + nFrames - 1,
-                      remote[childNum] ? 
+            pm_snprintf(command, sizeof(command),
+                        "%s %s -l %s %s "
+                        "%s %s -child %s %d %d %d %d %d %d "
+                        "-frames %d %d %s",
+                        rsh,
+                        machineName[childNum], userName[childNum],
+                        beNice ? "nice" : "",
+                        executable[childNum],
+                        debugMachines ? "-debug_machines" : "",
+                        masterHostName, masterPortNum, 
+                        remote[childNum] ? ioPortNum[numIoServers-1] : 0,
+                        combinePortNum, decodePortNum, childNum,
+                        remote[childNum] ? 1 : 0,
+                        startFrame, startFrame + nFrames - 1,
+                        remote[childNum] ? 
                           remoteParamFile[childNum] : paramFileName
                 );
         
@@ -2070,7 +2070,7 @@ MasterServer(struct inputSource * const inputSourceP,
         fclose(statFile);
 
     free(childState);
-    strfree(hostName);
+    pm_strfree(hostName);
 }
 
 

@@ -1217,8 +1217,8 @@ doDiffSize(struct Rect       const clipsrc,
 
     pm_close(tempFileP);
 
-    asprintfN(&command, "pnmscale -xsize %d -ysize %d > %s",
-              rectwidth(&clipdst), rectheight(&clipdst), tempFilename);
+    pm_asprintf(&command, "pnmscale -xsize %d -ysize %d > %s",
+                rectwidth(&clipdst), rectheight(&clipdst), tempFilename);
 
     pm_message("running command '%s'", command);
 
@@ -1227,7 +1227,7 @@ doDiffSize(struct Rect       const clipsrc,
         pm_error("cannot execute command '%s'  popen() errno = %s (%d)",
                  command, strerror(errno), errno);
 
-    strfree(command);
+    pm_strfree(command);
 
     fprintf(pnmscalePipeP, "P6\n%d %d\n%d\n",
             rectwidth(&clipsrc), rectheight(&clipsrc), PPM_MAXMAXVAL);
@@ -1331,7 +1331,7 @@ doDiffSize(struct Rect       const clipsrc,
 
     pm_close(scaled);
     ppm_freerow(row);
-    strfree(tempFilename);
+    pm_strfree(tempFilename);
     unlink(tempFilename);
 }
 

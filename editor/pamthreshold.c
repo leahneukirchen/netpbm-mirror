@@ -103,15 +103,15 @@ parseGeometry(const char *   const wxl,
 
     char * const xPos = strchr(wxl, 'x');
     if (!xPos)
-        asprintfN(errorP, "There is no 'x'.  It should be WIDTHxHEIGHT");
+        pm_asprintf(errorP, "There is no 'x'.  It should be WIDTHxHEIGHT");
     else {
         *widthP  = atoi(wxl);
         *heightP = atoi(xPos + 1);
 
         if (*widthP == 0)
-            asprintfN(errorP, "Width is zero.");
+            pm_asprintf(errorP, "Width is zero.");
         else if (*heightP == 0)
-            asprintfN(errorP, "Height is zero.");
+            pm_asprintf(errorP, "Height is zero.");
         else
             *errorP = NULL;
     }
@@ -194,7 +194,7 @@ parseCommandLine(int                 argc,
 
         if (error) {
             pm_error("Invalid -local value '%s'.  %s", localOpt, error);
-            strfree(error);
+            pm_strfree(error);
         }
     } else
         cmdlineP->local = FALSE;
@@ -207,7 +207,7 @@ parseCommandLine(int                 argc,
 
         if (error) {
             pm_error("Invalid -dual value '%s'.  %s", dualOpt, error);
-            strfree(error);
+            pm_strfree(error);
         }
     } else
         cmdlineP->dual = FALSE;
