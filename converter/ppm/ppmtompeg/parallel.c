@@ -1209,7 +1209,7 @@ openInputFile(const char * const fileName,
             pm_message("ERROR  Couldn't read frame file '%s' errno = %d (%s)"
                        "attempt %d", 
                        fileName, errno, strerror(errno), attempts);
-            sleepN(1000);
+            pm_sleep(1000);
         }
         ++attempts;
     }

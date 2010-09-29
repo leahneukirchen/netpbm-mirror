@@ -1680,7 +1680,7 @@ ReadDecodedRefFrame(MpegFrame *  const frameP,
     }
 
     if ((fpointer = fopen(fileName, "rb")) == NULL) {
-        sleepN(1000);
+        pm_sleep(1000);
         if ((fpointer = fopen(fileName, "rb")) == NULL) {
             fprintf(stderr, "Cannot open %s\n", fileName);
             exit(1);
