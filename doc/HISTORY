@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+10.09.30 BJH  Release 10.52.02
+
+              pm_floatFromBigendFloat, pm_doubleFromBigendFloat, fitstopnm:
+              fix corrupted output.  Broken in 10.46.
+
 10.09.29 BJH  Release 10.52.01
 
               pamtopdbimg: fix corrupted output image.  Thanks Scott Pakin.
