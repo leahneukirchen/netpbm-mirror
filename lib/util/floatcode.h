@@ -25,7 +25,7 @@ typedef struct {
 static __inline__ float
 pm_floatFromBigendFloat(pm_bigendFloat const arg) {
 
-    uint32_t retval;
+    float retval;
 
     switch (pm_byteOrder) {
     case BIG_ENDIAN: {
@@ -109,7 +109,7 @@ typedef struct {
 static __inline__ double
 pm_doubleFromBigendDouble(pm_bigendDouble const arg) {
 
-    uint32_t retval;
+    double retval;
 
     switch (pm_byteOrder) {
     case BIG_ENDIAN: {

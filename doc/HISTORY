@@ -4,6 +4,13 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+10.09.30 BJH  Release 10.47.20
+
+              pm_floatFromBigendFloat, pm_doubleFromBigendFloat, fitstopnm:
+              fix corrupted output.  Broken in 10.46.
+
+              ppmtompeg: fix crash with free of unallocated memory.
+
 10.08.28 BJH  Release 10.47.19
 
               Build: don't expect snprintf() to exist.
