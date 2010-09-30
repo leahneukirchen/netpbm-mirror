@@ -12,6 +12,9 @@ Not yet  BJH  Release 10.53.00
               pamstereogram: slight change to dpi and eye separation defaults.
               invert near/far dark/light association.  Thanks Scott Pakin.
 
+              pm_floatFromBigendFloat, pm_doubleFromBigendFloat, fitstopnm:
+              fix corrupted output.  Broken in 10.46.
+
               pamtopdbimg: fix corrupted output image.  Thanks Scott Pakin.
 
               pdbimgtopam: fix corrupted output image.  Thanks Scott Pakin.
