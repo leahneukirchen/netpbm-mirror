@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 Not yet  BJH  Release 10.53.00
 
+              fitstopnm: Deal properly with NaN in input image.
+
               pamstereogram: Add mapped texture stereogram option.
               Thanks Scott Pakin.
 

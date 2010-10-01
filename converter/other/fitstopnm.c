@@ -468,6 +468,9 @@ scanImageForMinMax(FILE *       const ifP,
                    double *     const dataminP,
                    double *     const datamaxP) {
 
+    /* Note that a value in the file might be Not-A-Number.  We ignore
+       such entries in computing the minimum and maximum for the image.
+    */
     double dmax, dmin;
     unsigned int image;
     pm_filepos rasterPos;
@@ -495,8 +498,9 @@ scanImageForMinMax(FILE *       const ifP,
                 double val;
                 readVal(ifP, valFmt, &val);
                 if (image == imagenum || multiplane ) {
-                    dmax = MAX(dmax, val);
-                    dmin = MIN(dmin, val);
+                    /* Note: if 'val' is NaN, result is 2nd operand */
+                    dmax = MAX(val, dmax);
+                    dmin = MIN(val, dmin);
                 }
             }
         }
