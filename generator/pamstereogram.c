@@ -874,7 +874,7 @@ smoothOutSpeckles(outGenerator * const outGenP,
             } else
                 pnm_assigntuple(pamP, scratchrow[col], outRow[col]);
         }
-        for (col = 0; col < pamP->width-1; ++col)
+        for (col = 1; col < pamP->width-1; ++col)
             pnm_assigntuple(pamP, outRow[col], scratchrow[col]);
     }
 }
