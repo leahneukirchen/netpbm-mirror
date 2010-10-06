@@ -1551,7 +1551,7 @@ sub testPngHdr($$) {
 
 
 
-sub printBadPngConfigCFlagsWarning($) {
+sub printBadPngConfigCflagsWarning($) {
     my ($pngCFlags) = @_;
 
     print << 'EOF';
