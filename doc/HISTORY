@@ -25,7 +25,9 @@ Not yet  BJH  Release 10.53.00
               to start with "pm_": shhopt, nstring, nsleep.  Eliminate
               createBlackTuple -- pnmCreateBlackTuple already existed.
 
-              configure: fix crash when libpng test compile fails.
+              configure: Make warnings stand out more.
+
+              configure: Fix crash when libpng test compile fails.
 
 10.09.26 BJH  Release 10.52.00
 
