@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+not yet  BJH  Release 10.52.03
+
+              configure: fix crash when libpng test compile fails.
+
 10.09.30 BJH  Release 10.52.02
 
               pm_floatFromBigendFloat, pm_doubleFromBigendFloat, fitstopnm:
