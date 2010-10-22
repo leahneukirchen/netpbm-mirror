@@ -751,21 +751,28 @@ parseCommandLine(int argc,
 
 static void 
 computeOutputDimensions(struct cmdlineInfo  const cmdline, 
-                        unsigned int        const rows, 
                         unsigned int        const cols, 
-                        int *               const newrowsP, 
-                        int *               const newcolsP) {
+                        unsigned int        const rows, 
+                        int *               const newcolsP,
+                        int *               const newrowsP) { 
+
+    double newcolsD, newrowsD;
+        /* Intermediate calculation of the output dimensions, in double
+           precision floating point to avoid arithmetic overflow.
+        */
+    unsigned int newcols, newrows;
+        /* The output dimensions we return */
 
     switch(cmdline.scaleType) {
     case SCALE_PIXELMAX: {
         if (rows * cols <= cmdline.pixels) {
-            *newrowsP = rows;
-            *newcolsP = cols;
+            newrowsD = rows;
+            newcolsD = cols;
         } else {
             const double scale =
                 sqrt( (float) cmdline.pixels / ((float) cols * (float) rows));
-            *newrowsP = rows * scale;
-            *newcolsP = cols * scale;
+            newrowsD = rows * scale;
+            newcolsD = cols * scale;
         }
     } break;
     case SCALE_BOXFIT:
@@ -778,45 +785,53 @@ computeOutputDimensions(struct cmdlineInfo  const cmdline,
              cmdline.scaleType == SCALE_BOXFIT) ||
             (box_aspect_ratio < aspect_ratio &&
              cmdline.scaleType == SCALE_BOXFILL)) {
-            *newrowsP = cmdline.ysize;
-            *newcolsP = *newrowsP * aspect_ratio + 0.5;
+            newrowsD = cmdline.ysize;
+            newcolsD = newrowsD * aspect_ratio;
         } else {
-            *newcolsP = cmdline.xsize;
-            *newrowsP = *newcolsP / aspect_ratio + 0.5;
+            newcolsD = cmdline.xsize;
+            newrowsD = newcolsD / aspect_ratio;
         }
     } break;
     case SCALE_SEPARATE: {
         if (cmdline.xsize)
-            *newcolsP = cmdline.xsize;
+            newcolsD = cmdline.xsize;
         else if (cmdline.xscale)
-            *newcolsP = cmdline.xscale * cols + .5;
+            newcolsD = cmdline.xscale * cols;
         else if (cmdline.ysize)
-            *newcolsP = cols * ((float) cmdline.ysize/rows) +.5;
+            newcolsD = cols * ((float) cmdline.ysize/rows);
         else
-            *newcolsP = cols;
+            newcolsD = cols;
 
         if (cmdline.ysize)
-            *newrowsP = cmdline.ysize;
+            newrowsD = cmdline.ysize;
         else if (cmdline.yscale)
-            *newrowsP = cmdline.yscale * rows +.5;
+            newrowsD = cmdline.yscale * rows;
         else if (cmdline.xsize)
-            *newrowsP = rows * ((float) cmdline.xsize/cols) +.5;
+            newrowsD = rows * ((float) cmdline.xsize/cols);
         else
-            *newrowsP = rows;
+            newrowsD = rows;
     }
     }
+    
+    /* If the rounding yields a zero dimension, we fudge it up to 1.  We do
+       this rather than considering it a specification error (and dying)
+       because it's friendlier to automated processes that work on arbitrary
+       input.  It saves them having to check their numbers to avoid
+       catastrophe.
+    */
+    newcols = MAX(1, ROUNDU(newcolsD));
+    newrows = MAX(1, ROUNDU(newrowsD));
 
-    /* If the calculations above yielded (due to rounding) a zero 
-     * dimension, we fudge it up to 1.  We do this rather than considering
-     * it a specification error (and dying) because it's friendlier to 
-     * automated processes that work on arbitrary input.  It saves them
-     * having to check their numbers to avoid catastrophe.
-     */
-  
-    if (*newcolsP < 1) *newcolsP = 1;
-    if (*newrowsP < 1) *newrowsP = 1;
+    if (newcols > INT_MAX - 2)
+        pm_error("output image width (%u) too large for computations",
+                 newcols);
+    if (newrows > INT_MAX - 2)
+        pm_error("output image height (%u) too large for computation",
+                 newrows);
+
+    *newcolsP = newcols;
+    *newrowsP = newrows;
 }
-
 
 
 
@@ -2142,8 +2157,8 @@ pamscale(FILE *             const ifP,
         outpam.maxval = inpam.maxval;
     }
 
-    computeOutputDimensions(cmdline, inpam.height, inpam.width,
-                            &outpam.height, &outpam.width);
+    computeOutputDimensions(cmdline, inpam.width, inpam.height, 
+                            &outpam.width, &outpam.height);
 
     xscale = (float) outpam.width / inpam.width;
     yscale = (float) outpam.height / inpam.height;
