@@ -516,6 +516,32 @@ processFilterOptions(unsigned int const         filterSpec,
 
 
 static void
+parseSizeParm(const char *   const sizeString,
+              const char *   const description,
+              unsigned int * const sizeP) {
+
+    char * endptr;
+    long int sizeLong;
+
+
+    sizeLong = strtol(sizeString, &endptr, 10);
+    if (strlen(sizeString) > 0 && *endptr != '\0')
+        pm_error("%s size argument not an integer: '%s'", 
+                 description, sizeString);
+    else if (sizeLong > INT_MAX - 2)
+        pm_error("%s size argument is too large "
+                 "for computations: %ld", 
+                 description, sizeLong);
+    else if (sizeLong <= 0)
+        pm_error("%s size argument is not positive: %ld", 
+                 description, sizeLong);
+    else
+        *sizeP = (unsigned int) sizeLong;
+}        
+
+
+
+static void
 parseXyParms(int                  const argc, 
              const char **        const argv,
              struct cmdlineInfo * const cmdlineP) {
@@ -531,23 +557,10 @@ parseXyParms(int                  const argc,
         pm_error("Too many arguments.  With -xyfit/xyfill/xysize, "
                  "you need 2 or 3 arguments.");
     else {
-        char * endptr;
-        cmdlineP->xsize = strtol(argv[1], &endptr, 10);
-        if (strlen(argv[1]) > 0 && *endptr != '\0')
-            pm_error("horizontal size argument not an integer: '%s'", 
-                     argv[1]);
-        if (cmdlineP->xsize <= 0)
-            pm_error("horizontal size argument is not positive: %d", 
-                     cmdlineP->xsize);
-        
-        cmdlineP->ysize = strtol(argv[2], &endptr, 10);
-        if (strlen(argv[2]) > 0 && *endptr != '\0')
-            pm_error("vertical size argument not an integer: '%s'", 
-                     argv[2]);
-        if (cmdlineP->ysize <= 0)
-            pm_error("vertical size argument is not positive: %d", 
-                     cmdlineP->ysize);
-        
+        parseSizeParm(argv[1], "horizontal", &cmdlineP->xsize);
+
+        parseSizeParm(argv[2], "vertical", &cmdlineP->ysize);
+
         if (argc-1 < 3)
             cmdlineP->inputFileName = "-";
         else
