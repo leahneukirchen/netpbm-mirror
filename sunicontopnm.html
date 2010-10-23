@@ -27,12 +27,31 @@ image as output.
 it is PBM.  Before Netpbm 10.53 (December 2010), the program would not work
 on a Depth=8 icon.
 
+<p>If the input is color, the output is still PGM (the program can't do
+any better because developers haven't figured out how).  If you know the
+palette used by the Sun icon image, you can use <b>pamlookup</b> to
+convert the PGM output to the proper color Netpbm image.
+
+
+<h2 id="sunicons">ABOUT SUN ICONS</h2>
+
+<p>It seems that this icon format was used in Sunview and were usable in it
+successor Openlook/Openwindows in Sun 4.1.1, which offered backward
+compatibilty for Sunview, including the icons.  Sunview's desktop was
+monochrome.  OpenWindows had color icons.  Sun 4 came with OpenWindows.
+OpenWindows appears to have been an X-based gui so presumably the icons were
+mostly XPM files.
+
+<p>So in addition to <b>sunicontopnm</b>, you should try <b>xpmtoppm</b> and
+<b>xbmtopbm</b> on icons from a Sun Workstation.
+
 
 <H2 id="seealso">SEE ALSO</H2>
 
 <A HREF="pbmtoicon.html">pbmtoicon</A>,
 <A HREF="winicontoppm.html">winicontoppm</A>,
 <A HREF="xpmtoppm.html">xpmtoppm</A>,
+<A HREF="xbmtoppm.html">xbmtoppm</A>,
 <A HREF="infotopam.html">infotopam</A>,
 <A HREF="pbm.html">pbm</A>
 <A HREF="pgm.html">pbm</A>
