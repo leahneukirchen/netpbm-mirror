@@ -6,13 +6,17 @@ CHANGE HISTORY
 
 Not yet  BJH  Release 10.53.00
 
-              fitstopnm: Deal properly with NaN in input image.
-
               pamstereogram: Add mapped texture stereogram option.
               Thanks Scott Pakin.
 
               pamstereogram: slight change to dpi and eye separation defaults.
               invert near/far dark/light association.  Thanks Scott Pakin.
+
+              sgitopnm: Fix arithmetic overflow on -channel option.
+
+              sgitopnm: Fix crash with -channel on verbatim SGI image.
+
+              fitstopnm: Deal properly with NaN in input image.
 
               pm_floatFromBigendFloat, pm_doubleFromBigendFloat, fitstopnm:
               fix corrupted output.  Broken in 10.46.
