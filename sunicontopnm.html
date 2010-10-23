@@ -1,0 +1,67 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Sunicontopnm User Manual</TITLE></HEAD>
+<BODY>
+<H1>sunicontopnm</H1>
+Updated: 23 October 2010
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<H2>NAME</H2>
+sunicontopnm - convert a Sun icon into a Netpbm image
+
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>sunicontopnm</B>
+[<I>iconfile</I>]
+
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>sunicontopnm</b> reads a Sun icon as input and produces a PBM or PGM
+image as output.
+
+<p>If the input is of the Depth=8 variety, the output is PGM.  Otherwise,
+it is PBM.  Before Netpbm 10.53 (December 2010), the program would not work
+on a Depth=8 icon.
+
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<A HREF="pbmtoicon.html">pbmtoicon</A>,
+<A HREF="winicontoppm.html">winicontoppm</A>,
+<A HREF="xpmtoppm.html">xpmtoppm</A>,
+<A HREF="infotopam.html">infotopam</A>,
+<A HREF="pbm.html">pbm</A>
+<A HREF="pgm.html">pbm</A>
+
+<H2 id="history">HISTORY</H2>
+
+<p>Jef Poskanzer wrote the program under the name <b>icontopbm</b> in 1988.
+
+<p>In October 2010, Prophet Of The Way (afu@wta.att.ne.jp) converted it to use
+the more recent &quot;packed PBM&quot; library functions, thus speeding it up
+
+<P>Netpbm 10.53 (December 2010) renamed the program to <b>sunicontopnm</b>.
+This name reflects the fact that there are lots of kinds of icons in the world
+besides the Sun variety, Windows ones being most popular.  It also takes
+into account the new Depth=8 capability (see below).
+
+<p>Netpbm 10.53 (December 2010) added the ability to work with Depth=8
+icon input and input with 32 bit &quot;items.&quot;  Whereas the previous
+program always produced PBM output, the new program produced PGM in the
+Depth=8 case.
+
+<HR>
+<H2 id="index">Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#history">HISTORY</A>
+</UL>
+</BODY>
+</HTML>
+
