@@ -6,6 +6,16 @@ CHANGE HISTORY
 
 Not yet  BJH  Release 10.53.00
 
+              sunicontopnm: Understands Depth=8.
+
+              sunicontopnm: Validate header.
+
+              sunicontopnm: fix for 32 bit items in input.
+
+              sunicontopnm: fix arithmetic overflows.
+
+              icontopbm: rename to sunicontopnm.
+
               pamstereogram: Add mapped texture stereogram option.
               Thanks Scott Pakin.
 

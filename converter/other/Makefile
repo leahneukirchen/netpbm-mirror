@@ -87,7 +87,7 @@ PORTBINARIES =  avstopam bmptopnm fitstopnm \
 	        pgmtopbm pgmtoppm ppmtopgm pnmtoddif \
 		pnmtopclxl \
 		pnmtosgi pnmtosir pamtotga pnmtoxwd \
-		rlatopam sgitopnm sirtopnm xwdtopnm zeisstopnm
+		rlatopam sgitopnm sirtopnm sunicontopnm xwdtopnm zeisstopnm
 
 ifneq ($(DONT_HAVE_PROCESS_MGMT),Y)
   PORTBINARIES += pstopnm
