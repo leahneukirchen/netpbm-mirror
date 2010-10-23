@@ -15,8 +15,11 @@
 ** 29Jan94: first version
 ** 08Feb94: minor bugfix
 ** 29Jul00: added -channel option (smar@reptiles.org)
+** 19Oct10: added checks for artihmetic overflows
+**          fixed problem with -channel on verbatim sgi images (afu)
 */
 #include <unistd.h>
+#include <limits.h>
 #include "mallocvar.h"
 #include "pnm.h"
 #include "sgi.h"
@@ -39,23 +42,18 @@ static void readerr ARGS((FILE *f));
 static const char *
 compression_name(char compr);
 static void       read_bytes ARGS((FILE *ifp, int n, char *buf));
-static Header *   read_header ARGS((FILE *ifp, int channel));
+static Header *   read_header ARGS((FILE *ifp, int outChannel, int verbose));
 static TabEntry * read_table ARGS((FILE *ifp, int tablen));
-static ScanLine * read_channels ARGS((FILE *ifp, Header *head, TabEntry *table, short (*func) ARGS((FILE *)), int ochan ));
-static void       image_to_pnm ARGS((Header *head, ScanLine *image, xelval maxval, int channel));
+static ScanLine * read_channels ARGS((FILE *ifp, Header *head, TabEntry *table, int outChannel ));
+static void       image_to_pnm ARGS((Header *head, ScanLine *image, xelval maxval, int outChannel));
 static void       rle_decompress ARGS((ScanElem *src, int srclen, ScanElem *dest, int destlen));
 
 #define WORSTCOMPR(x)   (2*(x) + 2)
 
 
-static short verbose = 0;
-
-
 
 int
-main(argc, argv)
-    int argc;
-    char *argv[];
+main(int argc, char *argv[])
 {
     FILE *ifp;
     int argn;
@@ -64,7 +62,8 @@ main(argc, argv)
     ScanLine *image;
     Header *head;
     pixval maxval;
-    int channel = -1;
+    long int outChannel = -1;
+    int verbose = 0;
 
     pnm_init(&argc, argv);
 
@@ -84,8 +83,8 @@ main(argc, argv)
                 pm_usage(usage);
 
             s = argv[argn];
-            channel = strtol(argv[argn], &s, 10);
-            if( s == argv[argn] || channel < 0)
+            outChannel = strtol(argv[argn], &s, 10);
+            if( s == argv[argn] || outChannel < 0)
                 pm_usage(usage);
         }
         else
@@ -103,33 +102,29 @@ main(argc, argv)
     if( argn != argc )
         pm_usage(usage);
 
-    head = read_header(ifp, channel);
+    head = read_header(ifp, outChannel, verbose);
     maxval = head->pixmax - head->pixmin;
     if( maxval > PNM_OVERALLMAXVAL )
         pm_error("Maximum sample value in input image (%d) is too large.  "
                  "This program's limit is %d.",
                  maxval, PNM_OVERALLMAXVAL);
-    if (channel >= head->zsize)
+    if (outChannel >= head->zsize)
         pm_error("channel out of range - only %d channels in image",
             head->zsize);
     if( head->storage != STORAGE_VERBATIM )
         table = read_table(ifp, head->ysize * head->zsize);
-    if( head->bpc == 1 )
-        image = read_channels(ifp, head, table, get_byte_as_short, channel);
-    else
-        image = read_channels(ifp, head, table, get_big_short, channel);
-
-    image_to_pnm(head, image, (xelval)maxval, channel);
+ 
+    image = read_channels(ifp, head, table, outChannel);
     pm_close(ifp);
+ 
+    image_to_pnm(head, image, (xelval)maxval, outChannel);
 
     exit(0);
 }
 
 
 static Header *
-read_header(ifp, channel)
-    FILE *ifp;
-    int channel;
+read_header(FILE * const ifp, int const outChannel, int const verbose)
 {
     Header *head;
 
@@ -142,8 +137,13 @@ read_header(ifp, channel)
     head->xsize     = get_big_short(ifp);
     head->ysize     = get_big_short(ifp);
     head->zsize     = get_big_short(ifp);
+    if(head->zsize > 256)
+      pm_error("Too many channels in input image: %u",
+	       (unsigned int) head->zsize );
     head->pixmin    = get_big_long(ifp);
     head->pixmax    = get_big_long(ifp);
+    if(head->pixmin >= head->pixmax)
+      pm_error("Invalid sgi image header: pixmin larger than pixmax");   
     read_bytes(ifp, 4, head->dummy1);
     read_bytes(ifp, 80, head->name);
     head->colormap  = get_big_long(ifp);
@@ -177,7 +177,7 @@ read_header(ifp, channel)
                 case 3:
                     break;
                 default:
-                    if (channel < 0)
+                    if (outChannel < 0)
                         pm_message("%d-channel image, using only first 3 channels", head->zsize);
                     break;
             }
@@ -198,9 +198,7 @@ read_header(ifp, channel)
 
 
 static TabEntry *
-read_table(ifp, tablen)
-    FILE *ifp;
-    int tablen;
+read_table(FILE * const ifp, int const tablen)
 {
     TabEntry *table;
     int i;
@@ -218,23 +216,21 @@ read_table(ifp, tablen)
 
 
 static ScanLine *
-read_channels(ifp, head, table, func, ochan)
-    FILE *ifp;
-    Header *head;
-    TabEntry *table;
-    short (*func) ARGS((FILE *));
-    int ochan;
+read_channels(FILE *        const ifp,
+              Header *      const head,
+              TabEntry *    const table, 
+              int           const outChannel) 
 {
     ScanLine *image;
     ScanElem *temp;
     int channel, maxchannel, sgi_index, i;
     long offset, length;
 
-    if (ochan < 0) {
+    if (outChannel < 0) {
         maxchannel = (head->zsize < 3) ? head->zsize : 3;
         MALLOCARRAY_NOFAIL(image, head->ysize * maxchannel);
     } else {
-        maxchannel = ochan + 1;
+        maxchannel = outChannel + 1;
         MALLOCARRAY_NOFAIL(image, head->ysize);
     }
     if ( table ) 
@@ -243,16 +239,16 @@ read_channels(ifp, head, table, func, ochan)
     for( channel = 0; channel < maxchannel;  channel++ ) {
         unsigned int row;
         for( row = 0; row < head->ysize; row++ ) {
-            int iindex;
+            unsigned long int iindex;
 
             sgi_index = channel * head->ysize + row;
-            iindex = (ochan < 0) ? sgi_index : row;
-            if (ochan < 0 || ochan == channel)
+            iindex = (outChannel < 0) ? sgi_index : row;
+            if (outChannel < 0 || outChannel == channel)
                 MALLOCARRAY_NOFAIL(image[iindex], head->xsize);
 
             if( table ) {
-                if (channel < ochan)
-                    continue;
+                if (channel < outChannel)
+                  continue;
 
                 offset = table[sgi_index].start;
                 length = table[sgi_index].length;
@@ -263,12 +259,24 @@ read_channels(ifp, head, table, func, ochan)
                     pm_error("seek error for offset %ld", offset);
 
                 for( i = 0; i < length; i++ )
-                    temp[i] = (*func)(ifp);
+                    if( head->bpc == 1 )
+                       temp[i] = get_byte_as_short(ifp);
+		    else
+                       temp[i] = get_big_short(ifp);
                 rle_decompress(temp, length, image[iindex], head->xsize);
             }
             else {
                 for( i = 0; i < head->xsize; i++ )
-                    image[iindex][i] = (*func)(ifp);
+		  {
+		    ScanElem p;
+                    if( head->bpc == 1 )
+                      p = get_byte_as_short(ifp);
+		    else
+                      p = get_big_short(ifp);
+
+                    if (channel == -1 || channel ==outChannel)
+		      image[iindex][i] = p;
+		  }
             }
         }
     }
@@ -280,7 +288,10 @@ read_channels(ifp, head, table, func, ochan)
 
 
 static void
-image_to_pnm(Header *head, ScanLine *image, xelval maxval, int channel)
+image_to_pnm(Header   * const head,
+             ScanLine * const image,
+             xelval     const maxval,
+             int        const channel)
 {
     int col, row, format;
     xel *pnmrow = pnm_allocrow(head->xsize);
@@ -316,11 +327,10 @@ image_to_pnm(Header *head, ScanLine *image, xelval maxval, int channel)
 
 
 static void
-rle_decompress(src, srcleft, dest, destleft)
-    ScanElem *src;
-    int srcleft;
-    ScanElem *dest;
-    int destleft;
+rle_decompress(ScanElem * src,
+               int        srcleft,
+               ScanElem * dest,
+               int        destleft)
 {
     int count;
     unsigned char el;
@@ -358,8 +368,7 @@ rle_decompress(src, srcleft, dest, destleft)
 /* basic I/O functions, taken from ilbmtoppm.c */
 
 static short
-get_big_short(ifp)
-    FILE *ifp;
+get_big_short(FILE * const ifp)
 {
     short s;
 
@@ -370,8 +379,7 @@ get_big_short(ifp)
 }
 
 static long
-get_big_long(ifp)
-    FILE *ifp;
+get_big_long(FILE * const ifp)
 {
     long l;
 
@@ -382,8 +390,7 @@ get_big_long(ifp)
 }
 
 static unsigned char
-get_byte(ifp)
-    FILE* ifp;
+get_byte(FILE * const ifp)
 {
     int i;
 
@@ -396,8 +403,7 @@ get_byte(ifp)
 
 
 static void
-readerr(f)
-    FILE *f;
+readerr(FILE * const f)
 {
     if( ferror(f) )
         pm_error("read error");
@@ -407,10 +413,7 @@ readerr(f)
 
 
 static void
-read_bytes(ifp, n, buf)
-    FILE *ifp;
-    int n;
-    char *buf;
+read_bytes(FILE * const ifp, int const n, char * const buf)
 {
     int r;
 
@@ -421,15 +424,14 @@ read_bytes(ifp, n, buf)
 
 
 static short
-get_byte_as_short(ifp)
-    FILE *ifp;
+get_byte_as_short(FILE * const ifp)
 {
     return (short)get_byte(ifp);
 }
 
 
 static const char *
-compression_name(char compr)
+compression_name(char const compr)
 {
     switch( compr ) {
         case STORAGE_VERBATIM:
@@ -440,4 +442,3 @@ compression_name(char compr)
             return "unknown";
     }
 }
-
