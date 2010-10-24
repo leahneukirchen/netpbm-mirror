@@ -1,4 +1,4 @@
-/* icontopbm.c - read a Sun icon file and produce a portable bitmap
+/* icontopbm.c - read a Sun icon file and produce a Netbpbm image.
 **
 ** Copyright (C) 1988 by Jef Poskanzer.
 **
