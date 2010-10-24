@@ -6,13 +6,17 @@ CHANGE HISTORY
 
 Not yet  BJH  Release 10.53.00
 
-              sunicontopnm: Understands Depth=8.
+              sunicontopnm: Understands Depth=8.  Thanks Prophet of the Way
+              <afu@wta.att.ne.jp>.
 
-              sunicontopnm: Validate header.
+              sunicontopnm: Validate header.  Thanks Prophet of the Way
+              <afu@wta.att.ne.jp>.
 
-              sunicontopnm: fix for 32 bit items in input.
+              sunicontopnm: fix for 32 bit items in input.  Thanks Prophet of
+              the Way <afu@wta.att.ne.jp>.
 
-              sunicontopnm: fix arithmetic overflows.
+              sunicontopnm: fix arithmetic overflows.  Thanks Prophet of the
+              Way <afu@wta.att.ne.jp>.
 
               icontopbm: rename to sunicontopnm.
 
@@ -22,9 +26,11 @@ Not yet  BJH  Release 10.53.00
               pamstereogram: slight change to dpi and eye separation defaults.
               invert near/far dark/light association.  Thanks Scott Pakin.
 
-              sgitopnm: Fix arithmetic overflow on -channel option.
+              sgitopnm: Fix arithmetic overflow on -channel option.  Thanks
+              Prophet of the Way <afu@wta.att.ne.jp>.
 
-              sgitopnm: Fix crash with -channel on verbatim SGI image.
+              sgitopnm: Fix crash with -channel on verbatim SGI image.  Thanks
+              Prophet of the Way <afu@wta.att.ne.jp>.
 
               fitstopnm: Deal properly with NaN in input image.
 
@@ -34,6 +40,9 @@ Not yet  BJH  Release 10.53.00
               pamtopdbimg: fix corrupted output image.  Thanks Scott Pakin.
 
               pdbimgtopam: fix corrupted output image.  Thanks Scott Pakin.
+
+              pstopnm: fix arithmetic overflows.  Thanks Prophet of the Way
+              <afu@wta.att.ne.jp>.
 
               Rename all external symbols that don't have a Netpbm prefix
               to start with "pm_": shhopt, nstring, nsleep.  Eliminate
