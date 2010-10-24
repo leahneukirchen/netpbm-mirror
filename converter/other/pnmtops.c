@@ -83,12 +83,15 @@ parseDpi(const char *   const dpiOpt,
          unsigned int * const dpiYP) {
 
     char *dpistr2;
-    unsigned int dpiX, dpiY;
+    unsigned long int dpiX, dpiY;
 
     dpiX = strtol(dpiOpt, &dpistr2, 10);
-    if (dpistr2 == dpiOpt) 
+    if (dpistr2 == dpiOpt)
         pm_error("Invalid value for -dpi: '%s'.  Must be either number "
                  "or NxN ", dpiOpt);
+    else if (dpiX > INT_MAX)
+        pm_error("Invalid value for -dpi: '%s'.  "
+                 "Value too large for computation", dpiOpt);
     else {
         if (*dpistr2 == '\0') {
             *dpiXP = dpiX;
@@ -97,8 +100,11 @@ parseDpi(const char *   const dpiOpt,
             char * dpistr3;
 
             dpistr2++;  /* Move past 'x' */
-            dpiY = strtol(dpistr2, &dpistr3, 10);        
-            if (dpistr3 != dpistr2 && *dpistr3 == '\0') {
+            dpiY = strtol(dpistr2, &dpistr3, 10);
+            if (dpiY > INT_MAX)
+                pm_error("Invalid value for -dpi: '%s'.  "
+                         "Value too large for computation", dpiOpt);
+            else if (dpistr3 != dpistr2 && *dpistr3 == '\0') {
                 *dpiXP = dpiX;
                 *dpiYP = dpiY;
             } else {
@@ -130,7 +136,30 @@ validateBps_1_2_4_8_12(unsigned int const bitsPerSample) {
 
 
 static void
-parseCommandLine(int argc, char ** argv,
+validateCompDimension(unsigned int const value,
+                      unsigned int const scaleFactor,
+                      const char * const vname) {
+/*----------------------------------------------------------------------------
+   Validate that the image dimension (width or height) 'value' isn't so big
+   that in this program's calculations, involving scale factor 'scaleFactor',
+   it would cause a register overflow.  If it is, abort the program and refer
+   to the offending dimension as 'vname' in the error message.
+
+   Note that this early validation approach (calling this function) means
+   the actual computations don't have to be complicated with arithmetic
+   overflow checks, so they're easier to read.
+-----------------------------------------------------------------------------*/
+    unsigned int const maxWidthHeight = INT_MAX - 2;
+    unsigned int const maxScaleFactor = maxWidthHeight / value;
+
+    if (scaleFactor > maxScaleFactor)
+        pm_error("%s is too large for compuations: %u", vname, value);
+}
+
+
+
+static void
+parseCommandLine(int argc, const char ** argv,
                  struct cmdlineInfo * const cmdlineP) {
 
     unsigned int imagewidthSpec, imageheightSpec;
@@ -140,19 +169,19 @@ parseCommandLine(int argc, char ** argv,
     float width, height;
     unsigned int noturn;
     unsigned int showpage, noshowpage;
-    const char *dpiOpt;
-    unsigned int dpiSpec;
+    const char * dpiOpt;
+    unsigned int dpiSpec, scaleSpec, widthSpec, heightSpec;
 
     optStruct3 opt;
     unsigned int option_def_index = 0;
-    optEntry *option_def;
+    optEntry * option_def;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
-    OPTENT3(0, "scale",       OPT_FLOAT, &cmdlineP->scale, NULL,         0);
+    OPTENT3(0, "scale",       OPT_FLOAT, &cmdlineP->scale, &scaleSpec,   0);
     OPTENT3(0, "dpi",         OPT_STRING, &dpiOpt,         &dpiSpec,     0);
-    OPTENT3(0, "width",       OPT_FLOAT, &width,           NULL,         0);
-    OPTENT3(0, "height",      OPT_FLOAT, &height,          NULL,         0);
+    OPTENT3(0, "width",       OPT_FLOAT, &width,           &widthSpec,   0);
+    OPTENT3(0, "height",      OPT_FLOAT, &height,          &heightSpec,  0);
     OPTENT3(0, "psfilter",    OPT_FLAG,  NULL, &cmdlineP->psfilter,      0);
     OPTENT3(0, "turn",        OPT_FLAG,  NULL, &cmdlineP->mustturn,      0);
     OPTENT3(0, "noturn",      OPT_FLAG,  NULL, &noturn,                  0);
@@ -177,16 +206,11 @@ parseCommandLine(int argc, char ** argv,
     OPTENT3(0, "level",       OPT_UINT, &cmdlineP->level, 
             &cmdlineP->levelSpec,              0);
     
-    /* DEFAULTS */
-    cmdlineP->scale = 1.0;
-    width = 8.5;
-    height = 11.0;
-
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;
     opt.allowNegNum = FALSE;
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
 
     if (cmdlineP->mustturn && noturn)
         pm_error("You cannot specify both -turn and -noturn");
@@ -196,6 +220,15 @@ parseCommandLine(int argc, char ** argv,
         pm_error("You cannot specify both -showpage and -noshowpage");
     if (cmdlineP->setpage && nosetpage)
         pm_error("You cannot specify both -setpage and -nosetpage");
+
+    if (!scaleSpec)
+        cmdlineP->scale = 1.0;
+
+    if (!widthSpec)
+        cmdlineP->width = 8.5;
+
+    if (!heightSpec)
+        cmdlineP->height = 11.0;
 
     if (dpiSpec)
         parseDpi(dpiOpt, &cmdlineP->dpiX, &cmdlineP->dpiY);
@@ -207,16 +240,23 @@ parseCommandLine(int argc, char ** argv,
     cmdlineP->center  =  !nocenter;
     cmdlineP->canturn =  !noturn;
     cmdlineP->showpage = !noshowpage;
+
+    validateCompDimension(width, 72, "-width value");
+    validateCompDimension(height, 72, "-height value");
     
     cmdlineP->width  = width * 72;
     cmdlineP->height = height * 72;
 
-    if (imagewidthSpec)
+    if (imagewidthSpec) {
+        validateCompDimension(imagewidth, 72, "-imagewidth value");
         cmdlineP->imagewidth = imagewidth * 72;
+    }
     else
         cmdlineP->imagewidth = 0;
-    if (imageheightSpec)
+    if (imageheightSpec) {
+        validateCompDimension(imagewidth, 72, "-imageheight value");
         cmdlineP->imageheight = imageheight * 72;
+    }
     else
         cmdlineP->imageheight = 0;
 
@@ -236,6 +276,7 @@ parseCommandLine(int argc, char ** argv,
     else
         cmdlineP->inputFileName = argv[1];
 
+    free(option_def); 
 }
 
 
@@ -258,7 +299,7 @@ static unsigned int rlebitsinitem;
     /* The number of bits filled so far in the item we are currently
        building 
     */
-static unsigned int bitspersample;
+static unsigned int bitsPerSample;
 static unsigned int item, bitshift, items;
 static unsigned int rleitem, rlebitshift;
 static unsigned int repeat, itembuf[128], count, repeatitem, repeatcount;
@@ -266,7 +307,8 @@ static unsigned int repeat, itembuf[128], count, repeatitem, repeatcount;
 
 
 static void
-initNativeOutputEncoder(bool const rle, unsigned int const bitspersample) {
+initNativeOutputEncoder(bool         const rle,
+                        unsigned int const bitsPerSample) {
 /*----------------------------------------------------------------------------
    Initialize the native output encoder.  Call this once per
    Postscript image that you will write with putitem(), before for the
@@ -281,15 +323,14 @@ initNativeOutputEncoder(bool const rle, unsigned int const bitspersample) {
     if (rle) {
         rleitem = 0;
         rlebitsinitem = 0;
-        rlebitshift = 8 - bitspersample;
+        rlebitshift = 8 - bitsPerSample;
         repeat = 1;
         count = 0;
     } else {
         item = 0;
         bitsinitem = 0;
-        bitshift = 8 - bitspersample;
+        bitshift = 8 - bitsPerSample;
     }
-
 }
 
 
@@ -309,7 +350,7 @@ putitem(void) {
     ++items;
     item = 0;
     bitsinitem = 0;
-    bitshift = 8 - bitspersample;
+    bitshift = 8 - bitsPerSample;
 }
 
 
@@ -327,8 +368,8 @@ putxelval(xelval const xv) {
     if (bitsinitem == 8)
         putitem();
     item += xv << bitshift;
-    bitsinitem += bitspersample;
-    bitshift -= bitspersample;
+    bitsinitem += bitsPerSample;
+    bitshift -= bitsPerSample;
 }
 
 
@@ -421,7 +462,7 @@ rleputitem() {
 
     rleitem = 0;
     rlebitsinitem = 0;
-    rlebitshift = 8 - bitspersample;
+    rlebitshift = 8 - bitsPerSample;
 }
 
 
@@ -431,8 +472,8 @@ rleputxelval(xelval const xv) {
     if (rlebitsinitem == 8)
         rleputitem();
     rleitem += xv << rlebitshift;
-    rlebitsinitem += bitspersample;
-    rlebitshift -= bitspersample;
+    rlebitsinitem += bitsPerSample;
+    rlebitshift -= bitsPerSample;
 }
 
 
@@ -515,6 +556,7 @@ destroyBmepsOutputEncoder(struct bmepsoe * const bmepsoeP) {
     free(bmepsoeP->rleBuffer);
     free(bmepsoeP->flateInBuffer);
     free(bmepsoeP->flateOutBuffer);
+    free(bmepsoeP->oeP);
     
     free(bmepsoeP);
 }
@@ -548,6 +590,26 @@ flushBmepsOutput(struct bmepsoe * const bmepsoeP) {
 /*============================================================================
    END OF OUTPUT ENCODERS
 ============================================================================*/
+
+
+
+static void
+validateComputableBoundingBox(float const scols, 
+                              float const srows,
+                              float const llx, 
+                              float const lly) {
+
+  float const bbWidth  = llx + scols + 0.5;
+  float const bbHeight = lly + srows + 0.5;
+
+  if (bbHeight < INT_MIN || bbHeight > INT_MAX ||
+      bbWidth  < INT_MIN || bbWidth  > INT_MAX)
+      pm_error("Bounding box dimensions %.1f x %.1f are too large "
+               "for computations.  "
+               "This probably means input image width, height, "
+               "or scale factor is too large", bbWidth, bbHeight);
+}
+
 
 
 static void
@@ -669,6 +731,7 @@ computeImagePosition(int     const dpiX,
     *llxP = (center) ? ( pagewid - *scolsP ) / 2 : 0;
     *llyP = (center) ? ( pagehgt - *srowsP ) / 2 : 0;
 
+    validateComputableBoundingBox( *scolsP, *srowsP, *llxP, *llyP);
 
     if (verbose)
         pm_message("Image will be %3.2f points wide by %3.2f points high, "
@@ -750,13 +813,18 @@ static void
 setupReadstringNative(bool         const rle,
                       bool         const color,
                       unsigned int const icols, 
-                      unsigned int const padright, 
                       unsigned int const bps) {
 /*----------------------------------------------------------------------------
    Write to Standard Output statements to define /readstring and also
    arguments for it (/picstr or /rpicstr, /gpicstr, and /bpicstr).
 -----------------------------------------------------------------------------*/
-    unsigned int const bytesPerRow = (icols + padright) * bps / 8;
+    unsigned int const bytesPerRow = icols / (8/bps) +
+        (icols % (8/bps) > 0 ? 1 : 0);
+        /* Size of row buffer, padded up to byte boundary.
+
+           A more straightforward calculation would be (icols * bps +7) / 8, 
+           but this overflows when icols is large.
+        */
 
     defineReadstring(rle);
     
@@ -810,7 +878,6 @@ putSetup(unsigned int const dictSize,
          bool         const rle,
          bool         const color,
          unsigned int const icols,
-         unsigned int const padright,
          unsigned int const bps) {
 /*----------------------------------------------------------------------------
    Put the setup section in the Postscript program on Standard Output.
@@ -822,7 +889,7 @@ putSetup(unsigned int const dictSize,
         printf("%u dict begin\n", dictSize);
     
     if (!psFilter)
-        setupReadstringNative(rle, color, icols, padright, bps);
+        setupReadstringNative(rle, color, icols, bps);
 
     printf("%%%%EndSetup\n");
 }
@@ -889,7 +956,6 @@ putInit(unsigned int const postscriptLevel,
         float        const srows,
         float        const llx, 
         float        const lly,
-        int          const padright, 
         int          const bps,
         int          const pagewid, 
         int          const pagehgt,
@@ -922,7 +988,7 @@ putInit(unsigned int const postscriptLevel,
         (int) (llx + scols + 0.5), (int) (lly + srows + 0.5));
     printf("%%%%EndComments\n");
 
-    putSetup(dictSize, psFilter, rle, color, icols, padright, bps);
+    putSetup(dictSize, psFilter, rle, color, icols, bps);
 
     printf("%%%%Page: 1 1\n");
     if (setpage)
@@ -1065,8 +1131,7 @@ computeDepth(xelval         const inputMaxval,
              unsigned int   const postscriptLevel, 
              bool           const psFilter,
              unsigned int   const bitsPerSampleReq,
-             unsigned int * const bitspersampleP,
-             unsigned int * const psMaxvalP) {
+             unsigned int * const bitsPerSampleP) {
 /*----------------------------------------------------------------------------
    Figure out how many bits will represent each sample in the Postscript
    program, and the maxval of the Postscript program samples.  The maxval
@@ -1079,33 +1144,69 @@ computeDepth(xelval         const inputMaxval,
 
     if (bitsPerSampleReq != 0) {
         validateBpsRequest(bitsPerSampleReq, postscriptLevel, psFilter);
-        *bitspersampleP = bitsPerSampleReq;
+        *bitsPerSampleP = bitsPerSampleReq;
     } else {
-        *bitspersampleP = bpsFromInput(bitsRequiredByMaxval,
+        *bitsPerSampleP = bpsFromInput(bitsRequiredByMaxval,
                                        postscriptLevel, psFilter);
     }
-    warnUserAboutReducedDepth(*bitspersampleP, bitsRequiredByMaxval,
+    warnUserAboutReducedDepth(*bitsPerSampleP, bitsRequiredByMaxval,
                               bitsPerSampleReq != 0,
                               postscriptLevel, psFilter);
 
-    *psMaxvalP = pm_bitstomaxval(*bitspersampleP);
-
-    if (verbose)
+    if (verbose) {
+        unsigned int const psMaxval = pm_bitstomaxval(*bitsPerSampleP);
         pm_message("Input maxval is %u.  Postscript raster will have "
                    "%u bits per sample, so maxval = %u",
-                   inputMaxval, *bitspersampleP, *psMaxvalP);
+                   inputMaxval, *bitsPerSampleP, psMaxval);
+    }
 }    
+
+
+
+static void
+padRightNative(unsigned int const bitsPerSample,
+               unsigned int const width,
+               bool         const rle) {
+/*----------------------------------------------------------------------------
+   Write extra columns to row end to bring output up to byte boundary,
+   given that the row is 'width' columns wide with 'bitsPerSample'
+   bits per column.
+
+   'rle' means to write the padding in RLE row format.
+-----------------------------------------------------------------------------*/
+    /*
+      'stragglers' is the number of bits at the right edge that don't
+      fill out a whole byte and 'padcols' is the number of columns we
+      have to add to fill out that last byte.
+      
+      E.g. at 2 bits per sample with 10 columns, stragglers is 4; padcols
+      is 2.
+    */
+    unsigned int const stragglers =
+        (bitsPerSample * (width % 8)) % 8;
+    unsigned int const padcols =
+        stragglers > 0 ? (8-stragglers) / bitsPerSample : 0;
+
+    unsigned int col;
+
+    for (col = 0; col < padcols; ++col) {
+        if (rle)
+            rleputxelval(0);
+        else
+            putxelval(0);
+    }
+}
 
 
 
 static void
 convertRowNative(struct pam * const pamP, 
                  tuple *      const tuplerow, 
-                 unsigned int const psMaxval, 
-                 bool         const rle, 
-                 unsigned int const padright) {
+                 unsigned int const bitsPerSample, 
+                 bool         const rle) {
 
     unsigned int plane;
+    unsigned int const psMaxval = pm_bitstomaxval(bitsPerSample);
 
     for (plane = 0; plane < pamP->depth; ++plane) {
         unsigned int col;
@@ -1118,11 +1219,9 @@ convertRowNative(struct pam * const pamP,
             else
                 putxelval(scaledSample);
         }
-        for (col = 0; col < padright; ++col)
-            if (rle)
-                rleputxelval(0);
-        else
-            putxelval(0);
+
+        padRightNative(bitsPerSample, pamP->width, rle);
+
         if (rle)
             rleflush();
     }
@@ -1134,13 +1233,14 @@ static void
 convertRowPsFilter(struct pam *     const pamP,
                    tuple *          const tuplerow,
                    struct bmepsoe * const bmepsoeP,
-                   unsigned int     const psMaxval) {
+                   unsigned int     const bitsPerSample) {
 
-    unsigned int const bitsPerSample = pm_maxvaltobits(psMaxval);
     unsigned int const stragglers =
-        (((bitsPerSample * pamP->depth) % 8) * pamP->width) % 8;
-        /* Number of bits at the right edge that don't fill out a
-           whole byte */
+        (((bitsPerSample * pamP->depth) % 8) * (pamP->width%8)) % 8;
+        /* Number of bits at the right edge that don't fill out a whole
+           byte
+        */
+    unsigned int const psMaxval = pm_bitstomaxval(bitsPerSample);
 
     unsigned int col;
     tuple scaledTuple;
@@ -1242,14 +1342,7 @@ convertPage(FILE *       const ifP,
     
     struct pam inpam;
     tuple* tuplerow;
-    unsigned int padright;
-        /* Number of bits we must add to the right end of each Postscript
-           output line in order to have an integral number of bytes of output.
-           E.g. at 2 bits per sample with 10 columns, this would be 4.
-        */
     int row;
-    unsigned int psMaxval;
-        /* The maxval of the Postscript program */
     float scols, srows;
     float llx, lly;
     bool turned;
@@ -1260,6 +1353,8 @@ convertPage(FILE *       const ifP,
         /* Size of Postscript dictionary we should define */
 
     pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
+
+    validateCompDimension(inpam.width, 16, "Input image width");
     
     if (!STRSEQ(inpam.tuple_type, PAM_PBM_TUPLETYPE) &&
         !STRSEQ(inpam.tuple_type, PAM_PGM_TUPLETYPE) &&
@@ -1277,12 +1372,8 @@ convertPage(FILE *       const ifP,
         pm_message("generating color Postscript program.");
 
     computeDepth(inpam.maxval, postscriptLevel, psFilter, bitsPerSampleReq,
-                 &bitspersample, &psMaxval);
-    {
-        unsigned int const realBitsPerLine = inpam.width * bitspersample;
-        unsigned int const paddedBitsPerLine = ((realBitsPerLine + 7) / 8) * 8;
-        padright = (paddedBitsPerLine - realBitsPerLine) / bitspersample;
-    }
+                 &bitsPerSample);
+
     /* In positioning/scaling the image, we treat the input image as if
        it has a density of 72 pixels per inch.
     */
@@ -1295,21 +1386,21 @@ convertPage(FILE *       const ifP,
     determineDictionaryRequirement(dict, psFilter, &dictSize);
     
     putInit(postscriptLevel, name, inpam.width, inpam.height, 
-            scols, srows, llx, lly, padright, bitspersample, 
+            scols, srows, llx, lly, bitsPerSample, 
             pagewid, pagehgt, color,
             turned, rle, flate, ascii85, setpage, psFilter, dictSize);
 
     createBmepsOutputEncoder(&bmepsoeP, stdout, rle, flate, ascii85);
-    initNativeOutputEncoder(rle, bitspersample);
+    initNativeOutputEncoder(rle, bitsPerSample);
 
     tuplerow = pnm_allocpamrow(&inpam);
 
     for (row = 0; row < inpam.height; ++row) {
         pnm_readpamrow(&inpam, tuplerow);
         if (psFilter)
-            convertRowPsFilter(&inpam, tuplerow, bmepsoeP, psMaxval);
+            convertRowPsFilter(&inpam, tuplerow, bmepsoeP, bitsPerSample);
         else
-            convertRowNative(&inpam, tuplerow, psMaxval, rle, padright);
+            convertRowNative(&inpam, tuplerow, bitsPerSample, rle);
     }
 
     pnm_freepamrow(tuplerow);
@@ -1355,19 +1446,19 @@ basebasename(const char * const filespec) {
 
 
 int
-main(int argc, char * argv[]) {
+main(int argc, const char * argv[]) {
 
-    FILE* ifp;
-    const char *name;  /* malloc'ed */
+    FILE * ifP;
+    const char * name;  /* malloc'ed */
     struct cmdlineInfo cmdline;
 
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
     verbose = cmdline.verbose;
 
-    ifp = pm_openr(cmdline.inputFileName);
+    ifP = pm_openr(cmdline.inputFileName);
 
     if (streq(cmdline.inputFileName, "-"))
         name = strdup("noname");
@@ -1390,7 +1481,7 @@ main(int argc, char * argv[]) {
 
         eof = FALSE;  /* There is always at least one image */
         for (imageSeq = 0; !eof; ++imageSeq) {
-            convertPage(ifp, cmdline.mustturn, cmdline.canturn, 
+            convertPage(ifP, cmdline.mustturn, cmdline.canturn, 
                         cmdline.psfilter,
                         cmdline.rle, cmdline.flate, cmdline.ascii85, 
                         cmdline.setpage, cmdline.showpage,
@@ -1403,12 +1494,12 @@ main(int argc, char * argv[]) {
                         name, 
                         cmdline.dict, cmdline.vmreclaim,
                         cmdline.levelSpec, cmdline.level);
-            pnm_nextimage(ifp, &eof);
+            pnm_nextimage(ifP, &eof);
         }
     }
     pm_strfree(name);
 
-    pm_close(ifp);
+    pm_close(ifP);
 
     return 0;
 }
