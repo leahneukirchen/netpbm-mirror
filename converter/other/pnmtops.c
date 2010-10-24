@@ -813,16 +813,17 @@ static void
 setupReadstringNative(bool         const rle,
                       bool         const color,
                       unsigned int const icols, 
-                      unsigned int const bps) {
+                      unsigned int const bitsPerSample) {
 /*----------------------------------------------------------------------------
    Write to Standard Output statements to define /readstring and also
    arguments for it (/picstr or /rpicstr, /gpicstr, and /bpicstr).
 -----------------------------------------------------------------------------*/
-    unsigned int const bytesPerRow = icols / (8/bps) +
-        (icols % (8/bps) > 0 ? 1 : 0);
+    unsigned int const bytesPerRow = icols / (8/bitsPerSample) +
+        (icols % (8/bitsPerSample) > 0 ? 1 : 0);
         /* Size of row buffer, padded up to byte boundary.
 
-           A more straightforward calculation would be (icols * bps +7) / 8, 
+           A more straightforward calculation would be
+             (icols * bitsPerSample + 7) / 8 ,
            but this overflows when icols is large.
         */
 
@@ -878,7 +879,7 @@ putSetup(unsigned int const dictSize,
          bool         const rle,
          bool         const color,
          unsigned int const icols,
-         unsigned int const bps) {
+         unsigned int const bitsPerSample) {
 /*----------------------------------------------------------------------------
    Put the setup section in the Postscript program on Standard Output.
 -----------------------------------------------------------------------------*/
@@ -889,7 +890,7 @@ putSetup(unsigned int const dictSize,
         printf("%u dict begin\n", dictSize);
     
     if (!psFilter)
-        setupReadstringNative(rle, color, icols, bps);
+        setupReadstringNative(rle, color, icols, bitsPerSample);
 
     printf("%%%%EndSetup\n");
 }
@@ -956,7 +957,7 @@ putInit(unsigned int const postscriptLevel,
         float        const srows,
         float        const llx, 
         float        const lly,
-        int          const bps,
+        int          const bitsPerSample,
         int          const pagewid, 
         int          const pagehgt,
         bool         const color, 
@@ -988,7 +989,7 @@ putInit(unsigned int const postscriptLevel,
         (int) (llx + scols + 0.5), (int) (lly + srows + 0.5));
     printf("%%%%EndComments\n");
 
-    putSetup(dictSize, psFilter, rle, color, icols, bps);
+    putSetup(dictSize, psFilter, rle, color, icols, bitsPerSample);
 
     printf("%%%%Page: 1 1\n");
     if (setpage)
@@ -999,7 +1000,7 @@ putInit(unsigned int const postscriptLevel,
     printf("%g %g scale\n", scols, srows);
     if (turned)
         printf("0.5 0.5 translate  90 rotate  -0.5 -0.5 translate\n");
-    printf("%d %d %d\n", icols, irows, bps);
+    printf("%d %d %d\n", icols, irows, bitsPerSample);
     printf("[ %d 0 0 -%d 0 %d ]\n", icols, irows, irows);
 
     if (psFilter)
