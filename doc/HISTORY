@@ -41,7 +41,7 @@ Not yet  BJH  Release 10.53.00
 
               pdbimgtopam: fix corrupted output image.  Thanks Scott Pakin.
 
-              pstopnm: fix arithmetic overflows.  Thanks Prophet of the Way
+              pnmtops: fix arithmetic overflows.  Thanks Prophet of the Way
               <afu@wta.att.ne.jp>.
 
               Rename all external symbols that don't have a Netpbm prefix
