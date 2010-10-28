@@ -26,6 +26,9 @@ Not yet  BJH  Release 10.53.00
               pamstereogram: slight change to dpi and eye separation defaults.
               invert near/far dark/light association.  Thanks Scott Pakin.
 
+              pnmtops: Fix incorrect output with -flate.  Thanks Prophet of
+              the Way <afu@wta.att.ne.jp>.
+
               sgitopnm: Fix arithmetic overflow on -channel option.  Thanks
               Prophet of the Way <afu@wta.att.ne.jp>.
 
