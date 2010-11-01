@@ -227,7 +227,7 @@ do_flate_flush(Output_Encoder * const oP,
   
     if (iptr && optr && is && os) {
         is = oP->fl_i_used;
-        if (is) {
+        if (is || final) {
             oP->flate_stream.next_in = iptr;
             oP->flate_stream.avail_in = is;
             if (final) { 

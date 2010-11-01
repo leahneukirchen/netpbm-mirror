@@ -4,6 +4,14 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+10.11.01 BJH  Release 10.47.22
+
+              pnmtops: Fix incorrect output with -flate.  Thanks Prophet of
+              the Way <afu@wta.att.ne.jp>.
+
+              ilbmtoppm: Don't crash on image that has a transparent color
+              index, but no color map.
+
 10.10.16 BJH  Release 10.47.21
 
               configure: fix crash when libpng test compile fails.
