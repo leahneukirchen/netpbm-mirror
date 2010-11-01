@@ -93,7 +93,6 @@ static short wrotemask = 0;
 static IFF_ID typeid;       /* ID_ILBM, ID_RGBN, ID_RGB8 */
 
 static pixel *transpColor = NULL;       /* transparent color */
-static short transpIndex = -1;
 static char *transpName = NULL;
 
 static bool debug = FALSE;
@@ -780,15 +779,19 @@ prepareCmap(const BitMapHeader * const bmhd,
     if( bmhd ) {
         if( bmhd->masking == mskHasTransparentColor || 
             bmhd->masking == mskLasso ) {
-            transpIndex = bmhd->transparentColor;
+            unsigned short const transpIdx = bmhd->transparentColor;
             if( !transpName ) {
                 MALLOCVAR_NOFAIL(transpColor);
-                if( transpIndex >= cmap->ncolors ) {
-                    pm_message("using default transparent color (black)");
-                    PPM_ASSIGN(*transpColor, 0, 0, 0);
+                if (HAS_COLORMAP(cmap)) {
+                    if( transpIdx >= cmap->ncolors ) {
+                        pm_message("using default transparent color (black)");
+                        PPM_ASSIGN(*transpColor, 0, 0, 0);
+                    } else
+                        *transpColor = cmap->color[transpIdx];
+                } else {
+                    /* The color index is just a direct gray level */
+                    PPM_ASSIGN(*transpColor, transpIdx, transpIdx, transpIdx);
                 }
-                else
-                    *transpColor = cmap->color[transpIndex];
             }
         }
 
