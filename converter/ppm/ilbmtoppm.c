@@ -848,12 +848,17 @@ transpColor(const BitMapHeader * const bmhdP,
             if (transpName)
                 *transpColorP = ppm_parsecolor(transpName, maxval);
             else {
-                short const transpIndex = bmhdP->transparentColor;
-                if (transpIndex >= cmapP->ncolors) {
-                    pm_message("using default transparent color (black)");
-                    PPM_ASSIGN(*transpColorP, 0, 0, 0);
-                } else
-                    *transpColorP = cmapP->color[transpIndex];
+                unsigned short const transpIdx = bmhdP->transparentColor;
+                if (HAS_COLORMAP(cmapP)) {
+                    if (transpIdx >= cmapP->ncolors) {
+                        pm_message("using default transparent color (black)");
+                        PPM_ASSIGN(*transpColorP, 0, 0, 0);
+                    } else
+                        *transpColorP = cmapP->color[transpIdx];
+                } else {
+                    /* The color index is just a direct gray level */
+                    PPM_ASSIGN(*transpColorP, transpIdx, transpIdx, transpIdx);
+                }
             }
         } else
             transpColorP = NULL;
