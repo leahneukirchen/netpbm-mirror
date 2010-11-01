@@ -12,6 +12,9 @@ Not yet  BJH  Release 10.53.00
               sunicontopnm: Validate header.  Thanks Prophet of the Way
               <afu@wta.att.ne.jp>.
 
+              ilbmtoppm: Don't crash on image that has a transparent color
+              index, but no color map.
+
               sunicontopnm: fix for 32 bit items in input.  Thanks Prophet of
               the Way <afu@wta.att.ne.jp>.
 
