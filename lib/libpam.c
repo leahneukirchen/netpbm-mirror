@@ -771,9 +771,9 @@ pnm_readpaminit(FILE *       const file,
 
     if (size < PAM_STRUCT_SIZE(tuple_type)) 
         pm_error("pam object passed to pnm_readpaminit() is too small.  "
-                 "It must be large\n"
+                 "It must be large "
                  "enough to hold at least up to the "
-                 "'tuple_type' member, but according\n"
+                 "'tuple_type' member, but according "
                  "to the 'size' argument, it is only %d bytes long.", 
                  size);
 
@@ -902,9 +902,9 @@ pnm_writepaminit(struct pam * const pamP) {
 
     if (pamP->size < PAM_STRUCT_SIZE(bytes_per_sample))
         pm_error("pam object passed to pnm_writepaminit() is too small.  "
-                 "It must be large\n"
+                 "It must be large "
                  "enough to hold at least up through the "
-                 "'bytes_per_sample' member, but according\n"
+                 "'bytes_per_sample' member, but according "
                  "to its 'size' member, it is only %u bytes long.", 
                  pamP->size);
     if (pamP->len < PAM_STRUCT_SIZE(maxval))
