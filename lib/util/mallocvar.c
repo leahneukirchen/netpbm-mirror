@@ -134,7 +134,7 @@ pm_mallocarray2(void **      const resultP,
             */
             rowIndex[rows+1] = NULL;   /* Declare it fragmented format */
             
-            allocarrayNoHeap(rowIndex, cols, rows, elementSize, &failed);
+            allocarrayNoHeap(rowIndex, rows, cols, elementSize, &failed);
         }
         rowIndex[rows+0] = NULL;   /* mark end of rows */
     }

@@ -15,6 +15,10 @@ Not yet  BJH  Release 10.53.00
               sunicontopnm: Validate header.  Thanks Prophet of the Way
               <afu@wta.att.ne.jp>.
 
+              pm_mallocarray2: fix wild pointers when image is too big to fit
+              in a single chunk of malloc memory.  Affects many Netpbm
+              programs.  Introduced in 10.51.00.
+
               ilbmtoppm: Don't crash on image that has a transparent color
               index, but no color map.
 
