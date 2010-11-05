@@ -4,6 +4,15 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+10.11.05 BJH  Release 10.52.05
+
+              pngtopam: include tuple type in output.  Thanks
+              Thomas Henlich <thenlich@users.sourceforge.net>.
+
+              pm_mallocarray2: fix wild pointers when image is too big to fit
+              in a single chunk of malloc memory.  Affects many Netpbm
+              programs.  Introduced in 10.51.00.
+
 10.11.01 BJH  Release 10.52.04
 
               pnmtops: Fix incorrect output with -flate.  Thanks Prophet of
