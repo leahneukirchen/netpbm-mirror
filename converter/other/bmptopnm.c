@@ -34,9 +34,6 @@
 #include "pnm.h"
 #include "bmp.h"
 
-/* MAXCOLORS is the maximum size of a color map in a BMP image */
-#define MAXCOLORS       256
-
 static xelval const bmpMaxval = 255;
     /* The maxval for intensity values in a BMP image -- either in a
        truecolor raster or in a colormap
