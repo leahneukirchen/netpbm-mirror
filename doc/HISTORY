@@ -15,6 +15,9 @@ Not yet  BJH  Release 10.53.00
               sunicontopnm: Validate header.  Thanks Prophet of the Way
               <afu@wta.att.ne.jp>.
 
+              bmptopnm: don't crash on large invalid value of 'colorsused' in
+              the BMP header.
+
               pm_mallocarray2: fix wild pointers when image is too big to fit
               in a single chunk of malloc memory.  Affects many Netpbm
               programs.  Introduced in 10.51.00.
