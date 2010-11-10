@@ -82,8 +82,8 @@ struct pixelformat {
 
 struct bmpInfoHeader {
     enum rowOrder rowOrder;
-    int cols;
-    int rows;
+    unsigned int cols;
+    unsigned int rows;
     unsigned int cBitCount;
         /* Number of bits in the BMP file that each pixel occupies. */
     enum bmpClass class;
@@ -283,13 +283,28 @@ static void
 readOs2InfoHeader(FILE *                 const ifP,
                   struct bmpInfoHeader * const headerP) {
 
+    unsigned short colsField, rowsField;
+    unsigned short planesField, bitCountField;
+
     headerP->class = C_OS2;
 
-    headerP->cols = GetShort(ifP);
-    headerP->rows = GetShort(ifP);
+    pm_readlittleshortu(ifP, &colsField);
+    if (colsField == 0)
+        pm_error("Invalid BMP file: says width is zero");
+    else
+        headerP->cols = colsField;
+    
+    pm_readlittleshortu(ifP, &rowsField);
+    if (rowsField == 0)
+        pm_error("Invalid BMP file: says height is zero");
+    else
+        headerP->rows = rowsField;
+
     headerP->rowOrder = BOTTOMUP;
-    headerP->cPlanes = GetShort(ifP);
-    headerP->cBitCount = GetShort(ifP);
+    pm_readlittleshortu(ifP, &planesField);
+    headerP->cPlanes = planesField;
+    pm_readlittleshortu(ifP, &bitCountField);
+    headerP->cBitCount = bitCountField;
     /* I actually don't know if the OS/2 BMP format allows
        cBitCount > 8 or if it does, what it means, but ppmtobmp
        creates such BMPs, more or less as a byproduct of creating
@@ -357,12 +372,18 @@ readWindowsBasic40ByteInfoHeader(FILE *                 const ifP,
 -----------------------------------------------------------------------------*/
     int colorsimportant;   /* ColorsImportant value from header */
     int colorsused;        /* ColorsUsed value from header */
+    unsigned short planesField, bitCountField;
 
     headerP->class = C_WIN;
 
     headerP->cols = GetLong(ifP);
+    if (headerP->cols == 0)
+        pm_error("Invalid BMP file: says width is zero");
     {
         long const cy = GetLong(ifP);
+
+        if (cy == 0)
+            pm_error("Invalid BMP file: says height is zero");
         if (cy < 0) {
             headerP->rowOrder = TOPDOWN;
             headerP->rows = - cy;
@@ -371,9 +392,10 @@ readWindowsBasic40ByteInfoHeader(FILE *                 const ifP,
             headerP->rows = cy;
         }
     }
-    headerP->cPlanes = GetShort(ifP);
-    headerP->cBitCount = GetShort(ifP);
- 
+    pm_readlittleshortu(ifP, &planesField);
+    headerP->cPlanes = planesField;
+    pm_readlittleshortu(ifP, &bitCountField);
+    headerP->cBitCount = bitCountField;
     {
         unsigned long int const compression = GetLong(ifP);
 
@@ -855,7 +877,8 @@ convertRow(unsigned char      const bmprow[],
 
 
 static unsigned char **
-allocBMPraster(unsigned int const rows, unsigned int const bytesPerRow) {
+allocBMPraster(unsigned int const rows,
+               unsigned int const bytesPerRow) {
 
     unsigned int const storageSize = 
         rows * sizeof(unsigned char *) + rows * bytesPerRow;        
@@ -1147,6 +1170,7 @@ BMPreadraster(FILE *            const ifP,
     case BMPCOMP_RLE8: {
         unsigned int i;
         /* Read all rows except last */
+        assert(rows >= 1);
         for (i = 0; i < rows - 1; ++i){
             readrowRLE(ifP, rowOrder == TOPDOWN ? i : rows - i - 1, 
                        cols, FALSE, compression, BMPraster, bytesReadP);
