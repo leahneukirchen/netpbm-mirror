@@ -213,7 +213,7 @@ pnmtorast rasttopnm: %: %.o rast.o $(NETPBMLIB) $(LIBOPT)
 pdbimgtopam pamtopdbimg: %: %.o ipdb.o $(NETPBMLIB) $(LIBOPT)
 	$(LD) -o $@ $@.o ipdb.o \
 	  $(shell $(LIBOPT) $(NETPBMLIB)) \
-	  $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
+	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
 bmptopnm.o bmptopnm.o2: bmp.h
 
