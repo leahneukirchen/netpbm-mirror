@@ -126,7 +126,7 @@ BMPleninfoheader(enum bmpClass const class) {
 static __inline__ unsigned int
 BMPlencolormap(enum bmpClass const class,
                unsigned int  const bitcount, 
-               int           const cmapsize) {
+               unsigned int  const cmapsize) {
 
     unsigned int lenrgb;
     unsigned int lencolormap;
@@ -141,7 +141,7 @@ BMPlencolormap(enum bmpClass const class,
         case C_OS2: lenrgb = 3; break;
         }
 
-        if (cmapsize < 0) 
+        if (!cmapsize) 
             lencolormap = (1 << bitcount) * lenrgb;
         else 
             lencolormap = cmapsize * lenrgb;
@@ -216,7 +216,7 @@ BMPoffbits(enum bmpClass const class,
 static __inline__ unsigned int
 BMPlenfileGen(enum bmpClass     const class,
               unsigned int      const bitcount, 
-              int               const cmapsize,
+              unsigned int      const cmapsize,
               unsigned int      const x,
               unsigned int      const y,
               unsigned int      const imageSize,
@@ -244,7 +244,7 @@ BMPlenfileGen(enum bmpClass     const class,
 static __inline__ unsigned int
 BMPlenfile(enum bmpClass const class,
            unsigned int  const bitcount, 
-           int           const cmapsize,
+           unsigned int  const cmapsize,
            unsigned int  const x,
            unsigned int  const y) {
 /*----------------------------------------------------------------------------

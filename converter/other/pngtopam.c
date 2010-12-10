@@ -1220,7 +1220,7 @@ convertpng(FILE *             const ifp,
     }
 
     pam.size        = sizeof(pam);
-    pam.len         = PAM_STRUCT_SIZE(maxval);
+    pam.len         = PAM_STRUCT_SIZE(tuple_type);
     pam.file        = stdout;
     pam.plainformat = 0;
     pam.height      = info_ptr->height;

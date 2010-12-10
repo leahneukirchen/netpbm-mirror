@@ -4,6 +4,17 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+10.12.10 BJH  Release 10.47.23
+
+              bmptopnm: Don't crash on invalid zero value of image height in
+              the BMP header of a compressed file.  Always broken.
+              
+              bmptopnm: don't crash on large invalid value of 'colorsused' in
+              the BMP header.
+
+              pngtopam: include tuple type in output.  Thanks
+              Thomas Henlich <thenlich@users.sourceforge.net>.
+
 10.11.01 BJH  Release 10.47.22
 
               pnmtops: Fix incorrect output with -flate.  Thanks Prophet of
