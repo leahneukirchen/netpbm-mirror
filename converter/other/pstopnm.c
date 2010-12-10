@@ -63,6 +63,7 @@ struct cmdlineInfo {
     unsigned int dpi;    /* zero means unspecified */
     enum orientation orientation;
     unsigned int goto_stdout;
+    unsigned int textalphabits;
 };
 
 
@@ -85,6 +86,7 @@ parseCommandLine(int argc, char ** argv,
     float llx, lly, urx, ury;
     unsigned int llxSpec, llySpec, urxSpec, urySpec;
     unsigned int xmaxSpec, ymaxSpec, xsizeSpec, ysizeSpec, dpiSpec;
+    unsigned int textalphabitsSpec;
     
     option_def_index = 0;   /* incremented by OPTENTRY */
     OPTENT3(0, "forceplain", OPT_FLAG,  NULL, &cmdlineP->forceplain,     0);
@@ -107,6 +109,8 @@ parseCommandLine(int argc, char ** argv,
     OPTENT3(0, "portrait",   OPT_FLAG,  NULL, &portrait_opt,             0);
     OPTENT3(0, "landscape",  OPT_FLAG,  NULL, &landscape_opt,            0);
     OPTENT3(0, "stdout",     OPT_FLAG,  NULL, &cmdlineP->goto_stdout,    0);
+    OPTENT3(0, "textalphabits", OPT_UINT,
+            &cmdlineP->textalphabits,  &textalphabitsSpec, 0);
 
     /* Set the defaults */
     cmdlineP->xborder = cmdlineP->yborder = 0.1;
@@ -184,6 +188,18 @@ parseCommandLine(int argc, char ** argv,
 
     if (dpiSpec && xsizeSpec + ysizeSpec + xmaxSpec + ymaxSpec > 0)
         pm_error("You may not specify both size options and -dpi");
+
+    if (textalphabitsSpec) {
+        if (cmdlineP->textalphabits != 1 && cmdlineP->textalphabits != 2
+            && cmdlineP->textalphabits != 4) {
+            /* Pstopnm won't take this value, and we don't want to inflict
+               a Pstopnm failure error message on the user.
+            */
+            pm_error("Valid values for -textalphabits are 1, 2, and 4.  "
+                     "You specified %u", cmdlineP->textalphabits );
+        }
+    } else
+        cmdlineP->textalphabits = 4;
 
     if (argc-1 == 0)
         cmdlineP->inputFileName = "-";  /* stdin */
@@ -681,15 +697,16 @@ findGhostscriptProg(const char ** const retvalP) {
 
 
 static void
-execGhostscript(int  const inputPipeFd,
-                char const ghostscript_device[],
-                char const outfile_arg[], 
-                int  const xsize,
-                int  const ysize, 
-                int  const xres,
-                int  const yres,
-                char const inputFileName[],
-                bool const verbose) {
+execGhostscript(int          const inputPipeFd,
+                char         const ghostscript_device[],
+                char         const outfile_arg[], 
+                int          const xsize,
+                int          const ysize, 
+                int          const xres,
+                int          const yres,
+                unsigned int const textalphabits,
+                char         const inputFileName[],
+                bool         const verbose) {
     
     const char * arg0;
     const char * ghostscriptProg;
@@ -697,6 +714,7 @@ execGhostscript(int  const inputPipeFd,
     const char * outfileopt;
     const char * gopt;
     const char * ropt;
+    const char * textalphabitsopt;
     int rc;
 
     findGhostscriptProg(&ghostscriptProg);
@@ -710,6 +728,7 @@ execGhostscript(int  const inputPipeFd,
     pm_asprintf(&outfileopt, "-sOutputFile=%s", outfile_arg);
     pm_asprintf(&gopt, "-g%dx%d", xsize, ysize);
     pm_asprintf(&ropt, "-r%dx%d", xres, yres);
+    pm_asprintf(&textalphabitsopt, "-dTextAlphaBits=%u", textalphabits);
 
     /* -dSAFER causes Postscript to disable %pipe and file operations,
        which are almost certainly not needed here.  This prevents our
@@ -719,9 +738,10 @@ execGhostscript(int  const inputPipeFd,
 
     if (verbose) {
         pm_message("execing '%s' with args '%s' (arg 0), "
-                   "'%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s'",
+                   "'%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s'",
                    ghostscriptProg, arg0,
-                   deviceopt, outfileopt, gopt, ropt, "-q", "-dNOPAUSE", 
+                   deviceopt, outfileopt, gopt, ropt, textalphabitsopt,
+                   "-q", "-dNOPAUSE", 
                    "-dSAFER", "-");
     }
 
@@ -742,6 +762,7 @@ executeGhostscript(char                     const pstrans[],
                    int                      const ysize, 
                    int                      const xres,
                    int                      const yres,
+                   unsigned int             const textalphabits,
                    char                     const inputFileName[], 
                    enum postscript_language const language,
                    bool                     const verbose) {
@@ -769,7 +790,8 @@ executeGhostscript(char                     const pstrans[],
         /* Child process */
         close(pipefd[1]);
         execGhostscript(pipefd[0], ghostscript_device, outfile_arg,
-                        xsize, ysize, xres, yres, inputFileName, verbose);
+                        xsize, ysize, xres, yres, textalphabits,
+                        inputFileName, verbose);
     } else {
         pid_t const ghostscriptPid = rc;
         int const pipeToGhostscriptFd = pipefd[1];
@@ -898,7 +920,8 @@ main(int argc, char ** argv) {
     pm_message("Writing %s file", ghostscript_device);
     
     executeGhostscript(pstrans, ghostscript_device, outfile_arg, 
-                       xsize, ysize, xres, yres, inputFileName,
+                       xsize, ysize, xres, yres, cmdline.textalphabits,
+                       inputFileName,
                        language, cmdline.verbose);
 
     pm_strfree(ghostscript_device);

@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 Not yet  BJH  Release 10.53.00
 
+              pnmtops: Add -textalphabits, default Postscript TextAlphaBits
+              to 4.
+
               pngtopam: include tuple type in output.  Thanks
               Thomas Henlich <thenlich@users.sourceforge.net>.
 
