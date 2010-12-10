@@ -48,7 +48,7 @@ struct cmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *input_filespec;  /* Filespecs of input files */
+    const char * inputFileName;  /* Names of input files */
     unsigned int forceplain;
     struct box extract_box;
     unsigned int nocrop;
@@ -186,49 +186,49 @@ parseCommandLine(int argc, char ** argv,
         pm_error("You may not specify both size options and -dpi");
 
     if (argc-1 == 0)
-        cmdlineP->input_filespec = "-";  /* stdin */
+        cmdlineP->inputFileName = "-";  /* stdin */
     else if (argc-1 == 1)
-        cmdlineP->input_filespec = argv[1];
+        cmdlineP->inputFileName = argv[1];
     else 
         pm_error("Too many arguments (%d).  "
-                 "Only need one: the Postscript filespec", argc-1);
+                 "Only need one: the Postscript file name", argc-1);
 }
 
 
 
 static void
-addPsToFilespec(char          const orig_filespec[],
-                const char ** const new_filespec_p,
+addPsToFileName(char          const origFileName[],
+                const char ** const newFileNameP,
                 bool          const verbose) {
 /*----------------------------------------------------------------------------
-   If orig_filespec[] does not name an existing file, but the same
+   If origFileName[] does not name an existing file, but the same
    name with ".ps" added to the end does, return the name with the .ps
-   attached.  Otherwise, just return orig_filespec[].
+   attached.  Otherwise, just return origFileName[].
 
    Return the name in newly malloc'ed storage, pointed to by
-   *new_filespec_p.
+   *newFileNameP.
 -----------------------------------------------------------------------------*/
     struct stat statbuf;
     int stat_rc;
 
-    stat_rc = lstat(orig_filespec, &statbuf);
+    stat_rc = lstat(origFileName, &statbuf);
     
     if (stat_rc == 0)
-        *new_filespec_p = strdup(orig_filespec);
+        *newFileNameP = strdup(origFileName);
     else {
-        const char *filespec_plus_ps;
+        const char * fileNamePlusPs;
 
-        pm_asprintf(&filespec_plus_ps, "%s.ps", orig_filespec);
+        pm_asprintf(&fileNamePlusPs, "%s.ps", origFileName);
 
-        stat_rc = lstat(filespec_plus_ps, &statbuf);
+        stat_rc = lstat(fileNamePlusPs, &statbuf);
         if (stat_rc == 0)
-            *new_filespec_p = strdup(filespec_plus_ps);
+            *newFileNameP = strdup(fileNamePlusPs);
         else
-            *new_filespec_p = strdup(orig_filespec);
-        pm_strfree(filespec_plus_ps);
+            *newFileNameP = strdup(origFileName);
+        pm_strfree(fileNamePlusPs);
     }
     if (verbose)
-        pm_message("Input file is %s", *new_filespec_p);
+        pm_message("Input file is %s", *newFileNameP);
 }
 
 
@@ -355,7 +355,7 @@ computeSizeRes(struct cmdlineInfo const cmdline,
 enum postscript_language {COMMON_POSTSCRIPT, ENCAPSULATED_POSTSCRIPT};
 
 static enum postscript_language
-languageDeclaration(char const input_filespec[],
+languageDeclaration(char const inputFileName[],
                     bool const verbose) {
 /*----------------------------------------------------------------------------
   Return the Postscript language in which the file declares it is written.
@@ -364,7 +364,7 @@ languageDeclaration(char const input_filespec[],
 -----------------------------------------------------------------------------*/
     enum postscript_language language;
 
-    if (streq(input_filespec, "-"))
+    if (streq(inputFileName, "-"))
         /* Can't read stdin, because we need it to remain positioned for the 
            Ghostscript interpreter to read it.
         */
@@ -373,7 +373,7 @@ languageDeclaration(char const input_filespec[],
         FILE *infile;
         char line[80];
 
-        infile = pm_openr(input_filespec);
+        infile = pm_openr(inputFileName);
 
         if (fgets(line, sizeof(line), infile) == NULL)
             language = COMMON_POSTSCRIPT;
@@ -399,7 +399,7 @@ languageDeclaration(char const input_filespec[],
 
 static struct box
 computeBoxToExtract(struct box const cmdline_extract_box,
-                    char       const input_filespec[],
+                    char       const inputFileName[],
                     bool       const verbose) {
 
     struct box retval;
@@ -413,7 +413,7 @@ computeBoxToExtract(struct box const cmdline_extract_box,
         */
         struct box ps_bb;  /* Box described by %%BoundingBox stmt in input */
 
-        if (streq(input_filespec, "-"))
+        if (streq(inputFileName, "-"))
             /* Can't read stdin, because we need it to remain
                positioned for the Ghostscript interpreter to read it.  
             */
@@ -421,7 +421,7 @@ computeBoxToExtract(struct box const cmdline_extract_box,
         else {
             FILE *infile;
             int found_BB, eof;  /* logical */
-            infile = pm_openr(input_filespec);
+            infile = pm_openr(inputFileName);
             
             found_BB = FALSE;
             eof = FALSE;
@@ -583,16 +583,16 @@ computeOutfileArg(struct cmdlineInfo const cmdline) {
 
     if (cmdline.goto_stdout)
         retval = strdup("-");
-    else if (streq(cmdline.input_filespec, "-"))
+    else if (streq(cmdline.inputFileName, "-"))
         retval = strdup("-");
     else {
         char * basename;
         const char * suffix;
         
-        basename  = strdup(cmdline.input_filespec);
+        basename  = strdup(cmdline.inputFileName);
         if (strlen(basename) > 3 && 
             streq(basename+strlen(basename)-3, ".ps")) 
-            /* The input filespec ends in ".ps".  Chop it off. */
+            /* The input file name ends in ".ps".  Chop it off. */
             basename[strlen(basename)-3] = '\0';
 
         switch (cmdline.format_type) {
@@ -688,7 +688,7 @@ execGhostscript(int  const inputPipeFd,
                 int  const ysize, 
                 int  const xres,
                 int  const yres,
-                char const input_filespec[],
+                char const inputFileName[],
                 bool const verbose) {
     
     const char * arg0;
@@ -742,7 +742,7 @@ executeGhostscript(char                     const pstrans[],
                    int                      const ysize, 
                    int                      const xres,
                    int                      const yres,
-                   char                     const input_filespec[], 
+                   char                     const inputFileName[], 
                    enum postscript_language const language,
                    bool                     const verbose) {
 
@@ -769,7 +769,7 @@ executeGhostscript(char                     const pstrans[],
         /* Child process */
         close(pipefd[1]);
         execGhostscript(pipefd[0], ghostscript_device, outfile_arg,
-                        xsize, ysize, xres, yres, input_filespec, verbose);
+                        xsize, ysize, xres, yres, inputFileName, verbose);
     } else {
         pid_t const ghostscriptPid = rc;
         int const pipeToGhostscriptFd = pipefd[1];
@@ -780,7 +780,7 @@ executeGhostscript(char                     const pstrans[],
         if (gs == NULL) 
             pm_error("Unable to open stream on pipe to Ghostscript process.");
     
-        infile = pm_openr(input_filespec);
+        infile = pm_openr(inputFileName);
         /*
           In encapsulated Postscript, we the encapsulator are supposed to
           handle showing the page (which we do by passing a showpage
@@ -851,7 +851,7 @@ int
 main(int argc, char ** argv) {
 
     struct cmdlineInfo cmdline;
-    const char * input_filespec;  /* malloc'ed */
+    const char * inputFileName;  /* malloc'ed */
         /* The file specification of our Postscript input file */
     unsigned int xres, yres;    /* Resolution in pixels per inch */
     unsigned int xsize, ysize;  /* output image size in pixels */
@@ -872,12 +872,12 @@ main(int argc, char ** argv) {
 
     parseCommandLine(argc, argv, &cmdline);
 
-    addPsToFilespec(cmdline.input_filespec, &input_filespec, cmdline.verbose);
+    addPsToFileName(cmdline.inputFileName, &inputFileName, cmdline.verbose);
 
-    extract_box = computeBoxToExtract(cmdline.extract_box, input_filespec, 
+    extract_box = computeBoxToExtract(cmdline.extract_box, inputFileName, 
                                       cmdline.verbose);
 
-    language = languageDeclaration(input_filespec, cmdline.verbose);
+    language = languageDeclaration(inputFileName, cmdline.verbose);
     
     orientation = computeOrientation(cmdline, extract_box);
 
@@ -898,7 +898,7 @@ main(int argc, char ** argv) {
     pm_message("Writing %s file", ghostscript_device);
     
     executeGhostscript(pstrans, ghostscript_device, outfile_arg, 
-                       xsize, ysize, xres, yres, input_filespec,
+                       xsize, ysize, xres, yres, inputFileName,
                        language, cmdline.verbose);
 
     pm_strfree(ghostscript_device);
