@@ -84,8 +84,11 @@ struct bmpInfoHeader {
            described by the "mask" values in the header, rather than
            fixed formats.
         */
-    int cmapsize;
-        /* Size in bytes of the colormap (palette) in the BMP file */
+    unsigned int cmapsize;
+        /* Size in bytes of the colormap (palette) in the BMP file.
+
+           Zero means there is no colormap.
+        */
     unsigned int imageSize;
         /* Size in bytes of the image data.  We only reference this 
            when the image is compressed. */    
@@ -320,6 +323,8 @@ readWindowsBasic40ByteInfoHeader(FILE *                 const ifP,
     headerP->cols = GetLong(ifP);
     {
         long const cy = GetLong(ifP);
+        if (cy == 0)
+            pm_error("Invalid BMP file: says height is zero");
         if (cy < 0) {
             headerP->rowOrder = TOPDOWN;
             headerP->rows = - cy;
@@ -360,7 +365,7 @@ readWindowsBasic40ByteInfoHeader(FILE *                 const ifP,
     GetLong(ifP);   /* YpixelsPerMeter */
     colorsused = GetLong(ifP);   /* ColorsUsed */
     /* See comments in bmp.h for info about the definition of the following
-       word and its relationship to the color map size (*pcmapsize).
+       word and its relationship to the color map size (headerP->cmapsize).
     */
     colorsimportant = GetLong(ifP);  /* ColorsImportant */
 
@@ -584,7 +589,7 @@ static void
 BMPreadcolormap(FILE *         const ifP, 
                 int            const class, 
                 xel **         const colormapP, 
-                int            const cmapsize,
+                unsigned int   const cmapsize,
                 unsigned int * const bytesReadP) {
 /*----------------------------------------------------------------------------
    Read the color map from the present position in the input BMP file
@@ -599,7 +604,7 @@ BMPreadcolormap(FILE *         const ifP,
    'class' is the class of BMP image - Windows or OS/2.
 -----------------------------------------------------------------------------*/
 
-    int i;
+    unsigned int i;
 
     xel * colormap;
     unsigned int bytesRead;
@@ -1139,7 +1144,7 @@ reportHeader(struct bmpInfoHeader const header,
                header.compression == COMP_JPEG ? "JPEG (not supported)" :
                header.compression == COMP_PNG ? "PNG (not supported)" :
                "???");                
-    pm_message("  Colors in color map: %d", header.cmapsize);
+    pm_message("  Colors in color map: %u", header.cmapsize);
 }        
 
 

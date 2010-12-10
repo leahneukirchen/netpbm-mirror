@@ -72,7 +72,7 @@
 #if PNG_LIBPNG_VER >= 10400
 #error Your PNG library (<png.h>) is incompatible with this Netpbm source code.
 #error You need either an older PNG library (older than 1.4)
-#error newer Netpbm source code (at least 10.48)
+#error newer Netpbm source code (at least 10.47.04)
 #endif
 
 
