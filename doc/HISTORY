@@ -67,6 +67,8 @@ Not yet  BJH  Release 10.53.00
               to start with "pm_": shhopt, nstring, nsleep.  Eliminate
               createBlackTuple -- pnmCreateBlackTuple already existed.
 
+              build: include -lm in build of pamtopdbimg, pdbimgtopam.
+
               configure: Make warnings stand out more.
 
               configure: Fix crash when libpng test compile fails.
