@@ -1,0 +1,104 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Pammosaicknit User Manual</title>
+<meta http-equiv="content-type" content="text/html; charset=us-ascii" />
+</head>
+
+<body>
+
+<h1>pammosaicknit</h1>
+
+<p>Updated: 12 December 2010</p>
+
+<p><a href="#contents">Table Of Contents</a></p>
+
+<h2 id="name">NAME</h2>
+
+<p>pammosaicknit - validate a mosaic knitting pattern</p>
+
+
+<h2 id="synopsis">SYNOPSIS</h2>
+
+<p><b>pammosaicknit</b> [<i>in_netpbmfile</i>]</p>
+
+<h2 id="description">DESCRIPTION</h2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.</p>
+
+<p><b>pammosaicknit</b> helps the user create
+<a href="http://en.wikipedia.org/wiki/Slip-stitch_knitting#Mosaic_knitting">mosaic
+knitting patterns</a>. The program inputs a black-and-white Netpbm image that
+describes a mosaic knitting pattern and outputs a color Netpbm image of the
+same pattern but with invalid runs shown in red.</p>
+
+<p>A valid knitting pattern starts with a <q>black</q> row on the
+bottom and alternates <q>white</q> and <q>black</q>
+rows. A <q>black</q> row can contain any arrangement of black pixels
+but no more than three consecutive white pixels. A <q>white</q> row
+can contain any arrangement of white pixels but no more than three
+consecutive black pixels. Columns wrap horizontally, so a <q>white</q>
+row that both begins and ends with two black pixels is deemed to
+contain four consecutive black pixels. Because this is an invalid
+number for a <q>white</q> row, those four pixels will be recolored red
+in the output image.</p>
+
+<p>For clarity, there are two shades of red in the output image.  Dark
+red pixels indicate pixels that were black in the input image but
+which must contain one or more white pixels. Light red pixels indicate
+pixels that were white in the input image but which must contain one
+or more black pixels.</p>
+
+<p>If the output image contains no red pixels, then the input image
+represents a valid mosaic knitting pattern.</p>
+
+
+<h2 id="arguments">ARGUMENTS</h2>
+
+<p><b>pammosaicknit</b>'s only argument,
+<i>in_netpbmfile</i>, is the name of an image file that represents a mosaic
+knitting pattern. If you don't specify
+<i>in_netpbmfile</i>, the program reads the image from Standard Input.</p>
+
+
+<h2 id="notes">NOTES</h2>
+
+<p>If the input image is not a black-and-white image, <b>pammosaicknit</b>
+converts it internally to black and white by thresholding each pixel's
+luminosity. The output image is always a color image containing at most four
+colors (black, white, dark red, light red).</p>
+
+
+<h2 id="see_also">SEE ALSO</h2>
+
+<ul>
+<li><a href="pam.html">pam</a></li>
+</ul>
+
+<h2 id="history">HISTORY</h2>
+
+<p>pammosaicknit was new in Netpbm 10.53 (December 2010).</p>
+
+
+<h2 id="author">AUTHOR</h2>
+
+<p>Copyright (C) 2010 Scott Pakin,
+<a href="mailto:scott+pbm@pakin.org.">scott+pbm@pakin.org.</a></p>
+
+
+<h2><a id="contents">Table Of Contents</a></h2>
+
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a></li>
+<li><a href="#description">DESCRIPTION</a></li>
+<li><a href="#arguments">ARGUMENTS</a></li>
+<li><a href="#notes">NOTES</a></li>
+<li><a href="#see_also">SEE ALSO</a></li>
+<li><a href="#history">HISTORY</a></li>
+<li><a href="#author">AUTHOR</a></li>
+</ul>
+
+</body>
+</html>
+
