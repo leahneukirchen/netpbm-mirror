@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 Not yet  BJH  Release 10.53.00
 
+              Add pammosaicknit.  Thanks Scott Pakin.
+
               pnmtops: Add -textalphabits, default Postscript TextAlphaBits
               to 4.
 
