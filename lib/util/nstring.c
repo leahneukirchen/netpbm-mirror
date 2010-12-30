@@ -190,12 +190,12 @@ static char credits[] = "\n\
 
 
 void
-vsnprintfN(char *       const str,
-           size_t       const str_m,
-           const char * const fmt,
-           va_list            ap,
-           size_t *     const sizeP) {
-
+pm_vsnprintf(char *       const str,
+             size_t       const str_m,
+             const char * const fmt,
+             va_list            ap,
+             size_t *     const sizeP) {
+    
     size_t str_l = 0;
     const char *p = fmt;
 
@@ -704,17 +704,17 @@ vsnprintfN(char *       const str,
 
 
 int
-snprintfN(char *       const dest,
-          size_t       const str_m,
-          const char * const fmt,
-          ...) {
+pm_snprintf(char *       const dest,
+            size_t       const str_m,
+            const char * const fmt,
+            ...) {
 
     size_t size;
     va_list ap;
 
     va_start(ap, fmt);
     
-    vsnprintfN(dest, str_m, fmt, ap, &size);
+    pm_vsnprintf(dest, str_m, fmt, ap, &size);
 
     va_end(ap);
 
@@ -726,24 +726,24 @@ snprintfN(char *       const dest,
 
 
 /* When a function that is supposed to return a malloc'ed string cannot
-   get the memory for it, it should return 'strsol'.  That has a much
+   get the memory for it, it should return 'pm_strsol'.  That has a much
    better effect on the caller, if the caller doesn't explicitly allow for
    the out of memory case, than returning NULL.  Note that it is very
    rare for the system not to have enough memory to return a small string,
    so it's OK to have somewhat nonsensical behavior when it happens.  We
    just don't want catastrophic behavior.
 
-   'strsol' is an external symbol, so if Caller wants to detect the
+   'pm_strsol' is an external symbol, so if Caller wants to detect the
    out-of-memory failure, he certainly can.
 */
-const char * const strsol = "NO MEMORY TO CREATE STRING!";
+const char * const pm_strsol = "NO MEMORY TO CREATE STRING!";
 
 
 
 void PM_GNU_PRINTF_ATTR(2,3)
-asprintfN(const char ** const resultP,
-          const char *  const fmt, 
-          ...) {
+pm_asprintf(const char ** const resultP,
+            const char *  const fmt, 
+            ...) {
 
     va_list varargs;
     
@@ -751,26 +751,26 @@ asprintfN(const char ** const resultP,
     
     va_start(varargs, fmt);
     
-    vsnprintfN(NULL, 0, fmt, varargs, &dryRunLen);
+    pm_vsnprintf(NULL, 0, fmt, varargs, &dryRunLen);
 
     va_end(varargs);
 
     if (dryRunLen + 1 < dryRunLen)
         /* arithmetic overflow */
-        *resultP = strsol;
+        *resultP = pm_strsol;
     else {
         size_t const allocSize = dryRunLen + 1;
         char * result;
         result = malloc(allocSize);
         if (result == NULL)
-            *resultP = strsol;
+            *resultP = pm_strsol;
         else {
             va_list varargs;
             size_t realLen;
 
             va_start(varargs, fmt);
 
-            vsnprintfN(result, allocSize, fmt, varargs, &realLen);
+            pm_vsnprintf(result, allocSize, fmt, varargs, &realLen);
                 
             assert(realLen == dryRunLen);
             va_end(varargs);
@@ -783,16 +783,16 @@ asprintfN(const char ** const resultP,
 
 
 void
-strfree(const char * const string) {
+pm_strfree(const char * const string) {
 
-    if (string != strsol)
+    if (string != pm_strsol)
         free((void *) string);
 }
 
 
 
 const char *
-strsepN(char ** const stringP, const char * const delim) {
+pm_strsep(char ** const stringP, const char * const delim) {
     const char * retval;   
 
     if (stringP == NULL || *stringP == NULL)
@@ -824,8 +824,8 @@ strsepN(char ** const stringP, const char * const delim) {
 
 
 int
-stripeq(const char * const comparand,
-        const char * const comparator) {
+pm_stripeq(const char * const comparand,
+           const char * const comparator) {
 /*----------------------------------------------------------------------------
   Compare two strings, ignoring leading and trailing white space.
 
@@ -879,10 +879,10 @@ stripeq(const char * const comparand,
 
 
 const void *
-memmemN(const void * const haystackArg,
-        size_t       const haystacklen,
-        const void * const needleArg,
-        size_t       const needlelen) {
+pm_memmem(const void * const haystackArg,
+          size_t       const haystacklen,
+          const void * const needleArg,
+          size_t       const needlelen) {
 
     const unsigned char * const haystack = haystackArg;
     const unsigned char * const needle   = needleArg;
@@ -902,7 +902,7 @@ memmemN(const void * const haystackArg,
 
 
 bool
-strishex(const char * const subject) {
+pm_strishex(const char * const subject) {
 
     bool retval;
     unsigned int i;
@@ -919,12 +919,12 @@ strishex(const char * const subject) {
 
 
 void
-interpret_uint(const char *   const string,
-               unsigned int * const valueP,
-               const char **  const errorP) {
+pm_interpret_uint(const char *   const string,
+                  unsigned int * const valueP,
+                  const char **  const errorP) {
 
     if (string[0] == '\0')
-        asprintfN(errorP, "Null string.");
+        pm_asprintf(errorP, "Null string.");
     else {
         /* strtoul() does a bizarre thing where if the number is out
            of range, it returns a clamped value but tells you about it
@@ -939,13 +939,13 @@ interpret_uint(const char *   const string,
         ulongValue = strtoul(string, &tail, 10);
 
         if (tail[0] != '\0')
-            asprintfN(errorP, "Non-digit stuff in string: %s", tail);
+            pm_asprintf(errorP, "Non-digit stuff in string: %s", tail);
         else if (errno == ERANGE)
-            asprintfN(errorP, "Number too large");
+            pm_asprintf(errorP, "Number too large");
         else if (ulongValue > UINT_MAX)
-            asprintfN(errorP, "Number too large");
+            pm_asprintf(errorP, "Number too large");
         else if (string[0] == '-')
-            asprintfN(errorP, "Negative number");
+            pm_asprintf(errorP, "Negative number");
             /* Sleazy code; string may have leading spaces. */
         else {
             *valueP = ulongValue;

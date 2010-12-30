@@ -59,7 +59,7 @@ parseColorOpt(const char *         const colorOpt,
     colorCount = 0; /* initial value */
     while (!eol && colorCount < ARRAY_SIZE(cmdlineP->maskColor)) {
         const char * token;
-        token = strsepN(&cursor, ",");
+        token = pm_strsep(&cursor, ",");
         if (token) {
             if (strneq(token, "bk:", 3)) {
                 cmdlineP->maskColor[colorCount].matchType = MATCH_BK;
@@ -108,7 +108,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We may have parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and all of *cmdlineP. */
 
     if (colorSpec)

@@ -9,7 +9,7 @@ include $(BUILDDIR)/config.mk
 
 PORTBINARIES =	atktopbm brushtopbm cistopbm cmuwmtopbm \
 		ddbugtopbm g3topbm escp2topbm \
-		icontopbm macptopbm mdatopbm mgrtopbm mrftopbm \
+		macptopbm mdatopbm mgrtopbm mrftopbm \
 		pbmto10x pbmto4425 pbmtoascii pbmtoatk \
 		pbmtobbnbg pbmtocis pbmtocmuwm pbmtodjvurle \
 		pbmtoepsi pbmtoepson pbmtoescp2 \
@@ -72,6 +72,14 @@ thinkjettopbm.c:%.c:%.c1 $(SRCDIR)/lib/util/lexheader
 	  grep -v "^[[:space:]]*int yylex(void);" | \
 	  grep -v "^[[:space:]]*int yywrap(void);" \
 	  >$@
+
+install.bin: install.bin.local
+.PHONY: install.bin.local
+install.bin.local: $(PKGDIR)/bin
+# Remember that $(SYMLINK) might just be a copy command.
+# In December 2010, sunicontopnm replaced icontopbm
+	cd $(PKGDIR)/bin ; \
+	$(SYMLINK) sunicontopnm icontopbm
 
 thisdirclean: localclean
 .PHONY: localclean

@@ -91,7 +91,7 @@ errorExit(const char format[], ...) {
     va_start(args, format);
 
     fprintf(stderr, "%s: FATAL ERROR.  ", hostname);
-    strfree(hostname);
+    pm_strfree(hostname);
     vfprintf(stderr, format, args);
     fputc('\n', stderr);
 
@@ -272,13 +272,13 @@ ConnectToSocket(const char *      const machineName,
     if ((*hostEnt) == NULL) {
         (*hostEnt) = gethostbyname(machineName);
         if ((*hostEnt) == NULL)
-            asprintfN(errorP, "Couldn't get host by name (%s)", machineName);
+            pm_asprintf(errorP, "Couldn't get host by name (%s)", machineName);
     }
     if (!*errorP) {
         rc = socket(AF_INET, SOCK_STREAM, 0);
         if (rc < 0)
-            asprintfN(errorP, "socket() failed with errno %d (%s)", 
-                      errno, strerror(errno));
+            pm_asprintf(errorP, "socket() failed with errno %d (%s)", 
+                        errno, strerror(errno));
         else {
             int const socketFd = rc;
             
@@ -298,10 +298,10 @@ ConnectToSocket(const char *      const machineName,
                          sizeof(struct sockaddr));
             
             if (rc != 0)
-                asprintfN(errorP, 
-                          "connect() to host '%s', port %d failed with "
-                          "errno %d (%s)",
-                          machineName, portNum, errno, strerror(errno));
+                pm_asprintf(errorP, 
+                            "connect() to host '%s', port %d failed with "
+                            "errno %d (%s)",
+                            machineName, portNum, errno, strerror(errno));
             else {
                 *errorP = NULL;
                 *socketFdP = socketFd;
@@ -364,14 +364,14 @@ bindToUnusedPort(int              const socketFd,
             foundPort = TRUE;
             *portNumP = trialPortNum;
         } else if (!portInUseErrno(errno))
-            asprintfN(errorP, "bind() of TCP port number %hu failed "
-                      "with errno %d (%s)", 
-                      trialPortNum, errno, strerror(errno));
+            pm_asprintf(errorP, "bind() of TCP port number %hu failed "
+                        "with errno %d (%s)", 
+                        trialPortNum, errno, strerror(errno));
     }
     
     if (!*errorP && !foundPort)
-        asprintfN(errorP, "Unable to find a free port.  Every TCP port "
-                  "in the range 2048-16383 is in use");
+        pm_asprintf(errorP, "Unable to find a free port.  Every TCP port "
+                    "in the range 2048-16383 is in use");
 }
 
 
@@ -392,10 +392,10 @@ CreateListeningSocket(int *         const socketP,
     
     rc = socket(AF_INET, SOCK_STREAM, 0);
     if (rc < 0)
-        asprintfN(errorP,
-                  "Unable to create socket.  "
-                  "socket() failed with errno %d (%s)",
-                  errno, strerror(errno));
+        pm_asprintf(errorP,
+                    "Unable to create socket.  "
+                    "socket() failed with errno %d (%s)",
+                    errno, strerror(errno));
     else {
         int const socketFd = rc;
 
@@ -414,9 +414,9 @@ CreateListeningSocket(int *         const socketP,
             */
             rc = listen(socketFd, SOMAXCONN);
             if (rc != 0)
-                asprintfN(errorP, "Unable to listen on TCP socket.  "
-                          "listen() fails with errno %d (%s)", 
-                          errno, strerror(errno));
+                pm_asprintf(errorP, "Unable to listen on TCP socket.  "
+                            "listen() fails with errno %d (%s)", 
+                            errno, strerror(errno));
         }
         if (*errorP)
             close(socketFd);
@@ -443,8 +443,8 @@ AcceptConnection(int           const listenSocketFd,
     rc = accept(listenSocketFd, &otherSocket, &otherSize);
 
     if (rc < 0)
-        asprintfN(errorP, "accept() failed with errno %d (%s).  ",
-                  errno, strerror(errno));
+        pm_asprintf(errorP, "accept() failed with errno %d (%s).  ",
+                    errno, strerror(errno));
     else {
         *connectSocketFdP = rc;
         *errorP = NULL;

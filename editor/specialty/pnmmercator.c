@@ -56,7 +56,7 @@ parseCommandLine(int                        argc,
 
     optEntry * option_def;
     optStruct3 opt;
-        /* Instructions to optParseOptions3 on how to parse our options. */
+        /* Instructions to pm_optParseOptions3 on how to parse our options. */
     
     unsigned int option_def_index;
 
@@ -73,7 +73,7 @@ parseCommandLine(int                        argc,
     opt.allowNegNum = FALSE;   /* We have no parms that are negative numbers */
 
     /* Uses and sets argc, argv, and some of *cmdlineP and others. */
-    optParseOptions3( &argc, (char **)argv, opt, sizeof(opt), 0 );
+    pm_optParseOptions3( &argc, (char **)argv, opt, sizeof(opt), 0 );
 
     /* Only parameter allowed is optional filespec */
     if (argc-1 < 1)

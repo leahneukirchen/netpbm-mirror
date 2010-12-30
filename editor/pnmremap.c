@@ -71,7 +71,7 @@ parseCommandLine (int argc, char ** argv,
    was passed to us as the argv array.  We also trash *argv.
 -----------------------------------------------------------------------------*/
     optEntry * option_def;
-        /* Instructions to optParseOptions3 on how to parse our options.
+        /* Instructions to pm_optParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
 
@@ -108,7 +108,7 @@ parseCommandLine (int argc, char ** argv,
 
     cmdlineP->missingcolor = NULL;  /* default value */
     
-    optParseOptions3( &argc, argv, opt, sizeof(opt), 0 );
+    pm_optParseOptions3( &argc, argv, opt, sizeof(opt), 0 );
         /* Uses and sets argc, argv, and some of *cmdline_p and others. */
 
     if (cmdlineP->floyd && nofloyd)
@@ -268,7 +268,7 @@ selectDepthAdjustment(const struct pam * const pamP,
     if (newDepth == pamP->depth)
         *adjustmentP = ADJUST_NONE;
     else {
-        if (stripeq(pamP->tuple_type, "RGB")) {
+        if (pm_stripeq(pamP->tuple_type, "RGB")) {
             if (newDepth != 1) {
                 pm_error("Map image depth of %u differs from input image "
                          "depth of %u, and the tuple type is RGB.  "
@@ -277,8 +277,8 @@ selectDepthAdjustment(const struct pam * const pamP,
                          newDepth, pamP->depth);
             } else
                 *adjustmentP = ADJUST_RGBTO1;
-        } else if (stripeq(pamP->tuple_type, "GRAYSCALE") ||
-                   stripeq(pamP->tuple_type, "BLACKANDWHITE")) {
+        } else if (pm_stripeq(pamP->tuple_type, "GRAYSCALE") ||
+                   pm_stripeq(pamP->tuple_type, "BLACKANDWHITE")) {
             if (newDepth != 3) {
                 pm_error("Map image depth of %u differs from input image "
                          "depth of %u, and the tuple type is GRAYSCALE "

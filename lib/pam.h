@@ -282,10 +282,6 @@ pnm_getopacity(const struct pam * const pamP,
 void
 pnm_createBlackTuple(const struct pam * const pamP, tuple * const blackTupleP);
 
-void
-createBlackTuple(const struct pam * const pamP, tuple * const blackTupleP);
-
-
 tuple
 pnm_allocpamtuple(const struct pam * const pamP);
 

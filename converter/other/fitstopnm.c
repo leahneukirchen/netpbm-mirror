@@ -88,7 +88,7 @@ parseCommandLine(int argc, char ** argv,
    was passed to us as the argv array.  We also trash *argv.
 --------------------------------------------------------------------------*/
     optEntry * option_def;
-        /* Instructions to optParseOptions3 on how to parse our options. */
+        /* Instructions to pm_optParseOptions3 on how to parse our options. */
     optStruct3 opt;
 
     unsigned int imageSpec;
@@ -120,7 +120,7 @@ parseCommandLine(int argc, char ** argv,
 
     /* Set some defaults the lazy way (using multiple setting of variables) */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (imageSpec) {
@@ -468,6 +468,9 @@ scanImageForMinMax(FILE *       const ifP,
                    double *     const dataminP,
                    double *     const datamaxP) {
 
+    /* Note that a value in the file might be Not-A-Number.  We ignore
+       such entries in computing the minimum and maximum for the image.
+    */
     double dmax, dmin;
     unsigned int image;
     pm_filepos rasterPos;
@@ -495,8 +498,9 @@ scanImageForMinMax(FILE *       const ifP,
                 double val;
                 readVal(ifP, valFmt, &val);
                 if (image == imagenum || multiplane ) {
-                    dmax = MAX(dmax, val);
-                    dmin = MIN(dmin, val);
+                    /* Note: if 'val' is NaN, result is 2nd operand */
+                    dmax = MAX(val, dmax);
+                    dmin = MIN(val, dmin);
                 }
             }
         }

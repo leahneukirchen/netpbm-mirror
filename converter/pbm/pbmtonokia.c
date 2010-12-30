@@ -69,7 +69,7 @@ parseCommandLine(int argc, char ** argv,
    was passed to us as the argv array.
 -----------------------------------------------------------------------------*/
     optEntry * option_def;
-        /* Instructions to optParseOptions3 on how to parse our options.
+        /* Instructions to pm_optParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
 
@@ -92,7 +92,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (fmtSpec) {
@@ -118,7 +118,7 @@ parseCommandLine(int argc, char ** argv,
         if (strlen(netOpt) != 6)
             pm_error("-net option must be 6 hex digits long.  "
                      "You specified %u characters", (unsigned)strlen(netOpt));
-        else if (!strishex(netOpt))
+        else if (!pm_strishex(netOpt))
             pm_error("-net option must be hexadecimal.  You specified '%s'",
                      netOpt);
         else
@@ -147,7 +147,7 @@ parseCommandLine(int argc, char ** argv,
 static void
 freeCmdline(struct cmdlineInfo const cmdline) {
 
-    strfree(cmdline.networkCode);
+    pm_strfree(cmdline.networkCode);
 }
 
 

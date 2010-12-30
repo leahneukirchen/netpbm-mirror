@@ -4,47 +4,79 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-10.12.10 BJH  Release 10.52.06
+10.12.30 BJH  Release 10.53.00
+
+              Add pammosaicknit.  Thanks Scott Pakin.
+
+              pnmtops: Add -textalphabits, default Postscript TextAlphaBits
+              to 4.
+
+              pngtopam: include tuple type in output.  Thanks
+              Thomas Henlich <thenlich@users.sourceforge.net>.
+
+              sunicontopnm: Understands Depth=8.  Thanks Prophet of the Way
+              <afu@wta.att.ne.jp>.
+
+              sunicontopnm: Validate header.  Thanks Prophet of the Way
+              <afu@wta.att.ne.jp>.
 
               bmptopnm: Don't crash on invalid zero value of image height in
               the BMP header of a compressed file.  Always broken.
               
               bmptopnm: don't crash on large invalid value of 'colorsused' in
-              the BMP header.
-
-              build: include -lm in build of pamtopdbimg, pdbimgtopam.
-
-10.11.05 BJH  Release 10.52.05
-
-              pngtopam: include tuple type in output.  Thanks
-              Thomas Henlich <thenlich@users.sourceforge.net>.
+              the BMP header.  Introduced in 9.11.
 
               pm_mallocarray2: fix wild pointers when image is too big to fit
               in a single chunk of malloc memory.  Affects many Netpbm
               programs.  Introduced in 10.51.00.
 
-10.11.01 BJH  Release 10.52.04
+              ilbmtoppm: Don't crash on image that has a transparent color
+              index, but no color map.
+
+              sunicontopnm: fix for 32 bit items in input.  Thanks Prophet of
+              the Way <afu@wta.att.ne.jp>.
+
+              sunicontopnm: fix arithmetic overflows.  Thanks Prophet of the
+              Way <afu@wta.att.ne.jp>.
+
+              icontopbm: rename to sunicontopnm.
+
+              pamstereogram: Add mapped texture stereogram option.
+              Thanks Scott Pakin.
+
+              pamstereogram: slight change to dpi and eye separation defaults.
+              invert near/far dark/light association.  Thanks Scott Pakin.
 
               pnmtops: Fix incorrect output with -flate.  Thanks Prophet of
               the Way <afu@wta.att.ne.jp>.
 
-              ilbmtoppm: Don't crash on image that has a transparent color
-              index, but no color map.
+              sgitopnm: Fix arithmetic overflow on -channel option.  Thanks
+              Prophet of the Way <afu@wta.att.ne.jp>.
 
-10.10.16 BJH  Release 10.52.03
+              sgitopnm: Fix crash with -channel on verbatim SGI image.  Thanks
+              Prophet of the Way <afu@wta.att.ne.jp>.
 
-              configure: fix crash when libpng test compile fails.
-
-10.09.30 BJH  Release 10.52.02
+              fitstopnm: Deal properly with NaN in input image.
 
               pm_floatFromBigendFloat, pm_doubleFromBigendFloat, fitstopnm:
               fix corrupted output.  Broken in 10.46.
 
-10.09.29 BJH  Release 10.52.01
-
               pamtopdbimg: fix corrupted output image.  Thanks Scott Pakin.
 
               pdbimgtopam: fix corrupted output image.  Thanks Scott Pakin.
+
+              pnmtops: fix arithmetic overflows.  Thanks Prophet of the Way
+              <afu@wta.att.ne.jp>.
+
+              Rename all external symbols that don't have a Netpbm prefix
+              to start with "pm_": shhopt, nstring, nsleep.  Eliminate
+              createBlackTuple -- pnmCreateBlackTuple already existed.
+
+              build: include -lm in build of pamtopdbimg, pdbimgtopam.
+
+              configure: Make warnings stand out more.
+
+              configure: Fix crash when libpng test compile fails.
 
 10.09.26 BJH  Release 10.52.00
 

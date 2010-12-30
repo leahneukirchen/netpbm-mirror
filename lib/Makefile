@@ -89,7 +89,7 @@ $(LIBOBJECTS): %.o: %.c importinc
 # We have to get the command all on one line to avoid messy make messages
 	$(CC) -c $(CFLAGS_ALL) -o $@ $<
 
-MAJ = $(NETPBM_MAJOR_RELEASE)
+MAJ = 11
 MIN = $(NETPBM_MINOR_RELEASE)
 
 SONAME = libnetpbm.$(NETPBMLIBSUFFIX).$(MAJ)

@@ -152,7 +152,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
 
     if (!imgareatlxSpec)
         cmdlineP->imgareatlx = 0;
@@ -380,7 +380,7 @@ writeJpc(jas_image_t *      const jasperP,
        specifying garbage for the -ilyrrates option 
     */
     if (strlen(cmdline.ilyrrates) > 0)
-        asprintfN(&ilyrratesOpt, "ilyrrates=%s", cmdline.ilyrrates);
+        pm_asprintf(&ilyrratesOpt, "ilyrrates=%s", cmdline.ilyrrates);
     else
         ilyrratesOpt = strdup("");
 
@@ -396,52 +396,52 @@ writeJpc(jas_image_t *      const jasperP,
 
     sprintf(rateOpt, "%1.9f", 1.0/cmdline.compressionRatio);
 
-    asprintfN(&options, 
-              "imgareatlx=%u "
-              "imgareatly=%u "
-              "tilegrdtlx=%u "
-              "tilegrdtly=%u "
-              "tilewidth=%u "
-              "tileheight=%u "
-              "prcwidth=%u "
-              "prcheight=%u "
-              "cblkwidth=%u "
-              "cblkheight=%u "
-              "mode=%s "
-              "rate=%s "
-              "%s "
-              "prg=%s "
-              "numrlvls=%u "
-              "numgbits=%u "
-              "%s %s %s %s %s %s %s %s %s",
-
-              cmdline.imgareatlx,
-              cmdline.imgareatly,
-              cmdline.tilegrdtlx,
-              cmdline.tilegrdtlx,
-              cmdline.tilewidth,
-              cmdline.tileheight,
-              cmdline.prcwidth,
-              cmdline.prcheight,
-              cmdline.cblkwidth,
-              cmdline.cblkheight,
-              cmdline.compmode == COMPMODE_INTEGER ? "int" : "real",
-              rateOpt,
-              ilyrratesOpt,
-              prgValue,
-              cmdline.numrlvls,
-              cmdline.numgbits,
-              cmdline.nomct     ? "nomct"     : "",
-              cmdline.sop       ? "sop"       : "",
-              cmdline.eph       ? "eph"       : "",
-              cmdline.lazy      ? "lazy"      : "",
-              cmdline.termall   ? "termall"   : "",
-              cmdline.segsym    ? "segsym"    : "",
-              cmdline.vcausal   ? "vcausal"   : "",
-              cmdline.pterm     ? "pterm"     : "",
-              cmdline.resetprob ? "resetprob" : ""
+    pm_asprintf(&options, 
+                "imgareatlx=%u "
+                "imgareatly=%u "
+                "tilegrdtlx=%u "
+                "tilegrdtly=%u "
+                "tilewidth=%u "
+                "tileheight=%u "
+                "prcwidth=%u "
+                "prcheight=%u "
+                "cblkwidth=%u "
+                "cblkheight=%u "
+                "mode=%s "
+                "rate=%s "
+                "%s "
+                "prg=%s "
+                "numrlvls=%u "
+                "numgbits=%u "
+                "%s %s %s %s %s %s %s %s %s",
+                
+                cmdline.imgareatlx,
+                cmdline.imgareatly,
+                cmdline.tilegrdtlx,
+                cmdline.tilegrdtlx,
+                cmdline.tilewidth,
+                cmdline.tileheight,
+                cmdline.prcwidth,
+                cmdline.prcheight,
+                cmdline.cblkwidth,
+                cmdline.cblkheight,
+                cmdline.compmode == COMPMODE_INTEGER ? "int" : "real",
+                rateOpt,
+                ilyrratesOpt,
+                prgValue,
+                cmdline.numrlvls,
+                cmdline.numgbits,
+                cmdline.nomct     ? "nomct"     : "",
+                cmdline.sop       ? "sop"       : "",
+                cmdline.eph       ? "eph"       : "",
+                cmdline.lazy      ? "lazy"      : "",
+                cmdline.termall   ? "termall"   : "",
+                cmdline.segsym    ? "segsym"    : "",
+                cmdline.vcausal   ? "vcausal"   : "",
+                cmdline.pterm     ? "pterm"     : "",
+                cmdline.resetprob ? "resetprob" : ""
         );
-    strfree(ilyrratesOpt);
+    pm_strfree(ilyrratesOpt);
 
 
     /* Open the output image file (Standard Output) */
@@ -478,7 +478,7 @@ writeJpc(jas_image_t *      const jasperP,
 
 	jas_image_clearfmts();
 
-    strfree(options);
+    pm_strfree(options);
 }
 
 

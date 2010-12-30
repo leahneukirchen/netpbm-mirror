@@ -335,9 +335,9 @@ announceJob(enum frameContext const context,
         const char * combineDest;
 
         if (context == CONTEXT_JUSTFRAMES)
-            asprintfN(&outputDest, "to individual frame files");
+            pm_asprintf(&outputDest, "to individual frame files");
         else
-            asprintfN(&outputDest, "to file '%s'", outputFileName);
+            pm_asprintf(&outputDest, "to file '%s'", outputFileName);
 
         if (childProcess)
             combineDest = strdup("for delivery to combine server");
@@ -347,8 +347,8 @@ announceJob(enum frameContext const context,
         pm_message("%s:  ENCODING FRAMES %u-%u to %s %s",
                    hostname, frameStart, frameEnd, outputDest, combineDest);
 
-        strfree(combineDest);
-        strfree(outputDest);
+        pm_strfree(combineDest);
+        pm_strfree(outputDest);
     }
 }
 
@@ -540,15 +540,15 @@ getUserFrameFile(void *       const handle,
 
         GetNthInputFileName(inputSourceP, frameNumber, &inputFileName);
         
-        asprintfN(&fileName, "%s/%s", currentFramePath, inputFileName);
+        pm_asprintf(&fileName, "%s/%s", currentFramePath, inputFileName);
         
         *ifPP = fopen(fileName, "rb");
         if (*ifPP == NULL)
             pm_error("Unable to open file '%s'.  Errno = %d (%s)",
                      fileName, errno, strerror(errno));
         
-        strfree(inputFileName);
-        strfree(fileName);
+        pm_strfree(inputFileName);
+        pm_strfree(fileName);
     }
 }
 
@@ -702,7 +702,7 @@ main(int argc, char **argv) {
     } 
     Frame_Exit();
         
-    strfree(hostname);
+    pm_strfree(hostname);
 
     return 0;
 }

@@ -407,7 +407,7 @@ alloctupletable(const struct pam * const pamP,
                 const char **      const errorP) {
     
     if (UINT_MAX / sizeof(struct tupleint) < size)
-        asprintfN(errorP, "size %u is too big for arithmetic", size);
+        pm_asprintf(errorP, "size %u is too big for arithmetic", size);
     else {
         unsigned int const mainTableSize = size * sizeof(struct tupleint *);
         unsigned int const tupleIntSize = 
@@ -419,7 +419,7 @@ alloctupletable(const struct pam * const pamP,
            as a single malloc block and suballocate internally.
         */
         if ((UINT_MAX - mainTableSize) / tupleIntSize < size)
-            asprintfN(errorP, "size %u is too big for arithmetic", size);
+            pm_asprintf(errorP, "size %u is too big for arithmetic", size);
         else {
             unsigned int const allocSize = mainTableSize + size * tupleIntSize;
             void * pool;
@@ -427,8 +427,9 @@ alloctupletable(const struct pam * const pamP,
             pool = malloc(allocSize);
 
             if (!pool)
-                asprintfN(errorP, "Unable to allocate %u bytes for a %u-entry "
-                          "tuple table", allocSize, size);
+                pm_asprintf(errorP,
+                            "Unable to allocate %u bytes for a %u-entry "
+                            "tuple table", allocSize, size);
             else {
                 tupletable const tbl = (tupletable) pool;
 
@@ -459,7 +460,7 @@ pnm_alloctupletable(const struct pam * const pamP,
 
     if (error) {
         pm_errormsg("%s", error);
-        strfree(error);
+        pm_strfree(error);
         pm_longjmp();
     }
     return retval;
@@ -514,7 +515,7 @@ tuplehashtotable(const struct pam * const pamP,
 
     if (error) {
         pm_errormsg("%s", error);
-        strfree(error);
+        pm_strfree(error);
         pm_longjmp();
     } else {
         unsigned int i, j;

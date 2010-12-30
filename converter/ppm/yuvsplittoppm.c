@@ -57,7 +57,7 @@ parseCommandLine(int                 argc,
    was passed to us as the argv array.  We also trash *argv.
 -----------------------------------------------------------------------------*/
     optEntry *option_def = malloc(100*sizeof(optEntry));
-        /* Instructions to optParseOptions3 on how to parse our options.
+        /* Instructions to pm_optParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
 
@@ -71,7 +71,7 @@ parseCommandLine(int                 argc,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3( &argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3( &argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
 
@@ -196,9 +196,9 @@ main(int argc, char **argv) {
 
     parseCommandLine(argc, argv, &cmdline);
         
-    asprintfN(&ufname, "%s.U", cmdline.filenameBase);
-    asprintfN(&vfname, "%s.V", cmdline.filenameBase);
-    asprintfN(&yfname, "%s.Y", cmdline.filenameBase);
+    pm_asprintf(&ufname, "%s.U", cmdline.filenameBase);
+    pm_asprintf(&vfname, "%s.V", cmdline.filenameBase);
+    pm_asprintf(&yfname, "%s.Y", cmdline.filenameBase);
 
     uf = pm_openr(ufname);
     vf = pm_openr(vfname);
@@ -241,9 +241,9 @@ main(int argc, char **argv) {
     }
     pm_close(stdout);
 
-    strfree(yfname);
-    strfree(vfname);
-    strfree(ufname);
+    pm_strfree(yfname);
+    pm_strfree(vfname);
+    pm_strfree(ufname);
 
     pm_close(yf);
     pm_close(uf);

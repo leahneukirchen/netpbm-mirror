@@ -71,7 +71,7 @@ static void
   opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
   opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-  optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+  pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
 
   if (argc-1 != 0)
     pm_error("There are no arguments.  You specified %d.", argc-1);

@@ -264,7 +264,7 @@ parseOldX11(char       const colorname[],
     
     computeHexTable(hexit);
 
-    if (!strishex(&colorname[1]))
+    if (!pm_strishex(&colorname[1]))
         pm_error("Non-hexadecimal characters in #-type color specification");
 
     switch (strlen(colorname) - 1 /* (Number of hex digits) */) {
@@ -460,8 +460,8 @@ processColorfileEntry(struct colorfile_entry const ce,
                       const char **          const errorP) {
 
     if (*colornameIndexP >= MAXCOLORNAMES)
-        asprintfN(errorP, "Too many colors in colorname dictionary.  "
-                  "Max allowed is %u", MAXCOLORNAMES);
+        pm_asprintf(errorP, "Too many colors in colorname dictionary.  "
+                    "Max allowed is %u", MAXCOLORNAMES);
     else {
         pixel color;
 
@@ -479,7 +479,7 @@ processColorfileEntry(struct colorfile_entry const ce,
             colornames[*colornameIndexP] = strdup(ce.colorname);
             colors[*colornameIndexP] = color;
             if (colornames[*colornameIndexP] == NULL)
-                asprintfN(errorP, "Unable to allocate space for color name");
+                pm_asprintf(errorP, "Unable to allocate space for color name");
             else {
                 *errorP = NULL;
                 ++(*colornameIndexP);
@@ -500,7 +500,7 @@ openColornameFile(const char *  const fileName,
     jmp_buf * origJmpbufP;
 
     if (setjmp(jmpbuf) != 0) {
-        asprintfN(errorP, "Failed to open color name file");
+        pm_asprintf(errorP, "Failed to open color name file");
         pm_setjmpbuf(origJmpbufP);
         pm_longjmp();
     } else {
@@ -554,7 +554,7 @@ readOpenColorFile(FILE *          const colorFileP,
         unsigned int colorIndex;
 
         for (colorIndex = 0; colorIndex < nColorsDone; ++colorIndex)
-            strfree(colornames[colorIndex]);
+            pm_strfree(colornames[colorIndex]);
     }
 }
 
@@ -624,21 +624,21 @@ readcolordict(const char *      const fileName,
     MALLOCARRAY(colornames, MAXCOLORNAMES);
 
     if (colornames == NULL)
-        asprintfN(errorP, "Unable to allocate space for colorname table.");
+        pm_asprintf(errorP, "Unable to allocate space for colorname table.");
     else {
         pixel * colors;
 
         MALLOCARRAY(colors, MAXCOLORNAMES);
         
         if (colors == NULL)
-            asprintfN(errorP, "Unable to allocate space for color table.");
+            pm_asprintf(errorP, "Unable to allocate space for color table.");
         else {
             colorhash_table cht;
 
             cht = allocColorHash();
             
             if (cht == NULL)
-                asprintfN(errorP, "Unable to allocate space for color hash");
+                pm_asprintf(errorP, "Unable to allocate space for color hash");
             else {
                 readColorFile(fileName, mustOpen,
                               nColorsP, colornames, colors, cht,
@@ -682,7 +682,7 @@ ppm_readcolordict(const char *      const fileName,
 
     if (error) {
         pm_errormsg("%s", error);
-        strfree(error);
+        pm_strfree(error);
         ppm_freecolorhash(cht);
     } else {
         if (chtP)

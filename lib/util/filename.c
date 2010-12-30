@@ -20,7 +20,7 @@ pm_basename(const char * const fileName) {
         if (fileName[i] == '/')
             basenameStart = i+1;
     }
-    asprintfN(&retval, "%s", &fileName[basenameStart]);
+    pm_asprintf(&retval, "%s", &fileName[basenameStart]);
 
     return retval;
 }

@@ -988,7 +988,7 @@ ReadParamFile(const char *         const fileName,
                            paramP);
               /* May read additional lines from file */
 
-      strfree(input);
+      pm_strfree(input);
   }
 
   fclose(fpointer);

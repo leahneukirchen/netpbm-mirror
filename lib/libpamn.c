@@ -40,9 +40,10 @@ allocpamrown(const struct pam * const pamP,
 
     tuplerown = malloc(pamP->width * (sizeof(tuplen *) + bytes_per_tuple));
     if (tuplerown == NULL)
-        asprintfN(&error, "Out of memory allocating space for a tuple row of"
-                  "%u tuples by %u samples per tuple by %u bytes per sample.",
-                  pamP->width, pamP->depth, (unsigned)sizeof(samplen));
+        pm_asprintf(&error, "Out of memory allocating space for a tuple row of"
+                    "%u tuples by %u samples per tuple "
+                    "by %u bytes per sample.",
+                    pamP->width, pamP->depth, (unsigned)sizeof(samplen));
     else {
         /* Now we initialize the pointers to the individual tuples to make this
            a regulation C two dimensional array.
@@ -78,7 +79,7 @@ pnm_allocpamrown(const struct pam * const pamP) {
 
     if (error) {
         pm_errormsg("pnm_allocpamrown() failed.  %s", error);
-        strfree(error);
+        pm_strfree(error);
         pm_longjmp();
     }
 
@@ -279,9 +280,9 @@ pnm_allocpamarrayn(const struct pam * const pamP) {
     
     MALLOCARRAY(tuplenarray, pamP->height);
     if (tuplenarray == NULL) 
-        asprintfN(&error,
-                  "Out of memory allocating the row pointer section of "
-                  "a %u row array", pamP->height);
+        pm_asprintf(&error,
+                    "Out of memory allocating the row pointer section of "
+                    "a %u row array", pamP->height);
     else {
         unsigned int rowsDone;
 
@@ -302,7 +303,7 @@ pnm_allocpamarrayn(const struct pam * const pamP) {
     }
     if (error) {
         pm_errormsg("pnm_allocpamarrayn() failed.  %s", error);
-        strfree(error);
+        pm_strfree(error);
         pm_longjmp();
     }
 

@@ -10,7 +10,7 @@
 
 
 void
-sleepN(unsigned int const milliseconds) {
+pm_sleep(unsigned int const milliseconds) {
 
 #ifdef WIN32
     SleepEx(milliseconds, TRUE);

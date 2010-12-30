@@ -112,11 +112,11 @@ getInitialViewerGeometry(const char *   const geometryString,
         *userChoseP = TRUE;
     } else if (geometryString) {
         const char * defGeom;
-        asprintfN(&defGeom, "%ux%u+0+0", defaultWidth, defaultHeight);
+        pm_asprintf(&defGeom, "%ux%u+0+0", defaultWidth, defaultHeight);
         XGeometry(dispP, scrn, geometryString, defGeom, 0, 1, 1, 0, 0,
                   (int *)xposP, (int *)yposP,
                   (int *)widthP, (int *)heightP);
-        strfree(defGeom);
+        pm_strfree(defGeom);
         *userChoseP = TRUE;
     } else {
         *widthP     = defaultWidth;
@@ -1175,7 +1175,7 @@ displayInViewer(viewer *       const viewerP,
     {
         const char * const name = iconName(title);
         XSetIconName(viewerP->dispP, viewerP->viewportWin, name);
-        strfree(name);
+        pm_strfree(name);
     }
     setNormalSizeHints(viewerP, imageP);
 

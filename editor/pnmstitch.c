@@ -233,7 +233,7 @@ parseCommandLine ( int argc, char ** argv,
    was passed to us as the argv array.  We also trash *argv.
 -----------------------------------------------------------------------------*/
     optEntry *option_def = malloc( 100*sizeof( optEntry ) );
-        /* Instructions to optParseOptions3 on how to parse our options.
+        /* Instructions to pm_optParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
 
@@ -265,7 +265,7 @@ parseCommandLine ( int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3( &argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3( &argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (!widthSpec) {
@@ -370,7 +370,7 @@ static void
 free_image(Image * image)
 {
     if (image->name) {
-        strfree(image->name);
+        pm_strfree(image->name);
         image->name = NULL;     
     }
     if (image->tuple) {
@@ -405,14 +405,14 @@ openWithPossibleExtension(const char *  const baseName,
         
         const char * trialName;
         
-        asprintfN(&trialName, "%s%s", baseName, extlist[extIndex]);
+        pm_asprintf(&trialName, "%s%s", baseName, extlist[extIndex]);
         
         ifP = fopen(trialName, "rb");
         
         if (ifP)
             *filenameP = trialName;
         else
-            strfree(trialName);
+            pm_strfree(trialName);
     }
     if (!ifP) 
         pm_error ("Failed to open input file named '%s' "
@@ -470,7 +470,7 @@ writeinit(Image * image)
 {
     if (streq(image->name, "-")) {
         image->pam.file = stdout;
-        strfree(image->name);
+        pm_strfree(image->name);
         image->name = strdup("<stdout>");
     } else {
         image->pam.file = pm_openw(image->name);

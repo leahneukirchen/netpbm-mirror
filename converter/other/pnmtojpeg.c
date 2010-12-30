@@ -271,7 +271,7 @@ parseCommandLine(const int argc, char ** argv,
     cmdlineP->comment = NULL;
     cmdlineP->exif_filespec = NULL;
 
-    /* Make private copy of arguments for optParseOptions to corrupt */
+    /* Make private copy of arguments for pm_optParseOptions to corrupt */
     argc_parse = argc;
     for (i=0; i < argc; i++) argv_parse[i] = argv[i];
 
@@ -279,7 +279,7 @@ parseCommandLine(const int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc_parse, argv_parse, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc_parse, argv_parse, opt, sizeof(opt), 0);
 
     if (!qualitySpec)
         cmdlineP->quality = -1;  /* unspecified */

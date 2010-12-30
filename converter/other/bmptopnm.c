@@ -34,9 +34,6 @@
 #include "pnm.h"
 #include "bmp.h"
 
-/* MAXCOLORS is the maximum size of a color map in a BMP image */
-#define MAXCOLORS       256
-
 static xelval const bmpMaxval = 255;
     /* The maxval for intensity values in a BMP image -- either in a
        truecolor raster or in a colormap
@@ -85,8 +82,8 @@ struct pixelformat {
 
 struct bmpInfoHeader {
     enum rowOrder rowOrder;
-    int cols;
-    int rows;
+    unsigned int cols;
+    unsigned int rows;
     unsigned int cBitCount;
         /* Number of bits in the BMP file that each pixel occupies. */
     enum bmpClass class;
@@ -104,7 +101,7 @@ struct bmpInfoHeader {
         /* Size in bytes of the image data.  We only reference this 
            when the image is compressed. */    
     unsigned short cPlanes;
-    unsigned long int compression;
+    BMPCompType compression;
     struct pixelformat pixelformat;
 };
 
@@ -148,7 +145,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (argc-1 == 0) 
@@ -286,13 +283,28 @@ static void
 readOs2InfoHeader(FILE *                 const ifP,
                   struct bmpInfoHeader * const headerP) {
 
+    unsigned short colsField, rowsField;
+    unsigned short planesField, bitCountField;
+
     headerP->class = C_OS2;
 
-    headerP->cols = GetShort(ifP);
-    headerP->rows = GetShort(ifP);
+    pm_readlittleshortu(ifP, &colsField);
+    if (colsField == 0)
+        pm_error("Invalid BMP file: says width is zero");
+    else
+        headerP->cols = colsField;
+    
+    pm_readlittleshortu(ifP, &rowsField);
+    if (rowsField == 0)
+        pm_error("Invalid BMP file: says height is zero");
+    else
+        headerP->rows = rowsField;
+
     headerP->rowOrder = BOTTOMUP;
-    headerP->cPlanes = GetShort(ifP);
-    headerP->cBitCount = GetShort(ifP);
+    pm_readlittleshortu(ifP, &planesField);
+    headerP->cPlanes = planesField;
+    pm_readlittleshortu(ifP, &bitCountField);
+    headerP->cBitCount = bitCountField;
     /* I actually don't know if the OS/2 BMP format allows
        cBitCount > 8 or if it does, what it means, but ppmtobmp
        creates such BMPs, more or less as a byproduct of creating
@@ -310,7 +322,7 @@ readOs2InfoHeader(FILE *                 const ifP,
         pm_error("Unrecognized bits per pixel in OS/2 BMP file header: %d",
                  headerP->cBitCount);
                  
-    headerP->compression = COMP_RGB;
+    headerP->compression = BMPCOMP_RGB;
     
     pm_message("OS/2 BMP, %dx%dx%d",
                headerP->cols, headerP->rows, headerP->cBitCount);
@@ -323,26 +335,26 @@ validateCompression(unsigned long const compression,
                     enum rowOrder const rowOrder,
                     unsigned int  const cBitCount) {
     
-    if (compression != COMP_RGB && compression != COMP_BITFIELDS &&
-        compression != COMP_RLE4 && compression != COMP_RLE8 ) 
+    if (compression != BMPCOMP_RGB && compression != BMPCOMP_BITFIELDS &&
+        compression != BMPCOMP_RLE4 && compression != BMPCOMP_RLE8) 
         pm_error("Input has unknown encoding.  "
                  "Compression type code = %ld.  The only ones we know "
                  "are RGB (%u), BITFIELDS (%u), "
                  "RLE4 (%u), and RLE8 (%u)",
-                 compression, COMP_RGB, COMP_BITFIELDS,
-                 COMP_RLE4, COMP_RLE8);
+                 compression, BMPCOMP_RGB, BMPCOMP_BITFIELDS,
+                 BMPCOMP_RLE4, BMPCOMP_RLE8);
                      
-    if ((compression == COMP_RLE4 || compression == COMP_RLE8) &&
+    if ((compression == BMPCOMP_RLE4 || compression == BMPCOMP_RLE8) &&
         rowOrder == TOPDOWN )                        
         pm_error("Invalid BMP header.  Claims image is top-down and also "
                  "compressed, which is an impossible combination.");
 
-    if ( (compression == COMP_RLE4 && cBitCount !=4) ||
-         (compression == COMP_RLE8 && cBitCount !=8) ) 
+    if ((compression == BMPCOMP_RLE4 && cBitCount !=4 ) ||
+        (compression == BMPCOMP_RLE8 && cBitCount !=8 )) 
         pm_error("Invalid BMP header.  " 
                  "Compression type (%s) disagrees with "
                  "number of bits per pixel (%u).",
-                 compression == COMP_RLE4 ? "RLE4" : "RLE8",
+                 compression == BMPCOMP_RLE4 ? "RLE4" : "RLE8",
                  cBitCount);
 }
 
@@ -360,12 +372,16 @@ readWindowsBasic40ByteInfoHeader(FILE *                 const ifP,
 -----------------------------------------------------------------------------*/
     int colorsimportant;   /* ColorsImportant value from header */
     int colorsused;        /* ColorsUsed value from header */
+    unsigned short planesField, bitCountField;
 
     headerP->class = C_WIN;
 
     headerP->cols = GetLong(ifP);
+    if (headerP->cols == 0)
+        pm_error("Invalid BMP file: says width is zero");
     {
         long const cy = GetLong(ifP);
+
         if (cy == 0)
             pm_error("Invalid BMP file: says height is zero");
         if (cy < 0) {
@@ -376,16 +392,17 @@ readWindowsBasic40ByteInfoHeader(FILE *                 const ifP,
             headerP->rows = cy;
         }
     }
-    headerP->cPlanes = GetShort(ifP);
-    headerP->cBitCount = GetShort(ifP);
- 
+    pm_readlittleshortu(ifP, &planesField);
+    headerP->cPlanes = planesField;
+    pm_readlittleshortu(ifP, &bitCountField);
+    headerP->cBitCount = bitCountField;
     {
         unsigned long int const compression = GetLong(ifP);
 
-        headerP->bitFields = (compression == COMP_BITFIELDS);
-
         validateCompression(compression, headerP->rowOrder,
                             headerP->cBitCount);
+
+        headerP->bitFields = (compression == BMPCOMP_BITFIELDS);
 
         headerP->compression = compression;             
     }
@@ -860,7 +877,8 @@ convertRow(unsigned char      const bmprow[],
 
 
 static unsigned char **
-allocBMPraster(unsigned int const rows, unsigned int const bytesPerRow) {
+allocBMPraster(unsigned int const rows,
+               unsigned int const bytesPerRow) {
 
     unsigned int const storageSize = 
         rows * sizeof(unsigned char *) + rows * bytesPerRow;        
@@ -978,12 +996,12 @@ readrowRLE(FILE *           const ifP,
            unsigned int     const row,
            unsigned int     const cols,
            bool             const lastrow,
-           unsigned long    const compression,
+           BMPCompType      const compression,
            unsigned char ** const BMPraster,
            unsigned int  *  const bytesReadP) {
 
-    bool const RLE4 = (compression == COMP_RLE4);
-    int  const pixelsPerRowMargin = RLE4 ? cols % 2 : 0;
+    bool const rle4 = (compression == BMPCOMP_RLE4);
+    int  const pixelsPerRowMargin = rle4 ? cols % 2 : 0;
 
     char const err_decode[] = 
         "Error while decoding compressed BMP image.  "
@@ -1001,17 +1019,17 @@ readrowRLE(FILE *           const ifP,
     totalBytesRead = 0;  /* Initial value */
     pixelsRead = 0;      /* Initial value */
 
-    while (TRUE) {
+    while (true) {
         unsigned int n;
             /* decompressed bytes already read; current write point */ 
         unsigned int cnt;
         unsigned char code;
 
-        n = RLE4 ? (pixelsRead + 1) / 2 : pixelsRead;
+        n = rle4 ? (pixelsRead + 1) / 2 : pixelsRead;
 
         switch (readRLEcode(ifP, &cnt, &code)) {
         case ENC_MODE: {
-            unsigned int const byteCnt = RLE4 ? (cnt + 1) /2 : cnt;
+            unsigned int const byteCnt = rle4 ? (cnt + 1) /2 : cnt;
             unsigned int i; 
 
             if (pixelsRead + cnt > cols + pixelsPerRowMargin)
@@ -1021,7 +1039,7 @@ readrowRLE(FILE *           const ifP,
             for (i = 0; i < byteCnt; ++i)
                 BMPraster[row][n+i] = code;
                  
-            if (RLE4 && pixelsRead % 2 == 1)
+            if (rle4 && pixelsRead % 2 == 1)
                 /* previous read ended odd */
                 nibbleAlign(&BMPraster[row][n-1], cnt); 
             
@@ -1033,7 +1051,7 @@ readrowRLE(FILE *           const ifP,
             unsigned int cmpBytesRead; /* compressed bytes read */
             /* align read-end to 16 bit boundary */
             unsigned int const bytesToRead =
-                RLE4 ? (cnt + 3) / 4 * 2 : (cnt + 1) / 2 * 2;
+                rle4 ? (cnt + 3) / 4 * 2 : (cnt + 1) / 2 * 2;
 
             if (pixelsRead + cnt > cols + pixelsPerRowMargin)
                 pm_error(err_decode,  "Too many pixels in absolute mode",
@@ -1050,7 +1068,7 @@ readrowRLE(FILE *           const ifP,
                     pm_error("Error reading BMP raster.  Errno=%d (%s)",
                              errno, strerror(errno));
             }
-            if (RLE4 && pixelsRead % 2 == 1) /* previous read ended odd */
+            if (rle4 && pixelsRead % 2 == 1) /* previous read ended odd */
                 nibbleAlign(&BMPraster[row][n-1], cnt); 
     
             pixelsRead += cnt;
@@ -1106,13 +1124,24 @@ BMPreadraster(FILE *            const ifP,
               unsigned int      const rows, 
               enum rowOrder     const rowOrder,
               unsigned int      const cBitCount, 
-              unsigned long int const compression,
+              BMPCompType       const compression,
               unsigned char *** const BMPrasterP, 
               unsigned int *    const bytesReadP) {
+/*----------------------------------------------------------------------------
+   Read the raster from the BMP file on *ifP (which is positioned to the
+   raster).  The raster is 'rows' rows of 'cols' columns, 'cBitCount' bits per
+   pixel, with rows in order 'rowOrder'.
 
+   Return the raster in a newly malloced 2-dimensional array and return
+   a pointer to that array as *BMPrasterP.
+
+   Leave the input file positioned immediately after the raster and return
+   as *bytesReadP the number of bytes we read from the file (i.e. the number
+   of bytes in the raster portion of the file).
+-----------------------------------------------------------------------------*/
     unsigned int const bytesPerRow =
-        (compression == COMP_RLE4) ? cols / 2 + 2 :
-        (compression == COMP_RLE8) ? cols + 1 :
+        (compression == BMPCOMP_RLE4) ? cols / 2 + 2 :
+        (compression == BMPCOMP_RLE8) ? cols + 1 :
         ((cols * cBitCount + 31) / 32) * 4;
         /* A BMP raster row is a multiple of 4 bytes, padded on the right
            with don't cares.
@@ -1130,17 +1159,18 @@ BMPreadraster(FILE *            const ifP,
     */
     
     switch(compression){
-    case COMP_RGB:
-    case COMP_BITFIELDS: {
+    case BMPCOMP_RGB:
+    case BMPCOMP_BITFIELDS: {
         unsigned int i;
         for (i = 0; i < rows; ++i)
             readrow(ifP, rowOrder == TOPDOWN ? i : rows - i - 1, 
                     bytesPerRow, BMPraster, bytesReadP);
     } break;
-    case COMP_RLE4: 
-    case COMP_RLE8: {
+    case BMPCOMP_RLE4: 
+    case BMPCOMP_RLE8: {
         unsigned int i;
         /* Read all rows except last */
+        assert(rows >= 1);
         for (i = 0; i < rows - 1; ++i){
             readrowRLE(ifP, rowOrder == TOPDOWN ? i : rows - i - 1, 
                        cols, FALSE, compression, BMPraster, bytesReadP);
@@ -1149,11 +1179,15 @@ BMPreadraster(FILE *            const ifP,
         readrowRLE(ifP, rowOrder == TOPDOWN ? i : rows - i - 1, 
                    cols, TRUE,  compression, BMPraster, bytesReadP);
     } break;             
-    default:       
-        pm_error("The BMP specifies a compression scheme we don't "
-                 "recognize.  Code= %lu", compression);
+    case BMPCOMP_JPEG:
+        pm_error("BMP file uses JPEG compression.  We don't know how to "
+                 "interpret that.");
+        break;
+    case BMPCOMP_PNG:
+        pm_error("BMP file uses PNG compression.  We don't know how to "
+                 "interpret that.");
+        break;
     }
-
     *BMPrasterP = BMPraster;
 }
 
@@ -1175,14 +1209,7 @@ reportHeader(struct bmpInfoHeader const header,
                header.rowOrder == BOTTOMUP ? "bottom up" : "top down");
     pm_message("  Byte offset of raster within file: %u", offBits);
     pm_message("  Bits per pixel in raster: %u", header.cBitCount);
-    pm_message("  Compression: %s", 
-               header.compression == COMP_RGB ? "none" :
-               header.compression == COMP_RLE4 ? "4 bit run-length coding" :
-               header.compression == COMP_RLE8 ? "8 bit run-length coding" :
-               header.compression == COMP_BITFIELDS ? "none" :
-               header.compression == COMP_JPEG ? "JPEG (not supported)" :
-               header.compression == COMP_PNG ? "PNG (not supported)" :
-               "???");                
+    pm_message("  Compression: %s", BMPCompTypeName(header.compression));
     pm_message("  Colors in color map: %u", header.cmapsize);
 }        
 

@@ -167,7 +167,7 @@ parseCommandLine(int argc, char ** argv,
     OPTENT3(0,   "linear",   
             OPT_FLAG,    NULL, &cmdlineP->linear, 0);
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
 
     if (!brightSpec)
         cmdlineP->bright = 1.0;

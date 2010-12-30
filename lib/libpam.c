@@ -205,21 +205,6 @@ pnm_createBlackTuple(const struct pam * const pamP,
 
 
 
-void
-createBlackTuple(const struct pam * const pamP, 
-                 tuple *            const blackTupleP) {
-
-/* This is poorly named, because it lacks the "pnm" prefix.  But for some
-   reason, this is how we originally named this.  So to maintain backward
-   compatibility with binaries that refer to "createBlackTuple", we define
-   this.  The preferred name, pnm_createBlackTuple() was new in Netpbm 10.20,
-   January 2004.  We should eventually retire createBlackTuple().
-*/
-    pnm_createBlackTuple(pamP, blackTupleP);
-}
-
-
-
 static tuple *
 allocPamRow(const struct pam * const pamP) {
 /*----------------------------------------------------------------------------
@@ -629,7 +614,7 @@ disposeOfComments(const struct pam * const pamP,
     if (retP)
         *retP = comments;
     else
-        strfree(comments);
+        pm_strfree(comments);
 }
 
 
@@ -672,7 +657,7 @@ readpaminitrest(struct pam * const pamP) {
             buffer[256-1-1] = '\n';  /* In case fgets() truncated */
             if (buffer[0] == '#')
                 appendComment(&comments, buffer);
-            else if (stripeq(buffer, ""));
+            else if (pm_stripeq(buffer, ""));
                 /* Ignore it; it's a blank line */
             else 
                 processHeaderLine(buffer, pamP, &headerSeen);
@@ -786,9 +771,9 @@ pnm_readpaminit(FILE *       const file,
 
     if (size < PAM_STRUCT_SIZE(tuple_type)) 
         pm_error("pam object passed to pnm_readpaminit() is too small.  "
-                 "It must be large\n"
+                 "It must be large "
                  "enough to hold at least up to the "
-                 "'tuple_type' member, but according\n"
+                 "'tuple_type' member, but according "
                  "to the 'size' argument, it is only %d bytes long.", 
                  size);
 
@@ -917,9 +902,9 @@ pnm_writepaminit(struct pam * const pamP) {
 
     if (pamP->size < PAM_STRUCT_SIZE(bytes_per_sample))
         pm_error("pam object passed to pnm_writepaminit() is too small.  "
-                 "It must be large\n"
+                 "It must be large "
                  "enough to hold at least up through the "
-                 "'bytes_per_sample' member, but according\n"
+                 "'bytes_per_sample' member, but according "
                  "to its 'size' member, it is only %u bytes long.", 
                  pamP->size);
     if (pamP->len < PAM_STRUCT_SIZE(maxval))
@@ -951,7 +936,7 @@ pnm_writepaminit(struct pam * const pamP) {
         fprintf(pamP->file, "HEIGHT %u\n",  (unsigned)pamP->height);
         fprintf(pamP->file, "DEPTH %u\n",   pamP->depth);
         fprintf(pamP->file, "MAXVAL %lu\n", pamP->maxval);
-        if (!stripeq(tupleType, ""))
+        if (!pm_stripeq(tupleType, ""))
             fprintf(pamP->file, "TUPLTYPE %s\n", pamP->tuple_type);
         fprintf(pamP->file, "ENDHDR\n");
         break;

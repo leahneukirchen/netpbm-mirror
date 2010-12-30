@@ -299,7 +299,7 @@ pnmpng_read_text (png_info * const info_ptr,
                                     textline, lineLength);
                 }
             }
-            strfree(textline);
+            pm_strfree(textline);
         }
     } 
     if (noCommentsYet)

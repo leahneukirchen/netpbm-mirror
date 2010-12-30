@@ -59,7 +59,7 @@ parseCommandLine(int argc, char ** argv,
    was passed to us as the argv array.  We also trash *argv.
 --------------------------------------------------------------------------*/
     optEntry * option_def;
-        /* Instructions to optParseOptions3 on how to parse our options. */
+        /* Instructions to pm_optParseOptions3 on how to parse our options. */
     optStruct3 opt;
 
     unsigned int minSpec;
@@ -79,7 +79,7 @@ parseCommandLine(int argc, char ** argv,
 
     /* Set some defaults the lazy way (using multiple setting of variables) */
 
-    optParseOptions3( &argc, argv, opt, sizeof(opt), 0 );
+    pm_optParseOptions3( &argc, argv, opt, sizeof(opt), 0 );
     /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (!minSpec)
@@ -111,11 +111,11 @@ writeHeaderCard(const char * const s) {
 -----------------------------------------------------------------------------*/
     const char * card;
 
-    asprintfN(&card, "%-80.80s", s);
+    pm_asprintf(&card, "%-80.80s", s);
 
     fwrite(card, sizeof(card[0]), 80, stdout);
 
-    strfree(card);
+    pm_strfree(card);
 }
 
 

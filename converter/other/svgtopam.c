@@ -67,7 +67,7 @@ parseCommandLine(int argc,
    was passed to us as the argv array.  We also trash *argv.
 --------------------------------------------------------------------------*/
     optEntry *option_def;
-        /* Instructions to optParseOptions3 on how to parse our options. */
+        /* Instructions to pm_optParseOptions3 on how to parse our options. */
     optStruct3 opt;
 
     unsigned int option_def_index;
@@ -82,7 +82,7 @@ parseCommandLine(int argc,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;   /* We have no parms that are negative numbers */
 
-    optParseOptions3( &argc, argv, opt, sizeof(opt), 0 );
+    pm_optParseOptions3( &argc, argv, opt, sizeof(opt), 0 );
     /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (argc-1 < 1)
@@ -193,7 +193,7 @@ destroyPath(path * const pathP) {
     
     assert(pathP->pathTextLength == strlen(pathP->pathText));
 
-    strfree(pathP->pathText);
+    pm_strfree(pathP->pathText);
 
     free(pathP);
 }
@@ -519,7 +519,7 @@ interpretStyle(const char * const styleAttr) {
     p = &buffer[0];
 
     while (p) {
-        const char * const token = strsepN(&p, ";");
+        const char * const token = pm_strsep(&p, ";");
         const char * strippedToken;
         const char * p;
         char * buffer;
@@ -662,14 +662,14 @@ stringToUint(const char *   const string,
     /* TODO: move this to nstring.c */
 
     if (strlen(string) == 0)
-        asprintfN(errorP, "Value is a null string");
+        pm_asprintf(errorP, "Value is a null string");
     else {
         char * tailptr;
 
         *uintP = strtoul(string, &tailptr, 10);
 
         if (*tailptr != '\0')
-            asprintfN(errorP, "Non-numeric crap in string: '%s'", tailptr);
+            pm_asprintf(errorP, "Non-numeric crap in string: '%s'", tailptr);
         else
             *errorP = NULL;
     }
@@ -690,12 +690,12 @@ getSvgAttributes(xmlTextReaderPtr const xmlReaderP,
     stringToUint(width, colsP, &error);
     if (error) {
         pm_error("'width' attribute of <svg> has invalid value.  %s", error);
-        strfree(error);
+        pm_strfree(error);
     }
     stringToUint(height, rowsP, &error);
     if (error) {
         pm_error("'height' attribute of <svg> has invalid value.  %s", error);
-        strfree(error);
+        pm_strfree(error);
     }
 }
 

@@ -57,7 +57,7 @@ parseCommandLine (int argc, char ** argv,
    was passed to us as the argv array.  We also trash *argv.
 -----------------------------------------------------------------------------*/
     optEntry *option_def;
-        /* Instructions to optParseOptions3 on how to parse our options.
+        /* Instructions to pm_optParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
 
@@ -80,7 +80,7 @@ parseCommandLine (int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3( &argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3( &argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
     
     if (!scriptSpec && !scriptfileSpec)
@@ -288,10 +288,10 @@ freeDrawCommand(const struct drawCommand * const commandP) {
     case VERB_SETLINECLIP:
         break;
     case VERB_SETCOLOR:
-        strfree(commandP->u.setcolorArg.colorName);
+        pm_strfree(commandP->u.setcolorArg.colorName);
         break;
     case VERB_SETFONT:
-        strfree(commandP->u.setfontArg.fontFileName);
+        pm_strfree(commandP->u.setfontArg.fontFileName);
         break;
     case VERB_LINE:
         break;
@@ -305,7 +305,7 @@ freeDrawCommand(const struct drawCommand * const commandP) {
         break;
     case VERB_TEXT:
     case VERB_TEXT_HERE:
-        strfree(commandP->u.textArg.text);
+        pm_strfree(commandP->u.textArg.text);
         break;
     }
     
@@ -677,7 +677,7 @@ disposeOfCommandTokens(struct tokenSet * const tokenSetP,
     {
         unsigned int i;
         for (i = 0; i < tokenSetP->count; ++i)
-            strfree(tokenSetP->token[i]);
+            pm_strfree(tokenSetP->token[i]);
         tokenSetP->count = 0;
     }
     /* Put the list element for this command at the tail of the list */
@@ -828,7 +828,7 @@ getScript(struct cmdlineInfo const cmdline,
 
     parseScript(scriptText, scriptPP);
 
-    strfree(scriptText);
+    pm_strfree(scriptText);
 }
 
           

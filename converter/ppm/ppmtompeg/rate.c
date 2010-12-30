@@ -236,7 +236,7 @@ analyzePattern(const char *  const framePattern,
         case 'p': ++*gop_pP; break;
         case 'b': ++*gop_bP; break;
         default:
-            asprintfN(errorP, "Bad pattern - not composed of i, p, and b");
+            pm_asprintf(errorP, "Bad pattern - not composed of i, p, and b");
         }
     }
     assert(*gop_xP == *gop_iP + *gop_pP + *gop_bP);
@@ -285,7 +285,7 @@ initRateControl(bool const wantUnderflowWarning,
     if (error) {
         pm_message("Unable to set up rate control.  Switching to variable.  "
                    "%s", error);
-        strfree(error);
+        pm_strfree(error);
         RateControlMode = VARIABLE_RATE;
         return -1;
     }

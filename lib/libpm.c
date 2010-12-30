@@ -115,8 +115,8 @@ pm_fork(int *         const iAmParentP,
     rc = fork();
 
     if (rc < 0) {
-        asprintfN(errorP, "Failed to fork a process.  errno=%d (%s)",
-                  errno, strerror(errno));
+        pm_asprintf(errorP, "Failed to fork a process.  errno=%d (%s)",
+                    errno, strerror(errno));
     } else {
         *errorP = NULL;
 
@@ -146,9 +146,9 @@ pm_waitpid(pid_t         const pid,
     pid_t rc;
     rc = waitpid(pid, statusP, options);
     if (rc == (pid_t)-1) {
-        asprintfN(errorP, "Failed to wait for process exit.  "
-                  "waitpid() errno = %d (%s)",
-                  errno, strerror(errno));
+        pm_asprintf(errorP, "Failed to wait for process exit.  "
+                    "waitpid() errno = %d (%s)",
+                    errno, strerror(errno));
     } else {
         *exitedPidP = rc;
         *errorP = NULL;
@@ -172,7 +172,7 @@ pm_waitpidSimple(pid_t const pid) {
 
     if (error) {
         pm_errormsg("%s", error);
-        strfree(error);
+        pm_strfree(error);
         pm_longjmp();
     } else {
         assert(exitedPid != 0);
@@ -213,14 +213,14 @@ pm_message(const char format[], ...) {
 
     if (pm_showmessages) {
         const char * msg;
-        vasprintfN(&msg, format, args);
+        pm_vasprintf(&msg, format, args);
 
         if (userMessageFn)
             userMessageFn(msg);
         else
             fprintf(stderr, "%s: %s\n", pm_progname, msg);
 
-        strfree(msg);
+        pm_strfree(msg);
     }
     va_end(args);
 }
@@ -246,11 +246,11 @@ pm_errormsg(const char format[], ...) {
 
     va_start(args, format);
 
-    vasprintfN(&msg, format, args);
+    pm_vasprintf(&msg, format, args);
     
     errormsg(msg);
 
-    strfree(msg);
+    pm_strfree(msg);
 
     va_end(args);
 }
@@ -264,11 +264,11 @@ pm_error(const char format[], ...) {
 
     va_start(args, format);
 
-    vasprintfN(&msg, format, args);
+    pm_vasprintf(&msg, format, args);
     
     errormsg(msg);
 
-    strfree(msg);
+    pm_strfree(msg);
 
     va_end(args);
 
@@ -742,11 +742,11 @@ pm_parse_width(const char * const arg) {
     unsigned int width;
     const char * error;
 
-    interpret_uint(arg, &width, &error);
+    pm_interpret_uint(arg, &width, &error);
 
     if (error) {
         pm_error("'%s' is invalid as an image width.  %s", arg, error);
-        strfree(error);
+        pm_strfree(error);
     } else {
         if (width > INT_MAX-10)
             pm_error("Width %u is too large for computations.", width);
@@ -767,11 +767,11 @@ pm_parse_height(const char * const arg) {
     unsigned int height;
     const char * error;
 
-    interpret_uint(arg, &height, &error);
+    pm_interpret_uint(arg, &height, &error);
 
     if (error) {
         pm_error("'%s' is invalid as an image height.  %s", arg, error);
-        strfree(error);
+        pm_strfree(error);
     } else {
         if (height > INT_MAX-10)
             pm_error("Height %u is too large for computations.", height);

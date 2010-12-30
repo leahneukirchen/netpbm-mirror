@@ -61,7 +61,7 @@ parseCommandLine(int argc, char ** argv,
    malloc'ed storage.
 -----------------------------------------------------------------------------*/
     optEntry *option_def = malloc( 100*sizeof( optEntry ) );
-        /* Instructions to optParseOptions3 on how to parse our options.
+        /* Instructions to pm_optParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
 
@@ -79,7 +79,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We may have parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (argc-1 == 0)
@@ -374,9 +374,9 @@ freeCmap(cixel_map    const cmap[],
     for (i = 0; i < ncolors; ++i) {
         cixel_map const cmapEntry = cmap[i];
         if (cmapEntry.uilname)
-            strfree(cmapEntry.uilname);
+            pm_strfree(cmapEntry.uilname);
         if (cmapEntry.rgbname)
-            strfree(cmapEntry.rgbname);
+            pm_strfree(cmapEntry.rgbname);
     }
 }
 

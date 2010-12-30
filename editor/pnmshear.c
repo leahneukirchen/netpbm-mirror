@@ -54,7 +54,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;
     opt.allowNegNum = TRUE;
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
 
     if (!backgroundSpec)
         cmdlineP->background = NULL;

@@ -59,7 +59,7 @@ parseCommandLine(int argc, char ** const argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We may have parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (!lookupfileSpec)
@@ -94,7 +94,7 @@ fitLookup(tuple **     const inputLookup,
     fitLookuppamP->width = cols;
     fitLookuppamP->height = rows;
 
-    asprintfN(&pamscaleCommand, "pamscale -width=%u -height=%u", cols, rows);
+    pm_asprintf(&pamscaleCommand, "pamscale -width=%u -height=%u", cols, rows);
 
     inPamtuples.pamP = (struct pam *) &inputLookuppam;
     inPamtuples.tuplesP = (tuple ***) &inputLookup;
@@ -105,7 +105,7 @@ fitLookup(tuple **     const inputLookup,
               &pm_accept_to_pamtuples, &outPamtuples,
               pamscaleCommand);
 
-    strfree(pamscaleCommand);
+    pm_strfree(pamscaleCommand);
 }
 
 

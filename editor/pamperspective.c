@@ -486,7 +486,7 @@ parseCommandLine(int argc, const char * argv[],
   opt.opt_table = option_def;
   opt.short_allowed = FALSE;
   opt.allowNegNum = TRUE;
-  optParseOptions3 (&argc, (char **)argv, opt, sizeof(opt), 0);
+  pm_optParseOptions3 (&argc, (char **)argv, opt, sizeof(opt), 0);
 
   /* The non-option arguments are optionally all eight coordinates
      and optionally the input filename

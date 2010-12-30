@@ -38,7 +38,8 @@ pm_gettoken(const char *  const tokenStart,
         if (*cursor == '\\') {
             ++cursor;
             if (*cursor == '\0')
-                asprintfN(errorP, "string ends with an escape character (\\)");
+                pm_asprintf(errorP,
+                            "string ends with an escape character (\\)");
         } else {
             ++cursor;
             ++charCount;
@@ -47,9 +48,9 @@ pm_gettoken(const char *  const tokenStart,
     if (!*errorP) {
         token = malloc(charCount + 1);
         if (token == NULL)
-            asprintfN(errorP, "Could not allocate %u bytes of memory "
-                      "to parse a string",
-                      charCount + 1);
+            pm_asprintf(errorP, "Could not allocate %u bytes of memory "
+                        "to parse a string",
+                        charCount + 1);
         else {
             /* Go back and do it again, this time copying the characters */
             charCount = 0;

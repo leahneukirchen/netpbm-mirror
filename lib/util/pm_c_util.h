@@ -1,6 +1,11 @@
 #ifndef PM_C_UTIL_INCLUDED
 #define PM_C_UTIL_INCLUDED
 
+/* Note that for MAX and MIN, if either of the operands is a floating point
+   Not-A-Number, the result is the second operand.  So if you're computing a
+   running maximum and want to ignore the NaNs in the computation, put the
+   running maximum variable second.
+*/
 #undef MAX
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 #undef MIN

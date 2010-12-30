@@ -1092,15 +1092,15 @@ writeLabel(pixel **                   const pixels,
 
     PPM_ASSIGN(rgbcolor, maxval, maxval, maxval);
     
-    snprintfN(sysdesc, sizeof(sysdesc),
-              "System: %s\n"
-              "Primary illuminants (X, Y)\n"
-              "     Red:  %0.4f, %0.4f\n"
-              "     Green: %0.4f, %0.4f\n"
-              "     Blue:  %0.4f, %0.4f\n"
-              "White point (X, Y): %0.4f, %0.4f",
-              cs->name, cs->xRed, cs->yRed, cs->xGreen, cs->yGreen,
-              cs->xBlue, cs->yBlue, cs->xWhite, cs->yWhite);
+    pm_snprintf(sysdesc, sizeof(sysdesc),
+                "System: %s\n"
+                "Primary illuminants (X, Y)\n"
+                "     Red:  %0.4f, %0.4f\n"
+                "     Green: %0.4f, %0.4f\n"
+                "     Blue:  %0.4f, %0.4f\n"
+                "White point (X, Y): %0.4f, %0.4f",
+                cs->name, cs->xRed, cs->yRed, cs->xGreen, cs->yGreen,
+                cs->xBlue, cs->yBlue, cs->xWhite, cs->yWhite);
     sysdesc[sizeof(sysdesc)-1] = '\0';  /* for robustness */
 
     ppmd_text(pixels, pixcols, pixrows, Maxval,

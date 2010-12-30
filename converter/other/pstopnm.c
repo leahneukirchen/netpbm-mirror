@@ -48,7 +48,7 @@ struct cmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *input_filespec;  /* Filespecs of input files */
+    const char * inputFileName;  /* Names of input files */
     unsigned int forceplain;
     struct box extract_box;
     unsigned int nocrop;
@@ -63,6 +63,7 @@ struct cmdlineInfo {
     unsigned int dpi;    /* zero means unspecified */
     enum orientation orientation;
     unsigned int goto_stdout;
+    unsigned int textalphabits;
 };
 
 
@@ -74,7 +75,7 @@ parseCommandLine(int argc, char ** argv,
    was passed to us as the argv array.
 -----------------------------------------------------------------------------*/
     optEntry *option_def = malloc( 100*sizeof( optEntry ) );
-        /* Instructions to optParseOptions3 on how to parse our options.
+        /* Instructions to pm_optParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
 
@@ -85,6 +86,7 @@ parseCommandLine(int argc, char ** argv,
     float llx, lly, urx, ury;
     unsigned int llxSpec, llySpec, urxSpec, urySpec;
     unsigned int xmaxSpec, ymaxSpec, xsizeSpec, ysizeSpec, dpiSpec;
+    unsigned int textalphabitsSpec;
     
     option_def_index = 0;   /* incremented by OPTENTRY */
     OPTENT3(0, "forceplain", OPT_FLAG,  NULL, &cmdlineP->forceplain,     0);
@@ -107,6 +109,8 @@ parseCommandLine(int argc, char ** argv,
     OPTENT3(0, "portrait",   OPT_FLAG,  NULL, &portrait_opt,             0);
     OPTENT3(0, "landscape",  OPT_FLAG,  NULL, &landscape_opt,            0);
     OPTENT3(0, "stdout",     OPT_FLAG,  NULL, &cmdlineP->goto_stdout,    0);
+    OPTENT3(0, "textalphabits", OPT_UINT,
+            &cmdlineP->textalphabits,  &textalphabitsSpec, 0);
 
     /* Set the defaults */
     cmdlineP->xborder = cmdlineP->yborder = 0.1;
@@ -115,7 +119,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (xmaxSpec) {
@@ -185,50 +189,62 @@ parseCommandLine(int argc, char ** argv,
     if (dpiSpec && xsizeSpec + ysizeSpec + xmaxSpec + ymaxSpec > 0)
         pm_error("You may not specify both size options and -dpi");
 
+    if (textalphabitsSpec) {
+        if (cmdlineP->textalphabits != 1 && cmdlineP->textalphabits != 2
+            && cmdlineP->textalphabits != 4) {
+            /* Pstopnm won't take this value, and we don't want to inflict
+               a Pstopnm failure error message on the user.
+            */
+            pm_error("Valid values for -textalphabits are 1, 2, and 4.  "
+                     "You specified %u", cmdlineP->textalphabits );
+        }
+    } else
+        cmdlineP->textalphabits = 4;
+
     if (argc-1 == 0)
-        cmdlineP->input_filespec = "-";  /* stdin */
+        cmdlineP->inputFileName = "-";  /* stdin */
     else if (argc-1 == 1)
-        cmdlineP->input_filespec = argv[1];
+        cmdlineP->inputFileName = argv[1];
     else 
         pm_error("Too many arguments (%d).  "
-                 "Only need one: the Postscript filespec", argc-1);
+                 "Only need one: the Postscript file name", argc-1);
 }
 
 
 
 static void
-addPsToFilespec(char          const orig_filespec[],
-                const char ** const new_filespec_p,
+addPsToFileName(char          const origFileName[],
+                const char ** const newFileNameP,
                 bool          const verbose) {
 /*----------------------------------------------------------------------------
-   If orig_filespec[] does not name an existing file, but the same
+   If origFileName[] does not name an existing file, but the same
    name with ".ps" added to the end does, return the name with the .ps
-   attached.  Otherwise, just return orig_filespec[].
+   attached.  Otherwise, just return origFileName[].
 
    Return the name in newly malloc'ed storage, pointed to by
-   *new_filespec_p.
+   *newFileNameP.
 -----------------------------------------------------------------------------*/
     struct stat statbuf;
     int stat_rc;
 
-    stat_rc = lstat(orig_filespec, &statbuf);
+    stat_rc = lstat(origFileName, &statbuf);
     
     if (stat_rc == 0)
-        *new_filespec_p = strdup(orig_filespec);
+        *newFileNameP = strdup(origFileName);
     else {
-        const char *filespec_plus_ps;
+        const char * fileNamePlusPs;
 
-        asprintfN(&filespec_plus_ps, "%s.ps", orig_filespec);
+        pm_asprintf(&fileNamePlusPs, "%s.ps", origFileName);
 
-        stat_rc = lstat(filespec_plus_ps, &statbuf);
+        stat_rc = lstat(fileNamePlusPs, &statbuf);
         if (stat_rc == 0)
-            *new_filespec_p = strdup(filespec_plus_ps);
+            *newFileNameP = strdup(fileNamePlusPs);
         else
-            *new_filespec_p = strdup(orig_filespec);
-        strfree(filespec_plus_ps);
+            *newFileNameP = strdup(origFileName);
+        pm_strfree(fileNamePlusPs);
     }
     if (verbose)
-        pm_message("Input file is %s", *new_filespec_p);
+        pm_message("Input file is %s", *newFileNameP);
 }
 
 
@@ -355,7 +371,7 @@ computeSizeRes(struct cmdlineInfo const cmdline,
 enum postscript_language {COMMON_POSTSCRIPT, ENCAPSULATED_POSTSCRIPT};
 
 static enum postscript_language
-languageDeclaration(char const input_filespec[],
+languageDeclaration(char const inputFileName[],
                     bool const verbose) {
 /*----------------------------------------------------------------------------
   Return the Postscript language in which the file declares it is written.
@@ -364,7 +380,7 @@ languageDeclaration(char const input_filespec[],
 -----------------------------------------------------------------------------*/
     enum postscript_language language;
 
-    if (streq(input_filespec, "-"))
+    if (streq(inputFileName, "-"))
         /* Can't read stdin, because we need it to remain positioned for the 
            Ghostscript interpreter to read it.
         */
@@ -373,7 +389,7 @@ languageDeclaration(char const input_filespec[],
         FILE *infile;
         char line[80];
 
-        infile = pm_openr(input_filespec);
+        infile = pm_openr(inputFileName);
 
         if (fgets(line, sizeof(line), infile) == NULL)
             language = COMMON_POSTSCRIPT;
@@ -399,7 +415,7 @@ languageDeclaration(char const input_filespec[],
 
 static struct box
 computeBoxToExtract(struct box const cmdline_extract_box,
-                    char       const input_filespec[],
+                    char       const inputFileName[],
                     bool       const verbose) {
 
     struct box retval;
@@ -413,7 +429,7 @@ computeBoxToExtract(struct box const cmdline_extract_box,
         */
         struct box ps_bb;  /* Box described by %%BoundingBox stmt in input */
 
-        if (streq(input_filespec, "-"))
+        if (streq(inputFileName, "-"))
             /* Can't read stdin, because we need it to remain
                positioned for the Ghostscript interpreter to read it.  
             */
@@ -421,7 +437,7 @@ computeBoxToExtract(struct box const cmdline_extract_box,
         else {
             FILE *infile;
             int found_BB, eof;  /* logical */
-            infile = pm_openr(input_filespec);
+            infile = pm_openr(inputFileName);
             
             found_BB = FALSE;
             eof = FALSE;
@@ -560,12 +576,12 @@ computePstrans(struct box       const box,
         int llx, lly;
         llx = box.llx - (xsize * 72 / xres - (box.urx - box.llx)) / 2;
         lly = box.lly - (ysize * 72 / yres - (box.ury - box.lly)) / 2;
-        asprintfN(&retval, "%d neg %d neg translate", llx, lly);
+        pm_asprintf(&retval, "%d neg %d neg translate", llx, lly);
     } else {
         int llx, ury;
         llx = box.llx - (ysize * 72 / yres - (box.urx - box.llx)) / 2;
         ury = box.ury + (xsize * 72 / xres - (box.ury - box.lly)) / 2;
-        asprintfN(&retval, "90 rotate %d neg %d neg translate", llx, ury);
+        pm_asprintf(&retval, "90 rotate %d neg %d neg translate", llx, ury);
     }
 
     if (retval == NULL)
@@ -583,16 +599,16 @@ computeOutfileArg(struct cmdlineInfo const cmdline) {
 
     if (cmdline.goto_stdout)
         retval = strdup("-");
-    else if (streq(cmdline.input_filespec, "-"))
+    else if (streq(cmdline.inputFileName, "-"))
         retval = strdup("-");
     else {
         char * basename;
         const char * suffix;
         
-        basename  = strdup(cmdline.input_filespec);
+        basename  = strdup(cmdline.inputFileName);
         if (strlen(basename) > 3 && 
             streq(basename+strlen(basename)-3, ".ps")) 
-            /* The input filespec ends in ".ps".  Chop it off. */
+            /* The input file name ends in ".ps".  Chop it off. */
             basename[strlen(basename)-3] = '\0';
 
         switch (cmdline.format_type) {
@@ -602,9 +618,9 @@ computeOutfileArg(struct cmdlineInfo const cmdline) {
         default: pm_error("Internal error: invalid value for format_type: %d",
                           cmdline.format_type);
         }
-        asprintfN(&retval, "%s%%03d.%s", basename, suffix);
+        pm_asprintf(&retval, "%s%%03d.%s", basename, suffix);
 
-        strfree(basename);
+        pm_strfree(basename);
     }
     return(retval);
 }
@@ -627,7 +643,7 @@ computeGsDevice(int  const format_type,
     if (forceplain)
         retval = strdup(basetype);
     else
-        asprintfN(&retval, "%sraw", basetype);
+        pm_asprintf(&retval, "%sraw", basetype);
 
     if (retval == NULL)
         pm_error("Unable to allocate memory for gs device");
@@ -658,7 +674,7 @@ findGhostscriptProg(const char ** const retvalP) {
                 const char * filename;
                 int rc;
 
-                asprintfN(&filename, "%s/gs", candidate);
+                pm_asprintf(&filename, "%s/gs", candidate);
                 rc = stat(filename, &statbuf);
                 if (rc == 0) {
                     if (S_ISREG(statbuf.st_mode))
@@ -667,7 +683,7 @@ findGhostscriptProg(const char ** const retvalP) {
                     pm_error("Error looking for Ghostscript program.  "
                              "stat(\"%s\") returns errno %d (%s)",
                              filename, errno, strerror(errno));
-                strfree(filename);
+                pm_strfree(filename);
 
                 candidate = strtok(NULL, ":");
             }
@@ -681,15 +697,16 @@ findGhostscriptProg(const char ** const retvalP) {
 
 
 static void
-execGhostscript(int  const inputPipeFd,
-                char const ghostscript_device[],
-                char const outfile_arg[], 
-                int  const xsize,
-                int  const ysize, 
-                int  const xres,
-                int  const yres,
-                char const input_filespec[],
-                bool const verbose) {
+execGhostscript(int          const inputPipeFd,
+                char         const ghostscript_device[],
+                char         const outfile_arg[], 
+                int          const xsize,
+                int          const ysize, 
+                int          const xres,
+                int          const yres,
+                unsigned int const textalphabits,
+                char         const inputFileName[],
+                bool         const verbose) {
     
     const char * arg0;
     const char * ghostscriptProg;
@@ -697,6 +714,7 @@ execGhostscript(int  const inputPipeFd,
     const char * outfileopt;
     const char * gopt;
     const char * ropt;
+    const char * textalphabitsopt;
     int rc;
 
     findGhostscriptProg(&ghostscriptProg);
@@ -705,11 +723,12 @@ execGhostscript(int  const inputPipeFd,
     rc = dup2(inputPipeFd, STDIN_FILENO);
     close(inputPipeFd);
 
-    asprintfN(&arg0, "gs");
-    asprintfN(&deviceopt, "-sDEVICE=%s", ghostscript_device);
-    asprintfN(&outfileopt, "-sOutputFile=%s", outfile_arg);
-    asprintfN(&gopt, "-g%dx%d", xsize, ysize);
-    asprintfN(&ropt, "-r%dx%d", xres, yres);
+    pm_asprintf(&arg0, "gs");
+    pm_asprintf(&deviceopt, "-sDEVICE=%s", ghostscript_device);
+    pm_asprintf(&outfileopt, "-sOutputFile=%s", outfile_arg);
+    pm_asprintf(&gopt, "-g%dx%d", xsize, ysize);
+    pm_asprintf(&ropt, "-r%dx%d", xres, yres);
+    pm_asprintf(&textalphabitsopt, "-dTextAlphaBits=%u", textalphabits);
 
     /* -dSAFER causes Postscript to disable %pipe and file operations,
        which are almost certainly not needed here.  This prevents our
@@ -719,9 +738,10 @@ execGhostscript(int  const inputPipeFd,
 
     if (verbose) {
         pm_message("execing '%s' with args '%s' (arg 0), "
-                   "'%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s'",
+                   "'%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s'",
                    ghostscriptProg, arg0,
-                   deviceopt, outfileopt, gopt, ropt, "-q", "-dNOPAUSE", 
+                   deviceopt, outfileopt, gopt, ropt, textalphabitsopt,
+                   "-q", "-dNOPAUSE", 
                    "-dSAFER", "-");
     }
 
@@ -742,7 +762,8 @@ executeGhostscript(char                     const pstrans[],
                    int                      const ysize, 
                    int                      const xres,
                    int                      const yres,
-                   char                     const input_filespec[], 
+                   unsigned int             const textalphabits,
+                   char                     const inputFileName[], 
                    enum postscript_language const language,
                    bool                     const verbose) {
 
@@ -769,7 +790,8 @@ executeGhostscript(char                     const pstrans[],
         /* Child process */
         close(pipefd[1]);
         execGhostscript(pipefd[0], ghostscript_device, outfile_arg,
-                        xsize, ysize, xres, yres, input_filespec, verbose);
+                        xsize, ysize, xres, yres, textalphabits,
+                        inputFileName, verbose);
     } else {
         pid_t const ghostscriptPid = rc;
         int const pipeToGhostscriptFd = pipefd[1];
@@ -780,7 +802,7 @@ executeGhostscript(char                     const pstrans[],
         if (gs == NULL) 
             pm_error("Unable to open stream on pipe to Ghostscript process.");
     
-        infile = pm_openr(input_filespec);
+        infile = pm_openr(inputFileName);
         /*
           In encapsulated Postscript, we the encapsulator are supposed to
           handle showing the page (which we do by passing a showpage
@@ -851,7 +873,7 @@ int
 main(int argc, char ** argv) {
 
     struct cmdlineInfo cmdline;
-    const char * input_filespec;  /* malloc'ed */
+    const char * inputFileName;  /* malloc'ed */
         /* The file specification of our Postscript input file */
     unsigned int xres, yres;    /* Resolution in pixels per inch */
     unsigned int xsize, ysize;  /* output image size in pixels */
@@ -872,12 +894,12 @@ main(int argc, char ** argv) {
 
     parseCommandLine(argc, argv, &cmdline);
 
-    addPsToFilespec(cmdline.input_filespec, &input_filespec, cmdline.verbose);
+    addPsToFileName(cmdline.inputFileName, &inputFileName, cmdline.verbose);
 
-    extract_box = computeBoxToExtract(cmdline.extract_box, input_filespec, 
+    extract_box = computeBoxToExtract(cmdline.extract_box, inputFileName, 
                                       cmdline.verbose);
 
-    language = languageDeclaration(input_filespec, cmdline.verbose);
+    language = languageDeclaration(inputFileName, cmdline.verbose);
     
     orientation = computeOrientation(cmdline, extract_box);
 
@@ -898,12 +920,13 @@ main(int argc, char ** argv) {
     pm_message("Writing %s file", ghostscript_device);
     
     executeGhostscript(pstrans, ghostscript_device, outfile_arg, 
-                       xsize, ysize, xres, yres, input_filespec,
+                       xsize, ysize, xres, yres, cmdline.textalphabits,
+                       inputFileName,
                        language, cmdline.verbose);
 
-    strfree(ghostscript_device);
-    strfree(outfile_arg);
-    strfree(pstrans);
+    pm_strfree(ghostscript_device);
+    pm_strfree(outfile_arg);
+    pm_strfree(pstrans);
     
     return 0;
 }

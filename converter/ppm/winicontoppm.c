@@ -66,7 +66,7 @@ parseCommandLine ( int argc, char ** argv,
    was passed to us as the argv array.  We also trash *argv.
 -----------------------------------------------------------------------------*/
     optEntry *option_def = malloc(100*sizeof(optEntry));
-        /* Instructions to optParseOptions3 on how to parse our options.
+        /* Instructions to pm_optParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
 
@@ -88,7 +88,7 @@ parseCommandLine ( int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3( &argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3( &argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
 
@@ -639,11 +639,11 @@ writeXors(FILE *   const multiOutF,
     } else {
         if (outputFileBase) {
             if (multiple) {
-                asprintfN(&outputFile, "%s%s_%d.ppm",
-                          outputFileBase,(xor ? "_xor" : ""), entryNum);
+                pm_asprintf(&outputFile, "%s%s_%d.ppm",
+                            outputFileBase,(xor ? "_xor" : ""), entryNum);
             } else { 
-                asprintfN(&outputFile, "%s%s.ppm",
-                          outputFileBase,(xor ? "_xor" : ""));
+                pm_asprintf(&outputFile, "%s%s.ppm",
+                            outputFileBase,(xor ? "_xor" : ""));
             }
         } else
             outputFile = strdup("-");
@@ -690,7 +690,7 @@ writeXors(FILE *   const multiOutF,
                  (pixval) maxval, forcetext);
     ppm_freearray(ppm_array,entry->height);
 
-    strfree(outputFile);
+    pm_strfree(outputFile);
     
     if (!multiOutF) 
         pm_close(outF);
@@ -727,11 +727,12 @@ writeAnds(FILE * const multiOutF,
         assert(outputFileBase);
 
         if (multiple) 
-            asprintfN(&outputFile, "%s_and_%d.pbm", outputFileBase, entryNum);
+            pm_asprintf(&outputFile, "%s_and_%d.pbm",
+                        outputFileBase, entryNum);
         else 
-            asprintfN(&outputFile, "%s_and.pbm", outputFileBase);
+            pm_asprintf(&outputFile, "%s_and.pbm", outputFileBase);
         outF = pm_openw(outputFile);
-        strfree(outputFile);
+        pm_strfree(outputFile);
     }
     pbm_array = pbm_allocarray(entry->width, entry->height);
     for (row=0; row < entry->height; row++) {
@@ -760,8 +761,8 @@ openMultiXor(char          outputFileBase[],
     const char *outputFile;
 
     if (outputFileBase) {
-        asprintfN(&outputFile, "%s%s.ppm",
-                  outputFileBase, (writeands ? "_xor" : ""));
+        pm_asprintf(&outputFile, "%s%s.ppm",
+                    outputFileBase, (writeands ? "_xor" : ""));
     } else
         outputFile = strdup("-");
 
@@ -770,7 +771,7 @@ openMultiXor(char          outputFileBase[],
      */
     *multiOutFP = pm_openw(outputFile);
 
-    strfree(outputFile);
+    pm_strfree(outputFile);
 }
 
 
@@ -782,11 +783,11 @@ openMultiAnd(char outputFileBase[], FILE ** const multiAndOutFP) {
 
     assert(outputFileBase);
 
-    asprintfN(&outputFile, "%s_and.pbm", outputFileBase);
+    pm_asprintf(&outputFile, "%s_and.pbm", outputFileBase);
     
     *multiAndOutFP = pm_openw(outputFile);
 
-    strfree(outputFile);
+    pm_strfree(outputFile);
 }
 
 static void free_iconentry(IC_Entry entry) {

@@ -194,25 +194,25 @@ makeTmpfileWithTemplate(const char *  const filenameTemplate,
     filenameBuffer = strdup(filenameTemplate);
 
     if (filenameBuffer == NULL)
-        asprintfN(errorP, "Unable to allocate storage for temporary "
-                  "file name");
+        pm_asprintf(errorP, "Unable to allocate storage for temporary "
+                    "file name");
     else {
         int rc;
         
         rc = mkstemp2(filenameBuffer);
         
         if (rc < 0)
-            asprintfN(errorP,
-                      "Unable to create temporary file according to name "
-                      "pattern '%s'.  mkstemp() failed with errno %d (%s)",
-                      filenameTemplate, errno, strerror(errno));
+            pm_asprintf(errorP,
+                        "Unable to create temporary file according to name "
+                        "pattern '%s'.  mkstemp() failed with errno %d (%s)",
+                        filenameTemplate, errno, strerror(errno));
         else {
             *fdP = rc;
             *filenameP = filenameBuffer;
             *errorP = NULL;
         }
         if (*errorP)
-            strfree(filenameBuffer);
+            pm_strfree(filenameBuffer);
     }
 }
 
@@ -237,20 +237,20 @@ pm_make_tmpfile_fd(int *         const fdP,
     else
         dirseparator = "/";
     
-    asprintfN(&filenameTemplate, "%s%s%s%s", 
-              tmpdir, dirseparator, pm_progname, "_XXXXXX");
+    pm_asprintf(&filenameTemplate, "%s%s%s%s", 
+                tmpdir, dirseparator, pm_progname, "_XXXXXX");
 
     if (filenameTemplate == NULL)
-        asprintfN(&error,
-                  "Unable to allocate storage for temporary file name");
+        pm_asprintf(&error,
+                    "Unable to allocate storage for temporary file name");
     else {
         makeTmpfileWithTemplate(filenameTemplate, fdP, filenameP, &error);
 
-        strfree(filenameTemplate);
+        pm_strfree(filenameTemplate);
     }
     if (error) {
         pm_errormsg("%s", error);
-        strfree(error);
+        pm_strfree(error);
         pm_longjmp();
     }
 }
@@ -270,7 +270,7 @@ pm_make_tmpfile(FILE **       const filePP,
     if (*filePP == NULL) {
         close(fd);
         unlink(*filenameP);
-        strfree(*filenameP);
+        pm_strfree(*filenameP);
 
         pm_error("Unable to create temporary file.  "
                  "fdopen() failed with errno %d (%s)",
@@ -290,7 +290,7 @@ pm_tmpfile(void) {
 
     unlink(tmpfile);
 
-    strfree(tmpfile);
+    pm_strfree(tmpfile);
 
     return fileP;
 }
@@ -307,7 +307,7 @@ pm_tmpfile_fd(void) {
 
     unlink(tmpfile);
 
-    strfree(tmpfile);
+    pm_strfree(tmpfile);
 
     return fd;
 }

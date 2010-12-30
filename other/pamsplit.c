@@ -59,7 +59,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (!padnameSpec)
@@ -138,11 +138,11 @@ computeOutputName(char          const outputFilePattern[],
     afterSub = strstr(outputFilePattern, "%d") + 2;
 
     /* Make filenameFormat something like "%s%04u%s" */
-    asprintfN(&filenameFormat, "%%s%%0%ud%%s", padCount);
+    pm_asprintf(&filenameFormat, "%%s%%0%ud%%s", padCount);
 
-    asprintfN(outputNameP, filenameFormat, beforeSub, imageSeq, afterSub);
+    pm_asprintf(outputNameP, filenameFormat, beforeSub, imageSeq, afterSub);
 
-    strfree(filenameFormat);
+    pm_strfree(filenameFormat);
 
     free(beforeSub);
 }
@@ -179,7 +179,7 @@ main(int argc, char *argv[]) {
         extractOneImage(ifP, ofP);
 
         pm_close(ofP);
-        strfree(outputFileName);
+        pm_strfree(outputFileName);
 
         pnm_nextimage(ifP, &eof);
     }

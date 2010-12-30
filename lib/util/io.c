@@ -49,9 +49,9 @@ pm_freadline(FILE *        const fileP,
         }
 
         if (!buffer)
-            asprintfN(errorP,
-                      "Couldn't get memory for a %u-byte file read buffer.",
-                      (unsigned int)bufferSize);
+            pm_asprintf(errorP,
+                        "Couldn't get memory for a %u-byte file read buffer.",
+                        (unsigned int)bufferSize);
         else {
             int const rc = getc(fileP);
         
@@ -59,9 +59,10 @@ pm_freadline(FILE *        const fileP,
                 if (feof(fileP))
                     eof = true;
                 else
-                    asprintfN(errorP, "Failed to read a character from file.  "
-                              "Errno = %d (%s)",
-                              errno, strerror(errno));
+                    pm_asprintf(errorP,
+                                "Failed to read a character from file.  "
+                                "Errno = %d (%s)",
+                                errno, strerror(errno));
             } else {
                 char const c = (char)rc;
 

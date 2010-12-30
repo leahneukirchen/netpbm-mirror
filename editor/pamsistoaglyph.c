@@ -83,7 +83,7 @@ parseCommandLine( int argc, const char ** const argv,
     opt.short_allowed = 1;
     opt.allowNegNum = 0;
 
-    optParseOptions3( &argc, (char **)argv, opt, sizeof(opt), 0 );
+    pm_optParseOptions3( &argc, (char **)argv, opt, sizeof(opt), 0 );
 
     if (argc-1 < 1)
         cmdlineP->inputFilename = "-";

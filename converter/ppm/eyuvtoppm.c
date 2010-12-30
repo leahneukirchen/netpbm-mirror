@@ -77,7 +77,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = TRUE;
     opt.allowNegNum = FALSE;
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
 
     if (cmdlineP->width == 0)
         pm_error("The width cannot be zero.");
