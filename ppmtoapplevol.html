@@ -1,0 +1,49 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Ppmtoapplevol User Manual</TITLE></HEAD>
+<BODY>
+<H1>ppmtoapplevol</H1>
+Updated: 08 January 2010
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<H2>NAME</H2>
+
+ppmtoapplevol - convert a PPM into an Apple volume label image
+
+<H2>SYNOPSIS</H2>
+
+<B>ppmtoapplevol</B>
+
+[<I>ppmfile</I>]
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>ppmtoapplevol</b> reads a PPM image as input and produces an Apple
+volume label image as output.
+
+<p>EFI-based Apple systems use a simple image format to provide textual labels
+for devices.  This program generates that format.
+
+<p>The input image must be exactly 12 rows tall.  Use <b>pamfile</b> to
+see how tall your image is and <b>pamscale</b> or <b>pamcut</b> to make
+it 12 rows if it isn't.
+
+<p>Netpbm does not have a converter for the other direction.
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<B><A HREF="pamfile.html">pamfile</A></B>
+<B><A HREF="pamcut.html">pamcut</A></B>
+<B><A HREF="ppm.html">ppm</A></B>
+
+<HR>
+<H2 id="index">Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+</UL>
+</BODY>
+</HTML>
