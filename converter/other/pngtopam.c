@@ -527,7 +527,7 @@ dumpPngInfo(struct pngx * const pngxP) {
     else
         pm_message("bKGD chunk: not present");
 
-    if (info_ptr->valid & PNG_INFO_HIST)
+    if (info_ptr->valid & PNG_INFO_hIST)
         pm_message("hIST chunk: present");
     else
         pm_message("hIST chunk: not present");
