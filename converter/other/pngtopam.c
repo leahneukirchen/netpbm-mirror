@@ -424,7 +424,7 @@ dump_png_info(png_info *info_ptr) {
     else
         pm_message("bKGD chunk: not present");
 
-    if (info_ptr->valid & PNG_INFO_PLTE)
+    if (info_ptr->valid & PNG_INFO_hIST)
         pm_message("hIST chunk: present");
     else
         pm_message("hIST chunk: not present");

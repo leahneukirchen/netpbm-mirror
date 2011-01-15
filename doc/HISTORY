@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+11.01.15 BJH  Release 10.47.25
+
+              pngtopam: fix bug: -verbose reports history chunk present when
+              it's really a palette.
+
 10.12.30 BJH  Release 10.47.24
 
               configure: don't default to /usr/X11R6/lib/libX11.so just because
