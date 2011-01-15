@@ -4,6 +4,14 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+11.01.15 BJH  Release 10.35.79
+
+              configure: don't default to /usr/X11R6/lib/libX11.so just because
+              /usr/X11R6 exists.  /usr/X11R6/lib must exist.
+
+              pngtopnm: fix bug: -verbose reports history chunk present when
+              it's really a palette.
+
 10.12.10 BJH  Release 10.35.78
 
               bmptopnm: Don't crash on invalid zero value of image height in
