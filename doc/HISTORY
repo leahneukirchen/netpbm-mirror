@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+
+11.01.15 BJH  Release 10.53.01
+              pngtopam: fix bug: -verbose reports history chunk present when
+              it's really a palette.
+
 10.12.30 BJH  Release 10.53.00
 
               Add pammosaicknit.  Thanks Scott Pakin.
