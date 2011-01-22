@@ -6,11 +6,16 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.54.00
 
-              pngtopam: fix bug: -verbose reports history chunk present when
-              it's really a palette.
-
               Add ppmtoapplevol.  Thanks Matthew Garrett
               <mjg59@srcf.ucam.org>.
+
+              pgmtoascii: Truncates instead of undefined behavior if input
+              image is wider than specified width.
+
+              pgmtoascii: Fix numerous output bugs.
+
+              pngtopam: fix bug: -verbose reports history chunk present when
+              it's really a palette.
 
 10.12.30 BJH  Release 10.53.00
 
