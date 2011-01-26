@@ -40,7 +40,7 @@ ppmchange - change all pixels of one color to another in a PPM image
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>ppmchange</b> reads a PPM image as input and changes all pixels of
-colr <I>oldcolor</I> to color <I>newcolor</I>.
+color <I>oldcolor</I> to color <I>newcolor</I>.
 
 You may specify up to 256 oldcolor/newcolor pairs on the command line.
 <B>ppmchange</B> leaves all colors not mentioned unchanged, unless you
@@ -83,7 +83,7 @@ option.
 <DL COMPACT>
 <DT><B>-closeness </B><I>closeness_percent</I>
 
-<DD><I>closeness</I> is an integer per centage indicating how close
+<DD><I>closeness</I> is an integer percentage indicating how close
 to the color you specified a pixel must be to get replaced.  By
 default, it is 0, which means the pixel must be the exact color you
 specified.
@@ -92,7 +92,7 @@ specified.
 color you specified is less than or equal to <I>closeness</I> per cent
 of the maxval.
 
-<P>The &quot;distance&quot; in color is defined as the cartesian sum of the
+<P>The &quot;distance&quot; in color is defined as the Cartesian sum of the
 individual differences in red, green, and blue intensities between the
 two pixels, normalized so that the difference between black and white
 is 100%.

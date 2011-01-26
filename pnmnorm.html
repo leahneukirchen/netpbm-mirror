@@ -107,15 +107,15 @@ decimal.  Zero is valid and is the same as <b>-bvalue=0</b> or
 <b>-wvalue=</b><i>maxval</i>, respectively.
 
 <p>Because there are whole numbers of pixels at each brightness,
-<b>pnmnorm</b> obviously can't guarantee the exact per centage, so it
-arranges that <em>at least</em> the per centage of pixels you specify
+<b>pnmnorm</b> obviously can't guarantee the exact percentage, so it
+arranges that <em>at least</em> the percentage of pixels you specify
 get remapped as promised.
 
 <p>It is possible for your <b>-bpercent</b> or <b>-wpercent</b>
 to overlap your <b>-wvalue</b> or <b>-bvalue</b>, respectively.  For
 example, you say <b>-bpercent=20</b> and <b>-wvalue=100</b> for an
-image in which only 10 per cent of the pixels are darker than 100.
-In that case, <b>pnmnorm</b> adjusts the per centile value as
+image in which only 10 percent of the pixels are darker than 100.
+In that case, <b>pnmnorm</b> adjusts the percentile value as
 required.  In the example, it uses 99 as the black value (like
 <b>-bvalue=99</b>).
 
@@ -144,7 +144,7 @@ intensity by 4 units now differ by 10, and that might be unsightly.
 <p>So that you can put a limit on the amount of expansion without
 having to examine the image first, there is the <b>-maxexpand</b>
 option.  It specifies the maximum expansion you will tolerate, as an
-additional per centage.  In the example above, you could say
+additional percentage.  In the example above, you could say
 <b>-maxexpand=50</b> to say you want the range to expand by at most
 50%, regardless of your other options.  <b>pnmnorm</b> figures out
 what intensity to stretch to full intensity and what intensity to

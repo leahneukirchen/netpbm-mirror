@@ -309,7 +309,7 @@ equal sign) depends upon what kind of value the tag type has:
 <li>Enumerated (For example, a 'subfiletype' tag takes an enumerated
 value.  Its possible values are REDUCEDIMAGE, PAGE, and MASK.): The
 name of the value.  You can see the possible value names in the TIFF
-library's <b>tiff.h</b> foile, where there is a macro defined for each
+library's <b>tiff.h</b> file, where there is a macro defined for each
 consisting of a qualifier plus the value name.  E.g. for the
 REDUCEDIMAGE value of a SUBFILETYPE tag, you see the macro
 FILETYPE_REDUCEDIMAGE.
@@ -381,7 +381,7 @@ or GRAYSCALE (and doesn't distinguish between those two).
 type RGB except with that number of planes instead of 3.
 <b>pamtotiff</b> doesn't really understand red, green, and blue, so it
 has no trouble with a 2-component or 5-component color space.  The
-TIFF format allows an arbitrary number of color compoonents, so
+TIFF format allows an arbitrary number of color components, so
 <b>pamtotiff</b> simply maps the PAM planes directly to TIFF color
 components.  I don't know if the meanings of 5 components in a TIFF image
 are standard at all, but the function is there if you want to use it.
