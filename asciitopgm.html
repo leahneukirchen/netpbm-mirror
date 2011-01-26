@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Asciitopgm User Manual</TITLE></HEAD>
 <BODY>
 <H1>asciitopgm</H1>
-Updated: 05 September 2003
+Updated: 20 January 2011
 <BR>
 
 <A HREF="#index">Table Of Contents</A>
@@ -28,25 +28,32 @@ period is very light, and a space is white.
 <p>Obviously, <b>asciitopgm</b> assumes a certain font in assigning
 a brightness value to a character.
 
-<p><b>asciitopgm</b> considers ASCII control characters to be all
-white.  It assigns special brightnesses to lower case letters which
-have nothing to do with what they look like printed.
+<p><b>asciitopgm</b> considers ASCII control characters to be all white.  For
+a lower case character, It assigns a special brightnesses which has nothing to
+do with what it looks like printed.
 <b>asciitopgm</b> takes the ASCII character code from the lower 7 bits
 of each input byte.  But it warns you if the most signficant bit of
 any input byte is not zero.
 
-<p>Input lines which are fewer than <I>width</I> characters are
-automatically padded with spaces.
+<p>The output image is <i>height</i> pixels high by <i>width</i> pixels wide,
+truncating and padding with white on the right and bottom as necessary.
 
 <P>The <i>divisor</I> value is an integer (decimal) by which the
 blackness of an input character is divided; the default value is 1.
 You can use this to adjust the brightness of the output: for example,
 if the image is too bright, increase the divisor.
 
-<P>In keeping with (I believe) Fortran line-printer conventions,
-input lines beginning with a <b>+</b> (plus) character are assumed to
-&quot;overstrike&quot; the previous line, allowing a larger range of
-gray values.
+<p>In a sort of reminiscence of Fortran line printer carriage control,
+where a line starts with <b>+</b> (plus), <b>asciitopgm</b> combines it
+with the previous row of output instead of generating a new row.  This
+allows a larger range of gray values.  (In Fortran carriage control, the
+first character of every line sent to the printer tells how much to advance
+the paper, with <b>+</b> meaning not at all, so that the rest of the
+characters on the line overstrike the ones already on the paper.  What
+<b>asciitopgm</b> does is rather different in that <b>asciitopgm</b> does not
+reserve the first character of every line that way.  If the first character is
+anything but <b>+</b>, <b>asciitopgm</b> considers it just to be first
+character of the image.
 
 <P>If you're looking for something that creates an image of text,
 with that text specified in ASCII, that is something quite different.
