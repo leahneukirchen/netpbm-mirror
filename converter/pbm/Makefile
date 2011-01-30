@@ -13,7 +13,7 @@ PORTBINARIES =	atktopbm brushtopbm cistopbm cmuwmtopbm \
 		pbmto10x pbmto4425 pbmtoascii pbmtoatk \
 		pbmtobbnbg pbmtocis pbmtocmuwm pbmtodjvurle \
 		pbmtoepsi pbmtoepson pbmtoescp2 \
-		pbmtog3 pbmtogem pbmtogo pbmtoibm23xx pbmtoicon pbmtolj \
+		pbmtog3 pbmtogem pbmtogo pbmtoibm23xx pbmtosunicon pbmtolj \
 		pbmtoln03 pbmtolps \
 		pbmtomacp pbmtomatrixorbital pbmtomda pbmtomgr pbmtomrf \
 		pbmtonokia \

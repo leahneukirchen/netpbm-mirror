@@ -4,8 +4,17 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+11.01.30 BJH  Release 10.53.02
+
+              asciitopgm: fix bug: memory corruption on too-long lines.
+
+              asciitopgm: fix bug: improper handling of blank lines.
+              
+              Rename pbmtoicon to pbmtosunicon, to go with change
+              of icontopbm to sunicontopnm in 10.53.00.
 
 11.01.15 BJH  Release 10.53.01
+
               pngtopam: fix bug: -verbose reports history chunk present when
               it's really a palette.
 
@@ -76,6 +85,9 @@ CHANGE HISTORY
               Rename all external symbols that don't have a Netpbm prefix
               to start with "pm_": shhopt, nstring, nsleep.  Eliminate
               createBlackTuple -- pnmCreateBlackTuple already existed.
+
+              libnetpbm: Change shared library major number to 11 because
+              of above renaming.
 
               build: include -lm in build of pamtopdbimg, pdbimgtopam.
 
