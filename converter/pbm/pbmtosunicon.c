@@ -1,4 +1,4 @@
-/* pbmtoicon.c - read a PBM image and produce a Sun icon file
+/* pbmtosunicon.c - read a PBM image and produce a Sun icon file
 **
 ** Copyright (C) 1988 by Jef Poskanzer.
 **

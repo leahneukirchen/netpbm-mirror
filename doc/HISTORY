@@ -9,6 +9,12 @@ not yet  BJH  Release 10.54.00
               Add ppmtoapplevol.  Thanks Matthew Garrett
               <mjg59@srcf.ucam.org>.
 
+              Add ppmtoapplevol.  Thanks Matthew Garrett
+              <mjg59@srcf.ucam.org>.
+
+              Rename pbmtoicon to pbmtosunicon, to go with change
+              of icontopbm to sunicontopnm in 10.53.
+
               pgmtoascii: Truncates instead of undefined behavior if input
               image is wider than specified width.
 
@@ -84,6 +90,9 @@ not yet  BJH  Release 10.54.00
               Rename all external symbols that don't have a Netpbm prefix
               to start with "pm_": shhopt, nstring, nsleep.  Eliminate
               createBlackTuple -- pnmCreateBlackTuple already existed.
+
+              libnetpbm: Change shared library major number to 11 because
+              of above renaming.
 
               build: include -lm in build of pamtopdbimg, pdbimgtopam.
 
