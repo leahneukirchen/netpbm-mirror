@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+11.01.30 BJH  Release 10.53.03
+
+              Install backward compatibility symlink for renamed pbmtoicon.
+
 11.01.30 BJH  Release 10.53.02
 
               asciitopgm: fix bug: memory corruption on too-long lines.

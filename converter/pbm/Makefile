@@ -77,6 +77,9 @@ install.bin: install.bin.local
 .PHONY: install.bin.local
 install.bin.local: $(PKGDIR)/bin
 # Remember that $(SYMLINK) might just be a copy command.
+# In December 2010 (Actually January 2011), pbmtosunicon replaced pbmtoicon
+	cd $(PKGDIR)/bin ; \
+	$(SYMLINK) pbmtosunicon pbmtoicon
 # In December 2010, sunicontopnm replaced icontopbm
 	cd $(PKGDIR)/bin ; \
 	$(SYMLINK) sunicontopnm icontopbm
