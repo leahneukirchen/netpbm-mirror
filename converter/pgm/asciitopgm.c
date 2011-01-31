@@ -55,6 +55,7 @@ main( argc, argv )
     bool warned;
     int *obuf;
     const char * const usage = "[-d <val>] height width [asciifile]";
+    char trunc;
 
     pgm_init( &argc, argv );
 
@@ -112,7 +113,7 @@ main( argc, argv )
         for (col = 0; col < cols; ++col) obuf[col] = 0;
     }
     grays = pgm_allocarray( cols, rows );
-    row = i = 0;
+    row = i = trunc = 0;
     while ( row < rows )
     {
         switch (c = getc (ifd))
@@ -120,6 +121,8 @@ main( argc, argv )
         case EOF:
             goto line_done;
         case '\n':
+	newline:
+	    trunc = 0;
             if ((c = getc (ifd)) == EOF)
                 goto line_done;
             if (c == '+')
@@ -137,11 +140,23 @@ main( argc, argv )
                 ++row;
                 if ( row >= rows )
                     break;
-                if (c != EOF)
+		if (c == '\n')
+		    goto newline;
+                else if (c != EOF)
                     obuf[i++] += gmap[c];
             }
             break;
         default:
+	    if (i == cols)
+	    {
+		if (! trunc)
+		{
+		    pm_message("Warning: row %d being truncated at %d columns",
+			       row+1, cols);
+		    trunc = 1;
+		}
+		continue;
+	    }
             if (c > 0x7f)       /* !isascii(c) */
             {
                 if (!warned)

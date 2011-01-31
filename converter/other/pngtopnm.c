@@ -32,6 +32,14 @@
 #include "shhopt.h"
 #include "pnm.h"
 
+/* A hack until we can remove direct access to png_info from the program */
+#if PNG_LIBPNG_VER >= 10400
+#define TRANS_ALPHA trans_alpha
+#else
+#define TRANS_ALPHA trans
+#endif
+
+
 enum alpha_handling {ALPHA_NONE, ALPHA_ONLY, ALPHA_MIX};
 
 struct cmdlineInfo {
@@ -725,8 +733,8 @@ paletteHasPartialTransparency(png_info * const info_ptr) {
             for (i = 0, foundGray = FALSE;
                  i < info_ptr->num_trans && !foundGray;
                  ++i) {
-                if (info_ptr->trans[i] != 0 &&
-                    info_ptr->trans[i] != maxval) {
+                if (info_ptr->TRANS_ALPHA[i] != 0 &&
+                    info_ptr->TRANS_ALPHA[i] != maxval) {
                     foundGray = TRUE;
                 }
             }
@@ -798,7 +806,7 @@ setupSignificantBits(struct pngx *       const pngxP,
                 unsigned int i;
                 trans_mix = TRUE;
                 for (i = 0; i < info_ptr->num_trans; ++i)
-                    if (info_ptr->trans[i] != 0 && info_ptr->trans[i] != 255) {
+                    if (info_ptr->TRANS_ALPHA[i] != 0 && info_ptr->TRANS_ALPHA[i] != 255) {
                         trans_mix = FALSE;
                         break;
                     }
@@ -1061,7 +1069,7 @@ makeXelRow(xel *               const xelrow,
             setXel(&xelrow[col], fgColor, bgColor, alphaHandling,
                    (pngxP->info_ptr->valid & PNG_INFO_tRNS) &&
                    index < pngxP->info_ptr->num_trans ?
-                   pngxP->info_ptr->trans[index] : maxval);
+                   pngxP->info_ptr->TRANS_ALPHA[index] : maxval);
         }
         break;
                 

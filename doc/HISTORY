@@ -4,6 +4,15 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+11.01.31 BJH  Release 10.47.26
+
+              asciitopgm: fix bug: memory corruption on too-long lines.
+
+              asciitopgm: fix bug: improper handling of blank lines.
+              
+              Build: compiles with libpng 1.4.  (This was done in 10.47.04
+              too, but apparently didn't work).
+
 11.01.15 BJH  Release 10.47.25
 
               pngtopam: fix bug: -verbose reports history chunk present when
