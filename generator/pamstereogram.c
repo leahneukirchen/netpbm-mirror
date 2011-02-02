@@ -330,6 +330,10 @@ typedef struct outGenerator {
     outGenStateTerm * terminateState;
     void *            stateP;
     texState *        textureP;
+        /* Mapped-texture part of the state of operation.  Null
+           means we are doing an ordinary stereogram instead of a
+           mapped-texture one.
+        */
 } outGenerator;
 
 
@@ -536,6 +540,62 @@ initPatternPixel(outGenerator *     const outGenP,
 
 
 static void
+readTextureImage(struct cmdlineInfo const cmdline,
+                 const struct pam * const inpamP,
+                 const struct pam * const outpamP,
+                 texState **        const texturePP) {
+
+    FILE *       textureFileP;
+    texState *   textureP;
+    struct pam * texPamP;
+
+    MALLOCVAR_NOFAIL(textureP);
+    texPamP = &textureP->pam;
+
+    textureFileP = pm_openr(cmdline.texFilespec);
+    textureP->imageData =
+        pnm_readpam(textureFileP, texPamP, PAM_STRUCT_SIZE(tuple_type));
+    pm_close(textureFileP);
+
+    if (cmdline.bgColorName)
+        textureP->bgColor =
+            pnm_parsecolor(cmdline.bgColorName, texPamP->maxval);
+    else
+        textureP->bgColor =
+            pnm_backgroundtuple(texPamP, textureP->imageData);
+    textureP->replaceBgColor = (cmdline.patFilespec != NULL);
+    textureP->smoothing = cmdline.smoothing;
+
+    if (cmdline.verbose) {
+        const char * const colorname =
+            pnm_colorname(texPamP, textureP->bgColor, 1);
+
+        reportImageParameters("Texture file", texPamP);
+        if (cmdline.bgColorName && strcmp(colorname, cmdline.bgColorName))
+            pm_message("Texture background color: %s (%s)",
+                       cmdline.bgColorName, colorname);
+        else
+            pm_message("Texture background color: %s", colorname);
+        pm_strfree(colorname);
+    }
+
+    if (texPamP->width != inpamP->width || texPamP->height != inpamP->height)
+        pm_error("The texture image must have the same width and height "
+                 "as the input image");
+    if (cmdline.patFilespec &&
+        (!streq(texPamP->tuple_type, outpamP->tuple_type) ||
+         texPamP->maxval != outpamP->maxval))
+        pm_error("The texture image must be of the same tuple type "
+                 "and maxval as the pattern image");
+
+    textureP->pam.file = outpamP->file;
+
+    *texturePP = textureP;
+}
+
+
+
+static void
 createoutputGenerator(struct cmdlineInfo const cmdline,
                       const struct pam * const inPamP,
                       outGenerator **    const outputGeneratorPP) {
@@ -562,6 +622,12 @@ createoutputGenerator(struct cmdlineInfo const cmdline,
     }
 
     outGenP->pam.bytes_per_sample = pnm_bytespersample(outGenP->pam.maxval);
+
+    if (cmdline.texFilespec) {
+        readTextureImage(cmdline, inPamP, &outGenP->pam, &outGenP->textureP);
+        outGenP->pam = outGenP->textureP->pam;
+    } else
+        outGenP->textureP = NULL;
 
     *outputGeneratorPP = outGenP;
 }
@@ -774,7 +840,8 @@ computeFixedPoint(const int *  const same,
 
 
 static void
-averageFromPattern(outGenerator * const outGenP, 
+averageFromPattern(struct pam *   const pamP,
+                   tuple          const bgColor,
                    const tuple *  const textureRow,
                    const int *    const same,
                    int *          const sameFp,
@@ -784,10 +851,7 @@ averageFromPattern(outGenerator * const outGenP,
   Average the color of each non-background pattern tuple to every column that
   should have the same color.
 -----------------------------------------------------------------------------*/
-    const struct pam * const pamP = &outGenP->pam;
-    tuple const bgColor = outGenP->textureP->bgColor;
-
-    int col;
+    unsigned int col;
 
     /* Initialize the tuple sums to zero. */
 
@@ -832,7 +896,9 @@ averageFromPattern(outGenerator * const outGenP,
 
 
 static void
-smoothOutSpeckles(outGenerator * const outGenP,
+smoothOutSpeckles(struct pam *   const pamP,
+                  tuple          const bgColor,
+                  unsigned int   const smoothing,
                   unsigned int * const tuplesPerCol,
                   tuple *        const rowBuffer,
                   const tuple *  const outRow) {
@@ -840,12 +906,9 @@ smoothOutSpeckles(outGenerator * const outGenP,
   Smooth out small speckles of the background color lying between other
   colors.
 -----------------------------------------------------------------------------*/
-    const struct pam * const pamP = &outGenP->pam;
-    tuple const bgColor = outGenP->textureP->bgColor;
-
     unsigned int i;
                           
-    for (i = 0; i < outGenP->textureP->smoothing; ++i) {
+    for (i = 0; i < smoothing; ++i) {
         int col;
         tuple * const scratchrow = rowBuffer;
         for (col = pamP->width-2; col >= 1; --col) {
@@ -925,6 +988,7 @@ makeImageRowMts(outGenerator * const outGenP,
 /*----------------------------------------------------------------------------
   Make a row of a mapped-texture stereogram.
 -----------------------------------------------------------------------------*/
+    assert(outGenP->textureP);
     /* This is an original algorithm by Scott Pakin. */
 
     /*
@@ -936,14 +1000,18 @@ makeImageRowMts(outGenerator * const outGenP,
     /* Average the color of each non-background pattern tuple to
        every column that should have the same color.
     */
-    averageFromPattern(outGenP, outGenP->textureP->imageData[row],
+
+    averageFromPattern(&outGenP->pam, outGenP->textureP->bgColor,
+                       outGenP->textureP->imageData[row],
                        same, sameFp,
                        outRow, tuplesPerCol);
 
     /* Smooth out small speckles of the background color lying between
        other colors.
     */
-    smoothOutSpeckles(outGenP, tuplesPerCol, rowBuffer, outRow);
+    smoothOutSpeckles(&outGenP->pam, outGenP->textureP->bgColor,
+                      outGenP->textureP->smoothing,
+                      tuplesPerCol, rowBuffer, outRow);
 
     /* Replace any remaining background tuples with a pattern tuple. */
 
@@ -1073,56 +1141,6 @@ makeImageRows(const struct pam * const inPamP,
 
 
 static void
-readTextureImage(struct cmdlineInfo const cmdline,
-                 const struct pam * const pamP,
-                 outGenerator *     const outGenP) {
-
-    FILE *       textureFileP;
-    struct pam * texPamP;
-
-    MALLOCVAR_NOFAIL(outGenP->textureP);
-    texPamP = &outGenP->textureP->pam;
-
-    textureFileP = pm_openr(cmdline.texFilespec);
-    outGenP->textureP->imageData =
-      pnm_readpam(textureFileP, texPamP, PAM_STRUCT_SIZE(tuple_type));
-    pm_close(textureFileP);
-
-    if (cmdline.bgColorName)
-        outGenP->textureP->bgColor =
-            pnm_parsecolor(cmdline.bgColorName, texPamP->maxval);
-    else
-        outGenP->textureP->bgColor =
-            pnm_backgroundtuple(texPamP, outGenP->textureP->imageData);
-    outGenP->textureP->replaceBgColor = (cmdline.patFilespec != NULL);
-    outGenP->textureP->smoothing = cmdline.smoothing;
-
-    if (cmdline.verbose) {
-        const char * const colorname =
-            pnm_colorname(texPamP, outGenP->textureP->bgColor, 1);
-
-        reportImageParameters("Texture file", texPamP);
-        if (cmdline.bgColorName && strcmp(colorname, cmdline.bgColorName))
-            pm_message("Texture background color: %s (%s)",
-                       cmdline.bgColorName, colorname);
-        else
-            pm_message("Texture background color: %s", colorname);
-        pm_strfree(colorname);
-    }
-
-    if (texPamP->width != pamP->width || texPamP->height != pamP->height)
-        pm_error("The texture image must have the same width and height "
-                 "as the input image");
-    if (cmdline.patFilespec &&
-        (!streq(texPamP->tuple_type, outGenP->pam.tuple_type) ||
-         texPamP->maxval != outGenP->pam.maxval))
-        pm_error("The texture image must be of the same tuple type "
-                 "and maxval as the pattern image");
-}
-
-
-
-static void
 produceStereogram(FILE *             const ifP,
                   struct cmdlineInfo const cmdline) {
 
@@ -1133,13 +1151,7 @@ produceStereogram(FILE *             const ifP,
     pnm_readpaminit(ifP, &inPam, PAM_STRUCT_SIZE(tuple_type));
 
     createoutputGenerator(cmdline, &inPam, &outputGeneratorP);
-    if (cmdline.texFilespec)
-        readTextureImage(cmdline, &inPam, outputGeneratorP);
 
-    if (cmdline.texFilespec) {
-        outputGeneratorP->textureP->pam.file = outputGeneratorP->pam.file;
-        outputGeneratorP->pam = outputGeneratorP->textureP->pam;
-    }
     if (cmdline.verbose) {
         reportImageParameters("Input (height map) file", &inPam);
         if (inPam.depth > 1)

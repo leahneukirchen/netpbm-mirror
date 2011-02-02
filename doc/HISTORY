@@ -18,6 +18,8 @@ not yet  BJH  Release 10.54.00
               pgmtoascii: Truncates instead of undefined behavior if input
               image is wider than specified width.
 
+              pamstereogram: fix crash when not doing texture.
+
               pgmtoascii: Fix numerous output bugs.
 
               pngtopam: fix bug: -verbose reports history chunk present when
