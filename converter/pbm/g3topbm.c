@@ -195,6 +195,8 @@ readBitAndDetectEol(struct bitStream * const bitStreamP,
 /*----------------------------------------------------------------------------
    Same as readBit(), but iff the bit read is the final bit of an EOL
    mark, return *eolP == TRUE.
+
+   An EOL mark is 11 zero bits in a row.
 -----------------------------------------------------------------------------*/
     readBit(bitStreamP, bitP, errorP);
     if (!*errorP) {
@@ -265,19 +267,19 @@ addtohash(g3TableEntry *     hash[],
 
 
 
-static g3TableEntry*
+static g3TableEntry *
 hashfind(g3TableEntry *       hash[], 
-         int          const length, 
-         int          const code, 
-         int          const a, 
-         int          const b) {
+         int            const length, 
+         int            const code, 
+         int            const a, 
+         int            const b) {
 
     unsigned int pos;
     g3TableEntry * te;
 
     pos = ((length + a) * (code + b)) % HASHSIZE;
     te = hash[pos];
-    return ((te && te->length == length && te->code == code) ? te : 0);
+    return ((te && te->length == length && te->code == code) ? te : NULL);
 }
 
 
@@ -316,7 +318,13 @@ static g3TableEntry *
 g3code(unsigned int const curcode,
        unsigned int const curlen,
        bit          const color) {
+/*----------------------------------------------------------------------------
+   Return the position in the code tables mtable and ttable of the
+   G3 code which is the 'curlen' bits long with value 'curcode'.
 
+   Note that it is the _position_ in the table that determines the meaning
+   of the code.  The contents of the table entry do not.
+-----------------------------------------------------------------------------*/
     g3TableEntry * retval;
 
     switch (color) {
@@ -431,7 +439,7 @@ formatBadCodeException(const char ** const exceptionP,
     pm_asprintf(exceptionP,
                 "bad code word at Column %u.  "
                 "No prefix of the %u bits 0x%x matches any recognized "
-                "code word and no code words longer than 12 bits are "
+                "code word and no code words longer than 13 bits are "
                 "defined.  ",
                 col, curlen, curcode);
 }
@@ -507,7 +515,7 @@ readFaxRow(struct bitStream * const bitStreamP,
                 done = TRUE;
             else {
                 curcode = (curcode << 1) | bit;
-                curlen++;
+                ++curlen;
             
                 if (curlen > 13) {
                     formatBadCodeException(exceptionP, col, curlen, curcode);
@@ -516,7 +524,8 @@ readFaxRow(struct bitStream * const bitStreamP,
                     const g3TableEntry * const teP =
                         g3code(curcode, curlen, currentColor);
                         /* Address of structure that describes the 
-                           current G3 code
+                           current G3 code.  Null means 'curcode' isn't
+                           a G3 code yet (probably just the beginning of one)
                         */
                     if (teP) {
                         processG3Code(teP, packedBitrow,
