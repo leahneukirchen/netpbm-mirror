@@ -6,9 +6,6 @@ CHANGE HISTORY
 
 11.02.18 BJH  Release 10.35.80
 
-              pamstereogram: fix crash when not doing texture.
-              Thanks Scott Pakin (scott@pakin.org).
-
               asciitopgm: fix bug: memory corruption on too-long lines.
 
               asciitopgm: fix bug: improper handling of blank lines.
