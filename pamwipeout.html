@@ -1,0 +1,92 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+<title>Pamwipeout User Manual</title>
+</head>
+<body>
+<h1>pamwipeout</h1>
+Updated: February 26, 2011
+<br>
+<a href="#index">Table Of Contents</a>
+<p><br></p>
+
+<h2>NAME</h2>
+pamwipeout - replace detail with smooth gradient from one edge to the other
+
+<h2 id="synopsis">SYNOPSIS</h2>
+<b>pamwipeout</b>
+{<b>-lr | -tb</b>}
+[<b><i>filename</i></b>]
+
+<p>Minimum unique abbreviation of options is acceptable. 
+You may use double hyphens instead of single hyphen to denote options.</p>
+
+<h2 id="description">DESCRIPTION</h2>
+
+<p>This program is part of <a href="http://netpbm.sourceforge.net/doc/index.html">Netpbm</a>.</p>
+
+<p>The <b>pamwipeout</b> utility takes a Neptbm image as input and the uses
+two opposite edges of the image to wipe out anything in between.  You can use
+it in combination with <b>pamcut</b> and <b>pnmpaste</b> / <b>pamcomp</b> to
+remove unwanted parts of a larger image.  The program replaces the pixels in
+between the two edges with a gradient from one edge to the other.</p>
+
+<p>In <b>top-bottom</b> mode, the program reads the whole image into memory
+before it can start processing.  In <b>left-right</b> it will read the image a
+row at the time, process that row and write it to the output file.  Therefore,
+in case of very large images, it may be better to use instead of
+"<b>pamwipeout -tb</b>" a pipe of "<b>pamflip -cw | pamwipeout -lr | pamflip
+-ccw</b>".
+
+<p>In his blog at
+ <a href="http://www.i-am.ws/entry/pnmblend_disappearing_act">www.i-am.ws</a>,
+the author wrote about a predecessor of "pamwipeout" at the time named
+"pnmblend". It shows a good example of what can be accomplished with this
+utility.</p>
+
+<h2 id="parameters">PARAMETERS</h2>
+
+<p><b><i>Filename</i></b> is the name of the input file. If you don't
+specify this, <b>pamwipeout</b> reads the image from Standard Input.</p>
+
+<h2 id="options">OPTIONS</h2>
+<dl compact="compact">
+<dt><b>-tb</b> | <b>-lr</b></dt>
+<dd>
+<p>This option chooses between a vertical and a horizontal gradient.  You must
+specify one of these, but not both.
+</dd>
+</dl>
+
+<h2 id="seealso">SEE ALSO</h2>
+<b><a href="http://netpbm.sourceforge.net/doc/pam.html">pam</a></b> and
+<b><a href="http://netpbm.sourceforge.net/doc/pamflip.html">pamflip</a></b>,
+<b><a href="http://netpbm.sourceforge.net/doc/pamcut.html">pamcut</a></b>,
+<b><a href="http://netpbm.sourceforge.net/doc/pamcomp.html">pamcomp</a></b>,
+<b><a href="http://netpbm.sourceforge.net/doc/pnmpaste.html">pnmpaste</a></b>.
+
+<h2 id="history">HISTORY</h2>
+<p><b>pamwipeout</b> was new in Netpbm 10.54 (March 2011).</p>
+
+<h2 id="authors">AUTHORS</h2>
+
+<p><a href="mailto:willem@schaik.com">Willem van Schaik</a>
+wrote this program in January 2011 and contributed it to Netpbm.</p>
+
+<p><br></p>
+<hr>
+
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+</li><li><a href="#description">DESCRIPTION</a>
+</li><li><a href="#parameters">PARAMETERS</a>
+</li><li><a href="#options">OPTIONS</a>
+</li><li><a href="#seealso">SEE ALSO</a>
+</li><li><a href="#authors">AUTHORS</a>
+</li>
+</ul>
+</body>
+</html>
+

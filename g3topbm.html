@@ -27,8 +27,8 @@ space in place of the equals sign to separate an option name from its value.
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><b>g3topbm</b> reads a Group 3 fax file in MH format as input and produces
-a PBM image as output.
+<p><b>g3topbm</b> reads a Group 3 fax file with MH (Modified Huffman)
+compression as input and produces a PBM image as output.
 
 <p><b>g3topbm</b> tolerates various deviations from the standard,
 so as to recover some of the image if there was a transmission error.
@@ -40,11 +40,21 @@ the right.  It warns you when it does this.
 <p>You can use the <b>stop_error</b> option to make <b>g3topbm</b>
 insist on valid input.
 
-<p>There is no Netpbm program that understands the other command fax
-formats, MR and MMR.
+<p>There is no Netpbm program that understands the other G3 fax
+compression methods: MR (Modified Read) and MMR (Modified Modified Read).
+
+<p>Note that the Group 3 fax file format does not include any kind of a
+signature so that <b>g3topbm</b> might verify it's actually looking at a G3
+file or that the compression method is MH.  The program will interpret any
+sequence of bytes you give it as if it is G3 and, while typically issuing a
+lot of error messages about the file not conforming to the G3 MH format, will
+produce output (unless you use
+<b>-stoperror</b>).  In particular, if you feed <b>g3topbm</b> an MR or MMR
+file, it will not tell you of your mistake.
 
 <p>There are subformats of TIFF that use the Group 3 fax encodings
 inside.  See <b>tifftopnm</b>.
+
 
 <H2 id="options">OPTIONS</H2>
 
