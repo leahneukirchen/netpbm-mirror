@@ -9,14 +9,15 @@ not yet  BJH  Release 10.54.00
               Add ppmtoapplevol.  Thanks Matthew Garrett
               <mjg59@srcf.ucam.org>.
 
-              Add ppmtoapplevol.  Thanks Matthew Garrett
-              <mjg59@srcf.ucam.org>.
+              Add pamwipeout.  Thanks Willem van Schaik <willem@schaik.com>
 
               Rename pbmtoicon to pbmtosunicon, to go with change
               of icontopbm to sunicontopnm in 10.53.
 
               pgmtoascii: Truncates instead of undefined behavior if input
               image is wider than specified width.
+
+              g3topbm: correct error message: codes go up to 13 bits.
 
               pamstereogram: fix crash when not doing texture.
 
