@@ -51,10 +51,11 @@ LIBOBJECTS_X = \
 MANUALS3 = libnetpbm
 MANUALS5 = pbm pgm ppm pnm pam
 
-INTERFACE_HEADERS =  pm.h pbm.h bitio.h pbmfont.h \
-	pgm.h ppm.h ppmcmap.h ppmfloyd.h colorname.h \
-	pnm.h pam.h pammap.h util/shhopt.h util/mallocvar.h \
-	pm_system.h pm_gamma.h ppmdraw.h ppmdfont.h \
+INTERFACE_HEADERS = bitio.h colorname.h \
+	pam.h pamdraw.h pammap.h pbm.h pbmfont.h \
+	pgm.h pm.h pm_gamma.h pm_system.h pnm.h \
+	ppm.h ppmcmap.h ppmdfont.h ppmdraw.h ppmfloyd.h \
+	util/mallocvar.h util/shhopt.h \
 
 DATAFILES = rgb.txt
 
