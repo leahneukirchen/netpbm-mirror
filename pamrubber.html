@@ -1,0 +1,162 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+<title>PamRubber User Manual</title>
+</head>
+<body>
+<h1>pamrubber</h1>
+Updated: February 2011
+<br>
+<a href="#index">Table Of Contents</a>
+<p><br></p>
+
+<h2>NAME</h2> 
+pamrubber - a rubber-sheeting utility that stretches an image
+based on control points
+
+<h2 id="synopsis">SYNOPSIS</h2>
+<b>pamrubber</b>
+{<b>-tri | -quad</b>}
+[<b>-linear</b>]
+[<b>-frame</b>]
+[<b>-verbose</b>]
+<i>cp1x cp1y</i> [<i>cp2x cp2y</i> [<i>cp3x cp3y</i> [<i>cp4x cp4y</i>]]]
+<i>cp1x cp1y</i> [<i>cp2x cp2y</i> [<i>cp3x cp3y</i> [<i>cp4x cp4y</i>]]]
+[<i>filename</i>]
+
+<p>Minimum unique abbreviation of options is acceptable.  You may use double
+hyphens instead of single hyphen to denote options.</p>
+
+<h2 id="description">DESCRIPTION</h2>
+
+<p>This program is part
+of <a href="http://netpbm.sourceforge.net/doc/index.html">Netpbm</a>.</p>
+
+<p>The <b>pamrubber</b> utility converts a pam image into a new image with the
+contents moved around.  The transformation is often called &quot;rubber
+sheeting&quot;: you identify control points (CP) on the source image and
+specify new positions for those points in the new image.  <b>pamrubber</b>
+moves all the pixels around, stretching and compressing as necessary, as
+if the original image were on a sheet of rubber and you pulled on the sheet
+to make the control points move to their new locations.
+
+<p>The new image has the same dimensions and format as the original.
+
+<p>The transformation can happen in two very different ways, called
+&quot;quad&quot; and &quot;tri.&quot; With the former, you must specify four
+control points (for both source and target).  These are the corners of two
+quadrilaterals that will act as the coordinate system for both source and
+target images.  Consider them as non-orthogonal (0,0), (0,1), (1,0) and (1,1)
+points.  This transformation comes close to the one <b>pamperspective</b>
+does, however that program does other corrections as well.</p>
+
+<p>When you specify less than four control points, the program adds control
+points in the following way.  With three control points, <b>pamrubber</b>
+chooses the fourth one such that the four points form a parallelogram.  With
+two points, <b>pamrubber</b> considers them the opposite corners of a
+rectangle.  When you specify only one control point, <b>pamrubber</b> uses a
+rectangle from the top left corner of the image to the single control
+point.</p>
+
+<p>In &quot;tri&quot; mode, <b>pamrubber</b> conceptually cuts up the source
+and target image into triangles.  It Transforms within each corresponding pair
+of triangles in a stretching fashion.  It's like pulling on the three corners
+of the triangle.  In this mode, each pixel in the source image gets mapped to
+a position in the target image. No pixels are lost.</b>
+
+<p>When, in &quot;tri&quot; mode, you specify only a single control point in
+the source and target image, <b>pamrubber</b> creates four triangles from this
+point to the four corners of the image. With two points, the program creates
+six triangles from the two endpoints of the line connecting the two points,
+again to the four corners of the image. Three control points is in a way the
+core of this utility in &quot;tri&quot; mode.  Between the three edges of the
+central triangle and the four edges of the image, <b>pamrubber</b> constructs
+another seven triangles.  Four control points define two central connected
+triangles.  In total this results in cutting the source and target image up
+into ten triangles.</p>
+
+<p>In this case clearly a picture says more than a thousand words.  There is a
+graphical illustration of these various modes at
+<a href="http://www.schaik.com/netpbm/rubber">
+www.schaik.com/netpbm/rubber</a>.  An example of how to use this type of
+rubber sheeting in cartography is in the article
+<a href="http://www.isprs.org/proceedings/XXXVI/5-W1/papers/21.pdf">
+Visualizing the Landscape of Old-Time Tokyo</a>.</p>
+
+
+<h2 id="parameters">PARAMETERS</h2>
+
+<p>The parameters are control points (<i>cp</i>) in pairs of <i>x</i>
+and <i>y</i>.  The source and target image must have the same number of
+control points.  The minimum number of values specified here is 4 for a single
+control point in the source and target image.  The maximum is 16 for four
+control points in each image.
+</p>
+
+<p><i>filename</i> is the name of the input file. If you don't specify
+this, <b>pamrubber</b> reads the image from Standard Input.</p>
+
+
+<h2 id="options">OPTIONS</h2>
+<dl compact="compact">
+
+<dt><b>-tri</b> | <b>-quad</b></dt>
+<dd>
+<p>This selects the type of rubber sheeting done.
+You must specify exactly one of these options.
+</dd>
+
+<dt><b>-linear</b></dt>
+<dd>
+<p>This determines whether <b>pamrubber</b> uses nearest neighbor
+interpolation or bilinear interpolation of four source pixels.
+</p>
+</dd>
+
+<dt><b>-frame</b></dt>
+<dd>
+<p>This option causes <b>pamrubber</b> to overlay the target image with the
+edges of the quadrilaterals, respectively the triangles used for the rubber
+sheeting.  To get the same overlay for the source image, use a <b>pamrubber</b>
+transformation with identical control points for source and target.
+</dd>
+
+<dt><b>-verbose</b></dt>
+<dd>
+<p>This option causes <b>pamrubber</b> to print some information about the
+source image.
+</dd>
+</dl>
+
+
+<h2 id="seealso">SEE ALSO</h2>
+<b><a href="http://netpbm.sourceforge.net/doc/pam.html">pam</a></b> and
+<b><a href="http://netpbm.sourceforge.net/doc/pamperspective.html">pamperspective</a></b>
+
+
+<h2 id="history">HISTORY</h2>
+<p><b>pamrubber</b> was new in Netpbm 10.54 (March 2011).</p>
+
+
+<h2 id="authors">AUTHORS</h2>
+
+<p><a href="mailto:willem@schaik.com">Willem van Schaik</a> wrote this program
+in February 2011 and contributed it to Netpbm.</p>
+
+<br>
+<hr>
+
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+</li><li><a href="#description">DESCRIPTION</a>
+</li><li><a href="#parameters">PARAMETERS</a>
+</li><li><a href="#options">OPTIONS</a>
+</li><li><a href="#seealso">SEE ALSO</a>
+</li><li><a href="#authors">AUTHORS</a>
+</li>
+</ul>
+</body>
+</html>
+
