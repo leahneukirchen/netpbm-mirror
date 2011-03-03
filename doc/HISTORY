@@ -6,16 +6,20 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.54.00
 
+              Add pamrubber.  Thanks Willem van Schaik <willem@schaik.com>.
+
               Add ppmtoapplevol.  Thanks Matthew Garrett
               <mjg59@srcf.ucam.org>.
 
-              Add pamwipeout.  Thanks Willem van Schaik <willem@schaik.com>
-
-              Rename pbmtoicon to pbmtosunicon, to go with change
-              of icontopbm to sunicontopnm in 10.53.
+              Add pamwipeout.  Thanks Willem van Schaik <willem@schaik.com>.
 
               pgmtoascii: Truncates instead of undefined behavior if input
               image is wider than specified width.
+
+              Add libpamd (PAM version of classic libppmd drawing routines).
+
+              Rename pbmtoicon to pbmtosunicon, to go with change
+              of icontopbm to sunicontopnm in 10.53.
 
               g3topbm: correct error message: codes go up to 13 bits.
 

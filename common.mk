@@ -128,7 +128,7 @@ IMPORTINC_ROOT_HEADERS := pm_config.h inttypes_netpbm.h version.h
 IMPORTINC_LIB_HEADERS := \
   pm.h pbm.h pgm.h ppm.h pnm.h pam.h bitio.h pbmfont.h ppmcmap.h \
   pammap.h colorname.h ppmfloyd.h ppmdraw.h pm_system.h ppmdfont.h \
-  pm_gamma.h lum.h dithers.h
+  pm_gamma.h lum.h dithers.h pamdraw.h
 
 IMPORTINC_LIB_UTIL_HEADERS := \
   bitarith.h bitreverse.h filename.h intcode.h floatcode.h io.h mallocvar.h\
