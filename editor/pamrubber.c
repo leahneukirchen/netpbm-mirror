@@ -167,11 +167,10 @@ makepoint(double const x,
 
 
 static void
-copypoint(point * const p1P,
-          point * const p2P) {
+copypoint(point *       const p1P,
+          const point * const p2P) {
 
-    p1P->x = p2P->x;
-    p1P->y = p2P->y;
+    *p1P = *p2P;
 }
 
 
@@ -453,15 +452,6 @@ quadRect(point * const quad,
 
 
 
-#define QUAD_CORNER(QUAD,P0,P1,P2,P3,MID,TRI) { \
-/* P0-P1 and P2-P3 are the diagonals */ \
-  if (fabs(P0.x - P1.x) + fabs(P0.y - P1.y) >= fabs(P2.x - P3.x) + fabs(P2.y - P3.y)) { \
-    QUAD_CORNER_SIZED(QUAD,P0,P1,P2,P3,MID,TRI); \
-  } else { \
-    QUAD_CORNER_SIZED(QUAD,P2,P3,P0,P1,MID,TRI); \
-  } \
-}
-
 #define QUAD_CORNER_SIZED(QUAD,P0,P1,P2,P3,MID,TRI) { \
 /* P0-P1 and P2-P3 are the diagonals */ \
 /* P0-P1 are further apart than P2-P3 */ \
@@ -516,6 +506,27 @@ quadRect(point * const quad,
         copypoint (&QUAD[1], &P2); \
       } \
     } \
+}
+
+
+
+static void
+quadCorner(point *    const quad,
+           point      const p0,
+           point      const p1,
+           point      const p2,
+           point      const p3,
+           point      const mid,
+           triangle * const triP) {
+
+    /* p0-p1 and p2-p3 are the diagonals */
+
+    if (fabs(p0.x - p1.x) + fabs(p0.y - p1.y) >=
+        fabs(p2.x - p3.x) + fabs(p2.y - p3.y)) {
+        QUAD_CORNER_SIZED(quad, p0, p1, p2, p3, mid, *triP);
+    } else {
+        QUAD_CORNER_SIZED(quad, p2, p3, p0, p1, mid, *triP);
+    }
 }
 
 
@@ -829,127 +840,134 @@ prepQuad(void) {
 
 /* order quad control points */
 
-  double d01, d12, d20;
-  line l1, l2;
-  point mid;
-  triangle tri;
+    double d01, d12, d20;
+    line l1, l2;
+    point mid;
+    triangle tri;
 
-  if (nCP == 1) {
-    /* create a rectangle from top-left corner of image and control point */
-      quadRect(quad1, 0.0, oldCP[0].x, 0.0, oldCP[0].y);
-      quadRect(quad2, 0.0, newCP[0].x, 0.0, newCP[0].y);
-  } else if (nCP == 2) {
-    /* create a rectangle with the two points as opposite corners */
-    if ((oldCP[0].x < oldCP[1].x) && (oldCP[0].y < oldCP[1].y)) { /* top-left and bottom-right */
-      quadRect(quad1,oldCP[0].x,oldCP[1].x,oldCP[0].y,oldCP[1].y);
-    } else
-    if ((oldCP[0].x > oldCP[1].x) && (oldCP[0].y < oldCP[1].y)) { /* top-right and bottom-left */
-      quadRect(quad1,oldCP[1].x,oldCP[0].x,oldCP[0].y,oldCP[1].y);
-    } else
-    if ((oldCP[0].x < oldCP[1].x) && (oldCP[0].y < oldCP[1].y)) { /* bottom-left and top-right */
-      quadRect(quad1,oldCP[0].x,oldCP[1].x,oldCP[1].y,oldCP[0].y);
-    } else
-    if ((oldCP[0].x > oldCP[1].x) && (oldCP[0].y < oldCP[1].y)) { /* bottom-right and top-left */
-      quadRect(quad1,oldCP[1].x,oldCP[0].x,oldCP[1].y,oldCP[0].y);
-    }
-
-    if ((newCP[0].x < newCP[1].x) && (newCP[0].y < newCP[1].y)) { /* top-left and bottom-right */
-      quadRect(quad2,newCP[0].x,newCP[1].x,newCP[0].y,newCP[1].y);
-    } else
-    if ((newCP[0].x > newCP[1].x) && (newCP[0].y < newCP[1].y)) { /* top-right and bottom-left */
-      quadRect(quad2,newCP[1].x,newCP[0].x,newCP[0].y,newCP[1].y);
-    } else
-    if ((newCP[0].x < newCP[1].x) && (newCP[0].y < newCP[1].y)) { /* bottom-left and top-right */
-      quadRect(quad2,newCP[0].x,newCP[1].x,newCP[1].y,newCP[0].y);
-    } else
-    if ((newCP[0].x > newCP[1].x) && (newCP[0].y < newCP[1].y)) { /* bottom-right and top-left */
-      quadRect(quad2,newCP[1].x,newCP[0].x,newCP[1].y,newCP[0].y);
-    }
-
-  } else {
-
-    if (nCP == 3) {
-
-      /* add the fourth corner of a parallelogram */
-      /* diagonal of the parallelogram is the two control points furthest apart */
-
-      d01 = distance (&newCP[0], &newCP[1]);
-      d12 = distance (&newCP[1], &newCP[2]);
-      d20 = distance (&newCP[2], &newCP[0]);
-
-      if ((d01 > d12) && (d01 > d20)) {
-        oldCP[3].x = oldCP[0].x + oldCP[1].x - oldCP[2].x;
-        oldCP[3].y = oldCP[0].y + oldCP[1].y - oldCP[2].y;
-      } else
-      if (d12 > d20) {
-        oldCP[3].x = oldCP[1].x + oldCP[2].x - oldCP[0].x;
-        oldCP[3].y = oldCP[1].y + oldCP[2].y - oldCP[0].y;
-      } else {
-        oldCP[3].x = oldCP[2].x + oldCP[0].x - oldCP[1].x;
-        oldCP[3].y = oldCP[2].y + oldCP[0].y - oldCP[1].y;
-      }
-
-      if ((d01 > d12) && (d01 > d20)) {
-        newCP[3].x = newCP[0].x + newCP[1].x - newCP[2].x;
-        newCP[3].y = newCP[0].y + newCP[1].y - newCP[2].y;
-      } else
-      if (d12 > d20) {
-        newCP[3].x = newCP[1].x + newCP[2].x - newCP[0].x;
-        newCP[3].y = newCP[1].y + newCP[2].y - newCP[0].y;
-      } else {
-        newCP[3].x = newCP[2].x + newCP[0].x - newCP[1].x;
-        newCP[3].y = newCP[2].y + newCP[0].y - newCP[1].y;
-      }
-
-    } /* end nCP = 3 */
-
-    /* nCP = 3 or 4 */
-
-    /* find the intersection of the diagonals */
-    l1 = makeline(oldCP[0], oldCP[1]);
-    l2 = makeline(oldCP[2], oldCP[3]);
-    if (intersect(&l1, &l2, &mid)) {
-      QUAD_CORNER(quad1,oldCP[0],oldCP[1],oldCP[2],oldCP[3],mid,tri);
+    if (nCP == 1) {
+        /* create a rectangle from top-left corner of image and control
+           point
+        */
+        quadRect(quad1, 0.0, oldCP[0].x, 0.0, oldCP[0].y);
+        quadRect(quad2, 0.0, newCP[0].x, 0.0, newCP[0].y);
+    } else if (nCP == 2) {
+        /* create a rectangle with the two points as opposite corners */
+        if ((oldCP[0].x < oldCP[1].x) && (oldCP[0].y < oldCP[1].y)) {
+            /* top-left and bottom-right */
+            quadRect(quad1,oldCP[0].x,oldCP[1].x,oldCP[0].y,oldCP[1].y);
+        } else if ((oldCP[0].x > oldCP[1].x) && (oldCP[0].y < oldCP[1].y)) {
+            /* top-right and bottom-left */
+            quadRect(quad1,oldCP[1].x,oldCP[0].x,oldCP[0].y,oldCP[1].y);
+        } else if ((oldCP[0].x < oldCP[1].x) && (oldCP[0].y < oldCP[1].y)) {
+            /* bottom-left and top-right */
+            quadRect(quad1, oldCP[0].x, oldCP[1].x, oldCP[1].y,
+                     oldCP[0].y);
+        } else if ((oldCP[0].x > oldCP[1].x) && (oldCP[0].y < oldCP[1].y)) {
+            /* bottom-right and top-left */
+            quadRect(quad1, oldCP[1].x, oldCP[0].x, oldCP[1].y,oldCP[0].y);
+        }
+        
+        if ((newCP[0].x < newCP[1].x) && (newCP[0].y < newCP[1].y)) {
+            /* top-left and bottom-right */
+            quadRect(quad2,newCP[0].x,newCP[1].x,newCP[0].y,newCP[1].y);
+        } else if ((newCP[0].x > newCP[1].x) && (newCP[0].y < newCP[1].y)) {
+            /* top-right and bottom-left */
+            quadRect(quad2,newCP[1].x,newCP[0].x,newCP[0].y,newCP[1].y);
+        } else if ((newCP[0].x < newCP[1].x) && (newCP[0].y < newCP[1].y)) {
+            /* bottom-left and top-right */
+            quadRect(quad2,newCP[0].x,newCP[1].x,newCP[1].y,newCP[0].y);
+        } else if ((newCP[0].x > newCP[1].x) && (newCP[0].y < newCP[1].y)) {
+            /* bottom-right and top-left */
+            quadRect(quad2,newCP[1].x,newCP[0].x,newCP[1].y,newCP[0].y);
+        }
     } else {
-      l1 = makeline(oldCP[0], oldCP[2]);
-      l2 = makeline(oldCP[1], oldCP[3]);
-      if (intersect(&l1, &l2, &mid)) {
-        QUAD_CORNER(quad1,oldCP[0],oldCP[2],oldCP[1],oldCP[3],mid,tri);
-      }
-      else {
-        l1 = makeline(oldCP[0], oldCP[3]);
-        l2 = makeline(oldCP[1], oldCP[2]);
-        if (intersect(&l1, &l2, &mid)) {
-          QUAD_CORNER(quad1,oldCP[0],oldCP[3],oldCP[1],oldCP[2],mid,tri);
-        }
-        else
-          pm_error("The four old control points don't seem to be corners.");
-      }
-    }
+        if (nCP == 3) {
+            /* add the fourth corner of a parallelogram */
+            /* diagonal of the parallelogram is the two control points
+               furthest apart
+            */
+            
+            d01 = distance (&newCP[0], &newCP[1]);
+            d12 = distance (&newCP[1], &newCP[2]);
+            d20 = distance (&newCP[2], &newCP[0]);
 
-    /* repeat for the "to-be" control points */
-    l1 = makeline(newCP[0], newCP[1]);
-    l2 = makeline(newCP[2], newCP[3]);
-    if (intersect(&l1, &l2, &mid)) {
-      QUAD_CORNER(quad2,newCP[0],newCP[1],newCP[2],newCP[3],mid,tri);
-    }
-    else {
-      l1 = makeline(newCP[0], newCP[2]);
-      l2 = makeline(newCP[1], newCP[3]);
-      if (intersect(&l1, &l2, &mid)) {
-        QUAD_CORNER(quad2,newCP[0],newCP[2],newCP[1],newCP[3],mid,tri);
-      }
-      else {
-        l1 = makeline(newCP[0], newCP[3]);
-        l2 = makeline(newCP[1], newCP[2]);
+            if ((d01 > d12) && (d01 > d20)) {
+                oldCP[3].x = oldCP[0].x + oldCP[1].x - oldCP[2].x;
+                oldCP[3].y = oldCP[0].y + oldCP[1].y - oldCP[2].y;
+            } else
+                if (d12 > d20) {
+                    oldCP[3].x = oldCP[1].x + oldCP[2].x - oldCP[0].x;
+                    oldCP[3].y = oldCP[1].y + oldCP[2].y - oldCP[0].y;
+                } else {
+                    oldCP[3].x = oldCP[2].x + oldCP[0].x - oldCP[1].x;
+                    oldCP[3].y = oldCP[2].y + oldCP[0].y - oldCP[1].y;
+                }
+
+            if ((d01 > d12) && (d01 > d20)) {
+                newCP[3].x = newCP[0].x + newCP[1].x - newCP[2].x;
+                newCP[3].y = newCP[0].y + newCP[1].y - newCP[2].y;
+            } else
+                if (d12 > d20) {
+                    newCP[3].x = newCP[1].x + newCP[2].x - newCP[0].x;
+                    newCP[3].y = newCP[1].y + newCP[2].y - newCP[0].y;
+                } else {
+                    newCP[3].x = newCP[2].x + newCP[0].x - newCP[1].x;
+                    newCP[3].y = newCP[2].y + newCP[0].y - newCP[1].y;
+                }
+
+        } /* end nCP = 3 */
+
+        /* nCP = 3 or 4 */
+
+        /* find the intersection of the diagonals */
+        l1 = makeline(oldCP[0], oldCP[1]);
+        l2 = makeline(oldCP[2], oldCP[3]);
         if (intersect(&l1, &l2, &mid)) {
-          QUAD_CORNER(quad2,newCP[0],newCP[3],newCP[1],newCP[2],mid,tri);
+            quadCorner(quad1, oldCP[0], oldCP[1], oldCP[2], oldCP[3],
+                       mid, &tri);
+        } else {
+            l1 = makeline(oldCP[0], oldCP[2]);
+            l2 = makeline(oldCP[1], oldCP[3]);
+            if (intersect(&l1, &l2, &mid))
+                quadCorner(quad1, oldCP[0], oldCP[2], oldCP[1], oldCP[3],
+                           mid, &tri);
+            else {
+                l1 = makeline(oldCP[0], oldCP[3]);
+                l2 = makeline(oldCP[1], oldCP[2]);
+                if (intersect(&l1, &l2, &mid))
+                    quadCorner(quad1, oldCP[0], oldCP[3],
+                               oldCP[1], oldCP[2], mid, &tri);
+                else
+                    pm_error("The four old control points don't seem "
+                             "to be corners.");
+            }
         }
-        else
-          pm_error("The four new control points don't seem to be corners.");
-      }
+
+        /* repeat for the "to-be" control points */
+        l1 = makeline(newCP[0], newCP[1]);
+        l2 = makeline(newCP[2], newCP[3]);
+        if (intersect(&l1, &l2, &mid))
+            quadCorner(quad2, newCP[0], newCP[1], newCP[2], newCP[3],
+                       mid, &tri);
+        else {
+            l1 = makeline(newCP[0], newCP[2]);
+            l2 = makeline(newCP[1], newCP[3]);
+            if (intersect(&l1, &l2, &mid))
+                quadCorner(quad2, newCP[0], newCP[2], newCP[1], newCP[3],
+                           mid, &tri);
+            else {
+                l1 = makeline(newCP[0], newCP[3]);
+                l2 = makeline(newCP[1], newCP[2]);
+                if (intersect(&l1, &l2, &mid))
+                    quadCorner(quad2, newCP[0], newCP[3],
+                               newCP[1], newCP[2], mid, &tri);
+                else
+                    pm_error("The four new control points don't seem "
+                             "to be corners.");
+            }
+        }
     }
-  }
 }
 
 
