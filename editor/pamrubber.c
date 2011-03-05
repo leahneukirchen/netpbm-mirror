@@ -1173,6 +1173,44 @@ createWhiteTuple(const struct pam * const pamP,
 
 
 
+static sample
+pix(tuple **     const rdTuples,
+    point        const p,
+    unsigned int const plane,
+    bool         const linear) {
+                    
+    double pix;
+
+    if (!linear) {
+        pix = rdTuples
+            [(int) floor(p.y + 0.5)]
+            [(int) floor(p.x + 0.5)][plane];
+    } else {
+        double const rx = p.x - floor(p.x);
+        double const ry = p.y - floor(p.y);
+        pix = 0.0;
+        pix += (1.0 - rx) * (1.0 - ry)
+            * rdTuples
+            [(int) floor(p.y)]
+            [(int) floor(p.x)][plane];
+        pix += rx * (1.0 - ry)
+            * rdTuples
+            [(int) floor(p.y)]
+            [(int) floor(p.x) + 1][plane];
+        pix += (1.0 - rx) * ry 
+            * rdTuples
+            [(int) floor(p.y) + 1]
+            [(int) floor(p.x)][plane];
+        pix += rx * ry
+            * rdTuples
+            [(int) floor(p.y) + 1]
+            [(int) floor(p.x) + 1][plane];
+    }
+    return (int) floor(pix);
+}
+
+
+
 int
 main(int argc, const char ** const argv) {
 
@@ -1233,37 +1271,12 @@ main(int argc, const char ** const argv) {
             p1.y += 1E-3;
             if ((p1.x >= 0.0) && (p1.x < (double) inpam.width - 0.5) &&
                 (p1.y >= 0.0) && (p1.y < (double) inpam.height - 0.5)) {
-                unsigned int i;
-                for (i = 0; i < inpam.depth; ++i) {
-                    double pix;
+                unsigned int plane;
+                for (plane = 0; plane < inpam.depth; ++plane) {
+                    wrTuples[p2y][p2x][plane] =
+                        pix(rdTuples, p1, plane, cmdline.linear);
 
-                    if (!cmdline.linear) {
-                        pix = rdTuples
-                            [(int) floor(p1.y + 0.5)]
-                            [(int) floor(p1.x + 0.5)][i];
-                    } else {
-                        double const rx = p1.x - floor(p1.x);
-                        double const ry = p1.y - floor(p1.y);
-                        pix = 0.0;
-                        pix += (1.0 - rx) * (1.0 - ry)
-                            * rdTuples
-                            [(int) floor(p1.y)]
-                            [(int) floor(p1.x)][i];
-                        pix += rx * (1.0 - ry)
-                            * rdTuples
-                            [(int) floor(p1.y)]
-                            [(int) floor(p1.x) + 1][i];
-                        pix += (1.0 - rx) * ry 
-                            * rdTuples
-                            [(int) floor(p1.y) + 1]
-                            [(int) floor(p1.x)][i];
-                        pix += rx * ry
-                            * rdTuples
-                            [(int) floor(p1.y) + 1]
-                            [(int) floor(p1.x) + 1][i];
-                    }
-                    wrTuples[p2y][p2x][i] = floor(pix);
-                } /* end for */
+                }
             }
         }
     }
