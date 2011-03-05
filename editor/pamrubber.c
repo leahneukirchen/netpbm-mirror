@@ -360,50 +360,129 @@ angle(point * const p1P,
 }
 
 
-#define SIDETRIANGLE(N,TRIG1,P11,P12,P13,P14,R11,R12,TRIG2,P21,P22,P23,P24,R21,R22) { \
-  if (fabs (R11.x - R12.x) < 1.0) { /* vertical edge */ \
-    if (((N >= 4) && (R11.x < P11.x) && (P14.x < P13.x) && (P14.x < P12.x) && (P14.x < P11.x)) || /* left edge */ \
-        ((N >= 4) && (R11.x > P11.x) && (P14.x > P13.x) && (P14.x > P12.x) && (P14.x > P11.x))) { /* right edge */ \
-      TRIG1 = maketriangle(R11, R12, P14); \
-      TRIG2 = maketriangle(R21, R22, P24); \
-    } \
-    else if (((N >= 3) && (R11.x < P11.x) && (P13.x < P12.x) && (P13.x < P11.x)) || /* left edge */ \
-             ((N >= 3) && (R11.x > P11.x) && (P13.x > P12.x) && (P13.x > P11.x))) { /* right edge */ \
-      TRIG1 = maketriangle(R11, R12, P13); \
-      TRIG2 = maketriangle(R21, R22, P23); \
-    } \
-    else if (((N >= 2) && (R11.x < P11.x) && (P12.x < P11.x)) || /* left edge */ \
-             ((N >= 2) && (R11.x > P11.x) && (P12.x > P11.x))) { /* right edge */ \
-      TRIG1 = maketriangle(R11, R12, P12); \
-      TRIG2 = maketriangle(R21, R22, P22); \
-    } \
-    else if (N >= 1) { \
-      TRIG1 = maketriangle(R11, R12, P11); \
-      TRIG2 = maketriangle(R21, R22, P21); \
-    } \
-  } else \
-  if (fabs (R11.y - R12.y) < 1.0) { /* horizontal edge */ \
-    if (((N >= 4) && (R11.y < P11.y) && (P14.y < P13.y) && (P14.y < P12.y) && (P14.y < P11.y)) || /* top edge */ \
-        ((N >= 4) && (R11.y > P11.y) && (P14.y > P13.y) && (P14.y > P12.y) && (P14.y > P11.y))) { /* bottom edge */ \
-      TRIG1 = maketriangle(R11, R12, P14); \
-      TRIG2 = maketriangle(R21, R22, P24); \
-    } \
-    else if (((N >= 3) && (R11.y < P11.y) && (P13.y < P12.y) && (P13.y < P11.y)) || /* top edge */ \
-             ((N >= 3) && (R11.y > P11.y) && (P13.y > P12.y) && (P13.y > P11.y))) { /* bottom edge */ \
-      TRIG1 = maketriangle(R11, R12, P13); \
-      TRIG2 = maketriangle(R21, R22, P23); \
-    } \
-    else if (((N >= 2) && (R11.y < P11.y) && (P12.y < P11.y)) || /* top edge */ \
-             ((N >= 2) && (R11.y > P11.y) && (P12.y > P11.y))) { /* bottom edge */ \
-      TRIG1 = maketriangle(R11, R12, P12); \
-      TRIG2 = maketriangle(R21, R22, P22); \
-    } \
-    else if (N >= 1) { \
-      TRIG1 = maketriangle(R11, R12, P11); \
-      TRIG2 = maketriangle(R21, R22, P21); \
-    } \
-  } \
+
+static void
+sideTriangleVerticalEdge(unsigned int const n,
+                         triangle *   const trig1P,
+                         point        const p11,
+                         point        const p12,
+                         point        const p13,
+                         point        const p14,
+                         point        const r11,
+                         point        const r12,
+                         triangle *   const trig2P,
+                         point        const p21,
+                         point        const p22,
+                         point        const p23,
+                         point        const p24,
+                         point        const r21,
+                         point        const r22) {
+                                   
+    if (((n >= 4) && (r11.x < p11.x)
+         && (p14.x < p13.x) && (p14.x < p12.x)
+         && (p14.x < p11.x)) /* left edge */
+        || 
+        ((n >= 4) && (r11.x > p11.x)
+         && (p14.x > p13.x) && (p14.x > p12.x)
+         && (p14.x > p11.x))) /* right edge */ {
+        *trig1P = maketriangle(r11, r12, p14);
+        *trig2P = maketriangle(r21, r22, p24);
+    } else if (((n >= 3) && (r11.x < p11.x) && (p13.x < p12.x)
+                && (p13.x < p11.x)) /* left edge */
+               || 
+               ((n >= 3) && (r11.x > p11.x) && (p13.x > p12.x)
+                && (p13.x > p11.x))) /* right edge */ {
+        *trig1P = maketriangle(r11, r12, p13);
+        *trig2P = maketriangle(r21, r22, p23);
+    } else if (((n >= 2) && (r11.x < p11.x)
+                && (p12.x < p11.x)) /* left edge */
+               ||
+               ((n >= 2) && (r11.x > p11.x)
+                && (p12.x > p11.x))) /* right edge */ { 
+        *trig1P = maketriangle(r11, r12, p12);
+        *trig2P = maketriangle(r21, r22, p22);
+    } else if (n >= 1) {
+        *trig1P = maketriangle(r11, r12, p11);
+        *trig2P = maketriangle(r21, r22, p21);
+    }
 }
+
+
+
+static void
+sideTriangleHorizontalEdge(unsigned int const n,
+                           triangle *   const trig1P,
+                           point        const p11,
+                           point        const p12,
+                           point        const p13,
+                           point        const p14,
+                           point        const r11,
+                           point        const r12,
+                           triangle *   const trig2P,
+                           point        const p21,
+                           point        const p22,
+                           point        const p23,
+                           point        const p24,
+                           point        const r21,
+                           point        const r22) {
+                                   
+    if (((n >= 4) && (r11.y < p11.y) && (p14.y < p13.y)
+         && (p14.y < p12.y) && (p14.y < p11.y)) /* top edge */
+        || 
+        ((n >= 4) && (r11.y > p11.y) && (p14.y > p13.y)
+         && (p14.y > p12.y) && (p14.y > p11.y))) /* bottom edge */ {
+        *trig1P = maketriangle(r11, r12, p14);
+        *trig2P = maketriangle(r21, r22, p24);
+    } else if (((n >= 3) && (r11.y < p11.y) && (p13.y < p12.y)
+                && (p13.y < p11.y)) /* top edge */
+               || 
+               ((n >= 3) && (r11.y > p11.y) && (p13.y > p12.y)
+                && (p13.y > p11.y))) /* bottom edge */ {
+        *trig1P = maketriangle(r11, r12, p13);
+        *trig2P = maketriangle(r21, r22, p23);
+    } else if (((n >= 2) && (r11.y < p11.y)
+                && (p12.y < p11.y)) /* top edge */
+               || 
+               ((n >= 2) && (r11.y > p11.y)
+                && (p12.y > p11.y))) /* bottom edge */ {
+        *trig1P = maketriangle(r11, r12, p12);
+        *trig2P = maketriangle(r21, r22, p22);
+    } else if (n >= 1) {
+        *trig1P = maketriangle(r11, r12, p11);
+        *trig2P = maketriangle(r21, r22, p21);
+    }
+}
+
+
+
+static void
+sideTriangle(unsigned int const n,
+             triangle *   const trig1P,
+             point        const p11,
+             point        const p12,
+             point        const p13,
+             point        const p14,
+             point        const r11,
+             point        const r12,
+             triangle *   const trig2P,
+             point        const p21,
+             point        const p22,
+             point        const p23,
+             point        const p24,
+             point        const r21,
+             point        const r22) {
+
+    if (fabs (r11.x - r12.x) < 1.0)
+        sideTriangleVerticalEdge(n,
+                                 trig1P, p11, p12, p13, p14, r11, r12,
+                                 trig2P, p21, p22, p23, p24, r21, r22);
+
+    else if (fabs (r11.y - r12.y) < 1.0)
+        sideTriangleHorizontalEdge(n,
+                                 trig1P, p11, p12, p13, p14, r11, r12,
+                                 trig2P, p21, p22, p23, p24, r21, r22);
+}
+
 
 
 static void
@@ -663,10 +742,22 @@ prepTrig(int const wd,
         c2p1 = newCP[0];
 
         /* connect control point to all corners to get 4 triangles */
-        SIDETRIANGLE(nCP,tri1s[0],c1p1,p0,p0,p0,rbl1,rtl1,tri2s[0],c2p1,p0,p0,p0,rbl2,rtl2); /* left side triangle */
-        SIDETRIANGLE(nCP,tri1s[1],c1p1,p0,p0,p0,rtl1,rtr1,tri2s[1],c2p1,p0,p0,p0,rtl2,rtr2); /* top side triangle */
-        SIDETRIANGLE(nCP,tri1s[2],c1p1,p0,p0,p0,rtr1,rbr1,tri2s[2],c2p1,p0,p0,p0,rtr2,rbr2); /* right side triangle */
-        SIDETRIANGLE(nCP,tri1s[3],c1p1,p0,p0,p0,rbr1,rbl1,tri2s[3],c2p1,p0,p0,p0,rbr2,rbl2); /* bottom side triangle */
+        /* left side triangle */
+        sideTriangle(nCP,
+                     &tri1s[0], c1p1, p0, p0, p0, rbl1, rtl1, 
+                     &tri2s[0], c2p1, p0, p0, p0, rbl2, rtl2);
+        /* top side triangle */
+        sideTriangle(nCP,
+                     &tri1s[1], c1p1, p0, p0, p0, rtl1, rtr1, 
+                     &tri2s[1], c2p1, p0, p0, p0, rtl2, rtr2);
+        /* right side triangle */
+        sideTriangle(nCP,
+                     &tri1s[2], c1p1, p0, p0, p0, rtr1, rbr1, 
+                     &tri2s[2], c2p1, p0, p0, p0, rtr2, rbr2);
+        /* bottom side triangle */
+        sideTriangle(nCP,
+                     &tri1s[3], c1p1, p0, p0, p0, rbr1, rbl1, 
+                     &tri2s[3], c2p1, p0, p0, p0, rbr2, rbl2);
 
         nTri = 4;
     } else if (nCP == 2) {
@@ -680,10 +771,22 @@ prepTrig(int const wd,
         angle (&c2p1, &c2p2);
 
         /* connect two control points to corners to get 6 triangles */
-        SIDETRIANGLE(nCP,tri1s[0],c1p1,c1p2,p0,p0,rbl1,rtl1,tri2s[0],c2p1,c2p2,p0,p0,rbl2,rtl2); /* left side */
-        SIDETRIANGLE(nCP,tri1s[1],c1p1,c1p2,p0,p0,rtl1,rtr1,tri2s[1],c2p1,c2p2,p0,p0,rtl2,rtr2); /* top side */
-        SIDETRIANGLE(nCP,tri1s[2],c1p1,c1p2,p0,p0,rtr1,rbr1,tri2s[2],c2p1,c2p2,p0,p0,rtr2,rbr2); /* right side */
-        SIDETRIANGLE(nCP,tri1s[3],c1p1,c1p2,p0,p0,rbr1,rbl1,tri2s[3],c2p1,c2p2,p0,p0,rbr2,rbl2); /* bottom side */
+        /* left side */
+        sideTriangle(nCP,
+                     &tri1s[0], c1p1, c1p2, p0, p0, rbl1, rtl1, 
+                     &tri2s[0], c2p1, c2p2, p0, p0, rbl2, rtl2);
+        /* top side */
+        sideTriangle(nCP, 
+                     &tri1s[1], c1p1, c1p2, p0, p0, rtl1, rtr1, 
+                     &tri2s[1], c2p1, c2p2, p0, p0, rtl2, rtr2);
+        /* right side */
+        sideTriangle(nCP, 
+                     &tri1s[2], c1p1, c1p2, p0, p0, rtr1, rbr1, 
+                     &tri2s[2], c2p1, c2p2, p0, p0, rtr2, rbr2);
+        /* bottom side */
+        sideTriangle(nCP, 
+                     &tri1s[3], c1p1, c1p2, p0, p0, rbr1, rbl1, 
+                     &tri2s[3], c2p1, c2p2, p0, p0, rbr2, rbl2);
 
         /* edge to corner triangles */
         edgeTriangle(&tri1s[4], c1p1, c1p2, rtl1, rtr1, rbl1, rbr1,
@@ -724,10 +827,22 @@ prepTrig(int const wd,
         c2p3 = tri2s[0].p3;
 
         /* point to side triangles */
-        SIDETRIANGLE(nCP,tri1s[1],c1p1,c1p2,c1p3,p0,rbl1,rtl1,tri2s[1],c2p1,c2p2,c2p3,p0,rbl2,rtl2); /* left side */
-        SIDETRIANGLE(nCP,tri1s[2],c1p1,c1p2,c1p3,p0,rtl1,rtr1,tri2s[2],c2p1,c2p2,c2p3,p0,rtl2,rtr2); /* top side */
-        SIDETRIANGLE(nCP,tri1s[3],c1p1,c1p2,c1p3,p0,rtr1,rbr1,tri2s[3],c2p1,c2p2,c2p3,p0,rtr2,rbr2); /* right side */
-        SIDETRIANGLE(nCP,tri1s[4],c1p1,c1p2,c1p3,p0,rbr1,rbl1,tri2s[4],c2p1,c2p2,c2p3,p0,rbr2,rbl2); /* bottom side */
+        /* left side */
+        sideTriangle(nCP,
+                     &tri1s[1], c1p1, c1p2, c1p3, p0, rbl1, rtl1, 
+                     &tri2s[1], c2p1, c2p2, c2p3, p0, rbl2, rtl2);
+        /* top side */
+        sideTriangle(nCP, 
+                     &tri1s[2], c1p1, c1p2, c1p3, p0, rtl1, rtr1, 
+                     &tri2s[2], c2p1, c2p2, c2p3, p0, rtl2, rtr2);
+        /* right side */
+        sideTriangle(nCP, 
+                     &tri1s[3], c1p1, c1p2, c1p3, p0, rtr1, rbr1, 
+                     &tri2s[3], c2p1, c2p2, c2p3, p0, rtr2, rbr2);
+        /* bottom side */
+        sideTriangle(nCP, 
+                     &tri1s[4], c1p1, c1p2, c1p3, p0, rbr1, rbl1, 
+                     &tri2s[4], c2p1, c2p2, c2p3, p0, rbr2, rbl2);
 
         /* edge to corner triangles */
         edgeTriangle(&tri1s[5], c1p1, c1p2, rtl1, rtr1, rbl1, rbr1,
@@ -822,10 +937,22 @@ prepTrig(int const wd,
         c2p4 = tri2s[1].p1;
 
         /* triangle from triangle point to side of image */
-        SIDETRIANGLE(nCP,tri1s[2],c1p1,c1p2,c1p3,c1p4,rbl1,rtl1,tri2s[2],c2p1,c2p2,c2p3,c2p4,rbl2,rtl2); /* left side triangle */
-        SIDETRIANGLE(nCP,tri1s[3],c1p1,c1p2,c1p3,c1p4,rtl1,rtr1,tri2s[3],c2p1,c2p2,c2p3,c2p4,rtl2,rtr2); /* top side triangle */
-        SIDETRIANGLE(nCP,tri1s[4],c1p1,c1p2,c1p3,c1p4,rtr1,rbr1,tri2s[4],c2p1,c2p2,c2p3,c2p4,rtr2,rbr2); /* right side triangle */
-        SIDETRIANGLE(nCP,tri1s[5],c1p1,c1p2,c1p3,c1p4,rbr1,rbl1,tri2s[5],c2p1,c2p2,c2p3,c2p4,rbr2,rbl2); /* bottom side triangle */
+        /* left side triangle */
+        sideTriangle(nCP, 
+                     &tri1s[2], c1p1, c1p2, c1p3, c1p4, rbl1, rtl1, 
+                     &tri2s[2], c2p1, c2p2, c2p3, c2p4, rbl2, rtl2);
+        /* top side triangle */
+        sideTriangle(nCP, 
+                     &tri1s[3], c1p1, c1p2, c1p3, c1p4, rtl1, rtr1, 
+                     &tri2s[3], c2p1, c2p2, c2p3, c2p4, rtl2, rtr2);
+        /* right side triangle */
+        sideTriangle(nCP, 
+                     &tri1s[4], c1p1, c1p2, c1p3, c1p4, rtr1, rbr1, 
+                     &tri2s[4], c2p1, c2p2, c2p3, c2p4, rtr2, rbr2);
+        /* bottom side triangle */
+        sideTriangle(nCP, 
+                     &tri1s[5], c1p1, c1p2, c1p3, c1p4, rbr1, rbl1, 
+                     &tri2s[5], c2p1, c2p2, c2p3, c2p4, rbr2, rbl2);
 
         /*-------------------------------------------------------------------*/
         /*        -1-      -2-        -3-      -4-        -5-      -6-       */
