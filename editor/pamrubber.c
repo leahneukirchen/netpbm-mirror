@@ -50,8 +50,8 @@ typedef struct triangle {
 
 struct cmdlineInfo {
     unsigned int nCP;
-    point oldCP[4];
-    point newCP[4];
+    point        oldCP[4];
+    point        newCP[4];
     const char * filename;
     unsigned int quad;
     unsigned int tri;
@@ -418,24 +418,43 @@ angle(point * const p1P,
   } \
 }
 
-#define EDGETRIANGLE(TRIG1,P11,P12,TL1,TR1,BL1,BR1,TRIG2,P21,P22,TL2,TR2,BL2,BR2) { \
-    if ((P11.x < P12.x) && (P11.y < P12.y)) { /* up/left to down/right */ \
-      TRIG1 = maketriangle(TR1, P12, P11); \
-      TRIG2 = maketriangle(TR2, P22, P21); \
-    } \
-    else if ((P11.x > P12.x) && (P11.y > P12.y)) { /* down/right to up/left */ \
-      TRIG1 = maketriangle(BL1, P12, P11); \
-      TRIG2 = maketriangle(BL2, P22, P21); \
-    } \
-    else if ((P11.x < P12.x) && (P11.y > P12.y)) { /* down/left to up/right */ \
-      TRIG1 = maketriangle(TL1, P12, P11); \
-      TRIG2 = maketriangle(TL2, P22, P21); \
-    } \
-    else if ((P11.x > P12.x) && (P11.y < P12.y)) { /* up/right to down/left */ \
-      TRIG1 = maketriangle(BR1, P12, P11); \
-      TRIG2 = maketriangle(BR2, P22, P21); \
-    } \
+
+static void
+edgeTriangle(triangle * const trig1P,
+             point      const p11,
+             point      const p12,
+             point      const tl1,
+             point      const tr1,
+             point      const bl1,
+             point      const br1,
+             triangle * const trig2P,
+             point      const p21,
+             point      const p22,
+             point      const tl2,
+             point      const tr2,
+             point      const bl2,
+             point      const br2) {
+             
+    if ((p11.x < p12.x) && (p11.y < p12.y)) {
+        /* up/left to down/right */
+        *trig1P = maketriangle(tr1, p12, p11);
+        *trig2P = maketriangle(tr2, p22, p21);
+    } else if ((p11.x > p12.x) && (p11.y > p12.y)) {
+        /* down/right to up/left */
+        *trig1P = maketriangle(bl1, p12, p11);
+        *trig2P = maketriangle(bl2, p22, p21);
+    } else if ((p11.x < p12.x) && (p11.y > p12.y)) {
+        /* down/left to up/right */
+        *trig1P = maketriangle(tl1, p12, p11);
+        *trig2P = maketriangle(tl2, p22, p21);
+    } else if ((p11.x > p12.x) && (p11.y < p12.y)) {
+        /* up/right to down/left */
+        *trig1P = maketriangle(br1, p12, p11);
+        *trig2P = maketriangle(br2, p22, p21);
+    }
 }
+
+
 
 static void
 quadRect(point * const quad,
@@ -678,9 +697,10 @@ prepTrig(int const wd,
         SIDETRIANGLE(nCP,tri1s[3],c1p1,c1p2,p0,p0,rbr1,rbl1,tri2s[3],c2p1,c2p2,p0,p0,rbr2,rbl2); /* bottom side */
 
         /* edge to corner triangles */
-        EDGETRIANGLE(tri1s[4],c1p1,c1p2,rtl1,rtr1,rbl1,rbr1,tri2s[4],c2p1,c2p2,rtl2,rtr2,rbl2,rbr2);
-        EDGETRIANGLE(tri1s[5],c1p2,c1p1,rtl1,rtr1,rbl1,rbr1,tri2s[5],c2p2,c2p1,rtl2,rtr2,rbl2,rbr2);
-
+        edgeTriangle(&tri1s[4], c1p1, c1p2, rtl1, rtr1, rbl1, rbr1,
+                     &tri2s[4], c2p1, c2p2, rtl2, rtr2, rbl2, rbr2);
+        edgeTriangle(&tri1s[5], c1p2, c1p1, rtl1, rtr1, rbl1, rbr1,
+                     &tri2s[5], c2p2, c2p1, rtl2, rtr2, rbl2, rbr2);
         nTri = 6;
     } else if (nCP == 3) {
         c1p1 = oldCP[0];
@@ -721,10 +741,12 @@ prepTrig(int const wd,
         SIDETRIANGLE(nCP,tri1s[4],c1p1,c1p2,c1p3,p0,rbr1,rbl1,tri2s[4],c2p1,c2p2,c2p3,p0,rbr2,rbl2); /* bottom side */
 
         /* edge to corner triangles */
-        EDGETRIANGLE(tri1s[5],c1p1,c1p2,rtl1,rtr1,rbl1,rbr1,tri2s[5],c2p1,c2p2,rtl2,rtr2,rbl2,rbr2);
-        EDGETRIANGLE(tri1s[6],c1p2,c1p3,rtl1,rtr1,rbl1,rbr1,tri2s[6],c2p2,c2p3,rtl2,rtr2,rbl2,rbr2);
-        EDGETRIANGLE(tri1s[7],c1p3,c1p1,rtl1,rtr1,rbl1,rbr1,tri2s[7],c2p3,c2p1,rtl2,rtr2,rbl2,rbr2);
-
+        edgeTriangle(&tri1s[5], c1p1, c1p2, rtl1, rtr1, rbl1, rbr1,
+                     &tri2s[5], c2p1, c2p2, rtl2, rtr2, rbl2, rbr2);
+        edgeTriangle(&tri1s[6], c1p2, c1p3, rtl1, rtr1, rbl1, rbr1,
+                     &tri2s[6], c2p2, c2p3, rtl2, rtr2, rbl2, rbr2);
+        edgeTriangle(&tri1s[7], c1p3, c1p1, rtl1, rtr1, rbl1, rbr1,
+                     &tri2s[7], c2p3, c2p1, rtl2, rtr2, rbl2, rbr2);
         nTri = 8;
     } else if (nCP == 4) {
         c1p1 = oldCP[0];
@@ -816,19 +838,22 @@ prepTrig(int const wd,
         SIDETRIANGLE(nCP,tri1s[4],c1p1,c1p2,c1p3,c1p4,rtr1,rbr1,tri2s[4],c2p1,c2p2,c2p3,c2p4,rtr2,rbr2); /* right side triangle */
         SIDETRIANGLE(nCP,tri1s[5],c1p1,c1p2,c1p3,c1p4,rbr1,rbl1,tri2s[5],c2p1,c2p2,c2p3,c2p4,rbr2,rbl2); /* bottom side triangle */
 
-        /*--------------------------------------------------------------------*/
-        /*        -1-      -2-        -3-      -4-        -5-      -6-        */
-        /*       1   2    1   3      1   2    1   4      1   3    1   4       */
-        /*         X        X          X        X          X        X         */
-        /*       3   4    2   4      4   3    2   3      4   2    3   2       */
-        /*--------------------------------------------------------------------*/
+        /*-------------------------------------------------------------------*/
+        /*        -1-      -2-        -3-      -4-        -5-      -6-       */
+        /*       1   2    1   3      1   2    1   4      1   3    1   4      */
+        /*         X        X          X        X          X        X        */
+        /*       3   4    2   4      4   3    2   3      4   2    3   2      */
+        /*-------------------------------------------------------------------*/
 
         /* edge-corner triangles */
-        EDGETRIANGLE(tri1s[6],c1p1,c1p2,rtl1,rtr1,rbl1,rbr1,tri2s[6],c2p1,c2p2,rtl2,rtr2,rbl2,rbr2);
-        EDGETRIANGLE(tri1s[7],c1p2,c1p4,rtl1,rtr1,rbl1,rbr1,tri2s[7],c2p2,c2p4,rtl2,rtr2,rbl2,rbr2);
-        EDGETRIANGLE(tri1s[8],c1p4,c1p3,rtl1,rtr1,rbl1,rbr1,tri2s[8],c2p4,c2p3,rtl2,rtr2,rbl2,rbr2);
-        EDGETRIANGLE(tri1s[9],c1p3,c1p1,rtl1,rtr1,rbl1,rbr1,tri2s[9],c2p3,c2p1,rtl2,rtr2,rbl2,rbr2);
-
+        edgeTriangle(&tri1s[6], c1p1, c1p2, rtl1, rtr1, rbl1, rbr1,
+                     &tri2s[6], c2p1, c2p2, rtl2, rtr2, rbl2, rbr2);
+        edgeTriangle(&tri1s[7], c1p2, c1p4, rtl1, rtr1, rbl1, rbr1,
+                     &tri2s[7], c2p2, c2p4, rtl2, rtr2, rbl2, rbr2);
+        edgeTriangle(&tri1s[8], c1p4, c1p3, rtl1, rtr1, rbl1, rbr1,
+                     &tri2s[8], c2p4, c2p3, rtl2, rtr2, rbl2, rbr2);
+        edgeTriangle(&tri1s[9], c1p3, c1p1, rtl1, rtr1, rbl1, rbr1,
+                     &tri2s[9], c2p3, c2p1, rtl2, rtr2, rbl2, rbr2);
         nTri = 10;
     }
 }
