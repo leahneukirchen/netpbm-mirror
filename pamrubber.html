@@ -20,7 +20,7 @@ based on control points
 {<b>-tri | -quad</b>}
 [<b>-linear</b>]
 [<b>-frame</b>]
-[<b>-verbose</b>]
+[<b>-randseed=</b><i>N</i>]
 <i>cp1x cp1y</i> [<i>cp2x cp2y</i> [<i>cp3x cp3y</i> [<i>cp4x cp4y</i>]]]
 <i>cp1x cp1y</i> [<i>cp2x cp2y</i> [<i>cp3x cp3y</i> [<i>cp4x cp4y</i>]]]
 [<i>filename</i>]
@@ -122,11 +122,16 @@ sheeting.  To get the same overlay for the source image, use a <b>pamrubber</b>
 transformation with identical control points for source and target.
 </dd>
 
-<dt><b>-verbose</b></dt>
+<dt><b>-randseed=</b><i>N</i></dt>
 <dd>
-<p>This option causes <b>pamrubber</b> to print some information about the
-source image.
+<p><b>pamrubber</b> randomizes some of its output.  So that you can produce
+repeatable results, you can choose the seed of the random number generator
+with this option.  If you use the same input image and the same random number
+generator seed, you should always get the exact same output.  By default,
+<b>pamrubber</b> uses the time of day as the seed, so you get slightly
+different output when you run the program twice on the same input.
 </dd>
+
 </dl>
 
 
