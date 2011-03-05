@@ -31,22 +31,28 @@
 
 
 
-typedef struct point {
+typedef struct {
   double x;
   double y;
 } point;
 
-typedef struct line {
+typedef struct {
   point p1;
   point p2;
 } line;
 
-typedef struct triangle {
+typedef struct {
   point p1;
   point p2;
   point p3;
 } triangle;
 
+typedef struct {
+    point tl;  /* top left     */
+    point tr;  /* top right    */
+    point bl;  /* bottom left  */
+    point br;  /* bottom right */
+} quadrilateral;
 
 struct cmdlineInfo {
     unsigned int nCP;
@@ -146,19 +152,9 @@ static point newCP[4];
 static int nTri;
 static triangle tri1s[10];
 static triangle tri2s[10];
-static point quad1[4];
-static point quad2[4];
+static quadrilateral quad1;
+static quadrilateral quad2;
 static tuple black;
-
-enum QuadCorner {
-    /* Index into quadN[] */
-    TL = 0,
-    TR = 1,
-    BL = 2,
-    BR = 3
-};
-
-
 
 static point
 makepoint(double const x,
@@ -170,15 +166,6 @@ makepoint(double const x,
     retval.y = y;
 
     return retval;
-}
-
-
-
-static void
-copypoint(point *       const p1P,
-          const point * const p2P) {
-
-    *p1P = *p2P;
 }
 
 
@@ -456,95 +443,97 @@ edgeTriangle(triangle * const trig1P,
 
 
 
-static void
-quadRect(point * const quad,
-         double  const lft,
+static quadrilateral
+quadRect(double  const lft,
          double  const rgt,
          double  const top,
          double  const bot) {
 
-    quad[0] = makepoint(lft, top);
-    quad[1] = makepoint(rgt, top);
-    quad[2] = makepoint(lft, bot);
-    quad[3] = makepoint(rgt, bot);
-}
+    quadrilateral retval;
 
+    retval.tl = makepoint(lft, top);
+    retval.tr = makepoint(rgt, top);
+    retval.bl = makepoint(lft, bot);
+    retval.br = makepoint(rgt, bot);
 
-
-#define QUAD_CORNER_SIZED(QUAD,P0,P1,P2,P3,MID,TRI) { \
-/* P0-P1 and P2-P3 are the diagonals */ \
-/* P0-P1 are further apart than P2-P3 */ \
-    if ((P0.x < P1.x) && (P0.y < P1.y)) { /* P0 is top-left */ \
-      copypoint (&QUAD[0], &P0); \
-      copypoint (&QUAD[3], &P1); \
-      if (windtriangle(&TRI, P0, P2, P1)) { /* P2 is top-right */ \
-        copypoint (&QUAD[1], &P2); \
-        copypoint (&QUAD[2], &P3); \
-      } \
-      else { /* P3 is top-right */ \
-        copypoint (&QUAD[1], &P3); \
-        copypoint (&QUAD[2], &P2); \
-      } \
-    } \
-    else \
-    if ((P0.x > P1.x) && (P0.y < P1.y)) { /* P0 is top-right */ \
-      copypoint (&QUAD[1], &P0); \
-      copypoint (&QUAD[2], &P1); \
-      if (windtriangle(&TRI, P0, P2, P1)) { /* P2 is bottom-right */ \
-        copypoint (&QUAD[3], &P2); \
-        copypoint (&QUAD[0], &P3); \
-      } \
-      else { /* P3 is bottom-right */ \
-        copypoint (&QUAD[3], &P3); \
-        copypoint (&QUAD[0], &P2); \
-      } \
-    } \
-    else \
-    if ((P0.x < P1.x) && (P0.y > P1.y)) { /* P0 is bottom-left */ \
-      copypoint (&QUAD[2], &P0); \
-      copypoint (&QUAD[1], &P1); \
-      if (windtriangle(&TRI, P0, P2, P1)) { /* P2 is top-left */ \
-        copypoint (&QUAD[0], &P2); \
-        copypoint (&QUAD[3], &P3); \
-      } \
-      else { /* P3 is top-left */ \
-        copypoint (&QUAD[0], &P3); \
-        copypoint (&QUAD[3], &P2); \
-      } \
-    } \
-    else \
-    if ((P0.x > P1.x) && (P0.y > P1.y)) { /* P0 is bottom-right */ \
-      copypoint (&QUAD[3], &P0); \
-      copypoint (&QUAD[0], &P1); \
-      if (windtriangle(&TRI, P0, P2, P1)) { /* P2 is bottom-left */ \
-        copypoint (&QUAD[2], &P2); \
-        copypoint (&QUAD[1], &P3); \
-      } \
-      else { /* P3 is bottom-left */ \
-        copypoint (&QUAD[2], &P3); \
-        copypoint (&QUAD[1], &P2); \
-      } \
-    } \
+    return retval;
 }
 
 
 
 static void
-quadCorner(point *    const quad,
-           point      const p0,
-           point      const p1,
-           point      const p2,
-           point      const p3,
-           point      const mid,
-           triangle * const triP) {
+quadCornerSized(point           const p0,
+                point           const p1,
+                point           const p2,
+                point           const p3,
+                point           const mid,
+                quadrilateral * const quadP,
+                triangle *      const triP) {
+
+/* P0-P1 and P2-P3 are the diagonals */
+/* P0-P1 are further apart than P2-P3 */
+
+    if ((p0.x < p1.x) && (p0.y < p1.y)) {
+        /* p0 is top-left */
+        quadP->tl = p0; quadP->br = p1;
+        if (windtriangle(triP, p0, p2, p1)) {
+            /* p2 is top-right */
+            quadP->tr = p2; quadP->bl = p3;
+        } else {
+            /* p3 is top-right */
+            quadP->tr = p3; quadP->bl = p2;
+        }
+    } else if ((p0.x > p1.x) && (p0.y < p1.y)) {
+        /* p0 is top-right */
+        quadP->tr = p0; quadP->bl = p1;
+        if (windtriangle(triP, p0, p2, p1)) {
+            /* p2 is bottom-right */
+            quadP->br = p2; quadP->tl = p3;
+        } else {
+            /* p3 is bottom-right */
+            quadP->br = p3; quadP->tl = p2;
+        }
+    } else if ((p0.x < p1.x) && (p0.y > p1.y)) {
+        /* p0 is bottom-left */
+        quadP->bl = p0; quadP->tr = p1;
+        if (windtriangle(triP, p0, p2, p1)) {
+            /* p2 is top-left */
+            quadP->tl = p2; quadP->br = p3;
+        } else {
+            /* p3 is top-left */
+            quadP->tl = p3; quadP->br = p2;
+        }
+    } else if ((p0.x > p1.x) && (p0.y > p1.y)) {
+        /* p0 is bottom-right */
+        quadP->br = p0; quadP->tl = p1;
+        if (windtriangle(triP, p0, p2, p1)) {
+            /* p2 is bottom-left */
+            quadP->bl = p2; quadP->tr = p3;
+        } else {
+            /* p3 is bottom-left */
+            quadP->bl = p3; quadP->tr = p2;
+        }
+    }
+}
+
+
+
+static void
+quadCorner(point           const p0,
+           point           const p1,
+           point           const p2,
+           point           const p3,
+           point           const mid,
+           quadrilateral * const quadP,
+           triangle *      const triP) {
 
     /* p0-p1 and p2-p3 are the diagonals */
 
     if (fabs(p0.x - p1.x) + fabs(p0.y - p1.y) >=
         fabs(p2.x - p3.x) + fabs(p2.y - p3.y)) {
-        QUAD_CORNER_SIZED(quad, p0, p1, p2, p3, mid, *triP);
+        quadCornerSized(p0, p1, p2, p3, mid, quadP, triP);
     } else {
-        QUAD_CORNER_SIZED(quad, p2, p3, p0, p1, mid, *triP);
+        quadCornerSized(p2, p3, p0, p1, mid, quadP, triP);
     }
 }
 
@@ -874,36 +863,36 @@ prepQuad(void) {
         /* create a rectangle from top-left corner of image and control
            point
         */
-        quadRect(quad1, 0.0, oldCP[0].x, 0.0, oldCP[0].y);
-        quadRect(quad2, 0.0, newCP[0].x, 0.0, newCP[0].y);
+        quad1 = quadRect(0.0, oldCP[0].x, 0.0, oldCP[0].y);
+        quad2 = quadRect(0.0, newCP[0].x, 0.0, newCP[0].y);
     } else if (nCP == 2) {
         /* create a rectangle with the two points as opposite corners */
         if ((oldCP[0].x < oldCP[1].x) && (oldCP[0].y < oldCP[1].y)) {
             /* top-left and bottom-right */
-            quadRect(quad1, oldCP[0].x,oldCP[1].x, oldCP[0].y, oldCP[1].y);
+            quad1 = quadRect(oldCP[0].x,oldCP[1].x, oldCP[0].y, oldCP[1].y);
         } else if ((oldCP[0].x > oldCP[1].x) && (oldCP[0].y < oldCP[1].y)) {
             /* top-right and bottom-left */
-            quadRect(quad1, oldCP[1].x, oldCP[0].x, oldCP[0].y, oldCP[1].y);
+            quad1 = quadRect(oldCP[1].x, oldCP[0].x, oldCP[0].y, oldCP[1].y);
         } else if ((oldCP[0].x < oldCP[1].x) && (oldCP[0].y < oldCP[1].y)) {
             /* bottom-left and top-right */
-            quadRect(quad1, oldCP[0].x, oldCP[1].x, oldCP[1].y, oldCP[0].y);
+            quad1 = quadRect(oldCP[0].x, oldCP[1].x, oldCP[1].y, oldCP[0].y);
         } else if ((oldCP[0].x > oldCP[1].x) && (oldCP[0].y < oldCP[1].y)) {
             /* bottom-right and top-left */
-            quadRect(quad1, oldCP[1].x, oldCP[0].x, oldCP[1].y, oldCP[0].y);
+            quad1 = quadRect(oldCP[1].x, oldCP[0].x, oldCP[1].y, oldCP[0].y);
         }
         
         if ((newCP[0].x < newCP[1].x) && (newCP[0].y < newCP[1].y)) {
             /* top-left and bottom-right */
-            quadRect(quad2, newCP[0].x, newCP[1].x, newCP[0].y, newCP[1].y);
+            quad2 = quadRect(newCP[0].x, newCP[1].x, newCP[0].y, newCP[1].y);
         } else if ((newCP[0].x > newCP[1].x) && (newCP[0].y < newCP[1].y)) {
             /* top-right and bottom-left */
-            quadRect(quad2, newCP[1].x, newCP[0].x, newCP[0].y, newCP[1].y);
+            quad2 = quadRect(newCP[1].x, newCP[0].x, newCP[0].y, newCP[1].y);
         } else if ((newCP[0].x < newCP[1].x) && (newCP[0].y < newCP[1].y)) {
             /* bottom-left and top-right */
-            quadRect(quad2, newCP[0].x, newCP[1].x, newCP[1].y, newCP[0].y);
+            quad2 = quadRect(newCP[0].x, newCP[1].x, newCP[1].y, newCP[0].y);
         } else if ((newCP[0].x > newCP[1].x) && (newCP[0].y < newCP[1].y)) {
             /* bottom-right and top-left */
-            quadRect(quad2, newCP[1].x, newCP[0].x, newCP[1].y, newCP[0].y);
+            quad2 = quadRect(newCP[1].x, newCP[0].x, newCP[1].y, newCP[0].y);
         }
     } else {
         if (nCP == 3) {
@@ -948,20 +937,20 @@ prepQuad(void) {
         l1 = makeline(oldCP[0], oldCP[1]);
         l2 = makeline(oldCP[2], oldCP[3]);
         if (intersect(&l1, &l2, &mid)) {
-            quadCorner(quad1, oldCP[0], oldCP[1], oldCP[2], oldCP[3],
-                       mid, &tri);
+            quadCorner(oldCP[0], oldCP[1], oldCP[2], oldCP[3],
+                       mid, &quad1, &tri);
         } else {
             l1 = makeline(oldCP[0], oldCP[2]);
             l2 = makeline(oldCP[1], oldCP[3]);
             if (intersect(&l1, &l2, &mid))
-                quadCorner(quad1, oldCP[0], oldCP[2], oldCP[1], oldCP[3],
-                           mid, &tri);
+                quadCorner(oldCP[0], oldCP[2], oldCP[1], oldCP[3],
+                           mid, &quad1, &tri);
             else {
                 l1 = makeline(oldCP[0], oldCP[3]);
                 l2 = makeline(oldCP[1], oldCP[2]);
                 if (intersect(&l1, &l2, &mid))
-                    quadCorner(quad1, oldCP[0], oldCP[3],
-                               oldCP[1], oldCP[2], mid, &tri);
+                    quadCorner(oldCP[0], oldCP[3],
+                               oldCP[1], oldCP[2], mid, &quad1, &tri);
                 else
                     pm_error("The four old control points don't seem "
                              "to be corners.");
@@ -972,20 +961,20 @@ prepQuad(void) {
         l1 = makeline(newCP[0], newCP[1]);
         l2 = makeline(newCP[2], newCP[3]);
         if (intersect(&l1, &l2, &mid))
-            quadCorner(quad2, newCP[0], newCP[1], newCP[2], newCP[3],
-                       mid, &tri);
+            quadCorner(newCP[0], newCP[1], newCP[2], newCP[3],
+                       mid, &quad2, &tri);
         else {
             l1 = makeline(newCP[0], newCP[2]);
             l2 = makeline(newCP[1], newCP[3]);
             if (intersect(&l1, &l2, &mid))
-                quadCorner(quad2, newCP[0], newCP[2], newCP[1], newCP[3],
-                           mid, &tri);
+                quadCorner(newCP[0], newCP[2], newCP[1], newCP[3],
+                           mid, &quad2, &tri);
             else {
                 l1 = makeline(newCP[0], newCP[3]);
                 l2 = makeline(newCP[1], newCP[2]);
                 if (intersect(&l1, &l2, &mid))
-                    quadCorner(quad2, newCP[0], newCP[3],
-                               newCP[1], newCP[2], mid, &tri);
+                    quadCorner(newCP[0], newCP[3],
+                               newCP[1], newCP[2], mid, &quad2, &tri);
                 else
                     pm_error("The four new control points don't seem "
                              "to be corners.");
@@ -1088,15 +1077,15 @@ warpQuad(point * const p2P,
   line l2t, l2b, l2l, l2r;
   line lh, lv;
 
-  c1tl = quad1[TL];
-  c1tr = quad1[TR];
-  c1bl = quad1[BL];
-  c1br = quad1[BR];
+  c1tl = quad1.tl;
+  c1tr = quad1.tr;
+  c1bl = quad1.bl;
+  c1br = quad1.br;
        
-  c2tl = quad2[TL];
-  c2tr = quad2[TR];
-  c2bl = quad2[BL];
-  c2br = quad2[BR];
+  c2tl = quad2.tl;
+  c2tr = quad2.tr;
+  c2bl = quad2.bl;
+  c2br = quad2.br;
 
   l2t = makeline(c2tl, c2tr);
   l2b = makeline(c2bl, c2br);
@@ -1195,10 +1184,7 @@ main(int argc, const char ** const argv) {
     tuple white;
     unsigned int row;
 
-    point p1, p2;
-    int p2x, p2y;
-    double rx, ry;
-    double pix;
+    unsigned int p2y;
   
     pm_proginit(&argc, argv);
 
@@ -1233,8 +1219,10 @@ main(int argc, const char ** const argv) {
 
     for (p2y = 0; p2y < inpam.height; p2y++)
     {
+        unsigned int p2x;
         for (p2x = 0; p2x < inpam.width; p2x++)
         {
+            point p1, p2;
             p2 = makepoint(p2x, p2y);
             if (cmdline.quad)
                 warpQuad (&p2, &p1);
@@ -1247,13 +1235,15 @@ main(int argc, const char ** const argv) {
                 (p1.y >= 0.0) && (p1.y < (double) inpam.height - 0.5)) {
                 unsigned int i;
                 for (i = 0; i < inpam.depth; ++i) {
+                    double pix;
+
                     if (!cmdline.linear) {
                         pix = rdTuples
                             [(int) floor(p1.y + 0.5)]
                             [(int) floor(p1.x + 0.5)][i];
                     } else {
-                        rx = p1.x - floor(p1.x);
-                        ry = p1.y - floor(p1.y);
+                        double const rx = p1.x - floor(p1.x);
+                        double const ry = p1.y - floor(p1.y);
                         pix = 0.0;
                         pix += (1.0 - rx) * (1.0 - ry)
                             * rdTuples
@@ -1272,7 +1262,7 @@ main(int argc, const char ** const argv) {
                             [(int) floor(p1.y) + 1]
                             [(int) floor(p1.x) + 1][i];
                     }
-                    wrTuples[p2y][p2x][i] = (int) floor(pix);
+                    wrTuples[p2y][p2x][i] = floor(pix);
                 } /* end for */
             }
         }
@@ -1280,16 +1270,15 @@ main(int argc, const char ** const argv) {
 
     if (cmdline.frame) {
         if (cmdline.quad) {
-            drawExtendedLine(&outpam, wrTuples, quad2[TL], quad2[TR]);
-            drawExtendedLine(&outpam, wrTuples, quad2[BL], quad2[BR]);
-            drawExtendedLine(&outpam, wrTuples, quad2[TL], quad2[BL]);
-            drawExtendedLine(&outpam, wrTuples, quad2[TR], quad2[BR]);
+            drawExtendedLine(&outpam, wrTuples, quad2.tl, quad2.tr);
+            drawExtendedLine(&outpam, wrTuples, quad2.bl, quad2.br);
+            drawExtendedLine(&outpam, wrTuples, quad2.tl, quad2.bl);
+            drawExtendedLine(&outpam, wrTuples, quad2.tr, quad2.br);
         }
         if (cmdline.tri) {
             unsigned int i;
-            for (i = 0; i < nTri; ++i) {
+            for (i = 0; i < nTri; ++i)
                 drawClippedTriangle(&outpam, wrTuples, tri2s[i]);
-            }
         }
     }
 
