@@ -150,7 +150,15 @@ static point quad1[4];
 static point quad2[4];
 static tuple black;
 
-/*----------------------------------------------------------------------------*/
+enum QuadCorner {
+    /* Index into quadN[] */
+    TL = 0,
+    TR = 1,
+    BL = 2,
+    BR = 3
+};
+
+
 
 static point
 makepoint(double const x,
@@ -363,14 +371,6 @@ angle(point * const p1P,
         p2P->y += tiny();
     }
 }
-
-
-
-#define TL 0
-#define TR 1
-#define BL 2
-#define BR 3
-
 
 
 #define SIDETRIANGLE(N,TRIG1,P11,P12,P13,P14,R11,R12,TRIG2,P21,P22,P23,P24,R21,R22) { \
@@ -880,31 +880,30 @@ prepQuad(void) {
         /* create a rectangle with the two points as opposite corners */
         if ((oldCP[0].x < oldCP[1].x) && (oldCP[0].y < oldCP[1].y)) {
             /* top-left and bottom-right */
-            quadRect(quad1,oldCP[0].x,oldCP[1].x,oldCP[0].y,oldCP[1].y);
+            quadRect(quad1, oldCP[0].x,oldCP[1].x, oldCP[0].y, oldCP[1].y);
         } else if ((oldCP[0].x > oldCP[1].x) && (oldCP[0].y < oldCP[1].y)) {
             /* top-right and bottom-left */
-            quadRect(quad1,oldCP[1].x,oldCP[0].x,oldCP[0].y,oldCP[1].y);
+            quadRect(quad1, oldCP[1].x, oldCP[0].x, oldCP[0].y, oldCP[1].y);
         } else if ((oldCP[0].x < oldCP[1].x) && (oldCP[0].y < oldCP[1].y)) {
             /* bottom-left and top-right */
-            quadRect(quad1, oldCP[0].x, oldCP[1].x, oldCP[1].y,
-                     oldCP[0].y);
+            quadRect(quad1, oldCP[0].x, oldCP[1].x, oldCP[1].y, oldCP[0].y);
         } else if ((oldCP[0].x > oldCP[1].x) && (oldCP[0].y < oldCP[1].y)) {
             /* bottom-right and top-left */
-            quadRect(quad1, oldCP[1].x, oldCP[0].x, oldCP[1].y,oldCP[0].y);
+            quadRect(quad1, oldCP[1].x, oldCP[0].x, oldCP[1].y, oldCP[0].y);
         }
         
         if ((newCP[0].x < newCP[1].x) && (newCP[0].y < newCP[1].y)) {
             /* top-left and bottom-right */
-            quadRect(quad2,newCP[0].x,newCP[1].x,newCP[0].y,newCP[1].y);
+            quadRect(quad2, newCP[0].x, newCP[1].x, newCP[0].y, newCP[1].y);
         } else if ((newCP[0].x > newCP[1].x) && (newCP[0].y < newCP[1].y)) {
             /* top-right and bottom-left */
-            quadRect(quad2,newCP[1].x,newCP[0].x,newCP[0].y,newCP[1].y);
+            quadRect(quad2, newCP[1].x, newCP[0].x, newCP[0].y, newCP[1].y);
         } else if ((newCP[0].x < newCP[1].x) && (newCP[0].y < newCP[1].y)) {
             /* bottom-left and top-right */
-            quadRect(quad2,newCP[0].x,newCP[1].x,newCP[1].y,newCP[0].y);
+            quadRect(quad2, newCP[0].x, newCP[1].x, newCP[1].y, newCP[0].y);
         } else if ((newCP[0].x > newCP[1].x) && (newCP[0].y < newCP[1].y)) {
             /* bottom-right and top-left */
-            quadRect(quad2,newCP[1].x,newCP[0].x,newCP[1].y,newCP[0].y);
+            quadRect(quad2, newCP[1].x, newCP[0].x, newCP[1].y, newCP[0].y);
         }
     } else {
         if (nCP == 3) {
@@ -1281,10 +1280,10 @@ main(int argc, const char ** const argv) {
 
     if (cmdline.frame) {
         if (cmdline.quad) {
-            drawExtendedLine(&outpam, wrTuples, quad2[0], quad2[1]);
-            drawExtendedLine(&outpam, wrTuples, quad2[2], quad2[3]);
-            drawExtendedLine(&outpam, wrTuples, quad2[0], quad2[2]);
-            drawExtendedLine(&outpam, wrTuples, quad2[1], quad2[3]);
+            drawExtendedLine(&outpam, wrTuples, quad2[TL], quad2[TR]);
+            drawExtendedLine(&outpam, wrTuples, quad2[BL], quad2[BR]);
+            drawExtendedLine(&outpam, wrTuples, quad2[TL], quad2[BL]);
+            drawExtendedLine(&outpam, wrTuples, quad2[TR], quad2[BR]);
         }
         if (cmdline.tri) {
             unsigned int i;
