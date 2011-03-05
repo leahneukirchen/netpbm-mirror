@@ -58,7 +58,7 @@ struct cmdlineInfo {
     unsigned int nCP;
     point        oldCP[4];
     point        newCP[4];
-    const char * filename;
+    const char * fileName;
     unsigned int quad;
     unsigned int tri;
     unsigned int frame;
@@ -108,7 +108,7 @@ parseCmdline(int argc, const char ** argv,
     if (cmdlineP->tri && cmdlineP->quad)
         pm_error("You may not specify both -tri and -quad");
 
-    /* Parameters are the control points (in qty of 4) and possibly a filename
+    /* Parameters are the control points (in qty of 4) and possibly a file name
      */
     nCP = (argc-1) / 4;
 
@@ -132,9 +132,9 @@ parseCmdline(int argc, const char ** argv,
     }
 
     if (argc - 1 == 4 * nCP)
-        cmdlineP->filename = "-";
+        cmdlineP->fileName = "-";
     else if (argc - 2 == 4 * nCP)
-        cmdlineP->filename = argv[nCP * 4 + 1];
+        cmdlineP->fileName = argv[nCP * 4 + 1];
     else
         pm_error("Invalid number of arguments.  Arguments are "
                  "control point coordinates and an optional file name, "
@@ -647,7 +647,7 @@ frameDrawproc (tuple **     const tuples,
 
 static void
 drawExtendedLine(const struct pam * const pamP,
-                 tuple **           const wrTuples,
+                 tuple **           const outTuples,
                  point              const p1,
                  point              const p2) {
 
@@ -659,7 +659,7 @@ drawExtendedLine(const struct pam * const pamP,
         pamd_makePoint(p2.x + 10 * (p2.x - p1.x),
                        p2.y + 10 * (p2.y - p1.y));
 
-    pamd_line(wrTuples, pamP->width, pamP->height, pamP->depth, pamP->maxval,
+    pamd_line(outTuples, pamP->width, pamP->height, pamP->depth, pamP->maxval,
               p1ext, p2ext, frameDrawproc, black);
 }
 
@@ -1301,7 +1301,7 @@ createWhiteTuple(const struct pam * const pamP,
 
 
 static sample
-pix(tuple **     const rdTuples,
+pix(tuple **     const tuples,
     point        const p,
     unsigned int const plane,
     bool         const linear) {
@@ -1309,7 +1309,7 @@ pix(tuple **     const rdTuples,
     double pix;
 
     if (!linear) {
-        pix = rdTuples
+        pix = tuples
             [(int) floor(p.y + 0.5)]
             [(int) floor(p.x + 0.5)][plane];
     } else {
@@ -1317,19 +1317,19 @@ pix(tuple **     const rdTuples,
         double const ry = p.y - floor(p.y);
         pix = 0.0;
         pix += (1.0 - rx) * (1.0 - ry)
-            * rdTuples
+            * tuples
             [(int) floor(p.y)]
             [(int) floor(p.x)][plane];
         pix += rx * (1.0 - ry)
-            * rdTuples
+            * tuples
             [(int) floor(p.y)]
             [(int) floor(p.x) + 1][plane];
         pix += (1.0 - rx) * ry 
-            * rdTuples
+            * tuples
             [(int) floor(p.y) + 1]
             [(int) floor(p.x)][plane];
         pix += rx * ry
-            * rdTuples
+            * tuples
             [(int) floor(p.y) + 1]
             [(int) floor(p.x) + 1][plane];
     }
@@ -1338,16 +1338,34 @@ pix(tuple **     const rdTuples,
 
 
 
+static void
+makeAllWhite(struct pam * const pamP,
+             tuple **     const tuples) {
+
+    tuple white;
+    unsigned int row;
+
+    createWhiteTuple(pamP, &white);
+
+    for (row = 0; row < pamP->height; ++row)  {
+        unsigned int col;
+        for (col = 0; col < pamP->width; ++col)
+            pnm_assigntuple(pamP, tuples[row][col], white);
+    }
+
+    pnm_freepamtuple(white);
+}
+
+
+
 int
 main(int argc, const char ** const argv) {
 
     struct cmdlineInfo cmdline;
-    FILE * rdFileP;
+    FILE * ifP;
     struct pam inpam, outpam;
-    tuple ** rdTuples;
-    tuple ** wrTuples;
-    tuple white;
-    unsigned int row;
+    tuple ** inTuples;
+    tuple ** outTuples;
 
     unsigned int p2y;
   
@@ -1359,34 +1377,27 @@ main(int argc, const char ** const argv) {
 
     srand(cmdline.randseedSpec ? cmdline.randseed : time(NULL));
 
-    rdFileP = pm_openr(cmdline.filename);
+    ifP = pm_openr(cmdline.fileName);
 
-    rdTuples = pnm_readpam (rdFileP, &inpam, PAM_STRUCT_SIZE(tuple_type));
+    inTuples = pnm_readpam(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
 
     outpam = inpam;  /* initial value */
     outpam.file = stdout;
 
-    wrTuples = pnm_allocpamarray(&outpam);
+    outTuples = pnm_allocpamarray(&outpam);
 
     pnm_createBlackTuple(&outpam, &black);
-    createWhiteTuple(&outpam, &white);
 
-    for (row = 0; row < inpam.height; ++row)  {
-        unsigned int col;
-        for (col = 0; col < inpam.width; ++col)
-            pnm_assigntuple(&outpam, wrTuples[row][col], white);
-    }
+    makeAllWhite(&outpam, outTuples);
 
     if (cmdline.tri)
         prepTrig(inpam.width, inpam.height);
     if (cmdline.quad)
         prepQuad();
 
-    for (p2y = 0; p2y < inpam.height; p2y++)
-    {
+    for (p2y = 0; p2y < inpam.height; ++p2y) {
         unsigned int p2x;
-        for (p2x = 0; p2x < inpam.width; p2x++)
-        {
+        for (p2x = 0; p2x < inpam.width; ++p2x) {
             point p1, p2;
             p2 = makepoint(p2x, p2y);
             if (cmdline.quad)
@@ -1400,8 +1411,8 @@ main(int argc, const char ** const argv) {
                 (p1.y >= 0.0) && (p1.y < (double) inpam.height - 0.5)) {
                 unsigned int plane;
                 for (plane = 0; plane < inpam.depth; ++plane) {
-                    wrTuples[p2y][p2x][plane] =
-                        pix(rdTuples, p1, plane, cmdline.linear);
+                    outTuples[p2y][p2x][plane] =
+                        pix(inTuples, p1, plane, cmdline.linear);
 
                 }
             }
@@ -1410,26 +1421,25 @@ main(int argc, const char ** const argv) {
 
     if (cmdline.frame) {
         if (cmdline.quad) {
-            drawExtendedLine(&outpam, wrTuples, quad2.tl, quad2.tr);
-            drawExtendedLine(&outpam, wrTuples, quad2.bl, quad2.br);
-            drawExtendedLine(&outpam, wrTuples, quad2.tl, quad2.bl);
-            drawExtendedLine(&outpam, wrTuples, quad2.tr, quad2.br);
+            drawExtendedLine(&outpam, outTuples, quad2.tl, quad2.tr);
+            drawExtendedLine(&outpam, outTuples, quad2.bl, quad2.br);
+            drawExtendedLine(&outpam, outTuples, quad2.tl, quad2.bl);
+            drawExtendedLine(&outpam, outTuples, quad2.tr, quad2.br);
         }
         if (cmdline.tri) {
             unsigned int i;
             for (i = 0; i < nTri; ++i)
-                drawClippedTriangle(&outpam, wrTuples, tri2s[i]);
+                drawClippedTriangle(&outpam, outTuples, tri2s[i]);
         }
     }
 
-    pnm_writepam(&outpam, wrTuples);
+    pnm_writepam(&outpam, outTuples);
 
-    pnm_freepamtuple(white);
     pnm_freepamtuple(black);
-    pnm_freepamarray(wrTuples, &outpam);
-    pnm_freepamarray(rdTuples, &inpam);
+    pnm_freepamarray(outTuples, &outpam);
+    pnm_freepamarray(inTuples, &inpam);
 
-    pm_close(rdFileP);
+    pm_close(ifP);
     pm_close(stdout);
 
     return 0;
