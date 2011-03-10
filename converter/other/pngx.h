@@ -11,6 +11,7 @@ struct pngx {
     png_structp png_ptr;
     png_infop   info_ptr;
     pngx_rw     rw;
+    png_uint_16 maxval;
 };
 
 void
