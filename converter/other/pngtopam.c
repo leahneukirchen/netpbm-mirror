@@ -46,89 +46,6 @@ struct CmdlineInfo {
 };
 
 
-typedef struct {
-/*----------------------------------------------------------------------------
-   A color in a format compatible with the PNG library.
-
-   Note that the PNG library declares types png_color and png_color_16
-   which are similar.
------------------------------------------------------------------------------*/
-    png_uint_16 r;
-    png_uint_16 g;
-    png_uint_16 b;
-} pngcolor;
-
-
-
-static pngcolor
-pngcolorFrom16(png_color_16 const arg) {
-
-    pngcolor retval;
-
-    retval.r = arg.red;
-    retval.g = arg.green;
-    retval.b = arg.blue;
-
-    return retval;
-}
-
-
-
-static pngcolor
-pngcolorFromByte(png_color const arg) {
-
-    pngcolor retval;
-
-    retval.r = arg.red;
-    retval.g = arg.green;
-    retval.b = arg.blue;
-
-    return retval;
-}
-
-
-
-static bool
-pngColorEqual(pngcolor const comparand,
-              pngcolor const comparator) {
-
-    return (comparand.r == comparator.r
-            && comparand.g == comparator.g
-            && comparand.b == comparator.b);
-}
-
-
-
-static png_uint_16
-gammaCorrect(png_uint_16 const v,
-             float       const g,
-             png_uint_16 const maxval) {
-
-    if (g != -1.0)
-        return (png_uint_16)
-            ROUNDU(pow((double) v / maxval, (1.0 / g)) * maxval);
-    else
-        return v;
-}
-
-
-
-static pngcolor
-gammaCorrectColor(pngcolor    const color,
-                  double      const gamma,
-                  png_uint_16 const maxval) {
-
-    pngcolor retval;
-
-    retval.r = gammaCorrect(color.r, gamma, maxval);
-    retval.g = gammaCorrect(color.g, gamma, maxval);
-    retval.b = gammaCorrect(color.b, gamma, maxval);
-
-    return retval;
-}
-
-
-
 static bool verbose;
 
 
@@ -215,6 +132,89 @@ parseCommandLine(int                  argc,
     else
         pm_error("Program takes at most one argument: input file name.  "
             "you specified %d", argc-1);
+}
+
+
+
+typedef struct {
+/*----------------------------------------------------------------------------
+   A color in a format compatible with the PNG library.
+
+   Note that the PNG library declares types png_color and png_color_16
+   which are similar.
+-----------------------------------------------------------------------------*/
+    png_uint_16 r;
+    png_uint_16 g;
+    png_uint_16 b;
+} pngcolor;
+
+
+
+static pngcolor
+pngcolorFrom16(png_color_16 const arg) {
+
+    pngcolor retval;
+
+    retval.r = arg.red;
+    retval.g = arg.green;
+    retval.b = arg.blue;
+
+    return retval;
+}
+
+
+
+static pngcolor
+pngcolorFromByte(png_color const arg) {
+
+    pngcolor retval;
+
+    retval.r = arg.red;
+    retval.g = arg.green;
+    retval.b = arg.blue;
+
+    return retval;
+}
+
+
+
+static bool
+pngColorEqual(pngcolor const comparand,
+              pngcolor const comparator) {
+
+    return (comparand.r == comparator.r
+            && comparand.g == comparator.g
+            && comparand.b == comparator.b);
+}
+
+
+
+static png_uint_16
+gammaCorrect(png_uint_16 const v,
+             float       const g,
+             png_uint_16 const maxval) {
+
+    if (g != -1.0)
+        return (png_uint_16)
+            ROUNDU(pow((double) v / maxval, (1.0 / g)) * maxval);
+    else
+        return v;
+}
+
+
+
+static pngcolor
+gammaCorrectColor(pngcolor    const color,
+                  double      const gamma,
+                  png_uint_16 const maxval) {
+
+    pngcolor retval;
+
+    retval.r = gammaCorrect(color.r, gamma, maxval);
+    retval.g = gammaCorrect(color.g, gamma, maxval);
+    retval.b = gammaCorrect(color.b, gamma, maxval);
+
+    return retval;
 }
 
 
