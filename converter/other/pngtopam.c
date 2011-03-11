@@ -303,13 +303,85 @@ freePngRaster(png_byte **   const pngRaster,
 
 
 
+typedef struct {
+/*----------------------------------------------------------------------------
+   This is an object for reading the raster of the PNG, a row at a time.
+-----------------------------------------------------------------------------*/
+    struct pngx * pngxP;
+    png_byte **   pngRaster;
+    unsigned int  nextRowNum;
+
+} Reader;
+
+
+
+static Reader *
+reader_createAllAtOnce(struct pngx * const pngxP,
+                       FILE *        const ifP) {
+/*----------------------------------------------------------------------------
+   Create a Reader object that uses libpng's all-at-once raster reading
+   interface (libpng calls this the "high level" interface).
+
+   The Reader object reads the PNG at construction time, stores the entire
+   raster, and hands it out as you call reader_read().
+-----------------------------------------------------------------------------*/
+    Reader * readerP;
+
+    MALLOCVAR_NOFAIL(readerP);
+
+    readerP->pngxP = pngxP;
+
+    allocPngRaster(pngxP, &readerP->pngRaster);
+
+    png_read_image(pngxP->png_ptr, readerP->pngRaster);
+
+    readerP->nextRowNum = 0;
+
+    return readerP;
+}
+
+
+
 static void
-readPng(struct pngx * const pngxP,
-        FILE *        const ifP,
-        png_byte ***  const pngRasterP) {
+reader_destroy(Reader * const readerP) {
+
+    png_read_end(readerP->pngxP->png_ptr, readerP->pngxP->info_ptr);
+    
+    /* Note that some of info_ptr is not defined until png_read_end() 
+       completes.  That's because it comes from chunks that are at the
+       end of the stream.  In particular, comment and time chunks may
+       be at the end.  Furthermore, they may be in both places, in
+       which case info_ptr contains different information before and
+       after png_read_end().
+    */
+
+    freePngRaster(readerP->pngRaster, readerP->pngxP);
+
+    free(readerP);
+}
+
+
+
+static png_byte *
+reader_read(Reader * const readerP) {
+
+    png_byte * retval;
+
+    if (readerP->nextRowNum >= readerP->pngxP->info_ptr->height)
+        retval = NULL;
+    else
+        retval = readerP->pngRaster[readerP->nextRowNum++];
+
+    return retval;
+}
+
+
+
+static void
+readPngInit(struct pngx * const pngxP,
+            FILE *        const ifP) {
 
     size_t sigByteCt;
-    png_byte ** pngRaster;
             
     verifyFileIsPng(ifP, &sigByteCt);
 
@@ -320,21 +392,8 @@ readPng(struct pngx * const pngxP,
 
     png_read_info(pngxP->png_ptr, pngxP->info_ptr);
 
-    allocPngRaster(pngxP, &pngRaster);
-
     if (pngxP->info_ptr->bit_depth < 8)
         png_set_packing(pngxP->png_ptr);
-
-    png_read_image(pngxP->png_ptr, pngRaster);
-
-    png_read_end(pngxP->png_ptr, pngxP->info_ptr);
-
-    /* Note that some of info_ptr is not defined until png_read_end() 
-       completes.  That's because it comes from chunks that are at the
-       end of the stream.
-    */
-
-    *pngRasterP = pngRaster;
 }
 
 
@@ -1273,14 +1332,14 @@ reportOutputFormat(const struct pam * const pamP) {
 static void
 writeNetpbm(struct pam *        const pamP,
             struct pngx *       const pngxP,
-            png_byte **         const pngRaster,
+            Reader *            const rasterReaderP,
             pngcolor            const bgColor,
             enum AlphaHandling  const alphaHandling,
             double              const totalgamma) {
 /*----------------------------------------------------------------------------
    Write a Netpbm image of either the image or the alpha mask, according to
-   'alphaHandling' that is in the PNG image described by *pngxP and
-   pngRaster[][].
+   'alphaHandling' that is in the PNG image described by *pngxP, reading
+   its raster with the raster reader object *rasterReaderP.
 
    *pamP describes the required output image and is consistent with
    *pngInfoP.
@@ -1299,7 +1358,11 @@ writeNetpbm(struct pam *        const pamP,
     tuplerow = pnm_allocpamrow(pamP);
 
     for (row = 0; row < pngxP->info_ptr->height; ++row) {
-        makeTupleRow(pamP, tuplerow, pngxP, pngRaster[row], bgColor,
+        png_byte * const pngRow = reader_read(rasterReaderP);
+
+        assert(pngRow);
+
+        makeTupleRow(pamP, tuplerow, pngxP, pngRow, bgColor,
                      alphaHandling, totalgamma);
 
         pnm_writepamrow(pamP, tuplerow);
@@ -1315,7 +1378,7 @@ convertpng(FILE *             const ifP,
            struct CmdlineInfo const cmdline,
            int *              const errorLevelP) {
 
-    png_byte ** pngRaster;
+    Reader * rasterReaderP;
     pngcolor bgColor;
     float totalgamma;
     struct pam pam;
@@ -1329,7 +1392,9 @@ convertpng(FILE *             const ifP,
 
     pngx_create(&pngxP, PNGX_READ, &jmpbuf);
 
-    readPng(pngxP, ifP, &pngRaster);
+    readPngInit(pngxP, ifP);
+
+    rasterReaderP = reader_createAllAtOnce(pngxP, ifP);
 
     if (verbose)
         dumpPngInfo(pngxP);
@@ -1359,11 +1424,12 @@ convertpng(FILE *             const ifP,
     determineOutputType(pngxP, cmdline.alpha, bgColor, pngxP->maxval,
                         &pam.format, &pam.depth, pam.tuple_type);
 
-    writeNetpbm(&pam, pngxP, pngRaster, bgColor, cmdline.alpha, totalgamma);
+    writeNetpbm(&pam, pngxP, rasterReaderP, bgColor,
+                cmdline.alpha, totalgamma);
+
+    reader_destroy(rasterReaderP);
 
     fflush(stdout);
-
-    freePngRaster(pngRaster, pngxP);
 
     pngx_destroy(pngxP);
 }
