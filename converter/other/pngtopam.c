@@ -43,6 +43,7 @@ struct CmdlineInfo {
     float gamma;  /* -1.0 means unspecified */
     const char * text;
     unsigned int time;
+    unsigned int byrow;
 };
 
 
@@ -93,6 +94,8 @@ parseCommandLine(int                  argc,
             &textSpec,                0);
     OPTENT3(0, "time",        OPT_FLAG,   NULL,                  
             &cmdlineP->time,          0);
+    OPTENT3(0, "byrow",       OPT_FLAG,   NULL,                  
+            &cmdlineP->byrow,         0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -309,7 +312,19 @@ typedef struct {
 -----------------------------------------------------------------------------*/
     struct pngx * pngxP;
     png_byte **   pngRaster;
+        /* The entire raster of the PNG.  Null if this is a
+           row-at-a-time object.  Constant.
+
+           We give a pointer into this to the user.
+        */
+    png_byte * rowBuf;
+        /* The buffer in which we put the most recently read row.
+           Null if this is an all-at-once object.  Constant.
+
+           We give a pointer into this to the user.
+        */
     unsigned int  nextRowNum;
+        /* The number of the next row to be read from this object. */
 
 } Reader;
 
@@ -333,7 +348,40 @@ reader_createAllAtOnce(struct pngx * const pngxP,
 
     allocPngRaster(pngxP, &readerP->pngRaster);
 
+    readerP->rowBuf = NULL;
+
     png_read_image(pngxP->png_ptr, readerP->pngRaster);
+
+    readerP->nextRowNum = 0;
+
+    return readerP;
+}
+
+
+
+static Reader *
+reader_createRowByRow(struct pngx * const pngxP,
+                      FILE *        const ifP) {
+/*----------------------------------------------------------------------------
+   Create a Reader object that uses libpng's one-row-at-a-time raster reading
+   interface (libpng calls this the "low level" interface).
+
+   The Reader object reads from the PNG file, via libpng, as its client
+   requests the rows.
+-----------------------------------------------------------------------------*/
+    Reader * readerP;
+
+    MALLOCVAR_NOFAIL(readerP);
+
+    readerP->pngxP = pngxP;
+
+    readerP->pngRaster = NULL;
+
+    MALLOCARRAY(readerP->rowBuf, computePngLineSize(pngxP)); 
+
+    if (!readerP->rowBuf)
+        pm_error("Could not allocate %u bytes for a PNG row buffer",
+                 computePngLineSize(pngxP));
 
     readerP->nextRowNum = 0;
 
@@ -345,17 +393,11 @@ reader_createAllAtOnce(struct pngx * const pngxP,
 static void
 reader_destroy(Reader * const readerP) {
 
-    png_read_end(readerP->pngxP->png_ptr, readerP->pngxP->info_ptr);
-    
-    /* Note that some of info_ptr is not defined until png_read_end() 
-       completes.  That's because it comes from chunks that are at the
-       end of the stream.  In particular, comment and time chunks may
-       be at the end.  Furthermore, they may be in both places, in
-       which case info_ptr contains different information before and
-       after png_read_end().
-    */
-
-    freePngRaster(readerP->pngRaster, readerP->pngxP);
+    if (readerP->pngRaster)
+        freePngRaster(readerP->pngRaster, readerP->pngxP);
+   
+    if (readerP->rowBuf)
+        free(readerP->rowBuf);
 
     free(readerP);
 }
@@ -364,13 +406,25 @@ reader_destroy(Reader * const readerP) {
 
 static png_byte *
 reader_read(Reader * const readerP) {
+/*----------------------------------------------------------------------------
+   Return a pointer to the next row of the raster.
 
+   The pointer is into storage owned by this object.  It is good until
+   the next read from the object, while the object exists.
+-----------------------------------------------------------------------------*/
     png_byte * retval;
 
-    if (readerP->nextRowNum >= readerP->pngxP->info_ptr->height)
-        retval = NULL;
-    else
-        retval = readerP->pngRaster[readerP->nextRowNum++];
+    if (readerP->pngRaster) {
+        if (readerP->nextRowNum >= readerP->pngxP->info_ptr->height)
+            retval = NULL;
+        else
+            retval = readerP->pngRaster[readerP->nextRowNum];
+    } else {
+        png_read_row(readerP->pngxP->png_ptr, readerP->rowBuf, NULL);
+        retval = readerP->rowBuf;
+    }
+
+    ++readerP->nextRowNum;
 
     return retval;
 }
@@ -394,6 +448,22 @@ readPngInit(struct pngx * const pngxP,
 
     if (pngxP->info_ptr->bit_depth < 8)
         png_set_packing(pngxP->png_ptr);
+}
+
+
+
+static void
+readPngTerm(struct pngx * const pngxP) {
+
+    png_read_end(pngxP->png_ptr, pngxP->info_ptr);
+    
+    /* Note that some of info_ptr is not defined until png_read_end() 
+       completes.  That's because it comes from chunks that are at the
+       end of the stream.  In particular, comment and time chunks may
+       be at the end.  Furthermore, they may be in both places, in
+       which case info_ptr contains different information before and
+       after png_read_end().
+    */
 }
 
 
@@ -1394,10 +1464,11 @@ convertpng(FILE *             const ifP,
 
     readPngInit(pngxP, ifP);
 
-    rasterReaderP = reader_createAllAtOnce(pngxP, ifP);
-
     if (verbose)
         dumpPngInfo(pngxP);
+
+    rasterReaderP = cmdline.byrow ? 
+        reader_createRowByRow(pngxP, ifP) : reader_createAllAtOnce(pngxP, ifP);
 
     if (cmdline.time)
         showTime(pngxP);
@@ -1428,6 +1499,8 @@ convertpng(FILE *             const ifP,
                 cmdline.alpha, totalgamma);
 
     reader_destroy(rasterReaderP);
+
+    readPngTerm(pngxP);
 
     fflush(stdout);
 
