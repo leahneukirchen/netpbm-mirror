@@ -20,6 +20,7 @@ pngtopam - convert a PNG image into a Netpbm image
 [<b>-gamma</b>=<i>value</i>]
 [<b>-text</b>=<i>filename</i>]
 [<b>-time</b>]
+[<B>-byrow</B>]
 [<I>pngfile</I>]
 
 <P>Minimum unique abbreviation of option is acceptable.  You may use double
@@ -154,6 +155,62 @@ text comments or annotations.
 <DT><B>-time</B>
 
 <DD>Prints the tIME chunk to stderr.
+
+<DT><B>-byrow</B>
+
+<DD>This option can make <b>pngtopam</b> run faster or in environments
+where it would otherwise fail.
+
+<P><B>pngtopam</B> has two ways to do the conversion from PNG to PAM, using
+respectively two facilities of the PNG library:
+
+<DL>
+
+<DT>Whole Image
+
+<DD>Decode the entire image into memory at once, using
+<b>png_read_image()</b>, then convert to PAM and output row by row.
+   
+<DT>Row By Row
+<DD>Read, convert, and output one row at a time using <b>png_read_row()</b>.
+
+</DL>
+
+<P>Whole Image is generally preferable because the PNG library does more of
+the work, which means it understands more of the PNG format possibilities now
+and in the future.  Also, if the PNG is interlaced, <b>pngtopam</b> does
+not know how to assemble the rows in the right order.
+
+<P>Row By Row uses far less memory, which means with large images, it
+can run in environments where Whole Image cannot and may also run
+faster.  And because Netpbm code does more of the work, it's possible
+that it can be more flexible or at least give better diagnostic
+information if there's something wrong with the PNG.
+
+<p>The Netpbm native code may do something correctly that the PNG library does
+incorrectly, or vice versa.
+
+<P>In Netpbm, we stress function over performance, so by default
+<B>pngtopam</B> uses Whole Image.  You can select Row By Row with
+<b>-byrow</b> if you want the speed or resource requirement improvement.
+
+<p><b>-byrow</b> was new in Netpbm 10.54 (March 2010).
+
+
+<dt><b>-orientraw</b>
+
+<dd>A TIFF stream contains raster data which can be arranged in the
+stream various ways.  Most commonly, it is arranged by rows, with the
+top row first, and the pixels left to right within each row, but many
+other orientations are possible.
+
+<p>The common orientation is the same on the Netpbm formats use, so
+<b>tifftopnm</b> can do its jobs quite efficiently when the TIFF raster
+is oriented that way.
+
+<p>But if the TIFF raster is oriented any other way, it can take a
+considerable amount of processing for <b>tifftopnm</b> to convert it to
+Netpbm format.
 
 </DL>
 

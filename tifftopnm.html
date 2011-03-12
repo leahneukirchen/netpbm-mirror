@@ -135,18 +135,19 @@ below.
 
 <DD>This option can make <b>tifftopnm</b> run faster.
 
-<P><B>tifftopnm</B> has two different ways to do the conversion from Tiff
-to PNM, using two different facilities of the TIFF library:
+<P><B>tifftopnm</B> has two ways to do the conversion from Tiff to PNM, using
+respectively two facilities of the TIFF library:
 
 <DL>
 
 <DT>Whole Image
 
 <DD>Decode the entire image into memory at once, using
-TIFFRGBAImageGet(), then convert to PNM and output row by row.
+<b>TIFFRGBAImageGet()</b>, then convert to PNM and output row by row.
    
 <DT>Row By Row
-<DD>Read, convert, and output one row at a time using TIFFReadScanline().
+<DD>Read, convert, and output one row at a time
+using <b>TIFFReadScanline()</b>
 
 </DL>
 
@@ -166,7 +167,7 @@ library does incorrectly, or vice versa.
 
 <P>In Netpbm, we stress function over performance, so by default we
 try Whole Image first, and if we can't get enough memory for the
-decoded image or TIFFRGBAImageGet() fails, we fall back to Row By Row.
+decoded image or <b>TIFFRGBAImageGet()</b> fails, we fall back to Row By Row.
 But if you specify the <b>-byrow</b> option, <b>tifftopnm</b> will not
 attempt Whole Image.  If Row By Row does not work, it simply fails.
 
@@ -175,11 +176,11 @@ description of one way Row By Row makes a significant difference in
 your results.
 
 <p>Whole Image costs you precision when your TIFF image uses more than
-8 bits per sample.  TIFFRGBAImageGet() converts the samples to 8 bits.
+8 bits per sample.  <b>TIFFRGBAImageGet()</b> converts the samples to 8 bits.
 <b>tifftopnm</b> then scales them back to maxval 65535, but the lower
 8 bits of information is gone.
 
-<p>In many versions of the TIFF library, TIFFRGBAImageGet() does not
+<p>In many versions of the TIFF library, <B>TIFFRGBAImageGet()</B> does not
 correctly interpret TIFF files in which the raster orientation is
 column-major (i.e. a row of the raster is a column of the image).
 With such a TIFF library and file, you must use <b>-byrow</b> to get
