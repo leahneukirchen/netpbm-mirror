@@ -13,6 +13,8 @@ not yet  BJH  Release 10.54.00
 
               Add pamwipeout.  Thanks Willem van Schaik <willem@schaik.com>.
 
+              pngtopam: add -byrow.
+
               pgmtoascii: Truncates instead of undefined behavior if input
               image is wider than specified width.
 
