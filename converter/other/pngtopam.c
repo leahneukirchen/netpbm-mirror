@@ -278,13 +278,15 @@ allocPngRaster(struct pngx * const pngxP,
     MALLOCARRAY(pngImage, pngxP->info_ptr->height);
 
     if (pngImage == NULL)
-        pm_error("couldn't allocate space for %u PNG raster rows",
+        pm_error("couldn't allocate index space for %u PNG raster rows.  "
+                 "Try -byrow, which needs only 1 row of buffer space.  ",
                  (unsigned int)pngxP->info_ptr->height);
 
     for (row = 0; row < pngxP->info_ptr->height; ++row) {
         MALLOCARRAY(pngImage[row], lineSize);
         if (pngImage[row] == NULL)
-            pm_error("couldn't allocate space for %uth row of PNG raster",
+            pm_error("couldn't allocate space for %uth row of PNG raster.  "
+                     "Try -byrow, which needs only 1 row of buffer space.  ",
                      row);
     }
     *pngImageP = pngImage;
@@ -384,6 +386,11 @@ reader_createRowByRow(struct pngx * const pngxP,
                  computePngLineSize(pngxP));
 
     readerP->nextRowNum = 0;
+
+    if (pngxP->info_ptr->interlace_type != PNG_INTERLACE_NONE)
+        pm_message("WARNING: this is an interlaced PNG.  The PAM output "
+                   "will be interlaced.  To get proper output, "
+                   "don't use -byrow");
 
     return readerP;
 }
