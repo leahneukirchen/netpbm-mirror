@@ -66,9 +66,9 @@ This option disables all PICT operations except images.
 
 <DT><B>-noheader</B>
 
-<DD>Do not skip the 512 byte header that is present on all PICT files.
-This is useful when you have PICT data that was not stored in
-the data fork of a PICT file.
+<DD>Do not assume the first 512 bytes of the file are a header.  All PICT
+files have such a header, but this is useful when you have PICT data that was
+not stored in the data fork of a PICT file.
 
 <DT><B>-quickdraw</B>
 
@@ -88,16 +88,12 @@ about.
 The PICT file format is a general drawing format.  <b>picttoppm</b>
 does not recognize all the drawing commands, but it does fully
 implement all image commands and mostly implement line, rectangle,
-polgon and text drawing.  It is useful for converting scanned images
+polygon and text drawing.  It is useful for converting scanned images
 and some drawing conversion.
 
 <p>With <b>-fullres</b>, <b>picttoppm</b> ignores text drawing commands.
 Beginning in Netpbm 10.45 (December 2008), it issues a warning message
 when it omits text for this reason.
-
-<P>Memory is used very liberally with at least 6 bytes needed for
-every pixel.  Large bitmap PICT files will likely run your computer
-out of memory.
 
 <h2 id="fonts">FONTS</h2>
 
