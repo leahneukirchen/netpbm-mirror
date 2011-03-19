@@ -1942,6 +1942,15 @@ ClipRgn(struct canvas * const canvasP,
 
     if (len == 10) {    /* null rgn */
         /* Parameter is 2 bytes of length, 8 bytes of rectangle corners */
+
+        /* In March 2011, I saw a supposed PICT file (reported to work with
+           Apple pictureViewer) with what looked like signed numbers for the
+           rectangle: (-32767,-32767), (32767, 32767).  This code has always
+           assumed all words in a PICT are unsigned.  But even when I changed
+           it to accept this clip rectangle, this program found the image to
+           have an invalid raster.
+        */
+
         readRect(&clip_rect);
         /* XXX should clip this by picFrame */
         if (verbose)
