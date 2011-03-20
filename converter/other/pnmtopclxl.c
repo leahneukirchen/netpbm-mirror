@@ -209,60 +209,87 @@ typedef struct XY_rle {
 } XY_rle;
 
 
-static void 
-XY_RLEreset(XY_rle *rle) 
-{   
-    rle->state = eSTART;
-    rle->bpos = 0;
-    rle->fbpos=0;
-    rle->error=0;
-}
-static XY_rle * 
-XY_RLEnew(int size) {
-    XY_rle *rle;
 
-    MALLOCVAR(rle);
-    if(rle==NULL)
-        return rle;
-    if(size<1024)
-        size=1024;
-    rle->fbuf=malloc(size);
-    rle->fbufsize=size;
-    if(!rle->fbuf) {
-        free(rle);
-        return NULL;
-    }
-    return rle;
+static void 
+XY_RLEreset(XY_rle * const rleP)  {   
+
+    rleP->state = eSTART;
+    rleP->bpos  = 0;
+    rleP->fbpos = 0;
+    rleP->error = 0;
 }
+
+
+
+static XY_rle * 
+XY_RLEnew(size_t const size) {
+
+    XY_rle * retval;
+    XY_rle * rleP;
+
+    MALLOCVAR(rleP);
+    if (rleP) {
+        rleP->fbuf = malloc(size);
+
+        if (rleP->fbuf) {
+            rleP->fbufsize = MAX(1024, size);
+            retval = rleP;
+        } else
+            retval = NULL;
+
+        if (retval == NULL)
+            free(rleP);
+    } else
+        retval = NULL;
+
+    return retval;
+}
+
+
+
 static void
-XY_RLEdelete(XY_rle *rle) {
-    free(rle->fbuf);
-    free(rle);
+XY_RLEdelete(XY_rle * const rleP) {
+
+    free(rleP->fbuf);
+    free(rleP);
 }
+
+
 
 static int 
-out(XY_rle *rle,int count) {
-    if(rle->state==eRLE) {
-        rle->fbuf[rle->fbpos++]=-count+1;
-        rle->fbuf[rle->fbpos++]=rle->buf[0];
-    } else if(rle->bpos>0) {
-        rle->fbuf[rle->fbpos++]=count-1;
-        memcpy(rle->fbuf+rle->fbpos,rle->buf,count);
-        rle->fbpos+=count;
+out(XY_rle * const rleP,
+    int      const count) {
+
+    bool error;
+
+    if (rleP->state == eRLE) {
+        rleP->fbuf[rleP->fbpos++] = -count + 1;
+        rleP->fbuf[rleP->fbpos++] = rleP->buf[0];
+    } else if (rleP->bpos > 0) {
+        rleP->fbuf[rleP->fbpos++] = count - 1;
+        memcpy(rleP->fbuf + rleP->fbpos, rleP->buf, count);
+        rleP->fbpos += count;
     }
-    if(rle->fbpos+129>rle->fbufsize) {
-        rle->fbufsize*=1.2; 
-        rle->fbuf=realloc(rle->fbuf,rle->fbufsize);
-        if(rle->fbuf==NULL) {
-            rle->error=-1;
-            rle->fbpos=0;
-            return -1;
-        }
-    }
-    rle->bpos=0;
-    rle->state=eSTART;
-    return 0;
+    if (rleP->fbpos + 129 > rleP->fbufsize) {
+        rleP->fbufsize *= 1.2; 
+        rleP->fbuf = realloc(rleP->fbuf, rleP->fbufsize);
+        if (rleP->fbuf == NULL) {
+            rleP->error = -1;
+            rleP->fbpos = 0;
+            error = true;
+        } else
+            error = false;
+    } else
+        error = false;
+
+    rleP->bpos = 0;
+    rleP->state = eSTART;
+
+    return error ? -1 : 0;
 }
+
+
+
 static int
 XY_RLEfinish (XY_rle *rle) {
     out(rle,rle->bpos);
@@ -271,37 +298,39 @@ XY_RLEfinish (XY_rle *rle) {
     else
         return rle->fbpos;
 }
+
+
+
 static  void
-rle_putbyte(XY_rle *rle,unsigned char u) 
-{
-    switch (rle->state) {
+rle_putbyte(XY_rle *      const rleP,
+            unsigned char const u) {
+
+    switch (rleP->state) {
         case eRLE:
-            if(u!=rle->buf[0]) {
-                out(rle,rle->bpos);
-            }   
+            if (u != rleP->buf[0])
+                out(rleP, rleP->bpos);
             break;
         case eLIT:
-            if((u==rle->buf[rle->bpos-1])&&(u==rle->buf[rle->bpos-2])) {
-                out(rle,rle->bpos-2);
-                rle->buf[0]=u;
-                rle->bpos+=2;
-                rle->state=eRLE;
+            if (u == rleP->buf[rleP->bpos - 1]
+                && u == rleP->buf[rleP->bpos - 2]) {
+                out(rleP,rleP->bpos - 2);
+                rleP->buf[0] = u;
+                rleP->bpos += 2;
+                rleP->state = eRLE;
             }   
             break;
         case eSTART:
-            if(rle->bpos==1) {
-                if(u==rle->buf[rle->bpos-1]) {
-                    rle->state=eRLE;
-                } else {
-                    rle->state=eLIT;
-                }   
+            if (rleP->bpos == 1) {
+                if (u == rleP->buf[rleP->bpos - 1])
+                    rleP->state = eRLE;
+                else
+                    rleP->state = eLIT;
             }
             break;
-    
     }
-    rle->buf[rle->bpos++]=u;
-    if(rle->bpos==128) {
-        out(rle,rle->bpos);
+    rleP->buf[rleP->bpos++] = u;
+    if (rleP->bpos == 128) {
+        out(rleP, rleP->bpos);
     }
 }
 
@@ -319,17 +348,28 @@ XY_RLEput(XY_rle *rle,const unsigned char buf[],int count)
 
 
 static int
-XY_Write(int fd, const void *buf,int cnt) {
-        int len=0;
-        while(len<cnt) {
-                int n = write(fd,(char*)buf+len,cnt-len);
-                if(n<=0)
-                        return n;
-                len+=n;
-        }
-        return len;
+XY_Write(int          const fd,
+         const void * const buf,
+         int          const cnt) {
+
+    int len;
+    bool error;
+
+    for (len =0, error = false; len < cnt && !error;) {
+        ssize_t const rc = write(fd, (char*)buf + len , cnt - len);
+        if (rc <= 0)
+            error = true;
+        else
+            len += rc;
+    }
+    return error ? -1 : len;
 }
-#define XY_Puts(fd,str)  XY_Write(fd,str,strlen(str))
+
+
+
+#define XY_Puts(fd, str)  XY_Write(fd, str, strlen(str))
+
+
 
 typedef struct pclGenerator {
     enum ColorDepth colorDepth;
@@ -339,6 +379,8 @@ typedef struct pclGenerator {
     unsigned char *data;
     void (*getnextrow)(const struct pclGenerator *, struct pam *);
 } pclGenerator;
+
+
 
 struct tPrinter { 
     const char *name;
@@ -353,74 +395,85 @@ struct tPrinter {
 
 
 static int
-out_ubyte(int fd,unsigned char data) {
-    return XY_Write(fd,&data,1);
+out_ubyte(int           const fd,
+          unsigned char const data) {
+
+    return XY_Write(fd, &data, 1);
 }
-static  int 
-XL_Operator(int fd,enum Operator const data)  {
-    return out_ubyte(fd,data);
+
+
+
+static int 
+XL_Operator(int           const fd,
+            enum Operator const data)  {
+
+    return out_ubyte(fd, data);
 }
+
+
+
 static int
-out_uint16(int fd,unsigned short data ) {
+out_uint16(int            const fd,
+           unsigned short const data ) {
+
     unsigned char c[2];
-    c[0]=data&0xff; c[1]=data>>8;
-    return XY_Write(fd,c,2);
+
+    c[0] = data & 0xff;
+    c[1] = data >>8;
+
+    return XY_Write(fd, c , ARRAY_SIZE(c));
 }
+
+
+
 static int
 out_uint32(int fd,unsigned int data ) {
     unsigned char c[4];
     c[0] = data&0xff; c[1]=(data>>8)&0xff; c[2]=(data>>16)&0xff; c[3]=data>>24;
     return XY_Write(fd,c,4);
 }
-static int
-out_sint16(int fd,signed short sdata ) {
-    unsigned short data=(unsigned short)sdata;    
-    unsigned char c[2];
-    c[0]=data&0xff; c[1]=data>>8;
-    return XY_Write(fd,c,2);
-}
-#if 0
-static int
-out_sint32(int fd,signed int sdata ) {
-    unsigned int data=(unsigned int)sdata;
-    unsigned char c[4];
-    c[0] = data&0xff; c[1]=(data>>8)&0xff; c[2]=(data>>16)&0xff; c[3]=data>>24;
-    return XY_Write(fd,c,4);
-}
-#endif
+
+
 
 static int
-xl_ubyte(int fd,unsigned char data) {
-    unsigned char const tag=0xc0;
-    XY_Write(fd,&tag,1);
-    return out_ubyte(fd,data);
+out_sint16(int          const fd,
+           signed short const sdata ) {
+
+    unsigned short const data= (unsigned short)sdata;    
+
+    unsigned char c[2];
+
+    c[0] = data & 0xff;
+    c[1] = data >> 8;
+
+    return XY_Write(fd, c, ARRAY_SIZE(c));
 }
+
+
+
 static int
-xl_uint16(int fd,unsigned short data ) {
-    unsigned char const tag=0xc1;
-    XY_Write(fd,&tag,1);
-    return out_uint16(fd,data);
+xl_ubyte(int           const fd,
+         unsigned char const data) {
+
+    unsigned char const tag = 0xc0;
+
+    XY_Write(fd, &tag, 1);
+
+    return out_ubyte(fd, data);
 }
-#if 0
+
+
+
 static int
-xl_uint32(int fd,unsigned int data ) {
-    unsigned char const c=0xc2;
-    XY_Write(fd,&c,1);
-    return out_uint32(fd,data);
+xl_uint16(int            const fd,
+          unsigned short const data) {
+
+    unsigned char const tag = 0xc1;
+
+    XY_Write(fd, &tag, 1);
+
+    return out_uint16(fd, data);
 }
-static int
-xl_sint16(int fd,signed short data ) {
-    unsigned char const c=0xc3;
-    XY_Write(fd,&c,1);
-    return out_sint16(fd,data);
-}
-static int
-xl_sint32(int fd,signed int data ) {
-    unsigned char const c=0xc4;
-    XY_Write(fd,&c,1);
-    return out_sint32(fd,data);
-}
-#endif
 
 
 
@@ -434,10 +487,10 @@ xl_ubyte_array(int                   const fd,
     
     head[0] = 0xc8;
     head[1] = 0xc1;
-    head[2] = len&0xff;
-    head[3] = (len>>8)&0xff;
+    head[2] = len & 0xff;
+    head[3] = (len >> 8) & 0xff;
 
-    XY_Write(fd, head, 4);
+    XY_Write(fd, head, ARRAY_SIZE(head));
 
     for (i = 0; i < len; ++i)
         out_ubyte(fd, data[i]);
@@ -447,123 +500,60 @@ xl_ubyte_array(int                   const fd,
 
 
 
-#if 0
 static int
-xl_uint16_array(int fd,unsigned short *data,int len) {
-    int i;
-    unsigned char head[4];
-    head[0]=0xc9;head[1]=0xc1;head[2]=len&0xff;head[3]=(len>>8)&0xff;
-    XY_Write(fd,head,4);
-    for(i=0;i<len;i++) {
-        out_uint16(fd,data[i]);
-    }
-    return 0;
-}
-static int
-xl_uint32_array(int fd,unsigned int *data,int len) {
-    int i;
-    unsigned char head[4];
-    head[0]=0xca;head[1]=0xc1;head[2]=len&0xff;head[3]=(len>>8)&0xff;
-    XY_Write(fd,head,4);
-    for(i=0;i<len;i++) {
-        out_uint32(fd,data[i]);
-    }
-    return 0;
-}
-static int
-xl_sint16_array(int fd,signed short *data,int len) {
-    int i;
-    unsigned char head[4];
-    head[0]=0xcb;head[1]=0xc1;head[2]=len&0xff;head[3]=(len>>8)&0xff;
-    XY_Write(fd,head,4);
-    for(i=0;i<len;i++) {
-        out_sint16(fd,data[i]);
-    }
-    return 0;
-}
-static int
-xl_sint32_array(int fd,signed int *data,int len) {
-    int i;
-    unsigned char head[4];
-    head[0]=0xcc;head[1]=0xc1;head[2]=len&0xff;head[3]=(len>>8)&0xff;
-    XY_Write(fd,head,4);
-    for(i=0;i<len;i++) {
-        out_sint32(fd,data[i]);
-    }
-    return 0;
+xl_uint16_xy(int            const fd,
+             unsigned short const xdata,
+             unsigned short const ydata ) {
+
+    unsigned char const tag = 0xd1;
+
+    XY_Write(fd, &tag, 1);
+    out_uint16(fd, xdata);
+
+    return out_uint16(fd, ydata);
 }
 
-static int
-xl_ubyte_xy(int fd,unsigned char xdata,unsigned char ydata) {
-    unsigned char const tag=0xd0;
-    XY_Write(fd,&data,1);
-    out_ubyte(fd,ydata);
-    return out_ubyte(fd,xdata);
-}
-#endif
-static int
-xl_uint16_xy(int fd,unsigned short xdata,unsigned short ydata ) {
-    unsigned char const tag=0xd1;
-    XY_Write(fd,&tag,1);
-    out_uint16(fd,xdata);
-    return out_uint16(fd,ydata);
-}
-#if 0
-static int
-xl_uint32_xy(int fd,unsigned int xdata,unsigned int ydata ) {
-    unsigned char const tag=0xd2;
-    XY_Write(fd,&tag,1);
-    out_uint32(fd,xdata);
-    return out_uint32(fd,ydata);
-}
-#endif
-static int
-xl_sint16_xy(int fd,signed short xdata,signed short ydata ) {
-    unsigned char const tag=0xd3;
-    XY_Write(fd,&tag,1);
-    out_sint16(fd,xdata);
-    return out_sint16(fd,ydata);
-}
 
-#if 0
-static int
-xl_sint32_xy(int fd,signed int xdata,signed int ydata ) {
-    unsigned char const tag=0xd4;
-    XY_Write(fd,&tag,1);
-    out_sint32(fd,xdata);
-    return out_sint32(fd,ydata);
-}
-#endif
 
 static int
-xl_attr_ubyte(int fd,enum Attribute const data) {
-    unsigned char const tag=0xf8;
-    XY_Write(fd,&tag,1);
-    return out_ubyte(fd,data);
-}
-#if 0
-static int
-xl_attr_uint16(int fd,enum Attribute const data ) {
-    unsigned char const tag=0xf9;
-    XY_Write(fd,&tag,1);
-    return out_uint16(fd,data);
-}
-#endif
-static int
-xl_dataLength(int fd,unsigned int dataLength ) {
-    unsigned char const tag=0xfa;
-    XY_Write(fd,&tag,1);
-    return out_uint32(fd,dataLength);
+xl_sint16_xy(int          const fd,
+             signed short const xdata,
+             signed short const ydata ) {
+
+    unsigned char const tag = 0xd3;
+
+    XY_Write(fd, &tag, 1);
+
+    out_sint16(fd, xdata);
+
+    return out_sint16(fd, ydata);
 }
 
-#if 0
+
+
 static int
-xl_dataLengthbytes(int fd,unsigned char dataLengthBytes) {
-    unsigned char const tag=0xfb;
-    XY_Write(fd,&tag,1);
-    return out_ubyte(fd,dataLengthBytes);
+xl_attr_ubyte(int            const fd,
+              enum Attribute const data) {
+
+    unsigned char const tag = 0xf8;
+
+    XY_Write(fd, &tag, 1);
+
+    return out_ubyte(fd, data);
 }
-#endif 
+
+
+
+static int
+xl_dataLength(int          const fd,
+              unsigned int const dataLength ) {
+
+    unsigned char const tag = 0xfa;
+
+    XY_Write(fd, &tag, 1);
+
+    return out_uint32(fd, dataLength);
+}
 
 
 
@@ -623,10 +613,10 @@ jobHead(int          const outFd,
         copyFile(userJobSetupFileName, outFd);
 
     if (renderGray)
-        XY_Puts(outFd,"@PJL SET RENDERMODE=GRAYSCALE\n");  
+        XY_Puts(outFd, "@PJL SET RENDERMODE=GRAYSCALE\n");  
 
-    XY_Puts(outFd,"@PJL ENTER LANGUAGE=PCLXL\n");  
-    XY_Puts(outFd,") HP-PCL XL;1;1;Generated by Netpbm Pnmtopclxl\n");  
+    XY_Puts(outFd, "@PJL ENTER LANGUAGE=PCLXL\n");  
+    XY_Puts(outFd, ") HP-PCL XL;1;1;Generated by Netpbm Pnmtopclxl\n");  
 }
 
 
