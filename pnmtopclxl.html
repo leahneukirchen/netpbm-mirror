@@ -3,38 +3,38 @@
 <BODY>
 <H1>pnmtopclxl</H1>
 Updated: 20 July 2005
-<BR>
 
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 pnmtopclxl - convert a PNM image to an HP LaserJet PCL XL printer stream
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>pnmtopclxl</b>
-[<b>-dpi</b> <i>N</i>]
-[<b>-xoffs</b> <i>N</i>]
-[<b>-yoffs</b> <i>N</i>]
+[<b>-dpi=</b><i>N</i>]
+[<b>-xoffs=</b><i>N</i>]
+[<b>-yoffs=</b><i>N</i>]
 [<b>-center</b>]
-[<b>-duplex</b> {<b>vertical</b>|<b>horizontal</b>}]
-[<b>-format</b> <i>paperformat</i>]
-[<b>-feeder</b> <i>N</i>]
-[<b>-copies</b> <i>N</i>]
+[<b>-duplex=</b>{<b>vertical</b>|<b>horizontal</b>}]
+[<b>-format=</b><i>paperformat</i>]
+[<b>-feeder=</b><i>N</i>]
+[<b>-copies=</b><i>N</i>]
 [<b>-colorok</b>]
 [<b>-rendergray</b>]
 [<b>-jobsetup=</b><i>filename</i>]
 <i>pnmfile1</i> <i>pnmfile2</i> ...
 
+<p>Minimum unique abbreviation of option is acceptable.  You may use double
+hyphens instead of single hyphen to denote options.  You may use white
+space in place of the equals sign to separate an option name from its value.
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<b>pnmtopclxl</b> reads one or more PNM input streams, each containing one
+<p><b>pnmtopclxl</b> reads one or more PNM input streams, each containing one
 or more PNM images, and generates a sequence of output pages in the
 HP PCL-XL (formerly named PCL 6) printer control language.  You can send
 this stream to a PCL-XL printer to print the images.
@@ -50,20 +50,19 @@ and grayscale.
 file, concatenated in the same order as the input images.
 
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<H2 id="options">OPTIONS</H2>
 
 <DL COMPACT>
 
-<dt><b>-dpi</b> <i>N</i>
+<dt><b>-dpi=</b><i>N</i>
 <dd>This option selects the resolution of the image (not the printer!).
 <i>N</i> is the resolution in dots per inch, from 1 to 65535.  The default
 is 300.
 
-<dt><b>-xoffs</b> <i>N</i>
+<dt><b>-xoffs=</b><i>N</i>
 <dd>This option and <b>-yoffs</b> determine the location on the page of the
 upper left corner of each image.  Note that the image may have built in
-borders tool, which would make the main image within more left and down 
+borders too, which would make the main image within more left and down 
 that what you specify here.
 
 <p><b>-xoffs</b> and <b>-yoffs</b> specify the distance from the left of the
@@ -80,14 +79,14 @@ corner of the image.  The default for each is zero.
 If you don't specify this option, the position of an image on the page is
 determined by <b>-xoffs</b> and <b>-yoffs</b> (or their defaults).
 
-<dt><b>-duplex</b> {<b>vertical</b>|<b>horizontal</b>} <dd>This option
+<dt><b>-duplex=</b>{<b>vertical</b>|<b>horizontal</b>} <dd>This option
 causes <b>pnmtopclxl</b> to create a printer stream that prints pages
 on both sides of the sheet of paper.  <b>vertical</b> means to print
 them so that the left edge of both pages is on the same edge of the
 sheet, while <b>horizontal</b> means the more usual duplexing where the
 top of both pages is on the same edge of the sheet.
 
-<dt><b>-format</b> <i>paperformat</i>
+<dt><b>-format=</b><i>paperformat</i>
 <dd>This option selects the media (e.g. paper size) that the printer
 control stream specifies.  <i>paperformat</i> is one of the following
 self-explanatory keywords:
@@ -113,13 +112,13 @@ self-explanatory keywords:
 <li>jdoublepostcard
 </ul>
 
-<p>The default is "letter".
+<p>The default is <b>letter</b>.
 
-<dt><b>-feeder</b> <i>N</i>
+<dt><b>-feeder=</b><i>N</i>
 <dd>This options selects the media source (e.g. paper tray) that the
 printer control stream specifies.
 
-<dt><b>-copies</b> <i>N</i>
+<dt><b>-copies=</b><i>N</i>
 <dd>This option specifies the number of copies that the printer control
 stream tells the printer to print.
 
@@ -159,8 +158,7 @@ file, you will hear from the printer.
 </DL>
 
 
-<A NAME="seealso">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <a href="ppmtolj.html"><b>ppmtolj</b></a>,
 <a href="pbmtolj.html"><b>pbmtolj</b></a>,
@@ -169,21 +167,18 @@ file, you will hear from the printer.
 <a href="thinkjettopbm.html"><b>thinkjettopbm</b></a>,
 <a href="ppm.html"><b>ppm</b></a>
 
-<A NAME="history">&nbsp;</A>
-<H2>HISTORY</H2>
+<H2 id="history">HISTORY</H2>
 
 <p><b>pnmtopclxl</b> was added to Netpbm in Release 10.6 (July 2002).
 It was contributed by
 <a href="mailto:cip307@cip.physik.uni-wuerzburg.de">Jochen Karrer</a>.
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
 <LI><A HREF="#seealso">SEE ALSO</A>
 <LI><A HREF="#history">HISTORY</A>
 </UL>
