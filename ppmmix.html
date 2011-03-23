@@ -33,7 +33,10 @@ using <b>ppmmix</b> of a black and a white image with a linearly increasing
 fade factor, you will see an image getting linearly brighter, but the light
 intensity will increase faster at the end.  That is because it requires more
 intensity change at the bright end of the scale than at the dark end for the
-human eye to perceive the same brightness change.
+human eye to perceive the same brightness change.  This also means that
+if the original images aren't all one color, the mixed image is distorted,
+since the intensity relationship between pixels is different from the
+original image.
 
 <P><B>pamcomp</B> is a more general alternative.  It allows you to mix
 images of different size and to have the fade factor vary throughout
