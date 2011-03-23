@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Ppmmix User Manual</TITLE></HEAD>
 <BODY>
 <H1>ppmmix</H1>
-Updated: 16 November 1993
+Updated: 23 March 2010
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -24,11 +24,22 @@ from 0.0 (only ppmfile1's image data) to 1.0 (only ppmfile2's image
 data).  Anything in between specifies a smooth blend between the two
 images.
 
-<P>The two images must have the same dimensions.
+<P>The two images must have the same dimensions, the same maxval, and the
+same type (PBM/PGM/PPM).
+
+<p>The fade factor is applied to brightness, not light intensity.  That means
+for example that if you have a series of images you generated
+using <b>ppmmix</b> of a black and a white image with a linearly increasing
+fade factor, you will see an image getting linearly brighter, but the light
+intensity will increase faster at the end.  That is because it requires more
+intensity change at the bright end of the scale than at the dark end for the
+human eye to perceive the same brightness change.
 
 <P><B>pamcomp</B> is a more general alternative.  It allows you to mix
 images of different size and to have the fade factor vary throughout
-the image (through the use of an alpha mask).
+the image (through the use of an alpha mask).  It does not have the
+same-maxval and same-type restrictions.  It mixes light intensity, not
+brightness.
 
 <H2 id="seealso">SEE ALSO</H2>
 
