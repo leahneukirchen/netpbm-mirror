@@ -431,7 +431,7 @@ formatBadCodeException(const char ** const exceptionP,
     asprintfN(exceptionP,
         "bad code word at Column %u.  "
         "No prefix of the %u bits 0x%x matches any recognized "
-        "code word and no code words longer than 12 bits are "
+        "code word and no code words longer than 13 bits are "
         "defined.  ",
         col, curlen, curcode);
 }
