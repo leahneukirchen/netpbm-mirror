@@ -551,6 +551,8 @@ createoutputGenerator(struct cmdlineInfo const cmdline,
         /* Allow room for guides. */
     outGenP->pam.width  = inPamP->width;
 
+    outGenP->textureP = NULL;
+
     if (cmdline.patFilespec) {
         /* Background pixels should come from the pattern file. */
 

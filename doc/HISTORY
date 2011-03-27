@@ -4,6 +4,13 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+11.03.27 BJH  Release 10.53.04
+
+              g3topbm: correct error message: codes go up to 13 bits.
+
+              pamstereogram: fix crash when not doing texture.
+              Thanks Scott Pakin (scott@pakin.org).
+
 11.01.30 BJH  Release 10.53.03
 
               Install backward compatibility symlink for renamed pbmtoicon.
