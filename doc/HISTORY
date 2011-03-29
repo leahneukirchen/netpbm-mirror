@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+11.03.29 BJH  Release 10.53.05
+
+              pnmpsnr: fix bug: says PGM images differ when they don't
+              and vice versa.
+
 11.03.27 BJH  Release 10.53.04
 
               g3topbm: correct error message: codes go up to 13 bits.
