@@ -126,7 +126,7 @@ reportPsnr(struct pam const pam,
         else
             pm_message("Cr color component does not differ.");
     } else {
-        if (ySumSqDiff == 0)
+        if (ySumSqDiff > 0)
             pm_message("PSNR between %s and %s: %.2f dB",
                        filespec1, filespec2, 10 * log10(yPsnr));
         else

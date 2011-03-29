@@ -34,6 +34,9 @@ not yet  BJH  Release 10.54.00
               pngtopam: fix bug: -verbose reports history chunk present when
               it's really a palette.
 
+              pnmpsnr: fix bug: says PGM images differ when they don't
+              and vice versa.
+
 10.12.30 BJH  Release 10.53.00
 
               Add pammosaicknit.  Thanks Scott Pakin.
