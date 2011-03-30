@@ -1,131 +1,96 @@
-
 /*********************************************************************/
 /* ppmmix -  mix together two pictures like with a fader             */
 /* Frank Neumann, October 1993                                       */
 /* V1.2 16.11.1993                                                   */
 /*                                                                   */
-/* version history:                                                  */
-/* V1.0 Aug   1993    first version                                  */
-/* V1.1 12.10.1993    uses ppm libs&headers, integer math, cleanups  */
-/* V1.2 16.11.1993    Rewritten to be NetPBM.programming conforming  */
 /*********************************************************************/
 
 #include "ppm.h"
 
-/* global variables */
-#ifdef AMIGA
-static char *version = "$VER: ppmmix 1.2 (16.11.93)"; /* Amiga version identification */
-#endif
+int main(int argc, const char ** argv) {
 
-/**************************/
-/* start of main function */
-/**************************/
-int main(argc, argv)
-int argc;
-char *argv[];
-{
-	FILE *ifp1, *ifp2;
-	int argn, rows, cols, format, i = 0, j = 0;
-	int rows2, cols2, format2;
-	pixel *srcrow1, *srcrow2, *destrow;
-	pixel *pP1, *pP2, *pP3;
-	pixval maxval, maxval2;
-	pixval r1, r2, r3, g1, g2, g3, b1, b2, b3;
-	double fadefactor;
-	long longfactor;
-	const char * const usage = "fadefactor ppmfile1 ppmfile2\n        fadefactor: 0.0 = only ppmfile1, 1.0 = only ppmfile2\n";
+    FILE * if1P;
+    FILE * if2P;
+    int argn;
+    int rows1, cols1, format1;
+    unsigned int row;
+    int rows2, cols2, format2;
+    pixel *srcrow1, *srcrow2, *destrow;
+    pixval maxval1, maxval2;
+    double fadefactor;
+    long longfactor;
+    const char * const usage = "fadefactor ppmfile1 ppmfile2\n        fadefactor: 0.0 = only ppmfile1, 1.0 = only ppmfile2\n";
 
-	/* parse in 'default' parameters */
-	ppm_init(&argc, argv);
+    /* parse in 'default' parameters */
+    pm_proginit(&argc, argv);
 
-	argn = 1;
+    argn = 1;
 
-	/* parse in dim factor */
-	if (argn == argc)
-		pm_usage(usage);
-	if (sscanf(argv[argn], "%lf", &fadefactor) != 1)
-		pm_usage(usage);
-	if (fadefactor < 0.0 || fadefactor > 1.0)
-		pm_error("fade factor must be in the range from 0.0 to 1.0 ");
-	++argn;
+    /* parse in dim factor */
+    if (argn == argc)
+        pm_usage(usage);
+    if (sscanf(argv[argn], "%lf", &fadefactor) != 1)
+        pm_usage(usage);
+    if (fadefactor < 0.0 || fadefactor > 1.0)
+        pm_error("fade factor must be in the range from 0.0 to 1.0 ");
+    ++argn;
 
-	/* parse in filenames and open files (cannot be stdin-filters, sorry..) */
-	if (argn == argc-2)
-	{
-		ifp1 = pm_openr(argv[argn]);
-		++argn;
-		ifp2 = pm_openr(argv[argn]);
-	}
-	else
-		pm_usage(usage);
+    if (argn == argc-2) {
+        if1P = pm_openr(argv[argn]);
+        ++argn;
+        if2P = pm_openr(argv[argn]);
+    } else
+        pm_usage(usage);
 
-	/* read first data from both files and compare sizes etc. */
-	ppm_readppminit(ifp1, &cols, &rows, &maxval, &format);
-	ppm_readppminit(ifp2, &cols2, &rows2, &maxval2, &format2);
+    ppm_readppminit(if1P, &cols1, &rows1, &maxval1, &format1);
+    ppm_readppminit(if2P, &cols2, &rows2, &maxval2, &format2);
 
-    if ( (cols != cols2) || (rows != rows2) )
+    if ((cols1 != cols2) || (rows1 != rows2))
         pm_error("image sizes are different!");
 
-    if ( maxval != maxval2)
-		pm_error("images have different maxvalues");
+    if (maxval1 != maxval2)
+        pm_error("images have different maxvalues");
 
-	if (format != format2)
-	{
-		pm_error("images have different PxM types");
-	}
+    srcrow1 = ppm_allocrow(cols1);
+    srcrow2 = ppm_allocrow(cols2);
 
-	/* no error checking required here, ppmlib does it all for us */
-	srcrow1 = ppm_allocrow(cols);
-	srcrow2 = ppm_allocrow(cols);
+    longfactor = (long)(fadefactor * 65536);
 
-	longfactor = (long)(fadefactor * 65536);
+    destrow = ppm_allocrow(cols1);
 
-	/* allocate a row of pixel data for the new pixels */
-	destrow = ppm_allocrow(cols);
+    ppm_writeppminit(stdout, cols1, rows1, maxval1, 0);
 
-	ppm_writeppminit(stdout, cols, rows, maxval, 0);
+    for (row = 0; row < rows1; ++row) {
+        unsigned int col;
+        ppm_readppmrow(if1P, srcrow1, cols1, maxval1, format1);
+        ppm_readppmrow(if2P, srcrow2, cols2, maxval2, format2);
 
-	for (i = 0; i < rows; i++)
-	{
-		ppm_readppmrow(ifp1, srcrow1, cols, maxval, format);
-		ppm_readppmrow(ifp2, srcrow2, cols, maxval, format);
+        for (col = 0; col < cols1; ++col) {
+            pixel const p1 = srcrow1[col];
+            pixval const r1 = PPM_GETR(p1);
+            pixval const g1 = PPM_GETG(p1);
+            pixval const b1 = PPM_GETB(p1);
 
-		pP1 = srcrow1;
-		pP2 = srcrow2;
-        pP3 = destrow;
+            pixel const p2 = srcrow2[col];
+            pixval const r2 = PPM_GETR(p2);
+            pixval const g2 = PPM_GETG(p2);
+            pixval const b2 = PPM_GETB(p2);
 
-		for (j = 0; j < cols; j++)
-		{
-			r1 = PPM_GETR(*pP1);
-			g1 = PPM_GETG(*pP1);
-			b1 = PPM_GETB(*pP1);
+            pixval const r = r1 + (((r2 - r1) * longfactor) >> 16);
+            pixval const g = g1 + (((g2 - g1) * longfactor) >> 16);
+            pixval const b = b1 + (((b2 - b1) * longfactor) >> 16);
 
-			r2 = PPM_GETR(*pP2);
-			g2 = PPM_GETG(*pP2);
-			b2 = PPM_GETB(*pP2);
+            PPM_ASSIGN(destrow[col], r, g, b);
+        }
 
-			r3 = r1 + (((r2 - r1) * longfactor) >> 16);
-			g3 = g1 + (((g2 - g1) * longfactor) >> 16);
-			b3 = b1 + (((b2 - b1) * longfactor) >> 16);
+        ppm_writeppmrow(stdout, destrow, cols1, maxval1, 0);
+    }
 
+    pm_close(if1P);
+    pm_close(if2P);
+    ppm_freerow(srcrow1);
+    ppm_freerow(srcrow2);
+    ppm_freerow(destrow);
 
-			PPM_ASSIGN(*pP3, r3, g3, b3);
-
-			pP1++;
-			pP2++;
-			pP3++;
-		}
-
-		/* write out one line of graphic data */
-		ppm_writeppmrow(stdout, destrow, cols, maxval, 0);
-	}
-
-	pm_close(ifp1);
-	pm_close(ifp2);
-	ppm_freerow(srcrow1);
-	ppm_freerow(srcrow2);
-	ppm_freerow(destrow);
-
-	exit(0);
+    return 0;
 }
-

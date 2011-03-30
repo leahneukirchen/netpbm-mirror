@@ -1,4 +1,4 @@
-/* asciitopgm.c - read an ASCII graphics file and produce a portable graymap
+/* asciitopgm.c - read an ASCII graphics file and produce a PGM
 **
 ** Copyright (C) 1989 by Wilson H. Bent, Jr
 **
@@ -16,11 +16,11 @@
 #include <string.h>
 
 #include "pm_c_util.h"
-#include "pgm.h"
 #include "mallocvar.h"
 #include "nstring.h"
+#include "pgm.h"
 
-static char gmap [128] = {
+static unsigned int const gmap [128] = {
 /*00 nul-bel*/  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 /*08 bs -si */  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 /*10 dle-etb*/  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -39,28 +39,160 @@ static char gmap [128] = {
 /*78  x -del*/  0x78, 0x79, 0x7a, 0x7b, 0x7c, 0x7d, 0x7e, 0x7f,
 };
 
-static gray maxval = 127;
+static gray const maxval = 127;
+
+
+
+static void
+zeroObuf(unsigned int * const obuf,
+         unsigned int   const cols) {
+
+    unsigned int col;
+    for (col = 0; col < cols; ++col)
+        obuf[col] = 0;
+}
+
+
+
+static void
+convertRowToPgm(const unsigned int * const obuf,
+                unsigned int         const cols,
+                gray                 const maxval,
+                gray *               const grayrow) {
+
+    unsigned int col;
+
+    for (col = 0; col < cols; ++col)
+        grayrow[col] = maxval - MIN(maxval, obuf[col]);
+}
+
+
+
+static bool warnedNonAscii;
+
+static unsigned int
+darknessOfChar(char const c) {
+
+    unsigned char asciifiedC;
+
+    if (c & 0x80) {       /* !isascii(c) */
+        if (!warnedNonAscii) {
+            pm_message("Warning: non-ASCII char(s) in input");
+            warnedNonAscii = true;
+        }
+        asciifiedC = c & 0x7f;      /* toascii(c) */
+    } else
+        asciifiedC = c;
+
+    return gmap[asciifiedC];
+}
+
+
+
+static void
+convertAsciiToPgm(FILE *         const ifP,
+                  unsigned int   const cols,
+                  unsigned int   const rows,
+                  unsigned int   const divisor,
+                  gray           const maxval,
+                  gray **        const grays,
+                  unsigned int * const obuf) {
+
+    unsigned int outRow;
+    unsigned int outCursor;
+    bool beginningOfImage;
+    bool beginningOfLine;
+    bool warnedTrunc;
+    bool eof;
+
+    zeroObuf(obuf, cols);
+
+    warnedNonAscii = false;
+    warnedTrunc = false;
+    outRow = 0;
+    outCursor = 0;
+    beginningOfImage = true;
+    beginningOfLine = true;
+    eof = false;
+    while (outRow < rows && !eof) {
+        int c;
+
+        c = getc(ifP);
+
+        if (c == EOF)
+            eof = true;
+        else {
+            if (beginningOfLine) {
+                if (c == '+') {
+                    /* + at start of line means rest of line 
+                       overstrikes previous
+                    */
+                    c = getc(ifP);
+                    if (c == EOF)
+                        eof = true;
+                } else {
+                    if (!beginningOfImage) {
+                        /* Output previous line, move to next */
+
+                        convertRowToPgm(obuf, cols, maxval, grays[outRow]);
+
+                        zeroObuf(obuf, cols);
+
+                        ++outRow;
+                    }
+                }
+                outCursor = 0;
+                beginningOfLine = false;
+            }
+            if (!eof) {
+                if (c == '\n')
+                    beginningOfLine = true;
+                else {
+                    if (outRow < rows && outCursor < cols)
+                        obuf[outCursor++] += darknessOfChar(c) / divisor;
+                    else {
+                        if (!warnedTrunc) {
+                            pm_message("Warning: "
+                                       "truncating image to %u columns "
+                                       "x %u rows", cols, rows);
+                            warnedTrunc = true;
+                        }
+                    }
+                }
+            }
+        }
+        beginningOfImage = false;
+    }
+    while (outRow < rows) {
+        /* Output previous line, move to next */
+
+        convertRowToPgm(obuf, cols, maxval, grays[outRow]);
+
+        zeroObuf(obuf, cols);
+
+        ++outRow;
+    }
+}
+
+
 
 int
-main( argc, argv )
-    int argc;
-    char *argv[];
-{
-    FILE *ifd;
-    register gray **grays;
-    int argn, row;
-    register int c, i;
-    int rows = 0, cols = 0;
-    int divisor = 1;
-    bool warned;
-    int *obuf;
+main(int argc, const char ** argv) {
+
+    FILE * ifP;
+    gray ** grays;
+    int argn;
+    unsigned int rows, cols;
+    unsigned int divisor;
+    unsigned int * obuf;  /* malloced */
     const char * const usage = "[-d <val>] height width [asciifile]";
-    char trunc;
 
-    pgm_init( &argc, argv );
+    pm_proginit(&argc, argv);
 
-    warned = FALSE;
-
+    rows = 0;  /* initial value */
+    cols = 0;  /* initial value */
+    divisor = 1; /* initial value */
+    
     argn = 1;
 
     if ( argc < 3 || argc > 6 )
@@ -72,7 +204,7 @@ main( argc, argv )
         {
             if ( argc == argn + 1 )
                 pm_usage( usage );
-            if ( sscanf( argv[argn+1], "%d", &divisor ) != 1 )
+            if ( sscanf( argv[argn+1], "%u", &divisor ) != 1 )
                 pm_usage( usage );
             argn += 2;
         }
@@ -80,9 +212,9 @@ main( argc, argv )
             pm_usage( usage );
     }
 
-    if ( sscanf( argv[argn++], "%d", &rows ) != 1 )
+    if ( sscanf( argv[argn++], "%u", &rows ) != 1 )
         pm_usage( usage );
-    if ( sscanf( argv[argn++], "%d", &cols ) != 1 )
+    if ( sscanf( argv[argn++], "%u", &cols ) != 1 )
         pm_usage( usage );
     if ( rows < 1 )
         pm_error( "height is less than 1" );
@@ -93,86 +225,24 @@ main( argc, argv )
         pm_usage( usage );
 
     if ( argc == argn + 1 )
-        ifd = pm_openr( argv[argn] );
+        ifP = pm_openr(argv[argn]);
     else
-        ifd = stdin;
+        ifP = stdin;
 
-    /* Here's where the work is done:
-     * - Usually, the graymap value of the input char is summed into grays
-     * - For a 'normal' newline, the current row is adjusted by the divisor
-     *   and the current row is incremented
-     * - If the first char in the input line is a '+', then the current row
-     *   stays the same to allow 'overstriking'
-     * NOTE that we assume the user specified a sufficiently large width!
-     */
-    MALLOCARRAY( obuf, cols );
-    if ( obuf == NULL )
-        pm_error( "Unable to allocate memory for %d columns.", cols);
-    else {
-        unsigned int col;
-        for (col = 0; col < cols; ++col) obuf[col] = 0;
-    }
-    grays = pgm_allocarray( cols, rows );
-    row = i = trunc = 0;
-    while ( row < rows )
-    {
-        switch (c = getc (ifd))
-        {
-        case EOF:
-            goto line_done;
-        case '\n':
-	newline:
-	    trunc = 0;
-            if ((c = getc (ifd)) == EOF)
-                goto line_done;
-            if (c == '+')
-                i = 0;
-            else
-            {
-            line_done:
-                for (i = 0; i < cols; ++i)
-                    grays[row][i] = maxval - (obuf[i] / divisor);
-                {
-                    unsigned int col;
-                    for (col = 0; col < cols; ++col) obuf[col] = 0;
-                }
-                i = 0;
-                ++row;
-                if ( row >= rows )
-                    break;
-		if (c == '\n')
-		    goto newline;
-                else if (c != EOF)
-                    obuf[i++] += gmap[c];
-            }
-            break;
-        default:
-	    if (i == cols)
-	    {
-		if (! trunc)
-		{
-		    pm_message("Warning: row %d being truncated at %d columns",
-			       row+1, cols);
-		    trunc = 1;
-		}
-		continue;
-	    }
-            if (c > 0x7f)       /* !isascii(c) */
-            {
-                if (!warned)
-                {
-                    pm_message("Warning: non-ASCII char(s) in input");
-                    warned = TRUE;
-                }
-                c &= 0x7f;      /* toascii(c) */
-            }
-            obuf[i++] += gmap[c];
-            break;
-        }
-    }
-    pm_close( ifd );
+    MALLOCARRAY(obuf, cols);
+    if (obuf == NULL)
+        pm_error("Unable to allocate memory for %u columns", cols);
 
-    pgm_writepgm( stdout, grays, cols, rows, maxval, 0 );
+    grays = pgm_allocarray(cols, rows);
+
+    convertAsciiToPgm(ifP, cols, rows, divisor, maxval, grays, obuf);
+
+    pm_close(ifP);
+
+    pgm_writepgm(stdout, grays, cols, rows, maxval, 0);
+
+    free(obuf);
+    pgm_freearray(grays, rows);
 
     return 0;
 }

@@ -30,43 +30,31 @@
 #include "pam.h"
 #include "pngx.h"
 
-enum alpha_handling {ALPHA_NONE, ALPHA_ONLY, ALPHA_MIX, ALPHA_IN};
+enum AlphaHandling {ALPHA_NONE, ALPHA_ONLY, ALPHA_MIX, ALPHA_IN};
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
     const char *inputFilespec;  /* '-' if stdin */
     unsigned int verbose;
-    enum alpha_handling alpha;
+    enum AlphaHandling alpha;
     const char * background;
     float gamma;  /* -1.0 means unspecified */
     const char * text;
     unsigned int time;
+    unsigned int byrow;
 };
 
 
-typedef struct {
-/*----------------------------------------------------------------------------
-   A color in a format compatible with the PNG library.
-
-   Note that the PNG library declares types png_color and png_color_16
-   which are similar.
------------------------------------------------------------------------------*/
-    png_uint_16 r;
-    png_uint_16 g;
-    png_uint_16 b;
-} pngcolor;
-
-
-static png_uint_16 maxval;
 static bool verbose;
+
 
 
 static void
 parseCommandLine(int                  argc, 
                  const char **        argv,
-                 struct cmdlineInfo * cmdlineP ) {
+                 struct CmdlineInfo * cmdlineP ) {
 /*----------------------------------------------------------------------------
    Parse program command line described in Unix standard form by argc
    and argv.  Return the information in the options as *cmdlineP.  
@@ -106,6 +94,8 @@ parseCommandLine(int                  argc,
             &textSpec,                0);
     OPTENT3(0, "time",        OPT_FLAG,   NULL,                  
             &cmdlineP->time,          0);
+    OPTENT3(0, "byrow",       OPT_FLAG,   NULL,                  
+            &cmdlineP->byrow,         0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -145,6 +135,89 @@ parseCommandLine(int                  argc,
     else
         pm_error("Program takes at most one argument: input file name.  "
             "you specified %d", argc-1);
+}
+
+
+
+typedef struct {
+/*----------------------------------------------------------------------------
+   A color in a format compatible with the PNG library.
+
+   Note that the PNG library declares types png_color and png_color_16
+   which are similar.
+-----------------------------------------------------------------------------*/
+    png_uint_16 r;
+    png_uint_16 g;
+    png_uint_16 b;
+} pngcolor;
+
+
+
+static pngcolor
+pngcolorFrom16(png_color_16 const arg) {
+
+    pngcolor retval;
+
+    retval.r = arg.red;
+    retval.g = arg.green;
+    retval.b = arg.blue;
+
+    return retval;
+}
+
+
+
+static pngcolor
+pngcolorFromByte(png_color const arg) {
+
+    pngcolor retval;
+
+    retval.r = arg.red;
+    retval.g = arg.green;
+    retval.b = arg.blue;
+
+    return retval;
+}
+
+
+
+static bool
+pngColorEqual(pngcolor const comparand,
+              pngcolor const comparator) {
+
+    return (comparand.r == comparator.r
+            && comparand.g == comparator.g
+            && comparand.b == comparator.b);
+}
+
+
+
+static png_uint_16
+gammaCorrect(png_uint_16 const v,
+             float       const g,
+             png_uint_16 const maxval) {
+
+    if (g != -1.0)
+        return (png_uint_16)
+            ROUNDU(pow((double) v / maxval, (1.0 / g)) * maxval);
+    else
+        return v;
+}
+
+
+
+static pngcolor
+gammaCorrectColor(pngcolor    const color,
+                  double      const gamma,
+                  png_uint_16 const maxval) {
+
+    pngcolor retval;
+
+    retval.r = gammaCorrect(color.r, gamma, maxval);
+    retval.g = gammaCorrect(color.g, gamma, maxval);
+    retval.b = gammaCorrect(color.b, gamma, maxval);
+
+    return retval;
 }
 
 
@@ -205,13 +278,15 @@ allocPngRaster(struct pngx * const pngxP,
     MALLOCARRAY(pngImage, pngxP->info_ptr->height);
 
     if (pngImage == NULL)
-        pm_error("couldn't allocate space for %u PNG raster rows",
+        pm_error("couldn't allocate index space for %u PNG raster rows.  "
+                 "Try -byrow, which needs only 1 row of buffer space.  ",
                  (unsigned int)pngxP->info_ptr->height);
 
     for (row = 0; row < pngxP->info_ptr->height; ++row) {
         MALLOCARRAY(pngImage[row], lineSize);
         if (pngImage[row] == NULL)
-            pm_error("couldn't allocate space for %uth row of PNG raster",
+            pm_error("couldn't allocate space for %uth row of PNG raster.  "
+                     "Try -byrow, which needs only 1 row of buffer space.  ",
                      row);
     }
     *pngImageP = pngImage;
@@ -233,13 +308,141 @@ freePngRaster(png_byte **   const pngRaster,
 
 
 
+typedef struct {
+/*----------------------------------------------------------------------------
+   This is an object for reading the raster of the PNG, a row at a time.
+-----------------------------------------------------------------------------*/
+    struct pngx * pngxP;
+    png_byte **   pngRaster;
+        /* The entire raster of the PNG.  Null if this is a
+           row-at-a-time object.  Constant.
+
+           We give a pointer into this to the user.
+        */
+    png_byte * rowBuf;
+        /* The buffer in which we put the most recently read row.
+           Null if this is an all-at-once object.  Constant.
+
+           We give a pointer into this to the user.
+        */
+    unsigned int  nextRowNum;
+        /* The number of the next row to be read from this object. */
+
+} Reader;
+
+
+
+static Reader *
+reader_createAllAtOnce(struct pngx * const pngxP,
+                       FILE *        const ifP) {
+/*----------------------------------------------------------------------------
+   Create a Reader object that uses libpng's all-at-once raster reading
+   interface (libpng calls this the "high level" interface).
+
+   The Reader object reads the PNG at construction time, stores the entire
+   raster, and hands it out as you call reader_read().
+-----------------------------------------------------------------------------*/
+    Reader * readerP;
+
+    MALLOCVAR_NOFAIL(readerP);
+
+    readerP->pngxP = pngxP;
+
+    allocPngRaster(pngxP, &readerP->pngRaster);
+
+    readerP->rowBuf = NULL;
+
+    png_read_image(pngxP->png_ptr, readerP->pngRaster);
+
+    readerP->nextRowNum = 0;
+
+    return readerP;
+}
+
+
+
+static Reader *
+reader_createRowByRow(struct pngx * const pngxP,
+                      FILE *        const ifP) {
+/*----------------------------------------------------------------------------
+   Create a Reader object that uses libpng's one-row-at-a-time raster reading
+   interface (libpng calls this the "low level" interface).
+
+   The Reader object reads from the PNG file, via libpng, as its client
+   requests the rows.
+-----------------------------------------------------------------------------*/
+    Reader * readerP;
+
+    MALLOCVAR_NOFAIL(readerP);
+
+    readerP->pngxP = pngxP;
+
+    readerP->pngRaster = NULL;
+
+    MALLOCARRAY(readerP->rowBuf, computePngLineSize(pngxP)); 
+
+    if (!readerP->rowBuf)
+        pm_error("Could not allocate %u bytes for a PNG row buffer",
+                 computePngLineSize(pngxP));
+
+    readerP->nextRowNum = 0;
+
+    if (pngxP->info_ptr->interlace_type != PNG_INTERLACE_NONE)
+        pm_message("WARNING: this is an interlaced PNG.  The PAM output "
+                   "will be interlaced.  To get proper output, "
+                   "don't use -byrow");
+
+    return readerP;
+}
+
+
+
 static void
-readPng(struct pngx * const pngxP,
-        FILE *        const ifP,
-        png_byte ***  const pngRasterP) {
+reader_destroy(Reader * const readerP) {
+
+    if (readerP->pngRaster)
+        freePngRaster(readerP->pngRaster, readerP->pngxP);
+   
+    if (readerP->rowBuf)
+        free(readerP->rowBuf);
+
+    free(readerP);
+}
+
+
+
+static png_byte *
+reader_read(Reader * const readerP) {
+/*----------------------------------------------------------------------------
+   Return a pointer to the next row of the raster.
+
+   The pointer is into storage owned by this object.  It is good until
+   the next read from the object, while the object exists.
+-----------------------------------------------------------------------------*/
+    png_byte * retval;
+
+    if (readerP->pngRaster) {
+        if (readerP->nextRowNum >= readerP->pngxP->info_ptr->height)
+            retval = NULL;
+        else
+            retval = readerP->pngRaster[readerP->nextRowNum];
+    } else {
+        png_read_row(readerP->pngxP->png_ptr, readerP->rowBuf, NULL);
+        retval = readerP->rowBuf;
+    }
+
+    ++readerP->nextRowNum;
+
+    return retval;
+}
+
+
+
+static void
+readPngInit(struct pngx * const pngxP,
+            FILE *        const ifP) {
 
     size_t sigByteCt;
-    png_byte ** pngRaster;
             
     verifyFileIsPng(ifP, &sigByteCt);
 
@@ -250,21 +453,24 @@ readPng(struct pngx * const pngxP,
 
     png_read_info(pngxP->png_ptr, pngxP->info_ptr);
 
-    allocPngRaster(pngxP, &pngRaster);
-
     if (pngxP->info_ptr->bit_depth < 8)
         png_set_packing(pngxP->png_ptr);
+}
 
-    png_read_image(pngxP->png_ptr, pngRaster);
+
+
+static void
+readPngTerm(struct pngx * const pngxP) {
 
     png_read_end(pngxP->png_ptr, pngxP->info_ptr);
-
+    
     /* Note that some of info_ptr is not defined until png_read_end() 
        completes.  That's because it comes from chunks that are at the
-       end of the stream.
+       end of the stream.  In particular, comment and time chunks may
+       be at the end.  Furthermore, they may be in both places, in
+       which case info_ptr contains different information before and
+       after png_read_end().
     */
-
-    *pngRasterP = pngRaster;
 }
 
 
@@ -314,13 +520,14 @@ setTuple(const struct pam *  const pamP,
          tuple               const tuple,
          pngcolor            const foreground,
          pngcolor            const background,
-         enum alpha_handling const alphaHandling,
+         enum AlphaHandling  const alphaHandling,
+         const struct pngx * const pngxP,
          png_uint_16         const alpha) {
 
     if (alphaHandling == ALPHA_ONLY)
         tuple[0] = alpha;
     else if (alphaHandling == ALPHA_NONE ||
-             (alphaHandling == ALPHA_MIX && alpha == maxval)) {
+             (alphaHandling == ALPHA_MIX && alpha == pngxP->maxval)) {
         if (pamP->depth < 3)
             tuple[0] = foreground.r;
         else {
@@ -343,29 +550,16 @@ setTuple(const struct pam *  const pamP,
 
         if (pamP->depth < 3)
             tuple[0] =
-                alphaMix(foreground.r, background.r, alpha, maxval);
+                alphaMix(foreground.r, background.r, alpha, pngxP->maxval);
         else {
             tuple[PAM_RED_PLANE] =
-                alphaMix(foreground.r, background.r, alpha, maxval);
+                alphaMix(foreground.r, background.r, alpha, pngxP->maxval);
             tuple[PAM_GRN_PLANE] =
-                alphaMix(foreground.g, background.g, alpha, maxval);
+                alphaMix(foreground.g, background.g, alpha, pngxP->maxval);
             tuple[PAM_BLU_PLANE] =
-                alphaMix(foreground.b, background.b, alpha, maxval);
+                alphaMix(foreground.b, background.b, alpha, pngxP->maxval);
         }
     }
-}
-
-
-
-static png_uint_16
-gammaCorrect(png_uint_16 const v,
-             float       const g) {
-
-    if (g != -1.0)
-        return (png_uint_16) ROUNDU(pow((double) v / maxval, (1.0 / g)) *
-                                    maxval);
-    else
-        return v;
 }
 
 
@@ -585,7 +779,9 @@ isTransparentColor(pngcolor      const color,
    Return TRUE iff pixels of color 'color' are supposed to be transparent
    everywhere they occur.  Assume it's an RGB image.
 
-   'color' has been gamma-corrected.
+   'color' has been gamma-corrected and 'totalgamma' is the gamma value that
+   was used for that (we need to know that because *pngxP identifies the
+   color that is supposed to be transparent in _not_ gamma-corrected form!).
 -----------------------------------------------------------------------------*/
     bool retval;
 
@@ -608,13 +804,15 @@ isTransparentColor(pngcolor      const color,
     
         switch (pngxP->info_ptr->color_type) {
         case PNG_COLOR_TYPE_GRAY:
-            retval = color.r == gammaCorrect(transColorP->gray, totalgamma);
+            retval = color.r == gammaCorrect(transColorP->gray, totalgamma,
+                                             pngxP->maxval);
             break;
-        default:
-            retval = 
-                color.r == gammaCorrect(transColorP->red,   totalgamma) &&
-                color.g == gammaCorrect(transColorP->green, totalgamma) &&
-                color.b == gammaCorrect(transColorP->blue,  totalgamma);
+        default: {
+            pngcolor const transColor = pngcolorFrom16(*transColorP);
+            retval = pngColorEqual(color,
+                                   gammaCorrectColor(transColor, totalgamma,
+                                                     pngxP->maxval));
+        }
         }
     } else 
         retval = FALSE;
@@ -683,7 +881,7 @@ paletteHasPartialTransparency(struct pngx * const pngxP) {
             for (i = 0, foundGray = FALSE;
                  i < numTrans && !foundGray;
                  ++i) {
-                if (trans[i] != 0 && trans[i] != maxval) {
+                if (trans[i] != 0 && trans[i] != pngxP->maxval) {
                     foundGray = TRUE;
                 }
             }
@@ -725,7 +923,7 @@ getComponentSbitFg(struct pngx * const pngxP,
 
 static void
 getComponentSbit(struct pngx *       const pngxP,
-                 enum alpha_handling const alphaHandling,
+                 enum AlphaHandling  const alphaHandling,
                  png_byte *          const componentSbitP,
                  bool *              const notUniformP) {
 
@@ -794,7 +992,7 @@ shiftPalette(struct pngx * const pngxP,
 
 static void
 computeMaxvalFromSbit(struct pngx *       const pngxP,
-                      enum alpha_handling const alphaHandling,
+                      enum AlphaHandling  const alphaHandling,
                       png_uint_16 *       const maxvalP,
                       bool *              const succeededP,
                       int *               const errorLevelP) {
@@ -860,13 +1058,12 @@ computeMaxvalFromSbit(struct pngx *       const pngxP,
 
 static void
 setupSignificantBits(struct pngx *       const pngxP,
-                     enum alpha_handling const alphaHandling,
-                     png_uint_16 *       const maxvalP,
+                     enum AlphaHandling  const alphaHandling,
                      int *               const errorLevelP) {
 /*----------------------------------------------------------------------------
-  Figure out what maxval would best express the information in the PNG
-  described by *pngxP, with 'alpha' telling which information in the PNG we
-  care about (image or alpha mask).
+  Figure out what maxval is used in the PNG described by *pngxP, with 'alpha'
+  telling which information in the PNG we care about (image or alpha mask).
+  Update *pngxP with that information.
 
   Return the result as *maxvalP.
 
@@ -878,7 +1075,7 @@ setupSignificantBits(struct pngx *       const pngxP,
     
     if (pngInfoP->valid & PNG_INFO_sBIT)
         computeMaxvalFromSbit(pngxP, alphaHandling,
-                              maxvalP, &gotItFromSbit, errorLevelP);
+                              &pngxP->maxval, &gotItFromSbit, errorLevelP);
     else
         gotItFromSbit = false;
 
@@ -890,20 +1087,20 @@ setupSignificantBits(struct pngx *       const pngxP,
                     /* The alpha mask will be all opaque, so maxval 1
                        is plenty
                     */
-                    *maxvalP = 1;
+                    pngxP->maxval = 1;
                 else if (paletteHasPartialTransparency(pngxP))
                     /* Use same maxval as PNG transparency palette for
                        simplicity
                     */
-                    *maxvalP = 255;
+                    pngxP->maxval = 255;
                 else
                     /* A common case, so we conserve bits */
-                    *maxvalP = 1;
+                    pngxP->maxval = 1;
             } else
                 /* Use same maxval as PNG palette for simplicity */
-                *maxvalP = 255;
+                pngxP->maxval = 255;
         } else {
-            *maxvalP = (1l << pngInfoP->bit_depth) - 1;
+            pngxP->maxval = (1l << pngInfoP->bit_depth) - 1;
         }
     }
 }
@@ -940,7 +1137,7 @@ imageHasColor(struct pngx * const pngxP) {
 
 static void
 determineOutputType(struct pngx *       const pngxP,
-                    enum alpha_handling const alphaHandling,
+                    enum AlphaHandling  const alphaHandling,
                     pngcolor            const bgColor,
                     xelval              const maxval,
                     int *               const formatP,
@@ -1010,23 +1207,23 @@ getBackgroundColor(struct pngx * const pngxP,
         case PNG_COLOR_TYPE_GRAY:
         case PNG_COLOR_TYPE_GRAY_ALPHA:
             bgColorP->r = bgColorP->g = bgColorP->b = 
-                gammaCorrect(pngxP->info_ptr->background.gray, totalgamma);
+                gammaCorrect(pngxP->info_ptr->background.gray, totalgamma,
+                             pngxP->maxval);
             break;
         case PNG_COLOR_TYPE_PALETTE: {
             png_color const rawBgcolor = 
                 pngxP->info_ptr->palette[pngxP->info_ptr->background.index];
-            bgColorP->r = gammaCorrect(rawBgcolor.red, totalgamma);
-            bgColorP->g = gammaCorrect(rawBgcolor.green, totalgamma);
-            bgColorP->b = gammaCorrect(rawBgcolor.blue, totalgamma);
+            *bgColorP =
+                gammaCorrectColor(pngcolorFromByte(rawBgcolor),
+                                  totalgamma, pngxP->maxval);
         }
         break;
         case PNG_COLOR_TYPE_RGB:
         case PNG_COLOR_TYPE_RGB_ALPHA: {
             png_color_16 const rawBgcolor = pngxP->info_ptr->background;
             
-            bgColorP->r = gammaCorrect(rawBgcolor.red,   totalgamma);
-            bgColorP->g = gammaCorrect(rawBgcolor.green, totalgamma);
-            bgColorP->b = gammaCorrect(rawBgcolor.blue,  totalgamma);
+            *bgColorP = gammaCorrectColor(pngcolorFrom16(rawBgcolor),
+                                          totalgamma, pngxP->maxval);
         }
         break;
         }
@@ -1095,9 +1292,18 @@ makeTupleRow(const struct pam *  const pamP,
              struct pngx *       const pngxP,
              const png_byte *    const pngRasterRow,
              pngcolor            const bgColor,
-             enum alpha_handling const alphaHandling,
+             enum AlphaHandling  const alphaHandling,
              double              const totalgamma) {
+/*----------------------------------------------------------------------------
+   Convert a raster row as supplied by libpng, at 'pngRasterRow' and
+   described by *pngxP, to a libpam-style tuple row at 'tupleRow'.
 
+   Where the raster says the pixel isn't opaque, we either include that
+   opacity information in the output pixel or we mix the pixel with background
+   color 'bgColor', as directed by 'alphaHandling'.  Or, if 'alphaHandling'
+   says so, we may produce an output row of _only_ the transparency
+   information.
+-----------------------------------------------------------------------------*/
     const png_byte * pngPixelP;
     unsigned int col;
 
@@ -1108,8 +1314,9 @@ makeTupleRow(const struct pam *  const pamP,
             pngcolor fgColor;
             fgColor.r = fgColor.g = fgColor.b = GET_PNG_VAL(pngPixelP);
             setTuple(pamP, tuplerow[col], fgColor, bgColor, alphaHandling,
-                   isTransparentColor(fgColor, pngxP, totalgamma) ?
-                   0 : maxval);
+                     pngxP,
+                     isTransparentColor(fgColor, pngxP, totalgamma) ?
+                     0 : pngxP->maxval);
         }
         break;
 
@@ -1120,7 +1327,7 @@ makeTupleRow(const struct pam *  const pamP,
             fgColor.r = fgColor.g = fgColor.b = GET_PNG_VAL(pngPixelP);
             alpha = GET_PNG_VAL(pngPixelP);
             setTuple(pamP, tuplerow[col], fgColor, bgColor,
-                     alphaHandling, alpha);
+                     alphaHandling, pngxP, alpha);
         }
         break;
 
@@ -1135,7 +1342,7 @@ makeTupleRow(const struct pam *  const pamP,
             fgColor.b = paletteColor.blue;
 
             setTuple(pamP, tuplerow[col], fgColor, bgColor, alphaHandling,
-                     paletteAlpha(pngxP, index, maxval));
+                     pngxP, paletteAlpha(pngxP, index, pngxP->maxval));
         }
         break;
                 
@@ -1146,8 +1353,9 @@ makeTupleRow(const struct pam *  const pamP,
             fgColor.g = GET_PNG_VAL(pngPixelP);
             fgColor.b = GET_PNG_VAL(pngPixelP);
             setTuple(pamP, tuplerow[col], fgColor, bgColor, alphaHandling,
+                     pngxP,
                      isTransparentColor(fgColor, pngxP, totalgamma) ?
-                     0 : maxval);
+                     0 : pngxP->maxval);
         }
         break;
 
@@ -1160,7 +1368,7 @@ makeTupleRow(const struct pam *  const pamP,
             fgColor.b = GET_PNG_VAL(pngPixelP);
             alpha     = GET_PNG_VAL(pngPixelP);
             setTuple(pamP, tuplerow[col], fgColor, bgColor,
-                     alphaHandling, alpha);
+                     alphaHandling, pngxP, alpha);
         }
         break;
 
@@ -1188,8 +1396,8 @@ reportOutputFormat(const struct pam * const pamP) {
         pm_message("Writing a PPM file with maxval %lu", pamP->maxval);
         break;
     case PAM_FORMAT:
-        pm_message("Writing a PAM file with tuple type %s, maxval %u",
-                   pamP->tuple_type, maxval);
+        pm_message("Writing a PAM file with tuple type %s, maxval %lu",
+                   pamP->tuple_type, pamP->maxval);
         break;
     default:
         assert(false); /* Every possible value handled above */
@@ -1201,14 +1409,14 @@ reportOutputFormat(const struct pam * const pamP) {
 static void
 writeNetpbm(struct pam *        const pamP,
             struct pngx *       const pngxP,
-            png_byte **         const pngRaster,
+            Reader *            const rasterReaderP,
             pngcolor            const bgColor,
-            enum alpha_handling const alphaHandling,
+            enum AlphaHandling  const alphaHandling,
             double              const totalgamma) {
 /*----------------------------------------------------------------------------
    Write a Netpbm image of either the image or the alpha mask, according to
-   'alphaHandling' that is in the PNG image described by *pngxP and
-   pngRaster[][].
+   'alphaHandling' that is in the PNG image described by *pngxP, reading
+   its raster with the raster reader object *rasterReaderP.
 
    *pamP describes the required output image and is consistent with
    *pngInfoP.
@@ -1227,7 +1435,11 @@ writeNetpbm(struct pam *        const pamP,
     tuplerow = pnm_allocpamrow(pamP);
 
     for (row = 0; row < pngxP->info_ptr->height; ++row) {
-        makeTupleRow(pamP, tuplerow, pngxP, pngRaster[row], bgColor,
+        png_byte * const pngRow = reader_read(rasterReaderP);
+
+        assert(pngRow);
+
+        makeTupleRow(pamP, tuplerow, pngxP, pngRow, bgColor,
                      alphaHandling, totalgamma);
 
         pnm_writepamrow(pamP, tuplerow);
@@ -1240,10 +1452,10 @@ writeNetpbm(struct pam *        const pamP,
 static void 
 convertpng(FILE *             const ifP, 
            FILE *             const tfP, 
-           struct cmdlineInfo const cmdline,
+           struct CmdlineInfo const cmdline,
            int *              const errorLevelP) {
 
-    png_byte ** pngRaster;
+    Reader * rasterReaderP;
     pngcolor bgColor;
     float totalgamma;
     struct pam pam;
@@ -1257,10 +1469,13 @@ convertpng(FILE *             const ifP,
 
     pngx_create(&pngxP, PNGX_READ, &jmpbuf);
 
-    readPng(pngxP, ifP, &pngRaster);
+    readPngInit(pngxP, ifP);
 
     if (verbose)
         dumpPngInfo(pngxP);
+
+    rasterReaderP = cmdline.byrow ? 
+        reader_createRowByRow(pngxP, ifP) : reader_createAllAtOnce(pngxP, ifP);
 
     if (cmdline.time)
         showTime(pngxP);
@@ -1271,10 +1486,10 @@ convertpng(FILE *             const ifP,
 
     setupGammaCorrection(pngxP, cmdline.gamma, &totalgamma);
 
-    setupSignificantBits(pngxP, cmdline.alpha, &maxval, errorLevelP);
+    setupSignificantBits(pngxP, cmdline.alpha, errorLevelP);
 
-    getBackgroundColor(pngxP, cmdline.background, totalgamma, maxval,
-                         &bgColor);
+    getBackgroundColor(pngxP, cmdline.background, totalgamma, pngxP->maxval,
+                       &bgColor);
   
     pam.size        = sizeof(pam);
     pam.len         = PAM_STRUCT_SIZE(tuple_type);
@@ -1282,16 +1497,19 @@ convertpng(FILE *             const ifP,
     pam.plainformat = 0;
     pam.height      = pngxP->info_ptr->height;
     pam.width       = pngxP->info_ptr->width;
-    pam.maxval      = maxval;
+    pam.maxval      = pngxP->maxval;
 
-    determineOutputType(pngxP, cmdline.alpha, bgColor, maxval,
+    determineOutputType(pngxP, cmdline.alpha, bgColor, pngxP->maxval,
                         &pam.format, &pam.depth, pam.tuple_type);
 
-    writeNetpbm(&pam, pngxP, pngRaster, bgColor, cmdline.alpha, totalgamma);
+    writeNetpbm(&pam, pngxP, rasterReaderP, bgColor,
+                cmdline.alpha, totalgamma);
+
+    reader_destroy(rasterReaderP);
+
+    readPngTerm(pngxP);
 
     fflush(stdout);
-
-    freePngRaster(pngRaster, pngxP);
 
     pngx_destroy(pngxP);
 }
@@ -1301,7 +1519,7 @@ convertpng(FILE *             const ifP,
 int 
 main(int argc, const char *argv[]) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP;
     FILE * tfP;
     int errorLevel;

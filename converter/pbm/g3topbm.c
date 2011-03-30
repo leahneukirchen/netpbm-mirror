@@ -196,7 +196,7 @@ readBitAndDetectEol(struct bitStream * const bitStreamP,
    Same as readBit(), but iff the bit read is the final bit of an EOL
    mark, return *eolP == TRUE.
 
-   An EOL mark is 11 zero bits in a row.
+   An EOL mark is 11 zero bits followed by a one.
 -----------------------------------------------------------------------------*/
     readBit(bitStreamP, bitP, errorP);
     if (!*errorP) {
@@ -387,7 +387,11 @@ processG3Code(const g3TableEntry * const teP,
               unsigned int *       const colP,
               bit *                const colorP,
               unsigned int *       const countP) {
-              
+/*----------------------------------------------------------------------------
+   'teP' is a pointer into the mtable/ttable.  Note that the thing it points
+   to is irrelevant to us; it is only the position in the table that
+   matters.
+-----------------------------------------------------------------------------*/
     enum g3tableId const teId =
         (teP > mtable ? 2 : 0) + (teP - ttable) % 2;
 
@@ -403,17 +407,17 @@ processG3Code(const g3TableEntry * const teP,
     switch (teId) {
     case TERMWHITE:
     case TERMBLACK: {
-        unsigned int runLengthSoFar;
+        unsigned int totalRunLength;
         unsigned int col;
         
         col = *colP;
-        runLengthSoFar = MIN(*countP + teCount, MAXCOLS - col);
+        totalRunLength = MIN(*countP + teCount, MAXCOLS - col);
 
-        if (runLengthSoFar > 0) {
+        if (totalRunLength > 0) {
             if (*colorP == PBM_BLACK)
-                writeBlackBitSpan(packedBitrow, runLengthSoFar, col);
+                writeBlackBitSpan(packedBitrow, totalRunLength, col);
             /* else : Row was initialized to white, so we just skip */
-            col += runLengthSoFar;
+            col += totalRunLength;
         }
         *colorP = !*colorP;
         *countP = 0;

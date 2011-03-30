@@ -4,35 +4,38 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-11.03.29 BJH  Release 10.53.05
+11.03.30 BJH  Release 10.54.00
 
-              pnmpsnr: fix bug: says PGM images differ when they don't
-              and vice versa.
+              Add pamrubber.  Thanks Willem van Schaik <willem@schaik.com>.
 
-11.03.27 BJH  Release 10.53.04
+              Add ppmtoapplevol.  Thanks Matthew Garrett
+              <mjg59@srcf.ucam.org>.
+
+              Add pamwipeout.  Thanks Willem van Schaik <willem@schaik.com>.
+
+              pngtopam: add -byrow.
+
+              pnmtopclxl: add -embedded.
+
+              pgmtoascii: Truncates instead of undefined behavior if input
+              image is wider than specified width.
+
+              Add libpamd (PAM version of classic libppmd drawing routines).
+
+              Rename pbmtoicon to pbmtosunicon, to go with change
+              of icontopbm to sunicontopnm in 10.53.
 
               g3topbm: correct error message: codes go up to 13 bits.
 
               pamstereogram: fix crash when not doing texture.
-              Thanks Scott Pakin (scott@pakin.org).
 
-11.01.30 BJH  Release 10.53.03
-
-              Install backward compatibility symlink for renamed pbmtoicon.
-
-11.01.30 BJH  Release 10.53.02
-
-              asciitopgm: fix bug: memory corruption on too-long lines.
-
-              asciitopgm: fix bug: improper handling of blank lines.
-              
-              Rename pbmtoicon to pbmtosunicon, to go with change
-              of icontopbm to sunicontopnm in 10.53.00.
-
-11.01.15 BJH  Release 10.53.01
+              pgmtoascii: Fix numerous output bugs.
 
               pngtopam: fix bug: -verbose reports history chunk present when
               it's really a palette.
+
+              pnmpsnr: fix bug: says PGM images differ when they don't
+              and vice versa.
 
 10.12.30 BJH  Release 10.53.00
 
