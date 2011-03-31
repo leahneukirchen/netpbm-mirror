@@ -6,6 +6,10 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.55.00
 
+              libnetpbm: pm_system(): fix bug - program always takes
+              Standard Input from invoker's Standard Input when you don't
+              supply a Standard Output accepter.
+
 11.03.30 BJH  Release 10.54.00
 
               Add pamrubber.  Thanks Willem van Schaik <willem@schaik.com>.
