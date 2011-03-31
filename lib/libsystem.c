@@ -416,7 +416,7 @@ pm_system_vp(const char *    const progName,
         /* Run a child process for the program that sends its Standard Output
            to our Standard Output
         */
-        spawnProcessor(progName, argArray, STDIN, NULL, &processorPid);
+        spawnProcessor(progName, argArray, progStdinFd, NULL, &processorPid);
     }
 
     cleanupProcessorProcess(processorPid);
