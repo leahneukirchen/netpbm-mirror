@@ -8,7 +8,10 @@ not yet  BJH  Release 10.55.00
 
               libnetpbm: pm_system(): fix bug - program always takes
               Standard Input from invoker's Standard Input when you don't
-              supply a Standard Output accepter.
+              supply a Standard Output accepter.  Broken in 10.40.00.
+
+              ppmtopbm: fix bug: crash ("internal error") on image without
+              palette (e.g. black and white).  Broken in 10.54.
 
 11.03.30 BJH  Release 10.54.00
 
