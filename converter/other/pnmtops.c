@@ -149,11 +149,13 @@ validateCompDimension(unsigned int const value,
    the actual computations don't have to be complicated with arithmetic
    overflow checks, so they're easier to read.
 -----------------------------------------------------------------------------*/
-    unsigned int const maxWidthHeight = INT_MAX - 2;
-    unsigned int const maxScaleFactor = maxWidthHeight / value;
+    if (value > 0) {
+        unsigned int const maxWidthHeight = INT_MAX - 2;
+        unsigned int const maxScaleFactor = maxWidthHeight / value;
 
-    if (scaleFactor > maxScaleFactor)
-        pm_error("%s is too large for compuations: %u", vname, value);
+        if (scaleFactor > maxScaleFactor)
+            pm_error("%s is too large for compuations: %u", vname, value);
+    }
 }
 
 
@@ -225,10 +227,10 @@ parseCommandLine(int argc, const char ** argv,
         cmdlineP->scale = 1.0;
 
     if (!widthSpec)
-        cmdlineP->width = 8.5;
+        width = 8.5;
 
     if (!heightSpec)
-        cmdlineP->height = 11.0;
+        height = 11.0;
 
     if (dpiSpec)
         parseDpi(dpiOpt, &cmdlineP->dpiX, &cmdlineP->dpiY);

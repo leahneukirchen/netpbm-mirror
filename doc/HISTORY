@@ -11,7 +11,10 @@ not yet  BJH  Release 10.55.00
               supply a Standard Output accepter.  Broken in 10.40.00.
 
               ppmtopbm: fix bug: crash ("internal error") on image without
-              palette (e.g. black and white).  Broken in 10.54.
+              palette (e.g. black and white).  Introduced in 10.54.
+
+              pnmtops: fix floating point exception or bogus width/height
+              too large error.  Introduced in 10.53.
 
 11.03.30 BJH  Release 10.54.00
 
