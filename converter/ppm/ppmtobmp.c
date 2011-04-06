@@ -190,7 +190,7 @@ BMPwritefileheader(FILE *        const fp,
     PutByte(fp, 'M');
 
     /* cbSize */
-    PutLong(fp, BMPlenfile(class, bitcount, -1, x, y));
+    PutLong(fp, BMPlenfile(class, bitcount, 0, x, y));
     
     /* xHotSpot */
     PutShort(fp, 0);
@@ -199,7 +199,7 @@ BMPwritefileheader(FILE *        const fp,
     PutShort(fp, 0);
     
     /* offBits */
-    PutLong(fp, BMPoffbits(class, bitcount, -1));
+    PutLong(fp, BMPoffbits(class, bitcount, 0));
     
     return 14;
 }
@@ -510,7 +510,7 @@ bmpEncode(FILE *           const ifP,
 
     nbyte += BMPwritebits(ifP, x, y, colortype, bpp, pixels, maxval,
                           colorMapP->cht);
-    if (nbyte != BMPlenfile(class, bpp, -1, x, y))
+    if (nbyte != BMPlenfile(class, bpp, 0, x, y))
         pm_error(er_internal, "BmpEncode 2");
 }
 
@@ -581,7 +581,7 @@ bmpEncodePbm(FILE *           const ifP,
             nbyte += bytesWritten;
     }
 
-    if (nbyte != BMPlenfile(class, 1, -1, cols, rows))
+    if (nbyte != BMPlenfile(class, 1, 0, cols, rows))
         pm_error(er_internal, "bmpEncodePbm 2");
 }
 

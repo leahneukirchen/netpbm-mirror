@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+11.04.06 BJH  Release 10.54.03
+
+              ppmtobmp: fix bugs causing bogus failure and incorrect output on
+              image without palette (e.g. black and white).  Introduced in
+              10.54.
 
 11.04.01 BJH  Release 10.54.02
 
@@ -16,7 +21,7 @@ CHANGE HISTORY
               Standard Input from invoker's Standard Input when you don't
               supply a Standard Output accepter.  Broken in 10.40.00.
 
-              ppmtopbm: fix bug: crash ("internal error") on image without
+              ppmtobmp: fix bug: crash ("internal error") on image without
               palette (e.g. black and white).  Introduced in 10.54.
 
 11.03.30 BJH  Release 10.54.00
