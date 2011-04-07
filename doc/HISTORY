@@ -6,9 +6,11 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.55.00
 
+              pamrubber: fix crash.  Introduced in 10.54.
+
               libnetpbm: pm_system(): fix bug - program always takes
               Standard Input from invoker's Standard Input when you don't
-              supply a Standard Output accepter.  Broken in 10.40.00.
+              supply a Standard Output accepter.  Introduced in 10.40.
 
               ppmtobmp: fix bug: crash ("internal error") or bogus failure or
               incorrect output on image without palette (e.g. black and
