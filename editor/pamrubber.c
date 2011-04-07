@@ -171,10 +171,10 @@ makepoint(double const x,
 
 
 static double
-distance(point * const p1P,
-         point * const p2P) {
+distance(point const p1,
+         point const p2) {
 
-    return sqrt(SQR(p1P->x - p2P->x) + SQR(p1P->y - p2P->y));
+    return sqrt(SQR(p1.x - p2.x) + SQR(p1.y - p2.y));
 }
 
 
@@ -274,30 +274,30 @@ maketriangle(point const p1,
 
 static int
 insidetri(triangle * const triP,
-          point *    const pP) {
+          point      const p) {
 
     int cnt;
 
     cnt = 0;  /* initial value */
 
-    if ((((triP->p1.y <= pP->y) && (pP->y < triP->p3.y))
-         || ((triP->p3.y <= pP->y) && (pP->y < triP->p1.y)))
+    if ((((triP->p1.y <= p.y) && (p.y < triP->p3.y))
+         || ((triP->p3.y <= p.y) && (p.y < triP->p1.y)))
         &&
-        (pP->x < (triP->p3.x - triP->p1.x) * (pP->y - triP->p1.y)
+        (p.x < (triP->p3.x - triP->p1.x) * (p.y - triP->p1.y)
          / (triP->p3.y - triP->p1.y) + triP->p1.x))
         cnt = !cnt;
 
-    if ((((triP->p2.y <= pP->y) && (pP->y < triP->p1.y))
-         || ((triP->p1.y <= pP->y) && (pP->y < triP->p2.y)))
+    if ((((triP->p2.y <= p.y) && (p.y < triP->p1.y))
+         || ((triP->p1.y <= p.y) && (p.y < triP->p2.y)))
         &&
-        (pP->x < (triP->p1.x - triP->p2.x) * (pP->y - triP->p2.y)
+        (p.x < (triP->p1.x - triP->p2.x) * (p.y - triP->p2.y)
          / (triP->p1.y - triP->p2.y) + triP->p2.x))
         cnt = !cnt;
 
-    if ((((triP->p3.y <= pP->y) && (pP->y < triP->p2.y))
-         || ((triP->p2.y <= pP->y) && (pP->y < triP->p3.y)))
+    if ((((triP->p3.y <= p.y) && (p.y < triP->p2.y))
+         || ((triP->p2.y <= p.y) && (p.y < triP->p3.y)))
         &&
-        (pP->x < (triP->p2.x - triP->p3.x) * (pP->y - triP->p3.y)
+        (p.x < (triP->p2.x - triP->p3.x) * (p.y - triP->p3.y)
          / (triP->p2.y - triP->p3.y) + triP->p3.x))
         cnt = !cnt;
 
@@ -350,7 +350,10 @@ tiny(void) {
 static void
 angle(point * const p1P,
       point * const p2P) {
-
+/*----------------------------------------------------------------------------
+   Move *p2P slightly if necessary to make sure the line (*p1P, *p2P)
+   is not horizontal or vertical.
+-----------------------------------------------------------------------------*/
     if (p1P->x == p2P->x) { /* vertical line */
         p2P->x += tiny();
     }
@@ -803,14 +806,16 @@ prepTrig(int const wd,
         c2p2 = newCP[1];
         c2p3 = newCP[2];
 
-        /* check for hor/ver edges */
-        angle (&c1p1, &c1p2);
-        angle (&c1p2, &c1p3);
-        angle (&c1p3, &c1p1);
+        /* Move vertices slightly if necessary to make sure no edge is
+           horizontal or vertical.
+        */
+        angle(&c1p1, &c1p2);
+        angle(&c1p2, &c1p3);
+        angle(&c1p3, &c1p1);
 
-        angle (&c2p1, &c2p2);
-        angle (&c2p2, &c2p3);
-        angle (&c2p3, &c2p1);
+        angle(&c2p1, &c2p2);
+        angle(&c2p2, &c2p3);
+        angle(&c2p3, &c2p1);
 
         if (windtriangle(&tri1s[0], c1p1, c1p2, c1p3)) {
             tri2s[0] = maketriangle(c2p1, c2p2, c2p3);
@@ -1028,9 +1033,9 @@ prepQuad(void) {
                furthest apart
             */
             
-            d01 = distance (&newCP[0], &newCP[1]);
-            d12 = distance (&newCP[1], &newCP[2]);
-            d20 = distance (&newCP[2], &newCP[0]);
+            d01 = distance(newCP[0], newCP[1]);
+            d12 = distance(newCP[1], newCP[2]);
+            d20 = distance(newCP[2], newCP[0]);
 
             if ((d01 > d12) && (d01 > d20)) {
                 oldCP[3].x = oldCP[0].x + oldCP[1].x - oldCP[2].x;
@@ -1113,7 +1118,7 @@ prepQuad(void) {
 
 
 static void
-warpTrig(point * const p2P,
+warpTrig(point   const p2,
          point * const p1P) {
 
 /* map target to source by triangulation */
@@ -1127,7 +1132,7 @@ warpTrig(point * const p2P,
 
     /* find in which triangle p2 lies */
     for (i = 0; i < nTri; i++) {
-        if (insidetri (&tri2s[i], p2P))
+        if (insidetri (&tri2s[i], p2))
             break;
     }
 
@@ -1135,22 +1140,22 @@ warpTrig(point * const p2P,
         *p1P = makepoint(0.0, 0.0);
     else {
         /* where in triangle is point */
-        d1 = fabs (p2P->x - tri2s[i].p1.x) + fabs (p2P->y - tri2s[i].p1.y);
-        d2 = fabs (p2P->x - tri2s[i].p2.x) + fabs (p2P->y - tri2s[i].p2.y);
-        d3 = fabs (p2P->x - tri2s[i].p3.x) + fabs (p2P->y - tri2s[i].p3.y);
+        d1 = fabs (p2.x - tri2s[i].p1.x) + fabs (p2.y - tri2s[i].p1.y);
+        d2 = fabs (p2.x - tri2s[i].p2.x) + fabs (p2.y - tri2s[i].p2.y);
+        d3 = fabs (p2.x - tri2s[i].p3.x) + fabs (p2.y - tri2s[i].p3.y);
 
         /* line through p1 and p intersecting with edge p2-p3 */
-        lp = makeline(tri2s[i].p1, *p2P);
+        lp = makeline(tri2s[i].p1, p2);
         le = makeline(tri2s[i].p2, tri2s[i].p3);
         intersect (&lp, &le, &e2p1);
 
         /* line through p2 and p intersecting with edge p3-p1 */
-        lp = makeline(tri2s[i].p2, *p2P);
+        lp = makeline(tri2s[i].p2, p2);
         le = makeline(tri2s[i].p3, tri2s[i].p1);
         intersect (&lp, &le, &e2p2);
 
         /* line through p3 and p intersecting with edge p1-p2 */
-        lp = makeline(tri2s[i].p3, *p2P);
+        lp = makeline(tri2s[i].p3, p2);
         le = makeline(tri2s[i].p1, tri2s[i].p2);
         intersect (&lp, &le, &e2p3);
 
@@ -1191,76 +1196,80 @@ warpTrig(point * const p2P,
 
 
 static void
-warpQuad(point * const p2P,
+warpQuad(point   const p2,
          point * const p1P) {
 
 /* map target to source for quad control points */
 
-  point h2, v2;
-  point c1tl, c1tr, c1bl, c1br;
-  point c2tl, c2tr, c2bl, c2br;
-  point e1t, e1b, e1l, e1r;
-  point e2t, e2b, e2l, e2r;
-  line l2t, l2b, l2l, l2r;
-  line lh, lv;
+    point h2, v2;
+    point c1tl, c1tr, c1bl, c1br;
+    point c2tl, c2tr, c2bl, c2br;
+    point e1t, e1b, e1l, e1r;
+    point e2t, e2b, e2l, e2r;
+    line l2t, l2b, l2l, l2r;
+    line lh, lv;
 
-  c1tl = quad1.tl;
-  c1tr = quad1.tr;
-  c1bl = quad1.bl;
-  c1br = quad1.br;
+    c1tl = quad1.tl;
+    c1tr = quad1.tr;
+    c1bl = quad1.bl;
+    c1br = quad1.br;
        
-  c2tl = quad2.tl;
-  c2tr = quad2.tr;
-  c2bl = quad2.bl;
-  c2br = quad2.br;
+    c2tl = quad2.tl;
+    c2tr = quad2.tr;
+    c2bl = quad2.bl;
+    c2br = quad2.br;
 
-  l2t = makeline(c2tl, c2tr);
-  l2b = makeline(c2bl, c2br);
-  l2l = makeline(c2tl, c2bl);
-  l2r = makeline(c2tr, c2br);
+    l2t = makeline(c2tl, c2tr);
+    l2b = makeline(c2bl, c2br);
+    l2l = makeline(c2tl, c2bl);
+    l2r = makeline(c2tr, c2br);
 
-  /* find intersections of lines through control points */
-  intersect (&l2t, &l2b, &h2);
-  intersect (&l2l, &l2r, &v2);
+    /* find intersections of lines through control points */
+    intersect (&l2t, &l2b, &h2);
+    intersect (&l2l, &l2r, &v2);
 
-  /* find intersections of axes through P with control point box */
-  lv = makeline(*p2P, v2);
-  intersect (&l2t, &lv, &e2t);
-  intersect (&l2b, &lv, &e2b);
+    /* find intersections of axes through P with control point box */
+    lv = makeline(p2, v2);
+    intersect (&l2t, &lv, &e2t);
+    intersect (&l2b, &lv, &e2b);
 
-  lh = makeline(*p2P, h2);
-  intersect (&l2l, &lh, &e2l);
-  intersect (&l2r, &lh, &e2r);
+    lh = makeline(p2, h2);
+    intersect (&l2l, &lh, &e2l);
+    intersect (&l2r, &lh, &e2r);
 
-  /* map target control points to source control points */
-  e1t.x = c1tl.x + (e2t.x - c2tl.x)/(c2tr.x - c2tl.x) * (c1tr.x - c1tl.x);
-  if (c1tl.y == c1tr.y)
-    e1t.y = c1tl.y;
-  else
-    e1t.y = c1tl.y + (e2t.x - c2tl.x)/(c2tr.x - c2tl.x) * (c1tr.y - c1tl.y);
+    /* map target control points to source control points */
+    e1t.x = c1tl.x + (e2t.x - c2tl.x)/(c2tr.x - c2tl.x) * (c1tr.x - c1tl.x);
+    if (c1tl.y == c1tr.y)
+        e1t.y = c1tl.y;
+    else
+        e1t.y =
+            c1tl.y + (e2t.x - c2tl.x)/(c2tr.x - c2tl.x) * (c1tr.y - c1tl.y);
 
-  e1b.x = c1bl.x + (e2b.x - c2bl.x)/(c2br.x - c2bl.x) * (c1br.x - c1bl.x);
-  if (c1bl.y == c1br.y)
-    e1b.y = c1bl.y;
-  else
-    e1b.y = c1bl.y + (e2b.x - c2bl.x)/(c2br.x - c2bl.x) * (c1br.y - c1bl.y);
+    e1b.x = c1bl.x + (e2b.x - c2bl.x)/(c2br.x - c2bl.x) * (c1br.x - c1bl.x);
+    if (c1bl.y == c1br.y)
+        e1b.y = c1bl.y;
+    else
+        e1b.y =
+            c1bl.y + (e2b.x - c2bl.x)/(c2br.x - c2bl.x) * (c1br.y - c1bl.y);
 
-  if (c1tl.x == c1bl.x)
-    e1l.x = c1tl.x;
-  else
-    e1l.x = c1tl.x + (e2l.y - c2tl.y)/(c2bl.y - c2tl.y) * (c1bl.x - c1tl.x);
-  e1l.y = c1tl.y + (e2l.y - c2tl.y)/(c2bl.y - c2tl.y) * (c1bl.y - c1tl.y);
+    if (c1tl.x == c1bl.x)
+        e1l.x = c1tl.x;
+    else
+        e1l.x =
+            c1tl.x + (e2l.y - c2tl.y)/(c2bl.y - c2tl.y) * (c1bl.x - c1tl.x);
+    e1l.y = c1tl.y + (e2l.y - c2tl.y)/(c2bl.y - c2tl.y) * (c1bl.y - c1tl.y);
 
-  if (c1tr.x == c1br.x)
-    e1r.x = c1tr.x;
-  else
-    e1r.x = c1tr.x + (e2r.y - c2tr.y)/(c2br.y - c2tr.y) * (c1br.x - c1tr.x);
-  e1r.y = c1tr.y + (e2r.y - c2tr.y)/(c2br.y - c2tr.y) * (c1br.y - c1tr.y);
+    if (c1tr.x == c1br.x)
+        e1r.x = c1tr.x;
+    else
+        e1r.x
+            = c1tr.x + (e2r.y - c2tr.y)/(c2br.y - c2tr.y) * (c1br.x - c1tr.x);
+    e1r.y = c1tr.y + (e2r.y - c2tr.y)/(c2br.y - c2tr.y) * (c1br.y - c1tr.y);
 
-  /* intersect grid lines in source */
-  lv = makeline(e1t, e1b);
-  lh = makeline(e1l, e1r);
-  intersect (&lh, &lv, p1P);
+    /* intersect grid lines in source */
+    lv = makeline(e1t, e1b);
+    lh = makeline(e1l, e1r);
+    intersect (&lh, &lv, p1P);
 }
 
 
@@ -1300,44 +1309,6 @@ createWhiteTuple(const struct pam * const pamP,
 
 
 
-static sample
-pix(tuple **     const tuples,
-    point        const p,
-    unsigned int const plane,
-    bool         const linear) {
-                    
-    double pix;
-
-    if (!linear) {
-        pix = tuples
-            [(int) floor(p.y + 0.5)]
-            [(int) floor(p.x + 0.5)][plane];
-    } else {
-        double const rx = p.x - floor(p.x);
-        double const ry = p.y - floor(p.y);
-        pix = 0.0;
-        pix += (1.0 - rx) * (1.0 - ry)
-            * tuples
-            [(int) floor(p.y)]
-            [(int) floor(p.x)][plane];
-        pix += rx * (1.0 - ry)
-            * tuples
-            [(int) floor(p.y)]
-            [(int) floor(p.x) + 1][plane];
-        pix += (1.0 - rx) * ry 
-            * tuples
-            [(int) floor(p.y) + 1]
-            [(int) floor(p.x)][plane];
-        pix += rx * ry
-            * tuples
-            [(int) floor(p.y) + 1]
-            [(int) floor(p.x) + 1][plane];
-    }
-    return (int) floor(pix);
-}
-
-
-
 static void
 makeAllWhite(struct pam * const pamP,
              tuple **     const tuples) {
@@ -1358,6 +1329,64 @@ makeAllWhite(struct pam * const pamP,
 
 
 
+static sample
+pix(tuple **     const tuples,
+    unsigned int const width,
+    unsigned int const height,
+    point        const p1,
+    unsigned int const plane,
+    bool         const linear) {
+
+    point p;
+    double pix;
+
+    p.x = p1.x + 1E-3;
+    p.y = p1.y + 1E-3;
+
+    if (p.x < 0.0)
+        p.x = 0.0;
+    if (p.x > (double) width - 1.0)
+        p.x = (double) width - 1.0;
+    if (p.y < 0.0)
+        p.y = 0.0;
+    if (p.y > (double) height - 1.0)
+        p.y = (double) height - 1.0;
+
+    if (!linear) {
+        pix = tuples
+            [(int) floor(p.y + 0.5)]
+            [(int) floor(p.x + 0.5)][plane];
+    } else {
+        double const rx = p.x - floor(p.x);
+        double const ry = p.y - floor(p.y);
+        pix = 0.0;
+        if (((int) floor(p.x) >= 0) && ((int) floor(p.x) < width) &&
+            ((int) floor(p.y) >= 0) && ((int) floor(p.y) < height)) {
+            pix += (1.0 - rx) * (1.0 - ry) 
+                * tuples[(int) floor(p.y)][(int) floor(p.x)][plane];
+        }
+        if (((int) floor(p.x) + 1 >= 0) && ((int) floor(p.x) + 1 < width) &&
+            ((int) floor(p.y) >= 0) && ((int) floor(p.y) < height)) {
+            pix += rx * (1.0 - ry) 
+                * tuples[(int) floor(p.y)][(int) floor(p.x) + 1][plane];
+        }
+        if (((int) floor(p.x) >= 0) && ((int) floor(p.x) < width) &&
+            ((int) floor(p.y) + 1 >= 0) && ((int) floor(p.y) + 1 < height)) {
+            pix += (1.0 - rx) * ry 
+                * tuples[(int) floor(p.y) + 1][(int) floor(p.x)][plane];
+        }
+        if (((int) floor(p.x) + 1 >= 0) && ((int) floor(p.x) + 1 < width) &&
+            ((int) floor(p.y) + 1 >= 0) && ((int) floor(p.y) + 1 < height)) {
+            pix += rx * ry 
+                * tuples[(int) floor(p.y) + 1][(int) floor(p.x) + 1][plane];
+        }
+    }
+
+    return (int) floor(pix);
+}
+
+
+
 int
 main(int argc, const char ** const argv) {
 
@@ -1366,7 +1395,6 @@ main(int argc, const char ** const argv) {
     struct pam inpam, outpam;
     tuple ** inTuples;
     tuple ** outTuples;
-
     unsigned int p2y;
   
     pm_proginit(&argc, argv);
@@ -1399,22 +1427,18 @@ main(int argc, const char ** const argv) {
         unsigned int p2x;
         for (p2x = 0; p2x < inpam.width; ++p2x) {
             point p1, p2;
+            unsigned int plane;
+
             p2 = makepoint(p2x, p2y);
             if (cmdline.quad)
-                warpQuad (&p2, &p1);
+                warpQuad(p2, &p1);
             if (cmdline.tri)
-                warpTrig (&p2, &p1);
+                warpTrig(p2, &p1);
 
-            p1.x += 1E-3;
-            p1.y += 1E-3;
-            if ((p1.x >= 0.0) && (p1.x < (double) inpam.width - 0.5) &&
-                (p1.y >= 0.0) && (p1.y < (double) inpam.height - 0.5)) {
-                unsigned int plane;
-                for (plane = 0; plane < inpam.depth; ++plane) {
-                    outTuples[p2y][p2x][plane] =
-                        pix(inTuples, p1, plane, cmdline.linear);
-
-                }
+            for (plane = 0; plane < inpam.depth; ++plane) {
+                outTuples[p2y][p2x][plane] =
+                    pix(inTuples, inpam.width, inpam.height, p1, plane,
+                        cmdline.linear);
             }
         }
     }
@@ -1444,3 +1468,6 @@ main(int argc, const char ** const argv) {
 
     return 0;
 }
+
+
+
