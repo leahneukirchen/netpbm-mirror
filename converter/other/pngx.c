@@ -101,3 +101,46 @@ pngx_chunkIsPresent(struct pngx * const pngxP,
 
 
 
+void
+pngx_setText(struct pngx * const pngxP,
+             png_textp     const textP,
+             unsigned int  const count) {
+
+    png_set_text(pngxP->png_ptr, pngxP->info_ptr, textP, count);
+}
+
+
+
+void
+pngx_setIhdr(struct pngx * const pngxP,
+             unsigned int  const width,
+             unsigned int  const height,
+             unsigned int  const bitDepth,
+             int           const colorType,
+             int           const interlaceMethod,
+             int           const compressionMethod,
+             int           const filterMethod) {
+
+    png_set_IHDR(pngxP->png_ptr, pngxP->info_ptr, width, height,
+                 bitDepth, colorType, interlaceMethod, compressionMethod,
+                 filterMethod);
+}
+
+
+
+void
+pngx_writeInfo(struct pngx * const pngxP) {
+
+    png_write_info(pngxP->png_ptr, pngxP->info_ptr);
+}
+
+
+
+void
+pngx_writeEnd(struct pngx * const pngxP) {
+
+    png_write_end(pngxP->png_ptr, pngxP->info_ptr);
+}
+
+
+
