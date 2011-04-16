@@ -169,8 +169,8 @@ pnmtopng: %: %.o pngx.o pngtxt.o $(NETPBMLIB) $(LIBOPT)
 	  $(shell $(LIBOPT) $(NETPBMLIB)) \
 	  $(PNGLIB_LIBOPTS) $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
-pamrgbatopng: %: %.o $(NETPBMLIB) $(LIBOPT)
-	$(LD) -o $@ $@.o \
+pamrgbatopng: %: %.o pngx.o $(NETPBMLIB) $(LIBOPT)
+	$(LD) -o $@ $@.o pngx.o \
 	  $(shell $(LIBOPT) $(NETPBMLIB)) $(PNGLIB_LIBOPTS) \
 	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 

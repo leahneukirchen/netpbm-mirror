@@ -4,10 +4,12 @@
 #include "pm_c_util.h"
 #include <png.h>
 
+struct pngx;
+
 void 
-pnmpng_read_text (png_info * const info_ptr, 
-                  FILE *     const tfp, 
-                  bool const ztxt,
-                  bool const verbose);
+pngtxt_read(struct pngx * const pngxP,
+            FILE *        const tfp, 
+            bool          const ztxt,
+            bool          const verbose);
 
 #endif

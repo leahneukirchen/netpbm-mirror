@@ -58,7 +58,12 @@
 #include <assert.h>
 #include <string.h> /* strcat() */
 #include <limits.h>
-#include <png.h>    /* includes zlib.h and setjmp.h */
+#include <png.h>
+/* Due to a design error in png.h, you must not #include <setjmp.h> before
+   <png.h>.  If you do, png.h won't compile.
+*/
+#include <setjmp.h> 
+#include <zlib.h>
 
 #include "pm_c_util.h"
 #include "pnm.h"
@@ -88,23 +93,6 @@ struct zlibCompression {
     unsigned int buffer_size;
 };
 
-struct chroma {
-    float wx;
-    float wy;
-    float rx;
-    float ry;
-    float gx;
-    float gy;
-    float bx;
-    float by;
-};
-
-struct phys {
-    int x;
-    int y;
-    int unit;
-};
-
 typedef struct cahitem {
     xel color;
     gray alpha;
@@ -129,9 +117,9 @@ struct cmdlineInfo {
     float         gamma;        /* Meaningless if !gammaSpec */
     unsigned int  hist;
     unsigned int  rgbSpec;
-    struct chroma rgb;          /* Meaningless if !rgbSpec */
+    struct pngx_chroma rgb;          /* Meaningless if !rgbSpec */
     unsigned int  sizeSpec;
-    struct phys   size;         /* Meaningless if !sizeSpec */
+    struct pngx_phys   size;         /* Meaningless if !sizeSpec */
     const char *  text;         /* NULL if none */
     const char *  ztxt;         /* NULL if none */
     unsigned int  modtimeSpec;
@@ -176,8 +164,8 @@ static int errorlevel;
 
 
 static void
-parseSizeOpt(const char *  const sizeOpt,
-             struct phys * const sizeP) {
+parseSizeOpt(const char *       const sizeOpt,
+             struct pngx_phys * const sizeP) {
 
     int count;
     
@@ -191,8 +179,8 @@ parseSizeOpt(const char *  const sizeOpt,
 
 
 static void
-parseRgbOpt(const char *    const rgbOpt,
-            struct chroma * const rgbP) {
+parseRgbOpt(const char *         const rgbOpt,
+            struct pngx_chroma * const rgbP) {
 
     int count;
     
@@ -2180,7 +2168,7 @@ makePngLine(png_byte *           const line,
             gray *               const alpha_mask,
             colorhash_table      const cht,
             coloralphahash_table const caht,
-            png_info *           const info_ptr,
+            struct pngx *        const pngxP,
             xelval               const png_maxval,
             unsigned int         const depth) {
             
@@ -2192,20 +2180,20 @@ makePngLine(png_byte *           const line,
         xel p_png;
         xel const p = xelrow[col];
         PPM_DEPTH(p_png, p, maxval, png_maxval);
-        if (info_ptr->color_type == PNG_COLOR_TYPE_GRAY ||
-            info_ptr->color_type == PNG_COLOR_TYPE_GRAY_ALPHA) {
+        if (pngx_colorType(pngxP) == PNG_COLOR_TYPE_GRAY ||
+            pngx_colorType(pngxP) == PNG_COLOR_TYPE_GRAY_ALPHA) {
             if (depth == 16)
                 *pp++ = PNM_GET1(p_png) >> 8;
             *pp++ = PNM_GET1(p_png) & 0xff;
-        } else if (info_ptr->color_type == PNG_COLOR_TYPE_PALETTE) {
+        } else if (pngx_colorType(pngxP) == PNG_COLOR_TYPE_PALETTE) {
             unsigned int paletteIndex;
             if (alpha)
                 paletteIndex = lookupColorAlpha(caht, &p, &alpha_mask[col]);
             else
                 paletteIndex = ppm_lookupcolor(cht, &p);
             *pp++ = paletteIndex;
-        } else if (info_ptr->color_type == PNG_COLOR_TYPE_RGB ||
-                   info_ptr->color_type == PNG_COLOR_TYPE_RGB_ALPHA) {
+        } else if (pngx_colorType(pngxP) == PNG_COLOR_TYPE_RGB ||
+                   pngx_colorType(pngxP) == PNG_COLOR_TYPE_RGB_ALPHA) {
             if (depth == 16)
                 *pp++ = PPM_GETR(p_png) >> 8;
             *pp++ = PPM_GETR(p_png) & 0xff;
@@ -2218,7 +2206,7 @@ makePngLine(png_byte *           const line,
         } else
             pm_error("INTERNAL ERROR: undefined color_type");
                 
-        if (info_ptr->color_type & PNG_COLOR_MASK_ALPHA) {
+        if (pngx_colorType(pngxP) & PNG_COLOR_MASK_ALPHA) {
             int const png_alphaval = (int)
                 alpha_mask[col] * (float) png_maxval / maxval + 0.5;
             if (depth == 16)
@@ -2274,7 +2262,7 @@ writeRaster(struct pngx *        const pngxP,
             
             makePngLine(line, xelrow, cols, maxval,
                         alpha, alpha ? alpha_mask[row] : NULL,
-                        cht, caht, pngxP->info_ptr, png_maxval, depth);
+                        cht, caht, pngxP, png_maxval, depth);
 
             png_write_row(pngxP->png_ptr, line);
         }
@@ -2285,16 +2273,16 @@ writeRaster(struct pngx *        const pngxP,
 
 
 static void
-doHistChunk(bool         const histRequested,
-            pixel        const palettePnm[],
-            FILE *       const ifP,
-            pm_filepos   const rasterPos,
-            unsigned int const cols,
-            unsigned int const rows,
-            xelval       const maxval,
-            int          const format,
-            png_info *   const info_ptr,
-            bool         const verbose) {
+doHistChunk(struct pngx * const pngxP,
+            bool          const histRequested,
+            pixel         const palettePnm[],
+            FILE *        const ifP,
+            pm_filepos    const rasterPos,
+            unsigned int  const cols,
+            unsigned int  const rows,
+            xelval        const maxval,
+            int           const format,
+            bool          const verbose) {
 
     if (histRequested) {
         colorhist_vector chv;
@@ -2324,8 +2312,8 @@ doHistChunk(bool         const histRequested,
                         histogram[i] = chv[chvIndex].value;
                 }
             
-                info_ptr->valid |= PNG_INFO_hIST;
-                info_ptr->hist = histogram;
+                pngx_setHist(pngxP, histogram);
+
                 if (verbose)
                     pm_message("histogram created in PNG stream");
             }
@@ -2337,84 +2325,69 @@ doHistChunk(bool         const histRequested,
 
 
 static void
-setColorType(struct pngx * const pngxP,
-             bool          const colorMapped,
-             int           const pnmType,
-             bool          const alpha) {
+doIhdrChunk(struct pngx * const pngxP,
+            unsigned int  const width,
+            unsigned int  const height,
+            unsigned int  const depth,
+            bool          const colorMapped,
+            int           const pnmType,
+            bool          const alpha) {
+
+    int colorType;
 
     if (colorMapped)
-        pngxP->info_ptr->color_type = PNG_COLOR_TYPE_PALETTE;
+        colorType = PNG_COLOR_TYPE_PALETTE;
     else if (pnmType == PPM_TYPE)
-        pngxP->info_ptr->color_type = PNG_COLOR_TYPE_RGB;
+        colorType = PNG_COLOR_TYPE_RGB;
     else
-        pngxP->info_ptr->color_type = PNG_COLOR_TYPE_GRAY;
+        colorType = PNG_COLOR_TYPE_GRAY;
 
-    if (alpha && pngxP->info_ptr->color_type != PNG_COLOR_TYPE_PALETTE)
-        pngxP->info_ptr->color_type |= PNG_COLOR_MASK_ALPHA;
+    if (alpha && pngx_colorType(pngxP) != PNG_COLOR_TYPE_PALETTE)
+        colorType |= PNG_COLOR_MASK_ALPHA;
+
+    pngx_setIhdr(pngxP, width, height, depth, colorType, 0, 0, 0);
 }
 
 
 
 static void
 doGamaChunk(struct cmdlineInfo const cmdline,
-            png_info *         const info_ptr) {
+            struct pngx *      const pngxP) {
             
-    if (cmdline.gammaSpec) {
-        /* gAMA chunk */
-        info_ptr->valid |= PNG_INFO_gAMA;
-        info_ptr->gamma = cmdline.gamma;
-    }
+    if (cmdline.gammaSpec)
+        pngx_setGama(pngxP, cmdline.gamma);
 }
 
 
 
 static void
 doChrmChunk(struct cmdlineInfo const cmdline,
-            png_info *         const info_ptr) {
+            struct pngx *      const pngxP) {
 
-    if (cmdline.rgbSpec) {
-        /* cHRM chunk */
-        info_ptr->valid |= PNG_INFO_cHRM;
-
-        info_ptr->x_white = cmdline.rgb.wx;
-        info_ptr->y_white = cmdline.rgb.wy;
-        info_ptr->x_red   = cmdline.rgb.rx;
-        info_ptr->y_red   = cmdline.rgb.ry;
-        info_ptr->x_green = cmdline.rgb.gx;
-        info_ptr->y_green = cmdline.rgb.gy;
-        info_ptr->x_blue  = cmdline.rgb.bx;
-        info_ptr->y_blue  = cmdline.rgb.by;
-    }
+    if (cmdline.rgbSpec)
+        pngx_setChrm(pngxP, cmdline.rgb);
 }
 
 
 
 static void
 doPhysChunk(struct cmdlineInfo const cmdline,
-            png_info *         const info_ptr) {
+            struct pngx *      const pngxP) {
 
-    if (cmdline.sizeSpec) {
-        /* pHYS chunk */
-        info_ptr->valid |= PNG_INFO_pHYs;
-
-        info_ptr->x_pixels_per_unit = cmdline.size.x;
-        info_ptr->y_pixels_per_unit = cmdline.size.y;
-        info_ptr->phys_unit_type    = cmdline.size.unit;
-    }
+    if (cmdline.sizeSpec)
+        pngx_setPhys(pngxP, cmdline.size);
 }
-
 
 
 
 static void
 doTimeChunk(struct cmdlineInfo const cmdline,
-            png_info *         const info_ptr) {
+            struct pngx *      const pngxP) {
 
     if (cmdline.modtimeSpec) {
-        /* tIME chunk */
-        info_ptr->valid |= PNG_INFO_tIME;
-
-        png_convert_from_time_t(&info_ptr->mod_time, cmdline.modtime);
+        png_time pngTime;
+        png_convert_from_time_t(&pngTime, cmdline.modtime);
+        pngx_setTime(pngxP, pngTime);
     }
 }
 
@@ -2424,19 +2397,14 @@ static void
 reportTrans(struct pngx * const pngxP) {
 
     if (pngx_chunkIsPresent(pngxP, PNG_INFO_tRNS)) {
-        png_bytep trans;
-        int numTrans;
-        png_color_16 * transColorP;
-
-        png_get_tRNS(pngxP->png_ptr, pngxP->info_ptr,
-                     &trans, &numTrans, &transColorP);
-
+        struct pngx_trans const transInfo = pngx_getTrns(pngxP);
+        
         pm_message("Transparent color {gray, red, green, blue} = "
                    "{%d, %d, %d, %d}",
-                   transColorP->gray,
-                   transColorP->red,
-                   transColorP->green,
-                   transColorP->blue);
+                   transInfo.transColorP->gray,
+                   transInfo.transColorP->red,
+                   transInfo.transColorP->green,
+                   transInfo.transColorP->blue);
     } else
         pm_message("No transparent color");
 }
@@ -2451,23 +2419,17 @@ doTrnsChunk(struct pngx * const pngxP,
             xelval        const maxval,
             xelval        const pngMaxval) {
 
-    switch (pngxP->info_ptr->color_type) {
+    switch (pngx_colorType(pngxP)) {
     case PNG_COLOR_TYPE_PALETTE:
-        if (transPaletteSize > 0) {
-            png_set_tRNS(pngxP->png_ptr, pngxP->info_ptr,
-                         (png_byte *)transPalette,
-                         transPaletteSize /* omit opaque values */,
-                         0);
-        }
+        if (transPaletteSize > 0)
+            pngx_setTrnsPalette(pngxP, transPalette,
+                                transPaletteSize /* omit opaque values */);
         break;
     case PNG_COLOR_TYPE_GRAY:
     case PNG_COLOR_TYPE_RGB:
-        if (transparent > 0) {
-            png_color_16 pngTransColor = 
-                xelToPngColor_16(transColor, maxval, pngMaxval);
-            png_set_tRNS(pngxP->png_ptr, pngxP->info_ptr,
-                         NULL, 0, &pngTransColor);
-        }
+        if (transparent > 0)
+            pngx_setTrnsValue(pngxP,
+                              xelToPngColor_16(transColor, maxval, pngMaxval));
         break;
     default:
         /* This is PNG_COLOR_MASK_ALPHA.  Transparency will be handled
@@ -2482,28 +2444,28 @@ doTrnsChunk(struct pngx * const pngxP,
 
 
 static void
-doBkgdChunk(bool         const bkgdRequested,
-            png_info *   const info_ptr,
-            unsigned int const backgroundIndex,
-            pixel        const backColor,
-            xelval       const maxval,
-            xelval       const pngMaxval,
-            bool         const verbose) {
+doBkgdChunk(struct pngx * const pngxP,
+            bool          const bkgdRequested,
+            unsigned int  const backgroundIndex,
+            pixel         const backColor,
+            xelval        const maxval,
+            xelval        const pngMaxval,
+            bool          const verbose) {
     
     if (bkgdRequested) {
-        info_ptr->valid |= PNG_INFO_bKGD;
-        if (info_ptr->color_type == PNG_COLOR_TYPE_PALETTE) {
-            info_ptr->background.index = backgroundIndex;
-        } else {
-            info_ptr->background = 
+        if (pngx_colorType(pngxP) == PNG_COLOR_TYPE_PALETTE)
+            pngx_setBkgdPalette(pngxP, backgroundIndex);
+        else {
+            png_color_16 const pngBackground = 
                 xelToPngColor_16(backColor, maxval, pngMaxval);
+            pngx_setBkgdRgb(pngxP, pngBackground);
             if (verbose)
                 pm_message("Writing bKGD chunk with background color "
                            " {gray, red, green, blue} = {%d, %d, %d, %d}",
-                           info_ptr->background.gray, 
-                           info_ptr->background.red, 
-                           info_ptr->background.green, 
-                           info_ptr->background.blue ); 
+                           pngBackground.gray, 
+                           pngBackground.red, 
+                           pngBackground.green, 
+                           pngBackground.blue ); 
         }
     }
 }
@@ -2511,13 +2473,13 @@ doBkgdChunk(bool         const bkgdRequested,
 
 
 static void
-doSbitChunk(png_info * const pngInfoP,
-            xelval     const pngMaxval,
-            xelval     const maxval,
-            bool       const alpha,
-            xelval     const alphaMaxval) {
+doSbitChunk(struct pngx * const pngxP,
+            xelval        const pngMaxval,
+            xelval        const maxval,
+            bool          const alpha,
+            xelval        const alphaMaxval) {
 
-    if (pngInfoP->color_type != PNG_COLOR_TYPE_PALETTE &&
+    if (pngx_colorType(pngxP) != PNG_COLOR_TYPE_PALETTE &&
         (pngMaxval > maxval || (alpha && pngMaxval > alphaMaxval))) {
 
         /* We're writing in a bit depth that doesn't match the maxval
@@ -2536,26 +2498,28 @@ doSbitChunk(png_info * const pngInfoP,
            sBIT chunk.
         */
 
-        pngInfoP->valid |= PNG_INFO_sBIT;
-
         {
             int const sbitval = pm_maxvaltobits(MIN(maxval, pngMaxval));
 
-            if (pngInfoP->color_type & PNG_COLOR_MASK_COLOR) {
-                pngInfoP->sig_bit.red   = sbitval;
-                pngInfoP->sig_bit.green = sbitval;
-                pngInfoP->sig_bit.blue  = sbitval;
+            png_color_8 sbit;
+
+            if (pngx_colorType(pngxP) & PNG_COLOR_MASK_COLOR) {
+                sbit.red   = sbitval;
+                sbit.green = sbitval;
+                sbit.blue  = sbitval;
             } else
-                pngInfoP->sig_bit.gray = sbitval;
+                sbit.gray  = sbitval;
             
             if (verbose)
                 pm_message("Writing sBIT chunk with bits = %d", sbitval);
-        }
-        if (pngInfoP->color_type & PNG_COLOR_MASK_ALPHA) {
-            pngInfoP->sig_bit.alpha =
-                pm_maxvaltobits(MIN(alphaMaxval, pngMaxval));
-            if (verbose)
-                pm_message("  alpha bits = %d", pngInfoP->sig_bit.alpha);
+
+            if (pngx_colorType(pngxP) & PNG_COLOR_MASK_ALPHA) {
+                sbit.alpha = pm_maxvaltobits(MIN(alphaMaxval, pngMaxval));
+                if (verbose)
+                    pm_message("  alpha bits = %d", sbit.alpha);
+            }
+
+            pngx_setSbit(pngxP, sbit);
         }
     }
 }
@@ -2605,19 +2569,19 @@ convertpnm(struct cmdlineInfo const cmdline,
   struct pngx * pngxP;
 
   bool colorMapped;
-  pixel palette_pnm[MAXCOLORS];
+  pixel palettePnm[MAXCOLORS];
   png_color palette[MAXCOLORS];
       /* The color part of the color/alpha palette passed to the PNG
          compressor 
       */
-  unsigned int palette_size;
+  unsigned int paletteSize;
 
-  gray trans_pnm[MAXCOLORS];
+  gray transPnm[MAXCOLORS];
   png_byte  trans[MAXCOLORS];
       /* The alpha part of the color/alpha palette passed to the PNG
          compressor 
       */
-  unsigned int trans_size;
+  unsigned int transSize;
 
   colorhash_table cht;
   coloralphahash_table caht;
@@ -2625,7 +2589,7 @@ convertpnm(struct cmdlineInfo const cmdline,
   unsigned int background_index;
       /* Index into palette[] of the background color. */
 
-  gray alpha_maxval;
+  gray alphaMaxval;
   const char * noColormapReason;
       /* The reason that we shouldn't make a colormapped PNG, or NULL if
          we should.  malloc'ed null-terminated string.
@@ -2646,7 +2610,7 @@ convertpnm(struct cmdlineInfo const cmdline,
   xel *xelrow;    /* malloc'ed */
       /* The row of the input image currently being processed */
 
-  int pnm_type;
+  int pnmType;
   gray ** alpha_mask;
 
   /* We initialize these guys to quiet compiler warnings: */
@@ -2661,29 +2625,29 @@ convertpnm(struct cmdlineInfo const cmdline,
 
   pnm_readpnminit(ifP, &cols, &rows, &maxval, &format);
   pm_tell2(ifP, &rasterPos, sizeof(rasterPos));
-  pnm_type = PNM_FORMAT_TYPE(format);
+  pnmType = PNM_FORMAT_TYPE(format);
 
   xelrow = pnm_allocrow(cols);
 
   if (verbose) {
-    if (pnm_type == PBM_TYPE)    
-      pm_message ("reading a PBM file (maxval=%d)", maxval);
-    else if (pnm_type == PGM_TYPE)    
-      pm_message ("reading a PGM file (maxval=%d)", maxval);
-    else if (pnm_type == PPM_TYPE)    
-      pm_message ("reading a PPM file (maxval=%d)", maxval);
+      if (pnmType == PBM_TYPE)    
+          pm_message ("reading a PBM file");
+      else if (pnmType == PGM_TYPE)    
+          pm_message ("reading a PGM file (maxval=%d)", maxval);
+      else if (pnmType == PPM_TYPE)    
+          pm_message ("reading a PPM file (maxval=%d)", maxval);
   }
 
   determineTransparency(cmdline, ifP, rasterPos, cols, rows, maxval, format,
                         afP,
                         &alpha, &transparent, &transcolor, &transexact,
-                        &alpha_mask, &alpha_maxval);
+                        &alpha_mask, &alphaMaxval);
 
   determineBackground(cmdline, maxval, &backcolor);
 
   /* first of all, check if we have a grayscale image written as PPM */
 
-  if (pnm_type == PPM_TYPE && !cmdline.force) {
+  if (pnmType == PPM_TYPE && !cmdline.force) {
       unsigned int row;
       bool isgray;
 
@@ -2699,7 +2663,7 @@ convertpnm(struct cmdlineInfo const cmdline,
           }
       }
       if (isgray)
-          pnm_type = PGM_TYPE;
+          pnmType = PGM_TYPE;
   }
 
   /* handle `odd' maxvalues */
@@ -2716,8 +2680,8 @@ convertpnm(struct cmdlineInfo const cmdline,
                   cmdline.force, pfP,
                   alpha, transparent >= 0, transcolor, transexact, 
                   !!cmdline.background, backcolor,
-                  alpha_mask, alpha_maxval, pnm_meaningful_bits,
-                  palette_pnm, &palette_size, trans_pnm, &trans_size,
+                  alpha_mask, alphaMaxval, pnm_meaningful_bits,
+                  palettePnm, &paletteSize, transPnm, &transSize,
                   &background_index, &noColormapReason);
 
   if (noColormapReason) {
@@ -2732,18 +2696,18 @@ convertpnm(struct cmdlineInfo const cmdline,
   } else
       colorMapped = TRUE;
   
-  computeColorMapLookupTable(colorMapped, palette_pnm, palette_size,
-                             trans_pnm, trans_size, alpha, alpha_maxval,
+  computeColorMapLookupTable(colorMapped, palettePnm, paletteSize,
+                             transPnm, transSize, alpha, alphaMaxval,
                              &cht, &caht);
 
-  computeRasterWidth(colorMapped, palette_size, pnm_type, 
+  computeRasterWidth(colorMapped, paletteSize, pnmType, 
                      pnm_meaningful_bits, alpha,
                      &depth, &fulldepth);
   if (verbose)
     pm_message ("writing a%s %d-bit %s%s file%s",
                 fulldepth == 8 ? "n" : "", fulldepth,
                 colorMapped ? "palette": 
-                (pnm_type == PPM_TYPE ? "RGB" : "gray"),
+                (pnmType == PPM_TYPE ? "RGB" : "gray"),
                 alpha ? (colorMapped ? "+transparency" : "+alpha") : "",
                 cmdline.interlace ? " (interlaced)" : "");
 
@@ -2755,50 +2719,44 @@ convertpnm(struct cmdlineInfo const cmdline,
     pm_error ("setjmp returns error condition (2)");
   }
 
-  pngxP->info_ptr->width = cols;
-  pngxP->info_ptr->height = rows;
-  pngxP->info_ptr->bit_depth = depth;
+  doIhdrChunk(pngxP, cols, rows, depth, colorMapped, pnmType, alpha);
 
-  setColorType(pngxP, colorMapped, pnm_type, alpha);
+  if (cmdline.interlace)
+      pngx_setInterlaceHandling(pngxP);
 
-  pngxP->info_ptr->interlace_type = cmdline.interlace;
+  doGamaChunk(cmdline, pngxP);
 
-  doGamaChunk(cmdline, pngxP->info_ptr);
+  doChrmChunk(cmdline, pngxP);
 
-  doChrmChunk(cmdline, pngxP->info_ptr);
+  doPhysChunk(cmdline, pngxP);
 
-  doPhysChunk(cmdline, pngxP->info_ptr);
+  if (pngx_colorType(pngxP) == PNG_COLOR_TYPE_PALETTE) {
 
-  if (pngxP->info_ptr->color_type == PNG_COLOR_TYPE_PALETTE) {
+      /* creating PNG palette (Not counting the transparency palette) */
 
-    /* creating PNG palette (Not counting the transparency palette) */
+      createPngPalette(palettePnm, paletteSize, maxval,
+                       transPnm, transSize, alphaMaxval, 
+                       palette, trans);
+      pngx_setPlte(pngxP, palette, paletteSize);
 
-    createPngPalette(palette_pnm, palette_size, maxval,
-                     trans_pnm, trans_size, alpha_maxval, 
-                     palette, trans);
-    pngxP->info_ptr->valid |= PNG_INFO_PLTE;
-    pngxP->info_ptr->palette = palette;
-    pngxP->info_ptr->num_palette = palette_size;
-
-    doHistChunk(cmdline.hist, palette_pnm, ifP, rasterPos,
-                cols, rows, maxval, format,
-                pngxP->info_ptr, cmdline.verbose);
+      doHistChunk(pngxP, cmdline.hist, palettePnm, ifP, rasterPos,
+                  cols, rows, maxval, format, cmdline.verbose);
   }
 
-  doTrnsChunk(pngxP, trans, trans_size,
+  doTrnsChunk(pngxP, trans, transSize,
               transparent, transcolor, maxval, png_maxval);
 
-  doBkgdChunk(!!cmdline.background, pngxP->info_ptr,
+  doBkgdChunk(pngxP, !!cmdline.background,
               background_index, backcolor,
               maxval, png_maxval, cmdline.verbose);
 
-  doSbitChunk(pngxP->info_ptr, png_maxval, maxval, alpha, alpha_maxval);
+  doSbitChunk(pngxP, png_maxval, maxval, alpha, alphaMaxval);
 
   /* tEXT and zTXT chunks */
   if (cmdline.text || cmdline.ztxt)
-      pnmpng_read_text(pngxP->info_ptr, tfP, !!cmdline.ztxt, cmdline.verbose);
+      pngtxt_read(pngxP, tfP, !!cmdline.ztxt, cmdline.verbose);
 
-  doTimeChunk(cmdline, pngxP->info_ptr);
+  doTimeChunk(cmdline, pngxP);
 
   if (cmdline.filterSet != 0)
       png_set_filter(pngxP->png_ptr, 0, cmdline.filterSet);
