@@ -47,6 +47,8 @@ pngx_create(struct pngx ** const pngxPP,
     if (!pngxP)
         pm_error("Failed to allocate memory for PNG object");
     else {
+        pngxP->numPassesRequired = 1;
+
         switch(rw) {
         case PNGX_READ:
             pngxP->png_ptr = png_create_read_struct(
@@ -102,6 +104,46 @@ pngx_chunkIsPresent(struct pngx * const pngxP,
 
 
 void
+pngx_setCompressionSize(struct pngx * const pngxP,
+                        int           const bufferSize) {
+
+#if PNG_LIBPNG_VER >= 10009
+    png_set_compression_buffer_size(pngxP->png_ptr, bufferSize);
+#else
+    pm_error("Your PNG library cannot set the compression buffer size.  "
+             "You need at least Version 1.0.9 of Libpng; you have Version %s",
+             PNG_LIBPNG_VER_STRING);
+#endif
+}
+
+
+
+void
+pngx_setInterlaceHandling(struct pngx * const pngxP) {
+
+    pngxP->numPassesRequired = png_set_interlace_handling(pngxP->png_ptr);
+}
+
+
+
+void
+pngx_setFilter(struct pngx * const pngxP,
+               int           const filterSet) {
+
+    png_set_filter(pngxP->png_ptr, 0, filterSet);
+}
+
+
+
+void
+pngx_setPacking(struct pngx * const pngxP) {
+
+    png_set_packing(pngxP->png_ptr);
+}
+
+
+
+void
 pngx_setText(struct pngx * const pngxP,
              png_textp     const textP,
              unsigned int  const count) {
@@ -124,22 +166,6 @@ pngx_setIhdr(struct pngx * const pngxP,
     png_set_IHDR(pngxP->png_ptr, pngxP->info_ptr, width, height,
                  bitDepth, colorType, interlaceMethod, compressionMethod,
                  filterMethod);
-}
-
-
-
-void
-pngx_writeInfo(struct pngx * const pngxP) {
-
-    png_write_info(pngxP->png_ptr, pngxP->info_ptr);
-}
-
-
-
-void
-pngx_writeEnd(struct pngx * const pngxP) {
-
-    png_write_end(pngxP->png_ptr, pngxP->info_ptr);
 }
 
 
@@ -206,14 +232,6 @@ pngx_setSbit(struct pngx * const pngxP,
     sbit = sbitArg;
 
     png_set_sBIT(pngxP->png_ptr, pngxP->info_ptr, &sbit);
-}
-
-
-
-void
-pngx_setInterlaceHandling(struct pngx * const pngxP) {
-
-    png_set_interlace_handling(pngxP->png_ptr);
 }
 
 
@@ -298,6 +316,32 @@ pngx_setBkgdRgb(struct pngx * const pngxP,
 
     png_set_bKGD(pngxP->png_ptr, pngxP->info_ptr, &background);
 }
+
+
+
+void
+pngx_writeInfo(struct pngx * const pngxP) {
+
+    png_write_info(pngxP->png_ptr, pngxP->info_ptr);
+}
+
+
+
+void
+pngx_writeRow(struct pngx *    const pngxP,
+              const png_byte * const line) {
+
+    png_write_row(pngxP->png_ptr, (png_byte *)line);
+}
+
+
+
+void
+pngx_writeEnd(struct pngx * const pngxP) {
+
+    png_write_end(pngxP->png_ptr, pngxP->info_ptr);
+}
+
 
 
 

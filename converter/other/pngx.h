@@ -34,10 +34,15 @@ struct pngx_trans {
 typedef enum {PNGX_READ, PNGX_WRITE} pngx_rw;
 
 struct pngx {
-    png_structp png_ptr;
-    png_infop   info_ptr;
-    pngx_rw     rw;
-    png_uint_16 maxval;
+    png_structp  png_ptr;
+    png_infop    info_ptr;
+    pngx_rw      rw;
+    png_uint_16  maxval;
+    unsigned int numPassesRequired;
+        /* The number of times we have write the complete image to the
+           compressor.  This is more than one when the compressor is set
+           up to do an interlaced format.
+        */
 };
 
 void
@@ -54,6 +59,20 @@ pngx_chunkIsPresent(struct pngx * const pngxP,
 
 png_byte
 pngx_colorType(struct pngx * const pngxP);
+
+void
+pngx_setInterlaceHandling(struct pngx * const pngxP);
+
+void
+pngx_setCompressionSize(struct pngx * const pngxP,
+                        int           const bufferSize);
+
+void
+pngx_setFilter(struct pngx * const pngxP,
+               int           const filterSet);
+
+void
+pngx_setPacking(struct pngx * const pngxP);
 
 void
 pngx_setText(struct pngx * const pngxP,
@@ -91,9 +110,6 @@ pngx_setSbit(struct pngx * const pngxP,
              png_color_8   const sbit);
 
 void
-pngx_setInterlaceHandling(struct pngx * const pngxP);
-
-void
 pngx_setPlte(struct pngx * const pngxP,
              png_color *   const palette,
              unsigned int  const paletteSize);
@@ -124,6 +140,10 @@ pngx_setBkgdRgb(struct pngx * const pngxP,
 
 void
 pngx_writeInfo(struct pngx * const pngxP);
+
+void
+pngx_writeRow(struct pngx *    const pngxP,
+              const png_byte * const line);
 
 void
 pngx_writeEnd(struct pngx * const pngxP);

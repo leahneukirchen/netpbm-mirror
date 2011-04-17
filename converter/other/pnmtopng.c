@@ -2119,41 +2119,28 @@ createPngPalette(pixel              palette_pnm[],
 
 
 static void
-setCompressionSize(png_struct * const png_ptr,
-                   int const    buffer_size) {
-
-#if PNG_LIBPNG_VER >= 10009
-    png_set_compression_buffer_size(png_ptr, buffer_size);
-#else
-    pm_error("Your PNG library cannot set the compression buffer size.  "
-             "You need at least Version 1.0.9 of Libpng; you have Version %s",
-             PNG_LIBPNG_VER_STRING);
-#endif
-}
-
-
-
-static void
-setZlibCompression(png_struct *           const png_ptr,
+setZlibCompression(struct pngx *          const pngxP,
                    struct zlibCompression const zlibCompression) {
 
     if (zlibCompression.levelSpec)
-        png_set_compression_level(png_ptr, zlibCompression.level);
+        png_set_compression_level(pngxP->png_ptr, zlibCompression.level);
 
     if (zlibCompression.memLevelSpec)
-        png_set_compression_mem_level(png_ptr, zlibCompression.mem_level);
+        png_set_compression_mem_level(pngxP->png_ptr,
+                                      zlibCompression.mem_level);
 
     if (zlibCompression.strategySpec)
-        png_set_compression_strategy(png_ptr, zlibCompression.strategy);
+        png_set_compression_strategy(pngxP->png_ptr, zlibCompression.strategy);
 
     if (zlibCompression.windowBitsSpec)
-        png_set_compression_window_bits(png_ptr, zlibCompression.window_bits);
+        png_set_compression_window_bits(pngxP->png_ptr,
+                                        zlibCompression.window_bits);
 
     if (zlibCompression.methodSpec)
-        png_set_compression_method(png_ptr, zlibCompression.method);
+        png_set_compression_method(pngxP->png_ptr, zlibCompression.method);
 
     if (zlibCompression.bufferSizeSpec) {
-        setCompressionSize(png_ptr, zlibCompression.buffer_size);
+        pngx_setCompressionSize(pngxP, zlibCompression.buffer_size);
     }
 }
                   
@@ -2227,14 +2214,14 @@ writeRaster(struct pngx *        const pngxP,
             xelval               const maxval,
             int                  const format,
             xelval               const png_maxval,
-            unsigned             const int depth,
+            unsigned int         const depth,
             bool                 const alpha,
             gray **              const alpha_mask,
             colorhash_table      const cht,
             coloralphahash_table const caht
             ) {
 /*----------------------------------------------------------------------------
-   Write the PNG raster via compressor *png_ptr, reading the PNM raster
+   Write the PNG raster via compressor *pngxP, reading the PNM raster
    from file *ifP, position 'rasterPos'.
 
    The PNG raster consists of IDAT chunks.
@@ -2252,7 +2239,7 @@ writeRaster(struct pngx *        const pngxP,
     if (line == NULL)
         pm_error("out of memory allocating PNG row buffer");
 
-    for (pass = 0; pass < png_set_interlace_handling(pngxP->png_ptr); ++pass) {
+    for (pass = 0; pass < pngxP->numPassesRequired; ++pass) {
         unsigned int row;
         pm_seek2(ifP, &rasterPos, sizeof(rasterPos));
         for (row = 0; row < rows; ++row) {
@@ -2264,7 +2251,7 @@ writeRaster(struct pngx *        const pngxP,
                         alpha, alpha ? alpha_mask[row] : NULL,
                         cht, caht, pngxP, png_maxval, depth);
 
-            png_write_row(pngxP->png_ptr, line);
+            pngx_writeRow(pngxP, line);
         }
     }
     pnm_freerow(xelrow);
@@ -2759,31 +2746,23 @@ convertpnm(struct cmdlineInfo const cmdline,
   doTimeChunk(cmdline, pngxP);
 
   if (cmdline.filterSet != 0)
-      png_set_filter(pngxP->png_ptr, 0, cmdline.filterSet);
+      pngx_setFilter(pngxP, cmdline.filterSet);
 
-  setZlibCompression(pngxP->png_ptr, cmdline.zlibCompression);
+  setZlibCompression(pngxP, cmdline.zlibCompression);
 
   png_init_io(pngxP->png_ptr, ofP);
 
   /* write the png-info struct */
-  png_write_info(pngxP->png_ptr, pngxP->info_ptr);
-
-  if (cmdline.text || cmdline.ztxt)
-      /* prevent from being written twice with png_write_end */
-      pngxP->info_ptr->num_text = 0;
-
-  if (cmdline.modtime)
-      /* prevent from being written twice with png_write_end */
-      pngxP->info_ptr->valid &= ~PNG_INFO_tIME;
+  pngx_writeInfo(pngxP);
 
   /* let libpng take care of, e.g., bit-depth conversions */
-  png_set_packing(pngxP->png_ptr);
+  pngx_setPacking(pngxP);
 
   writeRaster(pngxP, ifP, rasterPos,
               cols, rows, maxval, format,
               png_maxval, depth, alpha, alpha_mask, cht, caht);
 
-  png_write_end(pngxP->png_ptr, pngxP->info_ptr);
+  pngx_writeEnd(pngxP);
 
   pngx_destroy(pngxP);
 
