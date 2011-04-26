@@ -637,19 +637,19 @@ munpack(const uint8_t * const p,
 
 
 static void
-ipdb_g16row(IPDB *       const pdbP,
-            unsigned int const row,
-            uint8_t *    const buffer) {
-
+g16row(IPDB *       const pdbP,
+       unsigned int const row,
+       uint8_t *    const buffer) {
+    
     g16unpack(ipdb_img_row(pdbP->i, row), buffer, ipdb_width(pdbP));
 }
 
 
 
 static void
-ipdb_grow(IPDB *       const pdbP,
-          unsigned int const row,
-          uint8_t *    const buffer) {
+grow(IPDB *       const pdbP,
+     unsigned int const row,
+     uint8_t *    const buffer) {
 
     gunpack(ipdb_img_row(pdbP->i, row), buffer, ipdb_width(pdbP));
 }
@@ -657,9 +657,9 @@ ipdb_grow(IPDB *       const pdbP,
 
 
 static void
-ipdb_mrow(IPDB *       const pdbP,
-          unsigned int const row,
-          uint8_t *    const buffer) {
+mrow(IPDB *       const pdbP,
+     unsigned int const row,
+     uint8_t *    const buffer) {
 
     munpack(ipdb_img_row(pdbP->i, row), buffer, ipdb_width(pdbP));
 }
@@ -667,7 +667,7 @@ ipdb_mrow(IPDB *       const pdbP,
 
 
 static void
-writePdbImg(IPDB * const pdbP,
+writeImgPam(IPDB * const pdbP,
             FILE * const ofP) {
 
     struct pam pam;
@@ -700,11 +700,11 @@ writePdbImg(IPDB * const pdbP,
 
 
         if (ipdb_type(pdbP) == IMG_MONO)
-            ipdb_mrow(pdbP, row, imgRow);
+            mrow(pdbP, row, imgRow);
         else if (ipdb_type(pdbP) == IMG_GRAY)
-            ipdb_grow(pdbP, row, imgRow);
+            grow(pdbP, row, imgRow);
         else
-            ipdb_g16row(pdbP, row, imgRow);
+            g16row(pdbP, row, imgRow);
 
         for (col = 0; col < pam.width; ++col)
             tupleRow[col][0] = imgRow[col];
@@ -719,8 +719,8 @@ writePdbImg(IPDB * const pdbP,
 
 
 static void
-writetxt(IPDB *       const pdbP,
-         const char * const name) {
+writeText(IPDB *       const pdbP,
+          const char * const name) {
 
     const char * const note = ipdb_text(pdbP);
 
@@ -762,9 +762,9 @@ main(int argc, const char ** argv) {
     if (status != 0)
         pm_error("Image header read error: %s.", ipdb_err(status));
 
-    writePdbImg(pdbP, stdout);
+    writeImgPam(pdbP, stdout);
 
-    writetxt(pdbP, cmdline.notefile);
+    writeText(pdbP, cmdline.notefile);
 
     ipdb_free(pdbP);
 
