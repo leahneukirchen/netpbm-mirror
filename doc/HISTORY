@@ -23,6 +23,9 @@ not yet  BJH  Release 10.55.00
               as they no longer refer to private members of the pnginfo
               structure.
 
+              configure: fix selection of mingw compiler.  Introduced in
+              10.48.
+
 11.03.30 BJH  Release 10.54.00
 
               Add pamrubber.  Thanks Willem van Schaik <willem@schaik.com>.
