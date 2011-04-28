@@ -4,6 +4,16 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+11.04.28 BJH  Release 10.54.04
+
+              pamrubber: fix crash.  Introduced in 10.54.00.
+
+              configure: fix selection of mingw compiler.  Introduced in
+              10.48.
+
+              Build: fix undefined "strsol" and "vsnprintfN" failure on
+              systems without vasprintf().  Introduced in 10.53.
+
 11.04.06 BJH  Release 10.54.03
 
               ppmtobmp: fix bugs causing bogus failure and incorrect output on

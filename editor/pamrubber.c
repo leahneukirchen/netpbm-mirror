@@ -1300,44 +1300,6 @@ createWhiteTuple(const struct pam * const pamP,
 
 
 
-static sample
-pix(tuple **     const tuples,
-    point        const p,
-    unsigned int const plane,
-    bool         const linear) {
-                    
-    double pix;
-
-    if (!linear) {
-        pix = tuples
-            [(int) floor(p.y + 0.5)]
-            [(int) floor(p.x + 0.5)][plane];
-    } else {
-        double const rx = p.x - floor(p.x);
-        double const ry = p.y - floor(p.y);
-        pix = 0.0;
-        pix += (1.0 - rx) * (1.0 - ry)
-            * tuples
-            [(int) floor(p.y)]
-            [(int) floor(p.x)][plane];
-        pix += rx * (1.0 - ry)
-            * tuples
-            [(int) floor(p.y)]
-            [(int) floor(p.x) + 1][plane];
-        pix += (1.0 - rx) * ry 
-            * tuples
-            [(int) floor(p.y) + 1]
-            [(int) floor(p.x)][plane];
-        pix += rx * ry
-            * tuples
-            [(int) floor(p.y) + 1]
-            [(int) floor(p.x) + 1][plane];
-    }
-    return (int) floor(pix);
-}
-
-
-
 static void
 makeAllWhite(struct pam * const pamP,
              tuple **     const tuples) {
@@ -1358,6 +1320,64 @@ makeAllWhite(struct pam * const pamP,
 
 
 
+static sample
+pix(tuple **     const tuples,
+    unsigned int const width,
+    unsigned int const height,
+    point        const p1,
+    unsigned int const plane,
+    bool         const linear) {
+
+    point p;
+    double pix;
+
+    p.x = p1.x + 1E-3;
+    p.y = p1.y + 1E-3;
+
+    if (p.x < 0.0)
+        p.x = 0.0;
+    if (p.x > (double) width - 1.0)
+        p.x = (double) width - 1.0;
+    if (p.y < 0.0)
+        p.y = 0.0;
+    if (p.y > (double) height - 1.0)
+        p.y = (double) height - 1.0;
+
+    if (!linear) {
+        pix = tuples
+            [(int) floor(p.y + 0.5)]
+            [(int) floor(p.x + 0.5)][plane];
+    } else {
+        double const rx = p.x - floor(p.x);
+        double const ry = p.y - floor(p.y);
+        pix = 0.0;
+        if (((int) floor(p.x) >= 0) && ((int) floor(p.x) < width) &&
+            ((int) floor(p.y) >= 0) && ((int) floor(p.y) < height)) {
+            pix += (1.0 - rx) * (1.0 - ry) 
+                * tuples[(int) floor(p.y)][(int) floor(p.x)][plane];
+        }
+        if (((int) floor(p.x) + 1 >= 0) && ((int) floor(p.x) + 1 < width) &&
+            ((int) floor(p.y) >= 0) && ((int) floor(p.y) < height)) {
+            pix += rx * (1.0 - ry) 
+                * tuples[(int) floor(p.y)][(int) floor(p.x) + 1][plane];
+        }
+        if (((int) floor(p.x) >= 0) && ((int) floor(p.x) < width) &&
+            ((int) floor(p.y) + 1 >= 0) && ((int) floor(p.y) + 1 < height)) {
+            pix += (1.0 - rx) * ry 
+                * tuples[(int) floor(p.y) + 1][(int) floor(p.x)][plane];
+        }
+        if (((int) floor(p.x) + 1 >= 0) && ((int) floor(p.x) + 1 < width) &&
+            ((int) floor(p.y) + 1 >= 0) && ((int) floor(p.y) + 1 < height)) {
+            pix += rx * ry 
+                * tuples[(int) floor(p.y) + 1][(int) floor(p.x) + 1][plane];
+        }
+    }
+
+    return (int) floor(pix);
+}
+
+
+
 int
 main(int argc, const char ** const argv) {
 
@@ -1366,8 +1386,9 @@ main(int argc, const char ** const argv) {
     struct pam inpam, outpam;
     tuple ** inTuples;
     tuple ** outTuples;
-
-    unsigned int p2y;
+    unsigned int p2x, p2y;
+    point p1, p2;
+    unsigned int plane;
   
     pm_proginit(&argc, argv);
 
@@ -1396,25 +1417,16 @@ main(int argc, const char ** const argv) {
         prepQuad();
 
     for (p2y = 0; p2y < inpam.height; ++p2y) {
-        unsigned int p2x;
         for (p2x = 0; p2x < inpam.width; ++p2x) {
-            point p1, p2;
             p2 = makepoint(p2x, p2y);
             if (cmdline.quad)
                 warpQuad (&p2, &p1);
             if (cmdline.tri)
                 warpTrig (&p2, &p1);
 
-            p1.x += 1E-3;
-            p1.y += 1E-3;
-            if ((p1.x >= 0.0) && (p1.x < (double) inpam.width - 0.5) &&
-                (p1.y >= 0.0) && (p1.y < (double) inpam.height - 0.5)) {
-                unsigned int plane;
-                for (plane = 0; plane < inpam.depth; ++plane) {
-                    outTuples[p2y][p2x][plane] =
-                        pix(inTuples, p1, plane, cmdline.linear);
-
-                }
+            for (plane = 0; plane < inpam.depth; ++plane) {
+                outTuples[p2y][p2x][plane] =
+                    pix(inTuples, inpam.width, inpam.height, p1, plane, cmdline.linear);
             }
         }
     }
@@ -1444,3 +1456,4 @@ main(int argc, const char ** const argv) {
 
     return 0;
 }
+

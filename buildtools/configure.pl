@@ -646,7 +646,7 @@ sub getCompiler($$$) {
     if (commandExists('x86_64-w64-mingw32-gcc')) {
         printf("Do you want to use the Mingw-w64 Cross-Compiler?\n");
 
-        if (promptYesNo('y') == "y") {
+        if (promptYesNo('y') eq "y") {
             $$compilerR = 'x86_64-w64-mingw32-gcc';
         }
     }
