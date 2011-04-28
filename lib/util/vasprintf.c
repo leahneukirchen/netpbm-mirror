@@ -44,7 +44,7 @@ pm_vasprintf(const char ** const resultP,
     result = malloc(allocSize);
     
     if (result == NULL)
-        *resultP = strsol;
+        *resultP = pm_strsol;
     else {
         size_t realLen;
 
