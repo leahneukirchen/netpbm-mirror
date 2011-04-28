@@ -19,6 +19,10 @@ not yet  BJH  Release 10.55.00
               pnmtops: fix floating point exception or bogus width/height
               too large error.  Introduced in 10.53.
 
+              Build: Pnmtopng, Pamrgbatopng compile with newer libpng,
+              as they no longer refer to private members of the pnginfo
+              structure.
+
 11.03.30 BJH  Release 10.54.00
 
               Add pamrubber.  Thanks Willem van Schaik <willem@schaik.com>.
