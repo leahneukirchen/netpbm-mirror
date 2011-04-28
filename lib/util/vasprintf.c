@@ -48,7 +48,7 @@ pm_vasprintf(const char ** const resultP,
     else {
         size_t realLen;
 
-        vsnprintfN(result, allocSize, format, varargs, &realLen);
+        pm_vsnprintf(result, allocSize, format, varargs, &realLen);
         
         if (realLen >= allocSize)
             strcpy(result + allocSize - 15, "<<<TRUNCATED");

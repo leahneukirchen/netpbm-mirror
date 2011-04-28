@@ -23,8 +23,8 @@ not yet  BJH  Release 10.55.00
               as they no longer refer to private members of the pnginfo
               structure.
 
-              Build: fix undefined "strsol" failure on systems without
-              vasprintf().  Introduced in 10.53.
+              Build: fix undefined "strsol" and "vsnprintfN" failure on
+              systems without vasprintf().  Introduced in 10.53.
 
               configure: fix selection of mingw compiler.  Introduced in
               10.48.
