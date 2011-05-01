@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.55.00
 
+              Add pamtosrf, srftopam.  Thanks Mike Frysinger
+              (vapier@gentoo.org).
+
               pamrubber: fix crash.  Introduced in 10.54.
 
               libnetpbm: pm_system(): fix bug - program always takes
