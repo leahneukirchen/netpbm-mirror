@@ -601,7 +601,7 @@ pm_readlittlelong(FILE * const ifP,
 
 int
 pm_readlittlelong2(FILE *    const ifP,
-                int32_t * const lP) {
+                   int32_t * const lP) {
     int rc;
     long l;
 
