@@ -149,15 +149,10 @@ producePam(struct pam *     const pamP,
 
 
 static void
-convertsrf(struct cmdlineInfo const cmdline,
-           FILE *             const ifP,
-           FILE *             const ofP) {
-/*----------------------------------------------------------------------------
-  Design note:  It's is really a modularity violation that we have
-  all the command line parameters as an argument.  We do it because we're
-  lazy -- it takes a great deal of work to carry all that information as
-  separate arguments -- and it's only a very small violation.
-  -----------------------------------------------------------------------------*/
+srftopam(struct cmdlineInfo const cmdline,
+         FILE *             const ifP,
+         FILE *             const ofP) {
+
     const char * comment = "Produced by srftopam";  /* constant */
     long         width, height;
     long         fwidth;
@@ -214,7 +209,7 @@ main(int argc, const char * argv[]) {
 
     ifP = pm_openr(cmdline.inputFileName);
 
-    convertsrf(cmdline, ifP, stdout);
+    srftopam(cmdline, ifP, stdout);
 
     pm_closer(ifP);
 
