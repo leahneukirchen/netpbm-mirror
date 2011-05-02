@@ -43,21 +43,24 @@ static bool
 readPstring(FILE *               const ifP,
             struct srf_pstring * const pstringP) {
 
-    bool retval;
     size_t bytesRead;
 
     pm_readlittlelong2u(ifP, &pstringP->len);
 
-    MALLOCARRAY_NOFAIL(pstringP->val, pstringP->len + 1);
+    MALLOCARRAY(pstringP->val, pstringP->len + 1);
+
+    if (!pstringP->val)
+        pm_error("Failed to allocate buffer to read %u-byte pstring",
+                 pstringP->len);
 
     bytesRead = fread(pstringP->val, 1, pstringP->len, ifP);
     if (bytesRead != pstringP->len)
-        retval = false;
-    else {
-        pstringP->val[pstringP->len] = '\0';
-        retval = true;
-    }        
-    return retval;
+        pm_error("Failed to read pstring.  Requested %u bytes, got %u",
+                 (unsigned)pstringP->len,  (unsigned)bytesRead);
+
+    pstringP->val[pstringP->len] = '\0';
+
+    return true;
 }
 
 
