@@ -96,10 +96,6 @@ struct srf_img_header {
 #define SRF_ALPHA_OPAQUE 0
 #define SRF_ALPHA_TRANS  128
 
-#define SRF_TOPAM_A(d) srf_alpha_srftopam((uint8_t)(d))
-
-#define SRF_FROMPAM_A(d) srf_alpha_pamtosrf((uint8_t)(d))
-
 struct srf_img_alpha {
     uint32_t        type;
 
@@ -115,12 +111,6 @@ struct srf_img_alpha {
       width*height*2 bytes - RBG values as "rrrrrggggg0bbbbb" bits
                              (across, then down)
 */
-#define SRF_TOPAM_R(d) ((((d) >> 11) & 0x1f) << 3)
-#define SRF_TOPAM_G(d) ((((d) >>  6) & 0x1f) << 3)
-#define SRF_TOPAM_B(d) ((((d) >>  0) & 0x1f) << 3)
-
-
-
 
 struct srf_img_data {
     uint32_t   type;
