@@ -29,6 +29,8 @@ not yet  BJH  Release 10.55.00
               Build: fix undefined "strsol" and "vsnprintfN" failure on
               systems without vasprintf().  Introduced in 10.53.
 
+              Build: fix compiler warning in pbmtocmuwm.
+
               configure: fix selection of mingw compiler.  Introduced in
               10.48.
 
