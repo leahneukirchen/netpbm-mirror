@@ -24,8 +24,8 @@ from 0.0 (only ppmfile1's image data) to 1.0 (only ppmfile2's image
 data).  Anything in between specifies a smooth blend between the two
 images.
 
-<P>The two images must have the same dimensions, the same maxval, and the
-same type (PBM/PGM/PPM).
+<P>The two images must have the same dimensions and the same maxval.  Before
+Netpbm 10.54 (March 2011), they must also have the same type (PBM/PGM/PPM).
 
 <p>The fade factor is applied to brightness, not light intensity.  That means
 for example that if you have a series of images you generated
