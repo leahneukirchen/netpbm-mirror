@@ -159,12 +159,12 @@ void
 srf_term(struct srf * const srfP);
 
 void
-srf_init(struct srf * const srfP,
-         uint32_t     const imgCnt,
-         uint16_t     const width3d,
-         uint16_t     const height3d,
-         uint16_t     const widthOv,
-         uint16_t     const heightOv);
+srf_init(struct srf * const srfP);
+
+void
+srf_create_img(struct srf * const srfP,
+               uint16_t     const width,
+               uint16_t     const height);
 
 #endif
 

@@ -152,30 +152,20 @@ writeRaster(struct pam *     const pamP,
 
 
 static void
-srftopam(struct cmdlineInfo const cmdline,
-         FILE *             const ifP,
-         FILE *             const ofP) {
+convertOneImage(struct srf_img * const imgP,
+                FILE *           const ofP) {
 
     const char * comment = "Produced by srftopam";  /* constant */
-    long         width, height;
-    unsigned int i;
-    struct srf   srf;
+
     struct pam   outPam;
-
-    srf_read(ifP, verbose, &srf);
-
-    for (i = 0, width = 0, height = 0; i < srf.header.img_cnt; ++i) {
-        width = MAX(width, srf.imgs[i].header.width);
-        height += srf.imgs[i].header.height;
-    }
 
     outPam.size             = sizeof(struct pam);
     outPam.len              = PAM_STRUCT_SIZE(comment_p);
     outPam.file             = ofP;
     outPam.format           = PAM_FORMAT;
     outPam.plainformat      = 0;
-    outPam.width            = width;
-    outPam.height           = height;
+    outPam.width            = imgP->header.width;
+    outPam.height           = imgP->header.height;
     outPam.depth            = 4;
     outPam.maxval           = 255;
     outPam.bytes_per_sample = 1;
@@ -185,8 +175,26 @@ srftopam(struct cmdlineInfo const cmdline,
 
     pnm_writepaminit(&outPam);
 
-    for (i = 0; i < srf.header.img_cnt; ++i)
-        writeRaster(&outPam, &srf.imgs[i]);
+    writeRaster(&outPam, imgP);
+}
+
+
+
+static void
+srftopam(struct cmdlineInfo const cmdline,
+         FILE *             const ifP,
+         FILE *             const ofP) {
+
+    unsigned int imgSeq;
+    struct srf   srf;
+
+    srf_read(ifP, verbose, &srf);
+
+    for (imgSeq = 0; imgSeq < srf.header.img_cnt; ++imgSeq) {
+        if (verbose)
+            pm_message("Converting Image %u", imgSeq);
+        convertOneImage(&srf.imgs[imgSeq], ofP);
+    }
 
     srf_term(&srf);
 }

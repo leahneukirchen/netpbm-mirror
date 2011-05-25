@@ -593,7 +593,7 @@ srf_img_init(struct srf_img * const imgP,
 
 static void
 initPstring(struct srf_pstring * const pstringP,
-                 const char *         const s) {
+            const char *         const s) {
 
     pstringP->len = strlen(s);
 
@@ -610,23 +610,14 @@ initPstring(struct srf_pstring * const pstringP,
 
 
 void
-srf_init(struct srf * const srfP,
-         uint32_t     const imgCnt,
-         uint16_t     const width3d,
-         uint16_t     const height3d,
-         uint16_t     const widthOv,
-         uint16_t     const heightOv) {
+srf_init(struct srf * const srfP) {
 
     struct srf_header * const headerP = &srfP->header;
-    unsigned int i;
-
-    if (imgCnt == 0 || imgCnt % 2 != 0)
-        pm_error("invalid image count");
 
     strcpy(headerP->magic, SRF_MAGIC);
     headerP->_int4[0] = 4;
     headerP->_int4[1] = 4;
-    headerP->img_cnt = imgCnt;
+    headerP->img_cnt = 0;
     headerP->_int5 = 5;
     initPstring(&headerP->s578, "578");
     headerP->_int6 = 6;
@@ -634,16 +625,30 @@ srf_init(struct srf * const srfP,
     headerP->_int7 = 7;
     initPstring(&headerP->prod, "006-D0578-XX");
 
-    MALLOCARRAY(srfP->imgs, headerP->img_cnt);
-
-    if (!srfP->imgs)
-        pm_error("Could not allocate memory for %u images", headerP->img_cnt);
-
-    for (i = 0; i < headerP->img_cnt; i += 2) {
-        srf_img_init(&srfP->imgs[i], width3d, height3d);
-        srf_img_init(&srfP->imgs[i + 1], widthOv, heightOv);
-    }
+    srfP->imgs = NULL;
 }
 
 
 
+void
+srf_create_img(struct srf * const srfP,
+               uint16_t     const width,
+               uint16_t     const height) {
+/*----------------------------------------------------------------------------
+   Add an "image" to the SRF.  An image is a horizontal series of 36 
+   square frames, each showing a different angle view of an object, 10
+   degrees about.  At least that's what it's supposed to be.  We don't
+   really care -- it's just an arbitrary rectangular raster image to us.
+-----------------------------------------------------------------------------*/
+    
+    ++srfP->header.img_cnt;
+
+    REALLOCARRAY(srfP->imgs, srfP->header.img_cnt);
+
+    if (!srfP->imgs)
+        pm_error("Could not allocate memory for %u images",
+                 srfP->header.img_cnt);
+
+    srf_img_init(&srfP->imgs[srfP->header.img_cnt-1], width, height);
+}
+                 

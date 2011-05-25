@@ -130,78 +130,47 @@ srfAlphaFromTuple(tuple              const t,
 
 
 static void
-producepam(struct cmdlineInfo const cmdline,
-           struct pam *       const pamP,
-           FILE *             const ofP) {
-/*----------------------------------------------------------------------------
-   Design note:  It's is really a modularity violation that we have
-   all the command line parameters as an argument.  We do it because we're
-   lazy -- it takes a great deal of work to carry all that information as
-   separate arguments -- and it's only a very small violation.
------------------------------------------------------------------------------*/
-    uint16_t width3d, height3d;
-    uint16_t widthOv, heightOv;
-    unsigned int row;
-    unsigned int imgCt;
-    unsigned int i;
-    struct srf srf;
+convertRaster(struct pam *     const pamP,
+              struct srf_img * const imgP) {
+
     tuple * tuplerow;
+    unsigned int row;
 
-    if (verbose)
-        pm_message("reading %ux%u image", pamP->width, pamP->height);
-
-    /* Figure out the dimensions.  The frame series should come in pairs,
-       each series should contain 36 frames, the first set should never
-       be smaller than the 2nd set, the sets should have the same dimension
-       combos as other sets, and each frame is square.
-
-       So if we have two frame series with the first being 80px tall and
-       the second is 60px tall, we can figure out things from there.
-    */
-    height3d = pamP->width / SRF_NUM_FRAMES;
-    for (row = 1; row <= pamP->height / height3d; ++row) {
-        heightOv = (pamP->height - (height3d * row)) / row;
-        if (heightOv <= height3d) {
-            if ((heightOv + height3d) * row == pamP->height)
-                break;
-        }
-    }
-    imgCt = row * 2;
-    width3d = height3d * SRF_NUM_FRAMES;
-    widthOv = heightOv * SRF_NUM_FRAMES;
-
-    if (verbose)
-        pm_message("detected %u sets of 16-bit RGB images (%ux%u and %ux%u)",
-                   imgCt, width3d, height3d, widthOv, heightOv);
-
-    srf_init(&srf, imgCt, width3d, height3d, widthOv, heightOv);
-
-    /* Scan out each frame series */
     tuplerow = pnm_allocpamrow(pamP);
-    for (i = 0; i < srf.header.img_cnt; ++i) {
-        struct srf_img * const imgP = &srf.imgs[i];
 
-        unsigned int row;
+    for (row = 0; row < pamP->height; ++row) {
+        uint32_t        const off   = row * pamP->height;
+        uint16_t *      const data  = &imgP->data.data[off];
+        unsigned char * const alpha = &imgP->alpha.data[off];
 
-        for (row = 0; row < imgP->header.height; ++row) {
-            uint32_t        const off   = row * imgP->header.width;
-            uint16_t *      const data  = &imgP->data.data[off];
-            unsigned char * const alpha = &imgP->alpha.data[off];
+        unsigned int col;
 
-            unsigned int col;
+        pnm_readpamrow(pamP, tuplerow);
 
-            pnm_readpamrow(pamP, tuplerow);
-            for (col = 0; col < imgP->header.width; ++col) {
-                alpha[col] = srfAlphaFromTuple(tuplerow[col], pamP);
-                data[col]  = srfColorFromTuple(tuplerow[col], pamP);
-            }
+        for (col = 0; col < pamP->width; ++col) {
+            alpha[col] = srfAlphaFromTuple(tuplerow[col], pamP);
+            data[col]  = srfColorFromTuple(tuplerow[col], pamP);
         }
     }
     pnm_freepamrow(tuplerow);
+}
 
-    srf_write(ofP, &srf);
 
-    srf_term(&srf);
+
+static void
+convertImage(FILE *       const ifP,
+             struct srf * const srfP) {
+
+    struct pam inpam;
+
+    pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
+
+    if (verbose)
+        pm_message("reading %ux%u image", inpam.width, inpam.height);
+
+    srf_create_img(srfP, inpam.width, inpam.height);
+
+    convertRaster(&inpam, &srfP->imgs[srfP->header.img_cnt-1]);
 }
 
 
@@ -211,7 +180,10 @@ main(int argc, const char * argv[]) {
 
   struct cmdlineInfo cmdline;
   FILE *             ifP;
-  struct pam         inPam;
+  struct srf         srf;
+  bool               eof;   /* No more images in input */
+  unsigned int       imageSeq;
+      /* Sequence of current image in input file.  First = 0 */
 
   pm_proginit(&argc, argv);
 
@@ -221,11 +193,25 @@ main(int argc, const char * argv[]) {
 
   ifP = pm_openr(cmdline.inputFileName);
 
-  pnm_readpaminit(ifP, &inPam, PAM_STRUCT_SIZE(tuple_type));
+  srf_init(&srf);
 
-  producepam(cmdline, &inPam, stdout);
+  eof = FALSE;
+  for (imageSeq = 0; !eof; ++imageSeq) {
+      if (verbose)
+          pm_message("Converting Image %u", imageSeq);
 
+      convertImage(ifP, &srf);
+
+      pnm_nextimage(ifP, &eof);
+  }
+
+  srf_write(stdout, &srf);
+    
+  srf_term(&srf);
   pm_closer(ifP);
 
   return 0;
 }
+
+
+
