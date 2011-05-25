@@ -11,6 +11,7 @@
  * implied warranty.
  */
 
+#include <assert.h>
 #include <stdio.h>
 
 #include "pm_c_util.h"
@@ -109,24 +110,26 @@ srfAlpha(uint8_t const d) {
 
 
 static void
-producePam(struct pam *     const pamP,
-           uint16_t         const lineLen,
-           struct srf_img * const imgP) {
+writeRaster(struct pam *     const pamP,
+            struct srf_img * const imgP) {
 
     tuple *  tuplerow;
-    uint16_t r;
+    unsigned int row;
+
+    assert(imgP->header.width <= pamP->width);
 
     tuplerow = pnm_allocpamrow(pamP);
 
-    for (r = 0; r < imgP->header.height; ++r) {
-        unsigned int const off = r * imgP->header.width;
+    for (row = 0; row < imgP->header.height; ++row) {
+        unsigned int const rowStart = row * imgP->header.width;
 
         unsigned int col;
 
         for (col = 0; col < imgP->header.width; ++col) {
-            uint16_t const data  = imgP->data.data[off + col];
-            uint16_t const alpha = imgP->alpha.data[off + col];
+            uint16_t const data  = imgP->data.data[rowStart + col];
+            uint16_t const alpha = imgP->alpha.data[rowStart + col];
 
+            assert(col < pamP->width);
             
             tuplerow[col][PAM_RED_PLANE] = srfRed(data);
             tuplerow[col][PAM_GRN_PLANE] = srfGrn(data);
@@ -134,7 +137,7 @@ producePam(struct pam *     const pamP,
             tuplerow[col][PAM_TRN_PLANE] = srfAlpha(alpha);
         }
 
-        for (; col < lineLen; ++col) {
+        for (; col < pamP->width; ++col) {
             tuplerow[col][PAM_RED_PLANE] = 0;
             tuplerow[col][PAM_GRN_PLANE] = 0;
             tuplerow[col][PAM_BLU_PLANE] = 0;
@@ -155,19 +158,14 @@ srftopam(struct cmdlineInfo const cmdline,
 
     const char * comment = "Produced by srftopam";  /* constant */
     long         width, height;
-    long         fwidth;
     unsigned int i;
     struct srf   srf;
     struct pam   outPam;
 
     srf_read(ifP, verbose, &srf);
 
-    width = height = 0;  /* initial value */
-    for (i = 0; i < srf.header.img_cnt; ++i) {
-        if (width < srf.imgs[i].header.width) {
-            width  = srf.imgs[i].header.width;
-            fwidth = srf.imgs[i].header.height;
-        }
+    for (i = 0, width = 0, height = 0; i < srf.header.img_cnt; ++i) {
+        width = MAX(width, srf.imgs[i].header.width);
         height += srf.imgs[i].header.height;
     }
 
@@ -188,7 +186,7 @@ srftopam(struct cmdlineInfo const cmdline,
     pnm_writepaminit(&outPam);
 
     for (i = 0; i < srf.header.img_cnt; ++i)
-        producePam(&outPam, width, &srf.imgs[i]);
+        writeRaster(&outPam, &srf.imgs[i]);
 
     srf_term(&srf);
 }
@@ -215,3 +213,6 @@ main(int argc, const char * argv[]) {
 
     return 0;
 }
+
+
+
