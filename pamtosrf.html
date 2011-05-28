@@ -1,0 +1,99 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<title>Pamtosrf User Manual</title>
+<meta http-equiv="content-type" content="text/html; charset=us-ascii" />
+</head>
+
+<body>
+
+<h1>pamtosrf</h1>
+
+<p>Updated: 27 May 2011</p>
+
+<p><a href="#index">Table Of Contents</a></p>
+
+
+<h2>NAME</h2>
+
+<p>pamtosrf - convert a sequence of Netpbm images to a SRF image file</p>
+
+
+<h2><a id="synopsis">SYNOPSIS</a></h2>
+
+<p><b>pamtosrf</b>
+[<b>-verbose</b>]
+[<i>netpbmfile</i>]
+
+
+<h2><a id="description">DESCRIPTION</a></h2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.</p>
+
+<p><b>pamtosrf</b> reads a Netpbm image stream as input and produces a
+an SRF image file as output.  I don't know exactly what SRF is, but on popular
+use of it is in Garmin vehicle information files, which tell a GPS receiver
+how to depict a vehicle on its display.
+
+<p>An SRF file can contain multiple images; each image in a multi-image
+Netpbm input stream becomes one image in the SRF.</p>
+
+<P><B>pamtosrf</B> does not care how many images there are or what their
+dimensions or content are.  However, a Garmin vehicle information file has
+specific requirements, so if you don't make your Netpbm input conform, neither
+will your SRF output.  For such a file, you should have two image: the first
+for 3D oblique views of the vehicle and the second for overhead views.  Each
+image is a horizontal concatenation of 36 square images, each rotated 10
+degrees from the previous, thereby covering the full 360 degree circle.
+You could create this concatenation with <b>pnmcat -lr</b> and you could
+create the invidual views with <b>pnmrotate</b>.
+</P>
+
+<p>One way to use <b>pamtosrf</b> is to get an SRF file, convert it to PAM
+with <b>srftopam</b>, manipulate it, then convert it back with
+<b>pamtosrf</b>.
+
+<p><i>netpbmfile</i> is the input stream, which defaults to Standard Input.
+Output is always on Standard Output.
+
+
+<h2 id="options">OPTIONS</h2>
+
+<dl>
+<dt><b>-verbose</b></dt>
+<dd>Issue informational messages about the input and the conversion process.
+</dd>
+
+</dl>
+
+<h2><a id="see_also">SEE ALSO</a></h2>
+
+<p>
+<ul>
+  <li><a href="srftopam.html">srftopam</a>
+  <li><a href="pnmcat.html">pnmcat</a></li>
+  <li><a href="pam.html">pam</a></p>
+  </ul>
+
+<h2 a="history">HISTORY</h2>
+
+<P><b>srftopam</b> was new in Netpbm 10.55 (June 2011).
+</p>
+
+</P>It was contributed by Mike Frysinger.
+
+<hr />
+
+<h2 id="index">Table Of Contents</h2>
+
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a></li>
+<li><a href="#description">DESCRIPTION</a></li>
+<li><a href="#options">OPTIONS</a></li>
+<li><a href="#see_also">SEE ALSO</a></li>
+<li><a href="#history">HISTORY</a></li>
+</ul>
+
+</body>
+</html>
+
