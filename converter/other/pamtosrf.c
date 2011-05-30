@@ -139,7 +139,7 @@ convertRaster(struct pam *     const pamP,
     tuplerow = pnm_allocpamrow(pamP);
 
     for (row = 0; row < pamP->height; ++row) {
-        uint32_t        const off   = row * pamP->height;
+        uint32_t        const off   = row * pamP->width;
         uint16_t *      const data  = &imgP->data.data[off];
         unsigned char * const alpha = &imgP->alpha.data[off];
 
