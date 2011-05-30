@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pnmcat User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmcat</H1>
-Updated: 01 April 2007
+Updated: 30 May 2011
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -35,6 +35,11 @@ from its value.
 <p><b>pnmcat</b> reads one or more PNM images as input, concatenates them
 either left to right or top to bottom, and produces a single PNM image
 as output.
+
+<p>The arguments are names of input files.  Any one of these, but not more
+than one, may be &quot;-&quot; to indicate Standard Input.  If you have no
+arguments, that means a single input image from Standard Input (and that is
+pointless - the output is the same as the input).
 
 <p>To assemble a regular grid of images, you can use <b>pamundice</b>.
 
