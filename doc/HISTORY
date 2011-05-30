@@ -22,6 +22,9 @@ not yet  BJH  Release 10.55.00
               pnmtops: fix floating point exception or bogus width/height
               too large error.  Introduced in 10.53.
 
+              pnmcat: Fix garbage output when multiple input image are from
+              Standard Input (now it just fails gracefully).
+
               Build: Pnmtopng, Pamrgbatopng compile with newer libpng,
               as they no longer refer to private members of the pnginfo
               structure.
