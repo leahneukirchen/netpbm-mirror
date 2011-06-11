@@ -277,6 +277,10 @@ typedef void (drawFn)(struct canvas *, blitList *, int);
 struct opdef {
     const char* name;
     int len;
+        /* If non-negative, this is the length of the argument of the
+           instruction.  If negative, it has special meaning; WORD_LEN
+           is the only value negative value.
+        */
     drawFn * impl;
     const char* description;
 };
@@ -291,11 +295,11 @@ struct opdef {
  */
 
 /* for reserved opcodes of known length */
-#define res(length) \
+#define RESERVED_OP(length)                                   \
 { "reserved", (length), NULL, "reserved for Apple use" }
 
 /* for reserved opcodes of length determined by a function */
-#define resf(skipfunction) \
+#define RESERVED_OP_F(skipfunction) \
 { "reserved", NA, (skipfunction), "reserved for Apple use" }
 
 /* seems like RGB colors are 6 bytes, but Apple says they're variable */
@@ -3957,9 +3961,9 @@ static struct opdef const optable[] = {
 /* 0x14 */  { "FillPixPat", NA, FillPixPat, "color fill pattern" },
 /* 0x15 */  { "PnLocHFrac", 2, PnLocHFrac, "fractional pen position" },
 /* 0x16 */  { "ChExtra", 2, NULL, "extra for each character" },
-/* 0x17 */  res(0),
-/* 0x18 */  res(0),
-/* 0x19 */  res(0),
+/* 0x17 */  RESERVED_OP(0),
+/* 0x18 */  RESERVED_OP(0),
+/* 0x19 */  RESERVED_OP(0),
 /* 0x1a */  { "RGBFgCol", RGB_LEN, RGBFgCol, "RGB foreColor" },
 /* 0x1b */  { "RGBBkCol", RGB_LEN, RGBBkCol, "RGB backColor" },
 /* 0x1c */  { "HiliteMode", 0, NULL, "hilite mode flag" },
@@ -3971,134 +3975,134 @@ static struct opdef const optable[] = {
 /* 0x22 */  { "ShortLine", 6, ShortLine, 
               "pnLoc (point, dh, dv (-128 .. 127))" },
 /* 0x23 */  { "ShortLineFrom", 2, ShortLineFrom, "dh, dv (-128 .. 127)" },
-/* 0x24 */  res(WORD_LEN),
-/* 0x25 */  res(WORD_LEN),
-/* 0x26 */  res(WORD_LEN),
-/* 0x27 */  res(WORD_LEN),
+/* 0x24 */  RESERVED_OP(WORD_LEN),
+/* 0x25 */  RESERVED_OP(WORD_LEN),
+/* 0x26 */  RESERVED_OP(WORD_LEN),
+/* 0x27 */  RESERVED_OP(WORD_LEN),
 /* 0x28 */  { "LongText", NA, LongText, 
               "txLoc (point), count (0..255), text" },
 /* 0x29 */  { "DHText", NA, DHText, "dh (0..255), count (0..255), text" },
 /* 0x2a */  { "DVText", NA, DVText, "dv (0..255), count (0..255), text" },
 /* 0x2b */  { "DHDVText", NA, DHDVText, 
               "dh, dv (0..255), count (0..255), text" },
-/* 0x2c */  res(WORD_LEN),
-/* 0x2d */  res(WORD_LEN),
-/* 0x2e */  res(WORD_LEN),
-/* 0x2f */  res(WORD_LEN),
+/* 0x2c */  RESERVED_OP(WORD_LEN),
+/* 0x2d */  RESERVED_OP(WORD_LEN),
+/* 0x2e */  RESERVED_OP(WORD_LEN),
+/* 0x2f */  RESERVED_OP(WORD_LEN),
 /* 0x30 */  { "frameRect", 8, frameRect, "rect" },
 /* 0x31 */  { "paintRect", 8, paintRect, "rect" },
 /* 0x32 */  { "eraseRect", 8, NULL, "rect" },
 /* 0x33 */  { "invertRect", 8, NULL, "rect" },
 /* 0x34 */  { "fillRect", 8, NULL, "rect" },
-/* 0x35 */  res(8),
-/* 0x36 */  res(8),
-/* 0x37 */  res(8),
+/* 0x35 */  RESERVED_OP(8),
+/* 0x36 */  RESERVED_OP(8),
+/* 0x37 */  RESERVED_OP(8),
 /* 0x38 */  { "frameSameRect", 0, frameSameRect, "rect" },
 /* 0x39 */  { "paintSameRect", 0, paintSameRect, "rect" },
 /* 0x3a */  { "eraseSameRect", 0, NULL, "rect" },
 /* 0x3b */  { "invertSameRect", 0, NULL, "rect" },
 /* 0x3c */  { "fillSameRect", 0, NULL, "rect" },
-/* 0x3d */  res(0),
-/* 0x3e */  res(0),
-/* 0x3f */  res(0),
+/* 0x3d */  RESERVED_OP(0),
+/* 0x3e */  RESERVED_OP(0),
+/* 0x3f */  RESERVED_OP(0),
 /* 0x40 */  { "frameRRect", 8, NULL, "rect" },
 /* 0x41 */  { "paintRRect", 8, NULL, "rect" },
 /* 0x42 */  { "eraseRRect", 8, NULL, "rect" },
 /* 0x43 */  { "invertRRect", 8, NULL, "rect" },
 /* 0x44 */  { "fillRRrect", 8, NULL, "rect" },
-/* 0x45 */  res(8),
-/* 0x46 */  res(8),
-/* 0x47 */  res(8),
+/* 0x45 */  RESERVED_OP(8),
+/* 0x46 */  RESERVED_OP(8),
+/* 0x47 */  RESERVED_OP(8),
 /* 0x48 */  { "frameSameRRect", 0, NULL, "rect" },
 /* 0x49 */  { "paintSameRRect", 0, NULL, "rect" },
 /* 0x4a */  { "eraseSameRRect", 0, NULL, "rect" },
 /* 0x4b */  { "invertSameRRect", 0, NULL, "rect" },
 /* 0x4c */  { "fillSameRRect", 0, NULL, "rect" },
-/* 0x4d */  res(0),
-/* 0x4e */  res(0),
-/* 0x4f */  res(0),
+/* 0x4d */  RESERVED_OP(0),
+/* 0x4e */  RESERVED_OP(0),
+/* 0x4f */  RESERVED_OP(0),
 /* 0x50 */  { "frameOval", 8, NULL, "rect" },
 /* 0x51 */  { "paintOval", 8, NULL, "rect" },
 /* 0x52 */  { "eraseOval", 8, NULL, "rect" },
 /* 0x53 */  { "invertOval", 8, NULL, "rect" },
 /* 0x54 */  { "fillOval", 8, NULL, "rect" },
-/* 0x55 */  res(8),
-/* 0x56 */  res(8),
-/* 0x57 */  res(8),
+/* 0x55 */  RESERVED_OP(8),
+/* 0x56 */  RESERVED_OP(8),
+/* 0x57 */  RESERVED_OP(8),
 /* 0x58 */  { "frameSameOval", 0, NULL, "rect" },
 /* 0x59 */  { "paintSameOval", 0, NULL, "rect" },
 /* 0x5a */  { "eraseSameOval", 0, NULL, "rect" },
 /* 0x5b */  { "invertSameOval", 0, NULL, "rect" },
 /* 0x5c */  { "fillSameOval", 0, NULL, "rect" },
-/* 0x5d */  res(0),
-/* 0x5e */  res(0),
-/* 0x5f */  res(0),
+/* 0x5d */  RESERVED_OP(0),
+/* 0x5e */  RESERVED_OP(0),
+/* 0x5f */  RESERVED_OP(0),
 /* 0x60 */  { "frameArc", 12, NULL, "rect, startAngle, arcAngle" },
 /* 0x61 */  { "paintArc", 12, NULL, "rect, startAngle, arcAngle" },
 /* 0x62 */  { "eraseArc", 12, NULL, "rect, startAngle, arcAngle" },
 /* 0x63 */  { "invertArc", 12, NULL, "rect, startAngle, arcAngle" },
 /* 0x64 */  { "fillArc", 12, NULL, "rect, startAngle, arcAngle" },
-/* 0x65 */  res(12),
-/* 0x66 */  res(12),
-/* 0x67 */  res(12),
+/* 0x65 */  RESERVED_OP(12),
+/* 0x66 */  RESERVED_OP(12),
+/* 0x67 */  RESERVED_OP(12),
 /* 0x68 */  { "frameSameArc", 4, NULL, "rect, startAngle, arcAngle" },
 /* 0x69 */  { "paintSameArc", 4, NULL, "rect, startAngle, arcAngle" },
 /* 0x6a */  { "eraseSameArc", 4, NULL, "rect, startAngle, arcAngle" },
 /* 0x6b */  { "invertSameArc", 4, NULL, "rect, startAngle, arcAngle" },
 /* 0x6c */  { "fillSameArc", 4, NULL, "rect, startAngle, arcAngle" },
-/* 0x6d */  res(4),
-/* 0x6e */  res(4),
-/* 0x6f */  res(4),
+/* 0x6d */  RESERVED_OP(4),
+/* 0x6e */  RESERVED_OP(4),
+/* 0x6f */  RESERVED_OP(4),
 /* 0x70 */  { "framePoly", NA, skip_poly_or_region, "poly" },
 /* 0x71 */  { "paintPoly", NA, paintPoly, "poly" },
 /* 0x72 */  { "erasePoly", NA, skip_poly_or_region, "poly" },
 /* 0x73 */  { "invertPoly", NA, skip_poly_or_region, "poly" },
 /* 0x74 */  { "fillPoly", NA, skip_poly_or_region, "poly" },
-/* 0x75 */  resf(skip_poly_or_region),
-/* 0x76 */  resf(skip_poly_or_region),
-/* 0x77 */  resf(skip_poly_or_region),
+/* 0x75 */  RESERVED_OP_F(skip_poly_or_region),
+/* 0x76 */  RESERVED_OP_F(skip_poly_or_region),
+/* 0x77 */  RESERVED_OP_F(skip_poly_or_region),
 /* 0x78 */  { "frameSamePoly", 0, NULL, "poly (NYI)" },
 /* 0x79 */  { "paintSamePoly", 0, NULL, "poly (NYI)" },
 /* 0x7a */  { "eraseSamePoly", 0, NULL, "poly (NYI)" },
 /* 0x7b */  { "invertSamePoly", 0, NULL, "poly (NYI)" },
 /* 0x7c */  { "fillSamePoly", 0, NULL, "poly (NYI)" },
-/* 0x7d */  res(0),
-/* 0x7e */  res(0),
-/* 0x7f */  res(0),
+/* 0x7d */  RESERVED_OP(0),
+/* 0x7e */  RESERVED_OP(0),
+/* 0x7f */  RESERVED_OP(0),
 /* 0x80 */  { "frameRgn", NA, skip_poly_or_region, "region" },
 /* 0x81 */  { "paintRgn", NA, skip_poly_or_region, "region" },
 /* 0x82 */  { "eraseRgn", NA, skip_poly_or_region, "region" },
 /* 0x83 */  { "invertRgn", NA, skip_poly_or_region, "region" },
 /* 0x84 */  { "fillRgn", NA, skip_poly_or_region, "region" },
-/* 0x85 */  resf(skip_poly_or_region),
-/* 0x86 */  resf(skip_poly_or_region),
-/* 0x87 */  resf(skip_poly_or_region),
+/* 0x85 */  RESERVED_OP_F(skip_poly_or_region),
+/* 0x86 */  RESERVED_OP_F(skip_poly_or_region),
+/* 0x87 */  RESERVED_OP_F(skip_poly_or_region),
 /* 0x88 */  { "frameSameRgn", 0, NULL, "region (NYI)" },
 /* 0x89 */  { "paintSameRgn", 0, NULL, "region (NYI)" },
 /* 0x8a */  { "eraseSameRgn", 0, NULL, "region (NYI)" },
 /* 0x8b */  { "invertSameRgn", 0, NULL, "region (NYI)" },
 /* 0x8c */  { "fillSameRgn", 0, NULL, "region (NYI)" },
-/* 0x8d */  res(0),
-/* 0x8e */  res(0),
-/* 0x8f */  res(0),
+/* 0x8d */  RESERVED_OP(0),
+/* 0x8e */  RESERVED_OP(0),
+/* 0x8f */  RESERVED_OP(0),
 /* 0x90 */  { "BitsRect", NA, BitsRect, "copybits, rect clipped" },
 /* 0x91 */  { "BitsRgn", NA, BitsRegion, "copybits, rgn clipped" },
-/* 0x92 */  res(WORD_LEN),
-/* 0x93 */  res(WORD_LEN),
-/* 0x94 */  res(WORD_LEN),
-/* 0x95 */  res(WORD_LEN),
-/* 0x96 */  res(WORD_LEN),
-/* 0x97 */  res(WORD_LEN),
+/* 0x92 */  RESERVED_OP(WORD_LEN),
+/* 0x93 */  RESERVED_OP(WORD_LEN),
+/* 0x94 */  RESERVED_OP(WORD_LEN),
+/* 0x95 */  RESERVED_OP(WORD_LEN),
+/* 0x96 */  RESERVED_OP(WORD_LEN),
+/* 0x97 */  RESERVED_OP(WORD_LEN),
 /* 0x98 */  { "PackBitsRect", NA, BitsRect, "packed copybits, rect clipped" },
 /* 0x99 */  { "PackBitsRgn", NA, BitsRegion, "packed copybits, rgn clipped" },
 /* 0x9a */  { "DirectBitsRect", NA, DirectBitsRect, 
               "PixMap, srcRect, dstRect, int copymode, PixData" },
 /* 0x9b */  { "DirectBitsRgn", NA, DirectBitsRgn, 
               "PixMap, srcRect, dstRect, int copymode, maskRgn, PixData" },
-/* 0x9c */  res(WORD_LEN),
-/* 0x9d */  res(WORD_LEN),
-/* 0x9e */  res(WORD_LEN),
-/* 0x9f */  res(WORD_LEN),
+/* 0x9c */  RESERVED_OP(WORD_LEN),
+/* 0x9d */  RESERVED_OP(WORD_LEN),
+/* 0x9e */  RESERVED_OP(WORD_LEN),
+/* 0x9f */  RESERVED_OP(WORD_LEN),
 /* 0xa0 */  { "ShortComment", 2, ShortComment, "kind (word)" },
 /* 0xa1 */  { "LongComment", NA, LongComment, 
               "kind (word), size (word), data" }
@@ -4107,7 +4111,7 @@ static struct opdef const optable[] = {
 
 
 static void
-processOpcode(Word const opcode, 
+processOpcode(Word            const opcode, 
               struct canvas * const canvasP,
               blitList *      const blitListP,
               unsigned int    const version) {
@@ -4126,13 +4130,14 @@ processOpcode(Word const opcode,
         else if (optable[opcode].len >= 0)
             skip(optable[opcode].len);
         else {
+            /* It's a special length code */
             switch (optable[opcode].len) {
             case WORD_LEN: {
                 Word const len = readWord();
                 skip(len);
-                } break;
+            } break;
             default:
-                pm_error("can't do length %u", optable[opcode].len);
+                pm_error("can't do length %d", optable[opcode].len);
             }
         }
     } else if (opcode == 0xc00) {
@@ -4160,7 +4165,7 @@ processOpcode(Word const opcode,
             pm_message("%s 0x%x", stage, opcode);
         skip((opcode >> 7) & 255);
     } else if (opcode >= 0x8000 && opcode <= 0x80ff) {
-        /* just a reserved opcode */
+        /* just a reserved opcode, no data */
         if (verbose)
             pm_message("reserved 0x%x", opcode);
     } else if (opcode >= 0x8100) {
@@ -4175,13 +4180,13 @@ processOpcode(Word const opcode,
 
 
 static void
-interpret_pict(FILE * const ofP) {
+interpretPict(FILE * const ofP) {
 
     Byte ch;
     Word picSize;
     Word opcode;
     unsigned int version;
-    int i;
+    unsigned int i;
     struct canvas canvas;
     blitList blitList;
 
@@ -4330,7 +4335,7 @@ main(int argc, char * argv[]) {
         skip(512);
     }
 
-    interpret_pict(stdout);
+    interpretPict(stdout);
 
     pm_close(stdout);
 
