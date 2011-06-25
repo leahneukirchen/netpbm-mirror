@@ -4,6 +4,15 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+11.06.25 BJH  Release 10.47.28
+
+              pnmpsnr: fix bug: says PGM images differ when they don't
+              and vice versa.
+
+              libnetpbm: pm_system(): fix bug - program always takes
+              Standard Input from invoker's Standard Input when you don't
+              supply a Standard Output accepter.
+
 11.03.27 BJH  Release 10.47.27
 
               g3topbm: correct error message: codes go up to 13 bits.
