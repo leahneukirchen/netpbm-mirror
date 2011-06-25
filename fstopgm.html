@@ -36,14 +36,14 @@ This will tell you whether you need to use <B>pamscale.</B>
 
 Then use one of the following pipelines:
 <PRE>
-  fstopgm | pgmnorm
-  fstopgm | pamscale -whatever | pgmnorm
+  fstopgm | pnmnorm
+  fstopgm | pamscale -whatever | pnmnorm
 </PRE>
 
 To go to PBM, you want something more like one of these:
 <PRE>
-  fstopgm | pamenlarge 3 | pgmnorm | pamditherbw
-  fstopgm | pamenlarge 3 | pamscale &lt;whatever&gt; | pgmnorm | pamditherbw
+  fstopgm | pamenlarge 3 | pnmnorm | pamditherbw
+  fstopgm | pamenlarge 3 | pamscale &lt;whatever&gt; | pnmnorm | pamditherbw
 </PRE>
 
 You want to enlarge when going to a bitmap because otherwise you lose
@@ -57,7 +57,7 @@ Oakland, CA.
 
 <A HREF="pgmtofs.html">pgmtofs</A>,
 <A HREF="pgm.html">pgm</A>,
-<A HREF="pgmnorm.html">pgmnorm</A>,
+<A HREF="pnmnorm.html">pnmnorm</A>,
 <A HREF="pamenlarge.html">pamenlarge</A>,
 <A HREF="pamscale.html">pamscale</A>,
 <A HREF="pamditherbw.html">pamditherbw</A>

@@ -404,6 +404,23 @@ format.  <b>pnmtops</b>'s custom raster-generating code just doesn't
 know the 12 bit format.
 
 
+<h2 id="applications">APPLICATIONS</h2>
+
+<p>You can use the Postscript output a number of ways.  Many printers take
+Postscript input (but you still need some kind of printer driver to transport
+the Postscript to the printer).
+
+<p>There is also the Ghostscript program (not part of Netpbm), which takes
+Postscript as input and generates an output stream to control any of myriad
+models of printer (but you still need some kind of printer driver to transport
+that stream to the printer).
+
+<p>Ghostscript also can convert the Postscript file to PDF, which is a very
+popular document and image format.  Use Ghostscript's <b>pdfwrite</b> output
+device type.  The program <b>ps2pdf</b> (distributed with Ghostscript) is a
+convenient way to run Ghostscript with <b>pdfwrite</b>.
+
+
 <H2 id="seealso">SEE ALSO</H2>
 
 <p>Postscript is described in the <a
