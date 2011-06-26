@@ -25,7 +25,10 @@ not yet  BJH  Release 10.55.00
               pnmcat: Fix garbage output when multiple input image are from
               Standard Input (now it just fails gracefully).
 
-              Build: Pnmtopng, Pamrgbatopng compile with newer libpng,
+              Build: Use 'pkg-config' to find X libraries if possible (This
+              works with modern Xorg installations).
+
+              Build: pnmtopng, pamrgbatopng compile with newer libpng,
               as they no longer refer to private members of the pnginfo
               structure.
 
