@@ -1167,43 +1167,49 @@ sub getX11Library($@) {
     my ($platform, @suggestedHdrDir) = @_;
 
     my $x11lib;
-    {
-        my $default;
-
-        if (-d('/usr/link/X11')) {
-            $default = '/usr/link/X11/libX11' . libSuffix($platform);
-        } elsif (-d('/usr/X11R6/lib')) {
-            $default = '/usr/X11R6/lib/libX11' . libSuffix($platform);
-        } else {
-            $default = "libX11" . libSuffix($platform);
-        }
-        print("What is your X11 (X client) library?\n");
-        
-        my $response = prompt("library filename or 'none'", $default);
-        
-        if ($response ne "none") {
-            $x11lib = $response;
-        }
-    }
     my $x11hdr_dir;
-    if (defined($x11lib)) {
-        my $default;
 
-        $default = "default";
+    if (system('pkg-config x11 --exists') == 0) {
+        # We don't need to ask where X libraries are; pkg-config knows and the
+        # make files will use that.
+    } else {
+        {
+            my $default;
 
-        print("Where are the interface headers for it?\n");
-        
-        my $response = prompt("X11 header directory", $default);
-        
-        if ($response ne "default") {
-            $x11hdr_dir = $response;
+            if (-d('/usr/link/X11')) {
+                $default = '/usr/link/X11/libX11' . libSuffix($platform);
+            } elsif (-d('/usr/X11R6/lib')) {
+                $default = '/usr/X11R6/lib/libX11' . libSuffix($platform);
+            } else {
+                $default = "libX11" . libSuffix($platform);
+            }
+            print("What is your X11 (X client) library?\n");
+            
+            my $response = prompt("library filename or 'none'", $default);
+            
+            if ($response ne "none") {
+                $x11lib = $response;
+            }
         }
-        if (defined($x11hdr_dir)) {
-            if (!-d($x11hdr_dir)) {
-                warnUser("No directory named '$x11hdr_dir' exists.");
-            } elsif (!-d("$x11hdr_dir/X11")) {
-                warnUser("Directory '$x11hdr_dir' does not contain " .
-                         "the requisite 'X11' subdirectory");
+        if (defined($x11lib)) {
+            my $default;
+
+            $default = "default";
+
+            print("Where are the interface headers for it?\n");
+            
+            my $response = prompt("X11 header directory", $default);
+            
+            if ($response ne "default") {
+                $x11hdr_dir = $response;
+            }
+            if (defined($x11hdr_dir)) {
+                if (!-d($x11hdr_dir)) {
+                    warnUser("No directory named '$x11hdr_dir' exists.");
+                } elsif (!-d("$x11hdr_dir/X11")) {
+                    warnUser("Directory '$x11hdr_dir' does not contain " .
+                             "the requisite 'X11' subdirectory");
+                }
             }
         }
     }

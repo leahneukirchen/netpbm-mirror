@@ -47,6 +47,8 @@ pngx_create(struct pngx ** const pngxPP,
     if (!pngxP)
         pm_error("Failed to allocate memory for PNG object");
     else {
+        pngxP->numPassesRequired = 1;
+
         switch(rw) {
         case PNGX_READ:
             pngxP->png_ptr = png_create_read_struct(
@@ -98,6 +100,248 @@ pngx_chunkIsPresent(struct pngx * const pngxP,
 
     return png_get_valid(pngxP->png_ptr, pngxP->info_ptr, chunkType);
 }
+
+
+
+void
+pngx_setCompressionSize(struct pngx * const pngxP,
+                        int           const bufferSize) {
+
+#if PNG_LIBPNG_VER >= 10009
+    png_set_compression_buffer_size(pngxP->png_ptr, bufferSize);
+#else
+    pm_error("Your PNG library cannot set the compression buffer size.  "
+             "You need at least Version 1.0.9 of Libpng; you have Version %s",
+             PNG_LIBPNG_VER_STRING);
+#endif
+}
+
+
+
+void
+pngx_setInterlaceHandling(struct pngx * const pngxP) {
+
+    pngxP->numPassesRequired = png_set_interlace_handling(pngxP->png_ptr);
+}
+
+
+
+void
+pngx_setFilter(struct pngx * const pngxP,
+               int           const filterSet) {
+
+    png_set_filter(pngxP->png_ptr, 0, filterSet);
+}
+
+
+
+void
+pngx_setPacking(struct pngx * const pngxP) {
+
+    png_set_packing(pngxP->png_ptr);
+}
+
+
+
+void
+pngx_setText(struct pngx * const pngxP,
+             png_textp     const textP,
+             unsigned int  const count) {
+
+    png_set_text(pngxP->png_ptr, pngxP->info_ptr, textP, count);
+}
+
+
+
+void
+pngx_setIhdr(struct pngx * const pngxP,
+             unsigned int  const width,
+             unsigned int  const height,
+             unsigned int  const bitDepth,
+             int           const colorType,
+             int           const interlaceMethod,
+             int           const compressionMethod,
+             int           const filterMethod) {
+
+    png_set_IHDR(pngxP->png_ptr, pngxP->info_ptr, width, height,
+                 bitDepth, colorType, interlaceMethod, compressionMethod,
+                 filterMethod);
+}
+
+
+
+png_byte
+pngx_colorType(struct pngx * const pngxP) {
+
+    return png_get_color_type(pngxP->png_ptr, pngxP->info_ptr);
+}
+
+
+
+void
+pngx_setGama(struct pngx * const pngxP,
+             float         const fileGamma) {
+
+    png_set_gAMA(pngxP->png_ptr, pngxP->info_ptr, fileGamma);
+}
+
+
+
+void
+pngx_setChrm(struct pngx *      const pngxP,
+             struct pngx_chroma const chroma) {
+
+    png_set_cHRM(pngxP->png_ptr, pngxP->info_ptr, 
+                 chroma.wx, chroma.wy,
+                 chroma.rx, chroma.ry,
+                 chroma.gx, chroma.gy,
+                 chroma.bx, chroma.by);
+}
+
+
+
+void
+pngx_setPhys(struct pngx *    const pngxP,
+             struct pngx_phys const phys) {
+
+    png_set_pHYs(pngxP->png_ptr, pngxP->info_ptr, 
+                 phys.x, phys.y, phys.unit);
+}
+
+
+
+void
+pngx_setTime(struct pngx * const pngxP,
+             png_time      const timeArg) {
+
+    png_time time;
+
+    time = timeArg;
+
+    png_set_tIME(pngxP->png_ptr, pngxP->info_ptr, &time);
+}
+
+
+
+void
+pngx_setSbit(struct pngx * const pngxP,
+             png_color_8   const sbitArg) {
+
+    png_color_8 sbit;
+
+    sbit = sbitArg;
+
+    png_set_sBIT(pngxP->png_ptr, pngxP->info_ptr, &sbit);
+}
+
+
+
+void
+pngx_setPlte(struct pngx * const pngxP,
+             png_color *   const palette,
+             unsigned int  const paletteSize) {
+
+    png_set_PLTE(pngxP->png_ptr, pngxP->info_ptr, palette, paletteSize);
+}
+
+
+
+void
+pngx_setTrnsPalette(struct pngx *    const pngxP,
+                    const png_byte * const transPalette,
+                    unsigned int     const paletteSize) {
+
+    png_set_tRNS(pngxP->png_ptr, pngxP->info_ptr,
+                 (png_byte *)transPalette, paletteSize, NULL);
+}
+
+
+
+void
+pngx_setTrnsValue(struct pngx * const pngxP,
+                  png_color_16  const transColorArg) {
+
+    png_color_16 transColor;
+
+    transColor = transColorArg;
+
+    png_set_tRNS(pngxP->png_ptr, pngxP->info_ptr,
+                 NULL, 0, &transColor);
+}
+
+
+
+void
+pngx_setHist(struct pngx * const pngxP,
+             png_uint_16 * const histogram) {
+
+    png_set_hIST(pngxP->png_ptr, pngxP->info_ptr, histogram);
+}
+
+
+
+struct pngx_trans
+pngx_getTrns(struct pngx * const pngxP) {
+
+    struct pngx_trans retval;
+
+    png_get_tRNS(pngxP->png_ptr, pngxP->info_ptr,
+                 &retval.trans, &retval.numTrans, &retval.transColorP);
+
+    return retval;
+}
+
+
+
+void
+pngx_setBkgdPalette(struct pngx * const pngxP,
+                    unsigned int  const backgroundIndex) {
+
+    png_color_16 background;
+
+    background.index = backgroundIndex;
+
+    png_set_bKGD(pngxP->png_ptr, pngxP->info_ptr, &background);
+}
+
+
+
+void
+pngx_setBkgdRgb(struct pngx * const pngxP,
+                png_color_16  const backgroundArg) {
+
+    png_color_16 background;
+
+    background = backgroundArg;
+
+    png_set_bKGD(pngxP->png_ptr, pngxP->info_ptr, &background);
+}
+
+
+
+void
+pngx_writeInfo(struct pngx * const pngxP) {
+
+    png_write_info(pngxP->png_ptr, pngxP->info_ptr);
+}
+
+
+
+void
+pngx_writeRow(struct pngx *    const pngxP,
+              const png_byte * const line) {
+
+    png_write_row(pngxP->png_ptr, (png_byte *)line);
+}
+
+
+
+void
+pngx_writeEnd(struct pngx * const pngxP) {
+
+    png_write_end(pngxP->png_ptr, pngxP->info_ptr);
+}
+
 
 
 

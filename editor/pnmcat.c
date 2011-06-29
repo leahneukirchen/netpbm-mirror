@@ -16,6 +16,7 @@
 #include "mallocvar.h"
 #include "shhopt.h"
 #include "bitarith.h"
+#include "nstring.h"
 #include "pnm.h"
 
 #define LEFTBITS pm_byteLeftBits
@@ -153,12 +154,20 @@ parseCommandLine(int argc, const char ** const argv,
         cmdlineP->nfiles = 1;
     } else {
         unsigned int i;
+        unsigned int stdinCt;
+            /* Number of input files user specified as Standard Input */
 
         MALLOCARRAY_NOFAIL(cmdlineP->inputFilespec, argc-1);
 
-        for (i = 0; i < argc-1; ++i)
+        for (i = 0, stdinCt = 0; i < argc-1; ++i) {
             cmdlineP->inputFilespec[i] = argv[1+i];
+            if (streq(argv[1+i], "-"))
+                ++stdinCt;
+        }
         cmdlineP->nfiles = argc-1;
+        if (stdinCt > 1)
+            pm_error("At most one input image can come from Standard Input.  "
+                     "You specified %u", stdinCt);
     }
 }
 

@@ -93,7 +93,7 @@ ifneq ($(DONT_HAVE_PROCESS_MGMT),Y)
   PORTBINARIES += pstopnm
 endif
 
-BINARIES = $(PORTBINARIES) pnmtorast rasttopnm pamtopdbimg pdbimgtopam
+BINARIES = $(PORTBINARIES) pnmtorast rasttopnm pamtopdbimg pdbimgtopam srftopam pamtosrf
 
 ifeq ($(HAVE_PNGLIB),Y)
   BINARIES += pnmtopng pngtopam pamrgbatopng
@@ -117,7 +117,7 @@ endif
 
 MERGEBINARIES = $(BINARIES)
 
-EXTRA_OBJECTS = exif.o rast.o bmepsoe.o ipdb.o
+EXTRA_OBJECTS = exif.o rast.o bmepsoe.o ipdb.o srf.o
 ifeq ($(HAVE_PNGLIB),Y)
   EXTRA_OBJECTS += pngtxt.o
   EXTRA_OBJECTS += pngx.o
@@ -169,8 +169,8 @@ pnmtopng: %: %.o pngx.o pngtxt.o $(NETPBMLIB) $(LIBOPT)
 	  $(shell $(LIBOPT) $(NETPBMLIB)) \
 	  $(PNGLIB_LIBOPTS) $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
-pamrgbatopng: %: %.o $(NETPBMLIB) $(LIBOPT)
-	$(LD) -o $@ $@.o \
+pamrgbatopng: %: %.o pngx.o $(NETPBMLIB) $(LIBOPT)
+	$(LD) -o $@ $@.o pngx.o \
 	  $(shell $(LIBOPT) $(NETPBMLIB)) $(PNGLIB_LIBOPTS) \
 	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
@@ -182,6 +182,11 @@ jpegtopnm: %: %.o jpegdatasource.o exif.o $(NETPBMLIB) $(LIBOPT)
 pnmtojpeg: %: %.o $(NETPBMLIB) $(LIBOPT)
 	$(LD) -o $@ $@.o \
 	  $(shell $(LIBOPT) $(NETPBMLIB) $(LIBOPTR) $(JPEGLIB)) \
+	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
+
+srftopam pamtosrf: %: %.o srf.o $(NETPBMLIB) $(LIBOPT)
+	$(LD) -o $@ $@.o srf.o \
+	  $(shell $(LIBOPT) $(NETPBMLIB)) \
 	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
 svgtopam: %: %.o $(NETPBMLIB) $(LIBOPT)

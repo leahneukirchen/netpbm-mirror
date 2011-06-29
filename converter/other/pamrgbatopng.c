@@ -1,10 +1,17 @@
-#include <png.h>
 #include <stdio.h>
 #include <stdlib.h>
+/* Due to poor design of libpng, you must not #include <setjmp.h> before
+<png.h>.  Compile failure results.
+*/
+#include <png.h>
 #include <setjmp.h>
 
-#include "pam.h"
+#include "pm_c_util.h"
 #include "mallocvar.h"
+#include "pam.h"
+#include "pngx.h"
+
+
 
 struct cmdlineInfo {
     const char * inputFileName;
@@ -49,7 +56,7 @@ convertPamToPng(const struct pam * const pamP,
 
 static void
 writeRaster(const struct pam * const pamP,
-            png_struct *       const pngP) {
+            struct pngx *      const pngxP) {
     
     tuple * tupleRow;
     png_byte * pngRow;
@@ -66,7 +73,7 @@ writeRaster(const struct pam * const pamP,
             
             convertPamToPng(pamP, tupleRow, pngRow);
             
-            png_write_row(pngP, pngRow);
+            png_write_row(pngxP->png_ptr, pngRow);
         }
         free(pngRow);
     }
@@ -76,46 +83,25 @@ writeRaster(const struct pam * const pamP,
 
 
 static void
-pngErrorHandler(png_struct * const pngP,
-                const char * const message) {
-
-    pm_error("Error generating PNG image.  libpng says: %s", message);
-}
-
-
-
-static void
 writePng(const struct pam * const pamP,
          FILE *             const ofP) {
 
-    png_struct * pngP;
-    png_info * infoP;
+    struct pngx * pngxP;
 
-    pngP = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-    if (!pngP)
-        pm_error("Could not allocate png struct.");
-
-    png_set_error_fn(pngP, NULL, &pngErrorHandler, NULL);
-
-    infoP = png_create_info_struct(pngP);
-    if (!infoP)
-        pm_error("Could not allocate PNG info structure");
-    else {
-        infoP->width      = pamP->width;
-        infoP->height     = pamP->height;
-        infoP->bit_depth  = 8;
-        infoP->color_type = PNG_COLOR_TYPE_RGB_ALPHA;
+    pngx_create(&pngxP, PNGX_WRITE, NULL);
+    
+    pngx_setIhdr(pngxP, pamP->width, pamP->height,
+                 8, PNG_COLOR_TYPE_RGB_ALPHA, 0, 0, 0);
         
-        png_init_io(pngP, ofP);
+    png_init_io(pngxP->png_ptr, ofP);
 
-        png_write_info(pngP, infoP);
+    pngx_writeInfo(pngxP);
         
-        writeRaster(pamP, pngP);
+    writeRaster(pamP, pngxP);
 
-        png_write_end(pngP, infoP);
+    pngx_writeEnd(pngxP);
         
-        png_destroy_write_struct(&pngP, &infoP);
-    }
+    pngx_destroy(pngxP);
 }
     
 

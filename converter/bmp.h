@@ -145,7 +145,13 @@ static __inline__ unsigned int
 BMPlencolormap(enum bmpClass const class,
                unsigned int  const bitcount, 
                unsigned int  const cmapsize) {
+/*----------------------------------------------------------------------------
+   The number of bytes of the BMP stream occupied by the colormap in a
+   BMP of class 'class' with 'bitcount' bits per pixel and 'cmapsize'
+   entries in the palette.
 
+   'cmapsize' == 0 means there is no palette.
+-----------------------------------------------------------------------------*/
     unsigned int lenrgb;
     unsigned int lencolormap;
 

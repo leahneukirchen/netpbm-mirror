@@ -4,35 +4,41 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-11.04.28 BJH  Release 10.54.04
+11.06.29 BJH  Release 10.55.00
 
-              pamrubber: fix crash.  Introduced in 10.54.00.
+              Add pamtosrf, srftopam.  Thanks Mike Frysinger
+              (vapier@gentoo.org).
 
-              configure: fix selection of mingw compiler.  Introduced in
-              10.48.
+              pamrubber: fix crash.  Introduced in 10.54.
 
-              Build: fix undefined "strsol" and "vsnprintfN" failure on
-              systems without vasprintf().  Introduced in 10.53.
+              libnetpbm: pm_system(): fix bug - program always takes
+              Standard Input from invoker's Standard Input when you don't
+              supply a Standard Output accepter.  Introduced in 10.40.
 
-11.04.06 BJH  Release 10.54.03
-
-              ppmtobmp: fix bugs causing bogus failure and incorrect output on
-              image without palette (e.g. black and white).  Introduced in
-              10.54.
-
-11.04.01 BJH  Release 10.54.02
+              ppmtobmp: fix bug: crash ("internal error") or bogus failure or
+              incorrect output on image without palette (e.g. black and
+              white).  Introduced in 10.54.
 
               pnmtops: fix floating point exception or bogus width/height
               too large error.  Introduced in 10.53.
 
-11.03.31 BJH  Release 10.54.01
+              pnmcat: Fix garbage output when multiple input image are from
+              Standard Input (now it just fails gracefully).
 
-              libnetpbm: pm_system(): fix bug - program always takes
-              Standard Input from invoker's Standard Input when you don't
-              supply a Standard Output accepter.  Broken in 10.40.00.
+              Build: Use 'pkg-config' to find X libraries if possible (This
+              works with modern Xorg installations).
 
-              ppmtobmp: fix bug: crash ("internal error") on image without
-              palette (e.g. black and white).  Introduced in 10.54.
+              Build: pnmtopng, pamrgbatopng compile with newer libpng,
+              as they no longer refer to private members of the pnginfo
+              structure.
+
+              Build: fix undefined "strsol" and "vsnprintfN" failure on
+              systems without vasprintf().  Introduced in 10.53.
+
+              Build: fix compiler warning in pbmtocmuwm.
+
+              configure: fix selection of mingw compiler.  Introduced in
+              10.48.
 
 11.03.30 BJH  Release 10.54.00
 

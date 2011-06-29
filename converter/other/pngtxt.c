@@ -4,6 +4,7 @@
 #include <png.h>
 
 #include "nstring.h"
+#include "pngx.h"
 #include "pngtxt.h"
 #include "pm.h"
 #include "mallocvar.h"
@@ -240,25 +241,24 @@ handleArrayAllocation(png_text **    const arrayP,
 
 
 void 
-pnmpng_read_text (png_info * const info_ptr, 
-                  FILE *     const tfp, 
-                  bool       const ztxt,
-                  bool       const verbose) {
+pngtxt_read(struct pngx * const pngxP,
+            FILE *        const tfp, 
+            bool          const ztxt,
+            bool          const verbose) {
 
     const char * textline;
     unsigned int lineLength;
     unsigned int commentIdx;
     bool noCommentsYet;
     bool eof;
+    png_textp text;  /* An array; one line per element */
     unsigned int allocatedComments;
-        /* Number of entries currently allocated for the info_ptr->text
-           array 
-        */
+        /* Number of entries currently allocated for the PNG text array */
 
     allocatedComments = 256;  /* initial value */
 
-    MALLOCARRAY(info_ptr->text, allocatedComments);
-    if (info_ptr->text == NULL) 
+    MALLOCARRAY(text, allocatedComments);
+    if (text == NULL) 
         pm_error("unable to allocate memory for comment array");
 
     commentIdx = 0;
@@ -273,7 +273,7 @@ pnmpng_read_text (png_info * const info_ptr,
             if (lineLength == 0) {
                 /* skip this empty line */
             } else {
-                handleArrayAllocation(&info_ptr->text, &allocatedComments,
+                handleArrayAllocation(&text, &allocatedComments,
                                       commentIdx);
                 if ((textline[0] != ' ') && (textline[0] != '\t')) {
                     /* Line doesn't start with white space, which
@@ -285,7 +285,7 @@ pnmpng_read_text (png_info * const info_ptr,
                         ++commentIdx;
                     noCommentsYet = FALSE;
 
-                    startComment(&info_ptr->text[commentIdx], 
+                    startComment(&text[commentIdx], 
                                  textline, lineLength, ztxt);
                 } else {
                     /* Line starts with whitespace, which means it is
@@ -295,20 +295,20 @@ pnmpng_read_text (png_info * const info_ptr,
                         pm_error("Invalid comment file format: "
                                  "first line is a continuation line! "
                                  "(It starts with whitespace)");
-                    continueComment(&info_ptr->text[commentIdx], 
+                    continueComment(&text[commentIdx], 
                                     textline, lineLength);
                 }
             }
             pm_strfree(textline);
         }
     } 
-    if (noCommentsYet)
-        info_ptr->num_text = 0;
-    else
-        info_ptr->num_text = commentIdx + 1;
+    if (!noCommentsYet)
+        pngx_setText(pngxP, text, commentIdx + 1);
 
     if (verbose)
-        pm_message("%d comments placed in text chunk", info_ptr->num_text);
+        pm_message("%d comments placed in text chunk", commentIdx + 1);
+
+    free(text);
 }
 
 

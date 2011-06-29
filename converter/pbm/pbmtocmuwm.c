@@ -24,7 +24,7 @@ static void
 putinit(unsigned int const rows,
         unsigned int const cols) {
 
-    const char * const initWriteError =
+    const char initWriteError[] =
         "CMU window manager header write error";
 
     int rc;
