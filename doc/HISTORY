@@ -4,7 +4,7 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-not yet  BJH  Release 10.55.00
+11.06.29 BJH  Release 10.55.00
 
               Add pamtosrf, srftopam.  Thanks Mike Frysinger
               (vapier@gentoo.org).
