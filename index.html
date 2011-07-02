@@ -53,6 +53,7 @@ the <a href="http://sourceforge.net/projects/netpbm">Sourceforge
 <LI><A HREF="#othersoftware">Other Graphics Software</A>
 <ul>
   <li><a href="#viewers">Image Viewers</a>
+  <li><a href="#capturers">Image Capturers</a>
   <li><a href="#visual">Visual Graphics Software</a>
   <li><a href="#programmingtools">Programming Tools</a>
   <li><a href="#toolsforformats">Tools For Specific Graphics Formats</a>
@@ -550,14 +551,14 @@ expert might be able to figure it out and get some use out of it.
 <P>Netpbm contains primitive building blocks.  It certainly is not a
 complete graphics software library.
 
-<h3 id="viewers">Graphics Viewers</h3>
+<h3 id="viewers">Image Viewers</h3>
 
-<P>The first thing you will want to make use of any of these tools is
-a viewer.  (On GNU/Linux, you can use <B>ppmsvgalib</B> in a pinch,
-but it is pretty limiting).  <B>zgv</B> is a good full service viewer
-to use on a GNU/Linux system with the SVGALIB graphics display driver
-library.  You can find <B>zgv</B> at <B><A
-HREF="ftp://ftp.ibiblio.org/pub/Linux/apps/graphics/viewers/svga">ftp://ftp.ibiblio.org/pub/Linux/apps/graphics/viewers/svga</A>.</B>
+<P>The first thing you will want to make use of any of these tools is a
+viewer.  (On GNU/Linux, you can use Netpbm's <b>pamx</b> or <B>ppmsvgalib</B>
+in a pinch, but it is pretty limiting).  <B>zgv</B> is a good full service
+viewer to use on a GNU/Linux system with the SVGALIB graphics display driver
+library.  You can find <B>zgv</B>
+at <B><A HREF="ftp://ftp.ibiblio.org/pub/Linux/apps/graphics/viewers/svga">ftp://ftp.ibiblio.org/pub/Linux/apps/graphics/viewers/svga</A>.</B>
 
 <P><B>zgv</B> even has a feature in it wherein you can visually crop
 an image and write an output file of the cropped image using
@@ -566,6 +567,12 @@ an image and write an output file of the cropped image using
 See the <B>-s</B> option to <B>zgv</B>.
 
 <P>For the X inclined, there is also <B>xzgv</B>.
+
+<p><b>xwud</b> (X Window Undump) is a classic application program in the X
+Window System that displays an image in an X window.  It takes the special X
+Window Dump format as input; you can use
+Netpbm's <a href="pnmtoxwd.html"><b>pnmtoxwd</b></a> to create it.  You're
+probably better off just using Netpbm's <a href="pamx.html"><b>pamx</b></a>.
 
 <P><B>xloadimage</B> and its extension <B>xli</B> are also common
 ways to display a graphic image in X.
@@ -580,6 +587,19 @@ try <b><a href="http://www.mplayerhq.hu/design7/info.html">mplayer</a></b> or
 
 <p>See <B><A
 HREF="ftp://metalab.unc.edu/pub/Linux/apps/graphics/viewers/X">ftp://metalab.unc.edu/pub/Linux/apps/graphics/viewers/X</A></B>.
+
+<h3 id="viewers">Image Capturers</h3>
+
+<p><b>xwd</b> (X Window Dump), a classic application program in the X Window
+System, captures the contents of an X window, in its own special image format,
+called X Window Dump File.  You can use
+Netpbm's <a href="xwdtopnm.html"><b>xwdtopnm</b></a> to turn it into something
+more useful.
+
+<p><a href="http://www.rcdrummond.net/fbdump/"><b>fbdump</b></a>
+Capturers the current contents of a video display on the local computer
+and generates a PPM image of it.  It works with Linux framebuffer devices.
+
 
 <h3 id="visual">Visual Graphics Software</h3>
 
