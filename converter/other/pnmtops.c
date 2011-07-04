@@ -243,7 +243,7 @@ parseCommandLine(int argc, const char ** argv,
     cmdlineP->canturn =  !noturn;
     cmdlineP->showpage = !noshowpage;
 
-    validateCompDimension(width, 72, "-width value");
+    validateCompDimension(width,  72, "-width value");
     validateCompDimension(height, 72, "-height value");
     
     cmdlineP->width  = width * 72;
@@ -252,8 +252,7 @@ parseCommandLine(int argc, const char ** argv,
     if (imagewidthSpec) {
         validateCompDimension(imagewidth, 72, "-imagewidth value");
         cmdlineP->imagewidth = imagewidth * 72;
-    }
-    else
+    } else
         cmdlineP->imagewidth = 0;
     if (imageheightSpec) {
         validateCompDimension(imagewidth, 72, "-imageheight value");
