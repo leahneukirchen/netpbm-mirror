@@ -77,7 +77,7 @@ CHANGE HISTORY
 
               Add pammosaicknit.  Thanks Scott Pakin.
 
-              pnmtops: Add -textalphabits, default Postscript TextAlphaBits
+              pstopnm: Add -textalphabits, default Ghostscript TextAlphaBits
               to 4.
 
               pngtopam: include tuple type in output.  Thanks
