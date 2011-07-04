@@ -2,17 +2,15 @@
 <HTML><HEAD><TITLE>Pstopnm User Manual</TITLE></HEAD>
 <BODY>
 <H1>pstopnm</H1>
-Updated: 28 May 2003
+Updated: 04 July 2011
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
 pstopnm - convert a PostScript file to a PNM image
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>pstopnm</B>
 
@@ -29,7 +27,7 @@ pstopnm - convert a PostScript file to a PNM image
 
 [<B>-xborder=</B><I>frac</I>]
 [<B>-yborder=</B><I>frac</I>]
-
+5~
 [<B>-landscape</B>]
 
 [<B>-portrait</B>]
@@ -52,6 +50,8 @@ pstopnm - convert a PostScript file to a PNM image
 [<B>-xmax=</B><I>pixels</I>]
 [<B>-ymax=</B><I>pixels</I>]
 
+[<B>-textalphabits=</B>{<b>1</b>,<b>2</b>,<b>4</b>}]
+
 
 <I>psfile</I>[<B>.ps</B>]
 
@@ -61,8 +61,7 @@ double hyphens instead of single hyphen to denote options.  You may use
 white space in place of the equals sign to separate an option name
 from its value.
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -209,8 +208,7 @@ large enough to accommodate the subject image (no borders).  Remember
 image to fit the computed output size.
 
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<H2 id="options">OPTIONS</H2>
 
 <DL COMPACT>
 <DT><B>-forceplain</B>
@@ -328,11 +326,26 @@ See <a href="#dimensions">the Dimensions section</a>.
 
 <p>This option was new in Netpbm 10.21 (March 2004).
      
+<dt><b>-textalphabits=</b>{<b>1</b>,<b>2</b>,<b>4</b>}
+
+<dd>This controls subsample antialiasing of text.  Antialiasing is a form of
+smoothing that eliminates jagged edges on characters.  Subsample antialiasing
+is a kind of antialiasing that uses subpixels in a box, and the value of this
+option is the size of that box.  4 gives you the best looking output, while 1
+causes no antialiasing.  Smaller numbers make <b>pnmtops</b> use less CPU
+time.
+
+<p>Pstopnm uses Ghostscript's <b>TextAlphaBits</b> parameter for this.
+
+<p>The default is 4.
+
+<P>This option was new in Netpbm 10.53 (December 2010).  Older versions of
+<b>pstopnm</b> do no antialiasing.
+
 </DL>
 
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>LIMITATIONS</H2>
+<H2 id="limitations">LIMITATIONS</H2>
 
 <P>The program will produce incorrect results with PostScript files that
 initialize the current transformation matrix.  In these cases, page
@@ -346,8 +359,7 @@ files, probably the best bet is to use the following options:
 <P>Additional options may be needed if the document is supposed to be
 rendered on a medium different from letter-size paper.
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <B>gs</B>,
 <B><A HREF="pnmtops.html">pnmtops</A></B>,
@@ -359,31 +371,27 @@ rendered on a medium different from letter-size paper.
 
 
 
-<A NAME="lbAH">&nbsp;</A>
-<H2>COPYRIGHT</H2>
+<H2 id="copyright">COPYRIGHT</H2>
 
 <p>Copyright (c) 1992 Smithsonian Astrophysical Observatory
 
 <p>PostScript is a Trademark of Adobe Systems Incorporated.
 
 
-<A NAME="lbAI">&nbsp;</A>
-<H2>AUTHOR</H2>
+<H2 id="author">AUTHOR</H2>
 
 <p>Alberto Accomazzi, WIPL, Center for Astrophysics.
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="table">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">BUGS</A>
-<LI><A HREF="#lbAG">SEE ALSO</A>
-<LI><A HREF="#lbAH">COPYRIGHT</A>
-<LI><A HREF="#lbAI">AUTHOR</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#limitations">LIMITATIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#copyright">COPYRIGHT</A>
+<LI><A HREF="#author">AUTHOR</A>
 </UL>
 </BODY>
 </HTML>

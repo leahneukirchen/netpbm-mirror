@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pnmtops User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmtops</H1>
-Updated: 10 December 2010
+Updated: 04 July 2011
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -22,7 +22,6 @@ pnmtops - convert PNM image to PostScript
 [<B>-equalpixels</B>]
 [<b>-bitspersample=</b><i>N</i>]
 [<B>-turn</B>|<B>-noturn</B>]
-[<B>-textalphabits=</B>{<b>1</b>,<b>2</b>,<b>4</b>}
 [<B>-rle</B>|<B>-runlength</B>]
 [<b>-flate</b>]
 [<b>-ascii85</b>]
@@ -199,22 +198,6 @@ gets turned automatically to better fit the page.  If you specify the
 <B>-turn</B> option, <B>pnmtops </B> turns the image no matter what
 its shape; If you specify <B>-noturn</B>, <B>pnmtops</B> does
 <em>not</em> turn it no matter what its shape.
-
-<dt><b>-textalphabits=</b>{<b>1</b>,<b>2</b>,<b>4</b>}
-
-<dd>This controls subsample antialiasing of text.  Antialiasing is a form of
-smoothing that eliminates jagged edges on characters.  Subsample antialiasing
-is a kind of antialiasing that uses subpixels in a box, and the value of this
-option is the size of that box.  4 gives you the best looking output, while 1
-causes no antialiasing.  Smaller numbers make <b>pnmtops</b> use less CPU
-time.
-
-<p>Pstopnm uses Ghostscript's <b>TextAlphaBits</b> parameter for this.
-
-<p>The default is 4.
-
-<P>This option was new in Netpbm 10.53 (December 2010).  Older versions of
-<b>pnmtops</b> do no antialiasing.
 
 <DT><B>-rle</B>
 
