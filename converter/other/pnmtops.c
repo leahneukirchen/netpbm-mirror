@@ -154,7 +154,7 @@ validateCompDimension(unsigned int const value,
         unsigned int const maxScaleFactor = maxWidthHeight / value;
 
         if (scaleFactor > maxScaleFactor)
-            pm_error("%s is too large for compuations: %u", vname, value);
+            pm_error("%s is too large for computations: %u", vname, value);
     }
 }
 
