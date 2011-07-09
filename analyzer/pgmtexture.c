@@ -41,6 +41,11 @@
 **
 ** 05 Oct 05 - Marc Breithecker <Marc.Breithecker@informatik.uni-erlangen.de>
 **             Fix calculation or normalizing constants for d > 1.
+** 9 Jul 11  - Francois P. S. Luus <fpsluus@gmail.com> supplied fix for sum
+**             variance calculation (use F6:savg instead of F8:sentropy in
+**             F7:svar equation).
+
+
 */
 
 #include <math.h>
@@ -993,15 +998,16 @@ main (int argc, char *argv[]) {
     savg[3] = f6_savg (P_matrix135, tones);
     results (F6, savg);
 
+    svar[0] = f7_svar (P_matrix0, tones, savg[0]);
+    svar[1] = f7_svar (P_matrix45, tones, savg[1]);
+    svar[2] = f7_svar (P_matrix90, tones, savg[2]);
+    svar[3] = f7_svar (P_matrix135, tones, savg[3]);
+    results (F7, svar);
+
     sentropy[0] = f8_sentropy (P_matrix0, tones);
     sentropy[1] = f8_sentropy (P_matrix45, tones);
     sentropy[2] = f8_sentropy (P_matrix90, tones);
     sentropy[3] = f8_sentropy (P_matrix135, tones);
-    svar[0] = f7_svar (P_matrix0, tones, sentropy[0]);
-    svar[1] = f7_svar (P_matrix45, tones, sentropy[1]);
-    svar[2] = f7_svar (P_matrix90, tones, sentropy[2]);
-    svar[3] = f7_svar (P_matrix135, tones, sentropy[3]);
-    results (F7, svar);
     results (F8, sentropy);
 
     entropy[0] = f9_entropy (P_matrix0, tones);

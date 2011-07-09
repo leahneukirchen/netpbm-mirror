@@ -9,6 +9,9 @@ CHANGE HISTORY
               Add pamtosrf, srftopam.  Thanks Mike Frysinger
               (vapier@gentoo.org).
 
+              pgmtexure: fix wrong sum variance result.  Wrong since the
+              beginning.  Thanks Francois P. S. Luus <fpsluus@gmail.com>.
+
               pamrubber: fix crash.  Introduced in 10.54.
 
               libnetpbm: pm_system(): fix bug - program always takes
