@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+11.07.10 BJH  Release 10.47.29
+
+              pgmtexture: fix wrong sum variance result.  Wrong since the
+              beginning.  Thanks Francois P. S. Luus <fpsluus@gmail.com>.
+
 11.06.25 BJH  Release 10.47.28
 
               pnmpsnr: fix bug: says PGM images differ when they don't
