@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+11.07.10 BJH  Release 10.35.81
+
+              pgmtexture: fix wrong sum variance result.  Wrong since the
+              beginning.  Thanks Francois P. S. Luus <fpsluus@gmail.com>.
+
 11.02.18 BJH  Release 10.35.80
 
               asciitopgm: fix bug: memory corruption on too-long lines.
