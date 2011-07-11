@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pamx User Manual</TITLE></HEAD>
 <BODY>
 <H1>pamx</H1>
-Updated: 25 March 2006
+Updated: 02 July 2011
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -54,6 +54,10 @@ debugging more complex systems, but you can get much more powerful
 viewers that can display Netpbm images.  For example, <b>xloadimage</b>,
 <b>xli</b>, <b>xzgv</b>, and any web browser.
 
+<p>The program <b>xwud</b> (X Window Undump) is part of the X Window System
+and performs the same basic display function, though with input in the special
+X Window Dump format (for which Netpbm has converters).
+
 <p>The initial window is at most 90% of the size of the display unless
 the window manager does not correctly handle window size requests or
 if you've used the <b>-fullscreen</b> option.  You may move the image
@@ -72,6 +76,7 @@ Linux system without the need for the X Window System.
 window managers which need this resource set.  This is, of course, the
 same resource class that the conventional viewer program
 <b>xloadimage</b> uses.
+
 
 <h2 id="options">OPTIONS</h2>
 
@@ -168,8 +173,10 @@ the input file, or &quot;stdin&quot; if the image is from Standard Input.
 <B><A HREF="pam.html">pam</A></B>,
 <B><A HREF="pnm.html">pnm</A></B>,
 <B>xzgv</B>,
+<b>xwud</b>,
 <b>xloadimage</b>,
 <b>xli</b>
+
 
 <h2 id="author">AUTHOR</h2>
 
@@ -202,6 +209,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 <p>Lots of other people contributed to Xloadimage, and they are listed
 in the file COPYRIGHT in the source code.
+
 
 <h2 id="history">HISTORY</h2>
 
