@@ -7,7 +7,8 @@ CHANGE HISTORY
 not yet  BJH  Release 10.56.00
 
               pnmtopng: fix bug: with -alpha specifying a mask which contains
-              no fully transparent area, output PNG is fully opaque.
+              no fully transparent area, output PNG is fully opaque.  Broken
+              in 10.29.
 
 11.06.29 BJH  Release 10.55.00
 
