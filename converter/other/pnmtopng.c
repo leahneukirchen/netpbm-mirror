@@ -911,17 +911,17 @@ tryTransparentColor(FILE *     const ifp,
 
 
 static void
-analyzeAlpha(FILE *     const ifp, 
-             pm_filepos const rasterPos, 
-             int        const cols, 
-             int        const rows, 
-             xelval     const maxval,
-             int        const format, 
-             gray **    const alphaMask,
-             gray       const alphaMaxval,
-             bool *     const allOpaqueP,
-             bool *     const singleColorIsTransP, 
-             pixel *    const alphaTranscolorP) {
+analyzeAlpha(FILE *       const ifP,
+             pm_filepos   const rasterPos, 
+             unsigned int const cols, 
+             unsigned int const rows, 
+             xelval       const maxval,
+             int          const format, 
+             gray **      const alphaMask,
+             gray         const alphaMaxval,
+             bool *       const allOpaqueP,
+             bool *       const singleColorIsTransP, 
+             pixel *      const alphaTranscolorP) {
 /*----------------------------------------------------------------------------
   Get information about the alpha mask, in combination with the masked
   image, that Caller can use to choose the most efficient way to
@@ -942,19 +942,38 @@ analyzeAlpha(FILE *     const ifp,
         */
     pixel transcolor;
         /* Color of the transparent pixel mentioned above. */
+    bool foundNonOpaquePixel;
+        /* We found a pixel in the image where the alpha mask says it is
+           not fully opaque.
+        */
     
     xelrow = pnm_allocrow(cols);
 
     {
-        int row;
+        unsigned int row;
+        /* See if the mask says every pixel is opaque. */
+        foundNonOpaquePixel = false;  /* initial assumption */
+        pm_seek2(ifP, &rasterPos, sizeof(rasterPos));
+        for (row = 0; row < rows && !foundNonOpaquePixel; ++row) {
+            unsigned int col;
+            pnm_readpnmrow(ifP, xelrow, cols, maxval, format);
+            for (col = 0; col < cols && !foundNonOpaquePixel; ++col) {
+                if (alphaMask[row][col] != maxval)
+                    foundNonOpaquePixel = true;
+            }
+        }
+    }
+
+    if (foundNonOpaquePixel) {
+        unsigned int row;
         /* Find a candidate transparent color -- the color of any pixel in the
            image that the alpha mask says should be transparent.
         */
-        foundTransparentPixel = FALSE;  /* initial assumption */
-        pm_seek2(ifp, &rasterPos, sizeof(rasterPos));
+        foundTransparentPixel = false;  /* initial assumption */
+        pm_seek2(ifP, &rasterPos, sizeof(rasterPos));
         for (row = 0; row < rows && !foundTransparentPixel; ++row) {
-            int col;
-            pnm_readpnmrow(ifp, xelrow, cols, maxval, format);
+            unsigned int col;
+            pnm_readpnmrow(ifP, xelrow, cols, maxval, format);
             for (col = 0; col < cols && !foundTransparentPixel; ++col) {
                 if (alphaMask[row][col] == 0) {
                     foundTransparentPixel = TRUE;
@@ -962,20 +981,20 @@ analyzeAlpha(FILE *     const ifp,
                 }
             }
         }
-    }
+    } else
+        foundTransparentPixel = false;
 
     pnm_freerow(xelrow);
 
+    *allOpaqueP = !foundNonOpaquePixel;
+
     if (foundTransparentPixel) {
-        *allOpaqueP = FALSE;
-        tryTransparentColor(ifp, rasterPos, cols, rows, maxval, format,
+        tryTransparentColor(ifP, rasterPos, cols, rows, maxval, format,
                             alphaMask, alphaMaxval, transcolor,
                             singleColorIsTransP);
         *alphaTranscolorP = transcolor;
-    } else {
-        *allOpaqueP   = TRUE;
-        *singleColorIsTransP = FALSE;
-    }
+    } else
+        *singleColorIsTransP = false;
 }
 
 
@@ -1042,6 +1061,8 @@ determineTransparency(struct cmdlineInfo const cmdline,
             *transparentP = 2;
             *transColorP  = alphaTranscolor;
         } else if (allOpaque) {
+            if (verbose)
+                pm_message("Skipping alpha because mask is all opaque");
             *alphaP       = FALSE;
             *transparentP = -1;
         } else {

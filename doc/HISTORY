@@ -4,12 +4,17 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+not yet  BJH  Release 10.56.00
+
+              pnmtopng: fix bug: with -alpha specifying a mask which contains
+              no fully transparent area, output PNG is fully opaque.
+
 11.06.29 BJH  Release 10.55.00
 
               Add pamtosrf, srftopam.  Thanks Mike Frysinger
               (vapier@gentoo.org).
 
-              pgmtexure: fix wrong sum variance result.  Wrong since the
+              pgmtexture: fix wrong sum variance result.  Wrong since the
               beginning.  Thanks Francois P. S. Luus <fpsluus@gmail.com>.
 
               pamrubber: fix crash.  Introduced in 10.54.
