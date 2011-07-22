@@ -149,7 +149,7 @@ sub openSeekableAsStdin($) {
             tell(INFH);  # Avoids bogus "INFH is not referenced" warning
         }
     } else {
-        open(STDIN, "<", $infile) 
+        open(STDIN, "<$infile") 
             or die("Unable to open input file '$infile'.  Errno=$ERRNO");
     }
 }
@@ -194,7 +194,7 @@ sub makeColormap($$$$$) {
         push(@options, '-quiet');
     }
 
-    open(STDOUT, ">", $mapfileSpec);
+    open(STDOUT, ">$mapfileSpec");
 
     my $maprc = system("pnmcolormap", $ncolors, @options);
 

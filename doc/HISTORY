@@ -7,8 +7,10 @@ CHANGE HISTORY
 not yet  BJH  Release 10.56.00
 
               pnmtopng: fix bug: with -alpha specifying a mask which contains
-              no fully transparent area, output PNG is fully opaque.  Broken
-              in 10.29.
+              no fully transparent area, output PNG is fully opaque.
+              Introduced in 10.29.
+
+              pnmquant: work with older Perl that doesn't have 3-argument open.
 
 11.06.29 BJH  Release 10.55.00
 
