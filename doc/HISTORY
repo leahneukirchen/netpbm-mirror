@@ -10,6 +10,9 @@ not yet  BJH  Release 10.56.00
               no fully transparent area, output PNG is fully opaque.
               Introduced in 10.29.
 
+              pnmquant: use File::Temp::tempfile() instead of local
+              approximation if it is available.
+
               pnmquant: work with older Perl that doesn't have 3-argument open.
 
 11.06.29 BJH  Release 10.55.00

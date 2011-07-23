@@ -11,7 +11,6 @@
 use strict;
 use English;
 use Getopt::Long;
-#use File::Temp "tempfile";  # not available before Perl 5.6.1
 use File::Spec;
 #use Fcntl ":seek";  # not available in Perl 5.00503
 use Fcntl;  # gets open flags
@@ -22,22 +21,26 @@ my ($SEEK_SET, $SEEK_CUR, $SEEK_END) = (0, 1, 2);
 
 sub tempFile($) {
 
-# Here's what we'd do if we could expect Perl 5.6.1 or later, instead
-# of calling this subroutine:
-#    my ($file, $filename) = tempfile("pnmquant_XXXX", 
-#                                     SUFFIX=>".pnm", 
-#                                     DIR=>File::Spec->tmpdir())
-#                                     UNLINK=>$TRUE);
-    my ($suffix) = @_;
-    my $fileName;
-    local *file;  # For some inexplicable reason, must be local, not my
-    my $i;
-    $i = 0;
-    do {
-        $fileName = File::Spec->tmpdir() . "/pnmquant_" . $i++ . $suffix;
-    } until sysopen(*file, $fileName, O_RDWR|O_CREAT|O_EXCL);
+    # We trust Perl's File::Temp to do a better job of creating the temp
+    # file, but it doesn't exist before Perl 5.6.1.
 
-    return(*file, $fileName);
+    if (eval { require File::TempX; 1 }) {
+        return File::Temp::tempfile("pnmquant_XXXX", 
+                                    SUFFIX=>".pnm", 
+                                    DIR=>File::Spec->tmpdir(),
+                                    UNLINK=>$TRUE);
+    } else {
+        my ($suffix) = @_;
+        my $fileName;
+        local *file;  # For some inexplicable reason, must be local, not my
+        my $i;
+        $i = 0;
+        do {
+            $fileName = File::Spec->tmpdir() . "/pnmquant_" . $i++ . $suffix;
+        } until sysopen(*file, $fileName, O_RDWR|O_CREAT|O_EXCL);
+
+        return(*file, $fileName);
+    }
 }
 
 
