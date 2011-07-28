@@ -383,7 +383,10 @@ composeComponents(sample           const compA,
 /*----------------------------------------------------------------------------
   Compose a single component of each of two pixels, with 'distrib' being
   the fraction of 'compA' in the result, 1-distrib the fraction of 'compB'.
-  
+
+  'sampleScale' tells in what domain the 'distrib' fraction applies:
+  brightness or light intensity (gamma-adjusted or not).
+
   The inputs and result are based on a maxval of 'maxval'.
   
   Note that while 'distrib' in the straightforward case is always in
@@ -429,7 +432,37 @@ overlayPixel(tuple            const overlayTuple,
              struct pam *     const composedPamP,
              float            const masterOpacity,
              enum sampleScale const sampleScale) {
+/*----------------------------------------------------------------------------
+   Generate the result of overlaying one pixel with another, taking opacity
+   into account, viz overlaying 'underlayTuple' with 'overlayTuple'.
+   'overlayPamP' and 'underlayPamP', respectively, describe those tuples.
 
+   We always assume the underlay pixel is opaque.
+
+   We use the following declarations of the opacity of the overlay pixel in
+   deciding how much of the underlay pixel should show through.  The product
+   of all the indicated opacity factors is the overall opacity factor, where
+   an opacity factor is a real number from 0 to 1 and 1 means none of the
+   underlay pixel shows through and 0 means the overlay pixel is invisible and
+   the underlay pixel shows through in full force.
+
+     'overlayHasOpacity' means that 'overlayTuple' has an opacity component,
+     in particular its 'opacityPlane' sample.
+
+     'alphaTuplen' is a normalized tuple whose first sample is the opacity
+     factor, except that iff 'invertAlpha' is true, it is a transparency
+     factor instead (opacity = 1 - transparency).
+
+     'masterOpacity' is a direct opacity factor
+
+   'sampleScale' tells whether the samples in the tuples are proportional
+   to brightness or light intensity (gamma-adjusted or not).  Opacity
+   factors apply to brightness (.5 means half the brightness of the result
+   comes from the underlay pixel, half comes from the overlay).
+
+   Return the result as 'composedTuple', which has the form described by
+   'composedPamP'.
+-----------------------------------------------------------------------------*/
     float overlayWeight;
 
     overlayWeight = masterOpacity;  /* initial value */
