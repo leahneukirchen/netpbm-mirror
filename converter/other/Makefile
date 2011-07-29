@@ -117,7 +117,7 @@ endif
 
 MERGEBINARIES = $(BINARIES)
 
-EXTRA_OBJECTS = exif.o rast.o bmepsoe.o ipdb.o srf.o
+EXTRA_OBJECTS = exif.o rast.o ipdb.o srf.o
 ifeq ($(HAVE_PNGLIB),Y)
   EXTRA_OBJECTS += pngtxt.o
   EXTRA_OBJECTS += pngx.o
@@ -205,8 +205,8 @@ rletopnm pnmtorle: %: %.o $(NETPBMLIB) $(URTLIBDEP) $(LIBOPT)
 	  $(shell $(LIBOPT) $(URTLIB) $(NETPBMLIB)) \
 	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
-pnmtops: %: %.o bmepsoe.o $(NETPBMLIB) $(LIBOPT)
-	$(LD) -o $@ $@.o bmepsoe.o \
+pnmtops: %: %.o $(NETPBMLIB) $(LIBOPT)
+	$(LD) -o $@ $@.o \
 	  $(shell $(LIBOPT) $(NETPBMLIB) $(ZLIB)) \
 	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
