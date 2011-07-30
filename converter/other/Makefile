@@ -77,6 +77,18 @@ ifeq ($(TIFFLIB_NEEDS_Z),Y)
   endif
 endif
 
+# Pnmtops's "flate" compression function requires libz.  But if we don't
+# have libz, we still build Pnmtops; we just omit the flate compression
+# capability.
+ifeq ($(ZLIB),NONE)
+  PNMTOPS_ZLIB_OPT =
+  PNMTOPS_NOFLATE_OPT = -DNOFLATE
+else
+  PNMTOPS_ZLIB_OPT = $(ZLIB)
+  PNMTOPS_NOFLATE_OPT =
+endif
+
+
 PORTBINARIES =  avstopam bmptopnm fitstopnm \
 		gemtopnm giftopnm hdifftopam infotopam \
 		pamtoavs pamtodjvurle pamtofits pamtogif \
@@ -93,7 +105,15 @@ ifneq ($(DONT_HAVE_PROCESS_MGMT),Y)
   PORTBINARIES += pstopnm
 endif
 
-BINARIES = $(PORTBINARIES) pnmtorast rasttopnm pamtopdbimg pdbimgtopam srftopam pamtosrf
+BINARIES = \
+  $(PORTBINARIES) \
+  pamtopdbimg \
+  pamtosrf \
+  pdbimgtopam \
+  pnmtops \
+  pnmtorast \
+  rasttopnm \
+  srftopam \
 
 ifeq ($(HAVE_PNGLIB),Y)
   BINARIES += pnmtopng pngtopam pamrgbatopng
@@ -106,9 +126,6 @@ ifneq ($(TIFF_PREREQ_MISSING),Y)
 endif
 ifneq ($(URTLIB),NONE)
   BINARIES += rletopnm pnmtorle
-endif
-ifneq ($(ZLIB),NONE)
-  BINARIES += pnmtops
 endif
 
 ifneq ($(XML2_LIBS),NONE)
@@ -132,6 +149,7 @@ endif
 OBJECTS = $(BINARIES:%=%.o) $(EXTRA_OBJECTS)
 MERGE_OBJECTS = $(MERGEBINARIES:%=%.o2) $(EXTRA_OBJECTS)
 
+pnmtops.o pnmtops.o2: CFLAGS_TARGET=$(PNMTOPS_NOFLATE_OPT)
 
 SCRIPTS = anytopnm pnmtoplainpnm
 
@@ -207,7 +225,7 @@ rletopnm pnmtorle: %: %.o $(NETPBMLIB) $(URTLIBDEP) $(LIBOPT)
 
 pnmtops: %: %.o $(NETPBMLIB) $(LIBOPT)
 	$(LD) -o $@ $@.o \
-	  $(shell $(LIBOPT) $(NETPBMLIB) $(ZLIB)) \
+	  $(shell $(LIBOPT) $(NETPBMLIB) $(PNMTOPS_ZLIB_OPT)) \
 	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
 pnmtorast rasttopnm: %: %.o rast.o $(NETPBMLIB) $(LIBOPT)
