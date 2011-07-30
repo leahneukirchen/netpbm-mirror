@@ -257,11 +257,11 @@ determineOutputType(struct pam * const composedPamP,
     composedPamP->maxval = pm_lcm(underlayPamP->maxval, overlayPamP->maxval, 
                                   1, PNM_OVERALLMAXVAL);
 
-    if (strcmp(composedPamP->tuple_type, "RGB") == 0)
+    if (streq(composedPamP->tuple_type, "RGB"))
         composedPamP->depth = 3;
-    else if (strcmp(composedPamP->tuple_type, "GRAYSCALE") == 0)
+    else if (streq(composedPamP->tuple_type, "GRAYSCALE"))
         composedPamP->depth = 1;
-    else if (strcmp(composedPamP->tuple_type, "BLACKANDWHITE") == 0)
+    else if (streq(composedPamP->tuple_type, "BLACKANDWHITE"))
         composedPamP->depth = 1;
     else
         /* Results are undefined for this case, so we just do something safe */
@@ -711,3 +711,6 @@ main(int argc, const char *argv[]) {
     */
     return 0;
 }
+
+
+
