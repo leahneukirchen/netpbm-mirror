@@ -223,14 +223,14 @@ commonTupletype(const char * const tupletypeA,
                 char *       const tupletypeOut,
                 unsigned int const size) {
 
-    if (strncmp(tupletypeA, "RGB", 3) == 0 ||
-        strncmp(tupletypeB, "RGB", 3) == 0)
+    if (strneq(tupletypeA, "RGB", 3) ||
+        strneq(tupletypeB, "RGB", 3))
         strncpy(tupletypeOut, "RGB", size);
-    else if (strncmp(tupletypeA, "GRAYSCALE", 9) == 0 ||
-        strncmp(tupletypeB, "GRAYSCALE", 9) == 0)
+    else if (strneq(tupletypeA, "GRAYSCALE", 9) ||
+             strneq(tupletypeB, "GRAYSCALE", 9))
         strncpy(tupletypeOut, "GRAYSCALE", size);
-    else if (strncmp(tupletypeA, "BLACKANDWHITE", 13) == 0 ||
-        strncmp(tupletypeB, "BLACKANDWHITE", 13) == 0)
+    else if (strneq(tupletypeA, "BLACKANDWHITE", 13) ||
+             strneq(tupletypeB, "BLACKANDWHITE", 13))
         strncpy(tupletypeOut, "BLACKANDWHITE", size);
     else
         /* Results are undefined for this case, so we do a hail Mary. */
@@ -503,7 +503,7 @@ adaptRowToOutputFormat(struct pam * const inpamP,
 -----------------------------------------------------------------------------*/
     pnm_scaletuplerow(inpamP, tuplerow, tuplerow, outpamP->maxval);
 
-    if (strncmp(outpamP->tuple_type, "RGB", 3) == 0)
+    if (strneq(outpamP->tuple_type, "RGB", 3))
         pnm_makerowrgb(inpamP, tuplerow);
 }
 
