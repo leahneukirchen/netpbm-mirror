@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pnmtops User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmtops</H1>
-Updated: 04 July 2011
+Updated: 30 July 2011
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -252,6 +252,11 @@ same as PNG).
 <p>See the <b>-rle</b> option for information about compression in general.
 
 <p>You must specify <b>-psfilter</b> if you specify <b>-flate</b>.
+
+<p>There exist modern versions of <b>pnmtops</b> that cannot do flate
+compression; these versions were built without the Z library and built not to
+require the Z library.  If you have such a version, it fails with an
+explanatory error message when you specify <b>-flate</b>.
 
 <p>This option was new in Netbpm 10.27 (March 2005).
 

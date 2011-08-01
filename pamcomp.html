@@ -3,8 +3,8 @@
 <HEAD><TITLE>Pamcomp User Manual</TITLE></HEAD>
 <BODY>
 <H1>pamcomp</H1>
-Updated: 17 July 2004
-<BR>
+Updated: 27 July 2011
+<p>
 <A HREF="#index">Table Of Contents</A>
 
 <H2>NAME</H2>
@@ -76,19 +76,25 @@ alpha mask described above.  If you supply both an overlay image that
 has transparency information and an alpha mask, <b>pamcomp</b>
 multiplies the two opacities to get the opacity of the overlay pixel.
 
-<p>Before Netpbm 10.25 (October 2004), <b>pamcomp</b> did not
-recognize the transparency information in a PAM image -- it just
-ignored it.  So people had to make appropriate alpha masks in order to
-have a non-opaque overlay.  Some Netpbm programs that convert from
-image formats such as PNG that contain transparency information are
-not able to create RGB_ALPHA or GRAYSCALE_ALPHA PAM output, so you
-have to use the old method -- extract the transparency information from
+<p>Before Netpbm 10.25 (October 2004), <b>pamcomp</b> did not recognize the
+transparency information in a PAM image -- it just ignored it.  So people had
+to make appropriate alpha masks in order to have a non-opaque overlay.  Some
+Netpbm programs that convert from image formats that contain transparency
+information are not able to create RGB_ALPHA or GRAYSCALE_ALPHA PAM output, so
+you have to use the old method -- extract the transparency information from
 the original into a separate alpha mask and use that as input to
 <b>pamcomp</b>.
 
 <P>The output image is always of the same dimensions as the underlying
 image.  <B>pamcomp</B> uses only parts of the overlay image that fit
 within the underlying image.
+
+<p>The output image is a PAM image with tuple type &quot;RGB&quot;,
+&quot;GRAYSCALE&quot;, or &quot;BLACKANDWHITE&quot;, whichever is the
+&quot;highest&quot; format between the two input images.  Note that it never
+includes any transparency.  The maxval of the output is the least common
+multiple of the maxvals of the input, up to the maximum possible PAM maxval,
+65535.
 
 <P>To specify where on the underlying image to place the overlay
 image, use the <B>-align</B>, <B>-valign</B>, <B>-xoff</B>, and
