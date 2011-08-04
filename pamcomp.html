@@ -3,7 +3,7 @@
 <HEAD><TITLE>Pamcomp User Manual</TITLE></HEAD>
 <BODY>
 <H1>pamcomp</H1>
-Updated: 27 July 2011
+Updated: 04 August 2011
 <p>
 <A HREF="#index">Table Of Contents</A>
 
@@ -89,12 +89,15 @@ the original into a separate alpha mask and use that as input to
 image.  <B>pamcomp</B> uses only parts of the overlay image that fit
 within the underlying image.
 
-<p>The output image is a PAM image with tuple type &quot;RGB&quot;,
-&quot;GRAYSCALE&quot;, or &quot;BLACKANDWHITE&quot;, whichever is the
-&quot;highest&quot; format between the two input images.  Note that it never
-includes any transparency.  The maxval of the output is the least common
-multiple of the maxvals of the input, up to the maximum possible PAM maxval,
-65535.
+<p>The output image is a PAM image.  Its tuples are color, grayscale, or black
+and white, whichever is the &quot;highest&quot; format between the two input
+images.  The maxval of the output is the least common multiple of the maxvals
+of the input, up to the maximum possible PAM maxval, 65535.
+
+<p>The output has an opacity channel if and only if the underlying image does,
+and then the opacities are identical to those in the underlying image.  Before
+Netpbm 10.56 (September 2011), the output never has an opacity channel.
+<b>pamcomp</b> ignores any opacity information in the underlying image.
 
 <P>To specify where on the underlying image to place the overlay
 image, use the <B>-align</B>, <B>-valign</B>, <B>-xoff</B>, and
