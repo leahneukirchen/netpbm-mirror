@@ -70,6 +70,7 @@ pamCommentP(const struct pam * const pamP) {
 }
 
 
+
 static void
 validateComputableSize(struct pam * const pamP) {
 /*----------------------------------------------------------------------------
@@ -764,6 +765,107 @@ pnm_bytespersample(sample const maxval) {
 
 
 
+static void
+validateMinDepth(const struct pam * const pamP,
+                 unsigned int       const minDepth) {
+
+    if (pamP->depth < minDepth)
+        pm_error("Depth %u is insufficient for tuple type '%s'.  "
+                 "Minimum depth is %u",
+                 pamP->depth, pamP->tuple_type, minDepth);
+}
+
+
+
+static void
+interpretTupleType(struct pam * const pamP) {
+/*----------------------------------------------------------------------------
+   Fill in redundant convenience fields in *pamP with information implied by
+   the pamP->tuple_type implies:
+
+     visual
+     colorDepth
+     haveOpacity
+     opacityPlane
+
+   Validate the tuple type against the depth and maxval as well.
+-----------------------------------------------------------------------------*/
+    const char * const tupleType =
+        pamP->len >= PAM_STRUCT_SIZE(tuple_type) ? pamP->tuple_type : "";
+
+    bool         visual;
+    unsigned int colorDepth;
+    bool         haveOpacity;
+    unsigned int opacityPlane;
+
+    assert(pamP->depth > 0);
+
+    switch (PAM_FORMAT_TYPE(pamP->format)) {
+    case PAM_TYPE: {
+        if (STRSEQ(tupleType, "BLACKANDWHITE")) {
+            visual = true;
+            colorDepth = 1;
+            haveOpacity = false;
+            if (pamP->maxval != 1)
+                pm_error("maxval %u is not consistent with tuple type "
+                         "BLACKANDWHITE (should be 1)",
+                         (unsigned)pamP->maxval);
+        } else if (STRSEQ(tupleType, "GRAYSCALE")) {
+            visual = true;
+            colorDepth = 1;
+            haveOpacity = false;
+        } else if (STRSEQ(tupleType, "GRAYSCALE_ALPHA")) {
+            visual = true;
+            colorDepth = 1;
+            haveOpacity = true;
+            opacityPlane = PAM_GRAY_TRN_PLANE;
+            validateMinDepth(pamP, 2);
+        } else if (STRSEQ(tupleType, "RGB")) {
+            visual = true;
+            colorDepth = 3;
+            haveOpacity = false;
+            validateMinDepth(pamP, 3);
+        } else if (STRSEQ(tupleType, "RGB_ALPHA")) {
+            visual = true;
+            colorDepth = 3;
+            haveOpacity = true;
+            opacityPlane = PAM_TRN_PLANE;
+            validateMinDepth(pamP, 4);
+        } else {
+            visual = false;
+        }
+    } break;
+    case PPM_TYPE:
+        visual = true;
+        colorDepth = 3;
+        haveOpacity = false;
+        assert(pamP->depth == 3);
+        break;
+    case PGM_TYPE:
+        visual = true;
+        colorDepth = 1;
+        haveOpacity = false;
+        break;
+    case PBM_TYPE:
+        visual = true;
+        colorDepth = 1;
+        haveOpacity = false;
+        break;
+    default:
+        assert(false);
+    }
+    if (pamP->size >= PAM_STRUCT_SIZE(visual))
+        pamP->visual = visual;
+    if (pamP->size >= PAM_STRUCT_SIZE(color_depth))
+        pamP->color_depth = colorDepth;
+    if (pamP->size >= PAM_STRUCT_SIZE(have_opacity))
+        pamP->have_opacity = haveOpacity;
+    if (pamP->size >= PAM_STRUCT_SIZE(opacity_plane))
+        pamP->have_opacity = haveOpacity;
+}
+
+
+
 void 
 pnm_readpaminit(FILE *       const file, 
                 struct pam * const pamP, 
@@ -828,6 +930,8 @@ pnm_readpaminit(FILE *       const file,
     pamP->bytes_per_sample = pnm_bytespersample(pamP->maxval);
     pamP->plainformat = FALSE;
         /* See below for complex explanation of why this is FALSE. */
+
+    interpretTupleType(pamP);
 
     validateComputableSize(pamP);
 }
@@ -916,14 +1020,18 @@ pnm_writepaminit(struct pam * const pamP) {
         pm_error("maxval (%lu) passed to pnm_writepaminit() "
                  "is greater than %u", pamP->maxval, PAM_OVERALL_MAXVAL);
 
-    if (pamP->len < PAM_STRUCT_SIZE(tuple_type))
+    if (pamP->len < PAM_STRUCT_SIZE(tuple_type)) {
         tupleType = "";
-    else
+        if (pamP->size >= PAM_STRUCT_SIZE(tuple_type))
+            pamP->tuple_type[0] = '\0';
+    } else
         tupleType = pamP->tuple_type;
 
-    if (pamP->len < PAM_STRUCT_SIZE(bytes_per_sample))
-        pamP->len = PAM_STRUCT_SIZE(bytes_per_sample);
     pamP->bytes_per_sample = pnm_bytespersample(pamP->maxval);
+
+    interpretTupleType(pamP);
+
+    pamP->len = MIN(pamP->size, sizeof(struct pam));
     
     switch (PAM_FORMAT_TYPE(pamP->format)) {
     case PAM_TYPE:
@@ -1081,14 +1189,102 @@ pnm_makearrayrgb(const struct pam * const pamP,
 
 
 
+void 
+pnm_makerowrgba(const struct pam * const pamP,
+                tuple *            const tuplerow) {
+/*----------------------------------------------------------------------------
+   Make the tuples 'tuplerow' the RGBA equivalent of what they are now,
+   which is described by *pamP.
+
+   This means afterward, *pamP no longer correctly describes these tuples;
+   Caller must be sure to update *pamP it or not use it anymore.
+
+   We fail if Caller did not supply enough allocated space in 'tuplerow' for
+   the extra planes (tuple allocation depth).
+-----------------------------------------------------------------------------*/
+    if (pamP->len < PAM_STRUCT_SIZE(opacity_plane)) {
+        pm_message("struct pam length %u is too small for pnm_makerowrgba().  "
+                   "This function requires struct pam fields through "
+                   "'opacity_plane'", pamP->len);
+        abort();
+    } else {
+        if (!pamP->visual)
+            pm_error("Non-visual tuples given to pnm_addopacityrow()");
+        
+        if (pamP->color_depth >= 3 && pamP->have_opacity) {
+            /* It's already in RGBA format.  Leave it alone. */
+        } else {
+            unsigned int col;
+
+            if (allocationDepth(pamP) < 4)
+                pm_error("allocation depth %u passed to pnm_makerowrgba().  "
+                         "Must be at least 4.", allocationDepth(pamP));
+        
+            for (col = 0; col < pamP->width; ++col) {
+                tuple const thisTuple = tuplerow[col];
+                thisTuple[PAM_TRN_PLANE] = 
+                    pamP->have_opacity ? thisTuple[pamP->opacity_plane] :
+                    pamP->maxval;
+
+                assert(PAM_RED_PLANE == 0);
+                thisTuple[PAM_BLU_PLANE] = thisTuple[0];
+                thisTuple[PAM_GRN_PLANE] = thisTuple[0];
+            }
+        }
+    }
+}
+
+
+
+void 
+pnm_addopacityrow(const struct pam * const pamP,
+                  tuple *            const tuplerow) {
+/*----------------------------------------------------------------------------
+   Add an opacity plane to the tuples in 'tuplerow', if one isn't already
+   there.
+
+   This means afterward, *pamP no longer correctly describes these tuples;
+   Caller must be sure to update *pamP it or not use it anymore.
+
+   We fail if Caller did not supply enough allocated space in 'tuplerow' for
+   the extra plane (tuple allocation depth).
+-----------------------------------------------------------------------------*/
+    if (pamP->len < PAM_STRUCT_SIZE(opacity_plane)) {
+        pm_message("struct pam length %u is too small for pnm_makerowrgba().  "
+                   "This function requires struct pam fields through "
+                   "'opacity_plane'", pamP->len);
+        abort();
+    } else {
+        if (!pamP->visual)
+            pm_error("Non-visual tuples given to pnm_addopacityrow()");
+        
+        if (pamP->have_opacity) {
+            /* It already has opacity.  Leave it alone. */
+        } else {
+            unsigned int const opacityPlane = pamP->color_depth;
+
+            unsigned int col;
+
+            if (allocationDepth(pamP) < opacityPlane + 1)
+                pm_error("allocation depth %u passed to pnm_addopacityrow().  "
+                         "Must be at least %u.",
+                         allocationDepth(pamP), opacityPlane + 1);
+        
+            for (col = 0; col < pamP->width; ++col)
+                tuplerow[col][opacityPlane] = pamP->maxval;
+        }
+    }
+}
+
+
+
 void
 pnm_getopacity(const struct pam * const pamP,
                bool *             const haveOpacityP,
                unsigned int *     const opacityPlaneP) {
 
-    /* Design note; If use of this information proliferates, we should
-       probably add it to struct pam as convenience values analogous to
-       bytes_per_sample.
+    /* Usage note: this is obsolete since we added 'haveOpacity', etc.
+       to struct pam.
     */
     if (streq(pamP->tuple_type, "RGB_ALPHA")) {
         *haveOpacityP = TRUE;

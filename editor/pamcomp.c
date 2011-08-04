@@ -217,32 +217,65 @@ commonFormat(int const formatA,
 
 
 
-static void
+typedef enum { TT_BLACKANDWHITE, TT_GRAYSCALE, TT_RGB } BaseTupletype;
+
+
+
+static BaseTupletype
 commonTupletype(const char * const tupletypeA, 
-                const char * const tupletypeB, 
-                char *       const tupletypeOut,
-                unsigned int const size) {
+                const char * const tupletypeB) {
 
     if (strneq(tupletypeA, "RGB", 3) ||
         strneq(tupletypeB, "RGB", 3))
-        strncpy(tupletypeOut, "RGB", size);
+        return TT_RGB;
     else if (strneq(tupletypeA, "GRAYSCALE", 9) ||
              strneq(tupletypeB, "GRAYSCALE", 9))
-        strncpy(tupletypeOut, "GRAYSCALE", size);
+        return TT_GRAYSCALE;
     else if (strneq(tupletypeA, "BLACKANDWHITE", 13) ||
              strneq(tupletypeB, "BLACKANDWHITE", 13))
-        strncpy(tupletypeOut, "BLACKANDWHITE", size);
+        return TT_BLACKANDWHITE;
     else
         /* Results are undefined for this case, so we do a hail Mary. */
-        strncpy(tupletypeOut, tupletypeA, size);
+        return TT_RGB;
 }
 
 
 
 static void
-determineOutputType(struct pam * const composedPamP,
-                    struct pam * const underlayPamP,
-                    struct pam * const overlayPamP) {
+determineOutputTupleType(BaseTupletype const baseTupletype,
+                         bool          const underlayHaveOpacity,
+                         char *        const tupleType,
+                         size_t        const size) {
+
+    char buffer[80];
+
+    switch (baseTupletype) {
+    case TT_BLACKANDWHITE:
+        STRSCPY(buffer, "RGB");
+        break;
+    case TT_GRAYSCALE:
+        STRSCPY(buffer, "GRAYSCALE");
+        break;
+    case TT_RGB:
+        STRSCPY(buffer, "RGB");
+        break;
+    }
+
+    if (underlayHaveOpacity)
+        STRSCAT(buffer, "_ALPHA");
+
+    strncpy(tupleType, buffer, size);
+}
+
+
+
+static void
+determineOutputType(const struct pam * const underlayPamP,
+                    const struct pam * const overlayPamP,
+                    struct pam *       const composedPamP) {
+
+    BaseTupletype const baseTupletype =
+        commonTupletype(underlayPamP->tuple_type, overlayPamP->tuple_type);
 
     composedPamP->height = underlayPamP->height;
     composedPamP->width  = underlayPamP->width;
@@ -250,22 +283,22 @@ determineOutputType(struct pam * const composedPamP,
     composedPamP->format = commonFormat(underlayPamP->format, 
                                         overlayPamP->format);
     composedPamP->plainformat = FALSE;
-    commonTupletype(underlayPamP->tuple_type, overlayPamP->tuple_type,
-                    composedPamP->tuple_type, 
-                    sizeof(composedPamP->tuple_type));
 
     composedPamP->maxval = pm_lcm(underlayPamP->maxval, overlayPamP->maxval, 
                                   1, PNM_OVERALLMAXVAL);
 
-    if (streq(composedPamP->tuple_type, "RGB"))
-        composedPamP->depth = 3;
-    else if (streq(composedPamP->tuple_type, "GRAYSCALE"))
-        composedPamP->depth = 1;
-    else if (streq(composedPamP->tuple_type, "BLACKANDWHITE"))
-        composedPamP->depth = 1;
-    else
-        /* Results are undefined for this case, so we just do something safe */
-        composedPamP->depth = MIN(underlayPamP->depth, overlayPamP->depth);
+    composedPamP->visual = true;
+    composedPamP->color_depth = (baseTupletype == TT_RGB ? 3 : 1);
+    composedPamP->have_opacity = underlayPamP->have_opacity;
+    composedPamP->opacity_plane = (baseTupletype == TT_RGB ? 3 : 1);
+
+    composedPamP->depth =
+        (baseTupletype == TT_RGB ? 3 : 1) +
+        (underlayPamP->have_opacity ? 1 : 0);
+
+    determineOutputTupleType(baseTupletype, underlayPamP->have_opacity,
+                             composedPamP->tuple_type,
+                             sizeof(composedPamP->tuple_type));
 }
 
 
@@ -381,8 +414,9 @@ composeComponents(sample           const compA,
                   sample           const maxval,
                   enum sampleScale const sampleScale) {
 /*----------------------------------------------------------------------------
-  Compose a single component of each of two pixels, with 'distrib' being
+  Compose a single color component of each of two pixels, with 'distrib' being
   the fraction of 'compA' in the result, 1-distrib the fraction of 'compB'.
+  Note that this does not apply to an opacity component.
 
   'sampleScale' tells in what domain the 'distrib' fraction applies:
   brightness or light intensity (gamma-adjusted or not).
@@ -426,8 +460,6 @@ overlayPixel(tuple            const overlayTuple,
              struct pam *     const underlayPamP,
              tuplen           const alphaTuplen,
              bool             const invertAlpha,
-             bool             const overlayHasOpacity,
-             unsigned int     const opacityPlane,
              tuple            const composedTuple,
              struct pam *     const composedPamP,
              float            const masterOpacity,
@@ -446,8 +478,7 @@ overlayPixel(tuple            const overlayTuple,
    underlay pixel shows through and 0 means the overlay pixel is invisible and
    the underlay pixel shows through in full force.
 
-     'overlayHasOpacity' means that 'overlayTuple' has an opacity component,
-     in particular its 'opacityPlane' sample.
+     if *overlayPamP may indicate that 'overlayTuple' has an opacity component.
 
      'alphaTuplen' is a normalized tuple whose first sample is the opacity
      factor, except that iff 'invertAlpha' is true, it is a transparency
@@ -467,9 +498,9 @@ overlayPixel(tuple            const overlayTuple,
 
     overlayWeight = masterOpacity;  /* initial value */
     
-    if (overlayHasOpacity)
+    if (overlayPamP->have_opacity)
         overlayWeight *= (float)
-            overlayTuple[opacityPlane] / overlayPamP->maxval;
+            overlayTuple[overlayPamP->opacity_plane] / overlayPamP->maxval;
     
     if (alphaTuplen) {
         float const alphaval = 
@@ -480,31 +511,48 @@ overlayPixel(tuple            const overlayTuple,
     {
         unsigned int plane;
         
-        for (plane = 0; plane < composedPamP->depth; ++plane)
+        for (plane = 0; plane < composedPamP->color_depth; ++plane)
             composedTuple[plane] = 
                 composeComponents(overlayTuple[plane], underlayTuple[plane], 
                                   overlayWeight,
                                   composedPamP->maxval,
                                   sampleScale);
+
+        if (composedPamP->have_opacity) {
+            /* copy opacity from underlay to output */
+            assert(underlayPamP->have_opacity);
+            composedTuple[composedPamP->opacity_plane] =
+                underlayTuple[underlayPamP->opacity_plane];
+        }
     }
 }
 
 
 
 static void
-adaptRowToOutputFormat(struct pam * const inpamP,
-                       tuple *      const tuplerow,
-                       struct pam * const outpamP) {
+adaptRowFormat(struct pam * const inpamP,
+               struct pam * const outpamP,
+               tuple *      const tuplerow) {
 /*----------------------------------------------------------------------------
    Convert the row in 'tuplerow', which is in a format described by
    *inpamP, to the format described by *outpamP.
 
    'tuplerow' must have enough allocated depth to do this.
 -----------------------------------------------------------------------------*/
+    assert(outpamP->visual);
+    assert(inpamP->visual);
+
     pnm_scaletuplerow(inpamP, tuplerow, tuplerow, outpamP->maxval);
 
-    if (strneq(outpamP->tuple_type, "RGB", 3))
-        pnm_makerowrgb(inpamP, tuplerow);
+    if (outpamP->color_depth == 3) {
+        if (outpamP->have_opacity)
+            pnm_makerowrgba(inpamP, tuplerow);
+        else
+            pnm_makerowrgb(inpamP, tuplerow);
+    } else {
+        if (outpamP->have_opacity)
+            pnm_addopacityrow(inpamP, tuplerow);
+    }
 }
 
 
@@ -515,16 +563,21 @@ composeRow(int              const originleft,
            struct pam *     const overlayPamP,
            bool             const invertAlpha,
            float            const masterOpacity,
-           bool             const overlayHasOpacity,
-           unsigned int     const opacityPlane,
            struct pam *     const composedPamP,
            enum sampleScale const sampleScale,
            const tuple *    const underlayTuplerow,
            const tuple *    const overlayTuplerow,
            const tuplen *   const alphaTuplerown,
            tuple *          const composedTuplerow) {
+/*----------------------------------------------------------------------------
+   Create a row of tuples ('composedTupleRow') which is the composition of
+   row 'overlayTupleRow' laid over row 'underlayTupleRow', starting at
+   column 'originLeft'.
 
+   *underlayPamP and *overlayPamP describe the respective tuple rows.
+-----------------------------------------------------------------------------*/
     unsigned int col;
+
     for (col = 0; col < composedPamP->width; ++col) {
         int const ovlcol = col - originleft;
 
@@ -535,7 +588,6 @@ composeRow(int              const originleft,
             overlayPixel(overlayTuplerow[ovlcol], overlayPamP,
                          underlayTuplerow[col], underlayPamP,
                          alphaTuplen, invertAlpha,
-                         overlayHasOpacity, opacityPlane,
                          composedTuplerow[col], composedPamP,
                          masterOpacity, sampleScale);
         } else
@@ -543,6 +595,55 @@ composeRow(int              const originleft,
             pnm_assigntuple(composedPamP, composedTuplerow[col],
                             underlayTuplerow[col]);
     }
+}
+
+
+
+static void
+determineInputAdaptations(const struct pam * const underlayPamP,
+                          const struct pam * const overlayPamP,
+                          const struct pam * const composedPamP,
+                          struct pam *       const adaptUnderlayPamP,
+                          struct pam *       const adaptOverlayPamP) {
+/*----------------------------------------------------------------------------
+   For easy of computation, this program reads a tuple row from one of the
+   input files, then transforms it something similar to the format of the
+   eventual output tuple row.  E.g. if the input is grayscale and the
+   output color, it converts the depth 1 row read from the file to a depth
+   3 row for use in computations.
+
+   This function determines what the result of that transformation should be.
+   It's not as simple as it sounds because of opacity.  The overlay may have
+   an opacity plane that has to be kept for the computations, while the output
+   has no opacity plane.
+
+   Our output PAMs are meaningless except in the fields that pertain to a
+   row of tuples.  E.g. the file descriptor and image height members are
+   meaningless.
+-----------------------------------------------------------------------------*/
+    /* We make the underlay row identical to the composed (output) row,
+       except for its width.
+    */
+
+    *adaptUnderlayPamP = *composedPamP;
+    adaptUnderlayPamP->width = underlayPamP->width;
+
+    /* Same for the overlay row, except that it retains is original
+       opacity.
+    */
+
+    adaptOverlayPamP->width = overlayPamP->width;
+    adaptOverlayPamP->tuple_type[0] = '\0';  /* a hack; this doesn't matter */
+    adaptOverlayPamP->visual = true;
+    adaptOverlayPamP->color_depth = composedPamP->color_depth;
+    adaptOverlayPamP->have_opacity = overlayPamP->have_opacity;
+    adaptOverlayPamP->opacity_plane = composedPamP->color_depth;
+    adaptOverlayPamP->depth =
+        composedPamP->color_depth +
+        (overlayPamP->have_opacity ? 1 : 0);
+    adaptOverlayPamP->maxval = composedPamP->maxval;
+    adaptOverlayPamP->bytes_per_sample = composedPamP->bytes_per_sample;
+    adaptOverlayPamP->allocation_depth = overlayPamP->allocation_depth;
 }
 
 
@@ -584,12 +685,10 @@ composite(int          const originleft,
     int overlayRow;   /* NB may be negative */
     tuple * composedTuplerow;
     tuple * underlayTuplerow;
+    struct pam adaptUnderlayPam;
     tuple * overlayTuplerow;
+    struct pam adaptOverlayPam;
     tuplen * alphaTuplerown;
-    bool overlayHasOpacity;
-    unsigned int opacityPlane;
-
-    pnm_getopacity(overlayPamP, &overlayHasOpacity, &opacityPlane);
 
     composedTuplerow = pnm_allocpamrow(composedPamP);
     underlayTuplerow = pnm_allocpamrow(underlayPamP);
@@ -598,6 +697,9 @@ composite(int          const originleft,
         alphaTuplerown = pnm_allocpamrown(alphaPamP);
     else
         alphaTuplerown = NULL;
+
+    determineInputAdaptations(underlayPamP, overlayPamP, composedPamP,
+                              &adaptUnderlayPam, &adaptOverlayPam);
 
     pnm_writepaminit(composedPamP);
 
@@ -610,15 +712,13 @@ composite(int          const originleft,
 
         if (overlayRow >= 0 && overlayRow < overlayPamP->height) {
             pnm_readpamrow(overlayPamP, overlayTuplerow);
-            adaptRowToOutputFormat(overlayPamP, overlayTuplerow, composedPamP);
+            adaptRowFormat(overlayPamP, &adaptOverlayPam, overlayTuplerow);
             if (alphaPamP)
                 pnm_readpamrown(alphaPamP, alphaTuplerown);
         }
         if (underlayRow >= 0 && underlayRow < underlayPamP->height) {
             pnm_readpamrow(underlayPamP, underlayTuplerow);
-            adaptRowToOutputFormat(underlayPamP, underlayTuplerow, 
-                                   composedPamP);
-
+            adaptRowFormat(underlayPamP, &adaptUnderlayPam, underlayTuplerow);
             if (underlayRow < origintop || 
                 underlayRow >= origintop + overlayPamP->height) {
             
@@ -626,9 +726,9 @@ composite(int          const originleft,
 
                 pnm_writepamrow(composedPamP, underlayTuplerow);
             } else {
-                composeRow(originleft, underlayPamP, overlayPamP,
-                           invertAlpha, masterOpacity, overlayHasOpacity,
-                           opacityPlane, composedPamP, sampleScale,
+                composeRow(originleft, &adaptUnderlayPam, &adaptOverlayPam,
+                           invertAlpha, masterOpacity, 
+                           composedPamP, sampleScale,
                            underlayTuplerow, overlayTuplerow, alphaTuplerown,
                            composedTuplerow);
                 
@@ -641,6 +741,30 @@ composite(int          const originleft,
     pnm_freepamrow(overlayTuplerow);
     if (alphaPamP)
         pnm_freepamrown(alphaTuplerown);
+}
+
+
+
+static void
+initAlphaFile(struct cmdlineInfo const cmdline,
+              struct pam *       const overlayPamP,
+              FILE **            const filePP,
+              struct pam *       const pamP) {
+
+    FILE * fileP;
+    
+    if (cmdline.alphaFilespec) {
+        fileP = pm_openr(cmdline.alphaFilespec);
+        pamP->comment_p = NULL;
+        pnm_readpaminit(fileP, pamP, PAM_STRUCT_SIZE(opacity_plane));
+
+        if (overlayPamP->width != pamP->width || 
+            overlayPamP->height != pamP->height)
+            pm_error("Opacity map and overlay image are not the same size");
+    } else
+        fileP = NULL;
+
+    *filePP = fileP;
 }
 
 
@@ -663,34 +787,46 @@ main(int argc, const char *argv[]) {
     parseCommandLine(argc, argv, &cmdline);
 
     overlayFileP = pm_openr(cmdline.overlayFilespec);
-    pnm_readpaminit(overlayFileP, &overlayPam, 
-                    PAM_STRUCT_SIZE(allocation_depth));
-    if (cmdline.alphaFilespec) {
-        alphaFileP = pm_openr(cmdline.alphaFilespec);
-        pnm_readpaminit(alphaFileP, &alphaPam, 
-                        PAM_STRUCT_SIZE(allocation_depth));
 
-        if (overlayPam.width != alphaPam.width || 
-            overlayPam.height != overlayPam.height)
-            pm_error("Opacity map and overlay image are not the same size");
-    } else
-        alphaFileP = NULL;
+    overlayPam.comment_p = NULL;
+    pnm_readpaminit(overlayFileP, &overlayPam, 
+                    PAM_STRUCT_SIZE(opacity_plane));
+
+    if (overlayPam.len < PAM_STRUCT_SIZE(opacity_plane))
+        pm_error("Libnetpbm is too old.  This program requires libnetpbm from "
+                 "Netpbm 10.56 (September 2011) or newer");
+
+    if (!overlayPam.visual)
+        pm_error("Overlay image has tuple type '%s', which is not a "
+                 "standard visual type.  We don't know how to compose.",
+                 overlayPam.tuple_type);
+
+    initAlphaFile(cmdline, &overlayPam, &alphaFileP, &alphaPam);
 
     underlayFileP = pm_openr(cmdline.underlyingFilespec);
 
+    underlayPam.comment_p = NULL;
     pnm_readpaminit(underlayFileP, &underlayPam, 
-                    PAM_STRUCT_SIZE(allocation_depth));
+                    PAM_STRUCT_SIZE(opacity_plane));
 
+    assert(underlayPam.len >= PAM_STRUCT_SIZE(opacity_plane));
+
+    if (!overlayPam.visual)
+        pm_error("Overlay image has tuple type '%s', which is not a "
+                 "standard visual type.  We don't know how to compose.",
+                 overlayPam.tuple_type);
+    
     computeOverlayPosition(underlayPam.width, underlayPam.height, 
                            overlayPam.width,  overlayPam.height,
                            cmdline, &originLeft, &originTop);
 
-    composedPam.size             = sizeof(composedPam);
+    composedPam.size             = PAM_STRUCT_SIZE(opacity_plane);
     composedPam.len              = PAM_STRUCT_SIZE(allocation_depth);
     composedPam.allocation_depth = 0;
     composedPam.file             = pm_openw(cmdline.outputFilespec);
+    composedPam.comment_p        = NULL;
 
-    determineOutputType(&composedPam, &underlayPam, &overlayPam);
+    determineOutputType(&underlayPam, &overlayPam, &composedPam);
 
     pnm_setminallocationdepth(&underlayPam, composedPam.depth);
     pnm_setminallocationdepth(&overlayPam,  composedPam.depth);
