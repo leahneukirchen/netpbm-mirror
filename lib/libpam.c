@@ -1031,7 +1031,11 @@ pnm_writepaminit(struct pam * const pamP) {
 
     interpretTupleType(pamP);
 
-    pamP->len = MIN(pamP->size, sizeof(struct pam));
+    if (pamP->size >= PAM_STRUCT_SIZE(comment_p) &&
+        pamP->len < PAM_STRUCT_SIZE(comment_p))
+        pamP->comment_p = NULL;
+
+    pamP->len = MIN(pamP->size, PAM_STRUCT_SIZE(opacity_plane));
     
     switch (PAM_FORMAT_TYPE(pamP->format)) {
     case PAM_TYPE:
