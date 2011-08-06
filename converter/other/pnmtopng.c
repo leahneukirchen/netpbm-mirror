@@ -2405,14 +2405,16 @@ static void
 reportTrans(struct pngx * const pngxP) {
 
     if (pngx_chunkIsPresent(pngxP, PNG_INFO_tRNS)) {
-        struct pngx_trans const transInfo = pngx_getTrns(pngxP);
+        struct pngx_trns const transInfo = pngx_trns(pngxP);
+
+        pm_message("%u transparency values", transInfo.numTrans);
         
         pm_message("Transparent color {gray, red, green, blue} = "
                    "{%d, %d, %d, %d}",
-                   transInfo.transColorP->gray,
-                   transInfo.transColorP->red,
-                   transInfo.transColorP->green,
-                   transInfo.transColorP->blue);
+                   transInfo.transColor.gray,
+                   transInfo.transColor.red,
+                   transInfo.transColor.green,
+                   transInfo.transColor.blue);
     } else
         pm_message("No transparent color");
 }

@@ -25,10 +25,20 @@ struct pngx_phys {
     int unit;
 };
 
-struct pngx_trans {
-    png_bytep trans;
-    int numTrans;
-    png_color_16 * transColorP;
+struct pngx_text {
+    png_text *   line;
+    unsigned int size;
+};
+
+struct pngx_plte {
+    png_color *  palette;
+    unsigned int size;
+};
+
+struct pngx_trns {
+    png_byte *    trans;
+    unsigned int  numTrans;
+    png_color_16  transColor;
 };
 
 typedef enum {PNGX_READ, PNGX_WRITE} pngx_rw;
@@ -57,27 +67,87 @@ bool
 pngx_chunkIsPresent(struct pngx * const pngxP,
                     uint32_t      const chunkType);
 
+unsigned int
+pngx_bitDepth(struct pngx * const pngxP);
+
+png_color_16
+pngx_bkgd(struct pngx *  const pngxP);
+
 png_byte
 pngx_colorType(struct pngx * const pngxP);
 
+png_byte
+pngx_filterType(struct pngx * const pngxP);
+
+double
+pngx_gama(struct pngx * const pngxP);
+
+uint32_t
+pngx_imageHeight(struct pngx * const pngxP);
+
+uint32_t
+pngx_imageWidth(struct pngx * const pngxP);
+
+png_byte
+pngx_interlaceType(struct pngx * const pngxP);
+
+struct pngx_plte
+pngx_plte(struct pngx * const pngxP);
+
+png_color_8
+pngx_sbit(struct pngx * const pngxP);
+
+struct pngx_text
+pngx_text(struct pngx * const pngxP);
+
+png_time
+pngx_time(struct pngx * const pngxP);
+
+struct pngx_trns
+pngx_trns(struct pngx * const pngxP);
+
+uint32_t
+pngx_xPixelsPerMeter(struct pngx * const pngxP);
+
+uint32_t
+pngx_yPixelsPerMeter(struct pngx * const pngxP);
+
 void
-pngx_setInterlaceHandling(struct pngx * const pngxP);
+pngx_removeChunk(struct pngx * const pngxP,
+                 uint32_t      const chunkType);
+
+void
+pngx_setBkgdPalette(struct pngx * const pngxP,
+                    unsigned int  const backgroundIndex);
+
+void
+pngx_setBkgdRgb(struct pngx * const pngxP,
+                png_color_16  const backgroundArg);
+
+void
+pngx_setChrm(struct pngx *      const pngxP,
+             struct pngx_chroma const chroma);
 
 void
 pngx_setCompressionSize(struct pngx * const pngxP,
-                        int           const bufferSize);
+                        unsigned int  const bufferSize);
 
 void
 pngx_setFilter(struct pngx * const pngxP,
                int           const filterSet);
 
 void
-pngx_setPacking(struct pngx * const pngxP);
+pngx_setGama(struct pngx * const pngxP,
+             float         const fileGamma);
 
 void
-pngx_setText(struct pngx * const pngxP,
-             png_textp     const textP,
-             unsigned int  const count);
+pngx_setGamma(struct pngx * const pngxP,
+              float         const displayGamma,
+              float         const imageGamma);
+
+void
+pngx_setHist(struct pngx * const pngxP,
+             png_uint_16 * const histogram);
 
 void
 pngx_setIhdr(struct pngx * const pngxP,
@@ -90,29 +160,43 @@ pngx_setIhdr(struct pngx * const pngxP,
              int           const filterMethod);
 
 void
-pngx_setGama(struct pngx * const pngxP,
-             float         const fileGamma);
+pngx_setInterlaceHandling(struct pngx * const pngxP);
 
 void
-pngx_setChrm(struct pngx *      const pngxP,
-             struct pngx_chroma const chroma);
+pngx_setInvalid(struct pngx * const pngxP);
+
+void
+pngx_setPacking(struct pngx * const pngxP);
 
 void
 pngx_setPhys(struct pngx *    const pngxP,
              struct pngx_phys const phys);
 
 void
-pngx_setTime(struct pngx * const pngxP,
-             png_time      const time);
+pngx_setPlte(struct pngx * const pngxP,
+             png_color *   const palette,
+             unsigned int  const paletteSize);
 
 void
 pngx_setSbit(struct pngx * const pngxP,
              png_color_8   const sbit);
 
 void
-pngx_setPlte(struct pngx * const pngxP,
-             png_color *   const palette,
-             unsigned int  const paletteSize);
+pngx_setShift(struct pngx * const pngxP,
+              png_color_8   const sigBitArg);
+
+void
+pngx_setSigBytes(struct pngx * const pngxP,
+                 unsigned int  const sigByteCt);
+
+void
+pngx_setText(struct pngx * const pngxP,
+             png_textp     const textP,
+             unsigned int  const count);
+
+void
+pngx_setTime(struct pngx * const pngxP,
+             png_time      const time);
 
 void
 pngx_setTrnsPalette(struct pngx *    const pngxP,
@@ -122,21 +206,6 @@ pngx_setTrnsPalette(struct pngx *    const pngxP,
 void
 pngx_setTrnsValue(struct pngx * const pngxP,
                   png_color_16  const transColorArg);
-
-void
-pngx_setHist(struct pngx * const pngxP,
-             png_uint_16 * const histogram);
-
-struct pngx_trans
-pngx_getTrns(struct pngx * const pngxP);
-
-void
-pngx_setBkgdPalette(struct pngx * const pngxP,
-                    unsigned int  const backgroundIndex);
-
-void
-pngx_setBkgdRgb(struct pngx * const pngxP,
-                png_color_16  const backgroundArg);
 
 void
 pngx_writeInfo(struct pngx * const pngxP);
