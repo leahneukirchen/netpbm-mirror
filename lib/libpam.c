@@ -1029,11 +1029,15 @@ pnm_writepaminit(struct pam * const pamP) {
 
     pamP->bytes_per_sample = pnm_bytespersample(pamP->maxval);
 
-    interpretTupleType(pamP);
-
     if (pamP->size >= PAM_STRUCT_SIZE(comment_p) &&
         pamP->len < PAM_STRUCT_SIZE(comment_p))
         pamP->comment_p = NULL;
+
+    if (pamP->size >= PAM_STRUCT_SIZE(allocation_depth) &&
+        pamP->len < PAM_STRUCT_SIZE(allocation_depth))
+        pamP->allocation_depth = 0;
+
+    interpretTupleType(pamP);
 
     pamP->len = MIN(pamP->size, PAM_STRUCT_SIZE(opacity_plane));
     
