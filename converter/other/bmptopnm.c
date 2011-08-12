@@ -111,8 +111,8 @@ struct cmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *inputFileName;  /* Filespecs of input files */
-    int verbose;    /* -verbose option */
+    const char *inputFileName;
+    unsigned int verbose;
 };
 
 static const char *ifname;
@@ -120,7 +120,7 @@ static const char *ifname;
 
 
 static void
-parseCommandLine(int argc, char ** argv,
+parseCommandLine(int argc, const char ** argv,
                  struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
@@ -136,16 +136,13 @@ parseCommandLine(int argc, char ** argv,
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0,   "verbose",     OPT_FLAG,   &cmdlineP->verbose, NULL,   0);
+    OPTENT3(0,   "verbose",     OPT_FLAG,   NULL, &cmdlineP->verbose,   0);
  
-    /* Set the defaults */
-    cmdlineP->verbose = FALSE;
-
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (argc-1 == 0) 
@@ -155,7 +152,6 @@ parseCommandLine(int argc, char ** argv,
                  "specified %d", argc-1);
     else
         cmdlineP->inputFileName = argv[1];
-
 }
 
 
@@ -1482,7 +1478,7 @@ writeRasterPbm(unsigned char ** const BMPraster,
 
 
 int
-main(int argc, char ** argv) {
+main(int argc, const char ** argv) {
 
     struct cmdlineInfo cmdline;
     FILE * ifP;
@@ -1509,7 +1505,7 @@ main(int argc, char ** argv) {
            undefined if not a colormapped BMP.
          */
 
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
