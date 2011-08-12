@@ -1,0 +1,115 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Pamexec User Manual</TITLE></HEAD>
+<BODY>
+<H1>pamexec</H1>
+Updated: 11 August 2011
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<H2>NAME</H2>
+
+pamexec - Execute a shell command on each image in a Netpbm image stream
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>pamexec</B>
+
+[&quot;<i>command</i>&quot;]
+
+[<I>netpbmfile</I>
+
+[<b>-check</b>]
+
+<p>Minimum unique abbreviation of option is acceptable.  You may use double
+hyphens instead of single hyphen to denote options.  You may use white
+space in place of the equals sign to separate an option name from its value.
+
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>pamexec</b> reads a Netpbm image stream as input.  For each image, it
+runs a specified shell command and supplies the image to it as Standard
+Input (with a pipe).
+
+<P><I>netpbmfile</I> is the file name of the input file, or
+<B>-</B> to indicate Standard Input.  The default is Standard Input.
+
+<p>Many Netpbm programs understand multimage Netpbm streams themselves,
+so you don't need to use <b>pamexec</b> to run the program on the images
+in the stream.  Ideally, all Netpbm programs would have that capability,
+but multi-image streams are a relatively recent invention, so older Netpbm
+programs just process the first image in the stream and then stop.  Even
+recently written Netpbm programs work that way, since the authors aren't
+aware of the multi-image possibility.
+
+<p>Another way to process a multi-image stream is to use <b>pamsplit</b> to
+explode it into multiple files, one image per file.  You can then process
+those files.
+
+<p>To run your command on a subset of the images in the stream, use
+<b>pampick</b> to select the desired images from the input stream and pipe
+the result to <b>pamexec</b>.
+
+
+<h2 id="options">OPTIONS</h2>
+
+<dl>
+<dt><b>-check</b>
+
+<dd>This causes <b>pamexec</b> to exit without processing any further images
+if the command has a nonzero exit status.
+
+</dl>
+
+<h2 id="applications">APPLICATIONS</h2>
+
+To make an animated GIF movie:
+
+<kbd>
+<pre>
+    pamexec pamtogif myvideo.ppm | gifsicle &gt;myvideo.gif
+</pre>
+</kbd>
+
+<h2 id="limitations">LIMITATIONS</h2>
+
+<p><b>pamexec</b> assumes all commands consume all of Standard Input.
+If yours doesn't (perhaps it just exits when it's seen enough),
+you can buffer through a temporary file like this:
+
+<kbd>
+<pre>
+    pamexec &quot;cat &gt;/tmp/x; head -3 x&quot; myvideo.ppm  
+</pre>
+</kbd>
+
+<h2 id="history">HISTORY</h2>
+
+<p><b>pamexec</b> was new in Netpbm 10.56 (September 2011).
+
+<p>Michael Pot wrote it, borrowing from <b>pamsplit</b>.
+
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<B><A HREF="pamfile.html">pamfile</A></B>,
+<B><A HREF="pampick.html">pampick</A></B>,
+<B><A HREF="pamsplit.html">pampick</A></B>,
+<B><A HREF="pnm.html">pnm</A></B>,
+<B><A HREF="pam.html">pam</A></B>,
+<B>cat</b> man page
+
+<HR>
+<H2 id="index">Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#applications">APPLICATIONS</A>
+<LI><A HREF="#limitations">LIMITATIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+</UL>
+</BODY>
+</HTML>
