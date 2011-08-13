@@ -3,7 +3,7 @@
 <HEAD><TITLE>Pamcomp User Manual</TITLE></HEAD>
 <BODY>
 <H1>pamcomp</H1>
-Updated: 04 August 2011
+Updated: 13 August 2011
 <p>
 <A HREF="#index">Table Of Contents</A>
 
@@ -25,7 +25,8 @@ pamcomp - composite (overlay) two Netpbm images together
 <BR>
 [<B>-alpha=</B><I>alpha-pgmfile</I>]
 [<B>-invert</B>]
-[<B>-opacity=<i>opacity</i></B>]
+[<B>-opacity=</b><i>opacity</i>]
+[<b>-mixtransparency</b>]
 [<b>-linear</b>]
 <BR>
 <I>overlay_file</I>
@@ -95,9 +96,9 @@ images.  The maxval of the output is the least common multiple of the maxvals
 of the input, up to the maximum possible PAM maxval, 65535.
 
 <p>The output has an opacity channel if and only if the underlying image does,
-and then the opacities are identical to those in the underlying image.  Before
-Netpbm 10.56 (September 2011), the output never has an opacity channel.
-<b>pamcomp</b> ignores any opacity information in the underlying image.
+and then the opacities are as described under the <b>-mixtransparency</b>
+option.  Before Netpbm 10.56 (September 2011), the output never has an opacity
+channel.
 
 <P>To specify where on the underlying image to place the overlay
 image, use the <B>-align</B>, <B>-valign</B>, <B>-xoff</B>, and
@@ -231,6 +232,30 @@ this description</a> of the technique.
      
 <p>This option was added in Netpbm 10.6 (July 2002).  Before Netpbm 10.15
 (April 2003), values less than zero or greater than unity were not allowed.
+
+<dt><b>-mixtransparency</b>
+<dd>
+This option controls what <b>pamcomp</b> does where both the underlying and
+overlay image are non-opaque.
+
+<p>By default, the output image has the same transparency as the underlying
+image and the transparency of the underlying image has no effect on the
+composition of color.
+
+<p>But with this option, <b>pamcomp</b> composes the image according to a
+plastic transparency metaphor: the underlying and overlay images are plastic
+slides.  The output image is the slide you get when you stack up those two
+slides.  So the transparency of the output is a combination of the
+transparency of the inputs and the transparency of the underlying image
+affects the underlying image's contribution to the output image's color.
+
+<p>Unlike the metaphorical slide, a PAM pixel has a color even where it is
+completely transparent, so <b>pamcomp</b> departs from the metaphor in that
+case and makes the output color identical to the underlying image.
+
+<p>This option was new in Netpbm 10.56 (September 2011).  Before that, the
+output is always opaque and the <b>pamcomp</b> ignores the transparency of the
+underlying image.
 
 <dt><b>-linear</b>
 
