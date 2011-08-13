@@ -63,28 +63,99 @@ parseCommandLine(int argc, const char ** argv,
 
 
 
-static void
-readColorMap(FILE *              const ifP, 
-             struct rasterfile * const headerP,
-             colormap_t *        const colorMapP,
-             bool *              const grayscaleP) {
-                 
-    int rc;
-    unsigned int i;
-    colormap_t colorMap;
-        
-    rc = pr_load_colormap(ifP, headerP, &colorMap);
-        
-    if (rc != 0 )
-        pm_error("unable to read colormap from RAST file");
+static bool
+colorMapIsGrayscale(colormap_t   const colorMap,
+                    unsigned int const mapLength) {
 
-    for (i = 0, *grayscaleP = true; i < headerP->ras_maplength / 3; ++i) {
+    unsigned int i;
+    bool grayscale;
+
+    for (i = 0, grayscale = true; i < mapLength / 3; ++i) {
         if (colorMap.map[0][i] != colorMap.map[1][i] ||
             colorMap.map[1][i] != colorMap.map[2][i]) {
-            *grayscaleP = false;
+            grayscale = false;
         }
     }
-    *colorMapP = colorMap;
+    return grayscale;
+}
+
+
+
+static void
+analyzeImage(struct rasterfile const header,
+             colormap_t        const colorMap,
+             int *             const formatP,
+             xelval *          const maxvalP,
+             bool *            const grayscaleP,
+             xel *             const zeroP,
+             xel *             const oneP) {
+
+    bool const grayscale =
+        header.ras_maplength == 0 ||
+        colorMapIsGrayscale(colorMap, header.ras_maplength);
+
+    switch (header.ras_depth) {
+    case 1:
+        if (header.ras_maptype == RMT_NONE && header.ras_maplength == 0) {
+            *maxvalP = 1;
+            *formatP = PBM_TYPE;
+            PNM_ASSIGN1(*zeroP, 1);
+            PNM_ASSIGN1(*oneP, 0);
+        } else if (header.ras_maptype == RMT_EQUAL_RGB &&
+                   header.ras_maplength == 6) {
+            if (grayscale) {
+                *maxvalP = 255;
+                *formatP = PGM_TYPE;
+                PNM_ASSIGN1(*zeroP, colorMap.map[0][0]);
+                PNM_ASSIGN1(*oneP, colorMap.map[0][1]);
+            } else {
+                *maxvalP = 255;
+                *formatP = PPM_TYPE;
+                PPM_ASSIGN(
+                    *zeroP, colorMap.map[0][0], colorMap.map[1][0],
+                    colorMap.map[2][0]);
+                PPM_ASSIGN(
+                    *oneP, colorMap.map[0][1], colorMap.map[1][1],
+                    colorMap.map[2][1]);
+            }
+        } else
+            pm_error(
+                "this depth-1 rasterfile has a non-standard colormap - "
+                "type %ld length %ld",
+                header.ras_maptype, header.ras_maplength);
+        break;
+
+    case 8:
+        if (grayscale) {
+            *maxvalP = 255;
+            *formatP = PGM_TYPE;
+        } else if (header.ras_maptype == RMT_EQUAL_RGB) {
+            *maxvalP = 255;
+            *formatP = PPM_TYPE;
+        } else
+            pm_error(
+                "this depth-8 rasterfile has a non-standard colormap - "
+                "type %ld length %ld",
+                header.ras_maptype, header.ras_maplength);
+        break;
+
+    case 24:
+    case 32:
+        if (header.ras_maptype == RMT_NONE && header.ras_maplength == 0);
+        else if (header.ras_maptype == RMT_RAW || header.ras_maplength == 768);
+        else
+            pm_error(
+                "this depth-%ld rasterfile has a non-standard colormap - "
+                "type %ld length %ld",
+                header.ras_depth, header.ras_maptype, header.ras_maplength);
+        *maxvalP = 255;
+        *formatP = PPM_TYPE;
+        break;
+
+    default:
+        pm_error("invalid depth: %ld.  Can handle only depth 1, 8, 24, or 32.",
+                 header.ras_depth);
+    }
 }
 
 
@@ -218,81 +289,21 @@ main(int argc, const char ** const argv) {
 
     ifP = pm_openr(cmdline.inputFileName);
 
-    /* Read in the rasterfile.  First the header. */
     rc = pr_load_header(ifP, &header);
     if (rc != 0 )
         pm_error("unable to read in rasterfile header");
 
     if (header.ras_maplength != 0) {
-        readColorMap(ifP, &header, &colorMap, &grayscale);
-    } else
-        grayscale = true;
-
-    /* Check the depth and color map. */
-    switch (header.ras_depth) {
-    case 1:
-        if (header.ras_maptype == RMT_NONE && header.ras_maplength == 0) {
-            maxval = 1;
-            format = PBM_TYPE;
-            PNM_ASSIGN1(zero, maxval);
-            PNM_ASSIGN1(one, 0);
-        } else if (header.ras_maptype == RMT_EQUAL_RGB &&
-                   header.ras_maplength == 6) {
-            if (grayscale) {
-                maxval = 255;
-                format = PGM_TYPE;
-                PNM_ASSIGN1( zero, colorMap.map[0][0] );
-                PNM_ASSIGN1( one, colorMap.map[0][1] );
-            } else {
-                maxval = 255;
-                format = PPM_TYPE;
-                PPM_ASSIGN(
-                    zero, colorMap.map[0][0], colorMap.map[1][0],
-                    colorMap.map[2][0]);
-                PPM_ASSIGN(
-                    one, colorMap.map[0][1], colorMap.map[1][1],
-                    colorMap.map[2][1]);
-            }
-        } else
-            pm_error(
-                "this depth-1 rasterfile has a non-standard colormap - "
-                "type %ld length %ld",
-                header.ras_maptype, header.ras_maplength);
-        break;
-
-    case 8:
-        if (grayscale) {
-            maxval = 255;
-            format = PGM_TYPE;
-        } else if (header.ras_maptype == RMT_EQUAL_RGB) {
-            maxval = 255;
-            format = PPM_TYPE;
-        } else
-            pm_error(
-                "this depth-8 rasterfile has a non-standard colormap - "
-                "type %ld length %ld",
-                header.ras_maptype, header.ras_maplength);
-        break;
-
-    case 24:
-    case 32:
-        if (header.ras_maptype == RMT_NONE && header.ras_maplength == 0);
-        else if (header.ras_maptype == RMT_RAW || header.ras_maplength == 768);
-        else
-            pm_error(
-                "this depth-%ld rasterfile has a non-standard colormap - "
-                "type %ld length %ld",
-                header.ras_depth, header.ras_maptype, header.ras_maplength);
-        maxval = 255;
-        format = PPM_TYPE;
-        break;
-
-    default:
-        pm_error("invalid depth: %ld.  Can handle only depth 1, 8, 24, or 32.",
-                 header.ras_depth);
+        int rc;
+        
+        rc = pr_load_colormap(ifP, &header, &colorMap);
+        
+        if (rc != 0 )
+            pm_error("unable to read colormap from RAST file");
     }
 
-    /* Now load the data.  The pixrect returned is a memory pixrect. */
+    analyzeImage(header, colorMap, &format, &maxval, &grayscale, &zero, &one);
+
     pr = pr_load_image(ifP, &header, NULL);
     if (pr == NULL )
         pm_error("unable to read in the image from the rasterfile" );
