@@ -61,6 +61,115 @@ parseCommandLine(int argc, const char ** argv,
 
 
 
+static void
+writePnm(FILE *                 const ofP,
+         unsigned int           const cols,
+         unsigned int           const rows,
+         xelval                 const maxval,
+         int                    const format,
+         unsigned int           const depth,
+         long                   const rastType,
+         bool                   const grayscale,
+         bool                   const colorMapped,
+         colormap_t             const colorMap,
+         xel                    const zeroXel,
+         xel                    const oneXel,
+         const struct pixrect * const pixRectP) {
+
+    unsigned int const lineSize =
+        ((struct mpr_data*) pixRectP->pr_data)->md_linebytes;
+    unsigned char * const data =
+        ((struct mpr_data*) pixRectP->pr_data)->md_image;
+
+    xel * xelrow;
+    unsigned int row;
+    unsigned char * lineStart;
+
+    pnm_writepnminit(stdout, cols, rows, maxval, format, 0);
+
+    xelrow = pnm_allocrow(cols);
+    switch (PNM_FORMAT_TYPE(format)) {
+    case PBM_TYPE:
+        pm_message("writing PBM file");
+        break;
+    case PGM_TYPE:
+        pm_message("writing PGM file");
+        break;
+    case PPM_TYPE:
+        pm_message("writing PPM file");
+        break;
+    default:
+        abort();
+    }
+
+    for (row = 0, lineStart = data; row < rows; ++row, lineStart += lineSize) {
+        unsigned char * byteP;
+
+        byteP = lineStart; /* initial value */
+
+        switch (depth) {
+        case 1: {
+            unsigned int col;
+            unsigned char mask;
+            for (col = 0, mask = 0x80; col < cols; ++col) {
+                if (mask == 0x00) {
+                    ++byteP;
+                    mask = 0x80;
+                }
+                xelrow[col] = (*byteP & mask) ? oneXel : zeroXel;
+                mask = mask >> 1;
+            }
+        } break;
+        case 8: {
+            unsigned int col;
+            for (col = 0; col < cols; ++col) {
+                if (!colorMapped)
+                    PNM_ASSIGN1(xelrow[col], *byteP);
+                else if (grayscale)
+                    PNM_ASSIGN1(xelrow[col], colorMap.map[0][*byteP]);
+                else
+                    PPM_ASSIGN(xelrow[col],
+                               colorMap.map[0][*byteP],
+                               colorMap.map[1][*byteP],
+                               colorMap.map[2][*byteP]);
+                ++byteP;
+            }
+        } break;
+        case 24:
+        case 32: {
+            unsigned int col;
+            for (col = 0; col < cols; ++col) {
+                xelval r, g, b;
+
+                if (depth == 32)
+                    ++byteP;
+                if (rastType == RT_FORMAT_RGB) {
+                    r = *byteP++;
+                    g = *byteP++;
+                    b = *byteP++;
+                } else {
+                    b = *byteP++;
+                    g = *byteP++;
+                    r = *byteP++;
+                }
+                if (!colorMapped)
+                    PPM_ASSIGN(xelrow[col], r, g, b);
+                else
+                    PPM_ASSIGN(xelrow[col],
+                               colorMap.map[0][r],
+                               colorMap.map[1][g],
+                               colorMap.map[2][b]);
+            }
+        } break;
+        default:
+            pm_error("Invalid depth value: %u", depth);
+        }
+        pnm_writepnmrow(stdout, xelrow, cols, maxval, format, 0);
+    }
+}
+
+
+
 int
 main(int argc, const char ** const argv) {
 
@@ -70,34 +179,21 @@ main(int argc, const char ** const argv) {
     colormap_t pr_colormap;
     bool grayscale;
     struct pixrect * pr;
-    xel * xelrow;
-    int rows, cols, format;
-    unsigned int row;
-    unsigned int depth;
+    int format;
     xelval maxval;
     xel zero, one;
-    int linesize;
-    unsigned char * data;
-    unsigned char * byteP;
     int rc;
 
     pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
+    ifP = pm_openr(cmdline.inputFileName);
+
     /* Read in the rasterfile.  First the header. */
     rc = pr_load_header(ifP, &header);
     if (rc != 0 )
         pm_error("unable to read in rasterfile header");
-
-    cols = header.ras_width;
-    rows = header.ras_height;
-    depth = header.ras_depth;
-
-    if (cols <= 0)
-        pm_error( "invalid cols: %d", cols );
-    if (rows <= 0)
-        pm_error( "invalid rows: %d", rows );
 
     /* If there is a color map, read it. */
     if (header.ras_maplength != 0) {
@@ -119,7 +215,7 @@ main(int argc, const char ** const argv) {
         grayscale = true;
 
     /* Check the depth and color map. */
-    switch (depth) {
+    switch (header.ras_depth) {
     case 1:
         if (header.ras_maptype == RMT_NONE && header.ras_maplength == 0) {
             maxval = 1;
@@ -170,16 +266,16 @@ main(int argc, const char ** const argv) {
         else if (header.ras_maptype == RMT_RAW || header.ras_maplength == 768);
         else
             pm_error(
-                "this depth-%d rasterfile has a non-standard colormap - "
+                "this depth-%ld rasterfile has a non-standard colormap - "
                 "type %ld length %ld",
-                depth, header.ras_maptype, header.ras_maplength);
+                header.ras_depth, header.ras_maptype, header.ras_maplength);
         maxval = 255;
         format = PPM_TYPE;
         break;
 
     default:
-        pm_error("invalid depth: %d.  Can handle only depth 1, 8, 24, or 32.",
-                 depth);
+        pm_error("invalid depth: %ld.  Can handle only depth 1, 8, 24, or 32.",
+                 header.ras_depth);
     }
 
     /* Now load the data.  The pixrect returned is a memory pixrect. */
@@ -187,88 +283,9 @@ main(int argc, const char ** const argv) {
     if (pr == NULL )
         pm_error("unable to read in the image from the rasterfile" );
 
-    linesize = ((struct mpr_data*) pr->pr_data)->md_linebytes;
-    data = ((struct mpr_data*) pr->pr_data)->md_image;
-
-    /* Now write out the anymap. */
-    pnm_writepnminit(stdout, cols, rows, maxval, format, 0);
-    xelrow = pnm_allocrow(cols);
-    switch (PNM_FORMAT_TYPE(format)) {
-    case PBM_TYPE:
-        pm_message("writing PBM file");
-        break;
-    case PGM_TYPE:
-        pm_message("writing PGM file");
-        break;
-    case PPM_TYPE:
-        pm_message("writing PPM file");
-        break;
-    default:
-        abort();
-    }
-
-    for (row = 0; row < rows; ++row) {
-        byteP = data;
-        switch (depth) {
-        case 1: {
-            unsigned int col;
-            unsigned char mask;
-            for (col = 0, mask = 0x80; col < cols; ++col) {
-                if (mask == 0x00) {
-                    ++byteP;
-                    mask = 0x80;
-                }
-                xelrow[col] = (*byteP & mask) ? one : zero;
-                mask = mask >> 1;
-            }
-        } break;
-        case 8: {
-            unsigned int col;
-            for (col = 0; col < cols; ++col) {
-                if (header.ras_maplength == 0)
-                    PNM_ASSIGN1(xelrow[col], *byteP);
-                else if (grayscale)
-                    PNM_ASSIGN1(xelrow[col], pr_colormap.map[0][*byteP]);
-                else
-                    PPM_ASSIGN(xelrow[col],
-                               pr_colormap.map[0][*byteP],
-                               pr_colormap.map[1][*byteP],
-                               pr_colormap.map[2][*byteP]);
-                ++byteP;
-            }
-        } break;
-        case 24:
-        case 32: {
-            unsigned int col;
-            for (col = 0; col < cols; ++col) {
-                xelval r, g, b;
-
-                if (depth == 32)
-                    ++byteP;
-                if (header.ras_type == RT_FORMAT_RGB) {
-                    r = *byteP++;
-                    g = *byteP++;
-                    b = *byteP++;
-                } else {
-                    b = *byteP++;
-                    g = *byteP++;
-                    r = *byteP++;
-                }
-                if (header.ras_maplength == 0)
-                    PPM_ASSIGN(xelrow[col], r, g, b);
-                else
-                    PPM_ASSIGN(xelrow[col],
-                               pr_colormap.map[0][r],
-                               pr_colormap.map[1][g],
-                               pr_colormap.map[2][b]);
-            }
-        } break;
-        default:
-            pm_error("Invalid depth value: %u", depth);
-        }
-        data += linesize;
-        pnm_writepnmrow(stdout, xelrow, cols, maxval, format, 0);
-    }
+    writePnm(stdout, header.ras_width, header.ras_height, maxval, format,
+             header.ras_depth, header.ras_type, grayscale, 
+             header.ras_maplength > 0, pr_colormap, zero, one, pr);
 
     pm_close(ifP);
     pm_close(stdout);
