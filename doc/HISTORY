@@ -8,6 +8,8 @@ not yet  BJH  Release 10.56.00
 
               Add pamexec.  Thanks Michael Pot <fmw@actrix.co.nz>.
 
+              rasttopnm: add -index.
+
               pamcomp: Retain opacity information from underlying image.
 
               pnmtops: Add PBM fast path.  Thanks Prophet of the Way
