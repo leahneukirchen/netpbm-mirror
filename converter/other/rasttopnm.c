@@ -25,6 +25,8 @@ struct cmdlineInfo {
     const char *inputFileName;
 };
 
+
+
 static void
 parseCommandLine(int argc, const char ** argv,
                  struct cmdlineInfo * const cmdlineP) {
@@ -57,6 +59,32 @@ parseCommandLine(int argc, const char ** argv,
                  "specified %d", argc-1);
     else
         cmdlineP->inputFileName = argv[1];
+}
+
+
+
+static void
+readColorMap(FILE *              const ifP, 
+             struct rasterfile * const headerP,
+             colormap_t *        const colorMapP,
+             bool *              const grayscaleP) {
+                 
+    int rc;
+    unsigned int i;
+    colormap_t colorMap;
+        
+    rc = pr_load_colormap(ifP, headerP, &colorMap);
+        
+    if (rc != 0 )
+        pm_error("unable to read colormap from RAST file");
+
+    for (i = 0, *grayscaleP = true; i < headerP->ras_maplength / 3; ++i) {
+        if (colorMap.map[0][i] != colorMap.map[1][i] ||
+            colorMap.map[1][i] != colorMap.map[2][i]) {
+            *grayscaleP = false;
+        }
+    }
+    *colorMapP = colorMap;
 }
 
 
@@ -176,7 +204,7 @@ main(int argc, const char ** const argv) {
     struct cmdlineInfo cmdline;
     FILE * ifP;
     struct rasterfile header;
-    colormap_t pr_colormap;
+    colormap_t colorMap;
     bool grayscale;
     struct pixrect * pr;
     int format;
@@ -195,22 +223,8 @@ main(int argc, const char ** const argv) {
     if (rc != 0 )
         pm_error("unable to read in rasterfile header");
 
-    /* If there is a color map, read it. */
     if (header.ras_maplength != 0) {
-        int rc;
-        unsigned int i;
-        
-        rc = pr_load_colormap(ifP, &header, &pr_colormap);
-        
-        if (rc != 0 )
-            pm_error("unable to skip colormap data");
-
-        for (i = 0, grayscale = true; i < header.ras_maplength / 3; ++i) {
-            if (pr_colormap.map[0][i] != pr_colormap.map[1][i] ||
-                pr_colormap.map[1][i] != pr_colormap.map[2][i]) {
-                grayscale = false;
-            }
-        }
+        readColorMap(ifP, &header, &colorMap, &grayscale);
     } else
         grayscale = true;
 
@@ -227,17 +241,17 @@ main(int argc, const char ** const argv) {
             if (grayscale) {
                 maxval = 255;
                 format = PGM_TYPE;
-                PNM_ASSIGN1( zero, pr_colormap.map[0][0] );
-                PNM_ASSIGN1( one, pr_colormap.map[0][1] );
+                PNM_ASSIGN1( zero, colorMap.map[0][0] );
+                PNM_ASSIGN1( one, colorMap.map[0][1] );
             } else {
                 maxval = 255;
                 format = PPM_TYPE;
                 PPM_ASSIGN(
-                    zero, pr_colormap.map[0][0], pr_colormap.map[1][0],
-                    pr_colormap.map[2][0]);
+                    zero, colorMap.map[0][0], colorMap.map[1][0],
+                    colorMap.map[2][0]);
                 PPM_ASSIGN(
-                    one, pr_colormap.map[0][1], pr_colormap.map[1][1],
-                    pr_colormap.map[2][1]);
+                    one, colorMap.map[0][1], colorMap.map[1][1],
+                    colorMap.map[2][1]);
             }
         } else
             pm_error(
@@ -285,7 +299,7 @@ main(int argc, const char ** const argv) {
 
     writePnm(stdout, header.ras_width, header.ras_height, maxval, format,
              header.ras_depth, header.ras_type, grayscale, 
-             header.ras_maplength > 0, pr_colormap, zero, one, pr);
+             header.ras_maplength > 0, colorMap, zero, one, pr);
 
     pm_close(ifP);
     pm_close(stdout);
