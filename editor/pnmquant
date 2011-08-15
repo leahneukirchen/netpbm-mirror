@@ -24,7 +24,7 @@ sub tempFile($) {
     # We trust Perl's File::Temp to do a better job of creating the temp
     # file, but it doesn't exist before Perl 5.6.1.
 
-    if (eval { require File::TempX; 1 }) {
+    if (eval { require File::Temp; 1 }) {
         return File::Temp::tempfile("pnmquant_XXXX", 
                                     SUFFIX=>".pnm", 
                                     DIR=>File::Spec->tmpdir(),
