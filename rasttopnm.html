@@ -2,23 +2,22 @@
 <HTML><HEAD><TITLE>Rasttopnm User Manual</TITLE></HEAD>
 <BODY>
 <H1>rasttopnm</H1>
-Updated: 13 January 1991
+Updated: 16 August 2011
 <BR>
 <A HREF="#index">Table Of Contents</A>
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
 rasttopnm - convert a Sun rasterfile to a PNM image
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>rasttopnm</B>
 
+[<b>-index</b>]
+
 [<I>rastfile</I>]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -29,26 +28,48 @@ If it's grayscale, <b>rasttopnm</b> writes a PGM.  If it's color,
 <b>rasttopnm</b> writes a PPM.  The program tells you which type it is
 generating.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<h2 id="options">OPTIONS</h2>
+
+<dl>
+  
+<dt><b>-index</b>
+
+<dd>This odd option tells <b>rasttopnm</b> to use the color map indices in
+the raster as if they are the color values.
+
+<p>In a colormapped Sun rasterfile, the header of the file contains a color
+map, associating each unique color that occurs in the file with an index
+number.  The raster portion of the file then represents the color of a pixel
+with one of those colormap indices.
+
+<p>This option has found use as follows: take a regular grayscale Sun
+rasterfile in which all the grayscale value are represented, so the colormap
+indices are identical to the color values.  Modify its color map so as to
+alter the colors in the image, in particular to equalize the colors.  With
+that modified rasterfile as input, <b>rasttopnm</b> without <b>-index</b>
+produces the modified image.  But with <b>-index</b>, it produces the original
+unmodified image.
+
+<p>This option was new in Netpbm 10.56 (September 2011).
+
+</dl>
+
+<H2 id="seealso">SEE ALSO</H2>
 
 <A HREF="pnmtorast.html">pnmtorast</A>, 
 <A HREF="pnm.html">pnm</A>
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>AUTHOR</H2>
+<H2 id="author">AUTHOR</H2>
 
 Copyright (C) 1989, 1991 by Jef Poskanzer.
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">SEE ALSO</A>
-<LI><A HREF="#lbAF">AUTHOR</A>
+<LI><A HREF="#synopsys">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
 </UL>
 </BODY>
 </HTML>
