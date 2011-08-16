@@ -26,7 +26,18 @@ ifneq ($(TIFFLIB),NONE)
   endif
 endif
 
-ifeq ($(shell libpng$(PNGVER)-config --version),)
+TEST_PKGCONFIG_LIBPNG = if pkg-config libpng$(PNGVER); then echo exists; fi
+
+ifneq ($(shell $(TEST_PKGCONFIG_LIBPNG)),)
+  # pkg-config libpng works on this system
+  HAVE_PNGLIB = Y
+  EXTERN_INCLUDES += $(shell pkg-config libpng$(PNGVER) --cflags)
+else ifneq ($(shell libpng$(PNGVER)-config --version),)
+  # No pkg-config, but we have libpng-config on this system
+  HAVE_PNGLIB = Y
+  EXTERN_INCLUDES += $(shell libpng$(PNGVER)-config --cflags)
+else
+  # System can't tell use where libpng is; use stuff from config.mk
   ifneq ($(PNGLIB),NONE)
     HAVE_PNGLIB = Y
     ifneq ($(PNGHDR_DIR)x,x)
@@ -36,9 +47,6 @@ ifeq ($(shell libpng$(PNGVER)-config --version),)
       EXTERN_INCLUDES += -I$(ZHDR_DIR)
     endif
   endif
-else
-  HAVE_PNGLIB = Y
-  EXTERN_INCLUDES += $(shell libpng$(PNGVER)-config --cflags)
 endif
 
 ifneq ($(JPEGLIB),NONE)
@@ -171,10 +179,15 @@ tifftopnm pamtotiff pnmtotiffcmyk: %: %.o tiff.o $(NETPBMLIB) $(LIBOPT)
 	$(LD) -o $@ $@.o tiff.o \
 	  $(LIBOPTS_TIFF) $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
-ifeq ($(shell libpng$(PNGVER)-config --version),)
-  PNGLIB_LIBOPTS = $(shell $(LIBOPT) $(LIBOPTR) $(PNGLIB) $(ZLIB))
-else
+ifneq ($(shell $(TEST_PKGCONFIG_LIBPNG)),)
+  # pkg-config libpng works on this system
+  PNGLIB_LIBOPTS = $(shell pkg-config libpng$(PNGVER) --ldflags)
+else ifneq ($(shell libpng$(PNGVER)-config --version),)
+  # No pkg-config, but we have libpng-config on this system
   PNGLIB_LIBOPTS = $(shell libpng$(PNGVER)-config --ldflags)
+else
+  # System can't tell use where libpng is; use stuff from config.mk
+  PNGLIB_LIBOPTS = $(shell $(LIBOPT) $(LIBOPTR) $(PNGLIB) $(ZLIB))
 endif
 
 pngtopam: %: %.o pngx.o $(NETPBMLIB) $(LIBOPT)

@@ -25,6 +25,9 @@ not yet  BJH  Release 10.56.00
               pnmquant: work with older Perl that doesn't have 3-argument open.
               Thanks Slaven Rezic <srezic@iconmobile.com>.
 
+              Build: To find libpng, use the Pkgconfig database entry instead
+              of libpng-config if it is available.
+
               Build: pnmtops: Instead of omitting pnmtops from the build when
               there is no libz, just omit ability to create flate-compressed
               output from pnmtops.
