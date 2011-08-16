@@ -181,12 +181,12 @@ tifftopnm pamtotiff pnmtotiffcmyk: %: %.o tiff.o $(NETPBMLIB) $(LIBOPT)
 
 ifneq ($(shell $(TEST_PKGCONFIG_LIBPNG)),)
   # pkg-config libpng works on this system
-  PNGLIB_LIBOPTS = $(shell pkg-config libpng$(PNGVER) --ldflags)
+  PNGLIB_LIBOPTS = $(shell pkg-config libpng$(PNGVER) --libs)
 else ifneq ($(shell libpng$(PNGVER)-config --version),)
   # No pkg-config, but we have libpng-config on this system
   PNGLIB_LIBOPTS = $(shell libpng$(PNGVER)-config --ldflags)
 else
-  # System can't tell use where libpng is; use stuff from config.mk
+  # System can't tell us where libpng is; use stuff from config.mk
   PNGLIB_LIBOPTS = $(shell $(LIBOPT) $(LIBOPTR) $(PNGLIB) $(ZLIB))
 endif
 
