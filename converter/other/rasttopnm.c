@@ -322,6 +322,10 @@ main(int argc, const char ** const argv) {
     if (pr == NULL )
         pm_error("unable to read in the image from the rasterfile" );
 
+    if (cmdline.index && header.ras_maplength == 0)
+        pm_error("You requested to use color map indices as colors (-index), "
+                 "but this is not a color mapped image");
+
     writePnm(stdout, pr, header.ras_width, header.ras_height, maxval, format,
              header.ras_depth, header.ras_type, grayscale, 
              header.ras_maplength > 0, colorMap, zero, one, cmdline.index);
