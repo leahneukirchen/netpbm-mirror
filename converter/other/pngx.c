@@ -513,9 +513,77 @@ pngx_setTrnsValue(struct pngx * const pngxP,
 
 
 void
+pngx_readInfo(struct pngx * const pngxP) {
+
+    png_read_info(pngxP->png_ptr, pngxP->info_ptr);
+}
+
+
+
+void
 pngx_writeInfo(struct pngx * const pngxP) {
 
     png_write_info(pngxP->png_ptr, pngxP->info_ptr);
+}
+
+
+
+static void
+verifyFileIsPng(FILE *   const ifP,
+                size_t * const consumedByteCtP) {
+
+    unsigned char buffer[4];
+    size_t bytesRead;
+
+    bytesRead = fread(buffer, 1, sizeof(buffer), ifP);
+    if (bytesRead != sizeof(buffer))
+        pm_error("input file is empty or too short");
+
+    if (png_sig_cmp(buffer, (png_size_t) 0, (png_size_t) sizeof(buffer)) != 0)
+        pm_error("input file is not a PNG file "
+                 "(does not have the PNG signature in its first 4 bytes)");
+    else
+        *consumedByteCtP = bytesRead;
+}
+
+
+
+void
+pngx_readStart(struct pngx * const pngxP,
+               FILE *        const ifP) {
+
+    size_t sigByteCt;
+            
+    verifyFileIsPng(ifP, &sigByteCt);
+
+    /* Declare that we already read the signature bytes */
+    pngx_setSigBytes(pngxP, (unsigned int)sigByteCt);
+
+    png_init_io(pngxP->png_ptr, ifP);
+
+    pngx_readInfo(pngxP);
+
+    if (pngx_bitDepth(pngxP) < 8)
+        pngx_setPacking(pngxP);
+}
+
+
+
+void
+pngx_readRow(struct pngx * const pngxP,
+             png_byte *    const rowBuf,
+             png_byte *    const displayRow) {
+
+    png_read_row(pngxP->png_ptr, rowBuf, displayRow);
+}
+
+
+
+void
+pngx_readImage(struct pngx * const pngxP,
+               png_byte **   const image) {
+
+    png_read_image(pngxP->png_ptr, image);
 }
 
 
@@ -530,11 +598,25 @@ pngx_writeRow(struct pngx *    const pngxP,
 
 
 void
+pngx_readEnd(struct pngx * const pngxP) {
+
+    /* Note that some of info_ptr is not defined until png_read_end() 
+       completes.  That's because it comes from chunks that are at the
+       end of the stream.  In particular, comment and time chunks may
+       be at the end.  Furthermore, they may be in both places, in
+       which case info_ptr contains different information before and
+       after png_read_end().
+    */
+    png_read_end(pngxP->png_ptr, pngxP->info_ptr);
+}
+
+
+
+void
 pngx_writeEnd(struct pngx * const pngxP) {
 
     png_write_end(pngxP->png_ptr, pngxP->info_ptr);
 }
-
 
 
 

@@ -208,11 +208,30 @@ pngx_setTrnsValue(struct pngx * const pngxP,
                   png_color_16  const transColorArg);
 
 void
+pngx_readInfo(struct pngx * const pngxP);
+
+void
 pngx_writeInfo(struct pngx * const pngxP);
+
+void
+pngx_readStart(struct pngx * const pngxP,
+               FILE *        const ifP);
+
+void
+pngx_readRow(struct pngx * const pngxP,
+             png_byte *    const rowBuf,
+             png_byte *    const displayRow);
+
+void
+pngx_readImage(struct pngx * const pngxP,
+               png_byte **   const image);
 
 void
 pngx_writeRow(struct pngx *    const pngxP,
               const png_byte * const line);
+
+void
+pngx_readEnd(struct pngx * const pngxP);
 
 void
 pngx_writeEnd(struct pngx * const pngxP);

@@ -228,26 +228,6 @@ gammaCorrectColor(pngcolor    const color,
 
 
 
-static void
-verifyFileIsPng(FILE *   const ifP,
-                size_t * const consumedByteCtP) {
-
-    unsigned char buffer[4];
-    size_t bytesRead;
-
-    bytesRead = fread(buffer, 1, sizeof(buffer), ifP);
-    if (bytesRead != sizeof(buffer))
-        pm_error("input file is empty or too short");
-
-    if (png_sig_cmp(buffer, (png_size_t) 0, (png_size_t) sizeof(buffer)) != 0)
-        pm_error("input file is not a PNG file "
-                 "(does not have the PNG signature in its first 4 bytes)");
-    else
-        *consumedByteCtP = bytesRead;
-}
-
-
-
 static unsigned int
 computePngLineSize(struct pngx * const pngxP) {
 
@@ -358,7 +338,7 @@ reader_createAllAtOnce(struct pngx * const pngxP,
 
     readerP->rowBuf = NULL;
 
-    png_read_image(pngxP->png_ptr, readerP->pngRaster);
+    pngx_readImage(pngxP, readerP->pngRaster);
 
     readerP->nextRowNum = 0;
 
@@ -433,50 +413,13 @@ reader_read(Reader * const readerP) {
         else
             retval = readerP->pngRaster[readerP->nextRowNum];
     } else {
-        png_read_row(readerP->pngxP->png_ptr, readerP->rowBuf, NULL);
+        pngx_readRow(readerP->pngxP, readerP->rowBuf, NULL);
         retval = readerP->rowBuf;
     }
 
     ++readerP->nextRowNum;
 
     return retval;
-}
-
-
-
-static void
-readPngInit(struct pngx * const pngxP,
-            FILE *        const ifP) {
-
-    size_t sigByteCt;
-            
-    verifyFileIsPng(ifP, &sigByteCt);
-
-    /* Declare that we already read the signature bytes */
-    pngx_setSigBytes(pngxP, (unsigned int)sigByteCt);
-
-    png_init_io(pngxP->png_ptr, ifP);
-
-    png_read_info(pngxP->png_ptr, pngxP->info_ptr);
-
-    if (pngx_bitDepth(pngxP) < 8)
-        pngx_setPacking(pngxP);
-}
-
-
-
-static void
-readPngTerm(struct pngx * const pngxP) {
-
-    png_read_end(pngxP->png_ptr, pngxP->info_ptr);
-    
-    /* Note that some of info_ptr is not defined until png_read_end() 
-       completes.  That's because it comes from chunks that are at the
-       end of the stream.  In particular, comment and time chunks may
-       be at the end.  Furthermore, they may be in both places, in
-       which case info_ptr contains different information before and
-       after png_read_end().
-    */
 }
 
 
@@ -1486,7 +1429,7 @@ convertpng(FILE *             const ifP,
 
     pngx_create(&pngxP, PNGX_READ, &jmpbuf);
 
-    readPngInit(pngxP, ifP);
+    pngx_readStart(pngxP, ifP);
 
     if (verbose)
         dumpPngInfo(pngxP);
@@ -1524,7 +1467,7 @@ convertpng(FILE *             const ifP,
 
     reader_destroy(rasterReaderP);
 
-    readPngTerm(pngxP);
+    pngx_readEnd(pngxP);
 
     fflush(stdout);
 
