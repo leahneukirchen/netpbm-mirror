@@ -15,6 +15,10 @@ not yet  BJH  Release 10.56.00
               pnmtops: Add PBM fast path.  Thanks Prophet of the Way
               <afu@wta.att.ne.jp>.
 
+              libppmcmap and most programs that use color maps: speedup with
+              new color hash function.  Thanks Prophet of the Way
+              <afu@wta.att.ne.jp>.
+
               pnmtopng: fix bug: with -alpha specifying a mask which contains
               no fully transparent area, output PNG is fully opaque.
               Introduced in 10.29.
@@ -24,6 +28,9 @@ not yet  BJH  Release 10.56.00
 
               pnmquant: work with older Perl that doesn't have 3-argument open.
               Thanks Slaven Rezic <srezic@iconmobile.com>.
+
+              ppmcie: fix bug: fails with "X coordinate out of range" error.
+              Introduced in 10.51.
 
               Build: To find libpng, use the Pkgconfig database entry instead
               of libpng-config if it is available.
