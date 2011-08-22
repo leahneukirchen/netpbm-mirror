@@ -463,8 +463,18 @@ gamma_correct_rgb(const struct colorSystem * const cs,
 
 
 
+/* Sz(X) is the length in pixels of a normalized distance of length X.
+   (A normalized length unit is 1/512 of the smaller dimension of the
+   canvas)
+*/
 #define Sz(x) (((x) * MIN(pixcols, pixrows)) / 512)
+
+/* B(X, Y) is a pair of function arguments (for a libppmd function) that
+   give a pixel position on the canvas.  That position is (X, Y), biased
+   horizontally 'xBias' pixels.
+*/
 #define B(x, y) ((x) + xBias), (y)
+
 #define Bixels(y, x) pixels[y][x + xBias]
 
 
@@ -721,9 +731,18 @@ tickX(pixel **     const pixels,
 /*----------------------------------------------------------------------------
    Put a tick mark 'tenth' tenths of the way along the X axis
    and label it.
+
+   'pixels' is the canvas on which to draw it; its dimensions are
+   'pixcols' by 'pixrows' and has maxval 'maxval'.
 -----------------------------------------------------------------------------*/
     unsigned int const pxcols = pixcols - xBias;
     unsigned int const pxrows = pixrows - yBias;
+    unsigned int const tickCol = (tenth * (pxcols - 1)) / 10;
+        /* Pixel column where the left edge of the tick goes */
+    unsigned int const tickThickness = Sz(3);
+        /* Thickness of the tick in pixels */
+    unsigned int const tickBottom = pxrows - Sz(1);
+        /* Pixel row of the bottom of the tick */
 
     char s[20];
 
@@ -731,11 +750,11 @@ tickX(pixel **     const pixels,
 
     sprintf(s, "0.%u", tenth);
     ppmd_line(pixels, pixcols, pixrows, maxval,
-              B((tenth * (pxcols - 1)) / 10, pxrows - Sz(1)),
-              B((tenth * (pxcols - 1)) / 10, pxrows - Sz(4)),
+              B(tickCol, tickBottom),
+              B(tickCol, tickBottom - tickThickness),
               PPMD_NULLDRAWPROC, (char *) &axisColor);
     ppmd_text(pixels, pixcols, pixrows, maxval,
-              B((tenth * (pxcols - 1)) / 10 - Sz(11), pxrows + Sz(12)),
+              B(tickCol - Sz(11), pxrows + Sz(12)),
               Sz(10), 0, s, PPMD_NULLDRAWPROC, (char *) &axisColor);
 }
 
@@ -751,23 +770,28 @@ tickY(pixel **     const pixels,
       pixel        const axisColor,
       unsigned int const tenth) {
 /*----------------------------------------------------------------------------
-   Put a tick mark 'tenth' tenths of the way along the X axis
-   and label it.
+   Put a tick mark 'tenth' tenths of the way along the Y axis and label it.
+
+   'pixels' is the canvas on which to draw it; its dimensions are
+   'pixcols' by 'pixrows' and has maxval 'maxval'.
 -----------------------------------------------------------------------------*/
     unsigned int const pxrows = pixrows - yBias;
-
+    unsigned int const tickRow = (tenth * (pxrows - 1)) / 10;
+        /* Pixel row where the top of the tick goes */
+    unsigned int const tickThickness = Sz(3);
+        /* Thickness of the tick in pixels */
+    
     char s[20];
 
     assert(tenth < 10);
 
     sprintf(s, "0.%d", 10 - tenth);
     ppmd_line(pixels, pixcols, pixrows, maxval,
-              B(0, (tenth * (pxrows - 1)) / 10),
-              B(Sz(3), (tenth * (pxrows - 1)) / 10),
+              B(0, tickRow), B(tickThickness, tickRow),
               PPMD_NULLDRAWPROC, (char *) &axisColor);
 
     ppmd_text(pixels, pixcols, pixrows, maxval,
-              B(Sz(-30), (tenth * (pxrows - 1)) / 10 + Sz(5)),
+              B(Sz(-30), tickRow + Sz(5)),
               Sz(10), 0, s,
               PPMD_NULLDRAWPROC, (char *) &axisColor);
 }
