@@ -4,6 +4,20 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+11.08.22 BJH  Release 10.55.01
+
+              ppmcie: fix bug: fails with "X coordinate out of range" error.
+              Introduced in 10.51.
+
+              pgmtexture: fix wrong sum variance result.  Wrong since the
+              beginning.  Thanks Francois P. S. Luus <fpsluus@gmail.com>.
+
+              pnmtopng: fix bug: with -alpha specifying a mask which contains
+              no fully transparent area, output PNG is fully opaque.
+              Introduced in 10.29.
+
+              pnmquant: work with older Perl that doesn't have 3-argument open.
+
 11.06.29 BJH  Release 10.55.00
 
               Add pamtosrf, srftopam.  Thanks Mike Frysinger
@@ -77,7 +91,7 @@ CHANGE HISTORY
 
               Add pammosaicknit.  Thanks Scott Pakin.
 
-              pnmtops: Add -textalphabits, default Postscript TextAlphaBits
+              pstopnm: Add -textalphabits, default Ghostscript TextAlphaBits
               to 4.
 
               pngtopam: include tuple type in output.  Thanks

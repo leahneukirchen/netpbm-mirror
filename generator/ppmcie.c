@@ -463,7 +463,7 @@ gamma_correct_rgb(const struct colorSystem * const cs,
 
 
 
-#define Sz(x) (((x) * MIN(pixcols, pixrows)) / 512)
+#define Sz(x) (((x) * (int)MIN(pixcols, pixrows)) / 512)
 #define B(x, y) ((x) + xBias), (y)
 #define Bixels(y, x) pixels[y][x + xBias]
 
