@@ -3,6 +3,7 @@
 #ifndef _PPM_H_
 #define _PPM_H_
 
+#include <netpbm/pm_config.h>
 #include <netpbm/pm.h>
 #include <netpbm/pgm.h>
 

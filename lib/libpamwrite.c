@@ -16,9 +16,9 @@
 #include <stdio.h>
 #include <limits.h>
 #include <assert.h>
-
 #include <math.h>
 
+#include "pm_config.h"
 #include "pam.h"
 
 

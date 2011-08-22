@@ -12,6 +12,7 @@
 ** implied warranty.
 */
 
+#include "pm_config.h"
 #include "pm_c_util.h"
 #include "nstring.h"
 #include "mallocvar.h"
