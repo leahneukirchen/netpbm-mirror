@@ -638,7 +638,7 @@ main(int argc, const char *argv[]) {
                         PAM_STRUCT_SIZE(allocation_depth));
 
         if (overlayPam.width != alphaPam.width || 
-            overlayPam.height != overlayPam.height)
+            overlayPam.height != alphaPam.height)
             pm_error("Opacity map and overlay image are not the same size");
     } else
         alphaFileP = NULL;
