@@ -463,11 +463,11 @@ gamma_correct_rgb(const struct colorSystem * const cs,
 
 
 
-/* Sz(X) is the length in pixels of a normalized distance of length X.
-   (A normalized length unit is 1/512 of the smaller dimension of the
-   canvas)
+/* Sz(X) is the displacement in pixels of a displacement of X normalized
+   distance units.  (A normalized distance unit is 1/512 of the smaller
+   dimension of the canvas)
 */
-#define Sz(x) (((x) * MIN(pixcols, pixrows)) / 512)
+#define Sz(x) (((x) * (int)MIN(pixcols, pixrows)) / 512)
 
 /* B(X, Y) is a pair of function arguments (for a libppmd function) that
    give a pixel position on the canvas.  That position is (X, Y), biased
