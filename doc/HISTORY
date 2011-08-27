@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+11.08.27 BJH  Release 10.55.02
+
+              libnetpbm, many programs: fix bug in pm_allocarray(): returns
+              NULL when can't get memory.  Calling programs thus crash on
+              very large images.  Introduced in 10.51.
+              
 11.08.22 BJH  Release 10.55.01
 
               ppmcie: fix bug: fails with "X coordinate out of range" error.
