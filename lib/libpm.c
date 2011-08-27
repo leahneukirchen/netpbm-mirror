@@ -328,6 +328,10 @@ pm_allocarray(int const cols,
 
     pm_mallocarray2(&result, rows, cols, elementSize);
 
+    if (result == NULL)
+        pm_error("Failed to allocate a raster array of %u columns x %u rows",
+                 cols, rows);
+
     retval = result;
 
     return retval;

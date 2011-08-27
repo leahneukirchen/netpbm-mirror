@@ -15,19 +15,23 @@ not yet  BJH  Release 10.56.00
               pnmtops: Add PBM fast path.  Thanks Prophet of the Way
               <afu@wta.att.ne.jp>.
 
-              libppmcmap and most programs that use color maps: speedup with
+              libnetpbm and most programs that use color maps: speedup with
               new color hash function.  Thanks Prophet of the Way
               <afu@wta.att.ne.jp>.
-
-              pnmtopng: fix bug: with -alpha specifying a mask which contains
-              no fully transparent area, output PNG is fully opaque.
-              Introduced in 10.29.
 
               pnmquant: use File::Temp::tempfile() instead of local
               approximation if it is available.
 
               pnmquant: work with older Perl that doesn't have 3-argument open.
               Thanks Slaven Rezic <srezic@iconmobile.com>.
+
+              libnetpbm, many programs: fix bug in pm_allocarray(): returns
+              NULL when can't get memory.  Calling programs thus crash on
+              very large images.  Introduced in 10.51.
+              
+              pnmtopng: fix bug: with -alpha specifying a mask which contains
+              no fully transparent area, output PNG is fully opaque.
+              Introduced in 10.29.
 
               ppmcie: fix bug: fails with "X coordinate out of range" error.
               Introduced in 10.51.
