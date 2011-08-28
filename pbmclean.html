@@ -2,21 +2,20 @@
 <HTML><HEAD><TITLE>Pbmclean User Manual</TITLE></HEAD>
 <BODY>
 <H1>pbmclean</H1>
-Updated: 27 Feb 2005
+Updated: 28 August 2011
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
-pbmclean - flip isolated pixels in portable bitmap
+pbmclean - despeckle a PBM image
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>pbmclean</B>
 [<B>-minneighbors=</B><I>N</I>]
 [<B>-black</B>|<B>-white</B>]
+[<b>-extended</b>]
 [<I>pbmfile</I>]
 
 <?makeman .SH OPTION USAGE ?>
@@ -24,20 +23,34 @@ pbmclean - flip isolated pixels in portable bitmap
 can use two hyphens instead of one.  You can separate an option name
 from its value with white space instead of an equals sign.
 
-<A NAME="description">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><B>pbmclean</B> cleans up a PBM image of random specks.  It reads a
 PBM image as input and outputs a PBM that is the same as the input
-except with isolated pixels inverted.  An isolated pixel is one that
-has very few neighboring pixels of the same color.  The
-<b>-minneighbors</b> option gives the number of same-color neighbors
-are required.
+except with isolated pixels inverted.
 
-<P>The default is 1 pixel -- only completely isolated pixels are
-flipped.
+<P>You can use <B>pbmclean </B> to clean up &quot;snow&quot; on bitmap
+images.
+
+<p>There are two ways <b>pbmclean</b> can define &quot;isolated&quot; pixels:
+simple and extended.  When you specify <b>-extended</b>, <b>pbmclean</b>
+uses basic; otherwise it uses extended.
+
+<h3 id="basic"></h3>
+
+<P>In basic mode, <B>pbmclean</B> looks at each pixel individually, and any
+pixel that doesn't have at least a minimum number of pixels of the same color
+touching it is considered isolated.  E.g. if the minimum is two and there are
+two contiguous black pixels in an otherwise white field, each of those pixel
+is isolated.
+
+<p>The <b>-minneighbors</b> option specifies the minimum number of neighboring
+pixels of the same color for a pixel <em>not</em> to be considered
+isolated.
+
+<P>The default is 1 pixel -- only completely isolated pixels are flipped.
 
 <P>(A <b>-minneighbors</b> value greater than 8 generates a completely
 inverted image (but use <B>pnminvert</B> to do that) -- or a
@@ -48,11 +61,31 @@ completely white or completely black image with the <B>-black</B> or
 be white.  (This matters when you consider pixels right on the edge of
 the image).
 
-<P>You can use <B>pbmclean </B> to clean up &quot;snow&quot; on bitmap
-images.
+<p><b>pbmclean</b> does not distinguish between foreground and background; by
+default, it flips isolated pixels of either color.  But you can
+specify <b>-black</b> or <b>-white</b> to have it flip only pixels of one
+color.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<h3 id="extended"></h3>
+
+<p>In extended mode, <b>pbmclean</b> erases all blobs which don't have the
+specified minimum number of pixels.  A blob is a set of contiguous pixels of
+the foreground color.  The minimum number of pixels is one plus
+the <b>-minneighbors</b> value.  You specify the foreground color with
+<b>-black</b> and <b>-white</b> (default is black).
+
+<p>For example, if <b>minneighbors</b> is 2 and the foreground color is
+black, and the image contains a straight line 4 pixels long, <b>pbmclean</b>
+erases that -- turns all four pixels white.  <b>pbmclean</b> also erases
+4 pixels in a square or L-shape.
+
+<p>The default <b>-minneighbors</b> is 4, so a blob must have at least 5
+pixels to escape <b>pbmclean</b>'s purge.
+
+<p>Extended mode was new in Netpbm 10.56 (September 2011).
+
+
+<H2 id="options">OPTIONS</H2>
 
 <DL COMPACT>
 <DT><B>-black</B>
@@ -77,16 +110,20 @@ out of the image.  See <a href="#description">Description</a>.
 instead of <B>-minneighbors</B>.  Before Netpbm 10.27 (March 2005),
 <b>-minneighbors</b> was <b>-minneighbor</b>.
 
+<dt><b>-extended</b>
+
+<dd><b>pbmclean</b> uses extended, as opposed to basic, isolated pixel
+detection.
+
+<p>This option was new in Netpbm 10.56 (September 2011).
 
 </DL>
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="pbm.html">pbm</A></B>
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>AUTHOR</H2>
+<H2 id="author">AUTHOR</H2>
 
 Copyright (C) 1990 by Angus Duggan
 Copyright (C) 1989 by Jef Poskanzer.
@@ -100,15 +137,13 @@ documentation.  This software is provided &quot;as is&quot; without express or
 implied warranty.
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
 <LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">SEE ALSO</A>
-<LI><A HREF="#lbAG">AUTHOR</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
 </UL>
 </BODY>
 </HTML>
