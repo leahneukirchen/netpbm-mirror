@@ -539,7 +539,7 @@ queueNeighbors(pm_pixelcoord const center,
    Add to queue *queueP all the pixels in 'pixels' that touch 'center' and are
    the same color as 'center'.
 
-   But ignore pixels that 'visited' says have already been queued and we
+   But ignore pixels that 'visited' says have already been queued and
    mark everything we queue as visited.
 -----------------------------------------------------------------------------*/
     bit const blobColor = pixels[center.row][center.col];
