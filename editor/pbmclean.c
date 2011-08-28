@@ -19,8 +19,9 @@ struct cmdlineInfo {
     const char * inputFileName;  /* File name of input file */
     bool flipWhite;
     bool flipBlack;
-    unsigned int connect;
+    unsigned int minneighbors;
     unsigned int verbose;
+    unsigned int extended;
 };
 
 
@@ -45,8 +46,9 @@ parseCommandLine(int argc, const char ** argv,
     OPTENT3(0,   "verbose",          OPT_FLAG, NULL, &cmdlineP->verbose, 0);
     OPTENT3(0,   "black",            OPT_FLAG, NULL, &black, 0);
     OPTENT3(0,   "white",            OPT_FLAG, NULL, &white, 0);
-    OPTENT3(0,   "minneighbors",     OPT_UINT, &cmdlineP->connect, 
+    OPTENT3(0,   "minneighbors",     OPT_UINT, &cmdlineP->minneighbors, 
             &minneighborsSpec, 0);
+    OPTENT3(0,   "extended",         OPT_FLAG, NULL, &cmdlineP->extended, 0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -57,14 +59,26 @@ parseCommandLine(int argc, const char ** argv,
 
     free(option_def);
 
-    if (!black && !white) {
-        cmdlineP->flipBlack = TRUE;
-        cmdlineP->flipWhite = TRUE;
+    if (cmdlineP->extended) {
+        if (black && white)
+            pm_error("With -extended, you cannot specify both "
+                     "-black and -white");
+        else if (!black & !white) {
+            cmdlineP->flipBlack = TRUE;
+            cmdlineP->flipWhite = FALSE;
+        } else {
+            cmdlineP->flipBlack = !!black;
+            cmdlineP->flipWhite = !!white;
+        }
     } else {
-        cmdlineP->flipBlack = !!black;
-        cmdlineP->flipWhite = !!white;
-    }    
-
+        if (!black && !white) {
+            cmdlineP->flipBlack = TRUE;
+            cmdlineP->flipWhite = TRUE;
+        } else {
+            cmdlineP->flipBlack = !!black;
+            cmdlineP->flipWhite = !!white;
+        }    
+    }
     if (!minneighborsSpec) {
         /* Now we do a sleazy tour through the parameters to see if
            one is -N where N is a positive integer.  That's for
@@ -78,7 +92,7 @@ parseCommandLine(int argc, const char ** argv,
         int i;
         bool foundNegative;
 
-        cmdlineP->connect = 1;  /* default */
+        cmdlineP->minneighbors = 1;  /* default */
         foundNegative = FALSE;
 
         for (i = 1; i < argc; ++i) {
@@ -86,7 +100,7 @@ parseCommandLine(int argc, const char ** argv,
                 argv[i-1] = argv[i];
             else {
                 if (atoi(argv[i]) < 0) {
-                    cmdlineP->connect = - atoi(argv[i]);
+                    cmdlineP->minneighbors = - atoi(argv[i]);
                     foundNegative = TRUE;
                 }
             }
@@ -104,6 +118,7 @@ parseCommandLine(int argc, const char ** argv,
                  "argument is the optional input file specification.",
                  argc-1);
 }
+
 
 
 static unsigned int
@@ -313,11 +328,14 @@ cleanrow(const bit *    const prevrow,
 
 
 static void
-pbmclean(FILE *             const ifP,
-         FILE *             const ofP,
-         struct cmdlineInfo const cmdline,
-         double *           const nFlippedP) {
-
+cleanSimple(FILE *             const ifP,
+            FILE *             const ofP,
+            struct cmdlineInfo const cmdline,
+            double *           const nFlippedP) {
+/*----------------------------------------------------------------------------
+   Do the traditional clean where you look only at the immediate neighboring
+   pixels of a subject pixel to determine whether to erase that pixel.
+-----------------------------------------------------------------------------*/
     bit ** buffer;
     bit * prevrow;
     bit * thisrow;
@@ -386,7 +404,7 @@ pbmclean(FILE *             const ifP,
         } else  /* Bottom of image.  */
             nextrow = & edgerow[1];
 
-        cleanrow(prevrow, thisrow, nextrow, outrow, cols, cmdline.connect,
+        cleanrow(prevrow, thisrow, nextrow, outrow, cols, cmdline.minneighbors,
                  cmdline.flipWhite, cmdline.flipBlack, &nFlipped);
         
         *nFlippedP += nFlipped;
@@ -397,6 +415,352 @@ pbmclean(FILE *             const ifP,
     pbm_freearray(buffer, 3);
     pbm_freerow(edgerow);
     pbm_freerow(outrow);
+}
+
+
+
+struct PixQueueElt {
+    struct PixQueueElt * nextP;
+    pm_pixelcoord        coord;
+};
+
+typedef struct {
+/*----------------------------------------------------------------------------
+   A queue of pixel locations.
+-----------------------------------------------------------------------------*/
+    unsigned int size;
+    
+    struct PixQueueElt * headP;
+    struct PixQueueElt * tailP;
+} PixQueue;
+
+
+
+static void
+pixQueue_init(PixQueue * const queueP) {
+
+    queueP->size = 0;
+    queueP->headP = NULL;
+    queueP->tailP = NULL;
+}
+
+
+
+static unsigned int
+pixQueue_size(PixQueue * const queueP) {
+
+    return queueP->size;
+}
+
+
+
+static bool
+pixQueue_isEmpty(PixQueue * const queueP) {
+
+    return !queueP->headP;
+}
+
+
+
+static void
+pixQueue_push(PixQueue *    const queueP,
+              pm_pixelcoord const newValue) {
+
+    struct PixQueueElt * newEltP;
+
+    MALLOCVAR(newEltP);
+
+    if (!newEltP)
+        pm_error("Out of memory putting a pixel on a queue");
+
+    newEltP->coord = newValue;
+
+    newEltP->nextP = NULL;
+    if (queueP->tailP)
+        queueP->tailP->nextP = newEltP;
+    
+    queueP->tailP = newEltP;
+
+    if (!queueP->headP)
+        queueP->headP = newEltP;
+
+    ++queueP->size;
+}
+
+
+
+static pm_pixelcoord
+pixQueue_pop(PixQueue * const queueP) {
+
+    struct PixQueueElt * const newHeadP = queueP->headP->nextP;
+
+    pm_pixelcoord retval;
+
+    assert(queueP->headP);
+
+    retval = queueP->headP->coord;
+
+    if (queueP->tailP == queueP->headP)
+        queueP->tailP = NULL;
+
+    free(queueP->headP);
+
+    queueP->headP = newHeadP;
+
+    --queueP->size;
+
+    return retval;
+}
+
+
+
+static void
+pixQueue_term(PixQueue * const queueP) {
+
+    struct PixQueueElt * p;
+    struct PixQueueElt * nextP;
+    
+    for (p = queueP->headP; p; p = nextP) {
+        nextP = p->nextP;
+        free(p);
+    }
+}
+
+
+
+static void
+queueNeighbors(pm_pixelcoord const center,
+               bit **        const pixels,
+               unsigned int  const cols,
+               unsigned int  const rows,
+               bool **       const visited,
+               PixQueue *    const queueP) {
+/*----------------------------------------------------------------------------
+   Add to queue *queueP all the pixels in 'pixels' that touch 'center' and are
+   the same color as 'center'.
+
+   But ignore pixels that 'visited' says have already been queued and we
+   mark everything we queue as visited.
+-----------------------------------------------------------------------------*/
+    bit const blobColor = pixels[center.row][center.col];
+
+    int row;
+        /* Row number of a neighbor; might be off the canvas; even negative */
+
+    /* Note that we consider the center pixel here, but it has necessarily
+       already been visited, so we don't queue it.
+    */
+
+    for (row = (int)center.row - 1; row <= (int)center.row + 1; ++row) {
+        int col;  /* Analogous to 'row' */
+
+        for (col = (int)center.col - 1; col <= (int)center.col + 1; ++col) {
+            if (row < 0 || row >= rows || col < 0 || col >= cols) {
+                /* It's off the canvas; nothing to queue */
+            } else {
+                if (pixels[row][col] == blobColor) {
+                    if (visited[row][col]) {
+                        /* We've already explored this one */
+                    } else {
+                        /* Queue it! */
+                        pm_pixelcoord neighbor;
+                        neighbor.row = row;
+                        neighbor.col = col;
+                        pixQueue_push(queueP, neighbor);
+                        visited[row][col] = true;
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
+static void
+setColor(PixQueue * const blobP,
+         bit **     const pixels,
+         bit        const newColor) {
+
+    while (!pixQueue_isEmpty(blobP)) {
+        pm_pixelcoord const thisPix = pixQueue_pop(blobP);
+
+        pixels[thisPix.row][thisPix.col] = newColor;
+    }
+}
+
+
+
+static void
+processBlob(pm_pixelcoord const start,
+            bit **        const pixels,
+            unsigned int  const cols,
+            unsigned int  const rows,
+            unsigned int  const trivialSize,
+            bool **       const visited,
+            double *      const nFlippedP) {
+/*----------------------------------------------------------------------------
+   Process the blob that contains the pixel at 'start'.
+
+   That pixel is part of a blob.
+
+   None of the blob is marked visited in visited[][].
+
+   If the blob has fewer than 'trivialSize' pixels, erase it (flip its color).
+
+   Update visited[][] to flag all pixels of the blob as visited.
+
+   Return as *nFlippedP how many pixels we flipped (i.e. either zero or the
+   size of the blob).
+-----------------------------------------------------------------------------*/
+    /* In addition to putting output in it, we use visited[][] for working
+       memory.  It indicates pixels of the blob that we've queued for
+       processing so far.
+    */
+    PixQueue toExplore;
+    PixQueue blob;
+
+    pixQueue_init(&toExplore);
+    pixQueue_init(&blob);
+
+    pixQueue_push(&toExplore, start);
+    visited[start.row][start.col] = true;
+
+    while (!pixQueue_isEmpty(&toExplore)) {
+        pm_pixelcoord const thisPix = pixQueue_pop(&toExplore);
+
+        pixQueue_push(&blob, thisPix);
+
+        queueNeighbors(thisPix, pixels, cols, rows, visited, &toExplore);
+    }
+
+    if (pixQueue_size(&blob) <= trivialSize) {
+        bit const blobColor = pixels[start.row][start.col];
+
+        *nFlippedP = pixQueue_size(&blob);
+
+        setColor(&blob, pixels,
+                 blobColor == PBM_WHITE ? PBM_BLACK : PBM_WHITE);
+    } else
+        *nFlippedP = 0;
+
+    pixQueue_term(&blob);
+    pixQueue_term(&toExplore);
+}
+
+
+
+static void
+setAllNotVisited(bool **      const visited,
+                 unsigned int const cols,
+                 unsigned int const rows)  {
+
+    unsigned int row;
+    for (row = 0; row < rows; ++row) {
+        unsigned int col;
+        for (col = 0; col < cols; ++col)
+            visited[row][col] = false;
+    }
+}
+
+
+
+static void
+cleanPixels(bit **       const pixels,
+            unsigned int const cols,
+            unsigned int const rows,
+            bit          const foregroundColor,
+            unsigned int const trivialSize,
+            double *     const nFlippedP) {
+/*----------------------------------------------------------------------------
+   Same as cleanExtended(), except we work on the pixels 'pixels' instead
+   of input and output files.
+-----------------------------------------------------------------------------*/
+    pm_pixelcoord thisPix;
+
+    bool ** visited;  /* malloced */
+        /* visited[row][col] means we have processed the pixel at (row, col)
+           and flipped it if it needed to be flipped.
+        */
+
+    MALLOCARRAY2(visited, rows, cols);
+
+    if (!visited)
+        pm_error("Could not allocate a %u x %u array for visited flags",
+                 rows, cols);
+
+    setAllNotVisited(visited, cols, rows);
+
+    *nFlippedP = 0;  /* initial value */
+
+    for (thisPix.row = 0; thisPix.row < rows; ++thisPix.row) {
+        for (thisPix.col = 0; thisPix.col < cols; ++thisPix.col) {
+            if (pixels[thisPix.row][thisPix.col] == foregroundColor
+                && !visited[thisPix.row][thisPix.col]) {
+                
+                double nFlipped;
+                
+                processBlob(thisPix, pixels, cols, rows, trivialSize,
+                            visited, &nFlipped);
+
+                *nFlippedP += nFlipped;
+            } else
+                visited[thisPix.row][thisPix.col] = true;
+        }
+    }
+
+    pm_freearray2((void **)visited);
+}
+
+
+
+static void
+cleanExtended(FILE *             const ifP,
+              FILE *             const ofP,
+              bit                const foregroundColor,
+              unsigned int       const trivialSize,
+              double *           const nFlippedP) {
+/*----------------------------------------------------------------------------
+   Clean the image on *ifP and write the result to *ofP.
+
+   Look at arbitrarily shaped and sized blobs to determine what to erase.
+
+   A blob is a contiguous set of pixels of the foreground color
+   ('foregroundColor') which is not contiguous with any other pixels of that
+   color.
+
+   We erase (flip) every pixel in every trivial blob.  A trivial blob is
+   one with 'trivialSize' pixels or fewer.
+-----------------------------------------------------------------------------*/
+    bit ** pixels;
+    int cols, rows;
+
+    pixels = pbm_readpbm(ifP, &cols, &rows);
+
+	cleanPixels(pixels, cols, rows, foregroundColor, trivialSize, nFlippedP);
+
+    pbm_writepbm(ofP, pixels, cols, rows, 0);
+
+    pbm_freearray(pixels, rows);
+}
+
+
+
+static void
+pbmclean(FILE *             const ifP,
+         FILE *             const ofP,
+         struct cmdlineInfo const cmdline,
+         double *           const nFlippedP) {
+
+    if (cmdline.extended) {
+        bit const foregroundColor = cmdline.flipWhite ? PBM_WHITE : PBM_BLACK;
+
+        assert(cmdline.flipWhite + cmdline.flipBlack == 1);
+
+        cleanExtended(ifP, ofP, foregroundColor, cmdline.minneighbors,
+                      nFlippedP);
+    } else
+        cleanSimple(ifP, ofP, cmdline, nFlippedP);
 }
 
 
@@ -426,3 +790,6 @@ main(int argc, const char *argv[]) {
 
     return 0;
 }
+
+
+
