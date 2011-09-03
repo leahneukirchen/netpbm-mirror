@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+ <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
 <HTML><HEAD><TITLE>Pamexec User Manual</TITLE></HEAD>
 <BODY>
 <H1>pamexec</H1>
@@ -67,11 +67,11 @@ if the command has a nonzero exit status.
 
 To make an animated GIF movie:
 
-<kbd>
 <pre>
+<kbd>
     pamexec pamtogif myvideo.ppm | gifsicle --multifile &gt;myvideo.gif
-</pre>
 </kbd>
+</pre>
 
 <h2 id="limitations">LIMITATIONS</h2>
 
@@ -79,11 +79,11 @@ To make an animated GIF movie:
 If yours doesn't (perhaps it just exits when it's seen enough),
 you can buffer through a temporary file like this:
 
-<kbd>
 <pre>
+<kbd>
     pamexec &quot;cat &gt;/tmp/x; head -3 x&quot; myvideo.ppm  
-</pre>
 </kbd>
+</pre>
 
 <h2 id="history">HISTORY</h2>
 
