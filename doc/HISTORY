@@ -38,6 +38,9 @@ not yet  BJH  Release 10.56.00
               ppmcie: fix bug: fails with "X coordinate out of range" error.
               Introduced in 10.51.
 
+              bmptopnm: Fail properly with BMP that indicates an illegal bits
+              per pixel.
+
               Build: To find libpng, use the Pkgconfig database entry instead
               of libpng-config if it is available.
 
