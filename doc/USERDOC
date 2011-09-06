@@ -131,9 +131,9 @@ Here is an example of making troff pages:
   wget --recursive --relative http://netpbm.sourceforge.net/doc/
   cd netpbm.sourceforge.net/doc
   make MAKEMAN=/usr/src/netpbm/buildtools/makeman \
-    -f /usr/src/netpbm/buildtools/Makefile.manpage manpages
-  make -f /usr/src/netpbm/buildtools/Makefile.manpage manpages
-  make -f /usr/src/netpbm/buildtools/Makefile.manpage installman
+    -f /usr/src/netpbm/buildtools/manpage.mk manpages
+  make -f /usr/src/netpbm/buildtools/manpage.mk manpages
+  make -f /usr/src/netpbm/buildtools/manpage.mk installman
   cd ../../..
   rm -r netpbmdoc
 
