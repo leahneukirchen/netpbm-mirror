@@ -35,6 +35,9 @@ not yet  BJH  Release 10.56.00
               no fully transparent area, output PNG is fully opaque.
               Introduced in 10.29.
 
+              pnmtops: fix message: says "from top edge" where it means
+              "from bottom edge."
+
               ppmcie: fix bug: fails with "X coordinate out of range" error.
               Introduced in 10.51.
 

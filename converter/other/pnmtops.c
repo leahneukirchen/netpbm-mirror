@@ -1023,8 +1023,10 @@ computeImagePosition(int     const dpiX,
 
   *scolsP, *srowsP are the dimensions of the image in 1/72 inch.
 
-  *llxP, *llyP are the coordinates, in 1/72 inch, of the lower left
-  corner of the image on the page.
+  *llxP, *llyP are the coordinates in the Postcript frame, of the lower left
+  corner of the image on the page.  The Postscript frame is different from the
+  Neptbm frame: units are 1/72 inch (1 point) and (0,0) is the lower left
+  corner.
 
   *turnedP is true iff the image is to be rotated 90 degrees on the page.
 
@@ -1115,7 +1117,7 @@ computeImagePosition(int     const dpiX,
     if (verbose)
         pm_message("Image will be %3.2f points wide by %3.2f points high, "
                    "left edge %3.2f points from left edge of page, "
-                   "bottom edge %3.2f points from top of page; "
+                   "bottom edge %3.2f points from bottom of page; "
                    "%sturned to landscape orientation",
                    *scolsP, *srowsP, *llxP, *llyP, *turnedP ? "" : "NOT ");
 }
