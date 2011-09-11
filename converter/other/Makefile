@@ -32,19 +32,21 @@ ifneq ($(shell $(TEST_PKGCONFIG_LIBPNG)),)
   # pkg-config libpng works on this system
   HAVE_PNGLIB = Y
   EXTERN_INCLUDES += $(shell pkg-config libpng$(PNGVER) --cflags)
-else ifneq ($(shell libpng$(PNGVER)-config --version),)
-  # No pkg-config, but we have libpng-config on this system
-  HAVE_PNGLIB = Y
-  EXTERN_INCLUDES += $(shell libpng$(PNGVER)-config --cflags)
 else
-  # System can't tell use where libpng is; use stuff from config.mk
-  ifneq ($(PNGLIB),NONE)
+  ifneq ($(shell libpng$(PNGVER)-config --version),)
+    # No pkg-config, but we have libpng-config on this system
     HAVE_PNGLIB = Y
-    ifneq ($(PNGHDR_DIR)x,x)
-      EXTERN_INCLUDES += -I$(PNGHDR_DIR)
-    endif
-    ifneq ($(ZHDR_DIR)x,x)
-      EXTERN_INCLUDES += -I$(ZHDR_DIR)
+    EXTERN_INCLUDES += $(shell libpng$(PNGVER)-config --cflags)
+  else
+    # System can't tell use where libpng is; use stuff from config.mk
+    ifneq ($(PNGLIB),NONE)
+      HAVE_PNGLIB = Y
+      ifneq ($(PNGHDR_DIR)x,x)
+        EXTERN_INCLUDES += -I$(PNGHDR_DIR)
+      endif
+      ifneq ($(ZHDR_DIR)x,x)
+        EXTERN_INCLUDES += -I$(ZHDR_DIR)
+      endif
     endif
   endif
 endif
@@ -182,12 +184,14 @@ tifftopnm pamtotiff pnmtotiffcmyk: %: %.o tiff.o $(NETPBMLIB) $(LIBOPT)
 ifneq ($(shell $(TEST_PKGCONFIG_LIBPNG)),)
   # pkg-config libpng works on this system
   PNGLIB_LIBOPTS = $(shell pkg-config libpng$(PNGVER) --libs)
-else ifneq ($(shell libpng$(PNGVER)-config --version),)
-  # No pkg-config, but we have libpng-config on this system
-  PNGLIB_LIBOPTS = $(shell libpng$(PNGVER)-config --ldflags)
 else
-  # System can't tell us where libpng is; use stuff from config.mk
-  PNGLIB_LIBOPTS = $(shell $(LIBOPT) $(LIBOPTR) $(PNGLIB) $(ZLIB))
+  ifneq ($(shell libpng$(PNGVER)-config --version),)
+    # No pkg-config, but we have libpng-config on this system
+    PNGLIB_LIBOPTS = $(shell libpng$(PNGVER)-config --ldflags)
+  else
+    # System can't tell us where libpng is; use stuff from config.mk
+    PNGLIB_LIBOPTS = $(shell $(LIBOPT) $(LIBOPTR) $(PNGLIB) $(ZLIB))
+  endif
 endif
 
 pngtopam: %: %.o pngx.o $(NETPBMLIB) $(LIBOPT)
