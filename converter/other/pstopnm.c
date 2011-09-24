@@ -27,6 +27,7 @@
 #include <sys/stat.h>
 
 #include "pm_c_util.h"
+#include "mallocvar.h"
 #include "pnm.h"
 #include "shhopt.h"
 #include "nstring.h"
@@ -74,7 +75,7 @@ parseCommandLine(int argc, char ** argv,
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
 -----------------------------------------------------------------------------*/
-    optEntry *option_def = malloc( 100*sizeof( optEntry ) );
+    optEntry * option_def;
         /* Instructions to pm_optParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
@@ -87,6 +88,8 @@ parseCommandLine(int argc, char ** argv,
     unsigned int llxSpec, llySpec, urxSpec, urySpec;
     unsigned int xmaxSpec, ymaxSpec, xsizeSpec, ysizeSpec, dpiSpec;
     unsigned int textalphabitsSpec;
+
+    MALLOCARRAY_NOFAIL(option_def, 100);
     
     option_def_index = 0;   /* incremented by OPTENTRY */
     OPTENT3(0, "forceplain", OPT_FLAG,  NULL, &cmdlineP->forceplain,     0);
@@ -208,6 +211,8 @@ parseCommandLine(int argc, char ** argv,
     else 
         pm_error("Too many arguments (%d).  "
                  "Only need one: the Postscript file name", argc-1);
+
+    free(option_def);
 }
 
 
@@ -595,7 +600,7 @@ computePstrans(struct box       const box,
 static const char *
 computeOutfileArg(struct cmdlineInfo const cmdline) {
 
-    const char *retval;  /* malloc'ed */
+    const char * retval;  /* malloc'ed */
 
     if (cmdline.goto_stdout)
         retval = strdup("-");
@@ -661,7 +666,7 @@ findGhostscriptProg(const char ** const retvalP) {
         *retvalP = strdup(getenv("GHOSTSCRIPT"));
     if (*retvalP == NULL) {
         if (getenv("PATH") != NULL) {
-            char *pathwork;  /* malloc'ed */
+            char * pathwork;  /* malloc'ed */
             const char * candidate;
 
             pathwork = strdup(getenv("PATH"));
