@@ -584,7 +584,7 @@ parseScaleParms(int                   const argc,
     else {
         cmdlineP->xscale = cmdlineP->yscale = atof(argv[1]);
         
-        if (cmdlineP->xscale == 0.0)
+        if (cmdlineP->xscale <= 0.0)
             pm_error("The scale parameter %s is not a positive number.",
                      argv[1]);
         else {
