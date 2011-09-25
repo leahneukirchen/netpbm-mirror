@@ -590,8 +590,15 @@ parseScaleParms(int                   const argc,
         else {
             if (argc-1 < 2)
                 cmdlineP->inputFileName = "-";
-            else
+            else {
                 cmdlineP->inputFileName = argv[2];
+                
+                if (argc-1 > 2)
+                    pm_error("Too many arguments.  There are at most two "
+                             "arguments with this set of options: "
+                             "scale factor and input file name.  "
+                             "You specified %u", argc-1);
+            }
         }
     }
 }

@@ -27,6 +27,9 @@ not yet  BJH  Release 10.56.00
               pnmquant: work with older Perl that doesn't have 3-argument open.
               Thanks Slaven Rezic <srezic@iconmobile.com>.
 
+              pamscale: Issue error message instead of ignoring extraneous
+              arguments.
+
               libnetpbm, many programs: fix bug in pm_allocarray(): returns
               NULL when can't get memory.  Calling programs thus crash on
               very large images.  Introduced in 10.51.
