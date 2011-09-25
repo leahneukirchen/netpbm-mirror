@@ -4,6 +4,17 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+11.09.25 BJH  Release 10.35.82
+
+              pnmtopng: fix bug: with -alpha specifying a mask which contains
+              no fully transparent area, output PNG is fully opaque.
+              Introduced in 10.29.
+
+              pnmquant: work with older Perl that doesn't have 3-argument open.
+
+              pnmtops: fix message: says "from top edge" where it means
+              "from bottom edge."
+
 11.07.10 BJH  Release 10.35.81
 
               pgmtexture: fix wrong sum variance result.  Wrong since the
