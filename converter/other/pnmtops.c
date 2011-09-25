@@ -648,7 +648,7 @@ computeImagePosition(int     const dpiX,
     if (verbose)
         pm_message("Image will be %3.2f points wide by %3.2f points high, "
                    "left edge %3.2f points from left edge of page, "
-                   "bottom edge %3.2f points from top of page; "
+                   "bottom edge %3.2f points from bottom of page; "
                    "%sturned to landscape orientation",
                    *scolsP, *srowsP, *llxP, *llyP, *turnedP ? "" : "NOT ");
 }

@@ -1295,6 +1295,25 @@ warnIfBadFileSize(struct bmpInfoHeader const BMPheader,
 
 
 
+static bool
+isValidBmpBpp(unsigned int const cBitCount) {
+
+    switch (cBitCount) {
+    case 1:
+    case 2:
+    case 4:
+    case 8:
+    case 16:
+    case 24:
+    case 32:
+        return true;
+    default:
+        return false;
+    }
+}
+
+
+
 static void
 readBmp(FILE *               const ifP, 
         unsigned char ***    const BMPrasterP, 
@@ -1352,6 +1371,11 @@ readBmp(FILE *               const ifP,
     if (fgetc(ifP) != EOF)
         pm_message("warning: some image data remains unread.");
     
+    if (!isValidBmpBpp(BMPheader.cBitCount))
+        pm_error("Invalid BMP image: 'cBitCount' field of header "
+                 "(number of bits for each pixel in raster) is %u",
+                 BMPheader.cBitCount);
+
     *colsP        = BMPheader.cols;
     *rowsP        = BMPheader.rows;
     *cBitCountP   = BMPheader.cBitCount;
