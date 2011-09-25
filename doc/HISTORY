@@ -4,6 +4,14 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+11.09.25 BJH  Release 10.55.03
+
+              bmptopnm: Fail properly with BMP that indicates an illegal bits
+              per pixel.
+
+              pnmtops: fix message: says "from top edge" where it means
+              "from bottom edge."
+
 11.08.27 BJH  Release 10.55.02
 
               libnetpbm, many programs: fix bug in pm_allocarray(): returns
