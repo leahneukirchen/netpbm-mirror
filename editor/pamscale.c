@@ -574,8 +574,10 @@ static void
 parseScaleParms(int                   const argc, 
                 const char **         const argv,
                 struct cmdlineInfo  * const cmdlineP) {
-
-    /* parameters are scale factor and optional filespec */
+/*----------------------------------------------------------------------------
+   Parse the parameters as a scale factor and optional filespec
+   (e.g. 'pamscale .5' or 'pamscale .5 testimg.ppm').
+-----------------------------------------------------------------------------*/
     if (argc-1 < 1)
         pm_error("With no dimension options, you must supply at least "
                  "one parameter: the scale factor.");
@@ -623,7 +625,7 @@ parseCommandLine(int argc,
    Note that the strings we return are stored in the storage that
    was passed to us as the argv array.  We also trash *argv.
 --------------------------------------------------------------------------*/
-    optEntry *option_def;
+    optEntry * option_def;
     optStruct3 opt;
         /* Instructions to pm_optParseOptions3 on how to parse our options. */
   
@@ -634,18 +636,20 @@ parseCommandLine(int argc,
     float xscale, yscale;
     const char *filterOpt, *window;
     unsigned int filterSpec, windowSpec;
+    unsigned int xscaleSpec, yscaleSpec, xsizeSpec, ysizeSpec;
+    unsigned int pixelsSpec, reduceSpec;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0, "xsize",     OPT_UINT,    &xsize,     NULL,                 0);
-    OPTENT3(0, "width",     OPT_UINT,    &xsize,     NULL,                 0);
-    OPTENT3(0, "ysize",     OPT_UINT,    &ysize,     NULL,                 0);
-    OPTENT3(0, "height",    OPT_UINT,    &ysize,     NULL,                 0);
-    OPTENT3(0, "xscale",    OPT_FLOAT,   &xscale,    NULL,                 0);
-    OPTENT3(0, "yscale",    OPT_FLOAT,   &yscale,    NULL,                 0);
-    OPTENT3(0, "pixels",    OPT_UINT,    &pixels,    NULL,                 0);
-    OPTENT3(0, "reduce",    OPT_UINT,    &reduce,    NULL,                 0);
+    OPTENT3(0, "xsize",     OPT_UINT,    &xsize,     &xsizeSpec,           0);
+    OPTENT3(0, "width",     OPT_UINT,    &xsize,     &xsizeSpec,           0);
+    OPTENT3(0, "ysize",     OPT_UINT,    &ysize,     &ysizeSpec,           0);
+    OPTENT3(0, "height",    OPT_UINT,    &ysize,     &ysizeSpec,           0);
+    OPTENT3(0, "xscale",    OPT_FLOAT,   &xscale,    &xscaleSpec,          0);
+    OPTENT3(0, "yscale",    OPT_FLOAT,   &yscale,    &yscaleSpec,          0);
+    OPTENT3(0, "pixels",    OPT_UINT,    &pixels,    &pixelsSpec,          0);
+    OPTENT3(0, "reduce",    OPT_UINT,    &reduce,    &reduceSpec,          0);
     OPTENT3(0, "xysize",    OPT_FLAG,    NULL,       &xyfit,               0);
     OPTENT3(0, "xyfit",     OPT_FLAG,    NULL,       &xyfit,               0);
     OPTENT3(0, "xyfill",    OPT_FLAG,    NULL,       &xyfill,              0);
@@ -655,19 +659,6 @@ parseCommandLine(int argc,
     OPTENT3(0, "nomix",     OPT_FLAG,    NULL,       &cmdlineP->nomix,     0);
     OPTENT3(0, "linear",    OPT_FLAG,    NULL,       &cmdlineP->linear,    0);
   
-    /* Set the defaults. -1 = unspecified */
-
-    /* (Now that we're using ParseOptions3, we don't have to do this -1
-     * nonsense, but we don't want to risk screwing these complex 
-     * option compatibilities up, so we'll convert that later.
-     */
-    xsize = -1;
-    ysize = -1;
-    xscale = -1.0;
-    yscale = -1.0;
-    pixels = -1;
-    reduce = -1;
-    
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;   /* We have no parms that are negative numbers */
@@ -681,35 +672,35 @@ parseCommandLine(int argc,
     processFilterOptions(filterSpec, filterOpt, windowSpec, window,
                          cmdlineP);
 
-    if (xsize == 0)
+    if (xsizeSpec && xsize == 0)
         pm_error("-xsize/width must be greater than zero.");
-    if (ysize == 0)
+    if (ysizeSpec && ysize == 0)
         pm_error("-ysize/height must be greater than zero.");
-    if (xscale != -1.0 && xscale <= 0.0)
+    if (xscaleSpec && xscale <= 0.0)
         pm_error("-xscale must be greater than zero.");
-    if (yscale != -1.0 && yscale <= 0.0)
+    if (yscaleSpec && yscale <= 0.0)
         pm_error("-yscale must be greater than zero.");
-    if (reduce <= 0 && reduce != -1)
+    if (reduceSpec && reduce <= 0)
         pm_error("-reduce must be greater than zero.");
 
-    if (xsize != -1 && xscale != -1)
+    if (xsizeSpec && xscaleSpec)
         pm_error("Cannot specify both -xsize/width and -xscale.");
-    if (ysize != -1 && yscale != -1)
+    if (ysizeSpec && yscaleSpec)
         pm_error("Cannot specify both -ysize/height and -yscale.");
     
     if ((xyfit || xyfill) &&
-        (xsize != -1 || xscale != -1 || ysize != -1 || yscale != -1 || 
-         reduce != -1 || pixels != -1) )
+        (xsizeSpec || xscaleSpec || ysizeSpec || yscaleSpec || 
+         reduceSpec || pixelsSpec) )
         pm_error("Cannot specify -xyfit/xyfill/xysize with other "
                  "dimension options.");
     if (xyfit && xyfill)
         pm_error("Cannot specify both -xyfit and -xyfill");
-    if (pixels != -1 && 
-        (xsize != -1 || xscale != -1 || ysize != -1 || yscale != -1 ||
-         reduce != -1) )
+    if (pixelsSpec && 
+        (xsizeSpec || xscaleSpec || ysizeSpec || yscaleSpec ||
+         reduceSpec) )
         pm_error("Cannot specify -pixels with other dimension options.");
-    if (reduce != -1 && 
-        (xsize != -1 || xscale != -1 || ysize != -1 || yscale != -1) )
+    if (reduceSpec && 
+        (xsizeSpec || xscaleSpec || ysizeSpec || yscaleSpec) )
         pm_error("Cannot specify -reduce with other dimension options.");
 
     if (pixels == 0)
@@ -720,7 +711,7 @@ parseCommandLine(int argc,
     if (xyfit || xyfill) {
         cmdlineP->scaleType = xyfit ? SCALE_BOXFIT : SCALE_BOXFILL;
         parseXyParms(argc, argv, cmdlineP);
-    } else if (reduce != -1) {
+    } else if (reduceSpec) {
         cmdlineP->scaleType = SCALE_SEPARATE;
         parseFilespecOnlyParms(argc, argv, cmdlineP);
         cmdlineP->xsize = cmdlineP->ysize = 0;
@@ -728,22 +719,21 @@ parseCommandLine(int argc,
             ((double) 1.0) / ((double) reduce);
         pm_message("reducing by %d gives scale factor of %f.", 
                    reduce, cmdlineP->xscale);
-    } else if (pixels != -1) {
+    } else if (pixelsSpec) {
         cmdlineP->scaleType = SCALE_PIXELMAX;
         parseFilespecOnlyParms(argc, argv, cmdlineP);
         cmdlineP->pixels = pixels;
-    } else if (xsize == -1 && xscale == -1 && ysize == -1 && yscale == -1
-               && pixels == -1 && reduce == -1) {
+    } else if (xsizeSpec || xscaleSpec || ysizeSpec || yscaleSpec) {
+        cmdlineP->scaleType = SCALE_SEPARATE;
+        parseFilespecOnlyParms(argc, argv, cmdlineP);
+        cmdlineP->xsize = xsizeSpec ? xsize : 0;
+        cmdlineP->ysize = ysizeSpec ? ysize : 0;
+        cmdlineP->xscale = xscaleSpec ? xscale : 0.0;
+        cmdlineP->yscale = yscaleSpec ? yscale : 0.0;
+    } else {
         cmdlineP->scaleType = SCALE_SEPARATE;
         parseScaleParms(argc, argv, cmdlineP);
         cmdlineP->xsize = cmdlineP->ysize = 0;
-    } else {
-        cmdlineP->scaleType = SCALE_SEPARATE;
-        parseFilespecOnlyParms(argc, argv, cmdlineP);
-        cmdlineP->xsize = xsize == -1 ? 0 : xsize;
-        cmdlineP->ysize = ysize == -1 ? 0 : ysize;
-        cmdlineP->xscale = xscale == -1.0 ? 0.0 : xscale;
-        cmdlineP->yscale = yscale == -1.0 ? 0.0 : yscale;
     }
 }
 
