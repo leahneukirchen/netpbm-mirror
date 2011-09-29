@@ -13,8 +13,6 @@ use strict;
 
 use Getopt::Long;
 
-my $TRUE=1; my $FALSE = 0;
-
 my @ppmquantArgv = @ARGV;
 
 Getopt::Long::Configure('pass_through');

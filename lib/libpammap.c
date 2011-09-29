@@ -33,11 +33,11 @@ pnm_hashtuple(struct pam * const pamP,
 -----------------------------------------------------------------------------*/
     unsigned int i;
     unsigned int hash;
-    const unsigned int hash_factor[] = {33023, 30013, 27011};
+    const unsigned int hash_factor[] = {33*33, 33, 1};
 
     hash = 0;  /* initial value */
     for (i = 0; i < MIN(pamP->depth, 3); ++i) {
-        hash += tuple[i] * hash_factor[i];  /* May overflow */
+        hash += tuple[i] * hash_factor[i];
     }
     hash %= HASH_SIZE;
     return hash;

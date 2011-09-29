@@ -26,19 +26,29 @@ ifneq ($(TIFFLIB),NONE)
   endif
 endif
 
-ifeq ($(shell libpng$(PNGVER)-config --version),)
-  ifneq ($(PNGLIB),NONE)
+TEST_PKGCONFIG_LIBPNG = if pkg-config libpng$(PNGVER); then echo exists; fi
+
+ifneq ($(shell $(TEST_PKGCONFIG_LIBPNG)),)
+  # pkg-config libpng works on this system
+  HAVE_PNGLIB = Y
+  EXTERN_INCLUDES += $(shell pkg-config libpng$(PNGVER) --cflags)
+else
+  ifneq ($(shell libpng$(PNGVER)-config --version),)
+    # No pkg-config, but we have libpng-config on this system
     HAVE_PNGLIB = Y
-    ifneq ($(PNGHDR_DIR)x,x)
-      EXTERN_INCLUDES += -I$(PNGHDR_DIR)
-    endif
-    ifneq ($(ZHDR_DIR)x,x)
-      EXTERN_INCLUDES += -I$(ZHDR_DIR)
+    EXTERN_INCLUDES += $(shell libpng$(PNGVER)-config --cflags)
+  else
+    # System can't tell use where libpng is; use stuff from config.mk
+    ifneq ($(PNGLIB),NONE)
+      HAVE_PNGLIB = Y
+      ifneq ($(PNGHDR_DIR)x,x)
+        EXTERN_INCLUDES += -I$(PNGHDR_DIR)
+      endif
+      ifneq ($(ZHDR_DIR)x,x)
+        EXTERN_INCLUDES += -I$(ZHDR_DIR)
+      endif
     endif
   endif
-else
-  HAVE_PNGLIB = Y
-  EXTERN_INCLUDES += $(shell libpng$(PNGVER)-config --cflags)
 endif
 
 ifneq ($(JPEGLIB),NONE)
@@ -77,6 +87,18 @@ ifeq ($(TIFFLIB_NEEDS_Z),Y)
   endif
 endif
 
+# Pnmtops's "flate" compression function requires libz.  But if we don't
+# have libz, we still build Pnmtops; we just omit the flate compression
+# capability.
+ifeq ($(ZLIB),NONE)
+  PNMTOPS_ZLIB_OPT =
+  PNMTOPS_NOFLATE_OPT = -DNOFLATE
+else
+  PNMTOPS_ZLIB_OPT = $(ZLIB)
+  PNMTOPS_NOFLATE_OPT =
+endif
+
+
 PORTBINARIES =  avstopam bmptopnm fitstopnm \
 		gemtopnm giftopnm hdifftopam infotopam \
 		pamtoavs pamtodjvurle pamtofits pamtogif \
@@ -93,7 +115,15 @@ ifneq ($(DONT_HAVE_PROCESS_MGMT),Y)
   PORTBINARIES += pstopnm
 endif
 
-BINARIES = $(PORTBINARIES) pnmtorast rasttopnm pamtopdbimg pdbimgtopam srftopam pamtosrf
+BINARIES = \
+  $(PORTBINARIES) \
+  pamtopdbimg \
+  pamtosrf \
+  pdbimgtopam \
+  pnmtops \
+  pnmtorast \
+  rasttopnm \
+  srftopam \
 
 ifeq ($(HAVE_PNGLIB),Y)
   BINARIES += pnmtopng pngtopam pamrgbatopng
@@ -107,9 +137,6 @@ endif
 ifneq ($(URTLIB),NONE)
   BINARIES += rletopnm pnmtorle
 endif
-ifneq ($(ZLIB),NONE)
-  BINARIES += pnmtops
-endif
 
 ifneq ($(XML2_LIBS),NONE)
   BINARIES += svgtopam
@@ -117,7 +144,7 @@ endif
 
 MERGEBINARIES = $(BINARIES)
 
-EXTRA_OBJECTS = exif.o rast.o bmepsoe.o ipdb.o srf.o
+EXTRA_OBJECTS = exif.o rast.o ipdb.o srf.o
 ifeq ($(HAVE_PNGLIB),Y)
   EXTRA_OBJECTS += pngtxt.o
   EXTRA_OBJECTS += pngx.o
@@ -132,6 +159,7 @@ endif
 OBJECTS = $(BINARIES:%=%.o) $(EXTRA_OBJECTS)
 MERGE_OBJECTS = $(MERGEBINARIES:%=%.o2) $(EXTRA_OBJECTS)
 
+pnmtops.o pnmtops.o2: CFLAGS_TARGET=$(PNMTOPS_NOFLATE_OPT)
 
 SCRIPTS = anytopnm pnmtoplainpnm
 
@@ -153,10 +181,17 @@ tifftopnm pamtotiff pnmtotiffcmyk: %: %.o tiff.o $(NETPBMLIB) $(LIBOPT)
 	$(LD) -o $@ $@.o tiff.o \
 	  $(LIBOPTS_TIFF) $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
-ifeq ($(shell libpng$(PNGVER)-config --version),)
-  PNGLIB_LIBOPTS = $(shell $(LIBOPT) $(LIBOPTR) $(PNGLIB) $(ZLIB))
+ifneq ($(shell $(TEST_PKGCONFIG_LIBPNG)),)
+  # pkg-config libpng works on this system
+  PNGLIB_LIBOPTS = $(shell pkg-config libpng$(PNGVER) --libs)
 else
-  PNGLIB_LIBOPTS = $(shell libpng$(PNGVER)-config --ldflags)
+  ifneq ($(shell libpng$(PNGVER)-config --version),)
+    # No pkg-config, but we have libpng-config on this system
+    PNGLIB_LIBOPTS = $(shell libpng$(PNGVER)-config --ldflags)
+  else
+    # System can't tell us where libpng is; use stuff from config.mk
+    PNGLIB_LIBOPTS = $(shell $(LIBOPT) $(LIBOPTR) $(PNGLIB) $(ZLIB))
+  endif
 endif
 
 pngtopam: %: %.o pngx.o $(NETPBMLIB) $(LIBOPT)
@@ -205,9 +240,9 @@ rletopnm pnmtorle: %: %.o $(NETPBMLIB) $(URTLIBDEP) $(LIBOPT)
 	  $(shell $(LIBOPT) $(URTLIB) $(NETPBMLIB)) \
 	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
-pnmtops: %: %.o bmepsoe.o $(NETPBMLIB) $(LIBOPT)
-	$(LD) -o $@ $@.o bmepsoe.o \
-	  $(shell $(LIBOPT) $(NETPBMLIB) $(ZLIB)) \
+pnmtops: %: %.o $(NETPBMLIB) $(LIBOPT)
+	$(LD) -o $@ $@.o \
+	  $(shell $(LIBOPT) $(NETPBMLIB) $(PNMTOPS_ZLIB_OPT)) \
 	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
 pnmtorast rasttopnm: %: %.o rast.o $(NETPBMLIB) $(LIBOPT)

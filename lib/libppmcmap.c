@@ -12,6 +12,7 @@
 ** implied warranty.
 */
 
+#include "pm_config.h"
 #include "pm_c_util.h"
 #include "nstring.h"
 #include "mallocvar.h"
@@ -20,10 +21,17 @@
 
 #define HASH_SIZE 20023
 
-#define ppm_hashpixel(p) ( ( ( (long) PPM_GETR(p) * 33023 + \
-                               (long) PPM_GETG(p) * 30013 + \
-                               (long) PPM_GETB(p) * 27011 ) \
-                             & 0x7fffffff ) % HASH_SIZE )
+
+
+static __inline__ unsigned int
+ppm_hashpixel(pixel const p) {
+
+    return (unsigned int) (PPM_GETR(p) * 33 * 33
+                           + PPM_GETG(p) * 33
+                           + PPM_GETB(p)) % HASH_SIZE;
+}
+
+
 
 colorhist_vector
 ppm_computecolorhist( pixel ** const pixels, 

@@ -424,6 +424,14 @@ JPEGHDR_DIR =
 # files will use that program if it exists (must be in the PATH).  In that
 # case, PNGLIB and PNGHDR_DIR are irrelevant, but PNGVER is still meaningful,
 # because the make file runs 'libpng$(PNGVER)-config'.
+#
+# Even more recent versions have the more modern Pkgconfig database entry
+# to tell how to link it.  The make files will try to use that first.
+#
+# The normal way to choose the libpng the Netpbm build uses from among multiple
+# versions on your system is not to mess with the variables below, but rather
+# to mess with PKG_CONFIG_PATH or PATH environment variable so that the version
+# you want to use appears first in the search path.
 
 PNGLIB = NONE
 PNGHDR_DIR =

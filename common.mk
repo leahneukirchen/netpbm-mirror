@@ -45,6 +45,7 @@
 # CC: C compiler command 
 # CPPFLAGS: C preprocessor options
 # CFLAGS: C compiler general options
+# CFLAGS_TARGET: C compiler options for a particular target
 # LD: linker command
 # LINKERISCOMPILER: 'Y' if the linker invoked by LD is actually a compiler
 #   front end, so takes linker options in a different format
@@ -222,7 +223,8 @@ config:
 # assertion and crash the program if it isn't really true.  You can add
 # -UNDEBUG (in any of various ways) to override this.
 #
-CFLAGS_ALL =  -DNDEBUG $(CPPFLAGS) $(CFLAGS) $(CFLAGS_PERSONAL) $(CADD)
+CFLAGS_ALL = \
+  -DNDEBUG $(CPPFLAGS) $(CFLAGS) $(CFLAGS_TARGET) $(CFLAGS_PERSONAL) $(CADD)
 
 $(OBJECTS): %.o: %.c importinc
 #############################################################################

@@ -5,17 +5,21 @@
    We produce two main kinds of Postscript program:
 
       1) Use built in Postscript filters /ASCII85Decode, /ASCIIHexDecode,
-         /RunLengthDecode, and /FlateDecode;
+	 /RunLengthDecode, and /FlateDecode;
 
-         We use methods we learned from Dirk Krause's program Bmeps and
-         raster encoding code copied almost directly from Bmeps.
+	 We use methods we learned from Dirk Krause's program Bmeps.
+	 Previous versions used raster encoding code based on Bmeps
+	 code.  This program does not used any code from Bmeps.
 
       2) Use our own filters and redefine /readstring .  This is aboriginal
-         Netpbm code, from when Postscript was young.
+	 Netpbm code, from when Postscript was young.  The filters are
+	 nearly identical to /ASCIIHexDecode and /RunLengthDecode.  We
+	 use the same raster encoding code with slight modifications.
 
-   (2) is the default, because it's been working for ages and we have
-   more confidence in it.  But (1) gives more options.  The user
-   selects (1) with the -psfilter option.
+   (2) is the default.  (1) gives more options, but relies on features
+   introduced in Postscript Level 2, which appeared in 1991.  Postcript
+   devices made before 1991 can't handle them.  The user selects (1)
+   with the -psfilter option.
 
    We also do a few other bold new things only when the user specifies
    -psfilter, because we're not sure they work for everyone.
@@ -31,23 +35,29 @@
 
 #define _BSD_SOURCE  /* Make sure string.h contains strdup() */
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
-
-#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
 #include <assert.h>
+#include <string.h>
+#ifndef NOFLATE
+#include <zlib.h>
+#endif
 
 #include "pm_c_util.h"
 #include "pam.h"
 #include "mallocvar.h"
 #include "shhopt.h"
 #include "nstring.h"
-#include "bmepsoe.h"
 
 struct cmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
     const char * inputFileName;  /* Filespecs of input file */
-    float scale;
+    float        scale;
     unsigned int dpiX;     /* horiz component of DPI option */
     unsigned int dpiY;     /* vert component of DPI option */
     unsigned int width;              /* in 1/72 inch */
@@ -73,8 +83,8 @@ struct cmdlineInfo {
     unsigned int verbose;
 };
 
-
 static bool verbose;
+
 
 
 static void
@@ -140,14 +150,14 @@ validateCompDimension(unsigned int const value,
                       unsigned int const scaleFactor,
                       const char * const vname) {
 /*----------------------------------------------------------------------------
-   Validate that the image dimension (width or height) 'value' isn't so big
-   that in this program's calculations, involving scale factor 'scaleFactor',
-   it would cause a register overflow.  If it is, abort the program and refer
-   to the offending dimension as 'vname' in the error message.
+  Validate that the image dimension (width or height) 'value' isn't so big
+  that in this program's calculations, involving scale factor 'scaleFactor',
+  it would cause a register overflow.  If it is, abort the program and refer
+  to the offending dimension as 'vname' in the error message.
 
-   Note that this early validation approach (calling this function) means
-   the actual computations don't have to be complicated with arithmetic
-   overflow checks, so they're easier to read.
+  Note that this early validation approach (calling this function) means
+  the actual computations don't have to be complicated with arithmetic
+  overflow checks, so they're easier to read.
 -----------------------------------------------------------------------------*/
     if (value > 0) {
         unsigned int const maxWidthHeight = INT_MAX - 2;
@@ -282,315 +292,682 @@ parseCommandLine(int argc, const char ** argv,
 }
 
 
-/*===========================================================================
-  The native output encoder.  This is archaic and uses global variables.
-  It is probably obsoleted by the bmeps output encoder; we just haven't
-  had a chance to verify that yet.
-===========================================================================*/
 
+static bool
+progIsFlateCapable(void) {
+
+    return
+#ifdef NOFLATE
+        false
+#else
+        true
+#endif
+        ;
+}
+
+
+
+static const char *
+basebasename(const char * const filespec) {
 /*----------------------------------------------------------------------------
-   The following global variables are the native output encoder state.
+  Return filename up to first period
 -----------------------------------------------------------------------------*/
-static unsigned int itemsinline;
-    /* The number of items in the line we are currently building */
-static unsigned int bitsinitem;
-    /* The number of bits filled so far in the item we are currently
-       building 
-    */
-static unsigned int rlebitsinitem;
-    /* The number of bits filled so far in the item we are currently
-       building 
-    */
-static unsigned int bitsPerSample;
-static unsigned int item, bitshift, items;
-static unsigned int rleitem, rlebitshift;
-static unsigned int repeat, itembuf[128], count, repeatitem, repeatcount;
+    char const dirsep = '/';
+    const char * const lastSlashPos = strrchr(filespec, dirsep);
+
+    char * name;
+    const char * filename;
+
+    if (lastSlashPos)
+        filename = lastSlashPos + 1;
+    else
+        filename = filespec;
+
+    name = strdup(filename);
+    if (name != NULL) {
+        char * const dotPosition = strchr(name, '.');
+
+        if (dotPosition)
+            *dotPosition = '\0';
+    }
+    return name;
+}
+
+
+
+#define MAX_FILTER_CT 10
+    /* The maximum number of filters this code is capable of applying */
 
 
 
 static void
-initNativeOutputEncoder(bool         const rle,
-                        unsigned int const bitsPerSample) {
-/*----------------------------------------------------------------------------
-   Initialize the native output encoder.  Call this once per
-   Postscript image that you will write with putitem(), before for the
-   first putitem().
+initPidList(pid_t * const pidList) {
 
-   We initialize the item putter state variables, which are the
-   global variable defined above.
------------------------------------------------------------------------------*/
-    itemsinline = 0;
-    items = 0;
+    pidList[0] = (pid_t)0;  /* end of list marker */
+}
+
+
+
+static void
+addToPidList(pid_t * const pidList,
+             pid_t   const newPid) {
+
+    unsigned int i;
+
+    for (i = 0; i < MAX_FILTER_CT && pidList[i]; ++i);
+
+    assert(i < MAX_FILTER_CT);
+
+    pidList[i] = newPid;
+    pidList[i+1] = (pid_t)0;  /* end of list marker */
+}
+
+
+
+/*===========================================================================
+  The output encoder
+  ===========================================================================*/
+    
+enum OutputType {AsciiHex, Ascii85};
+
+typedef struct {
+    enum OutputType    outputType;
+    bool               compressRle;
+    bool               compressFlate;
+    unsigned int       runlengthRefresh;
+} OutputEncoder;
+
+
+
+static void
+initOutputEncoder(OutputEncoder  * const oeP,
+                  unsigned int     const icols,
+                  unsigned int     const bitsPerSample,
+                  bool             const rle,
+                  bool             const flate,
+                  bool             const ascii85,
+                  bool             const psFilter) {
+
+    unsigned int const bytesPerRow = icols / (8/bitsPerSample) +
+        (icols % (8/bitsPerSample) > 0 ? 1 : 0);
+        /* Size of row buffer, padded up to byte boundary.
+
+           A more straightforward calculation would be
+           (icols * bitsPerSample + 7) / 8 ,
+           but this overflows when icols is large.
+        */
+
+    oeP->outputType = ascii85 ? Ascii85 : AsciiHex;
 
     if (rle) {
-        rleitem = 0;
-        rlebitsinitem = 0;
-        rlebitshift = 8 - bitsPerSample;
-        repeat = 1;
-        count = 0;
-    } else {
-        item = 0;
-        bitsinitem = 0;
-        bitshift = 8 - bitsPerSample;
-    }
+        oeP->compressRle = true;
+        oeP->runlengthRefresh = psFilter ? INT_MAX : bytesPerRow;
+    } else
+        oeP->compressRle = false;
+
+    if (flate) {
+        assert(psFilter);
+        oeP->compressFlate = true;
+    } else
+        oeP->compressFlate = false;
+
+    if (ascii85) {
+        assert(psFilter);
+        oeP->outputType = Ascii85;
+    } else
+        oeP->outputType = AsciiHex;
 }
 
 
 
+typedef void FilterFn(FILE *          const ifP,
+                      FILE *          const ofP,
+                      OutputEncoder * const oeP);
+    /* This is a function that can be run in a separate process to do
+       arbitrary modifications of the raster data stream.
+    */
+       
+
+
+#ifndef NOFLATE
 static void
-putitem(void) {
-    const char* const hexits = "0123456789abcdef";
+initZlib(z_stream * const strmP) {
 
-    if (itemsinline == 30) {
-        putchar('\n');
-        itemsinline = 0;
-    }
-    assert(item >> 8 == 0);
-    putchar(hexits[item >> 4]);
-    putchar(hexits[item & 15]);
-    ++itemsinline;
-    ++items;
-    item = 0;
-    bitsinitem = 0;
-    bitshift = 8 - bitsPerSample;
+    int const level = 9; /* maximum compression.  see zlib.h */
+
+    int ret;
+
+    /* allocate deflate state */
+    strmP->zalloc = Z_NULL;
+    strmP->zfree  = Z_NULL;
+    strmP->opaque = Z_NULL;
+
+    ret = deflateInit(strmP, level);
+    if (ret != Z_OK)
+        pm_error("Failed to initialize zlib.");
 }
+#endif
 
 
 
-static void
-flushitem() {
-    if (bitsinitem > 0)
-        putitem();
-}
-
-
+static FilterFn flateFilter;
 
 static void 
-putxelval(xelval const xv) {
-    if (bitsinitem == 8)
-        putitem();
-    item += xv << bitshift;
-    bitsinitem += bitsPerSample;
-    bitshift -= bitsPerSample;
-}
+flateFilter(FILE *          const ifP,
+            FILE *          const ofP,
+            OutputEncoder * const oeP) {
 
+#ifndef NOFLATE
 
+    /* This code is based on def() in zpipe.c.  zpipe is an example program
+       which comes with the zlib source package.  zpipe.c is public domain and
+       is available from the Zlib website: http://www.zlib.net/
 
-static void
-rleputbuffer() {
-    if (repeat) {
-        item = 256 - count;
-        putitem();
-        item = repeatitem;
-        putitem();
-    } else {
-        unsigned int i;
-    
-        item = count - 1;
-        putitem();
-        for (i = 0; i < count; ++i) {
-            item = itembuf[i];
-            putitem();
+       See zlib.h for details on zlib parameters Z_NULL, Z_OK, etc.
+    */
+    unsigned int const chunkSz = 128*1024;
+        /* 128K recommended in zpipe.c.  4096 is not efficient but works. */
+
+    int flush;
+    z_stream strm;
+    unsigned char * in;
+    unsigned char * out;
+
+    in  = pm_allocrow(chunkSz, 1);
+    out = pm_allocrow(chunkSz, 1);
+
+    initZlib(&strm);
+
+    /* compress until end of file */
+    do {
+        strm.avail_in = fread(in, 1, chunkSz, ifP);
+        if (ferror(ifP)) {
+            deflateEnd(&strm);
+            pm_error("Error reading from internal pipe during "
+                     "flate compression.");
         }
-    }
-    repeat = 1;
-    count = 0;
-}
+        flush = feof(ifP) ? Z_FINISH : Z_NO_FLUSH;
+        strm.next_in = in;
 
+        /* run deflate() on input until output buffer not full, finish
+           compression if we have reached end of input.
+        */
+        do {
+            unsigned int have;
+            size_t bytesWritten;
 
-
-static void
-rleputitem() {
-    int i;
-
-    if ( count == 128 )
-        rleputbuffer();
-
-    if ( repeat && count == 0 )
-    { /* Still initializing a repeat buf. */
-        itembuf[count] = repeatitem = rleitem;
-        ++count;
-    }
-    else if ( repeat )
-    { /* Repeating - watch for end of run. */
-        if ( rleitem == repeatitem )
-        { /* Run continues. */
-            itembuf[count] = rleitem;
-            ++count;
-        }
-        else
-        { /* Run ended - is it long enough to dump? */
-            if ( count > 2 )
-            { /* Yes, dump a repeat-mode buffer and start a new one. */
-                rleputbuffer();
-                itembuf[count] = repeatitem = rleitem;
-                ++count;
+            strm.avail_out = chunkSz;
+            strm.next_out = out;
+            deflate(&strm, flush);
+            have = chunkSz - strm.avail_out;
+            bytesWritten = fwrite(out, 1, have, ofP);
+            if (ferror(ofP) || bytesWritten != have) {
+                deflateEnd(&strm);
+                pm_error("Error writing to internal pipe during "
+                         "flate compression.");
             }
-            else
-            { /* Not long enough - convert to non-repeat mode. */
-                repeat = 0;
-                itembuf[count] = repeatitem = rleitem;
-                ++count;
-                repeatcount = 1;
-            }
-        }
-    }
-    else
-    { /* Not repeating - watch for a run worth repeating. */
-        if ( rleitem == repeatitem )
-        { /* Possible run continues. */
-            ++repeatcount;
-            if ( repeatcount > 3 )
-            { /* Long enough - dump non-repeat part and start repeat. */
-                count = count - ( repeatcount - 1 );
-                rleputbuffer();
-                count = repeatcount;
-                for ( i = 0; i < count; ++i )
-                    itembuf[i] = rleitem;
-            }
-            else
-            { /* Not long enough yet - continue as non-repeat buf. */
-                itembuf[count] = rleitem;
-                ++count;
-            }
-        }
-        else
-        { /* Broken run. */
-            itembuf[count] = repeatitem = rleitem;
-            ++count;
-            repeatcount = 1;
-        }
-    }
+        } while (strm.avail_out == 0);
+        assert(strm.avail_in == 0);     /* all input is used */
 
-    rleitem = 0;
-    rlebitsinitem = 0;
-    rlebitshift = 8 - bitsPerSample;
+        /* done when last data in file processed */
+    } while (flush != Z_FINISH);
+
+    free(in);
+    free(out); 
+    deflateEnd(&strm);
+    fclose(ifP);
+    fclose(ofP);
+#else
+    assert(false);    /* filter is never used */ 
+#endif
 }
 
 
 
-static void 
-rleputxelval(xelval const xv) {
-    if (rlebitsinitem == 8)
-        rleputitem();
-    rleitem += xv << rlebitshift;
-    rlebitsinitem += bitsPerSample;
-    rlebitshift -= bitsPerSample;
-}
+/* Run length encoding
 
+   In this simple run-length encoding scheme, compressed and uncompressed
+   strings follow a single index byte N.  N 0-127 means the next N+1
+   bytes are uncompressed; 129-255 means the next byte is to be repeated
+   257-N times.
 
-
-static void
-rleflush() {
-    if (rlebitsinitem > 0)
-        rleputitem();
-    if (count > 0)
-        rleputbuffer();
-}
-
-
-static void
-flushNativeOutput(bool const rle) {
-    if (rle)
-        rleflush();
-    else
-        flushitem();
-    printf("\n");
-}
-        
-/*===========================================================================
-  The BMEPS output encoder.
-===========================================================================*/
-
-/* This code is just a wrapper around the output encoder that is part of
-   Bmeps, to give it better modularity.
+   In native (non-psfilter) mode, the run length filter must flush at
+   the end of every row.  But the entire raster is sent to the run length
+   filter as one continuous stream.  The run length filter learns the
+   refresh interval from oeP->runlengthRefresh.
 */
 
-struct bmepsoe {
-    Output_Encoder * oeP;
-    int * rleBuffer;
-    Byte * flateInBuffer;
-    Byte * flateOutBuffer;
-};
-
-
 
 static void
-createBmepsOutputEncoder(struct bmepsoe ** const bmepsoePP,
-                         FILE *            const ofP,
-                         bool              const rle,
-                         bool              const flate,
-                         bool              const ascii85) {
+rlePutBuffer (unsigned int    const repeat,
+              unsigned int    const count,
+              unsigned int    const repeatitem,
+              unsigned char * const itembuf,
+              FILE *          const fP) {
 
-    unsigned int const FLATE_IN_SIZE = 16384;
-    unsigned int const FLATE_OUT_SIZE = 17408;
+    if (repeat) {
+        fputc(257 - count,  fP);
+        fputc(repeatitem, fP);
+    } else {
+        fputc(count - 1, fP);
+        fwrite(itembuf, 1, count, fP);
+    }
+}
 
-    struct bmepsoe * bmepsoeP;
-    int mode;
 
-    MALLOCVAR_NOFAIL(bmepsoeP);
-    MALLOCVAR_NOFAIL(bmepsoeP->oeP);
-    MALLOCARRAY_NOFAIL(bmepsoeP->rleBuffer, 129);
-    MALLOCARRAY_NOFAIL(bmepsoeP->flateInBuffer, FLATE_IN_SIZE);
-    MALLOCARRAY_NOFAIL(bmepsoeP->flateOutBuffer, FLATE_OUT_SIZE);
 
-    mode = 0;
-    if (rle)
-        mode |= OE_RL;
-    if (flate)
-        mode |= OE_FLATE;
-    if (ascii85)
-        mode |= OE_ASC85;
+static FilterFn rleFilter;
 
-    oe_init(bmepsoeP->oeP, ofP, mode, 9, 
-            bmepsoeP->rleBuffer, 
-            bmepsoeP->flateInBuffer, FLATE_IN_SIZE,
-            bmepsoeP->flateOutBuffer, FLATE_OUT_SIZE);
+static void
+rleFilter (FILE *          const ifP,
+           FILE *          const ofP,
+           OutputEncoder * const oeP) {
 
-    *bmepsoePP = bmepsoeP;
+    unsigned int const refresh = oeP->runlengthRefresh;
+
+    bool eof;
+    bool repeat;
+    unsigned int count;
+    unsigned int incount;
+    unsigned int repeatcount;
+    unsigned char repeatitem;
+    unsigned char itembuf[128];
+
+    repeat = true; /* initial value */
+    count = 0; /* initial value */
+
+    for (eof = false, incount = 0; !eof; ) {
+        int rleitem;
+
+        rleitem = fgetc(ifP);
+        if (rleitem == EOF)
+            eof = true;
+        else {
+            ++incount;
+
+            if (repeat && count == 0) {
+                /* Still initializing a repeat buf. */
+                itembuf[count++] = repeatitem = rleitem;
+            }
+            else if (repeat) {
+                /* Repeating - watch for end of run. */
+                if (rleitem == repeatitem) {
+                    /* Run continues. */
+                    itembuf[count++] = rleitem;
+                } else {
+                    /* Run ended */
+                    if (count > 2) {
+                        /* Long enough to dump, so dump a repeat-mode buffer
+                           and start a new one.
+                        */
+                        rlePutBuffer(repeat, count, repeatitem, itembuf, ofP);
+                        repeat = true;
+                        count = 0;
+                        itembuf[count++] = repeatitem = rleitem;
+                    } else {
+                        /* Not long enough - convert to non-repeat mode. */
+                        repeat = false;
+                        itembuf[count++] = repeatitem = rleitem;
+                        repeatcount = 1;
+                    }
+                }
+            } else {
+                /* Not repeating - watch for a run worth repeating. */
+                if (rleitem == repeatitem) {
+                    /* Possible run continues. */
+                    ++repeatcount;
+                    if (repeatcount > 3) {
+                        /* Long enough - dump non-repeat part and start
+                           repeat.
+                        */
+                        unsigned int i;
+                        count = count - (repeatcount - 1);
+                        rlePutBuffer(repeat, count, repeatitem, itembuf, ofP);
+                        repeat = true;
+                        count = repeatcount;
+                        for (i = 0; i < count; ++i)
+                            itembuf[i] = rleitem;
+                    } else {
+                        /* Not long enough yet - continue as non-repeat buf. */
+                        itembuf[count++] = rleitem;
+                    }
+                } else {                    /* Broken run. */
+                    itembuf[count++] = repeatitem = rleitem;
+                    repeatcount = 1;
+                }
+            }
+
+            if (incount == refresh) {
+                rlePutBuffer(repeat, count, repeatitem, itembuf, ofP);
+                repeat = true;
+                count = incount = 0;
+            }
+
+            if (count == 128) {
+                rlePutBuffer(repeat, count, repeatitem, itembuf, ofP);
+                repeat = true;
+                count = 0;
+            }
+        }
+    }
+
+    if (count > 0)
+        rlePutBuffer(repeat, count, repeatitem, itembuf, ofP);
+
+    fclose(ifP);
+    fclose(ofP);
+}
+
+
+
+static FilterFn asciiHexFilter;
+
+static void
+asciiHexFilter(FILE *          const ifP,
+               FILE *          const ofP,
+               OutputEncoder * const oeP) {
+
+    char const hexits[16] = "0123456789abcdef";
+
+    bool eof;
+    unsigned char inbuff[40], outbuff[81];
+
+    for (eof = false; !eof; ) {
+        size_t bytesRead;
+
+        bytesRead = fread(inbuff, 1, 40, ifP);
+
+        if (bytesRead == 0)
+            eof = true;
+        else {
+            unsigned int i;
+
+            for (i = 0; i < bytesRead; ++i) {
+                int const item = inbuff[i]; 
+                outbuff[i*2]   = hexits[item >> 4];
+                outbuff[i*2+1] = hexits[item & 15];
+            }
+        }
+        outbuff[bytesRead * 2] = '\n';
+        fwrite(outbuff, 1, bytesRead*2 + 1, ofP);
+    }
+
+    fclose(ifP);
+    fclose(ofP);
+}
+
+
+
+static FilterFn ascii85Filter;
+
+static void
+ascii85Filter(FILE *          const ifP,
+              FILE *          const ofP,
+              OutputEncoder * const oeP) {
+
+    bool eof;
+    char outbuff[5];
+    unsigned long int value; /* requires 32 bits */
+    int count;
+    int outcount;
+
+    value = 0;  /* initial value */
+    count = 0;  /* initial value */
+    outcount = 0; /* initial value */
+
+    for (eof = false; !eof; ) {
+        int c;
+
+        c = fgetc(ifP);
+
+        if (c == EOF)
+            eof = true;
+        else {
+            value = value*256 + c;
+            ++count;
+
+            if (value == 0 && count == 4) {
+                putchar('z');  /* Ascii85 encoding z exception */
+                ++outcount;
+                count = 0;
+            } else if (count == 4) {
+                outbuff[4] = value % 85 + 33;  value/=85; 
+                outbuff[3] = value % 85 + 33;  value/=85;
+                outbuff[2] = value % 85 + 33;  value/=85;
+                outbuff[1] = value % 85 + 33;
+                outbuff[0] = value / 85 + 33;
+
+                fwrite(outbuff, 1, count + 1, ofP);
+                count = value = 0;
+                outcount += 5; 
+            }
+
+            if (outcount > 75) {
+                putchar('\n');
+                outcount = 0;
+            }
+        }
+    }
+
+    if (count > 0) { /* EOF, flush */
+        assert (count < 4);
+
+        value <<= (4 - count) * 8;   value/=85;
+        outbuff[3] = value % 85 + 33;  value/=85;
+        outbuff[2] = value % 85 + 33;  value/=85;
+        outbuff[1] = value % 85 + 33;
+        outbuff[0] = value / 85 + 33;
+        outbuff[count + 1] = '\n';
+
+        fwrite(outbuff, 1, count + 2, ofP);
+    }
+
+    fclose(ifP);
+    fclose(ofP);
 }
 
 
 
 static void
-destroyBmepsOutputEncoder(struct bmepsoe * const bmepsoeP) {
-    
-    free(bmepsoeP->rleBuffer);
-    free(bmepsoeP->flateInBuffer);
-    free(bmepsoeP->flateOutBuffer);
-    free(bmepsoeP->oeP);
-    
-    free(bmepsoeP);
+makePipe(int * const pipeFdArray) {
+
+    int rc;
+    rc = pipe(pipeFdArray);
+    if (rc == -1)
+        pm_error("pipe() failed, errno = %d (%s)", errno, strerror(errno));
 }
 
 
 
 static void
-outputBmepsSample(struct bmepsoe * const bmepsoeP,
-                  unsigned int     const sampleValue,
-                  unsigned int     const bitsPerSample) {
+closeAllBut(int const saveFd0,
+            int const saveFd1,
+            int const saveFd2) {
+/*----------------------------------------------------------------------------
+   Close every file descriptor in this process except 'saveFd0',
+   'saveFd1', and 'saveFd2'.
 
-    if (bitsPerSample == 8)
-        oe_byte_add(bmepsoeP->oeP, sampleValue);
-    else {
-        unsigned int m;
+   This is helpful because even if this process doesn't touch other file
+   desriptors, its very existence will keep the files open.
+-----------------------------------------------------------------------------*/
+    
+    /* Unix provides no good way to do this; we just assume file descriptors
+       above 9 are not used in this program; Caller must ensure that is true.
+    */
+    int fd;
 
-        for (m = 1 << (bitsPerSample-1); m != 0; m >>= 1)
-            /* depends on oe_bit_add accepting any value !=0 as 1 */
-            oe_bit_add(bmepsoeP->oeP, sampleValue & m); 
+    for (fd = 0; fd < 10; ++fd) {
+        if (fd != saveFd0 && fd != saveFd1 && fd != saveFd2)
+            close(fd);
     }
 }
 
 
 
 static void
-flushBmepsOutput(struct bmepsoe * const bmepsoeP) {
-    oe_byte_flush(bmepsoeP->oeP);
+spawnFilter(FILE *          const ofP,
+            FilterFn *      const filterFn,
+            OutputEncoder * const oeP,
+            FILE **         const feedFilePP,
+            pid_t *         const pidP) {
+/*----------------------------------------------------------------------------
+   Fork a child process to run filter function 'filterFn' and send its
+   output to *ofP.
+
+   Create a pipe for feeding the filter and return as *feedFilePP the
+   stream to which Caller can write to push stuff into the filter.
+
+   *oeP is the parameter to 'filterFn'.
+-----------------------------------------------------------------------------*/
+    int pipeFd[2];
+    pid_t rc;
+
+    makePipe(pipeFd);
+    
+    rc = fork();
+
+    if (rc == (pid_t)-1)
+        pm_error("fork() of filter process failed.  errno=%d (%s)", 
+                 errno, strerror(errno));
+    else if (rc == 0) {
+        /* This is the child process */
+ 
+        FILE * ifP;
+
+        ifP = fdopen(pipeFd[0], "r");
+
+        if (!ifP)
+            pm_error("filter process failed to make "
+                     "file stream (\"FILE\") "
+                     "out of the file descriptor which is input to the "
+                     "filter.  errno=%d (%s)",
+                     errno, strerror(errno));
+
+        closeAllBut(fileno(ifP), fileno(ofP), STDERR_FILENO);
+
+        filterFn(ifP, ofP, oeP);
+
+        exit(EXIT_SUCCESS);
+    } else {
+        /* This is the parent process */
+
+        pid_t const childPid = rc;
+
+        close(pipeFd[0]);
+
+        *feedFilePP = fdopen(pipeFd[1], "w");
+
+        *pidP = childPid;
+    }
 }
+
+
+
+static void
+addFilter(const char *    const description,
+          FilterFn *      const filter,
+          OutputEncoder * const oeP,
+          FILE **         const feedFilePP,
+          pid_t *         const pidList) {
+
+    pid_t pid;
+
+    FILE * const oldFeedFileP = *feedFilePP;
+
+    FILE * newFeedFileP;
+        
+    spawnFilter(oldFeedFileP, filter, oeP, &newFeedFileP, &pid);
+            
+    if (verbose)
+        pm_message("%s filter spawned: pid %u",
+                   description, (unsigned)pid);
+    
+    fclose(oldFeedFileP);  /* Child keeps this open now */
+    
+    addToPidList(pidList, pid);
+
+    *feedFilePP = newFeedFileP;
+}
+
+
+
+static void
+spawnFilters(FILE *          const ofP,
+             OutputEncoder * const oeP,
+             FILE **         const feedFilePP,
+             pid_t *         const pidList) {
+/*----------------------------------------------------------------------------
+   Get all the child processes for the filters running and connected.
+   Return at *feedFileP the file stream to which to write the raw data,
+   with the filtered data going to *ofP.
+
+   Filter according to *oeP.
+-----------------------------------------------------------------------------*/
+
+    /* Build up the pipeline from the final to the initial stage.  The
+       result is one of:
+
+          FEED | convertRow | asciiHexFilter | *ofP
+          FEED | convertRow | ascii85Filter | *ofP
+          FEED | convertRow | rleFilter   | asciiHexFilter | *ofP
+          FEED | convertRow | flateFilter | asciiHexFilter | *ofP
+          FEED | convertRow | flateFilter | rleFilter | asciiHexFilter | *ofP
+    */
+
+    FILE * feedFileP;
+        /* The current head of the filter chain; changes as we add filters */
+
+    initPidList(pidList);
+
+    feedFileP = ofP;  /* Initial state: no filter at all */
+
+    addFilter(
+        "output",
+        oeP->outputType == Ascii85 ? &ascii85Filter : asciiHexFilter,
+        oeP,
+        &feedFileP,
+        pidList);
+
+    if (oeP->compressFlate)
+        addFilter("flate", flateFilter, oeP, &feedFileP, pidList);
+
+    if (oeP->compressRle)
+        addFilter("rle", rleFilter, oeP, &feedFileP, pidList);
+
+    *feedFilePP = feedFileP;
+}
+
+
+
+static void
+waitForChildren(const pid_t * const pidList) {
+/*----------------------------------------------------------------------------
+   Wait for all child processes with PIDs in pidList[] to exit.
+   In pidList[], end-of-list is marked with a special zero value.
+-----------------------------------------------------------------------------*/
+    unsigned int i;
+
+    for (i = 0; pidList[i]; ++i) {
+        pid_t rc;
+        int status;
+
+        if (verbose)
+            pm_message("Waiting for PID %u to exit", (unsigned)pidList[i]);
+
+        rc = waitpid(pidList[i], &status, 0);
+        if (rc == -1)
+            pm_error ("waitpid() for child %u failed", i);
+        else if (status != EXIT_SUCCESS)
+            pm_error ("Child process %u terminated abnormally", i);
+    }
+    if (verbose)
+        pm_message("All children have exited");
+}
+
 
 
 /*============================================================================
-   END OF OUTPUT ENCODERS
+  END OF OUTPUT ENCODERS
 ============================================================================*/
 
 
@@ -601,15 +978,15 @@ validateComputableBoundingBox(float const scols,
                               float const llx, 
                               float const lly) {
 
-  float const bbWidth  = llx + scols + 0.5;
-  float const bbHeight = lly + srows + 0.5;
+    float const bbWidth  = llx + scols + 0.5;
+    float const bbHeight = lly + srows + 0.5;
 
-  if (bbHeight < INT_MIN || bbHeight > INT_MAX ||
-      bbWidth  < INT_MIN || bbWidth  > INT_MAX)
-      pm_error("Bounding box dimensions %.1f x %.1f are too large "
-               "for computations.  "
-               "This probably means input image width, height, "
-               "or scale factor is too large", bbWidth, bbHeight);
+    if (bbHeight < INT_MIN || bbHeight > INT_MAX ||
+        bbWidth  < INT_MIN || bbWidth  > INT_MAX)
+        pm_error("Bounding box dimensions %.1f x %.1f are too large "
+                 "for computations.  "
+                 "This probably means input image width, height, "
+                 "or scale factor is too large", bbWidth, bbHeight);
 }
 
 
@@ -634,39 +1011,41 @@ computeImagePosition(int     const dpiX,
                      float * const llyP,
                      bool *  const turnedP ) {
 /*----------------------------------------------------------------------------
-   Determine where on the page the image is to go.  This means position,
-   dimensions, and orientation.
+  Determine where on the page the image is to go.  This means position,
+  dimensions, and orientation.
 
-   icols/irows are the dimensions of the PNM input in xels.
+  icols/irows are the dimensions of the PNM input in xels.
 
-   'mustturn' means we are required to rotate the image.
+  'mustturn' means we are required to rotate the image.
 
-   'canturn' means we may rotate the image if it fits better, but don't
-   have to.
+  'canturn' means we may rotate the image if it fits better, but don't
+  have to.
 
-   *scolsP, *srowsP are the dimensions of the image in 1/72 inch.
+  *scolsP, *srowsP are the dimensions of the image in 1/72 inch.
 
-   *llxP, *llyP are the coordinates, in 1/72 inch, of the lower left
-   corner of the image on the page.
+  *llxP, *llyP are the coordinates in the Postcript frame, of the lower left
+  corner of the image on the page.  The Postscript frame is different from the
+  Neptbm frame: units are 1/72 inch (1 point) and (0,0) is the lower left
+  corner.
 
-   *turnedP is true iff the image is to be rotated 90 degrees on the page.
+  *turnedP is true iff the image is to be rotated 90 degrees on the page.
 
-   imagewidth/imageheight are the requested dimensions of the image on
-   the page, in 1/72 inch.  Image will be as large as possible within
-   those dimensions.  Zero means unspecified, so 'scale', 'pagewid',
-   'pagehgt', 'irows', and 'icols' determine image size.
+  imagewidth/imageheight are the requested dimensions of the image on
+  the page, in 1/72 inch.  Image will be as large as possible within
+  those dimensions.  Zero means unspecified, so 'scale', 'pagewid',
+  'pagehgt', 'irows', and 'icols' determine image size.
 
-   'equalpixels' means the user wants one printed pixel per input pixel.
-   It is inconsistent with imagewidth or imageheight != 0
+  'equalpixels' means the user wants one printed pixel per input pixel.
+  It is inconsistent with imagewidth or imageheight != 0
 
-   'requestedScale' is meaningful only when imageheight/imagewidth == 0
-   and equalpixels == FALSE.  It tells how many inches the user wants
-   72 pixels of input to occupy, if it fits on the page.
+  'requestedScale' is meaningful only when imageheight/imagewidth == 0
+  and equalpixels == FALSE.  It tells how many inches the user wants
+  72 pixels of input to occupy, if it fits on the page.
 -----------------------------------------------------------------------------*/
     int cols, rows;
-        /* Number of columns, rows of input xels in the output, as
-           rotated if applicable
-        */
+    /* Number of columns, rows of input xels in the output, as
+       rotated if applicable
+    */
     bool shouldturn;  /* The image fits the page better if we turn it */
     
     if (icols > irows && pagehgt > pagewid)
@@ -697,7 +1076,7 @@ computeImagePosition(int     const dpiX,
             scale = (float) imagewidth/cols;
         else
             scale = MIN((float)imagewidth/cols, (float)imageheight/rows);
-        
+    
         *scolsP = cols*scale;
         *srowsP = rows*scale;
     } else {
@@ -706,8 +1085,8 @@ computeImagePosition(int     const dpiX,
         */
         const int devpixX = dpiX / 72.0 + 0.5;        
         const int devpixY = dpiY / 72.0 + 0.5;        
-            /* How many device pixels make up 1/72 inch, rounded to
-               nearest integer */
+        /* How many device pixels make up 1/72 inch, rounded to
+           nearest integer */
         const float pixfacX = 72.0 / dpiX * devpixX;  /* 1, approx. */
         const float pixfacY = 72.0 / dpiY * devpixY;  /* 1, approx. */
         float scale;
@@ -717,7 +1096,7 @@ computeImagePosition(int     const dpiX,
 
         *scolsP = scale * cols * pixfacX;
         *srowsP = scale * rows * pixfacY;
-        
+    
         if (scale != requestedScale)
             pm_message("warning, image too large for page, rescaling to %g", 
                        scale );
@@ -767,7 +1146,7 @@ determineDictionaryRequirement(bool           const userWantsDict,
 static void
 defineReadstring(bool const rle) {
 /*----------------------------------------------------------------------------
-   Write to Standard Output Postscript statements to define /readstring.
+  Write to Standard Output Postscript statements to define /readstring.
 -----------------------------------------------------------------------------*/
     if (rle) {
         printf("/rlestr1 1 string def\n");
@@ -782,7 +1161,7 @@ defineReadstring(bool const rle) {
         printf("    readhexstring pop\n");            /* s */
         printf("    length\n");               /* nr */
         printf("  } {\n");                    /* c */
-        printf("    256 exch sub dup\n");         /* n n */
+        printf("    257 exch sub dup\n");         /* n n */
         printf("    currentfile rlestr1 readhexstring pop\n");/* n n s1 */
         printf("    0 get\n");                /* n n c */
         printf("    exch 0 exch 1 exch 1 sub {\n");       /* n c 0 1 n-1*/
@@ -817,17 +1196,12 @@ setupReadstringNative(bool         const rle,
                       unsigned int const icols, 
                       unsigned int const bitsPerSample) {
 /*----------------------------------------------------------------------------
-   Write to Standard Output statements to define /readstring and also
-   arguments for it (/picstr or /rpicstr, /gpicstr, and /bpicstr).
+  Write to Standard Output statements to define /readstring and also
+  arguments for it (/picstr or /rpicstr, /gpicstr, and /bpicstr).
 -----------------------------------------------------------------------------*/
     unsigned int const bytesPerRow = icols / (8/bitsPerSample) +
         (icols % (8/bitsPerSample) > 0 ? 1 : 0);
-        /* Size of row buffer, padded up to byte boundary.
-
-           A more straightforward calculation would be
-             (icols * bitsPerSample + 7) / 8 ,
-           but this overflows when icols is large.
-        */
+        /* Size of row buffer, padded up to byte boundary. */
 
     defineReadstring(rle);
     
@@ -850,13 +1224,17 @@ putFilters(unsigned int const postscriptLevel,
 
     assert(postscriptLevel > 1);
     
+    /* We say to decode flate, then rle, so Caller must ensure it encodes
+       rel, then flate.
+    */
+
     if (ascii85)
         printf("/ASCII85Decode filter ");
     else 
         printf("/ASCIIHexDecode filter ");
     if (flate)
         printf("/FlateDecode filter ");
-    if (rle) /* bmeps encodes rle before flate, so must decode after! */
+    if (rle) 
         printf("/RunLengthDecode filter ");
 }
 
@@ -883,7 +1261,7 @@ putSetup(unsigned int const dictSize,
          unsigned int const icols,
          unsigned int const bitsPerSample) {
 /*----------------------------------------------------------------------------
-   Put the setup section in the Postscript program on Standard Output.
+  Put the setup section in the Postscript program on Standard Output.
 -----------------------------------------------------------------------------*/
     printf("%%%%BeginSetup\n");
 
@@ -903,8 +1281,8 @@ static void
 putImage(bool const psFilter,
          bool const color) {
 /*----------------------------------------------------------------------------
-   Put the image/colorimage statement in the Postscript program on
-   Standard Output.
+  Put the image/colorimage statement in the Postscript program on
+  Standard Output.
 -----------------------------------------------------------------------------*/
     if (color) {
         if (psFilter)
@@ -971,8 +1349,8 @@ putInit(unsigned int const postscriptLevel,
         bool         const psFilter,
         unsigned int const dictSize) {
 /*----------------------------------------------------------------------------
-   Write out to Standard Output the headers stuff for the Postscript
-   program (everything up to the raster).
+  Write out to Standard Output the headers stuff for the Postscript
+  program (everything up to the raster).
 -----------------------------------------------------------------------------*/
     /* The numbers in the %! line often confuse people. They are NOT the
        PostScript language level.  The first is the level of the DSC comment
@@ -1011,6 +1389,7 @@ putInit(unsigned int const postscriptLevel,
         putInitReadstringNative(color);
 
     printf("\n");
+    fflush(stdout);
 }
 
 
@@ -1136,12 +1515,12 @@ computeDepth(xelval         const inputMaxval,
              unsigned int   const bitsPerSampleReq,
              unsigned int * const bitsPerSampleP) {
 /*----------------------------------------------------------------------------
-   Figure out how many bits will represent each sample in the Postscript
-   program, and the maxval of the Postscript program samples.  The maxval
-   is just the maximum value allowable in the number of bits.
+  Figure out how many bits will represent each sample in the Postscript
+  program, and the maxval of the Postscript program samples.  The maxval
+  is just the maximum value allowable in the number of bits.
 
-   'bitsPerSampleReq' is the bits per sample that the user requests, or
-   zero if he made no request.
+  'bitsPerSampleReq' is the bits per sample that the user requests, or
+  zero if he made no request.
 -----------------------------------------------------------------------------*/
     unsigned int const bitsRequiredByMaxval = pm_maxvaltobits(inputMaxval);
 
@@ -1166,67 +1545,208 @@ computeDepth(xelval         const inputMaxval,
 
 
 
+/*===========================================================================
+  The bit accumulator
+===========================================================================*/
+
+typedef struct {
+    unsigned int value;
+    unsigned int consumed;
+} BitAccumulator;
+
+
+
 static void
-padRightNative(unsigned int const bitsPerSample,
-               unsigned int const width,
-               bool         const rle) {
+ba_init(BitAccumulator * const baP) {
+
+    baP->value    = 0;
+    baP->consumed = 0;
+}
+
+
+
+static void
+ba_add12(BitAccumulator * const baP,
+         unsigned int     const new12,
+         FILE           * const fP) {
 /*----------------------------------------------------------------------------
-   Write extra columns to row end to bring output up to byte boundary,
-   given that the row is 'width' columns wide with 'bitsPerSample'
-   bits per column.
-
-   'rle' means to write the padding in RLE row format.
+  Read a 12-bit string into the bit accumulator baP->value.
+  On every other call, combine two 12-bit strings and write out three bytes.
 -----------------------------------------------------------------------------*/
-    /*
-      'stragglers' is the number of bits at the right edge that don't
-      fill out a whole byte and 'padcols' is the number of columns we
-      have to add to fill out that last byte.
-      
-      E.g. at 2 bits per sample with 10 columns, stragglers is 4; padcols
-      is 2.
-    */
-    unsigned int const stragglers =
-        (bitsPerSample * (width % 8)) % 8;
-    unsigned int const padcols =
-        stragglers > 0 ? (8-stragglers) / bitsPerSample : 0;
+    assert (baP->consumed == 12 || baP->consumed == 0);
 
-    unsigned int col;
+    if (baP->consumed == 12){
+        char const oldHi8 = (baP->value) >> 4;
+        char const oldLo4 = (baP->value) & 0x0f;
+        char const newHi4 = new12 >> 8;
+        char const newLo8 = new12 & 0xff;
 
-    for (col = 0; col < padcols; ++col) {
-        if (rle)
-            rleputxelval(0);
-        else
-            putxelval(0);
+        fputc(oldHi8, fP);
+        fputc((oldLo4 << 4) | newHi4 , fP);
+        fputc(newLo8, fP);
+        baP->value = 0; baP->consumed = 0;
+    } else {
+        baP->value = new12;  baP->consumed = 12;
     }
 }
 
 
 
 static void
-convertRowNative(struct pam * const pamP, 
-                 tuple *      const tuplerow, 
-                 unsigned int const bitsPerSample, 
-                 bool         const rle) {
+ba_add(BitAccumulator * const baP,
+       unsigned int     const b,
+       unsigned int     const bitsPerSample,
+       FILE           * const fP) {
+/*----------------------------------------------------------------------------
+  Combine bit sequences that do not fit into a byte.
+
+  Used when bitsPerSample =1, 2, 4.  
+  Logic also works for bitsPerSample = 8, 16.
+
+  The accumulator, baP->value is unsigned int (usually 32 bits), but
+  only 8 bits are used.
+-----------------------------------------------------------------------------*/
+    unsigned int const bufSize = 8;
+
+    assert (bitsPerSample == 1 || bitsPerSample == 2 || bitsPerSample == 4);
+
+    baP->value = (baP->value << bitsPerSample) | b ;
+    baP->consumed += bitsPerSample;
+    if (baP->consumed == bufSize) {
+        /* flush */
+        fputc( baP->value, fP);
+        baP->value = 0;
+        baP->consumed = 0;
+    }
+}
+
+
+
+static void
+ba_flush(BitAccumulator * const baP,
+         FILE *           const fP) {
+/*----------------------------------------------------------------------------
+  Flush partial bits in baP->consumed.
+-----------------------------------------------------------------------------*/
+    if (baP->consumed == 12) {
+        char const oldHi8 = (baP->value) >> 4;
+        char const oldLo4 = (baP->value) & 0x0f;
+        fputc(oldHi8, fP);
+        fputc(oldLo4 << 4, fP);
+    } else if (baP->consumed == 8)
+        fputc(baP->value , fP);
+    else if (baP->consumed > 0) {
+        unsigned int const leftShift = 8 - baP->consumed;
+        assert(baP->consumed <= 8);  /* why? */
+        baP->value <<= leftShift;
+        fputc(baP->value , fP);
+    }
+    baP->value = 0;
+    baP->consumed = 0;
+}
+
+
+
+static void
+outputSample(BitAccumulator * const baP,
+             unsigned int     const sampleValue,
+             unsigned int     const bitsPerSample,
+             FILE           * const fP) {
+
+    if (bitsPerSample == 8)
+        fputc(sampleValue, fP);
+    else if (bitsPerSample == 12)
+        ba_add12(baP, sampleValue, fP);
+    else
+        ba_add(baP, sampleValue, bitsPerSample, fP);
+}
+
+
+
+static void
+flushOutput(BitAccumulator * const baP,
+            FILE *           const fP) {
+    ba_flush(baP, fP);
+}
+
+
+
+/*----------------------------------------------------------------------
+  Row converters
+
+  convertRowPbm is a fast routine for PBM images.
+  It is used only when the input is PBM and the user does not specify
+  a -bitspersample value greater than 1.  It is not used when the input
+  image is PGM or PPM and the output resolution is brought down to one
+  bit per pixel by -bitpersample=1 .
+
+  convertRowNative and convertRowPsFilter are the general converters.
+  They are quite similar, the differences being:
+  (1) Native output separates the color planes: 
+  (RRR...RRR GGG...GGG BBB...BBB),
+  whereas psFilter does not:
+  (RGB RGB RGB RGB ......... RGB).
+  (2) Native flushes the run-length encoder at the end of each row if
+  grayscale, at the end of each plane if color.
+
+  Both convertRowNative and convertRowPsFilter can handle PBM, though we
+  don't use them.
+
+  If studying the code, read convertRowPbm first.  convertRowNative and
+  convertRowPsFilter are constructs that pack raster data into a form
+  similar to a binary PBM bitrow.
+  ----------------------------------------------------------------------*/
+
+static void
+convertRowPbm(struct pam *     const pamP,
+              unsigned char  * const bitrow,
+              bool             const psFilter,
+              FILE *           const fP) {
+/*---------------------------------------------------------------------
+  Feed PBM raster data directly to the output encoder.
+  Invert bits: 0 is "white" in PBM, 0 is "black" in postscript.
+----------------------------------------------------------------------*/
+    unsigned int colChar;
+    unsigned int const colChars = pbm_packed_bytes(pamP->width);
+    unsigned int const padRight = (8 - pamP->width %8) %8;
+
+    pbm_readpbmrow_packed(pamP->file, bitrow, pamP->width, pamP->format);
+
+    for (colChar = 0; colChar < colChars; ++colChar)
+        bitrow[colChar] =  ~ bitrow[colChar];
+
+    if (padRight > 0) {
+        bitrow[colChars-1] >>= padRight;  /* Zero clear padding beyond */
+        bitrow[colChars-1] <<= padRight;  /* right edge */
+    }
+
+    fwrite(bitrow, 1, colChars, fP); 
+}
+
+
+
+static void
+convertRowNative(struct pam *     const pamP, 
+                 tuple *                tuplerow, 
+                 unsigned int     const bitsPerSample,
+                 FILE           * const fP) { 
+
+    unsigned int const psMaxval = pm_bitstomaxval(bitsPerSample);
 
     unsigned int plane;
-    unsigned int const psMaxval = pm_bitstomaxval(bitsPerSample);
+    BitAccumulator ba;
+
+    ba_init(&ba);
+
+    pnm_readpamrow(pamP, tuplerow);
+    pnm_scaletuplerow(pamP, tuplerow, tuplerow, psMaxval);
 
     for (plane = 0; plane < pamP->depth; ++plane) {
         unsigned int col;
-        for (col= 0; col < pamP->width; ++col) {
-            sample const scaledSample = 
-                pnm_scalesample(tuplerow[col][plane], pamP->maxval, psMaxval);
+        for (col= 0; col < pamP->width; ++col)
+            outputSample(&ba, tuplerow[col][plane], bitsPerSample, fP);
 
-            if (rle)
-                rleputxelval(scaledSample);
-            else
-                putxelval(scaledSample);
-        }
-
-        padRightNative(bitsPerSample, pamP->width, rle);
-
-        if (rle)
-            rleflush();
+        flushOutput(&ba, fP);
     }
 }
 
@@ -1234,35 +1754,27 @@ convertRowNative(struct pam * const pamP,
 
 static void
 convertRowPsFilter(struct pam *     const pamP,
-                   tuple *          const tuplerow,
-                   struct bmepsoe * const bmepsoeP,
-                   unsigned int     const bitsPerSample) {
+                   tuple *                tuplerow,
+                   unsigned int     const bitsPerSample,
+                   FILE           * const fP) { 
 
-    unsigned int const stragglers =
-        (((bitsPerSample * pamP->depth) % 8) * (pamP->width%8)) % 8;
-        /* Number of bits at the right edge that don't fill out a whole
-           byte
-        */
     unsigned int const psMaxval = pm_bitstomaxval(bitsPerSample);
 
     unsigned int col;
-    tuple scaledTuple;
-    
-    scaledTuple = pnm_allocpamtuple(pamP);
+    BitAccumulator ba;
+
+    ba_init(&ba);
+
+    pnm_readpamrow(pamP, tuplerow);
+    pnm_scaletuplerow(pamP, tuplerow, tuplerow, psMaxval);
 
     for (col = 0; col < pamP->width; ++col) {
         unsigned int plane;
-        pnm_scaletuple(pamP, scaledTuple, tuplerow[col], psMaxval);
-        
         for (plane = 0; plane < pamP->depth; ++plane)
-            outputBmepsSample(bmepsoeP, scaledTuple[plane], bitsPerSample);
+            outputSample(&ba, tuplerow[col][plane], bitsPerSample, fP);
     }
-    if (stragglers > 0) {
-        unsigned int i;
-        for (i = stragglers; i < 8; ++i)
-            oe_bit_add(bmepsoeP->oeP, 0);
-    }
-    pnm_freepamtuple(scaledTuple);
+    flushOutput(&ba, fP);
+
 }
 
 
@@ -1318,6 +1830,40 @@ selectPostscriptLevel(bool           const levelIsGiven,
 
 
 static void
+convertRaster(struct pam * const inpamP,
+              unsigned int const bitsPerSample,
+              bool         const psFilter,
+              FILE *       const fP) {
+
+    if (PAM_FORMAT_TYPE(inpamP->format) == PBM_TYPE && bitsPerSample == 1)  {
+        unsigned char * bitrow;
+        unsigned int row;
+
+        bitrow = pbm_allocrow_packed(inpamP->width);
+
+        for (row = 0; row < inpamP->height; ++row)
+            convertRowPbm(inpamP, bitrow, psFilter, fP);
+
+        pbm_freerow(bitrow);
+    } else  {
+        tuple *tuplerow;
+        unsigned int row;
+        
+        tuplerow = pnm_allocpamrow(inpamP);
+
+        for (row = 0; row < inpamP->height; ++row) {
+            if (psFilter)
+                convertRowPsFilter(inpamP, tuplerow, bitsPerSample, fP);
+            else
+                convertRowNative(inpamP, tuplerow, bitsPerSample, fP);
+        }
+        pnm_freepamrow(tuplerow);
+    }
+}
+
+
+
+static void
 convertPage(FILE *       const ifP, 
             int          const turnflag, 
             int          const turnokflag, 
@@ -1344,16 +1890,21 @@ convertPage(FILE *       const ifP,
             bool         const levelGiven) {
     
     struct pam inpam;
-    tuple* tuplerow;
-    int row;
     float scols, srows;
     float llx, lly;
     bool turned;
     bool color;
     unsigned int postscriptLevel;
-    struct bmepsoe * bmepsoeP;
-    unsigned int dictSize;
+    unsigned int bitsPerSample;
+    unsigned int dictSize;  
         /* Size of Postscript dictionary we should define */
+    OutputEncoder oe;
+    pid_t filterPidList[MAX_FILTER_CT + 1];
+
+    FILE * feedFileP;
+        /* The file stream which is the head of the filter chain; we write to
+           this and filtered stuff comes out the other end.
+        */
 
     pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
 
@@ -1393,57 +1944,19 @@ convertPage(FILE *       const ifP,
             pagewid, pagehgt, color,
             turned, rle, flate, ascii85, setpage, psFilter, dictSize);
 
-    createBmepsOutputEncoder(&bmepsoeP, stdout, rle, flate, ascii85);
-    initNativeOutputEncoder(rle, bitsPerSample);
+    initOutputEncoder(&oe, inpam.width, bitsPerSample,
+                      rle, flate, ascii85, psFilter);
 
-    tuplerow = pnm_allocpamrow(&inpam);
+    spawnFilters(stdout, &oe, &feedFileP, filterPidList);
+ 
+    convertRaster(&inpam, bitsPerSample, psFilter, feedFileP);
 
-    for (row = 0; row < inpam.height; ++row) {
-        pnm_readpamrow(&inpam, tuplerow);
-        if (psFilter)
-            convertRowPsFilter(&inpam, tuplerow, bmepsoeP, bitsPerSample);
-        else
-            convertRowNative(&inpam, tuplerow, bitsPerSample, rle);
-    }
+    fflush(feedFileP);
+    fclose(feedFileP);
 
-    pnm_freepamrow(tuplerow);
-
-    if (psFilter)
-        flushBmepsOutput(bmepsoeP);
-    else
-        flushNativeOutput(rle);
-
-    destroyBmepsOutputEncoder(bmepsoeP);
+    waitForChildren(filterPidList);
 
     putEnd(showpage, psFilter, ascii85, dictSize, vmreclaim);
-}
-
-
-
-static const char *
-basebasename(const char * const filespec) {
-/*----------------------------------------------------------------------------
-    Return filename up to first period
------------------------------------------------------------------------------*/
-    char const dirsep = '/';
-    const char * const lastSlashPos = strrchr(filespec, dirsep);
-
-    char * name;
-    const char * filename;
-
-    if (lastSlashPos)
-        filename = lastSlashPos + 1;
-    else
-        filename = filespec;
-
-    name = strdup(filename);
-    if (name != NULL) {
-        char * const dotPosition = strchr(name, '.');
-
-        if (dotPosition)
-            *dotPosition = '\0';
-    }
-    return name;
 }
 
 
@@ -1460,6 +1973,11 @@ main(int argc, const char * argv[]) {
     parseCommandLine(argc, argv, &cmdline);
 
     verbose = cmdline.verbose;
+
+    if (cmdline.flate && !progIsFlateCapable())
+        pm_error("This program cannot do flate compression.  "
+                 "(There are other versions of the program that do, "
+                 "though -- it's a build-time option");
 
     ifP = pm_openr(cmdline.inputFileName);
 
@@ -1522,5 +2040,10 @@ main(int argc, const char * argv[]) {
 **
 ** -nocenter option added November 1993 by Wolfgang Stuerzlinger,
 **  wrzl@gup.uni-linz.ac.at.
+**
+** July 2011 afu
+** row convertors rewritten, fast PBM-only row convertor added,
+** rle compression slightly modified, flate compression added
+** ascii85 output end added.
 **
 */

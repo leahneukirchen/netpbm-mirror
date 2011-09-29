@@ -6,6 +6,7 @@
 #ifndef PAM_H
 #define PAM_H
 
+#include <netpbm/pm_config.h>
 #include <netpbm/pm.h>
 #include <netpbm/pnm.h>
 
@@ -108,6 +109,23 @@ struct pam {
            the pointer at *comment_p.  Caller must free it.  NULL means
            libnetpbm does not return comments and does not allocate any
            storage.
+        */
+    int visual;  /* boolean */
+        /* tuple_type is one of the PAM-defined tuple types for visual
+           images ("GRAYSCALE", "RGB_ALPHA", etc.).
+        */
+    unsigned int color_depth;
+        /* Number of color planes (i.e. 'depth', but without transparency).
+           The color planes are the lowest numbered ones.  Meaningless if
+           'visual' is false.
+        */
+    int have_opacity;   /* boolean */
+        /* The tuples have an opacity (transparency, alpha) plane.
+           Meaningless if 'visual' is false.
+        */
+    unsigned int opacity_plane;
+        /* The plane number of the opacity plane;  meaningless if
+           'haveOpacity' is false or 'visual' is false.
         */
 };
 
@@ -273,6 +291,14 @@ pnm_makerowrgb(const struct pam * const pamP,
 void 
 pnm_makearrayrgb(const struct pam * const pamP,
                  tuple **           const tuples);
+
+void
+pnm_makerowrgba(const struct pam * const pamP,
+                tuple *            const tuplerow);
+
+void
+pnm_addopacityrow(const struct pam * const pamP,
+                  tuple *            const tuplerow);
 
 void
 pnm_getopacity(const struct pam * const pamP,

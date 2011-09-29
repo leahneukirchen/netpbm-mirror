@@ -4,38 +4,63 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-11.09.25 BJH  Release 10.55.03
+11.09.28 BJH  Release 10.56.00
 
-              bmptopnm: Fail properly with BMP that indicates an illegal bits
-              per pixel.
+              Add pamexec.  Thanks Michael Pot <fmw@actrix.co.nz>.
 
-              pnmtops: fix message: says "from top edge" where it means
-              "from bottom edge."
+              pbmclean: add -extended.  Idea from kugland@gmail.com.
 
-11.08.27 BJH  Release 10.55.02
+              rasttopnm: add -index.
+
+              pamcomp: Retain opacity information from underlying image.
+
+              pnmtops: Add PBM fast path.  Thanks Prophet of the Way
+              <afu@wta.att.ne.jp>.
+
+              libnetpbm and most programs that use color maps: speedup with
+              new color hash function.  Thanks Prophet of the Way
+              <afu@wta.att.ne.jp>.
+
+              pnmquant: use File::Temp::tempfile() instead of local
+              approximation if it is available.
+
+              pnmquant: work with older Perl that doesn't have 3-argument open.
+              Thanks Slaven Rezic <srezic@iconmobile.com>.
+
+              pamscale: Issue error message instead of ignoring extraneous
+              arguments.
 
               libnetpbm, many programs: fix bug in pm_allocarray(): returns
               NULL when can't get memory.  Calling programs thus crash on
               very large images.  Introduced in 10.51.
               
-11.08.22 BJH  Release 10.55.01
-
-              ppmcie: fix bug: fails with "X coordinate out of range" error.
-              Introduced in 10.51.
-
-              pgmtexture: fix wrong sum variance result.  Wrong since the
-              beginning.  Thanks Francois P. S. Luus <fpsluus@gmail.com>.
-
               pnmtopng: fix bug: with -alpha specifying a mask which contains
               no fully transparent area, output PNG is fully opaque.
               Introduced in 10.29.
 
-              pnmquant: work with older Perl that doesn't have 3-argument open.
+              pnmtops: fix message: says "from top edge" where it means
+              "from bottom edge."
+
+              ppmcie: fix bug: fails with "X coordinate out of range" error.
+              Introduced in 10.51.
+
+              bmptopnm: Fail properly with BMP that indicates an illegal bits
+              per pixel.
+
+              Build: To find libpng, use the Pkgconfig database entry instead
+              of libpng-config if it is available.
+
+              Build: pnmtops: Instead of omitting pnmtops from the build when
+              there is no libz, just omit ability to create flate-compressed
+              output from pnmtops.
 
 11.06.29 BJH  Release 10.55.00
 
               Add pamtosrf, srftopam.  Thanks Mike Frysinger
               (vapier@gentoo.org).
+
+              pgmtexture: fix wrong sum variance result.  Wrong since the
+              beginning.  Thanks Francois P. S. Luus <fpsluus@gmail.com>.
 
               pamrubber: fix crash.  Introduced in 10.54.
 
