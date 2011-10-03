@@ -927,7 +927,7 @@ typedef struct {
            window.  The index order is NOT the order of the rows in the
            image.  E.g. line[0] isn't always the topmost row of the window.
            Rather, the rows are arranged in a cycle and you have to know
-           indpendently where the topmost one is.  E.g. the rows of a 5
+           independently where the topmost one is.  E.g. the rows of a 5
            line window with topmost row at index 3 might be:
 
               line[0] = Row 24
@@ -1058,7 +1058,7 @@ createWeightList(unsigned int          const targetPos,
       10*.022 + 20*.521 + 30*.457 = 24
 
 -----------------------------------------------------------------------------*/
-    /* 'windowCenter', is the continous position within the source of
+    /* 'windowCenter', is the continuous position within the source of
        the center of the window that will influence target pixel
        'targetPos'.  'left' and 'right' are the edges of the window.
        'leftPixel' and 'rightPixel' are the pixel positions of the
@@ -1648,7 +1648,7 @@ horizontalScale(tuplen *     const inputtuplenrow,
                 float        const xscale,
                 float *      const stretchP) {
 /*----------------------------------------------------------------------------
-  Take the input row 'inputtuplenrow', decribed by *inpamP, and scale
+  Take the input row 'inputtuplenrow', described by *inpamP, and scale
   it by a factor of 'xscale', to create the output row 'newtuplenrow',
   described by *outpamP.
 

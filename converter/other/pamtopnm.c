@@ -69,11 +69,11 @@ validateTupleType(struct pam const inpam,
 /*----------------------------------------------------------------------------
    Make sure the image has a tuple type we know how to convert to PNM.
 
-   We're quite liberal, trying to accomodate all sorts of future
+   We're quite liberal, trying to accommodate all sorts of future
    twists on the formats.  If the tuple type _starts with_
    BLACKANDWHITE, GRAYSCALE, or RGB, and has at least as many planes
    as we'd need to convert to PBM, PGM, or PPM, respectively, we
-   accept it.  We thus accomodate variations on these formats that add
+   accept it.  We thus accommodate variations on these formats that add
    planes and add to the right end of the tuple type to explain them.
 
    If Callers specified 'assumeTupleType', we're even more liberal.

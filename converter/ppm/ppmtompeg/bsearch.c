@@ -43,7 +43,7 @@
  * Changed copyrights
  *
  * Revision 1.6  1994/12/07  00:40:36  smoot
- * Added seperate P and B search ranges
+ * Added separate P and B search ranges
  *
  * Revision 1.5  1994/03/15  00:27:11  keving
  * nothing

@@ -175,7 +175,7 @@ typedef struct {
 	/* The number of streams in this list. */
 	int numstreams;
 
-	/* The maximum number of streams that can be accomodated without
+	/* The maximum number of streams that can be accommodated without
 	  growing the streams array. */
 	int maxstreams;
 

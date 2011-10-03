@@ -114,7 +114,7 @@ typedef struct DiskObject_ { /* 78 bytes (including Gadget struct) */
     unsigned char version[2];       /* Object version number */
     unsigned char gadget[44];       /* Copy of in memory gadget (44 by */
     unsigned char type;             /* ??? */
-    unsigned char pad;              /* Pad it out to the next word boundry */
+    unsigned char pad;              /* Pad it out to the next word boundary */
     unsigned char pDefaultTool[4];  /* Pointer  to default tool */
     unsigned char ppToolTypes[4];   /* Pointer pointer to tool types */
     unsigned char currentX[4];      /* Current X position (?) */

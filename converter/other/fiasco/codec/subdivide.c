@@ -289,7 +289,7 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
 			  : rrange.y;
 	 
 	 /* 
-	  *  If neccessary compute the inner products of the new states
+	  *  If necessary compute the inner products of the new states
 	  *  (generated during the recursive approximation of child [0])
 	  */
 	 if (label && rrange.level <= c->options.lc_max_level)

@@ -1406,13 +1406,13 @@ void ppm_to_pchg()
 /*
     read first slice
     build a colormap from this slice
-    select upto <maxcolors> colors
+    select up to <maxcolors> colors
     build colormap from selected colors
     map slice to colormap
     write slice
     while( !finished ) {
         read next slice
-        compute distances for each pixel and select upto
+        compute distances for each pixel and select up to
             <maxchangesperslice> unused colors in this slice
         modify selected colors to the ones with maximum(?) distance
         map slice to colormap

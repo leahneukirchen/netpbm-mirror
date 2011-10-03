@@ -294,7 +294,7 @@ static real_t ip_domain_ortho_vector [MAXSTATES][MAXEDGES];
 static real_t rem_denominator [MAXSTATES];     
 static real_t rem_numerator [MAXSTATES];
 /*
- *  At step n of the orthogonalization the comparitive value
+ *  At step n of the orthogonalization the comparative value
  *  (numerator_i / denominator_i):= <b, o_n>^2 / ||o_n|| ,
  *  is computed for every domain i,
  *  where o_n := s_i - \sum(k = 0, ... , n-1) {(<s_i, o_k> / ||o_k||^2) o_k}
@@ -670,7 +670,7 @@ orthogonalize (unsigned index, unsigned n, unsigned level, real_t min_norm,
     *  for (i = 0, ... , wfa->states)  
     *  <s_i, o_n> := <s_i, v_n> -
     *      \sum (k = 0, ... , n - 1){ <v_n, o_k> <s_i, o_k> / ||o_k||^2}
-    *  Moreover the denominator and numerator parts of the comparitive
+    *  Moreover the denominator and numerator parts of the comparative
     *  value are updated.
     */
    for (domain = 0; domain_blocks [domain] >= 0; domain++) 

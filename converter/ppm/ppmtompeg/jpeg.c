@@ -101,7 +101,7 @@ JMovie2JPEG(const char * const infilename,
     char ofname[256];     /* output filename string */
     int Temp = 0, temp = 0;   /* dummy variables */
     int image_offset = 0;     /* counting variable */
-    /* J_Movie header infomation */
+    /* J_Movie header information */
     int ver_no;           /* version number - expected to be 2 */
     int fps;              /* frame rate - frames per second */
     int no_frames;        /* total number of frames in jmovie */
@@ -500,7 +500,7 @@ ReadJPEG(MpegFrame * const mf,
 
         (void) jpeg_read_raw_data(&cinfo, scanarray, buffer_height);
 
-        /* alter subsample ratio's if neccessary */
+        /* alter subsample ratio's if necessary */
         if ((h_samp[0]==2) && (h_samp[1]==1) && (h_samp[2]==1) &&
             (v_samp[0]==2) && (v_samp[1]==1) && (v_samp[2]==1)) {
             /* we are 4:1:1 as expected by the encoder*/

@@ -133,7 +133,7 @@ Search for your platform name (Solaris, SunOS, NetBSD, Cygwin, BeOS,
 and Tru64 are among those mentioned) to see recommended settings for
 your platform.
 
-If your system is even too exotic to accomodate with settings in
+If your system is even too exotic to accommodate with settings in
 config.mk, you may need to modify things in the main make files
 or pm_config.h.in.
 

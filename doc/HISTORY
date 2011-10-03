@@ -2455,7 +2455,7 @@ not yet  BJH  Release 10.57.00
               rgb.txt: move D65 to the end, so "white" is preferred.
 
               xwdtopnm: change interpretation of bitmap_pad and bitmap_unit
-              to accomodate Xfree86 direct color 24 bit xwd.
+              to accommodate Xfree86 direct color 24 bit xwd.
 
               pbmtextps: fix bug where intermediate file gets truncated.
 
@@ -3025,7 +3025,7 @@ not yet  BJH  Release 10.57.00
 
               pnmtopng: fix -hist option.
 
-              Cygwin build accomodations.  Thanks Charles Wilson 
+              Cygwin build accommodations.  Thanks Charles Wilson 
               <cwilson@ece.gatech.edu>.
 
               Fix ppmtompeg build failure when JPEGLIB = NONE
@@ -3504,7 +3504,7 @@ not yet  BJH  Release 10.57.00
               this.  pnm_readpnmrow() changed to do same.  external data
               symbols like this do not work with Mingw.
          
-              various changes to accomodate Mingw (native Windows)
+              various changes to accommodate Mingw (native Windows)
               and DLLs with Cygwin (Windows).
 
               eyuvtoppm: rewrite.  Uses Netpbm libraries now.
@@ -3876,7 +3876,7 @@ not yet  BJH  Release 10.57.00
 
               stamp-date doesn't rely on whoami.
 
-              Make file fixes to accomodate more install programs.
+              Make file fixes to accommodate more install programs.
          
               Replace tmpnam() with mkstemp().
 
@@ -4473,7 +4473,7 @@ Changes since the comp.sources.misc distribution of 31oct88:
     Moved to the new PNM package: pbmcrop pbmcut pbmenlarge pbminvert.
     Consolidated into a single pnmflip tool: pbmfliplr pbmfliptb pbmtrnspos.
     Consolidated into a single pnmcat tool: pbmcatlr pbmcattb.
-    Added compataliases script for upward compatability with changed tools.
+    Added compataliases script for upward compatibility with changed tools.
     Removed xxxtopbm.
     Added a -headersize flag to macptopbm, to help get around annoying
       problems in MacPaint file format.

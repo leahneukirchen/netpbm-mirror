@@ -849,7 +849,7 @@ parse_long_option(char *   const argv[],
  |
  |                This differs from pm_optParseOptions in that it accepts
  |                long options with just one hyphen and doesn't accept
- |                any short options.  It also has accomodations for 
+ |                any short options.  It also has accommodations for 
  |                future expansion.
  |
  |                Options and arguments used are removed from the argv-
@@ -934,7 +934,7 @@ zero_specified(optEntry opt_table[]) {
  |
  |                This differs from pm_optParseOptions in that it accepts
  |                long options with just one hyphen and doesn't accept
- |                any short options.  It also has accomodations for 
+ |                any short options.  It also has accommodations for 
  |                future expansion.
  |
  |                Options and arguments used are removed from the argv-

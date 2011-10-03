@@ -1,5 +1,5 @@
 /*
- *  misc.c:		Some usefull functions, that don't fit in one of 
+ *  misc.c:		Some useful functions, that don't fit in one of 
  *			the other files and that are needed by at least
  *			two modules. 
  *

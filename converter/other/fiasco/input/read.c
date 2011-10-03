@@ -277,7 +277,7 @@ read_basis (const char *filename, wfa_t *wfa)
     *   string		|MAGIC Number "Wfa"
     *	int		|Number of basis states 'N'
     *	bool_t-array[N]	|use vector in linear combinations,
-    *			|0: don't use vector (auxilliary state)
+    *			|0: don't use vector (auxiliary state)
     *			|1: use vector in linear combinations
     *	float-array[N]	|final distribution of every state
     *

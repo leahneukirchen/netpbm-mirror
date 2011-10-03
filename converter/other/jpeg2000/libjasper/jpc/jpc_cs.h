@@ -188,7 +188,7 @@ typedef struct {
 	/* The tile number. */
 	uint_fast16_t tileno;
 
-	/* The combined length of the marker segment and its auxilary data
+	/* The combined length of the marker segment and its auxiliary data
 	  (i.e., packet data). */
 	uint_fast32_t len;
 

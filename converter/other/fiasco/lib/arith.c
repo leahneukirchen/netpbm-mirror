@@ -90,7 +90,7 @@ encode_symbol (unsigned symbol, arith_t *arith, model_t *model)
  *  The current state of the arithmetic coder is given by 'arith'.
  *  Output bits are appended to the stream 'output'.
  *
- *  The model is updated after encoding the symbol (if neccessary the
+ *  The model is updated after encoding the symbol (if necessary the
  *  symbol counts are rescaled).
  *  
  *  Return value:
@@ -354,7 +354,7 @@ decode_symbol (arith_t *arith, model_t *model)
  *  Decode the next symbol - the state of the arithmetic decoder
  *  is given in 'arith'. Read refinement bits from the stream 'input'
  *  and use the given probability 'model'. Update the probability model after
- *  deconding the symbol (if neccessary also rescale the symbol counts).
+ *  deconding the symbol (if necessary also rescale the symbol counts).
  *  
  *  Return value:
  *	decoded symbol

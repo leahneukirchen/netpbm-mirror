@@ -64,7 +64,7 @@ targetRateControl(MpegFrame * const frameP);
  * MB_RateOut
  *
  *      Prints out sampling of MB rate control data.  Every "nth" block
- *	stats are printed, with "n" controled by global RC_MB_SAMPLE_RATE
+ *	stats are printed, with "n" controlled by global RC_MB_SAMPLE_RATE
  *
  * RETURNS:     nothing
  *===========================================================================*/

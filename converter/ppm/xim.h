@@ -112,7 +112,7 @@ typedef struct XimAsciiHeader {
 /* Note:
 * - All data is in char's in order to maintain easily portability
 *   across machines, and some human readibility.
-* - Images may be stored as pixmaps (8 bits/pixel) or as seperate
+* - Images may be stored as pixmaps (8 bits/pixel) or as separate
 *   red, green, blue channel data (24+ bits/pixel).
 * - An alpha channel is optional and is found after every num_channels
 *   of data.

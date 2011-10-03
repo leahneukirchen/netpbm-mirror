@@ -2543,7 +2543,7 @@ interpretCompressedLine(unsigned char * const linebuf,
   So with 200 being the cutoff, it's actually impossible to represent some 
   16 bpp images with 200 pixels per row.
 
-  We have not been able to find an offical spec for PICT.
+  We have not been able to find an official spec for PICT.
 
   Some day, we may have to make a user option for this.
 */
@@ -3191,7 +3191,7 @@ frameSameRect(struct canvas * const canvasP,
 
 
 
-/* a stupid shell sort - I'm so embarassed  */
+/* a stupid shell sort - I'm so embarrassed  */
 
 static void 
 poly_sort(int const sort_index, struct Point points[]) {

@@ -675,7 +675,7 @@ addEntryToIcon(MS_Ico       const MSIconData,
     * All the icons I found seemed to pad the palette to the max entries
     * for that bitdepth.
     * 
-    * The spec indicates this isn't neccessary, but I'll follow this behaviour
+    * The spec indicates this isn't necessary, but I'll follow this behaviour
     * just in case.
     */
     if (colors < 3) {

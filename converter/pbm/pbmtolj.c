@@ -162,7 +162,7 @@ putinit(struct cmdlineInfo const cmdline) {
     /* Set raster graphics resolution */
     printf("\033*t%dR", cmdline.dpi);
 
-    /* Start raster graphics, relative adressing */
+    /* Start raster graphics, relative addressing */
     printf("\033*r1A");
 
     bitsperitem = 1;

@@ -77,7 +77,7 @@
  *      - Add RotateCrop filter algorithm (in-memory copy of image,
  *        detect least loss horizontal crop on a rotated image).
  *      - pnmstitch should be generalized to handle transformation
- *        occuring on the left image, currently it blends assuming
+ *        occurring on the left image, currently it blends assuming
  *        that there is no transformation effects on the left image.
  *      - user selectable blending algorithms?
  */
@@ -893,7 +893,7 @@ stitchOneRow(Image *    const Left,
      *  We scale the overlap of the left and right images, we need to
      * discover and hold on to the left edge of the right image to
      * determine the rate at which we blend. Most (7/8) of the blending
-     * occurs in the first half of the overlap to reduce the occurences
+     * occurs in the first half of the overlap to reduce the occurrences
      * of blending artifacts. If there is no overlap, the image present
      * has no blending activity, this is determined by the black
      * background and is not through an alpha layer to help reduce
@@ -1393,7 +1393,7 @@ LinearConstrain(Stitcher * me, int x, int y, int width, int height)
  *  width sliver of the left hand side of the right image and compare
  *  the sample to the left hand image. Accuracy is honored over speed.
  *  The image overlap is expected between 7/16 to 1/16 in the horizontal
- *  position, and a minumum of 5/8 in the vertical dimension.
+ *  position, and a minimum of 5/8 in the vertical dimension.
  *
  *  Blind alleys:
  *      - reduced resolution can match in totally wrong regions,
@@ -2071,7 +2071,7 @@ BiLinearConstrain(Stitcher * me, int x, int y, int width, int height)
  *  width sliver of the left hand side of the right image and compare
  *  the sample to the left hand image. Accuracy is honored over speed.
  *  The image overlap is expected between 7/16 to 1/16 in the horizontal
- *  position, and a minumum of 5/8 in the vertical dimension.
+ *  position, and a minimum of 5/8 in the vertical dimension.
  *
  *  Blind alleys:
  *      - Tried a simpler constraint for right side to be `back'

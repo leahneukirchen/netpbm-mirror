@@ -962,7 +962,7 @@ ShowBFMVHistogram(fpointer)
  * Changed copyrights
  *
  * Revision 1.8  1994/12/07  00:40:36  smoot
- * Added seperate P and B search ranges
+ * Added separate P and B search ranges
  *
  * Revision 1.7  1994/11/12  02:09:45  eyhung
  * full pixel bug

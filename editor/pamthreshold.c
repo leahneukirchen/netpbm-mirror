@@ -302,7 +302,7 @@ analyzeDistribution(struct pam *          const inpamP,
         pm_error("Unable to allocate space for %lu-entry histogram",
                  inpamP->maxval+1);
 
-    /* Initialize histogram -- zero occurences of everything */
+    /* Initialize histogram -- zero occurrences of everything */
     for (i = 0; i <= inpamP->maxval; ++i)
         histogram[i] = 0;
 
@@ -376,7 +376,7 @@ computeGlobalThreshold(struct pam *         const inpamP,
    Compute the proper threshold to use for the image described by
    *inpamP, and:
 
-     'histogram' describes the frequency of occurence of the various sample
+     'histogram' describes the frequency of occurrence of the various sample
      values in the image.
 
      'globalRange' describes the range (minimum, maximum) of sample values

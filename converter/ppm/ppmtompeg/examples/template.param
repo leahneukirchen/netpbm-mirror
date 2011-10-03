@@ -18,7 +18,7 @@
 # files in the order in which they must appear, followed by 'END_INPUT'
 #
 # Also, if you use the `command` method of generating input file names,
-# the command will only be executed in the INPUT_DIR if INPUT_DIR preceeds
+# the command will only be executed in the INPUT_DIR if INPUT_DIR precedes
 # the INPUT parameter.
 #
 # <option> MUST be in UPPER CASE

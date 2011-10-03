@@ -189,7 +189,7 @@ addColorOccurrenceToHash(tuple          const color,
          p = p->next);
 
     if (p) {
-        /* It's in the hash; just tally one more occurence */
+        /* It's in the hash; just tally one more occurrence */
         ++p->tupleint.value;
         *fullP = FALSE;
     } else {
@@ -227,7 +227,7 @@ pnm_addtuplefreqoccurrence(struct pam *   const pamP,
          p = p->next);
 
     if (p) {
-        /* It's in the hash; just tally one more occurence */
+        /* It's in the hash; just tally one more occurrence */
         ++p->tupleint.value;
         *firstOccurrenceP = FALSE;
     } else {
