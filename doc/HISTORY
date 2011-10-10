@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+11.10.10 BJH  Release 10.56.01
+
+              pamscale: fix "-pixels must be greater than zero".
+              Thanks Justin Hart (onyxraven@users.sourceforge.net).
+
 11.09.28 BJH  Release 10.56.00
 
               Add pamexec.  Thanks Michael Pot <fmw@actrix.co.nz>.
