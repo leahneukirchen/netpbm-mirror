@@ -710,7 +710,7 @@ parseCommandLine(int argc,
         (xsizeSpec || xscaleSpec || ysizeSpec || yscaleSpec) )
         pm_error("Cannot specify -reduce with other dimension options.");
 
-    if (pixelSpec && pixels == 0)
+    if (pixelsSpec && pixels == 0)
         pm_error("-pixels must be greater than zero");
 
     /* Get the program parameters */

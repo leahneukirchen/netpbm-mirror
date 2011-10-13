@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+11.10.13 BJH  Release 10.56.02
+
+              Build: fix compile failure introduced in 10.56.01.
+
 11.10.10 BJH  Release 10.56.01
 
               pamscale: fix "-pixels must be greater than zero".
