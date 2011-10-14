@@ -42,6 +42,7 @@ LIBOBJECTS_X = \
   util/filename.o \
   util/io.o \
   util/mallocvar.o \
+  util/matrix.o \
   util/nsleep.o \
   util/nstring.o \
   util/shhopt.o \
