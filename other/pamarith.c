@@ -523,7 +523,7 @@ sampleProduct(sample       const operands[],
     double product;
 
     for (i = 0, product = 1.0; i < operandCt; ++i) {
-        product *= ((double)operands[0]/maxval);
+        product *= ((double)operands[i]/maxval);
     }
     return (sample)(product * maxval + 0.5);
 }

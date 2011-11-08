@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+11.11.08 BJH  Release 10.47.32
+
+              pamarith: fix wrong result with -multiply.  Broken in 10.41.
+
 11.09.25 BJH  Release 10.47.31
 
               bmptopnm: Fail properly with BMP that indicates an illegal bits
@@ -11,6 +15,7 @@ CHANGE HISTORY
 
               pnmtops: fix message: says "from top edge" where it means
               "from bottom edge."
+11.09.28 BJH  Release 10.56.00
 
 11.08.22 BJH  Release 10.47.30
 
