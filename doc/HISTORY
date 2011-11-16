@@ -8,6 +8,8 @@ not yet  BJH  Release 10.57.00
 
               pnmnorm: add -midvalue, -middle .
 
+              pngtopam: fix crash with invalid tIME chunk.  Always broken.
+
               pamarith: fix wrong result with -multiply.  Broken in 10.41.
 
 11.09.28 BJH  Release 10.56.00
