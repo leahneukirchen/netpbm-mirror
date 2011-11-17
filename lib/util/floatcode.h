@@ -163,7 +163,7 @@ pm_bigendDoubleFromDouble(double const arg) {
     } break;
     case LITTLE_ENDIAN: {
         union {
-            unsigned char bytes[4];
+            unsigned char bytes[8];
             double native;
         } converter;
 
