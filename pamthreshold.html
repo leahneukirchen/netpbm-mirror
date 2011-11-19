@@ -66,9 +66,9 @@ gray.  <B>pamditherbw</B> does dithering.
 
 <H2 id="options">OPTIONS</H2>
 
-<p>Without any options, <b>pamthreshold</b> uses an iterative
-algorithm found in the <a
-href="http://www.wikipedia.org/">wikipedia</a> article
+<p>Without any options, <b>pamthreshold</b> uses a method based on the
+iterative algorithm found in
+the <a href="http://www.wikipedia.org/">wikipedia</a> article
 <a href="http://en.wikipedia.org/wiki/Thresholding_%28image_processing%29">
 <i>Thresholding (image processing)</i></a> to compute the thresholding
 value.  (<a
@@ -79,6 +79,9 @@ This should work well for most images.  The program issues a message
 telling you what threshold it used.  (Netpbm messages go to Standard
 Error, and you can turn them off with the Netpbm common option
 <b>-quiet</b>).
+
+<p>Options <b>-simple</b>, <b>-local</b>, and <b>-dual</b> select other
+methods.
 
 <DL COMPACT>
 
@@ -117,7 +120,9 @@ the Netpbm sample values, where 0 corresponds to black and 1 to the maxval of
 the image.
 
 <p>If you don't specify this option, <b>pamthreshold</b> uses a threshold
-of 0.5.  Without <b>-simple</b> or <b>-local</b> this option is
+of 0.5.
+
+<p>Without <b>-simple</b>, <b>-local</b>, or <b>-dual</b>, this option is
 meaningless.
 
 <p>The meaning of the threshold depends upon the kind of thresholding
