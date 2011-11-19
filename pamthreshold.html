@@ -95,11 +95,11 @@ determines the thresholding value first.
 <dt><b>-local=</b><i>width</i><b>x</b><i>height</i></dt>
 
 <dd>This selects local adaptive thresholding (also known as dynamic
-thresholding) using the neighborhood of <i>width</i> and <i>height</i>
-around every pixel.  <b>pamthreshold</b> computes the threshold
-individually for each pixel of the image.  This can accommodate
-changing lighting conditions in the image.  Depending on the size of
-the neighborhood this can be quite slow.
+thresholding) using the neighborhood which is the square <i>width</i> pixels
+wide and <i>height</i> pixels high centered on the pixel in question.
+<b>pamthreshold</b> computes the threshold individually for each pixel of the
+image.  This can accommodate changing lighting conditions in the image.
+Depending on the size of the neighborhood this can be quite slow.
 
 <dt><b>-dual=</b><i>width</i><b>x</b><i>height</i></dt>
 

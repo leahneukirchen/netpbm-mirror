@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pbmclean User Manual</TITLE></HEAD>
 <BODY>
 <H1>pbmclean</H1>
-Updated: 28 August 2011
+Updated: 19 November 2011
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -36,21 +36,35 @@ images.
 
 <p>There are two ways <b>pbmclean</b> can define &quot;isolated&quot; pixels:
 simple and extended.  When you specify <b>-extended</b>, <b>pbmclean</b>
-uses basic; otherwise it uses extended.
+uses extended; otherwise it uses basic.
 
 <h3 id="basic"></h3>
 
 <P>In basic mode, <B>pbmclean</B> looks at each pixel individually, and any
 pixel that doesn't have at least a minimum number of pixels of the same color
-touching it is considered isolated.  E.g. if the minimum is two and there are
-two contiguous black pixels in an otherwise white field, each of those pixel
-is isolated.
+touching it is considered isolated and <b>pbmclean</b> erases it.
 
 <p>The <b>-minneighbors</b> option specifies the minimum number of neighboring
 pixels of the same color for a pixel <em>not</em> to be considered
 isolated.
 
-<P>The default is 1 pixel -- only completely isolated pixels are flipped.
+<p>For example, if <b>-minneighbors</b> is two and there are two contiguous
+black pixels in an otherwise white field, each of those pixels is isolated,
+so <b>pbmclean</b> erases them - turns both white.
+
+<p>But it isn't that simple, because as <b>pbmclean</b> progresses, its having
+erased a pixel may make another pixel isolated that isn't isolated in the
+original image.  Consider a straight vertical line of 4 pixels, with
+<b>-minneigbors</b> of two.  <b>pbmclean</b> considers the top pixel first, and
+finding that it has only one neighbor (the pixel below it), erases it.  The it
+considers the second pixel, and erases it for the same reason, even though it
+has two neighbors in the original image.  In this way, <b>pbmclean</b>
+ultimately erases the entire line.  Because of this weirdness, you probably
+don't want <b>-minneighbors</b> greater than one.  But you may want to run
+<b>pbmclean</b> multiple times with <b>-minneighbors</b> of one.
+
+<P>The default minimum 1 pixel &mdash; <b>pbmclean</b> flips only completely
+isolated pixels.
 
 <P>(A <b>-minneighbors</b> value greater than 8 generates a completely
 inverted image (but use <B>pnminvert</B> to do that) -- or a
@@ -74,7 +88,7 @@ the foreground color.  The minimum number of pixels is one plus
 the <b>-minneighbors</b> value.  You specify the foreground color with
 <b>-black</b> and <b>-white</b> (default is black).
 
-<p>For example, if <b>minneighbors</b> is 2 and the foreground color is
+<p>For example, if <b>-minneighbors</b> is 2 and the foreground color is
 black, and the image contains a straight line 4 pixels long, <b>pbmclean</b>
 erases that -- turns all four pixels white.  <b>pbmclean</b> also erases
 4 pixels in a square or L-shape.
