@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+11.11.22 BJH  Release 10.47.33
+
+              pngtopam, pngtopnm: fix crash with invalid tIME chunk.  Always
+              broken.
+
 11.11.08 BJH  Release 10.47.32
 
               pamarith: fix wrong result with -multiply.  Broken in 10.41.

@@ -305,6 +305,13 @@ static void show_time (png_info *info_ptr)
     };
 
   if (info_ptr->valid & PNG_INFO_tIME) {
+    if (info_ptr->mod_time.month < 1 ||
+      info_ptr->mod_time.month >= ARRAY_SIZE(month)) {
+      pm_message("tIME chunk in PNG input is invalid; "
+                 "modification time of image is unknown.  "
+                 "The month value, which should be in the range "
+                 "1-12, is %u", info_ptr->mod_time.month);
+    } else
     pm_message ("modification time: %02d %s %d %02d:%02d:%02d",
                 info_ptr->mod_time.day, month[info_ptr->mod_time.month],
                 info_ptr->mod_time.year, info_ptr->mod_time.hour,
