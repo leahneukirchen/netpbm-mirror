@@ -573,13 +573,20 @@ showTime(struct pngx * const pngxP) {
             "July", "August", "September", "October", "November", "December"
         };
 
-        pm_message("modification time: %02d %s %d %02d:%02d:%02d",
-                   modTime.day,
-                   month[modTime.month],
-                   modTime.year,
-                   modTime.hour,
-                   modTime.minute,
-                   modTime.second);
+        if (modTime.month < 1 || modTime.month >= ARRAY_SIZE(month)) {
+            pm_message("tIME chunk in PNG input is invalid; "
+                       "modification time of image is unknown.  "
+                       "The month value, which should be in the range "
+                       "1-12, is %u", modTime.month);
+        } else {
+            pm_message("modification time: %02d %s %d %02d:%02d:%02d",
+                       modTime.day,
+                       month[modTime.month],
+                       modTime.year,
+                       modTime.hour,
+                       modTime.minute,
+                       modTime.second);
+        }
     }
 }
 
