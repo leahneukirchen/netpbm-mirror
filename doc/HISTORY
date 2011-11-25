@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+11.11.25 BJH  Release 10.35.83
+
+              pngtopnm: fix crash with invalid tIME chunk.  Always broken.
+
 11.09.25 BJH  Release 10.35.82
 
               pnmtopng: fix bug: with -alpha specifying a mask which contains
