@@ -12,6 +12,8 @@ not yet  BJH  Release 10.57.00
 
               pamarith: fix wrong result with -multiply.  Broken in 10.41.
 
+              Build: don't use <alloca.h>.
+
 11.09.28 BJH  Release 10.56.00
 
               Add pamexec.  Thanks Michael Pot <fmw@actrix.co.nz>.
