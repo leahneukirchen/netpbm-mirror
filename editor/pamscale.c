@@ -1357,7 +1357,6 @@ generateOutputTuple(const struct pam * const pamP,
 
         if (haveOpacity && plane != opacityPlane) {
             if (accum[opacityPlane] < EPSILON) {
-                assert(accum[plane] < EPSILON);
                 opacityAdjustedSample = 0.0;
             } else 
                 opacityAdjustedSample = accum[plane] / accum[opacityPlane];
