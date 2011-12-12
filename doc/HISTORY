@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+11.11.12 BJH  Release 10.56.05
+
+              pamscale: fix all black output with resampling.  Always broken.
+
+              Build: don't use <alloca.h>.
+
 11.11.22 BJH  Release 10.56.04
 
               pngtopam: fix crash with invalid tIME chunk.  Always broken.

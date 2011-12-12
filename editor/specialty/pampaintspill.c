@@ -42,7 +42,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-#include <alloca.h>
 #include <time.h>
 
 #include "mallocvar.h"
