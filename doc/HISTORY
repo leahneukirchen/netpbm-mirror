@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+11.12.12 BJH  Release 10.47.34
+
+              pamscale: fix all black output with resampling.  Always broken.
+
 11.11.22 BJH  Release 10.47.33
 
               pngtopam, pngtopnm: fix crash with invalid tIME chunk.  Always

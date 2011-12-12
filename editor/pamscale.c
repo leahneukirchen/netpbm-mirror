@@ -917,8 +917,8 @@ appendWeight(WLIST * const WList,
 
 
 static sample
-floatToSample(double const value,
-              sample const maxval) {
+unnormalize(double const normalized,
+            sample const maxval) {
 
     /* Take care here, the conversion of any floating point value <=
        -1.0 to an unsigned type is _undefined_.  See ISO 9899:1999
@@ -929,7 +929,7 @@ floatToSample(double const value,
        weights.  
     */
 
-    return MIN(maxval, (sample)(MAX(0.0, (value + 0.5))));
+    return MIN(maxval, (sample)(MAX(0.0, (normalized*maxval + 0.5))));
 }
 
 
@@ -1262,8 +1262,9 @@ addInPixel(const struct pam * const pamP,
            unsigned int       const opacityPlane,
            double *           const accum) {
 /*----------------------------------------------------------------------------
-  Add into *accum the values from the tuple 'tuple', weighted by
-  'weight'.
+  Add into accum[] the values from the tuple 'tuple', weighted by 'weight'.
+
+  accum[P] is the accumulated normalized sample value for Plane P.
 
   Iff 'haveOpacity', Plane 'opacityPlane' of the tuple is an opacity
   (alpha, transparency) plane.
@@ -1271,18 +1272,15 @@ addInPixel(const struct pam * const pamP,
     unsigned int plane;
 
     for (plane = 0; plane < pamP->depth; ++plane) {
-        sample adjustedForOpacity;
+        double const normalizedSample = (double)tuple[plane]/pamP->maxval;
+        double opacityAdjustment;
         
-        if (haveOpacity && plane != opacityPlane) {
-            float const opacity = (float)tuple[opacityPlane]/pamP->maxval;
-            float const unadjusted = (float)tuple[plane]/pamP->maxval;
-
-            adjustedForOpacity = 
-                floatToSample(unadjusted * opacity, pamP->maxval);
-        } else
-            adjustedForOpacity = tuple[plane];
+        if (haveOpacity && plane != opacityPlane)
+            opacityAdjustment = (double)tuple[opacityPlane]/pamP->maxval;
+        else
+            opacityAdjustment = 1;
         
-        accum[plane] += (double)adjustedForOpacity * weight;
+        accum[plane] += opacityAdjustment * normalizedSample * weight;
     }
 }
 
@@ -1298,22 +1296,23 @@ generateOutputTuple(const struct pam * const pamP,
   Convert the values accum[] accumulated for a pixel by
   outputOneResampledRow() to a bona fide PAM tuple as *tupleP,
   as described by *pamP.
+
+  accum[P] is the pixel's plane P value normalized (i.e. in range 0..1).
 -----------------------------------------------------------------------------*/
     unsigned int plane;
 
     for (plane = 0; plane < pamP->depth; ++plane) {
-        float opacityAdjustedSample;
+        float opacityAdjustedSample;  /* normalized sample value */
 
         if (haveOpacity && plane != opacityPlane) {
             if (accum[opacityPlane] < EPSILON) {
-                assert(accum[plane] < EPSILON);
                 opacityAdjustedSample = 0.0;
             } else 
                 opacityAdjustedSample = accum[plane] / accum[opacityPlane];
         } else
             opacityAdjustedSample = accum[plane];
 
-        (*tupleP)[plane] = floatToSample(opacityAdjustedSample, pamP->maxval);
+        (*tupleP)[plane] = unnormalize(opacityAdjustedSample, pamP->maxval);
     }
 }
 
@@ -1337,7 +1336,7 @@ outputOneResampledRow(const struct pam * const outpamP,
 
    'line' and 'accum' are just working space that Caller provides us
    with to save us the time of allocating it.  'line' is at least big
-   enough to hold an output row; 'weight' is at least outpamP->depth
+   enough to hold an output row; 'accum' is at least outpamP->depth
    big.
 -----------------------------------------------------------------------------*/
     unsigned int col;
@@ -1346,6 +1345,11 @@ outputOneResampledRow(const struct pam * const outpamP,
     unsigned int opacityPlane;  /* Plane number of opacity plane, if any */
 
     pnm_getopacity(outpamP, &haveOpacity, &opacityPlane);
+
+    /* We accumulate intensity in accum[], where accum[P] is the intensity
+       for Plane P.  These are normalized values (i.e. in the range
+       0..1
+    */
 
     for (col = 0; col < outpamP->width; ++col) {
         WLIST const XW = XWeight[col];
@@ -1477,9 +1481,9 @@ resample(struct pam *     const inpamP,
     unsigned int maxRowWeights;
 
     tuple * line;
-        /* This is just work space for outputOneSampleRow() */
+        /* This is just work space for outputOneResampledRow() */
     double * weight;
-        /* This is just work space for outputOneSampleRow() */
+        /* This is just work space for outputOneResampledRow() */
 
     if (linear)
         pm_error("You cannot use the resampling scaling method on "
