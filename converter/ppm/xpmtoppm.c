@@ -338,8 +338,8 @@ interpretXpm3ColorTableLine(char           const line[],
                              "'%s' before '%s'.", line, str2);
                 if (!lastwaskey) 
                     strcat(curbuf, " ");		/* append space */
-                if ( (strncmp(str2, "None", 4) == 0) 
-                     || (strncmp(str2, "none", 4) == 0) ) {
+                if ( (strneq(str2, "None", 4)) 
+                     || (strneq(str2, "none", 4)) ) {
                     /* This entry identifies the transparent color number */
                     strcat(curbuf, "#000000");  /* Make it black */
                     isTransparent = TRUE;
@@ -428,13 +428,13 @@ readXpm3Header(FILE *          const stream,
 
     /* Read the XPM signature comment */
     getline(line, sizeof(line), stream);
-    if (strncmp(line, xpm3_signature, strlen(xpm3_signature)) != 0) 
+    if (!strneq(line, xpm3_signature, strlen(xpm3_signature))) 
         pm_error("Apparent XPM 3 file does not start with '/* XPM */'.  "
                  "First line is '%s'", xpm3_signature);
 
     /* Read the assignment line */
     getline(line, sizeof(line), stream);
-    if (strncmp(line, "static char", 11) != 0)
+    if (!strneq(line, "static char", 11))
         pm_error("Cannot find data structure declaration.  Expected a "
                  "line starting with 'static char', but found the line "
                  "'%s'.", line);
@@ -442,7 +442,7 @@ readXpm3Header(FILE *          const stream,
 	/* Read the hints line */
     getline(line, sizeof(line), stream);
     /* skip the comment line if any */
-    if (!strncmp(line, "/*", 2)) {
+    if (strneq(line, "/*", 2)) {
         while (!strstr(line, "*/"))
             getline(line, sizeof(line), stream);
         getline(line, sizeof(line), stream);
@@ -481,7 +481,7 @@ readXpm3Header(FILE *          const stream,
         for (seqNum = 0; seqNum < nColors; ++seqNum) {
             getline(line, sizeof(line), stream);
             /* skip the comment line if any */
-            if (!strncmp(line, "/*", 2))
+            if (strneq(line, "/*", 2))
                 getline(line, sizeof(line), stream);
             
             interpretXpm3ColorTableLine(line, seqNum, charsPerPixel,
@@ -549,7 +549,7 @@ readXpm1Header(FILE *          const stream,
                 gotPixel = TRUE;
                 *charsPerPixelP = v;
             }
-        } else if (!strncmp(line, "static char", 11)) {
+        } else if (strneq(line, "static char", 11)) {
             if ((t1 = strrchr(line, '_')) == NULL)
                 t1 = line;
             else
@@ -578,10 +578,10 @@ readXpm1Header(FILE *          const stream,
         pm_message("WARNING: > 2 characters per pixel uses a lot of memory");
 
     /* If there's a monochrome color table, skip it. */
-    if (!strncmp(t1, "mono", 4)) {
+    if (strneq(t1, "mono", 4)) {
         for (;;) {
             getline(line, sizeof(line), stream);
-            if (!strncmp(line, "static char", 11))
+            if (strneq(line, "static char", 11))
                 break;
         }
     }
@@ -640,7 +640,7 @@ readXpm1Header(FILE *          const stream,
     */
     for (;;) {
         getline(line, sizeof(line), stream);
-        if (strncmp(line, "static char", 11) == 0)
+        if (strneq(line, "static char", 11))
             break;
     }
 }
@@ -749,7 +749,7 @@ ReadXPMFile(FILE * const stream, int * const widthP, int * const heightP,
     backup = TRUE;  /* back up so next read reads this line again */
     
     rc = sscanf(line, "/* %s */", str1);
-    if (rc == 1 && strncmp(str1, "XPM", 3) == 0) {
+    if (rc == 1 && strneq(str1, "XPM", 3)) {
         /* It's an XPM version 3 file */
         readXpm3Header(stream, widthP, heightP, &charsPerPixel,
                        &ncolors, colorsP, &ptab, transparentP);
@@ -768,7 +768,7 @@ ReadXPMFile(FILE * const stream, int * const widthP, int * const heightP,
 	getline(line, sizeof(line), stream); 
         /* read next line (first line may not always start with comment) */
     while (cursor <= maxcursor) {
-        if (strncmp(line, "/*", 2) == 0) {
+        if (strneq(line, "/*", 2)) {
             /* It's a comment.  Ignore it. */
         } else {
             interpretXpmLine(line, charsPerPixel, 
