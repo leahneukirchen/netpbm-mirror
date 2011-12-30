@@ -13,7 +13,7 @@
 /*
   Most icon images are monochrome: Depth=1
   Depth=8 images are extremely rare.  At least some of these are color
-  images but we can't tell the pallete color order.
+  images but we can't tell the palette color order.
   Output will be in pgm.  Convert to ppm with pgmtoppm or pamlookup
   if necessary.
 */

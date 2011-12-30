@@ -2330,7 +2330,7 @@ static size_t decode_pscd(struct jbg_dec_state *s, unsigned char *data,
  * cases the remaining len - *cnt bytes of the previous block will
  * have to passed to this function again (if len > *cnt). In case of
  * any other return value than JBG_EOK, JBG_EOK_INTR or JBG_EAGAIN, a
- * serious problem has occured and the only function you should call
+ * serious problem has occurred and the only function you should call
  * is jbg_dec_free() in order to remove the mess (and probably
  * jbg_strerror() in order to find out what to tell the user).
  */

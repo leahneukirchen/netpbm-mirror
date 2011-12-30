@@ -13,6 +13,7 @@ UTILOBJECTS = \
   filename.o \
   io.o \
   mallocvar.o \
+  matrix.o \
   nsleep.o \
   nstring.o \
   shhopt.o \

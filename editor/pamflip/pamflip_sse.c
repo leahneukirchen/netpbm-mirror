@@ -4,7 +4,7 @@
   This is part of the Pamflip program.  It contains code that exploits
   the SSE facility of some CPUs.
 
-  This code was orginally written by Akira Urushibata ("Douso") in 2010 and is
+  This code was originally written by Akira Urushibata ("Douso") in 2010 and is
   contributed to the public domain by all authors.
 
   The author makes the following request (which is not a reservation of legal

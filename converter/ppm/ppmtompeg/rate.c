@@ -595,7 +595,7 @@ updateRateControl(int const type) {
  * MB_RateOut
  *
  *      Prints out sampling of MB rate control data.  Every "nth" block
- *	stats are printed, with "n" controled by global RC_MB_SAMPLE_RATE
+ *	stats are printed, with "n" controlled by global RC_MB_SAMPLE_RATE
  *	(NB. "skipped" blocks do not go through this function and thus do not
  *		show up in the sample )
  *

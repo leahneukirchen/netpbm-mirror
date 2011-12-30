@@ -234,7 +234,7 @@ dealWithSubprocess(const char *  const file_name,
  *  will return a pointer to stdin or stdout depending on the mode.
  *    If the user specifies a non-null file name and an I/O error occurs
  *  when trying to open the file, rle_open_f will terminate execution with
- *  an appropiate error message.
+ *  an appropriate error message.
  *
  *  parameters
  *   input:

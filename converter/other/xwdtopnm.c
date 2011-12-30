@@ -837,7 +837,7 @@ typedef struct {
 
            'nBitsLeft' tells how many bits are in the buffer now.  It's
            zero when nothing has ever been read from the file.  Only
-           the least signficant 'nBitsLeft' bits are meaningful.
+           the least significant 'nBitsLeft' bits are meaningful.
 
            The numeric value of the member is the number whose pure
            binary representation is the bit string in the buffer.
@@ -974,7 +974,7 @@ readItem(pixelReader * const rdrP) {
 
 static unsigned long const lsbmask[] = {
 /*----------------------------------------------------------------------------
-   lsbmask[i] is the mask you use to select the i least signficant bits
+   lsbmask[i] is the mask you use to select the i least significant bits
    of a bit string.
 -----------------------------------------------------------------------------*/
     0x00000000,

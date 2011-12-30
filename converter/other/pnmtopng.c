@@ -1643,7 +1643,7 @@ makeOneColorTransparentInPalette(xel            const transColor,
         *transSizeP = 1;
         if (verbose) {
             pixel const p = palette_pnm[0];
-            pm_message("Making all occurences of color (%u, %u, %u) "
+            pm_message("Making all occurrences of color (%u, %u, %u) "
                        "transparent.",
                        PPM_GETR(p), PPM_GETG(p), PPM_GETB(p));
         }

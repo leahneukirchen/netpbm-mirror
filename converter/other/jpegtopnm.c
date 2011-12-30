@@ -22,7 +22,7 @@
     Extend pamtoppm to convert this to ppm using the standard
     transformation.
 
-    See if additional decompressor options effects signficant speedup.
+    See if additional decompressor options effects significant speedup.
     grayscale output of color image, downscaling, color quantization, and
     dithering are possibilities.  Djpeg's man page says they make it faster.
 

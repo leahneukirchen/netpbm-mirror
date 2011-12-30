@@ -9,7 +9,7 @@
 ** documentation.  This software is provided "as is" without express or
 ** implied warranty.
 **
-** Modified by Mark Thompson on 10/4/90 to accomodate 24-bit IFF files
+** Modified by Mark Thompson on 10/4/90 to accommodate 24-bit IFF files
 ** as used by ASDG, NewTek, etc.
 **
 ** Modified by Ingo Wilken (Ingo.Wilken@informatik.uni-oldenburg.de)

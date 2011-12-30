@@ -208,7 +208,7 @@ ReadImageChannel(FILE *         const infp,
             }
             marker += i;
         }
-        /* return to the begining of the next image's bufffer */
+        /* return to the beginning of the next image's bufffer */
         if (fseek(infp, marker, 0) == -1) {
             pm_message("ReadImageChannel: can't fseek to location in image buffer" );
             return(0);

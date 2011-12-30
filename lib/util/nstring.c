@@ -113,6 +113,10 @@
  */
 
 
+#define _GNU_SOURCE
+   /* Due to conditional compilation, this is GNU source only if the C library
+      is GNU.
+   */
 #define PORTABLE_SNPRINTF_VERSION_MAJOR 2
 #define PORTABLE_SNPRINTF_VERSION_MINOR 2
 
@@ -129,6 +133,12 @@
 #include "pm_c_util.h"
 
 #include "nstring.h"
+
+#if (defined(__GLIBC__) || defined(__GNU_LIBRARY__))
+  #define HAVE_VASPRINTF 1
+#else
+  #define HAVE_VASPRINTF 0
+#endif
 
 #ifdef isdigit
 #undef isdigit
@@ -745,26 +755,30 @@ pm_asprintf(const char ** const resultP,
             const char *  const fmt, 
             ...) {
 
+    const char * result;
     va_list varargs;
     
+#if HAVE_VASPRINTF
+    va_start(varargs, fmt);
+    vasprintf((char **)&result, fmt, varargs);
+    va_end(varargs);
+#else
     size_t dryRunLen;
     
     va_start(varargs, fmt);
-    
+
     pm_vsnprintf(NULL, 0, fmt, varargs, &dryRunLen);
 
     va_end(varargs);
 
     if (dryRunLen + 1 < dryRunLen)
         /* arithmetic overflow */
-        *resultP = pm_strsol;
+        result = NULL;
     else {
         size_t const allocSize = dryRunLen + 1;
         char * result;
         result = malloc(allocSize);
-        if (result == NULL)
-            *resultP = pm_strsol;
-        else {
+        if (result != NULL) {
             va_list varargs;
             size_t realLen;
 
@@ -774,10 +788,14 @@ pm_asprintf(const char ** const resultP,
                 
             assert(realLen == dryRunLen);
             va_end(varargs);
-
-            *resultP = result;
         }
     }
+#endif
+
+    if (result == NULL)
+        *resultP = pm_strsol;
+    else
+        *resultP = result;
 }
 
 

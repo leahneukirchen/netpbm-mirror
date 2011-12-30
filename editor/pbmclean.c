@@ -276,7 +276,7 @@ cleanrow(const bit *    const prevrow,
          unsigned int * const nFlippedP) {
 /* ----------------------------------------------------------------------
   Work through row, scanning for bits that require flipping, and write
-  the results to outrow.
+  the results to 'outrow'.
   
   Returns the number of bits flipped within this one row as *nFlippedP.
 -------------------------------------------------------------------------*/
@@ -328,6 +328,52 @@ cleanrow(const bit *    const prevrow,
 
 
 static void
+setupInputBuffers(FILE *       const ifP,
+                  unsigned int const cols,
+                  int          const format,
+                  bit ***      const bufferP,
+                  bit **       const edgeRowP,
+                  bit **       const thisRowP,
+                  bit **       const nextRowP) {
+/*----------------------------------------------------------------------------
+  Initialize input buffers.
+  We add a margin of 8 bits each on the left and right of the rows.
+
+  On the top and bottom of the image we place an imaginary blank row
+  ("edgerow") to facilitate the process.
+-----------------------------------------------------------------------------*/
+    bit ** const buffer  = pbm_allocarray_packed(cols+16, 3);
+    bit *  const edgeRow = pbm_allocrow_packed(cols+16);
+
+    bit * nextRow;
+    unsigned int i;
+
+    for (i = 0; i < pbm_packed_bytes(cols+16); ++i)
+        edgeRow[i] = 0x00;
+        
+    for (i = 0; i < 3; ++i) {
+        /* Add blank (all white) bytes beside the edges */ 
+        buffer[i][0] = buffer[i][ pbm_packed_bytes( cols +16 ) - 1] = 0x00;
+    }
+    nextRow = &buffer[0][1];
+
+    /* Read the top line into nextrow and clean the right end. */
+
+    pbm_readpbmrow_packed(ifP, nextRow, cols, format);
+
+    if (cols % 8 > 0){
+        nextRow[pbm_packed_bytes(cols) -1 ] >>= (8 - cols % 8);
+        nextRow[pbm_packed_bytes(cols) -1 ] <<= (8 - cols % 8);
+    }
+    *bufferP  = buffer;
+    *edgeRowP = edgeRow;
+    *thisRowP = &edgeRow[1];
+    *nextRowP = nextRow;
+}
+
+
+
+static void
 cleanSimple(FILE *             const ifP,
             FILE *             const ofP,
             struct cmdlineInfo const cmdline,
@@ -337,49 +383,24 @@ cleanSimple(FILE *             const ifP,
    pixels of a subject pixel to determine whether to erase that pixel.
 -----------------------------------------------------------------------------*/
     bit ** buffer;
-    bit * prevrow;
-    bit * thisrow;
-    bit * nextrow;
-    bit * outrow;
-    bit * edgerow;
+        /* The rows of the input relevant to our current processing:
+           the current row and the one above and below it.
+        */
+    bit * edgeRow;
+        /* A blank (all white) row.  Constant */
+    bit * prevRow;
+    bit * thisRow;
+    bit * nextRow;
+    bit * outRow;
     int cols, rows, format;
     unsigned int row;
 
     pbm_readpbminit(ifP, &cols, &rows, &format);
 
-    /* Initialize input buffers.
-       We add a margin of 8 bits each on the left and right of the rows.
+    setupInputBuffers(ifP, cols, format, &buffer, &edgeRow,
+                      &thisRow, &nextRow);
 
-       On the top and bottom of the image we place an imaginary blank row
-       ("edgerow") to facilitate the process.
-    */
-    {
-        unsigned int i;
-
-        buffer  = pbm_allocarray_packed(cols+16, 3);
-        edgerow = pbm_allocrow_packed(cols+16);
-
-        for (i = 0; i < pbm_packed_bytes(cols+16); ++i)
-            edgerow[i] = 0x00;
-        
-        for (i = 0; i < 3; ++i) {
-            /* Add blank (all white) bytes beside the edges */ 
-            buffer[i][0] = buffer[i][ pbm_packed_bytes( cols +16 ) - 1] = 0x00;
-        }
-        thisrow = &edgerow[1];
-        nextrow = &buffer[0][1];
-
-        /* Read the top line into nextrow and clean the right end. */
-
-        pbm_readpbmrow_packed(ifP, nextrow, cols, format);
-
-        if (cols % 8 > 0){
-            nextrow[pbm_packed_bytes(cols) -1 ] >>= (8 - cols % 8);
-            nextrow[pbm_packed_bytes(cols) -1 ] <<= (8 - cols % 8);
-        }
-    }
-
-    outrow = pbm_allocrow(cols);
+    outRow = pbm_allocrow(cols);
 
     pbm_writepbminit(ofP, cols, rows, 0) ;
 
@@ -388,33 +409,33 @@ cleanSimple(FILE *             const ifP,
     for (row = 0; row < rows; ++row) {
         unsigned int nFlipped;
 
-        prevrow = thisrow;  /* Slide up the input row window */
-        thisrow = nextrow;
+        prevRow = thisRow;  /* Slide up the input row window */
+        thisRow = nextRow;
         if (row < rows -1){
-            nextrow = &buffer[(row+1)%3][1];
+            nextRow = &buffer[(row+1)%3][1];
             /* We take the address directly instead of shuffling the rows
                with the help of a temporary.  This provision is for proper 
                handling of the initial edgerow.
             */
-            pbm_readpbmrow_packed(ifP, nextrow, cols, format);
+            pbm_readpbmrow_packed(ifP, nextRow, cols, format);
             if (cols % 8 > 0){
-                nextrow[pbm_packed_bytes(cols) -1 ] >>= (8 - cols % 8);
-                nextrow[pbm_packed_bytes(cols) -1 ] <<= (8 - cols % 8);
+                nextRow[pbm_packed_bytes(cols) -1 ] >>= (8 - cols % 8);
+                nextRow[pbm_packed_bytes(cols) -1 ] <<= (8 - cols % 8);
             }
         } else  /* Bottom of image.  */
-            nextrow = & edgerow[1];
+            nextRow = &edgeRow[1];
 
-        cleanrow(prevrow, thisrow, nextrow, outrow, cols, cmdline.minneighbors,
+        cleanrow(prevRow, thisRow, nextRow, outRow, cols, cmdline.minneighbors,
                  cmdline.flipWhite, cmdline.flipBlack, &nFlipped);
         
         *nFlippedP += nFlipped;
 
-        pbm_writepbmrow_packed(ofP, outrow, cols, 0) ;
+        pbm_writepbmrow_packed(ofP, outRow, cols, 0) ;
     }
 
     pbm_freearray(buffer, 3);
-    pbm_freerow(edgerow);
-    pbm_freerow(outrow);
+    pbm_freerow(edgeRow);
+    pbm_freerow(outRow);
 }
 
 
@@ -491,7 +512,9 @@ pixQueue_push(PixQueue *    const queueP,
 
 static pm_pixelcoord
 pixQueue_pop(PixQueue * const queueP) {
-
+/*----------------------------------------------------------------------------
+   Pop and return the pixel location at the head of queue *queueP.
+-----------------------------------------------------------------------------*/
     struct PixQueueElt * const newHeadP = queueP->headP->nextP;
 
     pm_pixelcoord retval;
@@ -581,7 +604,10 @@ static void
 setColor(PixQueue * const blobP,
          bit **     const pixels,
          bit        const newColor) {
-
+/*----------------------------------------------------------------------------
+   Change all the pixels in (blobP) to 'newColor'.  More precisely, change
+   the pixels in 'pixels' that are listed in *blobP.
+-----------------------------------------------------------------------------*/
     while (!pixQueue_isEmpty(blobP)) {
         pm_pixelcoord const thisPix = pixQueue_pop(blobP);
 
@@ -602,7 +628,8 @@ processBlob(pm_pixelcoord const start,
 /*----------------------------------------------------------------------------
    Process the blob that contains the pixel at 'start'.
 
-   That pixel is part of a blob.
+   That pixel is part of a blob.  A blob is a maximal set of contiguous
+   pixels of the same color.
 
    None of the blob is marked visited in visited[][].
 

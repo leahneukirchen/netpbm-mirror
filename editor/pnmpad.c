@@ -163,7 +163,7 @@ static void
 parseCommandLineOld(int argc, const char ** argv,
                     struct cmdlineInfo * const cmdlineP) {
 
-    /* This syntax was abandonned in February 2002. */
+    /* This syntax was abandoned in February 2002. */
     pm_message("Warning: old style options are deprecated!");
 
     cmdlineP->xsize = cmdlineP->ysize = 0;

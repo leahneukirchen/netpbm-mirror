@@ -12,7 +12,7 @@
 
 /*
    transformNonPbmChunk() is the general transformation function.
-   It can tranform anything, albeit slowly and expensively.
+   It can transform anything, albeit slowly and expensively.
    
    The following are enhancements for specific cases:
    

@@ -122,7 +122,7 @@ typedef struct wfa
    real_t	*final_distribution;    /* one pixel images */
    byte_t	*level_of_state;	/* level of the image part which is
 					   represented by the current state */
-   byte_t	*domain_type;		/* Bit_0==1: auxilliary state
+   byte_t	*domain_type;		/* Bit_0==1: auxiliary state
 					   Bit_1==1: used for Y compr */
    mv_t		(*mv_tree)[MAXLABELS];	/* motion vectors */
    word_t	(*tree)[MAXLABELS];	/* bintree partitioning */

@@ -539,7 +539,7 @@ pcx_256col_to_ppm(FILE *       const ifP,
 
     /*
      * 256 color images have their color map at the end of the file
-     * preceeded by a magic byte
+     * preceded by a magic byte
      */
     colormapSignature = GetByte(ifP);
     if (colormapSignature != PCX_256_COLORS)

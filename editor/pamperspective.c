@@ -536,7 +536,7 @@ parseCommandLine(int argc, const char * argv[],
                            parse_enum (bool_text[i], bool_token,
                                        bool_option_name[i]));
 
-  /* Propagate values where neccessary */
+  /* Propagate values where necessary */
 
   if (float_spec[10])           /* --margin */
     for (i=11; i<15; i++)       /* --top_margin through --right_margin */
