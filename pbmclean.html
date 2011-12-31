@@ -52,17 +52,6 @@ isolated.
 black pixels in an otherwise white field, each of those pixels is isolated,
 so <b>pbmclean</b> erases them - turns both white.
 
-<p>But it isn't that simple, because as <b>pbmclean</b> progresses, its having
-erased a pixel may make another pixel isolated that isn't isolated in the
-original image.  Consider a straight vertical line of 4 pixels, with
-<b>-minneigbors</b> of two.  <b>pbmclean</b> considers the top pixel first, and
-finding that it has only one neighbor (the pixel below it), erases it.  The it
-considers the second pixel, and erases it for the same reason, even though it
-has two neighbors in the original image.  In this way, <b>pbmclean</b>
-ultimately erases the entire line.  Because of this weirdness, you probably
-don't want <b>-minneighbors</b> greater than one.  But you may want to run
-<b>pbmclean</b> multiple times with <b>-minneighbors</b> of one.
-
 <P>The default minimum 1 pixel &mdash; <b>pbmclean</b> flips only completely
 isolated pixels.
 
