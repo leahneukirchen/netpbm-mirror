@@ -278,10 +278,10 @@ interpretXpm3ColorTableLine(char               const line[],
    The raster in the file uses 'charsPerPixel' characters per pixel (i.e.
    a color number (palette index) is 'charsPerPixel' characters).
 
-   Add the information from this color table entry to the color table
-   'colors' and, if it isn't NULL, the corresponding lookup shadow table
-   'ptab' (see readXpm3ColorTable for a description of these data 
-   structures).
+   Add the information from this color table entry to the color table 'colors'
+   and, if it isn't NULL, the corresponding lookup shadow table 'ptab'.  Both
+   are of size 'nColors'.  (See readV3ColorTable for a description of these
+   data structures).
 
    The line may include values for multiple kinds of color (grayscale,
    color, etc.).  We take the highest of these (e.g. color over grayscale).
@@ -396,11 +396,11 @@ interpretXpm3ColorTableLine(char               const line[],
 
 
 static void
-readV3ColorTable(FILE *          const ifP,
-                 pixel **        const colorsP,
-                 unsigned int    const nColors,
-                 unsigned int    const charsPerPixel,
-                 unsigned int ** const ptabP,
+readV3ColorTable(FILE *             const ifP,
+                 pixel **           const colorsP,
+                 unsigned int       const nColors,
+                 unsigned int       const charsPerPixel,
+                 unsigned int **    const ptabP,
                  TransparentColor * const transparentP) {
 /*----------------------------------------------------------------------------
    Read the color table from the XPM Version 3 header.
@@ -493,8 +493,6 @@ readXpm3Header(FILE *             const ifP,
     unsigned int width, height;
     unsigned int nColors;
     unsigned int charsPerPixel;
-    pixel * colors;
-    unsigned int * ptab;
 
     /* Read the XPM signature comment */
     getline(line, sizeof(line), ifP);
@@ -536,8 +534,6 @@ readXpm3Header(FILE *             const ifP,
     *heightP        = height;
     *charsPerPixelP = charsPerPixel;
     *nColorsP       = nColors;
-    *colorsP        = colors;
-    *ptabP          = ptab;
 }
 
 
@@ -726,16 +722,16 @@ readXpm1Header(FILE *          const ifP,
 
 static void
 interpretXpmLine(char            const line[],
+                 unsigned int    const width,
                  unsigned int    const charsPerPixel,
                  unsigned int    const nColors,
                  unsigned int *  const ptab, 
-                 unsigned int ** const cursorP,
-                 unsigned int *  const maxCursor) {
+                 unsigned int ** const cursorP) {
 /*----------------------------------------------------------------------------
    Interpret one line from XPM input which describes one raster line of the
-   image.  The XPM line is in 'line', and its format is 'charsPerPixel'
-   characters per pixel.  'ptab' is the color table that applies to the line,
-   which table has 'nColors' colors.
+   image.  The XPM line is in 'line', and its format is 'width' pixel,
+   'charsPerPixel' characters per pixel.  'ptab' is the color table that
+   applies to the line, which table has 'nColors' colors.
 
    Put the colormap indexes for the pixels represented in 'line' at
    *cursorP, lined up in the order they are in 'line', and return
@@ -744,9 +740,9 @@ interpretXpmLine(char            const line[],
    If the line doesn't start with a quote (e.g. it is empty), we issue
    a warning and just treat the line as one that describes no pixels.
 
-   Stop processing the line either at the end of the line or when
-   the output would go beyond maxCursor, whichever comes first.
+   Abort program if there aren't exactly 'width' pixels in the line.
 -----------------------------------------------------------------------------*/
+    unsigned int pixelCtSoFar;
     char * lineCursor;
 
     lineCursor = strchr(line, '"');  /* position to 1st quote in line */
@@ -763,13 +759,23 @@ interpretXpmLine(char            const line[],
         /* Handle pixels until a close quote, eol, or we've returned all
            the pixels Caller wants.
         */
-        while (*lineCursor && *lineCursor != '"' && *cursorP <= maxCursor) {
+        for (pixelCtSoFar = 0; pixelCtSoFar < width; ++pixelCtSoFar) {
             unsigned int colorNumber;
             unsigned int i;
             colorNumber = 0;  /* initial value */
             for (i = 0; i < charsPerPixel; ++i) {
-                unsigned char const byte = (unsigned char)(*lineCursor++);
-                colorNumber = (colorNumber << 8) + byte;
+                if (*lineCursor == '\0')
+                    pm_error("XPM input file ends in the middle of a string "
+                             "that represents a raster line");
+                if (*lineCursor == '"')
+                    pm_error("A string that represents a raster line in the "
+                             "XPM input file is too short to contain "
+                             "%u pixels (%u characters each)",
+                             width, charsPerPixel);
+                {
+                    unsigned char const byte = (unsigned char)(*lineCursor++);
+                    colorNumber = (colorNumber << 8) + byte;
+                }
             }
             if (ptab == NULL)
                 /* colormap is indexed directly by XPM color number */
@@ -786,6 +792,8 @@ interpretXpmLine(char            const line[],
                              colorNumber, line);
             }
         }
+        if (*lineCursor != '"')
+            pm_error("A raster line continues past width of image");
     }
 }
 
@@ -813,16 +821,18 @@ readXpmFile(FILE *             const ifP,
    In the colormap, put black for the transparent color, if the XPM 
    image contains one.
 -----------------------------------------------------------------------------*/
+    unsigned int * data;
     char line[MAX_LINE+1], str1[MAX_LINE+1];
     unsigned int totalpixels;
     unsigned int * cursor;
-        /* cursor into *dataP */
-    unsigned int * maxcursor;
+        /* cursor into data{} */
+    unsigned int * maxCursor;
         /* value of above cursor for last pixel in image */
     unsigned int * ptab;   /* colormap - malloc'ed */
     int rc;
     unsigned int nColors;
     unsigned int charsPerPixel;
+    unsigned int width, height;
 
     backup = FALSE;
 
@@ -833,33 +843,36 @@ readXpmFile(FILE *             const ifP,
     rc = sscanf(line, "/* %s */", str1);
     if (rc == 1 && strneq(str1, "XPM", 3)) {
         /* It's an XPM version 3 file */
-        readXpm3Header(ifP, widthP, heightP, &charsPerPixel,
+        readXpm3Header(ifP, &width, &height, &charsPerPixel,
                        &nColors, colorsP, &ptab, transparentP);
     } else {				/* try as an XPM version 1 file */
         /* Assume it's an XPM version 1 file */
-        readXpm1Header(ifP, widthP, heightP, &charsPerPixel, 
+        readXpm1Header(ifP, &width, &height, &charsPerPixel, 
                        &nColors, colorsP, &ptab);
         transparentP->none = true;  /* No transparency in version 1 */
     }
-    totalpixels = *widthP * *heightP;
-    MALLOCARRAY(*dataP, totalpixels);
-    if (*dataP == NULL)
-        pm_error("Could not get %d bytes of memory for image", totalpixels);
-    cursor = *dataP;
-    maxcursor = *dataP + totalpixels - 1;
+    totalpixels = width * height;
+    MALLOCARRAY(data, totalpixels);
+    if (!data)
+        pm_error("Could not get %u bytes of memory for image", totalpixels);
+    cursor = &data[0];
+    maxCursor = &data[totalpixels - 1];
 	getline(line, sizeof(line), ifP); 
         /* read next line (first line may not always start with comment) */
-    while (cursor <= maxcursor) {
+    while (cursor <= maxCursor) {
         if (strneq(line, "/*", 2)) {
             /* It's a comment.  Ignore it. */
         } else {
-            interpretXpmLine(line, charsPerPixel, 
-                             nColors, ptab, &cursor, maxcursor);
+            interpretXpmLine(line, width, charsPerPixel, nColors, ptab,
+                             &cursor);
         }
-        if (cursor <= maxcursor)
+        if (cursor <= maxCursor)
             getline(line, sizeof(line), ifP);
     }
     if (ptab) free(ptab);
+    *dataP   = data;
+    *widthP  = width;
+    *heightP = height;
 }
  
 
