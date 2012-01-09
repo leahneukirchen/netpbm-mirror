@@ -1025,12 +1025,12 @@ createWeightList(unsigned int          const targetPos,
    row.  Assume 'filter' is a triangle function -- 1 at 0, sloping
    down to 0 at -1 and 1.
 
-   Now assume that the scale factor is 2 -- the target image will be
-   twice the size of the source image.  That means the two-pixel-wide
-   window of the source row that affects Column 5 of the target row
-   (centered at target position 5.5) goes from position 1.75 to
-   3.75, centered at 2.75.  That means the window covers 1/4 of
-   Column 1, all of Column 2, and 3/4 of Column 3 of the source row.
+   Now assume that the scale factor is 2 -- the target image will be twice the
+   size of the source image.  That means the two-pixel-wide window of the
+   source row that affects Column 5 of the target row, which is centered at
+   target position 5.5, is centered at source position 5.5/2 = 2.75.  So it
+   goes from source position 1.75 to 3.75.  That means the window covers 1/4
+   of Column 1, all of Column 2, and 3/4 of Column 3 of the source row.
 
    We want to calculate 3 weights, one to be applied to each source pixel
    in computing the target pixel.  Ideally, we would compute the average
@@ -1043,19 +1043,19 @@ createWeightList(unsigned int          const targetPos,
    -.875 from the center of the window, we assume a constant function
    value of triangle(-.875), which equals .125.  For the 2.00-3.00
    region, we get triangle(-.25) = .75.  For the 3.00-3.75 region, we
-   get triangle(.125) = .875.  So the weights for the 3 regions, which
+   get triangle(.625) = .375.  So the weights for the 3 regions, which
    we get by multiplying this constant function value by the width of
    the region and normalizing so they add up to 1 are:
 
-      Source Column 1:  .125*.25 / 1.4375 = .022
-      Source Column 2:  .75*1.00 / 1.4375 = .521
-      Source Column 3:  .875*.75 / 1.4375 = .457
+      Source Column 1:  .125*.25 / 1.0625 = .029
+      Source Column 2:  .75*1.00 / 1.0625 = .706
+      Source Column 3:  .375*.75 / 1.0625 = .265
 
    These are the weights we return.  Thus, if we assume that the source
    pixel 1 has value 10, source pixel 2 has value 20, and source pixel 3
    has value 30, Caller would compute target pixel 5's value as
 
-      10*.022 + 20*.521 + 30*.457 = 24
+      10*.029 + 20*.706 + 30*.265 = 22
 
 -----------------------------------------------------------------------------*/
     /* 'windowCenter', is the continuous position within the source of
