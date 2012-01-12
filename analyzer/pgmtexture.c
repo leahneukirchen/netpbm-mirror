@@ -157,12 +157,12 @@ results (const char *  const name,
 
     unsigned int i;
 
-    fprintf (stdout, "%s", name);
+    fprintf(stdout, "%s", name);
 
     for (i = 0; i < 4; ++i)
-        fprintf (stdout, "% 1.3e ", a[i]);
+        fprintf(stdout, "% 1.3e ", a[i]);
 
-    fprintf (stdout, "% 1.3e\n", (a[0] + a[1] + a[2] + a[3]) / 4);
+    fprintf(stdout, "% 1.3e\n", (a[0] + a[1] + a[2] + a[3]) / 4);
 }
 
 
