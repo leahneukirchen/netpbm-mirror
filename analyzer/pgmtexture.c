@@ -707,12 +707,14 @@ f10_dvar (float **     const p,
 /*----------------------------------------------------------------------------
    Difference Variance
 -----------------------------------------------------------------------------*/
-    double pxpy[PGM_MAXMAXVAL];
+    double pxpy[PGM_MAXMAXVAL + 1];
     unsigned int i;
     double sqrNg;  /* Square of 'ng' */
     double sum;
     double sumSqr;
     double var;
+
+    assert(ng <= ARRAY_SIZE(pxpy));
 
     for (i = 0; i < ng; ++i)
         pxpy[i] = 0;
