@@ -723,7 +723,7 @@ f10_dvar (float **     const p,
     /* Now calculate the variance of Pxpy (Px-y) */
     for (i = 0, sum = 0.0, sumSqr = 0.0; i < ng; ++i) {
         sum += pxpy[i];
-        sumSqr += pxpy[i] * pxpy[i];
+        sumSqr += SQR(pxpy[i]);
     }
     sqrNg = SQR(ng);
     var = (sqrNg * sumSqr - SQR(sum)) / SQR(sqrNg);
@@ -964,7 +964,7 @@ main (int argc, const char ** argv) {
 
     d = 1;
 
-    grays = pgm_readpgm (ifP, &cols, &rows, &maxval);
+    grays = pgm_readpgm(ifP, &cols, &rows, &maxval);
     pm_close (ifP);
 
     /* Determine the number of different gray scales (not maxval) */
@@ -979,7 +979,7 @@ main (int argc, const char ** argv) {
         if (tone[i] != -1)
             ++toneCt;
     }
-    pm_message("(Image has %u graylevels.)", toneCt);
+    pm_message("(Image has %u gray levels.)", toneCt);
 
     /* Collapse array, taking out all zero values */
     for (row = 0, itone = 0; row <= PGM_MAXMAXVAL; ++row)
