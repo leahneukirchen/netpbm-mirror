@@ -4,6 +4,14 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+12.01.14 BJH  Release 10.57.01
+
+              pgmtexture: fix integer overflow in difference variance.
+              Always broken.
+
+              pgmtexture: fix array bounds violations in various calculations.
+              Always broken.
+
 11.12.30 BJH  Release 10.57.00
 
               pnmnorm: add -midvalue, -middle .
