@@ -6,6 +6,14 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.58.00
 
+              pgmtexture: fix integer overflow in difference variance.
+              Always broken.
+
+              pgmtexture: fix array bounds violations in various calculations.
+              Always broken.
+
+              xpmtoppm: Make it work on XPM with zero characters per pixel.
+
 11.12.30 BJH  Release 10.57.00
 
               pnmnorm: add -midvalue, -middle .
