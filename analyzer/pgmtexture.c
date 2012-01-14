@@ -542,7 +542,7 @@ f5_idm (float **P, int Ng)
 }
 
 static float 
-Pxpy[2 * PGM_MAXMAXVAL];
+Pxpy[2 * (PGM_MAXMAXVAL+1) + 1];
 
 static float 
 f6_savg (float **P, int Ng)
@@ -627,8 +627,9 @@ f10_dvar (float **P, int Ng)
 
 /* Difference Variance */
 {
-    int i, j, tmp;
-    float sum = 0, sum_sqr = 0, var = 0;
+    int i, j;
+    double tmp;
+    double sum = 0, sum_sqr = 0, var = 0;
 
     for (i = 0; i <= 2 * Ng; ++i)
         Pxpy[i] = 0;

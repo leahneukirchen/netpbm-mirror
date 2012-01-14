@@ -4,6 +4,14 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+12.01.14 BJH  Release 10.47.35
+
+              pgmtexture: fix integer overflow in difference variance.
+              Always broken.
+
+              pgmtexture: fix array bounds violations in various calculations.
+              Always broken.
+
 11.12.12 BJH  Release 10.47.34
 
               pamscale: fix all black output with resampling.  Always broken.
@@ -24,7 +32,6 @@ CHANGE HISTORY
 
               pnmtops: fix message: says "from top edge" where it means
               "from bottom edge."
-11.09.28 BJH  Release 10.56.00
 
 11.08.22 BJH  Release 10.47.30
 
