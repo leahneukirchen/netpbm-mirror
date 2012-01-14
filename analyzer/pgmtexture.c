@@ -609,9 +609,11 @@ f6_savg (float **     const p,
 /*----------------------------------------------------------------------------
    Sum Average
 -----------------------------------------------------------------------------*/
-    float pxpy[2 * PGM_MAXMAXVAL];
+    float pxpy[2 * (PGM_MAXMAXVAL+1) + 1];
     unsigned int i;
     float savg;
+
+    assert(2*ng < ARRAY_SIZE(pxpy));
 
     for (i = 0; i <= 2 * ng; ++i)
         pxpy[i] = 0.0;
@@ -636,9 +638,11 @@ f7_svar (float **     const p,
 /*----------------------------------------------------------------------------
    Sum Variance
 -----------------------------------------------------------------------------*/
-    float pxpy[2 * PGM_MAXMAXVAL];
+    float pxpy[2 * (PGM_MAXMAXVAL+1) + 1];
     unsigned int i;
     float var;
+
+    assert(2*ng < ARRAY_SIZE(pxpy));
 
     for (i = 0; i <= 2 * ng; ++i)
         pxpy[i] = 0;
@@ -662,9 +666,11 @@ f8_sentropy (float **     const p,
 /*----------------------------------------------------------------------------
    Sum Entropy
 -----------------------------------------------------------------------------*/
-    float pxpy[2 * PGM_MAXMAXVAL];
+    float pxpy[2 * (PGM_MAXMAXVAL+1) + 1];
     unsigned int i;
     float sentropy;
+
+    assert(2*ng < ARRAY_SIZE(pxpy));
 
     for (i = 0; i <= 2 * ng; ++i)
         pxpy[i] = 0;
@@ -743,9 +749,11 @@ f11_dentropy (float **     const p,
 /*----------------------------------------------------------------------------
    Difference Entropy
 -----------------------------------------------------------------------------*/
-    float pxpy[2 * PGM_MAXMAXVAL];
+    float pxpy[2 * (PGM_MAXMAXVAL+1) + 1];
     unsigned int i;
     float sum;
+
+    assert(2*ng < ARRAY_SIZE(pxpy));
 
     for (i = 0; i <= 2 * ng; ++i)
         pxpy[i] = 0;
