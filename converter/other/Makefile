@@ -7,12 +7,20 @@ VPATH=.:$(SRCDIR)/$(SUBDIR)
 
 include $(BUILDDIR)/config.mk
 
-ifeq ($(shell xml2-config --version),)
-  XML2_LIBS=NONE
-  XML2_CFLAGS=NONE
+TEST_PKGCONFIG_LIBXML2 = if pkg-config libxml-2.0; then echo exists; fi
+
+ifneq ($(shell $(TEST_PKGCONFIG_LIBXML2)),)
+  # pkg-config libxml2 works on this system
+  XML2_LIBS = $(shell pkg-config libxml-2.0 --libs)
+  XML2_CFLAGS = $(shell pkg-config libxml-2.0 --cflags)
 else
-  XML2_LIBS=$(shell xml2-config --libs)
-  XML2_CFLAGS=$(shell xml2-config --cflags)
+  ifeq ($(shell xml2-config --version),)
+    XML2_LIBS=NONE
+    XML2_CFLAGS=NONE
+  else
+    XML2_LIBS=$(shell xml2-config --libs)
+    XML2_CFLAGS=$(shell xml2-config --cflags)
+  endif
 endif
 
 SUBDIRS = jbig pnmtopalm jpeg2000 cameratopam pamtosvg

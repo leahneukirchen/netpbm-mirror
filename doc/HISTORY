@@ -12,6 +12,8 @@ not yet  BJH  Release 10.58.00
               pgmtexture: fix array bounds violations in various calculations.
               Always broken.
 
+              xpmtoppm: Make it work on XPM with zero characters per pixel.
+
               Windows/Mingw: fix bug: temporary file creation fails
               consistently.  Broken in 10.34.
 
@@ -19,7 +21,8 @@ not yet  BJH  Release 10.58.00
 
               Windows: compute program name correctly.
 
-              xpmtoppm: Make it work on XPM with zero characters per pixel.
+              Build: use Pkgconfig to find libxml2 if it works (fall back
+              to xml2-config).
 
 11.12.30 BJH  Release 10.57.00
 
