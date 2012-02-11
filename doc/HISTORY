@@ -4,6 +4,13 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+12.02.11 BJH  Release 10.57.02
+
+              Windows/Mingw: set binary mode on files.
+
+              Windows/Mingw: fix bug: temporary file creation fails
+              consistently.  Broken in 10.34.
+
 12.01.14 BJH  Release 10.57.01
 
               pgmtexture: fix integer overflow in difference variance.

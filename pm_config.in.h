@@ -130,7 +130,7 @@
 ** of stdin and stdout to binary for all Netpbm programs.
 ** You need this with Cygwin (Windows).
 */
-#ifdef __CYGWIN__
+#if defined(WIN32) || defined(__CYGWIN__) || defined(DJGPP)
 #define HAVE_SETMODE
 #endif
 
@@ -142,9 +142,8 @@
 #endif
 
 #ifdef DJGPP
-#define HAVE_SETMODE
 #define lstat stat
-#endif /* DJGPP */
+#endif
 
 /*  CONFIGURE: Netpbm uses __inline__ to declare functions that should
     be compiled as inline code.  GNU C recognizes the __inline__ keyword.
