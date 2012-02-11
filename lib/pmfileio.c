@@ -113,6 +113,31 @@ tmpDir(void) {
 
 
 static int
+tempFileOpenFlags(void) {
+/*----------------------------------------------------------------------------
+  Open flags (argument to open()) suitable for a new temporary file  
+-----------------------------------------------------------------------------*/
+    int retval;
+
+    retval = 0
+        | O_CREAT
+        | O_RDWR
+#ifndef WIN32
+        O_EXCL
+#endif
+#ifdef WIN32
+        O_BINARY
+#endif
+        ;
+
+    return retval;
+}
+, S_IRUSR | S_IWUSR
+
+
+
+
+static int
 mkstempx(char * const filenameBuffer) {
 /*----------------------------------------------------------------------------
   This is meant to be equivalent to POSIX mkstemp().
@@ -146,7 +171,8 @@ mkstempx(char * const filenameBuffer) {
         else {
             int rc;
 
-            rc = open(filenameBuffer, O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
+            rc = open(filenameBuffer, tempFileOpenFlags(),
+                      PM_S_IWUSR | PM_S_IRUSR);
 
             if (rc >= 0) {
                 fd = rc;

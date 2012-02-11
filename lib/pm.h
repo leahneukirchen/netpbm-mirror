@@ -21,6 +21,7 @@
 #include <errno.h>
 #include <setjmp.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -74,6 +75,26 @@ extern "C" {
 #else
 #define PURE_FN_ATTR
 #endif
+
+
+/* S_IRUSR is POSIX, defined in <sys/stat.h> Some old BSD systems and Windows
+   systems have S_IREAD instead.  Most Unix today (2011) has both.  In 2011,
+   Android has S_IRUSR and not S_IREAD.
+
+   Some Windows has _S_IREAD.
+
+   We're ignoring S_IREAD now to see if anyone misses it.  If there are still
+   users that need it, we can handle it here.
+*/
+#if WIN32
+  #define PM_S_IWUSR _S_IWRITE
+  #define PM_S_IRUSR _S_IREAD
+#else
+  #define PM_S_IWUSR S_IWUSR
+  #define PM_S_IRUSR S_IRUSR
+#endif
+
+
 
 typedef struct {
     /* Coordinates of a pixel within an image.  Row 0 is the top row.
