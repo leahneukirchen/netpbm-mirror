@@ -12,6 +12,8 @@ not yet  BJH  Release 10.58.00
               pgmtexture: fix array bounds violations in various calculations.
               Always broken.
 
+              Windows: compute program name correctly.
+
               xpmtoppm: Make it work on XPM with zero characters per pixel.
 
 11.12.30 BJH  Release 10.57.00

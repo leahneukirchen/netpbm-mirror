@@ -594,6 +594,32 @@ showNetpbmHelp(const char progname[]) {
 
 
 
+static const char *
+progNameFromArg0(const char * const arg0) {
+
+#ifdef _WIN32
+
+    char filename[256];
+
+    _splitpath(arg0, 0, 0, filename, 0);
+
+#else
+
+    /* Just take the last component of the file name, e.g. "foo" in
+       "/local/bin/foo"
+    */
+    const char * const slashPos = strrchr(arg0, '/');
+
+    const char * const filename = slashPos ? slashPos + 1 : arg0;
+
+#endif
+
+    return pm_strdup(filename);
+}
+
+    
+
+
 void
 pm_proginit(int * const argcP, const char * argv[]) {
 /*----------------------------------------------------------------------------
@@ -604,8 +630,12 @@ pm_proginit(int * const argcP, const char * argv[]) {
 
    This includes calling pm_init() to initialize the Netpbm libraries.
 -----------------------------------------------------------------------------*/
+    const char * const progname = progNameFromArg0(argv[0]);
+        /* Note: this is technically a memory leak; it is malloc'ed memory
+           that we have no way to give back because there is no pm_progterm().
+           So it goes down with the ship when the OS terminates the program.
+        */
     int argn, i;
-    const char * progname;
     bool showmessages;
     bool show_version;
         /* We're supposed to just show the version information, then exit the
@@ -615,13 +645,6 @@ pm_proginit(int * const argcP, const char * argv[]) {
         /* We're supposed to just tell user where to get help, then exit the
            program.
         */
-    
-    /* Extract program name. */
-    progname = strrchr( argv[0], '/');
-    if (progname == NULL)
-        progname = argv[0];
-    else
-        ++progname;
 
     pm_init(progname, 0);
 
