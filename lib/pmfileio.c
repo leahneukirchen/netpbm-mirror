@@ -148,7 +148,7 @@ mkstempx(char * const filenameBuffer) {
 
             rc = open(filenameBuffer, O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
 
-            if (rc == 0) {
+            if (rc >= 0) {
                 fd = rc;
                 gotFile = TRUE;
             } else {
