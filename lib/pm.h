@@ -86,7 +86,7 @@ extern "C" {
    We're ignoring S_IREAD now to see if anyone misses it.  If there are still
    users that need it, we can handle it here.
 */
-#if WIN32
+#ifdef WIN32
   #define PM_S_IWUSR _S_IWRITE
   #define PM_S_IRUSR _S_IREAD
 #else

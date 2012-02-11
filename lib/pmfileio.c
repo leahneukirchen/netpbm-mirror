@@ -123,16 +123,15 @@ tempFileOpenFlags(void) {
         | O_CREAT
         | O_RDWR
 #ifndef WIN32
-        O_EXCL
+        | O_EXCL
 #endif
 #ifdef WIN32
-        O_BINARY
+        | O_BINARY
 #endif
         ;
 
     return retval;
 }
-, S_IRUSR | S_IWUSR
 
 
 
