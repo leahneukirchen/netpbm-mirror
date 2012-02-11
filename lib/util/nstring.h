@@ -162,6 +162,9 @@ pm_vsnprintf(char *       const str,
              va_list            ap,
              size_t *     const sizeP);
 
+const char *
+pm_strdup(const char * const arg);
+
 void
 pm_asprintf(const char ** const resultP,
             const char *  const fmt,
