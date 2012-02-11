@@ -595,32 +595,6 @@ showNetpbmHelp(const char progname[]) {
 
 
 
-static const char *
-progNameFromArg0(const char * const arg0) {
-
-#ifdef _WIN32
-
-    char filename[256];
-
-    _splitpath(arg0, 0, 0, filename, 0);
-
-#else
-
-    /* Just take the last component of the file name, e.g. "foo" in
-       "/local/bin/foo"
-    */
-    const char * const slashPos = strrchr(arg0, '/');
-
-    const char * const filename = slashPos ? slashPos + 1 : arg0;
-
-#endif
-
-    return pm_strdup(filename);
-}
-
-    
-
-
 void
 pm_proginit(int * const argcP, const char * argv[]) {
 /*----------------------------------------------------------------------------
@@ -631,11 +605,8 @@ pm_proginit(int * const argcP, const char * argv[]) {
 
    This includes calling pm_init() to initialize the Netpbm libraries.
 -----------------------------------------------------------------------------*/
-    const char * const progname = progNameFromArg0(argv[0]);
-        /* Note: this is technically a memory leak; it is malloc'ed memory
-           that we have no way to give back because there is no pm_progterm().
-           So it goes down with the ship when the OS terminates the program.
-        */
+    const char * const progname = pm_arg0toprogname(argv[0]);
+        /* points to static memory in this library */
     int argn, i;
     bool showmessages;
     bool show_version;
@@ -712,6 +683,43 @@ pm_getMessage(void) {
 
 
 
+static void
+extractAfterLastSlash(const char * const fullPath,
+                      char *       const retval,
+                      size_t       const retvalSize) {
+    
+    char * slashPos;
+
+    /* Chop any directories off the left end */
+    slashPos = strrchr(fullPath, '/');
+
+    if (slashPos == NULL) {
+        strncpy(retval, fullPath, retvalSize);
+        retval[retvalSize-1] = '\0';
+    } else {
+        strncpy(retval, slashPos +1, retvalSize);
+        retval[retvalSize-1] = '\0';
+    }
+
+    /* Chop any .exe off the right end */
+    if (strlen(retval) >= 4 && strcmp(retval+strlen(retval)-4, ".exe") == 0)
+        retval[strlen(retval)-4] = 0;
+}
+
+
+
+#ifdef WIN32
+static void
+splitpath(const char * const fullPath,
+          char *       const retval,
+          size_t       const retvalSize) {
+
+    _splitpath_s(fullPath, 0, 0,  0, 0,  retval, retvalSize,  0, 0);
+}
+#endif
+
+
+
 char *
 pm_arg0toprogname(const char arg0[]) {
 /*----------------------------------------------------------------------------
@@ -729,22 +737,11 @@ pm_arg0toprogname(const char arg0[]) {
    but truncated at 64 characters.
 -----------------------------------------------------------------------------*/
     static char retval[64+1];
-    char *slash_pos;
-
-    /* Chop any directories off the left end */
-    slash_pos = strrchr(arg0, '/');
-
-    if (slash_pos == NULL) {
-        strncpy(retval, arg0, sizeof(retval));
-        retval[sizeof(retval)-1] = '\0';
-    } else {
-        strncpy(retval, slash_pos +1, sizeof(retval));
-        retval[sizeof(retval)-1] = '\0';
-    }
-
-    /* Chop any .exe off the right end */
-    if (strlen(retval) >= 4 && strcmp(retval+strlen(retval)-4, ".exe") == 0)
-        retval[strlen(retval)-4] = 0;
+#ifdef WIN32
+    splitPath(arg0, retval, sizeof(retval));
+#else
+    extractAfterLastSlash(arg0, retval, sizeof(retval));
+#endif
 
     return(retval);
 }
