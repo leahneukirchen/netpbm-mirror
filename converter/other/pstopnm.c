@@ -149,11 +149,11 @@ parseCommandLine(int argc, char ** argv,
     } else 
         cmdlineP->ysize = 0;
 
-    if (portrait_opt & !landscape_opt)
+    if (portrait_opt && !landscape_opt)
         cmdlineP->orientation = PORTRAIT;
-    else if (!portrait_opt & landscape_opt)
+    else if (!portrait_opt && landscape_opt)
         cmdlineP->orientation = LANDSCAPE;
-    else if (!portrait_opt & !landscape_opt)
+    else if (!portrait_opt && !landscape_opt)
         cmdlineP->orientation = UNSPECIFIED;
     else
         pm_error("Cannot specify both -portrait and -landscape options");
