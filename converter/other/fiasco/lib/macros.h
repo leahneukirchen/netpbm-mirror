@@ -28,11 +28,6 @@
 #   define SEEK_CUR	1
 #endif /* not SEEK_CUR */
 
-#ifdef WIN32
-#undef max
-#undef min
-#endif /* not WIN32 */
-
 /*****************************************************************************
 
 				Various macros
@@ -50,12 +45,6 @@
 #define address_of_level(l)	((unsigned) (size_of_level (l) - 1))
 #define size_of_tree(l)		((unsigned) (address_of_level ((l) + 1)))
 #define is_odd(n)		(abs (n) % 2)
-#ifndef max
-#define max(a,b)		((a) < (b) ? (b) : (a))
-#endif
-#ifndef min
-#define min(a,b)	        ((a) > (b) ? (b) : (a))
-#endif
 #define _(x) (x) 
 
 

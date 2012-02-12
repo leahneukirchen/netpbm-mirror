@@ -20,6 +20,8 @@
 
 #include <string.h>
 
+#include "pm_c_util.h"
+
 #include "types.h"
 #include "macros.h"
 #include "error.h"
@@ -455,7 +457,7 @@ decode_image (unsigned orig_width, unsigned orig_height, format_e format,
     */
    for (max_level = 0, state = wfa->basis_states; state < wfa->states; state++)
       if (isedge (wfa->into [state][0][0]) || isedge (wfa->into [state][1][0]))
-     max_level = max (max_level, wfa->level_of_state [state]);
+     max_level = MAX(max_level, wfa->level_of_state [state]);
    
 
    /*
@@ -463,8 +465,8 @@ decode_image (unsigned orig_width, unsigned orig_height, format_e format,
     */
    compute_actual_size (format == FORMAT_4_2_0 ? root_state [Y] : MAXSTATES,
             &width, &height, wfa);
-   width  = max (width, orig_width);
-   height = max (height, orig_height);
+   width  = MAX(width, orig_width);
+   height = MAX(height, orig_height);
    frame = alloc_image (width, height, wfa->wfainfo->color, format);
    
    /*
@@ -720,7 +722,7 @@ smooth_image (unsigned sf, const wfa_t *wfa, image_t *image)
         + wfa->x [state][1];
      img2 = bptr + wfa->y [state][1] * img_width + wfa->x [state][1];
      
-     for (i = min (width, img_width - wfa->x [state][1]); i;
+     for (i = MIN(width, img_width - wfa->x [state][1]); i;
           i--, img1++, img2++)
      {
         int tmp = *img1;
@@ -747,7 +749,7 @@ smooth_image (unsigned sf, const wfa_t *wfa, image_t *image)
      img1 = bptr + wfa->y [state][1] * img_width + wfa->x [state][1] - 1;
      img2 = bptr + wfa->y [state][1] * img_width + wfa->x [state][1];
      
-     for (i = min (height, img_height - wfa->y [state][1]); i;
+     for (i = MIN(height, img_height - wfa->y [state][1]); i;
           i--, img1 += img_width, img2 += img_width)
      {
         int tmp = *img1;
@@ -807,7 +809,7 @@ enlarge_image (int enlarge_factor, format_e format, unsigned y_root,
      unsigned label, n;
      
      wfa->level_of_state [state]
-        = max (wfa->level_of_state [state] + enlarge_factor * 2, 0);
+        = MAX(wfa->level_of_state [state] + enlarge_factor * 2, 0);
 
      for (label = 0; label < MAXLABELS; label++)
         if (enlarge_factor > 0)
@@ -859,12 +861,12 @@ compute_actual_size (unsigned luminance_root,
    for (state = wfa->basis_states; state < wfa->states; state++)
       if (isedge (wfa->into [state][0][0]) || isedge (wfa->into [state][1][0]))
       {
-     unsigned mult = state > luminance_root ? 2 : 1;
-     
-     x = max ((wfa->x [state][0]
-           + width_of_level (wfa->level_of_state [state])) * mult, x);
-     y = max ((wfa->y [state][0]
-           + height_of_level (wfa->level_of_state [state])) * mult, y);
+          unsigned mult = state > luminance_root ? 2 : 1;
+          
+          x = MAX((wfa->x [state][0]
+                   + width_of_level (wfa->level_of_state [state])) * mult, x);
+          y = MAX((wfa->y [state][0]
+                   + height_of_level (wfa->level_of_state [state])) * mult, y);
       }
 
    if (x & 1)               /* ensure that image size is even */

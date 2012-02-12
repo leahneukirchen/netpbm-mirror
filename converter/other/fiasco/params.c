@@ -30,6 +30,7 @@
  
 #include <getopt.h>			/* system or ../lib */
 
+#include "pm_c_util.h"
 #include "nstring.h"
 
 #include "types.h"
@@ -664,13 +665,13 @@ usage (const param_t *params, const char *progname, const char *synopsis,
         if (params [i].optchar != '\0' || show_all_options)
         {
             if (params [i].type == POSTR)
-                width = max (width, (strlen (params [i].name)
+                width = MAX(width, (strlen (params [i].name)
                                      + strlen (params [i].argument_name) + 2));
             else if (params [i].type != PFLAG)
-                width = max (width, (strlen (params [i].name)
+                width = MAX(width, (strlen (params [i].name)
                                      + strlen (params [i].argument_name)));
             else
-                width = max (width, (strlen (params [i].name)) - 1);
+                width = MAX(width, (strlen (params [i].name)) - 1);
         }
    
     for (i = 0; params [i].name != NULL; i++)
@@ -685,7 +686,7 @@ usage (const param_t *params, const char *progname, const char *synopsis,
                 fprintf (stderr, "%s=[%s]%-*s  ", params [i].name,
                          params [i].argument_name,
                          (unsigned)
-                         max(0, (width - 2 - strlen (params [i].name)
+                         MAX(0, (width - 2 - strlen (params [i].name)
                                  - strlen (params [i].argument_name))), "");
             else if (params [i].type != PFLAG)
                 fprintf (stderr, "%s=%-*s  ", params [i].name,

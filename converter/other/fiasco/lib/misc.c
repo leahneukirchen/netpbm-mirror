@@ -36,6 +36,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "pm_c_util.h"
+
 #include "types.h"
 #include "macros.h"
 #include "error.h"
@@ -445,13 +447,13 @@ variance (const word_t *pixels, unsigned x0, unsigned y0,
    assert (pixels);
    
    for (average = 0, n = 0, y = y0; y < y0 + height; y++)
-      for (x = x0; x < min (x0 + width, cols); x++, n++)
+      for (x = x0; x < MIN(x0 + width, cols); x++, n++)
 	 average += pixels [y * cols + x] / 16;
 
    average /= n;
 
    for (variance = 0, y = y0; y < y0 + height; y++)
-      for (x = x0; x < min (x0 + width, cols); x++)
+      for (x = x0; x < MIN(x0 + width, cols); x++)
 	 variance += square ((pixels [y * cols + x] / 16) - average);
 
    return variance;

@@ -18,6 +18,8 @@
 
 #include <stdlib.h>
 
+#include "pm_c_util.h"
+
 #include "types.h"
 #include "macros.h"
 #include "error.h"
@@ -144,7 +146,7 @@ perform_tiling (const image_t *image, tiling_t *tiling)
 	 unsigned    number;		/* number of image tiles */
 	 unsigned    lx       = log2 (image->width - 1) + 1; /* x level */
 	 unsigned    ly       = log2 (image->height - 1) + 1; /* y level */
-	 unsigned    level    = max (lx, ly) * 2 - ((ly == lx + 1) ? 1 : 0);
+	 unsigned    level    = MAX(lx, ly) * 2 - ((ly == lx + 1) ? 1 : 0);
 	 var_list_t *var_list = Calloc (tiles, sizeof (var_list_t));
 	 
 	 /*

@@ -20,6 +20,8 @@
 #include <ctype.h>
 #include <string.h>
 
+#include "pm_c_util.h"
+
 #include "types.h"
 #include "macros.h"
 #include "error.h"
@@ -808,10 +810,10 @@ find_second_mv (real_t price, const image_t *original,
 
    sr = wi->search_range;
 
-   y0 = max ((int) -sr, *my - (int) local_range);
-   y1 = min ((int) sr, *my + (int) local_range);
-   x0 = max ((int) -sr, *mx - (int) local_range);
-   x1 = min ((int) sr, *mx + (int) local_range);
+   y0 = MAX((int) -sr, *my - (int) local_range);
+   y1 = MIN((int) sr, *my + (int) local_range);
+   x0 = MAX((int) -sr, *mx - (int) local_range);
+   x1 = MIN((int) sr, *mx + (int) local_range);
 
    *mx = *my = 0;
 
