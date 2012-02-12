@@ -28,7 +28,9 @@
  * Copyright (c) 1986, Spencer W. Thomas
  */
 
+#include <stdlib.h>
 #include <stdio.h>
+
 #include "rle.h"
 
 /*****************************************************************

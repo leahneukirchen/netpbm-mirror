@@ -24,7 +24,7 @@ librle.a: $(LIBOBJECTS)
 
 # Rule for objects.
 $(LIBOBJECTS): %.o: %.c importinc
-	$(CC) -c -I importinc -o $@ \
+	$(CC) -c $(INCLUDES) -o $@ \
 	  $< $(CPPFLAGS) $(CFLAGS) $(CFLAGS_PERSONAL) $(CADD)
 
 BINARIES =

@@ -25,6 +25,8 @@
  * Copyright (c) 1990, University of Michigan
  */
 
+#include <stdlib.h>
+
 #include "rle.h"
 #include "rle_code.h"
 
