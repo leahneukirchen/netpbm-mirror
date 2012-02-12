@@ -3,7 +3,7 @@
 
 #define MAX_COMMENT 2000
 
-#ifdef _WIN32
+#if MSVCRT
     #define PATH_MAX _MAX_PATH
 #endif
 

@@ -708,7 +708,7 @@ extractAfterLastSlash(const char * const fullPath,
 
 
 
-#ifdef WIN32
+#if MSVCRT
 static void
 splitpath(const char * const fullPath,
           char *       const retval,
@@ -737,8 +737,8 @@ pm_arg0toprogname(const char arg0[]) {
    but truncated at 64 characters.
 -----------------------------------------------------------------------------*/
     static char retval[64+1];
-#ifdef WIN32
-    splitPath(arg0, retval, sizeof(retval));
+#if MSVCRT
+    splitpath(arg0, retval, sizeof(retval));
 #else
     extractAfterLastSlash(arg0, retval, sizeof(retval));
 #endif

@@ -10,6 +10,8 @@
 #define _BSD_SOURCE 1   /* Make sure string.h contains strcasecmp() */
 #define _XOPEN_SOURCE  /* Make sure unistd.h contains swab() */
 
+#include "pm_config.h"
+
 #include <ctype.h>
 #include <unistd.h>
 #include <errno.h>
@@ -26,7 +28,7 @@
 #ifdef __CYGWIN__
   #include <io.h>
 #endif
-#if !defined(WIN32) || defined(__CYGWIN__)
+#if !MSVCRT
   #include <unistd.h>
 #endif
 
@@ -207,7 +209,7 @@ static void CLASS bad_pixels()
     free (fname);
     if (errno != ERANGE) return;
   }
-#ifdef WIN32
+#if MSVCRT
   if (fname[1] == ':')
     memmove (fname, fname+2, len-2);
   for (cp=fname; *cp; cp++)

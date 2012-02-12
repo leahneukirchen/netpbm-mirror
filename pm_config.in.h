@@ -125,12 +125,37 @@
 */
 #define A_STRERROR
 
+/* MSVCRT means we're using the Microsoft Visual C++ runtime library.
+
+   _WIN32, set by the compiler, apparently means the same thing; we see it set
+   in compiles using the Microsoft Visual C++ development environment and also
+   with Mingw, which is the Windows version of the GNU compiler (which brings
+   with it a runtime library which wraps around the Microsoft one).  We don't
+   see it set in Cygwin compiles, which use GNU libraries instead of the
+   Microsoft one.
+
+   There is also _MSC_VER, which is set by MSVC to the version number of the
+   MSVC runtime library and __MINGW32__.
+ */
+
+#ifdef _WIN32
+#define MSVCRT 1
+#else
+#define MSVCRT 0
+#endif
+
+/* WIN32 is a macro that some older compilers predefine (compilers aren't
+   supposed to because it doesn't start with an underscore, hence the change.
+   Many build systems (project files, etc.) set WIN32 explicitly for
+   backward compatibility.  Netpbm doesn't use it.
+*/
+
 /* CONFIGURE: If your system has the setmode() function, set HAVE_SETMODE.
 ** If you do, and also the O_BINARY file mode, pm_init() will set the mode
 ** of stdin and stdout to binary for all Netpbm programs.
 ** You need this with Cygwin (Windows).
 */
-#if defined(WIN32) || defined(__CYGWIN__) || defined(DJGPP)
+#if MSVCRT || defined(__CYGWIN__) || defined(DJGPP)
 #define HAVE_SETMODE
 #endif
 
@@ -306,7 +331,7 @@ typedef long int pm_filepos;
 typedef int qsort_comparison_fn(const void *, const void *);
     /* A compare function to pass to <stdlib.h>'s qsort() */
 
-#if defined(WIN32) && !defined(__CYGWIN__)
+#if MSVCRT
   #define pm_mkdir(dir, perm) _mkdir(dir)
 #else
   #define pm_mkdir(dir, perm) mkdir(dir, perm) 

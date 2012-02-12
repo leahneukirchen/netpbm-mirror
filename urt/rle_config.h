@@ -1,5 +1,5 @@
 #include "pm_config.h"
-#if defined(WIN32) && !defined(__CYGWIN__)
+#if MSVCRT
 #define NO_OPEN_PIPES
 #endif
 

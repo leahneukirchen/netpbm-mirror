@@ -122,10 +122,10 @@ tempFileOpenFlags(void) {
     retval = 0
         | O_CREAT
         | O_RDWR
-#ifndef WIN32
+#if !MSVCRT
         | O_EXCL
 #endif
-#ifdef WIN32
+#if MSVCRT
         | O_BINARY
 #endif
         ;
