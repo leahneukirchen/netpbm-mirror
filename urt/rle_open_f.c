@@ -18,6 +18,7 @@
 #include "netpbm/pm_c_util.h"
 #include "netpbm/nstring.h"
 #include "rle.h"
+#include "rle_config.h"
 
 
 
