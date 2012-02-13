@@ -337,3 +337,8 @@ typedef int qsort_comparison_fn(const void *, const void *);
   #define pm_mkdir(dir, perm) mkdir(dir, perm) 
 #endif
 
+#if MSVCRT
+  #define pm_pipe _pipe
+#else
+  #define pm_pipe pipe
+#endif

@@ -782,7 +782,7 @@ executeGhostscript(char                     const pstrans[],
     if (strlen(outfile_arg) > 80)
         pm_error("output file spec too long.");
     
-    rc = pipe(pipefd);
+    rc = pm_pipe(pipefd);
     if (rc < 0)
         pm_error("Unable to create pipe to talk to Ghostscript process.  "
                  "errno = %d (%s)", errno, strerror(errno));

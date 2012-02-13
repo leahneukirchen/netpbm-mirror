@@ -133,7 +133,7 @@ createPipeFeeder(void          pipeFeederRtn(int, void *),
     int pipeToFeed[2];
     pid_t rc;
 
-    pipe(pipeToFeed);
+    pm_pipe(pipeToFeed);
     rc = fork();
     if (rc < 0) {
         pm_error("fork() of stdin feeder failed.  errno=%d (%s)", 
@@ -179,7 +179,7 @@ spawnProcessor(const char *  const progName,
     pid_t rc;
 
     if (pipeStdout)
-        pipe(stdoutpipe);
+        pm_pipe(stdoutpipe);
 
     rc = fork();
     if (rc < 0) {

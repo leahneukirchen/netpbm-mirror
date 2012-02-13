@@ -52,7 +52,7 @@ my_popen(const char * const cmd,
         return NULL;
     }
 
-    if ( pipe(pipefd) < 0 )
+    if (pm_pipe(pipefd) < 0 )
         return NULL;
     
     /* Flush known files. */
