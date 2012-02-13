@@ -129,8 +129,8 @@ pm_fork(int *         const iAmParentP,
         }
     }
 #else
-    asprintfN(errorP, "Cannot fork a process, because this system does "
-              "not have POSIX fork()");
+    pm_asprintf(errorP, "Cannot fork a process, because this system does "
+                "not have POSIX fork()");
 #endif
 }
 

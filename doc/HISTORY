@@ -24,6 +24,8 @@ not yet  BJH  Release 10.58.00
               Build: redo conditional compilation of Windows to use
               MSVCRT, based on _WIN32, instead of WIN32.
 
+              Build, Windows: various fixes.
+
               Build: use Pkgconfig to find libxml2 if it works (fall back
               to xml2-config).
 

@@ -121,6 +121,7 @@ PORTBINARIES =  avstopam bmptopnm fitstopnm \
 
 ifneq ($(DONT_HAVE_PROCESS_MGMT),Y)
   PORTBINARIES += pstopnm
+  PORTBINARIES += pnmtops
 endif
 
 BINARIES = \
@@ -128,7 +129,6 @@ BINARIES = \
   pamtopdbimg \
   pamtosrf \
   pdbimgtopam \
-  pnmtops \
   pnmtorast \
   rasttopnm \
   srftopam \
