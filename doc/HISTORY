@@ -14,6 +14,10 @@ not yet  BJH  Release 10.58.00
 
               xpmtoppm: Make it work on XPM with zero characters per pixel.
 
+
+              pm_make_tmpfile_fd: fix improper handling when unable to get
+              memory to construct file name.
+
               Windows/Mingw: fix bug: temporary file creation fails
               consistently.  Broken in 10.34.
 
