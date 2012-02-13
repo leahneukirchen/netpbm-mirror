@@ -786,7 +786,6 @@ pm_asprintf(const char ** const resultP,
         result = NULL;
     else {
         size_t const allocSize = dryRunLen + 1;
-        char * result;
         result = malloc(allocSize);
         if (result != NULL) {
             va_list varargs;
