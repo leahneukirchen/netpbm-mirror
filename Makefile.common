@@ -68,7 +68,7 @@
 
 include $(SRCDIR)/Makefile.version
 
-INCLUDES2 := $(INCLUDES) -I$(SRCDIR)/$(SUBDIR) -I. -I importinc
+INCLUDES2 := -I$(SRCDIR)/$(SUBDIR) -I. -I importinc $(INCLUDES) 
 
 ifeq ($(NETPBMLIBTYPE),unixstatic)
   NETPBMLIBFNAME = libnetpbm.$(STATICLIBSUFFIX)

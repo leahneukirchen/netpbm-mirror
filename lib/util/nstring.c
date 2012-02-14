@@ -769,7 +769,6 @@ asprintfN(const char ** const resultP,
         *resultP = strsol;
     else {
         size_t const allocSize = dryRunLen + 1;
-        char * result;
         result = malloc(allocSize);
         if (result == NULL)
             *resultP = strsol;

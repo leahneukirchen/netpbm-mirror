@@ -4,6 +4,19 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+12.02.14 BJH  Release 10.35.84
+
+              pamscale: fix all black output with resampling.  Always broken.
+
+              pgmtexture: fix integer overflow in difference variance.
+              Always broken.
+
+              pgmtexture: fix array bounds violations in various calculations.
+              Always broken.
+
+              Build: always put Netpbm header files before external library
+              header files in search path.
+
 11.11.25 BJH  Release 10.35.83
 
               pngtopnm: fix crash with invalid tIME chunk.  Always broken.
