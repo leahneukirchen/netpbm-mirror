@@ -272,7 +272,7 @@ pm_make_tmpfile_fd(int *         const fdP,
     asprintfN(&filenameTemplate, "%s%s%s%s", 
               tmpdir, dirseparator, pm_progname, "_XXXXXX");
 
-    if (filenameTemplate == pm_strsol)
+    if (filenameTemplate == strsol)
         asprintfN(&error,
                   "Unable to allocate storage for temporary file name");
     else {

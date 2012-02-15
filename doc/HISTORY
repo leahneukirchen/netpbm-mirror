@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+12.02.15 BJH  Release 10.47.37
+
+              Fix compile error from 10.47.36.
+
 12.02.15 BJH  Release 10.47.36
 
               pm_make_tmpfile_fd: fix improper handling when unable to get
