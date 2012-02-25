@@ -4,6 +4,16 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+12.02.25 BJH  Release 10.57.03
+
+              pm_make_tmpfile_fd: fix improper handling when unable to get
+              memory to construct file name.
+
+              pngtopam: fix incorrect output when PNG has 16 bits per pixel.
+              Broken in 10.56.
+
+              Build, Windows: various fixes.
+
 12.02.11 BJH  Release 10.57.02
 
               Windows/Mingw: set binary mode on files.
