@@ -1248,7 +1248,7 @@ paletteAlpha(struct pngx * const pngxP,
 
 
 
-#define GET_PNG_VAL(p) getPngVal(&(p), pngx_colorType(pngxP))
+#define GET_PNG_VAL(p) getPngVal(&(p), pngx_bitDepth(pngxP))
 
 
 

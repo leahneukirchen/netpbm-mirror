@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.58.00
 
+              pngtopam: fix incorrect output when PNG has 16 bits per pixel.
+              Broken in 10.56.
+
               pgmtexture: fix integer overflow in difference variance.
               Always broken.
 
@@ -13,7 +16,6 @@ not yet  BJH  Release 10.58.00
               Always broken.
 
               xpmtoppm: Make it work on XPM with zero characters per pixel.
-
 
               pm_make_tmpfile_fd: fix improper handling when unable to get
               memory to construct file name.
