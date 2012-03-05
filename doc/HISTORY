@@ -20,6 +20,9 @@ not yet  BJH  Release 10.58.00
               pm_make_tmpfile_fd: fix improper handling when unable to get
               memory to construct file name.
 
+              ppmquantall: replace with pnmquantall and change from Bash
+              to Perl.
+
               Windows/Mingw: fix bug: temporary file creation fails
               consistently.  Broken in 10.34.
 

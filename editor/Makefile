@@ -44,8 +44,8 @@ NOMERGEBINARIES =
 MERGEBINARIES = $(PORTBINARIES)
 
 BINARIES = $(MERGEBINARIES) $(NOMERGEBINARIES)
-SCRIPTS = pnmflip ppmfade ppmquant ppmquantall ppmshadow \
-	  pamstretch-gen pnmmargin pnmquant 
+SCRIPTS = pnmflip ppmfade ppmquant ppmshadow \
+	  pamstretch-gen pnmmargin pnmquant pnmquantall 
 
 OBJECTS = $(BINARIES:%=%.o)
 
@@ -90,3 +90,7 @@ install.bin.local: $(PKGDIR)/bin
 	cd $(PKGDIR)/bin ; \
 	rm -f pnmscale ; \
 	$(SYMLINK) pamscale$(EXE) pnmscale
+# In March 2012, pnmquantall replaced ppmquantall
+	cd $(PKGDIR)/bin ; \
+	rm -f ppmquantall ; \
+	$(SYMLINK) pnmquantall$(EXE) ppmquantall
