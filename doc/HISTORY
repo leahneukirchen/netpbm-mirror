@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.58.00
 
+              Add ppmtospu, 22 years late.
+
               pngtopam: fix incorrect output when PNG has 16 bits per pixel.
               Broken in 10.56.
 
