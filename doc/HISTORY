@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+12.03.10 BJH  Release 10.57.04
+
+              ppmquantall: replace with pnmquantall and change from Bash
+              to Perl.  This fixes a problem wherein the Bash version
+              claimed to be Bourne Shell.
+
 12.02.25 BJH  Release 10.57.03
 
               pm_make_tmpfile_fd: fix improper handling when unable to get
