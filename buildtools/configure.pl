@@ -1231,7 +1231,9 @@ sub getLinuxsvgaLibrary($@) {
             $default = '/usr/link/svgalib/libvga.so';
         } elsif (-d('/usr/lib/svgalib')) {
             $default = '/usr/lib/svgalib/libvga.so';
-        } elsif (system('ldconfig -p | grep libvga &>/dev/null') == 0) {
+        } elsif (system('ldconfig -p | grep libvga >/dev/null 2>&1') == 0) {
+            # &>/dev/null should work above, but on 12.03.26, it caused the
+            # return value of system() always to be zero!
             $default = 'libvga.so';
         } elsif (-f('/usr/lib/libvga.a')) {
             $default = '/usr/lib/libvga.a';
@@ -2297,7 +2299,7 @@ if (!$flex_result) {
     # make rules for Thinkjettopbm for information on our experiences
     # with Lexes besides Flex.
 
-    my $systemRc = system('lex </dev/null &>/dev/null');
+    my $systemRc = system('lex </dev/null >/dev/null 2>&1');
 
     if ($systemRc >> 8 == 127) {
         print("\n");

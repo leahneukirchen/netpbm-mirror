@@ -4,6 +4,13 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+12.03.27 BJH  Release 10.57.05
+
+              configure: work around Perl bug that causes 'configure' to
+              falsely conclude Svgalib is installed.
+
+              Build: fix bug finding X libraries for merge buildl
+
 12.03.10 BJH  Release 10.57.04
 
               ppmquantall: replace with pnmquantall and change from Bash
