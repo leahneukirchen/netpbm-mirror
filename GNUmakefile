@@ -272,9 +272,6 @@ endif
 ifneq ($(LINUXSVGALIB),NONE)
   MERGELIBS += $(LINUXSVGALIB)
 endif
-ifneq ($(X11LIB),NONE)
-  MERGELIBS += $(X11LIB)
-endif
 
 ifeq ($(shell libpng$(PNGVER)-config --version),)
   PNGLD = $(shell $(LIBOPT) $(LIBOPTR) $(PNGLIB) $(ZLIB))
@@ -287,6 +284,13 @@ ifeq ($(shell xml2-config --version),)
 else
   XML2LD=$(shell xml2-config --libs)
 endif
+
+ifeq ($(shell pkg-config x11 --libs),)
+  X11LD = $(shell $(LIBOPT) $(LIBOPTR) $(X11LIB))
+else
+  X11LD = $(shell pkg-config x11 --libs)
+endif
+
 
 
 # If URTLIB is BUNDLED_URTLIB, then we're responsible for building it, which
@@ -330,7 +334,7 @@ netpbm:%:%.o $(OBJECT_DEP) $(NETPBMLIB) $(URTLIBDEP) $(LIBOPT)
 # Note that LDFLAGS might contain -L options, so order is important.
 	$(LD) -o $@ $< $(OBJECT_LIST) \
           $(LDFLAGS) $(shell $(LIBOPT) $(NETPBMLIB) $(MERGELIBS)) \
-	  $(PNGLD) $(XML2LD) $(MATHLIB) $(NETWORKLD) $(LADD)
+	  $(PNGLD) $(XML2LD) $(X11LD) $(MATHLIB) $(NETWORKLD) $(LADD)
 
 netpbm.o: mergetrylist
 
