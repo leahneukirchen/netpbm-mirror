@@ -4,6 +4,8 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+not yet  BJH  Release 10.59.00
+
 12.03.29 BJH  Release 10.58.00
 
               Add ppmtospu, 22 years late.
@@ -34,6 +36,9 @@ CHANGE HISTORY
 
               configure: work around Perl bug that causes 'configure' to
               falsely conclude Svgalib is installed.
+
+              Build: Use rand/srand instead of random/srandom because the
+              latter are not present in Mingw builds.
 
               Build: fix bug finding X libraries for merge buildl
 
