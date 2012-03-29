@@ -4,43 +4,46 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-12.03.27 BJH  Release 10.57.05
+12.03.29 BJH  Release 10.58.00
 
-              configure: work around Perl bug that causes 'configure' to
-              falsely conclude Svgalib is installed.
-
-              Build: fix bug finding X libraries for merge buildl
-
-12.03.10 BJH  Release 10.57.04
-
-              ppmquantall: replace with pnmquantall and change from Bash
-              to Perl.  This fixes a problem wherein the Bash version
-              claimed to be Bourne Shell.
-
-12.02.25 BJH  Release 10.57.03
-
-              pm_make_tmpfile_fd: fix improper handling when unable to get
-              memory to construct file name.
+              Add ppmtospu, 22 years late.
 
               pngtopam: fix incorrect output when PNG has 16 bits per pixel.
               Broken in 10.56.
-
-              Build, Windows: various fixes.
-
-12.02.11 BJH  Release 10.57.02
-
-              Windows/Mingw: set binary mode on files.
-
-              Windows/Mingw: fix bug: temporary file creation fails
-              consistently.  Broken in 10.34.
-
-12.01.14 BJH  Release 10.57.01
 
               pgmtexture: fix integer overflow in difference variance.
               Always broken.
 
               pgmtexture: fix array bounds violations in various calculations.
               Always broken.
+
+              xpmtoppm: Make it work on XPM with zero characters per pixel.
+
+              pm_make_tmpfile_fd: fix improper handling when unable to get
+              memory to construct file name.
+
+              ppmquantall: replace with pnmquantall and change from Bash
+              to Perl.
+
+              Windows/Mingw: fix bug: temporary file creation fails
+              consistently.  Broken in 10.34.
+
+              Windows/Mingw: set binary mode on files.
+
+              Windows: compute program name correctly.
+
+              configure: work around Perl bug that causes 'configure' to
+              falsely conclude Svgalib is installed.
+
+              Build: fix bug finding X libraries for merge buildl
+
+              Build: redo conditional compilation of Windows to use
+              MSVCRT, based on _WIN32, instead of WIN32.
+
+              Build, Windows: various fixes.
+
+              Build: use Pkgconfig to find libxml2 if it works (fall back
+              to xml2-config).
 
 11.12.30 BJH  Release 10.57.00
 

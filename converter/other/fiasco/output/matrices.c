@@ -22,6 +22,8 @@
 
 #include <stdlib.h>
 
+#include "pm_c_util.h"
+
 #include "types.h"
 #include "macros.h"
 #include "error.h"
@@ -142,7 +144,7 @@ delta_encoding (bool_t use_normal_domains, bool_t use_delta_domains,
 		  ;
 	       count [edge]++;
 	       edges++;
-	       M = max (edge, M);
+	       M = MAX(edge, M);
 	    }
       write_rice_code (M, 3, output);
       for (n = 0; n <= M; n++)

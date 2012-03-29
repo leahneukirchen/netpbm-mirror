@@ -149,11 +149,11 @@ parseCommandLine(int argc, char ** argv,
     } else 
         cmdlineP->ysize = 0;
 
-    if (portrait_opt & !landscape_opt)
+    if (portrait_opt && !landscape_opt)
         cmdlineP->orientation = PORTRAIT;
-    else if (!portrait_opt & landscape_opt)
+    else if (!portrait_opt && landscape_opt)
         cmdlineP->orientation = LANDSCAPE;
-    else if (!portrait_opt & !landscape_opt)
+    else if (!portrait_opt && !landscape_opt)
         cmdlineP->orientation = UNSPECIFIED;
     else
         pm_error("Cannot specify both -portrait and -landscape options");
@@ -782,7 +782,7 @@ executeGhostscript(char                     const pstrans[],
     if (strlen(outfile_arg) > 80)
         pm_error("output file spec too long.");
     
-    rc = pipe(pipefd);
+    rc = pm_pipe(pipefd);
     if (rc < 0)
         pm_error("Unable to create pipe to talk to Ghostscript process.  "
                  "errno = %d (%s)", errno, strerror(errno));

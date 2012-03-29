@@ -37,7 +37,6 @@
   10.04.14
 */
 
-#define _XOPEN_SOURCE 600  /* Make sure random(), srandom() are in <stdlib.h>*/
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -254,11 +253,11 @@ locatePaintSources(struct pam *            const pamP,
     if (downsample > 0 && downsample < paintSources.size) {
         unsigned int i;
 
-        srandom(time(NULL));
+        srand(time(NULL));
 
         for (i = 0; i < downsample; ++i) {
             unsigned int const swapIdx =
-                i + random() % (paintSources.size - i);
+                i + rand() % (paintSources.size - i);
             struct coords const swapVal = paintSources.list[i];
 
             paintSources.list[i] = paintSources.list[swapIdx];

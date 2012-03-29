@@ -15,6 +15,7 @@
  */
 
 #include "config.h"
+#include "pm_c_util.h"
 #include "pnm.h"
 
 #include <stdlib.h>
@@ -278,14 +279,14 @@ checkargs (int argc, char **argv, char const ***image_template,
             int   n = * (int *) parameter_value (params, "chroma-dictionary");
             float q = * (float *) parameter_value (params, "chroma-qfactor");
       
-            if (!fiasco_c_options_set_chroma_quality (*options, q, max (0, n)))
+            if (!fiasco_c_options_set_chroma_quality (*options, q, MAX(0, n)))
                 error (fiasco_get_error_message ());
         }
       
         {
             int n = *((int *) parameter_value (params, "smooth"));
      
-            if (!fiasco_c_options_set_smoothing (*options, max (0, n)))
+            if (!fiasco_c_options_set_smoothing (*options, MAX(0, n)))
                 error (fiasco_get_error_message ());
         }
       
@@ -328,7 +329,7 @@ checkargs (int argc, char **argv, char const ***image_template,
             else
                 error (_("Invalid tiling method `%s' specified."), m);
 
-            if (!fiasco_c_options_set_tiling (*options, method, max (0, e)))
+            if (!fiasco_c_options_set_tiling (*options, method, MAX(0, e)))
                 error (fiasco_get_error_message ());
         }
       
@@ -355,7 +356,7 @@ checkargs (int argc, char **argv, char const ***image_template,
             }
      
             if (!fiasco_c_options_set_optimizations (*options, m, M, N,
-                                                     max (0, D), o))
+                                                     MAX(0, D), o))
                 error (fiasco_get_error_message ());
         }
         {
@@ -364,14 +365,14 @@ checkargs (int argc, char **argv, char const ***image_template,
             int p = * (int *) parameter_value (params, "prediction");
      
             if (!fiasco_c_options_set_prediction (*options,
-                                                  p, max (0, m), max (0, M)))
+                                                  p, MAX(0, m), MAX(0, M)))
                 error (fiasco_get_error_message ());
         }
         {
-            float r    = * (float *) parameter_value (params, "rpf-range");
-            float dc_r = * (float *) parameter_value (params, "dc-rpf-range");
-            int   m    = * (int *)   parameter_value (params, "rpf-mantissa");
-            int   dc_m = * (int *)   parameter_value (params, "dc-rpf-mantissa");
+            float r    = * (float *)parameter_value(params, "rpf-range");
+            float dc_r = * (float *)parameter_value(params, "dc-rpf-range");
+            int   m    = * (int *)  parameter_value(params, "rpf-mantissa");
+            int   dc_m = * (int *)  parameter_value(params, "dc-rpf-mantissa");
             fiasco_rpf_range_e range, dc_range;
      
             if (r < 1)
@@ -393,8 +394,8 @@ checkargs (int argc, char **argv, char const ***image_template,
                 dc_range = FIASCO_RPF_RANGE_2_00;
         
             if (!fiasco_c_options_set_quantization (*options,
-                                                    max (0, m), range,
-                                                    max (0, dc_m), dc_range))
+                                                    MAX(0, m), range,
+                                                    MAX(0, dc_m), dc_range))
                 error (fiasco_get_error_message ());
         }
 

@@ -157,10 +157,6 @@ jpc_bitstream_t *jpc_bitstream_sopen(jas_stream_t *stream, const char *mode)
 {
 	jpc_bitstream_t *bitstream;
 
-	/* Ensure that the open mode is valid. */
-	assert(!strcmp(mode, "r") || !strcmp(mode, "w") || !strcmp(mode, "r+")
-	  || !strcmp(mode, "w+"));
-
 	if (!(bitstream = jpc_bitstream_alloc())) {
 		return 0;
 	}

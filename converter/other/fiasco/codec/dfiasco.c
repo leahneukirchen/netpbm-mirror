@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "pm_c_util.h"
 #include "nstring.h"
 
 #include "config.h"
@@ -115,7 +116,7 @@ fiasco_decoder_new (const char *filename, const fiasco_d_options_t *options)
 	    {
 	       set_error (_("Magnifaction factor `%d' is too large. "
 			    "Maximium value is %d."),
-			  dfiasco->enlarge_factor, max (0, n - 1));
+			  dfiasco->enlarge_factor, MAX(0, n - 1));
 	       fiasco_decoder_delete (decoder);
 	       return NULL;
 	    }
@@ -132,7 +133,7 @@ fiasco_decoder_new (const char *filename, const fiasco_d_options_t *options)
 	    {
 	       set_error (_("Magnifaction factor `%d' is too small. "
 			    "Minimum value is %d."),
-			  dfiasco->enlarge_factor, - max (0, n - 1));
+			  dfiasco->enlarge_factor, - MAX(0, n - 1));
 	       fiasco_decoder_delete (decoder);
 	       return NULL;
 	    }

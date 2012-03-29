@@ -21,6 +21,7 @@
   See the EXIF specs at http://exif.org (2001.09.01).
 
 --------------------------------------------------------------------------*/
+#include "pm_config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -30,7 +31,7 @@
 #include <limits.h>
 #include <ctype.h>
 
-#ifdef _WIN32
+#if MSVCRT
     #include <sys/utime.h>
 #else
     #include <utime.h>

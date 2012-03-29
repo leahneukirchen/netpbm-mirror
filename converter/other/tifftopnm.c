@@ -727,7 +727,7 @@ spawnWithInputPipe(const char *  const shellCmd,
     int fd[2];
     int rc;
 
-    rc = pipe(fd);
+    rc = pm_pipe(fd);
 
     if (rc != 0)
         pm_asprintf(errorP, "Failed to create pipe for process input.  "

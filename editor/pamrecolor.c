@@ -24,7 +24,6 @@
  * ----------------------------------------------------------------------
  */
 
-#define _XOPEN_SOURCE 600  /* Make sure random(), srandom() are in <stdlib.h>*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -181,9 +180,9 @@ randomlyColorRow(struct pam *   const pamP,
     unsigned int col;
 
     for (col = 0; col < pamP->width; ++col) {
-        rowData[col][PAM_RED_PLANE] = random() / (float)RAND_MAX;
-        rowData[col][PAM_GRN_PLANE] = random() / (float)RAND_MAX;
-        rowData[col][PAM_BLU_PLANE] = random() / (float)RAND_MAX;
+        rowData[col][PAM_RED_PLANE] = rand() / (float)RAND_MAX;
+        rowData[col][PAM_GRN_PLANE] = rand() / (float)RAND_MAX;
+        rowData[col][PAM_BLU_PLANE] = rand() / (float)RAND_MAX;
     }
 }
 
@@ -457,7 +456,7 @@ main(int argc, const char *argv[]) {
 
     pm_proginit(&argc, argv);
 
-    srandom(pm_randseed());
+    srand(pm_randseed());
 
     parseCommandLine(argc, argv, &cmdline);
 

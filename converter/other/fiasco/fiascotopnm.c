@@ -178,21 +178,21 @@ checkargs (int argc, char **argv, bool_t *double_resolution, bool_t *panel,
     *options = fiasco_d_options_new ();
 
     {
-        int n = *((int *) parameter_value (params, "smoothing"));
+        int const n = *((int *) parameter_value (params, "smoothing"));
       
-        if (!fiasco_d_options_set_smoothing (*options, max (-1, n)))
+        if (!fiasco_d_options_set_smoothing (*options, MAX(-1, n)))
             error (fiasco_get_error_message ());
     }
 
     {
-        int n = *((int *) parameter_value (params, "magnify"));
+        int const n = *((int *) parameter_value (params, "magnify"));
       
         if (!fiasco_d_options_set_magnification (*options, n))
             error (fiasco_get_error_message ());
     }
    
     {
-        bool_t n = *((bool_t *) parameter_value (params, "fast"));
+        bool_t const n = *((bool_t *) parameter_value (params, "fast"));
       
         if (!fiasco_d_options_set_4_2_0_format (*options, n > 0 ? YES : NO))
             error (fiasco_get_error_message ());

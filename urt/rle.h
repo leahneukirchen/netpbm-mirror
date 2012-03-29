@@ -30,13 +30,7 @@
 #ifndef RLE_H
 #define RLE_H
 
-#include "rle_config.h"     /* Configuration parameters. */
-
 #include <stdio.h>      /* Declare FILE. */
-
-#ifdef c_plusplus
-#define USE_PROTOTYPES
-#endif
 
 enum rle_dispatch {
     NO_DISPATCH = -1,

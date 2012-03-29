@@ -92,11 +92,7 @@ _error (const char *format, ...)
 
    fprintf (stderr, "%s: %s: line %d:\nError: ",
 	    executable, error_file, error_line);
-#if HAVE_VPRINTF
    vfprintf (stderr, format, args);
-#elif HAVE_DOPRNT
-   _doprnt (format, args, stderr);
-#endif /* HAVE_DOPRNT */
    fputc ('\n', stderr);
    va_end(args);
 
@@ -132,11 +128,7 @@ _warning (const char *format, ...)
 
    fprintf (stderr, "%s: %s: line %d:\nWarning: ",
 	    executable, error_file, error_line);
-#if HAVE_VPRINTF
    vfprintf (stderr, format, args);
-#elif HAVE_DOPRNT
-   _doprnt (format, args, stderr);
-#endif /* HAVE_DOPRNT */
    fputc ('\n', stderr);
 
    va_end (args);

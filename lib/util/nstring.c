@@ -750,6 +750,16 @@ const char * const pm_strsol = "NO MEMORY TO CREATE STRING!";
 
 
 
+const char *
+pm_strdup(const char * const arg) {
+
+    const char * const dup = strdup(arg);
+
+    return dup ? dup : pm_strsol;
+}
+
+
+
 void PM_GNU_PRINTF_ATTR(2,3)
 pm_asprintf(const char ** const resultP,
             const char *  const fmt, 

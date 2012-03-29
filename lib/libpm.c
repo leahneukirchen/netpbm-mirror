@@ -8,6 +8,7 @@
   Netpbm library subroutines.
 **************************************************************************/
 
+#define _BSD_SOURCE          /* Make sure strdup is in string.h */
 #define _XOPEN_SOURCE 500    /* Make sure ftello, fseeko are defined */
 
 #include "netpbm/pm_config.h"
@@ -604,8 +605,9 @@ pm_proginit(int * const argcP, const char * argv[]) {
 
    This includes calling pm_init() to initialize the Netpbm libraries.
 -----------------------------------------------------------------------------*/
+    const char * const progname = pm_arg0toprogname(argv[0]);
+        /* points to static memory in this library */
     int argn, i;
-    const char * progname;
     bool showmessages;
     bool show_version;
         /* We're supposed to just show the version information, then exit the
@@ -615,13 +617,6 @@ pm_proginit(int * const argcP, const char * argv[]) {
         /* We're supposed to just tell user where to get help, then exit the
            program.
         */
-    
-    /* Extract program name. */
-    progname = strrchr( argv[0], '/');
-    if (progname == NULL)
-        progname = argv[0];
-    else
-        ++progname;
 
     pm_init(progname, 0);
 
@@ -688,6 +683,43 @@ pm_getMessage(void) {
 
 
 
+static void
+extractAfterLastSlash(const char * const fullPath,
+                      char *       const retval,
+                      size_t       const retvalSize) {
+    
+    char * slashPos;
+
+    /* Chop any directories off the left end */
+    slashPos = strrchr(fullPath, '/');
+
+    if (slashPos == NULL) {
+        strncpy(retval, fullPath, retvalSize);
+        retval[retvalSize-1] = '\0';
+    } else {
+        strncpy(retval, slashPos +1, retvalSize);
+        retval[retvalSize-1] = '\0';
+    }
+
+    /* Chop any .exe off the right end */
+    if (strlen(retval) >= 4 && strcmp(retval+strlen(retval)-4, ".exe") == 0)
+        retval[strlen(retval)-4] = 0;
+}
+
+
+
+#if MSVCRT
+static void
+splitpath(const char * const fullPath,
+          char *       const retval,
+          size_t       const retvalSize) {
+
+    _splitpath_s(fullPath, 0, 0,  0, 0,  retval, retvalSize,  0, 0);
+}
+#endif
+
+
+
 char *
 pm_arg0toprogname(const char arg0[]) {
 /*----------------------------------------------------------------------------
@@ -705,22 +737,11 @@ pm_arg0toprogname(const char arg0[]) {
    but truncated at 64 characters.
 -----------------------------------------------------------------------------*/
     static char retval[64+1];
-    char *slash_pos;
-
-    /* Chop any directories off the left end */
-    slash_pos = strrchr(arg0, '/');
-
-    if (slash_pos == NULL) {
-        strncpy(retval, arg0, sizeof(retval));
-        retval[sizeof(retval)-1] = '\0';
-    } else {
-        strncpy(retval, slash_pos +1, sizeof(retval));
-        retval[sizeof(retval)-1] = '\0';
-    }
-
-    /* Chop any .exe off the right end */
-    if (strlen(retval) >= 4 && strcmp(retval+strlen(retval)-4, ".exe") == 0)
-        retval[strlen(retval)-4] = 0;
+#if MSVCRT
+    splitpath(arg0, retval, sizeof(retval));
+#else
+    extractAfterLastSlash(arg0, retval, sizeof(retval));
+#endif
 
     return(retval);
 }

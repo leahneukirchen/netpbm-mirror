@@ -16,7 +16,8 @@ PORTBINARIES =	411toppm eyuvtoppm gouldtoppm ilbmtoppm imgtoppm \
 		ppmtobmp ppmtoeyuv ppmtogif ppmtoicr ppmtoilbm \
 		ppmtoleaf ppmtolj ppmtomitsu ppmtoneo \
 		ppmtopcx ppmtopi1 ppmtopict ppmtopj \
-		ppmtopjxl ppmtoppm ppmtopuzz ppmtorgb3 ppmtosixel ppmtoterm \
+		ppmtopjxl ppmtoppm ppmtopuzz ppmtorgb3 \
+		ppmtosixel ppmtospu ppmtoterm \
 		ppmtowinicon ppmtoxpm ppmtoyuv ppmtoyuvsplit \
 		qrttoppm rawtoppm rgb3toppm spctoppm \
 		sputoppm tgatoppm winicontoppm ximtoppm xpmtoppm xvminitoppm \

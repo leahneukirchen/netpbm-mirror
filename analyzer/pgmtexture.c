@@ -157,12 +157,12 @@ results (const char *  const name,
 
     unsigned int i;
 
-    fprintf (stdout, "%s", name);
+    fprintf(stdout, "%s", name);
 
     for (i = 0; i < 4; ++i)
-        fprintf (stdout, "% 1.3e ", a[i]);
+        fprintf(stdout, "% 1.3e ", a[i]);
 
-    fprintf (stdout, "% 1.3e\n", (a[0] + a[1] + a[2] + a[3]) / 4);
+    fprintf(stdout, "% 1.3e\n", (a[0] + a[1] + a[2] + a[3]) / 4);
 }
 
 
@@ -613,6 +613,8 @@ f6_savg (float **     const p,
     unsigned int i;
     float savg;
 
+    assert(2*ng < ARRAY_SIZE(pxpy));
+
     for (i = 0; i <= 2 * ng; ++i)
         pxpy[i] = 0.0;
 
@@ -640,6 +642,8 @@ f7_svar (float **     const p,
     unsigned int i;
     float var;
 
+    assert(2*ng < ARRAY_SIZE(pxpy));
+
     for (i = 0; i <= 2 * ng; ++i)
         pxpy[i] = 0;
 
@@ -665,6 +669,8 @@ f8_sentropy (float **     const p,
     float pxpy[2 * (PGM_MAXMAXVAL+1) + 1];
     unsigned int i;
     float sentropy;
+
+    assert(2*ng < ARRAY_SIZE(pxpy));
 
     for (i = 0; i <= 2 * ng; ++i)
         pxpy[i] = 0;
@@ -707,12 +713,16 @@ f10_dvar (float **     const p,
 /*----------------------------------------------------------------------------
    Difference Variance
 -----------------------------------------------------------------------------*/
-    double pxpy[2 * PGM_MAXMAXVAL];
+    double pxpy[PGM_MAXMAXVAL + 1];
     unsigned int i;
-    double sqrNg;
-    double sum, sumSqr, var;
+    double sqrNg;  /* Square of 'ng' */
+    double sum;
+    double sumSqr;
+    double var;
 
-    for (i = 0; i <= 2 * ng; ++i)
+    assert(ng <= ARRAY_SIZE(pxpy));
+
+    for (i = 0; i < ng; ++i)
         pxpy[i] = 0;
 
     for (i = 0; i < ng; ++i) {
@@ -723,7 +733,7 @@ f10_dvar (float **     const p,
     /* Now calculate the variance of Pxpy (Px-y) */
     for (i = 0, sum = 0.0, sumSqr = 0.0; i < ng; ++i) {
         sum += pxpy[i];
-        sumSqr += pxpy[i] * pxpy[i];
+        sumSqr += SQR(pxpy[i]);
     }
     sqrNg = SQR(ng);
     var = (sqrNg * sumSqr - SQR(sum)) / SQR(sqrNg);
@@ -742,6 +752,8 @@ f11_dentropy (float **     const p,
     float pxpy[2 * (PGM_MAXMAXVAL+1) + 1];
     unsigned int i;
     float sum;
+
+    assert(2*ng < ARRAY_SIZE(pxpy));
 
     for (i = 0; i <= 2 * ng; ++i)
         pxpy[i] = 0;
@@ -964,7 +976,7 @@ main (int argc, const char ** argv) {
 
     d = 1;
 
-    grays = pgm_readpgm (ifP, &cols, &rows, &maxval);
+    grays = pgm_readpgm(ifP, &cols, &rows, &maxval);
     pm_close (ifP);
 
     /* Determine the number of different gray scales (not maxval) */
@@ -979,7 +991,7 @@ main (int argc, const char ** argv) {
         if (tone[i] != -1)
             ++toneCt;
     }
-    pm_message("(Image has %u graylevels.)", toneCt);
+    pm_message("(Image has %u gray levels.)", toneCt);
 
     /* Collapse array, taking out all zero values */
     for (row = 0, itone = 0; row <= PGM_MAXMAXVAL; ++row)

@@ -22,6 +22,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "pm_c_util.h"
+
 #include "types.h"
 #include "macros.h"
 #include "error.h"
@@ -215,7 +217,7 @@ compute_hits (unsigned from, unsigned to, unsigned n, const wfa_t *wfa)
 
    qsort (hits + 1, to - 1, sizeof (pair_t), sort_desc_pair);
 
-   n       = min (to, n);
+   n       = MIN(to, n);
    domains = Calloc (n + 1, sizeof (word_t));
 
    for (domain = 0; domain < (int) n && (!domain || hits [domain].key);
@@ -483,7 +485,7 @@ compute_spiral (int *vorder, unsigned image_width, unsigned image_height,
    
    lx     = log2 (image_width - 1) + 1;
    ly     = log2 (image_height - 1) + 1;
-   level  = max (lx, ly) * 2 - ((ly == lx + 1) ? 1 : 0);
+   level  = MAX(lx, ly) * 2 - ((ly == lx + 1) ? 1 : 0);
    tiles  = 1 << tiling_exp;		/* Number of image tiles */
    width  = width_of_level (level - tiling_exp);
    height = height_of_level (level - tiling_exp);

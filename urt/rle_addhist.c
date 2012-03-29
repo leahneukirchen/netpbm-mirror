@@ -30,12 +30,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#ifdef  USE_TIME_H
 #include <time.h>
-#else
-#include <sys/types.h>
-#include <sys/time.h>
-#endif
 
 #include "netpbm/mallocvar.h"
 

@@ -857,7 +857,7 @@ void jas_image_dump(jas_image_t *image, FILE *out)
 	}
 	for (cmptno = 0; cmptno < image->numcmpts_; ++cmptno) {
 		cmpt = image->cmpts_[cmptno];
-		fprintf(out, "prec=%d sgnd=%d\n", cmpt->prec_, cmpt->sgnd_);
+		fprintf(out, "prec=%d sgnd=%d\n", (int)cmpt->prec_, cmpt->sgnd_);
 		if (jas_image_readcmpt(image, cmptno, 0, 0, 1, 1, data)) {
 			abort();
 		}

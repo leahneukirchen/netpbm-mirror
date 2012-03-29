@@ -73,8 +73,7 @@
 #include <unistd.h>
 #endif	/* GNU C library.  */
 
-#if defined (WIN32) && !defined (__CYGWIN32__)
-/* It's not Unix, really.  See?  Capital letters.  */
+#if MSVCRT
 #include <windows.h>
 #define getpid() GetCurrentProcessId()
 #endif

@@ -20,6 +20,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "pm_c_util.h"
+
 #include "types.h"
 #include "macros.h"
 #include "error.h"
@@ -458,7 +460,7 @@ qac_chroma (unsigned max_domains, const wfa_t *wfa, void *model)
                                 max_domains, wfa);
         for (n = 0; n < max_domains && domains [n] >= 0; n++)
             states [n] = domains [n];
-        max_domains = min (max_domains, n);
+        max_domains = MIN(max_domains, n);
         Free (domains);
 
         for (old = 0, new = 0; new < max_domains && old < qac_model->n; old++)
@@ -846,7 +848,7 @@ rle_chroma (unsigned max_domains, const wfa_t *wfa, void *model)
             states [n] = domains [n];
 
         assert (states [0] == 0);
-        max_domains = min (max_domains, n);
+        max_domains = MIN(max_domains, n);
         Free (domains);
 
         Free (rle_model->states);

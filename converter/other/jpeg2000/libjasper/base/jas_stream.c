@@ -117,6 +117,7 @@
     */
 #define _XOPEN_SOURCE 500    /* Make sure P_tmpdir is defined */
 
+#include "pm_config.h"
 #include <assert.h>
 #include <fcntl.h>
 #include <stdlib.h>
@@ -126,7 +127,7 @@
 #if defined(HAVE_UNISTD_H)
 #include <unistd.h>
 #endif
-#if defined(WIN32) || defined(HAVE_IO_H)
+#if MSVCRT
 #include <io.h>
 #endif
 
@@ -440,7 +441,7 @@ jas_stream_t *jas_stream_fdopen(int fd, const char *mode)
 	/* Parse the mode string. */
 	stream->openmode_ = jas_strtoopenmode(mode);
 
-#if defined(WIN32)
+#if defined(HAVE_SETMODE) && defined(O_BINARY)
 	/* Argh!!!  Someone ought to banish text mode (i.e., O_TEXT) to the
 	  greatest depths of purgatory! */
 	/* Ensure that the file descriptor is in binary mode, if the caller

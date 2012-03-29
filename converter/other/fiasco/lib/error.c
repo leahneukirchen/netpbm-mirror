@@ -108,11 +108,7 @@ set_error (const char *format, ...)
       Free (error_message);
    error_message = Calloc (len, sizeof (char));
    
-#if HAVE_VPRINTF
    vsprintf (error_message, format, args);
-#elif HAVE_DOPRNT
-   _doprnt (format, args, stderr);
-#endif /* HAVE_DOPRNT */
 
    va_end (args);
 }
@@ -169,11 +165,7 @@ error (const char *format, ...)
       Free (error_message);
    error_message = Calloc (len, sizeof (char));
    
-#if HAVE_VPRINTF
    vsprintf (error_message, format, args);
-#elif HAVE_DOPRNT
-   _doprnt (format, args, stderr);
-#endif /* HAVE_DOPRNT */
 
    va_end (args);
    
@@ -227,11 +219,7 @@ warning (const char *format, ...)
       return;
 	
    fprintf (stderr, "Warning: ");
-#if HAVE_VPRINTF
    vfprintf (stderr, format, args);
-#elif HAVE_DOPRNT
-   _doprnt (format, args, stderr);
-#endif /* HAVE_DOPRNT */
    fputc ('\n', stderr);
 
    va_end (args);
@@ -250,11 +238,7 @@ message (const char *format, ...)
    if (verboselevel == FIASCO_NO_VERBOSITY)
       return;
 
-#if HAVE_VPRINTF
    vfprintf (stderr, format, args);
-#elif HAVE_DOPRNT
-   _doprnt (format, args, stderr);
-#endif /* HAVE_DOPRNT */
    fputc ('\n', stderr);
    va_end (args);
 }
@@ -273,11 +257,7 @@ debug_message (const char *format, ...)
       return;
 
    fprintf (stderr, "*** ");
-#if HAVE_VPRINTF
    vfprintf (stderr, format, args);
-#elif HAVE_DOPRNT
-   _doprnt (format, args, stderr);
-#endif /* HAVE_DOPRNT */
    fputc ('\n', stderr);
    va_end (args);
 }
@@ -295,11 +275,7 @@ info (const char *format, ...)
    if (verboselevel == FIASCO_NO_VERBOSITY)
       return;
 
-#if HAVE_VPRINTF
    vfprintf (stderr, format, args);
-#elif HAVE_DOPRNT
-   _doprnt (format, args, stderr);
-#endif /* HAVE_DOPRNT */
    fflush (stderr);
    va_end (args);
 }

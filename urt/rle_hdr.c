@@ -26,6 +26,7 @@
  */
 
 #include "rle.h"
+#include "rle_config.h"
 
 #include <string.h>
 

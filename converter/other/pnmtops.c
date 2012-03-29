@@ -772,7 +772,7 @@ static void
 makePipe(int * const pipeFdArray) {
 
     int rc;
-    rc = pipe(pipeFdArray);
+    rc = pm_pipe(pipeFdArray);
     if (rc == -1)
         pm_error("pipe() failed, errno = %d (%s)", errno, strerror(errno));
 }
