@@ -4,7 +4,7 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-not yet  BJH  Release 10.58.00
+12.03.29 BJH  Release 10.58.00
 
               Add ppmtospu, 22 years late.
 
@@ -31,6 +31,11 @@ not yet  BJH  Release 10.58.00
               Windows/Mingw: set binary mode on files.
 
               Windows: compute program name correctly.
+
+              configure: work around Perl bug that causes 'configure' to
+              falsely conclude Svgalib is installed.
+
+              Build: fix bug finding X libraries for merge buildl
 
               Build: redo conditional compilation of Windows to use
               MSVCRT, based on _WIN32, instead of WIN32.
