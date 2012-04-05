@@ -250,7 +250,7 @@ openSeekableAsStdin($cmdlineR->{infile});
 
 # Save Standard Output for our eventual output
 open(OLDOUT, ">&STDOUT");
-select(OLDOUT);  # avoids Perl bug where it says we never use STDOUT 
+select(OLDOUT);  # avoids Perl bug where it says we never use OLDOUT 
 
 
 my $mapfileSpec = makeColormap($cmdlineR->{ncolors}, 
