@@ -4,7 +4,7 @@
 <BODY>
 <H1>ppmtogif</H1>
 <BR>
-<p><b>ppmtogif</b> was replaced in Netpbm 10.37 (December 2002) by
+<p><b>ppmtogif</b> was replaced in Netpbm 10.37 (December 2006) by
 <b><a href="pamtogif.html">pamtogif</a></b>.
 
 <P><B>pamtogif</b> is mostly backward compatible with <b>ppmtogif</b>.
@@ -25,7 +25,9 @@ Other than that, the compatibility <b>ppmtogif</b> just passes input and
 options directly to <b>pamtogif</b>.
 
 <P>You should not make any new use of <b>ppmtogif</b> and if you modify an
-existing use, you should upgrade to <b>pamtogif</b>.
+existing use, you should upgrade to <b>pamtogif</b>.  But note that if you
+write a program that might have to be used with old Netpbm, <b>ppmtogif</b> is
+the only way to do that.
 
 <p>Unless you use the <b>-alpha</b> option, you can simply change the name
 of the program.  If you use <b>-alpha</b>, here is how to upgrade:
