@@ -851,7 +851,7 @@ averageFromPattern(struct pam *   const pamP,
   Average the color of each non-background pattern tuple to every column that
   should have the same color.
 -----------------------------------------------------------------------------*/
-    unsigned int col;
+    int col;
 
     /* Initialize the tuple sums to zero. */
 

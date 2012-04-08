@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.59.00
 
+              pamstereogram: fix crash introduced in 10.54 (March 2011).
+
 12.03.29 BJH  Release 10.58.00
 
               Add ppmtospu, 22 years late.
