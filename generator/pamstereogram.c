@@ -825,7 +825,7 @@ computeFixedPoint(const int *  const same,
 -----------------------------------------------------------------------------*/
     int col;
 
-    for (col = width; col >= 0; --col) {
+    for (col = width-1; col >= 0; --col) {
         if (same[col] != col)
             sameFp[col] = sameFp[same[col]];
         else {
