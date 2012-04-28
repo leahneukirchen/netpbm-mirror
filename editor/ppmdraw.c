@@ -189,6 +189,7 @@ enum drawVerb {
     VERB_LINE_HERE,
     VERB_SPLINE3,
     VERB_CIRCLE,
+    VERB_FILLEDCIRCLE,
     VERB_FILLEDRECTANGLE,
     VERB_TEXT,
     VERB_TEXT_HERE
@@ -301,6 +302,8 @@ freeDrawCommand(const struct drawCommand * const commandP) {
         break;
     case VERB_CIRCLE:
         break;
+    case VERB_FILLEDCIRCLE:
+        break;
     case VERB_FILLEDRECTANGLE:
         break;
     case VERB_TEXT:
@@ -342,6 +345,35 @@ freeScript(struct script * const scriptP) {
 
     free(scriptP);
 }
+
+
+
+static void
+doFilledCircle(pixel **                   const pixels,
+               unsigned int               const cols,
+               unsigned int               const rows,
+               pixval                     const maxval,
+               const struct drawCommand * const commandP,
+               const struct drawState *   const drawStateP) {
+
+    struct fillobj * fhP;
+
+    fhP = ppmd_fill_create();
+            
+    ppmd_circle(pixels, cols, rows, maxval,
+                commandP->u.circleArg.cx,
+                commandP->u.circleArg.cy,
+                commandP->u.circleArg.radius,
+                ppmd_fill_drawproc,
+                fhP);
+            
+    ppmd_fill(pixels, cols, rows, maxval,
+              fhP,
+              PPMD_NULLDRAWPROC,
+              &drawStateP->color);
+
+    ppmd_fill_destroy(fhP);
+} 
 
 
 
@@ -462,6 +494,9 @@ executeScript(struct script * const scriptP,
                         commandP->u.circleArg.radius,
                         PPMD_NULLDRAWPROC,
                         &drawState.color);
+            break;
+        case VERB_FILLEDCIRCLE:
+            doFilledCircle(pixels, cols, rows, maxval, commandP, &drawState);
             break;
         case VERB_FILLEDRECTANGLE:
             ppmd_filledrectangle(pixels, cols, rows, maxval,
@@ -604,6 +639,17 @@ parseDrawCommand(struct tokenSet             const commandTokens,
             drawCommandP->verb = VERB_CIRCLE;
             if (commandTokens.count < 4)
                 pm_error("Not enough tokens for a 'circle' command.  "
+                         "Need %u.  Got %u", 4, commandTokens.count);
+            else {
+                struct circleArg * const argP = &drawCommandP->u.circleArg;
+                argP->cx     = atoi(commandTokens.token[1]);
+                argP->cy     = atoi(commandTokens.token[2]);
+                argP->radius = atoi(commandTokens.token[3]);
+            } 
+        } else if (streq(verb, "filledcircle")) {
+            drawCommandP->verb = VERB_FILLEDCIRCLE;
+            if (commandTokens.count < 4)
+                pm_error("Not enough tokens for a 'filledcircle' command.  "
                          "Need %u.  Got %u", 4, commandTokens.count);
             else {
                 struct circleArg * const argP = &drawCommandP->u.circleArg;
