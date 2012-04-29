@@ -627,11 +627,11 @@ static void
 byteBuffer_out(byteBuffer *  const byteBufferP,
                unsigned char const c) {
 /*----------------------------------------------------------------------------
-  Add a byte to the end of the current data block, and if it is now 254
+  Add a byte to the end of the current data block, and if it is now 255
   characters, flush the data block to the output file.
 -----------------------------------------------------------------------------*/
     byteBufferP->buffer[byteBufferP->count++] = c;
-    if (byteBufferP->count >= 254)
+    if (byteBufferP->count >= 255)
         byteBuffer_flush(byteBufferP);
 }
 
