@@ -127,7 +127,9 @@ for an automated process to do it for you with any significant
 integrity.  The examples are guidelines and you shouldn't expect them
 to work literally in your situtation.
 
-Here is an example of making troff pages:
+Here is an old example of making troff pages, which doesn't actually
+work anymore, but might be helpful.  You'll probably want to use a Subversion
+export of the manual instead of a Wget download (see above).
 
   mkdir netpbmdoc
   cd netpbmdoc
