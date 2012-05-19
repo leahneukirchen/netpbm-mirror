@@ -135,7 +135,6 @@ Here is an example of making troff pages:
   cd netpbm.sourceforge.net/doc
   make MAKEMAN=/usr/src/netpbm/buildtools/makeman \
     -f /usr/src/netpbm/buildtools/manpage.mk manpages
-  make -f /usr/src/netpbm/buildtools/manpage.mk manpages
   make -f /usr/src/netpbm/buildtools/manpage.mk installman
   cd ../../..
   rm -r netpbmdoc
