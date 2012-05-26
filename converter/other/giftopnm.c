@@ -63,20 +63,6 @@ static const bool wantLzwCodes = REPORTLZWCODES;
 
 
 
-static bool
-ReadOK(FILE *          const fileP,
-       unsigned char * const buffer,
-       size_t          const len) {
-
-    size_t bytesRead;
-
-    bytesRead = fread(buffer, len, 1, fileP);
-
-    return (bytesRead != 0);
-}
-
-
-
 static void
 readFile(FILE *          const ifP,
          unsigned char * const buffer,
@@ -85,7 +71,7 @@ readFile(FILE *          const ifP,
 
     size_t bytesRead;
 
-    bytesRead = fread(buffer, len, 1, ifP);
+    bytesRead = fread(buffer, 1, len, ifP);
 
     if (bytesRead == len)
         *errorP = NULL;
@@ -311,8 +297,8 @@ readColorMap(FILE *        const ifP,
              bool *        const hasGrayP,
              bool *        const hasColorP) {
 
-    int             i;
-    unsigned char   rgb[3];
+    unsigned int  i;
+    unsigned char rgb[3];
 
     assert(cmapSize <= MAXCOLORMAPSIZE);
 
@@ -320,8 +306,10 @@ readColorMap(FILE *        const ifP,
     *hasColorP = FALSE;  /* initial assumption */
 
     for (i = 0; i < cmapSize; ++i) {
-        if (! ReadOK(ifP, rgb, sizeof(rgb)))
-            pm_error("Unable to read Color %d from colormap", i);
+        const char * error;
+        readFile(ifP, rgb, sizeof(rgb), &error);
+        if (error)
+            pm_error("Unable to read Color %u from colormap.  %s", i, error);
 
         cmapP->map[i][CM_RED] = rgb[0] ;
         cmapP->map[i][CM_GRN] = rgb[1] ;
@@ -365,13 +353,17 @@ getDataBlock(FILE *          const ifP,
    If we hit EOF or have an I/O error reading the data portion of the
    DataBlock, we exit the program with pm_error().
 -----------------------------------------------------------------------------*/
-    unsigned char count;
-    bool successfulRead;
-    
     long const pos = ftell(ifP);
-    successfulRead = ReadOK(ifP, &count, 1);
-    if (!successfulRead) {
-        pm_message("EOF or error in reading DataBlock size from file" );
+
+    unsigned char count;
+    const char * error;
+    
+    readFile(ifP, &count, sizeof(count), &error);
+
+    if (error) {
+        pm_message("EOF or error in reading DataBlock size from file.  %s",
+                   error);
+        pm_strfree(error);
         *errorP = FALSE;
         *eofP = TRUE;
         *lengthP = 0;
@@ -385,17 +377,18 @@ getDataBlock(FILE *          const ifP,
             *errorP = NULL;
             zeroDataBlock = TRUE;
         } else {
-            bool successfulRead;
+            const char * error;
 
             zeroDataBlock = FALSE;
-            successfulRead = ReadOK(ifP, buf, count); 
+            readFile(ifP, buf, count, &error); 
 
-            if (successfulRead) 
-                *errorP = NULL;
-            else
+            if (error) {
                 pm_asprintf(errorP,
-                            "EOF or error reading data portion of %u byte "
-                            "DataBlock from file", count);
+                            "Unable to read data portion of %u byte "
+                            "DataBlock from file.  %s", count, error);
+                pm_strfree(error);
+            } else
+                *errorP = NULL;
         }
     }
 }
@@ -602,7 +595,7 @@ getAnotherBlock(FILE *                const ifP,
                 const char **         const errorP) {
 
     unsigned int count;
-    unsigned int assumed_count;
+    unsigned int assumedCount;
     bool eof;
 
     /* Shift buffer down so last two bytes are now the
@@ -627,13 +620,13 @@ getAnotherBlock(FILE *                const ifP,
                        "file is malformed, but we are proceeding "
                        "anyway as if an EOD marker were at the end "
                        "of the file.");
-            assumed_count = 0;
+            assumedCount = 0;
         } else
-            assumed_count = count;
+            assumedCount = count;
 
-        gsP->streamExhausted = (assumed_count == 0);
+        gsP->streamExhausted = (assumedCount == 0);
         
-        gsP->bufCount += assumed_count;
+        gsP->bufCount += assumedCount;
     }
 }
 
@@ -1128,7 +1121,9 @@ lzwReadByteFresh(struct getCodeState * const getCodeStateP,
   Read off all initial clear codes, read the first non-clear code, and return
   it as *dataReadP.
 
-  Iff we hit end of image in so doing, return *endOfImageP true.
+  Iff we hit end of image in so doing, return *endOfImageP true and nothing as
+  *dataReadP.  One way we hit end of image is for that first non-clear code to
+  be an end code.
 
   Assume the decompressor is fresh, i.e. there are no strings in the table
   yet, so the next code must be a direct true data code.
@@ -1152,7 +1147,7 @@ lzwReadByteFresh(struct getCodeState * const getCodeStateP,
             if (!zeroDataBlock)
                 readThroughEod(decompP->ifP);
             *endOfImageP = TRUE;
-        } else if(code >= decompP->cmapSize) { 
+        } else if (code >= decompP->cmapSize) { 
             pm_asprintf(errorP, "Error in GIF image: invalid color code %u. "
                         "Valid color values are: 0 - %u",
                         code, decompP->cmapSize-1);
@@ -1162,8 +1157,7 @@ lzwReadByteFresh(struct getCodeState * const getCodeStateP,
             decompP->prevcode = decompP->firstcode = 0;
 
             *endOfImageP = FALSE;
-        }
-        else {    /* valid code */
+        } else {    /* valid code */
             decompP->prevcode  = code;
             decompP->firstcode = decompP->table[code][1];
             *dataReadP = decompP->firstcode;
@@ -1645,13 +1639,13 @@ readImageData(FILE *       const ifP,
 
     unsigned char lzwMinCodeSize;      
     struct decompressor decomp;
-    bool gotMinCodeSize;
+    const char * error;
 
-    gotMinCodeSize = ReadOK(ifP, &lzwMinCodeSize, 1);
-    if (!gotMinCodeSize)
-        pm_error("GIF stream ends (or read error) "
+    readFile(ifP, &lzwMinCodeSize, sizeof(lzwMinCodeSize), &error);
+    if (error)
+        pm_error("Can't read GIF stream "
                  "right after an image separator; no "
-                 "image data follows.");
+                 "image data follows.  %s", error);
 
     if (lzwMinCodeSize > MAX_LZW_BITS)
         pm_error("Invalid minimum code size value in image data: %u.  "
@@ -1690,9 +1684,11 @@ readGifHeader(FILE *             const gifFileP,
     unsigned char buf[16];
     char version[4];
     unsigned int cmapSize;
+    const char * error;
 
-    if (!ReadOK(gifFileP, buf, 6))
-        pm_error("error reading magic number" );
+    readFile(gifFileP, buf, 6, &error);
+    if (error)
+        pm_error("Error reading magic number.  %s", error);
     
     if (!strneq((char *)buf, "GIF", 3))
         pm_error("File does not contain a GIF stream.  It does not start "
@@ -1705,10 +1701,11 @@ readGifHeader(FILE *             const gifFileP,
         pm_message("GIF format version is '%s'", version);
     
     if ((!streq(version, "87a")) && (!streq(version, "89a")))
-        pm_error("bad version number, not '87a' or '89a'" );
+        pm_error("Bad version number, not '87a' or '89a'" );
     
-    if (!ReadOK(gifFileP, buf, 7))
-        pm_error("failed to read screen descriptor" );
+    readFile(gifFileP, buf, 7, &error);
+    if (error)
+        pm_error("Failed to read screen descriptor.  %s", error);
     
     gifScreenP->Width           = LM_to_uint(buf[0],buf[1]);
     gifScreenP->Height          = LM_to_uint(buf[2],buf[3]);
@@ -1780,7 +1777,7 @@ readExtensions(FILE*          const ifP,
         unsigned char c;
         const char * error;
 
-        readFile(ifP, &c, 1, &error);
+        readFile(ifP, &c, sizeof(c), &error);
 
         if (error) {
             pm_asprintf(errorP, "File read error where start of image "
@@ -1860,9 +1857,11 @@ readImageHeader(FILE *                  const ifP,
                 struct GifImageHeader * const imageHeaderP) {
 
     unsigned char buf[16];
+    const char * error;
 
-    if (!ReadOK(ifP, buf, 9))
-        pm_error("couldn't read left/top/width/height");
+    readFile(ifP, buf, 9, &error);
+    if (error)
+        pm_error("couldn't read left/top/width/height.  %s", error);
 
     imageHeaderP->useGlobalColormap = ! BitSet(buf[8], LOCALCOLORMAP);
     imageHeaderP->localColorMapSize = 1u << ((buf[8] & 0x07) + 1);
@@ -1899,10 +1898,13 @@ validateWithinGlobalScreen(struct GifImageHeader const imageHeader,
 static void
 skipImageData(FILE * const ifP) {
     unsigned char lzwMinCodeSize;
+    const char * error;
 
-    if (!ReadOK(ifP, &lzwMinCodeSize, 1))
-        pm_message("EOF or error while skipping image DataBlock" );
-
+    readFile(ifP, &lzwMinCodeSize, sizeof(lzwMinCodeSize), &error);
+    if (error) {
+        pm_message("Unable to read file to skip image DataBlock.  %s", error);
+        pm_strfree(error);
+    }
     readThroughEod(ifP);
 }
 
