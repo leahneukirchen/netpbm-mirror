@@ -119,11 +119,6 @@ PORTBINARIES =  avstopam bmptopnm fitstopnm \
 		pnmtosgi pnmtosir pamtotga pnmtoxwd \
 		rlatopam sgitopnm sirtopnm sunicontopnm xwdtopnm zeisstopnm
 
-ifneq ($(DONT_HAVE_PROCESS_MGMT),Y)
-  PORTBINARIES += pstopnm
-  BINARIES += pnmtops
-endif
-
 BINARIES = \
   $(PORTBINARIES) \
   pamtopdbimg \
@@ -132,6 +127,11 @@ BINARIES = \
   pnmtorast \
   rasttopnm \
   srftopam \
+
+ifneq ($(DONT_HAVE_PROCESS_MGMT),Y)
+  PORTBINARIES += pstopnm
+  BINARIES += pnmtops
+endif
 
 ifeq ($(HAVE_PNGLIB),Y)
   BINARIES += pnmtopng pngtopam pamrgbatopng

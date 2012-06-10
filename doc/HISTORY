@@ -4,7 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-not yet  BJH  Release 10.58.01
+12.06.10 BJH  Release 10.58.02
+
+              Build: fix bug: declines to build pnmtops.  Broken in 10.58.00
+
+12.04.08 BJH  Release 10.58.01
 
               pamstereogram: fix crash introduced in 10.54 (March 2011).
 
