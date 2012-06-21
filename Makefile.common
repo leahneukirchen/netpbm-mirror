@@ -68,6 +68,15 @@
 
 include $(SRCDIR)/Makefile.version
 
+# The following poses a problem when xml2-config or libpng-config indicates
+# (incorrectly) that you need -I /usr/include to compile for them.  In that
+# case, $(INCLUDES) may include -I /usr/include before the -I's for the local
+# directories.  So if there is another Netpbm installed in /usr/include, the
+# build is wrong (it fails).  This is fixed in later Netpbm by changing the
+# order, but it is more complex than just moving around the following line,
+# because $(INCLUDES) also contains -I's for some local directories, which
+# must go before -I importinc.  It is too complex for the Super Stable series.
+#
 INCLUDES2 := $(INCLUDES) -I$(SRCDIR)/$(SUBDIR) -I. -I importinc
 
 ifeq ($(NETPBMLIBTYPE),unixstatic)
@@ -313,8 +322,8 @@ MATHLIB ?= -lm
 $(PORTBINARIES) $(MATHBINARIES): %: %.o $(NETPBMLIB) $(LIBOPT)
 # Note that LDFLAGS might contain -L options, so order is important.
 # LDFLAGS is commonly set as an environment variable.
-	$(LD) -o $@ $@.o $(MATHLIB) $(shell $(LIBOPT) $(NETPBMLIB)) \
-	  $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
+	$(LD) -o $@ $@.o $(shell $(LIBOPT) $(NETPBMLIB)) \
+	  $(LDFLAGS) $(LDLIBS) $(MATHLIB) $(RPATH) $(LADD)
 
 
 # MERGE STUFF
