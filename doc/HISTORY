@@ -17,6 +17,10 @@ not yet  BJH  Release 10.59.00
 
               pamstereogram: fix crash introduced in 10.53 (December 2010).
 
+              Build: fix bug: declines to build pnmtops.  Broken in 10.58.
+
+              Build: move -lm to end of -l's.  Broken at least since 10.35.
+
 12.03.29 BJH  Release 10.58.00
 
               Add ppmtospu, 22 years late.
