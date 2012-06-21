@@ -4,7 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-12.02.21 BJH  Release 10.35.85
+12.06.21 BJH  Release 10.35.85
+
+              configure: work around Perl bug that causes 'configure' to
+              falsely conclude Svgalib is installed.
 
               Build: move -lm to end of -l's.  Broken at least since 10.35.
 
