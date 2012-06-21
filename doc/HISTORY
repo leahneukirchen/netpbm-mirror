@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+12.06.21 BJH  Release 10.58.03
+
+              Build: move -lm to end of -l's.  Broken at least since 10.35.
+
 12.06.10 BJH  Release 10.58.02
 
               Build: fix bug: declines to build pnmtops.  Broken in 10.58.00
@@ -13,6 +17,8 @@ CHANGE HISTORY
               pamstereogram: fix crash introduced in 10.54 (March 2011).
 
               pamstereogram: fix crash introduced in 10.53 (December 2010).
+
+              Build: fix bug: declines to build pnmtops.  Broken in 10.58.
 
 12.03.29 BJH  Release 10.58.00
 

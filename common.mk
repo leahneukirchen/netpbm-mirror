@@ -347,8 +347,8 @@ MATHLIB ?= -lm
 
 # Note that LDFLAGS might contain -L options, so order is important.
 # LDFLAGS is commonly set as an environment variable.
-LDFLAGS_ALL = $(MATHLIB) $(shell $(LIBOPT) $(NETPBMLIB)) \
- $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
+LDFLAGS_ALL = $(shell $(LIBOPT) $(NETPBMLIB)) \
+ $(LDFLAGS) $(LDLIBS) $(MATHLIB) $(RPATH) $(LADD)
 
 $(PORTBINARIES) $(MATHBINARIES): %: %.o $(NETPBMLIB) $(LIBOPT)
 	$(LD) -o $@ $@.o $(LDFLAGS_ALL)
