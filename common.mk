@@ -336,7 +336,7 @@ $(PORTBINARIES) $(MATHBINARIES): %: %.o $(NETPBMLIB) $(LIBOPT)
 # Note that LDFLAGS might contain -L options, so order is important.
 # LDFLAGS is commonly set as an environment variable.
 	$(LD) -o $@ $@.o $(MATHLIB) $(shell $(LIBOPT) $(NETPBMLIB)) \
-	  $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
+	  $(LDFLAGS) $(LDLIBS) $(MATHLIB) $(RPATH) $(LADD)
 
 
 # MERGE STUFF
