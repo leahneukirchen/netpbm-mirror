@@ -1,16 +1,15 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "DTD/xhtml11.dtd">
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
-
 <head>
+<meta charset="UTF-8">
 <title>Pamstereogram User Manual</title>
-<meta http-equiv="Content-Type" content="text/html; charset=us-ascii"/>
 </head>
 
 <body>
 
 <h1>pamstereogram</h1>
 
-<p>Updated: 28 September 2010</p>
+<p>Updated: 20 June 2012</p>
 
 <p><a href="#contents">Table Of Contents</a></p>
 
@@ -41,6 +40,7 @@ depth map</p>
 [<b>-makemask</b>]
 [<b>-eyesep=</b><i>inches</i>]
 [<b>-depth=</b><i>fraction</i>]
+[<b>-planes=</b><i>near_pixels</i>,<i>far_pixels</i>]
 [<b>-randomseed=</b><i>integer</i>]
 [<i>infile</i>]
 </p>
@@ -241,6 +241,26 @@ plane from the far plane. Smaller numbers make the 3-D image easier
 to perceive but flatter. Larger numbers make the 3-D image more
 difficult to perceive but deeper. The default, 0.3333, generally
 works fairly well.</dd>
+
+<dt><b>-planes=</b><i>near_pixels</i>,<i>far_pixels</i></dt>
+<dd>Explicitly specify the distance between repeated pixels in the near plane
+and in the far plane.  This is an alternative to
+<b>-eyesep</b> and <b>-depth</b>.  The following equalities hold:
+
+<ul>
+  <li><i>eyesep</i> = 2 * <i>far</i></li>
+  <li><i>depth</i> = 2 * (<i>far</i> &minus; <i>near</i>) /
+      (2 * <i>far</i> &minus; <i>near</i>)</li>
+</ul>
+
+<p>The number of distinct 3-D depths is <i>far</i>
+&minus; <i>near</i> + 1.  One might say that <b>-eyesep</b>
+and <b>-depth</b> are a more human-friendly way to specify stereoscopic
+parameters (distance between eyes and tradeoff between perceptibility
+and depth) while <b>-planes</b> is a more computer-centric way (pixel
+distances in the resulting stereogram).
+
+<p>This option was new in Netpbm 10.59 (June 2012).
 
 <dt><b>-randomseed=</b><i>integer</i>
 <dd>Specify a seed to be used for the random number generator.
