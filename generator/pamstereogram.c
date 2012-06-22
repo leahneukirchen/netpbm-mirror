@@ -91,6 +91,38 @@ struct cmdlineInfo {
 
 
 static void
+parseNearFarPlanes(const char ** const nearFarPlanes,
+                   float *       const nearPlaneP,
+                   float *       const farPlaneP) {
+/*----------------------------------------------------------------------------
+  Parse nearFarPlanes option value into exactly two positive numbers
+-----------------------------------------------------------------------------*/
+    float nearPlane, farPlane;
+
+    if (nearFarPlanes == NULL || nearFarPlanes[0] == NULL ||
+        nearFarPlanes[1] == NULL || nearFarPlanes[2] != NULL)
+        pm_error("-planes requires exactly two positive numbers");
+
+    errno = 0;
+    nearPlane = strtof(nearFarPlanes[0], NULL);
+    if (errno != 0 || nearPlane <= 0.0)
+        pm_error("-planes requires exactly two positive numbers");
+
+    farPlane = strtof(nearFarPlanes[1], NULL);
+    if (errno != 0 || farPlane <= 0.0)
+        pm_error("-planes requires exactly two positive numbers");
+
+    if (nearPlane >= farPlane)
+        pm_error("-planes requires the near-plane value "
+                 "to be less than the far-plane value");
+
+    *nearPlaneP = nearPlane;
+    *farPlaneP  = farPlane;
+}
+
+
+
+static void
 parseCommandLine(int                  argc,
                  const char **        argv,
                  struct cmdlineInfo * cmdlineP ) {
@@ -113,10 +145,10 @@ parseCommandLine(int                  argc,
 
     unsigned int patfileSpec, texfileSpec, dpiSpec, eyesepSpec, depthSpec,
         guidesizeSpec, magnifypatSpec, xshiftSpec, yshiftSpec, randomseedSpec,
-        bgColorNameSpec, smoothingSpec;
+        bgColorNameSpec, smoothingSpec, planesSpec;
 
     unsigned int blackandwhite, grayscale, color;
-
+    const char ** nearFarPlanes;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
@@ -159,6 +191,8 @@ parseCommandLine(int                  argc,
             &randomseedSpec,          0);
     OPTENT3(0, "smoothing",       OPT_UINT,   &cmdlineP->smoothing,
             &smoothingSpec,           0);
+    OPTENT3(0, "planes",          OPT_STRINGLIST, &nearFarPlanes,
+            &planesSpec,              0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -263,6 +297,17 @@ parseCommandLine(int                  argc,
         pm_error("-color is not valid with -texfile");
     if (cmdlineP->texFilespec && cmdlineP->maxvalSpec)
         pm_error("-maxval is not valid with -texfile");
+    if (planesSpec && eyesepSpec)
+        pm_error("-planes is not valid with -eyesep");
+    if (planesSpec && depthSpec)
+        pm_error("-planes is not valid with -depth");
+
+    if (planesSpec) {
+        float nearPlane, farPlane;
+        parseNearFarPlanes(nearFarPlanes, &nearPlane, &farPlane);
+        cmdlineP->eyesep = 2.0*farPlane/cmdlineP->dpi;
+        cmdlineP->depth = 2.0*(farPlane-nearPlane) / (2.0*farPlane-nearPlane);
+    }
 
     if (argc-1 < 1)
         cmdlineP->inputFilespec = "-";
@@ -907,7 +952,7 @@ smoothOutSpeckles(struct pam *   const pamP,
   colors.
 -----------------------------------------------------------------------------*/
     unsigned int i;
-                          
+
     for (i = 0; i < smoothing; ++i) {
         int col;
         tuple * const scratchrow = rowBuffer;
@@ -1083,7 +1128,7 @@ makeImageRows(const struct pam * const inPamP,
            to have the same color as the one in column N
         */
     int * sameFp;     /* Fixed point of same[] */
-    unsigned int * tuplesPerCol; 
+    unsigned int * tuplesPerCol;
         /* Number of tuples averaged together in each column */
     tuple * rowBuffer;     /* Scratch row needed for texture manipulation */
     int row;           /* Current row in the input and output files */
@@ -1129,7 +1174,7 @@ makeImageRows(const struct pam * const inPamP,
         /* Write the resulting row. */
         pnm_writepamrow(&outputGeneratorP->pam, outRow);
     }
-    
+
     pnm_freepamrow(rowBuffer);
     free(tuplesPerCol);
     free(sameFp);
@@ -1190,7 +1235,12 @@ produceStereogram(FILE *             const ifP,
 static void
 reportParameters(struct cmdlineInfo const cmdline) {
 
-    unsigned int const pixelEyesep = round2int(cmdline.eyesep * cmdline.dpi);
+    unsigned int const pixelEyesep =
+        round2int(cmdline.eyesep * cmdline.dpi);
+    unsigned int const sep0 =
+        separation(0, cmdline.eyesep, cmdline.dpi, cmdline.depth);
+    unsigned int const sep1 =
+        separation(1, cmdline.eyesep, cmdline.dpi, cmdline.depth);
 
     pm_message("Eye separation: %.4g inch * %d DPI = %u pixels",
                cmdline.eyesep, cmdline.dpi, pixelEyesep);
@@ -1198,12 +1248,12 @@ reportParameters(struct cmdlineInfo const cmdline) {
     if (cmdline.magnifypat > 1)
         pm_message("Background magnification: %uX * %uX",
                    cmdline.magnifypat, cmdline.magnifypat);
-    pm_message("\"Optimal\" pattern width: %u / (%u * 2) = %u pixels",
+    pm_message("\"Optimal\" (far) pattern width: %u / (%u * 2) = %u pixels",
                pixelEyesep, cmdline.magnifypat,
                pixelEyesep/(cmdline.magnifypat * 2));
-    pm_message("Unique 3-D depth levels possible: %u",
-               separation(0, cmdline.eyesep, cmdline.dpi, cmdline.depth) -
-               separation(1, cmdline.eyesep, cmdline.dpi, cmdline.depth) + 1);
+    pm_message("Near pattern width: %u / %u = %u pixels",
+               sep1, cmdline.magnifypat, sep1 / cmdline.magnifypat);
+    pm_message("Unique 3-D depth levels possible: %u", sep0 - sep1 + 1);
     if (cmdline.patFilespec && (cmdline.xshift || cmdline.yshift))
         pm_message("Pattern shift: (%u, %u)", cmdline.xshift, cmdline.yshift);
 }
@@ -1234,5 +1284,3 @@ main(int argc, const char *argv[]) {
 
     return 0;
 }
-
-

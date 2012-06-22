@@ -13,6 +13,12 @@ not yet  BJH  Release 10.59.00
               ppmdraw: Add 'filledcircle' command class.  Thanks
               Elijah Griffin <eli@panix.com>.
 
+              pamstereogram: Add -planes .  Thanks Scott Pakin
+              (scott@pakin.org).
+
+              pamstereogram: improve verbose output.  Thanks Scott Pakin
+              (scott@pakin.org).
+
               pamstereogram: fix crash introduced in 10.54 (March 2011).
 
               pamstereogram: fix crash introduced in 10.53 (December 2010).
