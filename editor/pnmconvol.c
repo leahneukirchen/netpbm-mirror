@@ -899,7 +899,7 @@ getKernel(struct cmdlineInfo   const cmdline,
 
    We generate a kernel object in standard form (free of any indication of
    where it came from) and return a handle to it as *convKernelPP.
------------------------------------------------------------------------------*/
+----------------------------------------------------------------------------*/
     struct convKernel * convKernelP;
 
     if (cmdline.pnmMatrixFileName)
