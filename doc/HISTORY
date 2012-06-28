@@ -4,21 +4,28 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-12.06.21 BJH  Release 10.58.03
+12.06.28 BJH  Release 10.59.00
 
-              Build: move -lm to end of -l's.  Broken at least since 10.35.
+              pamtogif: Make data blocks 255 bytes instead of 254.  255 is
+              the maximum allowed by GIF.  254 was intended to not trigger
+              potential bugs in programs that read the file.
 
-12.06.10 BJH  Release 10.58.02
+              ppmdraw: Add 'filledcircle' command class.  Thanks
+              Elijah Griffin <eli@panix.com>.
 
-              Build: fix bug: declines to build pnmtops.  Broken in 10.58.00
+              pamstereogram: Add -planes .  Thanks Scott Pakin
+              (scott@pakin.org).
 
-12.04.08 BJH  Release 10.58.01
+              pamstereogram: improve verbose output.  Thanks Scott Pakin
+              (scott@pakin.org).
 
               pamstereogram: fix crash introduced in 10.54 (March 2011).
 
               pamstereogram: fix crash introduced in 10.53 (December 2010).
 
               Build: fix bug: declines to build pnmtops.  Broken in 10.58.
+
+              Build: move -lm to end of -l's.  Broken at least since 10.35.
 
 12.03.29 BJH  Release 10.58.00
 
@@ -50,6 +57,9 @@ CHANGE HISTORY
 
               configure: work around Perl bug that causes 'configure' to
               falsely conclude Svgalib is installed.
+
+              Build: Use rand/srand instead of random/srandom because the
+              latter are not present in Mingw builds.
 
               Build: fix bug finding X libraries for merge buildl
 

@@ -375,12 +375,11 @@ TIFFHDR_DIR =
 #TIFFHDR_DIR = /usr/local1/DEC/include
 
 # Some TIFF libraries do Jpeg and/or Z (flate) compression and thus any
-# program linked with the TIFF library needs a Jpeg and/or Z library.
-# Some TIFF libraries have such library statically linked in, but others
-# need it to be dynamically linked at program load time.
-# Make this 'N' if youf TIFF library doesn't need such dynamic linking.
-# As of 2005.01, the most usual build of the TIFF library appears to require
-# both.
+# program linked with the TIFF library needs a Jpeg and/or Z library.  Some
+# TIFF libraries have such library statically linked in, but others need it to
+# be linked with the program at link-edit time or dynamically at program load
+# time.  Make this 'N' if your TIFF library doesn't need such linking.  As of
+# 2005.01, the most usual build of the TIFF library appears to require both.
 TIFFLIB_NEEDS_JPEG = Y
 TIFFLIB_NEEDS_Z = Y
 

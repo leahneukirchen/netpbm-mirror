@@ -95,6 +95,12 @@ ifeq ($(TIFFLIB_NEEDS_Z),Y)
   endif
 endif
 
+# TIFFLIB_USERLIBS is for the user to set manually, on the make command line
+# or manually added to config.mk.  There are arcane situations where the TIFF
+# library refers to additional libraries not handled above.
+
+TIFFLIB_EXTRALIBS += $(TIFFLIB_USERLIBS)
+
 # Pnmtops's "flate" compression function requires libz.  But if we don't
 # have libz, we still build Pnmtops; we just omit the flate compression
 # capability.
