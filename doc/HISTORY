@@ -4,7 +4,7 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-not yet  BJH  Release 10.59.00
+12.06.28 BJH  Release 10.59.00
 
               pamtogif: Make data blocks 255 bytes instead of 254.  255 is
               the maximum allowed by GIF.  254 was intended to not trigger
