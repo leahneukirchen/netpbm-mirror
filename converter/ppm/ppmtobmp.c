@@ -184,7 +184,7 @@ BMPwritefileheader(FILE *        const fp,
                    unsigned long const x, 
                    unsigned long const y) {
 /*----------------------------------------------------------------------------
-  Return the number of bytes written, or -1 on error.
+  Return the number of bytes written.
 -----------------------------------------------------------------------------*/
     PutByte(fp, 'B');
     PutByte(fp, 'M');
@@ -213,9 +213,9 @@ BMPwriteinfoheader(FILE *        const fp,
                    unsigned long const x, 
                    unsigned long const y) {
 /*----------------------------------------------------------------------------
-  Return the number of bytes written, or -1 on error.
+  Return the number of bytes written.
 ----------------------------------------------------------------------------*/
-    long cbFix;
+    unsigned int cbFix;
 
     switch (class) {
     case C_WIN: {
@@ -266,7 +266,7 @@ BMPwriteRgb(FILE * const fp,
             pixval const G, 
             pixval const B) {
 /*----------------------------------------------------------------------------
-  Return the number of bytes written, or -1 on error.
+  Return the number of bytes written.
 -----------------------------------------------------------------------------*/
     switch (class) {
     case C_WIN:
@@ -282,8 +282,8 @@ BMPwriteRgb(FILE * const fp,
         return 3;
     default:
         pm_error(er_internal, "BMPwriteRgb");
+        return -1;  /* avoid compiler warning. */
     }
-    return -1;
 }
 
 
@@ -294,7 +294,7 @@ BMPwriteColormap(FILE *           const ifP,
                  int              const bpp,
                  const colorMap * const colorMapP) {
 /*----------------------------------------------------------------------------
-  Return the number of bytes written, or -1 on error.
+  Return the number of bytes written.
 -----------------------------------------------------------------------------*/
     unsigned int const ncolors = (1 << bpp);
 
@@ -445,7 +445,7 @@ BMPwritebits(FILE *          const fp,
              pixval          const maxval,
              colorhash_table const cht) {
 /*----------------------------------------------------------------------------
-  Return the number of bytes written, or -1 on error.
+  Return the number of bytes written.
 -----------------------------------------------------------------------------*/
     unsigned int nbyte;
     int row;
