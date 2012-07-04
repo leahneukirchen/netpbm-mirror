@@ -177,12 +177,10 @@ PutLong(FILE * const fp, long const v) {
  * BMP writing
  */
 
-static int
+static unsigned int
 BMPwritefileheader(FILE *        const fp, 
-                   int           const class, 
-                   unsigned long const bitcount, 
-                   unsigned long const x, 
-                   unsigned long const y) {
+                   unsigned int  const cbSize,
+                   unsigned int  const offBits) {
 /*----------------------------------------------------------------------------
   Return the number of bytes written.
 -----------------------------------------------------------------------------*/
@@ -190,7 +188,7 @@ BMPwritefileheader(FILE *        const fp,
     PutByte(fp, 'M');
 
     /* cbSize */
-    PutLong(fp, BMPlenfile(class, bitcount, 0, x, y));
+    PutLong(fp, cbSize);
     
     /* xHotSpot */
     PutShort(fp, 0);
@@ -199,7 +197,7 @@ BMPwritefileheader(FILE *        const fp,
     PutShort(fp, 0);
     
     /* offBits */
-    PutLong(fp, BMPoffbits(class, bitcount, 0));
+    PutLong(fp, offBits);
     
     return 14;
 }
@@ -490,6 +488,9 @@ bmpEncode(FILE *           const ifP,
 /*----------------------------------------------------------------------------
   Write a BMP file of the given class.
 -----------------------------------------------------------------------------*/
+    unsigned int const cbSize  = BMPlenfile(class, bpp, 0, x, y);
+    unsigned int const offbits = BMPoffbits(class, bpp, 0);
+
     unsigned long nbyte;
 
     if (colortype == PALETTE)
@@ -498,19 +499,17 @@ bmpEncode(FILE *           const ifP,
         pm_message("Writing %u bits per pixel truecolor (no palette)", bpp);
 
     nbyte = 0;  /* initial value */
-    nbyte += BMPwritefileheader(ifP, class, bpp, x, y);
+    nbyte += BMPwritefileheader(ifP, cbSize, offbits);
     nbyte += BMPwriteinfoheader(ifP, class, bpp, x, y);
     if (colortype == PALETTE)
         nbyte += BMPwriteColormap(ifP, class, bpp, colorMapP);
 
-    if (nbyte != (BMPlenfileheader(class)
-                  + BMPleninfoheader(class)
-                  + BMPlencolormap(class, bpp, 0)))
+    if (nbyte != offbits)
         pm_error(er_internal, "BmpEncode 1");
 
     nbyte += BMPwritebits(ifP, x, y, colortype, bpp, pixels, maxval,
                           colorMapP->cht);
-    if (nbyte != BMPlenfile(class, bpp, 0, x, y))
+    if (nbyte != cbSize)
         pm_error(er_internal, "BmpEncode 2");
 }
 
@@ -544,6 +543,8 @@ bmpEncodePbm(FILE *           const ifP,
        Only PBM input uses this routine.  Color images represented by 1 bpp via
        color palette use the general bmpEncode().
     */
+    unsigned int const cbSize       = BMPlenfile(class, 1, 0, cols, rows);
+    unsigned int const offbits      = BMPoffbits(class, 1, 0);
     unsigned int const adjustedCols = (cols + 31) / 32 * 32;
     unsigned int const packedBytes  = adjustedCols / 8;
 
@@ -555,18 +556,16 @@ bmpEncodePbm(FILE *           const ifP,
     pm_message("Writing 1 bit per pixel with a black-white palette");
 
     nbyte = 0;  /* initial value */
-    nbyte += BMPwritefileheader(ifP, class, 1, cols, rows);
+    nbyte += BMPwritefileheader(ifP, cbSize, offbits);
     nbyte += BMPwriteinfoheader(ifP, class, 1, cols, rows);
 
     makeBilevelColorMap(&bilevelColorMap);
 
     nbyte += BMPwriteColormap(ifP, class, 1, &bilevelColorMap);
 
-    if (nbyte != (BMPlenfileheader(class)
-                  + BMPleninfoheader(class)
-                  + BMPlencolormap(class, 1, 0)))
-        pm_error(er_internal, "bmpEncodePBM 1");
-   
+    if (nbyte != offbits)
+        pm_error(er_internal, "bmpEncodePbm 1");
+
     for (row = 0; row < rows; ++row){
         size_t bytesWritten;
 
@@ -581,7 +580,7 @@ bmpEncodePbm(FILE *           const ifP,
             nbyte += bytesWritten;
     }
 
-    if (nbyte != BMPlenfile(class, 1, 0, cols, rows))
+    if (nbyte != cbSize)
         pm_error(er_internal, "bmpEncodePbm 2");
 }
 
