@@ -235,15 +235,15 @@ sort(struct PixelType * const pixelType,
      unsigned int       const left,
      unsigned int       const right) {
 /*----------------------------------------------------------------------------
-  Sort pixelType[] from element 'left' through element 'right' in increasing
-  popularity.
+  Sort pixelType[] from element 'left' to (not including) element 'right' in
+  increasing popularity.
 
   Good ol' Quicksort.
 -----------------------------------------------------------------------------*/
-    unsigned int const pivot = pixelType[(left+right)/2].popularity;
+    unsigned int const pivot = pixelType[(left+right-1)/2].popularity;
 
-    int i, j;
-    
+    unsigned int i, j;
+
     /* Rearrange so that everything less than 'pivot' is on the left side of
        the subject array slice and everything greater than is on the right
        side and elements equal could be on either side (we won't know until
@@ -251,29 +251,29 @@ sort(struct PixelType * const pixelType,
        those two sides.
     */
 
-    assert(left <= right);
+    assert(left < right);
 
-    for (i = left, j = right; i <= j; ) {
+    for (i = left, j = right; i < j; ) {
         while (pixelType[i].popularity < pivot)
             ++i;
-        while (pixelType[j].popularity > pivot)
+        while (pixelType[j-1].popularity > pivot)
             --j;
         
-        if (i <= j) {
+        if (i < j) {
             /* An element not less popular than pivot is to the left of a
                pixel not more popular than pivot, so swap them.  Note that we
                could be swapping equal (pivot-valued) elements.  Though the
                swap isn't necessary, moving 'i' and 'j' is.
             */
-            swapPixelType(pixelType, i, j);
+            swapPixelType(pixelType, i, j-1);
             ++i;
             --j;
         }
     }
     
-    if (left < j)
+    if (j - left > 1)
         sort(pixelType, left, j);
-    if (i < right)
+    if (right - i > 1)
         sort(pixelType, i, right);
 }
 
@@ -301,7 +301,7 @@ computePalette(struct PixelType * const pixelType) {
         pixelType[col].popularity = hist[pixelType[col].color9];
 
     /* Sort to find the most popular colors */
-    sort(pixelType, 0, 319);
+    sort(pixelType, 0, 320);
 }
 
 
