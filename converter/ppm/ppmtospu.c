@@ -245,9 +245,10 @@ sort(struct PixelType * const pixelType,
     int i, j;
     
     /* Rearrange so that everything less than 'pivot' is on the left side of
-       the subject array slice, while everything else is on the right side (we
-       won't know until we're done where the dividing line between the sides
-       is), then sort those two sides.
+       the subject array slice and everything greater than is on the right
+       side and elements equal could be on either side (we won't know until
+       we're done where the dividing line between the sides is), then sort
+       those two sides.
     */
 
     assert(left <= right);
@@ -259,8 +260,10 @@ sort(struct PixelType * const pixelType,
             --j;
         
         if (i <= j) {
-            /* A pixel not less popular than pivot is to the left of a pixel
-               less popular than pivot, so swap them.
+            /* An element not less popular than pivot is to the left of a
+               pixel not more popular than pivot, so swap them.  Note that we
+               could be swapping equal (pivot-valued) elements.  Though the
+               swap isn't necessary, moving 'i' and 'j' is.
             */
             swapPixelType(pixelType, i, j);
             ++i;
