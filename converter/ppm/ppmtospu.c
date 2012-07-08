@@ -555,7 +555,7 @@ main (int argc, const char ** argv) {
 
     ifP = pm_openr(cmdline.inputFileName);
 
-    tuples = pnm_readpam(ifP, &pam, sizeof(pam));
+    tuples = pnm_readpam(ifP, &pam, PAM_STRUCT_SIZE(tuple_type));
 
     if (pam.depth < 3)
         pm_error("Image must be RGB, so at least 3 deep.  This image is "

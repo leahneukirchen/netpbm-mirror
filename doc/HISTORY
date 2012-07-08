@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.60.00
 
+              ppmtospu: wild memory accesses.  Always broken (program added in
+              10.58 (March 2012).
+
               pamtosrf: fix storage corruption.  Always broken (program added
               in 10.55 (June 2011).
 
