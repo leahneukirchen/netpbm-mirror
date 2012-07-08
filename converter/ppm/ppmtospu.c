@@ -225,30 +225,30 @@ sort(struct PixelType * const pixelType,
   Good ol' Quicksort
 -----------------------------------------------------------------------------*/
     struct PixelType x;
-    int i, j;
+    unsigned int i, j;
     
     i = left;
     j = right;
-    x = pixelType[(left+right)/2];
+    x = pixelType[(left+right-1)/2];
     
     do {
         while(pixelType[i].pop < x.pop)
             ++i;
-        while(x.pop < pixelType[j].pop)
+        while(x.pop < pixelType[j-1].pop)
             --j;
         
-        if (i <= j) {
+        if (i < j) {
             struct PixelType const w = pixelType[i];
-            pixelType[i] = pixelType[j];
-            pixelType[j] = w;
+            pixelType[i] = pixelType[j-1];
+            pixelType[j-1] = w;
             ++i;
             --j;
         }
-    } while (i <= j);
+    } while (i < j);
     
-    if (left < j)
+    if (j - left > 1)
         sort(pixelType, left, j);
-    if (i < right)
+    if (right - i > 1)
         sort(pixelType, i, right);
 }
 
@@ -276,7 +276,7 @@ computePalette(struct PixelType * const pixelType) {
         pixelType[col].pop = hist[pixelType[col].color9];
 
     /* Sort to find the most popular colors */
-    sort(pixelType, 0, 319);
+    sort(pixelType, 0, 320);
 }
 
 
@@ -526,7 +526,7 @@ main (int argc, const char ** argv) {
 
     ifP = pm_openr(cmdline.inputFileName);
 
-    tuples = pnm_readpam(ifP, &pam, sizeof(pam));
+    tuples = pnm_readpam(ifP, &pam, PAM_STRUCT_SIZE(tuple_type));
 
     if (pam.depth < 3)
         pm_error("Image must be RGB, so at least 3 deep.  This image is "

@@ -597,12 +597,11 @@ initPstring(struct srf_pstring * const pstringP,
 
     pstringP->len = strlen(s);
 
-    MALLOCARRAY(pstringP->val, pstringP->len);
+    MALLOCARRAY(pstringP->val, pstringP->len + 1);
 
     if (!pstringP->val)
         pm_error("Could not allocate memory for string of length %u",
                  pstringP->len);
-
 
     memcpy(pstringP->val, s, pstringP->len + 1);
 }
