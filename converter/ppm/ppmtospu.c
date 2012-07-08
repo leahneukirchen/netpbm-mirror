@@ -5,6 +5,7 @@
  *  Copyright (C) 1990, Steve Belczyk
  */
 
+#include <assert.h>
 #include <stdio.h>
 
 #include "pm_c_util.h"
@@ -82,10 +83,10 @@ parseCommandLine(int argc, const char ** argv,
 
 /* This is the stuff to remember about each pixel */
 struct PixelType {
-    int index4;  /* 4-bit color, used in bitmap */
-    int x;       /* Pixel's original x-position */
-    int pop;     /* Popularity of this pixel's color */
-    int color9;  /* 9-bit color this pixel actually got */
+    unsigned int index4;      /* 4-bit color, used in bitmap */
+    unsigned int x;           /* Pixel's original x-position */
+    unsigned int popularity;  /* Popularity of this pixel's color */
+    unsigned int color9;      /* 9-bit color this pixel actually got */
 };
 
 
@@ -217,34 +218,55 @@ dither(unsigned int       const row,
 
 
 static void
+swapPixelType(struct PixelType *  const pixelType,
+              unsigned int        const i,
+              unsigned int        const j) {
+
+    struct PixelType const w = pixelType[i];
+
+    pixelType[i] = pixelType[j];
+    pixelType[j] = w;
+}
+
+
+
+static void
 sort(struct PixelType * const pixelType,
      unsigned int       const left,
      unsigned int       const right) {
 /*----------------------------------------------------------------------------
-  Sort pixelType[] from element 'left' to element 'right'
-  Good ol' Quicksort
+  Sort pixelType[] from element 'left' through element 'right' in increasing
+  popularity.
+
+  Good ol' Quicksort.
 -----------------------------------------------------------------------------*/
-    struct PixelType x;
+    unsigned int const pivot = pixelType[(left+right)/2].popularity;
+
     int i, j;
     
-    i = left;
-    j = right;
-    x = pixelType[(left+right)/2];
-    
-    do {
-        while(pixelType[i].pop < x.pop)
+    /* Rearrange so that everything less than 'pivot' is on the left side of
+       the subject array slice, while everything else is on the right side (we
+       won't know until we're done where the dividing line between the sides
+       is), then sort those two sides.
+    */
+
+    assert(left <= right);
+
+    for (i = left, j = right; i <= j; ) {
+        while (pixelType[i].popularity < pivot)
             ++i;
-        while(x.pop < pixelType[j].pop)
+        while (pixelType[j].popularity >= pivot)
             --j;
         
         if (i <= j) {
-            struct PixelType const w = pixelType[i];
-            pixelType[i] = pixelType[j];
-            pixelType[j] = w;
+            /* A pixel not less popular than pivot is to the left of a pixel
+               less popular than pivot, so swap them.
+            */
+            swapPixelType(pixelType, i, j);
             ++i;
             --j;
         }
-    } while (i <= j);
+    }
     
     if (left < j)
         sort(pixelType, left, j);
@@ -273,7 +295,7 @@ computePalette(struct PixelType * const pixelType) {
 
     /* Set the popularity of each pixel's color */
     for (col = 0; col < 320; ++col)
-        pixelType[col].pop = hist[pixelType[col].color9];
+        pixelType[col].popularity = hist[pixelType[col].color9];
 
     /* Sort to find the most popular colors */
     sort(pixelType, 0, 319);
