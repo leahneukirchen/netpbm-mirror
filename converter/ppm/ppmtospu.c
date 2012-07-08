@@ -13,6 +13,10 @@
 #include "shhopt.h"
 #include "pam.h"
 
+#define SPU_WIDTH 320
+#define SPU_HEIGHT 200
+
+
 struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
@@ -91,12 +95,12 @@ struct PixelType {
 
 
 typedef struct {
-    int index[320][16];   /* Indices into the 48 color entries */
+    int index[SPU_WIDTH][16];   /* Indices into the 48 color entries */
 } Index48;
 
 typedef struct {
 /* These are the palettes, 3 16-color palettes per each of 200 scan lines */
-    int pal[200][48];  /* -1 means free */
+    int pal[SPU_HEIGHT][48];  /* -1 means free */
 } Pal;
 
 
@@ -108,7 +112,7 @@ initializePalette(Pal * const palP) {
 -----------------------------------------------------------------------------*/
     unsigned int row;
 
-    for (row = 0; row < 200; ++row) {
+    for (row = 0; row < SPU_HEIGHT; ++row) {
         unsigned int j;
         for (j = 0; j < 48; ++j)
             palP->pal[row][j] = 0;
@@ -153,7 +157,7 @@ setup48(Index48 * const index48P) {
 -----------------------------------------------------------------------------*/
     unsigned int col;
 
-    for (col = 0; col < 320; ++col) {
+    for (col = 0; col < SPU_WIDTH; ++col) {
         unsigned int i;
         for (i = 0; i < 16; ++i)
             index48P->index[col][i] = findIndex(col, i);
@@ -183,7 +187,7 @@ dither(unsigned int       const row,
     unsigned int c[3];  /* An element for each plane */
     unsigned int col;
 
-    for (col = 0; col < 320; ++col) {
+    for (col = 0; col < SPU_WIDTH; ++col) {
         unsigned int plane;
 
         for (plane = 0; plane < 3; ++plane) {
@@ -293,15 +297,15 @@ computePalette(struct PixelType * const pixelType) {
     for (i = 0; i < 512; ++i)
         hist[i] = 0;
 
-    for (col = 0; col < 320; ++col)
+    for (col = 0; col < SPU_WIDTH; ++col)
         ++hist[pixelType[col].color9];
 
     /* Set the popularity of each pixel's color */
-    for (col = 0; col < 320; ++col)
+    for (col = 0; col < SPU_WIDTH; ++col)
         pixelType[col].popularity = hist[pixelType[col].color9];
 
     /* Sort to find the most popular colors */
-    sort(pixelType, 0, 320);
+    sort(pixelType, 0, SPU_WIDTH);
 }
 
 
@@ -453,7 +457,7 @@ convertRow(unsigned int       const row,
            color
         */
         int col;
-        for (col = 319; col >= 0; --col) {
+        for (col = SPU_WIDTH-1; col >= 0; --col) {
             convertPixel(col, row, pixelType, palP, index48P);
             setPixel(pixelType[col].x, row, pixelType[col].index4, screen);
         }
@@ -470,7 +474,7 @@ doRow(unsigned int    const row,
       Pal *           const palP,
       short *         const screen) {
 
-    struct PixelType pixelType[320];
+    struct PixelType pixelType[SPU_WIDTH];
 
     /* Dither and reduce to 9 bits */
     dither(row, tuplerow, dithflag, pixelType);
@@ -506,7 +510,7 @@ writePalettes(const Pal * const palP) {
 
     unsigned int row;
 
-    for (row = 1; row < 200; ++row) {
+    for (row = 1; row < SPU_HEIGHT; ++row) {
         unsigned int i;
         for (i = 0; i < 48; ++i) {
             int const p = palP->pal[row][i];
@@ -557,9 +561,9 @@ main (int argc, const char ** argv) {
         pm_error("Image must be RGB, so at least 3 deep.  This image is "
                  "only %u deep", pam.depth);
 
-    if ((pam.width != 320) || (pam.height != 200))
-        pm_error("Image size must be 320x200.  This one is %u x %u",
-                 pam.width, pam.height);
+    if ((pam.width != SPU_WIDTH) || (pam.height != SPU_HEIGHT))
+        pm_error("Image size must be %ux%u.  This one is %u x %u",
+                 SPU_WIDTH, SPU_HEIGHT, pam.width, pam.height);
 
     {
         unsigned int i;
@@ -577,7 +581,7 @@ main (int argc, const char ** argv) {
     }
     {
         unsigned int row;
-        for (row = 0; row < 200; ++row)
+        for (row = 0; row < SPU_HEIGHT; ++row)
             doRow(row, tuples[row], cmdline.dithflag, &index48, &pal, screen);
     }
     writeSpu(screen, &pal);
