@@ -255,7 +255,7 @@ sort(struct PixelType * const pixelType,
     for (i = left, j = right; i <= j; ) {
         while (pixelType[i].popularity < pivot)
             ++i;
-        while (pixelType[j].popularity >= pivot)
+        while (pixelType[j].popularity > pivot)
             --j;
         
         if (i <= j) {
