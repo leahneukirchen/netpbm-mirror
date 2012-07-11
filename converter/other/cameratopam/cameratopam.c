@@ -7,7 +7,7 @@
  */
 
 
-#define _BSD_SOURCE 1   /* Make sure string.h contains strcasecmp() */
+#define _BSD_SOURCE 1   /* Make sure string.h contains strdup() */
 #define _XOPEN_SOURCE  /* Make sure unistd.h contains swab() */
 
 #include "pm_config.h"
