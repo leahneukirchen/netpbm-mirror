@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.60.00
 
+              pnm_hashtuple: slight performance improvement from new hash
+              function.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
               ppmtospu: wild memory accesses.  Always broken (program added in
               10.58 (March 2012).
 

@@ -31,9 +31,10 @@ pnm_hashtuple(struct pam * const pamP,
    Return the hash value of the tuple 'tuple' -- i.e. an index into a hash
    table.
 -----------------------------------------------------------------------------*/
+    unsigned int const hash_factor[] = {1, 33, 33*33};
+
     unsigned int i;
     unsigned int hash;
-    const unsigned int hash_factor[] = {33*33, 33, 1};
 
     hash = 0;  /* initial value */
     for (i = 0; i < MIN(pamP->depth, 3); ++i) {
