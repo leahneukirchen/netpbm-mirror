@@ -15,6 +15,9 @@ not yet  BJH  Release 10.60.00
               pamtosrf: fix storage corruption.  Always broken (program added
               in 10.55 (June 2011).
 
+              Build: rename getline() in xpmtoppm.c to avoid collision
+              with some libc.  Always broken.
+
 12.06.28 BJH  Release 10.59.00
 
               pamtogif: Make data blocks 255 bytes instead of 254.  255 is
