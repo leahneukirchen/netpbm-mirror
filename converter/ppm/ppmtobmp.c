@@ -471,7 +471,7 @@ BMPEncode(FILE *           const ifP,
 
     if (nbyte != (BMPlenfileheader(class)
                   + BMPleninfoheader(class)
-                  + BMPlencolormap(class, bpp, -1)))
+                  + BMPlencolormap(class, bpp, 0)))
         pm_error(er_internal, "BMPEncode 1");
 
     nbyte += BMPwritebits(ifP, x, y, colortype, bpp, pixels, maxval,
@@ -530,7 +530,7 @@ BMPEncodePBM(FILE *           const ifP,
 
     if (nbyte != (BMPlenfileheader(class)
                   + BMPleninfoheader(class)
-                  + BMPlencolormap(class, 1, -1)))
+                  + BMPlencolormap(class, 1, 0)))
         pm_error(er_internal, "BMPEncodePBM 1");
    
     for (row = 0; row < rows; ++row){
