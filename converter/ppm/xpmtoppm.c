@@ -122,7 +122,7 @@ static bool backup;
 
 
 static void
-getline(char * const line,
+getLine(char * const line,
         size_t const size,
         FILE * const stream) {
 /*----------------------------------------------------------------------------
@@ -140,7 +140,7 @@ getline(char * const line,
    Exit program if the line doesn't fit in the buffer.
 -----------------------------------------------------------------------------*/
     if (size > sizeof(lastInputLine))
-        pm_error("INTERNAL ERROR: getline() received 'size' parameter "
+        pm_error("INTERNAL ERROR: getLine() received 'size' parameter "
                  "which is out of bounds");
 
     if (backup) {
@@ -356,7 +356,7 @@ readXpm3Header(FILE * const stream, int * const widthP, int * const heightP,
                int * const transparentP) {
 /*----------------------------------------------------------------------------
   Read the header of the XPM file on stream 'stream'.  Assume the
-  getline() stream is presently positioned to the beginning of the
+  getLine() stream is presently positioned to the beginning of the
   file and it is a Version 3 XPM file.  Leave the stream positioned
   after the header.
 
@@ -387,25 +387,25 @@ readXpm3Header(FILE * const stream, int * const widthP, int * const heightP,
     *widthP = *heightP = *ncolorsP = *chars_per_pixelP = -1;
 
     /* Read the XPM signature comment */
-    getline(line, sizeof(line), stream);
+    getLine(line, sizeof(line), stream);
     if (strncmp(line, xpm3_signature, strlen(xpm3_signature)) != 0) 
         pm_error("Apparent XPM 3 file does not start with '/* XPM */'.  "
                  "First line is '%s'", xpm3_signature);
 
     /* Read the assignment line */
-    getline(line, sizeof(line), stream);
+    getLine(line, sizeof(line), stream);
     if (strncmp(line, "static char", 11) != 0)
         pm_error("Cannot find data structure declaration.  Expected a "
                  "line starting with 'static char', but found the line "
                  "'%s'.", line);
 
 	/* Read the hints line */
-    getline(line, sizeof(line), stream);
+    getLine(line, sizeof(line), stream);
     /* skip the comment line if any */
     if (!strncmp(line, "/*", 2)) {
         while (!strstr(line, "*/"))
-            getline(line, sizeof(line), stream);
-        getline(line, sizeof(line), stream);
+            getLine(line, sizeof(line), stream);
+        getLine(line, sizeof(line), stream);
     }
     if (sscanf(line, "\"%d %d %d %d\",", widthP, heightP,
                ncolorsP, chars_per_pixelP) != 4)
@@ -439,10 +439,10 @@ readXpm3Header(FILE * const stream, int * const widthP, int * const heightP,
         *transparentP = -1;  /* initial value */
 
         for (seqNum = 0; seqNum < *ncolorsP; seqNum++) {
-            getline(line, sizeof(line), stream);
+            getLine(line, sizeof(line), stream);
             /* skip the comment line if any */
             if (!strncmp(line, "/*", 2))
-                getline(line, sizeof(line), stream);
+                getLine(line, sizeof(line), stream);
             
             interpretXpm3ColorTableLine(line, seqNum, *chars_per_pixelP, 
                                         *colorsP, *ptabP, transparentP);
@@ -457,7 +457,7 @@ readXpm1Header(FILE * const stream, int * const widthP, int * const heightP,
                pixel ** const colorsP, int ** const ptabP) {
 /*----------------------------------------------------------------------------
   Read the header of the XPM file on stream 'stream'.  Assume the
-  getline() stream is presently positioned to the beginning of the
+  getLine() stream is presently positioned to the beginning of the
   file and it is a Version 1 XPM file.  Leave the stream positioned
   after the header.
   
@@ -477,7 +477,7 @@ readXpm1Header(FILE * const stream, int * const widthP, int * const heightP,
     /* Read the initial defines. */
     processedStaticChar = FALSE;
     while (!processedStaticChar) {
-        getline(line, sizeof(line), stream);
+        getLine(line, sizeof(line), stream);
 
         if (sscanf(line, "#define %s %d", str1, &v) == 2) {
             char *t1;
@@ -525,7 +525,7 @@ readXpm1Header(FILE * const stream, int * const widthP, int * const heightP,
     /* If there's a monochrome color table, skip it. */
     if (!strncmp(t1, "mono", 4)) {
         for (;;) {
-            getline(line, sizeof(line), stream);
+            getLine(line, sizeof(line), stream);
             if (!strncmp(line, "static char", 11))
                 break;
         }
@@ -548,7 +548,7 @@ readXpm1Header(FILE * const stream, int * const widthP, int * const heightP,
 
     /* Read color table. */
     for (i = 0; i < *ncolorsP; ++i) {
-        getline(line, sizeof(line), stream);
+        getLine(line, sizeof(line), stream);
 
         if ((t1 = strchr(line, '"')) == NULL)
             pm_error("D error scanning color table");
@@ -584,7 +584,7 @@ readXpm1Header(FILE * const stream, int * const widthP, int * const heightP,
        "static char ...").
     */
     for (;;) {
-        getline(line, sizeof(line), stream);
+        getLine(line, sizeof(line), stream);
         if (strncmp(line, "static char", 11) == 0)
             break;
     }
@@ -688,7 +688,7 @@ ReadXPMFile(FILE * const stream, int * const widthP, int * const heightP,
     backup = FALSE;
 
     /* Read the header line */
-    getline(line, sizeof(line), stream);
+    getLine(line, sizeof(line), stream);
     backup = TRUE;  /* back up so next read reads this line again */
     
     rc = sscanf(line, "/* %s */", str1);
@@ -708,7 +708,7 @@ ReadXPMFile(FILE * const stream, int * const widthP, int * const heightP,
         pm_error("Could not get %d bytes of memory for image", totalpixels);
     cursor = *dataP;
     maxcursor = *dataP + totalpixels - 1;
-	getline(line, sizeof(line), stream); 
+	getLine(line, sizeof(line), stream); 
         /* read next line (first line may not always start with comment) */
     while (cursor <= maxcursor) {
         if (strncmp(line, "/*", 2) == 0) {
@@ -718,7 +718,7 @@ ReadXPMFile(FILE * const stream, int * const widthP, int * const heightP,
                              ncolors, ptab, &cursor, maxcursor);
         }
         if (cursor <= maxcursor)
-            getline(line, sizeof(line), stream);
+            getLine(line, sizeof(line), stream);
     }
     if (ptab) free(ptab);
 }

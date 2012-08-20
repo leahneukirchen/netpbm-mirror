@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+12.08.20 BJH  Release 10.47.40
+
+              Build: rename getline() in xpmtoppm.c to avoid collision
+              with some libc.  Always broken.
+
 12.07.04 BJH  Release 10.47.39
 
               ppmtobmp: fix failure with "internal error" message on all
