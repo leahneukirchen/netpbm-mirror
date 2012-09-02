@@ -1,4 +1,4 @@
-/* pnmpaste.c - paste a rectangle into a portable anymap
+/* pnmpaste.c - paste a rectangle into a PNM image
 **
 ** Copyright (C) 1989 by Jef Poskanzer.
 **
@@ -108,7 +108,7 @@ static unsigned char
 leftBits(unsigned char const x,
          unsigned int  const n){
 /*----------------------------------------------------------------------------
-  Clear rightmost (8-n) bits, retain leftmost (=high) n bits.
+  'x' with the leftmost (high) n bits retained and the rest cleared to zero.
 -----------------------------------------------------------------------------*/
     assert(n <= 8);
 
@@ -121,7 +121,7 @@ static unsigned char
 rightBits(unsigned char const x,
           unsigned int  const n){
 /*----------------------------------------------------------------------------
-  Return rightmost (=low) n bits of x. (Clear the rest).
+  The rightmost 'n' bits of 'x'.
 -----------------------------------------------------------------------------*/
     assert(n <= 8);
 
@@ -146,6 +146,12 @@ insertDirect(FILE *          const ifP,
    'buffer' is a scratch buffer for our use, at least wide enough to hold
    a packed PBM row of 'ifP'.
 -----------------------------------------------------------------------------*/
+    /* We use pbm_readpbmrow_packed() to read whole bytes rounded up and merge
+       those into 'destrow', which means we update more than we're supposed to
+       if the image is not a multiple of 8 columns.  In that case, we then fix
+       up the last byte by replacing the bits from the original image that we
+       messed up.
+    */
     unsigned int  const colBytes  = pbm_packed_bytes(cols);
     unsigned int  const last      = colBytes - 1;
     unsigned char const origRight = destrow[last];
@@ -172,6 +178,10 @@ insertDirect(FILE *          const ifP,
         }
     }
 
+    /* destrow[] now contains garbage in the cols % 8 rightmost bits of the
+       last byte we touched.  Those are supposed to be unchanged from the
+       input, so we restore them now.
+    */
     if (cols % 8 > 0)
         destrow[last] = leftBits(destrow[last], cols % 8)
             | rightBits(origRight, 8 - cols % 8);
@@ -194,10 +204,10 @@ insertShift(FILE *          const ifP,
    buffer[] is wide enough to hold a packed PBM row of *ifP plus one
    byte of margin.
 -----------------------------------------------------------------------------*/
-    unsigned int const shiftBytes = pbm_packed_bytes(cols + offset);
-    unsigned int const last = shiftBytes - 1;
-    unsigned char const origLeft  = destrow[0];
-    unsigned char const origRight = destrow[last];
+    unsigned int  const shiftByteCt = pbm_packed_bytes(cols + offset);
+    unsigned int  const last        = shiftByteCt - 1;
+    unsigned char const origLeft    = destrow[0];
+    unsigned char const origRight   = destrow[last];
 
     unsigned int const padOffset = (cols + offset) % 8;
 
@@ -209,7 +219,7 @@ insertShift(FILE *          const ifP,
 
     /* Note that buffer[0] is undefined. */
 
-    for (i = 0; i < shiftBytes; ++i) {
+    for (i = 0; i < shiftByteCt; ++i) {
         unsigned int  const rsh = offset;
         unsigned int  const lsh = 8-rsh;
         unsigned char const t = buffer[i] << lsh | buffer[i+1] >> rsh;
@@ -227,9 +237,9 @@ insertShift(FILE *          const ifP,
         }
     }
 
-    /* destrow[] now contains garbage in the 'offset' leftmost bits
-       and 8-offset rightmost bits.  Those are supposed to be unchanged
-       from the input, so we restore them now.
+    /* destrow[] now contains garbage in the 'offset' leftmost bits and
+       8-offset rightmost bits of the last byte we touched.  Those are
+       supposed to be unchanged from the input, so we restore them now.
     */
 
     destrow[0] = leftBits(origLeft, offset) |
@@ -257,11 +267,11 @@ pastePbm(FILE *       const fpInset,
 /*----------------------------------------------------------------------------
   Fast paste for PBM
 -----------------------------------------------------------------------------*/
-    unsigned char * const baserow = pbm_allocrow_packed(baseCols);
-    unsigned char * const buffer = pbm_allocrow_packed(insetCols+8);
-    int const shiftBytes = insertCol / 8;
-    unsigned int const shiftOffset = insertCol % 8;
-    int const baseColBytes = pbm_packed_bytes(baseCols);
+    unsigned char * const baserow       = pbm_allocrow_packed(baseCols);
+    unsigned char * const buffer        = pbm_allocrow_packed(insetCols+8);
+    unsigned int    const shiftByteCt   = insertCol / 8;
+    unsigned int    const shiftOffset   = insertCol % 8;
+    unsigned int    const baseColByteCt = pbm_packed_bytes(baseCols);
 
     unsigned int row;
 
@@ -272,16 +282,16 @@ pastePbm(FILE *       const fpInset,
         
         if (row >= insertRow && row < insertRow + insetRows) {
             if (shiftOffset == 0)
-                insertDirect(fpInset, &baserow[shiftBytes], insetCols,
+                insertDirect(fpInset, &baserow[shiftByteCt], insetCols,
                              insetFormat, operation, buffer);
             else
-                insertShift(fpInset, &baserow[shiftBytes], insetCols,
+                insertShift(fpInset, &baserow[shiftByteCt], insetCols,
                             insetFormat, shiftOffset, operation, buffer);
         }
 
         if (baseCols % 8 > 0)
-            baserow[baseColBytes-1]
-                = leftBits(baserow[baseColBytes-1] , baseCols % 8);
+            baserow[baseColByteCt-1]
+                = leftBits(baserow[baseColByteCt-1] , baseCols % 8);
 
         pbm_writepbmrow_packed(stdout, baserow, baseCols, 0);
     }
