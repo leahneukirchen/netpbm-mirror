@@ -15,6 +15,9 @@ not yet  BJH  Release 10.60.00
               pamtosrf: fix storage corruption.  Always broken (program added
               in 10.55 (June 2011).
 
+              Build: change _XOPEN_SOURCE 500 to 600 because on a Mac OSX 10.8
+              system, this is necessary to get 'strdup' into <strings.h>.
+
               Build: rename getline() in xpmtoppm.c to avoid collision
               with some libc.  Always broken.
 
