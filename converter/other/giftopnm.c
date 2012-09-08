@@ -19,7 +19,7 @@
    describe the Lempel-Ziv base.
 */
 
-
+#define _BSD_SOURCE   /* for strcaseeq */
 #include <string.h>
 #include <assert.h>
 
