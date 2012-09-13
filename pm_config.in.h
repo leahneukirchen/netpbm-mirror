@@ -224,7 +224,22 @@
    don't want SSE code, set NO_GCC_BUILTINS to 1.
 */
 
-#if defined(__GNUC__) && !defined(NO_GCC_BUILTINS)
+/*
+  If the compiler is Clang, ignore reported __GNUC__ , __GNUC_MINOR__
+  values.  Treat it as a generic c compiler.  Clang normally reports itself
+  as GCC, but does not necessarily offer all the features of GCC.  For
+  example, we know that Apple Mac OSX 10.8 ships with 
+
+   > cc --version
+     Apple clang version 4.0 (tags/Apple/clang-421.0.60) (based on LLVM 3.1svn)
+
+   which masquerades as GCC 4.2.1, but it does not have SSE2 function
+   __builtin_ia32_pcmpeqb128 .
+
+  See below on compilers other than GCC that set __GNUC__:
+  http://sourceforge.net/apps/mediawiki/predef/index.php?title=Compilers
+*/
+#if defined(__GNUC__) && !defined(__clang__) && !defined(NO_GCC_BUILTINS)
   #define GCCVERSION __GNUC__*100 + __GNUC_MINOR__
 #else
   #define GCCVERSION 0
@@ -242,28 +257,7 @@
    and up.
 */
 #if GCCVERSION >=402 && defined(__SSE__) && defined(__SSE2__)
-
-/* Apple, in Mac OSX 10.8, ships:
-
-   > cc --version
-     Apple clang version 4.0 (tags/Apple/clang-421.0.60) (based on LLVM 3.1svn)
-
-   which masquerades as GCC 4.2.1, but it fails on pamflip_sse.c:
-
-     pamflip_sse.c:136:39: error: use of unknown builtin
-     '__builtin_ia32_pcmpeqb128' [-Wimplicit-function-declaration]
-     register v16qi const compare =__builtin_ia32_pcmpeqb128(vReg,zero128);
-
-   so we disable SSE2 for Apple cc.  The gcc compiler Apple ships is
-   llvm-based and also defines APPLE_CC, and it works fine, so we disable
-   SSE2 only on Clang compilers.
-*/
-#if defined(__APPLE_CC__) && defined(__clang__)
-  #define HAVE_GCC_SSE2 0
-#else
   #define HAVE_GCC_SSE2 1
-#endif
-
 #else
   #define HAVE_GCC_SSE2 0
 #endif
