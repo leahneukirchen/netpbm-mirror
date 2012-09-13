@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Giftopnm User Manual</TITLE></HEAD>
 <BODY>
 <H1>giftopnm</H1>
-Updated: 25 May 2012
+Updated: 13 September 2012
 <BR>
 
 <A HREF="#index">Table Of Contents</A>
@@ -52,12 +52,13 @@ Netpbm output image has the wrong aspect ratio.  In this case,
 <DL COMPACT>
 <DT><B>--alphaout=</B><I>alpha-filename</I>
 
-<DD><B>giftopnm </B> creates a PBM file containing the alpha channel values in
-the input image.  If the input image doesn't contain an alpha channel,
-the <I>alpha-filename</I> file contains all zero (transparent) alpha values.
-If you don't specify <B>--alphaout</B>, <B>giftopnm</B> does not generate an
-alpha file, and if the input image has an alpha channel, <B>giftopnm</B>
-simply discards it.
+<DD><B>giftopnm </B> creates a PBM file containing the transparency
+information from the input image.  This &quot;alpha image&quot; is the same
+dimensions as the input image, and each pixel of the alpha image tells whether
+the corresponding pixel of the input image is transparent.  Black means
+transparent; white means opaque.  If you don't specify <B>--alphaout</B>,
+<B>giftopnm</B> does not generate an alpha file, and if the input image has an
+alpha channel, <B>giftopnm</B> simply discards it.
 
 <P>If you specify <B>-</B> as the filename, <B>giftopnm</B> writes the
 alpha output to Standard Output and discards the image.
