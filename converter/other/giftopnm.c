@@ -1302,7 +1302,7 @@ renderRow(unsigned char *    const cmapIndexRow,
   Convert one row of cmap indexes to PPM/PGM/PBM output.
 
   Render the alpha row to *alphaFileP iff 'alphabits' is non-NULL.  If
-  'haveTransColor' is false, render all zeroes (i.e. the row is
+  'haveTransColor' is false, render all white (i.e. the row is
   opaque).  'alphabits' is otherwise just a one-row buffer for us to use
   in rendering the alpha row.
   
