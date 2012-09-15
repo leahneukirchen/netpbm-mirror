@@ -226,7 +226,7 @@
 
 /*
   If the compiler is Clang, ignore reported __GNUC__ , __GNUC_MINOR__
-  values.  Treat it as a generic c compiler.  Clang normally reports itself
+  values.  Treat it as a generic C compiler.  Clang normally reports itself
   as GCC, but does not necessarily offer all the features of GCC.  For
   example, we know that Apple Mac OSX 10.8 ships with 
 
@@ -235,6 +235,11 @@
 
    which masquerades as GCC 4.2.1, but it does not have SSE2 function
    __builtin_ia32_pcmpeqb128 .
+
+  On the other hand, research by Prophet of the Way in September 2012
+  indicated that Clang 2.6-3.0 have the above function (and all Netpbm 
+  compiled successfully with SSE exploitation), but 3.1 does not.  He did
+  not find any mention in documentation of that change.
 
   See below on compilers other than GCC that set __GNUC__:
   http://sourceforge.net/apps/mediawiki/predef/index.php?title=Compilers

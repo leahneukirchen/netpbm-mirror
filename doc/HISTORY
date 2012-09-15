@@ -21,6 +21,9 @@ not yet  BJH  Release 10.60.00
               Build: rename getline() in xpmtoppm.c to avoid collision
               with some libc.  Always broken.
 
+              Build: Don't expect GCC facilities to exist when compiler is
+              Clang.  (Note that Clang identifies itself as GCC).
+
 12.06.28 BJH  Release 10.59.00
 
               pamtogif: Make data blocks 255 bytes instead of 254.  255 is
