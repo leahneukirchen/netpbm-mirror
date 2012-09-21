@@ -177,6 +177,7 @@ getLine(char * const line,
 static void
 getColorNumber(const char *   const pArg,
                unsigned int   const bytesPerPixel,
+               unsigned int   const nColors,
                unsigned int * const colorNumberP,
                unsigned int * const bytesReadP) {
 /*----------------------------------------------------------------------------
@@ -205,6 +206,11 @@ getColorNumber(const char *   const pArg,
         accum <<= 8;
         accum += *q;
     }
+
+    if (bytesPerPixel <= 2 && accum >= nColors)
+        pm_error("Color number %u in color map is too large, as the "
+                 "header says there are only %u colors in the image",
+                 accum, nColors);
 
     *colorNumberP = accum;
     *bytesReadP   = q - p;
@@ -326,7 +332,7 @@ interpretXpm3ColorTableLine(char               const line[],
     else
         ++t1;  /* Points now to first color number character */
     
-    getColorNumber(t1, charsPerPixel, &colorNumber, &bytesRead);
+    getColorNumber(t1, charsPerPixel, nColors, &colorNumber, &bytesRead);
     if (bytesRead < charsPerPixel)
         pm_error("A color map entry ends in the middle of the colormap index");
 
@@ -613,7 +619,8 @@ readV1ColorTable(FILE *          const ifP,
             unsigned int colorNumber;
             unsigned int bytesRead;
 
-            getColorNumber(str1, charsPerPixel, &colorNumber, &bytesRead);
+            getColorNumber(str1, charsPerPixel, nColors,
+                           &colorNumber, &bytesRead);
             
             if (bytesRead < charsPerPixel)
                 pm_error("A color map entry ends in the middle "
@@ -741,7 +748,7 @@ static void
 getColormapIndex(const char **  const lineCursorP,
                  unsigned int   const charsPerPixel,
                  unsigned int * const ptab, 
-                 unsigned int   const ptabSize,
+                 unsigned int   const nColors,
                  unsigned int * const colormapIndexP) {
 /*----------------------------------------------------------------------------
    Read from the line (advancing cursor *lineCursorP) the next
@@ -757,7 +764,8 @@ getColormapIndex(const char **  const lineCursorP,
     unsigned int colorNumber;
     unsigned int bytesRead;
 
-    getColorNumber(pixelBytes, charsPerPixel, &colorNumber, &bytesRead);
+    getColorNumber(pixelBytes, charsPerPixel, nColors,
+                   &colorNumber, &bytesRead);
 
     if (bytesRead < charsPerPixel) {
         if (pixelBytes[bytesRead] == '\0')
@@ -778,8 +786,8 @@ getColormapIndex(const char **  const lineCursorP,
     else {
         /* colormap shadows ptab[].  Find this color # in ptab[] */
         unsigned int i;
-        for (i = 0; i < ptabSize && ptab[i] != colorNumber; ++i);
-        if (i < ptabSize)
+        for (i = 0; i < nColors && ptab[i] != colorNumber; ++i);
+        if (i < nColors)
             *colormapIndexP = i;
         else
             pm_error("Color number %u is in raster, but not in colormap",
