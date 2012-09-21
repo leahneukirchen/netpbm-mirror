@@ -199,7 +199,7 @@ getColorNumber(const char * const pArg,
     for (q = p, retval = 0; q < p + bytesPerPixel; ++q)
         retval = (retval << 8) + *q;
 
-    if (bytesPerPixel > 2 && retval >= nColors)
+    if (bytesPerPixel <= 2 && retval >= nColors)
         pm_error("Color number %u in color map is too large, as the "
                  "header says there are only %u colors in the image",
                  retval, nColors);
