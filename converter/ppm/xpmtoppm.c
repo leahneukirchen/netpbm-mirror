@@ -174,37 +174,40 @@ getLine(char * const line,
 
 
 
-static unsigned int
-getColorNumber(const char * const pArg,
-               unsigned int const bytesPerPixel,
-               unsigned int const nColors) {
+static void
+getColorNumber(const char *   const pArg,
+               unsigned int   const bytesPerPixel,
+               unsigned int * const colorNumberP,
+               unsigned int * const bytesReadP) {
 /*----------------------------------------------------------------------------
-   Return the color number (palette index) at 'p'.
+   Return the color number at 'pArg'.
 
    It occupies 'bytesPerPixel' bytes.
+
+   Note that the color number is not an ordinary palette index.  It is a
+   number we make up to represent the 0-3 bytes of text that represent a color
+   in the XPM image.  In particular, we take the bytes to be a big-endian pure
+   binary number code.  Note that this number is typically larger than the
+   number of colors in the palette and sometimes too large to be used as an
+   array index at all.
 
    Abort program if the number is too large for the format described
    by 'bytesPerPixel' and 'nColors'.
 -----------------------------------------------------------------------------*/
-    /* Color number is encoded as pure binary, big-endian, unsigned.
-       (which is stupid, since the rest of the file is text)
-    */
     const unsigned char * const p = (const unsigned char *)pArg;
 
-    unsigned int retval;
+    unsigned int accum;
     const unsigned char * q;
 
     assert(bytesPerPixel <= sizeof(unsigned int));
     
-    for (q = p, retval = 0; q < p + bytesPerPixel; ++q)
-        retval = (retval << 8) + *q;
+    for (q = p, accum = 0; q < p + bytesPerPixel && *q && *q != '"'; ++q) {
+        accum <<= 8;
+        accum += *q;
+    }
 
-    if (bytesPerPixel > 2 && retval >= nColors)
-        pm_error("Color number %u in color map is too large, as the "
-                 "header says there are only %u colors in the image",
-                 retval, nColors);
-
-    return retval;
+    *colorNumberP = accum;
+    *bytesReadP   = q - p;
 }
 
 
@@ -308,7 +311,11 @@ interpretXpm3ColorTableLine(char               const line[],
     bool isTransparent;
     
     unsigned int colorNumber;
-        /* A color number that appears in the raster */
+        /* The color number that will appear in the raster to refer to the
+           color indicated by this color map line.
+        */
+    unsigned int bytesRead;
+
     /* read the chars */
     t1 = strchr(line, '"');
     if (t1 == NULL)
@@ -318,9 +325,12 @@ interpretXpm3ColorTableLine(char               const line[],
                  line, seqNum);
     else
         ++t1;  /* Points now to first color number character */
+    
+    getColorNumber(t1, charsPerPixel, &colorNumber, &bytesRead);
+    if (bytesRead < charsPerPixel)
+        pm_error("A color map entry ends in the middle of the colormap index");
 
-    colorNumber = getColorNumber(t1, charsPerPixel, nColors);
-    t1 += charsPerPixel;
+    t1 += bytesRead;
 
     /*
      * read color keys and values 
@@ -484,6 +494,10 @@ readXpm3Header(FILE *             const ifP,
   you iterate through *ptabP looking for N and then look at the 
   corresponding entry in *colorsP to get the color.
 
+  Return as *nColorsP the number of colors in the color map (which if
+  there are less than 3 characters per pixel, is quite a bit smaller than
+  the *colorsP array).
+
   Return as *transColorNumberP the value of the XPM color number that
   represents a transparent pixel, or -1 if no color number does.
 -----------------------------------------------------------------------------*/
@@ -596,19 +610,22 @@ readV1ColorTable(FILE *          const ifP,
         str2[t2 - t1 - 1] = '\0';
 
         {
-            unsigned int v;
-            unsigned int j;
+            unsigned int colorNumber;
+            unsigned int bytesRead;
 
-            v = 0;
-            for (j = 0; j < charsPerPixel; ++j)
-                v = (v << 8) + str1[j];
+            getColorNumber(str1, charsPerPixel, &colorNumber, &bytesRead);
+            
+            if (bytesRead < charsPerPixel)
+                pm_error("A color map entry ends in the middle "
+                         "of the colormap index");
+
             if (charsPerPixel <= 2)
                 /* Index into table. */
-                colors[v] = ppm_parsecolor(str2, PPM_MAXMAXVAL);
+                colors[colorNumber] = ppm_parsecolor(str2, PPM_MAXMAXVAL);
             else {
                 /* Set up linear search table. */
                 colors[i] = ppm_parsecolor(str2, PPM_MAXMAXVAL);
-                ptab[i] = v;
+                ptab[i] = colorNumber;
             }
         }
     }
@@ -721,6 +738,59 @@ readXpm1Header(FILE *          const ifP,
 
 
 static void
+getColormapIndex(const char **  const lineCursorP,
+                 unsigned int   const charsPerPixel,
+                 unsigned int * const ptab, 
+                 unsigned int   const ptabSize,
+                 unsigned int * const colormapIndexP) {
+/*----------------------------------------------------------------------------
+   Read from the line (advancing cursor *lineCursorP) the next
+   color number, which is 'charsPerPixel' characters long, and determine
+   from it the index into the colormap of the color represented.
+
+   That index is just the color number itself if 'ptab' is NULL.  Otherwise,
+   'ptab' shadows the colormap and the index we return is the index into
+   'ptab' of the element that contains the color number.
+-----------------------------------------------------------------------------*/
+    const char * const pixelBytes = *lineCursorP;
+
+    unsigned int colorNumber;
+    unsigned int bytesRead;
+
+    getColorNumber(pixelBytes, charsPerPixel, &colorNumber, &bytesRead);
+
+    if (bytesRead < charsPerPixel) {
+        if (pixelBytes[bytesRead] == '\0')
+            pm_error("XPM input file ends in the middle of a string "
+                     "that represents a raster line");
+        else if (pixelBytes[bytesRead] == '"')
+            pm_error("A string that represents a raster line in the "
+                     "XPM input file is too short to contain all the "
+                     "pixels (%u characters each)",
+                     charsPerPixel);
+        else
+            pm_error("INTERNAL ERROR.  Failed to read a raster value "
+                     "for unknown reason");
+    }
+    if (ptab == NULL)
+        /* colormap is indexed directly by XPM color number */
+        *colormapIndexP = colorNumber;
+    else {
+        /* colormap shadows ptab[].  Find this color # in ptab[] */
+        unsigned int i;
+        for (i = 0; i < ptabSize && ptab[i] != colorNumber; ++i);
+        if (i < ptabSize)
+            *colormapIndexP = i;
+        else
+            pm_error("Color number %u is in raster, but not in colormap",
+                     colorNumber);
+    }
+    *lineCursorP += bytesRead;
+}
+
+
+
+static void
 interpretXpmLine(char            const line[],
                  unsigned int    const width,
                  unsigned int    const charsPerPixel,
@@ -743,7 +813,7 @@ interpretXpmLine(char            const line[],
    Abort program if there aren't exactly 'width' pixels in the line.
 -----------------------------------------------------------------------------*/
     unsigned int pixelCtSoFar;
-    char * lineCursor;
+    const char * lineCursor;
 
     lineCursor = strchr(line, '"');  /* position to 1st quote in line */
     if (lineCursor == NULL) {
@@ -760,37 +830,12 @@ interpretXpmLine(char            const line[],
            the pixels Caller wants.
         */
         for (pixelCtSoFar = 0; pixelCtSoFar < width; ++pixelCtSoFar) {
-            unsigned int colorNumber;
-            unsigned int i;
-            colorNumber = 0;  /* initial value */
-            for (i = 0; i < charsPerPixel; ++i) {
-                if (*lineCursor == '\0')
-                    pm_error("XPM input file ends in the middle of a string "
-                             "that represents a raster line");
-                if (*lineCursor == '"')
-                    pm_error("A string that represents a raster line in the "
-                             "XPM input file is too short to contain "
-                             "%u pixels (%u characters each)",
-                             width, charsPerPixel);
-                {
-                    unsigned char const byte = (unsigned char)(*lineCursor++);
-                    colorNumber = (colorNumber << 8) + byte;
-                }
-            }
-            if (ptab == NULL)
-                /* colormap is indexed directly by XPM color number */
-                *(*cursorP)++ = colorNumber;
-            else {
-                /* colormap shadows ptab[].  Find this color # in ptab[] */
-                unsigned int i;
-                for (i = 0; i < nColors && ptab[i] != colorNumber; ++i);
-                if (i < nColors)
-                    *(*cursorP)++ = i;
-                else
-                    pm_error("Color number %u is in raster, but not in "
-                             "colormap.  Line it's in: '%s'",
-                             colorNumber, line);
-            }
+            unsigned int colormapIndex;
+
+            getColormapIndex(&lineCursor, charsPerPixel, ptab, nColors,
+                             &colormapIndex);
+
+            *(*cursorP)++ = colormapIndex;
         }
         if (*lineCursor != '"')
             pm_error("A raster line continues past width of image");

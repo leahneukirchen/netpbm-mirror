@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.60.00
 
+              xpmtoppm: fix bogus "color number too large" failure.  Broken
+              in 10.49 (December 2009).
+
               pnm_hashtuple: slight performance improvement from new hash
               function.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
 
