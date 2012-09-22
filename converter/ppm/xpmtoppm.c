@@ -1,31 +1,6 @@
-/* xpmtoppm.c - read an X11 pixmap file and produce a portable pixmap
-**
-** Copyright (C) 1991 by Jef Poskanzer.
-**
-** Permission to use, copy, modify, and distribute this software and its
-** documentation for any purpose and without fee is hereby granted, provided
-** that the above copyright notice appear in all copies and that both that
-** copyright notice and this permission notice appear in supporting
-** documentation.  This software is provided "as is" without express or
-** implied warranty.
-**
-** Upgraded to handle XPM version 3 by
-**   Arnaud Le Hors (lehors@mirsa.inria.fr)
-**   Tue Apr 9 1991
-**
-** Rainer Sinkwitz sinkwitz@ifi.unizh.ch - 21 Nov 91:
-**  - Bug fix, no advance of read ptr, would not read 
-**    colors like "ac c black" because it would find 
-**    the "c" of "ac" and then had problems with "c"
-**    as color.
-**    
-**  - Now understands multiword X11 color names
-**  
-**  - Now reads multiple color keys. Takes the color
-**    of the hightest available key. Lines no longer need
-**    to begin with key 'c'.
-**    
-**  - expanded line buffer to from 500 to 2048 for bigger files
+/* xpmtoppm.c - convert XPM file (X11 pixmap) to PPM
+
+   Copyright and history information is at end of file
 */
 
 #define _BSD_SOURCE   /* Make sure strdup() is in string.h */
@@ -48,11 +23,11 @@
 
 const char *xpmColorKeys[] =
 {
- "s",					/* key #1: symbol */
- "m",					/* key #2: mono visual */
- "g4",					/* key #3: 4 grays visual */
- "g",					/* key #4: gray visual */
- "c",					/* key #5: color visual */
+ "s",                   /* key #1: symbol */
+ "m",                   /* key #2: mono visual */
+ "g4",                  /* key #3: 4 grays visual */
+ "g",                   /* key #4: gray visual */
+ "c",                   /* key #5: color visual */
 };
 
 struct cmdlineInfo {
@@ -67,16 +42,6 @@ struct cmdlineInfo {
 
 
 static bool verbose;
-
-
-typedef struct {
-    bool none;
-        /* No color is transparent */
-    unsigned int index;
-        /* Color index of the transparent color.
-           Meaningless if 'none'
-        */
-} TransparentColor;
 
 
 
@@ -129,12 +94,257 @@ parseCommandLine(int argc, char ** argv,
 }
 
 
+
+struct ColorNameHashTableEntry {
+/*----------------------------------------------------------------------------
+   An entry in the color name hash table.  It maps a color name to a
+   color, or is empty.
+-----------------------------------------------------------------------------*/
+    bool empty;
+    char colorName[3];
+        /* Actual length 0-3.  NOT NUL-terminated */
+    pixel color;
+};
+
+
+
+typedef struct {
+/*----------------------------------------------------------------------------
+   This is a color map which is primarily a hash table that maps an XPM
+   color name to a color.  An XPM color name is a 0-3 character name that
+   appears in the raster of an XPM image to uniquely identify a color.
+   The header of the XPM contains a listing of all the color names that
+   appear in the raster, identifying a color for each.
+
+   We represent a color as a 'pixel'.
+-----------------------------------------------------------------------------*/
+    unsigned int nameSize;
+        /* Size of color names in this hash.  0-3 */
+    struct ColorNameHashTableEntry * transparentP;
+        /* The element of 'table' that is for the transparent color.
+           NULL if there is none.
+        */
+
+    /* This is an internally chained hash table, i.e. there are no linked
+       lists.  You use the hash function to get an index into the hash table.
+       If the entry indexed by that is not for the color name you're looking
+       for, you look at the next entry down, and keep going down until you
+       either find the color name you're looking for or hit an empty entry.
+
+       So that we never run out of space for new color names, we make the
+       creator of the hash table tell us the maximum number of colors there
+       will be.  We allocate twice that size in order to reduce average hash
+       chain length.
+    */
+    unsigned int size;
+    struct ColorNameHashTableEntry * table;
+} ColorNameHash;
+
+
+
+static ColorNameHash *
+hash_create(unsigned int const nColors,
+            unsigned int const nameSize) {
+
+    ColorNameHash * hashP;
+
+    MALLOCVAR_NOFAIL(hashP);
+
+    hashP->nameSize = nameSize;
+
+    hashP->size = nColors * 2;
+
+    MALLOCARRAY(hashP->table, hashP->size);
+
+    if (!hashP->table)
+        pm_error("Failed to allocate memory for a %u-entry "
+                 "color name hash table.", hashP->size);
+
+    {
+        unsigned int i;
+        for (i = 0; i < hashP->size; ++i)
+            hashP->table[i].empty = true;
+    }
+
+    hashP->transparentP = NULL;
+
+    return hashP;
+}
+
+
+
+static void
+hash_destroy(ColorNameHash * const hashP) {
+
+    free(hashP->table);
+
+    free(hashP);
+}
+
+
+
+static unsigned int
+hashColorName(const char * const name,
+              unsigned int const size,
+              unsigned int const hashTableSize) {
+/*----------------------------------------------------------------------------
+   Return the hash value (initial index into the color name hash table)
+   for the color name 'name', which is 'size' characters long.  The hash
+   is to be in the range [0, hashTableSize).
+-----------------------------------------------------------------------------*/
+    /* I have no idea if this is an appropriate hash function.  I borrowed
+       it from pnm_hashTuple()
+    */
+
+    unsigned int const hash_factor[] = {1, 33, 33*33};
+
+    unsigned int i;
+    unsigned int hash;
+
+    hash = 0;  /* initial value */
+    for (i = 0; i < size; ++i) {
+        hash += name[i] * hash_factor[i];
+    }
+    hash %= hashTableSize;
+    return hash;
+}
+
+
+
+static bool
+entryMatch(struct ColorNameHashTableEntry const entry,
+           const char *                   const name,
+           unsigned int                   const size) {
+
+    if (entry.empty)
+        return true;
+
+    assert(size <= ARRAY_SIZE(entry.colorName));
+
+    {
+        unsigned int i;
+        
+        for (i = 0; i < size; ++i) {
+            if (name[i] != entry.colorName[i])
+                return false;
+        }
+    }
+
+    return true;
+}
+
+
+
+static void
+bumpIndex(unsigned int * const indexP,
+          unsigned int   const tableSize,
+          unsigned int   const limit) {
+/*----------------------------------------------------------------------------
+   Bump *indexP to the next entry in a table of size 'tableSize', in a
+   circular fashion.  But abort the program if this would take us to
+   'limit'.
+-----------------------------------------------------------------------------*/
+    *indexP += 1;
+    if (*indexP >= tableSize)
+        *indexP = 0;
+
+    if (*indexP == limit)
+        pm_error("INTERNAL ERROR: color name hash table is full");
+}
+
+
+
+static void
+hash_find(const ColorNameHash *             const hashP,
+          const char *                      const name,
+          struct ColorNameHashTableEntry ** const entryPP) {
+/*----------------------------------------------------------------------------
+   Find the entry in the color hash table *hashP for the color
+   named 'name' in the lexicon of this XPM file.  If the color is in the
+   table, this is where it is.  If it isn't, this is where it should go.
+-----------------------------------------------------------------------------*/
+    unsigned int const initialIndex  =
+        hashColorName(name, hashP->nameSize, hashP->size);
+
+    unsigned int i;
+
+    for (i = initialIndex;
+         !entryMatch(hashP->table[i], name, hashP->nameSize);
+         bumpIndex(&i, hashP->size, initialIndex));
+         
+    *entryPP = &hashP->table[i];
+}
+
+
+
+static void
+hash_add(ColorNameHash * const hashP,
+         const char *    const name,
+         pixel           const color,
+         bool            const isTransparent) {
+
+    struct ColorNameHashTableEntry * entryP;
+
+    hash_find(hashP, name, &entryP);
+
+    if (!entryP->empty)
+        pm_error("Color name appears multiple times in color map");
+
+    entryP->empty = false;
+    {
+        unsigned int i;
+        for (i = 0; i < hashP->nameSize; ++i)
+            entryP->colorName[i] = name[i];
+    }
+    entryP->color = color;
+
+    if (isTransparent) {
+        if (hashP->transparentP)
+            pm_error("There are multiple NONE (transparent) entries in "
+                     "the XPM color map");
+        else
+            hashP->transparentP = entryP;
+    }
+}
+
+
+
+static pixel
+hash_color(const ColorNameHash * const hashP,
+           const char *          const name) {
+
+    struct ColorNameHashTableEntry * entryP;
+
+    hash_find(hashP, name, &entryP);
+
+    if (entryP->empty)
+        pm_error("Color name in raster is not in color map");
+
+    return entryP->color;
+}
+
+
+
+static bool
+hash_isTransparent(const ColorNameHash * const hashP,
+                   const char *          const name) {
+
+    struct ColorNameHashTableEntry * entryP;
+
+    hash_find(hashP, name, &entryP);
+
+    return (entryP == hashP->transparentP);
+}
+
+
+
 static char lastInputLine[MAX_LINE+1];
     /* contents of line most recently read from input */
 static bool backup;
     /* TRUE means next read should be a reread of the most recently read
        line, i.e. lastInputLine, instead of a read from the input file.
     */
+
 
 
 static void
@@ -175,50 +385,6 @@ getLine(char * const line,
 
 
 static void
-getColorNumber(const char *   const pArg,
-               unsigned int   const bytesPerPixel,
-               unsigned int   const nColors,
-               unsigned int * const colorNumberP,
-               unsigned int * const bytesReadP) {
-/*----------------------------------------------------------------------------
-   Return the color number at 'pArg'.
-
-   It occupies 'bytesPerPixel' bytes.
-
-   Note that the color number is not an ordinary palette index.  It is a
-   number we make up to represent the 0-3 bytes of text that represent a color
-   in the XPM image.  In particular, we take the bytes to be a big-endian pure
-   binary number code.  Note that this number is typically larger than the
-   number of colors in the palette and sometimes too large to be used as an
-   array index at all.
-
-   Abort program if the number is too large for the format described
-   by 'bytesPerPixel' and 'nColors'.
------------------------------------------------------------------------------*/
-    const unsigned char * const p = (const unsigned char *)pArg;
-
-    unsigned int accum;
-    const unsigned char * q;
-
-    assert(bytesPerPixel <= sizeof(unsigned int));
-    
-    for (q = p, accum = 0; q < p + bytesPerPixel && *q && *q != '"'; ++q) {
-        accum <<= 8;
-        accum += *q;
-    }
-
-    if (bytesPerPixel <= 2 && accum >= nColors)
-        pm_error("Color number %u in color map is too large, as the "
-                 "header says there are only %u colors in the image",
-                 accum, nColors);
-
-    *colorNumberP = accum;
-    *bytesReadP   = q - p;
-}
-
-
-
-static void
 getword(char * const output, char ** const cursorP) {
 
     char *t1;
@@ -236,38 +402,34 @@ getword(char * const output, char ** const cursorP) {
 
 
 static void
-addToColorMap(unsigned int       const seqNum,
-              unsigned int       const colorNumber, 
-              pixel *            const colors,
-              unsigned int *     const ptab, 
-              char               const colorspec[],
-              bool               const isTransparent,
-              TransparentColor * const transparentP) {
+addToColorMap(ColorNameHash * const hashP,
+              const char *    const colorName,
+              char            const colorspec[],
+              bool            const isTransparent) {
 /*----------------------------------------------------------------------------
-   Add the color named by colorspec[] to the colormap contained in
-   'colors' and 'ptab', as the color associated with XPM color number
-   'colorNumber', which is the seqNum'th color in the XPM color map.
+   Add the color named by colorspec[] to the colormap represented by *hashP,
+   as the color associated with XPM color name 'colorNumber'.
 
-   Iff 'isTransparent', set *transparentP to the colormap index that 
-   corresponds to this color.
+   Note that *hashP determines how long 'colorName' is.
 -----------------------------------------------------------------------------*/
-    if (ptab == NULL) {
-        /* Index into table. */
-        colors[colorNumber] = ppm_parsecolor(colorspec,
-                                             (pixval) PPM_MAXMAXVAL);
-        if (isTransparent) {
-            transparentP->none = false;
-            transparentP->index = colorNumber;
-        }
-    } else {
-        /* Set up linear search table. */
-        colors[seqNum] = ppm_parsecolor(colorspec,
-                                        (pixval) PPM_MAXMAXVAL);
-        ptab[seqNum] = colorNumber;
-        if (isTransparent) {
-            transparentP->none = false;
-            transparentP->index = seqNum;
-        }
+    hash_add(hashP, colorName, ppm_parsecolor(colorspec, PPM_MAXMAXVAL),
+             isTransparent);
+}
+
+
+
+static void
+validateColorName(const char * const name,
+                  unsigned int const charsPerPixel) {
+
+    unsigned int i;
+
+    for (i = 0; i < charsPerPixel; ++i) {
+        if (name[i] == '"')
+            pm_error("A color map entry ends in the middle of the colormap "
+                     "index");
+        else if (name[i] == '\0')
+            pm_error("The XPM file ends in the middle of a color map entry");
     }
 }
 
@@ -277,26 +439,21 @@ static void
 interpretXpm3ColorTableLine(char               const line[],
                             unsigned int       const seqNum, 
                             unsigned int       const charsPerPixel,
-                            pixel *            const colors,
-                            unsigned int *     const ptab,
-                            unsigned int       const nColors,
-                            TransparentColor * const transparentP) {
+                            ColorNameHash *    const hashP) {
 /*----------------------------------------------------------------------------
    Interpret one line of the color table in the XPM header.  'line' is the
    line from the XPM file.  It is the seqNum'th color table entry in the file.
    The raster in the file uses 'charsPerPixel' characters per pixel (i.e.
-   a color number (palette index) is 'charsPerPixel' characters).
+   a an XPM color name is 'charsPerPixel' characters).
 
-   Add the information from this color table entry to the color table 'colors'
-   and, if it isn't NULL, the corresponding lookup shadow table 'ptab'.  Both
-   are of size 'nColors'.  (See readV3ColorTable for a description of these
-   data structures).
+   Add the information from this color table entry to the color name hash
+   *hashP.
 
    The line may include values for multiple kinds of color (grayscale,
    color, etc.).  We take the highest of these (e.g. color over grayscale).
 
    If a color table entry indicates transparency, set *transparentP
-   to the colormap index that corresponds to the indicated color.
+   to indicate the XPM color name.
 -----------------------------------------------------------------------------*/
     /* Note: this code seems to allow for multi-word color specifications,
        but I'm not aware that such are legal.  Ultimately, ppm_parsecolor()
@@ -308,19 +465,19 @@ interpretXpm3ColorTableLine(char               const line[],
     char * t2;
     int endOfEntry;   /* boolean */
     
-    unsigned int curkey, key, highkey;	/* current color key */
-    unsigned int lastwaskey;	
+    unsigned int curkey, key, highkey;  /* current color key */
+    bool lastwaskey;    
         /* The last token we processes was a key, and we have processed
            at least one token.
         */
-    char curbuf[BUFSIZ];		/* current buffer */
+    char curbuf[BUFSIZ];        /* current buffer */
     bool isTransparent;
     
-    unsigned int colorNumber;
-        /* The color number that will appear in the raster to refer to the
-           color indicated by this color map line.
+    const char * colorName;
+        /* The 0-3 character name this color map line gives the color
+           (i.e. the name that the raster uses).  This is NOT NUL-terminated.
+           It's length is bytesPerPixel.
         */
-    unsigned int bytesRead;
 
     /* read the chars */
     t1 = strchr(line, '"');
@@ -332,11 +489,10 @@ interpretXpm3ColorTableLine(char               const line[],
     else
         ++t1;  /* Points now to first color number character */
     
-    getColorNumber(t1, charsPerPixel, nColors, &colorNumber, &bytesRead);
-    if (bytesRead < charsPerPixel)
-        pm_error("A color map entry ends in the middle of the colormap index");
+    validateColorName(t1, charsPerPixel);
+    colorName = t1;
 
-    t1 += bytesRead;
+    t1 += charsPerPixel;
 
     /*
      * read color keys and values 
@@ -368,30 +524,30 @@ interpretXpm3ColorTableLine(char               const line[],
                     pm_error("Missing color key token in color table line "
                              "'%s' before '%s'.", line, str2);
                 if (!lastwaskey) 
-                    strcat(curbuf, " ");		/* append space */
+                    strcat(curbuf, " ");        /* append space */
                 if ( (strneq(str2, "None", 4)) 
                      || (strneq(str2, "none", 4)) ) {
                     /* This entry identifies the transparent color number */
                     strcat(curbuf, "#000000");  /* Make it black */
                     isTransparent = TRUE;
                 } else 
-                    strcat(curbuf, str2);		/* append buf */
-                lastwaskey = 0;
+                    strcat(curbuf, str2);       /* append buf */
+                lastwaskey = FALSE;
             } else { 
                 /* This word is a key.  So we've seen the last of the 
                    info for the previous key, and we must either put it
                    in the color map or ignore it if we already have a higher
                    color form in the colormap for this colormap entry.
                 */
-                if (curkey > highkey) {	/* flush string */
-                    addToColorMap(seqNum, colorNumber, colors, ptab, curbuf,
-                                  isTransparent, transparentP);
+                if (curkey > highkey) { /* flush string */
+                    addToColorMap(hashP, colorName, curbuf, isTransparent);
                     highkey = curkey;
                 }
-                curkey = key;			/* set new key  */
-                curbuf[0] = '\0';		/* reset curbuf */
+                /* intialize state to process this new key */
+                curkey = key;
+                curbuf[0] = '\0';
                 isTransparent = FALSE;
-                lastwaskey = 1;
+                lastwaskey = TRUE;
             }
             if (*t2 == '"') break;
         }
@@ -401,8 +557,7 @@ interpretXpm3ColorTableLine(char               const line[],
        entry in it)
     */
     if (curkey > highkey) {
-        addToColorMap(seqNum, colorNumber, colors, ptab, curbuf,
-                      isTransparent, transparentP);
+        addToColorMap(hashP, colorName, curbuf, isTransparent);
         highkey = curkey;
     }
     if (highkey == 1) 
@@ -413,56 +568,31 @@ interpretXpm3ColorTableLine(char               const line[],
 
 static void
 readV3ColorTable(FILE *             const ifP,
-                 pixel **           const colorsP,
+                 ColorNameHash **   const colorNameHashPP,
                  unsigned int       const nColors,
-                 unsigned int       const charsPerPixel,
-                 unsigned int **    const ptabP,
-                 TransparentColor * const transparentP) {
+                 unsigned int       const charsPerPixel) {
 /*----------------------------------------------------------------------------
    Read the color table from the XPM Version 3 header.
 
    Assume *ifP is positioned to the color table; leave it positioned after.
 -----------------------------------------------------------------------------*/
-    unsigned int colormapSize;
-    pixel * colors;  /* malloc'ed array */
-    unsigned int * ptab; /* malloc'ed array */
+    ColorNameHash * const colorNameHashP = hash_create(nColors, charsPerPixel);
 
-    if (charsPerPixel <= 2) {
-        /* Set up direct index (see above) */
-        colormapSize =
-            charsPerPixel == 0 ?   1 :
-            charsPerPixel == 1 ? 256 :
-            256*256;
-        ptab = NULL;
-    } else {
-        /* Set up lookup table (see above) */
-        colormapSize = nColors;
-        MALLOCARRAY(ptab, nColors);
-        if (ptab == NULL)
-            pm_error("Unable to allocate memory for %u colors", nColors);
-    }
-    colors = ppm_allocrow(colormapSize);
-    
-    { 
-        /* Read the color table */
-        unsigned int seqNum;
-            /* Sequence number of entry within color table in XPM header */
+    unsigned int seqNum;
+        /* Sequence number of entry within color table in XPM header */
 
-        transparentP->none = true;  /* initial value */
-
-        for (seqNum = 0; seqNum < nColors; ++seqNum) {
-            char line[MAX_LINE+1];
+    for (seqNum = 0; seqNum < nColors; ++seqNum) {
+        char line[MAX_LINE+1];
+        getLine(line, sizeof(line), ifP);
+        /* skip the comment line if any */
+        if (strneq(line, "/*", 2))
             getLine(line, sizeof(line), ifP);
-            /* skip the comment line if any */
-            if (strneq(line, "/*", 2))
-                getLine(line, sizeof(line), ifP);
             
-            interpretXpm3ColorTableLine(line, seqNum, charsPerPixel,
-                                        colors, ptab, nColors, transparentP);
-        }
+        interpretXpm3ColorTableLine(line, seqNum, charsPerPixel,
+                                    colorNameHashP);
+                                    
     }
-    *colorsP = colors;
-    *ptabP   = ptab;
+    *colorNameHashPP = colorNameHashP;
 }
 
 
@@ -472,40 +602,20 @@ readXpm3Header(FILE *             const ifP,
                unsigned int *     const widthP,
                unsigned int *     const heightP, 
                unsigned int *     const charsPerPixelP,
-               unsigned int *     const nColorsP,
-               pixel **           const colorsP,
-               unsigned int **    const ptabP,
-               TransparentColor * const transparentP) {
+               ColorNameHash **   const colorNameHashPP) {
 /*----------------------------------------------------------------------------
   Read the header of the XPM file on stream *ifP.  Assume the
   getLine() stream is presently positioned to the beginning of the
   file and it is a Version 3 XPM file.  Leave the stream positioned
   after the header.
 
-  We have two ways to return the colormap, depending on the number of
-  characters per pixel in the XPM:  
-  
-  If it is 1 or 2 characters per pixel, we return the colormap as a
-  Netpbm 'pixel' array *colorsP (in newly malloc'ed storage), such
-  that if a color in the raster is identified by index N, then
-  (*colorsP)[N] is that color.  So this array is either 256 or 64K
-  pixels.  In this case, we return *ptabP = NULL.
+  Return as *widthP and *heightP the dimensions of the image indicated
+  by the header.
 
-  If it is more than 2 characters per pixel, we return the colormap as
-  both a Netpbm 'pixel' array *colorsP and a lookup table *ptabP (both
-  in newly malloc'ed storage).
+  Return as *charsPerPixelP the number of characters the header says the
+  raster uses for each pixel, i.e. the XPM color name length.
 
-  If a color in the raster is identified by index N, then for some I,
-  (*ptabP)[I] is N and (*colorsP)[I] is the color in question.  So 
-  you iterate through *ptabP looking for N and then look at the 
-  corresponding entry in *colorsP to get the color.
-
-  Return as *nColorsP the number of colors in the color map (which if
-  there are less than 3 characters per pixel, is quite a bit smaller than
-  the *colorsP array).
-
-  Return as *transColorNumberP the value of the XPM color number that
-  represents a transparent pixel, or -1 if no color number does.
+  Return the color map as *colorNameHashPP.
 -----------------------------------------------------------------------------*/
     char line[MAX_LINE+1];
     const char * xpm3_signature = "/* XPM */";
@@ -547,48 +657,28 @@ readXpm3Header(FILE *             const ifP,
         pm_message("chars per pixel:  %u", charsPerPixel);
     }
 
-    readV3ColorTable(ifP, colorsP, nColors, charsPerPixel, ptabP,
-                     transparentP);
+    readV3ColorTable(ifP, colorNameHashPP, nColors, charsPerPixel);
 
     *widthP         = width;
     *heightP        = height;
     *charsPerPixelP = charsPerPixel;
-    *nColorsP       = nColors;
 }
 
 
 
 static void
-readV1ColorTable(FILE *          const ifP,
-                 pixel **        const colorsP,
-                 unsigned int    const nColors,
-                 unsigned int    const charsPerPixel,
-                 unsigned int ** const ptabP) {
+readV1ColorTable(FILE *           const ifP,
+                 ColorNameHash ** const colorNameHashPP,
+                 unsigned int     const nColors,
+                 unsigned int     const charsPerPixel) {
 /*----------------------------------------------------------------------------
    Read the color table from the XPM Version 1 header.
 
    Assume *ifP is positioned to the color table; leave it positioned after.
 -----------------------------------------------------------------------------*/
-    pixel * colors;  /* malloc'ed array */
-    unsigned int * ptab; /* malloc'ed array */
-    unsigned int i;
+    ColorNameHash * const colorNameHashP = hash_create(nColors, charsPerPixel);
 
-    /* Allocate space for color table. */
-    if (charsPerPixel <= 2) {
-        /* Up to two chars per pixel, we can use an indexed table. */
-        unsigned int v;
-        v = 1;
-        for (i = 0; i < charsPerPixel; ++i)
-            v *= 256;
-        colors = ppm_allocrow(v);
-        ptab = NULL;
-    } else {
-        /* Over two chars per pixel, we fall back on linear search. */
-        colors = ppm_allocrow(nColors);
-        MALLOCARRAY(ptab, nColors);
-        if (ptab == NULL)
-            pm_error("Unable to allocate memory for %u colors", nColors);
-    }
+    unsigned int i;
 
     for (i = 0; i < nColors; ++i) {
         char line[MAX_LINE+1];
@@ -615,41 +705,19 @@ readV1ColorTable(FILE *          const ifP,
         strncpy(str2, t1 + 1, t2 - t1 - 1);
         str2[t2 - t1 - 1] = '\0';
 
-        {
-            unsigned int colorNumber;
-            unsigned int bytesRead;
-
-            getColorNumber(str1, charsPerPixel, nColors,
-                           &colorNumber, &bytesRead);
-            
-            if (bytesRead < charsPerPixel)
-                pm_error("A color map entry ends in the middle "
-                         "of the colormap index");
-
-            if (charsPerPixel <= 2)
-                /* Index into table. */
-                colors[colorNumber] = ppm_parsecolor(str2, PPM_MAXMAXVAL);
-            else {
-                /* Set up linear search table. */
-                colors[i] = ppm_parsecolor(str2, PPM_MAXMAXVAL);
-                ptab[i] = colorNumber;
-            }
-        }
+        addToColorMap(colorNameHashP, str1, str2, false);
     }
-    *colorsP = colors;
-    *ptabP   = ptab;
+    *colorNameHashPP = colorNameHashP;
 }
 
 
 
 static void
-readXpm1Header(FILE *          const ifP,
-               unsigned int *  const widthP,
-               unsigned int *  const heightP, 
-               unsigned int *  const charsPerPixelP,
-               unsigned int *  const nColorsP, 
-               pixel **        const colorsP,
-               unsigned int ** const ptabP) {
+readXpm1Header(FILE *           const ifP,
+               unsigned int *   const widthP,
+               unsigned int *   const heightP, 
+               unsigned int *   const charsPerPixelP,
+               ColorNameHash ** const colorNameHashPP) {
 /*----------------------------------------------------------------------------
   Read the header of the XPM file on stream *ifP.  Assume the
   getLine() stream is presently positioned to the beginning of the
@@ -661,11 +729,15 @@ readXpm1Header(FILE *          const ifP,
     int format, v;
     bool processedStaticChar;  
         /* We have read up to and interpreted the "static char..." line */
-    bool gotPixel;
     char * t1;
+    unsigned int nColors;
+    bool gotPixel, gotNColors, gotWidth, gotHeight, gotFormat;
 
-    *widthP = *heightP = *nColorsP = format = -1;
-    gotPixel = false;
+    gotNColors = false;
+    gotWidth   = false;
+    gotHeight  = false;
+    gotFormat  = false;
+    gotPixel   = false;
 
     /* Read the initial defines. */
     processedStaticChar = FALSE;
@@ -680,15 +752,19 @@ readXpm1Header(FILE *          const ifP,
                 t1 = str1;
             else
                 ++t1;
-            if (streq(t1, "format"))
+            if (streq(t1, "format")) {
+                gotFormat = true;
                 format = v;
-            else if (streq(t1, "width"))
+            } else if (streq(t1, "width")) {
+                gotWidth = true;
                 *widthP = v;
-            else if (streq(t1, "height"))
+            } else if (streq(t1, "height")) {
+                gotHeight = true;
                 *heightP = v;
-            else if (streq(t1, "nColors"))
-                *nColorsP = v;
-            else if (streq(t1, "pixel")) {
+            } else if (streq(t1, "nColors")) {
+                gotNColors = true;
+                nColors = v;
+            } else if (streq(t1, "pixel")) {
                 gotPixel = TRUE;
                 *charsPerPixelP = v;
             }
@@ -706,15 +782,15 @@ readXpm1Header(FILE *          const ifP,
     */
     if (!gotPixel)
         pm_error("No 'pixel' value (characters per pixel)");
-    if (format == -1)
+    if (!gotFormat)
         pm_error("missing or invalid format");
     if (format != 1)
         pm_error("can't handle XPM version %d", format);
-    if (*widthP == -1)
+    if (!gotWidth)
         pm_error("missing or invalid width");
-    if (*heightP == -1)
+    if (!gotHeight)
         pm_error("missing or invalid height");
-    if (*nColorsP == -1)
+    if (!gotNColors)
         pm_error("missing or invalid nColors");
 
     if (*charsPerPixelP > 2)
@@ -729,7 +805,7 @@ readXpm1Header(FILE *          const ifP,
                 break;
         }
     }
-    readV1ColorTable(ifP, colorsP, *nColorsP, *charsPerPixelP, ptabP);
+    readV1ColorTable(ifP, colorNameHashPP, nColors, *charsPerPixelP);
 
     /* Position to first line of raster (which is the line after
        "static char ...").
@@ -745,82 +821,48 @@ readXpm1Header(FILE *          const ifP,
 
 
 static void
-getColormapIndex(const char **  const lineCursorP,
-                 unsigned int   const charsPerPixel,
-                 unsigned int * const ptab, 
-                 unsigned int   const nColors,
-                 unsigned int * const colormapIndexP) {
-/*----------------------------------------------------------------------------
-   Read from the line (advancing cursor *lineCursorP) the next
-   color number, which is 'charsPerPixel' characters long, and determine
-   from it the index into the colormap of the color represented.
+validateRasterPixel(const char * const pixelChars,
+                    unsigned int const charsPerPixel) {
 
-   That index is just the color number itself if 'ptab' is NULL.  Otherwise,
-   'ptab' shadows the colormap and the index we return is the index into
-   'ptab' of the element that contains the color number.
------------------------------------------------------------------------------*/
-    const char * const pixelBytes = *lineCursorP;
+    unsigned int i;
 
-    unsigned int colorNumber;
-    unsigned int bytesRead;
-
-    getColorNumber(pixelBytes, charsPerPixel, nColors,
-                   &colorNumber, &bytesRead);
-
-    if (bytesRead < charsPerPixel) {
-        if (pixelBytes[bytesRead] == '\0')
+    for (i = 0; i < charsPerPixel; ++i) {
+        if (pixelChars[i] == '\0')
             pm_error("XPM input file ends in the middle of a string "
                      "that represents a raster line");
-        else if (pixelBytes[bytesRead] == '"')
+        else if (pixelChars[i] == '"')
             pm_error("A string that represents a raster line in the "
                      "XPM input file is too short to contain all the "
                      "pixels (%u characters each)",
                      charsPerPixel);
-        else
-            pm_error("INTERNAL ERROR.  Failed to read a raster value "
-                     "for unknown reason");
     }
-    if (ptab == NULL)
-        /* colormap is indexed directly by XPM color number */
-        *colormapIndexP = colorNumber;
-    else {
-        /* colormap shadows ptab[].  Find this color # in ptab[] */
-        unsigned int i;
-        for (i = 0; i < nColors && ptab[i] != colorNumber; ++i);
-        if (i < nColors)
-            *colormapIndexP = i;
-        else
-            pm_error("Color number %u is in raster, but not in colormap",
-                     colorNumber);
-    }
-    *lineCursorP += bytesRead;
 }
 
 
 
 static void
-interpretXpmLine(char            const line[],
-                 unsigned int    const width,
-                 unsigned int    const charsPerPixel,
-                 unsigned int    const nColors,
-                 unsigned int *  const ptab, 
-                 unsigned int ** const cursorP) {
+convertRow(char                  const line[],
+           unsigned int          const width,
+           unsigned int          const charsPerPixel,
+           const ColorNameHash * const colorNameHashP,
+           pixel *               const pixrow,
+           bit *                 const alpharow) {
 /*----------------------------------------------------------------------------
-   Interpret one line from XPM input which describes one raster line of the
-   image.  The XPM line is in 'line', and its format is 'width' pixel,
-   'charsPerPixel' characters per pixel.  'ptab' is the color table that
-   applies to the line, which table has 'nColors' colors.
+   Convert one row from XPM input, which describes one raster line of the
+   image, to PPM.  The XPM line is in 'line', and its format is 'width' pixel,
+   'charsPerPixel' characters per pixel.  *colorNameHashP is the color table
+   that applies to the line.
 
-   Put the colormap indexes for the pixels represented in 'line' at
-   *cursorP, lined up in the order they are in 'line', and return
-   *cursorP positioned just after the last one.
+   Put the PPM pixels in 'pixrow'.
+
+   Also produce PBM row 'alpharow' with the transparency information from the
+   row.
 
    If the line doesn't start with a quote (e.g. it is empty), we issue
    a warning and just treat the line as one that describes no pixels.
 
    Abort program if there aren't exactly 'width' pixels in the line.
 -----------------------------------------------------------------------------*/
-    unsigned int pixelCtSoFar;
     const char * lineCursor;
 
     lineCursor = strchr(line, '"');  /* position to 1st quote in line */
@@ -832,18 +874,23 @@ interpretXpmLine(char            const line[],
                    "line which is supposed to be a line of raster data: "
                    "'%s'.  Ignoring this line.", line);
     } else {
+        unsigned int col;
+    
         ++lineCursor; /* Skip to first character after quote */
 
         /* Handle pixels until a close quote, eol, or we've returned all
            the pixels Caller wants.
         */
-        for (pixelCtSoFar = 0; pixelCtSoFar < width; ++pixelCtSoFar) {
-            unsigned int colormapIndex;
+        for (col = 0; col < width; ++col) {
 
-            getColormapIndex(&lineCursor, charsPerPixel, ptab, nColors,
-                             &colormapIndex);
+            validateRasterPixel(lineCursor, charsPerPixel);
 
-            *(*cursorP)++ = colormapIndex;
+            pixrow[col] = hash_color(colorNameHashP, lineCursor);
+
+            alpharow[col] = hash_isTransparent(colorNameHashP, lineCursor) ?
+                PBM_BLACK : PBM_WHITE;
+            
+            lineCursor += charsPerPixel;
         }
         if (*lineCursor != '"')
             pm_error("A raster line continues past width of image");
@@ -853,37 +900,71 @@ interpretXpmLine(char            const line[],
 
 
 static void
-readXpmFile(FILE *             const ifP,
-            unsigned int *     const widthP,
-            unsigned int *     const heightP, 
-            pixel **           const colorsP,
-            unsigned int **    const dataP, 
-            TransparentColor * const transparentP) {
+convertRaster(FILE *                const ifP,
+              unsigned int          const cols,
+              unsigned int          const rows, 
+              unsigned int          const charsPerPixel,
+              const ColorNameHash * const colorNameHashP,
+              FILE *                const imageOutFileP,
+              FILE *                const alphaOutFileP) {
 /*----------------------------------------------------------------------------
-   Read the XPM file from stream *ifP.
+  Read the XPM raster from *ifP and write the PPM raster to *imageOutFileP
+  and the alpha channel to *alphaOutFileP (where those are, respectively,
+  non-null).
 
-   Return the dimensions of the image as *widthP and *heightP.
-   Return the color map as *colorsP, which is an array of *nColorsP
-   colors.
-
-   Return the raster in newly malloced storage, an array of *widthP by
-   *heightP integers, each of which is an index into the colormap
-   *colorsP (and therefore less than *nColorsP).  Return the address
-   of the array as *dataP.
-
-   In the colormap, put black for the transparent color, if the XPM 
-   image contains one.
+  The dimensions are 'cols' by 'rows' and the color map for the XPM
+  raster is *colorNameHashP.
 -----------------------------------------------------------------------------*/
-    unsigned int * data;
-    char line[MAX_LINE+1], str1[MAX_LINE+1];
-    unsigned int totalpixels;
-    unsigned int * cursor;
-        /* cursor into data{} */
-    unsigned int * maxCursor;
-        /* value of above cursor for last pixel in image */
-    unsigned int * ptab;   /* colormap - malloc'ed */
+    char line[MAX_LINE+1];
+    pixel * pixrow;
+    bit * alpharow;
+    unsigned int row;
+
+    pixrow   = ppm_allocrow(cols);
+    alpharow = pbm_allocrow(cols);
+
+    for (row = 0; row < rows; ++row) {
+        bool haveLine;
+
+        for (haveLine = false; !haveLine; ) {
+            getLine(line, sizeof(line), ifP); 
+
+            if (strneq(line, "/*", 2)) {
+                /* It's a comment.  Ignore it. */
+            } else
+                haveLine = true;
+        }
+        convertRow(line, cols, charsPerPixel, colorNameHashP,
+                   pixrow, alpharow);
+
+        if (imageOutFileP)
+            ppm_writeppmrow(imageOutFileP, 
+                            pixrow, cols, PPM_MAXMAXVAL, 0);
+            if (alphaOutFileP)
+                pbm_writepbmrow(alphaOutFileP, alpharow, cols, 0);
+    }
+
+    pbm_freerow(alpharow);
+    ppm_freerow(pixrow);
+}
+ 
+
+
+static void
+readXpmHeader(FILE *           const ifP,
+              unsigned int *   const widthP,
+              unsigned int *   const heightP, 
+              unsigned int *   const charsPerPixelP,
+              ColorNameHash ** const colorNameHashPP) {
+/*----------------------------------------------------------------------------
+  Read the XPM header, including color map.
+
+  In the colormap, put black for the transparent color, if the XPM image
+  contains one.
+-----------------------------------------------------------------------------*/
+    char line[MAX_LINE+1];
+    char str1[MAX_LINE+1];
     int rc;
-    unsigned int nColors;
     unsigned int charsPerPixel;
     unsigned int width, height;
 
@@ -896,114 +977,27 @@ readXpmFile(FILE *             const ifP,
     rc = sscanf(line, "/* %s */", str1);
     if (rc == 1 && strneq(str1, "XPM", 3)) {
         /* It's an XPM version 3 file */
-        readXpm3Header(ifP, &width, &height, &charsPerPixel,
-                       &nColors, colorsP, &ptab, transparentP);
-    } else {				/* try as an XPM version 1 file */
+        readXpm3Header(ifP, &width, &height, &charsPerPixel, colorNameHashPP);
+    } else {
         /* Assume it's an XPM version 1 file */
-        readXpm1Header(ifP, &width, &height, &charsPerPixel, 
-                       &nColors, colorsP, &ptab);
-        transparentP->none = true;  /* No transparency in version 1 */
+        readXpm1Header(ifP, &width, &height, &charsPerPixel, colorNameHashPP);
     }
-    totalpixels = width * height;
-    MALLOCARRAY(data, totalpixels);
-    if (!data)
-        pm_error("Could not get %u bytes of memory for image", totalpixels);
-    cursor = &data[0];
-    maxCursor = &data[totalpixels - 1];
-	getLine(line, sizeof(line), ifP); 
-        /* read next line (first line may not always start with comment) */
-    while (cursor <= maxCursor) {
-        if (strneq(line, "/*", 2)) {
-            /* It's a comment.  Ignore it. */
-        } else {
-            interpretXpmLine(line, width, charsPerPixel, nColors, ptab,
-                             &cursor);
-        }
-        if (cursor <= maxCursor)
-            getLine(line, sizeof(line), ifP);
-    }
-    if (ptab) free(ptab);
-    *dataP   = data;
-    *widthP  = width;
-    *heightP = height;
+    *widthP         = width;
+    *heightP        = height;
+    *charsPerPixelP = charsPerPixel;
 }
  
-
-
-static void
-writeOutput(FILE *           const imageout_file,
-            FILE *           const alpha_file,
-            unsigned int     const cols,
-            unsigned int     const rows, 
-            pixel *          const colors,
-            unsigned int *   const data,
-            TransparentColor const transparent) {
-/*----------------------------------------------------------------------------
-   Write the image in 'data' to open PPM file stream 'imageout_file',
-   and the alpha mask for it to open PBM file stream 'alpha_file',
-   except if either is NULL, skip it.
-
-   'data' is an array of cols * rows integers, each one being an index
-   into the colormap 'colors'.
-
-   Where the index 'transparent' occurs in 'data', the pixel is supposed
-   to be transparent.  If 'transparent' < 0, no pixels are transparent.
------------------------------------------------------------------------------*/
-    unsigned int row;
-    pixel * pixrow;
-    bit * alpharow;
-
-    if (imageout_file)
-        ppm_writeppminit(imageout_file, cols, rows, PPM_MAXMAXVAL, 0);
-    if (alpha_file)
-        pbm_writepbminit(alpha_file, cols, rows, 0);
-
-    pixrow = ppm_allocrow(cols);
-    alpharow = pbm_allocrow(cols);
-
-    for (row = 0; row < rows; ++row ) {
-        unsigned int * const datarow = data+(row*cols);
-
-        unsigned int col;
-
-        for (col = 0; col < cols; ++col) {
-            pixrow[col] = colors[datarow[col]];
-            if (!transparent.none && datarow[col] == transparent.index)
-                alpharow[col] = PBM_BLACK;
-            else
-                alpharow[col] = PBM_WHITE;
-        }
-        if (imageout_file)
-            ppm_writeppmrow(imageout_file, 
-                            pixrow, cols, (pixval) PPM_MAXMAXVAL, 0);
-        if (alpha_file)
-            pbm_writepbmrow(alpha_file, alpharow, cols, 0);
-    }
-    ppm_freerow(pixrow);
-    pbm_freerow(alpharow);
-
-    if (imageout_file)
-        pm_close(imageout_file);
-    if (alpha_file)
-        pm_close(alpha_file);
-}    
-
 
 
 int
 main(int argc, char *argv[]) {
 
     FILE * ifP;
-    FILE * alpha_file;
-    FILE * imageout_file;
-    pixel * colormap;
+    FILE * alphaOutFileP;
+    FILE * imageOutFileP;
     unsigned int cols, rows;
-    TransparentColor transparent;
-        /* Pixels of what color, if any, are transparent */
-    unsigned int * data;
-        /* The image as an array of width * height integers, each one
-           being an index int colormap[].
-        */
+    unsigned int charsPerPixel;
+    ColorNameHash * colorNameHashP;
 
     struct cmdlineInfo cmdline;
 
@@ -1019,29 +1013,69 @@ main(int argc, char *argv[]) {
         ifP = stdin;
 
     if (cmdline.alpha_stdout)
-        alpha_file = stdout;
+        alphaOutFileP = stdout;
     else if (cmdline.alpha_filename == NULL) 
-        alpha_file = NULL;
+        alphaOutFileP = NULL;
     else {
-        alpha_file = pm_openw(cmdline.alpha_filename);
+        alphaOutFileP = pm_openw(cmdline.alpha_filename);
     }
 
     if (cmdline.alpha_stdout) 
-        imageout_file = NULL;
+        imageOutFileP = NULL;
     else
-        imageout_file = stdout;
+        imageOutFileP = stdout;
 
-    readXpmFile(ifP, &cols, &rows, &colormap, &data, &transparent);
+    readXpmHeader(ifP, &cols, &rows, &charsPerPixel, &colorNameHashP);
+
+    if (imageOutFileP)
+        ppm_writeppminit(imageOutFileP, cols, rows, PPM_MAXMAXVAL, 0);
+    if (alphaOutFileP)
+        pbm_writepbminit(alphaOutFileP, cols, rows, 0);
+
+
+    convertRaster(ifP, cols, rows, charsPerPixel, colorNameHashP,
+                  imageOutFileP, alphaOutFileP);
     
     pm_close(ifP);
+    if (imageOutFileP)
+        pm_close(imageOutFileP);
+    if (alphaOutFileP)
+        pm_close(alphaOutFileP);
 
-    writeOutput(imageout_file, alpha_file, cols, rows, colormap, data,
-                transparent);
-
-    free(colormap);
+    hash_destroy(colorNameHashP);
     
     return 0;
 }
 
 
+
+/*
+**
+** Copyright (C) 1991 by Jef Poskanzer.
+**
+** Permission to use, copy, modify, and distribute this software and its
+** documentation for any purpose and without fee is hereby granted, provided
+** that the above copyright notice appear in all copies and that both that
+** copyright notice and this permission notice appear in supporting
+** documentation.  This software is provided "as is" without express or
+** implied warranty.
+**
+** Upgraded to handle XPM version 3 by
+**   Arnaud Le Hors (lehors@mirsa.inria.fr)
+**   Tue Apr 9 1991
+**
+** Rainer Sinkwitz sinkwitz@ifi.unizh.ch - 21 Nov 91:
+**  - Bug fix, no advance of read ptr, would not read 
+**    colors like "ac c black" because it would find 
+**    the "c" of "ac" and then had problems with "c"
+**    as color.
+**    
+**  - Now understands multiword X11 color names
+**  
+**  - Now reads multiple color keys. Takes the color
+**    of the hightest available key. Lines no longer need
+**    to begin with key 'c'.
+**    
+**  - expanded line buffer to from 500 to 2048 for bigger files
+*/
 

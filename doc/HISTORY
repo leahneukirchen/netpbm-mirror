@@ -6,6 +6,10 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.60.00
 
+              xpmtoppm: major speedup for 3-character-per pixel files,
+              memory reduction for all files: use hash table instead of
+              linear search or direct index, go row by row.
+
               xpmtoppm: fix bogus "color number too large" failure.  Broken
               in 10.49 (December 2009).
 
