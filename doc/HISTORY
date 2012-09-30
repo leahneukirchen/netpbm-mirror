@@ -4,23 +4,32 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-12.09.21 BJH  Release 10.59.03
+12.09.30 BJH  Release 10.60.00
+
+              xpmtoppm: major speedup for 3-character-per pixel files,
+              memory reduction for all files: use hash table instead of
+              linear search or direct index, go row by row.
 
               xpmtoppm: fix bogus "color number too large" failure.  Broken
               in 10.49 (December 2009).
 
-12.07.20 BJH  Release 10.59.02
+              pnm_hashtuple: slight performance improvement from new hash
+              function.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
+              ppmtospu: wild memory accesses.  Always broken (program added in
+              10.58 (March 2012).
+
+              pamtosrf: fix storage corruption.  Always broken (program added
+              in 10.55 (June 2011).
+
+              Build: change _XOPEN_SOURCE 500 to 600 because on a Mac OSX 10.8
+              system, this is necessary to get 'strdup' into <strings.h>.
 
               Build: rename getline() in xpmtoppm.c to avoid collision
               with some libc.  Always broken.
 
-12.07.08 BJH  Release 10.59.01
-
-              ppmtospu: fix wild memory accesses.  Always broken (program
-              added in 10.58 (March 2012).
-
-              pamtosrf: fix storage corruption.  Always broken (program added
-              in 10.55 (June 2011).
+              Build: Don't expect GCC facilities to exist when compiler is
+              Clang.  (Note that Clang identifies itself as GCC).
 
 12.06.28 BJH  Release 10.59.00
 

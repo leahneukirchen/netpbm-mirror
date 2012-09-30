@@ -5,12 +5,17 @@
  *  Copyright (C) 1990, Steve Belczyk
  */
 
+#include <assert.h>
 #include <stdio.h>
 
 #include "pm_c_util.h"
 #include "mallocvar.h"
 #include "shhopt.h"
 #include "pam.h"
+
+#define SPU_WIDTH 320
+#define SPU_HEIGHT 200
+
 
 struct CmdlineInfo {
     /* All the information the user supplied in the command line,
@@ -82,20 +87,20 @@ parseCommandLine(int argc, const char ** argv,
 
 /* This is the stuff to remember about each pixel */
 struct PixelType {
-    int index4;  /* 4-bit color, used in bitmap */
-    int x;       /* Pixel's original x-position */
-    int pop;     /* Popularity of this pixel's color */
-    int color9;  /* 9-bit color this pixel actually got */
+    unsigned int index4;      /* 4-bit color, used in bitmap */
+    unsigned int x;           /* Pixel's original x-position */
+    unsigned int popularity;  /* Popularity of this pixel's color */
+    unsigned int color9;      /* 9-bit color this pixel actually got */
 };
 
 
 typedef struct {
-    int index[320][16];   /* Indices into the 48 color entries */
+    int index[SPU_WIDTH][16];   /* Indices into the 48 color entries */
 } Index48;
 
 typedef struct {
 /* These are the palettes, 3 16-color palettes per each of 200 scan lines */
-    int pal[200][48];  /* -1 means free */
+    int pal[SPU_HEIGHT][48];  /* -1 means free */
 } Pal;
 
 
@@ -107,7 +112,7 @@ initializePalette(Pal * const palP) {
 -----------------------------------------------------------------------------*/
     unsigned int row;
 
-    for (row = 0; row < 200; ++row) {
+    for (row = 0; row < SPU_HEIGHT; ++row) {
         unsigned int j;
         for (j = 0; j < 48; ++j)
             palP->pal[row][j] = 0;
@@ -152,7 +157,7 @@ setup48(Index48 * const index48P) {
 -----------------------------------------------------------------------------*/
     unsigned int col;
 
-    for (col = 0; col < 320; ++col) {
+    for (col = 0; col < SPU_WIDTH; ++col) {
         unsigned int i;
         for (i = 0; i < 16; ++i)
             index48P->index[col][i] = findIndex(col, i);
@@ -182,7 +187,7 @@ dither(unsigned int       const row,
     unsigned int c[3];  /* An element for each plane */
     unsigned int col;
 
-    for (col = 0; col < 320; ++col) {
+    for (col = 0; col < SPU_WIDTH; ++col) {
         unsigned int plane;
 
         for (plane = 0; plane < 3; ++plane) {
@@ -217,34 +222,58 @@ dither(unsigned int       const row,
 
 
 static void
+swapPixelType(struct PixelType *  const pixelType,
+              unsigned int        const i,
+              unsigned int        const j) {
+
+    struct PixelType const w = pixelType[i];
+
+    pixelType[i] = pixelType[j];
+    pixelType[j] = w;
+}
+
+
+
+static void
 sort(struct PixelType * const pixelType,
      unsigned int       const left,
      unsigned int       const right) {
 /*----------------------------------------------------------------------------
-  Sort pixelType[] from element 'left' to element 'right'
-  Good ol' Quicksort
+  Sort pixelType[] from element 'left' to (not including) element 'right' in
+  increasing popularity.
+
+  Good ol' Quicksort.
 -----------------------------------------------------------------------------*/
-    struct PixelType x;
+    unsigned int const pivot = pixelType[(left+right-1)/2].popularity;
+
     unsigned int i, j;
-    
-    i = left;
-    j = right;
-    x = pixelType[(left+right-1)/2];
-    
-    do {
-        while(pixelType[i].pop < x.pop)
+
+    /* Rearrange so that everything less than 'pivot' is on the left side of
+       the subject array slice and everything greater than is on the right
+       side and elements equal could be on either side (we won't know until
+       we're done where the dividing line between the sides is), then sort
+       those two sides.
+    */
+
+    assert(left < right);
+
+    for (i = left, j = right; i < j; ) {
+        while (pixelType[i].popularity < pivot)
             ++i;
-        while(x.pop < pixelType[j-1].pop)
+        while (pixelType[j-1].popularity > pivot)
             --j;
         
         if (i < j) {
-            struct PixelType const w = pixelType[i];
-            pixelType[i] = pixelType[j-1];
-            pixelType[j-1] = w;
+            /* An element not less popular than pivot is to the left of a
+               pixel not more popular than pivot, so swap them.  Note that we
+               could be swapping equal (pivot-valued) elements.  Though the
+               swap isn't necessary, moving 'i' and 'j' is.
+            */
+            swapPixelType(pixelType, i, j-1);
             ++i;
             --j;
         }
-    } while (i < j);
+    }
     
     if (j - left > 1)
         sort(pixelType, left, j);
@@ -268,15 +297,15 @@ computePalette(struct PixelType * const pixelType) {
     for (i = 0; i < 512; ++i)
         hist[i] = 0;
 
-    for (col = 0; col < 320; ++col)
+    for (col = 0; col < SPU_WIDTH; ++col)
         ++hist[pixelType[col].color9];
 
     /* Set the popularity of each pixel's color */
-    for (col = 0; col < 320; ++col)
-        pixelType[col].pop = hist[pixelType[col].color9];
+    for (col = 0; col < SPU_WIDTH; ++col)
+        pixelType[col].popularity = hist[pixelType[col].color9];
 
     /* Sort to find the most popular colors */
-    sort(pixelType, 0, 320);
+    sort(pixelType, 0, SPU_WIDTH);
 }
 
 
@@ -428,7 +457,7 @@ convertRow(unsigned int       const row,
            color
         */
         int col;
-        for (col = 319; col >= 0; --col) {
+        for (col = SPU_WIDTH-1; col >= 0; --col) {
             convertPixel(col, row, pixelType, palP, index48P);
             setPixel(pixelType[col].x, row, pixelType[col].index4, screen);
         }
@@ -445,7 +474,7 @@ doRow(unsigned int    const row,
       Pal *           const palP,
       short *         const screen) {
 
-    struct PixelType pixelType[320];
+    struct PixelType pixelType[SPU_WIDTH];
 
     /* Dither and reduce to 9 bits */
     dither(row, tuplerow, dithflag, pixelType);
@@ -481,7 +510,7 @@ writePalettes(const Pal * const palP) {
 
     unsigned int row;
 
-    for (row = 1; row < 200; ++row) {
+    for (row = 1; row < SPU_HEIGHT; ++row) {
         unsigned int i;
         for (i = 0; i < 48; ++i) {
             int const p = palP->pal[row][i];
@@ -532,9 +561,9 @@ main (int argc, const char ** argv) {
         pm_error("Image must be RGB, so at least 3 deep.  This image is "
                  "only %u deep", pam.depth);
 
-    if ((pam.width != 320) || (pam.height != 200))
-        pm_error("Image size must be 320x200.  This one is %u x %u",
-                 pam.width, pam.height);
+    if ((pam.width != SPU_WIDTH) || (pam.height != SPU_HEIGHT))
+        pm_error("Image size must be %ux%u.  This one is %u x %u",
+                 SPU_WIDTH, SPU_HEIGHT, pam.width, pam.height);
 
     {
         unsigned int i;
@@ -552,7 +581,7 @@ main (int argc, const char ** argv) {
     }
     {
         unsigned int row;
-        for (row = 0; row < 200; ++row)
+        for (row = 0; row < SPU_HEIGHT; ++row)
             doRow(row, tuples[row], cmdline.dithflag, &index48, &pal, screen);
     }
     writeSpu(screen, &pal);

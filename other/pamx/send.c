@@ -587,7 +587,7 @@ makeXImage(XImageInfo * const ximageinfoP,
         MALLOCARRAY(data, byteCount);
         if (data == NULL)
             pm_error("Can't allocate space for %u byte image", byteCount);
-        bcopy(imageP->data, data, byteCount);
+        memcpy(data, imageP->data, byteCount);
 
         ximageinfoP->ximageP =
             XCreateImage(disp, visualP, 1, XYBitmap,

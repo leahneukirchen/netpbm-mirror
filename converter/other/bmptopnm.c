@@ -1276,15 +1276,6 @@ readColorMap(FILE *               const ifP,
                     colorMapP, bmpHeader.cmapsize, &bytesRead);
 
     *posP += bytesRead;
-
-    if (bytesRead != BMPlencolormap(bmpHeader.class, bmpHeader.cBitCount, 
-                                    bmpHeader.cmapsize)) {
-
-        pm_message("warning: %u-byte RGB table, expected %u bytes",
-                   bytesRead,
-                   BMPlencolormap(bmpHeader.class, bmpHeader.cBitCount, 
-                                  bmpHeader.cmapsize));
-    }
 }
 
 
@@ -1302,23 +1293,6 @@ readRaster(FILE *               const ifP,
                   bmpRasterP, &bytesRead);
 
     *posP += bytesRead;
-}
-
-
-
-static void
-warnIfBadFileSize(struct bmpInfoHeader const bmpHeader,
-                  unsigned int         const pos) {
-
-    unsigned int const expectedSize =
-        BMPlenfileGen(bmpHeader.class, bmpHeader.cBitCount, 
-                      bmpHeader.cmapsize, bmpHeader.cols,
-                      bmpHeader.rows, bmpHeader.imageSize,
-                      bmpHeader.compression);
-
-    if (pos != expectedSize)
-        pm_message("warning: read %u bytes, expected to read %u bytes",
-                   pos, expectedSize);
 }
 
 
@@ -1394,8 +1368,6 @@ readBmp(FILE *               const ifP,
 
     readRaster(ifP, bmpHeader, bmpRasterP, &pos);
 
-    warnIfBadFileSize(bmpHeader, pos);
-    
     if (fgetc(ifP) != EOF)
         pm_message("warning: some image data remains unread.");
     

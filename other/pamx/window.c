@@ -499,10 +499,10 @@ iconName(const char * const s) {
         char * t;
 
         STRSCPY(buf, s);
-        /* strip off stuff following 1st word.  This strips
+        /* chop off stuff following 1st word.  This strips
            info added by processing functions too.
         */
-        t = index(buf, ' ');
+        t = strchr(buf, ' ');
         if (t)
             *t = '\0';
     
@@ -510,15 +510,15 @@ iconName(const char * const s) {
            You might want to change this.
         */
     
-        t= rindex(buf, '/');
+        t= strrchr(buf, '/');
         if (t) {
             char * p;
             for (p = buf, ++t; *t; ++p, ++t)
                 *p = *t;
             *p = '\0';
         }
-        /* look for an extension and strip it off */
-        t = index(buf, '.');
+        /* Chop off any filename extension */
+        t = strchr(buf, '.');
         if (t)
             *t = '\0';
     }
