@@ -4,7 +4,7 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-not yet  BJH  Release 10.60.00
+12.09.30 BJH  Release 10.60.00
 
               xpmtoppm: major speedup for 3-character-per pixel files,
               memory reduction for all files: use hash table instead of
