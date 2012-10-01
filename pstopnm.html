@@ -76,6 +76,13 @@ Devices&quot; <B>pbm</B>, <B>pbmraw</B>, <B>pgm</B>, <B>pgmraw</B>,
 <B>pnm</B>, <B>pnmraw</B>, <B>ppm</B>, or <B>ppmraw</B>, you're in
 business.
 
+<p>It's important to understand that <b>pstopnm</b> is a Netpbm image file
+format converter only in the broadest sense of the word, because Postscript is
+far from an image file format.  What <b>pstopnm</b> really is is a Postscript
+renderer - an image generator.  One place you'll notice the difference is
+where you expect <kbd>pstopnm | pnmtops</kbd> to be idempotent (which is not
+the case).  There are details on this kind of conversion below.
+
 <P><B>pstopnm</B> uses the value of the <B>GHOSTSCRIPT</B>
 environment variable as the file name for the Ghostscript program.  If
 <B>GHOSTSCRIPT</B> is not set, <B>pstopnm</B> searches your
@@ -206,6 +213,41 @@ based on that resolution, it chooses an output image size that is just
 large enough to accommodate the subject image (no borders).  Remember
 (above) that <b>pstopnm</b> trims the edges of the bordered subject
 image to fit the computed output size.
+
+<h3 id="usagenotes">Usage Notes</h3>
+
+<p>There is some good advice on converting to and from Postscript, in the
+document <a href="http://mintaka.sdsu.edu/GF/bibliog/latex/PSconv.html">Postcript
+File Conversions</a> by Andrew T. Young.
+
+<h4 id="reversible">Reversible Conversion</h4>
+
+<p>If you're trying to do the equivalent of the naive 
+<kbd>pstopnm | pnmtops</kbd>, the following steps will do it.
+
+<pre>
+<kbd>
+    $ pnmtops -nocenter -equalpixels -dpi 72 -noturn testimg.ppm > testimg.ps
+    $ pstopnm -xborder=0 -yborder=0 -xsize=<i>XSIZE</i> -ysize=<I>YSIZE</I> \
+        -stdout -quiet testimg.ps
+</kbd>
+</pre>
+
+<i>XSIZE</i> and <i>YSIZE</i> above are the image dimensions, which you can
+get from .ps file can awk or sed:
+
+<pre>
+<kbd>
+    $ grep "BoundingBox" testimg.ps
+    %%BoundingBox: 0 0 227 149
+
+    $ awk  '/%%BoundingBox/ {print $4,$5}' testimg.ps
+     227 149
+ 
+    $ xysize=$(awk  '/%%BoundingBox/ {print "-xsize="$4,"-ysize="$5}' testimg.ps)
+    $ pstopnm -xborder=0 -yborder=0 $xysize ... testimg.ps
+</kbd>
+</pre>
 
 
 <H2 id="options">OPTIONS</H2>
