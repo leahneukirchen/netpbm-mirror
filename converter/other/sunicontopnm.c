@@ -130,8 +130,9 @@ main(int argc, const char ** argv) {
         assert(depth == 8);
         format = PGM_TYPE;
         maxval = 255;
+        pgm_writepgminit(stdout, cols, rows, maxval, 0);
         grayrow = pgm_allocrow(cols);
-        colChars = cols / depth;
+        colChars = cols;
     }
 
     for (row = 0; row < rows; ++row) {
