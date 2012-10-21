@@ -120,8 +120,17 @@ ratio.  <b>pamtojpeg2k</b> will adjust quality as necessary to ensure that
 you get this compression ratio.  E.g. 4 means the output will be about
 one fourth the size in bytes of the input file.
 
-<p>The compression ratio must be at least 1.  The default is 1, which means
-the output has all the quality of the input -- the conversion is lossless.
+<p>The ratio concerns just the raster part of the image, with the denominator
+being what the raster would take if it were encoded the most naive way
+possible (e.g. 3 bytes per pixel in 8-bit-per-sample RGB).  It does,
+however, include metadata that is part of the compressed raster.  Because
+of that, it may not be possible to give you your requested compression ratio
+at any quality.  If it isn't, <b>pamtojpeg2k</b> fails with a message
+saying so.
+
+<p>If you don't specify this option, <b>pamtojpeg2k</b> gives you the best
+compression it can without losing any quality.  Because of the metadata issue
+described above, this may mean, for a small image, the image actually expands.
 
 <p>Note that though Jasper library takes a compression factor, this
 option specifies a compression ratio.  The compression factor is the
