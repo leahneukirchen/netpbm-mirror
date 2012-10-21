@@ -1,128 +1,12 @@
-/*
- * Copyright (c) 1999-2000 Image Power, Inc. and the University of
- *   British Columbia.
- * Copyright (c) 2001-2002 Michael David Adams.
- * All rights reserved.
- */
-
-/* __START_OF_JASPER_LICENSE__
- * 
- * JasPer Software License
- * 
- * IMAGE POWER JPEG-2000 PUBLIC LICENSE
- * ************************************
- * 
- * GRANT:
- * 
- * Permission is hereby granted, free of charge, to any person (the "User")
- * obtaining a copy of this software and associated documentation, to deal
- * in the JasPer Software without restriction, including without limitation
- * the right to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the JasPer Software (in source and binary forms),
- * and to permit persons to whom the JasPer Software is furnished to do so,
- * provided further that the License Conditions below are met.
- * 
- * License Conditions
- * ******************
- * 
- * A.  Redistributions of source code must retain the above copyright notice,
- * and this list of conditions, and the following disclaimer.
- * 
- * B.  Redistributions in binary form must reproduce the above copyright
- * notice, and this list of conditions, and the following disclaimer in
- * the documentation and/or other materials provided with the distribution.
- * 
- * C.  Neither the name of Image Power, Inc. nor any other contributor
- * (including, but not limited to, the University of British Columbia and
- * Michael David Adams) may be used to endorse or promote products derived
- * from this software without specific prior written permission.
- * 
- * D.  User agrees that it shall not commence any action against Image Power,
- * Inc., the University of British Columbia, Michael David Adams, or any
- * other contributors (collectively "Licensors") for infringement of any
- * intellectual property rights ("IPR") held by the User in respect of any
- * technology that User owns or has a right to license or sublicense and
- * which is an element required in order to claim compliance with ISO/IEC
- * 15444-1 (i.e., JPEG-2000 Part 1).  "IPR" means all intellectual property
- * rights worldwide arising under statutory or common law, and whether
- * or not perfected, including, without limitation, all (i) patents and
- * patent applications owned or licensable by User; (ii) rights associated
- * with works of authorship including copyrights, copyright applications,
- * copyright registrations, mask work rights, mask work applications,
- * mask work registrations; (iii) rights relating to the protection of
- * trade secrets and confidential information; (iv) any right analogous
- * to those set forth in subsections (i), (ii), or (iii) and any other
- * proprietary rights relating to intangible property (other than trademark,
- * trade dress, or service mark rights); and (v) divisions, continuations,
- * renewals, reissues and extensions of the foregoing (as and to the extent
- * applicable) now existing, hereafter filed, issued or acquired.
- * 
- * E.  If User commences an infringement action against any Licensor(s) then
- * such Licensor(s) shall have the right to terminate User's license and
- * all sublicenses that have been granted hereunder by User to other parties.
- * 
- * F.  This software is for use only in hardware or software products that
- * are compliant with ISO/IEC 15444-1 (i.e., JPEG-2000 Part 1).  No license
- * or right to this Software is granted for products that do not comply
- * with ISO/IEC 15444-1.  The JPEG-2000 Part 1 standard can be purchased
- * from the ISO.
- * 
- * THIS DISCLAIMER OF WARRANTY CONSTITUTES AN ESSENTIAL PART OF THIS LICENSE.
- * NO USE OF THE JASPER SOFTWARE IS AUTHORIZED HEREUNDER EXCEPT UNDER
- * THIS DISCLAIMER.  THE JASPER SOFTWARE IS PROVIDED BY THE LICENSORS AND
- * CONTRIBUTORS UNDER THIS LICENSE ON AN ``AS-IS'' BASIS, WITHOUT WARRANTY
- * OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING, WITHOUT LIMITATION,
- * WARRANTIES THAT THE JASPER SOFTWARE IS FREE OF DEFECTS, IS MERCHANTABLE,
- * IS FIT FOR A PARTICULAR PURPOSE OR IS NON-INFRINGING.  THOSE INTENDING
- * TO USE THE JASPER SOFTWARE OR MODIFICATIONS THEREOF FOR USE IN HARDWARE
- * OR SOFTWARE PRODUCTS ARE ADVISED THAT THEIR USE MAY INFRINGE EXISTING
- * PATENTS, COPYRIGHTS, TRADEMARKS, OR OTHER INTELLECTUAL PROPERTY RIGHTS.
- * THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE JASPER SOFTWARE
- * IS WITH THE USER.  SHOULD ANY PART OF THE JASPER SOFTWARE PROVE DEFECTIVE
- * IN ANY RESPECT, THE USER (AND NOT THE INITIAL DEVELOPERS, THE UNIVERSITY
- * OF BRITISH COLUMBIA, IMAGE POWER, INC., MICHAEL DAVID ADAMS, OR ANY
- * OTHER CONTRIBUTOR) SHALL ASSUME THE COST OF ANY NECESSARY SERVICING,
- * REPAIR OR CORRECTION.  UNDER NO CIRCUMSTANCES AND UNDER NO LEGAL THEORY,
- * WHETHER TORT (INCLUDING NEGLIGENCE), CONTRACT, OR OTHERWISE, SHALL THE
- * INITIAL DEVELOPER, THE UNIVERSITY OF BRITISH COLUMBIA, IMAGE POWER, INC.,
- * MICHAEL DAVID ADAMS, ANY OTHER CONTRIBUTOR, OR ANY DISTRIBUTOR OF THE
- * JASPER SOFTWARE, OR ANY SUPPLIER OF ANY OF SUCH PARTIES, BE LIABLE TO
- * THE USER OR ANY OTHER PERSON FOR ANY INDIRECT, SPECIAL, INCIDENTAL, OR
- * CONSEQUENTIAL DAMAGES OF ANY CHARACTER INCLUDING, WITHOUT LIMITATION,
- * DAMAGES FOR LOSS OF GOODWILL, WORK STOPPAGE, COMPUTER FAILURE OR
- * MALFUNCTION, OR ANY AND ALL OTHER COMMERCIAL DAMAGES OR LOSSES, EVEN IF
- * SUCH PARTY HAD BEEN INFORMED, OR OUGHT TO HAVE KNOWN, OF THE POSSIBILITY
- * OF SUCH DAMAGES.  THE JASPER SOFTWARE AND UNDERLYING TECHNOLOGY ARE NOT
- * FAULT-TOLERANT AND ARE NOT DESIGNED, MANUFACTURED OR INTENDED FOR USE OR
- * RESALE AS ON-LINE CONTROL EQUIPMENT IN HAZARDOUS ENVIRONMENTS REQUIRING
- * FAIL-SAFE PERFORMANCE, SUCH AS IN THE OPERATION OF NUCLEAR FACILITIES,
- * AIRCRAFT NAVIGATION OR COMMUNICATION SYSTEMS, AIR TRAFFIC CONTROL, DIRECT
- * LIFE SUPPORT MACHINES, OR WEAPONS SYSTEMS, IN WHICH THE FAILURE OF THE
- * JASPER SOFTWARE OR UNDERLYING TECHNOLOGY OR PRODUCT COULD LEAD DIRECTLY
- * TO DEATH, PERSONAL INJURY, OR SEVERE PHYSICAL OR ENVIRONMENTAL DAMAGE
- * ("HIGH RISK ACTIVITIES").  LICENSOR SPECIFICALLY DISCLAIMS ANY EXPRESS
- * OR IMPLIED WARRANTY OF FITNESS FOR HIGH RISK ACTIVITIES.  USER WILL NOT
- * KNOWINGLY USE, DISTRIBUTE OR RESELL THE JASPER SOFTWARE OR UNDERLYING
- * TECHNOLOGY OR PRODUCTS FOR HIGH RISK ACTIVITIES AND WILL ENSURE THAT ITS
- * CUSTOMERS AND END-USERS OF ITS PRODUCTS ARE PROVIDED WITH A COPY OF THE
- * NOTICE SPECIFIED IN THIS SECTION.
- * 
- * __END_OF_JASPER_LICENSE__
- */
-
-/*
- * $Id$
- */
-
-/******************************************************************************\
-* Includes.
-\******************************************************************************/
-
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <math.h>
 #include <float.h>
+
+#include "netpbm/pm.h"
+#include "netpbm/nstring.h"
 
 #include "jasper/jas_string.h"
 #include "jasper/jas_malloc.h"
@@ -147,9 +31,9 @@
 #include "jpc_math.h"
 #include "jpc_util.h"
 
-/******************************************************************************\
+/*****************************************************************************\
 *
-\******************************************************************************/
+\*****************************************************************************/
 
 #define JPC_POW2(n) \
     (1 << (n))
@@ -202,7 +86,6 @@ void jpc_enc_destroy(jpc_enc_t *enc);
 static int jpc_enc_encodemainhdr(jpc_enc_t *enc);
 static int jpc_enc_encodemainbody(jpc_enc_t *enc);
 int jpc_enc_encodetiledata(jpc_enc_t *enc);
-int rateallocate(jpc_enc_t *enc, int numlyrs, uint_fast32_t *cumlens);
 int setins(int numvalues, jpc_flt_t *values, jpc_flt_t value);
 static jpc_enc_cp_t *cp_create(char *optstr, jas_image_t *image);
 void jpc_enc_cp_destroy(jpc_enc_cp_t *cp);
@@ -314,6 +197,32 @@ jas_taginfo_t modetab[] = {
     {MODE_REAL, "real"},
     {-1, 0}
 };
+
+
+static void
+tracev(const char * const fmt,
+       va_list            args) {
+
+    vfprintf(stderr, fmt, args);
+
+    fprintf(stderr, "\n");
+}
+
+
+
+static void
+trace(const char * const fmt, ...) {
+
+    if (jas_getdbglevel() > 0) {
+        va_list args;
+
+        va_start(args, fmt);
+        tracev(fmt, args);
+        va_end(args);
+    }
+}
+
+
 
 /******************************************************************************\
 * The main encoder entry point.
@@ -768,11 +677,6 @@ static jpc_enc_cp_t *cp_create(char *optstr, jas_image_t *image)
         goto error;
     }
 
-    /* Ensure that the rate is within the legal range. */
-    if (cp->totalsize != UINT_FAST32_MAX && cp->totalsize > cp->rawsize) {
-        fprintf(stderr, "warning: specified rate is unreasonably large (%lu > %lu)\n", (unsigned long) cp->totalsize, (unsigned long) cp->rawsize);
-    }
-
     /* Ensure that the intermediate layer rates are valid. */
     if (tcp->numlyrs > 1) {
         /* The intermediate layers rates must increase monotonically. */
@@ -1119,365 +1023,6 @@ startoff = jas_stream_getrwcount(enc->out);
     return 0;
 }
 
-static int jpc_enc_encodemainbody(jpc_enc_t *enc)
-{
-    int tileno;
-    int tilex;
-    int tiley;
-    int i;
-    jpc_sot_t *sot;
-    jpc_enc_tcmpt_t *comp;
-    jpc_enc_tcmpt_t *endcomps;
-    jpc_enc_band_t *band;
-    jpc_enc_band_t *endbands;
-    jpc_enc_rlvl_t *lvl;
-    int rlvlno;
-    jpc_qcc_t *qcc;
-    jpc_cod_t *cod;
-    int adjust;
-    int j;
-    int absbandno;
-    long numbytes;
-    long tilehdrlen;
-    long tilelen;
-    jpc_enc_tile_t *tile;
-    jpc_enc_cp_t *cp;
-    double rho;
-    uint_fast16_t lyrno;
-    uint_fast16_t cmptno;
-    int samestepsizes;
-    jpc_enc_ccp_t *ccps;
-    jpc_enc_tccp_t *tccp;
-int bandno;
-uint_fast32_t x;
-uint_fast32_t y;
-int mingbits;
-int actualnumbps;
-jpc_fix_t mxmag;
-jpc_fix_t mag;
-int numgbits;
-
-    cp = enc->cp;
-
-    /* Avoid compile warnings. */
-    numbytes = 0;
-
-    for (tileno = 0; tileno < cp->numtiles; ++tileno) {
-        tilex = tileno % cp->numhtiles;
-        tiley = tileno / cp->numhtiles;
-
-        if (!(enc->curtile = jpc_enc_tile_create(enc->cp, enc->image, tileno))) {
-            abort();
-        }
-
-        tile = enc->curtile;
-
-        if (jas_getdbglevel() >= 10) {
-            jpc_enc_dump(enc);
-        }
-
-        endcomps = &tile->tcmpts[tile->numtcmpts];
-        for (cmptno = 0, comp = tile->tcmpts; cmptno < tile->numtcmpts; ++cmptno, ++comp) {
-            if (!cp->ccps[cmptno].sgnd) {
-                adjust = 1 << (cp->ccps[cmptno].prec - 1);
-                for (i = 0; i < jas_matrix_numrows(comp->data); ++i) {
-                    for (j = 0; j < jas_matrix_numcols(comp->data); ++j) {
-                        *jas_matrix_getref(comp->data, i, j) -= adjust;
-                    }
-                }
-            }
-        }
-
-        if (!tile->intmode) {
-                endcomps = &tile->tcmpts[tile->numtcmpts];
-                for (comp = tile->tcmpts; comp != endcomps; ++comp) {
-                    jas_matrix_asl(comp->data, JPC_FIX_FRACBITS);
-                }
-        }
-
-        switch (tile->mctid) {
-        case JPC_MCT_RCT:
-assert(jas_image_numcmpts(enc->image) == 3);
-            jpc_rct(tile->tcmpts[0].data, tile->tcmpts[1].data,
-              tile->tcmpts[2].data);
-            break;
-        case JPC_MCT_ICT:
-assert(jas_image_numcmpts(enc->image) == 3);
-            jpc_ict(tile->tcmpts[0].data, tile->tcmpts[1].data,
-              tile->tcmpts[2].data);
-            break;
-        default:
-            break;
-        }
-
-        for (i = 0; i < jas_image_numcmpts(enc->image); ++i) {
-            comp = &tile->tcmpts[i];
-            jpc_tsfb_analyze(comp->tsfb, ((comp->qmfbid == JPC_COX_RFT) ? JPC_TSFB_RITIMODE : 0), comp->data);
-
-        }
-
-
-        endcomps = &tile->tcmpts[tile->numtcmpts];
-        for (cmptno = 0, comp = tile->tcmpts; comp != endcomps; ++cmptno, ++comp) {
-            mingbits = 0;
-            absbandno = 0;
-            /* All bands must have a corresponding quantizer step size,
-              even if they contain no samples and are never coded. */
-            /* Some bands may not be hit by the loop below, so we must
-              initialize all of the step sizes to a sane value. */
-            memset(comp->stepsizes, 0, sizeof(comp->stepsizes));
-            for (rlvlno = 0, lvl = comp->rlvls; rlvlno < comp->numrlvls; ++rlvlno, ++lvl) {
-                if (!lvl->bands) {
-                    absbandno += rlvlno ? 3 : 1;
-                    continue;
-                }
-                endbands = &lvl->bands[lvl->numbands];
-                for (band = lvl->bands; band != endbands; ++band) {
-                    if (!band->data) {
-                        ++absbandno;
-                        continue;
-                    }
-                    actualnumbps = 0;
-                    mxmag = 0;
-                    for (y = 0; y < jas_matrix_numrows(band->data); ++y) {
-                        for (x = 0; x < jas_matrix_numcols(band->data); ++x) {
-                            mag = abs(jas_matrix_get(band->data, y, x));
-                            if (mag > mxmag) {
-                                mxmag = mag;
-                            }
-                        }
-                    }
-                    if (tile->intmode) {
-                        actualnumbps = jpc_firstone(mxmag) + 1;
-                    } else {
-                        actualnumbps = jpc_firstone(mxmag) + 1 - JPC_FIX_FRACBITS;
-                    }
-                    numgbits = actualnumbps - (cp->ccps[cmptno].prec - 1 +
-                      band->analgain);
-#if 0
-fprintf(stderr, "%d %d mag=%d actual=%d numgbits=%d\n", cp->ccps[cmptno].prec, band->analgain, mxmag, actualnumbps, numgbits);
-#endif
-                    if (numgbits > mingbits) {
-                        mingbits = numgbits;
-                    }
-                    if (!tile->intmode) {
-                        band->absstepsize = jpc_fix_div(jpc_inttofix(1
-                          << (band->analgain + 1)),
-                          band->synweight);
-                    } else {
-                        band->absstepsize = jpc_inttofix(1);
-                    }
-                    band->stepsize = jpc_abstorelstepsize(
-                      band->absstepsize, cp->ccps[cmptno].prec +
-                      band->analgain);
-                    band->numbps = cp->tccp.numgbits +
-                      JPC_QCX_GETEXPN(band->stepsize) - 1;
-
-                    if ((!tile->intmode) && band->data) {
-                        quantize(band->data, band->absstepsize);
-                    }
-
-                    comp->stepsizes[absbandno] = band->stepsize;
-                    ++absbandno;
-                }
-            }
-
-            assert(JPC_FIX_FRACBITS >= JPC_NUMEXTRABITS);
-            if (!tile->intmode) {
-                jas_matrix_divpow2(comp->data, JPC_FIX_FRACBITS - JPC_NUMEXTRABITS);
-            } else {
-                jas_matrix_asl(comp->data, JPC_NUMEXTRABITS);
-            }
-        }
-#if 0
-fprintf(stderr, "mingbits %d\n", mingbits);
-#endif
-
-        if (mingbits > cp->tccp.numgbits) {
-            fprintf(stderr, "error: too few guard bits (need at least %d)\n",
-              mingbits);
-            return -1;
-        }
-
-        if (!(enc->tmpstream = jas_stream_memopen(0, 0))) {
-            fprintf(stderr, "cannot open tmp file\n");
-            return -1;
-        }
-
-        /* Write the tile header. */
-        if (!(enc->mrk = jpc_ms_create(JPC_MS_SOT))) {
-            return -1;
-        }
-        sot = &enc->mrk->parms.sot;
-        sot->len = 0;
-        sot->tileno = tileno;
-        sot->partno = 0;
-        sot->numparts = 1;
-        if (jpc_putms(enc->tmpstream, enc->cstate, enc->mrk)) {
-            fprintf(stderr, "cannot write SOT marker\n");
-            return -1;
-        }
-        jpc_ms_destroy(enc->mrk);
-        enc->mrk = 0;
-
-/************************************************************************/
-/************************************************************************/
-/************************************************************************/
-
-        tccp = &cp->tccp;
-        for (cmptno = 0; cmptno < cp->numcmpts; ++cmptno) {
-            comp = &tile->tcmpts[cmptno];
-            if (comp->numrlvls != tccp->maxrlvls) {
-                if (!(enc->mrk = jpc_ms_create(JPC_MS_COD))) {
-                    return -1;
-                }
-/* XXX = this is not really correct. we are using comp #0's precint sizes
-and other characteristics */
-                comp = &tile->tcmpts[0];
-                cod = &enc->mrk->parms.cod;
-                cod->compparms.csty = 0;
-                cod->compparms.numdlvls = comp->numrlvls - 1;
-                cod->prg = tile->prg;
-                cod->numlyrs = tile->numlyrs;
-                cod->compparms.cblkwidthval = JPC_COX_CBLKSIZEEXPN(comp->cblkwidthexpn);
-                cod->compparms.cblkheightval = JPC_COX_CBLKSIZEEXPN(comp->cblkheightexpn);
-                cod->compparms.cblksty = comp->cblksty;
-                cod->compparms.qmfbid = comp->qmfbid;
-                cod->mctrans = (tile->mctid != JPC_MCT_NONE);
-                for (i = 0; i < comp->numrlvls; ++i) {
-                    cod->compparms.rlvls[i].parwidthval = comp->rlvls[i].prcwidthexpn;
-                    cod->compparms.rlvls[i].parheightval = comp->rlvls[i].prcheightexpn;
-                }
-                if (jpc_putms(enc->tmpstream, enc->cstate, enc->mrk)) {
-                    return -1;
-                }
-                jpc_ms_destroy(enc->mrk);
-                enc->mrk = 0;
-            }
-        }
-
-        for (cmptno = 0, comp = tile->tcmpts; cmptno < cp->numcmpts; ++cmptno, ++comp) {
-            ccps = &cp->ccps[cmptno];
-            if (ccps->numstepsizes == comp->numstepsizes) {
-                samestepsizes = 1;
-                for (bandno = 0; bandno < ccps->numstepsizes; ++bandno) {
-                    if (ccps->stepsizes[bandno] != comp->stepsizes[bandno]) {
-                        samestepsizes = 0;
-                        break;
-                    }
-                }
-            } else {
-                samestepsizes = 0;
-            }
-            if (!samestepsizes) {
-                if (!(enc->mrk = jpc_ms_create(JPC_MS_QCC))) {
-                    return -1;
-                }
-                qcc = &enc->mrk->parms.qcc;
-                qcc->compno = cmptno;
-                qcc->compparms.numguard = cp->tccp.numgbits;
-                qcc->compparms.qntsty = (comp->qmfbid == JPC_COX_INS) ?
-                  JPC_QCX_SEQNT : JPC_QCX_NOQNT;
-                qcc->compparms.numstepsizes = comp->numstepsizes;
-                qcc->compparms.stepsizes = comp->stepsizes;
-                if (jpc_putms(enc->tmpstream, enc->cstate, enc->mrk)) {
-                    return -1;
-                }
-                qcc->compparms.stepsizes = 0;
-                jpc_ms_destroy(enc->mrk);
-                enc->mrk = 0;
-            }
-        }
-
-        /* Write a SOD marker to indicate the end of the tile header. */
-        if (!(enc->mrk = jpc_ms_create(JPC_MS_SOD))) {
-            return -1;
-        }
-        if (jpc_putms(enc->tmpstream, enc->cstate, enc->mrk)) {
-            fprintf(stderr, "cannot write SOD marker\n");
-            return -1;
-        }
-        jpc_ms_destroy(enc->mrk);
-        enc->mrk = 0;
-tilehdrlen = jas_stream_getrwcount(enc->tmpstream);
-
-/************************************************************************/
-/************************************************************************/
-/************************************************************************/
-
-if (jpc_enc_enccblks(enc)) {
-    abort();
-    return -1;
-}
-
-        cp = enc->cp;
-        rho = (double) (tile->brx - tile->tlx) * (tile->bry - tile->tly) /
-          ((cp->refgrdwidth - cp->imgareatlx) * (cp->refgrdheight -
-          cp->imgareatly));
-        tile->rawsize = cp->rawsize * rho;
-
-        for (lyrno = 0; lyrno < tile->numlyrs - 1; ++lyrno) {
-            tile->lyrsizes[lyrno] = tile->rawsize * jpc_fixtodbl(
-              cp->tcp.ilyrrates[lyrno]);
-        }
-        tile->lyrsizes[tile->numlyrs - 1] = (cp->totalsize != UINT_FAST32_MAX) ?
-          (rho * enc->mainbodysize) : UINT_FAST32_MAX;
-        for (lyrno = 0; lyrno < tile->numlyrs; ++lyrno) {
-            if (tile->lyrsizes[lyrno] != UINT_FAST32_MAX) {
-                if (tilehdrlen <= tile->lyrsizes[lyrno]) {
-                    tile->lyrsizes[lyrno] -= tilehdrlen;
-                } else {
-                    tile->lyrsizes[lyrno] = 0;
-                }
-            }
-        }
-
-        if (rateallocate(enc, tile->numlyrs, tile->lyrsizes)) {
-            return -1;
-        }
-
-#if 0
-fprintf(stderr, "ENCODE TILE DATA\n");
-#endif
-        if (jpc_enc_encodetiledata(enc)) {
-            fprintf(stderr, "dotile failed\n");
-            return -1;
-        }
-
-/************************************************************************/
-/************************************************************************/
-/************************************************************************/
-
-/************************************************************************/
-/************************************************************************/
-/************************************************************************/
-
-        tilelen = jas_stream_tell(enc->tmpstream);
-
-        if (jas_stream_seek(enc->tmpstream, 6, SEEK_SET) < 0) {
-            return -1;
-        }
-        jpc_putuint32(enc->tmpstream, tilelen);
-
-        if (jas_stream_seek(enc->tmpstream, 0, SEEK_SET) < 0) {
-            return -1;
-        }
-        if (jpc_putdata(enc->out, enc->tmpstream, -1)) {
-            return -1;
-        }
-        enc->len += tilelen;
-
-        jas_stream_close(enc->tmpstream);
-        enc->tmpstream = 0;
-
-        jpc_enc_tile_destroy(enc->curtile);
-        enc->curtile = 0;
-
-    }
-
-    return 0;
-}
-
 int jpc_enc_encodetiledata(jpc_enc_t *enc)
 {
 assert(enc->tmpstream);
@@ -1576,6 +1121,81 @@ if (pass0->rdslope > 0.0) {
 #endif
 }
 
+
+
+static void
+traceLayerSizes(const uint_fast32_t * const lyrSizes,
+                unsigned int          const layerCt) {
+
+    if (jas_getdbglevel() > 0) {
+        unsigned int i;
+        for (i = 0; i < layerCt; ++i) {
+            fprintf(stderr, "Layer %u size = ", i);
+
+            if (lyrSizes[i] == UINT_FAST32_MAX)
+                fprintf(stderr, "Unlimited");
+            else
+                fprintf(stderr, "%u", (unsigned)lyrSizes[i]);
+            fprintf(stderr, "\n");
+        }
+    }
+}
+
+
+
+static void
+computeLayerSizes(jpc_enc_t *      const encP,
+                  jpc_enc_tile_t * const tileP,
+                  jpc_enc_cp_t *   const cpP,
+                  double           const rho,
+                  long             const tilehdrlen,
+                  const char **    const errorP) {
+
+    /* Note that in allowed sizes, UINT_FAST32_MAX is a special value meaning
+       "unlimited".
+    */
+
+    unsigned int const lastLyrno = tileP->numlyrs - 1;
+
+    unsigned int lyrno;
+
+    assert(tileP->numlyrs > 0);
+
+    for (lyrno = 0; lyrno < lastLyrno; ++lyrno) {
+        tileP->lyrsizes[lyrno] = tileP->rawsize * jpc_fixtodbl(
+            cpP->tcp.ilyrrates[lyrno]);
+    }
+
+    tileP->lyrsizes[lastLyrno] =
+        (cpP->totalsize != UINT_FAST32_MAX) ?
+        (rho * encP->mainbodysize) : UINT_FAST32_MAX;
+
+
+    /* Subtract 'tilehdrlen' from every layer. */
+
+    for (lyrno = 0; lyrno < tileP->numlyrs; ++lyrno) {
+        if (tileP->lyrsizes[lyrno] != UINT_FAST32_MAX) {
+            if (tilehdrlen <= tileP->lyrsizes[lyrno]) {
+                tileP->lyrsizes[lyrno] -= tilehdrlen;
+            } else {
+                tileP->lyrsizes[lyrno] = 0;
+            }
+        }
+    }
+
+    if (tileP->lyrsizes[lastLyrno] < 1)
+        pm_asprintf(errorP, "Cannot make image that small (%u bytes).  "
+                    "Even with pixels compressed as far as possible, metadata "
+                    "would exceed the limit",
+                    (unsigned)cpP->totalsize);
+    else
+        *errorP = NULL;
+
+    traceLayerSizes(tileP->lyrsizes, tileP->numlyrs);
+}
+
+
+
 static void dump_layeringinfo(jpc_enc_t *enc)
 {
 
@@ -1638,80 +1258,92 @@ static void dump_layeringinfo(jpc_enc_t *enc)
     }
 }
 
-int rateallocate(jpc_enc_t *enc, int numlyrs, uint_fast32_t *cumlens)
-{
-    jpc_flt_t lo;
-    jpc_flt_t hi;
-    jas_stream_t *out;
-    long cumlen;
-    int lyrno;
-    jpc_flt_t thresh;
-    jpc_flt_t goodthresh;
-    int success;
-    long pos;
-    long oldpos;
-    int numiters;
 
-    jpc_enc_tcmpt_t *comp;
-    jpc_enc_tcmpt_t *endcomps;
-    jpc_enc_rlvl_t *lvl;
-    jpc_enc_rlvl_t *endlvls;
-    jpc_enc_band_t *band;
-    jpc_enc_band_t *endbands;
-    jpc_enc_cblk_t *cblk;
-    jpc_enc_cblk_t *endcblks;
-    jpc_enc_pass_t *pass;
-    jpc_enc_pass_t *endpasses;
-    jpc_enc_pass_t *pass1;
-    jpc_flt_t mxrdslope;
-    jpc_flt_t mnrdslope;
-    jpc_enc_tile_t *tile;
-    jpc_enc_prc_t *prc;
-    uint_fast32_t prcno;
 
-    tile = enc->curtile;
+
+static void
+trace_layeringinfo(jpc_enc_t * const encP) {
+
+    if (jas_getdbglevel() >= 5)
+        dump_layeringinfo(encP);
+}
+
+
+
+static void
+validateCumlensIncreases(const uint_fast32_t * const cumlens,
+                         unsigned int          const numlyrs) {
+    unsigned int lyrno;
 
     for (lyrno = 1; lyrno < numlyrs - 1; ++lyrno) {
         if (cumlens[lyrno - 1] > cumlens[lyrno]) {
             abort();
         }
     }
-
-    if (!(out = jas_stream_memopen(0, 0))) {
-        return -1;
-    }
+}
 
 
-    /* Find minimum and maximum R-D slope values. */
+
+static void
+findMinMaxRDSlopeValues(jpc_enc_tile_t * const tileP,
+                        jpc_flt_t *      const mnrdslopeP,
+                        jpc_flt_t *      const mxrdslopeP) {
+/*----------------------------------------------------------------------------
+  Find minimum and maximum R-D slope values.
+-----------------------------------------------------------------------------*/
+    jpc_flt_t mxrdslope;
+    jpc_flt_t mnrdslope;
+    jpc_enc_tcmpt_t * endcomps;
+    jpc_enc_tcmpt_t * compP;
+
     mnrdslope = DBL_MAX;
     mxrdslope = 0;
-    endcomps = &tile->tcmpts[tile->numtcmpts];
-    for (comp = tile->tcmpts; comp != endcomps; ++comp) {
-        endlvls = &comp->rlvls[comp->numrlvls];
-        for (lvl = comp->rlvls; lvl != endlvls; ++lvl) {
-            if (!lvl->bands) {
-                continue;
-            }
-            endbands = &lvl->bands[lvl->numbands];
-            for (band = lvl->bands; band != endbands; ++band) {
-                if (!band->data) {
-                    continue;
-                }
-                for (prcno = 0, prc = band->prcs; prcno < lvl->numprcs; ++prcno, ++prc) {
-                    if (!prc->cblks) {
-                        continue;
-                    }
-                    endcblks = &prc->cblks[prc->numcblks];
-                    for (cblk = prc->cblks; cblk != endcblks; ++cblk) {
-                        calcrdslopes(cblk);
-                        endpasses = &cblk->passes[cblk->numpasses];
-                        for (pass = cblk->passes; pass != endpasses; ++pass) {
-                            if (pass->rdslope > 0) {
-                                if (pass->rdslope < mnrdslope) {
-                                    mnrdslope = pass->rdslope;
-                                }
-                                if (pass->rdslope > mxrdslope) {
-                                    mxrdslope = pass->rdslope;
+    endcomps = &tileP->tcmpts[tileP->numtcmpts];
+
+    for (compP = tileP->tcmpts; compP != endcomps; ++compP) {
+        jpc_enc_rlvl_t * const endlvlsP = &compP->rlvls[compP->numrlvls];
+
+        jpc_enc_rlvl_t * lvlP;
+
+        for (lvlP = compP->rlvls; lvlP != endlvlsP; ++lvlP) {
+            jpc_enc_band_t * endbandsP;
+            jpc_enc_band_t * bandP;
+
+            if (lvlP->bands) {
+                endbandsP = &lvlP->bands[lvlP->numbands];
+                for (bandP = lvlP->bands; bandP != endbandsP; ++bandP) {
+                    uint_fast32_t prcno;
+                    jpc_enc_prc_t * prcP;
+
+                    if (bandP->data) {
+                        for (prcno = 0, prcP = bandP->prcs;
+                             prcno < lvlP->numprcs;
+                             ++prcno, ++prcP) {
+
+                            jpc_enc_cblk_t * endcblksP;
+                            jpc_enc_cblk_t * cblkP;
+
+                            if (prcP->cblks) {
+                                endcblksP = &prcP->cblks[prcP->numcblks];
+                                for (cblkP = prcP->cblks;
+                                     cblkP != endcblksP;
+                                     ++cblkP) {
+                                    jpc_enc_pass_t * endpassesP;
+                                    jpc_enc_pass_t * passP;
+
+                                    calcrdslopes(cblkP);
+                                    endpassesP =
+                                        &cblkP->passes[cblkP->numpasses];
+                                    for (passP = cblkP->passes;
+                                         passP != endpassesP;
+                                         ++passP) {
+                                        if (passP->rdslope > 0) {
+                                            mnrdslope =
+                                                MIN(passP->rdslope, mnrdslope);
+                                            mxrdslope =
+                                                MAX(passP->rdslope, mxrdslope);
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -1720,211 +1352,283 @@ int rateallocate(jpc_enc_t *enc, int numlyrs, uint_fast32_t *cumlens)
             }
         }
     }
-if (jas_getdbglevel()) {
-    fprintf(stderr, "min rdslope = %f max rdslope = %f\n", mnrdslope, mxrdslope);
+    trace("min rdslope = %f max rdslope = %f", mnrdslope, mxrdslope);
+
+    *mnrdslopeP = mnrdslope;
+    *mxrdslopeP = mxrdslope;
 }
 
-    jpc_init_t2state(enc, 1);
 
-    for (lyrno = 0; lyrno < numlyrs; ++lyrno) {
 
-        lo = mnrdslope;
-        hi = mxrdslope;
+static void
+performTier2CodingOneLayer(jpc_enc_t *      const encP,
+                           jpc_enc_tile_t * const tileP,
+                           unsigned int     const lyrno,
+                           jas_stream_t *   const outP,
+                           const char **    const errorP) {
+/*----------------------------------------------------------------------------
+  Encode Layer 'lyrno' of tile *tileP to stream *outP.
 
-        success = 0;
-        goodthresh = 0;
-        numiters = 0;
+  Use the pass assignment already in *tileP.
+-----------------------------------------------------------------------------*/
+    jpc_enc_tcmpt_t * const endcompsP = &tileP->tcmpts[tileP->numtcmpts];
+
+    jpc_enc_tcmpt_t * compP;
+
+    *errorP = NULL;  /* initial assumption */
+
+    for (compP = tileP->tcmpts; compP != endcompsP && !*errorP; ++compP) {
+        jpc_enc_rlvl_t * const endlvlsP = &compP->rlvls[compP->numrlvls];
+
+        jpc_enc_rlvl_t * lvlP;
+
+        for (lvlP = compP->rlvls; lvlP != endlvlsP && !*errorP; ++lvlP) {
+            if (lvlP->bands) {
+                uint_fast32_t prcno;
+                for (prcno = 0; prcno < lvlP->numprcs && !*errorP; ++prcno) {
+                    int rc;
+                    rc = jpc_enc_encpkt(encP, outP, compP - tileP->tcmpts,
+                                        lvlP - compP->rlvls, prcno, lyrno);
+                    if (rc != 0)
+                        pm_asprintf(errorP, "jpc_enc_encpkt() failed on "
+                                    "precinct %u", (unsigned)prcno);
+                }
+            }
+        }
+    }
+}
+
+
+
+static void
+assignHighSlopePassesToLayer(jpc_enc_t *      const encP,
+                             jpc_enc_tile_t * const tileP,
+                             unsigned int     const lyrno,
+                             bool             const haveThresh,
+                             jpc_flt_t        const thresh) {
+/*----------------------------------------------------------------------------
+  Assign all passes with R-D slopes greater than or equal to 'thresh' to layer
+  'lyrno' and the rest to no layer.
+
+  If 'haveThresh' is false, assign all passes to no layer.
+-----------------------------------------------------------------------------*/
+    jpc_enc_tcmpt_t * endcompsP;
+    jpc_enc_tcmpt_t * compP;
+
+    endcompsP = &tileP->tcmpts[tileP->numtcmpts];
+    for (compP = tileP->tcmpts; compP != endcompsP; ++compP) {
+        jpc_enc_rlvl_t * const endlvlsP = &compP->rlvls[compP->numrlvls];
+
+        jpc_enc_rlvl_t * lvlP;
+
+        for (lvlP = compP->rlvls; lvlP != endlvlsP; ++lvlP) {
+            if (lvlP->bands) {
+                jpc_enc_band_t * const endbandsP =
+                    &lvlP->bands[lvlP->numbands];
+                jpc_enc_band_t * bandP;
+                for (bandP = lvlP->bands; bandP != endbandsP; ++bandP) {
+                    if (bandP->data) {
+                        jpc_enc_prc_t * prcP;
+                        uint_fast32_t prcno;
+                        for (prcno = 0, prcP = bandP->prcs;
+                             prcno < lvlP->numprcs;
+                             ++prcno, ++prcP) {
+                            if (prcP->cblks) {
+                                jpc_enc_cblk_t * const endcblksP =
+                                    &prcP->cblks[prcP->numcblks];
+                                jpc_enc_cblk_t * cblkP;
+                                for (cblkP = prcP->cblks;
+                                     cblkP != endcblksP;
+                                     ++cblkP) {
+                                    if (cblkP->curpass) {
+                                        jpc_enc_pass_t *  const endpassesP =
+                                            &cblkP->passes[cblkP->numpasses];
+                                        jpc_enc_pass_t * pass1P;
+                                        jpc_enc_pass_t * passP;
+
+                                        pass1P = cblkP->curpass;
+                                        if (haveThresh) {
+                                            jpc_enc_pass_t * passP;
+                                            for (passP = cblkP->curpass;
+                                                 passP != endpassesP;
+                                                 ++passP) {
+                                                if (passP->rdslope >= thresh)
+                                                    pass1P = passP + 1;
+                                            }
+                                        }
+                                        for (passP = cblkP->curpass;
+                                             passP != pass1P;
+                                             ++passP) {
+                                            passP->lyrno = lyrno;
+                                        }
+                                        for (; passP != endpassesP; ++passP) {
+                                            passP->lyrno = -1;
+                                        }
+                                    
+                                    }   
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+
+static void
+doLayer(jpc_enc_t *      const encP,
+        jpc_enc_tile_t * const tileP,
+        unsigned int     const lyrno,
+        uint_fast32_t    const allowedSize,
+        jpc_flt_t        const mnrdslope,
+        jpc_flt_t        const mxrdslope,
+        jas_stream_t *   const outP,
+        const char **    const errorP) {
+/*----------------------------------------------------------------------------
+   Assign passes to layer 'lyrno' such that the cumulative size through
+   this layer is as close as possible to, but not exceeding, 'allowedSize'.
+-----------------------------------------------------------------------------*/
+    bool      haveGoodThresh;
+    jpc_flt_t goodThresh;
+
+    if (allowedSize == UINT_FAST32_MAX) {
+        /* There's no rate constraint (This can be true of the last layer,
+           e.g. for lossless coding). */
+        goodThresh = -1;
+        haveGoodThresh = true;
+        *errorP = NULL;
+    } else {
+        /* Iterate through successive approximations of the threshold, finding
+           the threshold that gets us closest to 'allowedSize' without going
+           over.  In each iteration, we do the full encoding, note the size,
+           and then restore the previous state.
+        */
+        long pos;
+        jpc_flt_t lo;
+        jpc_flt_t hi;
+        unsigned int numiters;
+
+        lo = mnrdslope;  /* initial value */
+        hi = mxrdslope;  /* initial value */
+        numiters = 0;    /* initial value */
+        haveGoodThresh = false;  /* initial value */
+        goodThresh = 0;     /* initial value */
 
         do {
+            if (allowedSize == UINT_FAST32_MAX) {
+                /* There's no rate constraint (This can be true of the last
+                   layer, e.g. for lossless coding). */
+                goodThresh = -1;
+                haveGoodThresh = true;
+            } else {
+                jpc_flt_t const thresh = (lo + hi) / 2;
 
-            cumlen = cumlens[lyrno];
-            if (cumlen == UINT_FAST32_MAX) {
-                /* Only the last layer can be free of a rate
-                  constraint (e.g., for lossless coding). */
-                assert(lyrno == numlyrs - 1);
-                goodthresh = -1;
-                success = 1;
-                break;
-            }
+                int rc;
+                long oldpos;
 
-            thresh = (lo + hi) / 2;
+                /* Save the tier 2 coding state. */
+                jpc_save_t2state(encP);
+                oldpos = jas_stream_tell(outP);
+                assert(oldpos >= 0);
 
-            /* Save the tier 2 coding state. */
-            jpc_save_t2state(enc);
-            oldpos = jas_stream_tell(out);
-            assert(oldpos >= 0);
+                assignHighSlopePassesToLayer(encP, tileP, lyrno, true, thresh);
 
-            /* Assign all passes with R-D slopes greater than or
-              equal to the current threshold to this layer. */
-            endcomps = &tile->tcmpts[tile->numtcmpts];
-            for (comp = tile->tcmpts; comp != endcomps; ++comp) {
-                endlvls = &comp->rlvls[comp->numrlvls];
-                for (lvl = comp->rlvls; lvl != endlvls; ++lvl) {
-                    if (!lvl->bands) {
-                        continue;
-                    }
-                    endbands = &lvl->bands[lvl->numbands];
-                    for (band = lvl->bands; band != endbands; ++band) {
-                        if (!band->data) {
-                            continue;
-                        }
-                        for (prcno = 0, prc = band->prcs; prcno < lvl->numprcs; ++prcno, ++prc) {
-                            if (!prc->cblks) {
-                                continue;
-                            }
-                            endcblks = &prc->cblks[prc->numcblks];
-                            for (cblk = prc->cblks; cblk != endcblks; ++cblk) {
-                                if (cblk->curpass) {
-                                    endpasses = &cblk->passes[cblk->numpasses];
-                                    pass1 = cblk->curpass;
-                                    for (pass = cblk->curpass; pass != endpasses; ++pass) {
-                                        if (pass->rdslope >= thresh) {
-                                            pass1 = &pass[1];
-                                        }
-                                    }
-                                    for (pass = cblk->curpass; pass != pass1; ++pass) {
-                                        pass->lyrno = lyrno;
-                                    }
-                                    for (; pass != endpasses; ++pass) {
-                                        pass->lyrno = -1;
-                                    }
-                                }
-                            }
+                performTier2CodingOneLayer(encP, tileP, lyrno, outP, errorP);
+
+                if (!*errorP) {
+                    pos = jas_stream_tell(outP);
+
+                    /* Check the rate constraint. */
+                    assert(pos >= 0);
+                    if (pos > allowedSize) {
+                        /* The rate is too high. */
+                        lo = thresh;
+                    } else if (pos <= allowedSize) {
+                        /* The rate is low enough, so try higher. */
+                        hi = thresh;
+                        if (!haveGoodThresh || thresh < goodThresh) {
+                            goodThresh = thresh;
+                            haveGoodThresh = true;
                         }
                     }
                 }
+                /* Restore the tier 2 coding state. */
+                jpc_restore_t2state(encP);
+                rc = jas_stream_seek(outP, oldpos, SEEK_SET);
+                if (rc < 0)
+                    abort();
+
+                trace("iter %u: allowedlen=%08ld actuallen=%08ld thresh=%f",
+                      numiters, allowedSize, pos, thresh);
             }
-
-            /* Perform tier 2 coding. */
-            endcomps = &tile->tcmpts[tile->numtcmpts];
-            for (comp = tile->tcmpts; comp != endcomps; ++comp) {
-                endlvls = &comp->rlvls[comp->numrlvls];
-                for (lvl = comp->rlvls; lvl != endlvls; ++lvl) {
-                    if (!lvl->bands) {
-                        continue;
-                    }
-                    for (prcno = 0; prcno < lvl->numprcs; ++prcno) {
-                        if (jpc_enc_encpkt(enc, out, comp - tile->tcmpts, lvl - comp->rlvls, prcno, lyrno)) {
-                            return -1;
-                        }
-                    }
-                }
-            }
-
-            pos = jas_stream_tell(out);
-
-            /* Check the rate constraint. */
-            assert(pos >= 0);
-            if (pos > cumlen) {
-                /* The rate is too high. */
-                lo = thresh;
-            } else if (pos <= cumlen) {
-                /* The rate is low enough, so try higher. */
-                hi = thresh;
-                if (!success || thresh < goodthresh) {
-                    goodthresh = thresh;
-                    success = 1;
-                }
-            }
-
-            /* Save the tier 2 coding state. */
-            jpc_restore_t2state(enc);
-            if (jas_stream_seek(out, oldpos, SEEK_SET) < 0) {
-                abort();
-            }
-
-if (jas_getdbglevel()) {
-fprintf(stderr, "maxlen=%08ld actuallen=%08ld thresh=%f\n", cumlen, pos, thresh);
-}
-
             ++numiters;
-        } while (lo < hi - 1e-3 && numiters < 32);
+        } while (lo < hi - 1e-3 && numiters < 32 && !*errorP);
+    }
 
-        if (!success) {
+    if (!*errorP) {
+        if (!haveGoodThresh)
             fprintf(stderr, "warning: empty layer generated\n");
-        }
 
-if (jas_getdbglevel()) {
-fprintf(stderr, "success %d goodthresh %f\n", success, goodthresh);
+        trace("haveGoodThresh %u goodthresh %f", haveGoodThresh, goodThresh);
+
+        assignHighSlopePassesToLayer(encP, tileP, lyrno,
+                                     haveGoodThresh, goodThresh);
+
+        performTier2CodingOneLayer(encP, tileP, lyrno, outP, errorP);
+    }
 }
 
-        /* Assign all passes with R-D slopes greater than or
-          equal to the selected threshold to this layer. */
-        endcomps = &tile->tcmpts[tile->numtcmpts];
-        for (comp = tile->tcmpts; comp != endcomps; ++comp) {
-            endlvls = &comp->rlvls[comp->numrlvls];
-            for (lvl = comp->rlvls; lvl != endlvls; ++lvl) {
-if (!lvl->bands) {
-    continue;
-}
-                endbands = &lvl->bands[lvl->numbands];
-                for (band = lvl->bands; band != endbands; ++band) {
-                    if (!band->data) {
-                        continue;
-                    }
-                    for (prcno = 0, prc = band->prcs; prcno < lvl->numprcs; ++prcno, ++prc) {
-                        if (!prc->cblks) {
-                            continue;
-                        }
-                        endcblks = &prc->cblks[prc->numcblks];
-                        for (cblk = prc->cblks; cblk != endcblks; ++cblk) {
-                            if (cblk->curpass) {
-                                endpasses = &cblk->passes[cblk->numpasses];
-                                pass1 = cblk->curpass;
-                                if (success) {
-                                    for (pass = cblk->curpass; pass != endpasses; ++pass) {
-                                        if (pass->rdslope >= goodthresh) {
-                                            pass1 = &pass[1];
-                                        }
-                                    }
-                                }
-                                for (pass = cblk->curpass; pass != pass1; ++pass) {
-                                    pass->lyrno = lyrno;
-                                }
-                                for (; pass != endpasses; ++pass) {
-                                    pass->lyrno = -1;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+
+
+static void
+performTier2Coding(jpc_enc_t *     const encP,
+                   unsigned int    const numlyrs,
+                   uint_fast32_t * const cumlens,
+                   const char **   const errorP) {
+/*----------------------------------------------------------------------------
+   Encode in 'numlyrs' layers, such that at each layer L, the size is
+   cumlens[L].
+-----------------------------------------------------------------------------*/
+    jpc_enc_tile_t * const tileP = encP->curtile;
+
+    jas_stream_t * outP;
+    unsigned int lyrno;
+    jpc_flt_t mnrdslope;
+    jpc_flt_t mxrdslope;
+
+    validateCumlensIncreases(cumlens, numlyrs);
+
+    outP = jas_stream_memopen(0, 0);
+
+    if (!outP)
+        pm_asprintf(errorP, "jas_stream_memopen() failed");
+    else {
+        findMinMaxRDSlopeValues(tileP, &mnrdslope, &mxrdslope);
+
+        jpc_init_t2state(encP, 1);
+
+        for (lyrno = 0, *errorP = NULL;
+             lyrno < numlyrs && !*errorP;
+             ++lyrno) {
+            doLayer(encP, tileP, lyrno, cumlens[lyrno],
+                    mnrdslope, mxrdslope, outP, errorP);
         }
 
-        /* Perform tier 2 coding. */
-        endcomps = &tile->tcmpts[tile->numtcmpts];
-        for (comp = tile->tcmpts; comp != endcomps; ++comp) {
-            endlvls = &comp->rlvls[comp->numrlvls];
-            for (lvl = comp->rlvls; lvl != endlvls; ++lvl) {
-                if (!lvl->bands) {
-                    continue;
-                }
-                for (prcno = 0; prcno < lvl->numprcs; ++prcno) {
-                    if (jpc_enc_encpkt(enc, out, comp - tile->tcmpts, lvl - comp->rlvls, prcno, lyrno)) {
-                        return -1;
-                    }
-                }
-            }
+        if (!*errorP) {
+            trace_layeringinfo(encP);
+
+            jas_stream_close(outP);
         }
     }
-
-    if (jas_getdbglevel() >= 5) {
-        dump_layeringinfo(enc);
-    }
-
-    jas_stream_close(out);
-
     JAS_DBGLOG(10, ("done doing rateallocation\n"));
-#if 0
-fprintf(stderr, "DONE RATE ALLOCATE\n");
-#endif
-
-    return 0;
 }
 
-/******************************************************************************\
+/*****************************************************************************\
 * Tile constructors and destructors.
-\******************************************************************************/
+\*****************************************************************************/
 
 jpc_enc_tile_t *jpc_enc_tile_create(jpc_enc_cp_t *cp, jas_image_t *image, int tileno)
 {
@@ -2653,4 +2357,470 @@ void jpc_enc_dump(jpc_enc_t *enc)
 }
 
 
+
+static int jpc_enc_encodemainbody(jpc_enc_t *enc)
+{
+    int tileno;
+    int tilex;
+    int tiley;
+    int i;
+    jpc_sot_t *sot;
+    jpc_enc_tcmpt_t *comp;
+    jpc_enc_tcmpt_t *endcomps;
+    jpc_enc_band_t *band;
+    jpc_enc_band_t *endbands;
+    jpc_enc_rlvl_t *lvl;
+    int rlvlno;
+    jpc_qcc_t *qcc;
+    jpc_cod_t *cod;
+    int adjust;
+    int j;
+    int absbandno;
+    long numbytes;
+    long tilehdrlen;
+    long tilelen;
+    jpc_enc_tile_t *tile;
+    jpc_enc_cp_t *cp;
+    double rho;
+    uint_fast16_t cmptno;
+    int samestepsizes;
+    jpc_enc_ccp_t *ccps;
+    jpc_enc_tccp_t *tccp;
+    int bandno;
+    uint_fast32_t x;
+    uint_fast32_t y;
+    int mingbits;
+    int actualnumbps;
+    jpc_fix_t mxmag;
+    jpc_fix_t mag;
+    int numgbits;
+    const char * error;
+
+    cp = enc->cp;
+
+    /* Avoid compile warnings. */
+    numbytes = 0;
+
+    for (tileno = 0; tileno < cp->numtiles; ++tileno) {
+        tilex = tileno % cp->numhtiles;
+        tiley = tileno / cp->numhtiles;
+
+        enc->curtile = jpc_enc_tile_create(enc->cp, enc->image, tileno);
+        if (!enc->curtile)
+            abort();
+
+        tile = enc->curtile;
+
+        if (jas_getdbglevel() >= 10) {
+            jpc_enc_dump(enc);
+        }
+
+        endcomps = &tile->tcmpts[tile->numtcmpts];
+        for (cmptno = 0, comp = tile->tcmpts;
+             cmptno < tile->numtcmpts;
+             ++cmptno, ++comp) {
+            if (!cp->ccps[cmptno].sgnd) {
+                adjust = 1 << (cp->ccps[cmptno].prec - 1);
+                for (i = 0; i < jas_matrix_numrows(comp->data); ++i) {
+                    for (j = 0; j < jas_matrix_numcols(comp->data); ++j) {
+                        *jas_matrix_getref(comp->data, i, j) -= adjust;
+                    }
+                }
+            }
+        }
+
+        if (!tile->intmode) {
+            endcomps = &tile->tcmpts[tile->numtcmpts];
+            for (comp = tile->tcmpts; comp != endcomps; ++comp) {
+                jas_matrix_asl(comp->data, JPC_FIX_FRACBITS);
+            }
+        }
+
+        switch (tile->mctid) {
+        case JPC_MCT_RCT:
+            assert(jas_image_numcmpts(enc->image) == 3);
+            jpc_rct(tile->tcmpts[0].data, tile->tcmpts[1].data,
+                    tile->tcmpts[2].data);
+            break;
+        case JPC_MCT_ICT:
+            assert(jas_image_numcmpts(enc->image) == 3);
+            jpc_ict(tile->tcmpts[0].data, tile->tcmpts[1].data,
+                    tile->tcmpts[2].data);
+            break;
+        default:
+            break;
+        }
+
+        for (i = 0; i < jas_image_numcmpts(enc->image); ++i) {
+            comp = &tile->tcmpts[i];
+            jpc_tsfb_analyze(comp->tsfb,
+                             ((comp->qmfbid == JPC_COX_RFT) ?
+                              JPC_TSFB_RITIMODE : 0), comp->data);
+
+        }
+
+
+        endcomps = &tile->tcmpts[tile->numtcmpts];
+        for (cmptno = 0, comp = tile->tcmpts;
+             comp != endcomps;
+             ++cmptno, ++comp) {
+            mingbits = 0;
+            absbandno = 0;
+            /* All bands must have a corresponding quantizer step size,
+               even if they contain no samples and are never coded. */
+            /* Some bands may not be hit by the loop below, so we must
+               initialize all of the step sizes to a sane value. */
+            memset(comp->stepsizes, 0, sizeof(comp->stepsizes));
+            for (rlvlno = 0, lvl = comp->rlvls;
+                 rlvlno < comp->numrlvls;
+                 ++rlvlno, ++lvl) {
+                if (!lvl->bands) {
+                    absbandno += rlvlno ? 3 : 1;
+                    continue;
+                }
+                endbands = &lvl->bands[lvl->numbands];
+                for (band = lvl->bands; band != endbands; ++band) {
+                    if (!band->data) {
+                        ++absbandno;
+                        continue;
+                    }
+                    actualnumbps = 0;
+                    mxmag = 0;
+                    for (y = 0; y < jas_matrix_numrows(band->data); ++y) {
+                        for (x = 0; x < jas_matrix_numcols(band->data); ++x) {
+                            mag = abs(jas_matrix_get(band->data, y, x));
+                            if (mag > mxmag) {
+                                mxmag = mag;
+                            }
+                        }
+                    }
+                    if (tile->intmode) {
+                        actualnumbps =
+                            jpc_firstone(mxmag) + 1;
+                    } else {
+                        actualnumbps =
+                            jpc_firstone(mxmag) + 1 - JPC_FIX_FRACBITS;
+                    }
+                    numgbits = actualnumbps - (cp->ccps[cmptno].prec - 1 +
+                                               band->analgain);
+                    if (numgbits > mingbits) {
+                        mingbits = numgbits;
+                    }
+                    if (!tile->intmode) {
+                        band->absstepsize =
+                            jpc_fix_div(
+                                jpc_inttofix(1 << (band->analgain + 1)),
+                                band->synweight);
+                    } else {
+                        band->absstepsize = jpc_inttofix(1);
+                    }
+                    band->stepsize = jpc_abstorelstepsize(
+                        band->absstepsize, cp->ccps[cmptno].prec +
+                        band->analgain);
+                    band->numbps = cp->tccp.numgbits +
+                        JPC_QCX_GETEXPN(band->stepsize) - 1;
+
+                    if ((!tile->intmode) && band->data) {
+                        quantize(band->data, band->absstepsize);
+                    }
+
+                    comp->stepsizes[absbandno] = band->stepsize;
+                    ++absbandno;
+                }
+            }
+
+            assert(JPC_FIX_FRACBITS >= JPC_NUMEXTRABITS);
+            if (!tile->intmode) {
+                jas_matrix_divpow2(comp->data,
+                                   JPC_FIX_FRACBITS - JPC_NUMEXTRABITS);
+            } else {
+                jas_matrix_asl(comp->data, JPC_NUMEXTRABITS);
+            }
+        }
+
+        if (mingbits > cp->tccp.numgbits) {
+            fprintf(stderr, "error: too few guard bits (need at least %d)\n",
+                    mingbits);
+            return -1;
+        }
+
+        if (!(enc->tmpstream = jas_stream_memopen(0, 0))) {
+            fprintf(stderr, "cannot open tmp file\n");
+            return -1;
+        }
+
+        /* Write the tile header. */
+        if (!(enc->mrk = jpc_ms_create(JPC_MS_SOT))) {
+            return -1;
+        }
+        sot = &enc->mrk->parms.sot;
+        sot->len = 0;
+        sot->tileno = tileno;
+        sot->partno = 0;
+        sot->numparts = 1;
+        if (jpc_putms(enc->tmpstream, enc->cstate, enc->mrk)) {
+            fprintf(stderr, "cannot write SOT marker\n");
+            return -1;
+        }
+        jpc_ms_destroy(enc->mrk);
+        enc->mrk = 0;
+
+/************************************************************************/
+/************************************************************************/
+/************************************************************************/
+
+        tccp = &cp->tccp;
+        for (cmptno = 0; cmptno < cp->numcmpts; ++cmptno) {
+            comp = &tile->tcmpts[cmptno];
+            if (comp->numrlvls != tccp->maxrlvls) {
+                if (!(enc->mrk = jpc_ms_create(JPC_MS_COD))) {
+                    return -1;
+                }
+                /* XXX = this is not really correct. we are using comp #0's
+                   precint sizes and other characteristics */
+                comp = &tile->tcmpts[0];
+                cod = &enc->mrk->parms.cod;
+                cod->compparms.csty = 0;
+                cod->compparms.numdlvls = comp->numrlvls - 1;
+                cod->prg = tile->prg;
+                cod->numlyrs = tile->numlyrs;
+                cod->compparms.cblkwidthval =
+                    JPC_COX_CBLKSIZEEXPN(comp->cblkwidthexpn);
+                cod->compparms.cblkheightval =
+                    JPC_COX_CBLKSIZEEXPN(comp->cblkheightexpn);
+                cod->compparms.cblksty = comp->cblksty;
+                cod->compparms.qmfbid = comp->qmfbid;
+                cod->mctrans = (tile->mctid != JPC_MCT_NONE);
+                for (i = 0; i < comp->numrlvls; ++i) {
+                    cod->compparms.rlvls[i].parwidthval =
+                        comp->rlvls[i].prcwidthexpn;
+                    cod->compparms.rlvls[i].parheightval =
+                        comp->rlvls[i].prcheightexpn;
+                }
+                if (jpc_putms(enc->tmpstream, enc->cstate, enc->mrk)) {
+                    return -1;
+                }
+                jpc_ms_destroy(enc->mrk);
+                enc->mrk = 0;
+            }
+        }
+
+        for (cmptno = 0, comp = tile->tcmpts;
+             cmptno < cp->numcmpts;
+             ++cmptno, ++comp) {
+            ccps = &cp->ccps[cmptno];
+            if (ccps->numstepsizes == comp->numstepsizes) {
+                samestepsizes = 1;
+                for (bandno = 0; bandno < ccps->numstepsizes; ++bandno) {
+                    if (ccps->stepsizes[bandno] != comp->stepsizes[bandno]) {
+                        samestepsizes = 0;
+                        break;
+                    }
+                }
+            } else {
+                samestepsizes = 0;
+            }
+            if (!samestepsizes) {
+                if (!(enc->mrk = jpc_ms_create(JPC_MS_QCC))) {
+                    return -1;
+                }
+                qcc = &enc->mrk->parms.qcc;
+                qcc->compno = cmptno;
+                qcc->compparms.numguard = cp->tccp.numgbits;
+                qcc->compparms.qntsty = (comp->qmfbid == JPC_COX_INS) ?
+                    JPC_QCX_SEQNT : JPC_QCX_NOQNT;
+                qcc->compparms.numstepsizes = comp->numstepsizes;
+                qcc->compparms.stepsizes = comp->stepsizes;
+                if (jpc_putms(enc->tmpstream, enc->cstate, enc->mrk)) {
+                    return -1;
+                }
+                qcc->compparms.stepsizes = 0;
+                jpc_ms_destroy(enc->mrk);
+                enc->mrk = 0;
+            }
+        }
+
+        /* Write a SOD marker to indicate the end of the tile header. */
+        if (!(enc->mrk = jpc_ms_create(JPC_MS_SOD))) {
+            return -1;
+        }
+        if (jpc_putms(enc->tmpstream, enc->cstate, enc->mrk)) {
+            fprintf(stderr, "cannot write SOD marker\n");
+            return -1;
+        }
+        jpc_ms_destroy(enc->mrk);
+        enc->mrk = 0;
+        tilehdrlen = jas_stream_getrwcount(enc->tmpstream);
+
+/************************************************************************/
+/************************************************************************/
+/************************************************************************/
+
+        if (jpc_enc_enccblks(enc)) {
+            abort();
+            return -1;
+        }
+
+        cp = enc->cp;
+        rho = (double) (tile->brx - tile->tlx) * (tile->bry - tile->tly) /
+            ((cp->refgrdwidth - cp->imgareatlx) * (cp->refgrdheight -
+                                                   cp->imgareatly));
+        tile->rawsize = cp->rawsize * rho;
+
+        computeLayerSizes(enc, tile, cp, rho, tilehdrlen, &error);
+        
+        if (!error) {
+            int rc;
+            performTier2Coding(enc, tile->numlyrs, tile->lyrsizes, &error);
+
+            rc =  jpc_enc_encodetiledata(enc);
+            if (rc != 0)
+                pm_asprintf(&error, "jpc_enc_encodetiledata() failed\n");
+        }
+
+        if (error) {
+            fprintf(stderr, "%s\n", error);
+            pm_strfree(error);
+            return -1;
+        }
+
+        tilelen = jas_stream_tell(enc->tmpstream);
+
+        if (jas_stream_seek(enc->tmpstream, 6, SEEK_SET) < 0) {
+            return -1;
+        }
+        jpc_putuint32(enc->tmpstream, tilelen);
+
+        if (jas_stream_seek(enc->tmpstream, 0, SEEK_SET) < 0) {
+            return -1;
+        }
+        if (jpc_putdata(enc->out, enc->tmpstream, -1)) {
+            return -1;
+        }
+        enc->len += tilelen;
+
+        jas_stream_close(enc->tmpstream);
+        enc->tmpstream = 0;
+
+        jpc_enc_tile_destroy(enc->curtile);
+        enc->curtile = 0;
+
+    }
+
+    return 0;
+}
+
+
+
+/*
+ * Copyright (c) 1999-2000 Image Power, Inc. and the University of
+ *   British Columbia.
+ * Copyright (c) 2001-2002 Michael David Adams.
+ * All rights reserved.
+ */
+
+/* __START_OF_JASPER_LICENSE__
+ * 
+ * JasPer Software License
+ * 
+ * IMAGE POWER JPEG-2000 PUBLIC LICENSE
+ * ************************************
+ * 
+ * GRANT:
+ * 
+ * Permission is hereby granted, free of charge, to any person (the "User")
+ * obtaining a copy of this software and associated documentation, to deal
+ * in the JasPer Software without restriction, including without limitation
+ * the right to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the JasPer Software (in source and binary forms),
+ * and to permit persons to whom the JasPer Software is furnished to do so,
+ * provided further that the License Conditions below are met.
+ * 
+ * License Conditions
+ * ******************
+ * 
+ * A.  Redistributions of source code must retain the above copyright notice,
+ * and this list of conditions, and the following disclaimer.
+ * 
+ * B.  Redistributions in binary form must reproduce the above copyright
+ * notice, and this list of conditions, and the following disclaimer in
+ * the documentation and/or other materials provided with the distribution.
+ * 
+ * C.  Neither the name of Image Power, Inc. nor any other contributor
+ * (including, but not limited to, the University of British Columbia and
+ * Michael David Adams) may be used to endorse or promote products derived
+ * from this software without specific prior written permission.
+ * 
+ * D.  User agrees that it shall not commence any action against Image Power,
+ * Inc., the University of British Columbia, Michael David Adams, or any
+ * other contributors (collectively "Licensors") for infringement of any
+ * intellectual property rights ("IPR") held by the User in respect of any
+ * technology that User owns or has a right to license or sublicense and
+ * which is an element required in order to claim compliance with ISO/IEC
+ * 15444-1 (i.e., JPEG-2000 Part 1).  "IPR" means all intellectual property
+ * rights worldwide arising under statutory or common law, and whether
+ * or not perfected, including, without limitation, all (i) patents and
+ * patent applications owned or licensable by User; (ii) rights associated
+ * with works of authorship including copyrights, copyright applications,
+ * copyright registrations, mask work rights, mask work applications,
+ * mask work registrations; (iii) rights relating to the protection of
+ * trade secrets and confidential information; (iv) any right analogous
+ * to those set forth in subsections (i), (ii), or (iii) and any other
+ * proprietary rights relating to intangible property (other than trademark,
+ * trade dress, or service mark rights); and (v) divisions, continuations,
+ * renewals, reissues and extensions of the foregoing (as and to the extent
+ * applicable) now existing, hereafter filed, issued or acquired.
+ * 
+ * E.  If User commences an infringement action against any Licensor(s) then
+ * such Licensor(s) shall have the right to terminate User's license and
+ * all sublicenses that have been granted hereunder by User to other parties.
+ * 
+ * F.  This software is for use only in hardware or software products that
+ * are compliant with ISO/IEC 15444-1 (i.e., JPEG-2000 Part 1).  No license
+ * or right to this Software is granted for products that do not comply
+ * with ISO/IEC 15444-1.  The JPEG-2000 Part 1 standard can be purchased
+ * from the ISO.
+ * 
+ * THIS DISCLAIMER OF WARRANTY CONSTITUTES AN ESSENTIAL PART OF THIS LICENSE.
+ * NO USE OF THE JASPER SOFTWARE IS AUTHORIZED HEREUNDER EXCEPT UNDER
+ * THIS DISCLAIMER.  THE JASPER SOFTWARE IS PROVIDED BY THE LICENSORS AND
+ * CONTRIBUTORS UNDER THIS LICENSE ON AN ``AS-IS'' BASIS, WITHOUT WARRANTY
+ * OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING, WITHOUT LIMITATION,
+ * WARRANTIES THAT THE JASPER SOFTWARE IS FREE OF DEFECTS, IS MERCHANTABLE,
+ * IS FIT FOR A PARTICULAR PURPOSE OR IS NON-INFRINGING.  THOSE INTENDING
+ * TO USE THE JASPER SOFTWARE OR MODIFICATIONS THEREOF FOR USE IN HARDWARE
+ * OR SOFTWARE PRODUCTS ARE ADVISED THAT THEIR USE MAY INFRINGE EXISTING
+ * PATENTS, COPYRIGHTS, TRADEMARKS, OR OTHER INTELLECTUAL PROPERTY RIGHTS.
+ * THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE JASPER SOFTWARE
+ * IS WITH THE USER.  SHOULD ANY PART OF THE JASPER SOFTWARE PROVE DEFECTIVE
+ * IN ANY RESPECT, THE USER (AND NOT THE INITIAL DEVELOPERS, THE UNIVERSITY
+ * OF BRITISH COLUMBIA, IMAGE POWER, INC., MICHAEL DAVID ADAMS, OR ANY
+ * OTHER CONTRIBUTOR) SHALL ASSUME THE COST OF ANY NECESSARY SERVICING,
+ * REPAIR OR CORRECTION.  UNDER NO CIRCUMSTANCES AND UNDER NO LEGAL THEORY,
+ * WHETHER TORT (INCLUDING NEGLIGENCE), CONTRACT, OR OTHERWISE, SHALL THE
+ * INITIAL DEVELOPER, THE UNIVERSITY OF BRITISH COLUMBIA, IMAGE POWER, INC.,
+ * MICHAEL DAVID ADAMS, ANY OTHER CONTRIBUTOR, OR ANY DISTRIBUTOR OF THE
+ * JASPER SOFTWARE, OR ANY SUPPLIER OF ANY OF SUCH PARTIES, BE LIABLE TO
+ * THE USER OR ANY OTHER PERSON FOR ANY INDIRECT, SPECIAL, INCIDENTAL, OR
+ * CONSEQUENTIAL DAMAGES OF ANY CHARACTER INCLUDING, WITHOUT LIMITATION,
+ * DAMAGES FOR LOSS OF GOODWILL, WORK STOPPAGE, COMPUTER FAILURE OR
+ * MALFUNCTION, OR ANY AND ALL OTHER COMMERCIAL DAMAGES OR LOSSES, EVEN IF
+ * SUCH PARTY HAD BEEN INFORMED, OR OUGHT TO HAVE KNOWN, OF THE POSSIBILITY
+ * OF SUCH DAMAGES.  THE JASPER SOFTWARE AND UNDERLYING TECHNOLOGY ARE NOT
+ * FAULT-TOLERANT AND ARE NOT DESIGNED, MANUFACTURED OR INTENDED FOR USE OR
+ * RESALE AS ON-LINE CONTROL EQUIPMENT IN HAZARDOUS ENVIRONMENTS REQUIRING
+ * FAIL-SAFE PERFORMANCE, SUCH AS IN THE OPERATION OF NUCLEAR FACILITIES,
+ * AIRCRAFT NAVIGATION OR COMMUNICATION SYSTEMS, AIR TRAFFIC CONTROL, DIRECT
+ * LIFE SUPPORT MACHINES, OR WEAPONS SYSTEMS, IN WHICH THE FAILURE OF THE
+ * JASPER SOFTWARE OR UNDERLYING TECHNOLOGY OR PRODUCT COULD LEAD DIRECTLY
+ * TO DEATH, PERSONAL INJURY, OR SEVERE PHYSICAL OR ENVIRONMENTAL DAMAGE
+ * ("HIGH RISK ACTIVITIES").  LICENSOR SPECIFICALLY DISCLAIMS ANY EXPRESS
+ * OR IMPLIED WARRANTY OF FITNESS FOR HIGH RISK ACTIVITIES.  USER WILL NOT
+ * KNOWINGLY USE, DISTRIBUTE OR RESELL THE JASPER SOFTWARE OR UNDERLYING
+ * TECHNOLOGY OR PRODUCTS FOR HIGH RISK ACTIVITIES AND WILL ENSURE THAT ITS
+ * CUSTOMERS AND END-USERS OF ITS PRODUCTS ARE PROVIDED WITH A COPY OF THE
+ * NOTICE SPECIFIED IN THIS SECTION.
+ * 
+ * __END_OF_JASPER_LICENSE__
+ */
 

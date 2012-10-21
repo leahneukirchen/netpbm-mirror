@@ -4,6 +4,13 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+12.10.21 BJH  Release 10.60.02
+
+              Pamtojpeg2k: default to no compression ratio constraint and
+              allow compression ratios less than 1.  Because of compression
+              metadata, small images do require loss of quality in order to
+              get down to a compression ratio of 1.
+
 12.10.03 BJH  Release 10.60.01
 
               Sunicontopnm: Fix incorrect output for depth 8.  Always broken
