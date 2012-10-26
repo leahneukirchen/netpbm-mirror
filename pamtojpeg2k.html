@@ -136,6 +136,11 @@ described above, this may mean, for a small image, the image actually expands.
 option specifies a compression ratio.  The compression factor is the
 multiplicative inverse of (1 divided by) the compression ratio.
 
+<p>Before Netpbm 10.61 (December 2012), the default was a compression ratio
+of 1, and if <b>pamtojpeg2k</b> could not make the output that small, it just
+made it as small as it could, with zero quality.  You know this is happening
+when you see the warning message, &quot;empty layer generated.&quot;
+
 <DT><B>-verbose</b>
 
 <DD>This option causes <b>pamtojpeg2k</b> to issue informational messages about

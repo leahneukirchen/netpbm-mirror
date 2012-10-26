@@ -7,12 +7,10 @@ Updated: 07 February 2004
 
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 pamsumm - Summarize the samples in a Netpbm image arithmetically
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 <B>pamsumm</B>
 {
 <b>-sum</b> |
@@ -28,8 +26,7 @@ pamsumm - Summarize the samples in a Netpbm image arithmetically
 You may use two hyphens instead of one.  You may separate an option
 name and its value with white space instead of an equals sign.
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -37,12 +34,15 @@ name and its value with white space instead of an equals sign.
 summary function over all the samples in all the rows, columns, and planes
 and prints the result to Standard Output.
 
-<p><b>pamsumm</b> performs the operation on the actual sample values,
-not on the light intensities represented by them in the case that the
-image is a PGM or PPM image or PAM equivalent.  If you want to do
-arithmetic on light intensities of such a visual image, you can use
-<b>pnmgamma</b> to convert it to one with samples proportional to
-light intensity, and then use <b>pamsumm</b> on the result.
+<p><b>pamsumm</b> performs the operation on the actual sample values.  In the
+case of a PGM or PPM or PAM equivalent (i.e. a visual image), this is not the
+same as the light intensities represented by those samples.  See the format
+specifications of <a href="pgm.html">PGM</a>,
+<a href="ppm.html">PPM</a>, and <a href="pgm.html">PAM</a>, for the precise
+meanings of samples in these formats.  If you want to do arithmetic on light
+intensities of such a visual image, you can use <b>pnmgamma</b> to convert it
+to one with samples proportional to light intensity, and then
+use <b>pamsumm</b> on the result.
 
 <p>If you want to summarize by column (e.g. add up the columns
 separately), use <b>pamsummcol</b>.  If you want to summarize by row,
@@ -51,8 +51,7 @@ want to summarize a particular plane, use <b>pamchannel</b> to
 extract it and then <b>pamsumm</b>.
 
 
-<A NAME="options">&nbsp;</A>
-<H2>OPTIONS</H2>
+<H2 id="options">OPTIONS</H2>
 
 <p>You must specify exactly one of <b>-sum</b>, <b>-mean</b>,
 <b>-min</b>, or <b>-max</b>.
@@ -109,28 +108,24 @@ extract it and then <b>pamsumm</b>.
 
 </DL>
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="pamsummcol.html">pamsumm</A></B>,
 <B><A HREF="pam.html">pam</A></B>,
 
-<A NAME="history">&nbsp;</A>
-<h2>HISTORY</h2>
+<h2 id="history">HISTORY</h2>
 
 <p><b>pamsumm</b> was added to Netpbm in Release 10.21 (March
 2004).
 
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
 <LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#lbAE">SEE ALSO</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
 <LI><A HREF=#history>HISTORY</A>
 </UL>
 </BODY>
