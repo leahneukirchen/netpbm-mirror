@@ -55,9 +55,6 @@ If (<i>maxval</i> / ((<i>width</i> * <i>height</i>) - 1)), where
 value, <b>pgmmedian</b> uses histogram sort.  Otherwise, it uses kth
 value.
 
-<p>If expression is less than the cutoff, <b>pgmmedian</b> uses the
-histogram sort.  Otherwise it uses the select kth value method.
-
 <p>This option has no effect if you specify <b>-type</b>.
 
 <p>The default is 250
