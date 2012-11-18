@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+12.11.18 BJH  Release 10.60.03
+
+              Xbmtopbm: fix incorrect output, memory leak.  Thanks Prophet of
+              the Way <afu@wta.att.ne.jp>.
+
 12.10.21 BJH  Release 10.60.02
 
               Pamtojpeg2k: default to no compression ratio constraint and
