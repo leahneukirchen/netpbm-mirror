@@ -96,6 +96,8 @@ parseCommandLine(int argc, const char ** const argv,
 
     option_def_index = 0;   /* incremented by OPTENT3 */
 
+    OPTENTINIT;
+
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We may have parms that are negative numbers */
