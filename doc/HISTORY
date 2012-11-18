@@ -6,15 +6,20 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.61.00
 
-              Pamtojpeg2k: default to no compression ratio constraint and
+              pbmpscale, pgmhist, pampick, pamtompfont: fix wild pointer
+              in command line parsing.  Bug has always been there in 
+              pampick, pamtompfont, since 10.50 (March 2010) in pbmpscale,
+              since 10.44 (September 2008) in pgmhist.              
+
+              pamtojpeg2k: default to no compression ratio constraint and
               allow compression ratios less than 1.  Because of compression
               metadata, small images do require loss of quality in order to
               get down to a compression ratio of 1.
 
-              Xbmtopbm: fix incorrect output, memory leak.  Thanks Prophet of
+              xbmtopbm: fix incorrect output, memory leak.  Thanks Prophet of
               the Way <afu@wta.att.ne.jp>.
 
-              Sunicontopnm: Fix incorrect output for depth 8.  Always broken
+              sunicontopnm: Fix incorrect output for depth 8.  Always broken
               (depth = 8 capability was added in Netpbm 10.53 (December 2010).
 
               pamgauss: Fix bug: erroneously says -maxval is too big on 64 bit
