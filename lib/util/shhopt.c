@@ -77,7 +77,7 @@ optFatalFunc(const char *format, ...)
  |
  |  RETURNS       Number of options in the given array.
  |
- |  DESCRIPTION   Count elements in an optStruct-array. The strcture must
+ |  DESCRIPTION   Count elements in an optStruct-array. The structure must
  |                be ended using an element of type OPT_END.
  */
 static int

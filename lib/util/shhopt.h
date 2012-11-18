@@ -22,7 +22,8 @@ main ( int argc, char **argv ) {
     
     optStruct3 opt;
     unsigned int option_def_index = 0;
-    optEntry *option_def = malloc(100*sizeof(option_def[0]));
+    optEntry * option_def;
+    MALLOCARRAY(option_def, 100);
 
     OPTENT3(0,   "help",     OPT_FLAG,     &help_flag,    &help_spec,   0);
     OPTENT3(0,   "height",   OPT_INT,      &height,       &height_spec, 0);
@@ -68,6 +69,13 @@ Now run this program with something like
 
   myprog -v /etc/passwd -name=Bryan --hei=4
 
+
+  If your program takes no options (so you have no OPTENT3 macro invocations),
+  you need an OPTENTINIT call to establish the empty option table:
+
+    optEntry * option_def;
+    MALLOCARRAY(option_def, 1);
+    OPTENTINIT;
 
 ========================================================================
 #endif /* 0 */
@@ -190,9 +198,10 @@ typedef struct {
     }
 
 /* OPTENT3 is the same as OPTENTRY except that it also sets the "specified"
-   element of the table entry (so it assumes OPTION_DEF is a table of
-   optEntry instead of optStruct).  It sets it to the number of times that
-   the option appears in the command line.
+   element of the table entry (so it assumes OPTION_DEF is a table of optEntry
+   instead of optStruct).  This is a pointer to a variable that the parser
+   will set to the number of times that the option appears in the command
+   line.
 
    Here is an example:
 
