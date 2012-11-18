@@ -126,6 +126,7 @@ parseCommandLine(int argc, const char ** const argv,
                          "You specified %u", argc-1);
         }
     }
+    free(option_def);
 }
 
 

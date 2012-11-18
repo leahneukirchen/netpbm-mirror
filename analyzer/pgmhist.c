@@ -60,6 +60,8 @@ parseCommandLine(int argc, const char ** argv,
                  "specified %d", argc-1);
     else
         cmdlineP->inputFileName = argv[1];
+
+    free(option_def);
 }
 
 
