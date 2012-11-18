@@ -786,7 +786,11 @@ copyWeight(float **       const srcWeight,
            unsigned int   const width,
            unsigned int   const height, 
            float ***      const dstWeightP) {
-
+/*----------------------------------------------------------------------------
+   Make a copy, in dynamically allocated memory, of the weight matrix
+   'srcWeight', whose dimensions are 'width' by 'height'.  Return the
+   new matrix as *dstWeightP.
+-----------------------------------------------------------------------------*/
     unsigned int row;
     float ** dstWeight;
 
@@ -1048,7 +1052,7 @@ writeUnconvolvedBottom(struct pam *              const outpamP,
   Write out the bottom part that we can't convolve because the convolution
   kernel runs off the bottom of the image.
 
-  Assume the 'windowHeight' rows at the bottom of the image is in the row
+  Assume the 'windowHeight' rows at the bottom of the image are in the row
   buffer, mapped by 'circMap' such that the top of the window is circMap[0].
 -----------------------------------------------------------------------------*/
     unsigned int row;
