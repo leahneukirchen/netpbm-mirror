@@ -1423,8 +1423,6 @@ makePnmRow(struct decompressor * const decompP,
 
             lzwReadByte(decompP, &readColorIndex, &endOfImage, &readError);
 
-            assert(*errorP == NULL);
-
             verifyPixelRead(endOfImage, readError, cols, rows, errorP);
 
             if (readError)
