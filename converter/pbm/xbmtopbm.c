@@ -364,13 +364,14 @@ main(int    argc,
             bitrow[i] = bitreverse[*p++];
             
         if (cols % 8 > 0) {
-            bitrow[bytesPerRow] >>= 8 - cols % 8;
-            bitrow[bytesPerRow] <<= 8 - cols % 8;
+            bitrow[bytesPerRow-1] >>= 8 - cols % 8;
+            bitrow[bytesPerRow-1] <<= 8 - cols % 8;
         }
             
         pbm_writepbmrow_packed(stdout, bitrow, cols, 0);
     }
 
+    pbm_freerow(bitrow);
     free(data);
     pm_close(stdout);
 
