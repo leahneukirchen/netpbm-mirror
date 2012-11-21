@@ -151,10 +151,14 @@ main (int argc, char **argv) {
     pnm_init(&argc, argv);
 
     if (argc-1 < 2) 
-        pm_error("Takes two arguments:  specifications of the two files.");
+        pm_error("Takes two arguments:  names of the two files to compare");
     else {
         filespec1 = argv[1];
         filespec2 = argv[2];
+
+        if (argc-1 > 2)
+            pm_error("Too many arguments (%u).  The only arguments are "
+                     "the names of the two files to compare", argc-1);
     }
     
     file1 = pm_openr(filespec1);
