@@ -138,9 +138,11 @@ reportPsnr(struct pam const pam,
 
 
 int
-main (int argc, char **argv) {
-    char *filespec1, *filespec2;  /* specs of two files to compare */
-    FILE *file1, *file2;
+main (int argc, const char **argv) {
+    const char * fileName1;  /* name of first file to compare */
+    const char * fileName2;  /* name of second file to compare */
+    FILE * if1P;
+    FILE * if2P;
     struct pam pam1, pam2;
     bool color;
         /* It's a color image */
@@ -148,28 +150,28 @@ main (int argc, char **argv) {
     tuple *tuplerow1, *tuplerow2;  /* malloc'ed */
     int row;
     
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     if (argc-1 < 2) 
         pm_error("Takes two arguments:  names of the two files to compare");
     else {
-        filespec1 = argv[1];
-        filespec2 = argv[2];
+        fileName1 = argv[1];
+        fileName2 = argv[2];
 
         if (argc-1 > 2)
             pm_error("Too many arguments (%u).  The only arguments are "
                      "the names of the two files to compare", argc-1);
     }
     
-    file1 = pm_openr(filespec1);
-    file2 = pm_openr(filespec2);
+    if1P = pm_openr(fileName1);
+    if2P = pm_openr(fileName2);
 
-    pnm_readpaminit(file1, &pam1, PAM_STRUCT_SIZE(tuple_type));
-    pnm_readpaminit(file2, &pam2, PAM_STRUCT_SIZE(tuple_type));
+    pnm_readpaminit(if1P, &pam1, PAM_STRUCT_SIZE(tuple_type));
+    pnm_readpaminit(if2P, &pam2, PAM_STRUCT_SIZE(tuple_type));
 
     validate_input(pam1, pam2);
 
-    if (strcmp(pam1.tuple_type, PAM_PPM_TUPLETYPE) == 0) 
+    if (streq(pam1.tuple_type, PAM_PPM_TUPLETYPE)) 
         color = TRUE;
     else
         color = FALSE;
@@ -205,7 +207,7 @@ main (int argc, char **argv) {
     }
 
     reportPsnr(pam1, ySumSqDiff, crSumSqDiff, cbSumSqDiff,
-               filespec1, filespec2);
+               fileName1, fileName2);
 
     pnm_freepamrow(tuplerow1);
     pnm_freepamrow(tuplerow2);
