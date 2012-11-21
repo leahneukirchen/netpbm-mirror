@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.61.00
 
+              pnmpsnr: fix crash when invoked (invalidly) with only one
+              argument.  Always broken.
+
               pbmpscale, pgmhist, pampick, pamtompfont: fix wild pointer
               in command line parsing.  Bug has always been there in 
               pampick, pamtompfont, since 10.50 (March 2010) in pbmpscale,
