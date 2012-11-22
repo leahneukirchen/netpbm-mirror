@@ -16,22 +16,25 @@
 #include "nstring.h"
 #include "pam.h"
 
-#define MAXFILES 16
-
 static int
-udiff(unsigned int const subtrahend, unsigned int const subtractor) {
-    return subtrahend-subtractor;
+udiff(unsigned int const subtrahend,
+      unsigned int const subtractor) {
+
+    return subtrahend - subtractor;
 }
+
 
 
 static double
 square(double const arg) {
-    return(arg*arg);
+    return(arg * arg);
 }
 
 
+
 static void
-validate_input(const struct pam pam1, const struct pam pam2) {
+validateInput(struct pam const pam1,
+              struct pam const pam2) {
 
     if (pam1.width != pam2.width)
         pm_error("images are not the same width, so can't be compared.  "
@@ -52,14 +55,14 @@ validate_input(const struct pam pam1, const struct pam pam2) {
                  "maxval of one of them.",
                  (unsigned int) pam1.maxval, (unsigned int) pam2.maxval);
 
-    if (strcmp(pam1.tuple_type, pam2.tuple_type) != 0)
+    if (streq(pam1.tuple_type, pam2.tuple_type))
         pm_error("images are not of the same type.  The tuple types are "
                  "'%s' and '%s', respectively.",
                  pam1.tuple_type, pam2.tuple_type);
 
-    if (strcmp(pam1.tuple_type, PAM_PBM_TUPLETYPE) != 0 &&
-        strcmp(pam1.tuple_type, PAM_PGM_TUPLETYPE) != 0 &&
-        strcmp(pam1.tuple_type, PAM_PPM_TUPLETYPE) != 0)
+    if (streq(pam1.tuple_type, PAM_PBM_TUPLETYPE) &&
+        streq(pam1.tuple_type, PAM_PGM_TUPLETYPE) &&
+        streq(pam1.tuple_type, PAM_PPM_TUPLETYPE))
         pm_error("Images are not of a PNM type.  Tuple type is '%s'",
                  pam1.tuple_type);
 }
@@ -67,11 +70,11 @@ validate_input(const struct pam pam1, const struct pam pam2) {
 
 
 static void
-psnr_color(tuple    const tuple1,
-           tuple    const tuple2,
-           double * const ySqDiffP, 
-           double * const cbSqDiffP,
-           double * const crSqDiffP) {
+psnrColor(tuple    const tuple1,
+          tuple    const tuple2,
+          double * const ySqDiffP, 
+          double * const cbSqDiffP,
+          double * const crSqDiffP) {
 
     double y1, y2, cb1, cb2, cr1, cr2;
     
@@ -95,41 +98,47 @@ reportPsnr(struct pam const pam,
 
     bool const color = streq(pam.tuple_type, PAM_PPM_TUPLETYPE);
 
+    /* Maximum possible sum square difference, i.e. the sum of the squares of
+       the sample differences between an entirely white image and entirely
+       black image of the given dimensions.
+    */
+    double const maxSumSqDiff = square(pam.maxval) * pam.width * pam.height;
+
     /* The PSNR is the ratio of the maximum possible mean square difference
        to the actual mean square difference.
-    */
-    double const yPsnr =
-        square(pam.maxval) / (ySumSqDiff / (pam.width * pam.height));
-
-    /* Note that in the important special case that the images are
-       identical, the sum square differences are identically 0.0.  No
-       precision error; no rounding error.
+   
+       Note that in the important special case that the images are
+       identical, the sum square differences are identically 0.0.
+       No precision error; no rounding error.
     */
 
     if (color) {
-        double const cbPsnr =
-            square(pam.maxval) / (cbSumSqDiff / (pam.width * pam.height));
-        double const crPsnr =
-            square(pam.maxval) / (crSumSqDiff / (pam.width * pam.height));
-
         pm_message("PSNR between %s and %s:", filespec1, filespec2);
+
         if (ySumSqDiff > 0)
-            pm_message("Y  color component: %.2f dB", 10 * log10(yPsnr));
+            pm_message("Y  color component: %.2f dB",
+                       10 * log10(maxSumSqDiff/ySumSqDiff) );
         else
             pm_message("Y color component does not differ.");
+
         if (cbSumSqDiff > 0)
-            pm_message("Cb color component: %.2f dB", 10 * log10(cbPsnr));
+            pm_message("Cb color component: %.2f dB",
+                       10 * log10(maxSumSqDiff/cbSumSqDiff) );
         else
             pm_message("Cb color component does not differ.");
+
         if (crSumSqDiff > 0)
-            pm_message("Cr color component: %.2f dB", 10 * log10(crPsnr));
+            pm_message("Cr color component: %.2f dB",
+                       10 * log10(maxSumSqDiff/crSumSqDiff) );
         else
             pm_message("Cr color component does not differ.");
+
     } else {
-        if (ySumSqDiff > 0)
+        if (ySumSqDiff > 0) {
             pm_message("PSNR between %s and %s: %.2f dB",
-                       filespec1, filespec2, 10 * log10(yPsnr));
-        else
+                       filespec1, filespec2,
+                       10 * log10(maxSumSqDiff/ySumSqDiff) );
+        } else
             pm_message("Images %s and %s don't differ.",
                        filespec1, filespec2);
     }
@@ -169,7 +178,7 @@ main (int argc, const char **argv) {
     pnm_readpaminit(if1P, &pam1, PAM_STRUCT_SIZE(tuple_type));
     pnm_readpaminit(if2P, &pam2, PAM_STRUCT_SIZE(tuple_type));
 
-    validate_input(pam1, pam2);
+    validateInput(pam1, pam2);
 
     if (streq(pam1.tuple_type, PAM_PPM_TUPLETYPE)) 
         color = TRUE;
@@ -192,8 +201,8 @@ main (int argc, const char **argv) {
         for (col = 0; col < pam1.width; ++col) {
             if (color) {
                 double ySqDiff, cbSqDiff, crSqDiff;
-                psnr_color(tuplerow1[col], tuplerow2[col], 
-                           &ySqDiff, &cbSqDiff, &crSqDiff);
+                psnrColor(tuplerow1[col], tuplerow2[col], 
+                          &ySqDiff, &cbSqDiff, &crSqDiff);
                 ySumSqDiff  += ySqDiff;
                 cbSumSqDiff += cbSqDiff;
                 crSumSqDiff += crSqDiff;
@@ -214,3 +223,6 @@ main (int argc, const char **argv) {
 
     return 0;
 }
+
+
+
