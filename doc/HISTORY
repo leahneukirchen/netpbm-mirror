@@ -6,6 +6,18 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.61.00
 
+              pamtojpeg2k: default to no compression ratio constraint and
+              allow compression ratios less than 1.  Because of compression
+              metadata, small images do require loss of quality in order to
+              get down to a compression ratio of 1.
+
+              pnmmontage: fix totally wrong output.  Broken in 10.44
+              (August 2008).
+
+              pnmmontage: fix random stuff placed in unoccupied space in the
+              output image.  Always broken (program was new in 9.10 (January
+              2001).
+
               pnmpsnr: fix crash when invoked (invalidly) with only one
               argument.  Always broken.
 
@@ -14,16 +26,11 @@ not yet  BJH  Release 10.61.00
               pampick, pamtompfont, since 10.50 (March 2010) in pbmpscale,
               since 10.44 (September 2008) in pgmhist.              
 
-              pamtojpeg2k: default to no compression ratio constraint and
-              allow compression ratios less than 1.  Because of compression
-              metadata, small images do require loss of quality in order to
-              get down to a compression ratio of 1.
-
               xbmtopbm: fix incorrect output, memory leak.  Thanks Prophet of
               the Way <afu@wta.att.ne.jp>.
 
               sunicontopnm: Fix incorrect output for depth 8.  Always broken
-              (depth = 8 capability was added in Netpbm 10.53 (December 2010).
+              (depth = 8 capability was added in 10.53 (December 2010).
 
               pamgauss: Fix bug: erroneously says -maxval is too big on 64 bit
               system.  Always broken (Pamgauss was added in 10.23 (July 2004).
