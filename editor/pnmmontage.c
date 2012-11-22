@@ -23,7 +23,7 @@
 
 
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     const char * header;
     const char * data;
     const char * prefix;
@@ -37,7 +37,7 @@ struct cmdlineInfo {
 
 static void
 parseCommandLine(int argc, const char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
    and argv.  Return the information in the options as *cmdlineP.  
@@ -80,6 +80,8 @@ parseCommandLine(int argc, const char ** argv,
 
     pm_optParseOptions3(&argc, (char**)argv, opt, sizeof(opt), 0);
 
+    free(option_def);
+
     if (!dataSpec)
         cmdlineP->data = NULL;
     if (!headerSpec)
@@ -108,7 +110,7 @@ parseCommandLine(int argc, const char ** argv,
             pm_error("Filename '%s' contains a \":\", which is forbidden "
                      "with -data", argv[i+1]);
         else
-            cmdlineP->inFileName[i] = strdup(argv[1+1]);
+            cmdlineP->inFileName[i] = strdup(argv[i+1]);
     }
 }
 
@@ -273,11 +275,12 @@ recursefindpack(rectangle *    const current,
 
 static void 
 findpack(struct pam * const imgs,
-         unsigned int const n,
-         coord *      const coords,
+         unsigned int const imgCt,
+         coord **     const coordsP,
          unsigned int const quality,
          unsigned int const qfactor) {
 
+    coord * coords;
     int minarea;
     int i;
     int rdiv;
@@ -288,13 +291,18 @@ findpack(struct pam * const imgs,
     unsigned int z;
     coord c;
 
+    MALLOCARRAY(coords, imgCt);
+  
+    if (!coords)
+        pm_error("Out of memory allocating %u-element coords array", imgCt);
+
     minx = -1; miny = -1;  /* initial value */
     z = UINT_MAX;  /* initial value */
     c.x = 0; c.y = 0;  /* initial value */
 
     if (quality > 1) {
         unsigned int realMinarea;
-        for (realMinarea = i = 0; i < n; ++i)
+        for (realMinarea = i = 0; i < imgCt; ++i)
             realMinarea += imgs[i].height * imgs[i].width,
                 minx = MAX(minx, imgs[i].width),
                 miny = MAX(miny, imgs[i].height);
@@ -311,20 +319,22 @@ findpack(struct pam * const imgs,
      *
      * This speeds computation immensely.
      */
-    for (rdiv = imgs[0].height, i = 1; i < n; ++i)
+    for (rdiv = imgs[0].height, i = 1; i < imgCt; ++i)
         rdiv = gcd(imgs[i].height, rdiv);
 
-    for (cdiv = imgs[0].width, i = 1; i < n; ++i)
+    for (cdiv = imgs[0].width, i = 1; i < imgCt; ++i)
         cdiv = gcd(imgs[i].width, cdiv);
 
-    MALLOCARRAY(current, n);
+    MALLOCARRAY(current, imgCt);
 
-    for (i = 0; i < n; ++i) {
+    for (i = 0; i < imgCt; ++i) {
         current[i].size.x = imgs[i].width;
         current[i].size.y = imgs[i].height;
     }
-    recursefindpack(current, c, coords, minarea, &z, 0, n, cdiv, rdiv,
+    recursefindpack(current, c, coords, minarea, &z, 0, imgCt, cdiv, rdiv,
                     quality, qfactor);
+
+    *coordsP = coords;
 }
 
 
@@ -366,27 +376,53 @@ adjustMaxval(tuple *            const tuplerow,
 
 
 static void
+makeRowBlack(struct pam * const pamP,
+             tuple *      const tuplerow) {
+
+    unsigned int col;
+
+    for (col = 0; col < pamP->width; ++col) {
+        unsigned int plane;
+        for (plane = 0; plane < pamP->depth; ++plane)
+            tuplerow[col][plane] = 0;
+    }
+}
+
+
+
+static void
 writePam(struct pam *       const outpamP,
-         unsigned int       const nfiles,
+         unsigned int       const imgCt,
          const coord *      const coords,
          const struct pam * const imgs) {
-
-    tuple *tuplerow;
-    int i;
+/*----------------------------------------------------------------------------
+   Write the entire composite image.  There are 'imgCt' source images,
+   described by imgs[].  Their placement in the output is coords[].
+   Properties of the output image, including where to write it
+   and its dimensions are *outpamP.
+-----------------------------------------------------------------------------*/
+    tuple * tuplerow;
+    unsigned int row;  /* Row number in the output image */
   
     pnm_writepaminit(outpamP);
 
     tuplerow = pnm_allocpamrow(outpamP);
 
-    for (i = 0; i < outpamP->height; ++i) {
-        int j;
-        for (j = 0; j < nfiles; ++j) {
-            if (coords[j].y <= i && i < coords[j].y + imgs[j].height) {
-                pnm_readpamrow(&imgs[j], &tuplerow[coords[j].x]);
-                adjustDepth(tuplerow, &imgs[j], outpamP, coords[j]);
+    for (row = 0; row < outpamP->height; ++row) {
+        unsigned int imgIdx;
+        
+        makeRowBlack(outpamP, tuplerow);  /* initial value */
 
-                adjustMaxval(tuplerow, &imgs[j], outpamP, coords[j]);
+        for (imgIdx = 0; imgIdx < imgCt; ++imgIdx) {
+            const coord *      const imgCoordP = &coords[imgIdx];
+            const struct pam * const imgPamP   = &imgs[imgIdx];
 
+            if (imgCoordP->y <= row && row < imgCoordP->y + imgPamP->height) {
+                pnm_readpamrow(imgPamP, &tuplerow[imgCoordP->x]);
+
+                adjustDepth(tuplerow, imgPamP, outpamP, *imgCoordP);
+
+                adjustMaxval(tuplerow, imgPamP, outpamP, *imgCoordP);
             }
         }
         pnm_writepamrow(outpamP, tuplerow);
@@ -400,18 +436,18 @@ static void
 writeData(FILE *             const dataFileP,
           unsigned int       const width,
           unsigned int       const height,
-          unsigned int       const nfiles,
+          unsigned int       const imgCt,
           const char **      const names,
           const coord *      const coords,
           const struct pam * const imgs) {
 
-    unsigned int i;
+    unsigned int imgIdx;
 
     fprintf(dataFileP, ":0:0:%u:%u\n", width, height);
 
-    for (i = 0; i < nfiles; ++i) {
-        fprintf(dataFileP, "%s:%u:%u:%u:%u\n", names[i], coords[i].x,
-                coords[i].y, imgs[i].width, imgs[i].height);
+    for (imgIdx = 0; imgIdx < imgCt; ++imgIdx) {
+        fprintf(dataFileP, "%s:%u:%u:%u:%u\n", names[imgIdx], coords[imgIdx].x,
+                coords[imgIdx].y, imgs[imgIdx].width, imgs[imgIdx].height);
     }
 }
 
@@ -559,101 +595,162 @@ computeOutputDimensions(int * const widthP,
 
 
 
-int 
-main(int argc, const char **argv) {
+static unsigned int
+qfactorFromQuality(unsigned int const quality,
+                   unsigned int const quality2) {
 
-    struct cmdlineInfo cmdline;
-    struct pam * imgs;
-    struct pam outimg;
-    unsigned int nfiles;
-    coord * coords;
-    FILE * header;
-    FILE * data;
-    const char ** names;
-    unsigned int i;
-    unsigned int qfactor;  /* In per cent */
+    unsigned int qfactor;
 
-    pm_proginit(&argc, argv);
-
-    parseCommandLine(argc, argv, &cmdline);
-
-    header = cmdline.header ? pm_openw(cmdline.header) : NULL;
-    data = cmdline.data ? pm_openw(cmdline.data) : NULL;
-
-    switch (cmdline.quality2) {
+    switch (quality2) {
     case 0: case 1:
-        qfactor = cmdline.quality;
+        qfactor = quality;
         break;
     case 2: case 3: case 4: case 5: case 6: 
-        qfactor = 100 * (8 - cmdline.quality2); 
+        qfactor = 100 * (8 - quality2); 
         break;
     case 7: qfactor = 150; break;
     case 8: qfactor = 125; break;
     case 9: qfactor = 100; break;
     default: pm_error("Internal error - impossible value of 'quality2': %u",
-                      cmdline.quality2);
+                      quality2);
     }
 
-    nfiles = cmdline.nFiles > 0 ? cmdline.nFiles : 1;
+    return qfactor;
+}
 
-    MALLOCARRAY(imgs, nfiles);
-    MALLOCARRAY(coords, nfiles);
-    MALLOCARRAY(names, nfiles);
-  
-    if (!imgs || !coords || !names)
+
+
+static void
+openFiles(struct CmdlineInfo const cmdline,
+          unsigned int *     const fileCtP,
+          struct pam **      const imgPamP,
+          const char ***     const namesP) {
+
+    unsigned int fileCt;
+    struct pam * imgPam;
+    const char ** names;
+
+    fileCt = cmdline.nFiles > 0 ? cmdline.nFiles : 1;
+
+    MALLOCARRAY(imgPam, fileCt);
+    MALLOCARRAY(names, fileCt);
+
+    if (!imgPam || !names)
         pm_error("out of memory");
 
     if (cmdline.nFiles > 0) {
         unsigned int i;
 
         for (i = 0; i < cmdline.nFiles; ++i) {
-            imgs[i].file = pm_openr(cmdline.inFileName[i]);
+            imgPam[i].file = pm_openr(cmdline.inFileName[i]);
             names[i] = strdup(cmdline.inFileName[i]);
         }
     } else {
-        imgs[0].file = stdin;
+        imgPam[0].file = stdin;
         names[0] = strdup("stdin");
     }
 
-    for (i = 0; i < nfiles; ++i)
-        pnm_readpaminit(imgs[i].file, &imgs[i], PAM_STRUCT_SIZE(tuple_type));
+    *fileCtP = fileCt;
+    *imgPamP = imgPam;
+    *namesP  = names;
+}
 
-    sortImagesByArea(nfiles, imgs, names);
 
-    findpack(imgs, nfiles, coords, cmdline.quality2, qfactor);
+
+static void
+readFileHeaders(struct pam * const imgPam,
+                unsigned int const fileCt) {
+
+    unsigned int i;
+
+    for (i = 0; i < fileCt; ++i)
+        pnm_readpaminit(imgPam[i].file, &imgPam[i],
+                        PAM_STRUCT_SIZE(tuple_type));
+}
+
+
+
+static void
+closeFiles(const struct pam * const imgPam,
+           unsigned int       const fileCt,
+           FILE *             const headerFileP,
+           FILE *             const dataFileP) {
+
+    unsigned int i;
+
+    for (i = 0; i < fileCt; ++i)
+        pm_close(imgPam[i].file);
+
+    pm_close(stdout);
+
+    if (headerFileP)
+        pm_close(headerFileP);
+
+    if (dataFileP)
+        pm_close(dataFileP);
+}
+
+
+
+int 
+main(int argc, const char **argv) {
+
+    struct CmdlineInfo cmdline;
+    struct pam * imgPam;  /* malloced */
+    struct pam outimg;
+    unsigned int fileCt;
+    coord * coords;  /* malloced */
+    FILE * headerFileP;
+    FILE * dataFileP;
+    const char ** names; /* malloced */
+    unsigned int qfactor;  /* In per cent */
+
+    pm_proginit(&argc, argv);
+
+    parseCommandLine(argc, argv, &cmdline);
+
+    headerFileP = cmdline.header ? pm_openw(cmdline.header) : NULL;
+    dataFileP = cmdline.data ? pm_openw(cmdline.data) : NULL;
+
+    qfactor = qfactorFromQuality(cmdline.quality, cmdline.quality2);
+
+    openFiles(cmdline, &fileCt, &imgPam, &names);
+
+    readFileHeaders(imgPam, fileCt);
+
+    sortImagesByArea(fileCt, imgPam, names);
+
+    findpack(imgPam, fileCt, &coords, cmdline.quality2, qfactor);
 
     computeOutputType(&outimg.maxval, &outimg.format, outimg.tuple_type,
-                      &outimg.depth, nfiles, imgs);
+                      &outimg.depth, fileCt, imgPam);
 
-    computeOutputDimensions(&outimg.width, &outimg.height, nfiles,
-                            imgs, coords);
-
-    pnm_setminallocationdepth(&outimg, outimg.depth);
-
+    computeOutputDimensions(&outimg.width, &outimg.height, fileCt,
+                            imgPam, coords);
     outimg.size = sizeof(outimg);
-    outimg.len = sizeof(outimg);
+    outimg.len = PAM_STRUCT_SIZE(allocation_depth);
+    pnm_setminallocationdepth(&outimg, outimg.depth);
+    outimg.plainformat = false;
     outimg.file = stdout;
-    outimg.bytes_per_sample = 0;
-    for (i = outimg.maxval; i; i >>= 8)
-        ++outimg.bytes_per_sample;
  
-    writePam(&outimg, nfiles, coords, imgs);
+    writePam(&outimg, fileCt, coords, imgPam);
 
-    if (data)
-        writeData(data, outimg.width, outimg.height,
-                  nfiles, names, coords, imgs);
+    if (dataFileP)
+        writeData(dataFileP, outimg.width, outimg.height,
+                  fileCt, names, coords, imgPam);
 
-    if (header)
-        writeHeader(header, cmdline.prefix, outimg.width, outimg.height,
-                    nfiles, names, coords, imgs);
+    if (headerFileP)
+        writeHeader(headerFileP, cmdline.prefix, outimg.width, outimg.height,
+                    fileCt, names, coords, imgPam);
 
-    for (i = 0; i < nfiles; ++i)
-        pm_close(imgs[i].file);
-    pm_close(stdout);
-    if (header)
-        pm_close(header);
-    if (data)
-        pm_close(data);
+    closeFiles(imgPam, fileCt, headerFileP, dataFileP);
+
+    free(coords);
+    free(imgPam);
+    free(names);
 
     return 0;
 }
+
+
+
