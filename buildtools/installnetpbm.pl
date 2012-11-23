@@ -256,6 +256,176 @@ sub getLibDir($) {
 
 
 
+sub ldconfigExists() {
+
+    return (system("ldconfig -? >/dev/null 2>/dev/null") >> 8) != 127;
+}
+
+
+
+sub crleExists() {
+
+    return (system("crle -? 2>/dev/null") >> 8) != 127;
+}
+
+
+
+sub dirName($) {
+    my ($fileName) = @_;
+#-----------------------------------------------------------------------------
+#  The directory component of file name $fileName.
+#-----------------------------------------------------------------------------
+
+    my @components = split(m{/}, $fileName);
+
+    pop(@components);
+
+    if (@components == 1 && $components[0] eq '') {
+        return '/';
+    } else {
+        return join('/', @components);
+    }
+}
+
+
+
+sub ldConfigKnowsDir($) {
+    my ($shlibDir) = @_;
+#-----------------------------------------------------------------------------
+#  Ldconfig appears to search $shlibDir for shared libraries.
+#
+#  Our determination is approximate.  We just look at whether 'ldconfig'
+#  found anything in $shlibDir the last time it searched.  If it searched
+#  $shlibDir and just didn't find anything or $shlibDir has been added to
+#  its search path since then, we'll wrongly conclue that it doesn't search
+#  $shlibDir now.
+#-----------------------------------------------------------------------------
+    my @ldconfigOutput = split(m{\n}, qx{ldconfig -p});
+
+    my $found;
+
+    foreach (@ldconfigOutput) {
+
+        if (m{ => \s (.*) $ }x) {
+            my ($fileName) = ($1);
+
+            if (dirName($fileName) eq $shlibDir) {
+                $found = $TRUE;
+            }
+        }
+    }
+    return $found;
+}
+
+
+
+
+sub
+warnNonstandardShlibDirLdconfig($) {
+    my ($shlibDir) = @_;
+#-----------------------------------------------------------------------------
+#  Assuming this is a system that has an 'ldconfig' program, warn the user
+#  if $shlibDir appears not to be in the system shared library search path.
+#-----------------------------------------------------------------------------
+
+    # This appears to be a system that uses the GNU libc dynamic linker.
+    # The list of system shared library directories is in /etc/ld.so.conf.
+    # The program Ldconfig searches the directories in that list and
+    # remembers all the shared libraries it found (and some informtaion
+    # about them) in its cache /etc/ld.so.cache, which is what the 
+    # dynamic linker uses at run time to find the shared libraries.
+
+    if (!ldConfigKnowsDir($shlibDir)) {
+        print("You have installed shared libraries in " .
+              "'$shlibDir',\n" .
+              "which does not appear to be a system shared " .
+              "library directory ('ldconfig -p' \n" .
+              "doesn't show any other libraries in there).  " .
+              "Therefore, the system may not be\n" .
+              "able to find the Netpbm shared libraries " .
+              "when you run Netpbm programs.\n" .
+              "\n" .
+              "To fix this, you may need to update /etc/ld.so.conf\n" .
+              "\n" .
+              "You may need to use an LD_LIBRARY_PATH " .
+              "environment variable when running Netpbm programs\n" .
+              "\n");
+    }
+}
+
+
+
+
+sub
+warnNonstandardShlibDirCrle($) {
+    my ($shlibDir) = @_;
+#-----------------------------------------------------------------------------
+#  Assuming this is a system that has a 'crle' program, warn the user
+#  if $shlibDir appears not to be in the system shared library search path.
+#-----------------------------------------------------------------------------
+    # We should use 'crle' here to determine whether $shlibDir is a
+    # system directory.  But I don't have a Solaris system to reverse
+    # engineer/test with.
+
+    if ($shlibDir != "/lib" && $shlibDir != "/usr/lib") {
+        print("You have installed shared libraries in " .
+              "'$shlibDir',\n" .
+              "which is not a conventional system shared " .
+              "library directory.\n" .
+              "Therefore, the system may not be able to " .
+              "find the Netpbm\n" .
+              "shared libraries when you run Netpbm programs.\n" .
+              "\n" .
+              "To fix this, you may need to run 'crle -l'.\n" .
+              "\n" .
+              "You may need to use an LD_LIBRARY_PATH " .
+              "environment variable when running Netpbm programs\n" .
+              "\n");
+    }
+}
+        
+
+
+sub
+warnNonstandardShlibDirGeneric($) {
+    my ($shlibDir) = @_;
+#-----------------------------------------------------------------------------
+#  Without assuming any particular shared library search scheme on this
+#  system, warn if $shlibDir appears not to be in the system shared library
+#  search path.
+#-----------------------------------------------------------------------------
+
+    if ($shlibDir != "/lib" && $shlibDir != "/usr/lib") {
+        print("You have installed shared libraries in " .
+              "'$shlibDir',\n" .
+              "which is not a conventional system shared " .
+              "library directory.\n" .
+              "Therefore, the system may not be able to " .
+              "find the Netpbm\n" .
+              "shared libraries when you run Netpbm programs.\n" .
+              "\n" .
+              "You may need to use an LD_LIBRARY_PATH " .
+              "environment variable when running Netpbm programs\n" .
+              "\n");
+    }
+}
+
+
+
+sub warnNonstandardShlibDir($) {
+    my ($shlibDir) = @_;
+
+    if (ldconfigExists()) {
+        warnNonstandardShlibDirLdconfig($shlibDir);
+    } elsif (crleExists()) {
+        warnNonstandardShlibDirCrle($shlibDir);
+    } else {
+        warnNonstandardShlibDirGeneric($shlibDir);
+    }
+}
+
+
+
 sub 
 execLdconfig() {
 #-----------------------------------------------------------------------------
@@ -311,13 +481,6 @@ execLdconfig() {
 
 
 
-sub ldconfigExists() {
-
-    return (system("ldconfig -? 2>/dev/null") >> 8) != 127;
-}
-
-
-
 sub
 doLdconfig() {
 #-----------------------------------------------------------------------------
@@ -336,7 +499,7 @@ doLdconfig() {
               "to put the \n");
         print("Netpbm shared library in the cache?  This works only if " .
               "you have\n");
-        print("installed the library in a standard location.\n");
+        print("installed the library in a directory Ldconfig knows about.\n");
         print("\n");
         
         my $done;
@@ -377,6 +540,9 @@ sub installSharedLib($$$) {
         } else {
             print("done.\n");
             print("\n");
+
+            warnNonstandardShlibDir($libDir);
+
             doLdconfig();
         }
         $$libdirR = $libDir;
