@@ -98,8 +98,9 @@ pgmnoise(FILE * const ofP,
 
 
 
-int main(int          argc,
-         const char * argv[]) {
+int
+main(int          argc,
+     const char * argv[]) {
     
     struct cmdlineInfo cmdline;
 
