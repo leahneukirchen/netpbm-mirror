@@ -2,16 +2,14 @@
 <HTML><HEAD><TITLE>Ppmbrighten User Manual</TITLE></HEAD>
 <BODY>
 <H1>ppmbrighten</H1>
-Updated: 09 January 2003
+Updated: 26 October 2012
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 ppmbrighten - change a PPM image's Saturation and Value
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <b>ppmbrighten</b>
 [<b>-normalize</b>]
@@ -19,11 +17,12 @@ ppmbrighten - change a PPM image's Saturation and Value
 [<b>-value </b>[<b>+</b>|<b>-</b><i>value_percent</i>]]
 <i>ppmfile</i>
 
-<?makeman .SH OPTION USAGE ?>
-<P>All options can be abbreviated to their shortest unique prefix.
+<P>Minimum unique abbreviation of option is acceptable.  You may use
+double hyphens instead of single hyphen to denote options.  You may use
+white space in place of the equals sign to separate an option name
+from its value.
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -41,15 +40,14 @@ when we mean the number from the HSV color space, especially since
 "value" as a conventional English word has a much more abstract
 meaning.
 
-<p>Value is a measure of how much total light intensity is in the
-color, relative to some specified maximum (the PPM format is also
-defined in terms of a specified maximum intensity -- For the purposes
-of this program, they are the same).  In particular, it is the
-intensity of the most intense primary color component of the color
-divided by the maximum intensity possible for a component.  Zero Value
-means black.  White has full Value.
+<p>Value is a measure of how bright the color is, relative to some specified
+maximum (the PPM format is also defined in terms of a specified maximum
+brightness -- For the purposes of this program, they are the same).  In
+particular, it is the brightness of the brightest primary color component of
+the color divided by the maximum brightness possible for a component.  Zero
+Value means black.  White has full Value.
 
-<p>Hue is an indication of the secondary color with the same intensity
+<p>Hue is an indication of the secondary color with the same brightness
 that most closely approximates the color.  A secondary color is made
 of a combination of at most two of the primary colors.
 
@@ -68,33 +66,30 @@ increases it to full Value instead.
 you specify (e.g. it is already half saturated and you specify +200%),
 <b>ppmbrighten</b> increases it to full Saturation instead.
 
-<p>For a simpler kind of brightening, you can use <b>pamfunc
--multiplier</b> simply to increase the intensity of each pixel by a
-specified per centage, clipping each RGB component where the
-calculated intensity would exceed full intensity.  Thus, the brightest
-colors in the image would change chromaticity in addition to not
-getting the specified intensity boost.  For <em>decreasing</em>
-brightness, <b>pamfunc</b> should do the same thing as
+<p>For a simpler kind of brightening, you can use <b>pamfunc -multiplier</b>
+simply to increase the brightness of each pixel by a specified per centage,
+clipping each RGB component where the calculated brightness would exceed full
+brightness.  Thus, the brightest colors in the image would change chromaticity
+in addition to not getting the specified brightness boost.
+For <em>decreasing</em> brightness, <b>pamfunc</b> should do the same thing as
 <b>ppmbrighten</b>.
 
 <p><b>ppmflash</b> does another kind of brightening.  It changes the
 color of each pixel to bring it a specified per centage closer to white.
 This increases the value and saturation.
 
-<A NAME="examples"></a>
-<H2>EXAMPLES</H2>
+<H2 id="examples">EXAMPLES</H2>
 <p>To double the Value of each pixel:
 <pre>
 ppmbrighten -v 100
 </pre>
 
-<p>To double the Saturation and halve the value of each pixel:
+<p>To double the Saturation and halve the Value of each pixel:
 <pre>
 ppmbrighten -s 100 -v -50
 </pre>
 
-<A NAME="options"></a>
-<H2>OPTIONS</H2>
+<H2 id="options">OPTIONS</H2>
 
 <DL>
 <DT><b>-value </b><i>value_percent</i>
@@ -124,8 +119,7 @@ with a bogus error message.
 
 </DL>  
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <A HREF="pnmnorm.html">pnmnorm</A>, 
 <A HREF="ppmdim.html">ppmdim</A>, 
@@ -136,8 +130,7 @@ with a bogus error message.
 <A HREF="ppmhist.html">ppmhist</A>, 
 <A HREF="ppm.html">ppm</A>
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>AUTHOR</H2>
+<H2 id="author">AUTHOR</H2>
 
 <p>Copyright (C) 1990 by Brian Moffet.
 Copyright (C) 1989 by Jef Poskanzer.
@@ -151,16 +144,14 @@ documentation.  This software is provided &quot;as is&quot; without express or
 implied warranty.
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
 <LI><A HREF="#examples">EXAMPLES</A>
 <LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#lbAE">SEE ALSO</A>
-<LI><A HREF="#lbAF">AUTHOR</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
 </UL>
 </BODY>
 </HTML>

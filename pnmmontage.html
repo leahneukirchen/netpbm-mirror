@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pnmmontage User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmmontage</H1>
-Updated: 03 November 2007
+Updated: 22 November 2012
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -30,9 +30,11 @@ pnmmontage - create a montage of PNM images
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><b>pnmmontage</b> packs images of differing sizes into a
-minimum-area composite image, optionally producing a C header file
-with the locations of the subimages within the composite image.
+<p><b>pnmmontage</b> packs images of differing sizes into a minimum-area
+composite image.
+
+<p>Areas of the output that cannot be occupied by an image are black.
+
 
 <H2 id="options">OPTIONS</H2>
 
@@ -52,6 +54,19 @@ the packed image.  Here is an example:
 </tt>
 </pre>
 
+
+<p>There is a line for each component image and one for the composite.
+
+<p>The 5 fields on each line are:
+
+<ol>
+<li>source image name (or null string indicating the line for the composite
+image)
+<li>Column number of upper left corner of the image
+<li>Row number of upper left corner of the image
+<li>width of the image (columns)
+<li>height of the image (rows)
+</ol>
 
 <p>This option was new in Netpbm 10.6 (July 2002).
 

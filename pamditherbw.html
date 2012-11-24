@@ -26,6 +26,8 @@ pamditherbw - dither grayscale image to black and white
 
 [<B>-clump</B> <I>size</I>]
 
+[<b>-randomseed=</b><i>integer</i>]
+
 [<I>pamfile</I>]
 
 <P>All options can be abbreviated to their shortest unique prefix.
@@ -93,27 +95,50 @@ effect.
 <a href="http://www.tinrocket.com/projects/programming/graphics/00158/">
 some claim</a> Atkinson works better.
 
-<P>The <B>-value</B> option alters the thresholding value for
-Floyd-Steinberg, Atkinson, and simple thresholding.  It should be a
-real number between 0 and 1.  Above 0.5 means darker images; below 0.5
-means lighter.
-
 <P>The Hilbert curve method is useful for processing images before
 display on devices that do not render individual pixels distinctly
 (like laser printers).  This dithering method can give better results
 than the dithering usually done by the laser printers themselves.  The
-<B>-clump</B> option alters the number of pixels in a clump.  This is
-usually an integer between 2 and 100 (default 5).  Smaller clump sizes
-smear the image less and are less grainy, but seem to lose some grey
-scale linearity. Typically a PGM image will have to be scaled to fit
-on a laser printer page (2400 x 3000 pixels for an A4 300 dpi page),
-and then dithered to a PBM image before being converted to a
-postscript file.  A printing pipeline might look something like:
+<B>-clump</B> option alters the number of pixels in a clump.  Typically a PGM
+image will have to be scaled to fit on a laser printer page (2400 x 3000
+pixels for an A4 300 dpi page), and then dithered to a PBM image before being
+converted to a postscript file.  A printing pipeline might look something
+like:
 
 <pre>
     pamscale -xysize 2400 3000 image.pgm | pamditherbw -hilbert |  \
       pamtopnm | pnmtops -scale 0.25 &gt; image.ps 
 </pre>
+
+<dl>
+
+<dt><b>-value</b>
+
+<dd>This option alters the thresholding value for
+Floyd-Steinberg, Atkinson, and simple thresholding.  It should be a
+real number between 0 and 1.  Above 0.5 means darker images; below 0.5
+means lighter.
+
+<dt><b>-clump</b>
+<dd>This option alters the number of pixels in a clump.  This is usually an
+integer between 2 and 100 (default 5).  Smaller clump sizes smear the image
+less and are less grainy, but seem to lose some grey scale linearity.
+
+<dt><b>-randomseed=</b><i>integer</i>
+
+<dd>This is the seed for the random number generator that generates the
+pixels.
+
+<p>Use this to ensure you get the same image on separate invocations.
+
+<p>By default, <b>pgmnoise</b> uses a seed derived from the time of day
+and process ID, which gives you fairly uncorrelated results in multiple
+invocations.
+
+<p>This option was new in Netpbm 10.45 (December 2008).
+
+</dl>
+
 
 <H2 id="references">REFERENCES</H2>
 

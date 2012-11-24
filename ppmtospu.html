@@ -1,0 +1,102 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Ppmtospu User Manual</TITLE></HEAD>
+<BODY>
+<H1>ppmtospu</H1>
+Updated: 08 March 2012
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<H2>NAME</H2>
+
+ppmtospu - convert a PPM image to an Atari Spectrum 512 image
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>ppmtospu</B>
+
+[<b>-d0</b>|<b>-d2</b>|<b>-d4</b>]
+[<I>ppmfile</I>]
+
+<P>All options can be abbreviated to their shortest unique prefix.
+You may use two hyphens instead of one.  You may separate an option
+name and its value with white space instead of an equals sign.
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>. 
+
+<p>This program converts from the PPM format to the uncompressed Spectrum 512
+image format used on Atari ST computers.
+
+<p>Input comes from the file you name with the <i>ppmfile</i> argument, or
+Standard Input by default.  Output goes to Standard Output.
+
+<p>The input must be 320 pixels wide by 200 pixels high.  If you have an
+image of a different size, you can use <b>pamcut</b> or <b>pamscale</b>
+to force it to these dimensions.
+
+
+<H2 id="options">OPTIONS</H2>
+
+<dl>
+<dt><b>-d0</b>
+<dd>The program does no dithering.
+
+<dt><b>-d2</b>
+<dd>The program uses a 2x2 ordered dither.
+<p>This is the default.
+
+<dt><b>-d4</b>
+<dd>The program uses a 4x4 ordered dither.
+    
+</dl>
+
+
+<H2 id="seealso">SEE ALSO</H2>
+
+
+<B><A HREF="sputoppm.html">sputoppm</A></B>,
+<B><A HREF="spctoppm.html">sputoppm</A></B>,
+<B><A HREF="pamscale.html">pamscale</A></B>,
+<B><A HREF="pamcut.html">pamcut</a></b>,
+<B><A HREF="ppm.html">ppm</A></B>
+
+
+<H2 id="author">AUTHOR</H2>
+
+Copyright (C) 1990 by Steve Belczyk
+
+
+<h2 id="history">HISTORY</H2>
+
+<P>This program was new in Netpbm 10.58 (March 2012).
+
+<p>But it was written in 1990.  Steve Belczyk posted it along
+with <b>sputoppm</b>, <b>spctoppm</b>, <b>pi1toppm</b>, and
+<b>pi1toppm</b> - all programs for dealing with Atari image formats -
+to comp.sources.misc on July 15, 1990.  For reasons that have been lost
+to history, all of these entered the Netpbm (then Pbmplus) distribution
+<em>except</em> <b>ppmtospu</b>.
+
+<P>Georges Kesseler wondered In March 2012 why there was no counterpart to
+<b>sputoppm</b> in Netpbm and searched the web, finding only one reference
+to <b>ppmtopsu</b>: the 1990 comp.sources.misc posting, including the source
+code.  He emailed the Netpbm maintainer suggesting it be added.
+
+<p>Bryan Henderson found the source code to be extremely primitive, not even
+using common library code.  So Bryan completely recoded it, but retained
+nearly all of the original logic.
+
+
+<HR>
+<H2 id="contents">Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
+</UL>
+</BODY>
+</HTML>
+

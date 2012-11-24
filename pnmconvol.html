@@ -259,6 +259,22 @@ convolution gets applied to each color component.  However, if you
 want to use a PPM and do a different convolution to different
 colors, you can certainly do that.
 
+
+<h3 id="otherconvol">Other Forms of Convolution</h3>
+
+<p><b>pnmconvol</b> does only arithmetic, linear combination convolution.
+There are other forms of convolution that are especially useful in image
+processing.
+
+<p><b>pgmmedian</b> does median filtering, which is a form of convolution
+where the output pixel value, rather than being a linear combination of the
+pixels in the window, is the median of a certain subset of them.
+
+<p><b>pgmmorphconv</b> does dilation and erosion, which is like the median
+filter but the output value is the minimum or maximum of the values in the
+window.
+
+
 <H2 id="options">OPTIONS</H2>
 
 <DL COMPACT>
@@ -335,6 +351,7 @@ the maxval.
 
 <B><A HREF="pnmsmooth.html">pnmsmooth</A></B>,
 <B><A HREF="pgmmorphconv.html">pgmmorphconv</A></B>,
+<B><A HREF="pgmmedian.html">pgmmedian</A></B>,
 <B><A HREF="pnmnlfilt.html">pnmnlfilt</A></B>,
 <B><A HREF="pgmkernel.html">pgmkernel</A></B>,
 <B><A HREF="pamgauss.html">pamgauss</A></B>,

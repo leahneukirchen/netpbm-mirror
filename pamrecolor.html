@@ -28,6 +28,8 @@
 [<b>--bmult</b>=<i>fraction</i>]
 [<b>--targetcolor</b>=<i>color</i>]
 [<b>--colorfile</b>=<i>file</i>]
+[<b>-randomseed=</b><i>integer</i>]
+
 [<i>infile</i>]
 </p>
 
@@ -161,6 +163,19 @@ image to be repeated in a tile pattern.
 each pixel of the input image.</p>
 
 <p>You may not specify both <b>-targetcolor</b> and <b>-colorfile</b>.
+
+<dt><b>-randomseed=</b><i>integer</i>
+
+<dd>This is the seed for the random number generator that generates the
+pixels.
+
+<p>Use this to ensure you get the same image on separate invocations.
+
+<p>By default, <b>pamrecolor</b> uses a seed derived from the time of day
+and process ID, which gives you fairly uncorrelated results in multiple
+invocations.
+
+<p>This option was new in Netpbm 10.61 (December 2012).
 
 </dl>
 

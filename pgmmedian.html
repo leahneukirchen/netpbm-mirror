@@ -30,6 +30,7 @@ pgmmedian - apply a median filter to a PGM file
 hyphens instead of single hyphen to denote options.  You may use white
 space in place of the equals sign to separate an option name from its value.
 
+
 <H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
@@ -37,8 +38,14 @@ space in place of the equals sign to separate an option name from its value.
 <p><b>pgmmedian</b> applies a median filter to a PGM image, using either
 the histogram sort or select kth value method to determine the median.
 
+<p>A median filter is a convolution filter in which the value of a pixel in
+the output is the median of a certain set of pixels in the neighborhood of the
+corresponding input pixel.  The effect is to eliminate locally extreme values.
+Such pixels typically show up as speckles.
+
 <p>See the <b>-type</b> and <b>-cutoff</b> options for information on
 how <b>pgmmedian</b> chooses between the two methods.
+
 
 <H2 id="options">OPTIONS</H2>
 
@@ -102,6 +109,8 @@ Pitas, Prentice Hall, 1993 ISBN 0-13-145814-0
 
 <A HREF="pgmnoise.html">pgmnoise</A>,
 <A HREF="pamaddnoise.html">pamaddnoise</A>,
+<A HREF="pnmconvol.html">pnmconvol</A>,
+<A HREF="pgmmorphconv.html">pgmmorphconv</A>,
 <A HREF="pgm.html">pgm</A>
 
 <h2 id="history">HISTORY</h2>

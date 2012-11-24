@@ -22,6 +22,8 @@ pgmcrater - create cratered terrain by fractal forgery
 
 [<B>-gamma</B> <I>g</I>]
 
+[<b>-randomseed=</b><i>integer</i>]
+
 
 <H2 id="description">DESCRIPTION</H2>
 
@@ -114,6 +116,19 @@ of the definition of the PGM format.  The image <B>pnmgamma</B>
 generates is a genuine, gamma-corrected PGM image in any case.  This
 option simply changes the contrast and may compensate for a display
 device that does not correctly render PGM images.
+
+<dt><b>-randomseed=</b><i>integer</i>
+
+<dd>This is the seed for the random number generator that generates the
+pixels.
+
+<p>Use this to ensure you get the same image on separate invocations.
+
+<p>By default, <b>pgmnoise</b> uses a seed derived from the time of day
+and process ID, which gives you fairly uncorrelated results in multiple
+invocations.
+
+<p>This option was new in Netpbm 10.61 (December 2012).
 
 </DL>
 

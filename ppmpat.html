@@ -2,17 +2,15 @@
 <HTML><HEAD><TITLE>Ppmpat User Manual</TITLE></HEAD>
 <BODY>
 <H1>ppmpat</H1>
-Updated: 12 June 2004
+Updated: 24 November 2012
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
 ppmpat - make a pretty PPM image
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>ppmpat</B>
 {<B>-gingham2</B>|<B>-g2</B>} |
@@ -23,13 +21,14 @@ ppmpat - make a pretty PPM image
 <B>-squig</B> |
 <B>-camo</B> |
 <B>-anticamo</B>
+[<b>-randomseed=</b><i>integer</i>]
+
 <I>width</I> <I>height</I>
 
 
 <P>You can abbreviate any option to its shortest unique prefix.
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -46,8 +45,7 @@ should generate a nice background.
 <p>Some of these patterns have large numbers of colors, so if you want
 a simpler pattern, use <b>pnmquant</b> on the output.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<H2 id="options">OPTIONS</H2>
 
 <P>The options specify various pattern types:
 
@@ -84,16 +82,27 @@ a simpler pattern, use <b>pnmquant</b> on the output.
 
 <DD>Anti-camouflage pattern - like -camo, but ultra-bright colors.
 
+<dt><b>-randomseed=</b><i>integer</i>
+
+<dd>This is the seed for the random number generator that generates the
+pixels.
+
+<p>Use this to ensure you get the same image on separate invocations.
+
+<p>By default, <b>ppmpat</b> uses a seed derived from the time of day
+and process ID, which gives you fairly uncorrelated results in multiple
+invocations.
+
+<p>This option was new in Netpbm 10.61 (December 2012).
+
 </DL>
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>REFERENCES</H2>
+<H2 id="references">REFERENCES</H2>
 
 Some of the patterns are from &quot;Designer's Guide to Color 3&quot;
 by Jeanne Allen.
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <A HREF="pnmtile.html">pnmtile</A>, 
 <A HREF="pnmquant.html">pnmquant</A>, 
@@ -102,8 +111,7 @@ by Jeanne Allen.
 <A HREF="pamgradient.html">pamgradient</A>, 
 <A HREF="ppm.html">ppm</A>
 
-<A NAME="lbAH">&nbsp;</A>
-<H2>AUTHOR</H2>
+<H2 id="author">AUTHOR</H2>
 
 Copyright (C) 1989 by Jef Poskanzer.
 
@@ -111,13 +119,12 @@ Copyright (C) 1989 by Jef Poskanzer.
 <A NAME="index">&nbsp;</A>
 <H2>Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">REFERENCES</A>
-<LI><A HREF="#lbAG">SEE ALSO</A>
-<LI><A HREF="#lbAH">AUTHOR</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#references">REFERENCES</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
 </UL>
 </BODY>
 </HTML>
