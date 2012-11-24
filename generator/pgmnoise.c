@@ -38,7 +38,7 @@ parseCommandLine(int argc, const char ** const argv,
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0,   "randomseed",   OPT_INT,    &cmdlineP->randomseed,
+    OPTENT3(0,   "randomseed",   OPT_UINT,    &cmdlineP->randomseed,
             &cmdlineP->randomseedSpec,      0);
 
     opt.opt_table = option_def;
@@ -66,6 +66,7 @@ parseCommandLine(int argc, const char ** const argv,
         else
             cmdlineP->height = height;
     }
+    free(option_def);
 }
 
 
