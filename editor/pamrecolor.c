@@ -64,6 +64,8 @@ struct cmdlineInfo {
         */
     unsigned int    targetcolorSpec;
     struct rgbfrac  targetcolor;
+    unsigned int    randomseed;
+    unsigned int    randomseedSpec;
 };
 
 
@@ -375,6 +377,8 @@ parseCommandLine(int argc, const char ** const argv,
             &colorfileSpec, 0);
     OPTENT3(0, "targetcolor",  OPT_STRING, &targetcolorOpt,
             &cmdlineP->targetcolorSpec, 0);
+    OPTENT3(0,   "randomseed",   OPT_UINT,    &cmdlineP->randomseed,
+            &cmdlineP->randomseedSpec,      0);
 
     opt.opt_table = option_def;
     opt.short_allowed = 0;
@@ -456,9 +460,9 @@ main(int argc, const char *argv[]) {
 
     pm_proginit(&argc, argv);
 
-    srand(pm_randseed());
-
     parseCommandLine(argc, argv, &cmdline);
+
+    srand(cmdline.randomseedSpec ? cmdline.randomseed : pm_randseed());
 
     ifP = pm_openr(cmdline.inputFileName);
     inPam.comment_p = &comments;
