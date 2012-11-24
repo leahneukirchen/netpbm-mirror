@@ -41,6 +41,8 @@ struct cmdlineInfo {
     unsigned int  clusterRadius;  
         /* Defined only for halftone == QT_CLUSTER */
     float         threshval;
+    unsigned int  randomseed;
+    unsigned int  randomseedSpec;
 };
 
 
@@ -83,6 +85,8 @@ parseCommandLine(int argc, char ** argv,
             &valueSpec, 0);
     OPTENT3(0, "clump",     OPT_UINT,  &cmdlineP->clumpSize, 
             &clumpSpec, 0);
+    OPTENT3(0,   "randomseed",   OPT_UINT,    &cmdlineP->randomseed,
+            &cmdlineP->randomseedSpec,      0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -518,7 +522,6 @@ createFsConverter(struct pam * const graypamP,
     /* Initialize Floyd-Steinberg error vectors. */
     MALLOCARRAY_NOFAIL(stateP->thiserr, graypamP->width + 2);
     MALLOCARRAY_NOFAIL(stateP->nexterr, graypamP->width + 2);
-    srand(pm_randseed());
 
     {
         /* (random errors in [-1/8 .. 1/8]) */
@@ -660,8 +663,6 @@ createAtkinsonConverter(struct pam * const graypamP,
 
     for (relRow = 0; relRow < 3; ++relRow)
         MALLOCARRAY_NOFAIL(stateP->error[relRow], graypamP->width + 2);
-
-    srand(pm_randseed());
 
     {
         /* (random errors in [-1/8 .. 1/8]) */
@@ -856,6 +857,8 @@ main(int argc, char *argv[]) {
     pgm_init(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
+
+    srand(cmdline.randomseedSpec ? cmdline.randomseed : pm_randseed());
 
     ifP = pm_openr(cmdline.inputFilespec);
 
