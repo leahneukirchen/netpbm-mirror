@@ -85,6 +85,7 @@ struct cmdlineInfo {
     const char * bgColorName;    /* -bgcolor option */
     unsigned int smoothing;      /* -smoothing option */
     unsigned int randomseed;     /* -randomseed option */
+    unsigned int randomseedSpec; /* -randomseed option count */
     enum outputType outputType;  /* Type of output file */
 };
 
@@ -144,7 +145,7 @@ parseCommandLine(int                  argc,
     unsigned int option_def_index;
 
     unsigned int patfileSpec, texfileSpec, dpiSpec, eyesepSpec, depthSpec,
-        guidesizeSpec, magnifypatSpec, xshiftSpec, yshiftSpec, randomseedSpec,
+        guidesizeSpec, magnifypatSpec, xshiftSpec, yshiftSpec,
         bgColorNameSpec, smoothingSpec, planesSpec;
 
     unsigned int blackandwhite, grayscale, color;
@@ -188,7 +189,7 @@ parseCommandLine(int                  argc,
     OPTENT3(0, "bgcolor",         OPT_STRING, &cmdlineP->bgColorName,
             &bgColorNameSpec,         0);
     OPTENT3(0, "randomseed",      OPT_UINT,   &cmdlineP->randomseed,
-            &randomseedSpec,          0);
+            &cmdlineP->randomseedSpec, 0);
     OPTENT3(0, "smoothing",       OPT_UINT,   &cmdlineP->smoothing,
             &smoothingSpec,           0);
     OPTENT3(0, "planes",          OPT_STRINGLIST, &nearFarPlanes,
@@ -268,9 +269,6 @@ parseCommandLine(int                  argc,
 
     if (!yshiftSpec)
         cmdlineP->yshift = 0;
-
-    if (!randomseedSpec)
-        cmdlineP->randomseed = time(NULL);
 
     if (xshiftSpec && !cmdlineP->patFilespec)
         pm_error("-xshift is valid only with -patfile");
@@ -1273,7 +1271,7 @@ main(int argc, const char *argv[]) {
     if (cmdline.verbose)
         reportParameters(cmdline);
 
-    srand(cmdline.randomseed);
+    srand(cmdline.randomseedSpec ? cmdline.randomseed : pm_randseed());
 
     ifP = pm_openr(cmdline.inputFilespec);
 
