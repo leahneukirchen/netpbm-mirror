@@ -1,0 +1,30 @@
+#! /bin/bash
+# This script tests: giftopnm pamtogif
+# Also requires: ppmtopgm ppmtorgb3 rgb3toppm
+
+# Test 1. Should produce 2871603838 33838
+# which is the result of ppmtopgm testimg.ppm | cksum
+
+${PBM_BINPREFIX}ppmtopgm testimg.ppm | \
+  ${PBM_TESTPREFIX}pamtogif | ${PBM_TESTPREFIX}giftopnm | cksum
+
+# Test 2. Break up input image into three monochrome planes,
+# maxval 255.  Transform each plane to gif and back to pgm.
+# Reassemble the planes.  Result should be identical to input.
+# Should print 1926073387 101484
+
+cp testimg.ppm ${tmpdir} &&
+${PBM_BINPREFIX}ppmtorgb3 ${tmpdir}/testimg.ppm &&
+${PBM_TESTPREFIX}pamtogif ${tmpdir}/testimg.red | \
+  ${PBM_TESTPREFIX}giftopnm > ${tmpdir}/out.red &&
+${PBM_TESTPREFIX}pamtogif ${tmpdir}/testimg.grn |
+  ${PBM_TESTPREFIX}giftopnm > ${tmpdir}/out.grn &&
+${PBM_TESTPREFIX}pamtogif ${tmpdir}/testimg.blu | \
+  ${PBM_TESTPREFIX}giftopnm | \
+  ${PBM_BINPREFIX}rgb3toppm ${tmpdir}/testimg.red ${tmpdir}/testimg.grn - | \
+  cksum
+
+rm ${tmpdir}/testimg.{ppm,red,grn,blu} ${tmpdir}/out.{red,grn}
+
+# Test 3. Should produce 2425386270 41
+${PBM_TESTPREFIX}pamtogif testgrid.pbm | ${PBM_TESTPREFIX}giftopnm | cksum

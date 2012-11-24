@@ -1,0 +1,20 @@
+#! /bin/bash
+# This script tests: ppmcie
+# Also requires: 
+
+# Test 1. Should print 955840041 786447
+# Without -nolabel -noaxes -nowpoint -noblack older versions of
+# Netpbm produce slightly different charts.
+# Output from "ppmcie | cksum" :
+# v. 10.35.86: 288356530 786447   
+# v. 10.59.2 : 2292601420 786447  
+#
+# This test fails when ppmcie is compiled with SSE features are turned on.
+# Note that Gcc turns on SSE,SSE2 on by default for x86-64.
+
+# v. 10.59.2
+# x86 32 bit: 955840041 786447
+# x86 64 bit: 4208660683 786447
+
+${PBM_TESTPREFIX}ppmcie -nolabel -noaxes -nowpoint -noblack  | cksum
+

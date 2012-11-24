@@ -35,6 +35,8 @@ not yet  BJH  Release 10.61.00
               pamgauss: Fix bug: erroneously says -maxval is too big on 64 bit
               system.  Always broken (Pamgauss was added in 10.23 (July 2004).
 
+              Add tests.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
 12.09.30 BJH  Release 10.60.00
 
               xpmtoppm: major speedup for 3-character-per pixel files,

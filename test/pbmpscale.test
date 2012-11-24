@@ -1,0 +1,11 @@
+#! /bin/bash
+# This script tests: pbmpscale
+# Also requires: pamenlarge pbmtext
+
+${PBM_BINPREFIX}pbmtext -nomargin "F" | ${PBM_TESTPREFIX}pbmpscale 3 -plain 
+
+for i in 2 3 4
+do
+${PBM_BINPREFIX}pamenlarge 2 testgrid.pbm | \
+  ${PBM_TESTPREFIX}pbmpscale $i | cksum
+done

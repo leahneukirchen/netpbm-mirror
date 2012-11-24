@@ -1,0 +1,34 @@
+#! /bin/bash
+# This script tests: pamflip
+# Also requires: 
+
+${PBM_TESTPREFIX}pamflip -lr testimg.ppm | ${PBM_TESTPREFIX}pamflip -lr | cksum
+${PBM_TESTPREFIX}pamflip -tb testimg.ppm | ${PBM_TESTPREFIX}pamflip -tb | cksum
+${PBM_TESTPREFIX}pamflip -r180 testimg.ppm | \
+  ${PBM_TESTPREFIX}pamflip -r180 | cksum
+${PBM_TESTPREFIX}pamflip -xy testimg.ppm | ${PBM_TESTPREFIX}pamflip -xy | cksum
+${PBM_TESTPREFIX}pamflip -r90 testimg.ppm | \
+  ${PBM_TESTPREFIX}pamflip -r90 | \
+  ${PBM_TESTPREFIX}pamflip -r90 | \
+  ${PBM_TESTPREFIX}pamflip -r90 | cksum
+${PBM_TESTPREFIX}pamflip -r270 testimg.ppm | \
+  ${PBM_TESTPREFIX}pamflip -r270 | \
+  ${PBM_TESTPREFIX}pamflip -r270 | \
+  ${PBM_TESTPREFIX}pamflip -r270 | cksum
+
+${PBM_TESTPREFIX}pamflip -lr testgrid.pbm | \
+  ${PBM_TESTPREFIX}pamflip -lr | cksum
+${PBM_TESTPREFIX}pamflip -tb testgrid.pbm | \
+  ${PBM_TESTPREFIX}pamflip -tb | cksum
+${PBM_TESTPREFIX}pamflip -r180 testgrid.pbm | \
+  ${PBM_TESTPREFIX}pamflip -r180 | cksum
+${PBM_TESTPREFIX}pamflip -xy testgrid.pbm | \
+  ${PBM_TESTPREFIX}pamflip -xy | cksum
+${PBM_TESTPREFIX}pamflip -r90 testgrid.pbm | \
+  ${PBM_TESTPREFIX}pamflip -r90 | \
+  ${PBM_TESTPREFIX}pamflip -r90 | \
+  ${PBM_TESTPREFIX}pamflip -r90 | cksum
+${PBM_TESTPREFIX}pamflip -r270 testgrid.pbm | \
+  ${PBM_TESTPREFIX}pamflip -r270 | \
+  ${PBM_TESTPREFIX}pamflip -r270 | \
+  ${PBM_TESTPREFIX}pamflip -r270 | cksum

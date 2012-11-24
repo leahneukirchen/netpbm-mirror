@@ -1,0 +1,10 @@
+#! /bin/bash
+# This script tests: pbmminkowski
+# Also requires: pbmmake pnmmargin
+
+${PBM_BINPREFIX}pbmmake -w 1 1 | ${PBM_BINPREFIX}pnmmargin -b 1 | \
+  ${PBM_TESTPREFIX}pbmminkowski
+echo
+${PBM_BINPREFIX}pbmmake -g 3 3 | ${PBM_TESTPREFIX}pbmminkowski
+echo
+${PBM_TESTPREFIX}pbmminkowski testgrid.pbm

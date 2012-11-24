@@ -1,0 +1,20 @@
+#! /bin/bash
+# This script tests: pamtotiff tifftopnm
+# Also requires: 
+
+${PBM_TESTPREFIX}pamtotiff testimg.ppm 1<>${tmpdir}/test1.tiff &&
+  ${PBM_TESTPREFIX}tifftopnm ${tmpdir}/test1.tiff | cksum
+
+# test flate compression 
+# Will fail if Netpbm was built without the flate library
+${PBM_TESTPREFIX}pamtotiff -flate testimg.ppm 1<>${tmpdir}/test2.tiff &&
+  ${PBM_TESTPREFIX}tifftopnm ${tmpdir}/test2.tiff | cksum
+
+${PBM_TESTPREFIX}pamtotiff testgrid.pbm 1<>${tmpdir}/test3.tiff &&
+  ${PBM_TESTPREFIX}tifftopnm ${tmpdir}/test3.tiff | cksum
+
+# test G4 compression 
+${PBM_TESTPREFIX}pamtotiff -g4 testgrid.pbm 1<>${tmpdir}/test4.tiff &&
+  ${PBM_TESTPREFIX}tifftopnm ${tmpdir}/test4.tiff | cksum
+
+rm ${tmpdir}/test[1234].tiff

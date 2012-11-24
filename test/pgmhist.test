@@ -1,0 +1,6 @@
+#! /bin/bash
+# This script tests: pgmhist
+# Also requires: pgmramp
+
+${PBM_BINPREFIX}pgmramp -maxval=8 -lr 8 2 | ${PBM_TESTPREFIX}pgmhist
+${PBM_TESTPREFIX}pgmhist testgrid.pbm

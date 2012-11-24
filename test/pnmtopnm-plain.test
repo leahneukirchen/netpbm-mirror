@@ -1,0 +1,10 @@
+#! /bin/bash
+# This script tests: pnmtopnm
+# Also requires: pgmtopgm ppmtoppm
+
+${PBM_TESTPREFIX}pnmtopnm -plain testgrid.pbm
+
+${PBM_BINPREFIX}pgmtopgm < testgrid.pbm | ${PBM_TESTPREFIX}pnmtopnm -plain
+
+${PBM_BINPREFIX}ppmtoppm < testgrid.pbm | ${PBM_TESTPREFIX}pnmtopnm -plain | \
+  head -n11

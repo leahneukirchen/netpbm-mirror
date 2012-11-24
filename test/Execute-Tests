@@ -1,0 +1,113 @@
+#! /bin/bash
+
+# Confirm that PBM_TESTPREFIX is set.
+# PBM_TESTPREFIX is the directory with the Netpbm programs you want to
+# test.  This can be null, but this is not recommended.
+#
+# You can set it here by decommenting and modifying the next line:
+# export PBM_TESTPREFIX="/usr/local/bin/"
+
+
+if [ -z $PBM_TESTPREFIX ]
+  then
+  echo "Warning: PBM_TESTPREFIX is not set."
+  echo "Programs in the default execution path:"
+  echo $PATH
+  echo "will be tested."
+elif [ ! -d $PBM_TESTPREFIX ]
+  then
+  echo "Error: No directory named $PBM_TESTPREFIX"
+  exit 1
+else
+  # append "/" to end of string if necessary
+  export PBM_TESTPREFIX=`echo $PBM_TESTPREFIX | sed '/\/$/!s@$@/@'`
+fi
+
+# Set PBM_BINPREFIX.
+# PBM_BINPREFIX is the directory where Netpbm programs which play
+# auxiliary roles in tests (such as image generators for producing
+# test images, analyzers to summarize output and so forth).
+#
+# If testing a fresh install, this should be the same as PBM_TESTPREFIX.
+# If you are developing a single Netpbm program, you may want to
+# set this to a directory with stable executables.
+# If set to null, executables in the default execution path will
+# be used.
+
+# export PBM_BINPREFIX="/usr/local/bin/"
+# export PBM_BINPREFIX=""
+export PBM_BINPREFIX=${PBM_TESTPREFIX}
+
+# Add PBM_BINPREFIX to PATH.
+# This is necessary for Netpbm programs (mosly scripts) that call
+# other Netpbm programs.
+
+if [ ! -z $PBM_BINPREFIX ]
+  then
+  export PATH=${PBM_BINPREFIX}:$PATH
+fi
+
+# Set tmpdir, which is used in some of the test scripts.
+# This must be an existing directory.
+
+if [ -z $tmpdir ]
+  then
+  if [ -z $TMPDIR ]
+    then
+    export tmpdir=/tmp/
+    else 
+    export tmpdir=$TMPDIR
+  fi
+fi
+
+# If necessary set the RGBDEF environment variable.
+#export RGBDEF=/etc/rgb.txt
+#export RGBDEF=/usr/local/netpbm/lib/rgb.txt
+#export RGBDEF=/usr/share/emacs/*/etc/rgb.txt
+
+# Declare arrays used to count and report test results.
+# For now only "SUCCESS" and "FAILURE" are used.
+declare -a array=(0 0 0 0 0)
+declare -a status=("SUCCESS" "FAILURE" "UNEXPECTED SUCCESS" \
+                   "EXPECTED FAILURE" "NOT SUPPORTED")
+
+# Execute the tests, as described in the "Test-Order" file.
+#
+# To execute just one test, or a few tests, replace the grep part
+# within backquotes with names of tests you want to run like this:
+# 
+# for t in pbmmake.test pgmmake.test ppmmake.test
+
+for t in `grep -v "^#" Test-Order | grep "."`
+do
+echo == $t ==
+./$t >  ${t%.test}.out ; let result=$?
+case $result in
+0)   cmp --quiet ${t%.test}.out ${t%.test}.ok ;
+     if [ $? -eq 0 ]
+        then let result=0;  rm  ${t%.test}.out ;
+        else let result=1;
+     fi ;;
+1 | 2 | 3 ) ;;
+*) let result=1 ;;
+esac
+
+# Print out a summary report.
+
+echo $t: ${status[${result}]}; echo
+let array[${result}]=${array[${result}]}+1
+done
+
+echo "Test summary:"
+echo ==================
+
+for s in 0 1 2 3 4
+do
+if [[ ${array[${s}]} -gt 0 || s -eq 1 ]]
+then
+echo ${status[${s}]} ${array[${s}]}
+fi
+done
+
+echo ==================
+echo "All tests done."

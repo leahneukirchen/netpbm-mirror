@@ -1,0 +1,8 @@
+#! /bin/bash
+# This script tests: pbmupc
+# Also requires: 
+
+for type in -s1 -s2
+do
+${PBM_TESTPREFIX}pbmupc $type 0 72890 00011
+done | cksum

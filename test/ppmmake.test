@@ -1,0 +1,13 @@
+#! /bin/bash
+# This script tests: ppmmake
+# Also requires: 
+
+#export RGBDEF=/usr/share/emacs/23.2/etc/rgb.txt
+
+${PBM_TESTPREFIX}ppmmake rgb:ff/80/80 50 100 -maxval=5 | cksum
+${PBM_TESTPREFIX}ppmmake red 50 50  | cksum
+
+
+
+
+ 

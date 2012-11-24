@@ -1,0 +1,7 @@
+#! /bin/bash
+# This script tests: pamedge
+# Also requires: pbmpscale pbmtext pgmtopbm pgmtopgm ppmtopgm
+
+${PBM_BINPREFIX}pbmtext " F " -nom | ${PBM_BINPREFIX}pbmpscale 5 | \
+${PBM_BINPREFIX}pgmtopgm | ${PBM_TESTPREFIX}pamedge | \
+${PBM_BINPREFIX}ppmtopgm | ${PBM_BINPREFIX}pgmtopbm -th -val=.5 -plain

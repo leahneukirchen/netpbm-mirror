@@ -1,0 +1,104 @@
+#! /bin/bash
+# Tests whether the executable files listed below are in place.
+
+# See Netpbm Library Prerequisites
+# http://netpbm.sourceforge.net/prereq.html
+# if make succeeds but this test fails.
+
+# Test programs which support the --version flag.
+
+for i in \
+  411toppm asciitopgm atktopbm avstopam bioradtopgm \
+  bmptopnm bmptoppm brushtopbm cameratopam cistopbm \
+  cmuwmtopbm ddbugtopbm escp2topbm eyuvtoppm fitstopnm \
+  fstopgm g3topbm gemtopbm gemtopnm giftopnm gouldtoppm \
+  hdifftopam hipstopgm icontopbm ilbmtoppm imgtoppm infotopam \
+  jbigtopnm jpeg2ktopam jpegtopnm leaftoppm lispmtopgm \
+  macptopbm mdatopbm mgrtopbm mrftopbm mtvtoppm neotoppm \
+  palmtopnm pamaddnoise pamarith pambackground pambayer \
+  pamchannel pamcomp pamcut pamdeinterlace pamdepth \
+  pamdice pamditherbw pamedge pamendian pamenlarge \
+  pamexec pamfile pamfixtrunc pamflip pamfunc pamgauss \
+  pamgradient pamlookup pammasksharpen pammixinterlace \
+  pammosaicknit pamoil pampaintspill pamperspective pampick \
+  pampop9 pamrecolor pamrgbatopng pamrubber pamscale pamseq \
+  pamsharpmap pamsharpness pamsistoaglyph pamslice pamsplit \
+  pamstack pamstereogram pamstretch pamsumm pamsummcol \
+  pamthreshold pamtilt pamtoavs pamtodjvurle pamtofits \
+  pamtogif pamtohdiff pamtohtmltbl pamtojpeg2k pamtompfont \
+  pamtooctaveimg pamtopam pamtopdbimg pamtopfm pamtopnm \
+  pamtosrf pamtosvg pamtotga pamtotiff pamtouil pamtoxvmini \
+  pamundice pamwipeout pamx pbmclean pbmlife pbmmake pbmmask \
+  pbmminkowski pbmpage pbmpscale pbmreduce pbmtext pbmtextps \
+  pbmto10x pbmto4425 pbmtoascii pbmtoatk pbmtobbnbg pbmtocis \
+  pbmtocmuwm pbmtodjvurle pbmtoepsi pbmtoepson pbmtoescp2 \
+  pbmtog3 pbmtogem pbmtogo pbmtoibm23xx pbmtoicon pbmtolj \
+  pbmtoln03 pbmtolps pbmtomacp pbmtomatrixorbital pbmtomda \
+  pbmtomgr pbmtomrf pbmtonokia pbmtopgm pbmtopi3 pbmtopk \
+  pbmtoplot pbmtoppa pbmtopsg3 pbmtoptx pbmtosunicon \
+  pbmtowbmp pbmtoxbm pbmtoybm pbmtozinc pbmupc pc1toppm \
+  pcxtoppm pdbimgtopam pfmtopam pgmabel pgmbentley pgmcrater \
+  pgmdeshadow pgmedge pgmenhance pgmhist pgmkernel pgmmake \
+  pgmmedian pgmminkowski pgmmorphconv pgmnoise pgmnorm \
+  pgmoil pgmramp pgmslice pgmtexture pgmtofs pgmtolispm \
+  pgmtopbm pgmtopgm pgmtoppm pi1toppm pi3topbm picttoppm \
+  pjtoppm pktopbm pngtopam pngtopnm pnmalias pnmarith pnmcat \
+  pnmcolormap pnmcomp pnmconvol pnmcrop pnmcut pnmdepth \
+  pnmenlarge pnmfile pnmflip pnmgamma pnmhisteq pnmhistmap \
+  pnmindex pnminterp pnminvert pnmmercator pnmmontage \
+  pnmnlfilt pnmnorm pnmpad pnmpaste pnmpsnr pnmremap \
+  pnmrotate pnmscale pnmscalefixed pnmshear pnmsmooth \
+  pnmsplit pnmstitch pnmtile pnmtoddif pnmtofiasco pnmtofits \
+  pnmtojbig pnmtojpeg pnmtopalm pnmtopclxl pnmtopng pnmtopnm \
+  pnmtops pnmtorast pnmtorle pnmtosgi pnmtosir pnmtotiff \
+  pnmtotiffcmyk pnmtoxwd ppm3d ppmbrighten ppmchange \
+  ppmcie ppmcolormask ppmcolors ppmdcfont ppmddumpfont \
+  ppmdim ppmdist ppmdither ppmdmkfont ppmdraw ppmflash \
+  ppmforge ppmglobe ppmhist ppmlabel ppmmake ppmmix ppmnorm \
+  ppmntsc ppmpat ppmquant ppmrelief ppmrough ppmshift \
+  ppmspread ppmtoacad ppmtoapplevol ppmtoarbtxt ppmtoascii \
+  ppmtobmp ppmtoeyuv ppmtogif ppmtoicr ppmtoilbm ppmtojpeg \
+  ppmtoleaf ppmtolj ppmtomitsu ppmtompeg ppmtoneo ppmtopcx \
+  ppmtopgm ppmtopi1 ppmtopict ppmtopj ppmtopjxl ppmtoppm \
+  ppmtopuzz ppmtorgb3 ppmtosixel ppmtospu ppmtoterm ppmtouil \
+  ppmtowinicon ppmtoxpm ppmtoyuv ppmtoyuvsplit ppmtv ppmwheel \
+  psidtopgm pstopnm qrttoppm rasttopnm rawtopgm rawtoppm \
+  rgb3toppm rlatopam rletopnm sbigtopgm sgitopnm sirtopnm \
+  sldtoppm spctoppm spottopgm sputoppm srftopam sunicontopnm \
+  svgtopam tgatoppm thinkjettopbm tifftopnm wbmptopbm \
+  winicontoppm xbmtopbm ximtoppm xpmtoppm xvminitoppm \
+  xwdtopnm ybmtopbm yuvsplittoppm yuvtoppm zeisstopnm
+  do
+    ${PBM_TESTPREFIX}$i --version 2> /dev/null;
+    case $? in
+      0) echo $i": ok";;
+      127) echo $i": no such file";;
+      *) echo $i": error" $?;;
+    esac
+  done
+
+
+# Test fiascotopnm, which has a unique -v flag
+
+${PBM_TESTPREFIX}fiascotopnm -v 2> /dev/null
+  case $? in
+      2) echo fiascotopnm": ok";;
+      127) echo fiascotopnm": no such file";;
+      *) echo fiascotopnm": error" $?;;
+  esac
+
+
+# Test programs which do not have no --version flag.
+
+for i in \
+  anytopnm hpcdtoppm manweb pbmtox10bm pnmmargin \
+  pnmnoraw pnmquant pnmquantall pnmtoplainpnm ppmfade ppmquantall \
+  ppmrainbow ppmshadow ppmtomap
+  do
+    if [ -x ${PBM_TESTPREFIX}$i ]
+    then echo $i": ok"
+    elif [ -f ${PBM_TESTPREFIX}$i ]
+      then echo $i": not executable"
+      else echo $i": no such file"
+    fi
+ done

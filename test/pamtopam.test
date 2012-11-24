@@ -1,0 +1,9 @@
+#! /bin/bash
+# This script tests: pamtopam
+# Also requires: 
+
+${PBM_TESTPREFIX}pamtopam < testimg.ppm  | sed '/ENDHDR/q'
+${PBM_TESTPREFIX}pamtopam < testgrid.pbm | sed '/ENDHDR/q'
+
+${PBM_TESTPREFIX}pamtopam < testimg.ppm   | cksum
+${PBM_TESTPREFIX}pamtopam < testgrid.pbm  | cksum
