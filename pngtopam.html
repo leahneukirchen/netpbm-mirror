@@ -40,6 +40,16 @@ file.  Otherwise, it creates a PPM file.  Except that with the
 tuple type GRAYSCALE_ALPHA or RGB_ALPHA depending on whether the input
 has color or not.
 
+<p>To convert in the other direction, use <b>pnmtopng</b> or
+<b>pamrgbatopng</b>.  The former is more powerful in almost every way, except
+that only the latter can recognize transparency information in a PAM file, as
+you might generate with <b>pngtopam -alphapam</b>.  To use <b>pnmtopng</b>
+with a PAM file with transparency, you can separate out the transparency
+channel with <b>pamchannel</b> and feed it to <b>pnmtopng</b> separately.  But
+you may want to use <b>pngtopam -alpha</b> instead of <b>pngtopam
+-alphapam</b> if you're going to be converting back.
+
+
 <H2 id="options">OPTIONS</H2>
 
 <DL COMPACT>
@@ -61,6 +71,10 @@ format with tuple type of either GRAYSCALE_ALPHA (which has a depth of
 <p>You can specify only one of <b>-alphapam</b>, <b>-alpha</b>, and
 <b>-mix</b>.  With none of them, <b>pngtopam</b> produces an image of
 the foreground of the input image and discards transparency information.
+
+<p>Note that converting in the other direction, the <b>pamtopng</b> converter
+won't recognize the transparency information you generate
+with <b>-alphapam</b>, but <b>pamrgbatopng</b> will.
 
 <P>This option was new in Netpbm 10.44 (September 2008).
 
