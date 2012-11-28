@@ -1,9 +1,12 @@
-/*----------------------------------------------------------------------------
+/*============================================================================
                                   libpamcolor.c
-------------------------------------------------------------------------------
-   These are the library functions, which belong in the libnetpbm library,
-   that deal with colors in the PAM image format.
------------------------------------------------------------------------------*/
+==============================================================================
+  These are the library functions, which belong in the libnetpbm library,
+  that deal with colors in the PAM image format.
+
+  This file was originally written by Bryan Henderson and is contributed
+  to the public domain by him and subsequent authors.
+=============================================================================*/
 
 /* See pmfileio.c for the complicated explanation of this 32/64 bit file
    offset stuff.

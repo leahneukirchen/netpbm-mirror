@@ -1,10 +1,13 @@
-/*----------------------------------------------------------------------------
+/*=============================================================================
                                   libpamn.c
-------------------------------------------------------------------------------
+===============================================================================
    These are the library functions, which belong in the libnetpbm library,
    that deal with the PAM image format via maxval-normalized, floating point
    sample values.
------------------------------------------------------------------------------*/
+
+   This file was originally written by Bryan Henderson and is contributed
+   to the public domain by him and subsequent authors.
+=============================================================================*/
 
 #include <assert.h>
 
