@@ -25,6 +25,7 @@ struct cmdline_info {
        in a form easy for the program to use.
     */
     const char * inputFileName;  /* Filename of input files */
+    unsigned int machine;
 };
 
 
@@ -44,7 +45,8 @@ parseCommandLine(int argc, const char ** argv,
 
     option_def_index = 0;   /* incremented by OPTENT3 */
 
-    OPTENTINIT;
+    OPTENT3(0,   "machine",       OPT_FLAG,  NULL,
+            &cmdlineP->machine,             0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -142,27 +144,39 @@ countCumulative(unsigned int    const hist[],
 
 
 static void
-report(unsigned int const hist[],
-       unsigned int const rcount[],
-       gray         const maxval) {
+reportHumanFriendly(unsigned int const hist[],
+                    unsigned int const rcount[],
+                    gray         const maxval) {
 
     unsigned int const totalPixels = rcount[0];
-    unsigned int count;
+
+    unsigned int cumCount;
     unsigned int i;
 
     printf("value  count  b%%      w%%   \n");
     printf("-----  -----  ------  ------\n");
 
-    count = 0;
-
-    for (i = 0; i <= maxval; ++i) {
+    for (i = 0, cumCount = 0; i <= maxval; ++i) {
         if (hist[i] > 0) {
-            count += hist[i];
+            cumCount += hist[i];
             printf(
                 "%5d  %5d  %5.3g%%  %5.3g%%\n", i, hist[i],
-                (float) count * 100.0 / totalPixels, 
+                (float) cumCount * 100.0 / totalPixels, 
                 (float) rcount[i] * 100.0 / totalPixels);
         }
+    }
+}
+
+
+
+static void
+reportMachineFriendly(unsigned int const hist[],
+                      gray         const maxval) {
+
+    unsigned int i;
+
+    for (i = 0; i <= maxval; ++i) {
+        printf("%u %u\n", i, hist[i]);
     }
 }
 
@@ -187,7 +201,10 @@ main(int argc, const char ** argv) {
 
     countCumulative(hist, maxval, &rcount);
 
-    report(hist, rcount, maxval);
+    if (cmdline.machine)
+        reportMachineFriendly(hist, maxval);
+    else
+        reportHumanFriendly(hist, rcount, maxval);
 
     free(rcount);
     free(hist);
