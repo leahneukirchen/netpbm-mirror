@@ -26,6 +26,9 @@ struct cmdline_info {
     */
     const char * inputFileName;  /* Filename of input files */
     unsigned int machine;
+    unsigned int median;
+    unsigned int quartile;
+    unsigned int decile;
 };
 
 
@@ -47,6 +50,12 @@ parseCommandLine(int argc, const char ** argv,
 
     OPTENT3(0,   "machine",       OPT_FLAG,  NULL,
             &cmdlineP->machine,             0);
+    OPTENT3(0,   "median",        OPT_FLAG,  NULL,
+            &cmdlineP->median,              0);
+    OPTENT3(0,   "quartile",      OPT_FLAG,  NULL,
+            &cmdlineP->quartile,            0);
+    OPTENT3(0,   "decile",        OPT_FLAG,  NULL,
+            &cmdlineP->decile,              0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -54,6 +63,10 @@ parseCommandLine(int argc, const char ** argv,
 
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
+
+    if (cmdlineP->median + cmdlineP->quartile + cmdlineP->decile > 1)
+        pm_error("You may specify only one of -median, -quartile, "
+                 "and -decile");
 
     if (argc-1 == 0) 
         cmdlineP->inputFileName = "-";
@@ -117,11 +130,99 @@ buildHistogram(FILE *          const ifP,
 
 
 
+static unsigned int
+sum(unsigned int const hist[],
+    gray         const maxval) {
+
+    unsigned int sum;
+    unsigned int sampleVal;
+
+    for (sampleVal = 0, sum = 0; sampleVal <= maxval; ++sampleVal)
+        sum += hist[sampleVal];
+
+    return sum;
+}
+
+
+
+static void
+findQuantiles(unsigned int const n,
+              unsigned int const hist[],
+              gray         const maxval,
+              gray *       const quantile) {
+/*----------------------------------------------------------------------------
+   Find the order-n quantiles (e.g. n == 4 means quartiles) of the pixel
+   sample values, given that hist[] is the histogram of them (hist[N] is the
+   number of pixels that have sample value N).
+
+   'maxval' is the maxval of the image, so the size of hist[] is 'maxval' + 1.
+
+   We return the ith quantile as quantile[i].  For example, for quartiles,
+   quantile[3] is the least sample value for which at least 3/4 of the pixels
+   are less than or equal to it.  
+
+   quantile[] must be allocated at least to size 'n'.
+
+   We return 
+-----------------------------------------------------------------------------*/
+    unsigned int const totalCt = sum(hist, maxval);
+
+    unsigned int quantSeq;
+        /* 0 is first quantile, 1 is second quantile, etc. */
+
+    gray sampleVal;
+        /* As we increment through all the possible sample values, this
+           is the one we're considering now.
+        */
+    unsigned int cumCt;
+        /* The number of pixels that have sample value 'sampleVal' or less. */
+
+    assert(n > 1);
+
+    sampleVal = 0;    /* initial value */
+    cumCt = hist[0];  /* initial value */
+
+    for (quantSeq = 1; quantSeq <= n; ++quantSeq) {
+        double const quantCt = (double)quantSeq/n * totalCt;
+            /* This is how many pixels are (ignoring quantization) in the
+               quantile.  E.g. for the 3rd quartile, it is 3/4 of the pixels
+               in the image.
+            */
+
+        assert(quantCt <= totalCt);
+
+        /* at sampleVal == maxval, cumCt == totalCt, so because
+           quantCt <= 'totalCt', 'sampleVal' cannot go above maxval.
+        */
+
+        while (cumCt < quantCt) {
+            ++sampleVal;
+            cumCt += hist[sampleVal];
+        }
+
+        assert(sampleVal <= maxval);
+
+        /* 'sampleVal' is the lowest sample value for which at least 'quantCt'
+           pixels have that sample value or less.  'cumCt' is the number
+           of pixels that have sample value 'sampleVal' or less.
+        */
+        quantile[quantSeq-1] = sampleVal;
+    }
+}
+
+
+
 static void
 countCumulative(unsigned int    const hist[],
                 gray            const maxval,
                 unsigned int ** const rcountP) {
+/*----------------------------------------------------------------------------
+   From the histogram hist[] (hist[N] is the number of pixels of sample
+   value N), compute the cumulative distribution *rcountP ((*rcountP)[N]
+   is the number of pixels of sample value N or higher).
 
+   *rcountP is newly malloced memory.
+-----------------------------------------------------------------------------*/
     unsigned int * rcount;
     unsigned int cumCount;
     int i;
@@ -144,16 +245,16 @@ countCumulative(unsigned int    const hist[],
 
 
 static void
-reportHumanFriendly(unsigned int const hist[],
-                    unsigned int const rcount[],
-                    gray         const maxval) {
+reportHistHumanFriendly(unsigned int const hist[],
+                        unsigned int const rcount[],
+                        gray         const maxval) {
 
     unsigned int const totalPixels = rcount[0];
 
     unsigned int cumCount;
     unsigned int i;
 
-    printf("value  count  b%%      w%%   \n");
+    printf("value  count  b%%     w%%   \n");
     printf("-----  -----  ------  ------\n");
 
     for (i = 0, cumCount = 0; i <= maxval; ++i) {
@@ -170,8 +271,8 @@ reportHumanFriendly(unsigned int const hist[],
 
 
 static void
-reportMachineFriendly(unsigned int const hist[],
-                      gray         const maxval) {
+reportHistMachineFriendly(unsigned int const hist[],
+                          gray         const maxval) {
 
     unsigned int i;
 
@@ -182,13 +283,64 @@ reportMachineFriendly(unsigned int const hist[],
 
 
 
+static void
+reportQuantilesMachineFriendly(gray         const quantile[],
+                               unsigned int const n) {
+
+    unsigned int i;
+
+    for (i = 0; i < n; ++i)
+        printf("%u\n", quantile[i]);
+}
+
+
+
+static void
+reportMedianHumanFriendly(gray const median) {
+
+    printf("Median: %5u\n", median);
+}
+
+
+
+static void
+reportQuartilesHumanFriendly(gray const quartile[]) {
+
+    unsigned int i;
+
+    printf("Quartiles:\n");
+
+    printf("Q    Value\n");
+    printf("---- -----\n");
+
+    for (i = 1; i <= 4; ++i)
+        printf("%3u%% %5u\n", 25*i, quartile[i-1]);
+}
+
+
+
+static void
+reportDecilesHumanFriendly(gray const decile[]) {
+
+    unsigned int i;
+
+    printf("Deciles:\n");
+
+    printf("Q    Value\n");
+    printf("---  -----\n");
+
+    for (i = 1; i <= 10; ++i)
+        printf("%3u%% %5u\n", 10*i, decile[i-1]);
+}
+
+
+
 int
 main(int argc, const char ** argv) {
 
     struct cmdline_info cmdline;
     FILE * ifP;
     gray maxval;
-    unsigned int * rcount; /* malloc'ed array */
     unsigned int * hist;   /* malloc'ed array */
 
     pm_proginit(&argc, argv);
@@ -199,14 +351,39 @@ main(int argc, const char ** argv) {
 
     buildHistogram(ifP, &hist, &maxval);
 
-    countCumulative(hist, maxval, &rcount);
+    if (cmdline.median) {
+        gray median;
+        findQuantiles(2, hist, maxval, &median); 
+        if (cmdline.machine)
+            reportQuantilesMachineFriendly(&median, 1);
+        else
+            reportMedianHumanFriendly(median);
+    } else if (cmdline.quartile) {
+        gray quartile[4];
+        findQuantiles(4, hist, maxval, quartile);
+        if (cmdline.machine)
+            reportQuantilesMachineFriendly(quartile, 4);
+        else
+            reportQuartilesHumanFriendly(quartile);
+    } else if (cmdline.decile) {
+        gray decile[10];
+        findQuantiles(10, hist, maxval, decile);
+        if (cmdline.machine)
+            reportQuantilesMachineFriendly(decile, 10);
+        else
+            reportDecilesHumanFriendly(decile);
+    } else {
+        if (cmdline.machine)
+            reportHistMachineFriendly(hist, maxval);
+        else {
+            unsigned int * rcount; /* malloc'ed array */
+            countCumulative(hist, maxval, &rcount);
+            reportHistHumanFriendly(hist, rcount, maxval);
 
-    if (cmdline.machine)
-        reportMachineFriendly(hist, maxval);
-    else
-        reportHumanFriendly(hist, rcount, maxval);
+            free(rcount);
+        }
+    }
 
-    free(rcount);
     free(hist);
     pm_close(ifP);
 

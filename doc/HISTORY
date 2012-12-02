@@ -6,6 +6,10 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.61.00
 
+              pgmhist: Add -machine option.
+
+              pgmhist: Add -median, -quartile, and -decile options.
+
               pamtojpeg2k: default to no compression ratio constraint and
               allow compression ratios less than 1.  Because of compression
               metadata, small images do require loss of quality in order to
