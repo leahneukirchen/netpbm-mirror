@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pgmhist User Manual</TITLE></HEAD>
 <BODY>
 <H1>pgmhist</H1>
-Updated: 28 February 1989
+Updated: 2 December 2012
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -14,14 +14,87 @@ pgmhist - print a histogram of the values in a PGM image
 
 <B>pgmhist</B>
 
+[<b>-median</b>, <b>-quartile</b>, <b>-decile</b>]
+
+[<b>-machine</b>]
+
 [<I>pgmfile</I>]
 
 <H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><b>pgmhist</b> reads a PGM image as input and 
-prints a histogram of the gray values.
+<p><b>pgmhist</b> reads a PGM image as input and prints a histogram of the
+gray values or other gray value distribution metrics.
+
+
+<p>If you specify none of <b>-median</b>, <b>-quartile</b>, or <b>-decile</b>,
+<b>pgmhist</b> prints a complete histogram showing how many pixels of each
+possible gray value exist in the image.  Along with each gray value, it tells
+you how many pixels are more black and more white that it.
+
+<p><b>-median</b>, <b>-quartile</b>, and <b>-decile</b> options cause
+<b>pgmhist</b> instead to print the indicated quantiles.  Each quantile is a
+gray value that actually appears in the image (as opposed to fractional values
+that are sometimes used for quantiles).  The 3rd quartile is the least gray
+value for which at least 75% of the pixels are as dark or darker than it.
+The 4th quartile is the brightest gray value that appears in the image.
+
+
+<H2 id="options">OPTIONS</H2>
+
+You must specify exactly one of the ramp type options.
+<DL COMPACT>
+<DT><B>-median</B>
+<DD>
+
+<P>This option causes <b>pgmhist</b> to print the median gray value.
+
+<p>You may specify at most one of <b>-median</b>, <b>-quartile</b>, and
+<b>-decile</b>.
+
+<P>This option was new in Neptbm 10.61 (December 2012).
+
+<DT><B>-quartile</B>
+<DD>
+
+<P>This option causes <b>pgmhist</b> to print the four quartile gray value.
+
+<p>You may specify at most one of <b>-median</b>, <b>-quartile</b>, and
+<b>-decile</b>.
+
+<P>This option was new in Neptbm 10.61 (December 2012).
+
+<DT><B>-decile</B>
+<DD>
+     
+<P>This option causes <b>pgmhist</b> to print the ten decile gray value.
+
+<p>You may specify at most one of <b>-median</b>, <b>-quartile</b>, and
+<b>-decile</b>.
+
+<P>This option was new in Neptbm 10.61 (December 2012).
+
+<DT><B>-machine</B>
+<DD>
+
+<p>This option causes <b>pgmhist</b> to print the information in a way
+easily digestible by a machine as opposed to a human.
+
+<p>For the quantiles, there is one line per quantile, in quantile order, and
+it consists of the gray value of the quantile in decimal with no leading
+zeroes.
+
+<p>For the full histogram output, it consists of one line per possible
+gray value (whether that value appears in the image or not), in order of
+the gray values.  The line consists of two tokens separated by a space.  The
+first is the gray value; the second is the number of pixels in the image that
+have that gray value.  Both are decimal numbers without leading zeroes.
+
+<P>This option was new in Neptbm 10.61 (December 2012).
+
+</DL>
+
 
 <H2 id="name">SEE ALSO</H2>
 
@@ -34,8 +107,7 @@ prints a histogram of the gray values.
 Copyright (C) 1989 by Jef Poskanzer.
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
 <LI><A HREF="#synopsis">SYNOPSIS</A>
 <LI><A HREF="#description">DESCRIPTION</A>
