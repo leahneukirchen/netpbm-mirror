@@ -118,24 +118,27 @@ parseCommandLine(int argc, const char ** argv,
 
 typedef struct {
     int f[sizeof(int) * 8 + 1];
-} factorset;
+} Factorset;
 
 typedef struct {
-    int x; int y;
-} coord;
+    int x;
+    int y;
+} Coord;
 
 typedef struct {
-    coord ul;
-    coord size;
-} rectangle;
+    Coord ul;
+    Coord size;
+} Rectangle;
 
-static coord
-lr(rectangle const r) {
+
+
+static Coord
+lr(Rectangle const r) {
 /*----------------------------------------------------------------------------
-   Return the coordinates of the lower right corner of 'r'
-   (i.e. the pixel just beyond the lowest rightmost one).
+  The coordinates of the lower right corner of 'r' (i.e. the pixel just beyond
+  the lowest rightmost one).
 -----------------------------------------------------------------------------*/
-    coord retval;
+    Coord retval;
 
     retval.x = r.ul.x + r.size.x;
     retval.y = r.ul.y + r.size.y;
@@ -143,50 +146,67 @@ lr(rectangle const r) {
     return retval;
 }
 
-static factorset 
-factor(int n)
-{
-  int i, j;
-  factorset f;
-  for (i = 0; i < sizeof(int) * 8 + 1; ++i)
-    f.f[i] = 0;
-  for (i = 2, j = 0; n > 1; ++i)
-  {
-    if (n % i == 0)
-      f.f[j++] = i, n /= i, --i;
-  }
-  return (f);
+
+
+static Factorset 
+factor(unsigned int const arg) {
+/*----------------------------------------------------------------------------
+   The prime factors of 'arg'.
+-----------------------------------------------------------------------------*/
+    unsigned int n;
+    unsigned int i, j;
+    Factorset retval;
+
+    /* Initialize array element to zero */
+    for (i = 0; i < ARRAY_SIZE(retval.f); ++i)
+        retval.f[i] = 0;
+
+    /* Set array elements starting with the first to the factors */
+
+    for (i = 2, j = 0, n = arg; n > 1; ) {
+        if (n % i == 0) {
+            retval.f[j++] = i;
+            n /= i;
+        } else
+            ++i;
+    }
+    return retval;
 }
 
+
+
 static int 
-gcd(int n, int m)
-{
-  factorset nf, mf;
-  int i, j;
-  int g;
+gcf(unsigned int const n,
+    unsigned int const m) {
+/*----------------------------------------------------------------------------
+   Greatest common factor of 'n' and 'm'
+-----------------------------------------------------------------------------*/
+    Factorset const nFactors = factor(n);
+    Factorset const mFactors = factor(m);
 
-  nf = factor(n);
-  mf = factor(m);
+    unsigned int i, j;
+    unsigned int g;
 
-  i = j = 0;
-  g = 1;
-  while (nf.f[i] && mf.f[j])
-  {
-    if (nf.f[i] == mf.f[j])
-      g *= nf.f[i], ++i, ++j;
-    else if (nf.f[i] < mf.f[j])
-      ++i;
-    else
-      ++j;
-  }
-  return (g);
+    i = j = 0;
+    g = 1;
+    while (nFactors.f[i] && mFactors.f[j]) {
+        if (nFactors.f[i] == mFactors.f[j]) {
+            g *= nFactors.f[i];
+            ++i;
+            ++j;
+        } else if (nFactors.f[i] < mFactors.f[j])
+            ++i;
+        else
+            ++j;
+    }
+    return g;
 }
 
 
 
 static bool
-overlaps(rectangle const a,
-         rectangle const b) {
+overlaps(Rectangle const a,
+         Rectangle const b) {
 
     return
         (a.ul.x < lr(b).x && a.ul.y < lr(b).y) &&
@@ -196,8 +216,8 @@ overlaps(rectangle const a,
 
 
 static bool
-collides(rectangle         const test,
-         const rectangle * const fieldList,
+collides(Rectangle         const test,
+         const Rectangle * const fieldList,
          unsigned int      const n) {
 /*----------------------------------------------------------------------------
    Return true iff the rectangle 'test' overlaps any of the 'n' rectangles
@@ -205,19 +225,19 @@ collides(rectangle         const test,
 -----------------------------------------------------------------------------*/
     unsigned int i;
 
-    for (i = 0; i < n; ++i)
+    for (i = 0; i < n; ++i) {
         if (overlaps(fieldList[i], test))
             return true;
-
+    }
     return false;
 }
 
 
 
 static void 
-recursefindpack(rectangle *    const current,
-                coord          const currentsz,
-                coord *        const best,
+recursefindpack(Rectangle *    const current,
+                Coord          const currentsz,
+                Coord *        const best,
                 unsigned int   const minarea,
                 unsigned int * const maxareaP, 
                 unsigned int   const depth,
@@ -237,13 +257,13 @@ recursefindpack(rectangle *    const current,
     } else {
         unsigned int i;
 
-        rectangle * const newP = &current[depth];
+        Rectangle * const newP = &current[depth];
 
         for (i = 0; ; ++i) {
             for (newP->ul.x = 0, newP->ul.y = i * yinc;
                  newP->ul.y <= i * yinc;) {
 
-                coord c;
+                Coord c;
 
                 c.x = MAX(lr(*newP).x, currentsz.x);
                 c.y = MAX(lr(*newP).y, currentsz.y);
@@ -276,41 +296,34 @@ recursefindpack(rectangle *    const current,
 static void 
 findpack(struct pam * const imgs,
          unsigned int const imgCt,
-         coord **     const coordsP,
+         Coord **     const coordsP,
          unsigned int const quality,
          unsigned int const qfactor) {
 
-    coord * coords;
-    int minarea;
-    int i;
-    int rdiv;
-    int cdiv;
-    int minx;
-    int miny;
-    rectangle * current;
+    Coord * coords;  /* malloc'ed array */
+    unsigned int minarea;
+    unsigned int i;
+    unsigned int rdiv;
+    unsigned int cdiv;
+    Rectangle * current;  /* malloc'ed array */
     unsigned int z;
-    coord c;
+    Coord c;
 
     MALLOCARRAY(coords, imgCt);
   
     if (!coords)
         pm_error("Out of memory allocating %u-element coords array", imgCt);
 
-    minx = -1; miny = -1;  /* initial value */
     z = UINT_MAX;  /* initial value */
     c.x = 0; c.y = 0;  /* initial value */
 
     if (quality > 1) {
         unsigned int realMinarea;
         for (realMinarea = i = 0; i < imgCt; ++i)
-            realMinarea += imgs[i].height * imgs[i].width,
-                minx = MAX(minx, imgs[i].width),
-                miny = MAX(miny, imgs[i].height);
-
+            realMinarea += imgs[i].height * imgs[i].width;
         minarea = realMinarea * qfactor / 100;
-    } else {
-        minarea = INT_MAX - 1;
-    }
+    } else
+        minarea = UINT_MAX - 1;
 
     /* It's relatively easy to show that, if all the images
      * are multiples of a particular size, then a best
@@ -320,10 +333,10 @@ findpack(struct pam * const imgs,
      * This speeds computation immensely.
      */
     for (rdiv = imgs[0].height, i = 1; i < imgCt; ++i)
-        rdiv = gcd(imgs[i].height, rdiv);
+        rdiv = gcf(imgs[i].height, rdiv);
 
     for (cdiv = imgs[0].width, i = 1; i < imgCt; ++i)
-        cdiv = gcd(imgs[i].width, cdiv);
+        cdiv = gcf(imgs[i].width, cdiv);
 
     MALLOCARRAY(current, imgCt);
 
@@ -334,6 +347,8 @@ findpack(struct pam * const imgs,
     recursefindpack(current, c, coords, minarea, &z, 0, imgCt, cdiv, rdiv,
                     quality, qfactor);
 
+    free(current);
+
     *coordsP = coords;
 }
 
@@ -343,8 +358,8 @@ static void
 adjustDepth(tuple *            const tuplerow,
             const struct pam * const inpamP,
             const struct pam * const outpamP,
-            coord              const coord) {
-
+            Coord              const coord) {
+    
     if (inpamP->depth < outpamP->depth) {
         unsigned int i;
         for (i = coord.x; i < coord.x + inpamP->width; ++i) {
@@ -361,12 +376,12 @@ static void
 adjustMaxval(tuple *            const tuplerow,
              const struct pam * const inpamP,
              const struct pam * const outpamP,
-             coord              const coord) {
+             Coord              const coord) {
 
     if (inpamP->maxval < outpamP->maxval) {
-        int i;
+        unsigned int i;
         for (i = coord.x; i < coord.x + inpamP->width; ++i) {
-            int j;
+            unsigned int j;
             for (j = 0; j < outpamP->depth; ++j)
                 tuplerow[i][j] *= outpamP->maxval / inpamP->maxval;
         }
@@ -393,7 +408,7 @@ makeRowBlack(struct pam * const pamP,
 static void
 writePam(struct pam *       const outpamP,
          unsigned int       const imgCt,
-         const coord *      const coords,
+         const Coord *      const coords,
          const struct pam * const imgs) {
 /*----------------------------------------------------------------------------
    Write the entire composite image.  There are 'imgCt' source images,
@@ -414,7 +429,7 @@ writePam(struct pam *       const outpamP,
         makeRowBlack(outpamP, tuplerow);  /* initial value */
 
         for (imgIdx = 0; imgIdx < imgCt; ++imgIdx) {
-            const coord *      const imgCoordP = &coords[imgIdx];
+            const Coord *      const imgCoordP = &coords[imgIdx];
             const struct pam * const imgPamP   = &imgs[imgIdx];
 
             if (imgCoordP->y <= row && row < imgCoordP->y + imgPamP->height) {
@@ -438,7 +453,7 @@ writeData(FILE *             const dataFileP,
           unsigned int       const height,
           unsigned int       const imgCt,
           const char **      const names,
-          const coord *      const coords,
+          const Coord *      const coords,
           const struct pam * const imgs) {
 
     unsigned int imgIdx;
@@ -460,7 +475,7 @@ writeHeader(FILE * const headerFileP,
             unsigned int const height,
             unsigned int const nfiles,
             const char ** const names,
-            const coord * const coords,
+            const Coord * const coords,
             const struct pam * imgs) {
 
     unsigned int i;
@@ -473,7 +488,7 @@ writeHeader(FILE * const headerFileP,
 
     for (i = 0; i < nfiles; ++i) {
         char * const buffer = strdup(names[i]);
-        coord const coord = coords[i];
+        Coord const coord = coords[i];
         struct pam const img = imgs[i];
 
         unsigned int j;
@@ -572,11 +587,11 @@ computeOutputType(sample *           const maxvalP,
 
 
 static void
-computeOutputDimensions(int * const widthP,
-                        int * const heightP,
-                        unsigned int const nfiles,
+computeOutputDimensions(int *              const widthP,
+                        int *              const heightP,
+                        unsigned int       const nfiles,
                         const struct pam * const imgs,
-                        const coord * const coords) {
+                        const Coord *      const coords) {
 
     unsigned int widthGuess, heightGuess;
     unsigned int i;
@@ -699,7 +714,7 @@ main(int argc, const char **argv) {
     struct pam * imgPam;  /* malloced */
     struct pam outimg;
     unsigned int fileCt;
-    coord * coords;  /* malloced */
+    Coord * coords;  /* malloced */
     FILE * headerFileP;
     FILE * dataFileP;
     const char ** names; /* malloced */
