@@ -78,7 +78,7 @@ struct cmdlineInfo {
     unsigned int color;        /* logical: assume not grayscale */
     float xresolution; /* XRESOLUTION Tiff tag value or -1 for none */
     float yresolution; /* YRESOLUTION Tiff tag value or -1 for none */
-    int resolutionUnit;  /* RESOLUTIONUNIT Tiff tag value */
+    int resolutionunit;  /* RESOLUTIONUNIT Tiff tag value */
     struct sizeset indexsizeAllowed;
     /* Which bit widths are allowable in a raster of palette indices */
     unsigned int verbose;
@@ -120,9 +120,6 @@ validateTagList(struct optNameValue const taglist[]) {
             case TIFFTAG_ROWSPERSTRIP:
             case TIFFTAG_PLANARCONFIG:
             case TIFFTAG_COLORMAP:
-            case TIFFTAG_RESOLUTIONUNIT:
-            case TIFFTAG_XRESOLUTION:
-            case TIFFTAG_YRESOLUTION:
                 pm_error("You cannot specify a '%s' tag with -tag.  "
                          "Pamtotiff controls that internally or via other "
                          "options.", tagName);
@@ -148,10 +145,10 @@ parseCommandLine(int                        argc,
     unsigned int none, packbits, lzw, g3, g4, msb2lsb, lsb2msb, opt_2d, fill;
     unsigned int flate, adobeflate;
     char * indexbits;
-    char * resolutionUnit;
+    char * resolutionunit;
 
     unsigned int predictorSpec, rowsperstripSpec, xresolutionSpec,
-        yresolutionSpec, indexbitsSpec, resolutionUnitSpec, tagSpec;
+        yresolutionSpec, indexbitsSpec, resolutionunitSpec, tagSpec;
 
     unsigned int option_def_index;
 
@@ -185,8 +182,8 @@ parseCommandLine(int                        argc,
             &xresolutionSpec,  0);
     OPTENT3(0, "yresolution",  OPT_FLOAT,  &cmdlineP->yresolution,  
             &yresolutionSpec,  0);
-    OPTENT3(0, "resolutionunit", OPT_STRING, &resolutionUnit,
-            &resolutionUnitSpec,    0);
+    OPTENT3(0, "resolutionunit", OPT_STRING, &resolutionunit,
+            &resolutionunitSpec,    0);
     OPTENT3(0, "indexbits",    OPT_STRING,   &indexbits, 
             &indexbitsSpec,    0);
     OPTENT3(0, "tag",          OPT_NAMELIST, &cmdlineP->taglist, &tagSpec, 0);
@@ -269,25 +266,25 @@ parseCommandLine(int                        argc,
     } else
         cmdlineP->yresolution = -1;
 
-    if (resolutionUnitSpec) {
-        if (streq(resolutionUnit, "inch"))
-            cmdlineP->resolutionUnit = RESUNIT_INCH;
-        else if (streq(resolutionUnit, "in"))
-            cmdlineP->resolutionUnit = RESUNIT_INCH;
-        else if (streq(resolutionUnit, "centimeter"))
-            cmdlineP->resolutionUnit = RESUNIT_CENTIMETER;
-        else if (streq(resolutionUnit, "cm"))
-            cmdlineP->resolutionUnit = RESUNIT_CENTIMETER;
-        else if (streq(resolutionUnit, "none"))
-            cmdlineP->resolutionUnit = RESUNIT_NONE;
-        else if (streq(resolutionUnit, "no"))
-            cmdlineP->resolutionUnit = RESUNIT_NONE;
+    if (resolutionunitSpec) {
+        if (streq(resolutionunit, "inch"))
+            cmdlineP->resolutionunit = RESUNIT_INCH;
+        else if (streq(resolutionunit, "in"))
+            cmdlineP->resolutionunit = RESUNIT_INCH;
+        else if (streq(resolutionunit, "centimeter"))
+            cmdlineP->resolutionunit = RESUNIT_CENTIMETER;
+        else if (streq(resolutionunit, "cm"))
+            cmdlineP->resolutionunit = RESUNIT_CENTIMETER;
+        else if (streq(resolutionunit, "none"))
+            cmdlineP->resolutionunit = RESUNIT_NONE;
+        else if (streq(resolutionunit, "no"))
+            cmdlineP->resolutionunit = RESUNIT_NONE;
         else
             pm_error("The only acceptable values for -resolutionunit are "
                      "inch, centimeter, none, in, cm, and no.  "
-                     "You specified '%s'.", resolutionUnit);
+                     "You specified '%s'.", resolutionunit);
     } else
-        cmdlineP->resolutionUnit = RESUNIT_INCH;
+        cmdlineP->resolutionunit = RESUNIT_INCH;
 
     if (indexbitsSpec) {
         if (strstr(indexbits, "1"))
@@ -916,12 +913,17 @@ setTiffFields(TIFF *              const tifP,
     else
         TIFFSetField(tifP, TIFFTAG_ROWSPERSTRIP,
                      TIFFDefaultStripSize(tifP, 0));
+    /* Since Netpbm 10.31, we prefer that the user use -tags to specify
+       RESOLUTIONUNIT, XRESOLUTION, and YRESOLUTION, but retain
+       -xresolution, -yresolution, and -resolutionunit for backward
+       compatibility
+    */
     if (cmdline.xresolution != -1 ||
         cmdline.yresolution != -1 ||
-        cmdline.resolutionUnit != -1) {
+        cmdline.resolutionunit != -1) {
         TIFFSetField(tifP, TIFFTAG_RESOLUTIONUNIT,
-                     cmdline.resolutionUnit != -1 ?
-                     cmdline.resolutionUnit : RESUNIT_NONE);
+                     cmdline.resolutionunit != -1 ?
+                     cmdline.resolutionunit : RESUNIT_NONE);
     }
     if (cmdline.xresolution > 0)
         TIFFSetField(tifP, TIFFTAG_XRESOLUTION, cmdline.xresolution);
