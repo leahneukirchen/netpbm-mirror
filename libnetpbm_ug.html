@@ -59,8 +59,8 @@ Netpbm image input and produce a Netpbm image output.
 
 <h3><b>libnetpbm classes</b></h3>
 
-<p>In this section, we cover only the PAM functions in
-<b>libnetpbm</b>.  As described in <a href="libnetpbm.html">the
+<p>In this section, Guide To Using Libnetpbm, we cover only the PAM functions
+in <b>libnetpbm</b>.  As described in <a href="libnetpbm.html">the
 introduction to <b>libnetpbm</b></a>, there are four other classes of
 image processing functions (PBM, PGM, PPM, PNM).  They are less
 important, since you can do everything more easily with the PAM
@@ -86,6 +86,15 @@ which you can build once and use over and over, whereas the older
 functions require you to pass up to 5 pieces of image information
 (height, width, etc.) as separate arguments to every function.
 </ul>
+
+
+<h3 id="initialization">Library Initialization</h3>
+
+<p>Every program that uses the library must initialize the library, i.e. set
+up the process to use the library, as described in <a href="libpm.html#initialization">Initialization</a>.  That is the purpose of the call to
+<b>pm_init()</b> in the example above.
+
+
 
 <H3 id="pamstruct">THE pam STRUCTURE</H3>
 

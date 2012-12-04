@@ -119,7 +119,7 @@ is <B>-quality=200.</B>
 <DT><B>-0</b>, <b>-1</b>, ... <b>-9</B>
 
 <DD>These options control the quality at a higher level than
-<B>-q</B>; <B>-0</B> is the worst quality (literally pick the first
+<B>-quality</B>; <B>-0</B> is the worst quality (pick the first
 solution found), while <B>-9</B> is the best quality (perform an
 exhaustive search of problem space for the absolute best packing).
 The higher the number, the slower the computation.  The default is
@@ -130,10 +130,7 @@ The higher the number, the slower the computation.  The default is
 
 <H2 id="notes">NOTES</H2>
 
-<p>Using <B>-9</B> is excessively slow on all but the smallest image
-sets.  If the input images differ in maxvals, then pnmmontage will pick the
-smallest maxval which is evenly divisible by each of the maxvals of
-the original images.
+<p>Using <B>-9</B> is very slow on all but the smallest image sets.
 
 <p>The minimum area arrangement is often not a convenient shape.  For
 example, it might be a tall, thin column of images, when you'd rather
