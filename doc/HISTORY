@@ -15,6 +15,9 @@ not yet  BJH  Release 10.61.00
               metadata, small images do require loss of quality in order to
               get down to a compression ratio of 1.
 
+              pamtotiff: fix bug: XRESOLUTION, YRESOLUTION, and RESOLUTIONUNIT
+              not allowed in -tags.  Broken at least since 10.35.
+
               pnmmontage: fix totally wrong output.  Broken in 10.44
               (August 2008).
 
