@@ -150,7 +150,7 @@ main (int argc, char **argv) {
     
     pnm_init(&argc, argv);
 
-    if (argc < 2) 
+    if (argc-1 < 2) 
         pm_error("Takes two arguments:  specifications of the two files.");
     else {
         filespec1 = argv[1];

@@ -4,6 +4,26 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+12.12.04 BJH  Release 10.60.04
+
+              pamtotiff: fix bug: XRESOLUTION, YRESOLUTION, and RESOLUTIONUNIT
+              not allowed in -tags.  Broken at least since 10.35.
+
+              pnmmontage: fix totally wrong output.  Broken in 10.44
+              (August 2008).
+
+              pnmmontage: fix random stuff placed in unoccupied space in the
+              output image.  Always broken (program was new in 9.10 (January
+              2001).
+
+              pnmpsnr: fix crash when invoked (invalidly) with only one
+              argument.  Always broken.
+
+              pbmpscale, pgmhist, pampick, pamtompfont: fix wild pointer
+              in command line parsing.  Bug has always been there in 
+              pampick, pamtompfont, since 10.50 (March 2010) in pbmpscale,
+              since 10.44 (September 2008) in pgmhist.              
+
 12.11.18 BJH  Release 10.60.03
 
               Xbmtopbm: fix incorrect output, memory leak.  Thanks Prophet of

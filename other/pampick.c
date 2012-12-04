@@ -113,6 +113,7 @@ parseCommandLine(int argc, char ** argv,
        specifies an option.  But when we add an option in the future,
        it will go right here with an OPTENT3() macro invocation.
     */
+    OPTENTINIT;
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
