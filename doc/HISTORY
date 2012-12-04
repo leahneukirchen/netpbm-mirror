@@ -4,6 +4,21 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+12.12.04 BJH  Release 10.47.42
+
+              pamtotiff: fix bug: XRESOLUTION, YRESOLUTION, and RESOLUTIONUNIT
+              not allowed in -tags.  Broken at least since 10.35.
+
+              pnmpsnr: fix crash when invoked (invalidly) with only one
+              argument.  Always broken.
+
+              pgmhist, pampick, pamtompfont: fix wild pointer in command line
+              parsing.  Bug has always been there in pampick, pamtompfont,
+              since 10.44 (September 2008) in pgmhist.
+
+              Xbmtopbm: fix incorrect output, memory leak.  Thanks Prophet of
+              the Way <afu@wta.att.ne.jp>.
+
 12.10.03 BJH  Release 10.47.41
 
               pamgauss: Fix bug: erroneously says -maxval is too big.

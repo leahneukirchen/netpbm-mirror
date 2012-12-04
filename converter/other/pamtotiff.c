@@ -126,9 +126,6 @@ validateTagList(struct optNameValue const taglist[]) {
             case TIFFTAG_ROWSPERSTRIP:
             case TIFFTAG_PLANARCONFIG:
             case TIFFTAG_COLORMAP:
-            case TIFFTAG_RESOLUTIONUNIT:
-            case TIFFTAG_XRESOLUTION:
-            case TIFFTAG_YRESOLUTION:
                 pm_error("You cannot specify a '%s' tag with -tag.  "
                          "Pamtotiff controls that internally or via other "
                          "options.", tagName);
