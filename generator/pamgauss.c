@@ -19,7 +19,7 @@ struct cmdlineInfo {
     */
     unsigned int width;
     unsigned int height;
-    sample maxval;
+    unsigned int maxval;
     float sigma;
     const char * tupletype;
 };
@@ -82,8 +82,7 @@ parseCommandLine(int argc, char ** argv,
     else {
         if (cmdlineP->maxval > PNM_OVERALLMAXVAL)
             pm_error("The maxval you specified (%u) is too big.  "
-                     "Maximum is %u", (unsigned int) cmdlineP->maxval, 
-                     PNM_OVERALLMAXVAL);
+                     "Maximum is %u", cmdlineP->maxval, PNM_OVERALLMAXVAL);
         if (cmdlineP->maxval < 1)
             pm_error("-maxval must be at least 1");
     }    

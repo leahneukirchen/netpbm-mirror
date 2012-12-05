@@ -207,6 +207,21 @@ adjustMaxval(tuple *            const tuplerow,
 
 
 static void
+makeRowBlack(struct pam * const pamP,
+             tuple *      const tuplerow) {
+
+    unsigned int col;
+
+    for (col = 0; col < pamP->width; ++col) {
+        unsigned int plane;
+        for (plane = 0; plane < pamP->depth; ++plane)
+            tuplerow[col][plane] = 0;
+    }
+}
+
+
+
+static void
 writePam(struct pam *       const outpamP,
          unsigned int       const nfiles,
          const coord *      const coords,
@@ -221,6 +236,9 @@ writePam(struct pam *       const outpamP,
 
     for (i = 0; i < outpamP->height; ++i) {
         int j;
+
+        makeRowBlack(outpamP, tuplerow);  /* initial value */
+
         for (j = 0; j < nfiles; ++j) {
             if (coords[j].y <= i && i < coords[j].y + imgs[j].height) {
                 pnm_readpamrow(&imgs[j], &tuplerow[coords[j].x]);
@@ -378,11 +396,10 @@ main(int argc, char **argv)
   }
 
   outimg.size = sizeof(outimg);
-  outimg.len = sizeof(outimg);
+  outimg.len = PAM_STRUCT_SIZE(allocation_depth);
+  pnm_setminallocationdepth(&outimg, outimg.depth);
+  outimg.plainformat = false;
   outimg.file = stdout;
-  outimg.bytes_per_sample = 0;
-  for (i = outimg.maxval; i; i >>= 8)
-    ++outimg.bytes_per_sample;
 
   writePam(&outimg, nfiles, coords, imgs);
 
