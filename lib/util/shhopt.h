@@ -202,6 +202,8 @@ typedef struct {
     OPTENTRY(shortvalue, longvalue, typevalue, outputvalue, flagvalue) \
     }
 
+#define OPTENTINIT OPTION_DEF[0].type = OPT_END
+
 
 struct optNameValue {
     const char * name;
