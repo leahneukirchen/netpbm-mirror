@@ -843,8 +843,8 @@ poles(pixel **     const pixels,
             dist1 = dist2 = (SQR((double)cols) + SQR((double)rows));
             for (i = 0; i < poleCt; ++i) {
                 double const newdist =
-                    (double)(col - xs[i]) * (col - xs[i]) +
-                    (double)(row - ys[i]) * (row - ys[i]);
+                    (double)((int)col - xs[i]) * ((int)col - xs[i]) +
+                    (double)((int)row - ys[i]) * ((int)row - ys[i]);
                 if (newdist < dist1) {
                     dist2  = dist1;
                     color2 = color1;
