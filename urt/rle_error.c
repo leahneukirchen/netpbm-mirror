@@ -27,8 +27,8 @@
 
 #include <string.h>
 
-#include "rle.h"
 #include "rle_config.h"
+#include "rle.h"
 
 /*****************************************************************
  * TAG( rle_alloc_error )

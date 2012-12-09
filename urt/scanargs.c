@@ -40,15 +40,14 @@
  *  to have all "void" functions so declared.
  */
 
-#include "rle.h"
-#include "rle_config.h"
-
 #include <stdio.h>
 #include <ctype.h>
 #include <stdarg.h>
 
 #include "netpbm/pm_c_util.h"
 #include "netpbm/nstring.h"
+#include "rle_config.h"
+#include "rle.h"
 
 /* 
  * An explicit assumption is made in this code that all pointers look

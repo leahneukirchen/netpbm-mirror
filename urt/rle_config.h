@@ -1,3 +1,5 @@
+#ifndef RLE_CONFIG_H_INCLUDED
+#define RLE_CONFIG_H_INCLUDED
 #include "pm_config.h"
 #if MSVCRT
 #define NO_OPEN_PIPES
@@ -79,4 +81,6 @@ extern char *getenv( CONST_DECL char *name );
 
 #ifdef NEED_SETLINEBUF
 #   define setlinebuf( _s )	setvbuf( (_s), NULL, _IOLBF, 0 )
+#endif
+
 #endif
