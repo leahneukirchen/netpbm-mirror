@@ -1,0 +1,9 @@
+#! /bin/bash
+# This script tests: ppmdmkfont ppmddumpfont ppmdcfont
+# Also requires: 
+
+# Test 1. Should produce: 2726488777 48129
+${PBM_TESTPREFIX}ppmdmkfont | ${PBM_TESTPREFIX}ppmddumpfont 2>&1 | cksum
+
+# Test 2. Should produce: 2845495212 75033
+${PBM_TESTPREFIX}ppmdmkfont | ${PBM_TESTPREFIX}ppmdcfont | cksum

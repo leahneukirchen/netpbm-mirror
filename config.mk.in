@@ -526,6 +526,10 @@ DONT_HAVE_PROCESS_MGMT = N
 # override it by setting 'pkgdir' on the Make command line.
 PKGDIR_DEFAULT = /tmp/netpbm
 
+# This is where test results are written when you do 'make check', unless
+# you override it by setting 'resultdir' on the Make command line.
+RESULTDIR_DEFAULT = /tmp/netpbm-test
+
 # Subdirectory of the package directory ($(pkgdir)) in which man pages
 # go.
 PKGMANDIR = man

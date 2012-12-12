@@ -1,0 +1,8 @@
+#! /bin/bash
+# This script tests: ppmtoyuv yuvtoppm
+# Also requires: pamgradient
+
+# Should produce 1904478375 253455
+
+${PBM_BINPREFIX}pamgradient cyan yellow red green 352 240 | \
+    ${PBM_TESTPREFIX}ppmtoyuv | ${PBM_TESTPREFIX}yuvtoppm 352 240 | cksum

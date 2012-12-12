@@ -109,10 +109,22 @@ LDLIBS = $(LOADLIBES) $(LIBS)
 # disastrous if PKGDIR is a relative directory, and I don't know any
 # way to detect that case and fail, so I just add a '/' to the front
 # if it isn't already there.
+#
+# TODO: Convert 'pkgdir' to absolute path with # the $(abspath ...)
+# built-in function, available from GNU Make v 3.81 onward. 
 ifneq ($(pkgdir)x,x)
-  PKGDIR = $(patsubst //%, /%, /$(pkgdir))
+  PKGDIR = $(patsubst //%,/%, /$(pkgdir))
 else
   PKGDIR = $(PKGDIR_DEFAULT)
+endif
+
+
+# 'resultdir', like 'pkgdir' is meant to be supplied from the make
+# command line.  Unlike 'pkgdir' we allow relative paths.
+ifneq ($(resultdir)x,x)
+  RESULTDIR = $(resultdir)
+else
+  RESULTDIR = $(RESULTDIR_DEFAULT)
 endif
 
 #===========================================================================

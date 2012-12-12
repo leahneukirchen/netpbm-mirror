@@ -2,5 +2,5 @@
 # This script tests: pamcut pnmpaste
 # Also requires: 
 
-${PBM_TESTPREFIX}pamcut 50 40 100 70 ~/test-netpbm/testimg.ppm | \
-${PBM_TESTPREFIX}pnmpaste -replace - 50 40 ~/test-netpbm/testimg.ppm | cksum
+${PBM_TESTPREFIX}pamcut 50 40 100 70 testimg.ppm | \
+${PBM_TESTPREFIX}pnmpaste -replace - 50 40 testimg.ppm | cksum

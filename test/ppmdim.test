@@ -1,9 +1,9 @@
 #! /bin/bash
 # This script tests: ppmdim
-# Also requires: pamfunc pamarith pamsumm
+# Also requires: pamfunc pnmarith pamsumm
 
 # Compare ppmdim and pamfunc with various dim factors
-# Due to the difference rounding methods, pamfunc produces slightly
+# Due to the difference in rounding methods, pamfunc produces slightly
 # brighter images, by about 0.5 per pixel.
 # If the mean difference is between 0 and 0.75 we consider the output
 # normal.  This works for dim values up to 0.994 .

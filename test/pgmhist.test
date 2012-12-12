@@ -2,5 +2,10 @@
 # This script tests: pgmhist
 # Also requires: pgmramp
 
-${PBM_BINPREFIX}pgmramp -maxval=8 -lr 8 2 | ${PBM_TESTPREFIX}pgmhist
-${PBM_TESTPREFIX}pgmhist testgrid.pbm
+# Ignore differences in spaces.
+
+${PBM_BINPREFIX}pgmramp -maxval=8 -lr 8 2 | ${PBM_TESTPREFIX}pgmhist | \
+  sed -e 's/  */ /g' -e 's/ *$//'
+
+${PBM_TESTPREFIX}pgmhist testgrid.pbm | \
+  sed -e 's/  */ /g' -e 's/ *$//'

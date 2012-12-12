@@ -16,6 +16,7 @@ pgmramp.test
 ppmgauss.test
 ppmcie.test
 ppmwheel.test
+ppmpat.test
 
 # Analyzer tests
 
@@ -60,6 +61,12 @@ ppmmix.test
 # Format converter tests
 
 pbmtog3.test
+411toppm.test
+eyuvtoppm.test
+
+# Miscellaneous utility tests
+
+ppmdfont.test
 
 # Round-trip tests : editors
 
@@ -77,13 +84,31 @@ pamslice-roundtrip.test
 
 # Round-trip tests : lossless converters
 
-g3-roundtrip.test
+atk-roundtrip.test
+avs-roundtrip.test
 bmp-roundtrip.test
+cmuw-roundtrip.test
+facesaver-roundtrip.test
+fits-roundtrip.test
+g3-roundtrip.test
+gem-roundtrip.test
 gif-roundtrip.test
+hdiff-roundtrip.test
+leaf-roundtrip.test
+mgr-roundtrip.test
+mrf-roundtrip.test
+pfm-roundtrip.test
 png-roundtrip.test
 ps-roundtrip.test
+sunrast-roundtrip.test
+targa-roundtrip.test
 tiff-roundtrip.test
+utahrle-roundtrip.test
+wbmp-roundtrip.test
 xbm-roundtrip.test
 xpm-roundtrip.test
 xwd-roundtrip.test
-hdiff-roundtrip.test
+
+# Round-trip tests : lossy converter
+
+yuv-roundtrip.test
