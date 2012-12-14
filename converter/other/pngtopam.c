@@ -1131,7 +1131,7 @@ determineOutputType(struct pngx *       const pngxP,
                 *depthP = 4;
                 strcpy(tupleType, "RGB_ALPHA");
             } else {
-                *depthP = 1;
+                *depthP = 2;
                 strcpy(tupleType, "GRAYSCALE_ALPHA");
             }
         } else {
