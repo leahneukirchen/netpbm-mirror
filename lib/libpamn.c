@@ -541,7 +541,12 @@ static void
 applyopacityCommon(enum applyUnapply const applyUnapply,
                    struct pam *      const pamP,
                    tuplen *          const tuplenrow) {
-
+/*----------------------------------------------------------------------------
+   Either apply or unapply opacity to the row tuplenrow[], per
+   'applyUnapply'.  Apply means to multiply each foreground sample by
+   the opacity value for that pixel; Unapply means to do the inverse, as
+   if the foreground values had already been so multiplied.
+-----------------------------------------------------------------------------*/
     unsigned int opacityPlane;
     bool haveOpacity;
     
