@@ -4,10 +4,23 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+12.12.14 BJH  Release 10.60.05
+
+              pngtopam -alphapam with grayscale input: fix bug: generates
+              invalid output: tuple type GRAYSCALE_ALPHA, but depth 1.  Depth
+              should be 2.  Always broken (pngtopam was created in 
+              Netpbm 10.44 (September 2008).
+              
+              ppmpat: Fix bug: wrong output with -poles.  Broken in 10.47
+              (June 2009).
+
 12.12.04 BJH  Release 10.60.04
 
               pamtotiff: fix bug: XRESOLUTION, YRESOLUTION, and RESOLUTIONUNIT
               not allowed in -tags.  Broken at least since 10.35.
+
+              pnmpsnr: fix crash when invoked (invalidly) with only one
+              argument.  Always broken.
 
               pnmmontage: fix totally wrong output.  Broken in 10.44
               (August 2008).
@@ -15,9 +28,6 @@ CHANGE HISTORY
               pnmmontage: fix random stuff placed in unoccupied space in the
               output image.  Always broken (program was new in 9.10 (January
               2001).
-
-              pnmpsnr: fix crash when invoked (invalidly) with only one
-              argument.  Always broken.
 
               pbmpscale, pgmhist, pampick, pamtompfont: fix wild pointer
               in command line parsing.  Bug has always been there in 
