@@ -805,7 +805,7 @@ interpretTupleType(struct pam * const pamP) {
 
     switch (PAM_FORMAT_TYPE(pamP->format)) {
     case PAM_TYPE: {
-        if (STRSEQ(tupleType, "BLACKANDWHITE")) {
+        if (streq(tupleType, "BLACKANDWHITE")) {
             visual = true;
             colorDepth = 1;
             haveOpacity = false;
@@ -813,22 +813,22 @@ interpretTupleType(struct pam * const pamP) {
                 pm_error("maxval %u is not consistent with tuple type "
                          "BLACKANDWHITE (should be 1)",
                          (unsigned)pamP->maxval);
-        } else if (STRSEQ(tupleType, "GRAYSCALE")) {
+        } else if (streq(tupleType, "GRAYSCALE")) {
             visual = true;
             colorDepth = 1;
             haveOpacity = false;
-        } else if (STRSEQ(tupleType, "GRAYSCALE_ALPHA")) {
+        } else if (streq(tupleType, "GRAYSCALE_ALPHA")) {
             visual = true;
             colorDepth = 1;
             haveOpacity = true;
             opacityPlane = PAM_GRAY_TRN_PLANE;
             validateMinDepth(pamP, 2);
-        } else if (STRSEQ(tupleType, "RGB")) {
+        } else if (streq(tupleType, "RGB")) {
             visual = true;
             colorDepth = 3;
             haveOpacity = false;
             validateMinDepth(pamP, 3);
-        } else if (STRSEQ(tupleType, "RGB_ALPHA")) {
+        } else if (streq(tupleType, "RGB_ALPHA")) {
             visual = true;
             colorDepth = 3;
             haveOpacity = true;
@@ -1294,7 +1294,7 @@ pnm_getopacity(const struct pam * const pamP,
                bool *             const haveOpacityP,
                unsigned int *     const opacityPlaneP) {
 
-    /* Usage note: this is obsolete since we added 'haveOpacity', etc.
+    /* Usage note: this is obsolete since we added 'have_opacity', etc.
        to struct pam.
     */
     if (streq(pamP->tuple_type, "RGB_ALPHA")) {

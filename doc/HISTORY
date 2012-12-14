@@ -15,10 +15,15 @@ not yet  BJH  Release 10.61.00
               metadata, small images do require loss of quality in order to
               get down to a compression ratio of 1.
 
+              libpam, pamcomp: fix bug: treats tuple type GRAYSCALE_ALPHA like
+              GRAYSCALE on 32-bit machine.  Actually, looks only at first 4
+              characters (8 characters on machine with 64 bit addressess) of
+              the tuple type.  Broken since 10.56 (September 2011).
+
               pngtopam -alphapam with grayscale input: fix bug: generates
               invalid output: tuple type GRAYSCALE_ALPHA, but depth 1.  Depth
               should be 2.  Always broken (pngtopam was created in 
-              Netpbm 10.44 (September 2008).
+              Netpbm 10.44 (September 2008)).
               
               pamtotiff: fix bug: XRESOLUTION, YRESOLUTION, and RESOLUTIONUNIT
               not allowed in -tags.  Broken at least since 10.35.
