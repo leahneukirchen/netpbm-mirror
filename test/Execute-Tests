@@ -60,7 +60,7 @@ srcdir=$(dirname $0)
 
 if [ -z $tmpdir ]
   then
-  tmpdir_created=$(mktemp -p "" -d TestPBM-XXXXXXX) || exit 1;
+  tmpdir_created=$(mktemp -d TestPBM-XXXXXXX) || exit 1;
   export tmpdir=${tmpdir_created}
   else
   tmpdir_created="";
