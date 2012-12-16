@@ -18,7 +18,8 @@
 */
 
 #include "pbm.h"
-#include "cmuwm.h"
+
+
 
 static void
 putinit(unsigned int const rows,
@@ -26,10 +27,11 @@ putinit(unsigned int const rows,
 
     const char initWriteError[] =
         "CMU window manager header write error";
+    uint32_t const cmuwmMagic = 0xf10040bb;
 
     int rc;
 
-    rc = pm_writebiglong(stdout, CMUWM_MAGIC);
+    rc = pm_writebiglong(stdout, cmuwmMagic);
     if (rc == -1)
         pm_error(initWriteError);
     rc = pm_writebiglong(stdout, cols);

@@ -32,7 +32,10 @@ not yet  BJH  Release 10.61.00
               argument.  Always broken.
 
               leaftoppm: fix incorrect determination of whether input is
-              Interleaf on 64 bit systems.
+              Interleaf on 64 bit systems.  Always broken.
+
+              cmuwmtopbm: fix incorrect determination of whether input is
+              a CMU window manager bitmap on 64 bit systems.  Always broken.
 
               pnmmontage: fix totally wrong output.  Broken in 10.44
               (August 2008).
