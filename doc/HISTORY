@@ -15,6 +15,9 @@ not yet  BJH  Release 10.61.00
               metadata, small images do require loss of quality in order to
               get down to a compression ratio of 1.
 
+              pamstereogram: -smoothing smooths images even without -texfile.
+              Thanks Scott Pakin (scott@pakin.org).
+
               pnmcat: set don't care bits in packed PBM output to zero so
               they are predictable.
 

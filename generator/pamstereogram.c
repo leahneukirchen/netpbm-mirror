@@ -13,7 +13,7 @@
  *
  * ----------------------------------------------------------------------
  *
- * Copyright (C) 2006, 2010 Scott Pakin <scott+pbm@pakin.org>
+ * Copyright (C) 2006-2012 Scott Pakin <scott+pbm@pakin.org>
  *
  * All rights reserved.
  *
@@ -250,10 +250,6 @@ parseCommandLine(int                  argc,
     }
     if (bgColorNameSpec && !texfileSpec)
         pm_message("warning: -bgcolor has no effect "
-                   "except in conjunction with -texfile");
-
-    if (smoothingSpec && !texfileSpec)
-        pm_message("warning: -smoothing has no effect "
                    "except in conjunction with -texfile");
 
     if (!guidesizeSpec)
@@ -774,19 +770,21 @@ drawguides(int                const guidesize,
 
 
 
-/* Do the bulk of the work.  See the paper cited above for code
- * comments.  All I (Scott) did was transcribe the code and make
- * minimal changes for Netpbm.  And some style changes by Bryan to
- * match Netpbm style.
- */
 static void
 makeStereoRow(const struct pam * const inPamP,
               tuple *            const inRow,
               int *              const same,
               double             const depthOfField,
               double             const eyesep,
-              unsigned int       const dpi) {
+              unsigned int       const dpi,
+              unsigned int       const optWidth,
+              unsigned int       const smoothing) {
 
+/* Do the bulk of the work.  See the paper cited above for code
+ * comments.  All I (Scott) did was transcribe the code and make
+ * minimal changes for Netpbm.  And some style changes by Bryan to
+ * match Netpbm style.
+ */ 
 #define Z(X) (inRow[X][0]/(double)inPamP->maxval)
 
     int const width       = inPamP->width;
@@ -835,6 +833,21 @@ makeStereoRow(const struct pam * const inPamP,
                 }
                 same[left] = right;
             }
+        }
+    }
+
+    /* If smoothing is enabled, replace each non-duplicate pixel with
+       the pixel adjacent to its right neighbor. */
+    if (smoothing > 0) {
+        int const baseCol = width - optWidth - 1;
+
+        int col;
+
+        for (col = width - 1; col >= 0; --col)
+            same[col] = same[same[col]];
+        for (col = baseCol; col >= 0; --col) {
+            if (same[col] == col)
+                same[col] = same[col+1] - 1;
         }
     }
 }
@@ -1117,7 +1130,9 @@ makeImageRows(const struct pam * const inPamP,
               double             const eyesep,
               unsigned int       const dpi,
               bool               const crossEyed,
-              bool               const makeMask) {
+              bool               const makeMask,
+              unsigned int       const magnifypat,
+              unsigned int       const smoothing) {
 
     tuple * inRow;     /* One row of pixels read from the height-map file */
     tuple * outRow;    /* One row of pixels to write to the height-map file */
@@ -1145,10 +1160,6 @@ makeImageRows(const struct pam * const inPamP,
         pm_error("Unable to allocate space for \"tuplesPerCol\" array.");
     rowBuffer = pnm_allocpamrow(&outputGeneratorP->pam);
 
-    /* See the paper cited above for code comments.  All I (Scott) did was
-     * transcribe the code and make minimal changes for Netpbm.  And some
-     * style changes by Bryan to match Netpbm style.
-     */
     for (row = 0; row < inPamP->height; ++row) {
         pnm_readpamrow(inPamP, inRow);
         if (crossEyed)
@@ -1158,7 +1169,9 @@ makeImageRows(const struct pam * const inPamP,
             invertHeightRow(inPamP, inRow);
 
         /* Determine color constraints. */
-        makeStereoRow(inPamP, inRow, same, depthOfField, eyesep, dpi);
+        makeStereoRow(inPamP, inRow, same, depthOfField, eyesep, dpi,
+                      round2int(eyesep * dpi)/(magnifypat * 2),
+                      smoothing);
 
         if (makeMask)
             makeMaskRow(&outputGeneratorP->pam, same, outRow);
@@ -1213,7 +1226,8 @@ produceStereogram(FILE *             const ifP,
 
     makeImageRows(&inPam, outputGeneratorP,
                   cmdline.depth, cmdline.eyesep, cmdline.dpi,
-                  cmdline.crosseyed, cmdline.makemask);
+                  cmdline.crosseyed, cmdline.makemask, cmdline.magnifypat,
+                  cmdline.smoothing);
 
     /* Draw guide boxes at the bottom, if desired. */
     if (cmdline.guidesize > 0)
@@ -1282,3 +1296,6 @@ main(int argc, const char *argv[]) {
 
     return 0;
 }
+
+
+
