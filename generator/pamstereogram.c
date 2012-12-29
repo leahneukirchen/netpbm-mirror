@@ -56,8 +56,6 @@
 #include "shhopt.h"
 #include "pam.h"
 
-/* Define a few helper macros. */
-#define round2int(X) ((int)((X)+0.5))      /* Nonnegative numbers only */
 
 enum outputType {OUTPUT_BW, OUTPUT_GRAYSCALE, OUTPUT_COLOR};
 
@@ -314,7 +312,7 @@ parseCommandLine(int                  argc,
 
 
 
-static int
+static unsigned int
 separation(double             const dist,
            double             const eyesep,
            unsigned int       const dpi,
@@ -324,9 +322,9 @@ separation(double             const dist,
   Return a separation in pixels which corresponds to a 3-D distance
   between the viewer's eyes and a point on an object.
 -----------------------------------------------------------------------------*/
-    int const pixelEyesep = round2int(eyesep * dpi);
+    unsigned int const pixelEyesep = ROUNDU(eyesep * dpi);
 
-    return round2int((1.0 - dof * dist) * pixelEyesep / (2.0 - dof * dist));
+    return ROUNDU((1.0 - dof * dist) * pixelEyesep / (2.0 - dof * dist));
 }
 
 
@@ -773,7 +771,7 @@ drawguides(int                const guidesize,
 static void
 makeStereoRow(const struct pam * const inPamP,
               tuple *            const inRow,
-              int *              const same,
+              unsigned int *     const same,
               double             const depthOfField,
               double             const eyesep,
               unsigned int       const dpi,
@@ -787,35 +785,37 @@ makeStereoRow(const struct pam * const inPamP,
  */ 
 #define Z(X) (inRow[X][0]/(double)inPamP->maxval)
 
-    int const width       = inPamP->width;
-    int const pixelEyesep = round2int(eyesep * dpi);
+    unsigned int const pixelEyesep = ROUNDU(eyesep * dpi);
         /* Separation in pixels between the viewer's eyes */
 
-    int col;
+    unsigned int col;
 
-    for (col = 0; col < width; ++col)
+    for (col = 0; col < inPamP->width; ++col)
         same[col] = col;
 
-    for (col = 0; col < width; ++col) {
-        int const s = separation(Z(col), eyesep, dpi, depthOfField);
-        int left, right;
+    for (col = 0; col < inPamP->width; ++col) {
+        unsigned int const s = separation(Z(col), eyesep, dpi, depthOfField);
 
-        left  = col - s/2;  /* initial value */
-        right = left + s;   /* initial value */
+        if (col >= s/2 && col + s/2 < inPamP->width) {
+            unsigned int left, right;
 
-        if (0 <= left && right < width) {
-            int visible;
-            int t;
+            bool visible;
+            unsigned int t;
             double zt;
 
+            left  = col - s/2;  /* initial value */
+            right = col + s/2;  /* initial value */
             t = 1;  /* initial value */
 
             do {
                 double const dof = depthOfField;
                 zt = Z(col) + 2.0*(2.0 - dof*Z(col))*t/(dof*pixelEyesep);
+                assert(col >= t);
+                assert(col + t < inPamP->width);
                 visible = Z(col-t) < zt && Z(col+t) < zt;
                 ++t;
             } while (visible && zt < 1);
+
             if (visible) {
                 int l;
 
@@ -839,11 +839,11 @@ makeStereoRow(const struct pam * const inPamP,
     /* If smoothing is enabled, replace each non-duplicate pixel with
        the pixel adjacent to its right neighbor. */
     if (smoothing > 0) {
-        int const baseCol = width - optWidth - 1;
+        int const baseCol = inPamP->width - optWidth - 1;
 
         int col;
 
-        for (col = width - 1; col >= 0; --col)
+        for (col = inPamP->width - 1; col >= 0; --col)
             same[col] = same[same[col]];
         for (col = baseCol; col >= 0; --col) {
             if (same[col] == col)
@@ -855,9 +855,9 @@ makeStereoRow(const struct pam * const inPamP,
 
 
 static void
-makeMaskRow(const struct pam * const outPamP,
-            const int *        const same,
-            const tuple *      const outRow) {
+makeMaskRow(const struct pam *   const outPamP,
+            const unsigned int * const same,
+            const tuple *        const outRow) {
     int col;
 
     for (col = outPamP->width-1; col >= 0; --col) {
@@ -872,9 +872,9 @@ makeMaskRow(const struct pam * const outPamP,
 
 
 static void
-computeFixedPoint(const int *  const same,
-                  int *        const sameFp,
-                  unsigned int const width) {
+computeFixedPoint(const unsigned int * const same,
+                  unsigned int *       const sameFp,
+                  unsigned int         const width) {
 /*----------------------------------------------------------------------------
   Compute the fixed point of same[] (i.e., sameFp[x] is
   same[same[same[...[same[x]]...]]]).
@@ -896,13 +896,13 @@ computeFixedPoint(const int *  const same,
 
 
 static void
-averageFromPattern(struct pam *   const pamP,
-                   tuple          const bgColor,
-                   const tuple *  const textureRow,
-                   const int *    const same,
-                   int *          const sameFp,
-                   const tuple *  const outRow,
-                   unsigned int * const tuplesPerCol) {
+averageFromPattern(struct pam *         const pamP,
+                   tuple                const bgColor,
+                   const tuple *        const textureRow,
+                   const unsigned int * const same,
+                   unsigned int *       const sameFp,
+                   const tuple *        const outRow,
+                   unsigned int *       const tuplesInCol) {
 /*----------------------------------------------------------------------------
   Average the color of each non-background pattern tuple to every column that
   should have the same color.
@@ -915,7 +915,7 @@ averageFromPattern(struct pam *   const pamP,
         unsigned int plane;
         for (plane = 0; plane < pamP->depth; ++plane)
             outRow[col][plane] = 0;
-        tuplesPerCol[col] = 0;
+        tuplesInCol[col] = 0;
     }
 
     /* Accumulate the color of each non-background pattern tuple to
@@ -932,7 +932,7 @@ averageFromPattern(struct pam *   const pamP,
                     unsigned int plane;
                     for (plane = 0; plane < pamP->depth; ++plane)
                         outRow[eqcol][plane] += onetuple[plane];
-                    tuplesPerCol[eqcol]++;
+                    tuplesInCol[eqcol]++;
                 }
     }
     /* Take the average of all colors associated with each column.
@@ -940,10 +940,10 @@ averageFromPattern(struct pam *   const pamP,
        previously assigned to their fixed-point column.
     */
     for (col = 0; col < pamP->width; ++col) {
-        if (tuplesPerCol[col] > 0) {
+        if (tuplesInCol[col] > 0) {
             unsigned int plane;
             for (plane = 0; plane < pamP->depth; ++plane)
-                outRow[col][plane] /= tuplesPerCol[col];
+                outRow[col][plane] /= tuplesInCol[col];
         } else
             pnm_assigntuple(pamP, outRow[col], bgColor);
     }
@@ -955,7 +955,7 @@ static void
 smoothOutSpeckles(struct pam *   const pamP,
                   tuple          const bgColor,
                   unsigned int   const smoothing,
-                  unsigned int * const tuplesPerCol,
+                  unsigned int * const tuplesInCol,
                   tuple *        const rowBuffer,
                   const tuple *  const outRow) {
 /*----------------------------------------------------------------------------
@@ -968,7 +968,7 @@ smoothOutSpeckles(struct pam *   const pamP,
         int col;
         tuple * const scratchrow = rowBuffer;
         for (col = pamP->width-2; col >= 1; --col) {
-            if (tuplesPerCol[col] == 0) {
+            if (tuplesInCol[col] == 0) {
                 /* Replace a background tuple with the average of its
                    left and right neighbors.
                 */
@@ -978,16 +978,16 @@ smoothOutSpeckles(struct pam *   const pamP,
                 if (!pnm_tupleequal(pamP, outRow[col-1], bgColor)) {
                     for (plane = 0; plane < pamP->depth; ++plane)
                         scratchrow[col][plane] += outRow[col-1][plane];
-                    tuplesPerCol[col]++;
+                    ++tuplesInCol[col];
                 }
                 if (!pnm_tupleequal(pamP, outRow[col+1], bgColor)) {
                     for (plane = 0; plane < pamP->depth; ++plane)
                         scratchrow[col][plane] += outRow[col+1][plane];
-                    tuplesPerCol[col]++;
+                    ++tuplesInCol[col];
                 }
-                if (tuplesPerCol[col] > 0)
+                if (tuplesInCol[col] > 0)
                     for (plane = 0; plane < pamP->depth; ++plane)
-                        scratchrow[col][plane] /= tuplesPerCol[col];
+                        scratchrow[col][plane] /= tuplesInCol[col];
                 else
                     pnm_assigntuple(pamP, scratchrow[col], outRow[col]);
             } else
@@ -1001,10 +1001,10 @@ smoothOutSpeckles(struct pam *   const pamP,
 
 
 static void
-replaceRemainingBackgroundWithPattern(outGenerator * const outGenP,
-                                      const int *    const same,
-                                      unsigned int   const row,
-                                      const tuple *  const outRow) {
+replaceRemainingBackgroundWithPattern(outGenerator *       const outGenP,
+                                      const unsigned int * const same,
+                                      unsigned int         const row,
+                                      const tuple *        const outRow) {
 
     const struct pam * const pamP = &outGenP->pam;
     tuple const bgColor = outGenP->textureP->bgColor;
@@ -1034,16 +1034,23 @@ replaceRemainingBackgroundWithPattern(outGenerator * const outGenP,
 
 
 static void
-makeImageRowMts(outGenerator * const outGenP,
-                unsigned int   const row,
-                const int *    const same,
-                int *          const sameFp,
-                unsigned int * const tuplesPerCol,
-                tuple *        const rowBuffer,
-                const tuple *  const outRow) {
+makeImageRowMts(outGenerator *       const outGenP,
+                unsigned int         const row,
+                const unsigned int * const same,
+                unsigned int *       const sameFp,
+                tuple *              const rowBuffer,
+                const tuple *        const outRow) {
 /*----------------------------------------------------------------------------
   Make a row of a mapped-texture stereogram.
 -----------------------------------------------------------------------------*/
+    unsigned int * tuplesInCol;
+        /* tuplesInCol[C] is the number of tuples averaged together to make
+           Column C.
+        */
+    MALLOCARRAY(tuplesInCol, outGenP->pam.width);
+    if (tuplesInCol == NULL)
+        pm_error("Unable to allocate space for \"tuplesInCol\" array.");
+
     assert(outGenP->textureP);
     /* This is an original algorithm by Scott Pakin. */
 
@@ -1060,27 +1067,29 @@ makeImageRowMts(outGenerator * const outGenP,
     averageFromPattern(&outGenP->pam, outGenP->textureP->bgColor,
                        outGenP->textureP->imageData[row],
                        same, sameFp,
-                       outRow, tuplesPerCol);
+                       outRow, tuplesInCol);
 
     /* Smooth out small speckles of the background color lying between
        other colors.
     */
     smoothOutSpeckles(&outGenP->pam, outGenP->textureP->bgColor,
                       outGenP->textureP->smoothing,
-                      tuplesPerCol, rowBuffer, outRow);
+                      tuplesInCol, rowBuffer, outRow);
 
     /* Replace any remaining background tuples with a pattern tuple. */
 
     replaceRemainingBackgroundWithPattern(outGenP, same, row, outRow);
+
+    free(tuplesInCol);
 }
 
 
 
 static void
-makeImageRow(outGenerator * const outGenP,
-             int            const row,
-             const int *    const same,
-             const tuple *  const outRow) {
+makeImageRow(outGenerator *       const outGenP,
+             unsigned int         const row,
+             const unsigned int * const same,
+             const tuple *        const outRow) {
 /*----------------------------------------------------------------------------
   same[N] is one of two things:
 
@@ -1094,6 +1103,9 @@ makeImageRow(outGenerator * const outGenP,
     int col;
     for (col = outGenP->pam.width-1; col >= 0; --col) {
         bool const duplicate = (same[col] != col);
+            /* This column is a duplicate of an earlier (farther to the right)
+               column, to wit Column same[col]
+            */
 
         tuple newtuple;
 
@@ -1136,15 +1148,14 @@ makeImageRows(const struct pam * const inPamP,
 
     tuple * inRow;     /* One row of pixels read from the height-map file */
     tuple * outRow;    /* One row of pixels to write to the height-map file */
-    int * same;
-        /* Array: same[N] is the column number of a pixel to the right forced
-           to have the same color as the one in column N
+    unsigned int * same;
+        /* Malloced array: same[N] is the column number of a pixel to the
+           right forced to have the same color as the one in column N
         */
-    int * sameFp;     /* Fixed point of same[] */
-    unsigned int * tuplesPerCol;
-        /* Number of tuples averaged together in each column */
+    unsigned int * sameFp;
+        /* Malloced array: Fixed point of same[] */
     tuple * rowBuffer;     /* Scratch row needed for texture manipulation */
-    int row;           /* Current row in the input and output files */
+    unsigned int row;      /* Current row in the input and output files */
 
     inRow = pnm_allocpamrow(inPamP);
     outRow = pnm_allocpamrow(&outputGeneratorP->pam);
@@ -1155,9 +1166,6 @@ makeImageRows(const struct pam * const inPamP,
     MALLOCARRAY(sameFp, inPamP->width);
     if (sameFp == NULL)
         pm_error("Unable to allocate space for \"sameFp\" array.");
-    MALLOCARRAY(tuplesPerCol, inPamP->width);
-    if (tuplesPerCol == NULL)
-        pm_error("Unable to allocate space for \"tuplesPerCol\" array.");
     rowBuffer = pnm_allocpamrow(&outputGeneratorP->pam);
 
     for (row = 0; row < inPamP->height; ++row) {
@@ -1170,7 +1178,7 @@ makeImageRows(const struct pam * const inPamP,
 
         /* Determine color constraints. */
         makeStereoRow(inPamP, inRow, same, depthOfField, eyesep, dpi,
-                      round2int(eyesep * dpi)/(magnifypat * 2),
+                      ROUNDU(eyesep * dpi)/(magnifypat * 2),
                       smoothing);
 
         if (makeMask)
@@ -1178,7 +1186,7 @@ makeImageRows(const struct pam * const inPamP,
         else {
             if (outputGeneratorP->textureP)
                 makeImageRowMts(outputGeneratorP, row, same, sameFp,
-                                tuplesPerCol, rowBuffer, outRow);
+                                rowBuffer, outRow);
             else
                 makeImageRow(outputGeneratorP, row, same, outRow);
         }
@@ -1187,7 +1195,6 @@ makeImageRows(const struct pam * const inPamP,
     }
 
     pnm_freepamrow(rowBuffer);
-    free(tuplesPerCol);
     free(sameFp);
     free(same);
     pnm_freepamrow(outRow);
@@ -1248,7 +1255,7 @@ static void
 reportParameters(struct cmdlineInfo const cmdline) {
 
     unsigned int const pixelEyesep =
-        round2int(cmdline.eyesep * cmdline.dpi);
+        ROUNDU(cmdline.eyesep * cmdline.dpi);
     unsigned int const sep0 =
         separation(0, cmdline.eyesep, cmdline.dpi, cmdline.depth);
     unsigned int const sep1 =
