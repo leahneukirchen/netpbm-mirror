@@ -70,17 +70,19 @@ struct cmdlineInfo {
     unsigned int crosseyed;      /* -crosseyed option */
     unsigned int makemask;       /* -makemask option */
     unsigned int dpi;            /* -dpi option */
-    float eyesep;                /* -eyesep option */
-    float depth;                 /* -depth option */
+    float        eyesep;         /* -eyesep option */
+    float        depth;          /* -depth option */
     unsigned int maxvalSpec;     /* -maxval option count */
-    unsigned int maxval;         /* -maxval option value x*/
-    int guidesize;               /* -guidesize option */
+    unsigned int maxval;         /* -maxval option value */
+    unsigned int guidetop;       /* -guidetop option count */
+    unsigned int guidebottom;    /* -guidebottom option count */
+    unsigned int guidesize;      /* -guidesize option value */
     unsigned int magnifypat;     /* -magnifypat option */
     unsigned int xshift;         /* -xshift option */
     unsigned int yshift;         /* -yshift option */
-    const char * patFilespec;    /* -patfile option.  Null if none */
-    const char * texFilespec;    /* -texfile option.  Null if none */
-    const char * bgColorName;    /* -bgcolor option */
+    const char * patfile;        /* -patfile option.  Null if none */
+    const char * texfile;        /* -texfile option.  Null if none */
+    const char * bgcolor;        /* -bgcolor option */
     unsigned int smoothing;      /* -smoothing option */
     unsigned int randomseed;     /* -randomseed option */
     unsigned int randomseedSpec; /* -randomseed option count */
@@ -144,10 +146,10 @@ parseCommandLine(int                  argc,
 
     unsigned int patfileSpec, texfileSpec, dpiSpec, eyesepSpec, depthSpec,
         guidesizeSpec, magnifypatSpec, xshiftSpec, yshiftSpec,
-        bgColorNameSpec, smoothingSpec, planesSpec;
+        bgcolorSpec, smoothingSpec, planesSpec;
 
     unsigned int blackandwhite, grayscale, color;
-    const char ** nearFarPlanes;
+    const char ** planes;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
@@ -172,6 +174,10 @@ parseCommandLine(int                  argc,
             &depthSpec,               0);
     OPTENT3(0, "maxval",          OPT_UINT,   &cmdlineP->maxval,
             &cmdlineP->maxvalSpec,    0);
+    OPTENT3(0, "guidetop",        OPT_FLAG,   NULL,
+            &cmdlineP->guidetop,      0);
+    OPTENT3(0, "guidebottom",     OPT_FLAG,   NULL,
+            &cmdlineP->guidebottom,   0);
     OPTENT3(0, "guidesize",       OPT_INT,    &cmdlineP->guidesize,
             &guidesizeSpec,           0);
     OPTENT3(0, "magnifypat",      OPT_UINT,   &cmdlineP->magnifypat,
@@ -180,17 +186,17 @@ parseCommandLine(int                  argc,
             &xshiftSpec,              0);
     OPTENT3(0, "yshift",          OPT_UINT,   &cmdlineP->yshift,
             &yshiftSpec,              0);
-    OPTENT3(0, "patfile",         OPT_STRING, &cmdlineP->patFilespec,
+    OPTENT3(0, "patfile",         OPT_STRING, &cmdlineP->patfile,
             &patfileSpec,             0);
-    OPTENT3(0, "texfile",         OPT_STRING, &cmdlineP->texFilespec,
+    OPTENT3(0, "texfile",         OPT_STRING, &cmdlineP->texfile,
             &texfileSpec,             0);
-    OPTENT3(0, "bgcolor",         OPT_STRING, &cmdlineP->bgColorName,
-            &bgColorNameSpec,         0);
+    OPTENT3(0, "bgcolor",         OPT_STRING, &cmdlineP->bgcolor,
+            &bgcolorSpec,             0);
     OPTENT3(0, "randomseed",      OPT_UINT,   &cmdlineP->randomseed,
             &cmdlineP->randomseedSpec, 0);
     OPTENT3(0, "smoothing",       OPT_UINT,   &cmdlineP->smoothing,
             &smoothingSpec,           0);
-    OPTENT3(0, "planes",          OPT_STRINGLIST, &nearFarPlanes,
+    OPTENT3(0, "planes",          OPT_STRINGLIST, &planes,
             &planesSpec,              0);
 
     opt.opt_table = option_def;
@@ -216,11 +222,11 @@ parseCommandLine(int                  argc,
         }
     }
     if (!patfileSpec)
-        cmdlineP->patFilespec = NULL;
+        cmdlineP->patfile = NULL;
     if (!texfileSpec)
-        cmdlineP->texFilespec = NULL;
-    if (!bgColorNameSpec)
-        cmdlineP->bgColorName = NULL;
+        cmdlineP->texfile = NULL;
+    if (!bgcolorSpec)
+        cmdlineP->bgcolor = NULL;
     if (!smoothingSpec)
         cmdlineP->smoothing = 0;
 
@@ -246,12 +252,16 @@ parseCommandLine(int                  argc,
             pm_error("-maxval must be at most %u.  You specified %u",
                      PNM_OVERALLMAXVAL, cmdlineP->maxval);
     }
-    if (bgColorNameSpec && !texfileSpec)
+    if (bgcolorSpec && !texfileSpec)
         pm_message("warning: -bgcolor has no effect "
                    "except in conjunction with -texfile");
 
+    if (guidesizeSpec && !(cmdlineP->guidetop || cmdlineP->guidebottom))
+        pm_error("-guidesize has no meaning "
+                 "without -guidetop or -guidebottom");
+
     if (!guidesizeSpec)
-        cmdlineP->guidesize = 0;
+        cmdlineP->guidesize = 3;
 
     if (!magnifypatSpec)
         cmdlineP->magnifypat = 1;
@@ -264,30 +274,30 @@ parseCommandLine(int                  argc,
     if (!yshiftSpec)
         cmdlineP->yshift = 0;
 
-    if (xshiftSpec && !cmdlineP->patFilespec)
+    if (xshiftSpec && !cmdlineP->patfile)
         pm_error("-xshift is valid only with -patfile");
-    if (yshiftSpec && !cmdlineP->patFilespec)
+    if (yshiftSpec && !cmdlineP->patfile)
         pm_error("-yshift is valid only with -patfile");
 
-    if (cmdlineP->makemask && cmdlineP->patFilespec)
+    if (cmdlineP->makemask && cmdlineP->patfile)
         pm_error("You may not specify both -makemask and -patfile");
 
-    if (cmdlineP->patFilespec && blackandwhite)
+    if (cmdlineP->patfile && blackandwhite)
         pm_error("-blackandwhite is not valid with -patfile");
-    if (cmdlineP->patFilespec && grayscale)
+    if (cmdlineP->patfile && grayscale)
         pm_error("-grayscale is not valid with -patfile");
-    if (cmdlineP->patFilespec && color)
+    if (cmdlineP->patfile && color)
         pm_error("-color is not valid with -patfile");
-    if (cmdlineP->patFilespec && cmdlineP->maxvalSpec)
+    if (cmdlineP->patfile && cmdlineP->maxvalSpec)
         pm_error("-maxval is not valid with -patfile");
 
-    if (cmdlineP->texFilespec && blackandwhite)
+    if (cmdlineP->texfile && blackandwhite)
         pm_error("-blackandwhite is not valid with -texfile");
-    if (cmdlineP->texFilespec && grayscale)
+    if (cmdlineP->texfile && grayscale)
         pm_error("-grayscale is not valid with -texfile");
-    if (cmdlineP->texFilespec && color)
+    if (cmdlineP->texfile && color)
         pm_error("-color is not valid with -texfile");
-    if (cmdlineP->texFilespec && cmdlineP->maxvalSpec)
+    if (cmdlineP->texfile && cmdlineP->maxvalSpec)
         pm_error("-maxval is not valid with -texfile");
     if (planesSpec && eyesepSpec)
         pm_error("-planes is not valid with -eyesep");
@@ -296,7 +306,7 @@ parseCommandLine(int                  argc,
 
     if (planesSpec) {
         float nearPlane, farPlane;
-        parseNearFarPlanes(nearFarPlanes, &nearPlane, &farPlane);
+        parseNearFarPlanes(planes, &nearPlane, &farPlane);
         cmdlineP->eyesep = 2.0*farPlane/cmdlineP->dpi;
         cmdlineP->depth = 2.0*(farPlane-nearPlane) / (2.0*farPlane-nearPlane);
     }
@@ -547,9 +557,9 @@ initPatternPixel(outGenerator *     const outGenP,
 
     MALLOCVAR_NOFAIL(stateP);
 
-    assert(cmdline.patFilespec);
+    assert(cmdline.patfile);
 
-    patternFileP = pm_openr(cmdline.patFilespec);
+    patternFileP = pm_openr(cmdline.patfile);
 
     stateP->patTuples =
         pnm_readpam(patternFileP,
@@ -589,18 +599,18 @@ readTextureImage(struct cmdlineInfo const cmdline,
     MALLOCVAR_NOFAIL(textureP);
     texPamP = &textureP->pam;
 
-    textureFileP = pm_openr(cmdline.texFilespec);
+    textureFileP = pm_openr(cmdline.texfile);
     textureP->imageData =
         pnm_readpam(textureFileP, texPamP, PAM_STRUCT_SIZE(tuple_type));
     pm_close(textureFileP);
 
-    if (cmdline.bgColorName)
+    if (cmdline.bgcolor)
         textureP->bgColor =
-            pnm_parsecolor(cmdline.bgColorName, texPamP->maxval);
+            pnm_parsecolor(cmdline.bgcolor, texPamP->maxval);
     else
         textureP->bgColor =
             pnm_backgroundtuple(texPamP, textureP->imageData);
-    textureP->replaceBgColor = (cmdline.patFilespec != NULL);
+    textureP->replaceBgColor = (cmdline.patfile != NULL);
     textureP->smoothing = cmdline.smoothing;
 
     if (cmdline.verbose) {
@@ -608,10 +618,9 @@ readTextureImage(struct cmdlineInfo const cmdline,
             pnm_colorname(texPamP, textureP->bgColor, 1);
 
         reportImageParameters("Texture file", texPamP);
-        if (cmdline.bgColorName && strcmp(colorname, cmdline.bgColorName))
+        if (cmdline.bgcolor && strcmp(colorname, cmdline.bgcolor))
             pm_message("Texture background color: %s (%s)",
-                       cmdline.bgColorName, colorname);
-        else
+                       cmdline.bgcolor, colorname);
             pm_message("Texture background color: %s", colorname);
         pm_strfree(colorname);
     }
@@ -619,7 +628,7 @@ readTextureImage(struct cmdlineInfo const cmdline,
     if (texPamP->width != inpamP->width || texPamP->height != inpamP->height)
         pm_error("The texture image must have the same width and height "
                  "as the input image");
-    if (cmdline.patFilespec &&
+    if (cmdline.patfile &&
         (!streq(texPamP->tuple_type, outpamP->tuple_type) ||
          texPamP->maxval != outpamP->maxval))
         pm_error("The texture image must be of the same tuple type "
@@ -628,6 +637,21 @@ readTextureImage(struct cmdlineInfo const cmdline,
     textureP->pam.file = outpamP->file;
 
     *texturePP = textureP;
+}
+
+
+
+static unsigned int
+totalGuideHeight(struct cmdlineInfo const cmdline) {
+
+    /* Each pair of guides is cmdline.guidesize high, and we add that much
+       white above and below as well, so the total vertical space is three
+       times cmdline.giudesize.
+    */
+
+    return
+        (cmdline.guidetop ? 3 * cmdline.guidesize : 0) +
+        (cmdline.guidebottom ? 3 * cmdline.guidesize : 0);
 }
 
 
@@ -644,11 +668,10 @@ createoutputGenerator(struct cmdlineInfo const cmdline,
     outGenP->pam.size   = sizeof(struct pam);
     outGenP->pam.len    = PAM_STRUCT_SIZE(tuple_type);
     outGenP->pam.file   = stdout;
-    outGenP->pam.height = inPamP->height + 3 * abs(cmdline.guidesize);
-        /* Allow room for guides. */
+    outGenP->pam.height = inPamP->height + totalGuideHeight(cmdline);
     outGenP->pam.width  = inPamP->width;
 
-    if (cmdline.patFilespec) {
+    if (cmdline.patfile) {
         /* Background pixels should come from the pattern file. */
 
         initPatternPixel(outGenP, cmdline);
@@ -660,7 +683,7 @@ createoutputGenerator(struct cmdlineInfo const cmdline,
 
     outGenP->pam.bytes_per_sample = pnm_bytespersample(outGenP->pam.maxval);
 
-    if (cmdline.texFilespec) {
+    if (cmdline.texfile) {
         readTextureImage(cmdline, inPamP, &outGenP->pam, &outGenP->textureP);
         outGenP->pam = outGenP->textureP->pam;
     } else
@@ -688,7 +711,7 @@ static void
 makeWhiteRow(const struct pam * const pamP,
              tuple *            const tuplerow) {
 
-    int col;
+    unsigned int col;
 
     for (col = 0; col < pamP->width; ++col) {
         unsigned int plane;
@@ -705,63 +728,96 @@ writeRowCopies(const struct pam *  const outPamP,
                unsigned int        const copyCount) {
 
     unsigned int i;
+
     for (i = 0; i < copyCount; ++i)
         pnm_writepamrow(outPamP, outrow);
 }
 
 
 
-/* Draw a pair of guide boxes. */
 static void
-drawguides(int                const guidesize,
+writeWhiteRows(const struct pam * const outPamP,
+               unsigned int       const count) {
+
+    tuple * outrow;             /* One row of output data */
+
+    outrow = pnm_allocpamrow(outPamP);
+
+    makeWhiteRow(outPamP, outrow);
+
+    writeRowCopies(outPamP, outrow, count);
+
+    pnm_freerow(outrow);
+}
+
+
+
+static void
+drawguides(unsigned int       const guidesize,
            const struct pam * const outPamP,
            double             const eyesep,
            unsigned int       const dpi,
            double             const depthOfField) {
-
+/*----------------------------------------------------------------------------
+   Draw a pair of guide boxes, left and right.
+-----------------------------------------------------------------------------*/
     int const far = separation(0, eyesep, dpi, depthOfField);
         /* Space between the two guide boxes. */
     int const width = outPamP->width;    /* Width of the output image */
 
-    tuple *outrow;             /* One row of output data */
+    tuple * outrow;             /* One row of output data */
     tuple blackTuple;
-    int col;
+    unsigned int col;
 
     pnm_createBlackTuple(outPamP, &blackTuple);
 
     outrow = pnm_allocpamrow(outPamP);
+    
+    /* Put some white rows before the guides */
+    writeWhiteRows(outPamP, guidesize);
 
-    /* Leave some blank rows before the guides. */
+    /* Initialize the row buffer to white */
     makeWhiteRow(outPamP, outrow);
-    writeRowCopies(outPamP, outrow, guidesize);
 
-    /* Draw the guides. */
-    if ((width - far + guidesize)/2 < 0 ||
-        (width + far - guidesize)/2 >= width)
+    if (far > width + guidesize)
         pm_message("warning: the guide boxes are completely out of bounds "
-                   "at %d DPI", dpi);
-    else if ((width - far - guidesize)/2 < 0 ||
-             (width + far + guidesize)/2 >= width)
-        pm_message("warning: the guide boxes are partially out of bounds "
-                   "at %d DPI", dpi);
+                   "at %u DPI", dpi);
+    else {
+        unsigned int leftBeg, leftEnd, rightBeg, rightEnd;
 
-    for (col = (width - far - guidesize)/2;
-         col < (width - far + guidesize)/2;
-         ++col)
-        if (col >= 0 && col < width)
+        assert(far <= width + guidesize);
+        leftEnd  = (width - far + guidesize)/2;
+        assert(guidesize <= width + far);
+        rightBeg = (width + far - guidesize)/2;
+
+        if (far + guidesize > width) {
+            pm_message("warning: the guide boxes are partially out of bounds "
+                       "at %u DPI", dpi);
+            
+            leftBeg  = 0;
+            rightEnd = width;
+        } else {
+            assert(far + guidesize <= width);
+            leftBeg  = (width - far - guidesize)/2;
+            rightEnd = (width + far + guidesize)/2;
+        }
+        
+        /* Draw the left guide black in the buffer */
+        assert(leftEnd < outPamP->width);
+        for (col = leftBeg; col < leftEnd; ++col)
             pnm_assigntuple(outPamP, outrow[col], blackTuple);
 
-    for (col = (width + far - guidesize)/2;
-         col < (width + far + guidesize)/2;
-         ++col)
-        if (col >= 0 && col < width)
+        /* Draw the right guide black in the buffer */
+        assert(rightEnd <= outPamP->width);
+        for (col = rightBeg; col < rightEnd; ++col)
             pnm_assigntuple(outPamP, outrow[col], blackTuple);
+    }
+    /* Write out the guide rows */
 
-    writeRowCopies(outPamP,outrow, guidesize);
-
-    /* Leave some blank rows after the guides. */
-    makeWhiteRow(outPamP, outrow);
     writeRowCopies(outPamP, outrow, guidesize);
+
+    /* Put some white rows after the guides */
+    writeWhiteRows(outPamP, guidesize);
 
     pnm_freerow(outrow);
 }
@@ -1225,9 +1281,8 @@ produceStereogram(FILE *             const ifP,
 
     pnm_writepaminit(&outputGeneratorP->pam);
 
-    /* Draw guide boxes at the top, if desired. */
-    if (cmdline.guidesize < 0)
-        drawguides(-cmdline.guidesize, &outputGeneratorP->pam,
+    if (cmdline.guidetop)
+        drawguides(cmdline.guidesize, &outputGeneratorP->pam,
                    cmdline.eyesep,
                    cmdline.dpi, cmdline.depth);
 
@@ -1236,12 +1291,11 @@ produceStereogram(FILE *             const ifP,
                   cmdline.crosseyed, cmdline.makemask, cmdline.magnifypat,
                   cmdline.smoothing);
 
-    /* Draw guide boxes at the bottom, if desired. */
-    if (cmdline.guidesize > 0)
+    if (cmdline.guidebottom)
         drawguides(cmdline.guidesize, &outputGeneratorP->pam,
                    cmdline.eyesep, cmdline.dpi, cmdline.depth);
 
-    if (cmdline.texFilespec) {
+    if (cmdline.texfile) {
         pnm_freepamarray(outputGeneratorP->textureP->imageData,
                          &outputGeneratorP->textureP->pam);
         free(outputGeneratorP->textureP);
@@ -1273,7 +1327,7 @@ reportParameters(struct cmdlineInfo const cmdline) {
     pm_message("Near pattern width: %u / %u = %u pixels",
                sep1, cmdline.magnifypat, sep1 / cmdline.magnifypat);
     pm_message("Unique 3-D depth levels possible: %u", sep0 - sep1 + 1);
-    if (cmdline.patFilespec && (cmdline.xshift || cmdline.yshift))
+    if (cmdline.patfile && (cmdline.xshift || cmdline.yshift))
         pm_message("Pattern shift: (%u, %u)", cmdline.xshift, cmdline.yshift);
 }
 
