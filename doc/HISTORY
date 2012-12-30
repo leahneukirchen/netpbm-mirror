@@ -10,6 +10,10 @@ not yet  BJH  Release 10.61.00
 
               pgmhist: Add -median, -quartile, and -decile options.
 
+              pamstereogram: Add -guidetop and -guidebottom options to replace
+              trick where negative -guidesize means top, positive means
+              bottom, absent means none.
+
               pamtojpeg2k: default to no compression ratio constraint and
               allow compression ratios less than 1.  Because of compression
               metadata, small images do require loss of quality in order to
