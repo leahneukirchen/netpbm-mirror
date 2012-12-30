@@ -4,12 +4,25 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+12.12.30 BJH  Release 10.60.06
+
+              libpam, pamcomp: fix bug: treats tuple type GRAYSCALE_ALPHA like
+              GRAYSCALE on 32-bit machine.  Actually, looks only at first 4
+              characters (8 characters on machine with 64 bit addressess) of
+              the tuple type.  Broken since 10.56 (September 2011).
+
+              leaftoppm: fix incorrect determination of whether input is
+              Interleaf on 64 bit systems.  Always broken.
+
+              cmuwmtopbm: fix incorrect determination of whether input is
+              a CMU window manager bitmap on 64 bit systems.  Always broken.
+
 12.12.14 BJH  Release 10.60.05
 
               pngtopam -alphapam with grayscale input: fix bug: generates
               invalid output: tuple type GRAYSCALE_ALPHA, but depth 1.  Depth
               should be 2.  Always broken (pngtopam was created in 
-              Netpbm 10.44 (September 2008).
+              Netpbm 10.44 (September 2008)).
               
               ppmpat: Fix bug: wrong output with -poles.  Broken in 10.47
               (June 2009).
