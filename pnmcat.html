@@ -19,6 +19,7 @@ pnmcat - concatenate Netpbm images
 [<B>-white</B>|<B>-black</B>]
 
 [<B>-jtop</B>|<B>-jbottom</B>|<B>-jcenter</b>]
+[<B>-jleft</B>|<B>-jright</B>|<b>-jcenter</b>]
 
 <I>pnmfile</i> ...
 
@@ -55,8 +56,10 @@ of an image or extract part of an image.
 (top-bottom), the smaller ones have to be justified with the largest.
 By default, <b>pnmcat</b> centers them, but you can specify
 justification to one side or the other with one of the
-<b>-j</b><i>xxx</i> options.  So, <B>-topbottom -jleft</B> would stack
-the PNMs on top of each other, flush with the left edge.
+<b>-j</b><i>xxx</i> options.  So, <B>-topbottom -jleft</B> would stack the
+PNMs on top of each other, flush with the left edge.  <b>-leftright
+-jbottom</b> would line up the images left to right with their bottom edges
+aligned as if sitting on a table.
 
 <P>The <B>-white</B> and <B>-black</B> options specify what color to
 use to fill in the extra space when doing this justification.  If

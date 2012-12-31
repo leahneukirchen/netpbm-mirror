@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<meta http-equiv="Content-type" content="text/html">
+<meta charset="UTF-8">
 <title>Pamstereogram User Manual</title>
 </head>
 
@@ -9,7 +9,7 @@
 
 <h1>pamstereogram</h1>
 
-<p>Updated: 20 June 2012</p>
+<p>Updated:30 December 2012</p>
 
 <p><a href="#contents">Table Of Contents</a></p>
 
@@ -34,6 +34,8 @@ depth map</p>
 [<b>-xshift=</b><i>pixels</i>]
 [<b>-yshift=</b><i>pixels</i>]
 [<b>-magnifypat=</b><i>scale</i>]
+[<b>-guidetop</b>]
+[<b>-guidebottom</b>]
 [<b>-guidesize=</b><i>pixels</i>]
 [<b>-dpi=</b><i>resolution</i>]
 [<b>-crosseyed</b>]
@@ -135,6 +137,7 @@ dimensions.)  The texture image's background color is ignored when
 blending colors.
 
 <p>This option was new in Netpbm 10.53 (December 2010).</p>
+</dd>
 
 <dt><b>-bgcolor=</b><i>color</i></dt>
 <dd>Use <i>color</i> as the texture image's background color instead
@@ -145,19 +148,23 @@ routine</a>.  The <b>-bgcolor</b> option is meaningful only in conjunction
 with <b>-texfile</b>.
 
 <p>This option was new in Netpbm 10.53 (December 2010).</p>
+</dd>
 
 <dt><b>-smoothing=</b><i>pixels</i></dt>
-<dd>Horizontally blur non-background colors into background pixels up
-to a distance of <i>pixels</i> pixels (default: 0).  This helps smooth
-over distracting glitches introduced by the stereogram's color
-constraints when producing a mapped-texture stereogram.
-The <b>-smoothing</b> option is helpful when the texture image
-includes smooth color transitions (as in a photograph) but makes crisp
-texture images (as in a line drawing) appear blurry.
-The <b>-smoothing</b> option is meaningful only in conjunction with
-<b>-texfile</b>.
+<dd>When used without <b>-texfile</b>, attempt to eliminate artifacts
+introduced by edges in the depth map if <i>pixels</i> is greater than zero.
 
-<p>This option was new in Netpbm 10.53 (December 2010).</p>
+<p>When used with <b>-texfile</b>, horizontally blur non-background
+colors into background pixels up to a distance of <i>pixels</i> pixels.
+This helps smooth over distracting glitches introduced
+by the stereogram's color constraints when producing a mapped-texture
+stereogram.  In this case, the <b>-smoothing</b> option is helpful
+when the texture image includes smooth color transitions (as in a
+photograph) but makes crisp texture images (as in a line drawing)
+appear blurry.</p>
+
+<p>This option was new in Netpbm 10.53 (December 2010).  Before
+Netpbm 10.61 (December 2012), it has no effect without <b>-texfile</b>.</p>
 </dd>
 
 <dt><b>-xshift=</b><i>pixels</i></dt>
@@ -178,20 +185,42 @@ integral scaling factor <i>scale</i>. Note that
 <em>after</em> pattern shifting (<b>-xshift</b> and
 <b>-yshift</b>).</dd>
 
-<dt><b>-guidesize=</b><i>pixels</i></dt>
-<dd>Draw a pair of <i>pixels</i> by <i>pixels</i> black squares on
-a white background underneath the stereogram proper. These squares
-help you guide your eyes into proper focus to view the 3-D image.
-The trick is to focus your eyes some distance behind the image,
-causing you to see four black squares, then continue altering your
-focus distance until the middle two black squares fuse into a
-single black square. At that point, a crisp, 3-D image will appear.
+<dt><b>-guidebottom</b>
+<dd>
+Draw a pair of black squares on a white background underneath the stereogram
+proper. These squares help you guide your eyes into proper focus to view the
+3-D image.  The trick is to focus your eyes some distance behind the image,
+causing you to see four black squares, then continue altering your focus
+distance until the middle two black squares fuse into a single black
+square. At that point, a crisp, 3-D image will appear.
 
-<p>If <i>pixels</i> is negative, <b>pamstereogram</b> will draw the
-guide squares above the stereogram instead of below it. If
-<i>pixels</i> is zero (the default), <b>pamstereogram</b> will draw
-no guide squares.</p>
+<p>This option was new in Netpbm 10.61 (December 2012).  Before that,
+the presence of <b>-guidesize</b>, with a positive value, has the same
+effect.
 </dd>
+
+<dt><b>-guidetop</b>
+<dd>
+Same as <b>-guidebottom</b>, except the guides go at the top of the image.
+
+<p>This option was new in Netpbm 10.61 (December 2012).  Before that,
+the presence of <b>-guidesize</b>, with a negative value, has the same
+effect.
+
+<dt><b>-guidesize=</b><i>pixels</i></dt>
+
+<dd>The size (width and height) of each guide box.
+
+<p>This is valid only with <b>-guidetop</b> or <b>-guidebottom</b>.
+
+<p>Default is 20.
+
+<p>Before Netpbm 10.61 (December 2012), if you don't specify this option,
+<b>pamstereogram</b> draws no guides.  If you specify it with a positive
+value, <b>pamstereogram</b> behaves as if you specified <b>-guidebottom</b>
+too, and if you specify it with a negative value, it behaves as if you
+specified <b>-guidetop</b> and specified <b>guidesize</b> with the absolute
+value of that negative value.
 
 <dt><b>-dpi=</b><i>resolution</i></dt>
 <dd>Specify the resolution of the output device in dots per inch.
@@ -199,7 +228,6 @@ The default is 100 DPI, which represents a fairly crisp screen
 resolution.
 
 <p>Before Netpbm 10.53 (December 2010), the default was 96 DPI.</p>
-
 </dd>
 
 <dt><b>-crosseyed</b></dt>
@@ -213,10 +241,7 @@ colors are farther from the eye.
 
 <p>Before Netpbm 10.53 (December 2010), <b>pamstereogram</b> used higher
 (lighter) numbers for things closer to the eye <em>without</em>
-<b>-crosseyed</b> and vice versa.
-
-</p>
-
+<b>-crosseyed</b> and vice versa.</p>
 </dd>
 
 <dt><b>-makemask</b></dt>
@@ -260,9 +285,10 @@ parameters (distance between eyes and tradeoff between perceptibility
 and depth) while <b>-planes</b> is a more computer-centric way (pixel
 distances in the resulting stereogram).
 
-<p>This option was new in Netpbm 10.59 (June 2012).
+<p>This option was new in Netpbm 10.59 (June 2012).</p>
+</dd>
 
-<dt><b>-randomseed=</b><i>integer</i>
+<dt><b>-randomseed=</b><i>integer</i></dt>
 <dd>Specify a seed to be used for the random number generator.
 The default is to use a seed based on the time of day, to one second
 granularity.
@@ -273,9 +299,10 @@ every time you run <b>pamstereogram</b>.
 
 <p>This is irrelevant if you use a pattern file (<b>-patfile</b>
 option), because there is no random element to <b>pamstereogram</b>'s
-behavior.
+behavior.</p>
 
-<p>This option was new in Netpbm 10.32 (February 2006).
+<p>This option was new in Netpbm 10.32 (February 2006).</p>
+</dd>
 
 </dl>
 
@@ -399,9 +426,14 @@ href="http://dx.doi.org/10.1109/2.318576">10.1109/2.318576</a>.</li>
 but probably broken beyond usability until 
 Netpbm 10.32 (February 2006) and Netpbm 10.26.23 (January 2006).</p>
 
+<p>A backward incompatible change to the way you request guide boxes
+(<b>-guidetop</b>, <b>-guidebottom</b>, <b>-guidesize</b> happened in
+Netpbm 10.61 (December 2012).
+
 
 <h2><a id="author">AUTHOR</a></h2>
 <p>Copyright (C) 2006, 2010 Scott Pakin, <a href="mailto:scott+pbm@pakin.org">scott+pbm@pakin.org</a>.</p>
+
 <h2><a id="contents">Table Of Contents</a></h2>
 <ul>
 <li><a href="#synopsis">SYNOPSIS</a></li>
@@ -422,3 +454,4 @@ Netpbm 10.32 (February 2006) and Netpbm 10.26.23 (January 2006).</p>
 </ul>
 </body>
 </html>
+
