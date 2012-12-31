@@ -6,6 +6,15 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.62.00
 
+              pamstereogram: change -guidesize default from 10 to 20
+              (relevant since 10.61).
+
+              pamstereogram: fix bug: doesn't reject negative guidesize.
+              Broken since 10.61.
+
+              pamstereogram: fix bug: garbage in -verbose listing.  Broken
+              since 10.61
+
 12.12.30 BJH  Release 10.61.00
 
               pgmhist: Add -machine option.
