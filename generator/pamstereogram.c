@@ -178,7 +178,7 @@ parseCommandLine(int                  argc,
             &cmdlineP->guidetop,      0);
     OPTENT3(0, "guidebottom",     OPT_FLAG,   NULL,
             &cmdlineP->guidebottom,   0);
-    OPTENT3(0, "guidesize",       OPT_INT,    &cmdlineP->guidesize,
+    OPTENT3(0, "guidesize",       OPT_UINT,   &cmdlineP->guidesize,
             &guidesizeSpec,           0);
     OPTENT3(0, "magnifypat",      OPT_UINT,   &cmdlineP->magnifypat,
             &magnifypatSpec,          0);
@@ -261,7 +261,7 @@ parseCommandLine(int                  argc,
                  "without -guidetop or -guidebottom");
 
     if (!guidesizeSpec)
-        cmdlineP->guidesize = 10;
+        cmdlineP->guidesize = 20;
 
     if (!magnifypatSpec)
         cmdlineP->magnifypat = 1;
@@ -621,6 +621,7 @@ readTextureImage(struct cmdlineInfo const cmdline,
         if (cmdline.bgcolor && strcmp(colorname, cmdline.bgcolor))
             pm_message("Texture background color: %s (%s)",
                        cmdline.bgcolor, colorname);
+        else
             pm_message("Texture background color: %s", colorname);
         pm_strfree(colorname);
     }
