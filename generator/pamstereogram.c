@@ -261,7 +261,7 @@ parseCommandLine(int                  argc,
                  "without -guidetop or -guidebottom");
 
     if (!guidesizeSpec)
-        cmdlineP->guidesize = 10;
+        cmdlineP->guidesize = 20;
 
     if (!magnifypatSpec)
         cmdlineP->magnifypat = 1;
