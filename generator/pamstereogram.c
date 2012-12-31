@@ -178,7 +178,7 @@ parseCommandLine(int                  argc,
             &cmdlineP->guidetop,      0);
     OPTENT3(0, "guidebottom",     OPT_FLAG,   NULL,
             &cmdlineP->guidebottom,   0);
-    OPTENT3(0, "guidesize",       OPT_INT,    &cmdlineP->guidesize,
+    OPTENT3(0, "guidesize",       OPT_UINT,   &cmdlineP->guidesize,
             &guidesizeSpec,           0);
     OPTENT3(0, "magnifypat",      OPT_UINT,   &cmdlineP->magnifypat,
             &magnifypatSpec,          0);
