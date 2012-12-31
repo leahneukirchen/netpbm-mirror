@@ -1,10 +1,13 @@
-/*----------------------------------------------------------------------------
+/*============================================================================
                                   libpamwrite.c
-------------------------------------------------------------------------------
+==============================================================================
    These are the library functions, which belong in the libnetpbm library,
    that deal with writing the PAM (Portable Arbitrary Format) image format
    raster (not the header).
------------------------------------------------------------------------------*/
+
+   This file was originally written by Bryan Henderson and is contributed
+   to the public domain by him and subsequent authors.
+=============================================================================*/
 
 /* See pmfileio.c for the complicated explanation of this 32/64 bit file
    offset stuff.

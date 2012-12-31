@@ -1,0 +1,7 @@
+#! /bin/bash
+# This script tests: pbmpage 
+# Also requires: 
+
+${PBM_TESTPREFIX}pbmpage 1 | cksum
+${PBM_TESTPREFIX}pbmpage 2 | cksum
+${PBM_TESTPREFIX}pbmpage 3 | cksum

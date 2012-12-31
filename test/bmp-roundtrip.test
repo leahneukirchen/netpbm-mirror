@@ -1,0 +1,6 @@
+#! /bin/bash
+# This script tests: bmptopnm ppmtobmp
+# Also requires: 
+
+${PBM_TESTPREFIX}ppmtobmp testimg.ppm | ${PBM_TESTPREFIX}bmptopnm | cksum
+${PBM_TESTPREFIX}ppmtobmp testgrid.pbm | ${PBM_TESTPREFIX}bmptopnm | cksum

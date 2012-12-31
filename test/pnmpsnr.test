@@ -1,0 +1,11 @@
+#! /bin/bash
+# This script tests: pnmpsnr
+# Also requires: pbmmake
+
+${PBM_BINPREFIX}pbmmake -w 10 10 > ${tmpdir}/w.pbm
+${PBM_BINPREFIX}pbmmake -b 10 10 > ${tmpdir}/b.pbm
+${PBM_TESTPREFIX}pnmpsnr  ${tmpdir}/w.pbm  ${tmpdir}/b.pbm 2>&1 | \
+ awk '{print $(NF-1),$NF}'
+${PBM_TESTPREFIX}pnmpsnr  ${tmpdir}/w.pbm  ${tmpdir}/w.pbm 2>&1 | \
+ awk '{print $(NF-1),$NF}'
+rm ${tmpdir}/b.pbm ${tmpdir}/w.pbm

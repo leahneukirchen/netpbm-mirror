@@ -111,7 +111,7 @@ readJ2k(const char *   const inputFilename,
     jas_stream_t * instreamP;
     const char * options;
 
-    if ( strcmp(inputFilename, "-") == 0) {
+    if (streq(inputFilename, "-")) {
         /* The input image is to be read from standard input. */
         instreamP = jas_stream_fdopen(fileno(stdin), "rb");
         if (instreamP == NULL)
@@ -427,8 +427,9 @@ convertToPamPnm(struct pam *  const outpamP,
     unsigned int row;
     tuple * tuplerow;
     jas_seqent_t ** jasperRow;   /* malloc'ed */
-       /* A row of a plane of the raster from the Jasper library 
-          This is an array of pointers into the 'matrix' data structures.
+       /* A row of the raster from the Jasper library This is an array of
+          pointers into the 'matrix' data structures, one for each plane in
+          the row.
        */
     bool singleMaxval;
 

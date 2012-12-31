@@ -26,17 +26,20 @@
 
 static int lineNo;
 
-void 
-pm_canonstr(char * const str) {
 
-    char * p;
-    for (p = str; *p; ) {
-        if (ISSPACE(*p)) {
-            strcpy(p, &(p[1]));
-        } else {
-            if (ISUPPER(*p))
-                *p = tolower(*p);
-            ++p;
+
+void 
+pm_canonstr(char * const arg) {
+/*----------------------------------------------------------------------------
+   Modify string 'arg' to canonical form: lower case, no white space.
+-----------------------------------------------------------------------------*/
+    const char * srcCursor;
+    char * dstCursor;
+
+    for (srcCursor = arg, dstCursor = arg; *srcCursor; ++srcCursor) {
+        if (!ISSPACE(*srcCursor)) {
+            *dstCursor++ =
+                ISUPPER(*srcCursor) ? tolower(*srcCursor) : *srcCursor;
         }
     }
 }

@@ -25,14 +25,13 @@
  * Copyright (c) 1988, Curtin University of Technology
  */
 
-#include "rle.h"
-
 #include <string.h>
 #include <stdio.h>
-
 #include <time.h>
 
 #include "netpbm/mallocvar.h"
+#include "rle.h"
+
 
 /*****************************************************************
  * TAG( rle_addhist )

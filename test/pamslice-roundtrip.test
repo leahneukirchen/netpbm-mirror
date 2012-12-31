@@ -1,0 +1,29 @@
+#! /bin/bash
+# This script tests: pamslice
+# Also requires: pnmtopnm
+
+# Slice rows, one by one, out of testgrid.pbm.
+# Add header and reconstruct pbm image.
+# Note that in pamslice output 0 is white and 1 is black: opposite of PBM
+# Should print 2425386270 41
+
+(echo "P1"
+ echo "14 16"
+ seq 0 15 | while read i; 
+     do
+     ${PBM_TESTPREFIX}pamslice -row=$i testgrid.pbm  | \
+      awk '{print $2}' | sed 'y/01/10/'; 
+     done ) |  ${PBM_BINPREFIX}pnmtopnm | cksum
+
+# Slice rows, one by one, out of testimg.ppm.
+# Add header and reconstruct pbm image.
+# Should print 1926073387 101484
+
+(echo "P3"
+ echo "227 149"
+ echo "255"
+ seq 0 148 | while read i; 
+     do
+     ${PBM_TESTPREFIX}pamslice -row=$i testimg.ppm  | awk '{print $2, $3, $4}'; 
+     done ) |  ${PBM_BINPREFIX}pnmtopnm | cksum
+

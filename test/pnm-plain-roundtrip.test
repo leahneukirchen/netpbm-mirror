@@ -1,0 +1,9 @@
+#! /bin/bash
+# This script tests: pnmtopnm
+# Also requires: 
+
+${PBM_TESTPREFIX}pnmtopnm -plain testimg.ppm | \
+  ${PBM_TESTPREFIX}pnmtopnm | cksum
+${PBM_TESTPREFIX}pnmtopnm -plain testgrid.pbm | \
+  ${PBM_TESTPREFIX}pnmtopnm | cksum
+

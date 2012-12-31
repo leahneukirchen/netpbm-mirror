@@ -1,0 +1,9 @@
+#! /bin/bash
+# This script tests: pnmcat
+# Also requires: 
+
+${PBM_TESTPREFIX}pnmcat -lr testgrid.pbm testgrid.pbm | cksum
+${PBM_TESTPREFIX}pnmcat -tb testgrid.pbm testgrid.pbm | cksum
+
+${PBM_TESTPREFIX}pnmcat -lr testimg.ppm testimg.ppm | cksum
+${PBM_TESTPREFIX}pnmcat -tb testimg.ppm testimg.ppm | cksum

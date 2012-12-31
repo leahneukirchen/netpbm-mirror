@@ -1,0 +1,8 @@
+#! /bin/bash
+# This script tests: pgmtofs fstopgm
+# Also requires: ppmtopgm
+
+# Should produce 2871603838 33838, cksum of testimg.pgm
+
+${PBM_BINPREFIX}ppmtopgm testimg.ppm | \
+  ${PBM_TESTPREFIX}pgmtofs | ${PBM_TESTPREFIX}fstopgm | cksum

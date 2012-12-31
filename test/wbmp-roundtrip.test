@@ -1,0 +1,6 @@
+#! /bin/bash
+# This script tests: pbmtowbmp wbmptopbm
+# Also requires: 
+
+# Should print 2425386270 41, cksum of testgrid.pbm
+${PBM_TESTPREFIX}pbmtowbmp testgrid.pbm | ${PBM_TESTPREFIX}wbmptopbm | cksum

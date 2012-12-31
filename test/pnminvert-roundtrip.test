@@ -1,0 +1,6 @@
+#! /bin/bash
+# This script tests: pnminvert
+# Also requires: 
+
+${PBM_TESTPREFIX}pnminvert testimg.ppm | ${PBM_TESTPREFIX}pnminvert | cksum
+${PBM_TESTPREFIX}pnminvert testgrid.pbm | ${PBM_TESTPREFIX}pnminvert | cksum

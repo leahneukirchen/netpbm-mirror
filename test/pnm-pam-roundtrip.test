@@ -1,0 +1,7 @@
+#! /bin/bash
+# This script tests: pamtopam pamtopnm
+# Also requires: 
+
+${PBM_TESTPREFIX}pamtopam < testimg.ppm | ${PBM_TESTPREFIX}pamtopnm | cksum
+${PBM_TESTPREFIX}pamtopam < testgrid.pbm | ${PBM_TESTPREFIX}pamtopnm | cksum
+

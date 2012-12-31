@@ -25,10 +25,10 @@
  * Copyright (c) 1991, University of Michigan
  */
 
-#include "rle.h"
-#include "rle_config.h"
-
 #include <string.h>
+
+#include "rle_config.h"
+#include "rle.h"
 
 /*****************************************************************
  * TAG( rle_names )

@@ -13,7 +13,7 @@
  *
  * ----------------------------------------------------------------------
  *
- * Copyright (C) 2006, 2010 Scott Pakin <scott+pbm@pakin.org>
+ * Copyright (C) 2006-2012 Scott Pakin <scott+pbm@pakin.org>
  *
  * All rights reserved.
  *
@@ -56,8 +56,6 @@
 #include "shhopt.h"
 #include "pam.h"
 
-/* Define a few helper macros. */
-#define round2int(X) ((int)((X)+0.5))      /* Nonnegative numbers only */
 
 enum outputType {OUTPUT_BW, OUTPUT_GRAYSCALE, OUTPUT_COLOR};
 
@@ -72,19 +70,22 @@ struct cmdlineInfo {
     unsigned int crosseyed;      /* -crosseyed option */
     unsigned int makemask;       /* -makemask option */
     unsigned int dpi;            /* -dpi option */
-    float eyesep;                /* -eyesep option */
-    float depth;                 /* -depth option */
+    float        eyesep;         /* -eyesep option */
+    float        depth;          /* -depth option */
     unsigned int maxvalSpec;     /* -maxval option count */
-    unsigned int maxval;         /* -maxval option value x*/
-    int guidesize;               /* -guidesize option */
+    unsigned int maxval;         /* -maxval option value */
+    unsigned int guidetop;       /* -guidetop option count */
+    unsigned int guidebottom;    /* -guidebottom option count */
+    unsigned int guidesize;      /* -guidesize option value */
     unsigned int magnifypat;     /* -magnifypat option */
     unsigned int xshift;         /* -xshift option */
     unsigned int yshift;         /* -yshift option */
-    const char * patFilespec;    /* -patfile option.  Null if none */
-    const char * texFilespec;    /* -texfile option.  Null if none */
-    const char * bgColorName;    /* -bgcolor option */
+    const char * patfile;        /* -patfile option.  Null if none */
+    const char * texfile;        /* -texfile option.  Null if none */
+    const char * bgcolor;        /* -bgcolor option */
     unsigned int smoothing;      /* -smoothing option */
     unsigned int randomseed;     /* -randomseed option */
+    unsigned int randomseedSpec; /* -randomseed option count */
     enum outputType outputType;  /* Type of output file */
 };
 
@@ -144,11 +145,11 @@ parseCommandLine(int                  argc,
     unsigned int option_def_index;
 
     unsigned int patfileSpec, texfileSpec, dpiSpec, eyesepSpec, depthSpec,
-        guidesizeSpec, magnifypatSpec, xshiftSpec, yshiftSpec, randomseedSpec,
-        bgColorNameSpec, smoothingSpec, planesSpec;
+        guidesizeSpec, magnifypatSpec, xshiftSpec, yshiftSpec,
+        bgcolorSpec, smoothingSpec, planesSpec;
 
     unsigned int blackandwhite, grayscale, color;
-    const char ** nearFarPlanes;
+    const char ** planes;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
@@ -173,6 +174,10 @@ parseCommandLine(int                  argc,
             &depthSpec,               0);
     OPTENT3(0, "maxval",          OPT_UINT,   &cmdlineP->maxval,
             &cmdlineP->maxvalSpec,    0);
+    OPTENT3(0, "guidetop",        OPT_FLAG,   NULL,
+            &cmdlineP->guidetop,      0);
+    OPTENT3(0, "guidebottom",     OPT_FLAG,   NULL,
+            &cmdlineP->guidebottom,   0);
     OPTENT3(0, "guidesize",       OPT_INT,    &cmdlineP->guidesize,
             &guidesizeSpec,           0);
     OPTENT3(0, "magnifypat",      OPT_UINT,   &cmdlineP->magnifypat,
@@ -181,17 +186,17 @@ parseCommandLine(int                  argc,
             &xshiftSpec,              0);
     OPTENT3(0, "yshift",          OPT_UINT,   &cmdlineP->yshift,
             &yshiftSpec,              0);
-    OPTENT3(0, "patfile",         OPT_STRING, &cmdlineP->patFilespec,
+    OPTENT3(0, "patfile",         OPT_STRING, &cmdlineP->patfile,
             &patfileSpec,             0);
-    OPTENT3(0, "texfile",         OPT_STRING, &cmdlineP->texFilespec,
+    OPTENT3(0, "texfile",         OPT_STRING, &cmdlineP->texfile,
             &texfileSpec,             0);
-    OPTENT3(0, "bgcolor",         OPT_STRING, &cmdlineP->bgColorName,
-            &bgColorNameSpec,         0);
+    OPTENT3(0, "bgcolor",         OPT_STRING, &cmdlineP->bgcolor,
+            &bgcolorSpec,             0);
     OPTENT3(0, "randomseed",      OPT_UINT,   &cmdlineP->randomseed,
-            &randomseedSpec,          0);
+            &cmdlineP->randomseedSpec, 0);
     OPTENT3(0, "smoothing",       OPT_UINT,   &cmdlineP->smoothing,
             &smoothingSpec,           0);
-    OPTENT3(0, "planes",          OPT_STRINGLIST, &nearFarPlanes,
+    OPTENT3(0, "planes",          OPT_STRINGLIST, &planes,
             &planesSpec,              0);
 
     opt.opt_table = option_def;
@@ -217,11 +222,11 @@ parseCommandLine(int                  argc,
         }
     }
     if (!patfileSpec)
-        cmdlineP->patFilespec = NULL;
+        cmdlineP->patfile = NULL;
     if (!texfileSpec)
-        cmdlineP->texFilespec = NULL;
-    if (!bgColorNameSpec)
-        cmdlineP->bgColorName = NULL;
+        cmdlineP->texfile = NULL;
+    if (!bgcolorSpec)
+        cmdlineP->bgcolor = NULL;
     if (!smoothingSpec)
         cmdlineP->smoothing = 0;
 
@@ -247,16 +252,16 @@ parseCommandLine(int                  argc,
             pm_error("-maxval must be at most %u.  You specified %u",
                      PNM_OVERALLMAXVAL, cmdlineP->maxval);
     }
-    if (bgColorNameSpec && !texfileSpec)
+    if (bgcolorSpec && !texfileSpec)
         pm_message("warning: -bgcolor has no effect "
                    "except in conjunction with -texfile");
 
-    if (smoothingSpec && !texfileSpec)
-        pm_message("warning: -smoothing has no effect "
-                   "except in conjunction with -texfile");
+    if (guidesizeSpec && !(cmdlineP->guidetop || cmdlineP->guidebottom))
+        pm_error("-guidesize has no meaning "
+                 "without -guidetop or -guidebottom");
 
     if (!guidesizeSpec)
-        cmdlineP->guidesize = 0;
+        cmdlineP->guidesize = 10;
 
     if (!magnifypatSpec)
         cmdlineP->magnifypat = 1;
@@ -269,33 +274,30 @@ parseCommandLine(int                  argc,
     if (!yshiftSpec)
         cmdlineP->yshift = 0;
 
-    if (!randomseedSpec)
-        cmdlineP->randomseed = time(NULL);
-
-    if (xshiftSpec && !cmdlineP->patFilespec)
+    if (xshiftSpec && !cmdlineP->patfile)
         pm_error("-xshift is valid only with -patfile");
-    if (yshiftSpec && !cmdlineP->patFilespec)
+    if (yshiftSpec && !cmdlineP->patfile)
         pm_error("-yshift is valid only with -patfile");
 
-    if (cmdlineP->makemask && cmdlineP->patFilespec)
+    if (cmdlineP->makemask && cmdlineP->patfile)
         pm_error("You may not specify both -makemask and -patfile");
 
-    if (cmdlineP->patFilespec && blackandwhite)
+    if (cmdlineP->patfile && blackandwhite)
         pm_error("-blackandwhite is not valid with -patfile");
-    if (cmdlineP->patFilespec && grayscale)
+    if (cmdlineP->patfile && grayscale)
         pm_error("-grayscale is not valid with -patfile");
-    if (cmdlineP->patFilespec && color)
+    if (cmdlineP->patfile && color)
         pm_error("-color is not valid with -patfile");
-    if (cmdlineP->patFilespec && cmdlineP->maxvalSpec)
+    if (cmdlineP->patfile && cmdlineP->maxvalSpec)
         pm_error("-maxval is not valid with -patfile");
 
-    if (cmdlineP->texFilespec && blackandwhite)
+    if (cmdlineP->texfile && blackandwhite)
         pm_error("-blackandwhite is not valid with -texfile");
-    if (cmdlineP->texFilespec && grayscale)
+    if (cmdlineP->texfile && grayscale)
         pm_error("-grayscale is not valid with -texfile");
-    if (cmdlineP->texFilespec && color)
+    if (cmdlineP->texfile && color)
         pm_error("-color is not valid with -texfile");
-    if (cmdlineP->texFilespec && cmdlineP->maxvalSpec)
+    if (cmdlineP->texfile && cmdlineP->maxvalSpec)
         pm_error("-maxval is not valid with -texfile");
     if (planesSpec && eyesepSpec)
         pm_error("-planes is not valid with -eyesep");
@@ -304,7 +306,7 @@ parseCommandLine(int                  argc,
 
     if (planesSpec) {
         float nearPlane, farPlane;
-        parseNearFarPlanes(nearFarPlanes, &nearPlane, &farPlane);
+        parseNearFarPlanes(planes, &nearPlane, &farPlane);
         cmdlineP->eyesep = 2.0*farPlane/cmdlineP->dpi;
         cmdlineP->depth = 2.0*(farPlane-nearPlane) / (2.0*farPlane-nearPlane);
     }
@@ -320,7 +322,7 @@ parseCommandLine(int                  argc,
 
 
 
-static int
+static unsigned int
 separation(double             const dist,
            double             const eyesep,
            unsigned int       const dpi,
@@ -330,9 +332,9 @@ separation(double             const dist,
   Return a separation in pixels which corresponds to a 3-D distance
   between the viewer's eyes and a point on an object.
 -----------------------------------------------------------------------------*/
-    int const pixelEyesep = round2int(eyesep * dpi);
+    unsigned int const pixelEyesep = ROUNDU(eyesep * dpi);
 
-    return round2int((1.0 - dof * dist) * pixelEyesep / (2.0 - dof * dist));
+    return ROUNDU((1.0 - dof * dist) * pixelEyesep / (2.0 - dof * dist));
 }
 
 
@@ -555,9 +557,9 @@ initPatternPixel(outGenerator *     const outGenP,
 
     MALLOCVAR_NOFAIL(stateP);
 
-    assert(cmdline.patFilespec);
+    assert(cmdline.patfile);
 
-    patternFileP = pm_openr(cmdline.patFilespec);
+    patternFileP = pm_openr(cmdline.patfile);
 
     stateP->patTuples =
         pnm_readpam(patternFileP,
@@ -597,18 +599,18 @@ readTextureImage(struct cmdlineInfo const cmdline,
     MALLOCVAR_NOFAIL(textureP);
     texPamP = &textureP->pam;
 
-    textureFileP = pm_openr(cmdline.texFilespec);
+    textureFileP = pm_openr(cmdline.texfile);
     textureP->imageData =
         pnm_readpam(textureFileP, texPamP, PAM_STRUCT_SIZE(tuple_type));
     pm_close(textureFileP);
 
-    if (cmdline.bgColorName)
+    if (cmdline.bgcolor)
         textureP->bgColor =
-            pnm_parsecolor(cmdline.bgColorName, texPamP->maxval);
+            pnm_parsecolor(cmdline.bgcolor, texPamP->maxval);
     else
         textureP->bgColor =
             pnm_backgroundtuple(texPamP, textureP->imageData);
-    textureP->replaceBgColor = (cmdline.patFilespec != NULL);
+    textureP->replaceBgColor = (cmdline.patfile != NULL);
     textureP->smoothing = cmdline.smoothing;
 
     if (cmdline.verbose) {
@@ -616,10 +618,9 @@ readTextureImage(struct cmdlineInfo const cmdline,
             pnm_colorname(texPamP, textureP->bgColor, 1);
 
         reportImageParameters("Texture file", texPamP);
-        if (cmdline.bgColorName && strcmp(colorname, cmdline.bgColorName))
+        if (cmdline.bgcolor && strcmp(colorname, cmdline.bgcolor))
             pm_message("Texture background color: %s (%s)",
-                       cmdline.bgColorName, colorname);
-        else
+                       cmdline.bgcolor, colorname);
             pm_message("Texture background color: %s", colorname);
         pm_strfree(colorname);
     }
@@ -627,7 +628,7 @@ readTextureImage(struct cmdlineInfo const cmdline,
     if (texPamP->width != inpamP->width || texPamP->height != inpamP->height)
         pm_error("The texture image must have the same width and height "
                  "as the input image");
-    if (cmdline.patFilespec &&
+    if (cmdline.patfile &&
         (!streq(texPamP->tuple_type, outpamP->tuple_type) ||
          texPamP->maxval != outpamP->maxval))
         pm_error("The texture image must be of the same tuple type "
@@ -636,6 +637,21 @@ readTextureImage(struct cmdlineInfo const cmdline,
     textureP->pam.file = outpamP->file;
 
     *texturePP = textureP;
+}
+
+
+
+static unsigned int
+totalGuideHeight(struct cmdlineInfo const cmdline) {
+
+    /* Each pair of guides is cmdline.guidesize high, and we add that much
+       white above and below as well, so the total vertical space is three
+       times cmdline.giudesize.
+    */
+
+    return
+        (cmdline.guidetop ? 3 * cmdline.guidesize : 0) +
+        (cmdline.guidebottom ? 3 * cmdline.guidesize : 0);
 }
 
 
@@ -652,11 +668,10 @@ createoutputGenerator(struct cmdlineInfo const cmdline,
     outGenP->pam.size   = sizeof(struct pam);
     outGenP->pam.len    = PAM_STRUCT_SIZE(tuple_type);
     outGenP->pam.file   = stdout;
-    outGenP->pam.height = inPamP->height + 3 * abs(cmdline.guidesize);
-        /* Allow room for guides. */
+    outGenP->pam.height = inPamP->height + totalGuideHeight(cmdline);
     outGenP->pam.width  = inPamP->width;
 
-    if (cmdline.patFilespec) {
+    if (cmdline.patfile) {
         /* Background pixels should come from the pattern file. */
 
         initPatternPixel(outGenP, cmdline);
@@ -668,7 +683,7 @@ createoutputGenerator(struct cmdlineInfo const cmdline,
 
     outGenP->pam.bytes_per_sample = pnm_bytespersample(outGenP->pam.maxval);
 
-    if (cmdline.texFilespec) {
+    if (cmdline.texfile) {
         readTextureImage(cmdline, inPamP, &outGenP->pam, &outGenP->textureP);
         outGenP->pam = outGenP->textureP->pam;
     } else
@@ -696,7 +711,7 @@ static void
 makeWhiteRow(const struct pam * const pamP,
              tuple *            const tuplerow) {
 
-    int col;
+    unsigned int col;
 
     for (col = 0; col < pamP->width; ++col) {
         unsigned int plane;
@@ -713,113 +728,150 @@ writeRowCopies(const struct pam *  const outPamP,
                unsigned int        const copyCount) {
 
     unsigned int i;
+
     for (i = 0; i < copyCount; ++i)
         pnm_writepamrow(outPamP, outrow);
 }
 
 
 
-/* Draw a pair of guide boxes. */
 static void
-drawguides(int                const guidesize,
-           const struct pam * const outPamP,
-           double             const eyesep,
-           unsigned int       const dpi,
-           double             const depthOfField) {
+writeWhiteRows(const struct pam * const outPamP,
+               unsigned int       const count) {
 
-    int const far = separation(0, eyesep, dpi, depthOfField);
-        /* Space between the two guide boxes. */
-    int const width = outPamP->width;    /* Width of the output image */
-
-    tuple *outrow;             /* One row of output data */
-    tuple blackTuple;
-    int col;
-
-    pnm_createBlackTuple(outPamP, &blackTuple);
+    tuple * outrow;             /* One row of output data */
 
     outrow = pnm_allocpamrow(outPamP);
 
-    /* Leave some blank rows before the guides. */
     makeWhiteRow(outPamP, outrow);
-    writeRowCopies(outPamP, outrow, guidesize);
 
-    /* Draw the guides. */
-    if ((width - far + guidesize)/2 < 0 ||
-        (width + far - guidesize)/2 >= width)
-        pm_message("warning: the guide boxes are completely out of bounds "
-                   "at %d DPI", dpi);
-    else if ((width - far - guidesize)/2 < 0 ||
-             (width + far + guidesize)/2 >= width)
-        pm_message("warning: the guide boxes are partially out of bounds "
-                   "at %d DPI", dpi);
-
-    for (col = (width - far - guidesize)/2;
-         col < (width - far + guidesize)/2;
-         ++col)
-        if (col >= 0 && col < width)
-            pnm_assigntuple(outPamP, outrow[col], blackTuple);
-
-    for (col = (width + far - guidesize)/2;
-         col < (width + far + guidesize)/2;
-         ++col)
-        if (col >= 0 && col < width)
-            pnm_assigntuple(outPamP, outrow[col], blackTuple);
-
-    writeRowCopies(outPamP,outrow, guidesize);
-
-    /* Leave some blank rows after the guides. */
-    makeWhiteRow(outPamP, outrow);
-    writeRowCopies(outPamP, outrow, guidesize);
+    writeRowCopies(outPamP, outrow, count);
 
     pnm_freerow(outrow);
 }
 
 
 
+static void
+drawguides(unsigned int       const guidesize,
+           const struct pam * const outPamP,
+           double             const eyesep,
+           unsigned int       const dpi,
+           double             const depthOfField) {
+/*----------------------------------------------------------------------------
+   Draw a pair of guide boxes, left and right.
+-----------------------------------------------------------------------------*/
+    int const far = separation(0, eyesep, dpi, depthOfField);
+        /* Space between the two guide boxes. */
+    int const width = outPamP->width;    /* Width of the output image */
+
+    tuple * outrow;             /* One row of output data */
+    tuple blackTuple;
+    unsigned int col;
+
+    pnm_createBlackTuple(outPamP, &blackTuple);
+
+    outrow = pnm_allocpamrow(outPamP);
+    
+    /* Put some white rows before the guides */
+    writeWhiteRows(outPamP, guidesize);
+
+    /* Initialize the row buffer to white */
+    makeWhiteRow(outPamP, outrow);
+
+    if (far > width + guidesize)
+        pm_message("warning: the guide boxes are completely out of bounds "
+                   "at %u DPI", dpi);
+    else {
+        unsigned int leftBeg, leftEnd, rightBeg, rightEnd;
+
+        assert(far <= width + guidesize);
+        leftEnd  = (width - far + guidesize)/2;
+        assert(guidesize <= width + far);
+        rightBeg = (width + far - guidesize)/2;
+
+        if (far + guidesize > width) {
+            pm_message("warning: the guide boxes are partially out of bounds "
+                       "at %u DPI", dpi);
+            
+            leftBeg  = 0;
+            rightEnd = width;
+        } else {
+            assert(far + guidesize <= width);
+            leftBeg  = (width - far - guidesize)/2;
+            rightEnd = (width + far + guidesize)/2;
+        }
+        
+        /* Draw the left guide black in the buffer */
+        assert(leftEnd < outPamP->width);
+        for (col = leftBeg; col < leftEnd; ++col)
+            pnm_assigntuple(outPamP, outrow[col], blackTuple);
+
+        /* Draw the right guide black in the buffer */
+        assert(rightEnd <= outPamP->width);
+        for (col = rightBeg; col < rightEnd; ++col)
+            pnm_assigntuple(outPamP, outrow[col], blackTuple);
+    }
+    /* Write out the guide rows */
+
+    writeRowCopies(outPamP, outrow, guidesize);
+
+    /* Put some white rows after the guides */
+    writeWhiteRows(outPamP, guidesize);
+
+    pnm_freerow(outrow);
+}
+
+
+
+static void
+makeStereoRow(const struct pam * const inPamP,
+              tuple *            const inRow,
+              unsigned int *     const same,
+              double             const depthOfField,
+              double             const eyesep,
+              unsigned int       const dpi,
+              unsigned int       const optWidth,
+              unsigned int       const smoothing) {
+
 /* Do the bulk of the work.  See the paper cited above for code
  * comments.  All I (Scott) did was transcribe the code and make
  * minimal changes for Netpbm.  And some style changes by Bryan to
  * match Netpbm style.
- */
-static void
-makeStereoRow(const struct pam * const inPamP,
-              tuple *            const inRow,
-              int *              const same,
-              double             const depthOfField,
-              double             const eyesep,
-              unsigned int       const dpi) {
-
+ */ 
 #define Z(X) (inRow[X][0]/(double)inPamP->maxval)
 
-    int const width       = inPamP->width;
-    int const pixelEyesep = round2int(eyesep * dpi);
+    unsigned int const pixelEyesep = ROUNDU(eyesep * dpi);
         /* Separation in pixels between the viewer's eyes */
 
-    int col;
+    unsigned int col;
 
-    for (col = 0; col < width; ++col)
+    for (col = 0; col < inPamP->width; ++col)
         same[col] = col;
 
-    for (col = 0; col < width; ++col) {
-        int const s = separation(Z(col), eyesep, dpi, depthOfField);
-        int left, right;
+    for (col = 0; col < inPamP->width; ++col) {
+        unsigned int const s = separation(Z(col), eyesep, dpi, depthOfField);
 
-        left  = col - s/2;  /* initial value */
-        right = left + s;   /* initial value */
+        if (col >= s/2 && col + s/2 < inPamP->width) {
+            unsigned int left, right;
 
-        if (0 <= left && right < width) {
-            int visible;
-            int t;
+            bool visible;
+            unsigned int t;
             double zt;
 
+            left  = col - s/2;  /* initial value */
+            right = col + s/2;  /* initial value */
             t = 1;  /* initial value */
 
             do {
                 double const dof = depthOfField;
                 zt = Z(col) + 2.0*(2.0 - dof*Z(col))*t/(dof*pixelEyesep);
+                assert(col >= t);
+                assert(col + t < inPamP->width);
                 visible = Z(col-t) < zt && Z(col+t) < zt;
                 ++t;
             } while (visible && zt < 1);
+
             if (visible) {
                 int l;
 
@@ -839,14 +891,29 @@ makeStereoRow(const struct pam * const inPamP,
             }
         }
     }
+
+    /* If smoothing is enabled, replace each non-duplicate pixel with
+       the pixel adjacent to its right neighbor. */
+    if (smoothing > 0) {
+        int const baseCol = inPamP->width - optWidth - 1;
+
+        int col;
+
+        for (col = inPamP->width - 1; col >= 0; --col)
+            same[col] = same[same[col]];
+        for (col = baseCol; col >= 0; --col) {
+            if (same[col] == col)
+                same[col] = same[col+1] - 1;
+        }
+    }
 }
 
 
 
 static void
-makeMaskRow(const struct pam * const outPamP,
-            const int *        const same,
-            const tuple *      const outRow) {
+makeMaskRow(const struct pam *   const outPamP,
+            const unsigned int * const same,
+            const tuple *        const outRow) {
     int col;
 
     for (col = outPamP->width-1; col >= 0; --col) {
@@ -861,9 +928,9 @@ makeMaskRow(const struct pam * const outPamP,
 
 
 static void
-computeFixedPoint(const int *  const same,
-                  int *        const sameFp,
-                  unsigned int const width) {
+computeFixedPoint(const unsigned int * const same,
+                  unsigned int *       const sameFp,
+                  unsigned int         const width) {
 /*----------------------------------------------------------------------------
   Compute the fixed point of same[] (i.e., sameFp[x] is
   same[same[same[...[same[x]]...]]]).
@@ -885,13 +952,13 @@ computeFixedPoint(const int *  const same,
 
 
 static void
-averageFromPattern(struct pam *   const pamP,
-                   tuple          const bgColor,
-                   const tuple *  const textureRow,
-                   const int *    const same,
-                   int *          const sameFp,
-                   const tuple *  const outRow,
-                   unsigned int * const tuplesPerCol) {
+averageFromPattern(struct pam *         const pamP,
+                   tuple                const bgColor,
+                   const tuple *        const textureRow,
+                   const unsigned int * const same,
+                   unsigned int *       const sameFp,
+                   const tuple *        const outRow,
+                   unsigned int *       const tuplesInCol) {
 /*----------------------------------------------------------------------------
   Average the color of each non-background pattern tuple to every column that
   should have the same color.
@@ -904,7 +971,7 @@ averageFromPattern(struct pam *   const pamP,
         unsigned int plane;
         for (plane = 0; plane < pamP->depth; ++plane)
             outRow[col][plane] = 0;
-        tuplesPerCol[col] = 0;
+        tuplesInCol[col] = 0;
     }
 
     /* Accumulate the color of each non-background pattern tuple to
@@ -921,7 +988,7 @@ averageFromPattern(struct pam *   const pamP,
                     unsigned int plane;
                     for (plane = 0; plane < pamP->depth; ++plane)
                         outRow[eqcol][plane] += onetuple[plane];
-                    tuplesPerCol[eqcol]++;
+                    tuplesInCol[eqcol]++;
                 }
     }
     /* Take the average of all colors associated with each column.
@@ -929,10 +996,10 @@ averageFromPattern(struct pam *   const pamP,
        previously assigned to their fixed-point column.
     */
     for (col = 0; col < pamP->width; ++col) {
-        if (tuplesPerCol[col] > 0) {
+        if (tuplesInCol[col] > 0) {
             unsigned int plane;
             for (plane = 0; plane < pamP->depth; ++plane)
-                outRow[col][plane] /= tuplesPerCol[col];
+                outRow[col][plane] /= tuplesInCol[col];
         } else
             pnm_assigntuple(pamP, outRow[col], bgColor);
     }
@@ -944,7 +1011,7 @@ static void
 smoothOutSpeckles(struct pam *   const pamP,
                   tuple          const bgColor,
                   unsigned int   const smoothing,
-                  unsigned int * const tuplesPerCol,
+                  unsigned int * const tuplesInCol,
                   tuple *        const rowBuffer,
                   const tuple *  const outRow) {
 /*----------------------------------------------------------------------------
@@ -957,7 +1024,7 @@ smoothOutSpeckles(struct pam *   const pamP,
         int col;
         tuple * const scratchrow = rowBuffer;
         for (col = pamP->width-2; col >= 1; --col) {
-            if (tuplesPerCol[col] == 0) {
+            if (tuplesInCol[col] == 0) {
                 /* Replace a background tuple with the average of its
                    left and right neighbors.
                 */
@@ -967,16 +1034,16 @@ smoothOutSpeckles(struct pam *   const pamP,
                 if (!pnm_tupleequal(pamP, outRow[col-1], bgColor)) {
                     for (plane = 0; plane < pamP->depth; ++plane)
                         scratchrow[col][plane] += outRow[col-1][plane];
-                    tuplesPerCol[col]++;
+                    ++tuplesInCol[col];
                 }
                 if (!pnm_tupleequal(pamP, outRow[col+1], bgColor)) {
                     for (plane = 0; plane < pamP->depth; ++plane)
                         scratchrow[col][plane] += outRow[col+1][plane];
-                    tuplesPerCol[col]++;
+                    ++tuplesInCol[col];
                 }
-                if (tuplesPerCol[col] > 0)
+                if (tuplesInCol[col] > 0)
                     for (plane = 0; plane < pamP->depth; ++plane)
-                        scratchrow[col][plane] /= tuplesPerCol[col];
+                        scratchrow[col][plane] /= tuplesInCol[col];
                 else
                     pnm_assigntuple(pamP, scratchrow[col], outRow[col]);
             } else
@@ -990,10 +1057,10 @@ smoothOutSpeckles(struct pam *   const pamP,
 
 
 static void
-replaceRemainingBackgroundWithPattern(outGenerator * const outGenP,
-                                      const int *    const same,
-                                      unsigned int   const row,
-                                      const tuple *  const outRow) {
+replaceRemainingBackgroundWithPattern(outGenerator *       const outGenP,
+                                      const unsigned int * const same,
+                                      unsigned int         const row,
+                                      const tuple *        const outRow) {
 
     const struct pam * const pamP = &outGenP->pam;
     tuple const bgColor = outGenP->textureP->bgColor;
@@ -1023,16 +1090,23 @@ replaceRemainingBackgroundWithPattern(outGenerator * const outGenP,
 
 
 static void
-makeImageRowMts(outGenerator * const outGenP,
-                unsigned int   const row,
-                const int *    const same,
-                int *          const sameFp,
-                unsigned int * const tuplesPerCol,
-                tuple *        const rowBuffer,
-                const tuple *  const outRow) {
+makeImageRowMts(outGenerator *       const outGenP,
+                unsigned int         const row,
+                const unsigned int * const same,
+                unsigned int *       const sameFp,
+                tuple *              const rowBuffer,
+                const tuple *        const outRow) {
 /*----------------------------------------------------------------------------
   Make a row of a mapped-texture stereogram.
 -----------------------------------------------------------------------------*/
+    unsigned int * tuplesInCol;
+        /* tuplesInCol[C] is the number of tuples averaged together to make
+           Column C.
+        */
+    MALLOCARRAY(tuplesInCol, outGenP->pam.width);
+    if (tuplesInCol == NULL)
+        pm_error("Unable to allocate space for \"tuplesInCol\" array.");
+
     assert(outGenP->textureP);
     /* This is an original algorithm by Scott Pakin. */
 
@@ -1049,27 +1123,29 @@ makeImageRowMts(outGenerator * const outGenP,
     averageFromPattern(&outGenP->pam, outGenP->textureP->bgColor,
                        outGenP->textureP->imageData[row],
                        same, sameFp,
-                       outRow, tuplesPerCol);
+                       outRow, tuplesInCol);
 
     /* Smooth out small speckles of the background color lying between
        other colors.
     */
     smoothOutSpeckles(&outGenP->pam, outGenP->textureP->bgColor,
                       outGenP->textureP->smoothing,
-                      tuplesPerCol, rowBuffer, outRow);
+                      tuplesInCol, rowBuffer, outRow);
 
     /* Replace any remaining background tuples with a pattern tuple. */
 
     replaceRemainingBackgroundWithPattern(outGenP, same, row, outRow);
+
+    free(tuplesInCol);
 }
 
 
 
 static void
-makeImageRow(outGenerator * const outGenP,
-             int            const row,
-             const int *    const same,
-             const tuple *  const outRow) {
+makeImageRow(outGenerator *       const outGenP,
+             unsigned int         const row,
+             const unsigned int * const same,
+             const tuple *        const outRow) {
 /*----------------------------------------------------------------------------
   same[N] is one of two things:
 
@@ -1083,6 +1159,9 @@ makeImageRow(outGenerator * const outGenP,
     int col;
     for (col = outGenP->pam.width-1; col >= 0; --col) {
         bool const duplicate = (same[col] != col);
+            /* This column is a duplicate of an earlier (farther to the right)
+               column, to wit Column same[col]
+            */
 
         tuple newtuple;
 
@@ -1119,19 +1198,20 @@ makeImageRows(const struct pam * const inPamP,
               double             const eyesep,
               unsigned int       const dpi,
               bool               const crossEyed,
-              bool               const makeMask) {
+              bool               const makeMask,
+              unsigned int       const magnifypat,
+              unsigned int       const smoothing) {
 
     tuple * inRow;     /* One row of pixels read from the height-map file */
     tuple * outRow;    /* One row of pixels to write to the height-map file */
-    int * same;
-        /* Array: same[N] is the column number of a pixel to the right forced
-           to have the same color as the one in column N
+    unsigned int * same;
+        /* Malloced array: same[N] is the column number of a pixel to the
+           right forced to have the same color as the one in column N
         */
-    int * sameFp;     /* Fixed point of same[] */
-    unsigned int * tuplesPerCol;
-        /* Number of tuples averaged together in each column */
+    unsigned int * sameFp;
+        /* Malloced array: Fixed point of same[] */
     tuple * rowBuffer;     /* Scratch row needed for texture manipulation */
-    int row;           /* Current row in the input and output files */
+    unsigned int row;      /* Current row in the input and output files */
 
     inRow = pnm_allocpamrow(inPamP);
     outRow = pnm_allocpamrow(&outputGeneratorP->pam);
@@ -1142,15 +1222,8 @@ makeImageRows(const struct pam * const inPamP,
     MALLOCARRAY(sameFp, inPamP->width);
     if (sameFp == NULL)
         pm_error("Unable to allocate space for \"sameFp\" array.");
-    MALLOCARRAY(tuplesPerCol, inPamP->width);
-    if (tuplesPerCol == NULL)
-        pm_error("Unable to allocate space for \"tuplesPerCol\" array.");
     rowBuffer = pnm_allocpamrow(&outputGeneratorP->pam);
 
-    /* See the paper cited above for code comments.  All I (Scott) did was
-     * transcribe the code and make minimal changes for Netpbm.  And some
-     * style changes by Bryan to match Netpbm style.
-     */
     for (row = 0; row < inPamP->height; ++row) {
         pnm_readpamrow(inPamP, inRow);
         if (crossEyed)
@@ -1160,14 +1233,16 @@ makeImageRows(const struct pam * const inPamP,
             invertHeightRow(inPamP, inRow);
 
         /* Determine color constraints. */
-        makeStereoRow(inPamP, inRow, same, depthOfField, eyesep, dpi);
+        makeStereoRow(inPamP, inRow, same, depthOfField, eyesep, dpi,
+                      ROUNDU(eyesep * dpi)/(magnifypat * 2),
+                      smoothing);
 
         if (makeMask)
             makeMaskRow(&outputGeneratorP->pam, same, outRow);
         else {
             if (outputGeneratorP->textureP)
                 makeImageRowMts(outputGeneratorP, row, same, sameFp,
-                                tuplesPerCol, rowBuffer, outRow);
+                                rowBuffer, outRow);
             else
                 makeImageRow(outputGeneratorP, row, same, outRow);
         }
@@ -1176,7 +1251,6 @@ makeImageRows(const struct pam * const inPamP,
     }
 
     pnm_freepamrow(rowBuffer);
-    free(tuplesPerCol);
     free(sameFp);
     free(same);
     pnm_freepamrow(outRow);
@@ -1207,22 +1281,21 @@ produceStereogram(FILE *             const ifP,
 
     pnm_writepaminit(&outputGeneratorP->pam);
 
-    /* Draw guide boxes at the top, if desired. */
-    if (cmdline.guidesize < 0)
-        drawguides(-cmdline.guidesize, &outputGeneratorP->pam,
+    if (cmdline.guidetop)
+        drawguides(cmdline.guidesize, &outputGeneratorP->pam,
                    cmdline.eyesep,
                    cmdline.dpi, cmdline.depth);
 
     makeImageRows(&inPam, outputGeneratorP,
                   cmdline.depth, cmdline.eyesep, cmdline.dpi,
-                  cmdline.crosseyed, cmdline.makemask);
+                  cmdline.crosseyed, cmdline.makemask, cmdline.magnifypat,
+                  cmdline.smoothing);
 
-    /* Draw guide boxes at the bottom, if desired. */
-    if (cmdline.guidesize > 0)
+    if (cmdline.guidebottom)
         drawguides(cmdline.guidesize, &outputGeneratorP->pam,
                    cmdline.eyesep, cmdline.dpi, cmdline.depth);
 
-    if (cmdline.texFilespec) {
+    if (cmdline.texfile) {
         pnm_freepamarray(outputGeneratorP->textureP->imageData,
                          &outputGeneratorP->textureP->pam);
         free(outputGeneratorP->textureP);
@@ -1236,7 +1309,7 @@ static void
 reportParameters(struct cmdlineInfo const cmdline) {
 
     unsigned int const pixelEyesep =
-        round2int(cmdline.eyesep * cmdline.dpi);
+        ROUNDU(cmdline.eyesep * cmdline.dpi);
     unsigned int const sep0 =
         separation(0, cmdline.eyesep, cmdline.dpi, cmdline.depth);
     unsigned int const sep1 =
@@ -1254,7 +1327,7 @@ reportParameters(struct cmdlineInfo const cmdline) {
     pm_message("Near pattern width: %u / %u = %u pixels",
                sep1, cmdline.magnifypat, sep1 / cmdline.magnifypat);
     pm_message("Unique 3-D depth levels possible: %u", sep0 - sep1 + 1);
-    if (cmdline.patFilespec && (cmdline.xshift || cmdline.yshift))
+    if (cmdline.patfile && (cmdline.xshift || cmdline.yshift))
         pm_message("Pattern shift: (%u, %u)", cmdline.xshift, cmdline.yshift);
 }
 
@@ -1273,7 +1346,7 @@ main(int argc, const char *argv[]) {
     if (cmdline.verbose)
         reportParameters(cmdline);
 
-    srand(cmdline.randomseed);
+    srand(cmdline.randomseedSpec ? cmdline.randomseed : pm_randseed());
 
     ifP = pm_openr(cmdline.inputFilespec);
 
@@ -1284,3 +1357,6 @@ main(int argc, const char *argv[]) {
 
     return 0;
 }
+
+
+

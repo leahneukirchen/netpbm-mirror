@@ -31,6 +31,8 @@
  */
 
 #include <stdio.h>
+
+#include "rle_config.h"
 #include "rle_put.h"
 #include "rle.h"
 #include "Runput.h"

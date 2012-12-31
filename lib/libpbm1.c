@@ -113,23 +113,36 @@ static unsigned int const p[256] = {
 
 static int
 bitpop(const unsigned char * const packedRow,
-       unsigned int          const cols) {
+       unsigned int          const cols,
+       unsigned int          const offset) {
 /*----------------------------------------------------------------------------
-  Return the number of 1 bits in 'packedRow'.
+  Return the number of 1 bits in 'packedRow', ignoring 0 to 7 bits
+  at the row start (= on the left edge), indicated by offset.
 -----------------------------------------------------------------------------*/
-    unsigned int const colByteCnt  = pbm_packed_bytes(cols);
-    unsigned int const fullByteCnt = cols/8;
+    unsigned int const fullLength = cols + offset;
 
-    unsigned int i;
     unsigned int sum;
 
-    sum = 0;  /* initial value */
+    if (fullLength <= 8) {
+        /* All bits are in a single byte */
+        sum = bitpop8((packedRow[0] << offset ) & (0xff << (8 - cols)));
+    } else {
+        unsigned int const colByteCnt  = pbm_packed_bytes(fullLength);
+        unsigned int const fullByteCnt = fullLength/8;
 
-    for (i = 0; i < fullByteCnt; ++i)
-        sum += bitpop8(packedRow[i]);
+        unsigned int i;
 
-    if (colByteCnt > fullByteCnt)
-        sum += bitpop8(packedRow[i] >> (8-cols%8));
+        /* First byte, whether it is full or not */
+        sum = bitpop8(packedRow[0] << offset );
+
+        /* Second byte to last full byte */
+        for (i = 1; i < fullByteCnt; ++i)
+            sum += bitpop8(packedRow[i]);
+
+        /* Partial byte at the right end */
+        if (colByteCnt > fullByteCnt)
+            sum += bitpop8(packedRow[i] >> (8 - fullLength%8));
+    }
 
     return sum;
 }
@@ -151,19 +164,13 @@ pbm_backgroundbitrow(unsigned const char * const packedBits,
 
     unsigned int retval;
 
-    unsigned int firstbit, lastbit;
-    unsigned int totalBitpop, headBitpop;
-
-    firstbit = (row[0] >> (7-rs)) & 0x01;
-    lastbit  = (row[last] >> (7- (cols+rs-1)%8)) & 0x01;
+    bool const firstbit = (row[0] >> (7-rs)) & 0x01;
+    bool const lastbit  = (row[last] >> (7- (cols+rs-1)%8)) & 0x01;
 
     if (firstbit == lastbit)
         retval = firstbit;
     else {
-        totalBitpop = bitpop(row, cols + rs);
-        headBitpop  = (rs == 0) ? 0 : bitpop(row, rs);
-
-        if (totalBitpop - headBitpop >= cols/2)
+        if (bitpop(row, cols, rs) >= cols/2)
             retval = PBM_BLACK;
         else
             retval = PBM_WHITE;

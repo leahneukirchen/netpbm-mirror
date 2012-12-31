@@ -1,10 +1,13 @@
-/*----------------------------------------------------------------------------
+/*=============================================================================
                                   libpamn.c
-------------------------------------------------------------------------------
+===============================================================================
    These are the library functions, which belong in the libnetpbm library,
    that deal with the PAM image format via maxval-normalized, floating point
    sample values.
------------------------------------------------------------------------------*/
+
+   This file was originally written by Bryan Henderson and is contributed
+   to the public domain by him and subsequent authors.
+=============================================================================*/
 
 #include <assert.h>
 
@@ -538,7 +541,12 @@ static void
 applyopacityCommon(enum applyUnapply const applyUnapply,
                    struct pam *      const pamP,
                    tuplen *          const tuplenrow) {
-
+/*----------------------------------------------------------------------------
+   Either apply or unapply opacity to the row tuplenrow[], per
+   'applyUnapply'.  Apply means to multiply each foreground sample by
+   the opacity value for that pixel; Unapply means to do the inverse, as
+   if the foreground values had already been so multiplied.
+-----------------------------------------------------------------------------*/
     unsigned int opacityPlane;
     bool haveOpacity;
     

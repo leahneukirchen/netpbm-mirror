@@ -1,0 +1,6 @@
+#! /bin/bash
+# This script tests: pnmtorast rasttopnm
+# Also requires: 
+
+# Should produce 1926073387 101484, cksum of testimg.ppm
+${PBM_TESTPREFIX}pnmtorast testimg.ppm | ${PBM_TESTPREFIX}rasttopnm | cksum 

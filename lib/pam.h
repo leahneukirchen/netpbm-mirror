@@ -1,8 +1,10 @@
-/*----------------------------------------------------------------------------
+/*=============================================================================
    These are declarations for use with the Portable Arbitrary Map (PAM)
    format and the Netpbm library functions specific to them.
------------------------------------------------------------------------------*/
 
+   This file was originally written by Bryan Henderson and is contributed
+   to the public domain by him and subsequent authors.
+=============================================================================*/
 #ifndef PAM_H
 #define PAM_H
 

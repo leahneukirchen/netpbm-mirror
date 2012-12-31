@@ -94,6 +94,8 @@ parseCmdline(int argc, const char ** argv,
     OPTENT3(0, "verbose",  OPT_FLAG, NULL, &cmdlineP->verbose,  0);
     OPTENT3(0, "randseed", OPT_UINT, &cmdlineP->randseed,
             &cmdlineP->randseedSpec, 0);
+    OPTENT3(0, "randomseed", OPT_UINT, &cmdlineP->randseed,
+            &cmdlineP->randseedSpec, 0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* we have no short (old-fashioned) options */

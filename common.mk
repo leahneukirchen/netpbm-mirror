@@ -110,9 +110,18 @@ LDLIBS = $(LOADLIBES) $(LIBS)
 # way to detect that case and fail, so I just add a '/' to the front
 # if it isn't already there.
 ifneq ($(pkgdir)x,x)
-  PKGDIR = $(patsubst //%, /%, /$(pkgdir))
+  PKGDIR = $(patsubst //%,/%, /$(pkgdir))
 else
   PKGDIR = $(PKGDIR_DEFAULT)
+endif
+
+
+# 'resultdir', like 'pkgdir' is meant to be supplied from the make
+# command line.  Unlike 'pkgdir' we allow relative paths.
+ifneq ($(resultdir)x,x)
+  RESULTDIR = $(resultdir)
+else
+  RESULTDIR = $(RESULTDIR_DEFAULT)
 endif
 
 #===========================================================================

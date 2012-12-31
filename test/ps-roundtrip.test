@@ -1,0 +1,21 @@
+#! /bin/bash
+# This script tests: pnmtops pstopnm
+# Also requires: pnmtopnm
+
+${PBM_TESTPREFIX}pnmtops -nocenter -equalpixels -dpi 72 -noturn testimg.ppm \
+  > ${tmpdir}/testimg.ps
+xysize=`awk  '/BoundingBox/ {print "-xsize="$4,"-ysize="$5}' \
+  ${tmpdir}/testimg.ps` 
+${PBM_TESTPREFIX}pstopnm -xborder=0 -yborder=0 $xysize -stdout \
+  -quiet ${tmpdir}/testimg.ps | \
+  ${PBM_BINPREFIX}pnmtopnm | cksum
+
+${PBM_TESTPREFIX}pnmtops -nocenter -equalpixels -dpi 72 -noturn testgrid.pbm \
+  > ${tmpdir}/testgrid.ps
+xysize=`awk  '/BoundingBox/ {print "-xsize="$4,"-ysize="$5}' \
+  ${tmpdir}/testgrid.ps`
+${PBM_TESTPREFIX}pstopnm -xborder=0 -yborder=0 $xysize -stdout \
+  -quiet ${tmpdir}/testgrid.ps -pbm | \
+  ${PBM_BINPREFIX}pnmtopnm | cksum
+
+rm  ${tmpdir}/testgrid.ps  ${tmpdir}/testimg.ps

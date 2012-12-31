@@ -1,0 +1,31 @@
+#! /bin/bash
+# This script tests: ppmtorgb3 rgb3toppm
+# Also requires: pgmtopbm pgmtopgm ppmtopgm
+
+# Break an image into three monochrome planes, reassemble the
+# image from them and check whether the resulting output is
+# identical to the original input.
+
+cp testimg.ppm ${tmpdir} &&
+${PBM_TESTPREFIX}ppmtorgb3 ${tmpdir}/testimg.ppm &&
+${PBM_TESTPREFIX}rgb3toppm ${tmpdir}/testimg.red ${tmpdir}/testimg.grn \
+  ${tmpdir}/testimg.blu | cksum
+
+rm ${tmpdir}/testimg.{ppm,red,grn,blu}
+
+cp testgrid.pbm ${tmpdir} &&
+${PBM_TESTPREFIX}ppmtorgb3 ${tmpdir}/testgrid.pbm &&
+${PBM_TESTPREFIX}rgb3toppm ${tmpdir}/testgrid.red ${tmpdir}/testgrid.grn \
+  ${tmpdir}/testgrid.blu | \
+  ${PBM_BINPREFIX}ppmtopgm | ${PBM_BINPREFIX}pgmtopbm -th -val=0.5 | cksum
+
+
+# With PGM or PBM input, the three monochrome planes should be
+# identical.  Test for this.
+
+diff ${tmpdir}/testgrid.red ${tmpdir}/testgrid.grn ; echo $?
+diff ${tmpdir}/testgrid.grn ${tmpdir}/testgrid.blu ; echo $?
+${PBM_BINPREFIX}pgmtopgm < testgrid.pbm | diff - ${tmpdir}/testgrid.red;
+  echo $?
+
+rm ${tmpdir}/testgrid.{pbm,red,grn,blu}

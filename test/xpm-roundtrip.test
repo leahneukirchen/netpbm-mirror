@@ -1,0 +1,8 @@
+#! /bin/bash
+# This script tests: ppmtoxpm xpmtoppm
+# Also requires: pgmtopbm ppmtopgm
+
+#${PBM_TESTPREFIX}ppmtoxpm -hexonly testimg.ppm | \
+# ${PBM_TESTPREFIX}xpmtoppm  | cksum
+${PBM_TESTPREFIX}ppmtoxpm testgrid.pbm | ${PBM_TESTPREFIX}xpmtoppm | \
+  ${PBM_BINPREFIX}ppmtopgm | ${PBM_BINPREFIX}pgmtopbm -th -value=0.5 | cksum

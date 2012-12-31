@@ -1,6 +1,6 @@
-/******************************************************************************
+/*=============================================================================
                                   libpammap.c
-*******************************************************************************
+===============================================================================
 
   These are functions that deal with tuple hashes and tuple tables.
 
@@ -11,7 +11,9 @@
   A tuple table lets you scan all the values, being a table of elements
   that consist of an ordered pair of a tuple value and integer.
 
-******************************************************************************/
+  This file was originally written by Bryan Henderson and is contributed
+  to the public domain by him and subsequent authors.
+=============================================================================*/
 
 #include <assert.h>
 

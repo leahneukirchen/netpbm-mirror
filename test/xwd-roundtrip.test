@@ -1,0 +1,14 @@
+#! /bin/bash
+# This script tests: pnmtoxwd xwdtopnm
+# Also requires: pamdepth ppmtopgm
+
+# Test 1.  Should produce 2871603838 33838
+# which is the output of ppmtopgm testimg.ppm | cksum
+${PBM_BINPREFIX}ppmtopgm testimg.ppm | ${PBM_TESTPREFIX}pnmtoxwd  | \
+  ${PBM_TESTPREFIX}xwdtopnm | ${PBM_BINPREFIX}pamdepth 255 | cksum
+
+${PBM_TESTPREFIX}pnmtoxwd --quiet  testimg.ppm | \
+  ${PBM_TESTPREFIX}xwdtopnm --quiet | ${PBM_BINPREFIX}pamdepth 255 | cksum
+
+${PBM_TESTPREFIX}pnmtoxwd --quiet  testgrid.pbm | \
+  ${PBM_TESTPREFIX}xwdtopnm | cksum

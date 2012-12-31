@@ -93,6 +93,8 @@ parseCommandLine(int argc, const char ** const argv,
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
+    free(option_def);
+
     if (leftright + topbottom > 1)
         pm_error("You may specify only one of -topbottom (-tb) and "
                  "-leftright (-lr)");
@@ -427,6 +429,8 @@ concatenateLeftRightPbm(FILE *             const ofP,
 
     getPbmImageInfo(img, nfiles, newrows, justification, backcolor, &img2);
 
+    outrow[pbm_packed_bytes(newcols)-1] = 0x00;
+
     for (row = 0; row < newrows; ++row) {
         unsigned int i;
 
@@ -565,7 +569,7 @@ concatenateTopBottomPbm(FILE *             const ofP,
 
         backgroundPrev = background;
     }
-    free(outrow);
+    pbm_freerow_packed(outrow);
 }
 
 
@@ -860,6 +864,7 @@ main(int           argc,
     for (i = 0; i < cmdline.nfiles; ++i)
         pm_close(img[i].ifP);
     free(cmdline.inputFilespec);
+    free(img);
     pm_close(stdout);
 
     return 0;

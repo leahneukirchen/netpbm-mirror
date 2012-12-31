@@ -1,0 +1,7 @@
+#! /bin/bash
+# This script tests: pamfile
+# Also requires: ppmtopgm
+
+${PBM_TESTPREFIX}pamfile testimg.ppm
+${PBM_TESTPREFIX}pamfile testgrid.pbm
+${PBM_BINPREFIX}ppmtopgm testimg.ppm | ${PBM_TESTPREFIX}pamfile

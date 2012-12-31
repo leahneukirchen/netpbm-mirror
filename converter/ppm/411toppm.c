@@ -30,7 +30,7 @@
 
    Bryan Henderson reworked the program to use the Netpbm libraries to
    create the PPM output and follow some other Netpbm conventions.
-   2001-03-03.  Bryan's contribution is public domain.  
+   2001-03-03.  Bryan's contribution is public domain.
 */
 /*
  * Copyright (c) 1995 The Regents of the University of California.
@@ -56,7 +56,6 @@
  * HEADER FILES *
  *==============*/
 #include <stdio.h>
-#include <stdlib.h>
 
 #include "pm_c_util.h"
 #include "mallocvar.h"
@@ -67,7 +66,7 @@ typedef unsigned char uint8;
 
 #define CHOP(x)     ((x < 0) ? 0 : ((x > 255) ? 255 : x))
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -79,8 +78,8 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo *cmdlineP) {
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo *cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
@@ -107,11 +106,13 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
     
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (cmdlineP->width <= 0)
         pm_error("-width must be positive.");
+    if (cmdlineP->width %4 != 0)
+        pm_error("-width must be a multiple of 4.");
     if (cmdlineP->height <= 0)
         pm_error("-height must be positive.");
 
@@ -124,141 +125,103 @@ parseCommandLine(int argc, char ** argv,
         else
             cmdlineP->inputFileName = "-";
     }
-}
-
-
-
-static void 
-ReadYUV(FILE *fpointer, const int width, const int height, 
-        uint8 ** const orig_y, uint8 ** const orig_cb, 
-        uint8 ** const orig_cr) {
-
-    int y, x, i;
-
-    for (y = 0; y < height; y++) {
-        for (x = 0, i = 0; x < width; x+=4, i++) {
-            fread(orig_y[y]+x , 1, 4, fpointer);
-            fread(orig_cb[y]+i, 1, 1, fpointer);
-            fread(orig_cr[y]+i, 1, 1, fpointer);
-        }
-    }
+    free(option_def);
 }
 
 
 
 static void
-AllocYCC(const int width, const int height,
-         uint8 *** const orig_yP, uint8 *** const orig_crP, 
-         uint8 *** const orig_cbP) {
-    int y;
+ReadYUV(FILE  * const ifP,
+        uint8 * const inbuff) {
 
-    MALLOCARRAY_NOFAIL(*orig_yP, height);
-    for (y = 0; y < height; y++) 
-        MALLOCARRAY_NOFAIL((*orig_yP)[y], width);
+    size_t bytesRead;
 
-    MALLOCARRAY_NOFAIL(*orig_crP, height);
-    for (y = 0; y < height; y++) 
-        MALLOCARRAY_NOFAIL((*orig_crP)[y], width/4);
+    bytesRead = fread(inbuff, 1, 6, ifP);
 
-    MALLOCARRAY_NOFAIL(*orig_cbP, height);
-    for (y = 0; y < height; y++) 
-        MALLOCARRAY_NOFAIL((*orig_cbP)[y], width/4);
+    if (bytesRead != 6 ) {
+        if (feof(ifP))
+            pm_error("Premature end of input.");
+        else
+            pm_error("Error reading input.");
+     }
 }
 
 
 
-static void 
-YUVtoPPM(const int width, const int height, 
-         uint8 ** const orig_y, 
-         uint8 ** const orig_cb,
-         uint8 ** const orig_cr,
-         pixel ** const ppm_image
-         ) {
-    int     **Y, **U, **V;
-    int    y;
+static void
+YUVtoPPM(FILE  * const ifP,
+         int     const width,
+         int     const height,
+         pixel * const pixrow ) {
 
-    /* first, allocate tons of memory */
+    unsigned int col;
 
-    MALLOCARRAY_NOFAIL(Y, height);
-    for (y = 0; y < height; y++) 
-        MALLOCARRAY_NOFAIL(Y[y], width);
-    
-    MALLOCARRAY_NOFAIL(U, height);
-    for (y = 0; y < height; y++) 
-        MALLOCARRAY_NOFAIL(U[y], width / 4);
+    for (col = 0; col < width; ++col) {
 
-    MALLOCARRAY_NOFAIL(V, height);
-    for (y = 0; y < height; y++) 
-        MALLOCARRAY_NOFAIL(V[y], width/4);
+        uint8 inbuff[6];
 
-	for ( y = 0; y < height; y ++ ) {
-        int x;
-	    for ( x = 0; x < width/4; x ++ ) {
-            U[y][x] = orig_cb[y][x] - 128;
-            V[y][x] = orig_cr[y][x] - 128;
-	    }
-    }
-	for ( y = 0; y < height; y ++ ) {
-        int x;
-	    for ( x = 0; x < width; x ++ )
-	    {
-            Y[y][x] = orig_y[y][x] - 16;
-	    }
-    }
-    for ( y = 0; y < height; y++ ) {
-        int x;
-        for ( x = 0; x < width; x++ ) {
-            pixval r, g, b;
-            long   tempR, tempG, tempB;
-            /* look at yuvtoppm source for explanation */
-            
-            tempR = 104635*V[y][x/4];
-            tempG = -25690*U[y][x/4] + -53294 * V[y][x/4];
-            tempB = 132278*U[y][x/4];
-            
-            tempR += (Y[y][x]*76310);
-            tempG += (Y[y][x]*76310);
-            tempB += (Y[y][x]*76310);
-            
-            r = CHOP((int)(tempR >> 16));
-            g = CHOP((int)(tempG >> 16));
-            b = CHOP((int)(tempB >> 16));
+        uint8 * const origY  = &inbuff[0];
+        uint8 * const origCb = &inbuff[4];
+        uint8 * const origCr = &inbuff[5];
+        int   y, u, v;
+        int32_t tempR, tempG, tempB;
+        pixval r, g, b;
 
-            PPM_ASSIGN(ppm_image[y][x], r, g, b);
+        if (col % 4 == 0) {
+            ReadYUV(ifP, inbuff);
+            u = origCb[0] - 128;
+            v = origCr[0] - 128;
         }
+
+        y = origY[col % 4] - 16;
+
+        tempR = 104635 * v              + y * 76310;
+        tempG = -25690 * u + -53294 * v + y * 76310;
+        tempB = 132278 * u              + y * 76310;
+
+        r = CHOP((int)(tempR >> 16));
+        g = CHOP((int)(tempG >> 16));
+        b = CHOP((int)(tempB >> 16));
+        
+        PPM_ASSIGN(pixrow[col], r, g, b);
     }
-    /* We really should free the Y, U, and V arrays now */
 }
 
 
 
 int
-main(int argc, char **argv) {
-    FILE *infile;
-    struct cmdlineInfo cmdline;
-    uint8 **orig_y, **orig_cb, **orig_cr;
-    pixel **ppm_image;
+main(int argc, const char **argv) {
 
-    ppm_init(&argc, argv);
+    struct CmdlineInfo cmdline;
+    FILE  * ifP;
+    pixel * pixrow;
+    unsigned int row;
+
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
-    AllocYCC(cmdline.width, cmdline.height, &orig_y, &orig_cr, &orig_cb);
-    ppm_image = ppm_allocarray(cmdline.width, cmdline.height);
+    pixrow = ppm_allocrow(cmdline.width);
 
-    pm_message("Reading (%dx%d):  %s\n", cmdline.width, cmdline.height, 
+    pm_message("Reading (%ux%u): '%s'", cmdline.width, cmdline.height,
                cmdline.inputFileName);
-    infile = pm_openr(cmdline.inputFileName);
-    ReadYUV(infile, cmdline.width, cmdline.height, orig_y, orig_cb, orig_cr);
-    pm_close(infile);
 
-    YUVtoPPM(cmdline.width, cmdline.height, orig_y, orig_cb, orig_cr, 
-             ppm_image);
+    ifP = pm_openr(cmdline.inputFileName);
 
-    ppm_writeppm(stdout, ppm_image, cmdline.width, cmdline.height, 255, 0);
+    ppm_writeppminit(stdout, cmdline.width, cmdline.height, 255, 0);
 
-    ppm_freearray(ppm_image, cmdline.height);
+    for (row = 0; row < cmdline.height; row++) {
+        YUVtoPPM(ifP, cmdline.width, cmdline.height, pixrow);
+        ppm_writeppmrow(stdout, pixrow, cmdline.width, 255, 0);
+    }
+
+    pm_close(ifP);
+    ppm_freerow(pixrow);
 
     return 0;
 }
 
+/*
+   By default a .411 file is width=64, height=48, 4608 bytes.
+   There is no header.
+*/

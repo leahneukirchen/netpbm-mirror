@@ -1,0 +1,7 @@
+#! /bin/bash
+# This script tests: pamtopfm pfmtopam
+# Also requires: pamtopnm
+
+# Should print 1926073387 101484, cksum of testimg.ppm
+${PBM_TESTPREFIX}pamtopfm testimg.ppm | ${PBM_TESTPREFIX}pfmtopam | \
+  ${PBM_BINPREFIX}pamtopnm | cksum

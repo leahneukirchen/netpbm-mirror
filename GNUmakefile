@@ -406,6 +406,16 @@ install.sharedlibstub:
 	$(MAKE) -C lib -f $(SRCDIR)/lib/Makefile \
 	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) install.sharedlibstub 
 
+.PHONY: check
+check:
+# This works on typical Linux systems
+	if [ ! -d $(RESULTDIR) ]; then mkdir -pv $(RESULTDIR); fi
+	cd $(RESULTDIR); \
+	  PBM_TESTPREFIX=$(PKGDIR)/bin \
+	  LD_LIBRARY_PATH=$(PKGDIR)/lib \
+	  RGBDEF=$(SRCDIR)/lib/rgb.txt \
+	  $(SRCDIR)/test/Execute-Tests 2>&1
+
 clean: localclean
 
 .PHONY: localclean

@@ -4,36 +4,48 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-12.12.30 BJH  Release 10.60.06
+12.12.30 BJH  Release 10.61.00
+
+              pgmhist: Add -machine option.
+
+              pgmhist: Add -median, -quartile, and -decile options.
+
+              pamstereogram: Add -guidetop and -guidebottom options to replace
+              trick where negative -guidesize means top, positive means
+              bottom, absent means none.
+
+              pamtojpeg2k: default to no compression ratio constraint and
+              allow compression ratios less than 1.  Because of compression
+              metadata, small images do require loss of quality in order to
+              get down to a compression ratio of 1.
+
+              pamstereogram: -smoothing smooths images even without -texfile.
+              Thanks Scott Pakin (scott@pakin.org).
+
+              pnmcat: set don't care bits in packed PBM output to zero so
+              they are predictable.
 
               libpam, pamcomp: fix bug: treats tuple type GRAYSCALE_ALPHA like
               GRAYSCALE on 32-bit machine.  Actually, looks only at first 4
               characters (8 characters on machine with 64 bit addressess) of
               the tuple type.  Broken since 10.56 (September 2011).
 
-              leaftoppm: fix incorrect determination of whether input is
-              Interleaf on 64 bit systems.  Always broken.
-
-              cmuwmtopbm: fix incorrect determination of whether input is
-              a CMU window manager bitmap on 64 bit systems.  Always broken.
-
-12.12.14 BJH  Release 10.60.05
-
               pngtopam -alphapam with grayscale input: fix bug: generates
               invalid output: tuple type GRAYSCALE_ALPHA, but depth 1.  Depth
               should be 2.  Always broken (pngtopam was created in 
               Netpbm 10.44 (September 2008)).
               
-              ppmpat: Fix bug: wrong output with -poles.  Broken in 10.47
-              (June 2009).
-
-12.12.04 BJH  Release 10.60.04
-
               pamtotiff: fix bug: XRESOLUTION, YRESOLUTION, and RESOLUTIONUNIT
               not allowed in -tags.  Broken at least since 10.35.
 
               pnmpsnr: fix crash when invoked (invalidly) with only one
               argument.  Always broken.
+
+              leaftoppm: fix incorrect determination of whether input is
+              Interleaf on 64 bit systems.  Always broken.
+
+              cmuwmtopbm: fix incorrect determination of whether input is
+              a CMU window manager bitmap on 64 bit systems.  Always broken.
 
               pnmmontage: fix totally wrong output.  Broken in 10.44
               (August 2008).
@@ -47,25 +59,19 @@ CHANGE HISTORY
               pampick, pamtompfont, since 10.50 (March 2010) in pbmpscale,
               since 10.44 (September 2008) in pgmhist.              
 
-12.11.18 BJH  Release 10.60.03
-
-              Xbmtopbm: fix incorrect output, memory leak.  Thanks Prophet of
+              xbmtopbm: fix incorrect output, memory leak.  Thanks Prophet of
               the Way <afu@wta.att.ne.jp>.
 
-12.10.21 BJH  Release 10.60.02
-
-              Pamtojpeg2k: default to no compression ratio constraint and
-              allow compression ratios less than 1.  Because of compression
-              metadata, small images do require loss of quality in order to
-              get down to a compression ratio of 1.
-
-12.10.03 BJH  Release 10.60.01
-
-              Sunicontopnm: Fix incorrect output for depth 8.  Always broken
-              (depth = 8 capability was added in Netpbm 10.53 (December 2010).
+              sunicontopnm: Fix incorrect output for depth 8.  Always broken
+              (depth = 8 capability was added in 10.53 (December 2010).
 
               pamgauss: Fix bug: erroneously says -maxval is too big on 64 bit
               system.  Always broken (Pamgauss was added in 10.23 (July 2004).
+
+              ppmpat: Fix bug: wrong output with -poles.  Broken in 10.47
+              (June 2009).
+
+              Add tests.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
 
 12.09.30 BJH  Release 10.60.00
 

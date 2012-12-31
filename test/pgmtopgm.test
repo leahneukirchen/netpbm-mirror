@@ -1,0 +1,5 @@
+#! /bin/bash
+# This script tests: pgmtopgm
+# Also requires: 
+
+${PBM_TESTPREFIX}pgmtopgm < testgrid.pbm | cksum

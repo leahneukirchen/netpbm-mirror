@@ -1,0 +1,12 @@
+#! /bin/bash
+# This script tests: pgmramp
+# Also requires: 
+
+for type in -lr -tb -rect -ell
+do
+${PBM_TESTPREFIX}pgmramp -maxval=3 $type 4 4 -plain
+done
+
+for type in -lr -tb -rect -ell
+do ${PBM_TESTPREFIX}pgmramp $type 256 256 | cksum
+done

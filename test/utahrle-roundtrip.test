@@ -1,0 +1,14 @@
+#! /bin/bash
+# This script tests: pnmtorle rletopnm
+# Also requires: ppmtopgm
+
+#Test 1.  Should print 2871603838 33838, cksum of testimg.pgm
+${PBM_BINPREFIX}ppmtopgm testimg.ppm > ${tmpdir}/testimg.pgm
+${PBM_TESTPREFIX}pnmtorle ${tmpdir}/testimg.pgm | \
+  ${PBM_TESTPREFIX}rletopnm | cksum
+
+rm ${tmpdir}/testimg.pgm
+
+#Test 2.  Should print 1926073387 101484, cksum of testimg.ppm
+${PBM_TESTPREFIX}pnmtorle testimg.ppm | \
+  ${PBM_TESTPREFIX}rletopnm | cksum
