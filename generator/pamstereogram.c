@@ -621,6 +621,7 @@ readTextureImage(struct cmdlineInfo const cmdline,
         if (cmdline.bgcolor && strcmp(colorname, cmdline.bgcolor))
             pm_message("Texture background color: %s (%s)",
                        cmdline.bgcolor, colorname);
+        else
             pm_message("Texture background color: %s", colorname);
         pm_strfree(colorname);
     }
