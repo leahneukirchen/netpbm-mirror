@@ -36,6 +36,7 @@
 
 #include "all.h"
 #include "mtypes.h"
+#include "dct.h"
 #include "mpeg.h"
 #include "motion_search.h"
 #include "prototypes.h"
@@ -92,7 +93,6 @@ const char * hostname;
  *================================*/
 
 void init_idctref _ANSI_ARGS_((void));
-void init_fdct _ANSI_ARGS_((void));
 
 
 struct cmdlineInfo {

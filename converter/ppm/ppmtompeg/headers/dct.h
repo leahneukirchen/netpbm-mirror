@@ -47,6 +47,7 @@ typedef DCTELEM DCTBLOCK_2D[DCTSIZE][DCTSIZE];
 /*  
  *  from mfwddct.c:
  */
+void init_fdct _ANSI_ARGS_((void));
 extern void mp_fwd_dct_block2 _ANSI_ARGS_((DCTBLOCK_2D src, DCTBLOCK_2D dest));
 
 /* jrevdct.c */
