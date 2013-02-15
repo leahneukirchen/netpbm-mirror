@@ -1350,7 +1350,7 @@ warnBrokenTiffLibrary(TIFF * const tiffP) {
         case ORIENTATION_RIGHTBOT:
         case ORIENTATION_LEFTBOT:
             pm_message("WARNING: This TIFF image has an orientation that "
-                       "most TIFF libraries converts incorrectly.  "
+                       "most TIFF libraries convert incorrectly.  "
                        "Use -byrow to circumvent.");
             break;
         }
