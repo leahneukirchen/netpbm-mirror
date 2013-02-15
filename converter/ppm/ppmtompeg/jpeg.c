@@ -17,7 +17,6 @@
 #define _XOPEN_SOURCE    /* Make sure stdio.h contains fileno() */
 #include <unistd.h>
 #include <stdio.h>
-#include "all.h"
 /* With the lossless jpeg patch applied to the Jpeg library
     (ftp://ftp.wizards.dupont.com/pub/ImageMagick/delegates/ljpeg-6b.tar.gz),
     the name of min_DCT_scaled_size changes to min_codec_data_unit,
@@ -26,16 +25,17 @@
 #define min_codec_data_unit min_DCT_scaled_size
 #include <jpeglib.h>
 #undef min_codec_data_unit
-#include "mtypes.h"
-#include "frames.h"
-#include "prototypes.h"
-#include "param.h"
-#include "readframe.h"
+
+#include "netpbm/pm_config.h"
+#include "netpbm/pm_c_util.h"
+#include "netpbm/mallocvar.h"
+#include "netpbm/pm.h"
+
 #include "fsize.h"
-#include "rgbtoycc.h"
+#include "frame.h"
+
 #include "jpeg.h"
 
-#include "mallocvar.h"
 
 /* make it happier.... */
 #undef DCTSIZE2
@@ -385,7 +385,7 @@ ReadJPEG(MpegFrame * const mf,
     jpeg_component_info *compptr;
     int buffer_height;
     int current_row[3];
-    uint8 **orig[3];
+    uint8_t **orig[3];
     int h_samp[3],v_samp[3];
     int max_h_samp,max_v_samp;
     int temp_h, temp_v;

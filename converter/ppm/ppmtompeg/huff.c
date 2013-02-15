@@ -24,8 +24,9 @@
  */
 
 /*  
- *  THIS FILE IS MACHINE GENERATED!  DO NOT EDIT!
+ *  THIS FILE WAS ORIGINALLY MACHINE GENERATED
  */
+#include "general.h"
 #include "mtypes.h"
 #include "huff.h"
 
