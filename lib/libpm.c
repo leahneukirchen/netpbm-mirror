@@ -708,18 +708,6 @@ extractAfterLastSlash(const char * const fullPath,
 
 
 
-#if MSVCRT
-static void
-splitpath(const char * const fullPath,
-          char *       const retval,
-          size_t       const retvalSize) {
-
-    _splitpath_s(fullPath, 0, 0,  0, 0,  retval, retvalSize,  0, 0);
-}
-#endif
-
-
-
 char *
 pm_arg0toprogname(const char arg0[]) {
 /*----------------------------------------------------------------------------
@@ -736,14 +724,23 @@ pm_arg0toprogname(const char arg0[]) {
    The return value is in static storage within.  It is NUL-terminated,
    but truncated at 64 characters.
 -----------------------------------------------------------------------------*/
-    static char retval[64+1];
+#define MAX_RETVAL_SIZE 64
 #if MSVCRT
-    splitpath(arg0, retval, sizeof(retval));
+    /* Note that there exists _splitpath_s, which takes a size argument,
+       but it is only in "secure" extensions of MSVCRT that come only with
+       MSVC; but _splitpath() comes with Windows.  MinGW has a header file
+       for it.
+    */
+    static char retval[_MAX_FNAME];
+    _splitpath(fullPath, 0, 0,  retval, 0);
+    if (MAX_RETVAL_SIZE < _MAX_FNAME)
+        retval[MAX_RETVAL_SIZE] = '\0';
 #else
+    static char retval[MAX_RETVAL_SIZE+1];
     extractAfterLastSlash(arg0, retval, sizeof(retval));
 #endif
 
-    return(retval);
+    return retval;
 }
 
 
