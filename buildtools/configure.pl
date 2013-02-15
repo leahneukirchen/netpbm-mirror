@@ -478,10 +478,10 @@ sub getPlatform() {
     print("Which of the following best describes your platform?\n");
  
     print("gnu      GNU/Linux\n");
+    print("win      Windows/DOS (Cygwin, DJGPP, Mingw32)\n");
     print("sun      Solaris or SunOS\n");
     print("hp       HP-UX\n");
     print("aix      AIX\n");
-    print("win      Windows/DOS (Cygwin, DJGPP, Mingw32)\n");
     print("tru64    Tru64\n");
     print("irix     Irix\n");
     print("bsd      NetBSD, BSD/OS\n");
