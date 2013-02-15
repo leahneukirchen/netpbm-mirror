@@ -111,15 +111,7 @@ int pclose();
 #define NEWLINE '\n'
 
 
-/*==================*
- * TYPE DEFINITIONS *
- *==================*/
-
-#ifndef HAVE_BOOLEAN
 typedef int boolean;
-#define HAVE_BOOLEAN
-/* JPEG library also defines boolean */
-#endif
 
 /* In the following, we need the "signed" in order to make these typedefs
    match those in AIX system header files.  Otherwise, compile fails on 
