@@ -93,4 +93,4 @@ install.bin.local: $(PKGDIR)/bin
 # In March 2012, pnmquantall replaced ppmquantall
 	cd $(PKGDIR)/bin ; \
 	rm -f ppmquantall ; \
-	$(SYMLINK) pnmquantall$(EXE) ppmquantall
+	$(SYMLINK) pnmquantall ppmquantall
