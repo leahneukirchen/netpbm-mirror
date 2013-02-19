@@ -28,14 +28,14 @@ tifftopnm - convert a TIFF file into a PNM image
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><b>tifftopnm</b> reads a TIFF file as input and produces a PNM image
-as output.  The type of the output file depends on the input file - if
-it's black &amp; white, generates a PBM image; if it's grayscale,
-generates a PGM image; otherwise, a PPM image.  The program tells you
+<p><b>tifftopnm</b> reads a TIFF file as input and produces a PNM image as
+output.  The type of the output file depends on the input file - if it's black
+and white, <b>tifftopnm</b> generates a PBM image; if it's grayscale, it
+generates a PGM image; otherwise, the output is PPM.  The program tells you
 which type it is writing.
 
 <p>If the TIFF file contains multiple images (multiple
-&quot;directories,&quot;), <b>tifftopnm</b> generates a multi-image PNM
+&quot;directories&quot;), <b>tifftopnm</b> generates a multi-image PNM
 output stream.  Before Netpbm 10.27 (March 2005), however, it would
 just ignore all but the first input image.
 
