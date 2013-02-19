@@ -56,7 +56,7 @@ ifeq ($(OMIT_NETWORK),y)
 else
   MP_OTHER_OBJS += parallel.o psocket.o
 endif
-ifeq ($(WIN32),y)
+ifeq ($(MSVCRT),y)
   MP_OTHER_OBJS += gethostname_win32.o
 else
   MP_OTHER_OBJS += gethostname.o
