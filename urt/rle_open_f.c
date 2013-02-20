@@ -15,13 +15,13 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+#include "rle.h"
+
 #ifndef NO_OPEN_PIPES
 /* Need to have a SIGCLD signal catcher. */
 #include <signal.h>
 #include <sys/wait.h>
 #include <errno.h>
-
-#include "rle.h"
 
 /* Count outstanding children.  Assume no more than 100 possible. */
 #define MAX_CHILDREN 100

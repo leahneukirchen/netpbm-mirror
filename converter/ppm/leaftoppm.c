@@ -36,7 +36,7 @@ leaf_init(FILE *  const fp,
     long magic;
     
     pm_readbiglong(fp, &magic);
-    if (magic != 0x894f5053)
+    if ((uint32_t)magic != 0x894f5053)
         pm_error("Bad magic number.  First 4 bytes should be "
                  "0x894f5053 but are instead 0x%08x", (unsigned)magic);
     

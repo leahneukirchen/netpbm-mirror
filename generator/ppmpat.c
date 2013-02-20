@@ -618,6 +618,8 @@ poles( pixels, cols, rows, maxval )
               ( row - ys[i] ) * ( row - ys[i] );
         if ( newdist < dist1 )
             {
+            dist2 = dist1;
+            color2 = color1;
             dist1 = newdist;
             color1 = colors[i];
             }

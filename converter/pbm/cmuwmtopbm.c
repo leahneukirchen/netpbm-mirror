@@ -78,7 +78,7 @@ getinit( file, colsP, rowsP, depthP, padrightP )
 
     if ( pm_readbiglong( file, &l ) == -1 )
 	pm_error( "EOF / read error" );
-    if ( l != CMUWM_MAGIC )
+    if ( (uint32_t)l != CMUWM_MAGIC )
 	pm_error( "bad magic number in CMU window manager file" );
     if ( pm_readbiglong( file, &l ) == -1 )
 	pm_error( "EOF / read error" );

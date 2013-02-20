@@ -4,10 +4,23 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+13.02.20 BJH  Release 10.35.88
+
+              ppmpat: fix wrong output with -poles.
+
+              Windows build: fix compile error on urt/rle_open_f.c due to
+              Unix process management stuff.
+
+              leaftoppm: fix incorrect determination of whether input is
+              Interleaf on 64 bit systems.  Always broken.
+
+              cmuwmtopbm: fix incorrect determination of whether input is
+              a CMU window manager bitmap on 64 bit systems.  Always broken.
+
 12.12.05 BJH  Release 10.35.87
 
               pamtotiff: fix bug: XRESOLUTION, YRESOLUTION, and RESOLUTIONUNIT
-              not allowed in -tags.  Broken at least since 10.35.
+              not allowed in -tags.  Broken at least since 10.35.00.
 
               pnmmontage: fix random stuff placed in unoccupied space in the
               output image.  Always broken (program was new in 9.10 (January
