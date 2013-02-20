@@ -4,6 +4,22 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+13.02.20 BJH  Release 10.47.43
+
+              pngtopam -alphapam with grayscale input: fix bug: generates
+              invalid output: tuple type GRAYSCALE_ALPHA, but depth 1.  Depth
+              should be 2.  Always broken (pngtopam was created in 
+              Netpbm 10.44 (September 2008)).
+              
+              ppmpat: Fix bug: wrong output with -poles.  Broken in 10.47
+              (June 2009).
+
+              leaftoppm: fix incorrect determination of whether input is
+              Interleaf on 64 bit systems.  Always broken.
+
+              cmuwmtopbm: fix incorrect determination of whether input is
+              a CMU window manager bitmap on 64 bit systems.  Always broken.
+
 12.12.04 BJH  Release 10.47.42
 
               pamtotiff: fix bug: XRESOLUTION, YRESOLUTION, and RESOLUTIONUNIT
@@ -22,7 +38,7 @@ CHANGE HISTORY
 12.10.03 BJH  Release 10.47.41
 
               pamgauss: Fix bug: erroneously says -maxval is too big.
-              Always broken (Pamgauss was added in 10.23 (July 2004).
+              Always broken (Pamgauss was added in 10.23 (July 2004)).
 
 12.08.20 BJH  Release 10.47.40
 

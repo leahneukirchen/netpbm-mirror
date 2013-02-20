@@ -40,7 +40,7 @@ readCmuwmHeader(FILE *         const ifP,
     rc = pm_readbiglong(ifP, &l);
     if (rc == -1 )
         pm_error(initReadError);
-    if (l != CMUWM_MAGIC)
+    if ((uint32_t)l != CMUWM_MAGIC)
         pm_error("bad magic number in CMU window manager file");
     rc = pm_readbiglong(ifP, &l);
     if (rc == -1)

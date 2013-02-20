@@ -924,7 +924,7 @@ determineOutputType(png_info *          const pngInfoP,
                 *depthP = 4;
                 strcpy(tupleType, "RGB_ALPHA");
             } else {
-                *depthP = 1;
+                *depthP = 2;
                 strcpy(tupleType, "GRAYSCALE_ALPHA");
             }
         } else {
