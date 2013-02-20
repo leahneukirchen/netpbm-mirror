@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+13.02.20 BJH  Release 10.61.02
+
+              MinGW build: various fixes.
+
 12.12.31 BJH  Release 10.61.01
 
               pamstereogram: change -guidesize default from 10 to 20

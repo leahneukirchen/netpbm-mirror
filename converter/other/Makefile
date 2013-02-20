@@ -310,3 +310,6 @@ ifeq ($(HAVE_PNGLIB),Y)
 	cd $(PKGDIR)/bin ; \
 	$(SYMLINK) pngtopam$(EXE) pngtopnm
 endif
+# In December 2010, sunicontopnm replaced icontopbm
+	cd $(PKGDIR)/bin ; \
+	$(SYMLINK) sunicontopnm icontopbm

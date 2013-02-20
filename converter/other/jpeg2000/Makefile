@@ -57,7 +57,7 @@ all: $(BINARIES)
 
 include $(SRCDIR)/common.mk
 
-LIBOPTS = $(shell $(LIBOPT) $(NETPBMLIB) $(JASPERLIB_USE))
+LIBOPTS = $(shell $(LIBOPT) $(JASPERLIB_USE) $(NETPBMLIB))
 
 $(BINARIES): %: %.o $(JASPERLIB_DEP) $(NETPBMLIB) $(LIBOPT)
 	$(LD) -o $@ $< \

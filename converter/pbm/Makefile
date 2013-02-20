@@ -80,9 +80,6 @@ install.bin.local: $(PKGDIR)/bin
 # In December 2010 (Actually January 2011), pbmtosunicon replaced pbmtoicon
 	cd $(PKGDIR)/bin ; \
 	$(SYMLINK) pbmtosunicon pbmtoicon
-# In December 2010, sunicontopnm replaced icontopbm
-	cd $(PKGDIR)/bin ; \
-	$(SYMLINK) sunicontopnm icontopbm
 
 thisdirclean: localclean
 .PHONY: localclean
