@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+13.02.23 BJH  Release 10.61.03
+
+              Fix to 10.61.02 MinGW build fix.
+
 13.02.20 BJH  Release 10.61.02
 
               MinGW build: various fixes.
