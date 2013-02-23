@@ -732,7 +732,7 @@ pm_arg0toprogname(const char arg0[]) {
        for it.
     */
     static char retval[_MAX_FNAME];
-    _splitpath(fullPath, 0, 0,  retval, 0);
+    _splitpath(arg0, 0, 0,  retval, 0);
     if (MAX_RETVAL_SIZE < _MAX_FNAME)
         retval[MAX_RETVAL_SIZE] = '\0';
 #else
