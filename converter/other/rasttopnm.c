@@ -24,6 +24,8 @@ struct cmdlineInfo {
     */
     const char * inputFileName;
     unsigned int index;
+    unsigned int dumpheader;
+    unsigned int dumpcolormap;
 };
 
 
@@ -50,7 +52,12 @@ parseCommandLine(int argc, const char ** argv,
     opt.short_allowed = false;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = false;  /* We have no parms that are negative numbers */
 
-    OPTENT3(0,   "index",     OPT_FLAG,   NULL, &cmdlineP->index,   0);
+    OPTENT3(0,   "index",        OPT_FLAG,   NULL,
+            &cmdlineP->index,          0);
+    OPTENT3(0,   "dumpheader",   OPT_FLAG,   NULL,
+            &cmdlineP->dumpheader,     0);
+    OPTENT3(0,   "dumpcolormap", OPT_FLAG,   NULL,
+            &cmdlineP->dumpcolormap,   0);
 
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
@@ -283,6 +290,61 @@ writePnm(FILE *                 const ofP,
 
 
 
+static void
+dumpHeader(struct rasterfile const header) {
+
+    const char * typeName;
+
+    switch (header.ras_type) {
+    case RT_OLD:            typeName = "old";           break;
+    case RT_STANDARD:       typeName = "standard";      break;
+    case RT_BYTE_ENCODED:   typeName = "byte encoded";  break;
+    case RT_FORMAT_RGB:     typeName = "format rgb";    break;
+    case RT_FORMAT_TIFF:    typeName = "format_tiff";   break;
+    case RT_FORMAT_IFF:     typeName = "format_iff";    break;
+    case RT_EXPERIMENTAL:   typeName = "experimental";  break;
+    default:                typeName = "???";
+    }
+
+    pm_message("type: %s (%lu)", typeName, (unsigned long)header.ras_type);
+    pm_message("%luw x %lul x %lud",
+               (unsigned long)header.ras_width,
+               (unsigned long)header.ras_height,
+               (unsigned long)header.ras_depth);
+    pm_message("raster length: %lu", (unsigned long)header.ras_length);
+
+    if (header.ras_maplength)
+        pm_message("Has color map");
+}
+
+
+
+static void
+dumpColorMap(colormap_t const colorMap) {
+
+    unsigned int i;
+    const char * typeName;
+
+    switch (colorMap.type) {
+    case RMT_NONE:      typeName = "NONE";      break;
+    case RMT_EQUAL_RGB: typeName = "EQUAL_RGB"; break;
+    case RMT_RAW:       typeName = "RAW";       break;
+    default:            typeName = "???";
+    }
+
+    pm_message("color map type = %s (%u)", typeName, colorMap.type);
+
+    pm_message("color map size = %u", colorMap.length);
+
+    for (i = 0; i < colorMap.length; ++i)
+        pm_message("color %u: (%u, %u, %u)", i,
+                   (unsigned char)colorMap.map[0][i],
+                   (unsigned char)colorMap.map[1][i],
+                   (unsigned char)colorMap.map[2][i]);
+}
+
+
+
 int
 main(int argc, const char ** const argv) {
 
@@ -307,6 +369,9 @@ main(int argc, const char ** const argv) {
     if (rc != 0 )
         pm_error("unable to read in rasterfile header");
 
+    if (cmdline.dumpheader)
+        dumpHeader(header);
+
     if (header.ras_maplength != 0) {
         int rc;
         
@@ -314,6 +379,9 @@ main(int argc, const char ** const argv) {
         
         if (rc != 0 )
             pm_error("unable to read colormap from RAST file");
+
+        if (cmdline.dumpcolormap)
+            dumpColorMap(colorMap);
     }
 
     analyzeImage(header, colorMap, &format, &maxval, &grayscale, &zero, &one);
