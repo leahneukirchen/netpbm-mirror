@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.62.00
 
+              pnmtorast: set don't care bytes to zero to make output
+              repeatable.
+
               rasttopnm: add -dumpheader, dumpcolormap.
 
               pamstereogram: change -guidesize default from 10 to 20

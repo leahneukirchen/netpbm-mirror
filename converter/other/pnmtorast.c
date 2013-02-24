@@ -90,15 +90,16 @@ doRowDepth1(const xel *     const xelrow,
             unsigned int    const cols,
             int             const format,
             xelval          const maxval,
-            colorhash_table const cht) {
+            colorhash_table const cht,
+            unsigned int *  const lenP) {
                 
     unsigned int col;
     int bitcount;
-    unsigned char * byteP;
+    unsigned int cursor;
 
-    byteP = rastRow;
+    cursor = 0;
 
-    *byteP = 0;
+    rastRow[cursor] = 0;
     bitcount = 7;
 
     for (col = 0; col < cols; ++col) {
@@ -117,23 +118,24 @@ doRowDepth1(const xel *     const xelrow,
                          PPM_GETG(adjustedXel),
                          PPM_GETB(adjustedXel));
             if (color)
-                *byteP |= 1 << bitcount;
+                rastRow[cursor] |= 1 << bitcount;
         } break;
 
         default: {
             int const color = PNM_GET1(xelrow[col]);
             if (!color)
-                *byteP |= 1 << bitcount;
+                rastRow[cursor] |= 1 << bitcount;
             break;
         }
         }
         --bitcount;
         if (bitcount < 0) {
-            ++byteP;
-            *byteP = 0;
+            ++cursor;
+            rastRow[cursor] = 0;
             bitcount = 7;
         }
     }
+    *lenP = cursor;
 }
 
 
@@ -144,15 +146,14 @@ doRowDepth8(const xel *     const xelrow,
             unsigned int    const cols,
             int             const format,
             xelval          const maxval,
-            colorhash_table const cht) {
+            colorhash_table const cht,
+            unsigned int *  const lenP) {
 
     unsigned int col;
-    unsigned char * byteP;
+    unsigned int cursor;
 
-    byteP = rastRow;
-
-    for (col = 0; col < cols; ++col) {
-        int color;
+    for (col = 0, cursor = 0; col < cols; ++col) {
+        int color;  /* color index of pixel or -1 if not in 'cht' */
 
         switch (PNM_FORMAT_TYPE(format)) {
         case PPM_TYPE: {
@@ -183,8 +184,9 @@ doRowDepth8(const xel *     const xelrow,
         default:
             color = PNM_GET1(xelrow[col]);
         }
-        *byteP++ = color;
+        rastRow[cursor++] = color;
     }
+    *lenP = cursor;
 }
 
 
@@ -195,16 +197,15 @@ doRowDepth24(const xel *     const xelrow,
              unsigned char * const rastRow,
              unsigned int    const cols,
              int             const format,
-             xelval          const maxval) {
+             xelval          const maxval,
+             unsigned int *  const lenP) {
 
     /* Since depth is 24, we do NOT have a valid cht. */
 
-    unsigned char * byteP;
     unsigned int col;
+    unsigned int cursor;
 
-    byteP = rastRow;
-
-    for (col = 0; col < cols; ++col) {
+    for (col = 0, cursor = 0; col < cols; ++col) {
         xel adjustedXel;
 
         if (maxval == 255)
@@ -212,9 +213,56 @@ doRowDepth24(const xel *     const xelrow,
         else
             PPM_DEPTH(adjustedXel, xelrow[col], maxval, 255);
 
-        *byteP++ = PPM_GETB(adjustedXel);
-        *byteP++ = PPM_GETG(adjustedXel);
-        *byteP++ = PPM_GETR(adjustedXel);
+        rastRow[cursor++] = PPM_GETB(adjustedXel);
+        rastRow[cursor++] = PPM_GETG(adjustedXel);
+        rastRow[cursor++] = PPM_GETR(adjustedXel);
+    }
+    *lenP = cursor;
+}
+
+
+
+static void
+computeRaster(unsigned char * const rastRaster,
+              unsigned int    const lineSize,
+              unsigned int    const depth,
+              unsigned int    const cols,
+              unsigned int    const rows,
+              int             const format,
+              xelval          const maxval,
+              xel **          const xels,
+              colorhash_table const cht) {
+                  
+    unsigned int row;
+    unsigned char * rastRow;
+
+    for (row = 0, rastRow = &rastRaster[0]; row < rows; ++row) {
+        xel * const xelrow = xels[row];
+
+        unsigned int len; /* Number of bytes of rast data added to rastRow[] */
+
+        switch (depth) {
+        case 1:
+            doRowDepth1(xelrow, rastRow, cols, format, maxval, cht, &len);
+            break;
+        case 8:
+            doRowDepth8(xelrow, rastRow, cols, format, maxval, cht, &len);
+            break;
+        case 24:
+            doRowDepth24(xelrow, rastRow, cols, format, maxval, &len);
+            break;
+        default:
+            pm_error("INTERNAL ERROR: impossible depth %u", depth);
+        }
+        {
+            /* Pad out the line (which has a rounded size) with zeroes so
+               the resulting file is repeatable.
+            */
+            unsigned int i;
+            for (i = len; i < lineSize; ++i)
+                rastRow[i] = 0;
+        }
+        rastRow += lineSize;
     }
 }
 
@@ -225,7 +273,6 @@ main(int argc, const char ** argv) {
 
     FILE * ifP;
     xel ** xels;
-    xel * xelrow;
     xel p;
     colorhist_vector chv;
     colorhash_table cht;
@@ -236,10 +283,8 @@ main(int argc, const char ** argv) {
     int format;
     unsigned int depth;
     int colorCt;
-    unsigned int row;
     xelval maxval;
     struct pixrect * prP;
-    unsigned char * rastRow;
     const char * const usage = "[-standard|-rle] [pnmfile]";
 
     pm_proginit(&argc, argv);
@@ -336,26 +381,11 @@ main(int argc, const char ** argv) {
     if (!prP)
         pm_error("unable to create new pixrect");
 
-    /* And compute the Sun image.  The variables at this point are:
-       cht is null or not.  depth is 1, 8, or 24
-    */
-    for (row = 0, rastRow = prP->pr_data->md_image; row < rows; ++row) {
-        xelrow = xels[row];
-        switch (depth) {
-        case 1:
-            doRowDepth1(xelrow, rastRow, cols, format, maxval, cht);
-            break;
-        case 8:
-            doRowDepth8(xelrow, rastRow, cols, format, maxval, cht);
-            break;
-        case 24:
-            doRowDepth24(xelrow, rastRow, cols, format, maxval);
-            break;
-        default:
-            pm_error("INTERNAL ERROR: impossible depth %u", depth);
-        }
-        rastRow += prP->pr_data->md_linebytes;
-    }
+    computeRaster(prP->pr_data->md_image,
+                  prP->pr_data->md_linebytes,
+                  depth,
+                  cols, rows, format, maxval, xels, cht);
+
     pnm_freearray(xels, rows);
 
     {
