@@ -80,7 +80,7 @@ struct pixrect {
     struct pr_size pr_size;
     int pr_depth;
     struct mpr_data* pr_data;	/* work-alike only handles memory pixrects */
-    };
+};
 
 struct mpr_data {
     int md_linebytes;
