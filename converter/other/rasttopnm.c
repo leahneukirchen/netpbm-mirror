@@ -191,6 +191,104 @@ reportOutputType(int const format) {
 
 
 static void
+convertRowDepth1(const unsigned char * const rastLine,
+                 unsigned int          const cols,
+                 xel                   const zeroXel,
+                 xel                   const oneXel,
+                 xel *                 const xelrow) {
+
+    const unsigned char * byteP;
+     unsigned int col;
+    unsigned char mask;
+
+    byteP = rastLine;  /* initial value */
+
+    for (col = 0, mask = 0x80; col < cols; ++col) {
+        if (mask == 0x00) {
+            ++byteP;
+            mask = 0x80;
+        }
+        xelrow[col] = (*byteP & mask) ? oneXel : zeroXel;
+        mask = mask >> 1;
+    }
+}
+
+
+
+static void
+convertRowDepth8(const unsigned char * const lineStart,
+                 unsigned int          const cols,
+                 bool                  const colorMapped,
+                 bool                  const useIndexForColor,
+                 bool                  const grayscale,
+                 colormap_t            const colorMap,
+                 xel *                 const xelrow) {
+
+    const unsigned char * byteP;
+    unsigned int col;
+
+    byteP = lineStart; /* initial value */
+
+    for (col = 0; col < cols; ++col) {
+        if (colorMapped && !useIndexForColor) {
+            if (grayscale)
+                PNM_ASSIGN1(xelrow[col], colorMap.map[0][*byteP]);
+            else
+                PPM_ASSIGN(xelrow[col],
+                           colorMap.map[0][*byteP],
+                           colorMap.map[1][*byteP],
+                           colorMap.map[2][*byteP]);
+        } else
+            PNM_ASSIGN1(xelrow[col], *byteP);
+
+        ++byteP;
+    }
+} 
+
+
+
+static void
+convertRowRgb(const unsigned char * const lineStart,
+              unsigned int          const cols,
+              unsigned int          const depth,
+              long                  const rastType,
+              bool                  const colorMapped,
+              bool                  const useIndexForColor,
+              colormap_t            const colorMap,
+              xel *                 const xelrow) {
+
+    const unsigned char * byteP;
+    unsigned int col;
+
+    byteP = lineStart; /* initial value */
+
+    for (col = 0; col < cols; ++col) {
+        xelval r, g, b;
+
+        if (depth == 32)
+            ++byteP;
+        if (rastType == RT_FORMAT_RGB) {
+            r = *byteP++;
+            g = *byteP++;
+            b = *byteP++;
+        } else {
+            b = *byteP++;
+            g = *byteP++;
+            r = *byteP++;
+        }
+        if (colorMapped && !useIndexForColor)
+            PPM_ASSIGN(xelrow[col],
+                       colorMap.map[0][r],
+                       colorMap.map[1][g],
+                       colorMap.map[2][b]);
+        else
+            PPM_ASSIGN(xelrow[col], r, g, b);
+    }
+} 
+
+
+
+static void
 writePnm(FILE *                 const ofP,
          const struct pixrect * const pixRectP,
          unsigned int           const cols,
@@ -206,10 +304,7 @@ writePnm(FILE *                 const ofP,
          xel                    const oneXel,
          bool                   const useIndexForColor) {
 
-    unsigned int const lineSize =
-        ((struct mpr_data*) pixRectP->pr_data)->md_linebytes;
-    unsigned char * const data =
-        ((struct mpr_data*) pixRectP->pr_data)->md_image;
+    struct mpr_data const mprData = *pixRectP->pr_data;
 
     xel * xelrow;
     unsigned int row;
@@ -221,66 +316,23 @@ writePnm(FILE *                 const ofP,
 
     reportOutputType(format);
 
-    for (row = 0, lineStart = data; row < rows; ++row, lineStart += lineSize) {
-        unsigned char * byteP;
-
-        byteP = lineStart; /* initial value */
+    for (row = 0, lineStart = mprData.md_image;
+         row < rows;
+         ++row, lineStart += mprData.md_linebytes) {
 
         switch (depth) {
-        case 1: {
-            unsigned int col;
-            unsigned char mask;
-            for (col = 0, mask = 0x80; col < cols; ++col) {
-                if (mask == 0x00) {
-                    ++byteP;
-                    mask = 0x80;
-                }
-                xelrow[col] = (*byteP & mask) ? oneXel : zeroXel;
-                mask = mask >> 1;
-            }
-        } break;
-        case 8: {
-            unsigned int col;
-            for (col = 0; col < cols; ++col) {
-                if (colorMapped && !useIndexForColor)
-                    if (grayscale)
-                        PNM_ASSIGN1(xelrow[col], colorMap.map[0][*byteP]);
-                    else
-                        PPM_ASSIGN(xelrow[col],
-                                   colorMap.map[0][*byteP],
-                                   colorMap.map[1][*byteP],
-                                   colorMap.map[2][*byteP]);
-                else
-                    PNM_ASSIGN1(xelrow[col], *byteP);
-                ++byteP;
-            }
-        } break;
+        case 1:
+            convertRowDepth1(lineStart, cols, zeroXel, oneXel, xelrow);
+            break;
+        case 8:
+            convertRowDepth8(lineStart, cols, colorMapped, useIndexForColor,
+                             grayscale, colorMap, xelrow);
+            break;
         case 24:
-        case 32: {
-            unsigned int col;
-            for (col = 0; col < cols; ++col) {
-                xelval r, g, b;
-
-                if (depth == 32)
-                    ++byteP;
-                if (rastType == RT_FORMAT_RGB) {
-                    r = *byteP++;
-                    g = *byteP++;
-                    b = *byteP++;
-                } else {
-                    b = *byteP++;
-                    g = *byteP++;
-                    r = *byteP++;
-                }
-                if (colorMapped && !useIndexForColor)
-                    PPM_ASSIGN(xelrow[col],
-                               colorMap.map[0][r],
-                               colorMap.map[1][g],
-                               colorMap.map[2][b]);
-                else
-                    PPM_ASSIGN(xelrow[col], r, g, b);
-            }
-        } break;
+        case 32:
+            convertRowRgb(lineStart, cols, depth, rastType, colorMapped,
+                          useIndexForColor, colorMap, xelrow);
+            break;
         default:
             pm_error("Invalid depth value: %u", depth);
         }
