@@ -49,7 +49,7 @@ struct rasterfile {
 #define RMT_EQUAL_RGB	1
 #define RMT_RAW		2
     long ras_maplength;
-    };
+};
 
 struct pixrectops {
     int	(*pro_rop)();
@@ -65,14 +65,15 @@ struct pixrectops {
     int	(*pro_getcolormap)();
     int	(*pro_putattributes)();
     int	(*pro_getattributes)();
-    };
+};
 
 struct pr_size {
     int x, y;
-    };
+};
+
 struct pr_pos {
     int x, y;
-    };
+};
 
 struct pixrect {
     struct pixrectops* pr_ops;
@@ -87,13 +88,13 @@ struct mpr_data {
     struct pr_pos md_offset;
     short md_primary;
     short md_flags;
-    };
+};
 
 typedef struct {
     int type;
     int length;
     unsigned char* map[3];
-    } colormap_t;
+} colormap_t;
 
 /* And the routine definitions. */
 
