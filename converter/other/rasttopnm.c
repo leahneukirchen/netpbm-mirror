@@ -74,13 +74,14 @@ parseCommandLine(int argc, const char ** argv,
 
 
 static bool
-colorMapIsGrayscale(colormap_t   const colorMap,
-                    unsigned int const mapLength) {
-
+colorMapIsGrayscale(colormap_t const colorMap) {
+/*----------------------------------------------------------------------------
+   The color map contains only gray.
+-----------------------------------------------------------------------------*/
     unsigned int i;
     bool grayscale;
 
-    for (i = 0, grayscale = true; i < mapLength / 3; ++i) {
+    for (i = 0, grayscale = true; i < colorMap.length; ++i) {
         if (colorMap.map[0][i] != colorMap.map[1][i] ||
             colorMap.map[1][i] != colorMap.map[2][i]) {
             grayscale = false;
@@ -101,8 +102,7 @@ analyzeImage(struct rasterfile const header,
              xel *             const oneP) {
 
     bool const grayscale =
-        header.ras_maplength == 0 ||
-        colorMapIsGrayscale(colorMap, header.ras_maplength);
+        header.ras_maplength == 0 || colorMapIsGrayscale(colorMap);
 
     switch (header.ras_depth) {
     case 1:
@@ -223,7 +223,20 @@ convertRowDepth8(const unsigned char * const lineStart,
                  bool                  const grayscale,
                  colormap_t            const colorMap,
                  xel *                 const xelrow) {
+/*----------------------------------------------------------------------------
+   Convert a line of raster data from the RAST input to a row of raster
+   data for the PNM output.
 
+   'lineStart' is where the RAST row starts.   'xelrow' is where to put the
+   PNM row.  'cols' is the number of pixels in the row.
+
+   'colorMapped' means the RAST image is colormapped.  If so, 'colorMap'
+   is the color map from the RAST file and 'useIndexForColor' means not
+   to use that map but instead to create a PGM row of the colormap
+   _indices_.
+
+   'grayscale' means it is a grayscale image; the output is PGM.
+-----------------------------------------------------------------------------*/
     const unsigned char * byteP;
     unsigned int col;
 
@@ -372,6 +385,29 @@ dumpHeader(struct rasterfile const header) {
 
 
 static void
+dumpHeaderAnalysis(bool         const grayscale, 
+                   unsigned int const depth,
+                   xel          const zero, 
+                   xel          const one) {
+
+    pm_message("grayscale: %s", grayscale ? "YES" : "NO");
+
+    if (depth == 1) {
+        pm_message("Zero color: (%u,%u,%u)",
+                   PNM_GETR(zero),
+                   PNM_GETG(zero),
+                   PNM_GETB(zero));
+
+        pm_message("One color: (%u,%u,%u)",
+                   PNM_GETR(one),
+                   PNM_GETG(one),
+                   PNM_GETB(one));
+    }
+}
+
+
+
+static void
 dumpColorMap(colormap_t const colorMap) {
 
     unsigned int i;
@@ -437,6 +473,9 @@ main(int argc, const char ** const argv) {
     }
 
     analyzeImage(header, colorMap, &format, &maxval, &grayscale, &zero, &one);
+
+    if (cmdline.dumpheader)
+        dumpHeaderAnalysis(grayscale, header.ras_depth, zero, one);
 
     pr = pr_load_image(ifP, &header, NULL);
     if (pr == NULL )
