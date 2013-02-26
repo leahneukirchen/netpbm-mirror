@@ -104,6 +104,8 @@ analyzeImage(struct rasterfile const header,
     bool const grayscale =
         header.ras_maplength == 0 || colorMapIsGrayscale(colorMap);
 
+    *grayscaleP = grayscale;
+
     switch (header.ras_depth) {
     case 1:
         if (header.ras_maptype == RMT_NONE && header.ras_maplength == 0) {

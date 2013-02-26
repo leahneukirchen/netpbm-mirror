@@ -14,6 +14,9 @@ not yet  BJH  Release 10.62.00
               pamstereogram: change -guidesize default from 10 to 20
               (relevant since 10.61).
 
+              rasttopnm: fix bug: incorrect output due to used-before-set
+              variable.  Introduced in 10.56 (September 2011).
+
               pamstereogram: fix bug: doesn't reject negative guidesize.
               Broken since 10.61.
 
