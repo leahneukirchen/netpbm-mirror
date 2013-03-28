@@ -4,31 +4,28 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-13.02.26 BJH  Release 10.61.04
+12.03.28 BJH  Release 10.62.00
+
+              pnmtorast: set don't care bytes to zero to make output
+              repeatable.
+
+              rasttopnm: add -dumpheader, dumpcolormap.
+
+              pamstereogram: change -guidesize default from 10 to 20
+              (relevant since 10.61).
 
               rasttopnm: fix bug: incorrect output due to used-before-set
               variable.  Introduced in 10.56 (September 2011).
 
-13.02.23 BJH  Release 10.61.03
+              pamstereogram: fix bug: doesn't reject negative guidesize.
+              Broken since 10.61.
 
-              Fix to 10.61.02 MinGW build fix.
-
-13.02.20 BJH  Release 10.61.02
+              pamstereogram: fix bug: garbage in -verbose listing.  Broken
+              since 10.61
 
               MinGW build: various fixes.
 
-12.12.31 BJH  Release 10.61.01
-
-              pamstereogram: change -guidesize default from 10 to 20
-              (relevant since 10.61.00).
-
-              pamstereogram: fix bug: doesn't reject negative guidesize.
-              Broken since 10.61.00.
-
-              pamstereogram: fix bug: garbage in -verbose listing.  Broken
-              since 10.61.00
-
-12.12.31 BJH  Release 10.61.00
+12.12.30 BJH  Release 10.61.00
 
               pgmhist: Add -machine option.
 

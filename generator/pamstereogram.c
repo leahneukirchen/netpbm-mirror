@@ -762,10 +762,10 @@ drawguides(unsigned int       const guidesize,
 /*----------------------------------------------------------------------------
    Draw a pair of guide boxes, left and right.
 -----------------------------------------------------------------------------*/
-    int const far = separation(0, eyesep, dpi, depthOfField);
+    unsigned int const far = separation(0, eyesep, dpi, depthOfField);
         /* Space between the two guide boxes. */
-    int const width = outPamP->width;    /* Width of the output image */
-
+    unsigned int const width = outPamP->width;  /* Width of the output image */
+    
     tuple * outrow;             /* One row of output data */
     tuple blackTuple;
     unsigned int col;
@@ -874,8 +874,8 @@ makeStereoRow(const struct pam * const inPamP,
             } while (visible && zt < 1);
 
             if (visible) {
-                int l;
-
+                unsigned int l;
+                
                 l = same[left];
                 while (l != left && l != right) {
                     if (l < right) {
@@ -979,18 +979,20 @@ averageFromPattern(struct pam *         const pamP,
        every column that should have the same color.
     */
     for (col = pamP->width-1; col >= 0; --col) {
-        tuple onetuple = textureRow[(col+same[col])/2];
-        int targetcol = sameFp[col];
+        tuple const onetuple = textureRow[(col+same[col])/2];
+        unsigned int const targetcol = sameFp[col];
         int eqcol;
 
-        if (!pnm_tupleequal(pamP, onetuple, bgColor))
-            for (eqcol = pamP->width-1; eqcol >= 0; --eqcol)
+        if (!pnm_tupleequal(pamP, onetuple, bgColor)) {
+            for (eqcol = pamP->width-1; eqcol >= 0; --eqcol) {
                 if (sameFp[eqcol] == targetcol) {
                     unsigned int plane;
                     for (plane = 0; plane < pamP->depth; ++plane)
                         outRow[eqcol][plane] += onetuple[plane];
                     tuplesInCol[eqcol]++;
                 }
+            }
+        }
     }
     /* Take the average of all colors associated with each column.
        Tuples that can be any color are assigned the same color as was

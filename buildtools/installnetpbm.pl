@@ -47,7 +47,10 @@ sub prompt($$) {
 
 
 sub getPkgdir() {
-
+#-----------------------------------------------------------------------------
+#  Find out from the user where the Netpbm package is (i.e. where
+#  'make package' put it).
+#-----------------------------------------------------------------------------
     my $pkgdir;
 
     while (!$pkgdir) {
@@ -141,7 +144,7 @@ sub getPrefix() {
 
 sub getCpCommand() {
 #-----------------------------------------------------------------------------
-# compute the command + options need to do a recursive copy, preserving
+# Compute the command + options need to do a recursive copy, preserving
 # symbolic links and file attributes.
 #-----------------------------------------------------------------------------
     my $cpCommand;
@@ -168,7 +171,10 @@ sub getCpCommand() {
 
 
 sub getBinDir($) {
-
+#-----------------------------------------------------------------------------
+#  Find out from the user where he wants the programs installed, and return
+#  that.
+#-----------------------------------------------------------------------------
     my ($prefix) = @_;
 
     print("Where do you want the programs installed?\n");
@@ -223,7 +229,10 @@ sub installProgram($$$) {
 
 
 sub getLibDir($) {
-
+#-----------------------------------------------------------------------------
+#  Find out from the user where he wants the runtime libraries installed and
+#  return that.
+#-----------------------------------------------------------------------------
     my ($prefix) = @_;
 
     print("Where do you want the shared library installed?\n");
@@ -320,8 +329,7 @@ sub ldConfigKnowsDir($) {
 
 
 
-sub
-warnNonstandardShlibDirLdconfig($) {
+sub warnNonstandardShlibDirLdconfig($) {
     my ($shlibDir) = @_;
 #-----------------------------------------------------------------------------
 #  Assuming this is a system that has an 'ldconfig' program, warn the user
@@ -356,8 +364,7 @@ warnNonstandardShlibDirLdconfig($) {
 
 
 
-sub
-warnNonstandardShlibDirCrle($) {
+sub warnNonstandardShlibDirCrle($) {
     my ($shlibDir) = @_;
 #-----------------------------------------------------------------------------
 #  Assuming this is a system that has a 'crle' program, warn the user
@@ -386,8 +393,7 @@ warnNonstandardShlibDirCrle($) {
         
 
 
-sub
-warnNonstandardShlibDirGeneric($) {
+sub warnNonstandardShlibDirGeneric($) {
     my ($shlibDir) = @_;
 #-----------------------------------------------------------------------------
 #  Without assuming any particular shared library search scheme on this
@@ -426,8 +432,7 @@ sub warnNonstandardShlibDir($) {
 
 
 
-sub 
-execLdconfig() {
+sub execLdconfig() {
 #-----------------------------------------------------------------------------
 #  Run Ldconfig.  Try with the -X option first, and if that is an invalid
 #  option (which we have seen on an openBSD system), try it without -X.
@@ -481,8 +486,7 @@ execLdconfig() {
 
 
 
-sub
-doLdconfig() {
+sub doLdconfig() {
 #-----------------------------------------------------------------------------
 #  Run Ldconfig where appropriate.
 #-----------------------------------------------------------------------------
@@ -556,7 +560,10 @@ sub installSharedLib($$$) {
 
 
 sub getLinkDir($) {
-
+#-----------------------------------------------------------------------------
+#  Find out from the user where he wants the link-edit libraries installed and
+#  return that.
+#-----------------------------------------------------------------------------
     my ($prefix) = @_;
 
     print("Where do you want the static link library installed?\n");
@@ -616,7 +623,10 @@ sub installStaticLib($$$) {
 
 
 sub getDataDir($) {
-
+#-----------------------------------------------------------------------------
+#  Find out from the user where he wants the runtime data files installed and
+#  return that.
+#-----------------------------------------------------------------------------
     my ($prefix) = @_;
 
     print("Where do you want the data files installed?\n");
@@ -650,7 +660,10 @@ sub getDataDir($) {
 
 
 sub getHdrDir($) {
-
+#-----------------------------------------------------------------------------
+#  Find out from the user where he wants the compile-time header files
+#  installed and return that.
+#-----------------------------------------------------------------------------
     my ($prefix) = @_;
 
     print("Where do you want the library interface header files installed?\n");
@@ -740,7 +753,10 @@ sub installHeader($$$) {
 
 
 sub getManDir($) {
-
+#-----------------------------------------------------------------------------
+#  Find out from the user where he wants the pointer man pages
+#  installed and return that.
+#-----------------------------------------------------------------------------
     my ($prefix) = @_;
 
     print("Where do you want the man pages installed?\n");
@@ -958,10 +974,37 @@ sub installManPage($$$) {
 
 
 
+sub netpbmVersion($) {
+    my ($pkgdir) = @_;
+
+    my $versionOpened = open(VERSION, "<$pkgdir/VERSION");
+
+    my $version;
+    my $error;
+
+    if (!$versionOpened) {
+        $error = "Unable to open $pkgdir/VERSION for reading.  " .
+            "Errno=$ERRNO\n";
+    } else {
+        $version = <VERSION>;
+        chomp($version);
+        close(VERSION);
+    }
+
+    if ($error) {
+        print("Failed to determine the version of Netpbm from the package, "
+              . "so that will not be correct in netpbm.config and netpbm.pc.  "
+              . $error . "\n");
+        $version = "???";
+    }
+    return $version;
+}
+
+
+
 sub 
-processTemplate($$$$$$$$$) {
-    my ($templateR, $version, $bindir, $libdir, $linkdir, $datadir, 
-        $includedir, $mandir, $outputR) = @_;
+processTemplate($$$) {
+    my ($templateR, $infoR, $outputR) = @_;
 
     my @output;
 
@@ -969,26 +1012,26 @@ processTemplate($$$$$$$$$) {
         if (m{^@}) {
             # Comment -- ignore it.
         } else {
-            if (defined($version)) {
-                s/\@VERSION\@/$version/;
+            if (defined($infoR->{VERSION})) {
+                s/\@VERSION\@/$infoR->{VERSION}/;
             }
-            if (defined($bindir)) {
-                s/\@BINDIR@/$bindir/;
+            if (defined($infoR->{BINDIR})) {
+                s/\@BINDIR@/$infoR->{BINDIR}/;
             }
-            if (defined($libdir)) {
-                s/\@LIBDIR@/$libdir/;
+            if (defined($infoR->{LIBDIR})) {
+                s/\@LIBDIR@/$infoR-.{LIBDIR}/;
             }
-            if (defined($linkdir)) {
-                s/\@LINKDIR@/$linkdir/;
+            if (defined($infoR->{LINKDIR})) {
+                s/\@LINKDIR@/$infoR->{LINKDIR}/;
             }
-            if (defined($datadir)) {
-                s/\@DATADIR@/$datadir/;
+            if (defined($infoR->{DATADIR})) {
+                s/\@DATADIR@/$infoR->{DATADIR}/;
             }
-            if (defined($includedir)) {
-                s/\@INCLUDEDIR@/$includedir/;
+            if (defined($infoR->{INCLUDEDIR})) {
+                s/\@INCLUDEDIR@/$infoR->{INCLUDEDIR}/;
             }
-            if (defined($mandir)) {
-                s/\@MANDIR@/$mandir/;
+            if (defined($infoR->{MANDIR})) {
+                s/\@MANDIR@/$infoR->{MANDIR}/;
             }
             push(@output, $_);
         }
@@ -998,11 +1041,12 @@ processTemplate($$$$$$$$$) {
 
 
 
-sub
-installConfig($$$$$$$) {
-    my ($pkgdir, 
-        $bindir, $libdir, $linkdir, $datadir, $includedir, $mandir) = @_;
-
+sub installConfig($$) {
+    my ($installdir, $templateSubsR) = @_;
+#-----------------------------------------------------------------------------
+# Install 'netpbm-config' -- a program you run to tell you things about
+# how Netpbm is installed.
+#-----------------------------------------------------------------------------
     my $error;
 
     my $configTemplateFilename = dirname($0) . "/config_template";
@@ -1015,41 +1059,108 @@ installConfig($$$$$$$) {
 
         close(TEMPLATE);
 
-        my $versionOpened = open(VERSION, "<$pkgdir/VERSION");
+        processTemplate(\@template, $templateSubsR, \my $fileContentsR);
 
-        my $version;
-        if (!$versionOpened) {
-            $error = "Unable to open $pkgdir/VERSION for reading.  " .
-                "Errno=$ERRNO\n";
+        # TODO: Really, this ought to go in an independent directory,
+        # because you might want to have the Netpbm executables in
+        # some place not in the PATH and use this program, via the
+        # PATH, to find them.
+        
+        my $filename = "$installdir/netpbm-config";
+        
+        my $success = open(NETPBM_CONFIG, ">$filename");
+        if ($success) {
+            chmod(0755, $filename);
+            foreach (@{$fileContentsR}) { print NETPBM_CONFIG; }
+            close(NETPBM_CONFIG);
         } else {
-            $version = <VERSION>;
-            chomp($version);
-            close(VERSION);
-
-            processTemplate(\@template, $version, $bindir, $libdir,
-                            $linkdir, $datadir, $includedir, $mandir,
-                            \my $fileContentsR);
-
-            # TODO: Really, this ought to go in an independent directory,
-            # because you might want to have the Netpbm executables in
-            # some place not in the PATH and use this program, via the
-            # PATH, to find them.
-            
-            my $filename = "$bindir/netpbm-config";
-            
-            my $success = open(NETPBM_CONFIG, ">$filename");
-            if ($success) {
-                chmod(0755, $filename);
-                foreach (@{$fileContentsR}) { print NETPBM_CONFIG; }
-                close(NETPBM_CONFIG);
-            } else {
-                $error = "Unable to open the file " .
-                    "'$filename' for writing.  Errno=$ERRNO\n";
-            }
+            $error = "Unable to open the file " .
+                "'$filename' for writing.  Errno=$ERRNO\n";
         }
     }
     if ($error) {
         print(STDERR "Failed to create the Netpbm configuration program.  " .
+              "$error\n");
+    }
+}
+
+
+
+
+sub getPkgconfigDir($) {
+#-----------------------------------------------------------------------------
+#  Find out from the user where he wants the Pkg-config file for the
+#  installation (netpbm.pc) and return that.
+#-----------------------------------------------------------------------------
+    my ($prefix) = @_;
+
+    print("Where do you want the Pkg-config file netpbm.pc installed?\n");
+    print("\n");
+
+    my $pkgconfigDir;
+
+    while (!$pkgconfigDir) {
+        my $default = "$prefix/lib/pkgconfig";
+
+        my $response = prompt("Pkg-config directory", $default);
+        
+        if (-d($response)) {
+            $pkgconfigDir = $response;
+        } else {
+            my $succeeded = mkdir($response, 0777);
+            
+            if (!$succeeded) {
+                print("Unable to create directory '$response'.  " .
+                      "Error=$ERRNO\n");
+            } else {
+                $pkgconfigDir = $response;
+            }
+        }
+    }
+    print("\n");
+
+    return $pkgconfigDir;
+}
+
+
+
+sub installPkgConfig($$) {
+    my ($prefix, $templateSubsR) = @_;
+#-----------------------------------------------------------------------------
+# Install a pkg-config file (netpbm.pc) - used by the 'pkg-config' program to
+# find out various things about how Netpbm is installed.
+#-----------------------------------------------------------------------------
+    my $pkgconfigDir = getPkgconfigDir($prefix);
+
+    my $error;
+
+    my $pcTemplateFilename = dirname($0) . "/pkgconfig_template";
+
+    my $templateOpened = open(TEMPLATE, "<$pcTemplateFilename");
+    if (!$templateOpened) {
+        $error = "Can't open template file '$pcTemplateFilename'.\n";
+    } else {
+        my @template = <TEMPLATE>;
+
+        close(TEMPLATE);
+
+        processTemplate(\@template, $templateSubsR,
+                        \my $fileContentsR);
+
+        my $filename = "$pkgconfigDir/netpbm.pc";
+        
+        my $success = open(NETPBM_PC, ">$filename");
+        if ($success) {
+            chmod(0755, $filename);
+            foreach (@{$fileContentsR}) { print NETPBM_PC; }
+            close(NETPBM_PC);
+        } else {
+            $error = "Unable to open the file " .
+                "'$filename' for writing.  Errno=$ERRNO\n";
+        }
+    }
+    if ($error) {
+        print(STDERR "Failed to create the Netpbm Pkg-config file.  " .
               "$error\n");
     }
 }
@@ -1095,8 +1206,18 @@ print("\n");
 installManPage($pkgdir, $prefix, \my $mandir);
 print("\n");
 
-installConfig($pkgdir, 
-              $bindir, $libdir, $linkdir, $datadir, $includedir, $mandir);
+my $templateSubsR =
+    {VERSION    => netpbmVersion($pkgdir),
+     BINDIR     => $bindir,
+     LIBDIR     => $libdir,
+     LINKDIR    => $linkdir,
+     DATADIR    => $datadir,
+     INCLUDEDIR => $includedir,
+     MANDIR     => $mandir};
+
+installConfig($bindir, $templateSubsR);
+
+installPkgConfig($prefix, $templateSubsR);
 
 print("Installation is complete (except where previous error messages have\n");
 print("indicated otherwise).\n");

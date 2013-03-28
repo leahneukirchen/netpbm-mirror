@@ -103,9 +103,12 @@ $(PROG_SUBDIRS:%=%/all): lib/all $(SUPPORT_SUBDIRS:%=%/all)
 lib/all: lib/util/all
 
 .PHONY: lib/util/all
-lib/util/all:
+lib/util/all: lib/util
 	$(MAKE) -C lib/util -f $(SRCDIR)/lib/util/Makefile \
 	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) all
+
+lib/util: lib
+	mkdir $@
 
 OMIT_CONFIG_RULE = 1
 OMIT_VERSION_H_RULE = 1

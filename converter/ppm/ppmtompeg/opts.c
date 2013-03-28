@@ -40,6 +40,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "opts.h"
+#include "dct.h"
 
 /*==============*
  * EXTERNALS    *
@@ -52,7 +53,6 @@ extern int     ZAG[];
 extern boolean printSNR, decodeRefFrames;
 
 void init_idctref _ANSI_ARGS_((void));
-void init_fdct _ANSI_ARGS_((void));
 
 
 /*===================*
