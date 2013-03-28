@@ -4,7 +4,7 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-not yet  BJH  Release 10.62.00
+12.03.28 BJH  Release 10.62.00
 
               pnmtorast: set don't care bytes to zero to make output
               repeatable.
