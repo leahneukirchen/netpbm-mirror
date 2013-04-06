@@ -55,14 +55,14 @@ validateInput(struct pam const pam1,
                  "maxval of one of them.",
                  (unsigned int) pam1.maxval, (unsigned int) pam2.maxval);
 
-    if (streq(pam1.tuple_type, pam2.tuple_type))
+    if (!streq(pam1.tuple_type, pam2.tuple_type))
         pm_error("images are not of the same type.  The tuple types are "
                  "'%s' and '%s', respectively.",
                  pam1.tuple_type, pam2.tuple_type);
 
-    if (streq(pam1.tuple_type, PAM_PBM_TUPLETYPE) &&
-        streq(pam1.tuple_type, PAM_PGM_TUPLETYPE) &&
-        streq(pam1.tuple_type, PAM_PPM_TUPLETYPE))
+    if (!streq(pam1.tuple_type, PAM_PBM_TUPLETYPE) &&
+        !streq(pam1.tuple_type, PAM_PGM_TUPLETYPE) &&
+        !streq(pam1.tuple_type, PAM_PPM_TUPLETYPE))
         pm_error("Images are not of a PNM type.  Tuple type is '%s'",
                  pam1.tuple_type);
 }
