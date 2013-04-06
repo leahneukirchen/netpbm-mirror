@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.63.00
 
+              pnmpsnr: fix bug: says types aren't the same when they are.
+              Introduced in 10.61 (December 2012).
+
 12.03.28 BJH  Release 10.62.00
 
               pnmtorast: set don't care bytes to zero to make output
