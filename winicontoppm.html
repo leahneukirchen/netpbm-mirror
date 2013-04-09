@@ -6,12 +6,10 @@ Updated: 23 March 2003
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 winicontoppm - convert a Windows .ico image into 1 or more PPM images
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>winicontoppm</B>
 [<B>-writeands</B>]
@@ -21,8 +19,7 @@ winicontoppm - convert a Windows .ico image into 1 or more PPM images
 [<I>iconfile</I>]
 [<I>ppmdestfile</I>]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -48,8 +45,7 @@ the string <B>xor</B> as in <I>ppmdestfile</I><B>_xor.ppm</B> or
 32 bits per pixel.  Before Netpbm 10.15 (April 2003), it could not handle
 24 and 32.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<H2 id="options">OPTIONS</H2>
 
 <DL COMPACT>
 <DT><B>-writeands</B>
@@ -63,10 +59,16 @@ a separate PBM file.  It's name is of the form
 
 <DD>Extract all images from the .ico file.
 
+<p>If you specify neither this nor <b>-bestqual</b>, <b>winicontoppm</b>
+extracts the first image.
+
 <DT><B>-bestqual</B>
 
 <DD>Extract only the best quality (largest, then highest bpp) image
 from the .ico file.
+
+<p>If you specify neither this nor <b>-allicons</b>, <b>winicontoppm</b>
+extracts the first image.
 
 <DT><B>-multippm</B>
 
@@ -74,28 +76,24 @@ from the .ico file.
 
 </DL>
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="ppmtowinicon.html">ppmtowinicon</A></B>,
 <B><A HREF="bmptopnm.html">bmptopnm</A></B>,
 <B><A HREF="ppm.html">ppm</A></B>
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>AUTHOR</H2>
+<H2 id="author">AUTHOR</H2>
 
 Copyright (C) 2000, 2003 by Lee Benfield.
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">SEE ALSO</A>
-<LI><A HREF="#lbAG">AUTHOR</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
 </UL>
 </BODY>
 </HTML>

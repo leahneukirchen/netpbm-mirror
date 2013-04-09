@@ -2,16 +2,14 @@
 <HTML><HEAD><TITLE>Pnmquant User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmquant</H1>
-Updated: 22 October 2003
+Updated: 09 April 2013
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 pnmquant - quantize the colors in a Netpbm image to a smaller set
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>pnmquant</B>
 [<B>-center</B>|<B>-meancolor</B>|<B>-meanpixel</B>]
@@ -20,8 +18,7 @@ pnmquant - quantize the colors in a Netpbm image to a smaller set
 [<B>-spreadbrightness</B>|<B>-spreadluminosity</B>]
 <I>ncolors</I> [<I>pnmfile</I>]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -45,13 +42,31 @@ directly than to run <B>pnmquant</B>.  You save the overhead of the
 Perl interpreter and creating two extra processes.  <B>pnmquant</B> is
 just a convenience.
 
+<p>Here is an example of the relationship between the programs:
+
+<p>This:
+
+<pre>
+<kbd>
+    $ pnmquant 256 myimage.pnm &gt;/tmp/colormap.pnm &gt;myimage256.pnm
+</kbd>
+</pre>
+
+<p>does essentially this:
+
+<pre>
+<kbd>
+    $ pnmcolormap 256 myimage.pnm &gt;/tmp/colormap.pnm
+    $ pnmremap -mapfile=/tmp/colormap.pnm myimage.pnm &gt;myimage256.pnm
+</kbd>
+</pre>
+
 <p><b>pnmquant</b> did not exist before Netpbm 9.21 (January 2001).
 Before that, <b>ppmquant</b> did the same thing, but only on PPM
 images.  <b>ppmquant</b> continues to exist, but is only a front end
 (for name compatibility) to <b>pnmquant</b>.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="pnmcolormap.html">pnmcolormap</A></B>,
 <B><A HREF="pnmremap.html">pnmremap</A></B>,
@@ -62,13 +77,11 @@ images.  <b>ppmquant</b> continues to exist, but is only a front end
 <B><A HREF="pnm.html">pnm</A></B>
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">SEE ALSO</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
 </UL>
 </BODY>
 </HTML>

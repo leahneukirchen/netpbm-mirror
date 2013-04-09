@@ -6,13 +6,11 @@ Updated: 01 May 2004
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
 ppmtowinicon - convert PPM image into a Windows .ico file
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>ppmtowinicon</B>
 
@@ -22,8 +20,7 @@ ppmtowinicon - convert PPM image into a Windows .ico file
 
 [<I>ppmfile</I> [<i>andfile</i>] ...]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -32,7 +29,7 @@ produces a Microsoft Windows .ico file as output.
 
 <P>A Windows icon contains 1 or more images, at different resolutions
 and color depths.  When Windows wants to display the icon, it searches
-through the images to find the one the best matches the number of colors
+through the images to find the one that best matches the number of colors
 and resolution of the display.
 
 <P>Microsoft recommends including at least the following formats in each
@@ -76,13 +73,12 @@ exclusive-or'ed together.  So there is a sort of reverse video effect.
 straightforward transparency, use the <b>-truetransparent</b> option.
 This causes <b>ppmtowinicon</b> to make the base image black
 everywhere your transparency mask says transparent, regardless of what
-color you input image is at that location.
+color your input image is at that location.
 
 <p>If you don't specify <b>-andmask</b>, <b>ppmtowinicon</b> puts
 all-opaque and masks into the .ico file.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<H2 id="options">OPTIONS</H2>
 
 <DL COMPACT>
 <DT><B>-andpgms</B>
@@ -102,31 +98,27 @@ video effect.  See the <a href="#transparency">transparency section</a>.
      
 </DL>
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="winicontoppm.html">winicontoppm</A></B>,
 <B><A HREF="ppm.html">ppm</A></B>
 <B><A HREF="pgm.html">pgm</A></B>
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>AUTHOR</H2>
+<H2 id="author">AUTHOR</H2>
 
 Copyright (C) 2000 by Lee Benfield.
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
 <UL>
   <LI><A HREF="#transparency">TRANSPARENCY</A>
   </UL>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">SEE ALSO</A>
-<LI><A HREF="#lbAG">AUTHOR</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
 </UL>
 </BODY>
 </HTML>
