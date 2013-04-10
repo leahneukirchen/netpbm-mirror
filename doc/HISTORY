@@ -8,6 +8,10 @@ not yet  BJH  Release 10.63.00
 
               pnmpsnr: fix bug: says types aren't the same when they are.
               Introduced in 10.61 (December 2012).
+              
+              ppmtowinicon: fix bug: sometimes creates image truncated in the
+              middle of the AND mask.  Always broken (program was new in
+              Netpbm 9.3 (June 2000)).
 
 12.03.28 BJH  Release 10.62.00
 
