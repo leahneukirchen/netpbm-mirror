@@ -123,7 +123,8 @@ PORTBINARIES =  avstopam bmptopnm fitstopnm \
 	        pgmtopbm pgmtoppm ppmtopgm pnmtoddif \
 		pnmtopclxl \
 		pnmtosgi pnmtosir pamtotga pnmtoxwd \
-		rlatopam sgitopnm sirtopnm sunicontopnm xwdtopnm zeisstopnm
+		rlatopam sgitopnm sirtopnm sunicontopnm \
+		winicontopam xwdtopnm zeisstopnm
 
 BINARIES = \
   $(PORTBINARIES) \
