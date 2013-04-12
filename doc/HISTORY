@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.63.00
 
+              Perl programs: make them shell programs that reinvoke themselves
+              as perl so we can get the Perl interpreter from the PATH.
+
               pnmpsnr: fix bug: says types aren't the same when they are.
               Introduced in 10.61 (December 2012).
               
