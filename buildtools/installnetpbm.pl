@@ -374,7 +374,7 @@ sub warnNonstandardShlibDirCrle($) {
     # system directory.  But I don't have a Solaris system to reverse
     # engineer/test with.
 
-    if ($shlibDir != "/lib" && $shlibDir != "/usr/lib") {
+    if ($shlibDir ne "/lib" && $shlibDir ne "/usr/lib") {
         print("You have installed shared libraries in " .
               "'$shlibDir',\n" .
               "which is not a conventional system shared " .
@@ -401,7 +401,7 @@ sub warnNonstandardShlibDirGeneric($) {
 #  search path.
 #-----------------------------------------------------------------------------
 
-    if ($shlibDir != "/lib" && $shlibDir != "/usr/lib") {
+    if ($shlibDir ne "/lib" && $shlibDir ne "/usr/lib") {
         print("You have installed shared libraries in " .
               "'$shlibDir',\n" .
               "which is not a conventional system shared " .

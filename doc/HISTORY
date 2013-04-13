@@ -4,12 +4,20 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-12.04.06 BJH  Releasse 10.62.01
+13.04.13 BJH  Release 10.62.02
+
+              ppmtowinicon: fix bug: sometimes creates image truncated in the
+              middle of the AND mask.  Always broken (program was new in
+              Netpbm 9.3 (June 2000)).
+
+              install: fix Perl warning in installnetpbm.  Broken in 10.61.
+
+13.04.06 BJH  Release 10.62.01
 
               pnmpsnr: fix bug: says types aren't the same when they are.
               Introduced in 10.61 (December 2012).
-
-12.03.28 BJH  Release 10.62.00
+              
+13.03.28 BJH  Release 10.62.00
 
               pnmtorast: set don't care bytes to zero to make output
               repeatable.
