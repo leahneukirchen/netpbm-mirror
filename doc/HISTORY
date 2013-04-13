@@ -16,6 +16,8 @@ not yet  BJH  Release 10.63.00
               middle of the AND mask.  Always broken (program was new in
               Netpbm 9.3 (June 2000)).
 
+              install: fix Perl warning in installnetpbm.
+
 12.03.28 BJH  Release 10.62.00
 
               pnmtorast: set don't care bytes to zero to make output
