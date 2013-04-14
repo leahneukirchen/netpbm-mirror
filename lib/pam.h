@@ -514,6 +514,8 @@ pnm_backgroundtuple(struct pam *  const pamP,
 /*----------------------------------------------------------------------------
    These are meant for passing to pm_system() as Standard Input feeder
    and Standard Output accepter.
+
+   The 'feederParm' or 'accepterParm' is a pointer to a struct pamtuples.
 -----------------------------------------------------------------------------*/
 
 void
