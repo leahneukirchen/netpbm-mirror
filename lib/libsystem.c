@@ -501,20 +501,20 @@ pm_feed_from_memory(int    const pipeToFeedFd,
 
     struct bufferDesc * const inputBufferP = feederParm;
     
-    FILE * const outfile = fdopen(pipeToFeedFd, "w");
+    FILE * const outFileP = fdopen(pipeToFeedFd, "w");
     
-    int bytesTransferred;
+    size_t bytesTransferred;
 
     /* The following signals (and normally kills) the process with
        SIGPIPE if the pipe does not take all 'size' bytes.
     */
     bytesTransferred = 
-        fwrite(inputBufferP->buffer, 1, inputBufferP->size, outfile);
+        fwrite(inputBufferP->buffer, 1, inputBufferP->size, outFileP);
 
     if (inputBufferP->bytesTransferredP)
         *(inputBufferP->bytesTransferredP) = bytesTransferred;
 
-    fclose(outfile);
+    fclose(outFileP);
 }
 
 
@@ -525,14 +525,14 @@ pm_accept_to_memory(int             const pipetosuckFd,
 
     struct bufferDesc * const outputBufferP = accepterParm;
     
-    FILE * const infile = fdopen(pipetosuckFd, "r");
+    FILE * const inFileP = fdopen(pipetosuckFd, "r");
 
-    int bytesTransferred;
+    size_t bytesTransferred;
 
     bytesTransferred =
-        fread(outputBufferP->buffer, 1, outputBufferP->size, infile);
+        fread(outputBufferP->buffer, 1, outputBufferP->size, inFileP);
 
-    fclose(infile);
+    fclose(inFileP);
 
     if (outputBufferP->bytesTransferredP)
         *(outputBufferP->bytesTransferredP) = bytesTransferred;
