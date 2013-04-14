@@ -2,13 +2,13 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "pm_config.h"
-#include "pm_c_util.h"
-#include "mallocvar.h"
-#include "nstring.h"
-#include "shhopt.h"
-#include "pam.h"
-#include "pm_system.h"
+#include "netpbm/pm_config.h"
+#include "netpbm/pm_c_util.h"
+#include "netpbm/mallocvar.h"
+#include "netpbm/nstring.h"
+#include "netpbm/shhopt.h"
+#include "netpbm/pam.h"
+#include "netpbm/pm_system.h"
 
 #include "winicon.h"
 
@@ -239,15 +239,21 @@ readIconDir(struct File * const fP,
     if (head.zero != 0 || head.type != ICONDIR_TYPE_ICO)
         pm_error("Not a valid windows icon file");
 
-    dirP = malloc(sizeof(struct IconDir)
-                  - sizeof(struct IconDirEntry)
-                  + head.count * sizeof(struct IconDirEntry));
-    if (dirP == NULL)
-        pm_error("out of memory.");
+    MALLOCVAR(dirP);
 
-    dirP->zero  = head.zero;
-    dirP->type  = head.type;
-    dirP->count = head.count;
+    if (dirP == NULL)
+        pm_error("Could't allocate memory for Icon directory");
+
+    MALLOCARRAY(dirP->entries, head.count);
+
+    if (dirP->entries == NULL)
+        pm_error("Could not allocate memory for %u entries in icon directory",
+                 head.count);
+
+    dirP->zero           = head.zero;
+    dirP->type           = head.type;
+    dirP->count          = head.count;
+    dirP->entriesAllocCt = head.count;
 
     for (imageIndex = 0; imageIndex < head.count; ++imageIndex) {
         struct IconDirEntry * const dirEntryP = &dirP->entries[imageIndex];
@@ -322,6 +328,15 @@ readIconDir(struct File * const fP,
         dumpIconDir(dirP);
 
     return dirP;
+}
+
+
+
+static void
+freeIconDir(struct IconDir * const dirP) {
+
+    free(dirP->entries);
+    free(dirP);
 }
 
 
@@ -643,7 +658,7 @@ readXorBitfields(struct BitmapInfoHeader * const hdrP,
 
         bitmapCursor  += 12;
         sizeRemaining -= 12;
-        bytesConsumed     += 12;
+        bytesConsumed += 12;
     }
 
     /*  determine shift and maxval from bit field for each channel */
@@ -681,10 +696,7 @@ readXorBitfields(struct BitmapInfoHeader * const hdrP,
                        "reading XOR mask: image truncated.", index);
             truncatedXorSize = sizeRemaining;
         } else
-              truncatedXorSize = xorSize;
-        bitmapCursor  += truncatedXorSize;
-        sizeRemaining -= truncatedXorSize;
-        bytesConsumed     += truncatedXorSize;
+            truncatedXorSize = xorSize;
     }
 
     bytesPerRow = ((hdrP->bits_per_pixel * hdrP->bm_width + 31) / 32) * 4;
@@ -734,6 +746,10 @@ readXorBitfields(struct BitmapInfoHeader * const hdrP,
             }
         }
     }
+
+    bitmapCursor  += truncatedXorSize;
+    sizeRemaining -= truncatedXorSize;
+    bytesConsumed += truncatedXorSize;
 
     /*  A fully transparent alpha channel (all zero) in XOR mask is
         defined to be void by Microsoft, and a fully opaque alpha
@@ -954,7 +970,7 @@ convertBmp(const unsigned char * const image,
            FILE *                const ofP,
            struct IconDirEntry * const dirEntryP,
            bool                  const needHeaderDump,
-           bool                  const andMasks) {
+           bool                  const wantAndMaskPlane) {
     
     struct BitmapInfoHeader hdr;
     uint32_t                offset;
@@ -999,6 +1015,10 @@ convertBmp(const unsigned char * const image,
     outpam.height = hdr.bm_height / 2;
     outpam.maxval = 255;
     outpam.allocation_depth = 5;
+    outpam.depth  = 0;
+        /* Just for tuple array allocation; we set the value for the actual
+           output image below.
+        */
 
     tuples = pnm_allocpamarray(&outpam);
 
@@ -1022,7 +1042,7 @@ convertBmp(const unsigned char * const image,
             andPlane = PAM_TRN_PLANE;
             strcpy (outpam.tuple_type, "RGB_ALPHA");
             outpam.depth  = 4;
-        } else if (andMasks) {
+        } else if (wantAndMaskPlane) {
             haveAnd = true;
             andPlane = PAM_TRN_PLANE + 1;
             outpam.depth  = 5;
@@ -1086,12 +1106,12 @@ reportPngInfo(const unsigned char * const image,
             break;
 
         case 4:
-            colorType = "grayscale +alpha";
+            colorType = "grayscale + alpha";
             depth     = ihdr.bit_depth * 2;
             break;
 
         case 6:
-            colorType = "RGB +alpha";
+            colorType = "RGB + alpha";
             depth     = ihdr.bit_depth * 4;
             break;
 
@@ -1112,13 +1132,10 @@ reportPngInfo(const unsigned char * const image,
                        dirEntryP->index, dirEntryP->width, dirEntryP->height,
                        ihdr.width, ihdr.height);
         }
-        if (dirEntryP->bits_per_pixel != 0
-            && dirEntryP->bits_per_pixel != depth) {
-            pm_message("image %2u:"
-                       " mismatch in header and image bpp value"
-                       " (%u vs %u)",
-                       dirEntryP->index, dirEntryP->bits_per_pixel, depth);
-        }
+        /* Mismatch between dirEntryP->bits_per_pixel and 'depth' is
+           normal, because the creator of the winicon file doesn't necessarily
+           know the true color resolution.
+        */
     }
 }
 
@@ -1196,7 +1213,7 @@ convertImage(struct File *         const icoP,
              struct IconDirEntry * const dirEntryP,
              FILE *                const ofP,
              bool                  const needHeaderDump,
-             bool                  const andMasks) {
+             bool                  const wantAndMaskPlane) {
 
     const unsigned char * image;  /* malloced */
 
@@ -1205,7 +1222,7 @@ convertImage(struct File *         const icoP,
     if (MEMEQ(image, pngHeader, sizeof (pngHeader)))
         convertPng(image, ofP, dirEntryP);
     else
-        convertBmp(image, ofP, dirEntryP, needHeaderDump, andMasks);
+        convertBmp(image, ofP, dirEntryP, needHeaderDump, wantAndMaskPlane);
 
     free((void *)image);
 }
@@ -1253,8 +1270,8 @@ main (int argc, const char *argv []) {
         convertImage(&ico, &dirP->entries[bestImage(dirP)], stdout,
                      cmdline.headerdump, cmdline.andmasks);
     }
-
-    free(dirP);
+    
+    freeIconDir(dirP);
 
     if (ico.fileP != stdin)
         pm_close(ico.fileP);
