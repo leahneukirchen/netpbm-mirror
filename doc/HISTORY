@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.63.00
 
+              Add pamtowinicon, winicontopam.  Thanks Ludolf Holzheid
+              (lholzheid@bihl-wiedemann.de).
+
               Perl programs: make them shell programs that reinvoke themselves
               as perl so we can get the Perl interpreter from the PATH.
 
@@ -16,7 +19,7 @@ not yet  BJH  Release 10.63.00
               middle of the AND mask.  Always broken (program was new in
               Netpbm 9.3 (June 2000)).
 
-              install: fix Perl warning in installnetpbm.
+              install: fix Perl warning in installnetpbm.  Broken in 10.61.
 
 12.03.28 BJH  Release 10.62.00
 
