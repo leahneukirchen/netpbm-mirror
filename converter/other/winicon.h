@@ -36,7 +36,8 @@ struct IconDir {
     uint16_t type;                /* 1 */
     uint16_t count;               /* number of images in icon */
 
-    struct IconDirEntry entries[1];   /* one entry for each image */
+    unsigned int entriesAllocCt;     /* # of allocated slots in 'entries'*/
+    struct IconDirEntry * entries;   /* one entry for each image */
 };
 
 /*  BMP image structures  */
