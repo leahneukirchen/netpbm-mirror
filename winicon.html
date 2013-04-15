@@ -1,0 +1,129 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Windows Icons</TITLE></HEAD>
+<BODY>
+<H1>Windows Icons</H1>
+Updated: 12 April 2013
+<BR>
+<A HREF="#index">Table of Contents</A>
+
+<H2 id="name">NAME</H2>
+
+Microsoft Windows icon files
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>A Microsoft Windows icon file contains one or more images, at
+resolutions up to 256 by 256 pixels and various bpp values.  The
+images are encoded either as Portable Network Graphics file (PNG), or
+in a format similar to Microsoft's BMP format.
+
+<P>If encoded as BMP, the image includes an &lsquo;AND mask&rsquo;,
+which contains 1-bit transparency data.  It may also contain
+additional 8-bit transparency data together with the color
+information.
+
+
+<H3 id="colordepth">Color Depth</H3>
+
+Except for the 16 bits per pixel images and images with bit fields, which both
+are rare, the colors in all BMP encoded images are RGB with 8 bits per
+channel.  Images with bpp values lower than 16 use a palette.
+
+<P>I.e. the bpp value gives the number of distinct colors, not the color
+depth.
+
+
+<H3 id="masks">XOR Mask and AND Mask</H3>
+
+<p>BMP encoded images contain two pixel maps: The so-called &lsquo;XOR
+mask&rsquo; stores the color information for each pixel, and the
+&lsquo;AND mask&rsquo; stores the transparency belonging to it.
+
+<P>The names and the function of these maps are most easily
+understood by looking at how a 1-bpp icon image is rendered on a
+monochrome screen: The pixels on the screen are logically AND-ed with
+the bits on the AND mask, then the result is logically XOR-ed with the
+bits on the XOR mask.
+
+<P>The result is that if a bit on the AND mask is reset, the corresponding bit
+on the XOR mask determines the color of the pixel on the screen.  If a bit in
+the AND mask is set and the corresponding bit in the XOR mask is black
+(reset), the image is transparent.  Finally, if the bits are set in both the
+AND and XOR mask (the pixel on the XOR mask is white), the background of the
+screen is inverted.
+
+<P>In color environments, a pixel on the XOR mask outside the opaque area of
+the image is usually black and sometimes white, but a color other than black
+and white will hardly give predictable results.
+
+<P>Since Windows XP, there may also be an 8-bit alpha channel in 32-bpp BMP
+encoded icon images. The AND mask, however, is still required and used
+e.g. for generating shadows.
+
+<P>PNG encoded images don't contain AND masks.  While rendering a PNG encoded
+image, Windows constructs an AND mask on the fly from the alpha channel, if
+present.
+
+
+<H3 id="evolution">Evolution of Windows Icons</H3>
+
+<p>The Windows icon file format has undergone some extensions since it was
+invented in the mid-eighties for Windows&nbsp;1:
+
+<UL>
+<LI>Windows&nbsp;1 used monochrome 32x32 icons only.
+<P>
+<LI>Windows&nbsp;3.0 added color icons with bpp values up to 8.
+<P>
+<LI>Windows 4.0 (a.k.a. Windows95) added support for 32-bpp images and
+resolutions up to 256 by 256.
+<P>
+<LI>NT&nbsp;5.1 (a.k.a. Windows&nbsp;XP) added support for the 8-bit
+alpha channel in the unused bits of 32-bpp images.
+<P>
+<LI>NT&nbsp;6.0 (a.k.a. Windows&nbsp;Vista) added support for PNG
+encoded images
+</UL>
+
+<H3 id="resolutions">Common Resolutions and BPP Values</H3>
+
+<p>Typical resolutions and bpp values of the Windows shell icons include:
+
+<TABLE align="center" border=1>
+<TR><TH>OS</TH><TH>resolutions</TH><TH>bpp values</TH></TR>
+<TR><TD>Windows&nbsp;3</TD><TD>32x32</TD><TD>1, 4<BR></TD></TR>
+<TR><TD>Windows&nbsp;4</TD><TD>16x16, 32x32, 48x48</TD><TD>4, 8</TD></TR>
+<TR><TD>NT&nbsp;5</TD><TD>16x16, 32x32, 48x48</TD><TD>4, 8, 32</TD></TR>
+<TR><TD rowspan=3>NT&nbsp;6</TD><TD>16x16, 32x32, 48x48</TD><TD>4, 8, 32</TD></TR>
+<TR><TD>24x24, 96x96</TD><TD>8, 32<BR></TD></TR>
+<TR><TD>256x256</TD><TD>32 (PNG encoded)<BR></TD></TR>
+</TABLE>
+
+<P>Within the icon file, the images with low bpp values are usually
+stored first.  With the same bpp value, the images are sorted by
+resolution, large images first.
+
+
+<H3 id="mimetype">MIME Type and File Name Extension</H3>
+
+<p>The MIME type of Windows icon files is registered by IANA as
+<B>image/vnd.microsoft.icon</B>, but the unofficial name
+<B>image/x-icon</B> is still widely used.
+
+<P>The file name extension (used by Microsoft operating systems as
+file type identifier) is <B>.ico</B>.
+
+<HR>
+<H2 id="index">Table Of Contents</H2>
+<UL>
+<LI><A HREF="#description">DESCRIPTION</A>
+<UL>
+<LI><A HREF="#colordepth">Color Depth</A>
+<LI><A HREF="#masks">XOR Mask and AND Mask</A>
+<LI><A HREF="#evolution">Evolution of Windows Icons</A>
+<LI><A HREF="#resolutions">Common Resolutions and BPP Values</A>
+<LI><A HREF="#mimetype">MIME Type and File Name Extension</A>
+</UL>
+</UL>
+</BODY>
+</HTML>

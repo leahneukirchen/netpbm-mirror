@@ -1,0 +1,122 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Winicontopam User Manual</TITLE></HEAD>
+<BODY>
+<H1>winicontopam</H1>
+Updated: 12 April 2013
+<BR>
+<A HREF="#index">Table of Contents</A>
+
+<H2 id="name">NAME</H2>
+
+winicontopam - convert a Microsoft Windows icon file into a Netpbm PAM file
+
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>winicontopam</B>
+[<B>-image=</B><I>index</I> | <B>-allimages</B>]
+[<B>-andmasks</B>]
+[<B>-verbose</B>]
+[<I>icon_file</I>]
+
+<P>All options can be abbreviated to their shortest unique prefix.
+You may use two hyphens instead of one to designate an option.  You
+may use either white space or equals signs between an option name and
+its value.
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<P><B>winicontopam</B> reads a Microsoft Windows icon file and
+converts it to one or more RGB_ALPHA Netpbm PAM files.
+
+<P>The alpha channel is copied from the 8-bit transparency data from the icon,
+if present.  If no 8-bit transparency data is available, the alpha channel is
+constructed from the so-called &lsquo;AND mask&rsquo;.
+
+<P>The output goes to Standard Output.
+
+<p>The output is a multi-image PAM file.  If you want a separate file for
+each image, use <B>pamsplit</B>.
+
+
+<H2 id="options">OPTIONS</H2>
+
+In addition to the options common to all programs based on libnetpbm (most
+notably <B>-quiet</B>, see <A HREF="index.html#commonoptions">Common
+Options</A>), <B>winicontopam</B> recognizes the following command
+line options:
+
+<DL COMPACT>
+
+<DT><B>-allimages</B>
+
+<DD>Convert all images in the input.
+
+<p>You may not specify this together with <b>-image</b>.
+
+<p>By default, <b>winicontopam</b> converts only the one &lsquo;best
+quality&rsquo; image (largest, then most bits per pixel).
+
+<DT><B>-image=</B><I>index</I>
+
+<DD>Convert image number <I>index</I> (starting with zero).
+
+<p>You may not specify this together with <b>-allimages</b>.
+
+<p>By default, <b>winicontopam</b> converts the &lsquo;best quality&rsquo;
+image (largest, then most bits per pixel).
+
+<DT><B>-andmasks</B>
+
+<DD>If the image to be extracted contains both 8-bit transparency
+data and AND mask, write a five-channel Netpbm PAM file with the AND
+mask stored to the fifth plane.
+
+<DT><B>-verbose</B>
+
+<DD>Print more messages
+
+</DL>
+
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<ul>
+<li><A HREF="pamtowinicon.html">pamtowinicon</A>
+<li><A HREF="winicontoppm.html">winicontoppm</A>
+<li><A HREF="winicontoppm.html">pamsplit</A>
+<li><A HREF="pam.html">pam</A> 
+<li><A HREF="winicon.html">winicon</A>
+</ul>
+
+<p>For information on the PNG format,
+see <a href="http://schaik.com/png">http://schaik.com/png</a>.
+
+
+<h2 id="history">HISTORY</h2>
+
+<p><b>winicontopam</b> was new in Netpbm 10.63 (June 2013).  It obsoleted
+<b>winicontoppm</b> by providing more function and conforming better to Netpbm
+conventions.
+
+
+<H2 id="author">AUTHOR</H2>
+
+<p>Copyright (C) 2013 by Ludolf Holzheid.
+
+<p>Translated to Netpbm coding style by Bryan Henderson.
+
+<HR>
+<H2 id="index">Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#history">HISTORY</A>
+<LI><A HREF="#author">AUTHOR</A>
+</UL>
+</BODY>
+</HTML>
