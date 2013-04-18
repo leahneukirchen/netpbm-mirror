@@ -21,6 +21,9 @@ not yet  BJH  Release 10.63.00
 
               install: fix Perl warning in installnetpbm.  Broken in 10.61.
 
+              build: fix problem with creating lib/util that already exists.
+              Broken in 10.62.
+
 12.03.28 BJH  Release 10.62.00
 
               pnmtorast: set don't care bytes to zero to make output
