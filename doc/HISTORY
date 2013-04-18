@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+13.04.18 BJH  Release 10.62.03
+
+              build: fix problem with creating lib/util that already exists.
+              Broken in 10.62.
+
 13.04.13 BJH  Release 10.62.02
 
               ppmtowinicon: fix bug: sometimes creates image truncated in the
@@ -11,8 +16,6 @@ CHANGE HISTORY
               Netpbm 9.3 (June 2000)).
 
               install: fix Perl warning in installnetpbm.  Broken in 10.61.
-
-13.04.06 BJH  Release 10.62.01
 
               pnmpsnr: fix bug: says types aren't the same when they are.
               Introduced in 10.61 (December 2012).
