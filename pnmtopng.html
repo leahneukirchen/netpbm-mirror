@@ -106,7 +106,7 @@ sign to separate an option name from its value.  And the options had
 to come before the non-option program arguments.
 
 <p>Furthermore, the options <b>-chroma</b>, <b>-phys</b>, and
-<b>-time</b> were replaced by <b>-rgb</b>, <b>size</b>, and
+<b>-time</b> were replaced by <b>-rgb</b>, <b>-size</b>, and
 <b>-modtime</b>, respectively.  The only difference, taking
 <b>-phys</b>/<b>-size</b> as an example, is that <b>-phys</b> takes
 multiple program arguments as the option argument, whereas <b>-rgb</b>
@@ -376,11 +376,15 @@ same.
 compression.  Select a level from 0 for no compression (maximum speed)
 to 9 for maximum compression (minimum speed).
 
+<p>The default is the default of the zlib library.
+
 <dt><b>-comp_mem_level=</b><i>n</i>
 
 <dd>This option sets the memory usage level of the zlib compression.
 Select a level from 1 for minimum memory usage (and minimum speed) to
 9 for maximum memory usage (and speed).
+
+<p>The default is the default of the zlib library.
 
 <p>This option was new in Netpbm 10.30 (October 2005).
 
@@ -388,6 +392,8 @@ Select a level from 1 for minimum memory usage (and minimum speed) to
 
 <dd>This options sets the compression strategy of the zlib compression.
 See Zlib documentation for information on what these strategies are.
+
+<p>The default is the default of the zlib library.
 
 <p>This option was new in Netpbm 10.30 (October 2005).
 
@@ -397,6 +403,8 @@ See Zlib documentation for information on what these strategies are.
 completeness and for possible forward compatibility.  It theoretically
 selects the compression method of the zlib compression, but the Z
 library knows only one method today, so there's nothing to choose.
+
+<p>The default is the default of the zlib library.
 
 <p>This option was new in Netpbm 10.30 (October 2005).
 
@@ -408,6 +416,8 @@ so 8 means 256 bytes.  The value must be from 8 to 15 (i.e. 256 bytes
 to 32K).
 
 <p>See Zlib documentation for details on what this window size is.
+
+<p>The default is the default of the zlib library.
 
 <p>This option was new in Netpbm 10.30 (October 2005).
 
