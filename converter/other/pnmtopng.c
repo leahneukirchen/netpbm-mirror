@@ -128,7 +128,6 @@ struct cmdlineInfo {
     int           filterSet;
     unsigned int  force;
     unsigned int  libversion;
-    unsigned int  compressionSpec;
     struct zlibCompression zlibCompression;
 };
 
