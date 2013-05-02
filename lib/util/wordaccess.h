@@ -44,33 +44,32 @@
 
 #include "pm_config.h"
 
-#if (!defined(WORDACCESS_GENERIC) && HAVE_GCC_BITCOUNT )
-
-    #if BYTE_ORDER == BIG_ENDIAN    /* See pm_config.h */
-        /* Sun Sparc 64, etc */ 
-        #include "wordaccess_gcc3_be.h"
-
-    #elif (BITS_PER_LONG == 64)
-        /* AMD Athlon 64, Intel x86_64, Intel Itanium, etc. */
-        #include "wordaccess_64_le.h"
-
-    #elif (BITS_PER_LONG == 32)
-        /* Intel x86_32 (80386, 80486, Pentium), etc. */
-        #include "wordaccess_generic.h"
-
-    #else
-        /* Extremely rare case.
-           If long is neither 32 nor 64 bits, (say, 128) it comes here.
-        */
-        #define WORDACCESS_GENERIC
-        #include "wordaccess_generic.h"
-
-    #endif
-
+#if defined(WORDACCESS_GENERIC)
+  /* User wants this, regardless of whether machine can do better */
+  #include "wordaccess_generic.h"
+#elif BYTE_ORDER == BIG_ENDIAN
+  #if UNALIGNED_OK
+     #include wordaccess_be_unaligned.h
+  #else
+    /* Sparc */
+    #include wordaccess_be_aligned.h
+  #endif
+#elif HAVE_GCC_BITCOUNT
+  #if (BITS_PER_LONG == 64)
+    /* AMD Athlon 64, Intel x86_64, Intel Itanium, etc. */
+    #include "wordaccess_64_le.h"
+  #elif (BITS_PER_LONG == 32)
+    /* Intel x86_32 (80386, 80486, Pentium), etc. */
+      #include "wordaccess_generic.h"
+  #else
+     /* Extremely rare case.
+        If long is neither 32 nor 64 bits, (say, 128) it comes here.
+     */
+     #include "wordaccess_generic.h"
+  #endif
 #else
-    /* Non GCC, GCC prior to v.3.4 or WORDACCESS_GENERIC defined  */
-    #include "wordaccess_generic.h"
-
+  /* Non GCC or GCC prior to v.3.4; little-endian  */
+  #include "wordaccess_generic.h"
 #endif
 
 #endif

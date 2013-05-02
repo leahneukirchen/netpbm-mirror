@@ -19,6 +19,9 @@ not yet  BJH  Release 10.63.00
               middle of the AND mask.  Always broken (program was new in
               Netpbm 9.3 (June 2000)).
 
+              sparc64 pbmtog3: fix bug that causes crash due to unaligned
+              memory access.
+
               install: fix Perl warning in installnetpbm.  Broken in 10.61.
 
               build: fix problem with creating lib/util that already exists.

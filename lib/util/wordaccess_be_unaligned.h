@@ -1,9 +1,6 @@
 /*=============================================================================
-  This file is the part of wordaccess.h for use under these
-  conditions:
-
-  * GCC (>=3.4), GLIBC
-  * Big-Endian machines
+  This file is the part of wordaccess.h for use on a big-endian machine
+  that does not require word accesses to be word-aligned.
 *===========================================================================*/
 
 typedef unsigned long int wordint;
