@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+13.05.02 BJH  Release 10.62.04
+
+              sparc64 pbmtog3: fix bug that causes crash due to unaligned
+              memory access.
+
 13.04.18 BJH  Release 10.62.03
 
               build: fix problem with creating lib/util that already exists.
