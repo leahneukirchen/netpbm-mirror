@@ -143,9 +143,6 @@ load(const struct pam * const pamP,
     tuplerow = pnm_allocpamrow(pamP);
     
     MALLOCARRAY(pixels, pamP->height);
-    if (pixels == NULL)
-        pm_error("Unable to allocate array of %u pixel rows",
-                 pamP->height);
 
     if (pixels == NULL)
         pm_error("Unable to allocate array of %u rows", pamP->height);
