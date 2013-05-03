@@ -47,7 +47,7 @@ abandon(void) {
 
 
 static void
-parseCommandLine(int argc, char *argv[],
+parseCommandLine(int argc, const char ** const argv,
                  struct cmdlineInfo * const cmdlineP) {
 
     static optEntry option_def[50];
@@ -76,7 +76,7 @@ parseCommandLine(int argc, char *argv[],
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;          /* no short options used */
     opt.allowNegNum = FALSE;            /* don't allow negative values */
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
 
     if (cmdlineP->hstep < 1)
         pm_error("-hstep must be at least 1 column.");
@@ -491,7 +491,7 @@ getAngle(const struct pam * const pamP,
 
 
 int
-main(int argc, char *argv[]) {
+main(int argc, const char ** argv) {
 
     struct cmdlineInfo cmdline;
     struct pam pam;
@@ -501,7 +501,7 @@ main(int argc, char *argv[]) {
     unsigned int vstep;    /* vertical step size */
     float angle;
 
-    pgm_init(&argc, argv);              /* initialize netpbm system */
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
