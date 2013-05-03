@@ -4,10 +4,20 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+13.05.03 BJH  Release 10.35.89
+
+              ppmtowinicon: fix bug: sometimes creates image truncated in the
+              middle of the AND mask.  Always broken (program was new in
+              Netpbm 9.3 (June 2000)).
+
+              pamtilt: fix bug: incorrect output or invalid memory access
+              crash.  Always broken (program was new in Neptbm 10.30
+              (October 2005)).
+
 13.02.20 BJH  Release 10.35.88
 
               ppmpat: fix wrong output with -poles.
-
+              
               Windows build: fix compile error on urt/rle_open_f.c due to
               Unix process management stuff.
 
