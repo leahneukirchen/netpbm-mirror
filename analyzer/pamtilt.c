@@ -211,9 +211,32 @@ replacePixelValuesWithScaledDiffs(
 
 
 
+static unsigned long
+totalBrightness(sample **    const pixelWindow,
+                unsigned int const hsampleCt,
+                float        const dy) {
+/*----------------------------------------------------------------------------
+   Total brightness of samples in the line that goes from the top left corner
+   of 'pixelWindow' down to the right at 'dy' rows per column.
+-----------------------------------------------------------------------------*/
+    unsigned long total;
+    unsigned int i;
+    float rowOffset;
+
+    for (i = 0, rowOffset = 0.5, total = 0;
+         i < hsampleCt;
+         ++i, rowOffset += dy) {
+
+        total += pixelWindow[(unsigned)rowOffset][i];
+    }
+    return total;
+}
+
+
+
 static void
 scoreAngleRegion(sample **    const pixels,
-                 unsigned int const hsamples,
+                 unsigned int const hsampleCt,
                  unsigned int const startRow,
                  unsigned int const endRow,
                  unsigned int const vstep,
@@ -231,7 +254,7 @@ scoreAngleRegion(sample **    const pixels,
    Instead of a tilt angle, we have 'dy', the slope (downward) of the lines
    in our assumed tilt.
 -----------------------------------------------------------------------------*/
-    double const tscale  = 1.0 / hsamples;
+    double const tscale  = 1.0 / hsampleCt;
 
     unsigned int row;
     double sum;
@@ -242,17 +265,10 @@ scoreAngleRegion(sample **    const pixels,
         /* Number of lines that went into 'total' */
 
     for (row = startRow, sum = 0.0, n = 0; row < endRow; row += vstep) {
-        float o;
-        long t;     /* total brightness of the samples in the line */
-        double dt;  /* mean brightness of the samples in the line */
+        double const dt =
+            tscale * totalBrightness(&pixels[row], hsampleCt, dy);
+            /* mean brightness of the samples in the line */
 
-        unsigned int i;
-
-        for (i = 0, t = 0, o = 0.5;
-             i < hsamples;
-             ++i, t += pixels[(int)(row + o)][i], o += dy) {
-        }
-        dt = tscale * t;
         sum += dt * dt;
         n += 1;
     }
