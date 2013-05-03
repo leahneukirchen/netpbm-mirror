@@ -204,18 +204,13 @@ createAndBitmap (gray ** const ba, int const cols, int const rows,
     * How wide should the u1 string for each row be?
     * each byte is 8 pixels, but must be a multiple of 4 bytes.
     */
+   unsigned int const xBytes = ROUNDUP(cols, 32)/8;
    ICON_bmp icBitmap;
-   int xBytes,y,x;
-   int wt = cols;
+   int y,x;
    u1 ** rowData;
 
    MALLOCVAR_NOFAIL(icBitmap);
 
-   wt >>= 3;
-   if (wt & 3) {
-      wt = (wt & ~3) + 4;
-   }
-   xBytes = wt;
    MALLOCARRAY_NOFAIL(rowData, rows);
    icBitmap->xBytes = xBytes;
    icBitmap->data   = rowData;

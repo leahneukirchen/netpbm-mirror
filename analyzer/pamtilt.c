@@ -253,7 +253,7 @@ scoreAngleRegion(sample **    const pixels,
 
         for (i = 0, t = 0, o = 0.5;
              i < hsamples;
-             ++i, t += pixels[(int)(row + o)][i], o += dy) {
+             t += pixels[(int)(row + o)][i], ++i, o += dy) {
         }
         dt = tscale * t;
         sum += dt * dt;
