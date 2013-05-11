@@ -1903,6 +1903,7 @@ computeColorMap(FILE *         const ifP,
                 int            const cols,
                 int            const rows,
                 xelval         const maxval,
+                int            const pnmType,
                 int            const format,
                 bool           const force,
                 FILE *         const pfP,
@@ -1954,7 +1955,7 @@ computeColorMap(FILE *         const ifP,
                     maxval, PALETTEMAXVAL);
     else {
         unsigned int bitsPerPixel;
-        computePixelWidth(PNM_FORMAT_TYPE(format), pnm_meaningful_bits, alpha,
+        computePixelWidth(pnmType, pnm_meaningful_bits, alpha,
                           NULL, &bitsPerPixel);
 
         if (!pfP && bitsPerPixel == 1)
@@ -2685,7 +2686,7 @@ convertpnm(struct cmdlineInfo const cmdline,
   findRedundantBits(ifP, rasterPos, cols, rows, maxval, format, alpha,
                     cmdline.force, &pnm_meaningful_bits);
   
-  computeColorMap(ifP, rasterPos, cols, rows, maxval, format,
+  computeColorMap(ifP, rasterPos, cols, rows, maxval, pnmType, format,
                   cmdline.force, pfP,
                   alpha, transparent >= 0, transcolor, transexact, 
                   !!cmdline.background, backcolor,
@@ -2894,3 +2895,6 @@ main(int argc, const char * argv[]) {
 
     return errorlevel;
 }
+
+
+

@@ -12,6 +12,11 @@ not yet  BJH  Release 10.63.00
               Perl programs: make them shell programs that reinvoke themselves
               as perl so we can get the Perl interpreter from the PATH.
 
+              pnmtopng: fix bug: output bigger than it needs to be when the
+              input is a color format image that contains only gray.  Broken
+              since at least 10.26 (May 2001), but after 10.18 (September
+              2003).  Thanks Ludolf Holzheid (lholzheid@bihl-wiedemann.de).
+
               pamtilt: fix bug: incorrect output or invalid memory access
               crash.  Always broken (program was new in Neptbm 10.30
               (October 2005)).
