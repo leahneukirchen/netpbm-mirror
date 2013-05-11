@@ -459,7 +459,7 @@ readXorPalette(struct BitmapInfoHeader * const hdrP,
                bool                      const needHeaderDump,
                uint32_t *                const bytesConsumedP) {
 
-    uint32_t const paletteSize = hdrP->colors_in_palette * 4;
+    uint32_t paletteSize;
 
     int16_t     row;
     const PaletteEntry * palette;
@@ -508,6 +508,8 @@ readXorPalette(struct BitmapInfoHeader * const hdrP,
     bitmapCursor = &bitmap[0];  /* initial value */
     sizeRemaining = maxSize;    /* initial value */
     bytesConsumed = 0;          /* initial value */
+
+    paletteSize = hdrP->colors_in_palette * 4;
 
     if (sizeRemaining < paletteSize)
         pm_error("image %2u: "
@@ -785,11 +787,9 @@ readAnd(struct BitmapInfoHeader * const hdrP,
     int16_t  row;
     uint32_t bytesConsumed;
     uint32_t bytesPerRow;
-    const unsigned char * bitmapCursor;
     uint32_t sizeRemaining;
     uint32_t truncatedAndSize;
 
-    bitmapCursor = &bitmap[0];  /* initial value */
     sizeRemaining = maxSize;  /* initial value */
     bytesConsumed = 0;  /* initial value */
 
@@ -805,10 +805,6 @@ readAnd(struct BitmapInfoHeader * const hdrP,
             truncatedAndSize = sizeRemaining;
         } else
             truncatedAndSize = andSize;
-
-        bitmapCursor  += truncatedAndSize;
-        sizeRemaining -= truncatedAndSize;
-        bytesConsumed += truncatedAndSize;
     }
 
     bytesPerRow = ((1 * hdrP->bm_width + 31) / 32) * 4;
@@ -833,6 +829,8 @@ readAnd(struct BitmapInfoHeader * const hdrP,
             }
         }
     }
+    sizeRemaining -= truncatedAndSize;
+    bytesConsumed += truncatedAndSize;
 }
 
 
@@ -1153,6 +1151,7 @@ convertPng(const unsigned char * const image,
     imageBuffer.size = dirEntryP->size;
     imageBuffer.buffer = (unsigned char *)image;
 
+    fflush (stdout);
     pm_system(pm_feed_from_memory, &imageBuffer,
               NULL /* stdout accepter */, NULL,
               "pngtopam -alphapam");

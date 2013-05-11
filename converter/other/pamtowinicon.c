@@ -275,6 +275,37 @@ realAlphaNeeded(const struct pam * const pamP,
 
 
 static void
+writeBmpImageHeader(unsigned int const width,
+                    unsigned int const height,
+                    unsigned int const bpp,
+                    unsigned int const rasterSize,
+                    FILE *       const ofP) {
+/*----------------------------------------------------------------------------
+
+  Write BMP image header
+    
+  Note: bm_height is sum of rows in XOR mask and AND mask, while
+  image_size is the size of the AND mask only.
+    
+  image_size does not include the sizes of the (optional) palette
+  and the (mandatory) AND mask.
+-----------------------------------------------------------------------------*/
+    pm_writelittlelongu  (ofP, 40);              /* header_size          */
+    pm_writelittlelongu  (ofP, width);           /* bm_width             */
+    pm_writelittlelongu  (ofP, height *2);       /* bm_height            */
+    pm_writelittleshortu (ofP, 1);               /* color_planes         */
+    pm_writelittleshortu (ofP, bpp);             /* bits_per_pixel       */
+    pm_writelittlelongu  (ofP, BI_RGB);          /* compression_method   */
+    pm_writelittlelongu  (ofP, rasterSize);      /* image_size           */
+    pm_writelittlelongu  (ofP, 0);               /* horizontal_resolution*/
+    pm_writelittlelongu  (ofP, 0);               /* vertical_resolution  */
+    pm_writelittlelongu  (ofP, 0);               /* colors_in_palette    */
+    pm_writelittlelongu  (ofP, 0);               /* important_colors     */
+}
+
+
+
+static void
 write32BitBmp(const struct pam *   const pamP,
               tuple     **         const tuples,
               GetPixelFn *         const getPixel,
@@ -286,26 +317,9 @@ write32BitBmp(const struct pam *   const pamP,
   Write a 32-bit BMP encoded image to file *ofP.
 -----------------------------------------------------------------------------*/
     int row;
-
-    /*  write BMP image header
-     *
-     *  Note: bm_height is sum of rows in XOR mask and AND mask, while
-     *  image_size is the size of the AND mask only.
-     *
-     *  image_size does not include the sizes of the (optional) palette
-     *  and the (mandatory) AND mask.
-     */
-    pm_writelittlelongu  (ofP, 40);               /* header_size */
-    pm_writelittlelongu  (ofP, pamP->width);      /* bm_width */
-    pm_writelittlelongu  (ofP, pamP->height * 2); /* bm_height */
-    pm_writelittleshortu (ofP, 1);                /* color_planes */
-    pm_writelittleshortu (ofP, 32);               /* bits_per_pixel */
-    pm_writelittlelongu  (ofP, BI_RGB);           /* compression_method */
-    pm_writelittlelongu  (ofP, pamP->width *4 *pamP->height); /* image_size */
-    pm_writelittlelongu  (ofP, 0);                /* horizontal_resolution */
-    pm_writelittlelongu  (ofP, 0);                /* vertical_resolution */
-    pm_writelittlelongu  (ofP, 0);                /* colors_in_palette */
-    pm_writelittlelongu  (ofP, 0);                /* important_colors */
+    
+    writeBmpImageHeader(pamP->width, pamP->height, 32, 
+                        pamP->width * 4 * pamP->height, ofP);
 
     /*  write "XOR mask" */
     for (row = pamP->height - 1; row >= 0; --row) {
@@ -333,6 +347,91 @@ write32BitBmp(const struct pam *   const pamP,
 
 
 static void
+writeBmpPalette(const struct Palette * const paletteP,
+                unsigned int           const maxColors,
+                FILE *                 const ofP) {
+/*----------------------------------------------------------------------------
+   Write the palette of a BMP image.
+-----------------------------------------------------------------------------*/
+    unsigned int i;
+
+    for (i = 0; i < paletteP->colorCt; ++i)
+        pm_writelittlelongu(ofP, 0
+                            +(paletteP->color[i][PAM_RED_PLANE] << 16)
+                            +(paletteP->color[i][PAM_GRN_PLANE] <<  8)
+                            +(paletteP->color[i][PAM_BLU_PLANE] <<  0));
+    
+    for (; i < maxColors; ++i)
+        pm_writelittlelongu(ofP, 0);
+}
+
+
+
+static void
+writeXorMask(const struct pam *     const pamP,
+             tuple **               const tuples,
+             GetPixelFn *           const getPixel,
+             const struct Palette * const paletteP,
+             unsigned int           const bpp,
+             FILE *                 const ofP) {
+/*----------------------------------------------------------------------------
+   Write the "XOR mask" part of a BMP image.
+
+   This is what one normally thinks of as the foreground image raster.
+-----------------------------------------------------------------------------*/
+    unsigned int const maxCol = ((pamP->width * bpp + 31) & ~31) / bpp;
+
+    int row;
+                 
+    for (row = pamP->height - 1; row >= 0; --row) {
+        uint8_t  val;
+        uint16_t mask;
+        unsigned int col;
+
+        mask = 0x1;
+        val  = 0x0;
+
+        for (col = 0; col < pamP->width; ++col) {
+            sample pixel[3];
+            unsigned int i;
+
+            mask <<= bpp;
+            val  <<= bpp;
+
+            getPixel(tuples, col, row, pixel);
+
+            for (i = 0; i < paletteP->colorCt; ++i)
+                if (true
+                    && (pixel[0] == paletteP->color[i][0])
+                    && (pixel[1] == paletteP->color[i][1])
+                    && (pixel[2] == paletteP->color[i][2]))
+                    break;
+
+            assert(i < paletteP->colorCt);
+
+            val |= i;
+
+            if (mask > 0xFF) {
+                pm_writecharu(ofP, val);
+                mask = 0x1;
+                val  = 0x0;
+            }
+        }
+        for (; col < maxCol; ++col) {
+            mask <<= bpp;
+            val  <<= bpp;
+
+            if (mask > 0xFF) {
+                pm_writecharu(ofP, val);
+                mask = 0x1;
+            }
+        }
+    }
+}
+
+
+
+static void
 writePaletteBmp(unsigned int           const bpp,
                 const struct pam   *   const pamP,
                 tuple **               const tuples,
@@ -347,87 +446,24 @@ writePaletteBmp(unsigned int           const bpp,
   write that instead.
 -----------------------------------------------------------------------------*/
     unsigned int const maxColors = 1 << bpp;
-    unsigned int const size = 
+
+    unsigned int const rasterSize =
         pamP->height *((pamP->width * bpp + 31) & ~31) / 8;
 
-    if (pamP->height * pamP->width * 4 <= maxColors * 4 + size)
+    if (pamP->height * pamP->width * 4 <= maxColors * 4 + rasterSize)
         write32BitBmp(pamP, tuples, getPixel, false /*haveAlpha*/, 0,
                       ofP, sizeP);
     else {
-        unsigned int const maxCol = ((pamP->width * bpp + 31) & ~31) / bpp;
+        unsigned int const headerSize = 40;
+        unsigned int const paletteSize = maxColors * 4;
 
-        unsigned int i;
-        int row;
+        writeBmpImageHeader(pamP->width, pamP->height, bpp, rasterSize, ofP);
 
-        /*  BMP image header */
-        pm_writelittlelongu  (ofP, 40);              /* header_size          */
-        pm_writelittlelongu  (ofP, pamP->width);     /* bm_width             */
-        pm_writelittlelongu  (ofP, pamP->height *2); /* bm_height            */
-        pm_writelittleshortu (ofP, 1);               /* color_planes         */
-        pm_writelittleshortu (ofP, bpp);             /* bits_per_pixel       */
-        pm_writelittlelongu  (ofP, BI_RGB);          /* compression_method   */
-        pm_writelittlelongu  (ofP, size);            /* image_size           */
-        pm_writelittlelongu  (ofP, 0);               /* horizontal_resolution*/
-        pm_writelittlelongu  (ofP, 0);               /* vertical_resolution  */
-        pm_writelittlelongu  (ofP, 0);               /* colors_in_palette    */
-        pm_writelittlelongu  (ofP, 0);               /* important_colors     */
+        writeBmpPalette(paletteP, maxColors, ofP);
 
-        /*  palette */
-        for (i = 0; i < paletteP->colorCt; ++i)
-            pm_writelittlelongu(ofP, 0
-                                +(paletteP->color[i][PAM_RED_PLANE] << 16)
-                                +(paletteP->color[i][PAM_GRN_PLANE] <<  8)
-                                +(paletteP->color[i][PAM_BLU_PLANE] <<  0));
+        writeXorMask(pamP, tuples, getPixel, paletteP, bpp, ofP);
 
-        for (; i < maxColors; ++i)
-            pm_writelittlelongu(ofP, 0);
-
-        /*  `XOR mask' */
-        for (row = pamP->height - 1; row >= 0; --row) {
-            uint8_t  val;
-            uint16_t mask;
-            unsigned int col;
-
-            mask = 0x1;
-            val  = 0x0;
-
-            for (col = 0; col < pamP->width; ++col) {
-                sample pixel[3];
-                unsigned int i;
-
-                mask <<= bpp;
-                val  <<= bpp;
-
-                getPixel(tuples, col, row, pixel);
-
-                for (i = 0; i < paletteP->colorCt; ++i)
-                    if (true
-                        && (pixel[0] == paletteP->color[i][0])
-                        && (pixel[1] == paletteP->color[i][1])
-                        && (pixel[2] == paletteP->color[i][2]))
-                        break;
-
-                assert(i < paletteP->colorCt);
-
-                val |= i;
-
-                if (mask > 0xFF) {
-                    pm_writecharu(ofP, val);
-                    mask = 0x1;
-                    val  = 0x0;
-                }
-            }
-            for (; col < maxCol; ++col) {
-                mask <<= bpp;
-                val  <<= bpp;
-
-                if (mask > 0xFF) {
-                    pm_writecharu(ofP, val);
-                    mask = 0x1;
-                }
-            }
-        }
-        *sizeP = size;
+        *sizeP = headerSize + paletteSize + rasterSize;
     }
 }
 
@@ -521,7 +557,7 @@ makeAlphaFile(const struct pam * const imagePamP,
     for (row = 0; row < alphaPam.height; ++row) {
         unsigned int col;
         for (col = 0; col < alphaPam.width; ++col)
-            alphaTuples[row][col][0] = imageTuples[alphaPlane][row][col];
+            alphaTuples[row][col][0] = imageTuples[row][col][alphaPlane];
     }
 
     pnm_writepam(&alphaPam, alphaTuples);
@@ -587,9 +623,18 @@ writePng(const struct pam * const pamP,
     struct pamtuples pamTuples;
     size_t pngSize;
     struct AcceptToFileParm acceptParm;
+    struct pam pam;
 
-    pamTuples.pamP    = (struct pam *)pamP;
+    pam = *pamP;
+    pam.depth = pamP->depth - (haveAlpha ? 1 : 0) - (haveAnd ? 1 : 0);
+
+    pamTuples.pamP    = &pam;
     pamTuples.tuplesP = (tuple ***)&tuples;
+
+    /* We're going to fork a process to add stuff to *ofP, so we flush
+       out this process' previous writes to that file first:
+    */
+    fflush(ofP);
 
     acceptParm.ofP = ofP;
     acceptParm.writeCtP = &pngSize;
@@ -603,14 +648,17 @@ writePng(const struct pam * const pamP,
         else
             makeAlphaFile(pamP, tuples, andPlane, &alphaFileName);
 
+        strcpy (pam.tuple_type,
+                pam.depth == 3 ? PAM_PPM_TUPLETYPE: PAM_PGM_TUPLETYPE);
+        
         pm_asprintf(&command, "pnmtopng -alpha=\"%s\"", alphaFileName);
 
         pm_system(pm_feed_from_pamtuples, &pamTuples,
                   acceptToFile, &acceptParm,
                   command);
-
+    
         pm_strfree(command);
-
+    
         unlink(alphaFileName);
     } else {
         pm_system(pm_feed_from_pamtuples, &pamTuples,
