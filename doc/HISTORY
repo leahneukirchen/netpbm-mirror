@@ -4,6 +4,21 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+13.05.11 BJH  Release 10.62.05
+
+              pnmtopng: fix bug: incorrect output when output should have
+              an alpha mask.  Broken in 10.55 (June 2011).  Thanks
+              Ludolf Holzheid (lholzheid@bihl-wiedemann.de).
+
+              pnmtopng: fix bug: output bigger than it needs to be when the
+              input is a color format image that contains only gray.  Broken
+              since at least 10.26 (May 2001), but after 10.18 (September
+              2003).  Thanks Ludolf Holzheid (lholzheid@bihl-wiedemann.de).
+
+              pamtilt: fix bug: incorrect output or invalid memory access
+              crash.  Always broken (program was new in Neptbm 10.30
+              (October 2005)).
+
 13.05.02 BJH  Release 10.62.04
 
               sparc64 pbmtog3: fix bug that causes crash due to unaligned
