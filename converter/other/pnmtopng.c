@@ -2418,7 +2418,7 @@ doIhdrChunk(struct pngx * const pngxP,
     else
         colorType = PNG_COLOR_TYPE_GRAY;
 
-    if (alpha && pngx_colorType(pngxP) != PNG_COLOR_TYPE_PALETTE)
+    if (alpha && colorType != PNG_COLOR_TYPE_PALETTE)
         colorType |= PNG_COLOR_MASK_ALPHA;
 
     pngx_setIhdr(pngxP, width, height, depth, colorType, 0, 0, 0);

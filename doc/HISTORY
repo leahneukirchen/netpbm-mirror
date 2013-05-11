@@ -12,6 +12,10 @@ not yet  BJH  Release 10.63.00
               Perl programs: make them shell programs that reinvoke themselves
               as perl so we can get the Perl interpreter from the PATH.
 
+              pnmtopng: fix bug: incorrect output when output should have
+              an alpha mask.  Broken in 10.55 (June 2011).  Thanks
+              Ludolf Holzheid (lholzheid@bihl-wiedemann.de).
+
               pnmtopng: fix bug: output bigger than it needs to be when the
               input is a color format image that contains only gray.  Broken
               since at least 10.26 (May 2001), but after 10.18 (September
