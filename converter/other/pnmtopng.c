@@ -479,6 +479,27 @@ parseCommandLine(int argc, const char ** argv,
 
 
 
+static void
+reportInputType(int    const format,
+                xelval const maxval) {
+
+    switch (PNM_FORMAT_TYPE(format)) {
+    case PBM_TYPE:
+        pm_message ("reading a PBM file");
+        break;
+    case PGM_TYPE:
+        pm_message ("reading a PGM file (maxval=%d)", maxval);
+        break;
+    case PPM_TYPE:
+        pm_message ("reading a PPM file (maxval=%d)", maxval);
+        break;
+    default:
+        assert(false);
+    }
+}
+
+
+
 static png_color_16
 xelToPngColor_16(xel    const input, 
                  xelval const maxval, 
@@ -856,7 +877,7 @@ tryTransparentColor(FILE *     const ifp,
                     pixel      const transcolor,
                     bool *     const singleColorIsTransP) {
 
-    int const pnm_type = PNM_FORMAT_TYPE(format);
+    int const pnmType = PNM_FORMAT_TYPE(format);
 
     xel * xelrow;
     bool singleColorIsTrans;
@@ -877,7 +898,7 @@ tryTransparentColor(FILE *     const ifp,
                 /* If we have a second transparent color, we're
                    disqualified
                 */
-                if (pnm_type == PPM_TYPE) {
+                if (pnmType == PPM_TYPE) {
                     if (!PPM_EQUAL(xelrow[col], transcolor))
                         singleColorIsTrans = FALSE;
                 } else {
@@ -894,7 +915,7 @@ tryTransparentColor(FILE *     const ifp,
                    the same color as our candidate transparent color,
                    that disqualifies us.
                 */
-                if (pnm_type == PPM_TYPE) {
+                if (pnmType == PPM_TYPE) {
                     if (PPM_EQUAL(xelrow[col], transcolor))
                         singleColorIsTrans = FALSE;
                 } else {
@@ -1113,6 +1134,51 @@ determineBackground(struct cmdlineInfo const cmdline,
       PPM_DEPTH(*backColorP,
                 ppm_parsecolor(cmdline.background, PNM_OVERALLMAXVAL), 
                 PNM_OVERALLMAXVAL, maxval);;
+}
+
+
+
+static bool
+hasColor(FILE *       const ifP,
+         unsigned int const cols,
+         unsigned int const rows,
+         xelval       const maxval,
+         int          const format,
+         pm_filepos   const rasterPos) {
+/*----------------------------------------------------------------------------
+   The image contains colors other than black, white, and gray.
+-----------------------------------------------------------------------------*/
+    bool retval;
+
+    if (PNM_FORMAT_TYPE(format) == PPM_TYPE) {
+        unsigned int row;
+        xel * xelrow;    /* malloc'ed */
+            /* The row of the input image currently being analyzed */
+        bool isGray;
+
+        xelrow = pnm_allocrow(cols);
+
+        pm_seek2(ifP, &rasterPos, sizeof(rasterPos));
+
+        for (row = 0, isGray = true; row < rows && isGray; ++row) {
+            unsigned int col;
+
+            pnm_readpnmrow(ifP, xelrow, cols, maxval, format);
+
+            for (col = 0; col < cols && isGray; ++col) {
+                    xel const p = xelrow[col];
+                if (PPM_GETR(p) != PPM_GETG(p) || PPM_GETG(p) != PPM_GETB(p))
+                    isGray = FALSE;
+            }
+        }
+
+        pnm_freerow(xelrow);
+
+        retval = !isGray;
+    } else
+        retval = false;
+
+    return retval;
 }
 
 
@@ -1818,19 +1884,19 @@ tryAlphaPalette(FILE *         const ifP,
 
 
 static void
-computePixelWidth(int            const pnm_type,
-                  unsigned int   const pnm_meaningful_bits,
+computePixelWidth(bool           const colorPng,
+                  unsigned int   const pnmMeaningfulBitCt,
                   bool           const alpha,
                   unsigned int * const bitsPerSampleP,
                   unsigned int * const bitsPerPixelP) {
 
     unsigned int bitsPerSample, bitsPerPixel;
 
-    if (pnm_type == PPM_TYPE || alpha) {
+    if (colorPng || alpha) {
         /* PNG allows only depths of 8 and 16 for a truecolor image 
            and for a grayscale image with an alpha channel.
           */
-        if (pnm_meaningful_bits > 8)
+        if (pnmMeaningfulBitCt > 8)
             bitsPerSample = 16;
         else 
             bitsPerSample = 8;
@@ -1838,24 +1904,24 @@ computePixelWidth(int            const pnm_type,
         /* A grayscale, non-colormapped, no-alpha PNG may have any 
              bit depth from 1 to 16
           */
-        if (pnm_meaningful_bits > 8)
+        if (pnmMeaningfulBitCt > 8)
             bitsPerSample = 16;
-        else if (pnm_meaningful_bits > 4)
+        else if (pnmMeaningfulBitCt > 4)
             bitsPerSample = 8;
-        else if (pnm_meaningful_bits > 2)
+        else if (pnmMeaningfulBitCt > 2)
             bitsPerSample = 4;
-        else if (pnm_meaningful_bits > 1)
+        else if (pnmMeaningfulBitCt > 1)
             bitsPerSample = 2;
         else
             bitsPerSample = 1;
     }
     if (alpha) {
-        if (pnm_type == PPM_TYPE)
+        if (colorPng)
             bitsPerPixel = 4 * bitsPerSample;
         else
             bitsPerPixel = 2 * bitsPerSample;
     } else {
-        if (pnm_type == PPM_TYPE)
+        if (colorPng)
             bitsPerPixel = 3 * bitsPerSample;
         else
             bitsPerPixel = bitsPerSample;
@@ -1903,7 +1969,7 @@ computeColorMap(FILE *         const ifP,
                 int            const cols,
                 int            const rows,
                 xelval         const maxval,
-                int            const pnmType,
+                bool           const colorPng,
                 int            const format,
                 bool           const force,
                 FILE *         const pfP,
@@ -1946,6 +2012,8 @@ computeColorMap(FILE *         const ifP,
 
   If the image is to have a background color, we return the palette index
   of that color as *backgroundIndexP.
+
+  'colorPng' means the PNG will be of the RGB variety.
 -------------------------------------------------------------------------- */
     if (force)
         pm_asprintf(noColormapReasonP, "You requested no color map");
@@ -1955,7 +2023,7 @@ computeColorMap(FILE *         const ifP,
                     maxval, PALETTEMAXVAL);
     else {
         unsigned int bitsPerPixel;
-        computePixelWidth(pnmType, pnm_meaningful_bits, alpha,
+        computePixelWidth(colorPng, pnm_meaningful_bits, alpha,
                           NULL, &bitsPerPixel);
 
         if (!pfP && bitsPerPixel == 1)
@@ -2068,9 +2136,9 @@ static void computeColorMapLookupTable(
 
 static void
 computeRasterWidth(bool           const colorMapped,
-                   unsigned int   const palette_size,
-                   int            const pnm_type,
-                   unsigned int   const pnm_meaningful_bits,
+                   unsigned int   const paletteSize,
+                   bool           const colorPng,
+                   unsigned int   const pnmMeaningfulBitCt,
                    bool           const alpha,
                    unsigned int * const bitsPerSampleP,
                    unsigned int * const bitsPerPixelP) {
@@ -2081,24 +2149,24 @@ computeRasterWidth(bool           const colorMapped,
 -----------------------------------------------------------------------------*/
     if (colorMapped) {
         /* The raster element is a palette index */
-        if (palette_size <= 2)
+        if (paletteSize <= 2)
             *bitsPerSampleP = 1;
-        else if (palette_size <= 4)
+        else if (paletteSize <= 4)
             *bitsPerSampleP = 2;
-        else if (palette_size <= 16)
+        else if (paletteSize <= 16)
             *bitsPerSampleP = 4;
         else
             *bitsPerSampleP = 8;
         *bitsPerPixelP = *bitsPerSampleP;
         if (verbose)
-            pm_message("Writing %d-bit color indexes", *bitsPerSampleP);
+            pm_message("Writing %u-bit color indexes", *bitsPerSampleP);
     } else {
         /* The raster element is an explicit pixel -- color and transparency */
-        computePixelWidth(pnm_type, pnm_meaningful_bits, alpha,
+        computePixelWidth(colorPng, pnmMeaningfulBitCt, alpha,
                           bitsPerSampleP, bitsPerPixelP);
 
         if (verbose)
-            pm_message("Writing %d bits per component per pixel", 
+            pm_message("Writing %u bits per component per pixel", 
                        *bitsPerSampleP);
     }
 }
@@ -2338,14 +2406,14 @@ doIhdrChunk(struct pngx * const pngxP,
             unsigned int  const height,
             unsigned int  const depth,
             bool          const colorMapped,
-            int           const pnmType,
+            bool          const colorPng,
             bool          const alpha) {
 
     int colorType;
 
     if (colorMapped)
         colorType = PNG_COLOR_TYPE_PALETTE;
-    else if (pnmType == PPM_TYPE)
+    else if (colorPng)
         colorType = PNG_COLOR_TYPE_RGB;
     else
         colorType = PNG_COLOR_TYPE_GRAY;
@@ -2551,252 +2619,235 @@ convertpnm(struct cmdlineInfo const cmdline,
    lazy -- it takes a great deal of work to carry all that information as
    separate arguments -- and it's only a very small violation.
 -----------------------------------------------------------------------------*/
-  xel p;
-  int rows, cols, format;
-  xelval maxval;
-      /* The maxval of the input image */
-  xelval png_maxval;
-      /* The maxval of the samples in the PNG output 
-         (must be 1, 3, 7, 15, 255, or 65535)
-      */
-  pixel transcolor;
-      /* The color that is to be transparent, with maxval equal to that
-         of the input image.
-      */
-  int transexact;  
-      /* boolean: the user wants only the exact color he specified to be
-         transparent; not just something close to it.
-      */
-  int transparent;
-  bool alpha;
-      /* There will be an alpha mask */
-  unsigned int pnm_meaningful_bits;
-  pixel backcolor;
-      /* The background color, with maxval equal to that of the input
-         image.
-      */
-  jmp_buf jmpbuf;
-  struct pngx * pngxP;
+    int rows, cols, format;
+    xelval maxval;
+    /* The maxval of the input image */
+    xelval pngMaxval;
+        /* The maxval of the samples in the PNG output 
+           (must be 1, 3, 7, 15, 255, or 65535)
+        */
+    pixel transcolor;
+        /* The color that is to be transparent, with maxval equal to that
+           of the input image.
+        */
+    int transExact;  
+        /* boolean: the user wants only the exact color he specified to be
+           transparent; not just something close to it.
+        */
+    int transparent;
+    bool alpha;
+        /* There will be an alpha mask */
+    unsigned int pnmMeaningfulBitCt;
+    pixel backColor;
+        /* The background color, with maxval equal to that of the input
+           image.
+        */
+    jmp_buf jmpbuf;
+    struct pngx * pngxP;
 
-  bool colorMapped;
-  pixel palettePnm[MAXCOLORS];
-  png_color palette[MAXCOLORS];
-      /* The color part of the color/alpha palette passed to the PNG
-         compressor 
-      */
-  unsigned int paletteSize;
+    bool colorMapped;
+    pixel palettePnm[MAXCOLORS];
+    png_color palette[MAXCOLORS];
+        /* The color part of the color/alpha palette passed to the PNG
+           compressor 
+        */
+    unsigned int paletteSize;
 
-  gray transPnm[MAXCOLORS];
-  png_byte  trans[MAXCOLORS];
-      /* The alpha part of the color/alpha palette passed to the PNG
-         compressor 
-      */
-  unsigned int transSize;
+    gray transPnm[MAXCOLORS];
+    png_byte  trans[MAXCOLORS];
+        /* The alpha part of the color/alpha palette passed to the PNG
+           compressor 
+        */
+    unsigned int transSize;
 
-  colorhash_table cht;
-  coloralphahash_table caht;
+    colorhash_table cht;
+    coloralphahash_table caht;
 
-  unsigned int background_index;
-      /* Index into palette[] of the background color. */
+    unsigned int backgroundIndex;
+        /* Index into palette[] of the background color. */
 
-  gray alphaMaxval;
-  const char * noColormapReason;
-      /* The reason that we shouldn't make a colormapped PNG, or NULL if
-         we should.  malloc'ed null-terminated string.
-      */
-  unsigned int depth;
-      /* The number of bits per sample in the (uncompressed) png 
-         raster -- if the raster contains palette indices, this is the
-         number of bits in the index.
-      */
-  unsigned int fulldepth;
-      /* The total number of bits per pixel in the (uncompressed) png
-         raster, including all channels.
-      */
-  pm_filepos rasterPos;  
-      /* file position in input image file of start of image (i.e. after
-         the header)
-      */
-  xel *xelrow;    /* malloc'ed */
-      /* The row of the input image currently being processed */
+    gray alphaMaxval;
+    const char * noColormapReason;
+        /* The reason that we shouldn't make a colormapped PNG, or NULL if
+           we should.  malloc'ed null-terminated string.
+        */
+    unsigned int depth;
+        /* The number of bits per sample in the (uncompressed) png 
+           raster -- if the raster contains palette indices, this is the
+           number of bits in the index.
+        */
+    unsigned int fulldepth;
+        /* The total number of bits per pixel in the (uncompressed) png
+           raster, including all channels.
+        */
+    pm_filepos rasterPos;  
+        /* file position in input image file of start of image (i.e. after
+           the header)
+        */
+    xel * xelrow;    /* malloc'ed */
+        /* The row of the input image currently being processed */
 
-  int pnmType;
-  gray ** alpha_mask;
+    gray ** alpha_mask;
 
-  /* We initialize these guys to quiet compiler warnings: */
-  depth = 0;
+    bool colorPng;
+        /* The PNG shall be of the color (RGB) variety */
 
-  errorlevel = 0;
+    /* We initialize these guys to quiet compiler warnings: */
+    depth = 0;
 
-  if (setjmp(jmpbuf))
-      pm_error ("setjmp returns error condition");
+    errorlevel = 0;
 
-  pngx_create(&pngxP, PNGX_WRITE, &jmpbuf);
+    if (setjmp(jmpbuf))
+        pm_error ("setjmp returns error condition");
 
-  pnm_readpnminit(ifP, &cols, &rows, &maxval, &format);
-  pm_tell2(ifP, &rasterPos, sizeof(rasterPos));
-  pnmType = PNM_FORMAT_TYPE(format);
+    pngx_create(&pngxP, PNGX_WRITE, &jmpbuf);
 
-  xelrow = pnm_allocrow(cols);
+    pnm_readpnminit(ifP, &cols, &rows, &maxval, &format);
+    pm_tell2(ifP, &rasterPos, sizeof(rasterPos));
 
-  if (verbose) {
-      if (pnmType == PBM_TYPE)    
-          pm_message ("reading a PBM file");
-      else if (pnmType == PGM_TYPE)    
-          pm_message ("reading a PGM file (maxval=%d)", maxval);
-      else if (pnmType == PPM_TYPE)    
-          pm_message ("reading a PPM file (maxval=%d)", maxval);
-  }
+    xelrow = pnm_allocrow(cols);
 
-  determineTransparency(cmdline, ifP, rasterPos, cols, rows, maxval, format,
-                        afP,
-                        &alpha, &transparent, &transcolor, &transexact,
-                        &alpha_mask, &alphaMaxval);
+    if (verbose)
+        reportInputType(format, maxval);
 
-  determineBackground(cmdline, maxval, &backcolor);
+    determineTransparency(cmdline, ifP, rasterPos, cols, rows, maxval, format,
+                          afP,
+                          &alpha, &transparent, &transcolor, &transExact,
+                          &alpha_mask, &alphaMaxval);
 
-  /* first of all, check if we have a grayscale image written as PPM */
+    determineBackground(cmdline, maxval, &backColor);
 
-  if (pnmType == PPM_TYPE && !cmdline.force) {
-      unsigned int row;
-      bool isgray;
+    if (cmdline.force)
+        colorPng = (PNM_FORMAT_TYPE(format) == PPM_TYPE);
+    else {
+        if (PNM_FORMAT_TYPE(format) == PPM_TYPE) {
+            colorPng = hasColor(ifP, cols, rows, maxval, format, rasterPos); 
+        } else
+            colorPng = false;
+    }
 
-      isgray = TRUE;  /* initial assumption */
-      pm_seek2(ifP, &rasterPos, sizeof(rasterPos));
-      for (row = 0; row < rows && isgray; ++row) {
-          unsigned int col;
-          pnm_readpnmrow(ifP, xelrow, cols, maxval, format);
-          for (col = 0; col < cols && isgray; ++col) {
-              p = xelrow[col];
-              if (PPM_GETR(p) != PPM_GETG(p) || PPM_GETG(p) != PPM_GETB(p))
-                  isgray = FALSE;
-          }
-      }
-      if (isgray)
-          pnmType = PGM_TYPE;
-  }
 
-  /* handle `odd' maxvalues */
+    /* handle `odd' maxvalues */
 
-  if (maxval > 65535 && !cmdline.downscale) {
-      pm_error("can only handle files up to 16-bit "
-               "(use -downscale to override");
-  }
+    if (maxval > 65535 && !cmdline.downscale) {
+        pm_error("can only handle files up to 16-bit "
+                 "(use -downscale to override");
+    }
 
-  findRedundantBits(ifP, rasterPos, cols, rows, maxval, format, alpha,
-                    cmdline.force, &pnm_meaningful_bits);
+    findRedundantBits(ifP, rasterPos, cols, rows, maxval, format, alpha,
+                      cmdline.force, &pnmMeaningfulBitCt);
   
-  computeColorMap(ifP, rasterPos, cols, rows, maxval, pnmType, format,
-                  cmdline.force, pfP,
-                  alpha, transparent >= 0, transcolor, transexact, 
-                  !!cmdline.background, backcolor,
-                  alpha_mask, alphaMaxval, pnm_meaningful_bits,
-                  palettePnm, &paletteSize, transPnm, &transSize,
-                  &background_index, &noColormapReason);
+    computeColorMap(ifP, rasterPos, cols, rows, maxval, colorPng, format,
+                    cmdline.force, pfP,
+                    alpha, transparent >= 0, transcolor, transExact, 
+                    !!cmdline.background, backColor,
+                    alpha_mask, alphaMaxval, pnmMeaningfulBitCt,
+                    palettePnm, &paletteSize, transPnm, &transSize,
+                    &backgroundIndex, &noColormapReason);
 
-  if (noColormapReason) {
-      if (pfP)
-          pm_error("You specified a particular palette, but this image "
-                   "cannot be represented by any palette.  %s",
-                   noColormapReason);
-      if (verbose)
-          pm_message("Not using color map.  %s", noColormapReason);
-      pm_strfree(noColormapReason);
-      colorMapped = FALSE;
-  } else
-      colorMapped = TRUE;
+    if (noColormapReason) {
+        if (pfP)
+            pm_error("You specified a particular palette, but this image "
+                     "cannot be represented by any palette.  %s",
+                     noColormapReason);
+        if (verbose)
+            pm_message("Not using color map.  %s", noColormapReason);
+        pm_strfree(noColormapReason);
+        colorMapped = FALSE;
+    } else
+        colorMapped = TRUE;
   
-  computeColorMapLookupTable(colorMapped, palettePnm, paletteSize,
-                             transPnm, transSize, alpha, alphaMaxval,
-                             &cht, &caht);
+    computeColorMapLookupTable(colorMapped, palettePnm, paletteSize,
+                               transPnm, transSize, alpha, alphaMaxval,
+                               &cht, &caht);
 
-  computeRasterWidth(colorMapped, paletteSize, pnmType, 
-                     pnm_meaningful_bits, alpha,
-                     &depth, &fulldepth);
-  if (verbose)
-    pm_message ("writing a%s %d-bit %s%s file%s",
-                fulldepth == 8 ? "n" : "", fulldepth,
-                colorMapped ? "palette": 
-                (pnmType == PPM_TYPE ? "RGB" : "gray"),
-                alpha ? (colorMapped ? "+transparency" : "+alpha") : "",
-                cmdline.interlace ? " (interlaced)" : "");
+    computeRasterWidth(colorMapped, paletteSize, colorPng,
+                       pnmMeaningfulBitCt, alpha,
+                       &depth, &fulldepth);
+    if (verbose)
+        pm_message ("writing a%s %d-bit %s%s file%s",
+                    fulldepth == 8 ? "n" : "", fulldepth,
+                    colorMapped ? "palette": 
+                    colorPng ? "RGB" : "gray",
+                    alpha ? (colorMapped ? "+transparency" : "+alpha") : "",
+                    cmdline.interlace ? " (interlaced)" : "");
 
-  /* now write the file */
+    /* now write the file */
 
-  png_maxval = pm_bitstomaxval(depth);
+    pngMaxval = pm_bitstomaxval(depth);
 
-  if (setjmp (pnmtopng_jmpbuf_struct.jmpbuf)) {
-    pm_error ("setjmp returns error condition (2)");
-  }
+    if (setjmp (pnmtopng_jmpbuf_struct.jmpbuf)) {
+        pm_error ("setjmp returns error condition (2)");
+    }
 
-  doIhdrChunk(pngxP, cols, rows, depth, colorMapped, pnmType, alpha);
+    doIhdrChunk(pngxP, cols, rows, depth, colorMapped, colorPng, alpha);
 
-  if (cmdline.interlace)
-      pngx_setInterlaceHandling(pngxP);
+    if (cmdline.interlace)
+        pngx_setInterlaceHandling(pngxP);
 
-  doGamaChunk(cmdline, pngxP);
+    doGamaChunk(cmdline, pngxP);
 
-  doChrmChunk(cmdline, pngxP);
+    doChrmChunk(cmdline, pngxP);
 
-  doPhysChunk(cmdline, pngxP);
+    doPhysChunk(cmdline, pngxP);
 
-  if (pngx_colorType(pngxP) == PNG_COLOR_TYPE_PALETTE) {
+    if (pngx_colorType(pngxP) == PNG_COLOR_TYPE_PALETTE) {
 
-      /* creating PNG palette (Not counting the transparency palette) */
+        /* creating PNG palette (Not counting the transparency palette) */
 
-      createPngPalette(palettePnm, paletteSize, maxval,
-                       transPnm, transSize, alphaMaxval, 
-                       palette, trans);
-      pngx_setPlte(pngxP, palette, paletteSize);
+        createPngPalette(palettePnm, paletteSize, maxval,
+                         transPnm, transSize, alphaMaxval, 
+                         palette, trans);
+        pngx_setPlte(pngxP, palette, paletteSize);
 
-      doHistChunk(pngxP, cmdline.hist, palettePnm, ifP, rasterPos,
-                  cols, rows, maxval, format, cmdline.verbose);
-  }
+        doHistChunk(pngxP, cmdline.hist, palettePnm, ifP, rasterPos,
+                    cols, rows, maxval, format, cmdline.verbose);
+    }
 
-  doTrnsChunk(pngxP, trans, transSize,
-              transparent, transcolor, maxval, png_maxval);
+    doTrnsChunk(pngxP, trans, transSize,
+                transparent, transcolor, maxval, pngMaxval);
 
-  doBkgdChunk(pngxP, !!cmdline.background,
-              background_index, backcolor,
-              maxval, png_maxval, cmdline.verbose);
+    doBkgdChunk(pngxP, !!cmdline.background,
+                backgroundIndex, backColor,
+                maxval, pngMaxval, cmdline.verbose);
 
-  doSbitChunk(pngxP, png_maxval, maxval, alpha, alphaMaxval);
+    doSbitChunk(pngxP, pngMaxval, maxval, alpha, alphaMaxval);
 
-  /* tEXT and zTXT chunks */
-  if (cmdline.text || cmdline.ztxt)
-      pngtxt_read(pngxP, tfP, !!cmdline.ztxt, cmdline.verbose);
+    /* tEXT and zTXT chunks */
+    if (cmdline.text || cmdline.ztxt)
+        pngtxt_read(pngxP, tfP, !!cmdline.ztxt, cmdline.verbose);
 
-  doTimeChunk(cmdline, pngxP);
+    doTimeChunk(cmdline, pngxP);
 
-  if (cmdline.filterSet != 0)
-      pngx_setFilter(pngxP, cmdline.filterSet);
+    if (cmdline.filterSet != 0)
+        pngx_setFilter(pngxP, cmdline.filterSet);
 
-  setZlibCompression(pngxP, cmdline.zlibCompression);
+    setZlibCompression(pngxP, cmdline.zlibCompression);
 
-  png_init_io(pngxP->png_ptr, ofP);
+    png_init_io(pngxP->png_ptr, ofP);
 
-  /* write the png-info struct */
-  pngx_writeInfo(pngxP);
+    /* write the png-info struct */
+    pngx_writeInfo(pngxP);
 
-  /* let libpng take care of, e.g., bit-depth conversions */
-  pngx_setPacking(pngxP);
+    /* let libpng take care of, e.g., bit-depth conversions */
+    pngx_setPacking(pngxP);
 
-  writeRaster(pngxP, ifP, rasterPos,
-              cols, rows, maxval, format,
-              png_maxval, depth, alpha, alpha_mask, cht, caht);
+    writeRaster(pngxP, ifP, rasterPos,
+                cols, rows, maxval, format,
+                pngMaxval, depth, alpha, alpha_mask, cht, caht);
 
-  pngx_writeEnd(pngxP);
+    pngx_writeEnd(pngxP);
 
-  pngx_destroy(pngxP);
+    pngx_destroy(pngxP);
 
-  pnm_freerow(xelrow);
+    pnm_freerow(xelrow);
 
-  if (cht)
-      ppm_freecolorhash(cht);
-  if (caht)
-      freecoloralphahash(caht);
+    if (cht)
+        ppm_freecolorhash(cht);
+    if (caht)
+        freecoloralphahash(caht);
 
-  *errorLevelP = errorlevel;
+    *errorLevelP = errorlevel;
 }
 
 
