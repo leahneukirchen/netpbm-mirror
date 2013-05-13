@@ -41,13 +41,13 @@ combine them with <b>cat</b> and pass the result to <b>pamtowinicon</b>.
 
 In addition to the options common to all programs based on libnetpbm (most
 notably <B>-quiet</B>, see <A HREF="index.html#commonoptions">Common
-Options</A>), <B>winicontopam</B> recognizes the following command
+Options</A>), <B>pamtowinicon</B> recognizes the following command
 line options:
 
 <DL COMPACT>
 <DT><B>-pngthreshold=</B><I>threshold</I>
 
-<DD><b>pamtowinicon</b> encode images with resolutions above or equal <I>threshold</I> by <I>threshold</I> as PNG by running
+<DD><b>pamtowinicon</b> encodes images with resolutions above or equal <I>threshold</I> by <I>threshold</I> as PNG by running
 <A HREF="pnmtopng.html"><b>pnmtopng</b></A>.  Other images it encodes
 using the more traditional BMP format.
 
@@ -59,7 +59,7 @@ using the more traditional BMP format.
 
 <DD>Make all pixels outside the opaque area black, avoiding inversion
 and other effects on the background of the image
-(see <B><A HREF="winicon.html">Windows Icons</A></B>).
+(see <A HREF="winicon.html">Windows Icons</A>).
 
 <DT><B>-verbose</B>
 
@@ -125,8 +125,8 @@ PAM is not 255.
 <H2 id="seealso">SEE ALSO</H2>
 
 <ul>
-<li><A HREF="winicontopam.html">winicontopam</A>
-<li><A HREF="ppmtowinicon.html">ppmtowinicon</A>
+<li><A HREF="winicontopam.html"><b>winicontopam</b></A>
+<li><A HREF="ppmtowinicon.html"><b>ppmtowinicon</b></A>
 <li><A HREF="pam.html">pam</A>
 <li><A HREF="winicon.html">Windows Icons</A></B>
 </ul>
@@ -157,7 +157,6 @@ Netpbm conventions.
 <LI><A HREF="#images">IMAGES</A>
 <UL>
 <LI><A HREF="#paminput">PAM Input</A>
-<LI><A HREF="#pnginput">PNG Input</A>
 <LI><A HREF="#andmask">AND Mask</A>
 <LI><A HREF="#bmpoutput">BMP Output</A>
 </UL>
