@@ -378,6 +378,24 @@ randomizeError(long **      const err,
 
 
 static void
+zeroError(long **      const err,
+          unsigned int const width,
+          unsigned int const depth) {
+/*----------------------------------------------------------------------------
+   Set all errors to zero in the error array err[][].
+-----------------------------------------------------------------------------*/
+    unsigned int col;
+
+    for (col = 0; col < width; ++col) {
+        unsigned int plane;
+        for (plane = 0; plane < depth; ++plane) 
+            err[plane][col] = 0;
+    }
+}
+
+
+
+static void
 fserrSetForward(struct fserr * const fserrP) {
 
     fserrP->fsForward = TRUE;
@@ -434,6 +452,8 @@ initFserr(struct pam *   const pamP,
 
     if (initRandom)
         randomizeError(fserrP->thiserr, fserrSize, pamP->depth);
+    else
+        zeroError(fserrP->thiserr, fserrSize, pamP->depth);
 
     fserrSetForward(fserrP);
 }

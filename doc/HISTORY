@@ -21,6 +21,10 @@ not yet  BJH  Release 10.63.00
               since at least 10.26 (May 2001), but after 10.18 (September
               2003).  Thanks Ludolf Holzheid (lholzheid@bihl-wiedemann.de).
 
+              pnmremap (ergo pnmquant): fix bug: incorrect output with
+              -norandom and floyd-steinberg dithering.  Always broken.
+              (-norandom was introduced in 10.30 (June 2007)).
+
               pamtilt: fix bug: incorrect output or invalid memory access
               crash.  Always broken (program was new in Neptbm 10.30
               (October 2005)).
