@@ -13,24 +13,25 @@ not yet  BJH  Release 10.63.00
               as perl so we can get the Perl interpreter from the PATH.
 
               pnmtopng: fix bug: incorrect output when output should have
-              an alpha mask.  Broken in 10.55 (June 2011).  Thanks
+              an alpha mask.  Broken in Netpbm 10.55 (June 2011).  Thanks
               Ludolf Holzheid (lholzheid@bihl-wiedemann.de).
 
               pnmtopng: fix bug: output bigger than it needs to be when the
               input is a color format image that contains only gray.  Broken
-              since at least 10.26 (May 2001), but after 10.18 (September
-              2003).  Thanks Ludolf Holzheid (lholzheid@bihl-wiedemann.de).
+              since at least Netpbm 10.26 (May 2001), but after 10.18
+              (September 2003).  Thanks Ludolf Holzheid
+              (lholzheid@bihl-wiedemann.de).
 
               pnmremap (ergo pnmquant): fix bug: incorrect output with
               -norandom and floyd-steinberg dithering.  Always broken.
-              (-norandom was introduced in 10.30 (June 2007)).
+              (-norandom was introduced in Netpbm 10.30 (June 2007)).
 
               pamtilt: fix bug: incorrect output or invalid memory access
-              crash.  Always broken (program was new in Neptbm 10.30
+              crash.  Always broken (program was new in Netpbm 10.30
               (October 2005)).
 
               pnmpsnr: fix bug: says types aren't the same when they are.
-              Introduced in 10.61 (December 2012).
+              Introduced in Netpbm 10.61 (December 2012).
               
               ppmtowinicon: fix bug: sometimes creates image truncated in the
               middle of the AND mask.  Always broken (program was new in
@@ -39,10 +40,11 @@ not yet  BJH  Release 10.63.00
               sparc64 pbmtog3: fix bug that causes crash due to unaligned
               memory access.
 
-              install: fix Perl warning in installnetpbm.  Broken in 10.61.
+              install: fix Perl warning in installnetpbm.  Broken in 
+              Netpbm 10.61.
 
               build: fix problem with creating lib/util that already exists.
-              Broken in 10.62.
+              Broken in Netpbm 10.62.
 
 12.03.28 BJH  Release 10.62.00
 
@@ -52,16 +54,16 @@ not yet  BJH  Release 10.63.00
               rasttopnm: add -dumpheader, dumpcolormap.
 
               pamstereogram: change -guidesize default from 10 to 20
-              (relevant since 10.61).
+              (relevant since Netpbm 10.61).
 
               rasttopnm: fix bug: incorrect output due to used-before-set
-              variable.  Introduced in 10.56 (September 2011).
+              variable.  Introduced in Netpbm 10.56 (September 2011).
 
               pamstereogram: fix bug: doesn't reject negative guidesize.
-              Broken since 10.61.
+              Broken since Netpbm 10.61.
 
               pamstereogram: fix bug: garbage in -verbose listing.  Broken
-              since 10.61
+              since Netpbm 10.61
 
               MinGW build: various fixes.
 
@@ -89,7 +91,7 @@ not yet  BJH  Release 10.63.00
               libpam, pamcomp: fix bug: treats tuple type GRAYSCALE_ALPHA like
               GRAYSCALE on 32-bit machine.  Actually, looks only at first 4
               characters (8 characters on machine with 64 bit addressess) of
-              the tuple type.  Broken since 10.56 (September 2011).
+              the tuple type.  Broken since Netpbm 10.56 (September 2011).
 
               pngtopam -alphapam with grayscale input: fix bug: generates
               invalid output: tuple type GRAYSCALE_ALPHA, but depth 1.  Depth
@@ -97,7 +99,7 @@ not yet  BJH  Release 10.63.00
               Netpbm 10.44 (September 2008)).
               
               pamtotiff: fix bug: XRESOLUTION, YRESOLUTION, and RESOLUTIONUNIT
-              not allowed in -tags.  Broken at least since 10.35.
+              not allowed in -tags.  Broken at least since Netpbm 10.35.
 
               pnmpsnr: fix crash when invoked (invalidly) with only one
               argument.  Always broken.
@@ -108,29 +110,30 @@ not yet  BJH  Release 10.63.00
               cmuwmtopbm: fix incorrect determination of whether input is
               a CMU window manager bitmap on 64 bit systems.  Always broken.
 
-              pnmmontage: fix totally wrong output.  Broken in 10.44
+              pnmmontage: fix totally wrong output.  Broken in Netpbm 10.44
               (August 2008).
 
               pnmmontage: fix random stuff placed in unoccupied space in the
-              output image.  Always broken (program was new in 9.10 (January
-              2001).
+              output image.  Always broken (program was new in Netpbm 9.10
+              (January 2001).
 
-              pbmpscale, pgmhist, pampick, pamtompfont: fix wild pointer
-              in command line parsing.  Bug has always been there in 
-              pampick, pamtompfont, since 10.50 (March 2010) in pbmpscale,
-              since 10.44 (September 2008) in pgmhist.              
+              pbmpscale, pgmhist, pampick, pamtompfont: fix wild pointer in
+              command line parsing.  Bug has always been there in pampick,
+              pamtompfont, since Netpbm 10.50 (March 2010) in pbmpscale, since
+              10.44 (September 2008) in pgmhist.
 
               xbmtopbm: fix incorrect output, memory leak.  Thanks Prophet of
               the Way <afu@wta.att.ne.jp>.
 
               sunicontopnm: Fix incorrect output for depth 8.  Always broken
-              (depth = 8 capability was added in 10.53 (December 2010).
+              (depth = 8 capability was added in Netpbm 10.53 (December 2010).
 
               pamgauss: Fix bug: erroneously says -maxval is too big on 64 bit
-              system.  Always broken (Pamgauss was added in 10.23 (July 2004).
+              system.  Always broken (Pamgauss was added in Netpbm 10.23 (July
+              2004).
 
-              ppmpat: Fix bug: wrong output with -poles.  Broken in 10.47
-              (June 2009).
+              ppmpat: Fix bug: wrong output with -poles.  Broken in Netpbm
+              10.47 (June 2009).
 
               Add tests.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
 
@@ -141,19 +144,20 @@ not yet  BJH  Release 10.63.00
               linear search or direct index, go row by row.
 
               xpmtoppm: fix bogus "color number too large" failure.  Broken
-              in 10.49 (December 2009).
+              in Netpbm 10.49 (December 2009).
 
               pnm_hashtuple: slight performance improvement from new hash
               function.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
 
               ppmtospu: wild memory accesses.  Always broken (program added in
-              10.58 (March 2012).
+              Netpbm 10.58 (March 2012).
 
               pamtosrf: fix storage corruption.  Always broken (program added
-              in 10.55 (June 2011).
+              in Netpbm 10.55 (June 2011).
 
-              Build: change _XOPEN_SOURCE 500 to 600 because on a Mac OSX 10.8
-              system, this is necessary to get 'strdup' into <strings.h>.
+              Build: change _XOPEN_SOURCE 500 to 600 because on a Mac OSX
+              Netpbm 10.8 system, this is necessary to get 'strdup' into
+              <strings.h>.
 
               Build: rename getline() in xpmtoppm.c to avoid collision
               with some libc.  Always broken.
@@ -176,20 +180,23 @@ not yet  BJH  Release 10.63.00
               pamstereogram: improve verbose output.  Thanks Scott Pakin
               (scott@pakin.org).
 
-              pamstereogram: fix crash introduced in 10.54 (March 2011).
+              pamstereogram: fix crash introduced in Netpbm 10.54 (March 2011).
 
-              pamstereogram: fix crash introduced in 10.53 (December 2010).
+              pamstereogram: fix crash introduced in Netpbm 10.53 (December
+              2010).
 
-              Build: fix bug: declines to build pnmtops.  Broken in 10.58.
+              Build: fix bug: declines to build pnmtops.  Broken in Netpbm
+              10.58.
 
-              Build: move -lm to end of -l's.  Broken at least since 10.35.
+              Build: move -lm to end of -l's.  Broken at least since Netpbm
+              10.35.
 
 12.03.29 BJH  Release 10.58.00
 
               Add ppmtospu, 22 years late.
 
               pngtopam: fix incorrect output when PNG has 16 bits per pixel.
-              Broken in 10.56.
+              Broken in Netpbm 10.56.
 
               pgmtexture: fix integer overflow in difference variance.
               Always broken.
@@ -206,7 +213,7 @@ not yet  BJH  Release 10.63.00
               to Perl.
 
               Windows/Mingw: fix bug: temporary file creation fails
-              consistently.  Broken in 10.34.
+              consistently.  Broken in Netpbm 10.34.
 
               Windows/Mingw: set binary mode on files.
 
@@ -234,7 +241,8 @@ not yet  BJH  Release 10.63.00
 
               pngtopam: fix crash with invalid tIME chunk.  Always broken.
 
-              pamarith: fix wrong result with -multiply.  Broken in 10.41.
+              pamarith: fix wrong result with -multiply.  Broken in Neptbm
+              10.41.
 
               pamscale: fix all black output with resampling.  Always broken.
 
@@ -268,17 +276,17 @@ not yet  BJH  Release 10.63.00
 
               libnetpbm, many programs: fix bug in pm_allocarray(): returns
               NULL when can't get memory.  Calling programs thus crash on
-              very large images.  Introduced in 10.51.
+              very large images.  Introduced in Netpbm 10.51.
               
               pnmtopng: fix bug: with -alpha specifying a mask which contains
               no fully transparent area, output PNG is fully opaque.
-              Introduced in 10.29.
+              Introduced in Netpbm 10.29.
 
               pnmtops: fix message: says "from top edge" where it means
               "from bottom edge."
 
               ppmcie: fix bug: fails with "X coordinate out of range" error.
-              Introduced in 10.51.
+              Introduced in Neptbm 10.51.
 
               bmptopnm: Fail properly with BMP that indicates an illegal bits
               per pixel.
@@ -298,18 +306,18 @@ not yet  BJH  Release 10.63.00
               pgmtexture: fix wrong sum variance result.  Wrong since the
               beginning.  Thanks Francois P. S. Luus <fpsluus@gmail.com>.
 
-              pamrubber: fix crash.  Introduced in 10.54.
+              pamrubber: fix crash.  Introduced in Netpbm 10.54.
 
               libnetpbm: pm_system(): fix bug - program always takes
               Standard Input from invoker's Standard Input when you don't
-              supply a Standard Output accepter.  Introduced in 10.40.
+              supply a Standard Output accepter.  Introduced in Netpbm 10.40.
 
               ppmtobmp: fix bug: crash ("internal error") or bogus failure or
               incorrect output on image without palette (e.g. black and
-              white).  Introduced in 10.54.
+              white).  Introduced in Netpbm 10.54.
 
               pnmtops: fix floating point exception or bogus width/height
-              too large error.  Introduced in 10.53.
+              too large error.  Introduced in Netpbm 10.53.
 
               pnmcat: Fix garbage output when multiple input image are from
               Standard Input (now it just fails gracefully).
@@ -322,12 +330,12 @@ not yet  BJH  Release 10.63.00
               structure.
 
               Build: fix undefined "strsol" and "vsnprintfN" failure on
-              systems without vasprintf().  Introduced in 10.53.
+              systems without vasprintf().  Introduced in Netpbm 10.53.
 
               Build: fix compiler warning in pbmtocmuwm.
 
               configure: fix selection of mingw compiler.  Introduced in
-              10.48.
+              Netpbm 10.48.
 
 11.03.30 BJH  Release 10.54.00
 
@@ -348,7 +356,7 @@ not yet  BJH  Release 10.63.00
               Add libpamd (PAM version of classic libppmd drawing routines).
 
               Rename pbmtoicon to pbmtosunicon, to go with change
-              of icontopbm to sunicontopnm in 10.53.
+              of icontopbm to sunicontopnm in Netpbm 10.53.
 
               g3topbm: correct error message: codes go up to 13 bits.
 
@@ -382,11 +390,11 @@ not yet  BJH  Release 10.63.00
               the BMP header of a compressed file.  Always broken.
               
               bmptopnm: don't crash on large invalid value of 'colorsused' in
-              the BMP header.  Introduced in 9.11.
+              the BMP header.  Introduced in Netpbm 9.11.
 
               pm_mallocarray2: fix wild pointers when image is too big to fit
               in a single chunk of malloc memory.  Affects many Netpbm
-              programs.  Introduced in 10.51.00.
+              programs.  Introduced in Netpbm 10.51.00.
 
               ilbmtoppm: Don't crash on image that has a transparent color
               index, but no color map.
@@ -417,7 +425,7 @@ not yet  BJH  Release 10.63.00
               fitstopnm: Deal properly with NaN in input image.
 
               pm_floatFromBigendFloat, pm_doubleFromBigendFloat, fitstopnm:
-              fix corrupted output.  Broken in 10.46.
+              fix corrupted output.  Broken in Netpbm 10.46.
 
               pamtopdbimg: fix corrupted output image.  Thanks Scott Pakin.
 
@@ -459,10 +467,10 @@ not yet  BJH  Release 10.63.00
               bits).
 
               pnmconvol: fix reversed sense of -nooffset.  Introduced in
-              10.49.
+              Netpbm 10.49.
 
               ppmtompeg: fix crash with free of unallocated memory.
-              Broken after 10.18, not later than 10.26.
+              Broken after Netpbm 10.18, not later than 10.26.
 
               Build: fix parallel make - multiple simultaneous attempts to
               build lib/util/importinc.
@@ -501,19 +509,19 @@ not yet  BJH  Release 10.63.00
               Prophet of the Way <afu@wta.att.ne.jp>.
 
               pbmtext/libpbmfont: Fix wild pointer; probably asymptomatic.
-              Introduced in 10.39.
+              Introduced in Netpbm 10.39.
 
               pbmtext/libpbmfont: Fix some error messages for bad fonts.
 
               pbmtext/libpbmfont: fix crash with a BDF font with negative
-              left or bottom border.  Introduced in 10.39.
+              left or bottom border.  Introduced in Netpbm 10.39.
 
-              pamarith: fix memory leak.  Introduced in 10.41.
+              pamarith: fix memory leak.  Introduced in Netpbm 10.41.
 
               pnm_bytespersample(): fix bogus assertion on 64 bit system.
 
               pnmtops: fix bug: 12 bits per sample output when 8 would do.
-              Introduced in 10.40.
+              Introduced in Netpbm 10.40.
 
               palmtopnm: fix for pixel size 16.  Thanks Paul Bolle
               <pebolle@tiscali.nl>.
@@ -529,17 +537,18 @@ not yet  BJH  Release 10.63.00
               <afu@wta.att.ne.jp>.
 
               pnmsmooth: fix wild pointer: causes wrong arguments to
-              'pnmconvol'.  Introduced in 10.50.  Thanks Prophet of the Way
-              <afu@wta.att.ne.jp>.
+              'pnmconvol'.  Introduced in Netpbm 10.50.  Thanks Prophet of the
+              Way <afu@wta.att.ne.jp>.
 
-              pamscale: fix -reduce.  Introduced in 10.27.
+              pamscale: fix -reduce.  Introduced in Netpbm 10.27.
 
               pampaintspill: fix incorrect output.
 
               libnetpbm text drawing: fix incorrect output in all cases.
-              Introduced in 10.47.
+              Introduced in Netpbm 10.47.
 
-              libnetpbm line drawing: fix bogus assertion, introduced in 10.47.
+              libnetpbm line drawing: fix bogus assertion, introduced in
+              Netpbm 10.47.
 
               build: fix incorrect determination of when vasprintf() exists
               in libc.
@@ -597,14 +606,14 @@ not yet  BJH  Release 10.63.00
               pnmhistmap: Fix crash with -width.  Always broken.
 
               libppmd/ppmpat: fix wild pointer in ppmd_fill_drawprocp();
-              broken in 10.47.
+              broken in Netpbm 10.47.
 
               palmtopnm: fix incorrect "PALM_DIRECT_COLOR_FLAG is not valid
               for version 3 encoding type" failure.  Thanks Paul Bolle
               <pebolle@tiscali.nl>.
 
               pamtosvg: fix bug: occasional crash with out of range error.
-              Introduced in 10.42.
+              Introduced in Netpbm 10.42.
 
               palmtopnm: fix incorrect output with version 3 direct color.
               Thanks Paul Bolle <pebolle@tiscali.nl>.
@@ -657,7 +666,7 @@ not yet  BJH  Release 10.63.00
               pnmtofiasco, fiascotopnm: fix bug on bigendian machine.
 
               pngtopam: use png_create_read_struct() instead of
-              png_create_write_struct().  Broken since 10.48.
+              png_create_write_struct().  Broken since Netpbm 10.48.
 
               configure: advise if adding -lz -lm fixes libpng link problem.
 
@@ -748,7 +757,7 @@ not yet  BJH  Release 10.63.00
               problems.
 
               ilbmtoppm: fix some bug in interpreting ILBM input.
-              (due to wrong pm_uintFromBigend16()).  From 10.46.
+              (due to wrong pm_uintFromBigend16()).  From Netpbm 10.46.
 
               ximtoppm: fix crash in command line processing.
 
@@ -759,7 +768,7 @@ not yet  BJH  Release 10.63.00
               ppmquantall: don't use 'set' to set Bourne shell variable.
 
               pnmtile: fix reference to arbitrary storage in option
-              processing.  Introduced in 10.42.
+              processing.  Introduced in Netpbm 10.42.
 
               pamstereogram: fix tuple type in output file (and crash
               with -verbose) with -patfile .
@@ -799,23 +808,23 @@ not yet  BJH  Release 10.63.00
               the background color (i.e. the color of added margins).
 
               pnmscale: finally make it just an alias of pamscale, which
-              obsoleted it in 10.20.
+              obsoleted it in Netpbm 10.20.
               
               pnmcut: finally make it just an alias of pamcut, which
-              obsoleted it in 9.20.
+              obsoleted it in Netpbm 9.20.
 
               tifftopnm: fix orientation problem on big-endian machines.
-              Introduced in 10.42.
+              Introduced in Netpbm 10.42.
 
               pnmcrop: various fixes.
 
-              g3topbm: fix array bound violation.  Introduced in 10.32.
+              g3topbm: fix array bound violation.  Introduced in Netpbm 10.32.
 
               pnmcat: fix array bound violation with PBM top/bottom
-              concatenation.  Introduced in 10.44.
+              concatenation.  Introduced in Netpbm 10.44.
 
               ilbmtoppm: Fix array bound violation with compressed ILBM.
-              Introduced in 10.18.
+              Introduced in Netpbm 10.18.
 
               fitstopnm: fix garbage output when input is little endian
               floating point FITS.
@@ -826,7 +835,7 @@ not yet  BJH  Release 10.63.00
               picttoppm: Improve error/informational messages.
 
               picttoppm: Don't fail if 'fontdir' file doesn't exist.  Bug
-              from 10.44.
+              from Netpbm 10.44.
 
               ppmtopict: Use two-byte length field when image width > 200
               instead of > 250.  Former is what Picttoppm has been assuming
@@ -835,11 +844,11 @@ not yet  BJH  Release 10.63.00
 
               ilbmtoppm: fix bug: appends color map PPM to output if input
               has color map; fails if input doesn't have color map.  Broken
-              in 10.18.
+              in Netpbm 10.18.
 
               leaftoppm: fix bug: uses red channel as all three channels;
-              (produces grayscale output).  Broken between 10.19 and 10.26,
-              inclusive.
+              (produces grayscale output).  Broken between Netpbm 10.19 and
+              10.26, inclusive.
 
               pbmtomrf, mrftopbm: fix crashes, incorrect output in all
               cases.  Broken forever.
@@ -880,7 +889,7 @@ not yet  BJH  Release 10.63.00
 
               Build: Move LDFLAGS later so that a -L in LDFLAGS doesn't
               interfere with finding the built libnetpbm.  (The common
-              link rule is already this way in 10.44.00; all the other
+              link rule is already this way in Netpbm 10.44.00; all the other
               link rules are now the same).
 
               Build: Rename Makefile.common, Makefile.config, to common.mk,
@@ -926,13 +935,13 @@ not yet  BJH  Release 10.63.00
 
               pamtosvg: remove "needed exchange" debug trace.
 
-              Add pbmminkowski (source code has been in package since 10.12
-              but not documented or built by default).
+              Add pbmminkowski (source code has been in package since Netpbm
+              10.12 but not documented or built by default).
 
               pnmmontage: don't corrupt file names when they contain
               colons.
 
-              pamflip: fix bug: garbage output for PBMs, since 10.42.
+              pamflip: fix bug: garbage output for PBMs, since Netpbm 10.42.
 
               pngtopnm: fix gamma correction.
 
@@ -975,7 +984,7 @@ not yet  BJH  Release 10.63.00
               pamtohtmltbl: fix output error: contains holes due to
               uninitialized memory.
 
-              xvminitoppm: fix.  Totally broken since 10.34.
+              xvminitoppm: fix.  Totally broken since Netpbm 10.34.
 
               pnmtopclxl: fix crash with Standard Input input.
 
@@ -991,7 +1000,7 @@ not yet  BJH  Release 10.63.00
               height, width.
 
               Add back ppmd_fill_init() for backward compatibility;
-              removed in 10.29.
+              removed in Netpbm 10.29.
 
               Build: make it work with Gcc 4.3 and -sse.
 
