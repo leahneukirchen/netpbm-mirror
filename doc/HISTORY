@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+13.05.20 BJH  Release 10.62.06
+
+              pnmremap (ergo pnmquant): fix bug: incorrect output with
+              -norandom and floyd-steinberg dithering.  Always broken.
+              (-norandom was introduced in 10.30 (June 2007)).
+
 13.05.11 BJH  Release 10.62.05
 
               pnmtopng: fix bug: incorrect output when output should have
