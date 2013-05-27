@@ -335,6 +335,22 @@ basebasename(const char * const filespec) {
 
 
 
+static void
+writeFile(const unsigned char * const buffer,
+          size_t                const writeCt,
+          const char *          const name,
+          FILE *                const ofP) {
+
+    size_t writtenCt;
+
+    writtenCt = fwrite(buffer, 1, writeCt, ofP);
+
+    if (writtenCt != writeCt)
+        pm_error("Error writing to %s output file", name);
+}
+
+
+
 #define MAX_FILTER_CT 10
     /* The maximum number of filters this code is capable of applying */
 
@@ -494,18 +510,12 @@ flateFilter(FILE *          const ifP,
         */
         do {
             unsigned int have;
-            size_t bytesWritten;
 
             strm.avail_out = chunkSz;
             strm.next_out = out;
             deflate(&strm, flush);
             have = chunkSz - strm.avail_out;
-            bytesWritten = fwrite(out, 1, have, ofP);
-            if (ferror(ofP) || bytesWritten != have) {
-                deflateEnd(&strm);
-                pm_error("Error writing to internal pipe during "
-                         "flate compression.");
-            }
+            writeFile(out, have, "flate filter", ofP);
         } while (strm.avail_out == 0);
         assert(strm.avail_in == 0);     /* all input is used */
 
@@ -548,10 +558,8 @@ rlePutBuffer (unsigned int    const repeat,
     if (repeat) {
         fputc(257 - count,  fP);
         fputc(repeatitem, fP);
-    } else {
-        fputc(count - 1, fP);
-        fwrite(itembuf, 1, count, fP);
-    }
+    } else
+        writeFile(itembuf, count, "rlePutBuffer", fP);
 }
 
 
@@ -673,23 +681,24 @@ asciiHexFilter(FILE *          const ifP,
     unsigned char inbuff[40], outbuff[81];
 
     for (eof = false; !eof; ) {
-        size_t bytesRead;
+        size_t readCt;
 
-        bytesRead = fread(inbuff, 1, 40, ifP);
+        readCt = fread(inbuff, 1, 40, ifP);
 
-        if (bytesRead == 0)
+        if (readCt == 0)
             eof = true;
         else {
             unsigned int i;
 
-            for (i = 0; i < bytesRead; ++i) {
+            for (i = 0; i < readCt; ++i) {
                 int const item = inbuff[i]; 
                 outbuff[i*2]   = hexits[item >> 4];
                 outbuff[i*2+1] = hexits[item & 15];
             }
         }
-        outbuff[bytesRead * 2] = '\n';
-        fwrite(outbuff, 1, bytesRead*2 + 1, ofP);
+        outbuff[readCt * 2] = '\n';
+
+        writeFile(outbuff, readCt * 2 + 1, "asciiHex filter", ofP);
     }
 
     fclose(ifP);
@@ -737,7 +746,9 @@ ascii85Filter(FILE *          const ifP,
                 outbuff[1] = value % 85 + 33;
                 outbuff[0] = value / 85 + 33;
 
-                fwrite(outbuff, 1, count + 1, ofP);
+                writeFile((const unsigned char *)outbuff, count + 1,
+                          "ASCII 85 filter", ofP);
+
                 count = value = 0;
                 outcount += 5; 
             }
@@ -759,7 +770,8 @@ ascii85Filter(FILE *          const ifP,
         outbuff[0] = value / 85 + 33;
         outbuff[count + 1] = '\n';
 
-        fwrite(outbuff, 1, count + 2, ofP);
+        writeFile((const unsigned char *)outbuff, count + 2,
+                  "ASCII 85 filter", ofP);
     }
 
     fclose(ifP);
@@ -1720,7 +1732,7 @@ convertRowPbm(struct pam *     const pamP,
         bitrow[colChars-1] <<= padRight;  /* right edge */
     }
 
-    fwrite(bitrow, 1, colChars, fP); 
+    writeFile(bitrow, colChars, "PBM reader", fP);
 }
 
 
