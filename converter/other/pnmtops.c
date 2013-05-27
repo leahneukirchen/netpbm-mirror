@@ -881,13 +881,22 @@ addFilter(const char *    const description,
           OutputEncoder * const oeP,
           FILE **         const feedFilePP,
           pid_t *         const pidList) {
+/*----------------------------------------------------------------------------
+   Add a filter to the front of the chain.
 
-    pid_t pid;
+   Spawn a process to do the filtering, by running function 'filter'.
 
+   *feedFilePP is the present head of the chain.  We make the new filter
+   process write its output to that and get its input from a new pipe.
+   We update *feedFilePP to the sending end of the new pipe.
+
+   Add to the list pidList[] the PID of the process we spawn.
+-----------------------------------------------------------------------------*/
     FILE * const oldFeedFileP = *feedFilePP;
 
     FILE * newFeedFileP;
-        
+    pid_t pid;
+
     spawnFilter(oldFeedFileP, filter, oeP, &newFeedFileP, &pid);
             
     if (verbose)
@@ -895,7 +904,7 @@ addFilter(const char *    const description,
                    description, (unsigned)pid);
     
     fclose(oldFeedFileP);  /* Child keeps this open now */
-    
+
     addToPidList(pidList, pid);
 
     *feedFilePP = newFeedFileP;
@@ -1917,6 +1926,7 @@ convertPage(FILE *       const ifP,
         /* The file stream which is the head of the filter chain; we write to
            this and filtered stuff comes out the other end.
         */
+    FILE * filterChainOfP;
 
     pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
 
@@ -1959,7 +1969,24 @@ convertPage(FILE *       const ifP,
     initOutputEncoder(&oe, inpam.width, bitsPerSample,
                       rle, flate, ascii85, psFilter);
 
-    spawnFilters(stdout, &oe, &feedFileP, filterPidList);
+    /* FILE MANAGEMENT: File management is pretty hairy here.  A filter, which
+       runs in its own process, needs to be able to cause its output file to
+       close because it might be an internal pipe and the next stage needs to
+       know output is done.  So the forking process must close its copy of the
+       file descriptor.  BUT: if the output of the filter is not an internal
+       pipe but this program's output, then we don't want it closed when the
+       filter terminates because we'll need it to be open for the next image
+       the program converts (with a whole new chain of filters).
+
+       To prevent the progam output file from getting closed, we pass a
+       duplicate of it to spawnFilters() and keep the original open.
+    */
+
+    fflush(stdout);
+    filterChainOfP = fdopen(dup(fileno(stdout)), "w");
+        /* spawnFilters() closes this.  See FILE MANAGEMENT above */
+
+    spawnFilters(filterChainOfP, &oe, &feedFileP, filterPidList);
  
     convertRaster(&inpam, bitsPerSample, psFilter, feedFileP);
 

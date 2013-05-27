@@ -12,6 +12,9 @@ not yet  BJH  Release 10.63.00
               Perl programs: make them shell programs that reinvoke themselves
               as perl so we can get the Perl interpreter from the PATH.
 
+              pnmtops: Fix bug: only first image gets converted.  Broken in
+              Netpbm 10.56 (September 2011).
+
               pnmtopng: fix bug: incorrect output when output should have
               an alpha mask.  Broken in Netpbm 10.55 (June 2011).  Thanks
               Ludolf Holzheid (lholzheid@bihl-wiedemann.de).
@@ -24,7 +27,7 @@ not yet  BJH  Release 10.63.00
 
               pnmremap (ergo pnmquant): fix bug: incorrect output with
               -norandom and floyd-steinberg dithering.  Always broken.
-              (-norandom was introduced in Netpbm 10.30 (June 2007)).
+              (-norandom was introduced in Netpbm 10.39 (June 2007)).
 
               pamtilt: fix bug: incorrect output or invalid memory access
               crash.  Always broken (program was new in Netpbm 10.30
