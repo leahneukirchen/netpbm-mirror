@@ -4,25 +4,31 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+13.05.27 BJH  Release 10.62.07
+
+              pnmtops: Fix bug: only first image gets converted.  Broken in
+              Netpbm 10.56 (September 2011).
+
 13.05.20 BJH  Release 10.62.06
 
               pnmremap (ergo pnmquant): fix bug: incorrect output with
               -norandom and floyd-steinberg dithering.  Always broken.
-              (-norandom was introduced in 10.30 (June 2007)).
+              (-norandom was introduced in Netpbm 10.39 (June 2007)).
 
 13.05.11 BJH  Release 10.62.05
 
               pnmtopng: fix bug: incorrect output when output should have
-              an alpha mask.  Broken in 10.55 (June 2011).  Thanks
+              an alpha mask.  Broken Netpbm in 10.55 (June 2011).  Thanks
               Ludolf Holzheid (lholzheid@bihl-wiedemann.de).
 
               pnmtopng: fix bug: output bigger than it needs to be when the
               input is a color format image that contains only gray.  Broken
-              since at least 10.26 (May 2001), but after 10.18 (September
-              2003).  Thanks Ludolf Holzheid (lholzheid@bihl-wiedemann.de).
+              since at least Netpbm 10.26 (May 2001), but after 10.18
+              (September 2003).  Thanks Ludolf Holzheid
+              (lholzheid@bihl-wiedemann.de).
 
               pamtilt: fix bug: incorrect output or invalid memory access
-              crash.  Always broken (program was new in Neptbm 10.30
+              crash.  Always broken (program was new in Netpbm 10.30
               (October 2005)).
 
 13.05.02 BJH  Release 10.62.04

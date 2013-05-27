@@ -1905,6 +1905,7 @@ convertPage(FILE *       const ifP,
         /* The file stream which is the head of the filter chain; we write to
            this and filtered stuff comes out the other end.
         */
+    FILE * filterChainOfP;
 
     pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
 
@@ -1947,7 +1948,11 @@ convertPage(FILE *       const ifP,
     initOutputEncoder(&oe, inpam.width, bitsPerSample,
                       rle, flate, ascii85, psFilter);
 
-    spawnFilters(stdout, &oe, &feedFileP, filterPidList);
+    fflush(stdout);
+    filterChainOfP = fdopen(dup(fileno(stdout)), "w");
+        /* spawnFilters() closes this.  See FILE MANAGEMENT above */
+
+    spawnFilters(filterChainOfP, &oe, &feedFileP, filterPidList);
  
     convertRaster(&inpam, bitsPerSample, psFilter, feedFileP);
 
