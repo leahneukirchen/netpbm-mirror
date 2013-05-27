@@ -1884,6 +1884,21 @@ convertRaster(struct pam * const inpamP,
 
 
 
+/* FILE MANAGEMENT: File management is pretty hairy here.  A filter, which
+   runs in its own process, needs to be able to cause its output file to
+   close because it might be an internal pipe and the next stage needs to
+   know output is done.  So the forking process must close its copy of the
+   file descriptor.  BUT: if the output of the filter is not an internal
+   pipe but this program's output, then we don't want it closed when the
+   filter terminates because we'll need it to be open for the next image
+   the program converts (with a whole new chain of filters).
+   
+   To prevent the progam output file from getting closed, we pass a
+   duplicate of it to spawnFilters() and keep the original open.
+*/
+
+
+
 static void
 convertPage(FILE *       const ifP, 
             int          const turnflag, 
@@ -1968,19 +1983,6 @@ convertPage(FILE *       const ifP,
 
     initOutputEncoder(&oe, inpam.width, bitsPerSample,
                       rle, flate, ascii85, psFilter);
-
-    /* FILE MANAGEMENT: File management is pretty hairy here.  A filter, which
-       runs in its own process, needs to be able to cause its output file to
-       close because it might be an internal pipe and the next stage needs to
-       know output is done.  So the forking process must close its copy of the
-       file descriptor.  BUT: if the output of the filter is not an internal
-       pipe but this program's output, then we don't want it closed when the
-       filter terminates because we'll need it to be open for the next image
-       the program converts (with a whole new chain of filters).
-
-       To prevent the progam output file from getting closed, we pass a
-       duplicate of it to spawnFilters() and keep the original open.
-    */
 
     fflush(stdout);
     filterChainOfP = fdopen(dup(fileno(stdout)), "w");
