@@ -76,7 +76,7 @@ Set magnification of the decompressed image. Positive values enlarge
 and negative values reduce the image width and height by a factor of
 2^|<I>N</I>|.
 
-<DT><B>-s</B> <I>N</I>, <B>--smooth=</B><I>N</I>
+<DT><B>-s</B> <I>N</I>, <B>--smoothing=</B><I>N</I>
 <DD>
 Smooth decompressed image(s) along the partitioning borders by the
 given amount <I>N</I>. <I>N</I> is 1 (minimum) to 100 (maximum); default
@@ -87,6 +87,10 @@ FIASCO file is used (defined by the FIASCO coder).
 <DD>
 Set number of frames per second to <I>N</I>. When using this option,
 the frame rate specified in the FIASCO file is overridden.
+
+<DT><B>--verbose=</B><I>N</I>
+<DD>
+Set verbose of <B>fiascotopnm</B> to <I>N</I>.
 
 <DT><B>-v</B>, <B>--version</B>
 <DD>
