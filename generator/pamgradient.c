@@ -18,7 +18,7 @@ struct cmdlineInfo {
 };
 
 static void
-parseCommandLine(int argc, char **argv,
+parseCommandLine(int argc, const char **argv,
                  struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
   Convert program invocation arguments (argc,argv) into a format the 
@@ -45,7 +45,7 @@ parseCommandLine(int argc, char **argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (!maxvalSpec)
@@ -153,7 +153,7 @@ createEdge(const struct pam * const pamP,
 
 
 int
-main(int argc, char *argv[]) {
+main(int argc, const char *argv[]) {
 
     struct cmdlineInfo cmdline;
     struct pam pam;
@@ -162,7 +162,7 @@ main(int argc, char *argv[]) {
     tuple * rightEdge;
     unsigned int row;
     
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
