@@ -43,6 +43,14 @@ not yet  BJH  Release 10.63.00
               sparc64 pbmtog3: fix bug that causes crash due to unaligned
               memory access.
 
+              ppmforge. fix crash when -mesh is 1 or less.  Always broken
+              (program was added in Pbmplus (October 1991).  Thanks Prophet of
+              the Way <afu@wta.att.ne.jp>.
+
+              ppmforge: fix array bounds violation.  Always broken (program
+              was added in Pbmplus (October 1991).  Thanks Prophet of the Way
+              <afu@wta.att.ne.jp>.
+
               install: fix Perl warning in installnetpbm.  Broken in 
               Netpbm 10.61.
 
