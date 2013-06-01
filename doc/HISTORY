@@ -40,10 +40,14 @@ not yet  BJH  Release 10.63.00
               middle of the AND mask.  Always broken (program was new in
               Netpbm 9.3 (June 2000)).
 
+              ppmtoxpm: fix bug: ignores inability to open the specified color
+              dictionary file (-rgb) and just doesn't use color names.
+              Introduced in Netpbm 10.15 (April 2003).
+
               libnetpbm: fix bug: ppm_freecolornames() has wild pointer
               dereference when the color name table was generated empty
               because the color dictionary file was not openable.  ppmtoxpm
-              suffers from this.
+              suffers from this.  Broken in 10.15 (April 2003).
 
               sparc64 pbmtog3: fix bug that causes crash due to unaligned
               memory access.
