@@ -20,96 +20,201 @@
 ** implied warranty.
 */
 
-#include "ppm.h"
+#include "pm_c_util.h"
 #include "mallocvar.h"
+#include "shhopt.h"
+#include "ppm.h"
 
-/* x must be signed for the following to work correctly */
-#define limit(x) ((((x)>0xffffff)?0xff0000:(((x)<=0xffff)?0:(x)&0xff0000))>>16)
 
-int
-main(argc, argv)
-	char          **argv;
-{
-	FILE           *ifp;
-	pixel          *pixrow;
-	int             argn, rows, cols, row;
-	const char     * const usage = "<width> <height> [yuvfile]";
-    struct yuv {
-        /* This is an element of a YUV file.  It describes two 
-           side-by-side pixels.
-        */
-        unsigned char u;
-        unsigned char y1;
-        unsigned char v;
-        unsigned char y2;
-    } *yuvbuf;
 
-	ppm_init(&argc, argv);
+struct CmdlineInfo {
+    /* All the information the user supplied in the command line,
+       in a form easy for the program to use.
+    */
+    unsigned int cols;
+    unsigned int rows;
+    const char * inputFileName;  /* Name of input file */
+};
 
-	argn = 1;
 
-	if (argn + 2 > argc)
-		pm_usage(usage);
 
-	cols = atoi(argv[argn++]);
-	rows = atoi(argv[argn++]);
-	if (cols <= 0 || rows <= 0)
-		pm_usage(usage);
+static void
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo * const cmdlineP) {
 
-	if (argn < argc) {
-		ifp = pm_openr(argv[argn]);
-		++argn;
-	} else
-		ifp = stdin;
+    optEntry * option_def;
+        /* Instructions to OptParseOptions3 on how to parse our options */
+    optStruct3 opt;
 
-	if (argn != argc)
-		pm_usage(usage);
+    MALLOCARRAY_NOFAIL(option_def, 100);
 
-    if (cols % 2 != 0) {
-        pm_error("Number of columns (%d) is odd.  A YUV image must have an "
-                 "even number of columns.", cols);
+    OPTENTINIT;
+
+    opt.opt_table = option_def;
+    opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
+
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+        /* Uses and sets argc, argv, and some of *cmdlineP and others. */
+
+    if (argc-1 < 2)
+        pm_error("You need at least two arguments: width and height in "
+                 "pixels.  You specified %u", argc-1);
+    else {
+        int const widthArg  = atoi(argv[1]);
+        int const heightArg = atoi(argv[2]);
+
+        if (widthArg < 0)
+            pm_error("Negative number for width: %d", widthArg);
+        if (heightArg < 0)
+            pm_error("Negative number for height: %d", heightArg);
+
+        cmdlineP->cols = widthArg;
+        cmdlineP->rows = heightArg;
+                 
+        if (cmdlineP->cols % 2 != 0)
+            pm_error("Number of columns (%u) is odd.  "
+                     "A YUV image must have an "
+                     "even number of columns.", cmdlineP->cols);
+
+        if (argc-1 < 3)
+            cmdlineP->inputFileName = "-";
+        else {
+            cmdlineP->inputFileName = argv[3];
+
+            if (argc-1 > 3)
+                pm_error("Too many arguments: %u.  "
+                         "The only possible arguments are "
+                         "width, height, and input file name", argc-1);
+        }
+    }
+}
+
+
+
+static int
+limit(int const x) {
+
+    if (x > 0xffffff)
+        return 0xff;
+    else if (x <= 0xffff)
+        return 0;
+    else
+        return ((x >> 16) & 0xff);
+}
+
+
+
+static int
+nonneg(int const x) {
+/*----------------------------------------------------------------------------
+  Raise 'x' to 0 if negative
+-----------------------------------------------------------------------------*/
+    return x < 0 ? 0 : x;
+}
+
+
+
+struct Yuv {
+/*----------------------------------------------------------------------------
+  This is an element of a YUV file.  It describes two side-by-side pixels.
+
+  This is the actual layout of the data in the file (4 bytes).
+-----------------------------------------------------------------------------*/
+    unsigned char u;
+    unsigned char y1;
+    unsigned char v;
+    unsigned char y2;
+};
+
+
+
+static void
+readYuv(FILE *       const ifP,
+        struct Yuv * const yuvP) {
+
+    size_t readCt;
+
+    readCt = fread(yuvP, sizeof(*yuvP), 1, ifP);
+
+    if (readCt != 1) {
+        if (feof(ifP))
+            pm_error("Premature end of input.");
+        else
+            pm_error("Error reading input.");
+    }
+}
+
+
+
+static void
+yuvtoppm(FILE *       const ifP,
+         unsigned int const cols,
+         unsigned int const rows,
+         FILE *       const ofP) {
+
+    pixval const maxval = 255;
+
+    pixel * pixrow;
+    unsigned int row;
+
+    ppm_writeppminit(ofP, cols, rows, maxval, 0);
+
+    pixrow = ppm_allocrow(cols);
+
+    for (row = 0; row < rows; ++row) {
+        unsigned int col;
+        for (col = 0; col < cols; col += 2) {
+            /* Produce two pixels in pixrow[] */
+            struct Yuv yuv;
+            int     y1, u, v, y2, r, g, b;
+
+            readYuv(ifP, &yuv);
+
+            u = yuv.u - 128;
+            y1 = nonneg (yuv.y1 - 16);
+            v = yuv.v - 128;
+            y2 = nonneg (yuv.y2 - 16);
+
+            r = 104635 * v;
+            g = -25690 * u + -53294 * v;
+            b = 132278 * u;
+
+            y1 *= 76310;
+            y2 *= 76310;
+
+            PPM_ASSIGN(pixrow[col],
+                       limit(r + y1), limit(g + y1), limit(b + y1));
+            PPM_ASSIGN(pixrow[col + 1],
+                       limit(r + y2), limit(g + y2), limit(b + y2));
+        }
+        ppm_writeppmrow(ofP, pixrow, cols, maxval, 0);
     }
 
-	ppm_writeppminit(stdout, cols, rows, (pixval) 255, 0);
-	pixrow = ppm_allocrow(cols);
-    MALLOCARRAY(yuvbuf, (cols+1)/2);
-    if (yuvbuf == NULL)
-        pm_error("Unable to allocate YUV buffer for %d columns.", cols);
-
-	for (row = 0; row < rows; ++row) {
-		int    col;
-
-		fread(yuvbuf, cols * 2, 1, ifp);
-
-		for (col = 0; col < cols; col += 2) {
-            /* Produce two pixels in pixrow[] */
-            int y1, u, v, y2, r, g, b;
-
-			u = yuvbuf[col/2].u-128;
-
-            y1 = yuvbuf[col/2].y1 - 16;
-			if (y1 < 0) y1 = 0;
-
-            v = yuvbuf[col/2].v - 128;
-
-            y2 = yuvbuf[col/2].y2 - 16;
-			if (y2 < 0) y2 = 0;
-
-			r = 104635 * v;
-			g = -25690 * u + -53294 * v;
-			b = 132278 * u;
-
-			y1*=76310; y2*=76310;
-
-			PPM_ASSIGN(pixrow[col], limit(r+y1), limit(g+y1), limit(b+y1));
-			PPM_ASSIGN(pixrow[col+1], limit(r+y2), limit(g+y2), limit(b+y2));
-		}
-		ppm_writeppmrow(stdout, pixrow, cols, (pixval) 255, 0);
-	}
-    free(yuvbuf);
     ppm_freerow(pixrow);
-	pm_close(ifp);
-	pm_close(stdout);
 
-	exit(0);
+    if (fgetc(ifP) != EOF)
+        pm_message("Extraneous data at end of image.");
+}
+
+
+
+int
+main (int argc, const char ** argv) {
+
+    FILE * ifP;
+    struct CmdlineInfo cmdline;
+
+    pm_proginit(&argc, argv);
+
+    parseCommandLine(argc, argv, &cmdline);
+
+    ifP = pm_openr(cmdline.inputFileName);
+
+    yuvtoppm(ifP, cmdline.cols, cmdline.rows, stdout);
+    
+    pm_close(ifP);
+    pm_close(stdout);
+
+    return 0;
 }
