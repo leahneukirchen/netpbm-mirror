@@ -192,6 +192,7 @@ YUVtoPPM(FILE  * const ifP,
 int
 main(int argc, const char **argv) {
 
+    pixval const maxval = 255;
     struct CmdlineInfo cmdline;
     FILE  * ifP;
     pixel * pixrow;
@@ -208,11 +209,11 @@ main(int argc, const char **argv) {
 
     ifP = pm_openr(cmdline.inputFileName);
 
-    ppm_writeppminit(stdout, cmdline.width, cmdline.height, 255, 0);
+    ppm_writeppminit(stdout, cmdline.width, cmdline.height, maxval, 0);
 
-    for (row = 0; row < cmdline.height; row++) {
+    for (row = 0; row < cmdline.height; ++row) {
         YUVtoPPM(ifP, cmdline.width, cmdline.height, pixrow);
-        ppm_writeppmrow(stdout, pixrow, cmdline.width, 255, 0);
+        ppm_writeppmrow(stdout, pixrow, cmdline.width, maxval, 0);
     }
 
     if (fgetc(ifP) != EOF)
