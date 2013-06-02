@@ -215,6 +215,9 @@ main(int argc, const char **argv) {
         ppm_writeppmrow(stdout, pixrow, cmdline.width, 255, 0);
     }
 
+    if (fgetc(ifP) != EOF)
+        pm_message("Extraneous data at end of image.");
+
     pm_close(ifP);
     ppm_freerow(pixrow);
 
