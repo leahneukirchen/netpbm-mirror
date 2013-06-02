@@ -44,7 +44,7 @@ char **argv;
 
     if (cols % 2 != 0)
         pm_error("Image must have even number of columns.\n"
-                 "This image is %d columns wide.  Try Pnmcut.", cols);
+                 "This image is %u columns wide.  Try Pamcut.", cols);
 
 	pixelrow = ((pixel*) pm_allocrow( cols, sizeof(pixel) ));
 	yuvbuf = (unsigned char *) pm_allocrow( cols, 2 );
