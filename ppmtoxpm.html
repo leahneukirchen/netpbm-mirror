@@ -6,12 +6,10 @@ Updated: Feb 22 2003
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 ppmtoxpm - convert a PPM image to an X11 pixmap
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>ppmtoxpm </B>
 [<B>-name=</B><I>xpmname</I>]
@@ -24,8 +22,7 @@ ppmtoxpm - convert a PPM image to an X11 pixmap
 hyphens instead of single hyphen to denote options.  You may use white
 space in place of the equals sign to separate an option name from its value.
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -80,8 +77,7 @@ actually produce any transparent pixels.  So subtract one from the number
 of possible colors if you use <b>-alpha</b>.
 
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<H2 id="options">OPTIONS</H2>
 
 <DL COMPACT>
 <DT><B>-name=</B><I>xpmname</I>
@@ -107,7 +103,8 @@ it was the default, overridden by specifying <b>-rgb</b>.
 
 <DD>This option names the file in which the color dictionary you want
 to use resides.  By default, <b>ppmtoxpm</b> uses the <a
-href="libppm.html#rgb.txt">system color dictionary</a>. 
+href="libppm.html#rgb.txt">system color dictionary</a>, and if it cannot
+open that file, uses hexadecimal color specifiers.
 
 <P>This option in meaningless when you specify <b>-hexonly</b>.
 
@@ -133,8 +130,7 @@ XPM file with the <B>-alphaout</B> option to <B>xpmtoppm</B>.
 formats that include transparency information too.
 </DL>
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="ppmcolormask.html">ppmcolormask</A></B>,
 <B><A HREF="xpmtoppm.html">xpmtoppm</A></B>,
@@ -145,8 +141,7 @@ formats that include transparency information too.
 XPM Manual by Arnaud Le Hors <A
 HREF="mailto:lehors@mirsa.inria.fr">lehors@mirsa.inria.fr</A>
 
-<A NAME="lbAH">&nbsp;</A>
-<H2>AUTHOR</H2>
+<H2 id="author">AUTHOR</H2>
 
 <p>
 Copyright (C) 1990 by Mark W. Snitily.
@@ -174,12 +169,11 @@ HREF="mailto:lehors@mirsa.inria.fr">lehors@mirsa.inria.fr</A>), April
 <A NAME="index">&nbsp;</A>
 <H2>Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAG">SEE ALSO</A>
-<LI><A HREF="#lbAH">AUTHOR</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
 </UL>
 </BODY>
 </HTML>
