@@ -731,7 +731,6 @@ execGhostscript(int          const inputPipeFd,
                 int          const xres,
                 int          const yres,
                 unsigned int const textalphabits,
-                char         const inputFileName[],
                 bool         const verbose) {
     
     const char * arg0;
@@ -817,7 +816,7 @@ executeGhostscript(char                    const pstrans[],
         close(pipefd[1]);
         execGhostscript(pipefd[0], ghostscriptDevice, outfileArg,
                         xsize, ysize, xres, yres, textalphabits,
-                        inputFileName, verbose);
+                        verbose);
     } else {
         pid_t const ghostscriptPid = rc;
         int const pipeToGhostscriptFd = pipefd[1];
