@@ -18,6 +18,7 @@
 #define _XOPEN_SOURCE 500  
     /* Make sure fdopen() is in stdio.h and strdup() is in string.h */
 
+#include <assert.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -32,8 +33,8 @@
 #include "shhopt.h"
 #include "nstring.h"
 
-enum orientation {PORTRAIT, LANDSCAPE, UNSPECIFIED};
-struct box {
+enum Orientation {PORTRAIT, LANDSCAPE, UNSPECIFIED};
+struct Box {
     /* Description of a rectangle within an image; all coordinates 
        measured in points (1/72") with lower left corner of page being the 
        origin.
@@ -45,15 +46,15 @@ struct box {
     int ury;  /* upper right Y coord */
 };
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
     const char * inputFileName;  /* Names of input files */
     unsigned int forceplain;
-    struct box extract_box;
+    struct Box extractBox;
     unsigned int nocrop;
-    unsigned int format_type;
+    unsigned int formatType;
     unsigned int verbose;
     float xborder;
     unsigned int xmax;
@@ -62,15 +63,15 @@ struct cmdlineInfo {
     unsigned int ymax;
     unsigned int ysize;  /* zero means unspecified */
     unsigned int dpi;    /* zero means unspecified */
-    enum orientation orientation;
-    unsigned int goto_stdout;
+    enum Orientation orientation;
+    unsigned int stdout;
     unsigned int textalphabits;
 };
 
 
 static void
 parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
@@ -82,8 +83,8 @@ parseCommandLine(int argc, char ** argv,
 
     unsigned int option_def_index;
 
-    unsigned int pbm_opt, pgm_opt, ppm_opt;
-    unsigned int portrait_opt, landscape_opt;
+    unsigned int pbmOpt, pgmOpt, ppmOpt;
+    unsigned int portraitOpt, landscapeOpt;
     float llx, lly, urx, ury;
     unsigned int llxSpec, llySpec, urxSpec, urySpec;
     unsigned int xmaxSpec, ymaxSpec, xsizeSpec, ysizeSpec, dpiSpec;
@@ -98,9 +99,9 @@ parseCommandLine(int argc, char ** argv,
     OPTENT3(0, "urx",        OPT_FLOAT, &urx, &urxSpec,                  0);
     OPTENT3(0, "ury",        OPT_FLOAT, &ury, &urySpec,                  0);
     OPTENT3(0, "nocrop",     OPT_FLAG,  NULL, &cmdlineP->nocrop,         0);
-    OPTENT3(0, "pbm",        OPT_FLAG,  NULL, &pbm_opt,                  0);
-    OPTENT3(0, "pgm",        OPT_FLAG,  NULL, &pgm_opt,                  0);
-    OPTENT3(0, "ppm",        OPT_FLAG,  NULL, &ppm_opt,                  0);
+    OPTENT3(0, "pbm",        OPT_FLAG,  NULL, &pbmOpt ,                  0);
+    OPTENT3(0, "pgm",        OPT_FLAG,  NULL, &pgmOpt,                   0);
+    OPTENT3(0, "ppm",        OPT_FLAG,  NULL, &ppmOpt,                  0);
     OPTENT3(0, "verbose",    OPT_FLAG,  NULL, &cmdlineP->verbose,        0);
     OPTENT3(0, "xborder",    OPT_FLOAT, &cmdlineP->xborder, NULL,        0);
     OPTENT3(0, "xmax",       OPT_UINT,  &cmdlineP->xmax, &xmaxSpec,      0);
@@ -109,9 +110,9 @@ parseCommandLine(int argc, char ** argv,
     OPTENT3(0, "ymax",       OPT_UINT,  &cmdlineP->ymax, &ymaxSpec,      0);
     OPTENT3(0, "ysize",      OPT_UINT,  &cmdlineP->ysize, &ysizeSpec,    0);
     OPTENT3(0, "dpi",        OPT_UINT,  &cmdlineP->dpi, &dpiSpec,        0);
-    OPTENT3(0, "portrait",   OPT_FLAG,  NULL, &portrait_opt,             0);
-    OPTENT3(0, "landscape",  OPT_FLAG,  NULL, &landscape_opt,            0);
-    OPTENT3(0, "stdout",     OPT_FLAG,  NULL, &cmdlineP->goto_stdout,    0);
+    OPTENT3(0, "portrait",   OPT_FLAG,  NULL, &portraitOpt,             0);
+    OPTENT3(0, "landscape",  OPT_FLAG,  NULL, &landscapeOpt,            0);
+    OPTENT3(0, "stdout",     OPT_FLAG,  NULL, &cmdlineP->stdout,         0);
     OPTENT3(0, "textalphabits", OPT_UINT,
             &cmdlineP->textalphabits,  &textalphabitsSpec, 0);
 
@@ -149,38 +150,38 @@ parseCommandLine(int argc, char ** argv,
     } else 
         cmdlineP->ysize = 0;
 
-    if (portrait_opt && !landscape_opt)
+    if (portraitOpt && !landscapeOpt)
         cmdlineP->orientation = PORTRAIT;
-    else if (!portrait_opt && landscape_opt)
+    else if (!portraitOpt && landscapeOpt)
         cmdlineP->orientation = LANDSCAPE;
-    else if (!portrait_opt && !landscape_opt)
+    else if (!portraitOpt && !landscapeOpt)
         cmdlineP->orientation = UNSPECIFIED;
     else
         pm_error("Cannot specify both -portrait and -landscape options");
 
-    if (pbm_opt)
-        cmdlineP->format_type = PBM_TYPE;
-    else if (pgm_opt)
-        cmdlineP->format_type = PGM_TYPE;
-    else if (ppm_opt)
-        cmdlineP->format_type = PPM_TYPE;
+    if (pbmOpt)
+        cmdlineP->formatType = PBM_TYPE;
+    else if (pgmOpt)
+        cmdlineP->formatType = PGM_TYPE;
+    else if (ppmOpt)
+        cmdlineP->formatType = PPM_TYPE;
     else
-        cmdlineP->format_type = PPM_TYPE;
+        cmdlineP->formatType = PPM_TYPE;
 
     /* If any one of the 4 bounding box coordinates is given on the
        command line, we default any of the 4 that aren't.  
     */
     if (llxSpec || llySpec || urxSpec || urySpec) {
-        if (!llxSpec) cmdlineP->extract_box.llx = 72;
-        else cmdlineP->extract_box.llx = llx * 72;
-        if (!llySpec) cmdlineP->extract_box.lly = 72;
-        else cmdlineP->extract_box.lly = lly * 72;
-        if (!urxSpec) cmdlineP->extract_box.urx = 540;
-        else cmdlineP->extract_box.urx = urx * 72;
-        if (!urySpec) cmdlineP->extract_box.ury = 720;
-        else cmdlineP->extract_box.ury = ury * 72;
+        if (!llxSpec) cmdlineP->extractBox.llx = 72;
+        else cmdlineP->extractBox.llx = llx * 72;
+        if (!llySpec) cmdlineP->extractBox.lly = 72;
+        else cmdlineP->extractBox.lly = lly * 72;
+        if (!urxSpec) cmdlineP->extractBox.urx = 540;
+        else cmdlineP->extractBox.urx = urx * 72;
+        if (!urySpec) cmdlineP->extractBox.ury = 720;
+        else cmdlineP->extractBox.ury = ury * 72;
     } else {
-        cmdlineP->extract_box.llx = -1;
+        cmdlineP->extractBox.llx = -1;
     }
 
     if (dpiSpec) {
@@ -230,19 +231,19 @@ addPsToFileName(char          const origFileName[],
    *newFileNameP.
 -----------------------------------------------------------------------------*/
     struct stat statbuf;
-    int stat_rc;
+    int statRc;
 
-    stat_rc = lstat(origFileName, &statbuf);
+    statRc = lstat(origFileName, &statbuf);
     
-    if (stat_rc == 0)
+    if (statRc == 0)
         *newFileNameP = strdup(origFileName);
     else {
         const char * fileNamePlusPs;
 
         pm_asprintf(&fileNamePlusPs, "%s.ps", origFileName);
 
-        stat_rc = lstat(fileNamePlusPs, &statbuf);
-        if (stat_rc == 0)
+        statRc = lstat(fileNamePlusPs, &statbuf);
+        if (statRc == 0)
             *newFileNameP = strdup(fileNamePlusPs);
         else
             *newFileNameP = strdup(origFileName);
@@ -311,9 +312,9 @@ computeSizeResBlind(unsigned int   const xmax,
 
 
 static void
-computeSizeRes(struct cmdlineInfo const cmdline, 
-               enum orientation   const orientation, 
-               struct box         const bordered_box,
+computeSizeRes(struct CmdlineInfo const cmdline, 
+               enum Orientation   const orientation, 
+               struct Box         const borderedBox,
                unsigned int *     const xsizeP, 
                unsigned int *     const ysizeP,
                unsigned int *     const xresP, 
@@ -344,11 +345,11 @@ computeSizeRes(struct cmdlineInfo const cmdline,
         */
 
     if (orientation == LANDSCAPE) {
-        sx = bordered_box.ury - bordered_box.lly;
-        sy = bordered_box.urx - bordered_box.llx;
+        sx = borderedBox.ury - borderedBox.lly;
+        sy = borderedBox.urx - borderedBox.llx;
     } else {
-        sx = bordered_box.urx - bordered_box.llx;
-        sy = bordered_box.ury - bordered_box.lly;
+        sx = borderedBox.urx - borderedBox.llx;
+        sy = borderedBox.ury - borderedBox.lly;
     }
 
     if (cmdline.dpi) {
@@ -373,9 +374,9 @@ computeSizeRes(struct cmdlineInfo const cmdline,
 
 
 
-enum postscript_language {COMMON_POSTSCRIPT, ENCAPSULATED_POSTSCRIPT};
+enum PostscriptLanguage {COMMON_POSTSCRIPT, ENCAPSULATED_POSTSCRIPT};
 
-static enum postscript_language
+static enum PostscriptLanguage
 languageDeclaration(char const inputFileName[],
                     bool const verbose) {
 /*----------------------------------------------------------------------------
@@ -383,7 +384,7 @@ languageDeclaration(char const inputFileName[],
   (Except that if the file is on Standard Input or doesn't validly declare
   a languages, just say it is Common Postscript).
 -----------------------------------------------------------------------------*/
-    enum postscript_language language;
+    enum PostscriptLanguage language;
 
     if (streq(inputFileName, "-"))
         /* Can't read stdin, because we need it to remain positioned for the 
@@ -399,9 +400,9 @@ languageDeclaration(char const inputFileName[],
         if (fgets(line, sizeof(line), infile) == NULL)
             language = COMMON_POSTSCRIPT;
         else {
-            const char eps_header[] = " EPSF-";
+            const char epsHeader[] = " EPSF-";
 
-            if (strstr(line, eps_header))
+            if (strstr(line, epsHeader))
                 language = ENCAPSULATED_POSTSCRIPT;
             else
                 language = COMMON_POSTSCRIPT;
@@ -418,61 +419,64 @@ languageDeclaration(char const inputFileName[],
 
 
 
-static struct box
-computeBoxToExtract(struct box const cmdline_extract_box,
+static struct Box
+computeBoxToExtract(struct Box const cmdlineExtractBox,
                     char       const inputFileName[],
                     bool       const verbose) {
 
-    struct box retval;
+    struct Box retval;
 
-    if (cmdline_extract_box.llx != -1)
+    if (cmdlineExtractBox.llx != -1)
         /* User told us what box to extract, so that's what we'll do */
-        retval = cmdline_extract_box;
+        retval = cmdlineExtractBox;
     else {
         /* Try to get the bounding box from the DSC %%BoundingBox
            statement (A Postscript comment) in the input.
         */
-        struct box ps_bb;  /* Box described by %%BoundingBox stmt in input */
+        struct Box psBb;  /* Box described by %%BoundingBox stmt in input */
 
         if (streq(inputFileName, "-"))
             /* Can't read stdin, because we need it to remain
                positioned for the Ghostscript interpreter to read it.  
             */
-            ps_bb.llx = -1;
+            psBb.llx = -1;
         else {
-            FILE *infile;
-            int found_BB, eof;  /* logical */
-            infile = pm_openr(inputFileName);
+            FILE * ifP;
+            bool foundBb;
+            bool eof;
+
+            ifP = pm_openr(inputFileName);
             
-            found_BB = FALSE;
-            eof = FALSE;
-            while (!eof && !found_BB) {
+            for (foundBb = FALSE, eof = FALSE; !foundBb && !eof; ) {
                 char line[200];
-                
-                if (fgets(line, sizeof(line), infile) == NULL)
+                char * fgetsRc;
+
+                fgetsRc = fgets(line, sizeof(line), ifP);
+
+                if (fgetsRc == NULL)
                     eof = TRUE;
                 else {
                     int rc;
                     rc = sscanf(line, "%%%%BoundingBox: %d %d %d %d",
-                                &ps_bb.llx, &ps_bb.lly, 
-                                &ps_bb.urx, &ps_bb.ury);
+                                &psBb.llx, &psBb.lly, 
+                                &psBb.urx, &psBb.ury);
                     if (rc == 4) 
-                        found_BB = TRUE;
+                        foundBb = TRUE;
                 }
             }
-            fclose(infile);
+            fclose(ifP);
 
-            if (!found_BB) {
-                ps_bb.llx = -1;
+            if (!foundBb) {
+                psBb.llx = -1;
                 pm_message("Warning: no %%%%BoundingBox statement "
-                           "in the input or command line.\n"
+                           "in the input or command line.  "
                            "Will use defaults");
             }
         }
-        if (ps_bb.llx != -1) {
+        if (psBb.llx != -1) {
             if (verbose)
                 pm_message("Using %%%%BoundingBox statement from input.");
-            retval = ps_bb;
+            retval = psBb;
         } else { 
             /* Use the center of an 8.5" x 11" page with 1" border all around*/
             retval.llx = 72;
@@ -489,13 +493,14 @@ computeBoxToExtract(struct box const cmdline_extract_box,
 
 
 
-static enum orientation
-computeOrientation(struct cmdlineInfo const cmdline, 
-                   struct box         const extract_box) {
+static enum Orientation
+computeOrientation(struct CmdlineInfo const cmdline, 
+                   struct Box         const extractBox) {
 
-    enum orientation retval;
-    unsigned int const input_width  = extract_box.urx - extract_box.llx;
-    unsigned int const input_height = extract_box.ury - extract_box.lly;
+    unsigned int const inputWidth  = extractBox.urx - extractBox.llx;
+    unsigned int const inputHeight = extractBox.ury - extractBox.lly;
+
+    enum Orientation retval;
 
     if (cmdline.orientation != UNSPECIFIED)
         retval = cmdline.orientation;
@@ -506,24 +511,24 @@ computeOrientation(struct cmdlineInfo const cmdline,
                so we can't use output dimensions to make the decision.  So
                just use the input dimensions.
             */
-            if (input_height > input_width) retval = PORTRAIT;
+            if (inputHeight > inputWidth) retval = PORTRAIT;
             else retval = LANDSCAPE;
         } else {
-            int output_width, output_height;
+            unsigned int outputWidth, outputHeight;
             if (cmdline.xsize) {
                 /* He gave xsize and ysize, so that's the output size */
-                output_width = cmdline.xsize;
-                output_height = cmdline.ysize;
+                outputWidth  = cmdline.xsize;
+                outputHeight = cmdline.ysize;
             } else {
                 /* Well then we'll just use his (or default) xmax, ymax */
-                output_width = cmdline.xmax;
-                output_height = cmdline.ymax;
+                outputWidth  = cmdline.xmax;
+                outputHeight = cmdline.ymax;
             }
 
-            if (input_height > input_width && output_height > output_width)
+            if (inputHeight > inputWidth && outputHeight > outputWidth)
                 retval = PORTRAIT;
-            else if (input_height < input_width && 
-                     output_height < output_width)
+            else if (inputHeight < inputWidth && 
+                     outputHeight < outputWidth)
                 retval = PORTRAIT;
             else 
                 retval = LANDSCAPE;
@@ -534,32 +539,39 @@ computeOrientation(struct cmdlineInfo const cmdline,
 
 
 
-static struct box
-addBorders(struct box const input_box, 
-           float      const xborder_scale,
-           float      const yborder_scale,
+static struct Box
+addBorders(struct Box const inputBox, 
+           float      const xborderScale,
+           float      const yborderScale,
            bool       const verbose) {
 /*----------------------------------------------------------------------------
-   Return a box which is 'input_box' plus some borders.
+   Return a box which is 'inputBox' plus some borders.
 
-   Add left and right borders that are the fraction 'xborder_scale' of the
+   Add left and right borders that are the fraction 'xborderScale' of the
    width of the input box; likewise for top and bottom borders with 
-   'yborder_scale'.
+   'yborderScale'.
 -----------------------------------------------------------------------------*/
-    struct box retval;
+    unsigned int const leftRightBorderSize = 
+        ROUNDU((inputBox.urx - inputBox.llx) * xborderScale);
+    unsigned int const topBottomBorderSize = 
+        ROUNDU((inputBox.ury - inputBox.lly) * yborderScale);
 
-    const int left_right_border_size = 
-        (int) ((input_box.urx - input_box.llx) * xborder_scale + 0.5);
-    const int top_bottom_border_size = 
-        (int) ((input_box.ury - input_box.lly) * yborder_scale + 0.5);
+    struct Box retval;
 
-    retval.llx = input_box.llx - left_right_border_size;
-    retval.lly = input_box.lly - top_bottom_border_size;
-    retval.urx = input_box.urx + left_right_border_size;
-    retval.ury = input_box.ury + top_bottom_border_size;
+
+    assert(inputBox.urx >= inputBox.llx);
+    assert(inputBox.ury >= inputBox.lly);
+
+    assert(inputBox.llx >= leftRightBorderSize);
+    assert(inputBox.lly >= topBottomBorderSize);
+
+    retval.llx = inputBox.llx - leftRightBorderSize;
+    retval.lly = inputBox.lly - topBottomBorderSize;
+    retval.urx = inputBox.urx + leftRightBorderSize;
+    retval.ury = inputBox.ury + topBottomBorderSize;
 
     if (verbose)
-        pm_message("With borders, extracted box is ((%d,%d),(%d,%d))",
+        pm_message("With borders, extracted box is ((%u,%u),(%u,%u))",
                    retval.llx, retval.lly, retval.urx, retval.ury);
 
     return retval;
@@ -568,8 +580,8 @@ addBorders(struct box const input_box,
 
 
 static const char *
-computePstrans(struct box       const box,
-               enum orientation const orientation,
+computePstrans(struct Box       const box,
+               enum Orientation const orientation,
                int              const xsize,
                int              const ysize, 
                int              const xres,
@@ -598,11 +610,20 @@ computePstrans(struct box       const box,
 
 
 static const char *
-computeOutfileArg(struct cmdlineInfo const cmdline) {
+computeOutfileArg(struct CmdlineInfo const cmdline) {
+/*----------------------------------------------------------------------------
+   Determine the value for the "OutputFile" variable to pass to Ghostscript,
+   which is what tells Ghostscript where to put its output.  This is either
+   a pattern such as "foo%03d.ppm" or "-" to indicate Standard Output.
 
+   We go with "-" if, according to 'cmdline', the user asked for
+   Standard Output or is giving his input on Standard Input.  Otherwise,
+   we go with the pattern, based on the name of the input file and output
+   format type the user requested.
+-----------------------------------------------------------------------------*/
     const char * retval;  /* malloc'ed */
 
-    if (cmdline.goto_stdout)
+    if (cmdline.stdout)
         retval = strdup("-");
     else if (streq(cmdline.inputFileName, "-"))
         retval = strdup("-");
@@ -616,12 +637,12 @@ computeOutfileArg(struct cmdlineInfo const cmdline) {
             /* The input file name ends in ".ps".  Chop it off. */
             basename[strlen(basename)-3] = '\0';
 
-        switch (cmdline.format_type) {
+        switch (cmdline.formatType) {
         case PBM_TYPE: suffix = "pbm"; break;
         case PGM_TYPE: suffix = "pgm"; break;
         case PPM_TYPE: suffix = "ppm"; break;
-        default: pm_error("Internal error: invalid value for format_type: %d",
-                          cmdline.format_type);
+        default: pm_error("Internal error: invalid value for formatType: %d",
+                          cmdline.formatType);
         }
         pm_asprintf(&retval, "%s%%03d.%s", basename, suffix);
 
@@ -633,17 +654,17 @@ computeOutfileArg(struct cmdlineInfo const cmdline) {
 
 
 static const char *
-computeGsDevice(int  const format_type,
+computeGsDevice(int  const formatType,
                 bool const forceplain) {
 
     const char * basetype;
     const char * retval;
 
-    switch (format_type) {
+    switch (formatType) {
     case PBM_TYPE: basetype = "pbm"; break;
     case PGM_TYPE: basetype = "pgm"; break;
     case PPM_TYPE: basetype = "ppm"; break;
-    default: pm_error("Internal error: invalid value format_type");
+    default: pm_error("Internal error: invalid value formatType");
     }
     if (forceplain)
         retval = strdup(basetype);
@@ -703,8 +724,8 @@ findGhostscriptProg(const char ** const retvalP) {
 
 static void
 execGhostscript(int          const inputPipeFd,
-                char         const ghostscript_device[],
-                char         const outfile_arg[], 
+                char         const ghostscriptDevice[],
+                char         const outfileArg[], 
                 int          const xsize,
                 int          const ysize, 
                 int          const xres,
@@ -729,8 +750,8 @@ execGhostscript(int          const inputPipeFd,
     close(inputPipeFd);
 
     pm_asprintf(&arg0, "gs");
-    pm_asprintf(&deviceopt, "-sDEVICE=%s", ghostscript_device);
-    pm_asprintf(&outfileopt, "-sOutputFile=%s", outfile_arg);
+    pm_asprintf(&deviceopt, "-sDEVICE=%s", ghostscriptDevice);
+    pm_asprintf(&outfileopt, "-sOutputFile=%s", outfileArg);
     pm_asprintf(&gopt, "-g%dx%d", xsize, ysize);
     pm_asprintf(&ropt, "-r%dx%d", xres, yres);
     pm_asprintf(&textalphabitsopt, "-dTextAlphaBits=%u", textalphabits);
@@ -760,26 +781,26 @@ execGhostscript(int          const inputPipeFd,
 
 
 static void
-executeGhostscript(char                     const pstrans[],
-                   char                     const ghostscript_device[],
-                   char                     const outfile_arg[], 
-                   int                      const xsize,
-                   int                      const ysize, 
-                   int                      const xres,
-                   int                      const yres,
-                   unsigned int             const textalphabits,
-                   char                     const inputFileName[], 
-                   enum postscript_language const language,
-                   bool                     const verbose) {
+executeGhostscript(char                    const pstrans[],
+                   char                    const ghostscriptDevice[],
+                   char                    const outfileArg[], 
+                   int                     const xsize,
+                   int                     const ysize, 
+                   int                     const xres,
+                   int                     const yres,
+                   unsigned int            const textalphabits,
+                   char                    const inputFileName[], 
+                   enum PostscriptLanguage const language,
+                   bool                    const verbose) {
 
-    int gs_exit;  /* wait4 exit code from Ghostscript */
-    FILE *gs;  /* Pipe to Ghostscript's standard input */
-    FILE *infile;
+    int gsTermStatus;  /* termination status of Ghostscript process */
+    FILE * pipeToGsP;  /* Pipe to Ghostscript's standard input */
+    FILE * ifP;
     int rc;
     int eof;  /* End of file on input */
     int pipefd[2];
 
-    if (strlen(outfile_arg) > 80)
+    if (strlen(outfileArg) > 80)
         pm_error("output file spec too long.");
     
     rc = pm_pipe(pipefd);
@@ -794,7 +815,7 @@ executeGhostscript(char                     const pstrans[],
     else if (rc == 0) {
         /* Child process */
         close(pipefd[1]);
-        execGhostscript(pipefd[0], ghostscript_device, outfile_arg,
+        execGhostscript(pipefd[0], ghostscriptDevice, outfileArg,
                         xsize, ysize, xres, yres, textalphabits,
                         inputFileName, verbose);
     } else {
@@ -803,11 +824,11 @@ executeGhostscript(char                     const pstrans[],
         /* parent process */
         close(pipefd[0]);
 
-        gs = fdopen(pipeToGhostscriptFd, "w");
-        if (gs == NULL) 
+        pipeToGsP = fdopen(pipeToGhostscriptFd, "w");
+        if (pipeToGsP == NULL) 
             pm_error("Unable to open stream on pipe to Ghostscript process.");
     
-        infile = pm_openr(inputFileName);
+        ifP = pm_openr(inputFileName);
         /*
           In encapsulated Postscript, we the encapsulator are supposed to
           handle showing the page (which we do by passing a showpage
@@ -822,12 +843,12 @@ executeGhostscript(char                     const pstrans[],
           here, I think, so I boiled it down a bit.  JM 
         */
         if (language == ENCAPSULATED_POSTSCRIPT)
-            fprintf(gs, "\n/b4_Inc_state save def /showpage { } def\n");
+            fprintf(pipeToGsP, "\n/b4_Inc_state save def /showpage { } def\n");
  
         if (verbose) 
             pm_message("Postscript prefix command: '%s'", pstrans);
 
-        fprintf(gs, "%s\n", pstrans);
+        fprintf(pipeToGsP, "%s\n", pstrans);
 
         /* If our child dies, it closes the pipe and when we next write to it,
            we get a SIGPIPE.  We must survive that signal in order to report
@@ -840,34 +861,34 @@ executeGhostscript(char                     const pstrans[],
             char buffer[4096];
             int bytes_read;
             
-            bytes_read = fread(buffer, 1, sizeof(buffer), infile);
+            bytes_read = fread(buffer, 1, sizeof(buffer), ifP);
             if (bytes_read == 0) 
                 eof = TRUE;
             else 
-                fwrite(buffer, 1, bytes_read, gs);
+                fwrite(buffer, 1, bytes_read, pipeToGsP);
         }
-        pm_close(infile);
+        pm_close(ifP);
 
         if (language == ENCAPSULATED_POSTSCRIPT)
-            fprintf(gs, "\nb4_Inc_state restore showpage\n");
+            fprintf(pipeToGsP, "\nb4_Inc_state restore showpage\n");
 
-        fclose(gs);
+        fclose(pipeToGsP);
         
-        waitpid(ghostscriptPid, &gs_exit, 0);
+        waitpid(ghostscriptPid, &gsTermStatus, 0);
         if (rc < 0)
             pm_error("Wait for Ghostscript process to terminated failed.  "
                      "errno = %d (%s)", errno, strerror(errno));
 
-        if (gs_exit != 0) {
-            if (WIFEXITED(gs_exit))
+        if (gsTermStatus != 0) {
+            if (WIFEXITED(gsTermStatus))
                 pm_error("Ghostscript failed.  Exit code=%d\n", 
-                         WEXITSTATUS(gs_exit));
-            else if (WIFSIGNALED(gs_exit))
+                         WEXITSTATUS(gsTermStatus));
+            else if (WIFSIGNALED(gsTermStatus))
                 pm_error("Ghostscript process died due to a signal %d.",
-                         WTERMSIG(gs_exit));
+                         WTERMSIG(gsTermStatus));
             else 
                 pm_error("Ghostscript process died with exit code %d", 
-                         gs_exit);
+                         gsTermStatus);
         }
     }
 }
@@ -877,22 +898,22 @@ executeGhostscript(char                     const pstrans[],
 int
 main(int argc, char ** argv) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     const char * inputFileName;  /* malloc'ed */
         /* The file specification of our Postscript input file */
     unsigned int xres, yres;    /* Resolution in pixels per inch */
     unsigned int xsize, ysize;  /* output image size in pixels */
-    struct box extract_box;
+    struct Box extractBox;
         /* coordinates of the box within the input we are to extract; i.e.
            that will become the output. 
            */
-    struct box bordered_box;
+    struct Box borderedBox;
         /* Same as above, but expanded to include borders */
 
-    enum postscript_language language;
-    enum orientation orientation;
-    const char * ghostscript_device;
-    const char * outfile_arg;
+    enum PostscriptLanguage language;
+    enum Orientation orientation;
+    const char * ghostscriptDevice;
+    const char * outfileArg;
     const char * pstrans;
 
     pnm_init(&argc, argv);
@@ -901,36 +922,36 @@ main(int argc, char ** argv) {
 
     addPsToFileName(cmdline.inputFileName, &inputFileName, cmdline.verbose);
 
-    extract_box = computeBoxToExtract(cmdline.extract_box, inputFileName, 
+    extractBox = computeBoxToExtract(cmdline.extractBox, inputFileName, 
                                       cmdline.verbose);
 
     language = languageDeclaration(inputFileName, cmdline.verbose);
     
-    orientation = computeOrientation(cmdline, extract_box);
+    orientation = computeOrientation(cmdline, extractBox);
 
-    bordered_box = addBorders(extract_box, cmdline.xborder, cmdline.yborder,
-                              cmdline.verbose);
+    borderedBox = addBorders(extractBox, cmdline.xborder, cmdline.yborder,
+                             cmdline.verbose);
 
-    computeSizeRes(cmdline, orientation, bordered_box, 
+    computeSizeRes(cmdline, orientation, borderedBox, 
                    &xsize, &ysize, &xres, &yres);
     
-    pstrans = computePstrans(bordered_box, orientation,
+    pstrans = computePstrans(borderedBox, orientation,
                              xsize, ysize, xres, yres);
 
-    outfile_arg = computeOutfileArg(cmdline);
+    outfileArg = computeOutfileArg(cmdline);
 
-    ghostscript_device = 
-        computeGsDevice(cmdline.format_type, cmdline.forceplain);
+    ghostscriptDevice = 
+        computeGsDevice(cmdline.formatType, cmdline.forceplain);
     
-    pm_message("Writing %s file", ghostscript_device);
+    pm_message("Writing %s file", ghostscriptDevice);
     
-    executeGhostscript(pstrans, ghostscript_device, outfile_arg, 
+    executeGhostscript(pstrans, ghostscriptDevice, outfileArg, 
                        xsize, ysize, xres, yres, cmdline.textalphabits,
                        inputFileName,
                        language, cmdline.verbose);
 
-    pm_strfree(ghostscript_device);
-    pm_strfree(outfile_arg);
+    pm_strfree(ghostscriptDevice);
+    pm_strfree(outfileArg);
     pm_strfree(pstrans);
     
     return 0;
