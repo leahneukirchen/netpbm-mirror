@@ -942,7 +942,7 @@ main(int argc, char ** argv) {
     ghostscriptDevice = 
         computeGsDevice(cmdline.formatType, cmdline.forceplain);
     
-    pm_message("Writing %s file", ghostscriptDevice);
+    pm_message("Writing %s format", ghostscriptDevice);
     
     executeGhostscript(pstrans, ghostscriptDevice, outfileArg, 
                        xsize, ysize, xres, yres, cmdline.textalphabits,
