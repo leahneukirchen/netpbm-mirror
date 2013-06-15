@@ -27,7 +27,6 @@ pstopnm - convert a PostScript file to a PNM image
 
 [<B>-xborder=</B><I>frac</I>]
 [<B>-yborder=</B><I>frac</I>]
-5~
 [<B>-landscape</B>]
 
 [<B>-portrait</B>]
@@ -94,15 +93,15 @@ output files, so may not be entirely consistent with most Netpbm
 programs.
 
 <P><I>psfile</I>[<B>.ps</B>] is the name of the input file.
-<B>pstopnm</B> will add the <B>ps</B> to the end of the name you
-specify if no file exists by the exact name you specify, but one with
-added does.  Use <B>-</B> to indicate Standard Input.
+<B>pstopnm</B> will add the <B>ps</B> to the end of the name you specify if no
+file exists by the exact name you specify, but one with added does.
+For Standard Input, use <B>-</B> or just don't give any argument.
 
-<P>If you use the <B>-stdout </B> option, <B>pstopnm</B> outputs
-images of all the pages as a multi-image file to Standard Output.
-Otherwise, <B>pstopnm</B> creates one file for each page in the
-Postscript document.  The files are named as follows: If the input
-file is named <B>psfile.ps</B>, the name of the files will be
+<P>If you use the <B>-stdout </B> option or your input is from Standard
+Input, <B>pstopnm</B> outputs images of all the pages as a multi-image file to
+Standard Output.  Otherwise, <B>pstopnm</B> creates one file for each page in
+the Postscript input.  The files are named as follows: If the input file is
+named <B>psfile.ps</B>, the name of the files will be
 <B>psfile001.ppm</B>, <B>psfile002.ppm</B>, etc.  The filetype suffix
 is <B>.ppm</B>, <B>.pgm</B>, or <B>.pbm</B>, depending on which kind
 of output you choose with your invocation options.  If the input file
@@ -115,6 +114,21 @@ etc.
 Netpbm programs, because it does not default to Standard Output.  This
 is for historical reasons, based on the fact that the Netpbm formats
 did not always provide for a sequence of images in a single file.
+
+<p>When your input is from Standard Input, you may feed multiple Encapsulated
+Postscript documents, one after another, and <b>pstopnm</b> converts every
+document and places it in the Standard Output stream as an image.  But if your
+input is from a named file, <b>pstopnm</b> expects the file to be an
+Encapsulated Postscript file, which means it contains only one Enapsulated
+Postscript document.  If the file contains multiple concatenated
+documents, <b>pstopnm</b> ignores every document but the first.  This
+distinction does not exist for non-EPSF Postscript input
+&mdash; <b>pstopnm</b> generates an output image for each page of the input
+regardless of whether the input is from Standard Input or from a named file.
+
+<p>Note that you can generated both kinds of files &mdash; concatenated EPSF
+and multi-page non-EPSF &mdash; with <b>pnmtops</b>, selecting with the
+<b>-setpage</b> option.
 
 <p>Each output image contains a rectangular area of the page to which
 it pertains.  See <a href="#dimensions">the Dimensions section</a> for
