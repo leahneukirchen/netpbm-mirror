@@ -598,6 +598,11 @@ readColorFile(const char *    const fileName,
                empty file
             */
             *nColorsP = 0;
+            {
+                unsigned int i;
+                for (i = 0; i < MAXCOLORNAMES; ++i)
+                    colornames[i] = NULL;
+            }
             *errorP = NULL;
         } else {
             readOpenColorFile(colorFileP, nColorsP, colornames, colors, cht,
