@@ -18,6 +18,11 @@ not yet  BJH  Release 10.63.00
               411toppm: check for inconsistencies between specified
               width and height and size of input.
 
+              giftopnm: fix bug: erroneously claims GIF ends prematurely.
+              Broken in Netpbm 10.38 (March 2007).  This affects all GIfs, but
+              the problem does not manifest when Netpbm was built with Gcc
+              from 2007 and later.
+
               pnmtops: Fix bug: only first image gets converted.  Broken in
               Netpbm 10.56 (September 2011).
 
