@@ -6,19 +6,16 @@ Updated: 01 May 2005
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 pbmtoppa - convert PBM image to HP Printer Performance Architecture (PPA)
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>pbmtoppa</B>
 [<I>pbm_file</I>
 [<I>ppa_file</I>]]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -77,8 +74,7 @@ reduced compared to a conventional printer.
 (Printer Control Language) language.  HP manufactured PPA printers for only
 a few years, and no one else ever did.
 
-<A NAME="options">&nbsp;</A>
-<H2>OPTIONS</H2>
+<H2 id="options">OPTIONS</H2>
 
 <DL COMPACT>
 <DT><B>-v</B> <I>version</I>
@@ -166,8 +162,7 @@ place of the <B>-f</B> option.
 non-null prefix of these words.  Valid values are the same as with the
 corresponding invocation parameters.
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>EXAMPLES</H2>
+<H2 id="examples">EXAMPLES</H2>
 
 <P>Print a test pattern: 
 <PRE>
@@ -187,8 +182,7 @@ gs -sDEVICE=rawpbm -q -dNOPAUSE -r600 \
 | pbmtoppa | lpr
 </pre>
 
-<A NAME="calibration">&nbsp;</A>
-<H2>CALIBRATION</H2>
+<H2 id="calibration">CALIBRATION</H2>
 
 <p>To be able to print successfully and properly, you need to tell
 <B>pbmtoppa</B> an X and a Y offset appropriate for your printer to
@@ -230,8 +224,7 @@ be in the center of the paper.  Also, the margins should be able to be
 as small as 1/4 inch without causing the printer to choke with
 'blinking lights syndrome'.
 
-<A NAME="lbAH">&nbsp;</A>
-<H2>REDHAT LINUX INSTALLATION</H2>
+<H2 id="redhat">RED HAT LINUX INSTALLATION</H2>
 
 <P>RedHat users may find the following tip from Panayotis Vryonis
 &lt;<A HREF="mailto:vrypan@hol.gr">vrypan@hol.gr</A>&gt; helpful.  The
@@ -246,31 +239,33 @@ Also, use the pbmraw GSDriver if you have it; it's faster.
 /usr/lib/rhs/rhs-printfilters ) and append the following lines:
 
 <PRE>
+<code>
+  
 ----------------------Cut here-----------------------
 
 StartEntry: DeskJet720C
-&nbsp;&nbsp;GSDriver:&nbsp;pbm
-&nbsp;&nbsp;Description:&nbsp;{HP&nbsp;DeskJet&nbsp;720C}
-&nbsp;&nbsp;About:&nbsp;{&nbsp;\
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;This&nbsp;driver&nbsp;supports&nbsp;the&nbsp;HP&nbsp;DeskJet&nbsp;720C&nbsp;\
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;inkjet&nbsp;printer.&nbsp;\
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;It&nbsp;does&nbsp;does&nbsp;not&nbsp;support&nbsp;color&nbsp;printing.&nbsp;\
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;IMPORTANT!&nbsp;Insert&nbsp;\
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&quot;-&nbsp;|&nbsp;pbm2ppa&nbsp;-&quot;&nbsp;\
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;in&nbsp;the&nbsp;&quot;Extra&nbsp;GS&nbsp;Options&quot;&nbsp;field.\
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+  GSDriver: pbm
+  Description:&nbsp;{HP&nbsp;DeskJet&nbsp;720C}
+  About: { \
+        This driver drives the HP DeskJet 720C \
+        inkjet printer. \
+        It does not support color printing. \
+        IMPORTANT! Insert \
+           &quot;- | pbm2ppa -&quot; \
+        in the &quot;Extra GS Options &quot; field.\
+      }
 
-&nbsp;&nbsp;Resolution:&nbsp;{600}&nbsp;{600}&nbsp;{}
+  Resolution: {600} {600} {}
 
 EndEntry
 ----------------------------------------------------
+  </code>
 </pre>
 
 <P>Now you can add an HP720C printer just like any other, using
 printtool.
 
-<A NAME="lbAI">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealos">SEE ALSO</H2>
 
 <B><A HREF="pbmpage.html">pbmpage</A></B>,
 <B><A HREF="pstopnm.html">pstopnm</A></B>,
@@ -288,27 +283,24 @@ source code contains detailed instructions on setting up a system to
 use pbmtoppa to allow convenient printing on HP PPA printers.  It was
 written by Michael Buehlmann.
 
-<A NAME="lbAJ">&nbsp;</A>
-<H2>AUTHOR</H2>
+<H2 id="author">AUTHOR</H2>
 
 <p>Tim Norman.  Copyright (C) 1998.  Licensed under GNU Public License
 
 <P>Manual page by Bryan Henderson, May 2000.
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
 <LI><A HREF="#options">OPTIONS</A>
 <LI><A HREF="#configfile">CONFIGURATION FILES</A>
-<LI><A HREF="#lbAF">EXAMPLES</A>
+<LI><A HREF="#examples">EXAMPLES</A>
 <LI><A HREF="#calibration">CALIBRATION</A>
-<LI><A HREF="#lbAH">REDHAT LINUX INSTALLATION</A>
-<LI><A HREF="#lbAI">SEE ALSO</A>
-<LI><A HREF="#lbAJ">AUTHOR</A>
+<LI><A HREF="#redhat">REDHAT LINUX INSTALLATION</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
 </UL>
 </BODY>
 </HTML>
