@@ -1291,7 +1291,7 @@ pnm_addopacityrow(const struct pam * const pamP,
 
 void
 pnm_getopacity(const struct pam * const pamP,
-               bool *             const haveOpacityP,
+               int *              const haveOpacityP,
                unsigned int *     const opacityPlaneP) {
 
     /* Usage note: this is obsolete since we added 'have_opacity', etc.
