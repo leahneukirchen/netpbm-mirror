@@ -65,7 +65,8 @@ int main _ANSI_ARGS_((int argc, char **argv));
  * GLOBAL VARIABLES *
  *==================*/
 
-boolean showBitRatePerFrame;
+bool showBitRatePerFrame;
+bool computeMVHist = FALSE;
 boolean frameSummary;
 
 extern time_t IOtime;
@@ -79,9 +80,7 @@ boolean noFrameSummaryOption = FALSE;
 boolean debugSockets = FALSE;
 boolean debugMachines = FALSE;
 boolean bitRateInfoOption = FALSE;
-boolean computeMVHist = FALSE;
 int     baseFormat;
-extern  boolean specificsOn;
 extern  FrameSpecList *fsl;
 boolean pureDCT=FALSE;
 char    encoder_name[1024];

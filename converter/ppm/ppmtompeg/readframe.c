@@ -67,9 +67,6 @@ struct YuvLine {
  * Global VARIABLES *
  *==================*/
 
-extern boolean GammaCorrection;
-extern float GammaValue;
-extern int outputWidth,outputHeight;
 boolean resizeFrame;
 const char *CurrFile;
 
@@ -828,7 +825,7 @@ MpegFrame *mf;
 int w,h;
 {
   static int GammaVal[256];
-  static boolean init_done=FALSE;
+  static bool init_done=FALSE;
   int i,j;
 
   if (!init_done) {
@@ -882,7 +879,7 @@ DoKillDim(mf, w, h)
 MpegFrame *mf;
 int w,h;
 {
-  static boolean init_done=FALSE;
+  static bool init_done=FALSE;
   static unsigned char mapper[256];
   register int i,j;
   double slope, intercept;
