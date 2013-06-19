@@ -112,7 +112,7 @@ srfAlphaFromTuple(tuple              const t,
                   const struct pam * const pamP) {
 
     uint8_t retval;
-    bool haveOpacity;
+    int haveOpacity;
     unsigned int opacityPlane;
 
     pnm_getopacity(pamP, &haveOpacity, &opacityPlane);
@@ -181,7 +181,7 @@ main(int argc, const char * argv[]) {
   struct cmdlineInfo cmdline;
   FILE *             ifP;
   struct srf         srf;
-  bool               eof;   /* No more images in input */
+  int                eof;   /* No more images in input */
   unsigned int       imageSeq;
       /* Sequence of current image in input file.  First = 0 */
 

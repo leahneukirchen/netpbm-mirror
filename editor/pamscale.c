@@ -1392,7 +1392,7 @@ outputOneResampledRow(const struct pam * const outpamP,
 -----------------------------------------------------------------------------*/
     unsigned int col;
 
-    bool haveOpacity;           /* There is an opacity plane */
+    int haveOpacity;           /* There is an opacity plane */
     unsigned int opacityPlane;  /* Plane number of opacity plane, if any */
 
     pnm_getopacity(outpamP, &haveOpacity, &opacityPlane);

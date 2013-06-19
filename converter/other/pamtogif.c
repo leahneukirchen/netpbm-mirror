@@ -220,7 +220,7 @@ closestColor(tuple         const color,
     
     unsigned int i;
     unsigned int imin, dmin;
-    bool fits;
+    int fits;
 
     dmin = UINT_MAX;
     imin = 0;
@@ -1544,7 +1544,7 @@ computeTransparent(char          const colorarg[],
         const char * colorspec;
         bool exact;
         tuple transcolor;
-        bool found;
+        int found;
         int colorindex;
         
         if (colorarg[0] == '=') {

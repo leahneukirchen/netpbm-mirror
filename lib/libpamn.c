@@ -498,7 +498,7 @@ gammaCommon(struct pam *  const pamP,
 
     unsigned int plane;
     unsigned int opacityPlane;
-    bool haveOpacity;
+    int haveOpacity;
     
     pnm_getopacity(pamP, &haveOpacity, &opacityPlane);
 
@@ -548,7 +548,7 @@ applyopacityCommon(enum applyUnapply const applyUnapply,
    if the foreground values had already been so multiplied.
 -----------------------------------------------------------------------------*/
     unsigned int opacityPlane;
-    bool haveOpacity;
+    int haveOpacity;
     
     pnm_getopacity(pamP, &haveOpacity, &opacityPlane);
 
@@ -645,7 +645,7 @@ createUngammaMapOffset(const struct pam * const pamP,
         MALLOCARRAY(ungammaTransformMap, pamP->maxval+1);
 
         if (ungammaTransformMap != NULL) {
-            bool haveOpacity;
+            int haveOpacity;
             unsigned int opacityPlane;
             unsigned int plane;
 

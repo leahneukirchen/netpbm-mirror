@@ -10,5 +10,5 @@ void
 foveon_load_raw(void);
 
 void  
-foveon_coeff(bool * const useCoeffP,
-             float        coeff[3][4]);
+foveon_coeff(int * const useCoeffP,
+             float       coeff[3][4]);

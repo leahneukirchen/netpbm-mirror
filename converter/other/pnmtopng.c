@@ -2630,7 +2630,7 @@ convertpnm(struct cmdlineInfo const cmdline,
         /* The color that is to be transparent, with maxval equal to that
            of the input image.
         */
-    int transExact;  
+    bool transExact;  
         /* boolean: the user wants only the exact color he specified to be
            transparent; not just something close to it.
         */

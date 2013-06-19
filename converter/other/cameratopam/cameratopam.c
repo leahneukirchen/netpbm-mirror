@@ -69,7 +69,7 @@ int fuji_secondary;
 float cam_mul[4], pre_mul[4], coeff[3][4];
 int histogram[3][0x2000];
 jmp_buf failure;
-bool use_secondary;
+int use_secondary;
 bool verbose;
 
 #ifdef USE_LCMS

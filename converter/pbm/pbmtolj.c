@@ -545,7 +545,7 @@ main(int argc, char * argv[]) {
 
     struct cmdlineInfo cmdline;
     FILE * ifP;
-    bool eof;
+    int eof;
 
     pbm_init(&argc, argv);
 

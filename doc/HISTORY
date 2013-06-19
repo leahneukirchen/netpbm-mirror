@@ -62,7 +62,8 @@ not yet  BJH  Release 10.63.00
 
               libnetpbm: fix bug: pnm_readpaminit and pnm_writepaminit set
               'opacity_plane' member of struct pam incorrectly.  No Netpbm
-              programs are affected.
+              programs are affected.  Always broken (member was added in
+              Netpbm 10.56 (September 2011)).
 
               sparc64 pbmtog3: fix bug that causes crash due to unaligned
               memory access.

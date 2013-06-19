@@ -1055,7 +1055,7 @@ main(int argc, char *argv[]) {
     const char * inputFileDescription;
     FILE* ifP;
     TIFF* tifP;
-    bool eof;
+    int eof;
     unsigned int imageSeq;
 
     pnm_init(&argc, argv);

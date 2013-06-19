@@ -323,7 +323,7 @@ doPages(FILE *         const ifP,
         unsigned int * const pagesP,
         double         const dpi) {
 
-    bool eof;
+    int eof;
     unsigned int pagesDone;
 
     eof = FALSE;

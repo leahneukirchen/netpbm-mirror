@@ -75,13 +75,13 @@ findOrAddColor(tuple          const color,
   colormap *cmapP.  If the color isn't in the map, give it a new
   colormap index, put it in the colormap, and return that.
 -----------------------------------------------------------------------------*/
-    bool found;
+    int found;
     int colorIndex;
 
     pnm_lookuptuple(&cmapP->pam, cmapP->hash, color, &found, &colorIndex);
 
     if (!found) {
-        bool fits;
+        int fits;
         unsigned int plane;
 
         colorIndex = cmapP->nColors++;

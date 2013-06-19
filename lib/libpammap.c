@@ -574,7 +574,7 @@ pnm_computetupletablehash(struct pam * const pamP,
 -----------------------------------------------------------------------------*/
     tuplehash tupletablehash;
     unsigned int i;
-    bool fits;
+    int fits;
     
     tupletablehash = pnm_createtuplehash();
 

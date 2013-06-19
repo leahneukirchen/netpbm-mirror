@@ -1015,7 +1015,7 @@ convert(FILE *           const ifP,
   a PNG image.  Otherwise, use a BMP.
 -----------------------------------------------------------------------------*/
     unsigned int imageNum;
-    bool eof;
+    int eof;
     
     for (imageNum = 0, eof = false; !eof; ++imageNum) {
         convertOneImage(imageNum, ifP, pngThreshold, mustBlackenXor,
