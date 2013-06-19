@@ -63,9 +63,6 @@
   #endif
 /* C++ has a bool type and false and true constants built in. */
 #ifndef __cplusplus
-#ifndef NOT_EXPERIMENTING
-#include <stdbool.h>   /* DEBUG */
-#else
   #ifndef HAVE_BOOL
     #define HAVE_BOOL 1
     typedef int bool;
@@ -74,7 +71,6 @@
     enum boolvalue {false=0, true=1};
     #endif
   #endif
-#endif
 
 #define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
 
