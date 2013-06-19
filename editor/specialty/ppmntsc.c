@@ -70,6 +70,61 @@ struct cmdlineInfo {
 
 
 
+static void
+parseCommandLine(int argc, const char ** argv,
+                 struct cmdlineInfo * const cmdlineP) {
+/*----------------------------------------------------------------------------
+   Note that many of the strings that this function returns in the
+   *cmdlineP structure are actually in the supplied argv array.  And
+   sometimes, one of these strings is actually just a suffix of an entry
+   in argv!
+-----------------------------------------------------------------------------*/
+    optStruct3 opt;
+    optEntry *option_def;
+        /* Instructions to OptParseOptions on how to parse our options.
+         */
+    unsigned int option_def_index;
+    unsigned int legalonly, illegalonly, correctedonly;
+
+    MALLOCARRAY(option_def, 100);
+
+    option_def_index = 0;   /* incremented by OPTENTRY */
+    OPTENT3('v', "verbose",        OPT_FLAG, NULL,  &cmdlineP->verbose,  0);
+    OPTENT3('V', "debug",          OPT_FLAG, NULL,  &cmdlineP->debug,    0);
+    OPTENT3('p', "pal",            OPT_FLAG, NULL,  &cmdlineP->pal,      0);
+    OPTENT3('l', "legalonly",      OPT_FLAG, NULL,  &legalonly,           0);
+    OPTENT3('i', "illegalonly",    OPT_FLAG, NULL,  &illegalonly,         0);
+    OPTENT3('c', "correctedonly",  OPT_FLAG, NULL,  &correctedonly,       0);
+
+    opt.opt_table = option_def;
+    opt.short_allowed = TRUE;
+    opt.allowNegNum = FALSE;
+
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+
+    if (argc - 1 == 0)
+        cmdlineP->inputFilename = "-";  /* he wants stdin */
+    else if (argc - 1 == 1)
+        cmdlineP->inputFilename = argv[1];
+    else 
+        pm_error("Too many arguments.  The only arguments accepted "
+                 "are the mask color and optional input file specification");
+
+    if (legalonly + illegalonly + correctedonly > 1)
+        pm_error("--legalonly, --illegalonly, and --correctedonly are "
+                 "conflicting options.  Specify at most one of these.");
+        
+    if (legalonly) 
+        cmdlineP->output = LEGAL_ONLY;
+    else if (illegalonly) 
+        cmdlineP->output = ILLEGAL_ONLY;
+    else if (correctedonly) 
+        cmdlineP->output = CORRECTED_ONLY;
+    else 
+        cmdlineP->output = ALL;
+}
+
+
 
 static void 
 rgbtoyiq(const int r, const int g, const int b, 
@@ -118,39 +173,39 @@ yuvtorgb(const double y, const double u, const double v,
 
 
 static void
-make_legal_yiq(const double y, const double i, const double q, 
-               double * const y_new_p, 
-               double * const i_new_p, 
-               double * const q_new_p,
-               enum legalize * const action_p
-    ) {
+makeLegalYiq(double          const y,
+             double          const i,
+             double          const q, 
+             double *        const yNewP, 
+             double *        const iNewP, 
+             double *        const qNewP,
+             enum legalize * const actionP) {
     
-    double sat_old, sat_new;
+    double satOld, satNew;
     /*
      * I and Q are legs of a right triangle.  Saturation is the hypotenuse.
      */
-    sat_old = sqrt(i*i + q*q);
-    if (y+sat_old > 1.0) {
-        const double diff = 0.5*((y+sat_old) - 1.0);
-        *y_new_p = y - diff;
-        sat_new = 1.0 - *y_new_p;
-        *i_new_p = i*(sat_new/sat_old);
-        *q_new_p = q*(sat_new/sat_old);
-        *action_p = LOWER_SAT;
-    } else if (y-sat_old <= -0.251) {
-        const double diff = 0.5*((sat_old-y) - 0.251);
-        *y_new_p = y + diff;
-        sat_new = 0.250 + *y_new_p;
-        *i_new_p = i*(sat_new/sat_old);
-        *q_new_p = q*(sat_new/sat_old);
-        *action_p = RAISE_SAT;
+    satOld = sqrt(SQR(i) + SQR(q));
+    if (y+satOld > 1.0) {
+        const double diff = 0.5*((y + satOld) - 1.0);
+        *yNewP = y - diff;
+        satNew = 1.0 - *yNewP;
+        *iNewP = i * (satNew/satOld);
+        *qNewP = q * (satNew/satOld);
+        *actionP = LOWER_SAT;
+    } else if (y - satOld <= -0.251) {
+        const double diff = 0.5*((satOld - y) - 0.251);
+        *yNewP = y + diff;
+        satNew = 0.250 + *yNewP;
+        *iNewP = i * (satNew/satOld);
+        *qNewP = q * (satNew/satOld);
+        *actionP = RAISE_SAT;
     } else {
-        *y_new_p = y;
-        *i_new_p = i;
-        *q_new_p = q;
-        *action_p = ALREADY_LEGAL;
+        *yNewP = y;
+        *iNewP = i;
+        *qNewP = q;
+        *actionP = ALREADY_LEGAL;
     }
-    return;
 }
 
 
@@ -206,7 +261,7 @@ make_legal_yiq_i(const int r_in, const int g_in, const int b_in,
      * Convert to YIQ and compute the new saturation.
      */
     rgbtoyiq(r_in, g_in, b_in, &y, &i, &q);
-    make_legal_yiq(y, i, q, &y_new, &i_new, &q_new, action_p);
+    makeLegalYiq(y, i, q, &y_new, &i_new, &q_new, action_p);
     if (*action_p != ALREADY_LEGAL)
         /*
          * Given the new I and Q, compute new RGB values.
@@ -295,204 +350,155 @@ make_legal_yuv_b(const pixel input,
 
 
 static void 
-report_mapping(const pixel old_pixel, const pixel new_pixel) {
+reportMapping(pixel const oldPixel,
+              pixel const newPixel) {
 /*----------------------------------------------------------------------------
-  Assuming old_pixel and new_pixel are input and output pixels,
+  Assuming oldPixel and newPixel are input and output pixels,
   tell the user that we changed a pixel to make it legal, if in fact we
   did and it isn't the same change that we just reported.
 -----------------------------------------------------------------------------*/
-    static pixel last_changed_pixel;
-    static int first_time = TRUE;
+    static pixel lastChangedPixel;
+    static bool firstTime = TRUE;
 
-    if (!PPM_EQUAL(old_pixel, new_pixel) && 
-        (first_time || PPM_EQUAL(old_pixel, last_changed_pixel))) {
-        pm_message("Mapping %d %d %d -> %d %d %d\n",
-                   PPM_GETR(old_pixel),
-                   PPM_GETG(old_pixel),
-                   PPM_GETB(old_pixel),
-                   PPM_GETR(new_pixel),
-                   PPM_GETG(new_pixel),
-                   PPM_GETB(new_pixel)
+    if (!PPM_EQUAL(oldPixel, newPixel) && 
+        (firstTime || PPM_EQUAL(oldPixel, lastChangedPixel))) {
+        pm_message("Mapping %u %u %u -> %u %u %u\n",
+                   PPM_GETR(oldPixel),
+                   PPM_GETG(oldPixel),
+                   PPM_GETB(oldPixel),
+                   PPM_GETR(newPixel),
+                   PPM_GETG(newPixel),
+                   PPM_GETB(newPixel)
             );
 
-        last_changed_pixel = old_pixel;
-        first_time = FALSE;
+        lastChangedPixel = oldPixel;
+        firstTime = FALSE;
     }    
 }
 
 
 
 static void
-convert_one_image(FILE * const ifp, struct cmdlineInfo const cmdline, 
-                  bool * const eofP, 
-                  int * const hicountP, int * const locountP) {
+convertOneImage(FILE *             const ifP,
+                struct cmdlineInfo const cmdline, 
+                unsigned int *     const hiCountP,
+                unsigned int *     const loCountP) {
 
     /* Parameters of input image: */
     int rows, cols;
     pixval maxval;
     int format;
 
-    ppm_readppminit(ifp, &cols, &rows, &maxval, &format);
+    ppm_readppminit(ifP, &cols, &rows, &maxval, &format);
     ppm_writeppminit(stdout, cols, rows, maxval, FALSE);
     {
-        pixel* const input_row = ppm_allocrow(cols);
-        pixel* const output_row = ppm_allocrow(cols);
-        pixel last_illegal_pixel;
-        /* Value of the illegal pixel we most recently processed */
+        pixel * const inputRow = ppm_allocrow(cols);
+        pixel * const outputRow = ppm_allocrow(cols);
+
+        pixel lastIllegalPixel;
+            /* Value of the illegal pixel we most recently processed */
         pixel black;
-        /* A constant - black pixel */
+            /* A constant - black pixel */
 
         PPM_ASSIGN(black, 0, 0, 0);
 
-        PPM_ASSIGN(last_illegal_pixel, 0, 0, 0);  /* initial value */
+        PPM_ASSIGN(lastIllegalPixel, 0, 0, 0);  /* initial value */
         {
-            int row;
+            unsigned int row;
 
-            *hicountP = 0; *locountP = 0;  /* initial values */
+            *hiCountP = 0; *loCountP = 0;  /* initial values */
 
             for (row = 0; row < rows; ++row) {
-                int col;
-                ppm_readppmrow(ifp, input_row, cols, maxval, format);
+                unsigned int col;
+                ppm_readppmrow(ifP, inputRow, cols, maxval, format);
                 for (col = 0; col < cols; ++col) {
                     pixel corrected;
-                    /* Corrected or would-be corrected value for pixel */
+                        /* Corrected or would-be corrected value for pixel */
                     enum legalize action;
-                    /* What action was used to make pixel legal */
+                        /* What action was used to make pixel legal */
                     if (cmdline.pal)
-                        make_legal_yuv_b(input_row[col],
+                        make_legal_yuv_b(inputRow[col],
                                          &corrected,
                                          &action);
                     else
-                        make_legal_yiq_b(input_row[col],
+                        make_legal_yiq_b(inputRow[col],
                                          &corrected,
                                          &action);
                         
                     if (action == LOWER_SAT) 
-                        (*hicountP)++;
+                        ++*hiCountP;
                     if (action == RAISE_SAT)
-                        (*locountP)++;
-                    if (cmdline.debug) report_mapping(input_row[col],
-                                                      corrected);
+                        ++*loCountP;
+                    if (cmdline.debug)
+                        reportMapping(inputRow[col], corrected);
                     switch (cmdline.output) {
                     case ALL:
-                        output_row[col] = corrected;
+                        outputRow[col] = corrected;
                         break;
                     case LEGAL_ONLY:
-                        output_row[col] = (action == ALREADY_LEGAL) ?
-                            input_row[col] : black;
+                        outputRow[col] = (action == ALREADY_LEGAL) ?
+                            inputRow[col] : black;
                         break;
                     case ILLEGAL_ONLY:
-                        output_row[col] = (action != ALREADY_LEGAL) ?
-                            input_row[col] : black;
+                        outputRow[col] = (action != ALREADY_LEGAL) ?
+                            inputRow[col] : black;
                         break;
                     case CORRECTED_ONLY:
-                        output_row[col] = (action != ALREADY_LEGAL) ?
+                        outputRow[col] = (action != ALREADY_LEGAL) ?
                             corrected : black;
                         break;
                     }
                 }
-                ppm_writeppmrow(stdout, output_row, cols, maxval, FALSE);
+                ppm_writeppmrow(stdout, outputRow, cols, maxval, FALSE);
             }
         }
-        ppm_freerow(output_row);
-        ppm_freerow(input_row);
+        ppm_freerow(outputRow);
+        ppm_freerow(inputRow);
     }
-}
-
-
-static void
-parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
-/*----------------------------------------------------------------------------
-   Note that many of the strings that this function returns in the
-   *cmdlineP structure are actually in the supplied argv array.  And
-   sometimes, one of these strings is actually just a suffix of an entry
-   in argv!
------------------------------------------------------------------------------*/
-    optStruct3 opt;
-    optEntry *option_def;
-        /* Instructions to OptParseOptions on how to parse our options.
-         */
-    unsigned int option_def_index;
-    unsigned int legalonly, illegalonly, correctedonly;
-
-    MALLOCARRAY(option_def, 100);
-
-    option_def_index = 0;   /* incremented by OPTENTRY */
-    OPTENT3('v', "verbose",        OPT_FLAG, NULL,  &cmdlineP->verbose,  0);
-    OPTENT3('V', "debug",          OPT_FLAG, NULL,  &cmdlineP->debug,    0);
-    OPTENT3('p', "pal",            OPT_FLAG, NULL,  &cmdlineP->pal,      0);
-    OPTENT3('l', "legalonly",      OPT_FLAG, NULL,  &legalonly,           0);
-    OPTENT3('i', "illegalonly",    OPT_FLAG, NULL,  &illegalonly,         0);
-    OPTENT3('c', "correctedonly",  OPT_FLAG, NULL,  &correctedonly,       0);
-
-    opt.opt_table = option_def;
-    opt.short_allowed = TRUE;
-    opt.allowNegNum = FALSE;
-
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
-
-    if (argc - 1 == 0)
-        cmdlineP->inputFilename = "-";  /* he wants stdin */
-    else if (argc - 1 == 1)
-        cmdlineP->inputFilename = argv[1];
-    else 
-        pm_error("Too many arguments.  The only arguments accepted "
-                 "are the mask color and optional input file specification");
-
-    if (legalonly + illegalonly + correctedonly > 1)
-        pm_error("--legalonly, --illegalonly, and --correctedonly are "
-                 "conflicting options.  Specify at most one of these.");
-        
-    if (legalonly) 
-        cmdlineP->output = LEGAL_ONLY;
-    else if (illegalonly) 
-        cmdlineP->output = ILLEGAL_ONLY;
-    else if (correctedonly) 
-        cmdlineP->output = CORRECTED_ONLY;
-    else 
-        cmdlineP->output = ALL;
 }
 
 
 
 int
-main(int argc, char **argv) {
+main(int argc, const char **argv) {
     
     struct cmdlineInfo cmdline;
     FILE * ifP;
-    int total_hicount, total_locount;
-    int image_count;
+    unsigned int totalHiCount, totalLoCount;
+    unsigned int imageCount;
 
-    bool eof;
+    int eof;
 
-    ppm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
     ifP = pm_openr(cmdline.inputFilename);
-
-    image_count = 0;    /* initial value */
-    total_hicount = 0;  /* initial value */
-    total_locount = 0;  /* initial value */
+    
+    imageCount = 0;    /* initial value */
+    totalHiCount = 0;  /* initial value */
+    totalLoCount = 0;  /* initial value */
 
     eof = FALSE;
     while (!eof) {
-        int hicount, locount;
-        convert_one_image(ifP, cmdline, &eof, &hicount, &locount);
-        image_count++;
-        total_hicount += hicount;
-        total_locount += locount;
+        unsigned int hiCount, loCount;
+
+        convertOneImage(ifP, cmdline, &hiCount, &loCount);
+
+        ++imageCount;
+        totalHiCount += hiCount;
+        totalLoCount += loCount;
+
         ppm_nextimage(ifP, &eof);
     }
 
 
 	if (cmdline.verbose) {
-        pm_message("%d images processed.", image_count);
-        pm_message("%d pixels were above the saturation limit.", 
-                   total_hicount);
-        pm_message("%d pixels were below the saturation limit.", 
-                   total_locount);
+        pm_message("%u images processed.", imageCount);
+        pm_message("%u pixels were above the saturation limit.", 
+                   totalHiCount);
+        pm_message("%u pixels were below the saturation limit.", 
+                   totalLoCount);
     }
     
     pm_close(ifP);

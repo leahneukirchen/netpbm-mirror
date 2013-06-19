@@ -990,7 +990,7 @@ main(int argc, char *argv[]) {
 
     FILE * ifP;
     struct cmdlineInfo cmdline;
-	bool eof;  /* We've hit the end of the input stream */
+	int eof;  /* We've hit the end of the input stream */
     unsigned int imageSeq;  /* Sequence number of image, starting from 0 */
 
     pnm_init(&argc, argv);

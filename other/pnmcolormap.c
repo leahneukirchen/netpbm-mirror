@@ -655,7 +655,7 @@ addImageColorsToHash(struct pam *   const pamP,
         pnm_readpamrow(pamP, tuplerow);
 
         for (col = 0; col < pamP->width; ++col) {
-            bool firstOccurrence;
+            int firstOccurrence;
 
             pnm_addtuplefreqoccurrence(pamP, tuplerow[col], tuplehash,
                                        &firstOccurrence);
@@ -688,7 +688,7 @@ computeHistogram(FILE *         const ifP,
     struct pam firstPam;
     tuplehash tuplehash;
     unsigned int colorCount;
-    bool eof;
+    int eof;
     
     pm_message("making histogram...");
 

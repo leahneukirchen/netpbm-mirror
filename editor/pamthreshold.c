@@ -658,7 +658,7 @@ main(int argc, char **argv) {
     FILE * ifP; 
     struct cmdlineInfo cmdline;
     struct pam inpam, outpam;
-    bool eof;  /* No more images in input stream */
+    int eof;  /* No more images in input stream */
 
     pnm_init(&argc, argv);
 

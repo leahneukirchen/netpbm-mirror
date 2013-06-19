@@ -171,7 +171,11 @@ doOneImage(const char * const name,
         
         pnm_freepamrow(tuplerow);
         
-        pnm_nextimage(fileP, eofP);
+        {
+            int eof;
+            pnm_nextimage(fileP, &eof);
+            *eofP = eof;
+        }
     }
 }
 
