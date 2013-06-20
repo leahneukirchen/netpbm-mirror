@@ -19,79 +19,102 @@
 
 #include "ppm.h"
 
+
+
+static void
+convertRow(const pixel *   const pixelrow,
+           unsigned int    const cols,
+           unsigned char * const yuvBuf,
+           unsigned long * const uP,
+           unsigned long * const vP,
+           unsigned long * const u0P,
+           unsigned long * const v0P,
+           unsigned long * const y2CarryP) {
+
+    unsigned int col;
+    unsigned char * yuvptr;
+
+    for (col = 0, yuvptr = &yuvBuf[0]; col < cols; col += 2) {
+        unsigned long y1, y2, u1, u2, v1, v2;
+
+        {
+            /* first pixel gives Y and 0.5 of chroma */
+            pixval const r = PPM_GETR(pixelrow[col]);
+            pixval const g = PPM_GETG(pixelrow[col]);
+            pixval const b = PPM_GETB(pixelrow[col]);
+            
+            y1 = 16829 * r + 33039 * g +  6416 * b + (*y2CarryP & 0xffff);
+            u1 = -4853 * r -  9530 * g + 14383 * b;
+            v1 = 14386 * r - 12046 * g -  2340 * b;
+        }
+        {
+            /* second pixel gives Y and 0.25 of chroma */
+            pixval const r = PPM_GETR(pixelrow[col + 1]);
+            pixval const g = PPM_GETG(pixelrow[col + 1]);
+            pixval const b = PPM_GETB(pixelrow[col + 1]);
+
+            y2 = 16829 * r + 33039 * g + 6416 * b + (y1 & 0xffff);
+            u2 = -2426 * r -  4765 * g + 7191 * b;
+            v2 =  7193 * r -  6023 * g - 1170 * b;
+        }
+        /* filter the chroma */
+        *uP = *u0P + u1 + u2 + (*uP & 0xffff);
+        *vP = *v0P + v1 + v2 + (*vP & 0xffff);
+
+        *u0P = u2;
+        *v0P = v2;
+
+        *yuvptr++ = (*uP >> 16) + 128;
+        *yuvptr++ = (y1  >> 16) +  16;
+        *yuvptr++ = (*vP >> 16) + 128;
+        *yuvptr++ = (y2  >> 16) +  16;
+
+        *y2CarryP = y2;
+    }
+}
+
+
+
 int
-main(argc, argv)
-char **argv;
-{
-	FILE *ifp;
-	pixel          *pixelrow;
-	register pixel *pP;
-	int             rows, cols, format, row;
-	register int    col;
-	pixval          maxval;
-	unsigned long   y1, y2=0, u=0, v=0, u0=0, u1, u2, v0=0, v1, v2;
-	unsigned char  *yuvbuf;
+main(int argc, const char **argv) {
 
+    FILE * ifP;
+    pixel * pixelrow;
+    int rows, cols, format;
+    pixval maxval;
+    unsigned int row;
+    unsigned char  * yuvBuf;
+    unsigned long u, v, u0, v0, y2Carry;
 
-	ppm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
-	if (argc > 2) pm_usage("[ppmfile]");
+    if (argc-1 > 1)
+        pm_error("Too many arguments: %u.  The only possible argument "
+                 "is the name of the input file", argc-1);
 
-	if (argc == 2) ifp = pm_openr(argv[1]);
-	else ifp = stdin;
+    if (argc-1 == 1)
+        ifP = pm_openr(argv[1]);
+    else
+        ifP = stdin;
 
-	ppm_readppminit(ifp, &cols, &rows, &maxval, &format);
+    ppm_readppminit(ifP, &cols, &rows, &maxval, &format);
 
     if (cols % 2 != 0)
         pm_error("Image must have even number of columns.\n"
                  "This image is %u columns wide.  Try Pamcut.", cols);
 
-	pixelrow = ((pixel*) pm_allocrow( cols, sizeof(pixel) ));
-	yuvbuf = (unsigned char *) pm_allocrow( cols, 2 );
+    pixelrow = ppm_allocrow(cols);
+    yuvBuf = (unsigned char *) pm_allocrow(cols, 2);
 
-	for (row = 0; row < rows; ++row) {
-		unsigned char *yuvptr;
+    for (row = 0, u = v = u0 = v0 = y2Carry = 0; row < rows; ++row) {
+        ppm_readppmrow(ifP, pixelrow, cols, maxval, format);
 
-		ppm_readppmrow(ifp, pixelrow, cols, maxval, format);
+        convertRow(pixelrow, cols, yuvBuf, &u, &v, &u0, &v0, &y2Carry);
+        
+        fwrite(yuvBuf, cols*2, 1, stdout);
+    }
 
-		for (col = 0, pP = pixelrow, yuvptr=yuvbuf; col < cols; col += 2, ++pP) {
-			pixval r, g, b;
+    pm_close(ifP);
 
-			/* first pixel gives Y and 0.5 of chroma */
-			r = PPM_GETR(*pP);
-			g = PPM_GETG(*pP);
-			b = PPM_GETB(*pP);
-
-			y1 = 16829 * r + 33039 * g + 6416 * b + (0xffff & y2);
-			u1 = -4853 * r - 9530 * g + 14383 * b;
-			v1 = 14386 * r - 12046 * g - 2340 * b;
-
-			pP++;
-			/* second pixel just yields a Y and 0.25 U, 0.25 V */
-			r = PPM_GETR(*pP);
-			g = PPM_GETG(*pP);
-			b = PPM_GETB(*pP);
-
-			y2 = 16829 * r + 33039 * g + 6416 * b + (0xffff & y1);
-			u2 = -2426 * r - 4765 * g + 7191 * b;
-			v2 = 7193 * r - 6023 * g - 1170 * b;
-
-			/* filter the chroma */
-			u = u0 + u1 + u2 + (0xffff & u);
-			v = v0 + v1 + v2 + (0xffff & v);
-
-			u0 = u2;
-			v0 = v2;
-
-			*yuvptr++ = (u >> 16) + 128;
-			*yuvptr++ = (y1 >> 16) + 16;
-			*yuvptr++ = (v >> 16) + 128;
-			*yuvptr++ = (y2 >> 16) + 16;
-		}
-		fwrite(yuvbuf, cols*2, 1, stdout);
-	}
-
-	pm_close(ifp);
-
-	exit(0);
+    return 0;
 }
