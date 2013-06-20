@@ -1,5 +1,7 @@
+#define _POSIX_SOURCE   /* Make sure fdopen() is in <stdio.h> */
 #include <assert.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "netpbm/pm_config.h"
 #include "netpbm/pm_c_util.h"
