@@ -26,22 +26,19 @@
 #include <string.h>
 #include <math.h>
 
+#include "pm_c_util.h"
 #include "ppm.h"
 #include "ppmdraw.h"
 #include "nstring.h"
-#ifdef DEBUG
 #include <assert.h>
-#else
-#define assert(x)
-#endif
+
+#include "autocad.h"                  /* AutoCAD standard color assignments */
+
 
 /*  Define a variable type accepting numbers -127 <= n <= 127.  But note
     that we still expect it to act UNSIGNED. */
 
 #define smallint unsigned char        /* Small integers */
-
-#define TRUE     1
-#define FALSE    0
 
 #define EOS     '\0'
 
@@ -70,17 +67,16 @@ typedef void (slvecfn)(struct svector * vec, int color);
 typedef void (slfloodfn)(struct spolygon * poly, int color);
 
 
+static unsigned long const pixmaxval = 255;  /* Largest pixel value */
+
 static int ixdots, iydots;        /* Screen size in dots */
-static FILE *slfile;              /* Slide file descriptor */
-static int blither = FALSE;       /* Dump slide file information ? */
-static int info = FALSE;          /* Print header information */
+static FILE * slfile;             /* Slide file descriptor */
+static bool blither;              /* Dump slide file information ? */
+static bool info;                 /* Print header information */
 static pixel **pixels;            /* Pixel map */
-static int pixcols, pixrows;          /* Pixel map size */
-#define pixmaxval 255             /* Largest pixel value */
+static int pixcols, pixrows;      /* Pixel map size */
 static double uscale = -1;        /* Uniform scale factor */
 static int sxsize = -1, sysize = -1;  /* Scale to X, Y size ? */
-
-#include "autocad.h"                  /* AutoCAD standard color assignments */
 
 /*  Local variables  */
 
@@ -94,11 +90,11 @@ struct slhead {
     char spad;                /* Pad to even byte length */
 };
 
-static int adjust = FALSE;        /* Adjust to correct aspect ratio ? */
-static struct slhead slfrof;          /* Slide file header */
-static long xfac, yfac;           /* Aspect ratio scale factors */
+static bool adjust;           /* Adjust to correct aspect ratio ? */
+static struct slhead slfrof;  /* Slide file header */
+static long xfac, yfac;       /* Aspect ratio scale factors */
 
-static int sdrawkcab;
+static bool sdrawkcab;
     /* Slide drawing kinematic conversion of ass-backwards data flag */
 
 
@@ -108,7 +104,7 @@ static int sdrawkcab;
 */
 
 static int
-extend(smallint ch) {
+extend(unsigned char const ch) {
     return ((int) ((ch & 0x80) ? (ch | ~0xFF) : ch));
 }
 
@@ -136,9 +132,9 @@ sli(void) {
 
 static int 
 slib(void) {
-    smallint ch = 0;
+    unsigned char ch;
 
-    if (fread(&ch, sizeof ch, 1, slfile) != 1) {
+    if (fread(&ch, sizeof(ch), 1, slfile) != 1) {
         pm_error("error reading slide file");
     }
     return extend(ch);
@@ -171,22 +167,28 @@ slidefind(const char * const sname,
     char uname[32];
     unsigned char libent[36];
     long pos;
+    bool found;
+    bool eof;
 
     if (dironly)
         pm_message("Slides in library:");
     else {
-        int i;
+        unsigned int i;
         const char * ip;
         
         ip = sname; /* initial value */
         
-        for (i = 0; i < 31; i++) {
-            char ch = *ip++;
+        for (i = 0; i < 31; ++i) {
+            char const ch = *ip++;
             if (ch == EOS)
                 break;
-            if (ucasen && ISLOWER(ch))
-                ch = TOUPPER(ch);
-            uname[i] = ch;
+
+            {
+                char const upperCh =
+                    ucasen && islower(ch) ? toupper(ch) : ch;
+                
+                uname[i] = upperCh;
+            }
         }
         uname[i] = EOS;
     }
@@ -199,31 +201,38 @@ slidefind(const char * const sname,
     }
     pos = 32;
     
-    /* Search for a slide with the requested name. */
+    /* Search for a slide with the requested name or list the directory */
     
-    while (TRUE) {
-        if ((fread(libent, 36, 1, slfile) != 1) ||
-            (strlen((char *)libent) == 0)) {
-            if (dironly) {
-                return;
-            }
-            pm_error("slide %s not in library.", sname);
-        }
+    for (found = false, eof = false; !found && !eof; ) {
+        size_t readCt;
+        readCt = fread(libent, 36, 1, slfile);
+        if (readCt != 1)
+            eof = true;
+        else if (strlen((char *)libent) == 0)
+            eof = true;
+    }
+    if (!eof) {
         pos += 36;
         if (dironly) {
             pm_message("  %s", libent);
         } else if (streq((char *)libent, uname)) {
-            long dpos = (((((libent[35] << 8) | libent[34]) << 8) |
-                          libent[33]) << 8) | libent[32];
+            long dpos;
+
+            dpos = (((((libent[35] << 8) | libent[34]) << 8) |
+                     libent[33]) << 8) | libent[32];
+
             if ((slfile == stdin) || (fseek(slfile, dpos, 0) == -1)) {
                 dpos -= pos;
         
                 while (dpos-- > 0)
                     getc(slfile);
             }
-            break;
+            found = true;
         }
     }
+
+    if (!found && !dironly)
+        pm_error("slide '%s' not in library.", sname);
 }
 
 
@@ -329,7 +338,7 @@ slider(slvecfn   slvec,
     
     /* Process the header of the slide file.  */
     
-    sdrawkcab = FALSE;            /* Initially guess byte order is OK */
+    sdrawkcab = false;            /* Initially guess byte order is OK */
     fread(slfrof.slh, 17, 1, slfile);
     fread(&slfrof.sntype, sizeof(char), 1, slfile);
     fread(&slfrof.slevel, sizeof(char), 1, slfile);
@@ -364,12 +373,12 @@ slider(slvecfn   slvec,
     */
 
     if (btest != rtest) {
-        sdrawkcab = TRUE;
-#define rshort(x) x = ((x >> 8) & 0xFF) | (x << 8)
+        sdrawkcab = true;
+        #define rshort(x) x = ((x >> 8) & 0xFF) | (x << 8)
         rshort(slfrof.sxdots);
         rshort(slfrof.sydots);
         rshort(slfrof.shwfill);
-#undef rshort
+        #undef rshort
     }
     
     /* Dump the header if we're blithering. */
@@ -413,7 +422,7 @@ slider(slvecfn   slvec,
         ixdots = slfrof.sxdots;
         iydots = slfrof.sydots;
         dsar = slfrof.sdsar;
-        adjust = FALSE;           /* Mark no adjustment needed */
+        adjust = false;           /* Mark no adjustment needed */
     }
 
     /* If there's a uniform scale factor specified, apply it. */
@@ -571,32 +580,42 @@ slider(slvecfn   slvec,
 /*  Main program. */
 
 int
-main(int    argc,
-     char * argv[]) {
+main(int          argc,
+     const char * argv[]) {
 
     int argn;
     const char * const usage = "[-verbose] [-info] [-adjust] [-scale <s>]\n\
 [-dir] [-lib|-Lib <name>]\n\
 [-xsize|-width <x>] [-ysize|-height <y>] [sldfile]";
-    int scalespec = FALSE, widspec = FALSE, hgtspec = FALSE, dironly = FALSE,
-        ucasen;
+    bool dironly;
+    bool hgtspec;
+    bool widspec;
+    bool scalespec;
+    bool ucasen;
     const char * slobber;       /* Slide library item */
 
+    pm_proginit(&argc, argv);
+    argn = 1;
 
     slobber = NULL;
-
-    ppm_init(&argc, argv);
-    argn = 1;
+    dironly = false;
+    hgtspec = false;
+    widspec = false;
+    scalespec = false;
+    ucasen = false;
+    blither = false;
+    info = false;
+    adjust = false;
 
     while (argn < argc && argv[argn][0] == '-' && argv[argn][1] != '\0') {
         if (pm_keymatch(argv[argn], "-verbose", 2)) {
-            blither = TRUE;
+            blither = true;
         } else if (pm_keymatch(argv[argn], "-adjust", 2)) {
-            adjust = TRUE;
+            adjust = true;
         } else if (pm_keymatch(argv[argn], "-dir", 2)) {
-            dironly = TRUE;
+            dironly = true;
         } else if (pm_keymatch(argv[argn], "-info", 2)) {
-            info = TRUE;
+            info = true;
         } else if (pm_keymatch(argv[argn], "-lib", 2)) {
             if (slobber)
                 pm_error("already specified a library item");
@@ -616,7 +635,7 @@ main(int    argc,
             if (uscale <= 0.0) {
                 pm_error("scale factor must be greater than 0");
             }
-            scalespec = TRUE;
+            scalespec = true;
         } else if (pm_keymatch(argv[argn], "-xsize", 2) ||
                    pm_keymatch(argv[argn], "-width", 2)) {
             if (widspec) {
@@ -625,7 +644,7 @@ main(int    argc,
             argn++;
             if ((argn == argc) || (sscanf(argv[argn], "%d", &sxsize) != 1))
                 pm_usage(usage);
-            widspec = TRUE;
+            widspec = true;
         } else if (pm_keymatch(argv[argn], "-ysize", 2) ||
                    pm_keymatch(argv[argn], "-height", 2)) {
             if (hgtspec) {
@@ -634,7 +653,7 @@ main(int    argc,
             argn++;
             if ((argn == argc) || (sscanf(argv[argn], "%d", &sysize) != 1))
                 pm_usage(usage);
-            hgtspec = TRUE;
+            hgtspec = true;
         } else {
             pm_usage(usage);
         }
@@ -665,7 +684,7 @@ main(int    argc,
  
     if (!dironly) {
         slider(draw, flood);
-        ppm_writeppm(stdout, pixels, pixcols, pixrows, pixmaxval, FALSE);
+        ppm_writeppm(stdout, pixels, pixcols, pixrows, pixmaxval, 0);
     }
     pm_close(slfile);
     pm_close(stdout);
