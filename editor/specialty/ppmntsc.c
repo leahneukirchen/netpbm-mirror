@@ -51,9 +51,6 @@
 #include "mallocvar.h"
 #include "shhopt.h"
 
-#define TRUE 1
-#define FALSE 0
-
 enum legalize {RAISE_SAT, LOWER_SAT, ALREADY_LEGAL};
    /* The actions that make a legal pixel */
 
@@ -97,8 +94,8 @@ parseCommandLine(int argc, const char ** argv,
     OPTENT3('c', "correctedonly",  OPT_FLAG, NULL,  &correctedonly,       0);
 
     opt.opt_table = option_def;
-    opt.short_allowed = TRUE;
-    opt.allowNegNum = FALSE;
+    opt.short_allowed = true;
+    opt.allowNegNum = false;
 
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
 
@@ -358,7 +355,7 @@ reportMapping(pixel const oldPixel,
   did and it isn't the same change that we just reported.
 -----------------------------------------------------------------------------*/
     static pixel lastChangedPixel;
-    static bool firstTime = TRUE;
+    static bool firstTime = true;
 
     if (!PPM_EQUAL(oldPixel, newPixel) && 
         (firstTime || PPM_EQUAL(oldPixel, lastChangedPixel))) {
@@ -372,7 +369,7 @@ reportMapping(pixel const oldPixel,
             );
 
         lastChangedPixel = oldPixel;
-        firstTime = FALSE;
+        firstTime = false;
     }    
 }
 
@@ -390,7 +387,7 @@ convertOneImage(FILE *             const ifP,
     int format;
 
     ppm_readppminit(ifP, &cols, &rows, &maxval, &format);
-    ppm_writeppminit(stdout, cols, rows, maxval, FALSE);
+    ppm_writeppminit(stdout, cols, rows, maxval, 0);
     {
         pixel * const inputRow = ppm_allocrow(cols);
         pixel * const outputRow = ppm_allocrow(cols);
@@ -449,7 +446,7 @@ convertOneImage(FILE *             const ifP,
                         break;
                     }
                 }
-                ppm_writeppmrow(stdout, outputRow, cols, maxval, FALSE);
+                ppm_writeppmrow(stdout, outputRow, cols, maxval, 0);
             }
         }
         ppm_freerow(outputRow);
@@ -479,7 +476,7 @@ main(int argc, const char **argv) {
     totalHiCount = 0;  /* initial value */
     totalLoCount = 0;  /* initial value */
 
-    eof = FALSE;
+    eof = false;
     while (!eof) {
         unsigned int hiCount, loCount;
 
