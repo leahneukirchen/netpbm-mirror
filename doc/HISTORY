@@ -79,6 +79,8 @@ not yet  BJH  Release 10.63.00
               install: fix Perl warning in installnetpbm.  Broken in 
               Netpbm 10.61.
 
+              build: Use <stdbool.h> when available.
+
               build: fix problem with creating lib/util that already exists.
               Broken in Netpbm 10.62.
 
