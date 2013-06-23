@@ -71,6 +71,9 @@ struct pam {
            Before Netpbm 10.32, this was rather different.  It simply
            described for convenience the plainness of the format indicated
            by 'format'.
+
+           This is meaningless when 'format' is PAM_FORMAT, as PAM does not
+           have plain and raw variations.
         */
     int height;  /* Height of image in rows */
     int width;   
