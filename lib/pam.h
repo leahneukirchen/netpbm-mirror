@@ -52,9 +52,13 @@ struct pam {
         */
     FILE * file;
     int format;
-        /* The format code of the raw image.  This is PAM_FORMAT
+        /* The format code of the image.  This is PAM_FORMAT
            unless the PAM image is really a view of a PBM, PGM, or PPM
-           image.  Then it's PBM_FORMAT, RPBM_FORMAT, etc.
+           image.  Then it's PBM_FORMAT, RPBM_FORMAT, etc.  For output,
+           only the format _type_ is significant, e.g. PBM_FORMAT
+           and RPBM_FORMAT have identical effect.  This is because on
+           output, 'plainformat' determines whether the output is the
+           raw or plain format of the type given by 'format'.
            */
     unsigned int plainformat;
         /* Logical: On output, use plain version of the format type
