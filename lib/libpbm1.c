@@ -57,27 +57,28 @@ pbm_nextimage(FILE *file, int * const eofP) {
 
 
 void
-pbm_check(FILE * file, const enum pm_check_type check_type, 
-          const int format, const int cols, const int rows,
-          enum pm_check_code * const retval_p) {
+pbm_check(FILE *               const fileP,
+          enum pm_check_type   const checkType, 
+          int                  const format,
+          int                  const cols,
+          int                  const rows,
+          enum pm_check_code * const retvalP) {
 
     if (rows < 0)
         pm_error("Invalid number of rows passed to pbm_check(): %d", rows);
     if (cols < 0)
         pm_error("Invalid number of columns passed to pbm_check(): %d", cols);
     
-    if (check_type != PM_CHECK_BASIC) {
-        if (retval_p) *retval_p = PM_CHECK_UNKNOWN_TYPE;
+    if (checkType != PM_CHECK_BASIC) {
+        if (retvalP)
+            *retvalP = PM_CHECK_UNKNOWN_TYPE;
     } else if (format != RPBM_FORMAT) {
-        if (retval_p) *retval_p = PM_CHECK_UNCHECKABLE;
+        if (retvalP)
+            *retvalP = PM_CHECK_UNCHECKABLE;
     } else {        
-        pm_filepos const bytes_per_row = (cols+7)/8;
-        pm_filepos const need_raster_size = rows * bytes_per_row;
-#ifdef LARGEFILEDEBUG
-        pm_message("pm_filepos passed to pm_check() is %u bytes",
-                   sizeof(pm_filepos));
-#endif
-        pm_check(file, check_type, need_raster_size, retval_p);
+        pm_filepos const bytesPerRow    = (cols+7)/8;
+        pm_filepos const needRasterSize = rows * bytesPerRow;
+        pm_check(fileP, checkType, needRasterSize, retvalP);
     }
 }
 

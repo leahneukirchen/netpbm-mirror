@@ -422,30 +422,32 @@ ppm_readppm(FILE *   const fileP,
 
 void
 ppm_check(FILE *               const fileP, 
-          enum pm_check_type   const check_type, 
+          enum pm_check_type   const checkType, 
           int                  const format, 
           int                  const cols, 
           int                  const rows, 
           pixval               const maxval,
-          enum pm_check_code * const retval_p) {
+          enum pm_check_code * const retvalP) {
 
     if (rows < 0)
         pm_error("Invalid number of rows passed to ppm_check(): %d", rows);
     if (cols < 0)
         pm_error("Invalid number of columns passed to ppm_check(): %d", cols);
     
-    if (check_type != PM_CHECK_BASIC) {
-        if (retval_p) *retval_p = PM_CHECK_UNKNOWN_TYPE;
+    if (checkType != PM_CHECK_BASIC) {
+        if (retvalP)
+            *retvalP = PM_CHECK_UNKNOWN_TYPE;
     } else if (PPM_FORMAT_TYPE(format) == PBM_TYPE) {
-        pbm_check(fileP, check_type, format, cols, rows, retval_p);
+        pbm_check(fileP, checkType, format, cols, rows, retvalP);
     } else if (PPM_FORMAT_TYPE(format) == PGM_TYPE) {
-        pgm_check(fileP, check_type, format, cols, rows, maxval, retval_p);
+        pgm_check(fileP, checkType, format, cols, rows, maxval, retvalP);
     } else if (format != RPPM_FORMAT) {
-        if (retval_p) *retval_p = PM_CHECK_UNCHECKABLE;
+        if (retvalP)
+            *retvalP = PM_CHECK_UNCHECKABLE;
     } else {        
-        pm_filepos const bytes_per_row = cols * 3 * (maxval > 255 ? 2 : 1);
-        pm_filepos const need_raster_size = rows * bytes_per_row;
+        pm_filepos const bytesPerRow    = cols * 3 * (maxval > 255 ? 2 : 1);
+        pm_filepos const needRasterSize = rows * bytesPerRow;
         
-        pm_check(fileP, check_type, need_raster_size, retval_p);
+        pm_check(fileP, checkType, needRasterSize, retvalP);
     }
 }

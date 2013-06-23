@@ -919,10 +919,6 @@ pm_check(FILE *               const file,
     pm_filepos curpos;  /* Current position of file; -1 if none */
     int rc;
 
-#ifdef LARGEFILEDEBUG
-    pm_message("pm_filepos received by pm_check() is %u bytes.",
-               sizeof(pm_filepos));
-#endif
     /* Note: FTELLO() is either ftello() or ftell(), depending on the
        capabilities of the underlying C library.  It is defined in
        pm_config.h.  ftello(), in turn, may be either ftell() or
