@@ -72,6 +72,10 @@ NOMERGEBINARIES = netpbm
 
 OBJECTS = netpbm.o
 
+PBM_TESTPREFIX ?= $(PKGDIR)/bin
+PBM_LIBRARY_PATH ?= $(PKGDIR)/lib
+RGBDEF ?= $(SRCDIR)/lib/rgb.txt
+
 default: $(DEFAULT_TARGET)
 	echo "EXISTENCE OF THIS FILE MEANS NETPBM HAS BEEN BUILT." \
 	  >build_complete
@@ -412,9 +416,9 @@ check:
 # This works on typical Linux systems
 	if [ ! -d $(RESULTDIR) ]; then mkdir -pv $(RESULTDIR); fi
 	cd $(RESULTDIR); \
-	  PBM_TESTPREFIX=$(PKGDIR)/bin \
-	  LD_LIBRARY_PATH=$(PKGDIR)/lib \
-	  RGBDEF=$(SRCDIR)/lib/rgb.txt \
+	  PBM_TESTPREFIX=$(PBM_TESTPREFIX) \
+	  LD_LIBRARY_PATH=$(PBM_LIBRARY_PATH):$LD_LIBRARY_PATH \
+	  RGBDEF=$(RGBDEF) \
 	  $(SRCDIR)/test/Execute-Tests 2>&1
 
 clean: localclean
