@@ -1046,9 +1046,7 @@ pnm_writepaminit(struct pam * const pamP) {
     
     switch (PAM_FORMAT_TYPE(pamP->format)) {
     case PAM_TYPE:
-        if (pm_plain_output)
-            pm_error("There is no plain version of PAM.  -plain option "
-                     "is not allowed");
+        /* See explanation below of why we ignore 'pm_plain_output' here. */
         fprintf(pamP->file, "P7\n");
         writeComments(pamP);
         fprintf(pamP->file, "WIDTH %u\n",   (unsigned)pamP->width);
@@ -1105,6 +1103,23 @@ pnm_writepaminit(struct pam * const pamP) {
                  pamP->format);
     }
 }
+
+
+
+/* EFFECT OF -plain WHEN WRITING PAM FORMAT:
+
+   Before Netpbm 10.63 (June 2013), pnm_writepaminit() did a pm_error() here
+   if 'pm_plain_output' was set (i.e. the user said -plain).  But this isn't
+   really logical, because -plain is a global option for the program and here
+   we are just writing one image.  As a global option, -plain must be defined
+   to have effect where it makes sense and have no effect where it doesn't.
+   Note that a program that generates GIF just ignores -plain.  Note also that
+   a program could conceivably generate both a PPM image and a PAM image.
+
+   Note also how we handle the other a user can request plain format: the
+   'plainformat' member of the PAM struct.  In the case of PAM, we ignore that
+   member.
+*/
 
 
 

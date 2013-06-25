@@ -18,6 +18,10 @@ not yet  BJH  Release 10.63.00
               411toppm: check for inconsistencies between specified
               width and height and size of input.
 
+              Ignore -plain when program generates PAM.  Before, programs
+              failed if the user specified -plain to a program that generates
+              a PAM image.
+
               giftopnm: fix bug: erroneously claims GIF ends prematurely.
               Broken in Netpbm 10.38 (March 2007).  This affects all GIFs, but
               the problem does not manifest when Netpbm was built with Gcc
