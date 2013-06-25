@@ -417,7 +417,7 @@ check:
 	if [ ! -d $(RESULTDIR) ]; then mkdir -pv $(RESULTDIR); fi
 	cd $(RESULTDIR); \
 	  PBM_TESTPREFIX=$(PBM_TESTPREFIX) \
-	  LD_LIBRARY_PATH=$(PBM_LIBRARY_PATH):$LD_LIBRARY_PATH \
+	  LD_LIBRARY_PATH=$(PBM_LIBRARY_PATH):${LD_LIBRARY_PATH} \
 	  RGBDEF=$(RGBDEF) \
 	  $(SRCDIR)/test/Execute-Tests 2>&1
 
