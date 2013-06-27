@@ -636,8 +636,10 @@ main(int argc, char *argv[]) {
 
     if (cmdline.hexonly)
         colornameHash = NULL;
+    else if (cmdline.rgb)
+        ppm_readcolornamefile(cmdline.rgb, TRUE, &colornameHash, &colornames);
     else
-        ppm_readcolornamefile(cmdline.rgb, FALSE, &colornameHash, &colornames);
+        ppm_readcolornamefile(NULL, FALSE, &colornameHash, &colornames);
 
     /* Now generate the character-pixel colormap table. */
     genCmap(chv, ncolors, maxval, 

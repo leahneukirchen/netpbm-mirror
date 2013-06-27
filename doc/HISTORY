@@ -4,6 +4,40 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+13.06.27 BJH  Release 10.47.45
+
+              giftopnm: fix bug: erroneously claims GIF ends prematurely.
+              Broken in Netpbm 10.38 (March 2007).  This affects all GIFs, but
+              the problem does not manifest when Netpbm was built with Gcc
+              from 2007 and later.
+
+              ppmforge. fix crash when -mesh is 1 or less.  Always broken
+              (program was added in Pbmplus (October 1991).  Thanks Prophet of
+              the Way <afu@wta.att.ne.jp>.
+
+              ppmforge: fix array bounds violation.  Always broken (program
+              was added in Pbmplus (October 1991).  Thanks Prophet of the Way
+              <afu@wta.att.ne.jp>.
+
+              pnmtopng: fix bug: output bigger than it needs to be when the
+              input is a color format image that contains only gray.  Broken
+              since at least Netpbm 10.26 (May 2001), but after 10.18
+              (September 2003).  Thanks Ludolf Holzheid
+              (lholzheid@bihl-wiedemann.de).
+
+              pnmremap (ergo pnmquant): fix bug: incorrect output with
+              -norandom and floyd-steinberg dithering.  Always broken.
+              (-norandom was introduced in Netpbm 10.39 (June 2007)).
+
+              ppmtoxpm: fix bug: ignores inability to open the specified color
+              dictionary file (-rgb) and just doesn't use color names.
+              Introduced in Netpbm 10.15 (April 2003).
+
+              libnetpbm: fix bug: ppm_freecolornames() has wild pointer
+              dereference when the color name table was generated empty
+              because the color dictionary file was not openable.  ppmtoxpm
+              suffers from this.  Broken in 10.15 (April 2003).
+
 13.05.03 BJH  Release 10.47.44
 
               ppmtowinicon: fix bug: sometimes creates image truncated in the

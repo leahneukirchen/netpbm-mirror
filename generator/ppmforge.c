@@ -491,7 +491,7 @@ createPlanetStuff(float *          const a,
             double const bx = (n - 1) * uprj(j, cols);
             
             bxf[j] = floor(bx);
-            bxc[j] = bxf[j] + 1;
+            bxc[j] = MIN(bxf[j] + 1, n - 1);
             u[j] = bx - bxf[j];
             u1[j] = 1 - u[j];
         }
@@ -1050,6 +1050,9 @@ main(int argc, char ** argv) {
             i++;
             if ((i == argc) || (sscanf(argv[i], "%d", &meshsize) != 1))
                 pm_usage(usage);
+
+            if (meshsize < 2)
+                pm_error("mesh must be at least 2");
 
             /* Force FFT mesh to the next larger power of 2. */
 

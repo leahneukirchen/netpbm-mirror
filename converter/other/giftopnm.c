@@ -1028,6 +1028,7 @@ lzwReadByte(struct decompressor * const decompP,
                         *endOfImageP = TRUE;
                         *errorP = NULL;
                     } else {
+                        *endOfImageP = FALSE;
                         expandCodeOntoStack(decompP, code, errorP);
                         if (!*errorP)
                             *dataReadP = popStack(&decompP->stack);
