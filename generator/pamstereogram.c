@@ -43,6 +43,7 @@
  * ----------------------------------------------------------------------
  */
 
+#define _ISOC99_SOURCE  /* Make sure strtof() is in <stdlib.h> */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

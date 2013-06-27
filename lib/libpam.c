@@ -864,7 +864,7 @@ interpretTupleType(struct pam * const pamP) {
     if (pamP->size >= PAM_STRUCT_SIZE(have_opacity))
         pamP->have_opacity = haveOpacity;
     if (pamP->size >= PAM_STRUCT_SIZE(opacity_plane))
-        pamP->have_opacity = haveOpacity;
+        pamP->opacity_plane = opacityPlane;
 }
 
 

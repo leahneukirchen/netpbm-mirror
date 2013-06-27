@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+13.06.27 BJH  Release 10.62.09
+
+              libnetpbm: fix bug: pnm_readpaminit and pnm_writepaminit set
+              'opacity_plane' member of struct pam incorrectly.  No Netpbm
+              programs are affected.
+
 13.06.14 BJH  Release 10.62.08
 
               giftopnm: fix bug: erroneously claims GIF ends prematurely.
