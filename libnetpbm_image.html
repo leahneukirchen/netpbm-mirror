@@ -342,10 +342,12 @@ and computes some of the fields of the pam structure.
 set upon invocation to tell the function how and what to write.
 <B>size</B>, <B>len</B>, <B>file</B>, <B>format</B>, <B>height</B>,
 <B>width</B>, <B>depth</B>, <B>maxval</B>.  Furthermore, if
-<b>format</b> is <b>PAM_FORMAT</b>, <B>tuple_type</B> must be set.
+<b>format</b> is <b>PAM_FORMAT</b>, <B>tuple_type</B> must be set and
+if <b>format</b> is <em>not</em> <b>PAM_FORMAT</b>, <b>plainformat</b>
+must be set.
 
-<P><B>pnm_writepaminit()</B> sets the <B>plainformat</B> and
-<B>bytes_per_sample</B> members based on the information supplied.
+<P><B>pnm_writepaminit()</B> sets the <B>bytes_per_sample</B> member based on
+the information supplied.
 
 <P><B>pnm_writepamrow()</B> writes a row of the raster into a PAM or
 PNM image file.  It expects to find the file positioned where the row
@@ -358,14 +360,13 @@ leftmost tuple is Element 0 of this array.
 
 <p><B>pnm_writepam()</B> writes an entire PAM or PNM image to a PAM or
 PNM image file.  It expects to find the file positioned to where the
-image should start and leaves it positioned just after the image.  <P>
-The following members of the <B>*</B><I>pamP</I> structure must be set
-upon invocation to tell the function how and what to write:
-<B>size</B>, <B>len</B>, <B>file</B>, <B>format</B>, <B>height</B>,
-<B>width</B>, <B>depth</B>, <B>maxval</B>, <B>tuple_type</B>.
+image should start and leaves it positioned just after the image.
 
-<P><B>pnm_writepam()</B> sets the <B>plainformat</B> and
-<B>bytes_per_sample</B> members based on the information supplied.
+<p>The members of the <b>*</b><i>pamP</i> structure that must be set up
+invocation, and their meanings, is the same as for <b>pnm_writepaminit</b>.
+
+<P><B>pnm_writepam()</B> sets the <B>bytes_per_sample</B> member based on the
+information supplied.
 
 <P><I>tuplearray</I> is an array of rows such that you would pass to
 <B>pnm_writepamrow()</B>, with the top row being Element 0 of the

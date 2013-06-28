@@ -115,12 +115,18 @@ the other Netpbm files it uses as well.
 
 <DT><B>-plain</b>
 
-<DD>If the program generates an image in Netpbm format, generate it in
-the "plain" (aka "ascii") version of the format, as opposed to the
-"raw" (aka "binary") version.
+<DD>If the program generates an image in PNM format, generate it in the
+"plain" (aka "ascii") version of the format, as opposed to the "raw" (aka
+"binary") version.
+
+<P>Note that the other Netpbm format, PAM, does not have plain and raw
+versions, so this option has no effect on a program that generates PAM output.
 
 <p>
-This option was introduced in Netpbm 10.10 (October 2002).
+This option was introduced in Netpbm 10.10 (October 2002).  From Netpbm 10.32
+(February 2006) through Netpbm 10.62 (March 2013), the option is invalid with
+a program that generates PAM output (instead of ignoring the option, the
+program fails).
      
 </DL>
 

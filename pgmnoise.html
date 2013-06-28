@@ -3,7 +3,7 @@
 <HEAD><TITLE>Pgmnoise User Manual</TITLE></HEAD>
 <BODY>
 <H1>pgmnoise</H1>
-Updated: 23 November 2008
+Updated: 27 June 2013
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -15,6 +15,7 @@ pgmnoise - create a PGM image made up of white noise
 
 <B>pgmnoise</B> <I>width</i> <i>height</I>
 
+[<b>-maxval=</b><i>n</i>]
 [<b>-randomseed=</b><i>integer</i>]
 
 <P>Minimum unique abbreviations of option are acceptable.  You may use
@@ -28,7 +29,7 @@ from its value.
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><B>pgmnoise</b> creates a PGM image that is made up of pixels
-of random brightness.  The maxval is 255.
+of random brightness.
 
 <p>You specify the dimensions of the image with the <i>width</i>
 and <i>height</i> arguments.
@@ -37,9 +38,15 @@ and <i>height</i> arguments.
 2006) -- if you run the program twice in the same second, you may get
 identical output.
 
+
 <h2 id="options">OPTIONS</h2>
 
 <dl>
+<dt><b>-maxval=</b><i>n</i>
+<dd>The maxval of the generated image.
+<p>Default is 255.
+<p>This option was new in Netpbm 10.63 (June 2013).
+
 <dt><b>-randomseed=</b><i>integer</i>
 
 <dd>This is the seed for the random number generator that generates the
