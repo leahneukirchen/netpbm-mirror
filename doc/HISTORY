@@ -9,6 +9,9 @@ not yet  BJH  Release 10.63.00
               Add pamtowinicon, winicontopam.  Thanks Ludolf Holzheid
               (lholzheid@bihl-wiedemann.de).
 
+              pgmnoise: add -maxval, speed up.  Thanks Prophet of the Way
+              <afu@wta.att.ne.jp>.
+
               Perl programs: make them shell programs that reinvoke themselves
               as perl so we can get the Perl interpreter from the PATH.
 
