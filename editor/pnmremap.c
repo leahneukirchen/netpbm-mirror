@@ -749,7 +749,7 @@ lookupThroughHash(struct pam *            const pamP,
         } else 
             searchColormapClose(pamP, tuple, colorFinderP, colormapIndexP);
         if (*usehashP) {
-            bool fits;
+            int fits;
             pnm_addtotuplehash(pamP, colorhash, tuple, *colormapIndexP, 
                                &fits);
             if (!fits) {
@@ -1063,7 +1063,7 @@ remap(FILE *             const ifP,
    same as that of the input even though the individual pixels have different
    colors.
 -----------------------------------------------------------------------------*/
-    bool eof;
+    int eof;
     eof = FALSE;
     while (!eof) {
         struct pam inpam, outpam;

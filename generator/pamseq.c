@@ -7,8 +7,6 @@
 #include "pam.h"
 #include "shhopt.h"
 
-#define true (1)
-#define false (0)
 
 
 struct cmdlineInfo {

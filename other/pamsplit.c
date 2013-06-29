@@ -155,7 +155,7 @@ main(int argc, const char *argv[]) {
     struct cmdlineInfo cmdline;
 
     FILE * ifP;
-    bool eof;  /* No more images in input */
+    int eof;  /* No more images in input */
     unsigned int imageSeq;  
         /* Sequence of current image in input file.  First = 0 */
 

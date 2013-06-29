@@ -152,14 +152,14 @@ getPaletteIndexThroughCache(struct pam *      const pamP,
    If the tuple-index association is in *paletteIndexP, use it.  If not,
    find it the hard way and add it to *palettedIndexP for the next guy.
 -----------------------------------------------------------------------------*/
-    bool found;
+    int found;
     int paletteIndex;
 
     pnm_lookuptuple(pamP, paletteHash, tuple, &found, &paletteIndex);
     if (found)
         *paletteIndexP = paletteIndex;
     else {
-        bool fits;
+        int fits;
         findClosestColor(pamP, tuple, xvPaletteP, paletteIndexP);
         
         pnm_addtotuplehash(pamP, paletteHash, tuple, *paletteIndexP, &fits);

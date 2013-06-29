@@ -1,6 +1,6 @@
 #! /bin/bash
 # This script tests: pamslice
-# Also requires: pnmtopnm
+# Also requires: pnmtopnm pamtopnm
 
 # Slice rows, one by one, out of testgrid.pbm.
 # Add header and reconstruct pbm image.

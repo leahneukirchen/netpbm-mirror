@@ -52,6 +52,29 @@ and it will attempt to build whatever it hasn't successfully built
 yet.
 
 
+CHECKING THE BUILD
+------------------
+
+The package comes with a test facility, which you can run after packaging,
+against the package you created.  The typical sequence is
+
+    make
+
+    make package
+
+    make check
+
+    ./installnetpbm
+
+To capture all the messages from "make check" do:
+
+    make check > test.log  2>&1
+
+The test facility was new in Netpbm 10.61 (December 2012).
+
+For further information on the tests read the document TESTS.
+
+
 AUTOMATING THE BUILD
 --------------------
 

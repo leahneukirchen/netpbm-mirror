@@ -761,7 +761,7 @@ kodak_radc_load_raw()
 void kodak_jpeg_load_raw() {}
 #else
 
-static boolean
+static bool
 fill_input_buffer (j_decompress_ptr cinfo)
 {
   static char jpeg_buffer[4096];

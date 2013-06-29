@@ -1,21 +1,38 @@
 #! /bin/bash
 # This script tests: pnmtops pstopnm
-# Also requires: pnmtopnm
+# Also requires: pnmtopnm pamtopnm gs
 
+# Test 1.  Should print: 1926073387 101484
 ${PBM_TESTPREFIX}pnmtops -nocenter -equalpixels -dpi 72 -noturn testimg.ppm \
   > ${tmpdir}/testimg.ps
-xysize=`awk  '/BoundingBox/ {print "-xsize="$4,"-ysize="$5}' \
+xysize1=`awk  '/BoundingBox/ {print "-xsize="$4,"-ysize="$5}' \
   ${tmpdir}/testimg.ps` 
-${PBM_TESTPREFIX}pstopnm -xborder=0 -yborder=0 $xysize -stdout \
+${PBM_TESTPREFIX}pstopnm -xborder=0 -yborder=0 $xysize1 -stdout \
   -quiet ${tmpdir}/testimg.ps | \
   ${PBM_BINPREFIX}pnmtopnm | cksum
 
-${PBM_TESTPREFIX}pnmtops -nocenter -equalpixels -dpi 72 -noturn testgrid.pbm \
-  > ${tmpdir}/testgrid.ps
-xysize=`awk  '/BoundingBox/ {print "-xsize="$4,"-ysize="$5}' \
+
+# Test 2.  Should print: 2425386270 41
+${PBM_TESTPREFIX}pnmtops -nocenter -equalpixels -dpi 72 -noturn \
+  testgrid.pbm  > ${tmpdir}/testgrid.ps &&
+xysize2=`awk  '/BoundingBox/ {print "-xsize="$4,"-ysize="$5}' \
   ${tmpdir}/testgrid.ps`
-${PBM_TESTPREFIX}pstopnm -xborder=0 -yborder=0 $xysize -stdout \
+${PBM_TESTPREFIX}pstopnm -xborder=0 -yborder=0 $xysize2 -stdout \
   -quiet ${tmpdir}/testgrid.ps -pbm | \
   ${PBM_BINPREFIX}pnmtopnm | cksum
 
-rm  ${tmpdir}/testgrid.ps  ${tmpdir}/testimg.ps
+
+#Test 3. Should print: 1386192571 507420
+cat testimg.ppm testimg.ppm testimg.ppm testgrid.pbm testgrid.pbm | \
+${PBM_TESTPREFIX}pnmtops -nocenter -equalpixels -dpi 72 -noturn -setpage \
+  > ${tmpdir}/testimg5.ps
+xysize3=`awk  '/BoundingBox/ {print "-xsize="$4,"-ysize="$5 ; exit}' \
+  ${tmpdir}/testimg5.ps`
+${PBM_TESTPREFIX}pstopnm -xborder=0 -yborder=0 $xysize3 \
+    -stdout  ${tmpdir}/testimg5.ps | \
+  ${PBM_BINPREFIX}pnmtopnm | cksum
+
+
+#rm  ${tmpdir}/testgrid.ps  ${tmpdir}/testimg.ps  ${tmpdir}/testimg5.ps
+rm   ${tmpdir}/testimg.ps  ${tmpdir}/testimg5.ps
+mv ${tmpdir}/testgrid.ps /tmp

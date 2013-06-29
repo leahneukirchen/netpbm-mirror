@@ -7,6 +7,7 @@ ${PBM_TESTPREFIX}pnmtile 40 50 testgrid.pbm | cksum
 ${PBM_TESTPREFIX}pnmtile 454 298 testimg.ppm > ${tmpdir}/testimg4.ppm &&
 ${PBM_BINPREFIX}pnmcat -lr testimg.ppm testimg.ppm > ${tmpdir}/testimg2.ppm &&
 ${PBM_BINPREFIX}pnmcat -tb ${tmpdir}/testimg2.ppm ${tmpdir}/testimg2.ppm | \
-diff - ${tmpdir}/testimg4.ppm && echo $?
+cmp -s - ${tmpdir}/testimg4.ppm
+echo $?
 
 rm ${tmpdir}/testimg{2,4}.ppm

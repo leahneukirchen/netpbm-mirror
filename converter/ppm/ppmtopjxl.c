@@ -12,6 +12,7 @@
  *
  */
 
+#include <assert.h>
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
@@ -33,7 +34,7 @@ const char * const usage="[-nopack] [-gamma <n>] [-presentation] [-dark]\n\
 #define PCL_MAXHEIGHT 32767
 #define PCL_MAXVAL 255
 
-static int nopack = 0;
+static bool nopack = false;
 static int dark = 0;
 static int diffuse = 0;
 static int dither = 0;
@@ -73,16 +74,28 @@ static const struct options {
    {"-nopack",       BOOL, &nopack },
 };
 
-#define putword(w) (putchar(((w)>>8) & 255), putchar((w) & 255))
 
-static int 
-bitsperpixel(int v) {
-   int bpp = 0;
-   while (v > 0) {  /* calculate # bits for value */
-      ++bpp;
-      v>>=1;
-   }
-   return (bpp);
+
+static void
+putword(unsigned short const w) {
+    putchar((w >> 8) & 0xff);
+    putchar((w >> 0) & 0xff);
+}
+
+
+
+static unsigned int
+bitsperpixel(unsigned int v) {
+
+    unsigned int bpp;
+
+    /* calculate # bits for value */
+    
+    for (bpp = 0; v > 0; ) {
+        ++bpp;
+        v >>= 1;
+    }
+    return bpp;
 }
 
 
@@ -94,101 +107,117 @@ static char *outrow = NULL;
 static signed char *runcnt = NULL;
 
 static void 
-putbits(b, n) {
-    /* put #n bits in b out, packing into bytes; n=0 flushes bits */
-    /* n should never be > 8 */
+putbits(int const bArg,
+        int const nArg) {
+/*----------------------------------------------------------------------------
+  Put 'n' bits in 'b' out, packing into bytes; n=0 flushes bits.
 
-   static int out = 0;
-   static int cnt = 0;
-   static int num = 0;
-   static int pack = 0;
-   if (n) {
-      int xo = 0;
-      int xc = 0;
-      if (cnt+n > 8) {  /* overflowing current byte? */
-     xc = cnt + n - 8;
-     xo = (b & ~(-1 << xc)) << (8-xc);
-     n -= xc;
-     b >>= xc;
-      }
-      cnt += n;
-      out |= (b & ~(-1 << n)) << (8-cnt);
-      if (cnt >= 8) {
-     inrow[num++] = out;
-     out = xo;
-     cnt = xc;
-      }
-   } else { /* flush row */
-      int i;
-      if (cnt) {
-     inrow[num++] = out;
-     out = cnt = 0;
-      }
-      for (; num > 0 && inrow[num-1] == 0; num--); /* remove trailing zeros */
-      printf("\033*b"); 
-      if (num && !nopack) {            /* TIFF 4.0 packbits encoding */
-     int start = 0;
-     int next;
-     runcnt[start] = 0;
-     for (i = 1; i < num; i++) {
-        if (inrow[i] == inrow[i-1]) {
-           if (runcnt[start] <= 0 && runcnt[start] > -127)
-          runcnt[start]--;
-           else
-          runcnt[start = i] = 0;
-        } else {
-           if (runcnt[start] >= 0 && runcnt[start] < 127)
-          runcnt[start]++;
-           else
-          runcnt[start = i] = 0;
+  n should never be > 8 
+-----------------------------------------------------------------------------*/
+    static int out = 0;
+    static int cnt = 0;
+    static int num = 0;
+    static bool pack = false;
+
+    int b;
+    int n;
+
+    b = bArg;
+    n = nArg;
+
+    if (n) {
+        int xo = 0;
+        int xc = 0;
+
+        assert(n <= 8);
+
+        if (cnt + n > 8) {  /* overflowing current byte? */
+            xc = cnt + n - 8;
+            xo = (b & ~(-1 << xc)) << (8-xc);
+            n -= xc;
+            b >>= xc;
         }
-     }
-     start = 0;
-     for (i = 0; i < num; i = next) {
-        int count = runcnt[i];
-        int from = i;
-        if (count >= 0) { /* merge two-byte runs */
-           for (;;) {
-          next = i+1+runcnt[i];
-          if(next >= num || runcnt[next] < 0 ||
-             count+runcnt[next]+1 > 127)
-             break;
-          count += runcnt[next]+1;
-          i = next;
-           }
+        cnt += n;
+        out |= (b & ~(-1 << n)) << (8-cnt);
+        if (cnt >= 8) {
+            inrow[num++] = out;
+            out = xo;
+            cnt = xc;
         }
-        next =  i + 1 + ((runcnt[i] < 0) ? -runcnt[i] : runcnt[i]);
-        if (next < num && count > 0 &&
-        runcnt[next] < 0 && runcnt[next] > -127) {
-           count--;
-           next--;
-           runcnt[next] = runcnt[next+1]-1;
+    } else { /* flush row */
+        if (cnt) {
+            inrow[num++] = out;
+            out = cnt = 0;
         }
-        outrow[start++] = count;
-        if (count >= 0) {
-           while (count-- >= 0)
-          outrow[start++] = inrow[from++];
-        } else
-           outrow[start++] = inrow[from];
-     }
-     if (start < num) {
-        num = start;
-        if (!pack) {
-           printf("2m");
-           pack = 1;
+        for (; num > 0 && inrow[num-1] == 0; --num);
+            /* remove trailing zeros */
+        printf("\033*b"); 
+        if (num && !nopack) {            /* TIFF 4.0 packbits encoding */
+            unsigned int i;
+            int start = 0;
+            int next;
+            runcnt[start] = 0;
+            for (i = 1; i < num; ++i) {
+                if (inrow[i] == inrow[i-1]) {
+                    if (runcnt[start] <= 0 && runcnt[start] > -127)
+                        runcnt[start]--;
+                    else
+                        runcnt[start = i] = 0;
+                } else {
+                    if (runcnt[start] >= 0 && runcnt[start] < 127)
+                        runcnt[start]++;
+                    else
+                        runcnt[start = i] = 0;
+                }
+            }
+            for (i = 0, start = 0; i < num; i = next) {
+                int count = runcnt[i];
+                int from = i;
+                if (count >= 0) { /* merge two-byte runs */
+                    for (;;) {
+                        next = i+1+runcnt[i];
+                        if(next >= num || runcnt[next] < 0 ||
+                           count+runcnt[next]+1 > 127)
+                            break;
+                        count += runcnt[next]+1;
+                        i = next;
+                    }
+                }
+                next =  i + 1 + ((runcnt[i] < 0) ? -runcnt[i] : runcnt[i]);
+                if (next < num && count > 0 &&
+                    runcnt[next] < 0 && runcnt[next] > -127) {
+                    --count;
+                    --next;
+                    runcnt[next] = runcnt[next+1]-1;
+                }
+                outrow[start++] = count;
+                if (count >= 0) {
+                    while (count-- >= 0)
+                        outrow[start++] = inrow[from++];
+                } else
+                    outrow[start++] = inrow[from];
+            }
+            if (start < num) {
+                num = start;
+                if (!pack) {
+                    printf("2m");
+                    pack = true;
+                }
+            } else {
+                if (pack) {
+                    printf("0m");
+                    pack = false;
+                }
+            }
         }
-     } else {
-        if (pack) {
-           printf("0m");
-           pack = 0;
+        printf("%dW", num);
+        {
+            unsigned int i;
+            for (i = 0; i < num; ++i)
+                putchar(pack ? outrow[i] : inrow[i]);
         }
-     }
-      }
-      printf("%dW", num);
-      for (i = 0; i < num; i++)
-     putchar(pack ? outrow[i] : inrow[i]);
-      num = 0; /* new row */
-   }
+        num = 0; /* new row */
+    }
 }
 
 

@@ -52,9 +52,13 @@ struct pam {
         */
     FILE * file;
     int format;
-        /* The format code of the raw image.  This is PAM_FORMAT
+        /* The format code of the image.  This is PAM_FORMAT
            unless the PAM image is really a view of a PBM, PGM, or PPM
-           image.  Then it's PBM_FORMAT, RPBM_FORMAT, etc.
+           image.  Then it's PBM_FORMAT, RPBM_FORMAT, etc.  For output,
+           only the format _type_ is significant, e.g. PBM_FORMAT
+           and RPBM_FORMAT have identical effect.  This is because on
+           output, 'plainformat' determines whether the output is the
+           raw or plain format of the type given by 'format'.
            */
     unsigned int plainformat;
         /* Logical: On output, use plain version of the format type
@@ -67,6 +71,9 @@ struct pam {
            Before Netpbm 10.32, this was rather different.  It simply
            described for convenience the plainness of the format indicated
            by 'format'.
+
+           This is meaningless when 'format' is PAM_FORMAT, as PAM does not
+           have plain and raw variations.
         */
     int height;  /* Height of image in rows */
     int width;   
@@ -514,6 +521,8 @@ pnm_backgroundtuple(struct pam *  const pamP,
 /*----------------------------------------------------------------------------
    These are meant for passing to pm_system() as Standard Input feeder
    and Standard Output accepter.
+
+   The 'feederParm' or 'accepterParm' is a pointer to a struct pamtuples.
 -----------------------------------------------------------------------------*/
 
 void

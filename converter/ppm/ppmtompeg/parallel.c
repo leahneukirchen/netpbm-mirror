@@ -968,7 +968,7 @@ IoServer(struct inputSource * const inputSourceP,
 -----------------------------------------------------------------------------*/
     int       ioPortNum;
     int       serverSocket;
-    boolean   done;
+    bool   done;
     unsigned char   *bigBuffer;
         /* A work buffer that we keep around permanently.  We increase
            its size as needed, but never shrink it.

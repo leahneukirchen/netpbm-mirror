@@ -19,6 +19,7 @@
  *   Authors:  Eric A. Howe (mu@trends.net)
  *             Bryan Henderson, 2010
  */
+#define _BSD_SOURCE   /* Ensure strdup() is in <string.h> */
 #include <assert.h>
 #include <time.h>
 #include <string.h>

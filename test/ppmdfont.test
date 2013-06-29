@@ -7,3 +7,13 @@ ${PBM_TESTPREFIX}ppmdmkfont | ${PBM_TESTPREFIX}ppmddumpfont 2>&1 | cksum
 
 # Test 2. Should produce: 2845495212 75033
 ${PBM_TESTPREFIX}ppmdmkfont | ${PBM_TESTPREFIX}ppmdcfont | cksum
+
+# There is a strange glitch in output when ppmdcfont is compiled by clang:
+# 3171,3173c3171,3173
+# <     0x01,
+# <     95,
+# <     32
+# ---
+# >     0x00,
+# >     0,
+# >     0

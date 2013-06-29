@@ -46,14 +46,12 @@
 #include <stdio.h>
 #include <string.h>
 #include "prototypes.h"
+#include "param.h"
 
 /*==================*
  * GLOBAL VARIABLES *
  *==================*/
 
-extern boolean specificsOn;
-extern char specificsFile[];
-extern char specificsDefines[];
 FrameSpecList *fsl;
 
 /*=====================*

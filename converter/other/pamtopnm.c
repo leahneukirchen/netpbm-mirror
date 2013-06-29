@@ -109,7 +109,7 @@ main(int argc, char *argv[]) {
 
     struct cmdlineInfo cmdline;
     FILE* ifP;
-    bool eof;   /* no more images in input stream */
+    int eof;   /* no more images in input stream */
     struct pam inpam;   /* Input PAM image */
     struct pam outpam;  /* Output PNM image */
 

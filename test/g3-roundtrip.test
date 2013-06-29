@@ -3,11 +3,13 @@
 # Also requires: pnmcrop
 
 ${PBM_TESTPREFIX}pbmtog3 -nofixedwidth testgrid.pbm | \
-${PBM_TESTPREFIX}g3topbm -width=14 | diff - testgrid.pbm ; echo $?
+${PBM_TESTPREFIX}g3topbm -width=14 | cmp -s - testgrid.pbm
+echo $?
 
 ${PBM_TESTPREFIX}pbmtog3 -nofixedwidth -reversebits testgrid.pbm | \
-${PBM_TESTPREFIX}g3topbm -width=14 -reversebits | diff - testgrid.pbm ; echo $?
+${PBM_TESTPREFIX}g3topbm -width=14 -reversebits | cmp -s - testgrid.pbm
+echo $?
 
 ${PBM_TESTPREFIX}pbmtog3 testgrid.pbm | \
 ${PBM_TESTPREFIX}g3topbm  | ${PBM_BINPREFIX}pnmcrop -white -right -bottom | \
- diff - testgrid.pbm ; echo $?
+ cmp -s - testgrid.pbm ; echo $?

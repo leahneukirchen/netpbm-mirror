@@ -28,7 +28,7 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine(int argc, char ** argv,
+parseCommandLine(int argc, const char ** argv,
                  struct cmdlineInfo *cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec strings we return are stored in the storage that
@@ -51,7 +51,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We may have parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (argc-1 < 1)
@@ -133,16 +133,15 @@ transformRaster(struct pam * const inpamP,
 
 
 int
-main(int    argc,
-     char * argv[]) {
+main(int argc, const char * argv[]) {
 
     struct cmdlineInfo cmdline;
     FILE * ifP;
     struct pam inpam;
     struct pam outpam;
-    bool eof;
+    int eof;
 
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 

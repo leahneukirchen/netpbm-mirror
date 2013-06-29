@@ -1177,7 +1177,7 @@ printPages(int                 const outFd,
     while (sourceP) {
         FILE * ifP;
         struct pam pam;
-        bool eof;
+        int eof;
         unsigned int pageNum;
 
         ifP = pm_openr(sourceP->name);

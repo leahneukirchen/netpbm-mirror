@@ -1392,7 +1392,7 @@ outputOneResampledRow(const struct pam * const outpamP,
 -----------------------------------------------------------------------------*/
     unsigned int col;
 
-    bool haveOpacity;           /* There is an opacity plane */
+    int haveOpacity;           /* There is an opacity plane */
     unsigned int opacityPlane;  /* Plane number of opacity plane, if any */
 
     pnm_getopacity(outpamP, &haveOpacity, &opacityPlane);
@@ -2205,7 +2205,7 @@ main(int argc, const char **argv ) {
 
     struct cmdlineInfo cmdline;
     FILE * ifP;
-    bool eof;
+    int eof;
 
     pm_proginit(&argc, argv);
 

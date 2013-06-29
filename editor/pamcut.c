@@ -675,7 +675,7 @@ main(int argc, const char *argv[]) {
 
     struct cmdlineInfo cmdline;
     FILE * ifP;
-    bool eof;
+    int eof;
 
     pm_proginit(&argc, argv);
 

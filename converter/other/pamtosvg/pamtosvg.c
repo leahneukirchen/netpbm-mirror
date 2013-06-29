@@ -134,7 +134,7 @@ parseCommandLine(int argc,
    Note that the strings we return are stored in the storage that
    was passed to us as the argv array.  We also trash *argv.
 --------------------------------------------------------------------------*/
-    optEntry *option_def;
+    optEntry * option_def;
     /* Instructions to pm_optParseOptions3 on how to parse our options. */
     optStruct3 opt;
 

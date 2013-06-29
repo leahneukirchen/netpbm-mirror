@@ -141,8 +141,8 @@ parse_foveon(FILE * const ifp) {
 
 
 void  
-foveon_coeff(bool * const useCoeffP,
-             float        coeff[3][4]) {
+foveon_coeff(int * const useCoeffP,
+             float       coeff[3][4]) {
 
     static const float foveon[3][3] =
     { {  1.4032, -0.2231, -0.1016 },

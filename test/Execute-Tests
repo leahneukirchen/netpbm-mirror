@@ -53,6 +53,9 @@ fi
 
 srcdir=$(dirname $0)
 
+# Provision to run programs under valgrind.
+# export PBM_TESTPREFIX="valgrind --log-fd=4 "${PBM_TESTPREFIX}
+
 # Set tmpdir, which is used in some of the test scripts.  By default
 # this is created by mktemp.  The user can override and specify tmpdir,
 # but in this case it must be an existing directory and must not be
@@ -60,7 +63,7 @@ srcdir=$(dirname $0)
 
 if [ -z $tmpdir ]
   then
-  tmpdir_created=$(mktemp -d TestPBM-XXXXXXX) || exit 1;
+    tmpdir_created=$(mktemp -d) || exit 1;
   export tmpdir=${tmpdir_created}
   else
   tmpdir_created="";
@@ -90,7 +93,13 @@ declare -a status=("SUCCESS" "FAILURE" "UNEXPECTED SUCCESS"
 
 # Copy test files to the current work directory
 
-cp -n -t . ${srcdir}/testgrid.pbm ${srcdir}/testimg.ppm 
+if [ ! -f ./testgrid.pbm ]
+  then cp -v ${srcdir}/testgrid.pbm ./testgrid.pbm
+fi
+
+if [ ! -f ./testimg.ppm ]
+  then cp -v ${srcdir}/testimg.ppm  ./testimg.ppm 
+fi
 
 # Execute the tests, as described in the "Test-Order" file.
 #
@@ -103,30 +112,30 @@ cp -n -t . ${srcdir}/testgrid.pbm ${srcdir}/testimg.ppm
 #
 # All tests are self-contained.
 #
-# By defeault the tests are executed in the order described in the
-# file Test-Order.  Normally the Test-Order in the source directory
-# will be used, but the user can override this with a file named
-# Test-Order placed in the work directory.  (This feature comes useful
-# when you want to pare down the list.)
+# By default the tests are executed in the order described in the
+# file Test-Order.  Copy this file from the source directory
+# to the work directory.
+# 
+# The --no-clobber version comes useful when the user wants a modified
+# (pared-down) version of Test-Order.
 
-if [ ! -f ./Test-Order ]
-then cp ${srcdir}/Test-Order ./Test-Order
-fi
+cp ${srcdir}/Test-Order ./Test-Order
+#cp --no-clobber ${srcdir}/Test-Order ./Test-Order
 
 for t in `grep -v "^#" ./Test-Order | fgrep ".test"`
 do
 echo == $t ==
 ${srcdir}/$t >  ${t%.test}.out ; let result=$?
 case $result in
-0)   cmp --quiet ${t%.test}.out ${srcdir}/${t%.test}.ok ;
+0)   cmp -s ${t%.test}.out ${srcdir}/${t%.test}.ok ;
      if [ $? -eq 0 ]
         then let result=0;  rm  ${t%.test}.out ;
         else let result=1;
      fi
      let supported=1 ;;
-*) let result=1 ; let supported=1;;
+80) let result=4 ; let supported=0;;
+*)  let result=1 ; let supported=1;;
 esac
-
 
 # Report whether a single test succeeded or failed.
 # Increment counters.
@@ -168,7 +177,7 @@ for s in 0 1 2 3 4 5
 
 echo ==================
 echo "All tests done."
-date --rfc-3339=seconds
+date -R -u
 
 
 # Exit with status 0 if all supported tests succeeded, 1 otherwise.

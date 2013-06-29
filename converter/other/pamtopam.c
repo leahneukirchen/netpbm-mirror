@@ -17,7 +17,7 @@
 int
 main(int argc, const char * argv[]) {
 
-    bool       eof;     /* no more images in input stream */
+    int        eof;     /* no more images in input stream */
     struct pam inpam;   /* Input PAM image */
     struct pam outpam;  /* Output PAM image */
 

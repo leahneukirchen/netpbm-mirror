@@ -16,7 +16,14 @@ pgmramp.test
 ppmgauss.test
 ppmcie.test
 ppmwheel.test
+
+# Generators with random components
+
+pgmnoise.test
 ppmpat.test
+pgmcrater.test
+ppmforge.test
+ppmrough.test
 
 # Analyzer tests
 
@@ -46,6 +53,7 @@ pnmcat.test
 pamflip.test
 pamenlarge.test
 pnminvert.test
+pamchannel.test
 
 pbmpscale.test
 pnmremap1.test
@@ -93,6 +101,7 @@ fits-roundtrip.test
 g3-roundtrip.test
 gem-roundtrip.test
 gif-roundtrip.test
+gif-quant-roundtrip.test
 hdiff-roundtrip.test
 leaf-roundtrip.test
 mgr-roundtrip.test
@@ -105,6 +114,7 @@ targa-roundtrip.test
 tiff-roundtrip.test
 utahrle-roundtrip.test
 wbmp-roundtrip.test
+winicon-roundtrip.test
 xbm-roundtrip.test
 xpm-roundtrip.test
 xwd-roundtrip.test

@@ -48,10 +48,25 @@ do their JPEG work via a JPEG library not distributed with Netpbm.
 Your JPEG-related liability for using Netpbm is limited to your 
 liability for using your JPEG library.
 
+Note that it is possible to use Ppmtompeg without involving JPEG and to
+build it without the ability to involve JPEG.
+
 The next best alternative to JPEG is probably PNG and maybe JBIG for
 bilevel (black and white) images.
 
 http://burnalljpegs.org contains information on this issue.
+
+
+MPEG patents
+------------
+
+The original University of California distributeion of the Ppmtompeg code
+conatins this statement in a README file:
+
+  ... patents are held by several companies on various aspects of the MPEG
+  video standard.  Companies or individuals who want to develop commercial
+  products that include this code must acquire licenses from these companies.
+  For information on licensing, see Appendix F in the standard.
 
 
 Expired LZW patents

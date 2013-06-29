@@ -118,12 +118,13 @@ PORTBINARIES =  avstopam bmptopnm fitstopnm \
 		pamtoavs pamtodjvurle pamtofits pamtogif \
 		pamtohdiff pamtohtmltbl pamtompfont pamtooctaveimg \
 		pamtopam pamtopfm pamtopnm pamtouil \
-		pamtoxvmini \
+		pamtowinicon pamtoxvmini \
 		pbmtopgm pfmtopam \
 	        pgmtopbm pgmtoppm ppmtopgm pnmtoddif \
 		pnmtopclxl \
 		pnmtosgi pnmtosir pamtotga pnmtoxwd \
-		rlatopam sgitopnm sirtopnm sunicontopnm xwdtopnm zeisstopnm
+		rlatopam sgitopnm sirtopnm sunicontopnm \
+		winicontopam xwdtopnm zeisstopnm
 
 BINARIES = \
   $(PORTBINARIES) \

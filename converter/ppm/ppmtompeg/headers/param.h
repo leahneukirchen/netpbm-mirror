@@ -51,7 +51,7 @@ extern char machineName[MAX_MACHINES][256];
 extern char userName[MAX_MACHINES][256];
 extern char executable[MAX_MACHINES][1024];
 extern char remoteParamFile[MAX_MACHINES][1024];
-extern boolean remote[MAX_MACHINES];
+extern bool remote[MAX_MACHINES];
 extern char currentPath[MAXPATHLEN];
 extern char currentFramePath[MAXPATHLEN];
 extern char currentGOPPath[MAXPATHLEN];
@@ -62,11 +62,20 @@ extern int realWidth, realHeight;
 extern char ioConversion[1024];
 extern char slaveConversion[1024];
 extern FILE * bitRateFile;
-extern boolean showBitRatePerFrame;
-extern boolean computeMVHist;
 extern const double VidRateNum[9];
-extern boolean keepTempFiles;
+extern bool keepTempFiles;
+extern int outputWidth, outputHeight;
+extern bool specificsOn;
+extern char specificsFile[256];
+extern char specificsDefines[1024];
+extern bool GammaCorrection;
+extern float GammaValue;
+extern char userDataFileName[256];
 
+
+/* Defined in ppmtompeg.c; computed from command line */
+extern bool showBitRatePerFrame;
+extern bool computeMVHist;
 
 /*
  * Copyright (c) 1995 The Regents of the University of California.

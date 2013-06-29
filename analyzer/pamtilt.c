@@ -47,7 +47,7 @@ abandon(void) {
 
 
 static void
-parseCommandLine(int argc, char *argv[],
+parseCommandLine(int argc, const char ** const argv,
                  struct cmdlineInfo * const cmdlineP) {
 
     static optEntry option_def[50];
@@ -76,7 +76,7 @@ parseCommandLine(int argc, char *argv[],
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;          /* no short options used */
     opt.allowNegNum = FALSE;            /* don't allow negative values */
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
 
     if (cmdlineP->hstep < 1)
         pm_error("-hstep must be at least 1 column.");
@@ -143,9 +143,6 @@ load(const struct pam * const pamP,
     tuplerow = pnm_allocpamrow(pamP);
     
     MALLOCARRAY(pixels, pamP->height);
-    if (pixels == NULL)
-        pm_error("Unable to allocate array of %u pixel rows",
-                 pamP->height);
 
     if (pixels == NULL)
         pm_error("Unable to allocate array of %u rows", pamP->height);
@@ -214,9 +211,32 @@ replacePixelValuesWithScaledDiffs(
 
 
 
+static unsigned long
+totalBrightness(sample **    const pixelWindow,
+                unsigned int const hsampleCt,
+                float        const dy) {
+/*----------------------------------------------------------------------------
+   Total brightness of samples in the line that goes from the top left corner
+   of 'pixelWindow' down to the right at 'dy' rows per column.
+-----------------------------------------------------------------------------*/
+    unsigned long total;
+    unsigned int i;
+    float rowOffset;
+
+    for (i = 0, rowOffset = 0.5, total = 0;
+         i < hsampleCt;
+         ++i, rowOffset += dy) {
+
+        total += pixelWindow[(unsigned)rowOffset][i];
+    }
+    return total;
+}
+
+
+
 static void
 scoreAngleRegion(sample **    const pixels,
-                 unsigned int const hsamples,
+                 unsigned int const hsampleCt,
                  unsigned int const startRow,
                  unsigned int const endRow,
                  unsigned int const vstep,
@@ -234,7 +254,7 @@ scoreAngleRegion(sample **    const pixels,
    Instead of a tilt angle, we have 'dy', the slope (downward) of the lines
    in our assumed tilt.
 -----------------------------------------------------------------------------*/
-    double const tscale  = 1.0 / hsamples;
+    double const tscale  = 1.0 / hsampleCt;
 
     unsigned int row;
     double sum;
@@ -245,17 +265,10 @@ scoreAngleRegion(sample **    const pixels,
         /* Number of lines that went into 'total' */
 
     for (row = startRow, sum = 0.0, n = 0; row < endRow; row += vstep) {
-        float o;
-        long t;     /* total brightness of the samples in the line */
-        double dt;  /* mean brightness of the samples in the line */
+        double const dt =
+            tscale * totalBrightness(&pixels[row], hsampleCt, dy);
+            /* mean brightness of the samples in the line */
 
-        unsigned int i;
-
-        for (i = 0, t = 0, o = 0.5;
-             i < hsamples;
-             t += pixels[(int)(row + o)][i], ++i, o += dy) {
-        }
-        dt = tscale * t;
         sum += dt * dt;
         n += 1;
     }
@@ -478,7 +491,7 @@ getAngle(const struct pam * const pamP,
 
 
 int
-main(int argc, char *argv[]) {
+main(int argc, const char ** argv) {
 
     struct cmdlineInfo cmdline;
     struct pam pam;
@@ -488,7 +501,7 @@ main(int argc, char *argv[]) {
     unsigned int vstep;    /* vertical step size */
     float angle;
 
-    pgm_init(&argc, argv);              /* initialize netpbm system */
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 

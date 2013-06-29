@@ -753,7 +753,7 @@ Frame_AllocHalf(MpegFrame * const frameP) {
  *===========================================================================*/
 void
 Frame_AllocDecoded(MpegFrame * const frameP,
-                   boolean     const makeReference) {
+                   bool        const makeReference) {
 
     if (frameP->decoded_y != NULL) {
         /* already allocated */

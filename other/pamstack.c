@@ -216,10 +216,10 @@ nextImageAllStreams(unsigned int const nInput,
     unsigned int inputSeq;
 
     for (inputSeq = 0; inputSeq < nInput; ++inputSeq) {
-        bool eof;
+        int eof;
         pnm_nextimage(ifP[inputSeq], &eof);
         if (eof)
-            *eofP = eof;
+            *eofP = true;
     }
 }
 

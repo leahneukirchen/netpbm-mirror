@@ -1,0 +1,18 @@
+#! /bin/bash
+# This script tests: ppmrough
+# Also requires: pgmnoise
+
+
+${PBM_BINPREFIX}pgmnoise --testrandom --quiet
+case $? in
+   81)
+      # Should print: 378403602 30015
+      ${PBM_TESTPREFIX}ppmrough  -randomseed 1 | cksum
+      ;;
+
+   8[02-9] | 90)
+       echo "Skipping: random number generator is not glibc." 1>&2
+       exit 80;;
+
+   *)  exit 1;;  # pgmnoise --testrandom failed
+esac
