@@ -1,0 +1,29 @@
+#! /bin/bash
+# This script tests: pgmcrater
+# Also requires: pgmnoise
+
+# This test is sensitive to differences in floating point math.
+# With GCC slight results start to appear with -number 75 in
+# the following test.  Compiler type (GCC, Clang, etc.),
+# SSE math (by default off with x86 32 bit on with x86 64 bit)
+# and --ffast-math are factors.
+
+# We hope that by keeping the number of craters small the
+# difference will not show up.
+#
+# The slight differences in the image file are not discernable by
+# the naked eye.
+
+${PBM_BINPREFIX}pgmnoise --testrandom --quiet
+case $? in
+   81)
+      # Should print: 3828822912 65551
+      ${PBM_TESTPREFIX}pgmcrater -quiet -number 25 -randomseed 1 | cksum
+      ;;
+
+   8[02-9] | 90)
+       echo "Skipping: random number generator is not glibc." 1>&2
+       exit 80;;
+
+   *)  exit 1;;  # pgmnoise --testrandom failed
+esac

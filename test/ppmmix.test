@@ -25,5 +25,4 @@ ${PBM_BINPREFIX}pnminvert testimg.ppm | ${PBM_TESTPREFIX}ppmmix .5 \
     testimg.ppm - | tee ${tmpdir}/a3.ppm | \
   ${PBM_BINPREFIX}pamsumm -brief -max &&
   ${PBM_BINPREFIX}pamsumm -brief -min ${tmpdir}/a3.ppm &&
-
 rm ${tmpdir}/a3.ppm

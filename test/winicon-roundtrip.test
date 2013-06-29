@@ -1,0 +1,13 @@
+#! /bin/bash
+# This script tests: pamtowinicon winicontopam
+# Also requires: pnmcut pnmtile pamtopnm ppmtopgm pgmtopbm
+
+${PBM_BINPREFIX}pnmcut --left=30 --width=48 --height=48 testimg.ppm | \
+${PBM_TESTPREFIX}pamtowinicon | ${PBM_TESTPREFIX}winicontopam | \
+  ${PBM_BINPREFIX}pamtopnm | cksum
+
+${PBM_BINPREFIX}pnmtile 32 32 testgrid.pbm | \
+${PBM_TESTPREFIX}pamtowinicon | ${PBM_TESTPREFIX}winicontopam | \
+  ${PBM_BINPREFIX}pamtopnm | ${PBM_BINPREFIX}ppmtopgm | \
+  ${PBM_BINPREFIX}pgmtopbm  -th -val=0.5 | cksum
+

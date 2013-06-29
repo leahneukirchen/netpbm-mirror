@@ -1,0 +1,15 @@
+#! /bin/bash
+# This script tests: giftopnm pamtogif pnmquant
+# Also requires: pnmcolormap pnmremap
+
+# Should print 0
+
+colors=15      # any value between 2 - 256 works
+
+${PBM_TESTPREFIX}pnmquant $colors testimg.ppm > ${tmpdir}/quant.ppm &&
+${PBM_TESTPREFIX}pamtogif ${tmpdir}/quant.ppm | ${PBM_TESTPREFIX}giftopnm | \
+   cmp -s - ${tmpdir}/quant.ppm > /dev/null
+echo $?
+
+rm ${tmpdir}/quant.ppm
+

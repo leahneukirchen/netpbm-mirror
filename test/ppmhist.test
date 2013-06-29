@@ -1,6 +1,6 @@
 #! /bin/bash
 # This script tests: ppmhist
-# Also requires: pgmhist pgmramp
+# Also requires: pgmramp
 
 ${PBM_BINPREFIX}pgmramp -maxval=8 -lr 8 2 | ${PBM_TESTPREFIX}ppmhist
 ${PBM_TESTPREFIX}ppmhist -map -sort=rgb testimg.ppm | cksum

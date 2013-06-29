@@ -1,6 +1,6 @@
 #! /bin/bash
 # This script tests: pbmclean
-# Also requires: pbmmake pbmpage pnmmargin
+# Also requires: pbmmake pbmpage pnmmargin pnmpad
 
 ${PBM_BINPREFIX}pbmmake -g 3 3 | ${PBM_BINPREFIX}pnmmargin -black 2 \
  >${tmpdir}/test.pbm

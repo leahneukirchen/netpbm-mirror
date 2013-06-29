@@ -102,6 +102,7 @@ pamtosvg: ok
 pamtotga: ok
 pamtotiff: ok
 pamtouil: ok
+pamtowinicon: ok
 pamtoxvmini: ok
 pamundice: ok
 pamwipeout: ok
@@ -329,6 +330,7 @@ ximtoppm: ok
 xpmtoppm: ok
 xvminitoppm: ok
 xwdtopnm: ok
+winicontopam: ok
 ybmtopbm: ok
 yuvsplittoppm: ok
 yuvtoppm: ok
@@ -348,3 +350,5 @@ ppmquant: ok
 ppmquantall: ok
 ppmrainbow: ok
 ppmfade: ok
+pamstretch-gen: ok
+pcdovtoppm: ok
