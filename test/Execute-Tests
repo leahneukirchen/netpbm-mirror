@@ -89,7 +89,7 @@ fi
 # For now only "SUCCESS" and "FAILURE" are used.
 declare -a array=(0 0 0 0 0 0)
 declare -a status=("SUCCESS" "FAILURE" "UNEXPECTED SUCCESS"
-                   "EXPECTED FAILURE" "NOT SUPPORTED" "TOTAL SUPPORTED")
+                   "EXPECTED FAILURE" "NOT TESTABLE" "TOTAL TESTABLE")
 
 # Copy test files to the current work directory
 
@@ -132,9 +132,9 @@ case $result in
         then let result=0;  rm  ${t%.test}.out ;
         else let result=1;
      fi
-     let supported=1 ;;
-80) let result=4 ; let supported=0;;
-*)  let result=1 ; let supported=1;;
+     let testable=1 ;;
+80) let result=4 ; let testable=0;;
+*)  let result=1 ; let testable=1;;
 esac
 
 # Report whether a single test succeeded or failed.
@@ -142,7 +142,7 @@ esac
 
 echo $t: ${status[${result}]}; echo
 let array[${result}]=${array[${result}]}+1
-let array[5]=${array[5]}+$supported
+let array[5]=${array[5]}+$testable
 
 done
 
@@ -180,7 +180,7 @@ echo "All tests done."
 date -R -u
 
 
-# Exit with status 0 if all supported tests succeeded, 1 otherwise.
+# Exit with status 0 if all possible tests succeeded, 1 otherwise.
 
 if [[ ${array[0]} -eq ${array[5]} ]]
 then exit 0
