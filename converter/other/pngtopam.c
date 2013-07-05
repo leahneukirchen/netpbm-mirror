@@ -38,15 +38,21 @@
 
 enum AlphaHandling {ALPHA_NONE, ALPHA_ONLY, ALPHA_MIX, ALPHA_IN};
 
+typedef struct {
+    bool needCorrection;
+    double gamma;
+} GammaCorrection;
+
 struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *inputFilespec;  /* '-' if stdin */
+    const char * inputFileName;  /* '-' if stdin */
     unsigned int verbose;
     enum AlphaHandling alpha;
     const char * background;
-    float gamma;  /* -1.0 means unspecified */
+    unsigned int gammaSpec;
+    float gamma;
     const char * text;
     unsigned int time;
     unsigned int byrow;
@@ -79,7 +85,7 @@ parseCommandLine(int                  argc,
     unsigned int option_def_index;
 
     unsigned int alphaSpec, alphapamSpec, mixSpec,
-        backgroundSpec, gammaSpec, textSpec;
+        backgroundSpec, textSpec;
 
     MALLOCARRAY(option_def, 100);
 
@@ -95,7 +101,7 @@ parseCommandLine(int                  argc,
     OPTENT3(0, "background",  OPT_STRING, &cmdlineP->background,
             &backgroundSpec,          0);
     OPTENT3(0, "gamma",       OPT_FLOAT,  &cmdlineP->gamma,
-            &gammaSpec,               0);
+            &cmdlineP->gammaSpec,     0);
     OPTENT3(0, "text",        OPT_STRING, &cmdlineP->text,
             &textSpec,                0);
     OPTENT3(0, "time",        OPT_FLAG,   NULL,                  
@@ -128,16 +134,13 @@ parseCommandLine(int                  argc,
     if (!backgroundSpec)
         cmdlineP->background = NULL;
 
-    if (!gammaSpec)
-        cmdlineP->gamma = -1.0;
-
     if (!textSpec)
         cmdlineP->text = NULL;
 
     if (argc-1 < 1)
-        cmdlineP->inputFilespec = "-";
+        cmdlineP->inputFileName = "-";
     else if (argc-1 == 1)
-        cmdlineP->inputFilespec = argv[1];
+        cmdlineP->inputFileName = argv[1];
     else
         pm_error("Program takes at most one argument: input file name.  "
             "you specified %d", argc-1);
@@ -199,29 +202,28 @@ pngColorEqual(pngcolor const comparand,
 
 
 static png_uint_16
-gammaCorrect(png_uint_16 const v,
-             float       const g,
-             png_uint_16 const maxval) {
+gammaCorrect(png_uint_16     const uncorrected,
+             GammaCorrection const gamma,
+             png_uint_16     const maxval) {
 
-    if (g != -1.0)
+    if (gamma.needCorrection) {
+        double const uncorrectedN = (double) uncorrected / maxval;
         return (png_uint_16)
-            ROUNDU(pow((double) v / maxval, (1.0 / g)) * maxval);
-    else
-        return v;
+            ROUNDU(pow(uncorrectedN, (1.0 / gamma.gamma)) * maxval);
+    } else
+        return uncorrected;
 }
 
 
 
 static pngcolor
-gammaCorrectColor(pngcolor    const color,
-                  double      const gamma,
-                  png_uint_16 const maxval) {
+gammaCorrectColor(pngcolor        const color,
+                  GammaCorrection const gamma,
+                  png_uint_16     const maxval) {
 
     pngcolor retval;
 
     retval.r = gammaCorrect(color.r, gamma, maxval);
-    retval.g = gammaCorrect(color.g, gamma, maxval);
-    retval.b = gammaCorrect(color.b, gamma, maxval);
 
     return retval;
 }
@@ -741,16 +743,16 @@ transColor(struct pngx * const pngxP) {
 
 
 static bool
-isTransparentColor(pngcolor      const color,
-                   struct pngx * const pngxP,
-                   double        const totalgamma) {
+isTransparentColor(pngcolor        const color,
+                   struct pngx *   const pngxP,
+                   GammaCorrection const gamma) {
 /*----------------------------------------------------------------------------
    Return TRUE iff pixels of color 'color' are supposed to be transparent
    everywhere they occur.  Assume it's an RGB image.
 
-   'color' has been gamma-corrected and 'totalgamma' is the gamma value that
-   was used for that (we need to know that because *pngxP identifies the
-   color that is supposed to be transparent in _not_ gamma-corrected form!).
+   'gamma' indicats what gamma correction has been applied to 'color' (we need
+   to know that because *pngxP identifies the color that is supposed to be
+   transparent in _not_ gamma-corrected form!).
 -----------------------------------------------------------------------------*/
     bool retval;
 
@@ -773,13 +775,13 @@ isTransparentColor(pngcolor      const color,
     
         switch (pngx_colorType(pngxP)) {
         case PNG_COLOR_TYPE_GRAY:
-            retval = color.r == gammaCorrect(transColor16.gray, totalgamma,
+            retval = color.r == gammaCorrect(transColor16.gray, gamma,
                                              pngxP->maxval);
             break;
         default: {
             pngcolor const transColor = pngcolorFrom16(transColor16);
             retval = pngColorEqual(color,
-                                   gammaCorrectColor(transColor, totalgamma,
+                                   gammaCorrectColor(transColor, gamma,
                                                      pngxP->maxval));
         }
         }
@@ -792,12 +794,32 @@ isTransparentColor(pngcolor      const color,
 
 
 static void
-setupGammaCorrection(struct pngx * const pngxP,
-                     float         const displaygamma,
-                     float *       const totalgammaP) {
+setupGammaCorrection(struct pngx *     const pngxP,
+                     bool              const screenGammaIsKnown,
+                     float             const screenGamma,
+                     GammaCorrection * const gammaCorrectionP) {
+/*----------------------------------------------------------------------------
+   Set up to have values from the PNG gamma-corrected.
 
-    if (displaygamma == -1.0)
-        *totalgammaP = -1.0;
+   Return as *gammaCorrectionP the correction necessary and tell the
+   libpng image reader *pngxP to do that same correction - on the pixels
+   only, as it can't do it on anything else (hence, Caller will have to
+   use *gammaCorrectionP to do it).
+
+   'screenGammaIsKnown' means we know what the screen gamma is, and it is
+   'screenGamma'.  If we don't know what the screen gamma is, gamma 
+   correction is not possible, so we set up for no gamma correction.
+
+   The gamma correction we ordain is a combination of the image gamma,
+   recorded in the PNG input and represented by *pngxP, and the screen gamma.
+
+   Note that "screen gamma" is a characteristic of both the display and the
+   viewing conditions.  There are also "display gamma" and "viewing gamma,"
+   respectively, but we don't care about the breakdown.  In a dimly lit room,
+   viewing gamma is 1 and screen gamma is the same as the display gamma.
+-----------------------------------------------------------------------------*/
+    if (!screenGammaIsKnown)
+        gammaCorrectionP->needCorrection = false;
     else {
         float imageGamma;
         if (pngx_chunkIsPresent(pngxP, PNG_INFO_gAMA))
@@ -808,23 +830,26 @@ setupGammaCorrection(struct pngx * const pngxP,
             imageGamma = 1.0;
         }
 
-        if (fabs(displaygamma * imageGamma - 1.0) < .01) {
-            *totalgammaP = -1.0;
+        if (fabs(screenGamma * imageGamma - 1.0) < .01) {
+            gammaCorrectionP->needCorrection = false;
             if (verbose)
                 pm_message("image gamma %4.2f matches "
-                           "display gamma %4.2f.  No conversion.",
-                           imageGamma, displaygamma);
+                           "screen gamma %4.2f.  No conversion.",
+                           imageGamma, screenGamma);
         } else {
-            pngx_setGamma(pngxP, displaygamma, imageGamma);
-            *totalgammaP = imageGamma * displaygamma;
+            pngx_setGamma(pngxP, screenGamma, imageGamma);
+
+            gammaCorrectionP->needCorrection = true;
+            gammaCorrectionP->gamma = imageGamma * screenGamma;
             /* In case of gamma-corrections, sBIT's as in the
                PNG-file are not valid anymore 
             */
             pngx_removeChunk(pngxP, PNG_INFO_sBIT);
             if (verbose)
                 pm_message("image gamma is %4.2f, "
-                           "converted for display gamma of %4.2f",
-                           imageGamma, displaygamma);
+                           "display gamma is %4.2f; "
+                           "combined gamma is %4.2f",
+                           imageGamma, screenGamma, gammaCorrectionP->gamma);
         }
     }
 }
@@ -1149,11 +1174,11 @@ determineOutputType(struct pngx *       const pngxP,
 
 
 static void
-getBackgroundColor(struct pngx * const pngxP,
-                   const char *  const requestedColor,
-                   float         const totalgamma,
-                   xelval        const maxval,
-                   pngcolor *    const bgColorP) {
+getBackgroundColor(struct pngx *   const pngxP,
+                   const char *    const requestedColor,
+                   GammaCorrection const gamma,
+                   xelval          const maxval,
+                   pngcolor *      const bgColorP) {
 /*----------------------------------------------------------------------------
    Figure out what the background color should be.  If the user requested
    a particular color ('requestedColor' not null), that's the one.
@@ -1180,14 +1205,14 @@ getBackgroundColor(struct pngx * const pngxP,
         case PNG_COLOR_TYPE_GRAY:
         case PNG_COLOR_TYPE_GRAY_ALPHA:
             bgColorP->r = bgColorP->g = bgColorP->b = 
-                gammaCorrect(background.gray, totalgamma, pngxP->maxval);
+                gammaCorrect(background.gray, gamma, pngxP->maxval);
             break;
         case PNG_COLOR_TYPE_PALETTE: {
             struct pngx_plte const palette = pngx_plte(pngxP);
             png_color const rawBgcolor = 
                 palette.palette[background.index];
             *bgColorP = gammaCorrectColor(pngcolorFromByte(rawBgcolor),
-                                          totalgamma, pngxP->maxval);
+                                          gamma, pngxP->maxval);
         }
         break;
         case PNG_COLOR_TYPE_RGB:
@@ -1195,7 +1220,7 @@ getBackgroundColor(struct pngx * const pngxP,
             png_color_16 const rawBgcolor = background;
             
             *bgColorP = gammaCorrectColor(pngcolorFrom16(rawBgcolor),
-                                          totalgamma, pngxP->maxval);
+                                          gamma, pngxP->maxval);
         }
         break;
         }
@@ -1259,7 +1284,7 @@ makeTupleRow(const struct pam *  const pamP,
              const png_byte *    const pngRasterRow,
              pngcolor            const bgColor,
              enum AlphaHandling  const alphaHandling,
-             double              const totalgamma) {
+             GammaCorrection     const gamma) {
 /*----------------------------------------------------------------------------
    Convert a raster row as supplied by libpng, at 'pngRasterRow' and
    described by *pngxP, to a libpam-style tuple row at 'tupleRow'.
@@ -1281,7 +1306,7 @@ makeTupleRow(const struct pam *  const pamP,
             fgColor.r = fgColor.g = fgColor.b = GET_PNG_VAL(pngPixelP);
             setTuple(pamP, tuplerow[col], fgColor, bgColor, alphaHandling,
                      pngxP,
-                     isTransparentColor(fgColor, pngxP, totalgamma) ?
+                     isTransparentColor(fgColor, pngxP, gamma) ?
                      0 : pngxP->maxval);
         }
         break;
@@ -1321,7 +1346,7 @@ makeTupleRow(const struct pam *  const pamP,
             fgColor.b = GET_PNG_VAL(pngPixelP);
             setTuple(pamP, tuplerow[col], fgColor, bgColor, alphaHandling,
                      pngxP,
-                     isTransparentColor(fgColor, pngxP, totalgamma) ?
+                     isTransparentColor(fgColor, pngxP, gamma) ?
                      0 : pngxP->maxval);
         }
         break;
@@ -1379,7 +1404,7 @@ writeNetpbm(struct pam *        const pamP,
             Reader *            const rasterReaderP,
             pngcolor            const bgColor,
             enum AlphaHandling  const alphaHandling,
-            double              const totalgamma) {
+            GammaCorrection     const gamma) {
 /*----------------------------------------------------------------------------
    Write a Netpbm image of either the image or the alpha mask, according to
    'alphaHandling' that is in the PNG image described by *pngxP, reading
@@ -1407,7 +1432,7 @@ writeNetpbm(struct pam *        const pamP,
         assert(pngRow);
 
         makeTupleRow(pamP, tuplerow, pngxP, pngRow, bgColor,
-                     alphaHandling, totalgamma);
+                     alphaHandling, gamma);
 
         pnm_writepamrow(pamP, tuplerow);
     }
@@ -1424,7 +1449,7 @@ convertpng(FILE *             const ifP,
 
     Reader * rasterReaderP;
     pngcolor bgColor;
-    float totalgamma;
+    GammaCorrection gamma;
     struct pam pam;
     jmp_buf jmpbuf;
     struct pngx * pngxP;
@@ -1451,11 +1476,11 @@ convertpng(FILE *             const ifP,
 
     warnNonsquarePixels(pngxP, errorLevelP);
 
-    setupGammaCorrection(pngxP, cmdline.gamma, &totalgamma);
+    setupGammaCorrection(pngxP, cmdline.gammaSpec, cmdline.gamma, &gamma);
 
     setupSignificantBits(pngxP, cmdline.alpha, errorLevelP);
 
-    getBackgroundColor(pngxP, cmdline.background, totalgamma, pngxP->maxval,
+    getBackgroundColor(pngxP, cmdline.background, gamma, pngxP->maxval,
                        &bgColor);
   
     pam.size        = sizeof(pam);
@@ -1470,7 +1495,7 @@ convertpng(FILE *             const ifP,
                         &pam.format, &pam.depth, pam.tuple_type);
 
     writeNetpbm(&pam, pngxP, rasterReaderP, bgColor,
-                cmdline.alpha, totalgamma);
+                cmdline.alpha, gamma);
 
     reader_destroy(rasterReaderP);
 
@@ -1497,7 +1522,7 @@ main(int argc, const char *argv[]) {
 
     verbose = cmdline.verbose;
 
-    ifP = pm_openr(cmdline.inputFilespec);
+    ifP = pm_openr(cmdline.inputFileName);
 
     if (cmdline.text)
         tfP = pm_openw(cmdline.text);
