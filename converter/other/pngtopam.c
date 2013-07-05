@@ -327,6 +327,9 @@ reader_createAllAtOnce(struct pngx * const pngxP,
 
    The Reader object reads the PNG at construction time, stores the entire
    raster, and hands it out as you call reader_read().
+
+   It is essential that *pngxP be already fully set up to read the image
+   (all options set).
 -----------------------------------------------------------------------------*/
     Reader * readerP;
 
@@ -1441,9 +1444,6 @@ convertpng(FILE *             const ifP,
     if (verbose)
         dumpPngInfo(pngxP);
 
-    rasterReaderP = cmdline.byrow ? 
-        reader_createRowByRow(pngxP, ifP) : reader_createAllAtOnce(pngxP, ifP);
-
     if (cmdline.time)
         showTime(pngxP);
     if (tfP)
@@ -1468,6 +1468,9 @@ convertpng(FILE *             const ifP,
 
     determineOutputType(pngxP, cmdline.alpha, bgColor, pngxP->maxval,
                         &pam.format, &pam.depth, pam.tuple_type);
+
+    rasterReaderP = cmdline.byrow ? 
+        reader_createRowByRow(pngxP, ifP) : reader_createAllAtOnce(pngxP, ifP);
 
     writeNetpbm(&pam, pngxP, rasterReaderP, bgColor,
                 cmdline.alpha, totalgamma);
@@ -1514,3 +1517,6 @@ main(int argc, const char *argv[]) {
 
     return errorLevel;
 }
+
+
+

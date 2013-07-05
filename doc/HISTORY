@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+13.07.04 BJH  Release 10.63.01
+
+              pngtopam: fix bug: ignores -gamma.  Introduced in 10.48
+              (September 2009).
+
 13.06.29 BJH  Release 10.63.00
 
               Add pamtowinicon, winicontopam.  Thanks Ludolf Holzheid
