@@ -131,12 +131,33 @@ caused a usability problem).
 
 <DT><B>-gamma=</b><i>value</i>
 
-<DD>Converts the image to a new display-gamma value.  If a gAMA chunk
-is present in the <I>png-file</I>, <b>pngtopam</b> uses the specified
-image-gamma value.  If not, <b>pngtopam</b> considers the image-gamma
-to be 1.0.  Based on the image-gamma and the display-gamma given with
-this option, <b>pngtopam</b> adjusts the colors written to the
-<I>pnm-file</I>.
+<dd>This option causes <b>pngtopam</b> to respect the image gamma information
+in the PNG file (from the gAMA chunk).  Probably by historical accident,
+<b>pngtopam</b> ignores that information by default, assuming the image uses
+the same gamma transformation as a Netpbm image, so the output image has
+different colors than the PNG file actually represents if the PNG doesn't
+actually do that.  (However, it is rare for a PNG file to use a gamma
+transformation different from what the Netpbm formats specify, or if it does,
+to specify with a gAMA chuck what that is).
+
+<p>But when you <em>do</em> specify <b>-gamma</b>, you get a rather strange
+additional function, probably a historical mistake:
+<b>pngtopam</b> incorporates the specified screen gamma value into the output
+pixels, so that the samples in the Netpbm output deviate from the Netpbm
+format specifications and are appropriate raw intensity values to send to the
+display.  This function essentially just exercises the ability of the PNG
+library to make gamma corrections to the pixels as it reads them from the PNG
+file to produce values appropriate for sending to a certain display in certain
+viewing conditions.  It's a strange function because it has nothing to do with
+PNG and because in Netpbm, the normal way to make gamma corrections
+appropriate for sending to a ceratin display in certain viewing conditions is
+with the program <b>pngtopam</b>, applied to the normal output of
+<b>pngtopam</b>.
+
+<p>If you specify <b>-gamma</b>, but the PNG image does not specify what gamma
+transformation it uses (there is no gAMA chunk), <b>pngtopam</b> assumes a
+simple power transformation with an image gamma of 1.0.  That is probably not
+not the actual image gamma; it is much more likely to be .45.
 
 <p>Because the gammas of uncompensated monitors are around 2.6, which results 
 in an image-gamma of 0.45, some typical situations are: 
@@ -152,12 +173,9 @@ transparent.  But <b>pngtopam</b> interprets this as applying to the
 gamma-corrected space, and there may be less precision in that space
 than in the original, which means multiple uncorrected colors map to
 the same corrected color.  So imagine that the image contains 3 shades
-of white and specifies that one of them is transparent.  After gamma
+of white (gray) and specifies that one of them is transparent.  After gamma
 correction, those three shades are indistinguishable, so
 <b>pngtopam</b> considers pixels of all three shades to be transparent.
-
-<p>If this is not what you want, don't use <b>gamma</b>.  Instead,
-use <b>pnmgamma</b> on the output.
 
 
 <DT><B>-text=</b><i>file</i>

@@ -81,6 +81,11 @@ to Postscript).  It is designed so that an EPSF stream can be embedded
 in another Postscript stream.  A typical reason to do that is where an
 EPSF stream describes a picture you want in a larger document.
 
+<p>But EPSF is not an image format -- converting from Netpbm format to EPSF
+really means generating a program to print that Netpbm image on paper.  Note
+that there are myriad ways to print an image on paper; <b>pnmtops</b>
+command line options let you control some of them.
+
 <p>An Encapsulated Postscript document conforms to the DSC (Document
 Structuring Convention).  The DSC defines some Postscript comments
 (they're comments from a Postscript point of view, but have semantic
