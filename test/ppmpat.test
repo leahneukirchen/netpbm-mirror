@@ -1,11 +1,10 @@
 #! /bin/bash
 # This script tests: ppmpat
-# Also requires: pgmnoise
 
 # TODO: Write tests for squig and poles.  It appears that they are
 # sensitive to differences in floating point math.
 
-${PBM_BINPREFIX}pgmnoise --testrandom --quiet
+testrandom -q
 case $? in
    81)
        # Test 1. Should print: 4008533639 781
@@ -31,5 +30,5 @@ case $? in
        echo "Skipping: random number generator is not glibc." 1>&2
        exit 80;;
 
-   *)  exit 1;;  # pgmnoise --testrandom failed
+   *)  exit 1;;  # testrandom failed
 esac

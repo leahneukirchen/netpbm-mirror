@@ -1,9 +1,8 @@
 #! /bin/bash
 # This script tests: ppmrough
-# Also requires: pgmnoise
 
 
-${PBM_BINPREFIX}pgmnoise --testrandom --quiet
+testrandom -q
 case $? in
    81)
       # Should print: 378403602 30015
@@ -14,5 +13,5 @@ case $? in
        echo "Skipping: random number generator is not glibc." 1>&2
        exit 80;;
 
-   *)  exit 1;;  # pgmnoise --testrandom failed
+   *)  exit 1;;  # testrandom failed
 esac
