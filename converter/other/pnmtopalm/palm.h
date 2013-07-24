@@ -44,13 +44,9 @@ typedef struct {
 
 typedef Colormap_s * Colormap;
 
-int
-palmcolor_compare_indices(const void * const p1,
-                          const void * const p2);
+qsort_comparison_fn palmcolor_compare_indices;
 
-int
-palmcolor_compare_colors(const void * const p1,
-                         const void * const p2);
+qsort_comparison_fn palmcolor_compare_colors;
 
 Colormap
 palmcolor_build_custom_8bit_colormap(unsigned int const rows,

@@ -100,15 +100,29 @@ parseCommandLine(int argc, const char ** argv,
 
 
 
+#ifndef LITERAL_FN_DEF_MATCH
+static qsort_comparison_fn cmpfn;
+#endif
+
 static int
 countcompare(const void *ch1, const void *ch2) {
+/*----------------------------------------------------------------------------
+   This is a 'qsort' collation function.
+-----------------------------------------------------------------------------*/
     return ((colorhist_vector)ch2)->value - ((colorhist_vector)ch1)->value;
 }
 
 
+
+#ifndef LITERAL_FN_DEF_MATCH
+static qsort_comparison_fn cmpfn;
+#endif
+
 static int
 rgbcompare(const void * arg1, const void * arg2) {
-
+/*----------------------------------------------------------------------------
+   This is a 'qsort' collation function.
+-----------------------------------------------------------------------------*/
     colorhist_vector const ch1 = (colorhist_vector) arg1;
     colorhist_vector const ch2 = (colorhist_vector) arg2;
 

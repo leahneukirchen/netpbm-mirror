@@ -354,7 +354,6 @@ do_ham_body     ARGS((FILE *ifP, FILE *ofp, int cols, int rows, pixval maxval,
                 pixval hammaxval, int nPlanes, pixel *cmap, int colors));
 
 
-static int hcmp (const void *va, const void *vb);
 static pixel *compute_ham_cmap ARGS((int cols, int rows, int maxval, 
                                      int maxcolors, int *colorsP, int hbits));
 
@@ -364,6 +363,10 @@ typedef struct {
     pixval r, g, b;
 } hentry;
 
+
+#ifndef LITERAL_FN_DEF_MATCH
+static qsort_comparison_fn hcmp;
+#endif
 
 static int
 hcmp(const void *va, const void *vb)
