@@ -106,31 +106,6 @@
 
 #define INT16MAX 32767
 
-static void put_big_short ARGS((short s));
-static void put_big_long ARGS((long l));
-#define put_byte(b)     (void)(putc((unsigned char)(b), stdout))
-static void write_bytes ARGS((unsigned char *buffer, int bytes));
-static void ppm_to_ham ARGS((FILE *fp, int cols, int rows, int maxval, pixel *colormap, int colors, int cmapmaxval, int hamplanes));
-static void ppm_to_deep ARGS((FILE *fp, int cols, int rows, int maxval, int bitspercolor));
-static void ppm_to_dcol ARGS((FILE *fp, int cols, int rows, int maxval, DirectColor *dcol));
-static void ppm_to_rgb8 ARGS((FILE *fp, int cols, int rows, int maxval));
-static void ppm_to_rgbn ARGS((FILE *fp, int cols, int rows, int maxval));
-static void ppm_to_std ARGS((FILE *fp, int cols, int rows, int maxval, pixel *colormap, int colors, int cmapmaxval, int maxcolors, int nPlanes));
-static void ppm_to_cmap ARGS((pixel *colormap, int colors, int maxval));
-static void write_bmhd ARGS((int cols, int rows, int nPlanes));
-static void write_cmap ARGS((pixel *colormap, int colors, int maxval));
-static long encode_row ARGS((FILE *outfile, rawtype *rawrow, int cols, int nPlanes));
-static long encode_maskrow ARGS((FILE *outfile, rawtype *rawrow, int cols));
-static int compress_row ARGS((int bytes));
-static void store_bodyrow ARGS((unsigned char *row, int len));
-static int runbyte1 ARGS((int bytes));
-static pixel * next_pixrow ARGS((FILE *fp, int row));
-static int * make_val_table ARGS((int oldmaxval, int newmaxval));
-static void init_read ARGS((FILE *fp, int *colsP, int *rowsP, pixval *maxvalP, int *formatP, int readall));
-static void write_body_rows ARGS((void));
-static void write_camg ARGS((void));
-static int  length_of_text_chunks ARGS((void));
-static void write_text_chunks ARGS((void));
 #define PAD(n)      (ODD(n) ? 1 : 0)    /* pad to a word */
 
 
@@ -183,25 +158,430 @@ static short gen_camg = 0;      /* write CAMG chunk */
 #define WORSTCOMPR(bytes)       ((bytes) + (bytes)/128 + 1)
 #define DO_COMPRESS             (compmethod != cmpNone)
 
-
-/***** parse options and figure out what kind of ILBM to write *****/
-
-static int get_int_val ARGS((char *string, char *option, int bot, int top));
-static int get_compr_method ARGS((char *string));
-static int get_mask_type ARGS((char *string));
-static int get_hammap_mode ARGS((char *string));
-
-
-
 #define NEWDEPTH(pix, table) PPM_ASSIGN((pix), (table)[PPM_GETR(pix)], (table)[PPM_GETG(pix)], (table)[PPM_GETB(pix)])
+
+#define putByte(b)     (void)(putc((unsigned char)(b), stdout))
+
+
+
+/************ other utility functions ************/
+
 
 
 static void
-report_too_many_colors(int         const ifmode,
-                       int         const maxplanes,
-                       int         const hamplanes,
-                       DirectColor const dcol,
-                       int         const deepbits) {
+writeBytes(unsigned char * const buffer,
+           int             const bytes) {
+
+    if( fwrite(buffer, 1, bytes, stdout) != bytes )
+        pm_error("write error");
+}
+
+
+
+static int *
+makeValTable(int const oldmaxval,
+             int const newmaxval) {
+
+    unsigned int i;
+    int * table;
+
+    MALLOCARRAY_NOFAIL(table, oldmaxval + 1);
+    for (i = 0; i <= oldmaxval; ++i)
+        table[i] = ROUNDDIV(i * newmaxval, oldmaxval);
+
+    return table;
+}
+
+
+
+static int  gFormat;
+static int  gCols;
+static int  gMaxval;
+
+static void
+initRead(FILE *   const fp,
+         int *    const colsP,
+         int *    const rowsP,
+         pixval * const maxvalP,
+         int *    const formatP,
+         int      const readall) {
+
+    ppm_readppminit(fp, colsP, rowsP, maxvalP, formatP);
+
+    if( *rowsP >INT16MAX || *colsP >INT16MAX )
+      pm_error ("Input image is too large.");
+
+    if( readall ) {
+        int row;
+
+        pixels = ppm_allocarray(*colsP, *rowsP);
+        for( row = 0; row < *rowsP; row++ )
+            ppm_readppmrow(fp, pixels[row], *colsP, *maxvalP, *formatP);
+        /* pixels = ppm_readppm(fp, colsP, rowsP, maxvalP); */
+    }
+    else {
+        pixrow = ppm_allocrow(*colsP);
+    }
+    gCols = *colsP;
+    gMaxval = *maxvalP;
+    gFormat = *formatP;
+}
+
+
+
+static pixel *
+nextPixrow(FILE * const fp,
+           int    const row) {
+
+    if( pixels )
+        pixrow = pixels[row];
+    else {
+        ppm_readppmrow(fp, pixrow, gCols, gMaxval, gFormat);
+    }
+    if( maskrow ) {
+        int col;
+
+        if( maskfile )
+            pbm_readpbmrow(maskfile, maskrow, maskcols, maskformat);
+        else {
+            for( col = 0; col < gCols; col++ )
+                maskrow[col] = PBM_BLACK;
+        }
+        if( transpColor ) {
+            for( col = 0; col < gCols; col++ )
+                if( PPM_EQUAL(pixrow[col], *transpColor) )
+                    maskrow[col] = PBM_WHITE;
+        }
+    }
+    return pixrow;
+}
+
+
+
+/************ ILBM functions ************/
+
+
+
+static int
+lengthOfTextChunks(void) {
+
+    int len, n;
+
+    len = 0;
+    if( anno_chunk ) {
+        n = strlen(anno_chunk);
+        len += 4 + 4 + n + PAD(n);      /* ID chunksize text */
+    }
+    if( auth_chunk ) {
+        n = strlen(auth_chunk);
+        len += 4 + 4 + n + PAD(n);      /* ID chunksize text */
+    }
+    if( name_chunk ) {
+        n = strlen(name_chunk);
+        len += 4 + 4 + n + PAD(n);      /* ID chunksize text */
+    }
+    if( copyr_chunk ) {
+        n = strlen(copyr_chunk);
+        len += 4 + 4 + n + PAD(n);      /* ID chunksize text */
+    }
+    if( text_chunk ) {
+        n = strlen(text_chunk);
+        len += 4 + 4 + n + PAD(n);      /* ID chunksize text */
+    }
+    return len;
+}
+
+
+
+static void
+writeTextChunks(void) {
+
+    int n;
+
+    if( anno_chunk ) {
+        n = strlen(anno_chunk);
+        pm_writebiglong(stdout, ID_ANNO);
+        pm_writebiglong(stdout, n);
+        writeBytes((unsigned char *)anno_chunk, n);
+        if( ODD(n) )
+            putByte(0);
+    }
+    if( auth_chunk ) {
+        n = strlen(auth_chunk);
+        pm_writebiglong(stdout, ID_AUTH);
+        pm_writebiglong(stdout, n);
+        writeBytes((unsigned char *)auth_chunk, n);
+        if( ODD(n) )
+            putByte(0);
+    }
+    if( copyr_chunk ) {
+        n = strlen(copyr_chunk);
+        pm_writebiglong(stdout, ID_copy);
+        pm_writebiglong(stdout, n);
+        writeBytes((unsigned char *)copyr_chunk, n);
+        if( ODD(n) )
+            putByte(0);
+    }
+    if( name_chunk ) {
+        n = strlen(name_chunk);
+        pm_writebiglong(stdout, ID_NAME);
+        pm_writebiglong(stdout, n);
+        writeBytes((unsigned char *)name_chunk, n);
+        if( ODD(n) )
+            putByte(0);
+    }
+    if( text_chunk ) {
+        n = strlen(text_chunk);
+        pm_writebiglong(stdout, ID_TEXT);
+        pm_writebiglong(stdout, n);
+        writeBytes((unsigned char *)text_chunk, n);
+        if( ODD(n) )
+            putByte(0);
+    }
+}
+
+
+static void
+writeCmap(pixel * const colormap,
+          int     const colors,
+          int     const maxval) {
+
+    int cmapsize, i;
+
+    cmapsize = 3 * colors;
+
+    /* write colormap */
+    pm_writebiglong(stdout, ID_CMAP);
+    pm_writebiglong(stdout, cmapsize);
+    if( maxval != MAXCOLVAL ) {
+        int *table;
+        pm_message("maxval is not %d - automatically rescaling colors", 
+                   MAXCOLVAL);
+        table = makeValTable(maxval, MAXCOLVAL);
+        for( i = 0; i < colors; i++ ) {
+            putByte(table[PPM_GETR(colormap[i])]);
+            putByte(table[PPM_GETG(colormap[i])]);
+            putByte(table[PPM_GETB(colormap[i])]);
+        }
+        free(table);
+    }
+    else {
+        for( i = 0; i < colors; i++ ) {
+            putByte(PPM_GETR(colormap[i]));
+            putByte(PPM_GETG(colormap[i]));
+            putByte(PPM_GETB(colormap[i]));
+        }
+    }
+    if( ODD(cmapsize) )
+        putByte(0);
+}
+
+
+
+static void
+writeBmhd(int const cols,
+          int const rows,
+          int const nPlanes) {
+
+    unsigned char xasp, yasp;
+
+    xasp = 10;  /* initial value */
+    yasp = 10;  /* initial value */
+
+    if( viewportmodes & vmLACE )
+        xasp *= 2;
+    if( viewportmodes & vmHIRES )
+        yasp *= 2;
+
+    pm_writebiglong(stdout, ID_BMHD);
+    pm_writebiglong(stdout, BitMapHeaderSize);
+
+    pm_writebigshort(stdout, cols);
+    pm_writebigshort(stdout, rows);
+    pm_writebigshort(stdout, 0);                       /* x-offset */
+    pm_writebigshort(stdout, 0);                       /* y-offset */
+    putByte(nPlanes);                      /* no of planes */
+    putByte(maskmethod);                   /* masking */
+    putByte(compmethod);                   /* compression */
+    putByte(BMHD_FLAGS_CMAPOK);            /* flags */
+    if( maskmethod == mskHasTransparentColor )
+        pm_writebigshort(stdout, transpIndex);
+    else
+        pm_writebigshort(stdout, 0);
+    putByte(xasp);                         /* x-aspect */
+    putByte(yasp);                         /* y-aspect */
+    pm_writebigshort(stdout, cols);                    /* pageWidth */
+    pm_writebigshort(stdout, rows);                    /* pageHeight */
+}
+
+
+
+/************ compression ************/
+
+
+
+static int
+runbyte1(int const size) {
+
+/* runbyte1 algorithm by Robert A. Knop (rknop@mop.caltech.edu) */
+
+    int in,out,count,hold;
+    unsigned char *inbuf = coded_rowbuf;
+    unsigned char *outbuf = compr_rowbuf;
+
+
+    in=out=0;
+    while( in<size ) {
+        if( (in<size-1) && (inbuf[in]==inbuf[in+1]) ) {    
+            /*Begin replicate run*/
+            for( count=0, hold=in; 
+                 in < size && inbuf[in] == inbuf[hold] && count < 128; 
+                 in++, count++)
+                ;
+            outbuf[out++]=(unsigned char)(char)(-count+1);
+            outbuf[out++]=inbuf[hold];
+        }
+        else {  /*Do a literal run*/
+            hold=out; out++; count=0;
+            while( ((in>=size-2)&&(in<size)) || 
+                   ((in<size-2) && ((inbuf[in]!=inbuf[in+1])
+                                    ||(inbuf[in]!=inbuf[in+2]))) ) {
+                outbuf[out++]=inbuf[in++];
+                if( ++count>=128 )
+                    break;
+            }
+            outbuf[hold]=count-1;
+        }
+    }
+    return(out);
+}
+
+
+
+static void
+storeBodyrow(unsigned char * const row,
+             int             const len) {
+
+    int idx;
+
+    idx = cur_block->used;  /* initial value */
+
+    if (idx >= ROWS_PER_BLOCK) {
+        MALLOCVAR_NOFAIL(cur_block->next);
+        cur_block = cur_block->next;
+        cur_block->used = idx = 0;
+        cur_block->next = NULL;
+    }
+    MALLOCARRAY_NOFAIL(cur_block->row[idx], len);
+    cur_block->len[idx] = len;
+    memcpy(cur_block->row[idx], row, len);
+    ++cur_block->used;
+}
+
+
+
+static int
+compressRow(int const bytes) {
+
+    int newbytes;
+
+    switch( compmethod ) {
+        case cmpByteRun1:
+            newbytes = runbyte1(bytes);
+            break;
+        default:
+            pm_error("compressRow(): unknown compression method %d", 
+                     compmethod);
+    }
+    storeBodyrow(compr_rowbuf, newbytes);
+
+    return newbytes;
+}
+
+
+
+static const unsigned char bitmask[] = {1, 2, 4, 8, 16, 32, 64, 128};
+
+
+
+static long
+encodeRow(FILE *    const outfile,
+              /* if non-NULL, write uncompressed row to this file */
+          rawtype * const rawrow,
+          int       const cols,
+          int       const nPlanes) {
+
+    /* encode algorithm by Johan Widen (jw@jwdata.se) */
+
+    int plane, bytes;
+    long retbytes = 0;
+
+    bytes = RowBytes(cols);
+
+    /* Encode and write raw bytes in plane-interleaved form. */
+    for( plane = 0; plane < nPlanes; plane++ ) {
+        register int col, cbit;
+        register rawtype *rp;
+        register unsigned char *cp;
+        int mask;
+
+        mask = 1 << plane;
+        cbit = -1;
+        cp = coded_rowbuf-1;
+        rp = rawrow;
+        for( col = 0; col < cols; col++, cbit--, rp++ ) {
+            if( cbit < 0 ) {
+                cbit = 7;
+                *++cp = 0;
+            }
+            if( *rp & mask )
+                *cp |= bitmask[cbit];
+        }
+        if( outfile ) {
+            writeBytes(coded_rowbuf, bytes);
+            retbytes += bytes;
+        }
+        else
+            retbytes += compressRow(bytes);
+    }
+    return retbytes;
+}
+
+
+
+static long
+encodeMaskrow(FILE *    const ofP,
+              rawtype * const rawrow,
+              int       const cols) {
+
+    int col;
+
+    for( col = 0; col < cols; col++ ) {
+        if( maskrow[col] == PBM_BLACK )
+            rawrow[col] = 1;
+        else
+            rawrow[col] = 0;
+    }
+    return encodeRow(ofP, rawrow, cols, 1);
+}
+
+
+
+static void
+writeCamg(void) {
+    pm_writebiglong(stdout, ID_CAMG);
+    pm_writebiglong(stdout, CAMGChunkSize);
+    pm_writebiglong(stdout, viewportmodes);
+}
+
+
+
+static void
+reportTooManyColors(int         const ifmode,
+                    int         const maxplanes,
+                    int         const hamplanes,
+                    DirectColor const dcol,
+                    int         const deepbits) {
     
     int const maxcolors = 1 << maxplanes;
 
@@ -237,17 +617,19 @@ report_too_many_colors(int         const ifmode,
 }
 
 
+
 static int
-get_int_val(string, option, bot, top)
-    char *string, *option;
-    int bot, top;
-{
+getIntVal(const char * const string,
+          const char * const option,
+          int          const bot,
+          int          const top) {
+
     int val;
 
-    if( sscanf(string, "%d", &val) != 1 )
+    if (sscanf(string, "%d", &val) != 1 )
         pm_error("option \"%s\" needs integer argument", option);
 
-    if( val < bot || val > top )
+    if (val < bot || val > top)
         pm_error("option \"%s\" argument value out of range (%d..%d)", 
                  option, bot, top);
 
@@ -255,10 +637,10 @@ get_int_val(string, option, bot, top)
 }
 
 
+
 static int
-get_compr_method(string)
-    char *string;
-{
+getComprMethod(const char * const string) {
+
     int retval;
     if( pm_keymatch(string, "none", 1) || pm_keymatch(string, "0", 1) )
         retval = cmpNone;
@@ -271,10 +653,10 @@ get_compr_method(string)
 }
 
 
+
 static int
-get_mask_type(string)
-    char *string;
-{
+getMaskType(const char * const string) {
+
     int retval;
 
     if( pm_keymatch(string, "none", 1) || pm_keymatch(string, "0", 1) )
@@ -297,10 +679,10 @@ get_mask_type(string)
 }
 
 
+
 static int
-get_hammap_mode(string)
-    char *string;
-{
+getHammapMode(const char * const string) {
+
     int retval;
 
     if( pm_keymatch(string, "grey", 1) || pm_keymatch(string, "gray", 1) )
@@ -320,14 +702,16 @@ get_hammap_mode(string)
 }
 
 
+
 /************ colormap file ************/
 
+
+
 static void
-ppm_to_cmap(colorrow, colors, maxval)
-    pixel *colorrow;
-    int colors;
-    int maxval;
-{
+ppmToCmap(pixel * const colorrow,
+          int     const colors,
+          int     const maxval) {
+
     int formsize, cmapsize;
 
     cmapsize = colors * 3;
@@ -336,26 +720,21 @@ ppm_to_cmap(colorrow, colors, maxval)
         4 +                                 /* ILBM */
         4 + 4 + BitMapHeaderSize +          /* BMHD size header */
         4 + 4 + cmapsize + PAD(cmapsize) +  /* CMAP size colormap */
-        length_of_text_chunks();
+        lengthOfTextChunks();
 
-    put_big_long(ID_FORM);
-    put_big_long(formsize);
-    put_big_long(ID_ILBM);
+    pm_writebiglong(stdout, ID_FORM);
+    pm_writebiglong(stdout, formsize);
+    pm_writebiglong(stdout, ID_ILBM);
 
-    write_bmhd(0, 0, 0);
-    write_text_chunks();
-    write_cmap(colorrow, colors, maxval);
+    writeBmhd(0, 0, 0);
+    writeTextChunks();
+    writeCmap(colorrow, colors, maxval);
 }
+
+
 
 /************ HAM ************/
 
-static long 
-do_ham_body     ARGS((FILE *ifP, FILE *ofp, int cols, int rows, pixval maxval,
-                pixval hammaxval, int nPlanes, pixel *cmap, int colors));
-
-
-static pixel *compute_ham_cmap ARGS((int cols, int rows, int maxval, 
-                                     int maxcolors, int *colorsP, int hbits));
 
 
 typedef struct {
@@ -364,24 +743,33 @@ typedef struct {
 } hentry;
 
 
+
 #ifndef LITERAL_FN_DEF_MATCH
 static qsort_comparison_fn hcmp;
 #endif
 
 static int
-hcmp(const void *va, const void *vb)
-{
-    return(((hentry *)vb)->count - ((hentry *)va)->count);  
-        /* reverse sort, highest count first */
+hcmp(const void * const a,
+     const void * const b) {
+
+    /* reverse sort, highest count first */
+
+    const hentry * const vaP = a;
+    const hentry * const vbP = b;
+
+    return(vbP->count - vaP->count);  
 }
 
 
+
 static pixel *
-compute_ham_cmap(cols, rows, maxval, maxcolors, colorsP, hbits)
-    int cols, rows, maxval, maxcolors;
-    int *colorsP;
-    int hbits;
-{
+computeHamCmap(int   const cols,
+               int   const rows,
+               int   const maxval,
+               int   const maxcolors,
+               int * const colorsP,
+               int   const hbits) {
+
     int colors;
     hentry *hmap;
     pixel *cmap;
@@ -408,7 +796,7 @@ compute_ham_cmap(cols, rows, maxval, maxcolors, colorsP, hbits)
         }
     }
 
-    htable = make_val_table(maxval, hmaxval);
+    htable = makeValTable(maxval, hmaxval);
     for( row = 0; row < rows; row++ ) {
         unsigned int col;
         for( col = 0; col < cols; ++col) {
@@ -488,167 +876,38 @@ out:
 }
 
 
+
 static void
-ppm_to_ham(fp, cols, rows, maxval, colormap, colors, cmapmaxval, hamplanes)
-    FILE *fp;
-    int cols, rows, maxval;
-    pixel *colormap;
-    int colors, cmapmaxval, hamplanes;
-{
-    int hamcolors, nPlanes, i, hammaxval;
-    long oldsize, bodysize, formsize, cmapsize;
-    int *table = NULL;
+writeBodyRows(void) {
 
-    if( maskmethod == mskHasTransparentColor ) {
-        pm_message("masking method '%s' not usable with HAM - "
-                   "using '%s' instead",
-                   mskNAME[mskHasTransparentColor], mskNAME[mskHasMask]);
-        maskmethod = mskHasMask;
-    }
+    bodyblock *b;
+    int i;
+    long total = 0;
 
-    hamcolors = 1 << (hamplanes-2);
-    hammaxval = pm_bitstomaxval(hamplanes-2);
-
-    if( colors == 0 ) {
-        /* no colormap, make our own */
-        switch( hammapmode ) {
-            case HAMMODE_GRAY:
-                colors = hamcolors;
-                MALLOCARRAY_NOFAIL(colormap, colors);
-#ifdef DEBUG
-                pm_message("generating grayscale colormap");
-#endif
-                table = make_val_table(hammaxval, MAXCOLVAL);
-                for( i = 0; i < colors; i++ )
-                    PPM_ASSIGN(colormap[i], table[i], table[i], table[i]);
-                free(table);
-                cmapmaxval = MAXCOLVAL;
-                break;
-            case HAMMODE_FIXED: {
-                int entries, val;
-                double step;
-
-#ifdef DEBUG
-                pm_message("generating rgb colormap");
-#endif
-                /* generate a colormap of 7 "rays" in an RGB color cube:
-                        r, g, b, r+g, r+b, g+b, r+g+b
-                   we need one colormap entry for black, so the number of
-                   entries per ray is (maxcolors-1)/7 */
-
-                entries = (hamcolors-1)/7;
-                colors = 7*entries+1;
-                MALLOCARRAY_NOFAIL(colormap, colors);
-                step = (double)MAXCOLVAL / (double)entries;
-
-                PPM_ASSIGN(colormap[0], 0, 0, 0);
-                for( i = 1; i <= entries; i++ ) {
-                    val = (int)((double)i * step);
-                    PPM_ASSIGN(colormap[          i], val,   0,   0); /* r */
-                    PPM_ASSIGN(colormap[  entries+i],   0, val,   0); /* g */
-                    PPM_ASSIGN(colormap[2*entries+i],   0,   0, val); /* b */
-                    PPM_ASSIGN(colormap[3*entries+i], val, val,   0); /* r+g */
-                    PPM_ASSIGN(colormap[4*entries+i], val,   0, val); /* r+b */
-                    PPM_ASSIGN(colormap[5*entries+i],   0, val, val); /* g+b */
-                    PPM_ASSIGN(colormap[6*entries+i], val, val, val); /*r+g+b*/
-                }
-                cmapmaxval = MAXCOLVAL;
-            }
-            break;
-            case HAMMODE_RGB4:
-                colormap = compute_ham_cmap(cols, rows, maxval, hamcolors, 
-                                            &colors, 4);
-                cmapmaxval = 15;
-                break;
-            case HAMMODE_RGB5:
-                colormap = compute_ham_cmap(cols, rows, maxval, 
-                                            hamcolors, &colors, 5);
-                cmapmaxval = 31;
-                break;
-            default:
-                pm_error("ppm_to_ham(): unknown hammapmode - can't happen");
+    for( b = &firstblock; b != NULL; b = b->next ) {
+        for( i = 0; i < b->used; i++ ) {
+            writeBytes(b->row[i], b->len[i]);
+            total += b->len[i];
         }
     }
-    else {
-        hammapmode = HAMMODE_MAPFILE;
-        if( colors > hamcolors ) {
-            pm_message("colormap too large - using first %d colors", 
-                       hamcolors);
-            colors = hamcolors;
-        }
-    }
-
-    if( cmapmaxval != maxval ) {
-        int i, *table;
-        pixel *newcmap;
-
-        newcmap = ppm_allocrow(colors);
-        table = make_val_table(cmapmaxval, maxval);
-        for( i = 0; i < colors; i++ )
-            PPM_ASSIGN(newcmap[i], 
-                       table[PPM_GETR(colormap[i])], 
-                       table[PPM_GETG(colormap[i])], 
-                       table[PPM_GETB(colormap[i])]);
-        free(table);
-        ppm_freerow(colormap);
-        colormap = newcmap;
-    }
-    if( sortcmap )
-        ppm_sortcolorrow(colormap, colors, PPM_STDSORT);
-
-    nPlanes = hamplanes;
-    cmapsize = colors * 3;
-
-    bodysize = oldsize = rows * TOTALPLANES(nPlanes) * RowBytes(cols);
-    if( DO_COMPRESS ) {
-        bodysize = do_ham_body(fp, NULL, cols, rows, maxval, 
-                               hammaxval, nPlanes, colormap, colors);
-        /*bodysize = do_ham_body(fp, NULL, cols, 
-          rows, maxval, hammaxval, nPlanes, colbits, nocolor);*/
-        if( bodysize > oldsize )
-            pm_message("warning - %s compression increases BODY size "
-                       "by %ld%%", 
-                       cmpNAME[compmethod], 100*(bodysize-oldsize)/oldsize);
-        else
-            pm_message("BODY compression (%s): %ld%%", 
-                       cmpNAME[compmethod], 100*(oldsize-bodysize)/oldsize);
-    }
-
-
-    formsize =
-        4 +                                 /* ILBM */
-        4 + 4 + BitMapHeaderSize +          /* BMHD size header */
-        4 + 4 + CAMGChunkSize +             /* CAMG size viewportmodes */
-        4 + 4 + cmapsize + PAD(cmapsize) +  /* CMAP size colormap */
-        4 + 4 + bodysize + PAD(bodysize) +  /* BODY size data */
-        length_of_text_chunks();
-
-    put_big_long(ID_FORM);
-    put_big_long(formsize);
-    put_big_long(ID_ILBM);
-
-    write_bmhd(cols, rows, nPlanes);
-    write_text_chunks();
-    write_camg();       /* HAM requires CAMG chunk */
-    write_cmap(colormap, colors, maxval);
-
-    /* write body */
-    put_big_long(ID_BODY);
-    put_big_long(bodysize);
-    if( DO_COMPRESS )
-        write_body_rows();
-    else
-        do_ham_body(fp, NULL, cols, rows, maxval, hammaxval, 
-                    nPlanes, colormap, colors);
+    if( ODD(total) )
+        putByte(0);
 }
 
 
+
 static long
-do_ham_body(FILE *ifP, FILE *ofp, int cols, int rows,
-            pixval maxval, pixval hammaxval, int nPlanes,
-            pixel *colormap, int colors)
-{
-    register int col, row, i;
+doHamBody(FILE *  const ifP,
+          FILE *  const ofP,
+          int     const cols,
+          int     const rows,
+          pixval  const maxval,
+          pixval  const hammaxval,
+          int     const nPlanes,
+          pixel * const colormap,
+          int     const colors) {
+
+    int col, row, i;
     rawtype *raw_rowbuf;
     ppm_fs_info *fi = NULL;
     colorhash_table cht, cht2;
@@ -668,7 +927,7 @@ do_ham_body(FILE *ifP, FILE *ofp, int cols, int rows,
     hamcode_green = HAMCODE_GREEN << colbits;
     hamcode_blue  = HAMCODE_BLUE << colbits;
 
-    itoh = make_val_table(maxval, hammaxval);
+    itoh = makeValTable(maxval, hammaxval);
 
     if( floyd )
         fi = ppm_fs_init(cols, maxval, 0);
@@ -680,7 +939,7 @@ do_ham_body(FILE *ifP, FILE *ofp, int cols, int rows,
         pixel *prow;
 
         noprev = 1;
-        prow = next_pixrow(ifP, row);
+        prow = nextPixrow(ifP, row);
         for( col = ppm_fs_startrow(fi, prow); 
              col < cols; 
              col = ppm_fs_next(fi, col) ) {
@@ -793,13 +1052,13 @@ do_ham_body(FILE *ifP, FILE *ofp, int cols, int rows,
             }
             ppm_fs_update3(fi, col, upr, upg, upb);
         }
-        bodysize += encode_row(ofp, raw_rowbuf, cols, nPlanes);
+        bodysize += encodeRow(ofP, raw_rowbuf, cols, nPlanes);
         if( maskmethod == mskHasMask )
-            bodysize += encode_maskrow(ofp, raw_rowbuf, cols);
+            bodysize += encodeMaskrow(ofP, raw_rowbuf, cols);
         ppm_fs_endrow(fi);
     }
-    if( ofp && ODD(bodysize) )
-        put_byte(0);
+    if( ofP && ODD(bodysize) )
+        putByte(0);
 
     free(itoh);
 
@@ -811,34 +1070,132 @@ do_ham_body(FILE *ifP, FILE *ofp, int cols, int rows,
 }
 
 
-/************ deep (24-bit) ************/
-
-static long do_deep_body      ARGS((FILE *ifP, FILE *ofp, 
-                                    int cols, int rows, 
-                                    pixval maxval, int bitspercolor));
 
 static void
-ppm_to_deep(fp, cols, rows, maxval, bitspercolor)
-    FILE *fp;
-    int cols, rows, maxval, bitspercolor;
-{
-    int nPlanes;
-    long bodysize, oldsize, formsize;
+ppmToHam(FILE *  const ifP,
+         int     const cols,
+         int     const rows,
+         int     const maxval,
+         pixel * const colormapArg,
+         int     const colorsArg,
+         int     const cmapmaxvalArg,
+         int     const hamplanes) {
+
+    int hamcolors, nPlanes, i, hammaxval;
+    long oldsize, bodysize, formsize, cmapsize;
+    int * table;
+    int colors;
+    pixel * colormap;
+    int cmapmaxval;
+
+    table = NULL;  /* initial value */
+    colors = colorsArg;  /* initial value*/
+    colormap = colormapArg;  /* initial value */
+    cmapmaxval = cmapmaxvalArg;  /* initial value */
 
     if( maskmethod == mskHasTransparentColor ) {
-        pm_message("masking method '%s' not usable with deep ILBM - "
+        pm_message("masking method '%s' not usable with HAM - "
                    "using '%s' instead",
-                    mskNAME[mskHasTransparentColor], mskNAME[mskHasMask]);
+                   mskNAME[mskHasTransparentColor], mskNAME[mskHasMask]);
         maskmethod = mskHasMask;
     }
 
-    nPlanes = 3*bitspercolor;
+    hamcolors = 1 << (hamplanes-2);
+    hammaxval = pm_bitstomaxval(hamplanes-2);
+
+    if( colors == 0 ) {
+        /* no colormap, make our own */
+        switch( hammapmode ) {
+            case HAMMODE_GRAY:
+                colors = hamcolors;
+                MALLOCARRAY_NOFAIL(colormap, colors);
+                table = makeValTable(hammaxval, MAXCOLVAL);
+                for( i = 0; i < colors; i++ )
+                    PPM_ASSIGN(colormap[i], table[i], table[i], table[i]);
+                free(table);
+                cmapmaxval = MAXCOLVAL;
+                break;
+            case HAMMODE_FIXED: {
+                int entries, val;
+                double step;
+
+                /* generate a colormap of 7 "rays" in an RGB color cube:
+                        r, g, b, r+g, r+b, g+b, r+g+b
+                   we need one colormap entry for black, so the number of
+                   entries per ray is (maxcolors-1)/7 */
+
+                entries = (hamcolors-1)/7;
+                colors = 7*entries+1;
+                MALLOCARRAY_NOFAIL(colormap, colors);
+                step = (double)MAXCOLVAL / (double)entries;
+
+                PPM_ASSIGN(colormap[0], 0, 0, 0);
+                for( i = 1; i <= entries; i++ ) {
+                    val = (int)((double)i * step);
+                    PPM_ASSIGN(colormap[          i], val,   0,   0); /* r */
+                    PPM_ASSIGN(colormap[  entries+i],   0, val,   0); /* g */
+                    PPM_ASSIGN(colormap[2*entries+i],   0,   0, val); /* b */
+                    PPM_ASSIGN(colormap[3*entries+i], val, val,   0); /* r+g */
+                    PPM_ASSIGN(colormap[4*entries+i], val,   0, val); /* r+b */
+                    PPM_ASSIGN(colormap[5*entries+i],   0, val, val); /* g+b */
+                    PPM_ASSIGN(colormap[6*entries+i], val, val, val); /*r+g+b*/
+                }
+                cmapmaxval = MAXCOLVAL;
+            }
+            break;
+            case HAMMODE_RGB4:
+                colormap = computeHamCmap(cols, rows, maxval, hamcolors, 
+                                          &colors, 4);
+                cmapmaxval = 15;
+                break;
+            case HAMMODE_RGB5:
+                colormap = computeHamCmap(cols, rows, maxval, 
+                                          hamcolors, &colors, 5);
+                cmapmaxval = 31;
+                break;
+            default:
+                pm_error("ppm_to_ham(): unknown hammapmode - can't happen");
+        }
+    }
+    else {
+        hammapmode = HAMMODE_MAPFILE;
+        if( colors > hamcolors ) {
+            pm_message("colormap too large - using first %d colors", 
+                       hamcolors);
+            colors = hamcolors;
+        }
+    }
+
+    if( cmapmaxval != maxval ) {
+        int i, *table;
+        pixel *newcmap;
+
+        newcmap = ppm_allocrow(colors);
+        table = makeValTable(cmapmaxval, maxval);
+        for( i = 0; i < colors; i++ )
+            PPM_ASSIGN(newcmap[i], 
+                       table[PPM_GETR(colormap[i])], 
+                       table[PPM_GETG(colormap[i])], 
+                       table[PPM_GETB(colormap[i])]);
+        free(table);
+        ppm_freerow(colormap);
+        colormap = newcmap;
+    }
+    if( sortcmap )
+        ppm_sortcolorrow(colormap, colors, PPM_STDSORT);
+
+    nPlanes = hamplanes;
+    cmapsize = colors * 3;
 
     bodysize = oldsize = rows * TOTALPLANES(nPlanes) * RowBytes(cols);
     if( DO_COMPRESS ) {
-        bodysize = do_deep_body(fp, NULL, cols, rows, maxval, bitspercolor);
+        bodysize = doHamBody(ifP, NULL, cols, rows, maxval, 
+                               hammaxval, nPlanes, colormap, colors);
+        /*bodysize = doHamBody(ifP, NULL, cols, 
+          rows, maxval, hammaxval, nPlanes, colbits, nocolor);*/
         if( bodysize > oldsize )
-            pm_message("warning - %s compression increases BODY size by %ld%%",
+            pm_message("warning - %s compression increases BODY size "
+                       "by %ld%%", 
                        cmpNAME[compmethod], 100*(bodysize-oldsize)/oldsize);
         else
             pm_message("BODY compression (%s): %ld%%", 
@@ -849,35 +1206,45 @@ ppm_to_deep(fp, cols, rows, maxval, bitspercolor)
     formsize =
         4 +                                 /* ILBM */
         4 + 4 + BitMapHeaderSize +          /* BMHD size header */
+        4 + 4 + CAMGChunkSize +             /* CAMG size viewportmodes */
+        4 + 4 + cmapsize + PAD(cmapsize) +  /* CMAP size colormap */
         4 + 4 + bodysize + PAD(bodysize) +  /* BODY size data */
-        length_of_text_chunks();
-    if( gen_camg )
-        formsize += 4 + 4 + CAMGChunkSize;  /* CAMG size viewportmodes */
+        lengthOfTextChunks();
 
-    put_big_long(ID_FORM);
-    put_big_long(formsize);
-    put_big_long(ID_ILBM);
+    pm_writebiglong(stdout, ID_FORM);
+    pm_writebiglong(stdout, formsize);
+    pm_writebiglong(stdout, ID_ILBM);
 
-    write_bmhd(cols, rows, nPlanes);
-    write_text_chunks();
-    if( gen_camg )
-        write_camg();
+    writeBmhd(cols, rows, nPlanes);
+    writeTextChunks();
+    writeCamg();       /* HAM requires CAMG chunk */
+    writeCmap(colormap, colors, maxval);
 
     /* write body */
-    put_big_long(ID_BODY);
-    put_big_long(bodysize);
+    pm_writebiglong(stdout, ID_BODY);
+    pm_writebiglong(stdout, bodysize);
     if( DO_COMPRESS )
-        write_body_rows();
+        writeBodyRows();
     else
-        do_deep_body(fp, stdout, cols, rows, maxval, bitspercolor);
+        doHamBody(ifP, NULL, cols, rows, maxval, hammaxval, 
+                  nPlanes, colormap, colors);
 }
 
 
+
+/************ deep (24-bit) ************/
+
+
+
 static long
-do_deep_body(FILE *ifP, FILE *ofp, int cols, int rows, pixval maxval, 
-             int bitspercolor)
-{
-    register int row, col;
+doDeepBody(FILE * const ifP,
+           FILE * const ofP,
+           int    const cols,
+           int    const rows,
+           pixval const maxval, 
+           int    const bitspercolor) {
+
+    int row, col;
     pixel *pP;
     int *table = NULL;
     long bodysize = 0;
@@ -892,11 +1259,11 @@ do_deep_body(FILE *ifP, FILE *ofp, int cols, int rows, pixval maxval,
     if( maxval != newmaxval ) {
         pm_message("maxval is not %d - automatically rescaling colors", 
                    newmaxval);
-        table = make_val_table(maxval, newmaxval);
+        table = makeValTable(maxval, newmaxval);
     }
 
     for( row = 0; row < rows; row++ ) {
-        pP = next_pixrow(ifP, row);
+        pP = nextPixrow(ifP, row);
         if( table ) {
             for( col = 0; col < cols; col++, pP++ ) {
                 redbuf[col]     = table[PPM_GETR(*pP)];
@@ -911,14 +1278,14 @@ do_deep_body(FILE *ifP, FILE *ofp, int cols, int rows, pixval maxval,
                 bluebuf[col]    = PPM_GETB(*pP);
             }
         }
-        bodysize += encode_row(ofp, redbuf,   cols, bitspercolor);
-        bodysize += encode_row(ofp, greenbuf, cols, bitspercolor);
-        bodysize += encode_row(ofp, bluebuf,  cols, bitspercolor);
+        bodysize += encodeRow(ofP, redbuf,   cols, bitspercolor);
+        bodysize += encodeRow(ofP, greenbuf, cols, bitspercolor);
+        bodysize += encodeRow(ofP, bluebuf,  cols, bitspercolor);
         if( maskmethod == mskHasMask )
-            bodysize += encode_maskrow(ofp, redbuf, cols);
+            bodysize += encodeMaskrow(ofP, redbuf, cols);
     }
-    if( ofp && ODD(bodysize) )
-        put_byte(0);
+    if( ofP && ODD(bodysize) )
+        putByte(0);
 
     /* clean up */
     if( table )
@@ -931,17 +1298,127 @@ do_deep_body(FILE *ifP, FILE *ofp, int cols, int rows, pixval maxval,
 }
 
 
-/************ direct color ************/
-
-static long do_dcol_body      ARGS((FILE *ifP, FILE *ofp, int cols, int rows, 
-                                    pixval maxval, DirectColor *dcol));
 
 static void
-ppm_to_dcol(fp, cols, rows, maxval, dcol)
-    FILE *fp;
-    int cols, rows, maxval;
-    DirectColor *dcol;
-{
+ppmToDeep(FILE * const ifP,
+          int    const cols,
+          int    const rows,
+          int    const maxval,
+          int    const bitspercolor) {
+
+    int nPlanes;
+    long bodysize, oldsize, formsize;
+
+    if( maskmethod == mskHasTransparentColor ) {
+        pm_message("masking method '%s' not usable with deep ILBM - "
+                   "using '%s' instead",
+                    mskNAME[mskHasTransparentColor], mskNAME[mskHasMask]);
+        maskmethod = mskHasMask;
+    }
+
+    nPlanes = 3*bitspercolor;
+
+    bodysize = oldsize = rows * TOTALPLANES(nPlanes) * RowBytes(cols);
+    if( DO_COMPRESS ) {
+        bodysize = doDeepBody(ifP, NULL, cols, rows, maxval, bitspercolor);
+        if( bodysize > oldsize )
+            pm_message("warning - %s compression increases BODY size by %ld%%",
+                       cmpNAME[compmethod], 100*(bodysize-oldsize)/oldsize);
+        else
+            pm_message("BODY compression (%s): %ld%%", 
+                       cmpNAME[compmethod], 100*(oldsize-bodysize)/oldsize);
+    }
+
+    formsize =
+        4 +                                 /* ILBM */
+        4 + 4 + BitMapHeaderSize +          /* BMHD size header */
+        4 + 4 + bodysize + PAD(bodysize) +  /* BODY size data */
+        lengthOfTextChunks();
+    if( gen_camg )
+        formsize += 4 + 4 + CAMGChunkSize;  /* CAMG size viewportmodes */
+
+    pm_writebiglong(stdout, ID_FORM);
+    pm_writebiglong(stdout, formsize);
+    pm_writebiglong(stdout, ID_ILBM);
+
+    writeBmhd(cols, rows, nPlanes);
+    writeTextChunks();
+    if( gen_camg )
+        writeCamg();
+
+    /* write body */
+    pm_writebiglong(stdout, ID_BODY);
+    pm_writebiglong(stdout, bodysize);
+    if( DO_COMPRESS )
+        writeBodyRows();
+    else
+        doDeepBody(ifP, stdout, cols, rows, maxval, bitspercolor);
+}
+
+
+
+/************ direct color ************/
+
+
+
+static long
+doDcolBody(FILE *        const ifP,
+           FILE *        const ofP,
+           int           const cols,
+           int           const rows,
+           pixval        const maxval, 
+           DirectColor * const dcol) {
+
+    int row, col;
+    pixel *pP;
+    long bodysize = 0;
+    rawtype *redbuf, *greenbuf, *bluebuf;
+    int *redtable, *greentable, *bluetable;
+
+    MALLOCARRAY_NOFAIL(redbuf,   cols);
+    MALLOCARRAY_NOFAIL(greenbuf, cols);
+    MALLOCARRAY_NOFAIL(bluebuf,  cols);
+
+    redtable   = makeValTable(maxval, pm_bitstomaxval(dcol->r));
+    greentable = makeValTable(maxval, pm_bitstomaxval(dcol->g));
+    bluetable  = makeValTable(maxval, pm_bitstomaxval(dcol->b));
+
+    for( row = 0; row < rows; row++ ) {
+        pP = nextPixrow(ifP, row);
+        for( col = 0; col < cols; col++, pP++ ) {
+            redbuf[col]   = redtable[PPM_GETR(*pP)];
+            greenbuf[col] = greentable[PPM_GETG(*pP)];
+            bluebuf[col]  = bluetable[PPM_GETB(*pP)];
+        }
+        bodysize += encodeRow(ofP, redbuf,   cols, dcol->r);
+        bodysize += encodeRow(ofP, greenbuf, cols, dcol->g);
+        bodysize += encodeRow(ofP, bluebuf,  cols, dcol->b);
+        if( maskmethod == mskHasMask )
+            bodysize += encodeMaskrow(ofP, redbuf, cols);
+    }
+    if( ofP && ODD(bodysize) )
+        putByte(0);
+
+    /* clean up */
+    free(redtable);
+    free(greentable);
+    free(bluetable);
+    free(redbuf);
+    free(greenbuf);
+    free(bluebuf);
+
+    return bodysize;
+}
+
+
+
+static void
+ppmToDcol(FILE *        const ifP,
+          int           const cols,
+          int           const rows,
+          int           const maxval,
+          DirectColor * const dcol) {
+
     int nPlanes;
     long bodysize, oldsize, formsize;
 
@@ -956,7 +1433,7 @@ ppm_to_dcol(fp, cols, rows, maxval, dcol)
 
     bodysize = oldsize = rows * TOTALPLANES(nPlanes) * RowBytes(cols);
     if( DO_COMPRESS ) {
-        bodysize = do_dcol_body(fp, NULL, cols, rows, maxval, dcol);
+        bodysize = doDcolBody(ifP, NULL, cols, rows, maxval, dcol);
         if( bodysize > oldsize )
             pm_message("warning - %s compression increases BODY size by %ld%%",
                        cmpNAME[compmethod], 
@@ -972,181 +1449,53 @@ ppm_to_dcol(fp, cols, rows, maxval, dcol)
         4 + 4 + BitMapHeaderSize +          /* BMHD size header */
         4 + 4 + DirectColorSize +           /* DCOL size dcol */
         4 + 4 + bodysize + PAD(bodysize) +  /* BODY size data */
-        length_of_text_chunks();
+        lengthOfTextChunks();
     if( gen_camg )
         formsize += 4 + 4 + CAMGChunkSize;  /* CAMG size viewportmodes */
 
-    put_big_long(ID_FORM);
-    put_big_long(formsize);
-    put_big_long(ID_ILBM);
+    pm_writebiglong(stdout, ID_FORM);
+    pm_writebiglong(stdout, formsize);
+    pm_writebiglong(stdout, ID_ILBM);
 
-    write_bmhd(cols, rows, nPlanes);
-    write_text_chunks();
+    writeBmhd(cols, rows, nPlanes);
+    writeTextChunks();
 
-    put_big_long(ID_DCOL);
-    put_big_long(DirectColorSize);
-    put_byte(dcol->r);
-    put_byte(dcol->g);
-    put_byte(dcol->b);
-    put_byte(0);    /* pad */
+    pm_writebiglong(stdout, ID_DCOL);
+    pm_writebiglong(stdout, DirectColorSize);
+    putByte(dcol->r);
+    putByte(dcol->g);
+    putByte(dcol->b);
+    putByte(0);    /* pad */
 
     if( gen_camg )
-        write_camg();
+        writeCamg();
 
     /* write body */
-    put_big_long(ID_BODY);
-    put_big_long(bodysize);
+    pm_writebiglong(stdout, ID_BODY);
+    pm_writebiglong(stdout, bodysize);
     if( DO_COMPRESS )
-        write_body_rows();
+        writeBodyRows();
     else
-        do_dcol_body(fp, stdout, cols, rows, maxval, dcol);
+        doDcolBody(ifP, stdout, cols, rows, maxval, dcol);
 }
 
-
-static long
-do_dcol_body(FILE *ifP, FILE *ofp, int cols, int rows, pixval maxval, 
-             DirectColor *dcol)
-{
-    register int row, col;
-    pixel *pP;
-    long bodysize = 0;
-    rawtype *redbuf, *greenbuf, *bluebuf;
-    int *redtable, *greentable, *bluetable;
-
-    MALLOCARRAY_NOFAIL(redbuf,   cols);
-    MALLOCARRAY_NOFAIL(greenbuf, cols);
-    MALLOCARRAY_NOFAIL(bluebuf,  cols);
-
-    redtable   = make_val_table(maxval, pm_bitstomaxval(dcol->r));
-    greentable = make_val_table(maxval, pm_bitstomaxval(dcol->g));
-    bluetable  = make_val_table(maxval, pm_bitstomaxval(dcol->b));
-
-    for( row = 0; row < rows; row++ ) {
-        pP = next_pixrow(ifP, row);
-        for( col = 0; col < cols; col++, pP++ ) {
-            redbuf[col]   = redtable[PPM_GETR(*pP)];
-            greenbuf[col] = greentable[PPM_GETG(*pP)];
-            bluebuf[col]  = bluetable[PPM_GETB(*pP)];
-        }
-        bodysize += encode_row(ofp, redbuf,   cols, dcol->r);
-        bodysize += encode_row(ofp, greenbuf, cols, dcol->g);
-        bodysize += encode_row(ofp, bluebuf,  cols, dcol->b);
-        if( maskmethod == mskHasMask )
-            bodysize += encode_maskrow(ofp, redbuf, cols);
-    }
-    if( ofp && ODD(bodysize) )
-        put_byte(0);
-
-    /* clean up */
-    free(redtable);
-    free(greentable);
-    free(bluetable);
-    free(redbuf);
-    free(greenbuf);
-    free(bluebuf);
-
-    return bodysize;
-}
 
 
 /************ normal colormapped ************/
 
-static long do_std_body     ARGS((FILE *ifP, FILE *ofp, int cols, int rows, 
-                                  pixval maxval, pixel *colormap, 
-                                  int colors, int nPlanes));
-
-static void
-ppm_to_std(fp, cols, rows, maxval, colormap, colors, cmapmaxval, 
-           maxcolors, nPlanes)
-    FILE *fp;
-    int cols, rows, maxval;
-    pixel *colormap;
-    int cmapmaxval, colors, maxcolors, nPlanes;
-{
-    long formsize, cmapsize, bodysize, oldsize;
-
-    if( maskmethod == mskHasTransparentColor ) {
-        if( transpColor ) {
-            transpIndex = 
-                ppm_addtocolorrow(colormap, &colors, maxcolors, transpColor);
-        }
-        else
-        if( colors < maxcolors )
-            transpIndex = colors;
-
-        if( transpIndex < 0 ) {
-            pm_message("too many colors for masking method '%s' - "
-                       "using '%s' instead",
-                       mskNAME[mskHasTransparentColor], mskNAME[mskHasMask]);
-            maskmethod = mskHasMask;
-        }
-    }
-
-    if( cmapmaxval != maxval ) {
-        int i, *table;
-        pixel *newcmap;
-
-        newcmap = ppm_allocrow(colors);
-        table = make_val_table(cmapmaxval, maxval);
-        for (i = 0; i < colors; ++i)
-            PPM_ASSIGN(newcmap[i], 
-                       table[PPM_GETR(colormap[i])], 
-                       table[PPM_GETG(colormap[i])], 
-                       table[PPM_GETB(colormap[i])]);
-        free(table);
-        colormap = newcmap;
-    }
-    if( sortcmap )
-        ppm_sortcolorrow(colormap, colors, PPM_STDSORT);
-
-    bodysize = oldsize = rows * TOTALPLANES(nPlanes) * RowBytes(cols);
-    if( DO_COMPRESS ) {
-        bodysize = do_std_body(fp, NULL, cols, rows, maxval, colormap, 
-                               colors, nPlanes);
-        if( bodysize > oldsize )
-            pm_message("warning - %s compression increases BODY size by %ld%%",
-                       cmpNAME[compmethod], 100*(bodysize-oldsize)/oldsize);
-        else
-            pm_message("BODY compression (%s): %ld%%", 
-                       cmpNAME[compmethod], 100*(oldsize-bodysize)/oldsize);
-    }
-
-    cmapsize = colors * 3;
-
-    formsize =
-        4 +                                 /* ILBM */
-        4 + 4 + BitMapHeaderSize +          /* BMHD size header */
-        4 + 4 + cmapsize + PAD(cmapsize) +  /* CMAP size colormap */
-        4 + 4 + bodysize + PAD(bodysize) +  /* BODY size data */
-        length_of_text_chunks();
-    if( gen_camg )
-        formsize += 4 + 4 + CAMGChunkSize;  /* CAMG size viewportmodes */
-
-    put_big_long(ID_FORM);
-    put_big_long(formsize);
-    put_big_long(ID_ILBM);
-
-    write_bmhd(cols, rows, nPlanes);
-    write_text_chunks();
-    if( gen_camg )
-        write_camg();
-    write_cmap(colormap, colors, maxval);
-
-    /* write body */
-    put_big_long(ID_BODY);
-    put_big_long(bodysize);
-    if( DO_COMPRESS )
-        write_body_rows();
-    else
-        do_std_body(fp, stdout, cols, rows, maxval, colormap, colors, nPlanes);
-}
 
 
 static long
-do_std_body(FILE *ifP, FILE *ofp, int cols, int rows, pixval maxval,
-            pixel *colormap, int colors, int nPlanes)
-{
-    register int row, col, i;
+doStdBody(FILE *  const ifP,
+          FILE *  const ofP,
+          int     const cols,
+          int     const rows,
+          pixval  const maxval,
+          pixel * const colormap,
+          int     const colors,
+          int     const nPlanes) {
+
+    int row, col, i;
     pixel *pP;
     rawtype *raw_rowbuf;
     ppm_fs_info *fi = NULL;
@@ -1161,7 +1510,7 @@ do_std_body(FILE *ifP, FILE *ofp, int cols, int rows, pixval maxval,
 
     for( row = 0; row < rows; row++ ) {
         pixel *prow;
-        prow = next_pixrow(ifP, row);
+        prow = nextPixrow(ifP, row);
 
         for( col = ppm_fs_startrow(fi, prow); 
              col < cols; 
@@ -1191,13 +1540,13 @@ do_std_body(FILE *ifP, FILE *ofp, int cols, int rows, pixval maxval,
             raw_rowbuf[col] = i;
             ppm_fs_update(fi, col, &colormap[i]);
         }
-        bodysize += encode_row(ofp, raw_rowbuf, cols, nPlanes);
+        bodysize += encodeRow(ofP, raw_rowbuf, cols, nPlanes);
         if( maskmethod == mskHasMask )
-            bodysize += encode_maskrow(ofp, raw_rowbuf, cols);
+            bodysize += encodeMaskrow(ofP, raw_rowbuf, cols);
         ppm_fs_endrow(fi);
     }
-    if( ofp && ODD(bodysize) )
-        put_byte(0);
+    if( ofP && ODD(bodysize) )
+        putByte(0);
 
     /* clean up */
     ppm_freecolorhash(cht);
@@ -1207,14 +1556,117 @@ do_std_body(FILE *ifP, FILE *ofp, int cols, int rows, pixval maxval,
     return bodysize;
 }
 
-/************ RGB8 ************/
+
 
 static void
-ppm_to_rgb8(ifP, cols, rows, maxval)
-    FILE *ifP;
-    int cols, rows;
-    int maxval;
-{
+ppmToStd(FILE *  const ifP,
+         int     const cols,
+         int     const rows,
+         int     const maxval,
+         pixel * const colormapArg,
+         int     const colorsArg,
+         int     const cmapmaxvalArg, 
+         int     const maxcolors,
+         int     const nPlanes) {
+
+    long formsize, cmapsize, bodysize, oldsize;
+
+    int colors;
+    pixel * colormap;
+    int cmapmaxval;
+
+    colors = colorsArg;  /* initial value */
+    colormap = colormapArg;  /* initial value */
+    cmapmaxval = cmapmaxvalArg;  /* initial value */
+
+    if( maskmethod == mskHasTransparentColor ) {
+        if( transpColor ) {
+            transpIndex = 
+                ppm_addtocolorrow(colormap, &colors, maxcolors, transpColor);
+        }
+        else
+        if( colors < maxcolors )
+            transpIndex = colors;
+
+        if( transpIndex < 0 ) {
+            pm_message("too many colors for masking method '%s' - "
+                       "using '%s' instead",
+                       mskNAME[mskHasTransparentColor], mskNAME[mskHasMask]);
+            maskmethod = mskHasMask;
+        }
+    }
+
+    if( cmapmaxval != maxval ) {
+        int i, *table;
+        pixel *newcmap;
+
+        newcmap = ppm_allocrow(colors);
+        table = makeValTable(cmapmaxval, maxval);
+        for (i = 0; i < colors; ++i)
+            PPM_ASSIGN(newcmap[i], 
+                       table[PPM_GETR(colormap[i])], 
+                       table[PPM_GETG(colormap[i])], 
+                       table[PPM_GETB(colormap[i])]);
+        free(table);
+        colormap = newcmap;
+    }
+    if( sortcmap )
+        ppm_sortcolorrow(colormap, colors, PPM_STDSORT);
+
+    bodysize = oldsize = rows * TOTALPLANES(nPlanes) * RowBytes(cols);
+    if( DO_COMPRESS ) {
+        bodysize = doStdBody(ifP, NULL, cols, rows, maxval, colormap, 
+                             colors, nPlanes);
+        if( bodysize > oldsize )
+            pm_message("warning - %s compression increases BODY size by %ld%%",
+                       cmpNAME[compmethod], 100*(bodysize-oldsize)/oldsize);
+        else
+            pm_message("BODY compression (%s): %ld%%", 
+                       cmpNAME[compmethod], 100*(oldsize-bodysize)/oldsize);
+    }
+
+    cmapsize = colors * 3;
+
+    formsize =
+        4 +                                 /* ILBM */
+        4 + 4 + BitMapHeaderSize +          /* BMHD size header */
+        4 + 4 + cmapsize + PAD(cmapsize) +  /* CMAP size colormap */
+        4 + 4 + bodysize + PAD(bodysize) +  /* BODY size data */
+        lengthOfTextChunks();
+    if( gen_camg )
+        formsize += 4 + 4 + CAMGChunkSize;  /* CAMG size viewportmodes */
+
+    pm_writebiglong(stdout, ID_FORM);
+    pm_writebiglong(stdout, formsize);
+    pm_writebiglong(stdout, ID_ILBM);
+
+    writeBmhd(cols, rows, nPlanes);
+    writeTextChunks();
+    if( gen_camg )
+        writeCamg();
+    writeCmap(colormap, colors, maxval);
+
+    /* write body */
+    pm_writebiglong(stdout, ID_BODY);
+    pm_writebiglong(stdout, bodysize);
+    if( DO_COMPRESS )
+        writeBodyRows();
+    else
+        doStdBody(ifP, stdout, cols, rows, maxval, colormap, colors, nPlanes);
+}
+
+
+
+/************ RGB8 ************/
+
+
+
+static void
+ppmToRgb8(FILE * const ifP,
+          int    const cols,
+          int    const rows,
+          int    const maxval) {
+
     long bodysize, oldsize, formsize;
     pixel *pP;
     int *table = NULL;
@@ -1227,13 +1679,13 @@ ppm_to_rgb8(ifP, cols, rows, maxval)
 
     if( maxval != 255 ) {
         pm_message("maxval is not 255 - automatically rescaling colors");
-        table = make_val_table(maxval, 255);
+        table = makeValTable(maxval, 255);
     }
 
     oldsize = cols * rows * 4;
     bodysize = 0;
     for( row = 0; row < rows; row++ ) {
-        pP = next_pixrow(ifP, row);
+        pP = nextPixrow(ifP, row);
         compr_len = 0;
         for( col1 = 0; col1 < cols; col1 = col2 ) {
             col2 = col1 + 1;
@@ -1267,7 +1719,7 @@ ppm_to_rgb8(ifP, cols, rows, maxval)
                 ++compr_len;
             }
         }
-        store_bodyrow(compr_row, compr_len);
+        storeBodyrow(compr_row, compr_len);
         bodysize += compr_len;
     }
 
@@ -1278,31 +1730,34 @@ ppm_to_rgb8(ifP, cols, rows, maxval)
         4 + 4 + BitMapHeaderSize +          /* BMHD size header */
         4 + 4 + CAMGChunkSize +             /* CAMG size viewportmode */
         4 + 4 + bodysize + PAD(bodysize) +  /* BODY size data */
-        length_of_text_chunks();
+        lengthOfTextChunks();
 
     /* write header */
-    put_big_long(ID_FORM);
-    put_big_long(formsize);
-    put_big_long(ID_RGB8);
+    pm_writebiglong(stdout, ID_FORM);
+    pm_writebiglong(stdout, formsize);
+    pm_writebiglong(stdout, ID_RGB8);
 
-    write_bmhd(cols, rows, 25);
-    write_text_chunks();
-    write_camg();               /* RGB8 requires CAMG chunk */
+    writeBmhd(cols, rows, 25);
+    writeTextChunks();
+    writeCamg();               /* RGB8 requires CAMG chunk */
 
-    put_big_long(ID_BODY);
-    put_big_long(bodysize);
-    write_body_rows();
+    pm_writebiglong(stdout, ID_BODY);
+    pm_writebiglong(stdout, bodysize);
+    writeBodyRows();
 }
+
 
 
 /************ RGBN ************/
 
+
+
 static void
-ppm_to_rgbn(ifP, cols, rows, maxval)
-    FILE *ifP;
-    int cols, rows;
-    int maxval;
-{
+ppmToRgbn(FILE * const ifP,
+          int    const cols,
+          int    const rows,
+          int    const maxval) {
+
     long bodysize, oldsize, formsize;
     pixel *pP;
     int *table = NULL;
@@ -1315,13 +1770,13 @@ ppm_to_rgbn(ifP, cols, rows, maxval)
 
     if( maxval != 15 ) {
         pm_message("maxval is not 15 - automatically rescaling colors");
-        table = make_val_table(maxval, 15);
+        table = makeValTable(maxval, 15);
     }
 
     oldsize = cols * rows * 2;
     bodysize = 0;
     for( row = 0; row < rows; row++ ) {
-        pP = next_pixrow(ifP, row);
+        pP = nextPixrow(ifP, row);
         compr_len = 0;
         for( col1 = 0; col1 < cols; col1 = col2 ) {
             col2 = col1 + 1;
@@ -1371,7 +1826,7 @@ ppm_to_rgbn(ifP, cols, rows, maxval)
                 }
             }
         }
-        store_bodyrow(compr_row, compr_len);
+        storeBodyrow(compr_row, compr_len);
         bodysize += compr_len;
     }
 
@@ -1382,30 +1837,33 @@ ppm_to_rgbn(ifP, cols, rows, maxval)
         4 + 4 + BitMapHeaderSize +          /* BMHD size header */
         4 + 4 + CAMGChunkSize +             /* CAMG size viewportmode */
         4 + 4 + bodysize + PAD(bodysize) +  /* BODY size data */
-        length_of_text_chunks();
+        lengthOfTextChunks();
 
     /* write header */
-    put_big_long(ID_FORM);
-    put_big_long(formsize);
-    put_big_long(ID_RGBN);
+    pm_writebiglong(stdout, ID_FORM);
+    pm_writebiglong(stdout, formsize);
+    pm_writebiglong(stdout, ID_RGBN);
 
-    write_bmhd(cols, rows, 13);
-    write_text_chunks();
-    write_camg();               /* RGBN requires CAMG chunk */
+    writeBmhd(cols, rows, 13);
+    writeTextChunks();
+    writeCamg();               /* RGBN requires CAMG chunk */
 
-    put_big_long(ID_BODY);
-    put_big_long(bodysize);
-    write_body_rows();
+    pm_writebiglong(stdout, ID_BODY);
+    pm_writebiglong(stdout, bodysize);
+    writeBodyRows();
 }
+
 
 
 /************ multipalette ************/
 
+
+
 #ifdef ILBM_PCHG
 static pixel *ppmslice[2];  /* need 2 for laced ILBMs, else 1 */
 
-void ppm_to_pchg()
-{
+void
+ppmToPchg() {
 /*
     read first slice
     build a colormap from this slice
@@ -1432,432 +1890,6 @@ void ppm_to_pchg()
 */
 }
 #endif
-
-
-/************ ILBM functions ************/
-
-static int
-length_of_text_chunks ARGS((void))
-{
-    int len, n;
-
-    len = 0;
-    if( anno_chunk ) {
-        n = strlen(anno_chunk);
-        len += 4 + 4 + n + PAD(n);      /* ID chunksize text */
-    }
-    if( auth_chunk ) {
-        n = strlen(auth_chunk);
-        len += 4 + 4 + n + PAD(n);      /* ID chunksize text */
-    }
-    if( name_chunk ) {
-        n = strlen(name_chunk);
-        len += 4 + 4 + n + PAD(n);      /* ID chunksize text */
-    }
-    if( copyr_chunk ) {
-        n = strlen(copyr_chunk);
-        len += 4 + 4 + n + PAD(n);      /* ID chunksize text */
-    }
-    if( text_chunk ) {
-        n = strlen(text_chunk);
-        len += 4 + 4 + n + PAD(n);      /* ID chunksize text */
-    }
-    return len;
-}
-
-
-static void
-write_text_chunks ARGS((void))
-{
-    int n;
-
-    if( anno_chunk ) {
-        n = strlen(anno_chunk);
-        put_big_long(ID_ANNO);
-        put_big_long(n);
-        write_bytes((unsigned char *)anno_chunk, n);
-        if( ODD(n) )
-            put_byte(0);
-    }
-    if( auth_chunk ) {
-        n = strlen(auth_chunk);
-        put_big_long(ID_AUTH);
-        put_big_long(n);
-        write_bytes((unsigned char *)auth_chunk, n);
-        if( ODD(n) )
-            put_byte(0);
-    }
-    if( copyr_chunk ) {
-        n = strlen(copyr_chunk);
-        put_big_long(ID_copy);
-        put_big_long(n);
-        write_bytes((unsigned char *)copyr_chunk, n);
-        if( ODD(n) )
-            put_byte(0);
-    }
-    if( name_chunk ) {
-        n = strlen(name_chunk);
-        put_big_long(ID_NAME);
-        put_big_long(n);
-        write_bytes((unsigned char *)name_chunk, n);
-        if( ODD(n) )
-            put_byte(0);
-    }
-    if( text_chunk ) {
-        n = strlen(text_chunk);
-        put_big_long(ID_TEXT);
-        put_big_long(n);
-        write_bytes((unsigned char *)text_chunk, n);
-        if( ODD(n) )
-            put_byte(0);
-    }
-}
-
-
-static void
-write_cmap(colormap, colors, maxval)
-    pixel *colormap;
-    int colors, maxval;
-{
-    int cmapsize, i;
-
-    cmapsize = 3 * colors;
-
-    /* write colormap */
-    put_big_long(ID_CMAP);
-    put_big_long(cmapsize);
-    if( maxval != MAXCOLVAL ) {
-        int *table;
-        pm_message("maxval is not %d - automatically rescaling colors", 
-                   MAXCOLVAL);
-        table = make_val_table(maxval, MAXCOLVAL);
-        for( i = 0; i < colors; i++ ) {
-            put_byte(table[PPM_GETR(colormap[i])]);
-            put_byte(table[PPM_GETG(colormap[i])]);
-            put_byte(table[PPM_GETB(colormap[i])]);
-        }
-        free(table);
-    }
-    else {
-        for( i = 0; i < colors; i++ ) {
-            put_byte(PPM_GETR(colormap[i]));
-            put_byte(PPM_GETG(colormap[i]));
-            put_byte(PPM_GETB(colormap[i]));
-        }
-    }
-    if( ODD(cmapsize) )
-        put_byte(0);
-}
-
-
-static void
-write_bmhd(cols, rows, nPlanes)
-    int cols, rows, nPlanes;
-{
-    unsigned char xasp = 10, yasp = 10;
-
-    if( viewportmodes & vmLACE )
-        xasp *= 2;
-    if( viewportmodes & vmHIRES )
-        yasp *= 2;
-
-    put_big_long(ID_BMHD);
-    put_big_long(BitMapHeaderSize);
-
-    put_big_short(cols);
-    put_big_short(rows);
-    put_big_short(0);                       /* x-offset */
-    put_big_short(0);                       /* y-offset */
-    put_byte(nPlanes);                      /* no of planes */
-    put_byte(maskmethod);                   /* masking */
-    put_byte(compmethod);                   /* compression */
-    put_byte(BMHD_FLAGS_CMAPOK);            /* flags */
-    if( maskmethod == mskHasTransparentColor )
-        put_big_short(transpIndex);
-    else
-        put_big_short(0);
-    put_byte(xasp);                         /* x-aspect */
-    put_byte(yasp);                         /* y-aspect */
-    put_big_short(cols);                    /* pageWidth */
-    put_big_short(rows);                    /* pageHeight */
-}
-
-
-/* encode algorithm by Johan Widen (jw@jwdata.se) */
-static const unsigned char bitmask[] = {1, 2, 4, 8, 16, 32, 64, 128};
-
-static long
-encode_row(outfile, rawrow, cols, nPlanes)
-    FILE *outfile;  /* if non-NULL, write uncompressed row to this file */
-    rawtype *rawrow;
-    int cols, nPlanes;
-{
-    int plane, bytes;
-    long retbytes = 0;
-
-    bytes = RowBytes(cols);
-
-    /* Encode and write raw bytes in plane-interleaved form. */
-    for( plane = 0; plane < nPlanes; plane++ ) {
-        register int col, cbit;
-        register rawtype *rp;
-        register unsigned char *cp;
-        int mask;
-
-        mask = 1 << plane;
-        cbit = -1;
-        cp = coded_rowbuf-1;
-        rp = rawrow;
-        for( col = 0; col < cols; col++, cbit--, rp++ ) {
-            if( cbit < 0 ) {
-                cbit = 7;
-                *++cp = 0;
-            }
-            if( *rp & mask )
-                *cp |= bitmask[cbit];
-        }
-        if( outfile ) {
-            write_bytes(coded_rowbuf, bytes);
-            retbytes += bytes;
-        }
-        else
-            retbytes += compress_row(bytes);
-    }
-    return retbytes;
-}
-
-
-static long
-encode_maskrow(ofp, rawrow, cols)
-    FILE *ofp;
-    rawtype *rawrow;
-    int cols;
-{
-    int col;
-
-    for( col = 0; col < cols; col++ ) {
-        if( maskrow[col] == PBM_BLACK )
-            rawrow[col] = 1;
-        else
-            rawrow[col] = 0;
-    }
-    return encode_row(ofp, rawrow, cols, 1);
-}
-
-
-static int
-compress_row(bytes)
-    int bytes;
-{
-    int newbytes;
-
-    switch( compmethod ) {
-        case cmpByteRun1:
-            newbytes = runbyte1(bytes);
-            break;
-        default:
-            pm_error("compress_row(): unknown compression method %d", 
-                     compmethod);
-    }
-    store_bodyrow(compr_rowbuf, newbytes);
-
-    return newbytes;
-}
-
-
-static void
-store_bodyrow(row, len)
-    unsigned char *row;
-    int len;
-{
-    int idx = cur_block->used;
-    if( idx >= ROWS_PER_BLOCK ) {
-        MALLOCVAR_NOFAIL(cur_block->next);
-        cur_block = cur_block->next;
-        cur_block->used = idx = 0;
-        cur_block->next = NULL;
-    }
-    MALLOCARRAY_NOFAIL(cur_block->row[idx], len);
-    cur_block->len[idx] = len;
-    memcpy(cur_block->row[idx], row, len);
-    cur_block->used++;
-}
-
-
-static void
-write_body_rows ARGS((void))
-{
-    bodyblock *b;
-    int i;
-    long total = 0;
-
-    for( b = &firstblock; b != NULL; b = b->next ) {
-        for( i = 0; i < b->used; i++ ) {
-            write_bytes(b->row[i], b->len[i]);
-            total += b->len[i];
-        }
-    }
-    if( ODD(total) )
-        put_byte(0);
-}
-
-
-static void
-write_camg ARGS((void))
-{
-    put_big_long(ID_CAMG);
-    put_big_long(CAMGChunkSize);
-    put_big_long(viewportmodes);
-}
-
-
-/************ compression ************/
-
-
-/* runbyte1 algorithm by Robert A. Knop (rknop@mop.caltech.edu) */
-static int
-runbyte1(size)
-   int size;
-{
-    int in,out,count,hold;
-    register unsigned char *inbuf = coded_rowbuf;
-    register unsigned char *outbuf = compr_rowbuf;
-
-
-    in=out=0;
-    while( in<size ) {
-        if( (in<size-1) && (inbuf[in]==inbuf[in+1]) ) {    
-            /*Begin replicate run*/
-            for( count=0, hold=in; 
-                 in < size && inbuf[in] == inbuf[hold] && count < 128; 
-                 in++, count++)
-                ;
-            outbuf[out++]=(unsigned char)(char)(-count+1);
-            outbuf[out++]=inbuf[hold];
-        }
-        else {  /*Do a literal run*/
-            hold=out; out++; count=0;
-            while( ((in>=size-2)&&(in<size)) || 
-                   ((in<size-2) && ((inbuf[in]!=inbuf[in+1])
-                                    ||(inbuf[in]!=inbuf[in+2]))) ) {
-                outbuf[out++]=inbuf[in++];
-                if( ++count>=128 )
-                    break;
-            }
-            outbuf[hold]=count-1;
-        }
-    }
-    return(out);
-}
-
-
-
-/************ other utility functions ************/
-
-static void
-put_big_short(short s)
-{
-    if ( pm_writebigshort( stdout, s ) == -1 )
-        pm_error( "write error" );
-}
-
-
-static void
-put_big_long(l)
-    long l;
-{
-    if ( pm_writebiglong( stdout, l ) == -1 )
-        pm_error( "write error" );
-}
-
-
-static void
-write_bytes(buffer, bytes)
-    unsigned char *buffer;
-    int bytes;
-{
-    if( fwrite(buffer, 1, bytes, stdout) != bytes )
-        pm_error("write error");
-}
-
-
-static int *
-make_val_table(oldmaxval, newmaxval)
-    int oldmaxval, newmaxval;
-{
-    unsigned int i;
-    int * table;
-
-    MALLOCARRAY_NOFAIL(table, oldmaxval + 1);
-    for (i = 0; i <= oldmaxval; ++i)
-        table[i] = ROUNDDIV(i * newmaxval, oldmaxval);
-
-    return table;
-}
-
-
-
-static int  gFormat;
-static int  gCols;
-static int  gMaxval;
-
-static void
-init_read(fp, colsP, rowsP, maxvalP, formatP, readall)
-    FILE *fp;
-    int *colsP, *rowsP;
-    pixval *maxvalP;
-    int *formatP;
-    int readall;
-{
-    ppm_readppminit(fp, colsP, rowsP, maxvalP, formatP);
-
-    if( *rowsP >INT16MAX || *colsP >INT16MAX )
-      pm_error ("Input image is too large.");
-
-    if( readall ) {
-        int row;
-
-        pixels = ppm_allocarray(*colsP, *rowsP);
-        for( row = 0; row < *rowsP; row++ )
-            ppm_readppmrow(fp, pixels[row], *colsP, *maxvalP, *formatP);
-        /* pixels = ppm_readppm(fp, colsP, rowsP, maxvalP); */
-    }
-    else {
-        pixrow = ppm_allocrow(*colsP);
-    }
-    gCols = *colsP;
-    gMaxval = *maxvalP;
-    gFormat = *formatP;
-}
-
-
-static pixel *
-next_pixrow(fp, row)
-    FILE *fp;
-    int row;
-{
-    if( pixels )
-        pixrow = pixels[row];
-    else {
-        ppm_readppmrow(fp, pixrow, gCols, gMaxval, gFormat);
-    }
-    if( maskrow ) {
-        int col;
-
-        if( maskfile )
-            pbm_readpbmrow(maskfile, maskrow, maskcols, maskformat);
-        else {
-            for( col = 0; col < gCols; col++ )
-                maskrow[col] = PBM_BLACK;
-        }
-        if( transpColor ) {
-            for( col = 0; col < gCols; col++ )
-                if( PPM_EQUAL(pixrow[col], *transpColor) )
-                    maskrow[col] = PBM_WHITE;
-        }
-    }
-    return pixrow;
-}
 
 
 
@@ -1905,7 +1937,7 @@ main(int argc, char ** argv) {
             pm_keymatch(argv[argn], "-mp", 3) ) {
             if( ++argn >= argc )
                 pm_error("-maxplanes requires a value");
-            maxplanes = get_int_val(argv[argn], argv[argn-1], 1, MAXPLANES);
+            maxplanes = getIntVal(argv[argn], argv[argn-1], 1, MAXPLANES);
             fixplanes = 0;
         }
         else
@@ -1913,7 +1945,7 @@ main(int argc, char ** argv) {
             pm_keymatch(argv[argn], "-fp", 3) ) {
             if( ++argn >= argc )
                 pm_error("-fixplanes requires a value");
-            fixplanes = get_int_val(argv[argn], argv[argn-1], 1, MAXPLANES);
+            fixplanes = getIntVal(argv[argn], argv[argn-1], 1, MAXPLANES);
             maxplanes = fixplanes;
         }
         else
@@ -1926,7 +1958,7 @@ main(int argc, char ** argv) {
         if( pm_keymatch(argv[argn], "-mmethod", 3) ) {
             if( ++argn >= argc )
                 pm_error("-mmethod requires a value");
-            maskmethod = get_mask_type(argv[argn]);
+            maskmethod = getMaskType(argv[argn]);
             switch( maskmethod ) {
                 case mskNone:
                 case mskHasMask:
@@ -2006,14 +2038,14 @@ main(int argc, char ** argv) {
         if( pm_keymatch(argv[argn], "-hamplanes", 5) ) {
             if( ++argn >= argc )
                 pm_error("-hamplanes requires a value");
-            hamplanes = get_int_val(argv[argn], argv[argn-1], 3, HAMMAXPLANES);
+            hamplanes = getIntVal(argv[argn], argv[argn-1], 3, HAMMAXPLANES);
         }
         else
         if( pm_keymatch(argv[argn], "-hambits", 5) ) {
             if( ++argn >= argc )
                 pm_usage("-hambits requires a value");
             hamplanes = 
-                get_int_val(argv[argn], argv[argn-1], 3, HAMMAXPLANES-2) +2;
+                getIntVal(argv[argn], argv[argn-1], 3, HAMMAXPLANES-2) +2;
         }
         else
         if( pm_keymatch(argv[argn], "-ham6", 5) ) {
@@ -2029,7 +2061,7 @@ main(int argc, char ** argv) {
         if( pm_keymatch(argv[argn], "-hammap", 5) ) {
             if( ++argn >= argc )
                 pm_error("-hammap requires a value");
-            hammapmode = get_hammap_mode(argv[argn]);
+            hammapmode = getHammapMode(argv[argn]);
         }
         else
         if( pm_keymatch(argv[argn], "-hamif", 5) )
@@ -2071,7 +2103,7 @@ main(int argc, char ** argv) {
         if( pm_keymatch(argv[argn], "-deepplanes", 6) ) {
             if( ++argn >= argc )
                 pm_error("-deepplanes requires a value");
-            deepbits = get_int_val(argv[argn], argv[argn-1], 3, 3*MAXPLANES);
+            deepbits = getIntVal(argv[argn], argv[argn-1], 3, 3*MAXPLANES);
             if( deepbits % 3 != 0 )
                 pm_error("option \"%s\" argument value must be divisible by 3",
                          argv[argn-1]);
@@ -2081,7 +2113,7 @@ main(int argc, char ** argv) {
         if( pm_keymatch(argv[argn], "-deepbits", 6) ) {
             if( ++argn >= argc )
                 pm_error("-deepbits requires a value");
-            deepbits = get_int_val(argv[argn], argv[argn-1], 1, MAXPLANES);
+            deepbits = getIntVal(argv[argn], argv[argn-1], 1, MAXPLANES);
         }
         else
         if( pm_keymatch(argv[argn], "-deepif", 6) )
@@ -2120,9 +2152,9 @@ main(int argc, char ** argv) {
             pm_keymatch(argv[argn], "-dcplanes", 4) ) {
             if( argc - argn < 4 )
                 pm_error("-dcbits requires 4 arguments");
-            dcol.r = get_int_val(argv[argn+1], argv[argn], 1, MAXPLANES);
-            dcol.g = get_int_val(argv[argn+2], argv[argn], 1, MAXPLANES);
-            dcol.b = get_int_val(argv[argn+3], argv[argn], 1, MAXPLANES);
+            dcol.r = getIntVal(argv[argn+1], argv[argn], 1, MAXPLANES);
+            dcol.g = getIntVal(argv[argn+2], argv[argn], 1, MAXPLANES);
+            dcol.b = getIntVal(argv[argn+3], argv[argn], 1, MAXPLANES);
             argn += 3;
         }
         else
@@ -2149,7 +2181,7 @@ main(int argc, char ** argv) {
         if( pm_keymatch(argv[argn], "-cmethod", 4) ) {
             if( ++argn >= argc )
                 pm_error("-cmethod requires a value");
-            compmethod = get_compr_method(argv[argn]);
+            compmethod = getComprMethod(argv[argn]);
         }
         else
         if( pm_keymatch(argv[argn], "-floyd", 3) || 
@@ -2208,22 +2240,22 @@ main(int argc, char ** argv) {
     switch(forcemode) {
         case MODE_HAM:
             if (hammapmode == HAMMODE_RGB4 || hammapmode == HAMMODE_RGB5)
-                init_read(ifP, &cols, &rows, &maxval, &format, 1);
+                initRead(ifP, &cols, &rows, &maxval, &format, 1);
             else
-                init_read(ifP, &cols, &rows, &maxval, &format, 0);
+                initRead(ifP, &cols, &rows, &maxval, &format, 0);
             break;
         case MODE_DCOL:
         case MODE_DEEP:
             mapfile = NULL;
-            init_read(ifP, &cols, &rows, &maxval, &format, 0);
+            initRead(ifP, &cols, &rows, &maxval, &format, 0);
             break;
         case MODE_RGB8:
             mapfile = NULL;
-            init_read(ifP, &cols, &rows, &maxval, &format, 0);
+            initRead(ifP, &cols, &rows, &maxval, &format, 0);
             break;
         case MODE_RGBN:
             mapfile = NULL;
-            init_read(ifP, &cols, &rows, &maxval, &format, 0);
+            initRead(ifP, &cols, &rows, &maxval, &format, 0);
             break;
         case MODE_CMAP:
             /* Figure out the colormap. */
@@ -2237,9 +2269,9 @@ main(int argc, char ** argv) {
             break;
         default:
             if (mapfile)
-                init_read(ifP, &cols, &rows, &maxval, &format, 0);
+                initRead(ifP, &cols, &rows, &maxval, &format, 0);
             else {
-                init_read(ifP, &cols, &rows, &maxval, &format, 1);  
+                initRead(ifP, &cols, &rows, &maxval, &format, 1);  
                     /* read file into memory */
                 pm_message("computing colormap...");
                 colormap = 
@@ -2253,7 +2285,7 @@ main(int argc, char ** argv) {
                         nPlanes = fixplanes;
                 } else {  /* too many colors */
                     mode = ifmode;
-                    report_too_many_colors(ifmode, maxplanes, hamplanes,
+                    reportTooManyColors(ifmode, maxplanes, hamplanes,
                                            dcol, deepbits );
                 }
             }
@@ -2303,31 +2335,34 @@ main(int argc, char ** argv) {
     switch (mode) {
         case MODE_HAM:
             viewportmodes |= vmHAM;
-            ppm_to_ham(ifP, cols, rows, maxval, 
-                       colormap, colors, cmapmaxval, hamplanes);
+            ppmToHam(ifP, cols, rows, maxval, 
+                     colormap, colors, cmapmaxval, hamplanes);
             break;
         case MODE_DEEP:
-            ppm_to_deep(ifP, cols, rows, maxval, deepbits);
+            ppmToDeep(ifP, cols, rows, maxval, deepbits);
             break;
         case MODE_DCOL:
-            ppm_to_dcol(ifP, cols, rows, maxval, &dcol);
+            ppmToDcol(ifP, cols, rows, maxval, &dcol);
             break;
         case MODE_RGB8:
-            ppm_to_rgb8(ifP, cols, rows, maxval);
+            ppmToRgb8(ifP, cols, rows, maxval);
             break;
         case MODE_RGBN:
-            ppm_to_rgbn(ifP, cols, rows, maxval);
+            ppmToRgbn(ifP, cols, rows, maxval);
             break;
         case MODE_CMAP:
-            ppm_to_cmap(colormap, colors, cmapmaxval);
+            ppmToCmap(colormap, colors, cmapmaxval);
             break;
         default:
             if (mapfile == NULL)
                 floyd = 0;          /* would only slow down conversion */
-            ppm_to_std(ifP, cols, rows, maxval, colormap, colors, 
-                       cmapmaxval, MAXCOLORS, nPlanes);
+            ppmToStd(ifP, cols, rows, maxval, colormap, colors, 
+                     cmapmaxval, MAXCOLORS, nPlanes);
             break;
     }
     pm_close(ifP);
     return 0;
 }
+
+
+
