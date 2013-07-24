@@ -1014,12 +1014,12 @@ pamd_fill_drawproc(tuple **     const tuples,
 
 
 #ifndef LITERAL_FN_DEF_MATCH
-static qsort_comparison_fn yx_compare;
+static qsort_comparison_fn yxCompare;
 #endif
 
 static int
-yx_compare(const void * const c1Arg,
-           const void * const c2Arg) {
+yxCompare(const void * const c1Arg,
+          const void * const c2Arg) {
 
     const coord * const c1P = c1Arg;
     const coord * const c2P = c2Arg;
@@ -1082,7 +1082,7 @@ pamd_fill(tuple **         const tuples,
     pamd_setlineclip(oldclip);
 
     /* Sort the coords by Y, secondarily by X. */
-    qsort((char*) fh->coords, fh->n, sizeof(coord), yx_compare);
+    qsort((char*) fh->coords, fh->n, sizeof(coord), yxCompare);
 
     /* Find equal coords with different edge numbers, and swap if necessary. */
     edge = -1;
