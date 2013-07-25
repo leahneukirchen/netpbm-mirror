@@ -114,8 +114,8 @@
 
 
 #define _GNU_SOURCE
-   /* Due to conditional compilation, this is GNU source only if the C library
-      is GNU.
+   /* Because of conditional compilation, this is GNU source only if the C
+      library is GNU.
    */
 #define PORTABLE_SNPRINTF_VERSION_MAJOR 2
 #define PORTABLE_SNPRINTF_VERSION_MINOR 2
