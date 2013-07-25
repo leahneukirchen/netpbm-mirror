@@ -497,7 +497,7 @@ writeDummy() {
    Write a dummy Palm Bitmap header.  This is a 16 byte header, of
    type version 1 and with (only) pixelSize set to 0xFF.
 
-   An old viewer will see this as invalid due to the pixelSize, and stop
+   An old viewer will see this as invalid because of the pixelSize, and stop
    reading the stream.  A new viewer will recognize this for what it is
    (a dummy header designed to stop old viewers from reading further in
    the stream) and continue reading the stream.  Presumably, what follows

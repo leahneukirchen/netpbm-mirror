@@ -199,7 +199,7 @@ mpeg_jrevdct_quick(data)
   dataptr = data;
 
   for (rowctr = DCTSIZE-1; rowctr >= 0; rowctr--) {
-    /* Due to quantization, we will usually find that many of the input
+    /* Because of quantization, we will usually find that many of the input
      * coefficients are zero, especially the AC terms.  We can exploit this
      * by short-circuiting the IDCT calculation for any row in which all
      * the AC terms are zero.  In that case each output is equal to the

@@ -582,7 +582,7 @@ print_verbose_info_about_header(struct jpeg_decompress_struct const cinfo){
                colorspace_name(cinfo.jpeg_color_space));
 
     /* Note that raw information about marker, including marker type code,
-       was already printed by the jpeg library, due to the jpeg library
+       was already printed by the jpeg library, because of the jpeg library
        trace level >= 1.  Our job is to interpret it a little bit.
     */
     if (cinfo.marker_list)

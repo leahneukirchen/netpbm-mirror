@@ -22,7 +22,7 @@
 #include <math.h>
 #include <float.h>
 #include <png.h>
-/* Due to a design error in png.h, you must not #include <setjmp.h> before
+/* Becaues of a design error in png.h, you must not #include <setjmp.h> before
    <png.h>.  If you do, png.h won't compile.
 */
 #include <setjmp.h>

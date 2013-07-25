@@ -883,7 +883,7 @@ executeGhostscript(char                    const pstrans[],
                 pm_error("Ghostscript failed.  Exit code=%d\n", 
                          WEXITSTATUS(gsTermStatus));
             else if (WIFSIGNALED(gsTermStatus))
-                pm_error("Ghostscript process died due to a signal %d.",
+                pm_error("Ghostscript process died because of a signal %d.",
                          WTERMSIG(gsTermStatus));
             else 
                 pm_error("Ghostscript process died with exit code %d", 
