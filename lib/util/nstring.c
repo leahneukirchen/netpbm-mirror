@@ -601,17 +601,15 @@ pm_vsnprintf(char *       const str,
                 }
             } break;
             default:
-                /* unrecognized conversion specifier, keep format
-                   string as-is
+                /* Unrecognized conversion specifier.  Discard the
+                   unrecognized conversion, just keep the unrecognized
+                   conversion character.
                 */
                 zero_padding = 0;
                     /* turn zero padding off for non-numeric convers. */
                 /* reset flags */
                 justify_left = 1;
                 min_field_width = 0;
-                /* discard the unrecognized conversion, just keep the
-                   unrecognized conversion character
-                */
                 str_arg = p;
                 str_arg_l = 0;
                 if (*p)
