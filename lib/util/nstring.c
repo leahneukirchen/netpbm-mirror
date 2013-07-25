@@ -689,10 +689,10 @@ pm_vsnprintf(char *       const str,
                for unknown conversions)
             */
             {
-                int n = str_arg_l - zero_padding_insertion_ind;
+                int const n = str_arg_l - zero_padding_insertion_ind;
                 if (n > 0) {
                     if (str_l < str_m) {
-                        size_t avail = str_m-str_l;
+                        size_t const avail = str_m-str_l;
                         fast_memcpy(str + str_l,
                                     str_arg + zero_padding_insertion_ind,
                                     (n > avail ? avail : n));
