@@ -86,9 +86,9 @@ pm_mallocarray2(void **      const resultP,
    of those rows.  So a[row][col] gives you the element of the two
    dimensional array at Row 'row', Column 'col'.
 
-   Each array element is ideally aligned to an 'elementSize' boundary.
-   But we guarantee this only for 1, 2, 4, 8, and 16, due to limitations of
-   libc malloc() (which we use to allocate all the memory).
+   Each array element is ideally aligned to an 'elementSize' boundary.  But we
+   guarantee this only for 1, 2, 4, 8, and 16, because of limitations of libc
+   malloc() (which we use to allocate all the memory).
 
    We tack on two extra elements to the end of the row index, transparent to
    the user, for use in memory management (in particular, in destroying the
