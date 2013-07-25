@@ -231,10 +231,14 @@ pm_vsnprintf(char *       const str,
             p += n; str_l += n;
         } else {
             const char *starting_p;
-            size_t min_field_width = 0, precision = 0;
-            int zero_padding = 0, precision_specified = 0, justify_left = 0;
-            int alternate_form = 0, force_sign = 0;
-            int space_for_positive = 1;
+            size_t min_field_width;
+            size_t precision = 0;
+            bool precision_specified;
+            bool justify_left;
+            bool zero_padding;
+            bool alternate_form;
+            bool force_sign;
+            bool space_for_positive;
                 /* If both the ' ' and '+' flags appear,
                    the ' ' flag should be ignored.
                 */
@@ -271,17 +275,22 @@ pm_vsnprintf(char *       const str,
             ++p;  /* skip '%' */
 
             /* parse flags */
+            justify_left = false;  /* initial value */
+            zero_padding = false;  /* initial value */
+            alternate_form = false;  /* initial value */
+            force_sign = false;  /* initial value */
+            space_for_positive = false;  /* initial value */
             while (*p == '0' || *p == '-' || *p == '+' ||
                    *p == ' ' || *p == '#' || *p == '\'') {
                 switch (*p) {
-                case '0': zero_padding = 1; break;
-                case '-': justify_left = 1; break;
-                case '+': force_sign = 1; space_for_positive = 0; break;
-                case ' ': force_sign = 1; break;
+                case '0': zero_padding = true; break;
+                case '-': justify_left = true; break;
+                case '+': force_sign = true; space_for_positive = false; break;
+                case ' ': force_sign = true; break;
                     /* If both the ' ' and '+' flags appear, the ' '
                        flag should be ignored
                     */
-                case '#': alternate_form = 1; break;
+                case '#': alternate_form = true; break;
                 case '\'': break;
                 }
                 ++p;
@@ -293,9 +302,10 @@ pm_vsnprintf(char *       const str,
             /* parse field width */
             if (*p == '*') {
                 int j;
-                p++; j = va_arg(ap, int);
-                if (j >= 0) min_field_width = j;
-                else { min_field_width = -j; justify_left = 1; }
+                ++p;
+                j = va_arg(ap, int);
+                if (j >= 0) { min_field_width = j; justify_left = false; }
+                else { min_field_width = -j; justify_left = true; }
             } else if (isdigit((int)(*p))) {
                 /* size_t could be wider than unsigned int; make sure
                    we treat argument like common implementations do
@@ -304,16 +314,19 @@ pm_vsnprintf(char *       const str,
                 while (isdigit((int)(*p)))
                     uj = 10*uj + (unsigned int)(*p++ - '0');
                 min_field_width = uj;
-            }
+            } else
+                min_field_width = 0;
+
             /* parse precision */
             if (*p == '.') {
-                p++; precision_specified = 1;
+                ++p;
+                precision_specified = true;
                 if (*p == '*') {
                     int j = va_arg(ap, int);
                     p++;
                     if (j >= 0) precision = j;
                     else {
-                        precision_specified = 0; precision = 0;
+                        precision_specified = false; precision = 0;
                         /* NOTE: Solaris 2.6 man page claims that in
                            this case the precision should be set to 0.
                            Digital Unix 4.0, HPUX 10 and BSD man page
@@ -332,7 +345,9 @@ pm_vsnprintf(char *       const str,
                         uj = 10*uj + (unsigned int)(*p++ - '0');
                     precision = uj;
                 }
-            }
+            } else
+                precision_specified = false;
+
             /* parse 'h', 'l' and 'll' length modifiers */
             if (*p == 'h' || *p == 'l') {
                 length_modifier = *p; p++;
@@ -367,7 +382,7 @@ pm_vsnprintf(char *       const str,
                     Unix and Linux does not.
                 */
 
-                zero_padding = 0;
+                zero_padding = false;
                     /* turn zero padding off for string conversions */
                 str_arg_l = 1;
                 switch (fmt_spec) {
@@ -493,7 +508,7 @@ pm_vsnprintf(char *       const str,
                    Perl.
                 */
                 if (precision_specified)
-                    zero_padding = 0;
+                    zero_padding = false;
                 if (fmt_spec == 'd') {
                     if (force_sign && arg_sign >= 0)
                         tmp[str_arg_l++] = space_for_positive ? ' ' : '+';
@@ -586,7 +601,7 @@ pm_vsnprintf(char *       const str,
                                explicit precision of zero
                             */
                             precision = num_of_digits+1;
-                            precision_specified = 1;
+                            precision_specified = true;
                         }
                     }
                     /* zero padding to specified precision? */
@@ -605,10 +620,10 @@ pm_vsnprintf(char *       const str,
                    unrecognized conversion, just keep the unrecognized
                    conversion character.
                 */
-                zero_padding = 0;
+                zero_padding = false;
                     /* turn zero padding off for non-numeric convers. */
                 /* reset flags */
-                justify_left = 1;
+                justify_left = true;
                 min_field_width = 0;
                 str_arg = p;
                 str_arg_l = 0;
