@@ -452,7 +452,7 @@ resolvePercentParams(FILE *             const ifP,
    to black and the one that is to be stretched to white) as requested
    by the -bvalue, -bpercent, -wvalue, and -wpercent options.
 
-   These values may be invalid due to overlapping, and they may exceed
+   These values may be invalid because of overlapping, and they may exceed
    the maximum allowed stretch; Caller must deal with that.
 -----------------------------------------------------------------------------*/
     unsigned int * hist;  /* malloc'ed */
@@ -735,7 +735,7 @@ computeTransferFunction(bool      const quadratic,
    3 points.
 
    This stretching could conceivably result in more brightnesses mapping to
-   zero and full brightness that 'bvalue' and 'wvalue' demand, due to
+   zero and full brightness that 'bvalue' and 'wvalue' demand, because of
    rounding.
 
    Define function only for values 0..maxval.

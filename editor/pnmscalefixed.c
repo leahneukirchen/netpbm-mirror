@@ -256,7 +256,7 @@ compute_output_dimensions(const struct cmdline_info cmdline,
             *newrowsP = rows;
     }    
 
-    /* If the calculations above yielded (due to rounding) a zero 
+    /* If the calculations above yielded (because of rounding) a zero 
        dimension, we fudge it up to 1.  We do this rather than considering
        it a specification error (and dying) because it's friendlier to 
        automated processes that work on arbitrary input.  It saves them
@@ -283,7 +283,7 @@ horizontal_scale(const xel inputxelrow[], xel newxelrow[],
    output rows.
 
    *stretchP is the number of columns (could be fractional) on the right 
-   that we had to fill by stretching due to rounding problems.
+   that we had to fill by stretching because of rounding problems.
 -----------------------------------------------------------------------------*/
     long r, g, b;
     long fraccoltofill, fraccolleft;
@@ -574,7 +574,7 @@ main(int argc, char **argv ) {
             
             if (cmdline.verbose && row == 0 && stretch != 0)
                 pm_message("%d/%d = %f right columns filled by stretching "
-                           "due to arithmetic imprecision", 
+                           "because of arithmetic imprecision", 
                            stretch, SCALE, (float) stretch/SCALE);
             
             pnm_writepnmrow(stdout, newxelrow, newcols, 
