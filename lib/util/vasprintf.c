@@ -5,13 +5,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "pm_config.h"
 #include "nstring.h"
 
-#if (defined(__GLIBC__) || defined(__GNU_LIBRARY__))
-  #define HAVE_VASPRINTF 1
-#else
-  #define HAVE_VASPRINTF 0
-#endif
+
 
 void
 pm_vasprintf(const char ** const resultP,

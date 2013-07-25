@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+13.07.25 BJH  Release 10.63.02
+
+              libnetpbm, pnmpsnr, ppmcie on Mac OS X: fix bogus printing of
+              floating point numbers.
+
 13.07.04 BJH  Release 10.63.01
 
               pngtopam: fix bug: ignores -gamma.  Introduced in 10.48
