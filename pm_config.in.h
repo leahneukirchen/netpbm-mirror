@@ -99,31 +99,6 @@
 #if defined(SYSV)
 #include <malloc.h>
 #endif
-/* extern char* malloc(); */
-/* extern char* realloc(); */
-/* extern char* calloc(); */
-
-/* CONFIGURE: Some systems don't have vfprintf(), which we need for the
-** error-reporting routines.  If you compile and get a link error about
-** this routine, uncomment the first define, which gives you a vfprintf
-** that uses the theoretically non-portable but fairly common routine
-** _doprnt().  If you then get a link error about _doprnt, or
-** message-printing doesn't look like it's working, try the second
-** define instead.
-*/
-/* #define NEED_VFPRINTF1 */
-/* #define NEED_VFPRINTF2 */
-
-/* CONFIGURE: Some systems don't have strstr(), which some routines need.
-** If you compile and get a link error about this routine, uncomment the
-** define, which gives you a strstr.
-*/
-/* #define NEED_STRSTR */
-
-/* CONFIGURE: Set this option if your compiler uses strerror(errno)
-** instead of sys_errlist[errno] for error messages.
-*/
-#define A_STRERROR
 
 /* MSVCRT means we're using the Microsoft Visual C++ runtime library.
 
@@ -160,6 +135,12 @@
 #endif
 
 /* #define HAVE_SETMODE */
+
+#if (defined(__GLIBC__) || defined(__GNU_LIBRARY__) || defined(__APPLE__))
+  #define HAVE_VASPRINTF 1
+#else
+  #define HAVE_VASPRINTF 0
+#endif
 
 #ifdef __amigaos__
 #include <clib/exec_protos.h>
