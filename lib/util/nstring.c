@@ -39,7 +39,7 @@
  * IMPLEMENTED CONVERSION SPECIFIERS AND DATA TYPES
  *
  * This snprintf implements only the following conversion specifiers:
- * s, c, d, u, o, x, X, p  (and synonyms: i, D, U, O - see below)
+ * s, c, d, u, o, x, X, p, f  (and synonyms: i, D, U, O - see below)
  * with flags: '-', '+', ' ', '0' and '#'.
  * An asterisk is acceptable for field width as well as precision.
  *
@@ -66,7 +66,7 @@
  *
  * The following is specifically NOT implemented:
  *   - flag ' (thousands' grouping character) is recognized but ignored
- *   - numeric conversion specifiers: f, e, E, g, G and synonym F,
+ *   - numeric conversion specifiers: e, E, g, G and synonym F,
  *     as well as the new a and A conversion specifiers
  *   - length modifier 'L' (long double) and 'q' (quad - use 'll' instead)
  *   - wide character/string conversions: lc, ls, and nonstandard
@@ -614,6 +614,21 @@ pm_vsnprintf(char *       const str,
                         min_field_width - (str_arg_l+number_of_zeros_to_pad);
                     if (n > 0) number_of_zeros_to_pad += n;
                 }
+            } break;
+            case 'f': {
+                char f[10];
+                if (precision_specified)
+                    snprintf(f, ARRAY_SIZE(f), "%%%u.%uf",
+                             (unsigned)min_field_width, (unsigned)precision);
+                else
+                    snprintf(f, ARRAY_SIZE(f), "%%%uf",
+                             (unsigned)min_field_width);
+
+                str_arg_l = sprintf(tmp, f, va_arg(ap, double));
+                str_arg = &tmp[0];
+
+                min_field_width = 0;
+                zero_padding_insertion_ind = 0;
             } break;
             default:
                 /* Unrecognized conversion specifier.  Discard the
