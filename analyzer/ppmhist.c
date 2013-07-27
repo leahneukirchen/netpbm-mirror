@@ -100,39 +100,61 @@ parseCommandLine(int argc, const char ** argv,
 
 
 
-#ifndef LITERAL_FN_DEF_MATCH
-static qsort_comparison_fn cmpfn;
-#endif
-
 static int
-countcompare(const void *ch1, const void *ch2) {
+cmpUint(unsigned int const a,
+        unsigned int const b) {
 /*----------------------------------------------------------------------------
-   This is a 'qsort' collation function.
+   Return 1 if 'a' > 'b'; -1 if 'a' is < 'b'; 0 if 'a' == 'b'.
+
+   I.e. what a libc qsort() comparison function returns.
 -----------------------------------------------------------------------------*/
-    return ((colorhist_vector)ch2)->value - ((colorhist_vector)ch1)->value;
+    return a > b ? 1 : a < b ? -1 : 0;
 }
 
 
 
 #ifndef LITERAL_FN_DEF_MATCH
-static qsort_comparison_fn cmpfn;
+static qsort_comparison_fn countcompare;
 #endif
 
+
 static int
-rgbcompare(const void * arg1, const void * arg2) {
+countcompare(const void * const a,
+             const void * const b) {
 /*----------------------------------------------------------------------------
    This is a 'qsort' collation function.
 -----------------------------------------------------------------------------*/
-    colorhist_vector const ch1 = (colorhist_vector) arg1;
-    colorhist_vector const ch2 = (colorhist_vector) arg2;
+    const struct colorhist_item * const histItem1P = a;
+    const struct colorhist_item * const histItem2P = b;
+
+    return cmpUint(histItem2P->value, histItem1P->value);
+}
+
+
+
+#ifndef LITERAL_FN_DEF_MATCH
+static qsort_comparison_fn rgbcompare;
+#endif
+
+static int
+rgbcompare(const void * const a,
+           const void * const b) {
+/*----------------------------------------------------------------------------
+   This is a 'qsort' collation function.
+-----------------------------------------------------------------------------*/
+    const struct colorhist_item * const histItem1P = a;
+    const struct colorhist_item * const histItem2P = b;
 
     int retval;
 
-    retval = (PPM_GETR(ch1->color) - PPM_GETR(ch2->color));
+    retval = cmpUint(PPM_GETR(histItem1P->color),
+                     PPM_GETR(histItem2P->color));
     if (retval == 0) {
-        retval = (PPM_GETG(ch1->color) - PPM_GETG(ch2->color));
+        retval = cmpUint(PPM_GETG(histItem1P->color),
+                         PPM_GETG(histItem2P->color));
         if (retval == 0)
-            retval = (PPM_GETB(ch1->color) - PPM_GETB(ch2->color));
+            retval = cmpUint(PPM_GETB(histItem1P->color),
+                             PPM_GETB(histItem2P->color));
     }
     return retval;
 }
