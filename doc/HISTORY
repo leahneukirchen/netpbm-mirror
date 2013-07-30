@@ -9,8 +9,10 @@ not yet  BJH  Release 10.64.00
               pngtopam: fix bug: ignores -gamma.  Introduced in 10.48
               (September 2009).
 
-              libnetpbm, pnmpsnr, ppmcie on Mac OS X: fix bogus printing of
-              floating point numbers.
+              libnetpbm, pnmpsnr, ppmcie on systems that don't use GNU C
+              library: fix bogus printing of floating point numbers.
+
+              test: fix ppmhist lack of sorting.
 
 13.06.29 BJH  Release 10.63.00
 
