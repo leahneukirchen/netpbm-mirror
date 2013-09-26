@@ -4,6 +4,13 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+13.09.26 BJH  Release 10.47.46
+
+              Fixes for Mingw build with MSYS shell.
+
+              libnetpbm, pnmpsnr, ppmcie on Mac OS X: fix bogus printing of
+              floating point numbers.
+
 13.06.27 BJH  Release 10.47.45
 
               giftopnm: fix bug: erroneously claims GIF ends prematurely.

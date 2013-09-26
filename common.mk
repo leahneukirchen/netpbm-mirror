@@ -138,10 +138,10 @@ IMPORTINC_LIB_FILES := $(IMPORTINC_LIB_HEADERS:%=importinc/%)
 IMPORTINC_LIB_UTIL_FILES := $(IMPORTINC_LIB_UTIL_HEADERS:%=importinc/%)
 
 importinc: \
-  importinc/netpbm \
   $(IMPORTINC_ROOT_FILES) \
   $(IMPORTINC_LIB_FILES) \
   $(IMPORTINC_LIB_UTIL_FILES) \
+  importinc/netpbm \
 
 importinc/netpbm:
 	mkdir -p importinc
