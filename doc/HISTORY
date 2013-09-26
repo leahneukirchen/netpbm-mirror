@@ -4,6 +4,20 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+13.09.26 BJH  Release 10.35.90
+
+              ppmtoxpm: fix bug: ignores inability to open the specified color
+              dictionary file (-rgb) and just doesn't use color names.
+              Introduced in Netpbm 10.15 (April 2003).
+
+              ppmforge. fix crash when -mesh is 1 or less.  Always broken
+              (program was added in Pbmplus (October 1991).  Thanks Prophet of
+              the Way <afu@wta.att.ne.jp>.
+
+              ppmforge: fix array bounds violation.  Always broken (program
+              was added in Pbmplus (October 1991).  Thanks Prophet of the Way
+              <afu@wta.att.ne.jp>.
+
 13.05.03 BJH  Release 10.35.89
 
               ppmtowinicon: fix bug: sometimes creates image truncated in the
