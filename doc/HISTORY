@@ -4,6 +4,8 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+not yet  BJH  Release 10.65.00
+
 13.09.28 BJH  Release 10.64.00
 
               pngtopam: fix bug: ignores -gamma.  Introduced in 10.48
