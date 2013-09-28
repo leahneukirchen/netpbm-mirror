@@ -5,7 +5,7 @@
 # We first check whether random number generator is glibc rand().
 # If not, this test is skipped.
 
-${PBM_TESTPREFIX}pgmnoise --testrandom
+testrandom
 
 case $? in
    81)
@@ -18,5 +18,5 @@ case $? in
         echo "Skipping: random number generator is not glibc." 1>&2
         exit 80;;
 
-   *)   exit 1;;  # pgmnoise --testrandom failed
+   *)   exit 1;;  # testrandom failed
 esac

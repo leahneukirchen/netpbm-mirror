@@ -195,7 +195,7 @@ readPnm(FILE *            const fin,
     free(image);
     
     /* Invert the image if it is just one plane.  See top of this file
-       for an explanation why.  Due to the separate handling of PBM,
+       for an explanation why.  Because of the separate handling of PBM,
        this is for exceptional PGM files.  
     */
 

@@ -357,10 +357,10 @@ pngx_setGama(struct pngx * const pngxP,
 
 void
 pngx_setGamma(struct pngx * const pngxP,
-              float         const displayGamma,
+              float         const screenGamma,
               float         const imageGamma) {
 
-    png_set_gamma(pngxP->png_ptr, displayGamma, imageGamma);
+    png_set_gamma(pngxP->png_ptr, screenGamma, imageGamma);
 }
 
 

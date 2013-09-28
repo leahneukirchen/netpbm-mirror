@@ -55,7 +55,7 @@ appear at the end:
   ==================
   SUCCESS 83
   FAILURE 1
-  TOTAL SUPPORTED 84
+  TOTAL TESTABLE 84
   ==================
   All tests done.
   Sat, 08 Jun 2013 09:30:33 +0000
@@ -205,8 +205,8 @@ http://netpbm.sourceforge.net/prereq.html .
 ===================
 
 Broken programs will invariably lead to failures.  Certain programs
-(for instance, image generators pbmmake pgmmake) are used in numerous
-test scripts.  Problem in them will lead to multiple failures.
+(for instance, image generators 'pbmmake' and 'pgmmake') are used in numerous
+test scripts.  Problems in them will lead to multiple failures.
 
 To aid you in this situation each test routine lists the necessary programs
 near the top.

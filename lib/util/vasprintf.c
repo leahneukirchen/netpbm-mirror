@@ -1,6 +1,6 @@
 #define _GNU_SOURCE
-   /* Due to conditional compilation, this is GNU source only if the C library
-      is GNU.
+   /* Because of conditional compilation, this is GNU source only if the C
+      library is GNU.
    */
 #include <stdlib.h>
 #include <string.h>

@@ -313,7 +313,7 @@ scoreAngle(const struct pam * const pamP,
 -----------------------------------------------------------------------------*/
     float  const radians = (float)angle/360 * 2 * M_PI;
     float  const dy      = hstep * tan(radians);
-        /* How much a line sinks due to the tilt when we move one sample
+        /* How much a line sinks because of the tilt when we move one sample
            ('hstep' columns of the image) to the right.
         */
     if (fabs(dy * hsamples) > pamP->height) {

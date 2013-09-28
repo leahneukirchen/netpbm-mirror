@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-/* Due to poor design of libpng, you must not #include <setjmp.h> before
+/* Because of poor design of libpng, you must not #include <setjmp.h> before
 <png.h>.  Compile failure results.
 */
 #include <png.h>

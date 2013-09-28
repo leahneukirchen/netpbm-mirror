@@ -689,9 +689,33 @@ fail:
 }
 
 
+
+static int (*customCmp)(pixel *, pixel *);
+
+#ifndef LITERAL_FN_DEF_MATCH
+static qsort_comparison_fn customStub;
+#endif
+
 static int
-pixel_cmp(const void * const a, const void * const b) {
-    const pixel *p1 = (const pixel *)a, *p2 = (const pixel *)b;
+customStub(const void * const a,
+           const void * const b) {
+
+    return (*customCmp)((pixel *)a, (pixel *)b);
+}
+
+
+
+#ifndef LITERAL_FN_DEF_MATCH
+static qsort_comparison_fn pixelCmp;
+#endif
+
+static int
+pixelCmp(const void * const a,
+         const void * const b) {
+
+    const pixel * const p1 = (const pixel *)a;
+    const pixel * const p2 = (const pixel *)b;
+
     int diff;
 
     diff = PPM_GETR(*p1) - PPM_GETR(*p2);
@@ -703,23 +727,18 @@ pixel_cmp(const void * const a, const void * const b) {
     return diff;
 }
 
-static int (*custom_cmp)(pixel *, pixel *);
-
-static int
-custom_stub(const void * const a, const void * const b) {
-    return (*custom_cmp)((pixel *)a, (pixel *)b);
-}
 
 
 void
-ppm_sortcolorrow(pixel * const colorrow, const int ncolors, 
+ppm_sortcolorrow(pixel * const colorrow,
+                 int     const ncolors, 
                  int (*cmpfunc)(pixel *, pixel *)) {
 
-    if( cmpfunc ) {
-        custom_cmp = cmpfunc;
-        qsort((void *)colorrow, ncolors, sizeof(pixel), custom_stub);
+    if (cmpfunc) {
+        customCmp = cmpfunc;
+        qsort((void *)colorrow, ncolors, sizeof(pixel), customStub);
     } else
-        qsort((void *)colorrow, ncolors, sizeof(pixel), pixel_cmp);
+        qsort((void *)colorrow, ncolors, sizeof(pixel), pixelCmp);
 }
 
 

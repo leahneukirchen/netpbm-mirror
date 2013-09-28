@@ -10,7 +10,9 @@
 int
 palmcolor_compare_indices(const void * const p1,
                           const void * const p2) {
-
+/*----------------------------------------------------------------------------
+   This is a 'qsort' collation function.
+-----------------------------------------------------------------------------*/
     if ((*((Color) p1) & 0xFF000000) < (*((Color) p2) & 0xFF000000))
         return -1;
     else if ((*((Color) p1) & 0xFF000000) > (*((Color) p2) & 0xFF000000))
@@ -24,7 +26,9 @@ palmcolor_compare_indices(const void * const p1,
 int
 palmcolor_compare_colors(const void * const p1,
                          const void * const p2) {
-
+/*----------------------------------------------------------------------------
+   This is a 'qsort' collation function.
+-----------------------------------------------------------------------------*/
     unsigned long const val1 = *((const unsigned long *) p1) & 0xFFFFFF;
     unsigned long const val2 = *((const unsigned long *) p2) & 0xFFFFFF;
 

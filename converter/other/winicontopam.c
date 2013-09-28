@@ -182,6 +182,10 @@ u32_xx(const unsigned char * const buf,
 
 
 
+#ifndef LITERAL_FN_DEF_MATCH
+static qsort_comparison_fn cmpfn;
+#endif
+
 static int
 cmpfn(const void * const aP,
       const void * const bP) {

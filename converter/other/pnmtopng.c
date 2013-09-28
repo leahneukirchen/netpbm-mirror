@@ -59,7 +59,7 @@
 #include <string.h> /* strcat() */
 #include <limits.h>
 #include <png.h>
-/* Due to a design error in png.h, you must not #include <setjmp.h> before
+/* Because of a design error in png.h, you must not #include <setjmp.h> before
    <png.h>.  If you do, png.h won't compile.
 */
 #include <setjmp.h> 

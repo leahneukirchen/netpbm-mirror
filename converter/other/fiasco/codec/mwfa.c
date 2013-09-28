@@ -438,7 +438,7 @@ find_B_frame_mc (word_t *mcpe, real_t price, range_t *range,
    else					/* local exhaustive search */
    {
       /*
-       *  Keep forward and backward mv due to time constraints
+       *  Keep forward and backward mv because of time constraints
        */
 
       ifx = fx;

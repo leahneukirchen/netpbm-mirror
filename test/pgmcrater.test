@@ -1,6 +1,5 @@
 #! /bin/bash
 # This script tests: pgmcrater
-# Also requires: pgmnoise
 
 # This test is sensitive to differences in floating point math.
 # With GCC slight results start to appear with -number 75 in
@@ -14,7 +13,7 @@
 # The slight differences in the image file are not discernable by
 # the naked eye.
 
-${PBM_BINPREFIX}pgmnoise --testrandom --quiet
+testrandom -q
 case $? in
    81)
       # Should print: 3828822912 65551
@@ -25,5 +24,5 @@ case $? in
        echo "Skipping: random number generator is not glibc." 1>&2
        exit 80;;
 
-   *)  exit 1;;  # pgmnoise --testrandom failed
+   *)  exit 1;;  # testrandom failed
 esac

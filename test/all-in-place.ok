@@ -324,13 +324,13 @@ tgatoppm: ok
 thinkjettopbm: ok
 tifftopnm: ok
 wbmptopbm: ok
+winicontopam: ok
 winicontoppm: ok
 xbmtopbm: ok
 ximtoppm: ok
 xpmtoppm: ok
 xvminitoppm: ok
 xwdtopnm: ok
-winicontopam: ok
 ybmtopbm: ok
 yuvsplittoppm: ok
 yuvtoppm: ok

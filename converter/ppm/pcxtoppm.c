@@ -129,9 +129,9 @@ struct pcxHeader {
     short Planes;
     short BitsPerPixel;
     short BytesPerLine;
-        /* Number of decompressed bytes each plane of each row of the image 
-           takes.  Due to padding (this is always an even number), there may
-           be garbage on the right end that isn't part of the image.
+        /* Number of decompressed bytes each plane of each row of the image
+           takes.  Because of padding (this is always an even number), there
+           may be garbage on the right end that isn't part of the image.
         */
     short PaletteInfo;
     short HorizontalResolution;

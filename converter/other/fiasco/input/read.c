@@ -397,7 +397,7 @@ read_next_wfa (wfa_t *wfa, bitfile_t *input)
 
    /*
     *  Compute domain pool.
-    *  Large images have not been used due to image tiling.
+    *  Large images have not been used because of image tiling.
     */
    {
       unsigned state;

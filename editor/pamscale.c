@@ -1143,7 +1143,7 @@ createWeightListSet(unsigned int          const sourceSize,
       
    2) Filter out any frequencies that are too high to be captured
       by the new sampling -- i.e. frequencies above 1/2 the new
-      sample rate.  This is the information we must lose due to low
+      sample rate.  This is the information we must lose because of low
       sample rate.
       
    3) Sample the result at the new sample rate.
@@ -1656,7 +1656,7 @@ horizontalScale(tuplen *     const inputtuplenrow,
   it by a factor of 'xscale', to create the output row 'newtuplenrow',
   described by *outpamP.
 
-  Due to arithmetic imprecision, we may have to stretch slightly the
+  Because of arithmetic imprecision, we may have to stretch slightly the
   contents of the last pixel of the output row to make a full pixel.
   Return as *stretchP the fraction of a pixel by which we had to
   stretch in this way.
@@ -1697,7 +1697,7 @@ horizontalScale(tuplen *     const inputtuplenrow,
         }
         /* There's not enough left in the current input pixel to fill up 
            a whole output column, so just accumulate the remainder of the
-           pixel into the current output column.  Due to rounding, we may
+           pixel into the current output column.  Because of rounding, we may
            have a tiny bit of pixel left and have run out of output pixels.
            In that case, we throw away what's left.
         */
@@ -1850,7 +1850,7 @@ issueStretchWarning(bool   const verbose,
        row.  
     */
     if (verbose)
-        pm_message("%f of bottom row stretched due to "
+        pm_message("%f of bottom row stretched because of "
                    "arithmetic imprecision", 
                    fracrowtofill);
 }
@@ -1884,7 +1884,7 @@ scaleHorizontallyAndOutputRow(struct pam *             const inpamP,
                         xscale, &stretch);
             
         if (verbose && row == 0)
-            pm_message("%f of right column stretched due to "
+            pm_message("%f of right column stretched because of "
                        "arithmetic imprecision", 
                        stretch);
             
