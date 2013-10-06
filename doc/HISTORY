@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+13.10.06 BJH  Release 10.64.01
+
+              Build for big-endian machines: fix syntax error so it compiles.
+              Broken in 10.63 (June 2013).
+
 13.09.28 BJH  Release 10.64.00
 
               pngtopam: fix bug: ignores -gamma.  Introduced in 10.48
