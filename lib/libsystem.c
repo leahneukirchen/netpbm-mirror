@@ -13,6 +13,7 @@
    Contributed to the public domain.
 =============================================================================*/
 #define _XOPEN_SOURCE
+#define _BSD_SOURCE  /* Make SIGWINCH defined on OpenBSD */
 
 #include <stdarg.h>
 #include <unistd.h>
