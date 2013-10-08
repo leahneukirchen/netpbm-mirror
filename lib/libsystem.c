@@ -289,11 +289,11 @@ signalName(unsigned int const signalClass) {
     case SIGWINCH:
         return "SIGWINCH";
 #endif
-#ifdef HAVE_SIGIO
+#ifdef SIGIO
     case SIGIO:
         return "SIGIO";
 #endif
-#ifdef HAVE_SIGPWR
+#ifdef SIGPWR
     case SIGPWR:
         return "SIGPWR";
 #endif
