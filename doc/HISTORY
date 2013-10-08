@@ -6,11 +6,14 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.65.00
 
+              Recognize SIGPWR on systems that have it in messages
+              about signal received.
+
               Build for big-endian machines: fix syntax error so it compiles.
               Broken in 10.63 (June 2013).
 
               Fix compile failure on system such as OpenBSD that don't have
-              SIGWINCH and SIGIO.
+              SIGWINCH and SIGIO.  Broken since 10.49 (December 2009).
 
 13.09.28 BJH  Release 10.64.00
 

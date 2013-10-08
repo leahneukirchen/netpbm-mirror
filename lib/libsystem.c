@@ -220,6 +220,18 @@ spawnProcessor(const char *  const progName,
 static const char *
 signalName(unsigned int const signalClass) {
 
+/* There are various signal classes that are not universally defined,
+   so we make a half-hearted attempt to determine whether they are and
+   not try to recognize the ones that aren't.  We do this by testing
+   whether a macro is defind with the signal class name.  That could give
+   a false negative, because the signal class name isn't necessarily
+   defined as a macro, but it's a really, really small problem to miss
+   one of these signal classes here, so we don't bother with all the work
+   it would take to do it right.
+
+   OpenBSD does not have SIGWINCH and SIGIO in 2013.  Everyone else seems
+   to have it.
+*/
     switch (signalClass) {
     case SIGHUP: /* POSIX.1 */
         return "SIGHUP";
@@ -273,12 +285,6 @@ signalName(unsigned int const signalClass) {
         return "SIGVTALRM";
     case SIGPROF:
         return "SIGPROF";
-/* Most systems have SIGWINCH and SIGIO, but at least OpenBSD, in 2013,
-   does not.  Systems that do don't necessarily supply it as a macro, so
-   the following tests are not perfect, but a false negative is a really,
-   really, small problem, so we don't bother with all the work it would
-   take to do better.
-*/
 #ifdef SIGWINCH
     case SIGWINCH:
         return "SIGWINCH";
@@ -287,16 +293,14 @@ signalName(unsigned int const signalClass) {
     case SIGIO:
         return "SIGIO";
 #endif
+#ifdef HAVE_SIGPWR
+    case SIGPWR:
+        return "SIGPWR";
+#endif
     case SIGSYS:
         return "SIGSYS";
     default:
         return "???";
-
-        /* There are various other signal classes on some systems, but
-           not defined by POSIX and not on at least one system we
-           know of for which someone wanted to compile Netpbm.  The
-           list includes: SIGPWR, SIGLOST, SIGINFO, SIGRTxx.
-        */
     }
 }
 
