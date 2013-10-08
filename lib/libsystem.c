@@ -273,10 +273,20 @@ signalName(unsigned int const signalClass) {
         return "SIGVTALRM";
     case SIGPROF:
         return "SIGPROF";
+/* Most systems have SIGWINCH and SIGIO, but at least OpenBSD, in 2013,
+   does not.  Systems that do don't necessarily supply it as a macro, so
+   the following tests are not perfect, but a false negative is a really,
+   really, small problem, so we don't bother with all the work it would
+   take to do better.
+*/
+#ifdef SIGWINCH
     case SIGWINCH:
         return "SIGWINCH";
+#endif
+#ifdef HAVE_SIGIO
     case SIGIO:
         return "SIGIO";
+#endif
     case SIGSYS:
         return "SIGSYS";
     default:
