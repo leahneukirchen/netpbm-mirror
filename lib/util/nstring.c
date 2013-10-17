@@ -808,17 +808,20 @@ pm_asprintf(const char ** const resultP,
         result = NULL;
     else {
         size_t const allocSize = dryRunLen + 1;
-        result = malloc(allocSize);
-        if (result != NULL) {
+        char * buffer;
+        buffer = malloc(allocSize);
+        if (buffer != NULL) {
             va_list varargs;
             size_t realLen;
 
             va_start(varargs, fmt);
 
-            pm_vsnprintf(result, allocSize, fmt, varargs, &realLen);
+            pm_vsnprintf(buffer, allocSize, fmt, varargs, &realLen);
                 
             assert(realLen == dryRunLen);
             va_end(varargs);
+
+            result = buffer;
         }
     }
 #endif

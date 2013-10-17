@@ -15,6 +15,9 @@ not yet  BJH  Release 10.65.00
               Fix compile failure on system such as OpenBSD that don't have
               SIGWINCH and SIGIO.  Broken since 10.49 (December 2009).
 
+              Build on system without vasprintf (not GNU libc): fix
+              compiler warning.
+
               Apple build: use vasprintf.
 
 13.09.28 BJH  Release 10.64.00
