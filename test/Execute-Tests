@@ -39,16 +39,10 @@ fi
 # export PBM_BINPREFIX=""
 export PBM_BINPREFIX=${PBM_TESTPREFIX}
 
-# Add PBM_BINPREFIX to PATH.
-# This is necessary for Netpbm programs that call other Netpbm programs.
-
-if [ ! -z $PBM_BINPREFIX ]
-  then
-  export PATH=${PBM_BINPREFIX}:$PATH
-fi
-
-# Set srcdir, which is the directory which contains Execute-Tests
-# (this script), Test-Order *.test and *.ok files.
+# Set srcdir, which is the directory which contains Execute-Tests (this
+# script), programs that run the test, including *.test and helpers that they
+# invoke, the list of tests to run ('Test-Order'), and *.ok files that
+# indicate the expected results of tests.
 
 srcdir=$(dirname $0)
 
@@ -99,6 +93,16 @@ fi
 if [ ! -f ./testimg.ppm ]
   then cp -v ${srcdir}/testimg.ppm  ./testimg.ppm 
 fi
+
+# Add PBM_BINPREFIX to PATH.
+# This is necessary for Netpbm programs that call other Netpbm programs.
+
+if [ ! -z $PBM_BINPREFIX ]
+  then
+  export PATH=${PBM_BINPREFIX}:$PATH
+fi
+
+export PATH=${srcdir}:$PATH
 
 # Execute the tests, as described in the "Test-Order" file.
 #

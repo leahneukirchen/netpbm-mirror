@@ -60,7 +60,7 @@ VPATH=.:$(SRCDIR)
 
 include $(BUILDDIR)/config.mk
 
-PROG_SUBDIRS = converter analyzer editor generator other
+PROG_SUBDIRS = converter analyzer editor generator other test
 PRODUCT_SUBDIRS = lib $(PROG_SUBDIRS)
 SUPPORT_SUBDIRS = urt buildtools
 
