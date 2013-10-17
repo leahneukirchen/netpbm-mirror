@@ -40,8 +40,7 @@ fi
 export PBM_BINPREFIX=${PBM_TESTPREFIX}
 
 # Add PBM_BINPREFIX to PATH.
-# This is necessary for Netpbm programs (mosly scripts) that call
-# other Netpbm programs.
+# This is necessary for Netpbm programs that call other Netpbm programs.
 
 if [ ! -z $PBM_BINPREFIX ]
   then
