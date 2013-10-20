@@ -32,7 +32,7 @@
    (i.e. <emmintrin.h> exists).
 */
 
-#if WANT_MMX
+#if WANT_MMX && defined(__SSE2__)
 
 /*----------------------------------------------------------------------------
    This is a specialized routine for row-for-column PBM transformations.
