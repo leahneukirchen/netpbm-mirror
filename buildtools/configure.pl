@@ -1004,15 +1004,16 @@ sub determineMmxCapability($) {
             
         if ($success) {
             print("It does.\n");
-            $$haveEmmintrinR = 'Y';
+            $$haveEmmintrinR = $TRUE;
         } else {
             print("It does not.  Programs will not exploit fast MMX " .
                   "instructions.\n");
-            $$haveEmmintrinR = 'N';
+            $$haveEmmintrinR = $FALSE;
         }
         print("\n");
     } else {
-        $$haveEmmintrinR = "N";
+        # We conservatively estimate the facility isn't there
+        $$haveEmmintrinR = $FALSE;
     }
 }
 
