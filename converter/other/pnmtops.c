@@ -1855,7 +1855,17 @@ convertRaster(struct pam * const inpamP,
               unsigned int const bitsPerSample,
               bool         const psFilter,
               FILE *       const fP) {
+/*----------------------------------------------------------------------------
+   Read the raster described by *inpamP, and write a bit stream of samples
+   to *fP.  This stream has to be compressed and converted to text before it
+   can be part of a Postscript program.
+   
+   'psFilter' means to do the conversion using built in Postscript filters, as
+   opposed to our own filters via /readstring.
 
+   'bitsPerSample' is how many bits each sample is to take in the Postscript
+   output.
+-----------------------------------------------------------------------------*/
     if (PAM_FORMAT_TYPE(inpamP->format) == PBM_TYPE && bitsPerSample == 1)  {
         unsigned char * bitrow;
         unsigned int row;
