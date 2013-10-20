@@ -8,7 +8,7 @@ Updated: 30 July 2011
 
 <H2>NAME</H2>
 
-pnmtops - convert PNM image to PostScript
+pnmtops - convert PNM image to Postscript
 
 <H2 id="synopsis">SYNOPSIS</H2>
 
@@ -44,11 +44,15 @@ name and its value with white space instead of an equals sign.
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>pnmtops</b> reads a Netpbm image stream as input and produces
-Encapsulated PostScript (EPSF) as output.
+Encapsulated Postscript (EPSF) as output.
+
+<p>(Note: people usually render the name as &quot;PostScript,&quot; but we use
+standard typography in the Netpbm manual, so capitalize only the first
+letter).
 
 <P>If the input file is in color (PPM), <B>pnmtops</B> generates a
-color PostScript file.  Some PostScript interpreters can't handle
-color PostScript.  If you have one of these you will need to run your
+color Postscript file.  Some Postscript interpreters can't handle
+color Postscript.  If you have one of these you will need to run your
 image through <B>ppmtopgm</B> first.
 
 <P>If you specify no output dimensioning options, the output image is
@@ -243,7 +247,7 @@ comp.sources.misc and expo.lcs.mit.edu sometime in October. - Jef
 <p>This is
 from <a href="http://www.lngpstscrpt.tk/re-postscript-run-length-encoding-again">a
 forum about Postscript</a>, extracted in October 2010.  Jef added -rle in
-August 1988.  In those days, RS-232 lines (referred to a &quot;serial&quot; in
+August 1988.  In those days, RS-232 lines (referred to as &quot;serial&quot; in
 the quotation) were typically 9600bps.  2400 bps lines were still around.
 What the quotation calls &quot;the network&quot; is probably a 10 Mbps
 Ethernet connection.
@@ -336,6 +340,11 @@ collection as it exits.
      PostScript files, but can't cope with pictures which are not
      positioned in the lower left corner.
      <P>
+     If you want to position an image on the page arbitrarily, use
+     <b>pamcomp</b> to create an image of the full page with the image in
+     question at the proper place and the rest of the page white, and use
+     <b>pnmtops</b> to convert the composed result to Encapsulated Postscript.
+     <p>
      For backward compatibility, <B>pnmtops</B> accepts the option
      <B>-center</B>, but it has no effect.
 
