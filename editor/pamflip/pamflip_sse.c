@@ -28,7 +28,11 @@
 
 #include "pamflip_sse.h"
 
-#if HAVE_GCC_SSE2 && defined(__SSE2__)
+/* Note that WANT_MMX implies the user expects MMX to be available
+   (i.e. <emmintrin.h> exists).
+*/
+
+#if WANT_MMX
 
 /*----------------------------------------------------------------------------
    This is a specialized routine for row-for-column PBM transformations.
@@ -68,6 +72,8 @@
    possibility.
 -----------------------------------------------------------------------------*/
 
+#include <emmintrin.h>
+
 typedef char v16qi __attribute__ ((vector_size (16)));
 typedef int  v4di  __attribute__ ((vector_size (16)));
 
@@ -82,10 +88,23 @@ typedef int  v4di  __attribute__ ((vector_size (16)));
    variable must be vector from the beginning.
 
    Changes for your local system are okay, but if you intend to
-   publish the them, please specify the compiler version you used.
+   publish them, please specify the compiler version you used.
 
-   This code has been tested on gcc versions: 4.2.0, 4.2.4, 4.3.2,
-   4.4.3, 4.4.4 and 4.5.0 .
+   This code has been tested on gcc versions 4.2.0, 4.2.4, 4.3.2,
+   4.4.3, 4.4.4, 4.5.0, 4.5.2, 4.6.0 and 4.6.1 clang versions
+   3.0, 3.2, 3.3.
+
+   We use SSE instructions in "_mm_" form in favor of "__builtin_".
+   In GCC the "__builtin_" form is documented but "_mm_" is not.
+   Former versions of this source file used "__builtin_".  This was
+   changed to make possible compilation with clang.
+
+   _mm_slli_epi32 : __builtin_ia32_pslldi128
+   _mm_cmpeq_epi8 : __builtin_ia32_pcmpeqb128
+   _mm_movemask_epi8 : __builtin_ia32_pmovmskb128
+
+   The conversion requires <emmintrin.h> .
+
 */
 
 
@@ -133,9 +152,10 @@ transpose16Bitrows(unsigned int const cols,
             block[12][col8], block[13][col8],
             block[14][col8], block[15][col8] };
 
-        register v16qi const compare =__builtin_ia32_pcmpeqb128(vReg,zero128);
+        register __m128i const compare =
+            _mm_cmpeq_epi8((__m128i)vReg, (__m128i)zero128);
 
-        if (__builtin_ia32_pmovmskb128(compare) != 0xffff) {
+        if (_mm_movemask_epi8(compare) != 0xffff) {
 
             /* There is some black content in this block; write to outplane */
             
@@ -147,10 +167,10 @@ transpose16Bitrows(unsigned int const cols,
             for (i = 0; i < 7; ++i) {
                 /* GCC (>=4.2) automatically unrolls this loop */  
                 outplane[outrow++][outcol16] =
-                    __builtin_ia32_pmovmskb128(vReg);
-                vReg = (v16qi)__builtin_ia32_pslldi128 ((v4di)vReg, 1);
+                    _mm_movemask_epi8((__m128i)vReg);
+                vReg = (v16qi)_mm_slli_epi32((__m128i)vReg, 1);
             }
-            outplane[outrow][outcol16] = __builtin_ia32_pmovmskb128(vReg);
+            outplane[outrow][outcol16] = _mm_movemask_epi8((__m128i)vReg);
         } else {
             /* The block is completely white; skip. */
         }
@@ -391,12 +411,12 @@ pamflip_transformRowsToColumnsPbmSse(const struct pam * const inpamP,
     pbm_freearray(outplane, outpamP->height + 7);
     pbm_freearray(inrow, 16);
 }
-#else  /* SSE functions exist */
+#else  /* WANT_MMX */
 
 void
 pamflip_transformRowsToColumnsPbmSse(const struct pam * const inpamP,
                                      const struct pam * const outpamP,
-                                     struct xformCore const xformCore) { 
+                                     struct xformCore   const xformCore) { 
 
     /* Nobody is supposed to call this */
     assert(false);

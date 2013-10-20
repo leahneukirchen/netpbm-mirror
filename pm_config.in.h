@@ -187,22 +187,14 @@
 /* CONFIGURE: GNU Compiler extensions are used in performance critical places
    when available.  Test whether they exist.
 
-   Turn off by defining NO_GCC_BUILTINS.
+   Prevent the build from exploiting these extensions by defining
+   NO_GCC_BUILTINS.
 
-   Note that though these influence the resulting Netpbm machine code, the
-   compiler setting ultimately decides what instruction set the compiler uses.
-   If you want a generic build, check the manual and adjust CFLAGS in
-   config.mk accordingly.
-
-   For example, if you want binaries that run on all Intel x86-32
-   family CPUs back to 80386, adding "-march=i386" to CFLAGS in
-   config.mk is much better than setting NO_GCC_BUILTINS to 1.
-   If you want to be extra sure use:
-   "-march=i386 -mno-mmx -mno-sse -DNO_GCC_BUILTINS"
-
-   Gcc uses SSE and SSE2 instructions by default for AMD/Intel x86-64.
-   Tinkering with "-mno-sse" is not recommended for these machines.  If you
-   don't want SSE code, set NO_GCC_BUILTINS to 1.
+   Before Netpbm 10.65 (December 2013), Netpbm used GCC compiler extensions
+   to generate MMX code in Pamflip.  Starting in 10.65, Netpbm instead uses
+   the more standard operators defined in <emmtrins.h>.  To prevent Netpbm
+   from explicitly using any MMX instructions, set WANT_MMX to N in
+   config.mk.
 */
 
 /*
@@ -231,9 +223,11 @@
   #define GCCVERSION 0
 #endif
 
-/* HAVE_GCC_SSE2 means the compiler has GCC builtins to directly access
-   SSE/SSE2 features.  This is different from whether the compiler generates
-   code that uses these features at all.
+/* HAVE_GCC_SSE2 means the compiler has GCC-specific builtins to directly
+   access SSE/SSE2 features.  This is different from whether the compiler
+   generates code that uses these features at all.  It is also different
+   from whether the compiler has the more standard operators defined in
+   <emmintrins.h>.
 */
 
 #ifndef HAVE_GCC_SSE2

@@ -99,7 +99,7 @@ sub prompt($$) {
 
 
 sub promptYesNo($) {
-    my ($default) = $@;
+    my ($default) = @_;
 
     my $retval;
 
@@ -947,6 +947,7 @@ sub getInttypes($) {
 }
 
 
+
 sub getInt64($$) {
 
     my ($inttypes_h, $haveInt64R) = @_;
@@ -978,6 +979,59 @@ sub getInt64($$) {
     } else {
         $$haveInt64R = "N";
     }
+}
+
+
+
+sub determineMmxCapability($) {
+
+    my ($haveEmmintrinR) = @_;
+
+    if (defined($testCc)) {
+
+        print("(Doing test compiles to determine if your compiler has MMX " .
+              "intrinsics -- ignore errors)\n");
+
+        my $cflags = testCflags();
+
+        my $works;
+
+        my @cSourceCode = (
+                           "#include <emmintrin.h>\n",
+                           );
+            
+        testCompile($cflags, \@cSourceCode, \my $success);
+            
+        if ($success) {
+            print("It does.\n");
+            $$haveEmmintrinR = 'Y';
+        } else {
+            print("It does not.  Programs will not exploit fast MMX " .
+                  "instructions.\n");
+            $$haveEmmintrinR = 'N';
+        }
+        print("\n");
+    } else {
+        $$haveEmmintrinR = "N";
+    }
+}
+
+
+
+sub getMmx($) {
+
+    my ($wantMmxR) = @_;
+
+    determineMmxCapability(\my $haveEmmintrin);
+
+    my $gotit;
+
+    print("Use MMX instructions?\n");
+    print("\n");
+
+    my $default = $haveEmmintrin ? "y" : "n";
+
+    $$wantMmxR = promptYesNo($default);
 }
 
 
@@ -1959,6 +2013,8 @@ getInttypes(\my $inttypesHeaderFile);
 
 getInt64($inttypesHeaderFile, \my $haveInt64);
 
+getMmx(\my $wantMmx);
+
 findProcessManagement(\my $dontHaveProcessMgmt);
 
 #******************************************************************************
@@ -2383,6 +2439,10 @@ if ($inttypesHeaderFile ne '<inttypes.h>') {
 
 if ($haveInt64 ne 'Y') {
     push(@config_mk, "HAVE_INT64 = $haveInt64\n");
+}
+
+if ($wantMmx) {
+    push(@config_mk, "WANT_MMX = Y\n");
 }
 
 if ($dontHaveProcessMgmt) {

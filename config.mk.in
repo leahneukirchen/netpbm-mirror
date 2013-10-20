@@ -89,6 +89,14 @@ INTTYPES_H = <inttypes.h>
 HAVE_INT64 = Y
 #HAVE_INT64 = N
 
+# WANT_MMX tells whether the build should use MMX instructions, via the the
+# standard MMX intrinsics (operators such as '_mm_movemask_epi8').  MMX
+# instructions are faster than traditional instructions, but aren't available
+# on all CPUs.  Also, the standard intrinsics are not available in all
+# compilers.
+WANT_MMX = N
+#WANT_MMX = Y
+
 # CC and LD are for building the Netpbm programs, which are not necessarily
 # intended to run on the same system on which Make is running.  But when we 
 # build a build tool such as Libopt, it is meant to run only on the same 

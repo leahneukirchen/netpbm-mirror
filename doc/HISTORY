@@ -15,8 +15,12 @@ not yet  BJH  Release 10.65.00
               Fix compile failure on system such as OpenBSD that don't have
               SIGWINCH and SIGIO.  Broken since 10.49 (December 2009).
 
-              Build on system without vasprintf (not GNU libc): fix
-              compiler warning.
+              Build: Use <emmintrins.h> interface for MMX SSE intrinsics
+              instead of GCC-specific versions.  Thanks Prophet of the Way
+              <afu@wta.att.ne.jp>.
+
+              Build on system without vasprintf (not GNU libc): fix compiler
+              warning.
 
               Apple build: use vasprintf.
 

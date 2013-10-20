@@ -161,6 +161,11 @@ ifeq ($(HAVE_INT64),Y)
 else
 	echo "#define HAVE_INT64 0" >>$@
 endif	
+ifeq ($(WANT_MMX),Y)
+	echo "#define WANT_MMX 1" >>$@
+else
+	echo "#define WANT_MMX 0" >>$@
+endif	
 ifeq ($(DONT_HAVE_PROCESS_MGMT),Y)
 	echo "#define HAVE_FORK 0" >>$@
 else
