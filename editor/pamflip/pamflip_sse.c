@@ -28,11 +28,11 @@
 
 #include "pamflip_sse.h"
 
-/* Note that WANT_MMX implies the user expects MMX to be available
+/* Note that WANT_SSE implies the user expects SSE to be available
    (i.e. <emmintrin.h> exists).
 */
 
-#if WANT_MMX && defined(__SSE2__)
+#if WANT_SSE && defined(__SSE2__)
 
 /*----------------------------------------------------------------------------
    This is a specialized routine for row-for-column PBM transformations.
@@ -411,7 +411,7 @@ pamflip_transformRowsToColumnsPbmSse(const struct pam * const inpamP,
     pbm_freearray(outplane, outpamP->height + 7);
     pbm_freearray(inrow, 16);
 }
-#else  /* WANT_MMX */
+#else  /* WANT_SSE */
 
 void
 pamflip_transformRowsToColumnsPbmSse(const struct pam * const inpamP,

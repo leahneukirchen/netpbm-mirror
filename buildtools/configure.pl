@@ -983,13 +983,13 @@ sub getInt64($$) {
 
 
 
-sub determineMmxCapability($) {
+sub determineSseCapability($) {
 
     my ($haveEmmintrinR) = @_;
 
     if (defined($testCc)) {
 
-        print("(Doing test compiles to determine if your compiler has MMX " .
+        print("(Doing test compiles to determine if your compiler has SSE " .
               "intrinsics -- ignore errors)\n");
 
         my $cflags = testCflags();
@@ -1006,7 +1006,7 @@ sub determineMmxCapability($) {
             print("It does.\n");
             $$haveEmmintrinR = $TRUE;
         } else {
-            print("It does not.  Programs will not exploit fast MMX " .
+            print("It does not.  Programs will not exploit fast SSE " .
                   "instructions.\n");
             $$haveEmmintrinR = $FALSE;
         }
@@ -1019,20 +1019,32 @@ sub determineMmxCapability($) {
 
 
 
-sub getMmx($) {
+sub getSse($) {
 
-    my ($wantMmxR) = @_;
+    my ($wantSseR) = @_;
 
-    determineMmxCapability(\my $haveEmmintrin);
+    determineSseCapability(\my $haveEmmintrin);
 
     my $gotit;
 
-    print("Use MMX instructions?\n");
+    print("Use SSE instructions?\n");
     print("\n");
 
     my $default = $haveEmmintrin ? "y" : "n";
 
-    $$wantMmxR = promptYesNo($default);
+    $$wantSseR = promptYesNo($default);
+
+    # Another complication in the SSE world is that GNU compiler options
+    # -msse, -msse2, and -march=xxx affect whether the compiler can or will
+    # generate the instructions.  When compiling for older processors, the
+    # default for these options is negative ; for newer processors, it is
+    # affirmative.  -[no]msse2 determines whether macro __SSE2__ macro is
+    # defined.  If it is not, #include <emmintrins.h> fails (<emmintrins.h>
+    # checks __SSE2__.
+
+    # The Netpbm build does not mess with these compiler options.  If the
+    # user wants something other than the default, he can put it in CFLAGS
+    # in config.mk manually or on the make command line on in CFLAGS_PERSONAL.
 }
 
 
@@ -2014,7 +2026,7 @@ getInttypes(\my $inttypesHeaderFile);
 
 getInt64($inttypesHeaderFile, \my $haveInt64);
 
-getMmx(\my $wantMmx);
+getSse(\my $wantSse);
 
 findProcessManagement(\my $dontHaveProcessMgmt);
 
@@ -2442,8 +2454,8 @@ if ($haveInt64 ne 'Y') {
     push(@config_mk, "HAVE_INT64 = $haveInt64\n");
 }
 
-if ($wantMmx) {
-    push(@config_mk, "WANT_MMX = Y\n");
+if ($wantSse) {
+    push(@config_mk, "WANT_SSE = Y\n");
 }
 
 if ($dontHaveProcessMgmt) {

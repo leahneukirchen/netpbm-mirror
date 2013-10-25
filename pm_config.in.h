@@ -191,9 +191,9 @@
    NO_GCC_BUILTINS.
 
    Before Netpbm 10.65 (December 2013), Netpbm used GCC compiler extensions
-   to generate MMX code in Pamflip.  Starting in 10.65, Netpbm instead uses
+   to generate SSE code in Pamflip.  Starting in 10.65, Netpbm instead uses
    the more standard operators defined in <emmtrins.h>.  To prevent Netpbm
-   from explicitly using any MMX instructions, set WANT_MMX to N in
+   from explicitly using any SSE instructions, set WANT_SSE to N in
    config.mk.
 */
 

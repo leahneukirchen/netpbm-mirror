@@ -27,7 +27,7 @@
    to make PBM raster processing faster.  GCC only.
 
    The GNU Compiler -msse2 option makes SSE/SSE2 available.
-   For x86-32 with MMX/SSE, "-msse2" must be explicitly given.
+   For x86-32 with SSE, "-msse2" must be explicitly given.
    For x86-64 and AMD64, "-msse2" is the default (from Gcc v.4.)
 */
 
