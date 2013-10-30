@@ -93,7 +93,10 @@ HAVE_INT64 = Y
 # standard SSE intrinsics (operators such as '_mm_movemask_epi8').  SSE
 # instructions are faster than traditional instructions, but aren't available
 # on all CPUs.  Also, the standard intrinsics are not available in all
-# compilers.
+# compilers.  Even if you say N here, Netpbm may still be built with some
+# SSE exploitation (e.g. SSE floating point) because the compiler will 
+# do it automatically.  You can add a -nomsse or -nomsse2 option to
+# CFLAGS or CFLAGS_PERSONAL to stop that.
 WANT_SSE = N
 #WANT_SSE = Y
 
@@ -104,7 +107,7 @@ WANT_SSE = N
 # to use to compile and link build tools.
 CC_FOR_BUILD = $(CC)
 LD_FOR_BUILD = $(LD)
-CFLAGS_FOR_BUILD = $(CFLAGS)
+CFLAGS_FOR_BUILD = $(CFLAGS_CONFIG)
 LDFLAGS_FOR_BUILD = $(LDFLAGS)
 
 # MAKE is set automatically by Make to what was used to invoke Make.

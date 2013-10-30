@@ -16,20 +16,27 @@
 #include "pbm.h"
 
 #ifndef PACKBITS_SSE
-#if HAVE_GCC_SSE2 && HAVE_GCC_BSWAP && defined(__SSE2__)
+#if WANT_SSE && defined(__SSE2__) && HAVE_GCC_BSWAP
   #define PACKBITS_SSE 2
 #else
   #define PACKBITS_SSE 0
 #endif
 #endif
 
-/* HAVE_GCC_SSE2 means we have the means to use SSE CPU facilities
-   to make PBM raster processing faster.  GCC only.
+/* WANT_SSE means we want to use SSE CPU facilities to make PBM raster
+   processing faster.  This implies it's actually possible - i.e. the
+   build environment has <emmintrin.h>.
 
-   The GNU Compiler -msse2 option makes SSE/SSE2 available.
+   The GNU Compiler -msse2 option makes SSE/SSE2 available, and is
+   evidenced by __SSE2__.
    For x86-32 with SSE, "-msse2" must be explicitly given.
    For x86-64 and AMD64, "-msse2" is the default (from Gcc v.4.)
 */
+
+#if PACKBITS_SSE == 2
+  #include <emmintrin.h>
+#endif
+
 
 void
 pbm_writepbminit(FILE * const fileP, 
@@ -81,16 +88,28 @@ packBitsWithSse2(  FILE *          const fileP,
       PCMPGTB128  Packed CoMPare Greater Than Byte
     
         Compares 16 bytes in parallel
-        Result is x00 if greater than, xFF if not for each byte       
+        Result is x00 if greater than, xFF if not for each byte
+
     
       PMOVMSKB128 Packed MOVe MaSK Byte 
     
-        Result is a byte of the MSBs of 16 bytes
+        Result is 16 bits, the MSBs of 16 bytes
         x00 xFF x00 xFF xFF xFF x00 x00 xFF xFF xFF xFF x00 x00 x00 x00 
         --> 0101110011110000B = 0x5CF0
         
         The result is actually a 64 bit int, but the higher bits are
         always 0.
+
+      We use SSE instructions in "_mm_" form in favor of "__builtin_".
+      In GCC the "__builtin_" form is documented but "_mm_" is not.
+      Former versions of this source file used "__builtin_".  This was
+      changed to make possible compilation with clang, which does not
+      implement some "__builtin_" forms.
+
+      __builtin_ia32_pcmpgtb128 :  _mm_cmpgt_epi8
+      __builtin_ia32_pmovmskb128 : _mm_movemask_epi8
+
+      The conversion requires <emmintrin.h> .
     */
 
     typedef char v16qi __attribute__ ((vector_size(16)));
@@ -110,11 +129,10 @@ packBitsWithSse2(  FILE *          const fileP,
         bit128.i64[1]=__builtin_bswap64( *(uint64_t*) &bitrow[col+8]);
 
         {
-            v16qi const compare =
-                __builtin_ia32_pcmpgtb128(bit128.v16, zero128);
-            uint16_t const blackMask = 
-                (uint16_t) __builtin_ia32_pmovmskb128(compare);
-
+            v16qi const compare = (v16qi)
+                _mm_cmpgt_epi8((__m128i)bit128.v16, (__m128i) zero128);
+            uint16_t const blackMask = _mm_movemask_epi8 ((__m128i)compare);
+            
             *(uint16_t *) & packedBits[col/8] = blackMask;
         }
     }
@@ -128,10 +146,9 @@ packBitsWithSse2(  FILE *          const fileP,
             bit128.byte[ (i&8) + 7-(i&7) ] = bitrow[j];
       
         {
-            v16qi const compare =
-                __builtin_ia32_pcmpgtb128( bit128.v16, zero128 );
-            uint16_t const blackMask =
-                __builtin_ia32_pmovmskb128( compare );
+            v16qi const compare = (v16qi)
+                _mm_cmpgt_epi8((__m128i)bit128.v16, (__m128i) zero128);
+            uint16_t const blackMask = _mm_movemask_epi8 ((__m128i)compare);
 
             if ( cols%16 >8 )  /* Two partial bytes */
                 *(uint16_t *) & packedBits[col/8] = blackMask;

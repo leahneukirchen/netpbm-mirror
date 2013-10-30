@@ -43,13 +43,11 @@
 # MERGEBINARIES: list of the programs that, in a merge build, are invoked
 #   via the merged Netpbm program
 # CC: C compiler command 
-# CPPFLAGS: C preprocessor options
-# CFLAGS: C compiler general options
+# CFLAGS_CONFIG: C compiler options from config.mk.
 # CFLAGS_TARGET: C compiler options for a particular target
 # LD: linker command
 # LINKERISCOMPILER: 'Y' if the linker invoked by LD is actually a compiler
 #   front end, so takes linker options in a different format
-# LDFLAGS: linker options 
 # LIBS or LOADLIBES: names of libraries to be added to all links
 # COMP_INCLUDES: Compiler option string to establish the search path for
 #   component-specific include files when compiling things or computing
@@ -63,6 +61,10 @@
 # In addition, there is CADD, which is extra C compilation options and
 # is intended to be set on a make command line (e.g. 'make CADD=-g')
 # for options that apply just to a particular build.
+
+# In addition, there is CFLAGS, which is extra C compilation options and is
+# expected to be set via the make command line for a particular build.
+# Likewise, LDFLAGS for link-edit options.
 
 # In addition, there is CFLAGS_PERSONAL, which is extra C
 # compilation options and is expected to be set via environment variable
@@ -235,7 +237,19 @@ config:
 # -UNDEBUG (in any of various ways) to override this.
 #
 CFLAGS_ALL = \
-  -DNDEBUG $(CPPFLAGS) $(CFLAGS) $(CFLAGS_TARGET) $(CFLAGS_PERSONAL) $(CADD)
+  -DNDEBUG $(CPPFLAGS) $(CFLAGS_CONFIG) $(CFLAGS_TARGET) $(CFLAGS_PERSONAL) $(CFLAGS) $(CADD)
+
+ifeq ($(WANT_SSE),Y)
+  # The only two compilers we've seen that have the SSE capabilities that
+  # WANT_SSE requests are GCC and Clang, and they both have these options and
+  # require them in order for <emmintrin.h> to compile.  On some systems
+  # (x86_64, in our experience), these options are default, but on more
+  # traditional systems, they are not.  Note: __SSE2__ macro tells whether
+  # -msse2 is in effect.
+  CFLAGS_SSE = -msse -msse2
+else
+  CFLAGS_SSE =
+endif
 
 $(OBJECTS): %.o: %.c importinc
 #############################################################################

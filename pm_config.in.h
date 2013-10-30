@@ -188,7 +188,7 @@
    when available.  Test whether they exist.
 
    Prevent the build from exploiting these extensions by defining
-   NO_GCC_BUILTINS.
+   NO_GCC_UNIQUE.
 
    Before Netpbm 10.65 (December 2013), Netpbm used GCC compiler extensions
    to generate SSE code in Pamflip.  Starting in 10.65, Netpbm instead uses
@@ -206,7 +206,7 @@
    > cc --version
      Apple clang version 4.0 (tags/Apple/clang-421.0.60) (based on LLVM 3.1svn)
 
-   which masquerades as GCC 4.2.1, but it does not have SSE2 function
+   which masquerades as GCC 4.2.1, but it does not have SSE2 operator
    __builtin_ia32_pcmpeqb128 .
 
   On the other hand, research by Prophet of the Way in September 2012
@@ -214,20 +214,24 @@
   compiled successfully with SSE exploitation), but 3.1 does not.  He did
   not find any mention in documentation of that change.
 
+  At least some versions of Clang that do not have __builtin_ia32_pcmpeqb128
+  nonetheless have other GCC SSE2 operators, such as __builtin_ia32_pcmpgtb128.
+  We did not detect a pattern.
+
   See below on compilers other than GCC that set __GNUC__:
   http://sourceforge.net/apps/mediawiki/predef/index.php?title=Compilers
 */
-#if defined(__GNUC__) && !defined(__clang__) && !defined(NO_GCC_BUILTINS)
+#if defined(__GNUC__) && !defined(__clang__) && !defined(NO_GCC_UNIQUE)
   #define GCCVERSION __GNUC__*100 + __GNUC_MINOR__
 #else
   #define GCCVERSION 0
 #endif
 
-/* HAVE_GCC_SSE2 means the compiler has GCC-specific builtins to directly
-   access SSE/SSE2 features.  This is different from whether the compiler
-   generates code that uses these features at all.  It is also different
-   from whether the compiler has the more standard operators defined in
-   <emmintrins.h>.
+/* HAVE_GCC_SSE2 means the compiler has all of the GCC-specific builtins to
+   directly access SSE/SSE2 features.  This is different from whether the
+   compiler generates code that uses these features at all.  It is also
+   different from whether the compiler has the more standard operators defined
+   in <emmintrins.h>.
 */
 
 #ifndef HAVE_GCC_SSE2
@@ -254,10 +258,9 @@
 #endif
 
 #ifndef HAVE_GCC_BSWAP
-#if GCCVERSION >=403
+#if GCCVERSION >=403 || defined(__clang__)
   #define HAVE_GCC_BSWAP 1
   /* Use __builtin_bswap32(), __builtin_bswap64() for endian conversion.
-     Available from GCC v 4.3 onward.
      NOTE: On intel CPUs this may produce the bswap operand which is not
      available on 80386. */
 #else

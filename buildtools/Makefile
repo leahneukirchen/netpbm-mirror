@@ -26,7 +26,8 @@ endif
 libopt.o: libopt.c
 	$(CC_FOR_BUILD) -c -o $@ $(CFLAGS_FOR_BUILD) \
 	  -DSHLIBPREFIXLIST="\"$(SHLIBPREFIXLIST)\"" \
-	  $(STRIP_DLL_VERSION) $(EXPLICIT) $(CFLAGS_PERSONAL) $(CADD) \
+	  $(STRIP_DLL_VERSION) $(EXPLICIT) \
+	  $(CFLAGS_PERSONAL) $(CFLAGS) $(CADD) \
 	  $<
 
 typegen.o endiangen.o:%.o:%.c

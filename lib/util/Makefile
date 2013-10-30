@@ -5,6 +5,8 @@ endif
 SUBDIR = lib/util
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
+default:all
+
 include $(BUILDDIR)/config.mk
 
 # nstring is required for asprintf(), etc.  Also some systems don't have
@@ -22,13 +24,14 @@ UTILOBJECTS = \
 
 MERGE_OBJECTS =
 
-all: $(UTILOBJECTS)
-
 include $(SRCDIR)/common.mk
 
+all: $(UTILOBJECTS)
+
+$(UTILOBJECTS): CFLAGS_TARGET=$(CFLAGS_SHLIB)
+
 $(UTILOBJECTS):%.o:%.c importinc
-	$(CC) -c $(INCLUDES) -DNDEBUG $(CPPFLAGS) $(CFLAGS) $(CFLAGS_SHLIB) \
-	  $(CFLAGS_PERSONAL) $(CADD) -o $@ $<
+	$(CC) -c $(INCLUDES) $(CFLAGS_ALL) -o $@ $<
 
 testnstring: test.c nstring.h nstring.o
-	$(CC) $(CFLAGS) $(CADD) -o $@ nstring.o $<
+	$(CC) $(CFLAGS_ALL) -o $@ nstring.o $<

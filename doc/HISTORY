@@ -15,7 +15,10 @@ not yet  BJH  Release 10.65.00
               Fix compile failure on system such as OpenBSD that don't have
               SIGWINCH and SIGIO.  Broken since 10.49 (December 2009).
 
-              Build: Use <emmintrins.h> interface for SSE intrinsics
+              Build: Use SSE2 vector instructions when compiling with Clang,
+              as done already with GCC.
+
+              Build: Use <emmintrin.h> interface for SSE intrinsics
               instead of GCC-specific versions.  Thanks Prophet of the Way
               <afu@wta.att.ne.jp>.
 
