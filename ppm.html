@@ -6,7 +6,7 @@
 </HEAD>
 <BODY>
 <H1>ppm</H1>
-Updated: 03 October 2003
+Updated: 02 November 2013
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -113,6 +113,14 @@ with <a href="pbm.html">PBM</a>.
 <P>Note that you can use <B>pamdepth</B> to convert between a the
 format with 1 byte per sample and the one with 2 bytes per sample.
 
+<p>All characters referred to herein are encoded in ASCII.
+&quot;newline&quot; refers to the character known in ASCII as Line
+Feed or LF.  A &quot;white space&quot; character is space, CR, LF,
+TAB, VT, or FF (I.e. what the ANSI standard C isspace() function
+calls white space).
+
+<h3 id="plainppm">Plain PPM</h3>
+
 <P>There is actually another version of the PPM format that is fairly
 rare: &quot;plain&quot; PPM format.  The format above, which generally
 considered the normal one, is known as the &quot;raw&quot; PPM format.
@@ -121,26 +129,25 @@ and raw formats relate to one another and how to use them.
 
 <P>The difference in the plain format is:
 
-<DL COMPACT>
-<DT>-<DD>
+<ul>
+<li>
 There is exactly one image in a file.
-<DT>-<DD>
+<li>
 The magic number is P3 instead of P6.
-<DT>-<DD>
+<li>
 Each sample in the raster is represented as an ASCII decimal number
 (of arbitrary size).
-<DT>-<DD>
+<li>
 Each sample in the raster has white space before and after it.  There must
 be at least one character of white space between any two samples, but there
 is no maximum.  There is no particular separation of one pixel from another --
 just the required separation between the blue sample of one pixel from the
 red sample of the next pixel.
-<DT>-<DD>
+<li>
 No line should be longer than 70 characters.
-</DL>
-<P>
+</ul>
 
-Here is an example of a small image in this format.
+<P>Here is an example of a small image in this format.
 <PRE>
 P3
 # feep.ppm
@@ -157,11 +164,15 @@ P3
 <P>Programs that read this format should be as lenient as possible,
 accepting anything that looks remotely like a PPM image.
 
-<p>All characters referred to herein are encoded in ASCII.
-&quot;newline&quot; refers to the character known in ASCII as Line
-Feed or LF.  A &quot;white space&quot; character is space, CR, LF,
-TAB, VT, or FF (I.e. what the ANSI standard C isspace() function
-calls white space).
+
+<h3 id="internetmediatype">Internet Media Type</h3>
+
+<p>No Internet Media Type (aka MIME type, content type) for PBM has been
+registered with IANA, but the value <tt>image/x-portable-pixmap</tt> is
+conventional.
+
+<p>Note that the PNM Internet Media Type <tt>image/x-portable-anymap</tt>
+also applies.
 
 
 <H2 id="compatibility">COMPATIBILITY</H2>
@@ -187,6 +198,10 @@ data after the first image.
 <H2 id="index">Table Of Contents</H2>
 <UL>
 <LI><A HREF="#description">DESCRIPTION</A>
+<ul>
+  <li><A HREF="#plainppm">Plain PPM</A>
+  <li><A HREF="#internetmediatype">Internet Media Type</A>
+    </ul>
 <LI><A HREF="#compatibility">COMPATIBILITY</A>
 <LI><A HREF="#seealso">SEE ALSO</A>
 </UL>

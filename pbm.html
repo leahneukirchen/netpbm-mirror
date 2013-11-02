@@ -6,7 +6,7 @@
 </HEAD>
 <BODY>
 <H1>pbm</H1>
-Updated: 22 September 2006
+Updated: 02 November 2013
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -39,7 +39,7 @@ no data, delimiters, or padding before, after, or between images.
 
 <P>Each PBM image consists of the following:
 
-<OL>
+<UL>
 
 <LI>A &quot;magic number&quot; for identifying the file type.
 A pbm image's magic number is the two characters &quot;P4&quot;.
@@ -74,8 +74,16 @@ of what you might consider a token.  Note also that this means if you
 have a comment right before the raster, the newline at the end of the
 comment is not sufficient to delimit the raster.
 
-</OL>
+</UL>
 
+<p>All characters referred to herein are encoded in ASCII.
+&quot;newline&quot; refers to the character known in ASCII as Line
+Feed or LF.  A &quot;white space&quot; character is space, CR, LF,
+TAB, VT, or FF (I.e. what the ANSI standard C isspace() function
+calls white space).
+
+
+<h3 id="plainpbm">Plain PBM</h3>
 <P>
 There is actually another version of the PBM format, even more
 simplistic, more lavishly wasteful of space than PBM, called Plain
@@ -94,24 +102,23 @@ default, but the <a href="index.html#commonoptions">common option</a>
 <b>-plain</b> chooses Plain PBM.
 
 <P>The difference is:
-<DL COMPACT>
-<DT>-<DD>
+<ul>
+<li>
 There is exactly one image in a file.
-<DT>-<DD>
+<li>
 The &quot;magic number&quot; is &quot;P1&quot; instead of &quot;P4&quot;.
-<DT>-<DD>
+<li>
 Each pixel in the raster is represented by a byte containing ASCII '1' or '0',
 representing black and white respectively.  There are no fill bits at the
 end of a row.
-<DT>-<DD>
+<li>
 White space in the raster section is ignored.
-<DT>-<DD>
+<li>
 You can put any junk you want after the raster, if it starts with a 
 white space character.
-<DT>-<DD>
+<li>
 No line should be longer than 70 characters.
-</DL>
-<P>
+</ul>
 
 Here is an example of a small image in the plain PBM format.
 <PRE>
@@ -135,11 +142,16 @@ P1
 <P>Programs that read this format should be as lenient as possible,
 accepting anything that looks remotely like a bitmap.
 
-<p>All characters referred to herein are encoded in ASCII.
-&quot;newline&quot; refers to the character known in ASCII as Line
-Feed or LF.  A &quot;white space&quot; character is space, CR, LF,
-TAB, VT, or FF (I.e. what the ANSI standard C isspace() function
-calls white space).
+
+<h3 id="internetmediatype">Internet Media Type</h3>
+
+<p>No Internet Media Type (aka MIME type, content type) for PBM has been
+registered with IANA, but the value <tt>image/x-portable-bitmap</tt>
+is conventional.
+
+<p>Note that the PNM Internet Media Type <tt>image/x-portable-anymap</tt>
+also applies.
+
 
 <H2 id="compatibility">COMPATIBILITY</H2>
 
@@ -160,6 +172,10 @@ data after the first image.
 <H2 id="index">Table Of Contents</H2>
 <UL>
 <LI><A HREF="#description">DESCRIPTION</A>
+<ul>
+  <li><A HREF="#plainpbm">Plain PBM</A>
+  <li><A HREF="#internetmediatype">Internet Media Type</A>
+    </ul>
 <LI><A HREF="#compatibility">COMPATIBILITY</A>
 <LI><A HREF="#seealso">SEE ALSO</A>
 </UL>

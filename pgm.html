@@ -6,7 +6,7 @@
 </HEAD>
 <BODY>
 <H1>pgm</H1>
-Updated: 03 October 2003
+Updated: 02 November 2013
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -107,6 +107,14 @@ with <a href="pbm.html">PBM</a>.
 format with 1 byte per gray value and the one with 2 bytes per gray
 value.
 
+<p>All characters referred to herein are encoded in ASCII.
+&quot;newline&quot; refers to the character known in ASCII as Line
+Feed or LF.  A &quot;white space&quot; character is space, CR, LF,
+TAB, VT, or FF (I.e. what the ANSI standard C isspace() function
+calls white space).
+
+<h3 id="plainpgm">Plain PGM</h3>
+
 <P>There is actually another version of the PGM format that is fairly
 rare: &quot;plain&quot; PGM format.  The format above, which generally
 considered the normal one, is known as the &quot;raw&quot; PGM format.
@@ -115,24 +123,24 @@ and raw formats relate to one another and how to use them.
 
 <P>The difference in the plain format is:
 
-<DL COMPACT>
-<DT>-<DD>
+<ul>
+<li>
 There is exactly one image in a file.
-<DT>-<DD>
+<li>
 The magic number is P2 instead of P5.
-<DT>-<DD>
+<li>
 Each pixel in the raster is represented as an ASCII decimal number 
 (of arbitrary size).
-<DT>-<DD>
+<li>
 Each pixel in the raster has white space before and after it.  There must
 be at least one character of white space between any two pixels, but there
 is no maximum.
-<DT>-<DD>
+<li>
 No line should be longer than 70 characters.
-</DL>
-<P>
+</ul>
 
-Here is an example of a small image in the plain PGM format.
+<p>Here is an example of a small image in the plain PGM format.
+
 <PRE>
 P2
 # feep.pgm
@@ -152,11 +160,15 @@ P2
 <p>Programs that read this format should be as lenient as possible,
 accepting anything that looks remotely like a PGM.
 
-<p>All characters referred to herein are encoded in ASCII.
-&quot;newline&quot; refers to the character known in ASCII as Line
-Feed or LF.  A &quot;white space&quot; character is space, CR, LF,
-TAB, VT, or FF (I.e. what the ANSI standard C isspace() function
-calls white space).
+
+<h3 id="internetmediatype">Internet Media Type</h3>
+
+<p>No Internet Media Type (aka MIME type, content type) for PBM has been
+registered with IANA, but the value <tt>image/x-portable-graymap</tt>
+is conventional.
+
+<p>Note that the PNM Internet Media Type <tt>image/x-portable-anymap</tt>
+also applies.
 
 
 <H2 id="compatibility">COMPATIBILITY</H2>
@@ -187,6 +199,10 @@ Copyright (C) 1989, 1991 by Jef Poskanzer.
 <H2 id="index">Table Of Contents</H2>
 <UL>
 <LI><A HREF="#description">DESCRIPTION</A>
+<ul>
+  <li><A HREF="#plainpgm">Plain PGM</A>
+  <li><A HREF="#internetmediatype">Internet Media Type</A>
+    </ul>
 <LI><A HREF="#compatibility">COMPATIBILITY</A>
 <LI><A HREF="#seealso">SEE ALSO</A>
 <LI><A HREF="#author">AUTHOR</A>
