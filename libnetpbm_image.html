@@ -40,8 +40,7 @@ oriented toward processing image data.  Read about those in the
 <p>To use these services, #include <b>pam.h</b>.
 
 
-<a name="types"></a>
-<H2>Types</h2>
+<H2 id="types">Types</h2>
 
 <p>Here are some important types that you use with <b>libnetpbm</b>:
 
@@ -74,47 +73,36 @@ image's maxval.
 </dl>
 
 
+<h3 id="pamstruct">struct pam</h3>
 
 <p>The main argument to most of the PAM functions is the address of
 a <b>pam</b> structure, which is defined as follows:
 
-<P>
-<a name="#pamstruct"></a>
-<B>struct pam {</B>
-<BR>
-<B>int </B><I>size</I>
-<BR>
-<B>int </B><I>len</I>
-<BR>
-<B>FILE *</B><I>file   </I>
-<BR>
-<B>int </B><I>format</I>
-<BR>
-<B>int </B><I>plainformat</I>
-<BR>
-<B>int </B><I>height</I>
-<BR>
-<B>int </B><I>width</I>
-<BR>
-<B>int </B><I>depth</I>
-<BR>
-<B>sample </B><I>maxval</I>
-<BR>
-<B>int </B><I>bytes_per_sample</I>
-<BR>
-<B>char </B><I>tuple_type</I><B>[256]</B>
-<BR>
-<B>int </B><I>allocation_depth</I>
-<BR>
-<B>char **</B><I>comment_p</I><B>;</B>
-<B>}</B>
+<pre>
+  <code>
+    <B>struct pam {</B>
+        <B>int </B><I>size</I>
+        <B>int </B><I>len</I>
+        <B>FILE *</B><I>file   </I>
+        <B>int </B><I>format</I>
+        <B>int </B><I>plainformat</I>
+        <B>int </B><I>height</I>
+        <B>int </B><I>width</I>
+        <B>int </B><I>depth</I>
+        <B>sample </B><I>maxval</I>
+        <B>int </B><I>bytes_per_sample</I>
+        <B>char </B><I>tuple_type</I><B>[256]</B>
+        <B>int </B><I>allocation_depth</I>
+        <B>char **</B><I>comment_p</I><B>;</B>
+    <B>}</B>
+    </code>
+  </pre>
 
 <p>See <a href="libnetpbm_ug.html#pamstruct">The Libnetbm User's Guide</a>
 for information on the <b>pam</b> structure.
 
 
-<a name="macros"></a>
-<H2>Macros</h2>
+<H2 id="macros">Macros</h2>
 
 <B>PNM_MAXMAXVAL</B> is the maximum maxval that Netpbm images could
 historically have: 255.  Many programs aren't capable of handling Netpbm
@@ -141,13 +129,11 @@ format codes for the plain and raw subformats of each format.
 
 
 
-<a name="functions"></a>
-<H2>Functions</H2>
+<H2 id="functions">Functions</H2>
 
 <p>These interfaces are declared in <b>pam.h</b>.
 
-<a name="memory"></a>
-<h3>Memory Management</h3>
+<h3 id="memory">Memory Management</h3>
 <h4>Synopsis</h4>
 <P>
 <B>tuple ** pnm_allocpamarray(</B>
@@ -199,8 +185,7 @@ except that it allocates space for a PAM row in the normalized form.
 <b>pnm_freepamrown()</b> is similarly like <b>pnm_freepamrow</b>.
 
 
-<a name="reading"></a>
-<h3>Reading Netpbm Files</h3>
+<h3 id="reading">Reading Netpbm Files</h3>
 <h4>Synopsis</h4>
 
 <P>
@@ -301,8 +286,7 @@ syntactically valid, including if it contains a number too large to be
 processed using the system's normal data structures (to wit, a number
 that won't fit in a C 'int').
 
-<a name="writing"></a>
-<h3>Writing Netpbm Files</h3>
+<h3 id="writing">Writing Netpbm Files</h3>
 <h4>Synopsis</h4>
 <P>
 <B>void pnm_writepaminit(</B>
@@ -639,11 +623,13 @@ its header).
 
 
 <HR>
-<A NAME="toc">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="toc">Table Of Contents</H2>
 
 <ul>
   <li><a href="#types">Types</a>
+    <ul>
+      <li><a href="#pamstruct">struct pam</a>
+      </ul>
   <li><a href="#macros">Macros</a>
   <li><a href="#functions">Functions</a>
   <ul>
