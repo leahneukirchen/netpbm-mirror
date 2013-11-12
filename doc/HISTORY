@@ -4,10 +4,18 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+13.11.12 BJH  Release 10.64.02
+
+              Fix bug: program hangs if it inherits lots of open files.
+              Introduced in 10.56 (September 2011).
+
+              Fix compile failure on system such as OpenBSD that don't have
+              SIGWINCH and SIGIO.  Broken since 10.49 (December 2009).
+
 13.10.06 BJH  Release 10.64.01
 
               Build for big-endian machines: fix syntax error so it compiles.
-              Broken in 10.63 (June 2013).
+              Introduced in 10.63 (June 2013).
 
 13.09.28 BJH  Release 10.64.00
 
