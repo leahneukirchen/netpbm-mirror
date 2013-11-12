@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+13.11.12 BJH  Release 10.64.03
+
+              Fix bug: Pnmtops closes Standard Error.  Introduced in
+              10.64.02 (today).
+
 13.11.12 BJH  Release 10.64.02
 
               Fix bug: program hangs if it inherits lots of open files.
