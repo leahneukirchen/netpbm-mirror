@@ -2041,7 +2041,7 @@ main(int argc, const char * argv[]) {
        that new files will get file descriptor numbers less than 10,
        so we close superfluous files now to make sure that's true.
     */
-    closeAllBut(fileno(ifP), fileno(stdout), fileno(stdout));
+    closeAllBut(fileno(ifP), fileno(stdout), fileno(stderr));
 
     {
         int eof;  /* There are no more images in the input file */
