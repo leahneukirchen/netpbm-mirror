@@ -9,6 +9,8 @@ not yet  BJH  Release 10.65.00
               Recognize SIGPWR on systems that have it in messages
               about signal received.
 
+              Fix bug: program hangs if it inherits lots of open files.
+
               Build for big-endian machines: fix syntax error so it compiles.
               Broken in 10.63 (June 2013).
 

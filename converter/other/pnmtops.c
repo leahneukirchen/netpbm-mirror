@@ -2036,6 +2036,13 @@ main(int argc, const char * argv[]) {
         name = strdup("noname");
     else
         name = basebasename(cmdline.inputFileName);
+
+    /* This program manages file descriptors in a way that assumes
+       that new files will get file descriptor numbers less than 10,
+       so we close superfluous files now to make sure that's true.
+    */
+    closeAllBut(fileno(ifP), fileno(stdout), fileno(stdout));
+
     {
         int eof;  /* There are no more images in the input file */
         unsigned int imageSeq;
