@@ -42,6 +42,8 @@
 #include <unistd.h>
 #include <assert.h>
 #include <string.h>
+#include <errno.h>
+#include <signal.h>
 #ifndef NOFLATE
 #include <zlib.h>
 #endif
@@ -51,6 +53,37 @@
 #include "mallocvar.h"
 #include "shhopt.h"
 #include "nstring.h"
+
+
+
+static void
+setSignals() {
+/*----------------------------------------------------------------------------
+   Set up the process-global signal-related state.
+
+   Note that we can't rely on defaults, because much of this is inherited
+   from the process that forked and exec'ed this program.
+-----------------------------------------------------------------------------*/
+    /* See waitForChildren() for why we do this to SIGCHLD */
+
+    struct sigaction sigchldAction;
+    int rc;
+    sigset_t emptySet;
+
+    sigemptyset(&emptySet);
+
+    sigchldAction.sa_handler = SIG_DFL;
+    sigchldAction.sa_mask = emptySet;
+    sigchldAction.sa_flags = SA_NOCLDSTOP;
+
+    rc = sigaction(SIGCHLD, &sigchldAction, NULL);
+
+    if (rc != 0)
+        pm_error("sigaction() to set up signal environment failed, "
+                 "errno = %d (%s)", errno, strerror(errno));
+}
+
+
 
 struct cmdlineInfo {
     /* All the information the user supplied in the command line,
@@ -966,6 +999,15 @@ waitForChildren(const pid_t * const pidList) {
    Wait for all child processes with PIDs in pidList[] to exit.
    In pidList[], end-of-list is marked with a special zero value.
 -----------------------------------------------------------------------------*/
+    /* There's an odd behavior in Unix such that if you have set the
+       action for SIGCHLD to ignore the signal (even though ignoring the
+       siganl is the default), the process' children do not become
+       zombies.  Consequently, waitpid() always fails with ECHILD - but
+       nonetheless waits for the child to exit.
+    
+       We expect the process not to have the action for SIGCHLD set that
+       way.
+    */
     unsigned int i;
 
     for (i = 0; pidList[i]; ++i) {
@@ -977,7 +1019,8 @@ waitForChildren(const pid_t * const pidList) {
 
         rc = waitpid(pidList[i], &status, 0);
         if (rc == -1)
-            pm_error ("waitpid() for child %u failed", i);
+            pm_error ("waitpid() for child %u failed, errno=%d (%s)",
+                      i, errno, strerror(errno));
         else if (status != EXIT_SUCCESS)
             pm_error ("Child process %u terminated abnormally", i);
     }
@@ -2020,6 +2063,8 @@ main(int argc, const char * argv[]) {
     struct cmdlineInfo cmdline;
 
     pm_proginit(&argc, argv);
+
+    setSignals();
 
     parseCommandLine(argc, argv, &cmdline);
 
