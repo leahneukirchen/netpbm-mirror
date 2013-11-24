@@ -602,8 +602,10 @@ rlePutBuffer (unsigned int    const repeat,
     if (repeat) {
         fputc(257 - count,  fP);
         fputc(repeatitem, fP);
-    } else
+    } else {
+        fputc(count - 1, fP);
         writeFile(itembuf, count, "rlePutBuffer", fP);
+    }
 }
 
 
@@ -1011,7 +1013,7 @@ waitForChildren(const pid_t * const pidList) {
 -----------------------------------------------------------------------------*/
     /* There's an odd behavior in Unix such that if you have set the
        action for SIGCHLD to ignore the signal (even though ignoring the
-       siganl is the default), the process' children do not become
+       signal is the default), the process' children do not become
        zombies.  Consequently, waitpid() always fails with ECHILD - but
        nonetheless waits for the child to exit.
     

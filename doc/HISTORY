@@ -12,6 +12,9 @@ not yet  BJH  Release 10.65.00
               pnmtops: Fix bug: wrong output with -ascii85.  Introduced in
               10.63 (June 2013).
 
+              pnmtops: Fix bug: wrong output with -rle.  Introduced in
+              10.63 (June 2013).
+
               pnmtops: Fix bug: program hangs if it inherits lots of open
               files.  Introduced in 10.56 (September 2011).
 
