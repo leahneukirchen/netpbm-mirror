@@ -4,15 +4,27 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+13.11.24 BJH  Release 10.64.04
+
+              pnmtops: Fix bug: wrong output with -ascii85.  Introduced in
+              10.63 (June 2013).
+
+              pnmtops: Fix bug: wrong output with -rle.  Introduced in
+              10.63 (June 2013).
+
+              pnmtops: Fix bug: fails with message about waitpid() failing
+              if invoked with SIGCHLD ignored.  Introduced in 10.56
+              (September 2011).
+
 13.11.12 BJH  Release 10.64.03
 
-              Fix bug: Pnmtops closes Standard Error.  Introduced in
+              pnmtops: Fix bug: closes Standard Error.  Introduced in
               10.64.02 (today).
 
 13.11.12 BJH  Release 10.64.02
 
-              Fix bug: program hangs if it inherits lots of open files.
-              Introduced in 10.56 (September 2011).
+              pnmtops: Fix bug: program hangs if it inherits lots of open
+              files.  Introduced in 10.56 (September 2011).
 
               Fix compile failure on system such as OpenBSD that don't have
               SIGWINCH and SIGIO.  Broken since 10.49 (December 2009).
