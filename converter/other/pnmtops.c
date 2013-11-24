@@ -384,6 +384,17 @@ writeFile(const unsigned char * const buffer,
 
 
 
+static void
+writeFileChar(const char * const buffer,
+              size_t       const writeCt,
+              const char * const name,
+              FILE *       const ofP) {
+
+    writeFile((const unsigned char *)buffer, writeCt, name, ofP);
+}
+
+
+
 #define MAX_FILTER_CT 10
     /* The maximum number of filters this code is capable of applying */
 
@@ -769,7 +780,8 @@ ascii85Filter(FILE *          const ifP,
             ++count;
 
             if (value == 0 && count == 4) {
-                putchar('z');  /* Ascii85 encoding z exception */
+                writeFileChar("z", 1, "ASCII 85 filter", ofP);
+                    /* Ascii85 encoding z exception */
                 ++outcount;
                 count = 0;
             } else if (count == 4) {
@@ -779,15 +791,14 @@ ascii85Filter(FILE *          const ifP,
                 outbuff[1] = value % 85 + 33;
                 outbuff[0] = value / 85 + 33;
 
-                writeFile((const unsigned char *)outbuff, count + 1,
-                          "ASCII 85 filter", ofP);
+                writeFileChar(outbuff, count + 1, "ASCII 85 filter", ofP);
 
                 count = value = 0;
                 outcount += 5; 
             }
 
             if (outcount > 75) {
-                putchar('\n');
+                writeFileChar("\n", 1, "ASCII 85 filter", ofP);
                 outcount = 0;
             }
         }
@@ -803,8 +814,7 @@ ascii85Filter(FILE *          const ifP,
         outbuff[0] = value / 85 + 33;
         outbuff[count + 1] = '\n';
 
-        writeFile((const unsigned char *)outbuff, count + 2,
-                  "ASCII 85 filter", ofP);
+        writeFileChar(outbuff, count + 2, "ASCII 85 filter", ofP);
     }
 
     fclose(ifP);
