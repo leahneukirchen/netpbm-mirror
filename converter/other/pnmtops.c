@@ -114,8 +114,10 @@ struct cmdlineInfo {
     unsigned int dict;
     unsigned int vmreclaim;
     unsigned int verbose;
+    unsigned int debug;
 };
 
+static bool debug;
 static bool verbose;
 
 
@@ -248,6 +250,7 @@ parseCommandLine(int argc, const char ** argv,
     OPTENT3(0, "vmreclaim",   OPT_FLAG,  NULL, &cmdlineP->vmreclaim,     0);
     OPTENT3(0, "showpage",    OPT_FLAG,  NULL, &showpage,                0);
     OPTENT3(0, "verbose",     OPT_FLAG,  NULL, &cmdlineP->verbose,       0);
+    OPTENT3(0, "debug",       OPT_FLAG,  NULL, &cmdlineP->debug,         0);
     OPTENT3(0, "level",       OPT_UINT, &cmdlineP->level, 
             &cmdlineP->levelSpec,              0);
     
@@ -948,6 +951,12 @@ addFilter(const char *    const description,
         pm_message("%s filter spawned: pid %u",
                    description, (unsigned)pid);
     
+    if (debug) {
+        int const outFd    = fileno(oldFeedFileP);
+        int const supplyFd = fileno(newFeedFileP);
+        pm_message("PID %u writes to FD %u, its supplier writes to FD %u",
+                   (unsigned)pid, outFd, supplyFd);
+    }
     fclose(oldFeedFileP);  /* Child keeps this open now */
 
     addToPidList(pidList, pid);
@@ -2080,7 +2089,8 @@ main(int argc, const char * argv[]) {
 
     parseCommandLine(argc, argv, &cmdline);
 
-    verbose = cmdline.verbose;
+    verbose = cmdline.verbose || cmdline.debug;
+    debug   = cmdline.debug;
 
     if (cmdline.flate && !progIsFlateCapable())
         pm_error("This program cannot do flate compression.  "
