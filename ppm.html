@@ -42,6 +42,8 @@ scanner in question uses.&quot;
 Images in this format (or a precursor of it) were once also called
 "portable pixmaps."
 
+<H2 id="format">THE FORMAT</H2>
+
 <P>The format definition is as follows.  You can use the <a
 href="libnetpbm.html">libnetpbm</a> C subroutine library to read and
 interpret the format conveniently and accurately.
@@ -165,14 +167,22 @@ P3
 accepting anything that looks remotely like a PPM image.
 
 
-<h3 id="internetmediatype">Internet Media Type</h3>
+<h2 id="internetmediatype">INTERNET MEDIA TYPE</h2>
 
-<p>No Internet Media Type (aka MIME type, content type) for PBM has been
+<p>No Internet Media Type (aka MIME type, content type) for PPM has been
 registered with IANA, but the value <tt>image/x-portable-pixmap</tt> is
 conventional.
 
 <p>Note that the PNM Internet Media Type <tt>image/x-portable-anymap</tt>
 also applies.
+
+
+<h2 id="filename">FILE NAME</h2>
+
+<p>There are no requirements on the name of a PPM file, but the convention is
+to use the suffix &quot;.ppm&quot;.  &quot;pnm&quot; is also conventional, for
+cases where distinguishing between the particular subformats of PNM is not
+convenient.
 
 
 <H2 id="compatibility">COMPATIBILITY</H2>
@@ -198,10 +208,12 @@ data after the first image.
 <H2 id="index">Table Of Contents</H2>
 <UL>
 <LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#format">THE FORMAT</A>
 <ul>
   <li><A HREF="#plainppm">Plain PPM</A>
-  <li><A HREF="#internetmediatype">Internet Media Type</A>
     </ul>
+<li><A HREF="#internetmediatype">INTERNET MEDIA TYPE</A>
+<li><A HREF="#filename">FILE NAME</A>
 <LI><A HREF="#compatibility">COMPATIBILITY</A>
 <LI><A HREF="#seealso">SEE ALSO</A>
 </UL>

@@ -7,7 +7,7 @@
 <BODY>
 
 <H1>pnm</H1>
-Updated: 02 November 2013
+Updated: 27 November 2013
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -43,14 +43,23 @@ description of the netpbm programs</a>.
 href="libnetpbm.html">Netpbm library routines</a>, some of which aren't even
 related to the PNM format.
 
-<h3 id="internetmediatype">Internet Media Type</h3>
+<h2 id="internetmediatype">INTERNET MEDIA TYPE</h3>
 
 <p>No Internet Media Type (aka MIME type, content type) for PNM has been
 registered with the IANA, but the value <tt>image/x-portable-anymap</tt>
 is conventional.
 
 <p>Note that there are also conventional Internet Media Types for each of the
-PNM subformats.
+PNM subformats.  The recommended practice is to use those in preference to the
+PNM code when it is convenient to do so.
+
+<h2 id="filename">FILE NAME</h2>
+
+<p>There are no requirements on the name of a PNM file, but the convention is
+to use the suffix &quot;pbm&quot;, &quot;pgm&quot;, or &quot;ppm&quot;,
+depending on the particular subformat, or &quot;pnm&quot; if it is not
+convenient to distinguish the subformats.
+
 
 <H2 id="seealso">SEE ALSO</H2>
 <A HREF="ppm.html">ppm</A>,
@@ -65,9 +74,8 @@ PNM subformats.
 <H2 id="index">Table Of Contents</H2>
 <UL>
 <LI><A HREF="#description">DESCRIPTION</A>
-<ul>
-  <li><A HREF="#internetmediatype">Internet Media Type</A>
-    </ul>
+<li><A HREF="#internetmediatype">INTERNET MEDIA TYPE</A>
+<li><A HREF="#filename">FILE NAME</A>
 <LI><A HREF="#seealso">SEE ALSO</A>
 </UL>
 </BODY>

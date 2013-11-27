@@ -6,7 +6,7 @@
 </HEAD>
 <BODY>
 <H1>pgm</H1>
-Updated: 02 November 2013
+Updated: 27 November 2013
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -35,6 +35,8 @@ can easily be tricked into processing something else.
 <P>One official variant of PGM is the transparency mask.  A transparency
 mask in Netpbm is represented by a PGM image, except that in place of 
 pixel intensities, there are opaqueness values.  See below.
+
+<h2 id="format">THE FORMAT</h2>
 
 <P>The format definition is as follows.  You can use the <a
 href="libnetpbm.html">libnetpbm</a> C subroutine library to conveniently
@@ -161,14 +163,22 @@ P2
 accepting anything that looks remotely like a PGM.
 
 
-<h3 id="internetmediatype">Internet Media Type</h3>
+<h2 id="internetmediatype">INTERNET MEDIA TYPE</h2>
 
-<p>No Internet Media Type (aka MIME type, content type) for PBM has been
+<p>No Internet Media Type (aka MIME type, content type) for PGM has been
 registered with IANA, but the value <tt>image/x-portable-graymap</tt>
 is conventional.
 
 <p>Note that the PNM Internet Media Type <tt>image/x-portable-anymap</tt>
 also applies.
+
+
+<h2 id="filename">FILE NAME</h2>
+
+<p>There are no requirements on the name of a PGM file, but the convention is
+to use the suffix &quot;.pgm&quot;.  &quot;pnm&quot; is also conventional, for
+cases where distinguishing between the particular subformats of PNM is not
+convenient.
 
 
 <H2 id="compatibility">COMPATIBILITY</H2>
@@ -199,10 +209,12 @@ Copyright (C) 1989, 1991 by Jef Poskanzer.
 <H2 id="index">Table Of Contents</H2>
 <UL>
 <LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#description">THE FORMAT</A>
 <ul>
   <li><A HREF="#plainpgm">Plain PGM</A>
-  <li><A HREF="#internetmediatype">Internet Media Type</A>
     </ul>
+<li><A HREF="#internetmediatype">INTERNET MEDIA TYPE</A>
+<li><A HREF="#filename">FILE NAME</A>
 <LI><A HREF="#compatibility">COMPATIBILITY</A>
 <LI><A HREF="#seealso">SEE ALSO</A>
 <LI><A HREF="#author">AUTHOR</A>
