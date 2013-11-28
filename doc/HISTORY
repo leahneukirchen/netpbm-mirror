@@ -22,6 +22,9 @@ not yet  BJH  Release 10.65.00
               if invoked with SIGCHLD ignored.  Introduced in 10.56
               (September 2011).
 
+              Fix wild pointer dereference when memory allocation for a string
+              fails.  Broken since 10.36 (September 2006).
+
               Build for big-endian machines: fix syntax error so it compiles.
               Introduced in 10.63 (June 2013).
 
