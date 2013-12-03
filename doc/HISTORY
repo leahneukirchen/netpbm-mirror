@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+13.12.03 BJH  Release 10.47.47
+
+              Fix wild pointer dereference when memory allocation for a string
+              fails.  Broken since 10.36 (September 2006).
+
 13.09.26 BJH  Release 10.47.46
 
               Fixes for Mingw build with MSYS shell.
