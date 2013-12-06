@@ -442,6 +442,42 @@ typedef struct {
 
 
 
+static unsigned int
+bytesPerRow (unsigned int const cols,
+             unsigned int const bitsPerSample) {
+/*----------------------------------------------------------------------------
+  Size of row buffer, padded up to byte boundary, given that the image
+  has 'cols' samples per row, 'bitsPerSample' bits per sample.
+-----------------------------------------------------------------------------*/
+    unsigned int retval;
+
+    assert(bitsPerSample==1 || bitsPerSample==2 || bitsPerSample==4 || 
+           bitsPerSample==8 || bitsPerSample==12);
+
+    switch (bitsPerSample) {
+    case 1:
+    case 2:
+    case 4:
+        retval = cols / (8/bitsPerSample)
+            + (cols % (8/bitsPerSample) > 0 ? 1 : 0);
+        /* A more straightforward calculation would be
+           (cols * bitsPerSample + 7) / 8 ,
+           but this overflows when icols is large.
+        */
+        break;
+    case 8:
+        retval = cols;
+        break;
+    case 12:
+        retval = cols + (cols+1)/2;
+        break;
+    }
+
+    return retval;
+}
+
+
+
 static void
 initOutputEncoder(OutputEncoder  * const oeP,
                   unsigned int     const icols,
@@ -451,20 +487,12 @@ initOutputEncoder(OutputEncoder  * const oeP,
                   bool             const ascii85,
                   bool             const psFilter) {
 
-    unsigned int const bytesPerRow = icols / (8/bitsPerSample) +
-        (icols % (8/bitsPerSample) > 0 ? 1 : 0);
-        /* Size of row buffer, padded up to byte boundary.
-
-           A more straightforward calculation would be
-           (icols * bitsPerSample + 7) / 8 ,
-           but this overflows when icols is large.
-        */
-
     oeP->outputType = ascii85 ? Ascii85 : AsciiHex;
 
     if (rle) {
         oeP->compressRle = true;
-        oeP->runlengthRefresh = psFilter ? INT_MAX : bytesPerRow;
+        oeP->runlengthRefresh =
+             psFilter ? INT_MAX : bytesPerRow(icols, bitsPerSample);
     } else
         oeP->compressRle = false;
 
