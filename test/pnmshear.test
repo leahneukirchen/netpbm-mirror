@@ -1,0 +1,19 @@
+#! /bin/bash
+# This script tests: pnmshear
+# Also requires: pbmmake
+
+# Test.  Should produce 2080980136 22
+${PBM_BINPREFIX}pbmmake -g 7 7 | \
+   ${PBM_TESTPREFIX}pnmshear 45 -noantialias  | cksum
+
+# Output of above, in pbm plain format
+#
+# P1
+# 14 7
+# 01010101111111
+# 10101011111111
+# 10101010111111
+# 11101010111111
+# 11101010101111
+# 11111010101111
+# 11111010101011

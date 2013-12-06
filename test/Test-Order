@@ -63,6 +63,7 @@ ppmbrighten.test
 ppmdither.test
 pamedge.test
 ppmdim.test
+pnmshear.test
 
 ppmmix.test
 
