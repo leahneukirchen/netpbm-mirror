@@ -496,42 +496,72 @@ computeBoxToExtract(struct Box const cmdlineExtractBox,
 static enum Orientation
 computeOrientation(struct CmdlineInfo const cmdline, 
                    struct Box         const extractBox) {
+/*----------------------------------------------------------------------------
+   The proper orientation of the image on the page, given the user's
+   parameters 'cmdline' and the image dimensions 'extractBox'.
+-----------------------------------------------------------------------------*/
+    /* We're putting an _image_ on a _page_.  Either one can have portrait or
+       landscape aspect ratio.  In our return value, orientation just means
+       whether the image is rotated on the page: Portrait means it isn't
+       Landscape means it is.  The result can be confusing: Consider an image
+       which is a landscape, wider than it is tall, being printed on a page
+       which is also wider than it is tall.  The orientation we would return
+       for that case is Portrait.
 
-    unsigned int const inputWidth  = extractBox.urx - extractBox.llx;
-    unsigned int const inputHeight = extractBox.ury - extractBox.lly;
+       The decision is simple: if the user didn't request a particular
+       orientation, we return the value that makes the image orientation match
+       the page orientation.  If both possibilities match equally (because the
+       image or the page is square), we return Portrait.
+    */
 
     enum Orientation retval;
 
     if (cmdline.orientation != UNSPECIFIED)
         retval = cmdline.orientation;
     else {
-        if ((!cmdline.xsize || !cmdline.ysize) &
-            (cmdline.xsize || cmdline.ysize)) {
-            /* User specified one output dimension, but not the other,
-               so we can't use output dimensions to make the decision.  So
-               just use the input dimensions.
-            */
-            if (inputHeight > inputWidth) retval = PORTRAIT;
-            else retval = LANDSCAPE;
-        } else {
-            unsigned int outputWidth, outputHeight;
-            if (cmdline.xsize) {
-                /* He gave xsize and ysize, so that's the output size */
-                outputWidth  = cmdline.xsize;
-                outputHeight = cmdline.ysize;
-            } else {
-                /* Well then we'll just use his (or default) xmax, ymax */
-                outputWidth  = cmdline.xmax;
-                outputHeight = cmdline.ymax;
-            }
+        /* Dimensions of image to print, in points */
+        unsigned int const imageWidPt = extractBox.urx - extractBox.llx;
+        unsigned int const imageHgtPt = extractBox.ury - extractBox.lly;
+        
+        /* Dimensions of image to print, in pixels (possibly of assumed
+           resolution)
+        */
+        unsigned int imageWidXel;
+        unsigned int imageHgtXel;
 
-            if (inputHeight > inputWidth && outputHeight > outputWidth)
+        /* We have to deal with the awkward case that the printed pixels are
+           not square.  We match up the aspect ratio of the image in _pixels_
+           and the aspect ratio of the page in _pixels_.  But only the ratio
+           matters; we don't care what the absolute size of the pixels is.
+           And that's good, because if the user didn't specify xsize/ysize, we
+           don't know the absolute size in pixels.  In that case, fortunately,
+           the pixels are guaranteed to be square so we can just pretend it is
+           one point per pixel and get the right result.
+        */
+
+        if (cmdline.xsize && cmdline.ysize) {
+            imageWidXel = cmdline.xsize;
+            imageHgtXel = cmdline.ysize;
+        } else {
+            /* Pixels are square, so it doesn't matter what the resolution
+               is; just call it one pixel per point.
+            */
+            imageWidXel = imageWidPt;
+            imageHgtXel = imageHgtPt;
+
+            if (imageHgtXel >= imageWidXel && cmdline.ymax >= cmdline.xmax) {
+                /* Both image and page are higher than wide, so no rotation */
                 retval = PORTRAIT;
-            else if (inputHeight < inputWidth && 
-                     outputHeight < outputWidth)
+            } else if (imageHgtXel < imageWidXel &&
+                       cmdline.ymax < cmdline.xmax) {
+                /* Both image and page are wider than high, so no rotation */
                 retval = PORTRAIT;
-            else 
+            } else {
+                /* Image and pixel have opposite aspect ratios, so rotate
+                   for best fit.
+                */
                 retval = LANDSCAPE;
+            }
         }
     }
     return retval;

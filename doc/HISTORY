@@ -9,6 +9,10 @@ not yet  BJH  Release 10.65.00
               Recognize SIGPWR on systems that have it in messages
               about signal received.
 
+              pstopnm: More rational default for landscape/portrait choice.
+              In particular, if the image or page is square, image will always
+              be in portrait (not rotated).
+
               pnmtops: Fix bug: wrong output with -ascii85.  Introduced in
               10.63 (June 2013).
 
