@@ -624,14 +624,25 @@ flateFilter(FILE *          const ifP,
 
 
 static void
-rlePutBuffer (unsigned int    const repeat,
+rlePutBuffer (bool            const repeatMode,
               unsigned int    const count,
-              unsigned int    const repeatitem,
+              unsigned char   const repeatitem,
               unsigned char * const itembuf,
               FILE *          const fP) {
+/*----------------------------------------------------------------------------
+   Output some RLE data.  There are two forms of output:
 
-    if (repeat) {
-        fputc(257 - count,  fP);
+     'repeatMode' true: output a repeat sequence, indicating to repeat byte
+     'repeatitem' 'count' times.
+
+     'repeatMode' false: output a non-repeat sequence indicating the
+     'count' characters in itembuf[].
+-----------------------------------------------------------------------------*/
+    assert(count > 0);
+    assert(count <= 128);
+
+    if (repeatMode) {
+        fputc((257 - count) % 256,  fP);
         fputc(repeatitem, fP);
     } else {
         fputc(count - 1, fP);
