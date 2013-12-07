@@ -6,12 +6,10 @@ Updated: 24 June 2005
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
-<H2>NAME</H2>
+<H2 id="name">NAME</H2>
 ppmhist - print a histogram of the colors in a PPM image
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>ppmhist</B>
 [<B>-hexcolor</B> | <B>-float</B> | <B>-colorname</B> | <B>-map</B>]
@@ -20,8 +18,7 @@ ppmhist - print a histogram of the colors in a PPM image
 [<B>-sort=</B>{<B>frequency</B>,<B>rgb</B>}]
 [<I>ppmfile</I>]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -29,8 +26,7 @@ ppmhist - print a histogram of the colors in a PPM image
 of the colors in the image, i.e. a list of all the colors and how many
 pixels of each color are in the image.
 
-<a name="output"></a>
-<h3>Output Format</h3>
+<h3 id="output">Output Format</h3>
 
 <p>The output is in one of two basic formats:  a report for humans
 and a PPM image for use by programs.  The PPM image is actually quite
@@ -74,8 +70,7 @@ need some kind of palette.  The image is a single row with one
 column for each distinct color in the image.
 
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<H2 id="options">OPTIONS</H2>
 
 <DL COMPACT>
 
@@ -92,8 +87,8 @@ the blue, with the least intense first.
 
 <DT><B>-hexcolor</B>
 
-<DD>Print the color components in hexadecimal.  See <a
-href="#output">output format</a>.
+<DD>Print the color components in hexadecimal.  See <a href="#output">output
+format</a>.
 
 <p>You may not specify this option along with <b>-float</b> or <b>map</b>.
 
@@ -134,8 +129,7 @@ system color dictionary, the program fails.
 
 </DL>
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="ppm.html">ppm</A></B>,
 
@@ -147,22 +141,21 @@ system color dictionary, the program fails.
 
 <B><A HREF="ppmchange.html">ppmchange</A></B>
 
-<P>
-<A NAME="lbAG">&nbsp;</A>
-<H2>AUTHOR</H2>
+<H2 id="author">AUTHOR</H2>
 
 Copyright (C) 1989 by Jef Poskanzer.
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">SEE ALSO</A>
-<LI><A HREF="#lbAG">AUTHOR</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+  <ul>
+  <li><a href="#output">Output Format</a>  
+  </ul>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
 </UL>
 </BODY>
 </HTML>

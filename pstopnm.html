@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pstopnm User Manual</TITLE></HEAD>
 <BODY>
 <H1>pstopnm</H1>
-Updated: 04 July 2011
+Updated: 06 December 2013
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -198,17 +198,29 @@ dots per inch the virtual printer prints on the virtual page.
 <p>The simplest thing is for you to tell <b>pstopnm</b> exactly what
 output device resolution to use, using the <b>-dpi</b> option.  If you
 say for example <b>-dpi=300</b> and the bordered subject image is 2
-inches by 2 inches, the PNM output will be 600 pixels by 600 pixels.
+inches by 3 inches, the PNM output will be 600 pixels by 900 pixels.
+Using this method, the output device resolution has to be the same in
+both directions.
 
 <p>Or you can set the output image dimensions with <b>-xsize</b> and
-<b>-ysize</b>.  For example, if you say <b>-xsize=1000 -ysize=1000</b>
-and the bordered subject image is 2 inches by 2 inches, the output
-image is 1000 by 1000 pixels, with each pixel representing 1/500 inch
-of input image.
+<b>-ysize</b>.  For example, if you say <b>-xsize=1200 -ysize=1800</b> and the
+bordered subject image is 2 inches wide by 3 inches high, the output image is
+1200 by 1800 pixels, with each pixel representing 1/600 inch of input image.
+
+<p>In the unlikely event that you want different output device resolutions in
+the two directions, you could use <b>-xsize</b> and <b>-ysize</b> to do that.
+In the above example, if you change <b>-ysize</b> to 900, a pixel still
+represents 1/600 inch horizontally, but 1/300 inch vertically.
 
 <p>If you specify one of <b>-xsize</b> and <b>-ysize</b> and not the
-other, <b>pstopnm</b> defaults the other such that the output image
-has the same aspect ratio as the bordered subject image.
+other, <b>pstopnm</b> defaults the other such that the output device
+resolution is the same in both directions.
+
+<p>The &quot;x&quot; and &quot;y&quot; of <b>-xsize</b> and <b>-ysize</b>
+refer to the image being printed on the page, not the page.  So if
+<b>pstopnm</b> prints it in landscape orientation, &quot;x&quot; would pertain
+to the vertical direction on the page, i.e. the vertical direction in the
+output PNM image.
 
 <p>If you specify neither the output size nor the output device
 resolution, <b>pstopnm</b> does some weird computation which exists
@@ -219,7 +231,7 @@ mainly for historical reasons:
 default to 612 and 792 pixels, respectively.
 
 <p>The final case, the default, is where you don't specify any size or
-resolution options of <b>-nocrop</b>.  This is the most complicated
+resolution options or <b>-nocrop</b>.  This is the most complicated
 case.  In this case, <b>pstopnm</b> first chooses an output device
 resolution that would generate the number of pixels indicated by
 <b>-xmax</b> and <b>-ymax</b> from the bordered subject image.  Then,
@@ -237,18 +249,20 @@ File Conversions</a> by Andrew T. Young.
 <h4 id="reversible">Reversible Conversion</h4>
 
 <p>If you're trying to do the equivalent of the naive 
-<kbd>pstopnm | pnmtops</kbd>, the following steps will do it.
+<kbd>pnmtops | pstopnm</kbd>, the following steps will do it.
 
 <pre>
 <kbd>
-    $ pnmtops -nocenter -equalpixels -dpi 72 -noturn testimg.ppm > testimg.ps
+    $ pnmtops -nocenter -equalpixels -dpi 72 -noturn testimg.ppm &gt; testimg.ps
     $ pstopnm -xborder=0 -yborder=0 -xsize=<i>XSIZE</i> -ysize=<I>YSIZE</I> \
-        -stdout -quiet testimg.ps
+        -portrait -stdout -quiet testimg.ps &gt;testimg2.ppm
 </kbd>
 </pre>
 
 <i>XSIZE</i> and <i>YSIZE</i> above are the image dimensions, which you can
-get from .ps file can awk or sed:
+get from testimg.ps like in the following example (the grep, awk and echo
+commands are just to help demonstrate how the other commands work - you
+wouldn't use those in a program).
 
 <pre>
 <kbd>
@@ -259,6 +273,10 @@ get from .ps file can awk or sed:
      227 149
  
     $ xysize=$(awk  '/%%BoundingBox/ {print "-xsize="$4,"-ysize="$5}' testimg.ps)
+    $ echo $xysize
+
+     -xsize=227 -ysize=149
+
     $ pstopnm -xborder=0 -yborder=0 $xysize ... testimg.ps
 </kbd>
 </pre>
@@ -289,9 +307,18 @@ See <a href="#dimensions">the Dimensions section</a>.
 
 <DD>renders the image in landscape orientation.  
 
+<p>If you specify neither <b>-portrait</b> nor <b>-landscape</b>,
+<b>pstopnm</b> chooses the orientation that best fits the image on the
+output page.
+
+<p>Landscape means printed sideways on the page, not printed the long way.
+Those are different things if the long edge of the page is the top one.
+
 <DT><B>-portrait</B>
 
 <DD>renders the image in portrait orientation.
+
+<p>See <b>-landscape</b>.
 
 <DT><B>-nocrop</B>
 
