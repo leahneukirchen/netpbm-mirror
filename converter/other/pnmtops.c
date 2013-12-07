@@ -398,6 +398,16 @@ writeFileChar(const char * const buffer,
 
 
 
+static void
+writeFileByte(unsigned char const byte,
+              const char *  const name,
+              FILE *        const ofP) {
+
+    writeFile(&byte, 1, name, ofP);
+}
+
+
+
 #define MAX_FILTER_CT 10
     /* The maximum number of filters this code is capable of applying */
 
@@ -642,10 +652,10 @@ rlePutBuffer (bool            const repeatMode,
     assert(count <= 128);
 
     if (repeatMode) {
-        fputc((257 - count) % 256,  fP);
-        fputc(repeatitem, fP);
+        writeFileByte((257 - count) % 256, "rlePutBuffer", fP);
+        writeFileByte(repeatitem, "rlePutBuffer", fP);
     } else {
-        fputc(count - 1, fP);
+        writeFileByte(count - 1, "rlePutBuffer", fP);
         writeFile(itembuf, count, "rlePutBuffer", fP);
     }
 }
