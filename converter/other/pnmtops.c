@@ -793,10 +793,9 @@ asciiHexFilter(FILE *          const ifP,
                 outbuff[i*2]   = hexits[item >> 4];
                 outbuff[i*2+1] = hexits[item & 15];
             }
+            outbuff[readCt * 2] = '\n';
+            writeFile(outbuff, readCt * 2 + 1, "asciiHex filter", ofP);
         }
-        outbuff[readCt * 2] = '\n';
-
-        writeFile(outbuff, readCt * 2 + 1, "asciiHex filter", ofP);
     }
 
     fclose(ifP);
