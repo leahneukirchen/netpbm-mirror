@@ -5,12 +5,10 @@
 Updated: 17 April 2005
 <BR><A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
-<H2>NAME</H2>
+<H2 id="name">NAME</H2>
 ppmshadow - add simulated shadows to a PPM image
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>ppmshadow</B>
 [<B>-b</B> <I>blur_size</I>]
@@ -21,8 +19,7 @@ ppmshadow - add simulated shadows to a PPM image
 [<I>ppmfile</I>]
 
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -48,8 +45,7 @@ image.  The output image is the same dimensions as the input image.
 before running <b>ppmshadow</b> on it.  You can use <b>ppmmake</b> to make
 the background image (just an image of a solid color).
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<H2 id="options">OPTIONS</H2>
 
 <DL COMPACT>
 <DT><B>-b</B> <I>blur_size</I>
@@ -101,8 +97,7 @@ same as the horizontal offset (above), upward.
 </DL>
 
 
-<A NAME="files"></a>
-<H2>FILES</H2>
+<H2 id="files">FILES</H2>
 
 <p>Input is a PPM file named by the <I>ppmfile</I> command line
 argument; if you don't specify <I>ppmfile</I>, the input is Standard
@@ -174,8 +169,7 @@ Everything but the foreground (foreground area is black).
 
 </DL>
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>LIMITATIONS</H2>
+<H2 id="limitations">LIMITATIONS</H2>
 
 <p>The source image must contain sufficient space on the edges in the
 direction in which the shadow is cast to contain the shadow -- if it
@@ -239,8 +233,7 @@ first and then add the shadow, you'll get an unsightly jagged stripe
 between the edge of material and its shadow, due to resampled pixels
 intermediate between the image and background obscuring the shadow.
 
-<A NAME="lbAH">&nbsp;</A>
-<H2>EXIT STATUS</H2>
+<H2 id="exitstatus">EXIT STATUS</H2>
 
 <B>ppmshadow</B> returns status 0 if processing was completed without
 errors, and a nonzero Unix error code if an error prevented generation
@@ -250,8 +243,7 @@ without returning a nonzero error code.  When this happens, the output
 file will be empty, so be sure to test this if you need to know if the
 program succeeded. 
 
-<A NAME="seealso">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="pnm.html">pnm</A></B>,
 <B><A HREF="pnmmargin.html">pnmmargin</A></B>,
@@ -261,15 +253,13 @@ program succeeded.
 <B><A HREF="ppm.html">ppm</A></B>
 
 
-<A NAME="lbAJ">&nbsp;</A>
-<H2>AUTHOR</H2>
+<H2 id="author">AUTHOR</H2>
 
 John Walker &lt;<A
 HREF="http://www.fourmilab.ch">http://www.fourmilab.ch</A>&gt; August
 8, 1997
 
-<A NAME="lbAK">&nbsp;</A>
-<H2>COPYRIGHT</H2>
+<H2 id="copyright">COPYRIGHT</H2>
 This software is in the public domain.  Permission to use, copy,
 modify, and distribute this software and its documentation for any
 purpose and without fee is hereby granted, without any conditions or
@@ -277,19 +267,17 @@ restrictions.
 
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
 <LI><A HREF="#files">FILES</A>
-<LI><A HREF="#lbAG">LIMITATIONS</A>
-<LI><A HREF="#lbAH">EXIT STATUS</A>
+<LI><A HREF="#limitations">LIMITATIONS</A>
+<LI><A HREF="#exitstatus">EXIT STATUS</A>
 <LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#lbAJ">AUTHOR</A>
-<LI><A HREF="#lbAK">COPYRIGHT</A>
+<LI><A HREF="#author">AUTHOR</A>
+<LI><A HREF="#copyright">COPYRIGHT</A>
 </UL>
 </BODY>
 </HTML>

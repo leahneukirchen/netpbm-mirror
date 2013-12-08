@@ -70,8 +70,8 @@ ignored all but the first Netpbm image in the input stream.
 <h3 id="output">The Output File</h3>
 
 <P>The output goes to Standard Output.  <b>pamtotiff</b> approaches
-this output file differently from Unix and Netpbm convention.  This is
-entirely due to <b>pamtotiff</b>'s use of the TIFF library to do all
+this output file differently from Unix and Netpbm convention.  This is due
+entirely to <b>pamtotiff</b>'s use of the TIFF library to do all
 TIFF output.
 
 <ul>
@@ -129,7 +129,7 @@ play.
 
 <p>Before Netpbm 8.4 (April 2000), the default was to use LZW compression.
 But then new releases of the TIFF library started omitting the LZW
-compression capability due to concern about patents on LZW.  So
+compression capability because of concern about patents on LZW.  So
 since then, the default has been no compression.  The LZW patents have
 now expired and new TIFF libraries do LZW, but the <b>pamtotiff</b>
 behavior remains the same for compatibility with older TIFF libraries
@@ -241,7 +241,7 @@ results in better compression and is generally preferred for bilevel
 coding.
 
 <P>Before February 2001, <B>pamtotiff</B> always produced
-&quot;minimum is black,&quot; due to a bug.  In either case,
+&quot;minimum is black,&quot; because of a bug.  In either case,
 <B>pamtotiff</B> sets the photometric interpretation tag in the TIFF
 output according to which photometric is actually used.
 

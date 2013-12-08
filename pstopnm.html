@@ -175,7 +175,7 @@ image to form the bordered subject image is controlled by the options
 a BoundingBox statement in the input, and you don't specify image area
 coordinates on the command line, <B>pstopnm</B> uses default values.
 If your input is from Standard Input, <B>pstopnm</B> does not use the
-BoundingBox values (due to the technical difficulty of extracting that
+BoundingBox values (because of the technical difficulty of extracting that
 information and still feeding the file to Ghostscript), so you either
 have to specify the image area coordinates or take the default.
 
@@ -240,6 +240,17 @@ large enough to accommodate the subject image (no borders).  Remember
 (above) that <b>pstopnm</b> trims the edges of the bordered subject
 image to fit the computed output size.
 
+
+<h3 id="ghostscriptlimitations">Ghostscript Limitations</h3>
+
+<p>Tests done in 2013 with Ghostscript 8.71 indicate that Ghostscript's
+<b>pgmraw</b> output driver has some kind of rounding error that causes the
+pixel values to change slightly, and that means <b>pstopnm</b> generates
+incorrect output when you have monochrome Postscript input.  But with color
+Postscript input, <b>pstopnm</b> uses Ghostscript's <b>ppmraw</b> output
+driver and generates correct PPM output.
+
+
 <h3 id="usagenotes">Usage Notes</h3>
 
 <p>There is some good advice on converting to and from Postscript, in the
@@ -280,6 +291,9 @@ wouldn't use those in a program).
     $ pstopnm -xborder=0 -yborder=0 $xysize ... testimg.ps
 </kbd>
 </pre>
+
+<p>Note that Ghostscript bugs can keep this from doing a perfect
+reversible conversion.
 
 
 <H2 id="options">OPTIONS</H2>

@@ -45,7 +45,7 @@ the file.  For example, the program ran out of its own input or
 encountered a bug or ran out of space in which to write the output.
 
 <p>Another problem <b>pamfixtrunc</b> deals with is where the file isn't
-actually too small, but due to a system error, a byte in the middle of
+actually too small, but because of a system error, a byte in the middle of
 it cannot be read (think of a disk storage failure).  <b>pamfixtrunc</b>
 reads the input sequentially until it can't read any further, for any
 reason.  So it treats such an image as a truncated one, ignoring all
