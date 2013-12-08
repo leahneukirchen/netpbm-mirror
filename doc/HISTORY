@@ -33,6 +33,9 @@ not yet  BJH  Release 10.65.00
               if invoked with SIGCHLD ignored.  Introduced in 10.56
               (September 2011).
 
+              ppmpat: fix crash with -squig with aspect ratio < 1:25 or
+              > 25:1. Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
               Fix wild pointer dereference when memory allocation for a string
               fails.  Broken since 10.36 (September 2006).
 

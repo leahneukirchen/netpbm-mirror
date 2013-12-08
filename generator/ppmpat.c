@@ -877,6 +877,19 @@ static ppmd_point sq_offs[SQ_MAXCIRCLE_POINTS];
 
 
 
+static void
+validateSquigAspect(unsigned int const cols,
+                    unsigned int const rows) {
+
+    if (cols / rows >= 25 || rows / cols >= 25)
+        pm_error("Image too narrow.  Aspect ratio: %u/%u=%f "
+                 "is outside accepted range: 0.04 - 25.0",
+                 cols, rows, (float)cols/rows ); 
+
+}
+
+
+
 static ppmd_point
 vectorSum(ppmd_point const a,
           ppmd_point const b) {
@@ -1081,6 +1094,8 @@ squig(pixel **     const pixels,
       pixval       const maxval) {
 
     int i;
+
+    validateSquigAspect(cols, rows);
     
     clearImageToBlack(pixels, cols, rows, maxval);
 
@@ -1106,6 +1121,9 @@ squig(pixel **     const pixels,
             unsigned int j;
 
             for (j = 1; j < SQ_POINTS - 1; ++j) {
+              /* validateSquigAspect() assures that
+                 cols - 2 * radius, rows -2 * radius are positive
+              */
                 c[j].x = (rand() % (cols - 2 * radius)) + radius;
                 c[j].y = (rand() % (rows - 2 * radius)) + radius;
             }
