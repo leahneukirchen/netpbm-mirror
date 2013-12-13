@@ -16,19 +16,24 @@
 ** implied warranty.
 */
 
+/*
+ *
+ * Official guide from Adobe:
+ *
+ * Encapsulated PostScript File Format Specification
+ * http://partners.adobe.com/public/developer/en/ps/5002.EPSF_Spec.pdf
+ *
+*/
+
 #include "pm_c_util.h"
 #include "pbm.h"
 #include "shhopt.h"
-
-#if !defined(MAXINT)
-#define MAXINT (0x7fffffff)
-#endif
 
 struct cmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *inputFilespec;  /* Filespecs of input files */
+    const char *inputFileName;
 
     unsigned int dpiX;     /* horiz component of DPI option */
     unsigned int dpiY;     /* vert component of DPI option */
@@ -40,8 +45,9 @@ struct cmdlineInfo {
 
 
 static void
-parse_dpi(char * const dpiOpt, 
-          unsigned int * const dpiXP, unsigned int * const dpiYP) {
+parseDpi(char *         const dpiOpt, 
+         unsigned int * const dpiXP,
+         unsigned int * const dpiYP) {
 
     char *dpistr2;
     unsigned int dpiX, dpiY;
@@ -72,7 +78,7 @@ parse_dpi(char * const dpiOpt,
 
 
 static void
-parseCommandLine(int argc, char ** const argv,
+parseCommandLine(int argc, const char ** const argv,
                  struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
@@ -97,48 +103,58 @@ parseCommandLine(int argc, char ** const argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
     
 
     if (dpiOptSpec)
-        parse_dpi(dpiOpt, &cmdlineP->dpiX, &cmdlineP->dpiY);
+        parseDpi(dpiOpt, &cmdlineP->dpiX, &cmdlineP->dpiY);
     else
         cmdlineP->dpiX = cmdlineP->dpiY = 72;
     
     if ((argc-1) > 1)
-        pm_error("Too many arguments (%d).  Only argument is input filespec",
+        pm_error("Too many arguments (%d).  Only argument is input file name",
                  argc-1);
     
     if (argc-1 == 0)
-        cmdlineP->inputFilespec = "-";
+        cmdlineP->inputFileName = "-";
     else
-        cmdlineP->inputFilespec = argv[1];
+        cmdlineP->inputFileName = argv[1];
 }
 
 
 
 static void
-findPrincipalImage(bit ** const bits, 
-                   int    const rows,
-                   int    const cols,
-                   int *  const topP,
-                   int *  const bottomP,
-                   int *  const leftP,
-                   int *  const rightP) {
+findPrincipalImage(bit **         const bits, 
+                   unsigned int   const rows,
+                   unsigned int   const cols,
+                   unsigned int * const topP,
+                   unsigned int * const bottomP,
+                   unsigned int * const leftP,
+                   unsigned int * const rightP) {
+/*----------------------------------------------------------------------------
+   Find the foreground image on a white background.
 
-    int top, bottom, left, right;
-    int row;
+   Find the image in the pixels bits[][], which is 'rows' rows by
+   'cols' columns.
+
+   Return the boundaries of the foreground image as *topP, *bottomP, *leftP,
+   and *rightP.
+
+   If the image is all white, consider the entire image foreground.
+-----------------------------------------------------------------------------*/
+    unsigned int top, bottom, left, right;
+    unsigned int row;
 
     /* Initial values */
-    top = MAXINT;
-    bottom = -MAXINT;
-    left = MAXINT;
-    right = -MAXINT;
+    top    = rows;
+    bottom = 0;
+    left   = cols;
+    right  = 0;
  
-    for (row = 0; row < rows; row++) {
-        int col;
-        for (col = 0; col < cols; col++) {
+    for (row = 0; row < rows; ++row) {
+        unsigned int col;
+        for (col = 0; col < cols; ++col) {
             if (bits[row][col] == PBM_BLACK) {
                 if (row < top) 
                     top = row;
@@ -151,10 +167,20 @@ findPrincipalImage(bit ** const bits,
             }
         }
     }
-    *topP = top;
+
+    if (top > bottom) {
+        /* No black pixels encountered */ 
+        pm_message("Blank page");
+        top    = 0;
+        left   = 0;
+        bottom = rows - 1;
+        right  = cols - 1;
+    }
+
+    *topP    = top;
     *bottomP = bottom;
-    *leftP = left;
-    *rightP = right;
+    *leftP   = left;
+    *rightP  = right;
 }
 
 
@@ -183,7 +209,8 @@ eightPixels(bit ** const bits,
 /*----------------------------------------------------------------------------
   Compute a byte that represents the 8 pixels starting at Column 'col' of
   row 'row' of the raster 'bits'.  The most significant bit of the result
-  represents the leftmost pixel, with 1 meaning black.
+  represents the leftmost pixel, with 1 meaning black.  (Note that this is
+  the opposite of Postscript.)
 
   The row is 'cols' columns wide, so fill on the right with white if there
   are not eight pixels in the row starting with Column 'col'.
@@ -205,23 +232,23 @@ eightPixels(bit ** const bits,
 
 
 int
-main(int argc, char * argv[]) {
+main(int argc, const char * argv[]) {
 
     struct cmdlineInfo cmdline;
-    FILE *ifP;
-    bit **bits;
+    FILE * ifP;
+    bit ** bits;
     int rows, cols;
-    int top, bottom, left, right;
+    unsigned int top, bottom, left, right;
         /* boundaries of principal part of image -- i.e. excluding white
            borders
         */
 
-    pbm_init( &argc, argv );
+    pm_proginit(&argc, argv);
     
     parseCommandLine(argc, argv, &cmdline);
 
-    ifP = pm_openr(cmdline.inputFilespec);
-    bits = pbm_readpbm( ifP, &cols, &rows );
+    ifP = pm_openr(cmdline.inputFileName);
+    bits = pbm_readpbm(ifP, &cols, &rows);
     pm_close(ifP);
 
     findPrincipalImage(bits, rows, cols, &top, &bottom, &left, &right);
@@ -237,17 +264,26 @@ main(int argc, char * argv[]) {
                right - left + 1, bottom - top + 1, bottom - top + 1);
 
         for (row = top; row <= bottom; row++) {
-            int col;
-
+            unsigned int col;
+            unsigned int outChars;
             printf("%% ");
 
-            for (col = left; col <= right; col += 8) 
-                printf("%02x", eightPixels(bits, row, col, cols));
+            outChars = 2;  /* initial value */
 
-            printf("\n");
+            for (col = left; col <= right; col += 8) {
+                if (outChars == 72) {
+                    printf("\n%% ");
+                    outChars = 2;
+                }  
+
+                printf("%02x", eightPixels(bits, row, col, cols));
+                outChars += 2;
+            }
+            if (outChars > 0)
+                printf("\n");
         }
         printf("%%%%EndImage\n");
         printf("%%%%EndPreview\n");
     }
-    exit(0);
+    return 0;
 }

@@ -33,8 +33,15 @@ not yet  BJH  Release 10.65.00
               if invoked with SIGCHLD ignored.  Introduced in 10.56
               (September 2011).
 
+              pbmtoepsi: fix handling of all-white image.  Always broken.
+              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
+              pbmtoepsi: fix excessively long raster line.  Always broken.
+              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
               ppmpat: fix crash with -squig with aspect ratio < 1:25 or
               > 25:1. Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+              Always broken.
 
               Fix wild pointer dereference when memory allocation for a string
               fails.  Broken since 10.36 (September 2006).
