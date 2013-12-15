@@ -4,6 +4,28 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+not yet  BJH  Release 10.65.05
+
+              pnmtops: Fix spurious blank line in asciihex encoding of the
+              image raster.  Probably harmless.  Introduced in 10.56
+              (September 2011).
+
+              pnmtops: Fix crash with 12 bits per sample.  Introduced in 10.53
+              (December 2010).  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
+              pbmtoepsi: fix handling of all-white image.  Always broken.
+              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
+              pbmtoepsi: fix excessively long raster line.  Always broken.
+              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
+              pnmshear: fix incorrect determination of background color.
+              Always broken.
+
+              ppmpat: fix crash with -squig with aspect ratio < 1:25 or
+              > 25:1. Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+              Always broken.
+
 13.11.24 BJH  Release 10.64.04
 
               pnmtops: Fix bug: wrong output with -ascii85.  Introduced in
