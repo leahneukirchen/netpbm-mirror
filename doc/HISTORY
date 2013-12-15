@@ -39,6 +39,9 @@ not yet  BJH  Release 10.65.00
               pbmtoepsi: fix excessively long raster line.  Always broken.
               Thanks Prophet of the Way <afu@wta.att.ne.jp>.
 
+              pnmshear: fix incorrect determination of background color.
+              Always broken.
+
               ppmpat: fix crash with -squig with aspect ratio < 1:25 or
               > 25:1. Thanks Prophet of the Way <afu@wta.att.ne.jp>.
               Always broken.
