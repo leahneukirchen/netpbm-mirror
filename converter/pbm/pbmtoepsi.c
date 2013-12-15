@@ -151,6 +151,13 @@ findPrincipalImage(bit ** const bits,
             }
         }
     }
+
+    if(bottom == -MAXINT) {  /* No black pixels encountered */ 
+        pm_message("Blank page");
+        top = left = 0;
+        bottom = rows-1;  right = cols-1;
+	}
+
     *topP = top;
     *bottomP = bottom;
     *leftP = left;
@@ -238,13 +245,20 @@ main(int argc, char * argv[]) {
 
         for (row = top; row <= bottom; row++) {
             int col;
+	    int outChars = 2;
+	    printf("%% ");
 
-            printf("%% ");
+            for (col = left; col <= right; col += 8) {
+                if (outChars == 72) {
+		  printf("\n%% ");
+                  outChars = 2;
+		}  
 
-            for (col = left; col <= right; col += 8) 
                 printf("%02x", eightPixels(bits, row, col, cols));
-
-            printf("\n");
+                outChars += 2;
+	    }
+	    if (outChars > 0)
+                printf("\n");
         }
         printf("%%%%EndImage\n");
         printf("%%%%EndPreview\n");
