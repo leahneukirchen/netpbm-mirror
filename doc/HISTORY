@@ -4,7 +4,7 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-not yet  BJH  Release 10.65.05
+13.12.15 BJH  Release 10.65.05
 
               pnmtops: Fix spurious blank line in asciihex encoding of the
               image raster.  Probably harmless.  Introduced in 10.56
