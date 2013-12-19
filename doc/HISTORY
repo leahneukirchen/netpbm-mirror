@@ -46,6 +46,8 @@ not yet  BJH  Release 10.65.00
               > 25:1. Thanks Prophet of the Way <afu@wta.att.ne.jp>.
               Always broken.
 
+              pamgauss: Fix typo in message.
+
               Fix wild pointer dereference when memory allocation for a string
               fails.  Broken since 10.36 (September 2006).
 
