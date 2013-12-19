@@ -69,6 +69,10 @@ parseCommandLine(int argc, const char ** argv,
     if (!weightSpec)
         cmdlineP->weight = 6.0;
 
+    if (cmdlineP->weight < 0.0)
+        pm_error("-weight cannot be negative.  You specified %f",
+                 cmdlineP->weight);
+
     if (argc-1 < 1)
         pm_error("Need at least one argument: size of (square) kernel");
     else if (argc-1 == 1) {
