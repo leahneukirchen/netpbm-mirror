@@ -52,11 +52,12 @@ the left input image.
 <P><b>pamarith</b> performs the arithmetic on each pair of identically
 located tuples in the two input images.
 
-<p>The arithmetic operation is in all cases fundamentally a function
-from two integers to an integer.  The operation is performed on two
-tuples as follows.  The two input images must have the same depth, or
-one of them must have depth one.  <b>pamarith</b> fails if one of
-these is not the case.
+<p>The arithmetic operation is in all cases fundamentally a function from two
+integers to an integer (but see below - the functions are defined in ways that
+you can effectively e.g. add real numbers).  The operation is performed on two
+tuples as follows.  The two input images must have the same depth, or one of
+them must have depth one.  <b>pamarith</b> fails if one of these is not the
+case.
 
 <p>If they have the same depth, <b>pamarith</b> simply carries out the
 arithmetic one sample at a time.  I.e. if at a particular position the

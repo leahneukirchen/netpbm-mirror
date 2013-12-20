@@ -2,22 +2,23 @@
 <HTML><HEAD><TITLE>Pgmkernel User Manual</TITLE></HEAD>
 <BODY>
 <H1>pgmkernel</H1>
-Updated: 10 December 1992
+Updated: 19 December 2013
 <BR>
 <A HREF="#index">Table Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
 pgmkernel - generate a convolution kernel
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
-<B>pgmkernel</B> [<B>-weight</B> <I>w</I>] <I>width </I> [<I>height </I>]
+<p>
+<B>pgmkernel</B> [<B>-weight</B> <I>number</I>] <I>size</I>
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<p>
+<B>pgmkernel</B> [<B>-weight</B> <I>number</I>] <I>width</I> <I>height</I>
+
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -25,9 +26,9 @@ pgmkernel - generate a convolution kernel
 with <b>pnmconvol</b>.  The kernel is one where the weight of each location
 is inversely proportional to its distance from the center of the kernel.
 
-<p><b>pgmkernel</b> generates a PGM image of size <I>width</I> by
-<I>height</I> (or <I>width</I> by <I>width</I> if you don't specify
-<I>height</I>.
+<p><b>pgmkernel</b> generates a PGM image of width and height <I>size</I>
+if you specify one argument, or width <i>width</i> and height <i>height</i>
+if you specify two arguments.
 
 <p><b>pgmkernel</b> computes the convolution function K as follows.
 
@@ -39,24 +40,34 @@ where <I>w</I> is a coefficient specified via the <b>-weight</b>
 option.  <i>i</i> and <i>j</i> are measured in pixels.  K is zero
 everywhere beyond the specified kernel width and height.
 
-<P><b>pgmkernel</b> generates the output PGM file in the Plain (text)
-variation of PGM.
+<p>The sample values in the PGM output have this value scaled and biased using
+the protocol <b>pnmconvol</b> specifies for representing the real numbers K
+in PGM.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<H2 id="options">OPTIONS</H2>
 
-The optional <b>-weight</b> value should be a real number greater than
--1.  The default value is 6.0.
+The optional <b>-weight</b> value must be a positive real number.  The default
+value is 6.0.
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>LIMITATIONS</H2>
+<h2 id="limitations">LIMITATIONS</H2>
 
 <P>The computation time is proportional to <I>width</I>*<I>height</I>.
 This increases rapidly with the increase of the kernel size.  A better
 approach could be using a FFT in these cases.
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<h2 id="history">HISTORY</h2>
+
+<p>Before Netpbm 10.65 (December 2013), the output was always in
+Plain (text) PGM format.  (Now, like standard Netpbm programs, the default
+is raw PGM and you can get Plain PGM with a <b>-plain</b> option).
+
+<p>Before Netpbm 10.65 (December 2013), this manual said negative values
+for <b>-weight</b> were valid (as long as they were greater than -1.0).  But
+the program never worked with negative numbers and it isn't clear that the
+result would be useful, so <b>-weight</b> is now required to be nonnegative
+and the program fails gracefully if you specify a negative value.
+
+<H2 id="seealso">SEE ALSO</H2>
 
 <A HREF="pnmconvol.html">pnmconvol</A>,
 <A HREF="pnmsmooth.html">pnmsmooth</A>
@@ -64,24 +75,22 @@ approach could be using a FFT in these cases.
 <A HREF="pgm.html">pgm</A>
 
 
-<A NAME="lbAH">&nbsp;</A>
-<H2>AUTHOR</H2>
+<H2 id="author">AUTHOR</H2>
 
 Alberto Accomazzi (<A
 HREF="mailto:alberto@cfa.harvard.edu">alberto@cfa.harvard.edu</A>).
 
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">BUGS</A>
-<LI><A HREF="#lbAG">SEE ALSO</A>
-<LI><A HREF="#lbAH">AUTHOR</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#limitations">LIMITATIONS</A>
+<LI><A HREF="#history">HISTORY</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
 </UL>
 </BODY>
 </HTML>

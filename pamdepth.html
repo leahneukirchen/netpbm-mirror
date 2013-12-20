@@ -2,13 +2,13 @@
 <HTML><HEAD><TITLE>Pamdepth User Manual</TITLE></HEAD>
 <BODY>
 <H1>pamdepth</H1>
-Updated: 08 April 2000
+Updated: 19 December 2013
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
 <H2>NAME</H2>
 
-pamdepth - change the maxval in a Netpbm image
+pamdepth - change the depth (color resolution) in a Netpbm image
 
 <H2 id="synopsis">SYNOPSIS</H2>
 
@@ -18,10 +18,17 @@ pamdepth - change the maxval in a Netpbm image
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><b>pamdepth</b> reads a Netpbm image as input, scales all the pixel
-values, and writes out the image with the new maxval.  Scaling the
-colors down to a smaller maxval will result in some loss of
-information.
+<p><b>pamdepth</b> reads a Netpbm image as input, changes its depth (color
+resolution), and writes out the resulting Netpbm image.  I.e. the output has a
+different maxval from the input, but all the same colors (apart from rounding
+error).
+
+<p>Reducing the depth results in some loss of information.
+
+<p>Here is an example of the effect at the image format level: Assume you
+start with an image with maxval 100 and sample values of 50 and 100.  You
+tell <b>pamdepth</b> to change it to depth 150.  The output has maxval
+200 and sample values 75 and 150.
 
 <p>This program works on multi-image streams.
 
