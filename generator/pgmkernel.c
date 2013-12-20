@@ -30,6 +30,7 @@ struct CmdlineInfo {
     unsigned int cols;
     unsigned int rows;
     float weight;
+    gray maxval;
 };
 
 
@@ -50,7 +51,7 @@ parseCommandLine(int argc, const char ** argv,
          */
     optStruct3 opt;
 
-    unsigned int weightSpec;
+    unsigned int weightSpec, maxvalSpec;
     unsigned int option_def_index;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
@@ -58,6 +59,8 @@ parseCommandLine(int argc, const char ** argv,
     option_def_index = 0;   /* incremented by OPTENTRY */
     OPTENT3(0,   "weight",  OPT_FLOAT, &cmdlineP->weight, 
             &weightSpec,     0);
+    OPTENT3(0,   "maxval",  OPT_UINT, &cmdlineP->maxval, 
+            &maxvalSpec,     0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -72,6 +75,16 @@ parseCommandLine(int argc, const char ** argv,
     if (cmdlineP->weight < 0.0)
         pm_error("-weight cannot be negative.  You specified %f",
                  cmdlineP->weight);
+
+    if (!maxvalSpec)
+        cmdlineP->maxval = PGM_MAXMAXVAL;
+
+    if (cmdlineP->maxval > PGM_OVERALLMAXVAL)
+        pm_error("-maxval is too large: %u.  Maximum is %u",
+                 cmdlineP->maxval, PGM_OVERALLMAXVAL);
+
+    if (cmdlineP->maxval == 0)
+        pm_error("-maxval cannot be zero");
 
     if (argc-1 < 1)
         pm_error("Need at least one argument: size of (square) kernel");
@@ -178,8 +191,6 @@ writeKernel(FILE *       const ofP,
 int
 main(int argc, const char * argv[]) {
 
-    gray const maxval = 255;
-
     struct CmdlineInfo cmdline;
     unsigned int arows;
     int arow;
@@ -215,11 +226,11 @@ main(int argc, const char * argv[]) {
             double const normalized = t(dx2, dy2, cmdline.weight) / 2 / tMax;
 
             destarray[arow][col] = destarray[arow][cmdline.cols - col - 1] =
-                ROUNDU(maxval * (0.5 + normalized));
+                ROUNDU(cmdline.maxval * (0.5 + normalized));
         }
     }
 
-    writeKernel(stdout, cmdline.cols, cmdline.rows, maxval,
+    writeKernel(stdout, cmdline.cols, cmdline.rows, cmdline.maxval,
                 destarray, arows);
 
     pgm_freearray(destarray, arows);

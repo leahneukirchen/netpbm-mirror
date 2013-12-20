@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.65.00
 
+              pgmkernel: add -maxval.
+
               Recognize SIGPWR on systems that have it in messages
               about signal received.
 
@@ -45,6 +47,8 @@ not yet  BJH  Release 10.65.00
               ppmpat: fix crash with -squig with aspect ratio < 1:25 or
               > 25:1. Thanks Prophet of the Way <afu@wta.att.ne.jp>.
               Always broken.
+
+              pgmkernel: fix some pixels 1 less than they should be.
 
               pamgauss: Fix typo in message.
 
