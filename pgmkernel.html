@@ -13,10 +13,14 @@ pgmkernel - generate a convolution kernel
 <H2 id="synopsis">SYNOPSIS</H2>
 
 <p>
-<B>pgmkernel</B> [<B>-weight</B> <I>number</I>] <I>size</I>
+<B>pgmkernel</B>
+[<B>-weight=</B><I>number</I>]
+[<b>-maxval=</b>] {<I>size</I> | <i>width</i> <i>height</i>}
 
-<p>
-<B>pgmkernel</B> [<B>-weight</B> <I>number</I>] <I>width</I> <I>height</I>
+<P>Minimum unique abbreviation of option is acceptable.  You may use double
+hyphens instead of single hyphen to denote options.  You may use white
+space in place of the equals sign to separate an option name from its value.
+
 
 <H2 id="description">DESCRIPTION</H2>
 
@@ -44,10 +48,28 @@ everywhere beyond the specified kernel width and height.
 the protocol <b>pnmconvol</b> specifies for representing the real numbers K
 in PGM.
 
+
 <H2 id="options">OPTIONS</H2>
 
-The optional <b>-weight</b> value must be a positive real number.  The default
-value is 6.0.
+<dl>
+<dt><b>-weight=</b><i>number</i>
+<dd>The distance from the center is weighted by this; a higher number means
+the value falls off more quickly as you go away from the center.
+<p>
+This must be a positive real number.
+<p>
+The default is 6.0.
+
+<dt><b>-maxval=</b><i>maxval</i>
+
+<dd>The maxval for the PGM kernel.
+<p>Default is 255.
+
+<p>This option was new in Netpbm 10.65 (December 2013).  Before that, the
+maxval is always 255.
+    
+
+</dl>
 
 <h2 id="limitations">LIMITATIONS</H2>
 
