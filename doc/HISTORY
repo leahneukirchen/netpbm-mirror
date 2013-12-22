@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.65.00
 
+              pamfunc: add -changemaxval.
+
               pgmkernel: add -maxval.
 
               Recognize SIGPWR on systems that have it in messages

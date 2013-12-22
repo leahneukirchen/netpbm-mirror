@@ -13,8 +13,8 @@
   multiply/divide where possible.  Especially when multiplying by an 
   integer.
 
-  2) For multiply/divide, give option of simply changing the maxval and
-  leaving the raster alone.
+  2) speed up by not transforming the raster in the idempotent cases
+  (e.g. multiply by one).
 
 ******************************************************************************/
 
@@ -58,6 +58,7 @@ struct CmdlineInfo {
         unsigned int mask;
         unsigned int shiftCount;
     } u;
+    unsigned int changemaxval;
     unsigned int verbose;
 };
 
@@ -126,7 +127,10 @@ parseCommandLine(int argc, const char ** const argv,
             &shiftleftSpec,  0);
     OPTENT3(0,   "shiftright", OPT_UINT,   &cmdlineP->u.shiftCount,
             &shiftrightSpec, 0);
-    OPTENT3(0,   "verbose",    OPT_FLAG,   NULL, &cmdlineP->verbose,       0);
+    OPTENT3(0,   "verbose",      OPT_FLAG,   NULL, &cmdlineP->verbose,
+            0);
+    OPTENT3(0,   "changemaxval", OPT_FLAG,   NULL, &cmdlineP->changemaxval,
+            0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -260,6 +264,57 @@ validateFunction(struct CmdlineInfo const cmdline,
 
 
 static void
+planTransform(struct CmdlineInfo const cmdline,
+              sample             const inputMaxval,
+              sample *           const outputMaxvalP,
+              bool *             const mustChangeRasterP) {
+/*----------------------------------------------------------------------------
+   Plan the transform described by 'cmdline', given the maxval of the input
+   image is 'inputMaxval.
+
+   The plan just consists of whether to change the maxval or the raster.
+   Some multiplications and divisions can be achieved just by changing the
+   maxval and leaving the samples in the raster alone.
+-----------------------------------------------------------------------------*/
+    if (cmdline.changemaxval) {
+        /* User allows us to change the maxval, if that makes it easier */
+        if (cmdline.function == FN_MULTIPLY || cmdline.function == FN_DIVIDE) {
+            float const multiplier =
+                cmdline.function == FN_MULTIPLY ? cmdline.u.multiplier :
+                (1/cmdline.u.divisor);
+
+            float const neededMaxval = inputMaxval / multiplier;
+
+            if (neededMaxval + 0.5 < inputMaxval) {
+                /* Lowering the maxval might make some of the sample values
+                   higher than the maxval, so we'd have to modify the raster
+                   to clip them.
+                */
+                *outputMaxvalP     = inputMaxval;
+                *mustChangeRasterP = true;
+            } else if (neededMaxval > PAM_OVERALL_MAXVAL) {
+                *outputMaxvalP     = inputMaxval;
+                *mustChangeRasterP = true;
+            } else {
+                *outputMaxvalP     = ROUNDU(neededMaxval);
+                *mustChangeRasterP = false;
+            }
+        } else {
+            *outputMaxvalP     = inputMaxval;
+            *mustChangeRasterP = true;
+        }
+    } else {
+        *outputMaxvalP     = inputMaxval;
+        *mustChangeRasterP = true;
+    }
+    if (*outputMaxvalP != inputMaxval)
+        pm_message("Changing maxval to %u because of -changemaxval",
+                   (unsigned)*outputMaxvalP);
+}
+
+
+
+static void
 applyFunction(struct CmdlineInfo const cmdline,
               struct pam         const inpam,
               struct pam         const outpam,
@@ -276,10 +331,10 @@ applyFunction(struct CmdlineInfo const cmdline,
            divide, both cmdline.u.divisor and oneOverDivisor are
            meaningless.  
         */
-    int col;
+    unsigned int col;
 
     for (col = 0; col < inpam.width; ++col) {
-        int plane;
+        unsigned int plane;
         for (plane = 0; plane < inpam.depth; ++plane) {
             sample const inSample = inputRow[col][plane];
             sample outSample;  /* Could be > maxval  */
@@ -336,10 +391,11 @@ main(int argc, const char *argv[]) {
     FILE * ifP;
     tuple * inputRow;   /* Row from input image */
     tuple * outputRow;  /* Row of output image */
-    int row;
+    unsigned int row;
     struct CmdlineInfo cmdline;
     struct pam inpam;   /* Input PAM image */
     struct pam outpam;  /* Output PAM image */
+    bool mustChangeRaster;
 
     pm_proginit(&argc, argv);
 
@@ -356,16 +412,21 @@ main(int argc, const char *argv[]) {
     outpam = inpam;    /* Initial value -- most fields should be same */
     outpam.file = stdout;
 
+    planTransform(cmdline, inpam.maxval, &outpam.maxval, &mustChangeRaster);
+
     pnm_writepaminit(&outpam);
 
     outputRow = pnm_allocpamrow(&outpam);
 
-    for (row = 0; row < inpam.height; row++) {
+    for (row = 0; row < inpam.height; ++row) {
         pnm_readpamrow(&inpam, inputRow);
 
-        applyFunction(cmdline, inpam, outpam, inputRow, outputRow);
+        if (mustChangeRaster) {
+            applyFunction(cmdline, inpam, outpam, inputRow, outputRow);
 
-        pnm_writepamrow(&outpam, outputRow);
+            pnm_writepamrow(&outpam, outputRow);
+        } else
+            pnm_writepamrow(&outpam, inputRow);
     }
     pnm_freepamrow(outputRow);
     pnm_freepamrow(inputRow);
