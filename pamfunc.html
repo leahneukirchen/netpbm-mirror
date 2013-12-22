@@ -4,7 +4,7 @@
 
 <BODY>
 <H1>pamfunc</H1>
-Updated: July 2007
+Updated: December 2013
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -50,6 +50,67 @@ two images as input and applies a specified simple arithmetic function
 output image.
 
 
+<h3 id="values">Values</h2>
+
+<p>The functions fall into two categories: arithmetic (such as multiply by 5)
+and bit string (such as and with 01001000).  For the arithmetic functions, the
+function arguments and results are the fraction that a sample is of the
+maxval, i.e. normal interpretation of PAM tuples.  But for the bit string
+functions, the value is the the bit string whose value as a binary cipher is
+the sample value, and the maxval indicates the width of the bit string.
+
+<h4>Arithmetic functions</h4>
+
+<p>The arithmetic functions are those selected by the options
+<b>-multiplier</b>, <b>-divisor</b>, <b>-adder</b>, <b>-subtractor</b>,
+<b>-min</b>, and <b>-max</b>.
+
+<p>As an example, consider an image with maxval 100 and a sample value of 10
+and a function of &quot;multiply by 5.&quot; The argument to the function is
+10/100 (0.1) and the result is 5 * 0.1 = 0.5.  In the simplest case, the
+maxval of the output is also 100, so the output sample value is 0.5 * 100 =
+50.  As you can see, we could just talk about the sample values themselves
+instead of these fractions and get the same result (10 * 5 = 50), but we
+don't.
+
+<p>Where it makes a practical difference whether we consider the values to be
+the fraction of the maxval or the sample value alone is where <b>pamfunc</b>
+uses a different maxval in the output image than it finds in the input
+image.  See <b>-changemaxval</b>.
+
+<p>So remember in reading the descriptions below that the values are 0.1 and
+0.5 in this example, not 10 and 50.  All arguments and results are in the
+range [0,1].
+
+<h4>Bit string functions</h4>
+
+<P>The bit string functions are those selected by the options
+<B>-andmask</B>, <B>-ormask</B>, <B>-xormask</B>, <B>-not</B>,
+<b>-shiftleft</b>, and <b>-shiftright</b>.
+
+<p>With these functions, the maxval has a very different meaning than in
+normal Netpbm images: it tells how wide (how many bits) the bit string is.
+The maxval must be a full binary count (a power of two minus one, such as
+0xff) and the number of ones in it is the width of the bit string.
+
+<p>As an example, consider an image with maxval 15 and a sample value of 5
+and a function of &quot;and with 0100&quot;.  The argument to the function is
+0101 and the result is 0100.
+
+<p>In this example, it doesn't make any practical difference what we consider
+the width of the string to be, as long as it is at least 3.  If the maxval
+were 255, the result would be the same.  But with a bit shift operation,
+it matters.  Consider shifting left by 2 bits.  In the example, where
+the input value is 0101, the result is 0100.  But if the maxval were 255,
+the result would be 00010100.
+
+<p>For a masking function, the mask value you specify must not have
+more significant bits than the width indicated by the maxval.
+
+<p>For a shifting operation, the shift count you specify must not be
+greater than the width indicated by the maxval.
+
+
 <H2 id="options">OPTIONS</H2>
 
 <DL COMPACT>
@@ -58,17 +119,17 @@ output image.
 <DD>
      <P>This option makes the transfer function that of multiplying by
      <i>realnum</i>.  <i>realnum</i> must be nonnegative.  If the result
-     is greater than the image maxval, it is clipped to the maxval.
+     is greater than one, it is clipped to one.
 
      <P>Where the input is a PGM or PPM image, this has the effect of
      dimming or brightening it.  For a different kind of brightening,
      see <a href="ppmbrighten.html"><b>ppmbrighten</b></a> and
      <a href="ppmflash.html"><b>ppmflash</b></a>
 
-     <P>Also, see <a href="ppmdim.html"><b>ppmdim</b></a>, which does the
-     same thing as <b>pamfunc -multiplier</b> on a PPM image with a
-     multiplier between 0 and 1,
-     except it uses integer arithmetic, so it may be faster.
+     <P>Also, see <a href="ppmdim.html"><b>ppmdim</b></a>, which does the same
+     thing as <b>pamfunc -multiplier</b> on a PPM image with a multiplier
+     between zero and one, except it uses integer arithmetic, so it may be
+     faster.
 
      <P>And <a href="ppmfade.html"><b>ppmfade</b></a> can generate a whole
      sequence of images of brightness declining to black or increasing to
@@ -79,7 +140,7 @@ output image.
 <DD>
      <P>This option makes the transfer function that of dividing by
      <i>realnum</i>.  <i>realnum</i> must be nonnegative.  If the result
-     is greater than the image maxval, it is clipped to the maxval.
+     is greater than one, it is clipped to one.
 
      <P>This is the same function as you would get with <b>-multiplier</b>,
      specifying the multiplicative inverse of <i>realnum</i>.
@@ -88,9 +149,8 @@ output image.
 
 <DD>
      <P>This option makes the transfer function that of adding
-     <i>wholenum</i>.  If the result is greater than the image maxval,
-     it is clipped to the maxval.  If it is less than zero, it is
-     clipped to zero.
+     <i>integer</i>/<i>maxval</i>.  If the result is greater than one, it is
+     clipped to one.  If it is less than zero, it is clipped to zero.
 
      <p>Note that in mathematics, this entity is called an &quot;addend,&quot;
      and an &quot;adder&quot; is a snake.  We use &quot;adder&quot; because
@@ -100,13 +160,12 @@ output image.
 
 <DD>
      <P>This option makes the transfer function that of subtracting
-     <i>wholenum</i>.  If the result is greater than the image maxval,
-     it is clipped to the maxval.  If it is less than zero, it is
-     clipped to zero.
+     <i>integer</i>/<i>maxval</i>.  If the result is greater than one, it is
+     clipped to one.  If it is less than zero, it is clipped to zero.
 
      <p>Note that in mathematics, this entity is called a
-     &quot;subtrahend&quot; rather than a &quot;subtractor.&quot;  We
-     use &quot;subtractor&quot; because it makes more sense.
+     &quot;subtrahend&quot; rather than a &quot;subtractor.&quot; We use
+     &quot;subtractor&quot; because it makes more sense.
 
      <P>This is the same function as you would get with <b>-adder</b>,
      specifying the negative of <i>integer</i>.
@@ -114,21 +173,21 @@ output image.
 <DT><B>-min=<i>wholenum</i></B>
 
 <DD>
-     <P>This option makes the transfer function that of taking the
-     maximum of the argument and <i>wholenum</i>.  I.e the minimum
-     value in the output will be <i>wholenum</i>.
+     <P>This option makes the transfer function that of taking the maximum of
+     the argument and <i>wholenum</i>/<i>maxval</i>.  I.e the minimum value in
+     the output will be <i>wholenum</i>/<i>maxval</i>.
 
-     If <i>wholenum</i> is greater than the maxval, though, every sample
-     in the output will be maxval.
+     If <i>wholenum</i>/<i>maxval</i> is greater than one, though, every value
+     in the output will be one.
 
 <DT><B>-max=<i>wholenum</i></B>
 
 <DD>
-     <P>This option makes the transfer function that of taking the
-     minimum of the argument and <i>wholenum</i>.  I.e the maximum
-     value in the output will be <i>wholenum</i>.
+     <P>This option makes the transfer function that of taking the minimum of
+     the argument and <i>wholenum</i>/<i>maxval</i>.  I.e the maximum value in
+     the output will be <i>wholenum</i>/<i>maxval</i>.
 
-     If <i>wholenum</i> is greater than the maxval, the function is
+     If <i>wholenum</i>/<i>maxval</i> is greater than one, the function is
      idempotent -- the output is identical to the input.
      
 <DT><B>-andmask=<i>hexmask</i></B>
@@ -138,10 +197,6 @@ output image.
      with <i>hexmask</i>.
 
      <p><i>hexmask</i> is in hexadecimal.  Example: <kbd>0f</kbd>
-
-     <p>See section <a href="#maxval">Maxval</a> for the special
-     meaning of maxval with respect to bit string operations such as
-     this.
 
      <p>This option was new in Netpbm 10.40 (September 2007).
 
@@ -171,10 +226,6 @@ output image.
      <p>This option makes the transfer function that of bitwise logical
      inversion (e.g. sample value 0xAA becomes 0x55).
 
-     <p>See section <a href="#maxval">Maxval</a> for the special
-     meaning of maxval with respect to bit string operations such as
-     this.
-
      <p><b>pnminvert</b> does the same thing for a bilevel visual image
      which has maxval 1 or is of PBM type.
 
@@ -185,10 +236,6 @@ output image.
 <DD>
      <P>This option makes the transfer function that of bitwise shifting
      left by <i>count</i> bits.
-
-     <p>See section <a href="#maxval">Maxval</a> for the special
-     meaning of maxval with respect to bit string operations such as
-     this.
 
      <p>This option was new in Netpbm 10.40 (September 2007).
 
@@ -201,33 +248,38 @@ output image.
      <p>This is analogous to <b>-shiftleft</b>.
 
      <p>This option was new in Netpbm 10.40 (September 2007).
+
+<dt><b>-changemaxval</b>
+
+<dd>
+  <p>This option tells <b>pamfunc</b> to use a different maxval in the output
+image than the maxval of the input image, if it helps.  By default, the maxval
+of the output is unchanged from the input and <b>pamfunc</b> modifies the
+sample values as necessary to perform the operation.
+
+<p>But there is one case where <b>pamfunc</b> can achieve the same result just
+be changing the maxval and leaving the sample values unchanged: dividing by a
+number 1 or greater, or multiplying by a number 1 or less.  For example, to
+halve all of the values, <b>pamfunc</b> can just double the maxval.
+
+<p>With <b>-changemaxval</b>, <b>pamfunc</b> will do just that.
+
+<p>As the Netpbm formats have a maximum maxval of 65535, for large divisors,
+<b>pamfunc</b> may not be able to use this method.
+
+<p>An advantage of dividing by changing the maxval is that you don't lose
+precision.  The higher maxval means higher precision.  For example, consider
+an image with a maxval of 100 and sample value of 10.  You divide by 21 and
+then multiply by 21 again.  If <b>pamfunc</b> does this by changing the sample
+values while retaining maxval 100, the division will result in a sample value
+of 0 and the multiplication will also result in zero.  But if <b>pamfunc</b>
+instead keeps the sample value 10 and changing the maxval, the division will
+result in a maxval of 2100 and the multiplication will change it back to 100,
+and the round trip is idempotent.
+
+<p>This option was new in Netpbm 10.65 (December 2013).
+
 </DL>
-
-
-<h2 id="maxval">MAXVAL</h2>
-
-<p>For the arithmetic functions, the maxval has no meaning.  The function
-applies to the sample value as an integer.  (Note that this differs from
-the usual interpretation of PAM samples as being a fraction of a maxval,
-but <em>does</em> produce more intuitive result: 2 times 5 is 10.
-
-<P>But with the bit string operations, the maxval has a special
-meaning.  The functions in question are: <B>-andmask</B>, <B>-ormask</B>,
-<B>-xormask</B>, <B>-not</B>, <b>-shiftleft</b>, and <b>-shiftright</b>.
-
-<p>With these, each sample value the input image, and in the output
-image, represents a bit string, not a number.  The maxval tells how
-wide the bit string is.  The maxval must be a full binary count (a
-power of two minus one, such as 0xff) and the number of ones in it is
-the width of the bit string.
-
-<p>For a masking function, the mask value you specify must not have
-more significant bits than the width indicated by the maxval.
-
-<p>For a shifting operation, the shift count you specify must not be
-greater than the width indicated by the maxval.
-
-<p>The maxval of the output image is the same as that of the input image.
 
 
 <H2 id="seealso">SEE ALSO</H2>
@@ -250,13 +302,14 @@ greater than the width indicated by the maxval.
 <p>This program was added to Netpbm in Release 10.3 (June 2002).
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
 <LI><A HREF="#synopsis">SYNOPSIS</A>
 <LI><A HREF="#description">DESCRIPTION</A>
+  <ul>
+    <li><a href="#values">Values</a>
+    </ul>
 <LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#maxval">MAXVAL</A>
 <LI><A HREF="#seealso">SEE ALSO</A>
 <LI><A HREF="#history">HISTORY</A>
 </UL>
