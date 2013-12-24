@@ -201,12 +201,13 @@ main(int argc, char * argv[]) {
     pnm_writepnminit( stdout, newcols, rows, newmaxval, newformat, 0 );
     newxelrow = pnm_allocrow( newcols );
 
-    bgxel = pnm_backgroundxelrow( xelrow, cols, newmaxval, format );
-
     for ( row = 0; row < rows; ++row ) {
         double shearCols;
 
         pnm_readpnmrow( ifp, xelrow, cols, newmaxval, format );
+
+        if ( row == 0 )
+            bgxel = pnm_backgroundxelrow( xelrow, cols, newmaxval, format );
 
         if ( cmdline.angle > 0.0 )
             shearCols = row * shearfac;

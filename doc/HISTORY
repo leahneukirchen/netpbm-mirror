@@ -4,6 +4,23 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+13.12.24 BJH  Release 10.35.91
+
+              pbmtoepsi: fix handling of all-white image.  Always broken.
+              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
+              pbmtoepsi: fix excessively long raster line.  Always broken.
+              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
+              pnmshear: fix incorrect determination of background color.
+              Always broken.
+
+              ppmpat: fix crash with -squig with aspect ratio < 1:25 or
+              > 25:1. Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+              Always broken.
+
+              pamgauss: Fix typo in message.
+
 13.09.26 BJH  Release 10.35.90
 
               ppmtoxpm: fix bug: ignores inability to open the specified color

@@ -650,6 +650,19 @@ static pixel sq_colors[SQ_MAXCIRCLE_POINTS];
 static int sq_xoffs[SQ_MAXCIRCLE_POINTS], sq_yoffs[SQ_MAXCIRCLE_POINTS];
 
 static void
+validateSquigAspect(unsigned int const cols,
+                    unsigned int const rows) {
+
+    if (cols / rows >= 25 || rows / cols >= 25)
+        pm_error("Image too narrow.  Aspect ratio: %u/%u=%f "
+                 "is outside accepted range: 0.04 - 25.0",
+                 cols, rows, (float)cols/rows ); 
+
+}
+
+
+
+static void
 sq_measurecircle_drawproc(pixel** const pixels, 
                           int const cols, 
                           int const rows, 
@@ -746,6 +759,8 @@ squig( pixels, cols, rows, maxval )
     pixel color;
     int i, j, xc[SQ_POINTS], yc[SQ_POINTS], x0, y0, x1, y1, x2, y2, x3, y3;
 
+    validateSquigAspect(cols, rows);
+    
     /* Clear image to black. */
     PPM_ASSIGN( color, 0, 0, 0 );
     ppmd_filledrectangle(
