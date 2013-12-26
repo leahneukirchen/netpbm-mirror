@@ -4,6 +4,10 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+13.12.26 BJH  Release 10.65.06
+
+              pamgauss: Fix typo in message.
+
 13.12.15 BJH  Release 10.65.05
 
               pnmtops: Fix spurious blank line in asciihex encoding of the
