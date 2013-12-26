@@ -99,7 +99,7 @@ sub prompt($$) {
 
 
 sub promptYesNo($) {
-    my ($default) = $@;
+    my ($default) = @_;
 
     my $retval;
 
@@ -947,6 +947,7 @@ sub getInttypes($) {
 }
 
 
+
 sub getInt64($$) {
 
     my ($inttypes_h, $haveInt64R) = @_;
@@ -978,6 +979,72 @@ sub getInt64($$) {
     } else {
         $$haveInt64R = "N";
     }
+}
+
+
+
+sub determineSseCapability($) {
+
+    my ($haveEmmintrinR) = @_;
+
+    if (defined($testCc)) {
+
+        print("(Doing test compiles to determine if your compiler has SSE " .
+              "intrinsics -- ignore errors)\n");
+
+        my $cflags = testCflags();
+
+        my $works;
+
+        my @cSourceCode = (
+                           "#include <emmintrin.h>\n",
+                           );
+            
+        testCompile($cflags, \@cSourceCode, \my $success);
+            
+        if ($success) {
+            print("It does.\n");
+            $$haveEmmintrinR = $TRUE;
+        } else {
+            print("It does not.  Programs will not exploit fast SSE " .
+                  "instructions.\n");
+            $$haveEmmintrinR = $FALSE;
+        }
+        print("\n");
+    } else {
+        # We conservatively estimate the facility isn't there
+        $$haveEmmintrinR = $FALSE;
+    }
+}
+
+
+
+sub getSse($) {
+
+    my ($wantSseR) = @_;
+
+    determineSseCapability(\my $haveEmmintrin);
+
+    my $gotit;
+
+    print("Use SSE instructions?\n");
+    print("\n");
+
+    my $default = $haveEmmintrin ? "y" : "n";
+
+    $$wantSseR = promptYesNo($default);
+
+    # Another complication in the SSE world is that GNU compiler options
+    # -msse, -msse2, and -march=xxx affect whether the compiler can or will
+    # generate the instructions.  When compiling for older processors, the
+    # default for these options is negative ; for newer processors, it is
+    # affirmative.  -[no]msse2 determines whether macro __SSE2__ macro is
+    # defined.  If it is not, #include <emmintrins.h> fails (<emmintrins.h>
+    # checks __SSE2__.
+
+    # The Netpbm build does not mess with these compiler options.  If the
+    # user wants something other than the default, he can put it in CFLAGS
+    # in config.mk manually or on the make command line on in CFLAGS_PERSONAL.
 }
 
 
@@ -1959,6 +2026,8 @@ getInttypes(\my $inttypesHeaderFile);
 
 getInt64($inttypesHeaderFile, \my $haveInt64);
 
+getSse(\my $wantSse);
+
 findProcessManagement(\my $dontHaveProcessMgmt);
 
 #******************************************************************************
@@ -2383,6 +2452,10 @@ if ($inttypesHeaderFile ne '<inttypes.h>') {
 
 if ($haveInt64 ne 'Y') {
     push(@config_mk, "HAVE_INT64 = $haveInt64\n");
+}
+
+if ($wantSse) {
+    push(@config_mk, "WANT_SSE = Y\n");
 }
 
 if ($dontHaveProcessMgmt) {

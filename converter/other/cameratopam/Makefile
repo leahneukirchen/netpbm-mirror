@@ -9,7 +9,7 @@ EXTERN_INCLUDES =
 ifneq ($(JPEGLIB),NONE)
   ifneq ($(JPEGHDR_DIR)x,x)
     EXTERN_INCLUDES += -I$(JPEGHDR_DIR)
-    CFLAGS += -DHAVE_JPEG
+    HAVE_JPEG_DEFINE = -DHAVE_JPEG
   endif
 endif
 
@@ -21,6 +21,8 @@ all: cameratopam
 
 OBJECTS = util.o identify.o cameratopam.o camera.o foveon.o decode.o \
 	canon.o ljpeg.o dng.o
+
+camera.o camera.o2: CFLAGS_TARGET = $(HAVE_JPEG_DEFINE)
 
 MERGE_OBJECTS =
 

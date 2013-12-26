@@ -4,11 +4,21 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-13.12.26 BJH  Release 10.65.06
+13.12.26 BJH  Release 10.65.00
 
-              pamgauss: Fix typo in message.
+              pamfunc: add -changemaxval.
 
-13.12.15 BJH  Release 10.65.05
+              pgmkernel: add -maxval.
+
+              Recognize SIGPWR on systems that have it in messages
+              about signal received.
+
+              pstopnm: More rational default for landscape/portrait choice.
+              In particular, if the image or page is square, image will always
+              be in portrait (not rotated).
+
+              brushtopbm: check for read errors, extraneous data after apparent
+              end of image.
 
               pnmtops: Fix spurious blank line in asciihex encoding of the
               image raster.  Probably harmless.  Introduced in 10.56
@@ -16,6 +26,19 @@ CHANGE HISTORY
 
               pnmtops: Fix crash with 12 bits per sample.  Introduced in 10.53
               (December 2010).  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
+              pnmtops: Fix bug: wrong output with -ascii85.  Introduced in
+              10.63 (June 2013).
+
+              pnmtops: Fix bug: wrong output with -rle.  Introduced in
+              10.63 (June 2013).
+
+              pnmtops: Fix bug: program hangs if it inherits lots of open
+              files.  Introduced in 10.56 (September 2011).
+
+              pnmtops: Fix bug: fails with message about waitpid() failing
+              if invoked with SIGCHLD ignored.  Introduced in 10.56
+              (September 2011).
 
               pbmtoepsi: fix handling of all-white image.  Always broken.
               Thanks Prophet of the Way <afu@wta.att.ne.jp>.
@@ -30,35 +53,30 @@ CHANGE HISTORY
               > 25:1. Thanks Prophet of the Way <afu@wta.att.ne.jp>.
               Always broken.
 
-13.11.24 BJH  Release 10.64.04
+              pgmkernel: fix some pixels 1 less than they should be.
 
-              pnmtops: Fix bug: wrong output with -ascii85.  Introduced in
-              10.63 (June 2013).
+              pamgauss: Fix typo in message.
 
-              pnmtops: Fix bug: wrong output with -rle.  Introduced in
-              10.63 (June 2013).
+              Fix wild pointer dereference when memory allocation for a string
+              fails.  Broken since 10.36 (September 2006).
 
-              pnmtops: Fix bug: fails with message about waitpid() failing
-              if invoked with SIGCHLD ignored.  Introduced in 10.56
-              (September 2011).
-
-13.11.12 BJH  Release 10.64.03
-
-              pnmtops: Fix bug: closes Standard Error.  Introduced in
-              10.64.02 (today).
-
-13.11.12 BJH  Release 10.64.02
-
-              pnmtops: Fix bug: program hangs if it inherits lots of open
-              files.  Introduced in 10.56 (September 2011).
+              Build for big-endian machines: fix syntax error so it compiles.
+              Introduced in 10.63 (June 2013).
 
               Fix compile failure on system such as OpenBSD that don't have
               SIGWINCH and SIGIO.  Broken since 10.49 (December 2009).
 
-13.10.06 BJH  Release 10.64.01
+              Build: Use SSE2 vector instructions when compiling with Clang,
+              as done already with GCC.
 
-              Build for big-endian machines: fix syntax error so it compiles.
-              Introduced in 10.63 (June 2013).
+              Build: Use <emmintrin.h> interface for SSE intrinsics
+              instead of GCC-specific versions.  Thanks Prophet of the Way
+              <afu@wta.att.ne.jp>.
+
+              Build on system without vasprintf (not GNU libc): fix compiler
+              warning.
+
+              Apple build: use vasprintf.
 
 13.09.28 BJH  Release 10.64.00
 

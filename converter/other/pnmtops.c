@@ -114,8 +114,10 @@ struct cmdlineInfo {
     unsigned int dict;
     unsigned int vmreclaim;
     unsigned int verbose;
+    unsigned int debug;
 };
 
+static bool debug;
 static bool verbose;
 
 
@@ -248,6 +250,7 @@ parseCommandLine(int argc, const char ** argv,
     OPTENT3(0, "vmreclaim",   OPT_FLAG,  NULL, &cmdlineP->vmreclaim,     0);
     OPTENT3(0, "showpage",    OPT_FLAG,  NULL, &showpage,                0);
     OPTENT3(0, "verbose",     OPT_FLAG,  NULL, &cmdlineP->verbose,       0);
+    OPTENT3(0, "debug",       OPT_FLAG,  NULL, &cmdlineP->debug,         0);
     OPTENT3(0, "level",       OPT_UINT, &cmdlineP->level, 
             &cmdlineP->levelSpec,              0);
     
@@ -391,6 +394,16 @@ writeFileChar(const char * const buffer,
               FILE *       const ofP) {
 
     writeFile((const unsigned char *)buffer, writeCt, name, ofP);
+}
+
+
+
+static void
+writeFileByte(unsigned char const byte,
+              const char *  const name,
+              FILE *        const ofP) {
+
+    writeFile(&byte, 1, name, ofP);
 }
 
 
@@ -621,17 +634,28 @@ flateFilter(FILE *          const ifP,
 
 
 static void
-rlePutBuffer (unsigned int    const repeat,
+rlePutBuffer (bool            const repeatMode,
               unsigned int    const count,
-              unsigned int    const repeatitem,
+              unsigned char   const repeatitem,
               unsigned char * const itembuf,
               FILE *          const fP) {
+/*----------------------------------------------------------------------------
+   Output some RLE data.  There are two forms of output:
 
-    if (repeat) {
-        fputc(257 - count,  fP);
-        fputc(repeatitem, fP);
+     'repeatMode' true: output a repeat sequence, indicating to repeat byte
+     'repeatitem' 'count' times.
+
+     'repeatMode' false: output a non-repeat sequence indicating the
+     'count' characters in itembuf[].
+-----------------------------------------------------------------------------*/
+    assert(count > 0);
+    assert(count <= 128);
+
+    if (repeatMode) {
+        writeFileByte((257 - count) % 256, "rlePutBuffer", fP);
+        writeFileByte(repeatitem, "rlePutBuffer", fP);
     } else {
-        fputc(count - 1, fP);
+        writeFileByte(count - 1, "rlePutBuffer", fP);
         writeFile(itembuf, count, "rlePutBuffer", fP);
     }
 }
@@ -975,6 +999,12 @@ addFilter(const char *    const description,
         pm_message("%s filter spawned: pid %u",
                    description, (unsigned)pid);
     
+    if (debug) {
+        int const outFd    = fileno(oldFeedFileP);
+        int const supplyFd = fileno(newFeedFileP);
+        pm_message("PID %u writes to FD %u, its supplier writes to FD %u",
+                   (unsigned)pid, outFd, supplyFd);
+    }
     fclose(oldFeedFileP);  /* Child keeps this open now */
 
     addToPidList(pidList, pid);
@@ -1937,7 +1967,17 @@ convertRaster(struct pam * const inpamP,
               unsigned int const bitsPerSample,
               bool         const psFilter,
               FILE *       const fP) {
+/*----------------------------------------------------------------------------
+   Read the raster described by *inpamP, and write a bit stream of samples
+   to *fP.  This stream has to be compressed and converted to text before it
+   can be part of a Postscript program.
+   
+   'psFilter' means to do the conversion using built in Postscript filters, as
+   opposed to our own filters via /readstring.
 
+   'bitsPerSample' is how many bits each sample is to take in the Postscript
+   output.
+-----------------------------------------------------------------------------*/
     if (PAM_FORMAT_TYPE(inpamP->format) == PBM_TYPE && bitsPerSample == 1)  {
         unsigned char * bitrow;
         unsigned int row;
@@ -2097,7 +2137,8 @@ main(int argc, const char * argv[]) {
 
     parseCommandLine(argc, argv, &cmdline);
 
-    verbose = cmdline.verbose;
+    verbose = cmdline.verbose || cmdline.debug;
+    debug   = cmdline.debug;
 
     if (cmdline.flate && !progIsFlateCapable())
         pm_error("This program cannot do flate compression.  "

@@ -18,9 +18,11 @@ pm_vasprintf(const char ** const resultP,
     char * result;
 
 #if HAVE_VASPRINTF
-    vasprintf(&result, format, varargs);
+    int rc;
 
-    if (result == NULL)
+    rc = vasprintf(&result, format, varargs);
+
+    if (rc < 0)
         *resultP = pm_strsol;
     else
         *resultP = result;

@@ -13,8 +13,7 @@ partlist: $(SUBDIRS:%=%/partlist)
 	cat /dev/null $(SUBDIRS:%=%/partlist) >$@
 	echo $(LIB_OBJECTS:%=$(CURDIR)/%) >>$@
 
-.PHONY: $(SUBDIRS:%=%/partlist)
-$(SUBDIRS:%=%/partlist): %/partlist: $(CURDIR)/%
+$(SUBDIRS:%=%/partlist):
 	$(MAKE) -C $(dir $@) -f $(SRCDIR)/$(SUBDIR)/$(dir $@)Makefile \
 	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@) 
 

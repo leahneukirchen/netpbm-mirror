@@ -63,6 +63,7 @@ ppmbrighten.test
 ppmdither.test
 pamedge.test
 ppmdim.test
+pnmshear.test
 
 ppmmix.test
 
@@ -109,6 +110,7 @@ mrf-roundtrip.test
 pfm-roundtrip.test
 png-roundtrip.test
 ps-roundtrip.test
+ps-alt-roundtrip.test
 sunrast-roundtrip.test
 targa-roundtrip.test
 tiff-roundtrip.test

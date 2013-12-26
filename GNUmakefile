@@ -60,7 +60,7 @@ VPATH=.:$(SRCDIR)
 
 include $(BUILDDIR)/config.mk
 
-PROG_SUBDIRS = converter analyzer editor generator other
+PROG_SUBDIRS = converter analyzer editor generator other test
 PRODUCT_SUBDIRS = lib $(PROG_SUBDIRS)
 SUPPORT_SUBDIRS = urt buildtools
 
@@ -160,6 +160,11 @@ ifeq ($(HAVE_INT64),Y)
 	echo "#define HAVE_INT64 1" >>$@
 else
 	echo "#define HAVE_INT64 0" >>$@
+endif	
+ifeq ($(WANT_SSE),Y)
+	echo "#define WANT_SSE 1" >>$@
+else
+	echo "#define WANT_SSE 0" >>$@
 endif	
 ifeq ($(DONT_HAVE_PROCESS_MGMT),Y)
 	echo "#define HAVE_FORK 0" >>$@

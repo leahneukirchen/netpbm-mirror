@@ -134,12 +134,6 @@
 
 #include "nstring.h"
 
-#if (defined(__GLIBC__) || defined(__GNU_LIBRARY__))
-  #define HAVE_VASPRINTF 1
-#else
-  #define HAVE_VASPRINTF 0
-#endif
-
 #ifdef isdigit
 #undef isdigit
 #endif
@@ -797,9 +791,12 @@ pm_asprintf(const char ** const resultP,
     va_list varargs;
     
 #if HAVE_VASPRINTF
+    int rc;
     va_start(varargs, fmt);
-    vasprintf((char **)&result, fmt, varargs);
+    rc = vasprintf((char **)&result, fmt, varargs);
     va_end(varargs);
+    if (rc < 0)
+        result = pm_strsol;
 #else
     size_t dryRunLen;
     
@@ -811,20 +808,23 @@ pm_asprintf(const char ** const resultP,
 
     if (dryRunLen + 1 < dryRunLen)
         /* arithmetic overflow */
-        result = NULL;
+        result = pm_strsol;
     else {
         size_t const allocSize = dryRunLen + 1;
-        result = malloc(allocSize);
-        if (result != NULL) {
+        char * buffer;
+        buffer = malloc(allocSize);
+        if (buffer != NULL) {
             va_list varargs;
             size_t realLen;
 
             va_start(varargs, fmt);
 
-            pm_vsnprintf(result, allocSize, fmt, varargs, &realLen);
+            pm_vsnprintf(buffer, allocSize, fmt, varargs, &realLen);
                 
             assert(realLen == dryRunLen);
             va_end(varargs);
+
+            result = buffer;
         }
     }
 #endif

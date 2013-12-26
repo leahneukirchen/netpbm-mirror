@@ -1,0 +1,46 @@
+#! /bin/bash
+# This script tests: pbmtoepsi pbmtopsg3 pbmtolps psidtopgm pstopnm
+# Also requires: gs pnmtopnm pnmcrop
+
+# This script is for testing alternative (or minor) utilities that
+# read/write Postscript and encapsulated Postscript:
+# pbmtoepsi, pbmtopsg3, pbmtolps and psidtopgm.
+#
+# We keep these tests separate from those for pnmtops and pstopnm
+# which are far more popular.
+#
+# pbmtopsg3 and pbmtolps produce output that require pstopnm for decoding.
+#
+# If ps-roundtrip.test succeeds and this test fails, it is most likely
+# a problem with one of the minor utilities, and vice versa.
+
+
+# Test 1. Should print: 2425386270 41
+${PBM_TESTPREFIX}pbmtopsg3 -dpi=72 testgrid.pbm \
+     > ${tmpdir}/testgrid1.ps && \
+${PBM_TESTPREFIX}pstopnm -xborder=0 -yborder=0 -llx=0 -lly=-16 -urx=14 \
+    -dpi=72 -stdout -quiet -pbm ${tmpdir}/testgrid1.ps | \
+    ${PBM_BINPREFIX}pnmcrop | cksum
+
+
+# Test 2. Should print: 2425386270 41
+${PBM_TESTPREFIX}pbmtolps -dpi 72 testgrid.pbm \
+     > ${tmpdir}/testgrid2.ps && \
+${PBM_TESTPREFIX}pstopnm -xborder=0 -yborder=0 -dpi=72 -stdout \
+    -quiet ${tmpdir}/testgrid2.ps -pbm | \
+  ${PBM_BINPREFIX}pnmcrop | cksum
+
+
+# Test 3. Should print: 2916080186 235
+# Output is pgm maxval=1 with black and white inverted.
+#
+${PBM_TESTPREFIX}pbmtoepsi testgrid.pbm > ${tmpdir}/testgrid.epsi && \
+xysizebps=`awk  '/BeginPreview/ {print $2,$3,$4}' \
+    ${tmpdir}/testgrid.epsi` && \
+awk '/^%%BeginPreview:/ { p=1; next } /^%%EndImage/ { p=0; next } \
+  p==1 && /%[ \t0-9a-fA-F]+/ { print substr($0,2); next } \
+  p==1 {print "!"$0}' \
+    ${tmpdir}/testgrid.epsi | ${PBM_TESTPREFIX}psidtopgm $xysizebps | cksum
+
+
+rm ${tmpdir}/testgrid[12].ps  ${tmpdir}/testgrid.epsi 
