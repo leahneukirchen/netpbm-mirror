@@ -17,6 +17,9 @@ not yet  BJH  Release 10.65.00
               In particular, if the image or page is square, image will always
               be in portrait (not rotated).
 
+              brushtopbm: check for read errors, extraneous data after apparent
+              end of image.
+
               pnmtops: Fix spurious blank line in asciihex encoding of the
               image raster.  Probably harmless.  Introduced in 10.56
               (September 2011).
