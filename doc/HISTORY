@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.66.00
 
+              pstopnm: fix wrong orientation sometimes when you specify
+              both -xsize and -ysize.  Introduced in 10.65.
+
 13.12.26 BJH  Release 10.65.00
 
               pamfunc: add -changemaxval.
