@@ -548,20 +548,20 @@ computeOrientation(struct CmdlineInfo const cmdline,
             */
             imageWidXel = imageWidPt;
             imageHgtXel = imageHgtPt;
+        }
 
-            if (imageHgtXel >= imageWidXel && cmdline.ymax >= cmdline.xmax) {
-                /* Both image and page are higher than wide, so no rotation */
-                retval = PORTRAIT;
-            } else if (imageHgtXel < imageWidXel &&
-                       cmdline.ymax < cmdline.xmax) {
-                /* Both image and page are wider than high, so no rotation */
-                retval = PORTRAIT;
-            } else {
-                /* Image and pixel have opposite aspect ratios, so rotate
-                   for best fit.
-                */
-                retval = LANDSCAPE;
-            }
+        if (imageHgtXel >= imageWidXel && cmdline.ymax >= cmdline.xmax) {
+            /* Both image and page are higher than wide, so no rotation */
+            retval = PORTRAIT;
+        } else if (imageHgtXel < imageWidXel &&
+                   cmdline.ymax < cmdline.xmax) {
+            /* Both image and page are wider than high, so no rotation */
+            retval = PORTRAIT;
+        } else {
+            /* Image and pixel have opposite aspect ratios, so rotate
+               for best fit.
+            */
+            retval = LANDSCAPE;
         }
     }
     return retval;
