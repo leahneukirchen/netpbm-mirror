@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.66.00
 
+              pnmmargin: fix for size 0 and superfluous "unexpected operator" 
+              message with size != 0.
+
               pstopnm: fix wrong orientation sometimes when you specify
               both -xsize and -ysize.  Introduced in 10.65.
 
