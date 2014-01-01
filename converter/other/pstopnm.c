@@ -33,6 +33,8 @@
 #include "shhopt.h"
 #include "nstring.h"
 
+static bool verbose;
+
 enum Orientation {PORTRAIT, LANDSCAPE, UNSPECIFIED};
 struct Box {
     /* Description of a rectangle within an image; all coordinates 
@@ -220,8 +222,7 @@ parseCommandLine(int argc, char ** argv,
 
 static void
 addPsToFileName(char          const origFileName[],
-                const char ** const newFileNameP,
-                bool          const verbose) {
+                const char ** const newFileNameP) {
 /*----------------------------------------------------------------------------
    If origFileName[] does not name an existing file, but the same
    name with ".ps" added to the end does, return the name with the .ps
@@ -377,8 +378,7 @@ computeSizeRes(struct CmdlineInfo const cmdline,
 enum PostscriptLanguage {COMMON_POSTSCRIPT, ENCAPSULATED_POSTSCRIPT};
 
 static enum PostscriptLanguage
-languageDeclaration(char const inputFileName[],
-                    bool const verbose) {
+languageDeclaration(char const inputFileName[]) {
 /*----------------------------------------------------------------------------
   Return the Postscript language in which the file declares it is written.
   (Except that if the file is on Standard Input or doesn't validly declare
@@ -421,8 +421,7 @@ languageDeclaration(char const inputFileName[],
 
 static struct Box
 computeBoxToExtract(struct Box const cmdlineExtractBox,
-                    char       const inputFileName[],
-                    bool       const verbose) {
+                    char       const inputFileName[]) {
 
     struct Box retval;
 
@@ -572,8 +571,7 @@ computeOrientation(struct CmdlineInfo const cmdline,
 static struct Box
 addBorders(struct Box const inputBox, 
            float      const xborderScale,
-           float      const yborderScale,
-           bool       const verbose) {
+           float      const yborderScale) {
 /*----------------------------------------------------------------------------
    Return a box which is 'inputBox' plus some borders.
 
@@ -609,32 +607,40 @@ addBorders(struct Box const inputBox,
 
 
 
-static const char *
-computePstrans(struct Box       const box,
-               enum Orientation const orientation,
-               int              const xsize,
-               int              const ysize, 
-               int              const xres,
-               int              const yres) {
+static void
+writePstrans(struct Box       const box,
+             int              const xsize,
+             int              const ysize, 
+             int              const xres,
+             int              const yres,
+             enum Orientation const orientation,
+             FILE *           const pipeToGsP) {
 
-    const char * retval;
+    const char * pstrans;
 
     if (orientation == PORTRAIT) {
-        int llx, lly;
-        llx = box.llx - (xsize * 72 / xres - (box.urx - box.llx)) / 2;
-        lly = box.lly - (ysize * 72 / yres - (box.ury - box.lly)) / 2;
-        pm_asprintf(&retval, "%d neg %d neg translate", llx, lly);
+        int const llx =
+            box.llx - (xsize * 72 / xres - (box.urx - box.llx)) / 2;
+        int const lly =
+            box.lly - (ysize * 72 / yres - (box.ury - box.lly)) / 2;
+        pm_asprintf(&pstrans, "%d neg %d neg translate", llx, lly);
     } else {
-        int llx, ury;
-        llx = box.llx - (ysize * 72 / yres - (box.urx - box.llx)) / 2;
-        ury = box.ury + (xsize * 72 / xres - (box.ury - box.lly)) / 2;
-        pm_asprintf(&retval, "90 rotate %d neg %d neg translate", llx, ury);
+        int const llx =
+            box.llx - (ysize * 72 / yres - (box.urx - box.llx)) / 2;
+        int const ury =
+            box.ury + (xsize * 72 / xres - (box.ury - box.lly)) / 2;
+        pm_asprintf(&pstrans, "90 rotate %d neg %d neg translate", llx, ury);
     }
 
-    if (retval == NULL)
+    if (pstrans == NULL)
         pm_error("Unable to allocate memory for pstrans");
 
-    return retval;
+    if (verbose) 
+        pm_message("Postscript prefix command: '%s'", pstrans);
+
+    fprintf(pipeToGsP, "%s\n", pstrans);
+
+    pm_strfree(pstrans);
 }
 
 
@@ -760,9 +766,16 @@ execGhostscript(int          const inputPipeFd,
                 int          const ysize, 
                 int          const xres,
                 int          const yres,
-                unsigned int const textalphabits,
-                bool         const verbose) {
-    
+                unsigned int const textalphabits) {
+/*----------------------------------------------------------------------------
+   Exec the Ghostscript program and have it execute the Postscript program
+   that it receives on 'inputPipeFd', then exit.
+
+   'xsize' and 'ysize' are the dimensions in pixels of the print area,
+   and 'xres' and 'yres' are the print resolutions in pixels per inch,
+   where X and Y are with respect to the page, not the image (so 'xsize'
+   is the size across the page even if the image is rotated on the page)
+-----------------------------------------------------------------------------*/
     const char * arg0;
     const char * ghostscriptProg;
     const char * deviceopt;
@@ -810,23 +823,90 @@ execGhostscript(int          const inputPipeFd,
 
 
 static void
-executeGhostscript(char                    const pstrans[],
-                   char                    const ghostscriptDevice[],
-                   char                    const outfileArg[], 
+feedPsToGhostScript(const char *            const inputFileName,
+                    struct Box              const borderedBox,
+                    int                     const xsize,
+                    int                     const ysize, 
+                    int                     const xres,
+                    int                     const yres,
+                    enum Orientation        const orientation,
+                    int                     const pipeToGhostscriptFd,
+                    enum PostscriptLanguage const language) {
+/*----------------------------------------------------------------------------
+   Send a Postscript program to the Ghostscript process running on the
+   other end of the pipe 'pipeToGhostscriptFd'.  That program is mostly
+   the contents of file 'inputFileName' (special value "-" means Standard
+   Input), but we may add a little to it.
+-----------------------------------------------------------------------------*/
+    FILE * pipeToGsP;  /* Pipe to Ghostscript's standard input */
+    FILE * ifP;
+    bool eof;  /* End of file on input */
+
+    pipeToGsP = fdopen(pipeToGhostscriptFd, "w");
+    if (pipeToGsP == NULL) 
+        pm_error("Unable to open stream on pipe to Ghostscript process.");
+    
+    ifP = pm_openr(inputFileName);
+    /*
+      In encapsulated Postscript, we the encapsulator are supposed to
+      handle showing the page (which we do by passing a showpage
+      statement to Ghostscript).  Any showpage statement in the 
+      input must be defined to have no effect.
+          
+      See "Enscapsulated PostScript Format File Specification",
+      v. 3.0, 1 May 1992, in particular Example 2, p. 21.  I found
+      it at 
+      http://partners.adobe.com/asn/developer/pdfs/tn/5002.EPSF_Spec.pdf
+      The example given is a much fancier solution than we need
+      here, I think, so I boiled it down a bit.  JM 
+    */
+    if (language == ENCAPSULATED_POSTSCRIPT)
+        fprintf(pipeToGsP, "\n/b4_Inc_state save def /showpage { } def\n");
+ 
+    writePstrans(borderedBox, xsize, ysize, xres, yres, orientation, 
+                 pipeToGsP);
+
+    /* If our child dies, it closes the pipe and when we next write to it,
+       we get a SIGPIPE.  We must survive that signal in order to report
+       on the fate of the child.  So we ignore SIGPIPE:
+    */
+    signal(SIGPIPE, SIG_IGN);
+
+    eof = FALSE;
+    while (!eof) {
+        char buffer[4096];
+        size_t readCt;
+            
+        readCt = fread(buffer, 1, sizeof(buffer), ifP);
+        if (readCt == 0) 
+            eof = TRUE;
+        else 
+            fwrite(buffer, 1, readCt, pipeToGsP);
+    }
+    pm_close(ifP);
+
+    if (language == ENCAPSULATED_POSTSCRIPT)
+        fprintf(pipeToGsP, "\nb4_Inc_state restore showpage\n");
+
+    fclose(pipeToGsP);
+}        
+
+
+
+static void
+executeGhostscript(char                    const inputFileName[],
+                   struct Box              const borderedBox,
                    int                     const xsize,
                    int                     const ysize, 
                    int                     const xres,
                    int                     const yres,
+                   enum Orientation        const orientation,
+                   char                    const ghostscriptDevice[],
+                   char                    const outfileArg[], 
                    unsigned int            const textalphabits,
-                   char                    const inputFileName[], 
-                   enum PostscriptLanguage const language,
-                   bool                    const verbose) {
+                   enum PostscriptLanguage const language) {
 
-    int gsTermStatus;  /* termination status of Ghostscript process */
-    FILE * pipeToGsP;  /* Pipe to Ghostscript's standard input */
-    FILE * ifP;
     int rc;
-    int eof;  /* End of file on input */
     int pipefd[2];
 
     if (strlen(outfileArg) > 80)
@@ -845,65 +925,22 @@ executeGhostscript(char                    const pstrans[],
         /* Child process */
         close(pipefd[1]);
         execGhostscript(pipefd[0], ghostscriptDevice, outfileArg,
-                        xsize, ysize, xres, yres, textalphabits,
-                        verbose);
+                        xsize, ysize, xres, yres, textalphabits);
     } else {
+        /* parent process */
         pid_t const ghostscriptPid = rc;
         int const pipeToGhostscriptFd = pipefd[1];
-        /* parent process */
+
+        int gsTermStatus;  /* termination status of Ghostscript process */
+        pid_t rc;
+
         close(pipefd[0]);
 
-        pipeToGsP = fdopen(pipeToGhostscriptFd, "w");
-        if (pipeToGsP == NULL) 
-            pm_error("Unable to open stream on pipe to Ghostscript process.");
-    
-        ifP = pm_openr(inputFileName);
-        /*
-          In encapsulated Postscript, we the encapsulator are supposed to
-          handle showing the page (which we do by passing a showpage
-          statement to Ghostscript).  Any showpage statement in the 
-          input must be defined to have no effect.
-          
-          See "Enscapsulated PostScript Format File Specification",
-          v. 3.0, 1 May 1992, in particular Example 2, p. 21.  I found
-          it at 
-          http://partners.adobe.com/asn/developer/pdfs/tn/5002.EPSF_Spec.pdf
-          The example given is a much fancier solution than we need
-          here, I think, so I boiled it down a bit.  JM 
-        */
-        if (language == ENCAPSULATED_POSTSCRIPT)
-            fprintf(pipeToGsP, "\n/b4_Inc_state save def /showpage { } def\n");
- 
-        if (verbose) 
-            pm_message("Postscript prefix command: '%s'", pstrans);
+        feedPsToGhostScript(inputFileName, borderedBox,
+                            xsize, ysize, xres, yres, orientation,
+                            pipeToGhostscriptFd, language);
 
-        fprintf(pipeToGsP, "%s\n", pstrans);
-
-        /* If our child dies, it closes the pipe and when we next write to it,
-           we get a SIGPIPE.  We must survive that signal in order to report
-           on the fate of the child.  So we ignore SIGPIPE:
-        */
-        signal(SIGPIPE, SIG_IGN);
-
-        eof = FALSE;
-        while (!eof) {
-            char buffer[4096];
-            int bytes_read;
-            
-            bytes_read = fread(buffer, 1, sizeof(buffer), ifP);
-            if (bytes_read == 0) 
-                eof = TRUE;
-            else 
-                fwrite(buffer, 1, bytes_read, pipeToGsP);
-        }
-        pm_close(ifP);
-
-        if (language == ENCAPSULATED_POSTSCRIPT)
-            fprintf(pipeToGsP, "\nb4_Inc_state restore showpage\n");
-
-        fclose(pipeToGsP);
-        
-        waitpid(ghostscriptPid, &gsTermStatus, 0);
+        rc = waitpid(ghostscriptPid, &gsTermStatus, 0);
         if (rc < 0)
             pm_error("Wait for Ghostscript process to terminated failed.  "
                      "errno = %d (%s)", errno, strerror(errno));
@@ -943,30 +980,26 @@ main(int argc, char ** argv) {
     enum Orientation orientation;
     const char * ghostscriptDevice;
     const char * outfileArg;
-    const char * pstrans;
 
     pnm_init(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
-    addPsToFileName(cmdline.inputFileName, &inputFileName, cmdline.verbose);
+    verbose = cmdline.verbose;
 
-    extractBox = computeBoxToExtract(cmdline.extractBox, inputFileName, 
-                                      cmdline.verbose);
+    addPsToFileName(cmdline.inputFileName, &inputFileName);
 
-    language = languageDeclaration(inputFileName, cmdline.verbose);
+    extractBox = computeBoxToExtract(cmdline.extractBox, inputFileName);
+
+    language = languageDeclaration(inputFileName);
     
     orientation = computeOrientation(cmdline, extractBox);
 
-    borderedBox = addBorders(extractBox, cmdline.xborder, cmdline.yborder,
-                             cmdline.verbose);
+    borderedBox = addBorders(extractBox, cmdline.xborder, cmdline.yborder);
 
     computeSizeRes(cmdline, orientation, borderedBox, 
                    &xsize, &ysize, &xres, &yres);
     
-    pstrans = computePstrans(borderedBox, orientation,
-                             xsize, ysize, xres, yres);
-
     outfileArg = computeOutfileArg(cmdline);
 
     ghostscriptDevice = 
@@ -974,14 +1007,13 @@ main(int argc, char ** argv) {
     
     pm_message("Writing %s format", ghostscriptDevice);
     
-    executeGhostscript(pstrans, ghostscriptDevice, outfileArg, 
-                       xsize, ysize, xres, yres, cmdline.textalphabits,
-                       inputFileName,
-                       language, cmdline.verbose);
+    executeGhostscript(inputFileName, borderedBox,
+                       xsize, ysize, xres, yres, orientation,
+                       ghostscriptDevice, outfileArg, cmdline.textalphabits,
+                       language);
 
     pm_strfree(ghostscriptDevice);
     pm_strfree(outfileArg);
-    pm_strfree(pstrans);
     
     return 0;
 }
