@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+13.12.31 BJH  Release 10.65.02
+
+              pnmmargin: fix for size 0 and superfluous "unexpected operator" 
+              message with size != 0.  Introduced in 10.42.
+
 13.12.28 BJH  Release 10.65.01
 
               pstopnm: fix wrong orientation sometimes when you specify
