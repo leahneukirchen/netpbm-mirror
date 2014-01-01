@@ -7,7 +7,11 @@ CHANGE HISTORY
 not yet  BJH  Release 10.66.00
 
               pnmmargin: fix for size 0 and superfluous "unexpected operator" 
-              message with size != 0.
+              message with size != 0.  Introduced in 10.42.
+
+              pstopnm: fix wrong interpretations of -xsize and -ysize when
+              rendering image in landscape (rotated).  This can appear as
+              stretching and squashing.  Probably always broken.
 
               pstopnm: fix wrong orientation sometimes when you specify
               both -xsize and -ysize.  Introduced in 10.65.
@@ -1155,6 +1159,8 @@ not yet  BJH  Release 10.66.00
               pbmtext: fail cleanly if -width, -space, or -lspace is
               too large for computation.  Thanks Prophet of the Way
               <afu@wta.att.ne.jp>.
+
+              pnmmargin: don't crash with zero margin request.
 
               pnmtile: deal with zero width/height.
 
