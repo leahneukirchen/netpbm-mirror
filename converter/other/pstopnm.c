@@ -48,6 +48,19 @@ struct Box {
     int ury;  /* upper right Y coord */
 };
 
+struct Dimensions {
+/*----------------------------------------------------------------------------
+  Horizontal and vertical dimensions of something, both in pixels and
+  spatial distance (points).
+
+  Sizes are in pixels.  Resolutions are in dots per inch (pixels per inch);
+-----------------------------------------------------------------------------*/
+    unsigned int xsize;
+    unsigned int ysize;
+    unsigned int xres;
+    unsigned int yres;
+};
+
 struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
@@ -257,30 +270,31 @@ addPsToFileName(char          const origFileName[],
 
 
 static void
-computeSizeResFromSizeSpec(unsigned int   const requestedXsize,
-                           unsigned int   const requestedYsize,
-                           unsigned int   const imageWidth,
-                           unsigned int   const imageHeight,
-                           unsigned int * const xsizeP,
-                           unsigned int * const ysizeP,
-                           unsigned int * const xresP,
-                           unsigned int * const yresP) {
+computeSizeResFromSizeSpec(unsigned int        const requestedXsize,
+                           unsigned int        const requestedYsize,
+                           unsigned int        const imageWidth,
+                           unsigned int        const imageHeight,
+                           struct Dimensions * const imageDimP) {
 
     if (requestedXsize) {
-        *xsizeP = requestedXsize;
-        *xresP = (unsigned int) (requestedXsize * 72 / imageWidth + 0.5);
+        imageDimP->xsize = requestedXsize;
+        imageDimP->xres = (unsigned int)
+            (requestedXsize * 72 / imageWidth + 0.5);
         if (!requestedYsize) {
-            *yresP = *xresP;
-            *ysizeP = (unsigned int) (imageHeight * (float)*yresP/72 + 0.5);
+            imageDimP->yres = imageDimP->xres;
+            imageDimP->ysize = (unsigned int)
+                (imageHeight * (float)imageDimP->yres/72 + 0.5);
             }
         }
 
     if (requestedYsize) {
-        *ysizeP = requestedYsize;
-        *yresP = (unsigned int) (requestedYsize * 72 / imageHeight + 0.5);
+        imageDimP->ysize = requestedYsize;
+        imageDimP->yres = (unsigned int)
+            (requestedYsize * 72 / imageHeight + 0.5);
         if (!requestedXsize) {
-            *xresP = *yresP;
-            *xsizeP = (unsigned int) (imageWidth * (float)*xresP/72 + 0.5);
+            imageDimP->xres = imageDimP->yres;
+            imageDimP->xsize = (unsigned int)
+                (imageWidth * (float)imageDimP->xres/72 + 0.5);
         }
     } 
 }
@@ -288,42 +302,36 @@ computeSizeResFromSizeSpec(unsigned int   const requestedXsize,
 
 
 static void
-computeSizeResBlind(unsigned int   const xmax,
-                    unsigned int   const ymax,
-                    unsigned int   const imageWidth,
-                    unsigned int   const imageHeight,
-                    bool           const nocrop,
-                    unsigned int * const xsizeP,
-                    unsigned int * const ysizeP,
-                    unsigned int * const xresP,
-                    unsigned int * const yresP) {
-
-    *xresP = *yresP = MIN(xmax * 72 / imageWidth, 
-                          ymax * 72 / imageHeight);
+computeSizeResBlind(unsigned int        const xmax,
+                    unsigned int        const ymax,
+                    unsigned int        const imageWidth,
+                    unsigned int        const imageHeight,
+                    bool                const nocrop,
+                    struct Dimensions * const imageDimP) {
+    
+    imageDimP->xres = imageDimP->yres = MIN(xmax * 72 / imageWidth, 
+                                            ymax * 72 / imageHeight);
     
     if (nocrop) {
-        *xsizeP = xmax;
-        *ysizeP = ymax;
+        imageDimP->xsize = xmax;
+        imageDimP->ysize = ymax;
     } else {
-        *xsizeP = (unsigned int) (imageWidth * (float)*xresP / 72 + 0.5);
-        *ysizeP = (unsigned int) (imageHeight * (float)*yresP / 72 + 0.5);
+        imageDimP->xsize = (unsigned int)
+            (imageWidth * (float)imageDimP->xres / 72 + 0.5);
+        imageDimP->ysize = (unsigned int)
+            (imageHeight * (float)imageDimP->yres / 72 + 0.5);
     }
 }
 
 
 
 static void
-computeSizeRes(struct CmdlineInfo const cmdline, 
-               enum Orientation   const orientation, 
-               struct Box         const borderedBox,
-               unsigned int *     const xsizeP, 
-               unsigned int *     const ysizeP,
-               unsigned int *     const xresP, 
-               unsigned int *     const yresP) {
+computeSizeRes(struct CmdlineInfo  const cmdline, 
+               struct Box          const borderedBox,
+               struct Dimensions * const imageDimP) {
 /*----------------------------------------------------------------------------
-  Figure out how big the output image should be (return as
-  *xsizeP and *ysizeP) and what output device resolution Ghostscript
-  should assume (return as *xresP, *yresP).
+  Figure out how big the output image should be and what output device
+  resolution Ghostscript should assume (return as *imageDimP).
 
   A resolution number is the number of pixels per inch that the a
   printer prints.  Since we're emulating a printed page with a PNM
@@ -338,38 +346,33 @@ computeSizeRes(struct CmdlineInfo const cmdline,
   tell Ghostscript that our horizontal output device resolution is 500
   pixels per inch.
   
-  *xresP and *yresP are in dots per inch.
+  X and Y in all returned values is with respect to the image, not the
+  page.  Note that the image might be placed sideways on the page, so that
+  page X and Y would be reversed from image X and Y.
 -----------------------------------------------------------------------------*/
-    unsigned int sx, sy;
-        /* The horizontal and vertical sizes of the input image, in points
-           (1/72 inch)
-        */
-
-    if (orientation == LANDSCAPE) {
-        sx = borderedBox.ury - borderedBox.lly;
-        sy = borderedBox.urx - borderedBox.llx;
-    } else {
-        sx = borderedBox.urx - borderedBox.llx;
-        sy = borderedBox.ury - borderedBox.lly;
-    }
+    /* The horizontal and vertical sizes of the input image, in points
+       (1/72 inch)
+    */
+    unsigned int const sx = borderedBox.urx - borderedBox.llx;
+    unsigned int const sy = borderedBox.ury - borderedBox.lly;
 
     if (cmdline.dpi) {
         /* User gave resolution; we figure out output image size */
-        *xresP = *yresP = cmdline.dpi;
-        *xsizeP = (int) (cmdline.dpi * sx / 72 + 0.5);
-        *ysizeP = (int) (cmdline.dpi * sy / 72 + 0.5);
+        imageDimP->xres = imageDimP->yres = cmdline.dpi;
+        imageDimP->xsize = (int) (cmdline.dpi * sx / 72 + 0.5);
+        imageDimP->ysize = (int) (cmdline.dpi * sy / 72 + 0.5);
     } else  if (cmdline.xsize || cmdline.ysize)
         computeSizeResFromSizeSpec(cmdline.xsize, cmdline.ysize, sx, sy,
-                                   xsizeP, ysizeP, xresP, yresP);
+                                   imageDimP);
     else 
         computeSizeResBlind(cmdline.xmax, cmdline.ymax, sx, sy, cmdline.nocrop,
-                            xsizeP, ysizeP, xresP, yresP);
+                            imageDimP);
 
     if (cmdline.verbose) {
         pm_message("output is %u pixels wide X %u pixels high",
-                   *xsizeP, *ysizeP);
+                   imageDimP->xsize, imageDimP->ysize);
         pm_message("output device resolution is %u dpi horiz, %u dpi vert",
-                   *xresP, *yresP);
+                   imageDimP->xres, imageDimP->yres);
     }
 }
 
@@ -608,31 +611,36 @@ addBorders(struct Box const inputBox,
 
 
 static void
-writePstrans(struct Box       const box,
-             int              const xsize,
-             int              const ysize, 
-             int              const xres,
-             int              const yres,
-             enum Orientation const orientation,
-             FILE *           const pipeToGsP) {
+writePstrans(struct Box        const box,
+             struct Dimensions const d,
+             enum Orientation  const orientation,
+             FILE *            const pipeToGsP) {
+
+    int const xsize = d.xsize;
+    int const ysize = d.ysize;
+    int const xres  = d.xres;
+    int const yres  = d.yres;
 
     const char * pstrans;
 
-    if (orientation == PORTRAIT) {
-        int const llx =
-            box.llx - (xsize * 72 / xres - (box.urx - box.llx)) / 2;
-        int const lly =
-            box.lly - (ysize * 72 / yres - (box.ury - box.lly)) / 2;
+    switch (orientation) {
+    case PORTRAIT: {
+        int llx, lly;
+        llx = box.llx - (xsize * 72 / xres - (box.urx - box.llx)) / 2;
+        lly = box.lly - (ysize * 72 / yres - (box.ury - box.lly)) / 2;
         pm_asprintf(&pstrans, "%d neg %d neg translate", llx, lly);
-    } else {
-        int const llx =
-            box.llx - (ysize * 72 / yres - (box.urx - box.llx)) / 2;
-        int const ury =
-            box.ury + (xsize * 72 / xres - (box.ury - box.lly)) / 2;
+    } break;
+    case LANDSCAPE: {
+        int llx, ury;
+        llx = box.llx - (xsize * 72 / xres - (box.urx - box.llx)) / 2;
+        ury = box.ury + (ysize * 72 / yres - (box.ury - box.lly)) / 2;
         pm_asprintf(&pstrans, "90 rotate %d neg %d neg translate", llx, ury);
+    } break;
+    case UNSPECIFIED:
+        assert(false);
     }
 
-    if (pstrans == NULL)
+    if (pstrans == pm_strsol)
         pm_error("Unable to allocate memory for pstrans");
 
     if (verbose) 
@@ -759,22 +767,18 @@ findGhostscriptProg(const char ** const retvalP) {
 
 
 static void
-execGhostscript(int          const inputPipeFd,
-                char         const ghostscriptDevice[],
-                char         const outfileArg[], 
-                int          const xsize,
-                int          const ysize, 
-                int          const xres,
-                int          const yres,
-                unsigned int const textalphabits) {
+execGhostscript(int               const inputPipeFd,
+                char              const ghostscriptDevice[],
+                char              const outfileArg[], 
+                struct Dimensions const pageDim,
+                unsigned int      const textalphabits) {
 /*----------------------------------------------------------------------------
    Exec the Ghostscript program and have it execute the Postscript program
    that it receives on 'inputPipeFd', then exit.
 
-   'xsize' and 'ysize' are the dimensions in pixels of the print area,
-   and 'xres' and 'yres' are the print resolutions in pixels per inch,
-   where X and Y are with respect to the page, not the image (so 'xsize'
-   is the size across the page even if the image is rotated on the page)
+   'pageDim' describes the print area.  X and Y in 'pageDim' are with respect
+   to the page, independent of whether the program we receive on 'inputPipeFd'
+   puts an image in there sideways.
 -----------------------------------------------------------------------------*/
     const char * arg0;
     const char * ghostscriptProg;
@@ -794,8 +798,8 @@ execGhostscript(int          const inputPipeFd,
     pm_asprintf(&arg0, "gs");
     pm_asprintf(&deviceopt, "-sDEVICE=%s", ghostscriptDevice);
     pm_asprintf(&outfileopt, "-sOutputFile=%s", outfileArg);
-    pm_asprintf(&gopt, "-g%dx%d", xsize, ysize);
-    pm_asprintf(&ropt, "-r%dx%d", xres, yres);
+    pm_asprintf(&gopt, "-g%dx%d", pageDim.xsize, pageDim.ysize);
+    pm_asprintf(&ropt, "-r%dx%d", pageDim.xres, pageDim.yres);
     pm_asprintf(&textalphabitsopt, "-dTextAlphaBits=%u", textalphabits);
 
     /* -dSAFER causes Postscript to disable %pipe and file operations,
@@ -825,10 +829,7 @@ execGhostscript(int          const inputPipeFd,
 static void
 feedPsToGhostScript(const char *            const inputFileName,
                     struct Box              const borderedBox,
-                    int                     const xsize,
-                    int                     const ysize, 
-                    int                     const xres,
-                    int                     const yres,
+                    struct Dimensions       const imageDim,
                     enum Orientation        const orientation,
                     int                     const pipeToGhostscriptFd,
                     enum PostscriptLanguage const language) {
@@ -837,6 +838,10 @@ feedPsToGhostScript(const char *            const inputFileName,
    other end of the pipe 'pipeToGhostscriptFd'.  That program is mostly
    the contents of file 'inputFileName' (special value "-" means Standard
    Input), but we may add a little to it.
+
+   The image has dimensions 'imageDim' and is oriented on the page according
+   to 'orientation' ('imageDim' X and Y are with respect to the image itself,
+   without regard to how it is oriented on the page).
 -----------------------------------------------------------------------------*/
     FILE * pipeToGsP;  /* Pipe to Ghostscript's standard input */
     FILE * ifP;
@@ -863,8 +868,7 @@ feedPsToGhostScript(const char *            const inputFileName,
     if (language == ENCAPSULATED_POSTSCRIPT)
         fprintf(pipeToGsP, "\n/b4_Inc_state save def /showpage { } def\n");
  
-    writePstrans(borderedBox, xsize, ysize, xres, yres, orientation, 
-                 pipeToGsP);
+    writePstrans(borderedBox, imageDim, orientation, pipeToGsP);
 
     /* If our child dies, it closes the pipe and when we next write to it,
        we get a SIGPIPE.  We must survive that signal in order to report
@@ -893,13 +897,43 @@ feedPsToGhostScript(const char *            const inputFileName,
 
 
 
+static struct Dimensions
+pageDimFromImageDim(struct Dimensions const imageDim,
+                    enum Orientation  const orientation) {
+/*----------------------------------------------------------------------------
+   The dimensions of the page of an image whose dimensions are
+   'imageDim', if we place it on the page with orientation 'orientation'.
+
+   (I.e. swap and X and Y if landscape orientation).
+
+   'orientation' must not be UNSPECIFIED.
+-----------------------------------------------------------------------------*/
+    struct Dimensions retval;
+
+    switch (orientation) {
+    case PORTRAIT:
+        retval = imageDim;
+        break;
+    case LANDSCAPE:
+        retval.xsize = imageDim.ysize;
+        retval.ysize = imageDim.xsize;
+        retval.xres  = imageDim.yres;
+        retval.yres  = imageDim.xres;
+        break;
+    case UNSPECIFIED:
+        assert(false);
+        break;
+    }
+
+    return retval;
+}
+
+
+
 static void
 executeGhostscript(char                    const inputFileName[],
                    struct Box              const borderedBox,
-                   int                     const xsize,
-                   int                     const ysize, 
-                   int                     const xres,
-                   int                     const yres,
+                   struct Dimensions       const imageDim,
                    enum Orientation        const orientation,
                    char                    const ghostscriptDevice[],
                    char                    const outfileArg[], 
@@ -925,7 +959,8 @@ executeGhostscript(char                    const inputFileName[],
         /* Child process */
         close(pipefd[1]);
         execGhostscript(pipefd[0], ghostscriptDevice, outfileArg,
-                        xsize, ysize, xres, yres, textalphabits);
+                        pageDimFromImageDim(imageDim, orientation),
+                        textalphabits);
     } else {
         /* parent process */
         pid_t const ghostscriptPid = rc;
@@ -937,7 +972,7 @@ executeGhostscript(char                    const inputFileName[],
         close(pipefd[0]);
 
         feedPsToGhostScript(inputFileName, borderedBox,
-                            xsize, ysize, xres, yres, orientation,
+                            imageDim, orientation,
                             pipeToGhostscriptFd, language);
 
         rc = waitpid(ghostscriptPid, &gsTermStatus, 0);
@@ -967,8 +1002,8 @@ main(int argc, char ** argv) {
     struct CmdlineInfo cmdline;
     const char * inputFileName;  /* malloc'ed */
         /* The file specification of our Postscript input file */
-    unsigned int xres, yres;    /* Resolution in pixels per inch */
-    unsigned int xsize, ysize;  /* output image size in pixels */
+    struct Dimensions imageDim;
+        /* Size and resolution of the input image */
     struct Box extractBox;
         /* coordinates of the box within the input we are to extract; i.e.
            that will become the output. 
@@ -997,8 +1032,7 @@ main(int argc, char ** argv) {
 
     borderedBox = addBorders(extractBox, cmdline.xborder, cmdline.yborder);
 
-    computeSizeRes(cmdline, orientation, borderedBox, 
-                   &xsize, &ysize, &xres, &yres);
+    computeSizeRes(cmdline, borderedBox, &imageDim);
     
     outfileArg = computeOutfileArg(cmdline);
 
@@ -1007,8 +1041,7 @@ main(int argc, char ** argv) {
     
     pm_message("Writing %s format", ghostscriptDevice);
     
-    executeGhostscript(inputFileName, borderedBox,
-                       xsize, ysize, xres, yres, orientation,
+    executeGhostscript(inputFileName, borderedBox, imageDim, orientation,
                        ghostscriptDevice, outfileArg, cmdline.textalphabits,
                        language);
 
