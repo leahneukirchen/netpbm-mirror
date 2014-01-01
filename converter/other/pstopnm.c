@@ -593,16 +593,13 @@ addBorders(struct Box const inputBox,
     assert(inputBox.urx >= inputBox.llx);
     assert(inputBox.ury >= inputBox.lly);
 
-    assert(inputBox.llx >= leftRightBorderSize);
-    assert(inputBox.lly >= topBottomBorderSize);
-
-    retval.llx = inputBox.llx - leftRightBorderSize;
-    retval.lly = inputBox.lly - topBottomBorderSize;
-    retval.urx = inputBox.urx + leftRightBorderSize;
-    retval.ury = inputBox.ury + topBottomBorderSize;
+    retval.llx = inputBox.llx - (int)leftRightBorderSize;
+    retval.lly = inputBox.lly - (int)topBottomBorderSize;
+    retval.urx = inputBox.urx + (int)leftRightBorderSize;
+    retval.ury = inputBox.ury + (int)topBottomBorderSize;
 
     if (verbose)
-        pm_message("With borders, extracted box is ((%u,%u),(%u,%u))",
+        pm_message("With borders, extracted box is ((%d,%d),(%d,%d))",
                    retval.llx, retval.lly, retval.urx, retval.ury);
 
     return retval;
