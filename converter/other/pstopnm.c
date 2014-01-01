@@ -359,8 +359,8 @@ computeSizeRes(struct CmdlineInfo  const cmdline,
     if (cmdline.dpi) {
         /* User gave resolution; we figure out output image size */
         imageDimP->xres = imageDimP->yres = cmdline.dpi;
-        imageDimP->xsize = (int) (cmdline.dpi * sx / 72 + 0.5);
-        imageDimP->ysize = (int) (cmdline.dpi * sy / 72 + 0.5);
+        imageDimP->xsize = ROUNDU(cmdline.dpi * sx / 72.0);
+        imageDimP->ysize = ROUNDU(cmdline.dpi * sy / 72.0);
     } else  if (cmdline.xsize || cmdline.ysize)
         computeSizeResFromSizeSpec(cmdline.xsize, cmdline.ysize, sx, sy,
                                    imageDimP);
