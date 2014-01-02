@@ -2,6 +2,14 @@
 # This script tests: pamedge
 # Also requires: pbmpscale pbmtext pgmtopbm pgmtopgm ppmtopgm
 
-${PBM_BINPREFIX}pbmtext " F " -nom | ${PBM_BINPREFIX}pbmpscale 5 | \
-${PBM_BINPREFIX}pgmtopgm | ${PBM_TESTPREFIX}pamedge | \
-${PBM_BINPREFIX}ppmtopgm | ${PBM_BINPREFIX}pgmtopbm -th -val=.5 -plain
+  alias pamedge="${PBM_TESTPREFIX}pamedge"
+  alias pbmpscale="${PBM_BINPREFIX}pbmpscale"
+  alias pbmtext="${PBM_BINPREFIX}pbmtext"
+  alias pgmtopbm="${PBM_BINPREFIX}pgmtopbm"
+  alias pgmtopgm="${PBM_BINPREFIX}pgmtopgm"
+  alias ppmtopgm="${PBM_BINPREFIX}ppmtopgm"
+  shopt -s expand_aliases
+
+pbmtext " F " -nom | pbmpscale 5 | \
+pgmtopgm | pamedge | \
+ppmtopgm | pgmtopbm -th -val=.5 -plain

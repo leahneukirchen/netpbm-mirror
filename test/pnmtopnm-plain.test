@@ -2,9 +2,14 @@
 # This script tests: pnmtopnm
 # Also requires: pgmtopgm ppmtoppm pamtopnm
 
-${PBM_TESTPREFIX}pnmtopnm -plain testgrid.pbm
+  alias pnmtopnm="${PBM_TESTPREFIX}pnmtopnm"
+  alias pgmtopgm="${PBM_BINPREFIX}pgmtopgm"
+  alias ppmtoppm="${PBM_BINPREFIX}ppmtoppm"
+  shopt -s expand_aliases
 
-${PBM_BINPREFIX}pgmtopgm < testgrid.pbm | ${PBM_TESTPREFIX}pnmtopnm -plain
+pnmtopnm -plain testgrid.pbm
 
-${PBM_BINPREFIX}ppmtoppm < testgrid.pbm | ${PBM_TESTPREFIX}pnmtopnm -plain | \
+pgmtopgm < testgrid.pbm | pnmtopnm -plain
+
+ppmtoppm < testgrid.pbm | pnmtopnm -plain | \
   head -n11

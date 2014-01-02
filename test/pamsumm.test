@@ -2,12 +2,15 @@
 # This script tests: pamsumm
 # Also requires: 
 
+  alias pamsumm="${PBM_TESTPREFIX}pamsumm"
+  shopt -s expand_aliases
+
 for type in -sum -min -max -mean
   do
-  ${PBM_TESTPREFIX}pamsumm -brief $type testgrid.pbm
+  pamsumm -brief $type testgrid.pbm
   done
 
 for type in -sum -min -max -mean
   do
-  ${PBM_TESTPREFIX}pamsumm -brief $type testimg.ppm
+  pamsumm -brief $type testimg.ppm
   done

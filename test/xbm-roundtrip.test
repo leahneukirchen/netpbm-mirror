@@ -2,5 +2,9 @@
 # This script tests: pbmtoxbm xbmtopbm
 # Also requires: 
 
-${PBM_TESTPREFIX}pbmtoxbm testgrid.pbm | ${PBM_TESTPREFIX}xbmtopbm | cksum
-${PBM_TESTPREFIX}pbmtoxbm -x10 testgrid.pbm | ${PBM_TESTPREFIX}xbmtopbm | cksum
+  alias pbmtoxbm="${PBM_TESTPREFIX}pbmtoxbm"
+  alias xbmtopbm="${PBM_TESTPREFIX}xbmtopbm"
+  shopt -s expand_aliases
+
+pbmtoxbm testgrid.pbm | xbmtopbm | cksum
+pbmtoxbm -x10 testgrid.pbm | xbmtopbm | cksum

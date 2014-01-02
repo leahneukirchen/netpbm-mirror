@@ -2,5 +2,9 @@
 # This script tests: pbmtowbmp wbmptopbm
 # Also requires: 
 
+  alias pbmtowbmp="${PBM_TESTPREFIX}pbmtowbmp"
+  alias wbmptopbm="${PBM_TESTPREFIX}wbmptopbm"
+  shopt -s expand_aliases
+
 # Should print 2425386270 41, cksum of testgrid.pbm
-${PBM_TESTPREFIX}pbmtowbmp testgrid.pbm | ${PBM_TESTPREFIX}wbmptopbm | cksum
+pbmtowbmp testgrid.pbm | wbmptopbm | cksum

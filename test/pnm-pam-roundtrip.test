@@ -2,6 +2,10 @@
 # This script tests: pamtopam pamtopnm
 # Also requires: 
 
-${PBM_TESTPREFIX}pamtopam < testimg.ppm | ${PBM_TESTPREFIX}pamtopnm | cksum
-${PBM_TESTPREFIX}pamtopam < testgrid.pbm | ${PBM_TESTPREFIX}pamtopnm | cksum
+  alias pamtopam="${PBM_TESTPREFIX}pamtopam"
+  alias pamtopnm="${PBM_TESTPREFIX}pamtopnm"
+  shopt -s expand_aliases
+
+pamtopam < testimg.ppm | pamtopnm | cksum
+pamtopam < testgrid.pbm | pamtopnm | cksum
 

@@ -2,9 +2,15 @@
 # This script tests: pnmremap
 # Also requires: pamdepth pamseq pamtopnm
 
-${PBM_BINPREFIX}pamseq 3 5 -tupletype=RGB | ${PBM_BINPREFIX}pamtopnm \
+  alias pnmremap="${PBM_TESTPREFIX}pnmremap"
+  alias pamdepth="${PBM_BINPREFIX}pamdepth"
+  alias pamseq="${PBM_BINPREFIX}pamseq"
+  alias pamtopnm="${PBM_BINPREFIX}pamtopnm"
+  shopt -s expand_aliases
+
+pamseq 3 5 -tupletype=RGB | pamtopnm \
  > ${tmpdir}/palette
-${PBM_BINPREFIX}pamdepth 255 ${tmpdir}/palette > ${tmpdir}/palette255
+pamdepth 255 ${tmpdir}/palette > ${tmpdir}/palette255
 
 # Test 1. Floyd-Steinberg
 # This fails with older versions of Netpbm and x86-64.
@@ -13,7 +19,7 @@ ${PBM_BINPREFIX}pamdepth 255 ${tmpdir}/palette > ${tmpdir}/palette255
 # x86-32: 2667816854 101482 
 # x86-64: 3602410851 101482
 
-${PBM_TESTPREFIX}pnmremap -mapfile=${tmpdir}/palette -floyd -norandom \
+pnmremap -mapfile=${tmpdir}/palette -floyd -norandom \
  testimg.ppm | cksum
 
 rm ${tmpdir}/palette{,255}

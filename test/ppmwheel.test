@@ -2,12 +2,15 @@
 # This script tests: ppmwheel
 # Also requires: 
 
+  alias ppmwheel="${PBM_TESTPREFIX}ppmwheel"
+  shopt -s expand_aliases
+
 # For values 6 and above, x86(-32) and x86-64 produce different output.
 # SSE floating-point math is the probable cause.
 
 for i in 4 5
 do
-${PBM_TESTPREFIX}ppmwheel $i | cksum
+ppmwheel $i | cksum
 done
 
 #   i    32 bit              64 bit

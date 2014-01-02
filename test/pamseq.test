@@ -2,4 +2,7 @@
 # This script tests: pamseq
 # Also requires: 
 
-${PBM_TESTPREFIX}pamseq 1 255 | cksum
+  alias pamseq="${PBM_TESTPREFIX}pamseq"
+  shopt -s expand_aliases
+
+pamseq 1 255 | cksum

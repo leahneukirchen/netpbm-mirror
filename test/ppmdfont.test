@@ -2,11 +2,16 @@
 # This script tests: ppmdmkfont ppmddumpfont ppmdcfont
 # Also requires: 
 
+  alias ppmdcfont="${PBM_TESTPREFIX}ppmdcfont"
+  alias ppmddumpfont="${PBM_TESTPREFIX}ppmddumpfont"
+  alias ppmdmkfont="${PBM_TESTPREFIX}ppmdmkfont"
+  shopt -s expand_aliases
+
 # Test 1. Should produce: 2726488777 48129
-${PBM_TESTPREFIX}ppmdmkfont | ${PBM_TESTPREFIX}ppmddumpfont 2>&1 | cksum
+ppmdmkfont | ppmddumpfont 2>&1 | cksum
 
 # Test 2. Should produce: 2845495212 75033
-${PBM_TESTPREFIX}ppmdmkfont | ${PBM_TESTPREFIX}ppmdcfont | cksum
+ppmdmkfont | ppmdcfont | cksum
 
 # There is a strange glitch in output when ppmdcfont is compiled by clang:
 # 3171,3173c3171,3173

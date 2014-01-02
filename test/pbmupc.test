@@ -2,7 +2,10 @@
 # This script tests: pbmupc
 # Also requires: 
 
+  alias pbmupc="${PBM_TESTPREFIX}pbmupc"
+  shopt -s expand_aliases
+
 for type in -s1 -s2
 do
-${PBM_TESTPREFIX}pbmupc $type 0 72890 00011
+pbmupc $type 0 72890 00011
 done | cksum

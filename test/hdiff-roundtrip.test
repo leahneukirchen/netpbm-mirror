@@ -2,5 +2,9 @@
 # This script tests: hdifftopam pamtohdiff
 # Also requires: 
 
-${PBM_TESTPREFIX}pamtohdiff testimg.ppm | \
-  ${PBM_TESTPREFIX}hdifftopam -pnm | cksum
+  alias hdifftopam="${PBM_TESTPREFIX}hdifftopam"
+  alias pamtohdiff="${PBM_TESTPREFIX}pamtohdiff"
+  shopt -s expand_aliases
+
+pamtohdiff testimg.ppm | \
+  hdifftopam -pnm | cksum

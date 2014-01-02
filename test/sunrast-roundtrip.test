@@ -2,5 +2,9 @@
 # This script tests: pnmtorast rasttopnm
 # Also requires: 
 
+  alias pnmtorast="${PBM_TESTPREFIX}pnmtorast"
+  alias rasttopnm="${PBM_TESTPREFIX}rasttopnm"
+  shopt -s expand_aliases
+
 # Should produce 1926073387 101484, cksum of testimg.ppm
-${PBM_TESTPREFIX}pnmtorast testimg.ppm | ${PBM_TESTPREFIX}rasttopnm | cksum 
+pnmtorast testimg.ppm | rasttopnm | cksum 

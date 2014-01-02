@@ -2,6 +2,9 @@
 # This script tests: pbmpage 
 # Also requires: 
 
-${PBM_TESTPREFIX}pbmpage 1 | cksum
-${PBM_TESTPREFIX}pbmpage 2 | cksum
-${PBM_TESTPREFIX}pbmpage 3 | cksum
+  alias pbmpage="${PBM_TESTPREFIX}pbmpage"
+  shopt -s expand_aliases
+
+pbmpage 1 | cksum
+pbmpage 2 | cksum
+pbmpage 3 | cksum

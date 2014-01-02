@@ -2,10 +2,14 @@
 # This script tests: pgmhist
 # Also requires: pgmramp
 
+  alias pgmhist="${PBM_TESTPREFIX}pgmhist"
+  alias pgmramp="${PBM_BINPREFIX}pgmramp"
+  shopt -s expand_aliases
+
 # Ignore differences in spaces.
 
-${PBM_BINPREFIX}pgmramp -maxval=8 -lr 8 2 | ${PBM_TESTPREFIX}pgmhist | \
+pgmramp -maxval=8 -lr 8 2 | pgmhist | \
   sed -e 's/  */ /g' -e 's/ *$//'
 
-${PBM_TESTPREFIX}pgmhist testgrid.pbm | \
+pgmhist testgrid.pbm | \
   sed -e 's/  */ /g' -e 's/ *$//'

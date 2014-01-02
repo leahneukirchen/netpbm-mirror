@@ -2,19 +2,24 @@
 # This script tests: pnminvert
 # Also requires: pbmmake ppmtopgm
 
+  alias pnminvert="${PBM_TESTPREFIX}pnminvert"
+  alias pbmmake="${PBM_BINPREFIX}pbmmake"
+  alias ppmtopgm="${PBM_BINPREFIX}ppmtopgm"
+  shopt -s expand_aliases
+
 # Test 1.  Should print 1240379484 41
-${PBM_TESTPREFIX}pnminvert testgrid.pbm | cksum
+pnminvert testgrid.pbm | cksum
 # Test 2.  Should print 1416115901 101484
-${PBM_TESTPREFIX}pnminvert testimg.ppm | cksum
+pnminvert testimg.ppm | cksum
 # Test 3.  Should print 2961441369 33838
 # printed 4215652354 33838 with older ppmtopgm
-${PBM_BINPREFIX}ppmtopgm testimg.ppm | ${PBM_TESTPREFIX}pnminvert | cksum
+ppmtopgm testimg.ppm | pnminvert | cksum
 # Test 4.  Should print 2595564405 14
-${PBM_BINPREFIX}pbmmake -w 7 7 | ${PBM_TESTPREFIX}pnminvert | cksum
+pbmmake -w 7 7 | pnminvert | cksum
 # Test 5.  Should print 2595564405 14
-${PBM_BINPREFIX}pbmmake -b 7 7 | cksum
+pbmmake -b 7 7 | cksum
 # Test 6.  Should print 2595564405 14
-${PBM_BINPREFIX}pbmmake -b 7 7 | ${PBM_TESTPREFIX}pnminvert | \
-  ${PBM_TESTPREFIX}pnminvert | cksum
+pbmmake -b 7 7 | pnminvert | \
+  pnminvert | cksum
 # Test 7.  Should print 2896726098 15
-${PBM_BINPREFIX}pbmmake -g 8 8 | ${PBM_TESTPREFIX}pnminvert | cksum
+pbmmake -g 8 8 | pnminvert | cksum

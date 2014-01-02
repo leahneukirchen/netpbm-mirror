@@ -2,6 +2,10 @@
 # This script tests: pngtopnm pnmtopng
 # Also requires: 
 
-${PBM_TESTPREFIX}pnmtopng testimg.ppm | ${PBM_TESTPREFIX}pngtopnm | cksum
-${PBM_TESTPREFIX}pnmtopng testgrid.pbm | ${PBM_TESTPREFIX}pngtopnm | cksum
+  alias pngtopnm="${PBM_TESTPREFIX}pngtopnm"
+  alias pnmtopng="${PBM_TESTPREFIX}pnmtopng"
+  shopt -s expand_aliases
+
+pnmtopng testimg.ppm | pngtopnm | cksum
+pnmtopng testgrid.pbm | pngtopnm | cksum
 

@@ -2,8 +2,11 @@
 # This script tests: pnmtopnm
 # Also requires: pamtopnm
 
-${PBM_TESTPREFIX}pnmtopnm -plain testimg.ppm | \
-  ${PBM_TESTPREFIX}pnmtopnm | cksum
-${PBM_TESTPREFIX}pnmtopnm -plain testgrid.pbm | \
-  ${PBM_TESTPREFIX}pnmtopnm | cksum
+  alias pnmtopnm="${PBM_TESTPREFIX}pnmtopnm"
+  shopt -s expand_aliases
+
+pnmtopnm -plain testimg.ppm | \
+  pnmtopnm | cksum
+pnmtopnm -plain testgrid.pbm | \
+  pnmtopnm | cksum
 

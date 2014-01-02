@@ -2,6 +2,10 @@
 # This script tests: pamslice
 # Also requires: pnmtopnm pamtopnm
 
+  alias pamslice="${PBM_TESTPREFIX}pamslice"
+  alias pnmtopnm="${PBM_BINPREFIX}pnmtopnm"
+  shopt -s expand_aliases
+
 # Slice rows, one by one, out of testgrid.pbm.
 # Add header and reconstruct pbm image.
 # Note that in pamslice output 0 is white and 1 is black: opposite of PBM
@@ -11,12 +15,12 @@
  echo "14 16"
  seq 0 15 | while read i; 
      do
-     ${PBM_TESTPREFIX}pamslice -row=$i testgrid.pbm  | \
+     pamslice -row=$i testgrid.pbm  | \
       awk '{print $2}' | sed 'y/01/10/'; 
-     done ) |  ${PBM_BINPREFIX}pnmtopnm | cksum
+     done ) |  pnmtopnm | cksum
 
 # Slice rows, one by one, out of testimg.ppm.
-# Add header and reconstruct pbm image.
+# Add header and reconstruct ppm image.
 # Should print 1926073387 101484
 
 (echo "P3"
@@ -24,6 +28,6 @@
  echo "255"
  seq 0 148 | while read i; 
      do
-     ${PBM_TESTPREFIX}pamslice -row=$i testimg.ppm  | awk '{print $2, $3, $4}'; 
-     done ) |  ${PBM_BINPREFIX}pnmtopnm | cksum
+     pamslice -row=$i testimg.ppm  | awk '{print $2, $3, $4}'; 
+     done ) |  pnmtopnm | cksum
 

@@ -2,5 +2,9 @@
 # This script tests: pbmtomgr mgrtopbm
 # Also requires: 
 
+  alias mgrtopbm="${PBM_TESTPREFIX}mgrtopbm"
+  alias pbmtomgr="${PBM_TESTPREFIX}pbmtomgr"
+  shopt -s expand_aliases
+
 # Should print 2425386270 41, cksum of testgrid.pbm
-${PBM_TESTPREFIX}pbmtomgr testgrid.pbm | ${PBM_TESTPREFIX}mgrtopbm | cksum
+pbmtomgr testgrid.pbm | mgrtopbm | cksum

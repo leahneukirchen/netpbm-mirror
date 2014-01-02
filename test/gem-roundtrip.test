@@ -2,5 +2,9 @@
 # This script tests: pbmtogem gemtopbm
 # Also requires: gemtopnm
 
+  alias gemtopbm="${PBM_TESTPREFIX}gemtopbm"
+  alias pbmtogem="${PBM_TESTPREFIX}pbmtogem"
+  shopt -s expand_aliases
+
 # Should print 2425386270 41, cksum of testgrid.pbm
-${PBM_TESTPREFIX}pbmtogem testgrid.pbm | ${PBM_TESTPREFIX}gemtopbm | cksum
+pbmtogem testgrid.pbm | gemtopbm | cksum

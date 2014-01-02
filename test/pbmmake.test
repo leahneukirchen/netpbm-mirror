@@ -2,17 +2,20 @@
 # This script tests: pbmmake
 # Also requires: 
 
+  alias pbmmake="${PBM_TESTPREFIX}pbmmake"
+  shopt -s expand_aliases
+
 for i in `seq 1 8`
 do
 for color in -w -b -g
 do
-${PBM_TESTPREFIX}pbmmake -plain $color $i $i | tr -d '\n'; echo
+pbmmake -plain $color $i $i | tr -d '\n'; echo
 done
 done
 for i in `seq 8 5 98`
 do
- ( ${PBM_TESTPREFIX}pbmmake -w $i $i ;
-  ${PBM_TESTPREFIX}pbmmake -b $i $i ;
-  ${PBM_TESTPREFIX}pbmmake  -g $i $i ) | cksum
+ ( pbmmake -w $i $i ;
+  pbmmake -b $i $i ;
+  pbmmake  -g $i $i ) | cksum
 done
 

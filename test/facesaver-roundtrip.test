@@ -2,7 +2,12 @@
 # This script tests: pgmtofs fstopgm
 # Also requires: ppmtopgm
 
+  alias fstopgm="${PBM_TESTPREFIX}fstopgm"
+  alias pgmtofs="${PBM_TESTPREFIX}pgmtofs"
+  alias ppmtopgm="${PBM_BINPREFIX}ppmtopgm"
+  shopt -s expand_aliases
+
 # Should produce 2871603838 33838, cksum of testimg.pgm
 
-${PBM_BINPREFIX}ppmtopgm testimg.ppm | \
-  ${PBM_TESTPREFIX}pgmtofs | ${PBM_TESTPREFIX}fstopgm | cksum
+ppmtopgm testimg.ppm | \
+  pgmtofs | fstopgm | cksum

@@ -2,6 +2,10 @@
 # This script tests: pamfile
 # Also requires: ppmtopgm
 
-${PBM_TESTPREFIX}pamfile testimg.ppm
-${PBM_TESTPREFIX}pamfile testgrid.pbm
-${PBM_BINPREFIX}ppmtopgm testimg.ppm | ${PBM_TESTPREFIX}pamfile
+  alias pamfile="${PBM_TESTPREFIX}pamfile"
+  alias ppmtopgm="${PBM_BINPREFIX}ppmtopgm"
+  shopt -s expand_aliases
+
+pamfile testimg.ppm
+pamfile testgrid.pbm
+ppmtopgm testimg.ppm | pamfile

@@ -2,5 +2,9 @@
 # This script tests: pamtofits fitstopnm
 # Also requires: 
 
+  alias fitstopnm="${PBM_TESTPREFIX}fitstopnm"
+  alias pamtofits="${PBM_TESTPREFIX}pamtofits"
+  shopt -s expand_aliases
+
 # Should produce 1926073387 101484, cksum of testimg.ppm
-${PBM_TESTPREFIX}pamtofits testimg.ppm | ${PBM_TESTPREFIX}fitstopnm | cksum
+pamtofits testimg.ppm | fitstopnm | cksum

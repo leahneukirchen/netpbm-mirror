@@ -2,6 +2,9 @@
 # This script tests: eyuvtoppm
 # Also requires: 
 
+  alias eyuvtoppm="${PBM_TESTPREFIX}eyuvtoppm"
+  shopt -s expand_aliases
+
 # Should produce 1719878124 253455
 
-head -c 126720 /dev/zero |  ${PBM_TESTPREFIX}eyuvtoppm -quiet | cksum
+head -c 126720 /dev/zero |  eyuvtoppm -quiet | cksum

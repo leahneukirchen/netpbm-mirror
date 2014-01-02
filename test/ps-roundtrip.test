@@ -2,41 +2,53 @@
 # This script tests: pnmtops pstopnm
 # Also requires: pnmtopnm pamtopnm gs pbmmake pnmshear pnmpad pnmcat
 
+  alias pnmtops="${PBM_TESTPREFIX}pnmtops"
+  alias pstopnm="${PBM_TESTPREFIX}pstopnm"
+  alias pbmmake="${PBM_BINPREFIX}pbmmake"
+  alias pnmcat="${PBM_BINPREFIX}pnmcat"
+  alias pnmpad="${PBM_BINPREFIX}pnmpad"
+  alias pnmshear="${PBM_BINPREFIX}pnmshear"
+  alias pnmtopnm="${PBM_BINPREFIX}pnmtopnm"
+  shopt -s expand_aliases
+
+# pstopnm does not use libnetpbm functions for output. 
+# Output is filtered through pnmtopnm.
+
 # Test 1.  Should print: 1926073387 101484 five times
 # *NOTE* Fifth iteration fails if pnmtops was compiled without zlib
 # (flate compression) support.
 for flag in "" "-ps" "-rle" "-ps -ascii" "-ps -flate"
   do
-  ${PBM_TESTPREFIX}pnmtops -nocenter -equalpixels -dpi 72 -noturn \
+  pnmtops -nocenter -equalpixels -dpi 72 -noturn \
     ${flag} testimg.ppm \
     > ${tmpdir}/testimg.ps
   xysize1=`awk  '/BoundingBox/ {print "-xsize="$4,"-ysize="$5}' \
     ${tmpdir}/testimg.ps` 
-  ${PBM_TESTPREFIX}pstopnm -xborder=0 -yborder=0 $xysize1 -stdout \
+  pstopnm -xborder=0 -yborder=0 $xysize1 -stdout \
     -quiet ${tmpdir}/testimg.ps | \
-    ${PBM_BINPREFIX}pnmtopnm | cksum
+    pnmtopnm | cksum
   done
 
 
 # Test 2.  Should print: 2918318199 62 seven times
 # Test image designed to detect problems with run-length compression
 #
-${PBM_BINPREFIX}pbmmake -g 2 2 > ${tmpdir}/g.pbm
-${PBM_BINPREFIX}pbmmake -g 8 4 | \
-  ${PBM_BINPREFIX}pnmshear 45 -noantialias -background=black | \
-  ${PBM_BINPREFIX}pnmpad -right 60 | \
-  ${PBM_BINPREFIX}pnmcat -tb -jright - ${tmpdir}/g.pbm > ${tmpdir}/t.pbm &&
+pbmmake -g 2 2 > ${tmpdir}/g.pbm
+pbmmake -g 8 4 | \
+  pnmshear 45 -noantialias -background=black | \
+  pnmpad -right 60 | \
+  pnmcat -tb -jright - ${tmpdir}/g.pbm > ${tmpdir}/t.pbm &&
 for flag in "" "-rle" "-ps -rle -ascii" \
             "-bitspersample=2 -rle" "-ps -bitspersample=4 -rle" \
             "-bitspersample=8 -rle" "-ps -bitspersample=12 -rle -dict" 
   do
-  ${PBM_TESTPREFIX}pnmtops -nocenter -equalpixels -dpi 72 -noturn \
+  pnmtops -nocenter -equalpixels -dpi 72 -noturn \
     ${flag} ${tmpdir}/t.pbm  > ${tmpdir}/testgrid.ps &&
   xysize2=`awk  '/BoundingBox/ {print "-xsize="$4,"-ysize="$5}' \
     ${tmpdir}/testgrid.ps`
-  ${PBM_TESTPREFIX}pstopnm -xborder=0 -yborder=0 $xysize2 -stdout \
+  pstopnm -xborder=0 -yborder=0 $xysize2 -stdout \
     -quiet ${tmpdir}/testgrid.ps -pbm | \
-    ${PBM_BINPREFIX}pnmtopnm | cksum
+    pnmtopnm | cksum
   done
 
 
@@ -56,13 +68,13 @@ for flag in "" "-ps" \
             "-ps -bitspersample=12 -flate -rle -vmreclaim"
   do
 cat testimg.ppm testimg.ppm testimg.ppm testgrid.pbm testgrid.pbm | \
-${PBM_TESTPREFIX}pnmtops -nocenter -equalpixels -dpi 72 -noturn -setpage \
+pnmtops -nocenter -equalpixels -dpi 72 -noturn -setpage \
   ${flag}  > ${tmpdir}/testimg5.ps
 xysize3=`awk  '/BoundingBox/ {print "-xsize="$4,"-ysize="$5 ; exit}' \
   ${tmpdir}/testimg5.ps`
-${PBM_TESTPREFIX}pstopnm -xborder=0 -yborder=0 $xysize3 \
+pstopnm -xborder=0 -yborder=0 $xysize3 \
     -stdout  ${tmpdir}/testimg5.ps | \
-  ${PBM_BINPREFIX}pnmtopnm | cksum
+  pnmtopnm | cksum
   done
 
 

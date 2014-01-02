@@ -2,11 +2,19 @@
 # This script tests: giftopnm pamtogif
 # Also requires: ppmtopgm ppmtorgb3 rgb3toppm pbmmake
 
+  alias giftopnm="${PBM_TESTPREFIX}giftopnm"
+  alias pamtogif="${PBM_TESTPREFIX}pamtogif"
+  alias pbmmake="${PBM_BINPREFIX}pbmmake"
+  alias ppmtopgm="${PBM_BINPREFIX}ppmtopgm"
+  alias ppmtorgb3="${PBM_BINPREFIX}ppmtorgb3"
+  alias rgb3toppm="${PBM_BINPREFIX}rgb3toppm"
+  shopt -s expand_aliases
+
 # Test 1. Should produce 2871603838 33838
 # which is the result of ppmtopgm testimg.ppm | cksum
 
-${PBM_BINPREFIX}ppmtopgm testimg.ppm | \
-  ${PBM_TESTPREFIX}pamtogif | ${PBM_TESTPREFIX}giftopnm | cksum
+ppmtopgm testimg.ppm | \
+  pamtogif | giftopnm | cksum
 
 # Test 2. Break up input image into three monochrome planes,
 # maxval 255.  Transform each plane to gif and back to pgm.
@@ -14,26 +22,26 @@ ${PBM_BINPREFIX}ppmtopgm testimg.ppm | \
 # Should print 1926073387 101484
 
 cp testimg.ppm ${tmpdir} &&
-${PBM_BINPREFIX}ppmtorgb3 ${tmpdir}/testimg.ppm &&
-${PBM_TESTPREFIX}pamtogif ${tmpdir}/testimg.red | \
-  ${PBM_TESTPREFIX}giftopnm > ${tmpdir}/out.red &&
-${PBM_TESTPREFIX}pamtogif ${tmpdir}/testimg.grn |
-  ${PBM_TESTPREFIX}giftopnm > ${tmpdir}/out.grn &&
-${PBM_TESTPREFIX}pamtogif ${tmpdir}/testimg.blu | \
-  ${PBM_TESTPREFIX}giftopnm | \
-  ${PBM_BINPREFIX}rgb3toppm ${tmpdir}/testimg.red ${tmpdir}/testimg.grn - | \
+ppmtorgb3 ${tmpdir}/testimg.ppm &&
+pamtogif ${tmpdir}/testimg.red | \
+  giftopnm > ${tmpdir}/out.red &&
+pamtogif ${tmpdir}/testimg.grn |
+  giftopnm > ${tmpdir}/out.grn &&
+pamtogif ${tmpdir}/testimg.blu | \
+  giftopnm | \
+  rgb3toppm ${tmpdir}/testimg.red ${tmpdir}/testimg.grn - | \
   cksum
 
 rm ${tmpdir}/testimg.{ppm,red,grn,blu} ${tmpdir}/out.{red,grn}
 
 # Test 3. Should produce 2425386270 41
-${PBM_TESTPREFIX}pamtogif testgrid.pbm | ${PBM_TESTPREFIX}giftopnm | cksum
+pamtogif testgrid.pbm | giftopnm | cksum
 
 # Test 4.
 # In this gif file the code length changes after the last image data.
 # Image data: 3 bits, end code 4 bits.
 # Should produce P1 4 1 0 1 0 1
 
-${PBM_BINPREFIX}pbmmake -g 4 1 | \
-  ${PBM_TESTPREFIX}pamtogif | ${PBM_TESTPREFIX}giftopnm -plain | \
+pbmmake -g 4 1 | \
+  pamtogif | giftopnm -plain | \
   tr '\n' ' '

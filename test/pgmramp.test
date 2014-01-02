@@ -2,11 +2,14 @@
 # This script tests: pgmramp
 # Also requires: 
 
+  alias pgmramp="${PBM_TESTPREFIX}pgmramp"
+  shopt -s expand_aliases
+
 for type in -lr -tb -rect -ell
 do
-${PBM_TESTPREFIX}pgmramp -maxval=3 $type 4 4 -plain
+pgmramp -maxval=3 $type 4 4 -plain
 done
 
 for type in -lr -tb -rect -ell
-do ${PBM_TESTPREFIX}pgmramp $type 256 256 | cksum
+do pgmramp $type 256 256 | cksum
 done

@@ -2,13 +2,21 @@
 # This script tests: pnmtoxwd xwdtopnm
 # Also requires: pamdepth ppmtopgm
 
+  alias pnmtoxwd="${PBM_TESTPREFIX}pnmtoxwd"
+  alias xwdtopnm="${PBM_TESTPREFIX}xwdtopnm"
+  alias pamdepth="${PBM_BINPREFIX}pamdepth"
+  alias ppmtopgm="${PBM_BINPREFIX}ppmtopgm"
+  shopt -s expand_aliases
+
 # Test 1.  Should produce 2871603838 33838
 # which is the output of ppmtopgm testimg.ppm | cksum
-${PBM_BINPREFIX}ppmtopgm testimg.ppm | ${PBM_TESTPREFIX}pnmtoxwd  | \
-  ${PBM_TESTPREFIX}xwdtopnm | ${PBM_BINPREFIX}pamdepth 255 | cksum
+ppmtopgm testimg.ppm | pnmtoxwd  | \
+  xwdtopnm | pamdepth 255 | cksum
 
-${PBM_TESTPREFIX}pnmtoxwd --quiet  testimg.ppm | \
-  ${PBM_TESTPREFIX}xwdtopnm --quiet | ${PBM_BINPREFIX}pamdepth 255 | cksum
+# Test 2.  Should produce 1926073387 101484
+pnmtoxwd --quiet  testimg.ppm | \
+  xwdtopnm --quiet | pamdepth 255 | cksum
 
-${PBM_TESTPREFIX}pnmtoxwd --quiet  testgrid.pbm | \
-  ${PBM_TESTPREFIX}xwdtopnm | cksum
+# Test 3.  Should produce 2425386270 41
+pnmtoxwd --quiet  testgrid.pbm | \
+  xwdtopnm | cksum

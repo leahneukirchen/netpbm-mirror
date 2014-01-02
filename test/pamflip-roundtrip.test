@@ -2,33 +2,36 @@
 # This script tests: pamflip
 # Also requires: 
 
-${PBM_TESTPREFIX}pamflip -lr testimg.ppm | ${PBM_TESTPREFIX}pamflip -lr | cksum
-${PBM_TESTPREFIX}pamflip -tb testimg.ppm | ${PBM_TESTPREFIX}pamflip -tb | cksum
-${PBM_TESTPREFIX}pamflip -r180 testimg.ppm | \
-  ${PBM_TESTPREFIX}pamflip -r180 | cksum
-${PBM_TESTPREFIX}pamflip -xy testimg.ppm | ${PBM_TESTPREFIX}pamflip -xy | cksum
-${PBM_TESTPREFIX}pamflip -r90 testimg.ppm | \
-  ${PBM_TESTPREFIX}pamflip -r90 | \
-  ${PBM_TESTPREFIX}pamflip -r90 | \
-  ${PBM_TESTPREFIX}pamflip -r90 | cksum
-${PBM_TESTPREFIX}pamflip -r270 testimg.ppm | \
-  ${PBM_TESTPREFIX}pamflip -r270 | \
-  ${PBM_TESTPREFIX}pamflip -r270 | \
-  ${PBM_TESTPREFIX}pamflip -r270 | cksum
+  alias pamflip="${PBM_TESTPREFIX}pamflip"
+  shopt -s expand_aliases
 
-${PBM_TESTPREFIX}pamflip -lr testgrid.pbm | \
-  ${PBM_TESTPREFIX}pamflip -lr | cksum
-${PBM_TESTPREFIX}pamflip -tb testgrid.pbm | \
-  ${PBM_TESTPREFIX}pamflip -tb | cksum
-${PBM_TESTPREFIX}pamflip -r180 testgrid.pbm | \
-  ${PBM_TESTPREFIX}pamflip -r180 | cksum
-${PBM_TESTPREFIX}pamflip -xy testgrid.pbm | \
-  ${PBM_TESTPREFIX}pamflip -xy | cksum
-${PBM_TESTPREFIX}pamflip -r90 testgrid.pbm | \
-  ${PBM_TESTPREFIX}pamflip -r90 | \
-  ${PBM_TESTPREFIX}pamflip -r90 | \
-  ${PBM_TESTPREFIX}pamflip -r90 | cksum
-${PBM_TESTPREFIX}pamflip -r270 testgrid.pbm | \
-  ${PBM_TESTPREFIX}pamflip -r270 | \
-  ${PBM_TESTPREFIX}pamflip -r270 | \
-  ${PBM_TESTPREFIX}pamflip -r270 | cksum
+pamflip -lr testimg.ppm | pamflip -lr | cksum
+pamflip -tb testimg.ppm | pamflip -tb | cksum
+pamflip -r180 testimg.ppm | \
+  pamflip -r180 | cksum
+pamflip -xy testimg.ppm | pamflip -xy | cksum
+pamflip -r90 testimg.ppm | \
+  pamflip -r90 | \
+  pamflip -r90 | \
+  pamflip -r90 | cksum
+pamflip -r270 testimg.ppm | \
+  pamflip -r270 | \
+  pamflip -r270 | \
+  pamflip -r270 | cksum
+
+pamflip -lr testgrid.pbm | \
+  pamflip -lr | cksum
+pamflip -tb testgrid.pbm | \
+  pamflip -tb | cksum
+pamflip -r180 testgrid.pbm | \
+  pamflip -r180 | cksum
+pamflip -xy testgrid.pbm | \
+  pamflip -xy | cksum
+pamflip -r90 testgrid.pbm | \
+  pamflip -r90 | \
+  pamflip -r90 | \
+  pamflip -r90 | cksum
+pamflip -r270 testgrid.pbm | \
+  pamflip -r270 | \
+  pamflip -r270 | \
+  pamflip -r270 | cksum

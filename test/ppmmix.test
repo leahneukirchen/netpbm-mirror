@@ -3,26 +3,36 @@
 # Also requires: pamdepth pamenlarge pamsumm pbmmake
 # Also requires: pgmtopgm pnminvert ppmtopgm
 
+  alias ppmmix="${PBM_TESTPREFIX}ppmmix"
+  alias pamdepth="${PBM_BINPREFIX}pamdepth"
+  alias pamenlarge="${PBM_BINPREFIX}pamenlarge"
+  alias pamsumm="${PBM_BINPREFIX}pamsumm"
+  alias pbmmake="${PBM_BINPREFIX}pbmmake"
+  alias pgmtopgm="${PBM_BINPREFIX}pgmtopgm"
+  alias pnminvert="${PBM_BINPREFIX}pnminvert"
+  alias ppmtopgm="${PBM_BINPREFIX}ppmtopgm"
+  shopt -s expand_aliases
+
 # Print a pretty checkerboard pattern
-${PBM_BINPREFIX}pbmmake -g 8 8 | \
- ${PBM_BINPREFIX}pgmtopgm > ${tmpdir}/a1.pgm &&
-${PBM_BINPREFIX}pbmmake -g 2 2 | ${PBM_BINPREFIX}pamenlarge 4 | \
- ${PBM_BINPREFIX}pgmtopgm > ${tmpdir}/a2.pgm &&
-${PBM_TESTPREFIX}ppmmix 0.75 ${tmpdir}/a1.pgm ${tmpdir}/a2.pgm -plain | \
- ${PBM_BINPREFIX}ppmtopgm | ${PBM_BINPREFIX}pamdepth 3 -plain &&
+pbmmake -g 8 8 | \
+ pgmtopgm > ${tmpdir}/a1.pgm &&
+pbmmake -g 2 2 | pamenlarge 4 | \
+ pgmtopgm > ${tmpdir}/a2.pgm &&
+ppmmix 0.75 ${tmpdir}/a1.pgm ${tmpdir}/a2.pgm -plain | \
+ ppmtopgm | pamdepth 3 -plain &&
 rm ${tmpdir}/a1.pgm ${tmpdir}/a2.pgm
 
 # Mix image with itself.
 # Output should match input regardless of ratio. 
 for i in 0 0.5 0.6 1
 do 
-${PBM_TESTPREFIX}ppmmix $i testimg.ppm testimg.ppm | cksum
+ppmmix $i testimg.ppm testimg.ppm | cksum
 done
 
 # Mix image with its own inverse.
 # Output should be a monotone gray sheet.
-${PBM_BINPREFIX}pnminvert testimg.ppm | ${PBM_TESTPREFIX}ppmmix .5 \
+pnminvert testimg.ppm | ppmmix .5 \
     testimg.ppm - | tee ${tmpdir}/a3.ppm | \
-  ${PBM_BINPREFIX}pamsumm -brief -max &&
-  ${PBM_BINPREFIX}pamsumm -brief -min ${tmpdir}/a3.ppm &&
+  pamsumm -brief -max &&
+  pamsumm -brief -min ${tmpdir}/a3.ppm &&
 rm ${tmpdir}/a3.ppm
