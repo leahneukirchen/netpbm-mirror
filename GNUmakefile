@@ -258,10 +258,10 @@ endif
 
 .PHONY: install-merge install-nonmerge
 install-merge: install.merge install.lib install.data \
-	install.manweb install.man
+	install.manwebmain install.manweb install.man
 
 install-nonmerge: install.bin install.lib install.data \
-	install.manweb install.man
+	install.manwebmain install.manweb install.man
 
 .PHONY: merge
 merge: lib/all netpbm
@@ -367,7 +367,7 @@ install.lib:
 endif
 
 .PHONY: install.manweb
-install.manweb: $(PKGDIR)/man/web/netpbm.url $(PKGDIR)/bin/doc.url
+install.manwebmain: $(PKGDIR)/man/web/netpbm.url $(PKGDIR)/bin/doc.url
 
 $(PKGDIR)/man/web/netpbm.url: $(PKGDIR)/man/web
 	echo "$(NETPBM_DOCURL)" > $@
