@@ -20,10 +20,11 @@ finally
 
 to install it into your system.  
 
-If you're building Latest Netpbm (as opposed to Stable Netpbm), there
-are probably known bugs.  Some may even prevent Netpbm from building.
-These are listed in the release notes for the release on Sourceforge.
-Check it out.
+If you have a Debian-like system, that uses Dpkg for package management,
+it's better to create a Debian package file and install it like this:
+
+    make deb
+    dpkg --install netpbm-sf-*.deb
 
 The 'configure' program is not GNU Autoconf -- it is a simple program
 specific to Netpbm that prompts you for information about your system.
