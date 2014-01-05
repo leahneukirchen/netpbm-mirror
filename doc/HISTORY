@@ -16,6 +16,8 @@ not yet  BJH  Release 10.66.00
               pstopnm: fix wrong orientation sometimes when you specify
               both -xsize and -ysize.  Introduced in 10.65.
 
+              build/install: add tools for creating a Debian package.
+
               make package: Include a man/web directory with .url files for
               each manual page.
 

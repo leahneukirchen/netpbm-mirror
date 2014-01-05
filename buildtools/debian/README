@@ -1,0 +1,36 @@
+Files in this directory are for creating a Debian package (.deb file),
+which one can use to install Netpbm on a Debian system (or a system running
+a derivative of Debian, such as Ubuntu or Mint).
+
+You can of course install on one of these systems by running 'installnetpbm',
+or otherwise inserting all the files in the proper place in your system file
+tree, but having a Debian package allows you to manage those files using
+Debian's normal package management.  The package management system will know
+where the Netpbm files came from, and you can upgrade or remove Netpbm easily.
+The package management system will also be aware of prerequisites of Netpbm
+and ensure that you don't have Debian's own inferior version of Netpbm
+installed (which would cause conflicts).
+
+The package we create is named 'netpbm-sf' (where the "sf" is from
+"SourceForge"), to be distinct from the package named "netpbm" which is part
+of Debian.
+
+To install Netpbm as a Debian package:
+
+  1) Follow the regular instructions to build and package Netpbm
+     (configure, make, make package).
+
+  2) $ BUILDTOOLS=netpbm-src/buildtools
+
+     (netpbm-src is a Netpbm source tree).
+
+  3) $ $BUILDTOOLS/debian/mkdeb -buildtools=$BUILDTOOLS
+
+     (This defaults to getting Netpbm from /tmp/netpbm, which is also where
+     'make package' defaults to putting it).
+
+  4) $ dpkg --install netpbm-sfXXXX.deb
+
+     (netpbm-sfXXXX.deb is the file created by 'makedeb', in the current
+     directory).
+
