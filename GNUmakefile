@@ -418,6 +418,10 @@ install.sharedlibstub:
 	$(MAKE) -C lib -f $(SRCDIR)/lib/Makefile \
 	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) install.sharedlibstub 
 
+.PHONY: deb
+deb:
+	buildtools/debian/mkdeb --buildtools=buildtools --pkgdir=$(PKGDIR)
+
 .PHONY: check
 check:
 # This works on typical Linux systems
