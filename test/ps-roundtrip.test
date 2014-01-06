@@ -24,7 +24,7 @@ for flag in "" "-ps" "-rle" "-ps -ascii" "-ps -flate"
     > ${tmpdir}/testimg.ps
   xysize1=`awk  '/BoundingBox/ {print "-xsize="$4,"-ysize="$5}' \
     ${tmpdir}/testimg.ps` 
-  pstopnm -xborder=0 -yborder=0 $xysize1 -stdout \
+  pstopnm -portrait -xborder=0 -yborder=0 $xysize1 -stdout \
     -quiet ${tmpdir}/testimg.ps | \
     pnmtopnm | cksum
   done
@@ -46,7 +46,7 @@ for flag in "" "-rle" "-ps -rle -ascii" \
     ${flag} ${tmpdir}/t.pbm  > ${tmpdir}/testgrid.ps &&
   xysize2=`awk  '/BoundingBox/ {print "-xsize="$4,"-ysize="$5}' \
     ${tmpdir}/testgrid.ps`
-  pstopnm -xborder=0 -yborder=0 $xysize2 -stdout \
+  pstopnm -portrait -xborder=0 -yborder=0 $xysize2 -stdout \
     -quiet ${tmpdir}/testgrid.ps -pbm | \
     pnmtopnm | cksum
   done
@@ -72,7 +72,7 @@ pnmtops -nocenter -equalpixels -dpi 72 -noturn -setpage \
   ${flag}  > ${tmpdir}/testimg5.ps
 xysize3=`awk  '/BoundingBox/ {print "-xsize="$4,"-ysize="$5 ; exit}' \
   ${tmpdir}/testimg5.ps`
-pstopnm -xborder=0 -yborder=0 $xysize3 \
+pstopnm -portrait -xborder=0 -yborder=0 $xysize3 \
     -stdout  ${tmpdir}/testimg5.ps | \
   pnmtopnm | cksum
   done
