@@ -12,7 +12,7 @@ for flag in "" "-ps" "-rle" "-ps -ascii" "-ps -flate"
     > ${tmpdir}/testimg.ps
   xysize1=`awk  '/BoundingBox/ {print "-xsize="$4,"-ysize="$5}' \
     ${tmpdir}/testimg.ps` 
-  ${PBM_TESTPREFIX}pstopnm -xborder=0 -yborder=0 $xysize1 -stdout \
+  ${PBM_TESTPREFIX}pstopnm -portrait -xborder=0 -yborder=0 $xysize1 -stdout \
     -quiet ${tmpdir}/testimg.ps | \
     ${PBM_BINPREFIX}pnmtopnm | cksum
   done
@@ -34,7 +34,7 @@ for flag in "" "-rle" "-ps -rle -ascii" \
     ${flag} ${tmpdir}/t.pbm  > ${tmpdir}/testgrid.ps &&
   xysize2=`awk  '/BoundingBox/ {print "-xsize="$4,"-ysize="$5}' \
     ${tmpdir}/testgrid.ps`
-  ${PBM_TESTPREFIX}pstopnm -xborder=0 -yborder=0 $xysize2 -stdout \
+  ${PBM_TESTPREFIX}pstopnm -portrait -xborder=0 -yborder=0 $xysize2 -stdout \
     -quiet ${tmpdir}/testgrid.ps -pbm | \
     ${PBM_BINPREFIX}pnmtopnm | cksum
   done
@@ -60,7 +60,7 @@ ${PBM_TESTPREFIX}pnmtops -nocenter -equalpixels -dpi 72 -noturn -setpage \
   ${flag}  > ${tmpdir}/testimg5.ps
 xysize3=`awk  '/BoundingBox/ {print "-xsize="$4,"-ysize="$5 ; exit}' \
   ${tmpdir}/testimg5.ps`
-${PBM_TESTPREFIX}pstopnm -xborder=0 -yborder=0 $xysize3 \
+${PBM_TESTPREFIX}pstopnm -portrait -xborder=0 -yborder=0 $xysize3 \
     -stdout  ${tmpdir}/testimg5.ps | \
   ${PBM_BINPREFIX}pnmtopnm | cksum
   done

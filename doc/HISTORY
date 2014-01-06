@@ -4,7 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-13.12.31 BJH  Release 10.65.02
+14.01.06 BJH  Release 10.65.03
+
+              test: Add -portrait to invocations of pstopnm in order to get
+              proper round trips.
+
+14.01.01 BJH  Release 10.65.02
 
               pnmmargin: fix for size 0 and superfluous "unexpected operator" 
               message with size != 0.  Introduced in 10.42.
