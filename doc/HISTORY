@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 14.01.06 BJH  Release 10.65.03
 
+              make package: Include template for pkgconfig file.
+
               test: Add -portrait to invocations of pstopnm in order to get
               proper round trips.
 
