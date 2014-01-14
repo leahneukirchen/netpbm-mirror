@@ -18,6 +18,8 @@ not yet  BJH  Release 10.66.00
 
               build/install: add tools for creating a Debian package.
 
+              make package: Include template for pkgconfig file.
+
               make package: Include a man/web directory with .url files for
               each manual page.
 
