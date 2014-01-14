@@ -21,10 +21,15 @@ finally
 to install it into your system.  
 
 If you have a Debian-like system, that uses Dpkg for package management,
-it's better to create a Debian package file and install it like this:
+it's better to create a Debian package file and install it as follows in
+place of the 'installnetpbm' step above.
 
     make deb
     dpkg --install netpbm-sf-*.deb
+
+More information on building and installing on Debian are in the file
+buildtools/debian/README in the source tree.
+
 
 The 'configure' program is not GNU Autoconf -- it is a simple program
 specific to Netpbm that prompts you for information about your system.

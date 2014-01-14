@@ -20,17 +20,62 @@ To install Netpbm as a Debian package:
   1) Follow the regular instructions to build and package Netpbm
      (configure, make, make package).
 
-  2) $ BUILDTOOLS=netpbm-src/buildtools
+  2) With the root of the built Netpbm build tree as your current
+     directory:
 
-     (netpbm-src is a Netpbm source tree).
-
-  3) $ $BUILDTOOLS/debian/mkdeb -buildtools=$BUILDTOOLS
+     $ make deb
 
      (This defaults to getting Netpbm from /tmp/netpbm, which is also where
      'make package' defaults to putting it).
 
-  4) $ dpkg --install netpbm-sfXXXX.deb
+  3) $ dpkg --install netpbm-sfXXXX.deb
 
      (netpbm-sfXXXX.deb is the file created by 'makedeb', in the current
      directory).
+
+
+PREREQUSISITES
+--------------
+
+The following Debian packages are the known prerequisites for Netpbm
+(and the package created by 'mkdeb' knows this).
+
+    libc6
+    libjpeg62
+    libpng12-0
+    libtiff4
+    zlib1g
+    ghostscript
+    perl
+    perl-base
+    bash
+
+Note that many of these are needed only for a few parts of Netpbm, and it will
+be pretty obvious what the problem is when you need the prerequisite package
+and don't have it, so if you don't want to install a prerequisite, it would
+probably be fine to force install Netpbm, ignoring the prerequisites.
+
+
+CONFLICTS WITH DEBIAN'S NETPBM
+------------------------------
+
+Debian has several packages of Netpbm, all based on a slightly modified
+Sourceforge Netpbm 9.25 from 2002 (don't be confused by Debian's numbering
+system, which makes it look like it is Netpbm 10).  If you want to install
+Sourceforge Netpbm on your system, you will want first to remove any of these
+you have installed:
+
+  netpbm
+  netpbm-dev
+  libnetpbm9
+  libnetpbm10
+
+Sourceforge Netpbm should be backward compatible with all of those.  Note that
+'mkdeb' makes only one package.  It contains the programs, the runtime
+libraries, and the development files.
+
+We have not yet worked out what has to be done about the fact that the Debian
+packaging system thinks the Debian Netpbm packages are prerequisites for
+things.  If you install Sourceforge Netpbm via the package created by mkdeb,
+you should tell the Netpbm maintainer whatever you learn about that.
 
