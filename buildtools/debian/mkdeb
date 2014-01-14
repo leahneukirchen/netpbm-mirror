@@ -141,7 +141,13 @@ sub control($$) {
     $control{'Recommends'} = '';
     $control{'Conflicts'} = $debianNativeNetpbm;
     $control{'Replaces'} = $debianNativeNetpbm;
-    $control{'Provides'} = 'netpbm, pbmwbmp, pnmtopng';
+    $control{'Provides'} = 
+        'netpbm, ' .
+        'pbmwbmp, ' .
+        'pnmtopng, ' .
+        'netpbm-dev, ' .
+        'libnetpbm10'
+        ;
     $control{'Section'} = 'graphics';
     $control{'Priority'} = 'optional';
     $control{'Section'} = 'graphics';
