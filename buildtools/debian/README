@@ -37,13 +37,54 @@ To install Netpbm as a Debian package:
 PREREQUSISITES
 --------------
 
-The following Debian packages are the known prerequisites for Netpbm
+The following information was taken from the Wheezy version of Debian, in
+January 2014.
+
+You don't actually need the current version of any of these.  For example,
+while we list package libjpeg8-dev, the package libjpeg62-dev works fine.
+
+
+Building
+--------
+
+You need the following Debian packages to build all of Netpbm.
+
+You could omit some of these and, in the Netpbm build configuration dialog,
+indicate you don't have them, and the build will simply omit some parts.
+For example, if you don't install libx11-dev, the Netpbm build process
+will not build the 'pamx' program.
+
+  libjpeg8-dev
+  libpng12-0-dev
+  libsvga1-dev
+  libtiff5-dev
+  libx11-dev
+  libxml2a-dev
+  zlib1g-dev
+
+
+In addition, you need the following build tools:
+
+  make
+  gcc
+  flex
+  perl
+  pkg-config
+
+
+
+Running
+-------
+
+The following Debian packages are the known prerequisites for running Netpbm
 (and the package created by 'mkdeb' knows this).
 
     libc6
-    libjpeg62
+    libjpeg8
     libpng12-0
-    libtiff4
+    libsvga1
+    libtiff5
+    libx11-6
     zlib1g
     ghostscript
     perl

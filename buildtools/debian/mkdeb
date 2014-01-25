@@ -109,6 +109,11 @@ sub netpbmVersion($) {
 sub control($$) {
     my ($release, $architecture) = @_;
 
+# The Debian packaging system doesn't provide a way to express Netpbm's actual
+# prerequisites.  For example, Netpbm needs Version 6.2 or better of Libjpeg,
+# but there is no way to state that here.  Instead, we state Libjpeg 8.
+# This makes the Netpbm package less useful.
+
     my %control;
 
     my $debianNativeNetpbm = 
@@ -128,9 +133,12 @@ sub control($$) {
     $control{'Installed-Size'} = '6164';
     $control{'Depends'} =
         'libc6, ' .
-        'libjpeg62, ' .
+        'libjpeg8, ' .
         'libpng12-0, ' .
-        'libtiff4, ' .
+        'libsvga1, ' .
+        'libtiff5, ' .
+        'libx11-6, ' .
+        'libxml2a, ' .
         'zlib1g, ' .
         'ghostscript, ' .
         'perl, ' .
