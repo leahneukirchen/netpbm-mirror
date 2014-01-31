@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pamtojpeg2k User Manual</TITLE></HEAD>
 <BODY>
 <H1>PAMTOJPEG2K</H1>
-Updated: 27 October 2002
+Updated: 31 January 2014
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -54,7 +54,7 @@ space in place of the equals sign to separate an option name from its value.
 or Standard Input if no file is named, to a JPEG-2000 code stream
 (JPC) file on Standard Output.
 
-<P>The JPEG-2000 specification specifies two different formats: JP2
+<P>The JPEG-2000 specification specifies two separate formats: JP2
 and JPEG-2000 code stream (JPC).  JP2 represents a visual image quite
 specifically, whereas JPC is a more or less arbitrary array of codes.
 <B>pamtojpeg2k</B> can't produce a JP2, but the JPC image that
@@ -102,6 +102,12 @@ Because it's packaged with the library, it may exploit it better,
 especially recently added features.  However, since it does not use the
 Netpbm library to read and write the Netpbm formats, it doesn't do as
 good a job on that side.
+
+<p>Another format with goals similar to those of JPEG-2000 but that allows for
+faster encoding and decoding, is
+JPEG-LS.  <a href="http://charls.codeplex.com">CharLS</a> is a package of
+software for using JPEG-LS.
+
 
 <H2 id="options">OPTIONS</H2>
 
