@@ -3,7 +3,7 @@
 <HEAD><TITLE>User manual for Netpbm</TITLE></HEAD>
 <BODY>
 <H1>Netpbm</H1>
-Updated: 22 February 2009
+Updated: 31 January 2014
 <BR>
 <?makeman .SH NAME ?>
 <?makeman netpbm - netpbm library overview ?>
@@ -868,6 +868,18 @@ also handles lots of formats Netpbm does not.
 
 <li>WebP was announced by Google in October 2010 as a more compressed
 replacement for JFIF (aka JPEG) on the web.
+
+<li>JPEG-LS is similar to JFIF (aka JPEG) except that it is capable of
+representing all the information in any raster image, so you could convert
+from, say, PNM, without losing any
+information.  <a href="http://charls.codeplex.com">CharLS</a> is a programming
+library for JPEG-LS.
+
+
+<LI>Lossless JPEG is a similarly lossless variation of JPEG.  It predates
+every other lossless JPEG variation, but had only brief interest.  You can
+find code for encoding and decoding Lossless JPEG
+on <a href="https://github.com/thorfdbg/libjpeg">GitHub</a>.
 
 <li>JPEG XR offers greater dynamic range, a wider range of colors, and more
 efficient compression than JFIF (aka JPEG).  Windows and Internet Explorer
