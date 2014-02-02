@@ -6,6 +6,48 @@
   alias pnmtopng="${PBM_TESTPREFIX}pnmtopng"
   shopt -s expand_aliases
 
-pnmtopng testimg.ppm | pngtopnm | cksum
-pnmtopng testgrid.pbm | pngtopnm | cksum
+## Fails because .ok not set yet.
 
+# Test 1.  Should print 1926073387 101484 18 times
+for flags in "" -interlace \
+  -gamma=.45 \
+  -hist \
+  -nofilter \
+  -sub \
+  -up \
+  -avg \
+  -paeth \
+  -compression=9 \
+  "-compression=0 -comp_mem=1 -comp_window=8 -comp_buffer=512" \
+  "-compression=9 -comp_mem=1 -comp_window=15 -comp_buffer=512" \
+  "-compression=9 -comp_mem=1 -comp_window=8 -comp_buffer=512" \
+  "-compression=0 -comp_mem=9 -comp_window=8 -comp_buffer=512" \
+  "-compression=9 -comp_mem=9 -comp_window=15 -comp_buffer=8096" \
+  -comp_strategy=huffman_only \
+  -comp_strategy=filtered \
+  -force
+  do
+pnmtopng testimg.ppm $flags | pngtopnm | cksum
+done
+
+# Test 2.  Should print 2425386270 41 18 times
+for flags in "" -interlace \
+  -gamma=.45 \
+  -hist \
+  -nofilter \
+  -sub \
+  -up \
+  -avg \
+  -paeth \
+  -compression=9 \
+  "-compression=0 -comp_mem=1 -comp_window=8 -comp_buffer=512" \
+  "-compression=9 -comp_mem=1 -comp_window=15 -comp_buffer=512" \
+  "-compression=9 -comp_mem=1 -comp_window=8 -comp_buffer=512" \
+  "-compression=0 -comp_mem=9 -comp_window=8 -comp_buffer=512" \
+  "-compression=9 -comp_mem=9 -comp_window=15 -comp_buffer=8096" \
+  -comp_strategy=huffman_only \
+  -comp_strategy=filtered \
+  -force
+  do
+  pnmtopng testgrid.pbm $flags | pngtopnm | cksum
+  done

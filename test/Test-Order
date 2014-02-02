@@ -67,6 +67,10 @@ pnmshear.test
 
 ppmmix.test
 
+# Symmetry test
+
+symmetry.test
+
 # Format converter tests
 
 pbmtog3.test
@@ -104,6 +108,7 @@ gem-roundtrip.test
 gif-roundtrip.test
 gif-quant-roundtrip.test
 hdiff-roundtrip.test
+jbig-roundtrip.test
 leaf-roundtrip.test
 mgr-roundtrip.test
 mrf-roundtrip.test

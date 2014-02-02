@@ -1,0 +1,14 @@
+#! /bin/bash
+# This script tests: pnmtojbig jbigtopnm
+# Also requires: ppmtopgm
+
+  alias pnmtojbig="${PBM_TESTPREFIX}pnmtojbig"
+  alias jbigtopnm="${PBM_TESTPREFIX}jbigtopnm"
+  alias ppmtopgm="${PBM_BINPREFIX}ppmtopgm"
+  shopt -s expand_aliases
+
+# Test 1.  Should print 2425386270 41
+pnmtojbig testgrid.pbm | jbigtopnm | cksum
+
+# Test 2.  Should print 2871603838 33838
+ppmtopgm testimg.ppm | pnmtojbig | jbigtopnm | cksum

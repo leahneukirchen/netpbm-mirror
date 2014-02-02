@@ -8,13 +8,22 @@
   alias ppmtopgm="${PBM_BINPREFIX}ppmtopgm"
   alias ppmtorgb3="${PBM_BINPREFIX}ppmtorgb3"
   alias rgb3toppm="${PBM_BINPREFIX}rgb3toppm"
+  alias pnminvert="${PBM_BINPREFIX}pnminvert"
   shopt -s expand_aliases
 
 # Test 1. Should produce 2871603838 33838
 # which is the result of ppmtopgm testimg.ppm | cksum
+# four times
 
-ppmtopgm testimg.ppm | \
-  pamtogif | giftopnm | cksum
+ppmtopgm testimg.ppm | tee ${tmpdir}/testimg.pgm | pamtogif | giftopnm | cksum
+pamtogif -interlace ${tmpdir}/testimg.pgm | giftopnm | cksum
+pamtogif -sort ${tmpdir}/testimg.pgm | tee ${tmpdir}/testimg.gif | \
+  giftopnm | cksum
+echo "junk" >> ${tmpdir}/testimg.gif && \
+  giftopnm -image=1 -quitearly ${tmpdir}/testimg.gif | cksum
+
+rm  ${tmpdir}/testimg.pgm
+rm  ${tmpdir}/testimg.gif
 
 # Test 2. Break up input image into three monochrome planes,
 # maxval 255.  Transform each plane to gif and back to pgm.
@@ -34,8 +43,14 @@ pamtogif ${tmpdir}/testimg.blu | \
 
 rm ${tmpdir}/testimg.{ppm,red,grn,blu} ${tmpdir}/out.{red,grn}
 
-# Test 3. Should produce 2425386270 41
+# Test 3. Should produce 2425386270 41 five times.
+
 pamtogif testgrid.pbm | giftopnm | cksum
+pamtogif -nolzw testgrid.pbm | giftopnm | cksum
+pamtogif -transparent=black testgrid.pbm | giftopnm | cksum
+pamtogif -alpha=testgrid.pbm testgrid.pbm | giftopnm | cksum
+pamtogif -transparent=white testgrid.pbm | giftopnm -alpha=- | \
+  pnminvert | cksum
 
 # Test 4.
 # In this gif file the code length changes after the last image data.

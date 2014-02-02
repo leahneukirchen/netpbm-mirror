@@ -1,11 +1,15 @@
 #! /bin/bash
-# This script tests: pamslice
-# Also requires: pnmtopnm pamtopnm
+# This script tests: pamslice pamdeinterlace
+# Also requires: pamcut pnmtopnm pamflip
 
   alias pamslice="${PBM_TESTPREFIX}pamslice"
+  alias pamdeinterlace="${PBM_TESTPREFIX}pamdeinterlace"
+  alias pamcut="${PBM_BINPREFIX}pamcut"
   alias pnmtopnm="${PBM_BINPREFIX}pnmtopnm"
+  alias pamflip="${PBM_BINPREFIX}pamflip"
   shopt -s expand_aliases
 
+# Test 1.
 # Slice rows, one by one, out of testgrid.pbm.
 # Add header and reconstruct pbm image.
 # Note that in pamslice output 0 is white and 1 is black: opposite of PBM
@@ -13,21 +17,56 @@
 
 (echo "P1"
  echo "14 16"
- seq 0 15 | while read i; 
+ seq 0 15 | while read i;
      do
      pamslice -row=$i testgrid.pbm  | \
-      awk '{print $2}' | sed 'y/01/10/'; 
+      awk '{print $2}' | sed 'y/01/10/';
      done ) |  pnmtopnm | cksum
 
-# Slice rows, one by one, out of testimg.ppm.
+# Test 2.
+# Slice rows, one by one, out of ppm test image
+# We take a part out of testimg.ppm with pamcut for processing the
+# whole image takes much time.
 # Add header and reconstruct ppm image.
-# Should print 1926073387 101484
+# Should print 914327477 4864
+
+pamcut 50 50 49 33 testimg.ppm > ${tmpdir}/test4933.ppm
 
 (echo "P3"
- echo "227 149"
+ echo "49 33"
  echo "255"
- seq 0 148 | while read i; 
+ seq 0 32 | while read i;
      do
-     pamslice -row=$i testimg.ppm  | awk '{print $2, $3, $4}'; 
-     done ) |  pnmtopnm | cksum
+     pamslice -row=$i ${tmpdir}/test4933.ppm | awk '{print $2, $3, $4}';
+     done ) | pnmtopnm | cksum
+
+# Same as above test 2, but take cols instead of rows.
+# Should print 914327477 4864
+
+(echo "P3"
+ echo "33 49"
+ echo "255"
+ seq 0 48 | while read i;
+     do
+     pamslice -col=$i ${tmpdir}/test4933.ppm | awk '{print $2, $3, $4}';
+     done ) | pamflip -xy | cksum
+
+# Test 4.
+# Divide input image into two with pamdeinterlace and recombine.
+
+pamdeinterlace -takeodd ${tmpdir}/test4933.ppm > ${tmpdir}/testodd.ppm
+pamdeinterlace -takeeven ${tmpdir}/test4933.ppm > ${tmpdir}/testevn.ppm
+
+(echo "P3"
+ echo "49 33"
+ echo "255"
+ seq 0 15 | while read i;
+     do
+     pamslice -row=$i ${tmpdir}/testevn.ppm | awk '{print $2, $3, $4}';
+     pamslice -row=$i ${tmpdir}/testodd.ppm | awk '{print $2, $3, $4}';
+     done
+     pamslice -row=16 ${tmpdir}/testevn.ppm | awk '{print $2, $3, $4}';
+  ) | pnmtopnm | tee /tmp/z | cksum
+
+rm ${tmpdir}/test4933.ppm ${tmpdir}/testodd.ppm ${tmpdir}/testevn.ppm
 

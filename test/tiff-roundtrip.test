@@ -6,11 +6,13 @@
   alias tifftopnm="${PBM_TESTPREFIX}tifftopnm"
   shopt -s expand_aliases
 
+# Failure message
+## Second test fails if Netpbm was built without the flate library
+
 pamtotiff testimg.ppm 1<>${tmpdir}/test1.tiff &&
   tifftopnm ${tmpdir}/test1.tiff | cksum
 
 # test flate compression 
-# Will fail if Netpbm was built without the flate library
 pamtotiff -flate testimg.ppm 1<>${tmpdir}/test2.tiff &&
   tifftopnm ${tmpdir}/test2.tiff | cksum
 
