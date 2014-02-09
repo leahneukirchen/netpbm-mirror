@@ -32,7 +32,7 @@ parseCommandLine(int argc, char ** argv,
    was passed to us as the argv array.
 -----------------------------------------------------------------------------*/
     optStruct3 opt;  /* set by OPTENT3 */
-    optEntry *option_def;
+    optEntry * option_def;
     unsigned int option_def_index;
 
     unsigned int takeeven, takeodd;
@@ -49,6 +49,8 @@ parseCommandLine(int argc, char ** argv,
 
     pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
+
+    free(option_def);
 
     if (takeeven && takeodd)
         pm_error("You cannot specify both -takeeven and -takeodd options.");
@@ -89,6 +91,10 @@ main(int argc, char *argv[]) {
     ifP = pm_openr(cmdline.inputFilespec);
     
     pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
+
+    if (inpam.height < 2 && cmdline.rowsToTake == ODD)
+        pm_error("You requested to take the odd rows, but there aren't "
+                 "any odd rows in the image - it has only one row - Row 0");
 
     tuplerow = pnm_allocpamrow(&inpam);
 

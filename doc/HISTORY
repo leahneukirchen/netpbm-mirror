@@ -6,12 +6,6 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.66.00
 
-              ppmrelief: fix out-of-bound values in output.
-              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
-
-              ppmrelief: fix crash when input image is too small.
-              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
-
               pnmmargin: fix for size 0 and superfluous "unexpected operator" 
               message with size != 0.  Introduced in 10.42.
 
@@ -21,6 +15,15 @@ not yet  BJH  Release 10.66.00
 
               pstopnm: fix wrong orientation sometimes when you specify
               both -xsize and -ysize.  Introduced in 10.65.
+
+              ppmrelief: fix out-of-bound values in output.  Always broken.
+              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
+              ppmrelief: fix crash when input image is too small.  Always
+              broken.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
+              pamdeinterlace: fix incorrect output with -takeodd and image has
+              only one row.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
 
               build/install: add tools for creating a Debian package.
 
