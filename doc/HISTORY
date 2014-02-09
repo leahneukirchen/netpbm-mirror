@@ -4,6 +4,19 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+14.02.09 BJH  Release 10.65.04
+
+              ppmrelief: fix out-of-bound values in output.  Always broken.
+              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
+              ppmrelief: fix crash when input image is too small.  Always
+              broken.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
+              pamdeinterlace: fix incorrect output with -takeodd and image has
+              only one row.  Always broken (pamdeinterlace was introduced in
+              Netpbm 9.21 (January 2001)).  Thanks Prophet of the Way
+              <afu@wta.att.ne.jp>.
+
 14.01.06 BJH  Release 10.65.03
 
               make package: Include template for pkgconfig file.
