@@ -16,7 +16,7 @@
 #include "pgm.h"
 #include "shhopt.h"
 
-enum ramptype {RT_LR, RT_TB, RT_RECT, RT_ELLIP};
+enum ramptype {RT_LR, RT_TB, RT_DIAG, RT_RECT, RT_ELLIP};
 
 
 struct cmdlineInfo {
@@ -39,7 +39,7 @@ parseCommandLine(int argc, char ** argv,
   program can use easily, struct cmdlineInfo.  Validate arguments along
   the way and exit program with message if invalid.
 
-  Note that some string information we return as *cmdlineP is in the storage 
+  Note that some string information we return as *cmdlineP is in the storage
   argv[] points to.
 -----------------------------------------------------------------------------*/
     optEntry *option_def = malloc(100*sizeof(optEntry));
@@ -47,13 +47,14 @@ parseCommandLine(int argc, char ** argv,
          */
     optStruct3 opt;
 
-    unsigned int lrSpec, tbSpec, rectangleSpec, ellipseSpec;
+    unsigned int lrSpec, tbSpec, diagonalSpec, rectangleSpec, ellipseSpec;
     unsigned int maxvalSpec;
     unsigned int option_def_index;
 
     option_def_index = 0;   /* incremented by OPTENTRY */
     OPTENT3(0,   "lr",        OPT_FLAG, NULL,              &lrSpec,        0);
     OPTENT3(0,   "tb",        OPT_FLAG, NULL,              &tbSpec,        0);
+    OPTENT3(0,   "diagonal",  OPT_FLAG, NULL,              &diagonalSpec,  0);
     OPTENT3(0,   "rectangle", OPT_FLAG, NULL,              &rectangleSpec, 0);
     OPTENT3(0,   "ellipse",   OPT_FLAG, NULL,              &ellipseSpec,   0);
     OPTENT3(0,   "maxval",    OPT_UINT, &cmdlineP->maxval, &maxvalSpec,    0);
@@ -65,15 +66,20 @@ parseCommandLine(int argc, char ** argv,
     pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
-    if (lrSpec + tbSpec + rectangleSpec + ellipseSpec == 0)
-        pm_error("You must specify one of -lr, -tb, -rectangle, or -ellipse");
-    if (lrSpec + tbSpec + rectangleSpec + ellipseSpec > 1)
+    free (option_def);
+
+    if (lrSpec + tbSpec + diagonalSpec + rectangleSpec + ellipseSpec == 0)
+        pm_error("You must specify one of "
+                 "-lr, -tb, -diagonal, -rectangle, or -ellipse");
+    if (lrSpec + tbSpec + diagonalSpec + rectangleSpec + ellipseSpec > 1)
         pm_error("You may specify at most one of "
-                 "-lr, -tb, -rectangle, or -ellipse");
+                 "-lr, -tb, -diagonal, -rectangle, or -ellipse");
     if (lrSpec)
         cmdlineP->ramptype = RT_LR;
     else if (tbSpec)
         cmdlineP->ramptype = RT_TB;
+    else if (diagonalSpec)
+        cmdlineP->ramptype = RT_DIAG;
     else if (rectangleSpec)
         cmdlineP->ramptype = RT_RECT;
     else if (ellipseSpec)
@@ -87,10 +93,10 @@ parseCommandLine(int argc, char ** argv,
         if (cmdlineP->maxval > PGM_OVERALLMAXVAL)
             pm_error("The value you specified for -maxval (%u) is too big.  "
                      "Max allowed is %u", cmdlineP->maxval, PGM_OVERALLMAXVAL);
-        
+
         if (cmdlineP->maxval < 1)
             pm_error("You cannot specify 0 for -maxval");
-    }    
+    }
 
     if (argc-1 < 2)
         pm_error("Need two arguments: width and height.");
@@ -105,7 +111,7 @@ parseCommandLine(int argc, char ** argv,
 
 
 
-int 
+int
 main(int argc, char *argv[]) {
 
     struct cmdlineInfo cmdline;
@@ -119,31 +125,36 @@ main(int argc, char *argv[]) {
 
     colso2 = MAX(1, cmdline.cols / 2);
     rowso2 = MAX(1, cmdline.rows / 2);
-    
+
     pgm_writepgminit(stdout, cmdline.cols, cmdline.rows, cmdline.maxval, 0);
     grayrow = pgm_allocrow(cmdline.cols);
-    
+
     for (row = 0; row < cmdline.rows; ++row) {
         unsigned int col;
         for (col = 0; col < cmdline.cols; ++col) {
             switch (cmdline.ramptype) {
             case RT_LR:
-                grayrow[col] = 
-                    col * cmdline.maxval / MAX(cmdline.cols-1, 1);
+                /* Fill row buffer once.  All rows are identical. */
+                if (row == 0)
+                    grayrow[col] =
+                        (float) col * cmdline.maxval / MAX(cmdline.cols-1, 1);
                 break;
             case RT_TB:
-                grayrow[col] = 
-                    row * cmdline.maxval / MAX(cmdline.rows-1, 1);
+                grayrow[col] =
+                    (float) row * cmdline.maxval / MAX(cmdline.rows-1, 1);
                 break;
-
+            case RT_DIAG:
+                grayrow[col] =
+                    ((float) col + row) * cmdline.maxval /
+                        MAX((float) cmdline.cols + cmdline.rows-2, 1);
+                break;
             case RT_RECT: {
                 float const r = fabs((int)(rowso2 - row)) / rowso2;
                 float const c = fabs((int)(colso2 - col)) / colso2;
-                grayrow[col] = 
+                grayrow[col] =
                     cmdline.maxval - (r + c) / 2.0 * cmdline.maxval;
-            }
-            break;
-            
+            } break;
+
             case RT_ELLIP: {
                 float const r = fabs((int)(rowso2 - row)) / rowso2;
                 float const c = fabs((int)(colso2 - col)) / colso2;
@@ -153,12 +164,11 @@ main(int argc, char *argv[]) {
                 if ( v < 0.0 ) v = 0.0;
                 else if ( v > 1.0 ) v = 1.0;
                 grayrow[col] = cmdline.maxval - v * cmdline.maxval;
+            } break;
             }
-            break;
-            }
-	    }
+        }
         pgm_writepgmrow(stdout, grayrow, cmdline.cols, cmdline.maxval, 0);
-	}
+    }
 
     pgm_freerow(grayrow);
     pm_close(stdout);
