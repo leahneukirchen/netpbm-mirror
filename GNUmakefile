@@ -418,6 +418,8 @@ install.sharedlibstub:
 	$(MAKE) -C lib -f $(SRCDIR)/lib/Makefile \
 	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) install.sharedlibstub 
 
+# Make the 'deb' target after making 'package'.  It generates a .deb
+# file in the current directory.
 .PHONY: deb
 deb:
 	buildtools/debian/mkdeb --buildtools=buildtools --pkgdir=$(PKGDIR)
