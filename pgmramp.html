@@ -2,7 +2,7 @@
 <HTML><HEAD><title>Pgmramp User Manual</title>
 </HEAD><BODY>
 <H1>pgmramp</H1>
-Updated: 04 June 2002
+Updated: 15 February 2014
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -13,7 +13,7 @@ pgmramp - generate a grayscale ramp
 <H2 id="synopsis">SYNOPSIS</H2>
 
 <B>pgmramp</B>
-{<B>-lr</B>|<B>-tb</B>|<B>-rectangle</B>|<B>-ellipse</B>}
+{<B>-lr</B>|<B>-tb</B>|<B>-rectangle</B>|<B>-ellipse</B>|<b>-diagonal</b>}
 [<b>-maxval=</b><i>maxval</i>]
 <I>width</i> <i>height</I>
 
@@ -35,6 +35,18 @@ gamma-corrected sample values in the PGM rise linearly with distance
 from the corner of the image.  If you want a ramp that is linear in
 light intensity, use <b>pnmgamma</b> with <b>pgmramp</b>.
 
+<p>Options let you choose the shape of the ramp (left to right, inside
+out, etc.).  You can use <b>pamflip</b> to get more shapes.  For
+example, the <b>-lr</b> option gives you a left to right ramp and
+
+<pre>
+<kbd>
+    $ pgmramp -lr 100 100 | pamflip -lr
+</kbd>
+</pre>
+
+gives you a right to left ramp.
+
 <P>To generate a simple ramp of all the values from 0 to maxval, and not
 necessarily a graphic image, use <b><a href="pamseq.html">pamseq</a></b>.
 
@@ -48,11 +60,11 @@ You must specify exactly one of the ramp type options.
 <DL COMPACT>
 <DT><B>-lr</B>
 <DD>
-A left to right ramp.
+A left to right ramp.  Black on the left; white on the right.
 
 <DT><B>-tb</B>
 <DD>
-A top to bottom ramp.
+A top to bottom ramp.  Black on top; white on the bottom.
 
 <DT><B>-rectangle</B>
 <DD>
@@ -64,18 +76,26 @@ in the center.
 An outside-in elliptical ramp.  It is black around the edge and white
 in the center.
 
+<DT><B>-diagonal</B>
+<DD>
+A ramp from top left corner diagonally down to bottom right.  Black at
+the top left; white at the bottom right.
+<p>
+This option was new in Netpbm 10.66 (March 2014).
+
 <DT><b>-maxval=</b><i>maxval</i>
 <DD>
      The maxval for the generated image.  Default is 255.
 <p>
-     This option did not exist before June 2002.  Before, the maxval was
-     always 255.
+     This option was new in Netpbm 10.1 (June 2002).  Before that, the maxval
+     is always 255.
      
 </DL>
 
 
 <H2 id="seealso">SEE ALSO</H2>
 
+<A HREF="pamflip.html"><b>pamflip</b></A>,
 <A HREF="pamarith.html"><b>pamarith</b></A>,
 <A HREF="pnmgamma.html"><b>pnmgamma</b></A>,
 <A HREF="pamseq.html"><b>pamseq</b></A>,

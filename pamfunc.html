@@ -259,7 +259,7 @@ of the output is unchanged from the input and <b>pamfunc</b> modifies the
 sample values as necessary to perform the operation.
 
 <p>But there is one case where <b>pamfunc</b> can achieve the same result just
-be changing the maxval and leaving the sample values unchanged: dividing by a
+by changing the maxval and leaving the sample values unchanged: dividing by a
 number 1 or greater, or multiplying by a number 1 or less.  For example, to
 halve all of the values, <b>pamfunc</b> can just double the maxval.
 
@@ -274,7 +274,7 @@ an image with a maxval of 100 and sample value of 10.  You divide by 21 and
 then multiply by 21 again.  If <b>pamfunc</b> does this by changing the sample
 values while retaining maxval 100, the division will result in a sample value
 of 0 and the multiplication will also result in zero.  But if <b>pamfunc</b>
-instead keeps the sample value 10 and changing the maxval, the division will
+instead keeps the sample value 10 and changes the maxval, the division will
 result in a maxval of 2100 and the multiplication will change it back to 100,
 and the round trip is idempotent.
 
