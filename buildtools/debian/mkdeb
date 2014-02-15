@@ -357,7 +357,7 @@ sub buildDpkgBuildTree($$$$$) {
 #  subdirectory named DEBIAN.
 #-----------------------------------------------------------------------------
     print("Creating file tree for input to dpkg-deb --build as " .
-          "'$dpkgDirName'");
+          "'$dpkgDirName'\n");
 
     createDirOrDie($dpkgDirName);
 
