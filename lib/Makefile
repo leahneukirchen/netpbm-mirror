@@ -190,7 +190,7 @@ endif
 # To avoid major hassles with having ppmdcfont available here, we just
 # ship a pre-made standardppmfont.c, so this rule will not normally be
 # used.
-standardppmdfont.c:standard.ppmdfont
+standardppmdfont.c: standard.ppmdfont
 	ppmdcfont <$< >$@
 
 # Note that we create a new compile.h only for the first make after a
