@@ -61,6 +61,7 @@ pnmremap2.test
 pnmtile.test
 ppmbrighten.test
 ppmdither.test
+ppmrelief.test
 pamedge.test
 ppmdim.test
 pnmshear.test
