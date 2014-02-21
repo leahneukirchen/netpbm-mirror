@@ -474,9 +474,13 @@ foveon_interpolate(float coeff[3][4]) {
 
     black = calloc (height, sizeof *black);
     for (row=0; row < height; row++) {
-        for (i=0; i < 6; i++)
-            ddft[0][0][i] = ddft[1][0][i] +
-                row / (height-1.0) * (ddft[2][0][i] - ddft[1][0][i]);
+        unsigned int i;
+        for (i=0; i < 3; ++i) {
+            unsigned int j;
+            for (j = 0; j < 2; ++j)
+                ddft[0][i][j] = ddft[1][i][j] +
+                    row / (height-1.0) * (ddft[2][i][j] - ddft[1][i][j]);
+        }
         FORC3 black[row][c] =
             ( foveon_avg (image[row*width]+c, dscr[0], cfilt) +
               foveon_avg (image[row*width]+c, dscr[1], cfilt) * 3
@@ -522,9 +526,13 @@ foveon_interpolate(float coeff[3][4]) {
         FORC3 black[row][c] += fsum[c]/2 + total[c]/(total[3]*100.0);
 
     for (row=0; row < height; row++) {
-        for (i=0; i < 6; i++)
-            ddft[0][0][i] = ddft[1][0][i] +
-                row / (height-1.0) * (ddft[2][0][i] - ddft[1][0][i]);
+        unsigned int i;
+        for (i = 0; i < 3; ++i) {
+            unsigned int j;
+            for (j = 0; j < 2; ++j)
+                ddft[0][i][j] = ddft[1][i][j] +
+                    row / (height-1.0) * (ddft[2][i][j] - ddft[1][i][j]);
+        }
         pix = (short*)image[row*width];
         memcpy (prev, pix, sizeof prev);
         frow = row / (height-1.0) * (dim[2]-1);
