@@ -13,7 +13,7 @@ else
 LIBNETPBM = $(NETPBMSHLIBPREFIX)netpbm$(DLLVER).$(NETPBMLIBSUFFIX)
 endif
 
-ifeq ($(STATICLIB_TOO),y)
+ifeq ($(STATICLIB_TOO),Y)
 EXTRA_STATICLIB = libnetpbm.$(STATICLIBSUFFIX)
 else
 EXTRA_STATICLIB =
@@ -130,7 +130,7 @@ libnetpbm.$(NETPBMLIBSUFFIX).$(MAJ).$(MIN): $(LIBOBJECTS) $(LIBOBJECTS_X)
 endif
 
 ifeq ($(NETPBMLIBTYPE),dll)
-ifeq ($(STATICLIB_TOO),y)
+ifeq ($(STATICLIB_TOO),Y)
 $(NETPBMSHLIBPREFIX)netpbm$(DLLVER).dll: $(LIBOBJECTS) $(LIBOBJECTS_X) libnetpbm.$(STATICLIBSUFFIX)
 else
 $(NETPBMSHLIBPREFIX)netpbm$(DLLVER).dll: $(LIBOBJECTS) $(LIBOBJECTS_X)
@@ -170,16 +170,16 @@ endif
 # STATICLIB_SUFFIX may just be arbitrary.
 #-----------------------------------------------------------------------------
 ifeq ($(NETPBMLIBTYPE),unixstatic)
-  BUILD_STATICLIB = y
+  BUILD_STATICLIB = Y
 else
-  ifeq ($(STATICLIB_TOO),y)
-    BUILD_STATICLIB = y
+  ifeq ($(STATICLIB_TOO),Y)
+    BUILD_STATICLIB = Y
   else
     BUILD_STATICLIB = n
   endif
 endif
 
-ifeq ($(BUILD_STATICLIB),y)
+ifeq ($(BUILD_STATICLIB),Y)
 libnetpbm.$(STATICLIBSUFFIX): $(LIBOBJECTS) $(LIBOBJECTS_X)
 	-rm -f $@
 	$(AR) rc $@ $(LIBOBJECTS) $(LIBOBJECTS_X)

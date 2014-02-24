@@ -2289,7 +2289,7 @@ if ($platform eq "GNU") {
     # only Ppmtompeg and it isn't clear that using long instead of int is
     # ever right anyway.
 
-    push(@config_mk, "OMIT_NETWORK = y\n");
+    push(@config_mk, "OMIT_NETWORK = Y\n");
     push(@config_mk, "LINKER_CAN_DO_EXPLICIT_LIBRARY=Y\n");
 } elsif ($platform eq "IRIX") {
 #    push(@config_mk, "INSTALL = install\n");
@@ -2303,7 +2303,7 @@ if ($platform eq "GNU") {
         makeCompilerGcc(\@config_mk);
     }
     push(@config_mk, "EXE = .exe\n");
-    push(@config_mk, "OMIT_NETWORK = y\n");
+    push(@config_mk, "OMIT_NETWORK = Y\n");
 #    # Though it may not have the link as "ginstall", "install" in a Windows
 #    # Unix environment is usually GNU install.
 #    my $ginstall_result = `ginstall --version 2>/dev/null`;
