@@ -43,6 +43,9 @@ not yet  BJH  Release 10.66.00
               test: Add -portrait to invocations of pstopnm in order to get
               proper round trips.
 
+              Windows build: fix Ppmtompeg build failure in non-Cygwin build
+              due to missing sys/utsname.h.
+
 13.12.26 BJH  Release 10.65.00
 
               pamfunc: add -changemaxval.
