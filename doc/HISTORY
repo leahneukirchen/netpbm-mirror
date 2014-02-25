@@ -4,6 +4,14 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+14.02.24 BJH  Release 10.65.05
+
+              pgmtexture: fix buffer overflow.  Always broken.  (Program
+              was added in primordial Netpbm in 1991).
+
+              Windows build: fix Ppmtompeg build failure in non-Cygwin build
+              due to missing sys/utsname.h.
+
 14.02.09 BJH  Release 10.65.04
 
               ppmrelief: fix out-of-bound values in output.  Always broken.
