@@ -28,6 +28,9 @@ not yet  BJH  Release 10.66.00
               ppmrelief: fix crash when input image is too small.  Always
               broken.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
 
+              pgmtexture: fix buffer overflow.  Always broken.  (Program
+              was added in primordial Netpbm in 1991).
+
               pamdeinterlace: fix incorrect output with -takeodd and image has
               only one row.  Always broken (pamdeinterlace was introduced in
               Netpbm 9.21 (January 2001)).  Thanks Prophet of the Way

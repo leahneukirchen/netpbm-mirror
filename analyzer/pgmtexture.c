@@ -928,7 +928,7 @@ main (int argc, const char ** argv) {
 
     FILE * ifP;
     gray ** grays;
-    unsigned int tone[PGM_MAXMAXVAL];
+    unsigned int tone[PGM_MAXMAXVAL+1];
     unsigned int r0, r45, r90;
     unsigned int d;
     unsigned int x, y;
