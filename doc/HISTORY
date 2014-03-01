@@ -16,6 +16,9 @@ not yet  BJH  Release 10.66.00
               can allocate a row buffer.  Thanks Prophet of the Way
               <afu@wta.att.ne.jp>.
 
+              pgmhist: fix buffer overrun with -median.  Always broken.
+              -median was new in Netpbm 10.61 (December 2012).
+
               pnmmargin: fix for size 0 and superfluous "unexpected operator" 
               message with size != 0.  Introduced in 10.42.
 

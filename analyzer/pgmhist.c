@@ -352,12 +352,12 @@ main(int argc, const char ** argv) {
     buildHistogram(ifP, &hist, &maxval);
 
     if (cmdline.median) {
-        gray median;
-        findQuantiles(2, hist, maxval, &median); 
+        gray median[2];
+        findQuantiles(2, hist, maxval, median); 
         if (cmdline.machine)
-            reportQuantilesMachineFriendly(&median, 1);
+            reportQuantilesMachineFriendly(median, 1);
         else
-            reportMedianHumanFriendly(median);
+            reportMedianHumanFriendly(median[0]);
     } else if (cmdline.quartile) {
         gray quartile[4];
         findQuantiles(4, hist, maxval, quartile);
