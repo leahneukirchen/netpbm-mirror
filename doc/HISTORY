@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.66.00
 
+              pgmhist: Add -forensic: Analyze invalid >maxval pixels.
+              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
               pgmramp: add -diagonal.  Thanks Prophet of the Way
               <afu@wta.att.ne.jp>.
 
