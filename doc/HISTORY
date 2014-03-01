@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+14.03.01 BJH  Release 10.65.06
+
+              pgmhist: fix buffer overrun with -median.  Always broken.
+              -median was new in Netpbm 10.61 (December 2012).
+
 14.02.24 BJH  Release 10.65.05
 
               pgmtexture: fix buffer overflow.  Always broken.  (Program
