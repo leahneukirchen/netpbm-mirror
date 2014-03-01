@@ -100,10 +100,13 @@ validateComputableSize(unsigned int const cols,
    you expect.  That failed expectation can be disastrous if you use
    it to allocate memory.
 
+   It is very normal to allocate space for a pixel row, so we make sure
+   the size of a pixel row, in bytes, can be represented by an 'int'.
+
    A common operation is adding 1 or 2 to the highest row or
    column number in the image, so we make sure that's possible.
 -----------------------------------------------------------------------------*/
-    if (cols > INT_MAX - 2)
+    if (cols > INT_MAX/(sizeof(pixval) * 3) || cols > INT_MAX - 2)
         pm_error("image width (%u) too large to be processed", cols);
     if (rows > INT_MAX - 2)
         pm_error("image height (%u) too large to be processed", rows);
@@ -224,6 +227,48 @@ interpRasterRowRaw(const unsigned char * const rowBuffer,
 
 
 static void
+validateRppmRow(pixel *       const pixelrow,
+                unsigned int  const cols,
+                pixval        const maxval,
+                const char ** const errorP) {
+/*----------------------------------------------------------------------------
+  Check for sample values above maxval in input.  
+
+  Note: a program that wants to deal with invalid sample values itself can
+  simply make sure it uses a sufficiently high maxval on the read function
+  call, so this validation never fails.
+-----------------------------------------------------------------------------*/
+    if (maxval == 255 || maxval == 65535) {
+        /* There's no way a sample can be invalid, so we don't need to look at
+           the samples individually.
+        */
+        *errorP = NULL;
+    } else {
+        unsigned int col;
+
+        for (col = 0; col < cols; ++col) {
+            pixval const r = PPM_GETR(pixelrow[col]);
+            pixval const g = PPM_GETG(pixelrow[col]);
+            pixval const b = PPM_GETB(pixelrow[col]);
+
+            if (r > maxval)
+                pm_error("Red sample value %u is greater than maxval (%u)",
+                         r, maxval);
+            if (g > maxval)
+                pm_error("Green sample value %u is greater than maxval (%u)",
+                         g, maxval);
+            if (b > maxval)
+                pm_error("Blue sample value %u is greater than maxval (%u)",
+                         b, maxval);
+        }
+    }
+}
+
+
+
+
+
+static void
 readRppmRow(FILE *       const fileP, 
             pixel *      const pixelrow, 
             unsigned int const cols, 
@@ -259,7 +304,8 @@ readRppmRow(FILE *       const fileP,
                             "instead of %u", (unsigned)bytesRead, bytesPerRow);
             else {
                 interpRasterRowRaw(rowBuffer, pixelrow, cols, bytesPerSample);
-                error = NULL;
+
+                validateRppmRow(pixelrow, cols, maxval, &error);
             }
         }
         free(rowBuffer);
@@ -319,10 +365,10 @@ readPbmRow(FILE *       const fileP,
     jmp_buf * origJmpbufP;
     bit * bitrow;
 
-    bitrow = pbm_allocrow(cols);
+    bitrow = pbm_allocrow_packed(cols);
 
     if (setjmp(jmpbuf) != 0) {
-        pbm_freerow(bitrow);
+        pbm_freerow_packed(bitrow);
         pm_setjmpbuf(origJmpbufP);
         pm_longjmp();
     } else {
@@ -330,10 +376,12 @@ readPbmRow(FILE *       const fileP,
 
         pm_setjmpbufsave(&jmpbuf, &origJmpbufP);
 
-        pbm_readpbmrow(fileP, bitrow, cols, format);
+        pbm_readpbmrow_packed(fileP, bitrow, cols, format);
 
         for (col = 0; col < cols; ++col) {
-            pixval const g = (bitrow[col] == PBM_WHITE) ? maxval : 0;
+            pixval const g =
+                ((bitrow[col/8] >> (7 - col%8)) & 0x1) == PBM_WHITE ?
+                maxval : 0;
             PPM_ASSIGN(pixelrow[col], g, g, g);
         }
         pm_setjmpbuf(origJmpbufP);

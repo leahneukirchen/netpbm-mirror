@@ -9,6 +9,13 @@ not yet  BJH  Release 10.66.00
               pgmramp: add -diagonal.  Thanks Prophet of the Way
               <afu@wta.att.ne.jp>.
 
+              libnetpbm: Read functions validate that sample values do not
+              exceed maxval.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
+              libnetpbm: Validate image dimensions are small enough that you
+              can allocate a row buffer.  Thanks Prophet of the Way
+              <afu@wta.att.ne.jp>.
+
               pnmmargin: fix for size 0 and superfluous "unexpected operator" 
               message with size != 0.  Introduced in 10.42.
 
@@ -239,7 +246,7 @@ not yet  BJH  Release 10.66.00
               pamstereogram: fix bug: garbage in -verbose listing.  Broken
               since Netpbm 10.61
 
-              MinGW build: various fixes.
+              Windows MinGW build: various fixes.
 
 12.12.30 BJH  Release 10.61.00
 
