@@ -252,19 +252,23 @@ validateRppmRow(pixel *       const pixelrow,
             pixval const b = PPM_GETB(pixelrow[col]);
 
             if (r > maxval)
-                pm_error("Red sample value %u is greater than maxval (%u)",
-                         r, maxval);
+                pm_asprintf(
+                    errorP,
+                    "Red sample value %u is greater than maxval (%u)",
+                    r, maxval);
             if (g > maxval)
-                pm_error("Green sample value %u is greater than maxval (%u)",
-                         g, maxval);
+                pm_asprintf(
+                    errorP,
+                    "Green sample value %u is greater than maxval (%u)",
+                    g, maxval);
             if (b > maxval)
-                pm_error("Blue sample value %u is greater than maxval (%u)",
-                         b, maxval);
+                pm_asprintf(
+                    errorP,
+                    "Blue sample value %u is greater than maxval (%u)",
+                    b, maxval);
         }
     }
 }
-
-
 
 
 
