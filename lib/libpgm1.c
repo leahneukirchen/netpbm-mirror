@@ -195,7 +195,8 @@ validateRpgmRow(gray *         const grayrow,
         unsigned int col;
         for (col = 0; col < cols; ++col) {
             if (grayrow[col] > maxval) {
-                pm_asprintf(errorP, "value out of bounds (%u > %u)",
+                pm_asprintf(errorP,
+                            "gray value %u is greater than maxval (%u)",
                             grayrow[col], maxval);
                 return;
             }
