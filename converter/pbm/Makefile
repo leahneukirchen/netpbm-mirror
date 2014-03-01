@@ -79,7 +79,7 @@ install.bin.local: $(PKGDIR)/bin
 # Remember that $(SYMLINK) might just be a copy command.
 # In December 2010 (Actually January 2011), pbmtosunicon replaced pbmtoicon
 	cd $(PKGDIR)/bin ; \
-	$(SYMLINK) pbmtosunicon pbmtoicon
+	$(SYMLINK) pbmtosunicon$(EXE) pbmtoicon$(EXE)
 
 thisdirclean: localclean
 .PHONY: localclean

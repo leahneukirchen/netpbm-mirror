@@ -61,15 +61,15 @@ install.bin.local: $(PKGDIR)/bin
 # Remember that $(SYMLINK) might just be a copy command.
 # In July 2002, pamarith replaced pnmarith
 	cd $(PKGDIR)/bin ; \
-	  rm -f pnmarith ; \
-	  $(SYMLINK) pamarith$(EXE) pnmarith
+	  rm -f pnmarith$(EXE) ; \
+	  $(SYMLINK) pamarith$(EXE) pnmarith$(EXE)
 # In December 2005, pamsplit replaced pnmsplit
 	cd $(PKGDIR)/bin ; \
-	  rm -f pnmsplit ; \
-	  $(SYMLINK) pamsplit$(EXE) pnmsplit
+	  rm -f pnmsplit$(EXE) ; \
+	  $(SYMLINK) pamsplit$(EXE) pnmsplit$(EXE)
 # In February 2006, pamdepth replaced pnmdepth
 	cd $(PKGDIR)/bin ; \
-	  rm -f pnmdepth ; \
-	  $(SYMLINK) pamdepth$(EXE) pnmdepth
+	  rm -f pnmdepth$(EXE) ; \
+	  $(SYMLINK) pamdepth$(EXE) pnmdepth$(EXE)
 
 FORCE:

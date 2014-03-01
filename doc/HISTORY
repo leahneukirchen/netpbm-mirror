@@ -62,6 +62,9 @@ not yet  BJH  Release 10.66.00
               Windows build: fix Ppmtompeg build failure in non-Cygwin build
               due to missing sys/utsname.h.
 
+              Windows build: fix missing .exe on copies of programs under
+              their old names.
+
 13.12.26 BJH  Release 10.65.00
 
               pamfunc: add -changemaxval.

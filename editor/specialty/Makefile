@@ -53,5 +53,5 @@ install.bin.local: $(PKGDIR)/bin
 # Remember that $(SYMLINK) might just be a copy command.
 # pamoil replaced pgmoil in June 2001.
 	cd $(PKGDIR)/bin ; \
-	rm -f pgmoil ; \
-	$(SYMLINK) pamoil$(EXE) pgmoil
+	rm -f pgmoil$(EXE) ; \
+	$(SYMLINK) pamoil$(EXE) pgmoil$(EXE)

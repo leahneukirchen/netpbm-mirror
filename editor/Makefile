@@ -63,34 +63,34 @@ install.bin.local: $(PKGDIR)/bin
 # Remember that $(SYMLINK) might just be a copy command.
 # backward compatibility: program used to be pnminterp
 	cd $(PKGDIR)/bin ; \
-	rm -f pnminterp; \
-	$(SYMLINK) pamstretch$(EXE) pnminterp
+	rm -f pnminterp$(EXE); \
+	$(SYMLINK) pamstretch$(EXE) pnminterp$(EXE)
 # In March 2002, pnmnorm replaced ppmnorm and pgmnorm
 	cd $(PKGDIR)/bin ; \
-	rm -f ppmnorm ; \
-	$(SYMLINK) pnmnorm$(EXE) ppmnorm 
+	rm -f ppmnorm$(EXE) ; \
+	$(SYMLINK) pnmnorm$(EXE) ppmnorm$(EXE)
 	cd $(PKGDIR)/bin ; \
-	rm -f pgmnorm ; \
-	$(SYMLINK) pnmnorm$(EXE) pgmnorm
+	rm -f pgmnorm$(EXE) ; \
+	$(SYMLINK) pnmnorm$(EXE) pgmnorm$(EXE)
 # In March 2003, pamedge replaced pgmedge
 	cd $(PKGDIR)/bin ; \
-	rm -f pgmedge ; \
-	$(SYMLINK) pamedge$(EXE) pgmedge
+	rm -f pgmedge$(EXE) ; \
+	$(SYMLINK) pamedge$(EXE) pgmedge$(EXE)
 # In October 2004, pamenlarge replaced pnmenlarge
 	cd $(PKGDIR)/bin ; \
-	rm -f pnmenlarge ; \
-	$(SYMLINK) pamenlarge$(EXE) pnmenlarge
+	rm -f pnmenlarge$(EXE) ; \
+	$(SYMLINK) pamenlarge$(EXE) pnmenlarge$(EXE)
 # In March 2009, pamcut replaced pnmcut (but pamcut is much older -- pnmcut
 # was obsoleted by pamcut long before this).
 	cd $(PKGDIR)/bin ; \
-	rm -f pnmcut ; \
-	$(SYMLINK) pamcut$(EXE) pnmcut
+	rm -f pnmcut$(EXE) ; \
+	$(SYMLINK) pamcut$(EXE) pnmcut$(EXE)
 # In March 2009, pamscale replaced pnmscale (but pamscale is much older --
 # pnmscale was obsoleted by pamscale long before this).
 	cd $(PKGDIR)/bin ; \
-	rm -f pnmscale ; \
-	$(SYMLINK) pamscale$(EXE) pnmscale
+	rm -f pnmscale$(EXE) ; \
+	$(SYMLINK) pamscale$(EXE) pnmscale$(EXE)
 # In March 2012, pnmquantall replaced ppmquantall
 	cd $(PKGDIR)/bin ; \
-	rm -f ppmquantall ; \
+	rm -f ppmquantall$(EXE) ; \
 	$(SYMLINK) pnmquantall ppmquantall
