@@ -16,6 +16,8 @@ pgmhist - print a histogram of the values in a PGM image
 
 [<b>-median</b>, <b>-quartile</b>, <b>-decile</b>]
 
+[<b>-forensic</b>]
+
 [<b>-machine</b>]
 
 [<I>pgmfile</I>]
@@ -53,27 +55,47 @@ You must specify exactly one of the ramp type options.
 <p>You may specify at most one of <b>-median</b>, <b>-quartile</b>, and
 <b>-decile</b>.
 
-<P>This option was new in Neptbm 10.61 (December 2012).
+<P>This option was new in Netpbm 10.61 (December 2012).
 
 <DT><B>-quartile</B>
 <DD>
 
-<P>This option causes <b>pgmhist</b> to print the four quartile gray value.
+<P>This option causes <b>pgmhist</b> to print the four quartile gray values.
 
 <p>You may specify at most one of <b>-median</b>, <b>-quartile</b>, and
 <b>-decile</b>.
 
-<P>This option was new in Neptbm 10.61 (December 2012).
+<P>This option was new in Netpbm 10.61 (December 2012).
 
 <DT><B>-decile</B>
 <DD>
      
-<P>This option causes <b>pgmhist</b> to print the ten decile gray value.
+<P>This option causes <b>pgmhist</b> to print the ten decile gray values.
 
 <p>You may specify at most one of <b>-median</b>, <b>-quartile</b>, and
 <b>-decile</b>.
 
-<P>This option was new in Neptbm 10.61 (December 2012).
+<P>This option was new in Netpbm 10.61 (December 2012).
+
+<dt><b>-forensic</b><dd>
+
+<p>With this option, <b>pgmhist</b> works on images that contain invalid gray
+values.  Normally, like most Netpbm programs, <b>pgmhist</b> fails if it
+encounters a gray value greater than the maxval that the image declares.  The
+presence of such a value means the image is invalid, so the pixels have no
+meaning.  But with <b>-forensic</b>, <b>pgmhist</b> produces a histogram
+of the actual gray values without regard to maxval.  It issues messages
+summarizing the invalid pixels if there are any.
+
+<p>One use for this is to diagnose the problem that caused the invalid Netpbm
+image to exist.
+
+<p>There is a small exception to the ability of <b>pgmhist</b> to process
+invalid pixels even with <b>-forensic</b>: it can never process a gray value
+greater than 65535.  Note that in the rarely used Plain PGM format, it is
+possible for a number greater than that to appear where a gray value belongs.
+
+<p>This option was new in Netpbm 10.66 (March 2014).
 
 <DT><B>-machine</B>
 <DD>
@@ -91,12 +113,12 @@ the gray values.  The line consists of two tokens separated by a space.  The
 first is the gray value; the second is the number of pixels in the image that
 have that gray value.  Both are decimal numbers without leading zeroes.
 
-<P>This option was new in Neptbm 10.61 (December 2012).
+<P>This option was new in Netpbm 10.61 (December 2012).
 
 </DL>
 
 
-<H2 id="name">SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <A HREF="pnmnorm.html">pnmnorm</A>,
 <A HREF="ppmhist.html">ppmhist</A>
