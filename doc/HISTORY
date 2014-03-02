@@ -4,7 +4,7 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-not yet  BJH  Release 10.65.07
+14.03.02 BJH  Release 10.65.07
 
               pgmhist: fix incorrect report of quantiles or crash due to array
               bounds violation in some builds.  Thanks Prophet of the Way
