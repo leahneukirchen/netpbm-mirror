@@ -177,18 +177,28 @@ findQuantiles(unsigned int const n,
     unsigned int cumCt;
         /* The number of pixels that have sample value 'sampleVal' or less. */
 
-    assert(n > 1);
+    assert(n > 1 && n <= 100);
 
     sampleVal = 0;    /* initial value */
     cumCt = hist[0];  /* initial value */
 
     for (quantSeq = 1; quantSeq <= n; ++quantSeq) {
-        double const quantCt = (double)quantSeq/n * totalCt;
-            /* This is how many pixels are (ignoring quantization) in the
-               quantile.  E.g. for the 3rd quartile, it is 3/4 of the pixels
-               in the image.
-            */
+        unsigned long int const q = totalCt/n; 
+        unsigned long int const r = totalCt%n;  
+        unsigned long int const quantCt = q*quantSeq + (r*quantSeq +n -1)/n;
+       /* This is how many pixels are (ignoring quantization) in the
+          quantile.  E.g. for the 3rd quartile, it is 3/4 of the pixels
+          in the image.
 
+          This is equivalent to (float) totalCt * quantSeq / n rounded
+          upwards.  We use the int version in spite of complexities
+          for preventing overflow for slight innacuracies in floating
+          point arithmetic causes problems when used as loop counter
+          and array index.
+
+          The maximum value for n is currently 10; in the future this
+          may be brought up to 100.
+       */
         assert(quantCt <= totalCt);
 
         /* at sampleVal == maxval, cumCt == totalCt, so because

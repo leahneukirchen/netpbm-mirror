@@ -4,6 +4,16 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+not yet  BJH  Release 10.65.07
+
+              pgmhist: fix incorrect report of quantiles or crash due to array
+              bounds violation in some builds.  Thanks Prophet of the Way
+              <afu@wta.att.ne.jp>.  Always broken.  Quantile reporting was
+              new in Netpbm 10.61 (December 2012).
+
+              Windows build: fix missing .exe on copies of programs under
+              their old names.
+
 14.03.01 BJH  Release 10.65.06
 
               pgmhist: fix buffer overrun with -median.  Always broken.
