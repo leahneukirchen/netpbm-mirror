@@ -19,6 +19,11 @@ not yet  BJH  Release 10.66.00
               can allocate a row buffer.  Thanks Prophet of the Way
               <afu@wta.att.ne.jp>.
 
+              pgmhist: fix incorrect report of quantiles or crash due to array
+              bounds violation in some builds.  Thanks Prophet of the Way
+              <afu@wta.att.ne.jp>.  Always broken.  Quantile reporting was
+              new in Netpbm 10.61 (December 2012).
+
               pgmhist: fix buffer overrun with -median.  Always broken.
               -median was new in Netpbm 10.61 (December 2012).
 

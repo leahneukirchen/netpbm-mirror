@@ -184,7 +184,7 @@ findQuantiles(unsigned int      const n,
    sample values, given that hist[] is the histogram of them (hist[N] is the
    number of pixels that have sample value N).
 
-   'mmaxval' is the highest index in hist[] (so its size is 'maxval' + 1,
+   'mmaxval' is the highest index in hist[] (so its size is 'mmaxval' + 1,
    and there are no pixels greater than 'mmaxval' in the image).
 
    We return the ith quantile as quantile[i].  For example, for quartiles,
@@ -192,6 +192,8 @@ findQuantiles(unsigned int      const n,
    are less than or equal to it.
 
    quantile[] must be allocated at least to size 'n'.
+
+   'n' must not be more than 100.
 -----------------------------------------------------------------------------*/
     unsigned int quantSeq;
         /* 0 is first quantile, 1 is second quantile, etc. */
@@ -203,18 +205,25 @@ findQuantiles(unsigned int      const n,
     unsigned int cumCt;
         /* The number of pixels that have sample value 'sampleVal' or less. */
 
-    assert(n > 1);
+    assert(n > 1 && n <= 100);
 
     sampleVal = 0;    /* initial value */
     cumCt = hist[0];  /* initial value */
 
     for (quantSeq = 1; quantSeq <= n; ++quantSeq) {
-        double const quantCt = (double)quantSeq/n * totalCt;
-            /* This is how many pixels are (ignoring quantization) in the
-               quantile.  E.g. for the 3rd quartile, it is 3/4 of the pixels
-               in the image.
-            */
+        unsigned long int const q = totalCt / n; 
+        unsigned long int const r = totalCt % n;  
+        unsigned long int const quantCt = q*quantSeq + (r*quantSeq + n - 1)/n;
+       /* This is how many pixels are (ignoring quantization) in the
+          quantile.  E.g. for the 3rd quartile, it is 3/4 of the pixels
+          in the image.
 
+          This is equivalent to (float) totalCt * quantSeq / n rounded
+          upwards.  We use the int version in spite of complexities
+          for preventing overflow for slight innacuracies in floating
+          point arithmetic causes problems when used as loop counter
+          and array index.
+       */
         assert(quantCt <= totalCt);
 
         /* at sampleVal == mmaxval, cumCt == totalCt, so because
