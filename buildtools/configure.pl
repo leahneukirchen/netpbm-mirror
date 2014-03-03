@@ -353,7 +353,7 @@ sub testCompile($$$) {
 sub testCompileLink($$$) {
     my ($flags, $cSourceCodeR, $successR) = @_;
 #-----------------------------------------------------------------------------
-#  Do a test compile of the program in @{$cSourceCodeR}.
+#  Do a test compile and link of the program in @{$cSourceCodeR}.
 #  
 #  Return $$successR == $TRUE iff the compile succeeds (exit code 0).
 #-----------------------------------------------------------------------------
@@ -1629,6 +1629,56 @@ sub testJpegHdr($) {
 
 
 
+sub warnJpegNotInDefaultPath($) {
+    my ($jpegLib) = @_;
+
+    print("You said your JPEG library is '$jpegLib', which says it is "
+          . "in the linker's default search path, but a test link we did "
+          . "failed as if it is not.  If it isn't, the build will fail\n");
+}
+
+
+
+sub testJpegLink($) {
+    my ($jpegLib) = @_;
+#-----------------------------------------------------------------------------
+#  See if we can link the JPEG library with the information user gave us.
+#  $jpegLib is the answer to the "what is your JPEG library" prompt, so
+#  it is either a library file name such as "libjpeg.so", in the linker's
+#  default search path, or it is an absolute path name such as
+#  "/usr/jpeg/lib/libjpeg.so".
+#
+#  We actually test only the default search path case, since users often
+#  incorrectly specify that by taking the default.
+#-----------------------------------------------------------------------------
+    if ($jpegLib =~ m{( lib | cyg ) (.+) \. ( so | a )$}x) {
+        my $libName = $2;
+
+        # It's like "libjpeg.so", so is a library in the default search path.
+        # $libName is "jpeg" in this example.
+
+        # First we test our test tool.  We can do this only with GCC.
+
+        my @emptySource;
+
+        testCompileLink('-nostartfiles', \@emptySource, \my $controlWorked);
+
+        if ($controlWorked) {
+            # The "control" case worked.  Now see if it still works when we add
+            # the JPEG library.
+
+            testCompileLink("-nostartfiles -l$libName", \@emptySource,
+                            \my $workedWithJpeg);
+
+            if (!$workedWithJpeg) {
+                warnJpegNotInDefaultPath($jpegLib);
+            }
+        }
+    }
+}
+
+
+
 sub testCompileZlibH($$) {
     my ($cflags, $successR) = @_;
 #-----------------------------------------------------------------------------
@@ -1895,6 +1945,8 @@ sub testConfiguration($$$$$$) {
 
     if (defined($jpeglib)) {
         testJpegHdr($jpeghdr_dir);
+
+        testJpegLink($jpeglib);
     }
     if (defined($pnglib) && defined($zlib)) {
         testPngHdr($pnghdr_dir, $zhdr_dir);

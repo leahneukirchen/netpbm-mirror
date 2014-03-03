@@ -54,6 +54,9 @@ not yet  BJH  Release 10.66.00
               Netpbm 9.21 (January 2001)).  Thanks Prophet of the Way
               <afu@wta.att.ne.jp>.
 
+              configure: warn if user says JPEG library is in the linker's
+              default search path, but it isn't.
+
               build/install: add tools for creating a Debian package.
 
               make package: Include template for pkgconfig file.
