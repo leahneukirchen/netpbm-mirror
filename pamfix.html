@@ -1,0 +1,130 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Pamfix User Manual</TITLE></HEAD>
+<BODY>
+<H1>pamfix</H1>
+Updated: 06 March 2014
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<H2>NAME</H2>
+
+pamfix - repair a Netpbm image with various corruptions
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>pamfix</B>
+
+[<b>-verbose</b>]
+
+[<I>netpbmfile</I>]
+
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>pamfix</b> reads a stream that is mostly a Netpbm image but may have
+certain types of corruptions and produces a valid Netpbm image that preserves
+much of the information in the original.  In particular, Netpbm salvages
+streams that are truncated and that contain illegally large sample values.
+
+<p><b>pamfix</b> looks at only on the first image in a multi-image stream.
+
+
+<h3 id="truncatedstream">Truncated stream</h3>
+
+<p>This is an stream that is missing the last part.  Netpbm corrects this
+by creating an output image that simply has fewer rows.
+
+<p>You select this kind of repair with a <b>-truncate</b> option.
+
+<p>The header of a Netpbm image implies how large the image must
+be (how many bytes the file must contain).  If the file is actually
+smaller than that, a Netpbm program that tries to read the image
+fails, with an error message telling you that it couldn't read the
+whole file.  The data in the file is arranged in row order, from
+top to bottom, and the most common reason for the file being smaller
+than its header says it should be is because the bottommost rows are
+simply missing.  So <b>pamfix</b> assumes that is the case
+and generates a new image with just the rows that are readable.
+(technically, that means the output's header indicates a smaller
+number of rows and omits any partial last row).
+
+<p>The most common way for a Netpbm file to be small is that something
+interrupted the program that generated it before it was finished writing
+the file.  For example, the program ran out of its own input or
+encountered a bug or ran out of space in which to write the output.
+
+<p>Another problem <b>pamfix</b> deals with is where the file isn't
+actually too small, but because of a system error, a byte in the middle of
+it cannot be read (think of a disk storage failure).  <b>pamfix</b>
+reads the input sequentially until it can't read any further, for any
+reason.  So it treats such an image as a truncated one, ignoring all
+data after the unreadable byte.
+
+<p>But be aware that an image file is sometimes too small because of a
+bug in the program that generated it, and in that case it is not
+simply a matter of the bottom of the image missing, so
+<b>pamfix</b> simply creates a valid Netpbm image containing a
+garbage picture.
+
+<p>If you want to test an image file to see if it is corrupted by being
+too small, use <b>pamfile --allimages</b> .  It fails with an error
+message if the file is too small.
+
+<p>If you want to cut the bottom off a valid Netpbm image, use
+<b>pamcut</b>.
+
+
+<h3 id="excessivesample">Excessive Sample Value</h3>
+
+<p>This is a stream that contains a purported sample value that is higher than
+the maxval of the image.
+
+<p>The header of a Netpbm image tells the maxval of the image, which is a
+value that gives meaning to all the sample values in the raster.  The
+sample values represent a fraction of the maxval, so a sample value that is
+greater than the maxval makes no sense.
+
+<p>A regular Netpbm program fails if you give it input that contains a value
+larger than the maxval where a sample value belongs.
+
+<p><b>pamfix</b> has three ways of salvaging such a stream:
+
+<ul>
+<li>Clip to the maxval.  Request this with <b>-clip</b>.
+<li>Raise the maxval, thus lowering the fraction represented by every sample
+in the image.  Request this with <b>-changemaxval</b>.
+<li>Truncate the image at the first invalid sample value.  Request this with
+<b>-truncate</b> and neither <b>-clip</b> nor <b>-changemaxval</b>.
+</ul>
+
+<p>You cannot specify both <b>-clip</b> and <b>-changemaxval</b>.
+
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<A HREF="pnm.html">pnm</A>,
+<A HREF="pam.html">pam</A>,
+<A HREF="pamcut.html">pamcut</A>,
+<A HREF="pamfile.html">pamfile</A>,
+
+<h2 id="history">HISTORY</h2>
+
+<p><b>pamfix</b> was new in Netpbm 10.66 (March 2014).  But it grew out of
+<b>pamfixtrunc</b>, which was new in Netpbm 10.38 (March 2007) and did only
+the truncated image repair (and for invalid sample values would simply pass
+them through to its output, generating an invalid Netpbm image).
+
+<HR>
+<H2 id="index">Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<li><a href="#truncatedstream">Truncated Stream</a>
+<li><a href="#excessivesample">Excessive Sample Value</a>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#history">HISTORY</A>
+</UL>
+</BODY>
+</HTML>
