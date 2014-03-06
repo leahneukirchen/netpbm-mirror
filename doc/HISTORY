@@ -6,6 +6,11 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.66.00
 
+              Add pamfix: Does what pamfixtrunc did, plus repairs excessive
+              sample values.
+
+              pamfixtrunc: implement as call to new pamfix.
+
               pgmhist: Add -forensic: Analyze invalid >maxval pixels.
               Thanks Prophet of the Way <afu@wta.att.ne.jp>.
 
