@@ -209,10 +209,10 @@ validateRpgmRow(gray *         const grayrow,
 
 static void
 readRpgmRow(FILE * const fileP,
-               gray * const grayrow, 
-               int    const cols,
-               gray   const maxval,
-               int    const format) {
+            gray * const grayrow, 
+            int    const cols,
+            gray   const maxval,
+            int    const format) {
 
     unsigned int const bytesPerSample = maxval < 256 ? 1 : 2;
     int          const bytesPerRow    = cols * bytesPerSample;
