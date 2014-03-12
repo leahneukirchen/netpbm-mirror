@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Ppmhist User Manual</TITLE></HEAD>
 <BODY>
 <H1>ppmhist</H1>
-Updated: 24 June 2005
+Updated: 11 March 2014
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -16,6 +16,7 @@ ppmhist - print a histogram of the colors in a PPM image
 [<B>-nomap</B>]
 [<B>-noheader</B>]
 [<B>-sort=</B>{<B>frequency</B>,<B>rgb</B>}]
+[<b>-forensic</b>
 [<I>ppmfile</I>]
 
 <H2 id="description">DESCRIPTION</H2>
@@ -126,6 +127,29 @@ system color dictionary, the program fails.
 <DT><B>-noheader</B>
 
 <DD>Do not print the column headings.
+
+<dt><b>-forensic</b><dd>
+
+<p>With this option, <b>ppmhist</b> works on images that contain invalid sample
+values.  Normally, like most Netpbm programs, <b>ppmhist</b> fails if it
+encounters a sample value greater than the maxval that the image declares.  The
+presence of such a value means the image is invalid, so the pixels have no
+meaning.  But with <b>-forensic</b>, <b>ppmhist</b> produces a histogram
+of the actual sample values without regard to maxval.  It issues messages
+summarizing the invalid pixels if there are any.
+
+<p>One use for this is to diagnose the problem that caused the invalid Netpbm
+image to exist.
+
+<p>There is a small exception to the ability of <b>ppmhist</b> to process
+invalid pixels even with <b>-forensic</b>: it can never process a sample value
+greater than 65535.  Note that in the rarely used Plain PPM format, it is
+possible for a number greater than that to appear where a sample value
+belongs.
+
+<p>This option was new in Netpbm 10.66 (March 2014).  But Netpbm older than
+10.66 does not properly reject invalid sample values, so the effect is very
+similar to <b>-forensic</b>.
 
 </DL>
 
