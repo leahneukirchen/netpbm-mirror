@@ -11,7 +11,7 @@ not yet  BJH  Release 10.66.00
 
               pamfixtrunc: implement as call to new pamfix.
 
-              pgmhist: Add -forensic: Analyze invalid >maxval pixels.
+              pgmhist, ppmhist: Add -forensic: Analyze invalid >maxval pixels.
               Thanks Prophet of the Way <afu@wta.att.ne.jp>.
 
               pgmramp: add -diagonal.  Thanks Prophet of the Way
