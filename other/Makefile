@@ -25,7 +25,7 @@ endif
 
 PORTBINARIES = pamarith pambayer pamchannel pamdepth \
 	pamendian pamexec pamfix pamlookup pampick pamsplit \
-	pamstack pamsummcol pnmcolormap \
+	pamstack pamsummcol pamvalidate pnmcolormap \
 	ppmdcfont ppmddumpfont ppmdmkfont 
 
 BINARIES = $(PORTBINARIES)

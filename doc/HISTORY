@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.66.00
 
+              Add pamvalidate.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
               Add pamfix: Does what pamfixtrunc did, plus repairs excessive
               sample values.
 
@@ -46,10 +48,12 @@ not yet  BJH  Release 10.66.00
               Prophet of the Way <afu@wta.att.ne.jp>.
 
               ppmrelief: fix out-of-bound values in output.  Always broken.
+              ppmrelief was new in primordial Netpbm in 1989.
               Thanks Prophet of the Way <afu@wta.att.ne.jp>.
 
               ppmrelief: fix crash when input image is too small.  Always
-              broken.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+              broken.  ppmrelief was new in primordial Netpbm in 1989.  Thanks
+              Prophet of the Way <afu@wta.att.ne.jp>.
 
               pgmtexture: fix buffer overflow.  Always broken.  (Program
               was added in primordial Netpbm in 1991).
