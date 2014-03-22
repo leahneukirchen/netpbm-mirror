@@ -1,0 +1,77 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Pamvalidate User Manual</TITLE></HEAD>
+<BODY>
+<H1>pamvalidate</H1>
+Updated: 22 March 2014
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<H2>NAME</H2>
+
+pamvalidate - validate Netpbm image format
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>pamvalidate</B>
+
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>pamvalidate</b> copies a Netpbm image from Standard Input to Standard
+Output, except that if there are certain violations of the image format in the
+input, <b>pamvalidate</b> fails <em>without producing any output</em>.
+
+<p>This is most useful in a pipeline, before a stage you don't want to start
+working on Netpbm input until it knows it can get all the way through it.  For
+example, assume you are converting PPM images to PNG and you don't want to
+produce a partial PNG file under any circumstance.  If you just
+use <b>pnmtopng</b>, and the PPM input is truncated halfway through the
+raster, <b>pnmtopng</b> fails, but also produces about half of a PNG file.
+To prevent that, pass your PPM input through <b>pamvalidate</b> on its way
+to <b>pnmtopng</b>.  Then, <b>pamvalidate</b> will fail, and consequently
+the pipeline will fail, before <b>pnmtopng</b> has seen any input and 
+therefore before <b>pnmtopng</b> has produced any output.
+
+<p>These are the kinds of format violations <b>pamvalidate</b> detects:
+
+<ul>
+<li>A purported sample value exceeds the declared maxval.
+<li>The stream ends prematurely.
+</ul>
+
+<p>This program works on multi-image streams, producing a corresponding output
+stream.
+
+<p>See <b>pamfix</b> for a way to salvage an invalid Netpbm image stream.
+
+
+<H2 id="options">OPTIONS</H2>
+
+<p>None.
+
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<B><A HREF="pam.html">pam</A></B>
+<B><A HREF="pnm.html">pnm</A></B>
+<B><A HREF="pamfix.html">pamfix</A></B>
+
+
+<h2 id="history">HISTORY</h2>
+
+<p><b>pamvalidate</b> was new in Netpbm 10.66 (March 2014).
+
+<HR>
+<H2 id="index">Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#history">HISTORY</A>
+</UL>
+</BODY>
+</HTML>
+

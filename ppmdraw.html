@@ -154,7 +154,7 @@ in which subsequent drawing commands draw.  Before the first
 
 <dd>This sets the &quot;current font&quot;, which determines the font
 in which subsequent text drawing commands draw.  Before the first
-<b>setfont</b>, the current color is a built in font called
+<b>setfont</b>, the current font is a built in font called
 &quot;standard.&quot;
 
 <p>The argument of this command is a file name.  It is the name of a
@@ -164,13 +164,13 @@ Netpbm PPMD font file.
 &quot;.ppmdfont&quot; and its first 8 bytes are the ASCII encoding of
 &quot;ppmdfont&quot;.
 
-<p>There is only one of these fonts as far as we know.  It is
-distributed with Netpbm as the file <b>standard.ppmdfont</b>, but you
-don't need to use that file because the same font is built into the
-Netpbm library and is the default.  If you want to make a new font,
-you can find the format of a ppmdfont file in the Netpbm interface
-header file <b>ppmdfont.h</b>, but you'll have to make your own tools
-to build it.
+<p>There is only one of these fonts as far as we know.  It is distributed with
+Netpbm as the file <b>standard.ppmdfont</b>, but you don't need to use that
+file because the same font is built into the Netpbm library and is the
+default.  If you want to make a new font, you can find the format of a
+ppmdfont file in the Netpbm interface header file <b>ppmdfont.h</b>, but
+you'll have to make your own tools to build it.  The program <b>ppmdmkfont</b>
+generates <b>standard.ppmdfont</b>, so you can use that as an example.
 
 <dt>line
 
