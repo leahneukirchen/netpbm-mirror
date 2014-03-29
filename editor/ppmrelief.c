@@ -11,6 +11,7 @@
 */
 
 #include <stdio.h>
+#include "pm_c_util.h"
 #include "ppm.h"
 
 int
@@ -38,6 +39,11 @@ main(int argc, char * argv[]) {
         pm_usage( usage );
     
     ppm_readppminit( ifp, &cols, &rows, &maxval, &format );
+
+    if (cols < 3 || rows < 3 )
+        pm_error("Input image too small: %u x %u.  Must be at least 3x3",
+                  cols, rows);
+
     mv2 = maxval / 2;
 
     /* Allocate space for 3 input rows, plus an output row. */
@@ -67,12 +73,12 @@ main(int argc, char * argv[]) {
         ppm_readppmrow( ifp, inputbuf[rowa], cols, maxval, format );
         
         for ( col = 0; col < cols - 2; ++col ) {
-            r = PPM_GETR( inputbuf[rowa][col] ) +
-                ( mv2 - PPM_GETR( inputbuf[rowb][col + 2] ) );
-            g = PPM_GETG( inputbuf[rowa][col] ) +
-                ( mv2 - PPM_GETG( inputbuf[rowb][col + 2] ) );
-            b = PPM_GETB( inputbuf[rowa][col] ) +
-                ( mv2 - PPM_GETB( inputbuf[rowb][col + 2] ) );
+            r = MAX(0, MIN(maxval, PPM_GETR( inputbuf[rowa][col] ) +
+                           ( mv2 - PPM_GETR( inputbuf[rowb][col + 2] ) )));
+            g = MAX(0, MIN(maxval, PPM_GETG( inputbuf[rowa][col] ) +
+                           ( mv2 - PPM_GETG( inputbuf[rowb][col + 2] ) )));
+            b = MAX(0, MIN(maxval, PPM_GETB( inputbuf[rowa][col] ) +
+                           ( mv2 - PPM_GETB( inputbuf[rowb][col + 2] ) )));
             PPM_ASSIGN( outputrow[col + 1], r, g, b );
         }
         ppm_writeppmrow( stdout, outputrow, cols, maxval, 0 );

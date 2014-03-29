@@ -4,6 +4,22 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+14.03.29 BJH  Release 10.35.92
+
+              ppmrelief: fix out-of-bound values in output.  Always broken.
+              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
+              ppmrelief: fix crash when input image is too small.  Always
+              broken.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
+              pgmtexture: fix buffer overflow.  Always broken.  (Program
+              was added in primordial Netpbm in 1991).
+
+              pamdeinterlace: fix incorrect output with -takeodd and image has
+              only one row.  Always broken (pamdeinterlace was introduced in
+              Netpbm 9.21 (January 2001)).  Thanks Prophet of the Way
+              <afu@wta.att.ne.jp>.
+
 13.12.24 BJH  Release 10.35.91
 
               pbmtoepsi: fix handling of all-white image.  Always broken.
