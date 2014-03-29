@@ -2157,6 +2157,9 @@ if ($platform eq "GNU") {
     push(@config_mk, 'DLLVER=$(NETPBM_MAJOR_RELEASE)', "\n");
     push(@config_mk, "LDSHLIB = " . 
          '-shared -Wl,--image-base=0x10000000 -Wl,--enable-auto-import', "\n");
+    if ($subplatform ne "cygwin") {
+        push(@config_mk, "MSVCRT = Y\n");
+    }
 } elsif ($platform eq "BEOS") {
     push(@config_mk, "LDSHLIB = -nostart\n");
 } elsif ($platform eq "OPENBSD") {

@@ -814,7 +814,7 @@ int
 main (int argc, char *argv[]) {
     FILE *ifp;
     register gray **grays;
-    int tone[PGM_MAXMAXVAL], R0, R45, R90, angle, d = 1, x, y;
+    int tone[PGM_MAXMAXVAL+1], R0, R45, R90, angle, d = 1, x, y;
     int argn, rows, cols, row, col;
     int itone, jtone, tones;
     float **P_matrix0, **P_matrix45, **P_matrix90, **P_matrix135;

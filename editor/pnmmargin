@@ -76,7 +76,7 @@ fi
 
 cat $@ > $tmp1
 
-if [ $size == 0 ] ; then
+if [ $size -eq 0 ] ; then
     # Zero margin; just copy input to output
     pamtopnm $plainopt $tmp1;
 else

@@ -222,26 +222,26 @@ install.bin.local: $(PKGDIR)/bin
 	$(SYMLINK) pnmtoplainpnm pnmnoraw
 # backward compatibility: program used to be gemtopbm
 	cd $(PKGDIR)/bin ; \
-	$(SYMLINK) gemtopnm$(EXE) gemtopbm
+	$(SYMLINK) gemtopnm$(EXE) gemtopbm$(EXE)
 # In October 2001, pnmtojpeg replaced ppmtojpeg
 ifneq ($(JPEGLIB),NONE)
 	cd $(PKGDIR)/bin ; \
-	$(SYMLINK) pnmtojpeg$(EXE) ppmtojpeg
+	$(SYMLINK) pnmtojpeg$(EXE) ppmtojpeg$(EXE)
 endif
 # In March 2002, bmptopnm replaced bmptoppm
 	cd $(PKGDIR)/bin ; \
-	$(SYMLINK) bmptopnm$(EXE) bmptoppm
+	$(SYMLINK) bmptopnm$(EXE) bmptoppm$(EXE)
 # In May 2002, pamtouil replaced ppmtouil
 	cd $(PKGDIR)/bin ; \
-	$(SYMLINK) pamtouil$(EXE) ppmtouil
+	$(SYMLINK) pamtouil$(EXE) ppmtouil$(EXE)
 # In March 2005, we realized that pamtopnm obviates pnmtopnm
 	cd $(PKGDIR)/bin ; \
-	$(SYMLINK) pamtopnm$(EXE) pnmtopnm
+	$(SYMLINK) pamtopnm$(EXE) pnmtopnm$(EXE)
 # In October 2005, pamtofits replaced pnmtofits
 	cd $(PKGDIR)/bin ; \
-	$(SYMLINK) pamtofits$(EXE) pnmtofits
+	$(SYMLINK) pamtofits$(EXE) pnmtofits$(EXE)
 ifneq ($(TIFF_PREREQ_MISSING),Y)
 # In October 2005, pamtotiff replaced pnmtotiff
 	cd $(PKGDIR)/bin ; \
-	$(SYMLINK) pamtotiff$(EXE) pnmtotiff
+	$(SYMLINK) pamtotiff$(EXE) pnmtotiff$(EXE)
 endif

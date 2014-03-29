@@ -90,7 +90,7 @@ parseCommandLine(int argc, char ** argv,
     if (argc-1 < 2)
         pm_error("Need two arguments: width and height.");
     else if (argc-1 > 2)
-        pm_error("Only two argumeents allowed: with and height.  "
+        pm_error("Only two arguments allowed: width and height.  "
                  "You specified %d", argc-1);
     else {
         cmdlineP->width = atoi(argv[1]);

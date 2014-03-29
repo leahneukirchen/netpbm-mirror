@@ -222,6 +222,8 @@ init_package:
 	$(INSTALL) -c -m 664 $(SRCDIR)/buildtools/README.pkg $(PKGDIR)/README
 	$(INSTALL) -c -m 664 $(SRCDIR)/buildtools/config_template \
 	  $(PKGDIR)/config_template
+	$(INSTALL) -c -m 664 $(SRCDIR)/buildtools/pkgconfig_template \
+	  $(PKGDIR)/pkgconfig_template
 
 advise_installnetpbm:
 	@echo
