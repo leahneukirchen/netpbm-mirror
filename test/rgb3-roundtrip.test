@@ -2,13 +2,20 @@
 # This script tests: ppmtorgb3 rgb3toppm
 # Also requires: pgmtopbm pgmtopgm ppmtopgm
 
+  alias ppmtorgb3="${PBM_TESTPREFIX}ppmtorgb3"
+  alias rgb3toppm="${PBM_TESTPREFIX}rgb3toppm"
+  alias pgmtopbm="${PBM_BINPREFIX}pgmtopbm"
+  alias pgmtopgm="${PBM_BINPREFIX}pgmtopgm"
+  alias ppmtopgm="${PBM_BINPREFIX}ppmtopgm"
+  shopt -s expand_aliases
+
 # Break an image into three monochrome planes, reassemble the
 # image from them and check whether the resulting output is
 # identical to the original input.
 
 cp testimg.ppm ${tmpdir} &&
-${PBM_TESTPREFIX}ppmtorgb3 ${tmpdir}/testimg.ppm &&
-${PBM_TESTPREFIX}rgb3toppm ${tmpdir}/testimg.red ${tmpdir}/testimg.grn \
+ppmtorgb3 ${tmpdir}/testimg.ppm &&
+rgb3toppm ${tmpdir}/testimg.red ${tmpdir}/testimg.grn \
   ${tmpdir}/testimg.blu | cksum
 
 cat ${tmpdir}/testimg.red ${tmpdir}/testimg.grn ${tmpdir}/testimg.blu | \
@@ -17,10 +24,10 @@ cat ${tmpdir}/testimg.red ${tmpdir}/testimg.grn ${tmpdir}/testimg.blu | \
 rm ${tmpdir}/testimg.{ppm,red,grn,blu}
 
 cp testgrid.pbm ${tmpdir} &&
-${PBM_TESTPREFIX}ppmtorgb3 ${tmpdir}/testgrid.pbm &&
-${PBM_TESTPREFIX}rgb3toppm ${tmpdir}/testgrid.red ${tmpdir}/testgrid.grn \
+ppmtorgb3 ${tmpdir}/testgrid.pbm &&
+rgb3toppm ${tmpdir}/testgrid.red ${tmpdir}/testgrid.grn \
   ${tmpdir}/testgrid.blu | \
-  ${PBM_BINPREFIX}ppmtopgm | ${PBM_BINPREFIX}pgmtopbm -th -val=0.5 | cksum
+  ppmtopgm | pgmtopbm -th -val=0.5 | cksum
 
 
 # With PGM or PBM input, the three monochrome planes should be
@@ -28,7 +35,7 @@ ${PBM_TESTPREFIX}rgb3toppm ${tmpdir}/testgrid.red ${tmpdir}/testgrid.grn \
 
 cmp -s ${tmpdir}/testgrid.red ${tmpdir}/testgrid.grn ; echo $?
 cmp -s ${tmpdir}/testgrid.grn ${tmpdir}/testgrid.blu ; echo $?
-${PBM_BINPREFIX}pgmtopgm < testgrid.pbm | cmp -s - ${tmpdir}/testgrid.red
+pgmtopgm < testgrid.pbm | cmp -s - ${tmpdir}/testgrid.red
   echo $?
 
 rm ${tmpdir}/testgrid.{pbm,red,grn,blu}

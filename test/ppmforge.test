@@ -1,6 +1,9 @@
 #! /bin/bash
 # This script tests: ppmforge
 
+  alias ppmforge="${PBM_TESTPREFIX}ppmforge"
+  shopt -s expand_aliases
+
 # Use small x y values to avoid floating point issues.
 
 
@@ -8,7 +11,7 @@ testrandom -q
 case $? in
    81)
       # Test 1: Should print: 3634219838 196623
-      ${PBM_TESTPREFIX}ppmforge -night -seed 1 | cksum
+      ppmforge -night -seed 1 | cksum
       ;;
 
    8[02-9] | 90)

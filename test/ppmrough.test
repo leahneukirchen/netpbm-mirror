@@ -1,12 +1,15 @@
 #! /bin/bash
 # This script tests: ppmrough
 
+  alias ppmrough="${PBM_TESTPREFIX}ppmrough"
+  shopt -s expand_aliases
+
 
 testrandom -q
 case $? in
    81)
       # Should print: 378403602 30015
-      ${PBM_TESTPREFIX}ppmrough  -randomseed 1 | cksum
+      ppmrough  -randomseed 1 | cksum
       ;;
 
    8[02-9] | 90)

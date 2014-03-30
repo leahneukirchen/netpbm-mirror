@@ -2,6 +2,9 @@
 # This script tests: ppmtopgm
 # Also requires: 
 
+  alias ppmtopgm="${PBM_TESTPREFIX}ppmtopgm"
+  shopt -s expand_aliases
+
 # Test 1. Should produce 2871603838 33838
-${PBM_TESTPREFIX}ppmtopgm testimg.ppm | cksum
+ppmtopgm testimg.ppm | cksum
 

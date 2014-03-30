@@ -2,8 +2,11 @@
 # This script tests: pgmmake
 # Also requires: 
 
-${PBM_TESTPREFIX}pgmmake 1 50 50 | cksum
-${PBM_TESTPREFIX}pgmmake .2 50 100 -maxval=5 | cksum 
+  alias pgmmake="${PBM_TESTPREFIX}pgmmake"
+  shopt -s expand_aliases
+
+pgmmake 1 50 50 | cksum
+pgmmake .2 50 100 -maxval=5 | cksum 
 
 
 

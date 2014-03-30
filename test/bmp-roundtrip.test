@@ -2,5 +2,9 @@
 # This script tests: bmptopnm ppmtobmp
 # Also requires: 
 
-${PBM_TESTPREFIX}ppmtobmp testimg.ppm | ${PBM_TESTPREFIX}bmptopnm | cksum
-${PBM_TESTPREFIX}ppmtobmp testgrid.pbm | ${PBM_TESTPREFIX}bmptopnm | cksum
+  alias bmptopnm="${PBM_TESTPREFIX}bmptopnm"
+  alias ppmtobmp="${PBM_TESTPREFIX}ppmtobmp"
+  shopt -s expand_aliases
+
+ppmtobmp testimg.ppm | bmptopnm | cksum
+ppmtobmp testgrid.pbm | bmptopnm | cksum

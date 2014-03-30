@@ -58,16 +58,18 @@ parseCommandLine(int argc, char ** argv,
     pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
+    free (option_def);
+
     if (!maxvalSpec)
         cmdlineP->maxval = PPM_MAXMAXVAL;
     else {
         if (cmdlineP->maxval > PPM_OVERALLMAXVAL)
             pm_error("The value you specified for -maxval (%u) is too big.  "
                      "Max allowed is %u", cmdlineP->maxval, PPM_OVERALLMAXVAL);
-        
+
         if (cmdlineP->maxval < 1)
             pm_error("You cannot specify 0 for -maxval");
-    }    
+    }
 
     if (argc-1 < 3)
         pm_error("Need 3 arguments: color, width, height.");
@@ -88,7 +90,7 @@ main(int argc, char *argv[]) {
 
     struct cmdlineInfo cmdline;
     pixel * pixrow;
-    unsigned int row;
+    unsigned int row, col;
 
     ppm_init(&argc, argv);
 
@@ -97,12 +99,12 @@ main(int argc, char *argv[]) {
     ppm_writeppminit(stdout, cmdline.cols, cmdline.rows, cmdline.maxval, 0);
     pixrow = ppm_allocrow(cmdline.cols);
 
-    for (row = 0; row < cmdline.rows; ++row) {
-        unsigned int col;
-        for (col = 0; col < cmdline.cols; ++col)
-            pixrow[col] = cmdline.color;
+    /* All rows are identical.  Fill once. */
+    for (col = 0; col < cmdline.cols; ++col)
+        pixrow[col] = cmdline.color;
+
+    for (row = 0; row < cmdline.rows; ++row)
         ppm_writeppmrow(stdout, pixrow, cmdline.cols, cmdline.maxval, 0);
-	}
 
     ppm_freerow(pixrow);
     pm_close(stdout);

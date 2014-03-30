@@ -2,4 +2,7 @@
 # This script tests: pgmtopgm
 # Also requires: 
 
-${PBM_TESTPREFIX}pgmtopgm < testgrid.pbm | cksum
+  alias pgmtopgm="${PBM_TESTPREFIX}pgmtopgm"
+  shopt -s expand_aliases
+
+pgmtopgm < testgrid.pbm | cksum

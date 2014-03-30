@@ -2,5 +2,9 @@
 # This script tests: ppmtoleaf leaftoppm
 # Also requires: 
 
+  alias leaftoppm="${PBM_TESTPREFIX}leaftoppm"
+  alias ppmtoleaf="${PBM_TESTPREFIX}ppmtoleaf"
+  shopt -s expand_aliases
+
 # Should produce 1926073387 101484, cksum of testimg.ppm
-${PBM_TESTPREFIX}ppmtoleaf testimg.ppm | ${PBM_TESTPREFIX}leaftoppm | cksum
+ppmtoleaf testimg.ppm | leaftoppm | cksum

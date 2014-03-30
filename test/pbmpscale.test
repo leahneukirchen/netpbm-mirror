@@ -2,10 +2,15 @@
 # This script tests: pbmpscale
 # Also requires: pamenlarge pbmtext
 
-${PBM_BINPREFIX}pbmtext -nomargin "F" | ${PBM_TESTPREFIX}pbmpscale 3 -plain 
+  alias pbmpscale="${PBM_TESTPREFIX}pbmpscale"
+  alias pamenlarge="${PBM_BINPREFIX}pamenlarge"
+  alias pbmtext="${PBM_BINPREFIX}pbmtext"
+  shopt -s expand_aliases
+
+pbmtext -nomargin "F" | pbmpscale 3 -plain 
 
 for i in 2 3 4
 do
-${PBM_BINPREFIX}pamenlarge 2 testgrid.pbm | \
-  ${PBM_TESTPREFIX}pbmpscale $i | cksum
+pamenlarge 2 testgrid.pbm | \
+  pbmpscale $i | cksum
 done

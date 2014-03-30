@@ -1,6 +1,9 @@
 #! /bin/bash
 # This script tests: pgmcrater
 
+  alias pgmcrater="${PBM_TESTPREFIX}pgmcrater"
+  shopt -s expand_aliases
+
 # This test is sensitive to differences in floating point math.
 # With GCC slight results start to appear with -number 75 in
 # the following test.  Compiler type (GCC, Clang, etc.),
@@ -17,7 +20,7 @@ testrandom -q
 case $? in
    81)
       # Should print: 3828822912 65551
-      ${PBM_TESTPREFIX}pgmcrater -quiet -number 25 -randomseed 1 | cksum
+      pgmcrater -quiet -number 25 -randomseed 1 | cksum
       ;;
 
    8[02-9] | 90)

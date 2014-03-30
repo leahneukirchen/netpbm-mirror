@@ -260,10 +260,10 @@ endif
 
 .PHONY: install-merge install-nonmerge
 install-merge: install.merge install.lib install.data \
-	install.manweb install.man
+	install.manwebmain install.manweb install.man
 
 install-nonmerge: install.bin install.lib install.data \
-	install.manweb install.man
+	install.manwebmain install.manweb install.man
 
 .PHONY: merge
 merge: lib/all netpbm
@@ -369,7 +369,7 @@ install.lib:
 endif
 
 .PHONY: install.manweb
-install.manweb: $(PKGDIR)/man/web/netpbm.url $(PKGDIR)/bin/doc.url
+install.manwebmain: $(PKGDIR)/man/web/netpbm.url $(PKGDIR)/bin/doc.url
 
 $(PKGDIR)/man/web/netpbm.url: $(PKGDIR)/man/web
 	echo "$(NETPBM_DOCURL)" > $@
@@ -418,6 +418,12 @@ install.sharedlibstub:
 	$(MAKE) -C lib -f $(SRCDIR)/lib/Makefile \
 	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) install.sharedlibstub 
 
+# Make the 'deb' target after making 'package'.  It generates a .deb
+# file in the current directory.
+.PHONY: deb
+deb:
+	buildtools/debian/mkdeb --buildtools=buildtools --pkgdir=$(PKGDIR)
+
 .PHONY: check
 check:
 # This works on typical Linux systems
@@ -434,6 +440,7 @@ clean: localclean
 localclean:
 	rm -f netpbm build_started build_complete
 	rm -f pm_config.h inttypes_netpbm.h version.h
+	rm -f *.deb
 
 # Note that removing config.mk must be the last thing we do,
 # because no other makes will work after that is done.

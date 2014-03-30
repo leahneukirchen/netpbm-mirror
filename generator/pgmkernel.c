@@ -174,14 +174,14 @@ writeKernel(FILE *       const ofP,
             unsigned int const halfRows) {
 
     unsigned int row;
-    
+
     pgm_writepgminit(stdout, cols, rows, maxval, 0);
 
     for (row = 0; row < halfRows; ++row)
         pgm_writepgmrow(stdout, halfKernel[row], cols, maxval, 0);
 
     /* Now write out the same rows in reverse order. */
-    
+
     for (; row < rows; ++row)
         pgm_writepgmrow(stdout, halfKernel[rows-1-row], cols, maxval, 0);
 }
@@ -193,12 +193,15 @@ main(int argc, const char * argv[]) {
 
     struct CmdlineInfo cmdline;
     unsigned int arows;
-    int arow;
+    unsigned int arow;
     double xcenter, ycenter;
         /* row, column "number" of center of kernel */
     double tMax;
         /* The maximum t value over all pixels */
-    gray ** destarray;
+    gray ** halfKernel;
+        /* The upper half of the kernel we generate.  The lower half is
+           just the mirror image of this.
+        */
 
     pm_proginit(&argc, argv);
 
@@ -213,27 +216,28 @@ main(int argc, const char * argv[]) {
 
     arows = (cmdline.rows + 1) / 2;
         /* Half the number of rows.  Add 1 if odd. */
-    destarray = pgm_allocarray(cmdline.cols, arows);
+    halfKernel = pgm_allocarray(cmdline.cols, arows);
 
     for (arow = 0; arow < arows; ++arow) {
         double const dy2 = SQR(arow - ycenter);
 
         unsigned int col;
-
-        for (col = 0; col < cmdline.cols; ++col) {
+        for (col = 0; col < (cmdline.cols +1) / 2; ++col) {
             double const dx2 = SQR(col - xcenter);
 
             double const normalized = t(dx2, dy2, cmdline.weight) / 2 / tMax;
 
-            destarray[arow][col] = destarray[arow][cmdline.cols - col - 1] =
-                ROUNDU(cmdline.maxval * (0.5 + normalized));
+            gray const grayval = ROUNDU(cmdline.maxval * (0.5 + normalized));
+
+            halfKernel[arow][col                   ] = grayval;
+            halfKernel[arow][cmdline.cols - col - 1] = grayval;
         }
     }
 
     writeKernel(stdout, cmdline.cols, cmdline.rows, cmdline.maxval,
-                destarray, arows);
+                halfKernel, arows);
 
-    pgm_freearray(destarray, arows);
+    pgm_freearray(halfKernel, arows);
 
     return 0;
 }

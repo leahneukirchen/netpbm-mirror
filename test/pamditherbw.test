@@ -2,30 +2,34 @@
 # This script tests: pamditherbw
 # Also requires: ppmtopgm
 
+  alias pamditherbw="${PBM_TESTPREFIX}pamditherbw"
+  alias ppmtopgm="${PBM_BINPREFIX}ppmtopgm"
+  shopt -s expand_aliases
+
 # Make test input
-${PBM_BINPREFIX}ppmtopgm testimg.ppm >${tmpdir}/testimg.pgm
+ppmtopgm testimg.ppm >${tmpdir}/testimg.pgm
 
 # Test 1.  Simple threshold
-${PBM_TESTPREFIX}pamditherbw -threshold -val=0.5 \
+pamditherbw -threshold -val=0.5 \
    ${tmpdir}/testimg.pgm | cksum
 
 # Test 2.  Floyd-Steinberg
-#${PBM_TESTPREFIX}pamditherbw -floyd -val=0.5 ${tmpdir}/testimg.pgm | cksum
+#pamditherbw -floyd -val=0.5 ${tmpdir}/testimg.pgm | cksum
 
 # Test 3. Atkinson
-#${PBM_TESTPREFIX}pamditherbw -atkinson -val=0.5 ${tmpdir}/testimg.pgm | cksum
+#pamditherbw -atkinson -val=0.5 ${tmpdir}/testimg.pgm | cksum
 
 # Test 4. Hilbert
-${PBM_TESTPREFIX}pamditherbw -hilbert ${tmpdir}/testimg.pgm | cksum
+pamditherbw -hilbert ${tmpdir}/testimg.pgm | cksum
 
 # Test 5. Dither-8
-${PBM_TESTPREFIX}pamditherbw -dither8 ${tmpdir}/testimg.pgm | cksum
+pamditherbw -dither8 ${tmpdir}/testimg.pgm | cksum
 
 # Test 6. Cluster4
-${PBM_TESTPREFIX}pamditherbw -cluster4 ${tmpdir}/testimg.pgm | cksum
+pamditherbw -cluster4 ${tmpdir}/testimg.pgm | cksum
 
 # Test 7. Atkinson
-#${PBM_TESTPREFIX}pamditherbw -atkinson -val=0.5 ${tmpdir}/testimg.pgm | cksum
+#pamditherbw -atkinson -val=0.5 ${tmpdir}/testimg.pgm | cksum
 
 # Remove test file
 rm ${tmpdir}/testimg.pgm

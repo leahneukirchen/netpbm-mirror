@@ -2,8 +2,11 @@
 # This script tests: ppmmake
 # Also requires: 
 
-${PBM_TESTPREFIX}ppmmake rgb:ff/80/80 50 100 -maxval=5 | cksum
-${PBM_TESTPREFIX}ppmmake red 50 50  | cksum
+  alias ppmmake="${PBM_TESTPREFIX}ppmmake"
+  shopt -s expand_aliases
+
+ppmmake rgb:ff/80/80 50 100 -maxval=5 | cksum
+ppmmake red 50 50  | cksum
 
 
 

@@ -2,12 +2,17 @@
 # This script tests: giftopnm pamtogif pnmquant
 # Also requires: pnmcolormap pnmremap
 
+  alias giftopnm="${PBM_TESTPREFIX}giftopnm"
+  alias pamtogif="${PBM_TESTPREFIX}pamtogif"
+  alias pnmquant="${PBM_TESTPREFIX}pnmquant"
+  shopt -s expand_aliases
+
 # Should print 0
 
 colors=15      # any value between 2 - 256 works
 
-${PBM_TESTPREFIX}pnmquant $colors testimg.ppm > ${tmpdir}/quant.ppm &&
-${PBM_TESTPREFIX}pamtogif ${tmpdir}/quant.ppm | ${PBM_TESTPREFIX}giftopnm | \
+pnmquant $colors testimg.ppm > ${tmpdir}/quant.ppm &&
+pamtogif ${tmpdir}/quant.ppm | giftopnm | \
    cmp -s - ${tmpdir}/quant.ppm > /dev/null
 echo $?
 

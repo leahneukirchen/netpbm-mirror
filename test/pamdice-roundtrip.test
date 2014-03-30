@@ -2,8 +2,12 @@
 # This script tests: pamdice pamundice
 # Also requires: 
 
-${PBM_TESTPREFIX}pamdice testimg.ppm -outstem=${tmpdir}/a -width=50 -height=40
-${PBM_TESTPREFIX}pamundice ${tmpdir}/a_%1d_%1a.ppm -down=4 -across=5 | cksum
+  alias pamdice="${PBM_TESTPREFIX}pamdice"
+  alias pamundice="${PBM_TESTPREFIX}pamundice"
+  shopt -s expand_aliases
+
+pamdice testimg.ppm -outstem=${tmpdir}/a -width=50 -height=40
+pamundice ${tmpdir}/a_%1d_%1a.ppm -down=4 -across=5 | cksum
 
 rm ${tmpdir}/a_?_?.ppm
 

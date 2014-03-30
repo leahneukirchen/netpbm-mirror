@@ -2,4 +2,7 @@
 # This script tests: ppmtoppm
 # Also requires: 
 
-${PBM_TESTPREFIX}ppmtoppm < testgrid.pbm | cksum
+  alias ppmtoppm="${PBM_TESTPREFIX}ppmtoppm"
+  shopt -s expand_aliases
+
+ppmtoppm < testgrid.pbm | cksum

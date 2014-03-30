@@ -2,14 +2,19 @@
 # This script tests: g3topbm pbmtog3
 # Also requires: pnmcrop
 
-${PBM_TESTPREFIX}pbmtog3 -nofixedwidth testgrid.pbm | \
-${PBM_TESTPREFIX}g3topbm -width=14 | cmp -s - testgrid.pbm
+  alias g3topbm="${PBM_TESTPREFIX}g3topbm"
+  alias pbmtog3="${PBM_TESTPREFIX}pbmtog3"
+  alias pnmcrop="${PBM_BINPREFIX}pnmcrop"
+  shopt -s expand_aliases
+
+pbmtog3 -nofixedwidth testgrid.pbm | \
+g3topbm -width=14 | cmp -s - testgrid.pbm
 echo $?
 
-${PBM_TESTPREFIX}pbmtog3 -nofixedwidth -reversebits testgrid.pbm | \
-${PBM_TESTPREFIX}g3topbm -width=14 -reversebits | cmp -s - testgrid.pbm
+pbmtog3 -nofixedwidth -reversebits testgrid.pbm | \
+g3topbm -width=14 -reversebits | cmp -s - testgrid.pbm
 echo $?
 
-${PBM_TESTPREFIX}pbmtog3 testgrid.pbm | \
-${PBM_TESTPREFIX}g3topbm  | ${PBM_BINPREFIX}pnmcrop -white -right -bottom | \
+pbmtog3 testgrid.pbm | \
+g3topbm  | pnmcrop -white -right -bottom | \
  cmp -s - testgrid.pbm ; echo $?

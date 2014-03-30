@@ -449,7 +449,17 @@ ifeq ($(SYMLINKEXE)x,x)
   SYMLINKEXE := $(SYMLINK)
 endif
 
-$(PKGDIR)/%:
+# An implicit rule for $(PKGDIR)/% does not work because it causes Make
+# sometimes to believe the directory it creates from this rule is an unneeded
+# intermediate file and try to delete it later.  So we explicitly list the
+# possible directories under $(PKGDIR):
+
+PKGMANSUBDIRS = man1 man3 man5 web
+
+PKGSUBDIRS = bin include include/netpbm lib link misc \
+  $(PKGMANSUBDIRS:%=$(PKGMANDIR)/%)
+
+$(PKGSUBDIRS:%=$(PKGDIR)/%):
 	$(SRCDIR)/buildtools/mkinstalldirs $@
 
 .PHONY: install.merge
@@ -493,11 +503,13 @@ MANUALS1 = $(BINARIES) $(SCRIPTS)
 
 PKGMANDIR = man
 
-install.man1: $(PKGDIR)/$(PKGMANDIR)/man1 $(MANUALS1:%=%_installman1)
+install.man1: $(MANUALS1:%=%_installman1)
 
-install.man3: $(PKGDIR)/$(PKGMANDIR)/man3 $(MANUALS3:%=%_installman3)
+install.man3: $(MANUALS3:%=%_installman3)
 
-install.man5: $(PKGDIR)/$(PKGMANDIR)/man5 $(MANUALS5:%=%_installman5)
+install.man5: $(MANUALS5:%=%_installman5)
+
+install.manweb: $(MANUALS1:%=%_installmanweb) $(SUBDIRS:%=%/install.manweb)
 
 %_installman1: $(PKGDIR)/$(PKGMANDIR)/man1
 	perl -w $(SRCDIR)/buildtools/makepointerman $(@:%_installman1=%) \
@@ -510,6 +522,10 @@ install.man5: $(PKGDIR)/$(PKGMANDIR)/man5 $(MANUALS5:%=%_installman5)
 %_installman5: $(PKGDIR)/$(PKGMANDIR)/man5
 	perl -w $(SRCDIR)/buildtools/makepointerman $(@:%_installman5=%) \
           $(NETPBM_DOCURL) $< 5 $(MANPAGE_FORMAT) $(INSTALL_PERM_MAN)
+
+%_installmanweb: $(PKGDIR)/$(PKGMANDIR)/web
+	echo $(NETPBM_DOCURL)$(@:%_installmanweb=%).html \
+	  >$</$(@:%_installmanweb=%).url
 
 .PHONY: clean
 
@@ -554,6 +570,9 @@ endif
 	$(MAKE) -C $(dir $@) -f $(SRCDIR)/$(SUBDIR)/$(dir $@)Makefile \
 	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@) 
 %/install.man:
+	$(MAKE) -C $(dir $@) -f $(SRCDIR)/$(SUBDIR)/$(dir $@)Makefile \
+	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@) 
+%/install.manweb:
 	$(MAKE) -C $(dir $@) -f $(SRCDIR)/$(SUBDIR)/$(dir $@)Makefile \
 	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@) 
 %/install.data:

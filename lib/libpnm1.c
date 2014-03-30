@@ -72,10 +72,13 @@ validateComputableSize(unsigned int const cols,
    you expect.  That failed expectation can be disastrous if you use
    it to allocate memory.
 
+   It is very normal to allocate space for a pixel row, so we make sure
+   the size of a pixel row, in bytes, can be represented by an 'int'.
+
    A common operation is adding 1 or 2 to the highest row or
    column number in the image, so we make sure that's possible.
 -----------------------------------------------------------------------------*/
-    if (cols > INT_MAX - 2)
+    if (cols > INT_MAX/(sizeof(pixval) * 3) || cols > INT_MAX - 2)
         pm_error("image width (%u) too large to be processed", cols);
     if (rows > INT_MAX - 2)
         pm_error("image height (%u) too large to be processed", rows);
@@ -178,10 +181,10 @@ readpbmrow(FILE * const fileP,
     jmp_buf * origJmpbufP;
     bit * bitrow;
 
-    bitrow = pbm_allocrow(cols);
+    bitrow = pbm_allocrow_packed(cols);
 
     if (setjmp(jmpbuf) != 0) {
-        pbm_freerow(bitrow);
+        pbm_freerow_packed(bitrow);
         pm_setjmpbuf(origJmpbufP);
         pm_longjmp();
     } else {
@@ -189,11 +192,14 @@ readpbmrow(FILE * const fileP,
 
         pm_setjmpbufsave(&jmpbuf, &origJmpbufP);
 
-        pbm_readpbmrow(fileP, bitrow, cols, format);
+        pbm_readpbmrow_packed(fileP, bitrow, cols, format);
 
-        for (col = 0; col < cols; ++col)
-            PNM_ASSIGN1(xelrow[col], bitrow[col] == PBM_BLACK ? 0 : maxval);
-
+        for (col = 0; col < cols; ++col) {
+            pixval const g =
+                ((bitrow[col/8] >> (7 - col%8)) & 0x1) == PBM_WHITE ?
+                maxval : 0;
+            PNM_ASSIGN1(xelrow[col], g);
+        }
         pm_setjmpbuf(origJmpbufP);
     }
     pbm_freerow(bitrow);

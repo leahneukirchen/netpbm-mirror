@@ -4,58 +4,83 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-14.03.02 BJH  Release 10.65.07
+14.03.30 BJH  Release 10.66.00
+
+              Add pamvalidate.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
+              Add pamfix: Does what pamfixtrunc did, plus repairs excessive
+              sample values.
+
+              pamfixtrunc: implement as call to new pamfix.
+
+              pgmhist, ppmhist: Add -forensic: Analyze invalid >maxval pixels.
+              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
+              pgmramp: add -diagonal.  Thanks Prophet of the Way
+              <afu@wta.att.ne.jp>.
+
+              libnetpbm: Read functions validate that sample values do not
+              exceed maxval.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
+              libnetpbm: Validate image dimensions are small enough that you
+              can allocate a row buffer.  Thanks Prophet of the Way
+              <afu@wta.att.ne.jp>.
 
               pgmhist: fix incorrect report of quantiles or crash due to array
               bounds violation in some builds.  Thanks Prophet of the Way
               <afu@wta.att.ne.jp>.  Always broken.  Quantile reporting was
               new in Netpbm 10.61 (December 2012).
 
-              Windows build: fix missing .exe on copies of programs under
-              their old names.
-
-14.03.01 BJH  Release 10.65.06
-
               pgmhist: fix buffer overrun with -median.  Always broken.
               -median was new in Netpbm 10.61 (December 2012).
 
-14.02.24 BJH  Release 10.65.05
+              pnmmargin: fix for size 0 and superfluous "unexpected operator" 
+              message with size != 0.  Introduced in 10.42.
 
-              pgmtexture: fix buffer overflow.  Always broken.  (Program
-              was added in primordial Netpbm in 1991).
+              pstopnm: fix wrong interpretations of -xsize and -ysize when
+              rendering image in landscape (rotated).  This can appear as
+              stretching and squashing.  Probably always broken.
 
-              Windows build: fix Ppmtompeg build failure in non-Cygwin build
-              due to missing sys/utsname.h.
+              pstopnm: fix wrong orientation sometimes when you specify
+              both -xsize and -ysize.  Introduced in 10.65.
 
-14.02.09 BJH  Release 10.65.04
+              pgmramp: fix bogus output with really large images.  Thanks
+              Prophet of the Way <afu@wta.att.ne.jp>.
 
               ppmrelief: fix out-of-bound values in output.  Always broken.
+              ppmrelief was new in primordial Netpbm in 1989.
               Thanks Prophet of the Way <afu@wta.att.ne.jp>.
 
               ppmrelief: fix crash when input image is too small.  Always
-              broken.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+              broken.  ppmrelief was new in primordial Netpbm in 1989.  Thanks
+              Prophet of the Way <afu@wta.att.ne.jp>.
+
+              pgmtexture: fix buffer overflow.  Always broken.  (Program
+              was added in primordial Netpbm in 1991).
 
               pamdeinterlace: fix incorrect output with -takeodd and image has
               only one row.  Always broken (pamdeinterlace was introduced in
               Netpbm 9.21 (January 2001)).  Thanks Prophet of the Way
               <afu@wta.att.ne.jp>.
 
-14.01.06 BJH  Release 10.65.03
+              configure: warn if user says JPEG library is in the linker's
+              default search path, but it isn't.
+
+              build/install: add tools for creating a Debian package.
 
               make package: Include template for pkgconfig file.
+
+              make package: Include a man/web directory with .url files for
+              each manual page.
 
               test: Add -portrait to invocations of pstopnm in order to get
               proper round trips.
 
-14.01.01 BJH  Release 10.65.02
+              Windows build: fix Ppmtompeg build failure in non-Cygwin build
+              due to missing sys/utsname.h.
 
-              pnmmargin: fix for size 0 and superfluous "unexpected operator" 
-              message with size != 0.  Introduced in 10.42.
-
-13.12.28 BJH  Release 10.65.01
-
-              pstopnm: fix wrong orientation sometimes when you specify
-              both -xsize and -ysize.  Introduced in 10.65.00.
+              Windows build: fix missing .exe on copies of programs under
+              their old names.
 
 13.12.26 BJH  Release 10.65.00
 
@@ -228,7 +253,7 @@ CHANGE HISTORY
               build: fix problem with creating lib/util that already exists.
               Broken in Netpbm 10.62.
 
-12.03.28 BJH  Release 10.62.00
+13.03.28 BJH  Release 10.62.00
 
               pnmtorast: set don't care bytes to zero to make output
               repeatable.
@@ -247,7 +272,7 @@ CHANGE HISTORY
               pamstereogram: fix bug: garbage in -verbose listing.  Broken
               since Netpbm 10.61
 
-              MinGW build: various fixes.
+              Windows MinGW build: various fixes.
 
 12.12.30 BJH  Release 10.61.00
 
@@ -1200,6 +1225,8 @@ CHANGE HISTORY
               pbmtext: fail cleanly if -width, -space, or -lspace is
               too large for computation.  Thanks Prophet of the Way
               <afu@wta.att.ne.jp>.
+
+              pnmmargin: don't crash with zero margin request.
 
               pnmtile: deal with zero width/height.
 

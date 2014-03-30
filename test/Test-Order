@@ -61,11 +61,16 @@ pnmremap2.test
 pnmtile.test
 ppmbrighten.test
 ppmdither.test
+ppmrelief.test
 pamedge.test
 ppmdim.test
 pnmshear.test
 
 ppmmix.test
+
+# Symmetry test
+
+symmetry.test
 
 # Format converter tests
 
@@ -104,6 +109,7 @@ gem-roundtrip.test
 gif-roundtrip.test
 gif-quant-roundtrip.test
 hdiff-roundtrip.test
+jbig-roundtrip.test
 leaf-roundtrip.test
 mgr-roundtrip.test
 mrf-roundtrip.test

@@ -2,5 +2,9 @@
 # This script tests: pbmtocmuwm cmuwmtopbm
 # Also requires: 
 
+  alias cmuwmtopbm="${PBM_TESTPREFIX}cmuwmtopbm"
+  alias pbmtocmuwm="${PBM_TESTPREFIX}pbmtocmuwm"
+  shopt -s expand_aliases
+
 # Should print 2425386270 41, cksum of testgrid.pbm
-${PBM_TESTPREFIX}pbmtocmuwm testgrid.pbm | ${PBM_TESTPREFIX}cmuwmtopbm | cksum
+pbmtocmuwm testgrid.pbm | cmuwmtopbm | cksum

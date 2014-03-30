@@ -2,10 +2,13 @@
 # This script tests: pbmtext
 # Also requires: 
 
+  alias pbmtext="${PBM_TESTPREFIX}pbmtext"
+  shopt -s expand_aliases
+
 for i in 0123456789 abcdefghijk lmnopqrst uzwxyz ABCDEFGHIJK LMNOPQRST UVWXYZ
 do
 for flags in "" "-nom" "-builtin fixed"
 do
-echo $i | ${PBM_TESTPREFIX}pbmtext $flags | cksum
+echo $i | pbmtext $flags | cksum
 done
 done

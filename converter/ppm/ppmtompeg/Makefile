@@ -51,7 +51,7 @@ MP_ENCODE_OBJS = \
 MP_OTHER_OBJS = mpeg.o subsample.o param.o rgbtoycc.o \
 	readframe.o combine.o jrevdct.o frame.o fsize.o frametype.o \
 	specifics.o rate.o opts.o input.o
-ifeq ($(OMIT_NETWORK),y)
+ifeq ($(OMIT_NETWORK),Y)
   MP_OTHER_OBJS += noparallel.o
 else
   MP_OTHER_OBJS += parallel.o psocket.o

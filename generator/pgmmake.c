@@ -46,16 +46,18 @@ parseCommandLine(int argc, char ** argv,
     pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
+    free (option_def);
+
     if (!maxvalSpec)
         cmdlineP->maxval = PGM_MAXMAXVAL;
     else {
         if (cmdlineP->maxval > PGM_OVERALLMAXVAL)
             pm_error("The value you specified for -maxval (%u) is too big.  "
                      "Max allowed is %u", cmdlineP->maxval, PGM_OVERALLMAXVAL);
-        
+
         if (cmdlineP->maxval < 1)
             pm_error("You cannot specify 0 for -maxval");
-    }    
+    }
 
     if (argc-1 < 3)
         pm_error("Need 3 arguments: gray level, width, height.");
@@ -82,7 +84,7 @@ main(int argc, char *argv[]) {
 
     struct cmdlineInfo cmdline;
     gray * grayrow;
-    unsigned int row;
+    unsigned int col, row;
 
     pgm_init(&argc, argv);
 
@@ -91,12 +93,12 @@ main(int argc, char *argv[]) {
     pgm_writepgminit(stdout, cmdline.cols, cmdline.rows, cmdline.maxval, 0);
     grayrow = pgm_allocrow(cmdline.cols);
 
-    for (row = 0; row < cmdline.rows; ++row) {
-        unsigned int col;
-        for (col = 0; col < cmdline.cols; ++col)
-            grayrow[col] = cmdline.grayLevel;
+    /* All rows are identical.  Fill once. */
+    for (col = 0; col < cmdline.cols; ++col)
+        grayrow[col] = cmdline.grayLevel;
+
+    for (row = 0; row < cmdline.rows; ++row)
         pgm_writepgmrow(stdout, grayrow, cmdline.cols, cmdline.maxval, 0);
-	}
 
     pgm_freerow(grayrow);
     pm_close(stdout);

@@ -2,6 +2,9 @@
 # This script tests: 411toppm
 # Also requires: 
 
+  alias 411toppm="${PBM_TESTPREFIX}411toppm"
+  shopt -s expand_aliases
+
 # Test 1. should produce: 240376509 9229
 # The above value is what 411toppm has been always producing.
 # 411toppm's author Steve Allen says he was not able to obtain accurate
@@ -9,4 +12,4 @@
 #
 # See comment at head of source file 411toppm.c.
 
-head -c 4608 /dev/zero | ${PBM_TESTPREFIX}411toppm -quiet | cksum
+head -c 4608 /dev/zero | 411toppm -quiet | cksum

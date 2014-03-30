@@ -687,15 +687,22 @@ static int  radc_token (int tree)
 void
 kodak_radc_load_raw()
 {
-    int row, col, tree, nreps, rep, step, i, c, s, r, x, y, val;
+    int row, col, tree, nreps, rep, step, c, s, r, x, y, val;
+    unsigned int i;
     short last[3] = { 16,16,16 }, mul[3], buf[3][3][386];
 
     init_decoder();
     getbits(ifp, -1);
-    for (i=0; i < sizeof(buf)/sizeof(short); i++)
-        buf[0][0][i] = 2048;
+    for (i = 0; i < 3; ++i) {
+        unsigned int j;
+        for (j = 0; j < 3; ++j) {
+            unsigned int k;
+            buf[i][j][k] = 2048;
+        }
+    }
     for (row=0; row < height; row+=4) {
-        for (i=0; i < 3; i++)
+        unsigned int i;
+        for (i = 0; i < 3; ++i)
             mul[i] = getbits(ifp, 6);
         FORC3 {
             val = ((0x1000000/last[c] + 0x7ff) >> 12) * mul[c];

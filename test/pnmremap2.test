@@ -2,20 +2,26 @@
 # This script tests: pnmremap
 # Also requires: pamdepth pamseq pamtopnm
 
-${PBM_BINPREFIX}pamseq 3 5 -tupletype=RGB | ${PBM_BINPREFIX}pamtopnm \
+  alias pnmremap="${PBM_TESTPREFIX}pnmremap"
+  alias pamdepth="${PBM_BINPREFIX}pamdepth"
+  alias pamseq="${PBM_BINPREFIX}pamseq"
+  alias pamtopnm="${PBM_BINPREFIX}pamtopnm"
+  shopt -s expand_aliases
+
+pamseq 3 5 -tupletype=RGB | pamtopnm \
  > ${tmpdir}/palette
-${PBM_BINPREFIX}pamdepth 255 ${tmpdir}/palette > ${tmpdir}/palette255
+pamdepth 255 ${tmpdir}/palette > ${tmpdir}/palette255
 
 # Test 2. Default (unmodified quantization)
-${PBM_TESTPREFIX}pnmremap -mapfile=${tmpdir}/palette -nofloyd \
+pnmremap -mapfile=${tmpdir}/palette -nofloyd \
 testimg.ppm | cksum
 
 # Test 3. Use first color in palette for missing colors
-${PBM_TESTPREFIX}pnmremap -mapfile=${tmpdir}/palette255 -nofloyd \
+pnmremap -mapfile=${tmpdir}/palette255 -nofloyd \
  -firstisdefault testimg.ppm | cksum
 
 # Test 4. Use black for missing colors
-${PBM_TESTPREFIX}pnmremap -mapfile=${tmpdir}/palette255 -nofloyd \
+pnmremap -mapfile=${tmpdir}/palette255 -nofloyd \
 -missingcolor=black testimg.ppm | cksum
 
 rm ${tmpdir}/palette{,255}

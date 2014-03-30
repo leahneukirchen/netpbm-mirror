@@ -2,10 +2,16 @@
 # This script tests: ppmchange
 # Also requires: pgmtopbm pnminvert ppmtopgm
 
-${PBM_TESTPREFIX}ppmchange black white white black testgrid.pbm | \
-${PBM_BINPREFIX}pnminvert | ${PBM_BINPREFIX}ppmtopgm | \
-${PBM_BINPREFIX}pgmtopbm -th -val=0.5 | cksum
+  alias ppmchange="${PBM_TESTPREFIX}ppmchange"
+  alias pgmtopbm="${PBM_BINPREFIX}pgmtopbm"
+  alias pnminvert="${PBM_BINPREFIX}pnminvert"
+  alias ppmtopgm="${PBM_BINPREFIX}ppmtopgm"
+  shopt -s expand_aliases
 
-${PBM_TESTPREFIX}ppmchange  black white white black testgrid.pbm | \
-${PBM_TESTPREFIX}ppmchange  black white white black -plain  | \
-${PBM_BINPREFIX}ppmtopgm | ${PBM_BINPREFIX}pgmtopbm -th -val=0.5 | cksum
+ppmchange black white white black testgrid.pbm | \
+pnminvert | ppmtopgm | \
+pgmtopbm -th -val=0.5 | cksum
+
+ppmchange  black white white black testgrid.pbm | \
+ppmchange  black white white black -plain  | \
+ppmtopgm | pgmtopbm -th -val=0.5 | cksum

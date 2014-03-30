@@ -24,8 +24,8 @@ endif
 # build.
 
 PORTBINARIES = pamarith pambayer pamchannel pamdepth \
-	pamendian pamexec pamfixtrunc pamlookup pampick pamsplit \
-	pamstack pamsummcol pnmcolormap \
+	pamendian pamexec pamfix pamlookup pampick pamsplit \
+	pamstack pamsummcol pamvalidate pnmcolormap \
 	ppmdcfont ppmddumpfont ppmdmkfont 
 
 BINARIES = $(PORTBINARIES)
@@ -34,7 +34,7 @@ ifneq ($(LINUXSVGALIB),NONE)
   BINARIES += ppmsvgalib
 endif
 
-SCRIPTS = ppmtomap
+SCRIPTS = ppmtomap pamfixtrunc
 
 OBJECTS = $(BINARIES:%=%.o)
 

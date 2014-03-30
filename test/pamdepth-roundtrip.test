@@ -2,11 +2,15 @@
 # This script tests: pamdepth pgmtopbm
 # Also requires: 
 
+  alias pamdepth="${PBM_TESTPREFIX}pamdepth"
+  alias pgmtopbm="${PBM_TESTPREFIX}pgmtopbm"
+  shopt -s expand_aliases
+
 for i in 300 500 1023 4095 5000 16383 65535
 do
-${PBM_TESTPREFIX}pamdepth $i testimg.ppm | \
-  ${PBM_TESTPREFIX}pamdepth 255 | cksum
+pamdepth $i testimg.ppm | \
+  pamdepth 255 | cksum
 done
 
-${PBM_TESTPREFIX}pamdepth 255 testgrid.pbm | ${PBM_TESTPREFIX}pamdepth 1 | \
-  ${PBM_TESTPREFIX}pgmtopbm -th -val=0.5 | cksum
+pamdepth 255 testgrid.pbm | pamdepth 1 | \
+  pgmtopbm -th -val=0.5 | cksum
