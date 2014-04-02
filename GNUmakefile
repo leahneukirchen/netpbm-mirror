@@ -396,19 +396,19 @@ lib/install.hdr:
 	$(MAKE) -C $(dir $@) -f $(SRCDIR)/lib/Makefile \
 	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@)
 
-ifeq ($(STATICLIB_TOO),y)
-BUILD_STATIC = y
+ifeq ($(STATICLIB_TOO),Y)
+BUILD_STATIC = Y
 else
   ifeq ($(NETPBMLIBTYPE),unixstatic)
-    BUILD_STATIC = y
+    BUILD_STATIC = Y
   else
-    BUILD_STATIC = n
+    BUILD_STATIC = N
   endif
 endif
 
 .PHONY: install.staticlib
 install.staticlib: 
-ifeq ($(BUILD_STATIC),y)
+ifeq ($(BUILD_STATIC),Y)
 	$(MAKE) -C lib -f $(SRCDIR)/lib/Makefile \
 	SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) install.staticlib 
 endif
