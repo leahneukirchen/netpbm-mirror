@@ -835,16 +835,16 @@ sub getLibTypes($$$$$$$$) {
         my $response = prompt("(y)es or (n)o", $default);
         
         if (uc($response) =~ /^(Y|YES)$/)  {
-            $staticlib_too = "y";
+            $staticlib_too = "Y";
         } elsif (uc($response) =~ /^(N|NO)$/)  {
-            $staticlib_too = "n";
+            $staticlib_too = "N";
         } else {
             print("'$response' isn't one of the choices.  \n" .
               "You must choose 'yes' or 'no' (or 'y' or 'n').\n");
             exit 12;
         }
     } else {
-        $staticlib_too = "n";
+        $staticlib_too = "N";
     }
     print("\n");
 

@@ -503,7 +503,7 @@ LINUXSVGAHDR_DIR =
 #LINUXSVGALIB = /usr/lib/libvga.so
 #LINUXSVGAHDR_DIR = /usr/include/vgalib
 
-# If you don't want any network functions, set OMIT_NETWORK to "y".
+# If you don't want any network functions, set OMIT_NETWORK to "Y".
 # The only thing that requires network functions is the option in
 # ppmtompeg to run it on multiple computers simultaneously.  On some
 # systems network functions don't work or we haven't figured out how to 
@@ -512,11 +512,11 @@ OMIT_NETWORK =
 #DJGPP/Windows, Tru64:
 #   (there's some minor header problem that prevents network functions from 
 #   building on Tru64 2000.10.06)
-#OMIT_NETWORK = y
+#OMIT_NETWORK = Y
 
 # These are -l options to link in the network libraries.  Often, these are
 # built into the standard C library, so this can be null.  This is irrelevant
-# if OMIT_NETWORK is "y".
+# if OMIT_NETWORK is "Y".
 
 NETWORKLD = 
 # Solaris, SunOS:
@@ -602,12 +602,12 @@ NETPBMLIBSUFFIX = so
 # Windows shared library:
 #NETPBMLIBSUFFIX = dll
 
-#STATICLIB_TOO is "y" to signify that you want a static library built
+#STATICLIB_TOO is "Y" to signify that you want a static library built
 #and installed in addition to whatever library type you specified by
 #NETPBMLIBTYPE.  If NETPBMLIBTYPE specified a static library,
 #STATICLIB_TOO simply has no effect.
-STATICLIB_TOO = y
-#STATICLIB_TOO = n
+STATICLIB_TOO = Y
+#STATICLIB_TOO = N
 
 #STATICLIBSUFFIX is the suffix that static libraries have.  It's
 #meaningless if you aren't building static libraries.

@@ -175,7 +175,7 @@ else
   ifeq ($(STATICLIB_TOO),Y)
     BUILD_STATICLIB = Y
   else
-    BUILD_STATICLIB = n
+    BUILD_STATICLIB = N
   endif
 endif
 
