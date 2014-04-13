@@ -86,6 +86,9 @@ static int const bytesPerFormat[] = {0,1,1,2,4,8,1,1,2,4,8,4,8};
 
 #define TAG_ORIENTATION       0x0112
 
+#define TAG_XRESOLUTION       0x011A
+#define TAG_YRESOLUTION       0x011B
+
 #define TAG_EXPOSURETIME      0x829A
 #define TAG_FNUMBER           0x829D
 
@@ -500,6 +503,16 @@ processDirEntry(const unsigned char *  const dirEntry,
 
     case TAG_MODEL:
         strncpy(imageInfoP->CameraModel, (const char*)valuePtr, 39);
+        break;
+
+    case TAG_XRESOLUTION:
+        imageInfoP->XResolution = 
+            convertAnyFormat(valuePtr, format, byteOrder);
+        break;
+
+    case TAG_YRESOLUTION:
+        imageInfoP->YResolution = 
+            convertAnyFormat(valuePtr, format, byteOrder);
         break;
 
     case TAG_DATETIME_ORIGINAL:
@@ -927,8 +940,8 @@ exif_showImageInfo(const exif_ImageInfo * const imageInfoP,
     if (imageInfoP->DateTime[0])
         fprintf(fileP, "Date/Time    : %s\n", imageInfoP->DateTime);
 
-    fprintf(fileP, "Resolution   : %d x %d\n",
-            imageInfoP->Width, imageInfoP->Height);
+    fprintf(fileP, "Resolution   : %f x %f\n",
+            imageInfoP->XResolution, imageInfoP->YResolution);
 
     if (imageInfoP->Orientation > 1) {
 
