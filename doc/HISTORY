@@ -6,10 +6,12 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.67.00
 
+              pamsharpness: put primary output on Standard Output instead of
+              on Standard Error as a Netpbm message.
+
               Build: Fix inconsistent use of upper and lower case Y and N in 
               make variables, causing static library not to get built.
               Introduced in 10.66.
-
 
 14.03.30 BJH  Release 10.66.00
 

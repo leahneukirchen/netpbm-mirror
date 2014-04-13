@@ -151,7 +151,7 @@ main(int argc, char **argv) {
 
     computeSharpness(&inpam, tuplenarray, &sharpness);
 
-    pm_message("Sharpness = %f\n", sharpness);
+    printf("Sharpness = %f\n", sharpness);
 
 	pnm_freepamarrayn(tuplenarray, &inpam);
     pm_close(ifP);
