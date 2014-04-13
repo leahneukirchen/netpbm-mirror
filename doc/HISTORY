@@ -52,7 +52,7 @@ not yet  BJH  Release 10.67.00
               both -xsize and -ysize.  Introduced in 10.65.
 
               pgmramp: fix bogus output with really large images.  Thanks
-              Prophet of the Way <afu@wta.att.ne.jp>.
+              Prophet of the Way <afu@wta.att.ne.jp>.  Always broken.
 
               ppmrelief: fix out-of-bound values in output.  Always broken.
               ppmrelief was new in primordial Netpbm in 1989.
