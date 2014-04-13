@@ -10,7 +10,7 @@ not yet  BJH  Release 10.67.00
               on Standard Error as a Netpbm message.
 
               Windows build: include an icon in every executable.  The icon
-              was designed by Ron Vantreese (eaglesunxp@aol.com).
+              was designed by Ron Vantreese (ait_frog-netpbm@yahoo.com).
 
               Build: Fix inconsistent use of upper and lower case Y and N in 
               make variables, causing static library not to get built.
