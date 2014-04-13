@@ -11,8 +11,9 @@ COMP_INCLUDES = \
 	-I$(SRCDIR)/$(SUBDIR)/codec -I$(SRCDIR)/$(SUBDIR)/input \
 	-I$(SRCDIR)/$(SUBDIR)/output -I$(SRCDIR)/$(SUBDIR)/lib \
 
-BINARIES = pnmtofiasco fiascotopnm
+PORTBINARIES = pnmtofiasco fiascotopnm
 
+BINARIES = $(PORTBINARIES)
 MERGEBINARIES = $(BINARIES)
 
 SCRIPTS =
@@ -24,21 +25,18 @@ FIASCOLIBS = codec/libfiasco_codec.a \
 	     output/libfiasco_output.a \
 	     lib/libfiasco_lib.a 
 
-COMMON_OBJECTS = binerror.o getopt.o getopt1.o params.o
+ADDL_OBJECTS = binerror.o getopt.o getopt1.o params.o
 
-OBJECTS = $(BINARIES:%=%.o) $(COMMON_OBJECTS)
+OBJECTS = $(BINARIES:%=%.o) $(ADDL_OBJECTS)
 
-MERGE_OBJECTS = $(BINARIES:%=%.o2) $(COMMON_OBJECTS)  $(FIASCOLIBS)
+MERGE_OBJECTS = $(BINARIES:%=%.o2) $(ADDL_OBJECTS) $(FIASCOLIBS)
 
 SUBDIRS = codec input output lib
 
 include $(SRCDIR)/common.mk
 
-$(BINARIES):%:%.o $(COMMON_OBJECTS) $(FIASCOLIBS) $(NETPBMLIB) \
-   $(LIBOPT)
-	$(LD) -o $@ $< $(COMMON_OBJECTS) \
-	$(shell $(LIBOPT) $(FIASCOLIBS) $(NETPBMLIB)) $(MATHLIB) \
-	$(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
+$(BINARIES):%:%.o $(ADDL_OBJECTS) $(FIASCOLIBS)
+$(BINARIES): LDFLAGS_TARGET = $(shell $(LIBOPT) $(FIASCOLIBS))
 
 codec/libfiasco_codec.a: $(BUILDDIR)/$(SUBDIR)/codec FORCE
 	$(MAKE) -C codec -f $(SRCDIR)/$(SUBDIR)/codec/Makefile \

@@ -16,9 +16,11 @@ endif
 
 ifneq ($(JBIGHDR_DIR),NONE)
   ifneq ($(JBIGLIB),NONE)
-    BINARIES = jbigtopnm pnmtojbig
+    PORTBINARIES = jbigtopnm pnmtojbig
   endif
 endif
+
+BINARIES = $(PORTBINARIES)
 
 SCRIPTS =
 
@@ -35,11 +37,8 @@ all: $(BINARIES)
 
 include $(SRCDIR)/common.mk
 
-$(BINARIES): %: %.o $(JBIGLIB_DEP) $(NETPBMLIB) $(LIBOPT)
-	$(LD) -o $@ $< \
-	  $(shell $(LIBOPT) $(NETPBMLIB) $(JBIGLIB)) $(MATHLIB) \
-	  $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
-
+$(BINARIES): %: %.o $(JBIGLIB_DEP) $(LIBOPT)
+$(BINARIES): LDFLAGS_TARGET = $(shell $(LIBOPT) $(JBIGLIB))
 
 $(BUILDDIR)/$(SUBDIR)/libjbig.a: $(LIBJBIG_OBJECTS)
 	$(AR) -rc $@ $^

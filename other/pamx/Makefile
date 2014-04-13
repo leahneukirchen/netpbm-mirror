@@ -25,23 +25,20 @@ else
 endif
 
 ifeq ($(HAVE_X11LIB),Y)
-  BINARIES += pamx
+  PORTBINARIES += pamx
 
-  PAMX_OBJECTS = \
-	  pamx.o \
-	  image.o \
-	  send.o \
-	  window.o \
-
-  MERGE_OBJECTS = \
-	  pamx.o2 \
+  EXTRA_OBJECTS = \
 	  image.o \
 	  send.o \
 	  window.o \
 
 endif
 
-OBJECTS = $(PAMX_OBJECTS)
+BINARIES = $(PORTBINARIES)
+
+OBJECTS = $(BINARIES:%=%.o) $(EXTRA_OBJECTS)
+
+MERGE_OBJECTS = $(BINARIES:%=%.o2) $(EXTRA_OBJECTS)
 
 MERGEBINARIES = $(BINARIES)
 
@@ -55,7 +52,6 @@ else
   X11_LIBOPTS = $(shell pkg-config x11 --libs)
 endif
 
-pamx: $(PAMX_OBJECTS) $(NETPBMLIB) $(LIBOPT)
-	$(LD) -o $@ $(PAMX_OBJECTS) \
-	  $(shell $(LIBOPT) $(NETPBMLIB) $(X11_LIBOPTS)) \
-	  $(LDFLAGS) $(LDLIBS) $(MATHLIB) $(RPATH) $(LADD)
+pamx: image.o send.o window.o
+pamx: ADDL_OBJECTS = image.o send.o window.o
+pamx: LDFLAGS_TARGET = $(X11_LIBOPTS)

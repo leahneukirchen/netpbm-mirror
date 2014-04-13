@@ -503,6 +503,11 @@ LINUXSVGAHDR_DIR =
 #LINUXSVGALIB = /usr/lib/libvga.so
 #LINUXSVGAHDR_DIR = /usr/include/vgalib
 
+# WINICON_OBJECT is the object file to bind into all Netpbm executables
+# to provide the icon for Windows to use for it.  Null for none.
+WINICON_OBJECT =
+#WINICON_OBJECT = $(BUILDDIR)/icon/netpbm.o
+
 # If you don't want any network functions, set OMIT_NETWORK to "Y".
 # The only thing that requires network functions is the option in
 # ppmtompeg to run it on multiple computers simultaneously.  On some

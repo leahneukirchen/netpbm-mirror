@@ -287,6 +287,10 @@ $(BUNDLED_URTLIB): $(BUILDDIR)/urt
 	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@) 
 endif
 
+$(BUILDDIR)/icon/netpbm.o: $(BUILDDIR)/icon
+	$(MAKE) -C $(dir $@) -f $(SRCDIR)/icon/Makefile \
+	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@) 
+
 # Here are some notes from Nelson H. F. Beebe on April 16, 2002:
 #
 #   There are at least three incompatible kinds of command-line options
@@ -371,11 +375,12 @@ MATHLIB ?= -lm
 
 # Note that LDFLAGS might contain -L options, so order is important.
 # LDFLAGS is commonly set as an environment variable.
-LDFLAGS_ALL = $(shell $(LIBOPT) $(NETPBMLIB)) \
- $(LDFLAGS) $(LDLIBS) $(MATHLIB) $(RPATH) $(LADD)
+LDFLAGS_ALL = $(shell $(LIBOPT) $(NETPBMLIB)) $(WINICON_OBJECT) \
+ $(LDFLAGS_TARGET) $(LDFLAGS) $(LDLIBS) $(MATHLIB) $(RPATH) $(LADD)
 
-$(PORTBINARIES) $(MATHBINARIES): %: %.o $(NETPBMLIB) $(LIBOPT)
-	$(LD) -o $@ $@.o $(LDFLAGS_ALL)
+$(PORTBINARIES) $(MATHBINARIES): %: %.o \
+  $(NETPBMLIB) $(LIBOPT) $(WINICON_OBJECT)
+	$(LD) -o $@ $@.o $(ADDL_OBJECTS) $(LDFLAGS_ALL)
 
 
 # MERGE STUFF

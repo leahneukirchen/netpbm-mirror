@@ -38,16 +38,17 @@ endif
 
 ifneq ($(JASPERHDR_DIR),NONE)
   ifneq ($(JASPERLIB_USE),NONE)
-    BINARIES = pamtojpeg2k jpeg2ktopam
+    PORTBINARIES = pamtojpeg2k jpeg2ktopam
   endif
 endif
 
+BINARIES = $(PORTBINARIES)
 
 OBJECTS = $(BINARIES:%=%.o)
 MERGE_OBJECTS = $(BINARIES:%=%.o2) 
 ifeq ($(JASPERLIB),$(INTERNAL_JASPERLIB))
   # MERGE_OBJECTS contains relative paths, so $(INTERNAL_JASPERLIB) had better
-  # be relative to the current relative to the current directory.
+  # be relative to the current directory.
   MERGE_OBJECTS += $(JASPERLIB)
 endif
 MERGEBINARIES = $(BINARIES)
@@ -57,12 +58,10 @@ all: $(BINARIES)
 
 include $(SRCDIR)/common.mk
 
-LIBOPTS = $(shell $(LIBOPT) $(JASPERLIB_USE) $(NETPBMLIB))
+LIBOPTS = $(shell $(LIBOPT) $(JASPERLIB_USE))
 
-$(BINARIES): %: %.o $(JASPERLIB_DEP) $(NETPBMLIB) $(LIBOPT)
-	$(LD) -o $@ $< \
-	  $(LIBOPTS) $(JASPERDEPLIBS) $(MATHLIB) $(RPATH) \
-	  $(LDFLAGS) $(LDLIBS) $(LADD)
+$(BINARIES): %: %.o $(JASPERLIB_DEP) $(LIBOPT)
+$(BINARIES): LDFLAGS_TARGET = $(LIBOPTS) $(JASPERDEPLIBS)
 
 $(INTERNAL_JASPERLIB): $(BUILDDIR)/$(SUBDIR)/libjasper FORCE
 	$(MAKE) -f $(SRCDIR)/$(SUBDIR)/libjasper/Makefile \
