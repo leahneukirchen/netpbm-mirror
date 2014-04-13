@@ -1,6 +1,9 @@
 #ifndef EXIF_H_INCLUDED
 #define EXIF_H_INCLUDED
 
+#include <stdio.h>
+#include "netpbm/pm_c_util.h"
+
 #define MAX_COMMENT 2000
 
 #if MSVCRT
@@ -34,23 +37,24 @@ typedef struct {
     int   CompressionLevel;
     char  Comments[MAX_COMMENT];
 
-    unsigned char * ThumbnailPointer;  /* Pointer at the thumbnail */
+    const unsigned char * ThumbnailPointer;  /* Pointer at the thumbnail */
     unsigned ThumbnailSize;     /* Size of thumbnail. */
 
-    char * DatePointer;
-}ImageInfo_t;
+    const char * DatePointer;
+} exif_ImageInfo;
 
 
 /* Prototypes for exif.c functions. */
 
 void 
-process_EXIF(unsigned char * const ExifSection, 
-             unsigned int    const length,
-             ImageInfo_t *   const ImageInfoP, 
-             int             const ShowTags,
-             const char **   const errorP);
+exif_parse(const unsigned char * const exifSection, 
+           unsigned int          const length,
+           exif_ImageInfo *      const imageInfoP, 
+           bool                  const wantTagTrace,
+           const char **         const errorP);
 
 void 
-ShowImageInfo(ImageInfo_t * const ImageInfoP);
+exif_showImageInfo(const exif_ImageInfo * const imageInfoP,
+                   FILE *                 const fileP);
 
 #endif
