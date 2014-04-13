@@ -498,11 +498,11 @@ processDirEntry(const unsigned char *  const dirEntry,
     switch (tag){
 
     case TAG_MAKE:
-        strncpy(imageInfoP->CameraMake, (const char*)valuePtr, 31);
+        STRSCPY(imageInfoP->CameraMake, (const char*)valuePtr);
         break;
 
     case TAG_MODEL:
-        strncpy(imageInfoP->CameraModel, (const char*)valuePtr, 39);
+        STRSCPY(imageInfoP->CameraModel, (const char*)valuePtr);
         break;
 
     case TAG_XRESOLUTION:
@@ -516,7 +516,7 @@ processDirEntry(const unsigned char *  const dirEntry,
         break;
 
     case TAG_DATETIME_ORIGINAL:
-        strncpy(imageInfoP->DateTime, (const char*)valuePtr, 19);
+        STRSCPY(imageInfoP->DateTime, (const char*)valuePtr);
         imageInfoP->DatePointer = (const char*)valuePtr;
         break;
 
