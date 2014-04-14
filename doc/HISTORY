@@ -22,6 +22,10 @@ not yet  BJH  Release 10.67.00
               make variables, causing static library not to get built.
               Introduced in 10.66.
 
+              Build: fix dependencies in .deb package so they work with
+              Debian 6 at least.  Always broken (.deb capability was new in
+              10.66).
+
 14.03.30 BJH  Release 10.66.00
 
               Add pamvalidate.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
