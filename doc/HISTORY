@@ -6,6 +6,11 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.67.00
 
+              pamtotiff: add -output, use Standard Output normally (before, it
+              had to be seekable.  Also, you could do an append operation to
+              Standard Output; now you have to use -output for that).  Thanks
+              Prophet of the Way <afu@wta.att.ne.jp>.
+
               pamsharpness: put primary output on Standard Output instead of
               on Standard Error as a Netpbm message.
 
@@ -13,10 +18,16 @@ not yet  BJH  Release 10.67.00
               was designed by Ron Vantreese (ait_frog-netpbm@yahoo.com).
 
               jpegtopnm -dumpexif: fix incorrect display of resolution.
+              Always broken.  (-dumpexif was new in Netpbm 9.18 September
+              2001).
 
               jpegtopnm -dumpexif: fix truncated make, model, or datetime.
+              Always broken.  (-dumpexif was new in Netpbm 9.18 September
+              2001).
 
               jpegtopnm -dumpexif: fix wild pointer with invalid EXIF data.
+              Always broken.  (-dumpexif was new in Netpbm 9.18 September
+              2001).
 
               Build: Fix inconsistent use of upper and lower case Y and N in 
               make variables, causing static library not to get built.
