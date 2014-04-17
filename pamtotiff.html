@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pamtotiff User Manual</TITLE></HEAD>
 <BODY>
 <H1>pamtotiff</H1>
-Updated: 03 December 2008
+Updated: 17 April 2014
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -69,10 +69,46 @@ ignored all but the first Netpbm image in the input stream.
 
 <h3 id="output">The Output File</h3>
 
-<P>The output goes to Standard Output.  <b>pamtotiff</b> approaches
-this output file differently from Unix and Netpbm convention.  This is due
-entirely to <b>pamtotiff</b>'s use of the TIFF library to do all
-TIFF output.
+<P>By default, the output goes to Standard Output.  Alternatively, you can
+specify an output file with the <b>-output</b> option and <b>pamtotiff</b>
+will write its output directly to that file.
+
+<p>Because of the way the TIFF library (which <b>pamtotiff</b> uses) works,
+when the program writes to Standard Output, it generates the entire TIFF image
+in a temporary file and then copies it to Standard Output; you may see
+negative performance effects of this.
+
+<p>The <b>-output</b> method avoids the performance effects of the copy
+through the temporary file, but there are restrictions on the output file: it
+must be seekable and it must be readable.  The program fails if it is not.
+With Standard Output, neither of those restrictions applies.
+
+<p>With <b>-output</b>, if the file already exists and has data in it,
+<b>pamtotiff</b> appends the image to the existing TIFF file.  (A TIFF file
+may contain multiple images).
+
+<p>By default, <b>pamtotiff</b> creates the file named by <b>-output</b> if it
+does not already exist.  But if you also specify <b>-append</b>, the program
+fails if the file named by <b>-output</b> does not already exist.
+
+<p>Before Netpbm 10.67 (June 2014), there is no <b>-output</b> option and
+Standard Output must be seekable.  So pipes are out.
+
+<p>Before Netpbm 10.67 (June 2014), you could append to Standard Output.  See
+below.  The current program does not have the ability; you must
+use <b>-output</b> to append to an existing TIFF file.
+
+<p>The difference above means current <b>pamtotiff</b> is actually not
+backward compatible, which is a rare thing for Netpbm.  But it's a good thing
+because the previous function was very strange and probably hardly ever
+exploited.
+
+
+<h4 id="oldoutput">Old Versions</h4>
+
+<p>As alluded to above, <b>pamtotiff</b> does output very differently
+in releases before 10.67.  The following describes the old function,
+which is unusual both for Netpbm and for Unix programs in general.
 
 <ul>
 <li>The output file must be seekable.  <b>pamtotiff</b> does not
@@ -330,18 +366,35 @@ an IMAGEWIDTH tag that gives the actual width of the image.
 
 <p><b>-tag</b> was new in Netpbm 10.31 (December 2005).
 
+<h3 id="outputoptions">Output</h3>
+
+<p>See <a href="output">The Output File</a>.
+
+<p><b>-output</b> names the output file.  Without this option
+<b>pamtotiff</b> writes to Standard Output.
+
+<p>The <b>-append</b> option tells <b>pamtotiff</b> only to append to the file
+named by <b>output</b>; not create it.  Without this option, the program
+creates the file it does not already exist.  But even then, if the file does
+already exist, the program appends the image to what is in the file already.
+(A TIFF file may contain multiple images).
+
+<p><b>-append</b> has no effect if you don't also specify <b>-output</b>.
+
+<p>Before Netpbm 10.67 (June 2014), <b>-append</b> means something rather
+different: it means to append the image to the output TIFF file (which is
+always Standard Output in 10.67) instead of replacing its contents.
+
+<p><b>-append</b> was new in Netpbm 10.27 (March 2005).
+
+
+
 <h3 id="other">Other</h3>
 
 <P>You can use the <B>-rowsperstrip</B> option to set the number of
 rows (scanlines) in each strip of data in the output file.  By
 default, the output file has the number of rows per strip set to a
 value that will ensure each strip is no more than 8 kilobytes long.
-
-<p>The <b>-append</b> option tells <b>pamtotiff</b> to add images to
-the existing output file (a TIFF file may contain multiple images)
-instead of the default, which is to replace the output file.
-
-<p><b>-append</b> was new in Netpbm 10.27 (March 2005).
 
 
 <H2 id="notes">NOTES</H2>
@@ -512,7 +565,10 @@ Author: Patrick J. Naughton (<A HREF="mailto:naughton@wind.sun.com">naughton@win
 <LI><A HREF="#synopsis">SYNOPSIS</A>
 <LI><A HREF="#description">DESCRIPTION</A>
   <ul>
-  <li><a href="#outputfile">The Output File</a>
+  <li><a href="#output">The Output File</a>
+  <ul>
+    <li><a href="#oldoutput">Old Versions</a>
+    </ul>
   <li><a href="#library">TIFF Capability</a>
   </ul>
 <LI><A HREF="#options">OPTIONS</A>
@@ -524,6 +580,7 @@ Author: Patrick J. Naughton (<A HREF="mailto:naughton@wind.sun.com">naughton@win
   <li><a href="#fillorder">Fill Order</a>
   <li><a href="#colorspacer">Color Space</a>
   <li><a href="#extratags">Extra Tags</a>
+  <li><a href="#outputoptions">Output</a>
   <li><a href="#other">Other</a>
   </ul>
 <LI><A HREF="#notes">NOTES</A>
