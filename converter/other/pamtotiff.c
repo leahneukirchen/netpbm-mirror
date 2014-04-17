@@ -53,19 +53,19 @@
 #define COMPRESSION_ADOBE_DEFLATE 8
 #endif
 
-struct sizeset {
+typedef struct {
     bool b1, b2, b4, b8;
-};
+} SizeSet;
 
-enum writeMethod {Tmpfile, DirectCreate, DirectAppend};
+typedef enum { TMPFILE, DIRECT_CREATE, DIRECT_APPEND } WriteMethod;
 
-enum createPolicy {MustExist, MayCreate};
+typedef enum { MUST_EXIST, MAY_CREATE } CreatePolicy;
 
-struct cmdlineInfo {
+typedef struct {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *input_filespec;  /* Filespecs of input files */
+    const char * inputFileName;
     int compression;
         /* COMPRESSION Tiff tag value, that corresponds to the compression
            option the user specified, or -1 if he didn't specify any.
@@ -82,14 +82,14 @@ struct cmdlineInfo {
     float xresolution; /* XRESOLUTION Tiff tag value or -1 for none */
     float yresolution; /* YRESOLUTION Tiff tag value or -1 for none */
     int resolutionunit;  /* RESOLUTIONUNIT Tiff tag value */
-    struct sizeset indexsizeAllowed;
+    SizeSet indexsizeAllowed;
     /* Which bit widths are allowable in a raster of palette indices */
     unsigned int verbose;
-    enum writeMethod writeMethod;  /* Output mode */
-    const char *output; /* -output option value.  NULL if none. */
+    WriteMethod writeMethod;  /* Output mode */
+    const char * output; /* -output option value.  NULL if none. */
     float resolution;  /* X and Y resolution */
     struct optNameValue * taglist;
-};
+} CmdlineInfo;
 
 
 
@@ -135,9 +135,9 @@ validateTagList(struct optNameValue const taglist[]) {
 
 
 static void
-parseCommandLine(int                        argc,
-                 char **              const argv,
-                 struct cmdlineInfo * const cmdlineP) {
+parseCommandLine(int                 argc,
+                 const char ** const argv,
+                 CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
@@ -199,7 +199,7 @@ parseCommandLine(int                        argc,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char**)argv, opt, sizeof(opt), 0);
     /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (none + packbits + lzw + g3 + g4 + flate + adobeflate > 1)
@@ -247,11 +247,11 @@ parseCommandLine(int                        argc,
 
     if (outputSpec) {
         if (appendSpec)
-            cmdlineP->writeMethod = DirectAppend;
+            cmdlineP->writeMethod = DIRECT_APPEND;
         else
-            cmdlineP->writeMethod = DirectCreate;
+            cmdlineP->writeMethod = DIRECT_CREATE;
     } else
-        cmdlineP->writeMethod = Tmpfile;
+        cmdlineP->writeMethod = TMPFILE;
 
     if (predictorSpec) {
         if (cmdlineP->predictor != 1 && cmdlineP->predictor != 2)
@@ -334,12 +334,12 @@ parseCommandLine(int                        argc,
     }
 
     if (argc-1 == 0)
-        cmdlineP->input_filespec = "-";
+        cmdlineP->inputFileName = "-";
     else if (argc-1 != 1)
         pm_error("Program takes zero or one argument (filename).  You "
                  "specified %d", argc-1);
     else
-        cmdlineP->input_filespec = argv[1];
+        cmdlineP->inputFileName = argv[1];
 }
 
 
@@ -573,12 +573,12 @@ writeScanLines(struct pam *   const pamP,
 
 
 static void
-analyzeColorsInRgbInput(struct pam *        const pamP,
-                        struct cmdlineInfo  const cmdline,
-                        int                 const maxcolors,
-                        tupletable *        const chvP,
-                        unsigned int *      const colorsP,
-                        bool *              const grayscaleP) {
+analyzeColorsInRgbInput(struct pam *   const pamP,
+                        CmdlineInfo    const cmdline,
+                        int            const maxcolors,
+                        tupletable *   const chvP,
+                        unsigned int * const colorsP,
+                        bool *         const grayscaleP) {
 /*----------------------------------------------------------------------------
    Same as analyzeColors(), except assuming input image has R/G/B tuples.
 -----------------------------------------------------------------------------*/
@@ -630,12 +630,12 @@ analyzeColorsInRgbInput(struct pam *        const pamP,
 
 
 static void
-analyzeColors(struct pam *        const pamP,
-              struct cmdlineInfo  const cmdline,
-              int                 const maxcolors,
-              tupletable *        const chvP,
-              unsigned int *      const colorsP,
-              bool *              const grayscaleP) {
+analyzeColors(struct pam *   const pamP,
+              CmdlineInfo    const cmdline,
+              int            const maxcolors,
+              tupletable *   const chvP,
+              unsigned int * const colorsP,
+              bool *         const grayscaleP) {
 /*----------------------------------------------------------------------------
    Analyze the colors in the input image described by 'pamP', whose file
    is positioned to the raster.
@@ -673,7 +673,7 @@ computeRasterParm(struct pam *     const pamP,
                   int              const compression,
                   bool             const minisblack,
                   bool             const miniswhite,
-                  struct sizeset   const indexsizeAllowed,
+                  SizeSet          const indexsizeAllowed,
                   unsigned short * const samplesperpixelP,
                   unsigned short * const bitspersampleP,
                   unsigned short * const photometricP,
@@ -860,10 +860,10 @@ validateReadableOutputFile(int const ofd) {
 
 
 static void
-createTiffGeneratorDirect(const char *      const outputFileName,
-                          enum createPolicy const createPolicy,
-                          TIFF **           const tifPP,
-                          int  *            const ofdP) {
+createTiffGeneratorDirect(const char * const outputFileName,
+                          CreatePolicy const createPolicy,
+                          TIFF **      const tifPP,
+                          int  *       const ofdP) {
 /*----------------------------------------------------------------------------
   Create a TIFF generator that writes its output to the specified file.
 
@@ -877,7 +877,7 @@ createTiffGeneratorDirect(const char *      const outputFileName,
 -----------------------------------------------------------------------------*/
     int fd;
 
-    if (createPolicy == MustExist)
+    if (createPolicy == MUST_EXIST)
         fd = open(outputFileName, O_RDWR);
     else
         fd = open(outputFileName, (O_RDWR | O_CREAT), 00644);
@@ -966,13 +966,13 @@ copyBufferToStdout(int const tmpfileFd) {
 
 
 static void
-destroyTiffGenerator(enum writeMethod const writeMethod,
-                     TIFF *           const tifP,
-                     int              const ofd) {
+destroyTiffGenerator(WriteMethod const writeMethod,
+                     TIFF *      const tifP,
+                     int         const ofd) {
 
     TIFFFlushData(tifP);
 
-    if (writeMethod == Tmpfile)
+    if (writeMethod == TMPFILE)
         copyBufferToStdout(ofd);
 
     TIFFClose(tifP);
@@ -1044,7 +1044,7 @@ setTagListFields(const struct optNameValue * const taglist,
 
 static void
 setTiffFields(TIFF *              const tifP,
-              struct cmdlineInfo  const cmdline,
+              CmdlineInfo         const cmdline,
               struct pam *        const pamP,
               unsigned short      const bitspersample,
               unsigned short      const photometric,
@@ -1117,10 +1117,10 @@ setTiffFields(TIFF *              const tifP,
 
 
 static void
-convertImage(FILE *             const ifP,
-             TIFF *             const tifP,
-             const char *       const inputFileDescription,
-             struct cmdlineInfo const cmdline) {
+convertImage(FILE *       const ifP,
+             TIFF *       const tifP,
+             const char * const inputFileDescription,
+             CmdlineInfo  const cmdline) {
 
     tupletable chv;
     tuplehash cht;
@@ -1187,32 +1187,37 @@ convertImage(FILE *             const ifP,
 
 
 int
-main(int argc, char *argv[]) {
-    struct cmdlineInfo cmdline;
+main(int argc, const char *argv[]) {
+    CmdlineInfo cmdline;
     const char * inputFileDescription;
-    FILE* ifP;
-    TIFF* tifP;
+    FILE * ifP;
+    TIFF * tifP;
     int ofd;
     int eof;
     unsigned int imageSeq;
-
-    pnm_init(&argc, argv);
+    
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
-    ifP = pm_openr_seekable(cmdline.input_filespec);
+    ifP = pm_openr_seekable(cmdline.inputFileName);
 
-    if (streq(cmdline.input_filespec, "-"))
+    if (streq(cmdline.inputFileName, "-"))
         inputFileDescription = "Standard Input";
     else
-        inputFileDescription = cmdline.input_filespec;
+        inputFileDescription = cmdline.inputFileName;
 
-    if (cmdline.writeMethod == DirectAppend)
-        createTiffGeneratorDirect(cmdline.output, MustExist,  &tifP, &ofd);
-    else if (cmdline.writeMethod == DirectCreate)
-        createTiffGeneratorDirect(cmdline.output, MayCreate,  &tifP, &ofd);
-    else
+    switch (cmdline.writeMethod) {
+    case DIRECT_APPEND:
+        createTiffGeneratorDirect(cmdline.output, MUST_EXIST,  &tifP, &ofd);
+        break;
+    case DIRECT_CREATE:
+        createTiffGeneratorDirect(cmdline.output, MAY_CREATE,  &tifP, &ofd);
+        break;
+    case TMPFILE:
         createTiffGeneratorTmpfile(&tifP, &ofd);
+        break;
+    }
 
     eof = FALSE;  /* initial assumption */
     imageSeq = 0;
