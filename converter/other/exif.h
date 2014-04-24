@@ -16,7 +16,8 @@ typedef struct {
     char  CameraMake   [32];
     char  CameraModel  [40];
     char  DateTime     [20];
-    int   Height, Width;
+    float XResolution;
+    float YResolution;
     int   Orientation;
     int   IsColor;
     int   FlashUsed;

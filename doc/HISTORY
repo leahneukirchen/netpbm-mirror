@@ -4,6 +4,23 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+14.04.24 BJH  Release 10.66.02
+
+              pamsharpness: put primary output on Standard Output instead of
+              on Standard Error as a Netpbm message.
+
+              jpegtopnm -dumpexif: fix incorrect display of resolution.
+              Always broken.  (-dumpexif was new in Netpbm 9.18 September
+              2001).
+
+              jpegtopnm -dumpexif: fix truncated make, model, or datetime.
+              Always broken.  (-dumpexif was new in Netpbm 9.18 September
+              2001).
+
+              jpegtopnm -dumpexif: fix wild pointer with invalid EXIF data.
+              Always broken.  (-dumpexif was new in Netpbm 9.18 September
+              2001).
+
 14.04.02 BJH  Release 10.66.01
 
               Build: Fix inconsistent use of upper and lower case Y and N in 
