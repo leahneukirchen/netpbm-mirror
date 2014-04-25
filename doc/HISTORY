@@ -6,6 +6,12 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.67.00
 
+              sgitopnm: add ability to convert 2-channel SGI image.
+              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
+              sgitopnm: add ability to work with non-seekable input (e.g. a
+              pipe).  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+
               pamtotiff: add -output, use Standard Output normally (before, it
               had to be seekable.  Also, you could do an append operation to
               Standard Output; now you have to use -output for that).  Thanks
@@ -14,8 +20,9 @@ not yet  BJH  Release 10.67.00
               pamsharpness: put primary output on Standard Output instead of
               on Standard Error as a Netpbm message.
 
-              Windows build: include an icon in every executable.  The icon
-              was designed by Ron Vantreese (ait_frog-netpbm@yahoo.com).
+              sgitopnm: fix bug: no output if input is RLE compressed.  Broken
+              in Netpbm 10.53 (December 2010).  Thanks Prophet of the Way
+              <afu@wta.att.ne.jp>.
 
               jpegtopnm -dumpexif: fix incorrect display of resolution.
               Always broken.  (-dumpexif was new in Netpbm 9.18 September
@@ -28,6 +35,9 @@ not yet  BJH  Release 10.67.00
               jpegtopnm -dumpexif: fix wild pointer with invalid EXIF data.
               Always broken.  (-dumpexif was new in Netpbm 9.18 September
               2001).
+
+              Windows build: include an icon in every executable.  The icon
+              was designed by Ron Vantreese (ait_frog-netpbm@yahoo.com).
 
               Build: Fix inconsistent use of upper and lower case Y and N in 
               make variables, causing static library not to get built.
