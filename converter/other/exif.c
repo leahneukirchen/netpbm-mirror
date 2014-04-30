@@ -86,6 +86,9 @@ static int BytesPerFormat[] = {0,1,1,2,4,8,1,1,2,4,8,4,8};
 
 #define TAG_ORIENTATION       0x0112
 
+#define TAG_XRESOLUTION       0x011A
+#define TAG_YRESOLUTION       0x011B
+
 #define TAG_EXPOSURETIME      0x829A
 #define TAG_FNUMBER           0x829D
 
@@ -472,15 +475,25 @@ ProcessExifDir(unsigned char *  const ExifData,
         switch(Tag){
 
             case TAG_MAKE:
-                strncpy(ImageInfoP->CameraMake, (char*)ValuePtr, 31);
+                STRSCPY(ImageInfoP->CameraMake, (char*)ValuePtr);
                 break;
 
             case TAG_MODEL:
-                strncpy(ImageInfoP->CameraModel, (char*)ValuePtr, 39);
+                STRSCPY(ImageInfoP->CameraModel, (char*)ValuePtr);
                 break;
 
+            case TAG_XRESOLUTION:
+                ImageInfoP->XResolution = 
+                    ConvertAnyFormat(ValuePtr, Format);
+                break;
+    
+            case TAG_YRESOLUTION:
+                ImageInfoP->YResolution = 
+                    ConvertAnyFormat(ValuePtr, Format);
+                break;
+    
             case TAG_DATETIME_ORIGINAL:
-                strncpy(ImageInfoP->DateTime, (char*)ValuePtr, 19);
+                STRSCPY(ImageInfoP->DateTime, (char*)ValuePtr);
                 ImageInfoP->DatePointer = (char*)ValuePtr;
                 break;
 
@@ -838,8 +851,8 @@ ShowImageInfo(ImageInfo_t * const ImageInfoP)
     if (ImageInfoP->DateTime[0]){
         fprintf(stderr, "Date/Time    : %s\n",ImageInfoP->DateTime);
     }
-    fprintf(stderr, "Resolution   : %d x %d\n",
-            ImageInfoP->Width, ImageInfoP->Height);
+    fprintf(stderr, "Resolution   : %f x %f\n",
+            ImageInfoP->XResolution, ImageInfoP->YResolution);
     if (ImageInfoP->Orientation > 1){
 
         /* Only print orientation if one was supplied, and if its not
