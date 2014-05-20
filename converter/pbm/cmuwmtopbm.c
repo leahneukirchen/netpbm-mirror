@@ -48,20 +48,20 @@ readCmuwmHeader(FILE *         const ifP,
 
     rc = pm_readbiglong(ifP, &l);
     if (rc == -1 )
-        pm_error(initReadError);
+        pm_error("%s", initReadError);
     if ((uint32_t)l != cmuwmMagic)
         pm_error("bad magic number in CMU window manager file");
     rc = pm_readbiglong(ifP, &l);
     if (rc == -1)
-        pm_error(initReadError);
+        pm_error("%s", initReadError);
     *colsP = l;
     rc = pm_readbiglong(ifP, &l);
     if (rc == -1 )
-        pm_error(initReadError);
+        pm_error("%s", initReadError);
     *rowsP = l;
     rc = pm_readbigshort(ifP, &s);
     if (rc == -1)
-        pm_error(initReadError);
+        pm_error("%s", initReadError);
     *depthP = s;
 }
 
