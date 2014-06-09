@@ -127,7 +127,7 @@ PORTBINARIES =  avstopam bmptopnm fitstopnm \
 		winicontopam xwdtopnm zeisstopnm
 
 ifneq ($(DONT_HAVE_PROCESS_MGMT),Y)
-  PORTBINARIES += pstopnm
+  PORTBINARIES += pstopnm pnmtops
 endif
 
 ifeq ($(HAVE_PNGLIB),Y)
