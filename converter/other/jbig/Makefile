@@ -11,7 +11,9 @@ LIBJBIG_OBJECTS = jbig.o jbig_tab.o
 
 EXTERN_INCLUDES =
 ifneq ($(JBIGHDR_DIR),NONE)
-  EXTERN_INCLUDES += -I$(JBIGHDR_DIR)
+  ifneq ($(JBIGHDR_DIR)x,x)
+    EXTERN_INCLUDES += -I$(JBIGHDR_DIR)
+  endif
 endif
 
 ifneq ($(JBIGHDR_DIR),NONE)
