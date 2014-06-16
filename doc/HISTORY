@@ -4,6 +4,15 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+14.06.15 BJH  Release 10.66.03
+
+              sgitopnm: fix bug: no output if input is RLE compressed.  Broken
+              in Netpbm 10.53 (December 2010).  Thanks Prophet of the Way
+              <afu@wta.att.ne.jp>.
+
+              Build: fix bug in which null value is not taken to mean
+              "in the system search path" for JBIGHDR_DIR and JASPERHDR_DIR.
+
 14.04.24 BJH  Release 10.66.02
 
               pamsharpness: put primary output on Standard Output instead of

@@ -376,7 +376,7 @@ readChannels(FILE *       const ifP,
                 MALLOCARRAY_NOFAIL(image[iindex], head->xsize);
 
             if (table) {
-                if (outChannelSpec && channel >= outChannel) {
+                if (!outChannelSpec || channel >= outChannel) {
                     long const offset = table[sgiIndex].start;
                     long const length = head->bpc == 2 ?
                         table[sgiIndex].length / 2 :

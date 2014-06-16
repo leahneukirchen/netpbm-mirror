@@ -10,15 +10,17 @@ SUBDIRS = libjasper
 include $(BUILDDIR)/config.mk
 
 EXTERN_INCLUDES =
-ifneq ($(JASPERHDR_DIR),NONE)
-  EXTERN_INCLUDES += -I$(JASPERHDR_DIR)
-endif
-
 
 # INTERNAL_JASPERLIB must be relative to the current directory, because it
 # may end up in MERGE_OBJECTS, which must be relative.
 INTERNAL_JASPERLIB = libjasper/libjasper.a
 INTERNAL_JASPERHDR_DIR = $(SRCDIR)/$(SUBDIR)/libjasper/include
+
+ifneq ($(JASPERHDR_DIR),NONE)
+  ifneq ($(JASPERHDR_DIR)x,x)
+    EXTERN_INCLUDES += -I$(JASPERHDR_DIR)
+  endif
+endif
 
 ifeq ($(JASPERLIB),$(INTERNAL_JASPERLIB))
   ifeq ($(HAVE_INT64),Y)
