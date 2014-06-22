@@ -11,6 +11,9 @@ versions use the Netpbm libraries.
 The code in subdirectory 'libjbig' is straight from the JBIG_KIT package and
 generates essentially the same libjbig.a that one gets from that package.
 
+The code is based on JBIG-KIT version 2.1, adapted to Netpbm by Bryan
+Henderson in June 2014.
+
 The reason Netpbm contains a copy of the library is convenience of users.  For
 many people, the only reason to have a jbig library is to be able to convert
 images to and from the format, which they do with Netpbm.  Requiring a Netpbm

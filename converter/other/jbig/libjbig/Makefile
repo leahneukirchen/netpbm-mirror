@@ -7,7 +7,7 @@ VPATH=.:$(SRCDIR)/$(SUBDIR)
 
 include $(BUILDDIR)/config.mk
 
-LIBJBIG_OBJECTS = jbig.o jbig_tab.o
+LIBJBIG_OBJECTS = jbig.o jbig_ar.o
 
 OBJECTS = $(LIBJBIG_OBJECTS)
 MERGE_OBJECTS = $(LIBJBIG_OBJECTS)

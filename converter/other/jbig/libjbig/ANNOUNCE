@@ -1,54 +1,51 @@
 
-Version 1.2 of the JBIG-KIT lossless image compression library available
-------------------------------------------------------------------------
+JBIG-KIT lossless image compression library
+-------------------------------------------
 
-Markus Kuhn -- 2000-04-08
+by Markus Kuhn
 
 
-The latest release of JBIG-KIT can be downloaded over the Internet
-with anonymous ftp from
+The latest release of JBIG-KIT can be downloaded from
 
-  ftp://ftp.informatik.uni-erlangen.de/pub/doc/ISO/JBIG/jbigkit-1.2.tar.gz
-  http://www.cl.cam.ac.uk/~mgk25/download/jbigkit-1.2.tar.gz
-
-and from a number of other servers.
+  http://www.cl.cam.ac.uk/~mgk25/jbigkit/
 
 JBIG-KIT implements a highly effective data compression algorithm for
 bi-level high-resolution images such as fax pages or scanned
 documents.
 
-JBIG-KIT provides a portable library of compression and decompression
-functions with a documented interface that you can very easily include
-into your image or document processing software. In addition, JBIG-KIT
-provides ready-to-use compression and decompression programs with a
-simple command line interface (similar to the converters found in Jef
-Poskanzer's PBM graphics file conversion package).
+JBIG-KIT provides two variants of a portable library of compression
+and decompression functions with a documented interface. You can very
+easily include into your image or document processing software. In
+addition, JBIG-KIT provides ready-to-use compression and decompression
+programs with a simple command line interface (similar to the
+converters found in Jef Poskanzer's PBM graphics file conversion
+package).
 
 JBIG-KIT implements the specification
 
   International Standard ISO/IEC 11544:1993 and ITU-T Recommendation
   T.82(1993), "Information technology - Coded representation of picture
   and audio information - progressive bi-level image compression",
-  <http://www.itu.ch/itudoc/itu-t/rec/t/t82_23822.html>,
+  <http://www.itu.int/rec/T-REC-T.82>,
 
-which is commonly referred to as the "JBIG standard". JBIG (Joint
+which is commonly referred to as the "JBIG1 standard". JBIG (Joint
 Bi-level Image experts Group) is the committee which developed this
 international standard for the lossless compression of images using
 arithmetic coding. Like the well-known compression algorithms JPEG and
-MPEG, also JBIG has been developed and published by the International
+MPEG, JBIG has also been developed and published by the International
 Organization for Standardization (ISO) and the International
 Telecommunication Union (ITU). See also
 
-  http://www.jpeg.org/public/jbighomepage.htm
+  http://www.jpeg.org/jbig/
   http://www.iso.ch/
-  http://www.itu.ch/
+  http://www.itu.int/
 
 The JBIG compression algorithm offers the following features:
 
   - Close to state-of-the-art lossless compression ratio for high
     resolution bi-level images.
 
-  - Around 1.1 to 1.5 times better compression ratio on typical
+  - About 1.1 to 1.5 times better compression ratio on typical
     scanned documents compared to G4 fax compression (ITU-T T.6),
     which has been the best compression algorithm for scanned
     documents available prior to JBIG.
@@ -56,10 +53,10 @@ The JBIG compression algorithm offers the following features:
   - Up to 30 times better compression of scanned images with dithered
     images compared to G4 fax compression.
 
-  - Around 2 times better compression on typical 300 dpi documents
+  - About 2 times better compression on typical 300 dpi documents
     compared to 'gzip -9' on raw bitmaps.
     
-  - Around 3-4 times better compression than GIF on typical 300 dpi
+  - About 3-4 times better compression than GIF on typical 300 dpi
     documents.
 
   - Even much better competitive compression results on computer
@@ -67,7 +64,7 @@ The JBIG compression algorithm offers the following features:
 
   - JBIG supports hierarchical "progressive" encoding, that means it is
     possible to encode a low resolution image first, followed by
-    resolution enhancement data. This allows for instance a document
+    resolution enhancement data. This allows, for instance, a document
     browser to display already a good 75 dpi low resolution version of
     an image, while the data necessary to reconstruct the full 300 dpi
     version for laser printer reproduction is still arriving (say
@@ -78,166 +75,98 @@ The JBIG compression algorithm offers the following features:
     normal non-progressive mode encoded image (which JBIG also
     supports).
 
-  - The progressive encoding mode utilizes a very sophisticated
-    resolution reduction algorithm which offers highest quality
-    low resolution versions that preserve the shape of characters as
-    well as the integrity of thin lines and dithered images.
+  - The progressive encoding mode utilizes a quite sophisticated
+    resolution reduction algorithm which offers high quality low
+    resolution versions that preserve the shape of characters as well
+    as the integrity of thin lines and dithered images.
 
   - JBIG supports multiple bit planes and can this way also be used
-    for greyscale and color images, although the main field of
+    for grayscale and color images, although the main field of
     application is compression of bi-level images, i.e. images with
-    only two different pixel values. For greyscale images with up to
+    only two different pixel values. For grayscale images with up to
     6 bit per pixel, JBIG performs superior to JPEG's lossless
     mode.
 
-JBIG-KIT is free software under the GNU General Public License. For
-other license arrangements contact the author. JBIG-KIT provides a
-portable library implemented in ANSI/ISO C for encoding and decoding
-JBIG data streams together with documentation. The library is not
-intended for 8-bit or 16-bit machine architectures (e.g., old MS-DOS C
-compilers) on which a number of very efficient optimization techniques
-used in this software are not possible. For maximum performance, a
-32-bit processor is required (64-bit systems work too, of course). On
-architectures with 16-bit pointer arithmetic, only very small images
-can be processed.
+JBIG-KIT can be used as free software under the GNU General Public
+License. Other license arrangements more suitable for commercial
+applications are available as well, please contact the author for
+details. JBIG-KIT provides two portable libraries implemented in
+ANSI/ISO C for encoding and decoding JBIG data streams, along with
+documentation. The first library, jbig.c, implements nearly all of the
+options that the JBIG standard provides, but keeps the entire
+uncompressed image in memory. The second library, jbig85.c, implements
+only the ITU-R T.85 subset of the standard that black/white fax
+machines use (single bit per pixel, no "progressive" encoding), and
+keeps only three lines of the uncompressed image in memory, making it
+particularly attractive for low-memory embedded applications.
 
-Special features of the JBIG-KIT implementation are:
+The libraries are not intended for 8-bit or 16-bit machine
+architectures (e.g., old MS-DOS C compilers). For maximum performance,
+a 32-bit processor is required (64-bit systems work too, of course).
+On architectures with 16-bit pointer arithmetic, the full-featured
+jbig.c library can process only very small images.
+
+Special features of the full-featured jbig.c variant:
 
   - Fully reentrant multithread-capable design (no global or static
-    variables, isolated malloc()/free() calls, etc.).
+    variables, isolated malloc()/free() calls, etc.)
 
   - Capable of handling incomplete and growing JBIG data streams in
-    order to allow earliest display of low resolution versions.
+    order to allow earliest display of low resolution versions
 
   - Capable of handling several incoming data streams simultaneously
-    in one single process and task.
+    in one single process and thread
 
   - Especially designed with applications in mind that want to display
     incoming data as early as possible (e.g., similar to the way in
-    which Netscape Navigator handles incoming GIF images).
+    which Netscape Navigator handles incoming GIF images)
 
   - Implements all JBIG features and options including progressive and
     sequential encoding, multiple bit planes, user specified
     resolution reduction and deterministic prediction tables, adaptive
     template changes for optimal performance on half-tone images,
     deterministic prediction, typical prediction in lowest and
-    differential layers, various stripe orderings, etc. Only the SEQ
+    differential layers, various stripe orderings, etc; only the SEQ
     and HITOLO options are currently not supported by the decoder
     (they are normally never required, but could be added later in
-    case of user requirements).
+    case of user requirements)
+
+  - Suitable for fax applications, satisfies ITU-T T.85 profile
 
   - Efficient code, optimized utilization of 32-bit processor
-    registers.
+    registers
 
-  - Very easy to use documented C library interface.
+  - Very easy to use documented C library interface
 
   - Included Gray code conversion routines for efficient encoding
-    of greyscale images.
+    of grayscale images
 
   - Ready-to-use pbmtojbg and jbgtopbm converters.
 
+Special features of the light-weight jbig85.c variant:
 
-Changes in version 1.2 (2000-04-08):
+  - Suitable for low-memory embedded applications
 
-  - bug in the decoder fixed, which caused the rest of the input file
-    to be skipped whenever a comment marker was encountered (special
-    thanks to Ben Rudiak-Gould <benrg@math.berkeley.edu> for
-    reporting this one)
+  - Implements only the JBIG1 subset defined in the ITU-T T.85
+    profile (single bit plane, no differential layers)
 
-Changes in version 1.1 (1999-11-16):
+  - Requires only three pixel rows of the uncompressed image to be
+    kept in memory
 
-  - serious bug in the encoder fixed, which for a very small
-    percentage of images has caused an unterminated linked list to be
-    created internally that could have been responsible for
-    segmentation violations or non-terminating encoders
-    (special thanks to Hisashi Saiga <saiga@itl.tnr.sharp.co.jp> for
-    tracking that one down)
+  - Handles all NEWLEN modes of operation required by ITU-T T.85 with
+    just a single pass over the data, automatically performing the
+    necessary lookahead after the last stripe
 
-  - minor bug in the "jbgtopbm -d" diagnostic output fixed
-
-Changes in version 1.0 (1998-04-11):
-
-  - two bugs fixed that caused the encoder and decoder to fail
-    under certain modes of operation with several bit planes
-
-  - added new functions jbg_split_planes(), jbg_dec_merge_planes(),
-    and jbg_dec_getsize_merged() for easy handling of greyscale
-    images
-
-  - added support for compressing greyscale PGM files to pbmtojbg
-    and jbgtopbm
-
-  - more changes to avoid paranoid compiler warnings
-
-Changes in version 0.9 (1996-01-09):
-
-  - encoder won't break any more on input bitmap data with incorrect
-    zero padding
-
-  - pbmtojbg displays a warning if input file has incorrect zero
-    padding
-
-  - various minor improvements suggested by Stefan Willer
-    <Stefan.Willer@unnet.wupper.DE>
-
-  - many minor changes in order to avoid warnings from paranoid
-    compilers
-
-Changes in version 0.8 (1995-09-20):
-
-  - namespace cleared up, all names externally visible from the library
-    start now with jbg_ or JBG_
-
-  - minor non-critical bug fixed which caused library to fail compatibility
-    test and showed up especially on DEC Alpha systems
-
-  - jbg_dec_gethight() is now called jbg_dec_getheight()
-
-  - filenames conform now to MS-DOS limits
-
-  - Bug in pbmtojbg fixed (handling of ASCII PBM files)
-
-Changes in version 0.7 (1995-06-10):
-
-  - more problems on 16-bit int systems and on Macintosh systems fixed
-    (special thanks to Jean-Pierre Gachen <jpg11@calvanet.calvacom.fr>)
-
-  - global Makefile
-
-Changes in version 0.6 (1995-06-08):
-
-  - memory leak fixed
-
-  - should now also work on systems where int is only 16-bit large
-
-  - changes of the JBIG "Technical Corrigendum 1" included (special
-    thanks to Dr. Sebestyen from Siemens AG for sending me a copy
-    of the draft)
-
-First release: version 0.5 (1995-05-28)
-
-
-Please send all questions, problem reports, patches, suggestions,
-success stories, comments, etc. to
-
-  mkuhn at acm.org
+  - Codec buffers only a few bytes of arithmetic-codec data and outputs
+    resulting bytes or lines as soon as they are available.
 
 I will try to provide free support and maintenance for this software
-at least for the next few months depending on my available time.
-
-Y2K statement: JBIG-KIT does not handle any date and time related
-data, therefore if JBIG-KIT causes you any problems related to date
-and time overflows, this would indeed be most surprising.
-
-This library has been published in the hope that it will encourage the
-development of good freely available scanned document handling and
-transmission systems for the Internet so that large amounts of scanned
-text can be made available to the global village easily.
+for the foreseeable future, depending on my available time.
 
 Happy compressing ...
 
 Markus Kuhn
 
 --
-Markus G. Kuhn, Security Group, Computer Lab, Cambridge University, UK
-email: mkuhn at acm.org,  home page: <http://www.cl.cam.ac.uk/~mgk25/>
+Markus Kuhn, Computer Laboratory, University of Cambridge
+http://www.cl.cam.ac.uk/~mgk25/ || CB3 0FD, Great Britain
