@@ -44,9 +44,6 @@ all: $(BINARIES)
 
 include $(SRCDIR)/common.mk
 
-test:
-	echo $(JBIGLIB)
-
 $(BINARIES): %: %.o $(JBIGLIB_DEP) $(LIBOPT)
 $(BINARIES): LDFLAGS_TARGET = $(shell $(LIBOPT) $(JBIGLIB))
 
