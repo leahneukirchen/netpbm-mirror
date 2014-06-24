@@ -468,8 +468,8 @@ ZHDR_DIR =
 
 # The JBIG lossless image compression library (aka JBIG-KIT):
 
-JBIGLIB = $(BUILDDIR)/converter/other/jbig/libjbig.a
-JBIGHDR_DIR = $(SRCDIR)/converter/other/jbig
+JBIGLIB = $(INTERNAL_JBIG_LIB)
+JBIGHDR_DIR = $(INTERNAL_JBIGHDR_DIR)
 
 # The Jasper JPEG-2000 image compression library (aka JasPer):
 JASPERLIB = $(INTERNAL_JASPERLIB)
