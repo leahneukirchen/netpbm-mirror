@@ -188,8 +188,6 @@ typedef struct {
    This is an important data type because decent file formats use
    big-endian -- they don't care if some CPU happens to use some other
    code for its own work.
-
-   uint64_t is supported only when available.
 -----------------------------------------------------------------------------*/
     unsigned char bytes[8];
 } bigend64;

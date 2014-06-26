@@ -78,8 +78,8 @@ ximageToPixmap(Display *    const disp,
 
 
 
-/* find the best pixmap depth supported by the server for a particular
- * visual and return that depth.
+/* find the best pixmap depth the server can do for a particular visual and
+ * return that depth.
  *
  * this is complicated by R3's lack of XListPixmapFormats so we fake it
  * by looking at the structure ourselves.

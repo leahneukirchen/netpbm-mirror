@@ -297,9 +297,9 @@ jas_image_t *jp2_decode(jas_stream_t *in, char *optstr)
 		jas_eprintf("warning: component data type mismatch\n");
 	}
 
-	/* Is the compression type supported? */
+	/* Can we handle the compression type? */
 	if (dec->ihdr->data.ihdr.comptype != JP2_IHDR_COMPTYPE) {
-		jas_eprintf("error: unsupported compression type\n");
+		jas_eprintf("error: not capable of this compression type\n");
 		goto error;
 	}
 

@@ -20,6 +20,10 @@ not yet  BJH  Release 10.67.00
               pamsharpness: put primary output on Standard Output instead of
               on Standard Error as a Netpbm message.
 
+              pamflip: fix bug when built with WANT_SSE=n: column-for-row
+              transformations of PBM produce garbage output.  Introduced in
+              10.65 (December 2013).
+
               sgitopnm: fix bug: no output if input is RLE compressed.  Broken
               in Netpbm 10.53 (December 2010).  Thanks Prophet of the Way
               <afu@wta.att.ne.jp>.

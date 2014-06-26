@@ -1461,8 +1461,6 @@ static int jpc_unk_getparms(jpc_ms_t *ms, jpc_cstate_t *cstate, jas_stream_t *in
 
 static int jpc_unk_putparms(jpc_ms_t *ms, jpc_cstate_t *cstate, jas_stream_t *out)
 {
-    /* If this function is called, we are trying to write an unsupported
-      type of marker segment.  Return with an error indication.  */
     return -1;
 }
 

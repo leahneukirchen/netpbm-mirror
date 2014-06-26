@@ -346,7 +346,7 @@ static jpc_enc_cp_t *cp_create(char *optstr, jas_image_t *image)
         if (jas_image_cmptbrx(image, cmptno) + jas_image_cmpthstep(image, cmptno) <=
           jas_image_brx(image) || jas_image_cmptbry(image, cmptno) +
           jas_image_cmptvstep(image, cmptno) <= jas_image_bry(image)) {
-            fprintf(stderr, "unsupported image type\n");
+            fprintf(stderr, "We don't know how to interpret this image type\n");
             goto error;
         }
         /* Note: We ought to be calculating the LCMs here.  Fix some day. */

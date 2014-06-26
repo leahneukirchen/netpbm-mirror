@@ -39,8 +39,8 @@
 
 #include "jbig.h"
 
-#define MX_MAX  127    /* maximal supported mx offset for
-			* adaptive template in the encoder */
+#define MX_MAX  127
+   /* maximal mx offset for adaptive template in the encoder */
 
 #define TPB2CX  0x195  /* contexts for TP special pixels */
 #define TPB3CX  0x0e5
@@ -2609,7 +2609,7 @@ int jbg_dec_in(struct jbg_dec_state *s, unsigned char *data, size_t len,
     s->yd = y;
     s->l0 = (((long) s->buffer[12] << 24) | ((long) s->buffer[13] << 16) |
 	     ((long) s->buffer[14] <<  8) | (long) s->buffer[15]);
-    /* ITU-T T.85 trick not directly supported by decoder; for full
+    /* ITU-T T.85 trick not directly implemented by decoder; for full
      * T.85 compatibility with respect to all NEWLEN marker scenarios,
      * preprocess BIE with jbg_newlen() before passing it to the decoder,
      * or consider using the decoder found in jbig85.c instead. */

@@ -19,7 +19,7 @@
 
 #define MAXEDGES  5
 #define MAXSTATES 6000
-#define MAXLABELS 2			/* only bintree supported anymore */
+#define MAXLABELS 2			/* only bintree possible anymore */
 #define MAXLEVEL  22 
 
 #define FIASCO_BINFILE_RELEASE   2
