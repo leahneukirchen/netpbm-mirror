@@ -197,54 +197,10 @@
    config.mk.
 */
 
-/*
-  If the compiler is Clang, ignore reported __GNUC__ , __GNUC_MINOR__
-  values.  Treat it as a generic C compiler.  Clang normally reports itself
-  as GCC, but does not necessarily offer all the features of GCC.  For
-  example, we know that Apple Mac OSX 10.8 ships with 
-
-   > cc --version
-     Apple clang version 4.0 (tags/Apple/clang-421.0.60) (based on LLVM 3.1svn)
-
-   which masquerades as GCC 4.2.1, but it does not have SSE2 operator
-   __builtin_ia32_pcmpeqb128 .
-
-  On the other hand, research by Prophet of the Way in September 2012
-  indicated that Clang 2.6-3.0 have the above function (and all Netpbm 
-  compiled successfully with SSE exploitation), but 3.1 does not.  He did
-  not find any mention in documentation of that change.
-
-  At least some versions of Clang that do not have __builtin_ia32_pcmpeqb128
-  nonetheless have other GCC SSE2 operators, such as __builtin_ia32_pcmpgtb128.
-  We did not detect a pattern.
-
-  See below on compilers other than GCC that set __GNUC__:
-  http://sourceforge.net/apps/mediawiki/predef/index.php?title=Compilers
-*/
-#if defined(__GNUC__) && !defined(__clang__) && !defined(NO_GCC_UNIQUE)
+#if defined(__GNUC__) && !defined(NO_GCC_UNIQUE)
   #define GCCVERSION __GNUC__*100 + __GNUC_MINOR__
 #else
   #define GCCVERSION 0
-#endif
-
-/* HAVE_GCC_SSE2 means the compiler has all of the GCC-specific builtins to
-   directly access SSE/SSE2 features.  This is different from whether the
-   compiler generates code that uses these features at all.  It is also
-   different from whether the compiler has the more standard operators defined
-   in <emmintrins.h>.
-*/
-
-#ifndef HAVE_GCC_SSE2
-/* GCC 4.1 ostensibly has the feature, but experiments with 4.1.2 and
-   4.1.2 in May 2010 exposed an obscure compiler bug and the compiler got
-   stuck with pamflip_sse.c.  So we say the feature exists only on 4.2
-   and up.
-*/
-#if GCCVERSION >=402 && defined(__SSE__) && defined(__SSE2__)
-  #define HAVE_GCC_SSE2 1
-#else
-  #define HAVE_GCC_SSE2 0
-#endif
 #endif
 
 #ifndef HAVE_GCC_BITCOUNT

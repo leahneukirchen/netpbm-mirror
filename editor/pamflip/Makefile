@@ -31,5 +31,6 @@ include $(SRCDIR)/common.mk
 all: $(BINARIES) $(SUBDIRS:%=%/all)
 
 pamflip_sse.o pamflip_sse.o2: CFLAGS_TARGET = $(CFLAGS_SSE)
+pamflip.o pamflip.o2: CFLAGS_TARGET = $(CFLAGS_SSE)
 
 pamflip:%:%.o $(ADDL_OBJECTS)

@@ -78,7 +78,7 @@
 enum xformType {LEFTRIGHT, TOPBOTTOM, TRANSPOSE};
 
 #ifndef SIMD_PBM_TRANSPOSITION
-  #if HAVE_GCC_SSE2 && defined(__SSE2__)
+  #if WANT_SSE && defined(__SSE2__)
     #define SIMD_PBM_TRANSPOSITION 1
   #else
     #define SIMD_PBM_TRANSPOSITION 0
