@@ -15,5 +15,3 @@ pamflip -tb testimg.ppm | cksum
 pamflip -lr testgrid.pbm | cksum
 # Test 5.  Should print 604323149 41
 pamflip -tb testgrid.pbm | cksum
-# Test 6.  Should print 490797850 37
-pamflip -cw testgrid.pbm | cksum
