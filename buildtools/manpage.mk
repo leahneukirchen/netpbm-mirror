@@ -354,7 +354,7 @@ MAN5 = \
 	ppm.5 \
 
 # These things do get converted to man pages and installed.
-MANPAGES = $(MAN1) netpbm.1 $(MAN3) $(MAN5)
+MANPAGES = netpbm.1 $(MAN1) $(MAN3) $(MAN5)
 HTMLMANUALS = $(MAN1:.1=.html) $(MAN3:.3=.html) $(MAN5:.5=.html)
 
 # These things don't get converted to manual pages.
@@ -388,13 +388,13 @@ xmlpages:
 # This will install the generated man pages
 installman:
 	set -x
-	for f in $(MAN1); do if [ -f $$f ]; then gzip <$$f >$(MANDIR)/man1/$$f.gz; fi; done
+	for f in netpbm.1 $(MAN1); do if [ -f $$f ]; then gzip <$$f >$(MANDIR)/man1/$$f.gz; fi; done
 	for f in $(MAN3); do if [ -f $$f ]; then gzip <$$f >$(MANDIR)/man3/$$f.gz; fi; done
 	for f in $(MAN5); do if [ -f $$f ]; then gzip <$$f >$(MANDIR)/man5/$$f.gz; fi; done
 
 # This will uninstall them
 uninstallman:
-	for f in $(MAN1); do rm -f $(MANDIR)/man1/$$f.gz; fi; done
+	for f in netpbm.1 $(MAN1); do rm -f $(MANDIR)/man1/$$f.gz; fi; done
 	for f in $(MAN3); do rm -f $(MANDIR)/man3/$$f.gz; fi; done
 	for f in $(MAN5); do rm -f $(MANDIR)/man5/$$f.gz; fi; done
 

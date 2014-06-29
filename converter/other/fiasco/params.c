@@ -656,7 +656,7 @@ usage (const param_t *params, const char *progname, const char *synopsis,
     fprintf (stderr, "Usage: %s [OPTION]...%s\n", progname,
              non_opt_string ? non_opt_string : " ");
     if (synopsis != NULL)
-        fprintf (stderr, synopsis);
+        fprintf (stderr, "%s", synopsis);
     fprintf (stderr, "\n\n");
     fprintf (stderr, "Mandatory or optional arguments to long options "
              "are mandatory or optional\nfor short options too. "

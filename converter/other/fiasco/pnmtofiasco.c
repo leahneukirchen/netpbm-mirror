@@ -170,7 +170,7 @@ main (int argc, char **argv)
       return 0;
    else
    {
-      fprintf (stderr, fiasco_get_error_message ());
+       fprintf (stderr, "%s", fiasco_get_error_message ());
       fprintf (stderr, "\n");
       return 1;
    }

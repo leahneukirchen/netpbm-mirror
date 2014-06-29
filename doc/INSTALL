@@ -170,6 +170,32 @@ If you figure out how to install on other platforms, contact the
 Netpbm maintainer to have the 'configure' program or these
 instructions improved for the next person.
 
+If you want to use a compiler other than your system default, set
+the CC value in config.mk to the shell command name for your compiler,
+e.g.
+
+  CC=clang-3
+
+You can also override it on the Make command line, which is especially
+useful if you want to build some parts with one compiler and other parts
+with another compiler:
+
+  $ make pamflip CC=clang-3
+
+To get appropriate defaults when you run 'configure', you can also set what
+compiler Configure assumes you will be using to build, with an environment
+variable:
+
+  $ CC=clang-3 ./configure
+
+Likewise, you can add compiler flags with a CFLAGS make variable, either set
+in config.mk or on the make command line and you can get better get more
+appropriate defaults from Configure if you pass the same CFLAGS to Configure
+via environment variable.  LDFLAGS (linker options) and CPPFLAGS (C
+preprocessor options) are similar.
+
+  $ make CFLAGS=-O0
+
 
 CUSTOM INSTALLATION
 -------------------

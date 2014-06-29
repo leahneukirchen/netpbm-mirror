@@ -40,8 +40,8 @@ pamsumm --mean --brief ${tmpdir}/ppmcie.ppm | \
 # x86 64 bit: 0.002478
 
 pamsharpness ${tmpdir}/ppmcie.ppm 2>&1 | \
-  awk 'NF==4 && $2=="Sharpness" \
-       {if (0.002475 < $4 && $4 < 0.002479) print "ok"; else print $4}
-       NF>0 && NF!=4 {print "error"}'
+  awk 'NF==3 && $1=="Sharpness" \
+       {if (0.002475 < $3 && $3 < 0.002479) print "ok"; else print $3}
+       NF>0 && NF!=3 {print "error"}'
 
 rm ${tmpdir}/ppmcie.ppm

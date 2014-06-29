@@ -900,8 +900,8 @@ static void jpc_ns_analyze(jpc_qmfb1d_t *qmfb, int flags, jas_seq2d_t *x)
 			startptr += interstep;
 		}
 	} else {
-		/* The reversible integer-to-integer mode is not supported
-		  for this transform. */
+		/* The reversible integer-to-integer mode is not valid for this
+		  transform. */
 		abort();
 	}
 }
@@ -973,8 +973,8 @@ static void jpc_ns_synthesize(jpc_qmfb1d_t *qmfb, int flags, jas_seq2d_t *x)
 			startptr += interstep;
 		}
 	} else {
-		/* The reversible integer-to-integer mode is not supported
-		  for this transform. */
+		/* The reversible integer-to-integer mode is not valid
+           for this transform. */
 		abort();
 	}
 }

@@ -13,13 +13,14 @@
 #define _XOPEN_SOURCE 600
 #include <string.h>
 
+#include <jasper/jasper.h>
+
 #include "pm_c_util.h"
 #include "pam.h"
 #include "shhopt.h"
 #include "nstring.h"
 #include "mallocvar.h"
 
-#include <jasper/jasper.h>
 #include "libjasper_compat.h"
 
 

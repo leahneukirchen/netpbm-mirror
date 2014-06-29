@@ -105,8 +105,8 @@ BMPCompTypeName(BMPCompType const compression) {
     case BMPCOMP_RLE4:      return "4 bit run-length coding";
     case BMPCOMP_RLE8:      return "8 bit run-length coding";
     case BMPCOMP_BITFIELDS: return "none (bitfields)";
-    case BMPCOMP_JPEG:      return "JPEG (not supported)";
-    case BMPCOMP_PNG:       return "PNG (not supported)";   
+    case BMPCOMP_JPEG:      return "JPEG";
+    case BMPCOMP_PNG:       return "PNG";   
     }
     return 0;  /* Default compiler warning */
 }

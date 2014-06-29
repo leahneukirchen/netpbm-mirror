@@ -623,7 +623,7 @@ int jas_image_getfmt(jas_stream_t *in)
 	int found;
 	int i;
 
-	/* Check for data in each of the supported formats. */
+	/* Check for data in each of the formats we know. */
 	found = 0;
 	for (i = 0, fmtinfo = jas_image_fmtinfos; i < jas_image_numfmts; ++i,
 	  ++fmtinfo) {

@@ -36,7 +36,7 @@ at_bitmap_type * at_bitmap_new(unsigned short width,
 			       unsigned int planes);
 at_bitmap_type * at_bitmap_copy(at_bitmap_type * src);
 
-/* We have to export functions that supports internal datum 
+/* We have to export functions that allows internal datum 
    access. Such functions might be useful for 
    at_bitmap_new user. */
 unsigned short at_bitmap_get_width (at_bitmap_type * bitmap);
