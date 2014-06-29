@@ -4,29 +4,25 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-14.06.29 BJH  Release 10.67.00
-
-              sgitopnm: add ability to convert 2-channel SGI image.
-              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
-
-              sgitopnm: add ability to work with non-seekable input (e.g. a
-              pipe).  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
-
-              pamtotiff: add -output, use Standard Output normally (before, it
-              had to be seekable.  Also, you could do an append operation to
-              Standard Output; now you have to use -output for that).  Thanks
-              Prophet of the Way <afu@wta.att.ne.jp>.
-
-              pamsharpness: put primary output on Standard Output instead of
-              on Standard Error as a Netpbm message.
+14.06.27 BJH  Release 10.66.04
 
               pamflip: fix bug when built with WANT_SSE=n: column-for-row
               transformations of PBM produce garbage output.  Introduced in
               10.65 (December 2013).
 
+14.06.15 BJH  Release 10.66.03
+
               sgitopnm: fix bug: no output if input is RLE compressed.  Broken
               in Netpbm 10.53 (December 2010).  Thanks Prophet of the Way
               <afu@wta.att.ne.jp>.
+
+              Build: fix bug in which null value is not taken to mean
+              "in the system search path" for JBIGHDR_DIR and JASPERHDR_DIR.
+
+14.04.24 BJH  Release 10.66.02
+
+              pamsharpness: put primary output on Standard Output instead of
+              on Standard Error as a Netpbm message.
 
               jpegtopnm -dumpexif: fix incorrect display of resolution.
               Always broken.  (-dumpexif was new in Netpbm 9.18 September
@@ -40,19 +36,11 @@ CHANGE HISTORY
               Always broken.  (-dumpexif was new in Netpbm 9.18 September
               2001).
 
-              Windows build: include an icon in every executable.  The icon
-              was designed by Ron Vantreese (ait_frog-netpbm@yahoo.com).
-
-              Build: fix bug in which null value is not taken to mean
-              "in the system search path" for JBIGHDR_DIR and JASPERHDR_DIR.
+14.04.02 BJH  Release 10.66.01
 
               Build: Fix inconsistent use of upper and lower case Y and N in 
               make variables, causing static library not to get built.
-              Introduced in 10.66.
-
-              Build: fix dependencies in .deb package so they work with
-              Debian 6 at least.  Always broken (.deb capability was new in
-              10.66).
+              Introduced in 10.66.00.
 
 14.03.30 BJH  Release 10.66.00
 
@@ -95,7 +83,7 @@ CHANGE HISTORY
               both -xsize and -ysize.  Introduced in 10.65.
 
               pgmramp: fix bogus output with really large images.  Thanks
-              Prophet of the Way <afu@wta.att.ne.jp>.  Always broken.
+              Prophet of the Way <afu@wta.att.ne.jp>.
 
               ppmrelief: fix out-of-bound values in output.  Always broken.
               ppmrelief was new in primordial Netpbm in 1989.

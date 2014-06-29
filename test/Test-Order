@@ -50,8 +50,7 @@ pamditherbw.test
 pbmclean.test
 pamcut.test
 pnmcat.test
-pamflip1.test
-pamflip2.test
+pamflip.test
 pamenlarge.test
 pnminvert.test
 pamchannel.test

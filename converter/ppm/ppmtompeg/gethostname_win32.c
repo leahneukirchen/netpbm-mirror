@@ -94,7 +94,7 @@ get_string_version(push_string_t *str)
             return FALSE;
     }
 
-    /* Call GetNativeSystemInfo if available; GetSystemInfo otherwise. */
+    /* Call GetNativeSystemInfo if supported or GetSystemInfo otherwise. */
     pGNSI = (PGNSI)
             GetProcAddress(GetModuleHandle(TEXT("kernel32.dll")), 
             "GetNativeSystemInfo");

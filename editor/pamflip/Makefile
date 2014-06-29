@@ -13,15 +13,13 @@ SUBDIRS =
 
 MERGEBINARIES = pamflip
 
-PORTBINARIES = pamflip
-
-BINARIES = $(PORTBINARIES)
+BINARIES = pamflip
 
 SCRIPTS =
 
-ADDL_OBJECTS = pamflip_sse.o
+PAMFLIP_OBJECTS = pamflip.o pamflip_sse.o
 
-OBJECTS = pamflip.o $(ADDL_OBJECTS)
+OBJECTS = $(PAMFLIP_OBJECTS)
 
 MERGE_OBJECTS = $(OBJECTS:%.o=%.o2)
 
@@ -31,6 +29,8 @@ include $(SRCDIR)/common.mk
 all: $(BINARIES) $(SUBDIRS:%=%/all)
 
 pamflip_sse.o pamflip_sse.o2: CFLAGS_TARGET = $(CFLAGS_SSE)
-pamflip.o pamflip.o2: CFLAGS_TARGET = $(CFLAGS_SSE)
 
-pamflip:%:%.o $(ADDL_OBJECTS)
+pamflip: $(PAMFLIP_OBJECTS) $(NETPBMLIB) $(LIBOPT)
+	$(LD) -o $@ $(PAMFLIP_OBJECTS) \
+	  $(shell $(LIBOPT) $(NETPBMLIB)) \
+	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)

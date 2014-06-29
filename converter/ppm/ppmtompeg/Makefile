@@ -38,13 +38,7 @@ endif
 #	-DHEINOUS_DEBUG_MODE
 #
 
-MP_BASE_OBJS = \
-  mfwddct.o \
-  postdct.o \
-  huff.o \
-  bitio.o \
-  mheaders.o \
-
+MP_BASE_OBJS = mfwddct.o postdct.o huff.o bitio.o mheaders.o
 MP_ENCODE_OBJS = \
   frames.o \
   iframe.o \
@@ -52,24 +46,11 @@ MP_ENCODE_OBJS = \
   bframe.o \
   psearch.o \
   bsearch.o \
-  block.o \
+  block.o 
 
-MP_OTHER_OBJS = \
-  mpeg.o \
-  subsample.o \
-  param.o \
-  rgbtoycc.o \
-  readframe.o \
-  combine.o \
-  jrevdct.o \
-  frame.o \
-  fsize.o \
-  frametype.o \
-  specifics.o \
-  rate.o \
-  opts.o \
-  input.o \
-
+MP_OTHER_OBJS = mpeg.o subsample.o param.o rgbtoycc.o \
+	readframe.o combine.o jrevdct.o frame.o fsize.o frametype.o \
+	specifics.o rate.o opts.o input.o
 ifeq ($(OMIT_NETWORK),Y)
   MP_OTHER_OBJS += noparallel.o
 else
@@ -81,19 +62,14 @@ else
   MP_OTHER_OBJS += gethostname.o
 endif
 
-ADDL_OBJECTS = \
-  $(MP_BASE_OBJS) \
-  $(MP_OTHER_OBJS) \
-  $(MP_ENCODE_OBJS) \
-  $(JPEG_MODULE).o \
-
-OBJECTS = ppmtompeg.o $(ADDL_OBJECTS)
-MERGE_OBJECTS = ppmtompeg.o2 $(ADDL_OBJECTS)
+NONMAIN_OBJS = $(MP_BASE_OBJS) $(MP_OTHER_OBJS) $(MP_ENCODE_OBJS) \
+	      	$(JPEG_MODULE).o
+OBJECTS = ppmtompeg.o $(NONMAIN_OBJS)
+MERGE_OBJECTS = ppmtompeg.o2 $(NONMAIN_OBJS)
 MP_INCLUDE = mproto.h mtypes.h huff.h bitio.h
 MP_MISC = Makefile huff.table parse_huff.pl
 
-PORTBINARIES = ppmtompeg
-BINARIES = $(PORTBINARIES)
+BINARIES = ppmtompeg
 MERGEBINARIES = $(BINARIES)
 SCRIPTS = 
 
@@ -108,14 +84,18 @@ else
   LIBOPTR =
 endif
 
-ppmtompeg: $(ADDL_OBJECTS) $(LIBOPT)
-ppmtompeg: LDFLAGS_TARGET = \
-  $(shell $(LIBOPT) $(LIBOPTR) $(JPEGLIBX)) $(NETWORKLD)
+ppmtompeg: $(OBJECTS) $(NETPBMLIB) $(LIBOPT)
+	$(LD) -o $@ \
+          $(OBJECTS) $(shell $(LIBOPT) $(NETPBMLIB) $(LIBOPTR) $(JPEGLIBX)) \
+	  $(NETWORKLD) $(MATHLIB) $(LDFLAGS) $(LDLIBS) \
+	  $(RPATH) $(LADD)
 
-profile: $(ADDL_OBJECTS) $(LIBOPT)
-profile: LDFLAGS_TARGET = \
-  -Bstatic -pg \
-  $(shell $(LIBOPT) $(LIBOPTR) $(JPEGLIBX)) $(NETWORKLD)
+profile: $(OBJECTS) $(NETPBMLIB) $(LIBOPT)
+	$(LD) -o $@ -Bstatic -pg \
+          $(OBJECTS) $(shell $(LIBOPT) $(NETPBMLIB) $(LIBOPTR) $(JPEGLIBX)) \
+	  $(NETWORKLD) $(MATHLIB) $(LDFLAGS) $(LDLIBS) \
+	  $(RPATH) $(LADD)
+
 
 #########
 # OTHER #

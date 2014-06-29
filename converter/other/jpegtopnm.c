@@ -652,20 +652,19 @@ print_exif_info(struct jpeg_marker_struct const marker) {
    Dump as informational messages the contents of the Jpeg miscellaneous
    marker 'marker', assuming it is an Exif header.
 -----------------------------------------------------------------------------*/
-    bool const wantTagTrace = false;
-    exif_ImageInfo imageInfo;
+    ImageInfo_t imageInfo;
     const char * error;
 
     assert(marker.data_length >= 6);
 
-    exif_parse(marker.data+6, marker.data_length-6, 
-               &imageInfo, wantTagTrace, &error);
+    process_EXIF(marker.data+6, marker.data_length-6, 
+                 &imageInfo, FALSE, &error);
 
     if (error) {
         pm_message("EXIF header is invalid.  %s", error);
         pm_strfree(error);
     } else
-        exif_showImageInfo(&imageInfo, stderr);
+        ShowImageInfo(&imageInfo);
 }
 
 
@@ -701,7 +700,8 @@ dump_exif(struct jpeg_decompress_struct const cinfo) {
 
     found_one = FALSE;  /* initial value */
 
-    for (markerP = cinfo.marker_list; markerP; markerP = markerP->next) 
+    for (markerP = cinfo.marker_list;
+         markerP; markerP = markerP->next) 
         if (is_exif(*markerP)) {
             pm_message("EXIF INFO:");
             print_exif_info(*markerP);

@@ -117,37 +117,45 @@ PORTBINARIES =  avstopam bmptopnm fitstopnm \
 		gemtopnm giftopnm hdifftopam infotopam \
 		pamtoavs pamtodjvurle pamtofits pamtogif \
 		pamtohdiff pamtohtmltbl pamtompfont pamtooctaveimg \
-		pamtopam pamtopdbimg pamtopfm pamtopnm pamtosrf pamtouil \
+		pamtopam pamtopfm pamtopnm pamtouil \
 		pamtowinicon pamtoxvmini \
-		pbmtopgm pdbimgtopam pfmtopam \
+		pbmtopgm pfmtopam \
 	        pgmtopbm pgmtoppm ppmtopgm pnmtoddif \
-		pnmtopclxl pnmtorast \
+		pnmtopclxl \
 		pnmtosgi pnmtosir pamtotga pnmtoxwd \
-		rasttopnm rlatopam sgitopnm sirtopnm srftopam sunicontopnm \
+		rlatopam sgitopnm sirtopnm sunicontopnm \
 		winicontopam xwdtopnm zeisstopnm
 
+BINARIES = \
+  $(PORTBINARIES) \
+  pamtopdbimg \
+  pamtosrf \
+  pdbimgtopam \
+  pnmtorast \
+  rasttopnm \
+  srftopam \
+
 ifneq ($(DONT_HAVE_PROCESS_MGMT),Y)
-  PORTBINARIES += pstopnm pnmtops
+  PORTBINARIES += pstopnm
+  BINARIES += pnmtops
 endif
 
 ifeq ($(HAVE_PNGLIB),Y)
-  PORTBINARIES += pnmtopng pngtopam pamrgbatopng
+  BINARIES += pnmtopng pngtopam pamrgbatopng
 endif
 ifneq ($(JPEGLIB),NONE)
-  PORTBINARIES += jpegtopnm pnmtojpeg
+  BINARIES += jpegtopnm pnmtojpeg
 endif
 ifneq ($(TIFF_PREREQ_MISSING),Y)
-  PORTBINARIES += tifftopnm pamtotiff pnmtotiffcmyk
+  BINARIES += tifftopnm pamtotiff pnmtotiffcmyk
 endif
 ifneq ($(URTLIB),NONE)
-  PORTBINARIES += rletopnm pnmtorle
+  BINARIES += rletopnm pnmtorle
 endif
 
 ifneq ($(XML2_LIBS),NONE)
-  PORTBINARIES += svgtopam
+  BINARIES += svgtopam
 endif 
-
-BINARIES = $(PORTBINARIES)
 
 MERGEBINARIES = $(BINARIES)
 
@@ -181,14 +189,12 @@ else
   LIBOPTR =
 endif
 
-LIBOPTS_TIFF = $(shell $(LIBOPT) \
+LIBOPTS_TIFF = $(shell $(LIBOPT) $(NETPBMLIB) \
   $(LIBOPTR) $(TIFFLIB) $(TIFFLIB_EXTRALIBS))
 
-tifftopnm pamtotiff pnmtotiffcmyk: tiff.o
-tifftopnm pamtotiff pnmtotiffcmyk: ADDL_OBJECTS = tiff.o
-tifftopnm pamtotiff pnmtotiffcmyk: \
-  LDFLAGS_TARGET = \
- $(shell $(LIBOPT)  $(LIBOPTR) $(TIFFLIB) $(TIFFLIB_EXTRALIBS))
+tifftopnm pamtotiff pnmtotiffcmyk: %: %.o tiff.o $(NETPBMLIB) $(LIBOPT)
+	$(LD) -o $@ $@.o tiff.o \
+	  $(LIBOPTS_TIFF) $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
 ifneq ($(shell $(TEST_PKGCONFIG_LIBPNG)),)
   # pkg-config libpng works on this system
@@ -203,44 +209,66 @@ else
   endif
 endif
 
-pngtopam: pngx.o
-pngtopam: ADDL_OBJECTS = pngx.o
-pngtopam: LDFLAGS_TARGET = $(PNGLIB_LIBOPTS)
+pngtopam: %: %.o pngx.o $(NETPBMLIB) $(LIBOPT)
+	$(LD) -o $@ $@.o pngx.o \
+	  $(shell $(LIBOPT) $(NETPBMLIB)) \
+	  $(PNGLIB_LIBOPTS) $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
-pnmtopng: pngx.o pngtxt.o
-pnmtopng: ADDL_OBJECTS = pngx.o pngtxt.o
-pnmtopng: LDFLAGS_TARGET = $(PNGLIB_LIBOPTS)
+pnmtopng: %: %.o pngx.o pngtxt.o $(NETPBMLIB) $(LIBOPT)
+	$(LD) -o $@ $@.o pngx.o pngtxt.o \
+	  $(shell $(LIBOPT) $(NETPBMLIB)) \
+	  $(PNGLIB_LIBOPTS) $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
-pamrgbatopng: pngx.o
-pamrgbatopng: ADDL_OBJECTS = pngx.o
-pamrgbatopng: LDFLAGS_TARGET = $(PNGLIB_LIBOPTS)
+pamrgbatopng: %: %.o pngx.o $(NETPBMLIB) $(LIBOPT)
+	$(LD) -o $@ $@.o pngx.o \
+	  $(shell $(LIBOPT) $(NETPBMLIB)) $(PNGLIB_LIBOPTS) \
+	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
-jpegtopnm: jpegdatasource.o exif.o
-jpegtopnm: ADDL_OBJECTS = jpegdatasource.o exif.o
-jpegtopnm: LDFLAGS_TARGET = $(shell $(LIBOPT) $(LIBOPTR) $(JPEGLIB))
+jpegtopnm: %: %.o jpegdatasource.o exif.o $(NETPBMLIB) $(LIBOPT)
+	$(LD) -o $@ $< jpegdatasource.o exif.o \
+	  $(shell $(LIBOPT) $(NETPBMLIB) $(LIBOPTR) $(JPEGLIB)) \
+	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD) 
 
-srftopam pamtosrf: srf.o
-srftopam pamtosrf: ADDL_OBJECTS = srf.o
+pnmtojpeg: %: %.o $(NETPBMLIB) $(LIBOPT)
+	$(LD) -o $@ $@.o \
+	  $(shell $(LIBOPT) $(NETPBMLIB) $(LIBOPTR) $(JPEGLIB)) \
+	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
-pnmtojpeg: LDFLAGS_TARGET = $(shell $(LIBOPT) $(LIBOPTR) $(JPEGLIB))
+srftopam pamtosrf: %: %.o srf.o $(NETPBMLIB) $(LIBOPT)
+	$(LD) -o $@ $@.o srf.o \
+	  $(shell $(LIBOPT) $(NETPBMLIB)) \
+	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
-svgtopam: LDFLAGS_TARGET = $(XML2_LIBS)
+svgtopam: %: %.o $(NETPBMLIB) $(LIBOPT)
+	$(LD) -o $@ $@.o \
+	  $(shell $(LIBOPT) $(NETPBMLIB) $(LIBOPTR)) \
+	  $(XML2_LIBS) $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
 # If URTLIB is BUNDLED_URTLIB, then we're responsible for building it, which
 # means it needs to be a dependency:
 ifeq ($(URTLIB), $(BUNDLED_URTLIB))
-rletopnm pnmtorle: $(URTLIB)
+  URTLIBDEP = $(URTLIB)
 endif
 
-rletopnm pnmtorle: LDFLAGS_TARGET = $(shell $(LIBOPT) $(URTLIB))
+rletopnm pnmtorle: %: %.o $(NETPBMLIB) $(URTLIBDEP) $(LIBOPT)
+	$(LD) -o $@ $@.o \
+	  $(shell $(LIBOPT) $(URTLIB) $(NETPBMLIB)) \
+	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
-pnmtops: LDFLAGS_TARGET = $(shell $(LIBOPT) $(PNMTOPS_ZLIB_OPT))
+pnmtops: %: %.o $(NETPBMLIB) $(LIBOPT)
+	$(LD) -o $@ $@.o \
+	  $(shell $(LIBOPT) $(NETPBMLIB) $(PNMTOPS_ZLIB_OPT)) \
+	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
-pnmtorast rasttopnm: rast.o
-pnmtorast rasttopnm: ADDL_OBJECTS = rast.o
+pnmtorast rasttopnm: %: %.o rast.o $(NETPBMLIB) $(LIBOPT)
+	$(LD) -o $@ $@.o rast.o \
+	  $(shell $(LIBOPT) $(NETPBMLIB)) \
+	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
-pdbimgtopam pamtopdbimg: ipdb.o
-pdbimgtopam pamtopdbimg: ADDL_OBJECTS = ipdb.o
+pdbimgtopam pamtopdbimg: %: %.o ipdb.o $(NETPBMLIB) $(LIBOPT)
+	$(LD) -o $@ $@.o ipdb.o \
+	  $(shell $(LIBOPT) $(NETPBMLIB)) \
+	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
 bmptopnm.o bmptopnm.o2: bmp.h
 

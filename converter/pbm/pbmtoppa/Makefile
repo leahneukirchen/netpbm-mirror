@@ -9,18 +9,17 @@ include $(BUILDDIR)/config.mk
 
 all: pbmtoppa
 
-PORTBINARIES = pbmtoppa
-
-BINARIES = $(PORTBINARIES)
+BINARIES = pbmtoppa
 
 MERGEBINARIES = $(BINARIES)
 
-ADDL_OBJECTS = ppa.o pbm.o cutswath.o
-
-OBJECTS = pbmtoppa.o $(ADDL_OBJECTS)
-
-MERGE_OBJECTS = pbmtoppa.o2 $(ADDL_OBJECTS)
+OBJECTS = pbmtoppa.o ppa.o pbm.o cutswath.o
+MERGE_OBJECTS = pbmtoppa.o2 ppa.o pbm.o cutswath.o
 
 include $(SRCDIR)/common.mk
 
-pbmtoppa: $(OBJECTS)
+pbmtoppa: $(OBJECTS) $(NETPBMLIB) $(LIBOPT)
+	$(LD) -o pbmtoppa $(OBJECTS) \
+	  -lm $(shell $(LIBOPT) $(NETPBMLIB)) $(LDFLAGS) $(LDLIBS) \
+	  $(RPATH) $(LADD)
+

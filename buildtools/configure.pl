@@ -1048,19 +1048,6 @@ sub getSse($) {
 }
 
 
-sub getIcon($$) {
-
-    my ($platform, $wantIconR) = @_;
-
-    if ($platform eq 'WINDOWS') {
-        print("Include an icon in each executable?\n");
-        $$wantIconR = promptYesNo("y");
-    } else {
-        $$wantIconR = $FALSE;
-    }
-}
-
-
 
 # TODO: These should do test compiles to see if the headers are in the
 # default search path, both to create a default to offer and to issue a
@@ -2095,8 +2082,6 @@ getSse(\my $wantSse);
 
 findProcessManagement(\my $dontHaveProcessMgmt);
 
-getIcon($platform, \my $wantIcon);
-
 #******************************************************************************
 #
 #  FIND THE PREREQUISITE LIBRARIES
@@ -2384,9 +2369,6 @@ if ($platform eq "GNU") {
          '-shared -Wl,--image-base=0x10000000 -Wl,--enable-auto-import', "\n");
     if ($subplatform ne "cygwin") {
         push(@config_mk, "MSVCRT = Y\n");
-    }
-    if ($wantIcon) {
-        push(@config_mk, 'WINICON_OBJECT = $(BUILDDIR)/icon.netpbm.o');
     }
 } elsif ($platform eq "BEOS") {
     push(@config_mk, "LDSHLIB = -nostart\n");

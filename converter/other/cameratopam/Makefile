@@ -19,20 +19,22 @@ include $(BUILDDIR)/config.mk
 .PHONY: all
 all: cameratopam
 
-ADDL_OBJECTS = util.o identify.o camera.o foveon.o decode.o \
+OBJECTS = util.o identify.o cameratopam.o camera.o foveon.o decode.o \
 	canon.o ljpeg.o dng.o
-
-OBJECTS = cameratopam.o $(ADDL_OBJECTS)
 
 camera.o camera.o2: CFLAGS_TARGET = $(HAVE_JPEG_DEFINE)
 
 MERGE_OBJECTS =
 
-PORTBINARIES = cameratopam
-BINARIES = $(PORTBINARIES)
+BINARIES = cameratopam
 MERGEBINARIES = 
 SCRIPTS = 
 
 include $(SRCDIR)/common.mk
 
-cameratopam: $(ADDL_OBJECTS)
+cameratopam: $(OBJECTS) $(NETPBMLIB) $(LIBOPT)
+	$(LD) -o $@ \
+          $(OBJECTS) $(shell $(LIBOPT) $(NETPBMLIB) $(LIBOPTR)) \
+	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) \
+	  $(RPATH) $(LADD)
+

@@ -449,7 +449,7 @@ write_image (const char *image_name, const image_t *image)
    
    if (image->format == FORMAT_4_2_0)
    {
-      warning ("We cannot write images in 4:2:0 format.");
+      warning ("Writing of images in 4:2:0 format not supported.");
       return;
    }
    

@@ -28,11 +28,11 @@ PORTBINARIES = pamarith pambayer pamchannel pamdepth \
 	pamstack pamsummcol pamvalidate pnmcolormap \
 	ppmdcfont ppmddumpfont ppmdmkfont 
 
-ifneq ($(LINUXSVGALIB),NONE)
-  PORTBINARIES += ppmsvgalib
-endif
-
 BINARIES = $(PORTBINARIES)
+
+ifneq ($(LINUXSVGALIB),NONE)
+  BINARIES += ppmsvgalib
+endif
 
 SCRIPTS = ppmtomap pamfixtrunc
 
@@ -50,7 +50,10 @@ all: $(BINARIES) $(SUBDIRS:%=%/all)
 
 include $(SRCDIR)/common.mk
 
-ppmsvgalib: LDFLAGS_TARGET = $(LINUXSVGALIB)
+ppmsvgalib: %: %.o $(NETPBMLIB) $(LIBOPT)
+	$(LD) -o $@ $< \
+	  $(shell $(LIBOPT) $(NETPBMLIB) $(LINUXSVGALIB)) \
+	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(LADD) 
 
 install.bin: install.bin.local
 .PHONY: install.bin.local

@@ -7,13 +7,10 @@ VPATH=.:$(SRCDIR)/$(SUBDIR)
 
 include $(BUILDDIR)/config.mk
 
-PORTBINARIES = pamtosvg
+BINARIES = pamtosvg
 
-BINARIES = $(PORTBINARIES)
-
-MERGEBINARIES = $(BINARIES)
-
-ADDL_OBJECTS = \
+PAMTOSVG_OBJECTS = \
+	pamtosvg.o \
 	output-svg.o \
 	fit.o \
 	spline.o \
@@ -28,12 +25,31 @@ ADDL_OBJECTS = \
 	exception.o \
 	image-proc.o \
 
-OBJECTS = pamtosvg.o $(ADDL_OBJECTS)
+MERGE_OBJECTS = \
+	pamtosvg.o2 \
+	output-svg.o \
+	fit.o \
+	spline.o \
+	curve.o \
+	vector.o \
+	epsilon-equal.o \
+	autotrace.o \
+	pxl-outline.o \
+	bitmap.o \
+	thin-image.o \
+	logreport.o \
+	exception.o \
+	image-proc.o \
 
-MERGE_OBJECTS = pamtosvg.o2 $(ADDL_OBJECTS)
+OBJECTS = $(PAMTOSVG_OBJECTS)
+
+MERGEBINARIES = $(BINARIES)
 
 all: $(BINARIES)
 
 include $(SRCDIR)/common.mk
 
-pamtosvg: $(ADDL_OBJECTS)
+pamtosvg: $(PAMTOSVG_OBJECTS) $(NETPBMLIB) $(LIBOPT)
+	$(LD) -o $@ $(PAMTOSVG_OBJECTS) \
+	  $(shell $(LIBOPT) $(NETPBMLIB)) \
+	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)

@@ -5,11 +5,6 @@
 ** Based on the SGI image description v0.9 by Paul Haeberli (paul@sgi.comp)
 ** Available via ftp from sgi.com:graphics/SGIIMAGESPEC
 **
-** The definitive document describing the SGI image file format,
-** SGI Image File Format Version 1.00 is available from
-** ftp://ftp.sgi.com/graphics/grafica/sgiimage.html
-**
-**
 ** Permission to use, copy, modify, and distribute this software and its
 ** documentation for any purpose and without fee is hereby granted, provided
 ** that the above copyright notice appear in all copies and that both that
@@ -17,9 +12,12 @@
 ** documentation.  This software is provided "as is" without express or
 ** implied warranty.
 **
+** 29Jan94: first version
+** 08Feb94: minor bugfix
+** 29Jul00: added -channel option (smar@reptiles.org)
+** 19Oct10: added checks for artihmetic overflows
+**          fixed problem with -channel on verbatim sgi images (afu)
 */
-
-
 #include <unistd.h>
 #include <limits.h>
 #include "pm_c_util.h"
@@ -30,12 +28,12 @@
 
 
 
-struct CmdlineInfo {
+struct cmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char * inputFileName;  /* '-' if stdin */
-    unsigned int verbose;
+    const char *  inputFileName;  /* '-' if stdin */
+    unsigned int  verbose;
     unsigned int channelSpec;
     unsigned int channel;
 };
@@ -44,10 +42,10 @@ struct CmdlineInfo {
 
 static void
 parseCommandLine(int argc, const char ** argv,
-                 struct CmdlineInfo * const cmdlineP) {
+                 struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.
+   and argv.  Return the information in the options as *cmdlineP.  
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -55,7 +53,7 @@ parseCommandLine(int argc, const char ** argv,
    Note that the strings we return are stored in the storage that
    was passed to us as the argv array.  We also trash *argv.
 -----------------------------------------------------------------------------*/
-    optEntry * option_def;
+    optEntry *option_def;
         /* Instructions to pm_optParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
@@ -70,7 +68,7 @@ parseCommandLine(int argc, const char ** argv,
             &cmdlineP->channelSpec,            0);
     OPTENT3(0, "verbose",             OPT_FLAG,      NULL,
             &cmdlineP->verbose,       0);
-    OPTENT3(0, "noverbose",           OPT_FLAG,      NULL,
+    OPTENT3(0, "noverbose",             OPT_FLAG,      NULL,
             NULL,       0);  /* backward compatibility */
 
     opt.opt_table = option_def;
@@ -79,8 +77,6 @@ parseCommandLine(int argc, const char ** argv,
 
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
-
-    free(option_def);
 
     if (argc-1 < 1)
         cmdlineP->inputFileName = "-";
@@ -169,9 +165,9 @@ getByteAsShort(FILE * const ifP) {
 
 
 static const char *
-compressionName(unsigned char const storageCode) {
+compressionName(char const compr) {
 
-    switch (storageCode) {
+    switch (compr) {
     case STORAGE_VERBATIM:
         return "none";
     case STORAGE_RLE:
@@ -218,7 +214,7 @@ readHeader(FILE *       const ifP,
     headP->pixmin    = getBigLong(ifP);
     headP->pixmax    = getBigLong(ifP);
     if (headP->pixmin >= headP->pixmax)
-        pm_error("Invalid sgi image header: pixmin larger than pixmax");
+        pm_error("Invalid sgi image header: pixmin larger than pixmax");   
     readBytes(ifP, 4, headP->dummy1);
     readBytes(ifP, 80, headP->name);
     headP->colormap  = getBigLong(ifP);
@@ -247,32 +243,26 @@ readHeader(FILE *       const ifP,
             headP->dimension = 2;
             break;
         case 2:
-            if (!outChannelSpec)
-                pm_message("2-channel image, using only first channel.  "
-                           "Extract alpha channel with -channel=1");
+            pm_error("don't know how to interpret 2-channel image");
             break;
         case 3:
             break;
         default:
             if (!outChannelSpec)
-                pm_message("%u-channel image, using only first 3 channels  "
-                           "Extract %s with -channel=%c",
-                            headP->zsize,
-                            headP->zsize==4 ?
-                                "alpha channel" : "additional channels",
-                            headP->zsize==4 ? '3' : 'N');
+                pm_message("%d-channel image, using only first 3 channels",
+                           headP->zsize);
             break;
         }
         break;
     default:
-        pm_error("illegal dimension value %u (only 1-3 allowed)",
+        pm_error("illegal dimension value %d (only 1-3 allowed)",
                  headP->dimension);
     }
 
     if (verbose) {
-        pm_message("raster size %ux%u, %u channels",
+        pm_message("raster size %dx%d, %d channels",
                    headP->xsize, headP->ysize, headP->zsize);
-        pm_message("compression: 0x%02x = %s",
+        pm_message("compression: %d = %s",
                    headP->storage, compressionName(headP->storage));
         headP->name[79] = '\0';  /* just to be safe */
         pm_message("Image name: '%s'", headP->name);
@@ -355,7 +345,7 @@ rleDecompress(ScanElem * const srcStart,
 static ScanLine *
 readChannels(FILE *       const ifP,
              Header *     const head,
-             TabEntry *   const table,
+             TabEntry *   const table, 
              bool         const outChannelSpec,
              unsigned int const outChannel) {
 
@@ -367,14 +357,11 @@ readChannels(FILE *       const ifP,
     if (outChannelSpec) {
         maxchannel = outChannel + 1;
         MALLOCARRAY_NOFAIL(image, head->ysize);
-    } else if (head->zsize <= 2) {
-        maxchannel = 1;
-        MALLOCARRAY_NOFAIL(image, head->ysize);
     } else {
-        maxchannel = 3;
+        maxchannel = MIN(3, head->zsize);
         MALLOCARRAY_NOFAIL(image, head->ysize * maxchannel);
     }
-    if (table)
+    if (table) 
         MALLOCARRAY_NOFAIL(temp, WORSTCOMPR(head->xsize));
 
     for (channel = 0; channel < maxchannel; ++channel) {
@@ -390,17 +377,16 @@ readChannels(FILE *       const ifP,
 
             if (table) {
                 if (!outChannelSpec || channel >= outChannel) {
-                    pm_filepos const offset = (pm_filepos)
-                        table[sgiIndex].start;
+                    long const offset = table[sgiIndex].start;
                     long const length = head->bpc == 2 ?
                         table[sgiIndex].length / 2 :
                         table[sgiIndex].length;
 
                     unsigned int i;
 
-                    /* Note: (offset < currentPosition) can happen */
-
-                    pm_seek2(ifP, &offset, sizeof(offset));
+                    /* doc says length is in bytes, we are reading words */
+                    if (fseek(ifP, offset, SEEK_SET) != 0)
+                        pm_error("seek error for offset %ld", offset);
 
                     for (i = 0; i < length; ++i)
                         if (head->bpc == 1)
@@ -418,7 +404,7 @@ readChannels(FILE *       const ifP,
                     else
                         p = getBigShort(ifP);
 
-                    if (!outChannelSpec || outChannel == channel)
+                    if (channel == outChannel || !outChannelSpec)
                         image[iindex][i] = p;
                 }
             }
@@ -444,7 +430,7 @@ imageToPnm(Header   *   const head,
     int row;
     int format;
 
-    if (head->zsize <= 2 || outChannelSpec) {
+    if (head->zsize == 1 || outChannelSpec) {
         pm_message("writing PGM image");
         format = PGM_TYPE;
     } else {
@@ -473,10 +459,10 @@ imageToPnm(Header   *   const head,
 
 
 
-int
+int 
 main(int argc, const char * argv[]) {
 
-    struct CmdlineInfo cmdline;
+    struct cmdlineInfo cmdline;
     FILE * ifP;
     TabEntry * table;
     ScanLine * image;
@@ -486,8 +472,8 @@ main(int argc, const char * argv[]) {
     pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
-
-    ifP = pm_openr_seekable(cmdline.inputFileName);
+    
+    ifP = pm_openr(cmdline.inputFileName);    
 
     headP = readHeader(ifP, cmdline.channelSpec, cmdline.verbose);
 
@@ -505,14 +491,14 @@ main(int argc, const char * argv[]) {
         table = readTable(ifP, headP->ysize * headP->zsize);
     else
         table = NULL;
-
+ 
     image = readChannels(ifP, headP, table,
                          cmdline.channelSpec, cmdline.channel);
 
     imageToPnm(headP, image, maxval, cmdline.channelSpec, cmdline.channel);
 
     pm_close(ifP);
-
+ 
     return 0;
 }
 

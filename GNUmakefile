@@ -368,7 +368,7 @@ else
 install.lib:
 endif
 
-.PHONY: install.manwebmain
+.PHONY: install.manweb
 install.manwebmain: $(PKGDIR)/man/web/netpbm.url $(PKGDIR)/bin/doc.url
 
 $(PKGDIR)/man/web/netpbm.url: $(PKGDIR)/man/web
