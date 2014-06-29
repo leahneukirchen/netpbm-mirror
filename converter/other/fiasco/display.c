@@ -307,7 +307,8 @@ alloc_ximage (x11_info_t *xinfo, unsigned width, unsigned height)
       shmem_flag = 0;
       if (fiasco_get_verbosity ())
 	 fprintf (stderr,
-		  "Shared memory not supported\nReverting to normal Xlib.\n");
+              "Shared memory does not work on this system\n"
+              "Reverting to normal Xlib.\n");
    }
 
    if (shmem_flag)

@@ -1,0 +1,20 @@
+The jbig tools are derived from the JBIG-KIT package by Marcus Kuhn,
+by Bryan Henderson on 2000.05.11.
+
+The file ANNOUNCE in the 'libjbig' subdirectory is from that package and gives
+details.
+
+The Netpbm tools jbigtopbm and pbmtojbig were adapted from JBIG-KIT's
+jbgtopbm and pbmtojbg.  The main difference is that the Netpbm
+versions use the Netpbm libraries.
+
+The code in subdirectory 'libjbig' is straight from the JBIG_KIT package and
+generates essentially the same libjbig.a that one gets from that package.
+
+The code is based on JBIG-KIT version 2.1, adapted to Netpbm by Bryan
+Henderson in June 2014.
+
+The reason Netpbm contains a copy of the library is convenience of users.  For
+many people, the only reason to have a jbig library is to be able to convert
+images to and from the format, which they do with Netpbm.  Requiring a Netpbm
+user to find and install this esoteric library is impractical.

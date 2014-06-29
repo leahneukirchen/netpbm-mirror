@@ -171,9 +171,9 @@ extern "C" {
 
 #define	JAS_IMAGE_CT_GRAY_Y	0
 
-/******************************************************************************\
+/*****************************************************************************\
 * Image class and supporting classes.
-\******************************************************************************/
+\*****************************************************************************/
 
 /* Image component class. */
 
@@ -294,7 +294,7 @@ typedef struct {
 \******************************************************************************/
 
 #define	JAS_IMAGE_MAXFMTS	32
-/* The maximum number of image data formats supported. */
+/* The maximum number of image data formats we can handle. */
 
 /* Image format-dependent operations. */
 
@@ -530,57 +530,57 @@ int jas_image_getfmt(jas_stream_t *in);
 * Image format-dependent operations.
 \******************************************************************************/
 
-#if !defined(EXCLUDE_JPG_SUPPORT)
-/* Format-dependent operations for JPG support. */
+#if !defined(EXCLUDE_JPG_CAPABILITY)
+/* Format-dependent operations for JPG capability. */
 jas_image_t *jpg_decode(jas_stream_t *in, char *optstr);
 int jpg_encode(jas_image_t *image, jas_stream_t *out, char *optstr);
 int jpg_validate(jas_stream_t *in);
 #endif
 
-#if !defined(EXCLUDE_MIF_SUPPORT)
-/* Format-dependent operations for MIF support. */
+#if !defined(EXCLUDE_MIF_CAPABILITY)
+/* Format-dependent operations for MIF capability. */
 jas_image_t *mif_decode(jas_stream_t *in, char *optstr);
 int mif_encode(jas_image_t *image, jas_stream_t *out, char *optstr);
 int mif_validate(jas_stream_t *in);
 #endif
 
-#if !defined(EXCLUDE_PNM_SUPPORT)
-/* Format-dependent operations for PNM support. */
+#if !defined(EXCLUDE_PNM_CAPABILITY)
+/* Format-dependent operations for PNM capability. */
 jas_image_t *pnm_decode(jas_stream_t *in, char *optstr);
 int pnm_encode(jas_image_t *image, jas_stream_t *out, char *optstr);
 int pnm_validate(jas_stream_t *in);
 #endif
 
-#if !defined(EXCLUDE_RAS_SUPPORT)
-/* Format-dependent operations for Sun Rasterfile support. */
+#if !defined(EXCLUDE_RAS_CAPABILITY)
+/* Format-dependent operations for Sun Rasterfile capability. */
 jas_image_t *ras_decode(jas_stream_t *in, char *optstr);
 int ras_encode(jas_image_t *image, jas_stream_t *out, char *optstr);
 int ras_validate(jas_stream_t *in);
 #endif
 
-#if !defined(EXCLUDE_BMP_SUPPORT)
-/* Format-dependent operations for BMP support. */
+#if !defined(EXCLUDE_BMP_CAPABILITY)
+/* Format-dependent operations for BMP capability. */
 jas_image_t *bmp_decode(jas_stream_t *in, char *optstr);
 int bmp_encode(jas_image_t *image, jas_stream_t *out, char *optstr);
 int bmp_validate(jas_stream_t *in);
 #endif
 
-#if !defined(EXCLUDE_JP2_SUPPORT)
-/* Format-dependent operations for JP2 support. */
+#if !defined(EXCLUDE_JP2_CAPABILITY)
+/* Format-dependent operations for JP2 capability. */
 jas_image_t *jp2_decode(jas_stream_t *in, char *optstr);
 int jp2_encode(jas_image_t *image, jas_stream_t *out, char *optstr);
 int jp2_validate(jas_stream_t *in);
 #endif
 
-#if !defined(EXCLUDE_JPC_SUPPORT)
-/* Format-dependent operations for JPEG-2000 code stream support. */
+#if !defined(EXCLUDE_JPC_CAPABILITY)
+/* Format-dependent operations for JPEG-2000 code stream capability. */
 jas_image_t *jpc_decode(jas_stream_t *in, char *optstr);
 int jpc_encode(jas_image_t *image, jas_stream_t *out, char *optstr);
 int jpc_validate(jas_stream_t *in);
 #endif
 
-#if !defined(EXCLUDE_PGX_SUPPORT)
-/* Format-dependent operations for PGX support. */
+#if !defined(EXCLUDE_PGX_CAPABILITY)
+/* Format-dependent operations for PGX capability. */
 jas_image_t *pgx_decode(jas_stream_t *in, char *optstr);
 int pgx_encode(jas_image_t *image, jas_stream_t *out, char *optstr);
 int pgx_validate(jas_stream_t *in);

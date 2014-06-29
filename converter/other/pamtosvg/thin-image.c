@@ -189,7 +189,7 @@ thin_image(bitmap_type *image, bool bgSpec, pixel bg,
 
 	default:
 	{
-	  LOG1 ("thin_image: %u-plane images are not supported", spp);
+	  LOG1 ("thin_image: Don't know how to interpret %u-plane images", spp);
 	  at_exception_fatal(exp, "thin_image: wrong plane images are passed");
 	  goto cleanup;
 	}

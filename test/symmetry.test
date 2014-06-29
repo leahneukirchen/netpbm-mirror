@@ -29,67 +29,76 @@
 ## Failure with this test indicates that a generator or editor which
 ## should produce symmetric output images isn't doing so.
 
+tmpdir=${tmpdir:-/tmp}
+
 # Test 1.
-pgmramp -rect 31 31 > ${tmpdir}/rect.pgm
+rect_pgm=${tmpdir}/rect.pgm
+
+pgmramp -rect 31 31 > ${rect_pgm}
 
 ( for op in -null -tb -lr -r90
-    do pamflip $op ${tmpdir}/rect.pgm | cksum
+    do pamflip $op ${rect_pgm} | cksum
     done ) | uniq -c | \
   awk '$1==4 && $3>0 { print "ok"; exit }; { print }'
 
-rm ${tmpdir}/rect.pgm
+rm ${rect_pgm}
 
 # Test 2.
-pgmramp -ell 63 63 > ${tmpdir}/circle.pgm
+circle_pgm=${tmpdir}/circle.pgm
+pgmramp -ell 63 63 > ${circle_pgm}
 
 ( for op in -null -tb -lr -r90
-    do pamflip $op ${tmpdir}/circle.pgm | cksum
+    do pamflip $op ${circle_pgm} | cksum
     done ) | uniq -c | \
   awk '$1==4 && $3>0 { print "ok"; exit }; { print }'
 
-rm ${tmpdir}/circle.pgm
+rm ${circle_pgm}
 
 # Test 3.
-pamgauss -sigma=0.1 -tupletype=GRAYSCALE 25 25 > ${tmpdir}/gauss.pam
+gauss_pgm=${tmpdir}/gauss.pgm
+pamgauss -sigma=0.1 -tupletype=GRAYSCALE 25 25 > ${gauss_pgm}
 
 ( for op in -null -tb -lr -r90
-    do pamflip $op ${tmpdir}/gauss.pam | cksum
+    do pamflip $op ${gauss_pgm} | cksum
     done ) | uniq -c | \
   awk '$1==4 && $3>0 { print "ok"; exit }; { print }'
 
-rm ${tmpdir}/gauss.pam
+rm ${gauss_pgm}
 
 # Test 4.
-pgmkernel 15 15 > ${tmpdir}/kernel.pgm
+kernel_pgm=${tmpdir}/kernel.pgm
+pgmkernel 15 15 > ${kernel_pgm}
 
 ( for op in -null -tb -lr -r90
-    do pamflip $op ${tmpdir}/kernel.pgm | cksum
+    do pamflip $op ${kernel_pgm} | cksum
     done ) | uniq -c | \
   awk '$1==4 && $3>0 { print "ok"; exit }; { print }'
 
-rm ${tmpdir}/kernel.pgm
+rm ${kernel_pgm}
 
 # Test 5.
 # Should print "ok" 7 times.
+pscale_pbm=${tmpdir}/pscale.pbm
 for size in `seq 1 7`
 do
-pbmmake -g 5 5 | pbmpscale $size > ${tmpdir}/pscale.pbm
+pbmmake -g 5 5 | pbmpscale $size > ${pscale_pbm}
 
 ( for op in -null -tb -lr -r90
-    do pamflip $op ${tmpdir}/pscale.pbm | cksum
+    do pamflip $op ${pscale_pbm} | cksum
     done ) | uniq -c | \
   awk '$1==4 && $3>0 { print "ok"; exit }; { print }'
 
-rm ${tmpdir}/pscale.pbm
+rm ${pscale_pbm}
 done
 
 # Test 6.
-pgmramp -ell 101 33 > ${tmpdir}/ell.pgm
+ell_pgm=${tmpdir}/ell.pgm
+pgmramp -ell 101 33 > ${ell_pgm}
 
 ( for op in -null -tb -lr
-  do pamflip $op ${tmpdir}/ell.pgm | cksum
+  do pamflip $op ${ell_pgm} | cksum
   done ) | uniq -c | \
   awk '$1==3 && $3>0 { print "ok"; exit }; { print }'
 
-rm ${tmpdir}/ell.pgm
+rm ${ell_pgm}
 

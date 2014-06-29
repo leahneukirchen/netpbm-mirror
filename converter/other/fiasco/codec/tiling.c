@@ -224,7 +224,7 @@ perform_tiling (const image_t *image, tiling_t *tiling)
       }
       else
       {
-	 warning ("Unsupported image tiling method.\n"
+	 warning ("We do not know the tiling method.\n"
 		  "Skipping image tiling step.");
 	 tiling->exponent = 0;
       }

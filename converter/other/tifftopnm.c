@@ -1457,7 +1457,7 @@ convertRasterInMemory(pnmOut *       const pnmOutP,
         int ok;
         ok = TIFFRGBAImageOK(tif, emsg);
         if (!ok) {
-            pm_message(emsg);
+            pm_message("%s", emsg);
             *statusP = CONV_UNABLE;
         } else {
             uint32 * raster;
@@ -1477,14 +1477,14 @@ convertRasterInMemory(pnmOut *       const pnmOutP,
                 
                 ok = TIFFRGBAImageBegin(&img, tif, stopOnErrorFalse, emsg);
                 if (!ok) {
-                    pm_message(emsg);
+                    pm_message("%s", emsg);
                     *statusP = CONV_FAILED;
                 } else {
                     int ok;
                     ok = TIFFRGBAImageGet(&img, raster, cols, rows);
                     TIFFRGBAImageEnd(&img) ;
                     if (!ok) {
-                        pm_message(emsg);
+                        pm_message("%s", emsg);
                         *statusP = CONV_FAILED;
                     } else {
                         *statusP = CONV_DONE;

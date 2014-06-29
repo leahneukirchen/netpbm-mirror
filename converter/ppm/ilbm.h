@@ -23,7 +23,7 @@ typedef struct {
 #define mskNone                 0
 #define mskHasMask              1
 #define mskHasTransparentColor  2
-#define mskLasso                3       /* not supported */
+#define mskLasso                3       /* can't handle this */
 #define mskMAXKNOWN             mskLasso
 static const char * mskNAME[] = { 
     "none", "mask plane", "transparent color", "lasso" 
@@ -127,8 +127,8 @@ typedef struct {
 #define CLUT_RED    1
 #define CLUT_GREEN  2
 #define CLUT_BLUE   3
-#define CLUT_HUE    4   /* not supported */
-#define CLUT_SAT    5   /* not supported */
+#define CLUT_HUE    4   /* can't handle this */
+#define CLUT_SAT    5   /* can't handle this */
 
 
 /* unofficial DCOL chunk for direct-color */

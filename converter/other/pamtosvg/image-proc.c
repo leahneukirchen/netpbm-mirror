@@ -330,7 +330,7 @@ binarize(bitmap_type *bitmap)
     }
     else
     {
-	    WARNING1("binarize: %u-plane images are not supported", spp);
+	    WARNING1("binarize: don't know how to interpret %u-plane images", spp);
     }
 }
 
