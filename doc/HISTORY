@@ -4,6 +4,26 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+14.06.29 BJH  Release 10.35.93
+
+              pamsharpness: put primary output on Standard Output instead of
+              on Standard Error as a Netpbm message.
+
+              jpegtopnm -dumpexif: fix incorrect display of resolution.
+              Always broken.  (-dumpexif was new in Netpbm 9.18 September
+              2001).
+
+              jpegtopnm -dumpexif: fix truncated make, model, or datetime.
+              Always broken.  (-dumpexif was new in Netpbm 9.18 September
+              2001).
+
+              jpegtopnm -dumpexif: fix wild pointer with invalid EXIF data.
+              Always broken.  (-dumpexif was new in Netpbm 9.18 September
+              2001).
+
+              Build: fix dependencies in .deb package so they work with Debian
+              6 at least.  Always broken (.deb capability was new in 10.35.92).
+
 14.03.29 BJH  Release 10.35.92
 
               ppmrelief: fix out-of-bound values in output.  Always broken.
@@ -19,6 +39,8 @@ CHANGE HISTORY
               only one row.  Always broken (pamdeinterlace was introduced in
               Netpbm 9.21 (January 2001)).  Thanks Prophet of the Way
               <afu@wta.att.ne.jp>.
+
+              build/install: add tools for creating a Debian package.
 
 13.12.24 BJH  Release 10.35.91
 

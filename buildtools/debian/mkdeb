@@ -133,12 +133,12 @@ sub control($$) {
     $control{'Installed-Size'} = '6164';
     $control{'Depends'} =
         'libc6, ' .
-        'libjpeg8, ' .
+        'libjpeg62, ' .
         'libpng12-0, ' .
         'libsvga1, ' .
-        'libtiff5, ' .
+        'libtiff4, ' .
         'libx11-6, ' .
-        'libxml2a, ' .
+        'libxml2, ' .
         'zlib1g, ' .
         'ghostscript, ' .
         'perl, ' .
