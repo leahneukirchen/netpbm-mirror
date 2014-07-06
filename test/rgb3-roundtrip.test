@@ -13,29 +13,40 @@
 # image from them and check whether the resulting output is
 # identical to the original input.
 
+tmpdir=${tmpdir:-/tmp}
+
+# Test 1.  PPM (color) input
+testimg_ppm=${tmpdir}/testimg.ppm
+testimg_red=${tmpdir}/testimg.red
+testimg_grn=${tmpdir}/testimg.grn
+testimg_blu=${tmpdir}/testimg.blu
+
 cp testimg.ppm ${tmpdir} &&
-ppmtorgb3 ${tmpdir}/testimg.ppm &&
-rgb3toppm ${tmpdir}/testimg.red ${tmpdir}/testimg.grn \
-  ${tmpdir}/testimg.blu | cksum
+ppmtorgb3 ${testimg_ppm} &&
+rgb3toppm ${testimg_red} ${testimg_grn} ${testimg_blu} | cksum
 
-cat ${tmpdir}/testimg.red ${tmpdir}/testimg.grn ${tmpdir}/testimg.blu | \
-  cksum
+cat ${testimg_red} ${testimg_grn} ${testimg_blu} | cksum
 
-rm ${tmpdir}/testimg.{ppm,red,grn,blu}
+rm ${testimg_ppm} ${testimg_red} ${testimg_grn} ${testimg_blu}
+
+# Test 2.  PBM (monochrome) input
+testgrid_pbm=${tmpdir}/testgrid.pbm
+testgrid_red=${tmpdir}/testgrid.red
+testgrid_grn=${tmpdir}/testgrid.grn
+testgrid_blu=${tmpdir}/testgrid.blu
 
 cp testgrid.pbm ${tmpdir} &&
-ppmtorgb3 ${tmpdir}/testgrid.pbm &&
-rgb3toppm ${tmpdir}/testgrid.red ${tmpdir}/testgrid.grn \
-  ${tmpdir}/testgrid.blu | \
+ppmtorgb3 ${testgrid_pbm} &&
+rgb3toppm ${testgrid_red} ${testgrid_grn} ${testgrid_blu} | \
   ppmtopgm | pgmtopbm -th -val=0.5 | cksum
 
-
+# Test 3.
 # With PGM or PBM input, the three monochrome planes should be
 # identical.  Test for this.
 
-cmp -s ${tmpdir}/testgrid.red ${tmpdir}/testgrid.grn ; echo $?
-cmp -s ${tmpdir}/testgrid.grn ${tmpdir}/testgrid.blu ; echo $?
-pgmtopgm < testgrid.pbm | cmp -s - ${tmpdir}/testgrid.red
+cmp -s ${testgrid_red} ${testgrid_grn} ; echo $?
+cmp -s ${testgrid_grn} ${testgrid_blu} ; echo $?
+pgmtopgm < testgrid.pbm | cmp -s - ${testgrid_red}
   echo $?
 
-rm ${tmpdir}/testgrid.{pbm,red,grn,blu}
+rm ${testgrid_pbm} ${testgrid_red} ${testgrid_grn} ${testgrid_blu}

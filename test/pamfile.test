@@ -1,11 +1,14 @@
 #! /bin/bash
 # This script tests: pamfile
-# Also requires: ppmtopgm
+# Also requires: pamchannel
 
   alias pamfile="${PBM_TESTPREFIX}pamfile"
-  alias ppmtopgm="${PBM_BINPREFIX}ppmtopgm"
   shopt -s expand_aliases
 
 pamfile testimg.ppm
 pamfile testgrid.pbm
-ppmtopgm testimg.ppm | pamfile
+pamchannel -infile=testimg.ppm -tupletype="GRAYSCALE" 0 | pamtopnm | pamfile
+pamchannel -tupletype="GRAYSCALE" -infile=testimg.ppm 0 | pamfile
+
+
+

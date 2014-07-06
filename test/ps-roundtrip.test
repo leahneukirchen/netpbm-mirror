@@ -16,46 +16,53 @@
 ## (1) zlib was not linked.
 ## (2) ghostscript is not available.
 
+tmpdir=${tmpdir:-/tmp}
+
 # pstopnm does not use libnetpbm functions for output. 
 # Output is filtered through pnmtopnm.
 
 # Test 1.  Should print: 1926073387 101484 five times
 # *NOTE* Fifth iteration fails if pnmtops was compiled without zlib
 # (flate compression) support.
+test1_ps=${tmpdir}/testimg1.ps
+
 for flag in "" "-ps" "-rle" "-ps -ascii" "-ps -flate"
   do
-  pnmtops -nocenter -equalpixels -dpi 72 -noturn \
-    ${flag} testimg.ppm \
-    > ${tmpdir}/testimg.ps
+  pnmtops -nocenter -equalpixels -dpi 72 -noturn ${flag} testimg.ppm \
+    > ${test1_ps} && \
   xysize1=`awk  '/BoundingBox/ {print "-xsize="$4,"-ysize="$5}' \
-    ${tmpdir}/testimg.ps` 
-  pstopnm -portrait -xborder=0 -yborder=0 $xysize1 -stdout \
-    -quiet ${tmpdir}/testimg.ps | \
-    pnmtopnm | cksum
+    ${test1_ps}` && \
+  pstopnm -portrait -xborder=0 -yborder=0 $xysize1 -stdout -quiet \
+    ${test1_ps} | pnmtopnm | cksum
   done
 
-
+rm ${test1_ps}
 # Test 2.  Should print: 2918318199 62 seven times
 # Test image designed to detect problems with run-length compression
 #
-pbmmake -g 2 2 > ${tmpdir}/g.pbm
+
+g_pbm=${tmpdir}/g.pbm
+t_pbm=${tmpdir}/t.pbm
+grid_ps=${tmpdir}/testgrid.ps
+
+pbmmake -g 2 2 > ${g_pbm}
 pbmmake -g 8 4 | \
   pnmshear 45 -noantialias -background=black | \
   pnmpad -right 60 | \
-  pnmcat -tb -jright - ${tmpdir}/g.pbm > ${tmpdir}/t.pbm &&
+  pnmcat -tb -jright - ${g_pbm} > ${t_pbm} &&
 for flag in "" "-rle" "-ps -rle -ascii" \
             "-bitspersample=2 -rle" "-ps -bitspersample=4 -rle" \
             "-bitspersample=8 -rle" "-ps -bitspersample=12 -rle -dict" 
   do
-  pnmtops -nocenter -equalpixels -dpi 72 -noturn \
-    ${flag} ${tmpdir}/t.pbm  > ${tmpdir}/testgrid.ps &&
+  pnmtops -nocenter -equalpixels -dpi 72 -noturn  ${flag} ${t_pbm} \
+    > ${grid_ps} && \
   xysize2=`awk  '/BoundingBox/ {print "-xsize="$4,"-ysize="$5}' \
-    ${tmpdir}/testgrid.ps`
+      ${grid_ps}` && \
   pstopnm -portrait -xborder=0 -yborder=0 $xysize2 -stdout \
-    -quiet ${tmpdir}/testgrid.ps -pbm | \
-    pnmtopnm | cksum
+    -quiet ${grid_ps} -pbm | pnmtopnm | cksum
   done
 
+rm ${grid_ps} ${g_pbm} ${t_pbm}
 
 #Test 3. Should print: 1386192571 507420 three times
 # *NOTE* Second iteration fails if pnmtops was compiled without zlib
@@ -69,19 +76,19 @@ for flag in "" "-rle" "-ps -rle -ascii" \
 # (3) pstopnm: input must be an ordinary file.  Input from stdin
 #     (by pipe or input redirection: "< file" ) does not work.              
 #
+
+test3_ps=${tmpdir}/testimg3.ps
+
 for flag in "" "-ps" \
             "-ps -bitspersample=12 -flate -rle -vmreclaim"
   do
 cat testimg.ppm testimg.ppm testimg.ppm testgrid.pbm testgrid.pbm | \
-pnmtops -nocenter -equalpixels -dpi 72 -noturn -setpage \
-  ${flag}  > ${tmpdir}/testimg5.ps
+pnmtops -nocenter -equalpixels -dpi 72 -noturn -setpage ${flag} \
+  > ${test3_ps} &&
 xysize3=`awk  '/BoundingBox/ {print "-xsize="$4,"-ysize="$5 ; exit}' \
-  ${tmpdir}/testimg5.ps`
-pstopnm -portrait -xborder=0 -yborder=0 $xysize3 \
-    -stdout  ${tmpdir}/testimg5.ps | \
+  ${test3_ps}` &&
+pstopnm -portrait -xborder=0 -yborder=0 $xysize3 -stdout  ${test3_ps} | \
   pnmtopnm | cksum
   done
 
-
-rm ${tmpdir}/testgrid.ps  ${tmpdir}/testimg.ps  ${tmpdir}/testimg5.ps \
-   ${tmpdir}/t.pbm
+rm ${test3_ps}

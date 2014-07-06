@@ -408,7 +408,10 @@ ${PBM_TESTPREFIX}pnmmargin --help 2> /dev/null
 # pnmtoplainpnm, ppmquantall, ppmrainbow, ppmshadow, ppmtomap
 # with trivial input.
 
-cat > ${tmpdir}/test.pbm <<EOF
+tmpdir=${tmpdir:-/tmp}
+test_pbm=${tmpdir}/test.pbm
+
+cat > ${test_pbm} <<EOF
 P1
 1 1
 1
@@ -416,17 +419,17 @@ EOF
 
 for i in anytopnm pbmtox10bm pnmnoraw pnmtoplainpnm ppmtomap ppmshadow
   do
-    ${PBM_TESTPREFIX}$i ${tmpdir}/test.pbm > /dev/null 2> /dev/null;
+    ${PBM_TESTPREFIX}$i ${test_pbm} > /dev/null 2> /dev/null;
     testExitStatus $i 0 $?
   done
 
 for i in pnmquant pnmquantall ppmquant ppmquantall
   do
-    ${PBM_TESTPREFIX}$i 2 ${tmpdir}/test.pbm > /dev/null 2> /dev/null;
+    ${PBM_TESTPREFIX}$i 2 ${test_pbm} > /dev/null 2> /dev/null;
     testExitStatus $i 0 $?
   done
 
-rm ${tmpdir}/test.pbm
+rm ${test_pbm}
 
 ${PBM_TESTPREFIX}ppmrainbow rgb:00/00/00 rgb:ff/ff/ff \
     -tmpdir=${tmpdir} -width=2 -height=2 > /dev/null

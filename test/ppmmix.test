@@ -13,14 +13,19 @@
   alias ppmtopgm="${PBM_BINPREFIX}ppmtopgm"
   shopt -s expand_aliases
 
-# Print a pretty checkerboard pattern
+tmpdir=${tmpdir:-/tmp}
+
+# Test 1. Print a pretty checkerboard pattern
+a1_pgm=${tmpdir}/a1.pgm
+a2_pgm=${tmpdir}/a2.pgm
+
 pbmmake -g 8 8 | \
- pgmtopgm > ${tmpdir}/a1.pgm &&
+ pgmtopgm > ${a1_pgm} &&
 pbmmake -g 2 2 | pamenlarge 4 | \
- pgmtopgm > ${tmpdir}/a2.pgm &&
-ppmmix 0.75 ${tmpdir}/a1.pgm ${tmpdir}/a2.pgm -plain | \
+ pgmtopgm > ${a2_pgm} &&
+ppmmix 0.75 ${a1_pgm} ${a2_pgm} -plain | \
  ppmtopgm | pamdepth 3 -plain &&
-rm ${tmpdir}/a1.pgm ${tmpdir}/a2.pgm
+rm ${a1_pgm} ${a2_pgm}
 
 # Mix image with itself.
 # Output should match input regardless of ratio. 
@@ -31,8 +36,10 @@ done
 
 # Mix image with its own inverse.
 # Output should be a monotone gray sheet.
+a3_ppm=${tmpdir}/a3.ppm
+
 pnminvert testimg.ppm | ppmmix .5 \
-    testimg.ppm - | tee ${tmpdir}/a3.ppm | \
+    testimg.ppm - | tee ${a3_ppm} | \
   pamsumm -brief -max &&
-  pamsumm -brief -min ${tmpdir}/a3.ppm &&
-rm ${tmpdir}/a3.ppm
+  pamsumm -brief -min ${a3_ppm} &&
+rm ${a3_ppm}

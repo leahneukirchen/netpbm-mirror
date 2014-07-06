@@ -7,6 +7,12 @@
   alias pamsumm="${PBM_BINPREFIX}pamsumm"
   shopt -s expand_aliases
 
+# Failure message
+## Ppmcie is sensitive to system factors.  If this test fails, please
+## run the program and visually examine the output.
+
+tmpdir=${tmpdir:-/tmp}
+
 # Test 1. Should print 955840041 786447
 # Without -nolabel -noaxes -nowpoint -noblack older versions of
 # Netpbm produce slightly different charts.
@@ -14,8 +20,10 @@
 # v. 10.35.86: 288356530 786447   
 # v. 10.59.2 : 2292601420 786447  
 
+ppmcie_ppm=${tmpdir}/ppmcie.ppm
+
 ppmcie -nolabel -noaxes -nowpoint -noblack \
- > ${tmpdir}/ppmcie.ppm
+ > ${ppmcie_ppm}
 
 # There is a slight difference in the output depending on whether ppmcie
 # is compiled with SSE features are turned on or off.
@@ -31,7 +39,7 @@ ppmcie -nolabel -noaxes -nowpoint -noblack \
 # x86 32 bit: 38.660173
 # x86 64 bit: 38.681432
 
-pamsumm --mean --brief ${tmpdir}/ppmcie.ppm | \
+pamsumm --mean --brief ${ppmcie_ppm} | \
   awk '{ if(38.65 < $1 && $1 <38.69) print "ok"; else print $1}'
 
 # Test 2.  Measure image sharpness
@@ -39,9 +47,9 @@ pamsumm --mean --brief ${tmpdir}/ppmcie.ppm | \
 # x86 32 bit: 0.002476
 # x86 64 bit: 0.002478
 
-pamsharpness ${tmpdir}/ppmcie.ppm 2>&1 | \
+pamsharpness ${ppmcie_ppm} 2>&1 | \
   awk 'NF==3 && $1=="Sharpness" \
        {if (0.002475 < $3 && $3 < 0.002479) print "ok"; else print $3}
        NF>0 && NF!=3 {print "error"}'
 
-rm ${tmpdir}/ppmcie.ppm
+rm ${ppmcie_ppm}

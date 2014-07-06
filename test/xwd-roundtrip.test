@@ -1,17 +1,15 @@
 #! /bin/bash
 # This script tests: pnmtoxwd xwdtopnm
-# Also requires: pamdepth ppmtopgm
+# Also requires: pamdepth 
 
   alias pnmtoxwd="${PBM_TESTPREFIX}pnmtoxwd"
   alias xwdtopnm="${PBM_TESTPREFIX}xwdtopnm"
   alias pamdepth="${PBM_BINPREFIX}pamdepth"
-  alias ppmtopgm="${PBM_BINPREFIX}ppmtopgm"
   shopt -s expand_aliases
 
-# Test 1.  Should produce 2871603838 33838
-# which is the output of ppmtopgm testimg.ppm | cksum
-ppmtopgm testimg.ppm | pnmtoxwd  | \
-  xwdtopnm | pamdepth 255 | cksum
+# Test 1.  Should produce 1571496937 33838, cksum of testimg.red
+pamchannel -infile=testimg.ppm -tupletype="GRAYSCALE" 0 | pamtopnm | \
+  pnmtoxwd | xwdtopnm | pamdepth 255 | cksum
 
 # Test 2.  Should produce 1926073387 101484
 pnmtoxwd --quiet  testimg.ppm | \

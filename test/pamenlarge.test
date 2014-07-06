@@ -1,15 +1,15 @@
 #! /bin/bash
 # This script tests: pamenlarge
-# Also requires: ppmtopgm
+# Also requires: pamchannel
 
   alias pamenlarge="${PBM_TESTPREFIX}pamenlarge"
-  alias ppmtopgm="${PBM_BINPREFIX}ppmtopgm"
   shopt -s expand_aliases
 
 # Test 1.  Should print 3424505894 913236
 pamenlarge 3 testimg.ppm | cksum
-# Test 2.  Should print 4152147096 304422
-ppmtopgm testimg.ppm | pamenlarge 3 | cksum
+# Test 2.  Should print 3763267672 304422
+pamchannel -infile=testimg.ppm -tupletype="GRAYSCALE" 0 | pamtopnm | \
+  pamenlarge 3 | cksum
 # Test 3.  Should print 3342398172 297
 pamenlarge 3 testgrid.pbm | cksum
 # Test 4.  Should print 237488670 3133413

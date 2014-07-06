@@ -11,10 +11,13 @@
 
 colors=15      # any value between 2 - 256 works
 
-pnmquant $colors testimg.ppm > ${tmpdir}/quant.ppm &&
-pamtogif ${tmpdir}/quant.ppm | giftopnm | \
-   cmp -s - ${tmpdir}/quant.ppm > /dev/null
+tmpdir=${tmpdir:-/tmp}
+quant_ppm=${tmpdir}/quant.ppm
+
+pnmquant ${colors} testimg.ppm > ${quant_ppm} &&
+pamtogif ${quant_ppm} | giftopnm | \
+   cmp -s - ${quant_ppm} > /dev/null
 echo $?
 
-rm ${tmpdir}/quant.ppm
+rm ${quant_ppm}
 
