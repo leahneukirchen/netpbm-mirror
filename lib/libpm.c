@@ -595,63 +595,85 @@ showNetpbmHelp(const char progname[]) {
 
 
 
+static void
+parseCommonOptions(int *         const argcP,
+                   const char ** const argv,
+                   bool *        const showMessagesP,
+                   bool *        const showVersionP,
+                   bool *        const showHelpP,
+                   bool *        const plainOutputP) {
+
+    unsigned int inCursor;
+    unsigned int outCursor;
+
+    *showMessagesP = true;   /* initial assumption */
+    *showVersionP  = false;  /* initial assumption */
+    *showHelpP     = false;  /* initial assumption */
+    *plainOutputP  = false;  /* initial assumption */
+
+    for (inCursor = 1, outCursor = 1; inCursor < *argcP; ++inCursor) {
+            if (strcaseeq(argv[inCursor], "-quiet") ||
+                strcaseeq(argv[inCursor], "--quiet")) 
+                *showMessagesP = false;
+            else if (strcaseeq(argv[inCursor], "-version") ||
+                     strcaseeq(argv[inCursor], "--version")) 
+                *showVersionP = true;
+            else if (strcaseeq(argv[inCursor], "-help") ||
+                     strcaseeq(argv[inCursor], "--help") ||
+                     strcaseeq(argv[inCursor], "-?")) 
+                *showHelpP = true;
+            else if (strcaseeq(argv[inCursor], "-plain") ||
+                     strcaseeq(argv[inCursor], "--plain"))
+                *plainOutputP = true;
+            else
+                argv[outCursor++] = argv[inCursor];
+        }
+    *argcP = outCursor;
+}
+
+
+
 void
-pm_proginit(int * const argcP, const char * argv[]) {
+pm_proginit(int *         const argcP,
+            const char ** const argv) {
 /*----------------------------------------------------------------------------
    Do various initialization things that all programs in the Netpbm package,
    and programs that emulate such programs, should do.
 
-   This includes processing global options.
+   This includes processing global options.  We scan argv[], which has *argcP
+   elements, for common options and execute the functions for the ones we
+   find.  We remove the common options from argv[], updating *argcP
+   accordingly.
 
    This includes calling pm_init() to initialize the Netpbm libraries.
 -----------------------------------------------------------------------------*/
     const char * const progname = pm_arg0toprogname(argv[0]);
         /* points to static memory in this library */
-    int argn, i;
-    bool showmessages;
-    bool show_version;
+    bool showMessages;
+    bool plain;
+    bool justShowVersion;
         /* We're supposed to just show the version information, then exit the
            program.
         */
-    bool show_help;
+    bool justShowHelp;
         /* We're supposed to just tell user where to get help, then exit the
            program.
         */
 
     pm_init(progname, 0);
 
-    /* Check for any global args. */
-    showmessages = TRUE;
-    show_version = FALSE;
-    show_help = FALSE;
-    pm_plain_output = FALSE;
-    for (argn = 1; argn < *argcP; ++argn) {
-        if (pm_keymatch(argv[argn], "-quiet", 6) ||
-            pm_keymatch(argv[argn], "--quiet", 7)) 
-            showmessages = FALSE;
-        else if (pm_keymatch(argv[argn], "-version", 8) ||
-                   pm_keymatch(argv[argn], "--version", 9)) 
-            show_version = TRUE;
-        else if (pm_keymatch(argv[argn], "-help", 5) ||
-                 pm_keymatch(argv[argn], "--help", 6) ||
-                 pm_keymatch(argv[argn], "-?", 2)) 
-            show_help = TRUE;
-        else if (pm_keymatch(argv[argn], "-plain", 6) ||
-                 pm_keymatch(argv[argn], "--plain", 7))
-            pm_plain_output = TRUE;
-        else
-            continue;
-        for (i = argn + 1; i <= *argcP; ++i)
-            argv[i - 1] = argv[i];
-        --(*argcP);
-    }
+    parseCommonOptions(argcP, argv,
+                       &showMessages, &justShowVersion, &justShowHelp,
+                       &plain);
 
-    pm_setMessage((unsigned int) showmessages, NULL);
+    pm_plain_output = plain ? 1 : 0;
 
-    if (show_version) {
+    pm_setMessage(showMessages ? 1 : 0, NULL);
+
+    if (justShowVersion) {
         showVersion();
-        exit( 0 );
-    } else if (show_help) {
+        exit(0);
+    } else if (justShowHelp) {
         pm_error("Use 'man %s' for help.", progname);
         /* If we can figure out a way to distinguish Netpbm programs from 
            other programs using the Netpbm libraries, we can do better here.
@@ -661,6 +683,7 @@ pm_proginit(int * const argcP, const char * argv[]) {
         exit(0);
     }
 }
+
 
 
 void
