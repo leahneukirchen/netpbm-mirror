@@ -1,0 +1,200 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Pamcrater User Manual</TITLE></HEAD>
+<BODY>
+<H1>pamcrater</H1>
+Updated: 26 July 2014
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<H2>NAME</H2>
+
+psmcrater - create cratered terrain by fractal forgery
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>pamcrater</B>
+
+[<B>-number</B> <I>n</I>]
+
+[<B>-height</B> <I>pixels</I>]
+
+[<B>-width</B> <I>pixels</I>]
+
+[<b>-randomseed=</b><i>integer</i>]
+
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<P><B>pamcrater</B> creates a PAM image which is a terrain map of cratered
+terrain.  The terrain is as if a given number of impacts into a surface,
+create craters with random position and size.
+
+<p>The size distribution of the craters is based on a power law which results
+in many more small craters than large ones.  The number of craters of a given
+size varies as the reciprocal of the area as described on pages 31 and 32 of
+Peitgen and Saupe[1]; cratered bodies in the Solar System are observed to obey
+this relationship.  The formula used to obtain crater radii governed by this
+law from a uniformly distributed pseudorandom sequence was developed by Rudy
+Rucker.
+
+<p>A terrain map is a two dimensional map of terrain elevations.  the PAM
+image that <b>pamcrater</b> produces is therefore not a visual image but a
+depth-one image of tuple type &quot;elevation&quot;, with the sample value
+being proportional to an elevation.
+
+<p>You can visualize the terrain map by generating a shaded relief image of it
+with <b>pamshadedrelief</b>.  <P>High resolution images with large numbers of
+craters often benefit from being piped through <B>pnmsmooth</B>.  The
+averaging performed by this process eliminates some of the jagged pixels and
+lends a mellow ``telescopic image'' feel to the overall picture.
+
+<P><B>pamcrater</B> generates only small craters, which are hemispherical in
+shape (regardless of the incidence angle of the impacting body, as long as the
+velocity is sufficiently high).  Large craters, such as Copernicus and Tycho
+on the Moon, have a ``walled plain'' shape with a cross-section more like:
+
+<PRE>
+                /\                            /\
+          _____/  \____________/\____________/  \_____
+</PRE>
+
+
+<p>Larger craters should really use this profile, including the central
+peak, and totally obliterate the pre-existing terrain.
+
+<p>The randomness in the image is limited before Netpbm 10.37 (December
+2006) -- if you run the program twice in the same second, you may get
+identical output.
+
+
+<H2 id="options">OPTIONS</H2>
+
+<P>All options can be abbreviated to their shortest unique prefix.
+
+<DL COMPACT>
+<DT><B>-number</B> <I>n</I>
+
+<DD>Causes <b>pamcrater</b> to generate <I>n</I> craters.  If you do not
+specify <B>-number</B>, it generates 50000 craters.  Don't expect to see them
+all!  For every large crater there are many, many more tiny ones which tend
+simply to erode the landscape.  In general, the more craters you specify, the
+more realistic the result; ideally you want the entire terrain to have been
+extensively turned over again and again by cratering.  High resolution images
+containing five to ten million craters are stunning but take longer to create.
+
+<DT><B>-height</B> <I>height</I>
+
+<DD>Sets the height of the generated image to <I>height</I> pixels.
+The default height is 256 pixels.
+
+<DT><B>-width</B> <I>width</I>
+
+<DD>Sets the width of the generated image to <I>width</I> pixels.  The
+default width is 256 pixels.
+
+<dt><b>-randomseed=</b><i>integer</i>
+
+<dd>This is the seed for the random number generator that generates the
+pixels.
+
+<p>Use this to ensure you get the same image on separate invocations.
+
+<p>By default, <b>pamcrater</b> uses a seed derived from the time of day and
+process ID, which gives you fairly uncorrelated results in multiple
+invocations.
+
+<p>This option was new in Netpbm 10.61 (December 2012).
+
+</DL>
+
+
+<H2 id="designnotes">DESIGN NOTES</H2>
+
+<P>Real craters have two distinct morphologies.
+
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<B><A HREF="pamshadedrelief.html">pamshadedrelief</A></B>,
+
+<B><A HREF="ppmrelief.html">ppmrelief</A></B>,
+
+<B><A HREF="pnmsmooth.html">pnmsmooth</A></B>
+
+<B><A HREF="pam.html">pam</A></B>,
+
+<DL COMPACT>
+<DT>[1]
+<DD>Peitgen, H.-O., and Saupe, D. eds., The Science Of Fractal Images,
+New York: Springer Verlag, 1988.
+
+</DL>
+
+<H2 id="author">AUTHOR</H2>
+
+<p><b>pgmcrater</b>, from which this is derived, was written by John Walker:
+
+<PRE>
+John Walker
+Autodesk SA
+Avenue des Champs-Montants 14b
+CH-2074 MARIN
+Suisse/Schweiz/Svizzera/Svizra/Switzerland
+    <B>Usenet:</B><A HREF="mailto:kelvin@Autodesk.com">kelvin@Autodesk.com</A>
+    <B>Fax:</B>038/33 88 15
+    <B>Voice:</B>038/33 76 33
+</PRE>
+
+<P>Permission to use, copy, modify, and distribute this software and
+its documentation for any purpose and without fee is hereby granted,
+without any conditions or restrictions.  This software is provided
+&quot;as is&quot; without express or implied warranty.
+
+
+<H2 id="history">HISTORY</H2>
+
+<p>John Walker wrote <b>pgmcrater</b> in 1991 and it was included in Pbmplus.
+<b>pgmcrater</b> did the equivalent of <tt>pamcrater | pamshadedrelief</tt>.
+In Netpbm 10.68 (September 2014), Bryan Henderson split the functions
+of <b>pgmcrater</b> into two programs, one (<b>pamcrater</b>) to compute
+elevations, and the other (<b>pamshadedrelief</b>) to generate a shaded relief
+visual image showing those elevations.  Bryan did this because it is more in
+keeping with Netpbm's modular architecture, and because
+the <b>pamshadedrelief</b> might be useful with other inputs.
+
+<p>(Like all Netpbm programs, <b>pgmcrater</b> was not static between the two
+events described above; minor changes, including replacement of most of the
+code, happened in between).
+
+<P>The original 1991 <b>pgmcrater</b> manual contains the following:
+
+<h3>PLUGWARE!</h3>
+
+<p>If you like this kind of stuff, you may also enjoy &quot;James Gleick's
+Chaos--The Software&quot; for MS-DOS, available for $59.95 from your
+local software store or directly from Autodesk, Inc., Attn: Science
+Series, 2320 Marinship Way, Sausalito, CA 94965, USA.  Telephone:
+(800) 688-2344 toll-free or, outside the U.S. (415) 332-2344 Ext
+4886.  Fax: (415) 289-4718.  &quot;Chaos--The Software&quot; includes a more
+comprehensive fractal forgery generator which creates
+three-dimensional landscapes as well as clouds and planets, plus five
+more modules which explore other aspects of Chaos.  The user guide of
+more than 200 pages includes an introduction by James Gleick and
+detailed explanations by Rudy Rucker of the mathematics and algorithms
+used by each program.
+
+<HR>
+<H2 id="index">Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#designnotes">DESIGN NOTES</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
+<LI><A HREF="#history">HISTORY</A>
+</UL>
+</BODY>
+</HTML>

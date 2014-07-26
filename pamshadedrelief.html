@@ -1,0 +1,130 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Pamshadedrelief User Manual</TITLE></HEAD>
+<BODY>
+<H1>pamshadedrelief</H1>
+Updated: 26 July 2014
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<H2>NAME</H2>
+
+pamshadedrelief - generate shaded relief image from an elevation map
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>pamshadedrelief</B>
+
+[<B>-gamma</B> <I>g</I>]
+
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<P><B>pamshadedrelief</B> creates a shaded relief image from an elevation map.
+A shaded relief image is a visual image of terrain, showing the terrain as if
+illuminated by oblique light and viewed from above, so that the brightess of
+each spot depends upon its slope.  A common example of a shaded relief image
+is a relief map of the Earth, which shows mountains and valleys.
+
+<p>The image <b>pamshadedrelief</b> creates is as if illumated by a light
+source from the left.
+
+<p>The output image is a PAM with tuple type <b>GRAYSCALE</b>.
+
+<p>The program <b>pamcrater</b> is a good thing to use to demonstrate the
+function of <b>pamshadedrelief</b>.  It generates a terrain map of a cratered
+landscape.
+
+<pre>
+<kbd>
+    $ pamcrater | pamshadedrelief | pamx
+</kbd>  
+</pre>
+
+
+<H2 id="options">OPTIONS</H2>
+
+<P>All options can be abbreviated to their shortest unique prefix.
+
+<DL COMPACT>
+<DT><B>-gamma</B> <I>factor</I>
+
+<DD>The specified <I>factor</I> is used to gamma adjust the image in
+the same manner as performed by <B>pnmgamma</B>.  The default value is
+1.0, which results in a medium contrast image.  Values larger than 1
+lighten the image and reduce contrast, while values less than 1 darken
+the image, increasing contrast.
+
+<P>Note that this is separate from the gamma correction that is part of the
+definition of the PAM GRAYSCALE format.  The image <B>pamshadedrelief</B>
+generates is a genuine, gamma-corrected PAM GRAYSCALE image in any case.  This
+option simply changes the contrast and may compensate for a display device
+that does not correctly render PAM GRAYSCALE images.
+
+</DL>
+
+<H2 id="designnotes">DESIGN NOTES</H2>
+
+The<B>-gamma</B> option isn't really necessary since you can achieve
+the same effect by piping the output from <B>pamshadedrelief</B> through
+<B>pnmgamma</B>.  However, <B>pamshadedrelief</B> performs an internal gamma
+map anyway in the process of rendering the elevation array into the PAM
+GRAYSCALE format, so there's no additional overhead in allowing an additional
+gamma adjustment.
+
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<B><A HREF="ppmrelief.html">ppmrelief</A></B>
+
+<B><A HREF="pnmgamma.html">pnmgamma</A></B>,
+
+<B><A HREF="pnmsmooth.html">pnmsmooth</A></B>
+
+<B><A HREF="pamcrater.html">pamcrater</A></B>
+
+<B><A HREF="pam.html">pgm</A></B>,
+
+
+<H2>AUTHOR</H2>
+
+<p><b>pgmcrater</b>, from which this is derived, was written by John Walker:
+
+<PRE>
+John Walker
+Autodesk SA
+Avenue des Champs-Montants 14b
+CH-2074 MARIN
+Suisse/Schweiz/Svizzera/Svizra/Switzerland
+    <B>Usenet:</B><A HREF="mailto:kelvin@Autodesk.com">kelvin@Autodesk.com</A>
+    <B>Fax:</B>038/33 88 15
+    <B>Voice:</B>038/33 76 33
+</PRE>
+
+<P>Permission to use, copy, modify, and distribute this software and
+its documentation for any purpose and without fee is hereby granted,
+without any conditions or restrictions.  This software is provided
+&quot;as is&quot; without express or implied warranty.
+
+
+<H2 id="history">HISTORY</H2>
+
+<p><b>pgmcrater</b> was split into <b>pamshadedrelief</b> and <b>pamcrater</b>
+in Netpbm 10.68 (September 2014).  See the history section of the
+<b>pamcrater</b> manual for details.
+
+
+<HR>
+<H2 id="index">Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#designnotes">DESIGN NOTES</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
+<LI><A HREF="#history">HISTORY</A>
+</UL>
+</BODY>
+</HTML>
