@@ -6,12 +6,10 @@ Updated: 22 October 2003
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
-<H2>NAME</H2>
+<H2 id="name">NAME</H2>
 ppmquant - quantize the colors in a PPM image down to a specified number
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>ppmquant</B>
 [<B>-floyd</B>|<B>-fs</B>]
@@ -25,8 +23,14 @@ ppmquant - quantize the colors in a PPM image down to a specified number
 <I>mapfile</I>
 [<I>ppmfile</I>]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<P>
+All options can be abbreviated to their shortest unique prefix.  You
+may use two hyphens instead of one to designate an option.  You may
+use either white space or equals signs between an option name and its
+value.
+
+
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -41,12 +45,6 @@ compatibility.
 <em>without</em> the <b>-mapfile</b> option; <b>pnmremap</b> is fully
 backward compatible with <b>ppmquant</b> <em>with</em> the
 <b>-mapfile</b> option.
-
-<P>
-All options can be abbreviated to their shortest unique prefix.  You
-may use two hyphens instead of one to designate an option.  You may
-use either white space or equals signs between an option name and its
-value.
 
 <p>Except with differences suggested by the syntax synopsis above,
 <b>ppmquant</B>'s function is the same as <b>pnmquant</b> and
@@ -64,29 +62,24 @@ that for some time before that, <b>ppmquant</b> had a serious bug that
 would have been difficult to fix -- it chose the wrong color set.
 Maintaining two versions of the same code did not make sense.
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 <B><A HREF="pnmquant.html">pnmquant</A></B>,
 <B><A HREF="pnmremap.html">pnmremap</A></B>,
 <B><A HREF="pnmcolormap.html">pnmcolormap</A></B>,
 <B><A HREF="pamseq.html">pamseq</A></B>,
 <B><A HREF="ppm.html">ppm</A></B>
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>AUTHOR</H2>
+<H2 id="author">AUTHOR</H2>
 
 Copyright (C) 1989, 1991 by Jef Poskanzer.
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">REFERENCES</A>
-<LI><A HREF="#lbAF">SEE ALSO</A>
-<LI><A HREF="#lbAG">AUTHOR</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
 </UL>
 </BODY>
 </HTML>

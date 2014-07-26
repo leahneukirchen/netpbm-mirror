@@ -18,6 +18,12 @@ pnmquant - quantize the colors in a Netpbm image to a smaller set
 [<B>-spreadbrightness</B>|<B>-spreadluminosity</B>]
 <I>ncolors</I> [<I>pnmfile</I>]
 
+<P>All options can be abbreviated to their shortest unique prefix.  You
+may use two hyphens instead of one to designate an option.  You may
+use either white space or equals signs between an option name and its
+value.
+
+
 <H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
@@ -25,11 +31,6 @@ pnmquant - quantize the colors in a Netpbm image to a smaller set
 <p><b>pnmquant</b> reads a PNM image as input.  It chooses <I>ncolors</I>
 colors to best represent the image, maps the existing colors
 to the new ones, and writes a PNM image as output.
-
-<P>All options can be abbreviated to their shortest unique prefix.  You
-may use two hyphens instead of one to designate an option.  You may
-use either white space or equals signs between an option name and its
-value.
 
 <P>This program is simply a combination of <B>pnmcolormap</B> and
 <B>pnmremap</B>, where the colors of the input are remapped using a
