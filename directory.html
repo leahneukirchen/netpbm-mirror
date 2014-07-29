@@ -322,6 +322,9 @@ convert Palm DiddleBug image to PBM
 <DT><B><a href=macptopbm.html>macptopbm</a>    </B>
 <DD>convert MacPaint to PBM
 
+<DT><B><a href=pbmtomatrixorbital.html>pbmtomatrixorbital</a></B>
+<DD>convert a PBM image to a Matrix Orbital LCD image
+
 <DT><B><a href=pbmtomda.html>pbmtomda</a>     </B>
 <DD>convert from PBM to Microdesign (for Amstrad PCWs)
 
@@ -338,8 +341,7 @@ convert Palm DiddleBug image to PBM
 <DD>convert from PPM to Mitsubishi S340-10 printer stream
 
 <DT><B><a href=ppmtompeg.html>ppmtompeg</a>    </B>
-<DD>
-convert series of PPM frames to an MPEG movie
+<DD>convert series of PPM frames to an MPEG movie
 
 <DT><B><a href=pamtompfont.html>pamtompfont</a>      </B>
 <DD>convert Netpbm image to Mplayer bitmap font
@@ -366,12 +368,10 @@ convert series of PPM frames to an MPEG movie
 <DD>convert PNM/PAM to Gnu Octave image
 
 <DT><B><a href=pnmtopalm.html>pnmtopalm</a>    </B>
-<DD>
-convert Netpbm formats to Palm pixmap
+<DD>convert Netpbm formats to Palm pixmap
 
 <DT><B><a href=palmtopnm.html>palmtopnm</a>    </B>
-<DD>
-convert Palm pixmap to Netpbm formats
+<DD>convert Palm pixmap to Netpbm formats
 
 <DT><B><a href=pc1toppm.html>pc1toppm</a>     </B>
 <DD>convert Atari Degas .pc1 (compressed pi1) to PPM
@@ -506,12 +506,10 @@ convert Palm Pilot Image Viewer format to Netpbm formats.
 <DD>convert Atari uncompressed Spectrum to PPM
 
 <DT><B><a href=pamtosrf.html>pamtosrf</a>    </B>
-<DD>
-convert Netpbm formats to SRF
+<DD>convert Netpbm formats to SRF
 
 <DT><B><a href=srftopam.html>srftopam</a>    </B>
-<DD>
-convert SRF to PAM
+<DD>convert SRF to PAM
 
 <DT><B><a href=pbmtosunicon.html>pbmtosunicon</a>    </B>
 <DD>convert PBM to Sun icon
@@ -521,6 +519,9 @@ convert SRF to PAM
 
 <DT><b><a href="pamtosvg.html">pamtosvg</a></b>
 <dd>convert Netpbm image to Scalable Vector Graphics (SVG); trace image
+
+<DT><b><a href="svgtopam.html">svgtopam</a></b>
+<dd>convert an SVG (Scalable Vector Graphics) image to Netpbm format
 
 <DT><B><a href=ppmtoterm.html>ppmtoterm</a>     </B>
 <DD>Display PPM image on ANSI standard text terminal
@@ -646,6 +647,12 @@ All of these generate Netpbm format output.
 <DT><b><a href=ppmrough.html>ppmrough</a></b>
 <DD>create PPM image of two colors with a ragged border between them
 
+<DT><B><a href="pamcrater.html">pamcrater</a>     </B>
+<DD>create cratered terrain by fractal forgery
+
+<DT><B><a href="ppmforge.html">ppmforge</a>      </B>
+<DD>fractal forgeries of clouds, planets, and starry skies
+
 <DT><b><a href=pgmnoise.html>pgmnoise</a></b>
 <DD>create a PGM image of white noise
 
@@ -653,12 +660,10 @@ All of these generate Netpbm format output.
 <DD>render text into a PBM image
 
 <DT><B><a href=pbmtextps.html>pbmtextps</a>     </B>
-<DD>
-     render text into a PBM image using a Postscript interpreter
+<DD>render text into a PBM image using a Postscript interpreter
      
 <DT><B><a href=pbmupc.html>pbmupc</a>        </B>
-<DD>
-     create a Universal Product Code PBM image
+<DD>create a Universal Product Code PBM image
 
 <DT><B><a href=pamstereogram.html>pamstereogram</a>        </B>
 <DD>create a single image stereogram from a height map
@@ -667,25 +672,20 @@ All of these generate Netpbm format output.
 <DD>convert a single-image stereogram to a red/cyan anaglyphic image
 
 <DT><B><a href=ppmwheel.html>ppmwheel</a>        </B>
-<DD>
-     generate a hue-value color wheel
+<DD>generate a hue-value color wheel
 
 <DT><B><a href=ppmcie.html>ppmcie</a>        </B>
-<DD>
-     generate a CIE color map PPM image
+<DD>generate a CIE color map PPM image
 
 <DT><B><a href=pbmpage.html>pbmpage</a>       </B>
-<DD>
-     create a printer test pattern page in PBM format
+<DD>create a printer test pattern page in PBM format
 
 <DT><B><a href=pamseq.html>pamseq</a></B>
-<DD>
-     create a PAM image of all possible tuple values.  E.g.
-     a color map containing all possible colors of given maxval
+<DD>create a PAM image of all possible tuple values.  E.g.
+a color map containing all possible colors of given maxval
 
 <DT><B><a href=pamgauss.html>pamgauss</a></B>
-<DD>
-     create a PAM image of a Gaussian (bell curve; normal curve) function.
+<DD>create a PAM image of a Gaussian (bell curve; normal curve) function.
 
 <DT><B><a href=ppm3d.html>ppm3d</a></B>
 <DD>generate a blue/green 3D glasses image from two images
@@ -1040,12 +1040,6 @@ These all work on the Netpbm formats as input.
 
 <DT><B><a href="pnmmontage.html">pnmmontage</a>    </B>
 <DD>build multiple Netpbm images into a single montage image
-
-<DT><B><a href="pamcrater.html">pamcrater</a>     </B>
-<DD>create cratered terrain by fractal forgery
-
-<DT><B><a href="ppmforge.html">ppmforge</a>      </B>
-<DD>fractal forgeries of clouds, planets, and starry skies
 
 <DT><B><a href=pbmlife.html>pbmlife</a>       </B>
 <DD>apply Conway's rules of Life to a PBM image
