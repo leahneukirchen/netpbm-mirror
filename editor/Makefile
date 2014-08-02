@@ -26,7 +26,7 @@ PORTBINARIES = pamaddnoise pambackground pamcomp pamcut \
 	       pbmclean pbmmask pbmpscale pbmreduce \
 	       pgmdeshadow pgmenhance \
 	       pgmmedian \
-	       pnmalias pnmcat pnmcomp pnmconvol pnmcrop \
+	       pnmalias pnmcat pnmconvol pnmcrop \
 	       pnmgamma \
 	       pnmhisteq pnminvert pnmmontage \
 	       pnmnlfilt pnmnorm pnmpad pnmpaste \
@@ -94,3 +94,7 @@ install.bin.local: $(PKGDIR)/bin
 	cd $(PKGDIR)/bin ; \
 	rm -f ppmquantall$(EXE) ; \
 	$(SYMLINK) pnmquantall ppmquantall
+# In August 2014, pamcomp replaced pnmcomp
+	cd $(PKGDIR)/bin ; \
+	rm -f pnmcomp$(EXE) ; \
+	$(SYMLINK) pamcomp$(EXE) pnmcomp$(EXE)

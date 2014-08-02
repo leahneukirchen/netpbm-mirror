@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.68.00
 
+              Remove pnmcomp, install a pnmcomp symlink for pamcomp.
+
               Fix incorrect option parsing when there are multiple common
               options (e.g. -plain -quiet).  Always broken.  (Possibility of
               specifying multiple common options that don't cause the program
