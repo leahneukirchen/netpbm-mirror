@@ -2,56 +2,58 @@
 <HTML><HEAD><TITLE>Ppmrelief User Manual</TITLE></HEAD>
 <BODY>
 <H1>ppmrelief</H1>
-Updated: 11 January 1991
+Updated: 02 August 2014
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
-ppmrelief - run a Laplacian relief filter on a PPM image
+ppmrelief - compute a relief of a PPM image
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>ppmrelief</B>
 
 [<I>ppmfile</I>]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><b>ppmrelief</b> reads a PPM image as input,
-does a Laplacian relief filter, and writes a PPM image as output.
+<p><b>ppmrelief</b> reads a PPM image as input, and writes a relief of
+that image as a PPM image as output.
 
-<P>The Laplacian relief filter is described in &quot;Beyond
-Photography&quot; by Holzmann, equation 3.19.  It's a sort of
-edge-detection.
+<P>The relief process is described in &quot;Beyond Photography&quot; by
+Holzmann, equation 3.19.  It's a sort of edge-detection and is essentially
+a convolution with this matrix:
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<pre>
+<tt>
+    |  1  0  0 |
+    |  0  0  0 |
+    |  0  0 -1 |
+</tt>
+</pre>
 
+<H2 id="seealso">SEE ALSO</H2>
+
+<A HREF="pamshadedrelief.html">pamshadedrelief</A>, 
 <A HREF="pgmbentley.html">pgmbentley</A>, 
 <A HREF="pgmoil.html">pgmoil</A>, 
 <A HREF="ppm.html">ppm</A>
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>AUTHOR</H2>
+<H2 id="author">AUTHOR</H2>
 
 Copyright (C) 1990 by Wilson Bent (<A
 HREF="mailto:whb@hoh-2.att.com">whb@hoh-2.att.com</A>)
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">SEE ALSO</A>
-<LI><A HREF="#lbAF">AUTHOR</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
 </UL>
 </BODY>
 </HTML>
