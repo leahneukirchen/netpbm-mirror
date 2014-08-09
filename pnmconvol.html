@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pnmconvol User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmconvol</H1>
-Updated: 03 January 2010
+Updated: 06 August 2014
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -18,6 +18,9 @@ pnmconvol - general MxN convolution on a Netpbm image
 |
 <B>-matrixfile=</B><i>filename</i>[<b>,</b><i>filename</i>[<b>,</b> ...]]
 }
+[<b>-normalize</b>]
+[<b>-bias=<i>n</i></b>]
+
 [<I>netpbmfile</I>]
 
 <p>
@@ -344,6 +347,34 @@ specify 1/9 (.1111111) for each weight.
 via pseudo-PNM file.
 
 <p>This option was new in Netpbm 10.50 (March 2010).
+
+<dt><b>-bias=</b><i>n</i>
+<dd>
+
+<p>This specifies an amount to add to the convolved value for each sample.
+
+<p>The purpose of this addition is normally to handle negative convolution
+results.  Because the convolution matrix can contain negative numbers, the
+convolved value for a pixel could be negative.  But Netpbm formats cannot
+contain negative sample values, so without any bias, such samples would get
+clipped to zero.  The bias allows the output image to retain the information,
+and a program that pocesses that output, knowing the bias value, could
+reconstruct the real convolved values.
+
+<p>For example, with <b>bias=100</b>, a sample whose convolved value is -5
+appears as 95 in the output, whereas a sample whose convolved value is 5
+appears as 105 in the output.
+
+<p>A typical value for the bias is half the maxval, allowing the same range on
+either side of zero.
+
+<p>If the sample value, after adding the bias, is still less than
+zero, <b>pnmconvol</b> clips it to zero.  If it exceeds the maxval of the
+output image, it clips it to the maxval.
+
+<p>The default is zero.
+
+<p>This option was new in Netpbm 10.68 (September 2014).
 
 <DT><B>-nooffset=</b>
 <DD>This is part of the obsolete PNM image method of specifying the
