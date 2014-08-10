@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.68.00
 
+              pnmconvol: add -bias .
+
               Remove pnmcomp, install a pnmcomp symlink for pamcomp.
 
               Fix incorrect option parsing when there are multiple common
