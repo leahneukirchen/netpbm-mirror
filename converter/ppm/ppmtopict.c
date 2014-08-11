@@ -194,7 +194,7 @@ putRect(FILE * const ifP,
 #define     counttochar(c)  ((c)-1)
 
 static int
-putRow(FILE * const ifP,
+putRow(FILE *       const ifP,
        unsigned int const row,
        unsigned int const cols,
        pixel *      const rowpixels,
@@ -442,7 +442,7 @@ main(int argc, const char ** argv) {
 
     /* Finally, write out the data. */
     packed = malloc((unsigned)(cols+cols/MAX_COUNT+1));
-    for (row = 0, oc = 0; row < rows; row++)
+    for (row = 0, oc = 0; row < rows; ++row)
         oc += putRow(stdout, row, cols, pixels[row], packed);
 
     /* if we wrote an odd number of pixdata bytes, pad */
@@ -456,4 +456,6 @@ main(int argc, const char ** argv) {
 
     return 0;
 }
+
+
 
