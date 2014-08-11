@@ -210,9 +210,9 @@ putRow(FILE *       const ifP,
     char * p;
 
     run = count = 0;
-    for (i = cols-1, pP = rowpixels + cols-1, p = packed, lastp = *pP;
-         i >= 0;
-         i--, lastp = *pP, pP--) {
+    for (i = 0, pP = rowpixels + cols-1, p = packed, lastp = *pP;
+         i < cols;
+         ++i, lastp = *pP, --pP) {
 
         if (PPM_EQUAL(lastp, *pP))
             ++run;
