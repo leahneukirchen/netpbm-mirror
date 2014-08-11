@@ -193,32 +193,42 @@ putRect(FILE * const ifP,
 #define     runtochar(c)    (257-(c))
 #define     counttochar(c)  ((c)-1)
 
-static int
-putRow(FILE *       const ifP,
-       unsigned int const row,
-       unsigned int const cols,
-       pixel *      const rowpixels,
-       char *       const packed) {
+static void
+putRow(FILE *         const ofP,
+       unsigned int   const row,
+       unsigned int   const cols,
+       pixel *        const rowpixels,
+       char *         const outBuf,
+       unsigned int * const outCountP) {
+/*----------------------------------------------------------------------------
+   Write the row rowpixels[], which is 'cols' pixels wide and is row 'row' of
+   the image, to file *ofP in PICT format.
 
+   Return as *outCountP the number of bytes we write to *ofP.
+
+   Use buffer 'outBuf'.
+-----------------------------------------------------------------------------*/
     unsigned int i;
     unsigned int count;
     unsigned int run;
     unsigned int rep;
-    unsigned int oc;
-    pixel * pP;
-    pixel lastp;
+    unsigned int outCount;
+    pixel lastpix;
     char * p;
 
-    run = count = 0;
-    for (i = 0, pP = rowpixels + cols-1, p = packed, lastp = *pP;
-         i < cols;
-         ++i, lastp = *pP, --pP) {
+    run = 0;
+    count = 0;
+    lastpix = rowpixels[cols-1];
 
-        if (PPM_EQUAL(lastp, *pP))
+    for (i = 0, p = &outBuf[0]; i < cols; ++i) {
+
+        pixel const pix = rowpixels[cols - 1 - i];
+
+        if (PPM_EQUAL(lastpix, pix))
             ++run;
         else if (run < RUN_THRESH) {
             while (run > 0) {
-                *p++ = ppm_lookupcolor(cht, &lastp);
+                *p++ = ppm_lookupcolor(cht, &lastpix);
                 --run;
                 ++count;
                 if (count == MAX_COUNT) {
@@ -233,17 +243,18 @@ putRow(FILE *       const ifP,
             count = 0;
             while (run > 0) {
                 rep = MIN(run, MAX_RUN);
-                *p++ = ppm_lookupcolor(cht, &lastp);
+                *p++ = ppm_lookupcolor(cht, &lastpix);
                 *p++ = runtochar(rep);
                 assert(run >= rep);
                 run -= rep;
             }
             run = 1;
         }
+        lastpix = pix;
     }
     if (run < RUN_THRESH) {
         while (run > 0) {
-            *p++ = ppm_lookupcolor(cht, &lastp);
+            *p++ = ppm_lookupcolor(cht, &lastpix);
             --run;
             ++count;
             if (count == MAX_COUNT) {
@@ -257,7 +268,7 @@ putRow(FILE *       const ifP,
         count = 0;
         while (run > 0) {
             rep = MIN(run, MAX_RUN);
-            *p++ = ppm_lookupcolor(cht, &lastp);
+            *p++ = ppm_lookupcolor(cht, &lastpix);
             *p++ = runtochar(rep);
             assert(run >= rep);
             run -= rep;
@@ -268,22 +279,22 @@ putRow(FILE *       const ifP,
         *p++ = counttochar(count);
 
     {
-        unsigned int const packcols = p - packed;
+        unsigned int const packcols = p - outBuf;
             /* How many we wrote */
         if (cols-1 > 200) {
-            putShort(ifP, packcols);
-            oc = packcols + 2;
+            putShort(ofP, packcols);
+            outCount = packcols + 2;
         } else {
-            putc(packcols, ifP);
-            oc = packcols + 1;
+            putc(packcols, ofP);
+            outCount = packcols + 1;
         }
     }
     /* now write out the packed row */
-    while(p != packed) {
+    while (p != outBuf) {
         --p;
-        putc(*p, ifP);
+        putc(*p, ofP);
     }
-    return oc;
+    *outCountP = outCount;
 }
 
 
@@ -291,46 +302,44 @@ putRow(FILE *       const ifP,
 # if 0
 
 /* real dumb putRow with no compression */
-static unsigned int
-putRow(FILE *       const ifP,
-       unsigned int const row,
-       unsigned int const cols,
-       pixel *      const rowpixels,
-       char *       const packed) {
+static void
+putRow(FILE *         const ifP,
+       unsigned int   const row,
+       unsigned int   const cols,
+       pixel *        const rowpixels,
+       char *         const outBuf,
+       unsigned int * const outCountP) {
 
     unsigned int const bc = cols + (cols + MAX_COUNT - 1) / MAX_COUNT;
 
     unsigned int i;
-    unsigned int oc;
-    pixel * pP;
 
     if (bc > 200) {
         putShort(ifP, bc);
-        oc = bc + 2;
+        *outCountP = bc + 2;
     }  else {
         putc(bc, ifP);
-        oc = bc + 1;
+        *outCountP = bc + 1;
     }
-    for (i = 0, pP = rowpixels; i < cols;) {
-        if (cols - i > MAX_COUNT) {
+    for (col = 0; col < cols;) {
+        if (cols - col > MAX_COUNT) {
             unsigned int j;
             putc(MAX_COUNT - 1, ifP);
             for (j = 0; j < MAX_COUNT; ++j) {
-                putc(ppm_lookupcolor(cht, pP), ifP);
-                ++pP;
+                putc(ppm_lookupcolor(cht, &rowPixels[col]), ifP);
+                ++col
             }
-            i += MAX_COUNT;
+            col += MAX_COUNT;
         } else {
             unsigned int j;
-            putc(cols - i - 1, ifP);
-            for (j = 0; j < cols - i; ++j) {
-                putc(ppm_lookupcolor(cht, pP), ifP);
+            putc(cols - col - 1, ifP);
+            for (j = 0; j < cols - col; ++j) {
+                putc(ppm_lookupcolor(cht, &rowPixels[col]), ifP);
                 ++pP;
             }
-            i = cols;
+            col = cols;
         }
     }
-    return oc;
 }
 #endif  /* 0 */
 
@@ -346,7 +355,7 @@ main(int argc, const char ** argv) {
     int rows, cols;
     unsigned int row;
     pixel ** pixels;
-    char * packed;
+    char * outBuf;
     pixval maxval;
     long lmaxval, rval, gval, bval;
     colorhist_vector chv;
@@ -441,10 +450,12 @@ main(int argc, const char ** argv) {
     putShort(stdout, 0);            /* mode */
 
     /* Finally, write out the data. */
-    packed = malloc((unsigned)(cols+cols/MAX_COUNT+1));
-    for (row = 0, oc = 0; row < rows; ++row)
-        oc += putRow(stdout, row, cols, pixels[row], packed);
-
+    outBuf = malloc((unsigned)(cols+cols/MAX_COUNT+1));
+    for (row = 0, oc = 0; row < rows; ++row) {
+        unsigned int rowSize;
+        putRow(stdout, row, cols, pixels[row], outBuf, &rowSize);
+        oc += rowSize;
+    }
     /* if we wrote an odd number of pixdata bytes, pad */
     if (oc & 0x1)
         putc(0, stdout);
