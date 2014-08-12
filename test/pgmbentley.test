@@ -1,0 +1,10 @@
+#! /bin/bash
+# This script tests: pgmbentley
+# Also requires: pgmramp
+
+  alias pgmbentley="${PBM_TESTPREFIX}pgmbentley"
+  alias pgmramp="${PBM_BINPREFIX}pgmramp"
+  shopt -s expand_aliases
+
+# Test. Should produce 4127286153 16399
+pgmramp -rect 128 128 | pgmbentley | cksum

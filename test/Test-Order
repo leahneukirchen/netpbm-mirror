@@ -66,6 +66,7 @@ ppmrelief.test
 pamedge.test
 ppmdim.test
 pnmshear.test
+pgmbentley.test
 
 ppmmix.test
 
@@ -99,9 +100,11 @@ pamslice-roundtrip.test
 
 # Round-trip tests : lossless converters
 
+atari-roundtrip.test
 atk-roundtrip.test
 avs-roundtrip.test
 bmp-roundtrip.test
+cis-roundtrip.test
 cmuw-roundtrip.test
 facesaver-roundtrip.test
 fits-roundtrip.test
@@ -112,12 +115,17 @@ gif-quant-roundtrip.test
 hdiff-roundtrip.test
 jbig-roundtrip.test
 leaf-roundtrip.test
+mda-roundtrip.test
 mgr-roundtrip.test
 mrf-roundtrip.test
+pcx-roundtrip.test
 pfm-roundtrip.test
+pi3-roundtrip.test
+pict-roundtrip.test
 png-roundtrip.test
 ps-roundtrip.test
 ps-alt-roundtrip.test
+sgi-roundtrip.test
 sunrast-roundtrip.test
 targa-roundtrip.test
 tiff-roundtrip.test

@@ -1,0 +1,15 @@
+#! /bin/bash
+# This script tests: pbmtomacp macptopbm
+# Also requires: pamcrop pbmmake
+
+  alias pbmtomacp="${PBM_TESTPREFIX}pbmtomacp"
+  alias macptopbm="${PBM_TESTPREFIX}macptopbm"
+  alias pnmcrop="${PBM_BINPREFIX}pnmcrop"
+  alias pbmmake="${PBM_BINPREFIX}pbmmake"
+  shopt -s expand_aliases
+
+#Test 1. Should produce 2425386270 41
+pbmtomacp testgrid.pbm | macptopbm | pnmcrop | cksum
+
+#Test 2. Should produce 1005016577 51851
+pbmmake -g 576 720 | pbmtomacp | macptopbm | cksum

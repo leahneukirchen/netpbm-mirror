@@ -1,0 +1,20 @@
+#! /bin/bash
+# This script tests: ppmtoilbm ilbmtoppm
+# Also requires: pamseq pamdepth pamtopnm pnmremap
+
+  alias ppmtoilbm="${PBM_TESTPREFIX}ppmtoilbm"
+  alias ilbmtoppm="${PBM_TESTPREFIX}ilbmtoppm"
+  alias pamseq="${PBM_BINPREFIX}pamseq"
+  alias pamdepth="${PBM_BINPREFIX}pamdepth"
+  alias pamtopnm="${PBM_BINPREFIX}pamtopnm"
+  alias pnmremap="${PBM_BINPREFIX}pnmremap"
+  shopt -s expand_aliases
+
+#Test.  Should produce 1926073387 101484
+ppmtoilbm testimg.ppm | ilbmtoppm | cksum
+
+#Test.  Should print 984199586 101484
+pamseq 3 5 -tupletype=RGB | pamdepth 255 | pamtopnm | \
+  pnmremap -mapfile=- testimg.ppm | ppmtoilbm | ilbmtoppm | cksum
+
+
