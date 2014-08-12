@@ -468,7 +468,7 @@ ZHDR_DIR =
 
 # The JBIG lossless image compression library (aka JBIG-KIT):
 
-JBIGLIB = $(INTERNAL_JBIG_LIB)
+JBIGLIB = $(INTERNAL_JBIGLIB)
 JBIGHDR_DIR = $(INTERNAL_JBIGHDR_DIR)
 
 # The Jasper JPEG-2000 image compression library (aka JasPer):

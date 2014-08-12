@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+14.08.12 BJH  Release 10.67.02
+
+              Build: fix bug which prevents JBIG converters from building with
+              internal JBIG library.  Introduced in 10.67.00.
+
 14.08.11 BJH  Release 10.67.01
 
               Fix incorrect option parsing when there are multiple common
