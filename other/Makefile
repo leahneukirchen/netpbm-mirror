@@ -50,7 +50,7 @@ all: $(BINARIES) $(SUBDIRS:%=%/all)
 
 include $(SRCDIR)/common.mk
 
-ppmsvgalib: LDFLAGS_TARGET = $(LINUXSVGALIB)
+ppmsvgalib: LDFLAGS_TARGET = $(shell $(LIBOPT) $(LINUXSVGALIB))
 
 install.bin: install.bin.local
 .PHONY: install.bin.local

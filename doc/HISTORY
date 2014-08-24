@@ -4,6 +4,19 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+14.08.24 BJH  Release 10.67.03
+
+              Build: fix bug which makes build of Ppmsvga fail (which is
+              attempted only on a system with libvga).  Introduced in Netpbm
+              10.63 (June 2013)
+
+              Build: fix build failure in an environment that does not have
+              __inline .  Introduced some time between Netpbm 10.26
+              (January 2005) and Netpbm 10.35 (August 2006).
+
+              Build: fix build failure on SCO OpenServer due to SIGURG not
+              existing.  Broken in Netpbm 10.49 (December 2009).
+
 14.08.12 BJH  Release 10.67.02
 
               Build: fix bug which prevents JBIG converters from building with
