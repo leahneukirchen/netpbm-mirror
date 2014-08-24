@@ -195,7 +195,7 @@ if [ ${#imagefiles[*]} -gt 0 ] ; then
     rowfiles="$rowfiles $rowfile"
 fi
 
-if [ ${#rowfiles[*]} == 1 ]; then
+if [ ${#rowfiles[*]} = 1 ]; then
     cat $rowfiles
 else
     if [ "$colors" = "n" ] ; then
