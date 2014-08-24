@@ -30,6 +30,8 @@ not yet  BJH  Release 10.68.00
               __inline .  Introduced some time between Netpbm 10.26
               (January 2005) and Netpbm 10.35 (August 2006).
 
+              Build: fix build failure on SCO OpenServer due to SIGURG not
+              existing.  Broken in Netpbm 10.49 (December 2009).
 
 14.06.29 BJH  Release 10.67.00
 

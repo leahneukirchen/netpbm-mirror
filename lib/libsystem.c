@@ -231,7 +231,9 @@ signalName(unsigned int const signalClass) {
    it would take to do it right.
 
    OpenBSD does not have SIGWINCH and SIGIO in 2013.  Everyone else seems
-   to have it.
+   to have them.  OpenBSD does have them if the code is not declared as
+   X/open code (i.e. OpenBSD seems to interpret _XOPEN_SOURCE backward -
+   it removes features rather than adds them).
 */
     switch (signalClass) {
     case SIGHUP: /* POSIX.1 */
@@ -276,8 +278,11 @@ signalName(unsigned int const signalClass) {
         return "SIGTTIN";
     case SIGTTOU: /* POSIX.1 */
         return "SIGTTOU";
+#ifdef SIGURG
+/* SCO Openserver 5.0.7/3.2 does not have SIGURG */
     case SIGURG:
         return "SIGURG";
+#endif
     case SIGXCPU:
         return "SIGXCPU";
     case SIGXFSZ:
@@ -291,6 +296,7 @@ signalName(unsigned int const signalClass) {
         return "SIGWINCH";
 #endif
 #ifdef SIGIO
+/* SCO Openserver 5.0.7/3.2 does not have SIGIO */
     case SIGIO:
         return "SIGIO";
 #endif
