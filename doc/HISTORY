@@ -26,6 +26,11 @@ not yet  BJH  Release 10.68.00
               attempted only on a system with libvga).  Introduced in Netpbm
               10.63 (June 2013)
 
+              Build: fix build failure in an environment that does not have
+              __inline .  Introduced some time between Netpbm 10.26
+              (January 2005) and Netpbm 10.35 (August 2006).
+
+
 14.06.29 BJH  Release 10.67.00
 
               sgitopnm: add ability to convert 2-channel SGI image.
