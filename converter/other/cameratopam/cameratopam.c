@@ -8,7 +8,8 @@
 
 
 #define _BSD_SOURCE 1   /* Make sure string.h contains strdup() */
-#define _XOPEN_SOURCE  /* Make sure unistd.h contains swab() */
+#define _XOPEN_SOURCE 500
+   /* Make sure unistd.h contains swab(), string.h constains strdup() */
 
 #include "pm_config.h"
 

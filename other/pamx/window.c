@@ -6,6 +6,7 @@
    See COPYRIGHT file for copyright information.
 */
 
+#define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 #define _BSD_SOURCE    /* Make sure strcaseeq() is in nstring.h */
 
 #include <assert.h>

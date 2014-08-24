@@ -10,7 +10,8 @@
        does it in other libc's).  pm_config.h defines TMPDIR as P_tmpdir
        in some environments.
     */
-#define _XOPEN_SOURCE 600    /* Make sure ftello, fseeko are defined */
+#define _BSD_SOURCE    /* Make sure strdup is defined */
+#define _XOPEN_SOURCE 600    /* Make sure ftello, fseeko, strdup are defined */
 #define _LARGEFILE_SOURCE 1  /* Make sure ftello, fseeko are defined */
 #define _LARGEFILE64_SOURCE 1 
 #define _FILE_OFFSET_BITS 64
