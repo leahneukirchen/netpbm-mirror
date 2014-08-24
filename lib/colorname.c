@@ -87,8 +87,8 @@ pm_openColornameFile(const char * const fileName, const int must_open) {
    Open the colorname dictionary file.  Its file name is 'fileName', unless
    'fileName' is NULL.  In that case, its file name is the value of the
    environment variable whose name is RGB_ENV (e.g. "RGBDEF").  Except
-   if that environment variable is not set, it is RGB_DB1, RGB_DB2,
-   or RGB_DB3 (e.g. "/usr/lib/X11/rgb.txt"), whichever exists.
+   if that environment variable is not set, it is the first file found,
+   if any, in the search path RGB_DB_PATH.
    
    'must_open' is a logical: we must get the file open or die.  If
    'must_open' is true and we can't open the file (e.g. it doesn't
