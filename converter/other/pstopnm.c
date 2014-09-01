@@ -79,7 +79,7 @@ struct CmdlineInfo {
     unsigned int ysize;  /* zero means unspecified */
     unsigned int dpi;    /* zero means unspecified */
     enum Orientation orientation;
-    unsigned int stdout;
+    unsigned int stdoutSpec;
     unsigned int textalphabits;
 };
 
@@ -127,7 +127,7 @@ parseCommandLine(int argc, char ** argv,
     OPTENT3(0, "dpi",        OPT_UINT,  &cmdlineP->dpi, &dpiSpec,        0);
     OPTENT3(0, "portrait",   OPT_FLAG,  NULL, &portraitOpt,             0);
     OPTENT3(0, "landscape",  OPT_FLAG,  NULL, &landscapeOpt,            0);
-    OPTENT3(0, "stdout",     OPT_FLAG,  NULL, &cmdlineP->stdout,         0);
+    OPTENT3(0, "stdout",     OPT_FLAG,  NULL, &cmdlineP->stdoutSpec,     0);
     OPTENT3(0, "textalphabits", OPT_UINT,
             &cmdlineP->textalphabits,  &textalphabitsSpec, 0);
 
@@ -664,7 +664,7 @@ computeOutfileArg(struct CmdlineInfo const cmdline) {
 -----------------------------------------------------------------------------*/
     const char * retval;  /* malloc'ed */
 
-    if (cmdline.stdout)
+    if (cmdline.stdoutSpec)
         retval = strdup("-");
     else if (streq(cmdline.inputFileName, "-"))
         retval = strdup("-");
