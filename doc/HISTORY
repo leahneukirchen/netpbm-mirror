@@ -40,6 +40,9 @@ not yet  BJH  Release 10.68.00
               Build: Declare _XOPEN_SOURCE >= 500 in source files that use
               strdup.
 
+              Build: fix compile failure due to use of reserved word
+              'stdout'.
+
               Build with 'installosf': Fix crash due to invalid operator ==
               on some systems.
 
