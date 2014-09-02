@@ -74,12 +74,6 @@
 ** for the format of the color database file.
 */
 
-#define RGB_DB_PATH \
-"/usr/share/netpbm/rgb.txt:" \
-"/usr/lib/X11/rgb.txt:" \
-"/usr/share/X11/rgb.txt:" \
-"/usr/X11R6/lib/X11/rgb.txt"
-
 #if (defined(SYSV) || defined(__amigaos__))
 
 #include <string.h>
