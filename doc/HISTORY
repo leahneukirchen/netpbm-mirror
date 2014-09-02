@@ -23,6 +23,9 @@ not yet  BJH  Release 10.68.00
               systems.  Always broken (pcdovtoppm was new sometime between
               Netpbm 9.25 (March 2002) and Netpbm 10.11 (Februrary 2010)).
 
+              Build: provide means of setting the default search path for
+              rgb.txt color database via config.mk.
+
               Build: fix bug which prevents JBIG converters from building with
               internal JBIG library.  Introduced in 10.67.00.
 
@@ -84,9 +87,6 @@ not yet  BJH  Release 10.68.00
 
               Windows build: include an icon in every executable.  The icon
               was designed by Ron Vantreese (ait_frog-netpbm@yahoo.com).
-
-              Build: provide means of setting the default search path for
-              rgb.txt color database via config.mk.
 
               Build: fix bug in which null value is not taken to mean
               "in the system search path" for JBIGHDR_DIR and JASPERHDR_DIR.
