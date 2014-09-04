@@ -375,8 +375,12 @@ MATHLIB ?= -lm
 
 # Note that LDFLAGS might contain -L options, so order is important.
 # LDFLAGS is commonly set as an environment variable.
-LDFLAGS_ALL = $(shell $(LIBOPT) $(NETPBMLIB)) $(WINICON_OBJECT) \
- $(LDFLAGS_TARGET) $(LDFLAGS) $(LDLIBS) $(MATHLIB) $(RPATH) $(LADD)
+# Some of the target-specific libraries are internal Netpbm libraries
+# (such as libfiasco), which use Libnetpbm.  So we put $(NETPBMLIB)
+# after LDFLAGS_TARGET.
+LDFLAGS_ALL = $(WINICON_OBJECT) \
+ $(LDFLAGS_TARGET) $(shell $(LIBOPT) $(NETPBMLIB)) \
+ $(LDFLAGS) $(LDLIBS) $(MATHLIB) $(RPATH) $(LADD)
 
 $(PORTBINARIES) $(MATHBINARIES): %: %.o \
   $(NETPBMLIB) $(LIBOPT) $(WINICON_OBJECT)

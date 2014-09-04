@@ -171,6 +171,7 @@ ifeq ($(DONT_HAVE_PROCESS_MGMT),Y)
 else
 	echo "#define HAVE_FORK 1" >>$@
 endif
+	echo '#define RGB_DB_PATH "$(RGB_DB_PATH)"' >>$@
 	echo '/* pm_config.h.in FOLLOWS ... */' >>$@
 	cat $(SRCDIR)/pm_config.in.h >>$@
 	$(ENDIANGEN) >>$@

@@ -54,22 +54,31 @@
 #endif
 
 
-/* CONFIGURE: If you have an X11-style rgb color names file, define its
-** path here.  This is used by PPM to parse color names into rgb values.
-** If you don't have such a file, comment this out and use the alternative
-** hex and decimal forms to specify colors (see ppm/pgmtoppm.1 for details).  */
+/* CONFIGURE: This is the name of an environment variable that tells
+** where the color names database is.  If the environment variable isn't
+** set, Netpbm tries the hardcoded defaults per macro 'RGB_DB_PATH'
+** (see below).
+*/
+#define RGBENV "RGBDEF"    /* name of env-var */
+
+/* CONFIGURE: There should be an environment variable telling where the color
+** names database (color dictionary) is for Netpbm to use, e.g. to determine
+** what colord name "Salmon" is.  The name of that environment variable is
+** above.  But as some people prefer hardcoded file paths to environment
+** variables, if such environment variable is not set, Netpbm looks for the
+** first existing file in the list which is the value of 'RGB_DB_PATH'.  And
+** if none of those exist (including if the list is empty), Netpbm simply
+** doesn't understand any color names.  Note that Netpbm comes with a color
+** database (lib/rgb.txt in the source tree), but you might choose to have
+** Netpbm use a different one.  See the documentation of ppm_parsecolor()
+** for the format of the color database file.
+*/
 
 #define RGB_DB_PATH \
 "/usr/share/netpbm/rgb.txt:" \
 "/usr/lib/X11/rgb.txt:" \
 "/usr/share/X11/rgb.txt:" \
 "/usr/X11R6/lib/X11/rgb.txt"
-
-/* CONFIGURE: This is the name of an environment variable that tells
-** where the color names database is.  If the environment variable isn't
-** set, Netpbm tries the hardcoded defaults set above.
-*/
-#define RGBENV "RGBDEF"    /* name of env-var */
 
 #if (defined(SYSV) || defined(__amigaos__))
 
