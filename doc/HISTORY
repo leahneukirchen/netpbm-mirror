@@ -23,6 +23,9 @@ not yet  BJH  Release 10.68.00
               systems.  Always broken (pcdovtoppm was new sometime between
               Netpbm 9.25 (March 2002) and Netpbm 10.11 (Februrary 2010)).
 
+              Build: fix undefined symbols in fiasco converters with
+              static libraries.
+
               Build: provide means of setting the default search path for
               rgb.txt color database via config.mk.
 
