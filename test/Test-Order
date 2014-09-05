@@ -16,12 +16,12 @@ pgmramp.test
 ppmgauss.test
 ppmcie.test
 ppmwheel.test
+pamcrater.test
 
 # Generators with random components
 
 pgmnoise.test
 ppmpat.test
-pgmcrater.test
 ppmforge.test
 ppmrough.test
 

@@ -200,7 +200,7 @@ ordinary_testprogs="\
   pfmtopam \
   pgmabel \
   pgmbentley \
-  pgmcrater \
+  pamcrater \
   pgmdeshadow \
   pgmedge \
   pgmenhance \

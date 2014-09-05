@@ -1,0 +1,53 @@
+#! /bin/bash
+# This script tests: pamcrater pamshadedrelief
+# Also requires: pamslice pamvalidate
+
+  alias pamcrater="${PBM_TESTPREFIX}pamcrater"
+  alias pamslice="${PBM_TESTPREFIX}pamshadedrelief"
+  alias pamslice="${PBM_BINPREFIX}pamslice"
+  alias pamvalidate="${PBM_TESTPREFIX}pamvalidate"
+  shopt -s expand_aliases
+
+tmpdir=${tmpdir:-/tmp}
+
+test_pam=${tmpdir}/test.pam
+testshaded_pam=${tmpdir}/testshaded_pam
+test10_pam=${tmpdir}/test10.pam
+test50_pam=${tmpdir}/test50.pam
+test100_pam=${tmpdir}/test100.pam
+test150_pam=${tmpdir}/test150.pam
+
+# Test 1.  Should print 4 three times
+
+pamcrater --test --radius=10 > $test10_pam
+pamcrater --test --radius=50 > $test50_pam
+pamcrater --test --radius=100 > $test100_pam
+pamcrater --test --radius=150 > $test150_pam
+
+pamstack ${test10_pam} ${test50_pam} ${test100_pam} ${test150_pam} |
+  pamvalidate > ${test_pam} 
+
+for i in 1 10 70
+  do
+    ( pamslice -row=$((128 + $i))  ${test_pam} | cksum &&
+      pamslice -row=$((128 - $i))  ${test_pam} | cksum &&
+      pamslice -col=$((128 + $i))  ${test_pam} | cksum &&
+      pamslice -col=$((128 - $i))  ${test_pam} | cksum
+    ) | uniq -c | awk '{print $1}'
+  done
+
+rm ${test_pam} ${test10_pam} ${test50_pam}
+
+# Test 2.  Should print 2 three times
+
+pamshadedrelief ${test100_pam} > ${testshaded_pam}
+
+( pamslice -row=$((128 + 12))  ${testshaded_pam} | cksum &&
+  pamslice -row=$((128 - 12))  ${testshaded_pam} | cksum &&
+  pamslice -row=$((128 + 31))  ${testshaded_pam} | cksum &&
+  pamslice -row=$((128 - 31))  ${testshaded_pam} | cksum &&
+  pamslice -row=$((128 + 99))  ${testshaded_pam} | cksum &&
+  pamslice -row=$((128 - 99))  ${testshaded_pam} | cksum
+) | uniq -c | awk '{print $1}'
+
+rm ${testshaded_pam} ${test100_pam}
