@@ -78,7 +78,7 @@
 #define PHOTOMETRIC_DEPTH 32768
 #endif
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -96,7 +96,7 @@ struct cmdlineInfo {
 
 static void
 parseCommandLine(int argc, const char ** const argv,
-                 struct cmdlineInfo * const cmdlineP) {
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that many of the strings that this function returns in the
    *cmdlineP structure are actually in the supplied argv array.  And
@@ -219,6 +219,8 @@ tiffToImageDim(unsigned int   const tiffCols,
     }
 }
 
+
+
 static void
 getTiffDimensions(TIFF *         const tiffP,
                   unsigned int * const colsP,
@@ -338,15 +340,15 @@ readDirectory(TIFF *               const tiffP,
 
 
 static void
-readscanline(TIFF *         const tif, 
-             unsigned char  scanbuf[], 
-             int            const row, 
-             int            const plane,
-             unsigned int   const cols, 
-             unsigned short const bps,
-             unsigned short const spp,
-             unsigned short const fillorder,
-             unsigned int * const samplebuf) {
+readscanline(TIFF *          const tif, 
+             unsigned char * const scanbuf,
+             int             const row, 
+             int             const plane,
+             unsigned int    const cols, 
+             unsigned short  const bps,
+             unsigned short  const spp,
+             unsigned short  const fillorder,
+             unsigned int *  const samplebuf) {
 /*----------------------------------------------------------------------------
    Read one scanline out of the Tiff input and store it into samplebuf[].
    Unlike the scanline returned by the Tiff library function, samplebuf[]
@@ -440,8 +442,11 @@ readscanline(TIFF *         const tif,
 
 
 static void
-pick_cmyk_pixel(const unsigned int samplebuf[], const int sample_cursor,
-                xelval * const r_p, xelval * const b_p, xelval * const g_p) {
+pick_cmyk_pixel(unsigned int const samplebuf[],
+                int          const sampleCursor,
+                xelval *     const redP,
+                xelval *     const bluP,
+                xelval *     const grnP) {
 
     /* Note that the TIFF spec does not say which of the 4 samples is
        which, but common sense says they're in order C,M,Y,K.  Before
@@ -449,10 +454,10 @@ pick_cmyk_pixel(const unsigned int samplebuf[], const int sample_cursor,
        But combined with a compensating error in the CMYK->RGB
        calculation, it had the same effect as C,M,Y,K.
     */
-    unsigned int const c = samplebuf[sample_cursor+0];
-    unsigned int const m = samplebuf[sample_cursor+1];
-    unsigned int const y = samplebuf[sample_cursor+2];
-    unsigned int const k = samplebuf[sample_cursor+3];
+    unsigned int const c = samplebuf[sampleCursor + 0];
+    unsigned int const m = samplebuf[sampleCursor + 1];
+    unsigned int const y = samplebuf[sampleCursor + 2];
+    unsigned int const k = samplebuf[sampleCursor + 3];
 
     /* The CMYK->RGB formula used by TIFFRGBAImageGet() in the TIFF 
        library is the following, (with some apparent confusion with
@@ -470,9 +475,9 @@ pick_cmyk_pixel(const unsigned int samplebuf[], const int sample_cursor,
        Yellow ink removes blue light from what the white paper reflects.  
     */
 
-    *r_p = 255 - MIN(255, c + k);
-    *g_p = 255 - MIN(255, m + k);
-    *b_p = 255 - MIN(255, y + k);
+    *redP = 255 - MIN(255, c + k);
+    *grnP = 255 - MIN(255, m + k);
+    *bluP = 255 - MIN(255, y + k);
 }
 
 
@@ -509,9 +514,9 @@ analyzeImageType(TIFF *             const tif,
                  unsigned short     const photomet,
                  xelval *           const maxvalP, 
                  int *              const formatP, 
-                 xel                      colormap[],
+                 xel *              const colormap,
                  bool               const headerdump,
-                 struct cmdlineInfo const cmdline) {
+                 struct CmdlineInfo const cmdline) {
 
     bool grayscale; 
 
@@ -1078,8 +1083,8 @@ pnmOut_writeRow(pnmOut *     const pnmOutP,
 
 static void
 convertRow(unsigned int   const samplebuf[], 
-           xel                  xelrow[], 
-           gray                 alpharow[], 
+           xel *          const xelrow, 
+           gray *         const alpharow,
            int            const cols, 
            xelval         const maxval, 
            unsigned short const photomet, 
@@ -1155,9 +1160,9 @@ convertRow(unsigned int   const samplebuf[],
 
 
 static void
-scale32to16(unsigned int       samplebuf[],
-            unsigned int const cols,
-            unsigned int const spp) {
+scale32to16(unsigned int * const samplebuf,
+            unsigned int   const cols,
+            unsigned int   const spp) {
 /*----------------------------------------------------------------------------
   Convert every sample in samplebuf[] to something that can be expressed
   in 16 bits, assuming it takes 32 bits now.
@@ -1170,9 +1175,9 @@ scale32to16(unsigned int       samplebuf[],
 
 
 static void
-convertMultiPlaneRow(TIFF *         const tif,
-                     xel                   xelrow[],
-                     gray                  alpharow[],
+convertMultiPlaneRow(TIFF *          const tif,
+                     xel *           const xelrow,
+                     gray *          const alpharow,
                      int             const cols,
                      xelval          const maxval,
                      int             const row,
@@ -1188,15 +1193,15 @@ convertMultiPlaneRow(TIFF *         const tif,
        for the blues.
     */
 
-    int col;
-
     if (photomet != PHOTOMETRIC_RGB)
         pm_error("This is a multiple-plane file, but is not an RGB "
                  "file.  This program does not know how to handle that.");
     else {
+        unsigned int col;
+
         /* First, clear the buffer so we can add red, green,
            and blue one at a time.  
-                */
+        */
         for (col = 0; col < cols; ++col) 
             PPM_ASSIGN(xelrow[col], 0, 0, 0);
 
@@ -1270,12 +1275,12 @@ convertRasterByRows(pnmOut *       const pnmOutP,
            row we are presently converting.
         */
 
-    int row;
+    unsigned int row;
 
     if (verbose)
         pm_message("Converting row by row ...");
 
-    scanbuf = (unsigned char *) malloc(TIFFScanlineSize(tif));
+    MALLOCARRAY(scanbuf, TIFFScanlineSize(tif));
     if (scanbuf == NULL)
         pm_error("can't allocate memory for scanline buffer");
 
@@ -1409,20 +1414,23 @@ convertTiffRaster(uint32 *        const raster,
 
 
 
-enum convertDisp {CONV_DONE, CONV_OOM, CONV_UNABLE, CONV_FAILED, 
+enum convertDisp {CONV_DONE,
+                  CONV_OOM,
+                  CONV_UNABLE,
+                  CONV_FAILED, 
                   CONV_NOTATTEMPTED};
 
 static void
-convertRasterInMemory(pnmOut *       const pnmOutP,
-                      xelval         const maxval,
-                      TIFF *         const tif,
-                      unsigned short const photomet, 
-                      unsigned short const planarconfig,
-                      unsigned short const bps,
-                      unsigned short const spp,
-                      unsigned short const fillorder,
-                      xel            const colormap[],
-                      bool           const verbose,
+convertRasterInMemory(pnmOut *           const pnmOutP,
+                      xelval             const maxval,
+                      TIFF *             const tif,
+                      unsigned short     const photomet, 
+                      unsigned short     const planarconfig,
+                      unsigned short     const bps,
+                      unsigned short     const spp,
+                      unsigned short     const fillorder,
+                      xel                const colormap[],
+                      bool               const verbose,
                       enum convertDisp * const statusP) {
 /*----------------------------------------------------------------------------
    With the TIFF header all processed (and relevant information from
@@ -1512,6 +1520,7 @@ convertRaster(pnmOut *           const pnmOutP,
               bool               const verbose) {
 
     enum convertDisp status;
+
     if (byrow || !flipOk)
         status = CONV_NOTATTEMPTED;
     else {
@@ -1551,7 +1560,7 @@ static void
 convertImage(TIFF *             const tifP,
              FILE *             const alphaFileP,
              FILE *             const imageoutFileP,
-             struct cmdlineInfo const cmdline) {
+             struct CmdlineInfo const cmdline) {
 
     struct tiffDirInfo tiffDir;
     int format;
@@ -1588,7 +1597,7 @@ static void
 convertIt(TIFF *             const tifP,
           FILE *             const alphaFile, 
           FILE *             const imageoutFile,
-          struct cmdlineInfo const cmdline) {
+          struct CmdlineInfo const cmdline) {
 
     unsigned int imageSeq;
     bool eof;
@@ -1613,7 +1622,7 @@ convertIt(TIFF *             const tifP,
 int
 main(int argc, const char * argv[]) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     TIFF * tif;
     FILE * alphaFile;
     FILE * imageoutFile;
@@ -1654,6 +1663,7 @@ main(int argc, const char * argv[]) {
     pm_strfree(cmdline.inputFilename);
 
     /* If the program failed, it previously aborted with nonzero completion
-       code, via various function calls.  */
+       code, via various function calls.
+    */
     return 0;
 }
