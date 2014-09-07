@@ -472,8 +472,8 @@ foveon_interpolate(float coeff[3][4]) {
     sgrow = calloc (dim[1], sizeof *sgrow);
     sgx = (width + dim[1]-2) / (dim[1]-1);
 
-    black = calloc (height, sizeof *black);
-    for (row=0; row < height; row++) {
+    black = calloc (height, sizeof(black[0]));
+    for (row=0; row < height; ++row) {
         unsigned int i;
         for (i=0; i < 3; ++i) {
             unsigned int j;
@@ -486,8 +486,8 @@ foveon_interpolate(float coeff[3][4]) {
               foveon_avg (image[row*width]+c, dscr[1], cfilt) * 3
               - ddft[0][c][0] ) / 4 - ddft[0][c][1];
     }
-    memcpy (black, black+8, sizeof *black*8);
-    memcpy (black+height-11, black+height-22, 11*sizeof *black);
+    memcpy (black, black+8, 8 * sizeof(black[0]));
+    memcpy (black+height-11, black+height-22, 11*(sizeof black[0]));
     memcpy (last, black, sizeof last);
 
     for (row=1; row < height-1; row++) {
