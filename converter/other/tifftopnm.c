@@ -1254,8 +1254,8 @@ convertRasterByRows(pnmOut *       const pnmOutP,
                     bool           const verbose) {
 /*----------------------------------------------------------------------------
    With the TIFF header all processed (and relevant information from it in 
-   our arguments), write out the TIFF raster to the file images *imageoutFile
-   and *alphaFile.
+   our arguments), write out the TIFF raster to the Netpbm output files
+   as described by *pnmOutP.
 
    Do this one row at a time, employing the TIFF library's
    TIFFReadScanline.
