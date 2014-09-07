@@ -2,13 +2,23 @@
 <HTML><HEAD><TITLE>Pamcrater User Manual</TITLE></HEAD>
 <BODY>
 <H1>pamcrater</H1>
-Updated: 26 July 2014
+Updated: 04 September 2014
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
 <H2>NAME</H2>
 
-psmcrater - create cratered terrain by fractal forgery
+pamcrater - create cratered terrain by fractal forgery
+
+<h2 id="examples">EXAMPLES</h2>
+
+<pre>
+<kbd>
+    $ pamcrater | pamshadedrelief | pamx
+
+    $ pamcrater -number=500000 -height=1000 -width=1000 &gt;craters.pam
+</kbd>  
+</pre>
 
 <H2 id="synopsis">SYNOPSIS</H2>
 
@@ -28,8 +38,8 @@ psmcrater - create cratered terrain by fractal forgery
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <P><B>pamcrater</B> creates a PAM image which is a terrain map of cratered
-terrain.  The terrain is as if a given number of impacts into a surface,
-create craters with random position and size.
+terrain.  The terrain is as if a given number of impacts into a surface create
+craters with random position and size.
 
 <p>The size distribution of the craters is based on a power law which results
 in many more small craters than large ones.  The number of craters of a given
