@@ -249,7 +249,7 @@ struct hsv
 ppm_hsv_from_color(pixel  const color,
                    pixval const maxval);
 
-static __inline pixval
+static __inline__ pixval
 ppm_colorvalue(pixel const p) {
 /*----------------------------------------------------------------------------
   The color value (V is HSV) as a pixval
@@ -257,7 +257,7 @@ ppm_colorvalue(pixel const p) {
     return PPM_MAX(PPM_GETR(p), PPM_MAX(PPM_GETG(p), PPM_GETB(p)));
 }
 
-static __inline pixval
+static __inline__ pixval
 ppm_saturation(pixel const p,
                pixval const maxval) {
 /*----------------------------------------------------------------------------

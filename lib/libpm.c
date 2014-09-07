@@ -679,7 +679,7 @@ pm_proginit(int * const argcP, const char * argv[]) {
     show_version = FALSE;
     show_help = FALSE;
     pm_plain_output = FALSE;
-    for (argn = 1; argn < *argcP; ++argn) {
+    for (argn = i = 1; argn < *argcP; ++argn) {
         if (pm_keymatch(argv[argn], "-quiet", 6) ||
             pm_keymatch(argv[argn], "--quiet", 7)) 
             showmessages = FALSE;
@@ -694,11 +694,9 @@ pm_proginit(int * const argcP, const char * argv[]) {
                  pm_keymatch(argv[argn], "--plain", 7))
             pm_plain_output = TRUE;
         else
-            continue;
-        for (i = argn + 1; i <= *argcP; ++i)
-            argv[i - 1] = argv[i];
-        --(*argcP);
+            argv[i++] = argv[argn];
     }
+    *argcP=i;
 
     pm_setMessage((unsigned int) showmessages, NULL);
 

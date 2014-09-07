@@ -263,8 +263,6 @@ signalName(unsigned int const signalClass) {
         return "SIGTTIN";
     case SIGTTOU: /* POSIX.1 */
         return "SIGTTOU";
-    case SIGURG:
-        return "SIGURG";
     case SIGXCPU:
         return "SIGXCPU";
     case SIGXFSZ:
@@ -273,10 +271,6 @@ signalName(unsigned int const signalClass) {
         return "SIGVTALRM";
     case SIGPROF:
         return "SIGPROF";
-    case SIGWINCH:
-        return "SIGWINCH";
-    case SIGIO:
-        return "SIGIO";
     case SIGSYS:
         return "SIGSYS";
     default:
@@ -285,7 +279,8 @@ signalName(unsigned int const signalClass) {
         /* There are various other signal classes on some systems, but
            not defined by POSIX and not on at least one system we
            know of for which someone wanted to compile Netpbm.  The
-           list includes: SIGPWR, SIGLOST, SIGINFO, SIGRTxx.
+           list includes: SIGPWR, SIGLOST, SIGINFO, SIGRTxx,
+           SIGURG, SIGWINCH, SIGIO.
         */
     }
 }
