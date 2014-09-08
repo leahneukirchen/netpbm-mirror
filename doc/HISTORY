@@ -4,6 +4,13 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+14.09.08 BJH  Release 10.67.05
+
+              cameratopam: fix buffer overflow.  Always present.  (cameratopam
+              was new in Netpbm 10.28 (June 2005)).
+              
+              Build: fix universal build failure introduced in 10.67.04.
+
 14.09.04 BJH  Release 10.67.04
 
               pcdovtoppm: Fix crash due to invalid operator == on some
