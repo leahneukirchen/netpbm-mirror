@@ -21,7 +21,6 @@ static bool const have64BitArithmetic = false;
 #endif
 
 
-static loadRawFn load_raw;
 
 /* This does the same as the function of the same name in the GNU C library */
 static const char *memmem_internal (const char *haystack, size_t haystacklen,
@@ -264,7 +263,7 @@ identify(FILE *       const ifp,
          float        const blue_scale,
          unsigned int const four_color_rgb,
          const char * const inputFileName,
-         loadRawFn *  const loadRawFnP)
+         LoadRawFn ** const loadRawFnP)
 {
     char head[32];
     char * c;
@@ -299,6 +298,7 @@ identify(FILE *       const ifp,
         { "Canon", "NIKON", "EPSON", "Kodak", "OLYMPUS", "PENTAX",
           "MINOLTA", "Minolta", "Konica", "CASIO" };
     float tmp;
+    LoadRawFn * load_raw;
 
     /*  What format is this file?  Set make[] if we recognize it. */
 
@@ -317,9 +317,6 @@ identify(FILE *       const ifp,
     colors = 3;
     for (i=0; i < 0x1000; i++) curve[i] = i;
     maximum = 0xfff;
-#ifdef USE_LCMS
-    profile_length = 0;
-#endif
 
     order = get2(ifp);
     hlen = get4(ifp);
@@ -449,7 +446,7 @@ identify(FILE *       const ifp,
         goto dng_skip;
     }
 
-/*  We'll try to decode anything from Canon or Nikon. */
+    /*  We'll try to decode anything from Canon or Nikon. */
 
     if (!filters) filters = 0x94949494;
     if ((is_canon = !strcmp(make,"Canon")))
@@ -459,7 +456,7 @@ identify(FILE *       const ifp,
         load_raw = nikon_is_compressed() ?
             nikon_compressed_load_raw : nikon_load_raw;
 
-/* Set parameters based on camera name (for non-DNG files). */
+    /* Set parameters based on camera name (for non-DNG files). */
 
     if (is_foveon) {
         if (!have64BitArithmetic)

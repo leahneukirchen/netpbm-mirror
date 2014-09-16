@@ -23,7 +23,6 @@ extern time_t timestamp;
 extern int is_foveon;
 extern int is_dng;
 extern int is_canon;
-extern unsigned short (*image)[4];
 extern int maximum;
 extern int clip_max;
 extern short order;

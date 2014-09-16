@@ -211,7 +211,7 @@ foveon_load_camf() {
 
 
 void  
-foveon_load_raw() {
+foveon_load_raw(Image const image) {
 
     struct decode *dindex;
     short diff[1024], pred[3];
@@ -391,7 +391,8 @@ static int  foveon_apply_curve (short *curve, int i)
 }
 
 void  
-foveon_interpolate(float coeff[3][4]) {
+foveon_interpolate(Image const image,
+                   float coeff[3][4]) {
 
     static const short hood[] = { 
         -1,-1, -1,0, -1,1, 0,-1, 0,1, 1,-1, 1,0, 1,1 };

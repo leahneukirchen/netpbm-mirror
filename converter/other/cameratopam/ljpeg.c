@@ -87,9 +87,10 @@ ljpeg_row (struct jhead *jh)
     }
 }
 
+
 void  
-lossless_jpeg_load_raw(void)
-{
+lossless_jpeg_load_raw(Image const image) {
+
   int jwide, jrow, jcol, val, jidx, i, row, col;
   struct jhead jh;
   int min=INT_MAX;

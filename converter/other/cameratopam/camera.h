@@ -1,4 +1,9 @@
+#ifndef CAMERA_H_INCLUDED
+#define CAMERA_H_INCLUDED
+
 #include <stdio.h>
+
+#include "cameratopam.h"
 
 void 
 parse_ciff(FILE * const ifp,
@@ -21,20 +26,18 @@ void
 parse_mos(FILE * const ifp,
           int    const offset);
 
-void
-adobe_dng_load_raw_lj(void);
+typedef void LoadRawFn(Image const image);
 
-void
-adobe_dng_load_raw_nc(void);
+LoadRawFn adobe_dng_load_raw_lj;
+
+LoadRawFn adobe_dng_load_raw_nc;
 
 int
 nikon_is_compressed(void);
 
-void
-nikon_compressed_load_raw(void);
+LoadRawFn nikon_compressed_load_raw;
 
-void
-nikon_e950_load_raw(void);
+LoadRawFn nikon_e950_load_raw;
 
 void
 nikon_e950_coeff(void);
@@ -45,87 +48,63 @@ nikon_e990(void);
 int
 nikon_e2100(void);
 
-void
-nikon_e2100_load_raw(void);
+LoadRawFn nikon_e2100_load_raw;
 
 int
 minolta_z2(void);
 
-void
-fuji_s2_load_raw(void);
+LoadRawFn fuji_s2_load_raw;
 
-void
-fuji_s3_load_raw(void);
+LoadRawFn fuji_s3_load_raw;
 
-void
-fuji_s5000_load_raw(void);
+LoadRawFn fuji_s5000_load_raw;
 
-void
-unpacked_load_raw(void);
+LoadRawFn unpacked_load_raw;
 
-void
-fuji_s7000_load_raw(void);
+LoadRawFn fuji_s7000_load_raw;
 
-void
-fuji_f700_load_raw(void);
+LoadRawFn fuji_f700_load_raw;
 
-void
-packed_12_load_raw(void);
+LoadRawFn packed_12_load_raw;
 
-void
-eight_bit_load_raw(void);
+LoadRawFn eight_bit_load_raw;
 
-void
-phase_one_load_raw(void);
+LoadRawFn phase_one_load_raw;
 
-void
-ixpress_load_raw(void);
+LoadRawFn ixpress_load_raw;
 
-void
-leaf_load_raw(void);
+LoadRawFn leaf_load_raw;
 
-void
-olympus_e300_load_raw(void);
+LoadRawFn olympus_e300_load_raw;
 
-void
-olympus_cseries_load_raw(void);
+LoadRawFn olympus_cseries_load_raw;
 
-void
-sony_load_raw(void);
+LoadRawFn sony_load_raw;
 
-void
-kodak_easy_load_raw(void);
+LoadRawFn kodak_easy_load_raw;
 
-void
-kodak_compressed_load_raw(void);
+LoadRawFn kodak_compressed_load_raw;
 
-void
-kodak_yuv_load_raw(void);
+LoadRawFn kodak_yuv_load_raw;
 
 void
 kodak_dc20_coeff (float const juice);
 
-void
-kodak_radc_load_raw(void);
+LoadRawFn kodak_radc_load_raw;
 
-void
-kodak_jpeg_load_raw(void);
+LoadRawFn kodak_jpeg_load_raw;
 
-void
-kodak_dc120_load_raw(void);
+LoadRawFn kodak_dc120_load_raw;
 
-void
-rollei_load_raw(void);
+LoadRawFn rollei_load_raw;
 
-void
-casio_qv5700_load_raw(void);
+LoadRawFn casio_qv5700_load_raw;
 
-void
-nucore_load_raw(void);
+LoadRawFn nucore_load_raw;
 
-void
-nikon_load_raw(void);
+LoadRawFn nikon_load_raw;
 
 int
 pentax_optio33(void);
 
+#endif
