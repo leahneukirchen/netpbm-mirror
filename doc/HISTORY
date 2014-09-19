@@ -19,6 +19,9 @@ not yet  BJH  Release 10.68.00
               cameratopam: fix buffer overflow.  Always present.  (cameratopam
               was new in Netpbm 10.28 (June 2005)).
 
+              cameratopam: fix incorrect output introduced in Netpbm 10.51
+              (June 2010).
+
               ppmtopict: Fix unconditional crash.  Introduced in 
               Netpbm 10.52 (September 2010).
 
