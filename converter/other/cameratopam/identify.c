@@ -237,15 +237,8 @@ adobe_coeff()
     for (i=0; i < sizeof table / sizeof *table; i++)
         if (!strncmp (name, table[i].prefix, strlen(table[i].prefix))) {
             unsigned int j;
-            /* I have no idea what this code is supposed to do, but the way I
-               found it, it was setting the first 12 elements, instead of 4,
-               of cm[0].  But cm[0] has only 3 elements!  So I just changed it
-               to use the first 3 "trans" values and ignore the rest.  I
-               don't know if that produces useful results, but at least it
-               cures the array bounds violation.  -Bryan 2010.04.09.
-            */
-            for (j=0; j < 3; j++)
-                cm[0][j] = table[i].trans[j];
+            for (j=0; j < 12; j++)
+                cm[j/4][j%4] = table[i].trans[j];
             dng_coeff (cc, cm, xyz);
             break;
         }
