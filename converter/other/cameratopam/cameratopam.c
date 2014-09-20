@@ -63,13 +63,14 @@ int height, width, fuji_width, colors, tiff_samples;
 int black, maximum, clip_max;
 int iheight, iwidth, shrink;
 int is_dng, is_canon, is_foveon, use_coeff, use_gamma;
-int trim, flip, xmag, ymag;
+int flip, xmag, ymag;
 int zero_after_ff;
 unsigned filters;
 unsigned short  white[8][8];
 unsigned short  curve[0x1000];
 int fuji_secondary;
-float cam_mul[4], pre_mul[4], coeff[3][4];
+float cam_mul[4], coeff[3][4];
+float pre_mul[4];
 int histogram[3][0x2000];
 jmp_buf failure;
 int use_secondary;
@@ -86,7 +87,7 @@ static void CLASS merror (const void *ptr, const char *where)
         pm_error ("Out of memory in %s", where);
 }
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -110,11 +111,11 @@ struct cmdlineInfo {
 };
 
 
-static struct cmdlineInfo cmdline;
+static struct CmdlineInfo cmdline;
 
 static void
 parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo *cmdlineP) {
+                 struct CmdlineInfo *cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that many of the strings that this function returns in the
    *cmdlineP structure are actually in the supplied argv array.  And
@@ -196,55 +197,74 @@ fixBadPixels(Image const image) {
   Search from the current directory up to the root looking for
   a ".badpixels" file, and fix those pixels now.
 -----------------------------------------------------------------------------*/
-    FILE *fp=NULL;
-    char *fname, *cp, line[128];
-    int len, time, row, col, r, c, rad, tot, n, fixed=0;
+    if (filters) {
+        FILE *fp;
+        char *fname, *cp, line[128];
+        int len, time, row, col, rad, tot, n, fixed=0;
 
-    if (!filters) return;
-    for (len=16 ; ; len *= 2) {
-        fname = malloc (len);
-        if (!fname) return;
-        if (getcwd (fname, len-12)) break;
-        free (fname);
-        if (errno != ERANGE) return;
-    }
+        for (len=16 ; ; len *= 2) {
+            fname = malloc (len);
+            if (!fname) return;
+            if (getcwd (fname, len-12))
+                break;
+            free (fname);
+            if (errno != ERANGE)
+                return;
+        }
 #if MSVCRT
-    if (fname[1] == ':')
-        memmove (fname, fname+2, len-2);
-    for (cp=fname; *cp; cp++)
-        if (*cp == '\\') *cp = '/';
+        if (fname[1] == ':')
+            memmove (fname, fname+2, len-2);
+        for (cp=fname; *cp; cp++)
+            if (*cp == '\\') *cp = '/';
 #endif
-    cp = fname + strlen(fname);
-    if (cp[-1] == '/') cp--;
-    while (*fname == '/') {
-        strcpy (cp, "/.badpixels");
-        if ((fp = fopen (fname, "r"))) break;
-        if (cp == fname) break;
-        while (*--cp != '/');
-    }
-    free (fname);
-    if (!fp) return;
-    while (fgets (line, 128, fp)) {
-        cp = strchr (line, '#');
-        if (cp) *cp = 0;
-        if (sscanf (line, "%d %d %d", &col, &row, &time) != 3) continue;
-        if ((unsigned) col >= width || (unsigned) row >= height) continue;
-        if (time > timestamp) continue;
-        for (tot=n=0, rad=1; rad < 3 && n==0; rad++)
-            for (r = row-rad; r <= row+rad; r++)
-                for (c = col-rad; c <= col+rad; c++)
-                    if ((unsigned) r < height && (unsigned) c < width &&
-                        (r != row || c != col) && FC(r,c) == FC(row,col)) {
-                        tot += BAYER(r,c);
-                        n++;
+        cp = fname + strlen(fname);
+        if (cp[-1] == '/')
+            --cp;
+        fp = NULL; /* initial value */
+        while (*fname == '/') {
+            strcpy (cp, "/.badpixels");
+            fp = fopen (fname, "r");
+            if (fp)
+                break;
+            if (cp == fname)
+                break;
+            while (*--cp != '/');
+        }
+        free (fname);
+        if (fp) {
+            while (fgets (line, 128, fp)) {
+                char * cp;
+                cp = strchr (line, '#');
+                if (cp) *cp = 0;
+                if (sscanf (line, "%d %d %d", &col, &row, &time) != 3)
+                    continue;
+                if ((unsigned) col >= width || (unsigned) row >= height)
+                    continue;
+                if (time > timestamp) continue;
+                for (tot=n=0, rad=1; rad < 3 && n==0; rad++) {
+                    unsigned int r;
+                    for (r = row-rad; r <= row+rad; ++r) {
+                        unsigned int c;
+                        for (c = col-rad; c <= col+rad; ++c) {
+                            if ((unsigned) r < height &&
+                                (unsigned) c < width  &&
+                                (r != row || c != col) &&
+                                FC(r,c) == FC(row,col)) {
+                                tot += BAYER(r,c);
+                                ++n;
+                            }
+                        }
                     }
-        BAYER(row,col) = tot/n;
-        if (cmdline.verbose) {
-            if (!fixed++)
-                pm_message ("Fixed bad pixels at: %d,%d", col, row);
+                }
+                BAYER(row,col) = tot/n;
+                if (cmdline.verbose) {
+                    if (!fixed++)
+                        pm_message ("Fixed bad pixels at: %d,%d", col, row);
+                }
+            }
+            fclose (fp);
         }
     }
-    fclose (fp);
 }
 
 
@@ -258,33 +278,32 @@ scaleColors(Image const image) {
     int shift;
     int min[4], max[4], count[4];
     double sum[4], dmin;
+    int scaleMax;
 
-    shift = 0;  /* initial value */
-
-    maximum -= black;
+    scaleMax = maximum - black;  /* initial value */
     if (cmdline.use_auto_wb || (cmdline.use_camera_wb && camera_red == -1)) {
         unsigned int row;
-        FORC4 min[c] = INT_MAX;
-        FORC4 max[c] = count[c] = sum[c] = 0;
+        FORC4 min  [c] = INT_MAX;
+        FORC4 max  [c] = 0;
+        FORC4 count[c] = 0;
+        FORC4 sum  [c] = 0;
         for (row = 0; row < height; ++row) {
             unsigned int col;
             for (col = 0; col < width; ++col) {
                 FORC4 {
                     int val;
                     val = image[row*width+col][c];
-                    if (!val)
-                        continue;
-                    if (min[c] > val)
-                        min[c] = val;
-                    if (max[c] < val)
-                        max[c] = val;
-                    val -= black;
-                    if (val > maximum-25)
-                        continue;
-                    if (val < 0)
-                        val = 0;
-                    sum[c] += val;
-                    ++count[c];
+                    if (val != 0) {
+                        if (min[c] > val)
+                            min[c] = val;
+                        if (max[c] < val)
+                            max[c] = val;
+                        val -= black;
+                        if (val <= scaleMax-25) {
+                            sum  [c] += MAX(0, val);
+                            count[c] += 1;
+                        }
+                    }
                 }
             }
         }
@@ -320,38 +339,34 @@ scaleColors(Image const image) {
         dmin = pre_mul[c];
     FORC4 pre_mul[c] /= dmin;
 
-    while (maximum << shift < 0x8000)
-        ++shift;
+    for (shift = 0; scaleMax << shift < 0x8000; ++shift);
+
     FORC4 pre_mul[c] *= 1 << shift;
-    maximum <<= shift;
+    scaleMax <<= shift;
 
     if (cmdline.linear || cmdline.bright < 1) {
-        maximum *= cmdline.bright;
-        if (maximum > 0xffff)
-            maximum = 0xffff;
+        scaleMax = MIN(0xffff, scaleMax * cmdline.bright);
         FORC4 pre_mul[c] *= cmdline.bright;
     }
     if (cmdline.verbose) {
-        fprintf (stderr, "Scaling with black=%d, pre_mul[] =", black);
+        fprintf(stderr, "Scaling with black=%d, ", black);
+        fprintf(stderr, "pre_mul[] = ");
         FORC4 fprintf (stderr, " %f", pre_mul[c]);
-        fputc ('\n', stderr);
+        fprintf(stderr, "\n");
     }
-    clip_max = cmdline.no_clip_color ? 0xffff : maximum;
+    clip_max = cmdline.no_clip_color ? 0xffff : scaleMax;
     for (row = 0; row < height; ++row) {
         unsigned int col;
         for (col = 0; col < width; ++col) {
-            FORC4 {
+            unsigned int c;
+            for (c = 0; c < colors; ++c) {
                 int val;
                 val = image[row*width+col][c];
-                if (!val)
-                    continue;
-                val -= black;
-                val *= pre_mul[c];
-                if (val < 0)
-                    val = 0;
-                if (val > clip_max)
-                    val = clip_max;
-                image[row*width+col][c] = val;
+                if (val != 0) {
+                    val -= black;
+                    val *= pre_mul[c];
+                    image[row*width+col][c] = MAX(0, MIN(clip_max, val));
+                }
             }
         }
     }
@@ -536,51 +551,65 @@ vngInterpolate(Image const image) {
 
 
 static void CLASS
-convertToRgb(Image const image) {
+convertToRgb(Image        const image,
+             unsigned int const trim) {
 /*----------------------------------------------------------------------------
    Convert the entire image to RGB colorspace and build a histogram.
+
+   We modify 'image' to change it from whatever it is now to RGB.
 -----------------------------------------------------------------------------*/
     unsigned int row;
-    int r;
-    int g;
-    int c;
-    unsigned short *img;
-    float rgb[3];
+    unsigned int c;
+    float rgb[3];  /* { red, green, blue } */
 
     c = 0;  /* initial value */
 
     if (cmdline.document_mode)
         colors = 1;
 
-    memset (histogram, 0, sizeof histogram);
+    memset(histogram, 0, sizeof histogram);
 
-    for (row = trim; row < height-trim; ++row) {
+    for (row = 0 + trim; row < height - trim; ++row) {
         unsigned int col;
-        for (col = trim; col < width-trim; ++col) {
-            img = image[row*width+col];
+        for (col = 0 + trim; col < width - trim; ++col) {
+            unsigned short * const img = image[row*width+col];
+
             if (cmdline.document_mode)
                 c = FC(row,col);
-            if (colors == 4 && !use_coeff)    /* Recombine the greens */
-                img[1] = (img[1] + img[3]) >> 1;
+
+            if (colors == 4 && !use_coeff)
+                /* Recombine the greens */
+                img[1] = (img[1] + img[3]) / 2;
+
             if (colors == 1) {
                 /* RGB from grayscale */
-                for (r = 0; r < 3; ++r)
-                    rgb[r] = img[c];
-            } else if (use_coeff) {     /* RGB via coeff[][] */
-                for (r = 0; r < 3; ++r) {
-                    for (rgb[r]=g=0; g < colors; g++)
-                        rgb[r] += img[g] * coeff[r][g];
+                unsigned int i;
+                for (i = 0; i < 3; ++i)
+                    rgb[i] = img[c];
+            } else if (use_coeff) {
+                /* RGB via coeff[][] */
+                unsigned int i;
+                for (i = 0; i < 3; ++i) {
+                    unsigned int j;
+                    for (j = 0, rgb[i]= 0; j < colors; ++j)
+                        rgb[i] += img[j] * coeff[i][j];
                 }
-            } else                /* RGB from RGB (easy) */
-                goto norgb;
-            for (r = 0; r < 3; ++r) {
-                if (rgb[r] < 0)        rgb[r] = 0;
-                if (rgb[r] > clip_max) rgb[r] = clip_max;
-                img[r] = rgb[r];
+            } else {
+                /* RGB from RGB (easy) */
+                unsigned int i;
+                for (i = 0; i < 3; ++i)
+                    rgb[i] = img[i];
             }
-        norgb:
-            for (r = 0; r < 3; ++r)
-                ++histogram[r][img[r] >> 3];
+            {
+                unsigned int i;
+                for (i = 0; i < 3; ++i)
+                    img[i] = MIN(clip_max, MAX(0, rgb[i]));
+            }
+            {
+                unsigned int i;
+                for (i = 0; i < 3; ++i)
+                    ++histogram[i][img[i] >> 3];
+            }
         }
     }
 }
@@ -707,8 +736,9 @@ flipImage(Image const image) {
 
 
 static void CLASS
-writePamLinear(FILE * const ofP,
-               Image  const image) {
+writePamLinear(FILE *       const ofP,
+               Image        const image,
+               unsigned int const trim) {
 /*----------------------------------------------------------------------------
    Write the image 'image' to a 16-bit PAM file with linear color space
 -----------------------------------------------------------------------------*/
@@ -717,14 +747,11 @@ writePamLinear(FILE * const ofP,
     struct pam pam;
     tuple * tuplerow;
 
-    if (maximum < 256)
-        maximum = 256;
-
     pam.size   = sizeof(pam);
     pam.len    = PAM_STRUCT_SIZE(tuple_type);
     pam.file   = ofP;
-    pam.width  = width-trim*2;
-    pam.height = height-trim*2;
+    pam.width  = width - trim - trim;
+    pam.height = height - trim - trim;
     pam.depth  = 3;
     pam.format = PAM_FORMAT;
     pam.maxval = MAX(maximum, 256);
@@ -734,9 +761,9 @@ writePamLinear(FILE * const ofP,
 
     tuplerow = pnm_allocpamrow(&pam);
 
-    for (row = trim; row < height-trim; row++) {
+    for (row = 0 + trim; row < height - trim; ++row) {
         unsigned int col;
-        for (col = trim; col < width-trim; col++) {
+        for (col = 0 + trim; col < width - trim; ++col) {
             unsigned int const pamCol = col - trim;
             unsigned int plane;
             for (plane = 0; plane < 3; ++plane)
@@ -750,8 +777,9 @@ writePamLinear(FILE * const ofP,
 
 
 static void CLASS
-writePamNonlinear(FILE * const ofP,
-                  Image  const image) {
+writePamNonlinear(FILE *       const ofP,
+                  Image        const image,
+                  unsigned int const trim) {
 /*----------------------------------------------------------------------------
   Write the image 'image' as an RGB PAM image
 -----------------------------------------------------------------------------*/
@@ -797,19 +825,19 @@ writePamNonlinear(FILE * const ofP,
         r = i / white;
         val = 256 * ( !use_gamma ? r :
                       r <= 0.018 ? r*4.5 : pow(r,0.45)*1.099-0.099 );
-        if (val > 255)
-            val = 255;
-        lut[i] = val;
+        lut[i] = MIN(255, val);
     }
-    for (row = trim; row < height - trim; ++row) {
+
+    for (row = 0 + trim; row < height - trim; ++row) {
         unsigned int col;
-        for (col = trim; col < width - trim; ++col) {
+        for (col = 0 + trim; col < width - trim; ++col) {
             unsigned int plane;
-            for (plane=0; plane < pam.depth; ++plane) {
+            for (plane = 0; plane < pam.depth; ++plane) {
+                sample const value = lut[image[row*width+col][plane]];
                 unsigned int copy;
-                for (copy=0; copy < xmag; ++copy) {
+                for (copy = 0; copy < xmag; ++copy) {
                     unsigned int const pamcol = xmag*(col-trim)+copy;
-                    tuplerow[pamcol][plane] = lut[image[row*width+col][plane]];
+                    tuplerow[pamcol][plane] = value;
                 }
             }
         }
@@ -825,29 +853,31 @@ writePamNonlinear(FILE * const ofP,
 
 
 static void CLASS
-writePam(FILE * const ofP,
-         Image  const image,
-         bool   const linear) {
+writePam(FILE *       const ofP,
+         Image        const image,
+         bool         const linear,
+         unsigned int const trim) {
 
     if (linear)
-        writePamLinear(ofP, image);
+        writePamLinear(ofP, image, trim);
     else
-        writePamNonlinear(ofP, image);
+        writePamNonlinear(ofP, image, trim);
 }
 
 
 
 static void CLASS
-convertIt(FILE *      const ifP,
-          FILE *      const ofP,
-          LoadRawFn * const load_raw) {
+convertIt(FILE *       const ifP,
+          FILE *       const ofP,
+          LoadRawFn *  const load_raw) {
 
     Image image;
+    unsigned int trim;
 
     shrink = cmdline.half_size && filters;
     iheight = (height + shrink) >> shrink;
     iwidth  = (width  + shrink) >> shrink;
-    image = calloc (iheight*iwidth*sizeof *image + meta_length, 1);
+    image = calloc (iheight*iwidth*sizeof(*image) + meta_length, 1);
     merror (image, "main()");
     meta_data = (char *) (image + iheight*iwidth);
     if (cmdline.verbose)
@@ -868,19 +898,23 @@ convertIt(FILE *      const ifP,
     } else {
         scaleColors(image);
     }
-    if (shrink) filters = 0;
-    trim = 0;
+    if (shrink)
+        filters = 0;
+
     if (filters && !cmdline.document_mode) {
         trim = 1;
         if (cmdline.verbose)
             pm_message ("%s interpolation...",
                         cmdline.quick_interpolate ? "Bilinear":"VNG");
         vngInterpolate(image);
-    }
+    } else
+        trim = 0;
+
     fujiRotate(&image);
+
     if (cmdline.verbose)
         pm_message ("Converting to RGB colorspace...");
-    convertToRgb(image);
+    convertToRgb(image, trim);
 
     if (flip) {
         if (cmdline.verbose)
@@ -889,7 +923,7 @@ convertIt(FILE *      const ifP,
                         flip & 4 ? 'T':'0');
         flipImage(image);
     }
-    writePam(ofP, image, cmdline.linear);
+    writePam(ofP, image, cmdline.linear, trim);
 
     free(image);
 }

@@ -2,6 +2,8 @@
 #include <string.h>
 
 #include "pm.h"
+#include "pm_c_util.h"
+#include "nstring.h"
 
 #include "global_variables.h"
 #include "util.h"
@@ -33,16 +35,20 @@ static const char *memmem_internal (const char *haystack, size_t haystacklen,
     return NULL;
 }
 
-/*
-  Thanks to Adobe for providing these excellent CAM -> XYZ matrices!
-*/
+
+
 static void 
-adobe_coeff()
-{
-    static const struct {
-        const char *prefix;
+adobeCoeff(const char * const make,
+           const char * const model) {
+    /*
+      Thanks to Adobe for providing these excellent CAM -> XYZ matrices!
+    */
+    struct CoeffTableEntry {
+        const char * prefix;
         short trans[12];
-    } table[] = {
+    }; 
+
+    static struct CoeffTableEntry const table[] = {
         { "Canon EOS D2000C",
           { 24542,-10860,-3401,-1490,11370,-297,2858,-605,3225 } },
         { "Canon EOS D30",
@@ -228,26 +234,33 @@ adobe_coeff()
     double cm[4][3];
     double xyz[] = { 1,1,1 };
     char name[130];
-    int i, j;
+    unsigned int i;
 
-    for (i=0; i < 4; i++)
-        for (j=0; j < 4; j++)
-            cc[i][j] = i == j;
+    /* Make an identity matrix (1's on the diagonal) */
+    for (i = 0; i < 4; ++i) {
+        unsigned int j;
+        for (j = 0; j < 4; ++j)
+            cc[i][j] = (i == j);
+    }
     sprintf (name, "%s %s", make, model);
-    for (i=0; i < sizeof table / sizeof *table; i++)
-        if (!strncmp (name, table[i].prefix, strlen(table[i].prefix))) {
+
+    for (i = 0; i < ARRAY_SIZE(table); ++i) {
+        const struct CoeffTableEntry * const entryP = &table[i];
+
+        if (strneq(name, entryP->prefix, strlen(entryP->prefix))) {
             unsigned int j;
-            for (j=0; j < 12; j++)
-                cm[j/4][j%4] = table[i].trans[j];
-            dng_coeff (cc, cm, xyz);
+            for (j = 0; j < 12; ++j)
+                cm[j/4][j%4] = entryP->trans[j];
+            dng_coeff(cc, cm, xyz);
+
             break;
         }
+    }
 }
 
-/*
-  Identify which camera created this file, and set global variables
-  accordingly.  Return nonzero if the file cannot be decoded.
-*/
+
+
+
 int
 identify(FILE *       const ifp,
          bool         const use_secondary,
@@ -256,8 +269,11 @@ identify(FILE *       const ifp,
          float        const blue_scale,
          unsigned int const four_color_rgb,
          const char * const inputFileName,
-         LoadRawFn ** const loadRawFnP)
-{
+         LoadRawFn ** const loadRawFnP) {
+/*----------------------------------------------------------------------------
+  Identify which camera created this file, and set global variables
+  accordingly.  Return nonzero if the file cannot be decoded.
+-----------------------------------------------------------------------------*/
     char head[32];
     char * c;
     unsigned hlen, fsize, i;
@@ -408,6 +424,9 @@ identify(FILE *       const ifp,
     if (!strncmp (model, make, i++))
         memmove (model, model+i, 64-i);
     make[63] = model[63] = model2[63] = 0;
+
+    if (verbose)
+        fprintf(stderr, "Make = '%s', Model = '%s'\n", make, model);
 
     if (make[0] == 0) {
         pm_message ("unrecognized file format.");
@@ -1142,7 +1161,8 @@ identify(FILE *       const ifp,
             flip = 2;
         }
     }
-    if (!use_coeff) adobe_coeff();
+    if (!use_coeff)
+        adobeCoeff(make, model);
 dng_skip:
     if (!load_raw || !height) {
         pm_message ("This program cannot handle data from %s %s.",
