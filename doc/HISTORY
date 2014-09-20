@@ -41,6 +41,13 @@ not yet  BJH  Release 10.68.00
               _XOPEN_SOURCE is 600.  So we go back to 500 and if the problem
               on Mac OSX gets reported again, we will look more deeply.
 
+              Build: change _XOPEN_SOURCE from 600 back to 500 in
+              jpeg2ktopam.c and pamtojpeg2k.c.  It was changed from 500 to 600
+              in Netpbm 10.41 (December 2007), reportedly to get int_fast32_t,
+              etc. defined on AIX, but other files that use int_fast32_t
+              don't have it today, so that must be wrong.  See above for the
+              drawback of 600.
+
               Build: fix undefined symbols in fiasco converters with
               static libraries.
 
