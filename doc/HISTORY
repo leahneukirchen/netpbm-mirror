@@ -36,11 +36,10 @@ not yet  BJH  Release 10.68.00
               not get defined.  But this is apparently a bug in Mac OSX, since
               X/Open 500 does have strdup.  Furthermore, many other Netpbm
               files use strdup and apparently compile OK on Mac OSX without
-              600.  Finally, we have a report now that on SunOS with a non-C99
-              compiler, _XOPEN_SOURCE 600 actually removes things from libc
-              that these files need (no details).  So we will go back to 500
-              and if the problem on Mac OSX gets reported again, we will look
-              more deeply.
+              600.  Finally, we see today that Illumos system header files
+              deliberately kill the compilation if the compiler is pre-C99 and
+              _XOPEN_SOURCE is 600.  So we go back to 500 and if the problem
+              on Mac OSX gets reported again, we will look more deeply.
 
               Build: fix undefined symbols in fiasco converters with
               static libraries.
