@@ -29,6 +29,19 @@ not yet  BJH  Release 10.68.00
               systems.  Always broken (pcdovtoppm was new sometime between
               Netpbm 9.25 (March 2002) and Netpbm 10.11 (Februrary 2010)).
 
+              Build: change _XOPEN_SOURCE from 600 back to 500 in 7 files.  It
+              was changed from 500 to 600 in Subversion revision 1731 in
+              Netpbm 10.60 (September 2012) because that made a similar
+              version of Netpbm compile on Mac OSX.  Without it, strdup did
+              not get defined.  But this is apparently a bug in Mac OSX, since
+              X/Open 500 does have strdup.  Furthermore, many other Netpbm
+              files use strdup and apparently compile OK on Mac OSX without
+              600.  Finally, we have a report now that on SunOS with a non-C99
+              compiler, _XOPEN_SOURCE 600 actually removes things from libc
+              that these files need (no details).  So we will go back to 500
+              and if the problem on Mac OSX gets reported again, we will look
+              more deeply.
+
               Build: fix undefined symbols in fiasco converters with
               static libraries.
 

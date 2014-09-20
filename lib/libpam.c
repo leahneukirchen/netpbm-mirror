@@ -14,7 +14,7 @@
 #define _FILE_OFFSET_BITS 64
 #define _LARGE_FILES  
 #define _BSD_SOURCE 1      /* Make sure strdup() is in string.h */
-#define _XOPEN_SOURCE 600  /* Make sure strdup() is in string.h */
+#define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 
 #include <string.h>
 #include <limits.h>

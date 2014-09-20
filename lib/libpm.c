@@ -9,7 +9,7 @@
 **************************************************************************/
 
 #define _BSD_SOURCE          /* Make sure strdup is in string.h */
-#define _XOPEN_SOURCE 600    /* Make sure ftello, fseeko are defined */
+#define _XOPEN_SOURCE 500    /* Make sure ftello, fseeko are defined */
 
 #include "netpbm/pm_config.h"
 

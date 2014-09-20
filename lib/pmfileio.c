@@ -11,7 +11,7 @@
        in some environments.
     */
 #define _BSD_SOURCE    /* Make sure strdup is defined */
-#define _XOPEN_SOURCE 600    /* Make sure ftello, fseeko, strdup are defined */
+#define _XOPEN_SOURCE 500    /* Make sure ftello, fseeko, strdup are defined */
 #define _LARGEFILE_SOURCE 1  /* Make sure ftello, fseeko are defined */
 #define _LARGEFILE64_SOURCE 1 
 #define _FILE_OFFSET_BITS 64
