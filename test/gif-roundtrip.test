@@ -1,47 +1,59 @@
 #! /bin/bash
 # This script tests: giftopnm pamtogif
-# Also requires: ppmtopgm ppmtorgb3 rgb3toppm pbmmake
+# Also requires: ppmtorgb3 rgb3toppm pbmmake
 
   alias giftopnm="${PBM_TESTPREFIX}giftopnm"
   alias pamtogif="${PBM_TESTPREFIX}pamtogif"
   alias pbmmake="${PBM_BINPREFIX}pbmmake"
-  alias ppmtopgm="${PBM_BINPREFIX}ppmtopgm"
   alias ppmtorgb3="${PBM_BINPREFIX}ppmtorgb3"
   alias rgb3toppm="${PBM_BINPREFIX}rgb3toppm"
   alias pnminvert="${PBM_BINPREFIX}pnminvert"
   shopt -s expand_aliases
 
-# Test 1. Should produce 2871603838 33838
-# which is the result of ppmtopgm testimg.ppm | cksum
-# four times
+tmpdir=${tmpdir:-/tmp}
 
-ppmtopgm testimg.ppm | tee ${tmpdir}/testimg.pgm | pamtogif | giftopnm | cksum
-pamtogif -interlace ${tmpdir}/testimg.pgm | giftopnm | cksum
-pamtogif -sort ${tmpdir}/testimg.pgm | tee ${tmpdir}/testimg.gif | \
-  giftopnm | cksum
-echo "junk" >> ${tmpdir}/testimg.gif && \
-  giftopnm -image=1 -quitearly ${tmpdir}/testimg.gif | cksum
-
-rm  ${tmpdir}/testimg.pgm
-rm  ${tmpdir}/testimg.gif
-
-# Test 2. Break up input image into three monochrome planes,
+# Test 1. Break up input image into three monochrome planes,
 # maxval 255.  Transform each plane to gif and back to pgm.
 # Reassemble the planes.  Result should be identical to input.
 # Should print 1926073387 101484
 
+test_ppm=${tmpdir}/testimg.ppm
+
 cp testimg.ppm ${tmpdir} &&
-ppmtorgb3 ${tmpdir}/testimg.ppm &&
-pamtogif ${tmpdir}/testimg.red | \
-  giftopnm > ${tmpdir}/out.red &&
-pamtogif ${tmpdir}/testimg.grn |
-  giftopnm > ${tmpdir}/out.grn &&
-pamtogif ${tmpdir}/testimg.blu | \
-  giftopnm | \
-  rgb3toppm ${tmpdir}/testimg.red ${tmpdir}/testimg.grn - | \
+ppmtorgb3 ${test_ppm} &&
+
+test_red=${tmpdir}/testimg.red
+test_grn=${tmpdir}/testimg.grn
+test_blu=${tmpdir}/testimg.blu
+out_red=${tmpdir}/out.red
+out_grn=${tmpdir}/out.grn
+out_blu=${tmpdir}/out.blu
+
+pamtogif ${test_red} | giftopnm > ${out_red} &&
+pamtogif ${test_grn} | giftopnm > ${out_grn} &&
+pamtogif ${test_blu} | giftopnm | \
+  rgb3toppm ${out_red} ${out_grn} - | \
   cksum
 
-rm ${tmpdir}/testimg.{ppm,red,grn,blu} ${tmpdir}/out.{red,grn}
+rm ${test_ppm} ${test_grn} ${test_blu} \
+   ${out_red} ${out_grn} ${out_blu}
+
+
+# Test 2. Should produce 1571496937 33838
+# which is the result of cksum testimg.red
+# four times
+
+test_gif=${tmpdir}/testimg.gif
+
+pamtogif ${test_red} | giftopnm | cksum
+pamtogif -interlace ${test_red} | giftopnm | cksum
+pamtogif -sort ${test_red} | tee ${test_gif} | \
+  giftopnm | cksum
+echo "junk" >> ${test_gif} && \
+  giftopnm -image=1 -quitearly ${test_gif} | cksum
+
+rm  ${test_gif} ${test_red}
+
 
 # Test 3. Should produce 2425386270 41 five times.
 

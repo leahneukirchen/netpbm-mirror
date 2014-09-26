@@ -116,7 +116,7 @@ parseCommandLine(int argc, char ** argv,
     OPTENT3(0, "nocrop",     OPT_FLAG,  NULL, &cmdlineP->nocrop,         0);
     OPTENT3(0, "pbm",        OPT_FLAG,  NULL, &pbmOpt ,                  0);
     OPTENT3(0, "pgm",        OPT_FLAG,  NULL, &pgmOpt,                   0);
-    OPTENT3(0, "ppm",        OPT_FLAG,  NULL, &ppmOpt,                  0);
+    OPTENT3(0, "ppm",        OPT_FLAG,  NULL, &ppmOpt,                   0);
     OPTENT3(0, "verbose",    OPT_FLAG,  NULL, &cmdlineP->verbose,        0);
     OPTENT3(0, "xborder",    OPT_FLOAT, &cmdlineP->xborder, NULL,        0);
     OPTENT3(0, "xmax",       OPT_UINT,  &cmdlineP->xmax, &xmaxSpec,      0);
@@ -125,8 +125,8 @@ parseCommandLine(int argc, char ** argv,
     OPTENT3(0, "ymax",       OPT_UINT,  &cmdlineP->ymax, &ymaxSpec,      0);
     OPTENT3(0, "ysize",      OPT_UINT,  &cmdlineP->ysize, &ysizeSpec,    0);
     OPTENT3(0, "dpi",        OPT_UINT,  &cmdlineP->dpi, &dpiSpec,        0);
-    OPTENT3(0, "portrait",   OPT_FLAG,  NULL, &portraitOpt,             0);
-    OPTENT3(0, "landscape",  OPT_FLAG,  NULL, &landscapeOpt,            0);
+    OPTENT3(0, "portrait",   OPT_FLAG,  NULL, &portraitOpt,              0);
+    OPTENT3(0, "landscape",  OPT_FLAG,  NULL, &landscapeOpt,             0);
     OPTENT3(0, "stdout",     OPT_FLAG,  NULL, &cmdlineP->stdoutSpec,     0);
     OPTENT3(0, "textalphabits", OPT_UINT,
             &cmdlineP->textalphabits,  &textalphabitsSpec, 0);

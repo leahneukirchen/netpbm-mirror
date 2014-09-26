@@ -81,6 +81,34 @@ The test facility was new in Netpbm 10.61 (December 2012).
 For further information on the tests read the document TESTS.
 
 
+OVERRIDING INTERNAL LIBRARIES
+-----------------------------
+
+There are a few esoteric libraries that are distributed separately from Netpbm
+but of which Netpbm contains a copy too, for convenience.  The build normally
+uses the internal Netpbm copy, but you can configure the build to use a
+version of the library that is installed on your system.
+
+For the JBIG library, set the JBIGLIB and JBIGHDR_DIR variables in
+config.mk to the appropriate values.
+
+For the Utah Raster Toolkit (aka URT aka RLE) library, set the URTLIB and
+URTHDR_DIR vairables in config.mk to the appropriate values.
+
+The appropriate value for the xxxLIB variable is the full file name of the
+link library (e.g. "/usr/local/lib/jbigkit/libjbig.so") or just the file name
+part of it (e.g. "libjbig.so") if the library is in your linker's default
+search path.
+
+The appropriate value for the xxxHDR_DIR variable is the full directory name
+of the directory that contains the interface header files for the library
+identified by the xxxLIB variable (E.g. "usr/local/include/jbigkit") or a null
+string if those header files are in your compiler's default search path.
+
+If you use the 'configure' program, be sure to edit config.mk _after_ you
+run 'configure', since 'configure' generates config.mk.
+
+
 AUTOMATING THE BUILD
 --------------------
 

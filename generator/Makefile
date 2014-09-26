@@ -14,9 +14,10 @@ include $(BUILDDIR)/config.mk
 # This package is so big, it's useful even when some parts won't 
 # build.
 
-PORTBINARIES = pamgauss pamgradient pamseq pamstereogram \
+PORTBINARIES = pamcrater pamgauss pamgradient \
+	       pamseq pamshadedrelief pamstereogram \
 	       pbmpage pbmmake pbmtext pbmtextps pbmupc \
-	       pgmcrater pgmkernel pgmmake pgmnoise pgmramp \
+	       pgmkernel pgmmake pgmnoise pgmramp \
 	       ppmcie ppmcolors ppmforge ppmmake ppmpat ppmrough ppmwheel \
 
 # We don't include programs that have special library dependencies in the
@@ -28,7 +29,7 @@ MERGEBINARIES = $(PORTBINARIES)
 
 
 BINARIES = $(MERGEBINARIES) $(NOMERGEBINARIES)
-SCRIPTS = ppmrainbow
+SCRIPTS = pgmcrater ppmrainbow
 
 OBJECTS = $(BINARIES:%=%.o)
 

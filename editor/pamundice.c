@@ -491,7 +491,12 @@ openInStreams(struct pam         inpam[],
 /*----------------------------------------------------------------------------
    Open the input files for a single horizontal slice (there's one file
    for each vertical slice) and read the Netpbm headers from them.  Return
-   the pam structures to describe each.
+   the pam structures to describe each as inpam[].
+
+   Open the files for horizontal slice number 'rank', assuming there are
+   'fileCount' vertical slices (so open 'fileCount' files).  Use
+   inputFilePattern[] with each rank and file number to compute the name of
+   each file.
 -----------------------------------------------------------------------------*/
     unsigned int file;
 
@@ -507,7 +512,9 @@ openInStreams(struct pam         inpam[],
 static void
 closeInFiles(struct pam         pam[],
              unsigned int const fileCount) {
-
+/*----------------------------------------------------------------------------
+   Close the 'fileCount' input file streams represented by pam[].
+-----------------------------------------------------------------------------*/
     unsigned int file;
     
     for (file = 0; file < fileCount; ++file)

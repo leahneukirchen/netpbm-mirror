@@ -1,13 +1,12 @@
 #! /bin/bash
 # This script tests: pgmtofs fstopgm
-# Also requires: ppmtopgm
+# Also requires: pamchannel
 
   alias fstopgm="${PBM_TESTPREFIX}fstopgm"
   alias pgmtofs="${PBM_TESTPREFIX}pgmtofs"
-  alias ppmtopgm="${PBM_BINPREFIX}ppmtopgm"
   shopt -s expand_aliases
 
-# Should produce 2871603838 33838, cksum of testimg.pgm
+# Should produce 1571496937 33838, cksum of testimg.red
 
-ppmtopgm testimg.ppm | \
+pamchannel -infile=testimg.ppm -tupletype="GRAYSCALE" 0 | pamtopnm | \
   pgmtofs | fstopgm | cksum

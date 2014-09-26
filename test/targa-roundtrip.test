@@ -1,11 +1,10 @@
 #! /bin/bash
 # This script tests: pamtotga tgatoppm
-# Also requires: ppmtopgm pgmtopbm
+# Also requires: pgmtopbm
 
   alias pamtotga="${PBM_TESTPREFIX}pamtotga"
   alias tgatoppm="${PBM_TESTPREFIX}tgatoppm"
   alias pgmtopbm="${PBM_BINPREFIX}pgmtopbm"
-  alias ppmtopgm="${PBM_BINPREFIX}ppmtopgm"
   shopt -s expand_aliases
 
 #Test 1: Should print 2425386270 41, cksum of testgrid.pbm
@@ -14,13 +13,9 @@ pamtotga -mono testgrid.pbm | \
   tgatoppm | ppmtopgm | \
   pgmtopbm -threshold -val 0.5 | cksum
 
-#Test 2: Should print 2871603838 33838, cksum of testimg.pgm
-
-ppmtopgm testimg.ppm > ${tmpdir}/testimg.pgm
-pamtotga -cmap ${tmpdir}/testimg.pgm | \
-  tgatoppm | ppmtopgm | cksum
-
-rm ${tmpdir}/testimg.pgm
+#Test 2:  Should produce 1571496937 33838, cksum of testimg.red
+pamchannel -infile=testimg.ppm -tupletype="GRAYSCALE" 0 | \
+  pamtotga -cmap | tgatoppm | ppmtopgm | cksum
 
 #Test 3: Should print 1926073387 101484, cksum of testimg.ppm
 

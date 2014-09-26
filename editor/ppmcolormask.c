@@ -9,6 +9,7 @@
   Contributed to the public domain by its author.
 =========================================================================*/
 
+#define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 #define _BSD_SOURCE  /* Make sure strdup() is in <string.h> */
 #include <assert.h>
 #include <string.h>

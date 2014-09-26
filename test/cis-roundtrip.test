@@ -1,0 +1,20 @@
+#! /bin/bash
+# This script tests: pbmtocis cistopbm
+# Also requires: pbmmake pamenlarge pamcut
+
+  alias pbmtocis="${PBM_TESTPREFIX}pbmtocis"
+  alias cistopbm="${PBM_TESTPREFIX}cistopbm"
+  alias pbmmake="${PBM_BINPREFIX}pbmmake"
+  alias pamenlarge="${PBM_BINPREFIX}pamenlarge"
+  alias pamcut="${PBM_BINPREFIX}pamcut"
+  shopt -s expand_aliases
+
+# Output images produced by pbmtocis are of fixed size,
+# either 128x96 or 256x192.
+# Smaller input images are padded, larger ones are cropped.
+
+# Test 1. Should print 2631579683 1546
+pbmmake -g 128 96 | pbmtocis | cistopbm | cksum
+
+# Test 2. Should print 2425386270 41
+pbmtocis testgrid.pbm | cistopbm | pamcut 0 0 14 16 | cksum

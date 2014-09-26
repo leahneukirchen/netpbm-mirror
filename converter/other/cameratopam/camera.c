@@ -17,6 +17,7 @@
 #include "mallocvar.h"
 
 #include "global_variables.h"
+#include "cameratopam.h"
 #include "util.h"
 #include "decode.h"
 #include "bayer.h"
@@ -55,67 +56,76 @@ merror (const void *ptr, const char *where)
 
 
 static void  
-adobe_copy_pixel (int row, int col, unsigned short **rp, bool use_secondary)
-{
-  unsigned r=row, c=col;
+adobeCopyPixel(Image             const image,
+               unsigned int      const row,
+               unsigned int      const col,
+               unsigned short ** const rp,
+               bool              const useSecondary) {
 
-  if (fuji_secondary && use_secondary) (*rp)++;
-  if (filters) {
-    if (fuji_width) {
-      r = row + fuji_width - 1 - (col >> 1);
-      c = row + ((col+1) >> 1);
+    unsigned r=row, c=col;
+
+    if (fuji_secondary && useSecondary)
+        ++(*rp);
+    if (filters) {
+        if (fuji_width) {
+            r = row + fuji_width - 1 - (col >> 1);
+            c = row + ((col+1) >> 1);
+        }
+        if (r < height && c < width)
+            BAYER(r,c) = **rp < 0x1000 ? curve[**rp] : **rp;
+        *rp += 1 + fuji_secondary;
+    } else {
+        unsigned int c;
+        for (c = 0; c < tiff_samples; ++c) {
+            image[row*width+col][c] = **rp < 0x1000 ? curve[**rp] : **rp;
+            ++(*rp);
+        }
     }
-    if (r < height && c < width)
-      BAYER(r,c) = **rp < 0x1000 ? curve[**rp] : **rp;
-    *rp += 1 + fuji_secondary;
-  } else
-    for (c=0; c < tiff_samples; c++) {
-      image[row*width+col][c] = **rp < 0x1000 ? curve[**rp] : **rp;
-      (*rp)++;
-    }
-  if (fuji_secondary && use_secondary) (*rp)--;
+    if (fuji_secondary && useSecondary)
+        --(*rp);
 }
 
 void
-adobe_dng_load_raw_lj()
-{
-  int save, twide, trow=0, tcol=0, jrow, jcol;
-  struct jhead jh;
-  unsigned short *rp;
+adobe_dng_load_raw_lj(Image const image) {
 
-  while (1) {
-    save = ftell(ifp);
-    fseek (ifp, get4(ifp), SEEK_SET);
-    if (!ljpeg_start (ifp, &jh)) break;
-    if (trow >= raw_height) break;
-    if (jh.high > raw_height-trow)
-    jh.high = raw_height-trow;
-    twide = jh.wide;
-    if (filters) twide *= jh.clrs;
-    else         colors = jh.clrs;
-    if (fuji_secondary) twide /= 2;
-    if (twide > raw_width-tcol)
-    twide = raw_width-tcol;
+    int save, twide, trow=0, tcol=0, jrow, jcol;
+    struct jhead jh;
+    unsigned short *rp;
 
-    for (jrow=0; jrow < jh.high; jrow++) {
-      ljpeg_row (&jh);
-      for (rp=jh.row, jcol=0; jcol < twide; jcol++)
-    adobe_copy_pixel (trow+jrow, tcol+jcol, &rp, use_secondary);
+    while (1) {
+        save = ftell(ifp);
+        fseek (ifp, get4(ifp), SEEK_SET);
+        if (!ljpeg_start (ifp, &jh)) break;
+        if (trow >= raw_height) break;
+        if (jh.high > raw_height-trow)
+            jh.high = raw_height-trow;
+        twide = jh.wide;
+        if (filters) twide *= jh.clrs;
+        else         colors = jh.clrs;
+        if (fuji_secondary) twide /= 2;
+        if (twide > raw_width-tcol)
+            twide = raw_width-tcol;
+
+        for (jrow=0; jrow < jh.high; jrow++) {
+            ljpeg_row (&jh);
+            for (rp=jh.row, jcol=0; jcol < twide; jcol++)
+                adobeCopyPixel(image,
+                               trow+jrow, tcol+jcol, &rp, use_secondary);
+        }
+        fseek (ifp, save+4, SEEK_SET);
+        if ((tcol += twide) >= raw_width) {
+            tcol = 0;
+            trow += jh.high;
+        }
+        free (jh.row);
     }
-    fseek (ifp, save+4, SEEK_SET);
-    if ((tcol += twide) >= raw_width) {
-      tcol = 0;
-      trow += jh.high;
-    }
-    free (jh.row);
-  }
 }
 
 
 
 void
-adobe_dng_load_raw_nc()
-{
+adobe_dng_load_raw_nc(Image const image) {
+
     unsigned short *pixel, *rp;
     int row, col;
 
@@ -124,7 +134,7 @@ adobe_dng_load_raw_nc()
     for (row=0; row < raw_height; row++) {
         read_shorts (ifp, pixel, raw_width * tiff_samples);
         for (rp=pixel, col=0; col < raw_width; col++)
-            adobe_copy_pixel (row, col, &rp, use_secondary);
+            adobeCopyPixel(image, row, col, &rp, use_secondary);
     }
     free (pixel);
 }
@@ -134,8 +144,8 @@ adobe_dng_load_raw_nc()
 static int nikon_curve_offset;
 
 void
-nikon_compressed_load_raw(void)
-{
+nikon_compressed_load_raw(Image const image) {
+
     static const unsigned char nikon_tree[] = {
         0,1,5,1,1,1,1,1,1,2,0,0,0,0,0,0,
         5,4,3,6,2,7,1,0,8,9,11,10,12
@@ -176,8 +186,8 @@ nikon_compressed_load_raw(void)
 }
 
 void
-nikon_load_raw()
-{
+nikon_load_raw(Image const image) {
+
   int irow, row, col, i;
 
   getbits(ifp, -1);
@@ -294,8 +304,8 @@ minolta_z2()
 }
 
 void
-nikon_e2100_load_raw()
-{
+nikon_e2100_load_raw(Image const image) {
+        
   unsigned char   data[3432], *dp;
   unsigned short pixel[2288], *pix;
   int row, col;
@@ -322,8 +332,8 @@ nikon_e2100_load_raw()
 }
 
 void
-nikon_e950_load_raw()
-{
+nikon_e950_load_raw(Image const image) {
+
   int irow, row, col;
 
   getbits(ifp, -1);
@@ -341,8 +351,7 @@ nikon_e950_load_raw()
    The Fuji Super CCD is just a Bayer grid rotated 45 degrees.
  */
 void
-fuji_s2_load_raw()
-{
+fuji_s2_load_raw(Image const image) {
   unsigned short pixel[2944];
   int row, col, r, c;
 
@@ -358,8 +367,7 @@ fuji_s2_load_raw()
 }
 
 void
-fuji_s3_load_raw()
-{
+fuji_s3_load_raw(Image const image) {
   unsigned short pixel[4352];
   int row, col, r, c;
 
@@ -374,33 +382,44 @@ fuji_s3_load_raw()
   }
 }
 
-static void  fuji_common_load_raw (int ncol, int icol, int nrow)
-{
-  unsigned short pixel[2048];
-  int row, col, r, c;
+static void 
+fuji_common_load_raw(Image        const image,
+                     unsigned int const ncol,
+                     unsigned int const icol,
+                     unsigned int const nrow) {
 
-  for (row=0; row < nrow; row++) {
-    read_shorts(ifp, pixel, ncol);
-    for (col=0; col <= icol; col++) {
-      r = icol - col + (row >> 1);
-      c = col + ((row+1) >> 1);
-      BAYER(r,c) = pixel[col];
+    unsigned short pixel[2048];
+    unsigned int row;
+
+    for (row = 0; row < nrow; ++row) {
+        unsigned int col;
+        read_shorts(ifp, pixel, ncol);
+        for (col = 0; col <= icol; ++col) {
+            int const r = icol - col + (row >> 1);
+            int const c = col + ((row+1) >> 1);
+            BAYER(r,c) = pixel[col];
+        }
     }
-  }
 }
 
+
+
 void
-fuji_s5000_load_raw()
-{
+fuji_s5000_load_raw(Image const image) {
+
   fseek (ifp, (1472*4+24)*2, SEEK_CUR);
-  fuji_common_load_raw (1472, 1423, 2152);
+  fuji_common_load_raw(image, 1472, 1423, 2152);
 }
 
+
+
 void
-fuji_s7000_load_raw()
-{
-  fuji_common_load_raw (2048, 2047, 3080);
+fuji_s7000_load_raw(Image const image) {
+
+    fuji_common_load_raw(image, 2048, 2047, 3080);
 }
+
+
 
 /*
    The Fuji Super CCD SR has two photodiodes for each pixel.
@@ -408,8 +427,7 @@ fuji_s7000_load_raw()
    but this ratio may vary.
  */
 void
-fuji_f700_load_raw()
-{
+fuji_f700_load_raw(Image const image) {
   unsigned short pixel[2944];
   int row, col, r, c, val;
 
@@ -425,8 +443,7 @@ fuji_f700_load_raw()
 }
 
 void
-rollei_load_raw()
-{
+rollei_load_raw(Image const image) {
   unsigned char pixel[10];
   unsigned iten=0, isix, i, buffer=0, row, col, todo[16];
 
@@ -452,8 +469,7 @@ rollei_load_raw()
 }
 
 void
-phase_one_load_raw()
-{
+phase_one_load_raw(Image const image) {
   int row, col, a, b;
   unsigned short *pixel, akey, bkey;
 
@@ -479,8 +495,7 @@ phase_one_load_raw()
 }
 
 void
-ixpress_load_raw()
-{
+ixpress_load_raw(Image const image) {
   unsigned short pixel[4090];
   int row, col;
 
@@ -494,8 +509,7 @@ ixpress_load_raw()
 }
 
 void
-leaf_load_raw()
-{
+leaf_load_raw(Image const image) {
   unsigned short *pixel;
   int r, c, row, col;
 
@@ -514,8 +528,7 @@ leaf_load_raw()
    For this function only, raw_width is in bytes, not pixels!
  */
 void
-packed_12_load_raw()
-{
+packed_12_load_raw(Image const image) {
   int row, col;
 
   getbits(ifp, -1);
@@ -528,8 +541,7 @@ packed_12_load_raw()
 }
 
 void
-unpacked_load_raw()
-{
+unpacked_load_raw(Image const image) {
   unsigned short *pixel;
   int row, col;
 
@@ -544,8 +556,7 @@ unpacked_load_raw()
 }
 
 void
-olympus_e300_load_raw()
-{
+olympus_e300_load_raw(Image const image) {
   unsigned char  *data,  *dp;
   unsigned short *pixel, *pix;
   int dwide, row, col;
@@ -568,8 +579,7 @@ olympus_e300_load_raw()
 }
 
 void
-olympus_cseries_load_raw()
-{
+olympus_cseries_load_raw(Image const image) {
   int irow, row, col;
 
   for (irow=0; irow < height; irow++) {
@@ -584,8 +594,7 @@ olympus_cseries_load_raw()
 }
 
 void
-eight_bit_load_raw()
-{
+eight_bit_load_raw(Image const image) {
   unsigned char *pixel;
   int row, col;
 
@@ -601,8 +610,7 @@ eight_bit_load_raw()
 }
 
 void
-casio_qv5700_load_raw()
-{
+casio_qv5700_load_raw(Image const image) {
   unsigned char  data[3232],  *dp;
   unsigned short pixel[2576], *pix;
   int row, col;
@@ -622,8 +630,7 @@ casio_qv5700_load_raw()
 }
 
 void
-nucore_load_raw()
-{
+nucore_load_raw(Image const image) {
   unsigned short *pixel;
   int irow, row, col;
 
@@ -685,8 +692,7 @@ static int  radc_token (int tree)
 : (buf[c][y-1][x+1] + 2*buf[c][y-1][x] + buf[c][y][x+1]) / 4)
 
 void
-kodak_radc_load_raw()
-{
+kodak_radc_load_raw(Image const image) {
     int row, col, tree, nreps, rep, step, c, s, r, x, y, val;
     unsigned int i;
     short last[3] = { 16,16,16 }, mul[3], buf[3][3][386];
@@ -765,7 +771,8 @@ kodak_radc_load_raw()
 #undef PREDICTOR
 
 #ifndef HAVE_JPEG
-void kodak_jpeg_load_raw() {}
+void
+kodak_jpeg_load_raw(Image const Image) {}
 #else
 
 static bool
@@ -782,7 +789,7 @@ fill_input_buffer (j_decompress_ptr cinfo)
 }
 
 void
-kodak_jpeg_load_raw()
+kodak_jpeg_load_raw(Image const image)
 {
   struct jpeg_decompress_struct cinfo;
   struct jpeg_error_mgr jerr;
@@ -823,7 +830,7 @@ kodak_jpeg_load_raw()
 #endif
 
 void
-kodak_dc120_load_raw()
+kodak_dc120_load_raw(Image const image)
 {
   static const int mul[4] = { 162, 192, 187,  92 };
   static const int add[4] = {   0, 636, 424, 212 };
@@ -859,7 +866,7 @@ kodak_dc20_coeff (float const juice)
 }
 
 void
-kodak_easy_load_raw()
+kodak_easy_load_raw(Image const image)
 {
   unsigned char *pixel;
   unsigned row, col, icol;
@@ -887,7 +894,7 @@ kodak_easy_load_raw()
 }
 
 void
-kodak_compressed_load_raw()
+kodak_compressed_load_raw(Image const image)
 {
   unsigned char c, blen[256];
   unsigned short raw[6];
@@ -951,7 +958,7 @@ kodak_compressed_load_raw()
 }
 
 void
-kodak_yuv_load_raw()
+kodak_yuv_load_raw(Image const image)
 {
   unsigned char c, blen[384];
   unsigned row, col, len, bits=0;
@@ -1042,7 +1049,7 @@ static void  sony_decrypt (unsigned *data, int len, int start, int key)
 }
 
 void
-sony_load_raw()
+sony_load_raw(Image const image)
 {
   unsigned char head[40];
   struct pixel {
@@ -1310,12 +1317,6 @@ parse_mos(FILE * const ifp,
         fread (data, 1, 40, ifp);
         skip = get4(ifp);
         from = ftell(ifp);
-#ifdef USE_LCMS
-        if (!strcmp(data,"icc_camera_profile")) {
-            profile_length = skip;
-            profile_offset = from;
-        }
-#endif
         if (!strcmp(data,"NeutObj_neutrals")) {
             for (i=0; i < 4; i++)
                 fscanf (ifp, "%d", neut+i);

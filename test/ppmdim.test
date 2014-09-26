@@ -8,18 +8,23 @@
   alias pnmarith="${PBM_BINPREFIX}pnmarith"
   shopt -s expand_aliases
 
+tmpdir=${tmpdir:-/tmp}
+
 # Compare ppmdim and pamfunc with various dim factors
 # Due to the difference in rounding methods, pamfunc produces slightly
 # brighter images, by about 0.5 per pixel.
 # If the mean difference is between 0 and 0.75 we consider the output
 # normal.  This works for dim values up to 0.994 .
+dim1_ppm=${tmpdir}/dim1.ppm
+dim2_ppm=${tmpdir}/dim2.ppm
 
 for i in  0.125 0.25 0.5 0.75 0.1 0.0117 0.2 0.4 0.333 0.666 0.8 0.9 0.95
   do
-  ppmdim $i testimg.ppm > ${tmpdir}/dim1.ppm
-  pamfunc -mult=$i testimg.ppm > ${tmpdir}/dim2.ppm
-  pnmarith -diff ${tmpdir}/dim1.ppm ${tmpdir}/dim2.ppm | \
+  ppmdim $i testimg.ppm > ${dim1_ppm}
+  pamfunc -mult=$i testimg.ppm > ${dim2_ppm}
+  pnmarith -diff ${dim1_ppm} ${dim2_ppm} | \
     pamsumm -mean -brief | \
     awk '{print $1<0.75 ? "ok" : "fail"}'
   done
-rm ${tmpdir}/dim[12].ppm
+
+rm ${dim1_ppm} ${dim2_ppm}

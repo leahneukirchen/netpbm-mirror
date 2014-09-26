@@ -4,29 +4,49 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-14.09.26 BJH  Release 10.67.06
+14.09.26 BJH  Release 10.68.00
+
+              pnmconvol: add -bias .
+
+              Remove pnmcomp, install a pnmcomp symlink for pamcomp.
+
+              Fix incorrect option parsing when there are multiple common
+              options (e.g. -plain -quiet).  Always broken.  (Possibility of
+              specifying multiple common options that don't cause the program
+              to ignore every other option (like -version) was new in Netpbm
+              10.10 (October 2002).
+
+              cameratopam: fix buffer overflow.  Always present.  (cameratopam
+              was new in Netpbm 10.28 (June 2005)).
 
               cameratopam: fix incorrect output introduced in Netpbm 10.51
               (June 2010).
 
-14.09.08 BJH  Release 10.67.05
-
-              cameratopam: fix buffer overflow.  Always present.  (cameratopam
-              was new in Netpbm 10.28 (June 2005)).
-              
-              Build: fix universal build failure introduced in 10.67.04.
-
-14.09.04 BJH  Release 10.67.04
+              ppmtopict: Fix unconditional crash.  Introduced in 
+              Netpbm 10.52 (September 2010).
 
               pcdovtoppm: Fix crash due to invalid operator == on some
               systems.  Always broken (pcdovtoppm was new sometime between
               Netpbm 9.25 (March 2002) and Netpbm 10.11 (Februrary 2010)).
 
-              Build: fix compile failure due to use of reserved word
-              'stdout'.
+              Build: change _XOPEN_SOURCE from 600 back to 500 in 7 files.  It
+              was changed from 500 to 600 in Subversion revision 1731 in
+              Netpbm 10.60 (September 2012) because that made a similar
+              version of Netpbm compile on Mac OSX.  Without it, strdup did
+              not get defined.  But this is apparently a bug in Mac OSX, since
+              X/Open 500 does have strdup.  Furthermore, many other Netpbm
+              files use strdup and apparently compile OK on Mac OSX without
+              600.  Finally, we see today that Illumos system header files
+              deliberately kill the compilation if the compiler is pre-C99 and
+              _XOPEN_SOURCE is 600.  So we go back to 500 and if the problem
+              on Mac OSX gets reported again, we will look more deeply.
 
-              Build with 'installosf': Fix crash due to invalid operator ==
-              on some systems.
+              Build: change _XOPEN_SOURCE from 600 back to 500 in
+              jpeg2ktopam.c and pamtojpeg2k.c.  It was changed from 500 to 600
+              in Netpbm 10.41 (December 2007), reportedly to get int_fast32_t,
+              etc. defined on AIX, but other files that use int_fast32_t
+              don't have it today, so that must be wrong.  See above for the
+              drawback of 600.
 
               Build: fix undefined symbols in fiasco converters with
               static libraries.
@@ -34,7 +54,8 @@ CHANGE HISTORY
               Build: provide means of setting the default search path for
               rgb.txt color database via config.mk.
 
-14.08.24 BJH  Release 10.67.03
+              Build: fix bug which prevents JBIG converters from building with
+              internal JBIG library.  Introduced in 10.67.00.
 
               Build: fix bug which makes build of Ppmsvga fail (which is
               attempted only on a system with libvga).  Introduced in Netpbm
@@ -47,21 +68,14 @@ CHANGE HISTORY
               Build: fix build failure on SCO OpenServer due to SIGURG not
               existing.  Broken in Netpbm 10.49 (December 2009).
 
-14.08.12 BJH  Release 10.67.02
+              Build: Declare _XOPEN_SOURCE >= 500 in source files that use
+              strdup.
 
-              Build: fix bug which prevents JBIG converters from building with
-              internal JBIG library.  Introduced in 10.67.00.
+              Build: fix compile failure due to use of reserved word
+              'stdout'.
 
-14.08.11 BJH  Release 10.67.01
-
-              Fix incorrect option parsing when there are multiple common
-              options (e.g. -plain -quiet).  Always broken.  (Possibility of
-              specifying multiple common options that don't cause the program
-              to ignore every other option (like -version) was new in Netpbm
-              10.10 (October 2002).
-
-              ppmtopict: Fix unconditional crash.  Introduced in Netpbm 10.52
-              (September 2010).
+              Build with 'installosf': Fix crash due to invalid operator ==
+              on some systems.
 
 14.06.29 BJH  Release 10.67.00
 

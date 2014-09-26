@@ -6,10 +6,18 @@
   alias pbmmake="${PBM_BINPREFIX}pbmmake"
   shopt -s expand_aliases
 
-pbmmake -w 10 10 > ${tmpdir}/w.pbm
-pbmmake -b 10 10 > ${tmpdir}/b.pbm
-pnmpsnr  ${tmpdir}/w.pbm  ${tmpdir}/b.pbm 2>&1 | \
+tmpdir=${tmpdir:-/tmp}
+
+
+w_pbm=${tmpdir}/w.pbm
+b_pbm=${tmpdir}/b.pbm
+
+pbmmake -w 10 10 > ${w_pbm}
+pbmmake -b 10 10 > ${b_pbm}
+
+pnmpsnr  ${w_pbm}  ${b_pbm} 2>&1 | \
  awk '{print $(NF-1),$NF}'
-pnmpsnr  ${tmpdir}/w.pbm  ${tmpdir}/w.pbm 2>&1 | \
+pnmpsnr  ${w_pbm}  ${w_pbm} 2>&1 | \
  awk '{print $(NF-1),$NF}'
-rm ${tmpdir}/b.pbm ${tmpdir}/w.pbm
+
+rm ${b_pbm} ${w_pbm}

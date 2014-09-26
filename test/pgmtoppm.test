@@ -8,17 +8,22 @@
   alias pgmramp="${PBM_BINPREFIX}pgmramp"
   shopt -s expand_aliases
 
-pgmramp -maxval=5 -lr 256 1 >${tmpdir}/test.pgm
+tmpdir=${tmpdir:-/tmp}
+
+test_pgm=${tmpdir}/test.pgm
+palette=${tmpdir}/palette
+
+pgmramp -maxval=5 -lr 256 1 >${test_pgm}
 pamseq 3 5 -tupletype=RGB | pamtopnm \
-  >${tmpdir}/palette
+  >${palette}
 
 # Test 1.
-pgmtoppm green ${tmpdir}/test.pgm | cksum
+pgmtoppm green ${test_pgm} | cksum
 
-pgmtoppm yellow-blue ${tmpdir}/test.pgm | cksum
+pgmtoppm yellow-blue ${test_pgm} | cksum
 
-pgmtoppm -map=${tmpdir}/palette ${tmpdir}/test.pgm | cksum
+pgmtoppm -map=${palette} ${test_pgm} | cksum
 
-rm ${tmpdir}/test.pgm ${tmpdir}/palette
+rm ${test_pgm} ${palette}
 
 

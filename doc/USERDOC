@@ -125,7 +125,7 @@ Also, these methods require manual effort, and technical
 understanding, on your part to set up.  Setting it up is too complex
 for an automated process to do it for you with any significant
 integrity.  The examples are guidelines and you shouldn't expect them
-to work literally in your situtation.
+to work literally in your situation.
 
 Here is an old example of making troff pages, which doesn't actually
 work anymore, but might be helpful.  You'll probably want to use a Subversion

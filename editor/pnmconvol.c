@@ -27,6 +27,16 @@
 #include "pam.h"
 
 
+
+static sample const
+clipSample(sample const unclipped,
+           sample const maxval) {
+
+    return MIN(maxval, MAX(0, unclipped));
+}
+
+
+
 static void
 validateKernelDimensions(unsigned int const width,
                          unsigned int const height) {
@@ -67,6 +77,7 @@ struct cmdlineInfo {
     unsigned int matrixSpec;
     struct matrixOpt matrix;
     unsigned int normalize;
+    unsigned int bias;
 };
 
 
@@ -304,6 +315,7 @@ parseCommandLine(int argc, char ** argv,
     unsigned int option_def_index;
     unsigned int matrixfileSpec;
     const char * matrixOpt;
+    unsigned int biasSpec;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
@@ -316,6 +328,8 @@ parseCommandLine(int argc, char ** argv,
             &cmdlineP->nooffset,       0);
     OPTENT3(0, "normalize",    OPT_FLAG,   NULL,                  
             &cmdlineP->normalize,      0);
+    OPTENT3(0, "bias",         OPT_UINT,   &cmdlineP->bias,
+            &biasSpec,                 0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -323,6 +337,9 @@ parseCommandLine(int argc, char ** argv,
 
     pm_optParseOptions3( &argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
+
+    if (!biasSpec)
+        cmdlineP->bias = 0;
 
     if (matrixfileSpec && cmdlineP->matrixSpec)
         pm_error("You can't specify by -matrix and -matrixfile");
@@ -375,7 +392,7 @@ parseCommandLine(int argc, char ** argv,
 
 
 
-struct convKernel {
+struct ConvKernel {
     unsigned int cols;
         /* Width of the convolution window */
     unsigned int rows;
@@ -393,12 +410,18 @@ struct convKernel {
            It can have magnitude greater than or less than one.  It can be
            positive or negative.  
         */
+    unsigned int bias;
+        /* The amount to be added to the linear combination of sample values.
+           We take a little liberty with the term "convolution kernel" to
+           include this value, since convolution per se does not involve any
+           such biasing.
+        */
 };
 
 
 
 static void
-warnBadKernel(struct convKernel * const convKernelP) {
+warnBadKernel(struct ConvKernel * const convKernelP) {
 
     float sum[3];
     unsigned int plane;
@@ -456,7 +479,7 @@ convKernelCreatePnm(struct pam *         const cpamP,
                     tuple * const *      const ctuples, 
                     unsigned int         const depth,
                     bool                 const offsetPnm,
-                    struct convKernel ** const convKernelPP) {
+                    struct ConvKernel ** const convKernelPP) {
 /*----------------------------------------------------------------------------
    Compute the convolution matrix in normalized form from the PGM form
    'ctuples'/'cpamP'.  Each element of the output matrix is the actual weight
@@ -479,7 +502,7 @@ convKernelCreatePnm(struct pam *         const cpamP,
     double const offset = offsetPnm ? - 1.0 : 0.0;
     unsigned int const planes = MIN(3, depth);
 
-    struct convKernel * convKernelP;
+    struct ConvKernel * convKernelP;
     unsigned int plane;
 
     MALLOCVAR_NOFAIL(convKernelP);
@@ -507,13 +530,15 @@ convKernelCreatePnm(struct pam *         const cpamP,
             }
         }
     }
+    convKernelP->bias = 0;
+
     *convKernelPP = convKernelP;
 }
 
 
 
 static void
-convKernelDestroy(struct convKernel * const convKernelP) {
+convKernelDestroy(struct ConvKernel * const convKernelP) {
 
     unsigned int plane;
 
@@ -531,7 +556,7 @@ convKernelDestroy(struct convKernel * const convKernelP) {
 
 
 static void
-normalizeKernelPlane(struct convKernel * const convKernelP,
+normalizeKernelPlane(struct ConvKernel * const convKernelP,
                      unsigned int        const plane) {
 
     unsigned int row;
@@ -563,7 +588,7 @@ normalizeKernelPlane(struct convKernel * const convKernelP,
 
 
 static void
-normalizeKernel(struct convKernel * const convKernelP) {
+normalizeKernel(struct ConvKernel * const convKernelP) {
 /*----------------------------------------------------------------------------
    Modify *convKernelP by scaling every weight in a plane by the same factor
    such that the weights in the plane all add up to 1.
@@ -580,7 +605,7 @@ static void
 getKernelPnm(const char *         const fileName,
              unsigned int         const depth,
              bool                 const offset,
-             struct convKernel ** const convKernelPP) {
+             struct ConvKernel ** const convKernelPP) {
 /*----------------------------------------------------------------------------
    Get the convolution kernel from the PNM file named 'fileName'.
    'offset' means the PNM convolution matrix is defined in offset form so
@@ -613,7 +638,8 @@ static void
 convKernelCreateMatrixOpt(struct matrixOpt     const matrixOpt,
                           bool                 const normalize,
                           unsigned int         const depth,
-                          struct convKernel ** const convKernelPP) {
+                          unsigned int         const bias,
+                          struct ConvKernel ** const convKernelPP) {
 /*----------------------------------------------------------------------------
    Create a convolution kernel as described by a -matrix command line
    option.
@@ -625,7 +651,7 @@ convKernelCreateMatrixOpt(struct matrixOpt     const matrixOpt,
    so they may form a biased matrix -- i.e. one which brightens or dims the
    image overall.
 -----------------------------------------------------------------------------*/
-    struct convKernel * convKernelP;
+    struct ConvKernel * convKernelP;
     unsigned int plane;
 
     MALLOCVAR(convKernelP);
@@ -651,6 +677,8 @@ convKernelCreateMatrixOpt(struct matrixOpt     const matrixOpt,
     }
     if (normalize)
         normalizeKernel(convKernelP);
+
+    convKernelP->bias = bias;
 
     *convKernelPP = convKernelP;
 }
@@ -821,7 +849,8 @@ static void
 convKernelCreateSimpleFile(const char **        const fileNameList,
                            bool                 const normalize,
                            unsigned int         const depth,
-                           struct convKernel ** const convKernelPP) {
+                           unsigned int         const bias,
+                           struct ConvKernel ** const convKernelPP) {
 /*----------------------------------------------------------------------------
    Create a convolution kernel as described by a convolution matrix file.
    This is the simple file with floating point numbers in it, not the
@@ -834,7 +863,7 @@ convKernelCreateSimpleFile(const char **        const fileNameList,
    so they may form a biased matrix -- i.e. one which brightens or dims the
    image overall.
 -----------------------------------------------------------------------------*/
-    struct convKernel * convKernelP;
+    struct ConvKernel * convKernelP;
     unsigned int fileCt;
     unsigned int planeCt;
     unsigned int plane;
@@ -887,6 +916,8 @@ convKernelCreateSimpleFile(const char **        const fileNameList,
 
     convKernelP->cols = width;
     convKernelP->rows = height;
+    convKernelP->bias = bias;
+
     *convKernelPP = convKernelP;
 }
 
@@ -895,7 +926,7 @@ convKernelCreateSimpleFile(const char **        const fileNameList,
 static void
 getKernel(struct cmdlineInfo   const cmdline,
           unsigned int         const depth,
-          struct convKernel ** const convKernelPP) {
+          struct ConvKernel ** const convKernelPP) {
 /*----------------------------------------------------------------------------
    Figure out what the convolution kernel is.  It can come from various
    sources in various forms, as described on the command line, represented
@@ -904,17 +935,17 @@ getKernel(struct cmdlineInfo   const cmdline,
    We generate a kernel object in standard form (free of any indication of
    where it came from) and return a handle to it as *convKernelPP.
 ----------------------------------------------------------------------------*/
-    struct convKernel * convKernelP;
+    struct ConvKernel * convKernelP;
 
     if (cmdline.pnmMatrixFileName)
         getKernelPnm(cmdline.pnmMatrixFileName, depth, !cmdline.nooffset,
                      &convKernelP);
     else if (cmdline.matrixfile)
         convKernelCreateSimpleFile(cmdline.matrixfile, cmdline.normalize,
-                                   depth, &convKernelP);
+                                   depth, cmdline.bias, &convKernelP);
     else if (cmdline.matrixSpec)
         convKernelCreateMatrixOpt(cmdline.matrix, cmdline.normalize,
-                                  depth, &convKernelP);
+                                  depth, cmdline.bias, &convKernelP);
 
     warnBadKernel(convKernelP);
 
@@ -925,7 +956,7 @@ getKernel(struct cmdlineInfo   const cmdline,
 
 static void
 validateEnoughImageToConvolve(const struct pam *        const inpamP,
-                              const struct convKernel * const convKernelP) {
+                              const struct ConvKernel * const convKernelP) {
 /*----------------------------------------------------------------------------
    Abort program if the image isn't big enough in both directions to have
    at least one convolved pixel.
@@ -1025,8 +1056,39 @@ readAndScaleRows(struct pam *              const inpamP,
 
 
 static void
+writePamRowBiased(struct pam * const outpamP,
+                  tuple *      const row,
+                  unsigned int const bias) {
+/*----------------------------------------------------------------------------
+   Write row[] to the output file according to *outpamP, but with
+   'bias' added to each sample value, clipped to maxval.
+-----------------------------------------------------------------------------*/
+    if (bias == 0)
+        pnm_writepamrow(outpamP, row);
+    else {
+        unsigned int col;
+
+        tuple * const outrow = pnm_allocpamrow(outpamP);
+
+        for (col = 0; col < outpamP->width; ++col) {
+            unsigned int plane;
+
+            for (plane = 0; plane < outpamP->depth; ++plane) {
+                outrow[col][plane] =
+                    MIN(outpamP->maxval, bias + row[col][plane]);
+            }
+        }
+        pnm_writepamrow(outpamP, outrow);
+
+        pnm_freepamrow(outrow);
+    }
+}
+
+
+
+static void
 writeUnconvolvedTop(struct pam *              const outpamP,
-                    const struct convKernel * const convKernelP,
+                    const struct ConvKernel * const convKernelP,
                     tuple **                  const rowbuf) {
 /*----------------------------------------------------------------------------
    Write out the top part that we can't convolve because the convolution
@@ -1038,14 +1100,14 @@ writeUnconvolvedTop(struct pam *              const outpamP,
     unsigned int row;
 
     for (row = 0; row < convKernelP->rows/2; ++row)
-        pnm_writepamrow(outpamP, rowbuf[row]);
+        writePamRowBiased(outpamP, rowbuf[row], convKernelP->bias);
 }
 
 
 
 static void
 writeUnconvolvedBottom(struct pam *              const outpamP,
-                       const struct convKernel * const convKernelP,
+                       const struct ConvKernel * const convKernelP,
                        unsigned int              const windowHeight,
                        tuple **                  const circMap) {
 /*----------------------------------------------------------------------------
@@ -1061,7 +1123,7 @@ writeUnconvolvedBottom(struct pam *              const outpamP,
          row < windowHeight;
          ++row) {
 
-        pnm_writepamrow(outpamP, circMap[row]);
+        writePamRowBiased(outpamP, circMap[row], convKernelP->bias);
     }
 }
 
@@ -1093,7 +1155,7 @@ setupCircMap(tuple **     const circMap,
 static void
 convolveGeneralRowPlane(struct pam *              const pamP,
                         tuple **                  const window,
-                        const struct convKernel * const convKernelP,
+                        const struct ConvKernel * const convKernelP,
                         unsigned int              const plane,
                         tuple *                   const outputrow) {
 /*----------------------------------------------------------------------------
@@ -1114,7 +1176,10 @@ convolveGeneralRowPlane(struct pam *              const pamP,
     
     for (col = 0; col < pamP->width; ++col) {
         if (col < ccolso2 || col >= pamP->width - ccolso2)
-            outputrow[col][plane] = window[crowso2][col][plane];
+            /* The unconvolved left or right edge */
+            outputrow[col][plane] =
+                clipSample(convKernelP->bias + window[crowso2][col][plane],
+                           pamP->maxval);
         else {
             unsigned int const leftcol = col - ccolso2;
             unsigned int crow;
@@ -1127,7 +1192,8 @@ convolveGeneralRowPlane(struct pam *              const pamP,
                     sum += leftrptr[ccol][plane] *
                         convKernelP->weight[plane][crow][ccol];
             }
-            outputrow[col][plane] = MIN(pamP->maxval, MAX(0, sum + 0.5));
+            outputrow[col][plane] =
+                clipSample(convKernelP->bias + sum + 0.5, pamP->maxval);
         }
     }
 }
@@ -1137,7 +1203,7 @@ convolveGeneralRowPlane(struct pam *              const pamP,
 static void
 convolveGeneral(struct pam *              const inpamP,
                 struct pam *              const outpamP,
-                const struct convKernel * const convKernelP) {
+                const struct ConvKernel * const convKernelP) {
 /*----------------------------------------------------------------------------
    Do the convolution without taking advantage of any useful redundancy in the
    convolution matrix.
@@ -1244,7 +1310,7 @@ freeSum(sample **    const sum,
 static void
 computeInitialColumnSums(struct pam *              const pamP,
                          tuple **                  const window,
-                         const struct convKernel * const convKernelP,
+                         const struct ConvKernel * const convKernelP,
                          sample **                 const convColumnSum) {
 /*----------------------------------------------------------------------------
   Add up the sum of each column of window[][], whose rows are described
@@ -1271,7 +1337,7 @@ computeInitialColumnSums(struct pam *              const pamP,
 
 
 static void
-convolveRowWithColumnSumsMean(const struct convKernel * const convKernelP,
+convolveRowWithColumnSumsMean(const struct ConvKernel * const convKernelP,
                               struct pam *              const pamP,
                               tuple **                  const window,
                               tuple *                   const outputrow,
@@ -1301,30 +1367,32 @@ convolveRowWithColumnSumsMean(const struct convKernel * const convKernelP,
         unsigned int col;
         sample gisum;
 
-        gisum = 0;
-        for (col = 0; col < pamP->width; ++col) {
-            if (col < ccolso2 || col >= pamP->width - ccolso2)
-                outputrow[col][plane] = window[crowso2][col][plane];
-            else if (col == ccolso2) {
-                unsigned int const leftcol = col - ccolso2;
-
-                unsigned int ccol;
-
-                for (ccol = 0; ccol < convKernelP->cols; ++ccol)
-                    gisum += convColumnSum[plane][leftcol + ccol];
-
+        for (col = 0, gisum = 0; col < pamP->width; ++col) {
+            if (col < ccolso2 || col >= pamP->width - ccolso2) {
+                /* The unconvolved left or right edge */
                 outputrow[col][plane] =
-                    MIN(pamP->maxval, MAX(0, gisum * weight + 0.5));
+                    clipSample(convKernelP->bias +
+                               window[crowso2][col][plane],
+                               pamP->maxval);
             } else {
-                /* Column numbers to subtract or add to isum */
-                unsigned int const subcol = col - ccolso2 - 1;
-                unsigned int const addcol = col + ccolso2;  
+                if (col == ccolso2) {
+                    unsigned int const leftcol = col - ccolso2;
 
-                gisum -= convColumnSum[plane][subcol];
-                gisum += convColumnSum[plane][addcol];
+                    unsigned int ccol;
 
+                    for (ccol = 0; ccol < convKernelP->cols; ++ccol)
+                        gisum += convColumnSum[plane][leftcol + ccol];
+                } else {
+                    /* Column numbers to subtract or add to isum */
+                    unsigned int const subcol = col - ccolso2 - 1;
+                    unsigned int const addcol = col + ccolso2;  
+
+                    gisum -= convColumnSum[plane][subcol];
+                    gisum += convColumnSum[plane][addcol];
+                }
                 outputrow[col][plane] =
-                    MIN(pamP->maxval, MAX(0, gisum * weight + 0.5));
+                    clipSample(convKernelP->bias + gisum * weight + 0.5,
+                               pamP->maxval);
             }
         }
     }
@@ -1334,7 +1402,7 @@ convolveRowWithColumnSumsMean(const struct convKernel * const convKernelP,
 
 static void
 convolveRowWithColumnSumsVertical(
-    const struct convKernel * const convKernelP,
+    const struct ConvKernel * const convKernelP,
     struct pam *              const pamP,
     tuple **                  const window,
     tuple *                   const outputrow,
@@ -1363,9 +1431,13 @@ convolveRowWithColumnSumsVertical(
         unsigned int col;
     
         for (col = 0; col < pamP->width; ++col) {
-            if (col < ccolso2 || col >= pamP->width - ccolso2)
-                outputrow[col][plane] = window[crowso2][col][plane];
-            else {
+            if (col < ccolso2 || col >= pamP->width - ccolso2) {
+                /* The unconvolved left or right edge */
+                outputrow[col][plane] =
+                    clipSample(convKernelP->bias +
+                               window[crowso2][col][plane],
+                               pamP->maxval);
+            } else {
                 unsigned int const leftcol = col - ccolso2;
                 unsigned int ccol;
                 float sum;
@@ -1376,7 +1448,8 @@ convolveRowWithColumnSumsVertical(
                     sum += convColumnSum[plane][leftcol + ccol] *
                         convKernelP->weight[plane][0][ccol];
 
-                outputrow[col][plane] = MIN(pamP->maxval, MAX(0, sum + 0.5));
+                outputrow[col][plane] =
+                    clipSample(convKernelP->bias + sum + 0.5, pamP->maxval);
             }
         }
     }
@@ -1387,7 +1460,7 @@ convolveRowWithColumnSumsVertical(
 static void
 convolveMeanRowPlane(struct pam *              const pamP,
                      tuple **                  const window,
-                     const struct convKernel * const convKernelP,
+                     const struct ConvKernel * const convKernelP,
                      unsigned int              const plane,
                      tuple *                   const outputrow,
                      sample *                  const convColumnSum) {
@@ -1417,38 +1490,40 @@ convolveMeanRowPlane(struct pam *              const pamP,
     unsigned int col;
     sample gisum;
 
-    gisum = 0;
-    for (col = 0; col < pamP->width; ++col) {
-        if (col < ccolso2 || col >= pamP->width - ccolso2)
-            outputrow[col][plane] = window[crowso2][col][plane];
-        else if (col == ccolso2) {
-            unsigned int const leftcol = col - ccolso2;
+    for (col = 0, gisum = 0; col < pamP->width; ++col) {
+        if (col < ccolso2 || col >= pamP->width - ccolso2) {
+            /* The unconvolved left or right edge */
+            outputrow[col][plane] =
+                clipSample(convKernelP->bias + window[crowso2][col][plane],
+                           pamP->maxval);
+        } else {
+            if (col == ccolso2) {
+                unsigned int const leftcol = col - ccolso2;
 
-            unsigned int ccol;
+                unsigned int ccol;
 
-            for (ccol = 0; ccol < convKernelP->cols; ++ccol) {
-                sample * const thisColumnSumP =
-                    &convColumnSum[leftcol + ccol];
-                *thisColumnSumP = *thisColumnSumP
-                    - window[subrow][ccol][plane]
-                    + window[addrow][ccol][plane];
-                gisum += *thisColumnSumP;
+                for (ccol = 0; ccol < convKernelP->cols; ++ccol) {
+                    sample * const thisColumnSumP =
+                        &convColumnSum[leftcol + ccol];
+                    *thisColumnSumP = *thisColumnSumP
+                        - window[subrow][ccol][plane]
+                        + window[addrow][ccol][plane];
+                    gisum += *thisColumnSumP;
+                }
+            } else {
+                /* Column numbers to subtract or add to isum */
+                unsigned int const subcol = col - ccolso2 - 1;
+                unsigned int const addcol = col + ccolso2;  
+                
+                convColumnSum[addcol] = convColumnSum[addcol]
+                    - window[subrow][addcol][plane]
+                    + window[addrow][addcol][plane];
+                
+                gisum = gisum - convColumnSum[subcol] + convColumnSum[addcol];
             }
             outputrow[col][plane] =
-                MIN(pamP->maxval, MAX(0, gisum * weight + 0.5));
-        } else {
-            /* Column numbers to subtract or add to isum */
-            unsigned int const subcol = col - ccolso2 - 1;
-            unsigned int const addcol = col + ccolso2;  
-
-            convColumnSum[addcol] = convColumnSum[addcol]
-                - window[subrow][addcol][plane]
-                + window[addrow][addcol][plane];
-
-            gisum = gisum - convColumnSum[subcol] + convColumnSum[addcol];
-
-            outputrow[col][plane] =
-                MIN(pamP->maxval, MAX(0, gisum * weight + 0.5));
+                clipSample(convKernelP->bias + gisum * weight + 0.5,
+                           pamP->maxval);
         }
     }
 }
@@ -1457,7 +1532,7 @@ convolveMeanRowPlane(struct pam *              const pamP,
 
 typedef void convolver(struct pam *              const inpamP,
                        struct pam *              const outpamP,
-                       const struct convKernel * const convKernelP);
+                       const struct ConvKernel * const convKernelP);
 
 
 
@@ -1466,7 +1541,7 @@ static convolver convolveMean;
 static void
 convolveMean(struct pam *              const inpamP,
              struct pam *              const outpamP,
-             const struct convKernel * const convKernelP) {
+             const struct ConvKernel * const convKernelP) {
 /*----------------------------------------------------------------------------
   Mean Convolution
 
@@ -1645,7 +1720,7 @@ freeRowSum(sample ***   const sum,
 static void
 convolveHorizontalRowPlane0(struct pam *              const outpamP,
                             tuple **                  const window,
-                            const struct convKernel * const convKernelP,
+                            const struct ConvKernel * const convKernelP,
                             unsigned int              const plane,
                             tuple *                   const outputrow,
                             sample **                 const sumWindow) {
@@ -1659,47 +1734,57 @@ convolveHorizontalRowPlane0(struct pam *              const outpamP,
     unsigned int col;
 
     for (col = 0; col < outpamP->width; ++col) {
-        if (col < ccolso2 || col >= outpamP->width - ccolso2)
-            outputrow[col][plane] = window[crowso2][col][plane];
-        else if (col == ccolso2) {
-            /* This is the first column for which the entire convolution
-               kernel fits within the image horizontally.  I.e. the window
-               starts at the left edge of the image.
-            */
-            unsigned int const leftcol = 0;
-            
-            float matrixSum;
-            unsigned int crow;
-
-            for (crow = 0, matrixSum = 0.0; crow < convKernelP->rows; ++crow) {
-                tuple * const tuplesInWindow = &window[crow][leftcol];
-
-                unsigned int ccol;
-                
-                sumWindow[crow][col] = 0;
-                for (ccol = 0; ccol < convKernelP->cols; ++ccol)
-                    sumWindow[crow][col] += tuplesInWindow[ccol][plane];
-                matrixSum +=
-                    sumWindow[crow][col] * convKernelP->weight[plane][crow][0];
-            }
+        if (col < ccolso2 || col >= outpamP->width - ccolso2) {
+            /* The unconvolved left or right edge */
             outputrow[col][plane] =
-                MIN(outpamP->maxval, MAX(0, matrixSum + 0.5));
+                clipSample(convKernelP->bias + window[crowso2][col][plane],
+                           outpamP->maxval);
         } else {
-            unsigned int const subcol  = col - ccolso2 - 1;
-            unsigned int const addcol  = col + ccolso2;
-
             float matrixSum;
-            unsigned int crow;
 
-            for (crow = 0, matrixSum = 0.0; crow < convKernelP->rows; ++crow) {
-                sumWindow[crow][col] = sumWindow[crow][col-1] +
-                    + window[crow][addcol][plane]
-                    - window[crow][subcol][plane];
-                matrixSum +=
-                    sumWindow[crow][col] * convKernelP->weight[plane][crow][0];
+            if (col == ccolso2) {
+                /* This is the first column for which the entire convolution
+                   kernel fits within the image horizontally.  I.e. the window
+                   starts at the left edge of the image.
+                */
+                unsigned int const leftcol = 0;
+            
+                unsigned int crow;
+
+                for (crow = 0, matrixSum = 0.0;
+                     crow < convKernelP->rows;
+                     ++crow) {
+                    tuple * const tuplesInWindow = &window[crow][leftcol];
+
+                    unsigned int ccol;
+                
+                    sumWindow[crow][col] = 0;
+                    for (ccol = 0; ccol < convKernelP->cols; ++ccol)
+                        sumWindow[crow][col] += tuplesInWindow[ccol][plane];
+                    matrixSum +=
+                        sumWindow[crow][col] *
+                        convKernelP->weight[plane][crow][0];
+                }
+            } else {
+                unsigned int const subcol  = col - ccolso2 - 1;
+                unsigned int const addcol  = col + ccolso2;
+
+                unsigned int crow;
+                
+                for (crow = 0, matrixSum = 0.0;
+                     crow < convKernelP->rows;
+                     ++crow) {
+                    sumWindow[crow][col] = sumWindow[crow][col-1] +
+                        + window[crow][addcol][plane]
+                        - window[crow][subcol][plane];
+                    matrixSum +=
+                        sumWindow[crow][col] *
+                        convKernelP->weight[plane][crow][0];
+                }
             }
             outputrow[col][plane] =
-                MIN(outpamP->maxval, MAX(0, matrixSum + 0.5));
+                clipSample(convKernelP->bias + matrixSum + 0.5,
+                           outpamP->maxval);
         }
     }
 }
@@ -1737,7 +1822,7 @@ setupCircMap2(tuple **     const rowbuf,
 static void
 convolveHorizontalRowPlane(struct pam *              const pamP,
                            tuple **                  const window,
-                           const struct convKernel * const convKernelP,
+                           const struct ConvKernel * const convKernelP,
                            unsigned int              const plane,
                            tuple *                   const outputrow,
                            sample **                 const sumWindow) {
@@ -1763,13 +1848,15 @@ convolveHorizontalRowPlane(struct pam *              const pamP,
     unsigned int col;
 
     for (col = 0; col < pamP->width; ++col) {
-        if (col < ccolso2 || col >= pamP->width - ccolso2)
-            outputrow[col][plane] = window[crowso2][col][plane];
-        else if (col == ccolso2) {
+        float matrixSum;
+
+        if (col < ccolso2 || col >= pamP->width - ccolso2) {
+            outputrow[col][plane] =
+                clipSample(convKernelP->bias + window[crowso2][col][plane],
+                           pamP->maxval);
+        } else if (col == ccolso2) {
             unsigned int const leftcol = 0;
                 /* Window is up againt left edge of image */
-
-            float matrixSum;
 
             {
                 unsigned int ccol;
@@ -1787,13 +1874,10 @@ convolveHorizontalRowPlane(struct pam *              const pamP,
                         convKernelP->weight[plane][crow][0];
                 }
             }
-            outputrow[col][plane] =
-                MIN(pamP->maxval, MAX(0, matrixSum + 0.5));
         } else {
             unsigned int const subcol  = col - ccolso2 - 1;
             unsigned int const addcol  = col + ccolso2;  
 
-            float matrixSum;
             unsigned int crow;
 
             sumWindow[newrow][col] =
@@ -1805,9 +1889,9 @@ convolveHorizontalRowPlane(struct pam *              const pamP,
                 matrixSum += sumWindow[crow][col] *
                     convKernelP->weight[plane][crow][0];
             }
-            outputrow[col][plane] =
-                MIN(pamP->maxval, MAX(0, matrixSum + 0.5));
         }
+        outputrow[col][plane] =
+            clipSample(convKernelP->bias + matrixSum + 0.5, pamP->maxval);
     }
 }
 
@@ -1818,7 +1902,7 @@ static convolver convolveHorizontal;
 static void
 convolveHorizontal(struct pam *              const inpamP,
                    struct pam *              const outpamP,
-                   const struct convKernel * const convKernelP) {
+                   const struct ConvKernel * const convKernelP) {
 /*----------------------------------------------------------------------------
   Horizontal Convolution
 
@@ -1909,7 +1993,7 @@ convolveHorizontal(struct pam *              const inpamP,
 static void
 convolveVerticalRowPlane(struct pam *              const pamP,
                          tuple **                  const circMap,
-                         const struct convKernel * const convKernelP,
+                         const struct ConvKernel * const convKernelP,
                          unsigned int              const plane,
                          tuple *                   const outputrow,
                          sample *                  const convColumnSum) {
@@ -1927,45 +2011,54 @@ convolveVerticalRowPlane(struct pam *              const pamP,
     unsigned int col;
 
     for (col = 0; col < pamP->width; ++col) {
-        if (col < ccolso2 || col >= pamP->width - ccolso2)
-            outputrow[col][plane] = circMap[crowso2][col][plane];
-        else if (col == ccolso2) {
-            unsigned int const leftcol = 0;
-                /* Convolution window is againt left edge of image */
-
-            float matrixSum;
-            unsigned int ccol;
-
-            /* Slide window down in the first kernel's worth of columns */
-            for (ccol = 0; ccol < convKernelP->cols; ++ccol) {
-                convColumnSum[leftcol + ccol] +=
-                    circMap[addrow][leftcol + ccol][plane];
-                convColumnSum[leftcol + ccol] -=
-                    circMap[subrow][leftcol + ccol][plane];
-            }
-            for (ccol = 0, matrixSum = 0.0; ccol < convKernelP->cols; ++ccol) {
-                matrixSum += convColumnSum[leftcol + ccol] *
-                    convKernelP->weight[plane][0][ccol];
-            }
+        if (col < ccolso2 || col >= pamP->width - ccolso2) {
+            /* The unconvolved left or right edge */
             outputrow[col][plane] =
-                MIN(pamP->maxval, MAX(0, matrixSum + 0.5));
+                clipSample(convKernelP->bias + circMap[crowso2][col][plane],
+                           pamP->maxval);
         } else {
-            unsigned int const leftcol = col - ccolso2;
-            unsigned int const addcol  = col + ccolso2;
-
             float matrixSum;
-            unsigned int ccol;
 
-            /* Slide window down in the column that just entered the window */
-            convColumnSum[addcol] += circMap[addrow][addcol][plane];
-            convColumnSum[addcol] -= circMap[subrow][addcol][plane];
+            if (col == ccolso2) {
+                unsigned int const leftcol = 0;
+                    /* Convolution window is againt left edge of image */
 
-            for (ccol = 0, matrixSum = 0.0; ccol < convKernelP->cols; ++ccol) {
-                matrixSum += convColumnSum[leftcol + ccol] *
-                    convKernelP->weight[plane][0][ccol];
+                unsigned int ccol;
+
+                /* Slide window down in the first kernel's worth of columns */
+                for (ccol = 0; ccol < convKernelP->cols; ++ccol) {
+                    convColumnSum[leftcol + ccol] +=
+                        circMap[addrow][leftcol + ccol][plane];
+                    convColumnSum[leftcol + ccol] -=
+                        circMap[subrow][leftcol + ccol][plane];
+                }
+                for (ccol = 0, matrixSum = 0.0;
+                     ccol < convKernelP->cols;
+                     ++ccol) {
+                    matrixSum += convColumnSum[leftcol + ccol] *
+                        convKernelP->weight[plane][0][ccol];
+                }
+            } else {
+                unsigned int const leftcol = col - ccolso2;
+                unsigned int const addcol  = col + ccolso2;
+
+                unsigned int ccol;
+
+                /* Slide window down in the column that just entered the
+                   window
+                */
+                convColumnSum[addcol] += circMap[addrow][addcol][plane];
+                convColumnSum[addcol] -= circMap[subrow][addcol][plane];
+
+                for (ccol = 0, matrixSum = 0.0;
+                     ccol < convKernelP->cols;
+                     ++ccol) {
+                    matrixSum += convColumnSum[leftcol + ccol] *
+                        convKernelP->weight[plane][0][ccol];
+                }
             }
             outputrow[col][plane] =
-                MIN(pamP->maxval, MAX(0, matrixSum + 0.5));
+                clipSample(convKernelP->bias + matrixSum + 0.5, pamP->maxval);
         }
     }
 }
@@ -1977,7 +2070,7 @@ static convolver convolveVertical;
 static void
 convolveVertical(struct pam *              const inpamP,
                  struct pam *              const outpamP,
-                 const struct convKernel * const convKernelP) {
+                 const struct ConvKernel * const convKernelP) {
 
     /* Uses column sums as in mean convolution, above */
 
@@ -2058,7 +2151,7 @@ struct convolveType {
 
 
 static bool
-convolutionIncludesHorizontal(const struct convKernel * const convKernelP) {
+convolutionIncludesHorizontal(const struct ConvKernel * const convKernelP) {
 
     bool horizontal;
     unsigned int row;
@@ -2086,7 +2179,7 @@ convolutionIncludesHorizontal(const struct convKernel * const convKernelP) {
 
 
 static bool
-convolutionIncludesVertical(const struct convKernel * const convKernelP) {
+convolutionIncludesVertical(const struct ConvKernel * const convKernelP) {
 
     bool vertical;
     unsigned int col;
@@ -2114,7 +2207,7 @@ convolutionIncludesVertical(const struct convKernel * const convKernelP) {
 
 
 static void
-determineConvolveType(const struct convKernel * const convKernelP,
+determineConvolveType(const struct ConvKernel * const convKernelP,
                       struct convolveType *     const typeP) {
 /*----------------------------------------------------------------------------
    Determine which form of convolution is best to convolve the kernel
@@ -2150,7 +2243,7 @@ main(int argc, char * argv[]) {
     struct cmdlineInfo cmdline;
     FILE * ifP;
     struct convolveType convolveType;
-    struct convKernel * convKernelP;
+    struct ConvKernel * convKernelP;
     struct pam inpam;
     struct pam outpam;
 

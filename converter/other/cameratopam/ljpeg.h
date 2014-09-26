@@ -1,11 +1,12 @@
+#include "camera.h"
+
 struct jhead {
   int bits, high, wide, clrs, vpred[4];
   struct decode *huff[4];
   unsigned short *row;
 };
 
-void  
-lossless_jpeg_load_raw(void);
+LoadRawFn lossless_jpeg_load_raw;
 
 int  
 ljpeg_start (FILE * ifp, struct jhead *jh);

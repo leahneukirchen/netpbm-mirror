@@ -161,7 +161,7 @@ pdbimgtopam: ok
 pfmtopam: ok
 pgmabel: ok
 pgmbentley: ok
-pgmcrater: ok
+pamcrater: ok
 pgmdeshadow: ok
 pgmedge: ok
 pgmenhance: ok

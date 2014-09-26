@@ -6,7 +6,6 @@
   alias pamtopnm="${PBM_BINPREFIX}pamtopnm"
   shopt -s expand_aliases
 
-
 # Extract planes one by one.
 # Convert output to pgm to make it identical to ppmtorgb3 output.
 
@@ -26,8 +25,8 @@ pamchannel -infile testimg.ppm 0 | \
 # Test 2. green channel
 # Should produce  394856971 33838
 
-pamchannel -infile testimg.ppm 1 | \
-  pamtopnm --assume | cksum
+pamchannel -infile testimg.ppm -tupletype="GRAYSCALE" 1 | \
+  pamtopnm | cksum
 
 # Test 3. blue channel
 # Should produce 3164158573 33838
