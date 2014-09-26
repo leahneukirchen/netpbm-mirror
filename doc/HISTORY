@@ -4,7 +4,7 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-not  yet BJH  Release 10.67.06
+14.09.26 BJH  Release 10.67.06
 
               cameratopam: fix incorrect output introduced in Netpbm 10.51
               (June 2010).
