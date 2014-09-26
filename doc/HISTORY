@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+not  yet BJH  Release 10.67.06
+
+              cameratopam: fix incorrect output introduced in Netpbm 10.51
+              (June 2010).
+
 14.09.08 BJH  Release 10.67.05
 
               cameratopam: fix buffer overflow.  Always present.  (cameratopam
