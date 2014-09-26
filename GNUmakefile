@@ -135,7 +135,7 @@ pm_config.h: \
 	echo '#ifndef PM_CONFIG_H' >>$@ || $(DELETEIT)
 	echo '#define PM_CONFIG_H' >>$@ || $(DELETEIT)
 ifeq ($(INTTYPES_H)x,x)
-	echo '/* Don't need to #include any inttypes.h-type thing */
+	echo '/* Dont need to #include any inttypes.h-type thing */' >>$@
 else
   ifeq ($(INTTYPES_H),"inttypes_netpbm.h")
 	cat inttypes_netpbm.h >>$@ || $(DELETEIT)

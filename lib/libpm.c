@@ -213,7 +213,13 @@ pm_allocarray(int const cols, int const rows, int const size )  {
     if (rowIndex == NULL)
         pm_error("out of memory allocating row index (%u rows) for an array",
                  rows);
-    rowheap = malloc(rows * cols * size);
+
+    if (cols != 0 && rows != 0 && UINT_MAX / cols / rows < size)
+        /* Too big even to request the memory ! */
+        rowheap = NULL;
+    else
+        rowheap = malloc((unsigned int)rows * cols * size);
+
     if (rowheap == NULL) {
         /* We couldn't get the whole heap in one block, so try fragmented
            format.
@@ -576,7 +582,7 @@ pm_proginit(int * const argcP, char * argv[]) {
     show_version = FALSE;
     show_help = FALSE;
     pm_plain_output = FALSE;
-    for (argn = 1; argn < *argcP; ++argn) {
+    for (argn = i = 1; argn < *argcP; ++argn) {
         if (pm_keymatch(argv[argn], "-quiet", 6) ||
             pm_keymatch(argv[argn], "--quiet", 7)) 
             showmessages = FALSE;
@@ -591,11 +597,9 @@ pm_proginit(int * const argcP, char * argv[]) {
                  pm_keymatch(argv[argn], "--plain", 7))
             pm_plain_output = TRUE;
         else
-            continue;
-        for (i = argn + 1; i <= *argcP; ++i)
-            argv[i - 1] = argv[i];
-        --(*argcP);
+            argv[i++] = argv[argn];
     }
+    *argcP=i;
 
     pm_setMessage((unsigned int) showmessages, NULL);
 

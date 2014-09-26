@@ -4,6 +4,28 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+14.09.26 BJH  Release 10.35.94
+
+              Fix incorrect option parsing when there are multiple common
+              options (e.g. -plain -quiet).  Always broken.  (Possibility of
+              specifying multiple common options that don't cause the program
+              to ignore every other option (like -version) was new in Netpbm
+              10.10 (October 2002).
+
+              libnetpbm whole-image functions: Fix undefined behavior due to
+              arithmetic overrun when size of image exceeds the capacity of
+              a signed integer.
+
+              cameratopam: fix buffer overflow.  Always present.  (cameratopam
+              was new in Netpbm 10.28 (June 2005)).
+
+              Build: fix build failure in an environment that does not have
+              __inline .  Introduced some time between Netpbm 10.26
+              (January 2005) and Netpbm 10.35 (August 2006).
+
+              Build: Fix failure to compile lib/libsystem.c because of
+              nonexistent signal classes on some systems.
+
 14.06.29 BJH  Release 10.35.93
 
               pamsharpness: put primary output on Standard Output instead of
