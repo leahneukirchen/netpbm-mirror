@@ -2386,7 +2386,7 @@ if ($platform eq "GNU") {
         push(@config_mk, "MSVCRT = Y\n");
     }
     if ($wantIcon) {
-        push(@config_mk, 'WINICON_OBJECT = $(BUILDDIR)/icon.netpbm.o', "\n");
+        push(@config_mk, 'WINICON_OBJECT = $(BUILDDIR)/icon/netpbm.o', "\n");
     }
 } elsif ($platform eq "BEOS") {
     push(@config_mk, "LDSHLIB = -nostart\n");
