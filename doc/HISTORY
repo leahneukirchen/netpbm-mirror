@@ -6,11 +6,16 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.69.00
 
+              pambackground: fix bug: segfault or incorrect results in most
+              cases.  Thanks Ludolf Holzheid (ludolf.holzheid@gmx.de).
+
               Windows build: fix universal build failure with "No rule to make
               ...icon.netpbm.oLINKERISCOMPILER...".  Broken in Netpbm 10.67
               (June 2014).
 
 14.09.26 BJH  Release 10.68.00
+
+              Split pgmcrater into pamcrater and pamshadedrelief.
 
               pnmconvol: add -bias .
 
