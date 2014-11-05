@@ -8,6 +8,7 @@ not yet  BJH  Release 10.69.00
 
               pambackground: fix bug: segfault or incorrect results in most
               cases.  Thanks Ludolf Holzheid (ludolf.holzheid@gmx.de).
+              Introduced in Netpbm 10.37 (December 2006).
 
               Windows build: fix universal build failure with "No rule to make
               ...icon.netpbm.oLINKERISCOMPILER...".  Broken in Netpbm 10.67
