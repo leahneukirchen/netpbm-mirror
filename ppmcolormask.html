@@ -44,10 +44,10 @@ color indicated by the <b>-color</b> option, and white everywhere
 else.
 
 <P>The output of <B>ppmcolormask</B> is useful as an alpha mask input
-to <B>pamcomp</B>.  Note that you can generate such an alpha mask
-automatically as you convert to PNG format with <B><A
-HREF="pnmtopng.html">pnmtopng</A></B>.  Use its <B>-transparent</B>
-option.
+to <B>pamcomp</B>.  Note that you don't need <b>ppmcolormask</b> and
+<b>pamcomp</b> if you are ultimately converting to PNG with
+<b>pnmtopng</b> because the <b>-transparent</b> option on <b>pnmtopng</b> does
+the same thing.
 
 <P><I>ppmfile</I> is the input file.  If you don't specify
 <I>ppmfile</I>, the input is from Standard Input.
@@ -112,6 +112,7 @@ color.
 <B><A HREF="pgmtoppm.html">pgmtoppm</A></B>,
 <B><A HREF="pamcomp.html">pamcomp</A></B>,
 <B><A HREF="pbmmask.html">pbmmask</A></B>,
+<B><A HREF="pnmtopng.html">pbmmask</A></B>,
 <B><A HREF="ppm.html">ppm</A></B>
 
 
