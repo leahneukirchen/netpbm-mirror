@@ -292,14 +292,13 @@ normalCrater(struct pam * const pamP,
     axelev = amptot / npatch;
 
     for (y = cy - craterRadius; y <= cy + craterRadius; ++y) {
-        int const dysq = (cy - y) * (cy - y);
+        int const dysq = SQR(cy - y);
 
         int x;
 
         for (x = cx - craterRadius; x <= cx + craterRadius; ++x) {
-            int  const dxsq = (cx - x) * (cx - x);
-            double const cd = (dxsq + dysq) /
-                              (double) (craterRadius * craterRadius);
+            int  const dxsq = SQR(cx - x);
+            double const cd = (dxsq + dysq) / (double) SQR(craterRadius);
             double const cd2 = cd * 2.25;
             double const tcz = sqrt(DepthBias2) - sqrt(fabs(1 - cd2));
             double cz;
