@@ -64,6 +64,7 @@ struct CmdlineInfo {
     unsigned int randomseed;
     unsigned int test;
     unsigned int radius;
+    int          offset;
 };
 
 
@@ -81,7 +82,7 @@ parseCommandLine(int argc, const char ** const argv,
     optStruct3 opt;
     unsigned int option_def_index;
 
-    unsigned int numberSpec, heightSpec, widthSpec, radiusSpec;
+    unsigned int numberSpec, heightSpec, widthSpec, radiusSpec, offsetSpec;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
@@ -98,6 +99,8 @@ parseCommandLine(int argc, const char ** const argv,
             &cmdlineP->test,       0);
     OPTENT3(0,   "radius",     OPT_UINT,    &cmdlineP->radius,
             &radiusSpec,           0);
+    OPTENT3(0,   "offset",     OPT_INT,     &cmdlineP->offset,
+            &offsetSpec,           0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -122,6 +125,9 @@ parseCommandLine(int argc, const char ** const argv,
     if (cmdlineP->width == 0)
         pm_error("-width must be positive");
 
+    if (!offsetSpec)
+        cmdlineP->offset=0;
+
     if (cmdlineP->test) {
         if (!radiusSpec)
             pm_error("With -test, you must specify -radius");
@@ -138,6 +144,9 @@ parseCommandLine(int argc, const char ** const argv,
     } else {
         if (radiusSpec)
             pm_error("-radius is meaningful only with -test");
+
+        if (offsetSpec)
+            pm_error("-offset is meaningful only with -test");
 
         if (!numberSpec)
             cmdlineP->number = 50000;
@@ -373,7 +382,9 @@ genCraters(struct CmdlineInfo const cmdline) {
     
     if (cmdline.test)
         plopCrater(&pam, terrain,
-                   pam.width/2, pam.height/2, (double) cmdline.radius);
+                   pam.width/2 + cmdline.offset,
+                   pam.height/2 + cmdline.offset,
+                   (double) cmdline.radius);
     else {
         unsigned int const ncraters = cmdline.number; /* num of craters */
         unsigned int l;
