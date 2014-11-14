@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pnmmargin User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmmargin</H1>
-Updated: 20 March 2009
+Updated: 12 November 2014
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -22,11 +22,22 @@ pnmmargin - add borders to a PNM image
 
 <p><b>pnmmargin</b> adds a border around a PNM image.
 
+
+<H2 id="arguments">ARGUMENTS</H2>
+
+<p><i>pnmfile</i> is the name of the input file.  If you don't specify this
+argument, <b>pnmmargin</b> reads the input image from its Standard Input.
+
+
 <H2 id="options">OPTIONS</H2>
 
 <P>You can specify the border color with the <B>-white</B>,
-<B>-black</B>, and <B>-color</B> options.  If no color is specified,
-the program makes a guess.
+<B>-black</B>, and <B>-color</B> options.  If you don't specify a color, the
+program makes a guess.
+
+<p>The value of <b>-color</b> is like the
+<a href="libppm.html#colorname">argument of the <b>ppm_parsecolor()</b>
+library routine</a>.
 
 <P>To remove a border of a specified size from an image, use
 <B>pamcut</B>.  <b>pnmcrop</b> also removes borders, but determines by itself
@@ -40,6 +51,7 @@ size, <b>pamcut</b> may be what you want.
 
 <p><b>pnmpad</b> does essentially the same thing, but gives you more control
 over the individual margins and does only black and white margins.
+
 
 <H2 id="seealso">SEE ALSO</H2>
 
@@ -58,6 +70,7 @@ Copyright (C) 1991 by Jef Poskanzer.
 <UL>
 <LI><A HREF="#synopsis">SYNOPSIS</A>
 <LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#arguments">ARGUMENTS</A>
 <LI><A HREF="#options">OPTIONS</A>
 <LI><A HREF="#seealso">SEE ALSO</A>
 <LI><A HREF="#author">AUTHOR</A>

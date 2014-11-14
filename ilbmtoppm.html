@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Ilbmtoppm User Manual</TITLE></HEAD>
 <BODY>
 <H1>ilbmtoppm</H1>
-Updated: 04 October 1993
+Updated: 12 November 2014
 <BR>
 
 <A HREF="#index">Table Of Contents</A>
@@ -25,6 +25,7 @@ ilbmtoppm - convert an ILBM file into a PPM image
 [<b>-maskfile</b> <i>filename</i>
 [<B>-verbose</B>]
 [<I>ILBMfile</I>]
+
 
 <H2 id="description">DESCRIPTION</H2>
 
@@ -55,6 +56,13 @@ it doesn't recognize.
 
 <DL COMPACT>
 
+<dt><b>-transparent </b><i>color</i>
+<dd>This is the color that should &quot;show through&quot; in places where
+the image is transparent.
+
+<P><i>color</i> is like the <a href="libppm.html#colorname">argument of
+the <b>ppm_parsecolor()</b> library routine</a>.
+
 <DT><B>-verbose</B>
 
 <DD>Give some information about the ILBM file.
@@ -70,6 +78,16 @@ of the chunk to be skipped.
 these flags are not set in the CAMG chunk (or if there is no CAMG
 chunk).
 
+<dt><b>-maskfile</b> <i>filename</i>
+
+<dd>This names a file for <b>ilbmtoppm</b> to create with the image's
+transparency mask.  The mask file is a PBM image which maps to the input image
+with white pixels representing transparent pixels in the image and black
+pixels representing opaque pixels.
+
+<p>If you don't specfy this, or the image does not contain transparency
+information, <b>ilbmtoppm</b> does not create a mask file.
+
 <dt><b>-cmaponly</b>
 
 <dd>With this option, <b>ilbmtoppm</b> generates a PPM of the ILBM's <em>color
@@ -79,7 +97,6 @@ map</em>, not the image itself.
 ILBM is a pure color map stream (it has a bitmap header with an <i>nplanes</i>
 value of zero or has no BODY chunk.
 
-
 <DT><B>-adjustcolors</B>
 
 <DD>If all colors in the CMAP have a value of less then 16, ilbmtoppm
@@ -87,6 +104,7 @@ assumes a 4-bit colormap and gives a warning.  With this option the
 colormap is scaled to 8 bits.
 
 </DL>
+
 
 <H2 id="limitations">LIMITATIONS</H2>
 

@@ -25,9 +25,9 @@ ppmrough - create PPM image of two colors with a ragged border between them
 
 [<B>-height </B><I>pixels</I>]
 
-[<B>-bg </B><I>rgb:##/##/##</I>]
+[<B>-bg </B><I>colorspec</I>]
 
-[<B>-fg </B><I>rgb:##/##/##</I>]
+[<B>-fg </B><I>colorspec</I>]
 
 [<B>-var </B><I>pixels</I>]
 
@@ -111,15 +111,17 @@ alpha mask and use it to roughen up the edges of another image.
 
 <DD>Specifies the height of the image (default: 100).
 
-<DT><B>-bg=</B><I>color</I>
+<DT><B>-bg=</B><I>colorspec</I>
 
-<DD>Background color.  Specify this the same way you specify a color with
-     <b>ppmmake</b>.  Default is black.
+<DD>Background color.  <i>colorspec</i> is as described for the
+<a href="libppm.html#colorname">argument of the <b>ppm_parsecolor()</b>
+library routine</a>.  Default is black.
 
 <DT><B>-fg=</B><I>color</I>
 
-<DD>Foreground color.  Specify this the same way you specify a color with
-     <b>ppmmake</b>.  Default is white.
+<DD>Foreground color.  <i>colorspec</i> is as described for the
+<a href="libppm.html#colorname">argument of the <b>ppm_parsecolor()</b>
+library routine</a>.  Default is white.
 
 <DT><B>-var=</B><I>pixels</I>
 

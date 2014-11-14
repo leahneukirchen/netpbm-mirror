@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Ppmrainbow User Manual</TITLE></HEAD>
 <BODY>
 <H1>ppmrainbow</H1>
-Updated: 09 December 2009
+Updated: 12 November 2014
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -25,10 +25,7 @@ ppmrainbow - Generate a rainbow
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <B>ppmrainbow</B> generates a PPM image that fades from one color to
-another to another from left to right, like a rainbow.  The colors are
-those you specify on the command line, in that order.  The first color
-is added again on the right end of the image unless you specify the
-<b>-norepeat</b> option.
+another to another from left to right, like a rainbow.
 
 <P>If you want a vertical or other non-horizontal rainbow, run the output
 through <B>pnmrotate</B> or <b>pamflip</b>.
@@ -42,6 +39,21 @@ In fact, you can make rainbow-colored text by using <B>pbmtext</B>,
 
 <p>If you just want an image containing all the possible colors (for some
 kind of processing; not to look at), see <b>pamseq</b>.
+
+
+<h2 id="arguments">ARGUMENTS</h2>
+
+<P><I>color</I> ... is the list of colors, in order from left to right,
+to go into the rainbow.
+
+<p>The first color is added again on the right end of the image unless you
+specify the <b>-norepeat</b> option.  This means you can concatenate multiple
+copies (tile, as with <b>pnmtile</b>) to make a continuous larger image.
+
+<P><i>color</i> is as described for
+the <a href="libppm.html#colorname">argument of the <b>ppm_parsecolor()</b>
+library routine</a>.
+
 
 <H2 id="options">OPTIONS</H2>
 
@@ -70,8 +82,7 @@ The height in pixels of the output image.
 <dd>This option makes <b>ppmrainbow</b> end the rainbow with the last
 color you specify.  Without this option, <b>ppmrainbow</b> adds the
 first color you specify to the right end of the rainbow as if you had
-repeated it.  <i>(I don't understand the point of this default behavior;
-it exists today just for backward compatibility).</i>
+repeated it.
 
 <DT><B>-tmpdir</B>
 
@@ -111,6 +122,7 @@ to the Netpbm package.  Bryan Henderson wrote this manual in July
 <UL>
 <LI><A HREF="#synopsis">SYNOPSIS</A>
 <LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">ARGUMENTS</A>
 <LI><A HREF="#options">OPTIONS</A>
 <LI><A HREF="#seealso">SEE ALSO</A>
 <LI><A HREF="#author">AUTHOR</A>

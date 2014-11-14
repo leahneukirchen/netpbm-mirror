@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pnmremap User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmremap</H1>
-Updated: 03 June 2009
+Updated: 13 November 2014
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -24,7 +24,7 @@ pnmremap - replace colors in a PNM image with colors from another set
 
 [<B>-verbose</B>]
 
-[<B>-missingcolor=</B><I>color</I>]
+[<B>-missingcolor=</B><I>colorspec</I>]
 
 [<I>pnmfile</I>]
 
@@ -250,12 +250,16 @@ in the top left corner of the palette image)
 <P>If you specify <B>-firstisdefault</B>, the maxval of your input
 must match the maxval of your palette image.
 
-<DT><B>-missingcolor=</B><I>color</I>
+<DT><B>-missingcolor=</B><I>colorspec</I>
 
 <DD>This specifies the default color for <b>pnmremap</b> to map to a
 color in the input image that isn't in the palette.  <I>color</I> may
 or may not be in the palette image; it is part of the palette
 regardless.
+
+<P><i>colorspec</i> is as described for
+the <a href="libppm.html#colorname">argument of the <b>ppm_parsecolor()</b>
+library routine</a>.
 
 <P>If you specify <B>-missingcolor</B>, the maxval of your input must
 match the maxval of your palette image.
