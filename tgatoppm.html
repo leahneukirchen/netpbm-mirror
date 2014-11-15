@@ -34,18 +34,18 @@ a PPM image as output.
 
 <DT><B>--alphaout=</B><I>alpha-filename</I>
 
-<DD><B>tgatoppm </B> creates a PGM image containing the alpha channel
+<DD><B>tgatoppm </B> creates a PGM image containing the transparency channel
 values in the input image.  If the input image doesn't contain an
-alpha channel, the <I>alpha-filename</I> file contains all zero
-(transparent) alpha values.  If you don't specify <B>--alphaout</B>,
+transparency channel, the <I>alpha-filename</I> file contains all zero
+(transparent) transparency values.  If you don't specify <B>--alphaout</B>,
 <B>tgatoppm</B> does not generate an alpha file, and if the input
-image has an alpha channel, <B>tgatoppm</B> simply discards it.
+image has a transparency channel, <B>tgatoppm</B> simply discards it.
 
 <P>If you specify <B>-</B> as the filename, <B>tgatoppm</B> writes the
-alpha output to Standard Output and discards the image.
+transparency output to Standard Output and discards the image.
 
 <P>See <B><A HREF="pamcomp.html">pamcomp</A></B> for one way to use
-the alpha output file.
+the transparency output file.
 
 <DT><B>--headerdump</B>
 

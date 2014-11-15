@@ -144,12 +144,12 @@ with &quot;unrecognized option,&quot; fall back to the old syntax.
      Creates an interlaced PNG file (Adam7).
 <DT><B>-alpha=</b><i>filename</i>
 
-<DD> This specifies the transparency (alpha channel) of the image.
-You supply the alpha channel as a standard PGM alpha mask (see the <a
-href="pgm.html">PGM</a> specification.  <b>pnmtopng</b> does not
-necessarily represents the transparency information as an alpha channel in
-the PNG format.  If it can represent the transparency information through
-a palette, it will do so in order to make a smaller PNG file.
+<DD> This specifies the transparency (alpha) channel of the image.  You supply
+the transparency channel as a standard PGM transparency mask (see
+the <a href="pgm.html">PGM</a> specification.  <b>pnmtopng</b> does not
+necessarily represents the transparency information as a transparency channel
+in the PNG format.  If it can represent the transparency information through a
+palette, it will do so in order to make a smaller PNG file.
 <b>pnmtopng</b> even sorts the palette so it can omit the opaque colors
 from the transparency part of the palette and save space for the palette.
 
@@ -183,7 +183,7 @@ color does not appear in the image, there will be no transparency.
 <DT><B>-background=</b><i>color</i>
 <DD>
 Causes <b>pnmtopng</b> to create a background color chunk in the PNG output
-which can be used for subsequent alpha channel or transparent color
+which can be used for subsequent transparency channel or transparent color
 conversions.  Specify <i>color</i> the same as for <b>-transparent</b>.
 
 <DT><B>-palette=</b><i>palettefile</i>
@@ -440,11 +440,11 @@ compression buffer) in bytes.
 <DT><B>-force</B>
 
 <DD>
-When you specify this, <b>pnmtopng</b> limits its optimizations.
-The resulting PNG output is as similar to the Netpbm input as possible.
-For example, the PNG output will not be paletted and the alpha channel
-will be represented as a full alpha channel even if the information could
-be represented more succinctly with a transparency chunk.
+When you specify this, <b>pnmtopng</b> limits its optimizations.  The
+resulting PNG output is as similar to the Netpbm input as possible.  For
+example, the PNG output will not be paletted and the transparency channel will
+be represented as a full transparency channel even if the information could be
+represented more succinctly with a transparency chunk.
 
 
 <DT><B>-libversion</B>

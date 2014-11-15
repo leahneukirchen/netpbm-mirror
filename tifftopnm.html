@@ -53,7 +53,7 @@ it is able to interpret is determined mostly by that library.
 
 <P>This program cannot read every possible TIFF file -- there are
 myriad variations of the TIFF format.  However, it does understand
-monochrome and gray scale, RGB, RGBA (red/green/blue with alpha
+monochrome and gray scale, RGB, RGBA (red/green/blue with transparency
 channel), CMYK (Cyan-Magenta-Yellow-Black ink color separation), and
 color palette TIFF files.  An RGB file can have either single plane
 (interleaved) color or multiple plane format.  The program reads 1-8
@@ -109,18 +109,18 @@ its value either by an equals sign or white space.
 <DT><B>-alphaout=</B><I>alpha-filename</I>
 
 <DD><B>tifftopnm </B>creates a PGM file containing the alpha channel
-values in the input image.  If the input image doesn't contain an
-alpha channel, the <I>alpha-filename</I> file contains all zero
-(transparent) alpha values.  If you don't specify <B>-alphaout</B>,
+values in the input image.  If the input image doesn't contain a
+transparency channel, the <I>alpha-filename</I> file contains all zero
+(transparent) transparency values.  If you don't specify <B>-alphaout</B>,
 
-<B>tifftopnm</B> does not generate an alpha file, and if the input
-image has an alpha channel, <B>tifftopnm</B> simply discards it.
+<B>tifftopnm</B> does not generate a transparency file, and if the input
+image has an transparency channel, <B>tifftopnm</B> simply discards it.
 
 <P>If you specify <B>-</B> as the filename, <B>tifftopnm</B>
-writes the alpha output to Standard Output and discards the image.
+writes the transparency output to Standard Output and discards the image.
 
 <P>See <B><A HREF="pamcomp.html">pamcomp</A></B> for one way to use
-the alpha output file.
+the transparency output file.
 
 <DT><B>-respectfillorder</B>
 

@@ -32,9 +32,9 @@ value.
 produces a TrueVision Targa file as output.  The PAM image may be
 either a BLACKANDWHITE, GRAYSCALE, RGB, or RGB_ALPHA image.
 
-<p>To create a TGA image with transparency (i.e. with an alpha mask),
+<p>To create a TGA image with transparency (i.e. with a transparency mask),
 use RGB_ALPHA PAM input.  Some Netpbm programs that generate images with
-alpha masks generate them in that format.  For another way to create
+transparency masks generate them in that format.  For another way to create
 the proper input stream, see <a href="pamstack.html"><b>pamstack</b></a>.
 
 <p>It is unclear that anything except <b>pamtotga</b> knows about TGAs
@@ -102,11 +102,11 @@ Standard Input, <b>pamtotga</b> omits the image ID from the TGA header.
 That was always a misnomer, though, because a PPM class program would not be
 able to tell the difference between PGM and PPM input (it would all look like
 PPM), and thus could not choose the output Targa image type based on the type
-of the input.  Netpbm 10.6 also added the ability to handle an alpha channel,
-so it became a PAM class program.
+of the input.  Netpbm 10.6 also added the ability to handle a transparency
+channel, so it became a PAM class program.
 
 <p>In Netpbm 10.15 (April 2003), the program became the first in the
-Netpbm package to recognize an alpha channel in a PAM.  It recognized
+Netpbm package to recognize a transparency channel in a PAM.  It recognized
 tuple type &quot;RGBA&quot;.  But when this kind of PAM image was later
 added to the PAM specification, it was specified with tuple type
 &quot;RGB_ALPHA&quot;.  So in Netpbm 10-26 (January 2005), <b>pamtotga</b>

@@ -27,7 +27,7 @@ pnmtorle - convert a Netpbm image file into an RLE image file.
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p>This program converts Netpbm image files into Utah RLE image files.
-You can include an alpha mask.  If the input is a multiple image file,
+You can include a transparency mask.  If the input is a multiple image file,
 the output consists of several concatenated RLE images.
 
 <P>The RLE file will contain either a three channel color image (24
@@ -58,10 +58,10 @@ that no file conversion takes place.
 <DT><B>-a</B>
 
 <DD>
-This option causes <b>pnmtorle</b> to include an alpha channel in the output
-image.  The alpha channel is based on the image:  Wherever a pixel 
-is black, the corresponding alpha value is transparent.  Everywhere
-else, the alpha value is fully opaque.
+This option causes <b>pnmtorle</b> to include an transparency channel in the
+output image.  The transparency channel is based on the image: Wherever a
+pixel is black, the corresponding trasparency value is transparent.
+Everywhere else, the transparency value is fully opaque.
 
 <DT><B>-o</B> <I>outfile</I>
 

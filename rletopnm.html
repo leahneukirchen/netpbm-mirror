@@ -45,18 +45,18 @@ the input comes from Standard Input.
 
 <DD>
 <B>rletopnm </B> creates a PGM (portable graymap) file containing the
-alpha channel values in the input image.  If the input image doesn't
-contain an alpha channel, the <I>alpha-filename</I> file contains all
-zero (transparent) alpha values.  If you don't specify
-<B>--alphaout</B>, <B>rletopnm</B> does not generate an alpha file,
-and if the input image has an alpha channel, <B>rletopnm</B> simply
+transparency channel values in the input image.  If the input image doesn't
+contain an transparency channel, the <I>alpha-filename</I> file contains all
+zero (transparent) transparency values.  If you don't specify
+<B>--alphaout</B>, <B>rletopnm</B> does not generate a transparency file,
+and if the input image has a transparency channel, <B>rletopnm</B> simply
 discards it.
 
 <P>If you specify <B>-</B> as the filename, <B>rletopnm</B> writes the
-alpha output to Standard Output and discards the image.
+transparency output to Standard Output and discards the image.
 
 <P>See <B><A HREF="pamcomp.html">pamcomp</A></B> for one way to use
-the alpha output file.
+the transparency output file.
 
 <DT><B>--verbose</B>
 
@@ -93,8 +93,8 @@ store the resulting image as lenna.ppm:
 </pre>
 
 <li>Convert RLE file dart.rle to PPM format as dart.ppm.  Store the
-alpha channel of dart.rle as dartalpha.pgm (if dart.rle doesn't have
-an alpha channel, store a fully transparent alpha mask as
+transparency channel of dart.rle as dartalpha.pgm (if dart.rle doesn't have
+a transparency channel, store a fully transparent transparency mask as
 dartalpha.pgm):
 
 <pre>
@@ -129,12 +129,11 @@ Minnesota Supercomputer Center, Inc.
 
 <P>Modifications by Eric Haines to support raw and plain formats.
 
-<P>Modifications by Bryan Henderson to create alpha files and use
+<P>Modifications by Bryan Henderson to create transparency files and use
 mnemonic options.
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
 <LI><A HREF="#synopsis">SYNOPSIS</A>
 <LI><A HREF="#description">DESCRIPTION</A>

@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Anytopnm User Manual</TITLE></HEAD>
 <BODY>
 <H1>anytopnm</H1>
-Updated: 05 September 2006
+Updated: 15 November 2014
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -12,6 +12,7 @@ anytopnm - convert an arbitrary type of image file to PBM, PGM, or PPM
 <H2 id="synopsis">SYNOPSIS</H2>
 
 <B>anytopnm</B> [<I>file</I>]
+
 
 <H2 id="description">DESCRIPTION</H2>
 
@@ -52,6 +53,16 @@ decoded result.
 
 <P>If <I>file</I> is <B>-</B> or not given, <B>anytopnm</B> takes its
 input from Standard Input.
+
+<p>Many image formats are capable of representing multiple images.  In
+most cases, <b>anytopnm</b> converts these to multi-image Netpbm images,
+but for some formats, <b>anytopnm</b> converts only the first image and
+ignores the rest.
+
+<p>In the case of a multi-image GIF input, <b>anytopnm</b> converts all the
+images starting with Netpbm 10.69 (December 2014), but only the first in
+earlier releases.
+
 
 <H2 id="seealso">SEE ALSO</H2>
 

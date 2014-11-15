@@ -85,10 +85,11 @@ the number of channels.
 <TABLE summary="Image type based on number of channels" border=1 align="center">
 <TR><TH>channels</TH><TH>image</TH></TR>
 <TR><TD>1</TD><TD>fully opaque grayscale image</TD></TR>
-<TR><TD>2</TD><TD>grayscale image with alpha channel</TD></TR>
+<TR><TD>2</TD><TD>grayscale image with transparency channel</TD></TR>
 <TR><TD>3</TD><TD>fully opaque color image</TD></TR>
-<TR><TD>4</TD><TD>color image with alpha channel</TD></TR>
-<TR><TD>5</TD><TD>color image with alpha channel and additional AND mask</TD></TR>
+<TR><TD>4</TD><TD>color image with transparency channel</TD></TR>
+<TR><TD>5</TD><TD>color image with transparency channel and additional AND
+mask</TD></TR>
 </TABLE>
 
 <P>The tuple types of the PAMs are irrelevant.
@@ -98,13 +99,13 @@ the number of channels.
 
 The so-called &lsquo;AND mask&rsquo; is a special feature of Microsoft
 Windows icons.  It is required for all BMP encoded images.  At the
-first sight, the AND mask is a 1-bit alpha channel, but it is also
+first sight, the AND mask is a 1-bit transparency channel, but it is also
 used for e.g. shading the icon while dragging.  See
 <A HREF="winicon.html">Windows Icons</A> for details.
 
 <P>If there is no explicit AND mask, but transparency data in the
 input image, <B>pamtowinicon</B> sets the AND mask to opaque where the
-sample in the alpha channel is below maxval, and to transparent
+sample in the transparency channel is below maxval, and to transparent
 elsewhere.
 
 <P>If no transparency data is present in the input image,

@@ -34,16 +34,16 @@ and produces a PPM image as output.
 <DD><B>xpmtoppm</B> creates a PBM file containing the transparency
 mask for the image.  If the input image doesn't contain transparency
 information, the <I>alpha-filename</I> file contains all white
-(opaque) alpha values.  If you don't specify <B>--alphaout</B>,
-<B>xpmtoppm</B> does not generate an alpha file, and if the input
+(opaque) transparency values.  If you don't specify <B>--alphaout</B>,
+<B>xpmtoppm</B> does not generate a transparency file, and if the input
 image has transparency information, <B>xpmtoppm</B> simply discards
 it.
 
 <P>If you specify <B>-</B> as the filename, <B>xpmtoppm</B> writes the
-alpha output to Standard Output and discards the image.
+transparency output to Standard Output and discards the image.
 
 <P>See <B><A HREF="pamcomp.html">pamcomp</A></B> for one way to use
-the alpha output file.
+the transparency output file.
 
 <p><b>xpmtoppm</b> can't handle a line longer than 8K characters in
 the XPM input.  If an input line exceeds this limit,

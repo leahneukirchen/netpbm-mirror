@@ -37,12 +37,12 @@ to a thresholding value.
 <p>The input should be a PGM image or a PAM image of tuple type
 GRAYSCALE or GRAYSCALE_ALPHA.  However, pamthreshold doesn't check; it
 just thresholds the first channel as if it were grayscale samples and
-if there is a second channel, processes it as if it is an alpha
-(transparency) channel.  So if you feed it e.g. a PPM image, it will
+if there is a second channel, processes it as if it is a transparency
+(alpha) channel.  So if you feed it e.g. a PPM image, it will
 work but produce probably useless results.
 
 <p>The output is a PAM with tuple type BLACKANDWHITE or
-BLACKANDWHITE_ALPHA, depending on whether the input has an alpha
+BLACKANDWHITE_ALPHA, depending on whether the input has a transparency
 channel.  You can turn this into a PBM (if you need to use it with an
 older program that doesn't understand PAM, or you can't afford the 8X
 amount of space that PAM uses for the image) with
@@ -50,14 +50,14 @@ amount of space that PAM uses for the image) with
 
 <p>The output is to Standard Output.
 
-<P>When the input has an alpha channel, <b>pamthreshold</b> includes
-an alpha channel in the output.  Since the output has maxval 1, the
-alpha channel can indicate only fully transparent or fully opaque.
+<P>When the input has a transparency channel, <b>pamthreshold</b> includes
+a transparency channel in the output.  Since the output has maxval 1, the
+transparency channel can indicate only fully transparent or fully opaque.
 <b>pamthreshold</b> make it fully transparent where the input is more
 than half transparent and fully opaque where it isn't.
 
-<p>The alpha function was new in Netpbm 10.43 (June 2008).  Before
-that, <b>pamthreshold</b> ignores any alpha channel in the input.
+<p>The transparency function was new in Netpbm 10.43 (June 2008).  Before
+that, <b>pamthreshold</b> ignores any transparency channel in the input.
 
 <p>Another way to convert a grayscale image to black and white is to
 dither.  Dithering is using clustered black and white pixels such that

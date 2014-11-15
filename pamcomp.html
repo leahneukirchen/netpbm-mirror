@@ -51,21 +51,21 @@ file <I>overlay_file</I> on top of the image in the file
 beneath it.
 
 <P>If you add the <B>-alpha</B> option, then <B>pamcomp</B> uses the
-image in file <I>alpha-pgmfile</I> as an alpha mask, which means it
+image in file <I>alpha-pgmfile</I> as a transparency mask, which means it
 determines the level of transparency of each point in the overlay
-image.  The alpha mask must have the same dimensions as the overlay
-image.  In places where the alpha mask defines the overlay image to be
+image.  The transparency mask must have the same dimensions as the overlay
+image.  In places where the transparency mask defines the overlay image to be
 opaque, the composite output contains only the contents of the overlay
 image; the underlying image is totally blocked out.  In places where
-the alpha mask defines the overlay image to be transparent, the
+the transparency mask defines the overlay image to be transparent, the
 composite output contains none of the overlay image; the underlying
-image shows through completely.  In places where the alpha mask shows
+image shows through completely.  In places where the transparency mask shows
 a value in between opaque and transparent (translucence), the
 composite image contains a mixture of the overlay image and the
 underlying image and the level of translucence determines how much of
 each.
 
-<P>The alpha mask is a PGM file in which a white pixel represents
+<P>The transparency mask is a PGM file in which a white pixel represents
 opaqueness and a black pixel transparency.  Anything in between is
 translucent.  (Like any Netpbm program, <B>pamcomp</B> will see a PBM
 file as if it is PGM).
@@ -73,17 +73,17 @@ file as if it is PGM).
 <p>If the overlay image is a PAM image of tuple type RGB_ALPHA or
 GRAYSCALE_ALPHA, then the overlay image contains transparency
 information itself and <b>pamcomp</b> uses it the same way as the
-alpha mask described above.  If you supply both an overlay image that
-has transparency information and an alpha mask, <b>pamcomp</b>
+transparency mask described above.  If you supply both an overlay image that
+has transparency information and a transparency mask, <b>pamcomp</b>
 multiplies the two opacities to get the opacity of the overlay pixel.
 
 <p>Before Netpbm 10.25 (October 2004), <b>pamcomp</b> did not recognize the
 transparency information in a PAM image -- it just ignored it.  So people had
-to make appropriate alpha masks in order to have a non-opaque overlay.  Some
+to make appropriate transparency masks in order to have a non-opaque overlay.  Some
 Netpbm programs that convert from image formats that contain transparency
 information are not able to create RGB_ALPHA or GRAYSCALE_ALPHA PAM output, so
 you have to use the old method -- extract the transparency information from
-the original into a separate alpha mask and use that as input to
+the original into a separate transparency mask and use that as input to
 <b>pamcomp</b>.
 
 <P>The output image is always of the same dimensions as the underlying
@@ -187,17 +187,17 @@ exclusive with <b>-valign</b> and always measured from the top edge.
 
 <DT><B>-alpha=</B><i>alpha-pgmfile</i>
 <DD>
-This option names a file that contains the alpha mask.  If you don't
-specify this option, there is no alpha mask, which is equivalent to 
-having an alpha mask specify total opaqueness everywhere.
+This option names a file that contains the transparency mask.  If you don't
+specify this option, there is no transparency mask, which is equivalent to 
+having a transparency mask specify total opaqueness everywhere.
 <p>
-You can specify <b>-</b> as the value of this option and the alpha
+You can specify <b>-</b> as the value of this option and the transparency
 mask will come from Standard Input.  If you do this, don't specify
 Standard Input as the source of any other input image.
 
 <DT><B>-invert</B>
 <DD>
-This option inverts the sense of the values in the alpha mask, which 
+This option inverts the sense of the values in the transparency mask, which 
 effectively switches the roles of the overlay image and the underlying
 image in places where the two intersect.
 
@@ -209,8 +209,8 @@ the underlying image.  <i>opacity</i> is a floating point number, with
 1.0 meaning the overlay image is totally opaque and 0.0 meaning it is
 totally transparent.  The default is 1.0.
 
-<p>If you specify an alpha mask (the <b>-alpha</b> option),
-<b>pamcomp</b> uses the product of the opacity indicated by the alpha
+<p>If you specify a transparency mask (the <b>-alpha</b> option),
+<b>pamcomp</b> uses the product of the opacity indicated by the transparency
 mask (as modified by the <b>-invert</b> option, as a fraction, and
 this opacity value.  The <b>-invert</b> option does not apply to this
 opacity value.
@@ -261,10 +261,10 @@ underlying image.
 
 <dd>This option indicates that the inputs are not true Netpbm images
 but rather a non-gamma-adjusted variation.  This is relevant only when
-you mix pixels, using the <b>-opacity</b> option or an alpha mask
+you mix pixels, using the <b>-opacity</b> option or a transparency mask
 (the <b>-alpha</b> option).
 
-<p>The alpha mask and <b>-opacity</b> values indicate a fraction of
+<p>The transparency mask and <b>-opacity</b> values indicate a fraction of
 the light intensity of a pixel.  But the PNM and PNM-equivalent PAM
 image formats represent intensities with gamma-adjusted numbers that
 are not linearly proportional to intensity.  So <b>pamcomp</b>, by
@@ -310,7 +310,7 @@ versions of the same tool.
 <p><B><A HREF="ppmcolormask.html">ppmcolormask</A></B> and <B><A
 HREF="pbmmask.html">pbmmask</A></B>, and <a
 href="pambackground.html"><b>pambackground</b></a> can help with
-generating an alpha mask.
+generating a transparency mask.
 
 <p><B><A HREF="pnmcomp.html">pnmcomp</A></B> is an older program that
 runs faster, but has less function.

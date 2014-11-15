@@ -27,7 +27,7 @@ space in place of the equals sign to separate an option name from its value.
 tuple type (a color visual image with transparency) and produces an
 equivalent PNG image as output.
 
-<p>The input image if from the file named by the <i>pamfile</i> argument,
+<p>The input image is from the file named by the <i>pamfile</i> argument,
 or Standard Input if you don't specify <i>pamfile</i>.  The output goes
 to Standard Output.
 
@@ -41,7 +41,7 @@ information, you must supply it in a separate PGM image.  That makes
 it considerably less convenient to use.
 
 <p>(But note that <b>pnmtopng</b> takes PAM images, even with RGB_ALPHA
-tuple type just fine -- it just ignores the alpha plane).
+tuple type just fine -- it just ignores the transparency plane).
 
 <p>Netpbm's strategic direction is to add to <b>pnmtopng</b> all the
 capabilities of <b>pamrgbatopng</b> and retire <b>pamrgbatopng</b>.

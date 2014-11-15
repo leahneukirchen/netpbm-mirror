@@ -36,23 +36,23 @@ the X.V11R4 release.
 <DL COMPACT>
 <DT><B>--alphaout=</B><I>alpha-filename</I>
 
-<DD><B>ximtoppm</B> creates a PGM file containing the alpha channel
-values in the input image.  If the input image doesn't contain an
-alpha channel, the <I>alpha-filename</I> file contains all zero
-(transparent) alpha values.  If you don't specify <B>--alphaout</B>,
-<B>ximtoppm</B> does not generate an alpha file, and if the input
-image has an alpha channel, <B>ximtoppm</B> simply discards it.
+<DD><B>ximtoppm</B> creates a PGM file containing the transparency channel
+values in the input image.  If the input image doesn't contain a
+transparency channel, the <I>alpha-filename</I> file contains all zero
+(transparent) transparency values.  If you don't specify <B>--alphaout</B>,
+<B>ximtoppm</B> does not generate a transparency file, and if the input
+image has a transparency channel, <B>ximtoppm</B> simply discards it.
 
 <P>If you specify <B>-</B> as the filename, <B>ximtoppm</B> writes the
-alpha output to Standard Output and discards the image.
+transparency output to Standard Output and discards the image.
 
 <P>Actually, an Xim image can contain an arbitrary fourth channel --
-it need not be an Alpha channel.  <B>ximtoppm</B> extracts any fourth
-channel it finds as described above; it doesn't matter if it is an
-alpha channel or not.
+it need not be a transparency channel.  <B>ximtoppm</B> extracts any fourth
+channel it finds as described above; it doesn't matter if it is a
+transparency channel or not.
 
 <P>See <B><A HREF="pamcomp.html">pamcomp</A></B> for one way to use
-the alpha output file.
+the transparency output file.
 
 </DL>
 

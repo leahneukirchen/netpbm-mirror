@@ -64,7 +64,7 @@ conversion process.
 <DT><B>-alphapam</B>
 
 <DD>Produce a single output image containing the main image (foreground)
-and the alpha channel or transparency mask.  This image is in the PAM
+and the transparency channel or transparency mask.  This image is in the PAM
 format with tuple type of either GRAYSCALE_ALPHA (which has a depth of
 2 channels) or RGB_ALPHA (which has a depth of 4 channels).
 
@@ -80,7 +80,7 @@ with <b>-alphapam</b>, but <b>pamrgbatopng</b> will.
 
 <DT><B>-alpha</B>
 
-<DD>Output the alpha channel or transparency mask of the image. The
+<DD>Output the transparency channel or transparency mask of the image. The
 result is either a PBM file or a PGM file, depending on whether
 different levels of transparency appear.
 
@@ -92,7 +92,7 @@ the foreground of the input image and discards transparency information.
 
 <DT><B>-mix</B>
 
-<DD>Compose the image with the transparency or alpha mask against a
+<DD>Compose the image with the transparency or transparency mask against a
 background.  The background color is determined by the bKGD chunk in
 the PNG, except that you can override it with <b>-background</b>.
 If the PNG has no bKGD chunk and you don't specify <b>-background</b>,

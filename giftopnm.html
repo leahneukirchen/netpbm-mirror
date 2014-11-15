@@ -53,18 +53,19 @@ Netpbm output image has the wrong aspect ratio.  In this case,
 <DT><B>--alphaout=</B><I>alpha-filename</I>
 
 <DD><B>giftopnm </B> creates a PBM file containing the transparency
-information from the input image.  This &quot;alpha image&quot; is the same
-dimensions as the input image, and each pixel of the alpha image tells whether
-the corresponding pixel of the input image is transparent.  Black means
-transparent; white means opaque.  If you don't specify <B>--alphaout</B>,
-<B>giftopnm</B> does not generate an alpha file, and if the input image has an
-alpha channel, <B>giftopnm</B> simply discards it.
+information from the input image.  This transparency image is the same
+dimensions as the input image, and each pixel of the transparency image tells
+whether the corresponding pixel of the input image is transparent.  Black
+means transparent; white means opaque.  If you don't
+specify <B>--alphaout</B>, <B>giftopnm</B> does not generate a transparency
+file, and if the input image has a transparency channel, <B>giftopnm</B> simply
+discards it.
 
 <P>If you specify <B>-</B> as the filename, <B>giftopnm</B> writes the
-alpha output to Standard Output and discards the image.
+transparency output to Standard Output and discards the image.
 
 <P>See <B><A HREF="pamcomp.html">pamcomp</A></B> for one way to use
-the alpha output file.  
+the transparency output file.  
 
 <DT><B>-verbose</B>
 

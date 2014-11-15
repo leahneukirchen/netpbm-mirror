@@ -8,7 +8,7 @@ Updated: 05 May 2002
 <A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
-pamtouil - convert a PNM or PNM/alpha image into a Motif UIL icon file
+pamtouil - convert a PNM or PNM/transparency image into a Motif UIL icon file
 
 <A NAME="lbAC">&nbsp;</A>
 <H2>SYNOPSIS</H2>
@@ -25,11 +25,11 @@ separate an option from its value with whitespace instead of <b>=</b>.
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><b>pamtouil</b> reads a PNM or PAM image as input and produces a
-Motif UIL icon file as output.  If the input is PAM, it may be either
-a regular grayscale or color image or grayscale+alpha or color+alpha.
-Where the alpha channel is present, <b>pamtouil</b> renders pixels
-that are more than half transparent as transparent in the output.
+<p><b>pamtouil</b> reads a PNM or PAM image as input and produces a Motif UIL
+icon file as output.  If the input is PAM, it may be either a regular
+grayscale or color image or grayscale+transparency or color+transparency.
+Where the transparency channel is present, <b>pamtouil</b> renders pixels that
+are more than half transparent as transparent in the output.
 
 <P>In the UIL's colormap, <b>pamtouil</b> uses the color names from
 the RGB database -- the same one <b><a href="ppmmake.html">ppmmake</a></b>
