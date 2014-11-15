@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.69.00
 
+              anytopnm: convert all images in a multi-image GIF instead of
+              just the first.
+
               pambackground: fix bug: segfault or incorrect results in most
               cases.  Thanks Ludolf Holzheid (ludolf.holzheid@gmx.de).
               Introduced in Netpbm 10.37 (December 2006).
@@ -39,7 +42,7 @@ not yet  BJH  Release 10.69.00
 
               pcdovtoppm: Fix crash due to invalid operator == on some
               systems.  Always broken (pcdovtoppm was new sometime between
-              Netpbm 9.25 (March 2002) and Netpbm 10.11 (Februrary 2010)).
+              Netpbm 9.25 (March 2002) and Netpbm 10.11 (October 2002)).
 
               Build: change _XOPEN_SOURCE from 600 back to 500 in 7 files.  It
               was changed from 500 to 600 in Subversion revision 1731 in
