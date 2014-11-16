@@ -1,8 +1,11 @@
 #! /bin/bash
 # This script tests: pamenlarge
-# Also requires: pamchannel
+# Also requires: pamchannel pamseq pamtopnm
 
   alias pamenlarge="${PBM_TESTPREFIX}pamenlarge"
+  alias pamchannel="${PBM_TESTPREFIX}pamchannel"
+  alias pamseq="${PBM_TESTPREFIX}pamseq"
+  alias pamchannel="${PBM_TESTPREFIX}pamchannel"
   shopt -s expand_aliases
 
 # Test 1.  Should print 3424505894 913236
@@ -12,5 +15,5 @@ pamchannel -infile=testimg.ppm -tupletype="GRAYSCALE" 0 | pamtopnm | \
   pamenlarge 3 | cksum
 # Test 3.  Should print 3342398172 297
 pamenlarge 3 testgrid.pbm | cksum
-# Test 4.  Should print 237488670 3133413
-pamenlarge 3 -plain testimg.ppm | cksum
+# Test 4.  Should print 398497872 6806
+pamseq 3 4 | pamtopnm -assume | pamenlarge 3 -plain | cksum

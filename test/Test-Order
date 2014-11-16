@@ -55,6 +55,8 @@ pamflip2.test
 pamenlarge.test
 pnminvert.test
 pamchannel.test
+ppmchange.test
+pambackground.test
 
 pbmpscale.test
 pnmremap1.test
