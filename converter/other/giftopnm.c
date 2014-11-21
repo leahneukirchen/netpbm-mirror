@@ -1741,7 +1741,7 @@ readGifHeader(FILE *             const gifFileP,
                    "but we are rendering them as square pixels "
                    "in the output.  "
                    "To fix the output, run it through "
-                   "'pnmscale -%cscale %g'",
+                   "'pamscale -%cscale %g'",
                    r < 1.0 ? 'x' : 'y',
                    r < 1.0 ? 1.0 / r : r );
     }

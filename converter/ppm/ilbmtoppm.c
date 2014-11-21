@@ -513,7 +513,7 @@ read_bmhd(FILE *        const ifP,
 
         if( bmhdP->xAspect != bmhdP->yAspect ) {
             pm_message("warning - non-square pixels; "
-                       "to fix do a 'pnmscale -%cscale %g'",
+                       "to fix do a 'pamscale -%cscale %g'",
                        bmhdP->xAspect > bmhdP->yAspect ? 'x' : 'y',
                        bmhdP->xAspect > bmhdP->yAspect ? 
                        (float)(bmhdP->xAspect)/bmhdP->yAspect : 
