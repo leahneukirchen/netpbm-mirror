@@ -231,7 +231,6 @@ pm_vsnprintf(char *       const str,
             size_t precision = 0;
             bool precision_specified;
             bool justify_left;
-            bool zero_padding;
             bool alternate_form;
             bool force_sign;
             bool space_for_positive;
@@ -252,16 +251,18 @@ pm_vsnprintf(char *       const str,
                    argument for the c conversion is unsigned.
                 */
 
-            size_t number_of_zeros_to_pad = 0;
+            bool zero_padding;
+
+            size_t number_of_zeros_to_pad;
                 /* number of zeros to be inserted for numeric
                    conversions as required by the precision or minimal
                    field width
                 */
 
-            size_t zero_padding_insertion_ind = 0;
+            size_t zero_padding_insertion_ind;
                 /* index into tmp where zero padding is to be inserted */
 
-            char fmt_spec = '\0';
+            char fmt_spec;
                 /* current conversion specifier character */
 
             str_arg = credits;
@@ -272,10 +273,14 @@ pm_vsnprintf(char *       const str,
 
             /* parse flags */
             justify_left = false;  /* initial value */
-            zero_padding = false;  /* initial value */
             alternate_form = false;  /* initial value */
             force_sign = false;  /* initial value */
             space_for_positive = false;  /* initial value */
+            zero_padding = false;  /* initial value */
+            number_of_zeros_to_pad = 0;  /* initial value */
+            zero_padding_insertion_ind = 0;  /* initial value */
+            fmt_spec = '\0';  /* initial value */
+
             while (*p == '0' || *p == '-' || *p == '+' ||
                    *p == ' ' || *p == '#' || *p == '\'') {
                 switch (*p) {
@@ -568,9 +573,9 @@ pm_vsnprintf(char *       const str,
                     */
                     if (zero_padding_insertion_ind < str_arg_l &&
                         tmp[zero_padding_insertion_ind] == '-') {
-                        zero_padding_insertion_ind++;
+                        zero_padding_insertion_ind += 1;
                     }
-                    if (zero_padding_insertion_ind+1 < str_arg_l &&
+                    if (zero_padding_insertion_ind + 1 < str_arg_l &&
                         tmp[zero_padding_insertion_ind]   == '0' &&
                         (tmp[zero_padding_insertion_ind+1] == 'x' ||
                          tmp[zero_padding_insertion_ind+1] == 'X') ) {
@@ -578,7 +583,7 @@ pm_vsnprintf(char *       const str,
                     }
                 }
                 {
-                    size_t num_of_digits =
+                    size_t const num_of_digits =
                         str_arg_l - zero_padding_insertion_ind;
                     if (alternate_form && fmt_spec == 'o'
                         /* unless zero is already the first character */
@@ -604,9 +609,10 @@ pm_vsnprintf(char *       const str,
                 }
                 /* zero padding to specified minimal field width? */
                 if (!justify_left && zero_padding) {
-                    int n =
+                    int const n =
                         min_field_width - (str_arg_l+number_of_zeros_to_pad);
-                    if (n > 0) number_of_zeros_to_pad += n;
+                    if (n > 0)
+                        number_of_zeros_to_pad += n;
                 }
             } break;
             case 'f': {
@@ -652,7 +658,7 @@ pm_vsnprintf(char *       const str,
 
             if (!justify_left) {
                 /* left padding with blank or zero */
-                int n = min_field_width - (str_arg_l+number_of_zeros_to_pad);
+                int n = min_field_width - (str_arg_l + number_of_zeros_to_pad);
                 if (n > 0) {
                     if (str_l < str_m) {
                         size_t const avail = str_m - str_l;
@@ -671,27 +677,31 @@ pm_vsnprintf(char *       const str,
                 */
                 zero_padding_insertion_ind = 0;
             } else {
-                /* insert first part of numerics (sign or '0x') before
-                   zero padding
-                */
-                int n = zero_padding_insertion_ind;
-                if (n > 0) {
-                    if (str_l < str_m) {
-                        size_t const avail = str_m - str_l;
-                        fast_memcpy(str + str_l, str_arg, (MIN(n, avail)));
+                {
+                    /* insert first part of numerics (sign or '0x') before
+                       zero padding
+                    */
+                    int const n = zero_padding_insertion_ind;
+                    if (n > 0) {
+                        if (str_l < str_m) {
+                            size_t const avail = str_m - str_l;
+                            fast_memcpy(str + str_l, str_arg, (MIN(n, avail)));
+                        }
+                        str_l += n;
                     }
-                    str_l += n;
                 }
-                /* insert zero padding as requested by the precision
-                   or min field width
-                */
-                n = number_of_zeros_to_pad;
-                if (n > 0) {
-                    if (str_l < str_m) {
-                        size_t const avail = str_m - str_l;
-                        fast_memset(str + str_l, '0', (MIN(n, avail)));
+                {
+                    /* insert zero padding as requested by the precision
+                       or min field width
+                    */
+                    int const n = number_of_zeros_to_pad;
+                    if (n > 0) {
+                        if (str_l < str_m) {
+                            size_t const avail = str_m - str_l;
+                            fast_memset(str + str_l, '0', (MIN(n, avail)));
+                        }
+                        str_l += n;
                     }
-                    str_l += n;
                 }
             }
             /* insert formatted string (or as-is conversion specifier
@@ -712,7 +722,8 @@ pm_vsnprintf(char *       const str,
             /* insert right padding */
             if (justify_left) {
                 /* right blank padding to the field width */
-                int n = min_field_width - (str_arg_l+number_of_zeros_to_pad);
+                int const n =
+                    min_field_width - (str_arg_l + number_of_zeros_to_pad);
                 if (n > 0) {
                     if (str_l < str_m) {
                         size_t const avail = str_m - str_l;
