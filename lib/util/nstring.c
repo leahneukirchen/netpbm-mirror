@@ -221,8 +221,8 @@ pm_vsnprintf(char *       const str,
             const char *q = strchr(p + 1,'%');
             size_t n = !q ? strlen(p) : (q - p);
             if (str_l < str_m) {
-                size_t avail = str_m - str_l;
-                fast_memcpy(str + str_l, p, (n > avail ? avail : n));
+                size_t const avail = str_m - str_l;
+                fast_memcpy(str + str_l, p, (MIN(n, avail)));
             }
             p += n; str_l += n;
         } else {
@@ -408,9 +408,7 @@ pm_vsnprintf(char *       const str,
                     else {
                         /* memchr on HP does not like n > 2^31  !!! */
                         const char * q =
-                            memchr(str_arg, '\0',
-                                   precision <= 0x7fffffff ?
-                                   precision : 0x7fffffff);
+                            memchr(str_arg, '\0', MIN(precision, 0x7fffffff));
                         str_arg_l = !q ? precision : (q-str_arg);
                     }
                     break;
@@ -657,9 +655,9 @@ pm_vsnprintf(char *       const str,
                 int n = min_field_width - (str_arg_l+number_of_zeros_to_pad);
                 if (n > 0) {
                     if (str_l < str_m) {
-                        size_t avail = str_m-str_l;
-                        fast_memset(str+str_l, (zero_padding ? '0' : ' '),
-                                    (n > avail ? avail : n));
+                        size_t const avail = str_m - str_l;
+                        fast_memset(str + str_l, (zero_padding ? '0' : ' '),
+                                    (MIN(n, avail)));
                     }
                     str_l += n;
                 }
@@ -679,8 +677,8 @@ pm_vsnprintf(char *       const str,
                 int n = zero_padding_insertion_ind;
                 if (n > 0) {
                     if (str_l < str_m) {
-                        size_t avail = str_m-str_l;
-                        fast_memcpy(str+str_l, str_arg, (n>avail?avail:n));
+                        size_t const avail = str_m - str_l;
+                        fast_memcpy(str + str_l, str_arg, (MIN(n, avail)));
                     }
                     str_l += n;
                 }
@@ -690,8 +688,8 @@ pm_vsnprintf(char *       const str,
                 n = number_of_zeros_to_pad;
                 if (n > 0) {
                     if (str_l < str_m) {
-                        size_t avail = str_m - str_l;
-                        fast_memset(str + str_l, '0', (n > avail ? avail : n));
+                        size_t const avail = str_m - str_l;
+                        fast_memset(str + str_l, '0', (MIN(n, avail)));
                     }
                     str_l += n;
                 }
@@ -706,7 +704,7 @@ pm_vsnprintf(char *       const str,
                         size_t const avail = str_m-str_l;
                         fast_memcpy(str + str_l,
                                     str_arg + zero_padding_insertion_ind,
-                                    (n > avail ? avail : n));
+                                    MIN(n, avail));
                     }
                     str_l += n;
                 }
@@ -717,8 +715,8 @@ pm_vsnprintf(char *       const str,
                 int n = min_field_width - (str_arg_l+number_of_zeros_to_pad);
                 if (n > 0) {
                     if (str_l < str_m) {
-                        size_t avail = str_m-str_l;
-                        fast_memset(str+str_l, ' ', (n>avail?avail:n));
+                        size_t const avail = str_m - str_l;
+                        fast_memset(str+str_l, ' ', (MIN(n, avail)));
                     }
                     str_l += n;
                 }
@@ -730,7 +728,7 @@ pm_vsnprintf(char *       const str,
            of overwriting the last character (shouldn't happen, but
            just in case)
         */
-        str[str_l <= str_m-1 ? str_l : str_m-1] = '\0';
+        str[MIN(str_l, str_m - 1)] = '\0';
     }
     *sizeP = str_l;
 }
