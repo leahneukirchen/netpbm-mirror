@@ -1674,6 +1674,28 @@ readImageData(FILE *       const ifP,
 
 
 static void
+warnUserNotSquare(unsigned int const aspectRatio) {
+
+    const char * baseMsg =
+        "warning - input pixels are not square, "
+        "but we are rendering them as square pixels "
+        "in the output";
+
+    if (pm_have_float_format()) {
+        float const r = ((float)aspectRatio + 15.0 ) / 64.0;
+
+        pm_message("%s.  To fix the output, run it through "
+                   "'pamscale -%cscale %g'",
+                   baseMsg,
+                   r < 1.0 ? 'x' : 'y',
+                   r < 1.0 ? 1.0 / r : r );
+    } else
+        pm_message("%s", baseMsg);
+}
+
+
+
+static void
 readGifHeader(FILE *             const gifFileP,
               struct gifScreen * const gifScreenP) {
 /*----------------------------------------------------------------------------
@@ -1734,17 +1756,8 @@ readGifHeader(FILE *             const gifFileP,
         }
     }
     
-    if (gifScreenP->AspectRatio != 0 && gifScreenP->AspectRatio != 49) {
-        float   r;
-        r = ( (float) gifScreenP->AspectRatio + 15.0 ) / 64.0;
-        pm_message("warning - input pixels are not square, "
-                   "but we are rendering them as square pixels "
-                   "in the output.  "
-                   "To fix the output, run it through "
-                   "'pamscale -%cscale %g'",
-                   r < 1.0 ? 'x' : 'y',
-                   r < 1.0 ? 1.0 / r : r );
-    }
+    if (gifScreenP->AspectRatio != 0 && gifScreenP->AspectRatio != 49)
+        warnUserNotSquare(gifScreenP->AspectRatio);
 }
 
 

@@ -106,10 +106,14 @@ findLargestIthCoeff(unsigned int   const n,
             maxSoFar = thisA;
         }
     }
-    if (maxSoFar < epsilon)
-        pm_asprintf(errorP, "Matrix equation has no unique solution.  "
-                    "(debug: coeff %u %e < %e)", i, maxSoFar, epsilon);
-    else {
+    if (maxSoFar < epsilon) {
+        const char * const baseMsg = "Matrix equation has no unique solution";
+        if (pm_have_float_format())
+            pm_asprintf(errorP, "%s.  (debug: coeff %u %e < %e)",
+                        baseMsg, i, maxSoFar, epsilon);
+        else
+            pm_asprintf(errorP, "%s", baseMsg);
+    } else {
         *istarP = maxIdx;
         *errorP = NULL;
     }

@@ -42,6 +42,29 @@ gethexit(FILE * const ifP) {
 
 
 
+static void
+warnNonsquarePixels(unsigned int const cols,
+                    unsigned int const xcols,
+                    unsigned int const rows,
+                    unsigned int const xrows) {
+    
+    const char * const baseMsg = "warning, non-square pixels";
+
+    if (pm_have_float_format()) {
+        float const rowratio = (float) xrows / (float) rows;
+        float const colratio = (float) xcols / (float) cols;
+
+        pm_message("%s; to fix do a 'pamscale -%cscale %g'",
+                   baseMsg,
+                   rowratio > colratio ? 'y' : 'x',
+                   rowratio > colratio ? 
+                   rowratio / colratio : colratio / rowratio);
+    } else
+        pm_message("%s", baseMsg);
+}
+
+
+
 int
 main(int argc, const char ** argv) {
 
@@ -110,15 +133,8 @@ main(int argc, const char ** argv) {
     if (maxval > PGM_OVERALLMAXVAL)
         pm_error("depth %d is too large.  Our maximum is %d",
                  maxval, PGM_OVERALLMAXVAL);
-    if (xcols != 0 && xrows != 0 && (xcols != cols || xrows != rows)) {
-        float const rowratio = (float) xrows / (float) rows;
-        float const colratio = (float) xcols / (float) cols;
-
-        pm_message(
-            "warning, non-square pixels; to fix do a 'pamscale -%cscale %g'",
-            rowratio > colratio ? 'y' : 'x',
-            rowratio > colratio ? rowratio / colratio : colratio / rowratio );
-    }
+    if (xcols != 0 && xrows != 0 && (xcols != cols || xrows != rows))
+        warnNonsquarePixels(cols, xcols, rows, xrows);
 
     /* Read the hex bits. */
     grays = pgm_allocarray(cols, rows);

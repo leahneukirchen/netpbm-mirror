@@ -175,6 +175,9 @@ pm_vasprintf(const char ** const resultP,
              const char *  const format,
              va_list             args);
 
+bool
+pm_vasprintf_knows_float(void);
+
 void 
 pm_strfree(const char * const string);
 

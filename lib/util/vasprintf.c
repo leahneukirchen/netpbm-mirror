@@ -6,6 +6,8 @@
 #include <string.h>
 
 #include "pm_config.h"
+#include "pm_c_util.h"
+
 #include "nstring.h"
 
 
@@ -54,5 +56,16 @@ pm_vasprintf(const char ** const resultP,
 
         *resultP = result;
     }
+#endif
+}
+
+
+
+bool
+pm_vasprintf_knows_float(void) {
+#if HAVE_VASPRINTF
+    return true;
+#else
+    return false;
 #endif
 }

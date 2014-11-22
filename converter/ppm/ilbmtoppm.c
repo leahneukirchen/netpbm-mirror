@@ -433,6 +433,27 @@ read_clut(FILE *        const ifP,
 
 
 
+static void
+warnNonsquarePixels(uint8_t const xAspect,
+                    uint8_t const yAspect) {
+
+    if (xAspect != yAspect) {
+        const char * const baseMsg = "warning - non-square pixels";
+
+        if (pm_have_float_format())
+            pm_message("%s; to fix do a 'pamscale -%cscale %g'",
+                       baseMsg,
+                       xAspect > yAspect ? 'x' : 'y',
+                       xAspect > yAspect ? 
+                       (float)xAspect/yAspect : 
+                       (float)yAspect/xAspect);
+        else
+            pm_message("%s", baseMsg);
+    }
+}
+
+
+
 static BitMapHeader *
 read_bmhd(FILE *        const ifP,
           IFF_ID        const iffid,
@@ -440,7 +461,7 @@ read_bmhd(FILE *        const ifP,
 
     BitMapHeader * bmhdP;
 
-    if( chunksize != BitMapHeaderSize ) {
+    if (chunksize != BitMapHeaderSize) {
         pm_message("invalid size for %s chunk - skipping it", 
                    ID2string(iffid));
         skip_chunk(ifP, iffid, chunksize);
@@ -467,24 +488,24 @@ read_bmhd(FILE *        const ifP,
         bmhdP->pageWidth  = get_big_short(ifP, iffid, &remainingChunksize);
         bmhdP->pageHeight = get_big_short(ifP, iffid, &remainingChunksize);
 
-        if( verbose ) {
-            if( typeid == ID_ILBM )
+        if (verbose) {
+            if (typeid == ID_ILBM)
                 pm_message("dimensions: %dx%d, %d planes", 
                            bmhdP->w, bmhdP->h, bmhdP->nPlanes);
             else
                 pm_message("dimensions: %dx%d", bmhdP->w, bmhdP->h);
 
-            if( typeid == ID_ILBM || typeid == ID_PBM ) {
+            if (typeid == ID_ILBM || typeid == ID_PBM) {
                 pm_message("compression: %s",
                            bmhdP->compression <= cmpMAXKNOWN ?
                            cmpNAME[bmhdP->compression] : "unknown");
 
-                switch( bmhdP->masking ) {
+                switch(bmhdP->masking) {
                 case mskNone:
                     break;
                 case mskHasMask:
                 case mskHasTransparentColor:
-                    if( !maskfile )
+                    if (!maskfile)
                         pm_message("use '-maskfile <filename>' "
                                    "to generate a PBM mask file from %s", 
                                    mskNAME[bmhdP->masking]);
@@ -498,27 +519,20 @@ read_bmhd(FILE *        const ifP,
                 }
             }
             else    /* RGBN/RGB8 */
-                if( !maskfile )
+                if (!maskfile)
                     pm_message("use '-maskfile <filename>' "
                                "to generate a PBM mask file "
                                "from genlock bits");
         }
 
         /* fix aspect ratio */
-        if( bmhdP->xAspect == 0 || bmhdP->yAspect == 0 ) {
+        if (bmhdP->xAspect == 0 || bmhdP->yAspect == 0) {
             pm_message("warning - illegal aspect ratio %d:%d, using 1:1", 
                        bmhdP->xAspect, bmhdP->yAspect);
             bmhdP->xAspect = bmhdP->yAspect = 1;
         }
 
-        if( bmhdP->xAspect != bmhdP->yAspect ) {
-            pm_message("warning - non-square pixels; "
-                       "to fix do a 'pamscale -%cscale %g'",
-                       bmhdP->xAspect > bmhdP->yAspect ? 'x' : 'y',
-                       bmhdP->xAspect > bmhdP->yAspect ? 
-                       (float)(bmhdP->xAspect)/bmhdP->yAspect : 
-                       (float)(bmhdP->yAspect)/bmhdP->xAspect);
-        }
+        warnNonsquarePixels(bmhdP->xAspect, bmhdP->yAspect);
     }
     return bmhdP;
 }
