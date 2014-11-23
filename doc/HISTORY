@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+14.11.23 BJH  Release 10.68.02
+
+              pambackground: fix bug: segfault or incorrect results in most
+              cases.  Thanks Ludolf Holzheid (ludolf.holzheid@gmx.de).
+              Introduced in Netpbm 10.37 (December 2006).
+
 14.09.28 BJH  Release 10.68.01
 
               Windows build: fix universal build failure with "No rule to make
@@ -11,6 +17,8 @@ CHANGE HISTORY
               (June 2014).
 
 14.09.26 BJH  Release 10.68.00
+
+              Split pgmcrater into pamcrater and pamshadedrelief.
 
               pnmconvol: add -bias .
 
