@@ -6,8 +6,12 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.69.00
 
-              Fix %g in messages where platform doesn't have vasprintf.
-              (But scores of %f are still left).
+              NetBSD: show actual numbers in messages instead of "f" or
+              no information, by using NetBSD's vasprintf.
+
+              Make %g in messages display the actual number instead of "g" in
+              messages where platform doesn't have vasprintf.  (But scores of
+              %f are still left).
 
               anytopnm: convert all images in a multi-image GIF instead of
               just the first.
