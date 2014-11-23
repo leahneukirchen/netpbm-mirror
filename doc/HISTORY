@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+14.11.23 BJH  Release 10.47.53
+
+              pambackground: fix bug: segfault or incorrect results in most
+              cases.  Thanks Ludolf Holzheid (ludolf.holzheid@gmx.de).
+              Introduced in Netpbm 10.37 (December 2006).
+
 14.11.01 BJH  Release 10.47.52
 
               Fix 'make package': missing pkgconfig_template file.

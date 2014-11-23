@@ -353,7 +353,7 @@ expandBackgroundVert(unsigned char ** const pi,
     unsigned int col;
     bool expanded;
 
-    for (col = 1, expanded = FALSE; col < height-1; ++col) {
+    for (col = 1, expanded = FALSE; col < width-1; ++col) {
         int row;
 
         for (row = 1; row < height - 1; ++row) {
