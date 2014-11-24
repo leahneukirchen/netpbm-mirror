@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pambackground User Manual</TITLE></HEAD>
 <BODY>
 <H1>pambackground</H1>
-Updated: 09 November 2014
+Updated: 24 November 2014
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -58,6 +58,19 @@ against a blue sky, where nothing remotely sky-blue appears in the
 building, you could use <b>ppmchange</b> to change all pixels within
 20% of &quot;SkyBlue&quot; to SkyBlue, then run <b>pambackground</b>
 on it.
+
+<p>You might even extract the argument for <b>ppmchange</b> from the image in
+question, using <b>ppmtoarbtxt</b>.  In the foregoing example, we knew the
+background was approximately SkyBlue, but if we didn't we could just get the
+color of the top left pixel, in a form suitable for the color arguments
+of <b>ppmchange</b> like this:
+
+<pre>
+<kbd>
+    $ echo &quot;#(fred)/#(fgreen)/#(fblue)&quot; &gt;/tmp/bodyskl
+    $ color=$(pamcut 0 0 1 1 myimage.ppm | ppmtoarbtxt /tmp/bodyskl)
+</kbd>
+</pre>
 
 <p>A more convenient means of dealing with a multi-shade background is
 to use <b>pnmquant</b> to produce a version of the image with a very small
