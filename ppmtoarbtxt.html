@@ -3,7 +3,7 @@
 <BODY>
 <H1>ppmtoarbtxt</H1>
 <BR>
-Updated: 27 April 2003
+Updated: 26 November 2014
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -36,9 +36,16 @@ pixel, to stdout.  The substitutions are as follows:
 <DT><B>#(ired</B><I> format blackref whiteref</I><B>)</B>
 
 <DD>generates an integer in the range <I>blackref</I> to
-<I>whiteref</I> using <I>format</I> representing the red intensity of
-the pixel.  A red intensity of 0 becomes <I>blackref</I>; a red
-intensity of maxval becomes <I>whiteref</I>.
+<I>whiteref</I> in a format specified by <I>format</I> representing the red
+intensity of the pixel.  A red intensity of 0 becomes <I>blackref</I>; a red
+intensity of maxval becomes <I>whiteref</I>, with the rest linearly
+interpolated in between.
+
+<p><i>format</i> is a printf-like format specifier like &quot;%d&quot;.
+<b>ppmtoarbtxt</b> uses as the entire format string to a <b>fprintf</b> POSIX
+library call whose only other argument is the red itensity as an integer data
+type.  <b>ppmtoarbtxt</b> does not verify that your format string makes sense;
+there are values you could specify that could even crash the program.
 
 <p><B>#(ired)</B> is equivalent to <B>#(ired %d 0 255)</B>.
 
@@ -60,8 +67,10 @@ intensity of maxval becomes <I>whiteref</I>.
 <DD>Same as <B>#(ired...</B>, but generates a floating point number instead
 of an integer.
 
-<p>
-<B>#(fred)</B> is equivalent to <B>#(fred %f 0.0 1.0)</B>.
+<p>In this case, the second argument to the <b>fprintf</b> that uses 
+<i>format</i> has a double precision floating point data type.
+
+<p><B>#(fred)</B> is equivalent to <B>#(fred %f 0.0 1.0)</B>.
 
 <DT><B>#(fgreen</B><I> format blackref whiteref</I><B>)</B>
 
