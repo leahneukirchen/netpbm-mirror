@@ -63,11 +63,11 @@ freeColorMap(const colorMap * const colorMapP) {
 
 
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    char *input_filename;
+    const char * inputFilename;
     int class;  /* C_WIN or C_OS2 */
     unsigned int bppSpec;
     unsigned int bpp;
@@ -77,7 +77,7 @@ struct cmdlineInfo {
 
 static void
 parseCommandLine(int argc, const char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that many of the strings that this function returns in the
    *cmdline_p structure are actually in the supplied argv array.  And
@@ -131,9 +131,9 @@ parseCommandLine(int argc, const char ** argv,
         cmdlineP->mapfile = NULL;
 
     if (argc - 1 == 0)
-        cmdlineP->input_filename = strdup("-");  /* he wants stdin */
+        cmdlineP->inputFilename = strdup("-");  /* he wants stdin */
     else if (argc - 1 == 1)
-        cmdlineP->input_filename = strdup(argv[1]);
+        cmdlineP->inputFilename = strdup(argv[1]);
     else 
         pm_error("Too many arguments.  The only argument accepted "
                  "is the input file specificaton");
@@ -915,7 +915,7 @@ int
 main(int           argc,
      const char ** argv) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP;
     int rows;
     int cols;
@@ -926,7 +926,7 @@ main(int           argc,
 
     parseCommandLine(argc, argv, &cmdline);
 
-    ifP = pm_openr(cmdline.input_filename);
+    ifP = pm_openr(cmdline.inputFilename);
     
     ppm_readppminit(ifP, &cols, &rows, &maxval, &ppmFormat);
     
