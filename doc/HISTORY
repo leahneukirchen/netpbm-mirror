@@ -6,6 +6,14 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.69.00
 
+              ppmtoarbtxt: Fail if a #() escape sequence runs off end of
+              file or is too long to process; before, the program would
+              treat the text from # to EOF or where the buffer filled up
+              as literal text, even ignoring any #() within.
+
+              ppmtoarbtxt: Fix some undefined behavior when program limits
+              are exceeded (i.e. buffer overruns).
+
               NetBSD: show actual numbers in messages instead of "f" or
               no information, by using NetBSD's vasprintf.
 

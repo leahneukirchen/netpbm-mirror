@@ -12,51 +12,132 @@
 ** implied warranty.
 */
 
+#include <assert.h>
 #include <string.h>
 
-#include "ppm.h"
 #include "mallocvar.h"
 #include "nstring.h"
+#include "shhopt.h"
+#include "ppm.h"
+
+
+
+struct CmdlineInfo {
+    /* All the information the user supplied in the command line,
+       in a form easy for the program to use.
+    */
+    const char * inputFileName;
+    const char * bodySklFileName;
+    const char * hd;
+    const char * tl;
+    unsigned int debug;
+};
+
+
+
+static void
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo * const cmdlineP) {
+/*----------------------------------------------------------------------------
+   Note that many of the strings that this function returns in the
+   *cmdline_p structure are actually in the supplied argv array.  And
+   sometimes, one of these strings is actually just a suffix of an entry
+   in argv!
+-----------------------------------------------------------------------------*/
+    optEntry * option_def;
+        /* Instructions to OptParseOptions3 on how to parse our options.
+         */
+    optStruct3 opt;
+
+    unsigned int hdSpec, tlSpec;
+
+    unsigned int option_def_index;
+    
+    MALLOCARRAY(option_def, 100);
+
+    option_def_index = 0;   /* incremented by OPTENTRY */
+    OPTENT3(0,   "hd",   OPT_STRING, &cmdlineP->hd, 
+            &hdSpec,             0);
+    OPTENT3(0,   "tl",   OPT_STRING, &cmdlineP->tl,
+            &tlSpec,             0);
+    OPTENT3(0,   "debug", OPT_FLAG, NULL,
+            &cmdlineP->debug,      0);
+
+    opt.opt_table = option_def;
+    opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
+
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+
+    if (!hdSpec)
+        cmdlineP->hd = NULL;
+
+    if (!tlSpec)
+        cmdlineP->tl = NULL;
+
+    if (argc-1 < 1)
+        pm_error("You must specify the body skeleton file name as an "
+                 "argument");
+    else {
+        cmdlineP->bodySklFileName = strdup(argv[1]);
+
+        if (argc-1 < 2)
+            cmdlineP->inputFileName = strdup("-");  /* he wants stdin */
+        else {
+            cmdlineP->inputFileName = strdup(argv[2]);
+            if (argc-1 > 2)
+                pm_error("Too many arguments.  The only possible arguments "
+                         "are the body skeleton file name and input image "
+                         "file name");
+        }
+    }
+}
+
+
+
 
 typedef enum {
 /* The types of object we handle */
     BDATA, IRED, IGREEN, IBLUE, ILUM, FRED, FGREEN, FBLUE, FLUM,
     WIDTH, HEIGHT, POSX, POSY
-} SKL_OBJ_TYP;
+} SkeletonObjectType;
 
 typedef enum {
     OBJTYP_ICOLOR, OBJTYP_FCOLOR, OBJTYP_INT, OBJTYP_BDATA
-} SKL_OBJ_CLASS;
+} SkeletonObjectClass;
 
 /* Maximum size for a format string ("%d" etc.) */
 #define MAXFORMAT 16
 
+typedef union {
 /* The data we keep for each object */
-typedef union
- {
-  struct BNDAT { char *bdat;   /* Binary data (text with newlines etc.) */
-                 int ndat;
-               } bin_data;
+    struct Bndat {
+        char * bdat;   /* Binary data (text with newlines etc.) */
+        unsigned int ndat;
+    } binData;
+    
+    struct Icdat {
+        char icformat[MAXFORMAT];  /* Integer colors */
+        unsigned int icolmin, icolmax;
+    } icolData;
 
-  struct ICDAT { char icformat[MAXFORMAT];  /* Integer colors */
-                 int icolmin, icolmax;
-               } icol_data;
-
-  struct FCDAT { char fcformat[MAXFORMAT];  /* Float colors */
-                 double fcolmin, fcolmax;
-               } fcol_data;
-
-  struct IDAT  { char iformat[MAXFORMAT];   /* Integer data */
-               } i_data;
- } SKL_OBJ_DATA;
+    struct Fcdat {
+        char fcformat[MAXFORMAT];  /* Float colors */
+        double fcolmin, fcolmax;
+    } fcolData;
+    
+    struct Idat {
+        char iformat[MAXFORMAT];   /* Integer data */
+    } iData;
+} SkeletonObjectData;
 
 
 /* Each object has a type and some data */
-typedef struct
- { 
-   SKL_OBJ_TYP otyp;
-   SKL_OBJ_DATA odata;
- } SKL_OBJ;
+typedef struct { 
+    SkeletonObjectType objType;
+    SkeletonObjectData odata;
+} SkeletonObject;
+
 
 
 #define MAX_SKL_HEAD_OBJ 64
@@ -66,160 +147,252 @@ typedef struct
 #define MAX_OBJ_BUF 80
 
 
-static void write_txt (fout, nobj, obj, width, height, x, y, red, green, blue)
-FILE *fout;
-int nobj;
-SKL_OBJ *obj[];
-int width, height, x, y;
-double red, green, blue;
 
-{register int count;
+static void
+dumpSkeleton(SkeletonObject ** const skeletonPList,
+             unsigned int      const nSkeleton) {
 
-#define WRITE_BNDAT(fd,theobj) \
- {struct BNDAT *bdata = &((theobj)->odata.bin_data); \
-       fwrite (bdata->bdat,bdata->ndat,1,fd); }
+    unsigned int i;
 
-#define WRITE_ICOL(fd,theobj,thecol) \
- {struct ICDAT *icdata = &((theobj)->odata.icol_data); \
-  fprintf (fd,icdata->icformat,(int)(icdata->icolmin \
-                + (icdata->icolmax - icdata->icolmin)*(thecol))); }
+    pm_message("%u objects", nSkeleton);
 
-#define WRITE_FCOL(fd,theobj,thecol) \
- {struct FCDAT *fcdata = &((theobj)->odata.fcol_data); \
-  fprintf (fd,fcdata->fcformat,(double)(fcdata->fcolmin \
-                + (fcdata->fcolmax - fcdata->fcolmin)*(thecol))); }
+    for (i = 0; i < nSkeleton; ++i) {
+        SkeletonObject * const skeletonP = skeletonPList[i];
 
-#define WRITE_IDAT(fd,theobj,thedat) \
- {struct IDAT *idata = &((theobj)->odata.i_data); \
-  fprintf (fd,idata->iformat,thedat); }
-
- for (count = 0; count < nobj; count++)
- {
-   switch (obj[count]->otyp)
-   {
-     case BDATA:
-       WRITE_BNDAT (fout,obj[count]);
-       break;
-     case IRED:
-       WRITE_ICOL (fout,obj[count],red);
-       break;
-     case IGREEN:
-       WRITE_ICOL (fout,obj[count],green);
-       break;
-     case IBLUE:
-       WRITE_ICOL (fout,obj[count],blue);
-       break;
-     case ILUM:
-       WRITE_ICOL (fout,obj[count],0.299*red+0.587*green+0.114*blue);
-       break;
-     case FRED:
-       WRITE_FCOL (fout,obj[count],red);
-       break;
-     case FGREEN:
-       WRITE_FCOL (fout,obj[count],green);
-       break;
-     case FBLUE:
-       WRITE_FCOL (fout,obj[count],blue);
-       break;
-     case FLUM:
-       WRITE_FCOL (fout,obj[count],0.299*red+0.587*green+0.114*blue);
-       break;
-     case WIDTH:
-       WRITE_IDAT (fout,obj[count],width);
-       break;
-     case HEIGHT:
-       WRITE_IDAT (fout,obj[count],height);
-       break;
-     case POSX:
-       WRITE_IDAT (fout,obj[count],x);
-       break;
-     case POSY:
-       WRITE_IDAT (fout,obj[count],y);
-       break;
-   }
- }
-}
-
-
-static SKL_OBJ *
-save_bin_data(int    const ndat, 
-              char * const bdat) {
-
-    /* Save binary data in Object */
-
-    SKL_OBJ *obj;
-
-    obj = (SKL_OBJ *)malloc (sizeof (SKL_OBJ) + ndat);
-    if (obj != NULL)
-    {
-        obj->otyp = BDATA;
-        obj->odata.bin_data.ndat = ndat;
-        obj->odata.bin_data.bdat = ((char *)(obj))+sizeof (SKL_OBJ);
-        memcpy (obj->odata.bin_data.bdat,bdat,ndat);
+        pm_message("  Object: Type %u", skeletonP->objType);
     }
-    return (obj);
 }
 
 
 
-static SKL_OBJ *
-save_icol_data(SKL_OBJ_TYP  const ctyp,
-               const char * const format,
-               int          const icolmin,
-               int          const icolmax) {
-/* Save integer color data in Object */
+static void
+dumpAllSkeleton(SkeletonObject ** const bodySkeletonPList,
+                unsigned int      const bodyNskl,
+                SkeletonObject ** const headSkeletonPList, 
+                unsigned int      const headNskl,
+                SkeletonObject ** const tailSkeletonPList,
+                unsigned int      const tailNskl) {
+    
+    pm_message("Body skeleton:");
+    dumpSkeleton(bodySkeletonPList, bodyNskl);
 
-    SKL_OBJ * objP;
+    pm_message("Head skeleton:");
+    dumpSkeleton(headSkeletonPList, headNskl);
 
-    MALLOCVAR(objP);
-
-    if (objP) {
-        objP->otyp = ctyp;
-        strcpy(objP->odata.icol_data.icformat, format);
-        objP->odata.icol_data.icolmin = icolmin;
-        objP->odata.icol_data.icolmax = icolmax;
-    }
-    return objP;
+    pm_message("Tail skeleton:");
+    dumpSkeleton(tailSkeletonPList, tailNskl);
 }
 
 
 
-static SKL_OBJ *
-save_fcol_data(SKL_OBJ_TYP  const ctyp,
-               const char * const format,
-               double       const fcolmin,
-               double       const fcolmax) {
-/* Save float color data in Object */
+static void
+writeBndat(FILE *           const ofP,
+           SkeletonObject * const objectP) {
 
-    SKL_OBJ * objP;
+    struct Bndat * const bdataP = &objectP->odata.binData;
 
-    MALLOCVAR(objP);
-
-    if (objP) {
-        objP->otyp = ctyp;
-        strcpy(objP->odata.fcol_data.fcformat, format);
-        objP->odata.fcol_data.fcolmin = fcolmin;
-        objP->odata.fcol_data.fcolmax = fcolmax;
-    }
-    return objP;
+    fwrite(bdataP->bdat, bdataP->ndat, 1, ofP);
 }
 
 
 
-static SKL_OBJ *
-save_i_data(SKL_OBJ_TYP  const ctyp,
-            const char * const format) {
+static void
+writeIcol(FILE *           const ofP,
+          SkeletonObject * const objectP,
+          double           const value) {
 
-/* Save universal data in Object */
+    struct Icdat * const icdataP = &objectP->odata.icolData;
+    
+    fprintf(ofP, icdataP->icformat,
+            (unsigned int)
+            (icdataP->icolmin
+             + (icdataP->icolmax - icdataP->icolmin) * value));
+}
 
-    SKL_OBJ * objP;
 
-    MALLOCVAR(objP);
-    if (objP) {
-        objP->otyp = ctyp;
-        strcpy(objP->odata.i_data.iformat, format);
+
+static void
+writeFcol(FILE *           const ofP,
+          SkeletonObject * const objectP,
+          double           const value) {
+
+    struct Fcdat * const fcdataP = &objectP->odata.fcolData;
+    
+    fprintf(ofP, fcdataP->fcformat,
+            (double)
+            (fcdataP->fcolmin
+             + (fcdataP->fcolmax - fcdataP->fcolmin) * value));
+}
+
+
+
+static void
+writeIdat(FILE *           const ofP,
+          SkeletonObject * const objectP,
+          unsigned int     const value) {
+
+    struct Idat * const idataP = &objectP->odata.iData;
+    
+    fprintf(ofP, idataP->iformat, value);
+}
+
+
+
+static void
+writeText(FILE *            const ofP,
+          unsigned int      const nObj,
+          SkeletonObject ** const obj,
+          unsigned int      const width,
+          unsigned int      const height,
+          unsigned int      const x,
+          unsigned int      const y,
+          double            const red,
+          double            const green,
+          double            const blue) {
+    
+    unsigned int i;
+
+    for (i = 0; i < nObj; ++i) {
+        switch (obj[i]->objType) {
+        case BDATA:
+            writeBndat(ofP, obj[i]);
+            break;
+        case IRED:
+            writeIcol(ofP, obj[i], red);
+            break;
+        case IGREEN:
+            writeIcol(ofP, obj[i], green);
+            break;
+        case IBLUE:
+            writeIcol(ofP, obj[i], blue);
+            break;
+        case ILUM:
+            writeIcol(ofP, obj[i],
+                      PPM_LUMINR*red + PPM_LUMING*green + PPM_LUMINB*blue);
+            break;
+        case FRED:
+            writeFcol(ofP, obj[i], red);
+            break;
+        case FGREEN:
+            writeFcol(ofP, obj[i], green);
+            break;
+        case FBLUE:
+            writeFcol(ofP, obj[i], blue);
+            break;
+        case FLUM:
+            writeFcol(ofP, obj[i],
+                      PPM_LUMINR*red + PPM_LUMING*green + PPM_LUMINB*blue);
+            break;
+        case WIDTH:
+            writeIdat(ofP, obj[i], width);
+            break;
+        case HEIGHT:
+            writeIdat(ofP, obj[i], height);
+            break;
+        case POSX:
+            writeIdat(ofP, obj[i], x);
+            break;
+        case POSY:
+            writeIdat(ofP, obj[i], y);
+            break;
+        }
     }
-    return objP;
+}
+
+
+
+static SkeletonObject *
+newBinDataObj(unsigned int const nDat, 
+              const char * const bdat) {
+/*----------------------------------------------------------------------------
+  Createa binary data object.
+  -----------------------------------------------------------------------------*/
+    SkeletonObject * objectP;
+
+    objectP = malloc(sizeof(*objectP) + nDat);
+
+    if (!objectP)
+        pm_error("Failed to allocate memory for binary data object "
+                 "with %u bytes", nDat);
+
+    objectP->objType = BDATA;
+    objectP->odata.binData.ndat = nDat;
+    objectP->odata.binData.bdat = ((char *)objectP) + sizeof(SkeletonObject);
+    memcpy(objectP->odata.binData.bdat, bdat, nDat);
+
+    return objectP;
+}
+
+
+
+static SkeletonObject *
+newIcolDataObj(SkeletonObjectType const ctyp,
+               const char *       const format,
+               unsigned int       const icolmin,
+               unsigned int       const icolmax) {
+/*----------------------------------------------------------------------------
+  Create integer color data object.
+  -----------------------------------------------------------------------------*/
+    SkeletonObject * objectP;
+
+    MALLOCVAR(objectP);
+
+    if (!objectP)
+        pm_error("Failed to allocate memory for an integer color data "
+                 "object");
+
+    objectP->objType = ctyp;
+    strcpy(objectP->odata.icolData.icformat, format);
+    objectP->odata.icolData.icolmin = icolmin;
+    objectP->odata.icolData.icolmax = icolmax;
+
+    return objectP;
+}
+
+
+
+static SkeletonObject *
+newFcolDataObj(SkeletonObjectType  const ctyp,
+               const char *        const format,
+               double              const fcolmin,
+               double              const fcolmax) {
+/*----------------------------------------------------------------------------
+  Create float color data object.
+  -----------------------------------------------------------------------------*/
+    SkeletonObject * objectP;
+
+    MALLOCVAR(objectP);
+
+    if (!objectP)
+        pm_error("Failed to allocate memory for a float color data object");
+
+    objectP->objType = ctyp;
+    strcpy(objectP->odata.fcolData.fcformat, format);
+    objectP->odata.fcolData.fcolmin = fcolmin;
+    objectP->odata.fcolData.fcolmax = fcolmax;
+
+    return objectP;
+}
+
+
+
+static SkeletonObject *
+newIdataObj(SkeletonObjectType const ctyp,
+            const char *       const format) {
+/*----------------------------------------------------------------------------
+  Create universal data object.
+  -----------------------------------------------------------------------------*/
+    SkeletonObject * objectP;
+
+    MALLOCVAR(objectP);
+
+    if (!objectP)
+        pm_error("Failed to allocate memory for a universal data object");
+
+    objectP->objType = ctyp;
+    strcpy(objectP->odata.iData.iformat, format);
+
+    return objectP;
 }
 
 
@@ -228,37 +401,37 @@ static char const escape = '#';
 
 
 
-static SKL_OBJ_TYP
+static SkeletonObjectType
 interpretObjType(const char * const typstr) {
 
-    SKL_OBJ_TYP otyp;
+    SkeletonObjectType objType;
 
     /* Check for integer colors */
-    if      (streq(typstr, "ired")  ) otyp = IRED;
-    else if (streq(typstr, "igreen")) otyp = IGREEN;
-    else if (streq(typstr, "iblue") ) otyp = IBLUE;
-    else if (streq(typstr, "ilum")  ) otyp = ILUM;
+    if      (streq(typstr, "ired")  ) objType = IRED;
+    else if (streq(typstr, "igreen")) objType = IGREEN;
+    else if (streq(typstr, "iblue") ) objType = IBLUE;
+    else if (streq(typstr, "ilum")  ) objType = ILUM;
     /* Check for real colors */
-    else if (streq(typstr, "fred")  ) otyp = FRED;
-    else if (streq(typstr, "fgreen")) otyp = FGREEN;
-    else if (streq(typstr, "fblue") ) otyp = FBLUE;
-    else if (streq(typstr, "flum")  ) otyp = FLUM;
+    else if (streq(typstr, "fred")  ) objType = FRED;
+    else if (streq(typstr, "fgreen")) objType = FGREEN;
+    else if (streq(typstr, "fblue") ) objType = FBLUE;
+    else if (streq(typstr, "flum")  ) objType = FLUM;
     /* Check for integer data */
-    else if (streq(typstr, "width") ) otyp = WIDTH;
-    else if (streq(typstr, "height")) otyp = HEIGHT;
-    else if (streq(typstr, "posx")  ) otyp = POSX;
-    else if (streq(typstr, "posy")  ) otyp = POSY;
-    else                              otyp = BDATA;
+    else if (streq(typstr, "width") ) objType = WIDTH;
+    else if (streq(typstr, "height")) objType = HEIGHT;
+    else if (streq(typstr, "posx")  ) objType = POSX;
+    else if (streq(typstr, "posy")  ) objType = POSY;
+    else                              objType = BDATA;
 
-    return otyp;
+    return objType;
 }
 
 
 
-static SKL_OBJ_CLASS
-objClass(SKL_OBJ_TYP const otyp) {
+static SkeletonObjectClass
+objClass(SkeletonObjectType const objType) {
 
-    switch (otyp) {
+    switch (objType) {
     case IRED:
     case IGREEN:
     case IBLUE:
@@ -284,297 +457,469 @@ objClass(SKL_OBJ_TYP const otyp) {
 
 
 
+static SkeletonObject *
+newIcSkelFromReplString(const char *       const objstr,
+                        SkeletonObjectType const objType) {
+
+    SkeletonObject * retval;
+    unsigned int icolmin, icolmax;
+    char formstr[MAX_OBJ_BUF];
+    unsigned int nOdata;
+
+    nOdata = sscanf(objstr, "%*s%s%u%u", formstr, &icolmin, &icolmax);
+
+    if (nOdata == 3)
+        retval = newIcolDataObj(objType, formstr, icolmin, icolmax);
+    else if (nOdata == EOF) {
+        /* No arguments specified.  Use defaults */
+        retval = newIcolDataObj(objType, "%u", 0, 255);
+    } else
+        retval = NULL;
+
+    return retval;
+}
+
+
+
+static SkeletonObject *
+newFcSkelFromReplString(const char *       const objstr,
+                        SkeletonObjectType const objType) {
+
+    SkeletonObject * retval;
+    double fcolmin, fcolmax;
+    char formstr[MAX_OBJ_BUF];
+    unsigned int nOdata;
+
+    nOdata = sscanf(objstr, "%*s%s%lf%lf", formstr,
+                    &fcolmin, &fcolmax);
+
+    if (nOdata == 3)
+        retval = newFcolDataObj(objType, formstr, fcolmin, fcolmax);
+    else if (nOdata == EOF) {
+        /* No arguments specified.  Use defaults */
+        retval = newFcolDataObj(objType, "%f", 0.0, 1.0);
+    } else
+        retval = NULL;
+
+    return retval;
+} 
+
+
+
+static SkeletonObject *
+newISkelFromReplString(const char *        const objstr,
+                        SkeletonObjectType const objType) {
+
+    SkeletonObject * retval;
+    char formstr[MAX_OBJ_BUF];
+    unsigned int const nOdata = sscanf(objstr, "%*s%s", formstr);
+    
+    if (nOdata == 1)
+        retval = newIdataObj(objType, formstr);
+    else if (nOdata == EOF) {
+        /* No arguments specified.  Use defaults */
+        retval = newIdataObj(objType, "%u");
+    } else
+        retval = NULL;
+
+    return retval;
+} 
+
+
+static SkeletonObject *
+newSkeletonFromReplString(const char * const objstr) {
+/*----------------------------------------------------------------------------
+  Create a skeleton from the replacement string 'objstr' (the stuff
+  between the parentheses in #(...) ).
+
+  Return NULL if it isn't a valid replacement string.
+-----------------------------------------------------------------------------*/
+    SkeletonObject * retval;
+    char typstr[MAX_OBJ_BUF];
+    SkeletonObjectType objType;
+
+    typstr[0] = '\0';  /* initial value */
+
+    sscanf(objstr, "%s", typstr);
+
+    objType = interpretObjType(typstr);
+
+    switch (objClass(objType)) {
+    case OBJTYP_ICOLOR:
+        retval = newIcSkelFromReplString(objstr, objType);
+        break;
+    case OBJTYP_FCOLOR:
+        retval = newFcSkelFromReplString(objstr, objType);
+        break;
+    case OBJTYP_INT:
+        retval = newISkelFromReplString(objstr, objType);
+        break;
+    case OBJTYP_BDATA:
+        retval = NULL;
+    }
+    return retval;
+}
+
+
+
 static void
-addImpostorReplacementSeq(char *         const line,
-                          unsigned int   const startCursor,
-                          const char *   const seqContents,
-                          unsigned int   const seqContentsLen,
-                          unsigned int * const newCursorP) {
+readThroughCloseParen(FILE * const ifP,
+                      char * const objstr,
+                      size_t const objstrSize,
+                      bool * const unclosedP) {
 /*----------------------------------------------------------------------------
-   Add to line line[], at position 'startCursor', text that looks like a
-   replacement sequence but doesn't have the proper contents (the
-   stuff between the parentheses) to be one.  For example,
+   Read *ifP up through close parenthesis ( ')' ) into 'objstr', which
+   is of size 'objstrSize'.
 
-     "#(fread x)"
-
-   seqContents[] is the contents; 'seqContentsLen' its length.
-
-   Return as *newCursorP where the line[] cursor ends up after adding
-   the sequence.
+   Return *unclosedP true iff we run out of file or run out of objstr
+   before we see a close parenthesis.
 -----------------------------------------------------------------------------*/
-    unsigned int cursor;
     unsigned int i;
+    bool eof;
+    bool gotEscSeq;
 
-    cursor = startCursor;
+    for (i= 0, eof = false, gotEscSeq = false;
+         i < objstrSize - 1 && !gotEscSeq && !eof;
+         ++i) {
+        int rc;
+        rc = getc(ifP);
+        if (rc == EOF)
+            eof = true;
+        else {
+            char const chr = rc;
+            if (chr == ')')
+                gotEscSeq = true;
+            else
+                objstr[i] = chr;
+        }
+    }
+    objstr[i] = '\0';
 
-    line[cursor++] = escape;
-    line[cursor++] = '(';
-
-    for (i = 0; i < seqContentsLen; ++i)
-        line[cursor++] = seqContents[i];
-
-    line[cursor++] = ')';
-
-    *newCursorP = cursor;
+    *unclosedP = !gotEscSeq;
 }
 
 
 
-static int
-read_skeleton(const char *   const filename,
-              unsigned int   const maxskl,
-              unsigned int * const nsklP,
-              SKL_OBJ **     const skl) {
-/*----------------------------------------------------------------------------
-  Read skeleton file
------------------------------------------------------------------------------*/
-    FILE * sklfile;
-    unsigned int slen;
-    unsigned int objlen;
-    int chr;
-    SKL_OBJ_TYP otyp;
-    char line[MAX_LINE_BUF+MAX_OBJ_BUF+16];
-    char objstr[MAX_OBJ_BUF],typstr[MAX_OBJ_BUF];
-    unsigned int nskl;
+typedef struct {
+    unsigned int      capacity;
+    SkeletonObject ** skeletonPList;
+    unsigned int      nSkeleton;
+} SkeletonBuffer;
 
-#define SAVE_BIN(slen,line) \
-    { if (slen > 0 && (skl[nskl] = save_bin_data(slen,line)) != NULL) ++nskl; \
-      slen = 0; }
 
-    sklfile = pm_openr(filename);
 
-    /* Parse skeleton file */
-    nskl = 0;  /* initial value */
+static void
+SkeletonBuffer_init(SkeletonBuffer *  const bufferP,
+                    unsigned int      const capacity,
+                    SkeletonObject ** const skeletonPList) {
 
-    slen = 0;
-    while ((chr = getc (sklfile)) != EOF) {  /* Up to end of skeleton file */
-        if (nskl >= maxskl)
-            return -1;
+    bufferP->capacity      = capacity;
+    bufferP->skeletonPList = skeletonPList;
+    bufferP->nSkeleton     = 0;
+}
 
-        if (slen+1 >= MAX_LINE_BUF) {
-            /* Buffer finished.  Save as binary object */
-            SAVE_BIN(slen,line);
-        }
 
-        if (chr != escape) {
-            /* Not a replacement sequence; just a literal character */
-            line[slen++] = chr;
-            continue;
-        }
 
-        chr = getc(sklfile);
-        if (chr == EOF) {
-            /* Not a valid replacement sequence */
-            line[slen++] = escape;
-            break;
-        }
-        if (chr != '(') {
-            /* Not a valid replacement sequence */
-            line[slen++] = escape;
-            line[slen++] = chr;
-            continue;
-        }
-        /* Read replacement string up through ')'.  Put contents of
-           parentheses in objstr[].
+static void
+SkeletonBuffer_add(SkeletonBuffer * const bufferP,
+                   SkeletonObject * const skeletonP) {
+
+    if (bufferP->nSkeleton >= bufferP->capacity)
+        pm_error("Too many skeletons.  Max = %u", bufferP->capacity);
+
+    bufferP->skeletonPList[bufferP->nSkeleton++] = skeletonP;
+}                   
+
+
+
+typedef struct {
+
+    char data[MAX_LINE_BUF + MAX_OBJ_BUF + 16];
+
+    unsigned int length;
+
+    SkeletonBuffer * skeletonBufferP;
+        /* The buffer to which we flush.  Flushing means turning all the
+           characters currently in our buffer into a binary skeleton object
+           here.
         */
-        for (objlen = 0; objlen < sizeof(objstr)-1; ++objlen) {
-            chr = getc(sklfile);
-            if (chr == EOF) break;
-            if (chr == ')') break;
-            objstr[objlen] = chr;
-        }
-        objstr[objlen] = '\0';
 
-        if (chr != ')') {
-            /* Not valid replacement sequence */
-            unsigned int i;
-            line[slen++] = escape;
-            line[slen++] = chr;
-            for (i = 0; i < objlen; ++i)
-                line[slen++] = objstr[i];
-            if (chr == EOF)
-                break;
-            continue;
-        }
+} Buffer;
 
-        typstr[0] = '\0';           /* Get typ of data */
-        sscanf(objstr, "%s", typstr);
 
-        otyp = interpretObjType(typstr);
 
-        switch (objClass(otyp)) {
-        case OBJTYP_ICOLOR: {
-            int icolmin, icolmax;
-            char formstr[MAX_OBJ_BUF];
-            int n_odata;
+static void
+Buffer_init(Buffer *         const bufferP,
+            SkeletonBuffer * const skeletonBufferP) {
 
-            n_odata = sscanf(objstr, "%*s%s%d%d", formstr, &icolmin, &icolmax);
-
-            if (n_odata == 3) {
-                SAVE_BIN(slen, line);
-                skl[nskl] = save_icol_data(otyp, formstr, icolmin, icolmax);
-                if (skl[nskl] != NULL)
-                    ++nskl;
-            } else if (n_odata == EOF) {
-                /* No arguments specified.  Use defaults */
-                SAVE_BIN(slen, line);
-                skl[nskl] = save_icol_data(otyp, "%d", 0, 255);
-                if (skl[nskl] != NULL)
-                    ++nskl;
-            } else
-                addImpostorReplacementSeq(line, slen, objstr, objlen, &slen);
-        } break;
-        case OBJTYP_FCOLOR: {
-            double fcolmin, fcolmax;
-            char formstr[MAX_OBJ_BUF];
-            int n_odata;
-
-            n_odata = sscanf(objstr, "%*s%s%lf%lf", formstr,
-                             &fcolmin, &fcolmax);
-
-            if (n_odata == 3) {
-                SAVE_BIN(slen, line);
-                skl[nskl] = save_fcol_data(otyp, formstr, fcolmin, fcolmax);
-                if (skl[nskl] != NULL)
-                    ++nskl;
-            } else if (n_odata == EOF) {
-                /* No arguments specified.  Use defaults */
-                SAVE_BIN(slen, line);
-                skl[nskl] = save_fcol_data(otyp, "%f", 0.0, 1.0);
-                if (skl[nskl] != NULL)
-                    ++nskl;
-            } else
-                addImpostorReplacementSeq(line, slen, objstr, objlen, &slen);
-        } break;
-
-        case OBJTYP_INT: {
-            char formstr[MAX_OBJ_BUF];
-            int const n_odata = sscanf(objstr, "%*s%s", formstr);
-
-            if (n_odata == 1) {
-                SAVE_BIN(slen, line);
-                skl[nskl] = save_i_data(otyp, formstr);
-                if (skl[nskl] != NULL)
-                    ++nskl;
-            } else if (n_odata == EOF) {
-                /* No arguments specified.  Use defaults */
-                SAVE_BIN(slen, line);
-                skl[nskl] = save_i_data(otyp, "%d");
-                if (skl[nskl] != NULL)
-                    ++nskl;
-            } else
-                addImpostorReplacementSeq(line, slen, objstr, objlen, &slen);
-        } break;
-        case OBJTYP_BDATA:
-            addImpostorReplacementSeq(line, slen, objstr, objlen, &slen);
-        }
-    } /* EOF of skeleton file */
-
-    if (slen >= 1 && line[slen-1] == '\n')
-        /* Drop finishing newline character */
-        --slen;
-
-    SAVE_BIN(slen, line);  /* Save whatever is left */
-
-    *nsklP = nskl;
-
-    fclose(sklfile);
-    return 0;
+    bufferP->skeletonBufferP = skeletonBufferP;
+    bufferP->length = 0;
 }
 
 
 
-int main( argc, argv )
-int argc;
-char* argv[];
+static void
+Buffer_flush(Buffer * const bufferP) {
+/*----------------------------------------------------------------------------
+   Flush the buffer out to a binary skeleton object.
+-----------------------------------------------------------------------------*/
+    SkeletonBuffer_add(bufferP->skeletonBufferP,
+                       newBinDataObj(bufferP->length, bufferP->data));
 
-{register int col;
- register pixel* xP;
- pixel* pixelrow;
- pixval maxval,red,green,blue;
- double dmaxval;
- int argn, rows, cols, format, row;
- unsigned int head_nskl,body_nskl,tail_nskl;
- SKL_OBJ *head_skl[MAX_SKL_HEAD_OBJ];
- SKL_OBJ *body_skl[MAX_SKL_BODY_OBJ];
- SKL_OBJ *tail_skl[MAX_SKL_TAIL_OBJ];
- FILE *ifp;
- const char *usage = "bodyskl [ -hd headskl ] [ -tl tailskl ] [pnmfile]";
+    bufferP->length = 0;
+}
 
- ppm_init( &argc, argv );
 
- argn = 1;
- if (argn == argc)
-   pm_usage( usage );
-                          /* Read body skeleton file */
- if (read_skeleton (argv[argn],sizeof (body_skl)/sizeof (SKL_OBJ *),
-                    &body_nskl,body_skl) < 0)
-   pm_usage ( usage );
- ++argn;
 
- head_nskl = tail_nskl = 0;
+static void
+Buffer_add(Buffer * const bufferP,
+           char     const newChar) {
 
- while ( argn < argc && argv[argn][0] == '-' && argv[argn][1] != '\0')
- {
-   if ( pm_keymatch ( argv[argn], "-hd", 1) && argn+1 < argc )
-   {
-     argn++;           /* Read header skeleton */
-     if (read_skeleton (argv[argn],sizeof (head_skl)/sizeof (SKL_OBJ *),
-                        &head_nskl,head_skl) < 0)
-       pm_usage ( usage );
-   }
-   else if ( pm_keymatch ( argv[argn], "-tl", 1) && argn+1 < argc )
-   {
-     argn++;           /* Read tail skeleton */
-     if (read_skeleton (argv[argn],sizeof (tail_skl)/sizeof (SKL_OBJ *),
-                        &tail_nskl,tail_skl) < 0)
-       pm_usage ( usage );
-   }
-   else
-   {
-     pm_usage ( usage );
-   }
-   argn++;
- }
+    if (bufferP->length >= MAX_LINE_BUF)
+        Buffer_flush(bufferP);
 
- if ( argn != argc )
- {
-   ifp = pm_openr( argv[argn] );
-   ++argn;
- }
- else 
- {
-   ifp = stdin;
- }
+    assert(bufferP->length < MAX_LINE_BUF);
 
- if ( argn != argc )
-   pm_usage( usage );
+    bufferP->data[bufferP->length++] = newChar;
+}
 
- ppm_readppminit( ifp, &cols, &rows, &maxval, &format );
- pixelrow = ppm_allocrow( cols );
- dmaxval = (double)maxval;
 
- if (head_nskl > 0)    /* Write header */
-   write_txt (stdout,head_nskl,head_skl,cols,rows,0,0,0.0,0.0,0.0);
 
- for ( row = 0; row < rows; ++row )
- {
-   ppm_readppmrow( ifp, pixelrow, cols, maxval, format );
+static void
+Buffer_dropFinalNewline(Buffer * const bufferP) {
+/*----------------------------------------------------------------------------
+   If the last thing in the buffer is a newline, remove it.
+-----------------------------------------------------------------------------*/
+    if (bufferP->length >= 1 && bufferP->data[bufferP->length-1] == '\n') {
+            /* Drop finishing newline character */
+            --bufferP->length;
+    }
+}
 
-   for ( col = 0, xP = pixelrow; col < cols; ++col, ++xP )
-   {
-     red = PPM_GETR( *xP );
-     green = PPM_GETG( *xP );
-     blue = PPM_GETB( *xP );
-     write_txt (stdout,body_nskl,body_skl,cols,rows,col,row,
-                red/dmaxval,green/dmaxval,blue/dmaxval);
-   }
- }
 
- if (tail_nskl > 0)    /* Write trailer */
-   write_txt (stdout,tail_nskl,tail_skl,cols,rows,0,0,0.0,0.0,0.0);
 
- pm_close( ifp );
+static void
+addImpostorReplacementSeq(Buffer *     const bufferP,
+                          const char * const seqContents) {
+/*----------------------------------------------------------------------------
+  Add to buffer *bufferP something that looks like a replacement sequence but
+  doesn't have the proper contents (the stuff between the parentheses) to be
+  one.  For example,
 
- exit( 0 );
+  "#(fread x)"
+
+  seqContents[] is the contents, NUL-terminated.
+-----------------------------------------------------------------------------*/
+    const char * p;
+
+    Buffer_add(bufferP, escape);
+    Buffer_add(bufferP, '(');
+
+    for (p = &seqContents[0]; *p; ++p)
+        Buffer_add(bufferP, *p);
+
+    Buffer_add(bufferP, ')');
+}
+
+
+
+static void
+readSkeletonFile(const char *      const filename,
+                 unsigned int      const maxskl,
+                 const char **     const errorP,
+                 unsigned int *    const nSkeletonP,
+                 SkeletonObject ** const skeletonPList) {
+/*----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+    FILE * sklfileP;
+    SkeletonBuffer skeletonBuffer;
+        /* A buffer for accumulating skeleton objects */
+    Buffer buffer;
+        /* A buffer for accumulating binary (literal; unsubstituted) data, on
+           its way to becoming a binary skeleton object. 
+        */
+    bool eof;
+    const char * error;
+
+    SkeletonBuffer_init(&skeletonBuffer, maxskl, skeletonPList);
+
+    Buffer_init(&buffer, &skeletonBuffer);
+
+    sklfileP = pm_openr(filename);
+
+    for (eof = false, error = NULL; !eof && !error; ) {
+
+        int rc;
+
+        rc = getc(sklfileP);
+
+        if (rc == EOF)
+            eof = true;
+        else {
+            char const chr = rc;
+
+            if (chr != escape) {
+                /* Not a replacement sequence; just a literal character */
+                Buffer_add(&buffer, chr);
+            } else {
+                int rc;
+                rc = getc(sklfileP);
+                if (rc == EOF) {
+                    /* Not a replacement sequence, just an escape caharacter
+                       at the end of the file.
+                    */
+                    Buffer_add(&buffer, escape);
+                    eof = true;
+                } else {
+                    char const chr = rc;
+
+                    if (chr != '(') {
+                        /* Not a replacement sequence, just a lone escape
+                           character
+                        */
+                        Buffer_add(&buffer, escape);
+                        Buffer_add(&buffer, chr);
+                    } else {
+                        char objstr[MAX_OBJ_BUF];
+                        bool unclosed;
+                        readThroughCloseParen(sklfileP,
+                                              objstr, sizeof(objstr),
+                                              &unclosed);
+                        if (unclosed)
+                            pm_asprintf(&error, "Unclosed parentheses "
+                                        "in #() escape sequence");
+                        else {
+                            SkeletonObject * const skeletonP =
+                                newSkeletonFromReplString(objstr);
+
+                            if (skeletonP) {
+                                Buffer_flush(&buffer);
+                                SkeletonBuffer_add(&skeletonBuffer, skeletonP);
+                            } else
+                                addImpostorReplacementSeq(&buffer, objstr);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (!error) {
+        Buffer_dropFinalNewline(&buffer);
+        Buffer_flush(&buffer);
+    }
+    *errorP = error;
+    *nSkeletonP = skeletonBuffer.nSkeleton;
+
+    fclose(sklfileP);
+}
+
+
+
+static void
+convertIt(FILE *            const ifP,
+          FILE *            const ofP,
+          SkeletonObject ** const bodySkeletonPList,
+          unsigned int      const bodyNskl,
+          SkeletonObject ** const headSkeletonPList, 
+          unsigned int      const headNskl,
+          SkeletonObject ** const tailSkeletonPList,
+          unsigned int      const tailNskl) {
+
+    pixel * pixelrow;
+    pixval maxval;
+    double dmaxval;
+    int rows, cols;
+    int format;
+    unsigned int row;
+
+    ppm_readppminit(ifP, &cols, &rows, &maxval, &format);
+
+    pixelrow = ppm_allocrow(cols);
+
+    dmaxval = (double)maxval;
+
+    if (headNskl > 0)    /* Write header */
+        writeText(ofP, headNskl, headSkeletonPList, 
+                  cols, rows , 0, 0, 0.0, 0.0, 0.0);
+
+    for (row = 0; row < rows; ++row) {
+        unsigned int col;
+        ppm_readppmrow(ifP, pixelrow, cols, maxval, format);
+
+        for (col = 0; col < cols; ++col) {
+            pixel const thisPixel = pixelrow[col];
+
+            writeText(ofP, bodyNskl, bodySkeletonPList,
+                      cols, rows, col, row,
+                      PPM_GETR(thisPixel)/dmaxval,
+                      PPM_GETG(thisPixel)/dmaxval,
+                      PPM_GETB(thisPixel)/dmaxval);
+        }
+    }
+
+    if (tailNskl > 0)
+        /* Write trailer */
+        writeText(ofP, tailNskl, tailSkeletonPList, 
+                  cols, rows, 0, 0, 0.0, 0.0, 0.0);
+}
+
+
+
+int
+main(int           argc,
+     const char ** argv) {
+    
+    struct CmdlineInfo cmdline;
+
+    unsigned int headNskl, bodyNskl, tailNskl;
+    SkeletonObject * headSkeletonPList[MAX_SKL_HEAD_OBJ];
+    SkeletonObject * bodySkeletonPList[MAX_SKL_BODY_OBJ];
+    SkeletonObject * tailSkeletonPList[MAX_SKL_TAIL_OBJ];
+    FILE * ifP;
+    const char * error;
+
+    pm_proginit(&argc, argv);
+
+    parseCommandLine(argc, argv, &cmdline);
+
+    ifP = pm_openr(cmdline.inputFileName);
+
+    readSkeletonFile(cmdline.bodySklFileName, ARRAY_SIZE(bodySkeletonPList),
+                     &error, &bodyNskl, bodySkeletonPList);
+    if (error)
+        pm_error("Invalid body skeleton file '%s'.  %s",
+                 cmdline.bodySklFileName, error);
+
+    if (cmdline.hd) {
+        readSkeletonFile(cmdline.hd, ARRAY_SIZE(headSkeletonPList),
+                         &error, &headNskl, headSkeletonPList);
+        if (error)
+            pm_error("Invalid head skeleton file '%s'.  %s",
+                     cmdline.hd, error);
+    } else
+        headNskl = 0;
+
+    if (cmdline.tl) {
+        readSkeletonFile(cmdline.tl, ARRAY_SIZE(tailSkeletonPList),
+                         &error, &tailNskl, tailSkeletonPList);
+        if (error)
+            pm_error("Invalid tail skeleton file '%s'.  %s",
+                     cmdline.tl, error);
+    } else
+        tailNskl = 0;
+
+    if (cmdline.debug)
+        dumpAllSkeleton(bodySkeletonPList, bodyNskl,
+                        headSkeletonPList, headNskl,
+                        tailSkeletonPList, tailNskl);
+
+    convertIt(ifP, stdout,
+              bodySkeletonPList, bodyNskl,
+              headSkeletonPList, headNskl,
+              tailSkeletonPList, tailNskl);
+
+    pm_close(ifP);
+
+    return 0;
 }
