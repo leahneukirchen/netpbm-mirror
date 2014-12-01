@@ -332,7 +332,7 @@ newIcolDataObj(SkeletonObjectType const ctyp,
                unsigned int       const icolmax) {
 /*----------------------------------------------------------------------------
   Create integer color data object.
-  -----------------------------------------------------------------------------*/
+-----------------------------------------------------------------------------*/
     SkeletonObject * objectP;
 
     MALLOCVAR(objectP);
@@ -358,7 +358,7 @@ newFcolDataObj(SkeletonObjectType  const ctyp,
                double              const fcolmax) {
 /*----------------------------------------------------------------------------
   Create float color data object.
-  -----------------------------------------------------------------------------*/
+-----------------------------------------------------------------------------*/
     SkeletonObject * objectP;
 
     MALLOCVAR(objectP);
@@ -381,7 +381,7 @@ newIdataObj(SkeletonObjectType const ctyp,
             const char *       const format) {
 /*----------------------------------------------------------------------------
   Create universal data object.
-  -----------------------------------------------------------------------------*/
+-----------------------------------------------------------------------------*/
     SkeletonObject * objectP;
 
     MALLOCVAR(objectP);
