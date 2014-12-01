@@ -839,12 +839,14 @@ convertIt(FILE *            const ifP,
 
     dmaxval = (double)maxval;
 
-    if (headNskl > 0)    /* Write header */
-        writeText(ofP, headNskl, headSkeletonPList, 
-                  cols, rows , 0, 0, 0.0, 0.0, 0.0);
+    /* Write header */
+    writeText(ofP, headNskl, headSkeletonPList, 
+              cols, rows , 0, 0, 0.0, 0.0, 0.0);
 
+    /* Write raster */
     for (row = 0; row < rows; ++row) {
         unsigned int col;
+
         ppm_readppmrow(ifP, pixelrow, cols, maxval, format);
 
         for (col = 0; col < cols; ++col) {
@@ -858,10 +860,9 @@ convertIt(FILE *            const ifP,
         }
     }
 
-    if (tailNskl > 0)
-        /* Write trailer */
-        writeText(ofP, tailNskl, tailSkeletonPList, 
-                  cols, rows, 0, 0, 0.0, 0.0, 0.0);
+    /* Write trailer */
+    writeText(ofP, tailNskl, tailSkeletonPList, 
+              cols, rows, 0, 0, 0.0, 0.0, 0.0);
 }
 
 
@@ -923,3 +924,5 @@ main(int           argc,
 
     return 0;
 }
+
+
