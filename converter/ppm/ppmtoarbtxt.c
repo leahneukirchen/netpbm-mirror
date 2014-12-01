@@ -1,4 +1,4 @@
-/* ppmtoarbtxt.c - convert portable pixmap to cleartext
+/* ppmtoarbtxt.c - convert PPM to a custom text-based format
 **
 ** Renamed from ppmtotxt.c by Bryan Henderson in January 2003.
 **
