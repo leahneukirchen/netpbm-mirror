@@ -127,14 +127,12 @@ are see-through holes in the foreground image.
 
 <h2 id="examples">EXAMPLES</h2>
 
-<p>
 <pre>
 <kbd>
     $ pambackground test.ppm | pnminvert &gt;/tmp/bgmask.pgm
     $ pamcomp -alpha=bgmask.pgm test.ppm wallpaper.ppm &gt;output.ppm
 </kbd>
 </pre>
-<p>
 <pre>
 <kbd>
     $ pnmquant 5 test.pgm | pambackground test.ppm &gt;/tmp/bgmask.pam
