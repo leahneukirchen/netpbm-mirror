@@ -62,6 +62,7 @@ struct CmdlineInfo {
     unsigned int width;
     unsigned int randomseedSpec;
     unsigned int randomseed;
+    unsigned int verbose;
     unsigned int test;
     unsigned int radius;
     int          offset;
@@ -95,6 +96,8 @@ parseCommandLine(int argc, const char ** const argv,
             &widthSpec,                  0);
     OPTENT3(0,   "randomseed", OPT_UINT,    &cmdlineP->randomseed,
             &cmdlineP->randomseedSpec,   0);
+    OPTENT3(0,   "verbose",    OPT_FLAG,    NULL,
+            &cmdlineP->verbose,          0);
     OPTENT3(0,   "test",       OPT_FLAG,    NULL,
             &cmdlineP->test,       0);
     OPTENT3(0,   "radius",     OPT_UINT,    &cmdlineP->radius,
@@ -158,9 +161,6 @@ parseCommandLine(int argc, const char ** const argv,
 }
 
 
-/* Definitions for obtaining random numbers. */
-
-/*  Display parameters  */
 
 static double const arand       = 32767.0;  /* Random number parameters */
 static double const CdepthPower = 1.5;      /* Crater depth power factor */
@@ -170,7 +170,9 @@ static double const DepthBias2  = 0.5;      /* Square of depth bias */
 
 static double const
 cast(double const high) {
-
+/*----------------------------------------------------------------------------
+   A random number in the range [0, 'high'].
+-----------------------------------------------------------------------------*/
     return high * ((rand() & 0x7FFF) / arand);
 }
 
@@ -378,7 +380,12 @@ plopCrater(struct pam * const pamP,
            tuple **     const terrain,
            int          const cx,
            int          const cy,
-           double       const radius) {
+           double       const radius,
+           bool         const verbose) {
+
+    if (verbose && pm_have_float_format())
+        pm_message("Plopping crater at (%4d, %4d) with radius %g",
+                   cx, cy, radius);
 
     if (radius < 3)
         smallCrater (pamP, terrain, cx, cy, radius);
@@ -440,7 +447,7 @@ genCraters(struct CmdlineInfo const cmdline) {
         plopCrater(&pam, terrain,
                    pam.width/2 + cmdline.offset,
                    pam.height/2 + cmdline.offset,
-                   (double) cmdline.radius);
+                   (double) cmdline.radius, cmdline.verbose);
     else {
         unsigned int const ncraters = cmdline.number; /* num of craters */
         unsigned int l;
@@ -458,7 +465,7 @@ genCraters(struct CmdlineInfo const cmdline) {
             */
             double const radius = sqrt(1 / (M_PI * (1 - cast(0.9999))));
 
-            plopCrater(&pam, terrain, cx, cy, radius);
+            plopCrater(&pam, terrain, cx, cy, radius, cmdline.verbose);
 
             if (((l + 1) % 100000) == 0)
                 pm_message("%u craters generated of %u (%u%% done)",
