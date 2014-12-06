@@ -32,6 +32,7 @@ pamcrater - create cratered terrain by fractal forgery
 
 [<b>-randomseed=</b><i>integer</i>]
 
+[<b>-verbose</b>]
 
 <H2 id="description">DESCRIPTION</H2>
 
@@ -88,7 +89,7 @@ identical output.
 <DL COMPACT>
 <DT><B>-number</B> <I>n</I>
 
-<DD>Causes <b>pamcrater</b> to generate <I>n</I> craters.  If you do not
+<DD>This causes <b>pamcrater</b> to generate <I>n</I> craters.  If you do not
 specify <B>-number</B>, it generates 50000 craters.  Don't expect to see them
 all!  For every large crater there are many, many more tiny ones which tend
 simply to erode the landscape.  In general, the more craters you specify, the
@@ -98,12 +99,12 @@ containing five to ten million craters are stunning but take longer to create.
 
 <DT><B>-height</B> <I>height</I>
 
-<DD>Sets the height of the generated image to <I>height</I> pixels.
+<DD>This sets the height of the generated image to <I>height</I> pixels.
 The default height is 256 pixels.
 
 <DT><B>-width</B> <I>width</I>
 
-<DD>Sets the width of the generated image to <I>width</I> pixels.  The
+<DD>This sets the width of the generated image to <I>width</I> pixels.  The
 default width is 256 pixels.
 
 <dt><b>-randomseed=</b><i>integer</i>
@@ -118,6 +119,13 @@ process ID, which gives you fairly uncorrelated results in multiple
 invocations.
 
 <p>This option was new in Netpbm 10.61 (December 2012).
+
+<dt><b>-verbose</b>
+
+<dd>This causes <b>pamcrater</b> to issue additional messages about what it
+is doing.
+
+<p>This option was new in Neptbm 10.69 (December 2014).
 
 </DL>
 
