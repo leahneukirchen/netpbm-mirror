@@ -205,8 +205,15 @@ terrainModP(struct pam * const pamP,
             tuple **     const terrain,
             int          const x,
             int          const y) {
+/*----------------------------------------------------------------------------
+   A pointer to the sample in 'terrain' of an image described by *pamP that is
+   at Column 'x' of Row 'y', but modulus the image size.
 
-    return &terrain[mod(y, pamP->height)][mod(x, pamP->width)][0];
+   So e.g. if the image is 10 x 10 and 'x' and 'y' are both 12, our value
+   would be a pointer to the sample at Column 2 or Row 2.  If they are both
+   -1, we would point to Column 9, Row 9.
+-----------------------------------------------------------------------------*/
+    return &terrain[mod(x, pamP->height)][mod(y, pamP->width)][0];
 }
 
 
@@ -217,7 +224,14 @@ terrainMod(struct pam * const pamP,
            tuple **     const terrain,
            int          const x,
            int          const y) {
+/*----------------------------------------------------------------------------
+   The value of the sample in 'terrain' of an image described by *pamP that is
+   at Column 'x' of Row 'y', but modulus the image size.
 
+   So e.g. if the image is 10 x 10 and 'x' and 'y' are both 12, our value
+   would be the value of the sample at Column 2 or Row 2.  If they are both
+   -1, we would return Column 9, Row 9.
+-----------------------------------------------------------------------------*/
     return *terrainModP(pamP, terrain, x, y);
 }
 
@@ -228,13 +242,18 @@ smallCrater(struct pam * const pamP,
             tuple **     const terrain,
             int          const cx,
             int          const cy,
-            double       const g) {
+            double       const radius) {
 /*----------------------------------------------------------------------------
    Generate a crater with a special method for tiny craters.
+
+   Center the crater at Column 'cx', Row 'cy'; wrap as necessary to get them
+   on the canvas.  These might even be negative.
 -----------------------------------------------------------------------------*/
     int y;
     unsigned int amptot;
     unsigned int npatch;
+
+    assert(radius < 3);
 
     /* Set pixel to the average of its Moore neighborhood. */
 
@@ -247,12 +266,48 @@ smallCrater(struct pam * const pamP,
     }
     {
         unsigned int const axelev = amptot / npatch;
+            /* The mean elevation of the Moore neighborhood (9 pixels
+               centered on the crater location).
+            */
         
         /* Perturb the mean elevation by a small random factor. */
 
-        int const x = g >= 1 ? ((rand() >> 8) & 3) - 1 : 0;
+        int const x = radius >= 1 ? ((rand() >> 8) & 0x3) - 1 : 0;
+
+        assert(axelev > 0);
+
         *terrainModP(pamP, terrain, cx, cy) = axelev + x;
     }
+}
+
+
+
+static unsigned int
+meanElev(struct pam * const pamP,
+         tuple **     const terrain,
+         int          const cx,
+         int          const cy,
+         double       const radius) {
+/*----------------------------------------------------------------------------
+   The mean elevation in 'terrain', which is described by *pamP, within
+   'radius' pixels vertically and horizontally of (cx, cy).
+
+   We assume the area is a fraction the whole 'terrain'.
+-----------------------------------------------------------------------------*/
+    unsigned int amptot;
+    unsigned int npatch;
+    int y;
+
+    for (y = cy - radius, amptot = 0, npatch = 0; y <= cy + radius; ++y) {
+        int x;
+        for (x = cx - radius; x <= cx + radius; ++x) {
+            amptot += terrainMod(pamP, terrain, x, y);
+            ++npatch;
+        }
+    }
+    assert(npatch > 0);
+
+    return amptot / npatch;
 }
 
 
@@ -273,23 +328,9 @@ normalCrater(struct pam * const pamP,
     double const rollmin      = 0.9;
 
     int y;
-    unsigned int amptot, axelev;
-    unsigned int npatch;
 
-    /* Determine mean elevation around the impact area.
-       We assume the impact area is a fraction of the total crater size. */
-
-    for (y = cy - impactRadius, amptot = 0, npatch = 0;
-         y <= cy + impactRadius;
-         ++y) {
-        int x;
-        for (x = cx - impactRadius; x <= cx + impactRadius; ++x) {
-            amptot += terrainMod(pamP, terrain, x, y);
-            ++npatch;
-        }
-    }
-    assert(npatch > 0);
-    axelev = amptot / npatch;
+    unsigned int const axelev = meanElev(pamP, terrain, cx, cy, impactRadius);
+        /* The mean elevation of the impact area, before impact */
 
     for (y = cy - craterRadius; y <= cy + craterRadius; ++y) {
         int const dysq = SQR(cy - y);
@@ -348,37 +389,53 @@ plopCrater(struct pam * const pamP,
 
 
 static void
+initCanvas(unsigned int const width,
+           unsigned int const height,
+           struct pam * const pamP,
+           tuple ***    const terrainP) {
+/*----------------------------------------------------------------------------
+   Initialize the output image to a flat area of middle elevation.
+-----------------------------------------------------------------------------*/
+    tuple ** terrain;    /* elevation array */
+    unsigned int row;
+
+    pamP->size   = sizeof(*pamP);
+    pamP->len    = PAM_STRUCT_SIZE(tuple_type);
+    pamP->file   = stdout;
+    pamP->format = PAM_FORMAT;
+    pamP->height = height;
+    pamP->width  = width;
+    pamP->depth  = 1;
+    pamP->maxval = 65535;
+    pamP->bytes_per_sample = 2;
+    STRSCPY(pamP->tuple_type, "elevation");
+
+    terrain = pnm_allocpamarray(pamP);
+
+    for (row = 0; row < pamP->height; ++row) {
+        unsigned int col;
+        for (col = 0; col < pamP->width; ++col)
+            terrain[row][col][0] = pamP->maxval / 2;
+    }
+    *terrainP = terrain;
+}
+
+
+
+static void
 genCraters(struct CmdlineInfo const cmdline) {
 /*----------------------------------------------------------------------------
    Generate cratered terrain
 -----------------------------------------------------------------------------*/
     tuple ** terrain;    /* elevation array */
-    unsigned int row;
     struct pam pam;
 
     /* Allocate the elevation array and initialize it to mean surface
        elevation.
     */
 
-    pam.size   = sizeof(pam);
-    pam.len    = PAM_STRUCT_SIZE(tuple_type);
-    pam.file   = stdout;
-    pam.format = PAM_FORMAT;
-    pam.height = cmdline.height;
-    pam.width  = cmdline.width;
-    pam.depth  = 1;
-    pam.maxval = 65535;
-    pam.bytes_per_sample = 2;
-    STRSCPY(pam.tuple_type, "elevation");
+    initCanvas(cmdline.width, cmdline.height, &pam, &terrain);
 
-    terrain = pnm_allocpamarray(&pam);
-
-    for (row = 0; row < pam.height; ++row) {
-        unsigned int col;
-        for (col = 0; col < pam.width; ++col)
-            terrain[row][col][0] = pam.maxval / 2;
-    }
-    
     if (cmdline.test)
         plopCrater(&pam, terrain,
                    pam.width/2 + cmdline.offset,
