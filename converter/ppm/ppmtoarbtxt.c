@@ -14,11 +14,27 @@
 
 #include <assert.h>
 #include <string.h>
+#ifdef __GLIBC__
+  #include <printf.h>  /* Necessary for parse_printf_format() */
+#endif
 
 #include "mallocvar.h"
 #include "nstring.h"
 #include "shhopt.h"
 #include "ppm.h"
+
+/* HAVE_PARSE_PRINTF_FORMAT means the system library has
+   parse_printf_format(), declared in <printf.h>.  This essentially means
+   systems with GNU libc.
+*/
+
+#ifndef HAVE_PARSE_PRINTF_FORMAT
+  #ifdef PA_FLAG_MASK                   /* Defined in printf.h */
+    #define HAVE_PARSE_PRINTF_FORMAT 1
+  #else
+    #define HAVE_PARSE_PRINTF_FORMAT 0
+  #endif
+#endif
 
 
 
@@ -68,6 +84,7 @@ parseCommandLine(int argc, const char ** argv,
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+    free(option_def);
 
     if (!hdSpec)
         cmdlineP->hd = NULL;
@@ -107,6 +124,7 @@ typedef enum {
 } SkeletonObjectClass;
 
 /* Maximum size for a format string ("%d" etc.) */
+/* Add one to this size for the terminating '\0'. */
 #define MAXFORMAT 16
 
 typedef union {
@@ -117,17 +135,17 @@ typedef union {
     } binData;
     
     struct Icdat {
-        char icformat[MAXFORMAT];  /* Integer colors */
+        char icformat[MAXFORMAT+1];  /* Integer colors */
         unsigned int icolmin, icolmax;
     } icolData;
 
     struct Fcdat {
-        char fcformat[MAXFORMAT];  /* Float colors */
+        char fcformat[MAXFORMAT+1];  /* Float colors */
         double fcolmin, fcolmax;
     } fcolData;
     
     struct Idat {
-        char iformat[MAXFORMAT];   /* Integer data */
+        char iformat[MAXFORMAT+1];   /* Integer data */
     } iData;
 } SkeletonObjectData;
 
@@ -301,12 +319,289 @@ writeText(FILE *            const ofP,
 
 
 
+static SkeletonObjectClass
+objClass(SkeletonObjectType const objType) {
+
+    switch (objType) {
+    case IRED:
+    case IGREEN:
+    case IBLUE:
+    case ILUM:
+        return OBJTYP_ICOLOR;
+
+    case FRED:
+    case FGREEN:
+    case FBLUE:
+    case FLUM:
+        return OBJTYP_FCOLOR;
+
+    case WIDTH:
+    case HEIGHT:
+    case POSX:
+    case POSY:
+        return OBJTYP_INT;
+    case BDATA:
+        return OBJTYP_BDATA;
+    }
+    return 999; /* quiet compiler warning */
+}
+
+
+/*----------------------------------------------------------------------------
+  Format string validation
+
+  We validate format strings (such as "%f" "%03d") found in the skeleton files
+  for convenience, even though behavior is documented as undefined when the
+  user supplies a bogus format string.  Certain strings, most notably those
+  with "%n", are especially risky; they pose a security threat.
+
+  On systems with Glibc, we check with parse_printf_format().  On other
+  systems we conduct a cursory scan of the characters in the format string,
+  looking for characters that trigger non-numeric conversions, etc.
+
+  Documentation for parse_printf_format() is usually available in texinfo
+  format on GNU/Linux systems.  As of Dec. 2014 there is no official man page.
+  
+  Online documentation is available from:
+  https://
+  www.gnu.org/software/libc/manual/html_node/Parsing-a-Template-String.html
+-----------------------------------------------------------------------------*/
+
+#if HAVE_PARSE_PRINTF_FORMAT
+static void
+validateParsePrintfFLag(int                const printfConversion,
+                        SkeletonObjectType const ctyp,
+                        const char **      const errorP) {
+/*----------------------------------------------------------------------------
+  Assuming 'printfConversion' is the value reported by parse_printf_format()
+  as the type of argument a format string requires, 
+  return an explanation of how it is incompatible with 'ctyp' as
+  *errorP -- return null string if it is compatible.
+-----------------------------------------------------------------------------*/
+    /* We first check for "%n", then the type modifiers, and finally the
+       actual conversion type (char, int, float, double, string or pointer.)
+    */
+    switch (printfConversion & PA_FLAG_MASK) {
+    case PA_FLAG_PTR:  /* This means %n */
+        pm_asprintf(errorP, "Contains a %%n conversion specifier");
+        break;
+
+    case PA_FLAG_SHORT:
+    case PA_FLAG_LONG:
+    case PA_FLAG_LONG_LONG:
+        /* We omit PA_FLAG_LONG_DOUBLE because it is a synonym for
+           PA_FLAG_LONG_LONG: listing both causes compilation errors.
+        */
+        pm_asprintf(errorP, "Invalid type modifier");
+        break;
+
+    default:
+        switch (printfConversion & ~PA_FLAG_MASK) {
+        case PA_CHAR:
+            pm_message("Warning: char type conversion."); 
+        case PA_INT:
+            if(objClass(ctyp) == OBJTYP_ICOLOR ||
+               objClass(ctyp) == OBJTYP_INT )
+                *errorP = NULL;
+            else
+                pm_asprintf(errorP, "Conversion specifier requires a "
+                            "character or integer argument, but it is in "
+                            "a replacement sequence for a different type");
+            break;
+        case PA_DOUBLE:
+            if(objClass(ctyp) == OBJTYP_FCOLOR)
+                *errorP = NULL;
+            else
+                pm_asprintf(errorP, "Conversion specifier requires a "
+                            "double precision floating point argument, "
+                            "but it is in "
+                            "a replacement sequence for a different type");
+            break;
+        case PA_FLOAT:
+        case PA_STRING:    /* %s */
+        case PA_POINTER:   /* %p */
+        default:
+            pm_asprintf(errorP, "Conversion specifier requires an argument of "
+                        "a type that this program never provides for "
+                        "any replacement sequence");
+        }
+    }
+}
+#endif
+
+
+
+static void
+validateFormatWithPpf(const char *       const format,
+                      SkeletonObjectType const ctyp,
+                      const char **      const errorP) {
+/*----------------------------------------------------------------------------
+  Validate format string 'format' for use with a skeleton of type 'ctyp',
+  using the system parse_printf_format() function.
+
+  Return as *errorP an explanation of how it is invalid, or a null string
+  if it is valid.
+-----------------------------------------------------------------------------*/
+    /* We request parse_printf_format() to report the details of the first
+       8 conversions.  8 because the maximum length of format is 16 means it
+       can have up to 8 conversions: "%d%d%d%d%d%d%d%d".
+
+       Actually this is more than necessary: we are concerned with only the
+       first conversion and whether there it is the only one.
+    */
+
+    int printfConversion[MAXFORMAT/2] = {0, 0, 0, 0, 0, 0, 0, 0};
+
+    size_t const n =
+        parse_printf_format(format, MAXFORMAT/2, printfConversion);
+
+    switch (n) {
+    case 0:
+        pm_asprintf(errorP, "No transformation found");
+        break;
+
+    case 1:
+        validateParsePrintfFLag(printfConversion[0], ctyp, errorP);
+        break;
+
+    default:
+        pm_asprintf(errorP, "Has %lu extra transformation%s ",
+                    n-1, n-1 > 1 ? "s" : "");
+        break;
+    }
+}
+
+
+
+static void
+validateFormatOne(char               const typeSpecifier,
+                  bool               const isLastInString,
+                  SkeletonObjectType const ctyp,
+                  bool *             const validatedP,
+                  const char **      const errorP) {
+
+    switch (typeSpecifier) {
+        /* Valid character encountered.  Skip. */
+        /* ' ' (space) is listed here, but should never occur for
+           we use sscanf() to parse the fields.
+        */
+    case ' ': case '-': case '+': case '\'': case '#': case '.':
+    case '0': case '1': case '2': case '3': case '4': case '5':
+    case '6': case '7': case '8': case '9':
+        break;
+        
+    case 'c': case 'C':
+        pm_message("Warning: char type conversion: %%%c.", typeSpecifier);
+    case 'i': case 'd': case 'u': case 'o': case 'x': case 'X':
+        if (!isLastInString)
+            pm_asprintf(errorP, "Extra characters at end");
+        else if(objClass(ctyp) != OBJTYP_ICOLOR &&
+                objClass(ctyp) != OBJTYP_INT )
+            pm_asprintf(errorP, "Conversion type mismatch");
+        else
+            *validatedP = true;
+        break;
+
+    case 'f': case 'F': case 'g': case 'G': case 'a': case 'A':
+        if (!isLastInString)
+            pm_asprintf(errorP, "Extra characters at end");
+        else if(objClass(ctyp) != OBJTYP_FCOLOR)
+            pm_asprintf(errorP, "Conversion type mismatch");
+        else
+            *validatedP = true;
+        break;
+
+    case '\0':
+        pm_asprintf(errorP, "No conversion specified");
+        break;
+    case '%':
+        pm_asprintf(errorP, "No more than one %% is allowed");
+        break;
+    case '$':
+    case '*':
+        pm_asprintf(errorP, "%c is not allowed", typeSpecifier);
+        break;
+    case 'h': case 'l': case 'L': case 'q': case 'j': case 'Z': case 't':
+        pm_asprintf(errorP, "Modifier %c is not allowed in format",
+                    typeSpecifier);
+        break;
+    case 's': case 'S': case 'm': case 'p': case 'n':
+        pm_asprintf(errorP, "Invalid conversion type");
+        break;
+    default:
+        pm_asprintf(errorP, "Abnormal character");
+        break;
+    }
+}
+
+
+
+static void
+validateFormatGen(const char *       const format,
+                  SkeletonObjectType const ctyp,
+                  const char **      const errorP)  {
+/*----------------------------------------------------------------------------
+  Validate format string 'format' for use with a skeleton of type 'ctyp',
+  without using the system parse_printf_format() function.
+
+  The string must begin with "%" and end with the translation type character
+  ("%d", "%x", "%f", etc.)
+
+  We check only for invalid characters.  Invalid constructs, such as
+  "%00.00.00d" will pass this test.
+
+  Return as *errorP an explanation of how it is invalid, or a null string
+  if it is valid.
+-----------------------------------------------------------------------------*/
+    if (format[0] != '%')
+        pm_asprintf(errorP, "Does not start with %%");
+    else {
+        unsigned int i;
+        bool validated;
+
+        for (i = 1, validated = false, *errorP = NULL;
+             !validated && !*errorP;
+             ++i) {
+
+            validateFormatOne(format[1], format[i+1] == '\0', ctyp,
+                              &validated, errorP);
+        }
+    }
+}
+
+
+
+static void
+validateFormat(const char *       const format,
+               SkeletonObjectType const ctyp) {
+
+    const char * error;
+
+    if (strlen(format) > MAXFORMAT)
+        pm_asprintf(&error, "Too long");
+    else {
+#if HAVE_PARSE_PRINTF_FORMAT
+        if (true)
+            validateFormatWithPpf(format, ctyp, &error);
+        else  /* Silence compiler warning about unused function */
+            validateFormatGen(format, ctyp, &error);
+#else
+        validateFormatGen(format, ctyp, &error);
+#endif
+    }
+
+    if (error)
+        pm_error("Invalid format string '%s'.  %s", format, error);
+}              
+               
+
+
 static SkeletonObject *
 newBinDataObj(unsigned int const nDat, 
               const char * const bdat) {
 /*----------------------------------------------------------------------------
-  Createa binary data object.
-  -----------------------------------------------------------------------------*/
+  Create a binary data object.
+-----------------------------------------------------------------------------*/
     SkeletonObject * objectP;
 
     objectP = malloc(sizeof(*objectP) + nDat);
@@ -342,6 +637,7 @@ newIcolDataObj(SkeletonObjectType const ctyp,
                  "object");
 
     objectP->objType = ctyp;
+    validateFormat(format, ctyp);
     strcpy(objectP->odata.icolData.icformat, format);
     objectP->odata.icolData.icolmin = icolmin;
     objectP->odata.icolData.icolmax = icolmax;
@@ -367,6 +663,7 @@ newFcolDataObj(SkeletonObjectType  const ctyp,
         pm_error("Failed to allocate memory for a float color data object");
 
     objectP->objType = ctyp;
+    validateFormat(format, ctyp);
     strcpy(objectP->odata.fcolData.fcformat, format);
     objectP->odata.fcolData.fcolmin = fcolmin;
     objectP->odata.fcolData.fcolmax = fcolmax;
@@ -390,6 +687,7 @@ newIdataObj(SkeletonObjectType const ctyp,
         pm_error("Failed to allocate memory for a universal data object");
 
     objectP->objType = ctyp;
+    validateFormat(format, ctyp);
     strcpy(objectP->odata.iData.iformat, format);
 
     return objectP;
@@ -406,17 +704,17 @@ interpretObjType(const char * const typstr) {
 
     SkeletonObjectType objType;
 
-    /* Check for integer colors */
+    /* handle integer colors */
     if      (streq(typstr, "ired")  ) objType = IRED;
     else if (streq(typstr, "igreen")) objType = IGREEN;
     else if (streq(typstr, "iblue") ) objType = IBLUE;
     else if (streq(typstr, "ilum")  ) objType = ILUM;
-    /* Check for real colors */
+    /* handle real colors */
     else if (streq(typstr, "fred")  ) objType = FRED;
     else if (streq(typstr, "fgreen")) objType = FGREEN;
     else if (streq(typstr, "fblue") ) objType = FBLUE;
     else if (streq(typstr, "flum")  ) objType = FLUM;
-    /* Check for integer data */
+    /* handle integer data */
     else if (streq(typstr, "width") ) objType = WIDTH;
     else if (streq(typstr, "height")) objType = HEIGHT;
     else if (streq(typstr, "posx")  ) objType = POSX;
@@ -424,35 +722,6 @@ interpretObjType(const char * const typstr) {
     else                              objType = BDATA;
 
     return objType;
-}
-
-
-
-static SkeletonObjectClass
-objClass(SkeletonObjectType const objType) {
-
-    switch (objType) {
-    case IRED:
-    case IGREEN:
-    case IBLUE:
-    case ILUM:
-        return OBJTYP_ICOLOR;
-
-    case FRED:
-    case FGREEN:
-    case FBLUE:
-    case FLUM:
-        return OBJTYP_FCOLOR;
-
-    case WIDTH:
-    case HEIGHT:
-    case POSX:
-    case POSY:
-        return OBJTYP_INT;
-    case BDATA:
-        return OBJTYP_BDATA;
-    }
-    return 999; /* quiet compiler warning */
 }
 
 
@@ -507,8 +776,8 @@ newFcSkelFromReplString(const char *       const objstr,
 
 
 static SkeletonObject *
-newISkelFromReplString(const char *        const objstr,
-                        SkeletonObjectType const objType) {
+newISkelFromReplString(const char *       const objstr,
+                       SkeletonObjectType const objType) {
 
     SkeletonObject * retval;
     char formstr[MAX_OBJ_BUF];
@@ -526,6 +795,7 @@ newISkelFromReplString(const char *        const objstr,
 } 
 
 
+
 static SkeletonObject *
 newSkeletonFromReplString(const char * const objstr) {
 /*----------------------------------------------------------------------------
@@ -534,15 +804,32 @@ newSkeletonFromReplString(const char * const objstr) {
 
   Return NULL if it isn't a valid replacement string.
 -----------------------------------------------------------------------------*/
+    /* We use sscanf() to parse the contents of objstr, giving it a format
+       template with the largest number of fields possible plus one extra to
+       pick up and check for the existence of invalid trailing characters.  We
+       read and discard fields beyond the first, if any.  The appropriate
+       new**SkelFromReplString() function determines their contents with a
+       separate call to sscanf().
+    */
+
     SkeletonObject * retval;
     char typstr[MAX_OBJ_BUF];
     SkeletonObjectType objType;
+    int conversionCt;
+    char s1[MAX_OBJ_BUF];    /* Dry read. */
+    char s2[MAX_OBJ_BUF];    /* Extra tailing characters. */
+    float f1, f2;            /* Dry read. */ 
 
     typstr[0] = '\0';  /* initial value */
 
-    sscanf(objstr, "%s", typstr);
-
-    objType = interpretObjType(typstr);
+    conversionCt = sscanf(objstr, "%s%s%f%f%s", typstr, s1, &f1, &f2, s2);
+    switch (conversionCt) {
+    case 1: case 2: case 4:
+        objType = interpretObjType(typstr);
+      break;
+    default:
+        objType = BDATA;
+    }
 
     switch (objClass(objType)) {
     case OBJTYP_ICOLOR:
@@ -569,10 +856,11 @@ readThroughCloseParen(FILE * const ifP,
                       bool * const unclosedP) {
 /*----------------------------------------------------------------------------
    Read *ifP up through close parenthesis ( ')' ) into 'objstr', which
-   is of size 'objstrSize'.
+   is of size 'objstrSize'.  Make it a NUL-terminated string.
 
    Return *unclosedP true iff we run out of file or run out of objstr
-   before we see a close parenthesis.
+   before we see a close parenthesis.  In this case, return the rest of
+   the file, or as much as fits, in 'objstr', not NUL-terminated.
 -----------------------------------------------------------------------------*/
     unsigned int i;
     bool eof;
@@ -581,20 +869,21 @@ readThroughCloseParen(FILE * const ifP,
     for (i= 0, eof = false, gotEscSeq = false;
          i < objstrSize - 1 && !gotEscSeq && !eof;
          ++i) {
+
         int rc;
+
         rc = getc(ifP);
         if (rc == EOF)
             eof = true;
         else {
             char const chr = rc;
-            if (chr == ')')
+            if (chr == ')') {
                 gotEscSeq = true;
-            else
+                objstr[i] = '\0';
+	        } else
                 objstr[i] = chr;
         }
     }
-    objstr[i] = '\0';
-
     *unclosedP = !gotEscSeq;
 }
 
