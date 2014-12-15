@@ -13,9 +13,9 @@ ppmtoarbtxt - generate image in arbitrary text format from PPM image
 <H2 id="synopsis">SYNOPSIS</H2>
 
 <B>ppmtoarbtxt</B>
-<I>bodyskl</I>
-[<B>-hd</B> <I>headskl</I>]
-[<B>-tl</B> <I>tailskl</I>]
+<I>bodytmpl</I>
+[<B>-hd</B> <I>headtmpl</I>]
+[<B>-tl</B> <I>tailtmpl</I>]
 [<I>ppmfile</I>]
 
 <H2 id="description">DESCRIPTION</H2>
@@ -28,9 +28,46 @@ which an image is represented by text (like PNM plain format, but unlike
 PNM raw format).
 
 <b>ppmtoarbtxt</b> reads a PPM image as input.  For each pixel in the
-image, <b>ppmtoarbtxt</b> writes the contents of the skeleton file
-<I>bodyskl</I>, with certain substitutions based on the value of the
-pixel, to stdout.  The substitutions are as follows:
+image, <b>ppmtoarbtxt</b> writes the contents of the template file
+<I>bodytmpl</I>, with certain substitutions based on the value of the
+pixel, to Standard Output.
+
+<p>You may also supply a head template file, in which case <b>ppmtoarbtxt</b>
+generates text from the template file, based on the image dimensions, and
+includes it in the output before anything else.
+
+<p>Likewise, you may supply a tail template file to cause text to be placed
+at the end of the output.
+
+
+<h3 id="templatefiles">Template Files</h3>
+
+<p>The text that <b>ppmtoarbtxt</b> generates from a template file is the
+literal text of the template file, except with substitution specifier replaced
+with something else.  The program reecognizes a substitution specifier as
+text of the form <b>#(</b>...<b>)</b>.
+
+<P><b>ppmtoarbtxt</b> treats white space in the template files the same as any
+other characters, placing it in the output, with one exception: If the
+template file ends with a newline character, <b>ppmtoarbtxt</b> ignores it --
+it does not include it in the output.
+
+<p>Many substitution specifiers use format strings (another form of template)
+to specify the substitution.  You should make these format strings as minimal
+as possible, placing literal text outside the substitution specifier instead
+of inside the format string.  For example,
+
+<p>Wrong: <kbd>#(flum %%%2.2f 0 1) </kbd>
+
+<p>Right: <kbd>%#(flum %2.2f 0 1) </kbd>
+
+<p>The valid substitution specifiers are as follows.  Text that has the
+form of a substitution specifier but is not actually valid (e.g.
+<b>#(random junk)</b> usually just specifies its literal value, but if it is
+close enough to something valid, <b>ppmtoarbtxt</b> assumes you made a mistake
+and fails.
+
+<p>Useful in a body template, to do substitutions based on a particular pixel:
 
 <DL COMPACT>
 <DT><B>#(ired</B><I> format blackref whiteref</I><B>)</B>
@@ -44,8 +81,10 @@ interpolated in between.
 <p><i>format</i> is a printf-like format specifier like &quot;%d&quot;.
 <b>ppmtoarbtxt</b> uses as the entire format string to a <b>fprintf</b> POSIX
 library call whose only other argument is the red itensity as an integer data
-type.  <b>ppmtoarbtxt</b> does not verify that your format string makes sense;
-there are values you could specify that could even crash the program.
+type.  <b>ppmtoarbtxt</b> does not necessarily verify that your format string
+makes sense; there are values you could specify that could even crash the
+program.  To avoid unexpected behavior, keep format strings simple and
+hardcoded, and never include a per cent sign or newline.
 
 <p><B>#(ired)</B> is equivalent to <B>#(ired %d 0 255)</B>.
 
@@ -85,7 +124,29 @@ of an integer.
 <DD>Same as <B>#(fred...</B>, but representing the luminance value
 (0.299*red + 0.587*green + 0.114*blue) of the pixel.
 
+<DT><B>#(posx </B><i>format</i><b>)</b>
 
+<DD>Generates the horizontal position of the pixel, in pixels from the left
+edge of the image.
+
+<p>The second argument to the <b>fprintf</b> that uses <i>format</i> has an
+unsigned integer data type.
+
+<p><i>format</i> defaults to <b>%u</b>
+
+<DT><B>#(posy </B><i>format</i><b>)</b>
+
+<DD>Same as <b>#(width...</b>, but for the vertical position.
+
+</DL>
+
+<p>If you use any of the above substitution specifiers in a head or tail
+template, the result is undefined.
+
+<p>Useful in a head or tail template, to do substitutions based on whole-image
+attributes:
+
+<DL COMPACT>
 <DT><B>#(width </B><i>format</i><b>)</b>
 
 <DD>Generates the width in pixels of the image.
@@ -99,43 +160,22 @@ has an unsigned integer data type.
 
 <DD>Same as <b>#(width...</b>, but for the height of the image.
 
-<DT><B>#(posx </B><i>format</i><b>)</b>
-
-<DD>Generates the horizontal position of the pixel, in pixels from the left
-edge of the image.
-
-<p>The second argument to the <b>fprintf</b> that uses <i>format</i>
-has an unsigned integer data type.
-
-<p><i>format</i> defaults to <b>%u</b>
-
-<DT><B>#(posy </B><i>format</i><b>)</b>
-
-<DD>Same as <b>#(width...</b>, but for the vertical position.
-
-</DL>
-
-
-<P>If the skeleton file ends with a LF-character, <b>ppmtoarbtxt</b>
-ignores it -- it does not include it in the output.
+</dl>
 
 
 <H2 id="options">OPTIONS</H2>
 
 <DL COMPACT>
-<DT><B>-hd</B> <I>headskl</I>
+<DT><B>-hd</B> <I>headtmpl</I>
 
-<DD>This option causes <b>ppmtoarbtxt</b> to place the contents of
-the file named <I>headskl</I> at the beginning of the output, before
-the first pixel.  It does the same substitutions as for
-<I>bodyskl</I>, except substitutions based on a pixel value are
-undefined.
+<DD>This option specifies a head template (<i>headtmpl</i> is the name of the
+head template file); it causes <b>ppmtoarbtxt</b> to place the contents of the
+file named <I>headtmpl</I> at the beginning of the output
 
-<DT><B>-tl</B> <I>tailskl</I>
+<DT><B>-tl</B> <I>tailtmpl</I>
 
-<DD>This option causes <b>ppmtoarbtxt</b> to place the contents of
-the file named <i>tailskl</i> at the end of the output, after the
-last pixel.  It is analogous to <b>-hd</b>.
+<DD>This option specifies a tail template; it is analogous to <b>-hd</b>.
+
 </DL>
 
 <H2 id="examples">EXAMPLES</H2>
@@ -145,7 +185,7 @@ last pixel.  It is analogous to <b>-hd</b>.
 <P>Here we generate a PGM plain-format image with gray inversion
 (like <b>ppmtopgm | pnminvert</b>).
 
-<p>Contents of our head skeleton file:
+<p>Contents of our head template file:
 
 <pre>
 P2
@@ -209,11 +249,13 @@ It existed under the name <b>ppmtotxt</b> since 1995.
 Copyright (C) 1995 by Peter Kirchgessner
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
 <LI><A HREF="#synopsis">SYNOPSIS</A>
 <LI><A HREF="#description">DESCRIPTION</A>
+<ul>
+  <li><A HREF="#templatefiles">Template Files</A>
+  </ul>
 <LI><A HREF="#options">OPTIONS</A>
 <LI><A HREF="#examples">EXAMPLES</A>
 <LI><A HREF="#seealso">SEE ALSO</A>
