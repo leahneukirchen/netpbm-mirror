@@ -240,6 +240,18 @@ terrainMod(struct pam * const pamP,
 
 
 static void
+setElev(struct pam * const pamP,
+        tuple **     const terrain,
+        int          const cx,
+        int          const cy,
+        unsigned int const elevation) {
+
+    *terrainModP(pamP, terrain, cx, cy) = MIN(pamP->maxval, elevation);
+}
+
+
+
+static void
 smallCrater(struct pam * const pamP,
             tuple **     const terrain,
             int          const cx,
@@ -278,7 +290,7 @@ smallCrater(struct pam * const pamP,
 
         assert(axelev > 0);
 
-        *terrainModP(pamP, terrain, cx, cy) = axelev + x;
+        setElev(pamP, terrain, cx, cy, axelev + x);
     }
 }
 
@@ -324,7 +336,7 @@ normalCrater(struct pam * const pamP,
    Generate a regular (not tiny) crater.
 
    Generate an impact feature of the correct size and shape.
------------------------------------------------------------------------------*/
+----------------------------------------------------------------------------*/
     int    const impactRadius = (int) MAX(2, (radius / 3));
     int    const craterRadius = (int) radius;
     double const rollmin      = 0.9;
@@ -363,7 +375,7 @@ normalCrater(struct pam * const pamP,
                     (terrainMod(pamP, terrain, x, y) + cz) * roll;
                 av = MAX(1000, MIN(64000, av));
                 
-                *terrainModP(pamP, terrain, x, y) = av;
+                setElev(pamP, terrain, x, y, av);
             }
         }
     }
