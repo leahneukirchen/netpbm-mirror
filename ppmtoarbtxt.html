@@ -72,44 +72,53 @@ of an integer.
 
 <p><B>#(fred)</B> is equivalent to <B>#(fred %f 0.0 1.0)</B>.
 
-<DT><B>#(fgreen</B><I> format blackref whiteref</I><B>)</B>
+<DT><B>#(fgreen </B><I>format blackref whiteref</I><B>)</B>
 
 <DD>Same as <B>#(fred...</B>, but for green.
 
-<DT><B>#(fblue</B><I> format blackref whiteref</I><B>)</B>
+<DT><B>#(fblue </B><I>format blackref whiteref</I><B>)</B>
 
 <DD>Same as <B>#(fred...</B>, but for blue.
 
-<DT><B>#(flum</B><I> format blackref whiteref</I><B>)</B>
+<DT><B>#(flum </B><I>format blackref whiteref</I><B>)</B>
 
 <DD>Same as <B>#(fred...</B>, but representing the luminance value
 (0.299*red + 0.587*green + 0.114*blue) of the pixel.
 
 
-<DT><B>#(width)</B>
+<DT><B>#(width </B><i>format</i><b>)</b>
 
 <DD>Generates the width in pixels of the image.
 
-<DT><B>#(height)</B>
+<p>The second argument to the <b>fprintf</b> that uses <i>format</i>
+has an unsigned integer data type.
 
-<DD>Generates the height in pixels of the image.
+<p><i>format</i> defaults to <b>%u</b>
 
+<DT><B>#(height </B><i>format</i><b>)</b>
 
-<DT><B>#(posx)</B> 
+<DD>Same as <b>#(width...</b>, but for the height of the image.
+
+<DT><B>#(posx </B><i>format</i><b>)</b>
 
 <DD>Generates the horizontal position of the pixel, in pixels from the left
 edge of the image.
 
-<DT><B>#(posy)</B> 
+<p>The second argument to the <b>fprintf</b> that uses <i>format</i>
+has an unsigned integer data type.
 
-<DD>Generates the vertical position of the pixel, in pixels from the top
-edge of the image.
+<p><i>format</i> defaults to <b>%u</b>
+
+<DT><B>#(posy </B><i>format</i><b>)</b>
+
+<DD>Same as <b>#(width...</b>, but for the vertical position.
 
 </DL>
 
 
 <P>If the skeleton file ends with a LF-character, <b>ppmtoarbtxt</b>
 ignores it -- it does not include it in the output.
+
 
 <H2 id="options">OPTIONS</H2>
 
