@@ -26,6 +26,11 @@ not yet  BJH  Release 10.69.00
               anytopnm: convert all images in a multi-image GIF instead of
               just the first.
 
+              Fix bogus message from ppmXXX programs when the input is not
+              (per the magic number) a Netpbm image.  Introduced after
+              Netpbm 10.26 (January 2005) but before Netpbm 10.35 (August
+              2006).
+
               ppmtoarbtxt: Fix some undefined behavior when program limits
               are exceeded (i.e. buffer overruns).
 
