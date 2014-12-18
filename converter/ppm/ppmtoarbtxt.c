@@ -563,7 +563,7 @@ validateFormatGen(const char *       const format,
              !validated && !*errorP;
              ++i) {
 
-            validateFormatOne(format[1], format[i+1] == '\0', ctyp,
+            validateFormatOne(format[i], format[i+1] == '\0', ctyp,
                               &validated, errorP);
         }
     }
