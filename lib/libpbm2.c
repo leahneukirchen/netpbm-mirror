@@ -87,10 +87,13 @@ pbm_readpbminit(FILE * const ifP,
                 int *  const rowsP,
                 int *  const formatP) {
 
-    *formatP = pm_readmagicnumber(ifP);
+    int realFormat;
 
-    switch (PAM_FORMAT_TYPE(*formatP)) {
+    realFormat = pm_readmagicnumber(ifP);
+
+    switch (PAM_FORMAT_TYPE(realFormat)) {
     case PBM_TYPE:
+        *formatP = realFormat;
         pbm_readpbminitrest(ifP, colsP, rowsP);
         break;
 
@@ -110,7 +113,8 @@ pbm_readpbminit(FILE * const ifP,
                  "to PBM with 'pamtopnm'");
         break;
     default:
-        pm_error("bad magic number - not a Netpbm file");
+        pm_error("bad magic number 0x%x - not a PPM, PGM, PBM, or PAM file",
+                 realFormat);
     }
     validateComputableSize(*colsP, *rowsP);
 }
