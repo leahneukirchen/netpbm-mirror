@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pnmnorm User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmnorm</H1>
-Updated: 6 January 2006
+Updated: 19 December 2014
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -14,9 +14,9 @@ pnmnorm - normalize the contrast in a Netpbm image
 
 <B>pnmnorm</B>
 
-[<B>-bpercent=</B><I>percent</I> | <B>-bvalue=</B><I>N</I>]
+[<B>-bpercent=</B><I>percent</I> | <B>-bvalue=</B><I>N</I> | <b>-bsingle</b>]
 
-[<B>-wpercent=</B><I>percent</I> | <B>-wvalue=</B><I>N</I>]
+[<B>-wpercent=</B><I>percent</I> | <B>-wvalue=</B><I>N</I> | <b>-wsingle</b>]
 
 [<b>-midvalue=</b><i>N</i>]
 
@@ -90,7 +90,12 @@ change the picture in exchange.
 
 <P>By default, the darkest 2 percent of all pixels are mapped to
 black, and the brightest 1 percent are mapped to white.  You can
-override these percentages by using the <B>-bpercent</B> and
+override this behavior and specify either a different percentage, or
+specific brightness values to map to black and to white, or just have
+the single greatest brightness map to white and the least brightness map
+to black.
+
+<p>To specify a percentage, use the <B>-bpercent</B> and
 <B>-wpercent</B> options, or you can specify the exact pixel values to
 be mapped by using the <B>-bvalue</B> and <B>-wvalue</B> options.
 You can get appropriate numbers for the options from
@@ -150,6 +155,12 @@ up to 100 and intensity of 20 gets stretched down to zero, for a
 range expansion of 150% (from a range of 40 to a range of 100).  That
 much stretching means two adjacent pixels that used to differ in
 intensity by 4 units now differ by 10, and that might be unsightly.
+
+<p>To specify that the single least brightness in the image should stretch to
+black in the output, specify <b>-bsingle</b>.  To specify that the single
+greatest brightness in the image should stretch to white in the output,
+specify <b>-wsingle</b>.  <b>-bsingle</b> and <b>-wsingle</b> were new in
+Netpbm 10.69 (December 2014).
 
 <p>So that you can put a limit on the amount of expansion without
 having to examine the image first, there is the <b>-maxexpand</b>
