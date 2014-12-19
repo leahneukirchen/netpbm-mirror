@@ -51,6 +51,8 @@ struct cmdlineInfo {
     xelval wvalue;
     unsigned int wpercentSpec;
     float wpercent;
+    unsigned int bsingle;
+    unsigned int wsingle;
     float middle;
     unsigned int midvalueSpec;
     xelval midvalue;
@@ -101,6 +103,10 @@ parseCommandLine(int argc, const char ** argv,
             &cmdlineP->bvalue,     &cmdlineP->bvalueSpec, 0);
     OPTENT3(0,   "wvalue",        OPT_UINT,   
             &cmdlineP->wvalue,     &cmdlineP->wvalueSpec, 0);
+    OPTENT3(0,   "bsingle",       OPT_FLAG,   
+            NULL,                 &cmdlineP->bsingle, 0);
+    OPTENT3(0,   "wsingle",       OPT_FLAG,   
+            NULL,                 &cmdlineP->wsingle, 0);
     OPTENT3(0,   "middle",        OPT_FLOAT,   
             &cmdlineP->middle,     &middleSpec, 0);
     OPTENT3(0,   "midvalue",      OPT_UINT,   
@@ -149,6 +155,12 @@ parseCommandLine(int argc, const char ** argv,
     if (cmdlineP->bpercent > 100.0)
         pm_error("You specified a per centage > 100 for bpercent: %f",
                  cmdlineP->bpercent);
+
+    if (cmdlineP->bsingle && (cmdlineP->bpercentSpec || cmdlineP->bvalueSpec))
+        pm_error("You cannot specify both -bsingle and -bpercent or -bvalue");
+
+    if (cmdlineP->wsingle && (cmdlineP->wpercentSpec || cmdlineP->wvalueSpec))
+        pm_error("You cannot specify both -wsingle and -wpercent or -wvalue");
 
     if (middleSpec) {
         if (cmdlineP->middle < 0.0 || cmdlineP->middle > 1.0)
@@ -250,6 +262,50 @@ buildHistogram(FILE *   const ifp,
 
 
 
+static xelval
+minimumValue(const unsigned int * const hist,
+             unsigned int         const highest) {
+
+    xelval i;
+    bool foundOne;
+
+    for (i = 0, foundOne = false; !foundOne; ) {
+        if (hist[i] > 0)
+            foundOne = true;
+        else {
+            if (i == highest)
+                pm_error("INTERNAL ERROR in '%s'.  No pixels", __FUNCTION__);
+            else
+                ++i;
+        }
+    }
+    return i;
+}
+
+
+
+static xelval
+maximumValue(const unsigned int * const hist,
+             unsigned int         const highest) {
+
+    xelval i;
+    bool foundOne;
+
+    for (i = highest, foundOne = false; !foundOne; ) {
+        if (hist[i] > 0)
+            foundOne = true;
+        else {
+            if (i == 0)
+                pm_error("INTERNAL ERROR in '%s'.  No pixels", __FUNCTION__);
+            else
+                --i;
+        }
+    }
+    return i;
+}
+
+
+
 static void
 computeBottomPercentile(unsigned int         hist[], 
                         unsigned int   const highest,
@@ -259,7 +315,7 @@ computeBottomPercentile(unsigned int         hist[],
 /*----------------------------------------------------------------------------
    Compute the lowest index of hist[] such that the sum of the hist[]
    values with that index and lower represent at least 'percent' per cent of
-   'n' (which is assumed to be the sum of all the values in hist[],
+   'total' (which is assumed to be the sum of all the values in hist[],
    given to us to save us the time of computing it).
 -----------------------------------------------------------------------------*/
     unsigned int cutoff = total * percent / 100.0;
@@ -291,7 +347,7 @@ computeTopPercentile(unsigned int         hist[],
 /*----------------------------------------------------------------------------
    Compute the highest index of hist[] such that the sum of the hist[]
    values with that index and higher represent 'percent' per cent of
-   'n' (which is assumed to be the sum of all the values in hist[],
+   'total' (which is assumed to be the sum of all the values in hist[],
    given to us to save us the time of computing it).
 -----------------------------------------------------------------------------*/
     unsigned int cutoff = total * percent / 100.0;
@@ -450,7 +506,7 @@ resolvePercentParams(FILE *             const ifP,
 /*----------------------------------------------------------------------------
    Figure out the endpoint of the stretch (the value that is to be stretched
    to black and the one that is to be stretched to white) as requested
-   by the -bvalue, -bpercent, -wvalue, and -wpercent options.
+   by the -{b,w}{value,percent,single} options.
 
    These values may be invalid because of overlapping, and they may exceed
    the maximum allowed stretch; Caller must deal with that.
@@ -465,7 +521,9 @@ resolvePercentParams(FILE *             const ifP,
         buildHistogram(ifP, cols, rows, maxval, format, hist,
                        cmdline.brightMethod);
 
-        if (cmdline.bvalueSpec && !cmdline.bpercentSpec) {
+        if (cmdline.bsingle)
+            *bvalueP = minimumValue(hist, maxval);
+        else if (cmdline.bvalueSpec && !cmdline.bpercentSpec) {
             *bvalueP = cmdline.bvalue;
         } else {
             xelval percentBvalue;
@@ -477,7 +535,9 @@ resolvePercentParams(FILE *             const ifP,
                 *bvalueP = percentBvalue;
         }
 
-        if (cmdline.wvalueSpec && !cmdline.wpercentSpec) {
+        if (cmdline.wsingle)
+            *wvalueP = maximumValue(hist, maxval);
+        else if (cmdline.wvalueSpec && !cmdline.wpercentSpec) {
             *wvalueP = cmdline.wvalue;
         } else {
             xelval percentWvalue;

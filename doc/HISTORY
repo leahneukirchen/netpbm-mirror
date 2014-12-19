@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.69.00
 
+              pnmnorm: add -bsingle, -wsingle.
+
               ppmtoarbtxt: Do some validation of format strings.  Thanks
               Prophet of the Way <afu@wta.att.ne.jp>.
 
