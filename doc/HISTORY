@@ -4,6 +4,13 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+14.12.25 BJH  Release 10.68.03
+
+              Fix bogus message from ppmXXX programs when the input is not
+              (per the magic number) a Netpbm image.  Introduced after
+              Netpbm 10.26 (January 2005) but before Netpbm 10.35 (August
+              2006).
+
 14.11.23 BJH  Release 10.68.02
 
               pambackground: fix bug: segfault or incorrect results in most
