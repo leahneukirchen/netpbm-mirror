@@ -33,8 +33,8 @@ struct cmdline_info {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *inputFilespec;  /* Filespecs of input files */
-    char *transparent;          /* -transparent value.  Null if unspec */
+    const char * inputFilespec;  /* Filespecs of input files */
+    const char * transparent;    /* -transparent value.  Null if unspec */
     unsigned int depth;         /* -depth value.  0 if unspec */
     unsigned int maxdepth;      /* -maxdepth value.  0 if unspec */
     enum compressionType compression;
@@ -289,7 +289,7 @@ formatName(int const format) {
         
 
 static void
-findTransparentColor(char *         const colorSpec, 
+findTransparentColor(const char *   const colorSpec, 
                      pixval         const newMaxval,
                      bool           const directColor, 
                      pixval         const maxval, 

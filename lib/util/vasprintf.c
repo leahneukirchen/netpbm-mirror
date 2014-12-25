@@ -6,6 +6,8 @@
 #include <string.h>
 
 #include "pm_config.h"
+#include "pm_c_util.h"
+
 #include "nstring.h"
 
 
@@ -38,6 +40,12 @@ pm_vasprintf(const char ** const resultP,
 
        So instead, we just allocate 4K and truncate or waste as
        necessary.
+
+       Note that we don't recognize the floating point specifiers (%f, %e, %g)
+       - we render them as 'f', 'e', and 'g'.  It would be too much work to
+       make this code handle those, just for the few systems on which it runs.
+       Instead, we have pm_vasprintf_knows_float(), and any caller that cares
+       enough can avoid using these specifiers where they don't work.
     */
     size_t const allocSize = 4096;
     result = malloc(allocSize);
@@ -54,5 +62,16 @@ pm_vasprintf(const char ** const resultP,
 
         *resultP = result;
     }
+#endif
+}
+
+
+
+bool
+pm_vasprintf_knows_float(void) {
+#if HAVE_VASPRINTF
+    return true;
+#else
+    return false;
 #endif
 }

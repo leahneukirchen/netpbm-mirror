@@ -379,7 +379,7 @@ case "$2" in
         ;;
 
     gif )
-        giftopnm "$file"
+        giftopnm -image=all "$file"
         ;;
 
     tiff )

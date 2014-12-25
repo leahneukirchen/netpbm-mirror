@@ -145,11 +145,11 @@ entire installation when you don't want it anymore, and to keep
 multiple versions around.
 
 
-netpbm.pkgconfig
-----------------
+netpbm.pc
+---------
 
-You should create a file named 'netpbm.pkgconfig' out of the template file
-'pkgconfig_template' in the package directory, and install netpbm.pkgconfig in
+You should create a file named 'netpbm.pc' out of the template file
+'pkgconfig_template' in the package directory, and install netpbm.pc in
 your pkg-config directory (typically /usr/lib/pkgconfig).  Programs that want
 to find out where you installed some part of Netpbm can use a 'pkg-config
 netpbm ...' command to find out.  For example, a make file for a program that
@@ -175,4 +175,4 @@ Using netpbm-config, it's possible to have a viable Netpbm installation where
 netpbm.config is the only file in any default search path.
 
 The xxx-config concept (in general, not just Netpbm) has largely been replaced
-by the pkg-config concept (see netpbm.pkgconfig above).
+by the pkg-config concept (see netpbm.pc above).

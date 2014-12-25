@@ -1125,6 +1125,19 @@ validateComputableBoundingBox(float const scols,
 
 
 static void
+warnUserRescaling(float const scale) {
+
+    const char * const baseMsg = "warning, image too large for page";
+
+    if (pm_have_float_format())
+        pm_message("%s; rescaling to %g", baseMsg, scale);
+    else
+        pm_message("%s; rescaling", baseMsg);
+}
+
+
+
+static void
 computeImagePosition(int     const dpiX, 
                      int     const dpiY, 
                      int     const icols, 
@@ -1231,8 +1244,7 @@ computeImagePosition(int     const dpiX,
         *srowsP = scale * rows * pixfacY;
     
         if (scale != requestedScale)
-            pm_message("warning, image too large for page, rescaling to %g", 
-                       scale );
+            warnUserRescaling(scale);
 
         /* Before May 2001, Pnmtops enforced a 5% margin around the page.
            If the image would be too big to leave a 5% margin, Pnmtops would

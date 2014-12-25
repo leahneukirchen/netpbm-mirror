@@ -27,7 +27,7 @@ test_grn=${tmpdir}/testimg.grn
 test_blu=${tmpdir}/testimg.blu
 out_red=${tmpdir}/out.red
 out_grn=${tmpdir}/out.grn
-out_blu=${tmpdir}/out.blu
+#out_blu=${tmpdir}/out.blu
 
 pamtogif ${test_red} | giftopnm > ${out_red} &&
 pamtogif ${test_grn} | giftopnm > ${out_grn} &&
@@ -35,8 +35,7 @@ pamtogif ${test_blu} | giftopnm | \
   rgb3toppm ${out_red} ${out_grn} - | \
   cksum
 
-rm ${test_ppm} ${test_grn} ${test_blu} \
-   ${out_red} ${out_grn} ${out_blu}
+rm ${test_ppm} ${test_grn} ${test_blu} ${out_red} ${out_grn}
 
 
 # Test 2. Should produce 1571496937 33838

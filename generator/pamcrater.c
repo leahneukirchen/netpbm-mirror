@@ -62,8 +62,10 @@ struct CmdlineInfo {
     unsigned int width;
     unsigned int randomseedSpec;
     unsigned int randomseed;
+    unsigned int verbose;
     unsigned int test;
     unsigned int radius;
+    int          offset;
 };
 
 
@@ -81,7 +83,7 @@ parseCommandLine(int argc, const char ** const argv,
     optStruct3 opt;
     unsigned int option_def_index;
 
-    unsigned int numberSpec, heightSpec, widthSpec, radiusSpec;
+    unsigned int numberSpec, heightSpec, widthSpec, radiusSpec, offsetSpec;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
@@ -94,10 +96,14 @@ parseCommandLine(int argc, const char ** const argv,
             &widthSpec,                  0);
     OPTENT3(0,   "randomseed", OPT_UINT,    &cmdlineP->randomseed,
             &cmdlineP->randomseedSpec,   0);
+    OPTENT3(0,   "verbose",    OPT_FLAG,    NULL,
+            &cmdlineP->verbose,          0);
     OPTENT3(0,   "test",       OPT_FLAG,    NULL,
             &cmdlineP->test,       0);
     OPTENT3(0,   "radius",     OPT_UINT,    &cmdlineP->radius,
             &radiusSpec,           0);
+    OPTENT3(0,   "offset",     OPT_INT,     &cmdlineP->offset,
+            &offsetSpec,           0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -122,6 +128,9 @@ parseCommandLine(int argc, const char ** const argv,
     if (cmdlineP->width == 0)
         pm_error("-width must be positive");
 
+    if (!offsetSpec)
+        cmdlineP->offset=0;
+
     if (cmdlineP->test) {
         if (!radiusSpec)
             pm_error("With -test, you must specify -radius");
@@ -139,6 +148,9 @@ parseCommandLine(int argc, const char ** const argv,
         if (radiusSpec)
             pm_error("-radius is meaningful only with -test");
 
+        if (offsetSpec)
+            pm_error("-offset is meaningful only with -test");
+
         if (!numberSpec)
             cmdlineP->number = 50000;
 
@@ -149,9 +161,6 @@ parseCommandLine(int argc, const char ** const argv,
 }
 
 
-/* Definitions for obtaining random numbers. */
-
-/*  Display parameters  */
 
 static double const arand       = 32767.0;  /* Random number parameters */
 static double const CdepthPower = 1.5;      /* Crater depth power factor */
@@ -161,7 +170,9 @@ static double const DepthBias2  = 0.5;      /* Square of depth bias */
 
 static double const
 cast(double const high) {
-
+/*----------------------------------------------------------------------------
+   A random number in the range [0, 'high'].
+-----------------------------------------------------------------------------*/
     return high * ((rand() & 0x7FFF) / arand);
 }
 
@@ -196,8 +207,15 @@ terrainModP(struct pam * const pamP,
             tuple **     const terrain,
             int          const x,
             int          const y) {
+/*----------------------------------------------------------------------------
+   A pointer to the sample in 'terrain' of an image described by *pamP that is
+   at Column 'x' of Row 'y', but modulus the image size.
 
-    return &terrain[mod(y, pamP->height)][mod(x, pamP->width)][0];
+   So e.g. if the image is 10 x 10 and 'x' and 'y' are both 12, our value
+   would be a pointer to the sample at Column 2 or Row 2.  If they are both
+   -1, we would point to Column 9, Row 9.
+-----------------------------------------------------------------------------*/
+    return &terrain[mod(x, pamP->height)][mod(y, pamP->width)][0];
 }
 
 
@@ -208,8 +226,27 @@ terrainMod(struct pam * const pamP,
            tuple **     const terrain,
            int          const x,
            int          const y) {
+/*----------------------------------------------------------------------------
+   The value of the sample in 'terrain' of an image described by *pamP that is
+   at Column 'x' of Row 'y', but modulus the image size.
 
+   So e.g. if the image is 10 x 10 and 'x' and 'y' are both 12, our value
+   would be the value of the sample at Column 2 or Row 2.  If they are both
+   -1, we would return Column 9, Row 9.
+-----------------------------------------------------------------------------*/
     return *terrainModP(pamP, terrain, x, y);
+}
+
+
+
+static void
+setElev(struct pam * const pamP,
+        tuple **     const terrain,
+        int          const cx,
+        int          const cy,
+        unsigned int const elevation) {
+
+    *terrainModP(pamP, terrain, cx, cy) = MIN(pamP->maxval, elevation);
 }
 
 
@@ -219,13 +256,18 @@ smallCrater(struct pam * const pamP,
             tuple **     const terrain,
             int          const cx,
             int          const cy,
-            double       const g) {
+            double       const radius) {
 /*----------------------------------------------------------------------------
    Generate a crater with a special method for tiny craters.
+
+   Center the crater at Column 'cx', Row 'cy'; wrap as necessary to get them
+   on the canvas.  These might even be negative.
 -----------------------------------------------------------------------------*/
     int y;
     unsigned int amptot;
     unsigned int npatch;
+
+    assert(radius < 3);
 
     /* Set pixel to the average of its Moore neighborhood. */
 
@@ -238,12 +280,48 @@ smallCrater(struct pam * const pamP,
     }
     {
         unsigned int const axelev = amptot / npatch;
+            /* The mean elevation of the Moore neighborhood (9 pixels
+               centered on the crater location).
+            */
         
         /* Perturb the mean elevation by a small random factor. */
 
-        int const x = g >= 1 ? ((rand() >> 8) & 3) - 1 : 0;
-        *terrainModP(pamP, terrain, cx, cy) = axelev + x;
+        int const x = radius >= 1 ? ((rand() >> 8) & 0x3) - 1 : 0;
+
+        assert(axelev > 0);
+
+        setElev(pamP, terrain, cx, cy, axelev + x);
     }
+}
+
+
+
+static unsigned int
+meanElev(struct pam * const pamP,
+         tuple **     const terrain,
+         int          const cx,
+         int          const cy,
+         double       const radius) {
+/*----------------------------------------------------------------------------
+   The mean elevation in 'terrain', which is described by *pamP, within
+   'radius' pixels vertically and horizontally of (cx, cy).
+
+   We assume the area is a fraction the whole 'terrain'.
+-----------------------------------------------------------------------------*/
+    unsigned int amptot;
+    unsigned int npatch;
+    int y;
+
+    for (y = cy - radius, amptot = 0, npatch = 0; y <= cy + radius; ++y) {
+        int x;
+        for (x = cx - radius; x <= cx + radius; ++x) {
+            amptot += terrainMod(pamP, terrain, x, y);
+            ++npatch;
+        }
+    }
+    assert(npatch > 0);
+
+    return amptot / npatch;
 }
 
 
@@ -258,39 +336,24 @@ normalCrater(struct pam * const pamP,
    Generate a regular (not tiny) crater.
 
    Generate an impact feature of the correct size and shape.
------------------------------------------------------------------------------*/
+----------------------------------------------------------------------------*/
     int    const impactRadius = (int) MAX(2, (radius / 3));
     int    const craterRadius = (int) radius;
     double const rollmin      = 0.9;
 
     int y;
-    unsigned int amptot, axelev;
-    unsigned int npatch;
 
-    /* Determine mean elevation around the impact area.
-       We assume the impact area is a fraction of the total crater size. */
-
-    for (y = cy - impactRadius, amptot = 0, npatch = 0;
-         y <= cy + impactRadius;
-         ++y) {
-        int x;
-        for (x = cx - impactRadius; x <= cx + impactRadius; ++x) {
-            amptot += terrainMod(pamP, terrain, x, y);
-            ++npatch;
-        }
-    }
-    assert(npatch > 0);
-    axelev = amptot / npatch;
+    unsigned int const axelev = meanElev(pamP, terrain, cx, cy, impactRadius);
+        /* The mean elevation of the impact area, before impact */
 
     for (y = cy - craterRadius; y <= cy + craterRadius; ++y) {
-        int const dysq = (cy - y) * (cy - y);
+        int const dysq = SQR(cy - y);
 
         int x;
 
         for (x = cx - craterRadius; x <= cx + craterRadius; ++x) {
-            int  const dxsq = (cx - x) * (cx - x);
-            double const cd = (dxsq + dysq) /
-                              (double) (craterRadius * craterRadius);
+            int  const dxsq = SQR(cx - x);
+            double const cd = (dxsq + dysq) / (double) SQR(craterRadius);
             double const cd2 = cd * 2.25;
             double const tcz = sqrt(DepthBias2) - sqrt(fabs(1 - cd2));
             double cz;
@@ -312,7 +375,7 @@ normalCrater(struct pam * const pamP,
                     (terrainMod(pamP, terrain, x, y) + cz) * roll;
                 av = MAX(1000, MIN(64000, av));
                 
-                *terrainModP(pamP, terrain, x, y) = av;
+                setElev(pamP, terrain, x, y, av);
             }
         }
     }
@@ -329,7 +392,12 @@ plopCrater(struct pam * const pamP,
            tuple **     const terrain,
            int          const cx,
            int          const cy,
-           double       const radius) {
+           double       const radius,
+           bool         const verbose) {
+
+    if (verbose && pm_have_float_format())
+        pm_message("Plopping crater at (%4d, %4d) with radius %g",
+                   cx, cy, radius);
 
     if (radius < 3)
         smallCrater (pamP, terrain, cx, cy, radius);
@@ -340,40 +408,58 @@ plopCrater(struct pam * const pamP,
 
 
 static void
+initCanvas(unsigned int const width,
+           unsigned int const height,
+           struct pam * const pamP,
+           tuple ***    const terrainP) {
+/*----------------------------------------------------------------------------
+   Initialize the output image to a flat area of middle elevation.
+-----------------------------------------------------------------------------*/
+    tuple ** terrain;    /* elevation array */
+    unsigned int row;
+
+    pamP->size   = sizeof(*pamP);
+    pamP->len    = PAM_STRUCT_SIZE(tuple_type);
+    pamP->file   = stdout;
+    pamP->format = PAM_FORMAT;
+    pamP->height = height;
+    pamP->width  = width;
+    pamP->depth  = 1;
+    pamP->maxval = 65535;
+    pamP->bytes_per_sample = 2;
+    STRSCPY(pamP->tuple_type, "elevation");
+
+    terrain = pnm_allocpamarray(pamP);
+
+    for (row = 0; row < pamP->height; ++row) {
+        unsigned int col;
+        for (col = 0; col < pamP->width; ++col)
+            terrain[row][col][0] = pamP->maxval / 2;
+    }
+    *terrainP = terrain;
+}
+
+
+
+static void
 genCraters(struct CmdlineInfo const cmdline) {
 /*----------------------------------------------------------------------------
    Generate cratered terrain
 -----------------------------------------------------------------------------*/
     tuple ** terrain;    /* elevation array */
-    unsigned int row;
     struct pam pam;
 
     /* Allocate the elevation array and initialize it to mean surface
        elevation.
     */
 
-    pam.size   = sizeof(pam);
-    pam.len    = PAM_STRUCT_SIZE(tuple_type);
-    pam.file   = stdout;
-    pam.format = PAM_FORMAT;
-    pam.height = cmdline.height;
-    pam.width  = cmdline.width;
-    pam.depth  = 1;
-    pam.maxval = 65535;
-    pam.bytes_per_sample = 2;
-    STRSCPY(pam.tuple_type, "elevation");
+    initCanvas(cmdline.width, cmdline.height, &pam, &terrain);
 
-    terrain = pnm_allocpamarray(&pam);
-
-    for (row = 0; row < pam.height; ++row) {
-        unsigned int col;
-        for (col = 0; col < pam.width; ++col)
-            terrain[row][col][0] = pam.maxval / 2;
-    }
-    
     if (cmdline.test)
         plopCrater(&pam, terrain,
-                   pam.width/2, pam.height/2, (double) cmdline.radius);
+                   pam.width/2 + cmdline.offset,
+                   pam.height/2 + cmdline.offset,
+                   (double) cmdline.radius, cmdline.verbose);
     else {
         unsigned int const ncraters = cmdline.number; /* num of craters */
         unsigned int l;
@@ -391,7 +477,7 @@ genCraters(struct CmdlineInfo const cmdline) {
             */
             double const radius = sqrt(1 / (M_PI * (1 - cast(0.9999))));
 
-            plopCrater(&pam, terrain, cx, cy, radius);
+            plopCrater(&pam, terrain, cx, cy, radius, cmdline.verbose);
 
             if (((l + 1) % 100000) == 0)
                 pm_message("%u craters generated of %u (%u%% done)",

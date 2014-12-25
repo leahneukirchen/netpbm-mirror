@@ -4,20 +4,44 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-14.12.25 BJH  Release 10.68.03
+14.12.26 BJH  Release 10.69.00
+
+              pnmnorm: add -bsingle, -wsingle.
+
+              ppmtoarbtxt: Do some validation of format strings.  Thanks
+              Prophet of the Way <afu@wta.att.ne.jp>.
+
+              pamcrater: Add -verbose.
+
+              ppmtoarbtxt: Fail if a #() escape sequence runs off end of
+              file or is too long to process; before, the program would
+              treat the text from # to EOF or where the buffer filled up
+              as literal text, even ignoring any #() within.
+
+              NetBSD: show actual numbers in messages instead of "f" or
+              no information, by using NetBSD's vasprintf.
+
+              Make %g in messages display the actual number instead of "g" in
+              messages where platform doesn't have vasprintf.  (But scores of
+              %f are still left).
+
+              anytopnm: convert all images in a multi-image GIF instead of
+              just the first.
+              
+              Improve "bad magic number" message from pbmXXX, and pgmXXX, and
+              pnmXXX programs.
 
               Fix bogus message from ppmXXX programs when the input is not
               (per the magic number) a Netpbm image.  Introduced after
               Netpbm 10.26 (January 2005) but before Netpbm 10.35 (August
               2006).
 
-14.11.23 BJH  Release 10.68.02
+              ppmtoarbtxt: Fix some undefined behavior when program limits
+              are exceeded (i.e. buffer overruns).
 
               pambackground: fix bug: segfault or incorrect results in most
               cases.  Thanks Ludolf Holzheid (ludolf.holzheid@gmx.de).
               Introduced in Netpbm 10.37 (December 2006).
-
-14.09.28 BJH  Release 10.68.01
 
               Windows build: fix universal build failure with "No rule to make
               ...icon.netpbm.oLINKERISCOMPILER...".  Broken in Netpbm 10.67
@@ -48,7 +72,7 @@ CHANGE HISTORY
 
               pcdovtoppm: Fix crash due to invalid operator == on some
               systems.  Always broken (pcdovtoppm was new sometime between
-              Netpbm 9.25 (March 2002) and Netpbm 10.11 (Februrary 2010)).
+              Netpbm 9.25 (March 2002) and Netpbm 10.11 (October 2002)).
 
               Build: change _XOPEN_SOURCE from 600 back to 500 in 7 files.  It
               was changed from 500 to 600 in Subversion revision 1731 in

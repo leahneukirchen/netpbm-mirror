@@ -30,15 +30,15 @@ To install Netpbm as a Debian package:
 
   3) $ dpkg --install netpbm-sfXXXX.deb
 
-     (netpbm-sfXXXX.deb is the file created by 'makedeb', in the current
+     (netpbm-sfXXXX.deb is the file created by 'make deb', in the current
      directory).
 
 
 PREREQUSISITES
 --------------
 
-The following information was taken from the Wheezy version of Debian, in
-January 2014.
+The following information was taken from the Wheezy version (Version 7) of
+Debian, in January 2014.
 
 You don't actually need the current version of any of these.  For example,
 while we list package libjpeg8-dev, the package libjpeg62-dev works fine.

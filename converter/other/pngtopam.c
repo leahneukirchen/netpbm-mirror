@@ -1243,10 +1243,16 @@ warnNonsquarePixels(struct pngx * const pngxP,
             (float)pngx_xPixelsPerMeter(pngxP) / pngx_yPixelsPerMeter(pngxP);
 
         if (r != 1.0) {
-            pm_message ("warning - non-square pixels; "
-                        "to fix do a 'pamscale -%cscale %g'",
-                        r < 1.0 ? 'x' : 'y',
-                        r < 1.0 ? 1.0 / r : r );
+            const char * const baseMsg = "warning - non-square pixels";
+
+            if (pm_have_float_format())
+                pm_message("%s; to fix do a 'pamscale -%cscale %g'",
+                           baseMsg,
+                           r < 1.0 ? 'x' : 'y',
+                           r < 1.0 ? 1.0 / r : r);
+            else
+                pm_message("%s", baseMsg);
+
             *errorLevelP = PNMTOPNG_WARNING_LEVEL;
         }
     }

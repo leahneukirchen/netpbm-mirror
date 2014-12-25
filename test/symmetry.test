@@ -1,10 +1,11 @@
 #! /bin/bash
-# This script tests: pgmramp pamgauss pgmkernel pbmpscale
+# This script tests: pgmramp pamgauss pgmkernel pbmmake pbmpscale
 # Also requires: pamflip
 
   alias pgmramp="${PBM_TESTPREFIX}pgmramp"
   alias pamgauss="${PBM_TESTPREFIX}pamgauss"
   alias pgmkernel="${PBM_TESTPREFIX}pgmkernel"
+  alias pbmmake="${PBM_TESTPREFIX}pbmmake"
   alias pbmpscale="${PBM_TESTPREFIX}pbmpscale"
   alias pamflip="${PBM_BINPREFIX}pamflip"
   shopt -s expand_aliases

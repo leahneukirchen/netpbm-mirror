@@ -15,6 +15,7 @@
 #include <sys/time.h>
 
 #include "pm_c_util.h"
+#include "mallocvar.h"
 #include "shhopt.h"
 #include "ppm.h"
 
@@ -38,13 +39,15 @@ struct CmdlineInfo {
 
 static void
 parseCommandLine(int argc, const char ** argv,
-                 struct CmdlineInfo * const cmdlineP)
-{
-    optEntry *option_def = malloc(100*sizeof(optEntry));
-    /* Instructions to OptParseOptions2 on how to parse our options.    */
+                 struct CmdlineInfo * const cmdlineP) {
+
+    optEntry * option_def;
+        /* Instructions to OptParseOptions2 on how to parse our options.    */
     optStruct3 opt;
 
     unsigned int option_def_index;
+
+    MALLOCARRAY(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENTRY */
     OPTENT3(0, "width",       OPT_UINT,   &cmdlineP->width,   NULL, 0);

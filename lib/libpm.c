@@ -278,6 +278,19 @@ pm_error(const char format[], ...) {
 
 
 
+bool
+pm_have_float_format(void) {
+/*----------------------------------------------------------------------------
+  Return true iff %f, %e, and %g work in format strings for pm_message, etc.
+
+  Where they don't "work," that means the specifier just appears itself in
+  the formatted strings, e.g. "the number is g".
+-----------------------------------------------------------------------------*/
+    return pm_vasprintf_knows_float();
+}
+
+
+
 static void *
 mallocz(size_t const size) {
 

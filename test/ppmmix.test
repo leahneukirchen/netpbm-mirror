@@ -19,12 +19,9 @@ tmpdir=${tmpdir:-/tmp}
 a1_pgm=${tmpdir}/a1.pgm
 a2_pgm=${tmpdir}/a2.pgm
 
-pbmmake -g 8 8 | \
- pgmtopgm > ${a1_pgm} &&
-pbmmake -g 2 2 | pamenlarge 4 | \
- pgmtopgm > ${a2_pgm} &&
-ppmmix 0.75 ${a1_pgm} ${a2_pgm} -plain | \
- ppmtopgm | pamdepth 3 -plain &&
+pbmmake -g 8 8 | pgmtopgm > ${a1_pgm} &&
+pbmmake -g 2 2 | pamenlarge 4 | pgmtopgm > ${a2_pgm} &&
+ppmmix 0.75 ${a1_pgm} ${a2_pgm} | ppmtopgm | pamdepth 3 -plain &&
 rm ${a1_pgm} ${a2_pgm}
 
 # Mix image with itself.

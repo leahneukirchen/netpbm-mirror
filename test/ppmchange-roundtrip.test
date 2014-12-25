@@ -13,5 +13,5 @@ pnminvert | ppmtopgm | \
 pgmtopbm -th -val=0.5 | cksum
 
 ppmchange  black white white black testgrid.pbm | \
-ppmchange  black white white black -plain  | \
+ppmchange  black white white black | \
 ppmtopgm | pgmtopbm -th -val=0.5 | cksum

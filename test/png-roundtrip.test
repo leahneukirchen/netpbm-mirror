@@ -6,8 +6,6 @@
   alias pnmtopng="${PBM_TESTPREFIX}pnmtopng"
   shopt -s expand_aliases
 
-## Fails because .ok not set yet.
-
 # Test 1.  Should print 1926073387 101484 18 times
 for flags in "" -interlace \
   -gamma=.45 \

@@ -426,7 +426,7 @@ ppmHist(FILE *       const ifP,
     clipHistogramAll(hist, histWidth, hmax);
 
     vscale = (double) histHeight / hmax;
-    if (verbose)
+    if (verbose && pm_have_float_format())
         pm_message("Done: height = %u, vertical scale factor = %g", 
                    hmax, vscale);
 
@@ -477,7 +477,7 @@ reportScale(unsigned int const histWidth,
 
     double const hscale = (float)(histWidth-1) / (range-1);
 
-    if (hscale - 1.0 < epsilon && verbose)
+    if (hscale - 1.0 < epsilon && verbose && pm_have_float_format())
         pm_message("Horizontal scale factor: %g", hscale);
 }
 

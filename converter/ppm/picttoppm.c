@@ -1200,7 +1200,7 @@ doDiffSize(struct Rect       const clipsrc,
 
     unsigned int const dstadd = dstwid - xsize;
 
-    FILE * pnmscalePipeP;
+    FILE * pamscalePipeP;
     const char * command;
     FILE * scaled;
     int cols, rows, format;
@@ -1221,19 +1221,19 @@ doDiffSize(struct Rect       const clipsrc,
 
     pm_close(tempFileP);
 
-    pm_asprintf(&command, "pnmscale -xsize %d -ysize %d > %s",
+    pm_asprintf(&command, "pamscale -xsize %d -ysize %d > %s",
                 rectwidth(&clipdst), rectheight(&clipdst), tempFilename);
 
     pm_message("running command '%s'", command);
 
-    pnmscalePipeP = popen(command, "w");
-    if (pnmscalePipeP == NULL)
+    pamscalePipeP = popen(command, "w");
+    if (pamscalePipeP == NULL)
         pm_error("cannot execute command '%s'  popen() errno = %s (%d)",
                  command, strerror(errno), errno);
 
     pm_strfree(command);
 
-    fprintf(pnmscalePipeP, "P6\n%d %d\n%d\n",
+    fprintf(pamscalePipeP, "P6\n%d %d\n%d\n",
             rectwidth(&clipsrc), rectheight(&clipsrc), PPM_MAXMAXVAL);
 
     switch (pixSize) {
@@ -1245,9 +1245,9 @@ doDiffSize(struct Rect       const clipsrc,
             for (colNumber = 0; colNumber < xsize; ++colNumber) {
                 unsigned int const colorIndex = row[colNumber];
                 struct RGBColor * const ct = &color_map[colorIndex];
-                fputc(redepth(ct->red, 65535L), pnmscalePipeP);
-                fputc(redepth(ct->grn, 65535L), pnmscalePipeP);
-                fputc(redepth(ct->blu, 65535L), pnmscalePipeP);
+                fputc(redepth(ct->red, 65535L), pamscalePipeP);
+                fputc(redepth(ct->grn, 65535L), pamscalePipeP);
+                fputc(redepth(ct->blu, 65535L), pamscalePipeP);
             }
         }
     }
@@ -1259,9 +1259,9 @@ doDiffSize(struct Rect       const clipsrc,
             unsigned int colNumber;
             for (colNumber = 0; colNumber < xsize; ++colNumber) {
                 struct RGBColor const color = decode16(&row[colNumber * 2]);
-                fputc(redepth(color.red, 32), pnmscalePipeP);
-                fputc(redepth(color.grn, 32), pnmscalePipeP);
-                fputc(redepth(color.blu, 32), pnmscalePipeP);
+                fputc(redepth(color.red, 32), pamscalePipeP);
+                fputc(redepth(color.grn, 32), pamscalePipeP);
+                fputc(redepth(color.blu, 32), pamscalePipeP);
             }
         }
     }
@@ -1278,17 +1278,17 @@ doDiffSize(struct Rect       const clipsrc,
 
             unsigned int colNumber;
             for (colNumber = 0; colNumber < xsize; ++colNumber) {
-                fputc(redepth(redPlane[colNumber], 256), pnmscalePipeP);
-                fputc(redepth(grnPlane[colNumber], 256), pnmscalePipeP);
-                fputc(redepth(bluPlane[colNumber], 256), pnmscalePipeP);
+                fputc(redepth(redPlane[colNumber], 256), pamscalePipeP);
+                fputc(redepth(grnPlane[colNumber], 256), pamscalePipeP);
+                fputc(redepth(bluPlane[colNumber], 256), pamscalePipeP);
             }
         }
     }
     break;
     }
 
-    if (pclose(pnmscalePipeP))
-        pm_error("pnmscale failed.  pclose() returned Errno %s (%d)",
+    if (pclose(pamscalePipeP))
+        pm_error("pamscale failed.  pclose() returned Errno %s (%d)",
                  strerror(errno), errno);
 
     ppm_readppminit(scaled = pm_openr(tempFilename), &cols, &rows,
