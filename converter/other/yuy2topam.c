@@ -194,7 +194,6 @@ static void
 rgbToTuple(Rgb   const rgb,
            tuple const out) {
 
-    pm_message("r=%d,g=%d,b=%d", rgb.r, rgb.g, rgb.b);
     out[PAM_RED_PLANE] = MIN(255, MAX(0, rgb.r));
     out[PAM_GRN_PLANE] = MIN(255, MAX(0, rgb.g));
     out[PAM_BLU_PLANE] = MIN(255, MAX(0, rgb.b));
