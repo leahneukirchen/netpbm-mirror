@@ -124,7 +124,7 @@ PORTBINARIES =  avstopam bmptopnm fitstopnm \
 		pnmtopclxl pnmtorast \
 		pnmtosgi pnmtosir pamtotga pnmtoxwd \
 		rasttopnm rlatopam sgitopnm sirtopnm srftopam sunicontopnm \
-		winicontopam xwdtopnm zeisstopnm
+		winicontopam xwdtopnm yuy2topam zeisstopnm
 
 ifneq ($(DONT_HAVE_PROCESS_MGMT),Y)
   PORTBINARIES += pstopnm pnmtops
