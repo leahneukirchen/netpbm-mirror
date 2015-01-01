@@ -960,6 +960,12 @@ copyBufferToStdout(int const tmpfileFd) {
             fwrite(buffer, 1, bytesReadCt, stdout);
     }
 
+    /* POSIX lets us create a FILE from an existing file descriptor, but
+       does not provide a way to destroy the FILE and keep the file
+       descriptor.  The following fclose() closes the file.  Caller
+       must not access the file again, and if he attempts to close it,
+       must ignore the failure of close
+    */
     fclose(tmpfileP);
 }
 
@@ -975,6 +981,10 @@ destroyTiffGenerator(WriteMethod const writeMethod,
     if (writeMethod == TMPFILE)
         copyBufferToStdout(ofd);
 
+    /* If we copied the buffer above, the buffer file is already closed
+       (copyBufferToStdout closes it), TIFFClose appears to tolerate that -
+       all it does is a close() and doesn't mind that it fails.
+    */
     TIFFClose(tifP);
 }
 
