@@ -12,11 +12,10 @@
 
 #include <string.h>
 
+#include "pm_c_util.h"
 #include "pbm.h"
 #include "macp.h"
 
-#define TRUE		1
-#define FALSE		0
 #define EQUAL		1
 #define UNEQUAL		0
 

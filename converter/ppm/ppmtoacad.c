@@ -20,10 +20,9 @@
 */
 
 #include <stdio.h>
-#include "ppm.h"
 
-#define TRUE     1
-#define FALSE    0
+#include "pm_c_util.h"
+#include "ppm.h"
 
 #define EOS     '\0'
 
