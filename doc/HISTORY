@@ -8,6 +8,11 @@ not yet  BJH  Release 10.70.00
 
               Add yuy2topam.  Thanks Michael Haardt.
 
+              On Windows, don't leave temporary files around (previous code
+              did so because unlink of an open file fails in Windows; new
+              code deletes temporary files via atexit).  Thanks
+              Ludolf Holzheid <ludolf.holzheid@gmx.de>.
+
 14.12.25 BJH  Release 10.69.00
 
               pnmnorm: add -bsingle, -wsingle.

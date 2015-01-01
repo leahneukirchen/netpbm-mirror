@@ -145,6 +145,15 @@
   #define HAVE_VASPRINTF 0
 #endif
 
+/* On Windows, unlinking a file is deleting it, and you can't delete an open
+   file, so unlink of an open file fails.  The errno is (incorrectly) EACCES.
+*/
+#if MSVCRT || defined(__CYGWIN__) || defined(DJGPP)
+  #define CAN_UNLINK_OPEN 0
+#else
+  #define CAN_UNLINK_OPEN 1
+#endif
+
 #ifdef __amigaos__
 #include <clib/exec_protos.h>
 #define getpid() ((pid_t)FindTask(NULL))
