@@ -249,12 +249,9 @@ pm_make_tmpfile_fd(int *         const fdP,
                    const char ** const filenameP) {
 
     const char * filenameTemplate;
-    unsigned int fnamelen;
     const char * tmpdir;
     const char * dirseparator;
     const char * error;
-
-    fnamelen = strlen(pm_progname) + 10; /* "/" + "_XXXXXX\0" */
 
     tmpdir = tmpDir();
 
