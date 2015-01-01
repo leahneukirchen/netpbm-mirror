@@ -13,8 +13,8 @@ not yet  BJH  Release 10.70.00
               code deletes temporary files via atexit).  Thanks
               Ludolf Holzheid <ludolf.holzheid@gmx.de>.
 
-              build: fix compile failure in pbmtomacp.c: TRUE redefined.
-              Introduced in Netpbm 10.69.
+              build: fix compile failure in pbmtomacp.c, ppmtoacad.c: TRUE
+              redefined.  Introduced in Netpbm 10.69.
 
 14.12.25 BJH  Release 10.69.00
 
