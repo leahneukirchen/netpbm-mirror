@@ -452,7 +452,7 @@ ${PBM_TESTPREFIX}ppmfade -f /dev/zero -base /dev/null > /dev/null 2> /dev/null
 
 for i in pamstretch-gen pcdovtoppm
   do
-  ${PBM_TESTPREFIX}$i > /dev/zero
+  ${PBM_TESTPREFIX}$i > /dev/null
      testExitStatus $i 1 $?
   done
 
