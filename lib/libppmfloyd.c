@@ -22,9 +22,9 @@ do Floyd-Steinberg.
 ** implied warranty.
 */
 
+#include "netpbm/mallocvar.h"
 #include "ppm.h"
 #include "ppmfloyd.h"
-#include "mallocvar.h"
 
 
 

@@ -20,9 +20,11 @@
 #include <string.h>
 #include <limits.h>
 
-#include "pm_c_util.h"
+#include "netpbm/pm_c_util.h"
+
 #include "pam.h"
 #include "ppm.h"
+
 
 
 tuple

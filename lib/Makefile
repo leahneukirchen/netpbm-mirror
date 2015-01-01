@@ -68,6 +68,7 @@ SCRIPTS =
 BINARIES = 
 
 OMIT_LIBRARY_RULE = 1
+ALL_INTERNAL_HEADER_FILES_ARE_QUALIFIED = Y
 include $(SRCDIR)/common.mk
 
 # The following must go after common.mk because $(LIBNETPBM) may 

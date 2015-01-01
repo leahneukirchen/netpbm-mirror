@@ -21,8 +21,9 @@
 #include <assert.h>
 #include <math.h>
 
-#include "pm_config.h"
-#include "pm_c_util.h"
+#include "netpbm/pm_config.h"
+#include "netpbm/pm_c_util.h"
+
 #include "pam.h"
 
 

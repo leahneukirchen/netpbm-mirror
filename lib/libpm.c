@@ -34,7 +34,7 @@
 #include "netpbm/shhopt.h"
 #include "compile.h"
 
-#include "netpbm/pm.h"
+#include "pm.h"
 
 /* The following are set by pm_init(), then used by subsequent calls to other
    pm_xxx() functions.

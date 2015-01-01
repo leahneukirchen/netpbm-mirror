@@ -86,8 +86,13 @@ include $(SRCDIR)/version.mk
 # importinc/pam.h (as it did originally) is that it lives on a user's system
 # as <netpbm/pam.h>, and therefore all _exported_ header files do say
 # "<netpbm/pam.h>.
+ifneq ($(ALL_INTERNAL_HEADER_FILES_ARE_QUALIFIED),Y)
+  LEGACY_NETPBM_INCLUDE = -Iimportinc/netpbm
+else
+  LEGACY_NETPBM_INCLUDE =
+endif
 
-NETPBM_INCLUDES := -Iimportinc -Iimportinc/netpbm -I$(SRCDIR)/$(SUBDIR)
+NETPBM_INCLUDES := -Iimportinc $(LEGACY_NETPBM_INCLUDE) -I$(SRCDIR)/$(SUBDIR)
 
 # -I. is needed when builddir != srcdir
 INCLUDES = -I. $(COMP_INCLUDES) $(NETPBM_INCLUDES) $(EXTERN_INCLUDES)

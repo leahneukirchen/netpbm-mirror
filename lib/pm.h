@@ -23,7 +23,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "pm_c_util.h"
+#include "netpbm/pm_c_util.h"
 
 #ifdef __cplusplus
 extern "C" {

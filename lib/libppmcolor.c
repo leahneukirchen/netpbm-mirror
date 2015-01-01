@@ -17,9 +17,9 @@
 #include <string.h>
 #include <math.h>
 
-#include "pm_c_util.h"
-#include "mallocvar.h"
-#include "nstring.h"
+#include "netpbm/pm_c_util.h"
+#include "netpbm/mallocvar.h"
+#include "netpbm/nstring.h"
 #include "ppm.h"
 #include "colorname.h"
 

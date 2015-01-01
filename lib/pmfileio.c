@@ -40,9 +40,9 @@
   #include <io.h>
 #endif
 
-#include "pm_c_util.h"
-#include "mallocvar.h"
-#include "nstring.h"
+#include "netpbm/pm_c_util.h"
+#include "netpbm/mallocvar.h"
+#include "netpbm/nstring.h"
 
 #include "pm.h"
 

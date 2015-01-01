@@ -14,8 +14,8 @@
 #include <errno.h>
 
 
-#include "pm_c_util.h"
-#include "mallocvar.h"
+#include "netpbm/pm_c_util.h"
+#include "netpbm/mallocvar.h"
 #include "ppm.h"
 
 void
