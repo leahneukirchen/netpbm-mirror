@@ -137,7 +137,11 @@
 #define HAVE_SETMODE
 #endif
 
-/* #define HAVE_SETMODE */
+#if MSVCRT || defined(__CYGWIN__) || defined(DJGPP)
+#define HAVE_IO_H 1
+#else
+#define HAVE_IO_H 0
+#endif
 
 #if (defined(__GLIBC__) || defined(__GNU_LIBRARY__) || defined(__APPLE__)) || defined(__NetBSD__)
   #define HAVE_VASPRINTF 1

@@ -29,6 +29,7 @@
 #define _LARGE_FILE_API
     /* This makes the the x64() functions available on AIX */
 
+#include "netpbm/pm_config.h"
 #include <unistd.h>
 #include <assert.h>
 #include <stdio.h>
@@ -36,8 +37,8 @@
 #include <stdarg.h>
 #include <string.h>
 #include <errno.h>
-#ifdef __DJGPP__
-  #include <io.h>
+#if HAVE_IO_H
+  #include <io.h>  /* For mktemp */
 #endif
 
 #include "netpbm/pm_c_util.h"
