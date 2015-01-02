@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.70.00
 
+              tifftopnm: allow input file to be nonseekable.
+              Thanks Ludolf Holzheid <ludolf.holzheid@gmx.de>.
+
               Add yuy2topam.  Thanks Michael Haardt.
 
               On Windows, don't leave temporary files around (previous code

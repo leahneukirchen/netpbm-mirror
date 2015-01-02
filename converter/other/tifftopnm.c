@@ -151,6 +151,31 @@ parseCommandLine(int argc, const char ** const argv,
 
 
 
+static TIFF *
+newTiffImageObject(const char * const inputFileName) {
+/*----------------------------------------------------------------------------
+   Create a TIFF library object for accessing the TIFF input in file
+   named 'inputFileName'.  If 'inputFileName' is "-", that means
+   Standard Input.
+-----------------------------------------------------------------------------*/
+    const char * const tiffSourceName =
+        streq(inputFileName, "-") ? "Standard Input" : inputFileName;
+
+    TIFF * retval;
+
+    retval = TIFFFdOpen(fileno(pm_openr_seekable(inputFileName)),
+                        tiffSourceName,
+                        "r");
+
+    if (retval == NULL)
+        pm_error("Failed to access input file.  The OS opened the file fine, "
+                 "but the TIFF library's TIFFFdOpen rejected the open file.");
+
+    return retval;
+}
+
+
+
 static void
 getBps(TIFF *           const tif,
        unsigned short * const bpsP) {
@@ -1623,7 +1648,7 @@ int
 main(int argc, const char * argv[]) {
 
     struct CmdlineInfo cmdline;
-    TIFF * tif;
+    TIFF * tiffP;
     FILE * alphaFile;
     FILE * imageoutFile;
 
@@ -1631,15 +1656,7 @@ main(int argc, const char * argv[]) {
 
     parseCommandLine(argc, argv, &cmdline);
 
-    if (!streq(cmdline.inputFilename, "-")) {
-        tif = TIFFOpen(cmdline.inputFilename, "r");
-        if (tif == NULL)
-            pm_error("error opening TIFF file %s", cmdline.inputFilename);
-    } else {
-        tif = TIFFFdOpen(0, "Standard Input", "r");
-        if (tif == NULL)
-            pm_error("error opening standard input as TIFF file");
-    }
+    tiffP = newTiffImageObject(cmdline.inputFilename);
 
     if (cmdline.alphaStdout)
         alphaFile = stdout;
@@ -1653,12 +1670,14 @@ main(int argc, const char * argv[]) {
     else
         imageoutFile = stdout;
 
-    convertIt(tif, alphaFile, imageoutFile, cmdline);
+    convertIt(tiffP, alphaFile, imageoutFile, cmdline);
 
     if (imageoutFile != NULL) 
         pm_close( imageoutFile );
     if (alphaFile != NULL)
         pm_close( alphaFile );
+
+    TIFFClose(tiffP);
 
     pm_strfree(cmdline.inputFilename);
 
