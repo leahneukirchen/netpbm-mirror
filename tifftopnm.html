@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Tifftopnm User Manual</TITLE></HEAD>
 <BODY>
 <H1>tifftopnm</H1>
-Updated: 12 July 2009
+Updated: 02 January 2015
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -39,11 +39,16 @@ which type it is writing.
 output stream.  Before Netpbm 10.27 (March 2005), however, it would
 just ignore all but the first input image.
 
-<P>The <I>tiff-filename</I> argument names the regular file that
-contains the Tiff image.  If you specify &quot;-&quot; or don't
-specify this argument, <B>tfftopnm</B> uses Standard Input. In either
-case, the file must be seekable.  That means no pipe, but any regular
-file is fine.
+<P>The <I>tiff-filename</I> argument names the file that contains the Tiff
+image.  If you specify &quot;-&quot; or don't specify this
+argument, <B>tifftopnm</B> uses Standard Input.
+
+<p>In either case, before Netpbm 10.70 (March 2015), the file must be
+seekable.  That means no pipe, but any regular file is fine.  In current
+Netpbm, the file need not be seekable, but if it isn't, <b>tifftopnm</b>
+creates a temporary regular file containing the entire image, so you must have
+resources for that (and it may defeat your reason for using a pipe).
+
 
 <h3 id="library">TIFF Capability</h3>
 
