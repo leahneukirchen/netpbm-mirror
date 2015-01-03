@@ -4,10 +4,16 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+15.01.01 BJH  Release 10.69.02
+
+              Libnetpbm: fix external header file pm.h so it does not include
+              internal header file pm_c_util.h.  Introduced in Netpbm
+              10.69.00 (December 2014).
+
 15.01.01 BJH  Release 10.69.01
 
               build: fix compile failure in pbmtomacp, ppmtoacad, pgmabel:
-              TRUE redefined.  Introduced in Netpbm 10.69.
+              TRUE redefined.  Introduced in Netpbm 10.69 (December 2014).
 
 14.12.25 BJH  Release 10.69.00
 
