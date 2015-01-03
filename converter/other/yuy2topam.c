@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "pm_c_util.h"
 #include "mallocvar.h"
 #include "pm.h"
 #include "pam.h"
@@ -59,8 +60,8 @@ parseCommandLine(int argc, const char ** argv,
             &cmdlineP->height,  &heightSpec,                            0);
 
     opt.opt_table = option_def;
-    opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
-    opt.allowNegNum = FALSE;   /* We have no parms that are negative numbers */
+    opt.short_allowed = false;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = false;   /* We have no parms that are negative numbers */
 
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */

@@ -278,10 +278,11 @@ pm_error(const char format[], ...) {
 
 
 
-bool
+int
 pm_have_float_format(void) {
 /*----------------------------------------------------------------------------
-  Return true iff %f, %e, and %g work in format strings for pm_message, etc.
+  Return 1 if %f, %e, and %g work in format strings for pm_message, etc.;
+  0 otherwise.
 
   Where they don't "work," that means the specifier just appears itself in
   the formatted strings, e.g. "the number is g".

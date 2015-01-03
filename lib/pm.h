@@ -23,8 +23,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "netpbm/pm_c_util.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -221,7 +219,7 @@ pm_errormsg(const char format[], ...);
 void PM_GNU_PRINTF_ATTR(1,2)
 pm_error (const char reason[], ...);       
 
-bool
+int
 pm_have_float_format(void);
 
 /* Obsolete - use shhopt and user's manual instead */
