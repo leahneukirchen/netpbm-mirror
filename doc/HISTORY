@@ -3259,7 +3259,7 @@ not yet  BJH  Release 10.70.00
 
               pnmtojpeg: Add -density option.
 
-              pamtotga: Add alpha capability, via "RGBA" tuple type.
+              pamtotga: Fix bugs with images with alpha planes.
 
               libnetpbm: Add ppm_readcolornamefile().
 
@@ -3593,9 +3593,17 @@ not yet  BJH  Release 10.70.00
               pnmmontage: add -data option.  Thanks Ben
               <bem@mad.scientist.com>.
 
-              pnmtotga: put "image ID" in TGA output.
+              pamtotga: Add alpha capability, via "RGBA" tuple type.
 
-              ppmtotga: Correct name to pnmtotga.
+              pamtotga: put "image ID" in TGA output.
+
+              ppmtotga: take PAM input; rename dot 'pamtotga'.  Former name
+              was a misnomer anyway; it was always a PNM program because it
+              distinguished between PGM and PPM input.
+
+              pamtotga: Add alpha capability, via "RGBA" tuple type.
+
+              pamtotga: put "image ID" in TGA output.
 
               pnmcomp:  Add -opacity option.
 
@@ -3924,7 +3932,8 @@ not yet  BJH  Release 10.70.00
 
               pnmtops: Accept maxval > 255 input.
          
-              Rename pnminterp to the more informative pnmstretch.
+              Rename pnminterp to the more informative pnmstretch and
+              pnminterp-gen to pamstretch-gen.
 
               pnmstretch: convert from pnm to pam - pamstretch.
 
