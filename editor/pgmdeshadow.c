@@ -21,7 +21,7 @@
 */
 
 /*
- * Algorithm reference: Luc Vincent, "Morphological Grayscale Reruction
+ * Algorithm reference: Luc Vincent, "Morphological Grayscale Reconstruction
  * in Image Analysis: Applications and Efficient Algorithms," IEEE
  * Transactions on Image Processing, vol. 2, no. 2, April 1993, pp. 176-201.
  *
