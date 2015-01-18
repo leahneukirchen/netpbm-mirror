@@ -107,36 +107,36 @@ looseCanon(char * const cpArg) {
 
 
 
-int
-main(int argc, const char ** argv) {
-
-    FILE * ifP;
-    gray * grayrow;
-    unsigned int row;
-    int maxval;
-    int comp, rows, cols;
-    char header[SBIG_HEADER_LENGTH];
-    char * hdr;
+struct SbigHeader {
+/*----------------------------------------------------------------------------
+   The information in an SBIG file header.
+-----------------------------------------------------------------------------*/
+    unsigned int rows;
+    unsigned int cols;
+    unsigned int maxval;
+    bool isCompressed;
+    bool haveCamera;
     char camera[80];
+};
+
+
+
+static void
+readSbigHeader(FILE *              const ifP,
+               struct SbigHeader * const sbigHeaderP) {
+
     size_t rc;
-    struct CmdlineInfo cmdline;
+    bool gotCompression;
+    bool gotWidth;
+    bool gotHeight;
+    char buffer[SBIG_HEADER_LENGTH];
+    char * cursor;
+    bool endOfHeader;
 
-    pm_proginit(&argc, argv);
-
-    parseCommandLine(argc, argv, &cmdline);
-
-    ifP = pm_openr(cmdline.inputFileName);
-
-    rc = fread(header, SBIG_HEADER_LENGTH, 1, ifP);
+    rc = fread(buffer, SBIG_HEADER_LENGTH, 1, ifP);
 
     if (rc < 1)
         pm_error("error reading SBIG file header");
-
-    /*	Walk through the header and parse relevant parameters.	*/
-
-    comp = -1;
-    cols = -1;
-    rows = -1;
 
     /*	The SBIG header specification equivalent to maxval is
         "Sat_level", the saturation level of the image.  This
@@ -161,64 +161,77 @@ main(int argc, const char ** argv) {
         attempt to process it.
 	*/
 
-    maxval = 65535;
+    gotCompression = false;   /* initial value */
+    gotWidth = false;  /* initial value */
+    gotHeight = false;  /* initial value */
 
-    hdr = header;
+    sbigHeaderP->maxval = 65535;  /* initial assumption */
+    sbigHeaderP->haveCamera = false;  /* initial assumption */
 
-    strcpy(camera, "ST-?");  /* initial value */
-
-    for (;;) {
-        char *cp = strchr(hdr, '\n');
+    for (cursor = &buffer[0], endOfHeader = false; !endOfHeader;) {
+        char * const cp = strchr(cursor, '\n');
 
         if (cp == NULL) {
             pm_error("malformed SBIG file header at character %u",
-                     (unsigned)(hdr - header));
+                     (unsigned)(cursor - &buffer[0]));
         }
         *cp = '\0';
-        if (strncmp(hdr, "ST-", 3) == 0) {
-            char * const ep = strchr(hdr + 3, ' ');
+        if (STRSEQ("ST-", cursor)) {
+            char * const ep = strchr(cursor + 3, ' ');
 
             if (ep != NULL) {
                 *ep = '\0';
-                strcpy(camera, hdr);
+                strcpy(sbigHeaderP->camera, cursor);
+                sbigHeaderP->haveCamera = true;
                 *ep = ' ';
             }
         }
-        looseCanon(hdr);
-        if (STRSEQ(hdr, "st-")) {
-            comp = strstr(hdr, "compressed") != NULL;
-        } else if (STRSEQ(hdr, "height=")) {
-            rows = atoi(hdr + 7);
-        } else if (STRSEQ(hdr, "width=")) {
-            cols = atoi(hdr + 6);
-        } else if (STRSEQ(hdr, "sat_level=")) {
-            maxval = atoi(hdr + 10);
-        } else if (streq(hdr, "end")) {
-            break;
+        looseCanon(cursor);
+        if (STRSEQ("st-", cursor)) {
+            sbigHeaderP->isCompressed = (strstr("compressed", cursor) != NULL);
+            gotCompression = true;
+        } else if (STRSEQ("height=", cursor)) {
+            sbigHeaderP->rows = atoi(cursor + 7);
+            gotHeight = true;
+        } else if (STRSEQ("width=", cursor)) {
+            sbigHeaderP->cols = atoi(cursor + 6);
+            gotWidth = true;
+        } else if (STRSEQ("sat_level=", cursor)) {
+            sbigHeaderP->maxval = atoi(cursor + 10);
+        } else if (streq("end", cursor)) {
+            endOfHeader = true;
         }
-        hdr = cp + 1;
+        cursor = cp + 1;
     }
 
-    if (comp == -1 || rows == -1 || cols == -1)
-        pm_error("required specification missing from SBIG file header");
+    if (!gotCompression)
+        pm_error("Required 'st-*' specification missing "
+                 "from SBIG file header");
+    if (!gotHeight)
+        pm_error("required 'height=' specification missing"
+                 "from SBIG file header");
+    if (!gotWidth)
+        pm_error("required 'width=' specification missing "
+                 "from SBIG file header");
+}
 
-    pm_message("SBIG %s %dx%d %s image, saturation level = %d",
-               camera, cols, rows, comp ? "compressed" : "uncompressed",
-               maxval);
 
-    if (maxval > PGM_OVERALLMAXVAL) {
-        pm_error("Saturation level (%d levels) is too large"
-                 "This program's limit is %d.", maxval, PGM_OVERALLMAXVAL);
-    }
 
-    pgm_writepgminit(stdout, cols, rows, maxval, 0);
-    grayrow = pgm_allocrow(cols);
+static void
+writeRaster(FILE *            const ifP,
+            struct SbigHeader const hdr,
+            FILE *            const ofP) {
 
-    for (row = 0; row < rows; ++row) {
+    gray * grayrow;
+    unsigned int row;
+
+    grayrow = pgm_allocrow(hdr.cols);
+
+    for (row = 0; row < hdr.rows; ++row) {
         bool compthis;
         unsigned int col;
 
-        if (comp) {
+        if (hdr.isCompressed) {
             unsigned short rowlen;        /* Compressed row length */
 
             pm_readlittleshortu(ifP, &rowlen);
@@ -229,14 +242,14 @@ main(int argc, const char ** argv) {
                 that of an uncompressed row.
             */
 
-            if (rowlen == cols * 2)
+            if (rowlen == hdr.cols * 2)
                 compthis = false;
             else
-                compthis = comp;
+                compthis = hdr.isCompressed;
         } else
-            compthis = comp;
+            compthis = hdr.isCompressed;
 
-        for (col = 0; col < cols; ++col) {
+        for (col = 0; col < hdr.cols; ++col) {
             unsigned short g;
 
             if (compthis) {
@@ -254,8 +267,44 @@ main(int argc, const char ** argv) {
                 pm_readlittleshortu(ifP, &g);
             grayrow[col] = g;
         }
-        pgm_writepgmrow(stdout, grayrow, cols, maxval, 0);
+        pgm_writepgmrow(ofP, grayrow, hdr.cols, hdr.maxval, 0);
     }
+
+    pgm_freerow(grayrow);
+}
+
+
+
+int
+main(int argc, const char ** argv) {
+
+    FILE * ifP;
+    struct CmdlineInfo cmdline;
+    struct SbigHeader hdr;
+
+    pm_proginit(&argc, argv);
+
+    parseCommandLine(argc, argv, &cmdline);
+
+    ifP = pm_openr(cmdline.inputFileName);
+
+    readSbigHeader(ifP, &hdr);
+
+    pm_message("SBIG %s %dx%d %s image, saturation level = %d",
+               (hdr.haveCamera ? hdr.camera : "ST-?"),
+               hdr.cols, hdr.rows,
+               hdr.isCompressed ? "compressed" : "uncompressed",
+               hdr.maxval);
+
+    if (hdr.maxval > PGM_OVERALLMAXVAL) {
+        pm_error("Saturation level (%u levels) is too large"
+                 "This program's limit is %u.", hdr.maxval, PGM_OVERALLMAXVAL);
+    }
+
+    pgm_writepgminit(stdout, hdr.cols, hdr.rows, hdr.maxval, 0);
+
+    writeRaster(ifP, hdr, stdout);
+
     pm_close(ifP);
     pm_close(stdout);
 
