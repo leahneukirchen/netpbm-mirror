@@ -24,19 +24,21 @@
 
 #include <string.h>
 
-#include "pgm.h"
+#include "pm_c_util.h"
+#include "pm.h"
 #include "nstring.h"
+#include "pgm.h"
 
 #define SBIG_HEADER_LENGTH  2048      /* File header length */
 
-/*  looseCanon	--  Canonicalize a line from the file header so
-    items more sloppily formatted than those
-    written by CCDOPS are still accepted.
-*/
+
 
 static void
 looseCanon(char * const cpArg) {
-
+/*----------------------------------------------------------------------------
+  Canonicalize a line from the file header so items more sloppily formatted
+  than those written by CCDOPS are still accepted.
+-----------------------------------------------------------------------------*/
     char * cp;
     char * op;
     char c;
@@ -57,20 +59,18 @@ looseCanon(char * const cpArg) {
 
 
 int
-main(int argc, char ** argv) {
+main(int argc, const char ** argv) {
 
     FILE * ifP;
     gray * grayrow;
-    gray * gP;
     int argn, row;
-    int col;
     int maxval;
     int comp, rows, cols;
     char header[SBIG_HEADER_LENGTH];
     char * hdr;
-    static char camera[80] = "ST-?";
+    char camera[80];
 
-    pgm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     argn = 1;
 
@@ -119,6 +119,8 @@ main(int argc, char ** argv) {
 
     hdr = header;
 
+    strcpy(camera, "ST-?");  /* initial value */
+
     for (;;) {
         char *cp = strchr(hdr, '\n');
 
@@ -137,13 +139,13 @@ main(int argc, char ** argv) {
             }
         }
         looseCanon(hdr);
-        if (strncmp(hdr, "st-", 3) == 0) {
+        if (STRSEQ(hdr, "st-")) {
             comp = strstr(hdr, "compressed") != NULL;
-        } else if (strncmp(hdr, "height=", 7) == 0) {
+        } else if (STRSEQ(hdr, "height=")) {
             rows = atoi(hdr + 7);
-        } else if (strncmp(hdr, "width=", 6) == 0) {
+        } else if (STRSEQ(hdr, "width=")) {
             cols = atoi(hdr + 6);
-        } else if (strncmp(hdr, "sat_level=", 10) == 0) {
+        } else if (STRSEQ(hdr, "sat_level=")) {
             maxval = atoi(hdr + 10);
         } else if (streq(hdr, "end")) {
             break;
@@ -166,15 +168,14 @@ main(int argc, char ** argv) {
     pgm_writepgminit(stdout, cols, rows, maxval, 0);
     grayrow = pgm_allocrow(cols);
 
-#define DOSINT(fp) ((getc(fp) & 0xFF) | (getc(fp) << 8))
-
     for (row = 0; row < rows; ++row) {
-        int compthis;
-
-        compthis = comp;  /* initial value */
+        bool compthis;
+        unsigned int col;
 
         if (comp) {
-            int const rowlen = DOSINT(ifP); /* Compressed row length */
+            unsigned short rowlen;        /* Compressed row length */
+
+            pm_readlittleshortu(ifP, &rowlen);
             
             /*	If compression results in a row length >= the uncompressed
                 row length, that row is output uncompressed.  We detect this
@@ -183,27 +184,31 @@ main(int argc, char ** argv) {
             */
 
             if (rowlen == cols * 2)
-                compthis = 0;
-        }
-        for (col = 0, gP = grayrow; col < cols; ++col, ++gP) {
-            gray g;
+                compthis = false;
+            else
+                compthis = comp;
+        } else
+            compthis = comp;
+
+        for (col = 0; col < cols; ++col) {
+            unsigned short g;
 
             if (compthis) {
                 if (col == 0) {
-                    g = DOSINT(ifP);
+                    pm_readlittleshortu(ifP, &g);
                 } else {
-                    int delta = getc(ifP);
+                    int const delta = getc(ifP);
 
                     if (delta == 0x80)
-                        g = DOSINT(ifP);
+                        pm_readlittleshortu(ifP, &g);
                     else
                         g += ((signed char) delta);
                 }
             } else
-                g = DOSINT(ifP);
-            *gP = g;
+                pm_readlittleshortu(ifP, &g);
+            grayrow[col] = g;
         }
-        pgm_writepgmrow(stdout, grayrow, cols, (gray) maxval, 0);
+        pgm_writepgmrow(stdout, grayrow, cols, maxval, 0);
     }
     pm_close(ifP);
     pm_close(stdout);
