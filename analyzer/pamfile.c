@@ -16,7 +16,7 @@
 #include "shhopt.h"
 #include "pam.h"
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -30,8 +30,8 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to as as the argv array.
@@ -54,7 +54,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE; /* We have no short (old-fashioned) options */
     opt.allowNegNum   = FALSE; /* We have no parms that are negative numbers */
     
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others */
 
     cmdlineP->inputFilespec = (const char **)&argv[1];
@@ -221,11 +221,11 @@ describeOneFile(const char * const name,
 
 
 int
-main(int argc, char *argv[]) {
+main(int argc, const char *argv[]) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
 
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
