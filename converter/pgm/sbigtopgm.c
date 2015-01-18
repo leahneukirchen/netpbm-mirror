@@ -25,9 +25,58 @@
 #include <string.h>
 
 #include "pm_c_util.h"
-#include "pm.h"
+#include "mallocvar.h"
 #include "nstring.h"
+#include "shhopt.h"
+#include "pm.h"
 #include "pgm.h"
+
+struct CmdlineInfo {
+    /* All the information the user supplied in the command line,
+       in a form easy for the program to use.
+    */
+    const char * inputFileName;
+};
+
+
+
+static void
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo * const cmdlineP) {
+/*----------------------------------------------------------------------------
+   Note that the file spec array we return is stored in the storage that
+   was passed to as as the argv array.
+-----------------------------------------------------------------------------*/
+    optEntry * option_def;
+        /* Instructions to pm_optParseOptions3 on how to parse our options.
+         */
+    optStruct3 opt;
+
+    unsigned int option_def_index;
+
+    MALLOCARRAY_NOFAIL(option_def, 100);
+    
+    option_def_index = 0;   /* incremented by OPTENT3 */
+
+    opt.opt_table     = option_def;
+    opt.short_allowed = FALSE; /* We have no short (old-fashioned) options */
+    opt.allowNegNum   = FALSE; /* We have no parms that are negative numbers */
+    
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+        /* Uses and sets argc, argv, and some of *cmdlineP and others */
+
+    if (argc-1 < 0)
+        cmdlineP->inputFileName = "-";
+    else {
+        cmdlineP->inputFileName = argv[1];
+
+        if (argc-1 > 1)
+            pm_error("Too many arguments.  The only possible argument is the "
+                     "optional input file name");
+    }
+}
+
+
 
 #define SBIG_HEADER_LENGTH  2048      /* File header length */
 
@@ -63,27 +112,24 @@ main(int argc, const char ** argv) {
 
     FILE * ifP;
     gray * grayrow;
-    int argn, row;
+    unsigned int row;
     int maxval;
     int comp, rows, cols;
     char header[SBIG_HEADER_LENGTH];
     char * hdr;
     char camera[80];
+    size_t rc;
+    struct CmdlineInfo cmdline;
 
     pm_proginit(&argc, argv);
 
-    argn = 1;
+    parseCommandLine(argc, argv, &cmdline);
 
-    if (argn < argc) {
-        ifP = pm_openr(argv[argn]);
-        argn++;
-    } else
-        ifP = stdin;
+    ifP = pm_openr(cmdline.inputFileName);
 
-    if (argn != argc)
-        pm_usage( "[sbigfile]" );
+    rc = fread(header, SBIG_HEADER_LENGTH, 1, ifP);
 
-    if (fread(header, SBIG_HEADER_LENGTH, 1, ifP) < 1)
+    if (rc < 1)
         pm_error("error reading SBIG file header");
 
     /*	Walk through the header and parse relevant parameters.	*/
