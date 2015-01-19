@@ -2,24 +2,23 @@
 
     sbigtopgm.c - read a Santa Barbara Instruments Group CCDOPS file
 
-    Note: All SBIG CCD astronomical cameras produce 14 bits or
-	  (the ST-4 and ST-5) or 16 bits (ST-6 and later) per pixel.
-
-		  Copyright (C) 1998 by John Walker
-		       http://www.fourmilab.ch/
+    Note: All SBIG CCD astronomical cameras produce 14 bits
+    (the ST-4 and ST-5) or 16 bits (ST-6 and later) per pixel.
 
     If you find yourself having to add functionality included subsequent
     to the implementation of this program, you can probably find
     documentation of any changes to the SBIG file format on their
     Web site: http://www.sbig.com/
 
+    Copyright (C) 1998 by John Walker
+    http://www.fourmilab.ch/
+
     Permission to use, copy, modify, and distribute this software and
     its documentation for any purpose and without fee is hereby
     granted, provided that the above copyright notice appear in all
     copies and that both that copyright notice and this permission
-    notice appear in supporting documentation.	This software is
+    notice appear in supporting documentation.  This software is
     provided "as is" without express or implied warranty.
-
 */
 
 #include <string.h>
@@ -110,6 +109,9 @@ looseCanon(char * const cpArg) {
 struct SbigHeader {
 /*----------------------------------------------------------------------------
    The information in an SBIG file header.
+
+   This is only the information this program cares about; the header
+   may have much more information in it.
 -----------------------------------------------------------------------------*/
     unsigned int rows;
     unsigned int cols;
@@ -138,7 +140,7 @@ readSbigHeader(FILE *              const ifP,
     if (rc < 1)
         pm_error("error reading SBIG file header");
 
-    /*	The SBIG header specification equivalent to maxval is
+    /*  The SBIG header specification equivalent to maxval is
         "Sat_level", the saturation level of the image.  This
         specification is optional, and was not included in files
         written by early versions of CCDOPS. It was introduced when it
@@ -153,13 +155,13 @@ readSbigHeader(FILE *              const ifP,
         65535 as the default because the overwhelming majority of
         cameras in use today are 16 bit, and it's possible some
         non-SBIG software may omit the "optional" Sat_level
-        specification.	Also, no harm is done if a larger maxval is
+        specification.  Also, no harm is done if a larger maxval is
         specified than appears in the image--a simple contrast stretch
         will adjust pixels to use the full 0 to maxval range.  The
         converse, pixels having values greater than maxval, results in
         an invalid file which may cause problems in programs which
         attempt to process it.
-	*/
+    */
 
     gotCompression = false;   /* initial value */
     gotWidth = false;  /* initial value */
@@ -187,7 +189,7 @@ readSbigHeader(FILE *              const ifP,
             }
         }
         looseCanon(cursor);
-        if (STRSEQ("st-", cursor)) {
+        if (STRSEQ("ST-", cursor)) {
             sbigHeaderP->isCompressed = (strstr("compressed", cursor) != NULL);
             gotCompression = true;
         } else if (STRSEQ("height=", cursor)) {
@@ -205,7 +207,7 @@ readSbigHeader(FILE *              const ifP,
     }
 
     if (!gotCompression)
-        pm_error("Required 'st-*' specification missing "
+        pm_error("Required 'ST-*' specification missing "
                  "from SBIG file header");
     if (!gotHeight)
         pm_error("required 'height=' specification missing"
@@ -236,7 +238,7 @@ writeRaster(FILE *            const ifP,
 
             pm_readlittleshortu(ifP, &rowlen);
             
-            /*	If compression results in a row length >= the uncompressed
+            /*  If compression results in a row length >= the uncompressed
                 row length, that row is output uncompressed.  We detect this
                 by observing that the compressed row length is equal to
                 that of an uncompressed row.
@@ -310,3 +312,6 @@ main(int argc, const char ** argv) {
 
     return 0;
 }
+
+
+
