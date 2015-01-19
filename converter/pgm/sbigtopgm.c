@@ -86,6 +86,13 @@ looseCanon(char * const cpArg) {
 /*----------------------------------------------------------------------------
   Canonicalize a line from the file header so items more sloppily formatted
   than those written by CCDOPS are still accepted.
+
+  Remove all whitespace and make all letters lowercase.
+
+  Note that the SBIG Type 3 format specification at www.sbig.com in January
+  2015 says header parameter names are capitalized like 'Height' and the line
+  ends with CRLF.  In such a case, we change the first letter to 'h' and
+  remove the CR.
 -----------------------------------------------------------------------------*/
     char * cp;
     char * op;
@@ -189,6 +196,8 @@ readSbigHeader(FILE *              const ifP,
             }
         }
         looseCanon(cursor);
+            /* Convert from standard SBIG to an internal format */
+
         if (strneq(cursor, "ST-", 3)) {
             sbigHeaderP->isCompressed = (strstr("compressed", cursor) != NULL);
             gotCompression = true;
