@@ -1,5 +1,4 @@
 /*
-
     sbigtopgm.c - read a Santa Barbara Instruments Group CCDOPS file
 
     Note: All SBIG CCD astronomical cameras produce 14 bits
@@ -90,9 +89,12 @@ looseCanon(char * const cpArg) {
   Remove all whitespace and make all letters lowercase.
 
   Note that the SBIG Type 3 format specification at www.sbig.com in January
-  2015 says header parameter names are capitalized like 'Height' and the line
-  ends with CRLF.  In such a case, we change the first letter to 'h' and
-  remove the CR.
+  2015 says header parameter names are capitalized like 'Height'; we change
+  that to "height".
+
+  The spec also says the line ends with LF, then CR (yes, really).  Assuming
+  Caller separates lines at LF, that means we see CR at the beginning of all
+  lines but the first.  We remove that.
 -----------------------------------------------------------------------------*/
     char * cp;
     char * op;
@@ -170,9 +172,9 @@ readSbigHeader(FILE *              const ifP,
         attempt to process it.
     */
 
-    gotCompression = false;   /* initial value */
-    gotWidth = false;  /* initial value */
-    gotHeight = false;  /* initial value */
+    gotCompression = false;  /* initial value */
+    gotWidth       = false;  /* initial value */
+    gotHeight      = false;  /* initial value */
 
     sbigHeaderP->maxval = 65535;  /* initial assumption */
     sbigHeaderP->haveCameraType = false;  /* initial assumption */
@@ -195,10 +197,11 @@ readSbigHeader(FILE *              const ifP,
                 *ep = ' ';
             }
         }
+        
         looseCanon(cursor);
             /* Convert from standard SBIG to an internal format */
 
-        if (strneq(cursor, "ST-", 3)) {
+        if (strneq(cursor, "st-", 3)) {
             sbigHeaderP->isCompressed = (strstr("compressed", cursor) != NULL);
             gotCompression = true;
         } else if (strneq(cursor, "height=", 7)) {
