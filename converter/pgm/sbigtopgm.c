@@ -178,7 +178,7 @@ readSbigHeader(FILE *              const ifP,
                      (unsigned)(cursor - &buffer[0]));
         }
         *cp = '\0';
-        if (STRSEQ("ST-", cursor)) {
+        if (strneq(cursor, "ST-", 3)) {
             char * const ep = strchr(cursor + 3, ' ');
 
             if (ep != NULL) {
@@ -189,16 +189,16 @@ readSbigHeader(FILE *              const ifP,
             }
         }
         looseCanon(cursor);
-        if (STRSEQ("ST-", cursor)) {
+        if (strneq(cursor, "ST-", 3)) {
             sbigHeaderP->isCompressed = (strstr("compressed", cursor) != NULL);
             gotCompression = true;
-        } else if (STRSEQ("height=", cursor)) {
+        } else if (strneq(cursor, "height=", 7)) {
             sbigHeaderP->rows = atoi(cursor + 7);
             gotHeight = true;
-        } else if (STRSEQ("width=", cursor)) {
+        } else if (strneq(cursor, "width=", 6)) {
             sbigHeaderP->cols = atoi(cursor + 6);
             gotWidth = true;
-        } else if (STRSEQ("sat_level=", cursor)) {
+        } else if (strneq(cursor, "sat_level=", 10)) {
             sbigHeaderP->maxval = atoi(cursor + 10);
         } else if (streq("end", cursor)) {
             endOfHeader = true;
