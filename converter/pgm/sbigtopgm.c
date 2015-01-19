@@ -117,8 +117,8 @@ struct SbigHeader {
     unsigned int cols;
     unsigned int maxval;
     bool isCompressed;
-    bool haveCamera;
-    char camera[80];
+    bool haveCameraType;
+    char cameraType[80];
 };
 
 
@@ -168,7 +168,7 @@ readSbigHeader(FILE *              const ifP,
     gotHeight = false;  /* initial value */
 
     sbigHeaderP->maxval = 65535;  /* initial assumption */
-    sbigHeaderP->haveCamera = false;  /* initial assumption */
+    sbigHeaderP->haveCameraType = false;  /* initial assumption */
 
     for (cursor = &buffer[0], endOfHeader = false; !endOfHeader;) {
         char * const cp = strchr(cursor, '\n');
@@ -183,8 +183,8 @@ readSbigHeader(FILE *              const ifP,
 
             if (ep != NULL) {
                 *ep = '\0';
-                strcpy(sbigHeaderP->camera, cursor);
-                sbigHeaderP->haveCamera = true;
+                strcpy(sbigHeaderP->cameraType, cursor);
+                sbigHeaderP->haveCameraType = true;
                 *ep = ' ';
             }
         }
@@ -292,8 +292,8 @@ main(int argc, const char ** argv) {
 
     readSbigHeader(ifP, &hdr);
 
-    pm_message("SBIG %s %dx%d %s image, saturation level = %d",
-               (hdr.haveCamera ? hdr.camera : "ST-?"),
+    pm_message("SBIG '%s' %ux%u %s image, saturation level = %u",
+               (hdr.haveCameraType ? hdr.cameraType : "ST-?"),
                hdr.cols, hdr.rows,
                hdr.isCompressed ? "compressed" : "uncompressed",
                hdr.maxval);
