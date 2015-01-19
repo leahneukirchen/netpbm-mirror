@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.70.00
 
+              Add pgmtosbig.  Mainly a test tool for sbigtopgm.
+
               tifftopnm: allow input file to be nonseekable.
               Thanks Ludolf Holzheid <ludolf.holzheid@gmx.de>.
 
