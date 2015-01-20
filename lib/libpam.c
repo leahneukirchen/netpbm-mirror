@@ -784,8 +784,8 @@ validateMinDepth(const struct pam * const pamP,
 static void
 interpretTupleType(struct pam * const pamP) {
 /*----------------------------------------------------------------------------
-   Fill in redundant convenience fields in *pamP with information implied by
-   the pamP->tuple_type implies:
+   Fill in redundant convenience fields in *pamP with information the
+   pamP->tuple_type value implies:
 
      visual
      colorDepth
