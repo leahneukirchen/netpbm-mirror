@@ -8,8 +8,8 @@ VPATH=.:$(SRCDIR)/$(SUBDIR)
 include $(BUILDDIR)/config.mk
 
 PORTBINARIES =	asciitopgm bioradtopgm fstopgm hipstopgm \
-		lispmtopgm pgmtofs pgmtolispm pgmtopgm pgmtosbig \
-	        psidtopgm spottopgm sbigtopgm
+		lispmtopgm pgmtofs pgmtolispm pgmtopgm pgmtosbig pgmtost4 \
+	        psidtopgm spottopgm sbigtopgm st4topgm
 MATHBINARIES =	rawtopgm
 BINARIES =	$(PORTBINARIES) $(MATHBINARIES)
 
