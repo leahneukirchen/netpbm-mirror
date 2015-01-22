@@ -10,6 +10,7 @@
 ** implied warranty.
 */
 
+#include <assert.h>
 #include <math.h>
 #include <ctype.h>
 
@@ -308,6 +309,7 @@ buildPowGamma(xelval       table[],
         double const normalized = ((double) i) / maxval;
             /* Xel sample value normalized to 0..1 */
         double const v = pow(normalized, oneOverGamma);
+
         table[i] = MIN((xelval)(v * newMaxval + 0.5), newMaxval);  
             /* denormalize, round and clip */
     }
@@ -509,10 +511,14 @@ buildBt709ToSrgbGamma(xelval       table[],
         else
             radiance = pow((normalized + 0.099) / 1.099, gamma709);
 
-        if (radiance < linearCutoffSrgb)
+        assert(radiance <= 1.0);
+
+        if (radiance < linearCutoffSrgb * normalizer)
             srgb = radiance * linearExpansionSrgb;
         else
             srgb = 1.055 * pow(normalized, oneOverGammaSrgb) - 0.055;
+
+        assert(srgb <= 1.0);
 
         table[i] = srgb * newMaxval + 0.5;
     }
@@ -563,10 +569,14 @@ buildSrgbToBt709Gamma(xelval       table[],
         else
             radiance = pow((normalized + 0.099) / 1.099, gammaSrgb);
 
-        if (radiance < linearCutoff709)
+        assert(radiance <= 1.0);
+
+        if (radiance < linearCutoff709 * normalizer)
             bt709 = radiance * linearExpansion709;
         else
             bt709 = 1.055 * pow(normalized, oneOverGamma709) - 0.055;
+
+        assert(bt709 <= 1.0);
 
         table[i] = bt709 * newMaxval + 0.5;
     }

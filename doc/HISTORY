@@ -15,6 +15,10 @@ not yet  BJH  Release 10.70.00
 
               Add yuy2topam.  Thanks Michael Haardt.
 
+              pnmgamma -srgbtobt709, -bt709tosrgb: fix bug; incorrect output
+              nearly always.  Always broken (These options were new in
+              Netpbm 10.32 (February 2006)).
+
               On Windows, don't leave temporary files around (previous code
               did so because unlink of an open file fails in Windows; new
               code deletes temporary files via atexit).  Thanks
