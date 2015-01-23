@@ -24,7 +24,7 @@ bytesToWordint(wordintBytes bytes) {
 static __inline__ void
 wordintToBytes(wordintBytes * const bytesP,
                wordint        const wordInt) {
-    uint16_t const hi = ((wordInt >> 48) & 0xFF)
+    uint16_t const hi = ((wordInt >> 48) & 0xFF);
     uint16_t const mh = ((wordInt >> 32) & 0xFF);
     uint16_t const ml = ((wordInt >> 24) & 0xFF);
     uint16_t const lo = ((wordInt >>  0) & 0xFF);
