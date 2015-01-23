@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+15.01.23 BJH  Release 10.69.04
+
+              build: fix compile failure in wordint_access_be.h with Bigendian
+              target platforms.  Broken in Netpbm 10.63 (June 2013).
+
 15.01.22 BJH  Release 10.69.03
 
               pnmgamma -srgbtobt709, -bt709tosrgb: fix bug; incorrect output
