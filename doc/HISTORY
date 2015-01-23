@@ -28,8 +28,8 @@ not yet  BJH  Release 10.70.00
               internal header file pm_c_util.h.  Introduced in Netpbm
               10.69 (December 2014).
 
-              build: fix compile failure in wordint_access_be.h with
-              Bigendian target platforms.
+              build: fix compile failure in wordint_access_be.h with Bigendian
+              target platforms.  Broken in Netpbm 10.63 (June 2013).
 
               build: fix compile failure in pbmtomacp, ppmtoacad, pgmabel:
               TRUE redefined.  Introduced in Netpbm 10.69 (December 2014).
