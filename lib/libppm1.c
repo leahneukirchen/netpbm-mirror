@@ -145,8 +145,8 @@ ppm_readppminit(FILE *   const fileP,
         break;
 
     default:
-        pm_error("bad magic number %d - not a PPM, PGM, PBM, or PAM file",
-                 PAM_FORMAT_TYPE(*formatP));
+        pm_error("bad magic number 0x%x - not a PPM, PGM, PBM, or PAM file",
+                 realFormat);
     }
     validateComputableSize(*colsP, *rowsP);
 }

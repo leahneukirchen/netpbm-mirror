@@ -234,6 +234,9 @@ endif
 # In May 2002, pamtouil replaced ppmtouil
 	cd $(PKGDIR)/bin ; \
 	$(SYMLINK) pamtouil$(EXE) ppmtouil$(EXE)
+# In July 2002, pamtotga replaced ppmtotga
+	cd $(PKGDIR)/bin ; \
+	$(SYMLINK) pamtotga$(EXE) ppmtotga$(EXE)
 # In March 2005, we realized that pamtopnm obviates pnmtopnm
 	cd $(PKGDIR)/bin ; \
 	$(SYMLINK) pamtopnm$(EXE) pnmtopnm$(EXE)

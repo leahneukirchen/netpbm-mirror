@@ -302,7 +302,7 @@ getDataBlock(FILE *          const ifP,
     successfulRead = ReadOK(ifP, &count, 1);
     if (!successfulRead) {
         pm_message("EOF or error in reading DataBlock size from file" );
-        *errorP = FALSE;
+        *errorP = NULL;
         *eofP = TRUE;
         *lengthP = 0;
     } else {

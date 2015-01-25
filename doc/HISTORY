@@ -4,6 +4,23 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+15.01.25 BJH  Release 10.47.54
+
+              pnmgamma -srgbtobt709, -bt709tosrgb: fix bug; incorrect output
+              nearly always.  Always broken (These options were new in
+              Netpbm 10.32 (February 2006)).
+
+              build: fix incompatible type compilation error in giftopnm.
+              Broken in Netpbm 10.38 (March 2007) (but obviously manifests
+              only in recent build environments).
+
+              Fix bogus message from ppmXXX programs when the input is not
+              (per the magic number) a Netpbm image.  Introduced after
+              Netpbm 10.26 (January 2005) but before Netpbm 10.35 (August
+              2006).
+
+              Install: make backward compatibility link ppmtotga -> pamtotga .
+
 14.11.23 BJH  Release 10.47.53
 
               pambackground: fix bug: segfault or incorrect results in most
