@@ -129,11 +129,13 @@ static void
 load(const struct pam * const pamP,
      unsigned int       const hstep,
      sample ***         const pixelsP,
-     unsigned int *     const hsamplesP) {
+     unsigned int *     const hsampleCtP) {
 /*----------------------------------------------------------------------------
-  read file into memory, returning array of rows
+  Read part of the raster - to wit, every hstep'th column of every row.
+  Return that sampling of the raster as *pixelsP, and the resulting
+  array width (pixels in each row) as *hsampleCtP.
 -----------------------------------------------------------------------------*/
-    unsigned int const hsamples = 1 + (pamP->width - 1) / hstep;
+    unsigned int const hsampleCt = 1 + (pamP->width - 1) / hstep;
         /* use only this many cols */
 
     unsigned int row;
@@ -153,19 +155,19 @@ load(const struct pam * const pamP,
 
         pnm_readpamrow(pamP, tuplerow);
 
-        MALLOCARRAY(pixels[row], hsamples);
+        MALLOCARRAY(pixels[row], hsampleCt);
         if (pixels[row] == NULL)
             pm_error("Unable to allocate %u-sample array for Row %u",
-                     hsamples, row);
+                     hsampleCt, row);
 
         /* save every hstep'th column */
-        for (i = col = 0; i < hsamples; ++i, col += hstep)
+        for (i = col = 0; i < hsampleCt; ++i, col += hstep)
             pixels[row][i] = tuplerow[col][0];
     }
 
     pnm_freepamrow(tuplerow);
 
-    *hsamplesP = hsamples;
+    *hsampleCtP = hsampleCt;
     *pixelsP   = pixels;
 }
 
@@ -189,7 +191,7 @@ static void
 replacePixelValuesWithScaledDiffs(
     const struct pam * const pamP,
     sample **          const pixels,
-    unsigned int       const hsamples,
+    unsigned int       const hsampleCt,
     unsigned int       const dstep) {
 /*----------------------------------------------------------------------------
   Replace pixel values with scaled differences used for all
@@ -201,7 +203,7 @@ replacePixelValuesWithScaledDiffs(
 
     for (row = dstep; row < pamP->height; ++row) {
         unsigned int col;
-        for (col = 0; col < hsamples; ++col) {
+        for (col = 0; col < hsampleCt; ++col) {
             int const d = pixels[row - dstep][col] - pixels[row][col];
             unsigned int const absd = d < 0 ? -d : d;
             pixels[row - dstep][col] = m * absd;  /* scale the difference */
@@ -287,10 +289,11 @@ scoreAngle(const struct pam * const pamP,
            float              const angle,
            float *            const scoreP) {
 /*----------------------------------------------------------------------------
-  Calculate the score for assuming the image described by *pamP and
-  'pixels' is tilted down by angle 'angle' (in degrees) from what it
-  should be.  I.e. the angle from the top edge of the paper to the
-  lines of text in the image is 'angle'.
+  Calculate the score for assuming the image described by *pamP and 'pixels'
+  is tilted down by angle 'angle' (in degrees) from what it should be.
+  I.e. the angle from the top edge of the paper to the lines of text in the
+  image is 'angle'.  Positive means the text slopes down; negative means it
+  slopes up.
 
   The score is a measure of how bright the lines of the image are if
   we assume this angle.  If the angle is right, there should be lots
@@ -360,7 +363,10 @@ getBestAngleLocal(
     float *            const bestAngleP,
     float *            const qualityP) {
 /*----------------------------------------------------------------------------
-  find angle of highest score within a range
+  Find the angle that gives the highest score within the range
+  [minangle, maxangle].  Those are in degrees, with positive meaning
+  the subject is rotated clockwise on the page (so a horizontal line in
+  the subject would slope down across the page).
 -----------------------------------------------------------------------------*/
     int const nsamples = ((maxangle - minangle) / incr + 1.5);
 
@@ -415,23 +421,33 @@ getBestAngleLocal(
 
 
 static void
-readRelevantPixels(const char *   const inputFilename,
-                   unsigned int   const hstepReq,
-                   unsigned int   const vstepReq,
-                   unsigned int * const hstepP,
-                   unsigned int * const vstepP,
-                   sample ***     const pixelsP,
-                   struct pam *   const pamP,
-                   unsigned int * const hsampleCtP) {
+readSampledPixels(const char *   const inputFilename,
+                  unsigned int   const hstepReq,
+                  unsigned int   const vstepReq,
+                  unsigned int * const hstepP,
+                  unsigned int * const vstepP,
+                  sample ***     const pixelsP,
+                  struct pam *   const pamP,
+                  unsigned int * const hsampleCtP) {
 /*----------------------------------------------------------------------------
-  load the image, saving only the pixels we might actually inspect
+  Read the image.
+
+  Sample the image and return the selected pixels as *pixelsP, which is
+  an array the same height as the image, but with only certain columns
+  sampled.  Return as *hsampleCtP the number of columns sampled (i.e. the
+  width of the *pixelsP array).
+
+  Return the horizontal step size used in the sampling as *hstepP.
+  Return the appropriate vertical step size as *vstepP.
 -----------------------------------------------------------------------------*/
     FILE * ifP;
     unsigned int hstep;
     unsigned int vstep;
 
     ifP = pm_openr(inputFilename);
+
     pnm_readpaminit(ifP, pamP, PAM_STRUCT_SIZE(tuple_type));
+
     computeSteps(pamP, hstepReq, vstepReq, &hstep, &vstep);
 
     load(pamP, hstep, pixelsP, hsampleCtP);
@@ -505,8 +521,8 @@ main(int argc, const char ** argv) {
 
     parseCommandLine(argc, argv, &cmdline);
 
-    readRelevantPixels(cmdline.inputFilename, cmdline.hstep, cmdline.vstep,
-                       &hstep, &vstep, &pixels, &pam, &hsampleCt);
+    readSampledPixels(cmdline.inputFilename, cmdline.hstep, cmdline.vstep,
+                      &hstep, &vstep, &pixels, &pam, &hsampleCt);
 
     replacePixelValuesWithScaledDiffs(&pam, pixels, hsampleCt, cmdline.dstep);
 
