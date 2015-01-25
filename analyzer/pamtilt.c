@@ -129,11 +129,13 @@ static void
 load(const struct pam * const pamP,
      unsigned int       const hstep,
      sample ***         const pixelsP,
-     unsigned int *     const hsamplesP) {
+     unsigned int *     const hsampleCtP) {
 /*----------------------------------------------------------------------------
-  read file into memory, returning array of rows
+  Read part of the raster - to wit, every hstep'th column of every row.
+  Return that sampling of the raster as *pixelsP, and the resulting
+  array width (pixels in each row) as *hsampleCtP.
 -----------------------------------------------------------------------------*/
-    unsigned int const hsamples = 1 + (pamP->width - 1) / hstep;
+    unsigned int const hsampleCt = 1 + (pamP->width - 1) / hstep;
         /* use only this many cols */
 
     unsigned int row;
@@ -153,19 +155,19 @@ load(const struct pam * const pamP,
 
         pnm_readpamrow(pamP, tuplerow);
 
-        MALLOCARRAY(pixels[row], hsamples);
+        MALLOCARRAY(pixels[row], hsampleCt);
         if (pixels[row] == NULL)
             pm_error("Unable to allocate %u-sample array for Row %u",
-                     hsamples, row);
+                     hsampleCt, row);
 
         /* save every hstep'th column */
-        for (i = col = 0; i < hsamples; ++i, col += hstep)
+        for (i = col = 0; i < hsampleCt; ++i, col += hstep)
             pixels[row][i] = tuplerow[col][0];
     }
 
     pnm_freepamrow(tuplerow);
 
-    *hsamplesP = hsamples;
+    *hsampleCtP = hsampleCt;
     *pixelsP   = pixels;
 }
 
@@ -189,7 +191,7 @@ static void
 replacePixelValuesWithScaledDiffs(
     const struct pam * const pamP,
     sample **          const pixels,
-    unsigned int       const hsamples,
+    unsigned int       const hsampleCt,
     unsigned int       const dstep) {
 /*----------------------------------------------------------------------------
   Replace pixel values with scaled differences used for all
@@ -201,7 +203,7 @@ replacePixelValuesWithScaledDiffs(
 
     for (row = dstep; row < pamP->height; ++row) {
         unsigned int col;
-        for (col = 0; col < hsamples; ++col) {
+        for (col = 0; col < hsampleCt; ++col) {
             int const d = pixels[row - dstep][col] - pixels[row][col];
             unsigned int const absd = d < 0 ? -d : d;
             pixels[row - dstep][col] = m * absd;  /* scale the difference */
@@ -212,22 +214,36 @@ replacePixelValuesWithScaledDiffs(
 
 
 static unsigned long
-totalBrightness(sample **    const pixelWindow,
+totalBrightness(sample **    const pixels,
                 unsigned int const hsampleCt,
+                unsigned int const startRow,
                 float        const dy) {
 /*----------------------------------------------------------------------------
-   Total brightness of samples in the line that goes from the top left corner
-   of 'pixelWindow' down to the right at 'dy' rows per column.
+   Total brightness of samples in the line that goes from the left edge
+   of Row 'startRow' of 'pixels' down to the right at 'dy' rows per column.
+   
+   Note that 'dy' can be negative.
+
+   Assume that whatever 'dy' is, the sloping line thus described remains
+   within 'pixels'.
 -----------------------------------------------------------------------------*/
     unsigned long total;
-    unsigned int i;
-    float rowOffset;
+    unsigned int x;
+    float y;
+        /* The vertical location in the 'pixels' region of the currently
+           analyzed pixel.  0 is the top of the image.  Note that while
+           'pixels' is discrete pixels, this is a location in continuous
+           space.  We consider the brightness of the pixel at 1.5 to be
+           the mean of the brightness of the pixel in row 1 and the pixel
+           in row 2.
+        */
+    for (x = 0, y = startRow + 0.5, total = 0;
+         x < hsampleCt;
+         ++x, y += dy) {
 
-    for (i = 0, rowOffset = 0.5, total = 0;
-         i < hsampleCt;
-         ++i, rowOffset += dy) {
+        assert(y >= 0.0);  /* Because of entry conditions */
 
-        total += pixelWindow[(unsigned)rowOffset][i];
+        total += pixels[(unsigned)y][x];
     }
     return total;
 }
@@ -266,7 +282,7 @@ scoreAngleRegion(sample **    const pixels,
 
     for (row = startRow, sum = 0.0, n = 0; row < endRow; row += vstep) {
         double const dt =
-            tscale * totalBrightness(&pixels[row], hsampleCt, dy);
+            tscale * totalBrightness(pixels, hsampleCt, row, dy);
             /* mean brightness of the samples in the line */
 
         sum += dt * dt;
@@ -283,20 +299,21 @@ scoreAngle(const struct pam * const pamP,
            sample **          const pixels,
            unsigned int       const hstep,
            unsigned int       const vstep,
-           unsigned int       const hsamples,
+           unsigned int       const hsampleCt,
            float              const angle,
            float *            const scoreP) {
 /*----------------------------------------------------------------------------
-  Calculate the score for assuming the image described by *pamP and
-  'pixels' is tilted down by angle 'angle' (in degrees) from what it
-  should be.  I.e. the angle from the top edge of the paper to the
-  lines of text in the image is 'angle'.
+  Calculate the score for assuming the image described by *pamP and 'pixels'
+  is tilted down by angle 'angle' (in degrees) from what it should be.
+  I.e. the angle from the top edge of the paper to the lines of text in the
+  image is 'angle'.  Positive means the text slopes down; negative means it
+  slopes up.
 
   The score is a measure of how bright the lines of the image are if
   we assume this angle.  If the angle is right, there should be lots
   of lines that are all white, because they are between lines of text.
   If the angle is wrong, many lines will cross over lines of text and
-  thus be less that all white.  A higher score indicates 'angle' is more
+  thus be less than all white.  A higher score indicates 'angle' is more
   likely to be the angle at which the image is tilted.
 
   If 'angle' is so great that not a single line goes all the way across the
@@ -304,7 +321,7 @@ scoreAngle(const struct pam * const pamP,
   every other case, it is nonnegative.
   
   'pixels' is NOT all the pixels in the image; it is just a sampling.
-  In each row, it contains only 'hsamples' pixels, sampled from the
+  In each row, it contains only 'hsampleCt' pixels, sampled from the
   image at intervals of 'hstep' pixels.  E.g if the image is 1000
   pixels wide, pixels might be only 10 pixels wide, containing columns
   0, 100, 200, etc. of the image.
@@ -316,7 +333,7 @@ scoreAngle(const struct pam * const pamP,
         /* How much a line sinks because of the tilt when we move one sample
            ('hstep' columns of the image) to the right.
         */
-    if (fabs(dy * hsamples) > pamP->height) {
+    if (fabs(dy * hsampleCt) > pamP->height) {
         /* This is so tilted that not a single line of the image fits
            entirely on the page, so we can't do the measurement.
         */
@@ -329,17 +346,17 @@ scoreAngle(const struct pam * const pamP,
                off the page and we can't follow them.
             */
             startRow = 0;
-            endRow = pamP->height - dy * hsamples;
+            endRow = (unsigned int)(pamP->height - dy * hsampleCt + 0.5);
         } else {
             /* Lines of image rise as you go right, so the topmost lines go
                off the page and we can't follow them.
             */
-            startRow = 0 - dy * hsamples;
+            startRow = (unsigned int)(0 - dy * hsampleCt + 0.5);
             endRow = pamP->height;
         }
         assert(endRow > startRow);  /* because of 'if (fabs(dy ...' */
 
-        scoreAngleRegion(pixels, hsamples, startRow, endRow, vstep, dy,
+        scoreAngleRegion(pixels, hsampleCt, startRow, endRow, vstep, dy,
                          scoreP);
     }
 }
@@ -352,7 +369,7 @@ getBestAngleLocal(
     sample **          const pixels,
     unsigned int       const hstep,
     unsigned int       const vstep,
-    unsigned int       const hsamples,
+    unsigned int       const hsampleCt,
     float              const minangle,
     float              const maxangle,
     float              const incr,
@@ -360,7 +377,10 @@ getBestAngleLocal(
     float *            const bestAngleP,
     float *            const qualityP) {
 /*----------------------------------------------------------------------------
-  find angle of highest score within a range
+  Find the angle that gives the highest score within the range
+  [minangle, maxangle].  Those are in degrees, with positive meaning
+  the subject is rotated clockwise on the page (so a horizontal line in
+  the subject would slope down across the page).
 -----------------------------------------------------------------------------*/
     int const nsamples = ((maxangle - minangle) / incr + 1.5);
 
@@ -382,7 +402,7 @@ getBestAngleLocal(
     total = 0;
     for (i = 0; i < nsamples; i++) {
         angle = minangle + i * incr;
-        scoreAngle(pamP, pixels, hstep, vstep, hsamples, angle, &score);
+        scoreAngle(pamP, pixels, hstep, vstep, hsampleCt, angle, &score);
         results[i] = score;
         if (score > bestscore ||
             (score == bestscore && fabs(angle) < fabs(bestangle))) {
@@ -415,26 +435,36 @@ getBestAngleLocal(
 
 
 static void
-readRelevantPixels(const char *   const inputFilename,
-                   unsigned int   const hstepReq,
-                   unsigned int   const vstepReq,
-                   unsigned int * const hstepP,
-                   unsigned int * const vstepP,
-                   sample ***     const pixelsP,
-                   struct pam *   const pamP,
-                   unsigned int * const hsamplesP) {
+readSampledPixels(const char *   const inputFilename,
+                  unsigned int   const hstepReq,
+                  unsigned int   const vstepReq,
+                  unsigned int * const hstepP,
+                  unsigned int * const vstepP,
+                  sample ***     const pixelsP,
+                  struct pam *   const pamP,
+                  unsigned int * const hsampleCtP) {
 /*----------------------------------------------------------------------------
-  load the image, saving only the pixels we might actually inspect
+  Read the image.
+
+  Sample the image and return the selected pixels as *pixelsP, which is
+  an array the same height as the image, but with only certain columns
+  sampled.  Return as *hsampleCtP the number of columns sampled (i.e. the
+  width of the *pixelsP array).
+
+  Return the horizontal step size used in the sampling as *hstepP.
+  Return the appropriate vertical step size as *vstepP.
 -----------------------------------------------------------------------------*/
     FILE * ifP;
     unsigned int hstep;
     unsigned int vstep;
 
     ifP = pm_openr(inputFilename);
+
     pnm_readpaminit(ifP, pamP, PAM_STRUCT_SIZE(tuple_type));
+
     computeSteps(pamP, hstepReq, vstepReq, &hstep, &vstep);
 
-    load(pamP, hstep, pixelsP, hsamplesP);
+    load(pamP, hstep, pixelsP, hsampleCtP);
 
     *hstepP = hstep;
     *vstepP = vstep;
@@ -449,7 +479,7 @@ getAngle(const struct pam * const pamP,
          sample **          const pixels,
          unsigned int       const hstep,
          unsigned int       const vstep,
-         unsigned int       const hsamples,
+         unsigned int       const hsampleCt,
          float              const maxangle,
          float              const astep,
          float              const qmin,
@@ -461,7 +491,7 @@ getAngle(const struct pam * const pamP,
     float da;
     float lastq;        /* quality (s/n ratio) of last measurement */
     
-    getBestAngleLocal(pamP, pixels, hstep, vstep, hsamples,
+    getBestAngleLocal(pamP, pixels, hstep, vstep, hsampleCt,
                       -maxangle, maxangle, astep, verbose,
                       &a, &lastq);
 
@@ -474,14 +504,14 @@ getAngle(const struct pam * const pamP,
 
     /* make a finer search in the neighborhood */
     da = astep / 10;
-    getBestAngleLocal(pamP, pixels, hstep, vstep, hsamples,
+    getBestAngleLocal(pamP, pixels, hstep, vstep, hsampleCt,
                       a - 9 * da, a + 9 * da, da, verbose,
                       &a, &lastq);
 
     /* iterate once more unless we don't need that much accuracy */
     if (!fast) {
         da /= 10;
-        getBestAngleLocal(pamP, pixels, hstep, vstep, hsamples,
+        getBestAngleLocal(pamP, pixels, hstep, vstep, hsampleCt,
                           a - 9 * da, a + 9 * da, da, verbose,
                           &a, &lastq);
     }
@@ -496,7 +526,7 @@ main(int argc, const char ** argv) {
     struct cmdlineInfo cmdline;
     struct pam pam;
     sample ** pixels;       /* pixel data */
-    unsigned int hsamples; /* horizontal samples used */
+    unsigned int hsampleCt; /* number of horizontal samples used */
     unsigned int hstep;    /* horizontal step size */
     unsigned int vstep;    /* vertical step size */
     float angle;
@@ -505,12 +535,12 @@ main(int argc, const char ** argv) {
 
     parseCommandLine(argc, argv, &cmdline);
 
-    readRelevantPixels(cmdline.inputFilename, cmdline.hstep, cmdline.vstep,
-                       &hstep, &vstep, &pixels, &pam, &hsamples);
+    readSampledPixels(cmdline.inputFilename, cmdline.hstep, cmdline.vstep,
+                      &hstep, &vstep, &pixels, &pam, &hsampleCt);
 
-    replacePixelValuesWithScaledDiffs(&pam, pixels, hsamples, cmdline.dstep);
+    replacePixelValuesWithScaledDiffs(&pam, pixels, hsampleCt, cmdline.dstep);
 
-    getAngle(&pam, pixels, hstep, vstep, hsamples,
+    getAngle(&pam, pixels, hstep, vstep, hsampleCt,
              cmdline.maxangle, cmdline.astep, cmdline.qmin,
              cmdline.fast, cmdline.verbose, &angle);
 
