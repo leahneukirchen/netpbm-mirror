@@ -365,7 +365,7 @@ getDataBlock(FILE *          const ifP,
         pm_message("EOF or error in reading DataBlock size from file.  %s",
                    error);
         pm_strfree(error);
-        *errorP = FALSE;
+        *errorP = NULL;
         *eofP = TRUE;
         *lengthP = 0;
     } else {

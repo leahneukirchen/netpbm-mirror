@@ -31,6 +31,10 @@ not yet  BJH  Release 10.70.00
               internal header file pm_c_util.h.  Introduced in Netpbm
               10.69 (December 2014).
 
+              build: fix incompatible type compilation error in giftopnm.
+              Broken in Netpbm 10.38 (March 2007) (but obviously manifests
+              only in recent build environments).
+
               build: fix compile failure in wordint_access_be.h with Bigendian
               target platforms.  Broken in Netpbm 10.63 (June 2013).
 
