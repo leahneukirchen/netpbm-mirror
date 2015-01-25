@@ -214,22 +214,36 @@ replacePixelValuesWithScaledDiffs(
 
 
 static unsigned long
-totalBrightness(sample **    const pixelWindow,
+totalBrightness(sample **    const pixels,
                 unsigned int const hsampleCt,
+                unsigned int const startRow,
                 float        const dy) {
 /*----------------------------------------------------------------------------
-   Total brightness of samples in the line that goes from the top left corner
-   of 'pixelWindow' down to the right at 'dy' rows per column.
+   Total brightness of samples in the line that goes from the left edge
+   of Row 'startRow' of 'pixels' down to the right at 'dy' rows per column.
+   
+   Note that 'dy' can be negative.
+
+   Assume that whatever 'dy' is, the sloping line thus described remains
+   within 'pixels'.
 -----------------------------------------------------------------------------*/
     unsigned long total;
-    unsigned int i;
-    float rowOffset;
+    unsigned int x;
+    float y;
+        /* The vertical location in the 'pixels' region of the currently
+           analyzed pixel.  0 is the top of the image.  Note that while
+           'pixels' is discrete pixels, this is a location in continuous
+           space.  We consider the brightness of the pixel at 1.5 to be
+           the mean of the brightness of the pixel in row 1 and the pixel
+           in row 2.
+        */
+    for (x = 0, y = startRow + 0.5, total = 0;
+         x < hsampleCt;
+         ++x, y += dy) {
 
-    for (i = 0, rowOffset = 0.5, total = 0;
-         i < hsampleCt;
-         ++i, rowOffset += dy) {
+        assert(y >= 0.0);  /* Because of entry conditions */
 
-        total += pixelWindow[(unsigned)rowOffset][i];
+        total += pixels[(unsigned)y][x];
     }
     return total;
 }
@@ -268,7 +282,7 @@ scoreAngleRegion(sample **    const pixels,
 
     for (row = startRow, sum = 0.0, n = 0; row < endRow; row += vstep) {
         double const dt =
-            tscale * totalBrightness(&pixels[row], hsampleCt, dy);
+            tscale * totalBrightness(pixels, hsampleCt, row, dy);
             /* mean brightness of the samples in the line */
 
         sum += dt * dt;
@@ -299,7 +313,7 @@ scoreAngle(const struct pam * const pamP,
   we assume this angle.  If the angle is right, there should be lots
   of lines that are all white, because they are between lines of text.
   If the angle is wrong, many lines will cross over lines of text and
-  thus be less that all white.  A higher score indicates 'angle' is more
+  thus be less than all white.  A higher score indicates 'angle' is more
   likely to be the angle at which the image is tilted.
 
   If 'angle' is so great that not a single line goes all the way across the
@@ -332,12 +346,12 @@ scoreAngle(const struct pam * const pamP,
                off the page and we can't follow them.
             */
             startRow = 0;
-            endRow = pamP->height - dy * hsampleCt;
+            endRow = (unsigned int)(pamP->height - dy * hsampleCt + 0.5);
         } else {
             /* Lines of image rise as you go right, so the topmost lines go
                off the page and we can't follow them.
             */
-            startRow = 0 - dy * hsampleCt;
+            startRow = (unsigned int)(0 - dy * hsampleCt + 0.5);
             endRow = pamP->height;
         }
         assert(endRow > startRow);  /* because of 'if (fabs(dy ...' */

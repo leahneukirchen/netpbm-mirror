@@ -15,6 +15,9 @@ not yet  BJH  Release 10.70.00
 
               Add yuy2topam.  Thanks Michael Haardt.
 
+              pamtilt: fix bug: unconditional crash.  Broken in Netpbm 10.63
+              (June 2013).
+
               pnmgamma -srgbtobt709, -bt709tosrgb: fix bug; incorrect output
               nearly always.  Always broken (These options were new in
               Netpbm 10.32 (February 2006)).
