@@ -63,7 +63,7 @@ parseCommandLine(int argc, const char ** argv,
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others */
 
-    if (argc-1 < 0)
+    if (argc-1 < 1)
         cmdlineP->inputFileName = "-";
     else {
         cmdlineP->inputFileName = argv[1];
