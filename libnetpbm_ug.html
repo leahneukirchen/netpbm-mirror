@@ -104,11 +104,25 @@ convenient way to organize the information upon which most the
 functions depend.  So you are free to access or set the elements of
 the structure however you want.  But you will find in most cases it is
 most convenient to call <B>pnm_readpaminit()</B> or
-<B>pnm_writepaminit()</B> to set the fields in the <B>pam</B>
+<B>pnm_writepaminit()</B> to set the members in the <B>pam</B>
 structure before calling any other pam functions, and then just to
 pass the structure unchanged in all future calls to pam functions.
 
-<P>The fields are:
+<p>It depends upon the function to which you pass the structure what members
+are inputs, what members are outputs, and what members are irrelevant.
+
+<p>It is possible for a <b>pam</b> structure <em>not to specify</em> some
+members, by operation of its <b>len</b> member.  When you supply a <b>pam</b>
+structure as an argument to a function, the function has default behavior
+defined for unspecified members.  All the functions require that you specify
+at least up through <b>maxval</b>, and some require more.
+
+<p>Likewise, a function the returns a <b>pam</b> structure can return only
+a subset of the members defined here, according to its setting of the
+<b>len</b> member.  But this normally happens only because the library is old
+and predates the existence of the omitted members.
+
+<P>The members are:
 
 <DL COMPACT>
 <DT><B>size</B>
@@ -129,9 +143,42 @@ Netpbm libraries.
 
 <DT><B>format</B>
 
-<DD>The format code of the image.  This is <B>PAM_FORMAT</B>
-unless the PAM image is really a view of a PBM, PGM, or PPM image.
-Then it's <B>PBM_FORMAT</B>, <B>RPBM_FORMAT</B>, etc.
+<DD>The format code of the image, which tells which of the various Netpbm
+image formats is being processed.  The following macros stand for those
+format codes:
+
+<dl>
+
+<dt><b>PAM_FORMAT</b>
+
+<dd>PAM
+
+<dt><b>RPBM_FORMAT</b>
+
+<dd>raw PBM format
+
+<dt><b>RPGM_FORMAT</b>
+
+<dd>raw PGM format
+
+<dt><b>RPPM_FORMAT</b>
+
+<dd>raw PPM format
+
+<dt><b>PBM_FORMAT</b>
+
+<dd>plain PBM format
+
+<dt><b>PGM_FORMAT</b>
+
+<dd>plain PGM format
+
+<dt><b>PPM_FORMAT</b>
+
+<dd>plain PPM format
+
+</dl>
+
 <p>
 There is an important quirk in the meaning of this member when you use
 the pam structure to write an image: Only the type portion of it is
@@ -175,7 +222,7 @@ for computational speed.  But this was inconsistent with the older
 difficult to write backward compatible programs.  Before Netpbm 10.32,
 it affected reading as well as writing.
 <p>
-<b>libnetpbm</b> image reading functions set this field to false, for your
+<b>libnetpbm</b> image reading functions set this member to false, for your
 convenience in building an output image pam from an input image pam.
 
 <DT><B>height</B>
@@ -204,10 +251,26 @@ member for computational speed.
 <DT><B>tuple_type</B>
 
 <DD>The tuple type of the image.  See definitions in <A
-HREF="pam.html">pam</A>.  Netpbm does not define any values for this
-except the following, which are used for a PAM image which is really a
-view of a PBM, PGM, or PPM image: <B>PAM_PBM_TUPLETYPE</B>,
-<B>PAM_PGM_TUPLETYPE</B>, <B>PAM_PPM_TUPLETYPE</B>.
+HREF="pam.html">pam</A>.  Netpbm defines values for the most common
+types of visual images, but any value is legal.  There are macros for
+these values:
+
+<dl>
+<dt><b>PAM_PBM_TUPLETYPE</b>
+<dd>black and white image, such as would alternatively be represented by a PBM
+image.
+<dt><b>PAM_PGM_TUPLETYPE</b>
+<dd>grayscale image, such as would alternatively be represented by a PGM
+image.
+<dt><b>PAM_PPM_TUPLETYPE</b>
+<dd>color image, such as would alternatively be represented by a PPM image.
+<dt><b>PAM_PBM_ALPHA_TUPLETYPE</b>
+<dd>black and white with a transparency (alpha) information.
+<dt><b>PAM_PGM_ALPHA_TUPLETYPE</b>
+<dd>grayscale with a transparency (alpha) information.
+<dt><b>PAM_PPM_ALPHA_TUPLETYPE</b>
+<dd>color with a transparency (alpha) information.
+</dl>
 
 <DT><B>allocation_depth</B>
 

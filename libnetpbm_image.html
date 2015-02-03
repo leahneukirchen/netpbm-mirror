@@ -127,6 +127,17 @@ PBM_TYPE, PGM_TYPE, PPM_TYPE, and PAM_TYPE.  Note that there are more
 format codes then there are format types because there are different
 format codes for the plain and raw subformats of each format.
 
+<p>Macros for the tuple types that are defined by Netpbm are as follows.
+See the <i>tuple_type</i> member of <a
+href="libnetpbm_ug.html#pamstruct">the <b>pam</b> structure</a>.
+<UL>
+<LI><b>PAM_PBM_TUPLETYPE</b>
+<LI><b>PAM_PGM_TUPLETYPE</b>
+<LI><b>PAM_PPM_TUPLETYPE</b>
+<LI><b>PAM_PBM_ALPHA_TUPLETYPE</b>
+<LI><b>PAM_PGM_ALPHA_TUPLETYPE</b>
+<LI><b>PAM_PPM_ALPHA_TUPLETYPE</b>
+</UL>
 
 
 <H2 id="functions">Functions</H2>
@@ -258,10 +269,9 @@ already have its column pointers set up so that it forms a C
 <P><B>pnm_readpam()</B> reads an entire image from a PAM or PNM image
 file and allocates the space in which to return the raster.  It
 expects to find the file positioned to the first byte of the image and
-leaves it positioned just after the image.  <P> The function does not
-require <B>*</B><I>pamP</I> to have any of its members set and sets
-them all.  <I>size</I> is the storage size in bytes of the
-<B>*</B><I>pamP</I> structure, normally <B>sizeof(struct pam)</B>.
+leaves it positioned just after the image.
+
+<P><B>*</B><I>pamP</I> is the same as for <b>pnm_readpaminit()</b>.
 
 <P>The return value is a newly allocated array of the rows of the image,
 with the top row being Element 0 of the array.  Each row is represented

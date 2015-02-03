@@ -1,0 +1,64 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>St4topgm User Manual</TITLE></HEAD>
+<BODY>
+<H1>st4topgm</H1>
+Updated: 20 January 2015
+<BR>
+<A HREF="#index">Table Of Contents</A>
+<H2>NAME</H2>
+
+st4topgm - convert an SBIG ST-4 camera file to PGM
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>st4topgm</B>
+
+[<I>st4file</I>]
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>st4topgm</b> reads an image file in the native format used
+by the Santa Barbara Instrument Group (SBIG) ST-4 astronomical CCD cameras,
+and produces a PGM image as output.  This format is not to be confused with
+the format most other SBIG cameras use, for which you can use
+<b>sbigtopgm</b>.
+
+<P>Additional information on SBIG cameras and documentation of the file format
+is available at the Web
+site, <A HREF="http://www.sbig.com/">http://www.sbig.com/</A>.
+
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<B><A HREF="pgmtost4.html">pgmtost4</A></B>
+<B><A HREF="sbigtopgm.html">sbigtopgm</A></B>
+<B><A HREF="pgm.html">pgm</A></B>
+
+<h2 id="history">HISTORY</h2>
+
+<p>Bryan Henderson wrote <b>st4topgm</b> for Sourceforge Netpbm in 
+January 2015.  However, there has been another program by the same name for
+the same purpose since December 2003, in the Debian version of Netpbm.
+It was written by Justin Pryzby &lt;justinpryzby@users.sf.net&gt;.
+
+<p>Bryan discovered the Debian version when Prophet of the Way did a
+comparison of the two Netpbms in January 2015.  It was the only program that
+the Debian version had that the Netpbm version did not (not counting one that
+really didn't belong in any Netpbm), so Bryan decided to add it.  Because it
+was a small program, Bryan decided to write a replacement in the Netpbm coding
+style rather than just copy Pryzby's code, but Bryan endeavoured to keep the
+same function.
+
+
+<HR>
+<H2 id="index">Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#history">HISTORY</A>
+</UL>
+</BODY>
+</HTML>

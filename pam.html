@@ -216,32 +216,30 @@ and thus their own subformats.
 as are typically represented by images in the older and more concrete
 PBM, PGM, and PPM formats.
 
-<h4>Black And White (PBM)</h4>
+<h4>Black And White</h4>
 
-<P>A black and white image, such as would be represented by a PBM
-image, has a tuple type of "BLACKANDWHITE".  Such a PAM image
-has a depth of 1 and maxval 1 where the one sample in each tuple is 0
-to represent a black pixel and 1 to represent a white one.  The
-height, width, and raster bear the obvious relationship to those of
-the equivalent PBM image.
+<P>A black and white image, such as would alternatively be represented by a
+PBM image, has a tuple type of "BLACKANDWHITE".  Such a PAM image has a depth
+of 1 and maxval 1 where the one sample in each tuple is 0 to represent a black
+pixel and 1 to represent a white one.  The height, width, and raster bear the
+obvious relationship to those of the equivalent PBM image.
 
 <P>Note that in the PBM format, a zero value means white, but in PAM,
 zero means black.
 
-<h4>Grayscale (PGM)</h4>
+<h4>Grayscale</h4>
 
-<P>A grayscale image, such as would be represented by a PGM image, has
-a tuple type of "GRAYSCALE".  Such a PAM image has a depth of 1.  The
-maxval, height, width, and raster bear the obvious relationship to
-those of the equivalent PGM image.
+<P>A grayscale image, such as would alternativelybe represented by a PGM
+image, has a tuple type of "GRAYSCALE".  Such a PAM image has a depth of 1.
+The maxval, height, width, and raster bear the obvious relationship to those
+of the equivalent PGM image.
 
-<h4>Color (PPM)</h4>
+<h4>Color</h4>
 
-<P>A color image, such as would be represented by a PPM image, has a
-typle type of "RGB".  Such a PAM image has a depth of 3.  The maxval,
-height, width, and raster bear the obvious relationship to those of
-the PPM image.  The first plane represents red, the second green, and
-the third blue.
+<P>A color image, such as would alternatively be represented by a PPM image,
+has a typle type of "RGB".  Such a PAM image has a depth of 3.  The maxval,
+height, width, and raster bear the obvious relationship to those of the PPM
+image.  The first plane represents red, the second green, and the third blue.
 
 <h4>Transparent</h4>
 
