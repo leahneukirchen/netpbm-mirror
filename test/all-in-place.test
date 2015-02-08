@@ -221,6 +221,8 @@ ordinary_testprogs="\
   pgmtopbm \
   pgmtopgm \
   pgmtoppm \
+  pgmtosbig \
+  pgmtost4 \
   pi1toppm \
   pi3topbm \
   picttoppm \
@@ -357,6 +359,7 @@ ordinary_testprogs="\
   spottopgm \
   sputoppm \
   srftopam \
+  st4topgm \
   sunicontopnm \
   svgtopam \
   tgatoppm \
@@ -373,6 +376,7 @@ ordinary_testprogs="\
   ybmtopbm \
   yuvsplittoppm \
   yuvtoppm \
+  yuy2topam \
   zeisstopnm \
 "
 
