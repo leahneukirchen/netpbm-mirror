@@ -1,0 +1,62 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Pgmtost4 User Manual</TITLE></HEAD>
+<BODY>
+<H1>pgmtost4</H1>
+Updated: 20 January 2015
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<H2>NAME</H2>
+
+pgmtost4 - convert PGM image to SBIG ST-4 format
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>pgmtost4</B>
+
+[<I>pgmfile</I>]
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>pgmtost4</b> reads a PGM image as input and produces a
+Santa Barbara Instrument Group SBIG ST-4 camera CCD image as output.
+
+<p>Note that this format is distinct from the SBIG format used with mos
+SBIG cameras.  For that, see <b>pgmtosbig</b>
+
+<ul>
+<li>The image is uncompressed
+<li>The image says it is from a &quot;ST-6&quot; camera
+<li>The image header has these lines:
+<ul>
+<li>camera type
+<li>height
+<li>width
+<li>saturation level  
+</ul>
+</ul>
+
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<A HREF="st4topgm.html">st4topgm</A>,
+<A HREF="pgm.html">pgm</A>
+
+
+<h2 id="history">HISTORY</h2>
+
+<p><b>pgmtosbig</b> was new in Netpbm 10.70, and was intended primarily as a
+test tool for <b>sbigtopgm</b>.
+
+<HR>
+<H2 id="index">Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#history">HISTORY</A>
+</UL>
+</BODY>
+</HTML>
