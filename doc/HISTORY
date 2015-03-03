@@ -22,6 +22,9 @@ not yet  BJH  Release 10.70.00
               nearly always.  Always broken (These options were new in
               Netpbm 10.32 (February 2006)).
 
+              cameratopam: fix bug: variable used before set; unknown impact.
+              Introduced in Netpbm 10.66 (March 2014).
+
               On Windows, don't leave temporary files around (previous code
               did so because unlink of an open file fails in Windows; new
               code deletes temporary files via atexit).  Thanks
