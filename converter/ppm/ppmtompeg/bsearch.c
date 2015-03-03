@@ -834,7 +834,6 @@ BMotionSearchCross2(const LumBlock * const currentBlockP,
     interpErrF = FindBestMatch(&forwardBlock, currentBlockP,
                                next, by, bx, &newMotion.bwd,
                                bestErr, searchRangeB);
-    bestErr = min(bestErr, interpErr);
     interpErrB = FindBestMatch(&backBlock, currentBlockP,
                                prev, by, bx, &newMotion.fwd,
                                bestErr, searchRangeB);
