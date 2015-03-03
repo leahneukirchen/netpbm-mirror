@@ -15,6 +15,7 @@
 #include "pm_config.h"
 #include "pm.h"
 #include "mallocvar.h"
+#include "pm_c_util.h"
 
 #include "global_variables.h"
 #include "cameratopam.h"
@@ -699,11 +700,12 @@ kodak_radc_load_raw(Image const image) {
 
     init_decoder();
     getbits(ifp, -1);
-    for (i = 0; i < 3; ++i) {
+    for (i = 0; i < ARRAY_SIZE(buf); ++i) {
         unsigned int j;
-        for (j = 0; j < 3; ++j) {
+        for (j = 0; j < ARRAY_SIZE(buf[0]); ++j) {
             unsigned int k;
-            buf[i][j][k] = 2048;
+            for (k = 0; k < ARRAY_SIZE(buf[0][0]); ++k)
+                buf[i][j][k] = 2048;
         }
     }
     for (row=0; row < height; row+=4) {
