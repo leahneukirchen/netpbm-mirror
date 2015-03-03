@@ -22,6 +22,10 @@ not yet  BJH  Release 10.70.00
               nearly always.  Always broken (These options were new in
               Netpbm 10.32 (February 2006)).
 
+              pamtosvg: fix use of unset variable; probably results in a
+              crash.  Always present (pamtosvg was new in Netpbm 10.33 (March
+              2006).
+
               cameratopam: fix bug: variable used before set; unknown impact.
               Introduced in Netpbm 10.66 (March 2014).
 
