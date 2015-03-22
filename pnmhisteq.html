@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pnmhisteq User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmhisteq</H1>
-Updated: 02 February 2010
+Updated: 22 March 2015
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -15,6 +15,9 @@ pnmhisteq - histogram equalize a PNM image
 <B>pnmhisteq</B>
 
 [<B>-gray</B>]
+
+[<B>-noblack</B>]
+[<B>-nowhite</B>]
 
 [<B>-rmap</B> <I>pgmfile</I>]
 
@@ -110,6 +113,27 @@ intended for images where the actual data are gray scale, with color
 annotations you don't want modified.  Weather satellite images that
 show continent outlines in color are best processed using this option.
 The option has no effect when the input is a graymap.
+
+<DT><B>-noblack</B>
+
+<dd>Do not include black pixels in the equalization.  The black pixels in the
+output are exactly the black pixels in the input and the number of black
+pixels does not affect the color of any other pixels.
+
+<p>Sometimes, black isn't as much a color as a background or annotation for
+the real colors, so you want to treat it specially this way.  Think of a
+picture of stars, which is nearly all black, but with lots of stars of
+different brightness.  You want to change the brightnesses of the stars to
+maximize contrast between them, but if you considered the blackness to be
+significant, all the stars would end up close to full white.
+
+<p>This option was new in Netpbm 10.70 (March 2015).
+
+<DT><B>-nowhite</B>
+
+<p>Same as <b>-noblack</b>, but for the white pixels.
+
+<p>This option was new in Netpbm 10.70 (March 2015).
 
 <DT><B>-rmap</B> <I>mapfile</I>
 
