@@ -24,6 +24,8 @@ struct cmdlineInfo {
     */
     const char * inputFileName;
     unsigned int gray;
+    unsigned int noblack;
+    unsigned int nowhite;
     const char * wmap;
     const char * rmap;
     unsigned int verbose;
@@ -55,6 +57,10 @@ parseCommandLine(int argc, char ** argv,
             &wmapSpec,          0);
     OPTENT3(0, "gray",     OPT_FLAG,   NULL,
             &cmdlineP->gray,    0);
+    OPTENT3(0, "noblack",     OPT_FLAG,   NULL,
+            &cmdlineP->noblack,    0);
+    OPTENT3(0, "nowhite",     OPT_FLAG,   NULL,
+            &cmdlineP->nowhite,    0);
     OPTENT3(0, "verbose",  OPT_FLAG,   NULL,
             &cmdlineP->verbose, 0);
 
@@ -91,8 +97,6 @@ computeLuminosityHistogram(xel * const *   const xels,
                            int             const format,
                            bool            const monoOnly,
                            unsigned int ** const lumahistP,
-                           xelval *        const lminP,
-                           xelval *        const lmaxP,
                            unsigned int *  const pixelCountP) {
 /*----------------------------------------------------------------------------
   Scan the image and build the luminosity histogram.  If the input is
@@ -162,25 +166,6 @@ computeLuminosityHistogram(xel * const *   const xels,
 
     *lumahistP = lumahist;
     *pixelCountP = pixelCount;
-    *lminP = lmin;
-    *lmaxP = lmax;
-}
-
-
-
-static void
-findMaxLuma(const xelval * const lumahist,
-            xelval         const maxval,
-            xelval *       const maxLumaP) {
-
-    xelval maxluma;
-    unsigned int i;
-
-    for (i = 0, maxluma = 0; i <= maxval; ++i)
-        if (lumahist[i] > 0)
-            maxluma = i;
-
-    *maxLumaP = maxluma;
 }
 
 
@@ -216,44 +201,148 @@ readMapFile(const char * const rmapFileName,
 
 
 
+static xelval
+maxLumaPresent(const xelval * const lumahist,
+               xelval         const darkestCandidate,
+               xelval         const brightestCandidate) {
+/*----------------------------------------------------------------------------
+    The maximum luminosity in the image, in the range ['darkestCandidate',
+   'brightestCandidate'], given that the luminosity histogram for the image is
+   'lumahist' (lumahist[N] is the number of pixels in the image with
+   luminosity N).
+-----------------------------------------------------------------------------*/
+    xelval maxluma;
+    xelval i;
+
+    for (i = darkestCandidate, maxluma = darkestCandidate;
+         i <= brightestCandidate;
+         ++i) {
+
+        if (lumahist[i] > 0)
+            maxluma = i;
+    }
+    return maxluma;
+}
+
+
+
+static void
+equalize(const unsigned int * const lumahist,
+         xelval               const darkestRemap,
+         xelval               const brightestRemap,
+         unsigned int         const remapPixelCount,
+         gray *               const lumamap) {
+/*----------------------------------------------------------------------------
+   Fill in the mappings of luminosities from 'darkestRemap' through
+   'brightestRemap' in 'lumamap', to achieve an equalization based on the
+   histogram 'lumahist'.  lumahist[N] is the number of pixels in the original
+   image of luminosity N.
+
+   'remapPixelCount' is the number of pixels in the given luminosity range.
+   It is redundant with 'lumahist'; we get it for computational convenience.
+-----------------------------------------------------------------------------*/
+    xelval const maxluma =
+        maxLumaPresent(lumahist, darkestRemap, brightestRemap);
+
+    unsigned int const range = brightestRemap - darkestRemap;
+    
+    {
+        xelval origLum;
+        unsigned int pixsum;
+
+        for (origLum = darkestRemap, pixsum = 0;
+             origLum <= brightestRemap;
+             ++origLum) {
+            
+            /* With 16 bit grays, the following calculation can overflow a 32
+               bit long.  So, we do it in floating point.
+            */
+
+            lumamap[origLum] =
+                darkestRemap +
+                ROUNDU((((double) pixsum * range)) / remapPixelCount);
+            
+            pixsum += lumahist[origLum];
+        }
+
+    }
+    {
+        double const lscale = (double)range /
+            ((lumamap[maxluma] > darkestRemap) ?
+             (double) lumamap[maxluma] - darkestRemap : (double) range);
+
+        xelval origLum;
+
+        /* Normalize so that the brightest pixels are set to maxval. */
+
+        for (origLum = darkestRemap; origLum <= brightestRemap; ++origLum)
+            lumamap[origLum] =
+                MIN(brightestRemap, 
+                    darkestRemap + ROUNDU(lumamap[origLum] * lscale));
+    }
+}
+
+
+
 static void
 computeMap(const unsigned int * const lumahist,
            xelval               const maxval,
            unsigned int         const pixelCount,
+           bool                 const noblack,
+           bool                 const nowhite,
            gray *               const lumamap) {
+/*----------------------------------------------------------------------------
+  Calculate initial histogram equalization curve.
 
-    /* Calculate initial histogram equalization curve. */
-    
-    unsigned int i;
-    unsigned int pixsum;
-    xelval maxluma;
+  'lumahist' is the luminosity histogram for the image; lumahist[N] is
+  the number of pixels that have luminosity N.
 
-    for (i = 0, pixsum = 0; i <= maxval; ++i) {
-            
-        /* With 16 bit grays, the following calculation can
-           overflow a 32 bit long.  So, we do it in floating
-           point.
+  'maxval' is the maxval of the image (ergo the maximum luminosity).
+
+  'pixelCount' is the number of pixels in the image, which is redundant
+  with 'lumahist' but provided for computational convenience.
+   
+  'noblack' means don't include the black pixels in the equalization and
+  make the black pixels in the output the same ones as in the input.
+
+  'nowhite' is equivalent for the white pixels.
+
+  We return the map as *lumamap, where lumamap[N] is the luminosity in the
+  output of a pixel with luminosity N in the input.  Its storage size must
+  be at least 'maxval' + 1.
+-----------------------------------------------------------------------------*/
+    xelval darkestRemap, brightestRemap;
+        /* The lowest and highest luminosity values that we will remap
+           according to the equalization strategy.  They're just 0 and maxval
+           unless modified by 'noblack' and 'nowhite'.
+        */
+    unsigned int remapPixelCount;
+        /* The number of pixels we map according to the equalization
+           strategy; it doesn't include black pixels and white pixels that
+           are excluded from the equalization because of 'noblack' and
+           'nowhite'
         */
 
-        lumamap[i] = ROUNDU((((double) pixsum * maxval)) / pixelCount);
+    remapPixelCount = pixelCount;  /* Initial assumption */
 
-        pixsum += lumahist[i];
+    if (noblack) {
+        lumamap[0] = 0;
+        darkestRemap = 1;
+        remapPixelCount -= lumahist[0];
+    } else {
+        darkestRemap = 0;
     }
 
-    findMaxLuma(lumahist, maxval, &maxluma);
-
-    {
-        double const lscale = (double)maxval /
-            ((lumahist[maxluma] > 0) ?
-             (double) lumamap[maxluma] : (double) maxval);
-
-        unsigned int i;
-
-        /* Normalize so that the brightest pixels are set to maxval. */
-
-        for (i = 0; i <= maxval; ++i)
-            lumamap[i] = MIN(maxval, ROUNDU(lumamap[i] * lscale));
+    if (nowhite) {
+        lumamap[maxval] = maxval;
+        brightestRemap = maxval - 1;
+        remapPixelCount -= lumahist[maxval];
+    } else {
+        brightestRemap = maxval;
     }
+
+    equalize(lumahist, darkestRemap, brightestRemap, remapPixelCount,
+             lumamap);
 }
 
 
@@ -263,6 +352,8 @@ getMapping(const char *         const rmapFileName,
            const unsigned int * const lumahist,
            xelval               const maxval,
            unsigned int         const pixelCount,
+           bool                 const noblack,
+           bool                 const nowhite,
            gray **              const lumamapP) {
 /*----------------------------------------------------------------------------
   Calculate the luminosity mapping table which gives the
@@ -275,7 +366,7 @@ getMapping(const char *         const rmapFileName,
     if (rmapFileName)
         readMapFile(rmapFileName, maxval, lumamap);
     else
-        computeMap(lumahist, maxval, pixelCount, lumamap);
+        computeMap(lumahist, maxval, pixelCount, noblack, nowhite, lumamap);
 
     *lumamapP = lumamap;
 }
@@ -410,7 +501,6 @@ main(int argc, char * argv[]) {
 
     struct cmdlineInfo cmdline;
     FILE * ifP;
-    xelval lmin, lmax;
     gray * lumamap;           /* Luminosity map */
     unsigned int * lumahist;  /* Histogram of luminosity values */
     int rows, cols;           /* Rows, columns of input image */
@@ -429,11 +519,12 @@ main(int argc, char * argv[]) {
 
     pm_close(ifP);
 
-    computeLuminosityHistogram(xels, rows, cols, maxval, format,
-                               cmdline.gray, &lumahist, &lmin, &lmax,
-                               &pixelCount);
+    computeLuminosityHistogram(xels, rows, cols, maxval, format, cmdline.gray,
+                               &lumahist, &pixelCount);
 
-    getMapping(cmdline.rmap, lumahist, maxval, pixelCount, &lumamap);
+    getMapping(cmdline.rmap, lumahist, maxval, pixelCount,
+               cmdline.noblack > 0, cmdline.nowhite > 0,
+               &lumamap);
 
     if (cmdline.verbose)
         reportMap(lumahist, maxval, lumamap);

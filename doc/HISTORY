@@ -10,10 +10,13 @@ not yet  BJH  Release 10.70.00
 
               Add pgmtosbig.  Mainly a test tool for sbigtopgm.
 
+              Add yuy2topam.  Thanks Michael Haardt.
+
               tifftopnm: allow input file to be nonseekable.
               Thanks Ludolf Holzheid <ludolf.holzheid@gmx.de>.
 
-              Add yuy2topam.  Thanks Michael Haardt.
+              pnmhisteq: add -noblack and -nowhite.  Idea from Andrew Brooks
+              <arb@sat.dundee.ac.uk>.
 
               pamtilt: fix bug: unconditional crash.  Broken in Netpbm 10.63
               (June 2013).
