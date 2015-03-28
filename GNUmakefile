@@ -354,14 +354,31 @@ netpbm.o: mergetrylist
 install.merge: local.install.merge
 .PHONY: local.install.merge
 local.install.merge:
-	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pnmnoraw
-	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm gemtopbm
-	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pnminterp
-	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pgmoil
-	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm ppmtojpeg
 	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm bmptoppm
+	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm gemtopbm
+	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm icontopbm
+	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pgmedge
 	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pgmnorm
+	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pgmoil
+	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pgmslice
+	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pngtopnm
+	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pnmarith
+	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pnmcomp
+	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pnmcut
+	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pnmdepth
+	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pnmenlarge
 	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pnmfile
+	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pnminterp
+	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pnmnoraw
+	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pnmscale
+	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pnmsplit
+	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pnmtofits
+	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pnmnoraw
+	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pnmtopnm
+	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm ppmnorm
+	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm ppmtojpeg
+	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pnmtotga
+	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pnmtouil
 
 ifneq ($(NETPBMLIBTYPE),unixstatic)
 install.lib: lib/install.lib
