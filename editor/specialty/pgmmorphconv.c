@@ -116,6 +116,18 @@ erode( bit** template, int trowso2, int tcolso2,
 } /* erode */
 
 
+static void
+subtract(gray** in1_image, gray** in2_image, gray** out_image, 
+       int rows, int cols ){
+
+  int c, r;
+
+  for( c=0; c<cols; ++c)
+    for( r=0; r<rows; ++r )
+      out_image[r][c] = in1_image[r][c] - in2_image[r][c];
+}
+
+
 
 /************************************************************
  *  Main
@@ -126,7 +138,7 @@ int main( int argc, char* argv[] ){
 
   int argn;
   char operation;
-  const char* usage = "-dilate|-erode|-open|-close <templatefile> [pgmfile]";
+  const char* usage = "-dilate|-erode|-open|-close|-gradient <templatefile> [pgmfile]";
 
   FILE* tifp;   /* template */
   int tcols, trows;
@@ -163,6 +175,8 @@ int main( int argc, char* argv[] ){
   if( pm_keymatch( argv[argn], "-open", 2   )) { operation='o'; argn++; }
   else
   if( pm_keymatch( argv[argn], "-close", 2  )) { operation='c'; argn++; }
+  else
+  if( pm_keymatch( argv[argn], "-gradient", 2  )) { operation='g'; argn++; }
   
   if( argn == argc ) pm_usage( usage );
   
@@ -237,6 +251,18 @@ int main( int argc, char* argv[] ){
     templatecount = erode(template, trowso2, tcolso2, 
                           dilated_image, out_image, rows, cols);
     pgm_freearray( dilated_image, rows );
+  }
+  else if( operation == 'g' ){
+    gray ** dilated_image, ** eroded_image;
+    dilated_image = pgm_allocarray( cols, rows );
+    eroded_image = pgm_allocarray( cols, rows );
+    templatecount = dilate(template, trowso2, tcolso2, 
+                           in_image, dilated_image, rows, cols);
+    templatecount = erode(template, trowso2, tcolso2, 
+                           in_image, eroded_image, rows, cols);
+    subtract(dilated_image, eroded_image, out_image, rows, cols);
+    pgm_freearray( dilated_image, rows );
+    pgm_freearray( eroded_image, rows );
   }
   
   if(templatecount == 0 ) pm_error( "The template was empty!" );
