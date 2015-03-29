@@ -295,7 +295,7 @@ closeMorph(bit **         const template,
 
 static void
 subtract(gray **      const subtrahendImage,
-         gray **      const substractorIImage,
+         gray **      const subtractorImage,
          gray **      const outImage, 
          unsigned int const rows,
          unsigned int const cols ) {
