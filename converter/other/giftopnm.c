@@ -41,7 +41,6 @@
 
 #define INTERLACE      0x40
 #define LOCALCOLORMAP  0x80
-#define BitSet(byte, bit)      (((byte) & (bit)) == (bit))
 
 #if !defined(BYTE_ORDER) || !defined(LITTLE_ENDIAN)
   /* make sure (BYTE_ORDER == LITTLE_ENDIAN) is FALSE */ 
@@ -1755,7 +1754,7 @@ readGifHeader(FILE *             const gifFileP,
         pm_message("Colors = %d   Color Resolution = %d",
                    cmapSize, gifScreenP->colorResolution);
     }           
-    if (BitSet(buf[4], LOCALCOLORMAP)) {    /* Global Colormap */
+    if (buf[4] & LOCALCOLORMAP) {    /* Global Colormap */
         readColorMap(gifFileP, cmapSize, &gifScreenP->colorMap,
                      &gifScreenP->hasGray, &gifScreenP->hasColor);
         if (verbose) {
@@ -1885,13 +1884,13 @@ readImageHeader(FILE *                  const ifP,
     if (error)
         pm_error("couldn't read left/top/width/height.  %s", error);
 
-    imageHeaderP->useGlobalColormap = ! BitSet(buf[8], LOCALCOLORMAP);
+    imageHeaderP->useGlobalColormap = !(buf[8] & LOCALCOLORMAP);
     imageHeaderP->localColorMapSize = 1u << ((buf[8] & 0x07) + 1);
     imageHeaderP->lpos              = LM_to_uint(buf[0], buf[1]);
     imageHeaderP->tpos              = LM_to_uint(buf[2], buf[3]);
     imageHeaderP->cols              = LM_to_uint(buf[4], buf[5]);
     imageHeaderP->rows              = LM_to_uint(buf[6], buf[7]);
-    imageHeaderP->interlaced        = !!BitSet(buf[8], INTERLACE);
+    imageHeaderP->interlaced        = !!(buf[8] & INTERLACE);
 
     if (verbose)
         reportImageHeader(*imageHeaderP);
