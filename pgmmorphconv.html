@@ -3,7 +3,7 @@
 <HEAD><TITLE>Pgmmorphconv User Manual</TITLE></HEAD>
 <BODY>
 <H1>pgmmorphconv</H1>
-Updated: 29 October 2002
+Updated: 29 March 2015
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -14,7 +14,13 @@ pgmmorphconv - perform morphological convolutions: dilation, erosion
 <H2 id="synopsis">SYNOPSIS</H2>
 
 <B>pgmmorphconv</B>
-[ <b>-erode</b> | <b>-dilate</b> | <b>-open</b> | <b>-close</b> ]
+[
+ <b>-erode</b> |
+ <b>-dilate</b> |
+ <b>-open</b> |
+ <b>-close</b> |
+ <b>-gradient</b>
+]
 <I>templatefile</I>
 [<I>pgmfile</I>]
 
@@ -67,6 +73,10 @@ erosion or dilation, respectively.  <p>The <b>-open</b> option causes
 operation.  The <b>-close</b> option causes a dilate first and then an
 erode.  If you specify none of these options, it is the same as
 <b>-dilate</b>.
+
+<p>With <b>-gradient</b>, <b>pgmmorphconv</b> produces an image which is
+the difference between the eroded image and the dilated image.
+
 
 <H2 id="seealso">SEE ALSO</H2>
 
