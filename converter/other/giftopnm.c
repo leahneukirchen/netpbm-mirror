@@ -1754,6 +1754,8 @@ readGifHeader(FILE *             const gifFileP,
                        gifScreenP->hasGray ? "contains" : "doesn't contain",
                        gifScreenP->hasColor ? "contains" : "doesn't contain");
         }
+    } else {
+        gifScreenP->ColorMap.size = 0;
     }
     
     if (gifScreenP->AspectRatio != 0 && gifScreenP->AspectRatio != 49)
@@ -1948,6 +1950,11 @@ convertImage(FILE *           const ifP,
     validateWithinGlobalScreen(imageHeader, gifScreen);
 
     if (imageHeader.useGlobalColormap) {
+        if (gifScreen.ColorMap.size == 0) {
+            pm_error("Invalid GIF: "
+                     "Image has no local color map and stream has no global "
+                     "color map either.");
+        }
         currentColorMapP = &gifScreen.ColorMap;
         hasGray  = gifScreen.hasGray;
         hasColor = gifScreen.hasColor;

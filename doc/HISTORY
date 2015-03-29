@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+15.03.29 BJH  Release 10.69.07
+
+              giftopnm: Fix bug: crashes if purported GIF has neither a global
+              color map nor a local one.
+
 15.03.03 BJH  Release 10.69.06
 
               pamtosvg: fix use of unset variable; probably results in a
