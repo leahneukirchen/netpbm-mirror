@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+15.03.29 BJH  Release 10.47.55
+
+              pamtosvg: fix use of unset variable; probably results in a
+              crash.  Always present (pamtosvg was new in Netpbm 10.33 (March
+              2006).
+
 15.01.25 BJH  Release 10.47.54
 
               pnmgamma -srgbtobt709, -bt709tosrgb: fix bug; incorrect output
