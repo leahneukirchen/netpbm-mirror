@@ -21,6 +21,9 @@ not yet  BJH  Release 10.70.00
               pgmmorphconv: add -gradient.  Thanks Michael Haardt
               <michael@moria.de>.
 
+              giftopnm: Fix bug: crashes if purported GIF has neither a global
+              color map nor a local one.
+
               pgmmorphconv: fix bug: always produces PGM Plain format.
 
               pamtilt: fix bug: unconditional crash.  Broken in Netpbm 10.63

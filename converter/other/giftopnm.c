@@ -239,7 +239,15 @@ typedef struct {
 struct GifScreen {
     unsigned int    width;
     unsigned int    height;
+    bool            hasGlobalColorMap;
+        /* The stream has a global color map, to wit 'colorMap'.
+           (If the stream doesn't have a global color map, the individual
+           images must each have a local color map)
+        */
     GifColorMap     colorMap;
+        /* The global color map for the stream.  Meaningful only if
+           'hasGlobalColorMap' is true.
+        */
     unsigned int    colorResolution;
     unsigned int    background;
     unsigned int    aspectRatio;
@@ -1744,24 +1752,26 @@ readGifHeader(FILE *             const gifFileP,
     gifScreenP->aspectRatio     = buf[6];
 
     if (verbose) {
-        pm_message("GIF Width = %d GIF Height = %d "
-                   "Pixel aspect ratio = %d (%f:1)",
+        pm_message("GIF Width = %u GIF Height = %u "
+                   "Pixel aspect ratio = %u (%f:1)",
                    gifScreenP->width, gifScreenP->height, 
                    gifScreenP->aspectRatio, 
                    gifScreenP->aspectRatio == 0 ? 
                    1 : (gifScreenP->aspectRatio + 15) / 64.0);
-        pm_message("Colors = %d   Color Resolution = %d",
+        pm_message("Global color count = %u   Color Resolution = %u",
                    cmapSize, gifScreenP->colorResolution);
     }           
     if (buf[4] & GLOBALCOLORMAP) {
+        gifScreenP->hasGlobalColorMap = true;
         readColorMap(gifFileP, cmapSize, &gifScreenP->colorMap,
                      &gifScreenP->hasGray, &gifScreenP->hasColor);
         if (verbose) {
-            pm_message("Color map %s grays, %s colors", 
+            pm_message("Global color map %s grays, %s colors", 
                        gifScreenP->hasGray ? "contains" : "doesn't contain",
                        gifScreenP->hasColor ? "contains" : "doesn't contain");
         }
-    }
+    } else
+        gifScreenP->hasGlobalColorMap = false;
     
     if (gifScreenP->aspectRatio != 0 && gifScreenP->aspectRatio != 49)
         warnUserNotSquare(gifScreenP->aspectRatio);
@@ -1972,10 +1982,14 @@ convertImage(FILE *           const ifP,
         readColorMap(ifP, imageHeader.localColorMapSize, &localColorMap, 
                      &hasGray, &hasColor);
         currentColorMapP = &localColorMap;
-    } else {
+    } else if (gifScreen.hasGlobalColorMap) {
         currentColorMapP = &gifScreen.colorMap;
         hasGray  = gifScreen.hasGray;
         hasColor = gifScreen.hasColor;
+    } else {
+        pm_error("Invalid GIF: "
+                 "Image has no local color map and stream has no global "
+                 "color map either.");
     }
 
     if (!skipIt) {
