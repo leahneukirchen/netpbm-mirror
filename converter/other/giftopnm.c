@@ -39,9 +39,6 @@
 
 #define MAX_LZW_BITS  12
 
-#define INTERLACE      0x40
-#define LOCALCOLORMAP  0x80
-
 #if !defined(BYTE_ORDER) || !defined(LITTLE_ENDIAN)
   /* make sure (BYTE_ORDER == LITTLE_ENDIAN) is FALSE */ 
   #define BYTE_ORDER    0
@@ -1711,6 +1708,8 @@ readGifHeader(FILE *             const gifFileP,
    positioned to the beginning of a GIF stream.  Return the info from it
    as *gifScreenP.
 -----------------------------------------------------------------------------*/
+#define GLOBALCOLORMAP  0x80
+
     unsigned char buf[16];
     char version[4];
     unsigned int cmapSize;
@@ -1754,7 +1753,7 @@ readGifHeader(FILE *             const gifFileP,
         pm_message("Colors = %d   Color Resolution = %d",
                    cmapSize, gifScreenP->colorResolution);
     }           
-    if (buf[4] & LOCALCOLORMAP) {    /* Global Colormap */
+    if (buf[4] & GLOBALCOLORMAP) {
         readColorMap(gifFileP, cmapSize, &gifScreenP->colorMap,
                      &gifScreenP->hasGray, &gifScreenP->hasColor);
         if (verbose) {
@@ -1766,6 +1765,8 @@ readGifHeader(FILE *             const gifFileP,
     
     if (gifScreenP->aspectRatio != 0 && gifScreenP->aspectRatio != 49)
         warnUserNotSquare(gifScreenP->aspectRatio);
+
+#undef GLOBALCOLORMAP
 }
 
 
@@ -1838,7 +1839,13 @@ struct GifImageHeader {
 /*----------------------------------------------------------------------------
    Information in the header (first 9 bytes) of a GIF image.
 -----------------------------------------------------------------------------*/
-    bool useGlobalColormap;
+    bool hasLocalColormap;
+        /* The image has its own color map.  Its size is 'localColorMapSize' */
+        /* (If an image does not have its own color map, the image uses the 
+           global color map for the GIF stream)
+        */
+    unsigned int localColorMapSize;
+        /* Meaningful only if 'hasLocalColormap' is true. */
 
     /* Position of the image (max 65535) */
     unsigned int lpos;
@@ -1847,7 +1854,7 @@ struct GifImageHeader {
     /* Dimensions of the image (max 65535) */
     unsigned int cols;
     unsigned int rows;
-    unsigned int localColorMapSize;
+
     bool interlaced;
 };
 
@@ -1864,11 +1871,11 @@ reportImageHeader(struct GifImageHeader const imageHeader) {
         pm_message("  Image left position: %u top position: %u",
                    imageHeader.lpos, imageHeader.tpos);
     
-    if (imageHeader.useGlobalColormap)
-        pm_message("  Uses global colormap");
-    else
+    if (imageHeader.hasLocalColormap)
         pm_message("  Uses local colormap of %u colors",
                    imageHeader.localColorMapSize);
+    else
+        pm_message("  Uses global colormap");
 }
 
 
@@ -1877,6 +1884,9 @@ static void
 readImageHeader(FILE *                  const ifP,
                 struct GifImageHeader * const imageHeaderP) {
 
+#define LOCALCOLORMAP  0x80
+#define INTERLACE      0x40
+
     unsigned char buf[16];
     const char * error;
 
@@ -1884,7 +1894,7 @@ readImageHeader(FILE *                  const ifP,
     if (error)
         pm_error("couldn't read left/top/width/height.  %s", error);
 
-    imageHeaderP->useGlobalColormap = !(buf[8] & LOCALCOLORMAP);
+    imageHeaderP->hasLocalColormap  = !!(buf[8] & LOCALCOLORMAP);
     imageHeaderP->localColorMapSize = 1u << ((buf[8] & 0x07) + 1);
     imageHeaderP->lpos              = LM_to_uint(buf[0], buf[1]);
     imageHeaderP->tpos              = LM_to_uint(buf[2], buf[3]);
@@ -1894,6 +1904,9 @@ readImageHeader(FILE *                  const ifP,
 
     if (verbose)
         reportImageHeader(*imageHeaderP);
+
+#undef INTERLACE
+#undef LOCALCOLORMAP
 }
 
 
@@ -1955,14 +1968,14 @@ convertImage(FILE *           const ifP,
 
     validateWithinGlobalScreen(imageHeader, gifScreen);
 
-    if (imageHeader.useGlobalColormap) {
-        currentColorMapP = &gifScreen.colorMap;
-        hasGray  = gifScreen.hasGray;
-        hasColor = gifScreen.hasColor;
-    } else {
+    if (imageHeader.hasLocalColormap) {
         readColorMap(ifP, imageHeader.localColorMapSize, &localColorMap, 
                      &hasGray, &hasColor);
         currentColorMapP = &localColorMap;
+    } else {
+        currentColorMapP = &gifScreen.colorMap;
+        hasGray  = gifScreen.hasGray;
+        hasColor = gifScreen.hasColor;
     }
 
     if (!skipIt) {
