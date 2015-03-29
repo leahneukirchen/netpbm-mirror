@@ -18,6 +18,9 @@ not yet  BJH  Release 10.70.00
               pnmhisteq: add -noblack and -nowhite.  Idea from Andrew Brooks
               <arb@sat.dundee.ac.uk>.
 
+              pgmmorphconv: add -gradient.  Thanks Michael Haardt
+              <michael@moria.de>.
+
               pamtilt: fix bug: unconditional crash.  Broken in Netpbm 10.63
               (June 2013).
 
