@@ -21,6 +21,8 @@ not yet  BJH  Release 10.70.00
               pgmmorphconv: add -gradient.  Thanks Michael Haardt
               <michael@moria.de>.
 
+              pgmmorphconv: fix bug: always produces PGM Plain format.
+
               pamtilt: fix bug: unconditional crash.  Broken in Netpbm 10.63
               (June 2013).
 

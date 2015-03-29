@@ -404,7 +404,7 @@ main(int argc, const char ** argv) {
     if (templateCount == 0)
         pm_error( "The template was empty!" );
 
-    pgm_writepgm(stdout, outputImage, cols, rows, maxval, 1);
+    pgm_writepgm(stdout, outputImage, cols, rows, maxval, 0);
 
     pgm_freearray(outputImage, rows);
     pgm_freearray(inputImage, rows);
