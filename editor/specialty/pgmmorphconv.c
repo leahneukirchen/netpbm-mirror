@@ -294,18 +294,22 @@ closeMorph(bit **         const template,
 
 
 static void
-subtract(gray **      const in1Image,
-         gray **      const in2Image,
+subtract(gray **      const subtrahendImage,
+         gray **      const substractorIImage,
          gray **      const outImage, 
          unsigned int const rows,
          unsigned int const cols ) {
+
+    /* (I call the minuend the subtrahend and the subtrahend the subtractor,
+       to be consistent with other arithmetic terminology).
+    */
 
     unsigned int c;
 
     for (c = 0; c < cols; ++c) {
         unsigned int r;
         for (r = 0; r < rows; ++r)
-            outImage[r][c] = in1Image[r][c] - in2Image[r][c];
+            outImage[r][c] = subtrahendImage[r][c] - subtractorImage[r][c];
     }
 }
 
