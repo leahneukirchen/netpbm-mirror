@@ -18,9 +18,9 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#include "pm_config.h"
-#include "pm_c_util.h"
-#include "mallocvar.h"
+#include "netpbm/pm_config.h"
+#include "netpbm/pm_c_util.h"
+#include "netpbm/mallocvar.h"
 #include "ppm.h"
 #include "ppmdfont.h"
 #include "ppmdraw.h"

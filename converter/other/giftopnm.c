@@ -39,10 +39,6 @@
 
 #define MAX_LZW_BITS  12
 
-#define INTERLACE      0x40
-#define LOCALCOLORMAP  0x80
-#define BitSet(byte, bit)      (((byte) & (bit)) == (bit))
-
 #if !defined(BYTE_ORDER) || !defined(LITTLE_ENDIAN)
   /* make sure (BYTE_ORDER == LITTLE_ENDIAN) is FALSE */ 
   #define BYTE_ORDER    0
@@ -90,7 +86,7 @@ readFile(FILE *          const ifP,
 
 
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -111,7 +107,7 @@ struct cmdlineInfo {
 
 static void
 parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
@@ -240,13 +236,21 @@ typedef struct {
 -----------------------------------------------------------------------*/
 
 
-struct gifScreen {
-    unsigned int    Width;
-    unsigned int    Height;
-    GifColorMap     ColorMap;
-    unsigned int    ColorResolution;
-    unsigned int    Background;
-    unsigned int    AspectRatio;
+struct GifScreen {
+    unsigned int    width;
+    unsigned int    height;
+    bool            hasGlobalColorMap;
+        /* The stream has a global color map, to wit 'colorMap'.
+           (If the stream doesn't have a global color map, the individual
+           images must each have a local color map)
+        */
+    GifColorMap     colorMap;
+        /* The global color map for the stream.  Meaningful only if
+           'hasGlobalColorMap' is true.
+        */
+    unsigned int    colorResolution;
+    unsigned int    background;
+    unsigned int    aspectRatio;
         /* Aspect ratio of each pixel, times 64, minus 15.  (i.e. 1 => 1:4).
            But Zero means 1:1.
         */
@@ -260,7 +264,7 @@ struct gifScreen {
         */
 };
 
-struct gif89 {
+struct Gif89 {
     bool         haveTransColor;
         /* The GIF specifies a transparent background color */
     unsigned int transparentIndex;
@@ -278,7 +282,7 @@ struct gif89 {
 };
 
 static void
-initGif89(struct gif89 * const gif89P) {
+initGif89(struct Gif89 * const gif89P) {
     gif89P->haveTransColor = false;
     gif89P->haveDelayTime  = false;
     gif89P->haveInputFlag  = false;
@@ -297,7 +301,16 @@ readColorMap(FILE *        const ifP,
              GifColorMap * const cmapP,
              bool *        const hasGrayP,
              bool *        const hasColorP) {
+/*----------------------------------------------------------------------------
+   Read a color map from a GIF stream, where the stream is on *ifP,
+   which is positioned to a color map, which is 'cmapSize' bytes long.
 
+   Return as *cmapP that color map.
+
+   Furthermore, analyze that color map and return *hasGrayP == true iff it
+   contains any gray (black and white don't count) and *hasColorP == true iff
+   it contains anything that is not gray or black or white.
+-----------------------------------------------------------------------------*/
     unsigned int  i;
     unsigned char rgb[3];
 
@@ -494,7 +507,7 @@ LM_to_uint(unsigned char const a,
 
 static void 
 doGraphicControlExtension(FILE *         const ifP,
-                          struct gif89 * const gif89P) {
+                          struct Gif89 * const gif89P) {
 
     bool eof;
     unsigned int length;
@@ -531,7 +544,7 @@ doGraphicControlExtension(FILE *         const ifP,
 static void
 doExtension(FILE *         const ifP,
             unsigned char  const label,
-            struct gif89 * const gif89P) {
+            struct Gif89 * const gif89P) {
 
     const char * str;
     
@@ -566,7 +579,7 @@ doExtension(FILE *         const ifP,
 
 
 
-struct getCodeState {
+struct GetCodeState {
     unsigned char buf[280];
         /* This is the buffer through which we read the data from the 
            stream.  We must buffer it because we have to read whole data
@@ -592,7 +605,7 @@ struct getCodeState {
 
 static void
 getAnotherBlock(FILE *                const ifP, 
-                struct getCodeState * const gsP,
+                struct GetCodeState * const gsP,
                 const char **         const errorP) {
 
     unsigned int count;
@@ -633,10 +646,10 @@ getAnotherBlock(FILE *                const ifP,
 
 
 
-static struct getCodeState getCodeState;
+static struct GetCodeState getCodeState;
 
 static void
-getCode_init(struct getCodeState * const getCodeStateP) {
+getCode_init(struct GetCodeState * const getCodeStateP) {
     
     /* Fake a previous data block */
     getCodeStateP->buf[0] = 0;
@@ -688,7 +701,7 @@ bitsOfLeBuffer(const unsigned char * const buf,
 
 
 static void
-getCode_get(struct getCodeState * const gsP,
+getCode_get(struct GetCodeState * const gsP,
             FILE *                const ifP, 
             int                   const codeSize,
             bool *                const eofP,
@@ -752,7 +765,7 @@ getCode_get(struct getCodeState * const gsP,
 
 
 
-struct stack {
+struct Stack {
     /* Stack grows from low addresses to high addresses */
     unsigned char * stack;  /* malloc'ed array */
     unsigned char * sp;     /* stack pointer */
@@ -762,7 +775,7 @@ struct stack {
 
 
 static void 
-initStack(struct stack * const stackP, unsigned int const size) {
+initStack(struct Stack * const stackP, unsigned int const size) {
 
     MALLOCARRAY(stackP->stack, size);
     if (stackP->stack == NULL)
@@ -774,7 +787,7 @@ initStack(struct stack * const stackP, unsigned int const size) {
 
 
 static void
-pushStack(struct stack * const stackP, unsigned char const value) {
+pushStack(struct Stack * const stackP, unsigned char const value) {
 
     if (stackP->sp >= stackP->top)
         pm_error("stack overflow");
@@ -785,14 +798,14 @@ pushStack(struct stack * const stackP, unsigned char const value) {
 
 
 static bool
-stackIsEmpty(const struct stack * const stackP) {
+stackIsEmpty(const struct Stack * const stackP) {
     return stackP->sp == stackP->stack;
 }
 
 
 
 static unsigned char
-popStack(struct stack * const stackP) {
+popStack(struct Stack * const stackP) {
 
     if (stackP->sp <= stackP->stack)
         pm_error("stack underflow");
@@ -803,7 +816,7 @@ popStack(struct stack * const stackP) {
 
 
 static void
-termStack(struct stack * const stackP) {
+termStack(struct Stack * const stackP) {
     free(stackP->stack);
     stackP->stack = NULL;
 }
@@ -851,8 +864,8 @@ termStack(struct stack * const stackP) {
 
 static int const maxLzwCodeCt = (1<<MAX_LZW_BITS);
 
-struct decompressor {
-    struct stack stack;
+struct Decompressor {
+    struct Stack stack;
     bool fresh;
         /* The stream is right after a clear code or at the very beginning */
     unsigned int codeSize;
@@ -891,7 +904,7 @@ struct decompressor {
 
 
 static void
-resetDecompressor(struct decompressor * const decompP) {
+resetDecompressor(struct Decompressor * const decompP) {
 
     decompP->codeSize      = decompP->initCodeSize+1;
     decompP->maxCodeCt     = 1 << decompP->codeSize;
@@ -927,7 +940,7 @@ validateTransparentIndex(unsigned int const transparentIndex,
 
 
 static void
-lzwInit(struct decompressor * const decompP, 
+lzwInit(struct Decompressor * const decompP, 
         FILE *                const ifP,
         int                   const initCodeSize,
         unsigned int          const cmapSize,
@@ -988,7 +1001,7 @@ lzwInit(struct decompressor * const decompP,
 
 
 static void
-lzwAdjustForPBM(struct decompressor * const decompP,
+lzwAdjustForPBM(struct Decompressor * const decompP,
                 GifColorMap           const cmap) {
 /*----------------------------------------------------------------------------
   In the PBM case we use the table index value directly instead of looking up
@@ -1006,7 +1019,7 @@ lzwAdjustForPBM(struct decompressor * const decompP,
 
 
 static void
-lzwTerm(struct decompressor * const decompP) {
+lzwTerm(struct Decompressor * const decompP) {
 
     termStack(&decompP->stack);
 }
@@ -1014,7 +1027,7 @@ lzwTerm(struct decompressor * const decompP) {
 
 
 static void
-pushWholeStringOnStack(struct decompressor * const decompP,
+pushWholeStringOnStack(struct Decompressor * const decompP,
                        unsigned int          const code0) {
 /*----------------------------------------------------------------------------
   Get the whole string that compression code 'code0' represents and push
@@ -1038,7 +1051,7 @@ pushWholeStringOnStack(struct decompressor * const decompP,
 
 
 static void
-expandCodeOntoStack(struct decompressor * const decompP,
+expandCodeOntoStack(struct Decompressor * const decompP,
                     unsigned int          const incode,
                     const char **         const errorP) {
 /*----------------------------------------------------------------------------
@@ -1113,8 +1126,8 @@ expandCodeOntoStack(struct decompressor * const decompP,
 
 
 static void
-lzwReadByteFresh(struct getCodeState * const getCodeStateP,
-                 struct decompressor * const decompP,
+lzwReadByteFresh(struct GetCodeState * const getCodeStateP,
+                 struct Decompressor * const decompP,
                  bool *                const endOfImageP,
                  unsigned char *       const dataReadP,
                  const char **         const errorP) {
@@ -1171,7 +1184,7 @@ lzwReadByteFresh(struct getCodeState * const getCodeStateP,
 
 
 static void
-lzwReadByte(struct decompressor * const decompP,
+lzwReadByte(struct Decompressor * const decompP,
             unsigned char *       const dataReadP,
             bool *                const endOfImageP,
             const char **         const errorP) {
@@ -1398,7 +1411,7 @@ pnmFormat(bool const hasGray,
 
 
 static void
-makePnmRow(struct decompressor * const decompP,
+makePnmRow(struct Decompressor * const decompP,
            unsigned int          const cols,
            unsigned int          const rows,
            bool                  const fillWithZero,
@@ -1447,7 +1460,7 @@ makePnmRow(struct decompressor * const decompP,
 
 
 static void
-convertRaster(struct decompressor * const decompP,
+convertRaster(struct Decompressor * const decompP,
               unsigned int          const cols,
               unsigned int          const rows,
               GifColorMap           const cmap, 
@@ -1550,7 +1563,7 @@ convertRaster(struct decompressor * const decompP,
 
 
 static void
-skipExtraneousData(struct decompressor * const decompP) {
+skipExtraneousData(struct Decompressor * const decompP) {
 
     unsigned char byteRead;
     bool endOfImage;
@@ -1638,7 +1651,7 @@ readImageData(FILE *       const ifP,
               bool         const tolerateBadInput) {
 
     unsigned char lzwMinCodeSize;      
-    struct decompressor decomp;
+    struct Decompressor decomp;
     const char * error;
 
     readFile(ifP, &lzwMinCodeSize, sizeof(lzwMinCodeSize), &error);
@@ -1697,12 +1710,14 @@ warnUserNotSquare(unsigned int const aspectRatio) {
 
 static void
 readGifHeader(FILE *             const gifFileP,
-              struct gifScreen * const gifScreenP) {
+              struct GifScreen * const gifScreenP) {
 /*----------------------------------------------------------------------------
    Read the GIF stream header off the file *gifFileP, which is present
    positioned to the beginning of a GIF stream.  Return the info from it
    as *gifScreenP.
 -----------------------------------------------------------------------------*/
+#define GLOBALCOLORMAP  0x80
+
     unsigned char buf[16];
     char version[4];
     unsigned int cmapSize;
@@ -1729,44 +1744,46 @@ readGifHeader(FILE *             const gifFileP,
     if (error)
         pm_error("Failed to read screen descriptor.  %s", error);
     
-    gifScreenP->Width           = LM_to_uint(buf[0],buf[1]);
-    gifScreenP->Height          = LM_to_uint(buf[2],buf[3]);
+    gifScreenP->width           = LM_to_uint(buf[0],buf[1]);
+    gifScreenP->height          = LM_to_uint(buf[2],buf[3]);
     cmapSize                    = 1 << ((buf[4] & 0x07) + 1);
-    gifScreenP->ColorResolution = (buf[4] & 0x70 >> 3) + 1;
-    gifScreenP->Background      = buf[5];
-    gifScreenP->AspectRatio     = buf[6];
+    gifScreenP->colorResolution = (buf[4] & 0x70 >> 3) + 1;
+    gifScreenP->background      = buf[5];
+    gifScreenP->aspectRatio     = buf[6];
 
     if (verbose) {
-        pm_message("GIF Width = %d GIF Height = %d "
-                   "Pixel aspect ratio = %d (%f:1)",
-                   gifScreenP->Width, gifScreenP->Height, 
-                   gifScreenP->AspectRatio, 
-                   gifScreenP->AspectRatio == 0 ? 
-                   1 : (gifScreenP->AspectRatio + 15) / 64.0);
-        pm_message("Colors = %d   Color Resolution = %d",
-                   cmapSize, gifScreenP->ColorResolution);
+        pm_message("GIF Width = %u GIF Height = %u "
+                   "Pixel aspect ratio = %u (%f:1)",
+                   gifScreenP->width, gifScreenP->height, 
+                   gifScreenP->aspectRatio, 
+                   gifScreenP->aspectRatio == 0 ? 
+                   1 : (gifScreenP->aspectRatio + 15) / 64.0);
+        pm_message("Global color count = %u   Color Resolution = %u",
+                   cmapSize, gifScreenP->colorResolution);
     }           
-    if (BitSet(buf[4], LOCALCOLORMAP)) {    /* Global Colormap */
-        readColorMap(gifFileP, cmapSize, &gifScreenP->ColorMap,
+    if (buf[4] & GLOBALCOLORMAP) {
+        gifScreenP->hasGlobalColorMap = true;
+        readColorMap(gifFileP, cmapSize, &gifScreenP->colorMap,
                      &gifScreenP->hasGray, &gifScreenP->hasColor);
         if (verbose) {
-            pm_message("Color map %s grays, %s colors", 
+            pm_message("Global color map %s grays, %s colors", 
                        gifScreenP->hasGray ? "contains" : "doesn't contain",
                        gifScreenP->hasColor ? "contains" : "doesn't contain");
         }
-    } else {
-        gifScreenP->ColorMap.size = 0;
-    }
+    } else
+        gifScreenP->hasGlobalColorMap = false;
     
-    if (gifScreenP->AspectRatio != 0 && gifScreenP->AspectRatio != 49)
-        warnUserNotSquare(gifScreenP->AspectRatio);
+    if (gifScreenP->aspectRatio != 0 && gifScreenP->aspectRatio != 49)
+        warnUserNotSquare(gifScreenP->aspectRatio);
+
+#undef GLOBALCOLORMAP
 }
 
 
 
 static void
 readExtensions(FILE*          const ifP, 
-               struct gif89 * const gif89P,
+               struct Gif89 * const gif89P,
                bool *         const eodP,
                const char **  const errorP) {
 /*----------------------------------------------------------------------------
@@ -1832,7 +1849,13 @@ struct GifImageHeader {
 /*----------------------------------------------------------------------------
    Information in the header (first 9 bytes) of a GIF image.
 -----------------------------------------------------------------------------*/
-    bool useGlobalColormap;
+    bool hasLocalColormap;
+        /* The image has its own color map.  Its size is 'localColorMapSize' */
+        /* (If an image does not have its own color map, the image uses the 
+           global color map for the GIF stream)
+        */
+    unsigned int localColorMapSize;
+        /* Meaningful only if 'hasLocalColormap' is true. */
 
     /* Position of the image (max 65535) */
     unsigned int lpos;
@@ -1841,7 +1864,7 @@ struct GifImageHeader {
     /* Dimensions of the image (max 65535) */
     unsigned int cols;
     unsigned int rows;
-    unsigned int localColorMapSize;
+
     bool interlaced;
 };
 
@@ -1858,11 +1881,11 @@ reportImageHeader(struct GifImageHeader const imageHeader) {
         pm_message("  Image left position: %u top position: %u",
                    imageHeader.lpos, imageHeader.tpos);
     
-    if (imageHeader.useGlobalColormap)
-        pm_message("  Uses global colormap");
-    else
+    if (imageHeader.hasLocalColormap)
         pm_message("  Uses local colormap of %u colors",
                    imageHeader.localColorMapSize);
+    else
+        pm_message("  Uses global colormap");
 }
 
 
@@ -1871,6 +1894,9 @@ static void
 readImageHeader(FILE *                  const ifP,
                 struct GifImageHeader * const imageHeaderP) {
 
+#define LOCALCOLORMAP  0x80
+#define INTERLACE      0x40
+
     unsigned char buf[16];
     const char * error;
 
@@ -1878,34 +1904,37 @@ readImageHeader(FILE *                  const ifP,
     if (error)
         pm_error("couldn't read left/top/width/height.  %s", error);
 
-    imageHeaderP->useGlobalColormap = ! BitSet(buf[8], LOCALCOLORMAP);
+    imageHeaderP->hasLocalColormap  = !!(buf[8] & LOCALCOLORMAP);
     imageHeaderP->localColorMapSize = 1u << ((buf[8] & 0x07) + 1);
     imageHeaderP->lpos              = LM_to_uint(buf[0], buf[1]);
     imageHeaderP->tpos              = LM_to_uint(buf[2], buf[3]);
     imageHeaderP->cols              = LM_to_uint(buf[4], buf[5]);
     imageHeaderP->rows              = LM_to_uint(buf[6], buf[7]);
-    imageHeaderP->interlaced        = !!BitSet(buf[8], INTERLACE);
+    imageHeaderP->interlaced        = !!(buf[8] & INTERLACE);
 
     if (verbose)
         reportImageHeader(*imageHeaderP);
+
+#undef INTERLACE
+#undef LOCALCOLORMAP
 }
 
 
 
 static void
 validateWithinGlobalScreen(struct GifImageHeader const imageHeader,
-                           struct gifScreen      const gifScreen) {
+                           struct GifScreen      const gifScreen) {
 
     unsigned long int const rpos = imageHeader.lpos + imageHeader.cols;
     unsigned long int const bpos = imageHeader.tpos + imageHeader.rows; 
 
-    if (rpos > gifScreen.Width)
+    if (rpos > gifScreen.width)
         pm_error("Image right end (%lu) is outside global screen: %u x %u",
-                 rpos, gifScreen.Width, gifScreen.Height);
-    if (bpos > gifScreen.Height)
+                 rpos, gifScreen.width, gifScreen.height);
+    if (bpos > gifScreen.height)
         pm_error("Image bottom end (%lu) is outside global screen: "
                  "%u x %u",
-                 bpos, gifScreen.Width, gifScreen.Height);
+                 bpos, gifScreen.width, gifScreen.height);
 }
 
 
@@ -1930,8 +1959,8 @@ convertImage(FILE *           const ifP,
              bool             const skipIt, 
              FILE *           const imageoutFileP, 
              FILE *           const alphafileP, 
-             struct gifScreen const gifScreen,
-             struct gif89     const gif89,
+             struct GifScreen const gifScreen,
+             struct Gif89     const gif89,
              bool             const tolerateBadInput) {
 /*----------------------------------------------------------------------------
    Read a single GIF image from the current position of file 'ifP'.
@@ -1949,19 +1978,18 @@ convertImage(FILE *           const ifP,
 
     validateWithinGlobalScreen(imageHeader, gifScreen);
 
-    if (imageHeader.useGlobalColormap) {
-        if (gifScreen.ColorMap.size == 0) {
-            pm_error("Invalid GIF: "
-                     "Image has no local color map and stream has no global "
-                     "color map either.");
-        }
-        currentColorMapP = &gifScreen.ColorMap;
-        hasGray  = gifScreen.hasGray;
-        hasColor = gifScreen.hasColor;
-    } else {
+    if (imageHeader.hasLocalColormap) {
         readColorMap(ifP, imageHeader.localColorMapSize, &localColorMap, 
                      &hasGray, &hasColor);
         currentColorMapP = &localColorMap;
+    } else if (gifScreen.hasGlobalColorMap) {
+        currentColorMapP = &gifScreen.colorMap;
+        hasGray  = gifScreen.hasGray;
+        hasColor = gifScreen.hasColor;
+    } else {
+        pm_error("Invalid GIF: "
+                 "Image has no local color map and stream has no global "
+                 "color map either.");
     }
 
     if (!skipIt) {
@@ -2027,8 +2055,8 @@ convertImages(FILE *       const ifP,
         /* Sequence within GIF stream of image we are currently processing.
            First is 0.
         */
-    struct gifScreen gifScreen;
-    struct gif89 gif89;
+    struct GifScreen gifScreen;
+    struct Gif89 gif89;
     bool eod;
         /* We've read through the GIF terminator character */
 
@@ -2072,7 +2100,7 @@ convertImages(FILE *       const ifP,
 int
 main(int argc, char **argv) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP;
     FILE * alphaFileP;
     FILE * imageOutFileP;

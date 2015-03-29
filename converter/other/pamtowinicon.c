@@ -36,12 +36,12 @@ parseCommandLine(int argc, const char **argv,
 
     option_def_index = 0;
 
-    OPTENT3 (0, "verbose",         OPT_FLAG, NULL,
-             &cmdlineP->verbose,         0);
-    OPTENT3 (0, "pngthreshold",    OPT_UINT, &cmdlineP->pngthreshold,
-             &pngthresholdSpec,          0);
-    OPTENT3 (0, "truetransparent", OPT_FLAG, NULL,
-             &cmdlineP->truetransparent, 0);
+    OPTENT3(0, "verbose",         OPT_FLAG, NULL,
+            &cmdlineP->verbose,         0);
+    OPTENT3(0, "pngthreshold",    OPT_UINT, &cmdlineP->pngthreshold,
+            &pngthresholdSpec,          0);
+    OPTENT3(0, "truetransparent", OPT_FLAG, NULL,
+            &cmdlineP->truetransparent, 0);
 
     opt3.opt_table     = option_def;
     opt3.short_allowed = false;

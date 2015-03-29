@@ -17,9 +17,10 @@
 
 #include <assert.h>
 
-#include "pm_c_util.h"
-#include "mallocvar.h"
-#include "nstring.h"
+#include "netpbm/pm_c_util.h"
+#include "netpbm/mallocvar.h"
+#include "netpbm/nstring.h"
+
 #include "pam.h"
 #include "pammap.h"
 

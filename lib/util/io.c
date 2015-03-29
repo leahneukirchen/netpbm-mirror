@@ -15,8 +15,7 @@ pm_freadline(FILE *        const fileP,
              const char ** const errorP) {
 /*----------------------------------------------------------------------------
    Read a line (assuming the file is text with lines delimited by newlines)
-   for file *fileP.  Return that line in newly malloced storage as
-   *lineP.
+   from file *fileP.  Return that line in newly malloced storage as *lineP.
 
    The newline delimiter is not part of the line.
 
@@ -89,3 +88,5 @@ pm_freadline(FILE *        const fileP,
         }
     }
 }
+
+

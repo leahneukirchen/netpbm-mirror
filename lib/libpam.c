@@ -23,9 +23,10 @@
 
 #include <math.h>
 
-#include "pm_c_util.h"
-#include "mallocvar.h"
-#include "nstring.h"
+#include "netpbm/pm_c_util.h"
+#include "netpbm/mallocvar.h"
+#include "netpbm/nstring.h"
+
 #include "pam.h"
 #include "ppm.h"
 #include "libpbm.h"
@@ -783,8 +784,8 @@ validateMinDepth(const struct pam * const pamP,
 static void
 interpretTupleType(struct pam * const pamP) {
 /*----------------------------------------------------------------------------
-   Fill in redundant convenience fields in *pamP with information implied by
-   the pamP->tuple_type implies:
+   Fill in redundant convenience fields in *pamP with information the
+   pamP->tuple_type value implies:
 
      visual
      colorDepth

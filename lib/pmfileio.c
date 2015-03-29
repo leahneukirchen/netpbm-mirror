@@ -29,6 +29,7 @@
 #define _LARGE_FILE_API
     /* This makes the the x64() functions available on AIX */
 
+#include "netpbm/pm_config.h"
 #include <unistd.h>
 #include <assert.h>
 #include <stdio.h>
@@ -36,13 +37,13 @@
 #include <stdarg.h>
 #include <string.h>
 #include <errno.h>
-#ifdef __DJGPP__
-  #include <io.h>
+#if HAVE_IO_H
+  #include <io.h>  /* For mktemp */
 #endif
 
-#include "pm_c_util.h"
-#include "mallocvar.h"
-#include "nstring.h"
+#include "netpbm/pm_c_util.h"
+#include "netpbm/mallocvar.h"
+#include "netpbm/nstring.h"
 
 #include "pm.h"
 
@@ -249,12 +250,9 @@ pm_make_tmpfile_fd(int *         const fdP,
                    const char ** const filenameP) {
 
     const char * filenameTemplate;
-    unsigned int fnamelen;
     const char * tmpdir;
     const char * dirseparator;
     const char * error;
-
-    fnamelen = strlen(pm_progname) + 10; /* "/" + "_XXXXXX\0" */
 
     tmpdir = tmpDir();
 
@@ -306,17 +304,130 @@ pm_make_tmpfile(FILE **       const filePP,
 
 
 
+bool const canUnlinkOpen = 
+#if CAN_UNLINK_OPEN
+    1
+#else
+    0
+#endif
+    ;
+
+
+
+typedef struct UnlinkListEntry {
+/*----------------------------------------------------------------------------
+   This is an entry in the linked list of files to close and unlink as the
+   program exits.
+-----------------------------------------------------------------------------*/
+    struct UnlinkListEntry * next;
+    int                      fd;
+    char                     fileName[1];  /* Actually variable length */
+} UnlinkListEntry;
+
+static UnlinkListEntry * unlinkListP;
+
+
+
+static void
+unlinkTempFiles(void) {
+/*----------------------------------------------------------------------------
+  Close and unlink (so presumably delete) the files in the list
+  *unlinkListP.
+
+  This is an atexit function.
+-----------------------------------------------------------------------------*/
+    while (unlinkListP) {
+        UnlinkListEntry * const firstEntryP = unlinkListP;
+
+        unlinkListP = unlinkListP->next;
+
+        close(firstEntryP->fd);
+        unlink(firstEntryP->fileName);
+
+        free(firstEntryP);
+    }
+}
+
+
+
+static UnlinkListEntry *
+newUnlinkListEntry(const char * const fileName,
+                   int          const fd) {
+
+    UnlinkListEntry * const unlinkListEntryP =
+        malloc(sizeof(*unlinkListEntryP) + strlen(fileName) + 1);
+
+    if (unlinkListEntryP) {
+        strcpy(unlinkListEntryP->fileName, fileName);
+        unlinkListEntryP->fd   = fd;
+        unlinkListEntryP->next = NULL;
+    }
+    return unlinkListEntryP;
+}
+
+
+
+static void
+addUnlinkListEntry(const char * const fileName,
+                   int          const fd) {
+
+    UnlinkListEntry * const unlinkListEntryP =
+        newUnlinkListEntry(fileName, fd);
+
+    if (unlinkListEntryP) {
+        unlinkListEntryP->next = unlinkListP;
+        unlinkListP = unlinkListEntryP;
+    }
+}
+
+
+
+static void
+scheduleUnlinkAtExit(const char * const fileName,
+                     int          const fd) {
+/*----------------------------------------------------------------------------
+   Set things up to have the file unlinked as the program exits.
+
+   This is messy and probably doesn't work in all situations; it is a hack
+   to get Unix code essentially working on Windows, without messing up the
+   code too badly for Unix.
+-----------------------------------------------------------------------------*/
+    static bool unlinkListEstablished = false;
+    
+    if (!unlinkListEstablished) {
+        atexit(unlinkTempFiles);
+        unlinkListP = NULL;
+        unlinkListEstablished = true;
+    }
+
+    addUnlinkListEntry(fileName, fd);
+}
+
+
+
+static void
+arrangeUnlink(const char * const fileName,
+              int          const fd) {
+
+    if (canUnlinkOpen)
+        unlink(fileName);
+    else
+        scheduleUnlinkAtExit(fileName, fd);
+}
+
+
+
 FILE * 
 pm_tmpfile(void) {
 
     FILE * fileP;
-    const char * tmpfile;
+    const char * tmpfileNm;
 
-    pm_make_tmpfile(&fileP, &tmpfile);
+    pm_make_tmpfile(&fileP, &tmpfileNm);
 
-    unlink(tmpfile);
+    arrangeUnlink(tmpfileNm, fileno(fileP));
 
-    pm_strfree(tmpfile);
+    pm_strfree(tmpfileNm);
 
     return fileP;
 }
@@ -327,13 +438,13 @@ int
 pm_tmpfile_fd(void) {
 
     int fd;
-    const char * tmpfile;
+    const char * tmpfileNm;
 
-    pm_make_tmpfile_fd(&fd, &tmpfile);
+    pm_make_tmpfile_fd(&fd, &tmpfileNm);
 
-    unlink(tmpfile);
+    arrangeUnlink(tmpfileNm, fd);
 
-    pm_strfree(tmpfile);
+    pm_strfree(tmpfileNm);
 
     return fd;
 }

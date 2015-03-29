@@ -20,6 +20,9 @@
 #include <stdio.h>
 #include <errno.h>
 
+#include "netpbm/mallocvar.h"
+#include "netpbm/nstring.h"
+
 #include "pgm.h"
 #include "libpgm.h"
 #include "pbm.h"
@@ -27,8 +30,6 @@
 #include "pam.h"
 #include "libpam.h"
 #include "fileio.h"
-#include "mallocvar.h"
-#include "nstring.h"
 
 
 gray *

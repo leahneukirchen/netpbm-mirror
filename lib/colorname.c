@@ -15,13 +15,14 @@
 #define _BSD_SOURCE 1      /* Make sure strdup() is in string.h */
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 
-#include "pm_c_util.h"
+#include "netpbm/pm_c_util.h"
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
 
-#include "nstring.h"
+#include "netpbm/nstring.h"
+
 #include "colorname.h"
 
 static int lineNo;

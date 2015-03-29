@@ -24,11 +24,11 @@
        but we hope not.
        */
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *inputFileName;  /* File name of input file */
+    const char * inputFileName;  /* File name of input file */
 
     /* The following describe the rectangle the user wants to cut out. 
        the value UNSPEC for any of them indicates that value was not
@@ -52,7 +52,7 @@ struct cmdlineInfo {
 
 static void
 parseCommandLine(int argc, const char ** const argv,
-                 struct cmdlineInfo * const cmdlineP) {
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
@@ -628,7 +628,7 @@ extractRowsPBM(const struct pam * const inpamP,
 
 static void
 cutOneImage(FILE *             const ifP,
-            struct cmdlineInfo const cmdline,
+            struct CmdlineInfo const cmdline,
             FILE *             const ofP) {
 
     int leftcol, rightcol, toprow, bottomrow;
@@ -673,7 +673,7 @@ main(int argc, const char *argv[]) {
 
     FILE * const ofP = stdout;
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP;
     int eof;
 

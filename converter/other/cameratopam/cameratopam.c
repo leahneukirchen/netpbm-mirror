@@ -26,7 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef __CYGWIN__
+#ifdef HAVE_IO_H
   #include <io.h>
 #endif
 #if !MSVCRT

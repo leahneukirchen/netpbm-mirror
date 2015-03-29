@@ -19,9 +19,10 @@
 #include <limits.h>
 #include <assert.h>
 
-#include "pm_config.h"
+#include "netpbm/pm_config.h"
+#include "netpbm/nstring.h"
+
 #include "fileio.h"
-#include "nstring.h"
 #include "pam.h"
 
 

@@ -182,6 +182,8 @@ pgmtolispm: ok
 pgmtopbm: ok
 pgmtopgm: ok
 pgmtoppm: ok
+pgmtosbig: ok
+pgmtost4: ok
 pi1toppm: ok
 pi3topbm: ok
 picttoppm: ok
@@ -318,6 +320,7 @@ spctoppm: ok
 spottopgm: ok
 sputoppm: ok
 srftopam: ok
+st4topgm: ok
 sunicontopnm: ok
 svgtopam: ok
 tgatoppm: ok
@@ -334,6 +337,7 @@ xwdtopnm: ok
 ybmtopbm: ok
 yuvsplittoppm: ok
 yuvtoppm: ok
+yuy2topam: ok
 zeisstopnm: ok
 fiascotopnm: ok
 manweb: ok

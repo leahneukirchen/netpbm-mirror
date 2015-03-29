@@ -13,6 +13,8 @@
 #include <string.h>
 #include <errno.h>
 
+#include "netpbm/mallocvar.h"
+
 #include "pnm.h"
 
 #include "ppm.h"
@@ -26,8 +28,6 @@
 
 #include "pam.h"
 #include "libpam.h"
-
-#include "mallocvar.h"
 
 
 

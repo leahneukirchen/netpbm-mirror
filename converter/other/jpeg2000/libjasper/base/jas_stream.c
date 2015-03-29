@@ -127,7 +127,7 @@
 #if defined(HAVE_UNISTD_H)
 #include <unistd.h>
 #endif
-#if MSVCRT
+#if HAVE_IO_H
 #include <io.h>
 #endif
 

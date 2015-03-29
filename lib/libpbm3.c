@@ -12,7 +12,8 @@
 
 #include <assert.h>
 
-#include "pm_c_util.h"
+#include "netpbm/pm_c_util.h"
+
 #include "pbm.h"
 
 #ifndef PACKBITS_SSE

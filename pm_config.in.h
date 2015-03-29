@@ -137,12 +137,25 @@
 #define HAVE_SETMODE
 #endif
 
-/* #define HAVE_SETMODE */
+#if MSVCRT || defined(__CYGWIN__) || defined(DJGPP)
+#define HAVE_IO_H 1
+#else
+#define HAVE_IO_H 0
+#endif
 
 #if (defined(__GLIBC__) || defined(__GNU_LIBRARY__) || defined(__APPLE__)) || defined(__NetBSD__)
   #define HAVE_VASPRINTF 1
 #else
   #define HAVE_VASPRINTF 0
+#endif
+
+/* On Windows, unlinking a file is deleting it, and you can't delete an open
+   file, so unlink of an open file fails.  The errno is (incorrectly) EACCES.
+*/
+#if MSVCRT || defined(__CYGWIN__) || defined(DJGPP)
+  #define CAN_UNLINK_OPEN 0
+#else
+  #define CAN_UNLINK_OPEN 1
 #endif
 
 #ifdef __amigaos__

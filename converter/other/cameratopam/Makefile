@@ -26,11 +26,11 @@ OBJECTS = cameratopam.o $(ADDL_OBJECTS)
 
 camera.o camera.o2: CFLAGS_TARGET = $(HAVE_JPEG_DEFINE)
 
-MERGE_OBJECTS =
+MERGE_OBJECTS = cameratopam.o2 $(ADDL_OBJECTS)
 
 PORTBINARIES = cameratopam
 BINARIES = $(PORTBINARIES)
-MERGEBINARIES = 
+MERGEBINARIES = cameratopam
 SCRIPTS = 
 
 include $(SRCDIR)/common.mk

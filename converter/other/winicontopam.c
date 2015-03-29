@@ -49,16 +49,16 @@ parseCommandLine(int argc, const char **argv,
 
     option_def_index = 0;
 
-    OPTENT3 (0, "allimages",   OPT_FLAG,   NULL,
-             &cmdlineP->allimages,         0);
-    OPTENT3 (0, "image",     OPT_UINT,   &cmdlineP->image,
-             &cmdlineP->imageSpec,         0);
-    OPTENT3 (0, "andmasks",  OPT_FLAG,   NULL,
-             &cmdlineP->andmasks,          0);
-    OPTENT3 (0, "headerdump",   OPT_FLAG,   NULL,
-             &cmdlineP->headerdump,        0);
-    OPTENT3 (0, "verbose",   OPT_FLAG,   NULL,
-             &cmdlineP->verbose,           0);
+    OPTENT3(0, "allimages",   OPT_FLAG,   NULL,
+            &cmdlineP->allimages,         0);
+    OPTENT3(0, "image",     OPT_UINT,   &cmdlineP->image,
+            &cmdlineP->imageSpec,         0);
+    OPTENT3(0, "andmasks",  OPT_FLAG,   NULL,
+            &cmdlineP->andmasks,          0);
+    OPTENT3(0, "headerdump",   OPT_FLAG,   NULL,
+            &cmdlineP->headerdump,        0);
+    OPTENT3(0, "verbose",   OPT_FLAG,   NULL,
+            &cmdlineP->verbose,           0);
 
     opt3.opt_table     = option_def;
     opt3.short_allowed = false;
