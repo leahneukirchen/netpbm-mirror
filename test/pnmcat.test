@@ -1,9 +1,7 @@
 #! /bin/bash
 # This script tests: pnmcat
-# Also requires: 
+# Also requires:
 
-  alias pnmcat="${PBM_TESTPREFIX}pnmcat"
-  shopt -s expand_aliases
 
 pnmcat -lr testgrid.pbm testgrid.pbm | cksum
 pnmcat -tb testgrid.pbm testgrid.pbm | cksum

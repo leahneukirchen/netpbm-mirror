@@ -1,11 +1,7 @@
 #! /bin/bash
 # This script tests: pamtotga tgatoppm
-# Also requires: pgmtopbm
+# Also requires: ppmtopgm pgmtopbm pamchannel
 
-  alias pamtotga="${PBM_TESTPREFIX}pamtotga"
-  alias tgatoppm="${PBM_TESTPREFIX}tgatoppm"
-  alias pgmtopbm="${PBM_BINPREFIX}pgmtopbm"
-  shopt -s expand_aliases
 
 #Test 1: Should print 2425386270 41, cksum of testgrid.pbm
 

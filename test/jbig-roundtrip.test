@@ -1,10 +1,7 @@
 #! /bin/bash
 # This script tests: pnmtojbig jbigtopnm
-# Also requires: pamchannel
+# Also requires: pamchannel pamtopnm
 
-  alias pnmtojbig="${PBM_TESTPREFIX}pnmtojbig"
-  alias jbigtopnm="${PBM_TESTPREFIX}jbigtopnm"
-  shopt -s expand_aliases
 
 # Test 1.  Should print 2425386270 41
 pnmtojbig testgrid.pbm | jbigtopnm | cksum

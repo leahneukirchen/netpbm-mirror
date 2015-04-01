@@ -2,9 +2,6 @@
 # This script tests: pnmpsnr
 # Also requires: pbmmake
 
-  alias pnmpsnr="${PBM_TESTPREFIX}pnmpsnr"
-  alias pbmmake="${PBM_BINPREFIX}pbmmake"
-  shopt -s expand_aliases
 
 tmpdir=${tmpdir:-/tmp}
 

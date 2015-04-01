@@ -1,9 +1,7 @@
 #! /bin/bash
 # This script tests: 411toppm
-# Also requires: 
+# Also requires:
 
-  alias 411toppm="${PBM_TESTPREFIX}411toppm"
-  shopt -s expand_aliases
 
 # Test 1. should produce: 240376509 9229
 # The above value is what 411toppm has been always producing.

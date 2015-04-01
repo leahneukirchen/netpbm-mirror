@@ -2,10 +2,6 @@
 # This script tests: ppmcie
 # Also requires: pamsumm pamsharpness
 
-  alias ppmcie="${PBM_TESTPREFIX}ppmcie"
-  alias pamsharpness="${PBM_BINPREFIX}pamsharpness"
-  alias pamsumm="${PBM_BINPREFIX}pamsumm"
-  shopt -s expand_aliases
 
 # Failure message
 ## Ppmcie is sensitive to system factors.  If this test fails, please
@@ -17,8 +13,8 @@ tmpdir=${tmpdir:-/tmp}
 # Without -nolabel -noaxes -nowpoint -noblack older versions of
 # Netpbm produce slightly different charts.
 # Output from "ppmcie | cksum" :
-# v. 10.35.86: 288356530 786447   
-# v. 10.59.2 : 2292601420 786447  
+# v. 10.35.86: 288356530 786447
+# v. 10.59.2 : 2292601420 786447
 
 ppmcie_ppm=${tmpdir}/ppmcie.ppm
 

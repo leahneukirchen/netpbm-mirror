@@ -1,9 +1,7 @@
 #! /bin/bash
 # This script tests: pbmupc
-# Also requires: 
+# Also requires:
 
-  alias pbmupc="${PBM_TESTPREFIX}pbmupc"
-  shopt -s expand_aliases
 
 for type in -s1 -s2
 do

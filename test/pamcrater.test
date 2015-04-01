@@ -2,14 +2,6 @@
 # This script tests: pamcrater pamshadedrelief
 # Also requires: pamstack pamvalidate pamcut pamflip
 
-  alias pamcrater="${PBM_TESTPREFIX}pamcrater"
-  alias pamshadedrelief="${PBM_TESTPREFIX}pamshadedrelief"
-  alias pamstack="${PBM_BINPREFIX}pamstack"
-  alias pamvalidate="${PBM_BINPREFIX}pamvalidate"
-  alias pamcut="${PBM_BINPREFIX}pamcut"
-  alias pamflip="${PBM_BINPREFIX}pamflip"
-
-  shopt -s expand_aliases
 
 # We use the undocumented --test and --radius options of pamcrater.
 # pamcrater --test --radius=N
@@ -33,7 +25,7 @@ pamcrater --test --radius=100 > $test100_pam
 pamcrater --test --radius=150 > $test150_pam
 
 pamstack ${test10_pam} ${test50_pam} ${test100_pam} ${test150_pam} |
-  pamvalidate > ${test_pam} 
+  pamvalidate > ${test_pam}
 
 for i in 1 10 70
   do

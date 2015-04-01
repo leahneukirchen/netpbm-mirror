@@ -2,11 +2,6 @@
 # This script tests: ppmchange
 # Also requires: pgmtopbm pnminvert ppmtopgm
 
-  alias ppmchange="${PBM_TESTPREFIX}ppmchange"
-  alias pgmtopbm="${PBM_BINPREFIX}pgmtopbm"
-  alias pnminvert="${PBM_BINPREFIX}pnminvert"
-  alias ppmtopgm="${PBM_BINPREFIX}ppmtopgm"
-  shopt -s expand_aliases
 
 ppmchange black white white black testgrid.pbm | \
 pnminvert | ppmtopgm | \

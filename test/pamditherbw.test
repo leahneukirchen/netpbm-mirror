@@ -1,9 +1,7 @@
 #! /bin/bash
 # This script tests: pamditherbw
-# Also requires: pamchannel
+# Also requires: pamchannel pamtopnm
 
-  alias pamditherbw="${PBM_TESTPREFIX}pamditherbw"
-  shopt -s expand_aliases
 
 tmpdir=${tmpdir:-/tmp}
 test_red=${tmpdir}/testimg.red

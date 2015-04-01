@@ -1,9 +1,7 @@
 #! /bin/bash
 # This script tests: pamtopam
-# Also requires: 
+# Also requires:
 
-  alias pamtopam="${PBM_TESTPREFIX}pamtopam"
-  shopt -s expand_aliases
 
 pamtopam < testimg.ppm  | sed '/ENDHDR/q'
 pamtopam < testgrid.pbm | sed '/ENDHDR/q'

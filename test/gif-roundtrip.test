@@ -1,14 +1,7 @@
 #! /bin/bash
 # This script tests: giftopnm pamtogif
-# Also requires: ppmtorgb3 rgb3toppm pbmmake
+# Also requires: ppmtorgb3 rgb3toppm pbmmake pnminvert
 
-  alias giftopnm="${PBM_TESTPREFIX}giftopnm"
-  alias pamtogif="${PBM_TESTPREFIX}pamtogif"
-  alias pbmmake="${PBM_BINPREFIX}pbmmake"
-  alias ppmtorgb3="${PBM_BINPREFIX}ppmtorgb3"
-  alias rgb3toppm="${PBM_BINPREFIX}rgb3toppm"
-  alias pnminvert="${PBM_BINPREFIX}pnminvert"
-  shopt -s expand_aliases
 
 tmpdir=${tmpdir:-/tmp}
 
@@ -20,7 +13,7 @@ tmpdir=${tmpdir:-/tmp}
 test_ppm=${tmpdir}/testimg.ppm
 
 cp testimg.ppm ${tmpdir} &&
-ppmtorgb3 ${test_ppm} &&
+ppmtorgb3 ${test_ppm}
 
 test_red=${tmpdir}/testimg.red
 test_grn=${tmpdir}/testimg.grn

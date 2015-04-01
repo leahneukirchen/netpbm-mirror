@@ -1,15 +1,10 @@
 #! /bin/bash
-# This script tests: pnmtopnm
-# Also requires: pgmtopgm ppmtoppm pamtopnm
+# This script tests: pamtopnm
+# Also requires: pgmtopgm ppmtoppm
 
-  alias pnmtopnm="${PBM_TESTPREFIX}pnmtopnm"
-  alias pgmtopgm="${PBM_BINPREFIX}pgmtopgm"
-  alias ppmtoppm="${PBM_BINPREFIX}ppmtoppm"
-  shopt -s expand_aliases
+pamtopnm -plain testgrid.pbm
 
-pnmtopnm -plain testgrid.pbm
+pgmtopgm < testgrid.pbm | pamtopnm -plain
 
-pgmtopgm < testgrid.pbm | pnmtopnm -plain
-
-ppmtoppm < testgrid.pbm | pnmtopnm -plain | \
+ppmtoppm < testgrid.pbm | pamtopnm -plain | \
   head -n11

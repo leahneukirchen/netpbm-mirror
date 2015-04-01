@@ -1,15 +1,7 @@
 #! /bin/bash
 # This script tests: pnmtops pstopnm
-# Also requires: pnmtopnm pamtopnm gs pbmmake pnmshear pnmpad pnmcat
+# Also requires: pamtopnm gs pbmmake pnmshear pnmpad pnmcat
 
-  alias pnmtops="${PBM_TESTPREFIX}pnmtops"
-  alias pstopnm="${PBM_TESTPREFIX}pstopnm"
-  alias pbmmake="${PBM_BINPREFIX}pbmmake"
-  alias pnmcat="${PBM_BINPREFIX}pnmcat"
-  alias pnmpad="${PBM_BINPREFIX}pnmpad"
-  alias pnmshear="${PBM_BINPREFIX}pnmshear"
-  alias pnmtopnm="${PBM_BINPREFIX}pnmtopnm"
-  shopt -s expand_aliases
 
 # Failure message
 ## This test fails when:
@@ -18,8 +10,8 @@
 
 tmpdir=${tmpdir:-/tmp}
 
-# pstopnm does not use libnetpbm functions for output. 
-# Output is filtered through pnmtopnm.
+# pstopnm does not use libnetpbm functions for output.
+# Output is filtered through pamtopnm.
 
 # Test 1.  Should print: 1926073387 101484 five times
 # *NOTE* Fifth iteration fails if pnmtops was compiled without zlib
@@ -33,7 +25,7 @@ for flag in "" "-ps" "-rle" "-ps -ascii" "-ps -flate"
   xysize1=`awk  '/BoundingBox/ {print "-xsize="$4,"-ysize="$5}' \
     ${test1_ps}` && \
   pstopnm -portrait -xborder=0 -yborder=0 $xysize1 -stdout -quiet \
-    ${test1_ps} | pnmtopnm | cksum
+    ${test1_ps} | pamtopnm | cksum
   done
 
 rm ${test1_ps}
@@ -52,14 +44,14 @@ pbmmake -g 8 4 | \
   pnmcat -tb -jright - ${g_pbm} > ${t_pbm} &&
 for flag in "" "-rle" "-ps -rle -ascii" \
             "-bitspersample=2 -rle" "-ps -bitspersample=4 -rle" \
-            "-bitspersample=8 -rle" "-ps -bitspersample=12 -rle -dict" 
+            "-bitspersample=8 -rle" "-ps -bitspersample=12 -rle -dict"
   do
   pnmtops -nocenter -equalpixels -dpi 72 -noturn  ${flag} ${t_pbm} \
     > ${grid_ps} && \
   xysize2=`awk  '/BoundingBox/ {print "-xsize="$4,"-ysize="$5}' \
       ${grid_ps}` && \
   pstopnm -portrait -xborder=0 -yborder=0 $xysize2 -stdout \
-    -quiet ${grid_ps} -pbm | pnmtopnm | cksum
+    -quiet ${grid_ps} -pbm | pamtopnm | cksum
   done
 
 rm ${grid_ps} ${g_pbm} ${t_pbm}
@@ -74,7 +66,7 @@ rm ${grid_ps} ${g_pbm} ${t_pbm}
 # (2) awk: xy values are taken from the first "BoundingBox" encountered.
 #          Subsequent BoundingBox values are ignored.
 # (3) pstopnm: input must be an ordinary file.  Input from stdin
-#     (by pipe or input redirection: "< file" ) does not work.              
+#     (by pipe or input redirection: "< file" ) does not work.
 #
 
 test3_ps=${tmpdir}/testimg3.ps
@@ -88,7 +80,7 @@ pnmtops -nocenter -equalpixels -dpi 72 -noturn -setpage ${flag} \
 xysize3=`awk  '/BoundingBox/ {print "-xsize="$4,"-ysize="$5 ; exit}' \
   ${test3_ps}` &&
 pstopnm -portrait -xborder=0 -yborder=0 $xysize3 -stdout  ${test3_ps} | \
-  pnmtopnm | cksum
+  pamtopnm | cksum
   done
 
 rm ${test3_ps}

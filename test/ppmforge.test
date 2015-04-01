@@ -1,8 +1,6 @@
 #! /bin/bash
 # This script tests: ppmforge
-
-  alias ppmforge="${PBM_TESTPREFIX}ppmforge"
-  shopt -s expand_aliases
+# Also requires:
 
 # Use small x y values to avoid floating point issues.
 

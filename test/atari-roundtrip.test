@@ -1,15 +1,7 @@
+#! /bin/bash
 # This script tests: ppmtopi1 pi1toppm ppmtoneo neotoppm
-# Also requires: pgmramp pamscale pbmmake rgb3toppm
+# Also requires: pgmramp pamscale pbmmake pamenlarge rgb3toppm pamdepth
 
-  alias ppmtopi1="${PBM_TESTPREFIX}ppmtopi1"
-  alias pi1toppm="${PBM_TESTPREFIX}pi1toppm"
-  alias ppmtoneo="${PBM_TESTPREFIX}ppmtoneo"
-  alias neotoppm="${PBM_TESTPREFIX}neotoppm"
-  alias pgmramp="${PBM_BINPREFIX}pgmramp"
-  alias pamscale="${PBM_BINPREFIX}pamscale"
-  alias pbmmake="${PBM_BINPREFIX}pbmmake"
-  alias rgb3toppm="${PBM_BINPREFIX}rgb3toppm"
-  shopt -s expand_aliases
 
 # Atari pi1 and neo files have the following characteristics:
 # Size: 320x200

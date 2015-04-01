@@ -1,12 +1,7 @@
 #! /bin/bash
 # This script tests: ppmdim
-# Also requires: pamfunc pnmarith pamarith pamsumm
+# Also requires: pamfunc pamarith pamsumm
 
-  alias ppmdim="${PBM_TESTPREFIX}ppmdim"
-  alias pamfunc="${PBM_BINPREFIX}pamfunc"
-  alias pamsumm="${PBM_BINPREFIX}pamsumm"
-  alias pnmarith="${PBM_BINPREFIX}pnmarith"
-  shopt -s expand_aliases
 
 tmpdir=${tmpdir:-/tmp}
 
@@ -22,7 +17,7 @@ for i in  0.125 0.25 0.5 0.75 0.1 0.0117 0.2 0.4 0.333 0.666 0.8 0.9 0.95
   do
   ppmdim $i testimg.ppm > ${dim1_ppm}
   pamfunc -mult=$i testimg.ppm > ${dim2_ppm}
-  pnmarith -diff ${dim1_ppm} ${dim2_ppm} | \
+  pamarith -diff ${dim1_ppm} ${dim2_ppm} | \
     pamsumm -mean -brief | \
     awk '{print $1<0.75 ? "ok" : "fail"}'
   done

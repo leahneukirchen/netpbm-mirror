@@ -3,15 +3,6 @@
 # Also requires: pamdepth pamenlarge pamsumm pbmmake
 # Also requires: pgmtopgm pnminvert ppmtopgm
 
-  alias ppmmix="${PBM_TESTPREFIX}ppmmix"
-  alias pamdepth="${PBM_BINPREFIX}pamdepth"
-  alias pamenlarge="${PBM_BINPREFIX}pamenlarge"
-  alias pamsumm="${PBM_BINPREFIX}pamsumm"
-  alias pbmmake="${PBM_BINPREFIX}pbmmake"
-  alias pgmtopgm="${PBM_BINPREFIX}pgmtopgm"
-  alias pnminvert="${PBM_BINPREFIX}pnminvert"
-  alias ppmtopgm="${PBM_BINPREFIX}ppmtopgm"
-  shopt -s expand_aliases
 
 tmpdir=${tmpdir:-/tmp}
 
@@ -25,9 +16,9 @@ ppmmix 0.75 ${a1_pgm} ${a2_pgm} | ppmtopgm | pamdepth 3 -plain &&
 rm ${a1_pgm} ${a2_pgm}
 
 # Mix image with itself.
-# Output should match input regardless of ratio. 
+# Output should match input regardless of ratio.
 for i in 0 0.5 0.6 1
-do 
+do
 ppmmix $i testimg.ppm testimg.ppm | cksum
 done
 

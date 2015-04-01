@@ -1,11 +1,9 @@
 #! /bin/bash
 # This script tests: pgmramp
-# Also requires: 
+# Also requires:
 
-  alias pgmramp="${PBM_TESTPREFIX}pgmramp"
-  shopt -s expand_aliases
 
-for type in -lr -tb -rectangle -ellipse -diagonal 
+for type in -lr -tb -rectangle -ellipse -diagonal
 do
 pgmramp -maxval=6 $type 4 4 -plain
 done
@@ -15,4 +13,3 @@ do pgmramp $type 256 256 | cksum
 done
 
 pgmramp -diagonal -maxval=510 256 256 | cksum
-  

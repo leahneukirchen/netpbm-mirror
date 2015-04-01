@@ -2,14 +2,8 @@
 # This script tests: pbmtomda mdatopbm
 # Also requires: pbmmake pnmpad pamcut
 
-  alias pbmtomda="${PBM_TESTPREFIX}pbmtomda"
-  alias mdatopbm="${PBM_TESTPREFIX}mdatopbm"
-  alias pbmmake="${PBM_BINPREFIX}pbmmake"
-  alias pnmpad="${PBM_BINPREFIX}pnmpad"
-  alias pamcut="${PBM_BINPREFIX}pamcut"
-  shopt -s expand_aliases
 
-# Pbmtomda requires input width and height to be multiples of 8. 
+# Pbmtomda requires input width and height to be multiples of 8.
 
 # Test 1.  Should print 1757803444 169
 pbmmake -g 32 40 | pbmtomda | mdatopbm | cksum

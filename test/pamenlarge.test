@@ -2,11 +2,6 @@
 # This script tests: pamenlarge
 # Also requires: pamchannel pamseq pamtopnm
 
-  alias pamenlarge="${PBM_TESTPREFIX}pamenlarge"
-  alias pamchannel="${PBM_TESTPREFIX}pamchannel"
-  alias pamseq="${PBM_TESTPREFIX}pamseq"
-  alias pamchannel="${PBM_TESTPREFIX}pamchannel"
-  shopt -s expand_aliases
 
 # Test 1.  Should print 3424505894 913236
 pamenlarge 3 testimg.ppm | cksum

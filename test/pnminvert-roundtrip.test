@@ -1,9 +1,7 @@
 #! /bin/bash
 # This script tests: pnminvert
-# Also requires: 
+# Also requires:
 
-  alias pnminvert="${PBM_TESTPREFIX}pnminvert"
-  shopt -s expand_aliases
 
 pnminvert testimg.ppm | pnminvert | cksum
 pnminvert testgrid.pbm | pnminvert | cksum

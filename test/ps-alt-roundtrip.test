@@ -1,14 +1,7 @@
 #! /bin/bash
 # This script tests: pbmtoepsi pbmtopsg3 pbmtolps psidtopgm pstopnm
-# Also requires: gs pnmtopnm pnmcrop
+# Also requires: gs pnmcrop
 
-  alias pbmtoepsi="${PBM_TESTPREFIX}pbmtoepsi"
-  alias pbmtolps="${PBM_TESTPREFIX}pbmtolps"
-  alias pbmtopsg3="${PBM_TESTPREFIX}pbmtopsg3"
-  alias psidtopgm="${PBM_TESTPREFIX}psidtopgm"
-  alias pstopnm="${PBM_TESTPREFIX}pstopnm"
-  alias pnmcrop="${PBM_BINPREFIX}pnmcrop"
-  shopt -s expand_aliases
 
 # This script is for testing alternative (or minor) utilities that
 # read/write Postscript and encapsulated Postscript:
@@ -25,8 +18,8 @@
 ## pbmtoepsi, pbmtopsg3, pbmtolps or psidtopgm.
 ## If both tests fail it indicates a problem with pstopnm or gs.
 
-# pstopnm does not use libnetpbm functions for output. 
-# Output is filtered through pnmtopnm.
+# pstopnm does not use libnetpbm functions for output.
+# Output is filtered through at least one Netpbm program.
 
 # Test 1. Should print: 2425386270 41
 testgrid1_ps=${tmpdir}/testgrid1.ps
@@ -54,7 +47,7 @@ rm ${testgrid2_ps}
 # Test 3. Should print: 2916080186 235
 # Output is pgm maxval=1 with black and white inverted.
 #
-testgrid_epsi=${tmpdir}/testgrid.epsi 
+testgrid_epsi=${tmpdir}/testgrid.epsi
 
 pbmtoepsi testgrid.pbm > ${testgrid_epsi} && \
 xysizebps=`awk  '/BeginPreview/ {print $2,$3,$4}' \
@@ -64,4 +57,4 @@ awk '/^%%BeginPreview:/ { p=1; next } /^%%EndImage/ { p=0; next } \
   p==1 {print "!"$0}' \
     ${testgrid_epsi} | psidtopgm $xysizebps | cksum
 
-rm ${testgrid_epsi} 
+rm ${testgrid_epsi}

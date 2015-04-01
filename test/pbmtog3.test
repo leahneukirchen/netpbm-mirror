@@ -2,9 +2,6 @@
 # This script tests: pbmtog3
 # Also requires: pbmmake
 
-  alias pbmtog3="${PBM_TESTPREFIX}pbmtog3"
-  alias pbmmake="${PBM_BINPREFIX}pbmmake"
-  shopt -s expand_aliases
 
 # Test 1.  Should print 3697098186 144
 pbmtog3 testgrid.pbm | cksum

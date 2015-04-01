@@ -1,13 +1,7 @@
 #! /bin/bash
 # This script tests: pbmtocis cistopbm
-# Also requires: pbmmake pamenlarge pamcut
+# Also requires: pbmmake pamcut
 
-  alias pbmtocis="${PBM_TESTPREFIX}pbmtocis"
-  alias cistopbm="${PBM_TESTPREFIX}cistopbm"
-  alias pbmmake="${PBM_BINPREFIX}pbmmake"
-  alias pamenlarge="${PBM_BINPREFIX}pamenlarge"
-  alias pamcut="${PBM_BINPREFIX}pamcut"
-  shopt -s expand_aliases
 
 # Output images produced by pbmtocis are of fixed size,
 # either 128x96 or 256x192.

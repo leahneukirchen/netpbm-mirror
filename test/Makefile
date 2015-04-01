@@ -12,8 +12,12 @@ PROGS = testrandom
 
 all: $(PROGS)
 
-PORTBINARIES = testrandom
-OBJECTS = $(PORTBINARIES:%=%.o)
+testrandom.o: testrandom.c
+	$(CC_FOR_BUILD) -c -o $@ $(CFLAGS_FOR_BUILD) $<
+
+testrandom: testrandom.o
+	$(LD_FOR_BUILD) -o $@ $(LDFLAGS_FOR_BUILD) $<
+
 
 OMIT_TEST_RULE = 1
 include $(SRCDIR)/common.mk

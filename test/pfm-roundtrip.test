@@ -2,10 +2,6 @@
 # This script tests: pamtopfm pfmtopam
 # Also requires: pamtopnm
 
-  alias pamtopfm="${PBM_TESTPREFIX}pamtopfm"
-  alias pfmtopam="${PBM_TESTPREFIX}pfmtopam"
-  alias pamtopnm="${PBM_BINPREFIX}pamtopnm"
-  shopt -s expand_aliases
 
 # Should print 1926073387 101484, cksum of testimg.ppm
 pamtopfm testimg.ppm | pfmtopam | \

@@ -1,10 +1,7 @@
 #! /bin/bash
 # This script tests: pnminvert
-# Also requires: pbmmake
+# Also requires: pbmmake pamchannel pamtopnm
 
-  alias pnminvert="${PBM_TESTPREFIX}pnminvert"
-  alias pbmmake="${PBM_BINPREFIX}pbmmake"
-  shopt -s expand_aliases
 
 # Test 1.  Should print 1240379484 41
 pnminvert testgrid.pbm | cksum
@@ -12,7 +9,7 @@ pnminvert testgrid.pbm | cksum
 # Test 2.  Should print 1416115901 101484
 pnminvert testimg.ppm | cksum
 
-# Test 3.  Should print 
+# Test 3.  Should print 1174803406 33838
 pamchannel -infile=testimg.ppm -tupletype="GRAYSCALE" 0 | pamtopnm | \
   pnminvert | cksum
 

@@ -1,9 +1,6 @@
 #! /bin/bash
 # This script tests: ppmrough
-
-  alias ppmrough="${PBM_TESTPREFIX}ppmrough"
-  shopt -s expand_aliases
-
+# Also requires:
 
 testrandom -q
 case $? in

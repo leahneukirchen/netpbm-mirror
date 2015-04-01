@@ -2,10 +2,6 @@
 # This script tests: pnmtosgi sgitopnm
 # Also requires: rgb3toppm
 
-  alias pnmtosgi="${PBM_TESTPREFIX}pnmtosgi"
-  alias sgitopnm="${PBM_TESTPREFIX}sgitopnm"
-  alias rgb3toppm="${PBM_BINPREFIX}rgb3toppm"
-  shopt -s expand_aliases
 
 a_sgi=${tmpdir}/a.sgi
 a_red=${tmpdir}/a.red

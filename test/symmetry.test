@@ -2,13 +2,6 @@
 # This script tests: pgmramp pamgauss pgmkernel pbmmake pbmpscale
 # Also requires: pamflip
 
-  alias pgmramp="${PBM_TESTPREFIX}pgmramp"
-  alias pamgauss="${PBM_TESTPREFIX}pamgauss"
-  alias pgmkernel="${PBM_TESTPREFIX}pgmkernel"
-  alias pbmmake="${PBM_TESTPREFIX}pbmmake"
-  alias pbmpscale="${PBM_TESTPREFIX}pbmpscale"
-  alias pamflip="${PBM_BINPREFIX}pamflip"
-  shopt -s expand_aliases
 
 # All tests print "ok" upon success, cksum results otherwise.
 # The "$3>0" is a kludge for preventing false positives with empty files.
@@ -102,4 +95,3 @@ pgmramp -ell 101 33 > ${ell_pgm}
   awk '$1==3 && $3>0 { print "ok"; exit }; { print }'
 
 rm ${ell_pgm}
-

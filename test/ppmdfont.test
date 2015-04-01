@@ -1,11 +1,7 @@
 #! /bin/bash
 # This script tests: ppmdmkfont ppmddumpfont ppmdcfont
-# Also requires: 
+# Also requires:
 
-  alias ppmdcfont="${PBM_TESTPREFIX}ppmdcfont"
-  alias ppmddumpfont="${PBM_TESTPREFIX}ppmddumpfont"
-  alias ppmdmkfont="${PBM_TESTPREFIX}ppmdmkfont"
-  shopt -s expand_aliases
 
 # Test 1. Should produce: 2726488777 48129
 ppmdmkfont | ppmddumpfont 2>&1 | cksum

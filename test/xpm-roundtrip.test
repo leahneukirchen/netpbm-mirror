@@ -2,11 +2,6 @@
 # This script tests: ppmtoxpm xpmtoppm
 # Also requires: pgmtopbm ppmtopgm
 
-  alias ppmtoxpm="${PBM_TESTPREFIX}ppmtoxpm"
-  alias xpmtoppm="${PBM_TESTPREFIX}xpmtoppm"
-  alias pgmtopbm="${PBM_BINPREFIX}pgmtopbm"
-  alias ppmtopgm="${PBM_BINPREFIX}ppmtopgm"
-  shopt -s expand_aliases
 
 #ppmtoxpm -hexonly testimg.ppm | \
 # xpmtoppm  | cksum

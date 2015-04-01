@@ -2,10 +2,6 @@
 # This script tests: ppmchange
 # Also requires: ppmrainbow pgmramp
 
-  alias ppmchange="${PBM_TESTPREFIX}ppmchange"
-  alias ppmrainbow="${PBM_BINPREFIX}ppmrainbow"
-  alias pgmramp="${PBM_BINPREFIX}pgmramp"
-  shopt -s expand_aliases
 
 #  Failure message
 ## If this test fails and ppmchange-roundtrip.test succeeds,
@@ -57,7 +53,7 @@ rm ${rainbow_ppm}
 #   -remainder=black -closeness=25  ${rainbow_ppm} | \
 #   pphist -sort=rgb -noheader
 #
-#     0     0     0	    0	     75 
-#     0     0   255	   29	     42 
-#     0    50     2	   30	     42 
-#   100     0     1	   30	     41 
+#     0     0     0	    0	     75
+#     0     0   255	   29	     42
+#     0    50     2	   30	     42
+#   100     0     1	   30	     41

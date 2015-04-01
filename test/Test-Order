@@ -1,6 +1,7 @@
 # General test
 
 all-in-place.test
+legacy-names.test
 
 # Generator tests
 
@@ -115,8 +116,10 @@ gem-roundtrip.test
 gif-roundtrip.test
 gif-quant-roundtrip.test
 hdiff-roundtrip.test
+ilbm-roundtrip.test
 jbig-roundtrip.test
 leaf-roundtrip.test
+macp-roundtrip.test
 mda-roundtrip.test
 mgr-roundtrip.test
 mrf-roundtrip.test

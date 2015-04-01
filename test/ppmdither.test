@@ -1,9 +1,7 @@
 #! /bin/bash
 # This script tests: ppmdither
-# Also requires: 
+# Also requires:
 
-  alias ppmdither="${PBM_TESTPREFIX}ppmdither"
-  shopt -s expand_aliases
 
 ppmdither testimg.ppm | cksum
 ppmdither -red 2 -green 2 -blue 2 testimg.ppm | cksum
