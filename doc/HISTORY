@@ -26,7 +26,8 @@ not yet  BJH  Release 10.71.00
               giftopnm: Fix bug: crashes if purported GIF has neither a global
               color map nor a local one.
 
-              pgmmorphconv: fix bug: always produces PGM Plain format.
+              pgmmorphconv: fix bug: always produces PGM Plain format.  Always
+              present (progam was added to Netpbm in Release 10.0 (June 2002)).
 
               pamtilt: fix bug: unconditional crash.  Broken in Netpbm 10.63
               (June 2013).
@@ -37,7 +38,7 @@ not yet  BJH  Release 10.71.00
 
               pamtosvg: fix use of unset variable; probably results in a
               crash.  Always present (pamtosvg was new in Netpbm 10.33 (March
-              2006).
+              2006)).
 
               cameratopam: fix bug: variable used before set; unknown impact.
               Introduced in Netpbm 10.66 (March 2014).
@@ -52,11 +53,11 @@ not yet  BJH  Release 10.71.00
               10.69 (December 2014).
 
               build: fix incompatible type compilation error in giftopnm.
-              Broken in Netpbm 10.38 (March 2007) (but obviously manifests
+              Introduced in Netpbm 10.38 (March 2007) (but obviously manifests
               only in recent build environments).
 
               build: fix compile failure in wordint_access_be.h with Bigendian
-              target platforms.  Broken in Netpbm 10.63 (June 2013).
+              target platforms.  Introduced in Netpbm 10.63 (June 2013).
 
               build: fix compile failure in pbmtomacp, ppmtoacad, pgmabel:
               TRUE redefined.  Introduced in Netpbm 10.69 (December 2014).
