@@ -8,10 +8,11 @@ Contents
   1.4 Repeatability
   1.5 Execution time
   1.6 Testing package in designated directory
-  1.7 Post-install check
-  1.8 Skipping test items
-  1.9 Valgrind
-
+  1.7 Pre-packaging check
+  1.8 Post-install check
+  1.9 Skipping test items
+  1.10 Valgrind
+  
 2. Troubleshooting
   2.1 Missing programs
   2.2 Broken programs
@@ -66,31 +67,47 @@ appear at the end:
 1.3 Prerequisites
 =================
 
-The tests require the Bash command shell.  The script Execute-Tests has some
-expressions unique to bash.  Quite old versions work, at least back to bash
-v. 2.05b.
+The tests require the Bash command shell.  The script Execute-Tests has
+some expressions unique to bash.  Quite old versions work, at least back
+to bash v. 2.05b.
 
 The tests also use the following utilities:
 
-  - awk 
-  - cat
-  - cmp
-  - egrep
-  - head
-  - mktemp
-  - sed
-  - seq
-  - tee
+ - sh
+ - awk
+ - perl
+
+ - cat
+ - cksum
+ - cmp
+ - cp
+ - cut
+ - date
+ - dirname
+ - egrep
+ - fgrep
+ - grep
+ - file
+ - head
+ - mkdir
+ - mktemp
+ - rm
+ - sed
+ - seq
+ - tee
+ - tr
+ - uniq
 
 
 
 1.4 Repeatability
 =================
 
-The current version of the test package produces identical results if you run
-"make check" repeatedly.  The tests contain no random elements; some
-Netpbm programs use randomness internally, but the tests seed their random
-number generators with fixed values so that they too have repeatable results.
+The current version of the test package produces identical results if
+you run "make check" repeatedly.  The tests contain no random elements;
+some Netpbm programs use randomness internally, but the tests seed
+their random number generators with fixed values so that they too have
+repeatable results.
 
 
 
@@ -114,64 +131,99 @@ you must do the same with "make check":
 
 
 
-1.7 Post-install check
+1.7 Pre-packaging check
+=======================
+
+You can run the tests to check executables after compilation, before
+packaging.  This feature is intended for developers.
+
+   make check-tree
+
+This test method is incompatible with merge build.
+
+Currently this test method reports several errors when Netpbm is compiled in a
+separate build directory.
+
+
+
+1.8 Post-install check
 ======================
 
-You can run the tests after installation as well as from the package
-directory.  Just set $PBM_TESTPREFIX to the bin directory.  For example, if
-the Netpbm executables are in /usr/local/bin/ do
+You can run the tests after installation.  Run this way, the tests are of
+programs in the default search path.
 
-   PBM_TESTPREFIX=/usr/local/bin make check
+  make check-install
 
-If you want to test the executables in the default search path do
+Make sure to set RGBDEF if the color dictionary file rgb.txt is in
+a non-standard location.  This must be an absolute path.  
 
-   PBM_TESTPREFIX="" make check
-
-If the color dictionary file rgb.txt is in a non-standard location, you must
-set RGBDEF.  If you don't, the tests will report several false positives.
-
-   PBM_TESTPREFIX=/usr/local/bin RGBDEF=/etc/colors/rgb.txt make check
+  RGBDEF=/etc/colors/rgb.txt make check-install
 
 
 
-1.8 Skipping test items
+1.9 Skipping test items
 =======================
 
 The file test/Test-Order is a list of tests which are run.  If you want to
 skip any test, remove the line or comment it out with a "#".
 
+The variable "target", a comma-separated list of Netpbm programs
+provides another way to run only select tests.  For example to run
+only the test scripts which examine giftopnm and pamtogif, do:
+
+  make check target=giftopnm,pamtogif
 
 
-1.9 Valgrind
+
+1.10 Valgrind
 ============
 
 You can run the whole test under Valgrind.  This is an advanced feature
 intended for programmers who work on Netpbm code.
 
-To turn on Valgrind, uncomment this line in test/Execute:
+To turn on Valgrind, set VALGRIND_TESTS to "on":
 
-# export PBM_TESTPREFIX="valgrind --log-fd=4 "${PBM_TESTPREFIX}
+  make check VALGRIND_TESTS="on"
 
-   make check 4> valgrind.log
+Valgrind version 3.6.0 or newer is required.  For information on
+valgrind, visit http://www.valgrind.org/ .
 
-Note that Valgrind output is directed to file descriptor 4.
+Valgrind results are output to files, one per process in the directory
+/tmp/netpbm-test/valgrind .  The file name consists of the test script
+name, process ID and the suffix ".vout", e.g.: "ppmmake.18420.vout" .
 
-Valgrind version 3.5.0 or newer is recommended.  Older versions do
-not report the command that is being executed.
+Valgrind errors are not reported in the summary report and do not
+influence the success/failure count in any way.  The following awk
+one-liner will report ".vout" files with a positive error count in
+the ERROR SUMMARY line:
 
-You can add any options for Valgrind should by editing the above mentioned
-line.  To run "valgrind --track-origins=yes", you must make two changes in
+  awk '/ERROR SUMMARY/ && $4>0 {print FILENAME}' \
+       /tmp/netpbm-test/valgrind/*.vout  
+
+
+You can add or alter valgrind options by editing this line in
+test/Execute-Tests:
+
+  vg_command_base="valgrind --trace-children=yes"
+
+To run "valgrind --track-origins=yes", you must make two changes in
 config.mk:
 
-  - Add -g to CFLAGS.
-  - Turn stripping off.
+  - Add -g to CFLAGS
+  - Turn stripping off: STRIPFLAG =
 
-Valgrind significantly increases execution time.  You should consider paring
-down the items in Test-Order.  You probably don't need to run
-"all-in-place.test", which has restrictions in the way errors are reported
-when PBM_TESTPREFIX is not a simple directory path.  Another test
-"pamslice-roundtrip.test" is time-consuming, you may want to skip this one
-too.
+Valgrind significantly increases execution time.  If ordinary
+"make check" requires 10 seconds, "make check VALGRIND_TESTS=on"
+will require roughly 12 minutes, maybe more.  You should consider
+either setting "target=..." or paring down the items in Test-Order.
+In the latter case, you probably don't need to run "all-in-place.test"
+and "legacy-names.test".
+
+The option "--trace-children-skip" is used to prevent valgrind from
+stepping into child processes that are not relevant.  This option
+appears in valgrind v. 3.6.0.  If you wish to conduct valgrind tests
+with an older version, comment out the line in Execute-Tests with
+"--trace-children-skip".
 
 
 
@@ -181,7 +233,8 @@ too.
 2.1 Missing programs
 ====================
 
-The first test run, "all-in-place.test" detects missing programs.
+The first two tests run, "all-in-place.test" and "legacy-names.test"
+detect missing programs.
 
 If you work around a build glitch with "make --keep-going" you
 will get a few errors here.
@@ -191,10 +244,10 @@ problem, such as a misconfigured dynamic library or a directory-wide
 permission issue.  This kind of failure is known to happen when N is
 set too high with "make -jN" (overambitious parallel make.) 
 
-The current test routines assume a typical build configuration - they are not
-aware of the actual configuration you chose.  If a choice you make during
-configure causes "make" to skip compilation of certain programs, the test
-routines won't know and will report failures.
+The current test routines assume a typical build configuration - they are
+not aware of the actual configuration you chose.  If a choice you make
+during configure causes "make" to skip compilation of certain programs,
+the test routines won't know and will report failures.
 
 For details read 'Netpbm Library Prerequisites':
 http://netpbm.sourceforge.net/prereq.html .
@@ -205,8 +258,8 @@ http://netpbm.sourceforge.net/prereq.html .
 ===================
 
 Broken programs will invariably lead to failures.  Certain programs
-(for instance, image generators 'pbmmake' and 'pgmmake') are used in numerous
-test scripts.  Problems in them will lead to multiple failures.
+(for instance, image generators 'pbmmake' and 'pgmmake') are used in
+numerous test scripts.  Problems in them will lead to multiple failures.
 
 To aid you in this situation each test routine lists the necessary programs
 near the top.
@@ -232,7 +285,7 @@ the color dictionary file rgb.txt.
   pathname of your rgb.txt file or don't use color names.
 
 This is highly unlikely to occur with "make check" right after packaging,
-but may appear after installation.
+but may appear in the post-installation check "make check-install".
 
 To check manually after installation, execute the following and see
 whether the proper output or the error message appears:
@@ -249,6 +302,10 @@ Proper output:
 The simple remedy is properly setting the environment value RGBDEF to
 the location of rgb.txt.
 
+RGBDEF must be an absolute path.  The following will not work:
+
+  RGBDEF=./lib/rgb.txt make check-install
+
 If you want to hardcode the path, modify RGB_DB_PATH in pm_config.h
 and run "make" again.  Note that running "configure" will cause
 pm_config.h to be overwritten; changes by editing will be lost.
@@ -264,17 +321,19 @@ the newly built version is in place and in working condition.
 
 The test routines can test binaries other than the intended
 target, for example pre-compiled binaries distributed in .rpm
-or .deb format.  If PBM_TESTPREFIX is explicitly set to a directory
-that contains programs from such a source, you should expect multiple
-failures due to missing programs, missing features, etc.  If
-PBM_TEXTPREFIX is set to "" (null), the outcome will depend heavily
-on what version has precedence in PATH.
+or .deb format.  If the default binary search path gives priority
+to a directory that contains programs from such a source, you should
+expect multiple failures due to missing features, etc. with
+"make check-install".
 
 Netpbm distributed with Debian or Ubuntu is called "Netpbm-Free" and
 is based on a fork which broke off in 2002.  There are many differences.
 Many tests will fail.  However, the test framework itself is valid for
-these distributions.
+these distributions.  The following procedure will allow you to run
+the tests on installed Netpbm programs, regardless of the version:
 
+   ./configure           # accept the defaults
+   make check-install
 
 
 2.5 System dependent issues
@@ -292,6 +351,7 @@ flag by default may also be a factor.
 The current test framework checks whether the random number generator
 is the one from glibc and skips certain tests if a different one is
 detected.
+
 
 
 3. Reporting test failures

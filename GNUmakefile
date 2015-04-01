@@ -1,12 +1,24 @@
 # Makefile for Netpbm
- 
+
 # Configuration should normally be done in the included file config.mk.
 
 # Targets in this file:
 #
 #   nonmerge:     Build everything, in the source directory.
-#   merge:        Build everything as merged executables, in the source dir
-#   package:      Make a package of Netpbm files ready to install
+#   merge:        Build everything as merged executables, in the source dir.
+#   package:      Make a package of Netpbm files ready to install.
+#
+#   deb:          Make a .deb file in the current dir.
+#
+#   check-tree:     Conduct tests on Netpbm files in the source dir. 
+#   check-package:  Conduct tests on packaged Netpbm files.
+#   check-install:  Conduct tests on installed Netpbm files.
+#   check:          Default check.  Synonym for check-package.
+#
+#   clean:        Delete target executables and intermediate objects.
+#   distclean:    Delete configuration files in addition to the above.
+#
+#   tags:         Generate/update an Emacs tags file, named TAGS.
 #   
 #   The default target is either "merge" or "nonmerge", as determined by
 #   the DEFAULT_TARGET variable set by config.mk.
@@ -60,9 +72,9 @@ VPATH=.:$(SRCDIR)
 
 include $(BUILDDIR)/config.mk
 
-PROG_SUBDIRS = converter analyzer editor generator other test
+PROG_SUBDIRS = converter analyzer editor generator other
 PRODUCT_SUBDIRS = lib $(PROG_SUBDIRS)
-SUPPORT_SUBDIRS = urt buildtools
+SUPPORT_SUBDIRS = urt buildtools test
 
 SUBDIRS = $(PRODUCT_SUBDIRS) $(SUPPORT_SUBDIRS)
 
@@ -71,10 +83,6 @@ MANUALS1 = netpbm
 NOMERGEBINARIES = netpbm
 
 OBJECTS = netpbm.o
-
-PBM_TESTPREFIX ?= $(PKGDIR)/bin
-PBM_LIBRARY_PATH ?= $(PKGDIR)/lib
-RGBDEF ?= $(SRCDIR)/lib/rgb.txt
 
 default: $(DEFAULT_TARGET)
 	echo "EXISTENCE OF THIS FILE MEANS NETPBM HAS BEEN BUILT." \
@@ -133,6 +141,14 @@ $(TYPEGEN) $(ENDIANGEN): $(BUILDDIR)/buildtools
 
 inttypes_netpbm.h: $(TYPEGEN)
 	$(TYPEGEN) >$@
+
+
+# testrandom is a utility program used by the make file below.
+TESTRANDOM = $(BUILDDIR)/test/testrandom
+
+$(TESTRANDOM): $(BUILDDIR)/test
+	$(MAKE) -C $(dir $@) -f $(SRCDIR)/test/Makefile \
+	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@) 
 
 # We run a couple of programs on the build machine in computing the
 # contents of pm_config.h.  We need to give the user a way not to do
@@ -354,31 +370,14 @@ netpbm.o: mergetrylist
 install.merge: local.install.merge
 .PHONY: local.install.merge
 local.install.merge:
-	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm bmptoppm
+	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pnmnoraw
 	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm gemtopbm
-	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm icontopbm
-	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pgmedge
-	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pgmnorm
-	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pgmoil
-	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pgmslice
-	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pngtopnm
-	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pnmarith
-	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pnmcomp
-	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pnmcut
-	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pnmdepth
-	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pnmenlarge
-	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pnmfile
 	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pnminterp
-	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pnmnoraw
-	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pnmscale
-	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pnmsplit
-	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pnmtofits
-	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pnmnoraw
-	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pnmtopnm
-	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm ppmnorm
+	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pgmoil
 	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm ppmtojpeg
-	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pnmtotga
-	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pnmtouil
+	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm bmptoppm
+	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pgmnorm
+	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pnmfile
 
 ifneq ($(NETPBMLIBTYPE),unixstatic)
 install.lib: lib/install.lib
@@ -442,15 +441,110 @@ install.sharedlibstub:
 deb:
 	buildtools/debian/mkdeb --buildtools=buildtools --pkgdir=$(PKGDIR)
 
+
 .PHONY: check
-check:
-# This works on typical Linux systems
-	if [ ! -d $(RESULTDIR) ]; then mkdir -pv $(RESULTDIR); fi
+.PHONY: check-tree
+.PHONY: check-package
+.PHONY: check-install
+
+# Test files in source tree.
+# This does not work when Netpbm is compiled in a separate build dir.
+
+check-tree : SRCBINDIRS :=./analyzer \
+./converter/other \
+./converter/other/cameratopam \
+./converter/other/fiasco \
+./converter/other/jbig \
+./converter/other/jpeg2000 \
+./converter/other/pamtosvg \
+./converter/other/pnmtopalm \
+./converter/pbm \
+./converter/pbm/pbmtoppa \
+./converter/pgm \
+./converter/ppm \
+./converter/ppm/hpcdtoppm \
+./converter/ppm/ppmtompeg \
+./converter/ppm \
+./editor \
+./editor/pamflip \
+./editor/specialty \
+./generator \
+./other \
+./other/pamx \
+./
+
+# Create colon-separated PATH list from the above.
+# Use realpath function (appears in GNU Make v.3.81) if available.
+
+# Kludge to test whether realpath is available:
+ifeq ($(realpath $(CURDIR)/.),$(CURDIR))
+  check-tree : RBINDIRS :=\
+    $(foreach dir,$(SRCBINDIRS),$(realpath $(BUILDDIR)/$(dir)))
+else
+  check-tree : RBINDIRS :=$(foreach dir,$(SRCBINDIRS),$(BUILDDIR)/$(dir))  
+endif
+
+# Kludge to express characters given special meanings by GNU Make.
+# See GNU Make texinfo manual "Function Call Syntax".
+empty :=
+space := $(empty) $(empty)
+colon :=:
+
+check-tree : PBM_TEST_PATH := $(subst $(space),$(colon),$(RBINDIRS))
+check-tree : PBM_LIBRARY_PATH ?= $(BUILDDIR)/lib
+check-tree : RGBDEF ?= $(SRCDIR)/lib/rgb.txt
+
+
+# Create RESULTDIR.
+# If it already exists, rename and covert to an archive directory.
+# Use numbered backup.
+# TODO: Renaming fails with old versions of mv which do not support -T.  
+
+resultdir-backup: FORCE
+	if [ -d $(RESULTDIR) ]; \
+	   then mv -T --backup=numbered $(RESULTDIR) $(RESULTDIR).bak; \
+	fi; \
+	mkdir -p $(RESULTDIR); \
+
+
+check-tree: $(TESTRANDOM) resultdir-backup
 	cd $(RESULTDIR); \
-	  PBM_TESTPREFIX=$(PBM_TESTPREFIX) \
+	  CHECK_TYPE=tree \
+	  PBM_TEST_PATH=$(PBM_TEST_PATH) BUILDDIR=$(BUILDDIR) \
 	  LD_LIBRARY_PATH=$(PBM_LIBRARY_PATH):${LD_LIBRARY_PATH} \
 	  RGBDEF=$(RGBDEF) \
 	  $(SRCDIR)/test/Execute-Tests 2>&1
+
+# Execute-Tests needs to know BUILDDIR in order to locate testrandom.
+# This applies to all check varieties.
+
+# Check after the packaging stage
+# This works on typical Linux systems.
+# This is the default check.
+
+check-package : PBM_TEST_PATH := $(PKGDIR)/bin
+check-package : PBM_LIBRARY_PATH := $(PKGDIR)/lib
+check-package : RGBDEF ?= $(PKGDIR)/misc/rgb.txt
+check: check-package
+
+check-package: $(TESTRANDOM) resultdir-backup
+	cd $(RESULTDIR); \
+	  CHECK_TYPE=package \
+	  PBM_TEST_PATH=$(PBM_TEST_PATH) BUILDDIR=$(BUILDDIR) \
+	  LD_LIBRARY_PATH=$(PBM_LIBRARY_PATH):${LD_LIBRARY_PATH} \
+	  RGBDEF=$(RGBDEF) \
+	  $(SRCDIR)/test/Execute-Tests 2>&1
+
+
+# Check after install
+check-install: $(TESTRANDOM) resultdir-backup
+	cd $(RESULTDIR); \
+	  CHECK_TYPE=install \
+	  BUILDDIR=$(BUILDDIR) \
+	  RGBDEF=$(RGBDEF) \
+	  $(SRCDIR)/test/Execute-Tests 2>&1
+
+
 
 clean: localclean
 
@@ -469,7 +563,7 @@ localdistclean: localclean
 	-rm -f TAGS
 	-rm -f config.mk
 
-# 'tags' generates/updates an Emacs tags file, anmed TAGS, in the current
+# 'tags' generates/updates an Emacs tags file, named TAGS, in the current
 # directory.  Use with Emacs command 'find-tag'.
 
 .PHONY: tags
