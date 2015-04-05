@@ -210,6 +210,7 @@ def makeman(name, file, indoc):
     # Special characters
     indoc = indoc.replace("&quot;", "'")
     indoc = indoc.replace("&nbsp;", "\\ ")
+    indoc = indoc.replace("\", "\\\\")
     # Tables
     indoc = re.sub(' *<table[^>]*>.*', ".TS", indoc)
     indoc = re.sub(" *</table>.*", ".TE", indoc)

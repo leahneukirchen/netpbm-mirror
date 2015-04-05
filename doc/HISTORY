@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.71.00
 
+              makeman: deal properly with backlash in source.  Thanks Willem
+              van Schaik <willem@schaik.com>.
+
 15.03.29 BJH  Release 10.70.00
 
               Add st4topgm, pgmtost4.
