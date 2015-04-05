@@ -18,6 +18,7 @@
   #include <printf.h>  /* Necessary for parse_printf_format() */
 #endif
 
+#include "pm_c_util.h"
 #include "mallocvar.h"
 #include "nstring.h"
 #include "shhopt.h"
@@ -219,12 +220,15 @@ writeIcol(FILE *           const ofP,
           SkeletonObject * const objectP,
           double           const value) {
 
+    /* Unlike Netpbm, the output format does not have an upper limit for
+       maxval.  Here we allow all values representable by unsigned int.
+    */
+
     struct Icdat * const icdataP = &objectP->odata.icolData;
-    
-    fprintf(ofP, icdataP->icformat,
-            (unsigned int)
-            (icdataP->icolmin
-             + (icdataP->icolmax - icdataP->icolmin) * value));
+    unsigned int const outValue = icdataP->icolmin +
+        ROUNDU(((double) icdataP->icolmax - icdataP->icolmin) * value);
+
+    fprintf(ofP, icdataP->icformat, outValue);
 }
 
 

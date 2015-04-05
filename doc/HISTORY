@@ -4,6 +4,13 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+15.04.05 BJH  Release 10.70.01
+
+              ppmtoarbtxt: fix bug: wrong output when high numbers represent
+              darker.  Broken in Netpbm 10.69 (November 2014).
+
+              ppmtoarbtxt: better rounding in sample values.
+
 15.03.29 BJH  Release 10.70.00
 
               Add st4topgm, pgmtost4.
