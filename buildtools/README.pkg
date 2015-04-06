@@ -172,7 +172,7 @@ library might use netpbm-config to generate the necessary compiler and linker
 options to access that library.
 
 Using netpbm-config, it's possible to have a viable Netpbm installation where
-netpbm.config is the only file in any default search path.
+netpbm-config is the only file in any default search path.
 
 The xxx-config concept (in general, not just Netpbm) has largely been replaced
 by the pkg-config concept (see netpbm.pc above).
