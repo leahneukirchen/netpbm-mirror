@@ -11,6 +11,9 @@ not yet  BJH  Release 10.71.00
 
               ppmtoarbtxt: better rounding in sample values.
 
+              test: replace some GNU-only code with more portable code that
+              works on OS X.  Thanks Ryan Schmidt <ryandesign@macports.org>.
+
               makeman: deal properly with backlash in source.  Thanks Willem
               van Schaik <willem@schaik.com>.
 
