@@ -59,7 +59,7 @@ srcdir=$(dirname $0)
 
 if [ -z $tmpdir ]
   then
-    tmpdir_created=$(mktemp -d) || exit 1;
+    tmpdir_created=$(mktemp -d "${TMPDIR:-/tmp}/netpbm.XXXXXXXX") || exit 1;
   export tmpdir=${tmpdir_created}
   else
   tmpdir_created="";
@@ -297,7 +297,7 @@ echo "TOTAL TESTABLE" $total_testable
 
 echo ==================
 echo "All tests done."
-date -R -u
+date -u +"%a, %d %b %Y %H:%M:%S %z"
 
 
 # Exit with status 0 if all possible tests succeeded, 1 otherwise.
