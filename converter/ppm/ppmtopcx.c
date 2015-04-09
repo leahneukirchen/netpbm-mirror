@@ -12,6 +12,10 @@
 **
 ** 11/Dec/94: first version
 ** 12/Dec/94: added handling of "packed" format (16 colors or less)
+** 
+** ZSoft PCX File Format Technical Reference Manual
+** http://bespin.org/~qz/pc-gpe/pcx.txt
+** http://web.archive.org/web/20100206055706/http://www.qzx.com/pc-gpe/pcx.txt
 */
 #include <assert.h>
 
@@ -158,6 +162,8 @@ parseCommandLine(int argc, char ** argv,
         pm_error("Program takes at most one argument "
                  "(input file specification).  You specified %d",
                  argc-1);
+
+    free(option_def);
 }
 
 
@@ -630,6 +636,16 @@ generateStandardPalette(struct pcxCmapEntry ** const pcxcmapP,
                    stdPalette[colorIndex].b);
 
         putPcxColorInHash(cht, pcxColor, colorIndex, maxval);
+    }
+
+    /* Set remaining slots in palette to black.  The values are not
+       meaningful, but this suppresses a Valgrind warning about our writing
+       undefined values to the file and makes our output constant with input.
+    */
+    for ( ; colorIndex < MAXCOLORS; ++colorIndex) {
+        pcxcmap[colorIndex].r = 0;
+        pcxcmap[colorIndex].g = 0;
+        pcxcmap[colorIndex].b = 0;
     }
 
     *chtP = cht;
