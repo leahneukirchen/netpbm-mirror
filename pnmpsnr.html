@@ -2,17 +2,15 @@
 <HTML><HEAD><TITLE>Pnmpsnr User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmpsnr</H1>
-Updated: 04 March 2001
+Updated: 10 April 2015
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
 pnmpsnr - compute the difference between two images (the PSNR)
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>pnmpsnr</B>
 
@@ -20,8 +18,7 @@ pnmpsnr - compute the difference between two images (the PSNR)
 
 [<I>pnmfile2</I>]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -52,19 +49,21 @@ PSNR of 20 means the mean square difference of the luminances of the
 pixels is 100 times less than the maximum possible difference,
 i.e. 0.01.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<p>Note that the word &quot;peak&quot; is a misnomer; there is no maximum
+involved; the metric is a mean.  But &quot;peak signal to noise ratio&quot; is
+for some reason the common term for this measurement.
+
+
+<H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="pnm.html">pnm</A></B>
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">SEE ALSO</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
 </UL>
 </BODY>
 </HTML>
