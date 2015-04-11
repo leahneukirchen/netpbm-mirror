@@ -24,29 +24,68 @@
 #include "nstring.h"
 #include "pbm.h"
 
+static int itemsperline;
+static int bitsperitem;
+static int item;
+static int firstitem;
+static const char * const hexchar = "084c2a6e195d3b7f";
+
+
+
+static void
+putitem() {
+    if ( firstitem )
+        firstitem = 0;
+    else
+        putchar( ',' );
+
+    if ( itemsperline == 11 ) {
+        putchar( '\n' );
+        itemsperline = 0;
+        }
+    if ( itemsperline == 0 )
+        putchar( ' ' );
+
+    ++itemsperline;
+    putchar('0');
+    putchar('x');
+    putchar(hexchar[item & 15]);
+    putchar(hexchar[(item >> 4) & 15]);
+    putchar(hexchar[(item >> 8) & 15]);
+    putchar(hexchar[item >> 12]);
+    bitsperitem = 0;
+    item = 0;
+}
+
+
+
+static void
+putbit(const bit b) {
+    if ( bitsperitem == 16 )
+      putitem();
+    if ( (b) == PBM_BLACK )
+      item += 1 << bitsperitem;
+    ++bitsperitem;
+}
+
+
 int
 main(int argc, char * argv[]) {
 
     FILE* ifp;
     bit* bitrow;
-    register bit* bP;
+    bit* bP;
     int rows, cols, format, padright, row;
-    register int col;
+    int col;
     char name[100];
     char* cp;
-    int itemsperline;
-    register int bitsperitem;
-    register int item;
-    int firstitem;
-    const char * const hexchar = "084c2a6e195d3b7f";
 
     pbm_init( &argc, argv );
 
     if ( argc > 2 )
         pm_usage( "[pbmfile]" );
 
-    if ( argc == 2 )
-	{
+    if ( argc == 2 ) {
         ifp = pm_openr( argv[1] );
         strcpy( name, argv[1] );
         if ( streq( name, "-" ) )
@@ -54,12 +93,11 @@ main(int argc, char * argv[]) {
 
         if ( ( cp = strchr( name, '.' ) ) != 0 )
             *cp = '\0';
-	}
-    else
-	{
+        }
+    else {
         ifp = stdin;
         strcpy( name, "noname" );
-	}
+        }
 
     pbm_readpbminit( ifp, &cols, &rows, &format );
     bitrow = pbm_allocrow( cols );
@@ -76,52 +114,19 @@ main(int argc, char * argv[]) {
     item = 0;
     firstitem = 1;
 
-#define PUTITEM \
-    { \
-    if ( firstitem ) \
-	firstitem = 0; \
-    else \
-	putchar( ',' ); \
-    if ( itemsperline == 11 ) \
-	{ \
-	putchar( '\n' ); \
-	itemsperline = 0; \
-	} \
-    if ( itemsperline == 0 ) \
-	putchar( ' ' ); \
-    ++itemsperline; \
-    putchar('0'); \
-    putchar('x'); \
-    putchar(hexchar[item & 15]); \
-    putchar(hexchar[(item >> 4) & 15]); \
-    putchar(hexchar[(item >> 8) & 15]); \
-    putchar(hexchar[item >> 12]); \
-    bitsperitem = 0; \
-    item = 0; \
-    }
 
-#define PUTBIT(b) \
-    { \
-    if ( bitsperitem == 16 ) \
-	PUTITEM; \
-    if ( (b) == PBM_BLACK ) \
-	item += 1 << bitsperitem; \
-    ++bitsperitem; \
-    }
-
-    for ( row = 0; row < rows; ++row )
-	{
+    for ( row = 0; row < rows; ++row ) {
         pbm_readpbmrow( ifp, bitrow, cols, format );
         for ( col = 0, bP = bitrow; col < cols; ++col, ++bP )
-            PUTBIT( *bP );
+            putbit( *bP );
         for ( col = 0; col < padright; ++col )
-            PUTBIT( 0 );
+            putbit( 0 );
     }
 
     pm_close( ifp );
-    
+
     if ( bitsperitem > 0 )
-        PUTITEM;
+        putitem();
     printf( "};\n" );
 
     return 0;
