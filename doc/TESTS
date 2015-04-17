@@ -267,7 +267,7 @@ target, for example pre-compiled binaries distributed in .rpm
 or .deb format.  If PBM_TESTPREFIX is explicitly set to a directory
 that contains programs from such a source, you should expect multiple
 failures due to missing programs, missing features, etc.  If
-PBM_TEXTPREFIX is set to "" (null), the outcome will depend heavily
+PBM_TESTPREFIX is set to "" (null), the outcome will depend heavily
 on what version has precedence in PATH.
 
 Netpbm distributed with Debian or Ubuntu is called "Netpbm-Free" and

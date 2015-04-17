@@ -72,18 +72,11 @@
 #include "nstring.h"
 #include "bitreverse.h"
 
+#include "config.h"  /* Defines SSE_PBM_XY_FLIP */
 #include "flip.h"
 #include "pamflip_sse.h"
 
 enum xformType {LEFTRIGHT, TOPBOTTOM, TRANSPOSE};
-
-#ifndef SIMD_PBM_TRANSPOSITION
-  #if WANT_SSE && defined(__SSE2__)
-    #define SIMD_PBM_TRANSPOSITION 1
-  #else
-    #define SIMD_PBM_TRANSPOSITION 0
-  #endif
-#endif
 
 static void
 parseXformOpt(const char *     const xformOpt,
@@ -1149,7 +1142,7 @@ transformPbm(struct pam *     const inpamP,
         /* This is a column-for-row type of transformation, which requires
            complex traversal of an in-memory image.
         */
-        if (SIMD_PBM_TRANSPOSITION == 1)
+        if (SSE_PBM_XY_FLIP)
             pamflip_transformRowsToColumnsPbmSse(inpamP, outpamP, xform);
         else
             transformPbmGen(inpamP, outpamP, xform);

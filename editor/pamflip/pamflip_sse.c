@@ -24,6 +24,7 @@
 #include "mallocvar.h"
 #include "pam.h"
 
+#include "config.h"  /* Defines SSE_PBM_XY_FLIP */
 #include "flip.h"
 
 #include "pamflip_sse.h"
@@ -32,7 +33,7 @@
    (i.e. <emmintrin.h> exists).
 */
 
-#if WANT_SSE && defined(__SSE2__)
+#if SSE_PBM_XY_FLIP
 
 /*----------------------------------------------------------------------------
    This is a specialized routine for row-for-column PBM transformations.
@@ -59,7 +60,11 @@
    As an enhancement, we clear the output raster to zero (=white) in the
    beginning and flip only the 8x16 blocks that contain non-zero bits (=any
    amount of black pixels).  When we add padding to the edges, we initialize
-   it all to zero to prevent unnecessary transpositions.
+   it all to zero to prevent unnecessary transpositions.  Because most
+   real-world documents are largely white, this saves much execution time.  If
+   you are porting this code to an environment in which non-zero bits are the
+   majority, for example, BMP where zero means black, you should seriously
+   consider modifying this.
 
    All instructions unique to GCC/SSE are in transpose16Bitrows().
    It is possible to write a non-SSE version by providing a generic

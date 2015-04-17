@@ -4,6 +4,16 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+15.04.17 BJH  Release 10.70.02
+
+              Fix typo in doc/TESTS.
+
+              Build: work around bug in GCC < 4.2 related to SSE2 builtins
+              that causes compile of pamflip to fail.
+
+              Build: fix 'make package' where config.mk sets a subdirectory
+              other than 'man' for the manual.
+
 15.04.05 BJH  Release 10.70.01
 
               ppmtoarbtxt: fix bug: wrong output when high numbers represent

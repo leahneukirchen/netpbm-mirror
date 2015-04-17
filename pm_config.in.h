@@ -240,6 +240,20 @@
 #endif
 #endif
 
+#ifndef HAVE_WORKING_SSE2
+#if defined(__SSE2__) && ( GCCVERSION >=402 || defined(__clang__) )
+  #define HAVE_WORKING_SSE2 1
+  /* We can use SSE2 builtin functions to exploit SSE2 instructions.  GCC
+     version 4.2 or newer is required; older GCC ostensibly has these SSE2
+     builtins, but the compiler aborts with an error.  Note that __SSE2__
+     means not only that the compiler has the capability, but that the user
+     has not disabled it via compiler options.
+  */
+#else
+  #define HAVE_WORKING_SSE2 0
+#endif
+#endif
+
 /* UNALIGNED_OK means it's OK to do unaligned memory access, e.g.
    loading an 8-byte word from an address that is not a multiple of 8.
    On some systems, such an access causes a trap and a signal.
