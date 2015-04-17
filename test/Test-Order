@@ -103,6 +103,7 @@ pamslice-roundtrip.test
 
 # Round-trip tests : lossless converters
 
+ppmtoarbtxt-roundtrip.test
 atari-roundtrip.test
 atk-roundtrip.test
 avs-roundtrip.test
@@ -141,6 +142,7 @@ wbmp-roundtrip.test
 winicon-roundtrip.test
 xbm-roundtrip.test
 xpm-roundtrip.test
+xv-roundtrip.test
 xwd-roundtrip.test
 
 # Round-trip tests : lossy converter
