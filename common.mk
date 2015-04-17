@@ -515,8 +515,6 @@ install.man: install.man1 install.man3 install.man5 \
 
 MANUALS1 = $(BINARIES) $(SCRIPTS)
 
-PKGMANDIR = man
-
 install.man1: $(MANUALS1:%=%_installman1)
 
 install.man3: $(MANUALS3:%=%_installman3)

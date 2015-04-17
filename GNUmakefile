@@ -386,9 +386,9 @@ install.lib:
 endif
 
 .PHONY: install.manwebmain
-install.manwebmain: $(PKGDIR)/man/web/netpbm.url $(PKGDIR)/bin/doc.url
+install.manwebmain: $(PKGDIR)/$(PKGMANDIR)/web/netpbm.url $(PKGDIR)/bin/doc.url
 
-$(PKGDIR)/man/web/netpbm.url: $(PKGDIR)/man/web
+$(PKGDIR)/$(PKGMANDIR)/web/netpbm.url: $(PKGDIR)/$(PKGMANDIR)/web
 	echo "$(NETPBM_DOCURL)" > $@
 	chmod $(INSTALL_PERM_MAN) $@
 

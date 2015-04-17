@@ -20,6 +20,9 @@ not yet  BJH  Release 10.71.00
               Build: work around bug in GCC < 4.2 related to SSE2 builtins
               that causes compile of pamflip to fail.
 
+              Build: fix 'make package' where config.mk sets a subdirectory
+              other than 'man' for the manual.
+
 15.03.29 BJH  Release 10.70.00
 
               Add st4topgm, pgmtost4.
