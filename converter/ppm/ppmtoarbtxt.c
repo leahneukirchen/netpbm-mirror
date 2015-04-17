@@ -225,8 +225,9 @@ writeIcol(FILE *           const ofP,
     */
 
     struct Icdat * const icdataP = &objectP->odata.icolData;
-    unsigned int const outValue = icdataP->icolmin +
-        ROUNDU(((double) icdataP->icolmax - icdataP->icolmin) * value);
+    unsigned int const outValue =
+        ROUNDU( icdataP->icolmin +
+                ((double)icdataP->icolmax - icdataP->icolmin) * value);
 
     fprintf(ofP, icdataP->icformat, outValue);
 }
