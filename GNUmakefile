@@ -249,7 +249,7 @@ init_package:
 	@if [ -d $(PKGDIR) ]; then \
 	  echo "Directory $(PKGDIR) already exists.  Please specify a "; \
 	  echo "directory that can be created fresh, like this: "; \
-	  echo "  make package PKGDIR=/tmp/newnetpbm "; \
+	  echo "  make package pkgdir=/tmp/newnetpbm "; \
 	  false; \
 	  fi
 	mkdir $(PKGDIR)
