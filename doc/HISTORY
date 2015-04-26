@@ -7,6 +7,7 @@ CHANGE HISTORY
 not yet  BJH  Release 10.71.00
 
               ppmtorgb3: Fix buffer overflow with long input file name.
+              Always present.  (ppmtorgb3 was new in X.V11R4 (November 1989).
 
               ppmtoarbtxt: fix bug: wrong output when high numbers represent
               darker.  Broken in Netpbm 10.69 (November 2014).
