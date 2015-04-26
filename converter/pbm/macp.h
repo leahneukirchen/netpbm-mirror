@@ -4,9 +4,11 @@
 #ifndef MACP_H_INCLUDED
 #define MACP_H_INCLUDED
 
-#define	HEADER_LENGTH	512
-#define	MAX_LINES	720
-#define	BYTES_WIDE	72
-#define MAX_COLS	576	/* = BYTES_WIDE * 8 */
+#define	MACBIN_HEAD_LEN	128
+#define	MACP_HEAD_LEN	512
+#define	MACP_ROWS	720
+#define	MACP_COLCHARS	72
+#define MACP_COLS	((MACP_COLCHARS) * 8)
+#define MACP_BYTES	((MACP_COLCHARS) * (MACP_ROWS))
 
 #endif

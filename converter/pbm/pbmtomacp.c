@@ -1,297 +1,466 @@
-/* pbmtomacp.c - read a portable bitmap and produce a MacPaint bitmap file
-**
-** Copyright (C) 1988 by Douwe vand der Schaaf.
-**
-** Permission to use, copy, modify, and distribute this software and its
-** documentation for any purpose and without fee is hereby granted, provided
-** that the above copyright notice appear in all copies and that both that
-** copyright notice and this permission notice appear in supporting
-** documentation.  This software is provided "as is" without express or
-** implied warranty.
+/*=============================================================================
+                                  pbmtomacp
+===============================================================================
+  Read a PBM file and produce a MacPaint bitmap file
+
+  Copyright (C) 2015 by Akira Urushibata ("douso").
+
+  Replacement of a previous program of the same name written in 1988
+  by Douwe van der Schaaf (...!mcvax!uvapsy!vdschaaf).
+
+  Permission to use, copy, modify, and distribute this software and its
+  documentation for any purpose and without fee is hereby granted, provided
+  that the above copyright notice appear in all copies and that both that
+  copyright notice and this permission notice appear in supporting
+  documentation.  This software is provided "as is" without express or implied
+  warranty.
+=============================================================================*/
+
+/*
+
+  Implemention notes
+
+  Header size is 512 bytes.  There is no MacBinary header.
+
+  White margin which is added for input files with small dimensions
+  is treated separately from the active image raster.  The margins
+  are directly coded based on the number of rows/columns.
+
+  Output file size never exceeds 53072 bytes.  When -norle is specified,
+  output is always 53072 bytes.  It is conceivable that decoders which
+  examine the size of Macpaint files (for general validation or for
+  determination of header type and size) do exist.
+
+  The uncompressed output (-norle case) fully conforms to Macpaint
+  specifications.  No special treatment by the decoder is required.
 */
 
-#include <string.h>
+#include <assert.h>
 
 #include "pm_c_util.h"
 #include "pbm.h"
+#include "shhopt.h"
+#include "mallocvar.h"
 #include "macp.h"
 
-#define EQUAL		1
-#define UNEQUAL		0
+#define MIN3(a,b,c)     (MIN((MIN((a),(b))),(c)))
 
-static void fillbits ARGS(( bit **bits, bit **bitsr, int top, int left, int bottom, int right ));
-static void writemacp ARGS(( bit **bits ));
-static int packit ARGS(( bit *pb, bit *bits ));
-static void filltemp ARGS(( bit *dest, bit *src ));
-static void sendbytes ARGS(( bit *pb, register int npb ));
-static void header ARGS(( void ));
-
-static FILE *fdout;
-
-int
-main(argc, argv)
-int argc;
-char *argv[];
-{ FILE *ifp;
-  register bit **bits, **bitsr;
-  int argn, rows, cols;
-  int left,bottom,right,top;
-  int lflg, rflg, tflg, bflg;
-  const char * const usage = "[-l left] [-r right] [-b bottom] [-t top] [pbmfile]";
+struct cmdlineInfo {
+    /* All the information the user supplied in the command line,
+       in a form easy for the program to use.
+    */
+    const char * inputFilespec;  /* Filespec of input file */
+    unsigned int left;
+    unsigned int right;
+    unsigned int top;
+    unsigned int bottom;
+    unsigned int leftSpec;
+    unsigned int rightSpec;
+    unsigned int topSpec;
+    unsigned int bottomSpec;
+    bool         norle;         /* If true do not pack data */
+};
 
 
-  pbm_init( &argc, argv );
 
-  argn = 1;
-  fdout = stdout;
-  lflg = rflg = tflg = bflg = 0;
-  left = right = top = bottom = 0;  /* To quiet compiler warning */
+static void
+parseCommandLine(int                        argc,
+                 char              ** const argv,
+                 struct cmdlineInfo * const cmdlineP) {
+/*----------------------------------------------------------------------------
+   Parse program command line described in Unix standard form by argc
+   and argv.  Return the information in the options as *cmdlineP.
+-----------------------------------------------------------------------------*/
+    optEntry * option_def;  /* malloc'ed */
+        /* Instructions to OptParseOptions3 on how to parse our options.  */
+    optStruct3 opt;
 
-  while ( argn < argc && argv[argn][0] == '-' && argv[argn][1] != '\0' )
-  { switch ( argv[argn][1] )
-    { case 'l':
-      lflg++;
-      argn++;
-      left = atoi( argv[argn] );
-      break;
+    unsigned int norleSpec;
 
-      case 'r':
-      rflg++;
-      argn++;
-      right = atoi( argv[argn] );
-      break;
+    unsigned int option_def_index;
 
-      case 't':
-      tflg++;
-      argn++;
-      top = atoi( argv[argn] );
-      break;
+    MALLOCARRAY_NOFAIL(option_def, 100);
 
-      case 'b':
-      bflg++;
-      argn++;
-      bottom = atoi( argv[argn] );
-      break;
+    option_def_index = 0;   /* incremented by OPTENTRY */
+    OPTENT3(0, "left",     OPT_UINT,  &cmdlineP->left,
+            &cmdlineP->leftSpec,     0);
+    OPTENT3(0, "right",    OPT_UINT,  &cmdlineP->right,
+            &cmdlineP->rightSpec,    0);
+    OPTENT3(0, "top",      OPT_UINT,  &cmdlineP->top,
+            &cmdlineP->topSpec,      0);
+    OPTENT3(0, "bottom",   OPT_UINT,  &cmdlineP->bottom,
+            &cmdlineP->bottomSpec,   0);
+    OPTENT3(0, "norle", OPT_FLAG,  NULL,
+            &norleSpec, 0);
 
-      case '?':
-      default:
-      pm_usage( usage );
+    opt.opt_table = option_def;
+    opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
+
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+        /* Uses and sets argc, argv, and some of *cmdlineP and others. */
+
+    free(option_def);
+
+    cmdlineP->norle = norleSpec;
+
+    if (argc-1 == 0)
+        cmdlineP->inputFilespec = "-";
+    else if (argc-1 != 1)
+        pm_error("Program takes zero or one argument (filename).  You "
+                 "specified %d", argc-1);
+    else
+        cmdlineP->inputFilespec = argv[1];
+}
+
+
+
+struct CropPadDimensions {
+    unsigned int imageWidth;   /* Active image content */
+    unsigned int imageHeight;
+    unsigned int leftCrop;     /* Cols cropped off from input */
+    unsigned int topCrop;      /* Rows cropped off from input */
+    unsigned int topMargin;    /* White padding for output */
+    unsigned int bottomMargin;
+    unsigned int leftMargin;
+};
+
+
+
+static void
+calculateCropPad(struct cmdlineInfo       const cmdline,
+                 struct CropPadDimensions     * cropPad,
+                 int                      const cols,
+                 int                      const rows ) {
+/*--------------------------------------------------------------------------
+Validate -left -right -top -bottom from command line.  Determine
+what rows, columns to take from input if any of these are specified.
+
+Center image if it is smaller than the fixed Macpaint format size.
+----------------------------------------------------------------------------*/
+    int right, bottom, width, height;
+    int const left = cmdline.leftSpec ? cmdline.left : 0;
+    int const top  = cmdline.topSpec  ? cmdline.top  : 0;
+
+    if( cmdline.leftSpec ) {
+        if(cmdline.rightSpec && left >= cmdline.right )
+            pm_error("-left value must be smaller than -right value");
+        else if( left > cols -1 )
+            pm_error("Specified -left value is beyond right edge "
+                     "of input image");
     }
-    ++argn;
-  }
+    if( cmdline.topSpec ) {
+        if(cmdline.bottomSpec && top >= cmdline.bottom )
+            pm_error("-top value must be smaller than -bottom value");
+        else if( top > rows -1 )
+            pm_error("Specified -top value is beyond bottom edge "
+                     "of input image");
+    }
 
-  if ( argn == argc )
-  { ifp = stdin;
-  }
-  else
-  { ifp = pm_openr( argv[argn] );
-    ++argn;
-  }
+    if( cmdline.rightSpec ) {
+        if( cmdline.right > cols -1 )
+            pm_message("Specified -right value %d is beyond edge of "
+                       "input image", cmdline.right);
 
-  if ( argn != argc )
-    pm_usage( usage );
+            right = MIN3( cmdline.right, cols - 1, left + MACP_COLS - 1 );
+    }
+    else
+        right = MIN( cols - 1,  left + MACP_COLS - 1 );
 
-  bitsr = pbm_readpbm( ifp, &cols, &rows );
+    if( cmdline.bottomSpec ) {
+        if( cmdline.bottom > rows -1 )
+          pm_message("Specified -bottom value %d is beyond edge of "
+                     "input image", cmdline.bottom);
 
-  pm_close( ifp );
+            bottom = MIN3( cmdline.bottom, rows - 1, top + MACP_ROWS - 1);
+    }
+    else
+        bottom = MIN( rows - 1, top + MACP_ROWS - 1 );
 
-  bits = pbm_allocarray( MAX_COLS, MAX_LINES );
+    cropPad->leftCrop = left;
+    cropPad->topCrop  = top;
 
-  if( !lflg )
-    left = 0;
+    width = right - left + 1;
+    cropPad->leftMargin  = ( MACP_COLS - width ) / 2;
 
-  if( rflg )
-  { if( right - left >= MAX_COLS )
-      right = left + MAX_COLS - 1;
-  }
-  else
-    right = ( left + MAX_COLS > cols ) ? ( cols - 1 ) : ( left + MAX_COLS - 1 );
+    assert(width > 0 && width <= MACP_COLS);
+    if(width < cols)
+        pm_message("%d of %d input columns will be output", width, cols);
 
-  if( !tflg )
-    top = 0;
+    height = bottom - top + 1;
+    cropPad->topMargin    = ( MACP_ROWS - height ) / 2;
+    cropPad->bottomMargin = cropPad->topMargin + height - 1;
 
-  if( bflg )
-  { if( bottom - top >= MAX_LINES )
-      bottom = top + MAX_LINES - 1;
-  }
-  else
-    bottom = ( top + MAX_LINES > rows ) ?
-		   ( rows - 1 ) : ( top + MAX_LINES - 1 );
-  
-    if( right <= left || left < 0 || right - left + 1 > MAX_COLS )
-      pm_error("error in right (= %d) and/or left (=%d)",right,left );
-    if( bottom <= top || top < 0 || bottom - top + 1 > MAX_LINES )
-      pm_error("error in bottom (= %d) and/or top (=%d)",bottom,top );
+    assert(height > 0 && height <= MACP_ROWS);
+    if(height < rows)
+        pm_message("%d out of %d input rows will be output", height, rows);
 
-  fillbits( bits, bitsr, top, left, bottom, right );
-
-  writemacp( bits );
-
-  exit( 0 );
+    cropPad->imageWidth  = width;
+    cropPad->imageHeight = height;
 
 }
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-/* centreer het over te zenden plaatje in het MacPaint document
- *
- * Het plaatje wordt vanaf al of niet opgegeven (left, bottom)
- * in een pbm bitmap van de juist macpaint afmetingen gezet,
- * en eventueel afgekapt.
- */
-static void
-fillbits( bits, bitsr, top, left, bottom, right )
-bit **bits, **bitsr;
-int top, left, bottom, right;
-{ register bit *bi, *bir;
-  register int i, j;
-  register int bottomr, leftr, topr, rightr;
-  int width, height;
-
-  width = right - left + 1;
-  leftr = (MAX_COLS - width) / 2;
-  rightr = leftr + width - 1;
-
-  height = bottom - top + 1;
-  topr = ( MAX_LINES - height ) / 2;
-  bottomr = topr + height - 1;
-
-  for( i = 0; i < topr; i++ )
-  { bi = bits[i];
-    for( j = 0; j < MAX_COLS; j++ )
-      *bi++ = 0;
-  }
-
-  for( i = topr; i <= bottomr; i++ )
-  { bi = bits[i];
-    { for( j = 0; j < leftr; j++ )
-	*bi++ = 0;
-      bir = bitsr[ i - topr + top ];
-      for( j = leftr; j <= rightr; j++ )
-	*bi++ = bir[j - leftr + left];
-      for( j = rightr + 1; j < MAX_COLS; j++ )
-	*bi++ = 0;
-  } }
-
-  for( i = bottomr + 1; i < MAX_LINES; i++ )
-  { bi = bits[i];
-    for( j = 0; j < MAX_COLS; j++ )
-      *bi++ = 0;
-  }
-} /* fillbits */
-      
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 static void
-writemacp( bits )
-bit **bits;
-{ register int i;
-  bit pb[MAX_COLS * 2];
-  int npb;
+writeMacpHeader( ) {
 
-  header();
-  for( i=0; i < MAX_LINES; i++ )
-  { npb = packit( pb, bits[i] );
-    sendbytes( pb, npb );
-  }
-} /* writemacp */
+    int i;
+    char const ch = 0x00;    /* header contains nothing */
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - */
+    for(i = 0; i < MACP_HEAD_LEN; i++ )
+        fputc( ch, stdout );
+}
 
-/* pack regel van MacPaint doc in Apple's format
- * return value = # of bytes in pb 
- */
-static int
-packit( pb, bits )
-     bit *pb, *bits;
-{ register int charcount, npb, newcount, flg;
-  bit temp[72];
-  bit *count, *srcb, *destb, save;
 
-  srcb = bits; destb = temp;
-  filltemp( destb, srcb );
-  srcb = temp;
-  destb = pb;
-  npb = 0;
-  charcount = BYTES_WIDE;
-  flg = EQUAL;
-  while( charcount ) { 
-      save = *srcb++;
-      charcount--;
-      newcount = 1;
-      while( (*srcb == save) && charcount ) { 
-          srcb++;
-          newcount++;
-          charcount--;
-      }
-      if( newcount > 2 ) { 
-          count = destb++;
-          *count = 257 - newcount;
-          *destb++ = save;
-          npb += 2;
-          flg = EQUAL;
-      } else { 
-          if( flg == EQUAL ) { 
-              count = destb++;
-              *count = newcount - 1;
-              npb++;
-          } else
-            *count += newcount;
-          while( newcount-- ) { 
-              *destb++ = save;
-              npb++;
-          }
-          flg = UNEQUAL;
-      } 
-  }
-  return npb;
-} /* packit */
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 static void
-filltemp( dest, src )
-bit *dest, *src;
-{ register unsigned char ch, zero, acht;
-  register int i, j;
+writeMacpRowUnpacked( unsigned int const leftMarginChars,
+                      const bit  * const imageBits,
+                      unsigned int const imageColChars) {
+/*--------------------------------------------------------------------------
+Encode (without compression) and output one row.
+The row comes divided into three parts: left margin, image, right margin.
+----------------------------------------------------------------------------*/
+    int i;
+    char const marginByte = 0x00;  /* White bits for margin */
+    unsigned int const rightMarginChars =
+                       MACP_COLCHARS - leftMarginChars - imageColChars;
 
-  zero = '\0';
-  acht = 8;
-  i = BYTES_WIDE;
-  while( i-- )
-  { ch = zero; 
-    j = acht;
-    while( j-- )
-    { ch <<= 1;
-      if( *src++ )
-	ch++;
+    fputc( MACP_COLCHARS - 1, stdout );
+
+    for(i = 0; i < leftMarginChars; ++i)
+        fputc( marginByte, stdout );
+
+    if(imageColChars > 0)
+        fwrite(imageBits, 1, imageColChars, stdout);
+
+    for(i = 0; i < rightMarginChars; ++i)
+        fputc( marginByte, stdout );
+}
+
+
+
+static void
+writeMacpRowPacked( unsigned int const leftMarginChars,
+                    const bit  * const packedBits,
+                    unsigned int const imageColChars,
+                    unsigned int const rightMarginChars) {
+/*--------------------------------------------------------------------------
+Encode and output one row.
+As in the unpacked case, the row comes divided into three parts:
+left margin, image, right margin.  Unlike the unpacked case we need to
+know both the size of the packed data and the size of the right margin.
+----------------------------------------------------------------------------*/
+    char const marginByte = 0x00;  /* White bits for margin */
+
+    if( leftMarginChars > 0 ) {
+        fputc( 257 - leftMarginChars, stdout );
+        fputc( marginByte, stdout );
     }
-    *dest++ = ch;
+
+    if( imageColChars > 0)
+        fwrite( packedBits, 1, imageColChars, stdout);
+
+    if( rightMarginChars > 0 ) {
+        fputc( 257 - rightMarginChars, stdout );
+        fputc( marginByte, stdout );
+    }
+}
+
+
+
+static void
+packit (const bit *     const sourceBits,
+        unsigned int    const imageColChars,
+        unsigned char * const packedBits,
+        unsigned int  * const packedImageLengthP ) {
+/*--------------------------------------------------------------------------
+Compress according to packbits algorithm, a byte-level run-length
+encoding scheme.
+
+Each row is encoded separately.
+
+The following code does not produce optimum output when there are 2-byte
+long sequences between longer ones: the 2-byte run in between does not
+get packed, using up 3 bytes where 2 would do.
+----------------------------------------------------------------------------*/
+#define EQUAL           1
+#define UNEQUAL         0
+
+    int charcount, newcount, packcount;
+    bool status;
+    bit * count;
+    bit save;
+
+    packcount = charcount = 0;  /* Initial values */
+    status = EQUAL;
+    while( charcount < imageColChars ) {
+        save = sourceBits[charcount++];
+        newcount = 1;
+        while( charcount < imageColChars && sourceBits[charcount] == save ) {
+            charcount++;
+            newcount++;
+        }
+        if( newcount > 2 ) {
+             count = (unsigned char *) &packedBits[packcount++];
+             *count = 257 - newcount;
+             packedBits[packcount++] = save;
+             status = EQUAL;
+        } else {
+             if( status == EQUAL ) {
+                  count = (unsigned char *) &packedBits[packcount++];
+                  *count = newcount - 1;
+             } else
+                  *count += newcount;
+
+             for( ; newcount > 0; newcount-- ) {
+                 packedBits[packcount++] = save;
+             }
+             status = UNEQUAL;
+        }
+    }
+    *packedImageLengthP = packcount;
+}
+
+
+
+static void
+writeMacpRow( unsigned int const leftMarginChars,
+              bit        * const imageBits,
+              unsigned int const imageColChars,
+              bool         const norle) {
+/*--------------------------------------------------------------------------
+Determine whether a row should be packed (compressed) or not.
+
+If packing leads to unnecessary bloat, discard the packed data and write
+in unpacked mode.
+----------------------------------------------------------------------------*/
+  if (norle)
+    writeMacpRowUnpacked( leftMarginChars, imageBits, imageColChars );
+
+  else {
+    unsigned int packedImageLength;
+    unsigned int const rightMarginChars =
+        MACP_COLCHARS - leftMarginChars - imageColChars;
+    unsigned char * const packedBits = malloc(MACP_COLCHARS+1);
+    if(packedBits == NULL)
+        pm_error("Out of memory");
+
+    packit( imageBits, imageColChars, packedBits, &packedImageLength );
+    /* Check if we are we better off with compression.
+       If not, send row unpacked.  See note at top of file.
+    */
+    if ( packedImageLength + (!!(leftMarginChars  > 0)) *2 +
+         (!!(rightMarginChars > 0)) *2 < MACP_COLCHARS )
+        writeMacpRowPacked( leftMarginChars, packedBits,
+                            packedImageLength, rightMarginChars);
+    else /* Extremely rare */
+        writeMacpRowUnpacked( leftMarginChars, imageBits, imageColChars );
+
+    free( packedBits );
   }
-} /* filltemp */
+}
 
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-static void
-sendbytes( pb, npb )
-bit *pb;
-register int npb;
-{ register bit *b;
-
-  b = pb;
-  while( npb-- )
-    (void) putc( *b++, fdout );
-} /* sendbytes */
-
-/* - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 static void
-header()
-{ register int i;
-  register char ch;
+encodeRowsWithShift(bit              * const bitrow,
+                    FILE             * const ifP,
+                    int                const inCols,
+                    unsigned int       const format,
+                    bool               const norle,
+                    struct CropPadDimensions const cropPad ) {
+/*--------------------------------------------------------------------------
+Shift input rows to put only specified columns to output.
+Add padding on left and right if necessary.
 
-  /* header contains nothing ... */
-  ch = '\0';
-  for(i = 0; i < HEADER_LENGTH; i++ )
-    (void) putc( ch, fdout );
-} /* header */
+No shift if the input image is the exact size (576 columns) of the Macpaint
+format.  If the input image is too wide and -left was not specified, extra
+content on the right is discarded.
+----------------------------------------------------------------------------*/
+    unsigned int row;
+
+    int const offset     = (cropPad.leftMargin + 8 - cropPad.leftCrop % 8) % 8;
+    int const leftTrim   = cropPad.leftMargin % 8;
+    int const rightTrim  = ( 8 - (leftTrim + cropPad.imageWidth) % 8 ) % 8;
+    int const startChar  = (cropPad.leftCrop + offset) / 8;
+    int const imageChars = pbm_packed_bytes(leftTrim + cropPad.imageWidth);
+    int const leftMarginChars = cropPad.leftMargin / 8;
+
+    for(row = 0; row < cropPad.imageHeight; ++row ) {
+        pbm_readpbmrow_bitoffset(ifP, bitrow, inCols, format, offset);
+
+        /* Trim off fractional margin portion in first byte of image data */
+        if(leftTrim > 0) {
+            bitrow[startChar] <<= leftTrim;
+            bitrow[startChar] >>= leftTrim;
+        }
+        /* Do the same with bits in last byte of relevant image data */
+        if(rightTrim > 0) {
+            bitrow[startChar + imageChars -1] >>= rightTrim;
+            bitrow[startChar + imageChars -1] <<= rightTrim;
+            }
+
+        writeMacpRow( leftMarginChars,
+                      &bitrow[startChar], imageChars, norle);
+    }
+}
+
+
+
+static void
+writeMacp( int                      const cols,
+           int                      const rows,
+           unsigned int             const format,
+           FILE *                   const ifP,
+           bool                     const norle,
+           struct CropPadDimensions const cropPad ) {
+
+    unsigned int row, skipRow;
+    bit * bitrow;
+
+    writeMacpHeader( );
+
+    for( row = 0; row < cropPad.topMargin; ++row )
+        writeMacpRow( MACP_COLCHARS, NULL, 0, norle);
+
+    /* Allocate PBM row with one extra byte for the shift case. */
+    bitrow = pbm_allocrow_packed(cols + 8);
+
+    for(skipRow = 0; skipRow < cropPad.topCrop; ++skipRow )
+         pbm_readpbmrow_packed(ifP, bitrow, cols, format);
+
+    encodeRowsWithShift(bitrow, ifP, cols, format, norle, cropPad);
+
+    pbm_freerow_packed(bitrow);
+
+    for(row = cropPad.bottomMargin + 1 ; row < MACP_ROWS ; ++row )
+        writeMacpRow( MACP_COLCHARS, NULL, 0, norle);
+}
+
+
+
+int
+main( int argc, char *argv[] ) {
+    FILE * ifP;
+    int rows, cols;
+    int format;
+    struct cmdlineInfo cmdline;
+    struct CropPadDimensions cropPad;
+
+    pbm_init( &argc, argv );
+
+    parseCommandLine(argc, argv, &cmdline);
+    ifP = pm_openr(cmdline.inputFilespec);
+
+    pbm_readpbminit(ifP, &cols, &rows, &format);
+
+    calculateCropPad(cmdline, &cropPad, cols, rows);
+
+    writeMacp( cols, rows, format, ifP, cmdline.norle, cropPad );
+
+    pm_close( ifP );
+    exit( 0 );
+}
+
