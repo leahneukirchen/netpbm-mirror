@@ -212,7 +212,7 @@ main(int argc, const char **argv) {
     pm_proginit(&argc, argv);
 
     if (argc-1 < 1)
-        inputFileName = "'";
+        inputFileName = "-";
     else {
         inputFileName = argv[1];
         if (argc-1 > 1)
