@@ -4,6 +4,15 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+15.04.29 BJH  Release 10.70.03
+
+              st4topgm: Fix bug: with no argument, uses file named "'" instead
+              of Standard Input.  Always present (st45topgm was new in Netpbm
+              10.70.00 (March 2015).
+
+              ppmtorgb3: Fix buffer overflow with long input file name.
+              Always present.  (ppmtorgb3 was new in X.V11R4 (November 1989).
+
 15.04.17 BJH  Release 10.70.02
 
               Fix typo in doc/TESTS.
