@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+15.04.30 BJH  Release 10.70.04
+
+              pnmconvol: Fix bug: wrong output for pixels that convolve to
+              negative values (should be clipped to zero).  Introduced in
+              Netpbm 10.68 (September 2014).
+
 15.04.29 BJH  Release 10.70.03
 
               st4topgm: Fix bug: with no argument, uses file named "'" instead

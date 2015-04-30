@@ -32,7 +32,19 @@ static sample const
 clipSample(sample const unclipped,
            sample const maxval) {
 
-    return MIN(maxval, MAX(0, unclipped));
+    return MIN(maxval, unclipped);
+}
+
+
+
+static sample const
+makeSample(float  const arg,
+           sample const maxval) {
+/*----------------------------------------------------------------------------
+   From a tentative sample value that could be fractional or negative,
+   produce an actual sample value by rounding and clipping.
+-----------------------------------------------------------------------------*/
+    return MIN(maxval, ROUNDU(MAX(0.0, arg)));
 }
 
 
@@ -1193,7 +1205,7 @@ convolveGeneralRowPlane(struct pam *              const pamP,
                         convKernelP->weight[plane][crow][ccol];
             }
             outputrow[col][plane] =
-                clipSample(convKernelP->bias + sum + 0.5, pamP->maxval);
+                makeSample(convKernelP->bias + sum, pamP->maxval);
         }
     }
 }
@@ -1391,7 +1403,7 @@ convolveRowWithColumnSumsMean(const struct ConvKernel * const convKernelP,
                     gisum += convColumnSum[plane][addcol];
                 }
                 outputrow[col][plane] =
-                    clipSample(convKernelP->bias + gisum * weight + 0.5,
+                    makeSample(convKernelP->bias + gisum * weight,
                                pamP->maxval);
             }
         }
@@ -1449,7 +1461,7 @@ convolveRowWithColumnSumsVertical(
                         convKernelP->weight[plane][0][ccol];
 
                 outputrow[col][plane] =
-                    clipSample(convKernelP->bias + sum + 0.5, pamP->maxval);
+                    makeSample(convKernelP->bias + sum, pamP->maxval);
             }
         }
     }
@@ -1522,8 +1534,7 @@ convolveMeanRowPlane(struct pam *              const pamP,
                 gisum = gisum - convColumnSum[subcol] + convColumnSum[addcol];
             }
             outputrow[col][plane] =
-                clipSample(convKernelP->bias + gisum * weight + 0.5,
-                           pamP->maxval);
+                makeSample(convKernelP->bias + gisum * weight, pamP->maxval);
         }
     }
 }
@@ -1783,8 +1794,7 @@ convolveHorizontalRowPlane0(struct pam *              const outpamP,
                 }
             }
             outputrow[col][plane] =
-                clipSample(convKernelP->bias + matrixSum + 0.5,
-                           outpamP->maxval);
+                makeSample(convKernelP->bias + matrixSum, outpamP->maxval);
         }
     }
 }
@@ -1891,7 +1901,7 @@ convolveHorizontalRowPlane(struct pam *              const pamP,
             }
         }
         outputrow[col][plane] =
-            clipSample(convKernelP->bias + matrixSum + 0.5, pamP->maxval);
+            makeSample(convKernelP->bias + matrixSum, pamP->maxval);
     }
 }
 
@@ -2058,7 +2068,7 @@ convolveVerticalRowPlane(struct pam *              const pamP,
                 }
             }
             outputrow[col][plane] =
-                clipSample(convKernelP->bias + matrixSum + 0.5, pamP->maxval);
+                makeSample(convKernelP->bias + matrixSum, pamP->maxval);
         }
     }
 }
