@@ -6,6 +6,10 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.71.00
 
+              pnmconvol: Fix bug: wrong output for pixels that convolve to
+              negative values (should be clipped to zero).  Introduced in
+              Netpbm 10.68 (September 2014).
+
               st4topgm: Fix bug: with no argument, uses file named "'" instead
               of Standard Input.  Always present (st45topgm was new in Netpbm
               10.70 (March 2015).
