@@ -25,16 +25,11 @@ to the Internet), just make a local copy of the HTML files.
 You can get the files from the Subversion repository using the Subversion
 client program 'svn':
 
-  URL=https://netpbm.svn.sourceforge.net/svnroot/netpbm/userguide
+  URL=https://svn.code.sf.net/p/netpbm/code/userguide
   svn export $URL
 
 This creates a directory "userguide" in your current directory containing
 all the same files that are on the web site.
-
-And a sometimes more convenient way to get those files from the Subversion
-repository is to get Sourceforge's Viewvc service to make a tarball of them:
-
-  wget http://netpbm.svn.sourceforge.net/viewvc/netpbm/userguide.tar.gz?view=tar --output-document=/tmp/userguide.tgz
 
 
 An apparent alternative is just to copy the web site with something like GNU
