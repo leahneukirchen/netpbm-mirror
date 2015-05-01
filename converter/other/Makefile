@@ -242,6 +242,8 @@ pnmtorast rasttopnm: ADDL_OBJECTS = rast.o
 pdbimgtopam pamtopdbimg: ipdb.o
 pdbimgtopam pamtopdbimg: ADDL_OBJECTS = ipdb.o
 
+# Declare dependencies on created header files (symbolic links, actually).
+
 bmptopnm.o bmptopnm.o2: bmp.h
 
 pamtotga.o pamtotga.o2: tga.h
