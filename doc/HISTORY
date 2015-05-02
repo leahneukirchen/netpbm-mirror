@@ -32,7 +32,7 @@ not yet  BJH  Release 10.71.00
               makeman: deal properly with backlash in source.  Thanks Willem
               van Schaik <willem@schaik.com>.
 
-              Build: don't build and install libjpeg and libjasper if we
+              Build: don't build and install libjbig and libjasper if we
               are using external versions of them instead.
 
               Build: work around bug in GCC < 4.2 related to SSE2 builtins
