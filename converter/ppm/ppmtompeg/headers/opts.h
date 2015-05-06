@@ -38,7 +38,6 @@
  */
 
 #include "general.h"
-#include "ansi.h"
 #include "mtypes.h"
 
 /*
@@ -110,14 +109,14 @@ extern int LaplaceNum, LaplaceCnum;
 extern boolean BSkipBlocks;
 
 /* Procedures Prototypes */
-int	GetIQScale _ANSI_ARGS_((void));
-int	GetPQScale _ANSI_ARGS_((void));
-int	GetBQScale _ANSI_ARGS_((void));
-void	Tune_Init _ANSI_ARGS_((void));
-int     CalcRLEHuffLength _ANSI_ARGS_((FlatBlock in));
+int	GetIQScale (void);
+int	GetPQScale (void);
+int	GetBQScale (void);
+void	Tune_Init (void);
+int     CalcRLEHuffLength (FlatBlock in);
 void    ParseTuneParam(const char * const charPtr);
-int     mse _ANSI_ARGS_((Block blk1, Block blk2));
-void    Mpost_UnQuantZigBlockLaplace _ANSI_ARGS_((FlatBlock in, Block out, int qscale, boolean iblock));
+int     mse (Block blk1, Block blk2);
+void    Mpost_UnQuantZigBlockLaplace (FlatBlock in, Block out, int qscale, boolean iblock);
 extern void CalcLambdas(void);
 
 

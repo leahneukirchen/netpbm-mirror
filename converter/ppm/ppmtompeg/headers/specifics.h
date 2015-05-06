@@ -1,4 +1,3 @@
-#include "ansi.h"
 
 
 /*===========*
@@ -29,8 +28,8 @@ typedef struct fsl_def {
 } FrameSpecList;
 
 
-void	Specifics_Init _ANSI_ARGS_((void));
-int     SpecLookup _ANSI_ARGS_((int fn, int typ, int num, 
-				BlockMV **info, int start_qs));
-int SpecTypeLookup _ANSI_ARGS_((int fn));
+void	Specifics_Init (void);
+int     SpecLookup (int fn, int typ, int num,
+			    BlockMV **info, int start_qs);
+int SpecTypeLookup (int fn);
 

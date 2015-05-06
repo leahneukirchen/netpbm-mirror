@@ -52,7 +52,7 @@ extern int32   qtable[], niqtable[];
 extern int     ZAG[];
 extern boolean printSNR, decodeRefFrames;
 
-void init_idctref _ANSI_ARGS_((void));
+void init_idctref (void);
 
 
 /*===================*

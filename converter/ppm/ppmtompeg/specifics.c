@@ -58,14 +58,14 @@ FrameSpecList *fsl;
  * Internal procedures *
  *=====================*/
 
-void Parse_Specifics_File _ANSI_ARGS_((FILE *fp));
-void Parse_Specifics_File_v1 _ANSI_ARGS_((FILE *fp));
-void Parse_Specifics_File_v2 _ANSI_ARGS_((FILE *fp));
-FrameSpecList *MakeFslEntry _ANSI_ARGS_((void));
-void AddSlc _ANSI_ARGS_((FrameSpecList *c,int snum, int qs));
-Block_Specifics *AddBs _ANSI_ARGS_((FrameSpecList *c,int bnum, 
-				    boolean rel, int qs));
-FrameSpecList *MakeFslEntry _ANSI_ARGS_((void));
+void Parse_Specifics_File (FILE *fp);
+void Parse_Specifics_File_v1 (FILE *fp);
+void Parse_Specifics_File_v2 (FILE *fp);
+FrameSpecList *MakeFslEntry (void);
+void AddSlc (FrameSpecList *c,int snum, int qs);
+Block_Specifics *AddBs (FrameSpecList *c,int bnum, 
+				    boolean rel, int qs);
+FrameSpecList *MakeFslEntry (void);
 #define my_upper(c) (((c>='a') && (c<='z')) ? (c-'a'+'A') : c)
 #define CvtType(x) ReallyCvt(my_upper(x))
 #define ReallyCvt(x) (x=='I' ? 1 : (x=='P')?2: ((x=='B')?3:-1))

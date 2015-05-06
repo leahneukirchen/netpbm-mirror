@@ -34,7 +34,6 @@
 
 #include "pm_c_util.h"
 #include "ppm.h"
-#include "ansi.h"
 #include "mtypes.h"
 #include "frame.h"
 
@@ -80,7 +79,7 @@ ComputeGOPFrames(int            const whichGOP,
                  unsigned int * const lastFrameP, 
                  unsigned int   const numFrames);
 
-extern void	IncrementTCTime _ANSI_ARGS_((void));
+extern void	IncrementTCTime (void);
 void SetReferenceFrameType(const char * const type);
 
 boolean
@@ -93,7 +92,7 @@ ReadDecodedRefFrame(MpegFrame *  const frameP,
 void
 SetBitRateFileName(const char * const fileName);
 
-extern void	SetFrameRate _ANSI_ARGS_((void));
+extern void	SetFrameRate (void);
 
 
 /*==================*

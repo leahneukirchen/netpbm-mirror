@@ -126,9 +126,9 @@ int32 bit_rate, buf_size;
  * INTERNAL PROCEDURE prototypes *
  *===============================*/
 
-static void ComputeDHMSTime _ANSI_ARGS_((int32 someTime, char *timeText));
-static void OpenBitRateFile _ANSI_ARGS_((void));
-static void CloseBitRateFile _ANSI_ARGS_((void));
+static void ComputeDHMSTime (int32 someTime, char *timeText);
+static void OpenBitRateFile (void);
+static void CloseBitRateFile (void);
 
 
 static void

@@ -68,7 +68,7 @@ targetRateControl(MpegFrame * const frameP);
  *
  * RETURNS:     nothing
  *===========================================================================*/
-extern void MB_RateOut _ANSI_ARGS_((int type));
+extern void MB_RateOut (int type);
 
 
 /*===========================================================================*
@@ -92,7 +92,7 @@ updateRateControl(int const type);
  *
  * RETURNS:     new Qscale
  *===========================================================================*/
-extern int needQScaleChange _ANSI_ARGS_((int oldQScale,  Block blk0, Block blk1, Block blk2, Block blk3));
+extern int needQScaleChange (int oldQScale,  Block blk0, Block blk1, Block blk2, Block blk3);
 
 /*===========================================================================*
  *
@@ -101,7 +101,7 @@ extern int needQScaleChange _ANSI_ARGS_((int oldQScale,  Block blk0, Block blk1,
  *
  * RETURNS:   nothing
  *===========================================================================*/
-extern void incNumBlocks _ANSI_ARGS_((int num));
+extern void incNumBlocks (int num);
 
 
 /*===========================================================================*
@@ -113,7 +113,7 @@ extern void incNumBlocks _ANSI_ARGS_((int num));
  *
  * RETURNS:   nothing
  *===========================================================================*/
-extern void incMacroBlockBits _ANSI_ARGS_((int num));
+extern void incMacroBlockBits (int num);
 
 
 /*===========================================================================*
@@ -125,7 +125,7 @@ extern void incMacroBlockBits _ANSI_ARGS_((int num));
  *
  * RETURNS:     nothing
  *===========================================================================*/
-extern void SetRateControl _ANSI_ARGS_((char *charPtr));
+extern void SetRateControl (char *charPtr);
 
 
 /*===========================================================================*
@@ -150,7 +150,7 @@ setBufferSize(const char * const charPtr);
  *
  * RETURNS:     int (or -1 if invalid)
  *===========================================================================*/
-extern int getBufferSize _ANSI_ARGS_((void));
+extern int getBufferSize (void);
 
 
 /*===========================================================================*
@@ -178,7 +178,7 @@ setBitRate(const char * const charPtr);
  *
  * RETURNS:     int (-1 if Variable mode operation)
  *===========================================================================*/
-extern int getBitRate _ANSI_ARGS_((void));
+extern int getBitRate (void);
 
 
 /*===========================================================================*
@@ -189,7 +189,7 @@ extern int getBitRate _ANSI_ARGS_((void));
  *
  * RETURNS:     integer
  *===========================================================================*/
-extern int getRateMode _ANSI_ARGS_((void));
+extern int getRateMode (void);
 
 
 /*===========================================================================*
@@ -200,5 +200,5 @@ extern int getRateMode _ANSI_ARGS_((void));
  *
  * RETURNS:   nothing
  *===========================================================================*/
-extern void incQuantOverride  _ANSI_ARGS_((int num));
+extern void incQuantOverride  (int num);
 

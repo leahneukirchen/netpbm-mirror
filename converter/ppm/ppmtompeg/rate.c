@@ -204,13 +204,13 @@ extern int framePatternLen;
  * INTERNAL PROCEDURE prototypes *
  *===============================*/
 
-int initGOPRateControl _ANSI_ARGS_((void));
-int determineMBCount _ANSI_ARGS_((void));
-void checkBufferFullness _ANSI_ARGS_((int count));
-void checkSpatialActivity _ANSI_ARGS_((Block blk0, Block blk1, Block blk2, Block blk3));
-void incNumBlocks _ANSI_ARGS_((int num));
-void calculateVBVDelay _ANSI_ARGS_((int num));
-int BlockExperiments  _ANSI_ARGS_((int16 *OrigBlock, int16 *NewBlock, int control));
+int initGOPRateControl (void);
+int determineMBCount (void);
+void checkBufferFullness (int count);
+void checkSpatialActivity (Block blk0, Block blk1, Block blk2, Block blk3);
+void incNumBlocks (int num);
+void calculateVBVDelay (int num);
+int BlockExperiments  (int16 *OrigBlock, int16 *NewBlock, int control);
      
      
 

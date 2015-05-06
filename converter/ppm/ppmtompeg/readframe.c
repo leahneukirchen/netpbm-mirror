@@ -74,19 +74,19 @@ const char *CurrFile;
  * INTERNAL PROCEDURE prototypes *
  *===============================*/
 
-static void ReadEYUV _ANSI_ARGS_((MpegFrame * mf, FILE *fpointer,
-                 int width, int height));
-static void ReadAYUV _ANSI_ARGS_((MpegFrame * mf, FILE *fpointer,
-                 int width, int height));
-static void SeparateLine _ANSI_ARGS_((FILE *fpointer, struct YuvLine *lineptr,
-                     int width));
-static void ReadY _ANSI_ARGS_((MpegFrame * mf, FILE *fpointer,
-                 int width, int height));
-static void ReadSub4 _ANSI_ARGS_((MpegFrame * mf, FILE *fpointer,
-                  int width, int height));
-static void DoGamma  _ANSI_ARGS_((MpegFrame *mf, int width, int height));
+static void ReadEYUV (MpegFrame * mf, FILE *fpointer,
+                 int width, int height);
+static void ReadAYUV (MpegFrame * mf, FILE *fpointer,
+                 int width, int height);
+static void SeparateLine (FILE *fpointer, struct YuvLine *lineptr,
+                     int width);
+static void ReadY (MpegFrame * mf, FILE *fpointer,
+                 int width, int height);
+static void ReadSub4 (MpegFrame * mf, FILE *fpointer,
+                  int width, int height);
+static void DoGamma  (MpegFrame *mf, int width, int height);
 
-static void DoKillDim _ANSI_ARGS_((MpegFrame *mf, int w, int h));
+static void DoKillDim (MpegFrame *mf, int w, int h);
 
 #define safe_fread(ptr,sz,len,fileptr)                           \
     if ((safe_read_count=fread(ptr,sz,len,fileptr))!=sz*len) {   \
