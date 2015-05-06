@@ -126,26 +126,23 @@ pbm_readpbmrow( FILE * const file,
                 int const format) {
 
     int col, bitshift;
-    bit * bP;
 
     switch ( format )
     {
     case PBM_FORMAT:
-    for ( col = 0, bP = bitrow; col < cols; ++col, ++bP )
-        *bP = getbit( file );
+    for ( col = 0; col < cols; ++col )
+        bitrow[col] = getbit( file );
     break;
 
     case RPBM_FORMAT: {
-        register unsigned char item;
+        unsigned char item;
         bitshift = -1;  item = 0;  /* item's value is meaningless here */
-        for ( col = 0, bP = bitrow; col < cols; ++col, ++bP )
-          {
-              if ( bitshift == -1 )
-                {
+        for ( col = 0; col < cols; ++col ) {
+              if ( bitshift == -1 ) {
                     item = pm_getrawbyte( file );
                     bitshift = 7;
                 }
-              *bP = ( item >> bitshift ) & 1;
+              bitrow[col] = ( item >> bitshift ) & 1;
               --bitshift;
           }
     }
