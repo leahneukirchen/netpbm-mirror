@@ -49,12 +49,11 @@ ppm_allocrow(unsigned int const cols) {
 
 
 void
-ppm_init( argcP, argv )
-    int* argcP;
-    char* argv[];
-    {
+ppm_init(int * const argcP, char ** const argv) {
     pgm_init( argcP, argv );
-    }
+}
+
+
 
 void
 ppm_nextimage(FILE * const fileP, 

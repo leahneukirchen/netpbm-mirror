@@ -37,7 +37,7 @@ pnm_init(int *   const argcP,
          char ** const argv);
 
 void
-pnm_nextimage(FILE *file, int * const eofP);
+pnm_nextimage(FILE * const file, int * const eofP);
 
 xel *
 pnm_allocrow(unsigned int const cols);

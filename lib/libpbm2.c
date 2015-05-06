@@ -34,11 +34,9 @@ getbit (FILE * const file) {
 
 
 void
-pbm_readpbminitrest( file, colsP, rowsP )
-    FILE* file;
-    int* colsP;
-    int* rowsP;
-    {
+pbm_readpbminitrest( FILE * const file,
+                     int  * const colsP,
+                     int  * const rowsP ) {
     /* Read size. */
     *colsP = (int)pm_getuint( file );
     *rowsP = (int)pm_getuint( file );
@@ -55,7 +53,7 @@ pbm_readpbminitrest( file, colsP, rowsP )
         pm_error("Number of columns in header is too large.");
     if (*rowsP < 0)
         pm_error("Number of columns in header is too large.");
-    }
+}
 
 
 
@@ -122,13 +120,13 @@ pbm_readpbminit(FILE * const ifP,
 
 
 void
-pbm_readpbmrow( file, bitrow, cols, format )
-    FILE* file;
-    bit* bitrow;
-    int cols, format;
-    {
-    register int col, bitshift;
-    register bit* bP;
+pbm_readpbmrow( FILE * const file,
+                bit * const bitrow,
+                int const cols,
+                int const format) {
+
+    int col, bitshift;
+    bit * bP;
 
     switch ( format )
     {
@@ -156,7 +154,7 @@ pbm_readpbmrow( file, bitrow, cols, format )
     default:
     pm_error( "can't happen" );
     }
-    }
+}
 
 
 
@@ -267,12 +265,11 @@ pbm_readpbmrow_bitoffset(FILE *          const ifP,
 
 
 bit**
-pbm_readpbm( file, colsP, rowsP )
-    FILE* file;
-    int* colsP;
-    int* rowsP;
-    {
-    register bit** bits;
+pbm_readpbm( FILE * const file,
+             int  * const colsP,
+             int  * const rowsP) {
+
+    bit ** bits;
     int format, row;
 
     pbm_readpbminit( file, colsP, rowsP, &format );
@@ -283,4 +280,4 @@ pbm_readpbm( file, colsP, rowsP )
         pbm_readpbmrow( file, bits[row], *colsP, format );
 
     return bits;
-    }
+}

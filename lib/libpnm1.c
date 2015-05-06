@@ -47,15 +47,12 @@ pnm_allocrow(unsigned int const cols) {
 
 
 void
-pnm_init( argcP, argv )
-    int* argcP;
-    char* argv[];
-    {
+pnm_init(int * const argcP, char ** const argv) {
     ppm_init( argcP, argv );
-    }
+}
 
 void
-pnm_nextimage(FILE *file, int * const eofP) {
+pnm_nextimage(FILE * const file, int * const eofP) {
     pm_nextimage(file, eofP);
 }
 
