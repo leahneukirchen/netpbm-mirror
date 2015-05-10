@@ -471,7 +471,7 @@ validateFormatWithPpf(const char *       const format,
 
     default:
         pm_asprintf(errorP, "Has %lu extra transformation%s ",
-                    n-1, n-1 > 1 ? "s" : "");
+                    (unsigned long)n-1, n-1 > 1 ? "s" : "");
         break;
     }
 }
