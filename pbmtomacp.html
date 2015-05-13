@@ -2,31 +2,34 @@
 <HTML><HEAD><TITLE>Pbmtomacp User Manual</TITLE></HEAD>
 <BODY>
 <H1>pbmtomacp</H1>
-Updated: 31 August 1988
+Updated: 26 April 2015
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
-pbmtomacp - convert a PBM image into a MacPaint file
+pbmtomacp - convert a PBM image to a MacPaint file
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>pbmtomacp</B>
-[<B>-l</B> <I>left</I>]
+[<B>-left</B> <I>left</I>]
 
-[<B>-r</B> <I>right</I>]
+[<B>-right</B> <I>right</I>]
 
-[<B>-b</B> <I>bottom</I>]
+[<B>-top</B> <I>top</I>]
 
-[<B>-t</B> <I>top</I>]
+[<B>-bottom</B> <I>bottom</I>]
 
 [<I>pbmfile</I>]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<P>All options can be abbreviated to their shortest unique prefix.
+You may use two hyphens instead of one to designate an option.  You
+may use either white space or equals signs between an option name and
+its value.
+
+
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -40,37 +43,69 @@ need a program such as <B>mcvert</B> to generate a Macbinary or a
 BinHex file that contains the necessary information to identify the
 file as a PNTG file to MacOS.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
 
-<P> <b>-l</b>, <b>-r</b>, <b>-b</b>, and <b>-t</b> let you define a
-square into the pbm file, that must be converted.  Default is the
-whole file.  If the file is too large for a MacPaint-file, the bitmap
-is cut to fit from ( left, top ).
+<H2 id="options">OPTIONS</H2>
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<dl>
 
-<A HREF="ppmtopict.html">ppmtopict</A>,
+<dt><b>-norle</b>
+
+<dd>This option tells <b>pbmtomacp</b> not to use any run length encoding
+compression in the MacPaint image it produces.  This output, while not
+normal, conforms to MacPaint specifications and can be read by any
+MacPaint decoder without any special settings.
+
+<p>The only value of this option is testing and experimentation.  The option
+causes every output image to contain exactly 53072 bytes, which is the
+theoretical maximum size for a MacPaint image.
+
+<p>Without <b>-norle</b>, MacPaint compresses the image as much as possible
+and the output size depends on the nature of the input.
+
+<dt><b>-left</b>
+<b>-right</b>
+<b>-top</b>
+<b>-bottom</b>
+
+<dd>These options let you define a rectangle within the image to convert.  The
+default is the whole file.  If the specified image is too large for a
+MacPaint-file, <b>pbmtomacp</b> cuts the image to fit, starting at the
+specified top left corner.
+
+<p>These options exist for backward compatibility with an unfortunate original
+design.  They do the same thing that you can do in a more Netpbm-like way and
+more flexibly by processing the input through <b>pamcut</b>.
+    
+</dl>
+
+
+<H2 id="seealso">SEE ALSO</H2>
+
 <A HREF="macptopbm.html">macptopbm</A>,
+<A HREF="ppmtopict.html">ppmtopict</A>,
+<A HREF="macptopbm.html">pamcut</A>,
 <A HREF="pbm.html">pbm</A>,
 <b>mcvert</b> documentation
 
-<A NAME="lbAH">&nbsp;</A>
-<H2>AUTHOR</H2>
 
-Copyright (C) 1988 by Douwe van der Schaaf (...!mcvax!uvapsy!vdschaaf).
+<H2 id="history">HISTORY</H2>
+
+<p><b>pbmtomacp</b> was added to Netpbm in 1988, written by Douwe van der
+Schaaf (...!mcvax!uvapsy!vdschaaf).
+
+<p>In 2015, Akira Urushibata (&quot;Douso&quot;) replaced the program with
+the current version, using different logic and none of the original code.
+The new version used the &quot;packed PBM&quot; facilities of the Netpbm
+library and the shhopt method of command line parsing.
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAG">SEE ALSO</A>
-<LI><A HREF="#lbAH">AUTHOR</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
 </UL>
 </BODY>
 </HTML>

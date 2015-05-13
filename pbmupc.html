@@ -2,24 +2,21 @@
 <HTML><HEAD><TITLE>Pbmupc User Manual</TITLE></HEAD>
 <BODY>
 <H1>pbmupc</H1>
-Updated: 14 March 1989
+Updated: 29 April 2015
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
 pbmupc - create a Universal Product Code PBM image
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>pbmupc</B>
 
 [<B>-s1</B> | <B>-s2</B>] <I>type</i> <i>manufacturer</i> <i>product</I>
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -28,13 +25,11 @@ The three arguments are: a one digit product type, a five digit
 manufacturer code, and a five digit product code.
 For example, &quot;0 72890 00011&quot; is the code for Heineken.
 
-<P>As presently configured, <b>pbmupc</b> produces an image 230 bits
-wide and 175 bits high.  The size can be altered by changing the
-defines at the beginning of the program, or by running the output
-through <B>pamenlarge</B> or <B>pamscale</B>.
+<P><b>pbmupc</b> produces an image 230 bits wide and 175 bits high.  If you
+want a different size run the output through <B>pamscale</B>.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+
+<H2 id="options">OPTIONS</H2>
 
 <P>The <B>-s1</B> and <B>-s2</B> options select the style of UPC to
 generate.  The default, <B>-s1</B>, looks more or less like this:
@@ -58,25 +53,25 @@ and doesn't display the checksum digit:
  ||12345||67890||
 </PRE>
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>SEE ALSO</H2>
 
+<H2 id="seealso">SEE ALSO</H2>
+
+<A HREF="pamscale.html">pamscale</A>
 <A HREF="pbm.html">pbm</A>
-<A NAME="lbAG">&nbsp;</A>
-<H2>AUTHOR</H2>
+
+<H2 id="author">AUTHOR</H2>
 
 Copyright (C) 1989 by Jef Poskanzer.
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">SEE ALSO</A>
-<LI><A HREF="#lbAG">AUTHOR</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
 </UL>
+
 </BODY>
 </HTML>
