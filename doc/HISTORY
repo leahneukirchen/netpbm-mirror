@@ -6,10 +6,6 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.71.00
 
-              pbmtomacp: fix wild pointer dereference with -b larger than
-              image height.  Always broken.  (pbmtomacp was new in X.V11R3
-              (March 1988).
-
               pnmconvol: Fix bug: wrong output for pixels that convolve to
               negative values (should be clipped to zero).  Introduced in
               Netpbm 10.68 (September 2014).
@@ -17,6 +13,13 @@ not yet  BJH  Release 10.71.00
               st4topgm: Fix bug: with no argument, uses file named "'" instead
               of Standard Input.  Always present (st45topgm was new in Netpbm
               10.70 (March 2015).
+
+              pbmtomgr: Fix incorrect output when input is too large (must be
+              at most 4095 pixels high or wide).
+
+              pbmtomacp: fix wild pointer dereference with -b larger than
+              image height.  Always broken.  (pbmtomacp was new in X.V11R3
+              (March 1988).
 
               ppmtorgb3: Fix buffer overflow with long input file name.
               Always present.  (ppmtorgb3 was new in X.V11R4 (November 1989).
