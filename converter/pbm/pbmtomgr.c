@@ -20,8 +20,8 @@ putinit(unsigned int const rows,
     size_t writtenCount;
 
     /* Because of argument restrictions: maximum dimensions: */
-    assert((rows & 0x3f) == rows);
-    assert((cols & 0x3f) == cols);
+    assert((rows & 0xfff) == rows);
+    assert((cols & 0xfff) == cols);
 
     head.magic[0] = 'y';
     head.magic[1] = 'z';
@@ -55,7 +55,8 @@ main(int argc,
            a multiple of 8, i.e. an integral number of packed bytes.
         */
     const char * inputFileName;
-    unsigned int const maxDimension = 4095; /* Dimensions: 6 bits */
+    unsigned int const maxDimension = 4095;
+        /* Dimensions are 2 characters of the header -- 12 bits */
 
     pbm_init(&argc, argv);
 
