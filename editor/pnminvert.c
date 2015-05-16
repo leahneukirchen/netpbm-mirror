@@ -50,11 +50,8 @@ invertPbm(FILE * const ifP,
         for (colChar = 0; colChar < colChars; ++colChar)
             bitrow[colChar] = ~ bitrow[colChar];
         
-        /* Clean off remainder of fractional last character */
-        if (cols % CHARBITS > 0) {
-            bitrow[colChars-1] >>= CHARBITS - cols % CHARBITS;
-            bitrow[colChars-1] <<= CHARBITS - cols % CHARBITS;
-        }
+        /* Clean off remainder of fractional last character and write */
+        pbm_cleanrowend_packed(bitrow, cols);
         pbm_writepbmrow_packed(ofP, bitrow, cols, 0);
     }
     pbm_freerow_packed(bitrow);

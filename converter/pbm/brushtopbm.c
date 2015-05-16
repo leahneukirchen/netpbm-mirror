@@ -93,11 +93,7 @@ main(int argc, const char ** argv)  {
             bitrow[i] = ~bitrow[i];
 
         /* Clean off remainder of fractional last character */
-        if (cols % 8 > 0) {
-            unsigned int const colChars = pbm_packed_bytes(cols);
-            bitrow[colChars-1] >>= 8 - cols % 8;
-            bitrow[colChars-1] <<= 8 - cols % 8;
-        }
+        pbm_cleanrowend_packed(bitrow, cols);
 
         pbm_writepbmrow_packed(stdout, bitrow, cols, 0);
     }

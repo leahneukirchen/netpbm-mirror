@@ -10,6 +10,7 @@
 ** implied warranty.
 */
 
+#include <assert.h>
 #include <limits.h>
 
 #include "pbm.h"
@@ -257,7 +258,26 @@ pbm_readpbmrow_bitoffset(FILE *          const ifP,
 
         window[last] =  leftBits | rightBits;
     }
-} 
+}
+
+
+
+void
+pbm_cleanrowend_packed(unsigned char * const packedBits,
+                       unsigned int    const cols) {
+/*----------------------------------------------------------------------------
+  Set fractional "don't care" bits at end of row to zero.
+----------------------------------------------------------------------------*/
+    unsigned int const last = pbm_packed_bytes(cols) - 1;
+    unsigned int const bitsPerChar = 8;
+
+    assert(cols > 0);
+
+    if (cols % bitsPerChar > 0) {
+            packedBits[last] >>= bitsPerChar - cols % bitsPerChar;
+            packedBits[last] <<= bitsPerChar - cols % bitsPerChar;
+        }
+}
 
 
 

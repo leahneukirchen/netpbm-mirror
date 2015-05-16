@@ -821,7 +821,6 @@ doPbm(FILE *       const ifP,
         32 bit borders and that in BMP the bottom row comes first in
         order.
     */
-    int const CHARBITS = (sizeof(unsigned char)*8); 
     int const colChars = pbm_packed_bytes(cols);
     int const adjustedCols = (cols+31) /32 * 32;
     int const packedBytes  =  adjustedCols /8;
@@ -853,11 +852,8 @@ doPbm(FILE *       const ifP,
            some BMP viewers may get confused with that.
         */
 
-        if (cols % 8 >0) {
-            /* adjust final partial byte */
-            thisRow[colChars-1] >>= CHARBITS - cols % CHARBITS;
-            thisRow[colChars-1] <<= CHARBITS - cols % CHARBITS;
-        }
+        /* Clean off remainder of fractional last character */
+        pbm_cleanrowend_packed(thisRow, cols);
     }
 
     bmpEncodePbm(ofP, class, cols, rows, bitrow);

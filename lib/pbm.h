@@ -88,6 +88,10 @@ pbm_readpbmrow_bitoffset(FILE *          const fileP,
                          unsigned int    const offset);
 
 void
+pbm_cleanrowend_packed(unsigned char * const packedBits,
+                       unsigned int    const cols);
+
+void
 pbm_writepbminit(FILE * const fileP, 
                  int    const cols, 
                  int    const rows, 

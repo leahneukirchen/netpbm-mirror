@@ -361,10 +361,8 @@ setupInputBuffers(FILE *       const ifP,
 
     pbm_readpbmrow_packed(ifP, nextRow, cols, format);
 
-    if (cols % 8 > 0){
-        nextRow[pbm_packed_bytes(cols) -1 ] >>= (8 - cols % 8);
-        nextRow[pbm_packed_bytes(cols) -1 ] <<= (8 - cols % 8);
-    }
+    pbm_cleanrowend_packed(nextRow, cols);
+
     *bufferP  = buffer;
     *edgeRowP = edgeRow;
     *thisRowP = &edgeRow[1];
@@ -418,10 +416,8 @@ cleanSimple(FILE *             const ifP,
                handling of the initial edgerow.
             */
             pbm_readpbmrow_packed(ifP, nextRow, cols, format);
-            if (cols % 8 > 0){
-                nextRow[pbm_packed_bytes(cols) -1 ] >>= (8 - cols % 8);
-                nextRow[pbm_packed_bytes(cols) -1 ] <<= (8 - cols % 8);
-            }
+            pbm_cleanrowend_packed(nextRow, cols);
+
         } else  /* Bottom of image.  */
             nextRow = &edgeRow[1];
 

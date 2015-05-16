@@ -1442,8 +1442,6 @@ writeRasterPbm(unsigned char ** const bmpRaster,
   
   We destroy *bmpRaster as a side effect.
 -----------------------------------------------------------------------------*/
-    unsigned int const charBits = (sizeof(unsigned char) * 8);
-        /* Number of bits in a character */
     unsigned int const colChars = pbm_packed_bytes(cols);
     
     int row;
@@ -1463,13 +1461,8 @@ writeRasterPbm(unsigned char ** const bmpRaster,
             for (i = 0; i < colChars; ++i) 
                 bitrow[i] = ~bitrow[i]; /* flip all pixels */ 
         }   
-            
-        if (cols % 8 > 0) {
-            /* adjust final partial byte */
-            bitrow[colChars-1] >>= charBits - cols % charBits;
-            bitrow[colChars-1] <<= charBits - cols % charBits;
-        }
-        
+
+        pbm_cleanrowend_packed(bitrow, cols);
         pbm_writepbmrow_packed(stdout, bitrow, cols, FALSE);
     }
 }

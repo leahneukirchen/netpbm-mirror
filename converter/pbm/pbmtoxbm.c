@@ -342,17 +342,10 @@ convertRaster(FILE *          const ifP,
     bitrow[bitrowBytes-1] = 0;
     
     for (row = 0; row < rows; ++row) {
-        int const bitrowInBytes = pbm_packed_bytes(cols);
-        int const padrightIn    = bitrowInBytes * 8 - cols;
-
         unsigned int i;
 
         pbm_readpbmrow_packed(ifP, bitrow, cols, format);
-
-        if (padrightIn > 0) {
-            bitrow[bitrowInBytes - 1] >>= padrightIn;
-            bitrow[bitrowInBytes - 1] <<= padrightIn;
-        }
+        pbm_cleanrowend_packed(bitrow, cols);
 
         for (i = 0; i < bitrowBytes; ++i)
             putitem(bitrow[i]);

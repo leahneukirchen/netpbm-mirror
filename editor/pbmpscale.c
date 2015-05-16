@@ -412,11 +412,7 @@ main(int argc, const char ** argv) {
     /* Read the top line into nextrow and clean the right end. */
 
     pbm_readpbmrow_packed(ifP, nextrow, cols, format);
-
-    if (cols % 8 > 0) {
-        nextrow[pbm_packed_bytes(cols) - 1] >>= (8 - cols % 8);
-        nextrow[pbm_packed_bytes(cols) - 1] <<= (8 - cols % 8);
-    }
+    pbm_cleanrowend_packed(nextrow, cols);
 
     outrow = pbm_allocrow_packed(outcols);
     for (i = 0; i < pbm_packed_bytes(outcols); ++i)
@@ -440,10 +436,7 @@ main(int argc, const char ** argv) {
                This provision is for proper handling of the initial edgerow.
             */
             pbm_readpbmrow_packed(ifP, nextrow, cols, format);
-            if (cols % 8 > 0) {
-                nextrow[pbm_packed_bytes(cols) - 1] >>= (8 - cols % 8);
-                nextrow[pbm_packed_bytes(cols) - 1] <<= (8 - cols % 8);
-            }
+            pbm_cleanrowend_packed(nextrow, cols);
         } else
             /* Bottom of image.  */
             nextrow = edgerow;

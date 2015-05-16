@@ -1853,18 +1853,14 @@ convertRowPbm(struct pam *     const pamP,
 ----------------------------------------------------------------------*/
     unsigned int colChar;
     unsigned int const colChars = pbm_packed_bytes(pamP->width);
-    unsigned int const padRight = (8 - pamP->width %8) %8;
 
     pbm_readpbmrow_packed(pamP->file, bitrow, pamP->width, pamP->format);
 
     for (colChar = 0; colChar < colChars; ++colChar)
         bitrow[colChar] =  ~ bitrow[colChar];
 
-    if (padRight > 0) {
-        bitrow[colChars-1] >>= padRight;  /* Zero clear padding beyond */
-        bitrow[colChars-1] <<= padRight;  /* right edge */
-    }
-
+    /* Zero clear padding beyond right edge */
+    pbm_cleanrowend_packed(bitrow, pamP->width);
     writeFile(bitrow, colChars, "PBM reader", fP);
 }
 

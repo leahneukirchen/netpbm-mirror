@@ -362,12 +362,8 @@ main(int    argc,
         
         for (i = 0; i < bytesPerRow; ++i)
             bitrow[i] = bitreverse[*p++];
-            
-        if (cols % 8 > 0) {
-            bitrow[bytesPerRow-1] >>= 8 - cols % 8;
-            bitrow[bytesPerRow-1] <<= 8 - cols % 8;
-        }
-            
+
+        pbm_cleanrowend_packed(bitrow, cols);
         pbm_writepbmrow_packed(stdout, bitrow, cols, 0);
     }
 
