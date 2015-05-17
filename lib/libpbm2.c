@@ -268,15 +268,16 @@ pbm_cleanrowend_packed(unsigned char * const packedBits,
 /*----------------------------------------------------------------------------
   Set fractional "don't care" bits at end of row to zero.
 ----------------------------------------------------------------------------*/
-    unsigned int const last = pbm_packed_bytes(cols) - 1;
     unsigned int const bitsPerChar = 8;
 
-    assert(cols > 0);
-
     if (cols % bitsPerChar > 0) {
-            packedBits[last] >>= bitsPerChar - cols % bitsPerChar;
-            packedBits[last] <<= bitsPerChar - cols % bitsPerChar;
-        }
+        unsigned int const last = pbm_packed_bytes(cols) - 1;
+
+        assert(pbm_packed_bytes(cols) > 0);
+
+        packedBits[last] >>= bitsPerChar - cols % bitsPerChar;
+        packedBits[last] <<= bitsPerChar - cols % bitsPerChar;
+    }
 }
 
 
