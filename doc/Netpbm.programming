@@ -65,6 +65,14 @@ named such as "pbmtog3.test".  You can use those to verify your
 changes.  You should also add to these tests and create new ones.  But
 most developers don't.
 
+As you code and test, do 'make dep' to create the header file dependency files
+(depend.mk).  Do it after 'configure' and every time you change the
+dependencies.  If you don't, 'make' won't know to recompile things when you
+change the header files.  For the convenience of users who are just building,
+and not changing anything, the make files do work without a 'make dep', but do
+so by automatically generating empty depend.mk files.  This is not what you
+want as a developer.
+
 
 CODING GUIDELINES
 -----------------
@@ -111,7 +119,7 @@ before you read these.
   cause problems to other programs when you do a "merge build" of 
   Netpbm.
 
-* Always start the code in main() with a call to p?m_init().
+* Always start the code in main() with a call to pm_proginit().
 
 * Use shhopt for option processing.  i.e. call optParseOptions3().
   This is really easy if you just copy the parseCommandLine() function
@@ -197,8 +205,37 @@ before you read these.
   compose code just as easily with spaces as with tabs.
 
 * Limit your C code to original ANSI C.  Not C99.  Not C89.  Not C++.  Don't
-  use // for comments or put declarations in the interior of block.
+  use // for comments or put declarations in the interior of a block.
   Interpreted languages are OK, with Perl being preferred.
+
+* Make output invariant with input.  The program should produce the same output
+  when fed the same input.  This helps with testing and also reduces the chance
+  of bugs being encountered randomly.
+
+  This is an issue when there are "don't care" bits in the output.  You should
+  normally make those zero.
+
+  The valgrind utility helps you identify instances of undefined bits and
+  bytes getting to output.
+
+  A common place to find "don't care" bits is padding at the end of a raster
+  row.  You can use pbm_cleanrowend_packed() to clear padding bits when you
+  use pbm_writepbmrow_packed().
+
+  Some programs are designed to produce random output.  For those, include a
+  -seed option to specify the seed of the random number generator so that a
+  tester can make the output predictable.
+
+
+* Never assume that input will be valid; make sure your program can
+  handle corrupt input gracefully.
+
+  Watch out for arithmetic overflows caused by large numbers in the input.
+
+  Be careful when writing decoders.  Make sure that corruptions in the
+  input image do not cause buffer overruns.
+
+
 
 
 DISCONTINUED CODING GUIDELINES
@@ -206,6 +243,9 @@ DISCONTINUED CODING GUIDELINES
 
 Here are some things you will see in old Netpbm programs, but they are
 obsolete and you shouldn't propagate them into a new program:
+
+* Use of pbm_init(), pgm_init(), ppm_init(), and pnm_init().  We use
+  pm_proginit() now.
 
 * Tolerating non-standard C libraries.  You may assume all users have
   ANSI and POSIX compliant C libraries.  E.g. use strrchr() and forget
@@ -305,6 +345,10 @@ code.  Modular and structured above all.
 
   Declare a variable in the most local scope possible.
 
+  Global constants are OK.
+
+* Do not use static variables, except for global constants.
+
 * Keep subroutines small.  Generally under 50 lines.  But if the
   routine is a long sequence of simple, similar things, it's OK for it
   run on ad infinitem.
@@ -314,7 +358,7 @@ code.  Modular and structured above all.
 
 * Do not say "if (a)" when you mean "if (a != 0)".  Use "if (a)" only if a is
   a boolean variable.  Or where it's defined so that zero is a special value
-  that means ("doesn't exist").
+  that means "doesn't exist".
 
 * Do multiword variable names in camel case: "multiWordName".  Underscores
   waste valuable screen real estate.
@@ -325,6 +369,10 @@ code.  Modular and structured above all.
   variable's value is a pointer to a color value, name it "colorP", not
   "color".
 
+* A variable that represents the number of widgets should be "widgetCt",
+  ("widget count"), not "widgets".  The latter should represent the actual
+  widgets instead.
+
 * Put "const" as close as possible to the thing that is constant.
   "int const width", not "const int width".  When pointers to
   constants are involved, it makes it much easier to read.
@@ -332,4 +380,36 @@ code.  Modular and structured above all.
 * Free something in the same subroutine that allocates it.  Have exactly 
   one free per allocate (this comes naturally if you eliminate gotos).
 
+* Dynamically allocate buffers, for example raster buffers, rather than use
+  automatic variables.  Accidentally overrunning an automatic variable,
+  typically stored on the stack, is much more dangerous than overrunning a
+  variable stored in the heap.
+
+* Do not use the "register" qualifier of a variable.
+
+
+MISCELLANEOUS
+-------------
+
+Object code immutability across compilations
+--------------------------------------------
+
+In a normal build process the same source code always produces the same object
+code.  (Of course this depends on your compiler and its settings: if your
+compiler writes time stamps into the objects, they will naturally be different
+with each compilation.)
+
+The file lib/compile.h has a time stamp which gets written into libnetpbm.a
+and libnetpbm.so .  This will affect individual binary executables if they are
+statically linked.
+
+If compile.h does not exist it will be created by the program
+buildtools/stamp-date.  Once created, compile.h will stay unchanged until you
+do "make clean".
+
+If you make alterations to source which are entirely cosmetic (for example,
+changes to comments or amount of indentation) and need to confirm that the
+actual program logic is not affected, compare the object files.  If you need
+to compare library files (or for some reason, statically linked binaries) make
+sure that the same compile.h is used throughout.
 
