@@ -10,12 +10,16 @@ not yet  BJH  Release 10.71.00
               negative values (should be clipped to zero).  Introduced in
               Netpbm 10.68 (September 2014).
 
+              pbmtoxbm: Fix bug: crash with zero width input.  Broken in
+              Netpbm 10.37 (December 2006).
+
               st4topgm: Fix bug: with no argument, uses file named "'" instead
               of Standard Input.  Always present (st45topgm was new in Netpbm
               10.70 (March 2015).
 
               pbmtomgr: Fix incorrect output when input is too large (must be
-              at most 4095 pixels high or wide).
+              at most 4095 pixels high or wide).  Always broken.  (pbmtomgr
+              was new in 1989).
 
               pbmtomacp: fix wild pointer dereference with -b larger than
               image height.  Always broken.  (pbmtomacp was new in X.V11R3
