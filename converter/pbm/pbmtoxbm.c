@@ -249,7 +249,7 @@ puttermX10(void) {
                     (i == 0) ? " " : "",
                     itemBuff[i+1],
                     itemBuff[i], 
-                    (i == itemCnt - 2) ? "};\n" : ",");
+                    (i == itemCnt - 2) ? "" : ",");
         if (rc < 0)        
             pm_error("Error writing end of X10 bitmap raster.  "
                      "printf() failed with errno %d (%s)",
@@ -270,7 +270,7 @@ puttermX11(void) {
         rc = printf("%s0x%02x%s",
                     (i == 0)  ? " " : "",
                     itemBuff[i],
-                    (i == itemCnt - 1) ? "};\n" : ",");
+                    (i == itemCnt - 1) ? "" : ",");
 
         if (rc < 0)        
             pm_error("Error writing end of X11 bitmap raster.  "
@@ -296,6 +296,17 @@ putterm(void) {
     switch (itemVersion) {
     case X10: puttermX10(); break;
     case X11: puttermX11(); break;
+    }
+
+    {
+        int rc;
+
+        rc = printf("};\n");
+
+        if (rc < 0)        
+            pm_error("Error writing end of X11 bitmap raster.  "
+                     "printf() failed with errno %d (%s)",
+                     errno, strerror(errno));
     }
 }
 
@@ -339,7 +350,6 @@ convertRaster(FILE *          const ifP,
     putinit(xbmVersion);
 
     bitrow = pbm_allocrow_packed(cols + padright);
-    bitrow[bitrowBytes-1] = 0;
     
     for (row = 0; row < rows; ++row) {
         int const bitrowInBytes = pbm_packed_bytes(cols);
@@ -353,6 +363,9 @@ convertRaster(FILE *          const ifP,
             bitrow[bitrowInBytes - 1] >>= padrightIn;
             bitrow[bitrowInBytes - 1] <<= padrightIn;
         }
+
+        if (padright >= 8)
+            bitrow[bitrowBytes-1] = 0x00;
 
         for (i = 0; i < bitrowBytes; ++i)
             putitem(bitrow[i]);

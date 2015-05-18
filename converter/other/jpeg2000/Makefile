@@ -5,7 +5,7 @@ endif
 SUBDIR = converter/other/jpeg2000
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-SUBDIRS = libjasper
+SUBDIRS =
 
 include $(BUILDDIR)/config.mk
 
@@ -52,6 +52,7 @@ ifeq ($(JASPERLIB),$(INTERNAL_JASPERLIB))
   # MERGE_OBJECTS contains relative paths, so $(INTERNAL_JASPERLIB) had better
   # be relative to the current directory.
   MERGE_OBJECTS += $(JASPERLIB)
+  SUBDIRS += libjasper
 endif
 MERGEBINARIES = $(BINARIES)
 

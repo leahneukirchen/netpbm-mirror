@@ -6,8 +6,11 @@
    ftp://sunsite.unc.edu/pub/Linux/apps/MGR/!INDEX.html
 */
 
+#include <assert.h>
 #include "pbm.h"
 #include "mgr.h"
+
+
 
 static void
 putinit(unsigned int const rows,
@@ -15,6 +18,10 @@ putinit(unsigned int const rows,
 
     struct b_header head;
     size_t writtenCount;
+
+    /* Because of argument restrictions: maximum dimensions: */
+    assert((rows & 0xfff) == rows);
+    assert((cols & 0xfff) == cols);
 
     head.magic[0] = 'y';
     head.magic[1] = 'z';
@@ -48,6 +55,8 @@ main(int argc,
            a multiple of 8, i.e. an integral number of packed bytes.
         */
     const char * inputFileName;
+    unsigned int const maxDimension = 4095;
+        /* Dimensions are 2 characters of the header -- 12 bits */
 
     pbm_init(&argc, argv);
 
@@ -62,6 +71,10 @@ main(int argc,
     ifP = pm_openr(inputFileName);
 
     pbm_readpbminit(ifP, &cols, &rows, &format);
+    if (cols > maxDimension)
+        pm_error("Image width too large: %u (max: %u)", cols, maxDimension);
+    if (rows > maxDimension)
+        pm_error("Image height too large: %u (max: %u)", rows, maxDimension);
     
     bitrow = pbm_allocrow_packed(cols);
     bytesPerRow = pbm_packed_bytes(cols);

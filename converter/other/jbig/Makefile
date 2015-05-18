@@ -5,7 +5,7 @@ endif
 SUBDIR = converter/other/jbig
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-SUBDIRS = libjbig
+SUBDIRS =
 
 include $(BUILDDIR)/config.mk
 
@@ -35,6 +35,7 @@ SCRIPTS =
 
 ifeq ($(JBIGLIB),$(INTERNAL_JBIGLIB))
   JBIGLIB_DEP = $(JBIGLIB)
+  SUBDIRS += libjbig
 else
   # It's not our internal version; user's on his own to make sure it's built
 endif

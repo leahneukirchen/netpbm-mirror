@@ -4,6 +4,22 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+15.05.18 BJH  Release 10.70.05
+
+              pbmtoxbm: Fix bug: crash with zero width input.  Broken in
+              Netpbm 10.37 (December 2006).
+
+              pbmtomgr: Fix incorrect output when input is too large (must be
+              at most 4095 pixels high or wide).  Always broken.  (pbmtomgr
+              was new in 1989).
+
+              pbmtomacp: fix wild pointer dereference with -b larger than
+              image height.  Always broken.  (pbmtomacp was new in X.V11R3
+              (March 1988).
+
+              Build: don't build and install libjbig and libjasper if we
+              are using external versions of them instead.
+
 15.04.30 BJH  Release 10.70.04
 
               pnmconvol: Fix bug: wrong output for pixels that convolve to

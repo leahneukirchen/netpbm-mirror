@@ -57,9 +57,8 @@ the conventional Unix means of communicating code changes.  A Subversion
 You should update or create documentation too.  But if you don't, the Netpbm
 maintainer will do the update before releasing your code.  The source files
 for the documentation are the HTML files in the 'userguide' directory of the
-Netpbm Subversion repository:
-http://netpbm.svn.sourceforge.net/svnroot/netpbm/userguide .  The identical
-files are at http://netpbm.sourceforge.net/doc/ .
+Netpbm Subversion repository: https://svn.code.sf.net/p/netpbm/code/userguide.
+The identical files are at http://netpbm.sourceforge.net/doc/ .
 
 There are some automated tests in the package - shell scripts in files
 named such as "pbmtog3.test".  You can use those to verify your
