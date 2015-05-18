@@ -257,7 +257,7 @@ puttermX10(void) {
                     itemBuff[i], 
                     (i + 2 >= itemCnt) ? "" : ",");
         if (rc < 0)        
-            pm_error("Error writing Item %u of X10 bitmap raster.  "
+            pm_error("Error writing Item %u at end of X10 bitmap raster.  "
                      "printf() failed with errno %d (%s)",
                      i, errno, strerror(errno));
     }
@@ -279,7 +279,7 @@ puttermX11(void) {
                     (i + 1 >= itemCnt) ? "" : ",");
 
         if (rc < 0)        
-            pm_error("Error writing Item %u of X11 bitmap raster.  "
+            pm_error("Error writing Item %u at end of X11 bitmap raster.  "
                      "printf() failed with errno %d (%s)",
                      i, errno, strerror(errno));
     }
