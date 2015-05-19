@@ -121,13 +121,11 @@ int
 main(int argc, char *argv[]) {
 
     FILE *ifd;
-    bit *bitrow;
-    register bit *bP;
+    bit * bitrow;
     int rows, cols, format, row;
-    int col;
-    char name[100], *cp;
-    unsigned char curbyte, newbyte;
-    int curcount, gather;
+        unsigned char curbyte;
+        int curcount;
+
 
     pbm_init ( &argc, argv );
 
@@ -136,19 +134,12 @@ main(int argc, char *argv[]) {
 
     else if (argc-1 == 1) {
         ifd = pm_openr( argv[1] );
-        strcpy(name, argv[1]);
-        if (streq( name, "-"))
-            strcpy(name, "noname");
-        
-        if ((cp = strchr(name, '.')) != 0)
-            *cp = '\0';
     } else {
         ifd = stdin;
-        strcpy( name, "noname" );
     }
 
     pbm_readpbminit(ifd, &cols, &rows, &format);
-    bitrow = pbm_allocrow(cols);
+    bitrow = pbm_allocrow_packed(cols);
 
     printf ("\\begindata{raster,%d}\n", 1);
     printf ("%d %d %d %d ", RASTERVERSION, 0, DEFAULTSCALE, DEFAULTSCALE);
@@ -156,30 +147,21 @@ main(int argc, char *argv[]) {
     printf ("bits %d %d %d\n", 1, cols, rows);
 
     for (row = 0; row < rows; ++row) {
-        pbm_readpbmrow(ifd, bitrow, cols, format);
-        bP = bitrow;
-        gather = 0;
-        newbyte = 0;
-        curbyte = 0;
-        curcount = 0;
-        col = 0;
-        while (col < cols) {
-            if (gather > 7) {
-                process_atk_byte (&curcount, &curbyte, stdout, newbyte, FALSE);
-                gather = 0;
-                newbyte = 0;
-            }
-            newbyte = (newbyte << 1) | (*bP++);
-            gather += 1;
-            col += 1;
-        }
+        unsigned int byteCnt;
+        unsigned int const bytes = pbm_packed_bytes(cols);
 
-        if (gather > 0) {
-            newbyte = (newbyte << (8 - gather));
-            process_atk_byte (&curcount, &curbyte, stdout, newbyte, TRUE);
+        pbm_readpbmrow_packed(ifd, bitrow, cols, format);
+        pbm_cleanrowend_packed(bitrow, cols);
+        
+        curbyte = 0;  curcount = 0;
+        for(byteCnt = 0; byteCnt < bytes; ++byteCnt) {
+            process_atk_byte (&curcount, &curbyte, stdout,
+			      bitrow[byteCnt],
+			      byteCnt < bytes -1 ? FALSE : TRUE );
         }
     }
 
+    pbm_freerow_packed(bitrow);
     pm_close( ifd );
     
     printf ("\\enddata{raster, %d}\n", 1);
