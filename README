@@ -1,0 +1,16 @@
+This is a git-svn mirror of netpbm.
+
+Configuration:
+
+[svn-remote "svn"]
+        url = http://svn.code.sf.net/p/netpbm/code
+        fetch = trunk:refs/heads/trunk
+        fetch = advanced:refs/heads/advanced
+        fetch = stable:refs/heads/stable
+        fetch = super_stable:refs/heads/super_stable
+        fetch = userguide:refs/heads/userguide
+        tags = release_number/*:refs/tags/*
+
+To update, run
+
+	git svn fetch
