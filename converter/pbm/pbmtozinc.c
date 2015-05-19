@@ -59,7 +59,7 @@ imageName(const char * const inputFileName) {
         char * nameBuf;
         char * cp;
 
-        MALLOCARRAY_NOFAIL(nameBuf, strlen(inputFileName + 1));
+        MALLOCARRAY_NOFAIL(nameBuf, strlen(inputFileName +1));
 
         strcpy(nameBuf, inputFileName);
 
@@ -74,12 +74,9 @@ imageName(const char * const inputFileName) {
 
 
 
-static const char * const hexchar = "084c2a6e195d3b7f";
-
 typedef struct {
     unsigned int itemsperline;
-    unsigned int bitsperitem;
-    unsigned int item;
+    uint16_t     item;
     unsigned int firstitem;
 } Packer;
 
@@ -89,8 +86,6 @@ static void
 packer_init(Packer * const packerP) {
 
     packerP->itemsperline = 0;
-    packerP->bitsperitem = 0;
-    packerP->item = 0;
     packerP->firstitem = 1;
 }
 
@@ -112,40 +107,8 @@ packer_putitem(Packer * const packerP) {
         putchar(' ');
 
     ++packerP->itemsperline;
+    printf ("0x%02x%02x", packerP->item & 255, packerP->item >> 8);
 
-    putchar('0');
-    putchar('x');
-    putchar(hexchar[(packerP->item >>  0) & 0xF]);
-    putchar(hexchar[(packerP->item >>  4) & 0xF]);
-    putchar(hexchar[(packerP->item >>  8) & 0xF]);
-    putchar(hexchar[(packerP->item >> 12)]);
-
-    packerP->bitsperitem = 0;
-    packerP->item = 0;
-}
-
-
-
-static void
-packer_putbit(Packer * const packerP,
-              bit      const b) {
-
-    if (packerP->bitsperitem == 16)
-        packer_putitem(packerP);
-
-    if (b == PBM_BLACK)
-        packerP->item += 1 << packerP->bitsperitem;
-
-    ++packerP->bitsperitem;
-}
-
-
-
-static void
-packer_term(Packer * const packerP) {
-
-    if (packerP->bitsperitem > 0 )
-        packer_putitem(packerP);
 }
 
 
@@ -156,30 +119,31 @@ writeRaster(FILE *       const ifP,
             unsigned int const cols,
             int          const format) {
 
-    unsigned int const padright = ((cols + 15) / 16) * 16 - cols;
-        /* Padding to round cols up to the nearest multiple of 16. */
+    bit * const bitrow = pbm_allocrow_packed(cols + 8);
 
     Packer packer;
-    bit * bitrow;
     unsigned int row;
-
-    bitrow = pbm_allocrow(cols);
 
     packer_init(&packer);
 
+    bitrow[pbm_packed_bytes(cols+8) -1 ] = 0x00;
+
     for (row = 0; row < rows; ++row) {
-        unsigned int col;
+        uint16_t * const itemrow = (uint16_t *) bitrow;
+        unsigned int const itemCt = (cols + 15 ) / 16;
+
         unsigned int i;
-        pbm_readpbmrow(ifP, bitrow, cols, format);
-        for (col = 0; col < cols; ++col)
-            packer_putbit(&packer, bitrow[col]);
-        for (i = 0; i < padright; ++i)
-            packer_putbit(&packer, 0);
+
+        pbm_readpbmrow_packed(ifP, bitrow, cols, format);
+
+        pbm_cleanrowend_packed(bitrow, cols);
+
+        for (i = 0; i < itemCt; ++i) {
+            packer.item = itemrow[i];
+            packer_putitem(&packer);
+        }
     }
-
-    packer_term(&packer);
-
-    pbm_freerow(bitrow);
+    pbm_freerow_packed(bitrow);
 }
 
 
