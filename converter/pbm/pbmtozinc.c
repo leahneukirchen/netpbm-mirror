@@ -59,7 +59,7 @@ imageName(const char * const inputFileName) {
         char * nameBuf;
         char * cp;
 
-        MALLOCARRAY_NOFAIL(nameBuf, strlen(inputFileName +1));
+        MALLOCARRAY_NOFAIL(nameBuf, strlen(inputFileName) + 1);
 
         strcpy(nameBuf, inputFileName);
 
