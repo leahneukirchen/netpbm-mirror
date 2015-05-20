@@ -53,7 +53,7 @@ main(int argc, const char *argv[]) {
     else {
         inputFileName = argv[1];
 
-        if (argc-1 > 2)
+        if (argc-1 > 1)
             pm_error("Too many arguments.  The only argument is the optional "
                      "input file name");
     }
