@@ -180,12 +180,12 @@ pbm_readpbmrow_packed(FILE *          const fileP,
     break;
 
     case RPBM_FORMAT: {
-        int bytes_read;
-        bytes_read = fread(packedBits, 1, pbm_packed_bytes(cols), fileP);
+        unsigned int bytesReadCt;
+        bytesReadCt = fread(packedBits, 1, pbm_packed_bytes(cols), fileP);
              
-        if (bytes_read < pbm_packed_bytes(cols)) {
+        if (bytesReadCt < pbm_packed_bytes(cols)) {
             if (feof(fileP)) 
-                if (bytes_read == 0) 
+                if (bytesReadCt == 0) 
                     pm_error("Attempt to read a raw PBM image row, but "
                              "no more rows left in file.");
                 else
@@ -197,7 +197,7 @@ pbm_readpbmrow_packed(FILE *          const fileP,
     break;
     
     default:
-        pm_error( "Internal error in pbm_readpbmrow_packed." );
+        pm_error("Internal error in pbm_readpbmrow_packed.");
     }
 }
 
