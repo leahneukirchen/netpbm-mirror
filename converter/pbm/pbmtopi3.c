@@ -1,4 +1,4 @@
-/* pbmtopi3.c - read a portable bitmap and produce a Atari Degas .pi3 file
+/* pbmtopi3.c - read a PBM image and produce a Atari Degas .pi3 file
 **
 ** Module created from other pbmplus tools by David Beckemeyer.
 **
@@ -13,105 +13,85 @@
 */
 
 #include <stdio.h>
+#include "pm_c_util.h"
 #include "pbm.h"
 
-static void putinit ARGS(( void ));
-static void putbit ARGS(( bit b ));
-static void putrest ARGS(( void ));
-static void putitem ARGS(( void ));
+
+
+static void
+putinit(FILE * const ofP)  {
+
+    unsigned int i;
+
+    pm_writebigshort(ofP, (short) 2);
+    pm_writebigshort(ofP, (short) 0x777);
+
+    for (i = 1; i < 16; ++i) {
+        pm_writebigshort (ofP, (short) 0);
+        pm_writebigshort (ofP, (short) 0);
+    }
+}
+
+
 
 int
-main( argc, argv )
-    int argc;
-    char* argv[];
-    {
-    FILE* ifp;
-    bit* bitrow;
-    register bit* bP;
-    int rows, cols, format, padright, row, col;
+main(int argc, const char ** argv) {
 
+    unsigned int const outRows = 400;
+    unsigned int const outCols = 640;
+    unsigned int const outColByteCt = pbm_packed_bytes(outCols);
 
-    pbm_init( &argc, argv );
+    FILE * ifP;
 
-    if ( argc > 2 )
-	pm_usage( "[pbmfile]" );
+    int inRows, inCols, format;
+    unsigned int row;
+    unsigned int inColByteCt;
+    unsigned int i;
+    bit * bitrow;
 
-    if ( argc == 2 )
-	ifp = pm_openr( argv[1] );
-    else
-	ifp = stdin;
+    pm_proginit(&argc, argv);
 
-    pbm_readpbminit( ifp, &cols, &rows, &format );
-    if (cols > 640)
-	cols = 640;
-    if (rows > 400)
-	rows = 400;
-    bitrow = pbm_allocrow( cols );
+    if (argc-1 < 1)
+        ifP = stdin;
+    else  {
+        ifP = pm_openr(argv[1]);
+
+        if (argc-1 > 1)
+            pm_error("Too many arguments.  The only possible argument "
+                     "is the input file name");
+    }
+
+    pbm_readpbminit(ifP, &inCols, &inRows, &format);
+
+    inColByteCt = pbm_packed_bytes(inCols);
+
+    bitrow = pbm_allocrow_packed(MAX(outCols, inCols));
     
-    /* Compute padding to round cols up to 640 */
-    padright = 640 - cols;
+    /* Add padding to round cols up to 640 */
+    for (i = inColByteCt; i < outColByteCt; ++i)
+        bitrow[i] = 0x00;
 
-    putinit( );
-    for ( row = 0; row < rows; ++row )
-	{
-	pbm_readpbmrow( ifp, bitrow, cols, format );
-        for ( col = 0, bP = bitrow; col < cols; ++col, ++bP )
-	    putbit( *bP );
-	for ( col = 0; col < padright; ++col )
-	    putbit( 0 );
-        }
-    while (row++ < 400)
-	for ( col = 0; col < 640; ++col)
-	    putbit( 0 );
+    putinit(stdout);
 
-    pm_close( ifp );
+    for (row = 0; row < inRows; ++row) {
+        pbm_readpbmrow_packed(ifP, bitrow, inCols, format);
+        pbm_cleanrowend_packed(bitrow, inCols);
+        fwrite (bitrow, outColByteCt, 1, stdout);
+    }
+    pm_close(ifP);
 
-    putrest( );
+    if (row < outRows)  {
+        unsigned int i;
 
-    exit( 0 );
+        /* Clear entire row */
+        for (i = 0; i < outColByteCt; ++i)
+            bitrow[i] = 0x00;
+
+        while (row++ < outRows)
+            fwrite(bitrow, outColByteCt, 1, stdout);
     }
 
-static char item;
-static short bitsperitem, bitshift;
+    pbm_freerow_packed(bitrow);
 
-static void
-putinit( )
-    {
-    int i;
-    if (pm_writebigshort (stdout, (short) 2) == -1
-	|| pm_writebigshort (stdout, (short) 0x777) == -1)
-      pm_error ("write error");
-    for (i = 1; i < 16; i++)
-      if (pm_writebigshort (stdout, (short) 0) == -1)
-	pm_error ("write error");
-    item = 0;
-    bitsperitem = 0;
-    bitshift = 7;
-    }
-
-static void
-putbit( bit b )
-    {
-    if (bitsperitem == 8)
-	putitem( );
-    ++bitsperitem;
-    if ( b == PBM_BLACK )
-	item += 1 << bitshift;
-    --bitshift;
-    }
-
-static void
-putrest( )
-    {
-    if ( bitsperitem > 0 )
-	putitem( );
-    }
-
-static void
-putitem( )
-    {
-    putc (item, stdout);
-    item = 0;
-    bitsperitem = 0;
-    bitshift = 7;
-    }
+    return 0;
+}
