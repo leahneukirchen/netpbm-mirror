@@ -19,25 +19,10 @@
 
 #include "pm.h"
 #include "pbm.h"
+#include "bitreverse.h"
 
 #define YBM_MAGIC  ( ( '!' << 8 ) | '!' )
 #define INT16MAX 32767
-
-static long item;
-static int bitsperitem, bitshift;
-
-
-static void
-putitem(void) {
-
-    pm_writebigshort(stdout, item);
-
-    item        = 0;
-    bitsperitem = 0;
-    bitshift    = 0;
-}
-
-
 
 static void
 putinit(int const cols,
@@ -46,35 +31,6 @@ putinit(int const cols,
     pm_writebigshort(stdout, YBM_MAGIC);
     pm_writebigshort(stdout, cols);
     pm_writebigshort(stdout, rows);
-
-    item        = 0;
-    bitsperitem = 0;
-    bitshift    = 0;
-}
-
-
-
-static void
-putbit(bit const b) {
-
-    if (bitsperitem == 16)
-        putitem();
-
-    ++bitsperitem;
-
-    if (b == PBM_BLACK)
-        item += 1 << bitshift;
-
-    ++bitshift;
-}
-
-
-
-static void
-putrest(void) {
-
-    if (bitsperitem > 0)
-        putitem();
 }
 
 
@@ -87,51 +43,55 @@ main(int argc, const char *argv[]) {
     int rows;
     int cols;
     int format;
-    unsigned int padright;
     unsigned int row;
-    const char * inputFile;
+    const char * inputFileName;
 
     pm_proginit(&argc, argv);
 
     if (argc-1 < 1)
-        inputFile = "-";
+        inputFileName = "-";
     else {
-        inputFile = argv[1];
+        inputFileName = argv[1];
 
         if (argc-1 > 2)
             pm_error("Too many arguments.  The only argument is the optional "
                      "input file name");
     }
 
-    ifP = pm_openr(inputFile);
+    ifP = pm_openr(inputFileName);
 
     pbm_readpbminit(ifP, &cols, &rows, &format);
 
     if (rows > INT16MAX || cols > INT16MAX)
         pm_error("Input image is too large.");
 
-    bitrow = pbm_allocrow(cols);
+    bitrow = pbm_allocrow_packed(cols + 8);
     
-    /* Compute padding to round cols up to the nearest multiple of 16. */
-    padright = ((cols + 15) / 16) * 16 - cols;
-
     putinit(cols, rows);
+
+    bitrow[pbm_packed_bytes(cols + 8) - 1] = 0x00;
     for (row = 0; row < rows; ++row) {
-        unsigned int col;
+        uint16_t *   const itemrow = (uint16_t *) bitrow;
+        unsigned int const itemCt   = (cols + 15) / 16;
 
-        pbm_readpbmrow(ifP, bitrow, cols, format);
+        unsigned int i;
 
-        for (col = 0; col < cols; ++col)
-            putbit(bitrow[col]);
+        pbm_readpbmrow_packed(ifP, bitrow, cols, format);
+        pbm_cleanrowend_packed(bitrow, cols);
 
-        for (col = 0; col < padright; ++col)
-            putbit(0);
+        for (i = 0; i < pbm_packed_bytes(cols); ++i)
+            bitrow[i] = bitreverse[bitrow[i]];
+
+        for (i = 0; i < itemCt; ++i)
+            pm_writebigshort(stdout, itemrow[i]);
     }
+
+    pbm_freerow_packed(bitrow);
 
     if (ifP != stdin)
         fclose(ifP);
 
-    putrest();
-
     return 0;
 }
+
+
