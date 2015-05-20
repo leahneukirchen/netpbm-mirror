@@ -12,14 +12,9 @@
 
 #include "pm.h"
 #include "pbm.h"
+#include "bitreverse.h"
 
 static short const ybmMagic = ( ( '!' << 8 ) | '!' );
-
-
-
-
-static int item;
-static int bitsInBuffer, bitshift;
 
 
 
@@ -27,8 +22,7 @@ static void
 getinit(FILE *  const ifP,
         short * const colsP,
         short * const rowsP,
-        short * const depthP,
-        short * const padrightP) {
+        short * const depthP) {
 
     short magic;
     int rc;
@@ -49,31 +43,10 @@ getinit(FILE *  const ifP,
         pm_error("EOF / read error");
 
     *depthP = 1;
-    *padrightP = ((*colsP + 15) / 16) * 16 - *colsP;
 }
 
 
 
-static bit
-getbit(FILE * const ifP) {
-
-    bit b;
-
-    if (bitsInBuffer == 0) {
-        item = (getc(ifP) << 8) | (getc(ifP) << 0);
-
-        if (item == EOF)
-            pm_error("EOF / read error");
-
-        bitsInBuffer = 16;
-        bitshift = 0;
-    }
-
-    b = ((item >> bitshift) & 1 ) ? PBM_BLACK : PBM_WHITE;
-    --bitsInBuffer;
-    ++bitshift;
-    return b;
-}
 
 
 
@@ -82,7 +55,7 @@ main(int argc, const char * argv[]) {
 
     FILE * ifP;
     bit * bitrow;
-    short rows, cols, padright;
+    short rows, cols;
     unsigned int row;
     short depth;
     const char * inputFile;
@@ -94,36 +67,42 @@ main(int argc, const char * argv[]) {
     else {
         inputFile = argv[1];
 
-        if (argc-1 > 2)
+        if (argc-1 > 1)
             pm_error("Too many arguments.  The only argument is the optional "
                      "input file name");
     }
 
     ifP = pm_openr(inputFile);
 
-    bitsInBuffer = 0;
-
-    getinit(ifP, &cols, &rows, &depth, &padright);
+    getinit(ifP, &cols, &rows, &depth);
     if (depth != 1)
         pm_error("YBM file has depth of %u, must be 1", (unsigned)depth);
     
     pbm_writepbminit(stdout, cols, rows, 0);
 
-    bitrow = pbm_allocrow(cols);
+    bitrow = pbm_allocrow_packed(cols + 8);
 
     for (row = 0; row < rows; ++row) {
+        uint16_t *   const itemrow = (uint16_t *) bitrow;
+        unsigned int const itemCt  = (cols + 15) / 16;
+
+        unsigned int i;
+
         /* Get raster. */
-        unsigned int col;
+        for (i = 0; i < itemCt; ++i) {
+            short int item;
+            pm_readbigshort(ifP, &item);
+            itemrow[i] = (uint16_t) item; 
+        }
 
-        for (col = 0; col < cols; ++col)
-            bitrow[col] = getbit(ifP);
+        for (i = 0; i < pbm_packed_bytes(cols); ++i)
+            bitrow[i] = bitreverse[bitrow[i]];
 
-        /* Discard line padding */
-        for (col = 0; col < padright; ++col)
-            getbit(ifP);
-        pbm_writepbmrow(stdout, bitrow, cols, 0);
+        pbm_cleanrowend_packed(bitrow, cols);
+        pbm_writepbmrow_packed(stdout, bitrow, cols, 0);
     }
 
+    pbm_freerow_packed(bitrow);
     pm_close(ifP);
     pm_close(stdout);
 
