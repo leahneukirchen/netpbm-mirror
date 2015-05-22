@@ -108,7 +108,7 @@ adobe_dng_load_raw_lj(Image const image) {
             twide = raw_width-tcol;
 
         for (jrow=0; jrow < jh.high; jrow++) {
-            ljpeg_row (&jh);
+            ljpeg_row(ifp, &jh);
             for (rp=jh.row, jcol=0; jcol < twide; jcol++)
                 adobeCopyPixel(image,
                                trow+jrow, tcol+jcol, &rp, use_secondary);
@@ -170,7 +170,7 @@ nikon_compressed_load_raw(Image const image) {
     for (row=0; row < height; row++)
         for (col=0; col < raw_width; col++)
         {
-            diff = ljpeg_diff (first_decode);
+            diff = ljpeg_diff (ifp, first_decode);
             if (col < 2) {
                 i = 2*(row & 1) + (col & 1);
                 vpred[i] += diff;
