@@ -24,7 +24,7 @@ struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *inputFilename;  /* Filename of input file */
+    const char * inputFilename;  /* Filename of input file */
     unsigned int pseudodepth;
     unsigned int directcolor;
 };
@@ -476,10 +476,10 @@ main(int argc, char * argv[]) {
     if (streq(cmdline.inputFilename, "-"))
         dumpname = "stdin";
     else {
-        if (strlen(cmdline.inputFileSpec) > XWDVAL_MAX - sizeof(h11) - 1)
+        if (strlen(cmdline.inputFilename) > XWDVAL_MAX - sizeof(h11) - 1)
             pm_error("Input file name is ridiculously long.");
         else
-            dumpname = cmdline.inputFileSpec;
+            dumpname = cmdline.inputFilename;
     }
 
     setupX11Header(&h11, dumpname, cols, rows, format, 
