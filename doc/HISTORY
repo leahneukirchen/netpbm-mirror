@@ -10,6 +10,9 @@ not yet  BJH  Release 10.71.00
               negative values (should be clipped to zero).  Introduced in
               Netpbm 10.68 (September 2014).
 
+              cameratopam: Fix arithmetic underflow in JPEG processing;
+              unknown effect.
+
               pbmtoxbm: Fix bug: crash with zero width input.  Broken in
               Netpbm 10.37 (December 2006).
 

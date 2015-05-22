@@ -23,7 +23,7 @@ int
 ljpeg_start(FILE *         const ifP,
             struct jhead * const jhP) {
 
-    int i, tag, len;
+    int i, tag;
     unsigned char data[256], *dp;
 
     init_decoder();
@@ -32,22 +32,31 @@ ljpeg_start(FILE *         const ifP,
     fread (data, 2, 1, ifP);
     if (data[0] != 0xff || data[1] != 0xd8) return 0;
     do {
+        unsigned int len;
+
         fread (data, 2, 2, ifP);
         tag =  data[0] << 8 | data[1];
-        len = (data[2] << 8 | data[3]) - 2;
-        if (tag <= 0xff00 || len > 255) return 0;
-        fread (data, 1, len, ifP);
-        switch (tag) {
-        case 0xffc3:
-            jhP->bits = data[0];
-            jhP->high = data[1] << 8 | data[2];
-            jhP->wide = data[3] << 8 | data[4];
-            jhP->clrs = data[5];
-            break;
-        case 0xffc4:
-            for (dp = data; dp < data+len && *dp < 4; ) {
-                jhP->huff[*dp] = free_decode;
-                dp = make_decoder (++dp, 0);
+        len = data[2] << 8 | data[3];
+
+        if (len < 2)
+            pm_error("Length field is %u; must be at least 2", len);
+        else {
+            unsigned int const dataLen = len - 2;
+
+            if (tag <= 0xff00 || dataLen > 255) return 0;
+            fread (data, 1, dataLen, ifP);
+            switch (tag) {
+            case 0xffc3:
+                jhP->bits = data[0];
+                jhP->high = data[1] << 8 | data[2];
+                jhP->wide = data[3] << 8 | data[4];
+                jhP->clrs = data[5];
+                break;
+            case 0xffc4:
+                for (dp = data; dp < data + dataLen && *dp < 4; ) {
+                    jhP->huff[*dp] = free_decode;
+                    dp = make_decoder (++dp, 0);
+                }
             }
         }
     } while (tag != 0xffda);
