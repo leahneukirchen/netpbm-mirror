@@ -22,6 +22,10 @@ not yet  BJH  Release 10.71.00
               pbmtoxbm: Fix bug: crash with zero width input.  Broken in
               Netpbm 10.37 (December 2006).
 
+              pbmtopi3: Fix bug: wrong output when input is higher or wider
+              than 640 pixels.  Always broken (pbmtopi3 was new in Netpbm 1
+              (September 1991).
+
               st4topgm: Fix bug: with no argument, uses file named "'" instead
               of Standard Input.  Always present (st45topgm was new in Netpbm
               10.70 (March 2015).
