@@ -897,49 +897,59 @@ pm_stripeq(const char * const comparand,
 
   Return 1 (true) if the strings are identical; 0 (false) otherwise.
 -----------------------------------------------------------------------------*/
-    char *p, *q, *px, *qx;
-    char equal;
+    const char * p;
+    const char * q;
+    const char * px;
+    const char * qx;
+    bool equal;
   
     /* Make p and q point to the first non-blank character in each string.
-     If there are no non-blank characters, make them point to the terminating
-     NULL.
-     */
+       If there are no non-blank characters, make them point to the terminating
+       NUL.
+    */
 
-    p = (char *) comparand;
-    while (ISSPACE(*p)) p++;
-    q = (char *) comparator;
-    while (ISSPACE(*q)) q++;
+    p = &comparand[0];
+    while (ISSPACE(*p))
+        p++;
+    q = &comparator[0];
+    while (ISSPACE(*q))
+        q++;
 
     /* Make px and qx point to the last non-blank character in each string.
        If there are no nonblank characters (which implies the string is
-       null), make them point to the terminating NULL.
+       null), make them point to the terminating NUL.
     */
 
-    if (*p == '\0') px = p;
+    if (*p == '\0')
+        px = p;
     else {
         px = p + strlen(p) - 1;
-        while (ISSPACE(*px)) px--;
+        while (ISSPACE(*px))
+            --px;
     }
 
-    if (*q == '\0') qx = q;
+    if (*q == '\0')
+        qx = q;
     else {
         qx = q + strlen(q) - 1;
-        while (ISSPACE(*qx)) qx--;
+        while (ISSPACE(*qx))
+            --qx;
     }
 
-    equal = 1;   /* initial assumption */
-  
-    /* If the stripped strings aren't the same length, 
-       we know they aren't equal 
-     */
-    if (px - p != qx - q) equal = 0;
-
-
-    while (p <= px) {
-        if (*p != *q) equal = 0;
-        p++; q++;
+    if (px - p != qx - q) {
+        /* The stripped strings aren't the same length, so we know they aren't
+           equal.
+        */
+        equal = false;
+    } else {
+        /* Move p and q through the nonblank characters, comparing. */
+        for (equal = true; p <= px; ++p, ++q) {
+            assert(q <= qx);  /* Because stripped strings are same length */
+            if (*p != *q)
+                equal = false;
+        }
     }
-    return equal;
+    return equal ? 1 : 0;
 }
 
 

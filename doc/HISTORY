@@ -6,6 +6,12 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.71.00
 
+              libnetpbm: pm_stripeq: fix bug: wild pointer access when
+              comparator is shorter than comparand.  Doesn't affect function,
+              but could cause crash or privacy exposure.  Affects reading of a
+              PAM file by any program.  Introduced in one of Netpbm 10.27
+              (March 2005) through 10.35 (August 2006).
+
               pnmconvol: Fix bug: wrong output for pixels that convolve to
               negative values (should be clipped to zero).  Introduced in
               Netpbm 10.68 (September 2014).
@@ -1018,7 +1024,7 @@ not yet  BJH  Release 10.71.00
               'pnmconvol'.  Introduced in Netpbm 10.50.  Thanks Prophet of the
               Way <afu@wta.att.ne.jp>.
 
-              pamscale: fix -reduce.  Introduced in Netpbm 10.27.
+              pamscale: fix -reduce.  Introduced in Netpbm 10.27 (March 2005).
 
               pampaintspill: fix incorrect output.
 
@@ -2449,7 +2455,7 @@ not yet  BJH  Release 10.71.00
               has pointer size != word size and uses the general case code.
 
               libnetpbm: fix basic pm_readlittleshort() bug introduced
-              in 10.27.  Affects mdatopbm, rawtopgm, lispmtopgm,
+              in 10.27 (March 2005).  Affects mdatopbm, rawtopgm, lispmtopgm,
               pcxtoppm, winicontoppm, bmptopnm, sirtopnm, xwdtopnm,
               cameratopam.
 
@@ -2494,8 +2500,9 @@ not yet  BJH  Release 10.71.00
               ppmtompeg: fix insecure temp file.  Thanks Alexey
               Tourbin <at@altlinux.ru>.
 
-              libnetpbm: fix basic readlittlelong() bug introduced in 10.27.
-              Affects xwdtopnm, bmptopnm, winicontoppm, lispmtopgm.
+              libnetpbm: fix basic readlittlelong() bug introduced in 10.27
+              (March 2005).  Affects xwdtopnm, bmptopnm, winicontoppm,
+              lispmtopgm.
 
               pbmtext/libnetpbm: fix crash with -builtin=fixed.
 
