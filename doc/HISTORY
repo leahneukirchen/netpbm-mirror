@@ -4,6 +4,62 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+15.05.24 BJH  Release 10.47.56
+
+              libnetpbm: pm_stripeq: fix bug: wild pointer access when
+              comparator is shorter than comparand.  Doesn't affect function,
+              but could cause crash or privacy exposure.  Affects reading of a
+              PAM file by any program.  Introduced in one of Netpbm 10.27
+              (March 2005) through 10.35 (August 2006).
+
+              pbmtog3: Fix buffer overrun.  Introduced in Netpbm 10.23
+              (July 2004).
+
+              pbmtog3: Fix buffer overrun.  Introduced in Netpbm 10.23
+              (July 2004).
+
+              cameratopam: Fix arithmetic underflow in JPEG processing;
+              unknown effect.
+
+              pbmtoxbm: Fix bug: crash with zero width input.  Broken in
+              Netpbm 10.37 (December 2006).
+
+              sbigtopgm: fix buffer overrun with invalid input image.  Always
+              present (sbigtopgm was new in Netpbm 8.3 (March 2000)).
+
+              pnmtorle: Fix buffer overrun with long file name.  Always
+              present.  (pnmtorle was new to Netpbm in Netpbm 9.0 (April
+              2000)).
+
+              pbmtopk: Fix buffer overrun with long file name.  Always
+              present.  (pbmtopk was new in Netpbm 1 (March 1991)).
+
+              pktopbm: Fix buffer overrun with long file name.  Always
+              present.  (pbmtopk was new in Netpbm 1 (March 1991)).
+
+              ppmtoyuvsplit: Fix buffer overrun with long file name.  Always
+              present.  (New in Netpbm 1 (March 1991)).
+
+              pbmtopi3: Fix bug: wrong output when input is higher or wider
+              than 640 pixels.  Always broken (pbmtopi3 was new in September
+              1991).
+
+              pbmtomgr: Fix incorrect output when input is too large (must be
+              at most 4095 pixels high or wide).
+
+              pbmtomacp: fix wild pointer dereference with -b larger than
+              image height.  Always broken.  (pbmtomacp was new in X.V11R3
+              (March 1988).
+
+              ppmtorgb3: Fix buffer overflow with long input file name.
+              Always present.  (ppmtorgb3 was new in X.V11R4 (November 1989).
+
+              pbmtoatk: Fix crash with very long input file name argument.
+              Always broken (pbmtoatk was new in 1991).
+
+              Build: fix 'make package' where config.mk sets a subdirectory
+              other than 'man' for the manual.
+
 15.03.29 BJH  Release 10.47.55
 
               pamtosvg: fix use of unset variable; probably results in a

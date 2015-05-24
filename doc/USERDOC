@@ -18,22 +18,25 @@ so you can use the current manual with old Netpbm code.
 INSTALLING A LOCAL COPY OF DOCUMENTATION
 ----------------------------------------
 
-If accessing the manual on the World Wide Web is not convenient for
-you (for example, if you want to access it from a computer that is not
-always connected to the Internet), just make a local copy of the web
-site files.  An obvious way to do that is just to copy the web site
-with GNU Wget:
+If accessing the manual on the World Wide Web is not convenient for you (for
+example, if you want to access it from a computer that is not always connected
+to the Internet), just make a local copy of the HTML files.
 
-  wget --recursive --relative http://netpbm.sourceforge.net/doc/
+You can get the files from the Subversion repository using the Subversion
+client program 'svn':
 
-However, a somewhat cleaner way is to get the files from the
-Subversion repository using the Subversion client program 'svn':
-
-  URL=https://netpbm.svn.sourceforge.net/svnroot/netpbm/userguide
+  URL=https://svn.code.sf.net/p/netpbm/code/userguide
   svn export $URL
 
 This creates a directory "userguide" in your current directory containing
 all the same files that are on the web site.
+
+
+An apparent alternative is just to copy the web site with something like GNU
+Wget.  However, the Sourceforge web server has limitations on how much you can
+download.  In a February 2012 experiment, Sourceforge started refusing HTTP
+requests (with an Internal Server Error indication and a message saying there
+had been too many requests) before all the files could be fetched.
 
 
 GETTING COMMAND HELP WITH A "MAN" COMMAND

@@ -212,7 +212,6 @@ main(int argc, char **  argv) {
 
     const char * pnmname;
     const char * outname;
-    static char filename[BUFSIZ];
     int oflag;
 
     pnm_init(&argc, argv);
@@ -239,11 +238,9 @@ main(int argc, char **  argv) {
 
     /* Open the file. */
     if (pnmname == NULL) {
-        strcpy(filename, "stdin");
         fp = pm_openr("-");
     } else {
-        strcpy(filename, pnmname);
-        fp = pm_openr(filename);
+        fp = pm_openr(pnmname);
     }
 
     hdr.rle_file = rle_open_f( hdr.cmd, outname, "wb" );

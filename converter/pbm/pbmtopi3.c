@@ -14,6 +14,7 @@
 
 #include <stdio.h>
 #include "pbm.h"
+#include "pm_c_util.h"
 
 static void putinit ARGS(( void ));
 static void putbit ARGS(( bit b ));
@@ -28,8 +29,9 @@ main( argc, argv )
     FILE* ifp;
     bit* bitrow;
     register bit* bP;
-    int rows, cols, format, padright, row, col;
-
+    int inrows, incols, format, padright, row, col;
+    int const outcols = 640;
+    int const outrows = 400;
 
     pbm_init( &argc, argv );
 
@@ -41,27 +43,26 @@ main( argc, argv )
     else
 	ifp = stdin;
 
-    pbm_readpbminit( ifp, &cols, &rows, &format );
-    if (cols > 640)
-	cols = 640;
-    if (rows > 400)
-	rows = 400;
-    bitrow = pbm_allocrow( cols );
-    
+    pbm_readpbminit( ifp, &incols, &inrows, &format );
+    bitrow = pbm_allocrow( MAX(incols, outcols) );
+
     /* Compute padding to round cols up to 640 */
-    padright = 640 - cols;
+    if(incols < outcols)
+        padright = outcols - incols;
+    else 
+        padright = 0;
 
     putinit( );
-    for ( row = 0; row < rows; ++row )
+    for ( row = 0; row < MIN(inrows, outrows); ++row )
 	{
-	pbm_readpbmrow( ifp, bitrow, cols, format );
-        for ( col = 0, bP = bitrow; col < cols; ++col, ++bP )
+	pbm_readpbmrow( ifp, bitrow, incols, format );
+        for ( col = 0, bP = bitrow; col < MIN(incols, outcols); ++col, ++bP )
 	    putbit( *bP );
 	for ( col = 0; col < padright; ++col )
 	    putbit( 0 );
         }
-    while (row++ < 400)
-	for ( col = 0; col < 640; ++col)
+    while (row++ < outrows)
+	for ( col = 0; col < outcols; ++col)
 	    putbit( 0 );
 
     pm_close( ifp );

@@ -868,7 +868,7 @@ stripeq(const char * const comparand,
      */
     if (px - p != qx - q) equal = 0;
 
-
+    else
     while (p <= px) {
         if (*p != *q) equal = 0;
         p++; q++;

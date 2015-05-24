@@ -344,9 +344,9 @@ install.lib:
 endif
 
 .PHONY: install.manweb
-install.manweb: $(PKGDIR)/man/web/netpbm.url $(PKGDIR)/bin/doc.url
+install.manweb: $(PKGDIR)/$(PKGMANDIR)/web/netpbm.url $(PKGDIR)/bin/doc.url
 
-$(PKGDIR)/man/web/netpbm.url: $(PKGDIR)/man/web
+$(PKGDIR)/$(PKGMANDIR)/web/netpbm.url: $(PKGDIR)/$(PKGMANDIR)/web
 	echo "$(NETPBM_DOCURL)" > $@
 	chmod $(INSTALL_PERM_MAN) $@
 

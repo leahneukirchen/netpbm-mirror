@@ -61,7 +61,7 @@ int main(argc, argv)
     register int col;
     int maxval;
     int comp, rows, cols;
-    char header[SBIG_HEADER_LENGTH];
+    char header[SBIG_HEADER_LENGTH+1];
     char *hdr;
     static char camera[80] = "ST-?";
 
@@ -82,6 +82,7 @@ int main(argc, argv)
     if (fread(header, SBIG_HEADER_LENGTH, 1, ifp) < 1) {
         pm_error("error reading SBIG file header");
     }
+    header[SBIG_HEADER_LENGTH] = '\0';
 
     /*	Walk through the header and parse relevant parameters.	*/
 
@@ -127,7 +128,7 @@ int main(argc, argv)
 
 	    if (ep != NULL) {
 		*ep = 0;
-		strcpy(camera, hdr);
+		STRSCPY(camera, hdr);
                 *ep = ' ';
 	    }
 	}
