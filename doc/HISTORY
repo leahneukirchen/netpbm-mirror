@@ -25,6 +25,10 @@ not yet  BJH  Release 10.71.00
               pbmtoxbm: Fix bug: crash with zero width input.  Broken in
               Netpbm 10.37 (December 2006).
 
+              pnmtorle: Fix buffer overrun with long file name.  Always
+              present.  (pnmtorle was new to Netpbm in Netpbm 9.0 (April
+              2000)).
+
               pbmtopi3: Fix bug: wrong output when input is higher or wider
               than 640 pixels.  Always broken (pbmtopi3 was new in Netpbm 1
               (September 1991).
