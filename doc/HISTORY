@@ -16,6 +16,9 @@ not yet  BJH  Release 10.71.00
               negative values (should be clipped to zero).  Introduced in
               Netpbm 10.68 (September 2014).
 
+              pbmtog3: Fix buffer overrun.  Introduced in Netpbm 10.23
+              (July 2004).
+
               cameratopam: Fix arithmetic underflow in JPEG processing;
               unknown effect.
 
