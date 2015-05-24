@@ -32,6 +32,9 @@ not yet  BJH  Release 10.71.00
               pbmtopk: Fix buffer overrun with long file name.  Always
               present.  (pbmtopk was new in Netpbm 1 (March 1991)).
 
+              pktopbm: Fix buffer overrun with long file name.  Always
+              present.  (pbmtopk was new in Netpbm 1 (March 1991)).
+
               pbmtopi3: Fix bug: wrong output when input is higher or wider
               than 640 pixels.  Always broken (pbmtopi3 was new in September
               1991).
