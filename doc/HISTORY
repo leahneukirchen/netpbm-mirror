@@ -80,6 +80,8 @@ not yet  BJH  Release 10.71.00
               Build: fix 'make package' where config.mk sets a subdirectory
               other than 'man' for the manual.
 
+              Build: improve pointer man page text.
+
 15.03.29 BJH  Release 10.70.00
 
               Add st4topgm, pgmtost4.
