@@ -127,8 +127,8 @@ struct SbigHeader {
     unsigned int cols;
     unsigned int maxval;
     bool isCompressed;
-    bool haveCameraType;
-    char cameraType[80];
+    const char * cameraType;
+        /* Null means information not in header */
 };
 
 
@@ -141,14 +141,18 @@ readSbigHeader(FILE *              const ifP,
     bool gotCompression;
     bool gotWidth;
     bool gotHeight;
-    char buffer[SBIG_HEADER_LENGTH];
+    char * buffer;  /* malloced */
     char * cursor;
     bool endOfHeader;
+
+    MALLOCARRAY_NOFAIL(buffer, SBIG_HEADER_LENGTH + 1);
 
     rc = fread(buffer, SBIG_HEADER_LENGTH, 1, ifP);
 
     if (rc < 1)
         pm_error("error reading SBIG file header");
+
+    buffer[SBIG_HEADER_LENGTH] = '\0';
 
     /*  The SBIG header specification equivalent to maxval is
         "Sat_level", the saturation level of the image.  This
@@ -178,7 +182,7 @@ readSbigHeader(FILE *              const ifP,
     gotHeight      = false;  /* initial value */
 
     sbigHeaderP->maxval = 65535;  /* initial assumption */
-    sbigHeaderP->haveCameraType = false;  /* initial assumption */
+    sbigHeaderP->cameraType = NULL;  /* initial assumption */
 
     for (cursor = &buffer[0], endOfHeader = false; !endOfHeader;) {
         char * const cp = strchr(cursor, '\n');
@@ -193,8 +197,7 @@ readSbigHeader(FILE *              const ifP,
 
             if (ep != NULL) {
                 *ep = '\0';
-                strcpy(sbigHeaderP->cameraType, cursor);
-                sbigHeaderP->haveCameraType = true;
+                sbigHeaderP->cameraType = pm_strdup(cursor);
                 *ep = ' ';
             }
         }
@@ -228,6 +231,15 @@ readSbigHeader(FILE *              const ifP,
     if (!gotWidth)
         pm_error("required 'width=' specification missing "
                  "from SBIG file header");
+}
+
+
+
+static void
+termSbigHeader(struct SbigHeader const sbigHeader) {
+
+    if (sbigHeader.cameraType)
+        pm_strfree(sbigHeader.cameraType);
 }
 
 
@@ -306,7 +318,7 @@ main(int argc, const char ** argv) {
     readSbigHeader(ifP, &hdr);
 
     pm_message("SBIG '%s' %ux%u %s image, saturation level = %u",
-               (hdr.haveCameraType ? hdr.cameraType : "ST-?"),
+               (hdr.cameraType ? hdr.cameraType : "ST-?"),
                hdr.cols, hdr.rows,
                hdr.isCompressed ? "compressed" : "uncompressed",
                hdr.maxval);
@@ -319,6 +331,8 @@ main(int argc, const char ** argv) {
     pgm_writepgminit(stdout, hdr.cols, hdr.rows, hdr.maxval, 0);
 
     writeRaster(ifP, hdr, stdout);
+
+    termSbigHeader(hdr);
 
     pm_close(ifP);
     pm_close(stdout);
