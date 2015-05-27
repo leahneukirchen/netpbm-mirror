@@ -29,7 +29,39 @@
 #endif
 
 #include <string.h>
+#include "nstring.h"
 #include "ppm.h"
+
+
+
+struct FileNameSet {
+    const char * u;
+    const char * v;
+    const char * y;
+};
+
+
+
+static void
+makeOutputFileName(const char *         const baseName,
+                   struct FileNameSet * const fnameP) {
+
+    pm_asprintf(&fnameP->u, "%s.U", baseName);
+    pm_asprintf(&fnameP->v, "%s.V", baseName);
+    pm_asprintf(&fnameP->y, "%s.Y", baseName);
+}
+
+
+
+static void
+termFileNameSet(struct FileNameSet const fname) {
+
+    pm_strfree(fname.u);
+    pm_strfree(fname.v);
+    pm_strfree(fname.y);
+}
+
+
 
 int
 main(int argc, const char ** argv) {
@@ -42,7 +74,8 @@ main(int argc, const char ** argv) {
     unsigned int row;
     pixval maxval;
     unsigned char *y1buf, *y2buf, *ubuf, *vbuf;
-    char ufname[256], vfname[256], yfname[256];
+    struct FileNameSet fname;
+        /* Output file names - .U, .V, .Y */
 
     pm_proginit(&argc, argv);
 
@@ -56,17 +89,13 @@ main(int argc, const char ** argv) {
     else
         ifP = stdin;
 
-    strcpy(ufname,argv[1]);
-    strcpy(vfname,argv[1]);
-    strcpy(yfname,argv[1]);
+    makeOutputFileName(argv[1], &fname);
 
-    strcat(ufname,".U");
-    strcat(vfname,".V");
-    strcat(yfname,".Y");
+    uf = pm_openw(fname.u);
+    vf = pm_openw(fname.v);
+    yf = pm_openw(fname.y);
 
-    uf = pm_openw(ufname);
-    vf = pm_openw(vfname);
-    yf = pm_openw(yfname);
+    termFileNameSet(fname);
 
     ppm_readppminit(ifP, &cols, &rows, &maxval, &format);
 

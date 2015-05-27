@@ -127,8 +127,8 @@ struct SbigHeader {
     unsigned int cols;
     unsigned int maxval;
     bool isCompressed;
-    bool haveCameraType;
-    char cameraType[80];
+    const char * cameraType;
+        /* Null means information not in header */
 };
 
 
@@ -141,14 +141,18 @@ readSbigHeader(FILE *              const ifP,
     bool gotCompression;
     bool gotWidth;
     bool gotHeight;
-    char buffer[SBIG_HEADER_LENGTH];
+    char * buffer;  /* malloced */
     char * cursor;
     bool endOfHeader;
+
+    MALLOCARRAY_NOFAIL(buffer, SBIG_HEADER_LENGTH + 1);
 
     rc = fread(buffer, SBIG_HEADER_LENGTH, 1, ifP);
 
     if (rc < 1)
         pm_error("error reading SBIG file header");
+
+    buffer[SBIG_HEADER_LENGTH] = '\0';
 
     /*  The SBIG header specification equivalent to maxval is
         "Sat_level", the saturation level of the image.  This
@@ -171,6 +175,12 @@ readSbigHeader(FILE *              const ifP,
         converse, pixels having values greater than maxval, results in
         an invalid file which may cause problems in programs which
         attempt to process it.
+
+         According to the official specification, the camera type name is the
+         first item in the header, and may or may not start with "ST-".  But
+         this program has historically had an odd method of detecting camera
+         type, which allows any string starting with "ST-" anywhere in the
+         header, and for now we leave that undisturbed.  2015.05.27.
     */
 
     gotCompression = false;  /* initial value */
@@ -178,7 +188,7 @@ readSbigHeader(FILE *              const ifP,
     gotHeight      = false;  /* initial value */
 
     sbigHeaderP->maxval = 65535;  /* initial assumption */
-    sbigHeaderP->haveCameraType = false;  /* initial assumption */
+    sbigHeaderP->cameraType = NULL;  /* initial assumption */
 
     for (cursor = &buffer[0], endOfHeader = false; !endOfHeader;) {
         char * const cp = strchr(cursor, '\n');
@@ -188,13 +198,14 @@ readSbigHeader(FILE *              const ifP,
                      (unsigned)(cursor - &buffer[0]));
         }
         *cp = '\0';
-        if (strneq(cursor, "ST-", 3)) {
+        if (strneq(cursor, "ST-", 3) ||
+            (cursor == &buffer[0] && strstr(cursor,"Image") != NULL)) {
+
             char * const ep = strchr(cursor + 3, ' ');
 
             if (ep != NULL) {
                 *ep = '\0';
-                strcpy(sbigHeaderP->cameraType, cursor);
-                sbigHeaderP->haveCameraType = true;
+                sbigHeaderP->cameraType = pm_strdup(cursor);
                 *ep = ' ';
             }
         }
@@ -202,8 +213,9 @@ readSbigHeader(FILE *              const ifP,
         looseCanon(cursor);
             /* Convert from standard SBIG to an internal format */
 
-        if (strneq(cursor, "st-", 3)) {
-            sbigHeaderP->isCompressed = (strstr("compressed", cursor) != NULL);
+        if (strneq(cursor, "st-", 3) || cursor == &buffer[0]) {
+            sbigHeaderP->isCompressed =
+                 (strstr(cursor, "compressedimage") != NULL);
             gotCompression = true;
         } else if (strneq(cursor, "height=", 7)) {
             sbigHeaderP->rows = atoi(cursor + 7);
@@ -228,6 +240,15 @@ readSbigHeader(FILE *              const ifP,
     if (!gotWidth)
         pm_error("required 'width=' specification missing "
                  "from SBIG file header");
+}
+
+
+
+static void
+termSbigHeader(struct SbigHeader const sbigHeader) {
+
+    if (sbigHeader.cameraType)
+        pm_strfree(sbigHeader.cameraType);
 }
 
 
@@ -306,7 +327,7 @@ main(int argc, const char ** argv) {
     readSbigHeader(ifP, &hdr);
 
     pm_message("SBIG '%s' %ux%u %s image, saturation level = %u",
-               (hdr.haveCameraType ? hdr.cameraType : "ST-?"),
+               (hdr.cameraType ? hdr.cameraType : "ST-?"),
                hdr.cols, hdr.rows,
                hdr.isCompressed ? "compressed" : "uncompressed",
                hdr.maxval);
@@ -319,6 +340,8 @@ main(int argc, const char ** argv) {
     pgm_writepgminit(stdout, hdr.cols, hdr.rows, hdr.maxval, 0);
 
     writeRaster(ifP, hdr, stdout);
+
+    termSbigHeader(hdr);
 
     pm_close(ifP);
     pm_close(stdout);

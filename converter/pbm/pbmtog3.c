@@ -440,7 +440,7 @@ main(int    argc,
 
     MALLOCARRAY_NOFAIL(bitrow, pbm_packed_bytes(cols) + sizeof(wordint));
 
-    MALLOCARRAY_NOFAIL(milepost, readcols + 1);
+    MALLOCARRAY_NOFAIL(milepost, readcols + 2);
 
     initOutStream(cmdline.reversebits);
     puteol();

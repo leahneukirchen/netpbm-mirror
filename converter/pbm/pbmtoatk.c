@@ -125,7 +125,6 @@ main(int argc, char *argv[]) {
     register bit *bP;
     int rows, cols, format, row;
     int col;
-    char name[100], *cp;
     unsigned char curbyte, newbyte;
     int curcount, gather;
 
@@ -136,15 +135,8 @@ main(int argc, char *argv[]) {
 
     else if (argc-1 == 1) {
         ifd = pm_openr( argv[1] );
-        strcpy(name, argv[1]);
-        if (streq( name, "-"))
-            strcpy(name, "noname");
-        
-        if ((cp = strchr(name, '.')) != 0)
-            *cp = '\0';
     } else {
         ifd = stdin;
-        strcpy( name, "noname" );
     }
 
     pbm_readpbminit(ifd, &cols, &rows, &format);

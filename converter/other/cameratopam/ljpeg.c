@@ -33,21 +33,26 @@ ljpeg_start (FILE * ifp, struct jhead *jh)
   do {
     fread (data, 2, 2, ifp);
     tag =  data[0] << 8 | data[1];
-    len = (data[2] << 8 | data[3]) - 2;
-    if (tag <= 0xff00 || len > 255) return 0;
-    fread (data, 1, len, ifp);
-    switch (tag) {
+    len = (data[2] << 8 | data[3]);
+    if (len < 2)
+      pm_error("Length field is %u; must be at least 2", len);
+    else {
+      unsigned int const dataLen = len - 2;
+      if (tag <= 0xff00 || dataLen > 255) return 0;
+      fread (data, 1, dataLen, ifp);
+      switch (tag) {
       case 0xffc3:
-    jh->bits = data[0];
-    jh->high = data[1] << 8 | data[2];
-    jh->wide = data[3] << 8 | data[4];
-    jh->clrs = data[5];
-    break;
+        jh->bits = data[0];
+        jh->high = data[1] << 8 | data[2];
+        jh->wide = data[3] << 8 | data[4];
+        jh->clrs = data[5];
+        break;
       case 0xffc4:
-    for (dp = data; dp < data+len && *dp < 4; ) {
-      jh->huff[*dp] = free_decode;
-      dp = make_decoder (++dp, 0);
-    }
+        for (dp = data; dp < data+dataLen && *dp < 4; ) {
+          jh->huff[*dp] = free_decode;
+          dp = make_decoder (++dp, 0);
+        }
+      }
     }
   } while (tag != 0xffda);
   jh->row = calloc (jh->wide*jh->clrs, 2);
