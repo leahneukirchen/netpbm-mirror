@@ -20,6 +20,7 @@
 #include <string.h>
 
 #include "pm_c_util.h"
+#include "nstring.h"
 #include "mallocvar.h"
 #include "shhopt.h"
 #include "bmp.h"
@@ -131,13 +132,22 @@ parseCommandLine(int argc, const char ** argv,
         cmdlineP->mapfile = NULL;
 
     if (argc - 1 == 0)
-        cmdlineP->inputFilename = strdup("-");  /* he wants stdin */
+        cmdlineP->inputFilename = pm_strdup("-");  /* he wants stdin */
     else if (argc - 1 == 1)
-        cmdlineP->inputFilename = strdup(argv[1]);
+        cmdlineP->inputFilename = pm_strdup(argv[1]);
     else 
         pm_error("Too many arguments.  The only argument accepted "
                  "is the input file specificaton");
 
+    free(option_def);
+}
+
+
+
+static void
+freeCommandLine(struct CmdlineInfo const cmdline) {
+
+    pm_strfree(cmdline.inputFilename);
 }
 
 
@@ -903,6 +913,8 @@ doPgmPpm(FILE *       const ifP,
               cols, rows, (const pixel**)pixels, maxval, &colorMap);
     
     freeColorMap(&colorMap);
+
+    ppm_freearray(pixels, rows);
 }
 
 
@@ -932,6 +944,8 @@ main(int           argc,
         doPgmPpm(ifP, cols, rows, maxval, ppmFormat,
                  cmdline.class, cmdline.bppSpec, cmdline.bpp, cmdline.mapfile,
                  stdout);
+
+    freeCommandLine(cmdline);
 
     pm_close(ifP);
     pm_close(stdout);
