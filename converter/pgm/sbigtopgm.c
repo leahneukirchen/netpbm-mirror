@@ -175,6 +175,12 @@ readSbigHeader(FILE *              const ifP,
         converse, pixels having values greater than maxval, results in
         an invalid file which may cause problems in programs which
         attempt to process it.
+
+         According to the official specification, the camera type name is the
+         first item in the header, and may or may not start with "ST-".  But
+         this program has historically had an odd method of detecting camera
+         type, which allows any string starting with "ST-" anywhere in the
+         header, and for now we leave that undisturbed.  2015.05.27.
     */
 
     gotCompression = false;  /* initial value */
@@ -192,7 +198,9 @@ readSbigHeader(FILE *              const ifP,
                      (unsigned)(cursor - &buffer[0]));
         }
         *cp = '\0';
-        if (strneq(cursor, "ST-", 3)) {
+        if (strneq(cursor, "ST-", 3) ||
+            (cursor == &buffer[0] && strstr(cursor,"Image") != NULL)) {
+
             char * const ep = strchr(cursor + 3, ' ');
 
             if (ep != NULL) {
@@ -205,8 +213,9 @@ readSbigHeader(FILE *              const ifP,
         looseCanon(cursor);
             /* Convert from standard SBIG to an internal format */
 
-        if (strneq(cursor, "st-", 3)) {
-            sbigHeaderP->isCompressed = (strstr("compressed", cursor) != NULL);
+        if (strneq(cursor, "st-", 3) || cursor == &buffer[0]) {
+            sbigHeaderP->isCompressed =
+                 (strstr(cursor, "compressedimage") != NULL);
             gotCompression = true;
         } else if (strneq(cursor, "height=", 7)) {
             sbigHeaderP->rows = atoi(cursor + 7);

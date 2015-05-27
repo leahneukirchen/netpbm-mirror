@@ -6,6 +6,12 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.71.00
 
+              sbigtopgm: fix detection of camera type.  Always broken
+              (sbigtopgm was new in Netpbm 8.3 (March 2000)).
+
+              sbigtopgm: fix recognition of compressed image.  Always broken
+              (sbigtopgm was new in Netpbm 8.3 (March 2000)).
+
               libnetpbm: pm_stripeq: fix bug: wild pointer access when
               comparator is shorter than comparand.  Doesn't affect function,
               but could cause crash or privacy exposure.  Affects reading of a
