@@ -385,6 +385,16 @@ code.  Modular and structured above all.
   typically stored on the stack, is much more dangerous than overrunning a
   variable stored in the heap.
 
+* Use pm_asprintf() to compose strings, instead of sprintf(), strcat(), and
+  strcpy().  pm_asprintf() is essentially the same as GNU asprintf(), i.e.
+  sprintf(), except it dynamically allocates the result memory.  This
+  effortlessly makes it impossible to overrun the result buffer.  Use
+  pm_strfree() to free the result memory.  You usually need not worry about
+  the pathological case that there is no memory available for the result,
+  because in that case, pm_asprintf() returns a constant string "OUT OF MEMORY"
+  and in most cases, that won't cause a disaster - just incorrect behavior that
+  is reasonable in the face of such a pathological situation.
+
 * Do not use the "register" qualifier of a variable.
 
 
