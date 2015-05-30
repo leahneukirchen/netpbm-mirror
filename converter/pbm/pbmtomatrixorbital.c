@@ -60,7 +60,7 @@ main(int argc, char * argv[]) {
 
     pbm_init(&argc, argv);
 
-    if (argc-1 > 0)
+    if (argc-1 > 1)
         pm_error("Too many arguments (%d).  The only valid argument is an "
                  "input file name.", argc-1);
     else if (argc-1 == 1) 
