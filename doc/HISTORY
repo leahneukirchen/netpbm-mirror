@@ -18,6 +18,9 @@ not yet  BJH  Release 10.71.00
               pbmtogo: Fix bug: buffer overrun with certain input.  Broken
               at least since November 1989.
 
+              pbmtoescp2: Fix bug: overrun on certain input.  Always broken
+              (pbmtoescp2 was new in Netpbm 10.18 (September 2003).
+
               libnetpbm: pm_stripeq: fix bug: wild pointer access when
               comparator is shorter than comparand.  Doesn't affect function,
               but could cause crash or privacy exposure.  Affects reading of a
