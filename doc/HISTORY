@@ -10,6 +10,9 @@ not yet  BJH  Release 10.71.00
               crashes program.  Always broken (-protocol was new in Netpbm
               10.23 (July 2004).
 
+              pbmtoppa: fix buffer overruns, double-free crashes.  Always
+              broken (pbmtoppa was new in Netpbm 9.1 (March 2000).
+
               pbmtomatrixorbital: fix bug: fails if you specify the input
               file name argument.  Always broken.  (pbmtomatrixorbital was
               new in Netpbm 10.18 (Setpember 2003).

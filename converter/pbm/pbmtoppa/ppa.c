@@ -389,7 +389,9 @@ static void __inline__ place_2bytes(int x,unsigned char* y)
 static void __inline__ place_4bytes(int x,unsigned char* y)
 { place_2bytes(x>>16,y); place_2bytes(x,y+2); }
 
-#define do_compress_data (1)
+#define do_compress_data (1)  /* Compress. */
+/* The no-compression case has not been well tested 2015.05.31 */
+
 void ppa_print_sweep(ppa_stat* prn,ppa_sweep_data* data)
 {
   unsigned char* pc, *tpc;
@@ -403,11 +405,9 @@ void ppa_print_sweep(ppa_stat* prn,ppa_sweep_data* data)
   int nozzle_data_size;
   int MF; /* Multiplicative Factor -- quick hack */
 
-  pc=data->image_data;
-
   if(do_compress_data)
   {
-    if(!(pc=malloc((datasize/64+1)*65)))
+    if( !( pc = malloc( datasize * 2 + 1 )) )  /* Worst case + margin */
     {
       fprintf(stderr,"ppa_print_sweep(): could not malloc storage for compressed data\n");
       exit(-1);
@@ -416,12 +416,13 @@ void ppa_print_sweep(ppa_stat* prn,ppa_sweep_data* data)
   }
 
   /* send image data 16k at a time */
-  for(i=0, tpc=pc; i<datasize; tpc+=16384, i+=16384)
+  for(i=0, tpc= do_compress_data ? pc : data->image_data;
+        i<datasize; tpc+=16384, i+=16384)
     vlink_put(prn->fptr, 0, datasize-i > 16384 ? 16384 : datasize-i, tpc);
 
   /* memory leak fix courtesy of John McKown */
   if (do_compress_data)
-    free (pc);
+      free (pc);
 
   /* construct sweep packet */
   switch(prn->version)
