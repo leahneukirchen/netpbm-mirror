@@ -8,6 +8,7 @@
  *  Copyright (C) 1994-2000 Ullrich Hafner <hafner@bigfoot.de>
  */
 
+#include <assert.h>
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
@@ -15,6 +16,8 @@
 #include "pm_c_util.h"
 #include "nstring.h"
 #include "pam.h"
+
+
 
 static int
 udiff(unsigned int const subtrahend,
@@ -68,79 +71,213 @@ validateInput(struct pam const pam1,
 }
 
 
+enum ColorSpaceId { COLORSPACE_YCBCR, COLORSPACE_GRAYSCALE };
 
-static void
-psnrColor(tuple    const tuple1,
-          tuple    const tuple2,
-          double * const ySqDiffP, 
-          double * const cbSqDiffP,
-          double * const crSqDiffP) {
+typedef struct {
+
+    enum ColorSpaceId id;
+
+    unsigned int componentCt;
+
+    const char * componentName[3];
+        /* Only first 'componentCt' elements are valid */
+
+} ColorSpace;
+
+
+#define Y_INDEX  0
+#define CR_INDEX 1
+#define CB_INDEX 2
+
+
+
+static ColorSpace
+yCbCrColorSpace() {
+
+    ColorSpace retval;
+
+    retval.id = COLORSPACE_YCBCR;
+
+    retval.componentCt = 3;
+
+    retval.componentName[Y_INDEX]  = "Y";
+    retval.componentName[CR_INDEX] = "CR";
+    retval.componentName[CB_INDEX] = "CB";
+
+    return retval;
+}
+
+
+
+static ColorSpace
+grayscaleColorSpace() {
+
+    ColorSpace retval;
+
+    retval.id = COLORSPACE_GRAYSCALE;
+
+    retval.componentCt = 1;
+
+    retval.componentName[Y_INDEX]  = "luminance";
+
+    return retval;
+}
+
+
+
+struct SqDiff {
+/*----------------------------------------------------------------------------
+   The square-differences of the components of two pixels, for some
+   component set.
+-----------------------------------------------------------------------------*/
+    double sqDiff[3];
+};
+
+
+
+static struct SqDiff
+zeroSqDiff() {
+
+    struct SqDiff retval;
+    unsigned int i;
+
+    for (i = 0; i < 3; ++i)
+        retval.sqDiff[i] = 0.0;
+
+    return retval;
+}
+
+
+
+static struct SqDiff
+sqDiffSum(ColorSpace    const colorSpace,
+          struct SqDiff const addend,
+          struct SqDiff const adder) {
+
+    struct SqDiff retval;
+    unsigned int i;
+
+    for (i = 0; i < colorSpace.componentCt; ++i)
+        retval.sqDiff[i] = addend.sqDiff[i] + adder.sqDiff[i];
+
+    return retval;
+}
+
+
+
+static struct SqDiff
+sqDiffYCbCr(tuple    const tuple1,
+            tuple    const tuple2) {
+
+    struct SqDiff retval;
 
     double y1, y2, cb1, cb2, cr1, cr2;
     
     pnm_YCbCrtuple(tuple1, &y1, &cb1, &cr1);
     pnm_YCbCrtuple(tuple2, &y2, &cb2, &cr2);
     
-    *ySqDiffP  = square(y1  - y2);
-    *cbSqDiffP = square(cb1 - cb2);
-    *crSqDiffP = square(cr1 - cr2);
+    retval.sqDiff[Y_INDEX]  = square(y1  - y2);
+    retval.sqDiff[CB_INDEX] = square(cb1 - cb2);
+    retval.sqDiff[CR_INDEX] = square(cr1 - cr2);
+
+    return retval;
+}
+
+
+
+static struct SqDiff
+sqDiffGrayscale(tuple    const tuple1,
+                tuple    const tuple2) {
+
+    struct SqDiff sqDiff;
+
+    sqDiff.sqDiff[Y_INDEX] = square(udiff(tuple1[0], tuple2[0]));
+
+    return sqDiff;
+}
+
+
+
+static struct SqDiff
+sumSqDiffFromRaster(struct pam * const pam1P,
+                    struct pam * const pam2P,
+                    ColorSpace   const colorSpace) {
+
+    struct SqDiff sumSqDiff;
+    tuple *tuplerow1, *tuplerow2;  /* malloc'ed */
+    unsigned int row;
+
+    tuplerow1 = pnm_allocpamrow(pam1P);
+    tuplerow2 = pnm_allocpamrow(pam2P);
+    
+    sumSqDiff = zeroSqDiff();
+
+    for (row = 0; row < pam1P->height; ++row) {
+        unsigned int col;
+        
+        pnm_readpamrow(pam1P, tuplerow1);
+        pnm_readpamrow(pam2P, tuplerow2);
+
+        assert(pam1P->width == pam2P->width);
+
+        for (col = 0; col < pam1P->width; ++col) {
+            struct SqDiff sqDiff;
+
+            switch (colorSpace.id) {
+            case COLORSPACE_YCBCR:
+                sqDiff = sqDiffYCbCr(tuplerow1[col], tuplerow2[col]);
+                break;
+            case COLORSPACE_GRAYSCALE:
+                sqDiff = sqDiffGrayscale(tuplerow1[col], tuplerow2[col]);
+                break;
+            }
+            sumSqDiff = sqDiffSum(colorSpace, sumSqDiff, sqDiff);
+        }
+    }
+
+    pnm_freepamrow(tuplerow1);
+    pnm_freepamrow(tuplerow2);
+
+    return sumSqDiff;
 }
 
 
 
 static void
-reportPsnr(struct pam const pam,
-           double     const ySumSqDiff, 
-           double     const crSumSqDiff,
-           double     const cbSumSqDiff,
-           char       const filespec1[],
-           char       const filespec2[]) {
+reportPsnr(struct pam    const pam,
+           struct SqDiff const sumSqDiff,
+           ColorSpace    const colorSpace,
+           const char *  const fileName1,
+           const char *  const fileName2) {
 
-    bool const color = streq(pam.tuple_type, PAM_PPM_TUPLETYPE);
-
-    /* Maximum possible sum square difference, i.e. the sum of the squares of
-       the sample differences between an entirely white image and entirely
-       black image of the given dimensions.
-    */
     double const maxSumSqDiff = square(pam.maxval) * pam.width * pam.height;
+        /* Maximum possible sum square difference, i.e. the sum of the squares
+           of the sample differences between an entirely white image and
+           entirely black image of the given dimensions.
+        */
+
+    unsigned int i;
+
 
     /* The PSNR is the ratio of the maximum possible mean square difference
-       to the actual mean square difference.
+       to the actual mean square difference, which is also the ratio of
+       the maximum possible sum square difference to the actual sum square
+       difference.
    
        Note that in the important special case that the images are
        identical, the sum square differences are identically 0.0.
        No precision error; no rounding error.
     */
 
-    if (color) {
-        pm_message("PSNR between %s and %s:", filespec1, filespec2);
+    pm_message("PSNR between '%s' and '%s':", fileName1, fileName2);
 
-        if (ySumSqDiff > 0)
-            pm_message("Y  color component: %.2f dB",
-                       10 * log10(maxSumSqDiff/ySumSqDiff) );
+    for (i = 0; i < colorSpace.componentCt; ++i) {
+        if (sumSqDiff.sqDiff[i] > 0)
+            pm_message("  %s: %.2f dB",
+                       colorSpace.componentName[i],
+                       10 * log10(maxSumSqDiff/sumSqDiff.sqDiff[i]));
         else
-            pm_message("Y color component does not differ.");
-
-        if (cbSumSqDiff > 0)
-            pm_message("Cb color component: %.2f dB",
-                       10 * log10(maxSumSqDiff/cbSumSqDiff) );
-        else
-            pm_message("Cb color component does not differ.");
-
-        if (crSumSqDiff > 0)
-            pm_message("Cr color component: %.2f dB",
-                       10 * log10(maxSumSqDiff/crSumSqDiff) );
-        else
-            pm_message("Cr color component does not differ.");
-
-    } else {
-        if (ySumSqDiff > 0) {
-            pm_message("PSNR between %s and %s: %.2f dB",
-                       filespec1, filespec2,
-                       10 * log10(maxSumSqDiff/ySumSqDiff) );
-        } else
-            pm_message("Images %s and %s don't differ.",
-                       filespec1, filespec2);
+            pm_message("  %s: no difference", colorSpace.componentName[i]);
     }
 }
 
@@ -153,11 +290,7 @@ main (int argc, const char **argv) {
     FILE * if1P;
     FILE * if2P;
     struct pam pam1, pam2;
-    bool color;
-        /* It's a color image */
-    double ySumSqDiff, crSumSqDiff, cbSumSqDiff;
-    tuple *tuplerow1, *tuplerow2;  /* malloc'ed */
-    int row;
+    ColorSpace colorSpace;
     
     pm_proginit(&argc, argv);
 
@@ -181,46 +314,16 @@ main (int argc, const char **argv) {
     validateInput(pam1, pam2);
 
     if (streq(pam1.tuple_type, PAM_PPM_TUPLETYPE)) 
-        color = TRUE;
+        colorSpace = yCbCrColorSpace();
     else
-        color = FALSE;
+        colorSpace = grayscaleColorSpace();
 
-    tuplerow1 = pnm_allocpamrow(&pam1);
-    tuplerow2 = pnm_allocpamrow(&pam2);
-    
-    ySumSqDiff  = 0.0;
-    cbSumSqDiff = 0.0;
-    crSumSqDiff = 0.0;
+    {
+        struct SqDiff const sumSqDiff =
+            sumSqDiffFromRaster(&pam1, &pam2, colorSpace);
 
-    for (row = 0; row < pam1.height; ++row) {
-        int col;
-        
-        pnm_readpamrow(&pam1, tuplerow1);
-        pnm_readpamrow(&pam2, tuplerow2);
-
-        for (col = 0; col < pam1.width; ++col) {
-            if (color) {
-                double ySqDiff, cbSqDiff, crSqDiff;
-                psnrColor(tuplerow1[col], tuplerow2[col], 
-                          &ySqDiff, &cbSqDiff, &crSqDiff);
-                ySumSqDiff  += ySqDiff;
-                cbSumSqDiff += cbSqDiff;
-                crSumSqDiff += crSqDiff;
-                
-            } else {
-                unsigned int const yDiffSq =
-                    square(udiff(tuplerow1[col][0], tuplerow2[col][0]));
-                ySumSqDiff += yDiffSq;
-            }
-        }
+        reportPsnr(pam1, sumSqDiff, colorSpace, fileName1, fileName2);
     }
-
-    reportPsnr(pam1, ySumSqDiff, crSumSqDiff, cbSumSqDiff,
-               fileName1, fileName2);
-
-    pnm_freepamrow(tuplerow1);
-    pnm_freepamrow(tuplerow2);
-
     return 0;
 }
 
