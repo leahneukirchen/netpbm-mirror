@@ -27,6 +27,7 @@ struct CmdlineInfo {
     */
     const char * inputFile1Name;  /* Name of first input file */
     const char * inputFile2Name;  /* Name of second input file */
+    unsigned int rgb;
 };
 
 
@@ -48,6 +49,7 @@ parseCommandLine(int argc, const char ** argv,
     MALLOCARRAY_NOFAIL(option_def, 100);
     
     option_def_index = 0;   /* incremented by OPTENT3 */
+    OPTENT3(0,   "rgb",      OPT_FLAG,  NULL, &cmdlineP->rgb,       0);
 
     opt.opt_table     = option_def;
     opt.short_allowed = FALSE; /* We have no short (old-fashioned) options */
@@ -124,7 +126,11 @@ validateInput(struct pam const pam1,
 }
 
 
-enum ColorSpaceId { COLORSPACE_YCBCR, COLORSPACE_GRAYSCALE };
+enum ColorSpaceId {
+    COLORSPACE_GRAYSCALE,
+    COLORSPACE_YCBCR,
+    COLORSPACE_RGB
+};
 
 typedef struct {
 
@@ -136,46 +142,6 @@ typedef struct {
         /* Only first 'componentCt' elements are valid */
 
 } ColorSpace;
-
-
-#define Y_INDEX  0
-#define CR_INDEX 1
-#define CB_INDEX 2
-
-
-
-static ColorSpace
-yCbCrColorSpace() {
-
-    ColorSpace retval;
-
-    retval.id = COLORSPACE_YCBCR;
-
-    retval.componentCt = 3;
-
-    retval.componentName[Y_INDEX]  = "Y";
-    retval.componentName[CR_INDEX] = "CR";
-    retval.componentName[CB_INDEX] = "CB";
-
-    return retval;
-}
-
-
-
-static ColorSpace
-grayscaleColorSpace() {
-
-    ColorSpace retval;
-
-    retval.id = COLORSPACE_GRAYSCALE;
-
-    retval.componentCt = 1;
-
-    retval.componentName[Y_INDEX]  = "luminance";
-
-    return retval;
-}
-
 
 
 struct SqDiff {
@@ -218,6 +184,28 @@ sqDiffSum(ColorSpace    const colorSpace,
 
 
 
+#define Y_INDEX  0
+#define CB_INDEX 1
+#define CR_INDEX 2
+
+static ColorSpace
+yCbCrColorSpace() {
+
+    ColorSpace retval;
+
+    retval.id = COLORSPACE_YCBCR;
+
+    retval.componentCt = 3;
+
+    retval.componentName[Y_INDEX]  = "Y";
+    retval.componentName[CR_INDEX] = "CR";
+    retval.componentName[CB_INDEX] = "CB";
+
+    return retval;
+}
+
+
+
 static struct SqDiff
 sqDiffYCbCr(tuple    const tuple1,
             tuple    const tuple2) {
@@ -232,6 +220,64 @@ sqDiffYCbCr(tuple    const tuple1,
     retval.sqDiff[Y_INDEX]  = square(y1  - y2);
     retval.sqDiff[CB_INDEX] = square(cb1 - cb2);
     retval.sqDiff[CR_INDEX] = square(cr1 - cr2);
+
+    return retval;
+}
+
+
+
+#define R_INDEX 0
+#define G_INDEX 1
+#define B_INDEX 2
+
+
+
+static ColorSpace
+rgbColorSpace() {
+
+    ColorSpace retval;
+
+    retval.id = COLORSPACE_RGB;
+
+    retval.componentCt = 3;
+
+    retval.componentName[R_INDEX] = "Red";
+    retval.componentName[G_INDEX] = "Green";
+    retval.componentName[B_INDEX] = "Blue";
+
+    return retval;
+}
+
+
+
+static struct SqDiff
+sqDiffRgb(tuple    const tuple1,
+          tuple    const tuple2) {
+
+    struct SqDiff retval;
+
+    retval.sqDiff[R_INDEX] =
+        square((int)tuple1[PAM_RED_PLANE]  - (int)tuple2[PAM_RED_PLANE]);
+    retval.sqDiff[G_INDEX] =
+        square((int)tuple1[PAM_GRN_PLANE]  - (int)tuple2[PAM_GRN_PLANE]);
+    retval.sqDiff[B_INDEX] =
+        square((int)tuple1[PAM_BLU_PLANE]  - (int)tuple2[PAM_BLU_PLANE]);
+
+    return retval;
+}
+
+
+
+static ColorSpace
+grayscaleColorSpace() {
+
+    ColorSpace retval;
+
+    retval.id = COLORSPACE_GRAYSCALE;
+
+    retval.componentCt = 1;
+
+    retval.componentName[Y_INDEX]  = "luminance";
 
     return retval;
 }
@@ -277,11 +323,14 @@ sumSqDiffFromRaster(struct pam * const pam1P,
             struct SqDiff sqDiff;
 
             switch (colorSpace.id) {
+            case COLORSPACE_GRAYSCALE:
+                sqDiff = sqDiffGrayscale(tuplerow1[col], tuplerow2[col]);
+                break;
             case COLORSPACE_YCBCR:
                 sqDiff = sqDiffYCbCr(tuplerow1[col], tuplerow2[col]);
                 break;
-            case COLORSPACE_GRAYSCALE:
-                sqDiff = sqDiffGrayscale(tuplerow1[col], tuplerow2[col]);
+            case COLORSPACE_RGB:
+                sqDiff = sqDiffRgb(tuplerow1[col], tuplerow2[col]);
                 break;
             }
             sumSqDiff = sqDiffSum(colorSpace, sumSqDiff, sqDiff);
@@ -325,12 +374,18 @@ reportPsnr(struct pam    const pam,
     pm_message("PSNR between '%s' and '%s':", fileName1, fileName2);
 
     for (i = 0; i < colorSpace.componentCt; ++i) {
+        const char * label;
+
+        pm_asprintf(&label, "%s:", colorSpace.componentName[i]);
+
         if (sumSqDiff.sqDiff[i] > 0)
-            pm_message("  %s: %.2f dB",
-                       colorSpace.componentName[i],
+            pm_message("  %-6.6s %.2f dB",
+                       label,
                        10 * log10(maxSumSqDiff/sumSqDiff.sqDiff[i]));
         else
-            pm_message("  %s: no difference", colorSpace.componentName[i]);
+            pm_message("  %-6.6s no difference", label);
+
+        pm_strfree(label);
     }
 }
 
@@ -338,8 +393,6 @@ reportPsnr(struct pam    const pam,
 
 int
 main (int argc, const char **argv) {
-    const char * fileName1;  /* name of first file to compare */
-    const char * fileName2;  /* name of second file to compare */
     FILE * if1P;
     FILE * if2P;
     struct pam pam1, pam2;
@@ -359,16 +412,20 @@ main (int argc, const char **argv) {
 
     validateInput(pam1, pam2);
 
-    if (streq(pam1.tuple_type, PAM_PPM_TUPLETYPE)) 
-        colorSpace = yCbCrColorSpace();
-    else
+    if (streq(pam1.tuple_type, PAM_PPM_TUPLETYPE)) {
+        if (cmdline.rgb)
+            colorSpace = rgbColorSpace();
+        else
+            colorSpace = yCbCrColorSpace();
+    } else
         colorSpace = grayscaleColorSpace();
 
     {
         struct SqDiff const sumSqDiff =
             sumSqDiffFromRaster(&pam1, &pam2, colorSpace);
 
-        reportPsnr(pam1, sumSqDiff, colorSpace, fileName1, fileName2);
+        reportPsnr(pam1, sumSqDiff, colorSpace,
+                   cmdline.inputFile1Name, cmdline.inputFile2Name);
     }
     pm_close(if2P);
     pm_close(if1P);
