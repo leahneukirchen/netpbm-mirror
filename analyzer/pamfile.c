@@ -59,6 +59,8 @@ parseCommandLine(int argc, const char ** argv,
 
     cmdlineP->inputFilespec = (const char **)&argv[1];
     cmdlineP->inputFileCount = argc - 1;
+
+    free(option_def);
 }
 
 
