@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pnmpsnr User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmpsnr</H1>
-Updated: 10 April 2015
+Updated: 02 June 2015
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -17,6 +17,14 @@ pnmpsnr - compute the difference between two images (the PSNR)
 [<I>pnmfile1</I>]
 
 [<I>pnmfile2</I>]
+
+[<b>-rgb</b>]
+
+<P>Minimum unique abbreviations of options are acceptable.  You may use
+double hyphens instead of single hyphen to denote options.  You may use
+white space in place of the equals sign to separate an option name
+from its value.
+
 
 <H2 id="description">DESCRIPTION</H2>
 
@@ -54,6 +62,20 @@ involved; the metric is a mean.  But &quot;peak signal to noise ratio&quot; is
 for some reason the common term for this measurement.
 
 
+<H2 id="options">OPTIONS</H2>
+
+<DL COMPACT>
+<DT><B>-rgb</B>
+
+<DD>This option causes <b>pnmpsnr</b> to compare the red, green, and blue
+components of the color rather than the luminance and chrominance components.
+It has no effect on a grayscale image.
+
+<p>This option was new in Netpbm 10.71 (June 2015).
+
+</dl>
+
+
 <H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="pnm.html">pnm</A></B>
@@ -63,6 +85,7 @@ for some reason the common term for this measurement.
 <UL>
 <LI><A HREF="#synopsis">SYNOPSIS</A>
 <LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
 <LI><A HREF="#seealso">SEE ALSO</A>
 </UL>
 </BODY>
