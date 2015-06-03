@@ -14,8 +14,61 @@
 #include <math.h>
 
 #include "pm_c_util.h"
+#include "mallocvar.h"
 #include "nstring.h"
 #include "pam.h"
+#include "shhopt.h"
+
+
+
+struct CmdlineInfo {
+    /* All the information the user supplied in the command line,
+       in a form easy for the program to use.
+    */
+    const char * inputFile1Name;  /* Name of first input file */
+    const char * inputFile2Name;  /* Name of second input file */
+};
+
+
+
+static void
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo * const cmdlineP) {
+/*----------------------------------------------------------------------------
+   Note that the file spec array we return is stored in the storage that
+   was passed to as as the argv array.
+-----------------------------------------------------------------------------*/
+    optEntry * option_def;
+        /* Instructions to pm_optParseOptions3 on how to parse our options.
+         */
+    optStruct3 opt;
+
+    unsigned int option_def_index;
+
+    MALLOCARRAY_NOFAIL(option_def, 100);
+    
+    option_def_index = 0;   /* incremented by OPTENT3 */
+
+    opt.opt_table     = option_def;
+    opt.short_allowed = FALSE; /* We have no short (old-fashioned) options */
+    opt.allowNegNum   = FALSE; /* We have no parms that are negative numbers */
+    
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+        /* Uses and sets argc, argv, and some of *cmdlineP and others */
+
+    if (argc-1 < 2) 
+        pm_error("Takes two arguments:  names of the two files to compare");
+    else {
+        cmdlineP->inputFile1Name = argv[1];
+        cmdlineP->inputFile2Name = argv[2];
+
+        if (argc-1 > 2)
+            pm_error("Too many arguments (%u).  The only arguments are "
+                     "the names of the two files to compare", argc-1);
+    }
+
+    free(option_def);
+}
 
 
 
@@ -292,21 +345,14 @@ main (int argc, const char **argv) {
     struct pam pam1, pam2;
     ColorSpace colorSpace;
     
+    struct CmdlineInfo cmdline;
+
     pm_proginit(&argc, argv);
 
-    if (argc-1 < 2) 
-        pm_error("Takes two arguments:  names of the two files to compare");
-    else {
-        fileName1 = argv[1];
-        fileName2 = argv[2];
+    parseCommandLine(argc, argv, &cmdline);
 
-        if (argc-1 > 2)
-            pm_error("Too many arguments (%u).  The only arguments are "
-                     "the names of the two files to compare", argc-1);
-    }
-    
-    if1P = pm_openr(fileName1);
-    if2P = pm_openr(fileName2);
+    if1P = pm_openr(cmdline.inputFile1Name);
+    if2P = pm_openr(cmdline.inputFile2Name);
 
     pnm_readpaminit(if1P, &pam1, PAM_STRUCT_SIZE(tuple_type));
     pnm_readpaminit(if2P, &pam2, PAM_STRUCT_SIZE(tuple_type));
@@ -324,6 +370,9 @@ main (int argc, const char **argv) {
 
         reportPsnr(pam1, sumSqDiff, colorSpace, fileName1, fileName2);
     }
+    pm_close(if2P);
+    pm_close(if1P);
+
     return 0;
 }
 
