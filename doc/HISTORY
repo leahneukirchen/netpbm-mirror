@@ -8,6 +8,10 @@ not yet  BJH  Release 10.71.00
 
               pnmpsnr: Add -rgb.
 
+              ppmtoicr: remove -rle option.  Actually, it never worked
+              because of a bug.  Now it isn't expected to.  Ppmtoicr was
+              new in 1991.
+
               pbmtoepson: fix -protocol option - never works and sometimes
               crashes program.  Always broken (-protocol was new in Netpbm
               10.23 (July 2004).

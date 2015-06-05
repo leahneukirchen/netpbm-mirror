@@ -17,7 +17,6 @@
 
 static int colorstobpp ARGS(( int colors ));
 static int GetPixel ARGS(( int x, int y ));
-static int rleit ARGS(( char* buf, char* bufto, int len ));
 
 static pixel** pixels;
 static colorhash_table cht;
@@ -29,19 +28,16 @@ int argc;
 char* argv[];
 {
 	FILE* ifp;
-	int argn, rows, cols, colors, i, j, BitsPerPixel, newxsize;
+	int argn, rows, cols, colors, i, j, BitsPerPixel;
 	pixval maxval;
 	colorhist_vector chv;
 	char rgb[CLUTCOLORS];
 	const char* windowname;
 	char* thischar;
-	char* thisline;
-	char* space;
 	register unsigned char c;
-	register char* p;
 	int display, expand;
-	int rleflag, winflag;
-	const char* const usage = "[-windowname windowname] [-expand expand] [-display display] [-rle] [ppmfile]";
+	int winflag;
+	const char* const usage = "[-windowname windowname] [-expand expand] [-display display] [ppmfile]";
 
 
 	ppm_init( &argc, argv );
@@ -51,7 +47,6 @@ char* argv[];
 	winflag = 0;
 	expand = 1;
 	display = 0;
-	rleflag = 0;
 
 	while ( argn < argc && argv[argn][0] == '-' && argv[argn][1] != '\0' )
 	    {
@@ -73,10 +68,6 @@ char* argv[];
 		if ( sscanf( argv[argn], "%d",&display ) != 1 )
 		    pm_usage( usage );
 		}
-	    else if ( pm_keymatch(argv[argn],"-rle",2) )
-		rleflag = 1;
-	    else if ( pm_keymatch(argv[argn],"-norle",2) )
-		rleflag = 0;
 	    else
 		pm_usage( usage );
 	    }
@@ -165,59 +156,24 @@ char* argv[];
 	fflush(stdout);
 
 	/**************** send out picture *************************/
-	/* Protocol's RLE scheme is quicker but buggy              */
 
-	if (rleflag) {	
-		pm_message("sending run-length encoded picture data ..." );
-		testimage = (char*) malloc(rows*cols);
-		p = testimage;
-		for (i=0; i<rows; i++)
-			for (j=0; j<cols; j++) 
-			*p++ = GetPixel(j,i);
-		space = (char*) malloc(rows*3);
-		thisline = testimage;
-		for (i = 0; i < rows; i++) {
-			newxsize = rleit(thisline,space,cols);
-			thisline += cols;	/* increment to next line */
-		(void)printf("\033^R;%d;%d;%d;%d;%s^",0,i*expand,expand,newxsize,windowname);
-		thischar = space;
-		for (j=0; j< newxsize; j++) {
-			c= *thischar++;  /*get byte to send */
-			if (c>31 && c <123) {
-				putchar(c);
-				}
-			else {
-				putchar((c>>6) + 123);
-				putchar((c & 0x3f) + 32);
-				}
-			}
-			fflush(stdout);
-		}
-		free(space);
-		exit(0);
-		}
-
-	/* Otherwise, send out uncompressed pixel data via the slow method */
-
-		else {
-		pm_message("sending picture data ..." );
-		for (i = 0; i < rows; i++) {
-			(void)printf("\033^P;%d;%d;%d;%d;%s^",0,i*expand,expand,cols,windowname);
-			for (j = 0; j < cols; j++) {
-				c  = GetPixel(j,i);
-				if (c > 31 && c < 123) {
-						putchar(c);
-						}
-				else		{
-						putchar((c>>6)+123);
-						putchar((c & 0x3f) + 32);
-						}
-				}
-			}
-		fflush(stdout);
-		exit(0);
-		}
-	}
+    pm_message("sending picture data ..." );
+    for (i = 0; i < rows; i++) {
+        (void)printf("\033^P;%d;%d;%d;%d;%s^",0,i*expand,expand,cols,windowname);
+        for (j = 0; j < cols; j++) {
+            c  = GetPixel(j,i);
+            if (c > 31 && c < 123) {
+                putchar(c);
+            }
+            else		{
+                putchar((c>>6)+123);
+                putchar((c & 0x3f) + 32);
+            }
+        }
+    }
+    fflush(stdout);
+    exit(0);
+}
 
 static int
 colorstobpp(colors)
@@ -257,64 +213,3 @@ int x, y;
 	}
 
 
-/* rleit   compress with run length encoding as per NCSA's documentation */
-
-static int
-rleit(buf,bufto,len)
-	char* buf;
-	char* bufto;
-	int len;
-	{
-	register char* p;
-	register char* q;
-	register char* cfoll;
-	register char* clead;
-	char* begp;
-	int i;
-
-	p = buf;
-	cfoll = bufto;
-	clead = cfoll + 1;
-
-	begp = p;
-	while (len > 0 ) {		/* encode until gone */
-		
-		q = p + 1;
-		i = len-1;
-	while (*p == *q && i+120 > len && i) {
-		q++;
-		i--;
-	}
-
-	if (q > p +2) {			/* three in a row */
-		if (p > begp) {
-			*cfoll = p - begp;
-			cfoll = clead;
-		}
-		*cfoll++ = 128 | (q-p);		/*len of seq*/
-		*cfoll++ = *p;			/* char of seq */
-		len -= q-p;		/* subtract len of seq */
-		p = q;
-		clead = cfoll+1;
-		begp = p;
-	}
-	else {
-		*clead++ = *p++;	/* copy one char */
-		len--;
-		if (p>begp + 120) {
-			*cfoll = p - begp;
-			cfoll = clead++;
-			begp = p;
-		}
-	}
-	}
-
-/* fillin last bytecount */
-
-	if (p>begp)
-		*cfoll = (p - begp);
-	else
-		clead--;
-
-	return((int) (clead-bufto));	/*how many stored as encoded */
-}
