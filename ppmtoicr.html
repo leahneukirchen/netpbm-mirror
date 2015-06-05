@@ -2,17 +2,15 @@
 <HTML><HEAD><TITLE>Ppmtoicr User Manual</TITLE></HEAD>
 <BODY>
 <H1>ppmtoicr</H1>
-Updated: 30 July 1990
+Updated: 05 June 2015
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
 ppmtoicr - convert a PPM image into NCSA ICR format 
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>ppmtoicr</B>
 
@@ -26,8 +24,8 @@ ppmtoicr - convert a PPM image into NCSA ICR format
 
 [<I>ppmfile</I>]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -51,8 +49,8 @@ window.
 <P>Note that there is no icrtoppm tool - this transformation is one
 way.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+
+<H2 id="options">OPTIONS</H2>
 
 <DL COMPACT>
 <DT><B>-windowname</B> <I>name</I>
@@ -71,16 +69,10 @@ input pixel.)
 
 <DD>Output will be displayed on screen numbered <I>display</I>
 
-<DT><B>-rle</B>
-
-<DD>Use run-length encoded format for display. (This will nearly
-always result in a quicker display, but may skew the colormap).
-
 </DL>
 
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>EXAMPLES</H2>
+<H2 id="examples">EXAMPLES</H2>
 
 To display a PPM file named <b>ppmfile</b> using the protocol:
 
@@ -115,33 +107,43 @@ you save the output to a file for later display via <B>cat</B>,
 increasing the blocksize limit on the display will speed up
 transmission substantially.
 
-<A NAME="lbAH">&nbsp;</A>
-<H2>SEE ALSO</H2>
+
+<H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="ppm.html">ppm</A></B>
 
 <P>NCSA Telnet for the Macintosh, University of Illinois at
 Urbana-Champaign (1989)
 
-<A NAME="lbAI">&nbsp;</A>
-<H2>AUTHOR</H2>
+
+<H2 id="author">HISTORY</H2>
+
+<p>Until Netpbm 10.71 (June 2015), there was a <b>-rle</b> option documented,
+which was said to cause the output to use run length encoding compression.
+But because of a simple bug in option processing code, the option never had
+any effect.  And the compression code did not look like it worked anyway and
+would take a fair amount of work to fix.  Because it was unlikely anyone would
+ever use this program again, much less want to use run length encoding, we
+removed it from the documentation rather than fix the code.
+
+
+<H2 id="author">AUTHOR</H2>
 
 Copyright (C) 1990 by Kanthan Pillay (<A
 HREF="mailto:svpillay@Princeton.EDU">svpillay@Princeton.EDU</A>),
 Princeton University Computing and Information Technology.
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">EXAMPLES</A>
-<LI><A HREF="#lbAG">LIMITATIONS</A>
-<LI><A HREF="#lbAH">SEE ALSO</A>
-<LI><A HREF="#lbAI">AUTHOR</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#examples">EXAMPLES</A>
+<LI><A HREF="#limitations">LIMITATIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#history">HISTORY</A>
+<LI><A HREF="#author">AUTHOR</A>
 </UL>
 </BODY>
 </HTML>
