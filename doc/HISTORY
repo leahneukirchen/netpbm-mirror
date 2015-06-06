@@ -178,7 +178,7 @@ not yet  BJH  Release 10.71.00
               pnmnorm: add -bsingle, -wsingle.
 
               ppmtoarbtxt: Do some validation of format strings.  Thanks
-              Prophet of the Way <afu@wta.att.ne.jp>.
+              Akira F Urushibata <afu@wta.att.ne.jp>.
 
               pamcrater: Add -verbose.
 
@@ -294,15 +294,15 @@ not yet  BJH  Release 10.71.00
 14.06.29 BJH  Release 10.67.00
 
               sgitopnm: add ability to convert 2-channel SGI image.
-              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+              Thanks Akira F Urushibata <afu@wta.att.ne.jp>.
 
               sgitopnm: add ability to work with non-seekable input (e.g. a
-              pipe).  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+              pipe).  Thanks Akira F Urushibata <afu@wta.att.ne.jp>.
 
               pamtotiff: add -output, use Standard Output normally (before, it
               had to be seekable.  Also, you could do an append operation to
               Standard Output; now you have to use -output for that).  Thanks
-              Prophet of the Way <afu@wta.att.ne.jp>.
+              Akira F Urushibata <afu@wta.att.ne.jp>.
 
               pamsharpness: put primary output on Standard Output instead of
               on Standard Error as a Netpbm message.
@@ -312,7 +312,7 @@ not yet  BJH  Release 10.71.00
               10.65 (December 2013).
 
               sgitopnm: fix bug: no output if input is RLE compressed.  Broken
-              in Netpbm 10.53 (December 2010).  Thanks Prophet of the Way
+              in Netpbm 10.53 (December 2010).  Thanks Akira F Urushibata
               <afu@wta.att.ne.jp>.
 
               jpegtopnm -dumpexif: fix incorrect display of resolution.
@@ -343,7 +343,7 @@ not yet  BJH  Release 10.71.00
 
 14.03.30 BJH  Release 10.66.00
 
-              Add pamvalidate.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+              Add pamvalidate.  Thanks Akira F Urushibata <afu@wta.att.ne.jp>.
 
               Add pamfix: Does what pamfixtrunc did, plus repairs excessive
               sample values.
@@ -351,20 +351,20 @@ not yet  BJH  Release 10.71.00
               pamfixtrunc: implement as call to new pamfix.
 
               pgmhist, ppmhist: Add -forensic: Analyze invalid >maxval pixels.
-              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+              Thanks Akira F Urushibata <afu@wta.att.ne.jp>.
 
-              pgmramp: add -diagonal.  Thanks Prophet of the Way
+              pgmramp: add -diagonal.  Thanks Akira F Urushibata
               <afu@wta.att.ne.jp>.
 
               libnetpbm: Read functions validate that sample values do not
-              exceed maxval.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+              exceed maxval.  Thanks Akira F Urushibata <afu@wta.att.ne.jp>.
 
               libnetpbm: Validate image dimensions are small enough that you
-              can allocate a row buffer.  Thanks Prophet of the Way
+              can allocate a row buffer.  Thanks Akira F Urushibata
               <afu@wta.att.ne.jp>.
 
               pgmhist: fix incorrect report of quantiles or crash due to array
-              bounds violation in some builds.  Thanks Prophet of the Way
+              bounds violation in some builds.  Thanks Akira F Urushibata
               <afu@wta.att.ne.jp>.  Always broken.  Quantile reporting was
               new in Netpbm 10.61 (December 2012).
 
@@ -382,22 +382,22 @@ not yet  BJH  Release 10.71.00
               both -xsize and -ysize.  Introduced in 10.65.
 
               pgmramp: fix bogus output with really large images.  Thanks
-              Prophet of the Way <afu@wta.att.ne.jp>.  Always broken.
+              Akira F Urushibata <afu@wta.att.ne.jp>.  Always broken.
 
               ppmrelief: fix out-of-bound values in output.  Always broken.
               ppmrelief was new in primordial Netpbm in 1989.
-              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+              Thanks Akira F Urushibata <afu@wta.att.ne.jp>.
 
               ppmrelief: fix crash when input image is too small.  Always
               broken.  ppmrelief was new in primordial Netpbm in 1989.  Thanks
-              Prophet of the Way <afu@wta.att.ne.jp>.
+              Akira F Urushibata <afu@wta.att.ne.jp>.
 
               pgmtexture: fix buffer overflow.  Always broken.  (Program
               was added in primordial Netpbm in 1991).
 
               pamdeinterlace: fix incorrect output with -takeodd and image has
               only one row.  Always broken (pamdeinterlace was introduced in
-              Netpbm 9.21 (January 2001)).  Thanks Prophet of the Way
+              Netpbm 9.21 (January 2001)).  Thanks Akira F Urushibata
               <afu@wta.att.ne.jp>.
 
               configure: warn if user says JPEG library is in the linker's
@@ -440,7 +440,7 @@ not yet  BJH  Release 10.71.00
               (September 2011).
 
               pnmtops: Fix crash with 12 bits per sample.  Introduced in 10.53
-              (December 2010).  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+              (December 2010).  Thanks Akira F Urushibata <afu@wta.att.ne.jp>.
 
               pnmtops: Fix bug: wrong output with -ascii85.  Introduced in
               10.63 (June 2013).
@@ -456,16 +456,16 @@ not yet  BJH  Release 10.71.00
               (September 2011).
 
               pbmtoepsi: fix handling of all-white image.  Always broken.
-              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+              Thanks Akira F Urushibata <afu@wta.att.ne.jp>.
 
               pbmtoepsi: fix excessively long raster line.  Always broken.
-              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+              Thanks Akira F Urushibata <afu@wta.att.ne.jp>.
 
               pnmshear: fix incorrect determination of background color.
               Always broken.
 
               ppmpat: fix crash with -squig with aspect ratio < 1:25 or
-              > 25:1. Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+              > 25:1. Thanks Akira F Urushibata <afu@wta.att.ne.jp>.
               Always broken.
 
               pgmkernel: fix some pixels 1 less than they should be.
@@ -485,7 +485,7 @@ not yet  BJH  Release 10.71.00
               as done already with GCC.
 
               Build: Use <emmintrin.h> interface for SSE intrinsics
-              instead of GCC-specific versions.  Thanks Prophet of the Way
+              instead of GCC-specific versions.  Thanks Akira F Urushibata
               <afu@wta.att.ne.jp>.
 
               Build on system without vasprintf (not GNU libc): fix compiler
@@ -508,7 +508,7 @@ not yet  BJH  Release 10.71.00
               Add pamtowinicon, winicontopam.  Thanks Ludolf Holzheid
               (lholzheid@bihl-wiedemann.de).
 
-              pgmnoise: add -maxval, speed up.  Thanks Prophet of the Way
+              pgmnoise: add -maxval, speed up.  Thanks Akira F Urushibata
               <afu@wta.att.ne.jp>.
 
               Perl programs: make them shell programs that reinvoke themselves
@@ -575,11 +575,11 @@ not yet  BJH  Release 10.71.00
               memory access.
 
               ppmforge. fix crash when -mesh is 1 or less.  Always broken
-              (program was added in Pbmplus (October 1991).  Thanks Prophet of
-              the Way <afu@wta.att.ne.jp>.
+              (program was added in Pbmplus (October 1991).  Thanks 
+              Akira F Urushibata <afu@wta.att.ne.jp>.
 
               ppmforge: fix array bounds violation.  Always broken (program
-              was added in Pbmplus (October 1991).  Thanks Prophet of the Way
+              was added in Pbmplus (October 1991).  Thanks Akira F Urushibata
               <afu@wta.att.ne.jp>.
 
               install: fix Perl warning in installnetpbm.  Broken in 
@@ -666,8 +666,8 @@ not yet  BJH  Release 10.71.00
               pamtompfont, since Netpbm 10.50 (March 2010) in pbmpscale, since
               10.44 (September 2008) in pgmhist.
 
-              xbmtopbm: fix incorrect output, memory leak.  Thanks Prophet of
-              the Way <afu@wta.att.ne.jp>.
+              xbmtopbm: fix incorrect output, memory leak.  Thanks Akira F
+              Urushibata <afu@wta.att.ne.jp>.
 
               sunicontopnm: Fix incorrect output for depth 8.  Always broken
               (depth = 8 capability was added in Netpbm 10.53 (December 2010).
@@ -679,7 +679,7 @@ not yet  BJH  Release 10.71.00
               ppmpat: Fix bug: wrong output with -poles.  Broken in Netpbm
               10.47 (June 2009).
 
-              Add tests.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+              Add tests.  Thanks Akira F Urushibata <afu@wta.att.ne.jp>.
 
 12.09.30 BJH  Release 10.60.00
 
@@ -691,7 +691,7 @@ not yet  BJH  Release 10.71.00
               in Netpbm 10.49 (December 2009).
 
               pnm_hashtuple: slight performance improvement from new hash
-              function.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+              function.  Thanks Akira F Urushibata <afu@wta.att.ne.jp>.
 
               ppmtospu: wild memory accesses.  Always broken (program added in
               Netpbm 10.58 (March 2012).
@@ -802,11 +802,11 @@ not yet  BJH  Release 10.71.00
 
               pamcomp: Retain opacity information from underlying image.
 
-              pnmtops: Add PBM fast path.  Thanks Prophet of the Way
+              pnmtops: Add PBM fast path.  Thanks Akira F Urushibata
               <afu@wta.att.ne.jp>.
 
               libnetpbm and most programs that use color maps: speedup with
-              new color hash function.  Thanks Prophet of the Way
+              new color hash function.  Thanks Akira F Urushibata
               <afu@wta.att.ne.jp>.
 
               pnmquant: use File::Temp::tempfile() instead of local
@@ -924,10 +924,10 @@ not yet  BJH  Release 10.71.00
               pngtopam: include tuple type in output.  Thanks
               Thomas Henlich <thenlich@users.sourceforge.net>.
 
-              sunicontopnm: Understands Depth=8.  Thanks Prophet of the Way
+              sunicontopnm: Understands Depth=8.  Thanks Akira F Urushibata
               <afu@wta.att.ne.jp>.
 
-              sunicontopnm: Validate header.  Thanks Prophet of the Way
+              sunicontopnm: Validate header.  Thanks Akira F Urushibata
               <afu@wta.att.ne.jp>.
 
               bmptopnm: Don't crash on invalid zero value of image height in
@@ -943,11 +943,11 @@ not yet  BJH  Release 10.71.00
               ilbmtoppm: Don't crash on image that has a transparent color
               index, but no color map.
 
-              sunicontopnm: fix for 32 bit items in input.  Thanks Prophet of
-              the Way <afu@wta.att.ne.jp>.
+              sunicontopnm: fix for 32 bit items in input.  Thanks Akira F
+              Urushibata <afu@wta.att.ne.jp>.
 
-              sunicontopnm: fix arithmetic overflows.  Thanks Prophet of the
-              Way <afu@wta.att.ne.jp>.
+              sunicontopnm: fix arithmetic overflows.  Thanks Akira F
+              Urushibata <afu@wta.att.ne.jp>.
 
               icontopbm: rename to sunicontopnm.
 
@@ -957,14 +957,14 @@ not yet  BJH  Release 10.71.00
               pamstereogram: slight change to dpi and eye separation defaults.
               invert near/far dark/light association.  Thanks Scott Pakin.
 
-              pnmtops: Fix incorrect output with -flate.  Thanks Prophet of
-              the Way <afu@wta.att.ne.jp>.
+              pnmtops: Fix incorrect output with -flate.  Thanks Akira F
+              Urushibata <afu@wta.att.ne.jp>.
 
               sgitopnm: Fix arithmetic overflow on -channel option.  Thanks
-              Prophet of the Way <afu@wta.att.ne.jp>.
+              Akira F Urushibata <afu@wta.att.ne.jp>.
 
               sgitopnm: Fix crash with -channel on verbatim SGI image.  Thanks
-              Prophet of the Way <afu@wta.att.ne.jp>.
+              Akira F Urushibata <afu@wta.att.ne.jp>.
 
               fitstopnm: Deal properly with NaN in input image.
 
@@ -975,7 +975,7 @@ not yet  BJH  Release 10.71.00
 
               pdbimgtopam: fix corrupted output image.  Thanks Scott Pakin.
 
-              pnmtops: fix arithmetic overflows.  Thanks Prophet of the Way
+              pnmtops: fix arithmetic overflows.  Thanks Akira F Urushibata
               <afu@wta.att.ne.jp>.
 
               Rename all external symbols that don't have a Netpbm prefix
@@ -1037,20 +1037,20 @@ not yet  BJH  Release 10.71.00
               pamx: Make exit status 0 instead of 10 when window manager
               requests termination.
 
-              pnmsmooth: Respect -plain.  Thanks Prophet of the Way
+              pnmsmooth: Respect -plain.  Thanks Akira F Urushibata
               <afu@wta.att.ne.jp>.
 
               pnmsmooth: Don't display pnmconvol messages (i.e. run
               pnmconvol with -quiet).
 
               pamflip: speedup for PBM.  Use SSE2 and skip some idempotent
-              pixel movement.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+              pixel movement.  Thanks Akira F Urushibata <afu@wta.att.ne.jp>.
 
               anytopnm: recognize "PC bitmap" in 'file' response as BMP.
               (in addition to existing "PC bitmap data").
 
               libnetpbm, various PBM programs: Use SSE insted of MMX.  Thanks
-              Prophet of the Way <afu@wta.att.ne.jp>.
+              Akira F Urushibata <afu@wta.att.ne.jp>.
 
               pbmtext/libpbmfont: Fix wild pointer; probably asymptomatic.
               Introduced in Netpbm 10.39.
@@ -1077,12 +1077,12 @@ not yet  BJH  Release 10.71.00
               avstopam: fix incorrect output.
 
               pnmsmooth: fix arithmetic overflow with absurdly large
-              convolution matrix dimensions.  Thanks Prophet of the Way
+              convolution matrix dimensions.  Thanks Akira F Urushibata
               <afu@wta.att.ne.jp>.
 
               pnmsmooth: fix wild pointer: causes wrong arguments to
-              'pnmconvol'.  Introduced in Netpbm 10.50.  Thanks Prophet of the
-              Way <afu@wta.att.ne.jp>.
+              'pnmconvol'.  Introduced in Netpbm 10.50.  Thanks Akira F
+              Urushibata <afu@wta.att.ne.jp>.
 
               pamscale: fix -reduce.  Introduced in Netpbm 10.27 (March 2005).
 
@@ -1121,10 +1121,10 @@ not yet  BJH  Release 10.71.00
               strange combination of luminosity and HSV value.
 
               pamenlarge: Make special fast path for scale factors up to 10
-              (2, 3, and 5 already existed).  Thanks Prophet of the Way
+              (2, 3, and 5 already existed).  Thanks Akira F Urushibata
               <afu@wta.att.ne.jp>.
 
-              pamflip: Speed up for most images.  Thanks Prophet of the Way
+              pamflip: Speed up for most images.  Thanks Akira F Urushibata
               <afu@wta.att.ne.jp>.
 
               ybmtopbm: Assume YBM format has raster in natural order
@@ -1451,7 +1451,7 @@ not yet  BJH  Release 10.71.00
               computing means.
 
               pamcut, pnmcat, pnmpaste, pnmpad, g3topbm: Add fast PBM
-              path.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+              path.  Thanks Akira F Urushibata <afu@wta.att.ne.jp>.
 
               pnmpaste: fail if user specified stdin for both images.
 
@@ -1466,10 +1466,10 @@ not yet  BJH  Release 10.71.00
 
               pamcut: don't crash when cutting a region entirely to
               the left or right of the input image, with -pad.  Thanks
-              Prophet of the Way <afu@wta.att.ne.jp>.
+              Akira F Urushibata <afu@wta.att.ne.jp>.
 
               pamcut: don't crash when left > right or top > bottom with
-              -pad.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+              -pad.  Thanks Akira F Urushibata <afu@wta.att.ne.jp>.
 
               pgmhist: arbitrary output when total pixels doesn't fit in an
               integer.
@@ -1560,7 +1560,7 @@ not yet  BJH  Release 10.71.00
               tag).
 
               pbmtext: fail cleanly if -width, -space, or -lspace is
-              too large for computation.  Thanks Prophet of the Way
+              too large for computation.  Thanks Akira F Urushibata
               <afu@wta.att.ne.jp>.
 
               pnmmargin: don't crash with zero margin request.
@@ -1601,8 +1601,8 @@ not yet  BJH  Release 10.71.00
               
 07.12.27 BJH  Release 10.41.00
 
-              pamenlarge: much faster for PBM.  Thanks Prophet of the
-              Way <afu@wta.att.ne.jp>.
+              pamenlarge: much faster for PBM.  Thanks Akira F Urushibata
+              <afu@wta.att.ne.jp>.
 
               pamenlarge: remove arithmetic overflow.
 
@@ -1664,14 +1664,14 @@ not yet  BJH  Release 10.71.00
               <pebolle@tiscali.nl>.
 
               pnmmargin: add -plain option.    Thanks
-              Prophet of the Way <afu@wta.att.ne.jp>.
+              Akira F Urushibata <afu@wta.att.ne.jp>.
 
               pnmgamma: improve error messages.
 
               pamstack: accept Standard Input properly.
 
               pnmmargin: recognize invalid options better.  Thanks
-              Prophet of the Way <afu@wta.att.ne.jp>.
+              Akira F Urushibata <afu@wta.att.ne.jp>.
 
               anytopnm, pnmmargin, pamstretch-gen, ppmquantall: fix
               small temporary file security exposure.
@@ -1764,7 +1764,7 @@ not yet  BJH  Release 10.71.00
               Add pamfixtrunc.
 
               pamtogif: Add -aspect.  Thanks
-              Prophet of the Way <afu@wta.att.ne.jp>.
+              Akira F Urushibata <afu@wta.att.ne.jp>.
 
               pamditherbw: Add -atkinson.
 
@@ -1790,11 +1790,11 @@ not yet  BJH  Release 10.71.00
               misinterpretations.
 
               pamtogif: Speed up for monochrome images.  Thanks
-              Prophet of the Way <afu@wta.att.ne.jp>.
+              Akira F Urushibata <afu@wta.att.ne.jp>.
 
               pamtogif: Speed up for small images by using smaller
               hash table (so smaller memory footprint).  Thanks
-              Prophet of the Way <afu@wta.att.ne.jp>.
+              Akira F Urushibata <afu@wta.att.ne.jp>.
 
               libnetpbm: add pm_drain().
               
@@ -1868,21 +1868,21 @@ not yet  BJH  Release 10.71.00
               -interlace.
 
               pbmtoxbm: add -name option.
-              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+              Thanks Akira F Urushibata <afu@wta.att.ne.jp>.
 
               ppmshift, ppmspread, ppmforge, pgmnoise, pgmcrater: better
               randomization; won't produce the same image if you run it
               twice within the same second.
 
               pbmtoxbm: Use packed PBM functions for efficiency.
-              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+              Thanks Akira F Urushibata <afu@wta.att.ne.jp>.
               
               xbmtopbm: Use packed PBM functions for efficiency.
-              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+              Thanks Akira F Urushibata <afu@wta.att.ne.jp>.
 
               cmuwmtopbm, mgrtopbm, pbmtocmuwm, pbmtoicon, pbmtomgr:
               Use packed PBM functions for efficiency.
-              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+              Thanks Akira F Urushibata <afu@wta.att.ne.jp>.
 
               libnetpbm: add pnm_colorname().
 
@@ -1906,10 +1906,10 @@ not yet  BJH  Release 10.71.00
               rgb:0/0/0 style color name.
 
               pbmtoxbm, pbmtox10bm: merge.
-              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+              Thanks Akira F Urushibata <afu@wta.att.ne.jp>.
 
               pbmtox10bm: Fix generation of name in XBM file.
-              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+              Thanks Akira F Urushibata <afu@wta.att.ne.jp>.
 
               pbmtextps: Fix buffer overrun -- typical symptom: extra
               text generated.
@@ -2149,7 +2149,7 @@ not yet  BJH  Release 10.71.00
               Add pgmmake.
 
               bmptopnm: Understands RLE4/RLE8 compressed BMP.  Thanks
-              Prophet of the Way <afu@wta.att.ne.jp>.
+              Akira F Urushibata <afu@wta.att.ne.jp>.
 
               pnmgamma: Add -bt709tosrgb -srgbtobt709, -bt709tolinear,
               -lineartobt709, -gamma, -rgamma, -ggamma, -bgamma (gammma
@@ -2193,11 +2193,11 @@ not yet  BJH  Release 10.71.00
               being verbose.
 
               ppmtobmp, bmptopnm: major speed improvement for PBM.  Thanks
-              Prophet of the Way <afu@wta.att.ne.jp>.
+              Akira F Urushibata <afu@wta.att.ne.jp>.
 
               pbmtog3: Use new GCC features instead of assembly language
               for superspeed operations.  Thanks
-              Prophet of the Way <afu@wta.att.ne.jp>.
+              Akira F Urushibata <afu@wta.att.ne.jp>.
 
               pm_make_tmpfile(): Use TEMP and TMP environment variables if
               TMPDIR not set.
@@ -2855,37 +2855,34 @@ not yet  BJH  Release 10.71.00
 
               pamtopnm: accept extra planes (ignore them).
 
-              pamcut: major speedup.  Thanks Prophet of the Way
-              <afu@wta.att.ne.jp> (Akira Urushibata ("Douso")).
+              pamcut: major speedup.  Thanks Akira F Urushibata
+              <afu@wta.att.ne.jp>
 
               libnetpbm: Add pnm_getopacity().
 
               libnetpbm: Add pnm_applyopacityrown(), pnm_unapplyopacityrown().
 
               libnetpbm: "pam" read and write routines much more
-              efficient.  Thanks Prophet of the Way
-              <afu@wta.att.ne.jp> (Akira Urushibata ("Douso")).
+              efficient.  Thanks Akira F Urushibata
+              <afu@wta.att.ne.jp>
 
               Add pnm_formatpamrow(), pnm_allocrowimage(),
-              pnm_freerowimage().  Thanks Thanks Prophet of the Way
-              <afu@wta.att.ne.jp> (Akira Urushibata ("Douso")).
+              pnm_freerowimage().  Thanks Thanks Akira F Urushibata
+              <afu@wta.att.ne.jp>
 
               pnm_readpamrow(): Add option to have "tuplerow" argument
               NULL and not get the row's contents.  Thanks Thanks
-              Prophet of the Way <afu@wta.att.ne.jp> (Akira Urushibata
-              ("Douso")).
+              Akira F Urushibata <afu@wta.att.ne.jp>
 
-              Add pnm_writepamrowmult().  Thanks Thanks Prophet of the
-              Way <afu@wta.att.ne.jp> (Akira Urushibata ("Douso")).
+              Add pnm_writepamrowmult().  Thanks Thanks Akira F Urushibata
+              <afu@wta.att.ne.jp>.
 
               libnetpbm: format plain format images more nicely.
-              Thanks Thanks Prophet of the Way <afu@wta.att.ne.jp>
-              (Akira Urushibata ("Douso")).  
+              Thanks Thanks Akira F Urushibata <afu@wta.att.ne.jp>
 
               pamcut: fix bug: Blows up instead of failing cleanly
               when you try to cut beyond the bounds of the image.
-              Thanks Thanks Prophet of the Way <afu@wta.att.ne.jp>
-              (Akira Urushibata ("Douso")).
+              Thanks Thanks Akira F Urushibata <afu@wta.att.ne.jp>
 
               fix bug: MMX/SSE fast PBM writing (with gcc -msse) all wrong.
 
@@ -2895,7 +2892,7 @@ not yet  BJH  Release 10.71.00
               to enlarge.
 
               Speed up pbm_writepbmrow() (and all PBM output programs)
-              by going a byte at a time.  Thanks Prophet of the Way
+              by going a byte at a time.  Thanks Akira F Urushibata
               <afu@wta.att.ne.jp>.
 
               pamperspective: fix bug that can cause memory corruption
@@ -2926,11 +2923,11 @@ not yet  BJH  Release 10.71.00
               <esr@thyrsus.com>.
 
               pamflip: Large speed, memory improvements for
-              non-diagonal flips.  Thanks Prophet of the Way
+              non-diagonal flips.  Thanks Akira F Urushibata
               <afu@wta.att.ne.jp>.
 
               jbigtopnm, pnmtojbig: Use packed PBM functions to speed up
-              greatly.  Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+              greatly.  Thanks Akira F Urushibata <afu@wta.att.ne.jp>.
 
               g3topbm: Don't fail on premature EOF; produce partial
               output instead.
@@ -2997,13 +2994,13 @@ not yet  BJH  Release 10.71.00
               maketuplergb(), makerowrgb(), makearrayrgb().
 
               pnminvert: much faster for PBMs.  Thanks 
-              Prophet of the Way <afu@wta.att.ne.jp>.
+              Akira F Urushibata <afu@wta.att.ne.jp>.
 
-              pbmmake: use packed bits to speed up.  Thanks Prophet of
-              the Way <afu@wta.att.ne.jp> (Akira Urushibata ("Douso")).
+              pbmmake: use packed bits to speed up.  Thanks
+              Akira F Urushibata <afu@wta.att.ne.jp>.
 
-              pbmtog3: speedups.  Thanks Prophet of the Way
-              <afu@wta.att.ne.jp> (Akira Urushibata ("Douso")).
+              pbmtog3: speedups.  Thanks Akira F Urushibata
+              <afu@wta.att.ne.jp>.
 
               Fix gamma value (from .45 to 2.2) in pm_gamma709(), 
               pm_ungamma709().
@@ -3134,7 +3131,7 @@ not yet  BJH  Release 10.71.00
               Thanks David Jones <drj@pobox.com>.
 
               pbmtog3: fix buffer overrun when image > 1728 columns.
-              Thanks Prophet of the Way <afu@wta.att.ne.jp>.
+              Thanks Akira F Urushibata <afu@wta.att.ne.jp>.
 
               pnmsvgalib: Correct error message - too wide -> too tall.
 
