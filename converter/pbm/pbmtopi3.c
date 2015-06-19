@@ -12,6 +12,8 @@
 ** implied warranty.
 */
 
+/* Output file should always be 32034 bytes. */
+
 #include <stdio.h>
 #include "pm_c_util.h"
 #include "pbm.h"
@@ -27,7 +29,6 @@ putinit(FILE * const ofP)  {
     pm_writebigshort(ofP, (short) 0x777);
 
     for (i = 1; i < 16; ++i) {
-        pm_writebigshort (ofP, (short) 0);
         pm_writebigshort (ofP, (short) 0);
     }
 }
@@ -73,7 +74,7 @@ main(int argc, const char ** argv) {
 
     putinit(stdout);
 
-    for (row = 0; row < inRows; ++row) {
+    for (row = 0; row < MIN(inRows, outRows); ++row) {
         pbm_readpbmrow_packed(ifP, bitrow, inCols, format);
         pbm_cleanrowend_packed(bitrow, inCols);
         fwrite (bitrow, outColByteCt, 1, stdout);
