@@ -13,7 +13,8 @@ not yet  BJH  Release 10.71.00
               new in 1991.
 
               pnmtopalm: Fix arithmetic overflow with ridiculously large
-              image.
+              image.  Introduced after Netpbm 10.26 (January 2005) but before
+              Netpbm 10.35 (August 2006).
 
               pbmtoepson: fix -protocol option - never works and sometimes
               crashes program.  Always broken (-protocol was new in Netpbm
