@@ -689,15 +689,32 @@ destroyBuffer(struct seqBuffer * const bufferP) {
 static void
 addByteToBuffer(struct seqBuffer * const bufferP,
                 unsigned char      const newByte) {
+/*-----------------------------------------------------------------------------
+  Append one byte to buffer, expanding with realloc() whenever necessary.
+
+  Buffer is initially 4096 bytes.  It is doubled with each expansion.
+  A combination of large image size (maximum 65535 x 65535), high
+  resolution (each pixel can occupy more than one byte) and poor
+  compression can lead to an arithmetic overflow.
+  Abort with error if an arithmetic overflow is detected during doubling.
+-----------------------------------------------------------------------------*/
 
     assert(bufferP->allocatedSize >= bufferP->occupiedSize);
 
     if (bufferP->allocatedSize == bufferP->occupiedSize) {
-        bufferP->allocatedSize *= 2;
-        REALLOCARRAY(bufferP->buffer, bufferP->allocatedSize);
+        unsigned int const newSize = bufferP->allocatedSize * 2;
+
+        if (newSize <= bufferP->allocatedSize)
+            pm_error("Image too large.  Arithmetic overflow trying to "
+                     "expand buffer beyond %u bytes.",
+                     bufferP->allocatedSize);
+
+        REALLOCARRAY(bufferP->buffer, newSize);
         if (bufferP->buffer == NULL)
             pm_error("Couldn't (re)allocate %u bytes of memory "
-                     "for buffer.", bufferP->allocatedSize);
+                     "for buffer.", newSize);
+
+        bufferP->allocatedSize = newSize;
     }
     bufferP->buffer[bufferP->occupiedSize++] = newByte;
 }

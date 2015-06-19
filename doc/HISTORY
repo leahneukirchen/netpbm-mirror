@@ -12,6 +12,9 @@ not yet  BJH  Release 10.71.00
               because of a bug.  Now it isn't expected to.  Ppmtoicr was
               new in 1991.
 
+              pnmtopalm: Fix arithmetic overflow with ridiculously large
+              image.
+
               pbmtoepson: fix -protocol option - never works and sometimes
               crashes program.  Always broken (-protocol was new in Netpbm
               10.23 (July 2004).
