@@ -25,7 +25,7 @@ else
   LIBSYSTEM = libsystem.o
 endif
 
-LIBOBJECTS = libpm.o pmfileio.o fileio.o bitio.o colorname.o \
+LIBOBJECTS = libpm.o pmfileio.o fileio.o colorname.o \
 	libpamd.o \
 	libpbm1.o libpbm2.o libpbm3.o libpbmfont.o \
 	libpgm1.o libpgm2.o \
@@ -39,6 +39,7 @@ LIBOBJECTS = libpm.o pmfileio.o fileio.o bitio.o colorname.o \
 
 # Library objects to be linked but not built by common.mk:
 LIBOBJECTS_X = \
+  util/bitio.o \
   util/filename.o \
   util/io.o \
   util/mallocvar.o \
@@ -52,7 +53,7 @@ LIBOBJECTS_X = \
 MANUALS3 = libnetpbm
 MANUALS5 = pbm pgm ppm pnm pam
 
-INTERFACE_HEADERS = bitio.h colorname.h \
+INTERFACE_HEADERS = colorname.h \
 	pam.h pamdraw.h pammap.h pbm.h pbmfont.h \
 	pgm.h pm.h pm_gamma.h pm_system.h pnm.h \
 	ppm.h ppmcmap.h ppmdfont.h ppmdraw.h ppmfloyd.h \

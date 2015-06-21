@@ -116,6 +116,8 @@ not yet  BJH  Release 10.71.00
 
               ppmtoarbtxt: better rounding in sample values.
 
+              libnetpbm: Remove bitio.h as an external interface.
+
               test: replace some GNU-only code with more portable code that
               works on OS X.  Thanks Ryan Schmidt <ryandesign@macports.org>.
 
