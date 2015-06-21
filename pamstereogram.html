@@ -2,13 +2,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <title>Pamstereogram User Manual</title>
+<meta charset="UTF-8" />
 </head>
 
 <body>
 
 <h1>pamstereogram</h1>
 
-<p>Updated:30 December 2012</p>
+<p>Updated: 19 June 2015</p>
 
 <p><a href="#contents">Table Of Contents</a></p>
 
@@ -30,6 +31,7 @@ depth map</p>
 [<b>-texfile=</b><i>pamfile</i>]
 [<b>-bgcolor=</b><i>color</i>]
 [<b>-smoothing=</b><i>pixels</i>]
+[<b>-xbegin=</b><i>pixels</i>]
 [<b>-xshift=</b><i>pixels</i>]
 [<b>-yshift=</b><i>pixels</i>]
 [<b>-magnifypat=</b><i>scale</i>]
@@ -125,6 +127,20 @@ output file will have the same maxval and format (black and white,
 grayscale or color) as the pattern file. You cannot specify the
 <b>-patfile</b> option along with <b>-blackandwhite</b>,
 <b>-grayscale</b>, <b>-color</b>, or <b>-maxval</b>.</dd>
+
+<dt><b>-xbegin=</b><i>pixels</i></dt>
+<dd>Specify the horizontal coordinate at which to begin stereogram generation.
+The background pattern will be minimally distorted at this point and more
+distorted at greater distances.  Consider using this in conjunction
+with <b>-xshift</b> to align the horizontal start of the pattern with the
+horizontal start of stereogram generation. <b>-xbegin</b> is meaningful only
+in conjunction with <b>-patfile</b>, <b>-makemask</b>, or <b>-texfile</b>,
+and <b>pamstereogram</b> actually ignores it with respect to <b>-texfile</b>
+(but may not in a future version of <b>pamstereogram</b>).
+
+<p>The default is to begin in the center.
+
+<p>This option was new in Netpbm 10.71 (June 2015).
 
 <dt><b>-texfile=</b><i>pamfile</i></dt>
 <dd>Specify an image to use as the texture for a mapped-texture
@@ -410,20 +426,23 @@ speckles:</p>
 
 <li><a href="ppm3d.html">ppm3d</a></li>
 
-
 <li>Harold W. Thimbleby, Stuart Inglis, and Ian H. Witten.
 <em>Displaying 3D Images: Algorithms for Single Image Random Dot
 Stereograms</em>. In IEEE Computer, <strong>27</strong>(10):38-48,
-October 1994.  DOI <a
+October 1994.  DOI: <a
 href="http://dx.doi.org/10.1109/2.318576">10.1109/2.318576</a>.</li>
 
+<li>W. A. Steer.
+<em>Stereograms: Technical Details</em>.
+URL: <a href="http://www.techmind.org/stereo/stech.html">http://www.techmind.org/stereo/stech.html</a>.</li>
 </ul>
 
 
 <h2><a id="history">HISTORY</a></h2>
-<p><b>pamstereogram</b> was new in Netpbm 10.22 (April 2004),
-but probably broken beyond usability until 
-Netpbm 10.32 (February 2006) and Netpbm 10.26.23 (January 2006).</p>
+
+<p><b>pamstereogram</b> was new in Netpbm 10.22 (April 2004), but probably
+broken beyond usability until Netpbm 10.32 (February 2006) and Netpbm 10.26.23
+(January 2006).
 
 <p>A backward incompatible change to the way you request guide boxes
 (<b>-guidetop</b>, <b>-guidebottom</b>, <b>-guidesize</b> happened in
@@ -431,7 +450,7 @@ Netpbm 10.61 (December 2012).
 
 
 <h2><a id="author">AUTHOR</a></h2>
-<p>Copyright (C) 2006, 2010 Scott Pakin, <a href="mailto:scott+pbm@pakin.org">scott+pbm@pakin.org</a>.</p>
+<p>Copyright &copy; 2006-2015 Scott Pakin, <a href="mailto:scott+pbm@pakin.org">scott+pbm@pakin.org</a>.</p>
 
 <h2><a id="contents">Table Of Contents</a></h2>
 <ul>
@@ -453,4 +472,3 @@ Netpbm 10.61 (December 2012).
 </ul>
 </body>
 </html>
-
