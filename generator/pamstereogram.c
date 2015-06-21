@@ -8,12 +8,15 @@
  * The core of this program is a simple adaptation of the code in
  * "Displaying 3D Images: Algorithms for Single Image Random Dot
  * Stereograms" by Harold W. Thimbleby, Stuart Inglis, and Ian
- * H. Witten in IEEE Computer, 27(10):38-48, October 1994.  See that
- * paper for a thorough explanation of what's going on here.
+ * H. Witten in IEEE Computer, 27(10):38-48, October 1994 plus some
+ * enhancements presented in "Stereograms: Technical Details" by
+ * W. A. Steer at http://www.techmind.org/stereo/stech.html.  See
+ * those references for a thorough explanation of what's going on
+ * here.
  *
  * ----------------------------------------------------------------------
  *
- * Copyright (C) 2006-2012 Scott Pakin <scott+pbm@pakin.org>
+ * Copyright (C) 2006-2015 Scott Pakin <scott+pbm@pakin.org>
  *
  * All rights reserved.
  *
@@ -48,6 +51,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <limits.h>
 #include <assert.h>
 
 #include "pm_config.h"
@@ -79,8 +83,8 @@ struct cmdlineInfo {
     unsigned int guidebottom;    /* -guidebottom option count */
     unsigned int guidesize;      /* -guidesize option value */
     unsigned int magnifypat;     /* -magnifypat option */
-    unsigned int xshift;         /* -xshift option */
-    unsigned int yshift;         /* -yshift option */
+    int xshift;                  /* -xshift option */
+    int yshift;                  /* -yshift option */
     const char * patfile;        /* -patfile option.  Null if none */
     const char * texfile;        /* -texfile option.  Null if none */
     const char * bgcolor;        /* -bgcolor option */
@@ -88,6 +92,8 @@ struct cmdlineInfo {
     unsigned int randomseed;     /* -randomseed option */
     unsigned int randomseedSpec; /* -randomseed option count */
     enum outputType outputType;  /* Type of output file */
+    unsigned int xbegin;         /* -xbegin option */
+    unsigned int xbeginSpec;     /* -xbegin option count */
 };
 
 
@@ -147,7 +153,7 @@ parseCommandLine(int                  argc,
 
     unsigned int patfileSpec, texfileSpec, dpiSpec, eyesepSpec, depthSpec,
         guidesizeSpec, magnifypatSpec, xshiftSpec, yshiftSpec,
-        bgcolorSpec, smoothingSpec, planesSpec;
+      bgcolorSpec, smoothingSpec, planesSpec;
 
     unsigned int blackandwhite, grayscale, color;
     const char ** planes;
@@ -183,9 +189,9 @@ parseCommandLine(int                  argc,
             &guidesizeSpec,           0);
     OPTENT3(0, "magnifypat",      OPT_UINT,   &cmdlineP->magnifypat,
             &magnifypatSpec,          0);
-    OPTENT3(0, "xshift",          OPT_UINT,   &cmdlineP->xshift,
+    OPTENT3(0, "xshift",          OPT_INT,    &cmdlineP->xshift,
             &xshiftSpec,              0);
-    OPTENT3(0, "yshift",          OPT_UINT,   &cmdlineP->yshift,
+    OPTENT3(0, "yshift",          OPT_INT,    &cmdlineP->yshift,
             &yshiftSpec,              0);
     OPTENT3(0, "patfile",         OPT_STRING, &cmdlineP->patfile,
             &patfileSpec,             0);
@@ -199,6 +205,8 @@ parseCommandLine(int                  argc,
             &smoothingSpec,           0);
     OPTENT3(0, "planes",          OPT_STRINGLIST, &planes,
             &planesSpec,              0);
+    OPTENT3(0, "xbegin",          OPT_UINT,   &cmdlineP->xbegin,
+            &cmdlineP->xbeginSpec,    0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -494,8 +502,8 @@ struct patternPixelState {
     /* This is the state of a patternPixel generator.*/
     struct pam   patPam;     /* Descriptor of pattern image */
     tuple **     patTuples;  /* Entire image read from the pattern file */
-    unsigned int xshift;
-    unsigned int yshift;
+    int xshift;
+    int yshift;
     unsigned int magnifypat;
 };
 
@@ -766,7 +774,7 @@ drawguides(unsigned int       const guidesize,
     unsigned int const far = separation(0, eyesep, dpi, depthOfField);
         /* Space between the two guide boxes. */
     unsigned int const width = outPamP->width;  /* Width of the output image */
-    
+
     tuple * outrow;             /* One row of output data */
     tuple blackTuple;
     unsigned int col;
@@ -774,7 +782,7 @@ drawguides(unsigned int       const guidesize,
     pnm_createBlackTuple(outPamP, &blackTuple);
 
     outrow = pnm_allocpamrow(outPamP);
-    
+
     /* Put some white rows before the guides */
     writeWhiteRows(outPamP, guidesize);
 
@@ -795,7 +803,7 @@ drawguides(unsigned int       const guidesize,
         if (far + guidesize > width) {
             pm_message("warning: the guide boxes are partially out of bounds "
                        "at %u DPI", dpi);
-            
+
             leftBeg  = 0;
             rightEnd = width;
         } else {
@@ -803,7 +811,7 @@ drawguides(unsigned int       const guidesize,
             leftBeg  = (width - far - guidesize)/2;
             rightEnd = (width + far + guidesize)/2;
         }
-        
+
         /* Draw the left guide black in the buffer */
         assert(leftEnd < outPamP->width);
         for (col = leftBeg; col < leftEnd; ++col)
@@ -829,83 +837,80 @@ drawguides(unsigned int       const guidesize,
 static void
 makeStereoRow(const struct pam * const inPamP,
               tuple *            const inRow,
-              unsigned int *     const same,
+              unsigned int *     const sameL,
+              unsigned int *     const sameR,
               double             const depthOfField,
               double             const eyesep,
               unsigned int       const dpi,
               unsigned int       const optWidth,
               unsigned int       const smoothing) {
 
-/* Do the bulk of the work.  See the paper cited above for code
- * comments.  All I (Scott) did was transcribe the code and make
- * minimal changes for Netpbm.  And some style changes by Bryan to
- * match Netpbm style.
- */ 
+/* Given a row of the depth map, compute the sameL and sameR arrays,
+ * which indicate for each pixel which pixel to its left and right it
+ * should be colored the same as.
+ */
 #define Z(X) (inRow[X][0]/(double)inPamP->maxval)
-
-    unsigned int const pixelEyesep = ROUNDU(eyesep * dpi);
-        /* Separation in pixels between the viewer's eyes */
 
     unsigned int col;
 
-    for (col = 0; col < inPamP->width; ++col)
-        same[col] = col;
+    for (col = 0; col < inPamP->width; ++col) {
+        sameL[col] = col;
+        sameR[col] = col;
+    }
 
     for (col = 0; col < inPamP->width; ++col) {
-        unsigned int const s = separation(Z(col), eyesep, dpi, depthOfField);
+        unsigned int const sep = separation(Z(col), eyesep, dpi, depthOfField);
+        int const left = col - sep/2;
+        int const right = left + sep;
 
-        if (col >= s/2 && col + s/2 < inPamP->width) {
-            unsigned int left, right;
+        if (left >= 0 && right < inPamP->width) {
+            bool isVisible;
+        
+            if (sameL[right] != right) {
+                /* Right point already linked */
+                if (sameL[right] < left) {
+                    /* Deeper than current */
+                    sameR[sameL[right]] = sameL[right];  /* Break old links. */
+                    sameL[right] = right;
+                    isVisible = TRUE;
+                } else
+                    isVisible = FALSE;
+            } else
+                isVisible = TRUE;
 
-            bool visible;
-            unsigned int t;
-            double zt;
+            if (sameR[left] != left) {
+                /* Left point already linked */
+                if (sameR[left] > right) {
+                    /* Deeper than current */
+                    sameL[sameR[left]] = sameR[left];  /* Break old links. */
+                    sameR[left] = left;
+                    isVisible = TRUE;
+                } else
+                    isVisible = FALSE;
+            } else
+                isVisible = TRUE;
 
-            left  = col - s/2;  /* initial value */
-            right = col + s/2;  /* initial value */
-            t = 1;  /* initial value */
-
-            do {
-                double const dof = depthOfField;
-                zt = Z(col) + 2.0*(2.0 - dof*Z(col))*t/(dof*pixelEyesep);
-                assert(col >= t);
-                assert(col + t < inPamP->width);
-                visible = Z(col-t) < zt && Z(col+t) < zt;
-                ++t;
-            } while (visible && zt < 1);
-
-            if (visible) {
-                unsigned int l;
-                
-                l = same[left];
-                while (l != left && l != right) {
-                    if (l < right) {
-                        left = l;
-                        l = same[left];
-                    } else {
-                        same[left] = right;
-                        left = right;
-                        l = same[left];
-                        right = l;
-                    }
-                }
-                same[left] = right;
+            if (isVisible) {
+                /* Make a link. */
+                sameL[right] = left;
+                sameR[left] = right;
             }
         }
     }
 
     /* If smoothing is enabled, replace each non-duplicate pixel with
-       the pixel adjacent to its right neighbor. */
+       the pixel adjacent to its right neighbor.
+    */
     if (smoothing > 0) {
         int const baseCol = inPamP->width - optWidth - 1;
 
         int col;
 
         for (col = inPamP->width - 1; col >= 0; --col)
-            same[col] = same[same[col]];
+            sameR[col] = sameR[sameR[col]];
         for (col = baseCol; col >= 0; --col) {
-            if (same[col] == col)
-                same[col] = same[col+1] - 1;
+            if (sameR[col] == col)
+                sameR[col] = sameR[col+1] - 1;
         }
     }
 }
@@ -914,12 +919,24 @@ makeStereoRow(const struct pam * const inPamP,
 
 static void
 makeMaskRow(const struct pam *   const outPamP,
-            const unsigned int * const same,
+            unsigned int         const xbegin,
+            const unsigned int * const sameL,
+            const unsigned int * const sameR,
             const tuple *        const outRow) {
     int col;
 
-    for (col = outPamP->width-1; col >= 0; --col) {
-        bool const duplicate = (same[col] != col);
+    for (col = (int)xbegin; col < outPamP->width; ++col) {
+        bool const duplicate = (sameL[col] != col && sameL[col] >= xbegin);
+
+        unsigned int plane;
+
+        for (plane = 0; plane < outPamP->depth; ++plane)
+            outRow[col][plane] = duplicate ? outPamP->maxval : 0;
+    }
+
+    for (col = (int)xbegin - 1; col >= 0; --col) {
+        bool const duplicate = (sameR[col] != col);
+
         unsigned int plane;
 
         for (plane = 0; plane < outPamP->depth; ++plane)
@@ -1148,35 +1165,65 @@ makeImageRowMts(outGenerator *       const outGenP,
 static void
 makeImageRow(outGenerator *       const outGenP,
              unsigned int         const row,
-             const unsigned int * const same,
+             unsigned int         const optWidth,
+             unsigned int         const xbegin,
+             const unsigned int * const sameL,
+             const unsigned int * const sameR,
              const tuple *        const outRow) {
 /*----------------------------------------------------------------------------
-  same[N] is one of two things:
+  sameR[N] is one of two things:
 
-  same[N] == N means to generate a value for Column N independent of
+  sameR[N] == N means to generate a value for Column N independent of
   other columns in the row.
 
-  same[N] > N means Column N should be identical to Column same[N].
+  sameR[N] > N means Column N should be identical to Column sameR[N].
 
-  same[N] < N is not allowed.
+  sameR[N] < N is not allowed.
+
+  sameL[N] is one of two things:
+
+  sameL[N] == N means to generate a value for Column N independent of
+  other columns in the row.
+
+  sameL[N] < N means Column N should be identical to Column sameL[N].
+
+  sameL[N] > N is not allowed.
 -----------------------------------------------------------------------------*/
     int col;
-    for (col = outGenP->pam.width-1; col >= 0; --col) {
-        bool const duplicate = (same[col] != col);
-            /* This column is a duplicate of an earlier (farther to the right)
-               column, to wit Column same[col]
-            */
+    int lastLinked;
+
+    for (col = (int)xbegin, lastLinked = INT_MIN;
+         col < outGenP->pam.width;
+         ++col) {
 
         tuple newtuple;
 
-        if (duplicate) {
-            assert(same[col] > col);
-            assert(same[col] < outGenP->pam.width);
+        if (sameL[col] == col || sameL[col] < (int)xbegin) {
+            if (lastLinked == col - 1)
+                newtuple = outRow[col - 1];
+            else
+                newtuple = outGenP->getTuple(outGenP, col, row);
+        } else {
+          newtuple = outRow[sameL[col]];
+          lastLinked = col;
+              /* Keep track of the last pixel to be constrained. */
+        }
+        pnm_assigntuple(&outGenP->pam, outRow[col], newtuple);
+    }
 
-            newtuple = outRow[same[col]];
-        } else
-            newtuple = outGenP->getTuple(outGenP, col, row);
+    for (col = (int)xbegin - 1, lastLinked = INT_MIN; col >= 0; --col) {
+        tuple newtuple;
 
+        if (sameR[col] == col) {
+            if (lastLinked == col + 1)
+                newtuple = outRow[col + 1];
+            else
+                newtuple = outGenP->getTuple(outGenP, col, row);
+        } else {
+            newtuple = outRow[sameR[col]];
+            lastLinked = col;
+                /* Keep track of the last pixel to be constrained. */
+        }
         pnm_assigntuple(&outGenP->pam, outRow[col], newtuple);
     }
 }
@@ -1204,28 +1251,36 @@ makeImageRows(const struct pam * const inPamP,
               bool               const crossEyed,
               bool               const makeMask,
               unsigned int       const magnifypat,
-              unsigned int       const smoothing) {
+              unsigned int       const smoothing,
+              unsigned int       const xbegin) {
 
     tuple * inRow;     /* One row of pixels read from the height-map file */
     tuple * outRow;    /* One row of pixels to write to the height-map file */
-    unsigned int * same;
-        /* Malloced array: same[N] is the column number of a pixel to the
+    unsigned int * sameR;
+        /* Malloced array: sameR[N] is the column number of a pixel to the
            right forced to have the same color as the one in column N
         */
-    unsigned int * sameFp;
-        /* Malloced array: Fixed point of same[] */
+    unsigned int * sameL;
+        /* Malloced array: sameL[N] is the column number of a pixel to the
+           left forced to have the same color as the one in column N
+        */
+    unsigned int * sameRfp;
+        /* Malloced array: Fixed point of sameR[] */
     tuple * rowBuffer;     /* Scratch row needed for texture manipulation */
     unsigned int row;      /* Current row in the input and output files */
 
     inRow = pnm_allocpamrow(inPamP);
     outRow = pnm_allocpamrow(&outputGeneratorP->pam);
-    MALLOCARRAY(same, inPamP->width);
-    if (same == NULL)
-        pm_error("Unable to allocate space for \"same\" array.");
+    MALLOCARRAY(sameR, inPamP->width);
+    if (sameR == NULL)
+        pm_error("Unable to allocate space for \"sameR\" array.");
+    MALLOCARRAY(sameL, inPamP->width);
+    if (sameL == NULL)
+        pm_error("Unable to allocate space for \"sameL\" array.");
 
-    MALLOCARRAY(sameFp, inPamP->width);
-    if (sameFp == NULL)
-        pm_error("Unable to allocate space for \"sameFp\" array.");
+    MALLOCARRAY(sameRfp, inPamP->width);
+    if (sameRfp == NULL)
+        pm_error("Unable to allocate space for \"sameRfp\" array.");
     rowBuffer = pnm_allocpamrow(&outputGeneratorP->pam);
 
     for (row = 0; row < inPamP->height; ++row) {
@@ -1237,26 +1292,29 @@ makeImageRows(const struct pam * const inPamP,
             invertHeightRow(inPamP, inRow);
 
         /* Determine color constraints. */
-        makeStereoRow(inPamP, inRow, same, depthOfField, eyesep, dpi,
+        makeStereoRow(inPamP, inRow, sameL, sameR, depthOfField, eyesep, dpi,
                       ROUNDU(eyesep * dpi)/(magnifypat * 2),
                       smoothing);
 
         if (makeMask)
-            makeMaskRow(&outputGeneratorP->pam, same, outRow);
+            makeMaskRow(&outputGeneratorP->pam, xbegin, sameL, sameR, outRow);
         else {
             if (outputGeneratorP->textureP)
-                makeImageRowMts(outputGeneratorP, row, same, sameFp,
+                makeImageRowMts(outputGeneratorP, row, sameR, sameRfp,
                                 rowBuffer, outRow);
             else
-                makeImageRow(outputGeneratorP, row, same, outRow);
+                makeImageRow(outputGeneratorP, row,
+                             ROUNDU(eyesep * dpi)/(magnifypat * 2),
+                             xbegin, sameL, sameR, outRow);
         }
         /* Write the resulting row. */
         pnm_writepamrow(&outputGeneratorP->pam, outRow);
     }
 
     pnm_freepamrow(rowBuffer);
-    free(sameFp);
-    free(same);
+    free(sameRfp);
+    free(sameL);
+    free(sameR);
     pnm_freepamrow(outRow);
     pnm_freepamrow(inRow);
 }
@@ -1270,6 +1328,8 @@ produceStereogram(FILE *             const ifP,
     struct pam inPam;    /* PAM information for the height-map file */
     outGenerator * outputGeneratorP;
         /* Handle of an object that generates background pixels */
+    unsigned int xbegin;
+        /* x coordinate separating left-to-right from right-to-left coloring */
 
     pnm_readpaminit(ifP, &inPam, PAM_STRUCT_SIZE(tuple_type));
 
@@ -1285,6 +1345,15 @@ produceStereogram(FILE *             const ifP,
 
     pnm_writepaminit(&outputGeneratorP->pam);
 
+    if (cmdline.xbeginSpec == 0)
+        xbegin = outputGeneratorP->pam.width/2;
+    else {
+        xbegin = cmdline.xbegin;
+        if (xbegin >= outputGeneratorP->pam.width)
+            pm_error("-xbegin must be less than the image width (%d)",
+                     outputGeneratorP->pam.width);
+    }
+
     if (cmdline.guidetop)
         drawguides(cmdline.guidesize, &outputGeneratorP->pam,
                    cmdline.eyesep,
@@ -1293,7 +1362,7 @@ produceStereogram(FILE *             const ifP,
     makeImageRows(&inPam, outputGeneratorP,
                   cmdline.depth, cmdline.eyesep, cmdline.dpi,
                   cmdline.crosseyed, cmdline.makemask, cmdline.magnifypat,
-                  cmdline.smoothing);
+                  cmdline.smoothing, xbegin);
 
     if (cmdline.guidebottom)
         drawguides(cmdline.guidesize, &outputGeneratorP->pam,
@@ -1332,7 +1401,7 @@ reportParameters(struct cmdlineInfo const cmdline) {
                sep1, cmdline.magnifypat, sep1 / cmdline.magnifypat);
     pm_message("Unique 3-D depth levels possible: %u", sep0 - sep1 + 1);
     if (cmdline.patfile && (cmdline.xshift || cmdline.yshift))
-        pm_message("Pattern shift: (%u, %u)", cmdline.xshift, cmdline.yshift);
+        pm_message("Pattern shift: (%d, %d)", cmdline.xshift, cmdline.yshift);
 }
 
 
