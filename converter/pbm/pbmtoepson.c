@@ -11,6 +11,7 @@
 ** implied warranty.
 */
 
+#define _BSD_SOURCE    /* Make sure strcaseeq() is in nstring.h */
 #include <stdio.h>
 
 #include "pm_c_util.h"
