@@ -15,7 +15,8 @@ include $(SRCDIR)/common.mk
 
 %.o:%.ico
 	echo "id ICON \"$<\"" >rc
-	windres --input-format rc --input rc --output-format coff --output $@
+	$(WINDRES) --input-format rc --input rc --output-format coff \
+	   --output $@
 	rm rc
 
 distclean clean: cleanlocal

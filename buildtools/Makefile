@@ -8,9 +8,9 @@ include $(BUILDDIR)/config.mk
 
 MERGE_OBJECTS =
 
-PROGS = libopt typegen endiangen
+BUILDPROGS = libopt typegen endiangen
 
-all: $(PROGS)
+all: $(BUILDPROGS)
 
 OMIT_BUILDTOOL_RULE = 1
 include $(SRCDIR)/common.mk
@@ -39,4 +39,4 @@ $(BUILDPROGS):%:%.o
 distclean clean: cleanlocal
 .PHONY: cleanlocal
 cleanlocal:
-	rm -f $(PROGS)
+	rm -f $(BUILDPROGS)
