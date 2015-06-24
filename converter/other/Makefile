@@ -46,7 +46,7 @@ else
     HAVE_PNGLIB = Y
     EXTERN_INCLUDES += $(shell libpng$(PNGVER)-config --cflags)
   else
-    # System can't tell use where libpng is; use stuff from config.mk
+    # System can't tell us where libpng is; use stuff from config.mk
     ifneq ($(PNGLIB),NONE)
       HAVE_PNGLIB = Y
       ifneq ($(PNGHDR_DIR)x,x)
