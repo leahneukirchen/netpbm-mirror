@@ -127,6 +127,8 @@ not yet  BJH  Release 10.71.00
               Build: don't build and install libjbig and libjasper if we
               are using external versions of them instead.
 
+              Build: various cross-compile fixes, especially for MinGW.
+
               Build: work around bug in GCC < 4.2 related to SSE2 builtins
               that causes compile of pamflip to fail.
 
