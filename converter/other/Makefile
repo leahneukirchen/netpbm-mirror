@@ -131,7 +131,7 @@ ifneq ($(DONT_HAVE_PROCESS_MGMT),Y)
 endif
 
 ifeq ($(HAVE_PNGLIB),Y)
-  PORTBINARIES += pnmtopng pngtopam pamrgbatopng
+  PORTBINARIES += pamtopng pnmtopng pngtopam pamrgbatopng
 endif
 ifneq ($(JPEGLIB),NONE)
   PORTBINARIES += jpegtopnm pnmtojpeg
@@ -206,6 +206,10 @@ endif
 pngtopam: pngx.o
 pngtopam: ADDL_OBJECTS = pngx.o
 pngtopam: LDFLAGS_TARGET = $(PNGLIB_LIBOPTS)
+
+pamtopng: pngx.o pngtxt.o
+pamtopng: ADDL_OBJECTS = pngx.o pngtxt.o
+pamtopng: LDFLAGS_TARGET = $(PNGLIB_LIBOPTS)
 
 pnmtopng: pngx.o pngtxt.o
 pnmtopng: ADDL_OBJECTS = pngx.o pngtxt.o
