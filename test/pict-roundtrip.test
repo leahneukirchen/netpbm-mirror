@@ -2,13 +2,6 @@
 # This script tests: picttoppm ppmtopict
 # Also requires: pamseq pamdepth pamtopnm pnmremap
 
-  alias picttoppm="${PBM_TESTPREFIX}picttoppm"
-  alias ppmtopict="${PBM_TESTPREFIX}ppmtopict"
-  alias pamseq="${PBM_BINPREFIX}pamseq"
-  alias pamdepth="${PBM_BINPREFIX}pamdepth"
-  alias pamtopnm="${PBM_BINPREFIX}pamtopnm"
-  alias pnmremap="${PBM_BINPREFIX}pnmremap"
-  shopt -s expand_aliases
 
 #Test.  Should print 984199586 101484
 pamseq 3 5 -tupletype=RGB | pamdepth 255 | pamtopnm | \

@@ -1,10 +1,7 @@
 #! /bin/bash
 # This script tests: pbmtowbmp wbmptopbm
-# Also requires: 
+# Also requires:
 
-  alias pbmtowbmp="${PBM_TESTPREFIX}pbmtowbmp"
-  alias wbmptopbm="${PBM_TESTPREFIX}wbmptopbm"
-  shopt -s expand_aliases
 
 # Should print 2425386270 41, cksum of testgrid.pbm
 pbmtowbmp testgrid.pbm | wbmptopbm | cksum

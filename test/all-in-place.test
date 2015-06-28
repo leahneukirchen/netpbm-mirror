@@ -3,6 +3,7 @@
 
 # We test by actually running all the executables.
 
+# Failure message
 # See Netpbm Library Prerequisites
 # http://netpbm.sourceforge.net/prereq.html
 # if make succeeds but this test fails.
@@ -15,21 +16,20 @@ function testExitStatus () {
 #   $3: actual exit status
 
     case $3 in
-      $2)  echo $1": ok" ;;
-      126) if [ ! -z "${PBM_TESTPREFIX}" ] && \
-              [   -d "${PBM_TESTPREFIX}" ] && \
-              [ ! -x "${PBM_TESTPREFIX}/$1" ]
+      126) if [ ! -x $1 ]
              then echo $1": NOT EXECUTABLE";
              else echo $1": ERROR: "$3;    echo $1": error: "$3 1>&2 ;
            fi ;;
-      127) if [ ! -z "${PBM_TESTPREFIX}" ] && \
-              [   -d "${PBM_TESTPREFIX}" ] && \
-              [ ! -f "${PBM_TESTPREFIX}/$1" ]
+      127) type -p $1 > /dev/null
+           if [ $? -ne 0 ]
              then echo $1": NO SUCH FILE";
              else echo $1": ERROR: "$3;    echo $1": error: "$3 1>&2 ;
            fi ;;
+      88)  echo $1": NO SUCH FILE" ;;
+      $2)  echo $1": ok" ;;
       *)   echo $1": ERROR: "$3;    echo $1": error: "$3 1>&2 ;;
     esac
+
 }
 
 
@@ -43,7 +43,6 @@ ordinary_testprogs="\
   avstopam \
   bioradtopgm \
   bmptopnm \
-  bmptoppm \
   brushtopbm \
   cameratopam \
   cistopbm \
@@ -54,13 +53,11 @@ ordinary_testprogs="\
   fitstopnm \
   fstopgm \
   g3topbm \
-  gemtopbm \
   gemtopnm \
   giftopnm \
   gouldtoppm \
   hdifftopam \
   hipstopgm \
-  icontopbm \
   ilbmtoppm \
   imgtoppm \
   infotopam \
@@ -82,6 +79,7 @@ ordinary_testprogs="\
   pambayer \
   pamchannel \
   pamcomp \
+  pamcrater \
   pamcut \
   pamdeinterlace \
   pamdepth \
@@ -92,7 +90,7 @@ ordinary_testprogs="\
   pamenlarge \
   pamexec \
   pamfile \
-  pamfixtrunc \
+  pamfix \
   pamflip \
   pamfunc \
   pamgauss \
@@ -111,6 +109,7 @@ ordinary_testprogs="\
   pamrubber \
   pamscale \
   pamseq \
+  pamshadedrelief \
   pamsharpmap \
   pamsharpness \
   pamsistoaglyph \
@@ -144,6 +143,7 @@ ordinary_testprogs="\
   pamtowinicon \
   pamtoxvmini \
   pamundice \
+  pamvalidate \
   pamwipeout \
   pamx \
   pbmclean \
@@ -171,7 +171,6 @@ ordinary_testprogs="\
   pbmtogem \
   pbmtogo \
   pbmtoibm23xx \
-  pbmtoicon \
   pbmtolj \
   pbmtoln03 \
   pbmtolps \
@@ -200,9 +199,7 @@ ordinary_testprogs="\
   pfmtopam \
   pgmabel \
   pgmbentley \
-  pamcrater \
   pgmdeshadow \
-  pgmedge \
   pgmenhance \
   pgmhist \
   pgmkernel \
@@ -211,10 +208,7 @@ ordinary_testprogs="\
   pgmminkowski \
   pgmmorphconv \
   pgmnoise \
-  pgmnorm \
-  pgmoil \
   pgmramp \
-  pgmslice \
   pgmtexture \
   pgmtofs \
   pgmtolispm \
@@ -229,24 +223,15 @@ ordinary_testprogs="\
   pjtoppm \
   pktopbm \
   pngtopam \
-  pngtopnm \
   pnmalias \
-  pnmarith \
   pnmcat \
   pnmcolormap \
-  pnmcomp \
   pnmconvol \
   pnmcrop \
-  pnmcut \
-  pnmdepth \
-  pnmenlarge \
-  pnmfile \
-  pnmflip \
   pnmgamma \
   pnmhisteq \
   pnmhistmap \
   pnmindex \
-  pnminterp \
   pnminvert \
   pnmmercator \
   pnmmontage \
@@ -257,28 +242,23 @@ ordinary_testprogs="\
   pnmpsnr \
   pnmremap \
   pnmrotate \
-  pnmscale \
   pnmscalefixed \
   pnmshear \
   pnmsmooth \
-  pnmsplit \
   pnmstitch \
   pnmtile \
   pnmtoddif \
   pnmtofiasco \
-  pnmtofits \
   pnmtojbig \
   pnmtojpeg \
   pnmtopalm \
   pnmtopclxl \
   pnmtopng \
-  pnmtopnm \
   pnmtops \
   pnmtorast \
   pnmtorle \
   pnmtosgi \
   pnmtosir \
-  pnmtotiff \
   pnmtotiffcmyk \
   pnmtoxwd \
   ppm3d \
@@ -301,7 +281,6 @@ ordinary_testprogs="\
   ppmlabel \
   ppmmake \
   ppmmix \
-  ppmnorm \
   ppmntsc \
   ppmpat \
   ppmrelief \
@@ -314,14 +293,11 @@ ordinary_testprogs="\
   ppmtoascii \
   ppmtobmp \
   ppmtoeyuv \
-  ppmtogif \
   ppmtoicr \
   ppmtoilbm \
-  ppmtojpeg \
   ppmtoleaf \
   ppmtolj \
   ppmtomitsu \
-  ppmtompeg \
   ppmtoneo \
   ppmtopcx \
   ppmtopgm \
@@ -335,7 +311,6 @@ ordinary_testprogs="\
   ppmtosixel \
   ppmtospu \
   ppmtoterm \
-  ppmtouil \
   ppmtowinicon \
   ppmtoxpm \
   ppmtoyuv \
@@ -382,7 +357,7 @@ ordinary_testprogs="\
 
 for i in $ordinary_testprogs
   do
-    ${PBM_TESTPREFIX}$i --version  2>&1 | \
+    $i --version  2>&1 | \
     egrep -v \
     "(Using libnetpbm|Compiled|(BSD|SYSV|MSDOS|AMIGA) defined|RGB_?ENV=)" \
       1>&2;
@@ -390,28 +365,24 @@ for i in $ordinary_testprogs
   done
 
 
-
 # Test fiascotopnm, which has a unique -v flag.
-
-${PBM_TESTPREFIX}fiascotopnm -v 2> /dev/null
+fiascotopnm -v 2> /dev/null
     testExitStatus fiascotopnm 2 $?
 
 
-
 # Test manweb and pnmmargin, which have --help.
-
-${PBM_TESTPREFIX}manweb --help > /dev/null
+manweb --help > /dev/null
     testExitStatus manweb 0 $?
 
-${PBM_TESTPREFIX}pnmmargin --help 2> /dev/null
+pnmmargin --help 2> /dev/null
     testExitStatus pnmmargin 1 $?
 
 
-
-# Test anytopnm, pbmtox10bm, pnmnoraw, pnmquant, pnmquantall,
-# pnmtoplainpnm, ppmquantall, ppmrainbow, ppmshadow, ppmtomap
+# Test anytopnm, pnmnoraw, pnmquant, pnmquantall
+# ppmrainbow, ppmshadow, ppmtomap
 # with trivial input.
 
+$i ${tmpdir}/test.pbm > /dev/null 2> /dev/null;
 tmpdir=${tmpdir:-/tmp}
 test_pbm=${tmpdir}/test.pbm
 
@@ -421,33 +392,29 @@ P1
 1
 EOF
 
-for i in anytopnm pbmtox10bm pnmnoraw pnmtoplainpnm ppmtomap ppmshadow
+for i in anytopnm ppmtomap ppmshadow
   do
-    ${PBM_TESTPREFIX}$i ${test_pbm} > /dev/null 2> /dev/null;
+    $i ${tmpdir}/test.pbm > /dev/null 2> /dev/null;
     testExitStatus $i 0 $?
   done
 
-for i in pnmquant pnmquantall ppmquant ppmquantall
+for i in pnmquant pnmquantall
   do
-    ${PBM_TESTPREFIX}$i 2 ${test_pbm} > /dev/null 2> /dev/null;
+    $i 2 ${tmpdir}/test.pbm > /dev/null 2> /dev/null;
     testExitStatus $i 0 $?
   done
 
 rm ${test_pbm}
-
-${PBM_TESTPREFIX}ppmrainbow rgb:00/00/00 rgb:ff/ff/ff \
+    ppmrainbow rgb:00/00/00 rgb:ff/ff/ff \
     -tmpdir=${tmpdir} -width=2 -height=2 > /dev/null
     testExitStatus ppmrainbow 0 $?
-
 
 
 # Test ppmfade with corrupt input.
 # Prevent the creation of output files by setting base to /dev/null.
 # Exit status should be 50.
-
-${PBM_TESTPREFIX}ppmfade -f /dev/zero -base /dev/null > /dev/null 2> /dev/null
+    ppmfade -f /dev/zero -base /dev/null > /dev/null 2> /dev/null
     testExitStatus ppmfade 50 $?
-
 
 
 # Test pamstretch-gen and pcdovtoppm with no input.
@@ -456,15 +423,6 @@ ${PBM_TESTPREFIX}ppmfade -f /dev/zero -base /dev/null > /dev/null 2> /dev/null
 
 for i in pamstretch-gen pcdovtoppm
   do
-  ${PBM_TESTPREFIX}$i > /dev/null
+     $i > /dev/null
      testExitStatus $i 1 $?
   done
-
-
-
-# We do not test hpcdtoppm.
-# This is a stand-in which announces the absence of the real hpcdtoppm.
-# TODO: Provide for the case in which the real hpcdtoppm is encountered.
-
-#${PBM_TESTPREFIX}hpcdtoppm 2> /dev/null
-#    testExitStatus hpcdtoppm 1 $?

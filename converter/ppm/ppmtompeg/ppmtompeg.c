@@ -59,7 +59,7 @@
 
 #include <time.h>
 
-int main _ANSI_ARGS_((int argc, char **argv));
+int main (int argc, char **argv);
 
 
 /*==================*
@@ -92,7 +92,7 @@ const char * hostname;
  * External PROCEDURE prototypes  *
  *================================*/
 
-void init_idctref _ANSI_ARGS_((void));
+void init_idctref (void);
 
 
 struct cmdlineInfo {

@@ -2,10 +2,6 @@
 # This script tests: pnmshear
 # Also requires: pbmmake pnmpad
 
-  alias pnmshear="${PBM_TESTPREFIX}pnmshear"
-  alias pbmmake="${PBM_BINPREFIX}pbmmake"
-  alias pnmpad="${PBM_BINPREFIX}pnmpad"
-  shopt -s expand_aliases
 
 # Test.  Should produce 598644601 24
 

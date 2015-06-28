@@ -2,9 +2,6 @@
 # This script tests: pnmcrop pnmmargin
 # Also requires: pnmpad
 
-  alias pnmcrop="${PBM_TESTPREFIX}pnmcrop"
-  alias pnmmargin="${PBM_TESTPREFIX}pnmmargin"
-  shopt -s expand_aliases
 
 pnmmargin -white 10 testimg.ppm | \
   pnmcrop | cksum

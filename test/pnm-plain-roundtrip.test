@@ -1,12 +1,9 @@
 #! /bin/bash
-# This script tests: pnmtopnm
-# Also requires: pamtopnm
+# This script tests: pamtopnm
+#
 
-  alias pnmtopnm="${PBM_TESTPREFIX}pnmtopnm"
-  shopt -s expand_aliases
 
-pnmtopnm -plain testimg.ppm | \
-  pnmtopnm | cksum
-pnmtopnm -plain testgrid.pbm | \
-  pnmtopnm | cksum
-
+pamtopnm -plain testimg.ppm | \
+  pamtopnm | cksum
+pamtopnm -plain testgrid.pbm | \
+  pamtopnm | cksum

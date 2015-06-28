@@ -2,9 +2,6 @@
 # This script tests: pgmhist
 # Also requires: pgmramp
 
-  alias pgmhist="${PBM_TESTPREFIX}pgmhist"
-  alias pgmramp="${PBM_BINPREFIX}pgmramp"
-  shopt -s expand_aliases
 
 # Ignore differences in spaces.
 

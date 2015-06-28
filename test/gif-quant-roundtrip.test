@@ -1,11 +1,7 @@
 #! /bin/bash
 # This script tests: giftopnm pamtogif pnmquant
-# Also requires: pnmcolormap pnmremap
+# Also requires:
 
-  alias giftopnm="${PBM_TESTPREFIX}giftopnm"
-  alias pamtogif="${PBM_TESTPREFIX}pamtogif"
-  alias pnmquant="${PBM_TESTPREFIX}pnmquant"
-  shopt -s expand_aliases
 
 # Should print 0
 
@@ -20,4 +16,3 @@ pamtogif ${quant_ppm} | giftopnm | \
 echo $?
 
 rm ${quant_ppm}
-

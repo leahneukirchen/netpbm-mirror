@@ -46,7 +46,7 @@ else
     HAVE_PNGLIB = Y
     EXTERN_INCLUDES += $(shell libpng$(PNGVER)-config --cflags)
   else
-    # System can't tell use where libpng is; use stuff from config.mk
+    # System can't tell us where libpng is; use stuff from config.mk
     ifneq ($(PNGLIB),NONE)
       HAVE_PNGLIB = Y
       ifneq ($(PNGHDR_DIR)x,x)
@@ -131,7 +131,7 @@ ifneq ($(DONT_HAVE_PROCESS_MGMT),Y)
 endif
 
 ifeq ($(HAVE_PNGLIB),Y)
-  PORTBINARIES += pnmtopng pngtopam pamrgbatopng
+  PORTBINARIES += pamtopng pnmtopng pngtopam
 endif
 ifneq ($(JPEGLIB),NONE)
   PORTBINARIES += jpegtopnm pnmtojpeg
@@ -207,13 +207,13 @@ pngtopam: pngx.o
 pngtopam: ADDL_OBJECTS = pngx.o
 pngtopam: LDFLAGS_TARGET = $(PNGLIB_LIBOPTS)
 
+pamtopng: pngx.o pngtxt.o
+pamtopng: ADDL_OBJECTS = pngx.o pngtxt.o
+pamtopng: LDFLAGS_TARGET = $(PNGLIB_LIBOPTS)
+
 pnmtopng: pngx.o pngtxt.o
 pnmtopng: ADDL_OBJECTS = pngx.o pngtxt.o
 pnmtopng: LDFLAGS_TARGET = $(PNGLIB_LIBOPTS)
-
-pamrgbatopng: pngx.o
-pamrgbatopng: ADDL_OBJECTS = pngx.o
-pamrgbatopng: LDFLAGS_TARGET = $(PNGLIB_LIBOPTS)
 
 jpegtopnm: jpegdatasource.o exif.o
 jpegtopnm: ADDL_OBJECTS = jpegdatasource.o exif.o
@@ -241,6 +241,8 @@ pnmtorast rasttopnm: ADDL_OBJECTS = rast.o
 
 pdbimgtopam pamtopdbimg: ipdb.o
 pdbimgtopam pamtopdbimg: ADDL_OBJECTS = ipdb.o
+
+# Declare dependencies on created header files (symbolic links, actually).
 
 bmptopnm.o bmptopnm.o2: bmp.h
 
@@ -289,3 +291,8 @@ endif
 # In December 2010, sunicontopnm replaced icontopbm
 	cd $(PKGDIR)/bin ; \
 	$(SYMLINK) sunicontopnm$(EXE) icontopbm$(EXE)
+ifeq ($(HAVE_PNGLIB),Y)
+# In June 2015, pamtopng replaced pamrgbapng
+	cd $(PKGDIR)/bin ; \
+	$(SYMLINK) pamtopng$(EXE) pamrgbatopng$(EXE)
+endif

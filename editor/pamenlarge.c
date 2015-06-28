@@ -312,11 +312,8 @@ enlargePbm(struct pam * const inpamP,
         pbm_readpbmrow_packed(inpamP->file, inrow, inpamP->width,
                               inpamP->format);
 
-        if (outcols % 8 > 0) {
-            /* clean final partial byte */ 
-            inrow[inColChars-1] >>= 8 - inpamP->width % 8;
-            inrow[inColChars-1] <<= 8 - inpamP->width % 8;
-        }
+        if (outcols % 8 > 0)           /* clean final partial byte */ 
+            pbm_cleanrowend_packed(inrow, inpamP->width);
 
         enlargePbmRowHorizontally(inpamP, inrow, inColChars, outColChars,
                                   scaleFactor, outrow);

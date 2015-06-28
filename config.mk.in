@@ -110,6 +110,10 @@ LD_FOR_BUILD = $(LD)
 CFLAGS_FOR_BUILD = $(CFLAGS_CONFIG)
 LDFLAGS_FOR_BUILD = $(LDFLAGS)
 
+# WINDRES is the program that creates a linkable object file from 
+# a Windows Icon (.ico) file.
+WINDRES = windres
+
 # MAKE is set automatically by Make to what was used to invoke Make.
 
 INSTALL = $(SRCDIR)/buildtools/install.sh

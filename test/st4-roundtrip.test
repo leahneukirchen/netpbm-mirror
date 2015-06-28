@@ -2,9 +2,6 @@
 # This script tests: pgmtost4 st4topgm
 # Also requires: pamchannel pamtopnm pamcut
 
-  alias st4topgm="${PBM_TESTPREFIX}st4topgm"
-  alias pgmtost4="${PBM_TESTPREFIX}pgmtost4"
-  shopt -s expand_aliases
 
 # Input image of pgmtost4 must by 192x165
 

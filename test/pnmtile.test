@@ -2,9 +2,6 @@
 # This script tests: pnmtile
 # Also requires: pnmcat
 
-  alias pnmtile="${PBM_TESTPREFIX}pnmtile"
-  alias pnmcat="${PBM_BINPREFIX}pnmcat"
-  shopt -s expand_aliases
 
 # Test 1.  Should print 4228632379 259
 pnmtile 40 50 testgrid.pbm | cksum

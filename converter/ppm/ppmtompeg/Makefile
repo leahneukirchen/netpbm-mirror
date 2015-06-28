@@ -31,9 +31,6 @@ endif
 #	1) long's are 32 bits and
 #	2) int's are not
 #
-# if you are using a non-ANSI compiler, then use:
-#	-DNON_ANSI_COMPILER
-#
 # one other option:
 #	-DHEINOUS_DEBUG_MODE
 #

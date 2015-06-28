@@ -1,11 +1,7 @@
 #! /bin/bash
 # This script tests: pamtopam pamtopnm
-# Also requires: 
+# Also requires:
 
-  alias pamtopam="${PBM_TESTPREFIX}pamtopam"
-  alias pamtopnm="${PBM_TESTPREFIX}pamtopnm"
-  shopt -s expand_aliases
 
 pamtopam < testimg.ppm | pamtopnm | cksum
 pamtopam < testgrid.pbm | pamtopnm | cksum
-

@@ -1,17 +1,9 @@
 #! /bin/bash
 # This script tests: pamtowinicon winicontopam
-# Also requires: pnmcut pnmtile pamtopnm ppmtopgm pgmtopbm
+# Also requires: pamcut pnmtile pamtopnm ppmtopgm pgmtopbm
 
-  alias pamtowinicon="${PBM_TESTPREFIX}pamtowinicon"
-  alias winicontopam="${PBM_TESTPREFIX}winicontopam"
-  alias pamtopnm="${PBM_BINPREFIX}pamtopnm"
-  alias pgmtopbm="${PBM_BINPREFIX}pgmtopbm"
-  alias pnmcut="${PBM_BINPREFIX}pnmcut"
-  alias pnmtile="${PBM_BINPREFIX}pnmtile"
-  alias ppmtopgm="${PBM_BINPREFIX}ppmtopgm"
-  shopt -s expand_aliases
 
-pnmcut --left=30 --width=48 --height=48 testimg.ppm | \
+pamcut --left=30 --width=48 --height=48 testimg.ppm | \
 pamtowinicon | winicontopam | \
   pamtopnm | cksum
 
@@ -19,4 +11,3 @@ pnmtile 32 32 testgrid.pbm | \
 pamtowinicon | winicontopam | \
   pamtopnm | ppmtopgm | \
   pgmtopbm  -th -val=0.5 | cksum
-

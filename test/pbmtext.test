@@ -1,9 +1,7 @@
 #! /bin/bash
 # This script tests: pbmtext
-# Also requires: 
+# Also requires:
 
-  alias pbmtext="${PBM_TESTPREFIX}pbmtext"
-  shopt -s expand_aliases
 
 for i in 0123456789 abcdefghijk lmnopqrst uzwxyz ABCDEFGHIJK LMNOPQRST UVWXYZ
 do

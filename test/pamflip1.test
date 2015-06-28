@@ -1,12 +1,10 @@
 #! /bin/bash
 # This script tests: pamflip
-# Also requires: 
+# Also requires:
 
-  alias pamflip="${PBM_TESTPREFIX}pamflip"
-  shopt -s expand_aliases
 
 # Test 1.  Should print 2116496681 101484
-pamflip -lr testimg.ppm | cksum 
+pamflip -lr testimg.ppm | cksum
 # Test 2.  Should print 217037000 101484
 pamflip -cw testimg.ppm | cksum
 # Test 3.  Should print 2052917888 101484

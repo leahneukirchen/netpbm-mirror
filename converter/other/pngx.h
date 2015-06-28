@@ -128,6 +128,20 @@ void
 pngx_setChrm(struct pngx *      const pngxP,
              struct pngx_chroma const chroma);
 
+typedef enum {
+    PNGX_PERCEPTUAL,
+    PNGX_RELATIVE_COLORIMETRIC,
+    PNGX_SATURATION,
+    PNGX_ABSOLUTE_COLORIMETRIC
+} pngx_srgbIntent;
+
+const char *
+pngx_srgbIntentDesc(pngx_srgbIntent const srgbIntent);
+
+void
+pngx_setSrgb(struct pngx *   const pngxP,
+             pngx_srgbIntent const srgbIntent);
+
 void
 pngx_setCompressionSize(struct pngx * const pngxP,
                         unsigned int  const bufferSize);
@@ -196,7 +210,7 @@ pngx_setText(struct pngx * const pngxP,
 
 void
 pngx_setTime(struct pngx * const pngxP,
-             png_time      const time);
+             time_t        const timeArg);
 
 void
 pngx_setTrnsPalette(struct pngx *    const pngxP,

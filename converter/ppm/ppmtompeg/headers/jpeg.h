@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include "ansi.h"
 #include "frame.h"
 
 void

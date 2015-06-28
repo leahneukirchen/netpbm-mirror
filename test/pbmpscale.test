@@ -2,12 +2,8 @@
 # This script tests: pbmpscale
 # Also requires: pamenlarge pbmtext
 
-  alias pbmpscale="${PBM_TESTPREFIX}pbmpscale"
-  alias pamenlarge="${PBM_BINPREFIX}pamenlarge"
-  alias pbmtext="${PBM_BINPREFIX}pbmtext"
-  shopt -s expand_aliases
 
-pbmtext -nomargin "F" | pbmpscale 3 -plain 
+pbmtext -nomargin "F" | pbmpscale 3 -plain
 
 for i in 2 3 4
 do

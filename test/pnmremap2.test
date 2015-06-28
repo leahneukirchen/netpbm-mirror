@@ -2,14 +2,9 @@
 # This script tests: pnmremap
 # Also requires: pamdepth pamseq pamtopnm
 
-  alias pnmremap="${PBM_TESTPREFIX}pnmremap"
-  alias pamdepth="${PBM_BINPREFIX}pamdepth"
-  alias pamseq="${PBM_BINPREFIX}pamseq"
-  alias pamtopnm="${PBM_BINPREFIX}pamtopnm"
-  shopt -s expand_aliases
 
 tmpdir=${tmpdir:-/tmp}
-palette=${tmpdir}/palette 
+palette=${tmpdir}/palette
 palette255=${tmpdir}/palette255
 
 pamseq 3 5 -tupletype=RGB | pamtopnm > ${palette}

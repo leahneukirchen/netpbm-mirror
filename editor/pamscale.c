@@ -411,7 +411,7 @@ enum scaleType {SCALE_SEPARATE, SCALE_BOXFIT, SCALE_BOXFILL, SCALE_PIXELMAX};
        size.
     */
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
      * in a form easy for the program to use.
      */
@@ -484,7 +484,7 @@ processFilterOptions(unsigned int const         filterSpec,
                      const char                 filterOpt[],
                      unsigned int const         windowSpec,
                      const char                 windowOpt[],
-                     struct cmdlineInfo * const cmdlineP) {
+                     struct CmdlineInfo * const cmdlineP) {
 
     if (filterSpec) {
         filter baseFilter;
@@ -544,7 +544,7 @@ parseSizeParm(const char *   const sizeString,
 static void
 parseXyParms(int                  const argc, 
              const char **        const argv,
-             struct cmdlineInfo * const cmdlineP) {
+             struct CmdlineInfo * const cmdlineP) {
 
     /* parameters are box width (columns), box height (rows), and
        optional filespec 
@@ -573,7 +573,7 @@ parseXyParms(int                  const argc,
 static void
 parseScaleParms(int                   const argc, 
                 const char **         const argv,
-                struct cmdlineInfo  * const cmdlineP) {
+                struct CmdlineInfo  * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Parse the parameters as a scale factor and optional filespec
    (e.g. 'pamscale .5' or 'pamscale .5 testimg.ppm').
@@ -608,7 +608,7 @@ parseScaleParms(int                   const argc,
 static void
 parseFilespecOnlyParms(int                   const argc, 
                        const char **         const argv,
-                       struct cmdlineInfo  * const cmdlineP) {
+                       struct CmdlineInfo  * const cmdlineP) {
 
     /* Only parameter allowed is optional filespec */
     if (argc-1 < 1)
@@ -621,7 +621,7 @@ parseFilespecOnlyParms(int                   const argc,
 static void 
 parseCommandLine(int argc, 
                  const char ** argv, 
-                 struct cmdlineInfo  * const cmdlineP) {
+                 struct CmdlineInfo  * const cmdlineP) {
 /* --------------------------------------------------------------------------
    Parse program command line described in Unix standard form by argc
    and argv.  Return the information in the options as *cmdlineP.  
@@ -747,7 +747,7 @@ parseCommandLine(int argc,
 
 
 static void 
-computeOutputDimensions(struct cmdlineInfo  const cmdline, 
+computeOutputDimensions(struct CmdlineInfo  const cmdline, 
                         unsigned int        const cols, 
                         unsigned int        const rows, 
                         int *               const newcolsP,
@@ -2139,7 +2139,7 @@ scaleWithoutMixing(const struct pam * const inpamP,
 static void
 pamscale(FILE *             const ifP,
          FILE *             const ofP,
-         struct cmdlineInfo const cmdline) {
+         struct CmdlineInfo const cmdline) {
     
     struct pam inpam, outpam;
     float xscale, yscale;
@@ -2203,7 +2203,7 @@ pamscale(FILE *             const ifP,
 int
 main(int argc, const char **argv ) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP;
     int eof;
 

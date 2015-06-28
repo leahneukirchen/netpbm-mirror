@@ -1,10 +1,7 @@
+#! /bin/bash
 # This script tests: ppmtopcx pcxtoppm
 # Also requires: pnmremap
 
-  alias ppmtopcx="${PBM_TESTPREFIX}ppmtopcx"
-  alias pcxtoppm="${PBM_TESTPREFIX}pcxtoppm"
-  alias ppmremap="${PBM_BINPREFIX}ppmremap"
-  shopt -s expand_aliases
 
 tmpdir=${tmpdir:-/tmp}
 pcxstd_ppm=${tmpdir}/pcxstd_ppm
@@ -46,4 +43,3 @@ rm ${testpcx_ppm} ${pcxstd_ppm}
 # result of:
 # pgmtoppm < testgrid.pbm | cksum
 ppmtopcx -stdpalette -packed testgrid.pbm | pcxtoppm | cksum
-

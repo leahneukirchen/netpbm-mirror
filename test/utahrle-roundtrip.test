@@ -1,10 +1,7 @@
 #! /bin/bash
 # This script tests: pnmtorle rletopnm
-# Also requires: 
+# Also requires: pamchannel pamtopnm
 
-  alias pnmtorle="${PBM_TESTPREFIX}pnmtorle"
-  alias rletopnm="${PBM_TESTPREFIX}rletopnm"
-  shopt -s expand_aliases
 
 #Test 1.  Should produce 1571496937 33838, cksum of testimg.red
 pamchannel -infile=testimg.ppm -tupletype="GRAYSCALE" 0 | pamtopnm | \

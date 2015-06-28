@@ -63,7 +63,6 @@
 #include <stdio.h>
 
 #include "general.h"
-#include "ansi.h"
 
 
 /*===========*

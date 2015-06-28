@@ -2,9 +2,6 @@
 # This script tests: pamchannel
 # Also requires: pamtopnm
 
-  alias pamchannel="${PBM_TESTPREFIX}pamchannel"
-  alias pamtopnm="${PBM_BINPREFIX}pamtopnm"
-  shopt -s expand_aliases
 
 # Extract planes one by one.
 # Convert output to pgm to make it identical to ppmtorgb3 output.

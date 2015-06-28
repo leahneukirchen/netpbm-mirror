@@ -2,10 +2,6 @@
 # This script tests: ppmhist
 # Also requires: pgmramp
 
-  alias ppmhist="${PBM_TESTPREFIX}ppmhist"
-  alias pgmramp="${PBM_BINPREFIX}pgmramp"
-  shopt -s expand_aliases
 
 pgmramp -maxval=8 -lr 8 2 | ppmhist -sort=rgb
 ppmhist -map -sort=rgb testimg.ppm | cksum
-

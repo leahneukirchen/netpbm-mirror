@@ -242,7 +242,7 @@ handleArrayAllocation(png_text **    const arrayP,
 
 void 
 pngtxt_read(struct pngx * const pngxP,
-            FILE *        const tfp, 
+            FILE *        const fileP, 
             bool          const ztxt,
             bool          const verbose) {
 
@@ -266,7 +266,7 @@ pngtxt_read(struct pngx * const pngxP,
    
     eof = FALSE;
     while (!eof) {
-        getFileLine(tfp, &textline, &lineLength);
+        getFileLine(fileP, &textline, &lineLength);
         if (textline == NULL)
             eof = TRUE;
         else {

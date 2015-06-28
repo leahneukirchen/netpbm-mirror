@@ -54,7 +54,6 @@
  *==============*/
 
 #include "general.h"
-#include "ansi.h"
 #include "bitio.h"
 
 
@@ -62,7 +61,7 @@
  * EXTERNAL PROCEDURE prototypes *
  *===============================*/
 
-void	SetGOPStartTime _ANSI_ARGS_((int index));
+void	SetGOPStartTime (int index);
 
 void
 Mhead_GenSequenceHeader(BitBucket *   const bbPtr, 
@@ -80,21 +79,21 @@ Mhead_GenSequenceHeader(BitBucket *   const bbPtr,
                         uint8 *       const user_data,
                         int32         const user_data_size);
 
-void	Mhead_GenSequenceEnder _ANSI_ARGS_((BitBucket *bbPtr));
-void	Mhead_GenGOPHeader _ANSI_ARGS_((BitBucket *bbPtr,
+void	Mhead_GenSequenceEnder (BitBucket *bbPtr);
+void	Mhead_GenGOPHeader (BitBucket *bbPtr,
 	   int32 drop_frame_flag,
            int32 tc_hrs, int32 tc_min,
            int32 tc_sec, int32 tc_pict,
            int32 closed_gop, int32 broken_link,
            uint8 *ext_data, int32 ext_data_size,
-           uint8 *user_data, int32 user_data_size));
-void	Mhead_GenPictureHeader _ANSI_ARGS_((BitBucket *bbPtr, int frameType,
-					    int pictCount, int f_code));
-void	Mhead_GenSliceHeader _ANSI_ARGS_((BitBucket *bbPtr, uint32 slicenum,
+           uint8 *user_data, int32 user_data_size);
+void	Mhead_GenPictureHeader (BitBucket *bbPtr, int frameType,
+					    int pictCount, int f_code);
+void	Mhead_GenSliceHeader (BitBucket *bbPtr, uint32 slicenum,
 					  uint32 qscale, uint8 *extra_info,
-					  uint32 extra_info_size));
-void	Mhead_GenSliceEnder _ANSI_ARGS_((BitBucket *bbPtr));
-void	Mhead_GenMBHeader _ANSI_ARGS_((BitBucket *bbPtr,
+					  uint32 extra_info_size);
+void	Mhead_GenSliceEnder (BitBucket *bbPtr);
+void	Mhead_GenMBHeader (BitBucket *bbPtr,
 	  uint32 pict_code_type, uint32 addr_incr,
           uint32 q_scale,
           uint32 forw_f_code, uint32 back_f_code,
@@ -103,7 +102,7 @@ void	Mhead_GenMBHeader _ANSI_ARGS_((BitBucket *bbPtr,
           int32 motion_forw, int32 m_horiz_forw,
           int32 m_vert_forw, int32 motion_back,
           int32 m_horiz_back, int32 m_vert_back,
-          uint32 mb_pattern, uint32 mb_intra));
+          uint32 mb_pattern, uint32 mb_intra);
 
 
 #endif /* MHEADERS_INCLUDED */

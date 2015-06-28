@@ -30,7 +30,6 @@
  * HEADER FILES *
  *==============*/
 
-#include "ansi.h"
 #include "bitio.h"
 #include "frame.h"
 

@@ -101,13 +101,11 @@ writeGrayRaster(unsigned int const cols,
         bitrow1[i] = (PBM_WHITE*0x55) | (PBM_BLACK*0xaa);
         /* 0xaa = 10101010 ; 0x55 = 01010101 */
     }
-    if (cols % 8 > 0) { 
-        bitrow0[lastCol] >>= 8 - cols % 8;
-        bitrow0[lastCol] <<= 8 - cols % 8;
-        bitrow1[lastCol] >>= 8 - cols % 8;
-        bitrow1[lastCol] <<= 8 - cols % 8;
-    }
-    if (rows > 1) {
+
+    pbm_cleanrowend_packed(bitrow0, cols);
+    pbm_cleanrowend_packed(bitrow1, cols);
+
+  if (rows > 1) {
         unsigned int row;
         for (row = 1; row < rows; row += 2) {
             pbm_writepbmrow_packed(ofP, bitrow0, cols, 0);
@@ -139,11 +137,10 @@ writeSingleColorRaster(unsigned int const cols,
     for (i = 0; i <= lastCol; ++i) 
         bitrow0[i] = color*0xff;
 
-    if (cols % 8 > 0) { 
-        bitrow0[lastCol] >>= 8 - cols % 8;
-        bitrow0[lastCol] <<= 8 - cols % 8;
-        /* row end trimming, really not necessary with white */
-    }
+    if (color != 0)
+        pbm_cleanrowend_packed(bitrow0, cols);
+    /* row end trimming, not necessary with white */
+
     {
         unsigned int row;
         for (row = 0; row < rows; ++row)

@@ -1,9 +1,7 @@
 #! /bin/bash
 # This script tests: pamflip
-# Also requires: 
+# Also requires:
 
-  alias pamflip="${PBM_TESTPREFIX}pamflip"
-  shopt -s expand_aliases
 
 # Failure message
 ## Failure with this test indicates a problem with pamflip transpositions

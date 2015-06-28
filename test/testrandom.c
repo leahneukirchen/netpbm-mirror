@@ -9,6 +9,9 @@
   Options:
     -q : quiet mode
     -v : verbose mode : Use to generate values for new table 
+
+  This is a self-contained program which does not require any libnetpbm
+  functions.
 =============================================================================*/
 #include <stdio.h>
 #include <stdlib.h>

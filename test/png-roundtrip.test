@@ -1,10 +1,7 @@
 #! /bin/bash
-# This script tests: pngtopnm pnmtopng
-# Also requires: 
+# This script tests: pngtopam pnmtopng
+# Also requires:
 
-  alias pngtopnm="${PBM_TESTPREFIX}pngtopnm"
-  alias pnmtopng="${PBM_TESTPREFIX}pnmtopng"
-  shopt -s expand_aliases
 
 # Test 1.  Should print 1926073387 101484 18 times
 for flags in "" -interlace \
@@ -25,7 +22,7 @@ for flags in "" -interlace \
   -comp_strategy=filtered \
   -force
   do
-pnmtopng testimg.ppm $flags | pngtopnm | cksum
+pnmtopng testimg.ppm $flags | pngtopam | cksum
 done
 
 # Test 2.  Should print 2425386270 41 18 times
@@ -47,5 +44,5 @@ for flags in "" -interlace \
   -comp_strategy=filtered \
   -force
   do
-  pnmtopng testgrid.pbm $flags | pngtopnm | cksum
+  pnmtopng testgrid.pbm $flags | pngtopam | cksum
   done

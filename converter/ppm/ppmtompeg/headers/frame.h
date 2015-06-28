@@ -35,7 +35,6 @@
  *==============*/
 
 #include "netpbm/pm_c_util.h"
-#include "ansi.h"
 #include "mtypes.h"
 
 /*===========*

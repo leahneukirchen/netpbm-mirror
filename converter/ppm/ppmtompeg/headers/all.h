@@ -80,7 +80,6 @@
 #include <time.h>
 #endif
 
-#include "ansi.h"
 #include "general.h"
 
 /* some machines have #define index strchr; get rid of this nonsense */

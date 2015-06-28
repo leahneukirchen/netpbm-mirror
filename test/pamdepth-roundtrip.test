@@ -1,10 +1,7 @@
 #! /bin/bash
 # This script tests: pamdepth pgmtopbm
-# Also requires: 
+# Also requires:
 
-  alias pamdepth="${PBM_TESTPREFIX}pamdepth"
-  alias pgmtopbm="${PBM_TESTPREFIX}pgmtopbm"
-  shopt -s expand_aliases
 
 for i in 300 500 1023 4095 5000 16383 65535
 do

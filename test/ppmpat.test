@@ -1,8 +1,6 @@
 #! /bin/bash
 # This script tests: ppmpat
-
-  alias ppmpat="${PBM_TESTPREFIX}ppmpat"
-  shopt -s expand_aliases
+# Also requires:
 
 # TODO: Write tests for squig and poles.  It appears that they are
 # sensitive to differences in floating point math.

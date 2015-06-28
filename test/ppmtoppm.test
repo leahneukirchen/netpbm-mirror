@@ -1,8 +1,6 @@
 #! /bin/bash
 # This script tests: ppmtoppm
-# Also requires: 
+# Also requires:
 
-  alias ppmtoppm="${PBM_TESTPREFIX}ppmtoppm"
-  shopt -s expand_aliases
 
 ppmtoppm < testgrid.pbm | cksum

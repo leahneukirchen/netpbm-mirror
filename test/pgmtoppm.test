@@ -2,11 +2,6 @@
 # This script tests: pgmtoppm
 # Also requires: pamseq pamtopnm pgmramp
 
-  alias pgmtoppm="${PBM_TESTPREFIX}pgmtoppm"
-  alias pamseq="${PBM_BINPREFIX}pamseq"
-  alias pamtopnm="${PBM_BINPREFIX}pamtopnm"
-  alias pgmramp="${PBM_BINPREFIX}pgmramp"
-  shopt -s expand_aliases
 
 tmpdir=${tmpdir:-/tmp}
 
@@ -25,5 +20,3 @@ pgmtoppm yellow-blue ${test_pgm} | cksum
 pgmtoppm -map=${palette} ${test_pgm} | cksum
 
 rm ${test_pgm} ${palette}
-
-

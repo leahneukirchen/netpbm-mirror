@@ -22,91 +22,147 @@
  */
 
 #include <stdio.h>
+
+#include "pm_c_util.h"
+#include "mallocvar.h"
+#include "shhopt.h"
 #include "pbm.h"
 
+
+
+struct CmdlineInfo {
+    /* All the information the user supplied in the command line,
+       in a form easy for the program to use.
+    */
+    const char * inputFileName;  /* Filename of input file */
+    unsigned int debug;
+};
+
+
+
+static void 
+parseCommandLine(int argc, 
+                 const char ** argv, 
+                 struct CmdlineInfo * const cmdlineP) {
+/* --------------------------------------------------------------------------
+   Parse program command line described in Unix standard form by argc
+   and argv.  Return the information in the options as *cmdlineP.  
+
+   If command line is internally inconsistent (invalid options, etc.),
+   issue error message to stderr and abort program.
+
+   Note that the strings we return are stored in the storage that
+   was passed to us as the argv array.  We also trash *argv.
+--------------------------------------------------------------------------*/
+    optEntry * option_def;
+    optStruct3 opt;
+        /* Instructions to pm_optParseOptions3 on how to parse our options. */
+    unsigned int option_def_index;
+  
+    MALLOCARRAY_NOFAIL(option_def, 100);
+
+    option_def_index = 0;   /* incremented by OPTENT3 */
+    OPTENT3(0, "debug",    OPT_FLAG,    NULL,       &cmdlineP->debug,       0);
+  
+    opt.opt_table = option_def;
+    opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = FALSE;   /* We have no parms that are negative numbers */
+
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+        /* Uses and sets argc, argv, and some of *cmdlineP and others. */
+
+    if (argc-1 < 1) 
+        cmdlineP->inputFileName = "-";
+    else {
+        cmdlineP->inputFileName = argv[1];
+
+        if (argc-1 > 1)
+            pm_error("Program takes zero or one argument (filename).  You "
+                     "specified %u", argc-1);
+    }
+}
+
+
+
+static void
+readAndValidateHeader(FILE * const ifP,
+                      bool   const debug,
+                      bool * const reverseP) {
+
+    short item;
+
+    pm_readbigshort(ifP, &item);
+
+    if (debug)
+        pm_message("resolution is %d", item);
+
+    /* only handles hi-rez 640x400 */
+    if (item != 2)
+        pm_error("bad resolution %d", item);
+
+    pm_readbigshort(ifP, &item);
+
+    *reverseP = (item == 0);
+
+    {
+        unsigned int i;
+
+        for (i = 1; i < 16; ++i)
+            pm_readbigshort (ifP, &item);
+    }
+}
+
+
+
 int
-main(argc, argv)
-	int             argc;
-	char           *argv[];
-{
-	int             debug = 0;
-	FILE           *f;
-	int             x;
-	int             i, k;
-	int             c;
-	int		rows, cols;
-	bit		*bitrow;
-	short res;
-	int black, white;
-	const char * const usage = "[-debug] [pi3file]";
-	int argn = 1;
+main(int argc, const char ** argv) {
 
-	pbm_init( &argc, argv );
+    unsigned int const rows = 400;
+    unsigned int const cols = 640;
 
-	while (argn < argc && argv[argn][0] == '-' && argv[argn][1] != '\0')
-	  {
-	    if (pm_keymatch(argv[1], "-debug", 2))
-	      debug = 1;
-	    else
-	      pm_usage (usage);
-	    ++argn;
-	  }
+    struct CmdlineInfo cmdline;
+    FILE * ifP;
+    unsigned int row;
+    bit * bitrow;
+    bool reverse;
 
-	if (argn == argc)
-	    f = stdin;
-	else
-	  {
-	    f = pm_openr (argv[argn]);
-	    ++argn;
-	  }
+    pm_proginit(&argc, argv);
 
-	if (argn != argc)
-	  pm_usage (usage);
+    parseCommandLine(argc, argv, &cmdline);
 
-	if (pm_readbigshort (f, &res) == -1)
-		pm_error ("EOF / read error");
+    ifP = pm_openr(cmdline.inputFileName);
 
-	if (debug)
-		pm_message ("resolution is %d", res);
+    readAndValidateHeader(ifP, cmdline.debug, &reverse);
 
-	/* only handles hi-rez 640x400 */
-	if (res != 2)
-		pm_error( "bad resolution" );
+    pbm_writepbminit(stdout, cols, rows, 0);
 
-	pm_readbigshort (f, &res);
-	if (res == 0)
-	  {
-	    black = PBM_WHITE;
-	    white = PBM_BLACK;
-	  }
-	else
-	  {
-	    black = PBM_BLACK;
-	    white = PBM_WHITE;
-	  }
+    bitrow = pbm_allocrow_packed(cols);
 
-	for (i = 1; i < 16; i++)
-	  if (pm_readbigshort (f, &res) == -1)
-	    pm_error ("EOF / read error");
+    for (row = 0; row < rows; ++row) {
+        unsigned int const colChars = cols / 8;
 
-	cols = 640;
-	rows = 400;
-	pbm_writepbminit( stdout, cols, rows, 0 );
-	bitrow = pbm_allocrow( cols );
+        unsigned int bytesReadCt;
 
-	for (i = 0; i < rows; ++i) {
-		x = 0;
-		while (x < cols) {
-			if ((c = getc(f)) == EOF)
-				pm_error( "end of file reached" );
-			for (k = 0x80; k; k >>= 1) {
-				bitrow[x] = (k & c) ? black : white;
-				++x;
-			}
-		}
-		pbm_writepbmrow( stdout, bitrow, cols, 0 );
-	}
-	pm_close( f );
-	pm_close( stdout );
-	exit(0);
+        bytesReadCt = fread(bitrow, cols / 8, 1, ifP);
+        if (bytesReadCt != 1) {
+            if (feof(ifP))
+                pm_error( "EOF reached while reading image data" );
+            else
+                pm_error("read error while reading image data");
+        }
+
+        if (reverse) {
+            /* flip all pixels */
+            unsigned int colChar;
+            for (colChar = 0; colChar < colChars; ++colChar)
+                bitrow[colChar] = ~bitrow[colChar];
+        }
+        pbm_writepbmrow_packed(stdout, bitrow, cols, 0);
+    }
+
+    pbm_freerow_packed(bitrow);
+    pm_close(ifP);
+    pm_close(stdout);
+
+    return 0;
 }

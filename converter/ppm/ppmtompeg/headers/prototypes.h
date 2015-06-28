@@ -30,7 +30,6 @@
  *==============*/
 
 #include "general.h"
-#include "ansi.h"
 #include "frame.h"
 
 
@@ -38,34 +37,34 @@
  * EXTERNAL PROCEDURE prototypes *
  *===============================*/
 
-int GetBQScale _ANSI_ARGS_((void));
-int GetPQScale _ANSI_ARGS_((void));
-void    ResetBFrameStats _ANSI_ARGS_((void));
-void    ResetPFrameStats _ANSI_ARGS_((void));
+int GetBQScale (void);
+int GetPQScale (void);
+void    ResetBFrameStats (void);
+void    ResetPFrameStats (void);
 void SetSearchRange (int const pixelsP,
                      int const pixelsB);
 void
 SetPixelSearch(const char * const searchType);
-void    SetPQScale _ANSI_ARGS_((int qP));
-void    SetBQScale _ANSI_ARGS_((int qB));
-float   EstimateSecondsPerPFrame _ANSI_ARGS_((void));
-float   EstimateSecondsPerBFrame _ANSI_ARGS_((void));
-void    SetGOPSize _ANSI_ARGS_((int size));
+void    SetPQScale (int qP);
+void    SetBQScale (int qB);
+float   EstimateSecondsPerPFrame (void);
+float   EstimateSecondsPerBFrame (void);
+void    SetGOPSize (int size);
 void
 SetStatFileName(const char * const fileName);
 
 
-void DCTFrame _ANSI_ARGS_((MpegFrame * mf));
+void DCTFrame (MpegFrame * mf);
 
-void PPMtoYCC _ANSI_ARGS_((MpegFrame * mf));
+void PPMtoYCC (MpegFrame * mf);
 
-void    MotionSearchPreComputation _ANSI_ARGS_((MpegFrame *frame));
+void    MotionSearchPreComputation (MpegFrame *frame);
 
-void    ComputeHalfPixelData _ANSI_ARGS_((MpegFrame *frame));
-void mp_validate_size _ANSI_ARGS_((int *x, int *y));
+void    ComputeHalfPixelData (MpegFrame *frame);
+void mp_validate_size (int *x, int *y);
 
 
 /* psearch.c */
-void    ShowPMVHistogram _ANSI_ARGS_((FILE *fpointer));
-void    ShowBBMVHistogram _ANSI_ARGS_((FILE *fpointer));
-void    ShowBFMVHistogram _ANSI_ARGS_((FILE *fpointer));
+void    ShowPMVHistogram (FILE *fpointer);
+void    ShowBBMVHistogram (FILE *fpointer);
+void    ShowBFMVHistogram (FILE *fpointer);

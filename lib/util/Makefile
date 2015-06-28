@@ -12,6 +12,7 @@ include $(BUILDDIR)/config.mk
 # nstring is required for asprintf(), etc.  Also some systems don't have
 # snprintf(), e.g. Solaris 2.5.1.  2002.03.29.
 UTILOBJECTS = \
+  bitio.o \
   filename.o \
   io.o \
   mallocvar.o \

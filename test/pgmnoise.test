@@ -1,9 +1,7 @@
 #! /bin/bash
 # This script tests: pgmnoise
-# Also requires: 
+# Also requires:
 
-  alias pgmnoise="${PBM_TESTPREFIX}pgmnoise"
-  shopt -s expand_aliases
 
 # We first check whether random number generator is glibc rand().
 # If not, this test is skipped.

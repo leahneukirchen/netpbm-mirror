@@ -1,9 +1,7 @@
 #! /bin/bash
 # This script tests: pamgauss
-# Also requires: 
+# Also requires:
 
-  alias pamgauss="${PBM_TESTPREFIX}pamgauss"
-  shopt -s expand_aliases
 
 for i in `seq 3 11`
 do

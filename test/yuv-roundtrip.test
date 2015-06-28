@@ -2,10 +2,6 @@
 # This script tests: ppmtoyuv yuvtoppm
 # Also requires: pamgradient
 
-  alias ppmtoyuv="${PBM_TESTPREFIX}ppmtoyuv"
-  alias yuvtoppm="${PBM_TESTPREFIX}yuvtoppm"
-  alias pamgradient="${PBM_BINPREFIX}pamgradient"
-  shopt -s expand_aliases
 
 # Should produce 1904478375 253455
 

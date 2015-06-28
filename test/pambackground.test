@@ -1,15 +1,7 @@
 #! /bin/bash
-# This script tests: pambackground 
-# Also requires: pamgradient pamseq pbmmake pnmmargin pnmremap pnmtile
+# This script tests: pambackground
+# Also requires: pamgradient pamseq pbmmake pnmmargin pnmremap pnmtile pnmpad
 
-  alias pambackground="${PBM_TESTPREFIX}pambackground"
-  alias pamgradient="${PBM_BINPREFIX}pamgradient"
-  alias pamseq="${PBM_BINPREFIX}pamseq"
-  alias pbmmake="${PBM_BINPREFIX}pbmmake"
-  alias pnmmargin="${PBM_BINPREFIX}pnmmargin"
-  alias pnmremap="${PBM_BINPREFIX}pnmremap"
-  alias pnmtile="${PBM_BINPREFIX}pnmtile"
-  shopt -s expand_aliases
 
 tmpdir=${tmpdir:-/tmp}
 

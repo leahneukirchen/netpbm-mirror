@@ -1,7 +1,6 @@
 /* COPYRIGHT information is at end of file */
 
 #include "pm_c_util.h"
-#include "ansi.h"
 #include "input.h"
 
 

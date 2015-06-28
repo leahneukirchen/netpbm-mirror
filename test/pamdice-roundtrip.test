@@ -1,10 +1,7 @@
 #! /bin/bash
 # This script tests: pamdice pamundice
-# Also requires: 
+# Also requires:
 
-  alias pamdice="${PBM_TESTPREFIX}pamdice"
-  alias pamundice="${PBM_TESTPREFIX}pamundice"
-  shopt -s expand_aliases
 
 tmpdir=${tmpdir:-/tmp}
 fname_stem=${tmpdir}/a
@@ -13,4 +10,3 @@ pamdice testimg.ppm -outstem=${fname_stem} -width=50 -height=40
 pamundice ${fname_stem}_%1d_%1a.ppm -down=4 -across=5 | cksum
 
 rm ${fname_stem}_?_?.ppm
-

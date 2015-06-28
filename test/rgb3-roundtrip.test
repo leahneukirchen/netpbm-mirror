@@ -2,12 +2,6 @@
 # This script tests: ppmtorgb3 rgb3toppm
 # Also requires: pgmtopbm pgmtopgm ppmtopgm
 
-  alias ppmtorgb3="${PBM_TESTPREFIX}ppmtorgb3"
-  alias rgb3toppm="${PBM_TESTPREFIX}rgb3toppm"
-  alias pgmtopbm="${PBM_BINPREFIX}pgmtopbm"
-  alias pgmtopgm="${PBM_BINPREFIX}pgmtopgm"
-  alias ppmtopgm="${PBM_BINPREFIX}ppmtopgm"
-  shopt -s expand_aliases
 
 # Break an image into three monochrome planes, reassemble the
 # image from them and check whether the resulting output is

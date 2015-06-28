@@ -1,10 +1,7 @@
 #! /bin/bash
 # This script tests: pamcut pnmpaste
-# Also requires: 
+# Also requires:
 
-  alias pamcut="${PBM_TESTPREFIX}pamcut"
-  alias pnmpaste="${PBM_TESTPREFIX}pnmpaste"
-  shopt -s expand_aliases
 
 pamcut 50 40 100 70 testimg.ppm | \
 pnmpaste -replace - 50 40 testimg.ppm | cksum

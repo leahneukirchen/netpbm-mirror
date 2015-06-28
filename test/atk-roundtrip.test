@@ -1,10 +1,7 @@
 #! /bin/bash
 # This script tests: pbmtoatk atktopbm
-# Also requires: 
+# Also requires:
 
-  alias atktopbm="${PBM_TESTPREFIX}atktopbm"
-  alias pbmtoatk="${PBM_TESTPREFIX}pbmtoatk"
-  shopt -s expand_aliases
 
 # Should print 2425386270 41, cksum of testgrid.pbm
 pbmtoatk testgrid.pbm | atktopbm | cksum

@@ -2,11 +2,6 @@
 # This script tests: pbmclean
 # Also requires: pbmmake pbmpage pnmmargin pnmpad
 
-  alias pbmclean="${PBM_TESTPREFIX}pbmclean"
-  alias pbmmake="${PBM_BINPREFIX}pbmmake"
-  alias pbmpage="${PBM_BINPREFIX}pbmpage"
-  alias pnmmargin="${PBM_BINPREFIX}pnmmargin"
-  shopt -s expand_aliases
 
 tmpdir=${tmpdir:-/tmp}
 test_pbm=${tmpdir}/test.pbm

@@ -77,7 +77,7 @@ ppm_blackpixel(void) {
     return retval;
 }
 
-void ppm_init(int * argcP, char* argv[]);
+void ppm_init(int * const argcP, char ** const argv);
 
 #define ppm_allocarray(cols, rows) \
   ((pixel**) pm_allocarray(cols, rows, sizeof(pixel)))

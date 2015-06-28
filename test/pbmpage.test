@@ -1,9 +1,7 @@
 #! /bin/bash
-# This script tests: pbmpage 
-# Also requires: 
+# This script tests: pbmpage
+# Also requires:
 
-  alias pbmpage="${PBM_TESTPREFIX}pbmpage"
-  shopt -s expand_aliases
 
 pbmpage 1 | cksum
 pbmpage 2 | cksum

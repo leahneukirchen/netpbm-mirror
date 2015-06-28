@@ -2,10 +2,6 @@
 # This script tests: pamtoavs avstopam
 # Also requires: pamtopnm
 
-  alias avstopam="${PBM_TESTPREFIX}avstopam"
-  alias pamtoavs="${PBM_TESTPREFIX}pamtoavs"
-  alias pamtopnm="${PBM_BINPREFIX}pamtopnm"
-  shopt -s expand_aliases
 
 # Should produce 1926073387 101484, cksum of testimg.ppm
 pamtoavs testimg.ppm | \

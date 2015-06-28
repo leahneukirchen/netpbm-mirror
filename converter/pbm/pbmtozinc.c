@@ -1,4 +1,4 @@
-/* pbmtozinc.c - read a portable bitmap and produce an bitmap file
+/* pbmtozinc.c - read a PBM image and produce a bitmap file
 **               in the format used by the Zinc Interface Library (v1.0)
 **               November 1990.
 **
@@ -21,108 +21,163 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "mallocvar.h"
 #include "nstring.h"
 #include "pbm.h"
 
-int
-main(int argc, char * argv[]) {
+static void
+parseCommandLine(int           const argc,
+                 const char ** const argv,
+                 const char ** const inputFileNameP) {
 
-    FILE* ifp;
-    bit* bitrow;
-    register bit* bP;
-    int rows, cols, format, padright, row;
-    register int col;
-    char name[100];
-    char* cp;
-    int itemsperline;
-    register int bitsperitem;
-    register int item;
-    int firstitem;
-    const char * const hexchar = "084c2a6e195d3b7f";
+    if (argc-1 > 0) {
+        *inputFileNameP = argv[1];
 
-    pbm_init( &argc, argv );
+        if (argc-1 > 1)
+            pm_error("To many arguments: %u.  "
+                     "The only possible argument is the "
+                     "name of the input file", argc-1);
+    } else
+        *inputFileNameP = "-";
+}
 
-    if ( argc > 2 )
-        pm_usage( "[pbmfile]" );
 
-    if ( argc == 2 )
-	{
-        ifp = pm_openr( argv[1] );
-        strcpy( name, argv[1] );
-        if ( streq( name, "-" ) )
-            strcpy( name, "noname" );
 
-        if ( ( cp = strchr( name, '.' ) ) != 0 )
+static const char *
+imageName(const char * const inputFileName) {
+/*----------------------------------------------------------------------------
+   The image name to put in the Zinc file, based on the input file name
+   'inputFileName' ("-" to indicate Standard Input).
+
+   Result is newly malloc'ed space that Caller must free.
+-----------------------------------------------------------------------------*/
+    const char * retval;
+
+    if (streq(inputFileName, "-"))
+        pm_asprintf(&retval, "noname");
+    else {
+        char * nameBuf;
+        char * cp;
+
+        MALLOCARRAY_NOFAIL(nameBuf, strlen(inputFileName) + 1);
+
+        strcpy(nameBuf, inputFileName);
+
+        cp = strchr(nameBuf, '.' );
+        if (cp)
             *cp = '\0';
-	}
+
+        retval = nameBuf;
+    }
+    return retval;
+}
+
+
+
+typedef struct {
+    unsigned int itemsperline;
+    uint16_t     item;
+    unsigned int firstitem;
+} Packer;
+
+
+
+static void
+packer_init(Packer * const packerP) {
+
+    packerP->itemsperline = 0;
+    packerP->firstitem = 1;
+}
+
+
+
+static void
+packer_putitem(Packer * const packerP) {
+
+    if (packerP->firstitem)
+        packerP->firstitem = 0;
     else
-	{
-        ifp = stdin;
-        strcpy( name, "noname" );
-	}
+        putchar(',');
 
-    pbm_readpbminit( ifp, &cols, &rows, &format );
-    bitrow = pbm_allocrow( cols );
-
-    /* Compute padding to round cols up to the nearest multiple of 16. */
-    padright = ( ( cols + 15 ) / 16 ) * 16 - cols;
-
-    printf( "USHORT %s[] = {\n",name);
-    printf( "  %d\n", cols );
-    printf( "  %d\n", rows );
-
-    itemsperline = 0;
-    bitsperitem = 0;
-    item = 0;
-    firstitem = 1;
-
-#define PUTITEM \
-    { \
-    if ( firstitem ) \
-	firstitem = 0; \
-    else \
-	putchar( ',' ); \
-    if ( itemsperline == 11 ) \
-	{ \
-	putchar( '\n' ); \
-	itemsperline = 0; \
-	} \
-    if ( itemsperline == 0 ) \
-	putchar( ' ' ); \
-    ++itemsperline; \
-    putchar('0'); \
-    putchar('x'); \
-    putchar(hexchar[item & 15]); \
-    putchar(hexchar[(item >> 4) & 15]); \
-    putchar(hexchar[(item >> 8) & 15]); \
-    putchar(hexchar[item >> 12]); \
-    bitsperitem = 0; \
-    item = 0; \
+    if (packerP->itemsperline == 11) {
+        putchar('\n');
+        packerP->itemsperline = 0;
     }
+    if (packerP->itemsperline == 0)
+        putchar(' ');
 
-#define PUTBIT(b) \
-    { \
-    if ( bitsperitem == 16 ) \
-	PUTITEM; \
-    if ( (b) == PBM_BLACK ) \
-	item += 1 << bitsperitem; \
-    ++bitsperitem; \
+    ++packerP->itemsperline;
+    printf ("0x%02x%02x", packerP->item & 255, packerP->item >> 8);
+
+}
+
+
+
+static void
+writeRaster(FILE *       const ifP,
+            unsigned int const rows,
+            unsigned int const cols,
+            int          const format) {
+
+    bit * const bitrow = pbm_allocrow_packed(cols + 8);
+
+    Packer packer;
+    unsigned int row;
+
+    packer_init(&packer);
+
+    bitrow[pbm_packed_bytes(cols+8) -1 ] = 0x00;
+
+    for (row = 0; row < rows; ++row) {
+        uint16_t * const itemrow = (uint16_t *) bitrow;
+        unsigned int const itemCt = (cols + 15 ) / 16;
+
+        unsigned int i;
+
+        pbm_readpbmrow_packed(ifP, bitrow, cols, format);
+
+        pbm_cleanrowend_packed(bitrow, cols);
+
+        for (i = 0; i < itemCt; ++i) {
+            packer.item = itemrow[i];
+            packer_putitem(&packer);
+        }
     }
+    pbm_freerow_packed(bitrow);
+}
 
-    for ( row = 0; row < rows; ++row )
-	{
-        pbm_readpbmrow( ifp, bitrow, cols, format );
-        for ( col = 0, bP = bitrow; col < cols; ++col, ++bP )
-            PUTBIT( *bP );
-        for ( col = 0; col < padright; ++col )
-            PUTBIT( 0 );
-    }
 
-    pm_close( ifp );
-    
-    if ( bitsperitem > 0 )
-        PUTITEM;
-    printf( "};\n" );
+
+int
+main(int argc, const char * argv[]) {
+
+    const char * inputFileName;
+    FILE * ifP;
+    int rows, cols;
+    int format;
+    const char * name;
+
+    pm_proginit(&argc, argv);
+
+    parseCommandLine(argc, argv, &inputFileName);
+
+    ifP = pm_openr(inputFileName);
+
+    name = imageName(inputFileName);
+
+    pbm_readpbminit(ifP, &cols, &rows, &format);
+
+    printf("USHORT %s[] = {\n", name);
+    printf("  %d\n", cols);
+    printf("  %d\n", rows);
+
+    writeRaster(ifP, rows, cols, format);
+
+    printf("};\n");
+
+    pm_close(ifP);
+
+    pm_strfree(name);
 
     return 0;
 }

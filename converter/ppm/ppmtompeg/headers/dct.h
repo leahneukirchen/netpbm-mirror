@@ -31,7 +31,6 @@
 #define DCT_INCLUDED
 
 
-#include "ansi.h"
 
 
 
@@ -47,12 +46,12 @@ typedef DCTELEM DCTBLOCK_2D[DCTSIZE][DCTSIZE];
 /*  
  *  from mfwddct.c:
  */
-void init_fdct _ANSI_ARGS_((void));
-extern void mp_fwd_dct_block2 _ANSI_ARGS_((DCTBLOCK_2D src, DCTBLOCK_2D dest));
+void init_fdct (void);
+extern void mp_fwd_dct_block2 (DCTBLOCK_2D src, DCTBLOCK_2D dest);
 
 /* jrevdct.c */
-extern void init_pre_idct _ANSI_ARGS_((void ));
-extern void mpeg_jrevdct _ANSI_ARGS_((DCTBLOCK data ));
+extern void init_pre_idct (void );
+extern void mpeg_jrevdct (DCTBLOCK data );
 
 
 /* We assume that right shift corresponds to signed division by 2 with
