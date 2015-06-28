@@ -2,17 +2,15 @@
 <HTML><HEAD><TITLE>Ppmtoilbm User Manual</TITLE></HEAD>
 <BODY>
 <H1>ppmtoilbm</H1>
-Updated: 31 October 1993
+Updated: 28 June 2015
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
 ppmtoilbm - convert a PPM image into an ILBM file
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>ppmtoilbm</B>
 
@@ -37,12 +35,10 @@ ppmtoilbm - convert a PPM image into an ILBM file
 
 [<B>-map</B> <i>ppmfile</i>]
 
-[<B>-savemem</B>]
-
 [<B>ppmfile</B>]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -66,8 +62,8 @@ as output.  <b>ppmtoilbm</b> understands the following ILBM types:
 <p>Chunks written: BMHD, CMAP, CAMG (only for HAM), BODY (not for
 colormap files) unofficial DCOL chunk for direct color ILBM.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+
+<H2 id="options">OPTIONS</H2>
 
 <p>Options marked with (*) can be prefixed with a "no",
 e.g. "-nohamif".  All options can be abbreviated to their
@@ -170,8 +166,7 @@ nPlanes = 0.
 </DL>
 
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>LIMITATIONS</H2>
+<H2 id="limitations">LIMITATIONS</H2>
 
 <p>HAM pictures will always get a grayscale colormap; a real color
 selection algorithm might give better results.  On the other hand,
@@ -179,39 +174,44 @@ this allows row-by-row operation on HAM images, and all HAM images of
 the same depth (no. of planes) share a common colormap, which is
 useful for building HAM animations.
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>REFERENCES</H2>
+
+<H2 id="references">REFERENCES</H2>
 
 Amiga ROM Kernel Reference Manual - Devices (3rd Ed.)
 <BR>
 Addison Wesley, ISBN 0-201-56775-X
 
-<A NAME="lbAH">&nbsp;</A>
-<H2>SEE ALSO</H2>
+
+<H2 id="seealso">SEE ALSO</H2>
 
 <A HREF="ppm.html">ppm</A>, 
 <A HREF="ilbmtoppm.html">ilbmtoppm</A>
 
-<A NAME="lbAI">&nbsp;</A>
-<H2>AUTHORS</H2>
+
+<h2 id="history">HISTORY</h2>
+
+<p>For about a year in 1993-1994, there was a <b>-savemem</b> option.
+
+
+<H2 id="authoris">AUTHORS</H2>
 
 <p>Copyright (C) 1989 by Jef Poskanzer.
 
 <p>Modified October 1993 by Ingo Wilken (<A
 HREF="mailto:Ingo.Wilken@informatik.uni-oldenburg.de">Ingo.Wilken@informatik.uni-oldenburg.de</A>)
 
+
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">LIMITATIONS</A>
-<LI><A HREF="#lbAG">REFERENCES</A>
-<LI><A HREF="#lbAH">SEE ALSO</A>
-<LI><A HREF="#lbAI">AUTHORS</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#limitations">LIMITATIONS</A>
+<LI><A HREF="#references">REFERENCES</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#history">HISTORY</A>
+<LI><A HREF="#authors">AUTHORS</A>
 </UL>
 </BODY>
 </HTML>
