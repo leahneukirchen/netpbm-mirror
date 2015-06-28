@@ -118,7 +118,7 @@ parseSrgbintentOpt(const char *      const srgbintentOpt,
         *srgbintentP = PNGX_ABSOLUTE_COLORIMETRIC;
     else
         pm_error("Unrecognized sRGB intent value '%s'.  We understand "
-                 "only 'perceptual', 'realtivecolorimetric', "
+                 "only 'perceptual', 'relativecolorimetric', "
                  "'saturation', and 'absolutecolorimetric'",
                  srgbintentOpt);
 }
