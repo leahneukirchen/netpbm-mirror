@@ -268,7 +268,7 @@ find_one_centerline(bitmap_type    const bitmap,
     */
     {
         pm_pixelcoord pos;
-        pos.col = originalCol; pos.row = bitmap.height - originalRow - 1;
+        pos.col = original_col; pos.row = bitmap.height - original_row - 1;
         LOG2(" (%d,%d)", pos.col, pos.row);
         append_outline_pixel(&outline, pos);
     }

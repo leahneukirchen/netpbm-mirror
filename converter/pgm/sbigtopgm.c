@@ -123,7 +123,7 @@ int main(argc, argv)
             pm_error("malformed SBIG file header at character %d", hdr - header);
 	}
 	*cp = 0;
-        if (strncmp(hdr, "ST-", 3) == 0)  ||
+        if (strncmp(hdr, "ST-", 3) == 0  ||
             (hdr == &hdr[0] && strstr(hdr,"Image") != NULL)) {
             char *ep = strchr(hdr + 3, ' ');
 
