@@ -120,6 +120,8 @@ struct cmdlineInfo {
     struct pngx_chroma rgb;          /* Meaningless if !rgbSpec */
     unsigned int  sizeSpec;
     struct pngx_phys   size;         /* Meaningless if !sizeSpec */
+    unsigned int srgbintentSpec;
+    pngx_srgbIntent srgbintent;
     const char *  text;         /* NULL if none */
     const char *  ztxt;         /* NULL if none */
     unsigned int  modtimeSpec;
@@ -194,6 +196,27 @@ parseRgbOpt(const char *         const rgbOpt,
                  "Should be 6 floating point number: "
                  "x and y for each of white, red, green, and blue",
                  rgbOpt);
+}
+
+
+
+static void
+parseSrgbintentOpt(const char *      const srgbintentOpt,
+                   pngx_srgbIntent * const srgbintentP) {
+    
+    if (streq(srgbintentOpt, "perceptual"))
+        *srgbintentP = PNGX_PERCEPTUAL;
+    else if (streq(srgbintentOpt, "relativecolorimetric"))
+        *srgbintentP = PNGX_RELATIVE_COLORIMETRIC;
+    else if (streq(srgbintentOpt, "saturation"))
+        *srgbintentP = PNGX_SATURATION;
+    else if (streq(srgbintentOpt, "absolutecolorimetric"))
+        *srgbintentP = PNGX_ABSOLUTE_COLORIMETRIC;
+    else
+        pm_error("Unrecognized sRGB intent value '%s'.  We understand "
+                 "only 'perceptual', 'relativecolorimetric', "
+                 "'saturation', and 'absolutecolorimetric'",
+                 srgbintentOpt);
 }
 
 
@@ -292,6 +315,7 @@ parseCommandLine(int argc, const char ** argv,
     const char * modtime;
     const char * compMethod;
     const char * compStrategy;
+    const char * srgbintent;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
@@ -306,6 +330,8 @@ parseCommandLine(int argc, const char ** argv,
             &cmdlineP->rgbSpec,    0);
     OPTENT3(0, "size",             OPT_STRING,    &size,
             &cmdlineP->sizeSpec,   0);
+    OPTENT3(0,  "srgbintent",      OPT_STRING,    &srgbintent,
+            &cmdlineP->srgbintentSpec, 0);
     OPTENT3(0, "text",             OPT_STRING,    &cmdlineP->text,
             &textSpec,             0);
     OPTENT3(0, "ztxt",             OPT_STRING,    &cmdlineP->ztxt,
@@ -433,6 +459,9 @@ parseCommandLine(int argc, const char ** argv,
     if (cmdlineP->rgbSpec)
         parseRgbOpt(rgb, &cmdlineP->rgb);
     
+    if (cmdlineP->srgbintentSpec)
+        parseSrgbintentOpt(srgbintent, &cmdlineP->srgbintent);
+
     if (cmdlineP->modtimeSpec)
         parseModtimeOpt(modtime, &cmdlineP->modtime);
 
@@ -2601,6 +2630,20 @@ doSbitChunk(struct pngx * const pngxP,
 
 
 
+static void
+addSrgbChunk(struct pngx *   const pngxP,
+             pngx_srgbIntent const srgbIntent) {
+
+    pngx_setSrgb(pngxP, srgbIntent);
+
+    if (verbose) {
+        pm_message("writing sRGB chunk with intent value %s",
+                   pngx_srgbIntentDesc(srgbIntent));
+    }
+}
+
+
+
 static void 
 convertpnm(struct cmdlineInfo const cmdline,
            FILE *             const ifP,
@@ -2809,6 +2852,9 @@ convertpnm(struct cmdlineInfo const cmdline,
                 maxval, pngMaxval, cmdline.verbose);
 
     doSbitChunk(pngxP, pngMaxval, maxval, alpha, alphaMaxval);
+
+    if (cmdline.srgbintentSpec)
+        addSrgbChunk(pngxP, cmdline.srgbintent);
 
     /* tEXT and zTXT chunks */
     if (cmdline.text || cmdline.ztxt)
