@@ -28,6 +28,7 @@
 #include "pnm.h"
 #include "sgi.h"
 
+#define MAX_ZSIZE 256
 
 
 struct CmdlineInfo {
@@ -81,6 +82,10 @@ parseCommandLine(int argc, const char ** argv,
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     free(option_def);
+
+    if (!cmdlineP->channelSpec)
+        cmdlineP->channel = MAX_ZSIZE + 1;
+            /* Invalid value; to suppress Valgrind error */
 
     if (argc-1 < 1)
         cmdlineP->inputFileName = "-";
@@ -212,7 +217,7 @@ readHeader(FILE *       const ifP,
     headP->xsize     = getBigShort(ifP);
     headP->ysize     = getBigShort(ifP);
     headP->zsize     = getBigShort(ifP);
-    if (headP->zsize > 256)
+    if (headP->zsize > MAX_ZSIZE)
         pm_error("Too many channels in input image: %u",
                  (unsigned int) headP->zsize );
     headP->pixmin    = getBigLong(ifP);
