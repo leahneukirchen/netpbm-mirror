@@ -28,6 +28,7 @@ pnmtopng - convert a PNM image to PNG
 [<b>-rgb=&quot;</b><i>wx</i> <i>wy</i>
   <i>rx</i> <i>ry</i> <i>gx</i> <i>gy</i> <i>bx</i> <i>by</i><b>&quot;</b>]
 [<b>-size=&quot;</b><i>x</i> <i>y</i> <i>unit</i><b>&quot;</b>]
+[<b>-srgbintent=</b><i>intent</i>]
 [<b>-modtime=&quot;</b>[<i>yy</i>]<i>yy</i><b>-</b><i>mm</i><b>-</b><i>dd</i>
   <i>hh</i><b>:</b><i>mm</i><b>:</b><i>ss</i><b>&quot;</b>]
 [<b>-nofilter</b>]
@@ -229,54 +230,6 @@ images from scratch do it with a gamma transfer in which the gamma value is
 <DD>Use this parameter to create a chunk that specifies the frequency
 (or histogram) of the colors in the image.
 
-<DT><B>-rgb=</b><i>chroma_list</i>
-
-<DD>This option specifies how red, green, and blue component values
-of a pixel specify a particular color, by telling the chromaticities
-of those 3 primary illuminants and of white (i.e. full strength of
-all three).
-
-<p>The <i>chroma_list</i> value is a blank-separated list of 8 floating
-point decimal numbers.  The CIE-1931 X and Y chromaticities (in that
-order) of each of white, red, green, and blue, in that order.
-
-<p>This information goes into the PNG's cHRM chunk.
-
-<p>In a shell command, make sure you use quotation marks so that the
-blanks in <i>chroma_list</i> don't make the shell see multiple command
-arguments.
-
-<p>This option was new in Netpbm 10.30 (October 2005).  Before that,
-the option <b>-chroma</b> does the same thing, but with slightly
-different syntax.
-
-<DT><B>-size=&quot;</b><i>x</i> <i>y</i> <i>unit</i><b>&quot;</b>
-
-<DD>This option determines the aspect ratio of the individual pixels
-of your image as well as the physical resolution of it.
-
-<p><i>unit</i> is either <b>0</b> or <i>1</i>.  When it is <i>1</i>,
-the option specifies the physical resolution of the image in pixels
-per meter.  For example, <b>-size=&quot;10000 15000 1&quot;</b> means
-that when someone displays the image, he should make it so that 10,000
-pixels horizontally occupy 1 meter and 15,000 pixels vertically occupy
-one meter.  And even if he doesn't take this advice on the overall
-size of the displayed image, he should at least make it so that each
-pixel displays as 1.5 times as high as wide.
-
-<p>When <i>unit</i> is <b>0</b>, that means there is no advice on
-the absolute physical resolution; just on the ratio of horizontal to 
-vertical physical resolution.
-
-<p>This information goes into the PNG's pHYS chunk.
-
-<p>When you don't specify <b>-size</b>, <b>pnmtopng</b> creates the image
-with no pHYS chunk, which means square pixels of no absolute resolution.
-
-<p>This option was new in Netpbm 10.30 (October 2005).  Before that,
-the option <b>-phys</b> does the same thing, but with slightly
-different syntax.
-
 <DT><B>-text=</b><i>filename</i>
 
 <DD>
@@ -333,6 +286,73 @@ size of or number of lines in the file.
 
 <DD>The same as <b>-text</b>, except <b>pnmtopng</b> considers the
 text compressed.
+
+<DT><B>-rgb=</b><i>chroma_list</i>
+
+<DD>This option specifies how red, green, and blue component values
+of a pixel specify a particular color, by telling the chromaticities
+of those 3 primary illuminants and of white (i.e. full strength of
+all three).
+
+<p>The <i>chroma_list</i> value is a blank-separated list of 8 floating
+point decimal numbers.  The CIE-1931 X and Y chromaticities (in that
+order) of each of white, red, green, and blue, in that order.
+
+<p>This information goes into the PNG's cHRM chunk.
+
+<p>In a shell command, make sure you use quotation marks so that the
+blanks in <i>chroma_list</i> don't make the shell see multiple command
+arguments.
+
+<p>This option was new in Netpbm 10.30 (October 2005).  Before that,
+the option <b>-chroma</b> does the same thing, but with slightly
+different syntax.
+
+<DT><B>-size=&quot;</b><i>x</i> <i>y</i> <i>unit</i><b>&quot;</b>
+
+<DD>This option determines the aspect ratio of the individual pixels
+of your image as well as the physical resolution of it.
+
+<p><i>unit</i> is either <b>0</b> or <i>1</i>.  When it is <i>1</i>,
+the option specifies the physical resolution of the image in pixels
+per meter.  For example, <b>-size=&quot;10000 15000 1&quot;</b> means
+that when someone displays the image, he should make it so that 10,000
+pixels horizontally occupy 1 meter and 15,000 pixels vertically occupy
+one meter.  And even if he doesn't take this advice on the overall
+size of the displayed image, he should at least make it so that each
+pixel displays as 1.5 times as high as wide.
+
+<p>When <i>unit</i> is <b>0</b>, that means there is no advice on
+the absolute physical resolution; just on the ratio of horizontal to 
+vertical physical resolution.
+
+<p>This information goes into the PNG's pHYS chunk.
+
+<p>When you don't specify <b>-size</b>, <b>pnmtopng</b> creates the image
+with no pHYS chunk, which means square pixels of no absolute resolution.
+
+<p>This option was new in Netpbm 10.30 (October 2005).  Before that,
+the option <b>-phys</b> does the same thing, but with slightly
+different syntax.
+
+<dt><b>-srgbintent=</b><i>intent</i>
+<dd>This asserts that the input is a pseudo-Netpbm image that uses an
+sRGB color space (unlike true Netpbm) and indicates how you intend for the
+colors to be rendered.  It causes <b>pamtopng</b> to include an sRGB chunk
+in the PNG image that specifies that intent, so see the PNG documentation for
+more information on what this really means.
+
+<p><i>intent</i> is one of:
+
+<ul>
+<li><b>perceptual</b>  
+<li><b>relativecolorimetric</b>  
+<li><b>saturation</b>  
+<li><b>absolutecolorimetric</b>  
+</ul>
+
+<p>This option was new in Netpbm 10.71 (June 2015).  Before that,
+<b>pnmtopng</b> never generates an sRGB chunk.
 
 <DT><B>-modtime=&quot;</b>[<i>yy</i>]<i>yy-mm-dd hh:mm:ss</i><b>&quot;</b> 
 
