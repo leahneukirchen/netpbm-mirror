@@ -354,7 +354,7 @@ doTrnsChunk(const struct pam * const pamP,
         pngx_colorType(pngxP) == PNG_COLOR_TYPE_RGB_ALPHA)
         pm_error("Both alpha channel and transparency chunk not allowed.");
     else {
-        xelval pngMaxval = pm_bitstomaxval(pngx_bitDepth(pngxP));
+        xelval const pngMaxval = pm_bitstomaxval(pngx_bitDepth(pngxP));
         png_color_16 const pngColor = parseAndScaleColor(trans, pngMaxval);
             /* Transparency color from text format scaled from 16-bit to
                maxval.
