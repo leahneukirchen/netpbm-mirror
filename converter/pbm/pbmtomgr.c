@@ -40,6 +40,10 @@ main( argc, argv )
 	ifp = stdin;
 
     pbm_readpbminit( ifp, &cols, &rows, &format );
+    if (cols > 4095)
+        pm_error("Image width too large: %u (max: 4095)", cols);
+    if (rows > 4095)
+        pm_error("Image heigth too large: %u (max: 4095)", cols);
     bitrow = pbm_allocrow( cols );
     
     /* Round cols up to the nearest multiple of 8. */

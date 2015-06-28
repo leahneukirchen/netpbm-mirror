@@ -208,7 +208,6 @@ main(argc, argv)
     char **argv;
 {
     char     *pnmname = NULL, *outname = NULL;
-    static char  filename[BUFSIZ];
     int      oflag, c;
 
     pnm_init(&argc, argv);
@@ -235,12 +234,10 @@ main(argc, argv)
  * Open the file.
  */
     if (pnmname == NULL) {
-        strcpy(filename, "stdin");
         fp = stdin;
     }
     else {
-        strcpy(filename, pnmname);
-        fp = pm_openr(filename);
+        fp = pm_openr(pnmname);
     }
 
     hdr.rle_file = rle_open_f( hdr.cmd, outname, "wb" );

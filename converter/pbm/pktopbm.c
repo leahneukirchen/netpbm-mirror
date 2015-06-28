@@ -214,7 +214,10 @@ main(int argc, char *argv[]) {
 
     if (--argc < 1) pm_usage(usage) ;
 
-    strcpy(pkname, *++argv) ;
+    ++argv;
+    if(strlen(*argv) + 4 > NAMELENGTH)
+        pm_error("pkname is too long");
+    strcpy(pkname, *argv) ;
     pktopbm_add_suffix(pkname, ".pk") ;
 
     car = 0 ;

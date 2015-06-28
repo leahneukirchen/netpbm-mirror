@@ -35,7 +35,39 @@
 #endif
 
 #include <string.h>
+#include "nstring.h"
 #include "ppm.h"
+
+
+
+struct FileNameSet {
+    const char * u;
+    const char * v;
+    const char * y;
+};
+
+
+
+static void
+makeOutputFileName(const char *         const baseName,
+                   struct FileNameSet * const fnameP) {
+
+    asprintfN(&fnameP->u, "%s.U", baseName);
+    asprintfN(&fnameP->v, "%s.V", baseName);
+    asprintfN(&fnameP->y, "%s.Y", baseName);
+}
+
+
+
+static void
+termFileNameSet(struct FileNameSet const fname) {
+
+    strfree(fname.u);
+    strfree(fname.v);
+    strfree(fname.y);
+}
+
+
 
 int
 main(argc, argv)
@@ -49,8 +81,8 @@ char **argv;
         pixval          maxval;
         myLONG u,v,y0,y1,y2,y3,u0,u1,u2,u3,v0,v1,v2,v3;
         unsigned char  *y1buf,*y2buf,*ubuf,*vbuf;
-        char            ufname[256],vfname[256],yfname[256];
-
+        struct FileNameSet fname;
+            /* Output file names - .U, .V, .Y */
 
         ppm_init(&argc, argv);
 
@@ -59,17 +91,13 @@ char **argv;
         if (argc == 3) ifp = pm_openr(argv[2]);
         else ifp = stdin;
 
-        strcpy(ufname,argv[1]);
-        strcpy(vfname,argv[1]);
-        strcpy(yfname,argv[1]);
+        makeOutputFileName(argv[1], &fname);
 
-        strcat(ufname,".U");
-        strcat(vfname,".V");
-        strcat(yfname,".Y");
+        uf = pm_openw(fname.u);
+        vf = pm_openw(fname.v);
+        yf = pm_openw(fname.y);
 
-        uf = fopen(ufname,"wb");
-        vf = fopen(vfname,"wb");
-        yf = fopen(yfname,"wb");
+        termFileNameSet(fname);
 
         if(!(uf && vf && yf)) {
          perror("error opening output files");

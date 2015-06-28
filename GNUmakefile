@@ -400,6 +400,7 @@ clean: localclean
 localclean:
 	rm -f netpbm build_started build_complete
 	rm -f pm_config.h inttypes_netpbm.h version.h
+	rm -f *.deb
 
 # Note that removing Makefile.config must be the last thing we do,
 # because no other makes will work after that is done.

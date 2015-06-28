@@ -246,3 +246,24 @@ DOCUMENTATION
 
 Documentation is not packaged with the program source code.  See the
 file doc/USERDOC for information on installing documentation.
+
+
+COMMON PROBLEMS
+---------------
+
+Apple Mac: unknown machine mode 'V8QI'
+--------------------------------------
+
+Netpbm 10.35 does not work on modern Macs.  These newer systems have a
+different compiler than what 10.35 was designed for, and it reports itself as
+the GNU Compiler but doesn't provide some of the facilities the GNU Compiler
+does.  Because Netpbm 10.35 was the Super Stable release series by the time
+the newer Macs were found to be incompatible and this is a very complex area,
+we cannot fix it in 10.35.
+
+Netpbm 10.51 and later work.
+
+You can work around the problem by adding the option '-mno-sse' to the
+compile, which you can do like this:
+
+  $ make CFLAGS=-mno-sse

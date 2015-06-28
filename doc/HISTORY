@@ -4,6 +4,102 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+15.06.28 BJH  Release 10.35.96
+
+              palmtopnm: Fix distorted output with PackBits compressed input.
+              Always broken (Ability to convert PackBits input was new in
+              Netpbm 10.27 (March 2005).
+
+              pnmtopalm: Fix arithmetic overflow with ridiculously large
+              image.  Introduced after Netpbm 10.26 (January 2005) but before
+              Netpbm 10.35 (August 2006).
+
+              pbmtoepson: fix -protocol option - never works and sometimes
+              crashes program.  Always broken (-protocol was new in Netpbm
+              10.23 (July 2004).
+
+              pbmtoppa: fix buffer overruns, double-free crashes.  Always
+              broken (pbmtoppa was new in Netpbm 9.1 (March 2000).
+
+              pbmtomatrixorbital: fix bug: fails if you specify the input
+              file name argument.  Always broken.  (pbmtomatrixorbital was
+              new in Netpbm 10.18 (Setpember 2003).
+
+              sbigtopgm: fix detection of camera type.  Always broken
+              (sbigtopgm was new in Netpbm 8.3 (March 2000)).
+
+              pbmtogo: Fix bug: garbage first row.  Broken at least since
+              November 1989.
+
+              pbmtogo: Fix bug: buffer overrun with certain input.  Broken
+              at least since November 1989.
+
+              pbmtoescp2: Fix bug: overrun on certain input.  Always broken
+              (pbmtoescp2 was new in Netpbm 10.18 (September 2003)).
+
+              escp2topbm: Fix buffer overrun on certain input.  Always broken
+              (escp2topbm was new in Netpbm 10.18 (September 2003)).
+
+              libnetpbm: pm_stripeq: fix bug: wild pointer access when
+              comparator is shorter than comparand.  Doesn't affect function,
+              but could cause crash or privacy exposure.  Affects reading of a
+              PAM file by any program.  Introduced in one of Netpbm 10.27
+              (March 2005) through 10.35 (August 2006).
+
+              pbmtog3: Fix buffer overrun.  Introduced in Netpbm 10.23
+              (July 2004).
+
+              cameratopam: Fix arithmetic underflow in JPEG processing;
+              unknown effect.
+
+              sbigtopgm: fix buffer overrun with invalid input image.  Always
+              present (sbigtopgm was new in Netpbm 8.3 (March 2000)).
+
+              pnmtorle: Fix buffer overrun with long file name.  Always
+              present.  (pnmtorle was new to Netpbm in Netpbm 9.0 (April
+              2000)).
+
+              pbmtopk: Fix buffer overrun with long file name.  Always
+              present.  (pbmtopk was new in Netpbm 1 (March 1991)).
+
+              pktopbm: Fix buffer overrun with long file name.  Always
+              present.  (pbmtopk was new in Netpbm 1 (March 1991)).
+
+              ppmtoyuvsplit: Fix buffer overrun with long file name.  Always
+              present.  (New in Netpbm 1 (March 1991)).
+
+              pbmtopi3: Fix bug: wrong output when input is higher or wider
+              than 640 pixels.  Always broken (pbmtopi3 was new in September
+              1991).
+
+              pbmtomgr: Fix incorrect output when input is too large (must be
+              at most 4095 pixels high or wide).
+
+              pbmtomacp: fix wild pointer dereference with -b larger than
+              image height.  Always broken.  (pbmtomacp was new in X.V11R3
+              (March 1988).
+
+              ppmtorgb3: Fix buffer overflow with long input file name.
+              Always present.  (ppmtorgb3 was new in X.V11R4 (November 1989).
+
+              pbmtoatk: Fix crash with very long input file name argument.
+              Always broken (pbmtoatk was new in 1991).
+
+              pnmgamma -srgbtobt709, -bt709tosrgb: fix bug; incorrect output
+              nearly always.  Always broken (These options were new in
+              Netpbm 10.32 (February 2006)).
+
+              pamtosvg: fix use of unset variable; probably results in a
+              crash.  Always present (pamtosvg was new in Netpbm 10.33 (March
+              2006).
+
+              Install: make backward compatibility link ppmtotga -> pamtotga .
+
+              Install: mention in instructions that it doesn't build on
+              modern Macs.
+
+              Make clean: remove .deb file
+
 14.12.25 BJH  Release 10.35.95
 
               Fix bogus message from ppmXXX programs when the input is not

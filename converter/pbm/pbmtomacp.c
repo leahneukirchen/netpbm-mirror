@@ -20,6 +20,8 @@
 #define EQUAL		1
 #define UNEQUAL		0
 
+#define MIN3(a,b,c)     (MIN((MIN((a),(b))),(c)))
+
 static void fillbits ARGS(( bit **bits, bit **bitsr, int top, int left, int bottom, int right ));
 static void writemacp ARGS(( bit **bits ));
 static int packit ARGS(( bit *pb, bit *bits ));
@@ -102,23 +104,18 @@ char *argv[];
     left = 0;
 
   if( rflg )
-  { if( right - left >= MAX_COLS )
-      right = left + MAX_COLS - 1;
-  }
+    right = MIN3( right, cols - 1, left + MAX_COLS - 1 );
   else
-    right = ( left + MAX_COLS > cols ) ? ( cols - 1 ) : ( left + MAX_COLS - 1 );
+    right = MIN( cols - 1,  left + MAX_COLS - 1 );
 
   if( !tflg )
     top = 0;
 
   if( bflg )
-  { if( bottom - top >= MAX_LINES )
-      bottom = top + MAX_LINES - 1;
-  }
+    bottom = MIN3( bottom, rows - 1, top + MAX_LINES - 1);
   else
-    bottom = ( top + MAX_LINES > rows ) ?
-		   ( rows - 1 ) : ( top + MAX_LINES - 1 );
-  
+    bottom = MIN( rows - 1, top + MAX_LINES - 1 );
+
     if( right <= left || left < 0 || right - left + 1 > MAX_COLS )
       pm_error("error in right (= %d) and/or left (=%d)",right,left );
     if( bottom <= top || top < 0 || bottom - top + 1 > MAX_LINES )
@@ -220,7 +217,7 @@ packit( pb, bits )
       save = *srcb++;
       charcount--;
       newcount = 1;
-      while( (*srcb == save) && charcount ) { 
+      while( charcount && (*srcb == save) ) { 
           srcb++;
           newcount++;
           charcount--;
