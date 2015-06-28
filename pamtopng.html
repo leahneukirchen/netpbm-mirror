@@ -1,0 +1,333 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head><title>Pamtopng User Manual</title></head>
+<body>
+<h1>pamtopng</h1>
+Updated: 28 June 2015
+<BR>
+<a href="#index">Table Of Contents</a>
+
+<h2>NAME</h2>
+pamtopng - convert a Netpbm image to PNG
+
+<h2 id="synopsis">SYNOPSIS</h2>
+
+<b>pamtopng</b>
+[<b>-verbose</b>]
+[<b>-transparent=</b><i>color</i>]
+[<b>-background=</b><i>color</i>]
+[<b>-gamma=</b><i>value</i>]
+[<b>-chroma=&quot;</b><i>wx</i> <i>wy</i>
+  <i>rx</i> <i>ry</i> <i>gx</i> <i>gy</i> <i>bx</i> <i>by</i><b>&quot;</b>]
+[<b>-srgbintent=</b><i>0..3</i><b></b>]
+[<b>-time=</b>[<i>yy</i>]<i>yy</i><b>-</b><i>mm</i><b>-</b><i>dd</i>
+  <i>hh</i><b>:</b><i>mm</i><b>:</b><i>ss</i>]
+[<b>-text=</b><i>file</i>]
+[<b>-ztxt=</b><i>file</i>]
+[<b>-itxt=</b><i>file</i>]
+[<I>pnmfile</i>]
+
+<?makeman .SH OPTION USAGE ?>
+
+<p>Minimum unique abbreviation of option is acceptable.  You may use double
+hyphens instead of a single hyphen to denote options.  You may use white space
+in place of the equals sign to separate an option name from its value.
+
+<h2 id="description">DESCRIPTION</h2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>pamtopng</b> reads a Netpbm image as input and produces a PNG image as
+output.
+
+<p>Color component values in PNG files are either 8 or 16 bits wide, so where
+necessary <b>pamtopng</b> scales colors to have a maxval of 255 or 65535.
+In that case, it will add an sBIT chunk to indicated the original bit-depth.
+
+<p><b>pamtopng</b> works only on images with maxval 1, 3, 15, 255, or 65535.
+You can use <b>pamdepth</b> to convert an image with some other maxval to one
+of these.
+
+<p><b>pamtopng</b> produces a color PNG from a color PAM, even if the
+only colors in the image are shades of gray.  To create a graycale PNG,
+from such an image (which might be slightly smaller), you can use other
+Netpbm programs to convert the input to grayscale.
+
+<h3 id="pnmtopng">Alternative: <b>pnmtopng</b></h3>
+
+<p>Netpbm contains another program for generating PNG images: <b>pnmtopng</b>.
+<b>pnmtopng</b> is a much older program - it is in fact the first program in
+the world that could generate a PNG.  <b>pnmtopng</b> is a complex,
+feature-laden program.  It lets you control various arcane aspects of the
+conversion and create PNGs with various arcane features.  It does various
+transformations on the image to create the greatest compression possible, to a
+degree that probably doesn't make any difference in the modern world.
+
+<p>Because <b>pnmtopng</b> has been around virtually forever, programs and
+procedures that use it are more portable than those that use <b>pamtopng</b>.
+Its age and popularity also probably make it have fewer bugs.
+
+<p><b>pamtopng</b> does not have any way to do what the following do in
+<b>pnmtopng</b>:
+
+<ul>
+<li><b>-palette</b>
+<li><b>-history</b>
+<li><b>-filter</b>
+<li><b>-size</b>
+<li><b>-paeth</b>
+<li><b>-hist</b>
+<li><b>-nofilter</b>
+<li><b>-sub</b>
+<li><b>-up</b>
+<li><b>-avg</b>
+<li><b>-force</b>
+<li><b>-libversion</b>
+<li><b>-compression</b>
+<li><b>-comp_</b><i>xxx</i>
+</ul>
+
+
+
+<p>These are some of the other functions of <b>pnmtopng</b>
+that <b>pamtopng</b> lacks:
+
+<ul>
+<li>When you specify a transparent or background color that is not in the
+image, <b>pnmtopng</b> can optionally choose the closest one that is in
+image.  <b>pamtopng</b> always uses the exact color you specify.
+</ul>
+
+<p>Features that exist in both programs are controlled by largely the same
+command syntax.  But there are these differences:
+
+<ul>
+<li><b>pnmtopng</b>'s <b>-rgb</b> option is <b>-chroma</b> in <b>pamtopng</b>.
+<b>-chroma</b> is a better name, and in fact was the name that <b>pnmtopng</b>
+used originally, but we had to change it when we had to change the syntax
+of the option value to conform to the rest of Netpbm.
+
+<li><b>pnmtopng</b>'s <b>-modtime</b> option is <b>-time</b> in
+<b>pamtopng</b>.  The origin <b>-modtime</b> is analogous to that of
+<b>-rgb</b>.
+
+</ul>
+
+
+
+<h2 id="options">OPTIONS</h2>
+
+<dl compact>
+
+<dt><b>-transparent=</b><i>color</i>
+<dd>
+<b>pamtopng</b> marks the specified color as transparent in the PNG image.
+<P>Specify the color (<i>color</i>) as described for
+the <a href="libppm.html#colorname">argument of the <b>ppm_parsecolor()</b>
+library routine</a>.  E.g. <B>red</B> or <B>rgb:ff/00/0d</B>.
+
+<dt><b>-background=</b><i>color</i>
+<dd>
+This causes <b>pamtopng</b> to create a background color chunk in the PNG
+output which can be used for subsequent transparency channel or transparent
+color conversions.  Specify <i>color</i> the same as for <b>-transparent</b>.
+
+<dt><b>-gamma=</b><i>value</i>
+<DD>This causes <b>pnmtopng</b> to create a gAMA chunk.  This information
+helps describe how the color values in the PNG must be interpreted.  Without
+the gAMA chunk, whatever interprets the PNG must get this information
+separately (or just assume something standard).  If your input is a true PPM
+or PGM image, you should specify <b>-gamma=.45</b>.  But sometimes people
+generate images which are ostensibly PPM except the image uses a different
+gamma transfer function than the one specified for PPM.  A common case of this
+is when the image is created by simple hardware that doesn't have digital
+computational ability.  Also, some simple programs that generate images from
+scratch do it with a gamma transfer in which the gamma value is 1.0.
+
+<dt><b>-chroma=</b><i>chroma_list</i>
+<dd>
+<DD>This option specifies how red, green, and blue component values
+of a pixel specify a particular color, by telling the chromaticities
+of those 3 primary illuminants and of white (i.e. full strength of
+all three).
+
+<p>The <i>chroma_list</i> value is a blank-separated list of 8 floating
+point decimal numbers.  The CIE-1931 X and Y chromaticities (in that
+order) of each of white, red, green, and blue, in that order.
+
+<p>This information goes into the PNG's cHRM chunk.
+
+<p>In a shell command, make sure you use quotation marks so that the
+blanks in <i>chroma_list</i> don't make the shell see multiple command
+arguments.
+
+<dt><b>-srgbintent=</b><i>intent</i>
+<dd>This asserts that the input is a pseudo-Netpbm image that uses an
+sRGB color space (unlike true Netpbm) and indicates how you intend for the
+colors to be rendered.  It causes <b>pamtopng</b> to include an sRGB chunk
+in the PNG image that specifies that intent, so see the PNG documentation for
+more information on what this really means.
+
+<p><i>intent</i> is one of:
+
+<ul>
+<li><b>perceptual</b>  
+<li><b>relativecolorimetric</b>  
+<li><b>saturation</b>  
+<li><b>absolutecolorimetric</b>  
+</ul>
+
+<dt><b>-text=</b><i>filename</i>
+<dd>
+This option lets you include comments in text chunks of the PNG output.
+<i>filename</i> is the name of a file that contains your text comments.
+
+<p>The output contains a distinct tEXt chunk for each comment.
+
+<p>Here is an example of a comment file:
+
+<pre>
+	Title           PNG file
+	Author          John Doe
+	Description     how to include a text chunk
+                        PNG file
+	"Creation Date" 2015-may-11
+	Software        pamtopng
+</pre>
+
+<p>The first line representing a comment must not start with a delimiter
+character (a blank, tab or null).  Every other line in the group is a
+continuation line and must start with a delimiter character.
+
+<p>The first word in a comment line is the keyword of the comment.  It begins
+in column one of the line and continues up to, but not including, the first
+delimiter character or the end of the line, whichever is first.  You can
+enclose the keyword in double quotes in which case the keyword can consists of
+multiple words.  The quotes are not part of the keyword.  The comment text
+begins after the keyword and any delimiter characters after it, plus the text
+in subsequent continuation lines.
+
+<p>There is no limit on the length of a file line or keyword or comment text
+line or comment text.  There is no limit on the number of comments, the size
+of the comment or the number of comments in the file.
+
+<dt><b>-ztxt=</b><i>filename</i>
+<dd>The same as <b>-text</b>, except <b>pamtopng</b> will compress the
+comment, except that when the keyword is "Title", "Author" or "Language".
+
+<dt><b>-itxt=</b><i>filename</i>
+<dd>Similar to <b>-text</b>, but the comments can be in a language other than
+English.  The PNG image indicates what language that is and includes the
+comment key both in English and that language.
+
+<p>The input file must start with a record that identifies the comment
+language.  Its key is &quot;Language&quot;.
+
+<p>For each record, you must give the key both in English and in the comment
+language.
+
+<p>Example:
+
+<pre>
+	Language        Taal             nl-NL
+        Title           Titel            PNG file
+        Author          Auteur           Pietje Puk
+        Description     Omschrijving     Tekst in het Nederlands.
+</pre>
+
+<p>The language specification is based on the ISO 639-1 standard, see
+http://en.wikipedia.org/wiki/List_of_ISO_639-1_codes for the valid codes.
+The format is either a two character "nl" or an extended code like "en-US".
+
+<dt><b>-time=&quot;</b>[<i>yy</i>]<i>yy-mm-dd hh:mm:ss</i><b>&quot;</b> 
+<dd>This option allows you to specify the modification time value to be placed
+in the PNG output.  You can specify the year parameter either as a two or four
+digit value.
+
+<dt><b>-verbose</b>
+<dd>
+This causes the program to display various facts about the conversion.
+
+</dl>
+
+
+<h2 id="seealso">SEE ALSO</h2>
+
+<a href="pngtopam.html">pngtopam</a>,
+<a href="pnmtopng.html">pnmtopng</a>,
+<a href="pam.html">pam</a>,
+<a href="pnm.html">pnm</a>
+
+<p>For information on the PNG format, see
+<a href="http://www.w3.org/TR/PNG/">http://www.w3.org/TR/PNG/</a>,
+<a href="http://libpng.org/pub/png/">http://libpng.org/pub/png/</a>,
+<a href="http://en.wikipedia.org/wiki/List_of_ISO_639-1_codes">http://en.wikipedia.org/wiki/List_of_ISO_639-1_codes</a> and
+<a href="http://schaik.com/png/">http://schaik.com/png/</a>.
+
+<h2 id="history">HISTORY</h2>
+
+<p><b>pamtopng</b> was new in Netpbm 10.70 (June 2015).
+
+<p>Before <b>pamtopng</b>, the two ways to create PNG images with Netpbm
+were <b>pnmtopng</b> and <b>pamrgbatopng</b>.  The history of the former is
+discussed above.  The latter was added to Netpbm in 2005 as a cheap way to
+fill a significant need that <b>pnmtopng</b> did not: the ability to turn the
+alpha channel in a PAM image into the alpha channel in a PNG image.
+
+<p>Handling of the alpha channel with <b>pnmtopng</b> is very cumbersome (as
+was dealing with alpha channels in general before the introduction of the PAM
+format).  <b>pamrgbatopng</b> could do what people wanted with the alpha
+channel, but nothing else.  It was a very small program with literally no
+command line options.
+
+<p>The goal in those days was eventually to expand <b>pnmtopng</b> to do the
+PAM alpha channel thing, rename it to <B>pamtopng</B>, and retire
+<b>pamrgbatopng</b>.  But <b>pnmtopng</b> is such a complex program, because
+of its dizzying array of features and its need for backward compatibility,
+that adding that one capability to it was a daunting task and for ten years
+nobody attempted it.
+
+<p>In 2015, one of the authors of the original <b>pnmtopng</b> (from before it
+was even part of Netpbm -- a program that shared essentially no lines of code
+with <b>pnmtopng</b> of 2015) decided to go in a different direction.  While
+many features of <b>pnmtopng</b> were pretty important and easy to implement,
+many others were probably of no use in the modern world or at least not
+important enough to justify the complexity they lent to the code.  (The
+features thought to be outdated were ones that were intended to make the PNG
+output slightly smaller - something considerably less important with the
+declining cost of computer resources).  
+
+<p>And there was an opportunity to drop those features: We could use the new
+name &quot;pamtopng&quot; for a new program, keep the existing program under
+the name &quot;pnmtopng&quot;, and avoid most backward compatibility trouble.
+
+<p>Therefore, Willem van Schaik wrote an intermediate level program that had
+all the most important features of <b>pnmtopng</b>, plus the alpha channel
+handling of <b>pamrgbatopng</b>, with nice, simple code.  That was
+<b>pamtopng</b>.
+
+<p>Because <b>pamrgbatopng</b> had no options, <b>pamtopng</b> was backward
+compatible with it without even trying.  Therefore, as soon as we
+added <b>pamtopng</b> to Netpbm, we removed <b>pamrgbatopng</b> and 
+recommended that <b>pamtorgbatopng</b> be installed as an alias for
+<b>pamtopng</b>.
+
+
+<h2 id="author">AUTHOR</h2>
+
+Copyright (C) 1995-1997 by Alexander Lehmann and Willem van Schaik.
+<br>
+Copyright (C) 2015 by Willem van Schaik.
+
+<hr>
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis">SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#options">OPTIONS</a>
+<li><a href="#seealso">SEE ALSO</a>
+<li><a href="#history">HISTORY</a>
+<li><a href="#author">AUTHOR</a>
+</ul>
+</body>
+</html>
