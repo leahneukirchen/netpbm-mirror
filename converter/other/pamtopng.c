@@ -77,8 +77,8 @@ struct CmdlineInfo {
     const char * itxt;
     unsigned int backgroundSpec;
     const char * background;
-    unsigned int modtimeSpec;
-    time_t modtime;
+    unsigned int timeSpec;
+    time_t time;
 };
 
 
@@ -126,15 +126,15 @@ parseSrgbintentOpt(const char *      const srgbintentOpt,
 
 
 static void
-parseModtimeOpt(const char * const modtimeOpt,
-                time_t *     const modtimeP) {
+parseTimeOpt(const char * const timeOpt,
+             time_t *     const timeP) {
 
     struct tm brokenTime;
     int year;
     int month;
     int count;
 
-    count = sscanf(modtimeOpt, "%d-%d-%d %d:%d:%d",
+    count = sscanf(timeOpt, "%d-%d-%d %d:%d:%d",
                    &year,
                    &month,
                    &brokenTime.tm_mday,
@@ -143,35 +143,35 @@ parseModtimeOpt(const char * const modtimeOpt,
                    &brokenTime.tm_sec);
 
     if (count != 6)
-        pm_error("Invalid value for -modtime '%s'.   It should have "
-                 "the form [yy]yy-mm-dd hh:mm:ss.", modtimeOpt);
+        pm_error("Invalid value for -time '%s'.   It should have "
+                 "the form [yy]yy-mm-dd hh:mm:ss.", timeOpt);
     
     if (year < 0)
-        pm_error("Year is negative in -modtime value '%s'", modtimeOpt);
+        pm_error("Year is negative in -time value '%s'", timeOpt);
     if (year > 9999)
-        pm_error("Year is more than 4 digits in -modtime value '%s'",
-                 modtimeOpt);
+        pm_error("Year is more than 4 digits in -time value '%s'",
+                 timeOpt);
     if (month < 0)
-        pm_error("Month is negative in -modtime value '%s'", modtimeOpt);
+        pm_error("Month is negative in -time value '%s'", timeOpt);
     if (month > 12)
-        pm_error("Month is >12 in -modtime value '%s'", modtimeOpt);
+        pm_error("Month is >12 in -time value '%s'", timeOpt);
     if (brokenTime.tm_mday < 0)
-        pm_error("Day of month is negative in -modtime value '%s'",
-                 modtimeOpt);
+        pm_error("Day of month is negative in -time value '%s'",
+                 timeOpt);
     if (brokenTime.tm_mday > 31)
-        pm_error("Day of month is >31 in -modtime value '%s'", modtimeOpt);
+        pm_error("Day of month is >31 in -time value '%s'", timeOpt);
     if (brokenTime.tm_hour < 0)
-        pm_error("Hour is negative in -modtime value '%s'", modtimeOpt);
+        pm_error("Hour is negative in -time value '%s'", timeOpt);
     if (brokenTime.tm_hour > 23)
-        pm_error("Hour is >23 in -modtime value '%s'", modtimeOpt);
+        pm_error("Hour is >23 in -time value '%s'", timeOpt);
     if (brokenTime.tm_min < 0)
-        pm_error("Minute is negative in -modtime value '%s'", modtimeOpt);
+        pm_error("Minute is negative in -time value '%s'", timeOpt);
     if (brokenTime.tm_min > 59)
-        pm_error("Minute is >59 in -modtime value '%s'", modtimeOpt);
+        pm_error("Minute is >59 in -time value '%s'", timeOpt);
     if (brokenTime.tm_sec < 0)
-        pm_error("Second is negative in -modtime value '%s'", modtimeOpt);
+        pm_error("Second is negative in -time value '%s'", timeOpt);
     if (brokenTime.tm_sec > 59)
-        pm_error("Second is >59 in -modtime value '%s'", modtimeOpt);
+        pm_error("Second is >59 in -time value '%s'", timeOpt);
 
     brokenTime.tm_mon = month - 1;
     if (year >= 1900)
@@ -183,7 +183,7 @@ parseModtimeOpt(const char * const modtimeOpt,
        This is what we want, since we got it from a user.  User should
        set his local time zone to UTC if he wants absolute time.
     */
-    *modtimeP = mktime(&brokenTime);
+    *timeP = mktime(&brokenTime);
 }
 
 
@@ -199,7 +199,7 @@ parseCommandLine (int                  argc,
 
     const char * srgbintent;
     const char * chroma;
-    const char * modtime;
+    const char * time;
 
     MALLOCARRAY(option_def, 100);
 
@@ -221,8 +221,8 @@ parseCommandLine (int                  argc,
             &cmdlineP->itxtSpec,       0);
     OPTENT3(0,  "background",   OPT_STRING,     &cmdlineP->background,
             &cmdlineP->backgroundSpec, 0);
-    OPTENT3(0,  "modtime",      OPT_STRING,     &modtime,
-            &cmdlineP->modtimeSpec,    0);
+    OPTENT3(0,  "time",         OPT_STRING,        &time,
+            &cmdlineP->timeSpec,       0);
 
     opt.opt_table = option_def;
     opt.short_allowed = false;  /* we have no short (old-fashioned) options */
@@ -237,8 +237,8 @@ parseCommandLine (int                  argc,
     if (cmdlineP->srgbintentSpec)
         parseSrgbintentOpt(srgbintent, &cmdlineP->srgbintent);
 
-    if (cmdlineP->modtimeSpec)
-        parseModtimeOpt(modtime, &cmdlineP->modtime);
+    if (cmdlineP->timeSpec)
+        parseTimeOpt(time, &cmdlineP->time);
     
     /* get the input-file or stdin pipe */
     if (argc-1 < 1)
@@ -537,12 +537,12 @@ doBkgdChunk (const struct pam * const pamP,
 
 static void
 doTimeChunk(struct pngx * const pngxP,
-            time_t        const modtime) {
+            time_t        const time) {
 
-    pngx_setTime(pngxP, modtime);
+    pngx_setTime(pngxP, time);
 
     if (verbose) {
-        struct tm * const brokenTimeP = gmtime(&modtime);
+        struct tm * const brokenTimeP = gmtime(&time);
 
         char buffer[100];
 
@@ -686,8 +686,8 @@ writePng(const struct pam * const pamP,
 
     /* no splt */
 
-    if (cmdline.modtimeSpec)
-        doTimeChunk(pngxP, cmdline.modtime);
+    if (cmdline.timeSpec)
+        doTimeChunk(pngxP, cmdline.time);
 
     /* Write the ancillary chunks to PNG file */
     pngx_writeInfo(pngxP);
