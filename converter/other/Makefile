@@ -131,7 +131,7 @@ ifneq ($(DONT_HAVE_PROCESS_MGMT),Y)
 endif
 
 ifeq ($(HAVE_PNGLIB),Y)
-  PORTBINARIES += pamtopng pnmtopng pngtopam pamrgbatopng
+  PORTBINARIES += pamtopng pnmtopng pngtopam
 endif
 ifneq ($(JPEGLIB),NONE)
   PORTBINARIES += jpegtopnm pnmtojpeg
@@ -215,10 +215,6 @@ pnmtopng: pngx.o pngtxt.o
 pnmtopng: ADDL_OBJECTS = pngx.o pngtxt.o
 pnmtopng: LDFLAGS_TARGET = $(PNGLIB_LIBOPTS)
 
-pamrgbatopng: pngx.o
-pamrgbatopng: ADDL_OBJECTS = pngx.o
-pamrgbatopng: LDFLAGS_TARGET = $(PNGLIB_LIBOPTS)
-
 jpegtopnm: jpegdatasource.o exif.o
 jpegtopnm: ADDL_OBJECTS = jpegdatasource.o exif.o
 jpegtopnm: LDFLAGS_TARGET = $(shell $(LIBOPT) $(LIBOPTR) $(JPEGLIB))
@@ -295,3 +291,8 @@ endif
 # In December 2010, sunicontopnm replaced icontopbm
 	cd $(PKGDIR)/bin ; \
 	$(SYMLINK) sunicontopnm$(EXE) icontopbm$(EXE)
+ifeq ($(HAVE_PNGLIB),Y)
+# In June 2015, pamtopng replaced pamrgbapng
+	cd $(PKGDIR)/bin ; \
+	$(SYMLINK) pamtopng$(EXE) pamrgbatopng$(EXE)
+endif
