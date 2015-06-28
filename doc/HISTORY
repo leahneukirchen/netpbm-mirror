@@ -8,6 +8,8 @@ not yet  BJH  Release 10.71.00
 
               Add pamtopng.  Thanks Willem vanSchaik (willem@schaik.com).
 
+              pnmtopng: Add -srgbintent.
+
               pamstereogram: Add -xbegin.  Change default to render from
               center outwards intead of from right to left, thus making the
               center of the image the crispest part.  Thanks Scott Pakin
