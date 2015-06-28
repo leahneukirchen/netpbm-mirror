@@ -112,8 +112,8 @@ the variability.
 colormap in the GIF file, instead of the colors from <I>netpbmfile</I>.
 <I>mapfile</I> can be any PPM file; all that matters is the colors in
 it.  If the colors in <I>netpbmfile</I> do not match those in
-<I>mapfile</I>, <b>pamtogif</b> matches them to a &quot;best
-match.&quot; You can obtain a much better result by using <b>pnmremap</b>
+<I>mapfile</I>, <b>pamtogif</b> matches them to a "best
+match." You can obtain a much better result by using <b>pnmremap</b>
 to change the colors in the input to those in the map file.
 
 <p>The <i>mapfile</i> file is not a palette file, just an image whose
@@ -165,14 +165,14 @@ specify.  Closeness is measured as a Cartesian distance between colors
 in RGB space.  If multiple colors are equidistant, <B>pamtogif</B>
 chooses one of them arbitrarily.
 
-<P>However, if you prefix your color specification with &quot;=&quot;,
+<P>However, if you prefix your color specification with "=",
 e.g.  <B>-transparent==red</B>, only the exact color you specify will
 be transparent.  If that color does not appear in the image, there
 will be no transparency.  <B>pamtogif</B> issues an information
 message when this is the case.
 
 <p>When you specify <b>-transparent</b>, <b>pamtogif</b> ignores
-explicit transparency information (the &quot;alpha channel&quot;) in
+explicit transparency information (the "alpha channel") in
 the input image.
 
 <DT><B>-alpha=</B><I>pgmfile</I>
@@ -203,7 +203,7 @@ transparent.
 
 <DD>This specifies the foreground color for transparent pixels.  A
 viewer may use the foreground color for a transparent pixel if it
-chooses not to have another color &quot;show through.&quot;.  The
+chooses not to have another color "show through.".  The
 default is black.
 
 <p>This applies only to pixels that are transparent in the GIF because
@@ -311,7 +311,7 @@ users since 1989.
 
 <p>The main outward change in the conversion from <b>ppmtogif</b> to
 <b>pamtogif</b> was that <b>pamtogif</b> was able to use transparency
-information (&quot;alpha channel&quot;) in PAM input, whereas with
+information ("alpha channel") in PAM input, whereas with
 <b>ppmtogif</b>, one had to supply the transparency mask in a separate
 pseudo-PGM image (via the <b>-alpha</b> option).
 

@@ -56,7 +56,7 @@ this case, you might use <b>ppmchange</b> to change all similar colors
 to a single one first.  For example, if the photograph is a building
 against a blue sky, where nothing remotely sky-blue appears in the
 building, you could use <b>ppmchange</b> to change all pixels within
-20% of &quot;SkyBlue&quot; to SkyBlue, then run <b>pambackground</b>
+20% of "SkyBlue" to SkyBlue, then run <b>pambackground</b>
 on it.
 
 <p>You might even extract the argument for <b>ppmchange</b> from the image in
@@ -67,7 +67,7 @@ of <b>ppmchange</b> like this:
 
 <pre>
 <kbd>
-    $ echo &quot;#(fred)/#(fgreen)/#(fblue)&quot; &gt;/tmp/bodyskl
+    $ echo "#(fred)/#(fgreen)/#(fblue)" &gt;/tmp/bodyskl
     $ color=$(pamcut 0 0 1 1 myimage.ppm | ppmtoarbtxt /tmp/bodyskl)
 </kbd>
 </pre>

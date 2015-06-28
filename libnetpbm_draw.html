@@ -56,30 +56,30 @@ in this facility.
 <p>
 The <b>ppmd_text</b> and <b>ppmd_text_box</b> functions use fonts.
 You control the fonts using functions described in this section.
-There is one font that comes with Netpbm, called &quot;standard&quot;.
+There is one font that comes with Netpbm, called "standard".
 It is built into the function library and is the default font.  You
 can create additional fonts and use them instead.
 
 <p>In a program that uses Netpbm drawing facilities, there is a
-&quot;current font.&quot; all drawing of text uses the current font.
-When the program starts, the current font is &quot;standard&quot;; you
+"current font." all drawing of text uses the current font.
+When the program starts, the current font is "standard"; you
 can change it after that by calling the <b>ppmd_set_font</b> function.
 
 <p>Other than a built-in font, a font lives in file in a format
 special to Netpbm called Ppmdfont.  The file typically has a name that
-ends in &quot;.ppmdfont&quot;.
+ends in ".ppmdfont".
 
 <p>Use the <b>ppmddumpfont</b> program to dump the contents of a
 Ppmdfont file in human readable format.
 
-<p>Use the <b>ppmdmkfont</b> program to generate the &quot;standard&quot;
+<p>Use the <b>ppmdmkfont</b> program to generate the "standard"
 font as a Ppmdfont file.  You don't normally need to do this, because
-&quot;standard&quot; is built into <b>libnetpbm</b>.
+"standard" is built into <b>libnetpbm</b>.
 
 <p>Use the <b>ppmdcfont</b> program to turn a Ppmdfont file into a C
 source file that you can compile into a program as a built-in font.
 Though we don't give full instructions here on how to do that,
-<b>libnetpbm</b>'s built-in &quot;standard&quot; font is a good
+<b>libnetpbm</b>'s built-in "standard" font is a good
 example.  In Netpbm source code, you will find the C source file
 <b>standardppmdfont.c</b>, which was generated from the file
 <b>standard.ppmdfont</b> by <b>ppmdcfont</b>.  You simply use a
@@ -89,7 +89,7 @@ just like one you would get from <b>ppmd_read_font</b>.
 
 <h2>Font File Format</h2>
 
-<p>The font file starts with the characters &quot;ppmdfont&quot; (without
+<p>The font file starts with the characters "ppmdfont" (without
 the quotation marks) in ASCII.
 
 <p>The rest of the format is not yet documented, but it generally

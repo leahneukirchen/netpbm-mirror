@@ -21,7 +21,7 @@ pbmtoppa - convert PBM image to HP Printer Performance Architecture (PPA)
 
 <B>pbmtoppa</B> converts page images in PBM format to Hewlett
 Packard's PPA (Printer Performance Architecture) format, which is the
-data stream format expected by some HP &quot;Windows-only&quot;
+data stream format expected by some HP "Windows-only"
 printers including the HP Deskjet 820C series, the HP DeskJet 720
 series, and the HP DeskJet 1000 series.
 
@@ -60,8 +60,8 @@ calibration </a> below.
 <p>The PPA printer language is a far lower level language than most.
 When you use a PPA printer, most of the processing that a conventional
 printer does is done instead on the computer end of the wire.  In
-particular, <b>pbmtoppa</b> has to do &quot;swath cutting,&quot; and
-&quot;sweep formatting,&quot; which other printers do themselves.
+particular, <b>pbmtoppa</b> has to do "swath cutting," and
+"sweep formatting," which other printers do themselves.
 There is very little intelligence inside a PPA printer;
 <b>pbmtoppa</b> generates direct controls for the printer's hardware.
 
@@ -235,7 +235,7 @@ Also, use the pbmraw GSDriver if you have it; it's faster.
 
 <P>Install pbmtoppa. Copy pbmtoppa to /usr/bin.
 
-<P>Edit &quot;printerdb&quot; (in my system it is found in
+<P>Edit "printerdb" (in my system it is found in
 /usr/lib/rhs/rhs-printfilters ) and append the following lines:
 
 <PRE>
@@ -251,8 +251,8 @@ StartEntry: DeskJet720C
         inkjet printer. \
         It does not support color printing. \
         IMPORTANT! Insert \
-           &quot;- | pbm2ppa -&quot; \
-        in the &quot;Extra GS Options &quot; field.\
+           "- | pbm2ppa -" \
+        in the "Extra GS Options " field.\
       }
 
   Resolution: {600} {600} {}

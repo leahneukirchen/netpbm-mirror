@@ -111,7 +111,7 @@ the format that uses sRGB.
   <dd>Wide-gamut RGB with a D50 reference white</dd>
   </dl>
 
-<p>The default is &quot;ntsc&quot; because this is the color space that the
+<p>The default is "ntsc" because this is the color space that the
 Netpbm format
 of Netpbm and many other graphics utilities.  As a counterexample,
 <a href="http://www.gimp.org/">GIMP</a> uses sRGB as its native color
@@ -131,7 +131,7 @@ contribution of each color channel to the overall luminance as red, green, and
 blue multipliers.  These three options must be used together, and the
 three <i>fraction</i> values must sum to 1.0.  For example, you can specify
 the ProPhoto (ROMM) RGB color space with
-&quot;<b>--rmult</b>=0.2880402 <b>--gmult</b>=0.7118741 <b>--bmult</b>=0.0000857&quot;.</dd>
+"<b>--rmult</b>=0.2880402 <b>--gmult</b>=0.7118741 <b>--bmult</b>=0.0000857".</dd>
 
 <dt><b>--targetcolor</b>=<i>color</i></dt>
 <dd>Designate <i>color</i> as the target color for the
@@ -139,7 +139,7 @@ image.  <b>pamrecolor</b> will make each pixel as close as possible
 to <i>color</i> subject to the constraint that the luminance must stay the
 same as in the original image.  Specify <i>color</i> as in
 the <a href="libppm.html#colorname">argument of the <b>ppm_parsecolor()</b>
-library routine</a> (e.g.,&nbsp;&quot;hotpink&quot; or &quot;#ff69b4&quot;).
+library routine</a> (e.g.,&nbsp;"hotpink" or "#ff69b4").
 
 <p>If you specify neither <b>--targetcolor</b> nor
 <b>--colorfile</b>, <b>pamrecolor</b> will randomly select a target color for
@@ -208,7 +208,7 @@ appropriate <b>--colorspace</b> value for your conversion tool.</p>
 
 <ul>
 <li>Specify a color file that is identical to the input image but with
-some large, colored text added to it.  The text will &quot;magically&quot;
+some large, colored text added to it.  The text will "magically"
 vanish when the image is converted to grayscale.</li>
 
 <li>Provide a low-contrast grayscale image &mdash; perhaps a secret

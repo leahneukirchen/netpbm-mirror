@@ -290,7 +290,7 @@ the type of a tuple to one with more or fewer planes.
 When reading an image, this contains the comments from the image's PAM
 header; when writing, the image gets these as comments, right after
 the magic number line.  The individual comments are delimited by
-newlines and are in the same order as in the PAM header.  The &quot;#&quot;
+newlines and are in the same order as in the PAM header.  The "#"
 at the beginning of a PAM header line that indicates the line is a comment
 is not part of the comment.
 
@@ -308,8 +308,8 @@ does not return comments and does not allocate any storage.
     ...
     pam.comment_p = &amp;comments;
     pnm_readpaminit(fileP, &amp;pam, PAM_STRUCT_SIZE(comment_p));
-    printf(&quot;The comments are:\n&quot;);
-    printf(&quot;%s&quot;, comments)
+    printf("The comments are:\n");
+    printf("%s", comments)
     free(comments);
 </code>
 </pre>
@@ -318,7 +318,7 @@ does not return comments and does not allocate any storage.
 <code>
     const char * comments;
     ...
-    comments = strdup(&quot;This is a comment 1\nThis is comment 2\n&quot;);
+    comments = strdup("This is a comment 1\nThis is comment 2\n");
     pam.comment_p = &amp;comments;
     pnm_writepaminit(&amp;pam);
     free(comments);

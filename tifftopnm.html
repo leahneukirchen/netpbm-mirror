@@ -35,12 +35,12 @@ generates a PGM image; otherwise, the output is PPM.  The program tells you
 which type it is writing.
 
 <p>If the TIFF file contains multiple images (multiple
-&quot;directories&quot;), <b>tifftopnm</b> generates a multi-image PNM
+"directories"), <b>tifftopnm</b> generates a multi-image PNM
 output stream.  Before Netpbm 10.27 (March 2005), however, it would
 just ignore all but the first input image.
 
 <P>The <I>tiff-filename</I> argument names the file that contains the Tiff
-image.  If you specify &quot;-&quot; or don't specify this
+image.  If you specify "-" or don't specify this
 argument, <B>tifftopnm</B> uses Standard Input.
 
 <p>In either case, before Netpbm 10.70 (March 2015), the file must be
@@ -129,7 +129,7 @@ the transparency output file.
 
 <DT><B>-respectfillorder</B>
 
-<DD>By default, <B>tifftopnm </B> ignores the &quot;fillorder&quot;
+<DD>By default, <B>tifftopnm </B> ignores the "fillorder"
 tag in the TIFF input, which means it may incorrectly interpret the
 image.  To make it follow the spec, use this option.  For a lengthy
 but engaging discussion of why <B>tifftopnm</B> works this way and how
@@ -243,7 +243,7 @@ in debugging TIFF file conversion problems.
 
 <P>
 There is a piece of information in the header of a TIFF image called
-&quot;fillorder.&quot; The TIFF specification quite clearly states
+"fillorder." The TIFF specification quite clearly states
 that this value tells the order in which bits are arranged in a byte
 in the description of the image's pixels.  There are two options,
 assuming that the image has a format where more than one pixel can be

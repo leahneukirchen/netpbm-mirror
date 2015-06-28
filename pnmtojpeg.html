@@ -7,7 +7,7 @@ Updated: 23 April 2007
 <A HREF="#index">Table Of Contents</A>
 
 <H2>NAME</H2>
-pnmtojpeg - convert PNM image to a JFIF (&quot;JPEG&quot;) image
+pnmtojpeg - convert PNM image to a JFIF ("JPEG") image
 
 <H2 id="synopsis">SYNOPSIS</H2>
 
@@ -53,8 +53,8 @@ create the output file.  See <B><A
 HREF="http://www.ijg.org">http://www.ijg.org</A> </B> for information
 on the library.
 
-<P>&quot;JFIF&quot; is the correct name for the image format commonly
-known as &quot;JPEG.&quot; Strictly speaking, JPEG is a method of
+<P>"JFIF" is the correct name for the image format commonly
+known as "JPEG." Strictly speaking, JPEG is a method of
 compression.  The image format using JPEG compression that is by far
 the most common is JFIF.  There is also a subformat of TIFF that uses
 JPEG compression.
@@ -227,8 +227,8 @@ some other JFIF programs may be unable to decode the resulting file.
 Use <B>-baseline</B> if you need to ensure compatibility at low
 quality values.)
 
-<P>The <B>-progressive</B> option creates a &quot;progressive
-JPEG&quot; file.  In this type of JFIF file, the data is stored in
+<P>The <B>-progressive</B> option creates a "progressive
+JPEG" file.  In this type of JFIF file, the data is stored in
 multiple scans of increasing quality.  If the file is being
 transmitted over a slow communications link, the decoder can use the
 first scan to display a low-quality image very quickly, and can then
@@ -282,9 +282,9 @@ JPEG Group since about 1998 are not capable of arithmetic encoding.
 <b>pnmtojpeg</b> uses a JPEG library (either bound to it when the
 <b>pnmtojpeg</b> executable was built or accessed on your system at
 run time) to do the JPEG encoding.  If <b>pnmtojpeg</b> terminates
-with the message, &quot;Sorry, there are legal restrictions on
-arithmetic coding&quot; or &quot;Sorry, arithmetic coding not
-supported,&quot; this is the problem.
+with the message, "Sorry, there are legal restrictions on
+arithmetic coding" or "Sorry, arithmetic coding not
+supported," this is the problem.
      
 <DT><B>-restart=</B><I>n</I>
 
@@ -370,7 +370,7 @@ about the compression process.
 
 </DL>
 
-<P>The &quot;wizard&quot; options are intended for experimentation
+<P>The "wizard" options are intended for experimentation
 with JPEG.  If you don't know what you are doing, <strong>don't use
 them</strong>.  These switches are documented further in the file
 wizard.doc that comes with the Independent JPEG Group's JPEG library.
@@ -414,7 +414,7 @@ step.  And if you can keep a copy in the original format, so much the
 better.
 
 The <B>-optimize</B> option to <B>pnmtojpeg</B> is worth using when
-you are making a &quot;final&quot; version for posting or archiving.
+you are making a "final" version for posting or archiving.
 It's also a win when you are using low quality settings to make very
 small JFIF files; the percentage improvement is often a lot more than
 it is on larger files.  (At present, <B>-optimize</B> mode is
@@ -471,26 +471,26 @@ In an entry for AC coefficients, the first number after the colon must
 not be 0.
 <P>
 In a DC entry, the color components must be in increasing order.
-E.g. &quot;0,2,1&quot; before the colon is wrong.  So is &quot;0,0,0&quot;.
+E.g. "0,2,1" before the colon is wrong.  So is "0,0,0".
 <P>
 In an entry for an AC coefficient, you must specify only one color
 component.  I.e. there can be only one number before the colon.
 <P>
 In the first entry for a particular coefficient for a particular color
-component, the &quot;Ah&quot; value must be zero, but the Al value can be any
+component, the "Ah" value must be zero, but the Al value can be any
 valid bit number.  In subsequent entries, Ah must be the Al value from
 the previous entry (for that coefficient for that color component),
 and the Al value must be one less than the Ah value.
 <P>
 The script must ultimately specify at least some of the DC coefficient
 for every color component.  Otherwise, you get the error message
-&quot;Script does not transmit all the data.&quot;  You need not specify all of
+"Script does not transmit all the data."  You need not specify all of
 the bits of the DC coefficient, or any of the AC coefficients.
 <P>
 There is a standard option in building the JPEG library to omit scan
 script capability.  If for some reason your library was built with
-this option, you get the message &quot;Requested feature was omitted at
-compile time.&quot;
+this option, you get the message "Requested feature was omitted at
+compile time."
 
 <H2 id="environment">ENVIRONMENT</H2>
 
@@ -514,8 +514,8 @@ overrides any <B>JPEGMEM</B>.
 <B>rdjpgcom</B> man page,
 <B>wrjpgcom</B> man page
 
-<p>Wallace, Gregory K.  &quot;The JPEG Still Picture Compression
-Standard&quot;, Communications of the ACM, April 1991 (vol. 34,
+<p>Wallace, Gregory K.  "The JPEG Still Picture Compression
+Standard", Communications of the ACM, April 1991 (vol. 34,
 no. 4), pp. 30-44.
 
 

@@ -24,8 +24,8 @@ pm_make_tmpfile(int *         fdP,
 
 <h2>EXAMPLE</h2>
 
-<p>This simple example creates a temporary file, writes &quot;hello
-world&quot; to it, then writes some search patterns to it, then uses
+<p>This simple example creates a temporary file, writes "hello
+world" to it, then writes some search patterns to it, then uses
 it as input to <b>grep</b>:
 
 <pre>
@@ -36,12 +36,12 @@ const char * myfilename;
 
 pm_make_tmpfile_fd(&amp;fdP, &amp;myfilename);
 
-write(fd, &quot;^account:\\s.*\n&quot;, 16);
-fprintf(fd, &quot;^name:\\s.*\n&quot;, 13);
+write(fd, "^account:\\s.*\n", 16);
+fprintf(fd, "^name:\\s.*\n", 13);
 
 close(fd);
 
-asprintfN(&amp;grepCommand, &quot;grep --file='%s' /tmp/infile &gt;/tmp/outfile&quot;);
+asprintfN(&amp;grepCommand, "grep --file='%s' /tmp/infile &gt;/tmp/outfile");
 
 system(grepCommand);
 

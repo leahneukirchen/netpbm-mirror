@@ -24,8 +24,8 @@ dimensional rectangular array.  Actually, from another perspective it
 can be seen as a format for data arranged as a three dimensional
 array.
 
-<P>The name &quot;PAM&quot; is an acronym derived from &quot;Portable
-Arbitrary Map.&quot; This derivation makes more sense if you consider
+<P>The name "PAM" is an acronym derived from "Portable
+Arbitrary Map." This derivation makes more sense if you consider
 it in the context of the other Netpbm format names: PBM, PGM, and PPM.
 
 <P>This format does not define the meaning of the data at any particular
@@ -65,7 +65,7 @@ format and PBM, PGM, PPM, and PNM.  Here is a little enlightenment:
 and PPM formats collectively.  It is also the name of a group of
 library functions that can each handle all three of those formats.
 
-<P>&quot;PAM&quot; is in fact a fourth format.  But it is so general
+<P>"PAM" is in fact a fourth format.  But it is so general
 that you can represent the same information in a PAM image as you can
 in a PBM, PGM, or PPM image.  And in fact a program that is designed
 to read PBM, PGM, or PPM and does so with a recent version of the
@@ -73,7 +73,7 @@ Netpbm library, will read an equivalent PAM image just fine and the
 program will never know the difference.
 
 <P>To confuse things more, there is a collection of library routines
-called the &quot;pam&quot; functions that read and write the PAM
+called the "pam" functions that read and write the PAM
 format, but also read and write the PBM, PGM, and PPM formats.  They
 do this because the latter formats are much older and more popular, so
 even a new program must work with them.  Having the library handle all
@@ -105,7 +105,7 @@ ENDHDR
 </tt>
 </pre>
 
-<P>The header begins with the ASCII characters &quot;P7&quot; followed
+<P>The header begins with the ASCII characters "P7" followed
 by newline.  This is the magic number.
 
 <P>Note: <b>xv</b> thumbnail images also start with the "P7" magic number.
@@ -116,7 +116,7 @@ of the format makes it easy to distinguish PAM from that format, though).
 text.  Each line ends with and is delimited by a newline character.
 
 <P>Each header line consists of zero or more whitespace-delimited
-tokens or begins with &quot;#&quot;.  If it begins with &quot;#&quot;
+tokens or begins with "#".  If it begins with "#"
 it is a comment and the rest of this specification does not apply to
 it.
 
@@ -187,7 +187,7 @@ Each sample consists of an unsigned integer in pure binary format,
 with the most significant byte first.  The number of bytes is the
 minimum number of bytes required to represent the maxval of the image.
 
-<p>The character referred to as &quot;newline&quot; herein is the
+<p>The character referred to as "newline" herein is the
 character known in ASCII as Line Feed or LF.
 
 <H2 id="limitations">LIMITATIONS</H2>
@@ -245,7 +245,7 @@ image.  The first plane represents red, the second green, and the third blue.
 
 <p>Each of the visual image formats mentioned above has a variation that
 contains transparency information.  In that variation, the tuple type
-has &quot;_ALPHA&quot; added to it (e.g. &quot;RGB_ALPHA&quot;) and one
+has "_ALPHA" added to it (e.g. "RGB_ALPHA") and one
 more plane.  The highest numbered plane is the opacity plane (sometimes
 called an transparency plane or transparency plane).
 
@@ -281,7 +281,7 @@ be consistent with conventional values for the older Netpbm formats.
 
 <h2 id="filename">FILE NAME</h2>
 
-<p>The conventional suffix for the name of a PAM file is &quot;.pam&quot;.
+<p>The conventional suffix for the name of a PAM file is ".pam".
 But this is not required.
 
 

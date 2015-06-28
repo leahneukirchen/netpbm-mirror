@@ -128,8 +128,8 @@ following methods (in the specified order):
 
 <DD>Preload compression basis <I>name</I> into FIASCO.  The basis
 <I>name</I> provides the initial compression dictionary.  Either use
-one of the files &quot;small.fco&quot;, &quot;medium.fco&quot;, or
-&quot;large.fco&quot; that come with <B>pnmtofiasco </B> or create a
+one of the files "small.fco", "medium.fco", or
+"large.fco" that come with <B>pnmtofiasco </B> or create a
 new ASCII basis file.
 
 <DT><B>-z</B> <I>N</I>, <B>--optimize=</B><I>N</I> 
@@ -248,7 +248,7 @@ HREF="fiascotopnm.html">fiascotopnm</A> to control the framerate.
 
 <DD>Defines the type of inter frame compression which should be
 applied to individual frames of a video stream.  <I>type</I> is a
-sequence of characters; default is &quot;IPPPPPPPPP&quot;.  Element
+sequence of characters; default is "IPPPPPPPPP".  Element
 <B>N</B> defines the type of predicting which should be used for frame
 <B>N</B>; the frame type pattern is periodically extended.  Valid
 characters are:
@@ -271,7 +271,7 @@ backward or interpolated prediction).
 
 <DT><B>--cross-B-search</B>
 
-<DD>Instead of using exhaustive search the &quot;Cross-B-Search&quot;
+<DD>Instead of using exhaustive search the "Cross-B-Search"
 algorithm is used to find the best interpolated prediction of
 B-frames.
 
@@ -286,21 +286,21 @@ predict the current frame.
 
 <H2 id="examples">EXAMPLES</H2>
 
-<p>Compress the still image &quot;foo.ppm&quot; to the FIASCO file
-&quot;foo.wfa&quot; using the default options:
+<p>Compress the still image "foo.ppm" to the FIASCO file
+"foo.wfa" using the default options:
 
 <pre>
         pnmtofiasco &lt; foo.ppm &gt;foo.wfa
 </pre>
 
-<P>Compress the video frames &quot;foo0*.ppm&quot; to the FIASCO file
-&quot;video.wfa&quot; using half pixel precise motion compensation at
+<P>Compress the video frames "foo0*.ppm" to the FIASCO file
+"video.wfa" using half pixel precise motion compensation at
 a frame rate of 15 frames per second.  Intra frame 1 is used to
 predict P-frame 4, frames 1 and 4 are used to predict B-frames 2 and
 3, and so on.  Frame 10 is again an intra-frame.
 
 <pre>
-        pnmtofiasco -2 -p &quot;IBBPBBPBB&quot; -fps 15 -o video.wfa foo0*.ppm
+        pnmtofiasco -2 -p "IBBPBBPBB" -fps 15 -o video.wfa foo0*.ppm
 </pre>
 
 <H2 id="files">FILES</H2>
@@ -323,11 +323,11 @@ predict P-frame 4, frames 1 and 4 are used to predict B-frames 2 and
 
 <DT><B>FIASCO_IMAGES</B>
 
-<DD>Search path for image files.  Default is &quot;./&quot;.
+<DD>Search path for image files.  Default is "./".
 
 <DT><B>FIASCO_DATA</B>
 
-<DD>Search and save path for FIASCO files.  Default is &quot;./&quot;.
+<DD>Search and save path for FIASCO files.  Default is "./".
 
 </DL>
 

@@ -198,7 +198,7 @@ it is a name to be looked up in the system's program search path
 The last argument <em>must</em> be NULL to tell <b>pm_system_lp()</b>
 where the arguments end.
 
-<p>Note that the first argument (&quot;arg0&quot;) to a program is
+<p>Note that the first argument ("arg0") to a program is
 conventionally the first word of the command used to run the program, as if it
 were being run for a shell command.  In other words, typically the name of the
 program.
@@ -207,8 +207,8 @@ program.
 
 <pre>
 <code>
-    pm_system_lp(&quot;pnmtojpeg&quot;, NULL, NULL, NULL, NULL,
-                 &quot;pnmtojpeg&quot;, &quot;mypicture.jpg&quot;, &quot;-quality=50&quot;, NULL);
+    pm_system_lp("pnmtojpeg", NULL, NULL, NULL, NULL,
+                 "pnmtojpeg", "mypicture.jpg", "-quality=50", NULL);
 </code>
 </pre>
 
@@ -218,7 +218,7 @@ build a shell command using such arguments, unless you're really
 careful, you may end up building a shell command that does something
 very different from what you intended, because the argument could
 contain characters that mean something to the shell such as
-&quot;|&quot;.
+"|".
 
 <p><b>pm_system_lp()</b> can also be considerably faster that
 <b>pm_system()</b>, since it skips the whole running of the shell.
@@ -237,11 +237,11 @@ the array identifies the end of the arguments.
 <code>
     const char * argArray[3];
 
-    argArray[0] = &quot;pnmtojpeg&quot;;
-    argArray[1] = &quot;-quality=50&quot;;
+    argArray[0] = "pnmtojpeg";
+    argArray[1] = "-quality=50";
     argArray[2] = NULL;
 
-    pm_system_vp(&quot;pnmtojpeg&quot;, argArray, NULL, NULL, NULL, NULL);
+    pm_system_vp("pnmtojpeg", argArray, NULL, NULL, NULL, NULL);
 </code>
 </pre>
 

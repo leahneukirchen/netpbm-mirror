@@ -32,15 +32,15 @@ knitting patterns</a>. The program inputs a black-and-white Netpbm image that
 describes a mosaic knitting pattern and outputs a color Netpbm image of the
 same pattern but with invalid runs shown in red.</p>
 
-<p>A valid knitting pattern starts with a &quot;black&quot; row on the
-bottom and alternates &quot;white&quot; and &quot;black&quot;
-rows. A &quot;black&quot; row can contain any arrangement of black pixels
-but no more than three consecutive white pixels. A &quot;white&quot; row
+<p>A valid knitting pattern starts with a "black" row on the
+bottom and alternates "white" and "black"
+rows. A "black" row can contain any arrangement of black pixels
+but no more than three consecutive white pixels. A "white" row
 can contain any arrangement of white pixels but no more than three
-consecutive black pixels. Columns wrap horizontally, so a &quot;white&quot;
+consecutive black pixels. Columns wrap horizontally, so a "white"
 row that both begins and ends with two black pixels is deemed to
 contain four consecutive black pixels. Because this is an invalid
-number for a &quot;white&quot; row, those four pixels will be recolored red
+number for a "white" row, those four pixels will be recolored red
 in the output image.</p>
 
 <p>For clarity, there are two shades of red in the output image.  Dark

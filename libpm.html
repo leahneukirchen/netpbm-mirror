@@ -54,7 +54,7 @@ them from the argument list.
 services, need not invoke <b>pm_proginit</b>.  But such a program
 must invoke <b>pm_init()</b>.
 
-<P>By &quot;Netpbm program,&quot; we mean a program that is part of
+<P>By "Netpbm program," we mean a program that is part of
 the Netpbm package or is intended to act like one.  <b>pm_proginit()</b>
 does things that all Netpbm programs do by convention.  For example,
 it scans the argument list for <a href="index.html#commonoptions">
@@ -349,8 +349,8 @@ buffer.  The <B>nread</B> argument returns the number of bytes read.
 <B>pm_writelittleshort()</B>, <B>pm_readlittlelong()</B>, and
 <B>pm_writelittlelong()</B> are routines to read and write 1-byte,
 2-byte, and 4-byte pure binary integers in either big- or
-little-endian byte order.  Note that a &quot;long int&quot; C type might
-be wider than 4 bytes, but the &quot;long&quot; routines still read and
+little-endian byte order.  Note that a "long int" C type might
+be wider than 4 bytes, but the "long" routines still read and
 write 4 bytes.
 
 <p><b>pm_readbiglongu()</b>, etc. (names ending in <b>u</b>) are the same
@@ -505,12 +505,12 @@ Example:
 
     static void
     logfilewrite(const char * const msg) {
-        fprintf(mymsglog, &quot;Netpbm message: %s&quot;, msg);
+        fprintf(mymsglog, "Netpbm message: %s", msg);
     }
 
     pm_setusermessagefn(&amp;logfilewrite);
     
-    pm_message(&quot;Message for the message log&quot;);
+    pm_message("Message for the message log");
 </code>
 </pre>
 

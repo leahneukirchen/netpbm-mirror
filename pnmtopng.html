@@ -124,13 +124,13 @@ E.g.  The old shell command
 
 <pre>
 <kbd>
-   pnmtopng -size &quot;800 800 0&quot; input.pnm >output.png
+   pnmtopng -size "800 800 0" input.pnm >output.png
 </kbd>
 </pre>
 
 <p>If you're writing a program that needs to work with both new and old
 <b>pnmtopng</b>, have it first try with the new syntax, and if it fails
-with &quot;unrecognized option,&quot; fall back to the old syntax.
+with "unrecognized option," fall back to the old syntax.
 
 <DL COMPACT>
 <DT><B>-verbose</B>
@@ -169,7 +169,7 @@ distance between colors in RGB space.  If multiple colors are
 equidistant, <B>pnmtopng</B> chooses one of them arbitrarily.
 
 <P>However, if you prefix your color specification with
-&quot;=&quot;, e.g.
+"=", e.g.
 
 <pre>
 <kbd>
@@ -308,14 +308,14 @@ arguments.
 the option <b>-chroma</b> does the same thing, but with slightly
 different syntax.
 
-<DT><B>-size=&quot;</b><i>x</i> <i>y</i> <i>unit</i><b>&quot;</b>
+<DT><B>-size="</b><i>x</i> <i>y</i> <i>unit</i><b>"</b>
 
 <DD>This option determines the aspect ratio of the individual pixels
 of your image as well as the physical resolution of it.
 
 <p><i>unit</i> is either <b>0</b> or <i>1</i>.  When it is <i>1</i>,
 the option specifies the physical resolution of the image in pixels
-per meter.  For example, <b>-size=&quot;10000 15000 1&quot;</b> means
+per meter.  For example, <b>-size="10000 15000 1"</b> means
 that when someone displays the image, he should make it so that 10,000
 pixels horizontally occupy 1 meter and 15,000 pixels vertically occupy
 one meter.  And even if he doesn't take this advice on the overall
@@ -354,7 +354,7 @@ more information on what this really means.
 <p>This option was new in Netpbm 10.71 (June 2015).  Before that,
 <b>pnmtopng</b> never generates an sRGB chunk.
 
-<DT><B>-modtime=&quot;</b>[<i>yy</i>]<i>yy-mm-dd hh:mm:ss</i><b>&quot;</b> 
+<DT><B>-modtime="</b>[<i>yy</i>]<i>yy-mm-dd hh:mm:ss</i><b>"</b> 
 
 <DD>This option allows you to specify the modification time value to
 be placed in the PNG output.  You can specify the year parameter

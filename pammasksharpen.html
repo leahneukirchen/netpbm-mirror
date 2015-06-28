@@ -40,7 +40,7 @@ via an unsharp mask, which you supply as another Netpbm image.
 
 <p>An unsharp mask is generally a blurred version of the original
 image.  The sharpening computation is this: Calculate the
-&quot;edgeness&quot; of a sample in the input image as the signed
+"edgeness" of a sample in the input image as the signed
 difference between the sample value and the corresponding sample in
 the unsharp mask.  This tells how different the pixel is from its
 neighbors.  Add a multiple of the edgeness to the original sample to
@@ -64,7 +64,7 @@ number of pixels.
 <p>When you create an unsharp mask like this, you will have to choose
 the side length of the convolution kernel.  That length implements the
 parameter of unsharp mask sharpening usually known as
-&quot;radius.&quot;  In particular, a radius of R pixels corresponds to a 
+"radius."  In particular, a radius of R pixels corresponds to a 
 convolution kernel 2R+1 pixels on a side.
 
 <p>Radius is a very important parameter; you can ruin an image with a
@@ -89,7 +89,7 @@ of edgeness that gets added to each sample as described above.
 <p><i>realnum</i> is a nonnegative real decimal number.  Zero means
 no sharpening at all.
 
-<p>This parameter is known as &quot;amount&quot; in ImageMagick.
+<p>This parameter is known as "amount" in ImageMagick.
 
 <p>The default is 1.0.
 

@@ -15,8 +15,8 @@ functions return error information.  There are no return codes to
 check.  If for some reason a function can't do what was asked of it,
 it doesn't return at all.
 
-<p>Netpbm's response to encountering an error is called &quot;throwing
-an error.&quot;
+<p>Netpbm's response to encountering an error is called "throwing
+an error."
 
 <p>The typical way a Netpbm function throws an error (for example,
 when you attempt to open a non-existent file with <b>pm_openr()</b>)
@@ -87,11 +87,11 @@ setjmp() first, then tell the Netpbm programming library with
     
     pnm_readpam(stdin, &amp;pam, PAM_STRUCT_SIZE(tuple_type));
 
-    printf(&quot;pnm_readpam() succeeded!\n&quot;);
+    printf("pnm_readpam() succeeded!\n");
 
   } else {
-    printf(&quot;pnm_readpam() failed.  You should have seen &quot;
-           &quot;messages to Standard Error telling you why.\n&quot;);
+    printf("pnm_readpam() failed.  You should have seen "
+           "messages to Standard Error telling you why.\n");
   }
 </code>
 </pre>
@@ -147,8 +147,8 @@ appropriate one of these.
 <pre>
 <code>
 if (argc-1 &lt; 3)
-    pm_error(&quot;You must specify at least 3 arguments.  &quot;
-             &quot;You specified&quot; only %d&quot;, argc-1);
+    pm_error("You must specify at least 3 arguments.  "
+             "You specified" only %d", argc-1);
 </code>
 </pre>
 
@@ -171,7 +171,7 @@ simply throws an error.  It issues an error message exactly like
 <pre>
 <code>
 if (rc = -1)
-    pm_errormsg(&quot;Could not open file.  errno=%d&quot;, errno);
+    pm_errormsg("Could not open file.  errno=%d", errno);
     return -1;
 </code>
 </pre>
@@ -206,12 +206,12 @@ newlines or tabs in it.
 
     static void
     logfilewrite(const char * const msg) {
-        fprintf(myerrorlog, &quot;Netpbm error: %s&quot;, msg);
+        fprintf(myerrorlog, "Netpbm error: %s", msg);
     }
 
     pm_setusererrormsgfn(&amp;logfilewrite);
     
-    pm_errormsg(&quot;Message for the error log&quot;);
+    pm_errormsg("Message for the error log");
 </code>
 </pre>
 

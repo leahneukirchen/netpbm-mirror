@@ -24,8 +24,8 @@ pm_tmpfile_fd(void);
 
 <h2>EXAMPLE</h2>
 
-<p>This simple example creates a temporary file, writes &quot;hello
-world&quot; to it, then reads back and prints those contents.
+<p>This simple example creates a temporary file, writes "hello
+world" to it, then reads back and prints those contents.
 
 <pre>
 #include &lt;netpbm/pm.h&gt;
@@ -34,13 +34,13 @@ int fd;
 
 fd = pm_tmpfile();
 
-write(fd, &quot;hello world\n&quot;, 17);
+write(fd, "hello world\n", 17);
 
 lseek(fd, 0, SEEK_SET);
 
 read(fd, buffer, sizeof(buffer));
 
-fprintf(STDOUT, &quot;temp file contains '%s'\n&quot;, buffer);
+fprintf(STDOUT, "temp file contains '%s'\n", buffer);
 
 close(fd);
 

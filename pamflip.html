@@ -174,12 +174,12 @@ slightly more slowly because of extra overhead in manipulating temporary
 files.  Also, if your environment isn't set up to make temporary files
 possible, <b>pamflip</b> will fail.
 
-<p>Doing the entire transformation &quot;in memory&quot; doesn't speed
+<p>Doing the entire transformation "in memory" doesn't speed
 things up as much as you might think, because even with the temporary
 files, the data is just as likely to be in memory.  Virtual memory
 gets paged to disk and disk files get cached in memory.  In fact, the
 pixels fit much more compactly into memory when stored in a temporary
-file than when stored &quot;in memory&quot; because <b>pamflip</b>
+file than when stored "in memory" because <b>pamflip</b>
 uses a more efficient format.  So you're likely to have <em>less</em>
 disk I/O when you allow <b>pamflip</b> less memory.
 

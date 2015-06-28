@@ -78,7 +78,7 @@ intensity of the pixel.  A red intensity of 0 becomes <I>blackref</I>; a red
 intensity of maxval becomes <I>whiteref</I>, with the rest linearly
 interpolated in between.
 
-<p><i>format</i> is a printf-like format specifier like &quot;%d&quot;.
+<p><i>format</i> is a printf-like format specifier like "%d".
 <b>ppmtoarbtxt</b> uses as the entire format string to a <b>fprintf</b> POSIX
 library call whose only other argument is the red itensity as an integer data
 type.  <b>ppmtoarbtxt</b> does not necessarily verify that your format string
@@ -208,8 +208,8 @@ of the sphere is the color of the pixel.
 <p>Contents of our head skeleton:
 
 <pre>
-#include &quot;colors.inc&quot;
-#include &quot;textures.inc&quot;
+#include "colors.inc"
+#include "textures.inc"
 camera {
    location  &lt;#(width) * 0.6, #(height) * 0.7, 80&gt;
    look_at   &lt;#(width) * 0.5, #(height) * 0.5, 0&gt;

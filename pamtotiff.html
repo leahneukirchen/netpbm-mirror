@@ -64,7 +64,7 @@ as output.
 
 <p>Actually, it handles multi-image Netpbm streams, producing multi-image
 TIFF streams (i.e. a TIFF stream with multiple
-&quot;directories&quot;).  But before Netpbm 10.27 (March 2005), it
+"directories").  But before Netpbm 10.27 (March 2005), it
 ignored all but the first Netpbm image in the input stream.
 
 <h3 id="output">The Output File</h3>
@@ -191,9 +191,9 @@ Actually, with very old TIFF libraries, <b>-lzw</b> works because no
 distributors of the TIFF library were sensitive yet to the patent
 issue.
 
-<p><b>-flate</b> chooses &quot;flate&quot; compression, which is the
+<p><b>-flate</b> chooses "flate" compression, which is the
 patent-free compression common in the Unix world implemented by the 
-&quot;Z&quot; library.  It is what the PNG format uses.
+"Z" library.  It is what the PNG format uses.
 
 <H4 id="faxcompression">Fax Compression</H4>
 
@@ -268,16 +268,16 @@ before Netpbm 9.21 (December 2001).
 has no effect.
 
 <P>The <B>-minisblack</B> and <B>-miniswhite</B> options force the
-output image to have a &quot;minimum is black&quot; or &quot;minimum
-is white&quot; photometric, respectively.  If you don't specify
+output image to have a "minimum is black" or "minimum
+is white" photometric, respectively.  If you don't specify
 either, <B>pamtotiff</b> uses minimum is black except when using Group
 3 or Group 4 compression, in which case <B>pamtotiff</B> follows CCITT
-fax standards and uses &quot;minimum is white.&quot; This usually
+fax standards and uses "minimum is white." This usually
 results in better compression and is generally preferred for bilevel
 coding.
 
 <P>Before February 2001, <B>pamtotiff</B> always produced
-&quot;minimum is black,&quot; because of a bug.  In either case,
+"minimum is black," because of a bug.  In either case,
 <B>pamtotiff</B> sets the photometric interpretation tag in the TIFF
 output according to which photometric is actually used.
 
@@ -329,7 +329,7 @@ Each tag specification is a name and a value separated by an equal
 sign.  The name is the name of the tag type, except in arbitrary
 upper/lower case.  One place to see the names of TIFF tag types is in
 the TIFF library's <b>tiff.h</b> file, where there is a macro defined
-for each consisting of &quot;TIFF_&quot; plus the name.  E.g. for
+for each consisting of "TIFF_" plus the name.  E.g. for
 the SUBFILETYPE tag type, there is a macro TIFF_SUBFILETYPE.
 
 <p>The format of the value specification for a tag (stuff after the

@@ -36,7 +36,7 @@ and its value.
 
 <p><B>ppmdraw</B> draws lines, shapes, text, etc. on a PPM image.  It is
 essentially an easy-to-program front end to <b>libnetpbm</b>'s
-&quot;ppmd&quot; subroutines.  It lets you create a human-friendly
+"ppmd" subroutines.  It lets you create a human-friendly
 script to describe the drawing rather than write a C program.
 
 <p>You supply drawing instructions with a script, which you supply either
@@ -46,19 +46,19 @@ in a file named by a <b>-scriptfile</b> option or as the value of a
 <pre>
 <code>
 setpos 50 50;
-text_here 10 30 &quot;hello&quot;;
+text_here 10 30 "hello";
 setcolor black;
-text_here 10 0 &quot;there&quot;;
+text_here 10 0 "there";
 line_here 5 20;
 </code>
 </pre>
 
 <p>This example starts at Column 50, Row 50 of the input image and
-writes the word &quot;hello&quot; there in 10 pixel high white letters
+writes the word "hello" there in 10 pixel high white letters
 at a 30 degree angle up from horizontal.  Then, from where that leaves
-off, the script writes &quot;there&quot; in 10 pixel high black
+off, the script writes "there" in 10 pixel high black
 letters horizontally.  Finally, it draws a black line to a point 5
-pixels over and 20 pixels down from the end of &quot;there.&quot;
+pixels over and 20 pixels down from the end of "there."
 
 <P>If you don't specify <I>ppmfile</I>, <B>ppmdraw</B> reads its input
 PPM image from Standard Input.
@@ -128,7 +128,7 @@ But any pixels you draw there just get discarded.
 <dl>
 <dt>setpos
 
-<dd>Set the &quot;current position&quot; in the image.  This affects
+<dd>Set the "current position" in the image.  This affects
 where subsequent commands draw things.  The 2 arguments are the column
 and row number.
 
@@ -136,7 +136,7 @@ and row number.
 
 <dt>setlinetype
 
-<dd>The 1 argument is &quot;normal&quot; or &quot;nodiag.&quot;.  This
+<dd>The 1 argument is "normal" or "nodiag.".  This
 effects a <b>ppmd_setlinetype()</b> call.  Further details are not yet
 documented.
 
@@ -146,7 +146,7 @@ documented.
 
 <dt>setcolor
 
-<dd>This sets the &quot;current color&quot;, which determines the color
+<dd>This sets the "current color", which determines the color
 in which subsequent drawing commands draw.  Before the first
 <b>setcolor</b>, the current color is white.
 
@@ -156,17 +156,17 @@ library routine</a>.
 
 <dt>setfont
 
-<dd>This sets the &quot;current font&quot;, which determines the font
+<dd>This sets the "current font", which determines the font
 in which subsequent text drawing commands draw.  Before the first
 <b>setfont</b>, the current font is a built in font called
-&quot;standard.&quot;
+"standard."
 
 <p>The argument of this command is a file name.  It is the name of a
 Netpbm PPMD font file.
 
 <p>A Netpbm PPMD font file typically has a name that ends in
-&quot;.ppmdfont&quot; and its first 8 bytes are the ASCII encoding of
-&quot;ppmdfont&quot;.
+".ppmdfont" and its first 8 bytes are the ASCII encoding of
+"ppmdfont".
 
 <p>There is only one of these fonts as far as we know.  It is distributed with
 Netpbm as the file <b>standard.ppmdfont</b>, but you don't need to use that

@@ -40,7 +40,7 @@ subject pixel (ie.  there will be no filtering effect).  A radius
 value of 1.0 means that the 7 hexagons essentially cover the 3x3
 immediate neighbor square.
 
-<p>Your choice of &quot;alpha&quot; parameter selects among the three
+<p>Your choice of "alpha" parameter selects among the three
 modes.
 
 <H3 id="alphatrimmedmean">
@@ -51,17 +51,17 @@ the 7 hexagon values, but the 7 values are sorted by size and the top
 and bottom alpha portion of the 7 are excluded from the mean.  This
 implies that an alpha value of 0.0 gives the same sort of output as a
 normal convolution (ie. averaging or smoothing filter), where radius
-will determine the &quot;strength&quot; of the filter. A good value to
+will determine the "strength" of the filter. A good value to
 start from for subtle filtering is alpha = 0.0, radius = 0.55 For a
 more blatant effect, try alpha 0.0 and radius 1.0
 
 <P>An alpha value of 0.5 will cause the median value of the 7 hexagons
 to be used to replace the center pixel value. This sort of filter is
-good for eliminating &quot;pop&quot; or single pixel noise from an
+good for eliminating "pop" or single pixel noise from an
 image without spreading the noise out or smudging features on the
 image. Judicious use of the radius parameter will fine tune the
 filtering. Intermediate values of alpha give effects somewhere between
-smoothing and &quot;pop&quot; noise reduction. For subtle filtering
+smoothing and "pop" noise reduction. For subtle filtering
 try starting with values of alpha = 0.4, radius = 0.6 For a more
 blatant effect try alpha = 0.5, radius = 1.0
 
@@ -73,7 +73,7 @@ image.  For each pixel the variance of the surrounding hexagon values
 is calculated, and the amount of smoothing is made inversely
 proportional to it. The idea is that if the variance is small then it
 is due to noise in the image, while if the variance is large, it is
-because of &quot;wanted&quot; image features. As usual the radius
+because of "wanted" image features. As usual the radius
 parameter controls the effective radius, but it probably advisable to
 leave the radius between 0.8 and 1.0 for the variance calculation to
 be meaningful.  The alpha parameter sets the noise threshold, over
@@ -121,16 +121,16 @@ CG&amp;A May 1990 Page 23 by Mark E. Lee and Richard A. Redner, and
 has been enhanced to allow continuous alpha adjustment.
 
 <P>The optimal estimation filter is taken from an article
-&quot;Converting Dithered Images Back to Gray Scale&quot; by Allen
+"Converting Dithered Images Back to Gray Scale" by Allen
 Stenger, Dr Dobb's Journal, November 1992, and this article references
-&quot;Digital Image Enhancement and Noise Filtering by Use of Local
-Statistics&quot;, Jong-Sen Lee, IEEE Transactions on Pattern Analysis
+"Digital Image Enhancement and Noise Filtering by Use of Local
+Statistics", Jong-Sen Lee, IEEE Transactions on Pattern Analysis
 and Machine Intelligence, March 1980.
 
 <P>The edge enhancement details are from <A
 HREF="pgmenhance.html">pgmenhance</A>, which is taken from Philip
-R. Thompson's &quot;xim&quot; program, which in turn took it from
-section 6 of &quot;Digital Halftones by Dot Diffusion&quot;,
+R. Thompson's "xim" program, which in turn took it from
+section 6 of "Digital Halftones by Dot Diffusion",
 D. E. Knuth, ACM Transaction on Graphics Vol. 6, No. 4, October 1987,
 which in turn got it from two 1976 papers by J. F. Jarvis et. al.
 

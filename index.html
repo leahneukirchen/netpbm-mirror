@@ -13,8 +13,8 @@ Updated: 31 January 2014
 
 <P><B>Netpbm</B> is a package of graphics programs and a programming
 library.  <P> There are over 220 separate programs in the package,
-most of which have &quot;pbm&quot;, &quot;pgm&quot;, &quot;ppm&quot;,
-&quot;pam&quot;, or &quot;pnm&quot; in their names.  For example,
+most of which have "pbm", "pgm", "ppm",
+"pam", or "pnm" in their names.  For example,
 <B><a href="pamscale.html">pamscale</a></B> and <B><a
 href="giftopnm.html">giftopnm</a></B>.
 
@@ -178,7 +178,7 @@ ls *.yuv
 <B>xargs</B> are also useful for simple manipulation of groups of files.
 
 <P>
-Some shells' &quot;process substitution&quot; facility can help where a
+Some shells' "process substitution" facility can help where a
 non-Netpbm program expects you to identify a disk file for input and
 you want it to use the result of a Netpbm manipulation.  Say
 the hypothetical program <b>printcmyk</b>
@@ -200,7 +200,7 @@ Netpbm tool.
 
 <P>
 All of the programs work with a set of graphics formats called the 
-&quot;netpbm&quot; formats.  Specifically, these formats are
+"netpbm" formats.  Specifically, these formats are
 <A HREF="pbm.html">pbm</A>,
 <A HREF="pgm.html">pgm</A>,
 <A HREF="ppm.html">ppm</A>,
@@ -208,7 +208,7 @@ and
 <A HREF="pam.html">pam</A>.
 
 The first three of these are sometimes known generically as
-&quot;pnm&quot;.
+"pnm".
 
 Many of the Netpbm programs convert from a Netpbm format to another
 format or vice versa.  This is so you can use the Netpbm programs to
@@ -227,9 +227,9 @@ it can represent matrices of general data including but not limited to
 black and white, grayscale, and color images.
 
 <P>
-Programs designed to work with PBM images have &quot;pbm&quot; in their names.
+Programs designed to work with PBM images have "pbm" in their names.
 Programs designed to work with PGM, PPM, and PAM images similarly have
-&quot;pgm&quot;, &quot;ppm&quot;, and &quot;pam&quot; in their names.
+"pgm", "ppm", and "pam" in their names.
 
 <P>
 All Netpbm programs designed to read PGM images see PBM images as if
@@ -237,8 +237,8 @@ they were PGM too.  All Netpbm programs designed to read PPM images
 see PGM and PBM images as if they were PPM.  See <a href="#impconv">
 Implied Format Conversion</a>.
 
-<P> Programs that have &quot;pnm&quot; in their names read PBM, PGM,
-and PPM but unlike &quot;ppm&quot; programs, they distinguish between
+<P> Programs that have "pnm" in their names read PBM, PGM,
+and PPM but unlike "ppm" programs, they distinguish between
 those formats and their function depends on the format.  For example, <B><a
 href="pnmtopng.html">pnmtopng</a></B> creates a black and white PNG
 output image if its input is PBM or PGM, but a color PNG output image
@@ -315,7 +315,7 @@ PBM program to read a PAM image, run it through <b>pamtopnm</b>.
 
 <P>In many graphics formats, there's a means of indicating that certain
 parts of the image are wholly or partially transparent, meaning that
-if it were displayed &quot;over&quot; another image, the other image
+if it were displayed "over" another image, the other image
 would show through there.  Netpbm formats deliberately omit that
 capability, since their purpose is to be extremely simple.
 
@@ -416,7 +416,7 @@ to totally describe the pixel.  Netpbm does this expansion to make
 implementing the programs easier -- it uses the same format regardless
 of the type of image.
 
-<p>Newer programs use the &quot;pam&quot; family of library functions
+<p>Newer programs use the "pam" family of library functions
 internally, which use memory a little differently.  These functions are
 designed to handle generic tuples with a variable numbers of planes, so no
 fixed size per-tuple storage is possible.  A program of this type uses 4 bytes
@@ -507,7 +507,7 @@ href="pamditherbw.html"><b>pamditherbw</b></a> (Make a black and white
 image that approximates a grayscale image).
 
 <p>The Netpbm image formats use 16 bit integers.  The Netpbm code uses
-&quot;unsigned int&quot; size integers to work with them.
+"unsigned int" size integers to work with them.
 
 
 <H2 id="netpbmforgimp">Netpbm For Gimp</H2>
@@ -640,7 +640,7 @@ are specifically for KDE.
 
 <P>If you're writing a program in C to draw and manipulate images, check out
 <a href="http://www.boutell.com/gd">gd</a>.  Netpbm contains a C library for
-drawing images (<b>libnetpbm</b>'s &quot;ppmd&quot; routines), but it is
+drawing images (<b>libnetpbm</b>'s "ppmd" routines), but it is
 probably not as capable or documented as <b>gd</b>.  You can easily run any
 Netpbm program from a C program with the <b>pm_system</b> function from the
 Netpbm programming library, but that is less efficient than <b>gd</b>
@@ -736,7 +736,7 @@ available).  This can convert from TIFF -&gt; IOCA and back again.
 <a href="http://www.thethinktanksoftware.com/details.html">Ameri-Imager</a>
 ($40 Windows only).
 
-<P><B>pnm2ppa</B> converts to HP's &quot;Winprinter&quot; format (for
+<P><B>pnm2ppa</B> converts to HP's "Winprinter" format (for
 HP 710, 720, 820, 1000, etc).  It is a superset of Netpbm's
 <B>pbmtoppa </B> and handles, notably, color.  However, it is more of
 a printer driver than a Netpbm-style primitive graphics building
@@ -775,11 +775,11 @@ purposes the quintessential Postscript and PDF tools.
 
 <P>Adobe's free Acrobat Reader displays PDF and converts to
 Postscript.  The Acrobat Reader for unix has a program name of
-&quot;acroread&quot; and the -toPostScript option (also see the
+"acroread" and the -toPostScript option (also see the
 -level2 option) is useful.
 
 <P>Other software from Adobe, available for purchase, interprets and
-creates Postscript and PDF files.  &quot;Distill&quot;
+creates Postscript and PDF files.  "Distill"
 is a program that converts Postscript to PDF.
 
 <p><a href="http://www.foolabs.com/xpdf/"><b>xpdf</b></a> also reads
@@ -962,7 +962,7 @@ http://www.openexr.com</a>.
 <li>Xv Visual Schnauzer thumbnail image.  This is a rather antiquated
 format used by the Xv program.  In Netpbm circles, it is best known
 for the fact that it is very similar to Netpbm formats and uses the
-same signature (&quot;P7&quot;) as PAM because it was developed as
+same signature ("P7") as PAM because it was developed as
 sort of a fork of the Netpbm format specifications.
 
 <li>YUV 4:2:0, aka YUV 420, and the similar YUV 4:4:4, YUV 4:2:2,

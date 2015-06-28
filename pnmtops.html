@@ -46,7 +46,7 @@ name and its value with white space instead of an equals sign.
 <p><b>pnmtops</b> reads a Netpbm image stream as input and produces
 Encapsulated Postscript (EPSF) as output.
 
-<p>(Note: people usually render the name as &quot;PostScript,&quot; but we use
+<p>(Note: people usually render the name as "PostScript," but we use
 standard typography in the Netpbm manual, so capitalize only the first
 letter).
 
@@ -68,8 +68,8 @@ program in the output.  (This may not be the best way to create a multi-page
 Postscript stream; someone who knows Postscript should work on this).
 
 <p>The line at the top of the file produced by <b>pnmtops</b> is
-either &quot;%!PS-Adobe-3.0 EPSF-3.0&quot; or just
-&quot;%!PS-Adobe-3.0&quot;.  The numbers do not reflect the Postscript
+either "%!PS-Adobe-3.0 EPSF-3.0" or just
+"%!PS-Adobe-3.0".  The numbers do not reflect the Postscript
 language level, but the version of the DSC comment specification and
 EPS specification implemented.  The Postscript language level is in the
 "%%LanguageLevel:" comment.  <b>pnmtops</b> omits "EPSF-3.0" if you
@@ -248,15 +248,15 @@ comp.sources.misc and expo.lcs.mit.edu sometime in October. - Jef
 <p>This is
 from <a href="http://www.lngpstscrpt.tk/re-postscript-run-length-encoding-again">a
 forum about Postscript</a>, extracted in October 2010.  Jef added -rle in
-August 1988.  In those days, RS-232 lines (referred to as &quot;serial&quot; in
+August 1988.  In those days, RS-232 lines (referred to as "serial" in
 the quotation) were typically 9600bps.  2400 bps lines were still around.
-What the quotation calls &quot;the network&quot; is probably a 10 Mbps
+What the quotation calls "the network" is probably a 10 Mbps
 Ethernet connection.
 
 <dt><b>-flate</b>
 
-<dd>This option tells <b>pnmtops</b> to use &quot;flate&quot;
-compression (i.e. compression via the &quot;Z&quot; library -- the
+<dd>This option tells <b>pnmtops</b> to use "flate"
+compression (i.e. compression via the "Z" library -- the
 same as PNG).
 
 <p>See the <b>-rle</b> option for information about compression in general.
@@ -276,14 +276,14 @@ and <b>-flate</b> together.
 
 <dt><b>-ascii85</b>
 
-<dd>By default, <b>pnmtops</b> uses &quot;asciihex&quot; encoding of
+<dd>By default, <b>pnmtops</b> uses "asciihex" encoding of
 the image raster.  The image raster is a stream of bits, while a Postscript
 program is text, so there has to be an encoding from bits to text.  Asciihex
 encoding is just the common hexadecimal representation of bits.  E.g. 8
-1 bits would be encoded as the two characters &quot;FF&quot;.
+1 bits would be encoded as the two characters "FF".
 
 <p>With the <b>-ascii85</b> option, <b>pnmtops</b> uses
-&quot;ascii85&quot; encoding instead.  This is an encoding in which 32
+"ascii85" encoding instead.  This is an encoding in which 32
 bits are encoded into five characters of text.  Thus, it produces less
 text for the same raster than asciihex.  But ascii85 is not available
 in Postscript Level 1, whereas asciihex is.
@@ -351,7 +351,7 @@ collection as it exits.
 
 <DT><B>-setpage</B>
 <DD>
-     This causes <b>pnmtops</b> to include a &quot;setpagedevice&quot;
+     This causes <b>pnmtops</b> to include a "setpagedevice"
      directive in the output.  This causes the output to violate specifications
      of EPSF encapsulated Postscript, but if you're not using it in an
      encapsulated way, may be what you need.  The directive tells the
@@ -360,13 +360,13 @@ collection as it exits.
      <b>-width</b> and <b>-height</b> options or defaulted.
 
      <p>From January through May 2002, the default was to include
-     &quot;setpagedevice&quot; and this option did not exist.  Before
-     January 2002, there was no way to include &quot;setpagedevice&quot;
+     "setpagedevice" and this option did not exist.  Before
+     January 2002, there was no way to include "setpagedevice"
      and neither the <b>-setpage</b> nor <b>-nosetpage</b> option existed.
      
 <DT><B>-nosetpage</B>
 <DD>
-     This tells <b>pnmtops</b> not to include a &quot;setpagedevice&quot;
+     This tells <b>pnmtops</b> not to include a "setpagedevice"
      directive in the output.  This is the default, so the option has no
      effect.
 
@@ -374,9 +374,9 @@ collection as it exits.
 
 <DT><B>-noshowpage</B>
 <DD>
-     This tells <b>pnmtops</b> not to include a &quot;showpage&quot;
+     This tells <b>pnmtops</b> not to include a "showpage"
      directive in the output.  By default, <b>pnmtops</b> includes a
-     &quot;showpage&quot; at the end of the EPSF program.  According to
+     "showpage" at the end of the EPSF program.  According to
      EPSF specs, this is OK, and the program that includes the EPSF is
      supposed to redefine showpage so this doesn't cause undesirable
      behavior.  But it's often easier just not to have the showpage.
@@ -386,7 +386,7 @@ collection as it exits.
 
 <dt><b>-showpage</b>
 <dd>
-    This tells <b>pnmtops</b> to include a &quot;showpage&quot; directive
+    This tells <b>pnmtops</b> to include a "showpage" directive
     at the end of the EPSF output.  This is the default, so the option has
     no effect.
 

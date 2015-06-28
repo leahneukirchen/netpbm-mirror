@@ -48,7 +48,7 @@ least one pixel of each color in the set of colors it represents.  The
 ones <b>pnmcolormap</b> generates have exactly one pixel of each color,
 except where padding is necessary with the <b>-square</b> option.
 
-<P>The quantization method is Heckbert's &quot;median cut&quot;.
+<P>The quantization method is Heckbert's "median cut".
 See <a href="#quant">QUANTIZATION METHOD</a>.
 
 <P>The output image is of the same format (PBM, PGM, PPM, PAM) as the
@@ -127,21 +127,21 @@ href="#quant">QUANTIZATION METHOD</a>.
 
 <P>A quantization method is a way to choose which colors, being fewer
 in number than in the input, you want in the output.
-<B>pnmcolormap</B> uses Heckbert's &quot;median cut&quot; quantization
+<B>pnmcolormap</B> uses Heckbert's "median cut" quantization
 method.
 
 <P>This method involves separating all the colors into
-&quot;boxes,&quot; each holding colors that represent about the same
+"boxes," each holding colors that represent about the same
 number of pixels.  You start with one box and split boxes in two until
 the number of boxes is the same as the number of colors you want in
 the output, and choose one color to represent each box.
 
 <P>When you split a box, you do it so that all the colors in one
-sub-box are &quot;greater&quot; than all the colors in the other.
-&quot;Greater,&quot; for a particular box, means it is brighter in the
+sub-box are "greater" than all the colors in the other.
+"Greater," for a particular box, means it is brighter in the
 color component (red, green, blue) which has the largest spread in
 that box.  <B>pnmcolormap</B> gives you two ways to define
-&quot;largest spread.&quot;: 1) largest spread of brightness; 2)
+"largest spread.": 1) largest spread of brightness; 2)
 largest spread of contribution to the luminosity of the color.
 E.g. red is weighted much more than blue.  Select among these with the
 <B>-spreadbrightness</B> and <B>-spreadluminosity</B> options.  The
@@ -150,7 +150,7 @@ default is <B>-spreadbrightness</B>.
 <P><B>pnmcolormap</B> provides three ways of choosing a color to
 represent a box: 1) the center color - the color halfway between the
 greatest and least colors in the box, using the above definition of
-&quot;greater&quot;; 2) the mean of the colors (each component
+"greater"; 2) the mean of the colors (each component
 averaged separately by brightness) in the box; 3) the mean weighted by
 the number of pixels of a color in the image.
 
@@ -162,7 +162,7 @@ which do not appear in the input at all.
 
 <H2 id="references">REFERENCES</H2>
 
-&quot;Color Image Quantization for Frame Buffer Display&quot; by Paul Heckbert,
+"Color Image Quantization for Frame Buffer Display" by Paul Heckbert,
 SIGGRAPH '82 Proceedings, page 297.
 
 <H2 id="seealso">SEE ALSO</H2>

@@ -49,8 +49,8 @@ no data, delimiters, or padding before, after, or between images.
 
 <OL>
   
-<LI>A &quot;magic number&quot; for identifying the file type.
-A pgm image's magic number is the two characters &quot;P5&quot;.
+<LI>A "magic number" for identifying the file type.
+A pgm image's magic number is the two characters "P5".
 
 <LI>Whitespace (blanks, TABs, CRs, LFs).
 
@@ -86,7 +86,7 @@ most intense value in the image and any other image to which the image
 might be compared.
 
 <p>Note that a common variation on the PGM format is to have the
-gray value be &quot;linear,&quot; i.e. as specified above except
+gray value be "linear," i.e. as specified above except
 without the gamma adjustment.  <B>pnmgamma</B> takes such a PGM
 variant as input and produces a true PGM as output.
 
@@ -95,14 +95,14 @@ opaqueness.  It is proportional to the fraction of intensity of a
 pixel that would show in place of an underlying pixel.  So what
 normally means white represents total opaqueness and what normally
 means black represents total transparency.  In between, you would
-compute the intensity of a composite pixel of an &quot;under&quot; and
-&quot;over&quot; pixel as under * (1-(alpha/alpha_maxval)) + over *
+compute the intensity of a composite pixel of an "under" and
+"over" pixel as under * (1-(alpha/alpha_maxval)) + over *
 (alpha/alpha_maxval).  Note that there is no gamma transfer function
 in the transparency mask.
 
 </OL> 
 
-<p>Strings starting with &quot;#&quot; may be comments, the same as
+<p>Strings starting with "#" may be comments, the same as
 with <a href="pbm.html">PBM</a>.
 
 <P>Note that you can use <B>pamdepth</B> to convert between a the
@@ -110,16 +110,16 @@ format with 1 byte per gray value and the one with 2 bytes per gray
 value.
 
 <p>All characters referred to herein are encoded in ASCII.
-&quot;newline&quot; refers to the character known in ASCII as Line
-Feed or LF.  A &quot;white space&quot; character is space, CR, LF,
+"newline" refers to the character known in ASCII as Line
+Feed or LF.  A "white space" character is space, CR, LF,
 TAB, VT, or FF (I.e. what the ANSI standard C isspace() function
 calls white space).
 
 <h3 id="plainpgm">Plain PGM</h3>
 
 <P>There is actually another version of the PGM format that is fairly
-rare: &quot;plain&quot; PGM format.  The format above, which generally
-considered the normal one, is known as the &quot;raw&quot; PGM format.
+rare: "plain" PGM format.  The format above, which generally
+considered the normal one, is known as the "raw" PGM format.
 See <B><A HREF="pbm.html">pbm</A></B> for some commentary on how plain
 and raw formats relate to one another and how to use them.
 
@@ -176,7 +176,7 @@ also applies.
 <h2 id="filename">FILE NAME</h2>
 
 <p>There are no requirements on the name of a PGM file, but the convention is
-to use the suffix &quot;.pgm&quot;.  &quot;pnm&quot; is also conventional, for
+to use the suffix ".pgm".  "pnm" is also conventional, for
 cases where distinguishing between the particular subformats of PNM is not
 convenient.
 

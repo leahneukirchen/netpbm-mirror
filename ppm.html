@@ -35,8 +35,8 @@ every respect except the precise semantics of the sample values.
 These files are useful because of the way PPM is used as an
 intermediary format.  They are informally called PPM files, but to be
 absolutely precise, you should indicate the variation from true PPM.
-For example, &quot;PPM using the red, green, and blue colors that the
-scanner in question uses.&quot;
+For example, "PPM using the red, green, and blue colors that the
+scanner in question uses."
 
 <P>The name "PPM" is an acronym derived from "Portable Pixel Map."
 Images in this format (or a precursor of it) were once also called
@@ -54,8 +54,8 @@ no data, delimiters, or padding before, after, or between images.
 <P>Each PPM image consists of the following:
 
 <OL>
-<LI>A &quot;magic number&quot; for identifying the file type.
-A ppm image's magic number is the two characters &quot;P6&quot;.
+<LI>A "magic number" for identifying the file type.
+A ppm image's magic number is the two characters "P6".
 <LI>
 Whitespace (blanks, TABs, CRs, LFs).
 <LI>
@@ -82,7 +82,7 @@ significant byte is first.
 <P>A row of an image is horizontal.  A column is vertical.  The pixels
 in the image are square and contiguous.
      
-<p>In the raster, the sample values are &quot;nonlinear.&quot; They are
+<p>In the raster, the sample values are "nonlinear." They are
 proportional to the intensity of the ITU-R Recommendation BT.709 red,
 green, and blue in the pixel, adjusted by the BT.709 gamma transfer
 function.  (That transfer function specifies a gamma number of 2.2 and
@@ -103,29 +103,29 @@ variation on PPM is to substitute this color space for the one specified.
 
 <p>
 Note that a common variation on the PPM format is to have the sample
-values be &quot;linear,&quot; i.e. as specified above except without
+values be "linear," i.e. as specified above except without
 the gamma adjustment.  <B>pnmgamma</B> takes such a PPM variant as
 input and produces a true PPM as output.
 
 </OL>
 
-<p>Strings starting with &quot;#&quot; may be comments, the same as
+<p>Strings starting with "#" may be comments, the same as
 with <a href="pbm.html">PBM</a>.
 
 <P>Note that you can use <B>pamdepth</B> to convert between a the
 format with 1 byte per sample and the one with 2 bytes per sample.
 
 <p>All characters referred to herein are encoded in ASCII.
-&quot;newline&quot; refers to the character known in ASCII as Line
-Feed or LF.  A &quot;white space&quot; character is space, CR, LF,
+"newline" refers to the character known in ASCII as Line
+Feed or LF.  A "white space" character is space, CR, LF,
 TAB, VT, or FF (I.e. what the ANSI standard C isspace() function
 calls white space).
 
 <h3 id="plainppm">Plain PPM</h3>
 
 <P>There is actually another version of the PPM format that is fairly
-rare: &quot;plain&quot; PPM format.  The format above, which generally
-considered the normal one, is known as the &quot;raw&quot; PPM format.
+rare: "plain" PPM format.  The format above, which generally
+considered the normal one, is known as the "raw" PPM format.
 See <B><A HREF="pbm.html">pbm</A></B> for some commentary on how plain
 and raw formats relate to one another and how to use them.
 
@@ -180,7 +180,7 @@ also applies.
 <h2 id="filename">FILE NAME</h2>
 
 <p>There are no requirements on the name of a PPM file, but the convention is
-to use the suffix &quot;.ppm&quot;.  &quot;pnm&quot; is also conventional, for
+to use the suffix ".ppm".  "pnm" is also conventional, for
 cases where distinguishing between the particular subformats of PNM is not
 convenient.
 
