@@ -48,6 +48,8 @@ dec_epson_rle(unsigned        const int k,
         }
         dpos += i;
     }
+    if(dpos > k)
+      pm_error("Corrupt compressed block"); 
     return pos;        /* return number of treated input bytes */
 }
 
@@ -96,6 +98,7 @@ main(int    argc,
 
     /* filter out raster data */
     height = 0;  /* initial value */
+    width  = 0;  /* initial value */
     pos = 0;     /* initial value */
     opos = 0;    /* initial value */
 
@@ -104,9 +107,16 @@ main(int    argc,
         if (input[pos] == '\x1b' && input[pos+1] == '.') {
             unsigned int const k =
                 input[pos+5] * ((input[pos+7] * 256 + input[pos+6] + 7) / 8);
+            unsigned int const margin = 256;
+            if(input[pos+5] == 0)
+                pm_error("Abnormal height value in escape sequence");
             height += input[pos+5];
-            width = input[pos+7] * 256 + input[pos+6];
-            REALLOCARRAY(output, opos + k);
+            if(width == 0) /* initialize */
+                width = input[pos+7] * 256 + input[pos+6];
+            else if(width != input[pos+7] * 256 + input[pos+6])
+                pm_error("Abnormal width value in escape sequence");
+
+            REALLOCARRAY(output, opos + k + margin);
             if (output == NULL)
                 pm_error("Cannot allocate memory");
 

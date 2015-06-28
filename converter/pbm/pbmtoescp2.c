@@ -165,6 +165,11 @@ main(int argc, char* argv[]) {
         for (idx = 0; idx < 24 && row+idx < rows; ++idx)
             pbm_readpbmrow_packed(ifP,bytes+idx*pbm_packed_bytes(cols),
                                   cols,format);
+        /* Add delimiter to end of rows, using inverse of final
+           data byte to prevent match. */
+        *(bytes+idx*pbm_packed_bytes(cols)) =
+          ~ *(bytes+idx*pbm_packed_bytes(cols)-1);
+
         /* Write raster data. */
         if (cmdline.compress != 0) {
             /* compressed */

@@ -820,15 +820,16 @@ readPackBitsRow16(FILE *          const ifP,
             unsigned int k;
             unsigned short inval;
             pm_readlittleshortu(ifP, &inval);
-            for (k = 0; (k < runlength) && (j + k + 1 < bytesPerRow); k += 2) {
-                memcpy(palmrow + j + k, &inval, 2);
+            if (j + runlength <= bytesPerRow) {
+                for (k = 0; k < runlength; k += 2)
+                    memcpy(palmrow + j + k, &inval, 2);
             }
             j += runlength;
         } else {
             /* We just read the stream of shorts as a stream of chars */
             unsigned int const nonrunlength = (incount + 1) * 2;
             unsigned int k;
-            for (k = 0; (k < nonrunlength) && (j + k < bytesPerRow); ++k) {
+            for (k = 0; (k < nonrunlength) && (j + k <= bytesPerRow); ++k) {
                 unsigned char inval;
                 pm_readcharu(ifP, &inval);
                 palmrow[j + k] = inval;
@@ -860,13 +861,13 @@ readPackBitsRow(FILE *          const ifP,
             unsigned int const runlength = -incount + 1;
             unsigned char inval;
             pm_readcharu(ifP, &inval);
-            if (j + runlength < bytesPerRow) 
+            if (j + runlength <= bytesPerRow)
                 memset(palmrow + j, inval, runlength);
             j += runlength;
         } else {
             unsigned int const nonrunlength = incount + 1;
             unsigned int k;
-            for (k = 0; k < nonrunlength && j + k < bytesPerRow; ++k) {
+            for (k = 0; k < nonrunlength && j + k <= bytesPerRow; ++k) {
                 unsigned char inval;
                 pm_readcharu(ifP, &inval);
                 palmrow[j + k] = inval;

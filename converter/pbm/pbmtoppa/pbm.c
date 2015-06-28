@@ -91,6 +91,7 @@ int pbm_readline(pbm_stat* pbm,unsigned char* data)
       pbm->current_line++;
       pbm->unread = 0;
       free (pbm->revdata);
+      pbm->revdata = NULL;
       return 1;
     }
 

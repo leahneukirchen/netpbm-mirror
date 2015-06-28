@@ -39,13 +39,15 @@ cut_pbm_swath(pbm_stat* pbm,ppa_stat* prn,int maxlines,ppa_sweep_data* sweep_dat
   int shift;
   ppa_nozzle_data nozzles[2];
 
+  ppa = NULL;
+
   /* shift = 6 if DPI==300  */
   /* shift = 12 if DPI==600 */ 
   shift = ( prn->DPI == 300 ? 6:12 ) ;
   
   /* safeguard against the user freeing these */
-  sweep_data->image_data=NULL;
-  sweep_data->nozzle_data=NULL;
+  sweep_data->image_data  = NULL;
+  sweep_data->nozzle_data = NULL;
 
   /* read the data from the input file */
   width8 = (pbm->width + 7) / 8;
@@ -66,7 +68,7 @@ cut_pbm_swath(pbm_stat* pbm,ppa_stat* prn,int maxlines,ppa_sweep_data* sweep_dat
     if(!pbm_readline(pbm,data))
     {
       fprintf(stderr,"cutswath(): A-could not read top margin\n");
-      free(data);
+      free (data); data=NULL;
       return 0;
     }
 
@@ -77,10 +79,10 @@ cut_pbm_swath(pbm_stat* pbm,ppa_stat* prn,int maxlines,ppa_sweep_data* sweep_dat
       if(!pbm_readline(pbm,data))
       {
 	fprintf(stderr,"cutswath(): could not clear bottom margin\n");
-	free(data);
+	free (data); data=NULL;
 	return 0;
       }
-    free(data);
+    free (data); data=NULL;
     return 1;
   }
 
@@ -95,7 +97,7 @@ cut_pbm_swath(pbm_stat* pbm,ppa_stat* prn,int maxlines,ppa_sweep_data* sweep_dat
     if(!pbm_readline(pbm,data+width8*numlines))
     {
       fprintf(stderr,"cutswath(): B-could not read next line\n");
-      free(data);
+      free (data); data=NULL;
       return 0;
     }
     if(!got_nonblank)
@@ -130,7 +132,7 @@ cut_pbm_swath(pbm_stat* pbm,ppa_stat* prn,int maxlines,ppa_sweep_data* sweep_dat
 	  {
 	    fprintf (stderr, "Ack! newleft=%d, newright=%d, left=%d, right=%d\n",
 		     newleft, newright, left, right);
-	    free (data);
+	    free (data); data=NULL;
 	    return 0;
 	  }
 
@@ -177,13 +179,13 @@ cut_pbm_swath(pbm_stat* pbm,ppa_stat* prn,int maxlines,ppa_sweep_data* sweep_dat
 	if(!pbm_readline(pbm,data))
 	{
 	  fprintf(stderr,"cutswath(): could not clear bottom margin\n");
-	  free(data);
+	  free (data); data=NULL;
 	  return 0;
 	}
-      free(data);
+      free (data); data=NULL;
       return 1;
     }
-    free(data);
+    free (data); data=NULL;
     return 0; /* error, since didn't get to lower margin, yet blank */
   }
 
@@ -197,7 +199,7 @@ cut_pbm_swath(pbm_stat* pbm,ppa_stat* prn,int maxlines,ppa_sweep_data* sweep_dat
       if(!pbm_readline(pbm,data+width8*numlines))
 	{
 	  fprintf(stderr,"cutswath(): C-could not read next line\n");
-	  free(data);
+	  free (data); data=NULL;
 	  return 0;
 	}
       numlines++;
@@ -225,7 +227,7 @@ cut_pbm_swath(pbm_stat* pbm,ppa_stat* prn,int maxlines,ppa_sweep_data* sweep_dat
   if ((ppa = malloc ((p_width8+2*shift) * numlines)) == NULL)
     {
       fprintf(stderr,"cutswath(): could not malloc ppa storage\n");
-      free (data);
+      free (data); data=NULL;
       return 0;
     }
 
@@ -292,7 +294,7 @@ cut_pbm_swath(pbm_stat* pbm,ppa_stat* prn,int maxlines,ppa_sweep_data* sweep_dat
   }
 
   /* done with data */
-  free(data);
+  free (data); data=NULL;
 
   /* place 0's in the last 12 columns */
   memset (place, 0, numlines/2 * shift);

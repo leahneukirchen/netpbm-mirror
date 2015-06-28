@@ -69,7 +69,7 @@ parseCommandLine(int                 argc,
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0, "protocol",   OPT_UINT,   &protocol,
+    OPTENT3(0, "protocol",   OPT_STRING,   &protocol,
             &protocolSpec,                    0);
     OPTENT3(0, "dpi",        OPT_UINT,   &cmdlineP->dpi,
             &dpiSpec,                    0);

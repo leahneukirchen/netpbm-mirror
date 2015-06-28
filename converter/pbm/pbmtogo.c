@@ -164,7 +164,7 @@ main(int           argc,
     padright = rucols - cols;
 
     for (i = 0; i < GRAPHON_WIDTH_BYTES; ++i )
-      buffer[i] = 0;
+      buffer[i] = oldscanline[i] = 0;
     putinit();
 
     /* Start donwloading screen raster */
@@ -215,7 +215,7 @@ main(int           argc,
                   {
                       olditem = buffer[nbyte++];
                       ucount++;
-                  } while ((olditem != buffer[nbyte])
+                  } while (nbyte < bytesperrow && (olditem != buffer[nbyte])
                            && (ucount < MIN(bytesperrow, MAX_REPEAT)));
                   
                 if ((ucount != MAX_REPEAT) && (nbyte != bytesperrow)) {
@@ -246,7 +246,7 @@ main(int           argc,
                   {
                       olditem = buffer[nbyte++];
                       ecount++;
-                  } while ((olditem == buffer[nbyte])
+                  } while (nbyte < bytesperrow && (olditem == buffer[nbyte])
                            && (ecount < MIN(bytesperrow, MAX_REPEAT)));
                   
                 if (ecount > 1) {
