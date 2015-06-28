@@ -322,6 +322,45 @@ pngx_setChrm(struct pngx *      const pngxP,
 
 
 
+const char *
+pngx_srgbIntentDesc(pngx_srgbIntent const srgbIntent) {
+
+    switch (srgbIntent) {
+    case PNGX_PERCEPTUAL:            return "PERCEPTUAL";
+    case PNGX_RELATIVE_COLORIMETRIC: return "RELATIVE COLORIMETRIC";
+    case PNGX_SATURATION:            return "SATURATION";
+    case PNGX_ABSOLUTE_COLORIMETRIC: return "ABSOLUTE_COLORIMETRIC";
+    }
+    assert(false);
+}
+
+
+
+static int
+const libpngSrgbIntentCode(pngx_srgbIntent const srgbIntent) {
+
+    switch (srgbIntent) {
+    case PNGX_PERCEPTUAL:            return 0;
+    case PNGX_RELATIVE_COLORIMETRIC: return 1;
+    case PNGX_SATURATION:            return 2;
+    case PNGX_ABSOLUTE_COLORIMETRIC: return 3;
+    }
+
+    assert(false);  /* All cases above return */
+}
+
+
+
+void
+pngx_setSrgb(struct pngx *   const pngxP,
+             pngx_srgbIntent const srgbIntent) {
+
+    png_set_sRGB(pngxP->png_ptr, pngxP->info_ptr,
+                 libpngSrgbIntentCode(srgbIntent));
+}
+
+
+
 void
 pngx_setCompressionSize(struct pngx * const pngxP,
                         unsigned int  const bufferSize) {
@@ -476,13 +515,13 @@ pngx_setText(struct pngx * const pngxP,
 
 void
 pngx_setTime(struct pngx * const pngxP,
-             png_time      const timeArg) {
+             time_t        const timeArg) {
 
-    png_time time;
+    png_time pngTime;
 
-    time = timeArg;
+    png_convert_from_time_t(&pngTime, timeArg);
 
-    png_set_tIME(pngxP->png_ptr, pngxP->info_ptr, &time);
+    png_set_tIME(pngxP->png_ptr, pngxP->info_ptr, &pngTime);
 }
 
 

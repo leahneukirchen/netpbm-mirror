@@ -2460,11 +2460,8 @@ static void
 doTimeChunk(struct cmdlineInfo const cmdline,
             struct pngx *      const pngxP) {
 
-    if (cmdline.modtimeSpec) {
-        png_time pngTime;
-        png_convert_from_time_t(&pngTime, cmdline.modtime);
-        pngx_setTime(pngxP, pngTime);
-    }
+    if (cmdline.modtimeSpec)
+        pngx_setTime(pngxP, cmdline.modtime);
 }
 
 
