@@ -1226,7 +1226,7 @@ ppmToHam(FILE *  const ifP,
     if( DO_COMPRESS )
         writeBodyRows();
     else
-        doHamBody(ifP, NULL, cols, rows, maxval, hammaxval, 
+        doHamBody(ifP, stdout, cols, rows, maxval, hammaxval, 
                   nPlanes, colormap, colors);
 }
 
