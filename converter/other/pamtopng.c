@@ -18,19 +18,24 @@
 */
 
 /*
-** This NetPBM program pamtopng was in 2015 derived from the NetPBM program
-** pnmtopng. This was a nearly complete rewrite with the following goals:
-**
-** 1) Add support for a PNG alpha channel from a PAM (format P7) file.
-** 2) Cleanup of the 20 year old pnmtopng code base. Because of the many
-**    contributors over the years, the code had become rather convoluted.
-**    This program is roughly 1/3 the size of pnmtopng.c that it replaces.
-** 3) In 1995 bandwith was limited and therefore filesize had to be kept
-**    small. The original program tried to optimize for that by applying
-**    many "clever tricks". Today that isn't an issue anymore, so gone 
-**    are filters, palettes, etc. Also, image conversions were removed,
-**    because those should be done with other NetPBM tools.
-** 4) Add support for iTXt (international language) chunks.
+  This Netpbm program pamtopng was derived in 2015 from the Netpbm program
+  Pnmtopng. This was a nearly complete rewrite with the following goals:
+
+  - Add ability to create a PNG alpha channel from the alpha channel in a
+    PAM (format P7) file.
+
+  - Simplify the 20 year old pnmtopng code. Because of the many, many features
+    that program implements and its need for backward compatibility, the code
+    had become rather complex.  This program is roughly 1/3 the size of
+    pnmtopng.c that it replaces.
+
+  - In 1995 bandwith was limited and therefore filesize had to be kept
+    small. The original program tried to optimize for that by applying
+    many "clever tricks". Today that isn't an issue anymore, so gone 
+    are filters, palettes, etc. Also, image conversions were removed,
+    because those should be done with other NetPBM tools.
+
+  - Add support for iTXt (international language) chunks.
 */
 
 
