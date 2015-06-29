@@ -48,43 +48,62 @@ MAN1 = \
 	mtvtoppm.1 \
 	neotoppm.1 \
 	palmtopnm.1 \
+	pamaddnoise.1 \
 	pamarith.1 \
+	pambackground.1 \
+	pambayer.1 \
 	pamchannel.1 \
 	pamcomp.1 \
 	pamcut.1 \
 	pamdeinterlace.1 \
+	pamdepth.1 \
 	pamdice.1 \
 	pamditherbw.1 \
 	pamedge.1 \
 	pamendian.1 \
+	pamenlarge.1 \
 	pamfile.1 \
 	pamfixtrunc.1 \
 	pamflip.1 \
 	pamfunc.1 \
 	pamgauss.1 \
+	pamgradient.1 \
 	pamlookup.1 \
+	pammasksharpen.1 \
+	pammixinterlace.1 \
 	pamoil.1 \
 	pamperspective.1 \
+	pampick.1 \
 	pampop9.1 \
+	pamrgbatopng.1 \
 	pamscale.1 \
 	pamseq.1 \
 	pamsharpmap.1 \
 	pamsharpness.1 \
 	pamslice.1 \
+	pamsplit.1 \
 	pamstack.1 \
 	pamstereogram.1 \
 	pamstretch-gen.1 \
 	pamstretch.1 \
 	pamsumm.1 \
 	pamsummcol.1 \
+	pamthreshold.1 \
+	pamtilt.1 \
 	pamtodjvurle.1 \
+	pamtofits.1 \
+	pamtogif.1 \
 	pamtohdiff.1 \
 	pamtohtmltbl.1 \
 	pamtojpeg2k.1 \
 	pamtopfm.1 \
 	pamtopnm.1 \
+	pamtosvg.1 \
 	pamtotga.1 \
+	pamtotiff.1 \
 	pamtouil.1 \
+	pamtoxvmini.1 \
+	pamx.1 \
 	pbmclean.1 \
 	pbmlife.1 \
 	pbmmake.1 \
@@ -107,11 +126,13 @@ MAN1 = \
 	pbmtog3.1 \
 	pbmtogem.1 \
 	pbmtogo.1 \
+	pbmtoibm23xx.1 \
 	pbmtoicon.1 \
 	pbmtolj.1 \
 	pbmtoln03.1 \
 	pbmtolps.1 \
 	pbmtomacp.1 \
+	pbmtomatrixorbital.1 \
 	pbmtomda.1 \
 	pbmtomgr.1 \
 	pbmtomrf.1 \
@@ -136,10 +157,13 @@ MAN1 = \
 	pgmabel.1 \
 	pgmbentley.1 \
 	pgmcrater.1 \
+	pgmdeshadow.1 \
 	pgmedge.1 \
 	pgmenhance.1 \
 	pgmhist.1 \
 	pgmkernel.1 \
+	pgmmake.1 \
+	pgmmedian.1 \
 	pgmminkowski.1 \
 	pgmmorphconv.1 \
 	pgmnoise.1 \
@@ -217,9 +241,13 @@ MAN1 = \
 	ppmchange.1 \
 	ppmcie.1 \
 	ppmcolormask.1 \
+	ppmdcfont.1 \
+	ppmddumpfont.1 \
 	ppmdim.1 \
 	ppmdist.1 \
 	ppmdither.1 \
+	ppmdmkfont.1 \
+	ppmdraw.1 \
 	ppmfade.1 \
 	ppmflash.1 \
 	ppmforge.1 \
@@ -279,6 +307,7 @@ MAN1 = \
 	rawtopgm.1 \
 	rawtoppm.1 \
 	rgb3toppm.1 \
+	rlatopam.1 \
 	rletopnm.1 \
 	sbigtopgm.1 \
 	sgitopnm.1 \
@@ -302,40 +331,11 @@ MAN1 = \
 	yuvsplittoppm.1 \
 	yuvtoppm.1 \
 	zeisstopnm.1 \
-        pamaddnoise.1 \
-        pambackground.1 \
-        pambayer.1 \
-        pamdepth.1 \
-        pamenlarge.1 \
-        pamgradient.1 \
-        pammasksharpen.1 \
-        pammixinterlace.1 \
-        pampick.1 \
-        pamrgbatopng.1 \
-        pamsplit.1 \
-        pamthreshold.1 \
-        pamtilt.1 \
-        pamtofits.1 \
-        pamtogif.1 \
-        pamtosvg.1 \
-        pamtotiff.1 \
-        pamtoxvmini.1 \
-        pamx.1 \
-        pbmtoibm23xx.1 \
-        pbmtomatrixorbital.1 \
-        pgmdeshadow.1 \
-        pgmmake.1 \
-        pgmmedian.1 \
-        ppmdcfont.1 \
-        ppmddumpfont.1 \
-        ppmdmkfont.1 \
-        ppmdraw.1 \
-        rlatopam.1 \
 
 MAN3 = \
-	libnetpbm.3 \
 	libnetpbm_image.3 \
 	libnetpbm_ug.3 \
+	libnetpbm.3 \
 	libpbm.3 \
 	libpgm.3 \
 	libpm.3 \
@@ -348,7 +348,7 @@ MAN5 = \
 	extendedopacity.5 \
 	pam.5 \
 	pbm.5 \
-        pfm.5 \
+	pfm.5 \
 	pgm.5 \
 	pnm.5 \
 	ppm.5 \
