@@ -53,6 +53,7 @@ ordinary_testprogs="\
   gemtopbm \
   icontopbm \
   pamfixtrunc \
+  pamrgbatopng \
   pbmtoicon \
   pgmedge \
   pgmnorm \

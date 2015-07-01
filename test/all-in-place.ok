@@ -66,7 +66,6 @@ pamperspective: ok
 pampick: ok
 pampop9: ok
 pamrecolor: ok
-pamrgbatopng: ok
 pamrubber: ok
 pamscale: ok
 pamseq: ok
@@ -95,6 +94,7 @@ pamtooctaveimg: ok
 pamtopam: ok
 pamtopdbimg: ok
 pamtopfm: ok
+pamtopng: ok
 pamtopnm: ok
 pamtosrf: ok
 pamtosvg: ok
