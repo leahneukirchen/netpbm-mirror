@@ -11,6 +11,9 @@
 #include "pnm.h"
 
 #define MAX_WIDTHHEIGHT INT_MAX-10
+    /* The maximum width or height value we can handle without risking
+       arithmetic overflow
+    */
 
 struct cmdlineInfo {
     /* All the information the user supplied in the command line,
@@ -31,6 +34,8 @@ struct cmdlineInfo {
     unsigned int bottomSpec;
     float xalign;
     float yalign;
+    unsigned int mwidth;
+    unsigned int mheight;
     unsigned int white;     /* >0: pad white; 0: pad black */
     unsigned int verbose;
 };
@@ -51,7 +56,7 @@ parseCommandLine(int argc, const char ** argv,
 
     unsigned int option_def_index;
     unsigned int blackOpt;
-    unsigned int xalignSpec, yalignSpec;
+    unsigned int xalignSpec, yalignSpec, mwidthSpec, mheightSpec;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
@@ -82,6 +87,10 @@ parseCommandLine(int argc, const char ** argv,
             &yalignSpec,           0);
     OPTENT3(0,   "black",     OPT_FLAG,    NULL,
             &blackOpt,           0);
+    OPTENT3(0,   "mwidth",    OPT_UINT,    &cmdlineP->mwidth,
+            &mwidthSpec,         0);
+    OPTENT3(0,   "mheight",   OPT_UINT,    &cmdlineP->mheight,
+            &mheightSpec,        0);
     OPTENT3(0,   "white",     OPT_FLAG,    NULL,
             &cmdlineP->white,    0);
     OPTENT3(0,   "verbose",   OPT_FLAG,    NULL,
@@ -146,6 +155,12 @@ parseCommandLine(int argc, const char ** argv,
                      cmdlineP->yalign);
     } else
         cmdlineP->yalign = 0.5;
+
+    if (!mwidthSpec)
+        cmdlineP->mwidth = 1;
+
+    if (!mheightSpec)
+        cmdlineP->mheight = 1;
 
     /* get optional input filename */
     if (argc-1 > 1)
@@ -229,13 +244,17 @@ parseCommandLineOld(int argc, const char ** argv,
 
 static void
 validateHorizontalSize(struct cmdlineInfo const cmdline,
-                       unsigned int const cols) {
+                       unsigned int       const cols) {
+/*----------------------------------------------------------------------------
+   Abort the program if the padding parameters in 'cmdline', applied to
+   an image width 'cols', would result in numbers too large for us to
+   compute with easily.
+-----------------------------------------------------------------------------*/
+    unsigned int const lpad         = cmdline.leftSpec   ? cmdline.left   : 0;
+    unsigned int const rpad         = cmdline.rightSpec  ? cmdline.right  : 0;
+    unsigned int const mwidthMaxPad = cmdline.mwidth - 1;
 
-    unsigned int const xsize = cmdline.xsizeSpec ? cmdline.xsize : 0;
-    unsigned int const lpad  = cmdline.leftSpec  ? cmdline.left  : 0;
-    unsigned int const rpad  = cmdline.rightSpec ? cmdline.right : 0;
-
-    if (xsize > MAX_WIDTHHEIGHT)
+    if (cmdline.xsizeSpec && cmdline.xsize > MAX_WIDTHHEIGHT)
         pm_error("The width value you specified is too large.");
 
     if (lpad > MAX_WIDTHHEIGHT)
@@ -244,8 +263,128 @@ validateHorizontalSize(struct cmdlineInfo const cmdline,
     if (rpad > MAX_WIDTHHEIGHT)
         pm_error("The right padding value you specified is too large.");
 
-    if ((double) cols + (double) lpad + (double) rpad > MAX_WIDTHHEIGHT)
-        pm_error("Given padding value(s) makes output width too large.");
+    if ((double) cols +
+        (double) lpad + 
+        (double) rpad +
+        (double) mwidthMaxPad > MAX_WIDTHHEIGHT)
+        pm_error("Given padding parameters make output width too large "
+                 "for this program to compute");
+
+    if (cmdline.xsizeSpec &&
+        (double) cmdline.xsize + (double) mwidthMaxPad> MAX_WIDTHHEIGHT)
+        pm_error("Given padding parameters make output width too large "
+                 "for this program to compute");
+}
+
+
+
+static void
+computePadSizeBeforeMult(unsigned int   const unpaddedSize,
+                         bool           const sizeSpec,
+                         unsigned int   const sizeReq,
+                         bool           const begPadSpec,
+                         unsigned int   const begPadReq,
+                         bool           const endPadSpec,
+                         unsigned int   const endPadReq,
+                         double         const align,
+                         unsigned int * const begPadP,
+                         unsigned int * const endPadP) {
+/*----------------------------------------------------------------------------
+   Compute the padding on each end that would be required if user did not
+   request any "multiple" padding; i.e. he didn't say request e.g. that the
+   output width be a multiple of 10 pixels.
+-----------------------------------------------------------------------------*/
+    if (sizeSpec) {
+        if (begPadSpec && endPadSpec) {
+            if (begPadReq + unpaddedSize + endPadReq < unpaddedSize) {
+                pm_error("Beginning adding (%u), and end "
+                         "padding (%u) are insufficient to bring the "
+                         "image size of %u up to %u.",
+                         begPadReq, endPadReq, unpaddedSize, sizeReq);
+            } else {
+                *begPadP = begPadReq;
+                *endPadP = endPadReq;
+            }
+        } else if (begPadSpec) {
+            *begPadP = begPadReq;
+            *endPadP = MAX(sizeReq, unpaddedSize + begPadReq) -
+                (begPadReq + unpaddedSize);
+        } else if (endPadReq) {
+            *endPadP = endPadReq;
+            *begPadP = MAX(sizeReq, unpaddedSize + endPadReq) -
+                (unpaddedSize + endPadReq);
+        } else {
+            if (sizeReq > unpaddedSize) {
+                *begPadP = ROUNDU((sizeReq - unpaddedSize) * align);
+                *endPadP = sizeReq - unpaddedSize - *begPadP;
+            } else {
+                *begPadP = 0;
+                *endPadP = 0;
+            }
+        }
+    } else {
+        *begPadP = begPadSpec ? begPadReq : 0;
+        *endPadP = endPadSpec ? endPadReq : 0;
+    }
+}
+
+
+
+static void
+computePadSizesOneDim(unsigned int   const unpaddedSize,
+                      bool           const sizeSpec,
+                      unsigned int   const sizeReq,
+                      bool           const begPadSpec,
+                      unsigned int   const begPadReq,
+                      bool           const endPadSpec,
+                      unsigned int   const endPadReq,
+                      double         const align,
+                      unsigned int   const multiple,
+                      unsigned int * const begPadP,
+                      unsigned int * const endPadP) {
+/*----------------------------------------------------------------------------
+   Compute the number of pixels of padding needed before and after a row or
+   column ("before" means on the left side of a row or the top side of a
+   column).  Return them as *padBegP and *padEndP, respectively.
+
+   'unpaddedSize' is the size (width/height) of the row or column before
+   any padding.
+
+   The rest of the inputs are the padding parameters, equivalent to the
+   program's corresponding command line options.
+-----------------------------------------------------------------------------*/
+    unsigned int begPadBeforeMult, endPadBeforeMult;
+        /* The padding we would apply if user did not request multiple
+           padding (such as "make the output a multiple of 10 pixels")
+        */
+
+    computePadSizeBeforeMult(unpaddedSize, sizeSpec, sizeReq,
+                             begPadSpec, begPadReq, endPadSpec, endPadReq,
+                             align,
+                             &begPadBeforeMult, &endPadBeforeMult);
+
+    {
+        unsigned int const sizeBeforeMpad =
+            unpaddedSize + begPadBeforeMult + endPadBeforeMult;
+        unsigned int const paddedSize =
+            ROUNDUP(sizeBeforeMpad, multiple);
+        unsigned int const morePadNeeded = paddedSize - sizeBeforeMpad;
+        unsigned int const totalPadBeforeMult =
+            begPadBeforeMult + endPadBeforeMult;
+        double const begFrac =
+            totalPadBeforeMult > 0 ? 
+            (double)begPadBeforeMult / totalPadBeforeMult :
+            0.0;
+        unsigned int const addlMsizeBegPad = ROUNDU(morePadNeeded * begFrac);
+            /* # of pixels we have to add to the beginning to satisfy
+               user's desire for the final size to be a multiple of something
+            */
+        unsigned int const addlMsizeEndPad = morePadNeeded - addlMsizeBegPad;
+            /* Analogous to 'addlMsizeBegPad' */
+
+        *begPadP = begPadBeforeMult + addlMsizeBegPad;
+        *endPadP = endPadBeforeMult + addlMsizeEndPad;
+    }
 }
 
 
@@ -258,38 +397,13 @@ computeHorizontalPadSizes(struct cmdlineInfo const cmdline,
 
     validateHorizontalSize(cmdline, cols);
 
-    if (cmdline.xsizeSpec) {
-        if (cmdline.leftSpec && cmdline.rightSpec) {
-            if (cmdline.left + cols + cmdline.right < cmdline.xsize) {
-                pm_error("Left padding (%u), and right "
-                         "padding (%u) are insufficient to bring the "
-                         "image width of %d up to %u.",
-                         cmdline.left, cmdline.right, cols, cmdline.xsize);
-            } else {
-                *lpadP = cmdline.left;
-                *rpadP = cmdline.right;
-            }
-        } else if (cmdline.leftSpec) {
-            *lpadP = cmdline.left;
-            *rpadP = MAX(cmdline.xsize, cmdline.left + cols) -
-                (cmdline.left + cols);
-        } else if (cmdline.rightSpec) {
-            *rpadP = cmdline.right;
-            *lpadP = MAX(cmdline.xsize, cols + cmdline.right) -
-                (cols + cmdline.right);
-        } else {
-            if (cmdline.xsize > cols) {
-                *lpadP = ROUNDU((cmdline.xsize - cols) * cmdline.xalign);
-                *rpadP = cmdline.xsize - cols - *lpadP;
-            } else {
-                *lpadP = 0;
-                *rpadP = 0;
-            }
-        }
-    } else {
-        *lpadP = cmdline.leftSpec  ? cmdline.left  : 0;
-        *rpadP = cmdline.rightSpec ? cmdline.right : 0;
-    }
+    computePadSizesOneDim(cols,
+                          cmdline.xsizeSpec > 0, cmdline.xsize,
+                          cmdline.leftSpec > 0, cmdline.left,
+                          cmdline.rightSpec > 0, cmdline.right,
+                          cmdline.xalign,
+                          cmdline.mwidth,
+                          lpadP, rpadP);
 }
 
 
@@ -297,13 +411,19 @@ computeHorizontalPadSizes(struct cmdlineInfo const cmdline,
 static void
 validateVerticalSize(struct cmdlineInfo const cmdline,
                      unsigned int       const rows) {
+/*----------------------------------------------------------------------------
+   Abort the program if the padding parameters in 'cmdline', applied to
+   an image width 'cols', would result in numbers too large for us to
+   compute with easily.
+-----------------------------------------------------------------------------*/
+    unsigned int const tpad          =
+        cmdline.topSpec    ?  cmdline.top     : 0;
+    unsigned int const bpad          =
+        cmdline.bottomSpec ?  cmdline.bottom  : 0;
+    unsigned int const mheightMaxPad = cmdline.mheight - 1;
 
-    unsigned int const ysize = cmdline.ysizeSpec  ? cmdline.ysize  : 0;
-    unsigned int const tpad  = cmdline.topSpec    ? cmdline.top    : 0;
-    unsigned int const bpad  = cmdline.bottomSpec ? cmdline.bottom : 0;
-
-    if (ysize > MAX_WIDTHHEIGHT)
-        pm_error("The height value you specified is too large.");
+    if (cmdline.ysizeSpec && cmdline.ysize > MAX_WIDTHHEIGHT)
+        pm_error("The width value you specified is too large.");
 
     if (tpad > MAX_WIDTHHEIGHT)
         pm_error("The top padding value you specified is too large.");
@@ -311,8 +431,17 @@ validateVerticalSize(struct cmdlineInfo const cmdline,
     if (bpad > MAX_WIDTHHEIGHT)
         pm_error("The bottom padding value you specified is too large.");
 
-    if ((double) rows + (double) tpad + (double) bpad > MAX_WIDTHHEIGHT)
-        pm_error("Given padding value(s) makes output height too large.");
+    if ((double) rows +
+        (double) tpad +
+        (double) bpad +
+        (double) mheightMaxPad > MAX_WIDTHHEIGHT)
+        pm_error("Given padding parameters make output height too large "
+            "for this program to compute");
+
+    if (cmdline.ysizeSpec &&
+        (double) cmdline.ysize && (double) mheightMaxPad > MAX_WIDTHHEIGHT)
+        pm_error("Given padding parameters make output height too large "
+            "for this program to compute");
 }
 
 
@@ -325,38 +454,13 @@ computeVerticalPadSizes(struct cmdlineInfo const cmdline,
 
     validateVerticalSize(cmdline, rows);
 
-    if (cmdline.ysizeSpec) {
-        if (cmdline.topSpec && cmdline.bottomSpec) {
-            if (cmdline.bottom + rows + cmdline.top < cmdline.ysize) {
-                pm_error("Top padding (%u), and bottom "
-                         "padding (%u) are insufficient to bring the "
-                         "image height of %d up to %u.",
-                         cmdline.top, cmdline.bottom, rows, cmdline.ysize);
-            } else {
-                *tpadP = cmdline.top;
-                *bpadP = cmdline.bottom;
-            }
-        } else if (cmdline.topSpec) {
-            *tpadP = cmdline.top;
-            *bpadP = MAX(cmdline.ysize, cmdline.top + rows) -
-                (cmdline.top + rows);
-        } else if (cmdline.bottomSpec) {
-            *bpadP = cmdline.bottom;
-            *tpadP = MAX(cmdline.ysize, rows + cmdline.bottom) -
-                (rows + cmdline.bottom);
-        } else {
-            if (cmdline.ysize > rows) {
-                *bpadP = ROUNDU((cmdline.ysize - rows) * cmdline.yalign);
-                *tpadP = cmdline.ysize - rows - *bpadP;
-            } else {
-                *bpadP = 0;
-                *tpadP = 0;
-            }
-        }
-    } else {
-        *bpadP = cmdline.bottomSpec ? cmdline.bottom : 0;
-        *tpadP = cmdline.topSpec    ? cmdline.top    : 0;
-    }
+    computePadSizesOneDim(rows,
+                          cmdline.ysizeSpec > 0, cmdline.ysize,
+                          cmdline.topSpec > 0, cmdline.top,
+                          cmdline.bottomSpec > 0, cmdline.bottom,
+                          cmdline.yalign,
+                          cmdline.mheight,
+                          tpadP, bpadP);
 }
 
 
