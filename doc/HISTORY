@@ -6,8 +6,13 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.72.00
 
+              pnmpad: Add -mheight, -mwidth.
+
               ppmtoilbm: Fix failure with -hamforce and -nocompression.
               Broken in Netpbm 9.12 (March 2001).
+
+              makeman: fix Python syntax error.  Introduced in Netpbm 10.70
+              (June 2015).
 
 15.06.28 BJH  Release 10.71.00
 
@@ -131,7 +136,9 @@ not yet  BJH  Release 10.72.00
               works on OS X.  Thanks Ryan Schmidt <ryandesign@macports.org>.
 
               makeman: deal properly with backlash in source.  Thanks Willem
-              van Schaik <willem@schaik.com>.
+              van Schaik <willem@schaik.com>.  But something was wrong with
+              this change and it caused the program always to fail, so
+              we reversed this change in 10.72.
 
               Build: don't build and install libjbig and libjasper if we
               are using external versions of them instead.
