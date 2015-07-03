@@ -19,6 +19,7 @@ UTILOBJECTS = \
   matrix.o \
   nsleep.o \
   nstring.o \
+  runlength.o \
   shhopt.o \
   token.o \
   vasprintf.o \

@@ -32,3 +32,12 @@ rm ${b_sgi} ${b_red} ${b_grn} ${b_blu}
 # Test 3.  Should produce 2425386270 41 twice
 pnmtosgi testgrid.pbm | sgitopnm | cksum             # Defaults to -rle
 pnmtosgi -verbatim testgrid.pbm | sgitopnm | cksum
+
+
+testgrid_pgm=${tmpdir}/testgrid.pgm
+
+# Test 4. Should produce 2394972481 463 twice
+pamdepth 65535 testgrid.pbm | pamtopnm | tee ${testgrid_pgm} | \
+  pnmtosgi -rle | sgitopnm | cksum
+pnmtosgi -verbatim ${testgrid_pgm} | sgitopnm | cksum
+rm ${testgrid_pgm}

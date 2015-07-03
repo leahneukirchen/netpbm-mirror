@@ -46,6 +46,7 @@ LIBOBJECTS_X = \
   util/matrix.o \
   util/nsleep.o \
   util/nstring.o \
+  util/runlength.o \
   util/shhopt.o \
   util/token.o \
   util/vasprintf.o \
@@ -57,7 +58,7 @@ INTERFACE_HEADERS = colorname.h \
 	pam.h pamdraw.h pammap.h pbm.h pbmfont.h \
 	pgm.h pm.h pm_gamma.h pm_system.h pnm.h \
 	ppm.h ppmcmap.h ppmdfont.h ppmdraw.h ppmfloyd.h \
-	util/mallocvar.h util/shhopt.h \
+	util/mallocvar.h util/runlength.h util/shhopt.h \
 
 DATAFILES = rgb.txt
 
