@@ -19,6 +19,9 @@ not yet  BJH  Release 10.72.00
               pbmtoescp2: Pad output horizontally to a multiple of 8 columns
               and vertically to a whole stripe to prevent image loss.
 
+              escp2topbm: Fix -plain.  Always broken (escp2topbm was new in
+              Netpbm 10.18 (September 2003)).
+
               pnmpad: Add -mheight, -mwidth.
 
               ppmtoilbm: Fix failure with -hamforce and -nocompression.
