@@ -76,8 +76,12 @@ more information on this.
 
 <dt><b>-stripeheight=</b><i>n</i>
 
-<dd>This option controls the height of the stripes (number of raster lines) in
-the output.
+<dd>This option controls the height in lines of the stripes in the output.
+
+<p>The valid stripe heights in the printer language are 1, 8, and 24, but
+it is capable of expressing any height up to 255 and <b>pbmtoescp2</b>
+accepts any value in the range 1-255.  It issues a warning, though, if you
+choose something other than 1, 8, or 24.
 
 <p>The default is 24.
 
