@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pbmtoescp2 User Manual</TITLE></HEAD>
 <BODY>
 <H1>pbmtoescp2</H1>
-Updated: 4 April 2005
+Updated: 14 July 2015
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -23,6 +23,7 @@ may use two hyphens instead of one to designate an option.  You may
 use either white space or equals signs between an option name and its
 value.
 
+
 <H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
@@ -34,6 +35,12 @@ raster graphic printer control stream as output.
 understand the ESC/P2 printer control language (e.g. the Stylus models).  For
 older Epson 9-pin dot matrix printers, which use the ESC/P protocol, see
 <B>pbmtoepson</B>.
+
+<p>The printed output has one pixel for each pixel of the input image, except
+that it is padded up to the stripe size (see <b>-stripeheight</b> option)
+vertically and to a multiple of 8 columns horizontally.  Before Netpbm 10.72
+(September 2015), the output is instead truncated to those boundaries.
+
 
 <H2 id="options">OPTIONS</H2>
 
@@ -58,32 +65,60 @@ a printer control stream with RLE compressed raster graphic data
 set in the printer control stream.  Another way of looking at it is a
 declaration of what the resolution of the input image is (PBM images
 don't have inherent resolution).  Valid values for <i>dpi</i> are
-<b>180</b> and <b>360</b>.  See <a href="#hints">hints</a> for more
-information on this.
+<b>180</b>, <b>360</b>, and <b>720</b>.  See <a href="#hints">hints</a> for
+more information on this.
 
 <p>The default is <b>-resolution=360</b>.
 
+<p>Before Netpbm 10.72 (September 2015), <b>720</b> is not valid.
 
 </dd>
+
+<dt><b>-stripeheight=</b><i>n</i>
+
+<dd>This option controls the height of the stripes (number of raster lines) in
+the output.
+
+<p>The default is 24.
+
+<p>This option was new in Netpbm 10.72 (September 2015).  Before that, the
+stripe size is always 24.
+
+<dt><b>-formfeed</b>
+
+<dd>This option causes <b>pbmtoescp2</b> to place a formfeed command at the
+end of the output.
+
+<p>This option was new in Netpbm 10.72 (September 2015).
+
+
+<dt><b>-raw</b>
+
+<dd>This option causes <b>pbmtoescp2</b> to generate only the data blocks.
+It does not generate printer commands to set up the output (for example,
+setting the line spacing).
+
+<p>You can use this to insert graphics into a larger printer command stream.
+
+<p>This option was new in Netpbm 10.72 (September 2015).
 
 </dl>
 
 <H2 id="hints">HINTS</H2>
 
-<P>RLE compresses very well bitmaps of line drawings, preferably
-horizontal oriented contents like texts, sheets of music, etc.
-However, bitmaps derived from photographs are not ideal for RLE.  In
-extreme cases, when no byte repetitions occur in the input, the result
-will be even slightly bigger than the input.  To avoid this, use
-compression mode 0 to switch off RLE.
+<P>RLE compresses very well bitmaps of line drawings, preferably horizontal
+oriented contents like texts, sheets of music, etc.  However, bitmaps derived
+from photographs are not ideal for RLE.  In extreme cases, when no byte
+repetitions occur in the input, the result will be even slightly bigger than
+the input.  To avoid this, use compression mode 0 to switch off RLE.
 
-<p>Each pixel in the input PBM image becomes one dot in the printed
-output.  Therefore, you must make sure the width and height of the
-input are appropriate for the print resolution you choose and the
-print area you want.  E.g. if you print at 180 dpi and want the image
-to print as 8 inches by 10, you must supply a PBM that is 1440
-pixels wide by 1800 pixels high.  You can adjust the size of the
-input with <b>pamscale</b>, <b>pamstretch</b>, <b>pbmreduce</b>, or
+<p>Each pixel in the input PBM image becomes one dot in the printed output.
+Therefore, you must make sure the width and height of the input are
+appropriate for the print resolution you choose and the print area you want.
+E.g. if you print at 180 dpi and want the image to print as 8 inches by 10,
+you must supply a PBM that is 1440 pixels wide by 1800 pixels high.  You can
+adjust the size of the input
+with <b>pamscale</b>, <b>pamstretch</b>, <b>pbmreduce</b>, or
 <b>pamenlarge</b>.
 
 
