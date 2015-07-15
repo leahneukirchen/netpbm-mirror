@@ -35,7 +35,7 @@
     are filters, palettes, etc. Also, image conversions were removed,
     because those should be done with other NetPBM tools.
 
-  - Add support for iTXt (international language) chunks.
+  - Add ability to create iTXt (international language) chunks.
 */
 
 
