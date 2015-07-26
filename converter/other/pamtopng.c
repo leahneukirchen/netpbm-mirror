@@ -452,57 +452,54 @@ doSrgbChunk(struct pngx *   const pngxP,
 
 
 static void
-doTextChunk(struct pngx * const pngxP,
-            const char *  const textFileName) {
+doTextChunkSet(struct pngx * const pngxP,
+               const char *  const textFileName) {
+
+    bool const ztxt = true;
+    bool const itxt = false;
 
     FILE * tfP;
 
     tfP = pm_openr(textFileName);
     
-    pngtxt_read(pngxP, tfP, false, verbose);
+    pngtxt_addChunk(pngxP, tfP, ztxt, itxt, verbose);
     
-    if (verbose)
-        pm_message("writing tEXt chunk");
-
     pm_close(tfP);
 }
 
 
 
 static void
-doZtxtChunk(struct pngx * const pngxP,
-            const char *  const textFileName) {
+doZtxtChunkSet(struct pngx * const pngxP,
+               const char *  const textFileName) {
+
+    bool const ztxt = true;
+    bool const itxt = false;
 
     FILE * tfP;
 
     tfP = pm_openr(textFileName);
     
-    pngtxt_read(pngxP, tfP, true, verbose);
+    pngtxt_addChunk(pngxP, tfP, ztxt, itxt, verbose);
     
-    if (verbose)
-        pm_message("writing zTXt chunk");
-
     pm_close(tfP);
-    
 }
 
 
 
 
 static void
-doItxtChunk (struct pngx * const pngxP,
-             const char *  const textFileName) {
+doItxtChunkSet(struct pngx * const pngxP,
+               const char *  const textFileName) {
+
+    bool const ztxt = true;
+    bool const itxt = true;
 
     FILE * tfP;
 
     tfP = pm_openr(textFileName);
 
-    pm_error("Code to handle an ITXT chunk has not been written yet");
-
-    /* pngtxt_read(pngxP, tfP, true, true, verbose); */
-
-    if (verbose)
-        pm_message("writing iTXt chunk");
+    pngtxt_addChunk(pngxP, tfP, ztxt, itxt, verbose);
 }
 
 
@@ -669,13 +666,13 @@ writePng(const struct pam * const pamP,
         doSrgbChunk(pngxP, cmdline.srgbintent);
 
     if (cmdline.textSpec)
-        doTextChunk(pngxP, cmdline.text);
+        doTextChunkSet(pngxP, cmdline.text);
 
     if (cmdline.ztxtSpec)
-        doZtxtChunk(pngxP, cmdline.ztxt);
+        doZtxtChunkSet(pngxP, cmdline.ztxt);
 
     if (cmdline.itxtSpec)
-        doItxtChunk(pngxP, cmdline.itxt);
+        doItxtChunkSet(pngxP, cmdline.itxt);
 
     if (cmdline.backgroundSpec)
         doBkgdChunk(pamP, pngxP, cmdline.background);

@@ -2858,7 +2858,7 @@ convertpnm(struct cmdlineInfo const cmdline,
 
     /* tEXT and zTXT chunks */
     if (cmdline.text || cmdline.ztxt)
-        pngtxt_read(pngxP, tfP, !!cmdline.ztxt, cmdline.verbose);
+        pngtxt_addChunk(pngxP, tfP, !!cmdline.ztxt, false, cmdline.verbose);
 
     doTimeChunk(cmdline, pngxP);
 

@@ -204,6 +204,21 @@ pngx_setSigBytes(struct pngx * const pngxP,
                  unsigned int  const sigByteCt);
 
 void
+pngx_setTextKey(png_text *   const textP,
+                const char * const key);
+
+void
+pngx_setTextLang(png_text *   const textP,
+                 const char * const language);
+
+void
+pngx_setTextLangKey(png_text *   const textP,
+                    const char * const key);
+
+void
+pngx_termText(png_text * const textP);
+
+void
 pngx_setText(struct pngx * const pngxP,
              png_textp     const textP,
              unsigned int  const count);

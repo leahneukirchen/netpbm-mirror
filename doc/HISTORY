@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.72.00
 
+              pamtopng: Implement -itxt .
+
               pamlookup: Add -byplane .
 
               pbmtoescp2: Add -stripeheight .
