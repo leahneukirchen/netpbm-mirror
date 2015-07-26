@@ -3,7 +3,7 @@
 <head><title>Pamtopng User Manual</title></head>
 <body>
 <h1>pamtopng</h1>
-Updated: 28 June 2015
+Updated: 20 July 2015
 <BR>
 <a href="#index">Table Of Contents</a>
 
@@ -178,12 +178,14 @@ more information on what this really means.
 
 <dt><b>-text=</b><i>filename</i>
 <dd>
-This option lets you include comments in text chunks of the PNG output.
-<i>filename</i> is the name of a file that contains your text comments.
+This option lets you include arbitrary text strings in the PNG output, as tEXt
+chunks.
 
-<p>The output contains a distinct tEXt chunk for each comment.
+<i>filename</i> is the name of a file that contains your text strings.
 
-<p>Here is an example of a comment file:
+<p>The output contains a distinct tEXt chunk for each entry in the file.
+
+<p>Here is an example of a text string file:
 
 <pre>
 	Title           PNG file
@@ -194,44 +196,43 @@ This option lets you include comments in text chunks of the PNG output.
 	Software        pamtopng
 </pre>
 
-<p>The first line representing a comment must not start with a delimiter
-character (a blank, tab or null).  Every other line in the group is a
-continuation line and must start with a delimiter character.
+<p>The file is divided into entries, each entry comprising consecutive lines
+of text.  The first line of an entry starts in the first column (i.e. the
+first column is not white space) and every other line has white space in the
+first column.  The first entry starts in the first line, so it is not valid
+for the first line of the file to have white space in its first column.
 
-<p>The first word in a comment line is the keyword of the comment.  It begins
-in column one of the line and continues up to, but not including, the first
-delimiter character or the end of the line, whichever is first.  You can
-enclose the keyword in double quotes in which case the keyword can consists of
-multiple words.  The quotes are not part of the keyword.  The comment text
-begins after the keyword and any delimiter characters after it, plus the text
-in subsequent continuation lines.
+<p>The first word in an entry is the key of the text string
+(e.g. &quot;Title&quot;).  It begins in column one of the line and continues
+up to, but not including, the first delimiter character or the end of the
+line, whichever is first.  You can enclose the key in double quotes in
+which case the key can consists of multiple words.  The quotes are not
+part of the key.  The text string per se begins after the key and any
+delimiter characters after it, plus the text in subsequent continuation lines.
 
-<p>There is no limit on the length of a file line or keyword or comment text
-line or comment text.  There is no limit on the number of comments, the size
-of the comment or the number of comments in the file.
+<p>There is no limit on the length of a file line or entry or key or text
+string.  There is no limit on the number of entries.
 
 <dt><b>-ztxt=</b><i>filename</i>
-<dd>The same as <b>-text</b>, except <b>pamtopng</b> will compress the
-comment, except that when the keyword is "Title", "Author" or "Language".
+<dd>The same as <b>-text</b>, except the text string is compressed in the
+PNG output.  <b>pnmtopng</b> uses zTXt chunks instead of a tEXt chunks.
 
 <dt><b>-itxt=</b><i>filename</i>
-<dd>Similar to <b>-text</b>, but the comments can be in a language other than
-English.  The PNG image indicates what language that is and includes the
-comment key both in English and that language.
+<dd>Similar to <b>-text</b>, but the text strings can be in a language other
+than English.  The PNG image indicates what language that is and includes the
+text string key both in English and that language.  <b>pnmtopng</b> uses
+iTXt chunks instead of tEXt chunks.
 
-<p>The input file must start with a record that identifies the comment
-language.  Its key is &quot;Language&quot;.
-
-<p>For each record, you must give the key both in English and in the comment
-language.
+<p>For each record, you must specify the language and give the key both in
+English and in the text string language.
 
 <p>Example:
 
 <pre>
-	Language        Taal             nl-NL
-        Title           Titel            PNG file
-        Author          Auteur           Pietje Puk
-        Description     Omschrijving     Tekst in het Nederlands.
+	Language        nl-NL  Taal             nl-NL
+        Title           nl-NL  Titel            PNG file
+        Author          nl-NL  Auteur           Pietje Puk
+        Description     nl-NL  Omschrijving     Tekst in het Nederlands.
 </pre>
 
 <p>The language specification is based on the ISO 639-1 standard, see

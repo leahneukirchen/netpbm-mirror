@@ -3,7 +3,7 @@
 <HEAD><TITLE>Pnmtopng User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmtopng</H1>
-Updated: July 2008
+Updated: July 2015
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -233,59 +233,50 @@ images from scratch do it with a gamma transfer in which the gamma value is
 <DT><B>-text=</b><i>filename</i>
 
 <DD>
-This option lets you include comments in the text chunk of the PNG output.
-<i>file</i> is the name of a file that contains your text comments.
+This option lets you include arbitrary text strings in the PNG output, as tEXt
+chunks.
 
-<p>Here is an example of a comment file:
+<i>filename</i> is the name of a file that contains your text strings.
+
+<p>The output contains a distinct tEXt chunk for each entry in the file.
+
+<p>Here is an example of a text string file:
+
 <pre>
-           Title           PNG file
-           
-           Author          Bryan Henderson
-           
-           Description     how to include a text chunk
-                           PNG file
-           "Creation date" 3-feb-1987
-           
-           Software        pnmtopng
+	Title           PNG file
+	Author          John Doe
+	Description     how to include a text chunk
+                        PNG file
+	"Creation Date" 2015-may-11
+	Software        pamtopng
 </pre>
 
-<p>The format of the file is as follows:  The file is divided into lines,
-delimited by newline characters.  The last line need not end with a newline
-character.  A group of consecutive lines represents a comment.  
+<p>The file is divided into entries, each entry comprising consecutive lines
+of text.  The first line of an entry starts in the first column (i.e. the
+first column is not white space) and every other line has white space in the
+first column.  The first entry starts in the first line, so it is not valid
+for the first line of the file to have white space in its first column.
 
-<p>A "delimiter character" is a blank or tab or null character.  The
-first line representing a comment must not start with a delimiter
-character.  Every other line in the group is a "continuation line" and
-must start with a delimiter character.
+<p>The first word in an entry is the key of the text string
+(e.g. &quot;Title&quot;).  It begins in column one of the line and continues
+up to, but not including, the first delimiter character or the end of the
+line, whichever is first.  You can enclose the key in double quotes in
+which case the key can consists of multiple words.  The quotes are not
+part of the key.  The text string per se begins after the key and any
+delimiter characters after it, plus the text in subsequent continuation lines.
 
-<p>The first line representing a comment consists of a keyword and the
-first line of comment text.  The keyword begins in Column 1 of the
-file line and continues up to, but not including, the first delimiter
-character, or the end of the line, whichever is first.  Exception: you
-can enclose the keyword in double quotes and spaces and tabs within
-the double quotes are part of the keyword.  The quotes are not part of
-the keyword.  A NUL character is not allowed in a keyword.
-
-<p>The first line of the comment text is all the text in the file line
-beginning after the keyword and any delimiter characters after it.
-immediately after the delimiter character that marks the end of the
-keyword.
-
-<p>A continuation line defines a subsequent line of the comment.  The
-comment line is all the text on the continuation line starting with the
-first non-delimiter character.
-
-<p>There is one newline character between every two comment lines.  There
-is no newline character after the last line of comment text.
-
-<p>There is no limit on the length of a file line or keyword or comment text
-line or comment text.  There is no limit on the number of comments or
-size of or number of lines in the file.
+<p>There is no limit on the length of a file line or entry or key or text
+string.  There is no limit on the number of entries.
 
 <DT><B>-ztxt=</b><i>filename</i>
 
-<DD>The same as <b>-text</b>, except <b>pnmtopng</b> considers the
-text compressed.
+<DD>The same as <b>-text</b>, except the text string is compressed in the PNG
+output.  <b>pnmtopng</b> uses zTXt chunks instead of a tEXt chunks, unless the
+key for the text string starts with &quot;A&quot; or &quot;T&quot;.  This
+odd exception exists for backward compatibility; we don't know why the program
+was originally designed this way, except that the distinction was meant to
+roughly identify the keys &quot;Author&quot; and &quot;Title&quot;.
+
 
 <DT><B>-rgb=</b><i>chroma_list</i>
 

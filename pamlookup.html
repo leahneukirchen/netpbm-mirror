@@ -3,7 +3,7 @@
 <HEAD><title>Pamlookup User Manual</title></HEAD>
 <BODY>
 <H1>pamlookup</H1>
-Updated: 10 November 2002
+Updated: 25 July 2015
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -14,6 +14,7 @@ pamlookup - map an image to a new image by using it as indices into a table
 
 <B>pamlookup</B>
 <B>-lookupfile=</B><i>lookupfile</i>
+[<B>-byplane</B>]
 <B>-missingcolor=</B><i>color</i>
 [<B>-fit</B>]
 <I>indexfile</I>
@@ -30,14 +31,44 @@ name and its value with white space instead of an equals sign.
 <p><b>pamlookup</b> takes a two dimensional array of indices and a lookup
 table as input.  For each position in the index array, it looks up the index
 in the lookup table and places the result of the lookup in the output image.
-The output thus has the same width and height as the index image, and tuple
-types determined by the lookup table.
 
-<p>An index is either a whole number or an ordered pair of whole
-numbers.  If the index image has a depth of one, each index in it is a
-whole number: the value of the one sample.  If the index image has a
-depth greater than one, each index in it is an ordered pair of the first
-and second samples in the relevant tuple.
+There are two ways of indexing the lookup table: <i>whole tuple</i> and
+<i>by plane</i>.  The <b>-byplane</b> option controls which <b>pamlookup</b>
+does.
+
+<p>In the simplest form of whole tuple indexing, each index in the index array
+is a single whole number and the lookup table contains associates a whole
+tuple with each possible whole number index.  So for example, the index array
+might have at Row 2, Column 9 the value 23.  The lookup table might associate
+the tuple (1,2,3) with the value 23.  In that case, the output image contains
+the tuple (1,2,3) at Row 2, Column 9.
+
+<p>In a more complex form of whole tuple indexing, each index in the index
+array is an ordered pair of whole numbers and the lookup table associates a
+whole tuple with each possible ordered pair index.  Modifying the example
+above, the index value could be (23, 5) instead of 23.
+
+<p>With whole tuple indexing, the output thus has the same width and height as
+the index image, and tuple depth and type and maxval determined by the lookup
+table.
+
+<p>With whole tuple indexing, if the index image has depth 1, its sample
+values are single whole number indices.  If the index image has depth greater
+than 1, its tuples are ordered pair indices composed of the first and second
+sample in the tuple.
+
+<p>In by plane indexing, the index image contains whole number indices.
+The first sample of each tuple in the index image is the index.  The lookup
+table maps each whole number index to another whole number.
+<b>pamlookup</b> looks up each sample from the index image in the lookup table
+and uses the resulting whole number as the sample value for the same
+row, column, and plane in the output.
+
+<p>With by plane indexing, the output thus has the same dimensions as the
+index image an the same maxval as the lookup image.
+
+
+<h3 id="lookupimage">The Lookup Table Image</h3>
 
 <p>The lookup table is a PAM or PNM image.  If the index image
 contains whole number indices, the lookup image is a single row and
@@ -49,8 +80,41 @@ the ordered pair is a column number.  The lookup result is the value
 of the tuple or pixel at the indicated row and column in the lookup
 table.
 
-<p>For example:  Consider an index image consisting of a 3x2x1 PAM
-as follows:
+<p>The width of the lookup image should normally be the maxval of the index
+image plus one, so that each possible index sample value corresponds to one
+entry in the lookup table.  There are two ways <b>pamlookup</b> deals
+with a lookup image that does not have such a width: 
+
+<ul>
+<li>Scale the lookup image to the required width.  <b>pamlookup</b> always
+does this with by plane indexing, and with whole tuple indexing, does it when
+you specify <b>-fit</b>.
+
+<li>Use a default value for indices that exceed the width of the lookup image
+and ignore lookup image columns beyond the maxval of the index
+image.  <b>pamlookup</b> does this with whole tuple indexing when you don't
+specify <b>-fit</b>.
+<p>
+You specify the default value with a <b>-missingcolor</b> option; it defaults
+to the value from the top left corner of the lookup image.
+</ul>
+
+<p>With ordered pair indexes (which implies whole tuple indexing), the same
+rule applies to the height of the index image as to the width.
+
+<p>The mandatory <b>-lookupfile</b> option identifies the file containing the
+lookup table image.  <b>-</b> means Standard Input.  It won't work if both the
+index image file and lookup table file are Standard Input.
+
+<p>You can use <b>ppmmake</b> and <b>pnmcat</b> to create a lookup table file.
+
+
+<h3 id="wholetupleexample">Example - Whole Tuple Indexing</h3>
+
+<P>Here is an example of <b>pamlookup</b>'s function with whole
+tuple indexing (<b>-byplane</b> not specified).
+
+<p>Consider an index image consisting of a 3x2x1 PAM as follows:
 
 <table summary="3x2x1 index image">
 <?makeman l l l. ?>
@@ -104,19 +168,46 @@ is the following PPM image:
 <tr> <td>black</td> <td>green</td>  <td>red</td> </tr>
 </table>
 
-<p>If an index specifies a row or column that exceeds the dimensions of
-the lookup table image, <b>pamlookup</b> uses the value from the top left
-corner of the lookup image, or the value you specify with the
-<b>-missingcolor</b> option.
 
-<p>The <i>indexfile</i> argument identifies the file containing the index
-PAM or PNM image.  <b>-</b> means Standard Input.  The mandatory
-<b>-lookupfile</b> option identifies the file containing the lookup table
-image.  Again, <b>-</b> means Standard Input.  It won't work if both the
-index image file and lookup table file are Standard Input.  The output image
-goes to Standard Output.
+<h3 id="byplaneexample">Example - By Plane Indexing</h3>
 
-<p>You can use <b>ppmmake</b> and <b>pnmcat</b> to create a lookup table file.
+<P>Here is an example of <b>pamlookup</b>'s function with by plane
+tuple indexing (<b>-byplane</b> specified).
+
+<p>Consider an index image consisting of a 3x2x3 PAM as follows:
+
+<table summary="3x2x1 index image">
+<?makeman l l l. ?>
+<tr> <td>(0,0,0)</td> <td>(1,0,0)</td> <td>(2,0,0)</td> </tr>
+<tr> <td>(2,2,0)</td> <td>(2,0,2)</td> <td>(2,0,0)</td> </tr>
+</table>
+
+and a lookup table consisting of a 3x1x1 PAM image with maxval 7 as follows:
+
+<table summary="3x1 lookup table">
+<?makeman l l l. ?>
+<tr> <td>3</td> <td>4</td> <td>7</td> </tr>
+</table>
+
+The lookup table above says Index 0 corresponds to the sample value 3, Index 1
+corresponds to 4, and Index 2 corresponds to 7.  The output of
+<b>pamlookup</b> is the following 3x2x3 PAM image:
+
+<table summary="output image">
+<?makeman l l l. ?>
+<tr> <td>(3,3,3)</td> <td>(4,3,3)</td> <td>(7,3,3)</td> </tr>
+<tr> <td>(7,7,3)</td> <td>(7,3,7)</td> <td>(7,3,3)</td> </tr>
+</table>
+
+
+<h3 id="misc">Miscellaneous</h3>
+
+<p>The <i>indexfile</i> argument identifies the file containing the index PAM
+or PNM image.  <b>-</b> means Standard Input.
+It won't work if both the
+index image file and lookup table file are Standard Input.
+
+The output image goes to Standard Output.
 
 <p>If you want to use two separate 1-plane images as indices (so that your
 output reflects the combination of both inputs), use <b>pamstack</b> to combine
@@ -131,6 +222,14 @@ the two into one two-plane image (and use a 2-dimensional lookup table image).
 <DD><i>lookupfile</i> names the file that contains the PAM or PNM
 image that is the lookup table.  This option is mandatory.
 
+<dt><b>-byplane</b>
+
+<dd>This options selects by plane indexing.  The default is whole tuple
+indexing.
+
+<p>This option was new in Netpbm 10.72 (September 2015).  Before that, there
+is no by plane indexing.
+
 <DT><B>-missingcolor=</B><i>color</i>
 
 <DD>This option is meaningful only if the lookup image (and therefore the 
@@ -140,7 +239,7 @@ in the lookup table (not present means the index exceeds the dimensions
 of the lookup image -- e.g. index is 100 but the lookup image is a 50 x 1
 PPM).
 
-<p>If you don't specify this option of <b>-fit</b>, <b>pamlookup</b>
+<p>If you don't specify this option or <b>-fit</b>, <b>pamlookup</b>
 uses the value from the top left corner of the lookup image whenever
 an index exceeds the dimensions of the lookup image.
 
@@ -150,6 +249,9 @@ library routine</a>.
 
 <P>Another way to deal with a too-small lookup image is to use the 
 <b>-fit</b> option.
+
+<p>This option has no effect if you also specify <b>-fit</b> or
+<b>-byplane</b>.
 
 <DT><B>-fit</B>
 
@@ -165,6 +267,10 @@ program.
 <p>When you use <b>-fit</b>, <b>pamlookup</b> never fails or warns you
 because of invalid lookup image dimensions, and the <b>-missingcolor</b>
 option has no effect.
+
+<p><b>-fit</b> has no effect when you specify <b>-byplane</b>.
+<b>pamlookup</b> always has the behavior requested by <b>-fit</b> when it does
+by plane indexing.
 
 </DL>
 
@@ -273,6 +379,12 @@ produce the output:
 <UL COMPACT>
 <LI><A HREF="#synopsis">SYNOPSIS</A>
 <LI><A HREF="#description">DESCRIPTION</A>
+  <ul>
+  <li><a href="#lookupimage">The Lookup Table Image</a>  
+  <li><a href="#wholetupleexample">Example - Whole Tuple Indexing</a>  
+  <li><a href="#byplaneexample">Example - By Plane Indexing</a>  
+  <li><a href="#miscellaneous">Miscellaneous</a>  
+  </ul>
 <LI><A HREF="#options">OPTIONS</A>
 <LI><A HREF="#examples">EXAMPLES</A>
 <LI><A HREF="#history">HISTORY</A>
