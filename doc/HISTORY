@@ -6,15 +6,15 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.72.00
 
-              pbmtoescp2: Add -stripeheight;
+              pbmtoescp2: Add -stripeheight .
 
-              phmtoescp2: Add -resolution;
+              phmtoescp2: Add -resolution .
 
-              pbmtoescp2: Add -formfeed
+              pbmtoescp2: Add -formfeed .
 
-              pbmtoescp2: Add -raw.
+              pbmtoescp2: Add -raw .
 
-              pbmtoescp2: Add -resolution=720.
+              pbmtoescp2: Add -resolution=720 .
 
               pbmtoescp2: Pad output horizontally to a multiple of 8 columns
               and vertically to a whole stripe to prevent image loss.
