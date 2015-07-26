@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.72.00
 
+              pamlookup: Add -byplane .
+
               pbmtoescp2: Add -stripeheight .
 
               phmtoescp2: Add -resolution .
