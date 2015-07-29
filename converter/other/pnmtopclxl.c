@@ -269,10 +269,10 @@ XY_RLEnew(size_t const size) {
 
     MALLOCVAR(rleP);
     if (rleP) {
-        rleP->fbuf = malloc(size);
+        rleP->fbufsize = MAX(1024, size);
+        rleP->fbuf = malloc(rleP->fbufsize);
 
         if (rleP->fbuf) {
-            rleP->fbufsize = MAX(1024, size);
             retval = rleP;
         } else
             retval = NULL;

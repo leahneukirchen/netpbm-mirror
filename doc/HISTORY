@@ -23,6 +23,9 @@ not yet  BJH  Release 10.72.00
               pbmtoescp2: Pad output horizontally to a multiple of 8 columns
               and vertically to a whole stripe to prevent image loss.
 
+              Pnmtopclxl: fix buffer overrun causing unpredictable behavior.
+              (Introduced in Netpbm 10.54 (March 2011).
+
               escp2topbm: Fix -plain.  Always broken (escp2topbm was new in
               Netpbm 10.18 (September 2003)).
 
