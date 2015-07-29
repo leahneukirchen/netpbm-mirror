@@ -26,6 +26,9 @@ not yet  BJH  Release 10.72.00
               Pnmtopclxl: fix buffer overrun causing unpredictable behavior.
               (Introduced in Netpbm 10.54 (March 2011).
 
+              Pnmtopclxl: fix wild memory access when out of memory.  Always
+              broken (Pnmtopclxl was new in Netpbm 10.6 (July 2002)).
+
               escp2topbm: Fix -plain.  Always broken (escp2topbm was new in
               Netpbm 10.18 (September 2003)).
 
