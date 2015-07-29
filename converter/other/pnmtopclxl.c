@@ -302,7 +302,7 @@ pnmToPcllinePackbits(pclGenerator * const pclGeneratorP,
     if (bitmask != 0x80)
         pclGeneratorP->data[pclGeneratorP->cursor++] = accum;
 
-    for(padCt=0; padCt < padsize; ++padCt)
+    for (padCt = 0; padCt < padsize; ++padCt)
         pclGeneratorP->data[pclGeneratorP->cursor++] = 0;
 
     pnm_freepamrow(tuplerow);
@@ -412,7 +412,7 @@ createPclGeneratorWholebytes(struct pam *    const pamP,
     if (UINT_MAX / pamP->width < pamP->depth)
         pm_error("Image too big to process");
     else {
-        pclGenP->linelen    = pamP->width * pamP->depth;
+        pclGenP->linelen = pamP->width * pamP->depth;
         pclGenP->paddedLinelen = pclPaddedLinelen(pclGenP->linelen);
         pclGenP->data = malloc(pclDatabuffSize(pclGenP->paddedLinelen));
         if (pclGenP->data == NULL)
@@ -657,19 +657,19 @@ convertAndWriteRleBlock(int                  const outFd,
                         pclGenerator *       const pclGeneratorP,
                         struct pam *         const pamP,
                         int                  const firstLine,
-                        int                  const nlines,
+                        int                  const lineCt,
                         unsigned char *      const outbuf) {
 
     size_t rlelen;
     unsigned int line;
 
     pclGeneratorP->cursor = 0;
-    for (line = firstLine; line < firstLine + nlines; ++line) {
+    for (line = firstLine; line < firstLine + lineCt; ++line) {
         pclGeneratorP->getnextrow(pclGeneratorP, pamP);
     }
 
     pm_rlenc_compressbyte(pclGeneratorP->data, outbuf, PM_RLE_PACKBITS,
-                          pclGeneratorP->paddedLinelen * nlines, &rlelen);
+                          pclGeneratorP->paddedLinelen * lineCt, &rlelen);
 
     xl_dataLength(outFd, rlelen); 
     XY_Write(outFd, outbuf, rlelen);
@@ -688,9 +688,10 @@ convertAndWriteImage(int            const outFd,
                      pclGenerator * const pclGenP,
                      struct pam *   const pamP) {
 
+    size_t const inSize = (pclGenP-> linelen + 3) * 20;
+
     int blockStartLine;
     unsigned char * outbuf;
-    size_t const inSize = (pclGenP-> linelen +3) * 20;
 
     xl_ubyte(outFd, eDirectPixel); xl_attr_ubyte(outFd, aColorMapping);
     xl_ubyte(outFd, pclGenP->colorDepth); xl_attr_ubyte(outFd, aColorDepth);
@@ -702,10 +703,10 @@ convertAndWriteImage(int            const outFd,
 
     pm_rlenc_allocoutbuf(&outbuf, inSize, PM_RLE_PACKBITS);
 
-    blockStartLine = 0;
-    while (blockStartLine < pclGenP->height) {
+    for (blockStartLine = 0; blockStartLine < pclGenP->height; ) {
         unsigned int const blockHeight =
             MIN(20, pclGenP->height-blockStartLine);
+
         xl_uint16(outFd, blockStartLine); xl_attr_ubyte(outFd, aStartLine); 
         xl_uint16(outFd, blockHeight); xl_attr_ubyte(outFd, aBlockHeight);
         xl_ubyte(outFd, eRLECompression); xl_attr_ubyte(outFd, aCompressMode);
