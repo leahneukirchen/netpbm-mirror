@@ -54,7 +54,7 @@
 
 
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     const char * inputFileName;
     unsigned int image;  /* zero if unspecified */
     double max;
@@ -76,7 +76,7 @@ struct cmdlineInfo {
 
 static void 
 parseCommandLine(int argc, char ** argv, 
-                 struct cmdlineInfo * const cmdlineP) {
+                 struct CmdlineInfo * const cmdlineP) {
 /* --------------------------------------------------------------------------
    Parse program command line described in Unix standard form by argc
    and argv.  Return the information in the options as *cmdlineP.  
@@ -569,7 +569,7 @@ computeMinMax(FILE *             const ifP,
 
 
 static xelval
-determineMaxval(struct cmdlineInfo const cmdline,
+determineMaxval(struct CmdlineInfo const cmdline,
                 valFmt             const valFmt,
                 double             const datamax,
                 double             const datamin) {
@@ -734,7 +734,7 @@ convertRaster(FILE *                const ifP,
 int
 main(int argc, char * argv[]) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP;
     unsigned int cols, rows;
     xelval maxval;
