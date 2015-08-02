@@ -57,9 +57,9 @@
 struct CmdlineInfo {
     const char * inputFileName;
     unsigned int image;  /* zero if unspecified */
-    double max;
+    float max;
     unsigned int maxSpec;
-    double min;
+    float min;
     unsigned int minSpec;
     unsigned int scanmax;
     unsigned int printmax;
