@@ -269,10 +269,10 @@ XY_RLEnew(size_t const size) {
 
     MALLOCVAR(rleP);
     if (rleP) {
-        rleP->fbuf = malloc(size);
+        rleP->fbufsize = MAX(1024, size);
+        rleP->fbuf = malloc(rleP->fbufsize);
 
         if (rleP->fbuf) {
-            rleP->fbufsize = MAX(1024, size);
             retval = rleP;
         } else
             retval = NULL;
@@ -311,9 +311,14 @@ out(XY_rle * const rleP,
         rleP->fbpos += count;
     }
     if (rleP->fbpos + 129 > rleP->fbufsize) {
+        if (rleP->fbufsize > INT_MAX/1.2)
+            pm_error("Arithmetic overflow during attempt to expand RLE "
+                     "output buffer beyond %u", rleP->fbufsize);
         rleP->fbufsize *= 1.2; 
         rleP->fbuf = realloc(rleP->fbuf, rleP->fbufsize);
         if (rleP->fbuf == NULL) {
+            pm_error("Out of memory while attempting to expand RLE "
+                     "output buffer beyond %u", rleP->fbufsize);
             rleP->error = -1;
             rleP->fbpos = 0;
             error = true;
@@ -398,7 +403,7 @@ XY_Write(int          const fd,
     for (len =0, error = false; len < cnt && !error;) {
         ssize_t const rc = write(fd, (char*)buf + len , cnt - len);
         if (rc <= 0)
-            error = true;
+            pm_error("Failed to write %u bytes to fd %d", cnt - len, fd);
         else
             len += rc;
     }
@@ -820,6 +825,8 @@ convertAndWriteImage(int                  const outFd,
     xl_attr_ubyte(outFd, aDestinationSize);   
     XL_Operator(outFd, oBeginImage);
 
+    if (pclGenP->linelen > INT_MAX / 20)
+        pm_error("Image too big");
     rle = XY_RLEnew(pclGenP->linelen*20);
     if (!rle) 
         pm_error("Unable to allocate %d bytes for the RLE buffer",

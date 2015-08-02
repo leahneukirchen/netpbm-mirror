@@ -4,6 +4,22 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+15.08.02 BJH  Release 10.71.02
+
+              Pnmtopclxl: fix buffer overrun causing unpredictable behavior.
+              (Introduced in Netpbm 10.54 (March 2011).
+
+              Pnmtopclxl: fix wild memory access when out of memory.  Always
+              broken (Pnmtopclxl was new in Netpbm 10.6 (July 2002)).
+
+              Pnmtopclxl: fix wild memory access with pathologically large and
+              uncompressible image.  Always broken (Pnmtopclxl was new in
+              Netpbm 10.6 (July 2002)).
+
+              Pnmtopclxl: fix silent output corruption when a file write
+              fails.  Always broken (Pnmtopclxl was new in Netpbm 10.6 (July
+              2002)).
+
 15.07.02 BJH  Release 10.71.01
 
               ppmtoilbm: Fix failure with -hamforce and -nocompression.
