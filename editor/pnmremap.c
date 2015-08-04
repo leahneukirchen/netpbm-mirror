@@ -1107,12 +1107,10 @@ processMapFile(const char *   const mapFileName,
                tuple *        const firstColorP) {
 /*----------------------------------------------------------------------------
    Read a color map from the file named 'mapFileName'.  It's a map that
-   associates each color in that file with the number which is its ordinal
-   position in the file (zero is the top left pixel in the file, etc.).
-   Return the map as *colormapP, with the number of entries in it as
-   *colormapSizeP.
+   associates each color in that file with a unique whole number.  Return the
+   map as *colormapP, with the number of entries in it as *colormapSizeP.
 
-   Also determine the first color (top left) in the map and return that
+   Also determine the first color (top left) in the map file and return that
    as *firstColorP.
 -----------------------------------------------------------------------------*/
     FILE * mapfile;
