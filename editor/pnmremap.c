@@ -35,13 +35,13 @@
 
 #define MAXCOLORS 32767u
 
-enum missingMethod {
+enum MissingMethod {
     MISSING_FIRST,
     MISSING_SPECIFIED,
     MISSING_CLOSE
 };
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -49,7 +49,7 @@ struct cmdlineInfo {
     const char * mapFilespec;    /* Filespec of colormap file */
     unsigned int floyd;   /* Boolean: -floyd/-fs option */
     unsigned int norandom;
-    enum missingMethod missingMethod;
+    enum MissingMethod missingMethod;
     char * missingcolor;      
         /* -missingcolor value.  Null if not specified */
     unsigned int verbose;
@@ -58,8 +58,8 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine (int argc, char ** argv,
-                  struct cmdlineInfo *cmdlineP) {
+parseCommandLine (int argc, const char ** argv,
+                  struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
    and argv.  Return the information in the options as *cmdlineP.  
@@ -83,24 +83,24 @@ parseCommandLine (int argc, char ** argv,
     MALLOCARRAY_NOFAIL(option_def, 100);
     
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0,   "floyd",        OPT_FLAG,   
-            NULL,                       &cmdlineP->floyd, 0);
-    OPTENT3(0,   "fs",           OPT_FLAG,   
-            NULL,                       &cmdlineP->floyd, 0);
-    OPTENT3(0,   "nofloyd",      OPT_FLAG,   
-            NULL,                       &nofloyd, 0);
-    OPTENT3(0,   "nofs",         OPT_FLAG,   
-            NULL,                       &nofloyd, 0);
-    OPTENT3(0,   "norandom",     OPT_FLAG,   
+    OPTENT3(0,   "floyd",          OPT_FLAG,   
+            NULL,                       &cmdlineP->floyd,    0);
+    OPTENT3(0,   "fs",             OPT_FLAG,   
+            NULL,                       &cmdlineP->floyd,    0);
+    OPTENT3(0,   "nofloyd",        OPT_FLAG,   
+            NULL,                       &nofloyd,            0);
+    OPTENT3(0,   "nofs",           OPT_FLAG,   
+            NULL,                       &nofloyd,            0);
+    OPTENT3(0,   "norandom",       OPT_FLAG,   
             NULL,                       &cmdlineP->norandom, 0);
     OPTENT3(0,   "firstisdefault", OPT_FLAG,   
-            NULL,                       &firstisdefault, 0);
-    OPTENT3(0,   "mapfile",      OPT_STRING, 
-            &cmdlineP->mapFilespec,    &mapfileSpec, 0);
-    OPTENT3(0,   "missingcolor", OPT_STRING, 
-            &cmdlineP->missingcolor,   &missingSpec, 0);
-    OPTENT3(0, "verbose",        OPT_FLAG,   NULL,                  
-            &cmdlineP->verbose,        0 );
+            NULL,                       &firstisdefault,     0);
+    OPTENT3(0,   "mapfile",        OPT_STRING, 
+            &cmdlineP->mapFilespec,    &mapfileSpec,         0);
+    OPTENT3(0,   "missingcolor",   OPT_STRING, 
+            &cmdlineP->missingcolor,   &missingSpec,         0);
+    OPTENT3(0, "verbose",          OPT_FLAG,   NULL,                  
+            &cmdlineP->verbose,                              0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -108,7 +108,7 @@ parseCommandLine (int argc, char ** argv,
 
     cmdlineP->missingcolor = NULL;  /* default value */
     
-    pm_optParseOptions3( &argc, argv, opt, sizeof(opt), 0 );
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdline_p and others. */
 
     if (cmdlineP->floyd && nofloyd)
@@ -135,6 +135,8 @@ parseCommandLine (int argc, char ** argv,
         cmdlineP->inputFilespec = "-";
     else
         cmdlineP->inputFilespec = argv[1];
+
+    free(option_def);
 }
 
 
@@ -1103,7 +1105,16 @@ processMapFile(const char *   const mapFileName,
                tupletable *   const colormapP,
                unsigned int * const colormapSizeP,
                tuple *        const firstColorP) {
+/*----------------------------------------------------------------------------
+   Read a color map from the file named 'mapFileName'.  It's a map that
+   associates each color in that file with the number which is its ordinal
+   position in the file (zero is the top left pixel in the file, etc.).
+   Return the map as *colormapP, with the number of entries in it as
+   *colormapSizeP.
 
+   Also determine the first color (top left) in the map and return that
+   as *firstColorP.
+-----------------------------------------------------------------------------*/
     FILE * mapfile;
     struct pam mappam;
     tuple ** maptuples;
@@ -1156,9 +1167,9 @@ getSpecifiedMissingColor(struct pam * const pamP,
 
 
 int
-main(int argc, char * argv[] ) {
+main(int argc, const char * argv[] ) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP;
     struct pam outpamCommon;
         /* Describes the output images.  Width and height fields are
@@ -1181,7 +1192,7 @@ main(int argc, char * argv[] ) {
            color (i.e. we'll choose an approximate match from the map).
         */
 
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
@@ -1217,3 +1228,6 @@ main(int argc, char * argv[] ) {
 
     return 0;
 }
+
+
+
