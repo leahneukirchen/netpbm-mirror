@@ -279,7 +279,7 @@ doLookupByPlane(struct pam const indexpam,
                 if (index > lookuppam.maxval)
                     pm_error("Sample value %u in the lookup image exceeds "
                              "the lookup image's maxval (%u)",
-                             index, lookuppam.maxval);
+                             index, (unsigned)lookuppam.maxval);
 
                 tuplerowOut[col][plane] = lookup[0][index][0];
             }
