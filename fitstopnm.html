@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Fitstopnm User Manual</TITLE></HEAD>
 <BODY>
 <H1>fitstopnm</H1>
-Updated: 22 May 2007
+Updated: 2 August 2015
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -34,6 +34,17 @@ input and produces a PPM image if the FITS file consists of 3 image planes
 (NAXIS = 3 and NAXIS3 = 3), or a PGM image if the FITS file consists of 2
 image planes (NAXIS = 2), or if you specify the <B>-image</B> option.
 
+<p>Note that the PPM image is highly unlikely to be a true PPM image, as it is
+not normal for a FITS image to use the third axis as R, G, and B components of
+the pixels.  The most common interpretation when there are 3 axes is that the
+third one is time.  So the image is instead a pseudo-PPM in which the three
+sample values of a pixel represent something other than color components, for
+example gray levels at three instants (this variation on PPM is common in
+programs such as <b>fitstopnm</b> that predate the PAM format).
+
+<p>If you work with FITS images with 3 axes, you should probably always use
+the <b>-image</b> option to avoid getting an unwanted pseudo-PPM image.
+
 <P>The program tells you what kind of PNM image it is writing.
 
 
@@ -43,11 +54,11 @@ image planes (NAXIS = 2), or if you specify the <B>-image</B> option.
 
 <dt><b>-image=</b><i>N</i>
 
-<dd>This is for FITS files with three axes.  The assumption is that
-the third axis is for multiple images, and this option lets you select
-which one you want.
+<dd>This is for FITS files with three axes.  This option says that the third
+axis is for multiple images, and the option value <i>N</i> tells which one you
+want.
 
-<dd><b>-omaxval=</b><i>N</i>
+<dt><b>-omaxval=</b><i>N</i>
 
 <P>This is the maxval that the output PNM image is to have.
 

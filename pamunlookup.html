@@ -1,0 +1,135 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD><title>Pamunlookup User Manual</title></HEAD>
+<BODY>
+<H1>pamunlookup</H1>
+Updated: 9 August 2015
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<H2 id="name">NAME</H2>
+pamunlookup - inverse of pamlookup
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>pamunlookup</B>
+<B>-lookupfile=</B><i>lookupfile</i>
+<I>inputfile</I>
+
+
+<P>All options can be abbreviated to their shortest unique prefix.
+You may use two hyphens instead of one.  You may separate an option
+name and its value with white space instead of an equals sign.
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>pamunlookup</b> is best described as the inverse of <b>pamlookup</b>
+(without <b>-byplane</b>).  For example, the following normally yields output
+identical the input:
+
+<pre>
+<kbd>
+    $ cat input.ppm | \
+        pamlookup -lookupfile=map.pam | \
+        pamunlookup -lookupfile=map.pam \
+        &gt; output.ppm
+</kbd>
+</pre>
+
+
+<p>Specifically, <b>pamunlookup</b> takes an input image and produces an
+output image of the same width and height in which each tuple is a single
+number.  That number is the index in a given lookup table of the tuple value
+that is in the same position in the input image.
+
+<p>You specify the lookup table the same way as for
+<a href="pamlookup.html#lookupimage"><b>pamlookup</b></a>.
+
+<p>Where a tuple in the input image is not in the lookup table, the
+number <b>pamunlookup</b> places in the output index image is one greater than
+the highest index in the lookup table.  Accordingly, the maxval of the output
+index image is the size of the lookup table.
+
+
+<h3 id="example">Example</h3>
+
+<P>Here is an example of <b>pamunlookup</b>'s function.
+
+<p>Consider an input image consisting of a 3x2 PPM as follows:
+
+<table summary="output image">
+<?makeman l l l. ?>
+<tr> <td>red</td> <td>yellow</td> <td>red</td> </tr>
+<tr> <td>beige</td> <td>beige</td> <td>beige</td> </tr>
+</table>
+
+and a lookup table consisting of a 3x1 PPM image as follows:
+
+<table summary="3x1 lookup table">
+<?makeman l l l. ?>
+<tr> <td>red</td> <td>yellow</td> <td>beige</td> </tr>
+</table>
+
+The lookup table above says Index 0 corresponds to the color red,
+Index 1 corresponds to yellow, and Index 2 corresponds to beige.  The output
+of <b>pamunlookup</b> is the following index image:
+
+<table summary="3x2x1 index image">
+<?makeman l l l. ?>
+<tr> <td>0</td> <td>1</td> <td>0</td> </tr>
+<tr> <td>2</td> <td>2</td> <td>2</td> </tr>
+</table>
+
+
+<h3 id="misc">Miscellaneous</h3>
+
+<p>The <i>inputfile</i> argument identifies the file containing the index PAM
+or PNM image.  <b>-</b> means Standard Input.  It won't work if both the input
+image file and lookup table file are Standard Input.
+
+The output index image goes to Standard Output.
+
+
+<H2 id="options">OPTIONS</H2>
+
+<DL COMPACT>
+<DT><B>-lookupfile=</B><i>lookupfile</i>
+
+<DD><i>lookupfile</i> names the file that contains the PAM or PNM
+image that is the lookup table.  This option is mandatory.
+
+</DL>
+
+     
+<H2 id="seealso">SEE ALSO</H2>
+
+<A HREF="pamlookup.html">pamlookup</A>,
+<A HREF="ppmchange.html">ppmchange</A>,
+<A HREF="pnmcolormap.html">pnmcolormap</A>,
+<A HREF="pnm.html">pnm</A>,
+<A HREF="pam.html">pam</A>
+
+
+<H2 id="history">HISTORY</h2>
+
+<p><b>pamunlookup</b> was new in Netpbm 10.72 (September 2015).
+
+<HR>
+<H2 id="index">Table Of Contents</H2>
+<UL COMPACT>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+  <ul>
+  <li><a href="#example">Example</a>  
+  </ul>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#history">HISTORY</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+</UL>
+</BODY>
+</HTML>
+
+
+
