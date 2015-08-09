@@ -25,7 +25,7 @@ endif
 
 PORTBINARIES = pamarith pambayer pamchannel pamdepth \
 	pamendian pamexec pamfix pamlookup pampick pamsplit \
-	pamstack pamsummcol pamvalidate pnmcolormap \
+	pamstack pamsummcol pamunlookup pamvalidate pnmcolormap \
 	ppmdcfont ppmddumpfont ppmdmkfont 
 
 ifneq ($(LINUXSVGALIB),NONE)
