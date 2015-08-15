@@ -4,6 +4,35 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+15.08.15 BJH  Release 10.47.58
+
+              fitstopnm: Add message saying you're probably making a mistake
+              if you have a 3-D image and don't specify -image.  The third
+              dimension is almost always time in practice.
+
+              fitstopnm: Fix -min and -max.  Broken in Netpbm 10.39 (June
+              2007).
+
+              Pnmtopclxl: fix wild memory access when out of memory.  Always
+              broken (Pnmtopclxl was new in Netpbm 10.6 (July 2002)).
+
+              Pnmtopclxl: fix wild memory access with pathologically large and
+              uncompressible image.  Always broken (Pnmtopclxl was new in
+              Netpbm 10.6 (July 2002)).
+
+              Pnmtopclxl: fix silent output corruption when a file write
+              fails.  Always broken (Pnmtopclxl was new in Netpbm 10.6 (July
+              2002)).
+
+              ppmtoilbm: Fix failure with -hamforce and -nocompression.
+              Broken in Netpbm 9.12 (March 2001).
+
+              Build: fix compile error in sbigtopnm introduced in 10.47.57
+              (June 2015).
+
+              Build: fix link errors in pbmtomacp, ppmtoyuvsplit introduced
+              in 10.47.57 (June 2015).
+
 15.06.28 BJH  Release 10.47.57
 
               palmtopnm: Fix distorted output with PackBits compressed input.

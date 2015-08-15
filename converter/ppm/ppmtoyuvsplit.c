@@ -46,9 +46,9 @@ static void
 makeOutputFileName(const char *         const baseName,
                    struct FileNameSet * const fnameP) {
 
-    pm_asprintf(&fnameP->u, "%s.U", baseName);
-    pm_asprintf(&fnameP->v, "%s.V", baseName);
-    pm_asprintf(&fnameP->y, "%s.Y", baseName);
+    asprintfN(&fnameP->u, "%s.U", baseName);
+    asprintfN(&fnameP->v, "%s.V", baseName);
+    asprintfN(&fnameP->y, "%s.Y", baseName);
 }
 
 
@@ -56,9 +56,9 @@ makeOutputFileName(const char *         const baseName,
 static void
 termFileNameSet(struct FileNameSet const fname) {
 
-    pm_strfree(fname.u);
-    pm_strfree(fname.v);
-    pm_strfree(fname.y);
+    strfree(fname.u);
+    strfree(fname.v);
+    strfree(fname.y);
 }
 
 
