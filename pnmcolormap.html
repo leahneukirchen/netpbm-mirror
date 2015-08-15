@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pnmcolormap User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmcolormap</H1>
-Updated: 23 October 2005
+Updated: 15 August 2015
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -77,8 +77,12 @@ be useful.
 <H2 id="parameters">PARAMETERS</H2>
 
 <P>The single parameter, which is required, is the number of colors you want
-in the output colormap.  <B>pnmcolormap</B> may produce a color map with slightly fewer colors than that.  You may
-specify <B>all</B> to get a colormap of every color in the input image (no quantization).
+in the output colormap.  <B>pnmcolormap</B> may produce a color map with
+slightly fewer colors than that.  You may specify <B>all</B> to get a colormap
+of every color in the input image (no quantization).  When you specify
+<b>all</b>, the function is essentially the same as that of <b>ppmhist
+-map</b>.  <b>ppmhist</b> is much older.
+
 
 <H2 id="options">OPTIONS</H2>
 

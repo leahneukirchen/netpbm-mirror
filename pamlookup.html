@@ -37,11 +37,11 @@ There are two ways of indexing the lookup table: <i>whole tuple</i> and
 does.
 
 <p>In the simplest form of whole tuple indexing, each index in the index array
-is a single whole number and the lookup table contains associates a whole
-tuple with each possible whole number index.  So for example, the index array
-might have at Row 2, Column 9 the value 23.  The lookup table might associate
-the tuple (1,2,3) with the value 23.  In that case, the output image contains
-the tuple (1,2,3) at Row 2, Column 9.
+is a single whole number and the lookup table associates a whole tuple with
+each possible whole number index.  So for example, the index array might have
+at Row 2, Column 9 the value 23.  The lookup table might associate the tuple
+(1,2,3) with the value 23.  In that case, the output image contains the tuple
+(1,2,3) at Row 2, Column 9.
 
 <p>In a more complex form of whole tuple indexing, each index in the index
 array is an ordered pair of whole numbers and the lookup table associates a
