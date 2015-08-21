@@ -143,6 +143,7 @@ ordinary_testprogs="\
   pamtowinicon \
   pamtoxvmini \
   pamundice \
+  pamunlookup \
   pamvalidate \
   pamwipeout \
   pamx \

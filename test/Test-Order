@@ -102,6 +102,7 @@ rgb3-roundtrip.test
 ppmchange-roundtrip.test
 pamdice-roundtrip.test
 pamslice-roundtrip.test
+lookup-roundtrip.test
 
 # Round-trip tests : lossless converters
 
