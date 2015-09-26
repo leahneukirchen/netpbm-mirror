@@ -57,9 +57,9 @@
 struct cmdlineInfo {
     const char * inputFileName;
     unsigned int image;  /* zero if unspecified */
-    double max;
+    float max;
     unsigned int maxSpec;
-    double min;
+    float min;
     unsigned int minSpec;
     unsigned int scanmax;
     unsigned int printmax;
@@ -668,7 +668,8 @@ convertPpmRaster(FILE *                const ifP,
 -----------------------------------------------------------------------------*/
     unsigned int plane;
 
-    pm_message("writing PPM file");
+    pm_message("Writing PPM file "
+               "(Probably not what you want - consider an -image option)");
 
     for (plane = 0; plane < 3; ++plane) {
         unsigned int row;

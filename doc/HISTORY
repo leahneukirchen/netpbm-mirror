@@ -4,7 +4,16 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+15.09.26 BJH  Release 10.71.03
+
+              fitstopnm: Add message saying you're probably making a mistake
+              if you have a 3-D image and don't specify -image.  The third
+              dimension is almost always time in practice.
+
 15.08.02 BJH  Release 10.71.02
+
+              fitstopnm: Fix -min and -max.  Broken in Netpbm 10.39 (June
+              2007).
 
               Pnmtopclxl: fix buffer overrun causing unpredictable behavior.
               (Introduced in Netpbm 10.54 (March 2011).
