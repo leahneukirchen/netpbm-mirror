@@ -124,7 +124,7 @@ int main(argc, argv)
 	}
 	*cp = 0;
         if (strncmp(hdr, "ST-", 3) == 0  ||
-            (hdr == &hdr[0] && strstr(hdr,"Image") != NULL)) {
+            (hdr == &header[0] && strstr(hdr,"Image") != NULL)) {
             char *ep = strchr(hdr + 3, ' ');
 
 	    if (ep != NULL) {

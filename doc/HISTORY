@@ -4,6 +4,28 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+15.09.26 BJH  Release 10.35.97
+
+              sbigtopgm: Fix detection of camera type.  Broken in
+              Netpbm 10.35.96 (June 2015).
+
+              fitstopnm: Fix -min and -max.  Broken in Netpbm 10.39 (June
+              2007).
+
+              Pnmtopclxl: fix wild memory access when out of memory.  Always
+              broken (Pnmtopclxl was new in Netpbm 10.6 (July 2002)).
+
+              Pnmtopclxl: fix wild memory access with pathologically large and
+              uncompressible image.  Always broken (Pnmtopclxl was new in
+              Netpbm 10.6 (July 2002)).
+
+              Pnmtopclxl: fix silent output corruption when a file write
+              fails.  Always broken (Pnmtopclxl was new in Netpbm 10.6 (July
+              2002)).
+
+              ppmtoilbm: Fix failure with -hamforce and -nocompression.
+              Broken in Netpbm 9.12 (March 2001).
+
 15.06.28 BJH  Release 10.35.96
 
               palmtopnm: Fix distorted output with PackBits compressed input.

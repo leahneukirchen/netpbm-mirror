@@ -635,7 +635,7 @@ ppm_to_ham(fp, cols, rows, maxval, colormap, colors, cmapmaxval, hamplanes)
     if( DO_COMPRESS )
         write_body_rows();
     else
-        do_ham_body(fp, NULL, cols, rows, maxval, hammaxval, 
+        do_ham_body(fp, stdout, cols, rows, maxval, hammaxval, 
                     nPlanes, colormap, colors);
 }
 
