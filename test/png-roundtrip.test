@@ -2,6 +2,9 @@
 # This script tests: pngtopam pnmtopng
 # Also requires:
 
+# Failure message
+## If this test fails and pnm-roundtrip2.test succeeds, it indicates
+## some problem with pnmtopng.
 
 # Test 1.  Should print 1926073387 101484 18 times
 for flags in "" -interlace \

@@ -38,8 +38,11 @@
 **  - added IFF text chunks
 **
 **  Feb 2010: afu
-**  Added dimension check to prevent short int from overflowing.
-**  
+**  - added dimension check to prevent short int from overflowing.
+**
+**  June 2015: afu
+**  - moved byterun1 (or Packbits) compression to lib/util/runlenth.c
+**  - fixed bug with HAM -nocompress
 **
 **  TODO:
 **  - multipalette capability (PCHG chunk) for std and HAM
@@ -64,6 +67,7 @@
 ** implied warranty.
 */
 
+#include <assert.h>
 #include <string.h>
 
 #include "pm_c_util.h"
@@ -71,6 +75,7 @@
 #include "ppm.h"
 #include "ppmfloyd.h"
 #include "pbm.h"
+#include "runlength.h"
 #include "ilbm.h"
 #include "lum.h"
 
@@ -418,46 +423,6 @@ writeBmhd(int const cols,
 
 /************ compression ************/
 
-
-
-static int
-runbyte1(int const size) {
-
-/* runbyte1 algorithm by Robert A. Knop (rknop@mop.caltech.edu) */
-
-    int in,out,count,hold;
-    unsigned char *inbuf = coded_rowbuf;
-    unsigned char *outbuf = compr_rowbuf;
-
-
-    in=out=0;
-    while( in<size ) {
-        if( (in<size-1) && (inbuf[in]==inbuf[in+1]) ) {    
-            /*Begin replicate run*/
-            for( count=0, hold=in; 
-                 in < size && inbuf[in] == inbuf[hold] && count < 128; 
-                 in++, count++)
-                ;
-            outbuf[out++]=(unsigned char)(char)(-count+1);
-            outbuf[out++]=inbuf[hold];
-        }
-        else {  /*Do a literal run*/
-            hold=out; out++; count=0;
-            while( ((in>=size-2)&&(in<size)) || 
-                   ((in<size-2) && ((inbuf[in]!=inbuf[in+1])
-                                    ||(inbuf[in]!=inbuf[in+2]))) ) {
-                outbuf[out++]=inbuf[in++];
-                if( ++count>=128 )
-                    break;
-            }
-            outbuf[hold]=count-1;
-        }
-    }
-    return(out);
-}
-
-
-
 static void
 storeBodyrow(unsigned char * const row,
              int             const len) {
@@ -480,22 +445,26 @@ storeBodyrow(unsigned char * const row,
 
 
 
-static int
-compressRow(int const bytes) {
+static unsigned int
+compressRow(unsigned int const bytes) {
 
-    int newbytes;
+    size_t compressedByteCt;
 
-    switch( compmethod ) {
+    switch (compmethod) {
         case cmpByteRun1:
-            newbytes = runbyte1(bytes);
+            pm_rlenc_compressbyte(
+                coded_rowbuf, compr_rowbuf, PM_RLE_PACKBITS, bytes,
+                &compressedByteCt);
             break;
         default:
             pm_error("compressRow(): unknown compression method %d", 
                      compmethod);
     }
-    storeBodyrow(compr_rowbuf, newbytes);
+    storeBodyrow(compr_rowbuf, compressedByteCt);
 
-    return newbytes;
+    assert((unsigned)compressedByteCt == compressedByteCt);
+
+    return (unsigned)compressedByteCt;
 }
 
 
@@ -2020,7 +1989,8 @@ main(int argc, char ** argv) {
             if( ++argn >= argc )
                 pm_error("-camg requires a value");
             value = strtol(argv[argn], &tail, 16);
-            /* TODO: should do some error checking here */
+            if(argv[argn] == tail)
+                pm_error("-camg requires a value");
             viewportmodes |= value;
             gen_camg = 1;
         }
@@ -2329,7 +2299,7 @@ main(int argc, char ** argv) {
         for (i = 0; i < RowBytes(cols); ++i)
             coded_rowbuf[i] = 0;
         if (DO_COMPRESS)
-            MALLOCARRAY_NOFAIL(compr_rowbuf, WORSTCOMPR(RowBytes(cols)));
+            pm_rlenc_allocoutbuf(&compr_rowbuf, RowBytes(cols), PM_RLE_PACKBITS);
     }
     
     switch (mode) {

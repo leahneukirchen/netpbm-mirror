@@ -17,22 +17,22 @@
 ** Feb 2010 afu
 ** Added dimension check to prevent short int from overflowing
 */
+
+#include <assert.h>
+
 #include "pnm.h"
 #include "sgi.h"
 #include "mallocvar.h"
-
+#include "runlength.h"
 
 
 /*#define DEBUG*/
 
-typedef short       ScanElem;
+typedef uint16_t       ScanElem;
 typedef struct {
     ScanElem *  data;
     long        length;
 } ScanLine;
-
-#define WORSTCOMPR(x)   (2*(x) + 2)
-
 
 #define MAXVAL_BYTE     255
 #define MAXVAL_WORD     65535
@@ -40,7 +40,6 @@ typedef struct {
 
 static char storage = STORAGE_RLE;
 static ScanLine * channel[3];
-static ScanElem * rletemp;
 static xel * pnmrow;
 
 
@@ -108,51 +107,9 @@ writeChannels(unsigned int const cols,
             for (col = 0; col < channel[i][row].length; ++col) {
                 (*put)(channel[i][row].data[col]);
             }
+            pm_rlenc_freebuf((unsigned char *) channel[i][row].data);
         }
     }
-}
-
-
-
-static int
-rleCompress(ScanElem *   const inbuf,
-            unsigned int const size) {
-
-    /* slightly modified RLE algorithm from ppmtoilbm.c written by Robert
-       A. Knop (rknop@mop.caltech.edu)
-    */
-
-    int in, out, hold, count;
-    ScanElem *outbuf = rletemp;
-
-    in = out = 0;
-    while (in < size) {
-        if ((in < size-1) && (inbuf[in] == inbuf[in+1])) {
-            /*Begin replicate run*/
-            for (count = 0, hold = in; in < size &&
-                     inbuf[in] == inbuf[hold] && count < 127;
-                 ++in, ++count)
-                ;
-            outbuf[out++] = (ScanElem)(count);
-            outbuf[out++] = inbuf[hold];
-        } else {
-            /*Do a literal run*/
-            hold = out;
-            ++out;
-            count = 0;
-            while (((in >= size-2) && (in < size))
-                   || ((in < size-2) && ((inbuf[in] != inbuf[in+1])
-                                         || (inbuf[in] != inbuf[in+2])))) {
-                outbuf[out++] = inbuf[in++];
-                if (++count >= 127)
-                    break;
-            }
-            outbuf[hold] = (ScanElem)(count | 0x80);
-        }
-    }
-    outbuf[out++] = (ScanElem)0;     /* terminator */
-
-    return out;
 }
 
 
@@ -165,7 +122,13 @@ compress(ScanElem *   const tempArg,
          unsigned int const chanNum,
          long *       const table,
          unsigned int const bpc) {
+/*----------------------------------------------------------------------------
+   Compress a row, putting results in global 'channel' array, in newly
+   allocated storage (which Caller must free).
 
+   Except that if the compression is null compression, we make 'channel'
+   point to existing storage, which Caller must not free.  Yuck.
+-----------------------------------------------------------------------------*/
     ScanElem * retval;
 
     switch (storage) {
@@ -176,16 +139,26 @@ compress(ScanElem *   const tempArg,
         break;
     case STORAGE_RLE: {
         unsigned int const tabrow = chanNum * rows + row;
-        unsigned int const len = rleCompress(tempArg, cols);
-            /* writes result into rletemp */
-        unsigned int i;
+
+        unsigned int len;
+        size_t lenBytes;
         ScanElem * p;
-        
+
+        pm_rlenc_allocoutbuf((unsigned char **) &p, cols, PM_RLE_SGI16);
+
+        pm_rlenc_compressword(tempArg,(unsigned char *) p, PM_RLE_SGI16,
+                              cols, &lenBytes);
+
+        assert((unsigned)lenBytes == lenBytes);
+            /* Guaranteed by pm_rlenc_compressword() */
+
+        len = lenBytes / 2;  /* sizeof(ScanElem) */
         channel[chanNum][row].length = len;
-        MALLOCARRAY(p, len);
+        REALLOCARRAY(p, len);   /* reclaim some space */
+        if (p == NULL)
+            pm_error("realloc failure while reclaiming memory space "
+                     "for output");
         channel[chanNum][row].data = p;
-        for (i = 0; i < len; ++i)
-            p[i] = rletemp[i];
         table[tabrow] = len * bpc;
         retval = tempArg;
     } break;
@@ -213,7 +186,6 @@ buildChannels(FILE *       const ifP,
 
     if (storage != STORAGE_VERBATIM) {
         MALLOCARRAY_NOFAIL(table, channels * rows);
-        MALLOCARRAY_NOFAIL(rletemp, WORSTCOMPR(cols));
     } else
         table = NULL;
 
@@ -247,8 +219,6 @@ buildChannels(FILE *       const ifP,
     }
 
     free(temp);
-    if (table)
-        free(rletemp);
     return table;
 }
 

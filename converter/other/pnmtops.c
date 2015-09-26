@@ -5,16 +5,16 @@
    We produce two main kinds of Postscript program:
 
       1) Use built in Postscript filters /ASCII85Decode, /ASCIIHexDecode,
-	 /RunLengthDecode, and /FlateDecode;
+         /RunLengthDecode, and /FlateDecode;
 
-	 We use methods we learned from Dirk Krause's program Bmeps.
-	 Previous versions used raster encoding code based on Bmeps
-	 code.  This program does not used any code from Bmeps.
+         We use methods we learned from Dirk Krause's program Bmeps.
+         Previous versions used raster encoding code based on Bmeps
+         code.  This program does not used any code from Bmeps.
 
       2) Use our own filters and redefine /readstring .  This is aboriginal
-	 Netpbm code, from when Postscript was young.  The filters are
-	 nearly identical to /ASCIIHexDecode and /RunLengthDecode.  We
-	 use the same raster encoding code with slight modifications.
+         Netpbm code, from when Postscript was young.  The filters are
+         nearly identical to /ASCIIHexDecode and /RunLengthDecode.  We
+         use the same raster encoding code with slight modifications.
 
    (2) is the default.  (1) gives more options, but relies on features
    introduced in Postscript Level 2, which appeared in 1991.  Postcript
@@ -53,6 +53,7 @@
 #include "mallocvar.h"
 #include "shhopt.h"
 #include "nstring.h"
+#include "runlength.h"
 
 
 
@@ -398,16 +399,6 @@ writeFileChar(const char * const buffer,
 
 
 
-static void
-writeFileByte(unsigned char const byte,
-              const char *  const name,
-              FILE *        const ofP) {
-
-    writeFile(&byte, 1, name, ofP);
-}
-
-
-
 #define MAX_FILTER_CT 10
     /* The maximum number of filters this code is capable of applying */
 
@@ -502,7 +493,7 @@ initOutputEncoder(OutputEncoder  * const oeP,
     if (rle) {
         oeP->compressRle = true;
         oeP->runlengthRefresh =
-             psFilter ? INT_MAX : bytesPerRow(icols, bitsPerSample);
+             psFilter ? 1024*1024*16 : bytesPerRow(icols, bitsPerSample);
     } else
         oeP->compressRle = false;
 
@@ -629,38 +620,9 @@ flateFilter(FILE *          const ifP,
    In native (non-psfilter) mode, the run length filter must flush at
    the end of every row.  But the entire raster is sent to the run length
    filter as one continuous stream.  The run length filter learns the
-   refresh interval from oeP->runlengthRefresh.
+   refresh interval from oeP->runlengthRefresh.  In ps-filter mode the
+   run length filter ignores row boundaries and flushes every 4096 bytes.
 */
-
-
-static void
-rlePutBuffer (bool            const repeatMode,
-              unsigned int    const count,
-              unsigned char   const repeatitem,
-              unsigned char * const itembuf,
-              FILE *          const fP) {
-/*----------------------------------------------------------------------------
-   Output some RLE data.  There are two forms of output:
-
-     'repeatMode' true: output a repeat sequence, indicating to repeat byte
-     'repeatitem' 'count' times.
-
-     'repeatMode' false: output a non-repeat sequence indicating the
-     'count' characters in itembuf[].
------------------------------------------------------------------------------*/
-    assert(count > 0);
-    assert(count <= 128);
-
-    if (repeatMode) {
-        writeFileByte((257 - count) % 256, "rlePutBuffer", fP);
-        writeFileByte(repeatitem, "rlePutBuffer", fP);
-    } else {
-        writeFileByte(count - 1, "rlePutBuffer", fP);
-        writeFile(itembuf, count, "rlePutBuffer", fP);
-    }
-}
-
-
 
 static FilterFn rleFilter;
 
@@ -669,96 +631,31 @@ rleFilter (FILE *          const ifP,
            FILE *          const ofP,
            OutputEncoder * const oeP) {
 
-    unsigned int const refresh = oeP->runlengthRefresh;
+    unsigned int const inSize = oeP->runlengthRefresh;
 
     bool eof;
-    bool repeat;
-    unsigned int count;
-    unsigned int incount;
-    unsigned int repeatcount;
-    unsigned char repeatitem;
-    unsigned char itembuf[128];
+    unsigned char * inbuf;
+    unsigned char * outbuf;
+    size_t outSize;
 
-    repeat = true; /* initial value */
-    count = 0; /* initial value */
+    MALLOCARRAY(inbuf, inSize);
+    if (inbuf == NULL)
+        pm_error("Failed to allocate %u bytes of memory for RLE filter",
+                  inSize);
+    pm_rlenc_allocoutbuf(&outbuf, inSize, PM_RLE_PACKBITS);
 
-    for (eof = false, incount = 0; !eof; ) {
-        int rleitem;
+    for (eof = false; !eof; ) {
+        size_t const bytesRead = fread(inbuf, 1, inSize, ifP);
 
-        rleitem = fgetc(ifP);
-        if (rleitem == EOF)
+        if (feof(ifP))
             eof = true;
-        else {
-            ++incount;
+        else if (ferror(ifP) || bytesRead == 0)
+            pm_error("Internal read error: RLE compression");
 
-            if (repeat && count == 0) {
-                /* Still initializing a repeat buf. */
-                itembuf[count++] = repeatitem = rleitem;
-            }
-            else if (repeat) {
-                /* Repeating - watch for end of run. */
-                if (rleitem == repeatitem) {
-                    /* Run continues. */
-                    itembuf[count++] = rleitem;
-                } else {
-                    /* Run ended */
-                    if (count > 2) {
-                        /* Long enough to dump, so dump a repeat-mode buffer
-                           and start a new one.
-                        */
-                        rlePutBuffer(repeat, count, repeatitem, itembuf, ofP);
-                        repeat = true;
-                        count = 0;
-                        itembuf[count++] = repeatitem = rleitem;
-                    } else {
-                        /* Not long enough - convert to non-repeat mode. */
-                        repeat = false;
-                        itembuf[count++] = repeatitem = rleitem;
-                        repeatcount = 1;
-                    }
-                }
-            } else {
-                /* Not repeating - watch for a run worth repeating. */
-                if (rleitem == repeatitem) {
-                    /* Possible run continues. */
-                    ++repeatcount;
-                    if (repeatcount > 3) {
-                        /* Long enough - dump non-repeat part and start
-                           repeat.
-                        */
-                        unsigned int i;
-                        count = count - (repeatcount - 1);
-                        rlePutBuffer(repeat, count, repeatitem, itembuf, ofP);
-                        repeat = true;
-                        count = repeatcount;
-                        for (i = 0; i < count; ++i)
-                            itembuf[i] = rleitem;
-                    } else {
-                        /* Not long enough yet - continue as non-repeat buf. */
-                        itembuf[count++] = rleitem;
-                    }
-                } else {                    /* Broken run. */
-                    itembuf[count++] = repeatitem = rleitem;
-                    repeatcount = 1;
-                }
-            }
-
-            if (incount == refresh) {
-                rlePutBuffer(repeat, count, repeatitem, itembuf, ofP);
-                repeat = true;
-                count = incount = 0;
-            }
-
-            if (count == 128) {
-                rlePutBuffer(repeat, count, repeatitem, itembuf, ofP);
-                repeat = true;
-                count = 0;
-            }
-        }
+        pm_rlenc_compressbyte(inbuf, outbuf, PM_RLE_PACKBITS,
+                              bytesRead, &outSize);
+        writeFile(outbuf, outSize, "rlePutBuffer", ofP);
     }
-
-    if (count > 0)
-        rlePutBuffer(repeat, count, repeatitem, itembuf, ofP);
 
     fclose(ifP);
     fclose(ofP);

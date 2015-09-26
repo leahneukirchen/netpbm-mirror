@@ -34,6 +34,7 @@
 #include "shhopt.h"
 #include "mallocvar.h"
 #include "nstring.h"
+#include "runlength.h"
 
 #include "pclxl.h"
 
@@ -236,162 +237,6 @@ freeCmdline(struct cmdlineInfo const cmdline) {
 
 
 
-#define XY_RLE_FBUFSIZE (1024)
-typedef struct XY_rle {
-    int error;
-    unsigned char buf[128];
-    int bpos;
-    int state;  
-    unsigned char * fbuf;
-    int fbpos;
-    int fbufsize;
-    int fd;
-} XY_rle;
-
-
-
-static void 
-XY_RLEreset(XY_rle * const rleP)  {   
-
-    rleP->state = eSTART;
-    rleP->bpos  = 0;
-    rleP->fbpos = 0;
-    rleP->error = 0;
-}
-
-
-
-static XY_rle * 
-XY_RLEnew(size_t const size) {
-
-    XY_rle * retval;
-    XY_rle * rleP;
-
-    MALLOCVAR(rleP);
-    if (rleP) {
-        rleP->fbufsize = MAX(1024, size);
-        rleP->fbuf = malloc(rleP->fbufsize);
-
-        if (rleP->fbuf) {
-            retval = rleP;
-        } else
-            retval = NULL;
-
-        if (retval == NULL)
-            free(rleP);
-    } else
-        retval = NULL;
-
-    return retval;
-}
-
-
-
-static void
-XY_RLEdelete(XY_rle * const rleP) {
-
-    free(rleP->fbuf);
-    free(rleP);
-}
-
-
-
-static int 
-out(XY_rle * const rleP,
-    int      const count) {
-
-    bool error;
-
-    if (rleP->state == eRLE) {
-        rleP->fbuf[rleP->fbpos++] = -count + 1;
-        rleP->fbuf[rleP->fbpos++] = rleP->buf[0];
-    } else if (rleP->bpos > 0) {
-        rleP->fbuf[rleP->fbpos++] = count - 1;
-        memcpy(rleP->fbuf + rleP->fbpos, rleP->buf, count);
-        rleP->fbpos += count;
-    }
-    if (rleP->fbpos + 129 > rleP->fbufsize) {
-        if (rleP->fbufsize > INT_MAX/1.2)
-            pm_error("Arithmetic overflow during attempt to expand RLE "
-                     "output buffer beyond %u", rleP->fbufsize);
-        rleP->fbufsize *= 1.2; 
-        rleP->fbuf = realloc(rleP->fbuf, rleP->fbufsize);
-        if (rleP->fbuf == NULL) {
-            pm_error("Out of memory while attempting to expand RLE "
-                     "output buffer beyond %u", rleP->fbufsize);
-            rleP->error = -1;
-            rleP->fbpos = 0;
-            error = true;
-        } else
-            error = false;
-    } else
-        error = false;
-
-    rleP->bpos = 0;
-    rleP->state = eSTART;
-
-    return error ? -1 : 0;
-}
-
-
-
-static int
-XY_RLEfinish (XY_rle *rle) {
-    out(rle,rle->bpos);
-    if(rle->error<0) 
-        return rle->error;
-    else
-        return rle->fbpos;
-}
-
-
-
-static  void
-rle_putbyte(XY_rle *      const rleP,
-            unsigned char const u) {
-
-    switch (rleP->state) {
-        case eRLE:
-            if (u != rleP->buf[0])
-                out(rleP, rleP->bpos);
-            break;
-        case eLIT:
-            if (u == rleP->buf[rleP->bpos - 1]
-                && u == rleP->buf[rleP->bpos - 2]) {
-                out(rleP,rleP->bpos - 2);
-                rleP->buf[0] = u;
-                rleP->bpos += 2;
-                rleP->state = eRLE;
-            }   
-            break;
-        case eSTART:
-            if (rleP->bpos == 1) {
-                if (u == rleP->buf[rleP->bpos - 1])
-                    rleP->state = eRLE;
-                else
-                    rleP->state = eLIT;
-            }
-            break;
-    }
-    rleP->buf[rleP->bpos++] = u;
-    if (rleP->bpos == 128) {
-        out(rleP, rleP->bpos);
-    }
-}
-
-
-
-static void
-XY_RLEput(XY_rle *rle,const unsigned char buf[],int count) 
-{
-    int i;
-    for(i=0;i<count;i++) {
-        rle_putbyte(rle,buf[i]);
-    }
-    
-}
-
-
 static int
 XY_Write(int          const fd,
          const void * const buf,
@@ -403,7 +248,7 @@ XY_Write(int          const fd,
     for (len =0, error = false; len < cnt && !error;) {
         ssize_t const rc = write(fd, (char*)buf + len , cnt - len);
         if (rc <= 0)
-            pm_error("Failed to write %u bytes to fd %d", cnt - len, fd);
+            error = true;
         else
             len += rc;
     }
@@ -420,41 +265,69 @@ typedef struct pclGenerator {
     enum ColorDepth colorDepth;
     enum Colorspace colorSpace;
     int width,height;
-    int linelen; /* bytes per line */
-    unsigned char *data;
-    void (*getnextrow)(const struct pclGenerator *, struct pam *);
+    unsigned int linelen;       /* bytes per line */
+    unsigned int paddedLinelen; /* bytes per line + padding */
+    unsigned char * data;
+    unsigned int cursor;
+    void (*getnextrow)(struct pclGenerator *, struct pam *);
 } pclGenerator;
 
 
 
 static void
-pnmToPcllinePackbits(const pclGenerator * const pclGeneratorP,
-                     struct pam *         const pamP) {
+pnmToPcllinePackbits(pclGenerator * const pclGeneratorP,
+                     struct pam *   const pamP) {
 
     tuple * tuplerow;
-    unsigned int pcl_cursor;
     unsigned char accum;
     unsigned char bitmask;
-    unsigned int col;
+    unsigned int col, padCt;
+    unsigned int const padsize =
+        pclGeneratorP->paddedLinelen - pclGeneratorP->linelen;
         
     tuplerow = pnm_allocpamrow(pamP);
 
     pnm_readpamrow(pamP, tuplerow);
 
-    pcl_cursor = 0; bitmask = 0x80; accum = 0x00;
+    bitmask = 0x80; accum = 0x00;
     for (col = 0; col < pamP->width; ++col) {
         if (tuplerow[col][0] == PAM_PBM_WHITE)
             accum |= bitmask;
         bitmask >>= 1;
         if (bitmask == 0) {
-            pclGeneratorP->data[pcl_cursor++] = accum;
+            pclGeneratorP->data[pclGeneratorP->cursor++] = accum;
             bitmask = 0x80; accum = 0x0;
         } 
     }
     if (bitmask != 0x80)
-        pclGeneratorP->data[pcl_cursor++] = accum;
+        pclGeneratorP->data[pclGeneratorP->cursor++] = accum;
+
+    for (padCt = 0; padCt < padsize; ++padCt)
+        pclGeneratorP->data[pclGeneratorP->cursor++] = 0;
 
     pnm_freepamrow(tuplerow);
+}
+
+
+
+static unsigned int
+pclPaddedLinelen(unsigned int const linelen) {
+
+    if (UINT_MAX - 3 < linelen)
+        pm_error("Image too big to process");
+
+    return (((linelen + 3) / 4) * 4);
+}
+
+
+
+static unsigned int
+pclDatabuffSize(unsigned int const paddedLinelen) {
+
+    if (UINT_MAX / 20 < paddedLinelen)
+        pm_error("Image too big to process");
+
+    return (paddedLinelen * 20);
 }
 
 
@@ -472,10 +345,12 @@ createPclGeneratorPackbits(struct pam *    const pamP,
     pclGeneratorP->colorDepth = e1Bit;
     pclGeneratorP->colorSpace = eGray;
     pclGeneratorP->linelen = (pamP->width+7)/8;
+    pclGeneratorP->paddedLinelen = pclPaddedLinelen(pclGeneratorP->linelen);
     pclGeneratorP->height = pamP->height;
     pclGeneratorP->width = (pamP->width);
 
-    pclGeneratorP->data = malloc(pclGeneratorP->linelen);
+    pclGeneratorP->data =
+        malloc(pclDatabuffSize(pclGeneratorP->paddedLinelen));
     
     if (pclGeneratorP->data == NULL)
         pm_error("Unable to allocate row buffer.");
@@ -488,26 +363,29 @@ createPclGeneratorPackbits(struct pam *    const pamP,
 
 
 static void
-pnmToPcllineWholebytes(const pclGenerator * const pclGeneratorP,
-                       struct pam *         const pamP) {
+pnmToPcllineWholebytes(pclGenerator * const pclGeneratorP,
+                       struct pam *   const pamP) {
 
     tuple * tuplerow;
-    unsigned int pcl_cursor;
-    unsigned int col;
+    unsigned int col, padCt;
+    unsigned int const padsize =
+        pclGeneratorP->paddedLinelen - pclGeneratorP->linelen;
 
     tuplerow = pnm_allocpamrow(pamP);
 
     pnm_readpamrow(pamP, tuplerow);
 
-    pcl_cursor = 0; /* initial value */
-    
     for (col = 0; col < pamP->width; ++col) {
         unsigned int plane;
         for (plane = 0; plane < pamP->depth; ++plane) {
-            pclGeneratorP->data[pcl_cursor++] = 
+            pclGeneratorP->data[pclGeneratorP->cursor++] = 
                 pnm_scalesample(tuplerow[col][plane], pamP->maxval, 255);
         }
     }
+
+    for(padCt=0; padCt < padsize; ++padCt)
+        pclGeneratorP->data[pclGeneratorP->cursor++] = 0;
+
     pnm_freepamrow(tuplerow);
 }
 
@@ -530,15 +408,16 @@ createPclGeneratorWholebytes(struct pam *    const pamP,
     pclGenP->colorDepth = e8Bit;
     pclGenP->height     = pamP->height;
     pclGenP->width      = pamP->width;
-    pclGenP->linelen    = pamP->width * pamP->depth;
 
     if (UINT_MAX / pamP->width < pamP->depth)
-        pm_error("Image to big to process");
-    else
-        pclGenP->data = malloc(pamP->width * pamP->depth);
-
-    if (pclGenP->data == NULL)
-        pm_error("Unable to allocate row buffer.");
+        pm_error("Image too big to process");
+    else {
+        pclGenP->linelen = pamP->width * pamP->depth;
+        pclGenP->paddedLinelen = pclPaddedLinelen(pclGenP->linelen);
+        pclGenP->data = malloc(pclDatabuffSize(pclGenP->paddedLinelen));
+        if (pclGenP->data == NULL)
+            pm_error("Unable to allocate row buffer.");
+    }
     
     pclGenP->getnextrow = pnmToPcllineWholebytes;
 
@@ -775,30 +654,25 @@ closeDataSource(int const outFd) {
 
 static void
 convertAndWriteRleBlock(int                  const outFd,
-                        const pclGenerator * const pclGeneratorP,
+                        pclGenerator *       const pclGeneratorP,
                         struct pam *         const pamP,
                         int                  const firstLine,
-                        int                  const nlines,
-                        XY_rle *             const rle) {
+                        int                  const lineCt,
+                        unsigned char *      const outbuf) {
 
-    unsigned char const pad[4] = {0,0,0,0};
-    unsigned int const paddedLinelen = ((pclGeneratorP->linelen+3)/4)*4;
-    int rlelen;
+    size_t rlelen;
     unsigned int line;
-    
-    XY_RLEreset(rle);
 
-    for (line = firstLine; line < firstLine + nlines; ++line) {
+    pclGeneratorP->cursor = 0;
+    for (line = firstLine; line < firstLine + lineCt; ++line) {
         pclGeneratorP->getnextrow(pclGeneratorP, pamP);
-        XY_RLEput(rle, pclGeneratorP->data, pclGeneratorP->linelen);
-        XY_RLEput(rle, pad, paddedLinelen - pclGeneratorP->linelen);
     }
-    rlelen = XY_RLEfinish(rle);
-    if (rlelen<0) 
-        pm_error("Error on Making rle");
+
+    pm_rlenc_compressbyte(pclGeneratorP->data, outbuf, PM_RLE_PACKBITS,
+                          pclGeneratorP->paddedLinelen * lineCt, &rlelen);
 
     xl_dataLength(outFd, rlelen); 
-    XY_Write(outFd, rle->fbuf, rlelen);
+    XY_Write(outFd, outbuf, rlelen);
 }
 
 
@@ -810,12 +684,14 @@ convertAndWriteRleBlock(int                  const outFd,
  * ------------------------------------------------------------
  */
 static void 
-convertAndWriteImage(int                  const outFd,
-                     const pclGenerator * const pclGenP,
-                     struct pam *         const pamP) {
+convertAndWriteImage(int            const outFd,
+                     pclGenerator * const pclGenP,
+                     struct pam *   const pamP) {
+
+    size_t const inSize = (pclGenP-> linelen + 3) * 20;
 
     int blockStartLine;
-    XY_rle * rle;
+    unsigned char * outbuf;
 
     xl_ubyte(outFd, eDirectPixel); xl_attr_ubyte(outFd, aColorMapping);
     xl_ubyte(outFd, pclGenP->colorDepth); xl_attr_ubyte(outFd, aColorDepth);
@@ -825,17 +701,12 @@ convertAndWriteImage(int                  const outFd,
     xl_attr_ubyte(outFd, aDestinationSize);   
     XL_Operator(outFd, oBeginImage);
 
-    if (pclGenP->linelen > INT_MAX / 20)
-        pm_error("Image too big");
-    rle = XY_RLEnew(pclGenP->linelen*20);
-    if (!rle) 
-        pm_error("Unable to allocate %d bytes for the RLE buffer",
-                 pclGenP->linelen * 20);
+    pm_rlenc_allocoutbuf(&outbuf, inSize, PM_RLE_PACKBITS);
 
-    blockStartLine = 0;
-    while (blockStartLine < pclGenP->height) {
+    for (blockStartLine = 0; blockStartLine < pclGenP->height; ) {
         unsigned int const blockHeight =
             MIN(20, pclGenP->height-blockStartLine);
+
         xl_uint16(outFd, blockStartLine); xl_attr_ubyte(outFd, aStartLine); 
         xl_uint16(outFd, blockHeight); xl_attr_ubyte(outFd, aBlockHeight);
         xl_ubyte(outFd, eRLECompression); xl_attr_ubyte(outFd, aCompressMode);
@@ -846,10 +717,10 @@ convertAndWriteImage(int                  const outFd,
         */
         XL_Operator(outFd, oReadImage);
         convertAndWriteRleBlock(outFd, pclGenP, pamP,
-                                blockStartLine, blockHeight, rle);
+                                blockStartLine, blockHeight, outbuf);
         blockStartLine += blockHeight;
     }
-    XY_RLEdelete(rle);
+    pm_rlenc_freebuf(outbuf);
     XL_Operator(outFd, oEndImage);
 }
 
@@ -1087,7 +958,7 @@ endPage(int          const outFd,
 
 static void
 convertAndPrintPage(int                  const outFd,
-                    const pclGenerator * const pclGeneratorP,
+                    pclGenerator *       const pclGeneratorP,
                     struct pam *         const pamP,
                     enum MediaSize       const format,
                     unsigned int         const dpi,

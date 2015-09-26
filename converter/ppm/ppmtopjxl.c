@@ -20,6 +20,7 @@
 #include "pm_c_util.h"
 #include "nstring.h"
 #include "ppm.h"
+#include "runlength.h"
 
 #define MAXCOLORS 1024
 
@@ -153,52 +154,12 @@ putbits(int const bArg,
             /* remove trailing zeros */
         printf("\033*b"); 
         if (num && !nopack) {            /* TIFF 4.0 packbits encoding */
-            unsigned int i;
-            int start = 0;
-            int next;
-            runcnt[start] = 0;
-            for (i = 1; i < num; ++i) {
-                if (inrow[i] == inrow[i-1]) {
-                    if (runcnt[start] <= 0 && runcnt[start] > -127)
-                        runcnt[start]--;
-                    else
-                        runcnt[start = i] = 0;
-                } else {
-                    if (runcnt[start] >= 0 && runcnt[start] < 127)
-                        runcnt[start]++;
-                    else
-                        runcnt[start = i] = 0;
-                }
-            }
-            for (i = 0, start = 0; i < num; i = next) {
-                int count = runcnt[i];
-                int from = i;
-                if (count >= 0) { /* merge two-byte runs */
-                    for (;;) {
-                        next = i+1+runcnt[i];
-                        if(next >= num || runcnt[next] < 0 ||
-                           count+runcnt[next]+1 > 127)
-                            break;
-                        count += runcnt[next]+1;
-                        i = next;
-                    }
-                }
-                next =  i + 1 + ((runcnt[i] < 0) ? -runcnt[i] : runcnt[i]);
-                if (next < num && count > 0 &&
-                    runcnt[next] < 0 && runcnt[next] > -127) {
-                    --count;
-                    --next;
-                    runcnt[next] = runcnt[next+1]-1;
-                }
-                outrow[start++] = count;
-                if (count >= 0) {
-                    while (count-- >= 0)
-                        outrow[start++] = inrow[from++];
-                } else
-                    outrow[start++] = inrow[from];
-            }
-            if (start < num) {
-                num = start;
+            size_t outSize;
+            pm_rlenc_compressbyte(
+                (unsigned char *)inrow, (unsigned char *)outrow,
+                PM_RLE_PACKBITS, num, &outSize); 
+            if (outSize < num) {
+                num = outSize;
                 if (!pack) {
                     printf("2m");
                     pack = true;

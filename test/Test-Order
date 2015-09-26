@@ -83,6 +83,8 @@ pbmtog3.test
 411toppm.test
 eyuvtoppm.test
 
+pbm-misc-converters.test
+
 # Miscellaneous utility tests
 
 ppmdfont.test
@@ -100,6 +102,7 @@ rgb3-roundtrip.test
 ppmchange-roundtrip.test
 pamdice-roundtrip.test
 pamslice-roundtrip.test
+lookup-roundtrip.test
 
 # Round-trip tests : lossless converters
 
@@ -129,11 +132,13 @@ pfm-roundtrip.test
 pi3-roundtrip.test
 pict-roundtrip.test
 png-roundtrip.test
+png-roundtrip2.test
 ps-roundtrip.test
 ps-alt-roundtrip.test
 sgi-roundtrip.test
 sbig-roundtrip.test
 st4-roundtrip.test
+sunicon-roundtrip.test
 sunrast-roundtrip.test
 targa-roundtrip.test
 tiff-roundtrip.test

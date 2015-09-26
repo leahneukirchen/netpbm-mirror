@@ -1,4 +1,4 @@
-/* pbmtoescp2.c - read a portable bitmap and produce Epson ESC/P2 raster
+ /* pbmtoescp2.c - read a portable bitmap and produce Epson ESC/P2 raster
 **                 graphics output data for Epson Stylus printers
 **
 ** Copyright (C) 2003 by Ulrich Walcher (u.walcher@gmx.de)
@@ -10,45 +10,65 @@
 ** copyright notice and this permission notice appear in supporting
 ** documentation.  This software is provided "as is" without express or
 ** implied warranty.
+**
+** Major changes were made in July 2015 by Akira Urushibata.
+** Added 720 DPI capability.
+** Added -formfeed, -raw and -stripeheight.
+** Replaced Packbits run length encoding function.  (Use library function.)
+*
+*  ESC/P Reference Manual (1997)
+*  ftp://download.epson-europe.com/pub/download/182/epson18162eu.zip
 */
-
-/* I used the Epson ESC/P Reference Manual (1997) in writing this. */
 
 #include <string.h>
 
 #include "pm_c_util.h"
-#include "pbm.h"
+#include "mallocvar.h"
 #include "shhopt.h"
+#include "runlength.h"
+#include "pbm.h"
+
+
 
 static char const esc = 033;
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     const char * inputFileName;
     unsigned int resolution;
     unsigned int compress;
+    unsigned int stripeHeight;
+    bool raw;
+    bool formfeed;
 };
 
 
 
 static void
-parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo *cmdlineP) {
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo *cmdlineP) {
 
     optStruct3 opt;
     unsigned int option_def_index = 0;
-    optEntry *option_def = malloc(100*sizeof(optEntry));
+    optEntry * option_def = malloc(100*sizeof(optEntry));
 
-    unsigned int compressSpec, resolutionSpec;
+    unsigned int compressSpec, resolutionSpec, stripeHeightSpec,
+                 rawSpec, formfeedSpec;
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;
     opt.allowNegNum = FALSE;
     OPTENT3(0, "compress",     OPT_UINT,    &cmdlineP->compress,    
-            &compressSpec, 0);
+            &compressSpec,    0);
     OPTENT3(0, "resolution",   OPT_UINT,    &cmdlineP->resolution,  
-            &resolutionSpec, 0);
+            &resolutionSpec,  0);
+    OPTENT3(0, "stripeheight", OPT_UINT,    &cmdlineP->stripeHeight,  
+            &stripeHeightSpec, 0);
+    OPTENT3(0, "raw",          OPT_FLAG,    NULL,  
+            &rawSpec,    0);
+    OPTENT3(0, "formfeed",     OPT_FLAG,    NULL,  
+            &formfeedSpec,    0);
     
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
     
     if (argc-1 > 1)
         pm_error("Too many arguments: %d.  "
@@ -62,79 +82,81 @@ parseCommandLine(int argc, char ** argv,
         cmdlineP->compress = 1;
 
     if (resolutionSpec) {
-        if (cmdlineP->resolution != 360 && cmdlineP->resolution != 180)
+        if (cmdlineP->resolution != 720 && cmdlineP->resolution != 360 &&
+            cmdlineP->resolution != 180)
             pm_error("Invalid -resolution value: %u.  "
-                     "Only 180 and 360 are valid.", cmdlineP->resolution);
+                     "Only 180, 360 and 720 are valid.", cmdlineP->resolution);
     } else
         cmdlineP->resolution = 360;
+
+    if (stripeHeightSpec) {
+        if (cmdlineP->stripeHeight == 0 ||
+            cmdlineP->stripeHeight > 255)
+            pm_error("Invalid -stripeheight value: %u. "
+                     "Should be 24, 8, or 1, and must be in the range 1-255",
+                     cmdlineP->stripeHeight);
+        else if (cmdlineP->stripeHeight != 24 &&
+                 cmdlineP->stripeHeight != 8  &&
+                 cmdlineP->stripeHeight != 1)
+            pm_message("Proceeding with irregular -stripeheight value: %u. "
+                       "Should be 24, 8, or 1.", cmdlineP->stripeHeight);
+        else if (cmdlineP->resolution == 720 &&
+                 cmdlineP->stripeHeight != 1)
+            /* The official Epson manual mandates single-row stripes for
+               720 dpi high-resolution images.
+            */
+            pm_message("Proceeding with irregular -stripeheight value: %u. "
+                       "Because resolution i 720dpi, should be 1.",
+                        cmdlineP->stripeHeight);
+    } else
+        cmdlineP->stripeHeight = cmdlineP->resolution == 720 ? 1 : 24;
+
+    if (rawSpec && formfeedSpec)
+        pm_error("You cannot specify both -raw and -formfeed");
+    else {
+        cmdlineP->raw = rawSpec ? true : false ;
+        cmdlineP->formfeed = formfeedSpec ? true : false ;
+    }
 
     if (argc-1 == 1)
         cmdlineP->inputFileName = argv[1];
     else
         cmdlineP->inputFileName = "-";
+
+    free(option_def);
 }
 
 
 
-static unsigned int
-enc_epson_rle(unsigned int          const l, 
-              const unsigned char * const src, 
-              unsigned char *       const dest) {
-/*----------------------------------------------------------------------------
-  compress l data bytes from src to dest and return the compressed
-  length
------------------------------------------------------------------------------*/
-    unsigned int i;      /* index */
-    unsigned int state;  /* run state */
-    unsigned int pos;    /* source position */
-    unsigned int dpos;   /* destination position */
+static void
+writeSetup(unsigned int const hres) {
 
-    pos = dpos = state  = 0;
-    while ( pos < l )
-    {
-        for (i=0; i<128 && pos+i<l; i++)
-            /* search for begin of a run, smallest useful run is 3
-               equal bytes 
-            */
-            if(src[pos+i]==src[pos+i+1] && src[pos+i]==src[pos+i+2])
-            {
-                state=1;                       /* set run state */
-                break;
-            }
-	if(i)
-	{
-        /* set counter byte for copy through */
-        dest[dpos] = i-1;       
-        /* copy data bytes before run begin or end cond. */
-        memcpy(dest+dpos+1,src+pos,i);    
-        pos+=i; dpos+=i+1;                 /* update positions */
-	}
-    if (state)
-    {
-        for (i=0; src[pos+i]==src[pos+i+1] && i<128 && pos+i<l; i++);
-        /* found the runlength i */
-        dest[dpos]   = 257-i;           /* set counter for byte repetition */
-        dest[dpos+1] = src[pos];        /* set byte to be repeated */
-        pos+=i; dpos+=2; state=0;       /* update positions, reset run state */
-        }
-    }
-    return dpos;
+    /* Set raster graphic mode. */
+    printf("%c%c%c%c%c%c", esc, '(', 'G', 1, 0, 1);
+
+    /* Set line spacing in units of 1/360 inches. */
+    printf("%c%c%c", esc, '+', 24 * hres / 10);
 }
 
 
 
 int
-main(int argc, char* argv[]) {
+main(int argc, const char * argv[]) {
 
-    FILE* ifP;
+    FILE * ifP;
     int rows, cols;
     int format;
-    unsigned int row, idx, len;
-    unsigned int h, v;
-    unsigned char *bytes, *cprbytes;
-    struct cmdlineInfo cmdline;
+    unsigned int row;
+    unsigned int idx;
+    unsigned int outColByteCt;
+    unsigned int stripeByteCt;
+    unsigned int hres, vres;
+    unsigned char * inBuff;
+    unsigned char * bitrow[256];
+    unsigned char * compressedData;
+    struct CmdlineInfo cmdline;
     
-    pbm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
@@ -142,51 +164,83 @@ main(int argc, char* argv[]) {
 
     pbm_readpbminit(ifP, &cols, &rows, &format);
 
-    bytes = malloc(24*pbm_packed_bytes(cols)+2);
-    cprbytes = malloc(2*24*pbm_packed_bytes(cols));
-    if (bytes == NULL || cprbytes == NULL)
-        pm_error("Cannot allocate memory");
+    if (cols / 256 > 127)  /* Limit in official Epson manual */
+        pm_error("Image width is too large");
 
-    h = v = 3600/cmdline.resolution;
+    outColByteCt = pbm_packed_bytes(cols);
+    stripeByteCt = cmdline.stripeHeight * outColByteCt;
 
-    /* Set raster graphic mode. */
-    printf("%c%c%c%c%c%c", esc, '(', 'G', 1, 0, 1);
+    MALLOCARRAY(inBuff, stripeByteCt);
+    if (inBuff == NULL)
+      pm_error("Out of memory trying to create input buffer of %u bytes",
+               stripeByteCt);
 
-    /* Set line spacing in units of 1/360 inches. */
-    printf("%c%c%c", esc, '+', 24*h/10);
+    if (cmdline.compress != 0)
+        pm_rlenc_allocoutbuf(&compressedData, stripeByteCt, PM_RLE_PACKBITS);
+    else
+        compressedData = NULL;
 
-    /* Write out raster stripes 24 rows high. */
-    for (row = 0; row < rows; row += 24) {
-        unsigned int const linesThisStripe = (rows-row<24) ? rows%24 : 24;
-        printf("%c%c%c%c%c%c%c%c", esc, '.', cmdline.compress, 
-               v, h, linesThisStripe, 
-               cols%256, cols/256);
-        /* Read pbm rows, each padded to full byte */
-        for (idx = 0; idx < 24 && row+idx < rows; ++idx)
-            pbm_readpbmrow_packed(ifP,bytes+idx*pbm_packed_bytes(cols),
-                                  cols,format);
-        /* Add delimiter to end of rows, using inverse of final
-           data byte to prevent match. */
-        *(bytes+idx*pbm_packed_bytes(cols)) =
-          ~ *(bytes+idx*pbm_packed_bytes(cols)-1);
+    for (idx = 0; idx <= cmdline.stripeHeight; ++idx)
+        bitrow[idx]= &inBuff[idx * outColByteCt];
 
-        /* Write raster data. */
-        if (cmdline.compress != 0) {
-            /* compressed */
-            len = enc_epson_rle(linesThisStripe * pbm_packed_bytes(cols), 
-                                bytes, cprbytes);
-            fwrite(cprbytes,len,1,stdout);
-        } else
-            /* uncompressed */
-            fwrite(bytes, pbm_packed_bytes(cols), linesThisStripe, stdout);    
+    hres = vres = 3600 / cmdline.resolution;
+        /* Possible values for hres, vres: 20, 10, 5 */
 
-        if (rows-row >= 24) putchar('\n');
+    if (!cmdline.raw)
+        writeSetup(hres);
+
+    /* Write out raster stripes */
+
+    for (row = 0; row < rows; row += cmdline.stripeHeight ) {
+        unsigned int const rowsThisStripe =
+            MIN(rows - row, cmdline.stripeHeight);
+        unsigned int const outCols = outColByteCt * 8;
+
+        if (rowsThisStripe > 0) {
+            unsigned int idx;
+
+            printf("%c%c%c%c%c%c%c%c", esc, '.', cmdline.compress, vres, hres,
+                   cmdline.stripeHeight, outCols % 256, outCols / 256);
+
+            /* Read pbm rows, each padded to full byte */
+
+            for (idx = 0; idx < rowsThisStripe; ++idx) {
+                pbm_readpbmrow_packed (ifP, bitrow[idx], cols, format);
+                pbm_cleanrowend_packed(bitrow[idx], cols);
+            }
+
+            /* If at bottom pad with empty rows up to stripe height */
+            if (rowsThisStripe < cmdline.stripeHeight )
+                memset(bitrow[rowsThisStripe], 0,
+                       (cmdline.stripeHeight - rowsThisStripe) * outColByteCt);
+
+            /* Write raster data */
+            if (cmdline.compress != 0) {  /* compressed */
+                size_t compressedDataCt;
+
+                pm_rlenc_compressbyte(inBuff, compressedData, PM_RLE_PACKBITS,
+                                      stripeByteCt, &compressedDataCt);
+                fwrite(compressedData, compressedDataCt, 1, stdout);
+            } else                        /* uncompressed */
+                fwrite(inBuff, stripeByteCt, 1, stdout);
+
+            /* Emit newline to print the stripe */
+            putchar('\n');
+        }
     }
-    free(bytes); free(cprbytes);
+
+    free(inBuff); 
+    free(compressedData);
     pm_close(ifP);
 
-    /* Reset printer. */
-    printf("%c%c", esc, '@');
+    /* Form feed */
+    if (cmdline.formfeed)
+        putchar('\f');
+
+    if (!cmdline.raw) {
+        /* Reset printer. a*/
+        printf("%c%c", esc, '@');
+    }
 
     return 0;
 }

@@ -4,32 +4,52 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-15.09.26 BJH  Release 10.71.03
+not yet  BJH  Release 10.72.00
+
+              Add pamunlookup .
+
+              pamtopng: Implement -itxt .
+
+              pamlookup: Add -byplane .
+
+              pbmtoescp2: Add -stripeheight .
+
+              phmtoescp2: Add -resolution .
+
+              pbmtoescp2: Add -formfeed .
+
+              pbmtoescp2: Add -raw .
+
+              pbmtoescp2: Add -resolution=720 .
+
+              pbmtoescp2: Pad output horizontally to a multiple of 8 columns
+              and vertically to a whole stripe to prevent image loss.
 
               fitstopnm: Add message saying you're probably making a mistake
               if you have a 3-D image and don't specify -image.  The third
               dimension is almost always time in practice.
 
-15.08.02 BJH  Release 10.71.02
-
               fitstopnm: Fix -min and -max.  Broken in Netpbm 10.39 (June
               2007).
 
-              Pnmtopclxl: fix buffer overrun causing unpredictable behavior.
+              pnmtopclxl: fix buffer overrun causing unpredictable behavior.
               (Introduced in Netpbm 10.54 (March 2011).
 
-              Pnmtopclxl: fix wild memory access when out of memory.  Always
+              pnmtopclxl: fix wild memory access when out of memory.  Always
               broken (Pnmtopclxl was new in Netpbm 10.6 (July 2002)).
 
-              Pnmtopclxl: fix wild memory access with pathologically large and
+              pnmtopclxl: fix wild memory access with pathologically large and
               uncompressible image.  Always broken (Pnmtopclxl was new in
               Netpbm 10.6 (July 2002)).
 
-              Pnmtopclxl: fix silent output corruption when a file write
+              pnmtopclxl: fix silent output corruption when a file write
               fails.  Always broken (Pnmtopclxl was new in Netpbm 10.6 (July
               2002)).
 
-15.07.02 BJH  Release 10.71.01
+              escp2topbm: Fix -plain.  Always broken (escp2topbm was new in
+              Netpbm 10.18 (September 2003)).
+
+              pnmpad: Add -mheight, -mwidth.
 
               ppmtoilbm: Fix failure with -hamforce and -nocompression.
               Broken in Netpbm 9.12 (March 2001).
@@ -161,7 +181,7 @@ CHANGE HISTORY
               makeman: deal properly with backlash in source.  Thanks Willem
               van Schaik <willem@schaik.com>.  But something was wrong with
               this change and it caused the program always to fail, so
-              we reversed this change in 10.71.01.
+              we reversed this change in 10.72.
 
               Build: don't build and install libjbig and libjasper if we
               are using external versions of them instead.

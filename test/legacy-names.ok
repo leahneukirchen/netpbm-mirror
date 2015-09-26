@@ -2,6 +2,7 @@ bmptoppm: ok
 gemtopbm: ok
 icontopbm: ok
 pamfixtrunc: ok
+pamrgbatopng: ok
 pbmtoicon: ok
 pgmedge: ok
 pgmnorm: ok

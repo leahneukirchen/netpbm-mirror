@@ -41,6 +41,7 @@
 #include "pbm.h"
 #include "shhopt.h"
 #include "mallocvar.h"
+#include "runlength.h"
 #include "macp.h"
 
 #define MIN3(a,b,c)     (MIN((MIN((a),(b))),(c)))
@@ -282,60 +283,6 @@ writeMacpRowPacked(const bit  * const packedBits,
 
 
 static void
-packit(const bit *     const sourceBits,
-       unsigned int    const imageColCharCt,
-       unsigned char * const packedBits,
-       unsigned int  * const packedImageLengthP ) {
-/*--------------------------------------------------------------------------
-  Compress according to packbits algorithm, a byte-level run-length encoding
-  scheme.
-
-  Each row is encoded separately.
-
-  The following code does not produce optimum output when there are 2-byte
-  long sequences between longer ones: the 2-byte run in between does not get
-  packed, using up 3 bytes where 2 would do.
-----------------------------------------------------------------------------*/
-    int charcount, packcount;
-    enum {EQUAL, UNEQUAL} status;
-    bit * count;
-
-    for (packcount = 0, charcount = 0, status = EQUAL;
-         charcount < imageColCharCt;
-        ) {
-        bit const save = sourceBits[charcount++];
-
-        int newcount;
-
-        newcount = 1;
-        while (charcount < imageColCharCt && sourceBits[charcount] == save) {
-            ++charcount;
-            ++newcount;
-        }
-        if (newcount > 2) {
-            count = (unsigned char *) &packedBits[packcount++];
-            *count = 257 - newcount;
-            packedBits[packcount++] = save;
-            status = EQUAL;
-        } else {
-            if (status == EQUAL) {
-                count = (unsigned char *) &packedBits[packcount++];
-                *count = newcount - 1;
-             } else
-                *count += newcount;
-
-            for( ; newcount > 0; --newcount) {
-                packedBits[packcount++] = save;
-            }
-            status = UNEQUAL;
-        }
-    }
-    *packedImageLengthP = packcount;
-}
-
-
-
-static void
 writeMacpRow(bit        * const imageBits,
              unsigned int const leftMarginCharCt,
              unsigned int const imageColCharCt,
@@ -352,31 +299,30 @@ writeMacpRow(bit        * const imageBits,
     else {
         unsigned int const rightMarginCharCt =
             MACP_COLCHARS - leftMarginCharCt - imageColCharCt;
-        unsigned char * const packedBits = malloc(MACP_COLCHARS+1);
-        
-        unsigned int packedImageLength;
+        unsigned char packedBits[MACP_COLCHARS+1];
+        size_t packedImageLength;
 
-        if (packedBits == NULL)
-            pm_error("Failed to get memory for a %u-column row buffer",
-                     MACP_COLCHARS);
+        if (pm_rlenc_maxbytes(MACP_COLCHARS, PM_RLE_PACKBITS)
+            > MACP_COLCHARS + 1)
+            pm_error("INTERNAL ERROR: RLE buffer too small");
 
-        packit(imageBits, imageColCharCt, packedBits, &packedImageLength);
+        pm_rlenc_compressbyte(imageBits, packedBits, PM_RLE_PACKBITS,
+                              imageColCharCt,  &packedImageLength);
 
-        /* Check if we are we better off with compression.  If not, send row
-           unpacked.  See note at top of file.
-        */
-        
         if (packedImageLength +
             (leftMarginCharCt  > 0 ? 1 : 0) * 2 +
             (rightMarginCharCt > 0 ? 1 : 0) * 2
-            < MACP_COLCHARS)
+            < MACP_COLCHARS) {
+            /* It's smaller compressed, so do that */
             writeMacpRowPacked(packedBits, leftMarginCharCt,
                                packedImageLength, rightMarginCharCt, ofP);
-        else /* Extremely rare */
+        } else { /* Extremely rare */
+            /* It's larger compressed, so do it uncompressed.  See note
+               at top of file.
+            */
             writeMacpRowUnpacked(imageBits, leftMarginCharCt, imageColCharCt,
                                  ofP);
-
-        free(packedBits);
+        }
     }
 }
 

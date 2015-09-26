@@ -54,7 +54,7 @@
 
 
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     const char * inputFileName;
     unsigned int image;  /* zero if unspecified */
     float max;
@@ -75,8 +75,8 @@ struct cmdlineInfo {
 
 
 static void 
-parseCommandLine(int argc, char ** argv, 
-                 struct cmdlineInfo * const cmdlineP) {
+parseCommandLine(int argc, const char ** argv, 
+                 struct CmdlineInfo * const cmdlineP) {
 /* --------------------------------------------------------------------------
    Parse program command line described in Unix standard form by argc
    and argv.  Return the information in the options as *cmdlineP.  
@@ -120,7 +120,7 @@ parseCommandLine(int argc, char ** argv,
 
     /* Set some defaults the lazy way (using multiple setting of variables) */
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char**)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (imageSpec) {
@@ -145,6 +145,7 @@ parseCommandLine(int argc, char ** argv,
             pm_error("Too many arguments (%u).  The only non-option argument "
                      "is the input file name.", argc-1);
     }
+    free(option_def);
 }
 
 
@@ -569,7 +570,7 @@ computeMinMax(FILE *             const ifP,
 
 
 static xelval
-determineMaxval(struct cmdlineInfo const cmdline,
+determineMaxval(struct CmdlineInfo const cmdline,
                 valFmt             const valFmt,
                 double             const datamax,
                 double             const datamin) {
@@ -733,9 +734,9 @@ convertRaster(FILE *                const ifP,
 
 
 int
-main(int argc, char * argv[]) {
+main(int argc, const char * argv[]) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP;
     unsigned int cols, rows;
     xelval maxval;
@@ -754,7 +755,7 @@ main(int argc, char * argv[]) {
            is undefined
         */
   
-    pnm_init( &argc, argv );
+    pm_proginit(&argc, argv);
   
     parseCommandLine(argc, argv, &cmdline);
 
@@ -803,3 +804,6 @@ main(int argc, char * argv[]) {
 
     return 0;
 }
+
+
+
