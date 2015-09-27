@@ -40,7 +40,7 @@ Netpbm image input and produce a Netpbm image output.
 
    tuplerow = pnm_allocpamrow(&amp;inpam);
 
-   for (row = 0; row &lt; inpam.height; row++) {
+   for (row = 0; row &lt; inpam.height; ++row) {
        unsigned int column;
        pnm_readpamrow(&amp;inpam, tuplerow);
        for (column = 0; column &lt; inpam.width; ++column) {
@@ -49,8 +49,8 @@ Netpbm image input and produce a Netpbm image output.
                grand_total += tuplerow[column][plane];
            }
        }
-       pnm_writepamrow(&amp;outpam, tuplerow); }
-
+       pnm_writepamrow(&amp;outpam, tuplerow);
+   }
    pnm_freepamrow(tuplerow);
 
 </pre>
