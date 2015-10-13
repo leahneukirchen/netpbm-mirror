@@ -374,7 +374,7 @@ objClass(SkeletonObjectType const objType) {
 
 #if HAVE_PARSE_PRINTF_FORMAT
 static void
-validateParsePrintfFLag(int                const printfConversion,
+validateParsePrintfFlag(int                const printfConversion,
                         SkeletonObjectType const ctyp,
                         const char **      const errorP) {
 /*----------------------------------------------------------------------------
@@ -466,7 +466,7 @@ validateFormatWithPpf(const char *       const format,
         break;
 
     case 1:
-        validateParsePrintfFLag(printfConversion[0], ctyp, errorP);
+        validateParsePrintfFlag(printfConversion[0], ctyp, errorP);
         break;
 
     default:
