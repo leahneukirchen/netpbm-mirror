@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.73.00
 
+              Build: fix superfluous error message when USER environment
+              variable contains whitespace.
+
 15.09.26 BJH  Release 10.72.00
 
               Add pamunlookup .
