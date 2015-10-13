@@ -6,8 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.73.00
 
-              Build: fix undefined reference to parse_printf_format etc.
-              on system that doesn't have that facility.  Broken in 10.69
+              Build: fix undefined reference to parse_printf_format etc.  on
+              system that doesn't have that facility.  Broken in Netpbm 10.69
               (December 2014).
 
               Build: fix superfluous error message when USER environment
