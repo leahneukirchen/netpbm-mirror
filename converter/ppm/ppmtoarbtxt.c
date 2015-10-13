@@ -436,6 +436,7 @@ validateParsePrintfFlag(int                const printfConversion,
 
 
 
+#if HAVE_PARSE_PRINTF_FORMAT
 static void
 validateFormatWithPpf(const char *       const format,
                       SkeletonObjectType const ctyp,
@@ -475,6 +476,7 @@ validateFormatWithPpf(const char *       const format,
         break;
     }
 }
+#endif
 
 
 
