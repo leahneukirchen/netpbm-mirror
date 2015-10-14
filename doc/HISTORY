@@ -13,6 +13,9 @@ not yet  BJH  Release 10.73.00
               Build: fix superfluous error message when USER environment
               variable contains whitespace.  Broken since primordial Netpbm.
 
+              Windows build: fix bug: make clean doesn't clean icon/netpbm.o.
+              Broken since Netpbm 10.67 (June 2014).
+
 15.09.26 BJH  Release 10.72.00
 
               Add pamunlookup .

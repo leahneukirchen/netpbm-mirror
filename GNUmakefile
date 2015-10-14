@@ -74,7 +74,7 @@ include $(BUILDDIR)/config.mk
 
 PROG_SUBDIRS = converter analyzer editor generator other
 PRODUCT_SUBDIRS = lib $(PROG_SUBDIRS)
-SUPPORT_SUBDIRS = urt buildtools test
+SUPPORT_SUBDIRS = urt icon buildtools test
 
 SUBDIRS = $(PRODUCT_SUBDIRS) $(SUPPORT_SUBDIRS)
 
