@@ -12,7 +12,7 @@
 DATE=`date`
 LOGNAME_OR_UNKNOWN=${LOGNAME:-UNKNOWN}
 USER=${USER:-$LOGNAME_OR_UNKNOWN}
-if [ $USER = "UNKNOWN" ]; then
+if [ "$USER" = "UNKNOWN" ]; then
     USER=`whoami`
 fi
 
