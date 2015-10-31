@@ -4,6 +4,15 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+15.10.31 BJH  Release 10.72.02
+
+              anytopnm: use --mime-type option instead of --mime on newer
+              'file' program (on which --mime has a new meaning so that
+              'anytopnm' cannot recognize some file types).
+
+              anytopnm: recognize "Netpbm PAM" non-mime output from 'file'
+              program as indicating PAM.
+
 15.10.14 BJH  Release 10.72.01
 
               Build: fix undefined reference to parse_printf_format etc.  on
