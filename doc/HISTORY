@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+15.11.25 BJH  Release 10.72.03
+
+              pnmtops: fix bug: always things -level=N is -level=1.
+              Introduced after Netpbm 10.26 (January 2005) but before 10.35
+              (August 2006).  Manifests only with recent compilers.
+
 15.10.31 BJH  Release 10.72.02
 
               anytopnm: use --mime-type option instead of --mime on newer
