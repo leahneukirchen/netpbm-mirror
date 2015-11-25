@@ -10,8 +10,12 @@ not yet  BJH  Release 10.73.00
               'file' program (on which --mime has a new meaning so that
               'anytopnm' cannot recognize some file types).
 
-              anytopnm: recognized "Netpbm PAM" non-mime output from 'file'
+              anytopnm: recognize "Netpbm PAM" non-mime output from 'file'
               program as indicating PAM.
+
+              pnmtops: fix bug: always things -level=N is -level=1.
+              Introduced after Netpbm 10.26 (January 2005) but before 10.35
+              (August 2006).  Manifests only with recent compilers.
 
               Build: fix undefined reference to parse_printf_format etc.  on
               system that doesn't have that facility.  Broken in Netpbm 10.69
