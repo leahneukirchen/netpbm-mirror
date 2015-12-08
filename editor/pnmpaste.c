@@ -21,7 +21,7 @@
 
 enum boolOp {REPLACE, AND, OR, XOR /*, NAND, NOR, NXOR */ };
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -36,7 +36,7 @@ struct cmdlineInfo {
 
 static void
 parseCommandLine(int argc, const char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
@@ -354,7 +354,7 @@ pasteNonPbm(FILE *       const fpInset,
 int
 main(int argc, const char ** argv) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * fpInset;
     FILE * fpBase;
     xelval maxvalInset, maxvalBase;
