@@ -17,6 +17,9 @@ not yet  BJH  Release 10.73.00
               Introduced after Netpbm 10.26 (January 2005) but before 10.35
               (August 2006).  Manifests only with recent compilers.
 
+              pnmpaste: fix bug with PBM: incorrect output.  Introduced in
+              Netpbm 10.44 (September 2008).
+
               Build: fix undefined reference to parse_printf_format etc.  on
               system that doesn't have that facility.  Broken in Netpbm 10.69
               (December 2014).
