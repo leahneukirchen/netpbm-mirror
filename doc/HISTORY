@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+15.12.09 BJH  Release 10.72.04
+
+              pnmpaste: fix bug with PBM: incorrect output.  Introduced in
+              Netpbm 10.44 (September 2008).
+
 15.11.25 BJH  Release 10.72.03
 
               pnmtops: fix bug: always things -level=N is -level=1.
