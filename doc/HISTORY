@@ -13,7 +13,7 @@ not yet  BJH  Release 10.73.00
               anytopnm: recognize "Netpbm PAM" non-mime output from 'file'
               program as indicating PAM.
 
-              pnmtops: fix bug: always things -level=N is -level=1.
+              pnmtops: fix bug: always thinks -level=N is -level=1.
               Introduced after Netpbm 10.26 (January 2005) but before 10.35
               (August 2006).  Manifests only with recent compilers.
 
@@ -29,6 +29,8 @@ not yet  BJH  Release 10.73.00
 
               Windows build: fix bug: make clean doesn't clean icon/netpbm.o.
               Broken since Netpbm 10.67 (June 2014).
+
+              Test: improved pnmpaste test.
 
 15.09.26 BJH  Release 10.72.00
 
