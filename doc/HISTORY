@@ -4,6 +4,15 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+15.12.25 BJH  Release 10.35.98
+
+              pnmtops: fix bug: always things -level=N is -level=1.
+              Introduced after Netpbm 10.26 (January 2005) but before 10.35
+              (August 2006).  Manifests only with recent compilers.
+
+              Build: fix superfluous error message when USER environment
+              variable contains whitespace.  Broken since primordial Netpbm.
+
 15.09.26 BJH  Release 10.35.97
 
               sbigtopgm: Fix detection of camera type.  Broken in
