@@ -47,18 +47,39 @@ putInputIntoTempfile() {
 
 
 setMimeType() {
+#------------------------------------------------------------------------------
+# Set variable 'mimeType' to the mime type string (e.g. "application/binary")
+#
+# If we can't tell, set it to "unknown".
+#------------------------------------------------------------------------------
     # $1 is the file name
 
-    # Christos Zoulas's current 'file' (see Freshmeat) has the --mime option.
+    # Old versions of 'file' cannot tell us the mime type; they lack any option
+    # to do so.
+    #
+    # Newer ones have a --mime option for that.
+    #
+    # Still newer ones (ca 2008) have a --mime option, but it does something
+    # different - it prints the mime type plus the mime encoding.  And they
+    # have --mime-type to print just the mime type.
 
-    file --mime /dev/null >/dev/null 2>/dev/null
+    file --mime-type /dev/null >/dev/null 2>/dev/null
     if [ $? -eq 0 ]; then
-        # Now that we know the --mime option exists, use it.
-        mimeType=`file --mime "$1" | cut -d: -f2- | cut -c2-`
+        # Now that we know the --mime-type option exists, use it.
+        mimeType=`file --mime-type "$1" | cut -d: -f2- | cut -c2-`
     else
-        # file --mime failed; we don't know why, but we assume it's because it
-        # is a traditional 'file' program that doesn't have a --mime option.
-    mimeType="unknown"
+        # file --mime-type failed; we don't know why, but we assume it's
+        # because it is an older 'file' program that doesn't have a --mime-type
+        # option.
+        file --mime /dev/null >/dev/null 2>/dev/null
+        if [ $? -eq 0 ]; then
+            # Now that we know the --mime option exists, use it.
+            mimeType=`file --mime "$1" | cut -d: -f2- | cut -c2-`
+        else
+            # file --mime failed; we don't know why, but we assume it's because
+            # it is an older 'file' program that doesn't have a --mime option.
+            mimeType="unknown"
+        fi
     fi
 }
 
@@ -109,7 +130,7 @@ computeTypeFromTypeDescription () {
 
     case "$1" in
     
-        *PBM* | *PGM* | *PPM* )
+        *PBM* | *PGM* | *PPM* | *Netpbm*PAM*)
             filetype=pnm
             ;;
     

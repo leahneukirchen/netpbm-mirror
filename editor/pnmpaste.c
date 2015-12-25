@@ -125,7 +125,7 @@ rightBits(unsigned char const x,
 -----------------------------------------------------------------------------*/
     assert(n <= 8);
 
-    return (x << (8-n)) >> (8-n);
+    return ((unsigned char)(x << (8-n))) >> (8-n);
 }
 
 

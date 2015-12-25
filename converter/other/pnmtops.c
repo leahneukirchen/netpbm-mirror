@@ -1168,7 +1168,7 @@ convertPage(FILE * const ifP,
             bool   const dict,
             bool   const vmreclaim,
             bool   const levelIsGiven,
-            bool   const levelGiven) {
+            unsigned int const levelGiven) {
     
     struct pam inpam;
     tuple* tuplerow;

@@ -4,6 +4,25 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+15.12.25 BJH  Release 10.47.59
+
+              anytopnm: use --mime-type option instead of --mime on newer
+              'file' program (on which --mime has a new meaning so that
+              'anytopnm' cannot recognize some file types).
+
+              anytopnm: recognize "Netpbm PAM" non-mime output from 'file'
+              program as indicating PAM.
+
+              pnmtops: fix bug: always things -level=N is -level=1.
+              Introduced after Netpbm 10.26 (January 2005) but before 10.35
+              (August 2006).  Manifests only with recent compilers.
+
+              pnmpaste: fix bug with PBM: incorrect output.  Introduced in
+              Netpbm 10.44 (September 2008).
+
+              Build: fix superfluous error message when USER environment
+              variable contains whitespace.  Broken since primordial Netpbm.
+
 15.08.15 BJH  Release 10.47.58
 
               fitstopnm: Add message saying you're probably making a mistake
