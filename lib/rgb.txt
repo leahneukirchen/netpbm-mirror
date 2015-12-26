@@ -880,5 +880,12 @@
 
 204 119  34 Ochre
 
+# From Wikipedia article on Azure, 15.11.30
+# Note that this is much different from the older colors of that name in this
+# file.
+
+  0 127 255 Azure5
+
+
 # These were more or less invented for use with Netpbm:
 255 255 255  D65

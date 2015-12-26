@@ -4,18 +4,7 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-15.12.09 BJH  Release 10.72.04
-
-              pnmpaste: fix bug with PBM: incorrect output.  Introduced in
-              Netpbm 10.44 (September 2008).
-
-15.11.25 BJH  Release 10.72.03
-
-              pnmtops: fix bug: always things -level=N is -level=1.
-              Introduced after Netpbm 10.26 (January 2005) but before 10.35
-              (August 2006).  Manifests only with recent compilers.
-
-15.10.31 BJH  Release 10.72.02
+15.12.26 BJH  Release 10.73.00
 
               anytopnm: use --mime-type option instead of --mime on newer
               'file' program (on which --mime has a new meaning so that
@@ -24,7 +13,12 @@ CHANGE HISTORY
               anytopnm: recognize "Netpbm PAM" non-mime output from 'file'
               program as indicating PAM.
 
-15.10.14 BJH  Release 10.72.01
+              pnmtops: fix bug: always thinks -level=N is -level=1.
+              Introduced after Netpbm 10.26 (January 2005) but before 10.35
+              (August 2006).  Manifests only with recent compilers.
+
+              pnmpaste: fix bug with PBM: incorrect output.  Introduced in
+              Netpbm 10.44 (September 2008).
 
               Build: fix undefined reference to parse_printf_format etc.  on
               system that doesn't have that facility.  Broken in Netpbm 10.69
@@ -35,6 +29,8 @@ CHANGE HISTORY
 
               Windows build: fix bug: make clean doesn't clean icon/netpbm.o.
               Broken since Netpbm 10.67 (June 2014).
+
+              Test: improved pnmpaste test.
 
 15.09.26 BJH  Release 10.72.00
 
