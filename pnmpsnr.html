@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pnmpsnr User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmpsnr</H1>
-Updated: 02 June 2015
+Updated: 23 January 2016
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -19,6 +19,7 @@ pnmpsnr - compute the difference between two images (the PSNR)
 [<I>pnmfile2</I>]
 
 [<b>-rgb</b>]
+[<b>-machine</b>]
 
 <P>Minimum unique abbreviations of options are acceptable.  You may use
 double hyphens instead of single hyphen to denote options.  You may use
@@ -57,9 +58,12 @@ PSNR of 20 means the mean square difference of the luminances of the
 pixels is 100 times less than the maximum possible difference,
 i.e. 0.01.
 
-<p>Note that the word "peak" is a misnomer; there is no maximum
-involved; the metric is a mean.  But "peak signal to noise ratio" is
-for some reason the common term for this measurement.
+<p>Note that the word "peak" is a misnomer; there is no maximum involved; the
+metric is a mean.  But "peak signal to noise ratio" is for some reason the
+common term for this measurement.
+
+<p><b>pnmpsnr</b> reports the PSNR either in human-friendly form or in
+machine-friendly form (see <b>-machine</b>).
 
 
 <H2 id="options">OPTIONS</H2>
@@ -72,6 +76,22 @@ components of the color rather than the luminance and chrominance components.
 It has no effect on a grayscale image.
 
 <p>This option was new in Netpbm 10.71 (June 2015).
+
+<DT><B>-machine</B>
+
+<DD>This option causes <b>pnmpsnr</b> to report the PSNRs in machine-friendly
+form, so another program can easily use the information.
+
+<P>The output is a single line.  It contains one floating point decimal number
+for each color component, with a single space between every two.  (This means
+there are either 1 or 3 numbers).  For the YCbCr color space (no <b>-rgb</b>),
+they are in the order Y, Cb, Cr.  For the RGB color space (<b>-rgb</b>), they
+are in R, G, B order.  For a grayscale image, there is one number.
+
+<p>Where the component does not differ between the images, so the PSNR is
+infinite, the number is &quot;inf&quot;.
+
+<p>This option was new in Netpbm 10.74 (March 2016).
 
 </dl>
 
