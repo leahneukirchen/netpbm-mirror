@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.74.00
 
+              pnmtopsnr: Add -machine .
+
 15.12.26 BJH  Release 10.73.00
 
               anytopnm: use --mime-type option instead of --mime on newer

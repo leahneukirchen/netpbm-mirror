@@ -28,6 +28,7 @@ struct CmdlineInfo {
     const char * inputFile1Name;  /* Name of first input file */
     const char * inputFile2Name;  /* Name of second input file */
     unsigned int rgb;
+    unsigned int machine;
 };
 
 
@@ -50,6 +51,7 @@ parseCommandLine(int argc, const char ** argv,
     
     option_def_index = 0;   /* incremented by OPTENT3 */
     OPTENT3(0,   "rgb",      OPT_FLAG,  NULL, &cmdlineP->rgb,       0);
+    OPTENT3(0,   "machine",  OPT_FLAG,  NULL, &cmdlineP->machine,   0);
 
     opt.opt_table     = option_def;
     opt.short_allowed = FALSE; /* We have no short (old-fashioned) options */
@@ -345,21 +347,33 @@ sumSqDiffFromRaster(struct pam * const pam1P,
 
 
 
-static void
-reportPsnr(struct pam    const pam,
-           struct SqDiff const sumSqDiff,
-           ColorSpace    const colorSpace,
-           const char *  const fileName1,
-           const char *  const fileName2) {
+struct Psnr {
+/*----------------------------------------------------------------------------
+   The PSNR of an image, in some unspecified color space.
+-----------------------------------------------------------------------------*/
+    double psnr[3];
+};
 
-    double const maxSumSqDiff = square(pam.maxval) * pam.width * pam.height;
-        /* Maximum possible sum square difference, i.e. the sum of the squares
-           of the sample differences between an entirely white image and
-           entirely black image of the given dimensions.
-        */
 
+
+static struct Psnr
+psnrFromSumSqDiff(struct SqDiff const sumSqDiff,
+                  double        const maxSumSqDiff,
+                  unsigned int  const componentCt) {
+/*----------------------------------------------------------------------------
+   Compute the PSNR from the sums of the squares of the differences in the
+   pixels 'sumSqDiff' (separated by colorpspace component, where there are
+   'componentCt' components).
+
+   'maxSumSqDiff' is the maximum possible sum square difference, i.e. the sum
+   of the squares of the sample differences between an entirely white image
+   and entirely black image of the given dimensions.
+
+   Where there is no difference between the images, return infinity.
+-----------------------------------------------------------------------------*/
+
+    struct Psnr retval;
     unsigned int i;
-
 
     /* The PSNR is the ratio of the maximum possible mean square difference
        to the actual mean square difference, which is also the ratio of
@@ -371,6 +385,25 @@ reportPsnr(struct pam    const pam,
        No precision error; no rounding error.
     */
 
+    for (i = 0; i < componentCt; ++i) {
+        if (sumSqDiff.sqDiff[i] > 0)
+            retval.psnr[i] = 10 * log10(maxSumSqDiff/sumSqDiff.sqDiff[i]);
+        else
+            retval.psnr[i] = 1.0/0.0;
+    }
+    return retval;
+}
+
+
+
+static void
+reportPsnrHuman(struct Psnr   const psnr,
+                ColorSpace    const colorSpace,
+                const char *  const fileName1,
+                const char *  const fileName2) {
+
+    unsigned int i;
+
     pm_message("PSNR between '%s' and '%s':", fileName1, fileName2);
 
     for (i = 0; i < colorSpace.componentCt; ++i) {
@@ -378,15 +411,30 @@ reportPsnr(struct pam    const pam,
 
         pm_asprintf(&label, "%s:", colorSpace.componentName[i]);
 
-        if (sumSqDiff.sqDiff[i] > 0)
-            pm_message("  %-6.6s %.2f dB",
-                       label,
-                       10 * log10(maxSumSqDiff/sumSqDiff.sqDiff[i]));
+        if (isfinite(psnr.psnr[i]))
+            pm_message("  %-6.6s %.2f dB", label, psnr.psnr[i]);
         else
             pm_message("  %-6.6s no difference", label);
 
         pm_strfree(label);
     }
+}
+
+
+
+static void
+reportPsnrMachine(struct Psnr  const psnr,
+                  unsigned int const componentCt) {
+
+    unsigned int i;
+
+    for (i = 0; i < componentCt; ++i) {
+        if (i > 0)
+            fprintf(stdout, " ");
+
+        fprintf(stdout, "%.2f", psnr.psnr[i]);
+    }
+    fprintf(stdout, "\n");
 }
 
 
@@ -424,14 +472,27 @@ main (int argc, const char **argv) {
         struct SqDiff const sumSqDiff =
             sumSqDiffFromRaster(&pam1, &pam2, colorSpace);
 
-        reportPsnr(pam1, sumSqDiff, colorSpace,
-                   cmdline.inputFile1Name, cmdline.inputFile2Name);
+        double const maxSumSqDiff =
+            square(pam1.maxval) * pam1.width * pam1.height;
+            /* Maximum possible sum square difference, i.e. the sum of the
+               squares of the sample differences between an entirely white
+               image and entirely black image of the given dimensions.
+            */
+
+        struct Psnr const psnr =
+            psnrFromSumSqDiff(
+                sumSqDiff, maxSumSqDiff, colorSpace.componentCt);
+
+        if (cmdline.machine)
+            reportPsnrMachine(psnr, colorSpace.componentCt);
+        else
+            reportPsnrHuman(psnr, colorSpace,
+                            cmdline.inputFile1Name, cmdline.inputFile2Name);
     }
     pm_close(if2P);
     pm_close(if1P);
 
     return 0;
 }
-
 
 
