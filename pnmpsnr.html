@@ -20,6 +20,7 @@ pnmpsnr - compute the difference between two images (the PSNR)
 
 [<b>-rgb</b>]
 [<b>-machine</b>]
+[<b>-max=</b><i>n</i>]
 
 <P>Minimum unique abbreviations of options are acceptable.  You may use
 double hyphens instead of single hyphen to denote options.  You may use
@@ -89,7 +90,27 @@ they are in the order Y, Cb, Cr.  For the RGB color space (<b>-rgb</b>), they
 are in R, G, B order.  For a grayscale image, there is one number.
 
 <p>Where the component does not differ between the images, so the PSNR is
-infinite, the number is &quot;inf&quot;.
+infinite, the number is <b>inf</b>
+
+<p>But note that the number displayed is also modified by the effect of
+<b>-max</b>.  In particular, with <b>-max</b>, you will never see
+<b>inf</b>.
+
+<p>This option was new in Netpbm 10.74 (March 2016).
+
+<dt><b>-max=</b><i>n</i>
+
+<dd>This is meaningful only with <b>-machine</b>.
+
+<p>It specifies the maximum number <b>pnmpsnr</b> will print as a PSNR.
+If the PSNR is greater than <i>n</i>, <b>pnmpsnr</b> just prints <i>n</i>.
+<i>n</i> is a decimal floating point number.  An infinite PSNR is considered
+greater than any number.
+
+<p>This is mainly useful to deal with infinite PSNRs.  It is often much more
+convenient to have a program process only numbers than to make it deal with
+infinity, and often a very large number has the same effect on a program as
+infinity.
 
 <p>This option was new in Netpbm 10.74 (March 2016).
 
