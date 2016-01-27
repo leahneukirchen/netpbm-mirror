@@ -6,7 +6,7 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.74.00
 
-              pnmtopsnr: Add -machine .
+              pnmtopsnr: Add -machine, -max .
 
 15.12.26 BJH  Release 10.73.00
 

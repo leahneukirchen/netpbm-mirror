@@ -29,6 +29,8 @@ struct CmdlineInfo {
     const char * inputFile2Name;  /* Name of second input file */
     unsigned int rgb;
     unsigned int machine;
+    unsigned int maxSpec;
+    float        max;
 };
 
 
@@ -50,8 +52,12 @@ parseCommandLine(int argc, const char ** argv,
     MALLOCARRAY_NOFAIL(option_def, 100);
     
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0,   "rgb",      OPT_FLAG,  NULL, &cmdlineP->rgb,       0);
-    OPTENT3(0,   "machine",  OPT_FLAG,  NULL, &cmdlineP->machine,   0);
+    OPTENT3(0,   "rgb",      OPT_FLAG,  NULL,
+            &cmdlineP->rgb,       0);
+    OPTENT3(0,   "machine",  OPT_FLAG,  NULL,
+            &cmdlineP->machine,   0);
+    OPTENT3(0,   "max",      OPT_FLOAT, &cmdlineP->max,  
+            &cmdlineP->maxSpec,   0);
 
     opt.opt_table     = option_def;
     opt.short_allowed = FALSE; /* We have no short (old-fashioned) options */
@@ -424,15 +430,19 @@ reportPsnrHuman(struct Psnr   const psnr,
 
 static void
 reportPsnrMachine(struct Psnr  const psnr,
-                  unsigned int const componentCt) {
+                  unsigned int const componentCt,
+                  bool         const maxSpec,
+                  float        const max) {
 
     unsigned int i;
 
     for (i = 0; i < componentCt; ++i) {
+        double const clipped = maxSpec ? MIN(max, psnr.psnr[i]) : psnr.psnr[i];
+
         if (i > 0)
             fprintf(stdout, " ");
 
-        fprintf(stdout, "%.2f", psnr.psnr[i]);
+        fprintf(stdout, "%.2f", clipped);
     }
     fprintf(stdout, "\n");
 }
@@ -484,7 +494,8 @@ main (int argc, const char **argv) {
                 sumSqDiff, maxSumSqDiff, colorSpace.componentCt);
 
         if (cmdline.machine)
-            reportPsnrMachine(psnr, colorSpace.componentCt);
+            reportPsnrMachine(psnr, colorSpace.componentCt,
+                              cmdline.maxSpec, cmdline.max);
         else
             reportPsnrHuman(psnr, colorSpace,
                             cmdline.inputFile1Name, cmdline.inputFile2Name);
