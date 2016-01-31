@@ -8,6 +8,9 @@ not yet  BJH  Release 10.74.00
 
               pnmtopsnr: Add -machine, -max .
 
+              Netpbmlib: add /usr/local/netpbm/lib and /etc/X11 to search
+              path for rgb.txt.
+
 15.12.26 BJH  Release 10.73.00
 
               anytopnm: use --mime-type option instead of --mime on newer
