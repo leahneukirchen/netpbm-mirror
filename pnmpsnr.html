@@ -112,6 +112,13 @@ convenient to have a program process only numbers than to make it deal with
 infinity, and often a very large number has the same effect on a program as
 infinity.
 
+<p>Note that the output is logarithmic, which means you will not see really
+large but finite numbers.  If you specify <b>-max=1000</b>, the only way you
+will see 1000 in the output is if the PSNR is really infinite.  Two images
+with as many pixels as there are electrons in the universe, differing in only
+one pixel, and only in the smallest amount representable in the Netpbm format,
+have a PSNR less than 1000.
+
 <p>This option was new in Netpbm 10.74 (March 2016).
 
 </dl>
