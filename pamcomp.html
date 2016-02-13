@@ -113,7 +113,7 @@ over the underlying image -- i.e. the overlay is out of frame.  If you
 do that, <b>pamcomp</b> issues a warning.
 
 <P> The overlay and underlying images may be of different formats
-(e.g.  overlaying a PBM text image over a full color PPM image) and
+(e.g. overlaying a PBM text image over a full color PPM image) and
 have different maxvals.  The output image has the more general of the
 two input formats and a maxval that is the least common multiple the
 two maxvals (or the maximum maxval allowable by the format, if the LCM
@@ -221,14 +221,13 @@ values and performs the same arithmetic computation using whatever
 value you provide.  An opacity value less than zero means the underlay
 image is intensified and then the overlay image is "subtracted" from
 it.  An opacity value greater than unity means the overlay image is
-intensified and the underlaying image subtracted from it.  In either
+intensified and the underlay image subtracted from it.  In either
 case, <b>pamcomp</b> clips the resulting color component intensities
 so they are nonnegative and don't exceed the output image's maxval.
 
-<p>This may seem like a strange thing to do, but it has uses.  You
-can use it to brighten or darken or saturate or desaturate areas of the
-underlaying image.  See <a href="extendedopacity.html">
-this description</a> of the technique.
+<p>This may seem like a strange thing to do, but it has uses.  You can use it
+to brighten or darken or saturate or desaturate areas of the underlay image.
+See <a href="extendedopacity.html"> this description</a> of the technique.
      
 <p>This option was added in Netpbm 10.6 (July 2002).  Before Netpbm 10.15
 (April 2003), values less than zero or greater than unity were not allowed.
