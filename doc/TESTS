@@ -141,8 +141,8 @@ packaging.  This feature is intended for developers.
 
 This test method is incompatible with merge build.
 
-Currently this test method reports several errors when Netpbm is compiled in a
-separate build directory.
+This works when Netpbm is compiled in the source tree and also when
+a separate build directory is used.
 
 
 

@@ -456,9 +456,8 @@ deb:
 .PHONY: check-install
 
 # Test files in source tree.
-# This does not work when Netpbm is compiled in a separate build dir.
 
-check-tree : SRCBINDIRS :=./analyzer \
+check-tree : BUILDBINDIRS :=./analyzer \
 ./converter/other \
 ./converter/other/cameratopam \
 ./converter/other/fiasco \
@@ -470,7 +469,6 @@ check-tree : SRCBINDIRS :=./analyzer \
 ./converter/pbm/pbmtoppa \
 ./converter/pgm \
 ./converter/ppm \
-./converter/ppm/hpcdtoppm \
 ./converter/ppm/ppmtompeg \
 ./converter/ppm \
 ./editor \
@@ -478,7 +476,14 @@ check-tree : SRCBINDIRS :=./analyzer \
 ./editor/specialty \
 ./generator \
 ./other \
-./other/pamx \
+./other/pamx
+
+check-tree : SRCBINDIRS :=./converter/ \
+./converter/other/ \
+./converter/ppm/hpcdtoppm/ \
+./editor \
+./generator \
+./other \
 ./
 
 # Create colon-separated PATH list from the above.
@@ -486,10 +491,13 @@ check-tree : SRCBINDIRS :=./analyzer \
 
 # Kludge to test whether realpath is available:
 ifeq ($(realpath $(CURDIR)/.),$(CURDIR))
-  check-tree : RBINDIRS :=\
-    $(foreach dir,$(SRCBINDIRS),$(realpath $(BUILDDIR)/$(dir)))
+  check-tree : RBINDIRS :=$(sort \
+     $(foreach dir,$(BUILDBINDIRS),$(realpath $(BUILDDIR)/$(dir))) \
+     $(foreach dir,$(SRCBINDIRS),$(realpath $(SRCDIR)/$(dir))))
 else
-  check-tree : RBINDIRS :=$(foreach dir,$(SRCBINDIRS),$(BUILDDIR)/$(dir))  
+  check-tree : RBINDIRS :=$(sort \
+     $(foreach dir,$(BUILDBINDIRS),$(BUILDDIR)/$(dir)) \
+     $(foreach dir,$(SRCBINDIRS),$(SRCDIR)/$(dir)))
 endif
 
 # Kludge to express characters given special meanings by GNU Make.
@@ -498,7 +506,7 @@ empty :=
 space := $(empty) $(empty)
 colon :=:
 
-check-tree : PBM_TEST_PATH := $(subst $(space),$(colon),$(RBINDIRS))
+check-tree : PBM_TEST_PATH := $(subst $(space),$(colon),$(strip $(RBINDIRS)))
 check-tree : PBM_LIBRARY_PATH ?= $(BUILDDIR)/lib
 check-tree : RGBDEF ?= $(SRCDIR)/lib/rgb.txt
 
