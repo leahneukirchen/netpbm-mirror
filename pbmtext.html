@@ -286,7 +286,7 @@ any other multi-byte format.
 
 <pre>
 <tt>
-    $ awk 'BEGIN { for (i=0x01; i&lt;=0xFF; i++)  
+    $ awk 'BEGIN { for (i=1; i&lt;=255; i++) \
                     { printf("%c%s",i,i%16==15 ? "\n":""); } }' |\
       pbmtext -f font.bdf &gt; dump.pbm
 </tt>
@@ -296,7 +296,7 @@ any other multi-byte format.
 
 <pre>
 <tt>
-     for (i=0x20; i&lt;=0x7E; i++)  
+     for (i=32; i&lt;=127; i++)  
 </tt>
 </pre>
 
