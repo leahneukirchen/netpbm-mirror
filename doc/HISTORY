@@ -11,6 +11,9 @@ not yet  BJH  Release 10.74.00
               Netpbmlib: add /usr/local/netpbm/lib and /etc/X11 to search
               path for rgb.txt.
 
+              makeman: Add some text replacements to solve glitches.
+              Handle &mdash, &minus.
+
 15.12.26 BJH  Release 10.73.00
 
               anytopnm: use --mime-type option instead of --mime on newer
@@ -213,10 +216,9 @@ not yet  BJH  Release 10.74.00
               test: replace some GNU-only code with more portable code that
               works on OS X.  Thanks Ryan Schmidt <ryandesign@macports.org>.
 
-              makeman: deal properly with backlash in source.  Thanks Willem
-              van Schaik <willem@schaik.com>.  But something was wrong with
-              this change and it caused the program always to fail, so
-              we reversed this change in 10.72.
+              makeman: deal properly with backlash in source.  But something
+              was wrong with this change and it caused the program always to
+              fail, so we reversed this change in 10.72.
 
               Build: don't build and install libjbig and libjasper if we
               are using external versions of them instead.
