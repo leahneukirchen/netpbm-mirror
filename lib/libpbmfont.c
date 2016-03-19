@@ -1,4 +1,4 @@
-/* libpbm5.c - pbm utility library part 5
+/* libpbmfont.c - pbm utility library part 5
 **
 ** Font routines.
 **
@@ -12,6 +12,13 @@
 ** copyright notice and this permission notice appear in supporting
 ** documentation.  This software is provided "as is" without express or
 ** implied warranty.
+**
+** BDF font specs available from:
+** https://partners.adobe.com/public/developer/en/font/5005.BDF_Spec.pdf
+** Glyph Bitmap Distribution Format (BDF) Specification
+** Version 2.2
+** 22 March 1993
+** Adobe Developer Support
 */
 
 #include <assert.h>
@@ -25,6 +32,13 @@
 #include "pbmfont.h"
 #include "pbm.h"
 
+/* Constants for the built-in fixed font and fonts loaded by
+   pbm_loadpbmfont().
+
+   These values are ignored when using the built-in BDF font,
+   or fonts loaded from files in BDF format by pbm_loadbdffont() .
+   For fonts loaded from BDF files code points between 0 and 255 are valid. 
+*/
 static unsigned int const firstCodePoint = 32;
     /* This is the code point of the first character in a pbmfont font.
        In ASCII, it is a space.
@@ -40,7 +54,8 @@ static unsigned int const nCharsInFont = 96;
 */
 #define DEFAULTFONT_ROWS 155
 #define DEFAULTFONT_COLS 112
-static unsigned long defaultfont_bits[DEFAULTFONT_ROWS][(DEFAULTFONT_COLS+31)/32] = {
+static unsigned long int const
+defaultfont_bits[DEFAULTFONT_ROWS][(DEFAULTFONT_COLS+31)/32] = {
     {0x00000000L,0x20000c00L,0x10000000L,0x00000000L},
     {0xc600a000L,0x42000810L,0x00000002L,0x00000063L},
     {0x6c00a000L,0x45000810L,0x00000002L,0x00000036L},
@@ -942,27 +957,37 @@ pbm_dissectfont(const bit ** const font,
 
 
 struct font*
-pbm_loadfont(const char * const filename)
-{
-    FILE* fp;
-    struct font* fn;
-    char line[256];
+pbm_loadfont(const char * const filename) {
+/*----------------------------------------------------------------------------
+Read the head of the designated font file, determine its type and load
+the font.  
 
+Note that fgets() writes nothing to the line buffer when the file exists
+but is empty.
+----------------------------------------------------------------------------*/
+    FILE* fp;
+    struct font * fn;
+    char * line;
+
+    MALLOCARRAY_NOFAIL(line, 10);
+
+    line[0] = '\0';
     fp = pm_openr( filename );
-    fgets(line, 256, fp);
+    fgets(line, 10, fp);
     pm_close( fp );
 
     if (line[0] == PBM_MAGIC1 && 
         (line[1] == PBM_MAGIC2 || line[1] == RPBM_MAGIC2)) {
-        return pbm_loadpbmfont( filename );
+        fn = pbm_loadpbmfont( filename );
     } else if (!strncmp(line, "STARTFONT", 9)) {
         if (!(fn = pbm_loadbdffont( filename )))
           pm_error( "could not load BDF font file" );
-        return fn;
     } else {
       pm_error( "font file not in a recognized format ");
-      return NULL;  /* should never reach here */
+      fn =  NULL;  /* Supress compiler error.  This line never reached. */
   }
+    free(line);
+    return (fn);
 }
 
 
@@ -1073,6 +1098,10 @@ pbm_dumpfont( fn )
 
 /* Routines for loading a BDF font file */
 
+#define  MAXBDFLINE 1024 
+
+/* Official Adobe document says max length of string is 65535 characters.
+   However the value 1024 is sufficient for practical uses. */
 
 typedef struct {
 /*----------------------------------------------------------------------------
@@ -1081,7 +1110,7 @@ typedef struct {
 -----------------------------------------------------------------------------*/
     FILE * ifP;
 
-    char line[1024];
+    char line[MAXBDFLINE+1];
         /* This is the storage space for the words of the line.  The
            words go in here, one after another, separated by NULs.
 
@@ -1153,7 +1182,7 @@ readline_read(readline * const readlineP,
     for (gotLine = false, error = false; !gotLine && !error; ) {
         char * rc;
 
-        rc = fgets(readlineP->line, 1024, readlineP->ifP);
+        rc = fgets(readlineP->line, MAXBDFLINE+1, readlineP->ifP);
         if (rc == NULL)
             error = true;
         else {
@@ -1378,7 +1407,7 @@ interpEncoding(const char **  const arg,
         codepoint = atoi(arg[1]);
         gotCodepoint = true;
     } else {
-        if (arg[2]) {
+      if (atoi(arg[1]) == -1 && arg[2] != NULL) {
             codepoint = atoi(arg[2]);
             gotCodepoint = true;
         } else
@@ -1409,10 +1438,54 @@ readEncoding(readline *     const readlineP,
 }
 
 
+static void
+validateFontLimits(const struct font * const fontP) {
+
+    assert( pbm_maxfontheight() > 0 && pbm_maxfontwidth() > 0 );
+
+    if ( fontP->maxwidth  <= 0 ||
+         fontP->maxheight <= 0 ||
+         fontP->maxwidth  > pbm_maxfontwidth()  ||
+         fontP->maxheight > pbm_maxfontheight() ||
+         fontP->x < - fontP->maxwidth  +1 ||
+         fontP->y < - fontP->maxheight +1 ||
+         fontP->x > fontP->maxwidth  ||
+         fontP->y > fontP->maxheight ||
+         fontP->x + fontP->maxwidth  > pbm_maxfontwidth() || 
+         fontP->y + fontP->maxheight > pbm_maxfontheight()
+       )
+
+      pm_error("Global font metric(s) out of bounds.\n"); 
+}
+
+
+
+static void
+validateGlyphLimits(const struct font  * const fontP,
+		    const struct glyph * const glyphP,
+                    const char * const charName) {
+
+    if ( glyphP->width  == 0 ||
+         glyphP->height == 0 ||
+         glyphP->width  > fontP->maxwidth  ||
+         glyphP->height > fontP->maxheight ||
+         glyphP->width  > fontP->maxwidth  ||
+         glyphP->height > fontP->maxheight ||
+         glyphP->x < fontP->x ||
+         glyphP->y < fontP->y ||
+         glyphP->x + (int) glyphP->width  > fontP->x + fontP->maxwidth  ||
+	 glyphP->y + (int) glyphP->height > fontP->y + fontP->maxheight ||
+         glyphP->xadd > pbm_maxfontwidth() ||
+	 glyphP->xadd + MAX(glyphP->x,0) + (int) glyphP->width >
+             pbm_maxfontwidth()
+       )
+      pm_error("Font metric(s) for char '%s' out of bounds.\n", charName);
+}
+
 
 static void
 processChars(readline *    const readlineP,
-             struct font * const fontP) {
+             struct font  * const fontP) {
 /*----------------------------------------------------------------------------
    Process the CHARS block in a BDF font file, assuming the file is positioned
    just after the CHARS line.  Read the rest of the block and apply its
@@ -1436,7 +1509,11 @@ processChars(readline *    const readlineP,
         } else if (!streq(readlineP->arg[0], "STARTCHAR"))
             pm_error("no STARTCHAR after CHARS in BDF font file");
         else {
-            const char * const charName = readlineP->arg[1];
+	    char * const charName = strndup(readlineP->arg[1], 32);
+	    /* Above is not perfect, for the character name may
+               consist of several parts separated by whitespace,
+               for example "CAPITAL LETTER A WITH ACUTE ACCENT" .
+	    */
 
             struct glyph * glyphP;
             unsigned int codepoint;
@@ -1454,6 +1531,9 @@ processChars(readline *    const readlineP,
 
             if (badCodepoint)
                 skipCharacter(readlineP);
+	    else if (fontP->glyph[codepoint] != NULL)
+	        pm_error("Multiple definition of code point %d "
+			 "in font file", (unsigned int) codepoint); 
             else {
                 readExpectedStatement(readlineP, "SWIDTH");
                     
@@ -1466,6 +1546,8 @@ processChars(readline *    const readlineP,
                 glyphP->x      = atoi(readlineP->arg[3]);
                 glyphP->y      = atoi(readlineP->arg[4]);
 
+                validateGlyphLimits(fontP, glyphP, charName);
+
                 createBmap(glyphP->width, glyphP->height, readlineP, charName,
                            &glyphP->bmap);
                 
@@ -1475,6 +1557,7 @@ processChars(readline *    const readlineP,
                 assert(codepoint < 256); /* Ensured by readEncoding() */
 
                 fontP->glyph[codepoint] = glyphP;
+		free (charName);
             }
             ++nCharsDone;
         }
@@ -1484,9 +1567,9 @@ processChars(readline *    const readlineP,
 
 
 static void
-processBdfFontLine(readline *    const readlineP,
-                   struct font * const fontP,
-                   bool *        const endOfFontP) {
+processBdfFontLine(readline     * const readlineP,
+                   struct font  * const fontP,
+                   bool         * const endOfFontP) {
 /*----------------------------------------------------------------------------
    Process a nonblank line just read from a BDF font file.
 
@@ -1514,11 +1597,20 @@ processBdfFontLine(readline *    const readlineP,
     } else if (streq(readlineP->arg[0], "FONTBOUNDINGBOX")) {
         fontP->maxwidth  = atoi(readlineP->arg[1]);
         fontP->maxheight = atoi(readlineP->arg[2]);
-        fontP->x         = atoi(readlineP->arg[3]);
-        fontP->y         = atoi(readlineP->arg[4]);
+        fontP->x = atoi(readlineP->arg[3]);
+        fontP->y = atoi(readlineP->arg[4]);
+        validateFontLimits(fontP);
+    } else if (streq(readlineP->arg[0], "ENDPROPERTIES")) {
+      if (fontP->maxwidth ==0)
+	  pm_error("Encountered ENDPROPERTIES before FONTBOUNDINGBOX " 
+                   "in BDF font file");
     } else if (streq(readlineP->arg[0], "ENDFONT")) {
         *endOfFontP = true;
     } else if (streq(readlineP->arg[0], "CHARS")) {
+      if (fontP->maxwidth ==0)
+	  pm_error("Encountered CHARS before FONTBOUNDINGBOX " 
+                   "in BDF font file");
+      else
         processChars(readlineP, fontP);
     } else {
         /* ignore */
@@ -1555,7 +1647,8 @@ pbm_loadbdffont(const char * const name) {
         for (i = 0; i < 256; ++i) 
             fontP->glyph[i] = NULL;
     }
-    fontP->x = fontP->y = 0;
+
+    fontP->maxwidth = fontP->maxheight = fontP->x = fontP->y = 0;
 
     readExpectedStatement(&readline, "STARTFONT");
 

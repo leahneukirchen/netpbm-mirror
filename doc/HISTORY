@@ -6,6 +6,34 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.74.00
 
+              pbmtext: produce same image when you run pbmtext with -width
+              explicitly set to the width you get when you don't specify
+              width.
+
+              pbmtext: ignore -nomargins with -width is specified.
+
+              pbmtext: report when line ends are dropped because of
+              truncation.
+
+              pbmtext: Fix bug: if input has an code point that is not in the
+              font, Pbmtext substitutes space, but behavior is undefined if
+              font doesn't have space either.  Now it aborts the program in
+              that case.
+
+              pbmtext: fix bug: Respect -width when specified.
+
+              pbmtext: fix bug: Deal correctly with negative -space.
+
+              pbmtext: fix bug: Consider all characters in line, not just
+              first and last, in determining line width.
+
+              libnetbpm font facility (so pbmtext): fix bug: undefined
+              behavior when font definitions are invalid in any of various
+              ways.
+
+              libnetpbm font facility (so pbmtext): fix incorrect font names
+              in error messages.
+
               pnmtopsnr: Add -machine, -max .
 
               Netpbmlib: add /usr/local/netpbm/lib and /etc/X11 to search
