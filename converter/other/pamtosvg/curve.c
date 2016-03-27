@@ -42,18 +42,19 @@ int_to_real_coord(pm_pixelcoord const int_coord) {
 
 /* Return an entirely empty curve.  */
 
-curve_type
-new_curve (void)
-{
-  curve_type curve;
-  MALLOCVAR_NOFAIL(curve);
-  curve->point_list = NULL;
-  CURVE_LENGTH (curve) = 0;
-  CURVE_CYCLIC (curve) = false;
-  CURVE_START_TANGENT (curve) = CURVE_END_TANGENT (curve) = NULL;
-  PREVIOUS_CURVE (curve) = NEXT_CURVE (curve) = NULL;
+curve *
+new_curve(void) {
+  curve * curveP;
 
-  return curve;
+  MALLOCVAR_NOFAIL(curveP);
+
+  curveP->point_list = NULL;
+  CURVE_LENGTH(curveP) = 0;
+  CURVE_CYCLIC(curveP) = false;
+  PREVIOUS_CURVE(curveP)  = NULL;
+  NEXT_CURVE(curveP)      = NULL;
+
+  return curveP;
 }
 
 
@@ -71,21 +72,37 @@ copy_most_of_curve (curve_type old_curve)
   return curve;
 }
 
+void
+move_curve(curve * const dstP,
+           curve * const srcP) {
+
+    /* Move ownership of dynamically allocated memory from source 
+       to destination; destroy source.
+    */
+
+   if (CURVE_LENGTH(dstP) > 0)
+       free(dstP->point_list);
+    
+   *dstP = *srcP;
+
+   free(srcP);
+}
+
+
 
 /* The length of CURVE will be zero if we ended up not being able to fit
    it (which in turn implies a problem elsewhere in the program, but at
    any rate, we shouldn't try here to free the nonexistent curve).  */
 
 void
-free_curve (curve_type curve)
-{
-  if (CURVE_LENGTH (curve) > 0)
-    free (curve->point_list);
-  if (CURVE_START_TANGENT (curve))
-    free (CURVE_START_TANGENT (curve));
-  if (CURVE_END_TANGENT (curve))
-    free (CURVE_END_TANGENT (curve));
+free_curve(curve * const curveP) {
+
+   if (CURVE_LENGTH(curveP) > 0)
+       free(curveP->point_list);
+
+   free(curveP);
 }
+
 
 
 void
@@ -123,97 +140,82 @@ append_pixel(curve_type    const curve,
     }									\
   while (0)
 
+
+
 void
-log_curve (curve_type curve, bool print_t)
-{
-  unsigned this_point;
+log_curve(curve * const curveP,
+          bool    const print_t) {
 
-  if (!log_file) return;
+    if (!log_file)
+        return;
 
-  LOG1 ("curve id = %lx:\n", (unsigned long) curve);
-  LOG1 ("  length = %u.\n", CURVE_LENGTH (curve));
-  if (CURVE_CYCLIC (curve))
-    LOG ("  cyclic.\n");
+    LOG1("curve id = %lx:\n", (unsigned long) curveP);
+    LOG1("  length = %u.\n", CURVE_LENGTH(curveP));
+    if (CURVE_CYCLIC(curveP))
+        LOG("  cyclic.\n");
 
-  /* It should suffice to check just one of the tangents for being null
-     -- either they both should be, or neither should be.  */
-  if (CURVE_START_TANGENT (curve) != NULL)
-    LOG4 ("  tangents = (%.3f,%.3f) & (%.3f,%.3f).\n",
-          CURVE_START_TANGENT (curve)->dx, CURVE_START_TANGENT (curve)->dy,
-          CURVE_END_TANGENT (curve)->dx, CURVE_END_TANGENT (curve)->dy);
+    LOG("  ");
 
-  LOG ("  ");
+    /* If the curve is short enough, don't use ellipses.  */
+    if (CURVE_LENGTH(curveP) <= NUM_TO_PRINT * 2) {
+        unsigned int thisPoint;
+    
+        for (thisPoint = 0; thisPoint < CURVE_LENGTH(curveP); ++thisPoint) {
+            LOG_CURVE_POINT(curveP, thisPoint, print_t);
+            LOG(" ");
 
-  /* If the curve is short enough, don't use ellipses.  */
-  if (CURVE_LENGTH (curve) <= NUM_TO_PRINT * 2)
-    {
-      for (this_point = 0; this_point < CURVE_LENGTH (curve); this_point++)
-        {
-          LOG_CURVE_POINT (curve, this_point, print_t);
-          LOG (" ");
+            if (thisPoint != CURVE_LENGTH(curveP) - 1
+                && (thisPoint + 1) % NUM_TO_PRINT == 0)
+                LOG("\n  ");
+        }
+    } else {
+        unsigned int thisPoint;
+        for (thisPoint = 0;
+             thisPoint < NUM_TO_PRINT && thisPoint < CURVE_LENGTH(curveP);
+             ++thisPoint) {
+            LOG_CURVE_POINT(curveP, thisPoint, print_t);
+            LOG(" ");
+        }
 
-          if (this_point != CURVE_LENGTH (curve) - 1
-              && (this_point + 1) % NUM_TO_PRINT == 0)
-            LOG ("\n  ");
+        LOG("...\n   ...");
+
+        for (thisPoint = CURVE_LENGTH(curveP) - NUM_TO_PRINT;
+             thisPoint < CURVE_LENGTH(curveP);
+             ++thisPoint) {
+            LOG(" ");
+            LOG_CURVE_POINT(curveP, thisPoint, print_t);
         }
     }
-  else
-    {
-      for (this_point = 0;
-           this_point < NUM_TO_PRINT && this_point < CURVE_LENGTH (curve);
-           this_point++)
-        {
-          LOG_CURVE_POINT (curve, this_point, print_t);
-          LOG (" ");
-        }
-
-      LOG ("...\n   ...");
-
-      for (this_point = CURVE_LENGTH (curve) - NUM_TO_PRINT;
-           this_point < CURVE_LENGTH (curve);
-           this_point++)
-        {
-          LOG (" ");
-          LOG_CURVE_POINT (curve, this_point, print_t);
-        }
-    }
-
-  LOG (".\n");
+    LOG(".\n");
 }
 
 
 /* Like `log_curve', but write the whole thing.  */
 
 void
-log_entire_curve (curve_type curve)
-{
-  unsigned this_point;
+log_entire_curve(curve * const curveP) {
 
-  if (!log_file) return;
+    unsigned int thisPoint;
 
-  LOG1 ("curve id = %lx:\n", (unsigned long) curve);
-  LOG1 ("  length = %u.\n", CURVE_LENGTH (curve));
-  if (CURVE_CYCLIC (curve))
-    LOG ("  cyclic.\n");
+    if (!log_file)
+        return;
 
-  /* It should suffice to check just one of the tangents for being null
-     -- either they both should be, or neither should be.  */
-  if (CURVE_START_TANGENT (curve) != NULL)
-    LOG4 ("  tangents = (%.3f,%.3f) & (%.3f,%.3f).\n",
-          CURVE_START_TANGENT (curve)->dx, CURVE_START_TANGENT (curve)->dy,
-          CURVE_END_TANGENT (curve)->dx, CURVE_END_TANGENT (curve)->dy);
+    LOG1("curve id = %lx:\n", (unsigned long) curveP);
+    LOG1("  length = %u.\n", CURVE_LENGTH(curveP));
+    if (CURVE_CYCLIC(curveP))
+        LOG("  cyclic.\n");
 
-  LOG (" ");
+    LOG(" ");
 
-  for (this_point = 0; this_point < CURVE_LENGTH (curve); this_point++)
-    {
-      LOG (" ");
-      LOG_CURVE_POINT (curve, this_point, true);
-      /* Compiler warning `Condition is always true' can be ignored */
+    for (thisPoint = 0; thisPoint < CURVE_LENGTH(curveP); ++thisPoint) {
+        LOG(" ");
+        LOG_CURVE_POINT(curveP, thisPoint, true);
+        /* Compiler warning `Condition is always true' can be ignored */
     }
 
-  LOG (".\n");
+    LOG(".\n");
 }
+
 
 
 /* Return an initialized but empty curve list.  */
@@ -233,19 +235,16 @@ new_curve_list (void)
 /* Free a curve list and all the curves it contains.  */
 
 void
-free_curve_list(curve_list_type * const curve_list) {
+free_curve_list(curve_list_type * const curveListP) {
 
-  unsigned this_curve;
+    unsigned int thisCurve;
 
-  for (this_curve = 0; this_curve < curve_list->length; this_curve++)
-    {
-      free_curve (curve_list->data[this_curve]);
-      free (curve_list->data[this_curve]);
-    }
+    for (thisCurve = 0; thisCurve < curveListP->length; ++thisCurve)
+        free_curve(curveListP->data[thisCurve]);
 
-  /* If the character was empty, it won't have any curves.  */
-  if (curve_list->data != NULL)
-    free (curve_list->data);
+    /* If the character was empty, it won't have any curves.  */
+    if (curveListP->data != NULL)
+        free (curveListP->data);
 }
 
 

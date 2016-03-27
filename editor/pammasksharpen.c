@@ -1,6 +1,7 @@
-#include "pam.h"
-#include "shhopt.h"
+#include "pm_c_util.h"
 #include "mallocvar.h"
+#include "shhopt.h"
+#include "pam.h"
 
 struct cmdlineInfo {
     /* All the information the user supplied in the command line,
@@ -62,7 +63,6 @@ parseCommandLine(int argc, char ** const argv,
         if (cmdlineP->threshold > 1.0)
             pm_error("-threshold greater than unity doesn't make sense.  "
                      "You specified %f", cmdlineP->threshold);
-        
     } else
         cmdlineP->threshold = 0.0;
 

@@ -13,6 +13,7 @@
 #include <math.h>
 #include <string.h>
 
+#include "pm_c_util.h"
 #include "winico.h"
 #include "ppm.h"
 #include "mallocvar.h"
@@ -203,8 +204,6 @@ createAndBitmap (gray ** const ba, int const cols, int const rows,
     * How wide should the u1 string for each row be?
     * each byte is 8 pixels, but must be a multiple of 4 bytes.
     */
-
-#define ROUNDUP(X,M) (((X)+(M)-1)/(M)*(M))
    unsigned int const xBytes = ROUNDUP(cols, 32)/8;
    ICON_bmp icBitmap;
    int y,x;

@@ -16,6 +16,7 @@
 
 #include <string.h>
 
+#include "pm_c_util.h"
 #include "pbm.h"
 #include "shhopt.h"
 

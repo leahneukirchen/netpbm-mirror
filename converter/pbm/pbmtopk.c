@@ -172,7 +172,7 @@ pbmtopk_add_suffix(char * const name,
     char *slash = strrchr(name, '/');
     char *dot = strrchr(name, '.');
 
-    if ((dot && slash ? dot < slash : !dot) && !STREQ(name, "-"))
+    if ((dot && slash ? dot < slash : !dot) && !streq(name, "-"))
         strcat(name, suffix);
 }
 

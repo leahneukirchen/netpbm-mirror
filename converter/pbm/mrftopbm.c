@@ -41,34 +41,50 @@ bit_input(FILE * const in) {
 
 
 static void 
-doSquare(FILE *          const in,
-          unsigned char * const image,
-          int             const ox,
-          int             const oy,
-          int             const w,
-          int             const size) {
+doSquare(FILE *          const ifP,
+         unsigned char * const image,
+         unsigned int    const ulCol,
+         unsigned int    const ulRow,
+         unsigned int    const imageWidth,
+         unsigned int    const size) {
+/*----------------------------------------------------------------------------
+   Do a square of side 'size', whose upper left corner is at (ulCol, ulRow).
+   The contents of that square are next in file *ifP, in MRF format.
 
-    if (size == 1 || bit_input(in)) { 
+   Return the pixel values of the square in the corresponding position of
+   image[], which is a concatenation of rows 'imageWidth' pixels wide, one
+   byte per pixel.
+-----------------------------------------------------------------------------*/
+    if (size == 1 || bit_input(ifP)) { 
         /* It's all black or all white.  Next bit says which. */
 
-        unsigned int const c = bit_input(in);
+        unsigned int const c = bit_input(ifP);
 
-        unsigned int y;
+        unsigned int rowOfSquare;
 
-        for (y = 0; y < size; ++y) {
-            unsigned int x;
-            for (x = 0; x < size; ++x)
-                image[(oy+y)*w+ox+x] = c;
+        for (rowOfSquare = 0; rowOfSquare < size; ++rowOfSquare) {
+            unsigned int colOfSquare;
+            for (colOfSquare = 0; colOfSquare < size; ++colOfSquare) {
+                unsigned int rowOfImage = ulRow + rowOfSquare;
+                unsigned int colOfImage = ulCol + colOfSquare;
+
+                image[rowOfImage * imageWidth + colOfImage] = c;
+            }
         }
     } else {
-        /* not all one color, so recurse. */
+        /* Square is not all one color, so recurse.  Do each of the four
+           quadrants of this square individually.
+        */
+        unsigned int const quadSize = size/2;
 
-        int halfsize = size >> 1;
-
-        doSquare(in, image, ox,          oy,          w, halfsize);
-        doSquare(in, image, ox+halfsize, oy,          w, halfsize);
-        doSquare(in, image, ox,          oy+halfsize, w, halfsize);
-        doSquare(in, image, ox+halfsize, oy+halfsize, w, halfsize);
+        doSquare(ifP, image, ulCol,            ulRow,
+                 imageWidth, quadSize);
+        doSquare(ifP, image, ulCol + quadSize, ulRow,
+                 imageWidth, quadSize);
+        doSquare(ifP, image, ulCol,            ulRow + quadSize,
+                 imageWidth, quadSize);
+        doSquare(ifP, image, ulCol + quadSize, ulRow + quadSize,
+                 imageWidth, quadSize);
     }
 }
 
@@ -80,7 +96,7 @@ writeOutput(FILE *                const ofP,
             int                   const rows,
             const unsigned char * const image) {
             
-    /* w64 is units-of-64-bits width, h64 same for height */
+    /* w64 is units-of-64-bits width */
     unsigned int const w64 = (cols+63)/64;
 
     bit * bitrow;
@@ -145,7 +161,7 @@ readMrfImage(FILE *           const ifP,
         pm_error("Ridiculously large, unprocessable image: %u cols x %u rows",
                  cols, rows);
 
-    image = calloc(w64*h64*64*64,1);
+    image = calloc(w64*h64*64*64, 1);
     if (image == NULL)
         pm_error("Unable to get memory for raster");
                  
@@ -179,7 +195,7 @@ main(int argc, char *argv[]) {
 
     expandAll = FALSE;  /* initial assumption */
 
-    if (argc-1 >= 1 && STREQ(argv[1], "-a")) {
+    if (argc-1 >= 1 && streq(argv[1], "-a")) {
         expandAll = TRUE;
         argc--,argv++;
     }

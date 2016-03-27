@@ -5,7 +5,7 @@
    that deal with the PAM (Portable Arbitrary Format) image format.
 -----------------------------------------------------------------------------*/
 
-/* See libpm.c for the complicated explanation of this 32/64 bit file
+/* See pmfileio.c for the complicated explanation of this 32/64 bit file
    offset stuff.
 */
 #define _FILE_OFFSET_BITS 64
@@ -86,24 +86,32 @@ validateComputableSize(struct pam * const pamP) {
    Another common operation is adding 1 or 2 to the highest row, column,
    or plane number in the image, so we make sure that's possible.
 -----------------------------------------------------------------------------*/
-    unsigned int const depth = allocationDepth(pamP);
+    if (pamP->width == 0)
+        pm_error("Width is zero.  Image must be at least one pixel wide");
+    else if (pamP->height == 0)
+        pm_error("Height is zero.  Image must be at least one pixel high");
+    else {
+        unsigned int const depth = allocationDepth(pamP);
 
-    if (depth > INT_MAX/sizeof(sample))
-        pm_error("image depth (%u) too large to be processed", depth);
-    else if (pamP->width > 0 && depth * sizeof(sample) > INT_MAX/pamP->width)
-        pm_error("image width and depth (%u, %u) too large "
-                 "to be processed.", pamP->width, depth);
-    else if (pamP->width * (depth * sizeof(sample)) >
-             INT_MAX - depth * sizeof(tuple *))
-        pm_error("image width and depth (%u, %u) too large "
-                 "to be processed.", pamP->width, depth);
-    
-    if (depth > INT_MAX - 2)
-        pm_error("image depth (%u) too large to be processed", depth);
-    if (pamP->width > INT_MAX - 2)
-        pm_error("image width (%u) too large to be processed", pamP->width);
-    if (pamP->height > INT_MAX - 2)
-        pm_error("image height (%u) too large to be processed", pamP->height);
+        if (depth > INT_MAX/sizeof(sample))
+            pm_error("image depth (%u) too large to be processed", depth);
+        else if (depth * sizeof(sample) > INT_MAX/pamP->width)
+            pm_error("image width and depth (%u, %u) too large "
+                     "to be processed.", pamP->width, depth);
+        else if (pamP->width * (depth * sizeof(sample)) >
+                 INT_MAX - depth * sizeof(tuple *))
+            pm_error("image width and depth (%u, %u) too large "
+                     "to be processed.", pamP->width, depth);
+        
+        if (depth > INT_MAX - 2)
+            pm_error("image depth (%u) too large to be processed", depth);
+        if (pamP->width > INT_MAX - 2)
+            pm_error("image width (%u) too large to be processed",
+                     pamP->width);
+        if (pamP->height > INT_MAX - 2)
+            pm_error("image height (%u) too large to be processed",
+                     pamP->height);
+    }
 }
 
 
@@ -532,16 +540,20 @@ process_header_line(char                const buffer[],
             pamP->maxval = atoi(value);
             headerSeenP->maxval = TRUE;
         } else if (strcmp(label, "TUPLTYPE") == 0) {
-            int len = strlen(pamP->tuple_type);
-            if (len + strlen(value) + 1 > sizeof(pamP->tuple_type)-1)
-                pm_error("TUPLTYPE value too long in PAM header");
-            if (len == 0)
-                strcpy(pamP->tuple_type, value);
+            if (strlen(value) == 0)
+                pm_error("TUPLTYPE header does not have any tuple type text");
             else {
-                strcat(pamP->tuple_type, "\n");
-                strcat(pamP->tuple_type, value);
+                size_t const oldLen = strlen(pamP->tuple_type);
+                if (oldLen + strlen(value) + 1 > sizeof(pamP->tuple_type)-1)
+                    pm_error("TUPLTYPE value too long in PAM header");
+                if (oldLen == 0)
+                    strcpy(pamP->tuple_type, value);
+                else {
+                    strcat(pamP->tuple_type, " ");
+                    strcat(pamP->tuple_type, value);
+                }
+                pamP->tuple_type[sizeof(pamP->tuple_type)-1] = '\0';
             }
-            pamP->tuple_type[sizeof(pamP->tuple_type)-1] = '\0';
         } else 
             pm_error("Unrecognized header line: '%s'.  "
                      "Possible missing ENDHDR line?", label);
@@ -670,10 +682,10 @@ pnm_readpaminitrestaspnm(FILE * const fileP,
 -----------------------------------------------------------------------------*/
     struct pam pam;
 
-    pam.size        = sizeof(struct pam);
-    pam.file        = fileP;
-    pam.len         = PAM_STRUCT_SIZE(tuple_type);
-    pam.format      = PAM_FORMAT;
+    pam.size   = sizeof(struct pam);
+    pam.file   = fileP;
+    pam.len    = PAM_STRUCT_SIZE(tuple_type);
+    pam.format = PAM_FORMAT;
 
     readpaminitrest(&pam);
 
@@ -691,11 +703,10 @@ pnm_readpaminitrestaspnm(FILE * const fileP,
     case 1:
         *formatP = RPGM_FORMAT;
         break;
-    default: {
+    default:
         pm_error("Cannot treat PAM image as PPM or PGM, "
                  "because its depth (%u) "
                  "is not 1 or 3.", pam.depth);
-    }
     }
 
     *colsP   = pam.width;
@@ -775,7 +786,8 @@ pnm_readpaminit(FILE *       const file,
         break;
         
     default:
-        pm_error("bad magic number - not a PAM, PPM, PGM, or PBM file");
+        pm_error("bad magic number 0x%x - not a PAM, PPM, PGM, or PBM file",
+                 pamP->format);
     }
     
     pamP->bytes_per_sample = pnm_bytespersample(pamP->maxval);
@@ -848,18 +860,22 @@ pnm_writepaminit(struct pam * const pamP) {
 
     if (pamP->size < pamP->len)
         pm_error("pam object passed to pnm_writepaminit() is smaller "
-                 "(%d bytes, according to its 'size' element) "
+                 "(%u bytes, according to its 'size' element) "
                  "than the amount of data in it "
-                 "(%d bytes, according to its 'len' element).",
+                 "(%u bytes, according to its 'len' element).",
                  pamP->size, pamP->len);
 
-    if (pamP->len < PAM_STRUCT_SIZE(bytes_per_sample))
+    if (pamP->size < PAM_STRUCT_SIZE(bytes_per_sample))
         pm_error("pam object passed to pnm_writepaminit() is too small.  "
                  "It must be large\n"
                  "enough to hold at least up through the "
                  "'bytes_per_sample' member, but according\n"
-                 "to its 'len' member, it is only %d bytes long.", 
-                 pamP->len);
+                 "to its 'size' member, it is only %u bytes long.", 
+                 pamP->size);
+    if (pamP->len < PAM_STRUCT_SIZE(maxval))
+        pm_error("pam object must contain members at least through 'maxval', "
+                 "but according to the 'len' member, it is only %u bytes "
+                 "long.", pamP->len);
 
     if (pamP->maxval > PAM_OVERALL_MAXVAL)
         pm_error("maxval (%lu) passed to pnm_writepaminit() "
@@ -870,6 +886,8 @@ pnm_writepaminit(struct pam * const pamP) {
     else
         tupleType = pamP->tuple_type;
 
+    if (pamP->len < PAM_STRUCT_SIZE(bytes_per_sample))
+        pamP->len = PAM_STRUCT_SIZE(bytes_per_sample);
     pamP->bytes_per_sample = pnm_bytespersample(pamP->maxval);
     
     switch (PAM_FORMAT_TYPE(pamP->format)) {

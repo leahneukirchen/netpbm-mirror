@@ -17,7 +17,6 @@
 #include "pm_c_util.h"
 #include "mallocvar.h"
 #include "ppm.h"
-#include "libppm.h"
 
 void
 ppm_writeppminit(FILE*  const fileP, 
@@ -145,10 +144,10 @@ ppm_writeppmrowraw(FILE *        const fileP,
 
 
 static void
-ppm_writeppmrowplain(FILE *       const fileP,
-                     pixel *      const pixelrow,
-                     unsigned int const cols,
-                     pixval       const maxval) {
+ppm_writeppmrowplain(FILE *        const fileP,
+                     const pixel * const pixelrow,
+                     unsigned int  const cols,
+                     pixval        const maxval) {
 
     unsigned int col;
     unsigned int charcount;
@@ -178,11 +177,11 @@ ppm_writeppmrowplain(FILE *       const fileP,
 
 
 void
-ppm_writeppmrow(FILE *  const fileP, 
-                pixel * const pixelrow, 
-                int     const cols, 
-                pixval  const maxval, 
-                int     const forceplain) {
+ppm_writeppmrow(FILE *        const fileP, 
+                const pixel * const pixelrow, 
+                int           const cols, 
+                pixval        const maxval, 
+                int           const forceplain) {
 
     if (forceplain || pm_plain_output || maxval >= 1<<16) 
         ppm_writeppmrowplain(fileP, pixelrow, cols, maxval);

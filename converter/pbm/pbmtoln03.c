@@ -219,12 +219,7 @@ main (int argc, char **argv) {
    if( argn != argc )
       pm_usage(usage);
 
-
-   /* Initialize pbm file */
    pbm_readpbminit (input, &width, &height, &format) ;
-
-   if (format != PBM_FORMAT && format != RPBM_FORMAT)
-      pm_error ("input not in PBM format") ;
 
 /*
  * In explanation of the sequence below:

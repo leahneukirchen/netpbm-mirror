@@ -4,7 +4,8 @@
 #ifndef _PNM_H_
 #define _PNM_H_
 
-#include "ppm.h"
+#include <netpbm/pm.h>
+#include <netpbm/ppm.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,7 +29,9 @@ typedef pixval xelval;
 
 /* Declarations of routines. */
 
-void pnm_init ARGS(( int* argcP, char* argv[] ));
+void
+pnm_init(int *   const argcP,
+         char ** const argv);
 
 void
 pnm_nextimage(FILE *file, int * const eofP);
@@ -36,7 +39,7 @@ pnm_nextimage(FILE *file, int * const eofP);
 xel *
 pnm_allocrow(unsigned int const cols);
 
-#define pnm_freerow(xelrow) free(xelrow)
+#define pnm_freerow(xelrow) pm_freerow(xelrow)
 
 #define pnm_allocarray( cols, rows ) \
   ((xel**) pm_allocarray( cols, rows, sizeof(xel) ))
@@ -83,12 +86,12 @@ pnm_writepnminit(FILE * const fileP,
                  int    const forceplain);
 
 void
-pnm_writepnmrow(FILE * const fileP, 
-                xel *  const xelrow, 
-                int    const cols, 
-                xelval const maxval, 
-                int    const format, 
-                int    const forceplain);
+pnm_writepnmrow(FILE *      const fileP, 
+                const xel * const xelrow, 
+                int         const cols, 
+                xelval      const maxval, 
+                int         const format, 
+                int         const forceplain);
 
 void
 pnm_writepnm(FILE * const fileP,
@@ -100,13 +103,13 @@ pnm_writepnm(FILE * const fileP,
              int    const forceplain);
 
 xel 
-pnm_backgroundxel (xel** xels, int cols, int rows, xelval maxval, int format);
+pnm_backgroundxel(xel** xels, int cols, int rows, xelval maxval, int format);
 
 xel 
-pnm_backgroundxelrow (xel* xelrow, int cols, xelval maxval, int format);
+pnm_backgroundxelrow(xel* xelrow, int cols, xelval maxval, int format);
 
 xel 
-pnm_whitexel (xelval maxval, int format);
+pnm_whitexel(xelval maxval, int format);
 
 xel 
 pnm_blackxel(xelval maxval, int format);
@@ -126,6 +129,11 @@ pnm_promoteformatrow(xel* xelrow, int cols, xelval maxval, int format,
 pixel
 pnm_xeltopixel(xel const inputxel,
                int const format);
+
+xel
+pnm_parsecolorxel(const char * const colorName,
+                  xelval       const maxval,
+                  int          const format);
 
 #ifdef __cplusplus
 }

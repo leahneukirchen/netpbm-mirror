@@ -26,6 +26,7 @@
 #include <sys/wait.h>  
 #include <sys/stat.h>
 
+#include "pm_c_util.h"
 #include "pnm.h"
 #include "shhopt.h"
 #include "nstring.h"
@@ -196,8 +197,9 @@ parseCommandLine(int argc, char ** argv,
 
 
 static void
-add_ps_to_filespec(const char orig_filespec[], char ** const new_filespec_p,
-                   const int verbose) {
+addPsToFilespec(char          const orig_filespec[],
+                const char ** const new_filespec_p,
+                bool          const verbose) {
 /*----------------------------------------------------------------------------
    If orig_filespec[] does not name an existing file, but the same
    name with ".ps" added to the end does, return the name with the .ps
@@ -288,13 +290,13 @@ computeSizeResBlind(unsigned int   const xmax,
 
 
 static void
-compute_size_res(struct cmdlineInfo const cmdline, 
-                 enum orientation   const orientation, 
-                 struct box         const bordered_box,
-                 unsigned int *     const xsizeP, 
-                 unsigned int *     const ysizeP,
-                 unsigned int *     const xresP, 
-                 unsigned int *     const yresP) {
+computeSizeRes(struct cmdlineInfo const cmdline, 
+               enum orientation   const orientation, 
+               struct box         const bordered_box,
+               unsigned int *     const xsizeP, 
+               unsigned int *     const ysizeP,
+               unsigned int *     const xresP, 
+               unsigned int *     const yresP) {
 /*----------------------------------------------------------------------------
   Figure out how big the output image should be (return as
   *xsizeP and *ysizeP) and what output device resolution Ghostscript
@@ -353,7 +355,8 @@ compute_size_res(struct cmdlineInfo const cmdline,
 enum postscript_language {COMMON_POSTSCRIPT, ENCAPSULATED_POSTSCRIPT};
 
 static enum postscript_language
-language_declaration(const char input_filespec[], int const verbose) {
+languageDeclaration(char const input_filespec[],
+                    bool const verbose) {
 /*----------------------------------------------------------------------------
   Return the Postscript language in which the file declares it is written.
   (Except that if the file is on Standard Input or doesn't validly declare
@@ -361,7 +364,7 @@ language_declaration(const char input_filespec[], int const verbose) {
 -----------------------------------------------------------------------------*/
     enum postscript_language language;
 
-    if (STREQ(input_filespec, "-"))
+    if (streq(input_filespec, "-"))
         /* Can't read stdin, because we need it to remain positioned for the 
            Ghostscript interpreter to read it.
         */
@@ -395,9 +398,9 @@ language_declaration(const char input_filespec[], int const verbose) {
 
 
 static struct box
-compute_box_to_extract(struct box const cmdline_extract_box,
-                       char       const input_filespec[],
-                       bool       const verbose) {
+computeBoxToExtract(struct box const cmdline_extract_box,
+                    char       const input_filespec[],
+                    bool       const verbose) {
 
     struct box retval;
 
@@ -410,7 +413,7 @@ compute_box_to_extract(struct box const cmdline_extract_box,
         */
         struct box ps_bb;  /* Box described by %%BoundingBox stmt in input */
 
-        if (STREQ(input_filespec, "-"))
+        if (streq(input_filespec, "-"))
             /* Can't read stdin, because we need it to remain
                positioned for the Ghostscript interpreter to read it.  
             */
@@ -466,8 +469,8 @@ compute_box_to_extract(struct box const cmdline_extract_box,
 
 
 static enum orientation
-compute_orientation(struct cmdlineInfo const cmdline, 
-                    struct box         const extract_box) {
+computeOrientation(struct cmdlineInfo const cmdline, 
+                   struct box         const extract_box) {
 
     enum orientation retval;
     unsigned int const input_width  = extract_box.urx - extract_box.llx;
@@ -511,9 +514,10 @@ compute_orientation(struct cmdlineInfo const cmdline,
 
 
 static struct box
-add_borders(const struct box input_box, 
-            const float xborder_scale, float yborder_scale,
-            const int verbose) {
+addBorders(struct box const input_box, 
+           float      const xborder_scale,
+           float      const yborder_scale,
+           bool       const verbose) {
 /*----------------------------------------------------------------------------
    Return a box which is 'input_box' plus some borders.
 
@@ -543,9 +547,12 @@ add_borders(const struct box input_box,
 
 
 static const char *
-compute_pstrans(const struct box box, const enum orientation orientation,
-                const int xsize, const int ysize, 
-                const int xres, const int yres) {
+computePstrans(struct box       const box,
+               enum orientation const orientation,
+               int              const xsize,
+               int              const ysize, 
+               int              const xres,
+               int              const yres) {
 
     const char * retval;
 
@@ -570,13 +577,13 @@ compute_pstrans(const struct box box, const enum orientation orientation,
 
 
 static const char *
-compute_outfile_arg(const struct cmdlineInfo cmdline) {
+computeOutfileArg(struct cmdlineInfo const cmdline) {
 
     const char *retval;  /* malloc'ed */
 
     if (cmdline.goto_stdout)
         retval = strdup("-");
-    else if (STREQ(cmdline.input_filespec, "-"))
+    else if (streq(cmdline.input_filespec, "-"))
         retval = strdup("-");
     else {
         char * basename;
@@ -584,7 +591,7 @@ compute_outfile_arg(const struct cmdlineInfo cmdline) {
         
         basename  = strdup(cmdline.input_filespec);
         if (strlen(basename) > 3 && 
-            STREQ(basename+strlen(basename)-3, ".ps")) 
+            streq(basename+strlen(basename)-3, ".ps")) 
             /* The input filespec ends in ".ps".  Chop it off. */
             basename[strlen(basename)-3] = '\0';
 
@@ -605,7 +612,8 @@ compute_outfile_arg(const struct cmdlineInfo cmdline) {
 
 
 static const char *
-compute_gs_device(const int format_type, const int forceplain) {
+computeGsDevice(int  const format_type,
+                bool const forceplain) {
 
     const char * basetype;
     const char * retval;
@@ -673,19 +681,22 @@ findGhostscriptProg(const char ** const retvalP) {
 
 
 static void
-execGhostscript(int const inputPipeFd,
-                const char ghostscript_device[],
-                const char outfile_arg[], 
-                int const xsize, int const ysize, 
-                int const xres, int const yres,
-                const char input_filespec[], int const verbose) {
+execGhostscript(int  const inputPipeFd,
+                char const ghostscript_device[],
+                char const outfile_arg[], 
+                int  const xsize,
+                int  const ysize, 
+                int  const xres,
+                int  const yres,
+                char const input_filespec[],
+                bool const verbose) {
     
-    const char *arg0;
-    const char *ghostscriptProg;
-    const char *deviceopt;
-    const char *outfileopt;
-    const char *gopt;
-    const char *ropt;
+    const char * arg0;
+    const char * ghostscriptProg;
+    const char * deviceopt;
+    const char * outfileopt;
+    const char * gopt;
+    const char * ropt;
     int rc;
 
     findGhostscriptProg(&ghostscriptProg);
@@ -723,15 +734,17 @@ execGhostscript(int const inputPipeFd,
 
 
 
-
 static void
-execute_ghostscript(const char pstrans[], const char ghostscript_device[],
-                    const char outfile_arg[], 
-                    const int xsize, const int ysize, 
-                    const int xres, const int yres,
-                    const char input_filespec[], 
-                    const enum postscript_language language,
-                    const int verbose) {
+executeGhostscript(char                     const pstrans[],
+                   char                     const ghostscript_device[],
+                   char                     const outfile_arg[], 
+                   int                      const xsize,
+                   int                      const ysize, 
+                   int                      const xres,
+                   int                      const yres,
+                   char                     const input_filespec[], 
+                   enum postscript_language const language,
+                   bool                     const verbose) {
 
     int gs_exit;  /* wait4 exit code from Ghostscript */
     FILE *gs;  /* Pipe to Ghostscript's standard input */
@@ -835,10 +848,10 @@ execute_ghostscript(const char pstrans[], const char ghostscript_device[],
 
 
 int
-main(int argc, char **argv) {
+main(int argc, char ** argv) {
 
     struct cmdlineInfo cmdline;
-    char *input_filespec;  /* malloc'ed */
+    const char * input_filespec;  /* malloc'ed */
         /* The file specification of our Postscript input file */
     unsigned int xres, yres;    /* Resolution in pixels per inch */
     unsigned int xsize, ysize;  /* output image size in pixels */
@@ -851,43 +864,42 @@ main(int argc, char **argv) {
 
     enum postscript_language language;
     enum orientation orientation;
-    const char *ghostscript_device;
-    const char *outfile_arg;
-    const char *pstrans;
+    const char * ghostscript_device;
+    const char * outfile_arg;
+    const char * pstrans;
 
     pnm_init(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
-    add_ps_to_filespec(cmdline.input_filespec, &input_filespec,
-                       cmdline.verbose);
+    addPsToFilespec(cmdline.input_filespec, &input_filespec, cmdline.verbose);
 
-    extract_box = compute_box_to_extract(cmdline.extract_box, input_filespec, 
-                                         cmdline.verbose);
+    extract_box = computeBoxToExtract(cmdline.extract_box, input_filespec, 
+                                      cmdline.verbose);
 
-    language = language_declaration(input_filespec, cmdline.verbose);
+    language = languageDeclaration(input_filespec, cmdline.verbose);
     
-    orientation = compute_orientation(cmdline, extract_box);
+    orientation = computeOrientation(cmdline, extract_box);
 
-    bordered_box = add_borders(extract_box, cmdline.xborder, cmdline.yborder,
-                               cmdline.verbose);
+    bordered_box = addBorders(extract_box, cmdline.xborder, cmdline.yborder,
+                              cmdline.verbose);
 
-    compute_size_res(cmdline, orientation, bordered_box, 
-                     &xsize, &ysize, &xres, &yres);
+    computeSizeRes(cmdline, orientation, bordered_box, 
+                   &xsize, &ysize, &xres, &yres);
     
-    pstrans = compute_pstrans(bordered_box, orientation,
-                              xsize, ysize, xres, yres);
+    pstrans = computePstrans(bordered_box, orientation,
+                             xsize, ysize, xres, yres);
 
-    outfile_arg = compute_outfile_arg(cmdline);
+    outfile_arg = computeOutfileArg(cmdline);
 
     ghostscript_device = 
-        compute_gs_device(cmdline.format_type, cmdline.forceplain);
+        computeGsDevice(cmdline.format_type, cmdline.forceplain);
     
     pm_message("Writing %s file", ghostscript_device);
     
-    execute_ghostscript(pstrans, ghostscript_device, outfile_arg, 
-                        xsize, ysize, xres, yres, input_filespec,
-                        language, cmdline.verbose);
+    executeGhostscript(pstrans, ghostscript_device, outfile_arg, 
+                       xsize, ysize, xres, yres, input_filespec,
+                       language, cmdline.verbose);
 
     strfree(ghostscript_device);
     strfree(outfile_arg);

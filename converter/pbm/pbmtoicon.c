@@ -1,4 +1,4 @@
-/* pbmtoicon.c - read a portable bitmap and produce a Sun icon file
+/* pbmtoicon.c - read a PBM image and produce a Sun icon file
 **
 ** Copyright (C) 1988 by Jef Poskanzer.
 **
@@ -10,125 +10,177 @@
 ** implied warranty.
 */
 
+/* 2006.10 (afu)
+   Changed bitrow from plain to raw, read function from pbm_readpbmrow() to
+   pbm_readpbmrow_packed.  Applied wordint to scoop up 16 bit output items.
+   putitem changed to better express the output format.
+   Retired bitwise transformation functions.
+*/
+
+#include "wordaccess.h"
 #include "pbm.h"
 
-static void putinit ARGS(( void ));
-static void putbit ARGS(( bit b ));
-static void putrest ARGS(( void ));
-static void putitem ARGS(( void ));
+static unsigned short int itemBuff[8];
+static unsigned int itemCnt;    /* takes values 0 to 8 */
+FILE * putFp;
+
+
+
+static void
+putinit(FILE * const ofP) {
+    putFp = ofP;
+    itemCnt = 0;
+}
+
+
+
+static void
+putitem(wordint const item) {
+
+    if (itemCnt == 8 ) {
+        /* Buffer is full.  Write out one line. */
+        int rc;
+    
+        rc = fprintf(putFp,
+                     "\t0x%04x,0x%04x,0x%04x,0x%04x,"
+                     "0x%04x,0x%04x,0x%04x,0x%04x,\n",
+                     itemBuff[0],itemBuff[1],itemBuff[2],itemBuff[3],
+                     itemBuff[4],itemBuff[5],itemBuff[6],itemBuff[7]);
+        if (rc < 0)        
+           pm_error("fprintf() failed to write Icon bitmap");
+           
+        itemCnt = 0;
+    }
+    itemBuff[itemCnt++] = item & 0xffff;  /* Only lower 16 bits are used */
+}
+
+
+
+static void
+putterm(void) {
+
+    unsigned int i;
+
+    for (i = 0; i < itemCnt; ++i) {
+        int rc;
+        rc = fprintf(putFp, "%s0x%04x%c", i == 0  ? "\t" : "", itemBuff[i],
+                     i == itemCnt - 1 ? '\n' : ',');
+        if (rc < 0)        
+            pm_error("fprintf() failed to write Icon bitmap");
+    }
+}     
+
+
+
+static void
+writeIconHeader(FILE *       const ofP,
+                unsigned int const width,
+                unsigned int const height) {
+
+    int rc;
+
+    rc = fprintf(ofP,
+                 "/* Format_version=1, Width=%u, Height=%u", width, height);
+    if (rc < 0)
+        pm_error("fprintf() failed to write Icon header");
+        
+    rc = fprintf(ofP, ", Depth=1, Valid_bits_per_item=16\n */\n");
+    if (rc < 0)
+        pm_error("fprintf() failed to write Icon header");
+}
+
+
+
+static void
+writeIcon(FILE *       const ifP,
+          unsigned int const cols,
+          unsigned int const rows,
+          int          const format,
+          FILE *       const ofP) {
+
+    unsigned int const wordintSize = sizeof(wordint) * 8;
+        /* wordintSize is usually 32 or 64 bits.  Must be at least 24. */
+    unsigned int const items = (cols + 15) / 16;
+    unsigned int const bitrowBytes = pbm_packed_bytes(cols);
+    unsigned int const pad = items * 16 - cols;
+    /* 'padleft' is added to the output.  'padbyte' is for cleaning
+       the input
+    */
+    unsigned int const padleft = pad / 2;
+    unsigned int const padbyte = bitrowBytes * 8 - cols;
+    unsigned int const shift   = (wordintSize - 24) + padleft;
+    
+    unsigned char * bitbuffer;
+    unsigned char * bitrow;
+    unsigned int row;
+
+    bitbuffer = pbm_allocrow_packed(cols + wordintSize);
+    bitrow = &bitbuffer[1];
+    bitbuffer[0] = 0;
+    bitrow[bitrowBytes] = 0;
+    
+    writeIconHeader(ofP, cols + pad, rows);
+
+    putinit(ofP);
+
+    for (row = 0; row < rows; ++row) {
+        unsigned int itemSeq;
+        pbm_readpbmrow_packed(ifP, bitrow, cols, format);
+
+        /* Clear post-data junk in final partial byte */
+        if (padbyte > 0) {
+            bitrow[bitrowBytes-1] >>= padbyte;
+            bitrow[bitrowBytes-1] <<= padbyte;
+        }
+        
+        for (itemSeq = 0; itemSeq < items; ++itemSeq) {
+            /* Scoop up bits, shift-align, send to format & print function.
+    
+               An item is 16 bits, typically spread over 3 bytes due to
+               left-padding.  We use wordint here to scoop up 4 (or more)
+               consecutive bytes.  An item always resides within the higher
+               24 bits of each scoop.  It is essential to use wordint
+               (or rather the wordaccess function bytesToWordInt() ); 
+               simple long, uint_32t, etc. do not work for they are not
+               shift-tolerant.
+            */
+            
+            wordint const scoop = bytesToWordint(&bitbuffer[itemSeq*2]);
+            putitem (scoop >> shift);
+        }
+    }
+    putterm();    
+}
+
+
 
 int
-main( argc, argv )
-    int argc;
-    char* argv[];
-    {
-    FILE* ifp;
-    bit* bitrow;
-    register bit* bP;
-    int rows, cols, format, pad, padleft, padright, row, col;
+main(int argc,
+     char * argv[]) {
 
+    FILE * ifP;
+    int rows, cols;
+    int format;
+    const char * inputFileName;
 
-    pbm_init( &argc, argv );
+    pbm_init(&argc, argv);
 
-    if ( argc > 2 )
-	pm_usage( "[pbmfile]" );
-
-    if ( argc == 2 )
-	ifp = pm_openr( argv[1] );
+    if (argc-1 > 1)
+        pm_error("Too many arguments (%u).  "
+                 "Only argument is optional input file", argc-1);
+    if (argc-1 == 1)
+        inputFileName = argv[1];
     else
-	ifp = stdin;
-
-    pbm_readpbminit( ifp, &cols, &rows, &format );
-    bitrow = pbm_allocrow( cols );
+        inputFileName = "-";
     
-    /* Round cols up to the nearest multiple of 16. */
-    pad = ( ( cols + 15 ) / 16 ) * 16 - cols;
-    padleft = pad / 2;
-    padright = pad - padleft;
+    ifP = pm_openr(inputFileName);
 
-    printf( "/* Format_version=1, Width=%d, Height=%d", cols + pad, rows );
-    printf( ", Depth=1, Valid_bits_per_item=16\n */\n" );
+    pbm_readpbminit(ifP, &cols, &rows, &format);
 
-    putinit( );
-    for ( row = 0; row < rows; ++row )
-	{
-	pbm_readpbmrow( ifp, bitrow, cols, format );
-	for ( col = 0; col < padleft; ++col )
-	    putbit( 0 );
-        for ( col = 0, bP = bitrow; col < cols; ++col, ++bP )
-	    putbit( *bP );
-	for ( col = 0; col < padright; ++col )
-	    putbit( 0 );
-        }
+    writeIcon(ifP, cols, rows, format, stdout);
 
-    pm_close( ifp );
+    pm_close(ifP);
 
-    putrest( );
+    return 0;
+}
 
-    exit( 0 );
-    }
-
-static int item, bitsperitem, bitshift, itemsperline, firstitem;
-
-static void
-putinit( )
-    {
-    itemsperline = 0;
-    bitsperitem = 0;
-    item = 0;
-    bitshift = 15;
-    firstitem = 1;
-    }
-
-#if __STDC__
-static void
-putbit( bit b )
-#else /*__STDC__*/
-static void
-putbit( b )
-bit b;
-#endif /*__STDC__*/
-    {
-    if ( bitsperitem == 16 )
-	putitem( );
-    ++bitsperitem;
-    if ( b == PBM_BLACK )
-	item += 1 << bitshift;
-    --bitshift;
-    }
-
-static void
-putrest( )
-    {
-    if ( bitsperitem > 0 )
-	putitem( );
-    putchar( '\n' );
-    }
-
-static void
-putitem( )
-    {
-    const char* hexits = "0123456789abcdef";
-
-    if ( firstitem )
-	firstitem = 0;
-    else
-	putchar( ',' );
-    if ( itemsperline == 8 )
-	{
-	putchar( '\n' );
-	itemsperline = 0;
-	}
-    if ( itemsperline == 0 )
-	putchar( '\t' );
-    putchar( '0' );
-    putchar( 'x' );
-    putchar( hexits[item >> 12] );
-    putchar( hexits[( item >> 8 ) & 15] );
-    putchar( hexits[( item >> 4 ) & 15] );
-    putchar( hexits[item & 15] );
-    ++itemsperline;
-    bitsperitem = 0;
-    item = 0;
-    bitshift = 15;
-    }

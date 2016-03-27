@@ -69,6 +69,16 @@ The parts to be installed are:
     that is in the default search path of your compiler.  Typical
     directories for this are /usr/include and /usr/local/include.
 
+    All of the files are meant to be named like <netpbm/xxx.h> for C
+    #include purposes, which means on an ordinary system, they are
+    installed in a directory named "netpbm".  Thus, they are organized
+    this way in the package.  BUT: until Netpbm 10.41 (December 2007),
+    they were packaged for, and customarily used, just as <xxx.h>.
+    Therefore, for backward compatibility, it is a good idea to make
+    symbolic links from the parent directory into the netpbm/
+    directory.  But as that may pollute your namespace, you may prefer
+    just to make all users migrate to the <netpbm/xxx.h> form.
+
   Data Files
 
     These are files that you can use for various purposes as input to

@@ -5,13 +5,14 @@ endif
 SUBDIR = other
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 SUBDIRS = pamx
 
+EXTERN_INCLUDES =
 ifneq ($(LINUXSVGALIB),NONE)
   ifneq ($(LINUXSVGAHDR_DIR),)
-    INCLUDES += -I$(LINUXSVGAHDR_DIR)
+    EXTERN_INCLUDES += -I$(LINUXSVGAHDR_DIR)
   endif
 endif
 
@@ -23,7 +24,7 @@ endif
 # build.
 
 PORTBINARIES = pamarith pambayer pamchannel pamdepth \
-	pamendian pamlookup pampick pamsplit \
+	pamendian pamfixtrunc pamlookup pampick pamsplit \
 	pamstack pamsummcol pnmcolormap \
 	ppmdcfont ppmddumpfont ppmdmkfont 
 
@@ -47,7 +48,7 @@ MERGE_OBJECTS = $(MERGEBINARIES:%=%.o2)
 .PHONY: all
 all: $(BINARIES) $(SUBDIRS:%=%/all)
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 ppmsvgalib: %: %.o $(NETPBMLIB) $(LIBOPT)
 	$(LD) -o $@ $< \
@@ -60,15 +61,15 @@ install.bin.local: $(PKGDIR)/bin
 # Remember that $(SYMLINK) might just be a copy command.
 # In July 2002, pamarith replaced pnmarith
 	cd $(PKGDIR)/bin ; \
-	  rm -f pnmarith ; \
-	  $(SYMLINK) pamarith$(EXE) pnmarith
+	  rm -f pnmarith$(EXE) ; \
+	  $(SYMLINK) pamarith$(EXE) pnmarith$(EXE)
 # In December 2005, pamsplit replaced pnmsplit
 	cd $(PKGDIR)/bin ; \
-	  rm -f pnmsplit ; \
-	  $(SYMLINK) pamsplit$(EXE) pnmsplit
+	  rm -f pnmsplit$(EXE) ; \
+	  $(SYMLINK) pamsplit$(EXE) pnmsplit$(EXE)
 # In February 2006, pamdepth replaced pnmdepth
 	cd $(PKGDIR)/bin ; \
-	  rm -f pnmdepth ; \
-	  $(SYMLINK) pamdepth$(EXE) pnmdepth
+	  rm -f pnmdepth$(EXE) ; \
+	  $(SYMLINK) pamdepth$(EXE) pnmdepth$(EXE)
 
 FORCE:

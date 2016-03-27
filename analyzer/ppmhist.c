@@ -12,9 +12,11 @@
 
 #include <assert.h>
 
-#include "ppm.h"
-#include "shhopt.h"
+#include "pm_c_util.h"
+#include "mallocvar.h"
 #include "nstring.h"
+#include "shhopt.h"
+#include "ppm.h"
 
 enum sort {SORT_BY_FREQUENCY, SORT_BY_RGB};
 
@@ -24,7 +26,7 @@ struct cmdline_info {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *input_filespec;  /* Filespecs of input files */
+    const char * inputFileName;  /* Name of input file */
     unsigned int noheader;    /* -noheader option */
     enum colorFmt colorFmt;
     unsigned int colorname;   /* -colorname option */
@@ -34,18 +36,20 @@ struct cmdline_info {
 
 
 static void
-parse_command_line(int argc, char ** argv,
-                   struct cmdline_info * const cmdlineP) {
+parseCommandLine(int argc, const char ** argv,
+                 struct cmdline_info * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
 -----------------------------------------------------------------------------*/
     optStruct3 opt;  /* set by OPTENT3 */
-    optEntry *option_def = malloc(100*sizeof(optEntry));
+    optEntry * option_def;
     unsigned int option_def_index;
     
     unsigned int hexcolorOpt, floatOpt, mapOpt, nomapOpt;
     const char * sort_type;
+
+    MALLOCARRAY(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENTRY */
     OPTENT3(0,   "map",       OPT_FLAG, NULL,  &mapOpt,                0);
@@ -63,16 +67,16 @@ parse_command_line(int argc, char ** argv,
     /* Set defaults */
     sort_type = "frequency";
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (argc-1 == 0) 
-        cmdlineP->input_filespec = "-";
+        cmdlineP->inputFileName = "-";
     else if (argc-1 != 1)
         pm_error("Program takes zero or one argument (filename).  You "
                  "specified %d", argc-1);
     else
-        cmdlineP->input_filespec = argv[1];
+        cmdlineP->inputFileName = argv[1];
 
     if (hexcolorOpt + floatOpt + mapOpt > 1)
         pm_error("You can specify only one of -hexcolor, -float, and -map");
@@ -218,9 +222,10 @@ printColors(colorhist_vector const chv,
 
 
 int
-main(int argc, char *argv[] ) {
+main(int argc, const char *argv[]) {
+
     struct cmdline_info cmdline;
-    FILE* ifP;
+    FILE * ifP;
     colorhist_vector chv;
     int rows, cols;
     pixval maxval;
@@ -234,11 +239,11 @@ main(int argc, char *argv[] ) {
     const char ** dictColornames;
     pixel * dictColors;
 
-    ppm_init( &argc, argv );
+    pm_proginit(&argc, argv);
 
-    parse_command_line(argc, argv, &cmdline);
+    parseCommandLine(argc, argv, &cmdline);
 
-    ifP = pm_openr(cmdline.input_filespec);
+    ifP = pm_openr(cmdline.inputFileName);
 
     ppm_readppminit(ifP, &cols, &rows, &maxval, &format);
 

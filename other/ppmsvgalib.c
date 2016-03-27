@@ -16,6 +16,8 @@
 #include <errno.h>
 #include <signal.h>
 #include <unistd.h>
+
+#include "pm_c_util.h"
 #include "ppm.h"
 #include "shhopt.h"
 
@@ -249,7 +251,7 @@ main(int argc, char *argv[]) {
     int format;
     int rc;
 
-    ppm_init( &argc, argv );
+    ppm_init(&argc, argv);
 
     rc = vga_init();         /* Initialize. */
     if (rc < 0)

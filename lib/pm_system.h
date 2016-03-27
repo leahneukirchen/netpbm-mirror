@@ -10,12 +10,27 @@ extern "C" {
 
 
 void
+pm_system_vp(const char *    const progName,
+             const char **   const argArray,
+             void stdinFeeder(int, void *),
+             void *          const feederParm,
+             void stdoutAccepter(int, void *),
+             void *          const accepterParm);
+
+void
+pm_system_lp(const char *    const progName,
+             void stdinFeeder(int, void *),
+             void *          const feederParm,
+             void stdoutAccepter(int, void *),
+             void *          const accepterParm,
+             ...);
+
+void
 pm_system(void                  stdinFeeder(int, void *),
           void *          const feederParm,
           void                  stdoutAccepter(int, void *),
           void *          const accepterParm,
           const char *    const shellCommand);
-
 
 struct bufferDesc {
     /* This is just a parameter for the routines below */

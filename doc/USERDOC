@@ -18,18 +18,25 @@ so you can use the current manual with old Netpbm code.
 INSTALLING A LOCAL COPY OF DOCUMENTATION
 ----------------------------------------
 
-If accessing the manual on the World Wide Web is not convenient for
-you (for example, if you want to access it from a computer that is not
-always connected to the Internet), just make a local copy of the web
-site files using GNU Wget:
+If accessing the manual on the World Wide Web is not convenient for you (for
+example, if you want to access it from a computer that is not always connected
+to the Internet), just make a local copy of the HTML files.
 
-  wget --recursive --relative http://netpbm.sourceforge.net/doc/
+You can get the files from the Subversion repository using the Subversion
+client program 'svn':
 
-The above copies all the HTML files from the web site into your
-current directory, under a subdirectory 'netpbm.sourceforge.net/doc'
-that it creates.  You can browse those files directly with a web
-browser.  If you don't have Wget, get it from
-ftp://ftp.gnu.org/gnu/wget.  It is very useful.
+  URL=https://svn.code.sf.net/p/netpbm/code/userguide
+  svn export $URL
+
+This creates a directory "userguide" in your current directory containing
+all the same files that are on the web site.
+
+
+An apparent alternative is just to copy the web site with something like GNU
+Wget.  However, the Sourceforge web server has limitations on how much you can
+download.  In a February 2012 experiment, Sourceforge started refusing HTTP
+requests (with an Internal Server Error indication and a message saying there
+had been too many requests) before all the files could be fetched.
 
 
 GETTING COMMAND HELP WITH A "MAN" COMMAND
@@ -56,7 +63,7 @@ to go straight to the Ppmtogif documentation.
 
 Installnetpbm normally installs Manweb and the netpbm.url file that
 Manweb needs to find the Netpbm documentation.  Through the Configure
-dialog, or editing Makefile.config, you determine whether Manweb
+dialog, or editing config.mk, you determine whether Manweb
 accesses the master web copy or a local copy you installed.
 
 Installnetpbm installs the program as 'manweb'.  If you want to invoke
@@ -121,9 +128,9 @@ Here is an example of making troff pages:
   wget --recursive --relative http://netpbm.sourceforge.net/doc/
   cd netpbm.sourceforge.net/doc
   make MAKEMAN=/usr/src/netpbm/buildtools/makeman \
-    -f /usr/src/netpbm/buildtools/Makefile.manpage manpages
-  make -f /usr/src/netpbm/buildtools/Makefile.manpage manpages
-  make -f /usr/src/netpbm/buildtools/Makefile.manpage installman
+    -f /usr/src/netpbm/buildtools/manpage.mk manpages
+  make -f /usr/src/netpbm/buildtools/manpage.mk manpages
+  make -f /usr/src/netpbm/buildtools/manpage.mk installman
   cd ../../..
   rm -r netpbmdoc
 

@@ -13,6 +13,7 @@
 #define _XOPEN_SOURCE 600
 #include <string.h>
 
+#include "pm_c_util.h"
 #include "pam.h"
 #include "shhopt.h"
 #include "nstring.h"

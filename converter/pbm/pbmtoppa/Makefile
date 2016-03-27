@@ -5,7 +5,7 @@ endif
 SUBDIR = converter/pbm/pbmtoppa
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 all: pbmtoppa
 
@@ -16,7 +16,7 @@ MERGEBINARIES = $(BINARIES)
 OBJECTS = pbmtoppa.o ppa.o pbm.o cutswath.o
 MERGE_OBJECTS = pbmtoppa.o2 ppa.o pbm.o cutswath.o
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 pbmtoppa: $(OBJECTS) $(NETPBMLIB) $(LIBOPT)
 	$(LD) -o pbmtoppa $(OBJECTS) \

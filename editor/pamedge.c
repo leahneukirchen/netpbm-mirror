@@ -188,7 +188,7 @@ main(int argc, char *argv[]) {
     pnm_writepaminit(&outpam);
 
     /* First row is black: */
-    writeBlackRow(&outpam      );
+    writeBlackRow(&outpam);
 
     writeMiddleRows(&inpam, &outpam);
 

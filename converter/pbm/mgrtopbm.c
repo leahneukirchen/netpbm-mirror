@@ -1,13 +1,10 @@
-/* mgrtopbm.c - read a MGR bitmap and produce a portable bitmap
-**
-** Copyright (C) 1989 by Jef Poskanzer.
-**
-** Permission to use, copy, modify, and distribute this software and its
-** documentation for any purpose and without fee is hereby granted, provided
-** that the above copyright notice appear in all copies and that both that
-** copyright notice and this permission notice appear in supporting
-** documentation.  This software is provided "as is" without express or
-** implied warranty.
+/* mgrtopbm.c - read a MGR bitmap and produce a PBM image.
+
+   Copyright information is at end of file.
+
+   You can find MGR and some MGR format test images at
+   ftp://sunsite.unc.edu/pub/Linux/apps/MGR/!INDEX.html
+
 */
 
 #include <string.h>
@@ -17,29 +14,29 @@
 #include "mgr.h"
 
 
-static unsigned char item;
-static int bitsperitem, bitshift;
 
 static void
-getinit(FILE * const file, 
-        int *  const colsP, 
-        int *  const rowsP, 
-        int *  const depthP, 
-        int *  const padrightP,
-        int *  const bitsperitemP) {
-
+readMgrHeader(FILE *          const ifP, 
+              unsigned int *  const colsP, 
+              unsigned int *  const rowsP, 
+              unsigned int *  const depthP, 
+              unsigned int *  const padrightP ) {
+    
     struct b_header head;
-    int pad;
+    unsigned int pad;
+    size_t bytesRead;
 
-    if (fread(&head, sizeof(struct old_b_header), 1, file ) != 1)
+    bytesRead = fread(&head, sizeof(struct old_b_header), 1, ifP);
+    if (bytesRead != 1)
         pm_error("Unable to read 1st byte of file.  "
                  "fread() returns errno %d (%s)",
                  errno, strerror(errno));
     if (head.magic[0] == 'y' && head.magic[1] == 'z') { 
         /* new style bitmap */
-        if (fread(&head.depth, 
-                  sizeof(head) - sizeof(struct old_b_header), 1, file) 
-             != 1 )
+        size_t bytesRead;
+        bytesRead = fread(&head.depth, 
+                          sizeof(head) - sizeof(struct old_b_header), 1, ifP);
+        if (bytesRead != 1 )
             pm_error("Unable to read header after 1st byte.  "
                      "fread() returns errno %d (%s)",
                      errno, strerror(errno));
@@ -60,7 +57,7 @@ getinit(FILE * const file,
     } else {
         pm_error("bad magic chars in MGR file: '%c%c'",
                  head.magic[0], head.magic[1] );
-        pad = -1;  /* should never reach here */
+        pad = 0;  /* should never reach here */
     }
 
     if (head.h_wide < ' ' || head.l_wide < ' ')
@@ -71,75 +68,79 @@ getinit(FILE * const file,
     *colsP = (((int)head.h_wide - ' ') << 6) + ((int)head.l_wide - ' ');
     *rowsP = (((int)head.h_high - ' ') << 6) + ((int) head.l_high - ' ');
     *padrightP = ( ( *colsP + pad - 1 ) / pad ) * pad - *colsP;
-    
-    *bitsperitemP = 8;
 }
 
 
 
-static bit
-getbit( file )
-    FILE* file;
-    {
-    bit b;
-
-    if ( bitsperitem == 8 )
-	{
-	item = getc( file );
-	bitsperitem = 0;
-	bitshift = 7;
-	}
-    bitsperitem++;
-    b = ( ( item >> bitshift) & 1 ) ? PBM_BLACK : PBM_WHITE;
-    bitshift--;
-    return b;
-    }
-
-
-
 int
-main( argc, argv )
-    int argc;
-    char* argv[];
-    {
-    FILE* ifp;
-    bit* bitrow;
-    register bit* bP;
-    int rows, cols, depth, padright, row, col;
+main(int    argc,
+     char * argv[]) {
 
+    FILE * ifP;
+    unsigned char * bitrow;
+    unsigned int rows, cols, depth;
+    unsigned int padright;
+    unsigned int row;
+    unsigned int itemCount;
+    const char * inputFileName;
 
-    pbm_init( &argc, argv );
+    pbm_init(&argc, argv);
 
-    if ( argc > 2 )
-	pm_usage( "[mgrfile]" );
-
-    if ( argc == 2 )
-	ifp = pm_openr( argv[1] );
+    if (argc-1 > 1)
+        pm_error("Too many arguments (%u).  "
+                 "Only argument is optional input file", argc-1);
+    if (argc-1 == 1)
+        inputFileName = argv[1];
     else
-	ifp = stdin;
+        inputFileName = "-";
+    
+    ifP = pm_openr(inputFileName);
 
-    getinit( ifp, &cols, &rows, &depth, &padright, &bitsperitem );
-    if ( depth != 1 )
-	pm_error( "MGR file has depth of %d, must be 1", depth );
+    readMgrHeader(ifP, &cols, &rows, &depth, &padright);
+    if (depth != 1)
+        pm_error("MGR file has depth of %u, must be 1", depth);
 
-    pbm_writepbminit( stdout, cols, rows, 0 );
-    bitrow = pbm_allocrow( cols );
+    pbm_writepbminit(stdout, cols, rows, 0);
 
-    for ( row = 0; row < rows; row++ )
-	{
-	/* Get data, bit-reversed within each byte. */
-        for ( col = 0, bP = bitrow; col < cols; col++, bP++ )
-	    *bP = getbit( ifp );
-	/* Discard line padding */
-        for ( col = 0; col < padright; col ++ )
-	    (void) getbit( ifp );
-	pbm_writepbmrow( stdout, bitrow, cols, 0 );
-	}
+    bitrow = pbm_allocrow_packed(cols + padright);
+    
+    itemCount = (cols + padright ) / 8;
 
-    pm_close( ifp );
-    pm_close( stdout );
+    for (row = 0; row < rows; ++row) {
+        /* The raster formats are nearly identical.
+           MGR may have rows padded to 16 or 32 bit boundaries.
+        */
+        size_t bytesRead;
+        bytesRead = fread(bitrow, 1, itemCount, ifP);
+        if (bytesRead < itemCount)
+            pm_error("fread() failed to read mgr bitmap data");
 
-    exit( 0 );
+        pbm_writepbmrow_packed(stdout, bitrow, cols, 0);
     }
+    pm_close(ifP);
+    pm_close(stdout);
+    return 0;
+}
 
 
+
+/* 2006.10 (afu)
+   Changed bitrow from plain to raw, read function from getc() to fread(),
+   write function from pbm_writepbmrow() to pbm_writepbmrow_packed().
+   Retired bitwise transformation functions.
+   
+   NOT tested for old-style format files.  Only one zz file in mgrsrc-0.69 .
+  
+*/
+
+
+/*
+** Copyright (C) 1989 by Jef Poskanzer.
+**
+** Permission to use, copy, modify, and distribute this software and its
+** documentation for any purpose and without fee is hereby granted, provided
+** that the above copyright notice appear in all copies and that both that
+** copyright notice and this permission notice appear in supporting
+** documentation.  This software is provided "as is" without express or
+** implied warranty.
+*/

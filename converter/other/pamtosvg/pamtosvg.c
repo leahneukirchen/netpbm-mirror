@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <math.h>
 
+#include "pm_c_util.h"
 #include "mallocvar.h"
 #include "nstring.h"
 #include "shhopt.h"
@@ -211,6 +212,7 @@ parseCommandLine(int argc,
             pm_error("Too many arguments (%u).  The only non-option argument "
                      "is the input file name.", argc-1);
     }
+    free(option_def);
 }
 
 
@@ -389,7 +391,7 @@ main(int argc, char * argv[]) {
     pm_close(ifP);
     if (cmdline.log)
         pm_close(log_file);
-    
+
     at_splines_free(splinesP);
     at_bitmap_free(bitmapP);
 

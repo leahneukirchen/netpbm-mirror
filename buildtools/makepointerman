@@ -74,11 +74,11 @@ print(MANPAGE "If that doesn't work, also try " .
 print(MANPAGE "emailing Bryan Henderson, bryanh\@giraffe-data.com.\n");
 
 print(MANPAGE "\n");
-print(MANPAGE "Note that making the documentation available this way was\n");
-print(MANPAGE "a choice of the person who installed Netpbm on this system.\n");
-print(MANPAGE "It is also possible to install Netpbm such that you would\n");
-print(MANPAGE "simply see the documentation instead of the message you are\n");
-print(MANPAGE "reading now.\n");
+print(MANPAGE "Note that it is possible to install Netpbm with the\n");
+print(MANPAGE "documentation available differently.  For example, you\n");
+print(MANPAGE "could simply see the documentation instead of the message\n");
+print(MANPAGE "you are reading now.  The file 'doc/USERDOC' in the Netpbm\n");
+print(MANPAGE "source tree contains details.");
 print(MANPAGE "\n");
 
 if ($format eq "nroff") {

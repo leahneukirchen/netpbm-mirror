@@ -20,12 +20,15 @@
 
 #define _BSD_SOURCE   /* Make sure strdup is int string.h */
 
+#include <assert.h>
+#include <stdlib.h>
 #include <math.h>
 #include <string.h>
 
-#include "pam.h"
-#include "shhopt.h"
+#include "pm_c_util.h"
 #include "mallocvar.h"
+#include "shhopt.h"
+#include "pam.h"
 
 typedef double number;
 
@@ -164,9 +167,9 @@ typedef struct {
          xw_ll, yw_ll, zw_ll,  xw_lr, yw_lr, zw_lr;
 
   /* Originally I planned to include the possibility to move the
-     centre of projection, that is the pixel the camera "looks at".  It
+     center of projection, that is the pixel the camera "looks at".  It
      turned out, maybe surprisingly, that this does not have any
-     effect. So now this centre is moved to (0,0).
+     effect. So now this center is moved to (0,0).
      
      Another original plan was to correct the output parameters
      depending on the lengths of the paralellograms sides or its
@@ -184,26 +187,36 @@ typedef struct {
 } world_data;
 
 
-/*
-  Internal infile buffer
-
-  This is a cyclic in random access out buffer, just large enough
-  to store all input lines that are still in use.
-*/
 
 typedef struct {
-
-  int num_rows, last_physical, last_logical;
-  tuple** rows;
-  const struct pam* inpam;
-
+/*----------------------------------------------------------------------------
+   A buffer of image input.  This holds a vertical window of the input.
+-----------------------------------------------------------------------------*/
+    unsigned int numRows;
+        /* Height of buffer window */
+    unsigned int nextImageRow;
+        /* Row number of the next image row that will go into the buffer.
+           The 'numRows' rows before (above) that are in the buffer now.
+        */
+    unsigned int nextBufferRow;
+        /* Row number in the physical buffer (index of rows[]) where
+           the next row read will go (hence where the oldest/highest
+           row in the buffer is now).
+        */
+    tuple ** rows;
+        /* The rows of the window, as a cyclic buffer */
+    const struct pam * inpamP;
+        /* The image from which we fill the buffer */
 } buffer;
 
 
 
+typedef void interpolateFn(tuple, number, number);
+
 /*
   The following are like MALLOCARRAY_NOFAIL and MALLOCVAR_NOFAIL,
-  but issue an error message instead of aborting.
+  but abort (fail) the program instead of killing the process with an
+  abort signal.
 */
 
 #define MALLOCARRAY_SAFE(handle,length) \
@@ -306,45 +319,53 @@ static int parse_enum (const char *const text,
 
 
 
-static number parse_float (char *const text)
+static number
+parseFloat(const char * const text) {
 /*----------------------------------------------------------------------------
   Parse an argument given to a float command line option.  We cannot
   just call strtod, because we want to parse fractions like "5/3"
 -----------------------------------------------------------------------------*/
-{
-  bool error;
-  char* end;
-  char* denstart;
-  number num,den;
+    bool error;
+    char * end;
+    number num;
+    char * buffer;
+    
+    buffer = strdup(text);
+    if (!buffer)
+        pm_error("Out of memory");
 
-  error = FALSE;
-  num = strtod (text, &end);    /* try strtod anyway */
-  switch (*end) {
-  case 0:           /* It is a plain number */
-    break;
-  case '/':         /* It might be a fraction */
-    /* (Try to) parse the numerator */
-    *end = 0;
-    num = strtod (text, &end);
-    error = (*end) != 0;
-    if (!error) {
-      /* Undo the above change */
-      *end = '/';
-      /* (Try to) parse the denominator */
-      denstart = end+1;
-      den = strtod (denstart, &end);
-      error = (fabs(den)<eps) || ((*end) != 0);
-      if (!error)
-    num /= den;
+    error = FALSE;
+    num = strtod(buffer, &end);    /* try strtod anyway */
+    switch(*end) {
+    case 0:           /* It is a plain number */
+        break;
+    case '/':         /* It might be a fraction */
+        /* (Try to) parse the numerator */
+        *end = 0;
+        num = strtod(text, &end);
+        error = (*end != '\0');
+        if (!error) {
+            char * const denStart = end + 1;
+            number denominator;
+
+            /* Undo the above change */
+            *end = '/';
+            /* (Try to) parse the denominator */
+            denominator = strtod(denStart, &end);
+            error = (fabs(denominator) < eps) || (*end != '\0');
+            if (!error)
+                num /= denominator;
+        };
+        break;
+    default:          /* It is no number format we know */
+        error = TRUE;
     };
-    break;
-  default:          /* It is no number format we know */
-    error = TRUE;
-  };
-  if (error)
-    pm_error ("Invalid number format: %s", text);
+    if (error)
+        pm_error("Invalid number format: %s", text);
 
-  return num;
+    free(buffer);
+
+    return num;
 }
 
 
@@ -373,8 +394,8 @@ static void parse_include_point(char * specification,
   if (*comma_seek == 0)
     pm_error ("Invalid format for --include point: '%s'", specification);
   *comma_seek = 0;      /* separate the two parts for parsing purposes */
-  new_point->xi = (number) parse_float(specification);
-  new_point->yi = (number) parse_float(comma_seek+1);
+  new_point->xi = (number) parseFloat(specification);
+  new_point->yi = (number) parseFloat(comma_seek+1);
   *comma_seek = ',';
 }
 
@@ -422,9 +443,12 @@ static void parse_include_points(const char * const include_opt,
 }
 
 
-static void parse_command_line (int argc, char* argv[], option *const options)
-{
-  char* float_text[num_float_options];
+
+static void
+parseCommandLine(int argc, const char * argv[],
+                 option *  const options) {
+
+  const char* float_text[num_float_options];
   unsigned int float_spec[num_float_options];
   char* enum_text[num_enum_options];
   unsigned int enum_spec[num_enum_options];
@@ -436,6 +460,8 @@ static void parse_command_line (int argc, char* argv[], option *const options)
   optStruct3 opt;
   unsigned int option_def_index;
   optEntry* option_def;
+
+  set_command_line_defaults(options);
 
   /* Let shhopt try its best */
 
@@ -460,7 +486,7 @@ static void parse_command_line (int argc, char* argv[], option *const options)
   opt.opt_table = option_def;
   opt.short_allowed = FALSE;
   opt.allowNegNum = TRUE;
-  optParseOptions3 (&argc, argv, opt, sizeof(opt), 0);
+  optParseOptions3 (&argc, (char **)argv, opt, sizeof(opt), 0);
 
   /* The non-option arguments are optionally all eight coordinates
      and optionally the input filename
@@ -493,7 +519,7 @@ static void parse_command_line (int argc, char* argv[], option *const options)
 
   for (i=0; i<num_float_options; i++)
     if (float_spec[i])
-      options->floats[i] = parse_float (float_text[i]);
+      options->floats[i] = parseFloat (float_text[i]);
 
   /* Parse enum options -- shhopt retrieved them as strings */
 
@@ -611,7 +637,7 @@ static bool solve_3_linear_equations (number* x1, number* x2, number* x3,
     a11*x1 + a12*x2 + a13*x3 = b1
     a21*x1 + a22*x2 + a23*x3 = b2
     a31*x1 + a32*x2 + a33*x3 = b3
-  The return value is wether the system is solvable
+  The return value is whether the system is solvable
 ----------------------------------------------------------------------------*/
 {
   number c11,c12,d1,c21,c22,d2,e,f;
@@ -706,18 +732,18 @@ static bool solve_3_linear_equations (number* x1, number* x2, number* x3,
 static void determine_world_parallelogram (world_data *const world,
                                            const option *const options)
 /*----------------------------------------------------------------------------
-  constructs xw_ul,...,zw_lr from xi_ul,...,yi_lr
+  Construct xw_ul,...,zw_lr from xi_ul,...,yi_lr
      
-  Actually this is a solution of a linear equation system.
+  This is a solution of a linear equation system.
   
-  We first solve 4 variables (the 4 z-coordinates) against 4
-  equations: Each z-coordinate determines the corresponding x- and
-  y-coordinates in a linear fashion, where the coefficients are taken
-  from the image coordinates. This corresponds to the fact that a
-  point of an image determines a line in the world.
+  We first solve 4 equations for 4 variables (the 4 z-coordinates):
+  Each z-coordinate determines the corresponding x- and y-coordinates
+  in a linear fashion, where the coefficients are taken from the image
+  coordinates.  This corresponds to the fact that a point of an image
+  determines a line in the world.
   
   3 equations state that the 4 points form a parallelogram.  The 4th
-  equation is for normalization and states, that the centre of the
+  equation is for normalization and states that the center of the
   parallelogram has a z-coordinate of 1.
 -----------------------------------------------------------------------------*/
 {
@@ -885,9 +911,11 @@ static void determine_world_parallelogram (world_data *const world,
 
 
 
-static int diff (int const a, int const b)
-{
-  return MAX (b-a, a-b);
+static unsigned int
+distance(unsigned int const a,
+         unsigned int const b) {
+
+    return a > b ? a - b : b - a;
 }
 
 
@@ -1024,8 +1052,8 @@ static void determine_coefficients_pixel (world_data *const world,
   Constructs ax,...,cz from xw_ul,...,zw_lr
      
   The calculations assume pixel coordinates, that is the point ul
-  corresponds to the centre of the pixel (0,0) and the point lr
-  corresponds to the centre of the pixel (width-1,height-1)
+  corresponds to the center of the pixel (0,0) and the point lr
+  corresponds to the center of the pixel (width-1,height-1)
 -----------------------------------------------------------------------------*/
 {
   number width,height;
@@ -1054,40 +1082,46 @@ static void determine_coefficients_pixel (world_data *const world,
 
 
 
-static void outpixel_to_inpixel (int const xo, int const yo, 
-                                 number* const xi, number* const yi,
-                                 const world_data *const world)
-{
-  number xof,yof,xw,yw,zw;
+static void
+outpixelToInPos(int                const outCol,
+                int                const outRow, 
+                number *           const inColP,
+                number *           const inRowP,
+                const world_data * const worldP) {
+/*----------------------------------------------------------------------------
+   For a pixel of the output image at Column 'outCol', row 'outRow',
+   determine the position in the input image that corresponds to the
+   center of that pixel.
 
-  xof = (number) xo;
-  yof = (number) yo;
-  xw = world->ax + world->bx*xof + world->cx*yof;
-  yw = world->ay + world->by*xof + world->cy*yof;
-  zw = world->az + world->bz*xof + world->cz*yof;
-  *xi = xw/zw;
-  *yi = yw/zw;
+   This position is not a pixel position -- it's a position in
+   continuous space, for example Row 9.2, Column 0.1.  And it isn't
+   necessarily within the input image, for example Column 600 even though
+   the input image is only 500 pixels wide, and a coordinate might even
+   be negative.
+-----------------------------------------------------------------------------*/
+    number const outColF = (number) outCol;
+    number const outRowF = (number) outRow;
+
+    number const xw = worldP->ax + worldP->bx * outColF + worldP->cx * outRowF;
+    number const yw = worldP->ay + worldP->by * outColF + worldP->cy * outRowF;
+    number const zw = worldP->az + worldP->bz * outColF + worldP->cz * outRowF;
+
+    *inColP = xw/zw;
+    *inRowP = yw/zw;
 }
 
-static int outpixel_to_iny (int xo, int yo, const world_data *const world)
-{
-  number xi,yi;
 
-  outpixel_to_inpixel (xo,yo,&xi,&yi,world);
 
-  return (int) yi;
-}
+static int
+outpixelToInRow(int                const outCol,
+                int                const outRow,
+                const world_data * const worldP) {
 
-static int clean_y (int const y,  const struct pam *const outpam)
-{
-  return MIN(MAX(0, y), outpam->height-1);
-}
+    number xi, yi;
 
-static unsigned int
-distance(unsigned int const a,
-         unsigned int const b) {
+    outpixelToInPos(outCol, outRow, &xi, &yi, worldP);
 
-    return a > b ? a - b : b - a;
+    return (int) yi;
 }
 
 
@@ -1098,6 +1132,71 @@ boundedRow(int                const unboundedRow,
 
     return MIN(MAX(0, unboundedRow), outpamP->height-1);
 }
+
+
+
+#if 0
+/* This is the original calculation of window height.  It's
+   mysterious, and doesn't work.  It looks like it basically wants to
+   take the greater of vertical displacement of the top edge of the
+   input quadrilateral and that of the bottom edge.  In simple
+   scenarios, that is in fact what it does, and I can see how those
+   edges might be where the most stretching takes place.  However, it
+   the calculation is obviously more complex than that.
+
+   It doesn't work because the actual image generation produces rows
+   in the middle that are derived from lines in the input quadrilateral
+   with greater slope than either the top or bottom edge.  I.e. to
+   compute one output row, it needs more rows of input than this 
+   calculation provides.
+
+   I don't know if that means the computation of the output is wrong
+   or the computation of the window height is wrong.  The code is too
+   opaque.  But just to make a viable computation, I replaced the
+   window height calculation with the brute force computation you
+   see below: it determines the vertical displacement of every line
+   of the input quadrilateral that is used to generate an output row
+   and takes the greatest of them for the window height.
+
+   - Bryan Henderson 08.07.27.
+*/
+   
+
+static unsigned int
+windowHeight(const world_data * const worldP,
+             const struct pam * const inpamP,
+             const struct pam * const outpamP,
+             const option *     const optionsP) {
+
+    unsigned int numRows;
+    int yul, yur, yll, ylr, y_min;
+
+    yul = outpixelToInRow(0, 0, worldP);
+    yur = outpixelToInRow(outpamP->width-1, 0, worldP);
+    yll = outpixelToInRow(0, outpamP->height-1, worldP);
+    ylr = outpixelToInRow(outpamP->width-1, outpamP->height-1, worldP);
+    
+    y_min = MIN(MIN(yul, yur), MIN(yll, ylr));
+    numRows = MAX(MAX(diff(yul, yur),
+                      diff(yll, ylr)),
+                  MAX(diff(boundedRow(yul, outpamP),
+                           boundedRow(y_min, outpamP)),
+                      diff(boundedRow(yur, outpamP),
+                           boundedRow(y_min, outpamP))))
+        + 2;
+    switch (optionsP->enums[3]) {  /* --interpolation */
+    case interp_nearest:
+        break;
+    case interp_linear:
+        numRows += 1;
+        break;
+    }
+    if (numRows > inpamP->height)
+        numRows = inpamP->height;
+
+    return numRows;
+}
+#endif
 
 
 
@@ -1116,9 +1215,9 @@ windowHeight(const world_data * const worldP,
         unsigned int const leftCol = 0;
         unsigned int const rghtCol = outpamP->width - 1;
         unsigned int const leftInRow =
-            boundedRow(outpixel_to_iny(leftCol, outRow, worldP), outpamP);
+            boundedRow(outpixelToInRow(leftCol, outRow, worldP), outpamP);
         unsigned int const rghtInRow =
-            boundedRow(outpixel_to_iny(rghtCol, outRow, worldP), outpamP);
+            boundedRow(outpixelToInRow(rghtCol, outRow, worldP), outpamP);
         
         unsigned int const rowWindowHeight = distance(leftInRow, rghtInRow);
 
@@ -1133,249 +1232,305 @@ windowHeight(const world_data * const worldP,
 
 
 static void
-init_buffer(buffer *           const bufferP,
+buffer_init(buffer *           const bufferP,
             const world_data * const worldP,
             const option *     const optionsP,
             const struct pam * const inpamP,
             const struct pam * const outpamP) {
 
-    unsigned int const num_rows =
+    unsigned int const numRows =
         windowHeight(worldP, inpamP, outpamP, optionsP);
 
-    MALLOCARRAY_SAFE(bufferP->rows, num_rows);
-    bufferP->num_rows = num_rows;
-    {
-        unsigned int row;
-        for (row = 0; row < num_rows; ++row) {
-            bufferP->rows[row] = pnm_allocpamrow(inpamP);
-            pnm_readpamrow(inpamP, bufferP->rows[row]);
-        }
+    unsigned int row;
+
+    MALLOCARRAY_SAFE(bufferP->rows, numRows);
+
+    for (row = 0; row < numRows; ++row) {
+        bufferP->rows[row] = pnm_allocpamrow(inpamP);
+        pnm_readpamrow(inpamP, bufferP->rows[row]);
     }
-    bufferP->last_logical = num_rows-1;
-    bufferP->last_physical = num_rows-1;
-    bufferP->inpam = inpamP;
+
+    bufferP->nextImageRow  = numRows;
+    bufferP->nextBufferRow = 0;
+    bufferP->numRows       = numRows;
+
+    bufferP->inpamP = inpamP;
+}
+
+
+
+static const tuple *
+buffer_getRow(buffer *     const bufferP,
+              unsigned int const imageRow) {
+/*----------------------------------------------------------------------------
+   Return row 'imageRow' of an image.
+
+   The return value is a pointer into storage that belongs to *bufferP.
+
+   *bufferP remembers only a window of the image, and the window
+   cannot move up, so 'imageRow' cannot be higher in the image than
+   the lowest row read so far through *bufferP plus *bufferP's maximum
+   window height.  We assume that.
+-----------------------------------------------------------------------------*/
+    unsigned int bufferRow;
+        /* The row of the buffer that holds row 'imageRow' of the image */
+    unsigned int n;
+        /* Number of rows our row is before the bottom of the window */
+
+    assert(imageRow >= bufferP->nextImageRow - bufferP->numRows);
+        /* The requested row is not one that's already been bumped out
+           of the buffer.
+        */
+
+    while (imageRow >= bufferP->nextImageRow) {
+        pnm_readpamrow(bufferP->inpamP, bufferP->rows[bufferP->nextBufferRow]);
+
+        ++bufferP->nextBufferRow;
+        if (bufferP->nextBufferRow == bufferP->numRows)
+            bufferP->nextBufferRow = 0;
+
+        ++bufferP->nextImageRow;
+    }
+
+    n = bufferP->nextImageRow - imageRow;
+
+    assert(n <= bufferP->numRows);
+    
+    if (n <= bufferP->nextBufferRow)
+        bufferRow = bufferP->nextBufferRow - n;
+    else
+        bufferRow = bufferP->nextBufferRow + bufferP->numRows - n;
+
+    assert(bufferRow < bufferP->numRows);
+
+    return bufferP->rows[bufferRow];
+}
+
+
+
+static void
+buffer_term(buffer * const bufferP) {
+
+    unsigned int i;
+
+    /* We have to read through the end of the input image even if we
+       didn't use all the rows, because if the input is a pipe, the
+       guy writing into the pipe may require all the data to go
+       through.
+    */
+
+    while (bufferP->nextImageRow < bufferP->inpamP->height) {
+        pnm_readpamrow(bufferP->inpamP, bufferP->rows[0]);
+        ++bufferP->nextImageRow;
+    }
+
+    for (i = 0; i < bufferP->numRows; ++i)
+        pnm_freepamrow(bufferP->rows[i]);
+    
+    free(bufferP->rows);
 }
 
 
 
 
-static tuple* read_buffer (buffer *const b, int const logical_y)
-{
-  int y;
+struct interpContext {
+    tuple background;
+    buffer* indata;
+    int width,height,depth;
+};
 
-  while (logical_y > b->last_logical) {
-    b->last_physical++;
-    if (b->last_physical == b->num_rows)
-      b->last_physical = 0;
-    pnm_readpamrow (b->inpam, b->rows[b->last_physical]);
-    b->last_logical++;
-  }
-
-  y = logical_y - b->last_logical + b->last_physical;
-  if (y<0)
-    y += b->num_rows;
-
-  return b->rows[y];
-}
-
-static void free_buffer (buffer *const b)
-{
-  int i;
-
-  /* We have to read through the end of the input image even if we
-     didn't use all the rows, because if the input is a pipe, the
-     guy writing into the pipe may require all the data to go
-     through.
-  */
-  
-  while (b->last_logical < b->inpam->height-1) {
-      pnm_readpamrow(b->inpam, b->rows[0]);
-      ++b->last_logical;
-  }
-
-  for (i=0; i<b->num_rows; i++)
-    pnm_freepamrow (b->rows[i]);
-  free (b->rows);
-}
-
-
-
-
-/* The following variables are global for speed reasons.
-   In this way they do not have to be passed to each call of the
+/* The following is global for speed reasons.
+   In this way it does not have to be passed to each call of the
    interpolation functions
 
    Think of this as Sch&ouml;nfinkeling (aka Currying).
 */
 
-static tuple background;
-static buffer* indata;
-static int width,height,depth;
+static struct interpContext ictx;
 
-static void init_interpolation_global_vars (buffer* const inbuffer,
-                                            const struct pam *const inpam,
-                                            const struct pam *const outpam)
-{
-  pnm_createBlackTuple (outpam, &background);
-  indata = inbuffer;
-  width = inpam->width;
-  height = inpam->height;
-  depth = outpam->depth;
+static void
+init_interpolation_global_vars(buffer *           const inbufferP,
+                               const struct pam * const inpamP,
+                               const struct pam * const outpamP) {
+
+    pnm_createBlackTuple(outpamP, &ictx.background);
+    ictx.indata = inbufferP;
+    ictx.width  = inpamP->width;
+    ictx.height = inpamP->height;
+    ictx.depth  = outpamP->depth;
 }
 
 
 
-static void clean_interpolation_global_vars (void)
-{
-  free (background);
+static void
+clean_interpolation_global_vars(void) {
+
+    free(ictx.background);
 }
 
 
 
 /* These functions perform the interpolation */
 
-static tuple attempt_read (int const x, int const y)
-{
-  if ((x<0) || (x>=width) || (y<0) || (y>=height))
-    return background;
-  else
-    return read_buffer(indata, y)[x];
+static tuple
+getPixel(int const col,
+         int const row) {
+/*----------------------------------------------------------------------------
+   Get the pixel at Row 'row', Column 'col' of the image which is the
+   context of the interpolation in which we are called.
+
+   Consider the image to go on forever in all directions (even negative
+   column/row numbers), being the background color everywhere outside
+   the actual image.
+-----------------------------------------------------------------------------*/
+    if ((col < 0) || (col >= ictx.width) || (row < 0) || (row >= ictx.height))
+        return ictx.background;
+    else
+        return buffer_getRow(ictx.indata, row)[col];
 }
 
 
 
-static void take_nearest (tuple const dest, number const x, number const y)
-{
-  int xx,yy,entry;
-  tuple p;
+static void
+takeNearest(tuple  const dest,
+            number const x,
+            number const y) {
 
-  xx = (int)floor(x+0.5);
-  yy = (int)floor(y+0.5);
-  p = attempt_read (xx, yy);
-  for (entry=0; entry<depth; entry++) {
-    dest[entry]=p[entry];
-  }
-}
+    int   const xx = (int)floor(x+0.5);
+    int   const yy = (int)floor(y+0.5);
+    tuple const p  = getPixel(xx, yy);
 
+    unsigned int entry;
 
-
-static void linear_interpolation (tuple const dest, 
-                                  number const x, number const y)
-{
-  int xx,yy,entry;
-  number xf,yf,a,b,c,d;
-  tuple p1,p2,p3,p4;
-
-  xx = (int)floor(x);
-  yy = (int)floor(y);
-  xf = x-(number)xx;
-  yf = y-(number)yy;
-  p1 = attempt_read (xx, yy);
-  p2 = attempt_read (xx+1, yy);
-  p3 = attempt_read (xx, yy+1);
-  p4 = attempt_read (xx+1, yy+1);
-  a = (1.0-xf)*(1.0-yf);
-  b = xf*(1.0-yf);
-  c = (1.0-xf)*yf;
-  d = xf*yf;
-  for (entry=0; entry<depth; entry++) {
-    dest[entry]=(sample) floor(
-      a*((number) p1[entry]) +
-      b*((number) p2[entry]) +
-      c*((number) p3[entry]) +
-      d*((number) p4[entry]) +
-      0.5);
-  }
-}
-
-
-
-int main (int argc, char* argv[])
-{
-  FILE* infp;
-  struct pam inpam;
-  buffer inbuffer;
-  FILE* outfp;
-  struct pam outpam;
-  tuple* outrow;
-  option options;
-  world_data world;
-  int row,col;
-  number xi,yi;
-  void (*interpolate) (tuple, number, number);
-
-  /* The usual initializations */
-
-  pnm_init (&argc, argv);
-  set_command_line_defaults (&options);
-  parse_command_line (argc, argv, &options);
-  infp = pm_openr (options.infilename);
-  pnm_readpaminit (infp, &inpam, PAM_STRUCT_SIZE(tuple_type));
-
-  /* Our own initializations */
-
-  init_world (&options, &inpam, &world);
-  determine_world_parallelogram (&world, &options);
-  determine_output_width_and_height (&world, &options);
-  switch (options.enums[1]) {   /* --output_system */
-  case lattice:
-    determine_coefficients_lattice (&world, &options);
-    break;
-  case pixel_s:
-    determine_coefficients_pixel (&world, &options);
-    break;
-  };
-
-  /* Initialize outpam */
-
-  outfp = pm_openw ("-");
-  outpam.size = sizeof (outpam);
-  outpam.len = PAM_STRUCT_SIZE(bytes_per_sample);
-  outpam.file = outfp;
-  outpam.format = inpam.format;
-  outpam.plainformat = inpam.plainformat;
-  outpam.height = options.height;
-  outpam.width = options.width;
-  outpam.depth = inpam.depth;
-  outpam.maxval = inpam.maxval;
-  outpam.bytes_per_sample = inpam.bytes_per_sample;
-  pnm_writepaminit (&outpam);
-
-  /* Initialize the actual calculation */
-
-  init_buffer (&inbuffer, &world, &options, &inpam, &outpam);
-  outrow = pnm_allocpamrow (&outpam);
-  init_interpolation_global_vars (&inbuffer,&inpam,&outpam);
-  switch (options.enums[3]) {   /* --interpolation */
-  case interp_nearest:
-    interpolate = take_nearest;
-    break;
-  case interp_linear:
-    interpolate = linear_interpolation;
-    break;
-  };
-
-  /* Perform the actual calculation */
-
-  for (row=0; row<outpam.height; row++) {
-    for (col=0; col<outpam.width; col++) {
-      outpixel_to_inpixel (col,row,&xi,&yi,&world);
-      interpolate(outrow[col],xi,yi);
+    for (entry = 0; entry < ictx.depth; ++entry) {
+        dest[entry] = p[entry];
     }
-    pnm_writepamrow (&outpam, outrow);
-  }
-
-  /* Close everything down nicely */
-
-  clean_interpolation_global_vars ();
-  free_buffer (&inbuffer);
-  pnm_freepamrow (outrow);
-  free_option (&options);
-  pm_close (infp);
-  pm_close (outfp);
-  return 0;
 }
 
 
 
+static void
+linearInterpolation(tuple  const dest, 
+                    number const x,
+                    number const y) {
 
+    int    const xx = (int)floor(x);
+    int    const yy = (int)floor(y);
+    number const xf = x - (number)xx;
+    number const yf = y - (number)yy;
+    tuple  const p1 = getPixel(xx, yy);
+    tuple  const p2 = getPixel(xx+1, yy);
+    tuple  const p3 = getPixel(xx, yy+1);
+    tuple  const p4 = getPixel(xx+1, yy+1);
+    number const a  = (1.0-xf) * (1.0-yf);
+    number const b  = xf * (1.0-yf);
+    number const c  = (1.0-xf) * yf;
+    number const d  = xf * yf;
+
+    unsigned int entry;
+
+    for (entry=0; entry < ictx.depth; ++entry) {
+        dest[entry] = floor(
+            a * (number) p1[entry] +
+            b * (number) p2[entry] +
+            c * (number) p3[entry] +
+            d * (number) p4[entry] +
+            0.5);
+    }
+}
+
+
+
+static void
+perspective(struct pam * const outpamP,
+            world_data * const worldP,
+            interpolateFn *    interpolater) {
+
+    tuple * outrow;
+    unsigned int row;
+
+    outrow = pnm_allocpamrow(outpamP);
+
+    for (row = 0; row < outpamP->height; ++row) {
+        unsigned int col;
+
+        for (col = 0; col < outpamP->width; ++col) {
+            number xi, yi;
+            outpixelToInPos(col, row, &xi, &yi, worldP);
+            interpolater(outrow[col], xi, yi);
+        }
+        pnm_writepamrow(outpamP, outrow);
+    }
+    pnm_freepamrow(outrow);
+}
+
+
+
+int
+main(int argc, const char * argv[]) {
+
+    FILE * ifP;
+    struct pam inpam;
+    buffer inbuffer;
+    struct pam outpam;
+    option options;
+    world_data world;
+    interpolateFn * interpolater;
+
+    pm_proginit(&argc, argv);
+
+    parseCommandLine(argc, argv, &options);
+
+    ifP = pm_openr(options.infilename);
+
+    pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
+
+    /* Our own initializations */
+
+    init_world(&options, &inpam, &world);
+    determine_world_parallelogram(&world, &options);
+    determine_output_width_and_height(&world, &options);
+    switch (options.enums[1]) {   /* --output_system */
+    case lattice:
+        determine_coefficients_lattice(&world, &options);
+        break;
+    case pixel_s:
+        determine_coefficients_pixel(&world, &options);
+        break;
+    };
+
+    outpam.size             = sizeof(outpam);
+    outpam.len              = PAM_STRUCT_SIZE(bytes_per_sample);
+    outpam.file             = stdout;
+    outpam.format           = inpam.format;
+    outpam.plainformat      = FALSE;
+    outpam.height           = options.height;
+    outpam.width            = options.width;
+    outpam.depth            = inpam.depth;
+    outpam.maxval           = inpam.maxval;
+    outpam.bytes_per_sample = inpam.bytes_per_sample;
+    pnm_writepaminit(&outpam);
+
+    /* Initialize the actual calculation */
+
+    buffer_init(&inbuffer, &world, &options, &inpam, &outpam);
+    init_interpolation_global_vars(&inbuffer, &inpam, &outpam);
+    switch (options.enums[3]) {   /* --interpolation */
+    case interp_nearest:
+        interpolater = takeNearest;
+        break;
+    case interp_linear:
+        interpolater = linearInterpolation;
+        break;
+    };
+
+    perspective(&outpam, &world, interpolater);
+
+    clean_interpolation_global_vars();
+    buffer_term(&inbuffer);
+    free_option(&options);
+    pm_close(ifP);
+    pm_close(stdout);
+
+    return 0;
+}

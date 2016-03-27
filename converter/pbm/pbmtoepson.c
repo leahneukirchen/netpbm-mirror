@@ -16,8 +16,9 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "shhopt.h"
+#include "pm_c_util.h"
 #include "mallocvar.h"
+#include "shhopt.h"
 
 #include "pbm.h"
 

@@ -21,6 +21,7 @@
 #include <string.h>
 #include <assert.h>
 
+#include "pm_c_util.h"
 #include "ppm.h"
 #include "shhopt.h"
 #include "nstring.h"
@@ -572,7 +573,7 @@ trimOutputName(const char inputName[])
      * oh, for =~ ... :)
      */
     char * outFile = strdup(inputName);
-    if (STREQ(outFile + (strlen (outFile) - 4), ".ppm")) {
+    if (streq(outFile + (strlen (outFile) - 4), ".ppm")) {
         *(outFile + (strlen (outFile) - 4)) = 0;
     }
     return outFile;
@@ -828,7 +829,7 @@ main(int argc, char *argv[]) {
         pm_message("-bestqual doesn't make sense with -allicons.  "
                    "Ignoring -bestqual.");
    
-    if (STREQ(cmdline.outputFilespec, "-"))
+    if (streq(cmdline.outputFilespec, "-"))
         outputFileBase = NULL;
     else
         outputFileBase = trimOutputName(cmdline.outputFilespec);

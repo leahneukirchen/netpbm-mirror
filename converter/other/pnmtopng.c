@@ -52,8 +52,6 @@
    because xels were only 24 bits.  Now they're 96.
 */
    
-#define GRR_GRAY_PALETTE_FIX
-
 #ifndef PNMTOPNG_WARNING_LEVEL
 #  define PNMTOPNG_WARNING_LEVEL 0   /* use 0 for backward compatibility, */
 #endif                               /*  2 for warnings (1 == error) */
@@ -62,6 +60,8 @@
 #include <string.h> /* strcat() */
 #include <limits.h>
 #include <png.h>    /* includes zlib.h and setjmp.h */
+
+#include "pm_c_util.h"
 #include "pnm.h"
 #include "pngtxt.h"
 #include "shhopt.h"
@@ -69,10 +69,12 @@
 #include "nstring.h"
 #include "version.h"
 
+/* A hack until we can remove direct access to png_info from the program */
 #if PNG_LIBPNG_VER >= 10400
-#error Your PNG library (<png.h>) is incompatible with this Netpbm source code.
-#error You need either an older PNG library (older than 1.4)
-#error newer Netpbm source code (at least 10.47.04)
+#define trans_values trans_color
+#define TRANS_ALPHA trans_alpha
+#else
+#define TRANS_ALPHA trans
 #endif
 
 
@@ -390,7 +392,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3( &argc, argv, opt, sizeof(opt), 0);
+    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
 
@@ -471,7 +473,7 @@ parseCommandLine(int argc, char ** argv,
     }
 
     if (cmdlineP->zlibCompression.methodSpec) {
-        if (STREQ(compMethod, "deflated"))
+        if (streq(compMethod, "deflated"))
             cmdlineP->zlibCompression.method = Z_DEFLATED;
         else
             pm_error("The only valid value for -method is 'deflated'.  "
@@ -479,9 +481,9 @@ parseCommandLine(int argc, char ** argv,
     }
 
     if (cmdlineP->zlibCompression.strategySpec) {
-        if (STREQ(compStrategy, "huffman_only"))
+        if (streq(compStrategy, "huffman_only"))
             cmdlineP->zlibCompression.strategy = Z_HUFFMAN_ONLY;
-        else if (STREQ(compStrategy, "filtered"))
+        else if (streq(compStrategy, "filtered"))
             cmdlineP->zlibCompression.strategy = Z_FILTERED;
         else
             pm_error("Valid values for -strategy are 'huffman_only' and "
@@ -1060,7 +1062,7 @@ findRedundantBits(FILE *         const ifp,
 /*----------------------------------------------------------------------------
    Find out if we can use just a subset of the bits from each input
    sample.  Often, people create an image with e.g. 8 bit samples from
-   one that has e.g. only 4 bit samples by scaling by 256/16, which is
+   one that has e.g. only 4 bit samples by scaling by 255/15, which is
    the same as repeating the bits.  E.g.  1011 becomes 10111011.  We
    detect this case.  We return as *meaningfulBitsP the minimum number
    of bits, starting from the least significant end, that contain
@@ -1352,9 +1354,9 @@ computeUnsortedAlphaPalette(FILE *           const ifP,
 
 
 static void
-sortAlphaPalette(gray *         const alphas_of_color[],
-                 unsigned int   const alphas_first_index[],
-                 unsigned int   const alphas_of_color_cnt[],
+sortAlphaPalette(gray *         const alphasOfColor[],
+                 unsigned int   const alphasFirstIndex[],
+                 unsigned int   const alphasOfColorCnt[],
                  unsigned int   const colors,
                  gray           const alphaMaxval,
                  unsigned int         mapping[],
@@ -1370,40 +1372,56 @@ sortAlphaPalette(gray *         const alphas_of_color[],
    palette of the alpha/color pair whose index is x in the unsorted
    PNG palette.  This mapping sorts the palette so that opaque entries
    are last.
+
+   The unsorted PNG palette is sorted enough that all entries for a particular
+   color (with varying transparencies) are contiguous.  alphasFirstIndex[x] is
+   the index in the unsorted PNG palette of the first entry with color x
+   (where x is an index into some other palette).  alphasOfColorCnt[x] is the
+   number of non-opaque entries in the unsorted PNG palette with color x.
+
+   alphasOfColor[x][y] is the y'th alpha value for color x, in no particular
+   order.
+
+   Return as *transSizeP the number of non-opaque entries in the palette
+   (i.e. the index in the palette of the first opaque entry).
 -----------------------------------------------------------------------------*/
-    unsigned int bot_idx;
-    unsigned int top_idx;
-    unsigned int colorIndex;
+    if (colors == 0)
+        *transSizeP = 0;
+    else {
+        unsigned int bot_idx;
+        unsigned int top_idx;
+        unsigned int colorIndex;
     
-    /* We start one index at the bottom of the palette index range
-       and another at the top.  We run through the unsorted palette,
-       and when we see an opaque entry, we map it to the current top
-       cursor and bump it down.  When we see a non-opaque entry, we map 
-       it to the current bottom cursor and bump it up.  Because the input
-       and output palettes are the same size, the two cursors should meet
-       right when we process the last entry of the unsorted palette.
-    */    
-    bot_idx = 0;
-    top_idx = alphas_first_index[colors-1] + alphas_of_color_cnt[colors-1] - 1;
+        /* We start one index at the bottom of the palette index range
+           and another at the top.  We run through the unsorted palette,
+           and when we see an opaque entry, we map it to the current top
+           cursor and bump it down.  When we see a non-opaque entry, we map 
+           it to the current bottom cursor and bump it up.  Because the input
+           and output palettes are the same size, the two cursors should meet
+           right when we process the last entry of the unsorted palette.
+        */    
+        bot_idx = 0;
+        top_idx = alphasFirstIndex[colors-1] + alphasOfColorCnt[colors-1] - 1;
     
-    for (colorIndex = 0;  colorIndex < colors;  ++colorIndex) {
-        unsigned int j;
-        for (j = 0; j < alphas_of_color_cnt[colorIndex]; ++j) {
-            unsigned int const paletteIndex = 
-                alphas_first_index[colorIndex] + j;
-            if (alphas_of_color[colorIndex][j] == alphaMaxval)
-                mapping[paletteIndex] = top_idx--;
-            else
-                mapping[paletteIndex] = bot_idx++;
+        for (colorIndex = 0;  colorIndex < colors;  ++colorIndex) {
+            unsigned int j;
+            for (j = 0; j < alphasOfColorCnt[colorIndex]; ++j) {
+                unsigned int const paletteIndex = 
+                    alphasFirstIndex[colorIndex] + j;
+                if (alphasOfColor[colorIndex][j] == alphaMaxval)
+                    mapping[paletteIndex] = top_idx--;
+                else
+                    mapping[paletteIndex] = bot_idx++;
+            }
         }
+        /* indices should have just crossed paths */
+        if (bot_idx != top_idx + 1) {
+            pm_error ("internal inconsistency: "
+                      "remapped bot_idx = %u, top_idx = %u",
+                      bot_idx, top_idx);
+        }
+        *transSizeP = bot_idx;
     }
-    /* indices should have just crossed paths */
-    if (bot_idx != top_idx + 1) {
-        pm_error ("internal inconsistency: "
-                  "remapped bot_idx = %u, top_idx = %u",
-                  bot_idx, top_idx);
-    }
-    *transSizeP = bot_idx;
 }
 
 
@@ -1453,7 +1471,7 @@ compute_alpha_palette(FILE *         const ifP,
     getChv(ifP, rasterPos, cols, rows, maxval, format, MAXCOLORS, 
            &chv, &colors);
 
-    assert(colors < ARRAY_SIZE(alphas_of_color));
+    assert(colors <= ARRAY_SIZE(alphas_of_color));
 
     computeUnsortedAlphaPalette(ifP, cols, rows, maxval, format, rasterPos,
                                 alpha_mask, chv, colors,
@@ -1817,6 +1835,7 @@ computeColorMap(FILE *         const ifP,
                 int            const cols,
                 int            const rows,
                 xelval         const maxval,
+                int            const pnmType,
                 int            const format,
                 bool           const force,
                 FILE *         const pfP,
@@ -1864,7 +1883,7 @@ computeColorMap(FILE *         const ifP,
                   maxval, PALETTEMAXVAL);
     else {
         unsigned int bitsPerPixel;
-        computePixelWidth(PNM_FORMAT_TYPE(format), pnm_meaningful_bits, alpha,
+        computePixelWidth(pnmType, pnm_meaningful_bits, alpha,
                           NULL, &bitsPerPixel);
 
         if (!pfP && bitsPerPixel == 1)
@@ -2042,7 +2061,7 @@ createPngPalette(pixel              palette_pnm[],
     for (i = 0; i < transSize; ++i) {
         unsigned int const newmv = PALETTEMAXVAL;
         unsigned int const oldmv = alpha_maxval;
-        trans[i] = (trans_pnm[i] * newmv + (oldmv/2)) / oldmv;
+        trans[i] = ROUNDDIV(trans_pnm[i] * newmv, oldmv);
     }
 }
 
@@ -2347,12 +2366,12 @@ convertpnm(struct cmdlineInfo const cmdline,
          of the input image.
       */
   int transexact;  
-    /* boolean: the user wants only the exact color he specified to be
-       transparent; not just something close to it.
-    */
+      /* boolean: the user wants only the exact color he specified to be
+         transparent; not just something close to it.
+      */
   int transparent;
   bool alpha;
-    /* There will be an alpha mask */
+      /* There will be an alpha mask */
   unsigned int pnm_meaningful_bits;
   pixel backcolor;
       /* The background color, with maxval equal to that of the input
@@ -2397,7 +2416,7 @@ convertpnm(struct cmdlineInfo const cmdline,
       */
   unsigned int fulldepth;
       /* The total number of bits per pixel in the (uncompressed) png
-         raster, including all channels 
+         raster, including all channels.
       */
   pm_filepos rasterPos;  
       /* file position in input image file of start of image (i.e. after
@@ -2470,8 +2489,8 @@ convertpnm(struct cmdlineInfo const cmdline,
          to ppm_parsecolor() because ppm_parsecolor() does a cheap maxval
          scaling, and this is more precise.
       */
-      PPM_DEPTH (transcolor, ppm_parsecolor(transstring2, maxmaxval),
-                 maxmaxval, maxval);
+      PPM_DEPTH(transcolor, ppm_parsecolor(transstring2, maxmaxval),
+                maxmaxval, maxval);
   }
   if (cmdline.alpha) {
     pixel alpha_transcolor;
@@ -2550,7 +2569,7 @@ convertpnm(struct cmdlineInfo const cmdline,
   findRedundantBits(ifp, rasterPos, cols, rows, maxval, format, alpha,
                     cmdline.force, &pnm_meaningful_bits);
   
-  computeColorMap(ifp, rasterPos, cols, rows, maxval, format,
+  computeColorMap(ifp, rasterPos, cols, rows, maxval, pnm_type, format,
                   cmdline.force, pfp,
                   alpha, transparent >= 0, transcolor, transexact, 
                   !!cmdline.background, backcolor,
@@ -2630,7 +2649,7 @@ convertpnm(struct cmdlineInfo const cmdline,
     info_ptr->num_palette = palette_size;
     if (trans_size > 0) {
         info_ptr->valid |= PNG_INFO_tRNS;
-        info_ptr->trans = trans;
+        info_ptr->TRANS_ALPHA = trans;
         info_ptr->num_trans = trans_size;   /* omit opaque values */
     }
     /* creating hIST chunk */
@@ -2809,7 +2828,7 @@ main(int argc, char *argv[]) {
 
     int errorlevel;
     
-    pnm_init (&argc, argv);
+    pnm_init(&argc, argv);
     
     parseCommandLine(argc, argv, &cmdline);
     
@@ -2852,3 +2871,6 @@ main(int argc, char *argv[]) {
 
     return errorlevel;
 }
+
+
+

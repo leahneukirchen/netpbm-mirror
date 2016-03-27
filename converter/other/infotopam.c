@@ -65,6 +65,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
+#include "pm_c_util.h"
 #include "pam.h"
 #include "shhopt.h"
 #include "mallocvar.h"

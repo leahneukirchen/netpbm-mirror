@@ -9,6 +9,7 @@
 #include <errno.h>
 #include <string.h>
 
+#include "pm_c_util.h"
 #include "pam.h"
 #include "shhopt.h"
 #include "mallocvar.h"
@@ -176,35 +177,32 @@ errorHandler(Display *     const disp,
 
 
 
-static void
-fillRow1(struct pam *     const pamP,
-         tuple *          const tuplerow,
-         unsigned char ** const pP) {
+enum usableDepth {DEPTH_1, DEPTH_3};
 
+static void
+fillRow(struct pam *     const pamP,
+        tuple *          const tuplerow,
+        enum usableDepth const depth,
+        unsigned char ** const pP) {
+/*----------------------------------------------------------------------------
+   Add one row to the 24-bit truecolor image data at *pP, and advance
+   *pP just past that row.
+
+   Use either the first plane or the first 3 planes of tuplerow[]
+   for its contents, according to 'depth'.
+-----------------------------------------------------------------------------*/
     unsigned int col;
     
     for (col = 0; col < pamP->width; ++col) {
+        /* Truecolor image data has 3 bytes per pixel, one each for
+           red, green, and blue.
+        */
         unsigned int plane;
-        for (plane = 0; plane < 3; ++plane)
+        for (plane = 0; plane < 3; ++plane) {
+            unsigned int const tuplePlane = depth == DEPTH_3 ? plane : 0;
             *(*pP)++ =
-                pnm_scalesample(tuplerow[col][0], pamP->maxval, 255);
-    }
-}
-
-
-
-static void
-fillRow3(struct pam *     const pamP,
-         tuple *          const tuplerow,
-         unsigned char ** const pP) {
-
-    unsigned int col;
-    
-    for (col = 0; col < pamP->width; ++col) {
-        unsigned int plane;
-        for (plane = 0; plane < pamP->depth; ++plane)
-            *(*pP)++ =
-                pnm_scalesample(tuplerow[col][plane], pamP->maxval, 255);
+                pnm_scalesample(tuplerow[col][tuplePlane], pamP->maxval, 255);
+        }
     }
 }
 
@@ -219,7 +217,7 @@ loadPamImage(FILE *   const ifP,
     unsigned int row;
     tuple * tuplerow;
     unsigned char * p;
-    enum {DEPTH_1, DEPTH_3} depth;
+    enum usableDepth depth;
 
     pnm_readpaminit(ifP, &pam, PAM_STRUCT_SIZE(tuple_type));
 
@@ -239,12 +237,17 @@ loadPamImage(FILE *   const ifP,
     for (row = 0; row < pam.height; ++row) {
         pnm_readpamrow(&pam, tuplerow);
         
+        /* This semantically wasteful code allows a dumb compiler
+           optimizer to recognize that the depth is constant and
+           therefore not generate code that checks the depth every
+           time it processes a sample.
+        */
         switch (depth) {
         case DEPTH_3:
-            fillRow3(&pam, tuplerow, &p);
+            fillRow(&pam, tuplerow, DEPTH_3, &p);
             break;
         case DEPTH_1:
-            fillRow1(&pam, tuplerow, &p);
+            fillRow(&pam, tuplerow, DEPTH_1, &p);
             break;
         }
     }
@@ -297,7 +300,7 @@ determineTitle(struct cmdlineInfo const cmdline,
     if (cmdline.title)
         title = strdup(cmdline.title);
     else {
-        if (STREQ(cmdline.inputFileName, "-"))
+        if (streq(cmdline.inputFileName, "-"))
             title = NULL;
         else {
             title = pm_basename(cmdline.inputFileName);

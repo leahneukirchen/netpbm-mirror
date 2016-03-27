@@ -6,7 +6,7 @@
    raster (not the header).
 -----------------------------------------------------------------------------*/
 
-/* See libpm.c for the complicated explanation of this 32/64 bit file
+/* See pmfileio.c for the complicated explanation of this 32/64 bit file
    offset stuff.
 */
 #define _FILE_OFFSET_BITS 64
@@ -308,22 +308,33 @@ writePamRawRow(const struct pam * const pamP,
    Write mutiple ('count') copies of the same row ('tuplerow') to the file,
    in raw (not plain) format.
 -----------------------------------------------------------------------------*/
+    jmp_buf jmpbuf;
+    jmp_buf * origJmpbufP;
     unsigned int rowImageSize;
-
     unsigned char * outbuf;  /* malloc'ed */
-    unsigned int i;
 
     outbuf = pnm_allocrowimage(pamP);
 
     pnm_formatpamrow(pamP, tuplerow, outbuf, &rowImageSize);
 
-    for (i = 0; i < count; ++i) {
-        size_t bytesWritten;
+    if (setjmp(jmpbuf) != 0) {
+        pnm_freerowimage(outbuf);
+        pm_setjmpbuf(origJmpbufP);
+        pm_longjmp();
+    } else {
+        unsigned int i;
 
-        bytesWritten = fwrite(outbuf, 1, rowImageSize, pamP->file);
-        if (bytesWritten != rowImageSize)
-            pm_error("fwrite() failed to write an image row to the file.  "
-                     "errno=%d (%s)", errno, strerror(errno));
+        pm_setjmpbufsave(&jmpbuf, &origJmpbufP);
+        
+        for (i = 0; i < count; ++i) {
+            size_t bytesWritten;
+            
+            bytesWritten = fwrite(outbuf, 1, rowImageSize, pamP->file);
+            if (bytesWritten != rowImageSize)
+                pm_error("fwrite() failed to write an image row to the file.  "
+                         "errno=%d (%s)", errno, strerror(errno));
+        }
+        pm_setjmpbuf(origJmpbufP);
     }
     pnm_freerowimage(outbuf);
 }

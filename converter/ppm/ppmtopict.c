@@ -282,15 +282,8 @@ int i;
 	(void) putc(i & 0xff, fd);
 }
 
-#if __STDC__
 static void
 putLong( FILE *fd, long i )
-#else /*__STDC__*/
-static void
-putLong(fd, i)
-FILE *fd;
-long i;
-#endif /*__STDC__*/
 {
 	(void) putc((int)((i >> 24) & 0xff), fd);
 	(void) putc(((int)(i >> 16) & 0xff), fd);
@@ -405,7 +398,7 @@ char *packed;
 		*p++ = counttochar(count);
 
 	packcols = p - packed;		/* how many did we write? */
-	if (cols > 250)
+	if (cols > 200)
 	{
 		putShort(fd, packcols);
 		oc = packcols + 2;
@@ -443,7 +436,7 @@ char *packed;
 	bzero(aux, cols); /* aux?? */
 #endif /*notdef*/
 	bc = cols + (cols + MAX_COUNT - 1) / MAX_COUNT;
-	if (bc > 250)
+	if (bc > 200)
 	{
 		putShort(fd, bc);
 		oc = bc + 2;

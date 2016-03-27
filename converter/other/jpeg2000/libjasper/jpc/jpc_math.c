@@ -1,3 +1,72 @@
+#include <assert.h>
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
+#include <stdlib.h>
+#include <stdarg.h>
+
+#include "jpc_math.h"
+
+
+
+/* Calculate the integer quantity floor(log2(x)), where x is a positive
+  integer. */
+int
+jpc_floorlog2(int const arg) {
+
+	int y;
+    int x;
+
+	assert(arg > 0);
+
+	y = 0;
+    x = arg;
+	while (x > 1) {
+		x >>= 1;
+		++y;
+	}
+	return y;
+}
+
+
+
+/*
+  jpc_floorlog2() and jpc_firstone() do the same thing.
+  The only difference is how input 0 is handled.
+
+n                  : 0 1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 
+ceil(log2(n))      : x 0  1  2  2  3  3  3  3  4  4  4  4  4  4  4  4  5  5  5 
+floor(log2(n))     : x 0  1  1  2  2  2  2  3  3  3  3  3  3  3  3  4  4  4  4 
+31-__builtin_clz(n): x 0  1  1  2  2  2  2  3  3  3  3  3  3  3  3  4  4  4  4 
+jpc_floorlog2(n)   : x 0  1  1  2  2  2  2  3  3  3  3  3  3  3  3  4  4  4  4 
+jpc_firstone(n)    :-1 0  1  1  2  2  2  2  3  3  3  3  3  3  3  3  4  4  4  4 
+
+*/
+
+
+
+int
+jpc_firstone(int const arg) {
+/*---------------------------------------------------------------------------- 
+  Calculate the bit position of the first leading one in a nonnegative
+  integer.
+-----------------------------------------------------------------------------*/
+	int n;
+    int x;
+
+	assert(arg >= 0);
+
+	n = -1;
+    x = arg;
+	while (x > 0) {
+		x >>= 1;
+		++n;
+	}
+	return n;
+}
+
+
+
 /*
  * Copyright (c) 1999-2000 Image Power, Inc. and the University of
  *   British Columbia.
@@ -109,62 +178,3 @@
  * 
  * __END_OF_JASPER_LICENSE__
  */
-
-/*
- * Math Library
- *
- * $Id$
- */
-
-/******************************************************************************\
-* Includes
-\******************************************************************************/
-
-#include <assert.h>
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
-#include <stdlib.h>
-#include <stdarg.h>
-
-#include "jpc_math.h"
-
-/******************************************************************************\
-* Miscellaneous Functions
-\******************************************************************************/
-
-/* Calculate the integer quantity floor(log2(x)), where x is a positive
-  integer. */
-int jpc_floorlog2(int x)
-{
-	int y;
-
-	/* The argument must be positive. */
-	assert(x > 0);
-
-	y = 0;
-	while (x > 1) {
-		x >>= 1;
-		++y;
-	}
-	return y;
-}
-
-/* Calculate the bit position of the first leading one in a nonnegative
-  integer. */
-/* This function is the basically the same as ceillog2(x), except that the
-  allowable range for x is slightly different. */
-int jpc_firstone(int x)
-{
-	int n;
-
-	/* The argument must be nonnegative. */
-	assert(x >= 0);
-
-	n = -1;
-	while (x > 0) {
-		x >>= 1;
-		++n;
-	}
-	return n;
-}

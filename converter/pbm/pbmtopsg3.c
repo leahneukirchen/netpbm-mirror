@@ -26,6 +26,7 @@
 #include <unistd.h>
 #include <ctype.h>
 
+#include "pm_c_util.h"
 #include "pbm.h"
 #include "shhopt.h"
 

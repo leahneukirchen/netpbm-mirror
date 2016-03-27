@@ -5,7 +5,7 @@ endif
 SUBDIR = converter/other/pnmtopalm
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 BINARIES = palmtopnm pnmtopalm
 SCRIPTS =
@@ -16,7 +16,7 @@ DATAFILES = palmcolor8.map palmgray1.map palmgray2.map palmgray4.map
 
 all: $(BINARIES)
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 LIBOPTS = $(shell $(LIBOPT) $(NETPBMLIB))
 
@@ -24,8 +24,9 @@ $(BINARIES): %: %.o palmcolormap.o $(NETPBMLIB) $(LIBOPT)
 	$(LD) -o $@ $< palmcolormap.o $(LIBOPTS) \
 	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
 
-gen_palm_colormap : $(SUBDIR)/gen_palm_colormap.c palmcolormap.o
-	$(CC) $(INCLUDES) $(CFLAGS) -o $@ $< palmcolormap.o \
+gen_palm_colormap : % : %.c palmcolormap.o
+	$(CC) -I importinc $(CPPFLAGS) $(CFLAGS) -o $@ \
+	  $< palmcolormap.o \
 	  $(LIBOPTS) $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(LADD)
 
 

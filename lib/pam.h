@@ -6,8 +6,8 @@
 #ifndef PAM_H
 #define PAM_H
 
-#include "pm.h"
-#include "pnm.h"
+#include <netpbm/pm.h>
+#include <netpbm/pnm.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -23,16 +23,16 @@ typedef unsigned long sample;
     */
 
 struct pam {
-/* This structure describes an open PAM image file.  It consists
-   entirely of information that belongs in the header of a PAM image
-   and filesystem information.  It does not contain any state
-   information about the processing of that image.  
-
-   This is not considered to be an opaque object.  The user of Netbpm
-   libraries is free to access and set any of these fields whenever
-   appropriate.  The structure exists to make coding of function calls
-   easy.
-*/
+    /* This structure describes an open PAM image file.  It consists
+       entirely of information that belongs in the header of a PAM image
+       and filesystem information.  It does not contain any state
+       information about the processing of that image.  
+       
+       This is not considered to be an opaque object.  The user of Netbpm
+       libraries is free to access and set any of these fields whenever
+       appropriate.  The structure exists to make coding of function calls
+       easy.
+    */
 
     /* 'size' and 'len' are necessary in order to provide forward and
        backward compatibility between library functions and calling programs
@@ -44,7 +44,9 @@ struct pam {
         /* The length, in bytes, of the information in this structure.
            The information starts in the first byte and is contiguous.  
            This cannot be greater than 'size'
-           */
+
+           Use PAM_STRUCT_SIZE() to compute or interpret a value for this.
+        */
     FILE * file;
     int format;
         /* The format code of the raw image.  This is PAM_FORMAT
@@ -52,7 +54,7 @@ struct pam {
            image.  Then it's PBM_FORMAT, RPBM_FORMAT, etc.
            */
     unsigned int plainformat;
-        /* Logical: On output, use the plain version of the format type
+        /* Logical: On output, use plain version of the format type
            indicated by 'format'.  Otherwise, use the raw version.
            (i.e., on output, the plainness information in 'format' is
            irrelevant).  Input functions set this to FALSE, for the
@@ -102,7 +104,7 @@ struct pam {
 
            On output, NULL means no comments.
 
-           On input, libnetpbm mallocs storage for the comments and placed
+           On input, libnetpbm mallocs storage for the comments and places
            the pointer at *comment_p.  Caller must free it.  NULL means
            libnetpbm does not return comments and does not allocate any
            storage.
@@ -456,6 +458,11 @@ pnm_createungammatransform(const struct pam * const pamP);
 tuple
 pnm_parsecolor(const char * const colorname,
                sample       const maxval);
+
+const char *
+pnm_colorname(struct pam * const pamP,
+              tuple        const color,
+              int          const hexok);
 
 extern double 
 pnm_lumin_factor[3];

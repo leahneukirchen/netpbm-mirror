@@ -5,7 +5,9 @@ endif
 SUBDIR = editor
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
+
+SUBDIRS = specialty
 
 # We tend to separate out the build targets so that we don't have
 # any more dependencies for a given target than it really needs.
@@ -14,25 +16,24 @@ include $(BUILDDIR)/Makefile.config
 # This package is so big, it's useful even when some parts won't 
 # build.
 
-PORTBINARIES = pamaddnoise pamcomp pamcut \
-	       pamdeinterlace pamdice pamditherbw pamedge \
+PORTBINARIES = pamaddnoise pambackground pamcomp pamcut \
+	       pamdice pamditherbw pamedge \
 	       pamenlarge \
-	       pamflip pamfunc pammasksharpen pammixinterlace \
-	       pamoil pamperspective pampop9 \
-	       pamscale pamstretch pamthreshold \
-	       pbmclean pbmlife pbmmask pbmpscale pbmreduce \
-	       pgmabel pgmbentley pgmdeshadow pgmenhance \
-	       pgmmedian pgmmorphconv \
-	       pnmalias pnmcat pnmcomp pnmconvol pnmcrop pnmcut \
+	       pamflip pamfunc pammasksharpen \
+	       pamperspective \
+	       pamscale pamsistoaglyph pamstretch pamthreshold pamundice \
+	       pbmclean pbmmask pbmpscale pbmreduce \
+	       pgmdeshadow pgmenhance \
+	       pgmmedian \
+	       pnmalias pnmcat pnmcomp pnmconvol pnmcrop \
 	       pnmgamma \
-	       pnmhisteq pnmindex pnminvert pnmmontage \
+	       pnmhisteq pnminvert pnmmontage \
 	       pnmnlfilt pnmnorm pnmpad pnmpaste \
 	       pnmremap pnmrotate \
-	       pnmscale pnmscalefixed pnmshear pnmsmooth pnmstitch pnmtile \
-	       ppm3d ppmbrighten ppmchange ppmcolormask \
+	       pnmscalefixed pnmshear pnmsmooth pnmstitch pnmtile \
+	       ppmbrighten ppmchange ppmcolormask \
 	       ppmdim ppmdist ppmdither ppmdraw \
-	       ppmflash ppmglobe ppmlabel ppmmix \
-	       ppmntsc ppmrelief ppmshift ppmspread ppmtv
+	       ppmflash ppmlabel ppmmix \
 
 # We don't include programs that have special library dependencies in the
 # merge scheme, because we don't want those dependencies to prevent us
@@ -51,36 +52,41 @@ OBJECTS = $(BINARIES:%=%.o)
 MERGE_OBJECTS = $(MERGEBINARIES:%=%.o2)
 
 .PHONY: all
-all: $(BINARIES)
+all: $(BINARIES) $(SUBDIRS:%=%/all)
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 install.bin: install.bin.local
 
 .PHONY: install.bin.local
 install.bin.local: $(PKGDIR)/bin
 # Remember that $(SYMLINK) might just be a copy command.
-# backward compatibility: program used to be named pnmnoraw
 # backward compatibility: program used to be pnminterp
 	cd $(PKGDIR)/bin ; \
-	rm -f pnminterp; \
-	$(SYMLINK) pamstretch$(EXE) pnminterp
-# pamoil replaced pgmoil in June 2001.
-	cd $(PKGDIR)/bin ; \
-	rm -f pgmoil ; \
-	$(SYMLINK) pamoil$(EXE) pgmoil
+	rm -f pnminterp$(EXE); \
+	$(SYMLINK) pamstretch$(EXE) pnminterp$(EXE)
 # In March 2002, pnmnorm replaced ppmnorm and pgmnorm
 	cd $(PKGDIR)/bin ; \
-	rm -f ppmnorm ; \
-	$(SYMLINK) pnmnorm$(EXE) ppmnorm 
+	rm -f ppmnorm$(EXE) ; \
+	$(SYMLINK) pnmnorm$(EXE) ppmnorm$(EXE)
 	cd $(PKGDIR)/bin ; \
-	rm -f pgmnorm ; \
-	$(SYMLINK) pnmnorm$(EXE) pgmnorm
+	rm -f pgmnorm$(EXE) ; \
+	$(SYMLINK) pnmnorm$(EXE) pgmnorm$(EXE)
 # In March 2003, pamedge replaced pgmedge
 	cd $(PKGDIR)/bin ; \
-	rm -f pgmedge ; \
-	$(SYMLINK) pamedge$(EXE) pgmedge
+	rm -f pgmedge$(EXE) ; \
+	$(SYMLINK) pamedge$(EXE) pgmedge$(EXE)
 # In October 2004, pamenlarge replaced pnmenlarge
 	cd $(PKGDIR)/bin ; \
-	rm -f pnmenlarge ; \
-	$(SYMLINK) pamenlarge$(EXE) pnmenlarge
+	rm -f pnmenlarge$(EXE) ; \
+	$(SYMLINK) pamenlarge$(EXE) pnmenlarge$(EXE)
+# In March 2009, pamcut replaced pnmcut (but pamcut is much older -- pnmcut
+# was obsoleted by pamcut long before this).
+	cd $(PKGDIR)/bin ; \
+	rm -f pnmcut$(EXE) ; \
+	$(SYMLINK) pamcut$(EXE) pnmcut$(EXE)
+# In March 2009, pamscale replaced pnmscale (but pamscale is much older --
+# pnmscale was obsoleted by pamscale long before this).
+	cd $(PKGDIR)/bin ; \
+	rm -f pnmscale$(EXE) ; \
+	$(SYMLINK) pamscale$(EXE) pnmscale$(EXE)

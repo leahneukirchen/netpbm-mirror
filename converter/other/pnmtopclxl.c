@@ -29,6 +29,7 @@
 #include <sys/types.h>
 #include <ctype.h>
 
+#include "pm_c_util.h"
 #include "pam.h"
 #include "shhopt.h"
 #include "mallocvar.h"
@@ -153,7 +154,7 @@ parseCommandLine(int argc, char ** argv,
         bool found;
         int i;
         for (i = 0, found=FALSE; xlPaperFormats[i].name && !found; ++i) {
-            if (STREQ(xlPaperFormats[i].name, formatOpt)) {
+            if (streq(xlPaperFormats[i].name, formatOpt)) {
                 found = TRUE;
                 cmdlineP->format = xlPaperFormats[i].xl_nr;
             }
@@ -178,7 +179,7 @@ parseCommandLine(int argc, char ** argv,
         cmdlineP->sourceP->name = "-";
         cmdlineP->sourceP->next = NULL;
     } else {
-        int i;
+        unsigned int i;
         InputSource ** nextLinkP;
 
         nextLinkP = &cmdlineP->sourceP;

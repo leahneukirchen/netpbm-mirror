@@ -20,10 +20,17 @@
 ** in the FITS header, but do not cause the data to be rescaled.
 */
 
+/*
+  The official specification of FITS format (which is for more than
+  just visual images) is at
+  ftp://legacy.gsfc.nasa.gov/fits_info/fits_office/fits_standard.pdf
+*/
+
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
 
+#include "pm_c_util.h"
 #include "mallocvar.h"
 #include "shhopt.h"
 #include "nstring.h"
@@ -39,10 +46,9 @@ struct cmdlineInfo {
 
 
 static void 
-parseCommandLine(int argc, 
-                 char ** argv, 
-                 struct cmdlineInfo  * const cmdlineP) {
-/* --------------------------------------------------------------------------
+parseCommandLine(int argc, char ** argv,
+                 struct cmdlineInfo * const cmdlineP) {
+/*--------------------------------------------------------------------------
    Parse program command line described in Unix standard form by argc
    and argv.  Return the information in the options as *cmdlineP.  
 
@@ -52,8 +58,8 @@ parseCommandLine(int argc,
    Note that the strings we return are stored in the storage that
    was passed to us as the argv array.  We also trash *argv.
 --------------------------------------------------------------------------*/
-    optEntry *option_def;
-    /* Instructions to optParseOptions3 on how to parse our options. */
+    optEntry * option_def;
+        /* Instructions to optParseOptions3 on how to parse our options. */
     optStruct3 opt;
 
     unsigned int minSpec;
@@ -95,7 +101,6 @@ parseCommandLine(int argc,
                      "is the input file name.", argc-1);
     }
 }
-
 
 
 
@@ -202,6 +207,14 @@ writeRaster(struct pam * const pamP,
             tuple **     const tuples,
             unsigned int const bitpix,
             int          const offset) {
+
+    /* Note: the FITS specification does not give the association between
+       file position and image position (i.e. is the first pixel in the
+       file the top left, bottom left, etc.).  We use the common sense,
+       popular order of row major, top to bottom, left to right.  This
+       has been the case and accepted since 1989, but in 2008, we discovered
+       that Gimp and ImageMagick do bottom to top.
+    */
 
     unsigned int plane;
 

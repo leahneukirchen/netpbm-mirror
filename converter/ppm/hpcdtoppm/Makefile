@@ -5,21 +5,21 @@ endif
 SUBDIR = converter/ppm/hpcdtoppm
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 all: hpcdtoppm
 
 SCRIPTS = hpcdtoppm pcdovtoppm
 MERGE_OBJECTS =
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 install: install.bin.local
 .PHONY: install.bin.local
 install.bin.local: $(PKGDIR)/bin
 # In June 2002, pcdovtoppm replaced pcdindex
 	cd $(PKGDIR)/bin ; \
-	$(SYMLINK) pcdindex$(EXE) pcdovtoppm
+	$(SYMLINK) pcdindex$(EXE) pcdovtoppm$(EXE)
 
 
 FORCE:

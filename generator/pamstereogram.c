@@ -50,6 +50,7 @@
 #include <assert.h>
 
 #include "pm_config.h"
+#include "pm_c_util.h"
 #include "pam.h"
 #include "shhopt.h"
 #include "mallocvar.h"
@@ -455,12 +456,17 @@ termPatternPixel(outGenerator * const outGenP) {
 static void
 initPatternPixel(outGenerator *     const outGenP,
                  struct cmdlineInfo const cmdline) {
-
+/*----------------------------------------------------------------------------
+   Initialize parts of output generator *outGenP that are based on the
+   supplied pattern file, assuming there is one.
+-----------------------------------------------------------------------------*/
     struct patternPixelState * stateP;
     FILE * patternFileP;
 
     MALLOCVAR_NOFAIL(stateP);
-        
+
+    assert(cmdline.patFilespec);
+    
     patternFileP = pm_openr(cmdline.patFilespec);
 
     stateP->patTuples =

@@ -26,11 +26,12 @@
 #include <math.h>
 
 #include "pm_config.h"
-#include "pam.h"
-#include "pammap.h"
-#include "shhopt.h"
+#include "pm_c_util.h"
 #include "mallocvar.h"
 #include "nstring.h"
+#include "shhopt.h"
+#include "pam.h"
+#include "pammap.h"
 
 enum methodForLargest {LARGE_NORM, LARGE_LUM};
 
@@ -380,7 +381,7 @@ averageColors(int          const boxStart,
         for (i = 0; i < boxSize; ++i) 
             sum += colorfreqtable.table[boxStart+i]->tuple[plane];
 
-        newTuple[plane] = sum / boxSize;
+        newTuple[plane] = ROUNDDIV(sum, boxSize);
     }
 }
 
@@ -414,7 +415,7 @@ averagePixels(int          const boxStart,
             sum += colorfreqtable.table[boxStart+i]->tuple[plane]
                 * colorfreqtable.table[boxStart+i]->value;
 
-        newTuple[plane] = sum / n;
+        newTuple[plane] = ROUNDDIV(sum, n);
     }
 }
 
@@ -631,7 +632,7 @@ validateCompatibleImage(struct pam * const inpamP,
     if (inpamP->format != firstPamP->format)
         pm_error("Image %u format (%d) is not the same as Image 0 (%d)",
                  imageSeq, inpamP->format, firstPamP->format);
-    if (!STREQ(inpamP->tuple_type, firstPamP->tuple_type))
+    if (!streq(inpamP->tuple_type, firstPamP->tuple_type))
         pm_error("Image %u tuple type (%s) is not the same as Image 0 (%s)",
                  imageSeq, inpamP->tuple_type, firstPamP->tuple_type);
 }

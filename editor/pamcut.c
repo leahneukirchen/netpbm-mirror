@@ -12,6 +12,8 @@
 
 #include <limits.h>
 #include <assert.h>
+
+#include "pm_c_util.h"
 #include "pam.h"
 #include "shhopt.h"
 #include "mallocvar.h"
@@ -94,8 +96,10 @@ parseCommandLine(int argc, char ** const argv,
         pm_error("-height may not be negative.");
 
     if ((argc-1) != 0 && (argc-1) != 1 && (argc-1) != 4 && (argc-1) != 5)
-        pm_error("Wrong number of arguments.  "
-                 "Must be 0, 1, 4, or 5 arguments.");
+        pm_error("Wrong number of arguments: %u.  The only argument in "
+                 "the preferred syntax is an optional input file name.  "
+                 "In older syntax, there are also forms with 4 and 5 "
+                 "arguments.", argc-1);
 
     switch (argc-1) {
     case 0:
@@ -269,44 +273,51 @@ computeCutBounds(const int cols, const int rows,
 
 
 static void
-rejectOutOfBounds(const int cols, const int rows, 
-                  const int leftcol, const int rightcol, 
-                  const int toprow, const int bottomrow) {
+rejectOutOfBounds(unsigned int const cols,
+                  unsigned int const rows,
+                  int          const leftcol,
+                  int          const rightcol,
+                  int          const toprow,
+                  int          const bottomrow,
+                  bool         const pad) {
 
-    /* Reject coordinates off the edge */
+     /* Reject coordinates off the edge */
 
-    if (leftcol < 0)
-        pm_error("You have specified a left edge (%d) that is beyond\n"
-                 "the left edge of the image (0)", leftcol);
-    if (leftcol > cols-1)
-        pm_error("You have specified a left edge (%d) that is beyond\n"
-                 "the right edge of the image (%d)", leftcol, cols-1);
-    if (rightcol < 0)
-        pm_error("You have specified a right edge (%d) that is beyond\n"
-                 "the left edge of the image (0)", rightcol);
-    if (rightcol > cols-1)
-        pm_error("You have specified a right edge (%d) that is beyond\n"
-                 "the right edge of the image (%d)", rightcol, cols-1);
-    if (leftcol > rightcol) 
-        pm_error("You have specified a left edge (%d) that is to the right\n"
-                 "of the right edge you specified (%d)", 
+    if (!pad) {
+        if (leftcol < 0)
+            pm_error("You have specified a left edge (%d) that is beyond "
+                     "the left edge of the image (0)", leftcol);
+        if (leftcol > (int)(cols-1))
+            pm_error("You have specified a left edge (%d) that is beyond "
+                     "the right edge of the image (%u)", leftcol, cols-1);
+        if (rightcol < 0)
+            pm_error("You have specified a right edge (%d) that is beyond "
+                     "the left edge of the image (0)", rightcol);
+        if (rightcol > (int)(cols-1))
+            pm_error("You have specified a right edge (%d) that is beyond "
+                     "the right edge of the image (%u)", rightcol, cols-1);
+        if (toprow < 0)
+            pm_error("You have specified a top edge (%d) that is above "
+                     "the top edge of the image (0)", toprow);
+        if (toprow > (int)(rows-1))
+            pm_error("You have specified a top edge (%d) that is below "
+                     "the bottom edge of the image (%u)", toprow, rows-1);
+        if (bottomrow < 0)
+            pm_error("You have specified a bottom edge (%d) that is above "
+                     "the top edge of the image (0)", bottomrow);
+        if (bottomrow > (int)(rows-1))
+            pm_error("You have specified a bottom edge (%d) that is below "
+                     "the bottom edge of the image (%u)", bottomrow, rows-1);
+    }
+
+    if (leftcol > rightcol)
+        pm_error("You have specified a left edge (%d) that is to the right of "
+                 "the right edge you specified (%d)",
                  leftcol, rightcol);
-    
-    if (toprow < 0)
-        pm_error("You have specified a top edge (%d) that is above the top "
-                 "edge of the image (0)", toprow);
-    if (toprow > rows-1)
-        pm_error("You have specified a top edge (%d) that is below the\n"
-                 "bottom edge of the image (%d)", toprow, rows-1);
-    if (bottomrow < 0)
-        pm_error("You have specified a bottom edge (%d) that is above the\n"
-                 "top edge of the image (0)", bottomrow);
-    if (bottomrow > rows-1)
-        pm_error("You have specified a bottom edge (%d) that is below the\n"
-                 "bottom edge of the image (%d)", bottomrow, rows-1);
-    if (toprow > bottomrow) 
-        pm_error("You have specified a top edge (%d) that is below\n"
-                 "the bottom edge you specified (%d)", 
+
+    if (toprow > bottomrow)
+        pm_error("You have specified a top edge (%d) that is below "
+                 "the bottom edge you specified (%d)",
                  toprow, bottomrow);
 }
 
@@ -398,13 +409,15 @@ struct rowCutter {
    create a new one then.
 */
 
+
+
 static void
-createRowCutter(struct pam *        const inpamP,
-                struct pam *        const outpamP,
+createRowCutter(const struct pam *  const inpamP,
+                const struct pam *  const outpamP,
                 int                 const leftcol,
                 int                 const rightcol,
                 struct rowCutter ** const rowCutterPP) {
-    
+
     struct rowCutter * rowCutterP;
     tuple * inputPointers;
     tuple * outputPointers;
@@ -412,7 +425,7 @@ createRowCutter(struct pam *        const inpamP,
     tuple blackTuple;
     tuple discardTuple;
     int col;
-    
+
     assert(inpamP->depth >= outpamP->depth);
         /* Entry condition.  If this weren't true, we could not simply
            treat an input tuple as an output tuple.
@@ -483,65 +496,29 @@ destroyRowCutter(struct rowCutter * const rowCutterP) {
 
 
 static void
-cutOneImage(FILE *             const ifP,
-            struct cmdlineInfo const cmdline,
-            FILE *             const ofP) {
+extractRowsGen(const struct pam * const inpamP,
+               const struct pam * const outpamP,
+               int                const leftcol,
+               int                const rightcol,
+               int                const toprow,
+               int                const bottomrow) {
 
-    int row;
-    int leftcol, rightcol, toprow, bottomrow;
-    struct pam inpam;   /* Input PAM image */
-    struct pam outpam;  /* Output PAM image */
     struct rowCutter * rowCutterP;
-
-    pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
-    
-    computeCutBounds(inpam.width, inpam.height, 
-                     cmdline.left, cmdline.right, 
-                     cmdline.top, cmdline.bottom, 
-                     cmdline.width, cmdline.height, 
-                     &leftcol, &rightcol, &toprow, &bottomrow);
-
-    if (!cmdline.pad)
-        rejectOutOfBounds(inpam.width, inpam.height, leftcol, rightcol, 
-                          toprow, bottomrow);
-    else {
-        if (cmdline.left > cmdline.right) 
-            pm_error("You have specified a left edge (%d) that is to the right\n"
-                     "of the right edge you specified (%d)", 
-                     cmdline.left, cmdline.right);
-        
-        if (cmdline.top > cmdline.bottom) 
-            pm_error("You have specified a top edge (%d) that is below\n"
-                     "the bottom edge you specified (%d)", 
-                     cmdline.top, cmdline.bottom);
-    }
-    if (cmdline.verbose) {
-        pm_message("Image goes from Row 0, Column 0 through Row %d, Column %d",
-                   inpam.height-1, inpam.width-1);
-        pm_message("Cutting from Row %d, Column %d through Row %d Column %d",
-                   toprow, leftcol, bottomrow, rightcol);
-    }
-
-    outpam = inpam;    /* Initial value -- most fields should be same */
-    outpam.file   = ofP;
-    outpam.width  = rightcol-leftcol+1;
-    outpam.height = bottomrow-toprow+1;
-
-    pnm_writepaminit(&outpam);
+    int row;
 
     /* Write out top padding */
     if (0 - toprow > 0)
-        writeBlackRows(&outpam, 0 - toprow);
+        writeBlackRows(outpamP, 0 - toprow);
 
-    createRowCutter(&inpam, &outpam, leftcol, rightcol, &rowCutterP);
+    createRowCutter(inpamP, outpamP, leftcol, rightcol, &rowCutterP);
 
     /* Read input and write out rows extracted from it */
-    for (row = 0; row < inpam.height; ++row) {
+    for (row = 0; row < inpamP->height; ++row) {
         if (row >= toprow && row <= bottomrow){
-            pnm_readpamrow(&inpam, rowCutterP->inputPointers);
-            pnm_writepamrow(&outpam, rowCutterP->outputPointers);
+            pnm_readpamrow(inpamP, rowCutterP->inputPointers);
+            pnm_writepamrow(outpamP, rowCutterP->outputPointers);
         } else  /* row < toprow || row > bottomrow */
-            pnm_readpamrow(&inpam, NULL);
+            pnm_readpamrow(inpamP, NULL);
         
         /* Note that we may be tempted just to quit after reaching the bottom
            of the extracted image, but that would cause a broken pipe problem
@@ -552,8 +529,141 @@ cutOneImage(FILE *             const ifP,
     destroyRowCutter(rowCutterP);
     
     /* Write out bottom padding */
-    if ((bottomrow - (inpam.height-1)) > 0)
-        writeBlackRows(&outpam, bottomrow - (inpam.height-1));
+    if ((bottomrow - (inpamP->height-1)) > 0)
+        writeBlackRows(outpamP, bottomrow - (inpamP->height-1));
+}
+
+
+
+static void
+makeBlackPBMRow(unsigned char * const bitrow,
+                unsigned int    const cols) {
+
+    unsigned int const colByteCnt = pbm_packed_bytes(cols);
+
+    unsigned int i;
+
+    for (i = 0; i < colByteCnt; ++i)
+        bitrow[i] = PBM_BLACK * 0xff;
+
+    if (PBM_BLACK != 0 && cols % 8 > 0)
+        bitrow[colByteCnt-1] <<= (8 - cols % 8);
+}
+
+
+
+static void
+extractRowsPBM(const struct pam * const inpamP,
+               const struct pam * const outpamP,
+               int                const leftcol,
+               int                const rightcol,
+               int                const toprow,
+               int                const bottomrow) {
+
+    unsigned char * bitrow;
+    int             readOffset, writeOffset;
+    int             row;
+    unsigned int    totalWidth;
+
+    assert(leftcol <= rightcol);
+    assert(toprow <= bottomrow);
+
+    if (leftcol > 0) {
+        totalWidth = MAX(rightcol+1, inpamP->width) + 7;
+        if (totalWidth > INT_MAX)
+            /* Prevent overflows in pbm_allocrow_packed() */
+            pm_error("Specified right edge is too far "
+                     "from the right end of input image");
+        
+        readOffset  = 0;
+        writeOffset = leftcol;
+    } else {
+        totalWidth = -leftcol + MAX(rightcol+1, inpamP->width);
+        if (totalWidth > INT_MAX)
+            pm_error("Specified left/right edge is too far "
+                     "from the left/right end of input image");
+        
+        readOffset = -leftcol;
+        writeOffset = 0;
+    }
+
+    bitrow = pbm_allocrow_packed(totalWidth);
+
+    if (toprow < 0 || leftcol < 0 || rightcol >= inpamP->width){
+        makeBlackPBMRow(bitrow, totalWidth);
+        if (toprow < 0) {
+            int row;
+            for (row=0; row < 0 - toprow; ++row)
+                pbm_writepbmrow_packed(outpamP->file, bitrow,
+                                       outpamP->width, 0);
+        }
+    }
+
+    for (row = 0; row < inpamP->height; ++row){
+        if (row >= toprow && row <= bottomrow) {
+            pbm_readpbmrow_bitoffset(inpamP->file, bitrow, inpamP->width,
+                                     inpamP->format, readOffset);
+
+            pbm_writepbmrow_bitoffset(outpamP->file, bitrow, outpamP->width,
+                                      0, writeOffset);
+  
+            if (rightcol >= inpamP->width)
+                /* repair right padding */
+                bitrow[writeOffset/8 + pbm_packed_bytes(outpamP->width) - 1] =
+                    0xff * PBM_BLACK;
+        } else
+            pnm_readpamrow(inpamP, NULL);    /* read and discard */
+    }
+
+    if (bottomrow - (inpamP->height-1) > 0) {
+        int row;
+        makeBlackPBMRow(bitrow, outpamP->width);
+        for (row = 0; row < bottomrow - (inpamP->height-1); ++row)
+            pbm_writepbmrow_packed(outpamP->file, bitrow, outpamP->width, 0);
+    }
+    pbm_freerow_packed(bitrow);
+}
+
+
+
+static void
+cutOneImage(FILE *             const ifP,
+            struct cmdlineInfo const cmdline,
+            FILE *             const ofP) {
+
+    int leftcol, rightcol, toprow, bottomrow;
+    struct pam inpam;   /* Input PAM image */
+    struct pam outpam;  /* Output PAM image */
+
+    pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
+    
+    computeCutBounds(inpam.width, inpam.height, 
+                     cmdline.left, cmdline.right, 
+                     cmdline.top, cmdline.bottom, 
+                     cmdline.width, cmdline.height, 
+                     &leftcol, &rightcol, &toprow, &bottomrow);
+
+    rejectOutOfBounds(inpam.width, inpam.height, leftcol, rightcol, 
+                      toprow, bottomrow, cmdline.pad);
+
+    if (cmdline.verbose) {
+        pm_message("Image goes from Row 0, Column 0 through Row %u, Column %u",
+                   inpam.height-1, inpam.width-1);
+        pm_message("Cutting from Row %d, Column %d through Row %d Column %d",
+                   toprow, leftcol, bottomrow, rightcol);
+    }
+
+    outpam = inpam;    /* Initial value -- most fields should be same */
+    outpam.file   = ofP;
+    outpam.width  = rightcol - leftcol + 1;
+    outpam.height = bottomrow - toprow + 1;
+
+    pnm_writepaminit(&outpam);
+
+    if (PNM_FORMAT_TYPE(outpam.format) == PBM_TYPE)
+        extractRowsPBM(&inpam, &outpam, leftcol, rightcol, toprow, bottomrow);
+    else
+        extractRowsGen(&inpam, &outpam, leftcol, rightcol, toprow, bottomrow);
 }
 
 

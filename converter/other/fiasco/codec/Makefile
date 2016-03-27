@@ -6,9 +6,9 @@ FIASCOSUBDIR = converter/other/fiasco
 SUBDIR = $(FIASCOSUBDIR)/codec
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
-INCLUDES = -I$(SRCDIR)/$(FIASCOSUBDIR) -I$(SRCDIR)/$(FIASCOSUBDIR)/lib \
+COMP_INCLUDES = -I$(SRCDIR)/$(FIASCOSUBDIR) -I$(SRCDIR)/$(FIASCOSUBDIR)/lib \
 	 -I$(SRCDIR)/$(FIASCOSUBDIR)/input -I$(SRCDIR)/$(FIASCOSUBDIR)/output 
 
 OBJECTS =  approx.o bintree.o coder.o coeff.o \
@@ -19,7 +19,7 @@ MERGE_OBJECTS = $(OBJECTS)
 
 all: libfiasco_codec.a
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 libfiasco_codec.a: $(OBJECTS)
 	$(AR) -rc $@ $(OBJECTS)

@@ -41,6 +41,7 @@
 
 #include "mallocvar.h"
 #include "nstring.h"
+#include "nsleep.h"
 
 #include "pm.h"
 
@@ -128,7 +129,7 @@ boolean niceProcesses = FALSE;
 boolean forceIalign = FALSE;
 int     machineNumber = -1;
 boolean remoteIO = FALSE;
-bool separateConversion;
+boolean separateConversion;
     /* The I/O server will convert from the input format to the base format,
        and the slave will convert from the base format to the YUV internal
        format.  If false, the I/O server assumes the input format is the
@@ -630,7 +631,7 @@ static int safe_fork(command)       /* fork child process and remember its PID *
  *
  *===========================================================================*/
 void
-SetIOConvert(bool const separate) {
+SetIOConvert(boolean const separate) {
     separateConversion = separate;
 }
 
@@ -648,8 +649,7 @@ SetIOConvert(bool const separate) {
  *
  *===========================================================================*/
 void
-SetParallelPerfect(val)
-boolean val;
+SetParallelPerfect(boolean val)
 {
     parallelPerfect = val;
 }
@@ -1209,7 +1209,7 @@ openInputFile(const char * const fileName,
             pm_message("ERROR  Couldn't read frame file '%s' errno = %d (%s)"
                        "attempt %d", 
                        fileName, errno, strerror(errno), attempts);
-            sleep(1);
+            sleepN(1000);
         }
         ++attempts;
     }

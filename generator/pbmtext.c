@@ -14,69 +14,76 @@
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 
 #include <string.h>
+#include <limits.h>
+#include <assert.h>
 
+#include "pm_c_util.h"
+#include "mallocvar.h"
+#include "shhopt.h"
 #include "pbm.h"
 #include "pbmfont.h"
-#include "shhopt.h"
-#include "mallocvar.h"
 
-struct cmdline_info {
+struct cmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *text;    /* text from command line or NULL if none */
-    const char *font;    /* -font option value or NULL if none */
-    const char *builtin; /* -builtin option value or NULL if none */
+    const char * text;    /* text from command line or NULL if none */
+    const char * font;    /* -font option value or NULL if none */
+    const char * builtin; /* -builtin option value or NULL if none */
     unsigned int dump;   
         /* undocumented dump option for installing a new built-in font */
     float space;   /* -space option value or default */
     unsigned int width;     /* -width option value or zero */
     int lspace;    /* lspace option value or default */
     unsigned int nomargins;     /* -nomargins */
+    unsigned int verbose;
 };
 
 
 
 
 static void
-parse_command_line(int argc, char ** argv,
-                   struct cmdline_info *cmdline_p) {
+parseCommandLine(int argc, const char ** argv,
+                 struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
 -----------------------------------------------------------------------------*/
-    optEntry *option_def = malloc(100*sizeof(optEntry));
+    optEntry * option_def;
         /* Instructions to OptParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
 
     unsigned int option_def_index;
 
+    MALLOCARRAY_NOFAIL(option_def, 100);
+
     option_def_index = 0;   /* incremented by OPTENTRY */
-    OPTENT3(0, "font",      OPT_STRING, &cmdline_p->font, NULL,        0);
-    OPTENT3(0, "builtin",   OPT_STRING, &cmdline_p->builtin, NULL,     0);
-    OPTENT3(0, "dump",      OPT_FLAG,   NULL, &cmdline_p->dump,        0);
-    OPTENT3(0, "space",     OPT_FLOAT,  &cmdline_p->space, NULL,       0);
-    OPTENT3(0, "width",     OPT_UINT,   &cmdline_p->width, NULL,       0);
-    OPTENT3(0, "lspace",    OPT_INT,    &cmdline_p->lspace, NULL,      0);
-    OPTENT3(0, "nomargins", OPT_FLAG,   NULL, &cmdline_p->nomargins,   0);
+    OPTENT3(0, "font",      OPT_STRING, &cmdlineP->font, NULL,        0);
+    OPTENT3(0, "builtin",   OPT_STRING, &cmdlineP->builtin, NULL,     0);
+    OPTENT3(0, "dump",      OPT_FLAG,   NULL, &cmdlineP->dump,        0);
+    OPTENT3(0, "space",     OPT_FLOAT,  &cmdlineP->space, NULL,       0);
+    OPTENT3(0, "width",     OPT_UINT,   &cmdlineP->width, NULL,       0);
+    OPTENT3(0, "lspace",    OPT_INT,    &cmdlineP->lspace, NULL,      0);
+    OPTENT3(0, "nomargins", OPT_FLAG,   NULL, &cmdlineP->nomargins,   0);
+    OPTENT3(0, "verbose",   OPT_FLAG,   NULL, &cmdlineP->verbose,     0);
 
     /* Set the defaults */
-    cmdline_p->font = NULL;
-    cmdline_p->builtin = NULL;
-    cmdline_p->space = 0.0;
-    cmdline_p->width = 0;
-    cmdline_p->lspace = 0;
+    cmdlineP->font = NULL;
+    cmdlineP->builtin = NULL;
+    cmdlineP->space = 0.0;
+    cmdlineP->width = 0;
+    cmdlineP->lspace = 0;
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
-        /* Uses and sets argc, argv, and some of *cmdline_p and others. */
+    optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+        /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (argc-1 == 0)
-        cmdline_p->text = NULL;
+        cmdlineP->text = NULL;
     else {
         char *text;
         int i;
@@ -87,7 +94,7 @@ parse_command_line(int argc, char ** argv,
         text = malloc(totaltextsize);  /* initial allocation */
         text[0] = '\0';
         
-        for (i = 1; i < argc; i++) {
+        for (i = 1; i < argc; ++i) {
             if (i > 1) {
                 totaltextsize += 1;
                 text = realloc(text, totaltextsize);
@@ -101,9 +108,57 @@ parse_command_line(int argc, char ** argv,
                 pm_error("out of memory allocating space for input text");
             strcat(text, argv[i]);
         }
-        cmdline_p->text = text;
+        cmdlineP->text = text;
     }
 }
+
+
+
+static void
+reportFont(struct font * const fontP) {
+
+    unsigned int n;
+    unsigned int c;
+
+    pm_message("FONT:");
+    pm_message("  character dimensions: %uw x %uh",
+               fontP->maxwidth, fontP->maxheight);
+    pm_message("  Additional vert white space: %d pixels", fontP->y);
+
+    for (c = 0, n = 0; c < ARRAY_SIZE(fontP->glyph); ++c)
+        if (fontP->glyph[c])
+            ++n;
+
+    pm_message("  # characters: %u", n);
+}
+
+
+
+static void
+computeFont(struct cmdlineInfo const cmdline,
+            struct font **     const fontPP) {
+
+    struct font * fontP;
+
+    if (cmdline.font)
+        fontP = pbm_loadfont(cmdline.font);
+    else {
+        if (cmdline.builtin)
+            fontP = pbm_defaultfont(cmdline.builtin);
+        else
+            fontP = pbm_defaultfont("bdf");
+    }
+
+    if (cmdline.verbose)
+        reportFont(fontP);
+
+    if (cmdline.dump) {
+        pbm_dumpfont(fontP);
+        exit(0);
+    }
+    *fontPP = fontP;
+}
+
 
 
 struct text {
@@ -111,6 +166,7 @@ struct text {
     unsigned int allocatedLineCount;
     unsigned int lineCount;
 };
+
 
 
 static void
@@ -131,6 +187,7 @@ allocTextArray(struct text * const textP,
 }
 
 
+
 static void
 freeTextArray(struct text const text) {
 
@@ -145,30 +202,72 @@ freeTextArray(struct text const text) {
 
 
 static void
-fix_control_chars(char * const buf, struct font * const fn) {
+fixControlChars(const char *  const input,
+                struct font * const fontP,
+                const char ** const outputP) {
+/*----------------------------------------------------------------------------
+   Return a translation of input[] that can be rendered as glyphs in
+   the font 'fontP'.  Return it as newly malloced *outputP.
 
-    int i;
+   Expand tabs to spaces.
 
-    /* chop off terminating newline */
-    if (strlen(buf) >= 1 && buf[strlen(buf)-1] == '\n')
-        buf[strlen(buf)-1] = '\0';
-    
-    for ( i = 0; buf[i] != '\0'; ++i ) {
-        if ( buf[i] == '\t' ) { 
-            /* Turn tabs into the right number of spaces. */
-            int j, n, l;
-            n = ( i + 8 ) / 8 * 8;
-            l = strlen( buf );
-            for ( j = l; j > i; --j )
-                buf[j + n - i - 1] = buf[j];
-            for ( ; i < n; ++i )
-                buf[i] = ' ';
-            --i;
+   Remove any trailing newline.  (But leave intermediate ones as line
+   delimiters).
+
+   Turn anything that isn't a code point in the font to a single space
+   (which isn't guaranteed to be in the font either, of course).
+-----------------------------------------------------------------------------*/
+    /* We don't know in advance how big the output will be because of the
+       tab expansions.  So we make sure before processing each input
+       character that there is space in the output buffer for a worst
+       case tab expansion, plus a terminating NUL, reallocating as
+       necessary.  And we originally allocate enough for the entire line
+       assuming no tabs.
+    */
+
+    unsigned int const tabSize = 8;
+
+    unsigned int inCursor, outCursor;
+    char * output;      /* Output buffer.  Malloced */
+    size_t outputSize;  /* Currently allocated size of 'output' */
+
+    outputSize = strlen(input) + 1 + tabSize;
+        /* Leave room for one worst case tab expansion and NUL terminator */
+    MALLOCARRAY(output, outputSize);
+
+    if (output == NULL)
+        pm_error("Couldn't allocate %u bytes for a line of text.", outputSize);
+
+    for (inCursor = 0, outCursor = 0; input[inCursor] != '\0'; ++inCursor) {
+        if (outCursor + 1 + tabSize > outputSize) {
+            outputSize = outCursor + 1 + 4 * tabSize;
+            REALLOCARRAY(output, outputSize);
+            if (output == NULL)
+                pm_error("Couldn't allocate %u bytes for a line of text.",
+                         outputSize);
         }
-        else if ( !fn->glyph[(unsigned char)buf[i]] )
-            /* Turn unknown chars into a single space. */
-            buf[i] = ' ';
+        if (input[inCursor] == '\n' && input[inCursor+1] == '\0') {
+            /* This is a terminating newline.  We don't do those. */
+        } else if (input[inCursor] == '\t') { 
+            /* Expand this tab into the right number of spaces. */
+            unsigned int const nextTabStop =
+                (outCursor + tabSize) / tabSize * tabSize;
+
+            while (outCursor < nextTabStop)
+                output[outCursor++] = ' ';
+        } else if (!fontP->glyph[(unsigned char)input[inCursor]]) {
+            /* Turn this unknown char into a single space. */
+            output[outCursor++] = ' ';
+        } else
+            output[outCursor++] = input[inCursor];
+
+        assert(outCursor <= outputSize);
     }
+    output[outCursor++] = '\0';
+
+    assert(outCursor <= outputSize);
+
+    *outputP = output;
 }
 
 
@@ -195,35 +294,34 @@ fill_rect(bit** const bits,
 static void
 get_line_dimensions(const char line[], const struct font * const font_p, 
                     const float intercharacter_space,
-                    int * const bwid_p, int * const backup_space_needed_p) {
+                    double * const bwidP, int * const backup_space_needed_p) {
 /*----------------------------------------------------------------------------
    Determine the width in pixels of the line of text line[] in the font
-   *font_p, and return it as *bwid_p.  Also determine how much of this
+   *font_p, and return it as *bwidP.  Also determine how much of this
    width goes to the left of the nominal starting point of the line because
    the first character in the line has a "backup" distance.  Return that
    as *backup_space_needed_p.
 -----------------------------------------------------------------------------*/
     int cursor;  /* cursor into the line of text */
-    float accumulated_ics;
+    double accumulatedIcs;
         /* accumulated intercharacter space so far in the line we are 
            stepping through.  Because the intercharacter space might not be
            an integer, we accumulate it here and realize full pixels whenever
-           we have more than one pixel.
-           */
-
-    int no_chars_yet; 
-        /* logical: we haven't seen any renderable characters yet in 
-           the line.
+           we have more than one pixel.  Note that this can be negative
+           (which means were crowding, rather than spreading, text).
         */
+    double bwid;
+    bool no_chars_yet; 
+        /* We haven't seen any renderable characters yet in the line. */
     struct glyph * lastGlyphP;
         /* Glyph of last character processed so far.  Undefined if
            'no_chars_yet'.
         */
 
     no_chars_yet = TRUE;   /* initial value */
-    *bwid_p = 0;  /* initial value */
-    accumulated_ics = 0.0;  /* initial value */
-
+    accumulatedIcs = 0.0;  /* initial value */
+    bwid = 0.0;  /* initial value */
+    
     for (cursor = 0; line[cursor] != '\0'; cursor++) {
         struct glyph * const glyphP = 
             font_p->glyph[(unsigned char)line[cursor]];
@@ -235,18 +333,23 @@ get_line_dimensions(const char line[], const struct font * const font_p,
                     *backup_space_needed_p = -glyphP->x;
                 else {
                     *backup_space_needed_p = 0;
-                    *bwid_p += glyphP->x;
+                    bwid += glyphP->x;
                 }
             } else {
                 /* handle extra intercharacter space (-space option) */
-                int full_pixels;  /* integer part of accumulated_ics */
-                accumulated_ics += intercharacter_space;
-                full_pixels = (int) accumulated_ics;
-                *bwid_p += full_pixels;
-                accumulated_ics -= full_pixels;
+                accumulatedIcs += intercharacter_space;
+                if (accumulatedIcs >= INT_MAX)
+                    pm_error("Image width too large.");
+                if (accumulatedIcs <= INT_MIN)
+                    pm_error("Absurdly large negative -space value.");
+                {
+                    int const fullPixels = (int) accumulatedIcs;
+                    bwid           += fullPixels;
+                    accumulatedIcs -= fullPixels;
+                }
             }
             lastGlyphP = glyphP;
-            *bwid_p += glyphP->xadd;
+            bwid += glyphP->xadd;
         }
     }
     if (no_chars_yet)
@@ -258,9 +361,13 @@ get_line_dimensions(const char line[], const struct font * const font_p,
            right at the right edge of the glyph (no extra space to
            anticipate another character).
         */
-        *bwid_p -= lastGlyphP->xadd;
-        *bwid_p += lastGlyphP->width + lastGlyphP->x;
+        bwid -= lastGlyphP->xadd;
+        bwid += lastGlyphP->width + lastGlyphP->x;
     }
+    if (bwid > INT_MAX)
+        pm_error("Image width too large.");
+    else
+        *bwidP = bwid; 
 }
 
 
@@ -377,7 +484,8 @@ struct outputTextCursor {
            are stepping through.  Because the intercharacter space
            might not be an integer, we accumulate it here and
            realize full pixels whenever we have more than one
-           pixel.  
+           pixel.  Note that this is negative if we're crowding, rather
+           than spreading, characters.
         */
 };
 
@@ -442,11 +550,12 @@ placeCharacterInOutput(char                      const lastch,
                     cursorP->widthSoFar += fontP->glyph[glyphIndex]->x;
             } else {
                 /* handle extra intercharacter space (-space option) */
-                int fullPixels;  /* integer part of accumulatedIcs */
                 cursorP->accumulatedIcs += cursorP->intercharacterSpace;
-                fullPixels = (int) cursorP->accumulatedIcs;
-                cursorP->widthSoFar     += fullPixels;
-                cursorP->accumulatedIcs -= fullPixels;
+                {
+                    int const fullPixels = (int)cursorP->accumulatedIcs;
+                    cursorP->widthSoFar     += fullPixels;
+                    cursorP->accumulatedIcs -= fullPixels;
+                }
             }
             cursorP->widthSoFar += fontP->glyph[glyphIndex]->xadd;
         }
@@ -522,8 +631,9 @@ truncateText(struct text   const inputText,
         /* accumulated intercharacter space so far in the line we are 
            stepping through.  Because the intercharacter space might not be
            an integer, we accumulate it here and realize full pixels whenever
-           we have more than one pixel.
-           */
+           we have more than one pixel.  Note that this is negative if we're
+           crowding, not spreading, characters.
+        */
 
         int noCharsYet; 
         /* logical: we haven't seen any renderable characters yet in 
@@ -546,11 +656,12 @@ truncateText(struct text   const inputText,
                         widthSoFar += fontP->glyph[lastch]->x;
                 } else {
                     /* handle extra intercharacter space (-space option) */
-                    int fullPixels;  /* integer part of accumulatedIcs */
                     accumulatedIcs += intercharacterSpace;
-                    fullPixels = (int) intercharacterSpace;
-                    widthSoFar     += fullPixels;
-                    accumulatedIcs -= fullPixels;
+                    {
+                        int const fullPixels = (int) intercharacterSpace;
+                        widthSoFar     += fullPixels;
+                        accumulatedIcs -= fullPixels;
+                    }
                 }
                 widthSoFar += fontP->glyph[lastch]->xadd;
             }
@@ -569,16 +680,17 @@ truncateText(struct text   const inputText,
 
 static void
 getText(const char          cmdline_text[], 
-        struct font * const fn, 
+        struct font * const fontP,
         struct text * const input_textP) {
 
     struct text input_text;
 
     if (cmdline_text) {
-        allocTextArray(&input_text, 1, strlen(cmdline_text)*8);
-        strcpy(input_text.textArray[0], cmdline_text);
-        fix_control_chars(input_text.textArray[0], fn);
+        MALLOCARRAY_NOFAIL(input_text.textArray, 1);
+        input_text.allocatedLineCount = 1;
         input_text.lineCount = 1;
+        fixControlChars(cmdline_text, fontP,
+                        (const char**)&input_text.textArray[0]);
     } else {
         /* Read text from stdin. */
 
@@ -595,18 +707,16 @@ getText(const char          cmdline_text[],
         
         lineCount = 0;  /* initial value */
         while (fgets(buf, sizeof(buf), stdin) != NULL) {
-            if (strlen(buf)*8 + 1 >= sizeof(buf))
+            if (strlen(buf) + 1 >= sizeof(buf))
                 pm_error("A line of input text is longer than %u characters."
-                         "Cannot process.", (sizeof(buf)-1)/8);
-            fix_control_chars(buf, fn);
+                         "Cannot process.", sizeof(buf)-1);
             if (lineCount >= maxlines) {
                 maxlines *= 2;
-                text_array = (char**) realloc((char*) text_array, 
-                                              maxlines * sizeof(char*));
+                REALLOCARRAY(text_array, maxlines);
                 if (text_array == NULL)
                     pm_error("out of memory");
             }
-            text_array[lineCount] = strdup(buf);
+            fixControlChars(buf, fontP, (const char **)&text_array[lineCount]);
             if (text_array[lineCount] == NULL)
                 pm_error("out of memory");
             ++lineCount;
@@ -621,62 +731,97 @@ getText(const char          cmdline_text[],
 
 
 static void
-compute_image_width(struct text         const lp, 
-                    const struct font * const fn,
-                    float               const intercharacter_space,
-                    int *               const maxwidthP, 
-                    int *               const maxleftbP) {
-    int line;
+computeImageHeight(struct text         const formattedText, 
+                   const struct font * const fontP,
+                   int                 const interlineSpace,
+                   unsigned int        const vmargin,
+                   unsigned int *      const rowsP) {
+
+    if (interlineSpace < 0 && fontP->maxheight < -interlineSpace)
+        pm_error("-lspace value (%d) negative and exceeds font height.",
+                 interlineSpace);     
+    else {
+        double const rowsD = 2 * (double) vmargin + 
+            (double) formattedText.lineCount * fontP->maxheight + 
+            (double) (formattedText.lineCount-1) * interlineSpace;
+        
+        if (rowsD > INT_MAX-10)
+            pm_error("Image height too large.");
+        else
+            *rowsP = (unsigned int) rowsD;
+    }
+}
+
+
+
+static void
+computeImageWidth(struct text         const formattedText, 
+                  const struct font * const fontP,
+                  float               const intercharacterSpace,
+                  unsigned int        const hmargin,
+                  unsigned int *      const colsP,
+                  int *               const maxleftbP) {
+
+    if (intercharacterSpace < 0 && fontP->maxwidth < -intercharacterSpace)
+        pm_error("-space value (%f) negative; exceeds font width.",
+                 intercharacterSpace);     
+    else {
+        /* Find the widest line, and the one that backs up the most past
+           the nominal start of the line.
+        */
     
-    *maxwidthP = 0;  /* initial value */
-    *maxleftbP = 0;  /* initial value */
-    for (line = 0; line < lp.lineCount; ++line) {
-        int bwid, backup_space_needed;
-        
-        get_line_dimensions(lp.textArray[line], fn, intercharacter_space,
-                            &bwid, &backup_space_needed);
-        
-        *maxwidthP = MAX(*maxwidthP, bwid);
-        *maxleftbP = MAX(*maxleftbP, backup_space_needed);
+        unsigned int line;
+        double maxwidth;
+        int maxleftb;
+        double colsD;
+
+        for (line = 0, maxwidth = 0.0, maxleftb = 0;
+             line < formattedText.lineCount;
+             ++line) {
+
+            double bwid;
+            int backupSpaceNeeded;
+            
+            get_line_dimensions(formattedText.textArray[line], fontP,
+                                intercharacterSpace,
+                                &bwid, &backupSpaceNeeded);
+            
+            maxwidth = MAX(maxwidth, bwid);
+            maxleftb = MAX(maxleftb, backupSpaceNeeded);
+        }
+        colsD = 2 * (double) hmargin + (double) maxwidth;
+    
+        if (colsD > INT_MAX-10)
+            pm_error("Image width too large.");
+        else
+            *colsP = (unsigned int) colsD;
+    
+        *maxleftbP = maxleftb;
     }
 }
 
 
 
 int
-main(int argc, char *argv[]) {
+main(int argc, const char *argv[]) {
 
-    struct cmdline_info cmdline;
-    bit** bits;
-    int rows, cols;
-    struct font* fontP;
-    int vmargin, hmargin;
+    struct cmdlineInfo cmdline;
+    bit ** bits;
+    unsigned int rows, cols;
+    struct font * fontP;
+    unsigned int vmargin, hmargin;
     struct text inputText;
     struct text formattedText;
-    int maxwidth;
-        /* width in pixels of the longest line of text in the image */
     int maxleftb;
 
-    pbm_init( &argc, argv );
+    pm_proginit(&argc, argv);
 
-    parse_command_line(argc, argv, &cmdline);
+    parseCommandLine(argc, argv, &cmdline);
     
-    if (cmdline.font)
-        fontP = pbm_loadfont(cmdline.font);
-    else {
-        if (cmdline.builtin)
-            fontP = pbm_defaultfont(cmdline.builtin);
-        else
-            fontP = pbm_defaultfont("bdf");
-    }
-
-    if (cmdline.dump) {
-        pbm_dumpfont(fontP);
-        exit(0);
-    }
+    computeFont(cmdline, &fontP);
 
     getText(cmdline.text, fontP, &inputText);
-    
+       
     if (cmdline.nomargins) {
         vmargin = 0;
         hmargin = 0;
@@ -689,8 +834,11 @@ main(int argc, char *argv[]) {
             hmargin = 2 * fontP->maxwidth;
         }
     }
-
+    
     if (cmdline.width > 0) {
+        if (cmdline.width > INT_MAX -10)
+            pm_error("-width value too large: %u", cmdline.width);
+            
         /* Flow or truncate lines to meet user's width request */
         if (inputText.lineCount == 1) 
             flowText(inputText, cmdline.width, fontP, cmdline.space,
@@ -701,19 +849,18 @@ main(int argc, char *argv[]) {
         freeTextArray(inputText);
     } else
         formattedText = inputText;
+        
+    if (formattedText.lineCount == 0)
+        pm_error("No input text.");
     
-    rows = 2 * vmargin + 
-        formattedText.lineCount * fontP->maxheight + 
-        (formattedText.lineCount-1) * cmdline.lspace;
+    computeImageHeight(formattedText, fontP, cmdline.lspace, vmargin,
+                       &rows);
 
-    compute_image_width(formattedText, fontP, cmdline.space,
-                        &maxwidth, &maxleftb);
-
-    cols = 2 * hmargin + maxwidth;
+    computeImageWidth(formattedText, fontP, cmdline.space, hmargin,
+                      &cols, &maxleftb);
 
     if (cols == 0 || rows == 0)
-        pm_error("Input is all whitespace and/or non-renderable characters.  "
-                 "No output.");
+        pm_error("Input is all whitespace and/or non-renderable characters.");
 
     bits = pbm_allocarray(cols, rows);
 
@@ -724,8 +871,9 @@ main(int argc, char *argv[]) {
     insert_characters(bits, formattedText, fontP, vmargin, hmargin + maxleftb, 
                       cmdline.space, cmdline.lspace);
 
-    /* All done. */
     pbm_writepbm(stdout, bits, cols, rows, 0);
+
+    pbm_freearray(bits, rows);
 
     freeTextArray(formattedText);
     pm_close(stdout);

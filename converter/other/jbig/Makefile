@@ -5,13 +5,13 @@ endif
 SUBDIR = converter/other/jbig
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 LIBJBIG_OBJECTS = jbig.o jbig_tab.o
 
-INCLUDES =
+EXTERN_INCLUDES =
 ifneq ($(JBIGHDR_DIR),NONE)
-  INCLUDES += -I$(JBIGHDR_DIR)
+  EXTERN_INCLUDES += -I$(JBIGHDR_DIR)
 endif
 
 ifneq ($(JBIGHDR_DIR),NONE)
@@ -33,7 +33,7 @@ MERGE_OBJECTS = $(BINARIES:%=%.o2) $(LIBJBIG_OBJECTS)
 
 all: $(BINARIES)
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 $(BINARIES): %: %.o $(JBIGLIB_DEP) $(NETPBMLIB) $(LIBOPT)
 	$(LD) -o $@ $< \

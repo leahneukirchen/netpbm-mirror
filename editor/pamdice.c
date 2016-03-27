@@ -11,6 +11,7 @@
 
 #include <string.h>
 
+#include "pm_c_util.h"
 #include "pam.h"
 #include "shhopt.h"
 #include "nstring.h"
@@ -23,8 +24,8 @@ struct cmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char * inputFilespec;  /* '-' if stdin */
-    char * outstem; 
+    const char * inputFileName;  /* '-' if stdin */
+    const char * outstem; 
         /* null-terminated string, max MAXFILENAMELEN-10 characters */
     unsigned int sliceVertically;    /* boolean */
     unsigned int sliceHorizontally;  /* boolean */
@@ -39,8 +40,8 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine ( int argc, char ** argv,
-                   struct cmdlineInfo * const cmdlineP ) {
+parseCommandLine(int argc, char ** argv,
+                 struct cmdlineInfo * const cmdlineP ) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
    and argv.  Return the information in the options as *cmdlineP.  
@@ -63,17 +64,17 @@ parseCommandLine ( int argc, char ** argv,
 
     option_def_index = 0;   /* incremented by OPTENT3 */
     OPTENT3(0, "width",       OPT_UINT,    &cmdlineP->width,       
-            &cmdlineP->sliceVertically,       0 );
+            &cmdlineP->sliceVertically,       0);
     OPTENT3(0, "height",      OPT_UINT,    &cmdlineP->height,
-            &cmdlineP->sliceHorizontally,     0 );
+            &cmdlineP->sliceHorizontally,     0);
     OPTENT3(0, "hoverlap",    OPT_UINT,    &cmdlineP->hoverlap,
-            &hoverlapSpec,                    0 );
+            &hoverlapSpec,                    0);
     OPTENT3(0, "voverlap",    OPT_UINT,    &cmdlineP->voverlap,
-            &voverlapSpec,                    0 );
+            &voverlapSpec,                    0);
     OPTENT3(0, "outstem",     OPT_STRING,  &cmdlineP->outstem,
-            &outstemSpec,                     0 );
+            &outstemSpec,                     0);
     OPTENT3(0, "verbose",     OPT_FLAG,    NULL,
-            &cmdlineP->verbose,               0 );
+            &cmdlineP->verbose,               0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -104,13 +105,14 @@ parseCommandLine ( int argc, char ** argv,
     if (!outstemSpec)
         pm_error("You must specify the -outstem option to indicate where to "
                  "put the output images.");
+
     if (argc-1 < 1)
-        cmdlineP->inputFilespec = "-";
+        cmdlineP->inputFileName = "-";
     else if (argc-1 == 1)
-        cmdlineP->inputFilespec = argv[1];
+        cmdlineP->inputFileName = argv[1];
     else 
         pm_error("Progam takes at most 1 parameter: the file specification.  "
-                 "You specified %d", argc-1);
+                 "You specified %u", argc-1);
 }
 
 
@@ -451,7 +453,7 @@ main(int argc, char ** argv) {
     
     parseCommandLine(argc, argv, &cmdline);
         
-    ifP = pm_openr(cmdline.inputFilespec);
+    ifP = pm_openr(cmdline.inputFileName);
 
     pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
 

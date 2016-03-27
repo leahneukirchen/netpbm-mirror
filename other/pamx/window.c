@@ -6,6 +6,8 @@
    See COPYRIGHT file for copyright information.
 */
 
+#define _BSD_SOURCE    /* Make sure strcaseeq() is in nstring.h */
+
 #include <assert.h>
 #include <ctype.h>
 #include <signal.h>
@@ -555,7 +557,7 @@ visualClassFromName(const char * const name) {
     bool found;
     
     for (a = 0, found = FALSE; VisualClassName[a].name; ++a) {
-        if (STRCASEEQ(VisualClassName[a].name, name)) {
+        if (strcaseeq(VisualClassName[a].name, name)) {
             /* Check for uniqueness.  We special-case StaticGray
                because we have two spellings but they are unique if
                we find either.

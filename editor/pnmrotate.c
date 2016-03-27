@@ -15,9 +15,11 @@
 #include <math.h>
 #include <assert.h>
 
-#include "pnm.h"
-#include "shhopt.h"
+#include "pm_c_util.h"
 #include "mallocvar.h"
+#include "shhopt.h"
+#include "ppm.h"
+#include "pnm.h"
 
 #define SCALE 4096
 #define HALFSCALE 2048
@@ -159,27 +161,6 @@ computeNewFormat(bool     const antialias,
 
 
 
-static bool
-isWhite(xel    const color,
-        xelval const maxval) {
-
-    return (PPM_GETR(color) == maxval &&
-            PPM_GETG(color) == maxval &&
-            PPM_GETB(color) == maxval);
-}
-
-
-
-static bool
-isBlack(xel const color) {
-
-    return (PPM_GETR(color) == 0 &&
-            PPM_GETG(color) == 0 &&
-            PPM_GETB(color) == 0);
-}
-
-
-
 static xel
 backgroundColor(const char * const backgroundColorName,
                 xel *        const topRow,
@@ -190,24 +171,7 @@ backgroundColor(const char * const backgroundColorName,
     xel retval;
 
     if (backgroundColorName) {
-        retval = ppm_parsecolor(backgroundColorName, maxval);
-
-        switch(PNM_FORMAT_TYPE(format)) {
-        case PGM_TYPE:
-            if (!PPM_ISGRAY(retval))
-                pm_error("Image is PGM (grayscale), "
-                         "but you specified a non-gray "
-                         "background color '%s'", backgroundColorName);
-
-            break;
-        case PBM_TYPE:
-            if (!isWhite(retval, maxval) && !isBlack(retval))
-                pm_error("Image is PBM (black and white), "
-                         "but you specified '%s', which is neither black "
-                         "nor white, as background color", 
-                         backgroundColorName);
-            break;
-        }
+        retval = pnm_parsecolorxel(backgroundColorName, maxval, format);
     } else 
         retval = pnm_backgroundxelrow(topRow, cols, maxval, format);
 
@@ -725,7 +689,7 @@ shearXToOutputFile(FILE *                 const ofP,
     unsigned int row;
     xel * xelrow;
     
-    pnm_writepnminit(stdout, newcols, rows, maxval, format, 0);
+    pnm_writepnminit(ofP, newcols, rows, maxval, format, 0);
 
     xelrow = pnm_allocrow(newcols);
 
@@ -742,7 +706,7 @@ shearXToOutputFile(FILE *                 const ofP,
         shearFinal(xels[row], xelrow, cols, newcols, format, 
                    bgColor, antialias, shiftAmount, x2shearjunk);
 
-        pnm_writepnmrow(stdout, xelrow, newcols, maxval, format, 0);
+        pnm_writepnmrow(ofP, xelrow, newcols, maxval, format, 0);
     }
     pnm_freerow(xelrow);
 }

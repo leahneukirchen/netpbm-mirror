@@ -5,7 +5,7 @@ endif
 SUBDIR = converter
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 SUBDIRS = pbm pgm ppm other
 
@@ -14,4 +14,4 @@ all: $(SUBDIRS:%=%/all)
 SCRIPTS = 
 BINARIES =
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk

@@ -15,6 +15,7 @@
 #include <assert.h>
 #include <math.h>
 
+#include "pm_c_util.h"
 #include "pam.h"
 #include "mallocvar.h"
 #include "shhopt.h"

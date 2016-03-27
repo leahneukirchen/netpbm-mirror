@@ -53,7 +53,6 @@
 
 #include <assert.h>
 #include <math.h>
-#include <unistd.h>
 
 #include "pm_c_util.h"
 #include "pgm.h"
@@ -107,11 +106,10 @@ static int modulo(int t, int n)
 
 static void initseed()
 {
-    int i;
+    unsigned int i;
 
-    i = time(NULL) ^ getpid();
-    srand(i);
-    for (i = 0; i < 7; i++) 
+    srand(pm_randseed());
+    for (i = 0; i < 7; ++i) 
         V rand();
 }
 

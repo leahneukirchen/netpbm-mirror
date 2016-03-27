@@ -10,10 +10,13 @@
 ** documentation.  This software is provided "as is" without express or
 ** implied warranty.  */
 
+#include <stdlib.h>
 #include <math.h>
 #include <sys/time.h>
-#include "ppm.h"
+
+#include "pm_c_util.h"
 #include "shhopt.h"
+#include "ppm.h"
 
 static pixel** PIX;
 static pixval BG_RED, BG_GREEN, BG_BLUE;

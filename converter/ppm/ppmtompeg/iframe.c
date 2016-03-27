@@ -11,10 +11,9 @@
  *  GetIQScale                               *
  *  ResetIFrameStats                             *
  *  ShowIFrameSummary                            *
- *  EstimateSecondsPerIFrame                         *
  *  EncodeYDC                                *
  *  EncodeCDC                                *
- *      time_elapsed                                                         *
+ *  time_elapsed                                                         *
  *                                       *
  *===========================================================================*/
 
@@ -43,11 +42,11 @@
  * HEADER FILES *
  *==============*/
 
+#include <time.h>  /* Defines CLOCKS_PER_SEC, if this system has clock() */
 
-#ifdef CLOCKS_PER_SEC
-#include <times.h>
-#else
-#include <sys/times.h>
+#ifndef CLOCKS_PER_SEC
+  /* System doesn't have clock(); we assume it has times() instead */
+  #include <sys/times.h>
 #endif
 
 #include <sys/types.h>
@@ -67,12 +66,14 @@
 #include "specifics.h"
 #include "opts.h"
 
+#include "iframe.h"
+
 /*==================*
  * STATIC VARIABLES *
  *==================*/
 
-static  int lastNumBits = 0;
-static  int lastIFrame = 0;
+static int lastNumBits = 0;
+static int lastIFrame = 0;
 static int numBlocks = 0;
 static int numBits;
 static int numFrames = 0;
@@ -128,24 +129,11 @@ int fCodeI, fCodeP, fCodeB;
 boolean printSNR = FALSE;
 boolean printMSE = FALSE;
 boolean decodeRefFrames = FALSE;
-Block **dct=NULL, **dctr=NULL, **dctb=NULL;
-dct_data_type   **dct_data; /* used in p/bframe.c */
 int  TIME_RATE;
 
 
-/*=====================*
- * EXPORTED PROCEDURES *
- *=====================*/
-extern void PrintItoIBitRate _ANSI_ARGS_((int const numBits, int const frameNum));
 
-/*===============================*
- * INTERNAL PROCEDURE prototypes *
- *===============================*/
-void AllocDctBlocks(void );
-int SetFCodeHelper (int const sr);
-void CalcDistortion (MpegFrame * const current, int const y, int const x);
-
-int
+static int
 SetFCodeHelper(int const SR) {
 
     int     range,fCode;
@@ -292,6 +280,68 @@ SetIQScale(int const qI) {
 int
 GetIQScale(void) {
     return qscaleI;
+}
+
+
+
+static void
+CalcDistortion(MpegFrame * const current,
+               int         const y,
+               int         const x) {
+
+    int qscale, distort=0;
+    Block decblk;
+    FlatBlock fblk;
+    int datarate = 0;
+  
+    for (qscale = 1; qscale < 32; qscale ++) {
+        distort = 0;
+        datarate = 0;
+        Mpost_QuantZigBlock(dct[y][x], fblk, qscale, TRUE);
+        Mpost_UnQuantZigBlock(fblk, decblk, qscale, TRUE);
+        if (collect_distortion_detailed) datarate += CalcRLEHuffLength(fblk);
+        mpeg_jrevdct((int16 *)decblk);
+        distort += mse(current->y_blocks[y][x], decblk);
+
+        Mpost_QuantZigBlock(dct[y][x+1], fblk, qscale, TRUE);
+        Mpost_UnQuantZigBlock(fblk, decblk, qscale, TRUE);
+        if (collect_distortion_detailed) datarate += CalcRLEHuffLength(fblk);
+        mpeg_jrevdct((int16 *)decblk);
+        distort += mse(current->y_blocks[y][x+1], decblk);
+
+        Mpost_QuantZigBlock(dct[y+1][x], fblk, qscale, TRUE);
+        Mpost_UnQuantZigBlock(fblk, decblk, qscale, TRUE);
+        if (collect_distortion_detailed) datarate += CalcRLEHuffLength(fblk);
+        mpeg_jrevdct((int16 *)decblk);
+        distort += mse(current->y_blocks[y+1][x], decblk);
+
+        Mpost_QuantZigBlock(dct[y+1][x+1], fblk, qscale, TRUE);
+        Mpost_UnQuantZigBlock(fblk, decblk, qscale, TRUE);
+        if (collect_distortion_detailed) datarate += CalcRLEHuffLength(fblk);
+        mpeg_jrevdct((int16 *)decblk);
+        distort += mse(current->y_blocks[y+1][x+1], decblk);
+
+        Mpost_QuantZigBlock(dctb[y >> 1][x >> 1], fblk, qscale, TRUE);
+        Mpost_UnQuantZigBlock(fblk, decblk, qscale, TRUE);
+        if (collect_distortion_detailed) datarate += CalcRLEHuffLength(fblk);
+        mpeg_jrevdct((int16 *)decblk);
+        distort += mse(current->cb_blocks[y>>1][x>>1], decblk);
+
+        Mpost_QuantZigBlock(dctr[y >> 1][x >> 1], fblk, qscale, TRUE);
+        Mpost_UnQuantZigBlock(fblk, decblk, qscale, TRUE);
+        if (collect_distortion_detailed) datarate += CalcRLEHuffLength(fblk);
+        mpeg_jrevdct((int16 *)decblk);
+        distort += mse(current->cr_blocks[y >> 1][x >> 1], decblk);
+
+        if (!collect_distortion_detailed) {
+            fprintf(distortion_fp, "\t%d\n", distort);
+        } else if (collect_distortion_detailed == 1) {
+            fprintf(distortion_fp, "\t%d\t%d\n", distort, datarate);
+        } else {
+            fprintf(fp_table_rate[qscale-1], "%d\n", datarate);
+            fprintf(fp_table_dist[qscale-1], "%d\n", distort);
+        }
+    }
 }
 
 
@@ -618,24 +668,6 @@ ShowIFrameSummary(unsigned int const inputFrameBits,
 
 /*===========================================================================*
  *
- * EstimateSecondsPerIFrame
- *
- *  estimates the number of seconds required per I-frame
- *
- * RETURNS: seconds (floating point value)
- *
- * SIDE EFFECTS:    none
- *
- *===========================================================================*/
-float
-EstimateSecondsPerIFrame()
-{
-    return (float)totalTime/((float)TIME_RATE*(float)numFrames);
-}
-
-
-/*===========================================================================*
- *
  * EncodeYDC
  *
  *  Encode the DC portion of a DCT of a luminance block
@@ -926,53 +958,6 @@ PrintItoIBitRate(int const numBits,
 
 
 
-/*===========================================================================*
- *
- * AllocDctBlocks
- *
- *  allocate memory for dct blocks
- *
- * RETURNS: nothing
- *
- * SIDE EFFECTS:    creates dct, dctr, dctb
- *
- *===========================================================================*/
-void
-AllocDctBlocks(void) {
-    int dctx, dcty;
-    int i;
-
-    dctx = Fsize_x / DCTSIZE;
-    dcty = Fsize_y / DCTSIZE;
-
-    dct = (Block **) malloc(sizeof(Block *) * dcty);
-    ERRCHK(dct, "malloc");
-    for (i = 0; i < dcty; i++) {
-        dct[i] = (Block *) malloc(sizeof(Block) * dctx);
-        ERRCHK(dct[i], "malloc");
-    }
-
-    dct_data = (dct_data_type **) malloc(sizeof(dct_data_type *) * dcty);
-    ERRCHK(dct_data, "malloc");
-    for (i = 0; i < dcty; i++) {
-        dct_data[i] = (dct_data_type *) malloc(sizeof(dct_data_type) * dctx);
-        ERRCHK(dct[i], "malloc");
-    }
-
-    dctr = (Block **) malloc(sizeof(Block *) * (dcty >> 1));
-    dctb = (Block **) malloc(sizeof(Block *) * (dcty >> 1));
-    ERRCHK(dctr, "malloc");
-    ERRCHK(dctb, "malloc");
-    for (i = 0; i < (dcty >> 1); i++) {
-        dctr[i] = (Block *) malloc(sizeof(Block) * (dctx >> 1));
-        dctb[i] = (Block *) malloc(sizeof(Block) * (dctx >> 1));
-        ERRCHK(dctr[i], "malloc");
-        ERRCHK(dctb[i], "malloc");
-    }
-}
-
-
-
 /*======================================================================*
  *
  * time_elapsed
@@ -994,69 +979,3 @@ int32 time_elapsed(void) {
     return timeBuffer.tms_utime + timeBuffer.tms_stime;
 #endif
 }
-
-
-
-void
-CalcDistortion(MpegFrame * const current,
-               int         const y,
-               int         const x) {
-
-    int qscale, distort=0;
-    Block decblk;
-    FlatBlock fblk;
-    int datarate = 0;
-  
-    for (qscale = 1; qscale < 32; qscale ++) {
-        distort = 0;
-        datarate = 0;
-        Mpost_QuantZigBlock(dct[y][x], fblk, qscale, TRUE);
-        Mpost_UnQuantZigBlock(fblk, decblk, qscale, TRUE);
-        if (collect_distortion_detailed) datarate += CalcRLEHuffLength(fblk);
-        mpeg_jrevdct((int16 *)decblk);
-        distort += mse(current->y_blocks[y][x], decblk);
-
-        Mpost_QuantZigBlock(dct[y][x+1], fblk, qscale, TRUE);
-        Mpost_UnQuantZigBlock(fblk, decblk, qscale, TRUE);
-        if (collect_distortion_detailed) datarate += CalcRLEHuffLength(fblk);
-        mpeg_jrevdct((int16 *)decblk);
-        distort += mse(current->y_blocks[y][x+1], decblk);
-
-        Mpost_QuantZigBlock(dct[y+1][x], fblk, qscale, TRUE);
-        Mpost_UnQuantZigBlock(fblk, decblk, qscale, TRUE);
-        if (collect_distortion_detailed) datarate += CalcRLEHuffLength(fblk);
-        mpeg_jrevdct((int16 *)decblk);
-        distort += mse(current->y_blocks[y+1][x], decblk);
-
-        Mpost_QuantZigBlock(dct[y+1][x+1], fblk, qscale, TRUE);
-        Mpost_UnQuantZigBlock(fblk, decblk, qscale, TRUE);
-        if (collect_distortion_detailed) datarate += CalcRLEHuffLength(fblk);
-        mpeg_jrevdct((int16 *)decblk);
-        distort += mse(current->y_blocks[y+1][x+1], decblk);
-
-        Mpost_QuantZigBlock(dctb[y >> 1][x >> 1], fblk, qscale, TRUE);
-        Mpost_UnQuantZigBlock(fblk, decblk, qscale, TRUE);
-        if (collect_distortion_detailed) datarate += CalcRLEHuffLength(fblk);
-        mpeg_jrevdct((int16 *)decblk);
-        distort += mse(current->cb_blocks[y>>1][x>>1], decblk);
-
-        Mpost_QuantZigBlock(dctr[y >> 1][x >> 1], fblk, qscale, TRUE);
-        Mpost_UnQuantZigBlock(fblk, decblk, qscale, TRUE);
-        if (collect_distortion_detailed) datarate += CalcRLEHuffLength(fblk);
-        mpeg_jrevdct((int16 *)decblk);
-        distort += mse(current->cr_blocks[y >> 1][x >> 1], decblk);
-
-        if (!collect_distortion_detailed) {
-            fprintf(distortion_fp, "\t%d\n", distort);
-        } else if (collect_distortion_detailed == 1) {
-            fprintf(distortion_fp, "\t%d\t%d\n", distort, datarate);
-        } else {
-            fprintf(fp_table_rate[qscale-1], "%d\n", datarate);
-            fprintf(fp_table_dist[qscale-1], "%d\n", distort);
-        }
-    }
-}
-
-
-
-

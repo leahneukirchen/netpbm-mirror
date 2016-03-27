@@ -47,12 +47,6 @@
 #include <string.h>
 #include "prototypes.h"
 
-/*====================*
- * System Information *
- *====================*/
-
-#define CPP_LOC "/lib/cpp"
-
 /*==================*
  * GLOBAL VARIABLES *
  *==================*/
@@ -153,26 +147,27 @@ static char version = -1;
  *
  *================================================================
  */
-void Specifics_Init()
-{
-  char command[1100];
-  FILE *specificsFP;
-  
-  sprintf(command, "/bin/rm -f %s.cpp", specificsFile);
-  system(command);
-  sprintf(command, "%s -P %s %s %s.cpp",
-	  CPP_LOC, specificsDefines, specificsFile, specificsFile);
-  system(command);
-  strcat(specificsFile, ".cpp");
-  if ((specificsFP = fopen(specificsFile, "r")) == NULL) {
-    fprintf(stderr, "Error with specifics file, cannot open %s\n", specificsFile);
-    exit(1);
-  }
-  printf("Specifics file: %s\n", specificsFile);
-  Parse_Specifics_File(specificsFP);
-  sprintf(command, "/bin/rm -f %s.cpp", specificsFile);
-  system(command);
+void
+Specifics_Init() {
 
+    char command[1100];
+    FILE *specificsFP;
+  
+    sprintf(command, "rm -f %s.cpp", specificsFile);
+    system(command);
+    sprintf(command, "cpp -P %s %s %s.cpp",
+            specificsDefines, specificsFile, specificsFile);
+    system(command);
+    strcat(specificsFile, ".cpp");
+    if ((specificsFP = fopen(specificsFile, "r")) == NULL) {
+        fprintf(stderr, "Error with specifics file, cannot open %s\n",
+                specificsFile);
+        exit(1);
+    }
+    printf("Specifics file: %s\n", specificsFile);
+    Parse_Specifics_File(specificsFP);
+    sprintf(command, "rm -f %s.cpp", specificsFile);
+    system(command);
 }
 
 

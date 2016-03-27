@@ -11,6 +11,8 @@
 */
 
 #include <math.h>
+
+#include "pm_c_util.h"
 #include "pgm.h"
 #include "shhopt.h"
 
@@ -96,14 +98,8 @@ parseCommandLine(int argc, char ** argv,
         pm_error("Only two arguments allowed: width and height.  "
                  "You specified %d", argc-1);
     else {
-        cmdlineP->cols = atoi(argv[1]);
-        cmdlineP->rows = atoi(argv[2]);
-        if (cmdlineP->cols <= 0)
-            pm_error("width argument must be a positive number.  You "
-                     "specified '%s'", argv[1]);
-        if (cmdlineP->rows <= 0)
-            pm_error("height argument must be a positive number.  You "
-                     "specified '%s'", argv[2]);
+        cmdlineP->cols = pm_parse_width(argv[1]);
+        cmdlineP->rows = pm_parse_height(argv[2]);
     }
 }
 

@@ -16,6 +16,8 @@
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 
 #include <string.h>
+
+#include "pm_c_util.h"
 #include "ppm.h"
 #include "tga.h"
 #include "shhopt.h"
@@ -81,7 +83,7 @@ parseCommandLine(int argc, char ** argv,
                  "is the input file specification");
 
     if (alpha_spec &&
-        STREQ(cmdlineP->alpha_filename, "-"))
+        streq(cmdlineP->alpha_filename, "-"))
         cmdlineP->alpha_stdout = 1;
     else 
         cmdlineP->alpha_stdout = 0;

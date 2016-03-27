@@ -5,7 +5,7 @@ endif
 SUBDIR = converter/pbm
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 PORTBINARIES =	atktopbm brushtopbm cmuwmtopbm ddbugtopbm g3topbm escp2topbm \
 		icontopbm macptopbm mdatopbm mgrtopbm mrftopbm \
@@ -17,7 +17,7 @@ PORTBINARIES =	atktopbm brushtopbm cmuwmtopbm ddbugtopbm g3topbm escp2topbm \
 		pbmtomacp pbmtomatrixorbital pbmtomda pbmtomgr pbmtomrf \
 		pbmtonokia \
 		pbmtopi3 pbmtoplot pbmtopsg3 pbmtoptx pbmtowbmp \
-		pbmtox10bm pbmtoxbm pbmtoybm pbmtozinc \
+		pbmtoxbm pbmtoybm pbmtozinc \
 		pi3topbm pktopbm \
 		wbmptopbm xbmtopbm ybmtopbm	
 
@@ -29,7 +29,7 @@ endif
 #in libm?
 MATHBINARIES =	pbmtopk
 BINARIES =	$(PORTBINARIES) $(MATHBINARIES)
-SCRIPTS =
+SCRIPTS =       pbmtox10bm
 
 OBJECTS = $(BINARIES:%=%.o)
 
@@ -41,7 +41,7 @@ SUBDIRS=pbmtoppa
 .PHONY: all
 all: $(BINARIES) $(SUBDIRS:%=%/all)
 
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk
 
 ifneq ($(LEX)x,x)
 thinkjettopbm.c1:%.c1:%.l

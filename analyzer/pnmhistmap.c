@@ -19,6 +19,7 @@
 
 #include <string.h>
 
+#include "pm_c_util.h"
 #include "pnm.h"
 #include "shhopt.h"
 #include "mallocvar.h"
@@ -152,16 +153,16 @@ clipHistogram(unsigned int * const hist,
               unsigned int   const hist_width,
               unsigned int   const hmax) {
 
-            unsigned int i;
+    unsigned int i;
 
-            for (i = 0; i < hist_width; ++i)
-                hist[i] = MIN(hmax, hist[i]);
+    for (i = 0; i < hist_width; ++i)
+        hist[i] = MIN(hmax, hist[i]);
 }
 
 
 
 static void
-pgm_hist(FILE *       const fp,
+pgm_hist(FILE *       const ifP,
          int          const cols,
          int          const rows,
          xelval       const maxval,
@@ -186,41 +187,44 @@ pgm_hist(FILE *       const fp,
     unsigned int * ghist;
     double vscale;
     unsigned int hmax;
-
-    if ((ghist = calloc(hist_width, sizeof(int))) == NULL)
-        pm_error ("Not enough memory for histogram array (%d bytes)",
+    
+    MALLOCARRAY(ghist, hist_width);
+    if (ghist == NULL)
+        pm_error("Not enough memory for histogram array (%d bytes)",
                   hist_width * sizeof(int));
-    if ((bits = pbm_allocarray (hist_width, hist_height)) == NULL)
-        pm_error ("no space for output array (%d bits)",
-                  hist_width * hist_height);
-    memset (ghist, 0, sizeof (ghist));
+    bits = pbm_allocarray(hist_width, hist_height);
+    if (bits == NULL)
+        pm_error("no space for output array (%d bits)",
+                 hist_width * hist_height);
+    memset(ghist, 0, hist_width * sizeof(ghist[0]));
 
     /* read the pixel values into the histogram arrays */
-    grayrow = pgm_allocrow (cols);
-    /*XX error-check! */
-    if (verbose) pm_message ("making histogram...");
-    for (i = rows; i > 0; --i) {
-        pgm_readpgmrow (fp, grayrow, cols, maxval, format);
-        for (j = cols-1; j >= 0; --j) {
-            int value;
+    grayrow = pgm_allocrow(cols);
 
-            if ((value = grayrow[j]) >= startval && value <= endval)
-                ghist[SCALE_H(value-startval)]++;
+    if (verbose)
+        pm_message("making histogram...");
+
+    for (i = rows; i > 0; --i) {
+        pgm_readpgmrow (ifP, grayrow, cols, maxval, format);
+        for (j = cols-1; j >= 0; --j) {
+            int const value = grayrow[j];
+
+            if (value >= startval && value <= endval)
+                ++ghist[SCALE_H(value-startval)];
         }
     }
-    pgm_freerow (grayrow);
-    fclose (fp);
+    pgm_freerow(grayrow);
 
     /* find the highest-valued slot and set the vertical scale value */
     if (verbose)
-        pm_message ("finding max. slot height...");
+        pm_message("finding max. slot height...");
     if (clipSpec)
         hmax = clipCount;
     else 
         hmax = maxSlotCount(ghist, hist_width, no_white, no_black);
 
     if (verbose)
-        pm_message ("Done: height = %u", hmax);
+        pm_message("Done: height = %u", hmax);
 
     clipHistogram(ghist, hist_width, hmax);
 
@@ -236,7 +240,7 @@ pgm_hist(FILE *       const fp,
             bits[j][i] = dots ? PBM_BLACK : PBM_WHITE;
     }
 
-    pbm_writepbm (stdout, bits, hist_width, hist_height, 0);
+    pbm_writepbm(stdout, bits, hist_width, hist_height, 0);
 }
 
 
@@ -309,7 +313,7 @@ clipHistogramAll(unsigned int * const hist[3],
 
 
 static void
-ppm_hist(FILE *       const fp,
+ppm_hist(FILE *       const ifP,
          int          const cols,
          int          const rows,
          xelval       const maxval,
@@ -329,8 +333,8 @@ ppm_hist(FILE *       const fp,
 
     bool const hscale_unity = hscale - 1 < epsilon;
 
-    pixel *pixrow;
-    pixel **pixels;
+    pixel * pixrow;
+    pixel ** pixels;
     int i, j;
     unsigned int * hist[3];  /* Subscript is enum wantedColor */
     double vscale;
@@ -339,17 +343,19 @@ ppm_hist(FILE *       const fp,
     createHist(colorWanted, hist_width, &hist);
 
     if ((pixels = ppm_allocarray (hist_width, hist_height)) == NULL)
-        pm_error ("no space for output array (%d pixels)",
-                  hist_width * hist_height);
+        pm_error("no space for output array (%d pixels)",
+                 hist_width * hist_height);
     for (i = 0; i < hist_height; ++i)
-        memset (pixels[i], 0, hist_width * sizeof (pixel));
+        memset(pixels[i], 0, hist_width * sizeof(pixels[i][0]));
 
     /* read the pixel values into the histogram arrays */
-    pixrow = ppm_allocrow (cols);
-    /*XX error-check! */
-    if (verbose) pm_message ("making histogram...");
+    pixrow = ppm_allocrow(cols);
+
+    if (verbose)
+        pm_message("making histogram...");
+
     for (i = rows; i > 0; --i) {
-        ppm_readppmrow (fp, pixrow, cols, maxval, format);
+        ppm_readppmrow(ifP, pixrow, cols, maxval, format);
         for (j = cols-1; j >= 0; --j) {
             int value;
 
@@ -367,12 +373,11 @@ ppm_hist(FILE *       const fp,
                 hist[WANT_BLU][SCALE_H(value-startval)]++;
         }
     }
-    ppm_freerow (pixrow);
-    fclose (fp);
+    ppm_freerow(pixrow);
 
     /* find the highest-valued slot and set the vertical scale value */
     if (verbose)
-        pm_message ("finding max. slot height...");
+        pm_message("finding max. slot height...");
     if (clipSpec)
         hmax = clipCount;
     else 
@@ -420,16 +425,16 @@ ppm_hist(FILE *       const fp,
             }
         }
     }
-    ppm_writeppm (stdout, pixels, hist_width, hist_height, maxval, 0);
+    ppm_writeppm(stdout, pixels, hist_width, hist_height, maxval, 0);
 }
 
 
 
 int
-main (int argc, char ** argv) {
+main(int argc, char ** argv) {
 
     struct cmdlineInfo cmdline;
-    FILE* ifP;
+    FILE * ifP;
     int cols, rows;
     xelval maxval;
     int format;
@@ -479,5 +484,7 @@ main (int argc, char ** argv) {
         pm_error("Cannot do a histogram of a a PBM file");
         break;
     }
+    pm_close(ifP);
+
     return 0;
 }

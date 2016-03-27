@@ -11,10 +11,12 @@
 */
 
 #include <assert.h>
+
+#include "pm_c_util.h"
+#include "shhopt.h"
 #include "pgm.h"
 #include "dithers.h"
 #include "mallocvar.h"
-#include "shhopt.h"
 
 enum halftone {QT_FS, QT_THRESH, QT_DITHER8, QT_CLUSTER, QT_HILBERT};
 
@@ -346,6 +348,10 @@ struct converter {
 
 
 
+/*=============================================================================
+                 Converter: fs
+=============================================================================*/
+
 unsigned int const fs_scale      = 1024;
 unsigned int const half_fs_scale = 512;
 
@@ -445,7 +451,7 @@ createFsConverter(unsigned int const cols,
     /* Initialize Floyd-Steinberg error vectors. */
     MALLOCARRAY_NOFAIL(stateP->thiserr, cols + 2);
     MALLOCARRAY_NOFAIL(stateP->nexterr, cols + 2);
-    srand((int)(time(NULL) ^ getpid()));
+    srand(pm_randseed());
 
     {
         /* (random errors in [-fs_scale/8 .. fs_scale/8]) */
@@ -467,6 +473,10 @@ createFsConverter(unsigned int const cols,
 }
 
 
+
+/*=============================================================================
+                 Converter: thresh
+=============================================================================*/
 
 struct threshState {
     gray threshval;
@@ -521,19 +531,41 @@ createThreshConverter(unsigned int const cols,
 
 
 
+/*=============================================================================
+                 Converter: dither8
+=============================================================================*/
+
+struct dither8State {
+    int dither8[16][16];
+};
+
+
+
 static void
 dither8ConvertRow(struct converter * const converterP,
                   unsigned int       const row,
                   gray                     grayrow[],
                   bit                      bitrow[]) {
 
+    struct dither8State * const stateP = converterP->stateP;
+
     unsigned int col;
 
     for (col = 0; col < converterP->cols; ++col)
-        if (grayrow[col] > dither8[row % 16][col % 16])
+        if (grayrow[col] > stateP->dither8[row % 16][col % 16])
             bitrow[col] = PBM_WHITE;
         else
             bitrow[col] = PBM_BLACK;
+}
+
+
+
+static void
+dither8Destroy(struct converter * const converterP) {
+
+    struct dither8State * const stateP = converterP->stateP;
+
+    free(stateP);
 }
 
 
@@ -543,23 +575,31 @@ createDither8Converter(unsigned int const cols,
                        gray         const maxval) {
 
     struct converter converter;
+    struct dither8State * stateP;
 
     unsigned int row;
 
+    MALLOCVAR_NOFAIL(stateP);
+
     converter.cols = cols;
     converter.convertRow = &dither8ConvertRow;
-    converter.destroy = NULL;
+    converter.destroy = dither8Destroy;
+    converter.stateP = stateP;
 
     /* Scale dither matrix. */
     for (row = 0; row < 16; ++row) {
         unsigned int col;
         for (col = 0; col < 16; ++col)
-            dither8[row][col] = dither8[row][col] * maxval / 256;
+            stateP->dither8[row][col] = dither8[row][col] * maxval / 256;
     }
     return converter;
 }
 
 
+
+/*=============================================================================
+                 Converter: cluster
+=============================================================================*/
 
 struct clusterState {
     unsigned int radius;

@@ -4,7 +4,7 @@
 #ifndef LIBPAM_H_INCLUDED
 #define LIBPAM_H_INCLUDED
 
-#include "pam.h"
+#include "pgm.h"
 
 void
 pnm_readpaminitrestaspnm(FILE * const fileP, 

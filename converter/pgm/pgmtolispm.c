@@ -115,14 +115,8 @@ depth_to_word_size (depth)	/* Lispm architecture specific - if a bitmap is writt
 
 
 
-#if __STDC__
 static void
 putval( gray b )
-#else /*__STDC__*/
-static void
-putval( b )
-gray b;
-#endif /*__STDC__*/
     {
     if ( bitsperitem == 32 )
 	putitem( );

@@ -5,7 +5,7 @@ endif
 SUBDIR = urt
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
-include $(BUILDDIR)/Makefile.config
+include $(BUILDDIR)/config.mk
 
 LIBOBJECTS = Runput.o cmd_name.o \
 	rle_addhist.o rle_error.o rle_getcom.o rle_getrow.o rle_getskip.o \
@@ -24,10 +24,11 @@ librle.a: $(LIBOBJECTS)
 
 # Rule for objects.
 $(LIBOBJECTS): %.o: %.c importinc
-	$(CC) -c $(CFLAGS) -I importinc -o $@ $< $(CFLAGS_PERSONAL) $(CADD)
+	$(CC) -c -I importinc -o $@ \
+	  $< $(CPPFLAGS) $(CFLAGS) $(CFLAGS_PERSONAL) $(CADD)
 
 BINARIES =
 SCRIPTS =
 
 OMIT_URT_RULE = 1
-include $(SRCDIR)/Makefile.common
+include $(SRCDIR)/common.mk

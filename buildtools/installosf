@@ -4,7 +4,7 @@
 # its $(INSTALL) program and invokes OSF1 Install with the proper
 # parameters to effect what the make file wants.  If your system has
 # OSF1 Install on it, you can just set the INSTALL variable in
-# Makefile.config to "installosf" and 'make install' will work for
+# config.mk to "installosf" and 'make install' will work for
 # you.
 
 # Of course, you could also just install Ginstall and forget about this

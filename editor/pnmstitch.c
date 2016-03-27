@@ -216,7 +216,7 @@ struct cmdlineInfo {
     unsigned int verbose;
 };
 
-static char minus[] = "-";
+
 
 static void
 parseCommandLine ( int argc, char ** argv,
@@ -293,10 +293,10 @@ parseCommandLine ( int argc, char ** argv,
         /* NOTREACHED */
     } else {
         if (argc-1 == 0) {
-            cmdlineP->leftFilespec = minus;
-            cmdlineP->rightFilespec = minus;
+            cmdlineP->leftFilespec = "-";
+            cmdlineP->rightFilespec = "-";
         } else if (argc-1 == 1) {
-            cmdlineP->leftFilespec = minus;
+            cmdlineP->leftFilespec = "-";
             cmdlineP->rightFilespec = argv[1];
         } else {
             cmdlineP->leftFilespec = argv[1];
@@ -311,7 +311,7 @@ parseCommandLine ( int argc, char ** argv,
         } else if (outputSpec) {
             cmdlineP->outputFilespec = outputOpt;
         } else {
-            cmdlineP->outputFilespec = minus;
+            cmdlineP->outputFilespec = "-";
         }
     }
 } /* parseCommandLine() - end */
@@ -439,7 +439,7 @@ readinit(const char * const name)
     else {
         FILE * ifP;
 
-        if (strcmp(name,minus) == 0) {
+        if (streq(name, "-")) {
             ifP = stdin;
             image->name = strdup("<stdin>");
         } else {
@@ -468,7 +468,7 @@ readinit(const char * const name)
 static bool
 writeinit(Image * image)
 {
-    if (strcmp(image->name,minus) == 0) {
+    if (streq(image->name, "-")) {
         image->pam.file = stdout;
         strfree(image->name);
         image->name = strdup("<stdout>");

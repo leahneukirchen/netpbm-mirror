@@ -22,14 +22,17 @@
    additional work by multiple authors.
 -----------------------------------------------------------------------------*/
 
-#define _BSD_SOURCE    /* Make sure strcasecmp() is in string.h */
+#define _BSD_SOURCE    /* Make sure strcaseceq() is in nstring.h */
+#include <assert.h>
 #include <string.h>
 #include <math.h>
 
-#include "pam.h"
-#include "pm_gamma.h"
-#include "shhopt.h"
+#include "pm_c_util.h"
 #include "mallocvar.h"
+#include "nstring.h"
+#include "shhopt.h"
+#include "pm_gamma.h"
+#include "pam.h"
 
 enum horizPos {BEYONDLEFT, LEFT, CENTER, RIGHT, BEYONDRIGHT};
 enum vertPos {ABOVE, TOP, MIDDLE, BOTTOM, BELOW};
@@ -64,7 +67,7 @@ struct cmdlineInfo {
 
 static void
 parseCommandLine(int                        argc, 
-                 char **                    argv,
+                 const char **              argv,
                  struct cmdlineInfo * const cmdlineP ) {
 /*----------------------------------------------------------------------------
    Parse program command line described in Unix standard form by argc
@@ -111,7 +114,7 @@ parseCommandLine(int                        argc,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
 
@@ -123,15 +126,15 @@ parseCommandLine(int                        argc,
         cmdlineP->alphaFilespec = NULL;
 
     if (alignSpec) {
-        if (strcasecmp(align, "BEYONDLEFT") == 0)
+        if (strcaseeq(align, "BEYONDLEFT"))
             cmdlineP->align = BEYONDLEFT;
-        else if (strcasecmp(align, "LEFT") == 0)
+        else if (strcaseeq(align, "LEFT"))
             cmdlineP->align = LEFT;
-        else if (strcasecmp(align, "CENTER") == 0)
+        else if (strcaseeq(align, "CENTER"))
             cmdlineP->align = CENTER;
-        else if (strcasecmp(align, "RIGHT") == 0)
+        else if (strcaseeq(align, "RIGHT"))
             cmdlineP->align = RIGHT;
-        else if (strcasecmp(align, "BEYONDRIGHT") == 0)
+        else if (strcaseeq(align, "BEYONDRIGHT"))
             cmdlineP->align = BEYONDRIGHT;
         else
             pm_error("Invalid value for align option: '%s'.  Only LEFT, "
@@ -141,15 +144,15 @@ parseCommandLine(int                        argc,
         cmdlineP->align = LEFT;
 
     if (valignSpec) {
-        if (strcasecmp(valign, "ABOVE") == 0)
+        if (strcaseeq(valign, "ABOVE"))
             cmdlineP->valign = ABOVE;
-        else if (strcasecmp(valign, "TOP") == 0)
+        else if (strcaseeq(valign, "TOP"))
             cmdlineP->valign = TOP;
-        else if (strcasecmp(valign, "MIDDLE") == 0)
+        else if (strcaseeq(valign, "MIDDLE"))
             cmdlineP->valign = MIDDLE;
-        else if (strcasecmp(valign, "BOTTOM") == 0)
+        else if (strcaseeq(valign, "BOTTOM"))
             cmdlineP->valign = BOTTOM;
-        else if (strcasecmp(valign, "BELOW") == 0)
+        else if (strcaseeq(valign, "BELOW"))
             cmdlineP->valign = BELOW;
         else
             pm_error("Invalid value for valign option: '%s'.  Only TOP, "
@@ -268,12 +271,12 @@ determineOutputType(struct pam * const composedPamP,
 
 
 static void
-warnOutOfFrame( int const originLeft,
-                int const originTop, 
-                int const overCols,
-                int const overRows,
-                int const underCols,
-                int const underRows ) {
+warnOutOfFrame(int const originLeft,
+               int const originTop, 
+               int const overCols,
+               int const overRows,
+               int const underCols,
+               int const underRows) {
 
     if (originLeft >= underCols)
         pm_message("WARNING: the overlay is entirely off the right edge "
@@ -339,6 +342,10 @@ computeOverlayPosition(int                const underCols,
    The origin may be outside the underlying image (so e.g. *originLeftP may
    be negative or > image width).  That means not all of the overlay image
    actually gets used.  In fact, there may be no overlap at all.
+
+   But we insist that the span from the topmost row of the two images
+   to the bottommost row be less than INT_MAX so that Caller can
+   use an integer for a row number in the combination.
 -----------------------------------------------------------------------------*/
     int xalign, yalign;
 
@@ -470,6 +477,44 @@ adaptRowToOutputFormat(struct pam * const inpamP,
 
 
 static void
+composeRow(int              const originleft, 
+           struct pam *     const underlayPamP,
+           struct pam *     const overlayPamP,
+           bool             const invertAlpha,
+           float            const masterOpacity,
+           bool             const overlayHasOpacity,
+           unsigned int     const opacityPlane,
+           struct pam *     const composedPamP,
+           enum sampleScale const sampleScale,
+           const tuple *    const underlayTuplerow,
+           const tuple *    const overlayTuplerow,
+           const tuplen *   const alphaTuplerown,
+           tuple *          const composedTuplerow) {
+
+    unsigned int col;
+    for (col = 0; col < composedPamP->width; ++col) {
+        int const ovlcol = col - originleft;
+
+        if (ovlcol >= 0 && ovlcol < overlayPamP->width) {
+            tuplen const alphaTuplen = 
+                alphaTuplerown ? alphaTuplerown[ovlcol] : NULL;
+
+            overlayPixel(overlayTuplerow[ovlcol], overlayPamP,
+                         underlayTuplerow[col], underlayPamP,
+                         alphaTuplen, invertAlpha,
+                         overlayHasOpacity, opacityPlane,
+                         composedTuplerow[col], composedPamP,
+                         masterOpacity, sampleScale);
+        } else
+            /* Overlay image does not touch this column. */
+            pnm_assigntuple(composedPamP, composedTuplerow[col],
+                            underlayTuplerow[col]);
+    }
+}
+
+
+
+static void
 composite(int          const originleft, 
           int          const origintop, 
           struct pam * const underlayPamP,
@@ -495,6 +540,9 @@ composite(int          const originleft,
    go.  It is not necessarily inside the underlying image (in fact,
    may be negative).  Only the part of the overlay that actually
    intersects the underlying image, if any, gets into the output.
+
+   We assume that the span from the topmost row of the two images to
+   the bottommost row is less than INT_MAX.
 -----------------------------------------------------------------------------*/
     enum sampleScale const sampleScale = 
         assumeLinear ? INTENSITY_SAMPLE : GAMMA_SAMPLE;
@@ -515,8 +563,12 @@ composite(int          const originleft,
     overlayTuplerow  = pnm_allocpamrow(overlayPamP);
     if (alphaPamP)
         alphaTuplerown = pnm_allocpamrown(alphaPamP);
+    else
+        alphaTuplerown = NULL;
 
     pnm_writepaminit(composedPamP);
+
+    assert(INT_MAX - overlayPamP->height > origintop); /* arg constraint */
 
     for (underlayRow = MIN(0, origintop), overlayRow = MIN(0, -origintop);
          underlayRow < MAX(underlayPamP->height, 
@@ -541,25 +593,12 @@ composite(int          const originleft,
 
                 pnm_writepamrow(composedPamP, underlayTuplerow);
             } else {
-                unsigned int col;
-                for (col = 0; col < composedPamP->width; ++col) {
-                    int const ovlcol = col - originleft;
-
-                    if (ovlcol >= 0 && ovlcol < overlayPamP->width) {
-                        tuplen const alphaTuplen = 
-                            alphaPamP ? alphaTuplerown[ovlcol] : NULL;
-
-                        overlayPixel(overlayTuplerow[ovlcol], overlayPamP,
-                                     underlayTuplerow[col], underlayPamP,
-                                     alphaTuplen, invertAlpha,
-                                     overlayHasOpacity, opacityPlane,
-                                     composedTuplerow[col], composedPamP,
-                                     masterOpacity, sampleScale);
-                    } else
-                        /* Overlay image does not touch this column. */
-                        pnm_assigntuple(composedPamP, composedTuplerow[col],
-                                        underlayTuplerow[col]);
-                }
+                composeRow(originleft, underlayPamP, overlayPamP,
+                           invertAlpha, masterOpacity, overlayHasOpacity,
+                           opacityPlane, composedPamP, sampleScale,
+                           underlayTuplerow, overlayTuplerow, alphaTuplerown,
+                           composedTuplerow);
+                
                 pnm_writepamrow(composedPamP, composedTuplerow);
             }
         }
@@ -574,7 +613,7 @@ composite(int          const originleft,
 
 
 int
-main(int argc, char *argv[]) {
+main(int argc, const char *argv[]) {
 
     struct cmdlineInfo cmdline;
     FILE * underlayFileP;
@@ -586,7 +625,7 @@ main(int argc, char *argv[]) {
     struct pam composedPam;
     int originLeft, originTop;
 
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 

@@ -273,7 +273,7 @@ ReadATKRaster(FILE * const file,
 
     /* read the keyword */
     fscanf(file, " %5s", keyword);
-    if (!STREQ(keyword, "bits"))
+    if (!streq(keyword, "bits"))
       pm_error ("keyword is not 'bits'!");
 
     fscanf(file, " %d %d %d ", &objectid, &width, &height);

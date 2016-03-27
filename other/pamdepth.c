@@ -11,8 +11,9 @@
 =============================================================================*/
 #include <assert.h>
 
-#include "shhopt.h"
+#include "pm_c_util.h"
 #include "mallocvar.h"
+#include "shhopt.h"
 #include "pam.h"
 
 struct cmdlineInfo {
@@ -89,7 +90,7 @@ createSampleMap(sample   const oldMaxval,
     MALLOCARRAY_NOFAIL(sampleMap, oldMaxval+1);
 
     for (i = 0; i <= oldMaxval; ++i)
-        sampleMap[i] = (i * newMaxval + oldMaxval / 2) / oldMaxval;
+        sampleMap[i] = ROUNDDIV(i * newMaxval, oldMaxval);
 
     *sampleMapP = sampleMap;
 }

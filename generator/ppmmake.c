@@ -76,14 +76,8 @@ parseCommandLine(int argc, char ** argv,
                  "You specified %d", argc-1);
     else {
         cmdlineP->color = ppm_parsecolor(argv[1], cmdlineP->maxval);
-        cmdlineP->cols = atoi(argv[2]);
-        cmdlineP->rows = atoi(argv[3]);
-        if (cmdlineP->cols <= 0)
-            pm_error("width argument must be a positive number.  You "
-                     "specified '%s'", argv[2]);
-        if (cmdlineP->rows <= 0)
-            pm_error("height argument must be a positive number.  You "
-                     "specified '%s'", argv[3]);
+        cmdlineP->cols = pm_parse_width(argv[2]);
+        cmdlineP->rows = pm_parse_height(argv[3]);
     }
 }
 

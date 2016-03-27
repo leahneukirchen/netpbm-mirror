@@ -1,4 +1,4 @@
-/* pbmtocmuwm.c - read a portable bitmap and produce a CMU window manager bitmap
+/* pbmtocmuwm.c - read a PBM image and produce a CMU window manager bitmap
 **
 ** Copyright (C) 1989 by Jef Poskanzer.
 **
@@ -10,108 +10,95 @@
 ** implied warranty.
 */
 
+/* 2006.10 (afu)
+   Changed bitrow from plain to raw, read function from pbm_readpbmrow() to
+   pbm_readpbmrow_packed(), write function from putc() to fwrite().
+
+   Retired bitwise transformation functions.
+*/
+
 #include "pbm.h"
 #include "cmuwm.h"
 
-static void putinit ARGS(( int rows, int cols ));
-static void putbit ARGS(( bit b ));
-static void putrest ARGS(( void ));
-static void putitem ARGS(( void ));
+static void
+putinit(unsigned int const rows,
+        unsigned int const cols) {
+
+    const char * const initWriteError =
+        "CMU window manager header write error";
+
+    int rc;
+
+    rc = pm_writebiglong(stdout, CMUWM_MAGIC);
+    if (rc == -1)
+        pm_error(initWriteError);
+    rc = pm_writebiglong(stdout, cols);
+    if (rc == -1)
+        pm_error(initWriteError);
+    rc = pm_writebiglong(stdout, rows);
+    if (rc == -1)
+        pm_error(initWriteError);
+    rc = pm_writebigshort(stdout, (short) 1);
+    if (rc == -1)
+        pm_error(initWriteError);
+}
+
+
 
 int
-main( argc, argv )
-    int argc;
-    char* argv[];
-    {
-    FILE* ifp;
-    bit* bitrow;
-    register bit* bP;
-    int rows, cols, format, padright, row, col;
+main(int argc,
+     char * argv[]) {
 
-
-    pbm_init( &argc, argv );
-
-    if ( argc > 2 )
-	pm_usage( "[pbmfile]" );
-
-    if ( argc == 2 )
-	ifp = pm_openr( argv[1] );
-    else
-	ifp = stdin;
-
-    pbm_readpbminit( ifp, &cols, &rows, &format );
-    bitrow = pbm_allocrow( cols );
-    
-    /* Round cols up to the nearest multiple of 8. */
-    padright = ( ( cols + 7 ) / 8 ) * 8 - cols;
-
-    putinit( rows, cols );
-    for ( row = 0; row < rows; row++ )
-	{
-	pbm_readpbmrow( ifp, bitrow, cols, format );
-        for ( col = 0, bP = bitrow; col < cols; col++, bP++ )
-	    putbit( *bP );
-	for ( col = 0; col < padright; col++ )
-	    putbit( 0 );
-        }
-
-    pm_close( ifp );
-
-    putrest( );
-
-    exit( 0 );
-    }
-
-static unsigned char item;
-static int bitsperitem, bitshift;
-
-static void
-putinit( rows, cols )
+    FILE * ifP;
+    unsigned char * bitrow;
     int rows, cols;
-    {
-    if ( pm_writebiglong( stdout, CMUWM_MAGIC ) == -1 )
-	pm_error( "write error" );
-    if ( pm_writebiglong( stdout, cols ) == -1 )
-	pm_error( "write error" );
-    if ( pm_writebiglong( stdout, rows ) == -1 )
-	pm_error( "write error" );
-    if ( pm_writebigshort( stdout, (short) 1 ) == -1 )
-	pm_error( "write error" );
+    int format;
+    unsigned int row;
+    const char * inputFileName;
 
-    item = 0;
-    bitsperitem = 0;
-    bitshift = 7;
+    pbm_init(&argc, argv);
+
+    if (argc-1 > 1)
+        pm_error("Too many arguments (%u).  "
+                 "Only argument is optional input file", argc-1);
+    if (argc-1 == 1)
+        inputFileName = argv[1];
+    else
+        inputFileName = "-";
+    
+    ifP = pm_openr(inputFileName);
+
+    pbm_readpbminit(ifP, &cols, &rows, &format);
+    bitrow = pbm_allocrow_packed(cols);
+
+    putinit(rows, cols);
+    
+    /* Convert PBM raster data to CMUWM and write */ 
+    for (row = 0; row < rows; ++row) {
+        unsigned int const bytesPerRow = pbm_packed_bytes(cols);
+        unsigned char const padding = 
+            (cols % 8 == 0) ? 0x00 : ((unsigned char) ~0 >> (cols % 8));
+
+        unsigned int i;
+        size_t bytesWritten;
+
+        pbm_readpbmrow_packed(ifP, bitrow, cols, format);
+
+        /* Invert all bits in row - raster formats are similar.
+           PBM   Black:1 White:0  "Don't care" bits at end of row
+           CMUWM Black:0 White:1  End of row padded with 1
+        */
+
+        for (i = 0; i < bytesPerRow; ++i)
+            bitrow[i] = ~bitrow[i];
+
+        bitrow[bytesPerRow-1] |= padding;  /* Set row end pad bits */
+        
+        bytesWritten = fwrite(bitrow, 1, bytesPerRow, stdout);
+        if (bytesWritten != bytesPerRow)
+            pm_error("fwrite() failed to write CMU window manager bitmap");
     }
 
-#if __STDC__
-static void
-putbit( bit b )
-#else /*__STDC__*/
-static void
-putbit( b )
-    bit b;
-#endif /*__STDC__*/
-    {
-    if ( bitsperitem == 8 )
-	putitem( );
-    if ( b == PBM_WHITE )
-	item += 1 << bitshift;
-    bitsperitem++;
-    bitshift--;
-    }
-
-static void
-putrest( )
-    {
-    if ( bitsperitem > 0 )
-	putitem( );
-    }
-
-static void
-putitem( )
-    {
-    (void) putc( item, stdout );
-    item = 0;
-    bitsperitem = 0;
-    bitshift = 7;
-    }
+    pm_close(ifP);
+    return 0;
+}

@@ -13,13 +13,19 @@
 #include <assert.h>
 #include <string.h>
 
+#include "pm_c_util.h"
 #include "pam.h"
 #include "dithers.h"
 #include "mallocvar.h"
 #include "shhopt.h"
 #include "pm_gamma.h"
 
-enum halftone {QT_FS, QT_THRESH, QT_DITHER8, QT_CLUSTER, QT_HILBERT};
+enum halftone {QT_FS,
+               QT_ATKINSON,
+               QT_THRESH,
+               QT_DITHER8,
+               QT_CLUSTER,
+               QT_HILBERT};
 
 enum ditherType {DT_REGULAR, DT_CLUSTER};
 
@@ -53,7 +59,7 @@ parseCommandLine(int argc, char ** argv,
     optStruct3 opt;
 
     unsigned int option_def_index;
-    unsigned int floydOpt, hilbertOpt, thresholdOpt, dither8Opt,
+    unsigned int floydOpt, atkinsonOpt, hilbertOpt, thresholdOpt, dither8Opt,
         cluster3Opt, cluster4Opt, cluster8Opt;
     unsigned int valueSpec, clumpSpec;
 
@@ -62,6 +68,7 @@ parseCommandLine(int argc, char ** argv,
     option_def_index = 0;   /* incremented by OPTENTRY */
     OPTENT3(0, "floyd",     OPT_FLAG,  NULL, &floydOpt,     0);
     OPTENT3(0, "fs",        OPT_FLAG,  NULL, &floydOpt,     0);
+    OPTENT3(0, "atkinson",  OPT_FLAG,  NULL, &atkinsonOpt,     0);
     OPTENT3(0, "threshold", OPT_FLAG,  NULL, &thresholdOpt, 0);
     OPTENT3(0, "hilbert",   OPT_FLAG,  NULL, &hilbertOpt,   0);
     OPTENT3(0, "dither8",   OPT_FLAG,  NULL, &dither8Opt,   0);
@@ -84,15 +91,17 @@ parseCommandLine(int argc, char ** argv,
     optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
-    if (floydOpt + thresholdOpt + hilbertOpt + dither8Opt + 
+    if (floydOpt + atkinsonOpt + thresholdOpt + hilbertOpt + dither8Opt + 
         cluster3Opt + cluster4Opt + cluster8Opt == 0)
         cmdlineP->halftone = QT_FS;
-    else if (floydOpt + thresholdOpt + dither8Opt + 
+    else if (floydOpt + atkinsonOpt + thresholdOpt + dither8Opt + 
         cluster3Opt + cluster4Opt + cluster8Opt > 1)
-        pm_error("No cannot specify more than one halftoning type");
+        pm_error("Cannot specify more than one halftoning type");
     else {
         if (floydOpt)
             cmdlineP->halftone = QT_FS;
+        else if (atkinsonOpt)
+            cmdlineP->halftone = QT_ATKINSON;
         else if (thresholdOpt)
             cmdlineP->halftone = QT_THRESH;
         else if (hilbertOpt) {
@@ -390,10 +399,22 @@ struct converter {
 
 struct fsState {
     float * thiserr;
+        /* thiserr[N] is the power from previous pixels to include in 
+           future column N of the current row.
+        */
     float * nexterr;
+        /* nexterr[N] is the power from previous pixels to include in 
+           future column N of the next row.
+        */
     bool fs_forward;
-    samplen threshval;
-        /* The power value we consider to be half white */
+        /* We're going forward (left to right) through the current row */
+    samplen white;
+        /* The power value we consider to be white (normally 1.0).
+           Constant. */
+    samplen halfWhite;
+        /* The power value we consider to be half white (always half of
+           'white'; carried separately to save computation)
+        */
 };
 
 
@@ -423,37 +444,39 @@ fsConvertRow(struct converter * const converterP,
     }
 
     do {
-        samplen sum;
+        samplen const thisPixelPower =
+            MIN(pm_ungamma709(grayrow[col][0]), stateP->white);
+        samplen accum;
 
-        sum = MIN(2*stateP->threshval, pm_ungamma709(grayrow[col][0])) +
-            thiserr[col + 1];
-        if (sum >= stateP->threshval) {
-            /* We've accumulated enough light to justify a white output
-               pixel.
+        accum = thisPixelPower + thiserr[col + 1];
+
+        if (accum >= stateP->halfWhite) {
+            /* We've accumulated enough light (power) to justify a
+               white output pixel.
             */
             bitrow[col][0] = PAM_BW_WHITE;
-            /* Remove from sum the power of the white output pixel */
-            sum -= 2*stateP->threshval;
+            /* Remove from sum the power of this white output pixel */
+            accum -= stateP->white;
         } else
             bitrow[col][0] = PAM_BLACK;
-        
-        /* Forward the power from current input pixel and the power
-           forwarded from previous input pixels to the current pixel,
-           to future output pixels, but subtract out any power we put
-           into the current output pixel.  
+
+        /* Forward to future output pixels the power from current
+           input pixel and the power forwarded from previous input
+           pixels to the current pixel, less any power we put into the
+           current output pixel.
         */
         if (stateP->fs_forward) {
-            thiserr[col + 2] += (sum * 7) / 16;
-            nexterr[col    ] += (sum * 3) / 16;
-            nexterr[col + 1] += (sum * 5) / 16;
-            nexterr[col + 2] += (sum    ) / 16;
+            thiserr[col + 2] += (accum * 7) / 16;
+            nexterr[col    ] += (accum * 3) / 16;
+            nexterr[col + 1] += (accum * 5) / 16;
+            nexterr[col + 2] += (accum * 1) / 16;
             
             ++col;
         } else {
-            thiserr[col    ] += (sum * 7) / 16;
-            nexterr[col + 2] += (sum * 3) / 16;
-            nexterr[col + 1] += (sum * 5) / 16;
-            nexterr[col    ] += (sum    ) / 16;
+            thiserr[col    ] += (accum * 7) / 16;
+            nexterr[col + 2] += (accum * 3) / 16;
+            nexterr[col + 1] += (accum * 5) / 16;
+            nexterr[col    ] += (accum * 1) / 16;
             
             --col;
         }
@@ -468,7 +491,13 @@ fsConvertRow(struct converter * const converterP,
 
 static void
 fsDestroy(struct converter * const converterP) {
-    free(converterP->stateP);
+
+    struct fsState * const stateP = converterP->stateP;
+
+    free(stateP->thiserr);
+    free(stateP->nexterr);
+
+    free(stateP);
 }
 
 
@@ -489,7 +518,7 @@ createFsConverter(struct pam * const graypamP,
     /* Initialize Floyd-Steinberg error vectors. */
     MALLOCARRAY_NOFAIL(stateP->thiserr, graypamP->width + 2);
     MALLOCARRAY_NOFAIL(stateP->nexterr, graypamP->width + 2);
-    srand((int)(time(NULL) ^ getpid()));
+    srand(pm_randseed());
 
     {
         /* (random errors in [-1/8 .. 1/8]) */
@@ -498,9 +527,154 @@ createFsConverter(struct pam * const graypamP,
             stateP->thiserr[col] = ((float)rand()/RAND_MAX - 0.5) / 4;
     }
 
-    stateP->threshval  = threshFraction;
+    stateP->halfWhite = threshFraction;
+    stateP->white = 2 * threshFraction;
 
     stateP->fs_forward = TRUE;
+
+    converter.stateP = stateP;
+
+    return converter;
+}
+
+
+
+struct atkinsonState {
+    float * error[3];
+        /* error[R][C] is the power from previous pixels to include
+           in column C of the Rth row down from the current row
+           (0th row is the current row).
+
+           No error propagates down more than two rows.
+
+           For R == 0, C is a column we haven't done yet.
+        */
+    samplen white;
+        /* The power value we consider to be white (normally 1.0).
+           Constant. */
+    samplen halfWhite;
+        /* The power value we consider to be half white (always half of
+           'white'; carried separately to save computation)
+        */
+};
+
+
+static void
+moveAtkinsonErrorWindowDown(struct converter * const converterP) {
+                            
+    struct atkinsonState * const stateP = converterP->stateP;
+
+    float * const oldError0 = stateP->error[0];
+
+    unsigned int relRow;
+    unsigned int col;
+
+    for (relRow = 0; relRow < 2; ++relRow)
+        stateP->error[relRow] = stateP->error[relRow+1];
+
+    for (col = 0; col < converterP->cols + 2; ++col)
+        oldError0[col] = 0.0;
+
+    stateP->error[2] = oldError0;
+}
+
+
+
+static void
+atkinsonConvertRow(struct converter * const converterP,
+                   unsigned int       const row,
+                   tuplen                   grayrow[],
+                   tuple                    bitrow[]) {
+
+    /* See http://www.tinrocket.com/projects/programming/graphics/00158/
+       for a description of the Atkinson algorithm
+    */
+
+    struct atkinsonState * const stateP = converterP->stateP;
+
+    samplen ** const error = stateP->error;
+
+    unsigned int col;
+
+    for (col = 0; col < converterP->cols; ++col) {
+        samplen accum;
+
+        accum = pm_ungamma709(grayrow[col][0]) + error[0][col + 1];
+        if (accum >= stateP->halfWhite) {
+            /* We've accumulated enough light (power) to justify a
+               white output pixel.
+            */
+            bitrow[col][0] = PAM_BW_WHITE;
+            /* Remove from accum the power of this white output pixel */
+            accum -= stateP->white;
+        } else
+            bitrow[col][0] = PAM_BLACK;
+        
+        /* Forward to future output pixels 3/4 of the power from current
+           input pixel and the power forwarded from previous input
+           pixels to the current pixel, less any power we put into the
+           current output pixel.
+        */
+        error[0][col+1] += accum/8;
+        error[0][col+2] += accum/8;
+        if (col > 0)
+            error[1][col-1] += accum/8;
+        error[1][col  ] += accum/8;
+        error[1][col+1] += accum/8;
+        error[2][col  ] += accum/8;
+    }
+    
+    moveAtkinsonErrorWindowDown(converterP);
+}
+
+
+
+static void
+atkinsonDestroy(struct converter * const converterP) {
+
+    struct atkinsonState * const stateP = converterP->stateP;
+
+    unsigned int relRow;
+
+    for (relRow = 0; relRow < 3; ++relRow)
+        free(stateP->error[relRow]);
+
+    free(stateP);
+}
+
+
+
+static struct converter
+createAtkinsonConverter(struct pam * const graypamP,
+                        float        const threshFraction) {
+
+    struct atkinsonState * stateP;
+    struct converter converter;
+    unsigned int relRow;
+    
+    converter.cols       = graypamP->width;
+    converter.convertRow = &atkinsonConvertRow;
+    converter.destroy    = &atkinsonDestroy;
+
+    MALLOCVAR_NOFAIL(stateP);
+
+    for (relRow = 0; relRow < 3; ++relRow)
+        MALLOCARRAY_NOFAIL(stateP->error[relRow], graypamP->width + 2);
+
+    srand(pm_randseed());
+
+    {
+        /* (random errors in [-1/8 .. 1/8]) */
+        unsigned int col;
+        for (col = 0; col < graypamP->width + 2; ++col) {
+            stateP->error[0][col] = ((float)rand()/RAND_MAX - 0.5) / 4;
+            stateP->error[1][col] = 0.0;
+            stateP->error[2][col] = 0.0;
+        }
+    }
+
+    stateP->halfWhite = threshFraction;
+    stateP->white = 2 * threshFraction;
 
     converter.stateP = stateP;
 
@@ -704,6 +878,9 @@ main(int argc, char *argv[]) {
         switch (cmdline.halftone) {
         case QT_FS:
             converter = createFsConverter(&graypam, cmdline.threshval);
+            break;
+        case QT_ATKINSON:
+            converter = createAtkinsonConverter(&graypam, cmdline.threshval);
             break;
         case QT_THRESH:
             converter = createThreshConverter(&graypam, cmdline.threshval);

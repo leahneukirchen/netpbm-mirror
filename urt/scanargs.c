@@ -49,9 +49,9 @@
 #include <stdarg.h>
 #endif
 
+#include "pm_c_util.h"
 #include "nstring.h"
 
-typedef char bool;
 /* 
  * An explicit assumption is made in this code that all pointers look
  * alike, except possible char * pointers.

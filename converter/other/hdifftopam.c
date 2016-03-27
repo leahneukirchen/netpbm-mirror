@@ -9,6 +9,7 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "pm_c_util.h"
 #include "pam.h"
 #include "shhopt.h"
 #include "nstring.h"
@@ -96,7 +97,7 @@ main(int argc, char *argv[]) {
     tuple * outrow;
     tuple * prevrow;
 
-    pnm_init( &argc, argv );
+    pnm_init(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
@@ -106,7 +107,7 @@ main(int argc, char *argv[]) {
 
     if (diffpam.format != PAM_FORMAT) 
         pm_error("Input must be a PAM file, not PNM");
-    else if (!STREQ(diffpam.tuple_type, "hdiff")) 
+    else if (!streq(diffpam.tuple_type, "hdiff")) 
         pm_error("Input tuple type is '%s'.  Must be 'hdiff'",
                  diffpam.tuple_type);
 

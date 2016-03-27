@@ -165,15 +165,8 @@ DoBitmap( ifp )
 	sscreen[i] = ( screen[i<<1] << 8 ) + ( 0xff & screen[(i<<1)+1] );
     }
 
-#if __STDC__
 static void
 DoChar( int n, char c )
-#else /*__STDC__*/
-static void
-DoChar( n, c )
-    int n;
-    char c;
-#endif /*__STDC__*/
     {
     int i;
 
