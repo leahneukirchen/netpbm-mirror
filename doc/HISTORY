@@ -4,6 +4,8 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+not yet  BJH  Release 10.75.00
+
 16.03.27 BJH  Release 10.74.00
 
               pbmtext: produce same image when you run pbmtext with -width
