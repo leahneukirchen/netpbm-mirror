@@ -609,10 +609,6 @@ atkinsonConvertRow(struct converter * const converterP,
                    tuplen                   grayrow[],
                    tuple                    bitrow[]) {
 
-    /* See http://www.tinrocket.com/projects/programming/graphics/00158/
-       for a description of the Atkinson algorithm
-    */
-
     struct atkinsonState * const stateP = converterP->stateP;
 
     samplen ** const error = stateP->error;
