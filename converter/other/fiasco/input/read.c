@@ -23,6 +23,8 @@
 
 #include <string.h>
 
+#include "nstring.h"
+
 #include "types.h"
 #include "macros.h"
 #include "error.h"
@@ -155,7 +157,7 @@ open_wfa (const char *filename, wfa_info_t *wi)
 	 unsigned lx = log2 (wi->width - 1) + 1;
 	 unsigned ly = log2 (wi->height - 1) + 1;
       
-	 wi->level = max (lx, ly) * 2 - ((ly == lx + 1) ? 1 : 0);
+	 wi->level = MAX(lx, ly) * 2 - ((ly == lx + 1) ? 1 : 0);
       }
       wi->chroma_max_states = wi->color ? read_rice_code (rice_k, input) : -1;
       wi->p_min_level       = read_rice_code (rice_k, input);
@@ -275,7 +277,7 @@ read_basis (const char *filename, wfa_t *wfa)
     *   string		|MAGIC Number "Wfa"
     *	int		|Number of basis states 'N'
     *	bool_t-array[N]	|use vector in linear combinations,
-    *			|0: don't use vector (auxilliary state)
+    *			|0: don't use vector (auxiliary state)
     *			|1: use vector in linear combinations
     *	float-array[N]	|final distribution of every state
     *
@@ -395,7 +397,7 @@ read_next_wfa (wfa_t *wfa, bitfile_t *input)
 
    /*
     *  Compute domain pool.
-    *  Large images have not been used due to image tiling.
+    *  Large images have not been used because of image tiling.
     */
    {
       unsigned state;

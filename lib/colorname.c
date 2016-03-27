@@ -15,28 +15,32 @@
 #define _BSD_SOURCE 1      /* Make sure strdup() is in string.h */
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 
-#include "pm_c_util.h"
+#include "netpbm/pm_c_util.h"
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
 
-#include "nstring.h"
+#include "netpbm/nstring.h"
+
 #include "colorname.h"
 
 static int lineNo;
 
-void 
-pm_canonstr(char * const str) {
 
-    char * p;
-    for (p = str; *p; ) {
-        if (ISSPACE(*p)) {
-            strcpy(p, &(p[1]));
-        } else {
-            if (ISUPPER(*p))
-                *p = tolower(*p);
-            ++p;
+
+void 
+pm_canonstr(char * const arg) {
+/*----------------------------------------------------------------------------
+   Modify string 'arg' to canonical form: lower case, no white space.
+-----------------------------------------------------------------------------*/
+    const char * srcCursor;
+    char * dstCursor;
+
+    for (srcCursor = arg, dstCursor = arg; *srcCursor; ++srcCursor) {
+        if (!ISSPACE(*srcCursor)) {
+            *dstCursor++ =
+                ISUPPER(*srcCursor) ? tolower(*srcCursor) : *srcCursor;
         }
     }
 }
@@ -65,7 +69,7 @@ openColornameFileSearch(const char * const searchPath,
         *filePP = NULL;  /* initial value */
         while (!eol && !*filePP) {
             const char * token;
-            token = strsepN(&cursor, ":");
+            token = pm_strsep(&cursor, ":");
             if (token) {
                 *filePP = fopen(token, "r");
             } else
@@ -84,8 +88,8 @@ pm_openColornameFile(const char * const fileName, const int must_open) {
    Open the colorname dictionary file.  Its file name is 'fileName', unless
    'fileName' is NULL.  In that case, its file name is the value of the
    environment variable whose name is RGB_ENV (e.g. "RGBDEF").  Except
-   if that environment variable is not set, it is RGB_DB1, RGB_DB2,
-   or RGB_DB3 (e.g. "/usr/lib/X11/rgb.txt"), whichever exists.
+   if that environment variable is not set, it is the first file found,
+   if any, in the search path RGB_DB_PATH.
    
    'must_open' is a logical: we must get the file open or die.  If
    'must_open' is true and we can't open the file (e.g. it doesn't

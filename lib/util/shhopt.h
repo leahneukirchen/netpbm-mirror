@@ -1,4 +1,5 @@
-/*=============================================================================
+#if 0
+=============================================================================
 HERE IS AN EXAMPLE OF THE USE OF SHHOPT:
 
 
@@ -6,8 +7,9 @@ HERE IS AN EXAMPLE OF THE USE OF SHHOPT:
 int 
 main ( int argc, char **argv ) {
 
-    // initial values here are just to demonstrate what gets set and
-    // what doesn't by the code below.
+    /* initial values here are just to demonstrate what gets set and
+       what doesn't by the code below.
+    */
     int help_flag = 7;
     unsigned int help_spec =7;
     unsigned int height_spec =7;
@@ -20,7 +22,8 @@ main ( int argc, char **argv ) {
     
     optStruct3 opt;
     unsigned int option_def_index = 0;
-    optEntry *option_def = malloc(100*sizeof(option_def[0]));
+    optEntry * option_def;
+    MALLOCARRAY(option_def, 100);
 
     OPTENT3(0,   "help",     OPT_FLAG,     &help_flag,    &help_spec,   0);
     OPTENT3(0,   "height",   OPT_INT,      &height,       &height_spec, 0);
@@ -34,7 +37,7 @@ main ( int argc, char **argv ) {
     opt.allowNegNum = 1;
 
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
     
 
     printf("argc=%d\n", argc);
@@ -67,8 +70,15 @@ Now run this program with something like
   myprog -v /etc/passwd -name=Bryan --hei=4
 
 
-========================================================================*/
+  If your program takes no options (so you have no OPTENT3 macro invocations),
+  you need an OPTENTINIT call to establish the empty option table:
 
+    optEntry * option_def;
+    MALLOCARRAY(option_def, 1);
+    OPTENTINIT;
+
+========================================================================
+#endif /* 0 */
 
 #ifndef SHHOPT_H
 #define SHHOPT_H
@@ -90,13 +100,14 @@ typedef enum {
     OPT_LONG,              /* signed long integer argument. */
     OPT_ULONG,             /* unsigned long integer argument. */
     OPT_FLOAT,             /* floating point argument. */
+    OPT_STRINGLIST,        /* list like "arg1,arg2.arg3" */
     OPT_NAMELIST           /* list like "key1=val1,key2=val2" */
 } optArgType;
 
 
 typedef struct {
     /* This structure describes a single program option in a form for
-     use by the optParseOptions() or optParseOptions2() function.
+     use by the pm_optParseOptions() or pm_optParseOptions2() function.
     */
     char       shortName;  /* short option name. */
     const char *longName;  /* long option name, not including '--'. */
@@ -108,7 +119,7 @@ typedef struct {
     
 typedef struct {
     /* This structure describes a single program option in a form for
-     use by the optParseOptions3() function.
+     use by the pm_optParseOptions3() function.
     */
     char       shortName;  /* short option name. */
     const char *longName;  /* long option name, not including '--' or '-' */
@@ -129,7 +140,7 @@ typedef struct {
 
 typedef struct {
     /* This structure describes the options of a program in a form for
-       use with the optParseOptions2() function.
+       use with the pm_optParseOptions2() function.
        */
     unsigned char short_allowed;  /* boolean */
         /* The syntax may include short (i.e. one-character) options.
@@ -146,7 +157,7 @@ typedef struct {
 } optStruct2;
 
 typedef struct {
-    /* Same as optStruct2, but for optParseOptions3() */
+    /* Same as optStruct2, but for pm_optParseOptions3() */
     unsigned char short_allowed;  
     unsigned char allowNegNum;    
     optEntry *opt_table;
@@ -187,9 +198,10 @@ typedef struct {
     }
 
 /* OPTENT3 is the same as OPTENTRY except that it also sets the "specified"
-   element of the table entry (so it assumes OPTION_DEF is a table of
-   optEntry instead of optStruct).  It sets it to the number of times that
-   the option appears in the command line.
+   element of the table entry (so it assumes OPTION_DEF is a table of optEntry
+   instead of optStruct).  This is a pointer to a variable that the parser
+   will set to the number of times that the option appears in the command
+   line.
 
    Here is an example:
 
@@ -215,18 +227,21 @@ struct optNameValue {
 
 
         
-void optSetFatalFunc(void (*f)(const char *, ...));
-void optParseOptions(int *argc, char *argv[],
-		     optStruct opt[], int allowNegNum);
 void
-optParseOptions2(int * const argc_p, char *argv[], const optStruct2 opt, 
+pm_optSetFatalFunc(void (*f)(const char *, ...));
+
+void
+pm_optParseOptions(int *argc, char *argv[],
+                   optStruct opt[], int allowNegNum);
+void
+pm_optParseOptions2(int * const argc_p, char *argv[], const optStruct2 opt, 
                  const unsigned long flags);
 void
-optParseOptions3(int * const argc_p, char *argv[], const optStruct3 opt, 
+pm_optParseOptions3(int * const argc_p, char *argv[], const optStruct3 opt, 
                  const unsigned int optStructSize, const unsigned long flags);
 
 void
-optDestroyNameValueList(struct optNameValue * const list);
+pm_optDestroyNameValueList(struct optNameValue * const list);
 
 #ifdef __cplusplus
 }

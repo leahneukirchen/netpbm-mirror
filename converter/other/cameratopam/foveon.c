@@ -141,8 +141,8 @@ parse_foveon(FILE * const ifp) {
 
 
 void  
-foveon_coeff(bool * const useCoeffP,
-             float        coeff[3][4]) {
+foveon_coeff(int * const useCoeffP,
+             float       coeff[3][4]) {
 
     static const float foveon[3][3] =
     { {  1.4032, -0.2231, -0.1016 },
@@ -211,7 +211,7 @@ foveon_load_camf() {
 
 
 void  
-foveon_load_raw() {
+foveon_load_raw(Image const image) {
 
     struct decode *dindex;
     short diff[1024], pred[3];
@@ -391,7 +391,8 @@ static int  foveon_apply_curve (short *curve, int i)
 }
 
 void  
-foveon_interpolate(float coeff[3][4]) {
+foveon_interpolate(Image const image,
+                   float coeff[3][4]) {
 
     static const short hood[] = { 
         -1,-1, -1,0, -1,1, 0,-1, 0,1, 1,-1, 1,0, 1,1 };
@@ -472,18 +473,22 @@ foveon_interpolate(float coeff[3][4]) {
     sgrow = calloc (dim[1], sizeof *sgrow);
     sgx = (width + dim[1]-2) / (dim[1]-1);
 
-    black = calloc (height, sizeof *black);
-    for (row=0; row < height; row++) {
-        for (i=0; i < 6; i++)
-            ddft[0][0][i] = ddft[1][0][i] +
-                row / (height-1.0) * (ddft[2][0][i] - ddft[1][0][i]);
+    black = calloc (height, sizeof(black[0]));
+    for (row=0; row < height; ++row) {
+        unsigned int i;
+        for (i=0; i < 3; ++i) {
+            unsigned int j;
+            for (j = 0; j < 2; ++j)
+                ddft[0][i][j] = ddft[1][i][j] +
+                    row / (height-1.0) * (ddft[2][i][j] - ddft[1][i][j]);
+        }
         FORC3 black[row][c] =
             ( foveon_avg (image[row*width]+c, dscr[0], cfilt) +
               foveon_avg (image[row*width]+c, dscr[1], cfilt) * 3
               - ddft[0][c][0] ) / 4 - ddft[0][c][1];
     }
-    memcpy (black, black+8, sizeof (*black)*8);
-    memcpy (black+height-11, black+height-22, 11*sizeof *black);
+    memcpy (black, black+8, 8 * sizeof(black[0]));
+    memcpy (black+height-11, black+height-22, 11*(sizeof black[0]));
     memcpy (last, black, sizeof last);
 
     for (row=1; row < height-1; row++) {
@@ -522,9 +527,13 @@ foveon_interpolate(float coeff[3][4]) {
         FORC3 black[row][c] += fsum[c]/2 + total[c]/(total[3]*100.0);
 
     for (row=0; row < height; row++) {
-        for (i=0; i < 6; i++)
-            ddft[0][0][i] = ddft[1][0][i] +
-                row / (height-1.0) * (ddft[2][0][i] - ddft[1][0][i]);
+        unsigned int i;
+        for (i = 0; i < 3; ++i) {
+            unsigned int j;
+            for (j = 0; j < 2; ++j)
+                ddft[0][i][j] = ddft[1][i][j] +
+                    row / (height-1.0) * (ddft[2][i][j] - ddft[1][i][j]);
+        }
         pix = (short*)image[row*width];
         memcpy (prev, pix, sizeof prev);
         frow = row / (height-1.0) * (dim[2]-1);

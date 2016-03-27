@@ -39,12 +39,9 @@
 #include "pm_c_util.h"
 #include "ppm.h"
 #include "mallocvar.h"
+#include "shhopt.h"
 
-#ifdef VMS
-static double const hugeVal = HUGE_VAL;
-#else
 static double const hugeVal = 1e50;
-#endif
 
 /* Definitions used to address real and imaginary parts in a two-dimensional
    array of complex numbers as stored by fourn(). */
@@ -78,12 +75,6 @@ static double arand, gaussadd, gaussfac; /* Gaussian random parameters */
 static double fracdim;            /* Fractal dimension */
 static double powscale;           /* Power law scaling exponent */
 static int meshsize = 256;        /* FFT mesh size */
-static unsigned int seedarg;        /* Seed specified by user */
-static bool seedspec = FALSE;      /* Did the user specify a seed ? */
-static bool clouds = FALSE;        /* Just generate clouds */
-static bool stars = FALSE;         /* Just generate stars */
-static int screenxsize = 256;         /* Screen X size */
-static int screenysize = 256;         /* Screen Y size */
 static double inclangle, hourangle;   /* Star position relative to planet */
 static bool inclspec = FALSE;      /* No inclination specified yet */
 static bool hourspec = FALSE;      /* No hour specified yet */
@@ -91,6 +82,166 @@ static double icelevel;           /* Ice cap theshold */
 static double glaciers;           /* Glacier level */
 static int starfraction;          /* Star fraction */
 static int starcolor;            /* Star color saturation */
+
+
+struct CmdlineInfo {
+    unsigned int clouds;
+    unsigned int night;
+    float        dimension;
+    float        hourAngle;
+    unsigned int hourSpec;
+    float        inclAngle;
+    unsigned int inclinationSpec;
+    unsigned int meshSize;
+    unsigned int meshSpec;
+    float        power;
+    float        glaciers;
+    float        ice;
+    int          saturation;
+    unsigned int seed;
+    int          stars;
+    unsigned int starsSpec;
+    unsigned int width;
+    unsigned int height;
+};
+
+
+
+static void
+parseCommandLine(int argc, const char **argv,
+                 struct CmdlineInfo * const cmdlineP) {
+/*----------------------------------------------------------------------------
+  Convert program invocation arguments (argc,argv) into a format the 
+  program can use easily, struct cmdlineInfo.  Validate arguments along
+  the way and exit program with message if invalid.
+
+  Note that some string information we return as *cmdlineP is in the storage 
+  argv[] points to.
+-----------------------------------------------------------------------------*/
+    optEntry * option_def;
+        /* Instructions to OptParseOptions3 on how to parse our options.
+         */
+    optStruct3 opt;
+
+    unsigned int option_def_index;
+
+    unsigned int dimensionSpec, seedSpec,
+        meshSpec, powerSpec, glaciersSpec, iceSpec, saturationSpec,
+        starsSpec, widthSpec, heightSpec;
+    float hour;
+    float inclination;
+    unsigned int mesh;
+
+    MALLOCARRAY_NOFAIL(option_def, 100);
+
+    option_def_index = 0;
+    OPTENT3(0, "clouds",      OPT_FLAG, NULL, &cmdlineP->clouds, 0);
+    OPTENT3(0, "night",       OPT_FLAG, NULL, &cmdlineP->night, 0);
+    OPTENT3(0, "dimension",   OPT_FLOAT, &cmdlineP->dimension,
+            &dimensionSpec, 0);
+    OPTENT3(0, "hour",        OPT_FLOAT, &hour,
+            &cmdlineP->hourSpec, 0);
+    OPTENT3(0, "inclination", OPT_FLOAT, &inclination,
+            &cmdlineP->inclinationSpec, 0);
+    OPTENT3(0, "tilt",        OPT_FLOAT, &inclination,
+            &cmdlineP->inclinationSpec, 0);
+    OPTENT3(0, "mesh",        OPT_UINT, &mesh,
+            &meshSpec, 0);
+    OPTENT3(0, "power",       OPT_FLOAT, &cmdlineP->power,
+            &powerSpec, 0);
+    OPTENT3(0, "glaciers",    OPT_FLOAT, &cmdlineP->glaciers,
+            &glaciersSpec, 0);
+    OPTENT3(0, "ice",         OPT_FLOAT, &cmdlineP->ice,
+            &iceSpec, 0);
+    OPTENT3(0, "saturation",  OPT_INT,   &cmdlineP->saturation,
+            &saturationSpec, 0);
+    OPTENT3(0, "seed",        OPT_UINT,  &cmdlineP->seed,
+            &seedSpec, 0);
+    OPTENT3(0, "stars",       OPT_INT,   &cmdlineP->stars,
+            &starsSpec, 0);
+    OPTENT3(0, "width",       OPT_UINT,  &cmdlineP->width,
+            &widthSpec, 0);
+    OPTENT3(0, "xsize",       OPT_UINT,  &cmdlineP->width,
+            &widthSpec, 0);
+    OPTENT3(0, "height",      OPT_UINT,  &cmdlineP->height,
+            &heightSpec, 0);
+    OPTENT3(0, "ysize",       OPT_UINT,  &cmdlineP->height,
+            &heightSpec, 0);
+
+    opt.opt_table = option_def;
+    opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
+
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+        /* Uses and sets argc, argv, and some of *cmdlineP and others. */
+
+    if (dimensionSpec) {
+        if (cmdlineP->dimension <= 0.0)
+            pm_error("-dimension must be greater than zero.  "
+                     "You specified %f", cmdlineP->dimension);
+    } else
+        cmdlineP->dimension = cmdlineP->clouds ? 2.15 : 2.4;
+
+    if (cmdlineP->hourSpec)
+        cmdlineP->hourAngle = (M_PI / 12.0) * (hour + 12.0);
+
+    if (cmdlineP->inclinationSpec)
+        cmdlineP->inclAngle = (M_PI / 180.0) * inclination;
+
+    if (meshSpec) {
+        unsigned int i;
+        if (mesh < 2)
+            pm_error("-mesh value must be at least 2.  "
+                     "You specified %u", mesh);
+        /* Force FFT mesh to the next larger power of 2. */
+        for (i = 2; i < mesh; i <<= 1);
+        cmdlineP->meshSize = i;
+    } else
+        cmdlineP->meshSize = 256;
+
+    if (powerSpec) {
+        if (cmdlineP->power <= 0.0)
+            pm_error("-power must be greater than zero.  "
+                     "You specified %f", cmdlineP->power);
+    } else
+        cmdlineP->power = cmdlineP->clouds ? 0.75 : 1.2;
+
+    if (iceSpec) {
+        if (cmdlineP->ice <= 0.0)
+            pm_error("-ice must be greater than zero.  "
+                     "You specified %f", cmdlineP->ice);
+    } else
+        cmdlineP->ice = 0.4;
+
+    if (glaciersSpec) {
+        if (cmdlineP->glaciers <= 0.0)
+            pm_error("-glaciers must be greater than 0.  "
+                     "You specified %f", cmdlineP->glaciers);
+    } else
+        cmdlineP->glaciers = 0.75;
+
+    if (!starsSpec)
+        cmdlineP->stars = 100;
+
+    if (!saturationSpec)
+        cmdlineP->saturation = 125;
+
+    if (!seedSpec)
+        cmdlineP->seed = pm_randseed();
+
+    if (!widthSpec)
+        cmdlineP->width = 256;
+
+    if (!heightSpec)
+        cmdlineP->height = 256;
+
+    if (argc-1 > 0)
+        pm_error("There are no non-option arguments.  "
+                 "You specified %u", argc-1);
+
+    free(option_def);
+}
+
 
 /*  FOURN  --  Multi-dimensional fast Fourier transform
 
@@ -278,19 +429,6 @@ static void spectralsynth(x, n, h)
 }
 
 
-static unsigned int
-initseed(void) {
-    /*  Generate initial random seed.  */
-
-    unsigned int i;
-
-    srand(pm_randseed());
-    for (i = 0; i < 7; ++i)
-        rand();
-    return rand();
-}
-
-
 
 /*  TEMPRGB  --  Calculate the relative R, G, and B components  for  a
          black  body  emitting  light  at a given temperature.
@@ -421,7 +559,8 @@ makeCp(float *      const a,
 
 
 static void
-createPlanetStuff(float *          const a,
+createPlanetStuff(bool             const clouds,
+                  float *          const a,
                   unsigned int     const n,
                   double **        const uP,
                   double **        const u1P,
@@ -460,7 +599,9 @@ createPlanetStuff(float *          const a,
             "        -inclination %.0f -hour %d -ice %.2f -glaciers %.2f",
             (siang * (180.0 / M_PI)),
             (int) (((shang * (12.0 / M_PI)) + 12 +
-                    (flipped ? 12 : 0)) + 0.5) % 24, icelevel, glaciers);
+                    (flipped ? 12 : 0)) + 0.5) % 24,
+            icelevel,
+            glaciers);
         pm_message("        -stars %d -saturation %d.",
                    starfraction, starcolor);
     }
@@ -535,9 +676,9 @@ generateCloudRow(pixel *         const pixels,
 
     /* Render the FFT output as clouds. */
 
-    unsigned int j;
+    unsigned int col;
 
-    for (j = 0; j < cols; j++) {
+    for (col = 0; col < cols; ++col) {
         double r;
         pixval w;
         
@@ -546,15 +687,15 @@ generateCloudRow(pixel *         const pixels,
            referenced below does not exist.
         */
         if (t1 > 0.0)
-            r += t1 * u1[j] * cp[byf + bxf[j]] +
-                t1 * u[j]  * cp[byf + bxc[j]];
+            r += t1 * u1[col] * cp[byf + bxf[col]] +
+                t1 * u[col]  * cp[byf + bxc[col]];
         if (t > 0.0)
-            r += t * u1[j] * cp[byc + bxf[j]] +
-                t * u[j]  * cp[byc + bxc[j]];
+            r += t * u1[col] * cp[byc + bxf[col]] +
+                t * u[col]  * cp[byc + bxc[col]];
         
         w = (r > 127.0) ? (maxval * ((r - 127.0) / 128.0)) : 0;
         
-        PPM_ASSIGN(*(pixels + j), w, w, maxval);
+        PPM_ASSIGN(pixels[col], w, w, maxval);
     }
 }
 
@@ -823,7 +964,7 @@ genplanet(bool         const stars,
         pm_message("%s: -seed %d -dimension %.2f -power %.2f -mesh %d",
                    clouds ? "clouds" : "planet",
                    rseed, fracdim, powscale, meshsize);
-        createPlanetStuff(a, n, &u, &u1, &bxf, &bxc, &cp, &sunvec, 
+        createPlanetStuff(clouds, a, n, &u, &u1, &bxf, &bxc, &cp, &sunvec, 
                           cols, maxval);
     }
 
@@ -944,19 +1085,14 @@ static bool
 planet(unsigned int const cols,
        unsigned int const rows,
        bool         const stars,
-       bool         const clouds) {
+       bool         const clouds,
+       unsigned int const rseed) {
 /*----------------------------------------------------------------------------
    Make a planet.
 -----------------------------------------------------------------------------*/
     float * a;
     bool error;
-    unsigned int rseed;        /* Current random seed */
-    
-    if (seedspec)
-        rseed = seedarg;
-    else 
-        rseed = initseed();
-    
+
     initgauss(rseed);
     
     if (stars) {
@@ -985,200 +1121,39 @@ planet(unsigned int const cols,
 
 
 
-
 int 
-main(int argc, char ** argv) {
+main(int argc, const char ** argv) {
 
+    struct CmdlineInfo cmdline;
     bool success;
-    int i;
-    const char * const usage = "\n\
-[-width|-xsize <x>] [-height|-ysize <y>] [-mesh <n>]\n\
-[-clouds] [-dimension <f>] [-power <f>] [-seed <n>]\n\
-[-hour <f>] [-inclination|-tilt <f>] [-ice <f>] [-glaciers <f>]\n\
-[-night] [-stars <n>] [-saturation <n>]";
-    bool dimspec = FALSE, meshspec = FALSE, powerspec = FALSE,
-        widspec = FALSE, hgtspec = FALSE, icespec = FALSE,
-        glacspec = FALSE, starspec = FALSE, starcspec = FALSE;
 
-    int cols, rows;     /* Dimensions of our output image */
+    unsigned int cols, rows;     /* Dimensions of our output image */
 
-    ppm_init(&argc, argv);
-    i = 1;
-    
-    while ((i < argc) && (argv[i][0] == '-') && (argv[i][1] != '\0')) {
+    pm_proginit(&argc, argv);
 
-        if (pm_keymatch(argv[i], "-clouds", 2)) {
-            clouds = TRUE;
-        } else if (pm_keymatch(argv[i], "-night", 2)) {
-            stars = TRUE;
-        } else if (pm_keymatch(argv[i], "-dimension", 2)) {
-            if (dimspec) {
-                pm_error("already specified a dimension");
-            }
-            i++;
-            if ((i == argc) || (sscanf(argv[i], "%lf", &fracdim)  != 1))
-                pm_usage(usage);
-            if (fracdim <= 0.0) {
-                pm_error("fractal dimension must be greater than 0");
-            }
-            dimspec = TRUE;
-        } else if (pm_keymatch(argv[i], "-hour", 3)) {
-            if (hourspec) {
-                pm_error("already specified an hour");
-            }
-            i++;
-            if ((i == argc) || (sscanf(argv[i], "%lf", &hourangle) != 1))
-                pm_usage(usage);
-            hourangle = (M_PI / 12.0) * (hourangle + 12.0);
-            hourspec = TRUE;
-        } else if (pm_keymatch(argv[i], "-inclination", 3) ||
-                   pm_keymatch(argv[i], "-tilt", 2)) {
-            if (inclspec) {
-                pm_error("already specified an inclination/tilt");
-            }
-            i++;
-            if ((i == argc) || (sscanf(argv[i], "%lf", &inclangle) != 1))
-                pm_usage(usage);
-            inclangle = (M_PI / 180.0) * inclangle;
-            inclspec = TRUE;
-        } else if (pm_keymatch(argv[i], "-mesh", 2)) {
-            unsigned int j;
+    parseCommandLine(argc, argv, &cmdline);
 
-            if (meshspec) {
-                pm_error("already specified a mesh size");
-            }
-            i++;
-            if ((i == argc) || (sscanf(argv[i], "%d", &meshsize) != 1))
-                pm_usage(usage);
-
-            if (meshsize < 2)
-                pm_error("mesh must be at least 2");
-
-            /* Force FFT mesh to the next larger power of 2. */
-
-            for (j = meshsize; (j & 1) == 0; j >>= 1) ;
-
-            if (j != 1) {
-                for (j = 2; j < meshsize; j <<= 1) ;
-                meshsize = j;
-            }
-            meshspec = TRUE;
-        } else if (pm_keymatch(argv[i], "-power", 2)) {
-            if (powerspec) {
-                pm_error("already specified a power factor");
-            }
-            i++;
-            if ((i == argc) || (sscanf(argv[i], "%lf", &powscale) != 1))
-                pm_usage(usage);
-            if (powscale <= 0.0) {
-                pm_error("power factor must be greater than 0");
-            }
-            powerspec = TRUE;
-        } else if (pm_keymatch(argv[i], "-ice", 3)) {
-            if (icespec) {
-                pm_error("already specified ice cap level");
-            }
-            i++;
-            if ((i == argc) || (sscanf(argv[i], "%lf", &icelevel) != 1))
-                pm_usage(usage);
-            if (icelevel <= 0.0) {
-                pm_error("ice cap level must be greater than 0");
-            }
-            icespec = TRUE;
-        } else if (pm_keymatch(argv[i], "-glaciers", 2)) {
-            if (glacspec) {
-                pm_error("already specified glacier level");
-            }
-            i++;
-            if ((i == argc) || (sscanf(argv[i], "%lf", &glaciers) != 1))
-                pm_usage(usage);
-            if (glaciers <= 0.0) {
-                pm_error("glacier level must be greater than 0");
-            }
-            glacspec = TRUE;
-        } else if (pm_keymatch(argv[i], "-stars", 3)) {
-            if (starspec) {
-                pm_error("already specified a star fraction");
-            }
-            i++;
-            if ((i == argc) || (sscanf(argv[i], "%d", &starfraction) != 1))
-                pm_usage(usage);
-            starspec = TRUE;
-        } else if (pm_keymatch(argv[i], "-saturation", 3)) {
-            if (starcspec) {
-                pm_error("already specified a star color saturation");
-            }
-            i++;
-            if ((i == argc) || (sscanf(argv[i], "%d", &starcolor) != 1))
-                pm_usage(usage);
-            starcspec = TRUE;
-        } else if (pm_keymatch(argv[i], "-seed", 3)) {
-            if (seedspec) {
-                pm_error("already specified a random seed");
-            }
-            i++;
-            if ((i == argc) || (sscanf(argv[i], "%u", &seedarg) != 1))
-                pm_usage(usage);
-            seedspec = TRUE;
-        } else if (pm_keymatch(argv[i], "-xsize", 2) ||
-                   pm_keymatch(argv[i], "-width", 2)) {
-            if (widspec) {
-                pm_error("already specified a width/xsize");
-            }
-            i++;
-            if ((i == argc) || (sscanf(argv[i], "%d", &screenxsize) != 1))
-                pm_usage(usage);
-            widspec = TRUE;
-        } else if (pm_keymatch(argv[i], "-ysize", 2) ||
-                   pm_keymatch(argv[i], "-height", 3)) {
-            if (hgtspec) {
-                pm_error("already specified a height/ysize");
-            }
-            i++;
-            if ((i == argc) || (sscanf(argv[i], "%d", &screenysize) != 1))
-                pm_usage(usage);
-            hgtspec = TRUE;
-        } else {
-            pm_usage(usage);
-        }
-        i++;
-    }
-
-
-    /* Set defaults when explicit specifications were not given.
-
-       The  default  fractal  dimension  and  power  scale depend upon
-       whether we are generating a planet or clouds. 
-    */
-    
-    if (!dimspec) {
-        fracdim = clouds ? 2.15 : 2.4;
-    }
-    if (!powerspec) {
-        powscale = clouds ? 0.75 : 1.2;
-    }
-    if (!icespec) {
-        icelevel = 0.4;
-    }
-    if (!glacspec) {
-        glaciers = 0.75;
-    }
-    if (!starspec) {
-        starfraction = 100;
-    }
-    if (!starcspec) {
-        starcolor = 125;
-    }
+    fracdim      = cmdline.dimension;
+    hourspec     = cmdline.hourSpec;
+    hourangle    = cmdline.hourAngle;
+    inclspec     = cmdline.inclinationSpec;
+    inclangle    = cmdline.inclAngle;
+    meshsize     = cmdline.meshSize;
+    powscale     = cmdline.power;
+    icelevel     = cmdline.ice;
+    glaciers     = cmdline.glaciers;
+    starfraction = cmdline.stars;
+    starcolor    = cmdline.saturation;
 
     /* Force  screen to be at least  as wide as it is high.  Long,
        skinny screens  cause  crashes  because  picture  width  is
        calculated based on height.  
     */
 
-    cols = (MAX(screenysize, screenxsize) + 1) & (~1);
-    rows = screenysize;
+    cols = (MAX(cmdline.height, cmdline.width) + 1) & (~1);
+    rows = cmdline.height;
 
-    success = planet(cols, rows, stars, clouds);
+    success = planet(cols, rows, cmdline.night, cmdline.clouds, cmdline.seed);
 
     exit(success ? 0 : 1);
 }

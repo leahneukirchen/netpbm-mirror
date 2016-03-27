@@ -9,11 +9,9 @@
 #include "mallocvar.h"
 #include "pam.h"
 
-#define true (1)
-#define false (0)
 
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -27,8 +25,8 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
   Convert program invocation arguments (argc,argv) into a format the 
   program can use easily, struct cmdlineInfo.  Validate arguments along
@@ -59,7 +57,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (!tupletypeSpec)
@@ -68,7 +66,8 @@ parseCommandLine(int argc, char ** argv,
         struct pam pam;
         if (strlen(cmdlineP->tupletype)+1 > sizeof(pam.tuple_type))
             pm_error("The tuple type you specified is too long.  "
-                     "Maximum %d characters.", sizeof(pam.tuple_type)-1);
+                     "Maximum %u characters.",
+                     (unsigned)sizeof(pam.tuple_type)-1);
     }        
 
     if (!sigmaSpec)
@@ -102,6 +101,7 @@ parseCommandLine(int argc, char ** argv,
             pm_error("height argument must be a positive number.  You "
                      "specified '%s'", argv[2]);
     }
+    free(option_def);
 }
 
 
@@ -160,15 +160,15 @@ imageNormalizer(struct pam * const pamP,
 
 
 int
-main(int argc, char **argv) {
+main(int argc, const char **argv) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     struct pam pam;
     int row;
     double normalizer;
     tuplen * tuplerown;
     
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
    
     parseCommandLine(argc, argv, &cmdline);
 

@@ -84,7 +84,7 @@ parseCommandLine ( int argc, char ** argv,
    was passed to us as the argv array.  We also trash *argv.
 -----------------------------------------------------------------------------*/
     optEntry *option_def = malloc( 100*sizeof( optEntry ) );
-        /* Instructions to optParseOptions3 on how to parse our options.
+        /* Instructions to pm_optParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
 
@@ -100,7 +100,7 @@ parseCommandLine ( int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3( &argc, argv, opt, sizeof(opt), 0 );
+    pm_optParseOptions3( &argc, argv, opt, sizeof(opt), 0 );
         /* Uses and sets argc, argv, and some of *cmdline_p and others. */
 
     if (argc-1 < 1)
@@ -129,9 +129,9 @@ struct pcxHeader {
     short Planes;
     short BitsPerPixel;
     short BytesPerLine;
-        /* Number of decompressed bytes each plane of each row of the image 
-           takes.  Due to padding (this is always an even number), there may
-           be garbage on the right end that isn't part of the image.
+        /* Number of decompressed bytes each plane of each row of the image
+           takes.  Because of padding (this is always an even number), there
+           may be garbage on the right end that isn't part of the image.
         */
     short PaletteInfo;
     short HorizontalResolution;
@@ -532,14 +532,14 @@ pcx_256col_to_ppm(FILE *       const ifP,
     } else
         cols = headerCols;
 
-    image = (unsigned char **)pm_allocarray(BytesPerLine, rows, 
-                                            sizeof(unsigned char));
+    MALLOCARRAY2(image, rows, BytesPerLine);
+
     for (row = 0; row < rows; ++row)
         GetPCXRow(ifP, image[row], BytesPerLine);
 
     /*
      * 256 color images have their color map at the end of the file
-     * preceeded by a magic byte
+     * preceded by a magic byte
      */
     colormapSignature = GetByte(ifP);
     if (colormapSignature != PCX_256_COLORS)

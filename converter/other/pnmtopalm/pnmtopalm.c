@@ -33,8 +33,8 @@ struct cmdline_info {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *inputFilespec;  /* Filespecs of input files */
-    char *transparent;          /* -transparent value.  Null if unspec */
+    const char * inputFilespec;  /* Filespecs of input files */
+    const char * transparent;    /* -transparent value.  Null if unspec */
     unsigned int depth;         /* -depth value.  0 if unspec */
     unsigned int maxdepth;      /* -maxdepth value.  0 if unspec */
     enum compressionType compression;
@@ -90,7 +90,7 @@ parseCommandLine(int argc, char ** argv, struct cmdline_info *cmdlineP) {
     opt.short_allowed = FALSE; /* We have some short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdline_p and others. */
 
     if (depthSpec) {
@@ -289,7 +289,7 @@ formatName(int const format) {
         
 
 static void
-findTransparentColor(char *         const colorSpec, 
+findTransparentColor(const char *   const colorSpec, 
                      pixval         const newMaxval,
                      bool           const directColor, 
                      pixval         const maxval, 
@@ -497,7 +497,7 @@ writeDummy() {
    Write a dummy Palm Bitmap header.  This is a 16 byte header, of
    type version 1 and with (only) pixelSize set to 0xFF.
 
-   An old viewer will see this as invalid due to the pixelSize, and stop
+   An old viewer will see this as invalid because of the pixelSize, and stop
    reading the stream.  A new viewer will recognize this for what it is
    (a dummy header designed to stop old viewers from reading further in
    the stream) and continue reading the stream.  Presumably, what follows
@@ -835,6 +835,7 @@ rleCompressAndBufferRow(const unsigned char * const rowdata,
 
 
 
+/* FIXME Incorrect for images with pixelSize == 16 */
 static void
 computeNextPackbitsRun(const unsigned char * const rowdata,
                        unsigned int          const rowbytes,
@@ -912,7 +913,7 @@ packbitsCompressAndBufferRow(const unsigned char * const rowdata,
                              unsigned int          const rowbytes,
                              struct seqBuffer *    const rasterBufferP) {
 /*----------------------------------------------------------------------------
-   Take the raw Palm Bitmap row 'rowdata', which is 'rowbytess' bytes, and
+   Take the raw Palm Bitmap row 'rowdata', which is 'rowbytes' bytes, and
    add the packbits-compressed representation of it to the buffer 
    with handle 'rasterBufferP'.
 -----------------------------------------------------------------------------*/

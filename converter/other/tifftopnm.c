@@ -52,7 +52,6 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
-#include <sys/wait.h>
 
 #include "pm_c_util.h"
 #include "shhopt.h"
@@ -60,12 +59,6 @@
 #include "nstring.h"
 #include "pnm.h"
 
-#ifdef VMS
-#ifdef SYSV
-#undef SYSV
-#endif
-#include <tiffioP.h>
-#endif
 /* See warning about tiffio.h in pamtotiff.c */
 #include <tiffio.h>
 
@@ -85,7 +78,7 @@
 #define PHOTOMETRIC_DEPTH 32768
 #endif
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -103,7 +96,7 @@ struct cmdlineInfo {
 
 static void
 parseCommandLine(int argc, const char ** const argv,
-                 struct cmdlineInfo * const cmdlineP) {
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that many of the strings that this function returns in the
    *cmdlineP structure are actually in the supplied argv array.  And
@@ -135,7 +128,7 @@ parseCommandLine(int argc, const char ** const argv,
     OPTENT3(0,   "alphaout",   
             OPT_STRING, &cmdlineP->alphaFilename, &alphaSpec,  0);
 
-    optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
 
     if (argc - 1 == 0)
         cmdlineP->inputFilename = strdup("-");  /* he wants stdin */
@@ -154,6 +147,31 @@ parseCommandLine(int argc, const char ** const argv,
         cmdlineP->alphaFilename = NULL;
         cmdlineP->alphaStdout = FALSE;
     }
+}
+
+
+
+static TIFF *
+newTiffImageObject(const char * const inputFileName) {
+/*----------------------------------------------------------------------------
+   Create a TIFF library object for accessing the TIFF input in file
+   named 'inputFileName'.  If 'inputFileName' is "-", that means
+   Standard Input.
+-----------------------------------------------------------------------------*/
+    const char * const tiffSourceName =
+        streq(inputFileName, "-") ? "Standard Input" : inputFileName;
+
+    TIFF * retval;
+
+    retval = TIFFFdOpen(fileno(pm_openr_seekable(inputFileName)),
+                        tiffSourceName,
+                        "r");
+
+    if (retval == NULL)
+        pm_error("Failed to access input file.  The OS opened the file fine, "
+                 "but the TIFF library's TIFFFdOpen rejected the open file.");
+
+    return retval;
 }
 
 
@@ -225,6 +243,8 @@ tiffToImageDim(unsigned int   const tiffCols,
                  orientation);
     }
 }
+
+
 
 static void
 getTiffDimensions(TIFF *         const tiffP,
@@ -345,15 +365,15 @@ readDirectory(TIFF *               const tiffP,
 
 
 static void
-readscanline(TIFF *         const tif, 
-             unsigned char  scanbuf[], 
-             int            const row, 
-             int            const plane,
-             unsigned int   const cols, 
-             unsigned short const bps,
-             unsigned short const spp,
-             unsigned short const fillorder,
-             unsigned int * const samplebuf) {
+readscanline(TIFF *          const tif, 
+             unsigned char * const scanbuf,
+             int             const row, 
+             int             const plane,
+             unsigned int    const cols, 
+             unsigned short  const bps,
+             unsigned short  const spp,
+             unsigned short  const fillorder,
+             unsigned int *  const samplebuf) {
 /*----------------------------------------------------------------------------
    Read one scanline out of the Tiff input and store it into samplebuf[].
    Unlike the scanline returned by the Tiff library function, samplebuf[]
@@ -381,8 +401,8 @@ readscanline(TIFF *         const tif,
                   "TIFFReadScanline() failed.",
                   row, plane);
     else if (bps == 8) {
-        int sample;
-        for (sample = 0; sample < cols*spp; sample++) 
+        unsigned int sample;
+        for (sample = 0; sample < cols * spp; ++sample) 
             samplebuf[sample] = scanbuf[sample];
     } else if (bps < 8) {
         /* Note that in this format, samples do not span bytes.  Rather,
@@ -390,12 +410,12 @@ readscanline(TIFF *         const tif,
            At least that's how I infer the format from reading pnmtotiff.c
            -Bryan 00.11.18
            */
-        int sample;
-        int bitsleft;
+        unsigned int sample;
+        unsigned int bitsleft;
         unsigned char * inP;
 
-        for (sample = 0, bitsleft=8, inP=scanbuf; 
-             sample < cols*spp; 
+        for (sample = 0, bitsleft = 8, inP = scanbuf; 
+             sample < cols * spp; 
              ++sample) {
             if (bitsleft == 0) {
                 ++inP; 
@@ -412,6 +432,7 @@ readscanline(TIFF *         const tif,
                 pm_error("Internal error: invalid value for fillorder: %u", 
                          fillorder);
             }
+            assert(bitsleft >= bps);
             bitsleft -= bps; 
             if (bitsleft < bps)
                 /* Don't count dregs at end of byte */
@@ -433,10 +454,10 @@ readscanline(TIFF *         const tif,
         for (sample = 0; sample < cols*spp; ++sample)
             samplebuf[sample] = scanbuf16[sample];
     } else if (bps == 32) {
-        uint32 * const scanbuf32 = (uint32 *) scanbuf;
+        const uint32 * const scanbuf32 = (const uint32 *) scanbuf;
         unsigned int sample;
         
-        for (sample = 0; sample < cols*spp; ++sample)
+        for (sample = 0; sample < cols * spp; ++sample)
             samplebuf[sample] = scanbuf32[sample];
     } else 
         pm_error("Internal error: invalid bits per sample passed to "
@@ -446,8 +467,11 @@ readscanline(TIFF *         const tif,
 
 
 static void
-pick_cmyk_pixel(const unsigned int samplebuf[], const int sample_cursor,
-                xelval * const r_p, xelval * const b_p, xelval * const g_p) {
+pick_cmyk_pixel(unsigned int const samplebuf[],
+                int          const sampleCursor,
+                xelval *     const redP,
+                xelval *     const bluP,
+                xelval *     const grnP) {
 
     /* Note that the TIFF spec does not say which of the 4 samples is
        which, but common sense says they're in order C,M,Y,K.  Before
@@ -455,10 +479,10 @@ pick_cmyk_pixel(const unsigned int samplebuf[], const int sample_cursor,
        But combined with a compensating error in the CMYK->RGB
        calculation, it had the same effect as C,M,Y,K.
     */
-    unsigned int const c = samplebuf[sample_cursor+0];
-    unsigned int const m = samplebuf[sample_cursor+1];
-    unsigned int const y = samplebuf[sample_cursor+2];
-    unsigned int const k = samplebuf[sample_cursor+3];
+    unsigned int const c = samplebuf[sampleCursor + 0];
+    unsigned int const m = samplebuf[sampleCursor + 1];
+    unsigned int const y = samplebuf[sampleCursor + 2];
+    unsigned int const k = samplebuf[sampleCursor + 3];
 
     /* The CMYK->RGB formula used by TIFFRGBAImageGet() in the TIFF 
        library is the following, (with some apparent confusion with
@@ -476,9 +500,9 @@ pick_cmyk_pixel(const unsigned int samplebuf[], const int sample_cursor,
        Yellow ink removes blue light from what the white paper reflects.  
     */
 
-    *r_p = 255 - MIN(255, c + k);
-    *g_p = 255 - MIN(255, m + k);
-    *b_p = 255 - MIN(255, y + k);
+    *redP = 255 - MIN(255, c + k);
+    *grnP = 255 - MIN(255, m + k);
+    *bluP = 255 - MIN(255, y + k);
 }
 
 
@@ -515,9 +539,9 @@ analyzeImageType(TIFF *             const tif,
                  unsigned short     const photomet,
                  xelval *           const maxvalP, 
                  int *              const formatP, 
-                 xel                      colormap[],
+                 xel *              const colormap,
                  bool               const headerdump,
-                 struct cmdlineInfo const cmdline) {
+                 struct CmdlineInfo const cmdline) {
 
     bool grayscale; 
 
@@ -733,44 +757,40 @@ spawnWithInputPipe(const char *  const shellCmd,
     int fd[2];
     int rc;
 
-    rc = pipe(fd);
+    rc = pm_pipe(fd);
 
     if (rc != 0)
-        asprintfN(errorP, "Failed to create pipe for process input.  "
-                  "Errno=%d (%s)", errno, strerror(errno));
+        pm_asprintf(errorP, "Failed to create pipe for process input.  "
+                    "Errno=%d (%s)", errno, strerror(errno));
     else {
-        int rc;
+        int iAmParent;
+        pid_t childPid;
 
-        rc = fork();
+        pm_fork(&iAmParent, &childPid, errorP);
 
-        if (rc < 0) {
-            asprintfN(errorP, "Failed to fork a process.  errno=%d (%s)",
-                      errno, strerror(errno));
-        } else if (rc == 0) {
-            /* This is the child */
-            int rc;
-            close(fd[PIPE_WRITE]);
-            close(STDIN_FILENO);
-            dup2(fd[PIPE_READ], STDIN_FILENO);
+        if (!*errorP) {
+            if (iAmParent) {
+                close(fd[PIPE_READ]);
 
-            rc = system(shellCmd);
+                *pidP   = childPid;
+                *pipePP = fdopen(fd[PIPE_WRITE], "w");
+                
+                if (*pipePP == NULL)
+                    pm_asprintf(errorP,"Unable to create stream from pipe.  "
+                                "fdopen() fails with errno=%d (%s)",
+                                errno, strerror(errno));
+                else
+                    *errorP = NULL;
+            } else {
+                int rc;
+                close(fd[PIPE_WRITE]);
+                close(STDIN_FILENO);
+                dup2(fd[PIPE_READ], STDIN_FILENO);
 
-            exit(rc);
-        } else {
-            /* Parent */
-            pid_t const childPid = rc;
+                rc = system(shellCmd);
 
-            close(fd[PIPE_READ]);
-
-            *pidP   = childPid;
-            *pipePP = fdopen(fd[PIPE_WRITE], "w");
-
-            if (*pipePP == NULL)
-                asprintfN(errorP,"Unable to create stream from pipe.  "
-                          "fdopen() fails with errno=%d (%s)",
-                          errno, strerror(errno));
-            else
-                *errorP = NULL;
+                exit(rc);
+            }
         }
     }
 }
@@ -787,7 +807,7 @@ createFlipProcess(FILE *         const outFileP,
    Create a process that runs the program Pamflip and writes its output
    to *imageoutFileP.
 
-   The process takes it input from a pipe that we create.  We return as
+   The process takes its input from a pipe that we create.  We return as
    *inPipePP a file stream connected to the other end of that pipe.
 
    I.e. Caller will write a Netpbm file stream to **inPipePP and a flipped
@@ -810,8 +830,8 @@ createFlipProcess(FILE *         const outFileP,
        file descriptor is equivalent to writing to the stream.
     */
 
-    asprintfN(&pamflipCmd, "pamflip -xform=%s >&%u",
-              xformNeeded(orientation), fileno(outFileP));
+    pm_asprintf(&pamflipCmd, "pamflip -xform=%s >&%u",
+                xformNeeded(orientation), fileno(outFileP));
 
     if (verbose)
         pm_message("Reorienting raster with shell command '%s'", pamflipCmd);
@@ -823,7 +843,7 @@ createFlipProcess(FILE *         const outFileP,
                  "raster, failed.  %s.  To work around this, you can use "
                  "the -orientraw option.", pamflipCmd, error);
 
-        strfree(error);
+        pm_strfree(error);
     }
 }
 
@@ -973,12 +993,12 @@ pnmOut_init(FILE *         const imageoutFileP,
    data, pnmOut get 'cols' x 'rows' data, but its output file may be
    'rows x cols'.
 
-   Because the pnmOut object must be set up to receive flipped or not
-   flipped input, we have *flipOkP and *noflipOkP outputs that tell
-   Caller whether he has to flip or not.  In the unique case that
-   the TIFF matrix is already oriented the way the output PNM file needs
-   to be, flipping is idempotent, so both *flipOkP and *noflipOkP are
-   true.
+   Because we must set up the pnmOut object either to receive flipped or not
+   flipped input, we have *flipOkP and *noflipOkP outputs that tell Caller
+   whether he has to flip or not.  Note that Caller also influences which way
+   we set up pnmOut, with his 'flipIfNeeded' argument.  In the unique case
+   that the TIFF matrix is already oriented the way the output PNM file needs
+   to be, flipping is idempotent, so both *flipOkP and *noflipOkP are true.
 -----------------------------------------------------------------------------*/
     pnmOutP->imageoutFileP = imageoutFileP;
     pnmOutP->alphaFileP    = alphaFileP;
@@ -1040,14 +1060,12 @@ pnmOut_term(pnmOut * const pnmOutP,
                        "waiting for Pamflip to terminate");
 
         if (pnmOutP->imagePipeP) {
-            int status;
             fclose(pnmOutP->imagePipeP);
-            waitpid(pnmOutP->imageFlipPid, &status, 0);
+            pm_waitpidSimple(pnmOutP->imageFlipPid);
         }
         if (pnmOutP->alphaPipeP) {
-            int status;
             fclose(pnmOutP->alphaPipeP);
-            waitpid(pnmOutP->alphaFlipPid, &status, 0);
+            pm_waitpidSimple(pnmOutP->alphaFlipPid);
         }
     } else {
         if (pnmOutP->imageoutFileP)
@@ -1090,8 +1108,8 @@ pnmOut_writeRow(pnmOut *     const pnmOutP,
 
 static void
 convertRow(unsigned int   const samplebuf[], 
-           xel                  xelrow[], 
-           gray                 alpharow[], 
+           xel *          const xelrow, 
+           gray *         const alpharow,
            int            const cols, 
            xelval         const maxval, 
            unsigned short const photomet, 
@@ -1167,9 +1185,9 @@ convertRow(unsigned int   const samplebuf[],
 
 
 static void
-scale32to16(unsigned int       samplebuf[],
-            unsigned int const cols,
-            unsigned int const spp) {
+scale32to16(unsigned int * const samplebuf,
+            unsigned int   const cols,
+            unsigned int   const spp) {
 /*----------------------------------------------------------------------------
   Convert every sample in samplebuf[] to something that can be expressed
   in 16 bits, assuming it takes 32 bits now.
@@ -1182,9 +1200,9 @@ scale32to16(unsigned int       samplebuf[],
 
 
 static void
-convertMultiPlaneRow(TIFF *         const tif,
-                     xel                   xelrow[],
-                     gray                  alpharow[],
+convertMultiPlaneRow(TIFF *          const tif,
+                     xel *           const xelrow,
+                     gray *          const alpharow,
                      int             const cols,
                      xelval          const maxval,
                      int             const row,
@@ -1200,15 +1218,15 @@ convertMultiPlaneRow(TIFF *         const tif,
        for the blues.
     */
 
-    int col;
-
     if (photomet != PHOTOMETRIC_RGB)
         pm_error("This is a multiple-plane file, but is not an RGB "
                  "file.  This program does not know how to handle that.");
     else {
+        unsigned int col;
+
         /* First, clear the buffer so we can add red, green,
            and blue one at a time.  
-                */
+        */
         for (col = 0; col < cols; ++col) 
             PPM_ASSIGN(xelrow[col], 0, 0, 0);
 
@@ -1261,8 +1279,8 @@ convertRasterByRows(pnmOut *       const pnmOutP,
                     bool           const verbose) {
 /*----------------------------------------------------------------------------
    With the TIFF header all processed (and relevant information from it in 
-   our arguments), write out the TIFF raster to the file images *imageoutFile
-   and *alphaFile.
+   our arguments), write out the TIFF raster to the Netpbm output files
+   as described by *pnmOutP.
 
    Do this one row at a time, employing the TIFF library's
    TIFFReadScanline.
@@ -1282,12 +1300,12 @@ convertRasterByRows(pnmOut *       const pnmOutP,
            row we are presently converting.
         */
 
-    int row;
+    unsigned int row;
 
     if (verbose)
         pm_message("Converting row by row ...");
 
-    scanbuf = (unsigned char *) malloc(TIFFScanlineSize(tif));
+    MALLOCARRAY(scanbuf, TIFFScanlineSize(tif));
     if (scanbuf == NULL)
         pm_error("can't allocate memory for scanline buffer");
 
@@ -1362,7 +1380,7 @@ warnBrokenTiffLibrary(TIFF * const tiffP) {
         case ORIENTATION_RIGHTBOT:
         case ORIENTATION_LEFTBOT:
             pm_message("WARNING: This TIFF image has an orientation that "
-                       "most TIFF libraries converts incorrectly.  "
+                       "most TIFF libraries convert incorrectly.  "
                        "Use -byrow to circumvent.");
             break;
         }
@@ -1421,20 +1439,23 @@ convertTiffRaster(uint32 *        const raster,
 
 
 
-enum convertDisp {CONV_DONE, CONV_OOM, CONV_UNABLE, CONV_FAILED, 
+enum convertDisp {CONV_DONE,
+                  CONV_OOM,
+                  CONV_UNABLE,
+                  CONV_FAILED, 
                   CONV_NOTATTEMPTED};
 
 static void
-convertRasterInMemory(pnmOut *       const pnmOutP,
-                      xelval         const maxval,
-                      TIFF *         const tif,
-                      unsigned short const photomet, 
-                      unsigned short const planarconfig,
-                      unsigned short const bps,
-                      unsigned short const spp,
-                      unsigned short const fillorder,
-                      xel            const colormap[],
-                      bool           const verbose,
+convertRasterInMemory(pnmOut *           const pnmOutP,
+                      xelval             const maxval,
+                      TIFF *             const tif,
+                      unsigned short     const photomet, 
+                      unsigned short     const planarconfig,
+                      unsigned short     const bps,
+                      unsigned short     const spp,
+                      unsigned short     const fillorder,
+                      xel                const colormap[],
+                      bool               const verbose,
                       enum convertDisp * const statusP) {
 /*----------------------------------------------------------------------------
    With the TIFF header all processed (and relevant information from
@@ -1469,7 +1490,7 @@ convertRasterInMemory(pnmOut *       const pnmOutP,
         int ok;
         ok = TIFFRGBAImageOK(tif, emsg);
         if (!ok) {
-            pm_message(emsg);
+            pm_message("%s", emsg);
             *statusP = CONV_UNABLE;
         } else {
             uint32 * raster;
@@ -1489,14 +1510,14 @@ convertRasterInMemory(pnmOut *       const pnmOutP,
                 
                 ok = TIFFRGBAImageBegin(&img, tif, stopOnErrorFalse, emsg);
                 if (!ok) {
-                    pm_message(emsg);
+                    pm_message("%s", emsg);
                     *statusP = CONV_FAILED;
                 } else {
                     int ok;
                     ok = TIFFRGBAImageGet(&img, raster, cols, rows);
                     TIFFRGBAImageEnd(&img) ;
                     if (!ok) {
-                        pm_message(emsg);
+                        pm_message("%s", emsg);
                         *statusP = CONV_FAILED;
                     } else {
                         *statusP = CONV_DONE;
@@ -1524,6 +1545,7 @@ convertRaster(pnmOut *           const pnmOutP,
               bool               const verbose) {
 
     enum convertDisp status;
+
     if (byrow || !flipOk)
         status = CONV_NOTATTEMPTED;
     else {
@@ -1563,7 +1585,7 @@ static void
 convertImage(TIFF *             const tifP,
              FILE *             const alphaFileP,
              FILE *             const imageoutFileP,
-             struct cmdlineInfo const cmdline) {
+             struct CmdlineInfo const cmdline) {
 
     struct tiffDirInfo tiffDir;
     int format;
@@ -1600,7 +1622,7 @@ static void
 convertIt(TIFF *             const tifP,
           FILE *             const alphaFile, 
           FILE *             const imageoutFile,
-          struct cmdlineInfo const cmdline) {
+          struct CmdlineInfo const cmdline) {
 
     unsigned int imageSeq;
     bool eof;
@@ -1625,8 +1647,8 @@ convertIt(TIFF *             const tifP,
 int
 main(int argc, const char * argv[]) {
 
-    struct cmdlineInfo cmdline;
-    TIFF * tif;
+    struct CmdlineInfo cmdline;
+    TIFF * tiffP;
     FILE * alphaFile;
     FILE * imageoutFile;
 
@@ -1634,15 +1656,7 @@ main(int argc, const char * argv[]) {
 
     parseCommandLine(argc, argv, &cmdline);
 
-    if (!streq(cmdline.inputFilename, "-")) {
-        tif = TIFFOpen(cmdline.inputFilename, "r");
-        if (tif == NULL)
-            pm_error("error opening TIFF file %s", cmdline.inputFilename);
-    } else {
-        tif = TIFFFdOpen(0, "Standard Input", "r");
-        if (tif == NULL)
-            pm_error("error opening standard input as TIFF file");
-    }
+    tiffP = newTiffImageObject(cmdline.inputFilename);
 
     if (cmdline.alphaStdout)
         alphaFile = stdout;
@@ -1656,16 +1670,19 @@ main(int argc, const char * argv[]) {
     else
         imageoutFile = stdout;
 
-    convertIt(tif, alphaFile, imageoutFile, cmdline);
+    convertIt(tiffP, alphaFile, imageoutFile, cmdline);
 
     if (imageoutFile != NULL) 
         pm_close( imageoutFile );
     if (alphaFile != NULL)
         pm_close( alphaFile );
 
-    strfree(cmdline.inputFilename);
+    TIFFClose(tiffP);
+
+    pm_strfree(cmdline.inputFilename);
 
     /* If the program failed, it previously aborted with nonzero completion
-       code, via various function calls.  */
+       code, via various function calls.
+    */
     return 0;
 }

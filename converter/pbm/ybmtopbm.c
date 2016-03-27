@@ -10,104 +10,101 @@
 ** implied warranty.
 */
 
-#include <stdio.h>
+#include "pm.h"
 #include "pbm.h"
+#include "bitreverse.h"
 
-static void getinit ARGS(( FILE* file, short* colsP, short* rowsP, short* depthP, short* padrightP ));
-static bit getbit ARGS(( FILE* file ));
+static short const ybmMagic = ( ( '!' << 8 ) | '!' );
 
-#define YBM_MAGIC  ( ( '!' << 8 ) | '!' )
 
-int
-main( argc, argv )
-    int argc;
-    char* argv[];
-    {
-    FILE* ifp;
-    bit* bitrow;
-    register bit* bP;
-    short rows, cols, padright, row, col;
-    short depth;
-
-    pbm_init( &argc, argv );
-
-    if ( argc > 2 )
-	pm_usage( "[ybmfile]" );
-
-    if ( argc == 2 )
-	ifp = pm_openr( argv[1] );
-    else
-	ifp = stdin;
-
-    getinit( ifp, &cols, &rows, &depth, &padright );
-    if ( depth != 1 )
-	pm_error(
-	    "YBM file has depth of %d, must be 1",
-	    (int) depth );
-
-    pbm_writepbminit( stdout, cols, rows, 0 );
-    bitrow = pbm_allocrow( cols );
-
-    for ( row = 0; row < rows; ++row )
-	{
-	/* Get data. */
-        for ( col = 0, bP = bitrow; col < cols; ++col, ++bP )
-	    *bP = getbit( ifp );
-	/* Discard line padding */
-        for ( col = 0; col < padright; ++col )
-	    (void) getbit( ifp );
-	pbm_writepbmrow( stdout, bitrow, cols, 0 );
-	}
-
-    pm_close( ifp );
-    pm_close( stdout );
-
-    exit( 0 );
-    }
-
-static int item;
-static int bitsperitem, bitshift;
 
 static void
-getinit( file, colsP, rowsP, depthP, padrightP )
-    FILE* file;
-    short* colsP;
-    short* rowsP;
-    short* depthP;
-    short* padrightP;
-    {
-    short magic;
+getinit(FILE *  const ifP,
+        short * const colsP,
+        short * const rowsP,
+        short * const depthP) {
 
-    if ( pm_readbigshort( file, &magic ) == -1 )
-	pm_error( "EOF / read error" );
-    if ( magic != YBM_MAGIC )
-	pm_error( "bad magic number in YBM file" );
-    if ( pm_readbigshort( file, colsP ) == -1 )
-	pm_error( "EOF / read error" );
-      if ( pm_readbigshort( file, rowsP ) == -1 )
-	pm_error( "EOF / read error" );
+    short magic;
+    int rc;
+
+    rc = pm_readbigshort(ifP, &magic);
+    if (rc == -1)
+        pm_error("EOF / read error");
+
+    if (magic != ybmMagic)
+        pm_error("bad magic number in YBM file");
+
+    rc = pm_readbigshort(ifP, colsP);
+    if (rc == -1 )
+        pm_error("EOF / read error");
+
+    rc = pm_readbigshort(ifP, rowsP);
+    if (rc == -1)
+        pm_error("EOF / read error");
 
     *depthP = 1;
-    *padrightP = ( ( *colsP + 15 ) / 16 ) * 16 - *colsP;
-    bitsperitem = 0;
+}
+
+
+
+
+
+
+int
+main(int argc, const char * argv[]) {
+
+    FILE * ifP;
+    bit * bitrow;
+    short rows, cols;
+    unsigned int row;
+    short depth;
+    const char * inputFile;
+
+    pm_proginit(&argc, argv);
+
+    if (argc-1 < 1)
+        inputFile = "-";
+    else {
+        inputFile = argv[1];
+
+        if (argc-1 > 1)
+            pm_error("Too many arguments.  The only argument is the optional "
+                     "input file name");
     }
 
-static bit
-getbit( file )
-    FILE* file;
-    {
-    bit b;
+    ifP = pm_openr(inputFile);
 
-    if ( bitsperitem == 0 )
-	{
-	item = getc(file) | getc(file)<<8;
-	if ( item == EOF )
-	    pm_error( "EOF / read error" );
-	bitsperitem = 16;
-	bitshift = 0;
-	}
-    b = ( ( item >> bitshift) & 1 ) ? PBM_BLACK : PBM_WHITE;
-    --bitsperitem;
-    ++bitshift;
-    return b;
+    getinit(ifP, &cols, &rows, &depth);
+    if (depth != 1)
+        pm_error("YBM file has depth of %u, must be 1", (unsigned)depth);
+    
+    pbm_writepbminit(stdout, cols, rows, 0);
+
+    bitrow = pbm_allocrow_packed(cols + 8);
+
+    for (row = 0; row < rows; ++row) {
+        uint16_t *   const itemrow = (uint16_t *) bitrow;
+        unsigned int const itemCt  = (cols + 15) / 16;
+
+        unsigned int i;
+
+        /* Get raster. */
+        for (i = 0; i < itemCt; ++i) {
+            short int item;
+            pm_readbigshort(ifP, &item);
+            itemrow[i] = (uint16_t) item; 
+        }
+
+        for (i = 0; i < pbm_packed_bytes(cols); ++i)
+            bitrow[i] = bitreverse[bitrow[i]];
+
+        pbm_cleanrowend_packed(bitrow, cols);
+        pbm_writepbmrow_packed(stdout, bitrow, cols, 0);
     }
+
+    pbm_freerow_packed(bitrow);
+    pm_close(ifP);
+    pm_close(stdout);
+
+    return 0;
+}

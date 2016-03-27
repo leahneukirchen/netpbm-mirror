@@ -28,13 +28,11 @@
 #include <assert.h>
 
 #include "pm_c_util.h"
-#include "pnm.h"
+#include "mallocvar.h"
 #include "shhopt.h"
 #include "nstring.h"
+#include "pnm.h"
 #include "bmp.h"
-
-/* MAXCOLORS is the maximum size of a color map in a BMP image */
-#define MAXCOLORS       256
 
 static xelval const bmpMaxval = 255;
     /* The maxval for intensity values in a BMP image -- either in a
@@ -84,8 +82,8 @@ struct pixelformat {
 
 struct bmpInfoHeader {
     enum rowOrder rowOrder;
-    int cols;
-    int rows;
+    unsigned int cols;
+    unsigned int rows;
     unsigned int cBitCount;
         /* Number of bits in the BMP file that each pixel occupies. */
     enum bmpClass class;
@@ -103,59 +101,57 @@ struct bmpInfoHeader {
         /* Size in bytes of the image data.  We only reference this 
            when the image is compressed. */    
     unsigned short cPlanes;
-    unsigned long int compression;
+    BMPCompType compression;
     struct pixelformat pixelformat;
 };
 
 
 
-struct cmdline_info {
+struct cmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *input_filespec;  /* Filespecs of input files */
-    int verbose;    /* -verbose option */
+    const char * inputFileName;
+    unsigned int verbose;
 };
 
-static const char *ifname;
+static const char * ifname;
 
 
 
 static void
-parse_command_line(int argc, char ** argv,
-                   struct cmdline_info *cmdline_p) {
+parseCommandLine(int argc, const char ** argv,
+                 struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
 -----------------------------------------------------------------------------*/
-    optStruct *option_def = malloc(100*sizeof(optStruct));
+    optEntry * option_def;
         /* Instructions to OptParseOptions2 on how to parse our options.
          */
-    optStruct2 opt;
+    optStruct3 opt;
 
     unsigned int option_def_index;
 
-    option_def_index = 0;   /* incremented by OPTENTRY */
-    OPTENTRY(0,   "verbose",     OPT_FLAG,   &cmdline_p->verbose,         0);
- 
-    /* Set the defaults */
-    cmdline_p->verbose = FALSE;
+    MALLOCARRAY_NOFAIL(option_def, 100);
 
+    option_def_index = 0;   /* incremented by OPTENT3 */
+    OPTENT3(0,   "verbose",     OPT_FLAG,   NULL, &cmdlineP->verbose,   0);
+ 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions2(&argc, argv, opt, 0);
-        /* Uses and sets argc, argv, and some of *cmdline_p and others. */
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+        /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (argc-1 == 0) 
-        cmdline_p->input_filespec = "-";
+        cmdlineP->inputFileName = "-";
     else if (argc-1 != 1)
         pm_error("Program takes zero or one argument (filename).  You "
                  "specified %d", argc-1);
     else
-        cmdline_p->input_filespec = argv[1];
-
+        cmdlineP->inputFileName = argv[1];
 }
 
 
@@ -249,13 +245,13 @@ readOffBytes(FILE * const fp, unsigned int const nbytes) {
 
 
 static void
-BMPreadfileheader(FILE *         const ifP, 
+bmpReadfileheader(FILE *         const ifP, 
                   unsigned int * const bytesReadP, 
                   unsigned int * const offBitsP) {
 
-    unsigned short  xHotSpot;
-    unsigned short  yHotSpot;
-    unsigned long   offBits;
+    unsigned short    xHotSpot;
+    unsigned short    yHotSpot;
+    unsigned long     offBits;
     unsigned long int fileSize;
 
 
@@ -268,9 +264,9 @@ BMPreadfileheader(FILE *         const ifP,
 
 
     fileSize = GetLong(ifP);  /* This is not always reliable. */
-    xHotSpot  = GetShort(ifP);
-    yHotSpot  = GetShort(ifP);
-    offBits   = GetLong(ifP);
+    xHotSpot = GetShort(ifP);
+    yHotSpot = GetShort(ifP);
+    offBits  = GetLong(ifP);
 
     *offBitsP = offBits;
 
@@ -283,13 +279,28 @@ static void
 readOs2InfoHeader(FILE *                 const ifP,
                   struct bmpInfoHeader * const headerP) {
 
+    unsigned short colsField, rowsField;
+    unsigned short planesField, bitCountField;
+
     headerP->class = C_OS2;
 
-    headerP->cols = GetShort(ifP);
-    headerP->rows = GetShort(ifP);
+    pm_readlittleshortu(ifP, &colsField);
+    if (colsField == 0)
+        pm_error("Invalid BMP file: says width is zero");
+    else
+        headerP->cols = colsField;
+    
+    pm_readlittleshortu(ifP, &rowsField);
+    if (rowsField == 0)
+        pm_error("Invalid BMP file: says height is zero");
+    else
+        headerP->rows = rowsField;
+
     headerP->rowOrder = BOTTOMUP;
-    headerP->cPlanes = GetShort(ifP);
-    headerP->cBitCount = GetShort(ifP);
+    pm_readlittleshortu(ifP, &planesField);
+    headerP->cPlanes = planesField;
+    pm_readlittleshortu(ifP, &bitCountField);
+    headerP->cBitCount = bitCountField;
     /* I actually don't know if the OS/2 BMP format allows
        cBitCount > 8 or if it does, what it means, but ppmtobmp
        creates such BMPs, more or less as a byproduct of creating
@@ -307,7 +318,7 @@ readOs2InfoHeader(FILE *                 const ifP,
         pm_error("Unrecognized bits per pixel in OS/2 BMP file header: %d",
                  headerP->cBitCount);
                  
-    headerP->compression = COMP_RGB;
+    headerP->compression = BMPCOMP_RGB;
     
     pm_message("OS/2 BMP, %dx%dx%d",
                headerP->cols, headerP->rows, headerP->cBitCount);
@@ -320,26 +331,26 @@ validateCompression(unsigned long const compression,
                     enum rowOrder const rowOrder,
                     unsigned int  const cBitCount) {
     
-    if (compression != COMP_RGB && compression != COMP_BITFIELDS &&
-        compression != COMP_RLE4 && compression != COMP_RLE8 ) 
+    if (compression != BMPCOMP_RGB && compression != BMPCOMP_BITFIELDS &&
+        compression != BMPCOMP_RLE4 && compression != BMPCOMP_RLE8) 
         pm_error("Input has unknown encoding.  "
                  "Compression type code = %ld.  The only ones we know "
                  "are RGB (%u), BITFIELDS (%u), "
                  "RLE4 (%u), and RLE8 (%u)",
-                 compression, COMP_RGB, COMP_BITFIELDS,
-                 COMP_RLE4, COMP_RLE8);
+                 compression, BMPCOMP_RGB, BMPCOMP_BITFIELDS,
+                 BMPCOMP_RLE4, BMPCOMP_RLE8);
                      
-    if ((compression == COMP_RLE4 || compression == COMP_RLE8) &&
+    if ((compression == BMPCOMP_RLE4 || compression == BMPCOMP_RLE8) &&
         rowOrder == TOPDOWN )                        
         pm_error("Invalid BMP header.  Claims image is top-down and also "
                  "compressed, which is an impossible combination.");
 
-    if ( (compression == COMP_RLE4 && cBitCount !=4) ||
-         (compression == COMP_RLE8 && cBitCount !=8) ) 
+    if ((compression == BMPCOMP_RLE4 && cBitCount !=4 ) ||
+        (compression == BMPCOMP_RLE8 && cBitCount !=8 )) 
         pm_error("Invalid BMP header.  " 
                  "Compression type (%s) disagrees with "
                  "number of bits per pixel (%u).",
-                 compression == COMP_RLE4 ? "RLE4" : "RLE8",
+                 compression == BMPCOMP_RLE4 ? "RLE4" : "RLE8",
                  cBitCount);
 }
 
@@ -357,12 +368,16 @@ readWindowsBasic40ByteInfoHeader(FILE *                 const ifP,
 -----------------------------------------------------------------------------*/
     int colorsimportant;   /* ColorsImportant value from header */
     int colorsused;        /* ColorsUsed value from header */
+    unsigned short planesField, bitCountField;
 
     headerP->class = C_WIN;
 
     headerP->cols = GetLong(ifP);
+    if (headerP->cols == 0)
+        pm_error("Invalid BMP file: says width is zero");
     {
         long const cy = GetLong(ifP);
+
         if (cy == 0)
             pm_error("Invalid BMP file: says height is zero");
         if (cy < 0) {
@@ -373,16 +388,17 @@ readWindowsBasic40ByteInfoHeader(FILE *                 const ifP,
             headerP->rows = cy;
         }
     }
-    headerP->cPlanes = GetShort(ifP);
-    headerP->cBitCount = GetShort(ifP);
- 
+    pm_readlittleshortu(ifP, &planesField);
+    headerP->cPlanes = planesField;
+    pm_readlittleshortu(ifP, &bitCountField);
+    headerP->cBitCount = bitCountField;
     {
         unsigned long int const compression = GetLong(ifP);
 
-        headerP->bitFields = (compression == COMP_BITFIELDS);
-
         validateCompression(compression, headerP->rowOrder,
                             headerP->cBitCount);
+
+        headerP->bitFields = (compression == BMPCOMP_BITFIELDS);
 
         headerP->compression = compression;             
     }
@@ -596,7 +612,7 @@ readWindowsInfoHeader(FILE *                 const ifP,
 
 
 static void
-BMPreadinfoheader(FILE *                 const ifP, 
+bmpReadinfoheader(FILE *                 const ifP, 
                   unsigned int *         const bytesReadP,
                   struct bmpInfoHeader * const headerP) {
 
@@ -622,7 +638,7 @@ BMPreadinfoheader(FILE *                 const ifP,
 
 
 static void
-BMPreadcolormap(FILE *         const ifP, 
+bmpReadColormap(FILE *         const ifP, 
                 int            const class, 
                 xel **         const colormapP, 
                 unsigned int   const cmapsize,
@@ -837,7 +853,7 @@ convertRow(unsigned char      const bmprow[],
         unsigned int col;
         for (col = 0; col < cols; ++col)
             xelrow[col] = colormap[bmprow[col]];
-    } else if (cBitCount < 8) {
+    } else if (cBitCount == 1 || cBitCount == 2 || cBitCount == 4) {
         /* It's a bit field color index */
         unsigned char const mask = ( 1 << cBitCount ) - 1;
 
@@ -850,18 +866,21 @@ convertRow(unsigned char      const bmprow[],
                 (bmprow[cursor] & (mask << shift)) >> shift;
             xelrow[col] = colormap[index];
         }
-    } else
-        pm_error("Internal error: invalid cBitCount in convertRow()");
+    } else {
+        /* Every possible BMP bits per pixel is handled above */
+        assert(false);
+    }
 }
 
 
 
 static unsigned char **
-allocBMPraster(unsigned int const rows, unsigned int const bytesPerRow) {
+allocBmpRaster(unsigned int const rows,
+               unsigned int const bytesPerRow) {
 
     unsigned int const storageSize = 
         rows * sizeof(unsigned char *) + rows * bytesPerRow;        
-    unsigned char ** BMPraster;
+    unsigned char ** bmpRaster;
     unsigned int row;
     unsigned char * startOfRows;
 
@@ -872,18 +891,18 @@ allocBMPraster(unsigned int const rows, unsigned int const bytesPerRow) {
     if (UINT_MAX / (bytesPerRow + sizeof(unsigned char *)) < rows)
         pm_error("raster is ridiculously large.");
 
-    BMPraster = (unsigned char **) malloc(storageSize);
+    bmpRaster = (unsigned char **) malloc(storageSize);
 
-    if (BMPraster == NULL)
+    if (bmpRaster == NULL)
         pm_error("Unable to allocate %u bytes for the BMP raster\n",
                  storageSize);
 
-    startOfRows = (unsigned char *)(BMPraster + rows);
+    startOfRows = (unsigned char *)(bmpRaster + rows);
 
     for (row = 0; row < rows; ++row) 
-        BMPraster[row] = startOfRows + row * bytesPerRow;
+        bmpRaster[row] = startOfRows + row * bytesPerRow;
 
-    return BMPraster;
+    return bmpRaster;
 }
 
 
@@ -892,14 +911,14 @@ static void
 readrow(FILE *           const ifP,
         unsigned int     const row,
         unsigned int     const bytesPerRow,
-        unsigned char ** const BMPraster,
+        unsigned char ** const bmpRaster,
         unsigned int *   const bytesReadP) {
 
     size_t bytesRead;
 
     assert(bytesPerRow > 0);
     
-    bytesRead = fread(BMPraster[row], 1, bytesPerRow, ifP);
+    bytesRead = fread(bmpRaster[row], 1, bytesPerRow, ifP);
 
     if (bytesRead < bytesPerRow) {
         if (feof(ifP))
@@ -975,12 +994,12 @@ readrowRLE(FILE *           const ifP,
            unsigned int     const row,
            unsigned int     const cols,
            bool             const lastrow,
-           unsigned long    const compression,
-           unsigned char ** const BMPraster,
+           BMPCompType      const compression,
+           unsigned char ** const bmpRaster,
            unsigned int  *  const bytesReadP) {
 
-    bool const RLE4 = (compression == COMP_RLE4);
-    int  const pixelsPerRowMargin = RLE4 ? cols % 2 : 0;
+    bool const rle4 = (compression == BMPCOMP_RLE4);
+    int  const pixelsPerRowMargin = rle4 ? cols % 2 : 0;
 
     char const err_decode[] = 
         "Error while decoding compressed BMP image.  "
@@ -998,17 +1017,17 @@ readrowRLE(FILE *           const ifP,
     totalBytesRead = 0;  /* Initial value */
     pixelsRead = 0;      /* Initial value */
 
-    while (TRUE) {
+    while (true) {
         unsigned int n;
             /* decompressed bytes already read; current write point */ 
         unsigned int cnt;
         unsigned char code;
 
-        n = RLE4 ? (pixelsRead + 1) / 2 : pixelsRead;
+        n = rle4 ? (pixelsRead + 1) / 2 : pixelsRead;
 
         switch (readRLEcode(ifP, &cnt, &code)) {
         case ENC_MODE: {
-            unsigned int const byteCnt = RLE4 ? (cnt + 1) /2 : cnt;
+            unsigned int const byteCnt = rle4 ? (cnt + 1) /2 : cnt;
             unsigned int i; 
 
             if (pixelsRead + cnt > cols + pixelsPerRowMargin)
@@ -1016,11 +1035,11 @@ readrowRLE(FILE *           const ifP,
                          row, pixelsRead ); 
                  
             for (i = 0; i < byteCnt; ++i)
-                BMPraster[row][n+i] = code;
+                bmpRaster[row][n+i] = code;
                  
-            if (RLE4 && pixelsRead % 2 == 1)
+            if (rle4 && pixelsRead % 2 == 1)
                 /* previous read ended odd */
-                nibbleAlign(&BMPraster[row][n-1], cnt); 
+                nibbleAlign(&bmpRaster[row][n-1], cnt); 
             
             pixelsRead += cnt;
             totalBytesRead += 2;
@@ -1030,13 +1049,13 @@ readrowRLE(FILE *           const ifP,
             unsigned int cmpBytesRead; /* compressed bytes read */
             /* align read-end to 16 bit boundary */
             unsigned int const bytesToRead =
-                RLE4 ? (cnt + 3) / 4 * 2 : (cnt + 1) / 2 * 2;
+                rle4 ? (cnt + 3) / 4 * 2 : (cnt + 1) / 2 * 2;
 
             if (pixelsRead + cnt > cols + pixelsPerRowMargin)
                 pm_error(err_decode,  "Too many pixels in absolute mode",
                          row, pixelsRead); 
 
-            cmpBytesRead = fread(&BMPraster[row][n], 
+            cmpBytesRead = fread(&bmpRaster[row][n], 
                                  sizeof(char), bytesToRead, ifP);
 
             if (cmpBytesRead < bytesToRead) {
@@ -1047,8 +1066,8 @@ readrowRLE(FILE *           const ifP,
                     pm_error("Error reading BMP raster.  Errno=%d (%s)",
                              errno, strerror(errno));
             }
-            if (RLE4 && pixelsRead % 2 == 1) /* previous read ended odd */
-                nibbleAlign(&BMPraster[row][n-1], cnt); 
+            if (rle4 && pixelsRead % 2 == 1) /* previous read ended odd */
+                nibbleAlign(&bmpRaster[row][n-1], cnt); 
     
             pixelsRead += cnt;
             totalBytesRead += cmpBytesRead + 2;
@@ -1098,25 +1117,36 @@ readrowRLE(FILE *           const ifP,
 
 
 static void
-BMPreadraster(FILE *            const ifP, 
+bmpReadraster(FILE *            const ifP, 
               unsigned int      const cols, 
               unsigned int      const rows, 
               enum rowOrder     const rowOrder,
               unsigned int      const cBitCount, 
-              unsigned long int const compression,
-              unsigned char *** const BMPrasterP, 
+              BMPCompType       const compression,
+              unsigned char *** const bmpRasterP, 
               unsigned int *    const bytesReadP) {
+/*----------------------------------------------------------------------------
+   Read the raster from the BMP file on *ifP (which is positioned to the
+   raster).  The raster is 'rows' rows of 'cols' columns, 'cBitCount' bits per
+   pixel, with rows in order 'rowOrder'.
 
+   Return the raster in a newly malloced 2-dimensional array and return
+   a pointer to that array as *bmpRasterP.
+
+   Leave the input file positioned immediately after the raster and return
+   as *bytesReadP the number of bytes we read from the file (i.e. the number
+   of bytes in the raster portion of the file).
+-----------------------------------------------------------------------------*/
     unsigned int const bytesPerRow =
-        (compression == COMP_RLE4) ? cols / 2 + 2 :
-        (compression == COMP_RLE8) ? cols + 1 :
+        (compression == BMPCOMP_RLE4) ? cols / 2 + 2 :
+        (compression == BMPCOMP_RLE8) ? cols + 1 :
         ((cols * cBitCount + 31) / 32) * 4;
         /* A BMP raster row is a multiple of 4 bytes, padded on the right
            with don't cares.
         */
-    unsigned char ** BMPraster;
+    unsigned char ** bmpRaster;
 
-    BMPraster = allocBMPraster(rows, bytesPerRow);
+    bmpRaster = allocBmpRaster(rows, bytesPerRow);
 
     *bytesReadP = 0;
 
@@ -1127,31 +1157,36 @@ BMPreadraster(FILE *            const ifP,
     */
     
     switch(compression){
-    case COMP_RGB:
-    case COMP_BITFIELDS: {
+    case BMPCOMP_RGB:
+    case BMPCOMP_BITFIELDS: {
         unsigned int i;
         for (i = 0; i < rows; ++i)
             readrow(ifP, rowOrder == TOPDOWN ? i : rows - i - 1, 
-                    bytesPerRow, BMPraster, bytesReadP);
+                    bytesPerRow, bmpRaster, bytesReadP);
     } break;
-    case COMP_RLE4: 
-    case COMP_RLE8: {
+    case BMPCOMP_RLE4: 
+    case BMPCOMP_RLE8: {
         unsigned int i;
         /* Read all rows except last */
+        assert(rows >= 1);
         for (i = 0; i < rows - 1; ++i){
             readrowRLE(ifP, rowOrder == TOPDOWN ? i : rows - i - 1, 
-                       cols, FALSE, compression, BMPraster, bytesReadP);
+                       cols, FALSE, compression, bmpRaster, bytesReadP);
         }
         /* Read last row */
         readrowRLE(ifP, rowOrder == TOPDOWN ? i : rows - i - 1, 
-                   cols, TRUE,  compression, BMPraster, bytesReadP);
+                   cols, TRUE,  compression, bmpRaster, bytesReadP);
     } break;             
-    default:       
-        pm_error("The BMP specifies a compression scheme we don't "
-                 "recognize.  Code= %lu", compression);
+    case BMPCOMP_JPEG:
+        pm_error("BMP file uses JPEG compression.  We don't know how to "
+                 "interpret that.");
+        break;
+    case BMPCOMP_PNG:
+        pm_error("BMP file uses PNG compression.  We don't know how to "
+                 "interpret that.");
+        break;
     }
-
-    *BMPrasterP = BMPraster;
+    *bmpRasterP = bmpRaster;
 }
 
 
@@ -1172,14 +1207,7 @@ reportHeader(struct bmpInfoHeader const header,
                header.rowOrder == BOTTOMUP ? "bottom up" : "top down");
     pm_message("  Byte offset of raster within file: %u", offBits);
     pm_message("  Bits per pixel in raster: %u", header.cBitCount);
-    pm_message("  Compression: %s", 
-               header.compression == COMP_RGB ? "none" :
-               header.compression == COMP_RLE4 ? "4 bit run-length coding" :
-               header.compression == COMP_RLE8 ? "8 bit run-length coding" :
-               header.compression == COMP_BITFIELDS ? "none" :
-               header.compression == COMP_JPEG ? "JPEG (not supported)" :
-               header.compression == COMP_PNG ? "PNG (not supported)" :
-               "???");                
+    pm_message("  Compression: %s", BMPCompTypeName(header.compression));
     pm_message("  Colors in color map: %u", header.cmapsize);
 }        
 
@@ -1217,11 +1245,11 @@ analyzeColors(xel          const colormap[],
 
 
 static void
-warnIfOffBitsWrong(struct bmpInfoHeader const BMPheader,
+warnIfOffBitsWrong(struct bmpInfoHeader const bmpHeader,
                    unsigned int         const offBits) {
 
-    if (offBits != BMPoffbits(BMPheader.class, BMPheader.cBitCount, 
-                              BMPheader.cmapsize)) {
+    if (offBits != BMPoffbits(bmpHeader.class, bmpHeader.cBitCount, 
+                              bmpHeader.cmapsize)) {
 
         pm_message("warning: the BMP header says the raster starts "
                    "at offset %u bytes into the file (offbits), "
@@ -1229,8 +1257,8 @@ warnIfOffBitsWrong(struct bmpInfoHeader const BMPheader,
                    "the raster.  This inconsistency probably means the "
                    "input file is not a legal BMP file and is unusable.",
                    offBits,
-                   BMPoffbits(BMPheader.class, BMPheader.cBitCount, 
-                              BMPheader.cmapsize));
+                   BMPoffbits(bmpHeader.class, bmpHeader.cBitCount, 
+                              bmpHeader.cmapsize));
     }
 }
 
@@ -1238,59 +1266,33 @@ warnIfOffBitsWrong(struct bmpInfoHeader const BMPheader,
 
 static void
 readColorMap(FILE *               const ifP,
-             struct bmpInfoHeader const BMPheader,
+             struct bmpInfoHeader const bmpHeader,
              xel **               const colorMapP,
              unsigned int *       const posP) {
 
     unsigned int bytesRead;
 
-    BMPreadcolormap(ifP, BMPheader.class, 
-                    colorMapP, BMPheader.cmapsize, &bytesRead);
+    bmpReadColormap(ifP, bmpHeader.class, 
+                    colorMapP, bmpHeader.cmapsize, &bytesRead);
 
     *posP += bytesRead;
-
-    if (bytesRead != BMPlencolormap(BMPheader.class, BMPheader.cBitCount, 
-                                    BMPheader.cmapsize)) {
-
-        pm_message("warning: %u-byte RGB table, expected %u bytes",
-                   bytesRead,
-                   BMPlencolormap(BMPheader.class, BMPheader.cBitCount, 
-                                  BMPheader.cmapsize));
-    }
 }
 
 
 
 static void
 readRaster(FILE *               const ifP,
-           struct bmpInfoHeader const BMPheader,
-           unsigned char ***    const BMPrasterP, 
+           struct bmpInfoHeader const bmpHeader,
+           unsigned char ***    const bmpRasterP, 
            unsigned int *       const posP) {
 
     unsigned int bytesRead;
 
-    BMPreadraster(ifP, BMPheader.cols, BMPheader.rows, BMPheader.rowOrder,
-                  BMPheader.cBitCount, BMPheader.compression,
-                  BMPrasterP, &bytesRead);
+    bmpReadraster(ifP, bmpHeader.cols, bmpHeader.rows, bmpHeader.rowOrder,
+                  bmpHeader.cBitCount, bmpHeader.compression,
+                  bmpRasterP, &bytesRead);
 
     *posP += bytesRead;
-}
-
-
-
-static void
-warnIfBadFileSize(struct bmpInfoHeader const BMPheader,
-                  unsigned int         const pos) {
-
-    unsigned int const expectedSize =
-        BMPlenfileGen(BMPheader.class, BMPheader.cBitCount, 
-                      BMPheader.cmapsize, BMPheader.cols,
-                      BMPheader.rows, BMPheader.imageSize,
-                      BMPheader.compression);
-
-    if (pos != expectedSize)
-        pm_message("warning: read %u bytes, expected to read %u bytes",
-                   pos, expectedSize);
 }
 
 
@@ -1316,7 +1318,7 @@ isValidBmpBpp(unsigned int const cBitCount) {
 
 static void
 readBmp(FILE *               const ifP, 
-        unsigned char ***    const BMPrasterP, 
+        unsigned char ***    const bmpRasterP, 
         int *                const colsP, 
         int *                const rowsP,
         bool *               const grayPresentP, 
@@ -1334,59 +1336,58 @@ readBmp(FILE *               const ifP,
     
     unsigned int offBits;
         /* Byte offset into file of raster */
-    struct bmpInfoHeader BMPheader;
+    struct bmpInfoHeader bmpHeader;
 
     pos = 0;  /* Starting at the beginning ... */
     { 
         unsigned int bytesRead;
-        BMPreadfileheader(ifP, &bytesRead, &offBits);
+        bmpReadfileheader(ifP, &bytesRead, &offBits);
         pos += bytesRead;
     }
     {
         unsigned int bytesRead;
-        BMPreadinfoheader(ifP, &bytesRead, &BMPheader);
+        bmpReadinfoheader(ifP, &bytesRead, &bmpHeader);
         if (verbose)
             pm_message("Read %u bytes of header", bytesRead);
         pos += bytesRead;
     }
 
     if (verbose) 
-        reportHeader(BMPheader, offBits);
+        reportHeader(bmpHeader, offBits);
 
-    warnIfOffBitsWrong(BMPheader, offBits);
+    warnIfOffBitsWrong(bmpHeader, offBits);
 
-    readColorMap(ifP, BMPheader, &colormap, &pos);
+    readColorMap(ifP, bmpHeader, &colormap, &pos);
 
-    analyzeColors(colormap, BMPheader.cmapsize, bmpMaxval, 
+    analyzeColors(colormap, bmpHeader.cmapsize, bmpMaxval, 
                   grayPresentP, colorPresentP);
 
     readOffBytes(ifP, offBits - pos);
 
     pos = offBits;
 
-    readRaster(ifP, BMPheader, BMPrasterP, &pos);
+    readRaster(ifP, bmpHeader, bmpRasterP, &pos);
 
-    warnIfBadFileSize(BMPheader, pos);
-    
     if (fgetc(ifP) != EOF)
         pm_message("warning: some image data remains unread.");
     
-    if (!isValidBmpBpp(BMPheader.cBitCount))
+    if (!isValidBmpBpp(bmpHeader.cBitCount))
         pm_error("Invalid BMP image: 'cBitCount' field of header "
                  "(number of bits for each pixel in raster) is %u",
-                 BMPheader.cBitCount);
+                 bmpHeader.cBitCount);
 
-    *colsP        = BMPheader.cols;
-    *rowsP        = BMPheader.rows;
-    *cBitCountP   = BMPheader.cBitCount;
-    *pixelformatP = BMPheader.pixelformat;
+    *cBitCountP   = bmpHeader.cBitCount;
+
+    *colsP        = bmpHeader.cols;
+    *rowsP        = bmpHeader.rows;
+    *pixelformatP = bmpHeader.pixelformat;
     *colormapP    = colormap;
 }
 
 
 
 static void
-writeRasterGen(unsigned char **   const BMPraster,
+writeRasterGen(unsigned char **   const bmpRaster,
                int                const cols, 
                int                const rows, 
                int                const format,
@@ -1395,7 +1396,7 @@ writeRasterGen(unsigned char **   const BMPraster,
                xel                const colormap[]) {
 /*----------------------------------------------------------------------------
   Write the PNM raster to Standard Output, corresponding to the raw BMP
-  raster BMPraster.  Write the raster assuming the PNM image has 
+  raster bmpRaster.  Write the raster assuming the PNM image has 
   dimensions 'cols' by 'rows' and format 'format', with maxval 255.
 
   The BMP image has 'cBitCount' bits per pixel, arranged in format
@@ -1412,7 +1413,7 @@ writeRasterGen(unsigned char **   const BMPraster,
     xelrow = pnm_allocrow(cols);
 
     for (row = 0; row < rows; ++row) {
-        convertRow(BMPraster[row], xelrow, cols, cBitCount, pixelformat,
+        convertRow(bmpRaster[row], xelrow, cols, cBitCount, pixelformat,
                    colormap);
         pnm_writepnmrow(stdout, xelrow, cols, bmpMaxval, format, FALSE);
     }
@@ -1422,13 +1423,13 @@ writeRasterGen(unsigned char **   const BMPraster,
 
 
 static void
-writeRasterPbm(unsigned char ** const BMPraster,
+writeRasterPbm(unsigned char ** const bmpRaster,
                int              const cols, 
                int              const rows, 
                xel              const colormap[]) {
 /*----------------------------------------------------------------------------
   Write the PBM raster to Standard Output corresponding to the raw BMP
-  raster BMPraster.  Write the raster assuming the PBM image has 
+  raster bmpRaster.  Write the raster assuming the PBM image has 
   dimensions 'cols' by 'rows'.
 
   The BMP image has 'cBitCount' bits per pixel, arranged in format
@@ -1439,10 +1440,8 @@ writeRasterPbm(unsigned char ** const BMPraster,
   abnormal case in which colormap[0] and colormap[1] have the same
   value (i.e. both white or both black.)
   
-  We destroy *BMPraster as a side effect.
+  We destroy *bmpRaster as a side effect.
 -----------------------------------------------------------------------------*/
-    unsigned int const charBits = (sizeof(unsigned char) * 8);
-        /* Number of bits in a character */
     unsigned int const colChars = pbm_packed_bytes(cols);
     
     int row;
@@ -1455,20 +1454,15 @@ writeRasterPbm(unsigned char ** const BMPraster,
         colorformat = BlackWhite;
         
     for (row=0; row < rows; ++row){
-        unsigned char * const bitrow = BMPraster[row]; 
+        unsigned char * const bitrow = bmpRaster[row]; 
 
         if (colorformat == BlackWhite) {
             unsigned int i;
             for (i = 0; i < colChars; ++i) 
                 bitrow[i] = ~bitrow[i]; /* flip all pixels */ 
         }   
-            
-        if (cols % 8 > 0) {
-            /* adjust final partial byte */
-            bitrow[colChars-1] >>= charBits - cols % charBits;
-            bitrow[colChars-1] <<= charBits - cols % charBits;
-        }
-        
+
+        pbm_cleanrowend_packed(bitrow, cols);
         pbm_writepbmrow_packed(stdout, bitrow, cols, FALSE);
     }
 }
@@ -1476,9 +1470,9 @@ writeRasterPbm(unsigned char ** const BMPraster,
 
 
 int
-main(int argc, char ** argv) {
+main(int argc, const char ** argv) {
 
-    struct cmdline_info cmdline;
+    struct cmdlineInfo cmdline;
     FILE * ifP;
     int outputType;
 
@@ -1488,10 +1482,10 @@ main(int argc, char ** argv) {
            and gray.
         */
     int cols, rows;
-    unsigned char **BMPraster;
+    unsigned char **bmpRaster;
         /* The raster part of the BMP image, as a row x column array, with
            each element being a raw byte from the BMP raster.  Note that
-           BMPraster[0] is really Row 0 -- the top row of the image, even
+           bmpRaster[0] is really Row 0 -- the top row of the image, even
            though the bottom row comes first in the BMP format.
         */
     unsigned int cBitCount;
@@ -1503,17 +1497,17 @@ main(int argc, char ** argv) {
            undefined if not a colormapped BMP.
          */
 
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
-    parse_command_line(argc, argv, &cmdline);
+    parseCommandLine(argc, argv, &cmdline);
 
-    ifP = pm_openr(cmdline.input_filespec);
-    if (streq(cmdline.input_filespec, "-"))
+    ifP = pm_openr(cmdline.inputFileName);
+    if (streq(cmdline.inputFileName, "-"))
         ifname = "Standard Input";
     else 
-        ifname = cmdline.input_filespec;
+        ifname = cmdline.inputFileName;
 
-    readBmp(ifP, &BMPraster, &cols, &rows, &grayPresent, &colorPresent, 
+    readBmp(ifP, &bmpRaster, &cols, &rows, &grayPresent, &colorPresent, 
             &cBitCount, &pixelformat, &colormap,
             cmdline.verbose);
     pm_close(ifP);
@@ -1531,14 +1525,14 @@ main(int argc, char ** argv) {
     
     if (outputType == PBM_TYPE  && cBitCount == 1){
         pbm_writepbminit(stdout, cols, rows, FALSE);
-        writeRasterPbm(BMPraster, cols, rows, colormap);
+        writeRasterPbm(bmpRaster, cols, rows, colormap);
     } else {
         pnm_writepnminit(stdout, cols, rows, bmpMaxval, outputType, FALSE);
-        writeRasterGen(BMPraster, cols, rows, outputType, cBitCount,
+        writeRasterGen(bmpRaster, cols, rows, outputType, cBitCount,
                        pixelformat, colormap); 
     }
     free(colormap);
-    free(BMPraster);
+    free(bmpRaster);
 
     return 0;
 }

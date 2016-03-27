@@ -15,8 +15,9 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#include "pm_c_util.h"
-#include "nstring.h"
+#include "netpbm/pm_c_util.h"
+#include "netpbm/nstring.h"
+#include "rle_config.h"
 #include "rle.h"
 
 
@@ -52,7 +53,7 @@ my_popen(const char * const cmd,
         return NULL;
     }
 
-    if ( pipe(pipefd) < 0 )
+    if (pm_pipe(pipefd) < 0 )
         return NULL;
     
     /* Flush known files. */
@@ -199,11 +200,11 @@ dealWithSubprocess(const char *  const file_name,
         *noSubprocessP = FALSE;
         
         if (*mode == 'w')
-            asprintfN(&command, "compress > %s", file_name);
+            pm_asprintf(&command, "compress > %s", file_name);
         else if (*mode == 'a')
-            asprintfN(&command, "compress >> %s", file_name);
+            pm_asprintf(&command, "compress >> %s", file_name);
         else
-            asprintfN(&command, "compress -d < %s", file_name);
+            pm_asprintf(&command, "compress -d < %s", file_name);
         
         *fpP = my_popen(command, mode, &thepid);
 
@@ -215,7 +216,7 @@ dealWithSubprocess(const char *  const file_name,
             if (*catchingChildrenP < MAX_CHILDREN)
                 pids[(*catchingChildrenP)++] = thepid;
         }
-        strfree(command);
+        pm_strfree(command);
     } else {
         *noSubprocessP = TRUE;
         *errorP = NULL;
@@ -234,7 +235,7 @@ dealWithSubprocess(const char *  const file_name,
  *  will return a pointer to stdin or stdout depending on the mode.
  *    If the user specifies a non-null file name and an I/O error occurs
  *  when trying to open the file, rle_open_f will terminate execution with
- *  an appropiate error message.
+ *  an appropriate error message.
  *
  *  parameters
  *   input:

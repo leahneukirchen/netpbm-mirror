@@ -9,7 +9,7 @@
 
 
 void 
-canon_600_load_raw(void) {
+canon_600_load_raw(Image const image) {
     unsigned char  data[1120], *dp;
     unsigned short pixel[896], *pix;
     int irow, orow, col;
@@ -42,7 +42,7 @@ canon_600_load_raw(void) {
 
 
 void
-canon_a5_load_raw(void) {
+canon_a5_load_raw(Image const image) {
     unsigned char  data[1940], *dp;
     unsigned short pixel[1552], *pix;
     int row, col;
@@ -97,7 +97,7 @@ canon_has_lowbits()
 
 
 void 
-canon_compressed_load_raw(void) {
+canon_compressed_load_raw(Image const image) {
     unsigned short *pixel, *prow;
     int lowbits, i, row, r, col, save, val;
     unsigned irow, icol;

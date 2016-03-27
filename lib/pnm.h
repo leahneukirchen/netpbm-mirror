@@ -20,6 +20,9 @@ typedef pixval xelval;
 #define PNM_OVERALLMAXVAL PPM_OVERALLMAXVAL
 #define PNM_MAXMAXVAL PPM_MAXMAXVAL
 #define PNM_GET1(x) PPM_GETB(x)
+#define PNM_GETR(x) PPM_GETR(x)
+#define PNM_GETG(x) PPM_GETG(x)
+#define PNM_GETB(x) PPM_GETB(x)
 #define PNM_ASSIGN1(x,v) PPM_ASSIGN(x,0,0,v)
 #define PNM_ASSIGN(x,r,g,b) PPM_ASSIGN(x,r,g,b)
 #define PNM_EQUAL(x,y) PPM_EQUAL(x,y)
@@ -34,7 +37,7 @@ pnm_init(int *   const argcP,
          char ** const argv);
 
 void
-pnm_nextimage(FILE *file, int * const eofP);
+pnm_nextimage(FILE * const file, int * const eofP);
 
 xel *
 pnm_allocrow(unsigned int const cols);

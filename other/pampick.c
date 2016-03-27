@@ -92,7 +92,7 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine(int argc, char ** argv,
+parseCommandLine(int argc, const char ** argv,
                  struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the pointers we place into *cmdlineP are sometimes to storage
@@ -119,7 +119,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     initUintSet(&cmdlineP->imageSeqList, argc-1);
@@ -217,15 +217,15 @@ failIfUnpickedImages(const struct uintSet * const uintSetP,
 
 
 int
-main(int argc, char *argv[]) {
+main(int argc, const char *argv[]) {
 
     struct cmdlineInfo cmdline;
 
-    bool eof;  /* No more images in input */
+    int eof;  /* No more images in input */
     unsigned int imageSeq;  
         /* Sequence of current image in input file.  First = 0 */
 
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
     

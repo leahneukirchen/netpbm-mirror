@@ -16,9 +16,9 @@
 
 #include "config.h"
 
-#if STDC_HEADERS
-#	include <stdlib.h>
-#endif /* not STDC_HEADERS */
+#include <stdlib.h>
+
+#include "pm_c_util.h"
 
 #include "types.h"
 #include "macros.h"
@@ -29,28 +29,45 @@
 #include "wfalib.h"
 #include "tiling.h"
 
-/*****************************************************************************
 
-				prototypes
-  
-*****************************************************************************/
-
-static int
-cmpdecvar (const void *value1, const void *value2);
-static int
-cmpincvar (const void *value1, const void *value2);
-
-/*****************************************************************************
-
-				public code
-  
-*****************************************************************************/
 
 typedef struct var_list
 {
    int	  address;			/* bintree address */
    real_t variance;			/* variance of tile */
 } var_list_t;
+
+#ifndef LITERAL_FN_DEF_MATCH
+static qsort_comparison_fn cmpincvar;
+#endif
+
+static int
+cmpincvar(const void * const value1,
+          const void * const value2) {
+/*----------------------------------------------------------------------------
+  Sorts by increasing variances (quicksort sorting function)
+-----------------------------------------------------------------------------*/
+    return
+        ((var_list_t *) value1)->variance - ((var_list_t *) value2)->variance;
+}
+
+
+
+#ifndef LITERAL_FN_DEF_MATCH
+static qsort_comparison_fn cmpdecvar;
+#endif
+
+static int
+cmpdecvar(const void * const value1,
+          const void * const value2) {
+/*----------------------------------------------------------------------------
+  Sorts by decreasing variances (quicksort sorting function).
+-----------------------------------------------------------------------------*/
+    return
+        ((var_list_t *) value2)->variance - ((var_list_t *) value1)->variance;
+}
+
+
 
 tiling_t *
 alloc_tiling (fiasco_tiling_e method, unsigned tiling_exponent,
@@ -146,7 +163,7 @@ perform_tiling (const image_t *image, tiling_t *tiling)
 	 unsigned    number;		/* number of image tiles */
 	 unsigned    lx       = log2 (image->width - 1) + 1; /* x level */
 	 unsigned    ly       = log2 (image->height - 1) + 1; /* y level */
-	 unsigned    level    = max (lx, ly) * 2 - ((ly == lx + 1) ? 1 : 0);
+	 unsigned    level    = MAX(lx, ly) * 2 - ((ly == lx + 1) ? 1 : 0);
 	 var_list_t *var_list = Calloc (tiles, sizeof (var_list_t));
 	 
 	 /*
@@ -207,33 +224,10 @@ perform_tiling (const image_t *image, tiling_t *tiling)
       }
       else
       {
-	 warning ("Unsupported image tiling method.\n"
+	 warning ("We do not know the tiling method.\n"
 		  "Skipping image tiling step.");
 	 tiling->exponent = 0;
       }
    }
 }
 
-/*****************************************************************************
-
-				private code
-  
-*****************************************************************************/
-
-static int
-cmpincvar (const void *value1, const void *value2)
-/*
- *  Sorts by increasing variances (quicksort sorting function).
- */
-{
-  return ((var_list_t *) value1)->variance - ((var_list_t *) value2)->variance;
-}
-
-static int
-cmpdecvar (const void *value1, const void *value2)
-/*
- *  Sorts by decreasing variances (quicksort sorting function).
- */
-{
-  return ((var_list_t *) value2)->variance - ((var_list_t *) value1)->variance;
-}

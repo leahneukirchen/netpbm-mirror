@@ -2,6 +2,6 @@
 #define NSLEEP_H_INCLUDED
 
 void
-sleepN(unsigned int const milliseconds);
+pm_sleep(unsigned int const milliseconds);
 
 #endif

@@ -16,11 +16,9 @@
 
 #include "config.h"
 
-#if HAVE_STRING_H
-#	include <string.h>
-#else /* not HAVE_STRING_H */
-#	include <strings.h>
-#endif /* not HAVE_STRING_H */
+#include <string.h>
+
+#include "pm_c_util.h"
 
 #include "types.h"
 #include "macros.h"
@@ -293,7 +291,7 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
 			  : rrange.y;
 	 
 	 /* 
-	  *  If neccessary compute the inner products of the new states
+	  *  If necessary compute the inner products of the new states
 	  *  (generated during the recursive approximation of child [0])
 	  */
 	 if (label && rrange.level <= c->options.lc_max_level)
@@ -304,7 +302,7 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
 	  *  Abort the recursion if 'subdivide_costs' exceed 'lincomb_costs'
 	  *  or 'max_costs'.
 	  */
-	 remaining_costs = min (lincomb_costs, max_costs) - subdivide_costs;
+	 remaining_costs = MIN(lincomb_costs, max_costs) - subdivide_costs;
 
 	 if (remaining_costs > 0)	/* still a way for improvement */
 	 {
@@ -356,7 +354,7 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
 	  *  If costs of subdivision exceed costs of linear combination 
 	  *  then abort recursion.
 	  */
-	 if (subdivide_costs >= min (lincomb_costs, max_costs)) 
+	 if (subdivide_costs >= MIN(lincomb_costs, max_costs)) 
 	 {
 	    subdivide_costs = MAXCOSTS;
 	    break; 
@@ -386,28 +384,28 @@ subdivide (real_t max_costs, unsigned band, int y_state, range_t *range,
     */
    if (try_mc || try_nd)		/* try prediction */
    {
-      real_t prediction_costs;	/* Costs arising from approx. the current
-				   range with prediction */
+       real_t prediction_costs;	/* Costs arising from approx. the current
+                                   range with prediction */
 
-      prediction_costs
-	 = predict_range (min (min (lincomb_costs, subdivide_costs),
-			       max_costs),
-			  price, range, wfa, c, band, y_state, states,
-			  &tree_model, &p_tree_model, domain_model,
-			  d_domain_model, coeff_model, d_coeff_model);
-      if (prediction_costs < MAXCOSTS)	/* prediction has smallest costs */
-      {
-	 c->domain_pool->model_free (domain_model);
-	 c->d_domain_pool->model_free (d_domain_model);
-	 c->domain_pool->model_free (lc_domain_model);
-	 c->d_domain_pool->model_free (lc_d_domain_model);
-	 c->coeff->model_free (coeff_model);
-	 c->d_coeff->model_free (d_coeff_model);
-	 c->coeff->model_free (lc_coeff_model);
-	 c->d_coeff->model_free (lc_d_coeff_model);
+       prediction_costs
+           = predict_range (MIN(MIN(lincomb_costs, subdivide_costs),
+                                max_costs),
+                            price, range, wfa, c, band, y_state, states,
+                            &tree_model, &p_tree_model, domain_model,
+                            d_domain_model, coeff_model, d_coeff_model);
+       if (prediction_costs < MAXCOSTS)	/* prediction has smallest costs */
+       {
+           c->domain_pool->model_free (domain_model);
+           c->d_domain_pool->model_free (d_domain_model);
+           c->domain_pool->model_free (lc_domain_model);
+           c->d_domain_pool->model_free (lc_d_domain_model);
+           c->coeff->model_free (coeff_model);
+           c->d_coeff->model_free (d_coeff_model);
+           c->coeff->model_free (lc_coeff_model);
+           c->d_coeff->model_free (lc_d_coeff_model);
 	 
-	 return prediction_costs;
-      }
+           return prediction_costs;
+       }
    }
 
    if (lincomb_costs >= MAXCOSTS && subdivide_costs >= MAXCOSTS)

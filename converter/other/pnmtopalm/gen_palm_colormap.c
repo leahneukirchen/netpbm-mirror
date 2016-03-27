@@ -3,8 +3,8 @@
  * Based on an earlier version by Bill Janssen  <bill@janssen.org>
  */
 
-#include "ppm.h"
-#include "pm_c_util.h"
+#include "netpbm/ppm.h"
+#include "netpbm/pm_c_util.h"
 
 #include "palm.h"
 

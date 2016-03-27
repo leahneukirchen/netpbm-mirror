@@ -7,12 +7,20 @@ VPATH=.:$(SRCDIR)/$(SUBDIR)
 
 include $(BUILDDIR)/config.mk
 
-ifeq ($(shell xml2-config --version),)
-  XML2_LIBS=NONE
-  XML2_CFLAGS=NONE
+TEST_PKGCONFIG_LIBXML2 = if pkg-config libxml-2.0; then echo exists; fi
+
+ifneq ($(shell $(TEST_PKGCONFIG_LIBXML2)),)
+  # pkg-config libxml2 works on this system
+  XML2_LIBS = $(shell pkg-config libxml-2.0 --libs)
+  XML2_CFLAGS = $(shell pkg-config libxml-2.0 --cflags)
 else
-  XML2_LIBS=$(shell xml2-config --libs)
-  XML2_CFLAGS=$(shell xml2-config --cflags)
+  ifeq ($(shell xml2-config --version),)
+    XML2_LIBS=NONE
+    XML2_CFLAGS=NONE
+  else
+    XML2_LIBS=$(shell xml2-config --libs)
+    XML2_CFLAGS=$(shell xml2-config --cflags)
+  endif
 endif
 
 SUBDIRS = jbig pnmtopalm jpeg2000 cameratopam pamtosvg
@@ -26,19 +34,29 @@ ifneq ($(TIFFLIB),NONE)
   endif
 endif
 
-ifeq ($(shell libpng$(PNGVER)-config --version),)
-  ifneq ($(PNGLIB),NONE)
+TEST_PKGCONFIG_LIBPNG = if pkg-config libpng$(PNGVER); then echo exists; fi
+
+ifneq ($(shell $(TEST_PKGCONFIG_LIBPNG)),)
+  # pkg-config libpng works on this system
+  HAVE_PNGLIB = Y
+  EXTERN_INCLUDES += $(shell pkg-config libpng$(PNGVER) --cflags)
+else
+  ifneq ($(shell libpng$(PNGVER)-config --version),)
+    # No pkg-config, but we have libpng-config on this system
     HAVE_PNGLIB = Y
-    ifneq ($(PNGHDR_DIR)x,x)
-      EXTERN_INCLUDES += -I$(PNGHDR_DIR)
-    endif
-    ifneq ($(ZHDR_DIR)x,x)
-      EXTERN_INCLUDES += -I$(ZHDR_DIR)
+    EXTERN_INCLUDES += $(shell libpng$(PNGVER)-config --cflags)
+  else
+    # System can't tell us where libpng is; use stuff from config.mk
+    ifneq ($(PNGLIB),NONE)
+      HAVE_PNGLIB = Y
+      ifneq ($(PNGHDR_DIR)x,x)
+        EXTERN_INCLUDES += -I$(PNGHDR_DIR)
+      endif
+      ifneq ($(ZHDR_DIR)x,x)
+        EXTERN_INCLUDES += -I$(ZHDR_DIR)
+      endif
     endif
   endif
-else
-  HAVE_PNGLIB = Y
-  EXTERN_INCLUDES += $(shell libpng$(PNGVER)-config --cflags)
 endif
 
 ifneq ($(JPEGLIB),NONE)
@@ -77,49 +95,66 @@ ifeq ($(TIFFLIB_NEEDS_Z),Y)
   endif
 endif
 
-PORTBINARIES =  bmptopnm fitstopnm \
+# TIFFLIB_USERLIBS is for the user to set manually, on the make command line
+# or manually added to config.mk.  There are arcane situations where the TIFF
+# library refers to additional libraries not handled above.
+
+TIFFLIB_EXTRALIBS += $(TIFFLIB_USERLIBS)
+
+# Pnmtops's "flate" compression function requires libz.  But if we don't
+# have libz, we still build Pnmtops; we just omit the flate compression
+# capability.
+ifeq ($(ZLIB),NONE)
+  PNMTOPS_ZLIB_OPT =
+  PNMTOPS_NOFLATE_OPT = -DNOFLATE
+else
+  PNMTOPS_ZLIB_OPT = $(ZLIB)
+  PNMTOPS_NOFLATE_OPT =
+endif
+
+
+PORTBINARIES =  avstopam bmptopnm fitstopnm \
 		gemtopnm giftopnm hdifftopam infotopam \
-		pamtodjvurle pamtofits pamtogif \
+		pamtoavs pamtodjvurle pamtofits pamtogif \
 		pamtohdiff pamtohtmltbl pamtompfont pamtooctaveimg \
-		pamtopam pamtopfm pamtopnm pamtouil \
-		pamtoxvmini \
-		pbmtopgm pfmtopam \
+		pamtopam pamtopdbimg pamtopfm pamtopnm pamtosrf pamtouil \
+		pamtowinicon pamtoxvmini \
+		pbmtopgm pdbimgtopam pfmtopam \
 	        pgmtopbm pgmtoppm ppmtopgm pnmtoddif \
-		pnmtopclxl \
+		pnmtopclxl pnmtorast \
 		pnmtosgi pnmtosir pamtotga pnmtoxwd \
-		rlatopam sgitopnm sirtopnm xwdtopnm zeisstopnm
+		rasttopnm rlatopam sgitopnm sirtopnm srftopam sunicontopnm \
+		winicontopam xwdtopnm yuy2topam zeisstopnm
 
 ifneq ($(DONT_HAVE_PROCESS_MGMT),Y)
-  PORTBINARIES += pstopnm
+  PORTBINARIES += pstopnm pnmtops
 endif
-
-BINARIES = $(PORTBINARIES) pnmtorast rasttopnm
 
 ifeq ($(HAVE_PNGLIB),Y)
-  BINARIES += pnmtopng pngtopnm pngtopam pamrgbatopng
+  PORTBINARIES += pamtopng pnmtopng pngtopam
 endif
 ifneq ($(JPEGLIB),NONE)
-  BINARIES += jpegtopnm pnmtojpeg
+  PORTBINARIES += jpegtopnm pnmtojpeg
 endif
 ifneq ($(TIFF_PREREQ_MISSING),Y)
-  BINARIES += tifftopnm pamtotiff pnmtotiffcmyk
+  PORTBINARIES += tifftopnm pamtotiff pnmtotiffcmyk
 endif
 ifneq ($(URTLIB),NONE)
-  BINARIES += rletopnm pnmtorle
-endif
-ifneq ($(ZLIB),NONE)
-  BINARIES += pnmtops
+  PORTBINARIES += rletopnm pnmtorle
 endif
 
 ifneq ($(XML2_LIBS),NONE)
-  BINARIES += svgtopam
+  PORTBINARIES += svgtopam
 endif 
+
+BINARIES = $(PORTBINARIES)
 
 MERGEBINARIES = $(BINARIES)
 
-EXTRA_OBJECTS = exif.o rast.o bmepsoe.o
+EXTRA_OBJECTS = exif.o rast.o ipdb.o srf.o
 ifeq ($(HAVE_PNGLIB),Y)
   EXTRA_OBJECTS += pngtxt.o
+  EXTRA_OBJECTS += pngx.o
 endif
 ifneq ($(JPEGLIB),NONE)
   EXTRA_OBJECTS += jpegdatasource.o
@@ -131,6 +166,7 @@ endif
 OBJECTS = $(BINARIES:%=%.o) $(EXTRA_OBJECTS)
 MERGE_OBJECTS = $(MERGEBINARIES:%=%.o2) $(EXTRA_OBJECTS)
 
+pnmtops.o pnmtops.o2: CFLAGS_TARGET=$(PNMTOPS_NOFLATE_OPT)
 
 SCRIPTS = anytopnm pnmtoplainpnm
 
@@ -145,69 +181,68 @@ else
   LIBOPTR =
 endif
 
-LIBOPTS_TIFF = $(shell $(LIBOPT) $(NETPBMLIB) \
+LIBOPTS_TIFF = $(shell $(LIBOPT) \
   $(LIBOPTR) $(TIFFLIB) $(TIFFLIB_EXTRALIBS))
 
-tifftopnm pamtotiff pnmtotiffcmyk: %: %.o tiff.o $(NETPBMLIB) $(LIBOPT)
-	$(LD) -o $@ $@.o tiff.o \
-	  $(LIBOPTS_TIFF) $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
+tifftopnm pamtotiff pnmtotiffcmyk: tiff.o
+tifftopnm pamtotiff pnmtotiffcmyk: ADDL_OBJECTS = tiff.o
+tifftopnm pamtotiff pnmtotiffcmyk: \
+  LDFLAGS_TARGET = \
+ $(shell $(LIBOPT)  $(LIBOPTR) $(TIFFLIB) $(TIFFLIB_EXTRALIBS))
 
-ifeq ($(shell libpng$(PNGVER)-config --version),)
-  PNGLIB_LIBOPTS = $(shell $(LIBOPT) $(LIBOPTR) $(PNGLIB) $(ZLIB))
+ifneq ($(shell $(TEST_PKGCONFIG_LIBPNG)),)
+  # pkg-config libpng works on this system
+  PNGLIB_LIBOPTS = $(shell pkg-config libpng$(PNGVER) --libs)
 else
-  PNGLIB_LIBOPTS = $(shell libpng$(PNGVER)-config --ldflags)
+  ifneq ($(shell libpng$(PNGVER)-config --version),)
+    # No pkg-config, but we have libpng-config on this system
+    PNGLIB_LIBOPTS = $(shell libpng$(PNGVER)-config --ldflags)
+  else
+    # System can't tell us where libpng is; use stuff from config.mk
+    PNGLIB_LIBOPTS = $(shell $(LIBOPT) $(LIBOPTR) $(PNGLIB) $(ZLIB))
+  endif
 endif
 
-pngtopnm pngtopam: %: %.o $(NETPBMLIB) $(LIBOPT)
-	$(LD) -o $@ $@.o \
-	  $(shell $(LIBOPT) $(NETPBMLIB)) \
-	  $(PNGLIB_LIBOPTS) $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
+pngtopam: pngx.o
+pngtopam: ADDL_OBJECTS = pngx.o
+pngtopam: LDFLAGS_TARGET = $(PNGLIB_LIBOPTS)
 
-pnmtopng: %: %.o pngtxt.o $(NETPBMLIB) $(LIBOPT)
-	$(LD) -o $@ $@.o pngtxt.o \
-	  $(shell $(LIBOPT) $(NETPBMLIB)) \
-	  $(PNGLIB_LIBOPTS) $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
+pamtopng: pngx.o pngtxt.o
+pamtopng: ADDL_OBJECTS = pngx.o pngtxt.o
+pamtopng: LDFLAGS_TARGET = $(PNGLIB_LIBOPTS)
 
-pamrgbatopng: %: %.o $(NETPBMLIB) $(LIBOPT)
-	$(LD) -o $@ $@.o \
-	  $(shell $(LIBOPT) $(NETPBMLIB)) $(PNGLIB_LIBOPTS) \
-	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
+pnmtopng: pngx.o pngtxt.o
+pnmtopng: ADDL_OBJECTS = pngx.o pngtxt.o
+pnmtopng: LDFLAGS_TARGET = $(PNGLIB_LIBOPTS)
 
-jpegtopnm: %: %.o jpegdatasource.o exif.o $(NETPBMLIB) $(LIBOPT)
-	$(LD) -o $@ $< jpegdatasource.o exif.o \
-	  $(shell $(LIBOPT) $(NETPBMLIB) $(LIBOPTR) $(JPEGLIB)) \
-	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD) 
+jpegtopnm: jpegdatasource.o exif.o
+jpegtopnm: ADDL_OBJECTS = jpegdatasource.o exif.o
+jpegtopnm: LDFLAGS_TARGET = $(shell $(LIBOPT) $(LIBOPTR) $(JPEGLIB))
 
-pnmtojpeg: %: %.o $(NETPBMLIB) $(LIBOPT)
-	$(LD) -o $@ $@.o \
-	  $(shell $(LIBOPT) $(NETPBMLIB) $(LIBOPTR) $(JPEGLIB)) \
-	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
+srftopam pamtosrf: srf.o
+srftopam pamtosrf: ADDL_OBJECTS = srf.o
 
-svgtopam: %: %.o $(NETPBMLIB) $(LIBOPT)
-	$(LD) -o $@ $@.o \
-	  $(shell $(LIBOPT) $(NETPBMLIB) $(LIBOPTR)) \
-	  $(XML2_LIBS) $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
+pnmtojpeg: LDFLAGS_TARGET = $(shell $(LIBOPT) $(LIBOPTR) $(JPEGLIB))
+
+svgtopam: LDFLAGS_TARGET = $(XML2_LIBS)
 
 # If URTLIB is BUNDLED_URTLIB, then we're responsible for building it, which
 # means it needs to be a dependency:
 ifeq ($(URTLIB), $(BUNDLED_URTLIB))
-  URTLIBDEP = $(URTLIB)
+rletopnm pnmtorle: $(URTLIB)
 endif
 
-rletopnm pnmtorle: %: %.o $(NETPBMLIB) $(URTLIBDEP) $(LIBOPT)
-	$(LD) -o $@ $@.o \
-	  $(shell $(LIBOPT) $(URTLIB) $(NETPBMLIB)) \
-	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
+rletopnm pnmtorle: LDFLAGS_TARGET = $(shell $(LIBOPT) $(URTLIB))
 
-pnmtops: %: %.o bmepsoe.o $(NETPBMLIB) $(LIBOPT)
-	$(LD) -o $@ $@.o bmepsoe.o \
-	  $(shell $(LIBOPT) $(NETPBMLIB) $(ZLIB)) \
-	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
+pnmtops: LDFLAGS_TARGET = $(shell $(LIBOPT) $(PNMTOPS_ZLIB_OPT))
 
-pnmtorast rasttopnm: %: %.o rast.o $(NETPBMLIB) $(LIBOPT)
-	$(LD) -o $@ $@.o rast.o \
-	  $(shell $(LIBOPT) $(NETPBMLIB)) \
-	  $(MATHLIB) $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
+pnmtorast rasttopnm: rast.o
+pnmtorast rasttopnm: ADDL_OBJECTS = rast.o
+
+pdbimgtopam pamtopdbimg: ipdb.o
+pdbimgtopam pamtopdbimg: ADDL_OBJECTS = ipdb.o
+
+# Declare dependencies on created header files (symbolic links, actually).
 
 bmptopnm.o bmptopnm.o2: bmp.h
 
@@ -247,4 +282,17 @@ ifneq ($(TIFF_PREREQ_MISSING),Y)
 # In October 2005, pamtotiff replaced pnmtotiff
 	cd $(PKGDIR)/bin ; \
 	$(SYMLINK) pamtotiff$(EXE) pnmtotiff$(EXE)
+endif
+ifeq ($(HAVE_PNGLIB),Y)
+# In September 2009, pngtopam replaced pngtopnm
+	cd $(PKGDIR)/bin ; \
+	$(SYMLINK) pngtopam$(EXE) pngtopnm$(EXE)
+endif
+# In December 2010, sunicontopnm replaced icontopbm
+	cd $(PKGDIR)/bin ; \
+	$(SYMLINK) sunicontopnm$(EXE) icontopbm$(EXE)
+ifeq ($(HAVE_PNGLIB),Y)
+# In June 2015, pamtopng replaced pamrgbapng
+	cd $(PKGDIR)/bin ; \
+	$(SYMLINK) pamtopng$(EXE) pamrgbatopng$(EXE)
 endif

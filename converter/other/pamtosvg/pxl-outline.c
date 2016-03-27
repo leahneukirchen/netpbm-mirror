@@ -9,7 +9,6 @@
 
 #include "message.h"
 #include "bitmap.h"
-#include "bitmap.h"
 #include "logreport.h"
 #include "pxl-outline.h"
 

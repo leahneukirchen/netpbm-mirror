@@ -1,11 +1,14 @@
-/*----------------------------------------------------------------------------
+/*=============================================================================
    These are declarations for use with the Portable Arbitrary Map (PAM)
    format and the Netpbm library functions specific to them.
------------------------------------------------------------------------------*/
 
+   This file was originally written by Bryan Henderson and is contributed
+   to the public domain by him and subsequent authors.
+=============================================================================*/
 #ifndef PAM_H
 #define PAM_H
 
+#include <netpbm/pm_config.h>
 #include <netpbm/pm.h>
 #include <netpbm/pnm.h>
 
@@ -49,9 +52,13 @@ struct pam {
         */
     FILE * file;
     int format;
-        /* The format code of the raw image.  This is PAM_FORMAT
+        /* The format code of the image.  This is PAM_FORMAT
            unless the PAM image is really a view of a PBM, PGM, or PPM
-           image.  Then it's PBM_FORMAT, RPBM_FORMAT, etc.
+           image.  Then it's PBM_FORMAT, RPBM_FORMAT, etc.  For output,
+           only the format _type_ is significant, e.g. PBM_FORMAT
+           and RPBM_FORMAT have identical effect.  This is because on
+           output, 'plainformat' determines whether the output is the
+           raw or plain format of the type given by 'format'.
            */
     unsigned int plainformat;
         /* Logical: On output, use plain version of the format type
@@ -64,6 +71,9 @@ struct pam {
            Before Netpbm 10.32, this was rather different.  It simply
            described for convenience the plainness of the format indicated
            by 'format'.
+
+           This is meaningless when 'format' is PAM_FORMAT, as PAM does not
+           have plain and raw variations.
         */
     int height;  /* Height of image in rows */
     int width;   
@@ -109,6 +119,23 @@ struct pam {
            libnetpbm does not return comments and does not allocate any
            storage.
         */
+    int visual;  /* boolean */
+        /* tuple_type is one of the PAM-defined tuple types for visual
+           images ("GRAYSCALE", "RGB_ALPHA", etc.).
+        */
+    unsigned int color_depth;
+        /* Number of color planes (i.e. 'depth', but without transparency).
+           The color planes are the lowest numbered ones.  Meaningless if
+           'visual' is false.
+        */
+    int have_opacity;   /* boolean */
+        /* The tuples have an opacity (transparency, alpha) plane.
+           Meaningless if 'visual' is false.
+        */
+    unsigned int opacity_plane;
+        /* The plane number of the opacity plane;  meaningless if
+           'haveOpacity' is false or 'visual' is false.
+        */
 };
 
 #define PAM_HAVE_ALLOCATION_DEPTH 1
@@ -136,6 +163,9 @@ struct pam {
 #define PAM_PBM_TUPLETYPE "BLACKANDWHITE"
 #define PAM_PGM_TUPLETYPE "GRAYSCALE"
 #define PAM_PPM_TUPLETYPE "RGB"
+#define PAM_PBM_ALPHA_TUPLETYPE "BLACKANDWHITE_ALPHA"
+#define PAM_PGM_ALPHA_TUPLETYPE "GRAYSCALE_ALPHA"
+#define PAM_PPM_ALPHA_TUPLETYPE "RGB_ALPHA"
 
 #define PAM_PBM_BLACK PAM_BLACK
 #define PAM_PBM_WHITE PAM_BW_WHITE
@@ -275,16 +305,20 @@ pnm_makearrayrgb(const struct pam * const pamP,
                  tuple **           const tuples);
 
 void
+pnm_makerowrgba(const struct pam * const pamP,
+                tuple *            const tuplerow);
+
+void
+pnm_addopacityrow(const struct pam * const pamP,
+                  tuple *            const tuplerow);
+
+void
 pnm_getopacity(const struct pam * const pamP,
                int *              const haveOpacityP,
                unsigned int *     const opacityPlaneP);
 
 void
 pnm_createBlackTuple(const struct pam * const pamP, tuple * const blackTupleP);
-
-void
-createBlackTuple(const struct pam * const pamP, tuple * const blackTupleP);
-
 
 tuple
 pnm_allocpamtuple(const struct pam * const pamP);
@@ -483,9 +517,15 @@ pnm_YCbCr_to_rgbtuple(const struct pam * const pamP,
     ((tuple)[PAM_RED_PLANE] == (tuple)[PAM_GRN_PLANE] && \
      (tuple)[PAM_RED_PLANE] == (tuple)[PAM_BLU_PLANE])
 
+tuple
+pnm_backgroundtuple(struct pam *  const pamP,
+                    tuple      ** const tuples);
+
 /*----------------------------------------------------------------------------
    These are meant for passing to pm_system() as Standard Input feeder
    and Standard Output accepter.
+
+   The 'feederParm' or 'accepterParm' is a pointer to a struct pamtuples.
 -----------------------------------------------------------------------------*/
 
 void

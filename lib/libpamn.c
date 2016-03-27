@@ -1,16 +1,20 @@
-/*----------------------------------------------------------------------------
+/*=============================================================================
                                   libpamn.c
-------------------------------------------------------------------------------
+===============================================================================
    These are the library functions, which belong in the libnetpbm library,
    that deal with the PAM image format via maxval-normalized, floating point
    sample values.
------------------------------------------------------------------------------*/
+
+   This file was originally written by Bryan Henderson and is contributed
+   to the public domain by him and subsequent authors.
+=============================================================================*/
 
 #include <assert.h>
 
-#include "pm_c_util.h"
-#include "mallocvar.h"
-#include "nstring.h"
+#include "netpbm/pm_c_util.h"
+#include "netpbm/mallocvar.h"
+#include "netpbm/nstring.h"
+
 #include "pam.h"
 #include "fileio.h"
 #include "pm_gamma.h"
@@ -40,9 +44,10 @@ allocpamrown(const struct pam * const pamP,
 
     tuplerown = malloc(pamP->width * (sizeof(tuplen *) + bytes_per_tuple));
     if (tuplerown == NULL)
-        asprintfN(&error, "Out of memory allocating space for a tuple row of"
-                  "%u tuples by %u samples per tuple by %u bytes per sample.",
-                  pamP->width, pamP->depth, sizeof(samplen));
+        pm_asprintf(&error, "Out of memory allocating space for a tuple row of"
+                    "%u tuples by %u samples per tuple "
+                    "by %u bytes per sample.",
+                    pamP->width, pamP->depth, (unsigned)sizeof(samplen));
     else {
         /* Now we initialize the pointers to the individual tuples to make this
            a regulation C two dimensional array.
@@ -78,7 +83,7 @@ pnm_allocpamrown(const struct pam * const pamP) {
 
     if (error) {
         pm_errormsg("pnm_allocpamrown() failed.  %s", error);
-        strfree(error);
+        pm_strfree(error);
         pm_longjmp();
     }
 
@@ -279,9 +284,9 @@ pnm_allocpamarrayn(const struct pam * const pamP) {
     
     MALLOCARRAY(tuplenarray, pamP->height);
     if (tuplenarray == NULL) 
-        asprintfN(&error,
-                  "Out of memory allocating the row pointer section of "
-                  "a %u row array", pamP->height);
+        pm_asprintf(&error,
+                    "Out of memory allocating the row pointer section of "
+                    "a %u row array", pamP->height);
     else {
         unsigned int rowsDone;
 
@@ -302,7 +307,7 @@ pnm_allocpamarrayn(const struct pam * const pamP) {
     }
     if (error) {
         pm_errormsg("pnm_allocpamarrayn() failed.  %s", error);
-        strfree(error);
+        pm_strfree(error);
         pm_longjmp();
     }
 
@@ -494,7 +499,7 @@ gammaCommon(struct pam *  const pamP,
 
     unsigned int plane;
     unsigned int opacityPlane;
-    bool haveOpacity;
+    int haveOpacity;
     
     pnm_getopacity(pamP, &haveOpacity, &opacityPlane);
 
@@ -537,9 +542,14 @@ static void
 applyopacityCommon(enum applyUnapply const applyUnapply,
                    struct pam *      const pamP,
                    tuplen *          const tuplenrow) {
-
+/*----------------------------------------------------------------------------
+   Either apply or unapply opacity to the row tuplenrow[], per
+   'applyUnapply'.  Apply means to multiply each foreground sample by
+   the opacity value for that pixel; Unapply means to do the inverse, as
+   if the foreground values had already been so multiplied.
+-----------------------------------------------------------------------------*/
     unsigned int opacityPlane;
-    bool haveOpacity;
+    int haveOpacity;
     
     pnm_getopacity(pamP, &haveOpacity, &opacityPlane);
 
@@ -636,7 +646,7 @@ createUngammaMapOffset(const struct pam * const pamP,
         MALLOCARRAY(ungammaTransformMap, pamP->maxval+1);
 
         if (ungammaTransformMap != NULL) {
-            bool haveOpacity;
+            int haveOpacity;
             unsigned int opacityPlane;
             unsigned int plane;
 

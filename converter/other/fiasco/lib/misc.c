@@ -1,5 +1,5 @@
 /*
- *  misc.c:		Some usefull functions, that don't fit in one of 
+ *  misc.c:		Some useful functions, that don't fit in one of 
  *			the other files and that are needed by at least
  *			two modules. 
  *
@@ -33,15 +33,10 @@
 #	endif /* not HAVE_SYS_TIME_H */
 #endif /* not TIME_WITH_SYS_TIME */
 
-#if STDC_HEADERS
-#	include <stdlib.h>
-#endif /* not STDC_HEADERS */
+#include <stdlib.h>
+#include <string.h>
 
-#if HAVE_STRING_H
-#	include <string.h>
-#else /* not HAVE_STRING_H */
-#	include <strings.h>
-#endif /* not HAVE_STRING_H */
+#include "pm_c_util.h"
 
 #include "types.h"
 #include "macros.h"
@@ -401,22 +396,6 @@ memmove (void *v_dst, const void *v_src, size_t n)
 }
 #endif /* not HAVE_MEMMOVE */
 
-#ifndef HAVE_STRDUP
-char *
-strdup (const char *s)
-/*
- *  Duplicate given string 's'.
- *
- *  Return value:
- *	pointer to new string value
- */
-{
-   assert (s);
-   
-   return strcpy (Calloc (strlen (s) + 1, sizeof (char)), s);
-}
-#endif /* not HAVE_STRDUP */
-
 /* Note that some systems have a "log2()" in the math library and some
    have a "log2" macro.  So we name ours Log2.  But to avoid lots of
    differences from the original fiasco source code, we define a
@@ -452,13 +431,13 @@ variance (const word_t *pixels, unsigned x0, unsigned y0,
    assert (pixels);
    
    for (average = 0, n = 0, y = y0; y < y0 + height; y++)
-      for (x = x0; x < min (x0 + width, cols); x++, n++)
+      for (x = x0; x < MIN(x0 + width, cols); x++, n++)
 	 average += pixels [y * cols + x] / 16;
 
    average /= n;
 
    for (variance = 0, y = y0; y < y0 + height; y++)
-      for (x = x0; x < min (x0 + width, cols); x++)
+      for (x = x0; x < MIN(x0 + width, cols); x++)
 	 variance += square ((pixels [y * cols + x] / 16) - average);
 
    return variance;

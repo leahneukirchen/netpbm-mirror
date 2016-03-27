@@ -27,17 +27,21 @@
 *  removed rounding of the imagewidth to the next word boundary
 *  removed arbitrary limit to imagewidth
 *  changed pattern length to 1 to simplify locating of compressable parts
-*	in real world images
+*       in real world images
 *  add solid run and pattern run compression
 *
 *  Deficiencies:
 *  Compression of repeated scanlines not added
 *  
-*	Johann Haider (jh@fortec.tuwien.ac.at)
+*       Johann Haider (jh@fortec.tuwien.ac.at)
 *
 * 94/01/31 Andreas Schwab (schwab@ls5.informatik.uni-dortmund.de)
 * Changed to remove architecture dependencies
 * Added compression of repeated scanlines
+*
+* Feb 2010 afu
+* Added dimension check to prevent short int from overflowing
+* Changed code style (ANSI-style function definitions, etc.)
 */
 
 #include <stdio.h>
@@ -47,58 +51,10 @@
 #define SOLID_0 0
 #define SOLID_1 0xff
 #define MINRUN 4
+#define INT16MAX 32767
+
 #define putsolid(v,c) putc((v&0x80)|c, stdout)
 #define putpattern(v,c) putc(0, stdout);putc(c, stdout);putc(v, stdout)
-
-static void putinit ARGS ((int rows, int cols));
-static void putbit ARGS(( bit b ));
-static void putitem ARGS(( void ));
-static void putrow ARGS(( void ));
-static void flushrow ARGS ((void));
-static void putstring ARGS((register unsigned char *p, register int n));
-
-int
-main( argc, argv )
-    int argc;
-    char* argv[];
-    {
-    FILE* ifp;
-    bit* bitrow;
-    register bit* bP;
-    int rows, cols, format, row, col;
-
-    pbm_init( &argc, argv );
-
-    if ( argc > 2 )
-	pm_usage( "[pbmfile]" );
-
-    if ( argc == 2 )
-	ifp = pm_openr( argv[1] );
-    else
-	ifp = stdin;
-
-    pbm_readpbminit( ifp, &cols, &rows, &format );
-
-    bitrow = pbm_allocrow( cols );
-
-    putinit (rows, cols);
-    for ( row = 0; row < rows; ++row )
-	{
-#ifdef DEBUG
-	fprintf (stderr, "row %d\n", row);
-#endif
-	pbm_readpbmrow( ifp, bitrow, cols, format );
-        for ( col = 0, bP = bitrow; col < cols; ++col, ++bP )
-	    putbit( *bP );
-        putrow( );
-        }
-    flushrow ();
-
-    pm_close( ifp );
-
-
-    exit( 0 );
-    }
 
 static short item;
 static int outcol, outmax;
@@ -107,9 +63,9 @@ static short linerepeat;
 static unsigned char *outrow, *lastrow;
 
 static void
-putinit (rows, cols)
-     int rows, cols;
+putinit (int const rows, int const cols)
 {
+
   if (pm_writebigshort (stdout, (short) 1) == -1 /* Image file version */
       || pm_writebigshort (stdout, (short) 8) == -1 /* Header length */
       || pm_writebigshort (stdout, (short) 1) == -1 /* Number of planes */
@@ -130,17 +86,6 @@ putinit (rows, cols)
 }
 
 static void
-putbit( bit b )
-    {
-    if ( bitsperitem == 8 )
-	putitem( );
-    ++bitsperitem;
-    if ( b == PBM_BLACK )
-	item += 1 << bitshift;
-    --bitshift;
-    }
-
-static void
 putitem( )
     {
     outrow[outcol++] = item;
@@ -149,18 +94,92 @@ putitem( )
     bitshift = 7;
     }
 
+
 static void
-putstring (p, n)
-register unsigned char *p;
-register int n;
+putbit( bit const b )
+    {
+    if ( bitsperitem == 8 )
+        putitem( );
+    ++bitsperitem;
+    if ( b == PBM_BLACK )
+        item += 1 << bitshift;
+    --bitshift;
+    }
+
+
+static void
+putstring ( unsigned char *p, int n)
 {
 #ifdef DEBUG
     fprintf (stderr, "Bitstring, length: %d, pos %d\n", n, outcol);
 #endif
     (void) putc((char) 0x80, stdout);     /* a Bit string */
-    (void) putc(n, stdout);	/* count */
+    (void) putc(n, stdout);     /* count */
     fwrite( p, n, 1, stdout );
 }
+
+
+static void
+flushrow( )
+    {
+    unsigned char *outp, *p, *q;
+    int count;
+    int col = outmax;
+
+    if (linerepeat > 1)
+      {
+        /* Put out line repeat count */
+        fwrite ("\0\0\377", 3, 1, stdout);
+        putchar (linerepeat);
+      }
+    for (outp = p = lastrow; col > 0;)
+    {
+            for (q = p, count=0; (count < col) && (*q == *p); q++,count++);
+            if (count > MINRUN)
+            {
+                if (p > outp)
+                {
+                    putstring (outp, p-outp);
+                    outp = p;
+                }
+                col -= count;
+                switch (*p)
+                {
+                case SOLID_0:
+#ifdef DEBUG
+/*                      if (outcol > 0) */
+                        fprintf (stderr, "Solid run 0, length: %d\n", count);
+#endif
+                        putsolid (SOLID_0, count);
+                        break;
+
+                case SOLID_1:
+#ifdef DEBUG
+                        fprintf (stderr, "Solid run 1, length: %d, pos %d\n", count, outcol);
+#endif
+                        putsolid (SOLID_1, count);
+                        break;
+                default:
+#ifdef DEBUG
+                        fprintf (stderr, "Pattern run, length: %d\n", count);
+#endif
+                        putpattern (*p, count);
+                        break;
+                }
+                outp = p = q;
+            }
+            else
+            {
+                p++;
+                col--;
+            }
+    }           
+    if (p > outp)
+         putstring (outp, p-outp);
+    if (ferror (stdout))
+      pm_error ("write error");
+}
+
 
 static void
 putrow( )
@@ -173,7 +192,7 @@ putrow( )
     {
       unsigned char *temp;
       if (linerepeat != -1) /* Unless first line */
-	flushrow ();
+        flushrow ();
       /* Swap the pointers */
       temp = outrow; outrow = lastrow; lastrow = temp;
       linerepeat = 1;
@@ -183,64 +202,47 @@ putrow( )
     linerepeat++;
 }
 
-static void
-flushrow( )
+
+int
+main( int argc, char* argv[])
     {
-    register unsigned char *outp, *p, *q;
-    register int count;
-    int col = outmax;
+    FILE* ifp;
+    bit* bitrow;
+    int rows, cols, format, row, col;
 
-    if (linerepeat > 1)
-      {
-	/* Put out line repeat count */
-	fwrite ("\0\0\377", 3, 1, stdout);
-	putchar (linerepeat);
-      }
-    for (outp = p = lastrow; col > 0;)
-    {
-	    for (q = p, count=0; (count < col) && (*q == *p); q++,count++);
-	    if (count > MINRUN)
-	    {
-		if (p > outp)
-		{
-		    putstring (outp, p-outp);
-		    outp = p;
-		}
-		col -= count;
-		switch (*p)
-		{
-		case SOLID_0:
-#ifdef DEBUG
-/*			if (outcol > 0) */
-			fprintf (stderr, "Solid run 0, length: %d\n", count);
-#endif
-			putsolid (SOLID_0, count);
-			break;
+    pbm_init( &argc, argv );
 
-		case SOLID_1:
-#ifdef DEBUG
-			fprintf (stderr, "Solid run 1, length: %d, pos %d\n", count, outcol);
-#endif
-			putsolid (SOLID_1, count);
-			break;
-		default:
-#ifdef DEBUG
-			fprintf (stderr, "Pattern run, length: %d\n", count);
-#endif
-			putpattern (*p, count);
-			break;
-		}
-		outp = p = q;
-	    }
-	    else
-	    {
-		p++;
-		col--;
-	    }
-    }		
-    if (p > outp)
-         putstring (outp, p-outp);
-    if (ferror (stdout))
-      pm_error ("write error");
-}
+    if ( argc > 2 )
+        pm_usage( "[pbmfile]" );
 
+    if ( argc == 2 )
+        ifp = pm_openr( argv[1] );
+    else
+        ifp = stdin;
+
+    pbm_readpbminit( ifp, &cols, &rows, &format );
+
+    if( rows>INT16MAX || cols>INT16MAX )
+      pm_error ("Input image is too large.");
+
+
+    bitrow = pbm_allocrow( cols );
+
+    putinit (rows, cols);
+    for ( row = 0; row < rows; ++row )
+        {
+#ifdef DEBUG
+        fprintf (stderr, "row %d\n", row);
+#endif
+        pbm_readpbmrow( ifp, bitrow, cols, format );
+        for ( col = 0; col < cols; ++col )
+            putbit( bitrow[col] );
+        putrow( );
+        }
+    flushrow ();
+
+    pm_close( ifp );
+
+
+    exit( 0 );
+    }

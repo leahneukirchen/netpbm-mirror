@@ -13,6 +13,7 @@
    Contributed to the public domain.
 =============================================================================*/
 #define _XOPEN_SOURCE
+#define _BSD_SOURCE  /* Make SIGWINCH defined on OpenBSD */
 
 #include <stdarg.h>
 #include <unistd.h>
@@ -23,8 +24,8 @@
 #include <signal.h>
 #include <sys/wait.h>
 
-#include "pm_c_util.h"
-#include "mallocvar.h"
+#include "netpbm/pm_c_util.h"
+#include "netpbm/mallocvar.h"
 #include "pm.h"
 #include "pm_system.h"
 
@@ -133,7 +134,7 @@ createPipeFeeder(void          pipeFeederRtn(int, void *),
     int pipeToFeed[2];
     pid_t rc;
 
-    pipe(pipeToFeed);
+    pm_pipe(pipeToFeed);
     rc = fork();
     if (rc < 0) {
         pm_error("fork() of stdin feeder failed.  errno=%d (%s)", 
@@ -179,7 +180,7 @@ spawnProcessor(const char *  const progName,
     pid_t rc;
 
     if (pipeStdout)
-        pipe(stdoutpipe);
+        pm_pipe(stdoutpipe);
 
     rc = fork();
     if (rc < 0) {
@@ -220,6 +221,20 @@ spawnProcessor(const char *  const progName,
 static const char *
 signalName(unsigned int const signalClass) {
 
+/* There are various signal classes that are not universally defined,
+   so we make a half-hearted attempt to determine whether they are and
+   not try to recognize the ones that aren't.  We do this by testing
+   whether a macro is defind with the signal class name.  That could give
+   a false negative, because the signal class name isn't necessarily
+   defined as a macro, but it's a really, really small problem to miss
+   one of these signal classes here, so we don't bother with all the work
+   it would take to do it right.
+
+   OpenBSD does not have SIGWINCH and SIGIO in 2013.  Everyone else seems
+   to have them.  OpenBSD does have them if the code is not declared as
+   X/open code (i.e. OpenBSD seems to interpret _XOPEN_SOURCE backward -
+   it removes features rather than adds them).
+*/
     switch (signalClass) {
     case SIGHUP: /* POSIX.1 */
         return "SIGHUP";
@@ -263,6 +278,11 @@ signalName(unsigned int const signalClass) {
         return "SIGTTIN";
     case SIGTTOU: /* POSIX.1 */
         return "SIGTTOU";
+#ifdef SIGURG
+/* SCO Openserver 5.0.7/3.2 does not have SIGURG */
+    case SIGURG:
+        return "SIGURG";
+#endif
     case SIGXCPU:
         return "SIGXCPU";
     case SIGXFSZ:
@@ -271,17 +291,23 @@ signalName(unsigned int const signalClass) {
         return "SIGVTALRM";
     case SIGPROF:
         return "SIGPROF";
+#ifdef SIGWINCH
+    case SIGWINCH:
+        return "SIGWINCH";
+#endif
+#ifdef SIGIO
+/* SCO Openserver 5.0.7/3.2 does not have SIGIO */
+    case SIGIO:
+        return "SIGIO";
+#endif
+#ifdef SIGPWR
+    case SIGPWR:
+        return "SIGPWR";
+#endif
     case SIGSYS:
         return "SIGSYS";
     default:
         return "???";
-
-        /* There are various other signal classes on some systems, but
-           not defined by POSIX and not on at least one system we
-           know of for which someone wanted to compile Netpbm.  The
-           list includes: SIGPWR, SIGLOST, SIGINFO, SIGRTxx,
-           SIGURG, SIGWINCH, SIGIO.
-        */
     }
 }
 
@@ -496,20 +522,20 @@ pm_feed_from_memory(int    const pipeToFeedFd,
 
     struct bufferDesc * const inputBufferP = feederParm;
     
-    FILE * const outfile = fdopen(pipeToFeedFd, "w");
+    FILE * const outFileP = fdopen(pipeToFeedFd, "w");
     
-    int bytesTransferred;
+    size_t bytesTransferred;
 
     /* The following signals (and normally kills) the process with
        SIGPIPE if the pipe does not take all 'size' bytes.
     */
     bytesTransferred = 
-        fwrite(inputBufferP->buffer, 1, inputBufferP->size, outfile);
+        fwrite(inputBufferP->buffer, 1, inputBufferP->size, outFileP);
 
     if (inputBufferP->bytesTransferredP)
         *(inputBufferP->bytesTransferredP) = bytesTransferred;
 
-    fclose(outfile);
+    fclose(outFileP);
 }
 
 
@@ -520,14 +546,14 @@ pm_accept_to_memory(int             const pipetosuckFd,
 
     struct bufferDesc * const outputBufferP = accepterParm;
     
-    FILE * const infile = fdopen(pipetosuckFd, "r");
+    FILE * const inFileP = fdopen(pipetosuckFd, "r");
 
-    int bytesTransferred;
+    size_t bytesTransferred;
 
     bytesTransferred =
-        fread(outputBufferP->buffer, 1, outputBufferP->size, infile);
+        fread(outputBufferP->buffer, 1, outputBufferP->size, inFileP);
 
-    fclose(infile);
+    fclose(inFileP);
 
     if (outputBufferP->bytesTransferredP)
         *(outputBufferP->bytesTransferredP) = bytesTransferred;

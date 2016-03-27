@@ -43,12 +43,11 @@
 # MERGEBINARIES: list of the programs that, in a merge build, are invoked
 #   via the merged Netpbm program
 # CC: C compiler command 
-# CPPFLAGS: C preprocessor options
-# CFLAGS: C compiler general options
+# CFLAGS_CONFIG: C compiler options from config.mk.
+# CFLAGS_TARGET: C compiler options for a particular target
 # LD: linker command
 # LINKERISCOMPILER: 'Y' if the linker invoked by LD is actually a compiler
 #   front end, so takes linker options in a different format
-# LDFLAGS: linker options 
 # LIBS or LOADLIBES: names of libraries to be added to all links
 # COMP_INCLUDES: Compiler option string to establish the search path for
 #   component-specific include files when compiling things or computing
@@ -63,6 +62,10 @@
 # is intended to be set on a make command line (e.g. 'make CADD=-g')
 # for options that apply just to a particular build.
 
+# In addition, there is CFLAGS, which is extra C compilation options and is
+# expected to be set via the make command line for a particular build.
+# Likewise, LDFLAGS for link-edit options.
+
 # In addition, there is CFLAGS_PERSONAL, which is extra C
 # compilation options and is expected to be set via environment variable
 # for options that are particular to the person doing the build and not
@@ -76,7 +79,20 @@ include $(SRCDIR)/version.mk
 # fully made.
 .DELETE_ON_ERROR:
 
-NETPBM_INCLUDES := -Iimportinc -I$(SRCDIR)/$(SUBDIR)
+# -I importinc/netpbm is a backward compatibility thing.  Really, the source
+# file should refer to e.g. "netpbm/pam.h" but for historical reasons, most
+# refer to "pam.h" and we'll probably never have the energy to convert them
+# all.  The reason the file exists as importinc/netpbm/pam.h rather than just
+# importinc/pam.h (as it did originally) is that it lives on a user's system
+# as <netpbm/pam.h>, and therefore all _exported_ header files do say
+# "<netpbm/pam.h>.
+ifneq ($(ALL_INTERNAL_HEADER_FILES_ARE_QUALIFIED),Y)
+  LEGACY_NETPBM_INCLUDE = -Iimportinc/netpbm
+else
+  LEGACY_NETPBM_INCLUDE =
+endif
+
+NETPBM_INCLUDES := -Iimportinc $(LEGACY_NETPBM_INCLUDE) -I$(SRCDIR)/$(SUBDIR)
 
 # -I. is needed when builddir != srcdir
 INCLUDES = -I. $(COMP_INCLUDES) $(NETPBM_INCLUDES) $(EXTERN_INCLUDES)
@@ -101,9 +117,18 @@ LDLIBS = $(LOADLIBES) $(LIBS)
 # way to detect that case and fail, so I just add a '/' to the front
 # if it isn't already there.
 ifneq ($(pkgdir)x,x)
-  PKGDIR = $(patsubst //%, /%, /$(pkgdir))
+  PKGDIR = $(patsubst //%,/%, /$(pkgdir))
 else
   PKGDIR = $(PKGDIR_DEFAULT)
+endif
+
+
+# 'resultdir', like 'pkgdir' is meant to be supplied from the make
+# command line.  Unlike 'pkgdir' we allow relative paths.
+ifneq ($(resultdir)x,x)
+  RESULTDIR = $(resultdir)
+else
+  RESULTDIR = $(RESULTDIR_DEFAULT)
 endif
 
 #===========================================================================
@@ -118,14 +143,16 @@ endif
 IMPORTINC_ROOT_HEADERS := pm_config.h inttypes_netpbm.h version.h
 
 IMPORTINC_LIB_HEADERS := \
-  pm.h pbm.h pgm.h ppm.h pnm.h pam.h bitio.h pbmfont.h ppmcmap.h \
+  pm.h pbm.h pgm.h ppm.h pnm.h pam.h pbmfont.h ppmcmap.h \
   pammap.h colorname.h ppmfloyd.h ppmdraw.h pm_system.h ppmdfont.h \
-  pm_gamma.h lum.h dithers.h
+  pm_gamma.h lum.h dithers.h pamdraw.h
 
 IMPORTINC_LIB_UTIL_HEADERS := \
-  bitarith.h bitreverse.h filename.h intcode.h floatcode.h mallocvar.h\
-  nsleep.h nstring.h pm_c_util.h shhopt.h \
-  wordaccess.h wordaccess_64_le.h wordaccess_gcc3_be.h wordaccess_generic.h \
+  bitarith.h bitio.h bitreverse.h filename.h intcode.h floatcode.h io.h \
+  matrix.h mallocvar.h \
+  nsleep.h nstring.h pm_c_util.h runlength.h shhopt.h token.h \
+  wordaccess.h  wordaccess_generic.h wordaccess_64_le.h \
+  wordaccess_be_aligned.h wordaccess_be_unaligned.h \
   wordintclz.h
 
 IMPORTINC_HEADERS := \
@@ -133,33 +160,32 @@ IMPORTINC_HEADERS := \
   $(IMPORTINC_LIB_HEADERS) \
   $(IMPORTINC_LIB_UTIL_HEADERS)
 
-IMPORTINC_ROOT_FILES := $(IMPORTINC_ROOT_HEADERS:%=importinc/%)
-IMPORTINC_LIB_FILES := $(IMPORTINC_LIB_HEADERS:%=importinc/%)
-IMPORTINC_LIB_UTIL_FILES := $(IMPORTINC_LIB_UTIL_HEADERS:%=importinc/%)
+IMPORTINC_ROOT_FILES := $(IMPORTINC_ROOT_HEADERS:%=importinc/netpbm/%)
+IMPORTINC_LIB_FILES := $(IMPORTINC_LIB_HEADERS:%=importinc/netpbm/%)
+IMPORTINC_LIB_UTIL_FILES := $(IMPORTINC_LIB_UTIL_HEADERS:%=importinc/netpbm/%)
 
 importinc: \
   $(IMPORTINC_ROOT_FILES) \
   $(IMPORTINC_LIB_FILES) \
   $(IMPORTINC_LIB_UTIL_FILES) \
-  importinc/netpbm \
 
-importinc/netpbm:
-	mkdir -p importinc
-	rm -f $@
-	$(SYMLINK) . $@
+# The reason we mkdir importinc/netpbm every time instead of just having
+# importinc depend on it and a rule to make it is that as a dependency, it
+# would force importinc to rebuild when importinc/netpbm has a more recent
+# modification date, which it sometimes would.
 
-$(IMPORTINC_ROOT_FILES):importinc/%:$(BUILDDIR)/%
-	mkdir -p importinc
-	rm -f $@
-	$(SYMLINK) $< $@
-
-$(IMPORTINC_LIB_FILES):importinc/%:$(SRCDIR)/lib/%
-	mkdir -p importinc
+$(IMPORTINC_ROOT_FILES):importinc/netpbm/%:$(BUILDDIR)/%
+	mkdir -p importinc/netpbm
 	rm -f $@
 	$(SYMLINK) $< $@
 
-$(IMPORTINC_LIB_UTIL_FILES):importinc/%:$(SRCDIR)/lib/util/%
-	mkdir -p importinc
+$(IMPORTINC_LIB_FILES):importinc/netpbm/%:$(SRCDIR)/lib/%
+	mkdir -p importinc/netpbm
+	rm -f $@
+	$(SYMLINK) $< $@
+
+$(IMPORTINC_LIB_UTIL_FILES):importinc/netpbm/%:$(SRCDIR)/lib/util/%
+	mkdir -p importinc/netpbm
 	rm -f $@
 	$(SYMLINK) $< $@
 
@@ -209,6 +235,27 @@ config:
 
 # Rule to make regular object files, e.g. pnmtojpeg.o.
 
+# The NDEBUG macro says to build code that assumes there are no bugs.
+# This makes the code go faster.  The main thing it does is tell the C library
+# to make assert() a no-op as opposed to generating code to check the
+# assertion and crash the program if it isn't really true.  You can add
+# -UNDEBUG (in any of various ways) to override this.
+#
+CFLAGS_ALL = \
+  -DNDEBUG $(CPPFLAGS) $(CFLAGS_CONFIG) $(CFLAGS_TARGET) $(CFLAGS_PERSONAL) $(CFLAGS) $(CADD)
+
+ifeq ($(WANT_SSE),Y)
+  # The only two compilers we've seen that have the SSE capabilities that
+  # WANT_SSE requests are GCC and Clang, and they both have these options and
+  # require them in order for <emmintrin.h> to compile.  On some systems
+  # (x86_64, in our experience), these options are default, but on more
+  # traditional systems, they are not.  Note: __SSE2__ macro tells whether
+  # -msse2 is in effect.
+  CFLAGS_SSE = -msse -msse2
+else
+  CFLAGS_SSE =
+endif
+
 $(OBJECTS): %.o: %.c importinc
 #############################################################################
 # Note that the user may have configured -I options into CFLAGS or CPPFLAGS.
@@ -221,14 +268,8 @@ $(OBJECTS): %.o: %.c importinc
 # the space is no longer a problem for anyone.
 #############################################################################
 #
-# The NDEBUG macro says not to build code that assumes there are no bugs.
-# This makes the code go faster.  The main thing it does is tell the C library
-# to make assert() a no-op as opposed to generating code to check the
-# assertion and crash the program if it isn't really true.  You can add
-# -UNDEBUG (in any of various ways) to override this.
-#
-	$(CC) -c $(INCLUDES) -DNDEBUG \
-	    $(CPPFLAGS) $(CFLAGS) $(CFLAGS_PERSONAL) $(CADD) -o $@ $<
+# We have to get this all on one line to make make messages neat
+	$(CC) -c $(INCLUDES) $(CFLAGS_ALL) -o $@ $<
 
 # libopt is a utility program used in the make file below.
 LIBOPT = $(BUILDDIR)/buildtools/libopt
@@ -250,6 +291,10 @@ $(BUNDLED_URTLIB): $(BUILDDIR)/urt
 	$(MAKE) -C $(dir $@) -f $(SRCDIR)/urt/Makefile \
 	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@) 
 endif
+
+$(BUILDDIR)/icon/netpbm.o: $(BUILDDIR)/icon
+	$(MAKE) -C $(dir $@) -f $(SRCDIR)/icon/Makefile \
+	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@) 
 
 # Here are some notes from Nelson H. F. Beebe on April 16, 2002:
 #
@@ -332,11 +377,19 @@ endif
 # Earlier ones do it regardless of __FAST_MATH__.
 
 MATHLIB ?= -lm
-$(PORTBINARIES) $(MATHBINARIES): %: %.o $(NETPBMLIB) $(LIBOPT)
+
 # Note that LDFLAGS might contain -L options, so order is important.
 # LDFLAGS is commonly set as an environment variable.
-	$(LD) -o $@ $@.o $(MATHLIB) $(shell $(LIBOPT) $(NETPBMLIB)) \
-	  $(LDFLAGS) $(LDLIBS) $(MATHLIB) $(RPATH) $(LADD)
+# Some of the target-specific libraries are internal Netpbm libraries
+# (such as libfiasco), which use Libnetpbm.  So we put $(NETPBMLIB)
+# after LDFLAGS_TARGET.
+LDFLAGS_ALL = $(WINICON_OBJECT) \
+ $(LDFLAGS_TARGET) $(shell $(LIBOPT) $(NETPBMLIB)) \
+ $(LDFLAGS) $(LDLIBS) $(MATHLIB) $(RPATH) $(LADD)
+
+$(PORTBINARIES) $(MATHBINARIES): %: %.o \
+  $(NETPBMLIB) $(LIBOPT) $(WINICON_OBJECT)
+	$(LD) -o $@$(EXE) $@.o $(ADDL_OBJECTS) $(LDFLAGS_ALL)
 
 
 # MERGE STUFF
@@ -410,7 +463,17 @@ ifeq ($(SYMLINKEXE)x,x)
   SYMLINKEXE := $(SYMLINK)
 endif
 
-$(PKGDIR)/%:
+# An implicit rule for $(PKGDIR)/% does not work because it causes Make
+# sometimes to believe the directory it creates from this rule is an unneeded
+# intermediate file and try to delete it later.  So we explicitly list the
+# possible directories under $(PKGDIR):
+
+PKGMANSUBDIRS = man1 man3 man5 web
+
+PKGSUBDIRS = bin include include/netpbm lib link misc \
+  $(PKGMANSUBDIRS:%=$(PKGMANDIR)/%)
+
+$(PKGSUBDIRS:%=$(PKGDIR)/%):
 	$(SRCDIR)/buildtools/mkinstalldirs $@
 
 .PHONY: install.merge
@@ -452,11 +515,13 @@ install.man: install.man1 install.man3 install.man5 \
 
 MANUALS1 = $(BINARIES) $(SCRIPTS)
 
-install.man1: $(PKGDIR)/$(PKGMANDIR)/man1 $(MANUALS1:%=%_installman1)
+install.man1: $(MANUALS1:%=%_installman1)
 
-install.man3: $(PKGDIR)/$(PKGMANDIR)/man3 $(MANUALS3:%=%_installman3)
+install.man3: $(MANUALS3:%=%_installman3)
 
-install.man5: $(PKGDIR)/$(PKGMANDIR)/man5 $(MANUALS5:%=%_installman5)
+install.man5: $(MANUALS5:%=%_installman5)
+
+install.manweb: $(MANUALS1:%=%_installmanweb) $(SUBDIRS:%=%/install.manweb)
 
 %_installman1: $(PKGDIR)/$(PKGMANDIR)/man1
 	perl -w $(SRCDIR)/buildtools/makepointerman $(@:%_installman1=%) \
@@ -469,6 +534,10 @@ install.man5: $(PKGDIR)/$(PKGMANDIR)/man5 $(MANUALS5:%=%_installman5)
 %_installman5: $(PKGDIR)/$(PKGMANDIR)/man5
 	perl -w $(SRCDIR)/buildtools/makepointerman $(@:%_installman5=%) \
           $(NETPBM_DOCURL) $< 5 $(MANPAGE_FORMAT) $(INSTALL_PERM_MAN)
+
+%_installmanweb: $(PKGDIR)/$(PKGMANDIR)/web
+	echo $(NETPBM_DOCURL)$(@:%_installmanweb=%).html \
+	  >$</$(@:%_installmanweb=%).url
 
 .PHONY: clean
 
@@ -513,6 +582,9 @@ endif
 	$(MAKE) -C $(dir $@) -f $(SRCDIR)/$(SUBDIR)/$(dir $@)Makefile \
 	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@) 
 %/install.man:
+	$(MAKE) -C $(dir $@) -f $(SRCDIR)/$(SUBDIR)/$(dir $@)Makefile \
+	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@) 
+%/install.manweb:
 	$(MAKE) -C $(dir $@) -f $(SRCDIR)/$(SUBDIR)/$(dir $@)Makefile \
 	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@) 
 %/install.data:

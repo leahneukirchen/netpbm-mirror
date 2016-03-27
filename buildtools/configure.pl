@@ -42,6 +42,11 @@ my ($TRUE, $FALSE) = (1,0);
 
 my $testCc;
 
+# $warned is logical.  It means we have issued a warning to Standard Output.
+
+my $warned;
+
+
 ##############################################################################
 #
 #  Implementation note:
@@ -89,6 +94,97 @@ sub prompt($$) {
     }
 
     return $response;
+}
+
+
+
+sub promptYesNo($) {
+    my ($default) = @_;
+
+    my $retval;
+
+    while (!defined($retval)) {
+        my $response = prompt("(y)es or (n)o", $default);
+        
+        if (uc($response) =~ m{ ^ (Y|YES) $ }x)  {
+            $retval = $TRUE;
+        } elsif (uc($response) =~ m{ ^ (N|NO) $ }x)  {
+            $retval = $FALSE;
+        } else {
+            print("'$response' isn't one of the choices.  \n" .
+                  "You must choose 'yes' or 'no' (or 'y' or 'n').\n");
+        }
+    }
+
+    return $retval;
+}
+
+
+
+sub flow($) {
+    my ($unflowed) = @_;
+#-----------------------------------------------------------------------------
+#  Return the text $unflowed, split with newlines into 72 character lines.
+#  We assum $unflowed is pure text, without any kind of formatting characters
+#  such as newlines.
+#-----------------------------------------------------------------------------
+    my $retval;
+
+    my @words = split(m{\s+}, $unflowed);
+    
+    my $currentLine;
+    
+    $currentLine = "";
+    
+    foreach my $word (@words) {
+        my $mustSpill;
+        if (length($currentLine) == 0) {
+            $currentLine = $word;
+            $mustSpill = $FALSE;
+        } else {
+            my $separator;
+            if (substr($currentLine, -1) eq '.') {
+                $separator = "  ";
+            } else {
+                $separator = " ";
+            }
+                
+            if (length($currentLine) + length($separator) + length($word)
+                <= 72) {
+                $currentLine .= $separator;
+                $currentLine .= $word;
+                $mustSpill = $FALSE;
+            } else {
+                $mustSpill = $TRUE;
+            }
+        }
+        if ($mustSpill) {
+            $retval .= $currentLine;
+            $retval .= "\n";
+            $currentLine = $word;
+        }
+    }
+
+    $retval .= $currentLine;
+    $retval .= "\n";
+
+    return $retval;
+}
+
+
+
+sub warnUser($) {
+    my ($warning) = @_;
+#-----------------------------------------------------------------------------
+#  Warn the user the build might fail, with explanation "$warning".
+#-----------------------------------------------------------------------------
+    print("************************************" .
+          "************************************\n");
+    print flow("WARNING: $warning");
+    print("************************************" .
+          "************************************\n");
+
+    $warned = $TRUE;
 }
 
 
@@ -257,7 +353,7 @@ sub testCompile($$$) {
 sub testCompileLink($$$) {
     my ($flags, $cSourceCodeR, $successR) = @_;
 #-----------------------------------------------------------------------------
-#  Do a test compile of the program in @{$cSourceCodeR}.
+#  Do a test compile and link of the program in @{$cSourceCodeR}.
 #  
 #  Return $$successR == $TRUE iff the compile succeeds (exit code 0).
 #-----------------------------------------------------------------------------
@@ -322,20 +418,8 @@ sub askAboutCygwin() {
         $default = "n";
     }
     
-    my $retval;
+    my $retval = promptYesNo($default);
 
-    while (!defined($retval)) {
-        my $response = prompt("(y)es or (n)o", $default);
-    
-        if (uc($response) =~ /^(Y|YES)$/)  {
-            $retval = $TRUE;
-        } elsif (uc($response) =~ /^(N|NO)$/)  {
-            $retval = $FALSE;
-        } else {
-            print("'$response' isn't one of the choices.  \n" .
-                  "You must choose 'yes' or 'no' (or 'y' or 'n').\n");
-        }
-    }
     return $retval;
 }
 
@@ -353,20 +437,7 @@ sub askAboutDjgpp() {
         $default = "n";
     }
     
-    my $retval;
-
-    while (!defined($retval)) {
-        my $response = prompt("(y)es or (n)o", $default);
-    
-        if (uc($response) =~ /^(Y|YES)$/)  {
-            $retval = $TRUE;
-        } elsif (uc($response) =~ /^(N|NO)$/)  {
-            $retval = $FALSE;
-        } else {
-            print("'$response' isn't one of the choices.  \n" .
-                  "You must choose 'yes' or 'no' (or 'y' or 'n').\n");
-        }
-    }
+    my $retval = promptYesNo($default);
 }
 
 
@@ -407,10 +478,10 @@ sub getPlatform() {
     print("Which of the following best describes your platform?\n");
  
     print("gnu      GNU/Linux\n");
+    print("win      Windows/DOS (Cygwin, DJGPP, Mingw32)\n");
     print("sun      Solaris or SunOS\n");
     print("hp       HP-UX\n");
     print("aix      AIX\n");
-    print("win      Windows/DOS (Cygwin, DJGPP, Mingw32)\n");
     print("tru64    Tru64\n");
     print("irix     Irix\n");
     print("bsd      NetBSD, BSD/OS\n");
@@ -485,6 +556,49 @@ sub getPlatform() {
 
 
 
+sub getGccChoiceFromUser($) {
+    my ($platform) = @_;
+
+    my $retval;
+
+    print("GNU compiler or native operating system compiler (cc)?\n");
+    print("\n");
+
+    my $default;
+
+    if ($platform eq "SOLARIS" || $platform eq "SCO" ) {
+        $default = "gcc";
+    } else {
+        $default = "cc";
+    }
+
+    while (!defined($retval)) {
+        my $response = prompt("gcc or cc", $default);
+
+        if ($response eq "gcc") {
+            $retval = "gcc";
+        } elsif ($response eq "cc") {
+            $retval = "cc";
+        } else {
+            print("'$response' isn't one of the choices.  \n" .
+                  "You must choose 'gcc' or 'cc'.\n");
+        }
+    }
+    if ($retval eq 'gcc' && !commandExists('gcc')) {
+        warnUser("WARNING: You selected the GNU compiler, " .
+                 "but do not appear to have a program " .
+                 "named 'gcc' in your PATH.  This may " .
+                 "cause trouble later.  You may need to " .
+                 "set the CC environment variable or CC " .
+                 "makefile variable or install 'gcc'");
+    }
+    print("\n");
+
+    return $retval;
+}
+
+
+
 sub getCompiler($$$) {
     my ($platform, $subplatform, $compilerR) = @_;
 #-----------------------------------------------------------------------------
@@ -529,45 +643,23 @@ sub getCompiler($$$) {
                             "DARWIN"  => 1,
                             );
 
-    if ($gccUsualPlatform{$platform}) {
-        $$compilerR = "gcc";
-    } elsif ($platform eq "WINDOWS" && $subplatform eq "cygwin") {
-        $$compilerR = "gcc";
-    } elsif ($gccOptionalPlatform{$platform}) {
-        print("GNU compiler or native operating system compiler (cc)?\n");
-        print("\n");
+    if (commandExists('x86_64-w64-mingw32-gcc')) {
+        printf("Do you want to use the Mingw-w64 Cross-Compiler?\n");
 
-        my $default;
-
-        if ($platform eq "SOLARIS" || $platform eq "SCO" ) {
-            $default = "gcc";
-        } else {
-            $default = "cc";
+        if (promptYesNo('y') eq "y") {
+            $$compilerR = 'x86_64-w64-mingw32-gcc';
         }
-
-        my $response = prompt("gcc or cc", $default);
-
-        if ($response eq "gcc") {
+    }
+    if (!defined($$compilerR)) {
+        if ($gccUsualPlatform{$platform}) {
             $$compilerR = "gcc";
-        } elsif ($response eq "cc") {
-            $$compilerR = "cc";
+        } elsif ($platform eq "WINDOWS" && $subplatform eq "cygwin") {
+            $$compilerR = "gcc";
+        } elsif ($gccOptionalPlatform{$platform}) {
+            $$compilerR = getGccChoiceFromUser($platform);
         } else {
-            print("'$response' isn't one of the choices.  \n" .
-                  "You must choose 'gcc' or 'cc'.\n");
-            exit 12;
+            $$compilerR = 'cc';
         }
-
-        if ($$compilerR eq 'gcc' && !commandExists('gcc')) {
-            print("WARNING: You selected the GNU compiler, " .
-                  "but do not appear to have a program " .
-                  "named 'gcc' in your PATH.  This may " .
-                  "cause trouble later.  You may need to " .
-                  "set the CC environment variable or CC " .
-                  "makefile variable or install 'gcc'\n");
-        }
-        print("\n");
-    } else {
-        $$compilerR = 'cc';
     }
 }
 
@@ -743,16 +835,16 @@ sub getLibTypes($$$$$$$$) {
         my $response = prompt("(y)es or (n)o", $default);
         
         if (uc($response) =~ /^(Y|YES)$/)  {
-            $staticlib_too = "y";
+            $staticlib_too = "Y";
         } elsif (uc($response) =~ /^(N|NO)$/)  {
-            $staticlib_too = "n";
+            $staticlib_too = "N";
         } else {
             print("'$response' isn't one of the choices.  \n" .
               "You must choose 'yes' or 'no' (or 'y' or 'n').\n");
             exit 12;
         }
     } else {
-        $staticlib_too = "n";
+        $staticlib_too = "N";
     }
     print("\n");
 
@@ -855,6 +947,7 @@ sub getInttypes($) {
 }
 
 
+
 sub getInt64($$) {
 
     my ($inttypes_h, $haveInt64R) = @_;
@@ -890,6 +983,85 @@ sub getInt64($$) {
 
 
 
+sub determineSseCapability($) {
+
+    my ($haveEmmintrinR) = @_;
+
+    if (defined($testCc)) {
+
+        print("(Doing test compiles to determine if your compiler has SSE " .
+              "intrinsics -- ignore errors)\n");
+
+        my $cflags = testCflags();
+
+        my $works;
+
+        my @cSourceCode = (
+                           "#include <emmintrin.h>\n",
+                           );
+            
+        testCompile($cflags, \@cSourceCode, \my $success);
+            
+        if ($success) {
+            print("It does.\n");
+            $$haveEmmintrinR = $TRUE;
+        } else {
+            print("It does not.  Programs will not exploit fast SSE " .
+                  "instructions.\n");
+            $$haveEmmintrinR = $FALSE;
+        }
+        print("\n");
+    } else {
+        # We conservatively estimate the facility isn't there
+        $$haveEmmintrinR = $FALSE;
+    }
+}
+
+
+
+sub getSse($) {
+
+    my ($wantSseR) = @_;
+
+    determineSseCapability(\my $haveEmmintrin);
+
+    my $gotit;
+
+    print("Use SSE instructions?\n");
+    print("\n");
+
+    my $default = $haveEmmintrin ? "y" : "n";
+
+    $$wantSseR = promptYesNo($default);
+
+    # Another complication in the SSE world is that GNU compiler options
+    # -msse, -msse2, and -march=xxx affect whether the compiler can or will
+    # generate the instructions.  When compiling for older processors, the
+    # default for these options is negative ; for newer processors, it is
+    # affirmative.  -[no]msse2 determines whether macro __SSE2__ macro is
+    # defined.  If it is not, #include <emmintrins.h> fails (<emmintrins.h>
+    # checks __SSE2__.
+
+    # The Netpbm build does not mess with these compiler options.  If the
+    # user wants something other than the default, he can put it in CFLAGS
+    # in config.mk manually or on the make command line on in CFLAGS_PERSONAL.
+}
+
+
+sub getIcon($$) {
+
+    my ($platform, $wantIconR) = @_;
+
+    if ($platform eq 'WINDOWS') {
+        print("Include an icon in each executable?\n");
+        $$wantIconR = promptYesNo("y");
+    } else {
+        $$wantIconR = $FALSE;
+    }
+}
+
+
+
 # TODO: These should do test compiles to see if the headers are in the
 # default search path, both to create a default to offer and to issue a
 # warning after user has chosen.  Also test links to test the link library.
@@ -915,7 +1087,7 @@ sub getTiffLibrary($@) {
             $tifflib = $response;
         }
         if (defined($tifflib) and $tifflib =~ m{/} and !-f($tifflib)) {
-            printf("WARNING: No regular file named '$tifflib' exists.\n");
+            warnUser("No regular file named '$tifflib' exists.");
         }
     }
     my $tiffhdr_dir;
@@ -937,7 +1109,7 @@ sub getTiffLibrary($@) {
             $tiffhdr_dir = $response;
         }
         if (defined($tiffhdr_dir) and !-d($tiffhdr_dir)) {
-            printf("WARNING: No directory named '$tiffhdr_dir' exists.\n");
+            warnUser("No directory named '$tiffhdr_dir' exists.");
         }
     }
     return($tifflib, $tiffhdr_dir);
@@ -978,7 +1150,7 @@ sub getJpegLibrary($@) {
             $jpeghdr_dir = $response;
         }
         if (defined($jpeghdr_dir) and !-d($jpeghdr_dir)) {
-            printf("WARNING: No directory named '$jpeghdr_dir' exists.\n");
+            warnUser("No directory named '$jpeghdr_dir' exists.");
         }
     }
     return($jpeglib, $jpeghdr_dir);
@@ -1075,43 +1247,49 @@ sub getX11Library($@) {
     my ($platform, @suggestedHdrDir) = @_;
 
     my $x11lib;
-    {
-        my $default;
-
-        if (-d('/usr/link/X11')) {
-            $default = '/usr/link/X11/libX11' . libSuffix($platform);
-        } elsif (-d('/usr/X11R6/lib')) {
-            $default = '/usr/X11R6/lib/libX11' . libSuffix($platform);
-        } else {
-            $default = "libX11" . libSuffix($platform);
-        }
-        print("What is your X11 (X client) library?\n");
-        
-        my $response = prompt("library filename or 'none'", $default);
-        
-        if ($response ne "none") {
-            $x11lib = $response;
-        }
-    }
     my $x11hdr_dir;
-    if (defined($x11lib)) {
-        my $default;
 
-        $default = "default";
+    if (system('pkg-config x11 --exists') == 0) {
+        # We don't need to ask where X libraries are; pkg-config knows and the
+        # make files will use that.
+    } else {
+        {
+            my $default;
 
-        print("Where are the interface headers for it?\n");
-        
-        my $response = prompt("X11 header directory", $default);
-        
-        if ($response ne "default") {
-            $x11hdr_dir = $response;
+            if (-d('/usr/link/X11')) {
+                $default = '/usr/link/X11/libX11' . libSuffix($platform);
+            } elsif (-d('/usr/X11R6/lib')) {
+                $default = '/usr/X11R6/lib/libX11' . libSuffix($platform);
+            } else {
+                $default = "libX11" . libSuffix($platform);
+            }
+            print("What is your X11 (X client) library?\n");
+            
+            my $response = prompt("library filename or 'none'", $default);
+            
+            if ($response ne "none") {
+                $x11lib = $response;
+            }
         }
-        if (defined($x11hdr_dir)) {
-            if (!-d($x11hdr_dir)) {
-                printf("WARNING: No directory named '$x11hdr_dir' exists.\n");
-            } elsif (!-d("$x11hdr_dir/X11")) {
-                printf("WARNING: Directory '$x11hdr_dir' does not contain " .
-                       "the requisite 'X11' subdirectory\n");
+        if (defined($x11lib)) {
+            my $default;
+
+            $default = "default";
+
+            print("Where are the interface headers for it?\n");
+            
+            my $response = prompt("X11 header directory", $default);
+            
+            if ($response ne "default") {
+                $x11hdr_dir = $response;
+            }
+            if (defined($x11hdr_dir)) {
+                if (!-d($x11hdr_dir)) {
+                    warnUser("No directory named '$x11hdr_dir' exists.");
+                } elsif (!-d("$x11hdr_dir/X11")) {
+                    warnUser("Directory '$x11hdr_dir' does not contain " .
+                             "the requisite 'X11' subdirectory");
+                }
             }
         }
     }
@@ -1137,6 +1315,8 @@ sub getLinuxsvgaLibrary($@) {
             # &>/dev/null should work above, but on 12.03.26, it caused the
             # return value of system() always to be zero!
             $default = 'libvga.so';
+        } elsif (-f('/usr/lib/libvga.a')) {
+            $default = '/usr/lib/libvga.a';
         } else {
             $default = 'none';
         }
@@ -1166,8 +1346,7 @@ sub getLinuxsvgaLibrary($@) {
         }
         if (defined($svgalibhdr_dir)) {
             if (!-d($svgalibhdr_dir)) {
-                printf("WARNING: No directory named " .
-                       "'$svgalibhdr_dir' exists.\n");
+                warnUser("No directory named '$svgalibhdr_dir' exists.");
             }
         }
     }
@@ -1283,7 +1462,8 @@ sub gnuCflags($) {
     return("CFLAGS = " . gnuOptimizeOpt($gccCommandName) . " -ffast-math " .
            " -pedantic -fno-common " . 
            "-Wall -Wno-uninitialized -Wmissing-declarations -Wimplicit " .
-           "-Wwrite-strings -Wmissing-prototypes -Wundef\n");
+           "-Wwrite-strings -Wmissing-prototypes -Wundef " .
+           "-Wno-unknown-pragmas\n");
 }
 
 
@@ -1332,10 +1512,10 @@ sub validateLibraries(@) {
     foreach my $libname (@libList) {
         if (defined($libname)) {
             if ($libname =~ m{/} and !-f($libname)) {
-                print("WARNING: No regular file named '$libname' exists.\n");
+                warnUser("No regular file named '$libname' exists.");
             } elsif (!($libname =~ m{ .* \. (so|a|sa|sl|dll|dylib) $ }x)) {
-                print("WARNING: The library name '$libname' does not have " .
-                      "a conventional suffix (.so, .a, .dll, etc.)\n");
+                warnUser("The library name '$libname' does not have " .
+                         "a conventional suffix (.so, .a, .dll, etc.)");
             }
         }
     }
@@ -1347,16 +1527,12 @@ sub warnJpegTiffDependency($$) {
     my ($jpeglib, $tifflib) = @_;
 
     if (defined($tifflib) && !defined($jpeglib)) {
-        print("WARNING: You say you have a Tiff library, " .
-              "but no Jpeg library.\n");
-        print("Sometimes the Tiff library prerequires the " .
-              "Jpeg library.  If \n");
-        print("that is the case on your system, you will " .
-              "have some links fail with\n");
-        print("missing 'jpeg...' symbols.  If so, rerun " .
-              "Configure and say you\n");
-        print("have no Tiff library either.\n");
-        print("\n");
+        warnUser("You say you have a Tiff library, but no Jpeg library.  " .
+                 "Sometimes the Tiff library prerequires the " .
+                 "Jpeg library.  If that is the case on your system, " .
+                 "you will have some links fail with " .
+                 "missing 'jpeg...' symbols.  If so, rerun " .
+                 "Configure and say you have no Tiff library either.");
     }
 }
 
@@ -1401,41 +1577,37 @@ sub printMissingHdrWarning($$) {
 
     my ($name, $hdr_dir) = @_;
 
-    print("WARNING: You said the compile-time part of the $name library " .
-          "(the header\n");
-    print("files) is in ");
+    warnUser("You said the compile-time part of the $name library " .
+             "(the header files) is in " .
+             
+             (defined($hdr_dir) ?
+              "directory '$hdr_dir', " :
+              "the compiler's default search path, ") .
 
-    if (defined($hdr_dir)) {
-        print("directory '$hdr_dir', ");
-    } else {
-        print("the compiler's default search path, ");
-    }
-    print("but a test compile failed\n");
-    print("to confirm that.  If your configuration is exotic, the test " .
-          "compile might\n");
-    print("just be wrong, but otherwise the Netpbm build will fail.\n");
-    print("\n");
-    print("To fix this, either install the $name library there \n");
-    print("or re-run Configure and answer the question about the $name " .
-          "library\n");
-    print("differently.\n");
-    print("\n");
+             "but a test compile failed to confirm that.  " .
+             "If your configuration is exotic, the test compile might" .
+             "just be wrong, but otherwise the Netpbm build will fail.  " .
+             "To fix this, either install the $name library there " .
+             "or re-run Configure and answer the question about the $name " .
+             "library differently."
+        );
 }
 
 
 
 sub printOldJpegWarning() {
-    print("WARNING: Your JPEG library appears to be too old for Netpbm.\n");
-    print("We base this conclusion on the fact that jpeglib.h apparently\n");
-    print("does not define struct jpeg_marker_struct.\n");
-    print("If the JPEG library is not Independent Jpeg Group's Version 6b\n");
-    print("or better, the Netpbm build will fail when it attempts to build\n");
-    print("the parts that use the JPEG library.\n");
-    print("\n");
-    print("If your configuration is exotic, this test may just be wrong.\n");
-    print("Otherwise, either upgrade your JPEG library or re-run Configure\n");
-    print("and say you don't have a JPEG library.\n");
-    print("\n");
+    warnUser("Your JPEG library appears to be too old for Netpbm.  " .
+             "We base this conclusion on the fact that jpeglib.h apparently" .
+             "does not define struct jpeg_marker_struct.  " .
+             "If the JPEG library is not " .
+             "Independent Jpeg Group's Version 6b" .
+             "or better, the Netpbm build will fail when it attempts " .
+             "to build the parts that use the JPEG library.  " .
+             "If your configuration is exotic, " .
+             "this test may just be wrong.  " .
+             "Otherwise, either upgrade your JPEG library " .
+             "or re-run Configure and say you don't have a JPEG library."
+        );
 }
 
 
@@ -1463,6 +1635,56 @@ sub testJpegHdr($) {
             if (!$success) {
                 print("\n");
                 printOldJpegWarning();
+            }
+        }
+    }
+}
+
+
+
+sub warnJpegNotInDefaultPath($) {
+    my ($jpegLib) = @_;
+
+    print("You said your JPEG library is '$jpegLib', which says it is "
+          . "in the linker's default search path, but a test link we did "
+          . "failed as if it is not.  If it isn't, the build will fail\n");
+}
+
+
+
+sub testJpegLink($) {
+    my ($jpegLib) = @_;
+#-----------------------------------------------------------------------------
+#  See if we can link the JPEG library with the information user gave us.
+#  $jpegLib is the answer to the "what is your JPEG library" prompt, so
+#  it is either a library file name such as "libjpeg.so", in the linker's
+#  default search path, or it is an absolute path name such as
+#  "/usr/jpeg/lib/libjpeg.so".
+#
+#  We actually test only the default search path case, since users often
+#  incorrectly specify that by taking the default.
+#-----------------------------------------------------------------------------
+    if ($jpegLib =~ m{( lib | cyg ) (.+) \. ( so | a )$}x) {
+        my $libName = $2;
+
+        # It's like "libjpeg.so", so is a library in the default search path.
+        # $libName is "jpeg" in this example.
+
+        # First we test our test tool.  We can do this only with GCC.
+
+        my @emptySource;
+
+        testCompileLink('-nostartfiles', \@emptySource, \my $controlWorked);
+
+        if ($controlWorked) {
+            # The "control" case worked.  Now see if it still works when we add
+            # the JPEG library.
+
+            testCompileLink("-nostartfiles -l$libName", \@emptySource,
+                            \my $workedWithJpeg);
+
+            if (!$workedWithJpeg) {
+                warnJpegNotInDefaultPath($jpegLib);
             }
         }
     }
@@ -1531,38 +1753,47 @@ sub testPngHdr($$) {
 
 
 
-sub printBadPngConfigLdflagsWarning($) {
-    my ($pngLdFlags) = @_;
+sub printBadPngConfigCflagsWarning($) {
+    my ($pngCFlags) = @_;
 
-    print << 'EOF';
-WARNING: 'libpng-config' in this environment (a program in your PATH)
-gives instructions that don't work for linking with the PNG library.
-Our test link failed.
-
-This indicates Libpng is installed incorrectly on this system.  If so,
-your Netpbm build, which uses 'libpng-config', will fail.  But it
-might also just be our test that is broken.
-
-EOF
-
+    warnUser("'libpng-config' in this environment (a program in your PATH) " .
+             "gives instructions that don't work for compiling for " .
+             "(not linking with) the PNG library.  " .
+             "Our test compile failed.  " .
+             "This indicates Libpng is installed incorrectly " .
+             "on this system.  If so, your Netpbm build, " .
+             "which uses 'libpng-config', will fail.  " .
+             "But it might also just be our test that is broken.");
 }
 
 
 
-sub printBadPngConfigCflagsWarning($) {
-    my ($pngCFlags) = @_;
+sub pngLinkWorksWithLzLmMsg() {
 
-    print << 'EOF';
-WARNING: 'libpng-config' in this environment (a program in your PATH)
-gives instructions that don't work for compiling for the PNG library.
-Our test compile failed.
+    return
+        "When we added \"-lz -lm\" to the linker flags, the link worked.  " .
+        "That means the fix for this may be to modify 'libpng-config' " .
+        "so that 'libpng-config --ldflags' includes \"-lz -lm\" " .
+        "in its output.  But the right fix may actually " .
+        "be to build libpng differently so that it specifies its dependency " .
+        "on those libraries, or to put those libraries in a different " .
+        "place, or to create missing symbolic links.";
+}
 
-This indicates Libpng is installed incorrectly on this system.  If so,
-your Netpbm build, which uses 'libpng-config', will fail.  But it
-might also just be our test that is broken.
 
-EOF
 
+sub printBadPngConfigLdflagsWarning($$) {
+    my ($pngLdFlags, $lzLmSuccess) = @_;
+
+    warnUser(
+        "'libpng-config' in this environment (a program in your PATH) " .
+        "gives instructions that don't work for linking " .
+        "with the PNG library.  Our test link failed.  " .
+        "This indicates Libpng is installed incorrectly on this system.  " .
+        "If so, your Netpbm build, which uses 'libpng-config', will fail.  " .
+        "But it might also just be our test that is broken.  " .
+        ($lzLmSuccess ? pngLinkWorksWithLzLmMsg : "")
+        );
 }
 
 
@@ -1588,7 +1819,10 @@ sub testLinkPnglib($$) {
                         \@cSourceCode, \my $success);
         
         if (!$success) {
-            printBadPngConfigLdflagsWarning($pngLdflags);
+            testCompileLink("$generalCflags $pngCflags $pngLdflags -lz -lm",
+                        \@cSourceCode, \my $lzLmSuccess);
+
+            printBadPngConfigLdflagsWarning($pngLdflags, $lzLmSuccess);
         }
     }
 }
@@ -1633,20 +1867,15 @@ sub testCompileXmlreaderH($$) {
 sub printBadXml2CFlagsWarning($) {
     my ($xml2CFlags) = @_;
 
-    print << 'EOF';
-
-WARNING: 'xml2-config' in this environment (a program in your PATH)
-gives instructions that don't work for compiling for the Libxml2 library.
-Our test compile failed.
-
-This indicates Libxml2 is installed incorrectly on this system.  If so,
-your Netpbm build, which uses 'xml2-config', will fail.  But it
-might also just be our test that is broken.
-
-'xml2-config' says to use compiler options '$xml2CFlags'.
-
-EOF
-
+    warnUser(
+      "'xml2-config' in this environment (a program in your PATH) " .
+        "gives instructions that don't work for compiling for the " .
+        "Libxml2 library.  Our test compile failed.  " .
+        "This indicates Libxml2 is installed incorrectly on this system.  " .
+        "If so, your Netpbm build, which uses 'xml2-config', will fail.  " .
+        "But it might also just be our test that is broken.  ".
+        "'xml2-config' says to use compiler options '$xml2CFlags'.  "
+        );
 }
 
 
@@ -1669,26 +1898,24 @@ sub testCompileXmlReaderTypes($$) {
 
 sub printMissingXmlReaderTypesWarning() {
 
-    print << 'EOF';
-
-WARNING: Your libxml2 interface header file does not define the type
-'xmlReaderTypes', which Netpbm needs.  In order to build Netpbm successfully,
-you must install a more recent version of Libxml2.
-
-EOF
+    warnUser(
+        "Your libxml2 interface header file does not define the type " .
+        "'xmlReaderTypes', which Netpbm needs.  " .
+        "In order to build Netpbm successfully, " .
+        "you must install a more recent version of Libxml2.  "
+        );
 }
 
 
 
 sub printNoLibxml2Warning() {
 
-    print << 'EOF';
-
-WARNING: You appear not to have Libxml2 installed ('xml2-config' does not
-exist in your program search PATH).  If this is the case at build time,
-the build will skip building 'svgtopam'.
-
-EOF
+    warnUser(
+        "You appear not to have Libxml2 installed ('xml2-config' does not " .
+        "exist in your program search PATH).  " .
+        "If this is the case at build time, " .
+        "the build will skip building 'svgtopam'."
+        );
 }
 
 
@@ -1731,6 +1958,8 @@ sub testConfiguration($$$$$$) {
 
     if (defined($jpeglib)) {
         testJpegHdr($jpeghdr_dir);
+
+        testJpegLink($jpeglib);
     }
     if (defined($pnglib) && defined($zlib)) {
         testPngHdr($pnghdr_dir, $zhdr_dir);
@@ -1862,7 +2091,11 @@ getInttypes(\my $inttypesHeaderFile);
 
 getInt64($inttypesHeaderFile, \my $haveInt64);
 
+getSse(\my $wantSse);
+
 findProcessManagement(\my $dontHaveProcessMgmt);
+
+getIcon($platform, \my $wantIcon);
 
 #******************************************************************************
 #
@@ -1870,33 +2103,25 @@ findProcessManagement(\my $dontHaveProcessMgmt);
 #
 #*****************************************************************************
 
-print("\n\n");
-print("The following questions concern the subroutine libraries that are " .
-      "Netpbm\n");
-print("prerequisites.  Every library has a compile-time part (header " .
-      "files)\n");
-print("and a link-time part.  In the case of a shared library, these are " .
-      "both\n");
-print("part of the \"development\" component of the library, which may be " .
-      "separately\n");
-print("installable from the runtime shared library.  For each library, you " .
-      "must\n");
-print("give the filename of the link library.  If it is not in your " .
-      "linker's\n");
-print("default search path, give the absolute pathname of the file.  In " .
-      "addition,\n");
-print("you will be asked for the directory in which the library's interface " .
-      "headers\n");
-print("reside, and you can respond 'default' if they are in your compiler's " .
-      "default\n");
-print("search path.\n");
-print("\n");
-print("If you don't have the library on your system, you can enter 'none' " .
-      "as the\n");
-print("library filename and the builder will skip any part that requires " .
-      "that ");
-print("library.\n");
-print("\n");
+print << 'EOF';
+
+
+The following questions concern the subroutine libraries that are Netpbm
+prerequisites.  Every library has a compile-time part (header files)
+and a link-time part.  In the case of a shared library, these are both
+part of the "development" component of the library, which may be separately
+installable from the runtime shared library.  For each library, you must
+give the filename of the link library.  If it is not in your linker's
+default search path, give the absolute pathname of the file.  In addition,
+you will be asked for the directory in which the library's interface headers
+reside, and you can respond 'default' if they are in your compiler's default
+search path.
+
+If you don't have the library on your system, you can enter 'none' as the
+library filename and the builder will skip any part that requires that
+library.
+
+EOF
 
 my ($jpeglib, $jpeghdr_dir) = getJpegLibrary($platform);
 print("\n");
@@ -2131,7 +2356,7 @@ if ($platform eq "GNU") {
     # only Ppmtompeg and it isn't clear that using long instead of int is
     # ever right anyway.
 
-    push(@config_mk, "OMIT_NETWORK = y\n");
+    push(@config_mk, "OMIT_NETWORK = Y\n");
     push(@config_mk, "LINKER_CAN_DO_EXPLICIT_LIBRARY=Y\n");
 } elsif ($platform eq "IRIX") {
 #    push(@config_mk, "INSTALL = install\n");
@@ -2145,7 +2370,7 @@ if ($platform eq "GNU") {
         makeCompilerGcc(\@config_mk);
     }
     push(@config_mk, "EXE = .exe\n");
-    push(@config_mk, "OMIT_NETWORK = y\n");
+    push(@config_mk, "OMIT_NETWORK = Y\n");
 #    # Though it may not have the link as "ginstall", "install" in a Windows
 #    # Unix environment is usually GNU install.
 #    my $ginstall_result = `ginstall --version 2>/dev/null`;
@@ -2159,6 +2384,9 @@ if ($platform eq "GNU") {
          '-shared -Wl,--image-base=0x10000000 -Wl,--enable-auto-import', "\n");
     if ($subplatform ne "cygwin") {
         push(@config_mk, "MSVCRT = Y\n");
+    }
+    if ($wantIcon) {
+        push(@config_mk, 'WINICON_OBJECT = $(BUILDDIR)/icon/netpbm.o', "\n");
     }
 } elsif ($platform eq "BEOS") {
     push(@config_mk, "LDSHLIB = -nostart\n");
@@ -2296,6 +2524,10 @@ if ($haveInt64 ne 'Y') {
     push(@config_mk, "HAVE_INT64 = $haveInt64\n");
 }
 
+if ($wantSse) {
+    push(@config_mk, "WANT_SSE = Y\n");
+}
+
 if ($dontHaveProcessMgmt) {
     push(@config_mk, "DONT_HAVE_PROCESS_MGMT = Y\n");
 }
@@ -2322,6 +2554,9 @@ print("make.\n");
 print("\n");
 
 print("Now you may proceed with 'make'\n");
+if ($warned) {
+    print("BUT: per the previous WARNINGs, don't be surprised if it fails\n");
+}
 print("\n");
 
 

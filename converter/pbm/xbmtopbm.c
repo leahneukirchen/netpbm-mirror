@@ -170,7 +170,7 @@ getXbmHeader(FILE *         const ifP,
             if (strlen(line) == MAX_LINE - 1)
                 pm_error("A line in the input file is %u characters long.  "
                          "%u is the maximum we can handle",
-                         strlen(line), MAX_LINE-1);
+                         (unsigned)strlen(line), MAX_LINE-1);
 
             parseWidthHeightLine(line, &gotWidth, widthP, &gotHeight, heightP);
 
@@ -362,12 +362,8 @@ main(int    argc,
         
         for (i = 0; i < bytesPerRow; ++i)
             bitrow[i] = bitreverse[*p++];
-            
-        if (cols % 8 > 0) {
-            bitrow[bytesPerRow-1] >>= 8 - cols % 8;
-            bitrow[bytesPerRow-1] <<= 8 - cols % 8;
-        }
-            
+
+        pbm_cleanrowend_packed(bitrow, cols);
         pbm_writepbmrow_packed(stdout, bitrow, cols, 0);
     }
 

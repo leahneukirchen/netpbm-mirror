@@ -87,7 +87,7 @@ reallocProduct(void **      const blockP,
     void * array; \
     array = arrayName; \
     reallocProduct(&array, nElements, sizeof(arrayName[0])); \
-    if (!array) \
+    if (!array && arrayName) \
         free(arrayName); \
     arrayName = array; \
 } while (0)
@@ -107,12 +107,33 @@ do { \
         abort(); \
 } while(0)
 
+#define MALLOCARRAY2(arrayName, nRows, nCols) do { \
+    void * array; \
+    pm_mallocarray2(&array, nRows, nCols, sizeof(arrayName[0][0]));  \
+    arrayName = array; \
+} while (0)
+
+#define MALLOCARRAY2_NOFAIL(arrayName, nRows, nCols) do { \
+    MALLOCARRAY2(arrayName, nRows, nCols);       \
+    if ((arrayName) == NULL) \
+        abort(); \
+} while (0)
+
+void
+pm_freearray2(void ** const rowIndex);
+
 
 #define MALLOCVAR(varName) \
     varName = malloc(sizeof(*varName))
 
 #define MALLOCVAR_NOFAIL(varName) \
     do {if ((varName = malloc(sizeof(*varName))) == NULL) abort();} while(0)
+
+void
+pm_mallocarray2(void **      const resultP,
+                unsigned int const cols,
+                unsigned int const rows,
+                unsigned int const elementSize);
 
 #ifdef __cplusplus
 }

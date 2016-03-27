@@ -22,7 +22,7 @@
     Extend pamtoppm to convert this to ppm using the standard
     transformation.
 
-    See if additional decompressor options effects signficant speedup.
+    See if additional decompressor options effects significant speedup.
     grayscale output of color image, downscaling, color quantization, and
     dithering are possibilities.  Djpeg's man page says they make it faster.
 
@@ -173,7 +173,7 @@ parseCommandLine(int                  const argc,
    not change argv at all.
 -----------------------------------------------------------------------------*/
     optEntry *option_def;
-        /* Instructions to optParseOptions3 on how to parse our options.
+        /* Instructions to pm_optParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
 
@@ -216,12 +216,12 @@ parseCommandLine(int                  const argc,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We may have parms that are negative numbers */
 
-    /* Make private copy of arguments for optParseOptions to corrupt */
+    /* Make private copy of arguments for pm_optParseOptions to corrupt */
     argc_parse = argc;
     for (i=0; i < argc; ++i)
         argv_parse[i] = argv[i];
 
-    optParseOptions3( &argc_parse, argv_parse, opt, sizeof(opt), 0);
+    pm_optParseOptions3( &argc_parse, argv_parse, opt, sizeof(opt), 0);
         /* Uses and sets argc_parse, argv_parse, 
            and some of *cmdlineP and others. */
 
@@ -582,7 +582,7 @@ print_verbose_info_about_header(struct jpeg_decompress_struct const cinfo){
                colorspace_name(cinfo.jpeg_color_space));
 
     /* Note that raw information about marker, including marker type code,
-       was already printed by the jpeg library, due to the jpeg library
+       was already printed by the jpeg library, because of the jpeg library
        trace level >= 1.  Our job is to interpret it a little bit.
     */
     if (cinfo.marker_list)
@@ -652,19 +652,20 @@ print_exif_info(struct jpeg_marker_struct const marker) {
    Dump as informational messages the contents of the Jpeg miscellaneous
    marker 'marker', assuming it is an Exif header.
 -----------------------------------------------------------------------------*/
-    ImageInfo_t imageInfo;
+    bool const wantTagTrace = false;
+    exif_ImageInfo imageInfo;
     const char * error;
 
     assert(marker.data_length >= 6);
 
-    process_EXIF(marker.data+6, marker.data_length-6, 
-                 &imageInfo, FALSE, &error);
+    exif_parse(marker.data+6, marker.data_length-6, 
+               &imageInfo, wantTagTrace, &error);
 
     if (error) {
         pm_message("EXIF header is invalid.  %s", error);
-        strfree(error);
+        pm_strfree(error);
     } else
-        ShowImageInfo(&imageInfo);
+        exif_showImageInfo(&imageInfo, stderr);
 }
 
 
@@ -700,8 +701,7 @@ dump_exif(struct jpeg_decompress_struct const cinfo) {
 
     found_one = FALSE;  /* initial value */
 
-    for (markerP = cinfo.marker_list;
-         markerP; markerP = markerP->next) 
+    for (markerP = cinfo.marker_list; markerP; markerP = markerP->next) 
         if (is_exif(*markerP)) {
             pm_message("EXIF INFO:");
             print_exif_info(*markerP);

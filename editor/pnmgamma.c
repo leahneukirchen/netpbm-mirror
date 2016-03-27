@@ -10,6 +10,7 @@
 ** implied warranty.
 */
 
+#include <assert.h>
 #include <math.h>
 #include <ctype.h>
 
@@ -145,7 +146,7 @@ parseCommandLine(int argc, char ** argv,
                  struct cmdlineInfo * const cmdlineP) {
 
     optEntry *option_def;
-        /* Instructions to optParseOptions3 on how to parse our options.
+        /* Instructions to pm_optParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
 
@@ -190,7 +191,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = TRUE; 
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdline_p and others. */
 
     if (bt709tolinear + lineartobt709 + bt709ramp + srgbramp +
@@ -308,6 +309,7 @@ buildPowGamma(xelval       table[],
         double const normalized = ((double) i) / maxval;
             /* Xel sample value normalized to 0..1 */
         double const v = pow(normalized, oneOverGamma);
+
         table[i] = MIN((xelval)(v * newMaxval + 0.5), newMaxval);  
             /* denormalize, round and clip */
     }
@@ -509,10 +511,14 @@ buildBt709ToSrgbGamma(xelval       table[],
         else
             radiance = pow((normalized + 0.099) / 1.099, gamma709);
 
+        assert(radiance <= 1.0);
+
         if (radiance < linearCutoffSrgb * normalizer)
             srgb = radiance * linearExpansionSrgb;
         else
             srgb = 1.055 * pow(normalized, oneOverGammaSrgb) - 0.055;
+
+        assert(srgb <= 1.0);
 
         table[i] = srgb * newMaxval + 0.5;
     }
@@ -563,10 +569,14 @@ buildSrgbToBt709Gamma(xelval       table[],
         else
             radiance = pow((normalized + 0.099) / 1.099, gammaSrgb);
 
+        assert(radiance <= 1.0);
+
         if (radiance < linearCutoff709 * normalizer)
             bt709 = radiance * linearExpansion709;
         else
             bt709 = 1.055 * pow(normalized, oneOverGamma709) - 0.055;
+
+        assert(bt709 <= 1.0);
 
         table[i] = bt709 * newMaxval + 0.5;
     }

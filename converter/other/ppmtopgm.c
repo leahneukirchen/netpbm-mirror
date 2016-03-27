@@ -36,9 +36,9 @@ convertRaster(FILE *       const ifP,
                 outputRow[col] = (gray) ppm_fastlumin(inputRow[col]);
         } else {
             /* Can't use fast approximation, so fall back on floats. */
-            int col;
+            unsigned int col;
             for (col = 0; col < cols; ++col) 
-                outputRow[col] = (gray) (PPM_LUMIN(inputRow[col]) + 0.5);
+                outputRow[col] = ppm_luminosity(inputRow[col]);
         }
         pgm_writepgmrow(ofP, outputRow, cols, maxval, 0);
     }

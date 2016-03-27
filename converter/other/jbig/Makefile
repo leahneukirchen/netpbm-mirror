@@ -5,43 +5,54 @@ endif
 SUBDIR = converter/other/jbig
 VPATH=.:$(SRCDIR)/$(SUBDIR)
 
+SUBDIRS =
+
 include $(BUILDDIR)/config.mk
 
-LIBJBIG_OBJECTS = jbig.o jbig_tab.o
+# INTERNAL_JBIGLIB must be relative to the current directory, because it
+# may end up in MERGE_OBJECTS, which must be relative.
+INTERNAL_JBIGLIB = libjbig/libjbig.a
+INTERNAL_JBIGHDR_DIR = $(SRCDIR)/$(SUBDIR)/libjbig/include
 
 EXTERN_INCLUDES =
 ifneq ($(JBIGHDR_DIR),NONE)
-  EXTERN_INCLUDES += -I$(JBIGHDR_DIR)
+  ifneq ($(JBIGHDR_DIR)x,x)
+    EXTERN_INCLUDES += -I$(JBIGHDR_DIR)
+  endif
 endif
 
 ifneq ($(JBIGHDR_DIR),NONE)
   ifneq ($(JBIGLIB),NONE)
-    BINARIES = jbigtopnm pnmtojbig
+    PORTBINARIES = jbigtopnm pnmtojbig
   endif
 endif
 
+BINARIES = $(PORTBINARIES)
+
+MERGEBINARIES = $(BINARIES)
+
 SCRIPTS =
 
-ifeq ($(JBIGLIB),$(BUILDDIR)/$(SUBDIR)/libjbig.a)
+ifeq ($(JBIGLIB),$(INTERNAL_JBIGLIB))
   JBIGLIB_DEP = $(JBIGLIB)
+  SUBDIRS += libjbig
 else
   # It's not our internal version; user's on his own to make sure it's built
 endif
 
-OBJECTS = $(BINARIES:%=%.o) $(LIBJBIG_OBJECTS)
-MERGE_OBJECTS = $(BINARIES:%=%.o2) $(LIBJBIG_OBJECTS)
+OBJECTS = $(BINARIES:%=%.o)
+MERGE_OBJECTS = $(BINARIES:%=%.o2)
 
 all: $(BINARIES)
 
 include $(SRCDIR)/common.mk
 
-$(BINARIES): %: %.o $(JBIGLIB_DEP) $(NETPBMLIB) $(LIBOPT)
-	$(LD) -o $@ $< \
-	  $(shell $(LIBOPT) $(NETPBMLIB) $(JBIGLIB)) $(MATHLIB) \
-	  $(LDFLAGS) $(LDLIBS) $(RPATH) $(LADD)
+$(BINARIES): %: %.o $(JBIGLIB_DEP) $(LIBOPT)
+$(BINARIES): LDFLAGS_TARGET = $(shell $(LIBOPT) $(JBIGLIB))
 
+$(INTERNAL_JBIGLIB): $(BUILDDIR)/$(SUBDIR)/libjbig FORCE
+	$(MAKE) -f $(SRCDIR)/$(SUBDIR)/libjbig/Makefile \
+	  -C $(dir $@) $(notdir $@)
 
-$(BUILDDIR)/$(SUBDIR)/libjbig.a: $(LIBJBIG_OBJECTS)
-	$(AR) -rc $@ $^
-	$(RANLIB) $@
-
+.PHONY: FORCE
+FORCE:

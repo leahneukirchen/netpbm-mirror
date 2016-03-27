@@ -20,6 +20,7 @@
 #include <string.h>
 
 #include "pm_c_util.h"
+#include "nstring.h"
 #include "mallocvar.h"
 #include "shhopt.h"
 #include "bmp.h"
@@ -63,11 +64,11 @@ freeColorMap(const colorMap * const colorMapP) {
 
 
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    char *input_filename;
+    const char * inputFilename;
     int class;  /* C_WIN or C_OS2 */
     unsigned int bppSpec;
     unsigned int bpp;
@@ -77,7 +78,7 @@ struct cmdlineInfo {
 
 static void
 parseCommandLine(int argc, const char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that many of the strings that this function returns in the
    *cmdline_p structure are actually in the supplied argv array.  And
@@ -107,7 +108,7 @@ parseCommandLine(int argc, const char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
 
     if (windowsSpec && os2Spec) 
         pm_error("Can't specify both -windows and -os2 options.");
@@ -131,13 +132,22 @@ parseCommandLine(int argc, const char ** argv,
         cmdlineP->mapfile = NULL;
 
     if (argc - 1 == 0)
-        cmdlineP->input_filename = strdup("-");  /* he wants stdin */
+        cmdlineP->inputFilename = pm_strdup("-");  /* he wants stdin */
     else if (argc - 1 == 1)
-        cmdlineP->input_filename = strdup(argv[1]);
+        cmdlineP->inputFilename = pm_strdup(argv[1]);
     else 
         pm_error("Too many arguments.  The only argument accepted "
                  "is the input file specificaton");
 
+    free(option_def);
+}
+
+
+
+static void
+freeCommandLine(struct CmdlineInfo const cmdline) {
+
+    pm_strfree(cmdline.inputFilename);
 }
 
 
@@ -177,20 +187,18 @@ PutLong(FILE * const fp, long const v) {
  * BMP writing
  */
 
-static int
+static unsigned int
 BMPwritefileheader(FILE *        const fp, 
-                   int           const class, 
-                   unsigned long const bitcount, 
-                   unsigned long const x, 
-                   unsigned long const y) {
+                   unsigned int  const cbSize,
+                   unsigned int  const offBits) {
 /*----------------------------------------------------------------------------
-  Return the number of bytes written, or -1 on error.
+  Return the number of bytes written.
 -----------------------------------------------------------------------------*/
     PutByte(fp, 'B');
     PutByte(fp, 'M');
 
     /* cbSize */
-    PutLong(fp, BMPlenfile(class, bitcount, -1, x, y));
+    PutLong(fp, cbSize);
     
     /* xHotSpot */
     PutShort(fp, 0);
@@ -199,7 +207,7 @@ BMPwritefileheader(FILE *        const fp,
     PutShort(fp, 0);
     
     /* offBits */
-    PutLong(fp, BMPoffbits(class, bitcount, -1));
+    PutLong(fp, offBits);
     
     return 14;
 }
@@ -213,9 +221,9 @@ BMPwriteinfoheader(FILE *        const fp,
                    unsigned long const x, 
                    unsigned long const y) {
 /*----------------------------------------------------------------------------
-  Return the number of bytes written, or -1 on error.
+  Return the number of bytes written.
 ----------------------------------------------------------------------------*/
-    long cbFix;
+    unsigned int cbFix;
 
     switch (class) {
     case C_WIN: {
@@ -266,7 +274,7 @@ BMPwriteRgb(FILE * const fp,
             pixval const G, 
             pixval const B) {
 /*----------------------------------------------------------------------------
-  Return the number of bytes written, or -1 on error.
+  Return the number of bytes written.
 -----------------------------------------------------------------------------*/
     switch (class) {
     case C_WIN:
@@ -282,8 +290,8 @@ BMPwriteRgb(FILE * const fp,
         return 3;
     default:
         pm_error(er_internal, "BMPwriteRgb");
+        return -1;  /* avoid compiler warning. */
     }
-    return -1;
 }
 
 
@@ -294,7 +302,7 @@ BMPwriteColormap(FILE *           const ifP,
                  int              const bpp,
                  const colorMap * const colorMapP) {
 /*----------------------------------------------------------------------------
-  Return the number of bytes written, or -1 on error.
+  Return the number of bytes written.
 -----------------------------------------------------------------------------*/
     unsigned int const ncolors = (1 << bpp);
 
@@ -445,7 +453,7 @@ BMPwritebits(FILE *          const fp,
              pixval          const maxval,
              colorhash_table const cht) {
 /*----------------------------------------------------------------------------
-  Return the number of bytes written, or -1 on error.
+  Return the number of bytes written.
 -----------------------------------------------------------------------------*/
     unsigned int nbyte;
     int row;
@@ -490,6 +498,9 @@ bmpEncode(FILE *           const ifP,
 /*----------------------------------------------------------------------------
   Write a BMP file of the given class.
 -----------------------------------------------------------------------------*/
+    unsigned int const cbSize  = BMPlenfile(class, bpp, 0, x, y);
+    unsigned int const offbits = BMPoffbits(class, bpp, 0);
+
     unsigned long nbyte;
 
     if (colortype == PALETTE)
@@ -498,19 +509,17 @@ bmpEncode(FILE *           const ifP,
         pm_message("Writing %u bits per pixel truecolor (no palette)", bpp);
 
     nbyte = 0;  /* initial value */
-    nbyte += BMPwritefileheader(ifP, class, bpp, x, y);
+    nbyte += BMPwritefileheader(ifP, cbSize, offbits);
     nbyte += BMPwriteinfoheader(ifP, class, bpp, x, y);
     if (colortype == PALETTE)
         nbyte += BMPwriteColormap(ifP, class, bpp, colorMapP);
 
-    if (nbyte != (BMPlenfileheader(class)
-                  + BMPleninfoheader(class)
-                  + BMPlencolormap(class, bpp, 0)))
+    if (nbyte != offbits)
         pm_error(er_internal, "BmpEncode 1");
 
     nbyte += BMPwritebits(ifP, x, y, colortype, bpp, pixels, maxval,
                           colorMapP->cht);
-    if (nbyte != BMPlenfile(class, bpp, -1, x, y))
+    if (nbyte != cbSize)
         pm_error(er_internal, "BmpEncode 2");
 }
 
@@ -544,6 +553,8 @@ bmpEncodePbm(FILE *           const ifP,
        Only PBM input uses this routine.  Color images represented by 1 bpp via
        color palette use the general bmpEncode().
     */
+    unsigned int const cbSize       = BMPlenfile(class, 1, 0, cols, rows);
+    unsigned int const offbits      = BMPoffbits(class, 1, 0);
     unsigned int const adjustedCols = (cols + 31) / 32 * 32;
     unsigned int const packedBytes  = adjustedCols / 8;
 
@@ -555,18 +566,16 @@ bmpEncodePbm(FILE *           const ifP,
     pm_message("Writing 1 bit per pixel with a black-white palette");
 
     nbyte = 0;  /* initial value */
-    nbyte += BMPwritefileheader(ifP, class, 1, cols, rows);
+    nbyte += BMPwritefileheader(ifP, cbSize, offbits);
     nbyte += BMPwriteinfoheader(ifP, class, 1, cols, rows);
 
     makeBilevelColorMap(&bilevelColorMap);
 
     nbyte += BMPwriteColormap(ifP, class, 1, &bilevelColorMap);
 
-    if (nbyte != (BMPlenfileheader(class)
-                  + BMPleninfoheader(class)
-                  + BMPlencolormap(class, 1, 0)))
-        pm_error(er_internal, "bmpEncodePBM 1");
-   
+    if (nbyte != offbits)
+        pm_error(er_internal, "bmpEncodePbm 1");
+
     for (row = 0; row < rows; ++row){
         size_t bytesWritten;
 
@@ -581,7 +590,7 @@ bmpEncodePbm(FILE *           const ifP,
             nbyte += bytesWritten;
     }
 
-    if (nbyte != BMPlenfile(class, 1, -1, cols, rows))
+    if (nbyte != cbSize)
         pm_error(er_internal, "bmpEncodePbm 2");
 }
 
@@ -822,7 +831,6 @@ doPbm(FILE *       const ifP,
         32 bit borders and that in BMP the bottom row comes first in
         order.
     */
-    int const CHARBITS = (sizeof(unsigned char)*8); 
     int const colChars = pbm_packed_bytes(cols);
     int const adjustedCols = (cols+31) /32 * 32;
     int const packedBytes  =  adjustedCols /8;
@@ -854,11 +862,8 @@ doPbm(FILE *       const ifP,
            some BMP viewers may get confused with that.
         */
 
-        if (cols % 8 >0) {
-            /* adjust final partial byte */
-            thisRow[colChars-1] >>= CHARBITS - cols % CHARBITS;
-            thisRow[colChars-1] <<= CHARBITS - cols % CHARBITS;
-        }
+        /* Clean off remainder of fractional last character */
+        pbm_cleanrowend_packed(thisRow, cols);
     }
 
     bmpEncodePbm(ofP, class, cols, rows, bitrow);
@@ -908,6 +913,8 @@ doPgmPpm(FILE *       const ifP,
               cols, rows, (const pixel**)pixels, maxval, &colorMap);
     
     freeColorMap(&colorMap);
+
+    ppm_freearray(pixels, rows);
 }
 
 
@@ -916,7 +923,7 @@ int
 main(int           argc,
      const char ** argv) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP;
     int rows;
     int cols;
@@ -927,7 +934,7 @@ main(int           argc,
 
     parseCommandLine(argc, argv, &cmdline);
 
-    ifP = pm_openr(cmdline.input_filename);
+    ifP = pm_openr(cmdline.inputFilename);
     
     ppm_readppminit(ifP, &cols, &rows, &maxval, &ppmFormat);
     
@@ -937,6 +944,8 @@ main(int           argc,
         doPgmPpm(ifP, cols, rows, maxval, ppmFormat,
                  cmdline.class, cmdline.bppSpec, cmdline.bpp, cmdline.mapfile,
                  stdout);
+
+    freeCommandLine(cmdline);
 
     pm_close(ifP);
     pm_close(stdout);

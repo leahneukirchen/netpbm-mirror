@@ -20,10 +20,16 @@ finally
 
 to install it into your system.  
 
-If you're building Latest Netpbm (as opposed to Stable Netpbm), there
-are probably known bugs.  Some may even prevent Netpbm from building.
-These are listed in the release notes for the release on Sourceforge.
-Check it out.
+If you have a Debian-like system, that uses Dpkg for package management,
+it's better to create a Debian package file and install it as follows in
+place of the 'installnetpbm' step above.
+
+    make deb
+    dpkg --install netpbm-sf-*.deb
+
+More information on building and installing on Debian are in the file
+buildtools/debian/README in the source tree.
+
 
 The 'configure' program is not GNU Autoconf -- it is a simple program
 specific to Netpbm that prompts you for information about your system.
@@ -50,6 +56,57 @@ unusual for a few things to fail to build, but that doesn't affect
 everything else.  You can work on the failed parts and repeat the make
 and it will attempt to build whatever it hasn't successfully built
 yet.
+
+
+CHECKING THE BUILD
+------------------
+
+The package comes with a test facility, which you can run after packaging,
+against the package you created.  The typical sequence is
+
+    make
+
+    make package
+
+    make check
+
+    ./installnetpbm
+
+To capture all the messages from "make check" do:
+
+    make check > test.log  2>&1
+
+The test facility was new in Netpbm 10.61 (December 2012).
+
+For further information on the tests read the document TESTS.
+
+
+OVERRIDING INTERNAL LIBRARIES
+-----------------------------
+
+There are a few esoteric libraries that are distributed separately from Netpbm
+but of which Netpbm contains a copy too, for convenience.  The build normally
+uses the internal Netpbm copy, but you can configure the build to use a
+version of the library that is installed on your system.
+
+For the JBIG library, set the JBIGLIB and JBIGHDR_DIR variables in
+config.mk to the appropriate values.
+
+For the Utah Raster Toolkit (aka URT aka RLE) library, set the URTLIB and
+URTHDR_DIR vairables in config.mk to the appropriate values.
+
+The appropriate value for the xxxLIB variable is the full file name of the
+link library (e.g. "/usr/local/lib/jbigkit/libjbig.so") or just the file name
+part of it (e.g. "libjbig.so") if the library is in your linker's default
+search path.
+
+The appropriate value for the xxxHDR_DIR variable is the full directory name
+of the directory that contains the interface header files for the library
+identified by the xxxLIB variable (E.g. "usr/local/include/jbigkit") or a null
+string if those header files are in your compiler's default search path.
+
+If you use the 'configure' program, be sure to edit config.mk _after_ you
+run 'configure', since 'configure' generates config.mk.
 
 
 AUTOMATING THE BUILD
@@ -133,13 +190,39 @@ Search for your platform name (Solaris, SunOS, NetBSD, Cygwin, BeOS,
 and Tru64 are among those mentioned) to see recommended settings for
 your platform.
 
-If your system is even too exotic to accomodate with settings in
+If your system is even too exotic to accommodate with settings in
 config.mk, you may need to modify things in the main make files
 or pm_config.h.in.
 
 If you figure out how to install on other platforms, contact the
 Netpbm maintainer to have the 'configure' program or these
 instructions improved for the next person.
+
+If you want to use a compiler other than your system default, set
+the CC value in config.mk to the shell command name for your compiler,
+e.g.
+
+  CC=clang-3
+
+You can also override it on the Make command line, which is especially
+useful if you want to build some parts with one compiler and other parts
+with another compiler:
+
+  $ make pamflip CC=clang-3
+
+To get appropriate defaults when you run 'configure', you can also set what
+compiler Configure assumes you will be using to build, with an environment
+variable:
+
+  $ CC=clang-3 ./configure
+
+Likewise, you can add compiler flags with a CFLAGS make variable, either set
+in config.mk or on the make command line and you can get better get more
+appropriate defaults from Configure if you pass the same CFLAGS to Configure
+via environment variable.  LDFLAGS (linker options) and CPPFLAGS (C
+preprocessor options) are similar.
+
+  $ make CFLAGS=-O0
 
 
 CUSTOM INSTALLATION
@@ -259,10 +342,11 @@ and which one is default is controlled by the DEFAULT_TARGET make
 variable in config.mk, and its value is one of the choices you
 make via the Configure dialog.
 
-The standard build is the conventional one.  The merge build is a way
-to reduce disk space and other resource usage in some configurations.
-These are rare configurations, mostly antique ones.  The advent of
-shared libraries largely obsoleted the merge build.
+The standard build is the conventional one.  The merge build is a way to
+reduce disk space and other resource usage in some configurations.  These are
+rare configurations, mostly antique ones.  The advent of shared libraries
+largely obsoleted the merge build.  In some configurations, Netpbm uses _more_
+resources with the merge build.
 
 In the standard build, hundreds of separate programs get built: ppmtogif,
 pamcomp, etc.
@@ -288,3 +372,61 @@ DOCUMENTATION
 
 Documentation is not packaged with the program source code.  See the
 file doc/USERDOC for information on installing documentation.
+
+
+COMMON PROBLEMS
+---------------
+
+Improper -config files
+----------------------
+
+The most common problem building Netpbm is one of improperly installed
+prerequisite libraries, such as Libpng.  Such a library is designed to be
+installed along with a -config program (e.g. libpng-config) that tells
+builders of dependent packages (such as Netpbm) how to use it.  When the
+-config program is wrong, you get Netpbm build failures with messages about
+undefined references.
+
+The exact nature of the problems with -config programs can be quite
+involved, especially since there is no guarantee that a -config
+program can do what's required of it in every situation.  But I'll
+explain the basic problem.  For simplicity, I'll talk specifically
+about Libpng, but the principles apply to any library that has a -config
+program.
+
+The point of libpng-config is to describe how Libpng is installed on your
+particular system.  You have choices of where to install the various parts
+and what prerequisites to build into them, and libpng-config is how you
+communicate those choices to the Netpbm make files.
+
+Libpng's builder automatically creates a libpng-config program for you,
+but you should not think of it as part of Libpng.  It's really a
+configuration file -- something that tells how your particular system
+is put together.  The Libpng builder is not smart enough to know exactly
+what to put in libpng-config; it just builds one that works for most
+people.  The local system administrator is actually responsible for
+the contents of libpng-config.
+
+One rather complex way in which the libpng-config that the Libpng builder
+builds can be wrong is that it often indicates that to link to the
+Libpng library, you need a "-L /usr/lib" option (or something like that
+-- an option that adds to the linker's search path a directory that is
+already in it).  This is usually unnecessary because the directory is
+already in the search path, and often breaks things because it puts
+the directory too early in the search path.  If your libpng-config says to
+link with -L /usr/lib, you should normally edit it to remove that.
+
+As an example of how -L /usr/lib breaks things, here is a problem that is
+often reported: The user has Netpbm installed on his system, but wants to
+build a new one to replace it, or to use for a particular project instead of
+the system version.  But the build of the new version fails with undefined
+references to symbol "pm_foo".  pm_foo is a new symbol - it was added to
+Netpbm in a recent release.  The version of Netpbm installed on the system is
+too old to have it.  The make file obviously specifies the path to the current
+libraries that the user just built in the link library search order, but the
+link is picking up the old system version instead.  Why?  Because the link
+options say to search /usr/lib _before_ the local build directory.  And they
+do that because libpng-config erroneously says that you need a -L /usr/lib
+link option to find the Libpng library.
+
+

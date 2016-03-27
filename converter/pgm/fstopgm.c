@@ -12,127 +12,144 @@
 
 #include <string.h>
 
+#include "pm.h"
 #include "pgm.h"
 
-static int gethexit ARGS(( FILE* ifp ));
+
+
+static int
+gethexit(FILE * const ifP) {
+
+    for ( ; ; ) {
+        unsigned int const i = getc(ifP);
+
+        if (i == EOF)
+            pm_error("EOF / read error");
+        else {
+            char const c = (char) i;
+            if (c >= '0' && c <= '9')
+                return c - '0';
+            else if (c >= 'A' && c <= 'F')
+                return c - 'A' + 10;
+            else if (c >= 'a' && c <= 'f')
+                return c - 'a' + 10;
+            else {
+                /* Ignore - whitespace. */
+            }
+        }
+    }
+}
+
+
+
+static void
+warnNonsquarePixels(unsigned int const cols,
+                    unsigned int const xcols,
+                    unsigned int const rows,
+                    unsigned int const xrows) {
+    
+    const char * const baseMsg = "warning, non-square pixels";
+
+    if (pm_have_float_format()) {
+        float const rowratio = (float) xrows / (float) rows;
+        float const colratio = (float) xcols / (float) cols;
+
+        pm_message("%s; to fix do a 'pamscale -%cscale %g'",
+                   baseMsg,
+                   rowratio > colratio ? 'y' : 'x',
+                   rowratio > colratio ? 
+                   rowratio / colratio : colratio / rowratio);
+    } else
+        pm_message("%s", baseMsg);
+}
+
+
 
 int
-main( argc, argv )
-int argc;
-char *argv[];
-    {
-    FILE *ifp;
-    register gray **grays, *gP;
-    int argn, row;
-    register int col;
-    int maxval;
-    int rows = 0, cols = 0, depth = 0, xrows = 0, xcols = 0, xdepth = 0;
+main(int argc, const char ** argv) {
+
+    FILE * ifP;
+    gray ** grays;
+    int argn;
+    int row;
+    gray maxval;
+    int rows, cols, depth;
+    int xrows, xcols, xdepth;
 #define STRSIZE 1000
-    char buf[STRSIZE], firstname[STRSIZE], lastname[STRSIZE], email[STRSIZE];
 
+    pm_proginit(&argc, argv);
 
-    pgm_init( &argc, argv );
+    rows = 0;
+    cols = 0;
+    depth = 0;
+
+    xrows = 0;
+    xcols = 0;
+    xdepth = 0;
 
     argn = 1;
 
-    if ( argn < argc )
-	{
-	ifp = pm_openr( argv[argn] );
-	argn++;
-	}
-    else
-	ifp = stdin;
+    if (argn < argc) {
+        ifP = pm_openr(argv[argn]);
+        argn++;
+    } else
+        ifP = stdin;
 
-    if ( argn != argc )
-	pm_usage( "[fsfile]" );
+    if (argn != argc)
+        pm_error("Too many arguments.  The only argument is the file name");
 
     /* Read the FaceSaver(tm) header. */
-    for ( ; ; )
-	{
-	if ( fgets( buf, STRSIZE, ifp ) == (char *) 0 )
-	    pm_error( "error reading header" );
+    for ( ; ; ) {
+        char buf[STRSIZE];
+        char firstname[STRSIZE];
+        char lastname[STRSIZE];
+        char email[STRSIZE];
 
-	/* Blank line ends header. */
-	if ( strlen( buf ) == 1 )
-	    break;
+        char * const rc = fgets(buf, STRSIZE, ifP);
 
-	if ( sscanf( buf, "FirstName: %[^\n]", firstname ) == 1 )
-	    ;
-	else if ( sscanf( buf, "LastName: %[^\n]", lastname ) == 1 )
-	    ;
-	else if ( sscanf( buf, "E-mail: %[^\n]", email ) == 1 )
-	    ;
-	else if ( sscanf( buf, "PicData: %d %d %d\n",
-			  &cols, &rows, &depth ) == 3 )
-	    {
-	    if ( depth != 8 )
-		pm_error(
-		    "can't handle 'PicData' depth other than 8" );
-	    }
-	else if ( sscanf( buf, "Image: %d %d %d\n",
-			  &xcols, &xrows, &xdepth ) == 3 )
-	    {
-	    if ( xdepth != 8 )
-		pm_error(
-		    "can't handle 'Image' depth other than 8" );
-	    }
-	}
-    if ( cols <= 0 || rows <= 0 )
-	pm_error( "invalid header" );
-    maxval = pm_bitstomaxval( depth );
-    if ( maxval > PGM_OVERALLMAXVAL )
-	pm_error( "depth %d is too large.  Our maximum is %d",
-              maxval, PGM_OVERALLMAXVAL);
-    if ( xcols != 0 && xrows != 0 && ( xcols != cols || xrows != rows ) )
-	{
-	float rowratio, colratio;
+        if (rc  == NULL)
+            pm_error("error reading header");
 
-	rowratio = (float) xrows / (float) rows;
-	colratio = (float) xcols / (float) cols;
-	pm_message(
-	    "warning, non-square pixels; to fix do a 'pamscale -%cscale %g'",
-	    rowratio > colratio ? 'y' : 'x',
-	    rowratio > colratio ? rowratio / colratio : colratio / rowratio );
-	}
+        /* Blank line ends header. */
+        if (strlen(buf) == 1)
+            break;
 
-    /* Now read the hex bits. */
-    grays = pgm_allocarray( cols, rows );
-    for ( row = rows - 1; row >= 0; row--)
-	{
-	for ( col = 0, gP = grays[row]; col < cols; col++, gP++ )
-	    {
-	    *gP = gethexit( ifp ) << 4;
-	    *gP += gethexit( ifp );
-	    }
-	}
-    pm_close( ifp );
-
-    /* And write out the graymap. */
-    pgm_writepgm( stdout, grays, cols, rows, (gray) maxval, 0 );
-    pm_close( stdout );
-
-    exit( 0 );
+        if (sscanf(buf, "FirstName: %[^\n]", firstname) == 1);
+        else if (sscanf(buf, "LastName: %[^\n]", lastname) == 1);
+        else if (sscanf(buf, "E-mail: %[^\n]", email ) == 1);
+        else if (sscanf(buf, "PicData: %d %d %d\n",
+                        &cols, &rows, &depth ) == 3) {
+            if (depth != 8)
+                pm_error("can't handle 'PicData' depth other than 8");
+        } else if (sscanf(buf, "Image: %d %d %d\n",
+                          &xcols, &xrows, &xdepth ) == 3) {
+            if (xdepth != 8)
+                pm_error("can't handle 'Image' depth other than 8");
+        }
     }
+    if (cols <= 0 || rows <= 0)
+        pm_error("invalid header");
+    maxval = pm_bitstomaxval(depth);
+    if (maxval > PGM_OVERALLMAXVAL)
+        pm_error("depth %d is too large.  Our maximum is %d",
+                 maxval, PGM_OVERALLMAXVAL);
+    if (xcols != 0 && xrows != 0 && (xcols != cols || xrows != rows))
+        warnNonsquarePixels(cols, xcols, rows, xrows);
 
-static int
-gethexit( ifp )
-FILE *ifp;
-    {
-    register int i;
-    register char c;
-
-    for ( ; ; )
-	{
-	i = getc( ifp );
-	if ( i == EOF )
-	    pm_error( "EOF / read error" );
-	c = (char) i;
-	if ( c >= '0' && c <= '9' )
-	    return c - '0';
-	else if ( c >= 'A' && c <= 'F' )
-	    return c - 'A' + 10;
-	else if ( c >= 'a' && c <= 'f' )
-	    return c - 'a' + 10;
-	/* Else ignore - whitespace. */
-	}
+    /* Read the hex bits. */
+    grays = pgm_allocarray(cols, rows);
+    for (row = rows - 1; row >= 0; --row) {
+        unsigned int col;
+        for (col = 0; col < cols; ++col) {
+            grays[row][col] =  gethexit(ifP) << 4;
+            grays[row][col] += gethexit(ifP);
+        }
     }
+    pm_close(ifP);
+
+    pgm_writepgm(stdout, grays, cols, rows, maxval, 0);
+    pm_close(stdout);
+
+    return 0;
+}
+

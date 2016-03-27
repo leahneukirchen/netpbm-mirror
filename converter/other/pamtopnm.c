@@ -17,23 +17,23 @@
 #include "shhopt.h"
 #include "mallocvar.h"
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *inputFilespec;  /* Filespecs of input files */
-    unsigned int assume;    /* -assume option */
+    const char * inputFileName;  /* Name of input file */
+    unsigned int assume;
 };
 
 
 static void
-parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo *cmdlineP) {
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo *cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
 -----------------------------------------------------------------------------*/
-    optEntry *option_def;
+    optEntry * option_def;
         /* Instructions to OptParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
@@ -49,16 +49,18 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (argc-1 == 0) 
-        cmdlineP->inputFilespec = "-";
+        cmdlineP->inputFileName = "-";
     else if (argc-1 != 1)
         pm_error("Program takes zero or one argument (filename).  You "
                  "specified %d", argc-1);
     else
-        cmdlineP->inputFilespec = argv[1];
+        cmdlineP->inputFileName = argv[1];
+
+    free(option_def);
 }
 
 
@@ -69,11 +71,11 @@ validateTupleType(struct pam const inpam,
 /*----------------------------------------------------------------------------
    Make sure the image has a tuple type we know how to convert to PNM.
 
-   We're quite liberal, trying to accomodate all sorts of future
+   We're quite liberal, trying to accommodate all sorts of future
    twists on the formats.  If the tuple type _starts with_
    BLACKANDWHITE, GRAYSCALE, or RGB, and has at least as many planes
    as we'd need to convert to PBM, PGM, or PPM, respectively, we
-   accept it.  We thus accomodate variations on these formats that add
+   accept it.  We thus accommodate variations on these formats that add
    planes and add to the right end of the tuple type to explain them.
 
    If Callers specified 'assumeTupleType', we're even more liberal.
@@ -105,19 +107,19 @@ validateTupleType(struct pam const inpam,
 
 
 int
-main(int argc, char *argv[]) {
+main(int argc, const char **argv) {
 
-    struct cmdlineInfo cmdline;
-    FILE* ifP;
-    bool eof;   /* no more images in input stream */
+    struct CmdlineInfo cmdline;
+    FILE * ifP;
+    int eof;   /* no more images in input stream */
     struct pam inpam;   /* Input PAM image */
     struct pam outpam;  /* Output PNM image */
 
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
-    ifP = pm_openr(cmdline.inputFilespec);
+    ifP = pm_openr(cmdline.inputFileName);
 
     eof = FALSE;
     while (!eof) {

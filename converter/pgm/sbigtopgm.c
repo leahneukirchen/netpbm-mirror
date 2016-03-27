@@ -1,210 +1,353 @@
 /*
-
     sbigtopgm.c - read a Santa Barbara Instruments Group CCDOPS file
 
-    Note: All SBIG CCD astronomical cameras produce 14 bits or
-	  (the ST-4 and ST-5) or 16 bits (ST-6 and later) per pixel.
-
-		  Copyright (C) 1998 by John Walker
-		       http://www.fourmilab.ch/
+    Note: All SBIG CCD astronomical cameras produce 14 bits
+    (the ST-4 and ST-5) or 16 bits (ST-6 and later) per pixel.
 
     If you find yourself having to add functionality included subsequent
     to the implementation of this program, you can probably find
     documentation of any changes to the SBIG file format on their
     Web site: http://www.sbig.com/
 
+    Copyright (C) 1998 by John Walker
+    http://www.fourmilab.ch/
+
     Permission to use, copy, modify, and distribute this software and
     its documentation for any purpose and without fee is hereby
     granted, provided that the above copyright notice appear in all
     copies and that both that copyright notice and this permission
-    notice appear in supporting documentation.	This software is
+    notice appear in supporting documentation.  This software is
     provided "as is" without express or implied warranty.
-
 */
 
 #include <string.h>
 
-#include "pgm.h"
+#include "pm_c_util.h"
+#include "mallocvar.h"
 #include "nstring.h"
+#include "shhopt.h"
+#include "pm.h"
+#include "pgm.h"
+
+struct CmdlineInfo {
+    /* All the information the user supplied in the command line,
+       in a form easy for the program to use.
+    */
+    const char * inputFileName;
+};
+
+
+
+static void
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo * const cmdlineP) {
+/*----------------------------------------------------------------------------
+   Note that the file spec array we return is stored in the storage that
+   was passed to as as the argv array.
+-----------------------------------------------------------------------------*/
+    optEntry * option_def;
+        /* Instructions to pm_optParseOptions3 on how to parse our options.
+         */
+    optStruct3 opt;
+
+    unsigned int option_def_index;
+
+    MALLOCARRAY_NOFAIL(option_def, 100);
+    
+    option_def_index = 0;   /* incremented by OPTENT3 */
+    OPTENTINIT;
+
+    opt.opt_table     = option_def;
+    opt.short_allowed = FALSE; /* We have no short (old-fashioned) options */
+    opt.allowNegNum   = FALSE; /* We have no parms that are negative numbers */
+    
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+        /* Uses and sets argc, argv, and some of *cmdlineP and others */
+
+    if (argc-1 < 1)
+        cmdlineP->inputFileName = "-";
+    else {
+        cmdlineP->inputFileName = argv[1];
+
+        if (argc-1 > 1)
+            pm_error("Too many arguments.  The only possible argument is the "
+                     "optional input file name");
+    }
+}
+
+
 
 #define SBIG_HEADER_LENGTH  2048      /* File header length */
 
-/*  looseCanon	--  Canonicalize a line from the file header so
-		    items more sloppily formatted than those
-		    written by CCDOPS are still accepted.  */
 
-static void looseCanon(cp)
-  char *cp;
-{
-    char *op = cp;
+
+static void
+looseCanon(char * const cpArg) {
+/*----------------------------------------------------------------------------
+  Canonicalize a line from the file header so items more sloppily formatted
+  than those written by CCDOPS are still accepted.
+
+  Remove all whitespace and make all letters lowercase.
+
+  Note that the SBIG Type 3 format specification at www.sbig.com in January
+  2015 says header parameter names are capitalized like 'Height'; we change
+  that to "height".
+
+  The spec also says the line ends with LF, then CR (yes, really).  Assuming
+  Caller separates lines at LF, that means we see CR at the beginning of all
+  lines but the first.  We remove that.
+-----------------------------------------------------------------------------*/
+    char * cp;
+    char * op;
     char c;
-    
+
+    cp = cpArg;  /* initial value */
+    op = cpArg;  /* initial value */
+
     while ((c = *cp++) != 0) {
-	if (!ISSPACE(c)) {
-	    if (ISUPPER(c)) {
-		c = tolower(c);
-	    }
-	    *op++ = c;
-	}
+        if (!ISSPACE(c)) {
+            if (ISUPPER(c))
+                c = tolower(c);
+            *op++ = c;
+        }
     }
-    *op++ = 0;
+    *op++ = '\0';
 }
 
-int main(argc, argv)
-  int argc;
-  char* argv[];
-{
-    FILE *ifp;
-    gray *grayrow;
-    register gray *gP;
-    int argn, row;
-    register int col;
-    int maxval;
-    int comp, rows, cols;
-    char header[SBIG_HEADER_LENGTH+1];
-    char *hdr;
-    static char camera[80] = "ST-?";
 
-    pgm_init(&argc, argv);
 
-    argn = 1;
+struct SbigHeader {
+/*----------------------------------------------------------------------------
+   The information in an SBIG file header.
 
-    if (argn < argc) {
-	ifp = pm_openr(argv[argn]);
-	argn++;
-    } else {
-	ifp = stdin;
-    }
+   This is only the information this program cares about; the header
+   may have much more information in it.
+-----------------------------------------------------------------------------*/
+    unsigned int rows;
+    unsigned int cols;
+    unsigned int maxval;
+    bool isCompressed;
+    const char * cameraType;
+        /* Null means information not in header */
+};
 
-    if (argn != argc)
-        pm_usage( "[sbigfile]" );
 
-    if (fread(header, SBIG_HEADER_LENGTH, 1, ifp) < 1) {
+
+static void
+readSbigHeader(FILE *              const ifP,
+               struct SbigHeader * const sbigHeaderP) {
+
+    size_t rc;
+    bool gotCompression;
+    bool gotWidth;
+    bool gotHeight;
+    char * buffer;  /* malloced */
+    char * cursor;
+    bool endOfHeader;
+
+    MALLOCARRAY_NOFAIL(buffer, SBIG_HEADER_LENGTH + 1);
+
+    rc = fread(buffer, SBIG_HEADER_LENGTH, 1, ifP);
+
+    if (rc < 1)
         pm_error("error reading SBIG file header");
-    }
-    header[SBIG_HEADER_LENGTH] = '\0';
 
-    /*	Walk through the header and parse relevant parameters.	*/
+    buffer[SBIG_HEADER_LENGTH] = '\0';
 
-    comp = -1;
-    cols = -1;
-    rows = -1;
-
-    /*	The SBIG header specification equivalent to maxval is
+    /*  The SBIG header specification equivalent to maxval is
         "Sat_level", the saturation level of the image.  This
-	specification is optional, and was not included in files
-	written by early versions of CCDOPS. It was introduced when it
-	became necessary to distinguish 14-bit images with a Sat_level
-	of 16383 from 16-bit images which saturate at 65535.  In
-	addition, co-adding images or capturing with Track and
-	Accumulate can increase the saturation level.  Since files
+        specification is optional, and was not included in files
+        written by early versions of CCDOPS. It was introduced when it
+        became necessary to distinguish 14-bit images with a Sat_level
+        of 16383 from 16-bit images which saturate at 65535.  In
+        addition, co-adding images or capturing with Track and
+        Accumulate can increase the saturation level.  Since files
         which don't have a Sat_level line in the header were most
-	probably written by early drivers for the ST-4 or ST-5, it
-	might seem reasonable to make the default for maxval 16383,
-	the correct value for those cameras.  I chose instead to use
-	65535 as the default because the overwhelming majority of
+        probably written by early drivers for the ST-4 or ST-5, it
+        might seem reasonable to make the default for maxval 16383,
+        the correct value for those cameras.  I chose instead to use
+        65535 as the default because the overwhelming majority of
         cameras in use today are 16 bit, and it's possible some
         non-SBIG software may omit the "optional" Sat_level
-	specification.	Also, no harm is done if a larger maxval is
-	specified than appears in the image--a simple contrast stretch
-	will adjust pixels to use the full 0 to maxval range.  The
-	converse, pixels having values greater than maxval, results in
-	an invalid file which may cause problems in programs which
-	attempt to process it.	*/
+        specification.  Also, no harm is done if a larger maxval is
+        specified than appears in the image--a simple contrast stretch
+        will adjust pixels to use the full 0 to maxval range.  The
+        converse, pixels having values greater than maxval, results in
+        an invalid file which may cause problems in programs which
+        attempt to process it.
 
-    maxval = 65535;
+         According to the official specification, the camera type name is the
+         first item in the header, and may or may not start with "ST-".  But
+         this program has historically had an odd method of detecting camera
+         type, which allows any string starting with "ST-" anywhere in the
+         header, and for now we leave that undisturbed.  2015.05.27.
+    */
 
-    hdr = header;
+    gotCompression = false;  /* initial value */
+    gotWidth       = false;  /* initial value */
+    gotHeight      = false;  /* initial value */
 
-    for (;;) {
-        char *cp = strchr(hdr, '\n');
+    sbigHeaderP->maxval = 65535;  /* initial assumption */
+    sbigHeaderP->cameraType = NULL;  /* initial assumption */
 
-	if (cp == NULL) {
-            pm_error("malformed SBIG file header at character %d", hdr - header);
-	}
-	*cp = 0;
-        if (strncmp(hdr, "ST-", 3) == 0  ||
-            (hdr == &header[0] && strstr(hdr,"Image") != NULL)) {
-            char *ep = strchr(hdr + 3, ' ');
+    for (cursor = &buffer[0], endOfHeader = false; !endOfHeader;) {
+        char * const cp = strchr(cursor, '\n');
 
-	    if (ep != NULL) {
-		*ep = 0;
-		STRSCPY(camera, hdr);
+        if (cp == NULL) {
+            pm_error("malformed SBIG file header at character %u",
+                     (unsigned)(cursor - &buffer[0]));
+        }
+        *cp = '\0';
+        if (strneq(cursor, "ST-", 3) ||
+            (cursor == &buffer[0] && strstr(cursor,"Image") != NULL)) {
+
+            char * const ep = strchr(cursor + 3, ' ');
+
+            if (ep != NULL) {
+                *ep = '\0';
+                sbigHeaderP->cameraType = pm_strdup(cursor);
                 *ep = ' ';
-	    }
-	}
-	looseCanon(hdr);
-        if (strncmp(hdr, "st-", 3) == 0) {
-            comp = strstr(hdr, "compressed") != NULL;
-        } else if (strncmp(hdr, "height=", 7) == 0) {
-	    rows = atoi(hdr + 7);
-        } else if (strncmp(hdr, "width=", 6) == 0) {
-	    cols = atoi(hdr + 6);
-        } else if (strncmp(hdr, "sat_level=", 10) == 0) {
-	    maxval = atoi(hdr + 10);
-        } else if (streq(hdr, "end")) {
-	    break;
-	}
-	hdr = cp + 1;
+            }
+        }
+        
+        looseCanon(cursor);
+            /* Convert from standard SBIG to an internal format */
+
+        if (strneq(cursor, "st-", 3) || cursor == &buffer[0]) {
+            sbigHeaderP->isCompressed =
+                 (strstr(cursor, "compressedimage") != NULL);
+            gotCompression = true;
+        } else if (strneq(cursor, "height=", 7)) {
+            sbigHeaderP->rows = atoi(cursor + 7);
+            gotHeight = true;
+        } else if (strneq(cursor, "width=", 6)) {
+            sbigHeaderP->cols = atoi(cursor + 6);
+            gotWidth = true;
+        } else if (strneq(cursor, "sat_level=", 10)) {
+            sbigHeaderP->maxval = atoi(cursor + 10);
+        } else if (streq("end", cursor)) {
+            endOfHeader = true;
+        }
+        cursor = cp + 1;
     }
 
-    if ((comp == -1) || (rows == -1) || (cols == -1)) {
-        pm_error("required specification missing from SBIG file header");
+    if (!gotCompression)
+        pm_error("Required 'ST-*' specification missing "
+                 "from SBIG file header");
+    if (!gotHeight)
+        pm_error("required 'height=' specification missing"
+                 "from SBIG file header");
+    if (!gotWidth)
+        pm_error("required 'width=' specification missing "
+                 "from SBIG file header");
+}
+
+
+
+static void
+termSbigHeader(struct SbigHeader const sbigHeader) {
+
+    if (sbigHeader.cameraType)
+        pm_strfree(sbigHeader.cameraType);
+}
+
+
+
+static void
+writeRaster(FILE *            const ifP,
+            struct SbigHeader const hdr,
+            FILE *            const ofP) {
+
+    gray * grayrow;
+    unsigned int row;
+
+    grayrow = pgm_allocrow(hdr.cols);
+
+    for (row = 0; row < hdr.rows; ++row) {
+        bool compthis;
+        unsigned int col;
+
+        if (hdr.isCompressed) {
+            unsigned short rowlen;        /* Compressed row length */
+
+            pm_readlittleshortu(ifP, &rowlen);
+            
+            /*  If compression results in a row length >= the uncompressed
+                row length, that row is output uncompressed.  We detect this
+                by observing that the compressed row length is equal to
+                that of an uncompressed row.
+            */
+
+            if (rowlen == hdr.cols * 2)
+                compthis = false;
+            else
+                compthis = hdr.isCompressed;
+        } else
+            compthis = hdr.isCompressed;
+
+        for (col = 0; col < hdr.cols; ++col) {
+            unsigned short g;
+
+            if (compthis) {
+                if (col == 0) {
+                    pm_readlittleshortu(ifP, &g);
+                } else {
+                    int const delta = getc(ifP);
+
+                    if (delta == 0x80)
+                        pm_readlittleshortu(ifP, &g);
+                    else
+                        g += ((signed char) delta);
+                }
+            } else
+                pm_readlittleshortu(ifP, &g);
+            grayrow[col] = g;
+        }
+        pgm_writepgmrow(ofP, grayrow, hdr.cols, hdr.maxval, 0);
     }
 
-    fprintf(stderr, "SBIG %s %dx%d %s image, saturation level = %d.\n",
-        camera, cols, rows, comp ? "compressed" : "uncompressed", maxval);
+    pgm_freerow(grayrow);
+}
 
-    if (maxval > PGM_OVERALLMAXVAL) {
-        pm_error("Saturation level (%d levels) is too large.\n"
-                 "This program's limit is %d.", maxval, PGM_OVERALLMAXVAL);
+
+
+int
+main(int argc, const char ** argv) {
+
+    FILE * ifP;
+    struct CmdlineInfo cmdline;
+    struct SbigHeader hdr;
+
+    pm_proginit(&argc, argv);
+
+    parseCommandLine(argc, argv, &cmdline);
+
+    ifP = pm_openr(cmdline.inputFileName);
+
+    readSbigHeader(ifP, &hdr);
+
+    pm_message("SBIG '%s' %ux%u %s image, saturation level = %u",
+               (hdr.cameraType ? hdr.cameraType : "ST-?"),
+               hdr.cols, hdr.rows,
+               hdr.isCompressed ? "compressed" : "uncompressed",
+               hdr.maxval);
+
+    if (hdr.maxval > PGM_OVERALLMAXVAL) {
+        pm_error("Saturation level (%u levels) is too large"
+                 "This program's limit is %u.", hdr.maxval, PGM_OVERALLMAXVAL);
     }
 
-    pgm_writepgminit(stdout, cols, rows, (gray) maxval, 0);
-    grayrow = pgm_allocrow(cols);
+    pgm_writepgminit(stdout, hdr.cols, hdr.rows, hdr.maxval, 0);
 
-#define DOSINT(fp) ((getc(fp) & 0xFF) | (getc(fp) << 8))
+    writeRaster(ifP, hdr, stdout);
 
-    for (row = 0; row < rows; row++) {
-	int compthis = comp;
+    termSbigHeader(hdr);
 
-	if (comp) {
-	    int rowlen = DOSINT(ifp); /* Compressed row length */
-
-	    /*	If compression results in a row length >= the uncompressed
-		row length, that row is output uncompressed.  We detect this
-		by observing that the compressed row length is equal to
-		that of an uncompressed row.  */
-
-	    if (rowlen == cols * 2) {
-		compthis = 0;
-	    }
-	}
-	for (col = 0, gP = grayrow; col < cols; col++, gP++) {
-	    gray g;
-
-	    if (compthis) {
-
-		if (col == 0) {
-		    g = DOSINT(ifp);
-		} else {
-		    int delta = getc(ifp);
-
-		    if (delta == 0x80) {
-			g = DOSINT(ifp);
-		    } else {
-			g += ((signed char) delta);
-		    }
-		}
-	    } else {
-		g = DOSINT(ifp);
-	    }
-	    *gP = g;
-	}
-	pgm_writepgmrow(stdout, grayrow, cols, (gray) maxval, 0);
-    }
-    pm_close(ifp);
+    pm_close(ifP);
     pm_close(stdout);
 
     return 0;
 }
+
+
+

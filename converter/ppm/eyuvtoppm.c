@@ -36,9 +36,9 @@
 #include <unistd.h>
 
 #include "pm_c_util.h"
-#include "ppm.h"
 #include "shhopt.h"
 #include "mallocvar.h"
+#include "ppm.h"
 
 typedef unsigned char uint8;
 
@@ -46,11 +46,11 @@ typedef unsigned char uint8;
 
 
 
-struct cmdline_info {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *input_filespec;  /* Filespecs of input file */
+    const char * inputFileName;  /* Name of input file */
     unsigned int width;
     unsigned int height;
 };
@@ -59,11 +59,13 @@ struct cmdline_info {
 
 static void
 parseCommandLine(int argc, char ** argv,
-                 struct cmdline_info *cmdlineP) {
+                 struct CmdlineInfo * const cmdlineP) {
 
     optStruct3 opt;   /* Set by OPTENT3 */
     unsigned int option_def_index;
-    optEntry *option_def = malloc(100*sizeof(optEntry));
+    optEntry * option_def;
+
+    MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
     OPTENT3('w', "width",     OPT_UINT,  &cmdlineP->width,   NULL,         0);
@@ -77,7 +79,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = TRUE;
     opt.allowNegNum = FALSE;
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
 
     if (cmdlineP->width == 0)
         pm_error("The width cannot be zero.");
@@ -92,249 +94,226 @@ parseCommandLine(int argc, char ** argv,
 
 
     if (argc-1 == 0) 
-        cmdlineP->input_filespec = "-";
+        cmdlineP->inputFileName = "-";
     else if (argc-1 != 1)
         pm_error("Program takes zero or one argument (filename).  You "
-                 "specified %d", argc-1);
+                 "specified %u", argc-1);
     else
-        cmdlineP->input_filespec = argv[1];
+        cmdlineP->inputFileName = argv[1];
 
+    free(option_def);
 }
 
 
 
 static uint8 ** 
-AllocUint8Array(unsigned int const cols, unsigned int const rows) {
+allocUint8Array(unsigned int const cols,
+                unsigned int const rows) {
 
-    uint8 **retval;
-    unsigned int y;
-
-    MALLOCARRAY(retval, rows);
-    if (retval == NULL)
-        pm_error("Unable to allocate storage for %d x %d byte array.",
-                 cols, rows);
-
-    for (y = 0; y < rows; y++) {
-        MALLOCARRAY(retval[y], cols);
-        if (retval[y] == NULL)
-            pm_error("Unable to allocate storage for %d x %d byte array.",
-                     cols, rows);
-    }
-    return retval;
-}
-
-
-
-static int ** 
-AllocIntArray(unsigned int const cols, unsigned int const rows) {
-
-    int **retval;
-    unsigned int y;
+    uint8 ** retval;
+    unsigned int row;
 
     MALLOCARRAY(retval, rows);
     if (retval == NULL)
-        pm_error("Unable to allocate storage for %d x %d byte array.",
+        pm_error("Unable to allocate storage for %u x %u byte array.",
                  cols, rows);
 
-    for (y = 0; y < rows; y++) {
-        MALLOCARRAY(retval[y], cols);
-        if (retval[y] == NULL)
-            pm_error("Unable to allocate storage for %d x %d byte array.",
+    for (row = 0; row < rows; ++row) {
+        MALLOCARRAY(retval[row], cols);
+        if (retval[row] == NULL)
+            pm_error("Unable to allocate storage for %u x %u byte array.",
                      cols, rows);
     }
     return retval;
-}
-
-
-
-static void
-allocateStorage(int const cols, int const rows,
-                int *** const YP, int *** const UP, int *** const VP,
-                pixel *** const pixelsP, 
-                uint8 *** const orig_yP, uint8 *** const orig_cbP,
-                uint8 *** const orig_crP) {
-
-    *YP = AllocIntArray(cols, rows);
-    *UP = AllocIntArray(cols, rows);
-    *VP = AllocIntArray(cols, rows);
-
-    *pixelsP = ppm_allocarray(cols, rows);
-
-    *orig_yP  = AllocUint8Array(cols, rows);
-    *orig_cbP = AllocUint8Array(cols, rows);
-    *orig_crP = AllocUint8Array(cols, rows);
 }
 
 
 
 static void 
-FreeArray(void ** const array, unsigned int const rows) {
+freeUint8Array(uint8 **     const array,
+               unsigned int const rows) {
 
-    unsigned int y;
+    unsigned int row;
 
-    for (y = 0; y < rows; y++)
-        free(array[y]);
+    for (row = 0; row < rows; ++row)
+        free(array[row]);
+
     free(array);
 }
 
 
 
 static void
-freeStorage(int const rows,
-            int ** const Y, int ** const U, int ** const V,
-            pixel ** const pixels, 
-            uint8 ** const orig_y, uint8 ** const orig_cb,
-            uint8 ** const orig_cr) {
+allocateStorage(unsigned int const cols,
+                unsigned int const rows,
+                uint8 ***    const orig_yP,
+                uint8 ***    const orig_cbP,
+                uint8 ***    const orig_crP) {
+
+    *orig_yP  = allocUint8Array(cols, rows);
+    *orig_cbP = allocUint8Array(cols, rows);
+    *orig_crP = allocUint8Array(cols, rows);
+}
+
+
+
+static void
+freeStorage(unsigned int const rows,
+            uint8 **     const orig_y,
+            uint8 **     const orig_cb,
+            uint8 **     const orig_cr) {
     
-    FreeArray((void**) orig_y, rows); 
-    FreeArray((void**) orig_cb, rows); 
-    FreeArray((void**) orig_cr, rows);
+    freeUint8Array(orig_y,  rows); 
+    freeUint8Array(orig_cb, rows); 
+    freeUint8Array(orig_cr, rows);
 
-    ppm_freearray(pixels, rows);
-
-    FreeArray((void**) Y, rows);
-    FreeArray((void**) U, rows);
-    FreeArray((void**) V, rows);
 }
 
 
 
 static void 
-YUVtoPPM(unsigned int const cols, unsigned int const rows,
-         uint8 ** const orig_y, uint8 ** const orig_cb, uint8 ** const orig_cr,
-         pixel ** const pixels, 
-         int ** const Y, int ** const U, int ** const V) {
+YUVtoPPM(FILE *       const ofP,
+         unsigned int const cols,
+         unsigned int const rows,
+         uint8 **     const orig_y,
+         uint8 **     const orig_cb,
+         uint8 **     const orig_cr) { 
 /*----------------------------------------------------------------------------
    Convert the YUV image in arrays orig_y[][], orig_cb[][], and orig_cr[][]
-   to a PPM image in the array (already allocated) pixels[][].
-
-   Use the preallocated areas Y[][], U[][], and V[][] for working space.
+   to a PPM image and write it to file *ofP.
 -----------------------------------------------------------------------------*/
+    pixel * const pixrow = ppm_allocrow(cols);
     
-    int y;
+    unsigned int row;
 
-    for ( y = 0; y < rows/2; y ++ ) {
-        int x;
-        for ( x = 0; x < cols/2; x ++ ) {
-            U[y][x] = orig_cb[y][x] - 128;
-            V[y][x] = orig_cr[y][x] - 128;
-        }
-    }
+    ppm_writeppminit(ofP, cols, rows, 255, FALSE);
 
-    for ( y = 0; y < rows; y ++ ) {
-        int x;
-        for ( x = 0; x < cols; x ++ ) 
-            Y[y][x] = orig_y[y][x] - 16;
-    }
+    for (row = 0; row < rows; ++row) {
+        unsigned int col;
 
-    for ( y = 0; y < rows; y++ ) {
-        int x;
-        for ( x = 0; x < cols; x++ ) {
+        for (col = 0; col < cols; ++col) {
+            int const y =  orig_y[row][col] - 16;
+            int const u =  orig_cb[row/2][col/2] - 128;
+            int const v =  orig_cr[row/2][col/2] - 128;
             long   tempR, tempG, tempB;
-            int     r, g, b;
+            int    r, g, b;
             /* look at yuvtoppm source for explanation */
 
-            tempR = 104635*V[y/2][x/2];
-            tempG = -25690*U[y/2][x/2] + -53294 * V[y/2][x/2];
-            tempB = 132278*U[y/2][x/2];
-
-            tempR += (Y[y][x]*76310);
-            tempG += (Y[y][x]*76310);
-            tempB += (Y[y][x]*76310);
+            tempR = 104635*v + 76310*y;
+            tempG = -25690*u + -53294*v + 76310*y;
+            tempB = 132278*u + 76310*y;
             
             r = CHOP((int)(tempR >> 16));
             g = CHOP((int)(tempG >> 16));
             b = CHOP((int)(tempB >> 16));
             
-            PPM_ASSIGN(pixels[y][x], r, g, b);
+            PPM_ASSIGN(pixrow[col], r, g, b);
         }
+        ppm_writeppmrow(stdout, pixrow, cols, 255, FALSE);
     }
+    ppm_freerow(pixrow);
 }
 
 
 
 static void 
-ReadYUV(FILE * const yuvfile,
-        unsigned int const cols, unsigned int const rows,
-        uint8 ** const orig_y, 
-        uint8 ** const orig_cb, 
-        uint8 ** const orig_cr,
-        bool * const eofP) {
+ReadYUV(FILE *       const ifP,
+        unsigned int const cols,
+        unsigned int const rows,
+        uint8 **     const orig_y, 
+        uint8 **     const orig_cb, 
+        uint8 **     const orig_cr,
+        bool *       const eofP) {
 
-    unsigned int y;
-    int c;
+    unsigned int row;
+    unsigned int totalRead;
+    bool eof;
 
-    c = fgetc(yuvfile);
-    if (c < 0)
-        *eofP = TRUE;
-    else {
-        *eofP = FALSE;
-        ungetc(c, yuvfile);
+    eof = false;  /* initial value */
+    totalRead = 0;  /* initial value */
+
+    for (row = 0; row < rows && !eof; ++row) {        /* Y */
+        size_t bytesRead;
+
+        bytesRead = fread(orig_y[row], 1, cols, ifP);
+        totalRead += bytesRead;
+        if (bytesRead != cols)
+            eof = true;
     }
-    if (!*eofP) {
-        for (y = 0; y < rows; y++)            /* Y */
-            fread(orig_y[y], 1, cols, yuvfile);
         
-        for (y = 0; y < rows / 2; y++)            /* U */
-            fread(orig_cb[y], 1, cols / 2, yuvfile);
+    for (row = 0; row < rows / 2 && !eof; ++row) {  /* U */
+        size_t bytesRead;
+
+        bytesRead = fread(orig_cb[row], 1, cols / 2, ifP);
+        totalRead += bytesRead;
+        if (bytesRead != cols / 2)
+            eof = true;
+    }
         
-        for (y = 0; y < rows / 2; y++)            /* V */
-            fread(orig_cr[y], 1, cols / 2, yuvfile);
-        if (feof(yuvfile))
+    for (row = 0; row < rows / 2 && !eof; ++row) { /* V */
+        size_t bytesRead;
+
+        bytesRead = fread(orig_cr[row], 1, cols / 2, ifP);
+        totalRead += bytesRead;
+        if (bytesRead != cols / 2)
+            eof = true;
+    }
+
+    if (eof) {
+        if (totalRead == 0)
+            *eofP = TRUE;
+        else
             pm_error("Premature end of file reading EYUV input file");
-    }
+    } else
+        *eofP = FALSE;
 }
 
 
 
 int
-main(int argc, char **argv) {
+main(int argc, const char **argv) {
 
-    FILE *ifp;
-    struct cmdline_info cmdline;
+    FILE * ifP;
+    struct CmdlineInfo cmdline;
     unsigned int frameSeq;
 
     /* The following are addresses of malloc'ed storage areas for use by
        subroutines.
     */
-    int ** Y;
-    int ** U;
-    int ** V;
-    uint8 **orig_y, **orig_cb, **orig_cr;
-    pixel ** pixels;
+    uint8 ** orig_y;
+    uint8 ** orig_cb;
+    uint8 ** orig_cr;
+    bool eof;
 
-    ppm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
-    parseCommandLine(argc, argv, &cmdline);
+    parseCommandLine(argc, (char **)argv, &cmdline);
 
-    /* Allocate all the storage once, to save time. */
+    /* Allocate all the storage at once, to save time. */
     allocateStorage(cmdline.width, cmdline.height,
-                    &Y, &U, &V, &pixels, &orig_y, &orig_cb, &orig_cr);
+                    &orig_y, &orig_cb, &orig_cr);
 
-    ifp = pm_openr(cmdline.input_filespec);
+    ifP = pm_openr(cmdline.inputFileName);
 
-    for (frameSeq = 0; !feof(ifp); frameSeq++) {
-        bool eof;
+    for (frameSeq = 0, eof = false; !eof; ++frameSeq) {
 
-        ReadYUV(ifp, cmdline.width, cmdline.height, 
+        ReadYUV(ifP, cmdline.width, cmdline.height, 
                 orig_y, orig_cb, orig_cr, &eof);
+
         if (!eof) {
             pm_message("Converting Frame %u", frameSeq);
 
-            YUVtoPPM(cmdline.width, cmdline.height, orig_y, orig_cb, orig_cr, 
-                     pixels, Y, U, V);
-            ppm_writeppm(stdout, pixels, cmdline.width, cmdline.height, 
-                         255, FALSE);
-        }
+            YUVtoPPM(stdout, cmdline.width, cmdline.height,
+                     orig_y, orig_cb, orig_cr);
+        } else if (frameSeq == 0)
+            pm_error("Empty EYUV input file");
     }
 
-    freeStorage(cmdline.height, Y, U, V, pixels, orig_y, orig_cb, orig_cr);
+    freeStorage(cmdline.height, orig_y, orig_cb, orig_cr);
 
-    pm_close(ifp);
-    exit(0);
+    pm_close(ifP);
+
+    return 0;
 }
-
-
-
 
 

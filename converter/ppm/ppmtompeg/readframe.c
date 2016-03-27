@@ -67,9 +67,6 @@ struct YuvLine {
  * Global VARIABLES *
  *==================*/
 
-extern boolean GammaCorrection;
-extern float GammaValue;
-extern int outputWidth,outputHeight;
 boolean resizeFrame;
 const char *CurrFile;
 
@@ -77,19 +74,19 @@ const char *CurrFile;
  * INTERNAL PROCEDURE prototypes *
  *===============================*/
 
-static void ReadEYUV _ANSI_ARGS_((MpegFrame * mf, FILE *fpointer,
-                 int width, int height));
-static void ReadAYUV _ANSI_ARGS_((MpegFrame * mf, FILE *fpointer,
-                 int width, int height));
-static void SeparateLine _ANSI_ARGS_((FILE *fpointer, struct YuvLine *lineptr,
-                     int width));
-static void ReadY _ANSI_ARGS_((MpegFrame * mf, FILE *fpointer,
-                 int width, int height));
-static void ReadSub4 _ANSI_ARGS_((MpegFrame * mf, FILE *fpointer,
-                  int width, int height));
-static void DoGamma  _ANSI_ARGS_((MpegFrame *mf, int width, int height));
+static void ReadEYUV (MpegFrame * mf, FILE *fpointer,
+                 int width, int height);
+static void ReadAYUV (MpegFrame * mf, FILE *fpointer,
+                 int width, int height);
+static void SeparateLine (FILE *fpointer, struct YuvLine *lineptr,
+                     int width);
+static void ReadY (MpegFrame * mf, FILE *fpointer,
+                 int width, int height);
+static void ReadSub4 (MpegFrame * mf, FILE *fpointer,
+                  int width, int height);
+static void DoGamma  (MpegFrame *mf, int width, int height);
 
-static void DoKillDim _ANSI_ARGS_((MpegFrame *mf, int w, int h));
+static void DoKillDim (MpegFrame *mf, int w, int h);
 
 #define safe_fread(ptr,sz,len,fileptr)                           \
     if ((safe_read_count=fread(ptr,sz,len,fileptr))!=sz*len) {   \
@@ -155,7 +152,7 @@ openFile(struct inputSource * const inputSourceP,
         
         GetNthInputFileName(inputSourceP, frameNumber, &fileName);
         
-        asprintfN(&fullFileName, "%s/%s", currentPath, fileName);
+        pm_asprintf(&fullFileName, "%s/%s", currentPath, fileName);
         
         CurrFile = fullFileName;
         
@@ -207,8 +204,8 @@ openFile(struct inputSource * const inputSourceP,
             if (baseFormat == JMOVIE_FILE_TYPE)
                 unlink(fullFileName);
         }
-        strfree(fullFileName);
-        strfree(fileName);
+        pm_strfree(fullFileName);
+        pm_strfree(fileName);
     }
 }
 
@@ -377,10 +374,10 @@ ReadFrame(MpegFrame *          const frameP,
 void
 SetFileType(const char * const conversion)
 {
-    if ( strcmp(conversion, "*") == 0 ) {
-    fileType = BASE_FILE_TYPE;
+    if (streq(conversion, "*")) {
+        fileType = BASE_FILE_TYPE;
     } else {
-    fileType = ANY_FILE_TYPE;
+        fileType = ANY_FILE_TYPE;
     }
 }
 
@@ -399,23 +396,23 @@ SetFileType(const char * const conversion)
 void
 SetFileFormat(const char * const format)
 {
-    if ( strcmp(format, "PPM") == 0 ) {
-    baseFormat = PNM_FILE_TYPE;
-    } else if ( strcmp(format, "YUV") == 0 ) {
-    baseFormat = YUV_FILE_TYPE;
-    } else if ( strcmp(format, "Y") == 0 ) {
-    baseFormat = Y_FILE_TYPE;
-    } else if ( strcmp(format, "PNM") == 0 ) {
-    baseFormat = PNM_FILE_TYPE;
-    } else if (( strcmp(format, "JPEG") == 0 ) || ( strcmp(format, "JPG") == 0 )) {
-    baseFormat = JPEG_FILE_TYPE;
-    } else if ( strcmp(format, "JMOVIE") == 0 ) {
-    baseFormat = JMOVIE_FILE_TYPE;
-    } else if ( strcmp(format, "SUB4") == 0 ) {
-    baseFormat = SUB4_FILE_TYPE;
+    if (streq(format, "PPM")) {
+        baseFormat = PNM_FILE_TYPE;
+    } else if (streq(format, "YUV")) {
+        baseFormat = YUV_FILE_TYPE;
+    } else if (streq(format, "Y")) {
+        baseFormat = Y_FILE_TYPE;
+    } else if (streq(format, "PNM")) {
+        baseFormat = PNM_FILE_TYPE;
+    } else if (streq(format, "JPEG") || streq(format, "JPG")) {
+        baseFormat = JPEG_FILE_TYPE;
+    } else if (streq(format, "JMOVIE")) {
+        baseFormat = JMOVIE_FILE_TYPE;
+    } else if (streq(format, "SUB4")) {
+        baseFormat = SUB4_FILE_TYPE;
     } else {
-    fprintf(stderr, "ERROR:  Invalid file format:  %s\n", format);
-    exit(1);
+        fprintf(stderr, "ERROR:  Invalid file format:  %s\n", format);
+        exit(1);
     }
 }
 
@@ -435,9 +432,9 @@ ReadIOConvert(struct inputSource * const inputSourceP,
 
     GetNthInputFileName(inputSourceP, frameNumber, &fileName);
 
-    asprintfN(&fullFileName, "%s/%s", currentPath, fileName);
+    pm_asprintf(&fullFileName, "%s/%s", currentPath, fileName);
 
-    if ( strcmp(ioConversion, "*") == 0 ) {
+    if (streq(ioConversion, "*")) {
         char buff[1024];
         ifp = fopen(fullFileName, "rb");
         sprintf(buff,"fopen \"%s\"",fullFileName);
@@ -483,8 +480,8 @@ ReadIOConvert(struct inputSource * const inputSourceP,
         exit(1);
     }
 
-    strfree(fullFileName);
-    strfree(fileName);
+    pm_strfree(fullFileName);
+    pm_strfree(fileName);
 
     return ifp;
 }
@@ -828,7 +825,7 @@ MpegFrame *mf;
 int w,h;
 {
   static int GammaVal[256];
-  static boolean init_done=FALSE;
+  static bool init_done=FALSE;
   int i,j;
 
   if (!init_done) {
@@ -882,7 +879,7 @@ DoKillDim(mf, w, h)
 MpegFrame *mf;
 int w,h;
 {
-  static boolean init_done=FALSE;
+  static bool init_done=FALSE;
   static unsigned char mapper[256];
   register int i,j;
   double slope, intercept;

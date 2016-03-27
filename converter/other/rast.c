@@ -269,31 +269,70 @@ pr_dump( p, out, colormap, type, copy_flag )
     return 0;
 }
 
+
+
 int
-pr_load_header( in, hP )
-    FILE* in;
-    struct rasterfile* hP;
-{
-    if ( pm_readbiglong( in, &(hP->ras_magic) ) == -1 )
-        return PIX_ERR;
-    if ( hP->ras_magic != RAS_MAGIC )
-        return PIX_ERR;
-    if ( pm_readbiglong( in, &(hP->ras_width) ) == -1 )
-        return PIX_ERR;
-    if ( pm_readbiglong( in, &(hP->ras_height) ) == -1 )
-        return PIX_ERR;
-    if ( pm_readbiglong( in, &(hP->ras_depth) ) == -1 )
-        return PIX_ERR;
-    if ( pm_readbiglong( in, &(hP->ras_length) ) == -1 )
-        return PIX_ERR;
-    if ( pm_readbiglong( in, &(hP->ras_type) ) == -1 )
-        return PIX_ERR;
-    if ( pm_readbiglong( in, &(hP->ras_maptype) ) == -1 )
-        return PIX_ERR;
-    if ( pm_readbiglong( in, &(hP->ras_maplength) ) == -1 )
-        return PIX_ERR;
+pr_load_header(FILE * const ifP, struct rasterfile * const headerP) {
+
+    {
+        long magic;
+
+        pm_readbiglong(ifP, &magic);
+        if (magic != RAS_MAGIC)
+            pm_error("Wrong magic number for a RAST file");
+    }
+    {
+        long width;
+        pm_readbiglong(ifP, &width);
+
+        if (width < 0)
+            pm_error("Negative width in RAST header");
+        else
+            headerP->ras_width = width;
+    }
+    {
+        long height;
+        pm_readbiglong(ifP, &height);
+
+        if (height < 0)
+            pm_error("Negative height in RAST header");
+        else
+            headerP->ras_height = height;
+    }
+    {
+        long depth;
+        pm_readbiglong(ifP, &depth);
+
+        if (depth < 0)
+            pm_error("Negative depth in RAST header");
+        else
+            headerP->ras_depth = depth;
+    }
+    {
+        long length;
+        pm_readbiglong(ifP, &length);
+
+        if (length < 0)
+            pm_error("Negative length in RAST header");
+        else
+            headerP->ras_length = length;
+    }
+    pm_readbiglong(ifP, &headerP->ras_type);
+
+    pm_readbiglong(ifP, &headerP->ras_maptype);
+    {
+        long mapLength;
+        pm_readbiglong(ifP, &mapLength);
+
+        if (mapLength < 0)
+            pm_error("Negative map length in RAST header");
+        else
+            headerP->ras_maplength = mapLength;
+    }
     return 0;
 }
+
+
 
 int
 pr_load_colormap( in, hP, colormap )

@@ -1,12 +1,24 @@
 # Makefile for Netpbm
- 
+
 # Configuration should normally be done in the included file config.mk.
 
 # Targets in this file:
 #
 #   nonmerge:     Build everything, in the source directory.
-#   merge:        Build everything as merged executables, in the source dir
-#   package:      Make a package of Netpbm files ready to install
+#   merge:        Build everything as merged executables, in the source dir.
+#   package:      Make a package of Netpbm files ready to install.
+#
+#   deb:          Make a .deb file in the current dir.
+#
+#   check-tree:     Conduct tests on Netpbm files in the source dir. 
+#   check-package:  Conduct tests on packaged Netpbm files.
+#   check-install:  Conduct tests on installed Netpbm files.
+#   check:          Default check.  Synonym for check-package.
+#
+#   clean:        Delete target executables and intermediate objects.
+#   distclean:    Delete configuration files in addition to the above.
+#
+#   tags:         Generate/update an Emacs tags file, named TAGS.
 #   
 #   The default target is either "merge" or "nonmerge", as determined by
 #   the DEFAULT_TARGET variable set by config.mk.
@@ -62,7 +74,7 @@ include $(BUILDDIR)/config.mk
 
 PROG_SUBDIRS = converter analyzer editor generator other
 PRODUCT_SUBDIRS = lib $(PROG_SUBDIRS)
-SUPPORT_SUBDIRS = urt buildtools
+SUPPORT_SUBDIRS = urt icon buildtools test
 
 SUBDIRS = $(PRODUCT_SUBDIRS) $(SUPPORT_SUBDIRS)
 
@@ -98,8 +110,15 @@ nonmerge: $(PRODUCT_SUBDIRS:%=%/all)
 # make works for 'make all' in the top directory, but it may still fail
 # for the aforementioned reason for other invocations.
 
-$(SUBDIRS:%=%/all): pm_config.h inttypes_netpbm.h version.h
+$(SUBDIRS:%=%/all) lib/util/all: pm_config.h inttypes_netpbm.h version.h
 $(PROG_SUBDIRS:%=%/all): lib/all $(SUPPORT_SUBDIRS:%=%/all)
+lib/all: lib/util/all
+
+.PHONY: lib/util/all
+lib/util/all:
+	mkdir -p lib/util
+	$(MAKE) -C lib/util -f $(SRCDIR)/lib/util/Makefile \
+	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) all
 
 OMIT_CONFIG_RULE = 1
 OMIT_VERSION_H_RULE = 1
@@ -122,6 +141,14 @@ $(TYPEGEN) $(ENDIANGEN): $(BUILDDIR)/buildtools
 
 inttypes_netpbm.h: $(TYPEGEN)
 	$(TYPEGEN) >$@
+
+
+# testrandom is a utility program used by the make file below.
+TESTRANDOM = $(BUILDDIR)/test/testrandom
+
+$(TESTRANDOM): $(BUILDDIR)/test
+	$(MAKE) -C $(dir $@) -f $(SRCDIR)/test/Makefile \
+	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@) 
 
 # We run a couple of programs on the build machine in computing the
 # contents of pm_config.h.  We need to give the user a way not to do
@@ -150,6 +177,17 @@ ifeq ($(HAVE_INT64),Y)
 else
 	echo "#define HAVE_INT64 0" >>$@
 endif	
+ifeq ($(WANT_SSE),Y)
+	echo "#define WANT_SSE 1" >>$@
+else
+	echo "#define WANT_SSE 0" >>$@
+endif	
+ifeq ($(DONT_HAVE_PROCESS_MGMT),Y)
+	echo "#define HAVE_FORK 0" >>$@
+else
+	echo "#define HAVE_FORK 1" >>$@
+endif
+	echo '#define RGB_DB_PATH "$(RGB_DB_PATH)"' >>$@
 	echo '/* pm_config.h.in FOLLOWS ... */' >>$@
 	cat $(SRCDIR)/pm_config.in.h >>$@
 	$(ENDIANGEN) >>$@
@@ -211,7 +249,7 @@ init_package:
 	@if [ -d $(PKGDIR) ]; then \
 	  echo "Directory $(PKGDIR) already exists.  Please specify a "; \
 	  echo "directory that can be created fresh, like this: "; \
-	  echo "  make package PKGDIR=/tmp/newnetpbm "; \
+	  echo "  make package pkgdir=/tmp/newnetpbm "; \
 	  false; \
 	  fi
 	mkdir $(PKGDIR)
@@ -239,10 +277,10 @@ endif
 
 .PHONY: install-merge install-nonmerge
 install-merge: install.merge install.lib install.data \
-	install.manweb install.man
+	install.manwebmain install.manweb install.man
 
 install-nonmerge: install.bin install.lib install.data \
-	install.manweb install.man
+	install.manwebmain install.manweb install.man
 
 .PHONY: merge
 merge: lib/all netpbm
@@ -263,21 +301,33 @@ endif
 ifneq ($(LINUXSVGALIB),NONE)
   MERGELIBS += $(LINUXSVGALIB)
 endif
-ifneq ($(X11LIB),NONE)
-  MERGELIBS += $(X11LIB)
+
+ifneq ($(shell pkg-config --modversion libpng$(PNGVER)),)
+  PNGLD = $(shell pkg-config --libs libpng$(PNGVER))
+else
+  ifneq ($(shell libpng$(PNGVER)-config --version),)
+    PNGLD = $(shell libpng$(PNGVER)-config --ldflags)
+  else
+    PNGLD = $(shell $(LIBOPT) $(LIBOPTR) $(PNGLIB) $(ZLIB))
+  endif
 endif
 
-ifeq ($(shell libpng$(PNGVER)-config --version),)
-  PNGLD = $(shell $(LIBOPT) $(LIBOPTR) $(PNGLIB) $(ZLIB))
+ifneq ($(shell pkg-config --modversion libxml-2.0),)
+  XML2LD=$(shell pkg-config --libs libxml-2.0)
 else
-  PNGLD = $(shell libpng$(PNGVER)-config --ldflags)
+  ifneq ($(shell xml2-config --version),)
+    XML2LD=$(shell xml2-config --libs)
+  else
+    XML2LD=
+  endif
 endif
 
-ifeq ($(shell xml2-config --version),)
-  XML2LD=
+ifneq ($(shell pkg-config x11 --libs),)
+  X11LD = $(shell pkg-config x11 --libs)
 else
-  XML2LD=$(shell xml2-config --libs)
+  X11LD = $(shell $(LIBOPT) $(LIBOPTR) $(X11LIB))
 endif
+
 
 
 # If URTLIB is BUNDLED_URTLIB, then we're responsible for building it, which
@@ -321,7 +371,7 @@ netpbm:%:%.o $(OBJECT_DEP) $(NETPBMLIB) $(URTLIBDEP) $(LIBOPT)
 # Note that LDFLAGS might contain -L options, so order is important.
 	$(LD) -o $@ $< $(OBJECT_LIST) \
           $(LDFLAGS) $(shell $(LIBOPT) $(NETPBMLIB) $(MERGELIBS)) \
-	  $(PNGLD) $(XML2LD) $(MATHLIB) $(NETWORKLD) $(LADD)
+	  $(PNGLD) $(XML2LD) $(X11LD) $(MATHLIB) $(NETWORKLD) $(LADD)
 
 netpbm.o: mergetrylist
 
@@ -343,8 +393,8 @@ else
 install.lib:
 endif
 
-.PHONY: install.manweb
-install.manweb: $(PKGDIR)/$(PKGMANDIR)/web/netpbm.url $(PKGDIR)/bin/doc.url
+.PHONY: install.manwebmain
+install.manwebmain: $(PKGDIR)/$(PKGMANDIR)/web/netpbm.url $(PKGDIR)/bin/doc.url
 
 $(PKGDIR)/$(PKGMANDIR)/web/netpbm.url: $(PKGDIR)/$(PKGMANDIR)/web
 	echo "$(NETPBM_DOCURL)" > $@
@@ -371,19 +421,19 @@ lib/install.hdr:
 	$(MAKE) -C $(dir $@) -f $(SRCDIR)/lib/Makefile \
 	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@)
 
-ifeq ($(STATICLIB_TOO),y)
-BUILD_STATIC = y
+ifeq ($(STATICLIB_TOO),Y)
+BUILD_STATIC = Y
 else
   ifeq ($(NETPBMLIBTYPE),unixstatic)
-    BUILD_STATIC = y
+    BUILD_STATIC = Y
   else
-    BUILD_STATIC = n
+    BUILD_STATIC = N
   endif
 endif
 
 .PHONY: install.staticlib
 install.staticlib: 
-ifeq ($(BUILD_STATIC),y)
+ifeq ($(BUILD_STATIC),Y)
 	$(MAKE) -C lib -f $(SRCDIR)/lib/Makefile \
 	SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) install.staticlib 
 endif
@@ -393,12 +443,124 @@ install.sharedlibstub:
 	$(MAKE) -C lib -f $(SRCDIR)/lib/Makefile \
 	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) install.sharedlibstub 
 
+# Make the 'deb' target after making 'package'.  It generates a .deb
+# file in the current directory.
+.PHONY: deb
+deb:
+	buildtools/debian/mkdeb --buildtools=buildtools --pkgdir=$(PKGDIR)
+
+
+.PHONY: check
+.PHONY: check-tree
+.PHONY: check-package
+.PHONY: check-install
+
+# Test files in source tree.
+# This does not work when Netpbm is compiled in a separate build dir.
+
+check-tree : SRCBINDIRS :=./analyzer \
+./converter/other \
+./converter/other/cameratopam \
+./converter/other/fiasco \
+./converter/other/jbig \
+./converter/other/jpeg2000 \
+./converter/other/pamtosvg \
+./converter/other/pnmtopalm \
+./converter/pbm \
+./converter/pbm/pbmtoppa \
+./converter/pgm \
+./converter/ppm \
+./converter/ppm/hpcdtoppm \
+./converter/ppm/ppmtompeg \
+./converter/ppm \
+./editor \
+./editor/pamflip \
+./editor/specialty \
+./generator \
+./other \
+./other/pamx \
+./
+
+# Create colon-separated PATH list from the above.
+# Use realpath function (appears in GNU Make v.3.81) if available.
+
+# Kludge to test whether realpath is available:
+ifeq ($(realpath $(CURDIR)/.),$(CURDIR))
+  check-tree : RBINDIRS :=\
+    $(foreach dir,$(SRCBINDIRS),$(realpath $(BUILDDIR)/$(dir)))
+else
+  check-tree : RBINDIRS :=$(foreach dir,$(SRCBINDIRS),$(BUILDDIR)/$(dir))  
+endif
+
+# Kludge to express characters given special meanings by GNU Make.
+# See GNU Make texinfo manual "Function Call Syntax".
+empty :=
+space := $(empty) $(empty)
+colon :=:
+
+check-tree : PBM_TEST_PATH := $(subst $(space),$(colon),$(RBINDIRS))
+check-tree : PBM_LIBRARY_PATH ?= $(BUILDDIR)/lib
+check-tree : RGBDEF ?= $(SRCDIR)/lib/rgb.txt
+
+
+# Create RESULTDIR.
+# If it already exists, rename and covert to an archive directory.
+# Use numbered backup.
+# TODO: Renaming fails with old versions of mv which do not support -T.  
+
+resultdir-backup: FORCE
+	if [ -d $(RESULTDIR) ]; \
+	   then mv -T --backup=numbered $(RESULTDIR) $(RESULTDIR).bak; \
+	fi; \
+	mkdir -p $(RESULTDIR); \
+
+
+check-tree: $(TESTRANDOM) resultdir-backup
+	cd $(RESULTDIR); \
+	  CHECK_TYPE=tree \
+	  PBM_TEST_PATH=$(PBM_TEST_PATH) BUILDDIR=$(BUILDDIR) \
+	  LD_LIBRARY_PATH=$(PBM_LIBRARY_PATH):${LD_LIBRARY_PATH} \
+	  RGBDEF=$(RGBDEF) \
+	  $(SRCDIR)/test/Execute-Tests 2>&1
+
+# Execute-Tests needs to know BUILDDIR in order to locate testrandom.
+# This applies to all check varieties.
+
+# Check after the packaging stage
+# This works on typical Linux systems.
+# This is the default check.
+
+check-package : PBM_TEST_PATH := $(PKGDIR)/bin
+check-package : PBM_LIBRARY_PATH := $(PKGDIR)/lib
+check-package : RGBDEF ?= $(PKGDIR)/misc/rgb.txt
+check: check-package
+
+check-package: $(TESTRANDOM) resultdir-backup
+	cd $(RESULTDIR); \
+	  CHECK_TYPE=package \
+	  PBM_TEST_PATH=$(PBM_TEST_PATH) BUILDDIR=$(BUILDDIR) \
+	  LD_LIBRARY_PATH=$(PBM_LIBRARY_PATH):${LD_LIBRARY_PATH} \
+	  RGBDEF=$(RGBDEF) \
+	  $(SRCDIR)/test/Execute-Tests 2>&1
+
+
+# Check after install
+check-install: $(TESTRANDOM) resultdir-backup
+	cd $(RESULTDIR); \
+	  CHECK_TYPE=install \
+	  BUILDDIR=$(BUILDDIR) \
+	  RGBDEF=$(RGBDEF) \
+	  $(SRCDIR)/test/Execute-Tests 2>&1
+
+
+
 clean: localclean
 
 .PHONY: localclean
 localclean:
 	rm -f netpbm build_started build_complete
 	rm -f pm_config.h inttypes_netpbm.h version.h
+	rm -f *.deb
 
 # Note that removing config.mk must be the last thing we do,
 # because no other makes will work after that is done.
@@ -409,7 +571,7 @@ localdistclean: localclean
 	-rm -f TAGS
 	-rm -f config.mk
 
-# 'tags' generates/updates an Emacs tags file, anmed TAGS, in the current
+# 'tags' generates/updates an Emacs tags file, named TAGS, in the current
 # directory.  Use with Emacs command 'find-tag'.
 
 .PHONY: tags

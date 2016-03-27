@@ -252,14 +252,14 @@ alloc_coder (char const * const * const inputname,
         lx = (unsigned) (log2 (wi->width - 1) + 1);
         ly = (unsigned) (log2 (wi->height - 1) + 1);
       
-        wi->level = max (lx, ly) * 2 - ((ly == lx + 1) ? 1 : 0);
+        wi->level = MAX(lx, ly) * 2 - ((ly == lx + 1) ? 1 : 0);
     }
    
     c = Calloc (1, sizeof (coding_t));
 
     c->options             = *options;
-    c->options.lc_min_level = max (options->lc_min_level, 3);
-    c->options.lc_max_level = min (options->lc_max_level, wi->level - 1);
+    c->options.lc_min_level = MAX(options->lc_min_level, 3);
+    c->options.lc_max_level = MIN(options->lc_max_level, wi->level - 1);
 
     c->tiling = alloc_tiling (options->tiling_method,
                               options->tiling_exponent, wi->level);
@@ -273,7 +273,7 @@ alloc_coder (char const * const * const inputname,
     if (c->options.lc_max_level >= wi->level - c->tiling->exponent)
     {
         message ("'max_level' changed from %d to %d "
-                 "due to image tiling level.",
+                 "because of image tiling level.",
                  c->options.lc_max_level, wi->level - c->tiling->exponent - 1);
         c->options.lc_max_level = wi->level - c->tiling->exponent - 1;
     }
@@ -285,16 +285,16 @@ alloc_coder (char const * const * const inputname,
      *  p_min_level, p_max_level min and max level for ND/MC prediction
      *  [p_min_level, p_max_level] must be a subset of [min_level, max_level] !
      */
-    wi->p_min_level = max (options->p_min_level, c->options.lc_min_level);
-    wi->p_max_level = min (options->p_max_level, c->options.lc_max_level);
+    wi->p_min_level = MAX(options->p_min_level, c->options.lc_min_level);
+    wi->p_max_level = MIN(options->p_max_level, c->options.lc_max_level);
     if (wi->p_min_level > wi->p_max_level)
         wi->p_min_level = wi->p_max_level;
 
-    c->options.images_level = min (c->options.images_level,
-                                   c->options.lc_max_level - 1);
+    c->options.images_level = MIN(c->options.images_level,
+                                  c->options.lc_max_level - 1);
    
-    c->products_level  = max (0, ((signed int) c->options.lc_max_level
-                                  - (signed int) c->options.images_level - 1));
+    c->products_level  = MAX(0, ((signed int) c->options.lc_max_level
+                                 - (signed int) c->options.images_level - 1));
     c->pixels         = Calloc (size_of_level (c->options.lc_max_level),
                                 sizeof (real_t));
     c->images_of_state = Calloc (MAXSTATES, sizeof (real_t *));
@@ -324,8 +324,8 @@ alloc_coder (char const * const * const inputname,
     /*
      *  Max. number of states and edges
      */
-    wi->max_states         = max (min (options->max_states, MAXSTATES), 1);
-    c->options.max_elements = max (min (options->max_elements, MAXEDGES), 1);
+    wi->max_states          = MAX(MIN(options->max_states, MAXSTATES), 1);
+    c->options.max_elements = MAX(MIN(options->max_elements, MAXEDGES), 1);
 
     /*
      *  Title and comment strings
@@ -348,7 +348,7 @@ alloc_coder (char const * const * const inputname,
     /*
      *  Color image options ...
      */
-    wi->chroma_max_states = max (1, options->chroma_max_states);
+    wi->chroma_max_states = MAX(1, options->chroma_max_states);
 
     /*
     *  Set up motion compensation struct.
@@ -432,9 +432,9 @@ print_statistics (char c, real_t costs, const wfa_t *wfa, const image_t *image,
      
       if (lincomb)
       {
-     max_level = max (max_level,
+     max_level = MAX(max_level,
               (unsigned) (wfa->level_of_state [state] - 1));
-     min_level = min (min_level,
+     min_level = MIN(min_level,
               (unsigned) (wfa->level_of_state [state] - 1));
       }
    }
@@ -548,77 +548,78 @@ frame_coder (wfa_t *wfa, coding_t *c, bitfile_t *output)
    }
    else
    {
-      int     YCb_node = -1;
-      int     tree [3];         /* 3 root states of each color comp. */
-      color_e band;
+       int     YCb_node = -1;
+       int     tree [3];         /* 3 root states of each color comp. */
+       color_e band;
       
-      /*
-       *  When compressing color images, the three color components (YCbCr) 
-       *  are copied into a large image:
-       *  [  Y  Cr ]
-       *  [  Cb 0  ]
-       *  I.e. the color components of an image are processed in a row.
-       *  After all components are compressed, virtual states are generated
-       *  to describe the large image.
-       */
-      for (band = first_band (YES); band <= last_band (YES) ; band++)
-      {
-     debug_message ("Encoding color component %d", band);
-     tree [band] = RANGE;
-     if (band == Cb)
-     {
-        unsigned min_level;
+       /*
+        *  When compressing color images, the three color components (YCbCr) 
+        *  are copied into a large image:
+        *  [  Y  Cr ]
+        *  [  Cb 0  ]
+        *  I.e. the color components of an image are processed in a row.
+        *  After all components are compressed, virtual states are generated
+        *  to describe the large image.
+        */
+       for (band = first_band (YES); band <= last_band (YES) ; band++)
+       {
+           debug_message ("Encoding color component %d", band);
+           tree [band] = RANGE;
+           if (band == Cb)
+           {
+               unsigned min_level;
 
-        c->domain_pool->chroma (wfa->wfainfo->chroma_max_states, wfa,
-                    c->domain_pool->model);
-        /*
-         *  Don't use a finer partioning for the chrominancy bands than for
-         *  the luminancy band.
-         */
-        for (min_level = MAXLEVEL, state = wfa->basis_states;
-         state < wfa->states; state++)
-        {
-           unsigned lincomb, label;
+               c->domain_pool->chroma (wfa->wfainfo->chroma_max_states, wfa,
+                                       c->domain_pool->model);
+               /*
+                *  Don't use a finer partioning for the chrominancy bands than
+                *  for the luminancy band.
+                */
+               for (min_level = MAXLEVEL, state = wfa->basis_states;
+                    state < wfa->states; state++)
+               {
+                   unsigned lincomb, label;
            
-           for (lincomb = 0, label = 0; label < MAXLABELS; label++)
-          lincomb += isrange (wfa->tree [state][label]) ? 1 : 0;
-           if (lincomb)
-          min_level = min (min_level,
-                   (unsigned) (wfa->level_of_state [state]
-                           - 1));
-        }
-        c->options.lc_min_level = min_level;
-        if (c->mt->frame_type != I_FRAME) /* subtract mc of luminance */
-           subtract_mc (c->mt->original, c->mt->past, c->mt->future, wfa);
-     }
+                   for (lincomb = 0, label = 0; label < MAXLABELS; label++)
+                       lincomb += isrange (wfa->tree [state][label]) ? 1 : 0;
+                   if (lincomb)
+                       min_level = MIN(min_level,
+                                       (unsigned) (wfa->level_of_state [state]
+                                                   - 1));
+               }
+               c->options.lc_min_level = min_level;
+               if (c->mt->frame_type != I_FRAME) /* subtract mc of luminance */
+                   subtract_mc (c->mt->original, c->mt->past, c->mt->future,
+                                wfa);
+           }
 
-     memset (&range, 0, sizeof (range_t));
-     range.level = wfa->wfainfo->level;
+           memset (&range, 0, sizeof (range_t));
+           range.level = wfa->wfainfo->level;
      
-     costs = subdivide (MAXCOSTS, band, tree [Y], &range, wfa, c,
-                c->mt->frame_type != I_FRAME && band == Y, NO);
-     if (c->options.progress_meter != FIASCO_PROGRESS_NONE)
-        message ("");
-     {
-        char colors [] = {'Y', 'B', 'R'};
+           costs = subdivide (MAXCOSTS, band, tree [Y], &range, wfa, c,
+                              c->mt->frame_type != I_FRAME && band == Y, NO);
+           if (c->options.progress_meter != FIASCO_PROGRESS_NONE)
+               message ("");
+           {
+               char colors [] = {'Y', 'B', 'R'};
         
-        print_statistics (colors [band], costs, wfa,
-                  c->mt->original, &range);
-     }
+               print_statistics (colors [band], costs, wfa,
+                                 c->mt->original, &range);
+           }
      
-     if (isrange (range.tree))  /* whole image is approx. by a l.c. */
-        error ("No root state generated for color component %d!", band);
-     else
-        tree[band] = range.tree;
+           if (isrange (range.tree))  /* whole image is approx. by a l.c. */
+               error ("No root state generated for color component %d!", band);
+           else
+               tree[band] = range.tree;
      
-     if (band == Cb)
-     {
-        wfa->tree [wfa->states][0] = tree[Y];
-        wfa->tree [wfa->states][1] = tree[Cb];
-        YCb_node = wfa->states;
-        append_state (YES, compute_final_distribution (wfa->states, wfa),
-              wfa->wfainfo->level + 1, wfa, c);
-     }
+           if (band == Cb)
+           {
+               wfa->tree [wfa->states][0] = tree[Y];
+               wfa->tree [wfa->states][1] = tree[Cb];
+               YCb_node = wfa->states;
+               append_state (YES, compute_final_distribution(wfa->states, wfa),
+                             wfa->wfainfo->level + 1, wfa, c);
+           }
       }
       /*
        *  generate two virtual states (*) 

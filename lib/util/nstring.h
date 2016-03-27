@@ -137,62 +137,68 @@ strncaseeq(const char * const comparand,
      - The returned string is a const char * instead of a char *.  The
        const is more correct.
 
-     - If the function can't get the memory, it returns 'strsol',
+     - If the function can't get the memory, it returns 'pm_strsol',
        which is a string that is in static memory that contains text
        indicating an out of memory failure has occurred, intead of
        NULL.  This makes it much easier for programs to ignore this
        possibility.
 
    strfree() is strictly a Netpbm invention, to allow proper type checking
-   when freeing storage allocated by the Netpbm asprintfN().
+   when freeing storage allocated by the Netpbm pm_asprintf().
 */
 
-extern const char * const strsol;
+extern const char * const pm_strsol;
 
 int
-snprintfN(char *       const dest,
-          size_t       const str_m,
-          const char * const fmt,
-          ...) PM_GNU_PRINTF_ATTR(3,4);
+pm_snprintf(char *       const dest,
+            size_t       const str_m,
+            const char * const fmt,
+            ...) PM_GNU_PRINTF_ATTR(3,4);
 
 void
-vsnprintfN(char *       const str,
-           size_t       const str_m,
-           const char * const fmt,
-           va_list            ap,
-           size_t *     const sizeP);
-
-void
-asprintfN(const char ** const resultP,
-          const char *  const fmt,
-          ...) PM_GNU_PRINTF_ATTR(2,3);
-
-void
-vasprintfN(const char ** const resultP,
-           const char *  const format,
-           va_list             args);
-
-void 
-strfree(const char * const string);
+pm_vsnprintf(char *       const str,
+             size_t       const str_m,
+             const char * const fmt,
+             va_list            ap,
+             size_t *     const sizeP);
 
 const char *
-strsepN(char ** const stringP, const char * const delim);
-
-int
-stripeq(const char * const comparand,
-        const char * const comparator);
-
-const void *
-memmemN(const void * const haystackArg,
-        size_t       const haystacklen,
-        const void * const needleArg,
-        size_t       const needlelen);
-
-bool
-strishex(const char * const subject);
+pm_strdup(const char * const arg);
 
 void
-interpret_uint(const char *   const string,
+pm_asprintf(const char ** const resultP,
+            const char *  const fmt,
+            ...) PM_GNU_PRINTF_ATTR(2,3);
+
+void
+pm_vasprintf(const char ** const resultP,
+             const char *  const format,
+             va_list             args);
+
+bool
+pm_vasprintf_knows_float(void);
+
+void 
+pm_strfree(const char * const string);
+
+const char *
+pm_strsep(char ** const stringP, const char * const delim);
+
+int
+pm_stripeq(const char * const comparand,
+           const char * const comparator);
+
+const void *
+pm_memmem(const void * const haystackArg,
+          size_t       const haystacklen,
+          const void * const needleArg,
+          size_t       const needlelen);
+
+bool
+pm_strishex(const char * const subject);
+
+void
+pm_interpret_uint(const char *   const string,
                unsigned int * const valueP,
                const char **  const errorP);
 

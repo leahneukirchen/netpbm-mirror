@@ -876,6 +876,16 @@
 139   0   0 DarkRed
 144 238 144 LightGreen
 
+# From Wikipedia article on Ochre, 10.04.21
+
+204 119  34 Ochre
+
+# From Wikipedia article on Azure, 15.11.30
+# Note that this is much different from the older colors of that name in this
+# file.
+
+  0 127 255 Azure5
+
 
 # These were more or less invented for use with Netpbm:
 255 255 255  D65

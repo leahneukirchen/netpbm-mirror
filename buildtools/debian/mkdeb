@@ -1,0 +1,541 @@
+#!/usr/bin/perl
+###############################################################################
+#                                mkdeb
+###############################################################################
+#
+#  This generates a Debian packge file (.deb) to install Sourceforge
+#  Netpbm on a Debian system.
+#
+#  This is especially useful because Debian does not have a good Debian
+#  package (what Debian contains is derived from Sourceforge Netpbm ca.
+#  2002).
+#
+###############################################################################
+
+use strict;
+use warnings;
+use English;
+use Getopt::Long;
+
+my $TRUE=1; my $FALSE = 0;
+
+
+
+sub parseCommandLine(@) {
+
+    local @ARGV = @_;  # GetOptions takes input from @ARGV only
+
+    my %cmdline;
+
+    my $validOptions = GetOptions(\%cmdline,
+                                  "buildtools=s",
+                                  "arch=s",
+                                  "pkgdir=s",
+        );
+
+    if (!$validOptions) {
+        print(STDERR "Invalid option syntax.\n");
+        exit(1);
+    }
+    if (@ARGV > 0) {
+        print(STDERR "This program takes no non-option arguments.  " .
+              "You specified ",
+              scalar(@ARGV), "\n");
+        exit(1);
+    } 
+
+    return(\%cmdline);
+}
+
+
+
+sub writeFile($$$$) {
+    my ($fileLinesR, $fileName, $executable, $errorR) = @_;
+
+    my $success = open(FILE, ">$fileName");
+    if ($success) {
+        if ($executable eq 'EXECUTABLE') {
+            chmod(0755, $fileName);
+        } else {
+            chmod(0644, $fileName);
+        }
+        foreach (@{$fileLinesR}) { print FILE; }
+        close(FILE);
+    } else {
+        $$errorR = "Unable to open the file " .
+            "'$fileName' for writing.  Errno=$ERRNO\n";
+    }
+}
+
+
+
+sub netpbmVersion($) {
+    my ($pkgdir) = @_;
+
+    my $versionFileName = "$pkgdir/VERSION";
+
+    my $versionOpened = open(VERSION, "<$versionFileName");
+
+    my $retval;
+    my $error;
+
+    if (!$versionOpened) {
+        $error = "Unable to open '$versionFileName' for reading.  " .
+            "Errno=$ERRNO\n";
+    } else {
+        my $version = <VERSION>;
+        chomp($version);
+
+        if ($version =~ m{^Netpbm (\S*)}) {
+            my ($versionNumber) = ($1);
+            $retval = $versionNumber;
+        } else {
+            die("Can't understand format of '$versionFileName': '$version'");
+        }
+        close(VERSION);
+    }
+
+    if ($error) {
+        print("Failed to determine the version of Netpbm from the package, "
+              . "so that will not be correct in netpbm.config and netpbm.pc.  "
+              . $error . "\n");
+        $retval = "???";
+    }
+    return $retval;
+}
+
+
+
+sub control($$) {
+    my ($release, $architecture) = @_;
+
+# The Debian packaging system doesn't provide a way to express Netpbm's actual
+# prerequisites.  For example, Netpbm needs Version 6.2 or better of Libjpeg,
+# but there is no way to state that here.  Instead, we state Libjpeg 8.
+# This makes the Netpbm package less useful.
+
+    my %control;
+
+    my $debianNativeNetpbm = 
+        'netpbm, ' .
+        'libnetpbm10, ' .
+        'libnetpbm10-dev, ' .
+        'netpbm-dev, ' .
+        'netpbm-nonfree, ' .
+        'pbmwbmp, ' .
+        'pnmtopng, ' .
+        'ucbmpeg';
+
+    $control{'Package'} = 'netpbm-sf';
+    $control{'Version'} = $release;
+    $control{'Architecture'} = $architecture;
+    $control{'Maintainer'} = 'Bryan Henderson <bryanh@giraffe-data.com>';
+    $control{'Installed-Size'} = '6164';
+    $control{'Depends'} =
+        'libc6, ' .
+        'libjpeg62, ' .
+        'libpng12-0, ' .
+        'libsvga1, ' .
+        'libtiff4, ' .
+        'libx11-6, ' .
+        'libxml2, ' .
+        'zlib1g, ' .
+        'ghostscript, ' .
+        'perl, ' .
+        'perl-base, ' .
+        'bash'
+        ;
+    $control{'Recommends'} = '';
+    $control{'Recommends'} = '';
+    $control{'Conflicts'} = $debianNativeNetpbm;
+    $control{'Replaces'} = $debianNativeNetpbm;
+    $control{'Provides'} = 
+        'netpbm, ' .
+        'pbmwbmp, ' .
+        'pnmtopng, ' .
+        'netpbm-dev, ' .
+        'libnetpbm10'
+        ;
+    $control{'Section'} = 'graphics';
+    $control{'Priority'} = 'optional';
+    $control{'Section'} = 'graphics';
+    $control{'Description'} = 'Graphics conversion tools between image formats
+ Netpbm is a toolkit for manipulation of graphic images, including
+ conversion of images between a variety of different formats. There
+ are over 300 separate tools in the package including converters for
+ more than 80 graphics formats.  This is the Super Stable version from
+ the Sourceforge Netpbm project, unmodified.';
+
+    return \%control;
+}
+
+
+
+sub writeControlFile($$) {
+    my ($controlR, $fileName) = @_;
+
+    open(CTL, '>', $fileName)
+        or die "Can't open '$fileName': $ERRNO";
+
+    while (my ($key, $value) = each %{$controlR}) {
+        print CTL ("$key: $value\n");
+    }
+    
+    close(CTL);
+}
+
+
+
+sub createScripts($$) {
+    my ($dpkgDirName, $buildToolsDir) = @_;
+
+    my @scriptList = ('postinst', 'postrm');
+
+    my @scriptFileList = map("$buildToolsDir/debian/$_", @scriptList);
+
+    system('cp', @scriptFileList, "$dpkgDirName/DEBIAN/") &&
+        die("Failed to copy postinst, etc. to '$dpkgDirName/DEBIAN'.");
+
+    my @createdFileList = map("$dpkgDirName/DEBIAN/$_", @scriptList);
+
+    chmod(0755, @createdFileList);
+}
+
+
+
+sub createDirOrDie($) {
+    my ($newDirName) = @_;
+
+    mkdir($newDirName)
+        or die("Couldn't create directory '$newDirName'.  $ERRNO");
+
+    chmod(0755, $newDirName);
+}
+
+
+
+sub 
+processTemplate($$$) {
+    my ($templateR, $infoR, $outputR) = @_;
+
+    my @output;
+
+    foreach (@{$templateR}) {
+        if (m{^@}) {
+            # Comment -- ignore it.
+        } else {
+            if (defined($infoR->{VERSION})) {
+                s/\@VERSION\@/$infoR->{VERSION}/;
+            }
+            if (defined($infoR->{BINDIR})) {
+                s/\@BINDIR@/$infoR->{BINDIR}/;
+            }
+            if (defined($infoR->{LIBDIR})) {
+                s/\@LIBDIR@/$infoR-.{LIBDIR}/;
+            }
+            if (defined($infoR->{LINKDIR})) {
+                s/\@LINKDIR@/$infoR->{LINKDIR}/;
+            }
+            if (defined($infoR->{DATADIR})) {
+                s/\@DATADIR@/$infoR->{DATADIR}/;
+            }
+            if (defined($infoR->{INCLUDEDIR})) {
+                s/\@INCLUDEDIR@/$infoR->{INCLUDEDIR}/;
+            }
+            if (defined($infoR->{MANDIR})) {
+                s/\@MANDIR@/$infoR->{MANDIR}/;
+            }
+            push(@output, $_);
+        }
+    }
+    $$outputR = \@output;
+}
+
+
+
+
+
+sub makeConfig($$$) {
+    my ($fileName, $templateSubsR, $netpbmPkgDir) = @_;
+#-----------------------------------------------------------------------------
+# Install 'netpbm-config' -- a program you run to tell you things about
+# how Netpbm is installed.
+#-----------------------------------------------------------------------------
+    my $error;
+
+    my $configTemplateFilename = $netpbmPkgDir . "/config_template";
+
+    my $templateOpened = open(TEMPLATE, "<$configTemplateFilename");
+    if (!$templateOpened) {
+        $error = "Can't open template file '$configTemplateFilename'.\n";
+    } else {
+        my @template = <TEMPLATE>;
+
+        close(TEMPLATE);
+
+        processTemplate(\@template, $templateSubsR, \my $fileContentsR);
+
+        writeFile($fileContentsR, $fileName, 'EXECUTABLE', \$error);
+    }
+    if ($error) {
+        print(STDERR "Failed to create the Netpbm configuration program.  " .
+              "$error\n");
+    }
+}
+
+
+
+sub makePkgConfig($$$) {
+    my ($fileName, $templateSubsR, $netpbmPkgDir) = @_;
+#-----------------------------------------------------------------------------
+# Install a pkg-config file (netpbm.pc) - used by the 'pkg-config' program to
+# find out various things about how Netpbm is installed.
+#-----------------------------------------------------------------------------
+    my $error;
+
+    my $pcTemplateFilename = "$netpbmPkgDir/pkgconfig_template";
+
+    my $templateOpened = open(TEMPLATE, "<$pcTemplateFilename");
+    if (!$templateOpened) {
+        $error = "Can't open template file '$pcTemplateFilename'.\n";
+    } else {
+        my @template = <TEMPLATE>;
+
+        close(TEMPLATE);
+
+        processTemplate(\@template, $templateSubsR,
+                        \my $fileContentsR);
+
+        writeFile($fileContentsR, $fileName, 'NOTEXECUTABLE', \$error);
+    }
+    if ($error) {
+        print(STDERR "Failed to create the Netpbm Pkg-config file.  " .
+              "$error\n");
+    }
+}
+
+
+
+sub makeManweb($$) {
+    my ($dpkgDirName, $netpbmPkgDir) = @_;
+#-----------------------------------------------------------------------------
+#  Set up things so one can read the manual with e.g.
+#
+#    $ manweb pnmtojpeg
+#-----------------------------------------------------------------------------
+    my @manwebConfContents;
+
+    push(@manwebConfContents, "#Configuration file for Manweb\n");
+    push(@manwebConfContents, "webdir=/usr/man/web\n");
+
+    createDirOrDie("$dpkgDirName/etc");
+
+    my $manwebConfFileName = "$dpkgDirName/etc/manweb.conf";
+
+    writeFile(\@manwebConfContents, $manwebConfFileName,
+        'NOTEXECUTABLE', \my $error);
+
+    if ($error) {
+        die("Failed to create Manweb configuration file $manwebConfFileName");
+    }
+    createDirOrDie("$dpkgDirName/usr/man");
+
+    system('cp', '--archive',
+           "$netpbmPkgDir/man/web", "$dpkgDirName/usr/man/web") &&
+               die("Failed to copy executables from '$netpbmPkgDir/bin' " .
+                   "to '$dpkgDirName/usr/bin'");
+}
+
+
+
+sub buildDpkgBuildTree($$$$$) {
+    my ($dpkgDirName, $release, $netpbmPkgDir, $architecture,
+        $buildToolsDir) = @_;
+#-----------------------------------------------------------------------------
+#  Create the directory tree that is the input to Dpkg-deb --build.
+#  This tree contains all the files to be installed, _plus_ the control
+#  subdirectory named DEBIAN.
+#-----------------------------------------------------------------------------
+    print("Creating file tree for input to dpkg-deb --build as " .
+          "'$dpkgDirName'\n");
+
+    createDirOrDie($dpkgDirName);
+
+    createDirOrDie("$dpkgDirName/DEBIAN");
+
+    my $controlR = control($release, $architecture);
+
+    writeControlFile($controlR, "$dpkgDirName/DEBIAN/control");
+
+    createScripts($dpkgDirName, $buildToolsDir);
+
+    createDirOrDie("$dpkgDirName/usr");
+
+    system('cp', '--archive',
+           "$netpbmPkgDir/bin", "$dpkgDirName/usr/bin") &&
+               die("Failed to copy executables from '$netpbmPkgDir/bin' " .
+                   "to '$dpkgDirName/usr/bin'");
+
+    # doc.url is inappropriate with the program installed into the global
+    # /usr/bin .
+    unlink("$dpkgDirName/usr/bin/doc.url");
+
+    system("cp", "--archive", "$netpbmPkgDir/include",
+           "$dpkgDirName/usr/include") &&
+               die("Failed to copy header files from " .
+                   "'$netpbmPkgDir/include' " .
+                   "to '$dpkgDirName/usr/include'");
+
+    system("cp", "--archive",
+           "$netpbmPkgDir/lib", "$dpkgDirName/usr/lib") &&
+               die("Failed to copy libraries from '$netpbmPkgDir/lib' " .
+                   "to '$dpkgDirName/usr/lib'");
+
+    my @linkFileList = glob("$netpbmPkgDir/link/*");
+
+    if (@linkFileList > 0) {
+        system("cp", "--archive",
+               @linkFileList, "$dpkgDirName/usr/lib/") &&
+                   die("Failed to copy libraries from '$netpbmPkgDir/link' " .
+                       "to '$dpkgDirName/usr/lib'");
+    }
+    createDirOrDie("$dpkgDirName/usr/share");
+
+    system("cp", "--archive",
+           "$netpbmPkgDir/misc", "$dpkgDirName/usr/share/netpbm") &&
+               die("Failed to copy files from '$netpbmPkgDir/misc' " .
+                   "to '$dpkgDirName/usr/share/netpbm'");
+
+    # We install Netpbm in the default search path, so most of the values
+    # 'netpbm-config' returns are null strings.
+    my $templateSubsR =
+    {VERSION    => $release,
+     BINDIR     => '',
+     LIBDIR     => '',
+     LINKDIR    => '',
+     DATADIR    => '/usr/share/netpbm',
+     INCLUDEDIR => '',
+     MANDIR     => ''};
+
+    makeConfig("$dpkgDirName/usr/bin/netpbm-config", $templateSubsR,
+               $netpbmPkgDir);
+
+    createDirOrDie("$dpkgDirName/usr/lib/pkgconfig");
+
+    makePkgConfig("$dpkgDirName/usr/lib/pkgconfig/netpbm.pc", $templateSubsR,
+                  $netpbmPkgDir);
+
+    makeManweb($dpkgDirName, $netpbmPkgDir);
+}
+
+
+
+sub debianArchOfThisMachine() {
+
+    # A lazy implementation that handles only the most common cases
+
+    my $retval;
+
+    my $arch = qx{'arch'};
+    chomp($arch);
+
+    if ($arch eq 'x86_64') {
+        $retval = 'amd64';
+    } elsif ($arch =~ m{i.86}) {
+        $retval = 'i386';
+    } else {
+        die("Can't determine the Debian architecture classification of this " .
+            "system.  You'll have to give a -arch option");
+    }
+    return $retval;
+}
+
+
+
+sub buildToolsDir($) {
+    my ($cmdlineR) = @_;
+
+    my $retval;
+
+    if (exists($cmdlineR->{'buildtools'})) {
+        $retval = $cmdlineR->{'buildtools'};
+    } else {
+        if (-f('./debian/mkdeb')) {
+            $retval = '.';
+        } else {
+            die("The current directory does not appear to be 'buildtools' " .
+                "subdirectory of a Netpbm source tree, so you will have " .
+                "to use the -buildtools option to identify it");
+        }
+    }
+    return $retval;
+}
+
+
+
+sub netpbmPkgDir($) {
+    my ($cmdlineR) = @_;
+
+    my $retval;
+
+    if (exists($cmdlineR->{'pkgdir'})) {
+        $retval = $cmdlineR->{'pkgdir'};
+    } else {
+        my $tmpdir = $ENV{TMPDIR} || "/tmp";
+
+        my $defaultPkgDir = "$tmpdir/netpbm";
+
+        if (-d($defaultPkgDir)) {
+            $retval = $defaultPkgDir;
+        } else {
+            die("No directory '$defaultPkgDir' exists.  " .
+                "You can specify the Netpbm package directory " .
+                "(what 'make package' created), with a -pkgdir option");
+        }
+    }
+    return $retval;
+}
+
+
+
+sub arch($) {
+    my ($cmdlineR) = @_;
+
+    my $retval;
+
+    if (exists($cmdlineR->{'arch'})) {
+        $retval = $cmdlineR->{'arch'};
+    } else {
+        $retval = debianArchOfThisMachine();
+    }
+
+    return $retval;
+}
+
+
+
+###############################################################################
+#                               MAIN PROGRAM
+###############################################################################
+
+my $cmdlineR = parseCommandLine(@ARGV);
+
+my $buildTools = buildToolsDir($cmdlineR);
+
+my $netpbmPkgDir = netpbmPkgDir($cmdlineR);
+
+my $arch = arch($cmdlineR);
+
+my $release = netpbmVersion($netpbmPkgDir);
+
+my $dpkgDirName = "/tmp/netpbm-sf-$release";
+ 
+buildDpkgBuildTree($dpkgDirName, $release, $netpbmPkgDir, $arch,
+                   $buildTools);
+
+my $debFileName = 'netpbm-sf-' . $release . '_' . $arch . '.deb';
+
+system('dpkg-deb', '--build', $dpkgDirName, $debFileName) &&
+    die("dpgk-deb --build with input '$dpkgDirName' failed.");
+
+system('rm', '--recursive', $dpkgDirName);

@@ -3,6 +3,7 @@
    Copyright information is in the file COPYRIGHT
 */
 
+#define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 #define _BSD_SOURCE  /* Make sure strdup() is in <string.h> */
 #include <signal.h>
 #include <unistd.h>
@@ -65,7 +66,7 @@ parseCommandLine(int argc,
    was passed to us as the argv array.  We also trash *argv.
 --------------------------------------------------------------------------*/
     optEntry *option_def;
-        /* Instructions to optParseOptions3 on how to parse our options. */
+        /* Instructions to pm_optParseOptions3 on how to parse our options. */
     optStruct3 opt;
   
     unsigned int option_def_index;
@@ -110,7 +111,7 @@ parseCommandLine(int argc,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;   /* We have no parms that are negative numbers */
     
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (geometrySpec) {
@@ -360,7 +361,7 @@ main(int     argc,
     destroyViewer(viewerP);
 
     if (title)
-        strfree(title);
+        pm_strfree(title);
 
     XCloseDisplay(dispP);
 

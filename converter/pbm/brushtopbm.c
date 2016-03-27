@@ -1,4 +1,4 @@
-/* brushtopbm.c - read a doodle brush file and write a portable bitmap
+/* brushtopbm.c - read a doodle brush file and write a PBM image
 **
 ** Copyright (C) 1988 by Jef Poskanzer.
 **
@@ -12,96 +12,96 @@
 
 #include "pbm.h"
 
-static void getinit ARGS(( FILE* file, int* colsP, int* rowsP ));
-static bit getbit ARGS(( FILE* file ));
-
-int
-main( argc, argv )
-    int argc;
-    char* argv[];
-    {
-    FILE* ifp;
-    bit* bitrow;
-    register bit* bP;
-    int rows, cols, padright, row, col;
+#define HEADERSIZE 16   /* 16 is just a guess at the header size */
 
 
-    pbm_init( &argc, argv );
-
-    if ( argc > 2 )
-	pm_usage( "[brushfile]" );
-
-    if ( argc == 2 )
-	ifp = pm_openr( argv[1] );
-    else
-	ifp = stdin;
-
-    getinit( ifp, &cols, &rows );
-
-    pbm_writepbminit( stdout, cols, rows, 0 );
-    bitrow = pbm_allocrow( cols );
-
-    /* Compute padding to round cols up to the next multiple of 16. */
-    padright = ( ( cols + 15 ) / 16 ) * 16 - cols;
-
-    for ( row = 0; row < rows; ++row )
-	{
-	/* Get data. */
-        for ( col = 0, bP = bitrow; col < cols; ++col, ++bP )
-	    *bP = getbit( ifp );
-	/* Discard line padding. */
-        for ( col = 0; col < padright; ++col )
-	    (void) getbit( ifp );
-	/* Write row. */
-	pbm_writepbmrow( stdout, bitrow, cols, 0 );
-	}
-
-    pm_close( ifp );
-    pm_close( stdout );
-    
-    exit( 0 );
-    }
-
-
-static int item, bitsperitem, bitshift;
 
 static void
-getinit( file, colsP, rowsP )
-    FILE* file;
-    int* colsP;
-    int* rowsP;
-    {
-    int i;
+getinit(FILE *         const ifP,
+        unsigned int * const colsP,
+        unsigned int * const rowsP) {
 
-    if ( getc( file ) != 1 )
-	pm_error( "bad magic number 1" );
-    if ( getc( file ) != 0 )
-	pm_error( "bad magic number 2" );
-    *colsP = getc( file ) << 8;
-    *colsP += getc( file );
-    *rowsP = getc( file ) << 8;
-    *rowsP += getc( file );
-    bitsperitem = 8;
+    unsigned char header[HEADERSIZE];
+    size_t bytesRead;
 
-    /* Junk rest of header. */
-    for ( i = 0; i < 10; ++i )  /* 10 is just a guess at the header size */
-	(void) getc( file );
+    bytesRead = fread(header, sizeof(header), 1, ifP);
+    if (bytesRead !=1)
+        pm_error("Error reading header");   
+
+    if (header[0] != 1)
+        pm_error("bad magic number 1");
+    if (header[1] != 0)
+        pm_error("bad magic number 2");
+
+    *colsP =  (header[2] << 8) + header[3];  /* Max 65535 */
+    *rowsP =  (header[4] << 8) + header[5];  /* Max 65535 */
+}
+
+
+
+static void
+validateEof(FILE * const ifP) {
+
+    int rc;
+    rc = getc(ifP);
+    if (rc != EOF)
+        pm_message("Extraneous data at end of file");
+}
+
+
+/*
+   The routine for converting the raster closely resembles the pbm
+   case of pnminvert.  Input is padded up to 16 bit border.
+   afu December 2013
+ */
+
+
+
+int
+main(int argc, const char ** argv)  {
+
+    FILE * ifP;
+    bit * bitrow;
+    unsigned int rows, cols, row;
+
+    pm_proginit(&argc, argv);
+
+    if (argc-1 > 0) {
+        ifP = pm_openr(argv[1]);
+        if (argc-1 > 1)
+            pm_error("Too many arguments (%u).  "
+                     "The only argument is the brush file name.", argc-1);
+    } else
+        ifP = stdin;
+
+    getinit(ifP, &cols, &rows);
+
+    pbm_writepbminit(stdout, cols, rows, 0);
+
+    bitrow = pbm_allocrow_packed(cols + 16);
+
+    for (row = 0; row < rows; ++row) {
+        unsigned int const inRowBytes = ((cols + 15) / 16) * 2;
+        unsigned int i;
+        size_t bytesRead;
+
+        bytesRead = fread (bitrow, 1, inRowBytes, ifP); 
+        if (bytesRead != inRowBytes)
+            pm_error("Error reading a row of data from brushfile");
+
+        for (i = 0; i < inRowBytes; ++i)
+            bitrow[i] = ~bitrow[i];
+
+        /* Clean off remainder of fractional last character */
+        pbm_cleanrowend_packed(bitrow, cols);
+
+        pbm_writepbmrow_packed(stdout, bitrow, cols, 0);
     }
 
-static bit
-getbit( file )
-    FILE* file;
-    {
-    bit b;
+    validateEof(ifP);
 
-    if ( bitsperitem == 8 )
-	{
-	item = getc( file );
-	bitsperitem = 0;
-	bitshift = 7;
-	}
-    ++bitsperitem;
-    b = ( ( item >> bitshift) & 1 ) ? PBM_WHITE : PBM_BLACK;
-    --bitshift;
-    return b;
-    }
+    pm_close(ifP);
+    pm_close(stdout);
+    
+    return 0;
+}

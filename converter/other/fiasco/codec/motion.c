@@ -17,11 +17,9 @@
 
 #include "config.h"
 
-#if HAVE_STRING_H
-#	include <string.h>
-#else /* not HAVE_STRING_H */
-#	include <strings.h>
-#endif /* not HAVE_STRING_H */
+#include <string.h>
+
+#include "pm_c_util.h"
 
 #include "types.h"
 #include "macros.h"
@@ -54,10 +52,10 @@ restore_mc (int enlarge_factor, image_t *image, const image_t *past,
 
 #define FX(v) ((image->format == FORMAT_4_2_0) && band != Y ? ((v) / 2) : v)
    
-   mcblock1 = Calloc (size_of_level (max ((int) wfa->wfainfo->p_max_level
+   mcblock1 = Calloc (size_of_level (MAX((int) wfa->wfainfo->p_max_level
 					  + 2 * enlarge_factor, 0)),
 		      sizeof (word_t));
-   mcblock2 = Calloc (size_of_level (max ((int) wfa->wfainfo->p_max_level
+   mcblock2 = Calloc (size_of_level (MAX((int) wfa->wfainfo->p_max_level
 					  + 2 * enlarge_factor, 0)),
 		      sizeof (word_t));
 

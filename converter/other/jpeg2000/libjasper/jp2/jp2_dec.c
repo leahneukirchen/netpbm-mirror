@@ -297,9 +297,9 @@ jas_image_t *jp2_decode(jas_stream_t *in, char *optstr)
 		jas_eprintf("warning: component data type mismatch\n");
 	}
 
-	/* Is the compression type supported? */
+	/* Can we handle the compression type? */
 	if (dec->ihdr->data.ihdr.comptype != JP2_IHDR_COMPTYPE) {
-		jas_eprintf("error: unsupported compression type\n");
+		jas_eprintf("error: not capable of this compression type\n");
 		goto error;
 	}
 
@@ -340,7 +340,8 @@ jas_image_t *jp2_decode(jas_stream_t *in, char *optstr)
 		iccp = dec->colr->data.colr.iccp;
 		cs = (iccp[16] << 24) | (iccp[17] << 16) | (iccp[18] << 8) |
 		  iccp[19];
-		jas_eprintf("ICC Profile CS %08x\n", cs);
+        if (jas_getdbglevel() > 1)
+            jas_eprintf("ICC Profile CS %08x\n", cs);
 		jas_image_setcolorspace(dec->image, fromiccpcs(cs));
 		break;
 	}
@@ -454,7 +455,6 @@ jas_image_t *jp2_decode(jas_stream_t *in, char *optstr)
 		jas_eprintf("error: no components\n");
 		goto error;
 	}
-fprintf(stderr, "no of components is %d\n", jas_image_numcmpts(dec->image));
 
 	/* Prevent the image from being destroyed later. */
 	image = dec->image;

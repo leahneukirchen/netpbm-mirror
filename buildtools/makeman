@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/usr/bin/python
 #
 # makeman -- compile netpbm's stereotyped HTML to troff markup
 #
@@ -51,9 +51,7 @@ def makeman(name, file, indoc):
     # Protect escapes before we try generating font changes.
     indoc = indoc.replace("\\", r"\e")
     # Header-bashing
-    indoc = indoc.replace('<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "DTD/xhtml11.dtd">', "")
-    indoc = indoc.replace('<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">', "")
-    indoc = indoc.replace('<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">\n',"")
+    indoc = re.sub('(?i)<!DOCTYPE html[^>]*>', "", indoc)
     indoc = indoc.replace('<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">', "")
     indoc = indoc.replace('<meta http-equiv="Content-Type" content="text/html; charset=us-ascii"/>', "")
     indoc = indoc.replace('<?xml version="1.1" encoding="iso-8859-1" ?>\n',"")
@@ -121,7 +119,10 @@ def makeman(name, file, indoc):
     indoc = re.sub("(?i)</SUP>", r"\\d", indoc)
     # Paragraph handling
     indoc = re.sub("(?i)\n*<P>\n*", r"\n.PP\n", indoc)
+    indoc = re.sub("(?i)<br */>", r"\n.PP\n", indoc)
     indoc = re.sub("(?i)</P>", "", indoc)
+    indoc = re.sub("(?i)<!--[^>]*-->", "", indoc)
+    indoc = re.sub("(?i)<meta[^>]*>", "", indoc)
     lines = indoc.split("\n")
     listdepth = 0
     for i in range(len(lines)):
@@ -138,13 +139,14 @@ def makeman(name, file, indoc):
     indoc = re.sub('(?i)<A[ \n]+HREF="mailto:[^>]+">([^<]+)</A>', r'\\fI\1\\fP', indoc)    
     # Format manual crossreferences
     def xrefmatch(match):
-        xrefto = match.group(1)
-        xrefsection = sectmap.get(xrefto, 1)
+        xrefto = match.group(2)
+        xrefurl = match.group(1)
+        xrefsection = sectmap.get(xrefurl, 1)
         if xrefsection == 0:
             return "\n.I " + xrefto
         else:
-            return "\n.BR %s (%d)" % (xrefto, xrefsection)
-    indoc = re.sub(r'(?i)\n* *(?:\\fB)?<A[ \n]+HREF="[^>]+.html">([^<]+)</A>(?:\\fP)?',
+            return "\n.BR %s (%d)\n" % (xrefto, xrefsection)
+    indoc = re.sub(r'(?i)\n* *(?:\\fB)?<A[ \n]+HREF="?([^>]+.html)"?>([^<]+)</A>(?:\\fP)?',
                    xrefmatch, indoc)
     # Format URLs
     def urlmatch(match):
@@ -159,7 +161,7 @@ def makeman(name, file, indoc):
     indoc = indoc.replace("&#174;", r"\*R")
     indoc = indoc.replace("&copy;", r"\(co")
     # Turn anchors into .UN tags
-    indoc = re.sub('(?i)<A NAME *= *"#?([a-zA-Z][a-zA-Z0-9.-]+)">(?:&nbsp;)*</A>\s*', ".UN \\1\n", indoc)
+    indoc = re.sub('(?i)<A NAME *= *"#?([a-zA-Z_][a-zA-Z_0-9.-]+)">(?:&nbsp;)*</A>\s*', ".UN \\1\n", indoc)
     # Strip off the index trailer
     trailer = re.compile('<HR */*>.*', re.DOTALL | re.IGNORECASE)
     indoc = re.sub(trailer, "", indoc)

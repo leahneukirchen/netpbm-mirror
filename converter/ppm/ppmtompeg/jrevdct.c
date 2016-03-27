@@ -28,7 +28,6 @@
 
 #include <memory.h>
 #include "all.h"
-#include "ansi.h"
 #include "dct.h"
 
 
@@ -162,9 +161,9 @@ ones here or successive P-frames will drift too much with Reference frame coding
 /*
   Switch on reverse_dct choices
 */
-void reference_rev_dct _ANSI_ARGS_((int16 *block));
-void mpeg_jrevdct_quick _ANSI_ARGS_((int16 *block));
-void init_idctref _ANSI_ARGS_((void));
+void reference_rev_dct (int16 *block);
+void mpeg_jrevdct_quick (int16 *block);
+void init_idctref (void);
 
 extern boolean pureDCT;
 
@@ -199,7 +198,7 @@ mpeg_jrevdct_quick(data)
   dataptr = data;
 
   for (rowctr = DCTSIZE-1; rowctr >= 0; rowctr--) {
-    /* Due to quantization, we will usually find that many of the input
+    /* Because of quantization, we will usually find that many of the input
      * coefficients are zero, especially the AC terms.  We can exploit this
      * by short-circuiting the IDCT calculation for any row in which all
      * the AC terms are zero.  In that case each output is equal to the

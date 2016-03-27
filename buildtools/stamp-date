@@ -9,7 +9,7 @@
 # documentation.  This software is provided "as is" without express or
 # implied warranty.
 #
-DATE=`date`
+DATE=$(date)
 LOGNAME_OR_UNKNOWN=${LOGNAME:-UNKNOWN}
 USER=${USER:-$LOGNAME_OR_UNKNOWN}
 if [ "$USER" = "UNKNOWN" ]; then

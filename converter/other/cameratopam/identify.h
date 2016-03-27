@@ -1,4 +1,4 @@
-typedef void (*loadRawFn)();
+#include "camera.h"
 
 int
 identify(FILE *       const ifp,
@@ -8,4 +8,4 @@ identify(FILE *       const ifp,
          float        const blue_scale,
          unsigned int const four_color_rgb,
          const char * const inputFileName,
-         loadRawFn *  const loadRawFnP);
+         LoadRawFn ** const loadRawFnP);

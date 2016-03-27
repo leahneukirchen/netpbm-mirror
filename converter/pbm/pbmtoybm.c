@@ -9,100 +9,89 @@
 ** copyright notice and this permission notice appear in supporting
 ** documentation.  This software is provided "as is" without express or
 ** implied warranty.
+**
+** Feb 2010 afu
+** Added dimension check to prevent short int from overflowing
+** Changed code style (ANSI-style function definitions, etc.)
 */
 
 #include <stdio.h>
+
+#include "pm.h"
 #include "pbm.h"
+#include "bitreverse.h"
 
 #define YBM_MAGIC  ( ( '!' << 8 ) | '!' )
+#define INT16MAX 32767
 
-static void putinit ARGS(( int cols, int rows ));
-static void putbit ARGS(( bit b ));
-static void putrest ARGS(( void ));
-static void putitem ARGS(( void ));
+static void
+putinit(int const cols,
+        int const rows) {
+
+    pm_writebigshort(stdout, YBM_MAGIC);
+    pm_writebigshort(stdout, cols);
+    pm_writebigshort(stdout, rows);
+}
+
+
 
 int
-main( argc, argv )
-    int argc;
-    char* argv[];
-    {
-    FILE* ifp;
-    bit* bitrow;
-    register bit* bP;
-    int rows, cols, format, padright, row, col;
+main(int argc, const char *argv[]) {
 
+    FILE * ifP;
+    bit * bitrow;
+    int rows;
+    int cols;
+    int format;
+    unsigned int row;
+    const char * inputFileName;
 
-    pbm_init( &argc, argv );
+    pm_proginit(&argc, argv);
 
-    if ( argc > 2 )
-	pm_usage( "[pbmfile]" );
-    if ( argc == 2 )
-	ifp = pm_openr( argv[1] );
-    else
-	ifp = stdin;
+    if (argc-1 < 1)
+        inputFileName = "-";
+    else {
+        inputFileName = argv[1];
 
-    pbm_readpbminit( ifp, &cols, &rows, &format );
-    bitrow = pbm_allocrow( cols );
+        if (argc-1 > 1)
+            pm_error("Too many arguments.  The only argument is the optional "
+                     "input file name");
+    }
+
+    ifP = pm_openr(inputFileName);
+
+    pbm_readpbminit(ifP, &cols, &rows, &format);
+
+    if (rows > INT16MAX || cols > INT16MAX)
+        pm_error("Input image is too large.");
+
+    bitrow = pbm_allocrow_packed(cols + 8);
     
-    /* Compute padding to round cols up to the nearest multiple of 16. */
-    padright = ( ( cols + 15 ) / 16 ) * 16 - cols;
+    putinit(cols, rows);
 
-    putinit( cols, rows );
-    for ( row = 0; row < rows; ++row )
-	{
-	pbm_readpbmrow( ifp, bitrow, cols, format );
-        for ( col = 0, bP = bitrow; col < cols; ++col, ++bP )
-	    putbit( *bP );
-	for ( col = 0; col < padright; ++col )
-	    putbit( 0 );
-        }
+    bitrow[pbm_packed_bytes(cols + 8) - 1] = 0x00;
+    for (row = 0; row < rows; ++row) {
+        uint16_t *   const itemrow = (uint16_t *) bitrow;
+        unsigned int const itemCt   = (cols + 15) / 16;
 
-    if ( ifp != stdin )
-	fclose( ifp );
+        unsigned int i;
 
-    putrest( );
+        pbm_readpbmrow_packed(ifP, bitrow, cols, format);
+        pbm_cleanrowend_packed(bitrow, cols);
 
-    exit( 0 );
+        for (i = 0; i < pbm_packed_bytes(cols); ++i)
+            bitrow[i] = bitreverse[bitrow[i]];
+
+        for (i = 0; i < itemCt; ++i)
+            pm_writebigshort(stdout, itemrow[i]);
     }
 
-static long item;
-static int bitsperitem, bitshift;
+    pbm_freerow_packed(bitrow);
 
-static void
-putinit( cols, rows )
-    int cols, rows;
-    {
-    pm_writebigshort( stdout, YBM_MAGIC );
-    pm_writebigshort( stdout, cols );
-    pm_writebigshort( stdout, rows );
-    item = 0;
-    bitsperitem = 0;
-    bitshift = 0;
-    }
+    if (ifP != stdin)
+        fclose(ifP);
 
-static void
-putbit( bit b )
-    {
-    if ( bitsperitem == 16 )
-	putitem( );
-    ++bitsperitem;
-    if ( b == PBM_BLACK )
-	item += 1 << bitshift;
-    ++bitshift;
-    }
+    return 0;
+}
 
-static void
-putrest( )
-    {
-    if ( bitsperitem > 0 )
-	putitem( );
-    }
 
-static void
-putitem( )
-    {
-    pm_writebigshort( stdout, item );
-    item = 0;
-    bitsperitem = 0;
-    bitshift = 0;
-    }

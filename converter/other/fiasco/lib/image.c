@@ -18,6 +18,8 @@
 
 #include <string.h>
 
+#include "nstring.h"
+
 #include "types.h"
 #include "macros.h"
 #include "error.h"
@@ -239,7 +241,7 @@ alloc_image (unsigned width, unsigned height, bool_t color, format_e format)
    image->format      = format;
    image->reference_count = 1;
    
-   strcpy (image->id, "IFIASCO");
+   STRSCPY(image->id, "IFIASCO");
 
    for (band = first_band (color); band <= last_band (color); band++)
       if (format == FORMAT_4_2_0 && band != Y)
@@ -447,7 +449,7 @@ write_image (const char *image_name, const image_t *image)
    
    if (image->format == FORMAT_4_2_0)
    {
-      warning ("Writing of images in 4:2:0 format not supported.");
+      warning ("We cannot write images in 4:2:0 format.");
       return;
    }
    

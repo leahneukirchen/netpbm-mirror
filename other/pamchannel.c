@@ -14,14 +14,14 @@
 #include <string.h>
 
 #include "pm_c_util.h"
-#include "pam.h"
-#include "shhopt.h"
 #include "mallocvar.h"
+#include "shhopt.h"
+#include "pam.h"
 
 #define MAX_CHANNELS 16
     /* The most channels we allow user to specify */
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -36,14 +36,14 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
 -----------------------------------------------------------------------------*/
     optEntry *option_def;
-        /* Instructions to optParseOptions3 on how to parse our options.
+        /* Instructions to pm_optParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
     extern struct pam pam;  /* Just so we can look at field sizes */
@@ -63,7 +63,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (!infileSpec)
@@ -74,7 +74,8 @@ parseCommandLine(int argc, char ** argv,
     else
         if (strlen(cmdlineP->tupletype)+1 > sizeof(pam.tuple_type))
             pm_error("Tuple type name specified is too long.  Maximum of "
-                     "%u characters allowed.", sizeof(pam.tuple_type));
+                     "%u characters allowed.",
+                     (unsigned)sizeof(pam.tuple_type));
 
     cmdlineP->n_channel = 0;  /* initial value */
     { 
@@ -173,13 +174,13 @@ doOneImage(FILE *       const ifP,
 
 
 int
-main(int argc, char *argv[]) {
+main(int argc, const char *argv[]) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP;
-    bool eof;
+    int eof;
 
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
     

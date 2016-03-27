@@ -56,9 +56,6 @@
 /* Define if you have the strcasecmp function.  */
 #define HAVE_STRCASECMP 1
 
-/* Define if you have the strdup function.  */
-#define HAVE_STRDUP 1
-
 /* Define if you have the <X11/extensions/XShm.h> header file.  */
 /* #undef HAVE_X11_EXTENSIONS_XSHM_H */
 

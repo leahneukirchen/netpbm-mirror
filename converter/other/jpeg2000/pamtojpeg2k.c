@@ -9,9 +9,17 @@
 *****************************************************************************/
 
 #define _BSD_SOURCE 1    /* Make sure strdup() is in string.h */
-/* Make sure strdup() is in string.h and int_fast32_t is in inttypes.h */
-#define _XOPEN_SOURCE 600
+#define _XOPEN_SOURCE 500 /* Make sure strdup() is in string.h */
+    /* In 2014.09, this was _XOPEN_SOURCE 600, with a comment saying it was
+       necessary to make <inttypes.h> define int_fast32_t, etc. on AIX.
+       <jasper/jasper.h> does use int_fast32_t and does include <inttypes.h>,
+       but plenty of source files of libjasper do too, and they did not have
+       _XOPEN_SOURCE 600, so it would seem to be superfluous here too.
+    */
+
 #include <string.h>
+
+#include <jasper/jasper.h>
 
 #include "pm_c_util.h"
 #include "pam.h"
@@ -19,7 +27,6 @@
 #include "nstring.h"
 #include "mallocvar.h"
 
-#include <jasper/jasper.h>
 #include "libjasper_compat.h"
 
 
@@ -43,7 +50,8 @@ struct cmdlineInfo {
     unsigned int cblkwidth;
     unsigned int cblkheight;
     enum compmode compmode;
-    float        compressionRatio;
+    unsigned int compressionSpec;
+    float        compression;
     char *       ilyrrates;
     enum progression progression;
     unsigned int numrlvls;
@@ -81,7 +89,7 @@ parseCommandLine(int argc, char ** argv,
     unsigned int tilewidthSpec, tileheightSpec;
     unsigned int prcwidthSpec, prcheightSpec;
     unsigned int cblkwidthSpec, cblkheightSpec;
-    unsigned int modeSpec, compressionSpec, ilyrratesSpec;
+    unsigned int modeSpec, ilyrratesSpec;
     unsigned int progressionSpec, numrlvlsSpec, numgbitsSpec;
     unsigned int debuglevelSpec;
 
@@ -115,8 +123,8 @@ parseCommandLine(int argc, char ** argv,
             &cblkheightSpec,     0);
     OPTENT3(0, "mode",         OPT_STRING, &modeOpt,
             &modeSpec,           0);
-    OPTENT3(0, "compression",  OPT_FLOAT,  &cmdlineP->compressionRatio,
-            &compressionSpec,    0);
+    OPTENT3(0, "compression",  OPT_FLOAT,  &cmdlineP->compression,
+            &cmdlineP->compressionSpec,    0);
     OPTENT3(0, "ilyrrates",    OPT_STRING, &cmdlineP->ilyrrates,
             &ilyrratesSpec,      0);
     OPTENT3(0, "progression",  OPT_STRING, &progressionOpt,
@@ -152,7 +160,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
 
     if (!imgareatlxSpec)
         cmdlineP->imgareatlx = 0;
@@ -184,11 +192,6 @@ parseCommandLine(int argc, char ** argv,
                      "valid values are 'INTEGER' and 'REAL'", modeOpt);
     } else
         cmdlineP->compmode = COMPMODE_INTEGER;
-    if (compressionSpec) {
-        if (cmdlineP->compressionRatio < 1.0)
-            pm_error("Compression ratio less than 1 does not make sense.");
-    } else
-        cmdlineP->compressionRatio = 1.0;
     if (!ilyrratesSpec)
         cmdlineP->ilyrrates = (char*) "";
     if (progressionSpec) {
@@ -230,7 +233,10 @@ parseCommandLine(int argc, char ** argv,
 static void
 createJasperRaster(struct pam *  const inpamP, 
                    jas_image_t * const jasperP) {
-
+/*----------------------------------------------------------------------------
+   Create the raster in the *jasperP object, reading the raster from the
+   input file described by *inpamP, which is positioned to the raster.
+-----------------------------------------------------------------------------*/
     jas_matrix_t ** matrix;  /* malloc'ed */
         /* matrix[X] is the data for Plane X of the current row */
     unsigned int plane;
@@ -380,7 +386,7 @@ writeJpc(jas_image_t *      const jasperP,
        specifying garbage for the -ilyrrates option 
     */
     if (strlen(cmdline.ilyrrates) > 0)
-        asprintfN(&ilyrratesOpt, "ilyrrates=%s", cmdline.ilyrrates);
+        pm_asprintf(&ilyrratesOpt, "ilyrrates=%s", cmdline.ilyrrates);
     else
         ilyrratesOpt = strdup("");
 
@@ -394,55 +400,62 @@ writeJpc(jas_image_t *      const jasperP,
 
     /* Note that asprintfN() doesn't understand %f, but sprintf() does */
 
-    sprintf(rateOpt, "%1.9f", 1.0/cmdline.compressionRatio);
-
-    asprintfN(&options, 
-              "imgareatlx=%u "
-              "imgareatly=%u "
-              "tilegrdtlx=%u "
-              "tilegrdtly=%u "
-              "tilewidth=%u "
-              "tileheight=%u "
-              "prcwidth=%u "
-              "prcheight=%u "
-              "cblkwidth=%u "
-              "cblkheight=%u "
-              "mode=%s "
-              "rate=%s "
-              "%s "
-              "prg=%s "
-              "numrlvls=%u "
-              "numgbits=%u "
-              "%s %s %s %s %s %s %s %s %s",
-
-              cmdline.imgareatlx,
-              cmdline.imgareatly,
-              cmdline.tilegrdtlx,
-              cmdline.tilegrdtlx,
-              cmdline.tilewidth,
-              cmdline.tileheight,
-              cmdline.prcwidth,
-              cmdline.prcheight,
-              cmdline.cblkwidth,
-              cmdline.cblkheight,
-              cmdline.compmode == COMPMODE_INTEGER ? "int" : "real",
-              rateOpt,
-              ilyrratesOpt,
-              prgValue,
-              cmdline.numrlvls,
-              cmdline.numgbits,
-              cmdline.nomct     ? "nomct"     : "",
-              cmdline.sop       ? "sop"       : "",
-              cmdline.eph       ? "eph"       : "",
-              cmdline.lazy      ? "lazy"      : "",
-              cmdline.termall   ? "termall"   : "",
-              cmdline.segsym    ? "segsym"    : "",
-              cmdline.vcausal   ? "vcausal"   : "",
-              cmdline.pterm     ? "pterm"     : "",
-              cmdline.resetprob ? "resetprob" : ""
+    if (cmdline.compressionSpec)
+        sprintf(rateOpt, "rate=%1.9f", 1.0/cmdline.compression);
+    else {
+        /* No 'rate' option.  This means there is no constraint on the image
+           size, so the encoder will compress losslessly.  Note that the
+           image may get larger, because of metadata.
+        */
+        rateOpt[0] = '\0';
+    }
+    pm_asprintf(&options, 
+                "imgareatlx=%u "
+                "imgareatly=%u "
+                "tilegrdtlx=%u "
+                "tilegrdtly=%u "
+                "tilewidth=%u "
+                "tileheight=%u "
+                "prcwidth=%u "
+                "prcheight=%u "
+                "cblkwidth=%u "
+                "cblkheight=%u "
+                "mode=%s "
+                "%s "    /* rate */
+                "%s "    /* ilyrrates */
+                "prg=%s "
+                "numrlvls=%u "
+                "numgbits=%u "
+                "%s %s %s %s %s %s %s %s %s",
+                
+                cmdline.imgareatlx,
+                cmdline.imgareatly,
+                cmdline.tilegrdtlx,
+                cmdline.tilegrdtlx,
+                cmdline.tilewidth,
+                cmdline.tileheight,
+                cmdline.prcwidth,
+                cmdline.prcheight,
+                cmdline.cblkwidth,
+                cmdline.cblkheight,
+                cmdline.compmode == COMPMODE_INTEGER ? "int" : "real",
+                rateOpt,
+                ilyrratesOpt,
+                prgValue,
+                cmdline.numrlvls,
+                cmdline.numgbits,
+                cmdline.nomct     ? "nomct"     : "",
+                cmdline.sop       ? "sop"       : "",
+                cmdline.eph       ? "eph"       : "",
+                cmdline.lazy      ? "lazy"      : "",
+                cmdline.termall   ? "termall"   : "",
+                cmdline.segsym    ? "segsym"    : "",
+                cmdline.vcausal   ? "vcausal"   : "",
+                cmdline.pterm     ? "pterm"     : "",
+                cmdline.resetprob ? "resetprob" : ""
         );
-    strfree(ilyrratesOpt);
 
+    pm_strfree(ilyrratesOpt);
 
     /* Open the output image file (Standard Output) */
     outStreamP = jas_stream_fdopen(fileno(ofP), "w+b");
@@ -459,7 +472,7 @@ writeJpc(jas_image_t *      const jasperP,
 
         rc = jas_image_encode(jasperP, outStreamP, 
                               jas_image_strtofmt((char*)"jpc"), 
-                              (char*)options);
+                              (char *)options);
         if (rc != 0)
             pm_error("jas_image_encode() failed to encode the JPEG 2000 "
                      "image.  Rc=%d", rc);
@@ -478,7 +491,7 @@ writeJpc(jas_image_t *      const jasperP,
 
 	jas_image_clearfmts();
 
-    strfree(options);
+    pm_strfree(options);
 }
 
 
@@ -487,7 +500,7 @@ int
 main(int argc, char **argv)
 {
     struct cmdlineInfo cmdline;
-    FILE *ifP;
+    FILE * ifP;
     struct pam inpam;
     jas_image_t * jasperP;
 

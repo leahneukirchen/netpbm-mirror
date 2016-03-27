@@ -22,6 +22,7 @@ struct colorToGrayEntry {
 #define MAXCOLORS 255
 
 
+
 static gray
 newGrayValue(pixel *pix, struct colorToGrayEntry *colorToGrayMap, int colors) {
 
@@ -40,20 +41,34 @@ newGrayValue(pixel *pix, struct colorToGrayEntry *colorToGrayMap, int colors) {
 
 
 
-static int
-cmpColorToGrayEntryByIntensity(const void *entry1, const void *entry2) {
+#ifndef LITERAL_FN_DEF_MATCH
+static qsort_comparison_fn cmpColorToGrayEntryByIntensity;
+#endif
 
-    return ((struct colorToGrayEntry *) entry1)->gray -
-        ((struct colorToGrayEntry *) entry2)->gray;
+static int
+cmpColorToGrayEntryByIntensity(const void * const a,
+                               const void * const b) {
+
+    const struct colorToGrayEntry * const entry1P = a;
+    const struct colorToGrayEntry * const entry2P = b;
+
+    return entry1P->gray - entry2P->gray;
 }
 
 
 
-static int
-cmpColorToGrayEntryByFrequency(const void * entry1, const void * entry2) {
+#ifndef LITERAL_FN_DEF_MATCH
+static qsort_comparison_fn cmpColorToGrayEntryByFrequency;
+#endif
 
-    return ((struct colorToGrayEntry *) entry1)->frequency -
-        ((struct colorToGrayEntry *) entry2)->frequency;
+static int
+cmpColorToGrayEntryByFrequency(const void * const a,
+                               const void * const b) {
+
+    const struct colorToGrayEntry * const entry1P = a;
+    const struct colorToGrayEntry * const entry2P = b;
+
+    return entry1P->frequency - entry2P->frequency;
 }
 
 
@@ -125,7 +140,7 @@ main(int argc, char *argv[]) {
          * by frequency - but again, for a small number of colors
          * it's a small matter.
          */
-        colorToGrayMap[color].gray = PPM_LUMIN(hist[color].color);
+        colorToGrayMap[color].gray = ppm_luminosity(hist[color].color);
     }
 
     /*

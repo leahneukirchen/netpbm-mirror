@@ -1,19 +1,21 @@
 #define _GNU_SOURCE
-   /* Due to conditional compilation, this is GNU source only if the C library
-      is GNU.
+   /* Because of conditional compilation, this is GNU source only if the C
+      library is GNU.
    */
 #include <stdlib.h>
 #include <string.h>
 
 #include "pm_config.h"
+#include "pm_c_util.h"
+
 #include "nstring.h"
 
 
 
 void
-vasprintfN(const char ** const resultP,
-           const char *  const format,
-           va_list             varargs) {
+pm_vasprintf(const char ** const resultP,
+             const char *  const format,
+             va_list             varargs) {
 
     char * result;
 
@@ -23,7 +25,7 @@ vasprintfN(const char ** const resultP,
     rc = vasprintf(&result, format, varargs);
 
     if (rc < 0)
-        *resultP = strsol;
+        *resultP = pm_strsol;
     else
         *resultP = result;
 #else
@@ -38,21 +40,38 @@ vasprintfN(const char ** const resultP,
 
        So instead, we just allocate 4K and truncate or waste as
        necessary.
+
+       Note that we don't recognize the floating point specifiers (%f, %e, %g)
+       - we render them as 'f', 'e', and 'g'.  It would be too much work to
+       make this code handle those, just for the few systems on which it runs.
+       Instead, we have pm_vasprintf_knows_float(), and any caller that cares
+       enough can avoid using these specifiers where they don't work.
     */
     size_t const allocSize = 4096;
     result = malloc(allocSize);
     
     if (result == NULL)
-        *resultP = strsol;
+        *resultP = pm_strsol;
     else {
         size_t realLen;
 
-        vsnprintfN(result, allocSize, format, varargs, &realLen);
+        pm_vsnprintf(result, allocSize, format, varargs, &realLen);
         
         if (realLen >= allocSize)
             strcpy(result + allocSize - 15, "<<<TRUNCATED");
 
         *resultP = result;
     }
+#endif
+}
+
+
+
+bool
+pm_vasprintf_knows_float(void) {
+#if HAVE_VASPRINTF
+    return true;
+#else
+    return false;
 #endif
 }

@@ -4,6 +4,7 @@
    Copyright information is at end of file.
 */
 
+#define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 #define _BSD_SOURCE    /* Make sure strcaseeq() is in nstring.h */
 #include <string.h>
 #include <assert.h>
@@ -45,7 +46,7 @@ uppercase(const char * const subject) {
 
     if (buffer == NULL)
         pm_error("Out of memory allocating buffer for uppercasing a "
-                 "%u-character string", strlen(subject));
+                 "%u-character string", (unsigned)strlen(subject));
     else {
         unsigned int i;
 
@@ -69,7 +70,7 @@ parseCommandLine(int argc, char ** argv,
    was passed to us as the argv array.
 -----------------------------------------------------------------------------*/
     optEntry * option_def;
-        /* Instructions to optParseOptions3 on how to parse our options.
+        /* Instructions to pm_optParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
 
@@ -92,7 +93,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (fmtSpec) {
@@ -117,8 +118,8 @@ parseCommandLine(int argc, char ** argv,
     if (netSpec) {
         if (strlen(netOpt) != 6)
             pm_error("-net option must be 6 hex digits long.  "
-                     "You specified %u characters", strlen(netOpt));
-        else if (!strishex(netOpt))
+                     "You specified %u characters", (unsigned)strlen(netOpt));
+        else if (!pm_strishex(netOpt))
             pm_error("-net option must be hexadecimal.  You specified '%s'",
                      netOpt);
         else
@@ -131,7 +132,7 @@ parseCommandLine(int argc, char ** argv,
     else if (strlen(cmdlineP->txt) > 120)
         pm_error("Text message is longer (%u characters) than "
                  "the 120 characters allowed by the format.",
-                 strlen(cmdlineP->txt));
+                 (unsigned)strlen(cmdlineP->txt));
 
     if (argc-1 == 0) 
         cmdlineP->inputFileName = "-";
@@ -147,7 +148,7 @@ parseCommandLine(int argc, char ** argv,
 static void
 freeCmdline(struct cmdlineInfo const cmdline) {
 
-    strfree(cmdline.networkCode);
+    pm_strfree(cmdline.networkCode);
 }
 
 
@@ -253,7 +254,7 @@ convertToHexNpm(bit **       const image,
 
         unsigned int it;
 
-        fprintf(ofP, "00%04X", len);
+        fprintf(ofP, "00%04X", (unsigned)len);
 
         for (it = 0; it < len; ++it)
             fprintf(ofP, "%02X", text[it]);

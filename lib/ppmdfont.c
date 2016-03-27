@@ -3,8 +3,8 @@
 #include <errno.h>
 #include <string.h>
 
+#include "netpbm/mallocvar.h"
 #include "pm.h"
-#include "mallocvar.h"
 #include "ppmdfont.h"
 
 

@@ -11,11 +11,13 @@ PORTBINARIES = pamdeinterlace \
 	       pammixinterlace \
 	       pamoil \
 	       pampop9 \
+	       pampaintspill \
 	       pbmlife \
 	       pgmabel \
 	       pgmbentley \
 	       pgmmorphconv \
 	       pnmindex \
+	       pnmmercator \
 	       ppm3d \
 	       ppmglobe \
 	       ppmntsc \

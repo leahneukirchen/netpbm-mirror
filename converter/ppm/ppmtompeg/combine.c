@@ -104,7 +104,7 @@ appendSpecifiedGopFiles(struct inputSource * const inputSourceP,
         FILE * ifP;
 
         GetNthInputFileName(inputSourceP, fileSeq, &inputFileName);
-        asprintfN(&fileName, "%s/%s", currentGOPPath, inputFileName);
+        pm_asprintf(&fileName, "%s/%s", currentGOPPath, inputFileName);
 
         for (nAttempts = 0, ifP = NULL;
              nAttempts < READ_ATTEMPTS && !ifP;
@@ -122,8 +122,8 @@ appendSpecifiedGopFiles(struct inputSource * const inputSourceP,
         } else
             pm_error("Unable to read file '%s' after %u attempts.",
                      fileName, READ_ATTEMPTS);
-        strfree(fileName);
-        strfree(inputFileName);
+        pm_strfree(fileName);
+        pm_strfree(inputFileName);
     }
 } 
 
@@ -140,7 +140,7 @@ appendDefaultGopFiles(const char * const outputFileName,
         const char * fileName;
         FILE * ifP;
 
-        asprintfN(&fileName, "%s.gop.%u", outputFileName, fileSeq);
+        pm_asprintf(&fileName, "%s.gop.%u", outputFileName, fileSeq);
         
         ifP = fopen(fileName, "rb");
         if (ifP == NULL)
@@ -151,7 +151,7 @@ appendDefaultGopFiles(const char * const outputFileName,
             
             AppendFile(ofP, ifP);
         }
-        strfree(fileName);
+        pm_strfree(fileName);
     }
 }
 

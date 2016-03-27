@@ -10,7 +10,8 @@
        does it in other libc's).  pm_config.h defines TMPDIR as P_tmpdir
        in some environments.
     */
-#define _XOPEN_SOURCE 500    /* Make sure ftello, fseeko are defined */
+#define _BSD_SOURCE    /* Make sure strdup is defined */
+#define _XOPEN_SOURCE 500    /* Make sure ftello, fseeko, strdup are defined */
 #define _LARGEFILE_SOURCE 1  /* Make sure ftello, fseeko are defined */
 #define _LARGEFILE64_SOURCE 1 
 #define _FILE_OFFSET_BITS 64
@@ -28,19 +29,21 @@
 #define _LARGE_FILE_API
     /* This makes the the x64() functions available on AIX */
 
+#include "netpbm/pm_config.h"
 #include <unistd.h>
+#include <assert.h>
 #include <stdio.h>
 #include <fcntl.h>
 #include <stdarg.h>
 #include <string.h>
 #include <errno.h>
-#ifdef __DJGPP__
-  #include <io.h>
+#if HAVE_IO_H
+  #include <io.h>  /* For mktemp */
 #endif
 
-#include "pm_c_util.h"
-#include "mallocvar.h"
-#include "nstring.h"
+#include "netpbm/pm_c_util.h"
+#include "netpbm/mallocvar.h"
+#include "netpbm/nstring.h"
 
 #include "pm.h"
 
@@ -48,18 +51,14 @@
 
 /* File open/close that handles "-" as stdin/stdout and checks errors. */
 
-FILE*
+FILE *
 pm_openr(const char * const name) {
-    FILE* f;
+    FILE * f;
 
-    if (strcmp(name, "-") == 0)
+    if (streq(name, "-"))
         f = stdin;
     else {
-#ifndef VMS
         f = fopen(name, "rb");
-#else
-        f = fopen(name, "r", "ctx=stm");
-#endif
         if (f == NULL) 
             pm_error("Unable to open file '%s' for reading.  "
                      "fopen() returns errno %d (%s)", 
@@ -70,18 +69,14 @@ pm_openr(const char * const name) {
 
 
 
-FILE*
+FILE *
 pm_openw(const char * const name) {
-    FILE* f;
+    FILE * f;
 
-    if (strcmp(name, "-") == 0)
+    if (streq(name, "-"))
         f = stdout;
     else {
-#ifndef VMS
         f = fopen(name, "wb");
-#else
-        f = fopen(name, "w", "mbc=32", "mbf=2");  /* set buffer factors */
-#endif
         if (f == NULL) 
             pm_error("Unable to open file '%s' for writing.  "
                      "fopen() returns errno %d (%s)", 
@@ -129,10 +124,10 @@ tempFileOpenFlags(void) {
     retval = 0
         | O_CREAT
         | O_RDWR
-#ifndef WIN32
+#if !MSVCRT
         | O_EXCL
 #endif
-#ifdef WIN32
+#if MSVCRT
         | O_BINARY
 #endif
         ;
@@ -226,25 +221,25 @@ makeTmpfileWithTemplate(const char *  const filenameTemplate,
     filenameBuffer = strdup(filenameTemplate);
 
     if (filenameBuffer == NULL)
-        asprintfN(errorP, "Unable to allocate storage for temporary "
-                  "file name");
+        pm_asprintf(errorP, "Unable to allocate storage for temporary "
+                    "file name");
     else {
         int rc;
         
         rc = mkstemp2(filenameBuffer);
         
         if (rc < 0)
-            asprintfN(errorP,
-                      "Unable to create temporary file according to name "
-                      "pattern '%s'.  mkstemp() failed with errno %d (%s)",
-                      filenameTemplate, errno, strerror(errno));
+            pm_asprintf(errorP,
+                        "Unable to create temporary file according to name "
+                        "pattern '%s'.  mkstemp() failed with errno %d (%s)",
+                        filenameTemplate, errno, strerror(errno));
         else {
             *fdP = rc;
             *filenameP = filenameBuffer;
             *errorP = NULL;
         }
         if (*errorP)
-            strfree(filenameBuffer);
+            pm_strfree(filenameBuffer);
     }
 }
 
@@ -255,12 +250,9 @@ pm_make_tmpfile_fd(int *         const fdP,
                    const char ** const filenameP) {
 
     const char * filenameTemplate;
-    unsigned int fnamelen;
     const char * tmpdir;
     const char * dirseparator;
     const char * error;
-
-    fnamelen = strlen(pm_progname) + 10; /* "/" + "_XXXXXX\0" */
 
     tmpdir = tmpDir();
 
@@ -269,20 +261,20 @@ pm_make_tmpfile_fd(int *         const fdP,
     else
         dirseparator = "/";
     
-    asprintfN(&filenameTemplate, "%s%s%s%s", 
-              tmpdir, dirseparator, pm_progname, "_XXXXXX");
+    pm_asprintf(&filenameTemplate, "%s%s%s%s", 
+                tmpdir, dirseparator, pm_progname, "_XXXXXX");
 
-    if (filenameTemplate == strsol)
-        asprintfN(&error,
-                  "Unable to allocate storage for temporary file name");
+    if (filenameTemplate == pm_strsol)
+        pm_asprintf(&error,
+                    "Unable to allocate storage for temporary file name");
     else {
         makeTmpfileWithTemplate(filenameTemplate, fdP, filenameP, &error);
 
-        strfree(filenameTemplate);
+        pm_strfree(filenameTemplate);
     }
     if (error) {
         pm_errormsg("%s", error);
-        strfree(error);
+        pm_strfree(error);
         pm_longjmp();
     }
 }
@@ -302,7 +294,7 @@ pm_make_tmpfile(FILE **       const filePP,
     if (*filePP == NULL) {
         close(fd);
         unlink(*filenameP);
-        strfree(*filenameP);
+        pm_strfree(*filenameP);
 
         pm_error("Unable to create temporary file.  "
                  "fdopen() failed with errno %d (%s)",
@@ -312,17 +304,130 @@ pm_make_tmpfile(FILE **       const filePP,
 
 
 
+bool const canUnlinkOpen = 
+#if CAN_UNLINK_OPEN
+    1
+#else
+    0
+#endif
+    ;
+
+
+
+typedef struct UnlinkListEntry {
+/*----------------------------------------------------------------------------
+   This is an entry in the linked list of files to close and unlink as the
+   program exits.
+-----------------------------------------------------------------------------*/
+    struct UnlinkListEntry * next;
+    int                      fd;
+    char                     fileName[1];  /* Actually variable length */
+} UnlinkListEntry;
+
+static UnlinkListEntry * unlinkListP;
+
+
+
+static void
+unlinkTempFiles(void) {
+/*----------------------------------------------------------------------------
+  Close and unlink (so presumably delete) the files in the list
+  *unlinkListP.
+
+  This is an atexit function.
+-----------------------------------------------------------------------------*/
+    while (unlinkListP) {
+        UnlinkListEntry * const firstEntryP = unlinkListP;
+
+        unlinkListP = unlinkListP->next;
+
+        close(firstEntryP->fd);
+        unlink(firstEntryP->fileName);
+
+        free(firstEntryP);
+    }
+}
+
+
+
+static UnlinkListEntry *
+newUnlinkListEntry(const char * const fileName,
+                   int          const fd) {
+
+    UnlinkListEntry * const unlinkListEntryP =
+        malloc(sizeof(*unlinkListEntryP) + strlen(fileName) + 1);
+
+    if (unlinkListEntryP) {
+        strcpy(unlinkListEntryP->fileName, fileName);
+        unlinkListEntryP->fd   = fd;
+        unlinkListEntryP->next = NULL;
+    }
+    return unlinkListEntryP;
+}
+
+
+
+static void
+addUnlinkListEntry(const char * const fileName,
+                   int          const fd) {
+
+    UnlinkListEntry * const unlinkListEntryP =
+        newUnlinkListEntry(fileName, fd);
+
+    if (unlinkListEntryP) {
+        unlinkListEntryP->next = unlinkListP;
+        unlinkListP = unlinkListEntryP;
+    }
+}
+
+
+
+static void
+scheduleUnlinkAtExit(const char * const fileName,
+                     int          const fd) {
+/*----------------------------------------------------------------------------
+   Set things up to have the file unlinked as the program exits.
+
+   This is messy and probably doesn't work in all situations; it is a hack
+   to get Unix code essentially working on Windows, without messing up the
+   code too badly for Unix.
+-----------------------------------------------------------------------------*/
+    static bool unlinkListEstablished = false;
+    
+    if (!unlinkListEstablished) {
+        atexit(unlinkTempFiles);
+        unlinkListP = NULL;
+        unlinkListEstablished = true;
+    }
+
+    addUnlinkListEntry(fileName, fd);
+}
+
+
+
+static void
+arrangeUnlink(const char * const fileName,
+              int          const fd) {
+
+    if (canUnlinkOpen)
+        unlink(fileName);
+    else
+        scheduleUnlinkAtExit(fileName, fd);
+}
+
+
+
 FILE * 
 pm_tmpfile(void) {
 
     FILE * fileP;
-    const char * tmpfile;
+    const char * tmpfileNm;
 
-    pm_make_tmpfile(&fileP, &tmpfile);
+    pm_make_tmpfile(&fileP, &tmpfileNm);
 
-    unlink(tmpfile);
+    arrangeUnlink(tmpfileNm, fileno(fileP));
 
-    strfree(tmpfile);
+    pm_strfree(tmpfileNm);
 
     return fileP;
 }
@@ -333,13 +438,13 @@ int
 pm_tmpfile_fd(void) {
 
     int fd;
-    const char * tmpfile;
+    const char * tmpfileNm;
 
-    pm_make_tmpfile_fd(&fd, &tmpfile);
+    pm_make_tmpfile_fd(&fd, &tmpfileNm);
 
-    unlink(tmpfile);
+    arrangeUnlink(tmpfileNm, fd);
 
-    strfree(tmpfile);
+    pm_strfree(tmpfileNm);
 
     return fd;
 }
@@ -557,6 +662,23 @@ pm_readbiglong(FILE * const ifP,
 
 
 int
+pm_readbiglong2(FILE *    const ifP,
+                int32_t * const lP) {
+    int rc;
+    long l;
+
+    rc = pm_readbiglong(ifP, &l);
+
+    assert((int32_t)l == l);
+
+    *lP = (int32_t)l;
+
+    return rc;
+}
+
+
+
+int
 pm_writebiglong(FILE * const ofP, 
                 long   const l) {
 
@@ -610,6 +732,23 @@ pm_readlittlelong(FILE * const ifP,
     *lP = l;
 
     return 0;
+}
+
+
+
+int
+pm_readlittlelong2(FILE *    const ifP,
+                   int32_t * const lP) {
+    int rc;
+    long l;
+
+    rc = pm_readlittlelong(ifP, &l);
+
+    assert((int32_t)l == l);
+
+    *lP = (int32_t)l;
+
+    return rc;
 }
 
 
@@ -892,10 +1031,6 @@ pm_check(FILE *               const file,
     pm_filepos curpos;  /* Current position of file; -1 if none */
     int rc;
 
-#ifdef LARGEFILEDEBUG
-    pm_message("pm_filepos received by pm_check() is %u bytes.",
-               sizeof(pm_filepos));
-#endif
     /* Note: FTELLO() is either ftello() or ftell(), depending on the
        capabilities of the underlying C library.  It is defined in
        pm_config.h.  ftello(), in turn, may be either ftell() or

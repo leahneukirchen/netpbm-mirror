@@ -46,7 +46,7 @@ parseCommandLine (int argc, char ** argv,
    was passed to us as the argv array.  We also trash *argv.
 -----------------------------------------------------------------------------*/
     optEntry *option_def = malloc( 100*sizeof( optEntry ) );
-        /* Instructions to optParseOptions3 on how to parse our options.
+        /* Instructions to pm_optParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
 
@@ -64,7 +64,7 @@ parseCommandLine (int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3( &argc, argv, opt, sizeof(opt), 0 );
+    pm_optParseOptions3( &argc, argv, opt, sizeof(opt), 0 );
         /* Uses and sets argc, argv, and some of *cmdline_p and others. */
 
     if (!modeSpec)
@@ -253,10 +253,6 @@ main(int argc, char *argv[]) {
 
     ppm_init(&argc, argv);
 
-    rc = vga_init();         /* Initialize. */
-    if (rc < 0)
-        pm_error("Svgalib unable to allocate a virtual console.");
-
     parseCommandLine(argc, argv, &cmdline);
 
     ifP = pm_openr(cmdline.inputFilespec);
@@ -268,6 +264,14 @@ main(int argc, char *argv[]) {
         ppm_check(ifP, PM_CHECK_BASIC, format, cols, rows, maxval, 
                   &checkResult);
     }
+
+    /* We wait to initialize Svgalib to prevent it from interfering with
+       error messages the code above might issue, and leaving the console
+       in an undesirable state if the above code aborts the program.
+    */
+    rc = vga_init();         /* Initialize. */
+    if (rc < 0)
+        pm_error("Svgalib unable to allocate a virtual console.");
 
     if (vga_hasmode(cmdline.mode))
         display(ifP, cols, rows, maxval, format, 

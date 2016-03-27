@@ -89,11 +89,7 @@ main(int argc,
         size_t bytesWritten;
 
         pbm_readpbmrow_packed(ifP, bitrow, cols, format);
-        
-        if (padright > 0) {
-            bitrow[bytesPerRow-1] >>= padright;
-            bitrow[bytesPerRow-1] <<= padright;
-        }
+        pbm_cleanrowend_packed(bitrow, cols);
 
         bytesWritten = fwrite(bitrow, 1, bytesPerRow, stdout);
         if (bytesWritten != bytesPerRow )

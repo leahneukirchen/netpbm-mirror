@@ -14,7 +14,7 @@ Known BUGS:
      REFERENCE_FRAME	DECODED
    does not work
 
-5. Cannot use both STDIN and CDL_FILEs (ok, since it doesnt make sense...)
+5. Cannot use both STDIN and CDL_FILEs (ok, since it doesn't make sense...)
 
 6. <fixed>
 

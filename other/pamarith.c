@@ -47,7 +47,7 @@ isDyadic(enum function const function) {
 
 
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -60,7 +60,7 @@ struct cmdlineInfo {
 
 static void
 parseCommandLine(int argc, const char ** const argv,
-                 struct cmdlineInfo * const cmdlineP) {
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
@@ -102,7 +102,7 @@ parseCommandLine(int argc, const char ** const argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (addSpec + subtractSpec + multiplySpec + divideSpec + differenceSpec +
@@ -400,48 +400,66 @@ doNormalizedArith(struct pam *  const inpam1P,
                   struct pam *  const outpamP,
                   enum function const function) {
 
+    /* Some of the logic in this subroutine is designed for future
+       expansion into non-dyadic computations.  But for now, all
+       computations have exactly two operands.
+    */
     unsigned int const operandCt = 2;
 
-    tuplen * tuplerown1;
-    tuplen * tuplerown2;
+    tuplen ** tuplerown;
+        /* tuplerown[0] is the current row in the first operand image */
+
     tuplen * tuplerownOut;
     unsigned int row;
     samplen * operands;
+        /* operand[0] is the first operand in the current one-sample
+           computation
+        */
+    unsigned int * plane;
+        /* plane[0] is the plane number in the first operand image for 
+           the current one-sample computation.  plane[1] is the plane number
+           in the second operand image, etc.
+         */
 
     MALLOCARRAY_NOFAIL(operands, operandCt);
+    MALLOCARRAY_NOFAIL(plane, operandCt);
+    MALLOCARRAY_NOFAIL(tuplerown, operandCt);
 
-    tuplerown1   = pnm_allocpamrown(inpam1P);
-    tuplerown2   = pnm_allocpamrown(inpam2P);
+    tuplerown[0] = pnm_allocpamrown(inpam1P);
+    tuplerown[1] = pnm_allocpamrown(inpam2P);
     tuplerownOut = pnm_allocpamrown(outpamP);
 
     for (row = 0; row < outpamP->height; ++row) {
         unsigned int col;
-        pnm_readpamrown(inpam1P, tuplerown1);
-        pnm_readpamrown(inpam2P, tuplerown2);
+        pnm_readpamrown(inpam1P, tuplerown[0]);
+        pnm_readpamrown(inpam2P, tuplerown[1]);
         
         for (col = 0; col < outpamP->width; ++col) {
             unsigned int outplane;
             
             for (outplane = 0; outplane < outpamP->depth; ++outplane) {
-                unsigned int const plane1 = MIN(outplane, inpam1P->depth-1);
-                unsigned int const plane2 = MIN(outplane, inpam2P->depth-1);
+                unsigned int op;
 
-                operands[0] = tuplerown1[col][plane1];
-                operands[1] = tuplerown2[col][plane2];
+                plane[0] = MIN(outplane, inpam1P->depth-1);
+                plane[1] = MIN(outplane, inpam2P->depth-1);
+
+                for (op = 0; op < operandCt; ++op)
+                    operands[op] = tuplerown[op][col][plane[op]];
 
                 tuplerownOut[col][outplane] = 
                     applyNormalizedFunction(function, operands, operandCt); 
                 assert(tuplerownOut[col][outplane] >= 0.);
                 assert(tuplerownOut[col][outplane] <= 1.);
-
             }
         }
         pnm_writepamrown(outpamP, tuplerownOut);
     }
 
-    pnm_freepamrown(tuplerown1);
-    pnm_freepamrown(tuplerown2);
+    pnm_freepamrown(tuplerown[0]);
+    pnm_freepamrown(tuplerown[1]);
+    free(tuplerown);
     pnm_freepamrown(tuplerownOut);
+    free(plane);
     free(operands);
 }
 
@@ -701,14 +719,28 @@ doUnNormalizedArith(struct pam *  const inpam1P,
    maxval to do the computation without time-consuming normalization of
    sample values.
 -----------------------------------------------------------------------------*/
+    /* Some of the logic in this subroutine is designed for future
+       expansion into non-dyadic computations.  But for now, all
+       computations have exactly two operands.
+    */
     unsigned int const operandCt = 2;
+
     sample const maxval = outpamP->maxval;
 
-    tuple * tuplerow1;
-    tuple * tuplerow2;
+    tuple ** tuplerow;
+        /* tuplerow[0] is the current row in the first operand image */
+
     tuple * tuplerowOut;
     unsigned int row;
     sample * operands;
+        /* operand[0] is the first operand in the current one-sample
+           computation
+        */
+    unsigned int * plane;
+        /* plane[0] is the plane number in the first operand image for 
+           the current one-sample computation.  plane[1] is the plane number
+           in the second operand image, etc.
+         */
 
     /* Input conditions: */
     assert(inpam1P->maxval == maxval);
@@ -716,25 +748,29 @@ doUnNormalizedArith(struct pam *  const inpam1P,
     assert(outpamP->maxval == maxval);
 
     MALLOCARRAY_NOFAIL(operands, operandCt);
+    MALLOCARRAY_NOFAIL(plane, operandCt);
+    MALLOCARRAY_NOFAIL(tuplerow, operandCt);
 
-    tuplerow1   = pnm_allocpamrow(inpam1P);
-    tuplerow2   = pnm_allocpamrow(inpam2P);
+    tuplerow[0]   = pnm_allocpamrow(inpam1P);
+    tuplerow[1]   = pnm_allocpamrow(inpam2P);
     tuplerowOut = pnm_allocpamrow(outpamP);
 
     for (row = 0; row < outpamP->height; ++row) {
         unsigned int col;
-        pnm_readpamrow(inpam1P, tuplerow1);
-        pnm_readpamrow(inpam2P, tuplerow2);
+        pnm_readpamrow(inpam1P, tuplerow[0]);
+        pnm_readpamrow(inpam2P, tuplerow[1]);
         
         for (col = 0; col < outpamP->width; ++col) {
             unsigned int outplane;
             
             for (outplane = 0; outplane < outpamP->depth; ++outplane) {
-                unsigned int const plane1 = MIN(outplane, inpam1P->depth-1);
-                unsigned int const plane2 = MIN(outplane, inpam2P->depth-1);
+                unsigned int op;
 
-                operands[0] = tuplerow1[col][plane1];
-                operands[1] = tuplerow2[col][plane2];
+                plane[0] = MIN(outplane, inpam1P->depth-1);
+                plane[1] = MIN(outplane, inpam2P->depth-1);
+
+                for (op = 0; op < operandCt; ++op)
+                    operands[op] = tuplerow[op][col][plane[op]];
 
                 tuplerowOut[col][outplane] = 
                     applyUnNormalizedFunction(function, operands, operandCt,
@@ -747,10 +783,11 @@ doUnNormalizedArith(struct pam *  const inpam1P,
         pnm_writepamrow(outpamP, tuplerowOut);
     }
 
-    pnm_freepamrow(tuplerow1);
-    pnm_freepamrow(tuplerow2);
+    pnm_freepamrow(tuplerow[0]);
+    pnm_freepamrow(tuplerow[1]);
+    free(tuplerow);
     pnm_freepamrow(tuplerowOut);
-
+    free(plane);
     free(operands);
 }
 
@@ -759,7 +796,7 @@ doUnNormalizedArith(struct pam *  const inpam1P,
 int
 main(int argc, const char *argv[]) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     struct pam inpam1;
     struct pam inpam2;
     struct pam outpam;

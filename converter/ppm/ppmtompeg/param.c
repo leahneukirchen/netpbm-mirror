@@ -73,14 +73,14 @@
 #define LAST_OPTION           15
 
 /* put any non-required options after LAST_OPTION */
-#define OPTION_RESIZE	      16
+#define OPTION_RESIZE         16
 #define OPTION_IO_CONVERT     17
 #define OPTION_SLAVE_CONVERT  18
-#define OPTION_IQTABLE	      19
-#define OPTION_NIQTABLE	      20
+#define OPTION_IQTABLE        19
+#define OPTION_NIQTABLE       20
 #define OPTION_FRAME_RATE     21
 #define OPTION_ASPECT_RATIO   22
-#define OPTION_YUV_SIZE	      23
+#define OPTION_YUV_SIZE       23
 #define OPTION_SPECIFICS      24
 #define OPTION_DEFS_SPECIFICS 25
 #define OPTION_BUFFER_SIZE    26
@@ -98,48 +98,49 @@
  * GLOBAL VARIABLES *
  *==================*/
 
-extern char currentPath[MAXPATHLEN];
-char	outputFileName[256];
-int	outputWidth, outputHeight;
+char outputFileName[256];
+int outputWidth, outputHeight;
 char inputConversion[1024];
 char ioConversion[1024];
 char slaveConversion[1024];
 char yuvConversion[256];
 char specificsFile[256],specificsDefines[1024]="";
-boolean GammaCorrection=FALSE;
-float   GammaValue;
+bool GammaCorrection=FALSE;
+float GammaValue;
 char userDataFileName[256]={0};
-boolean specificsOn = FALSE;
+bool specificsOn = FALSE;
 char currentGOPPath[MAXPATHLEN];
 char currentFramePath[MAXPATHLEN];
-boolean keepTempFiles;
+bool keepTempFiles;
+int numMachines;
+char machineName[MAX_MACHINES][256];
+char userName[MAX_MACHINES][256];
+char executable[MAX_MACHINES][1024];
+char remoteParamFile[MAX_MACHINES][1024];
+bool remote[MAX_MACHINES];
+int mult_seq_headers = 0;  /* 0 for none, N for header/N GOPs */
+
+
+extern char currentPath[MAXPATHLEN];
 
 static const char * const optionText[LAST_OPTION+1] = { 
     "GOP_SIZE", "PATTERN", "PIXEL", "PQSCALE",
     "OUTPUT", "RANGE", "PSEARCH_ALG", "IQSCALE", "INPUT_DIR",
     "INPUT_CONVERT", "INPUT", "BQSCALE", "BASE_FILE_FORMAT",
     "SLICES_PER_FRAME", "BSEARCH_ALG", "REFERENCE_FRAME"};
-static boolean optionSeen[NUM_OPTIONS+1];
+static bool optionSeen[NUM_OPTIONS+1];
     /* optionSeen[x] means we have seen option x in the parameter file we've
        been reading.
     */
-
-int numMachines;
-char	machineName[MAX_MACHINES][256];
-char	userName[MAX_MACHINES][256];
-char	executable[MAX_MACHINES][1024];
-char	remoteParamFile[MAX_MACHINES][1024];
-boolean	remote[MAX_MACHINES];
-int mult_seq_headers = 0;  /* 0 for none, N for header/N GOPs */
 
 
 /*===========================================================================*
  *
  * SkipSpacesTabs
  *
- *	skip all spaces and tabs
+ *  skip all spaces and tabs
  *
- * RETURNS:	point to next character not a space or tab
+ * RETURNS: point to next character not a space or tab
  *
  * SIDE EFFECTS:    none
  *
@@ -172,13 +173,13 @@ static int
 GetAspectRatio(const char * const p)
 {
   float   ratio;
-  int	  ttRatio;
+  int     ttRatio;
   int     retval;
 
   sscanf(p, "%f", &ratio);
   ttRatio = (int)(0.5+ratio*10000.0);
 
-  if ( ttRatio == 10000 )	      retval = 1;
+  if ( ttRatio == 10000 )         retval = 1;
   else if ( ttRatio ==  6735 )    retval = 2;
   else if ( ttRatio ==  7031 )    retval = 3;
   else if ( ttRatio ==  7615 )    retval = 4;
@@ -205,9 +206,9 @@ GetAspectRatio(const char * const p)
  *
  * ReadMachineNames
  *
- *	read a list of machine names for parallel execution
+ *  read a list of machine names for parallel execution
  *
- * RETURNS:	nothing
+ * RETURNS: nothing
  *
  * SIDE EFFECTS:    machine info updated
  *
@@ -219,7 +220,7 @@ ReadMachineNames(FILE * const fpointer)
   const char *charPtr;
 
   while ( (fgets(input, 256, fpointer) != NULL) &&
-	 (strncmp(input, "END_PARALLEL", 12) != 0) ) {
+     (strncmp(input, "END_PARALLEL", 12) != 0) ) {
     if ( input[0] == '#' || input[0] == '\n') {
       continue;
     }
@@ -229,13 +230,13 @@ ReadMachineNames(FILE * const fpointer)
       remote[numMachines] = TRUE;
 
       sscanf(charPtr, "%s %s %s %s", machineName[numMachines],
-	     userName[numMachines], executable[numMachines],
-	     remoteParamFile[numMachines]);
+         userName[numMachines], executable[numMachines],
+         remoteParamFile[numMachines]);
     } else {
       remote[numMachines] = FALSE;
 
       sscanf(input, "%s %s %s", machineName[numMachines],
-	     userName[numMachines], executable[numMachines]);
+         userName[numMachines], executable[numMachines]);
     }
 
     numMachines++;
@@ -259,13 +260,13 @@ static int
 GetFrameRate(const char * const p)
 {
   float   rate;
-  int	  thouRate;
+  int     thouRate;
   int     retval;
 
   sscanf(p, "%f", &rate);
   thouRate = (int)(0.5+1000.0*rate);
 
-  if ( thouRate == 23976 )	       retval = 1;
+  if ( thouRate == 23976 )         retval = 1;
   else if ( thouRate == 24000 )    retval = 2;
   else if ( thouRate == 25000 )    retval = 3;
   else if ( thouRate == 29970 )    retval = 4;
@@ -988,7 +989,7 @@ ReadParamFile(const char *         const fileName,
                            paramP);
               /* May read additional lines from file */
 
-      strfree(input);
+      pm_strfree(input);
   }
 
   fclose(fpointer);

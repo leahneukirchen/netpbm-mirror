@@ -51,11 +51,11 @@ openComponentOut(const char * const suffix,
 
     const char * fileName;
 
-    asprintfN(&fileName, "%s.%s", baseName, suffix);
+    pm_asprintf(&fileName, "%s.%s", baseName, suffix);
 
     *fpP = pm_openw(fileName);
 
-    strfree(fileName);
+    pm_strfree(fileName);
 }
 
 
@@ -90,7 +90,7 @@ main(int argc, const char ** argv) {
     ifP = pm_openr(cmdline.inputFileName);
 
     if (streq(cmdline.inputFileName, "-"))
-        asprintfN(&baseFileName, "noname");
+        baseFileName = strdup("noname");
     else
         baseFileName = strippedOfExtension(cmdline.inputFileName);
 
@@ -131,7 +131,7 @@ main(int argc, const char ** argv) {
 
     pgm_freerow(grayrow);
     ppm_freerow(pixelrow);
-    strfree(baseFileName);
+    pm_strfree(baseFileName);
     pm_close(ifP);
     pm_close(blufP);
     pm_close(grnfP);

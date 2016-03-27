@@ -14,8 +14,8 @@
 #include <errno.h>
 
 
-#include "pm_c_util.h"
-#include "mallocvar.h"
+#include "netpbm/pm_c_util.h"
+#include "netpbm/mallocvar.h"
 #include "ppm.h"
 
 void
@@ -36,10 +36,6 @@ ppm_writeppminit(FILE*  const fileP,
             PPM_MAGIC1, 
             plainFormat || maxval >= 1<<16 ? PPM_MAGIC2 : RPPM_MAGIC2, 
             cols, rows, maxval );
-#ifdef VMS
-    if (!plainFormat)
-        set_outfile_binary();
-#endif
 }
 
 
@@ -133,10 +129,13 @@ ppm_writeppmrowraw(FILE *        const fileP,
     if (rc < 0)
         pm_error("Error writing row.  fwrite() errno=%d (%s)",
                  errno, strerror(errno));
-    else if (rc != bytesPerRow)
-        pm_error("Error writing row.  Short write of %u bytes "
-                 "instead of %u", rc, bytesPerRow);
+    else {
+        size_t const bytesWritten = rc;
 
+        if (bytesWritten != bytesPerRow)
+            pm_error("Error writing row.  Short write of %u bytes "
+                     "instead of %u", (unsigned)bytesWritten, bytesPerRow);
+    }
     free(rowBuffer);
 }
 

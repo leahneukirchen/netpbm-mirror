@@ -30,6 +30,7 @@
  
 #include <getopt.h>			/* system or ../lib */
 
+#include "pm_c_util.h"
 #include "nstring.h"
 
 #include "types.h"
@@ -631,6 +632,8 @@ read_parameter_file (param_t *params, FILE *file)
    }
 }   
 
+
+
 static void 
 usage (const param_t *params, const char *progname, const char *synopsis,
        const char *comment, const char *non_opt_string,
@@ -647,82 +650,84 @@ usage (const param_t *params, const char *progname, const char *synopsis,
  *  No return value.
  */
 {
-   int	  i;
-   size_t width = 0;
+    int	  i;
+    size_t width = 0;
    
-   fprintf (stderr, "Usage: %s [OPTION]...%s\n", progname,
-	    non_opt_string ? non_opt_string : " ");
-   if (synopsis != NULL)
-      fprintf (stderr, synopsis);
-   fprintf (stderr, "\n\n");
-   fprintf (stderr, "Mandatory or optional arguments to long options "
-	    "are mandatory or optional\nfor short options too. "
-	    "Default values are surrounded by {}.\n");
-   for (i = 0; params [i].name != NULL; i++)
-      if (params [i].optchar != '\0' || show_all_options)
-      {
-	 if (params [i].type == POSTR)
-	    width = max (width, (strlen (params [i].name)
-				 + strlen (params [i].argument_name) + 2));
-	 else if (params [i].type != PFLAG)
-	    width = max (width, (strlen (params [i].name)
-				 + strlen (params [i].argument_name)));
-	 else
-	    width = max (width, (strlen (params [i].name)) - 1);
-      }
+    fprintf (stderr, "Usage: %s [OPTION]...%s\n", progname,
+             non_opt_string ? non_opt_string : " ");
+    if (synopsis != NULL)
+        fprintf (stderr, "%s", synopsis);
+    fprintf (stderr, "\n\n");
+    fprintf (stderr, "Mandatory or optional arguments to long options "
+             "are mandatory or optional\nfor short options too. "
+             "Default values are surrounded by {}.\n");
+    for (i = 0; params [i].name != NULL; i++)
+        if (params [i].optchar != '\0' || show_all_options)
+        {
+            if (params [i].type == POSTR)
+                width = MAX(width, (strlen (params [i].name)
+                                     + strlen (params [i].argument_name) + 2));
+            else if (params [i].type != PFLAG)
+                width = MAX(width, (strlen (params [i].name)
+                                     + strlen (params [i].argument_name)));
+            else
+                width = MAX(width, (strlen (params [i].name)) - 1);
+        }
    
-   for (i = 0; params [i].name != NULL; i++)
-      if (params [i].optchar != '\0' || show_all_options)
-      {
-	 if (params [i].optchar != '\0')
-	    fprintf (stderr, "  -%c, --", params [i].optchar);
-	 else
-	    fprintf (stderr, "      --");
+    for (i = 0; params [i].name != NULL; i++)
+        if (params [i].optchar != '\0' || show_all_options)
+        {
+            if (params [i].optchar != '\0')
+                fprintf (stderr, "  -%c, --", params [i].optchar);
+            else
+                fprintf (stderr, "      --");
 	 
-	 if (params [i].type == POSTR)
-	    fprintf (stderr, "%s=[%s]%-*s  ", params [i].name,
-		     params [i].argument_name,
-		     max (0, (width - 2 - strlen (params [i].name)
-			   - strlen (params [i].argument_name))), "");
-	 else if (params [i].type != PFLAG)
-	    fprintf (stderr, "%s=%-*s  ", params [i].name,
-		  width - strlen (params [i].name),
-		  params [i].argument_name);
-	 else
-	    fprintf (stderr, "%-*s  ", width + 1, params [i].name);
+            if (params [i].type == POSTR)
+                fprintf (stderr, "%s=[%s]%-*s  ", params [i].name,
+                         params [i].argument_name,
+                         (unsigned)
+                         MAX(0, (width - 2 - strlen (params [i].name)
+                                 - strlen (params [i].argument_name))), "");
+            else if (params [i].type != PFLAG)
+                fprintf (stderr, "%s=%-*s  ", params [i].name,
+                         (unsigned)(width - strlen (params [i].name)),
+                         params [i].argument_name);
+            else
+                fprintf (stderr, "%-*s  ",
+                         (unsigned)(width + 1), params [i].name);
 
-	 fprintf (stderr, params [i].use, params [i].argument_name);
+            fprintf (stderr, params [i].use, params [i].argument_name);
 	 
-	 switch (params [i].type)
-	 {
-	    case PFLAG:
-	       break;
-	    case PINT:
-	       fprintf (stderr, "{%d}", params [i].value.i);
-	       break;
-	    case PFLOAT:
-	       fprintf (stderr, "{%.2f}", (double) params [i].value.f);
-	       break;
-	    case PSTR:
-	    case POSTR:
-	       if (params [i].value.s)
-		  fprintf (stderr, "{%s}", params [i].value.s);
-	       break;
-	    default:
-	       error ("type %d for %s invalid",
-		      params [i].type, params [i].name);
-	 }
-	 fprintf (stderr, "\n");
-      }
-   fprintf (stderr, "\n");
-   fprintf (stderr, "Parameter initialization order:\n");
-   fprintf (stderr,
-	    "1.) %s\n2.) $HOME/%s\t 3.) command line\t 4.) --config=file",
-	    sys_file_name, usr_file_name);
-   fprintf (stderr, "\n\n");
-   if (comment != NULL)
-      fprintf (stderr, "%s\n", comment);
+            switch (params [i].type)
+            {
+            case PFLAG:
+                break;
+            case PINT:
+                fprintf (stderr, "{%d}", params [i].value.i);
+                break;
+            case PFLOAT:
+                fprintf (stderr, "{%.2f}", (double) params [i].value.f);
+                break;
+            case PSTR:
+            case POSTR:
+                if (params [i].value.s)
+                    fprintf (stderr, "{%s}", params [i].value.s);
+                break;
+            default:
+                error ("type %d for %s invalid",
+                       params [i].type, params [i].name);
+            }
+            fprintf (stderr, "\n");
+        }
+    fprintf (stderr, "\n");
+    fprintf (stderr, "Parameter initialization order:\n");
+    fprintf (stderr,
+             "1.) %s\n2.) $HOME/%s\t 3.) command line\t 4.) --config=file",
+             sys_file_name, usr_file_name);
+    fprintf (stderr, "\n\n");
+    if (comment != NULL)
+        fprintf (stderr, "%s\n", comment);
 
-   exit (1);
+    exit (1);
 }
 

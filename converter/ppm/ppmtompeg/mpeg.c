@@ -30,6 +30,7 @@
  * HEADER FILES *
  *==============*/
 
+#define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 #define _BSD_SOURCE   /* Make sure strdup() is in string.h */
 
 #include "all.h"
@@ -125,9 +126,9 @@ int32 bit_rate, buf_size;
  * INTERNAL PROCEDURE prototypes *
  *===============================*/
 
-static void ComputeDHMSTime _ANSI_ARGS_((int32 someTime, char *timeText));
-static void OpenBitRateFile _ANSI_ARGS_((void));
-static void CloseBitRateFile _ANSI_ARGS_((void));
+static void ComputeDHMSTime (int32 someTime, char *timeText);
+static void OpenBitRateFile (void);
+static void CloseBitRateFile (void);
 
 
 static void
@@ -413,11 +414,11 @@ bitioNew(const char * const outputFileName,
     else {
         const char * fileName;
 
-        asprintfN(&fileName, "%s.frame.%d", outputFileName, frameNumber);
+        pm_asprintf(&fileName, "%s.frame.%d", outputFileName, frameNumber);
 
         bbP = Bitio_New_Filename(fileName);
 
-        strfree(fileName);
+        pm_strfree(fileName);
     }
     return bbP;
 }
@@ -771,12 +772,12 @@ doFirstFrameStuff(enum frameContext const context,
             time_t now;
                     
             time(&now);
-            asprintfN(&userDataString,"MPEG stream encoded by UCB Encoder "
-                      "(mpeg_encode) v%s on %s.",
-                      VERSION, ctime(&now));
+            pm_asprintf(&userDataString,"MPEG stream encoded by UCB Encoder "
+                        "(mpeg_encode) v%s on %s.",
+                        VERSION, ctime(&now));
             userData = strdup(userDataString);
             userDataSize = strlen(userData);
-            strfree(userDataString);
+            pm_strfree(userDataString);
         }
         Mhead_GenSequenceHeader(bbP, Fsize_x, Fsize_y,
                                 /* pratio */ aspectRatio,
@@ -1322,12 +1323,12 @@ PrintStartStats(time_t               const startTime,
             GetNthInputFileName(inputSourceP, 0, &inputFileName);
             fprintf(fpointer, "FIRST FILE:  %s/%s\n", 
                     currentPath, inputFileName);
-            strfree(inputFileName);
+            pm_strfree(inputFileName);
             GetNthInputFileName(inputSourceP, inputSourceP->numInputFiles-1, 
                                 &inputFileName);
             fprintf(fpointer, "LAST FILE:  %s/%s\n", 
                     currentPath, inputFileName);
-            strfree(inputFileName);
+            pm_strfree(inputFileName);
         }    
         fprintf(fpointer, "OUTPUT:  %s\n", outputFileName);
 
@@ -1680,7 +1681,7 @@ ReadDecodedRefFrame(MpegFrame *  const frameP,
     }
 
     if ((fpointer = fopen(fileName, "rb")) == NULL) {
-        sleepN(1000);
+        pm_sleep(1000);
         if ((fpointer = fopen(fileName, "rb")) == NULL) {
             fprintf(stderr, "Cannot open %s\n", fileName);
             exit(1);

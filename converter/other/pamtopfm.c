@@ -52,7 +52,7 @@ parseCommandLine(int argc,
    was passed to us as the argv array.  We also trash *argv.
 --------------------------------------------------------------------------*/
     optEntry *option_def = malloc( 100*sizeof( optEntry ) );
-    /* Instructions to optParseOptions3 on how to parse our options. */
+    /* Instructions to pm_optParseOptions3 on how to parse our options. */
     optStruct3 opt;
   
     unsigned int option_def_index;
@@ -67,7 +67,7 @@ parseCommandLine(int argc,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;   /* We have no parms that are negative numbers */
 
-    optParseOptions3( &argc, argv, opt, sizeof(opt), 0 );
+    pm_optParseOptions3( &argc, argv, opt, sizeof(opt), 0 );
     /* Uses and sets argc, argv, and some of *cmdline_p and others. */
 
     if (endianSpec) {
@@ -150,12 +150,12 @@ floatToPfmSample(float       const input,
    Type converter
 -----------------------------------------------------------------------------*/
     if (machineEndianness == pfmEndianness) {
-        *(float *)outputP->bytes = input;
+        MEMSCPY(&outputP->bytes, &input);
     } else {
         unsigned char reversed[sizeof(pfmSample)];
         unsigned int i, j;
 
-        *(float *)reversed = input;
+        MEMSCPY(&reversed, &input);
         
         for (i = 0, j = sizeof(pfmSample)-1; 
              i < sizeof(pfmSample); 

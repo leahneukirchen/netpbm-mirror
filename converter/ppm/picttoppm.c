@@ -40,10 +40,10 @@
 /*
  * Typical byte, 2 byte and 4 byte integers.
  */
-typedef unsigned char byte;
-typedef char signed_byte;
-typedef unsigned short word;
-typedef unsigned long longword;
+typedef unsigned char Byte;
+typedef char SignedByte;
+typedef unsigned short Word;
+typedef unsigned long Longword;
 
 
 /*
@@ -51,47 +51,47 @@ typedef unsigned long longword;
  */
 
 struct Rect {
-    word top;
-    word left;
-    word bottom;
-    word right;
+    Word top;
+    Word left;
+    Word bottom;
+    Word right;
 };
 
 struct pixMap {
     struct Rect Bounds;
-    word version;
-    word packType;
-    longword packSize;
-    longword hRes;
-    longword vRes;
-    word pixelType;
-    word pixelSize;
-    word cmpCount;
-    word cmpSize;
-    longword planeBytes;
-    longword pmTable;
-    longword pmReserved;
+    Word version;
+    Word packType;
+    Longword packSize;
+    Longword hRes;
+    Longword vRes;
+    Word pixelType;
+    Word pixelSize;
+    Word cmpCount;
+    Word cmpSize;
+    Longword planeBytes;
+    Longword pmTable;
+    Longword pmReserved;
 };
 
 struct RGBColor {
-    word red;
-    word grn;
-    word blu;
+    Word red;
+    Word grn;
+    Word blu;
 };
 
 struct Point {
-    word x;
-    word y;
+    Word x;
+    Word y;
 };
 
 struct Pattern {
-    byte pix[64];
+    Byte pix[64];
 };
 
 struct rgbPlanes {
-    word * red;
-    word * grn;
-    word * blu;
+    Word * red;
+    Word * grn;
+    Word * blu;
 };
 
 struct canvas {
@@ -102,8 +102,8 @@ typedef void (*transfer_func) (struct RGBColor* src, struct RGBColor* dst);
 
 static const char * stage;
 static struct Rect picFrame;
-static word rowlen;
-static word collen;
+static Word rowlen;
+static Word collen;
 static int verbose;
 static int fullres;
 static int recognize_comment;
@@ -121,23 +121,23 @@ static struct Rect clip_rect;
 static struct Rect cur_rect;
 static struct Point current;
 static struct Pattern pen_pat;
-static word pen_width;
-static word pen_height;
-static word pen_mode;
+static Word pen_width;
+static Word pen_height;
+static Word pen_mode;
 static transfer_func pen_trf;
-static word text_font;
-static byte text_face;
-static word text_mode;
+static Word text_font;
+static Byte text_face;
+static Word text_mode;
 static transfer_func text_trf;
-static word text_size;
+static Word text_size;
 static struct font* tfont;
 
 /* state for magic printer comments */
 static int ps_text;
-static byte ps_just;
-static byte ps_flip;
-static word ps_rotation;
-static byte ps_linespace;
+static Byte ps_just;
+static Byte ps_flip;
+static Word ps_rotation;
+static Byte ps_linespace;
 static int ps_cent_x;
 static int ps_cent_y;
 static int ps_cent_set;
@@ -277,6 +277,10 @@ typedef void (drawFn)(struct canvas *, blitList *, int);
 struct opdef {
     const char* name;
     int len;
+        /* If non-negative, this is the length of the argument of the
+           instruction.  If negative, it has special meaning; WORD_LEN
+           is the only value negative value.
+        */
     drawFn * impl;
     const char* description;
 };
@@ -291,11 +295,11 @@ struct opdef {
  */
 
 /* for reserved opcodes of known length */
-#define res(length) \
+#define RESERVED_OP(length)                                   \
 { "reserved", (length), NULL, "reserved for Apple use" }
 
 /* for reserved opcodes of length determined by a function */
-#define resf(skipfunction) \
+#define RESERVED_OP_F(skipfunction) \
 { "reserved", NA, (skipfunction), "reserved for Apple use" }
 
 /* seems like RGB colors are 6 bytes, but Apple says they're variable */
@@ -308,8 +312,8 @@ static int align = 0;
 
 
 
-static byte
-read_byte(void) {
+static Byte
+readByte(void) {
     int c;
 
     if ((c = fgetc(ifp)) == EOF)
@@ -321,52 +325,52 @@ read_byte(void) {
 
 
 
-static word
-read_word(void) {
-    byte b;
+static Word
+readWord(void) {
 
-    b = read_byte();
+    Byte const hi = readByte();
+    Byte const lo = readByte();
 
-    return (b << 8) | read_byte();
+    return (hi << 8) | (lo << 0);
 }
 
 
 
-static void read_point(struct Point * const p) {
-    p->y = read_word();
-    p->x = read_word();
+static void readPoint(struct Point * const p) {
+    p->y = readWord();
+    p->x = readWord();
 }
 
 
 
-static longword
-read_long(void) {
-    word i;
+static Longword
+readLong(void) {
+    Word const hi = readWord();
+    Word const lo = readWord();
 
-    i = read_word();
-    return (i << 16) | read_word();
+    return (hi << 16) | (lo << 0);
 }
 
 
 
-static signed_byte
-read_signed_byte(void) {
-    return (signed_byte)read_byte();
+static SignedByte
+readSignedByte(void) {
+    return (SignedByte)readByte();
 }
 
 
 
 static void 
-read_short_point(struct Point * const p) {
-    p->x = read_signed_byte();
-    p->y = read_signed_byte();
+readShortPoint(struct Point * const p) {
+    p->x = readSignedByte();
+    p->y = readSignedByte();
 }
 
 
 
 static void
 skip(int const byteCount) {
-    static byte buf[1024];
+    static Byte buf[1024];
     int n;
 
     align += byteCount;
@@ -461,7 +465,7 @@ const_name(const struct const_name * const table,
 
 
 static void 
-picComment(word const type, 
+picComment(Word const type, 
            int const length) {
 
     unsigned int remainingLength;
@@ -470,10 +474,10 @@ picComment(word const type,
     case 150:
         if (verbose) pm_message("TextBegin");
         if (length >= 6) {
-            ps_just = read_byte();
-            ps_flip = read_byte();
-            ps_rotation = read_word();
-            ps_linespace = read_byte();
+            ps_just = readByte();
+            ps_flip = readByte();
+            ps_rotation = readWord();
+            ps_linespace = readByte();
             remainingLength = length - 5;
             if (recognize_comment)
                 ps_text = 1;
@@ -506,11 +510,11 @@ picComment(word const type,
         if (length < 8)
             remainingLength = length;
         else {
-            ps_cent_y = read_word();
+            ps_cent_y = readWord();
             if (ps_cent_y > 32767)
                 ps_cent_y -= 65536;
             skip(2); /* ignore fractional part */
-            ps_cent_x = read_word();
+            ps_cent_x = readWord();
             if (ps_cent_x > 32767)
                 ps_cent_x -= 65536;
             skip(2); /* ignore fractional part */
@@ -621,7 +625,7 @@ ShortComment(struct canvas * const canvasP,
              blitList *      const blitListP,
              int             const version) {
 
-    picComment(read_word(), 0);
+    picComment(readWord(), 0);
 }
 
 
@@ -633,10 +637,10 @@ LongComment(struct canvas * const canvasP,
             blitList *      const blitListP,
             int             const version) {
 
-    word type;
+    Word type;
 
-    type = read_word();
-    picComment(type, read_word());
+    type = readWord();
+    picComment(type, readWord());
 }
 
 
@@ -649,7 +653,7 @@ skip_poly_or_region(struct canvas * const canvasP,
                     int             const version) {
 
     stage = "skipping polygon or region";
-    skip(read_word() - 2);
+    skip(readWord() - 2);
 }
 
 
@@ -788,12 +792,12 @@ dumpRect(const char * const label,
 
 
 static void
-read_rect(struct Rect * const r) {
+readRect(struct Rect * const r) {
 
-    r->top    = read_word();
-    r->left   = read_word();
-    r->bottom = read_word();
-    r->right  = read_word();
+    r->top    = readWord();
+    r->left   = readWord();
+    r->bottom = readWord();
+    r->right  = readWord();
 
     if (r->top > r->bottom || r->right < r->left)
         dumpRect("Invalid rectangle", *r);
@@ -1196,7 +1200,7 @@ doDiffSize(struct Rect       const clipsrc,
 
     unsigned int const dstadd = dstwid - xsize;
 
-    FILE * pnmscalePipeP;
+    FILE * pamscalePipeP;
     const char * command;
     FILE * scaled;
     int cols, rows, format;
@@ -1205,9 +1209,9 @@ doDiffSize(struct Rect       const clipsrc,
     pixel * rowp;
     FILE * tempFileP;
     const char * tempFilename;
-    word * reddst;
-    word * grndst;
-    word * bludst;
+    Word * reddst;
+    Word * grndst;
+    Word * bludst;
 
     reddst = dst.red;  /* initial value */
     grndst = dst.grn;  /* initial value */
@@ -1217,19 +1221,19 @@ doDiffSize(struct Rect       const clipsrc,
 
     pm_close(tempFileP);
 
-    asprintfN(&command, "pnmscale -xsize %d -ysize %d > %s",
-              rectwidth(&clipdst), rectheight(&clipdst), tempFilename);
+    pm_asprintf(&command, "pamscale -xsize %d -ysize %d > %s",
+                rectwidth(&clipdst), rectheight(&clipdst), tempFilename);
 
     pm_message("running command '%s'", command);
 
-    pnmscalePipeP = popen(command, "w");
-    if (pnmscalePipeP == NULL)
+    pamscalePipeP = popen(command, "w");
+    if (pamscalePipeP == NULL)
         pm_error("cannot execute command '%s'  popen() errno = %s (%d)",
                  command, strerror(errno), errno);
 
-    strfree(command);
+    pm_strfree(command);
 
-    fprintf(pnmscalePipeP, "P6\n%d %d\n%d\n",
+    fprintf(pamscalePipeP, "P6\n%d %d\n%d\n",
             rectwidth(&clipsrc), rectheight(&clipsrc), PPM_MAXMAXVAL);
 
     switch (pixSize) {
@@ -1241,9 +1245,9 @@ doDiffSize(struct Rect       const clipsrc,
             for (colNumber = 0; colNumber < xsize; ++colNumber) {
                 unsigned int const colorIndex = row[colNumber];
                 struct RGBColor * const ct = &color_map[colorIndex];
-                fputc(redepth(ct->red, 65535L), pnmscalePipeP);
-                fputc(redepth(ct->grn, 65535L), pnmscalePipeP);
-                fputc(redepth(ct->blu, 65535L), pnmscalePipeP);
+                fputc(redepth(ct->red, 65535L), pamscalePipeP);
+                fputc(redepth(ct->grn, 65535L), pamscalePipeP);
+                fputc(redepth(ct->blu, 65535L), pamscalePipeP);
             }
         }
     }
@@ -1255,9 +1259,9 @@ doDiffSize(struct Rect       const clipsrc,
             unsigned int colNumber;
             for (colNumber = 0; colNumber < xsize; ++colNumber) {
                 struct RGBColor const color = decode16(&row[colNumber * 2]);
-                fputc(redepth(color.red, 32), pnmscalePipeP);
-                fputc(redepth(color.grn, 32), pnmscalePipeP);
-                fputc(redepth(color.blu, 32), pnmscalePipeP);
+                fputc(redepth(color.red, 32), pamscalePipeP);
+                fputc(redepth(color.grn, 32), pamscalePipeP);
+                fputc(redepth(color.blu, 32), pamscalePipeP);
             }
         }
     }
@@ -1274,17 +1278,17 @@ doDiffSize(struct Rect       const clipsrc,
 
             unsigned int colNumber;
             for (colNumber = 0; colNumber < xsize; ++colNumber) {
-                fputc(redepth(redPlane[colNumber], 256), pnmscalePipeP);
-                fputc(redepth(grnPlane[colNumber], 256), pnmscalePipeP);
-                fputc(redepth(bluPlane[colNumber], 256), pnmscalePipeP);
+                fputc(redepth(redPlane[colNumber], 256), pamscalePipeP);
+                fputc(redepth(grnPlane[colNumber], 256), pamscalePipeP);
+                fputc(redepth(bluPlane[colNumber], 256), pamscalePipeP);
             }
         }
     }
     break;
     }
 
-    if (pclose(pnmscalePipeP))
-        pm_error("pnmscale failed.  pclose() returned Errno %s (%d)",
+    if (pclose(pamscalePipeP))
+        pm_error("pamscale failed.  pclose() returned Errno %s (%d)",
                  strerror(errno), errno);
 
     ppm_readppminit(scaled = pm_openr(tempFilename), &cols, &rows,
@@ -1331,7 +1335,7 @@ doDiffSize(struct Rect       const clipsrc,
 
     pm_close(scaled);
     ppm_freerow(row);
-    strfree(tempFilename);
+    pm_strfree(tempFilename);
     unlink(tempFilename);
 }
 
@@ -1707,9 +1711,9 @@ allocPlanes(unsigned int       const width,
         pm_error("not enough memory to hold picture");
 
     /* initialize background to white */
-    memset(planes.red, 255, planelen * sizeof(word));
-    memset(planes.grn, 255, planelen * sizeof(word));
-    memset(planes.blu, 255, planelen * sizeof(word));
+    memset(planes.red, 255, planelen * sizeof(Word));
+    memset(planes.grn, 255, planelen * sizeof(Word));
+    memset(planes.blu, 255, planelen * sizeof(Word));
 
     *planesP = planes;
 }
@@ -1727,7 +1731,7 @@ freePlanes(struct rgbPlanes const planes) {
 
 
 static unsigned char
-compact(word const input) {
+compact(Word const input) {
 
     return (input >> 8) & 0xff;
 }
@@ -1913,41 +1917,49 @@ outputPpm(FILE *           const ofP,
  * All data in version 2 is 2-byte word aligned.  Odd size data
  * is padded with a null.
  */
-static word
+static Word
 get_op(int const version) {
     if ((align & 1) && version == 2) {
         stage = "aligning for opcode";
-        read_byte();
+        readByte();
     }
 
     stage = "reading opcode";
 
     if (version == 1)
-        return read_byte();
+        return readByte();
     else
-        return read_word();
+        return readWord();
 }
 
 
 
-static drawFn Clip;
+static drawFn ClipRgn;
 
 static void
-Clip(struct canvas * const canvasP,
-     blitList *      const blitListP,
-     int             const version) {
+ClipRgn(struct canvas * const canvasP,
+        blitList *      const blitListP,
+        int             const version) {
 
-    word len;
+    Word const len = readWord();
+        /* Length in bytes of the parameter (including this word) */
 
-    len = read_word();
+    if (len == 10) {    /* null rgn */
+        /* Parameter is 2 bytes of length, 8 bytes of rectangle corners */
 
-    if (len == 0x000a) {    /* null rgn */
-        read_rect(&clip_rect);
+        /* In March 2011, I saw a supposed PICT file (reported to work with
+           Apple pictureViewer) with what looked like signed numbers for the
+           rectangle: (-32767,-32767), (32767, 32767).  This code has always
+           assumed all words in a PICT are unsigned.  But even when I changed
+           it to accept this clip rectangle, this program found the image to
+           have an invalid raster.
+        */
+
+        readRect(&clip_rect);
         /* XXX should clip this by picFrame */
         if (verbose)
             dumpRect("clipping to", clip_rect);
-    }
-    else
+    } else
         skip(len - 2);
 }
 
@@ -1960,31 +1972,31 @@ OpColor(struct canvas * const canvasP,
         blitList *      const blitListP,
         int             const version) {
 
-    op_color.red = read_word();
-    op_color.grn = read_word();
-    op_color.blu = read_word();
+    op_color.red = readWord();
+    op_color.grn = readWord();
+    op_color.blu = readWord();
 }
 
 
 
 static void
-read_pixmap(struct pixMap * const p) {
+readPixmap(struct pixMap * const p) {
 
     stage = "getting pixMap header";
 
-    read_rect(&p->Bounds);
-    p->version    = read_word();
-    p->packType   = read_word();
-    p->packSize   = read_long();
-    p->hRes       = read_long();
-    p->vRes       = read_long();
-    p->pixelType  = read_word();
-    p->pixelSize  = read_word();
-    p->cmpCount   = read_word();
-    p->cmpSize    = read_word();
-    p->planeBytes = read_long();
-    p->pmTable    = read_long();
-    p->pmReserved = read_long();
+    readRect(&p->Bounds);
+    p->version    = readWord();
+    p->packType   = readWord();
+    p->packSize   = readLong();
+    p->hRes       = readLong();
+    p->vRes       = readLong();
+    p->pixelType  = readWord();
+    p->pixelSize  = readWord();
+    p->cmpCount   = readWord();
+    p->cmpSize    = readWord();
+    p->planeBytes = readLong();
+    p->pmTable    = readLong();
+    p->pmReserved = readLong();
 
     if (verbose) {
         pm_message("pixelType: %d", p->pixelType);
@@ -2007,19 +2019,19 @@ read_pixmap(struct pixMap * const p) {
 
 
 static struct RGBColor*
-read_color_table(void) {
-    longword ctSeed;
-    word ctFlags;
-    word ctSize;
-    word val;
+readColorTable(void) {
+    Longword ctSeed;
+    Word ctFlags;
+    Word ctSize;
+    Word val;
     int i;
     struct RGBColor* color_table;
 
     stage = "getting color table info";
 
-    ctSeed = read_long();
-    ctFlags = read_word();
-    ctSize = read_word();
+    ctSeed = readLong();
+    ctFlags = readWord();
+    ctSize = readWord();
 
     if (verbose) {
         pm_message("ctSeed:  %ld", ctSeed);
@@ -2034,7 +2046,7 @@ read_color_table(void) {
         pm_error("no memory for color table");
 
     for (i = 0; i <= ctSize; i++) {
-        val = read_word();
+        val = readWord();
         /* The indices in a device color table are bogus and usually == 0.
          * so I assume we allocate up the list of colors in order.
          */
@@ -2042,9 +2054,9 @@ read_color_table(void) {
             val = i;
         if (val > ctSize)
             pm_error("pixel value greater than color table size");
-        color_table[val].red = read_word();
-        color_table[val].grn = read_word();
-        color_table[val].blu = read_word();
+        color_table[val].red = readWord();
+        color_table[val].grn = readWord();
+        color_table[val].blu = readWord();
 
         if (verbose > 1)
             pm_message("Color %3u: [%u,%u,%u]", val,
@@ -2531,7 +2543,7 @@ interpretCompressedLine(unsigned char * const linebuf,
   So with 200 being the cutoff, it's actually impossible to represent some 
   16 bpp images with 200 pixels per row.
 
-  We have not been able to find an offical spec for PICT.
+  We have not been able to find an official spec for PICT.
 
   Some day, we may have to make a user option for this.
 */
@@ -2573,9 +2585,9 @@ unpackCompressedBits(FILE *          const ifP,
         unsigned int linelen;
 
         if (llsize == 2)
-            linelen = read_word();
+            linelen = readWord();
         else
-            linelen = read_byte();
+            linelen = readByte();
 
         reportValidateCompressedLineLen(row, linelen, raster.rowSize);
 
@@ -2598,7 +2610,7 @@ unpackCompressedBits(FILE *          const ifP,
 static void
 unpackbits(FILE *           const ifP,
            struct Rect *    const boundsP,
-           word             const rowBytesArg, 
+           Word             const rowBytesArg, 
            int              const bitsPerPixel,
            struct raster *  const rasterP) {
 
@@ -2633,7 +2645,7 @@ unpackbits(FILE *           const ifP,
 
 
 static void
-interpretRowBytesWord(word           const rowBytesWord,
+interpretRowBytesWord(Word           const rowBytesWord,
                       bool *         const pixMapP,
                       unsigned int * const rowBytesP) {
 
@@ -2651,13 +2663,13 @@ interpretRowBytesWord(word           const rowBytesWord,
  * a pattern in the fabled complete version.
  */
 static void
-read_pattern(void) {
+readPattern(void) {
 
-    word PatType;
+    Word PatType;
 
     stage = "Reading a pattern";
 
-    PatType = read_word();
+    PatType = readWord();
 
     switch (PatType) {
     case 2:
@@ -2665,7 +2677,7 @@ read_pattern(void) {
         skip(5); /* RGB for pattern */
         break;
     case 1: {
-        word rowBytesWord;
+        Word rowBytesWord;
         bool pixMap;
         unsigned int rowBytes;
         struct pixMap p;
@@ -2673,16 +2685,16 @@ read_pattern(void) {
         struct RGBColor * ct;
 
         skip(8); /* old pattern data */
-        rowBytesWord = read_word();
+        rowBytesWord = readWord();
         interpretRowBytesWord(rowBytesWord, &pixMap, &rowBytes);
-        read_pixmap(&p);
-        ct = read_color_table();
+        readPixmap(&p);
+        ct = readColorTable();
         unpackbits(ifp, &p.Bounds, rowBytes, p.pixelSize, &raster);
         freeRaster(raster);
         free(ct);
     } break;
     default:
-        pm_error("unknown pattern type in read_pattern");
+        pm_error("unknown pattern type in readPattern");
     }
 }
 
@@ -2697,7 +2709,7 @@ BkPixPat(struct canvas * const canvasP,
          blitList *      const blitListP,
          int             const version) {
 
-    read_pattern();
+    readPattern();
 }
 
 
@@ -2709,7 +2721,7 @@ PnPixPat(struct canvas * const canvasP,
          blitList *      const blitListP,
          int             const version) {
 
-    read_pattern();
+    readPattern();
 }
 
 
@@ -2721,13 +2733,13 @@ FillPixPat(struct canvas * const canvasP,
            blitList *      const blitListP,
            int             const version) {
 
-    read_pattern();
+    readPattern();
 }
 
 
 
 static void
-read_8x8_pattern(struct Pattern * const pat) {
+read8x8Pattern(struct Pattern * const pat) {
     unsigned char buf[8];
     unsigned char * exp;
     unsigned int len;
@@ -2756,7 +2768,7 @@ BkPat(struct canvas * const canvasP,
       blitList *      const blitListP,
       int             const version) {
 
-    read_8x8_pattern(&bkpat);
+    read8x8Pattern(&bkpat);
 }
 
 
@@ -2768,7 +2780,7 @@ PnPat(struct canvas * const canvasP,
       blitList *      const blitListP,
       int             const version) {
 
-    read_8x8_pattern(&pen_pat);
+    read8x8Pattern(&pen_pat);
 }
 
 
@@ -2780,7 +2792,7 @@ FillPat(struct canvas * const canvasP,
         blitList *      const blitListP,
         int             const version) {
 
-    read_8x8_pattern(&fillpat);
+    read8x8Pattern(&fillpat);
 }
 
 
@@ -2792,8 +2804,8 @@ PnSize(struct canvas * const canvasP,
        blitList *      const blitListP,
        int             const version) {
 
-    pen_height = read_word();
-    pen_width = read_word();
+    pen_height = readWord();
+    pen_width = readWord();
     if (verbose)
         pm_message("pen size %d x %d", pen_width, pen_height);
 }
@@ -2807,7 +2819,7 @@ PnMode(struct canvas * const canvasP,
        blitList *      const blitListP,
        int             const version) {
 
-    pen_mode = read_word();
+    pen_mode = readWord();
 
     if (pen_mode >= 8 && pen_mode < 15)
         pen_mode -= 8;
@@ -2821,10 +2833,10 @@ PnMode(struct canvas * const canvasP,
 
 
 static void 
-read_rgb(struct RGBColor * const rgb) {
-    rgb->red = read_word();
-    rgb->grn = read_word();
-    rgb->blu = read_word();
+readRgb(struct RGBColor * const rgb) {
+    rgb->red = readWord();
+    rgb->grn = readWord();
+    rgb->blu = readWord();
 }
 
 
@@ -2836,7 +2848,7 @@ RGBFgCol(struct canvas * const canvasP,
          blitList *      const blitListP,
          int             const version) {
 
-    read_rgb(&foreground);
+    readRgb(&foreground);
     if (verbose)
         pm_message("foreground now [%d,%d,%d]", 
             foreground.red, foreground.grn, foreground.blu);
@@ -2851,7 +2863,7 @@ RGBBkCol(struct canvas * const canvasP,
          blitList *      const blitListP,
          int             const version) {
 
-    read_rgb(&background);
+    readRgb(&background);
     if (verbose)
         pm_message("background now [%d,%d,%d]", 
             background.red, background.grn, background.blu);
@@ -2869,7 +2881,7 @@ draw_pixel(struct canvas *   const canvasP,
            transfer_func           trf) {
 
     if (x < clip_rect.left || x >= clip_rect.right ||
-        y < clip_rect.top || y >= clip_rect.bottom) {
+        y < clip_rect.top  || y >= clip_rect.bottom) {
     } else {
         unsigned int const i = PIXEL_INDEX(x, y);
 
@@ -3011,8 +3023,8 @@ Line(struct canvas * const canvasP,
      int             const version) {
 
   struct Point p1;
-  read_point(&p1);
-  read_point(&current);
+  readPoint(&p1);
+  readPoint(&current);
   if (verbose)
     pm_message("(%d,%d) to (%d, %d)",
            p1.x,p1.y,current.x,current.y);
@@ -3029,7 +3041,7 @@ LineFrom(struct canvas * const canvasP,
          int             const version) {
 
     struct Point p1;
-    read_point(&p1);
+    readPoint(&p1);
     if (verbose)
         pm_message("(%d,%d) to (%d, %d)", current.x, current.y, p1.x, p1.y);
 
@@ -3050,8 +3062,8 @@ ShortLine(struct canvas * const canvasP,
           int             const version) {
 
     struct Point p1;
-    read_point(&p1);
-    read_short_point(&current);
+    readPoint(&p1);
+    readShortPoint(&current);
     if (verbose)
         pm_message("(%d,%d) delta (%d, %d)", p1.x, p1.y, current.x, current.y);
     current.x += p1.x;
@@ -3071,7 +3083,7 @@ ShortLineFrom(struct canvas * const canvasP,
               int             const version) {
 
     struct Point p1;
-    read_short_point(&p1);
+    readShortPoint(&p1);
     if (verbose)
         pm_message("(%d,%d) delta (%d, %d)",
                    current.x,current.y,p1.x,p1.y);
@@ -3108,7 +3120,7 @@ paintRect(struct canvas * const canvasP,
           blitList *      const blitListP,
           int             const version) {
 
-    read_rect(&cur_rect);
+    readRect(&cur_rect);
     if (!blitListP)
         do_paintRect(canvasP, cur_rect);
 }
@@ -3159,7 +3171,7 @@ frameRect(struct canvas * const canvasP,
           blitList *      const blitListP,
           int             const version) {
 
-    read_rect(&cur_rect);
+    readRect(&cur_rect);
     if (!blitListP)
         do_frameRect(canvasP, cur_rect);
 }
@@ -3179,7 +3191,7 @@ frameSameRect(struct canvas * const canvasP,
 
 
 
-/* a stupid shell sort - I'm so embarassed  */
+/* a stupid shell sort - I'm so embarrassed  */
 
 static void 
 poly_sort(int const sort_index, struct Point points[]) {
@@ -3326,11 +3338,11 @@ paintPoly(struct canvas * const canvasP,
 
   struct Rect bb;
   struct Point pts[100];
-  int i, np = (read_word() - 10) >> 2;
+  int i, np = (readWord() - 10) >> 2;
 
-  read_rect(&bb);
+  readRect(&bb);
   for (i=0; i<np; ++i)
-    read_point(&pts[i]);
+    readPoint(&pts[i]);
 
   /* scan convert poly ... */
   if (!blitListP)
@@ -3346,7 +3358,7 @@ PnLocHFrac(struct canvas * const canvasP,
            blitList *      const blitListP,
            int             const version) {
 
-    word frac = read_word();
+    Word frac = readWord();
 
     if (verbose)
         pm_message("PnLocHFrac = %d", frac);
@@ -3361,7 +3373,7 @@ TxMode(struct canvas * const canvasP,
        blitList *      const blitListP,
        int             const version) {
 
-    text_mode = read_word();
+    text_mode = readWord();
 
     if (text_mode >= 8 && text_mode < 15)
         text_mode -= 8;
@@ -3382,7 +3394,7 @@ TxFont(struct canvas * const canvasP,
        blitList *      const blitListP,
        int             const version) {
 
-    text_font = read_word();
+    text_font = readWord();
     if (verbose)
         pm_message("text font %s", const_name(font_name, text_font));
 }
@@ -3396,7 +3408,7 @@ TxFace(struct canvas * const canvasP,
        blitList *      const blitListP,
        int             const version) {
 
-    text_face = read_byte();
+    text_face = readByte();
     if (verbose)
         pm_message("text face %d", text_face);
 }
@@ -3410,7 +3422,7 @@ TxSize(struct canvas * const canvasP,
        blitList *      const blitListP,
        int             const version) {
 
-    text_size = read_word();
+    text_size = readWord();
     if (verbose)
         pm_message("text size %d", text_size);
 }
@@ -3420,7 +3432,7 @@ TxSize(struct canvas * const canvasP,
 static void
 skip_text(blitList * const blitListP) {
 
-    skip(read_byte());
+    skip(readByte());
 
     blitListP->unblittableText = true;
 }
@@ -3504,11 +3516,11 @@ rotate(int * const x,
 
 static void
 do_ps_text(struct canvas * const canvasP,
-           word            const tx, 
-           word            const ty) {
+           Word            const tx, 
+           Word            const ty) {
 
     int len, width, i, w, h, x, y, rx, ry, o;
-    byte str[256], ch;
+    Byte str[256], ch;
     struct glyph* glyph;
 
     current.x = tx;
@@ -3520,12 +3532,12 @@ do_ps_text(struct canvas * const canvasP,
         ps_cent_set = 1;
     }
 
-    len = read_byte();
+    len = readByte();
 
     /* XXX this width calculation is not completely correct */
     width = 0;
     for (i = 0; i < len; i++) {
-        ch = str[i] = read_byte();
+        ch = str[i] = readByte();
         if (tfont->glyph[ch])
             width += tfont->glyph[ch]->xadd;
     }
@@ -3574,8 +3586,8 @@ do_ps_text(struct canvas * const canvasP,
 static void
 do_text(struct canvas *  const canvasP,
         blitList *       const blitListP,
-        word             const startx, 
-        word             const starty) {
+        Word             const startx, 
+        Word             const starty) {
 
     if (blitListP)
         skip_text(blitListP);
@@ -3587,12 +3599,12 @@ do_text(struct canvas *  const canvasP,
             do_ps_text(canvasP, startx, starty);
         else {
             int len;
-            word x, y;
+            Word x, y;
 
             x = startx;
             y = starty;
-            for (len = read_byte(); len > 0; --len) {
-                struct glyph* const glyph = tfont->glyph[read_byte()];
+            for (len = readByte(); len > 0; --len) {
+                struct glyph* const glyph = tfont->glyph[readByte()];
                 if (glyph) {
                     int dy;
                     int h;
@@ -3628,7 +3640,7 @@ LongText(struct canvas * const canvasP,
 
     struct Point p;
 
-    read_point(&p);
+    readPoint(&p);
 
     do_text(canvasP, blitListP, p.x, p.y);
 }
@@ -3642,7 +3654,7 @@ DHText(struct canvas * const canvasP,
        blitList *      const blitListP,
        int             const version) {
 
-    current.x += read_byte();
+    current.x += readByte();
 
     do_text(canvasP, blitListP, current.x, current.y);
 }
@@ -3656,7 +3668,7 @@ DVText(struct canvas * const canvasP,
        blitList *      const blitListP,
        int             const version) {
 
-    current.y += read_byte();
+    current.y += readByte();
 
     do_text(canvasP, blitListP, current.x, current.y);
 }
@@ -3669,10 +3681,10 @@ static void
 DHDVText(struct canvas * const canvasP,
          blitList *      const blitListP,
          int             const version) {
-    byte dh, dv;
+    Byte dh, dv;
 
-    dh = read_byte();
-    dv = read_byte();
+    dh = readByte();
+    dv = readByte();
 
     if (verbose)
         pm_message("dh, dv = %d, %d", dh, dv);
@@ -3686,7 +3698,7 @@ DHDVText(struct canvas * const canvasP,
 
 
 /*
- * This could use read_pixmap, but I'm too lazy to hack read_pixmap.
+ * This could use readPixmap, but I'm too lazy to hack readPixmap.
  */
 
 static void
@@ -3699,36 +3711,36 @@ directBits(struct canvas * const canvasP,
     struct Rect     srcRect;
     struct Rect     dstRect;
     struct raster   raster;
-    word            mode;
+    Word            mode;
     unsigned int    rectWidth;
 
     /* skip fake len, and fake EOF */
     skip(4);    /* Ptr baseAddr == 0x000000ff */
-    read_word();    /* version */
-    read_rect(&p.Bounds);
+    readWord();    /* version */
+    readRect(&p.Bounds);
     rectWidth = p.Bounds.right - p.Bounds.left;
-    p.packType = read_word();
-    p.packSize = read_long();
-    p.hRes = read_long();
-    p.vRes = read_long();
-    p.pixelType = read_word();
-    p.pixelSize = read_word();
-    p.pixelSize = read_word();    /* XXX twice??? */
-    p.cmpCount = read_word();
-    p.cmpSize = read_word();
-    p.planeBytes = read_long();
-    p.pmTable = read_long();
-    p.pmReserved = read_long();
+    p.packType = readWord();
+    p.packSize = readLong();
+    p.hRes = readLong();
+    p.vRes = readLong();
+    p.pixelType = readWord();
+    p.pixelSize = readWord();
+    p.pixelSize = readWord();    /* XXX twice??? */
+    p.cmpCount = readWord();
+    p.cmpSize = readWord();
+    p.planeBytes = readLong();
+    p.pmTable = readLong();
+    p.pmReserved = readLong();
 
-    read_rect(&srcRect);
+    readRect(&srcRect);
     if (verbose)
         dumpRect("source rectangle:", srcRect);
 
-    read_rect(&dstRect);
+    readRect(&dstRect);
     if (verbose)
         dumpRect("destination rectangle:", dstRect);
 
-    mode = read_word();
+    mode = readWord();
     if (verbose)
         pm_message("transfer mode = %s", const_name(transfer_name, mode));
 
@@ -3776,38 +3788,38 @@ static void
 do_pixmap(struct canvas * const canvasP,
           blitList *      const blitListP,
           int             const version, 
-          word            const rowBytes, 
+          Word            const rowBytes, 
           int             const is_region) {
 /*----------------------------------------------------------------------------
    Do a paletted image.
 -----------------------------------------------------------------------------*/
-    word mode;
+    Word mode;
     struct pixMap p;
     struct raster raster;
     struct RGBColor * color_table;
     struct Rect srcRect;
     struct Rect dstRect;
 
-    read_pixmap(&p);
+    readPixmap(&p);
 
     if (verbose)
         pm_message("%u x %u paletted image",
                    p.Bounds.right - p.Bounds.left,
                    p.Bounds.bottom - p.Bounds.top);
 
-    color_table = read_color_table();
+    color_table = readColorTable();
 
-    read_rect(&srcRect);
+    readRect(&srcRect);
 
     if (verbose)
         dumpRect("source rectangle:", srcRect);
 
-    read_rect(&dstRect);
+    readRect(&dstRect);
 
     if (verbose)
         dumpRect("destination rectangle:", dstRect);
 
-    mode = read_word();
+    mode = readWord();
 
     if (verbose)
         pm_message("transfer mode = %s", const_name(transfer_name, mode));
@@ -3843,7 +3855,7 @@ do_bitmap(FILE *          const ifP,
     struct Rect Bounds;
     struct Rect srcRect;
     struct Rect dstRect;
-    word mode;
+    Word mode;
     struct raster raster;
         /* This raster contains padding on the right to make a multiple
            of 16 pixels per row.
@@ -3851,10 +3863,10 @@ do_bitmap(FILE *          const ifP,
     static struct RGBColor color_table[] = { 
         {65535L, 65535L, 65535L}, {0, 0, 0} };
 
-    read_rect(&Bounds);
-    read_rect(&srcRect);
-    read_rect(&dstRect);
-    mode = read_word();
+    readRect(&Bounds);
+    readRect(&srcRect);
+    readRect(&dstRect);
+    mode = readWord();
     if (verbose)
         pm_message("transfer mode = %s", const_name(transfer_name, mode));
 
@@ -3880,12 +3892,12 @@ BitsRect(struct canvas * const canvasP,
          blitList *      const blitListP,
          int             const version) {
 
-    word rowBytesWord;
+    Word rowBytesWord;
     bool pixMap;
     unsigned int rowBytes;
 
     stage = "Reading rowBytes word for bitsrect";
-    rowBytesWord = read_word();
+    rowBytesWord = readWord();
 
     interpretRowBytesWord(rowBytesWord, &pixMap, &rowBytes);
 
@@ -3904,12 +3916,12 @@ BitsRegion(struct canvas * const canvasP,
            blitList *      const blitListP,
            int             const version) {
     
-    word rowBytesWord;
+    Word rowBytesWord;
     bool pixMap;
     unsigned int rowBytes;
 
     stage = "Reading rowBytes for bitsregion";
-    rowBytesWord = read_word();
+    rowBytesWord = readWord();
 
     interpretRowBytesWord(rowBytesWord, &pixMap, &rowBytes);
 
@@ -3927,7 +3939,7 @@ BitsRegion(struct canvas * const canvasP,
   */
 static struct opdef const optable[] = {
 /* 0x00 */  { "NOP", 0, NULL, "nop" },
-/* 0x01 */  { "Clip", NA, Clip, "clip" },
+/* 0x01 */  { "ClipRgn", NA, ClipRgn, "clip region" },
 /* 0x02 */  { "BkPat", 8, BkPat, "background pattern" },
 /* 0x03 */  { "TxFont", 2, TxFont, "text font (word)" },
 /* 0x04 */  { "TxFace", 1, TxFace, "text face (byte)" },
@@ -3949,9 +3961,9 @@ static struct opdef const optable[] = {
 /* 0x14 */  { "FillPixPat", NA, FillPixPat, "color fill pattern" },
 /* 0x15 */  { "PnLocHFrac", 2, PnLocHFrac, "fractional pen position" },
 /* 0x16 */  { "ChExtra", 2, NULL, "extra for each character" },
-/* 0x17 */  res(0),
-/* 0x18 */  res(0),
-/* 0x19 */  res(0),
+/* 0x17 */  RESERVED_OP(0),
+/* 0x18 */  RESERVED_OP(0),
+/* 0x19 */  RESERVED_OP(0),
 /* 0x1a */  { "RGBFgCol", RGB_LEN, RGBFgCol, "RGB foreColor" },
 /* 0x1b */  { "RGBBkCol", RGB_LEN, RGBBkCol, "RGB backColor" },
 /* 0x1c */  { "HiliteMode", 0, NULL, "hilite mode flag" },
@@ -3963,134 +3975,134 @@ static struct opdef const optable[] = {
 /* 0x22 */  { "ShortLine", 6, ShortLine, 
               "pnLoc (point, dh, dv (-128 .. 127))" },
 /* 0x23 */  { "ShortLineFrom", 2, ShortLineFrom, "dh, dv (-128 .. 127)" },
-/* 0x24 */  res(WORD_LEN),
-/* 0x25 */  res(WORD_LEN),
-/* 0x26 */  res(WORD_LEN),
-/* 0x27 */  res(WORD_LEN),
+/* 0x24 */  RESERVED_OP(WORD_LEN),
+/* 0x25 */  RESERVED_OP(WORD_LEN),
+/* 0x26 */  RESERVED_OP(WORD_LEN),
+/* 0x27 */  RESERVED_OP(WORD_LEN),
 /* 0x28 */  { "LongText", NA, LongText, 
               "txLoc (point), count (0..255), text" },
 /* 0x29 */  { "DHText", NA, DHText, "dh (0..255), count (0..255), text" },
 /* 0x2a */  { "DVText", NA, DVText, "dv (0..255), count (0..255), text" },
 /* 0x2b */  { "DHDVText", NA, DHDVText, 
               "dh, dv (0..255), count (0..255), text" },
-/* 0x2c */  res(WORD_LEN),
-/* 0x2d */  res(WORD_LEN),
-/* 0x2e */  res(WORD_LEN),
-/* 0x2f */  res(WORD_LEN),
+/* 0x2c */  RESERVED_OP(WORD_LEN),
+/* 0x2d */  RESERVED_OP(WORD_LEN),
+/* 0x2e */  RESERVED_OP(WORD_LEN),
+/* 0x2f */  RESERVED_OP(WORD_LEN),
 /* 0x30 */  { "frameRect", 8, frameRect, "rect" },
 /* 0x31 */  { "paintRect", 8, paintRect, "rect" },
 /* 0x32 */  { "eraseRect", 8, NULL, "rect" },
 /* 0x33 */  { "invertRect", 8, NULL, "rect" },
 /* 0x34 */  { "fillRect", 8, NULL, "rect" },
-/* 0x35 */  res(8),
-/* 0x36 */  res(8),
-/* 0x37 */  res(8),
+/* 0x35 */  RESERVED_OP(8),
+/* 0x36 */  RESERVED_OP(8),
+/* 0x37 */  RESERVED_OP(8),
 /* 0x38 */  { "frameSameRect", 0, frameSameRect, "rect" },
 /* 0x39 */  { "paintSameRect", 0, paintSameRect, "rect" },
 /* 0x3a */  { "eraseSameRect", 0, NULL, "rect" },
 /* 0x3b */  { "invertSameRect", 0, NULL, "rect" },
 /* 0x3c */  { "fillSameRect", 0, NULL, "rect" },
-/* 0x3d */  res(0),
-/* 0x3e */  res(0),
-/* 0x3f */  res(0),
+/* 0x3d */  RESERVED_OP(0),
+/* 0x3e */  RESERVED_OP(0),
+/* 0x3f */  RESERVED_OP(0),
 /* 0x40 */  { "frameRRect", 8, NULL, "rect" },
 /* 0x41 */  { "paintRRect", 8, NULL, "rect" },
 /* 0x42 */  { "eraseRRect", 8, NULL, "rect" },
 /* 0x43 */  { "invertRRect", 8, NULL, "rect" },
 /* 0x44 */  { "fillRRrect", 8, NULL, "rect" },
-/* 0x45 */  res(8),
-/* 0x46 */  res(8),
-/* 0x47 */  res(8),
+/* 0x45 */  RESERVED_OP(8),
+/* 0x46 */  RESERVED_OP(8),
+/* 0x47 */  RESERVED_OP(8),
 /* 0x48 */  { "frameSameRRect", 0, NULL, "rect" },
 /* 0x49 */  { "paintSameRRect", 0, NULL, "rect" },
 /* 0x4a */  { "eraseSameRRect", 0, NULL, "rect" },
 /* 0x4b */  { "invertSameRRect", 0, NULL, "rect" },
 /* 0x4c */  { "fillSameRRect", 0, NULL, "rect" },
-/* 0x4d */  res(0),
-/* 0x4e */  res(0),
-/* 0x4f */  res(0),
+/* 0x4d */  RESERVED_OP(0),
+/* 0x4e */  RESERVED_OP(0),
+/* 0x4f */  RESERVED_OP(0),
 /* 0x50 */  { "frameOval", 8, NULL, "rect" },
 /* 0x51 */  { "paintOval", 8, NULL, "rect" },
 /* 0x52 */  { "eraseOval", 8, NULL, "rect" },
 /* 0x53 */  { "invertOval", 8, NULL, "rect" },
 /* 0x54 */  { "fillOval", 8, NULL, "rect" },
-/* 0x55 */  res(8),
-/* 0x56 */  res(8),
-/* 0x57 */  res(8),
+/* 0x55 */  RESERVED_OP(8),
+/* 0x56 */  RESERVED_OP(8),
+/* 0x57 */  RESERVED_OP(8),
 /* 0x58 */  { "frameSameOval", 0, NULL, "rect" },
 /* 0x59 */  { "paintSameOval", 0, NULL, "rect" },
 /* 0x5a */  { "eraseSameOval", 0, NULL, "rect" },
 /* 0x5b */  { "invertSameOval", 0, NULL, "rect" },
 /* 0x5c */  { "fillSameOval", 0, NULL, "rect" },
-/* 0x5d */  res(0),
-/* 0x5e */  res(0),
-/* 0x5f */  res(0),
+/* 0x5d */  RESERVED_OP(0),
+/* 0x5e */  RESERVED_OP(0),
+/* 0x5f */  RESERVED_OP(0),
 /* 0x60 */  { "frameArc", 12, NULL, "rect, startAngle, arcAngle" },
 /* 0x61 */  { "paintArc", 12, NULL, "rect, startAngle, arcAngle" },
 /* 0x62 */  { "eraseArc", 12, NULL, "rect, startAngle, arcAngle" },
 /* 0x63 */  { "invertArc", 12, NULL, "rect, startAngle, arcAngle" },
 /* 0x64 */  { "fillArc", 12, NULL, "rect, startAngle, arcAngle" },
-/* 0x65 */  res(12),
-/* 0x66 */  res(12),
-/* 0x67 */  res(12),
+/* 0x65 */  RESERVED_OP(12),
+/* 0x66 */  RESERVED_OP(12),
+/* 0x67 */  RESERVED_OP(12),
 /* 0x68 */  { "frameSameArc", 4, NULL, "rect, startAngle, arcAngle" },
 /* 0x69 */  { "paintSameArc", 4, NULL, "rect, startAngle, arcAngle" },
 /* 0x6a */  { "eraseSameArc", 4, NULL, "rect, startAngle, arcAngle" },
 /* 0x6b */  { "invertSameArc", 4, NULL, "rect, startAngle, arcAngle" },
 /* 0x6c */  { "fillSameArc", 4, NULL, "rect, startAngle, arcAngle" },
-/* 0x6d */  res(4),
-/* 0x6e */  res(4),
-/* 0x6f */  res(4),
+/* 0x6d */  RESERVED_OP(4),
+/* 0x6e */  RESERVED_OP(4),
+/* 0x6f */  RESERVED_OP(4),
 /* 0x70 */  { "framePoly", NA, skip_poly_or_region, "poly" },
 /* 0x71 */  { "paintPoly", NA, paintPoly, "poly" },
 /* 0x72 */  { "erasePoly", NA, skip_poly_or_region, "poly" },
 /* 0x73 */  { "invertPoly", NA, skip_poly_or_region, "poly" },
 /* 0x74 */  { "fillPoly", NA, skip_poly_or_region, "poly" },
-/* 0x75 */  resf(skip_poly_or_region),
-/* 0x76 */  resf(skip_poly_or_region),
-/* 0x77 */  resf(skip_poly_or_region),
+/* 0x75 */  RESERVED_OP_F(skip_poly_or_region),
+/* 0x76 */  RESERVED_OP_F(skip_poly_or_region),
+/* 0x77 */  RESERVED_OP_F(skip_poly_or_region),
 /* 0x78 */  { "frameSamePoly", 0, NULL, "poly (NYI)" },
 /* 0x79 */  { "paintSamePoly", 0, NULL, "poly (NYI)" },
 /* 0x7a */  { "eraseSamePoly", 0, NULL, "poly (NYI)" },
 /* 0x7b */  { "invertSamePoly", 0, NULL, "poly (NYI)" },
 /* 0x7c */  { "fillSamePoly", 0, NULL, "poly (NYI)" },
-/* 0x7d */  res(0),
-/* 0x7e */  res(0),
-/* 0x7f */  res(0),
+/* 0x7d */  RESERVED_OP(0),
+/* 0x7e */  RESERVED_OP(0),
+/* 0x7f */  RESERVED_OP(0),
 /* 0x80 */  { "frameRgn", NA, skip_poly_or_region, "region" },
 /* 0x81 */  { "paintRgn", NA, skip_poly_or_region, "region" },
 /* 0x82 */  { "eraseRgn", NA, skip_poly_or_region, "region" },
 /* 0x83 */  { "invertRgn", NA, skip_poly_or_region, "region" },
 /* 0x84 */  { "fillRgn", NA, skip_poly_or_region, "region" },
-/* 0x85 */  resf(skip_poly_or_region),
-/* 0x86 */  resf(skip_poly_or_region),
-/* 0x87 */  resf(skip_poly_or_region),
+/* 0x85 */  RESERVED_OP_F(skip_poly_or_region),
+/* 0x86 */  RESERVED_OP_F(skip_poly_or_region),
+/* 0x87 */  RESERVED_OP_F(skip_poly_or_region),
 /* 0x88 */  { "frameSameRgn", 0, NULL, "region (NYI)" },
 /* 0x89 */  { "paintSameRgn", 0, NULL, "region (NYI)" },
 /* 0x8a */  { "eraseSameRgn", 0, NULL, "region (NYI)" },
 /* 0x8b */  { "invertSameRgn", 0, NULL, "region (NYI)" },
 /* 0x8c */  { "fillSameRgn", 0, NULL, "region (NYI)" },
-/* 0x8d */  res(0),
-/* 0x8e */  res(0),
-/* 0x8f */  res(0),
+/* 0x8d */  RESERVED_OP(0),
+/* 0x8e */  RESERVED_OP(0),
+/* 0x8f */  RESERVED_OP(0),
 /* 0x90 */  { "BitsRect", NA, BitsRect, "copybits, rect clipped" },
 /* 0x91 */  { "BitsRgn", NA, BitsRegion, "copybits, rgn clipped" },
-/* 0x92 */  res(WORD_LEN),
-/* 0x93 */  res(WORD_LEN),
-/* 0x94 */  res(WORD_LEN),
-/* 0x95 */  res(WORD_LEN),
-/* 0x96 */  res(WORD_LEN),
-/* 0x97 */  res(WORD_LEN),
+/* 0x92 */  RESERVED_OP(WORD_LEN),
+/* 0x93 */  RESERVED_OP(WORD_LEN),
+/* 0x94 */  RESERVED_OP(WORD_LEN),
+/* 0x95 */  RESERVED_OP(WORD_LEN),
+/* 0x96 */  RESERVED_OP(WORD_LEN),
+/* 0x97 */  RESERVED_OP(WORD_LEN),
 /* 0x98 */  { "PackBitsRect", NA, BitsRect, "packed copybits, rect clipped" },
 /* 0x99 */  { "PackBitsRgn", NA, BitsRegion, "packed copybits, rgn clipped" },
 /* 0x9a */  { "DirectBitsRect", NA, DirectBitsRect, 
               "PixMap, srcRect, dstRect, int copymode, PixData" },
 /* 0x9b */  { "DirectBitsRgn", NA, DirectBitsRgn, 
               "PixMap, srcRect, dstRect, int copymode, maskRgn, PixData" },
-/* 0x9c */  res(WORD_LEN),
-/* 0x9d */  res(WORD_LEN),
-/* 0x9e */  res(WORD_LEN),
-/* 0x9f */  res(WORD_LEN),
+/* 0x9c */  RESERVED_OP(WORD_LEN),
+/* 0x9d */  RESERVED_OP(WORD_LEN),
+/* 0x9e */  RESERVED_OP(WORD_LEN),
+/* 0x9f */  RESERVED_OP(WORD_LEN),
 /* 0xa0 */  { "ShortComment", 2, ShortComment, "kind (word)" },
 /* 0xa1 */  { "LongComment", NA, LongComment, 
               "kind (word), size (word), data" }
@@ -4099,7 +4111,7 @@ static struct opdef const optable[] = {
 
 
 static void
-processOpcode(word const opcode, 
+processOpcode(Word            const opcode, 
               struct canvas * const canvasP,
               blitList *      const blitListP,
               unsigned int    const version) {
@@ -4118,13 +4130,14 @@ processOpcode(word const opcode,
         else if (optable[opcode].len >= 0)
             skip(optable[opcode].len);
         else {
+            /* It's a special length code */
             switch (optable[opcode].len) {
             case WORD_LEN: {
-                word const len = read_word();
+                Word const len = readWord();
                 skip(len);
-                } break;
+            } break;
             default:
-                pm_error("can't do length %u", optable[opcode].len);
+                pm_error("can't do length %d", optable[opcode].len);
             }
         }
     } else if (opcode == 0xc00) {
@@ -4136,7 +4149,7 @@ processOpcode(word const opcode,
         stage = "skipping reserved";
         if (verbose)
             pm_message("%s 0x%x", stage, opcode);
-        skip(read_word());
+        skip(readWord());
     } else if (opcode >= 0xb0 && opcode <= 0xcf) {
         /* just a reserved opcode, no data */
         if (verbose)
@@ -4145,21 +4158,21 @@ processOpcode(word const opcode,
         stage = "skipping reserved";
         if (verbose)
             pm_message("%s 0x%x", stage, opcode);
-        skip(read_long());
+        skip(readLong());
     } else if (opcode >= 0x100 && opcode <= 0x7fff) {
         stage = "skipping reserved";
         if (verbose)
             pm_message("%s 0x%x", stage, opcode);
         skip((opcode >> 7) & 255);
     } else if (opcode >= 0x8000 && opcode <= 0x80ff) {
-        /* just a reserved opcode */
+        /* just a reserved opcode, no data */
         if (verbose)
             pm_message("reserved 0x%x", opcode);
     } else if (opcode >= 0x8100) {
         stage = "skipping reserved";
         if (verbose)
             pm_message("%s 0x%x", stage, opcode);
-        skip(read_long());
+        skip(readLong());
     } else
         pm_error("This program does not understand opcode 0x%04x", opcode);
 }
@@ -4167,13 +4180,13 @@ processOpcode(word const opcode,
 
 
 static void
-interpret_pict(FILE * const ofP) {
+interpretPict(FILE * const ofP) {
 
-    byte ch;
-    word picSize;
-    word opcode;
+    Byte ch;
+    Word picSize;
+    Word opcode;
     unsigned int version;
-    int i;
+    unsigned int i;
     struct canvas canvas;
     blitList blitList;
 
@@ -4188,13 +4201,13 @@ interpret_pict(FILE * const ofP) {
     text_trf = transfer(text_mode);
 
     stage = "Reading picture size";
-    picSize = read_word();
+    picSize = readWord();
 
     if (verbose)
         pm_message("picture size = %u (0x%x)", picSize, picSize);
 
     stage = "reading picture frame";
-    read_rect(&picFrame);
+    readRect(&picFrame);
 
     if (verbose) {
         dumpRect("Picture frame:", picFrame);
@@ -4212,18 +4225,18 @@ interpret_pict(FILE * const ofP) {
         clip_rect = picFrame;
     }
 
-    while ((ch = read_byte()) == 0)
+    while ((ch = readByte()) == 0)
         ;
     if (ch != 0x11)
         pm_error("No version number");
 
-    version = read_byte();
+    version = readByte();
 
     switch (version) {
     case 1:
         break;
     case 2: {
-        unsigned char const subcode = read_byte();
+        unsigned char const subcode = readByte();
         if (subcode != 0xff)
             pm_error("The only Version 2 PICT images this program "
                      "undertands are subcode 0xff.  This image has "
@@ -4322,7 +4335,7 @@ main(int argc, char * argv[]) {
         skip(512);
     }
 
-    interpret_pict(stdout);
+    interpretPict(stdout);
 
     pm_close(stdout);
 

@@ -31,9 +31,9 @@
 #include <assert.h>
 
 #include "pm_c_util.h"
-#include "pam.h"
-#include "shhopt.h"
 #include "mallocvar.h"
+#include "shhopt.h"
+#include "pam.h"
 
 
 /****************************/
@@ -52,18 +52,20 @@
 #define EPSILON 1e-7
 
 
+
 /* x^2 and x^3 helper functions */
 static __inline__ double 
-pow2 (double x)
-{
-  return x*x;
+pow2(double const x) {
+    return x * x;
 }
 
+
+
 static __inline__ double 
-pow3 (double x) 
-{
-  return x*x*x;
+pow3(double const x) {
+    return x * x * x;
 }
+
 
 
 /* box, pulse, Fourier window, */
@@ -74,12 +76,13 @@ pow3 (double x)
 #define radius_box (0.5)
 
 static double 
-filter_box (double x)
-{
-    if (x <  0.0) x = -x;
-    if (x <= 0.5) return 1.0;
-    return 0.0;
+filter_box(double const x) {
+
+    double const absx = x < 0.0 ? -x : x;
+
+    return (absx <= 0.5) ? 1.0 : 0.0;
 }
+
 
 
 /* triangle, Bartlett window, */
@@ -89,12 +92,13 @@ filter_box (double x)
 #define radius_triangle (1.0)
 
 static double 
-filter_triangle (double x)
-{
-    if (x <  0.0) x = -x;
-    if (x < 1.0) return 1.0-x;
-    return 0.0;
+filter_triangle(double const x) {
+
+    double const absx = x < 0.0 ? -x : x;
+
+    return absx < 1.0 ? 1.0 - absx : 0.0;
 }
+
 
 
 /* 3rd order (quadratic) b-spline */
@@ -102,13 +106,16 @@ filter_triangle (double x)
 #define radius_quadratic (1.5)
 
 static double 
-filter_quadratic(double x)
-{
-    if (x <  0.0) x = -x;
-    if (x < 0.5) return 0.75-pow2(x);
-    if (x < 1.5) return 0.50*pow2(x-1.5);
-    return 0.0;
+filter_quadratic(double const x) {
+
+    double const absx = x < 0.0 ? -x : x;
+
+    return
+        absx < 0.5 ? 0.75 - pow2(absx) :
+        absx < 1.5 ? 0.50 * pow2(absx - 1.5) :
+        0.0;
 }
+
 
 
 /* 4th order (cubic) b-spline */
@@ -116,13 +123,16 @@ filter_quadratic(double x)
 #define radius_cubic (2.0)
 
 static double 
-filter_cubic(double x)
-{
-    if (x <  0.0) x = -x;
-    if (x < 1.0) return 0.5*pow3(x) - pow2(x) + 2.0/3.0;
-    if (x < 2.0) return pow3(2.0-x)/6.0;
-    return 0.0;
+filter_cubic(double const x) {
+
+    double const absx = x < 0.0 ? -x : x;
+
+    return
+        absx < 1.0 ? 0.5 * pow3(absx) - pow2(absx) + 2.0/3.0 :
+        absx < 2.0 ? pow3(2.0-absx)/6.0 :
+        0.0;
 }
+
 
 
 /* Catmull-Rom spline, Overhauser spline */
@@ -130,13 +140,16 @@ filter_cubic(double x)
 #define radius_catrom (2.0)
 
 static double 
-filter_catrom(double x)
-{
-    if (x <  0.0) x = -x;
-    if (x < 1.0) return  1.5*pow3(x) - 2.5*pow2(x)         + 1.0;
-    if (x < 2.0) return -0.5*pow3(x) + 2.5*pow2(x) - 4.0*x + 2.0;
-    return 0.0;
+filter_catrom(double const x) {
+
+    double const absx = x < 0.0 ? -x : x;
+
+    return
+        absx < 1.0 ?  1.5 * pow3(absx) - 2.5 * pow2(absx)         + 1.0 :
+        absx < 2.0 ? -0.5 * pow3(absx) + 2.5 * pow2(absx) - 4.0 * absx + 2.0 :
+        0.0;
 }
+
 
 
 /* Mitchell & Netravali's two-param cubic */
@@ -149,22 +162,25 @@ static double
 filter_mitchell(double x)
 {
 
-    double b = 1.0/3.0;
-    double c = 1.0/3.0;
+    double const b = 1.0/3.0;
+    double const c = 1.0/3.0;
 
-    double p0 = (  6.0 -  2.0*b         ) / 6.0;
-    double p2 = (-18.0 + 12.0*b +  6.0*c) / 6.0;
-    double p3 = ( 12.0 -  9.0*b -  6.0*c) / 6.0;
-    double q0 = (         8.0*b + 24.0*c) / 6.0;
-    double q1 = (      - 12.0*b - 48.0*c) / 6.0;
-    double q2 = (         6.0*b + 30.0*c) / 6.0;
-    double q3 = (      -      b -  6.0*c) / 6.0;
+    double const p0 = (  6.0 -  2.0*b         ) / 6.0;
+    double const p2 = (-18.0 + 12.0*b +  6.0*c) / 6.0;
+    double const p3 = ( 12.0 -  9.0*b -  6.0*c) / 6.0;
+    double const q0 = (         8.0*b + 24.0*c) / 6.0;
+    double const q1 = (      - 12.0*b - 48.0*c) / 6.0;
+    double const q2 = (         6.0*b + 30.0*c) / 6.0;
+    double const q3 = (      -      b -  6.0*c) / 6.0;
 
-    if (x <  0.0) x = -x;
-    if (x <  1.0) return p3*pow3(x) + p2*pow2(x)        + p0;
-    if (x < 2.0) return q3*pow3(x) + q2*pow2(x) + q1*x + q0;
-    return 0.0;
+    double const absx = x < 0.0 ? -x : x;
+
+    return
+        absx <  1.0 ? p3 * pow3(absx) + p2 * pow2(absx)        + p0 :
+        absx < 2.0 ? q3 * pow3(absx) + q2 * pow2(absx) + q1 * absx + q0 :
+        0.0;
 }
+
 
 
 /* Gaussian filter (infinite) */
@@ -172,10 +188,11 @@ filter_mitchell(double x)
 #define radius_gauss (1.25)
 
 static double 
-filter_gauss(double x)
-{
+filter_gauss(double const x) {
+
     return exp(-2.0*pow2(x)) * sqrt(2.0/M_PI);
 }
+
 
 
 /* sinc, perfect lowpass filter (infinite) */
@@ -183,16 +200,17 @@ filter_gauss(double x)
 #define radius_sinc (4.0)
 
 static double 
-filter_sinc(double x)
-{
+filter_sinc(double const x) {
     /* Note: Some people say sinc(x) is sin(x)/x.  Others say it's
        sin(PI*x)/(PI*x), a horizontal compression of the former which is
        zero at integer values.  We use the latter, whose Fourier transform
        is a canonical rectangle function (edges at -1/2, +1/2, height 1).
     */
-    if (x == 0.0) return 1.0;
-    return sin(M_PI*x)/(M_PI*x);
+    return 
+        x == 0.0 ? 1.0 :
+        sin(M_PI*x)/(M_PI*x);
 }
+
 
 
 /* Bessel (for circularly symm. 2-d filt, infinite) */
@@ -201,11 +219,13 @@ filter_sinc(double x)
 #define radius_bessel (3.2383)
 
 static double 
-filter_bessel(double x)
-{
-    if (x == 0.0) return M_PI/4.0;
-    return j1(M_PI*x)/(2.0*x);
+filter_bessel(double const x) {
+
+    return 
+        x == 0.0 ? M_PI/4.0 :
+        j1(M_PI * x) / (2.0 * x);
 }
+
 
 
 /* Hanning window (infinite) */
@@ -213,10 +233,11 @@ filter_bessel(double x)
 #define radius_hanning (1.0)
 
 static double 
-filter_hanning(double x)
-{
-    return 0.5*cos(M_PI*x) + 0.5;
+filter_hanning(double const x) {
+
+    return 0.5 * cos(M_PI * x) + 0.5;
 }
+
 
 
 /* Hamming window (infinite) */
@@ -224,10 +245,10 @@ filter_hanning(double x)
 #define radius_hamming (1.0)
 
 static double 
-filter_hamming(double x)
-{
-  return 0.46*cos(M_PI*x) + 0.54;
+filter_hamming(double const x) {
+    return 0.46 * cos(M_PI * x) + 0.54;
 }
+
 
 
 /* Blackman window (infinite) */
@@ -235,10 +256,10 @@ filter_hamming(double x)
 #define radius_blackman (1.0)
 
 static double 
-filter_blackman(double x)
-{
-    return 0.5*cos(M_PI*x) + 0.08*cos(2.0*M_PI*x) + 0.42;
+filter_blackman(double const x) {
+    return 0.5 * cos(M_PI * x) + 0.08 * cos(2.0 * M_PI * x) + 0.42;
 }
+
 
 
 /* parameterized Kaiser window (infinite) */
@@ -248,8 +269,7 @@ filter_blackman(double x)
 
 /* modified zeroth order Bessel function of the first kind. */
 static double 
-bessel_i0(double x)
-{
+bessel_i0(double const x) {
   
     int i;
     double sum, y, t;
@@ -257,25 +277,27 @@ bessel_i0(double x)
     sum = 1.0;
     y = pow2(x)/4.0;
     t = y;
-    for (i=2; t>EPSILON; i++) {
+    for (i=2; t>EPSILON; ++i) {
         sum += t;
         t   *= (double)y/pow2(i);
     }
     return sum;
 }
 
+
+
 static double 
-filter_kaiser(double x)
-{
-    /* typically 4<a<9 */
+filter_kaiser(double const x) {
+    /* typically 4 < a < 9 */
     /* param a trades off main lobe width (sharpness) */
     /* for side lobe amplitude (ringing) */
   
-    double a   = 6.5;
-    double i0a = 1.0/bessel_i0(a);
+    double const a   = 6.5;
+    double const i0a = 1.0/bessel_i0(a);
   
-    return i0a*bessel_i0(a*sqrt(1.0-pow2(x)));
+    return i0a * bessel_i0(a * sqrt(1.0-pow2(x)));
 }
+
 
 
 /* normal distribution (infinite) */
@@ -284,11 +306,10 @@ filter_kaiser(double x)
 #define radius_normal (1.0)
 
 static double 
-filter_normal(double x)
-{
+filter_normal(double const x) {
     return exp(-pow2(x)/2.0) / sqrt(2.0*M_PI);
-    return 0.0;
 }
+
 
 
 /* Hermite filter */
@@ -296,13 +317,16 @@ filter_normal(double x)
 #define radius_hermite  (1.0)
 
 static double 
-filter_hermite(double x)
-{
+filter_hermite(double const x) {
     /* f(x) = 2|x|^3 - 3|x|^2 + 1, -1 <= x <= 1 */
-    if (x <  0.0) x = -x;
-    if (x <  1.0) return 2.0*pow3(x) - 3.0*pow2(x) + 1.0;
-    return 0.0;
+
+    double const absx = x < 0.0 ? -x : x;
+
+    return
+        absx <  1.0 ? 2.0 * pow3(absx) - 3.0 * pow2(absx) + 1.0 :
+        0.0;
 }
+
 
 
 /* Lanczos filter */
@@ -310,11 +334,13 @@ filter_hermite(double x)
 #define radius_lanczos (3.0)
 
 static double 
-filter_lanczos(double x)
-{
-    if (x <  0.0) x = -x;
-    if (x <  3.0) return filter_sinc(x) * filter_sinc(x/3.0);
-    return(0.0);
+filter_lanczos(double const x) {
+
+    double const absx = x < 0.0 ? -x : x;
+
+    return
+        x <  3.0 ? filter_sinc(absx) * filter_sinc(absx/3.0) :
+        0.0;
 }
 
 
@@ -385,7 +411,7 @@ enum scaleType {SCALE_SEPARATE, SCALE_BOXFIT, SCALE_BOXFILL, SCALE_PIXELMAX};
        size.
     */
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
      * in a form easy for the program to use.
      */
@@ -458,7 +484,7 @@ processFilterOptions(unsigned int const         filterSpec,
                      const char                 filterOpt[],
                      unsigned int const         windowSpec,
                      const char                 windowOpt[],
-                     struct cmdlineInfo * const cmdlineP) {
+                     struct CmdlineInfo * const cmdlineP) {
 
     if (filterSpec) {
         filter baseFilter;
@@ -490,9 +516,35 @@ processFilterOptions(unsigned int const         filterSpec,
 
 
 static void
+parseSizeParm(const char *   const sizeString,
+              const char *   const description,
+              unsigned int * const sizeP) {
+
+    char * endptr;
+    long int sizeLong;
+
+
+    sizeLong = strtol(sizeString, &endptr, 10);
+    if (strlen(sizeString) > 0 && *endptr != '\0')
+        pm_error("%s size argument not an integer: '%s'", 
+                 description, sizeString);
+    else if (sizeLong > INT_MAX - 2)
+        pm_error("%s size argument is too large "
+                 "for computations: %ld", 
+                 description, sizeLong);
+    else if (sizeLong <= 0)
+        pm_error("%s size argument is not positive: %ld", 
+                 description, sizeLong);
+    else
+        *sizeP = (unsigned int) sizeLong;
+}        
+
+
+
+static void
 parseXyParms(int                  const argc, 
-             char **              const argv,
-             struct cmdlineInfo * const cmdlineP) {
+             const char **        const argv,
+             struct CmdlineInfo * const cmdlineP) {
 
     /* parameters are box width (columns), box height (rows), and
        optional filespec 
@@ -505,23 +557,10 @@ parseXyParms(int                  const argc,
         pm_error("Too many arguments.  With -xyfit/xyfill/xysize, "
                  "you need 2 or 3 arguments.");
     else {
-        char * endptr;
-        cmdlineP->xsize = strtol(argv[1], &endptr, 10);
-        if (strlen(argv[1]) > 0 && *endptr != '\0')
-            pm_error("horizontal size argument not an integer: '%s'", 
-                     argv[1]);
-        if (cmdlineP->xsize <= 0)
-            pm_error("horizontal size argument is not positive: %d", 
-                     cmdlineP->xsize);
-        
-        cmdlineP->ysize = strtol(argv[2], &endptr, 10);
-        if (strlen(argv[2]) > 0 && *endptr != '\0')
-            pm_error("vertical size argument not an integer: '%s'", 
-                     argv[2]);
-        if (cmdlineP->ysize <= 0)
-            pm_error("vertical size argument is not positive: %d", 
-                     cmdlineP->ysize);
-        
+        parseSizeParm(argv[1], "horizontal", &cmdlineP->xsize);
+
+        parseSizeParm(argv[2], "vertical", &cmdlineP->ysize);
+
         if (argc-1 < 3)
             cmdlineP->inputFileName = "-";
         else
@@ -533,24 +572,33 @@ parseXyParms(int                  const argc,
 
 static void
 parseScaleParms(int                   const argc, 
-                char **               const argv,
-                struct cmdlineInfo  * const cmdlineP) {
-
-    /* parameters are scale factor and optional filespec */
+                const char **         const argv,
+                struct CmdlineInfo  * const cmdlineP) {
+/*----------------------------------------------------------------------------
+   Parse the parameters as a scale factor and optional filespec
+   (e.g. 'pamscale .5' or 'pamscale .5 testimg.ppm').
+-----------------------------------------------------------------------------*/
     if (argc-1 < 1)
         pm_error("With no dimension options, you must supply at least "
                  "one parameter: the scale factor.");
     else {
         cmdlineP->xscale = cmdlineP->yscale = atof(argv[1]);
         
-        if (cmdlineP->xscale == 0.0)
+        if (cmdlineP->xscale <= 0.0)
             pm_error("The scale parameter %s is not a positive number.",
                      argv[1]);
         else {
             if (argc-1 < 2)
                 cmdlineP->inputFileName = "-";
-            else
+            else {
                 cmdlineP->inputFileName = argv[2];
+                
+                if (argc-1 > 2)
+                    pm_error("Too many arguments.  There are at most two "
+                             "arguments with this set of options: "
+                             "scale factor and input file name.  "
+                             "You specified %u", argc-1);
+            }
         }
     }
 }
@@ -559,8 +607,8 @@ parseScaleParms(int                   const argc,
 
 static void
 parseFilespecOnlyParms(int                   const argc, 
-                       char **               const argv,
-                       struct cmdlineInfo  * const cmdlineP) {
+                       const char **         const argv,
+                       struct CmdlineInfo  * const cmdlineP) {
 
     /* Only parameter allowed is optional filespec */
     if (argc-1 < 1)
@@ -572,8 +620,8 @@ parseFilespecOnlyParms(int                   const argc,
 
 static void 
 parseCommandLine(int argc, 
-                 char ** argv, 
-                 struct cmdlineInfo  * const cmdlineP) {
+                 const char ** argv, 
+                 struct CmdlineInfo  * const cmdlineP) {
 /* --------------------------------------------------------------------------
    Parse program command line described in Unix standard form by argc
    and argv.  Return the information in the options as *cmdlineP.  
@@ -584,9 +632,9 @@ parseCommandLine(int argc,
    Note that the strings we return are stored in the storage that
    was passed to us as the argv array.  We also trash *argv.
 --------------------------------------------------------------------------*/
-    optEntry *option_def;
-    /* Instructions to optParseOptions3 on how to parse our options. */
+    optEntry * option_def;
     optStruct3 opt;
+        /* Instructions to pm_optParseOptions3 on how to parse our options. */
   
     unsigned int option_def_index;
     unsigned int xyfit, xyfill;
@@ -595,45 +643,34 @@ parseCommandLine(int argc,
     float xscale, yscale;
     const char *filterOpt, *window;
     unsigned int filterSpec, windowSpec;
+    unsigned int xscaleSpec, yscaleSpec, xsizeSpec, ysizeSpec;
+    unsigned int pixelsSpec, reduceSpec;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0, "xsize",     OPT_UINT,    &xsize,     NULL,                 0);
-    OPTENT3(0, "width",     OPT_UINT,    &xsize,     NULL,                 0);
-    OPTENT3(0, "ysize",     OPT_UINT,    &ysize,     NULL,                 0);
-    OPTENT3(0, "height",    OPT_UINT,    &ysize,     NULL,                 0);
-    OPTENT3(0, "xscale",    OPT_FLOAT,   &xscale,    NULL,                 0);
-    OPTENT3(0, "yscale",    OPT_FLOAT,   &yscale,    NULL,                 0);
-    OPTENT3(0, "pixels",    OPT_UINT,    &pixels,    NULL,                 0);
-    OPTENT3(0, "reduce",    OPT_UINT,    &reduce,    NULL,                 0);
+    OPTENT3(0, "xsize",     OPT_UINT,    &xsize,     &xsizeSpec,           0);
+    OPTENT3(0, "width",     OPT_UINT,    &xsize,     &xsizeSpec,           0);
+    OPTENT3(0, "ysize",     OPT_UINT,    &ysize,     &ysizeSpec,           0);
+    OPTENT3(0, "height",    OPT_UINT,    &ysize,     &ysizeSpec,           0);
+    OPTENT3(0, "xscale",    OPT_FLOAT,   &xscale,    &xscaleSpec,          0);
+    OPTENT3(0, "yscale",    OPT_FLOAT,   &yscale,    &yscaleSpec,          0);
+    OPTENT3(0, "pixels",    OPT_UINT,    &pixels,    &pixelsSpec,          0);
+    OPTENT3(0, "reduce",    OPT_UINT,    &reduce,    &reduceSpec,          0);
     OPTENT3(0, "xysize",    OPT_FLAG,    NULL,       &xyfit,               0);
     OPTENT3(0, "xyfit",     OPT_FLAG,    NULL,       &xyfit,               0);
     OPTENT3(0, "xyfill",    OPT_FLAG,    NULL,       &xyfill,              0);
-    OPTENT3(0, "verbose",   OPT_FLAG,    NULL,       &cmdlineP->verbose,  0);
+    OPTENT3(0, "verbose",   OPT_FLAG,    NULL,       &cmdlineP->verbose,   0);
     OPTENT3(0, "filter",    OPT_STRING,  &filterOpt, &filterSpec,          0);
     OPTENT3(0, "window",    OPT_STRING,  &window,    &windowSpec,          0);
-    OPTENT3(0, "nomix",     OPT_FLAG,    NULL,       &cmdlineP->nomix,    0);
-    OPTENT3(0, "linear",    OPT_FLAG,    NULL,       &cmdlineP->linear,   0);
+    OPTENT3(0, "nomix",     OPT_FLAG,    NULL,       &cmdlineP->nomix,     0);
+    OPTENT3(0, "linear",    OPT_FLAG,    NULL,       &cmdlineP->linear,    0);
   
-    /* Set the defaults. -1 = unspecified */
-
-    /* (Now that we're using ParseOptions3, we don't have to do this -1
-     * nonsense, but we don't want to risk screwing these complex 
-     * option compatibilities up, so we'll convert that later.
-     */
-    xsize = -1;
-    ysize = -1;
-    xscale = -1.0;
-    yscale = -1.0;
-    pixels = -1;
-    reduce = -1;
-    
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;   /* We have no parms that are negative numbers */
 
-    optParseOptions3( &argc, argv, opt, sizeof(opt), 0 );
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
     /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (cmdlineP->nomix && filterSpec) 
@@ -642,38 +679,38 @@ parseCommandLine(int argc,
     processFilterOptions(filterSpec, filterOpt, windowSpec, window,
                          cmdlineP);
 
-    if (xsize == 0)
+    if (xsizeSpec && xsize == 0)
         pm_error("-xsize/width must be greater than zero.");
-    if (ysize == 0)
+    if (ysizeSpec && ysize == 0)
         pm_error("-ysize/height must be greater than zero.");
-    if (xscale != -1.0 && xscale <= 0.0)
+    if (xscaleSpec && xscale <= 0.0)
         pm_error("-xscale must be greater than zero.");
-    if (yscale != -1.0 && yscale <= 0.0)
+    if (yscaleSpec && yscale <= 0.0)
         pm_error("-yscale must be greater than zero.");
-    if (reduce <= 0 && reduce != -1)
+    if (reduceSpec && reduce <= 0)
         pm_error("-reduce must be greater than zero.");
 
-    if (xsize != -1 && xscale != -1)
+    if (xsizeSpec && xscaleSpec)
         pm_error("Cannot specify both -xsize/width and -xscale.");
-    if (ysize != -1 && yscale != -1)
+    if (ysizeSpec && yscaleSpec)
         pm_error("Cannot specify both -ysize/height and -yscale.");
     
     if ((xyfit || xyfill) &&
-        (xsize != -1 || xscale != -1 || ysize != -1 || yscale != -1 || 
-         reduce != -1 || pixels != -1) )
+        (xsizeSpec || xscaleSpec || ysizeSpec || yscaleSpec || 
+         reduceSpec || pixelsSpec) )
         pm_error("Cannot specify -xyfit/xyfill/xysize with other "
                  "dimension options.");
     if (xyfit && xyfill)
         pm_error("Cannot specify both -xyfit and -xyfill");
-    if (pixels != -1 && 
-        (xsize != -1 || xscale != -1 || ysize != -1 || yscale != -1 ||
-         reduce != -1) )
+    if (pixelsSpec && 
+        (xsizeSpec || xscaleSpec || ysizeSpec || yscaleSpec ||
+         reduceSpec) )
         pm_error("Cannot specify -pixels with other dimension options.");
-    if (reduce != -1 && 
-        (xsize != -1 || xscale != -1 || ysize != -1 || yscale != -1) )
+    if (reduceSpec && 
+        (xsizeSpec || xscaleSpec || ysizeSpec || yscaleSpec) )
         pm_error("Cannot specify -reduce with other dimension options.");
 
-    if (pixels == 0)
+    if (pixelsSpec && pixels == 0)
         pm_error("-pixels must be greater than zero");
 
     /* Get the program parameters */
@@ -681,7 +718,7 @@ parseCommandLine(int argc,
     if (xyfit || xyfill) {
         cmdlineP->scaleType = xyfit ? SCALE_BOXFIT : SCALE_BOXFILL;
         parseXyParms(argc, argv, cmdlineP);
-    } else if (reduce != -1) {
+    } else if (reduceSpec) {
         cmdlineP->scaleType = SCALE_SEPARATE;
         parseFilespecOnlyParms(argc, argv, cmdlineP);
         cmdlineP->xsize = cmdlineP->ysize = 0;
@@ -689,44 +726,50 @@ parseCommandLine(int argc,
             ((double) 1.0) / ((double) reduce);
         pm_message("reducing by %d gives scale factor of %f.", 
                    reduce, cmdlineP->xscale);
-    } else if (pixels != -1) {
+    } else if (pixelsSpec) {
         cmdlineP->scaleType = SCALE_PIXELMAX;
         parseFilespecOnlyParms(argc, argv, cmdlineP);
         cmdlineP->pixels = pixels;
-    } else if (xsize == -1 && xscale == -1 && ysize == -1 && yscale == -1
-               && pixels == -1 && reduce == -1) {
+    } else if (xsizeSpec || xscaleSpec || ysizeSpec || yscaleSpec) {
+        cmdlineP->scaleType = SCALE_SEPARATE;
+        parseFilespecOnlyParms(argc, argv, cmdlineP);
+        cmdlineP->xsize = xsizeSpec ? xsize : 0;
+        cmdlineP->ysize = ysizeSpec ? ysize : 0;
+        cmdlineP->xscale = xscaleSpec ? xscale : 0.0;
+        cmdlineP->yscale = yscaleSpec ? yscale : 0.0;
+    } else {
         cmdlineP->scaleType = SCALE_SEPARATE;
         parseScaleParms(argc, argv, cmdlineP);
         cmdlineP->xsize = cmdlineP->ysize = 0;
-    } else {
-        cmdlineP->scaleType = SCALE_SEPARATE;
-        parseFilespecOnlyParms(argc, argv, cmdlineP);
-        cmdlineP->xsize = xsize == -1 ? 0 : xsize;
-        cmdlineP->ysize = ysize == -1 ? 0 : ysize;
-        cmdlineP->xscale = xscale == -1.0 ? 0.0 : xscale;
-        cmdlineP->yscale = yscale == -1.0 ? 0.0 : yscale;
     }
 }
 
 
 
 static void 
-computeOutputDimensions(struct cmdlineInfo  const cmdline, 
-                        int                 const rows, 
-                        int                 const cols, 
-                        int *               const newrowsP, 
-                        int *               const newcolsP) {
+computeOutputDimensions(struct CmdlineInfo  const cmdline, 
+                        unsigned int        const cols, 
+                        unsigned int        const rows, 
+                        int *               const newcolsP,
+                        int *               const newrowsP) { 
+
+    double newcolsD, newrowsD;
+        /* Intermediate calculation of the output dimensions, in double
+           precision floating point to avoid arithmetic overflow.
+        */
+    unsigned int newcols, newrows;
+        /* The output dimensions we return */
 
     switch(cmdline.scaleType) {
     case SCALE_PIXELMAX: {
         if (rows * cols <= cmdline.pixels) {
-            *newrowsP = rows;
-            *newcolsP = cols;
+            newrowsD = rows;
+            newcolsD = cols;
         } else {
             const double scale =
                 sqrt( (float) cmdline.pixels / ((float) cols * (float) rows));
-            *newrowsP = rows * scale;
-            *newcolsP = cols * scale;
+            newrowsD = rows * scale;
+            newcolsD = cols * scale;
         }
     } break;
     case SCALE_BOXFIT:
@@ -739,45 +782,53 @@ computeOutputDimensions(struct cmdlineInfo  const cmdline,
              cmdline.scaleType == SCALE_BOXFIT) ||
             (box_aspect_ratio < aspect_ratio &&
              cmdline.scaleType == SCALE_BOXFILL)) {
-            *newrowsP = cmdline.ysize;
-            *newcolsP = *newrowsP * aspect_ratio + 0.5;
+            newrowsD = cmdline.ysize;
+            newcolsD = newrowsD * aspect_ratio;
         } else {
-            *newcolsP = cmdline.xsize;
-            *newrowsP = *newcolsP / aspect_ratio + 0.5;
+            newcolsD = cmdline.xsize;
+            newrowsD = newcolsD / aspect_ratio;
         }
     } break;
     case SCALE_SEPARATE: {
         if (cmdline.xsize)
-            *newcolsP = cmdline.xsize;
+            newcolsD = cmdline.xsize;
         else if (cmdline.xscale)
-            *newcolsP = cmdline.xscale * cols + .5;
+            newcolsD = cmdline.xscale * cols;
         else if (cmdline.ysize)
-            *newcolsP = cols * ((float) cmdline.ysize/rows) +.5;
+            newcolsD = cols * ((float) cmdline.ysize/rows);
         else
-            *newcolsP = cols;
+            newcolsD = cols;
 
         if (cmdline.ysize)
-            *newrowsP = cmdline.ysize;
+            newrowsD = cmdline.ysize;
         else if (cmdline.yscale)
-            *newrowsP = cmdline.yscale * rows +.5;
+            newrowsD = cmdline.yscale * rows;
         else if (cmdline.xsize)
-            *newrowsP = rows * ((float) cmdline.xsize/cols) +.5;
+            newrowsD = rows * ((float) cmdline.xsize/cols);
         else
-            *newrowsP = rows;
+            newrowsD = rows;
     }
     }
+    
+    /* If the rounding yields a zero dimension, we fudge it up to 1.  We do
+       this rather than considering it a specification error (and dying)
+       because it's friendlier to automated processes that work on arbitrary
+       input.  It saves them having to check their numbers to avoid
+       catastrophe.
+    */
+    newcols = MAX(1, ROUNDU(newcolsD));
+    newrows = MAX(1, ROUNDU(newrowsD));
 
-    /* If the calculations above yielded (due to rounding) a zero 
-     * dimension, we fudge it up to 1.  We do this rather than considering
-     * it a specification error (and dying) because it's friendlier to 
-     * automated processes that work on arbitrary input.  It saves them
-     * having to check their numbers to avoid catastrophe.
-     */
-  
-    if (*newcolsP < 1) *newcolsP = 1;
-    if (*newrowsP < 1) *newrowsP = 1;
+    if (newcols > INT_MAX - 2)
+        pm_error("output image width (%u) too large for computations",
+                 newcols);
+    if (newrows > INT_MAX - 2)
+        pm_error("output image height (%u) too large for computation",
+                 newrows);
+
+    *newcolsP = newcols;
+    *newrowsP = newrows;
 }
-
 
 
 
@@ -876,7 +927,7 @@ typedef struct {
            window.  The index order is NOT the order of the rows in the
            image.  E.g. line[0] isn't always the topmost row of the window.
            Rather, the rows are arranged in a cycle and you have to know
-           indpendently where the topmost one is.  E.g. the rows of a 5
+           independently where the topmost one is.  E.g. the rows of a 5
            line window with topmost row at index 3 might be:
 
               line[0] = Row 24
@@ -974,12 +1025,12 @@ createWeightList(unsigned int          const targetPos,
    row.  Assume 'filter' is a triangle function -- 1 at 0, sloping
    down to 0 at -1 and 1.
 
-   Now assume that the scale factor is 2 -- the target image will be
-   twice the size of the source image.  That means the two-pixel-wide
-   window of the source row that affects Column 5 of the target row
-   (centered at target position 5.5) goes from position 1.75 to
-   3.75, centered at 2.75.  That means the window covers 1/4 of
-   Column 1, all of Column 2, and 3/4 of Column 3 of the source row.
+   Now assume that the scale factor is 2 -- the target image will be twice the
+   size of the source image.  That means the two-pixel-wide window of the
+   source row that affects Column 5 of the target row, which is centered at
+   target position 5.5, is centered at source position 5.5/2 = 2.75.  So it
+   goes from source position 1.75 to 3.75.  That means the window covers 1/4
+   of Column 1, all of Column 2, and 3/4 of Column 3 of the source row.
 
    We want to calculate 3 weights, one to be applied to each source pixel
    in computing the target pixel.  Ideally, we would compute the average
@@ -992,22 +1043,22 @@ createWeightList(unsigned int          const targetPos,
    -.875 from the center of the window, we assume a constant function
    value of triangle(-.875), which equals .125.  For the 2.00-3.00
    region, we get triangle(-.25) = .75.  For the 3.00-3.75 region, we
-   get triangle(.125) = .875.  So the weights for the 3 regions, which
+   get triangle(.625) = .375.  So the weights for the 3 regions, which
    we get by multiplying this constant function value by the width of
    the region and normalizing so they add up to 1 are:
 
-      Source Column 1:  .125*.25 / 1.4375 = .022
-      Source Column 2:  .75*1.00 / 1.4375 = .521
-      Source Column 3:  .875*.75 / 1.4375 = .457
+      Source Column 1:  .125*.25 / 1.0625 = .029
+      Source Column 2:  .75*1.00 / 1.0625 = .706
+      Source Column 3:  .375*.75 / 1.0625 = .265
 
    These are the weights we return.  Thus, if we assume that the source
    pixel 1 has value 10, source pixel 2 has value 20, and source pixel 3
    has value 30, Caller would compute target pixel 5's value as
 
-      10*.022 + 20*.521 + 30*.457 = 24
+      10*.029 + 20*.706 + 30*.265 = 22
 
 -----------------------------------------------------------------------------*/
-    /* 'windowCenter', is the continous position within the source of
+    /* 'windowCenter', is the continuous position within the source of
        the center of the window that will influence target pixel
        'targetPos'.  'left' and 'right' are the edges of the window.
        'leftPixel' and 'rightPixel' are the pixel positions of the
@@ -1092,7 +1143,7 @@ createWeightListSet(unsigned int          const sourceSize,
       
    2) Filter out any frequencies that are too high to be captured
       by the new sampling -- i.e. frequencies above 1/2 the new
-      sample rate.  This is the information we must lose due to low
+      sample rate.  This is the information we must lose because of low
       sample rate.
       
    3) Sample the result at the new sample rate.
@@ -1341,7 +1392,7 @@ outputOneResampledRow(const struct pam * const outpamP,
 -----------------------------------------------------------------------------*/
     unsigned int col;
 
-    bool haveOpacity;           /* There is an opacity plane */
+    int haveOpacity;           /* There is an opacity plane */
     unsigned int opacityPlane;  /* Plane number of opacity plane, if any */
 
     pnm_getopacity(outpamP, &haveOpacity, &opacityPlane);
@@ -1601,11 +1652,11 @@ horizontalScale(tuplen *     const inputtuplenrow,
                 float        const xscale,
                 float *      const stretchP) {
 /*----------------------------------------------------------------------------
-  Take the input row 'inputtuplenrow', decribed by *inpamP, and scale
+  Take the input row 'inputtuplenrow', described by *inpamP, and scale
   it by a factor of 'xscale', to create the output row 'newtuplenrow',
   described by *outpamP.
 
-  Due to arithmetic imprecision, we may have to stretch slightly the
+  Because of arithmetic imprecision, we may have to stretch slightly the
   contents of the last pixel of the output row to make a full pixel.
   Return as *stretchP the fraction of a pixel by which we had to
   stretch in this way.
@@ -1646,7 +1697,7 @@ horizontalScale(tuplen *     const inputtuplenrow,
         }
         /* There's not enough left in the current input pixel to fill up 
            a whole output column, so just accumulate the remainder of the
-           pixel into the current output column.  Due to rounding, we may
+           pixel into the current output column.  Because of rounding, we may
            have a tiny bit of pixel left and have run out of output pixels.
            In that case, we throw away what's left.
         */
@@ -1799,7 +1850,7 @@ issueStretchWarning(bool   const verbose,
        row.  
     */
     if (verbose)
-        pm_message("%f of bottom row stretched due to "
+        pm_message("%f of bottom row stretched because of "
                    "arithmetic imprecision", 
                    fracrowtofill);
 }
@@ -1833,7 +1884,7 @@ scaleHorizontallyAndOutputRow(struct pam *             const inpamP,
                         xscale, &stretch);
             
         if (verbose && row == 0)
-            pm_message("%f of right column stretched due to "
+            pm_message("%f of right column stretched because of "
                        "arithmetic imprecision", 
                        stretch);
             
@@ -2085,24 +2136,18 @@ scaleWithoutMixing(const struct pam * const inpamP,
 
 
 
-int
-main(int argc, char **argv ) {
-
-    struct cmdlineInfo cmdline;
-    FILE* ifP;
+static void
+pamscale(FILE *             const ifP,
+         FILE *             const ofP,
+         struct CmdlineInfo const cmdline) {
+    
     struct pam inpam, outpam;
     float xscale, yscale;
-
-    pnm_init(&argc, argv);
-
-    parseCommandLine(argc, argv, &cmdline);
-
-    ifP = pm_openr(cmdline.inputFileName);
 
     pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
 
     outpam = inpam;  /* initial value */
-    outpam.file = stdout;
+    outpam.file = ofP;
 
     if (PNM_FORMAT_TYPE(inpam.format) == PBM_TYPE && !cmdline.nomix) {
         outpam.format = PGM_TYPE;
@@ -2113,8 +2158,8 @@ main(int argc, char **argv ) {
         outpam.maxval = inpam.maxval;
     }
 
-    computeOutputDimensions(cmdline, inpam.height, inpam.width,
-                            &outpam.height, &outpam.width);
+    computeOutputDimensions(cmdline, inpam.width, inpam.height, 
+                            &outpam.width, &outpam.height);
 
     xscale = (float) outpam.width / inpam.width;
     yscale = (float) outpam.height / inpam.height;
@@ -2151,6 +2196,29 @@ main(int argc, char **argv ) {
                  cmdline.windowFunction, cmdline.verbose,
                  cmdline.linear);
     }
+}
+
+
+
+int
+main(int argc, const char **argv ) {
+
+    struct CmdlineInfo cmdline;
+    FILE * ifP;
+    int eof;
+
+    pm_proginit(&argc, argv);
+
+    parseCommandLine(argc, argv, &cmdline);
+
+    ifP = pm_openr(cmdline.inputFileName);
+
+    eof = FALSE;
+    while (!eof) {
+        pamscale(ifP, stdout, cmdline);
+        pnm_nextimage(ifP, &eof);
+    }
+
     pm_close(ifP);
     pm_close(stdout);
     

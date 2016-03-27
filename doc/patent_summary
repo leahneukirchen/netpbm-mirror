@@ -1,0 +1,100 @@
+These are the patents the Netpbm maintainer knows about that relate to
+Netpbm.  It is basically just information the maintainer has stumbled
+over at some point -- no search has been done.
+
+No licenses have been granted by patent owners to the maintainer of
+Netpbm.  Therefore, if you need a patent to use something in Netpbm,
+you need your own license.
+
+A note about patents in general: A patent gives an inventor the
+exclusive right to make, sell, or use the invention.  If you
+independently invent something without knowing that the patent holder
+already did, that makes no difference -- the patent holder still has
+the exclusive right.  It makes no difference if you give the original
+inventor credit.  The patent applies to a method, not its expression,
+so writing a program from scratch to implement a certain method is
+still a patent infringement.  Infringing a patent is not a crime per
+se, but to the extent that it costs the patent holder money, the
+infringer has to make it up.
+
+The original purpose of patents is probably perverted when patents are
+applied to things you implement in computer programs.  This is one of
+the Free Software Foundation's causes.  See 
+<http://www.gnu.org/philosophy.html#laws>.
+
+The Jbigtopnm and Pnmtojbig programs use arithmetic coding patents and
+other patents covering various aspects of the "front end."
+
+
+JPEG patents
+------------
+
+The Pnmtojpeg and possibly Jpegtopnm programs in some cases may use
+the arithmetic coding patents owned by IBM, AT&T, and Mitsubishi.
+There is difference of opinion on whether they do.
+
+Forgent owns a patent it believes covers JPEG compression.  This
+patent was virtually unknown before July 2002, when Forgent began to
+enforce it.  It has successfully enforced it against two companies
+(Sony and an unnamed Japanese digital camera maker), but without court
+ruling.  This patent, U.S. Patent No. 4,698,672, expires in 2006.
+
+Philips and Lucent Technologies also own patents they claim cover
+JPEG.
+
+The following Netpbm components may be restricted by these patents:
+Jpegtopnm, Pnmtojpeg, Ppmtompeg, Tifftopnm, Pnmtotiff.  These all
+do their JPEG work via a JPEG library not distributed with Netpbm.
+Your JPEG-related liability for using Netpbm is limited to your 
+liability for using your JPEG library.
+
+Note that it is possible to use Ppmtompeg without involving JPEG and to
+build it without the ability to involve JPEG.
+
+The next best alternative to JPEG is probably PNG and maybe JBIG for
+bilevel (black and white) images.
+
+http://burnalljpegs.org contains information on this issue.
+
+
+MPEG patents
+------------
+
+The original University of California distribution of the Ppmtompeg code
+contains this statement in a README file:
+
+  ... patents are held by several companies on various aspects of the MPEG
+  video standard.  Companies or individuals who want to develop commercial
+  products that include this code must acquire licenses from these companies.
+  For information on licensing, see Appendix F in the standard.
+
+
+Expired LZW patents
+-------------------
+
+Unisys owns patents on LZW compression, which is used by
+Ppmtogif, and maybe on LZW decompression, which is used by Giftopnm.  IBM also
+owns a patent that may cover the GIF tools.  Unisys offers a license of the
+patent for trivial use for $5000.  Its U.S. patent (Number 4,558,302) expired
+June 20, 2003.  In most of Europe, the patent expired June 18, 2004.  In
+Japan, it was June 20, 2004 and in Canada, July 7, 2004.  IBM's U.S. patent
+expired August 11, 2006.
+
+Neither company has ever enforced the patent against trivial users of
+it.  <http://news.cnet.com/news/0-1005-200-1713278.html> is an article
+dated April 18, 2000 on the issue.
+http://www.unisys.com/about__unisys/lzw/> is Unisys' view of the
+matter.  For information from another perspective, see
+<http://burnallgifs.org>.
+
+The following Netpbm components may be restricted by these patents:
+Ppmtogif, Giftopnm.
+
+A good substitute for GIF if the patents are a problem is PNG (see
+pngtopnm, pnmtopng), which was developed with a primary purpose of not
+using any patented technology.
+
+You can also use the -nolzw option on ppmtogif to avoid using the LZW
+patent.  The images so generated are larger than traditional
+LZW-compressed GIFs, but any GIF decoder can decode them just the
+same.

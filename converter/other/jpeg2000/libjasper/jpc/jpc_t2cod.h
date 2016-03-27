@@ -136,7 +136,7 @@ typedef struct {
 	/* The number of progression changes. */
 	int numpchgs;
 
-	/* The maximum number of progression changes that can be accomodated
+	/* The maximum number of progression changes that can be accommodated
 	  without growing the progression change array. */
 	int maxpchgs;
 
@@ -253,7 +253,7 @@ typedef struct {
 	/* The progression change list. */
 	jpc_pchglist_t *pchglist;
 
-	/* The progression to use in the absense of explicit specification. */
+	/* The progression to use in the absence of explicit specification. */
 	jpc_pchg_t defaultpchg;
 
 	/* The current progression change number. */

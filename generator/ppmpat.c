@@ -41,6 +41,8 @@ struct cmdlineInfo {
     pattern basePattern;
     unsigned int width;
     unsigned int height;
+    unsigned int randomseed;
+    unsigned int randomseedSpec;
 };
 
 
@@ -71,22 +73,34 @@ parseCommandLine(int argc, const char ** argv,
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENTRY */
-    OPTENT3(0, "gingham2",  OPT_FLAG,   NULL, &gingham2,   0);
-    OPTENT3(0, "g2",        OPT_FLAG,   NULL, &gingham2,   0);
-    OPTENT3(0, "gingham3",  OPT_FLAG,   NULL, &gingham3,   0);
-    OPTENT3(0, "g3",        OPT_FLAG,   NULL, &gingham3,   0);
-    OPTENT3(0, "madras",    OPT_FLAG,   NULL, &madras,     0);
-    OPTENT3(0, "tartan",    OPT_FLAG,   NULL, &tartan,     0);
-    OPTENT3(0, "poles",     OPT_FLAG,   NULL, &poles,      0);
-    OPTENT3(0, "squig",     OPT_FLAG,   NULL, &squig,      0);
-    OPTENT3(0, "camo",      OPT_FLAG,   NULL, &camo,       0);
-    OPTENT3(0, "anticamo",  OPT_FLAG,   NULL, &anticamo,   0);
+    OPTENT3(0, "gingham2",      OPT_FLAG,   NULL,
+            &gingham2,   0);
+    OPTENT3(0, "g2",            OPT_FLAG,   NULL,
+            &gingham2,   0);
+    OPTENT3(0, "gingham3",      OPT_FLAG,   NULL,
+            &gingham3,   0);
+    OPTENT3(0, "g3",            OPT_FLAG,   NULL,
+            &gingham3,   0);
+    OPTENT3(0, "madras",        OPT_FLAG,   NULL,
+            &madras,     0);
+    OPTENT3(0, "tartan",        OPT_FLAG,   NULL,
+            &tartan,     0);
+    OPTENT3(0, "poles",         OPT_FLAG,   NULL,
+            &poles,      0);
+    OPTENT3(0, "squig",         OPT_FLAG,   NULL,
+            &squig,      0);
+    OPTENT3(0, "camo",          OPT_FLAG,   NULL,
+            &camo,       0);
+    OPTENT3(0, "anticamo",      OPT_FLAG,   NULL,
+            &anticamo,   0);
+    OPTENT3(0, "randomseed",    OPT_UINT,   &cmdlineP->randomseed,
+            &cmdlineP->randomseedSpec,      0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     basePatternCount =
@@ -136,6 +150,7 @@ parseCommandLine(int argc, const char ** argv,
         if (cmdlineP->height < 1)
             pm_error("Height must be at least 1 pixel");
     }
+    free(option_def);
 }
 
 
@@ -1140,7 +1155,8 @@ main(int argc, const char ** argv) {
 
     validateComputableDimensions(cmdline.width, cmdline.height);
     
-    srand(pm_randseed());
+    srand(cmdline.randomseedSpec ? cmdline.randomseed : pm_randseed());
+
     pixels = ppm_allocarray(cmdline.width, cmdline.height);
 
     switch (cmdline.basePattern) {
@@ -1187,4 +1203,6 @@ main(int argc, const char ** argv) {
 
     return 0;
 }
+
+
 

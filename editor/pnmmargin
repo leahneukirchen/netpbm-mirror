@@ -31,30 +31,30 @@ while true ; do
         plainopt="-plain"
         shift
         ;;
-	-w|-wh|-whi|-whit|-white )
-	color="-white"
-	shift
-	;;
-	-b|-bl|-bla|-blac|-black )
-	color="-black"
-	shift
-	;;
-	-c|-co|-col|-colo|-color )
-	shift
-	if [ ! ${1-""} ] ; then
-       	    echo "usage: $0 [-white|-black|-color <colorspec>] <size> [pnmfile]" 1>&2
-	    exit 1
-	fi
-	color="$1"
-	shift
-	;;
-	-* )
-	echo "usage: $0 [-white|-black|-color <colorspec>] <size> [pnmfile]" 1>&2
-	exit 1
-	;;
-	* )
-	break
-	;;
+        -w|-wh|-whi|-whit|-white )
+        color="-white"
+        shift
+        ;;
+        -b|-bl|-bla|-blac|-black )
+        color="-black"
+        shift
+        ;;
+        -c|-co|-col|-colo|-color )
+        shift
+        if [ ! ${1-""} ] ; then
+            echo "usage: $0 [-white|-black|-color <colorspec>] <size> [pnmfile]" 1>&2
+            exit 1
+        fi
+        color="$1"
+        shift
+        ;;
+        -* )
+        echo "usage: $0 [-white|-black|-color <colorspec>] <size> [pnmfile]" 1>&2
+        exit 1
+        ;;
+        * )
+        break
+        ;;
     esac
 done
 
@@ -82,7 +82,7 @@ if [ $size -eq 0 ] ; then
 else
     # If -white or -black, write output with pnmpad and exit.
     # Otherwise construct spacer files.
-    
+
     case "$color" in
         -gofigure )
         pnmcut 0 0 1 1 $tmp1 | pnmtile $size 1 > $tmp2
@@ -97,12 +97,10 @@ else
         ;;
     esac
     pamflip -rotate90 $tmp2 > $tmp3
-    
+
     # Cat things together.
     pnmcat -lr $tmp2 $tmp1 $tmp2 > $tmp4
     pnmcat -tb $plainopt $tmp3 $tmp4 $tmp3
 fi
-
-
 
 

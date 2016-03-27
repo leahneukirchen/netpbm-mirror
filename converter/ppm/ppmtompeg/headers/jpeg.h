@@ -1,5 +1,5 @@
-#include "ansi.h"
-
+#include <stdio.h>
+#include "frame.h"
 
 void
 JMovie2JPEG(const char * const infilename,

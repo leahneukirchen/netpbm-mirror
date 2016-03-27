@@ -72,10 +72,6 @@ memmove(void *dest, const void *src, size_t n);
 
 double
 Log2 (double x);
-#ifndef HAVE_STRDUP
-char *
-strdup (const char *s);
-#endif
 #ifndef HAVE_STRCASECMP
 bool_t
 strcaseeq (const char *s1, const char *s2);

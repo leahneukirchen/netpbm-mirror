@@ -18,9 +18,9 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#include "pm_config.h"
-#include "pm_c_util.h"
-#include "mallocvar.h"
+#include "netpbm/pm_config.h"
+#include "netpbm/pm_c_util.h"
+#include "netpbm/mallocvar.h"
 #include "ppm.h"
 #include "ppmdfont.h"
 #include "ppmdraw.h"
@@ -966,14 +966,25 @@ typedef struct
     int edge;
 } coord;
 
-typedef struct fillobj {
+typedef struct fillState {
     int n;
+        /* Number of elements in 'coords' */
     int size;
     int curedge;
     int segstart;
     int ydir;
     int startydir;
     coord * coords;
+} fillState;
+
+typedef struct fillobj {
+
+    /* The only reason we have a struct fillState separate from
+       struct fillobj is that the drawproc interface is defined to
+       have drawing not modify the fillobj, i.e. it passed
+       const fillobj * to the drawing program.
+    */
+    struct fillState * stateP;
 } fillobj;
 
 #define SOME 1000
@@ -984,16 +995,24 @@ struct fillobj *
 ppmd_fill_create(void) {
 
     fillobj * fillObjP;
+    struct fillState * stateP;
 
     MALLOCVAR(fillObjP);
     if (fillObjP == NULL)
         pm_error("out of memory allocating a fillhandle");
-    fillObjP->n = 0;
-    fillObjP->size = SOME;
-    MALLOCARRAY(fillObjP->coords, fillObjP->size);
-    if (fillObjP->coords == NULL)
+
+    MALLOCVAR(stateP);
+    if (stateP == NULL)
         pm_error("out of memory allocating a fillhandle");
-    fillObjP->curedge = 0;
+
+    stateP->n = 0;
+    stateP->size = SOME;
+    MALLOCARRAY(stateP->coords, stateP->size);
+    if (stateP->coords == NULL)
+        pm_error("out of memory allocating a fillhandle");
+    stateP->curedge = 0;
+
+    fillObjP->stateP = stateP;
     
     /* Turn off line clipping. */
     /* UGGH! We must eliminate this global variable */
@@ -1021,13 +1040,94 @@ ppmd_fill_init(void) {
 
 
 void
-ppmd_fill_destroy(struct fillobj * fillObjP) {
+ppmd_fill_destroy(struct fillobj * const fillObjP) {
 
-    free(fillObjP->coords);
+    free(fillObjP->stateP->coords);
+    free(fillObjP->stateP);
     free(fillObjP);
 }
 
 
+
+static void
+addCoord(struct fillState *  const stateP,
+         ppmd_point const point) {
+
+    stateP->coords[stateP->n].point = point;
+    stateP->coords[stateP->n].edge = stateP->curedge;
+
+    ++stateP->n;
+}
+
+
+
+static void
+startNewSegment(struct fillState * const stateP) {
+/*----------------------------------------------------------------------------
+   Close off the segment we're currently building and start a new one.
+-----------------------------------------------------------------------------*/
+    if (stateP->startydir != 0 && stateP->ydir != 0) {
+        /* There's stuff in the current segment.  */
+        if (stateP->startydir == stateP->ydir) {
+            /* Oops, first edge and last edge of current segment are the same.
+               Change all points in the first edge to be in the last.
+            */
+            int const firstEdge = stateP->coords[stateP->segstart].edge;
+            int const lastEdge  = stateP->coords[stateP->n - 1].edge;
+            coord * const segStartCoordP = &stateP->coords[stateP->segstart];
+            coord * const segEndCoordP   = &stateP->coords[stateP->n];
+
+            coord * fcP;
+
+            for (fcP = segStartCoordP;
+                 fcP < segEndCoordP && fcP->edge == firstEdge;
+                 ++fcP)
+                fcP->edge = lastEdge;
+        }
+    }
+    /* And start new segment. */
+    ++stateP->curedge;
+    stateP->segstart  = stateP->n;
+    stateP->ydir      = 0;
+    stateP->startydir = 0;
+}
+
+
+
+static void
+continueSegment(struct fillState * const stateP,
+                int                const dy) {
+/*----------------------------------------------------------------------------
+   'dy' is how much the current point is above the previous one.
+-----------------------------------------------------------------------------*/
+    if (dy != 0) {
+        if (stateP->ydir != 0 && stateP->ydir != dy) {
+            /* Direction changed.  Insert a fake coord, old
+               position but new edge number.
+            */
+            ++stateP->curedge;
+            addCoord(stateP, stateP->coords[stateP->n - 1].point);
+        }
+        stateP->ydir = dy;
+        if (stateP->startydir == 0)
+            stateP->startydir = dy;
+    }
+}
+
+
+
+
+/* ppmd_fill_drawprocp() is a drawproc that turns an outline drawing function
+   into a filled shape function.  This is a somewhat off-label application of
+   a drawproc:  A drawproc is intended just to draw a point.  So e.g. you
+   might draw a circle with a fat brush by calling ppmd_circle with a drawproc
+   that draws a point as a 10-pixel disk.
+
+   But ppmd_fill_drawproc() just draws a point the trivial way: as one pixel.
+   However, it tracks every point that is drawn in a form that a subsequent
+   ppmd_fill() call can use to to fill in the shape drawn, assuming it turns
+   out to be a closed shape.
+*/
 
 void
 ppmd_fill_drawprocp(pixel **     const pixels, 
@@ -1037,85 +1137,39 @@ ppmd_fill_drawprocp(pixel **     const pixels,
                     ppmd_point   const p,
                     const void * const clientdata) {
 
-    fillobj * fh;
-    coord * cp;
+    const fillobj *    const fillObjP = clientdata;
+    struct fillState * const stateP   = fillObjP->stateP;
 
-    fh = (fillobj*) clientdata;
-
-    /* If these are the same coords we saved last time, don't bother. */
-    if (fh->n > 0) {
-        ppmd_point const lastPoint = fh->coords[fh->n - 1].point;
-        if (pointsEqual(p, lastPoint))
-            return;
-    }
-
-    /* Ok, these are new; make room for two more coords. */
-    if (fh->n + 1 >= fh->size) {
-        fh->size += SOME;
-        REALLOCARRAY(fh->coords, fh->size);
-        if (fh->coords == NULL)
+    /* Make room for two more coords, the max we might add. */
+    if (stateP->n + 2 > stateP->size) {
+        stateP->size += SOME;
+        REALLOCARRAY(stateP->coords, stateP->size);
+        if (stateP->coords == NULL)
             pm_error("out of memory enlarging a fillhandle");
     }
 
-    /* Check for extremum and set the edge number. */
-    if (fh->n == 0) {
+    if (stateP->n == 0) {
         /* Start first segment. */
-        fh->segstart = fh->n;
-        fh->ydir = 0;
-        fh->startydir = 0;
+        stateP->segstart = stateP->n;
+        stateP->ydir = 0;
+        stateP->startydir = 0;
+        addCoord(stateP, p);
     } else {
-        coord * const ocp = &(fh->coords[fh->n - 1]);
-        int dx, dy;
+        ppmd_point const prevPoint = stateP->coords[stateP->n - 1].point;
+        int const dx = p.x - prevPoint.x;
+        int const dy = p.y - prevPoint.y;
 
-        dx = p.x - ocp->point.x;
-        dy = p.y - ocp->point.y;
-        if (dx < -1 || dx > 1 || dy < -1 || dy > 1) {
-            /* Segment break.  Close off old one. */
-            if (fh->startydir != 0 && fh->ydir != 0)
-                if (fh->startydir == fh->ydir) {
-                    /* Oops, first edge and last edge are the same.
-                       Renumber the first edge in the old segment.
-                    */
-                    const coord * const fcpLast= &(fh->coords[fh->n -1]); 
-                    coord * fcp;
-
-                    int oldedge;
-
-                    fcp = &(fh->coords[fh->segstart]);
-                    oldedge = fcp->edge;
-                    for (; fcp <= fcpLast && fcp->edge == oldedge ; ++fcp)
-                        fcp->edge = ocp->edge;
-                }
-            /* And start new segment. */
-            ++fh->curedge;
-            fh->segstart = fh->n;
-            fh->ydir = 0;
-            fh->startydir = 0;
+        if (dx == 0 && dy == 0) {
+            /* These are the same coords we had last time; don't bother */
         } else {
-            /* Segment continues. */
-            if (dy != 0) {
-                if (fh->ydir != 0 && fh->ydir != dy) {
-                    /* Direction changed.  Insert a fake coord, old
-                       position but new edge number.
-                    */
-                    ++fh->curedge;
-                    cp = &fh->coords[fh->n];
-                    cp->point = ocp->point;
-                    cp->edge = fh->curedge;
-                    ++fh->n;
-                }
-                fh->ydir = dy;
-                if (fh->startydir == 0)
-                    fh->startydir = dy;
-            }
+            if (abs(dx) > 1 || abs(dy) > 1)
+                startNewSegment(stateP);
+            else
+                continueSegment(stateP, dy);
+
+            addCoord(stateP, p);
         }
     }
-
-    /* Save this coord. */
-    cp = &fh->coords[fh->n];
-    cp->point = p;
-    cp->edge = fh->curedge;
-    ++fh->n;
 }
 
 
@@ -1137,12 +1191,12 @@ ppmd_fill_drawproc(pixel**      const pixels,
 
 
 #ifndef LITERAL_FN_DEF_MATCH
-static qsort_comparison_fn yx_compare;
+static qsort_comparison_fn yxCompare;
 #endif
 
 static int
-yx_compare(const void * const c1Arg,
-           const void * const c2Arg) {
+yxCompare(const void * const c1Arg,
+          const void * const c2Arg) {
 
     const coord * const c1P = c1Arg;
     const coord * const c2P = c2Arg;
@@ -1173,9 +1227,11 @@ ppmd_fill(pixel **         const pixels,
           int              const cols, 
           int              const rows, 
           pixval           const maxval, 
-          struct fillobj * const fh,
+          struct fillobj * const fillObjP,
           ppmd_drawproc          drawProc,
           const void *     const clientdata) {
+
+    struct fillState * const fh = fillObjP->stateP;
 
     int pedge;
     int i, edge, lx, rx, py;
@@ -1202,7 +1258,7 @@ ppmd_fill(pixel **         const pixels,
     ppmd_setlineclip(oldclip);
 
     /* Sort the coords by Y, secondarily by X. */
-    qsort((char*) fh->coords, fh->n, sizeof(coord), yx_compare);
+    qsort((char*) fh->coords, fh->n, sizeof(coord), yxCompare);
 
     /* Find equal coords with different edge numbers, and swap if necessary. */
     edge = -1;

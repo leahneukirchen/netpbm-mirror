@@ -19,31 +19,36 @@
 **
 */
 
+#include <assert.h>
 #include <string.h>
 
 #include "pm_c_util.h"
-#include "ppm.h"
+#include "mallocvar.h"
 #include "shhopt.h"
+#include "ppm.h"
 
 
 struct cmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *inputFilespec;  /* Filespec of input file */
+    const char * inputFileName;  /* Name of input file */
     unsigned int verbose;
 };
 
 
 
 static void
-parseCommandLine(int argc, char **argv,
-                 struct cmdlineInfo *cmdlineP) {
-    optEntry *option_def = malloc(100*sizeof(optEntry));
+parseCommandLine(int argc, const char ** argv,
+                 struct cmdlineInfo * const cmdlineP) {
+
+    optEntry * option_def;
         /* Instructions to OptParseOptions3 on how to parse our options */
     optStruct3 opt;
 
     unsigned int option_def_index;
+
+    MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENTRY */
     OPTENT3(0, "verbose", OPT_FLAG, NULL, &cmdlineP->verbose, 0);
@@ -52,123 +57,176 @@ parseCommandLine(int argc, char **argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
-    switch (argc-1) {
-    case 0:
-        cmdlineP->inputFilespec = "-";
-        break;
-    case 1:
-        cmdlineP->inputFilespec = argv[1];
-        break;
-    case 2:
-        break;
+    if (argc-1 < 1)
+        cmdlineP->inputFileName = "-";
+    else {
+        cmdlineP->inputFileName = argv[1];
+
+        if (argc-1 > 1)
+            pm_error("Too many arguments: %u.  The only possible argument "
+                     "is the input file name", argc-1);
     }
 }
 
 
-#define ESC         "\x1B\x5B"
-#define NUM_COLORS      128
-#define MAX_ANSI_STR_LEN    16
+
+#define ESC "\x1B\x5B"
+#define ANSI_BRIGHT_CMD_PAT ESC "%dm"
+#define ANSI_FGCOLOR_CMD_PAT ESC "3%dm"
+#define ANSI_BGCOLOR_CMD_PAT ESC "4%dm"
+#define MAX_ANSI_STR_LEN 16
+#define NUM_COLORS 128
+    /* 1 bit each RGB = 8 colors.
+       8 BG colors * 8 FG colors * 2 brightnesses
+    */
 
 
-static int __inline__ sqr(const int x) {
-    return x*x;
-}
 
-/*
-    Generates some sort of color palette mixing the available
-    colors as different values of background, foreground & brightness.
-*/
-static int 
-generate_palette(unsigned char rgb[NUM_COLORS][3], 
-                 char ansi_code[NUM_COLORS][MAX_ANSI_STR_LEN]) {
-    int code, col=0, cd2=0;
-    
-    memset((void *)rgb, 0, NUM_COLORS*3);
-    memset((void *)ansi_code, 0, NUM_COLORS*MAX_ANSI_STR_LEN);
+static void
+generatePalette(unsigned char        rgb[NUM_COLORS][3], 
+                char                 ansiCode[NUM_COLORS][MAX_ANSI_STR_LEN],
+                unsigned int * const paletteSizeP) {
+/*----------------------------------------------------------------------------
+  Generate some sort of color palette mixing the available colors as different
+  values of background, foreground & brightness.
 
-    for(col=cd2=0; cd2<8; cd2++) {
-        unsigned int b;
-        for(b=0;b<2;b++) {
-            for(code=0; code<8; code++) {
-                unsigned int c;
-                for(c=0;c<3;c++) {
-                    if(code&(1<<c)) {
-                        rgb[col][c]=(192|(b?63:0));
+  We return as rgb[I] the RGB triple for the color with palette index I.
+  Component intensities are in the range 0..255.  rgb[I][0] is red;
+  rgb[I][1] is green; rgb[I][2] is blue.
+
+  We return as ansiCode[I] the sequence you send to a terminal to generate
+  the color with palette index I.
+-----------------------------------------------------------------------------*/
+    unsigned int idx;
+        /* palette index of the color being considered */
+    unsigned int bgColorCode;
+        /* This is the ANSI color code for the background.  An ANSI color code
+           is a 3 bit code in which LSB means red; middle bit means green, and
+           MSB means blue.
+        */
+
+    /* We develop the palette backwards: consider every permutation of the
+       three terminal controls -- background, foreground, and brightness --
+       and for each figure out what RGB color it represents and fill in
+       that element of RGB[][]
+    */
+
+    for (bgColorCode = 0, idx = 0; bgColorCode < 8; ++bgColorCode) {
+        unsigned int brightness;  /* 0 = dim; 1 = bright */
+        for (brightness = 0; brightness < 2; ++brightness) {
+            unsigned int fgColorCode;
+                /* ANSI color code for the foreground.  See bgColorCode. */
+            for (fgColorCode = 0; fgColorCode < 8; ++fgColorCode) {
+                unsigned int rgbComp;
+                    /* 0 = red; 1 = green; 2 = blue */
+                for (rgbComp = 0; rgbComp < 3; ++rgbComp) {
+                    assert (idx < NUM_COLORS);
+                    rgb[idx][rgbComp] = 0x00;  /* initial value */
+                    if ((fgColorCode & (0x1 << rgbComp)) != 0) {
+                        rgb[idx][rgbComp] |= 0xC0;
+                        if (brightness == 1)
+                            rgb[idx][rgbComp] |= 0x3F;
                     }
-                    if(cd2&(1<<c)) {
-                        rgb[col][c]|=(128);
-                    }
+                    if ((bgColorCode & (0x1 << rgbComp)) != 0)
+                        rgb[idx][rgbComp] |= 0x80;
                 }
-                sprintf(ansi_code[col],
-                        ESC"%dm"ESC"3%dm"ESC"4%dm",
-                        b, code, cd2);
-                col++;
+                sprintf(ansiCode[idx],
+                        ANSI_BRIGHT_CMD_PAT
+                        ANSI_FGCOLOR_CMD_PAT
+                        ANSI_BGCOLOR_CMD_PAT,
+                        brightness, fgColorCode, bgColorCode);
+                ++idx;
             }
         }
     }
-    return col;
+    *paletteSizeP = idx;
 }
 
 
 
-int main(int argc, char **argv)
-{
-    FILE            *ifp;
-    pixel           **pixels;
-    int             rows, row, cols, col,
-                    pal_len, i;
-    pixval          maxval;
-    struct cmdlineInfo
-                    cmdline;
-    unsigned char   rgb[NUM_COLORS][3];
-    char            ansi_code[NUM_COLORS][MAX_ANSI_STR_LEN];
+static void
+lookupInPalette(pixel          const pixel,
+                pixval         const maxval,
+                unsigned char        rgb[NUM_COLORS][3], 
+                unsigned int   const palLen,
+                unsigned int * const paletteIdxP) {
+/*----------------------------------------------------------------------------
+   Look up the color 'pixel' (which has maxval 'maxval') in the palette
+   palette[], which has 'palLen' elements and uses maxval 255.  Return the
+   index into palette[] of the color that is closes to 'pixel' as
+   *paletteIdxP.
+-----------------------------------------------------------------------------*/
+    pixval const r = PPM_GETR(pixel) * 255 / maxval;
+    pixval const g = PPM_GETG(pixel) * 255 / maxval;
+    pixval const b = PPM_GETB(pixel) * 255 / maxval;
 
-    
-    ppm_init(&argc, argv);    
+    unsigned int paletteIdxSoFar;
+    unsigned int dist;
+    unsigned int i;
+            
+    /* The following loop calculates the index that corresponds to the
+       minimum color distance between the given RGB values and the
+       values available in the palette.
+    */
+    for (i = 0, dist = SQR(255)*3, paletteIdxSoFar = 0; i < palLen; ++i) {
+        pixval const pr=rgb[i][0];
+        pixval const pg=rgb[i][1];
+        pixval const pb=rgb[i][2];
+        unsigned int const j = SQR(r-pr) + SQR(b-pb) + SQR(g-pg);
+
+        if (j  < dist) {
+            dist = j;
+            paletteIdxSoFar = i;
+        }
+    }
+    *paletteIdxP = paletteIdxSoFar;
+}
+
+
+
+int
+main(int argc, const char ** argv) {
+
+    FILE *          ifP;
+    pixel **        pixels;
+    int             rows, cols;
+    unsigned int    row;
+    unsigned int    palLen;
+    pixval          maxval;
+    struct cmdlineInfo cmdline;
+    unsigned char   rgb[NUM_COLORS][3];
+    char            ansiCode[NUM_COLORS][MAX_ANSI_STR_LEN];
+
+    pm_proginit(&argc, argv);    
 
     parseCommandLine(argc, argv, &cmdline);
 
-    ifp = pm_openr(cmdline.inputFilespec);
+    ifP = pm_openr(cmdline.inputFileName);
     
-    pixels = ppm_readppm(ifp, &cols, &rows, &maxval);
+    pixels = ppm_readppm(ifP, &cols, &rows, &maxval);
 
-    pm_close(ifp);
+    pm_close(ifP);
         
-    pal_len=generate_palette(rgb, ansi_code);
+    generatePalette(rgb, ansiCode, &palLen);
     
     for (row = 0; row < rows; ++row) {
-        for (col = 0; col < cols; col++) {
-            pixval const r=(int)PPM_GETR(pixels[row][col])*255/maxval;
-            pixval const g=(int)PPM_GETG(pixels[row][col])*255/maxval;
-            pixval const b=(int)PPM_GETB(pixels[row][col])*255/maxval;
-            int val, dist;
-            
-            /*
-            The following loop calculates the index that
-            corresponds to the minimum color distance
-            between the given RGB values and the values
-            available in the palette.
-            */
-            for(i=0, dist=sqr(255)*3, val=0; i<pal_len; i++) {
-                pixval const pr=rgb[i][0];
-                pixval const pg=rgb[i][1];
-                pixval const pb=rgb[i][2];
-                unsigned int j;
-                if( (j=sqr(r-pr)+sqr(b-pb)+sqr(g-pg))<dist ) {
-                    dist=j;
-                    val=i;
-                }
-            }
-            printf("%s%c", ansi_code[val],0xB1);
+        unsigned int col;
+        for (col = 0; col < cols; ++col) {
+            unsigned int paletteIdx;
+
+            lookupInPalette(pixels[row][col], maxval, rgb, palLen,
+                            &paletteIdx);
+
+            printf("%s\xB1", ansiCode[paletteIdx]);
         }
-        printf(ESC"\x30m\n");
+        printf(ESC "\x30m\n");
     }
-    printf(ESC"\x30m");
+    printf(ESC "\x30m");
 
     ppm_freearray(pixels, rows);
     
-    exit(0);
+    return 0;
 }

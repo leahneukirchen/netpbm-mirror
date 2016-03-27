@@ -1,6 +1,8 @@
 /* pbmfont.h - header file for font routines in libpbm
 */
 
+#include "pbm.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif

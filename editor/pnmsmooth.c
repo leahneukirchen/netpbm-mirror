@@ -21,6 +21,7 @@
 
 
 #include <unistd.h>
+#include <assert.h>
 #include <string.h>
 #include <errno.h>
 
@@ -28,6 +29,7 @@
 #include "mallocvar.h"
 #include "shhopt.h"
 #include "nstring.h"
+#include "pm.h"   /* For pm_plain_output */
 #include "pm_system.h"
 #include "pnm.h"
 
@@ -39,13 +41,13 @@ struct cmdlineInfo {
     const char * inputFilespec;  /* Filespec of input file */
     unsigned int width;
     unsigned int height;
-    const char * dump;
+    unsigned int dump;
 };
 
 
 
 static void
-parseCommandLine (int argc, char ** argv,
+parseCommandLine (int argc, const char ** argv,
                   struct cmdlineInfo *cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
@@ -58,19 +60,19 @@ parseCommandLine (int argc, char ** argv,
    was passed to us as the argv array.  We also trash *argv.
 -----------------------------------------------------------------------------*/
     optEntry * option_def;
-        /* Instructions to optParseOptions3 on how to parse our options.
+        /* Instructions to pm_optParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
 
     unsigned int option_def_index;
 
-    unsigned int widthSpec, heightSpec, dumpSpec, sizeSpec;
+    unsigned int widthSpec, heightSpec, sizeSpec;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
     
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0,   "dump",          OPT_STRING,   
-            &cmdlineP->dump,            &dumpSpec, 0);
+    OPTENT3(0,   "dump",          OPT_FLAG,   
+            NULL,                       &cmdlineP->dump, 0);
     OPTENT3(0,   "width",         OPT_UINT,
             &cmdlineP->width,           &widthSpec, 0);
     OPTENT3(0,   "height",        OPT_UINT,
@@ -82,17 +84,16 @@ parseCommandLine (int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3( &argc, argv, opt, sizeof(opt), 0 );
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdline_p and others. */
+
+    free(option_def);
 
     if (!widthSpec)
         cmdlineP->width = 3;
 
     if (!heightSpec)
         cmdlineP->height = 3;
-
-    if (!dumpSpec)
-        cmdlineP->dump = NULL;
 
     if (sizeSpec) {
         /* -size is strictly for backward compatibility.  This program
@@ -142,69 +143,122 @@ parseCommandLine (int argc, char ** argv,
 }
 
 
+static void
+validateComputableDimensions(unsigned int const cols,
+                             unsigned int const rows){
+/*----------------------------------------------------------------------------
+   Make sure that convolution matrix dimensions are small enough to
+   represent in a string.
+-----------------------------------------------------------------------------*/
+    unsigned int const maxStringLength = INT_MAX - 2 -6;
+
+    if (cols >  maxStringLength / rows / 2 )
+       pm_error("The convolution matrix size %u x %u is too large.",
+                cols, rows);
+}
+
+
+
+static const char *
+makeConvolutionKernel(unsigned int const cols,
+                      unsigned int const rows) {
+/*----------------------------------------------------------------------------
+  Return a value for a Pnmconvol '-matrix' option that specifies a
+  convolution kernel with with dimensions 'cols' by 'rows' with 1
+  for every weight.  Caller can use this with Pnmconvol -normalize.
+-----------------------------------------------------------------------------*/
+    unsigned int const maxOptSize = cols * rows * 2;
+
+    char * matrix;
+
+    MALLOCARRAY(matrix, maxOptSize);
+
+    if (matrix == NULL)
+        pm_error("Could not get memory for a %u x %u convolution matrix",
+                 rows, cols);
+    else {
+        unsigned int row;
+        unsigned int cursor;
+     
+        for (row = 0, cursor = 0; row < rows; ++row) {
+            unsigned int col;
+
+            if (row > 0)
+                matrix[cursor++] = ';';
+
+            for (col = 0; col < cols; ++col) {
+                if (col > 0)
+                    matrix[cursor++] = ',';
+
+                matrix[cursor++] = '1';
+            }
+        }
+        assert(cursor < maxOptSize);
+        matrix[cursor] = '\0';
+    }
+
+    return matrix;
+}
+
+
 
 static void
-writeConvolutionImage(FILE *       const cofp,
-                      unsigned int const cols,
-                      unsigned int const rows,
-                      int          const format) {
+validateMatrixOptSize(unsigned int const rows,
+                      unsigned int const cols) {
 
-    xelval const convmaxval = rows * cols * 2;
-        /* normalizing factor for our convolution matrix */
-    xelval const g = rows * cols + 1;
-        /* weight of all pixels in our convolution matrix */
-    int row;
-    xel *outputrow;
+    /* If the user accidentally specifies absurdly large values for the
+       convolution matrix size, the failure mode can be a confusing message
+       resulting from the 'pnmconvol' arguments being too large.  To try
+       to be more polite in that case, we apply an arbitrary limit on the
+       size of the option here.
+    */
 
-    if (convmaxval > PNM_OVERALLMAXVAL)
-        pm_error("The convolution matrix is too large.  "
-                 "Width x Height x 2\n"
-                 "must not exceed %d and it is %d.",
-                 PNM_OVERALLMAXVAL, convmaxval);
-
-    pnm_writepnminit(cofp, cols, rows, convmaxval, format, 0);
-    outputrow = pnm_allocrow(cols);
-
-    for (row = 0; row < rows; ++row) {
-        unsigned int col;
-        for (col = 0; col < cols; ++col)
-            PNM_ASSIGN1(outputrow[col], g);
-        pnm_writepnmrow(cofp, outputrow, cols, convmaxval, format, 0);
-    }
-    pnm_freerow(outputrow);
+    if (rows * cols > 5000)
+        pm_error("Convolution matrix dimensions %u x %u are too large "
+                 "to be useful, so we assume you made a mistake.  "
+                 "We refuse to use numbers this large because they might "
+                 "cause excessive resource use that would cause failures "
+                 "whose cause would not be obvious to you", cols, rows);
 }
 
 
 
 int
-main(int argc, char ** argv) {
+main(int argc, const char ** argv) {
 
     struct cmdlineInfo cmdline;
-    FILE * convFileP;
-    const char * tempfileName;
+    const char * matrixOptValue;
 
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
-    if (cmdline.dump)
-        convFileP = pm_openw(cmdline.dump);
-    else
-        pm_make_tmpfile(&convFileP, &tempfileName);
-        
-    writeConvolutionImage(convFileP, cmdline.width, cmdline.height,
-                          PGM_FORMAT);
+    validateComputableDimensions(cmdline.width, cmdline.height);
+    validateMatrixOptSize(cmdline.width, cmdline.height);
 
-    pm_close(convFileP);
+    matrixOptValue = makeConvolutionKernel(cmdline.width, cmdline.height);
 
     if (cmdline.dump) {
-        /* We're done.  Convolution image is in user's file */
+        pm_error("-dump option no longer exists.  "
+                 "You don't need it because you can now do uniform "
+                 "convolution easily with the -matrix and -normalize "
+                 "options of 'pnmconvol'.");
     } else {
-        pm_system_lp("pnmconvol", NULL, NULL, NULL, NULL,
-                     "pnmconvol", tempfileName, cmdline.inputFilespec, NULL);
+        const char * const plainOpt = pm_plain_output ? "-plain" : NULL;
 
-        unlink(tempfileName);
-        strfree(tempfileName);
+        const char * matrixOpt;
+
+        pm_asprintf(&matrixOpt, "-matrix=%s", matrixOptValue);
+
+        pm_message("Running Pnmconvol -normalize %s", matrixOpt);
+
+        pm_system_lp("pnmconvol", NULL, NULL, NULL, NULL,
+                     "pnmconvol", matrixOpt, cmdline.inputFilespec,
+                     "-normalize", "-quiet", plainOpt, NULL);
+
+        pm_strfree(matrixOpt);
     }
+    pm_strfree(matrixOptValue);
+
     return 0;
 }

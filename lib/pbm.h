@@ -58,9 +58,21 @@ pbm_allocrow(unsigned int const cols);
 #define pbm_freearray_packed(packed_bits, rows) \
     pm_freearray((char **) packed_bits, rows)
 
-bit** pbm_readpbm(FILE* file, int* colsP, int* rowsP);
-void pbm_readpbminit(FILE* file, int* colsP, int* rowsP, int* formatP);
-void pbm_readpbmrow(FILE* file, bit* bitrow, int cols, int format);
+bit**
+pbm_readpbm(FILE * const file,
+            int  * const colsP,
+            int  * const rowsP);
+
+void
+pbm_readpbminit(FILE * const file,
+                int  * const colsP,
+                int  * const rowsP, int * const formatP);
+
+void
+pbm_readpbmrow(FILE * const file,
+               bit  * const bitrow,
+               int    const cols,
+               int    const format);
 
 void
 pbm_readpbmrow_packed(FILE *          const file, 
@@ -74,6 +86,10 @@ pbm_readpbmrow_bitoffset(FILE *          const fileP,
                          int             const cols,
                          int             const format,
                          unsigned int    const offset);
+
+void
+pbm_cleanrowend_packed(unsigned char * const packedBits,
+                       unsigned int    const cols);
 
 void
 pbm_writepbminit(FILE * const fileP, 

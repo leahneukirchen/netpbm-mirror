@@ -39,7 +39,7 @@
  * IMPLEMENTED CONVERSION SPECIFIERS AND DATA TYPES
  *
  * This snprintf implements only the following conversion specifiers:
- * s, c, d, u, o, x, X, p  (and synonyms: i, D, U, O - see below)
+ * s, c, d, u, o, x, X, p, f  (and synonyms: i, D, U, O - see below)
  * with flags: '-', '+', ' ', '0' and '#'.
  * An asterisk is acceptable for field width as well as precision.
  *
@@ -66,7 +66,7 @@
  *
  * The following is specifically NOT implemented:
  *   - flag ' (thousands' grouping character) is recognized but ignored
- *   - numeric conversion specifiers: f, e, E, g, G and synonym F,
+ *   - numeric conversion specifiers: e, E, g, G and synonym F,
  *     as well as the new a and A conversion specifiers
  *   - length modifier 'L' (long double) and 'q' (quad - use 'll' instead)
  *   - wide character/string conversions: lc, ls, and nonstandard
@@ -113,6 +113,12 @@
  */
 
 
+#define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
+#define _BSD_SOURCE  /* Make sure strdup() is in string.h */
+#define _GNU_SOURCE
+   /* Because of conditional compilation, this is GNU source only if the C
+      library is GNU.
+   */
 #define PORTABLE_SNPRINTF_VERSION_MAJOR 2
 #define PORTABLE_SNPRINTF_VERSION_MINOR 2
 
@@ -190,12 +196,12 @@ static char credits[] = "\n\
 
 
 void
-vsnprintfN(char *       const str,
-           size_t       const str_m,
-           const char * const fmt,
-           va_list            ap,
-           size_t *     const sizeP) {
-
+pm_vsnprintf(char *       const str,
+             size_t       const str_m,
+             const char * const fmt,
+             va_list            ap,
+             size_t *     const sizeP) {
+    
     size_t str_l = 0;
     const char *p = fmt;
 
@@ -215,16 +221,19 @@ vsnprintfN(char *       const str,
             const char *q = strchr(p + 1,'%');
             size_t n = !q ? strlen(p) : (q - p);
             if (str_l < str_m) {
-                size_t avail = str_m - str_l;
-                fast_memcpy(str + str_l, p, (n > avail ? avail : n));
+                size_t const avail = str_m - str_l;
+                fast_memcpy(str + str_l, p, (MIN(n, avail)));
             }
             p += n; str_l += n;
         } else {
             const char *starting_p;
-            size_t min_field_width = 0, precision = 0;
-            int zero_padding = 0, precision_specified = 0, justify_left = 0;
-            int alternate_form = 0, force_sign = 0;
-            int space_for_positive = 1;
+            size_t min_field_width;
+            size_t precision = 0;
+            bool precision_specified;
+            bool justify_left;
+            bool alternate_form;
+            bool force_sign;
+            bool space_for_positive;
                 /* If both the ' ' and '+' flags appear,
                    the ' ' flag should be ignored.
                 */
@@ -242,16 +251,18 @@ vsnprintfN(char *       const str,
                    argument for the c conversion is unsigned.
                 */
 
-            size_t number_of_zeros_to_pad = 0;
+            bool zero_padding;
+
+            size_t number_of_zeros_to_pad;
                 /* number of zeros to be inserted for numeric
                    conversions as required by the precision or minimal
                    field width
                 */
 
-            size_t zero_padding_insertion_ind = 0;
+            size_t zero_padding_insertion_ind;
                 /* index into tmp where zero padding is to be inserted */
 
-            char fmt_spec = '\0';
+            char fmt_spec;
                 /* current conversion specifier character */
 
             str_arg = credits;
@@ -261,17 +272,26 @@ vsnprintfN(char *       const str,
             ++p;  /* skip '%' */
 
             /* parse flags */
+            justify_left = false;  /* initial value */
+            alternate_form = false;  /* initial value */
+            force_sign = false;  /* initial value */
+            space_for_positive = false;  /* initial value */
+            zero_padding = false;  /* initial value */
+            number_of_zeros_to_pad = 0;  /* initial value */
+            zero_padding_insertion_ind = 0;  /* initial value */
+            fmt_spec = '\0';  /* initial value */
+
             while (*p == '0' || *p == '-' || *p == '+' ||
                    *p == ' ' || *p == '#' || *p == '\'') {
                 switch (*p) {
-                case '0': zero_padding = 1; break;
-                case '-': justify_left = 1; break;
-                case '+': force_sign = 1; space_for_positive = 0; break;
-                case ' ': force_sign = 1; break;
+                case '0': zero_padding = true; break;
+                case '-': justify_left = true; break;
+                case '+': force_sign = true; space_for_positive = false; break;
+                case ' ': force_sign = true; break;
                     /* If both the ' ' and '+' flags appear, the ' '
                        flag should be ignored
                     */
-                case '#': alternate_form = 1; break;
+                case '#': alternate_form = true; break;
                 case '\'': break;
                 }
                 ++p;
@@ -283,9 +303,10 @@ vsnprintfN(char *       const str,
             /* parse field width */
             if (*p == '*') {
                 int j;
-                p++; j = va_arg(ap, int);
-                if (j >= 0) min_field_width = j;
-                else { min_field_width = -j; justify_left = 1; }
+                ++p;
+                j = va_arg(ap, int);
+                if (j >= 0) { min_field_width = j; justify_left = false; }
+                else { min_field_width = -j; justify_left = true; }
             } else if (isdigit((int)(*p))) {
                 /* size_t could be wider than unsigned int; make sure
                    we treat argument like common implementations do
@@ -294,16 +315,19 @@ vsnprintfN(char *       const str,
                 while (isdigit((int)(*p)))
                     uj = 10*uj + (unsigned int)(*p++ - '0');
                 min_field_width = uj;
-            }
+            } else
+                min_field_width = 0;
+
             /* parse precision */
             if (*p == '.') {
-                p++; precision_specified = 1;
+                ++p;
+                precision_specified = true;
                 if (*p == '*') {
                     int j = va_arg(ap, int);
                     p++;
                     if (j >= 0) precision = j;
                     else {
-                        precision_specified = 0; precision = 0;
+                        precision_specified = false; precision = 0;
                         /* NOTE: Solaris 2.6 man page claims that in
                            this case the precision should be set to 0.
                            Digital Unix 4.0, HPUX 10 and BSD man page
@@ -322,7 +346,9 @@ vsnprintfN(char *       const str,
                         uj = 10*uj + (unsigned int)(*p++ - '0');
                     precision = uj;
                 }
-            }
+            } else
+                precision_specified = false;
+
             /* parse 'h', 'l' and 'll' length modifiers */
             if (*p == 'h' || *p == 'l') {
                 length_modifier = *p; p++;
@@ -357,7 +383,7 @@ vsnprintfN(char *       const str,
                     Unix and Linux does not.
                 */
 
-                zero_padding = 0;
+                zero_padding = false;
                     /* turn zero padding off for string conversions */
                 str_arg_l = 1;
                 switch (fmt_spec) {
@@ -387,9 +413,7 @@ vsnprintfN(char *       const str,
                     else {
                         /* memchr on HP does not like n > 2^31  !!! */
                         const char * q =
-                            memchr(str_arg, '\0',
-                                   precision <= 0x7fffffff ?
-                                   precision : 0x7fffffff);
+                            memchr(str_arg, '\0', MIN(precision, 0x7fffffff));
                         str_arg_l = !q ? precision : (q-str_arg);
                     }
                     break;
@@ -483,7 +507,7 @@ vsnprintfN(char *       const str,
                    Perl.
                 */
                 if (precision_specified)
-                    zero_padding = 0;
+                    zero_padding = false;
                 if (fmt_spec == 'd') {
                     if (force_sign && arg_sign >= 0)
                         tmp[str_arg_l++] = space_for_positive ? ' ' : '+';
@@ -549,9 +573,9 @@ vsnprintfN(char *       const str,
                     */
                     if (zero_padding_insertion_ind < str_arg_l &&
                         tmp[zero_padding_insertion_ind] == '-') {
-                        zero_padding_insertion_ind++;
+                        zero_padding_insertion_ind += 1;
                     }
-                    if (zero_padding_insertion_ind+1 < str_arg_l &&
+                    if (zero_padding_insertion_ind + 1 < str_arg_l &&
                         tmp[zero_padding_insertion_ind]   == '0' &&
                         (tmp[zero_padding_insertion_ind+1] == 'x' ||
                          tmp[zero_padding_insertion_ind+1] == 'X') ) {
@@ -559,7 +583,7 @@ vsnprintfN(char *       const str,
                     }
                 }
                 {
-                    size_t num_of_digits =
+                    size_t const num_of_digits =
                         str_arg_l - zero_padding_insertion_ind;
                     if (alternate_form && fmt_spec == 'o'
                         /* unless zero is already the first character */
@@ -576,7 +600,7 @@ vsnprintfN(char *       const str,
                                explicit precision of zero
                             */
                             precision = num_of_digits+1;
-                            precision_specified = 1;
+                            precision_specified = true;
                         }
                     }
                     /* zero padding to specified precision? */
@@ -585,23 +609,37 @@ vsnprintfN(char *       const str,
                 }
                 /* zero padding to specified minimal field width? */
                 if (!justify_left && zero_padding) {
-                    int n =
+                    int const n =
                         min_field_width - (str_arg_l+number_of_zeros_to_pad);
-                    if (n > 0) number_of_zeros_to_pad += n;
+                    if (n > 0)
+                        number_of_zeros_to_pad += n;
                 }
             } break;
+            case 'f': {
+                char f[10];
+                if (precision_specified)
+                    snprintf(f, ARRAY_SIZE(f), "%%%u.%uf",
+                             (unsigned)min_field_width, (unsigned)precision);
+                else
+                    snprintf(f, ARRAY_SIZE(f), "%%%uf",
+                             (unsigned)min_field_width);
+
+                str_arg_l = sprintf(tmp, f, va_arg(ap, double));
+                str_arg = &tmp[0];
+
+                min_field_width = 0;
+                zero_padding_insertion_ind = 0;
+            } break;
             default:
-                /* unrecognized conversion specifier, keep format
-                   string as-is
+                /* Unrecognized conversion specifier.  Discard the
+                   unrecognized conversion, just keep the unrecognized
+                   conversion character.
                 */
-                zero_padding = 0;
+                zero_padding = false;
                     /* turn zero padding off for non-numeric convers. */
                 /* reset flags */
-                justify_left = 1;
+                justify_left = true;
                 min_field_width = 0;
-                /* discard the unrecognized conversion, just keep the
-                   unrecognized conversion character
-                */
                 str_arg = p;
                 str_arg_l = 0;
                 if (*p)
@@ -620,12 +658,12 @@ vsnprintfN(char *       const str,
 
             if (!justify_left) {
                 /* left padding with blank or zero */
-                int n = min_field_width - (str_arg_l+number_of_zeros_to_pad);
+                int n = min_field_width - (str_arg_l + number_of_zeros_to_pad);
                 if (n > 0) {
                     if (str_l < str_m) {
-                        size_t avail = str_m-str_l;
-                        fast_memset(str+str_l, (zero_padding ? '0' : ' '),
-                                    (n > avail ? avail : n));
+                        size_t const avail = str_m - str_l;
+                        fast_memset(str + str_l, (zero_padding ? '0' : ' '),
+                                    (MIN(n, avail)));
                     }
                     str_l += n;
                 }
@@ -639,40 +677,44 @@ vsnprintfN(char *       const str,
                 */
                 zero_padding_insertion_ind = 0;
             } else {
-                /* insert first part of numerics (sign or '0x') before
-                   zero padding
-                */
-                int n = zero_padding_insertion_ind;
-                if (n > 0) {
-                    if (str_l < str_m) {
-                        size_t avail = str_m-str_l;
-                        fast_memcpy(str+str_l, str_arg, (n>avail?avail:n));
+                {
+                    /* insert first part of numerics (sign or '0x') before
+                       zero padding
+                    */
+                    int const n = zero_padding_insertion_ind;
+                    if (n > 0) {
+                        if (str_l < str_m) {
+                            size_t const avail = str_m - str_l;
+                            fast_memcpy(str + str_l, str_arg, (MIN(n, avail)));
+                        }
+                        str_l += n;
                     }
-                    str_l += n;
                 }
-                /* insert zero padding as requested by the precision
-                   or min field width
-                */
-                n = number_of_zeros_to_pad;
-                if (n > 0) {
-                    if (str_l < str_m) {
-                        size_t avail = str_m - str_l;
-                        fast_memset(str + str_l, '0', (n > avail ? avail : n));
+                {
+                    /* insert zero padding as requested by the precision
+                       or min field width
+                    */
+                    int const n = number_of_zeros_to_pad;
+                    if (n > 0) {
+                        if (str_l < str_m) {
+                            size_t const avail = str_m - str_l;
+                            fast_memset(str + str_l, '0', (MIN(n, avail)));
+                        }
+                        str_l += n;
                     }
-                    str_l += n;
                 }
             }
             /* insert formatted string (or as-is conversion specifier
                for unknown conversions)
             */
             {
-                int n = str_arg_l - zero_padding_insertion_ind;
+                int const n = str_arg_l - zero_padding_insertion_ind;
                 if (n > 0) {
                     if (str_l < str_m) {
-                        size_t avail = str_m-str_l;
+                        size_t const avail = str_m-str_l;
                         fast_memcpy(str + str_l,
                                     str_arg + zero_padding_insertion_ind,
-                                    (n > avail ? avail : n));
+                                    MIN(n, avail));
                     }
                     str_l += n;
                 }
@@ -680,11 +722,12 @@ vsnprintfN(char *       const str,
             /* insert right padding */
             if (justify_left) {
                 /* right blank padding to the field width */
-                int n = min_field_width - (str_arg_l+number_of_zeros_to_pad);
+                int const n =
+                    min_field_width - (str_arg_l + number_of_zeros_to_pad);
                 if (n > 0) {
                     if (str_l < str_m) {
-                        size_t avail = str_m-str_l;
-                        fast_memset(str+str_l, ' ', (n>avail?avail:n));
+                        size_t const avail = str_m - str_l;
+                        fast_memset(str+str_l, ' ', (MIN(n, avail)));
                     }
                     str_l += n;
                 }
@@ -696,7 +739,7 @@ vsnprintfN(char *       const str,
            of overwriting the last character (shouldn't happen, but
            just in case)
         */
-        str[str_l <= str_m-1 ? str_l : str_m-1] = '\0';
+        str[MIN(str_l, str_m - 1)] = '\0';
     }
     *sizeP = str_l;
 }
@@ -704,17 +747,17 @@ vsnprintfN(char *       const str,
 
 
 int
-snprintfN(char *       const dest,
-          size_t       const str_m,
-          const char * const fmt,
-          ...) {
+pm_snprintf(char *       const dest,
+            size_t       const str_m,
+            const char * const fmt,
+            ...) {
 
     size_t size;
     va_list ap;
 
     va_start(ap, fmt);
     
-    vsnprintfN(dest, str_m, fmt, ap, &size);
+    pm_vsnprintf(dest, str_m, fmt, ap, &size);
 
     va_end(ap);
 
@@ -726,73 +769,96 @@ snprintfN(char *       const dest,
 
 
 /* When a function that is supposed to return a malloc'ed string cannot
-   get the memory for it, it should return 'strsol'.  That has a much
+   get the memory for it, it should return 'pm_strsol'.  That has a much
    better effect on the caller, if the caller doesn't explicitly allow for
    the out of memory case, than returning NULL.  Note that it is very
    rare for the system not to have enough memory to return a small string,
    so it's OK to have somewhat nonsensical behavior when it happens.  We
    just don't want catastrophic behavior.
 
-   'strsol' is an external symbol, so if Caller wants to detect the
+   'pm_strsol' is an external symbol, so if Caller wants to detect the
    out-of-memory failure, he certainly can.
 */
-const char * const strsol = "NO MEMORY TO CREATE STRING!";
+const char * const pm_strsol = "NO MEMORY TO CREATE STRING!";
+
+
+
+const char *
+pm_strdup(const char * const arg) {
+
+    const char * const dup = strdup(arg);
+
+    return dup ? dup : pm_strsol;
+}
 
 
 
 void PM_GNU_PRINTF_ATTR(2,3)
-asprintfN(const char ** const resultP,
-          const char *  const fmt, 
-          ...) {
+pm_asprintf(const char ** const resultP,
+            const char *  const fmt, 
+            ...) {
 
+    const char * result;
     va_list varargs;
     
+#if HAVE_VASPRINTF
+    int rc;
+    va_start(varargs, fmt);
+    rc = vasprintf((char **)&result, fmt, varargs);
+    va_end(varargs);
+    if (rc < 0)
+        result = pm_strsol;
+#else
     size_t dryRunLen;
     
     va_start(varargs, fmt);
-    
-    vsnprintfN(NULL, 0, fmt, varargs, &dryRunLen);
+
+    pm_vsnprintf(NULL, 0, fmt, varargs, &dryRunLen);
 
     va_end(varargs);
 
     if (dryRunLen + 1 < dryRunLen)
         /* arithmetic overflow */
-        *resultP = strsol;
+        result = pm_strsol;
     else {
         size_t const allocSize = dryRunLen + 1;
-        char * result;
-        result = malloc(allocSize);
-        if (result == NULL)
-            *resultP = strsol;
-        else {
+        char * buffer;
+        buffer = malloc(allocSize);
+        if (buffer != NULL) {
             va_list varargs;
             size_t realLen;
 
             va_start(varargs, fmt);
 
-            vsnprintfN(result, allocSize, fmt, varargs, &realLen);
+            pm_vsnprintf(buffer, allocSize, fmt, varargs, &realLen);
                 
             assert(realLen == dryRunLen);
             va_end(varargs);
 
-            *resultP = result;
+            result = buffer;
         }
     }
+#endif
+
+    if (result == NULL)
+        *resultP = pm_strsol;
+    else
+        *resultP = result;
 }
 
 
 
 void
-strfree(const char * const string) {
+pm_strfree(const char * const string) {
 
-    if (string != strsol)
+    if (string != pm_strsol)
         free((void *) string);
 }
 
 
 
 const char *
-strsepN(char ** const stringP, const char * const delim) {
+pm_strsep(char ** const stringP, const char * const delim) {
     const char * retval;   
 
     if (stringP == NULL || *stringP == NULL)
@@ -824,65 +890,75 @@ strsepN(char ** const stringP, const char * const delim) {
 
 
 int
-stripeq(const char * const comparand,
-        const char * const comparator) {
+pm_stripeq(const char * const comparand,
+           const char * const comparator) {
 /*----------------------------------------------------------------------------
   Compare two strings, ignoring leading and trailing white space.
 
   Return 1 (true) if the strings are identical; 0 (false) otherwise.
 -----------------------------------------------------------------------------*/
-    char *p, *q, *px, *qx;
-    char equal;
+    const char * p;
+    const char * q;
+    const char * px;
+    const char * qx;
+    bool equal;
   
     /* Make p and q point to the first non-blank character in each string.
-     If there are no non-blank characters, make them point to the terminating
-     NULL.
-     */
+       If there are no non-blank characters, make them point to the terminating
+       NUL.
+    */
 
-    p = (char *) comparand;
-    while (ISSPACE(*p)) p++;
-    q = (char *) comparator;
-    while (ISSPACE(*q)) q++;
+    p = &comparand[0];
+    while (ISSPACE(*p))
+        p++;
+    q = &comparator[0];
+    while (ISSPACE(*q))
+        q++;
 
     /* Make px and qx point to the last non-blank character in each string.
        If there are no nonblank characters (which implies the string is
-       null), make them point to the terminating NULL.
+       null), make them point to the terminating NUL.
     */
 
-    if (*p == '\0') px = p;
+    if (*p == '\0')
+        px = p;
     else {
         px = p + strlen(p) - 1;
-        while (ISSPACE(*px)) px--;
+        while (ISSPACE(*px))
+            --px;
     }
 
-    if (*q == '\0') qx = q;
+    if (*q == '\0')
+        qx = q;
     else {
         qx = q + strlen(q) - 1;
-        while (ISSPACE(*qx)) qx--;
+        while (ISSPACE(*qx))
+            --qx;
     }
 
-    equal = 1;   /* initial assumption */
-  
-    /* If the stripped strings aren't the same length, 
-       we know they aren't equal 
-     */
-    if (px - p != qx - q) equal = 0;
-
-    else
-    while (p <= px) {
-        if (*p != *q) equal = 0;
-        p++; q++;
+    if (px - p != qx - q) {
+        /* The stripped strings aren't the same length, so we know they aren't
+           equal.
+        */
+        equal = false;
+    } else {
+        /* Move p and q through the nonblank characters, comparing. */
+        for (equal = true; p <= px; ++p, ++q) {
+            assert(q <= qx);  /* Because stripped strings are same length */
+            if (*p != *q)
+                equal = false;
+        }
     }
-    return equal;
+    return equal ? 1 : 0;
 }
 
 
 
 const void *
-memmemN(const void * const haystackArg,
-        size_t       const haystacklen,
-        const void * const needleArg,
-        size_t       const needlelen) {
+pm_memmem(const void * const haystackArg,
+          size_t       const haystacklen,
+          const void * const needleArg,
+          size_t       const needlelen) {
 
     const unsigned char * const haystack = haystackArg;
     const unsigned char * const needle   = needleArg;
@@ -902,7 +978,7 @@ memmemN(const void * const haystackArg,
 
 
 bool
-strishex(const char * const subject) {
+pm_strishex(const char * const subject) {
 
     bool retval;
     unsigned int i;
@@ -919,12 +995,12 @@ strishex(const char * const subject) {
 
 
 void
-interpret_uint(const char *   const string,
-               unsigned int * const valueP,
-               const char **  const errorP) {
+pm_interpret_uint(const char *   const string,
+                  unsigned int * const valueP,
+                  const char **  const errorP) {
 
     if (string[0] == '\0')
-        asprintfN(errorP, "Null string.");
+        pm_asprintf(errorP, "Null string.");
     else {
         /* strtoul() does a bizarre thing where if the number is out
            of range, it returns a clamped value but tells you about it
@@ -939,13 +1015,13 @@ interpret_uint(const char *   const string,
         ulongValue = strtoul(string, &tail, 10);
 
         if (tail[0] != '\0')
-            asprintfN(errorP, "Non-digit stuff in string: %s", tail);
+            pm_asprintf(errorP, "Non-digit stuff in string: %s", tail);
         else if (errno == ERANGE)
-            asprintfN(errorP, "Number too large");
+            pm_asprintf(errorP, "Number too large");
         else if (ulongValue > UINT_MAX)
-            asprintfN(errorP, "Number too large");
+            pm_asprintf(errorP, "Number too large");
         else if (string[0] == '-')
-            asprintfN(errorP, "Negative number");
+            pm_asprintf(errorP, "Negative number");
             /* Sleazy code; string may have leading spaces. */
         else {
             *valueP = ulongValue;

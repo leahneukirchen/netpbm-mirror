@@ -30,12 +30,14 @@
  * HEADER FILES *
  *==============*/
 
+#define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 #define _BSD_SOURCE   /* Make sure strdup() is in string.h */
 
 #include <assert.h>
 
 #include "all.h"
 #include "mtypes.h"
+#include "dct.h"
 #include "mpeg.h"
 #include "motion_search.h"
 #include "prototypes.h"
@@ -57,14 +59,15 @@
 
 #include <time.h>
 
-int main _ANSI_ARGS_((int argc, char **argv));
+int main (int argc, char **argv);
 
 
 /*==================*
  * GLOBAL VARIABLES *
  *==================*/
 
-boolean showBitRatePerFrame;
+bool showBitRatePerFrame;
+bool computeMVHist = FALSE;
 boolean frameSummary;
 
 extern time_t IOtime;
@@ -78,9 +81,7 @@ boolean noFrameSummaryOption = FALSE;
 boolean debugSockets = FALSE;
 boolean debugMachines = FALSE;
 boolean bitRateInfoOption = FALSE;
-boolean computeMVHist = FALSE;
 int     baseFormat;
-extern  boolean specificsOn;
 extern  FrameSpecList *fsl;
 boolean pureDCT=FALSE;
 char    encoder_name[1024];
@@ -91,8 +92,7 @@ const char * hostname;
  * External PROCEDURE prototypes  *
  *================================*/
 
-void init_idctref _ANSI_ARGS_((void));
-void init_fdct _ANSI_ARGS_((void));
+void init_idctref (void);
 
 
 struct cmdlineInfo {
@@ -335,9 +335,9 @@ announceJob(enum frameContext const context,
         const char * combineDest;
 
         if (context == CONTEXT_JUSTFRAMES)
-            asprintfN(&outputDest, "to individual frame files");
+            pm_asprintf(&outputDest, "to individual frame files");
         else
-            asprintfN(&outputDest, "to file '%s'", outputFileName);
+            pm_asprintf(&outputDest, "to file '%s'", outputFileName);
 
         if (childProcess)
             combineDest = strdup("for delivery to combine server");
@@ -347,8 +347,8 @@ announceJob(enum frameContext const context,
         pm_message("%s:  ENCODING FRAMES %u-%u to %s %s",
                    hostname, frameStart, frameEnd, outputDest, combineDest);
 
-        strfree(combineDest);
-        strfree(outputDest);
+        pm_strfree(combineDest);
+        pm_strfree(outputDest);
     }
 }
 
@@ -540,15 +540,15 @@ getUserFrameFile(void *       const handle,
 
         GetNthInputFileName(inputSourceP, frameNumber, &inputFileName);
         
-        asprintfN(&fileName, "%s/%s", currentFramePath, inputFileName);
+        pm_asprintf(&fileName, "%s/%s", currentFramePath, inputFileName);
         
         *ifPP = fopen(fileName, "rb");
         if (*ifPP == NULL)
             pm_error("Unable to open file '%s'.  Errno = %d (%s)",
                      fileName, errno, strerror(errno));
         
-        strfree(inputFileName);
-        strfree(fileName);
+        pm_strfree(inputFileName);
+        pm_strfree(fileName);
     }
 }
 
@@ -702,7 +702,7 @@ main(int argc, char **argv) {
     } 
     Frame_Exit();
         
-    strfree(hostname);
+    pm_strfree(hostname);
 
     return 0;
 }

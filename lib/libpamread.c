@@ -1,10 +1,13 @@
-/*----------------------------------------------------------------------------
+/*=============================================================================
                                   libpamread.c
-------------------------------------------------------------------------------
+===============================================================================
    These are the library functions, which belong in the libnetpbm library,
    that deal with reading the PAM (Portable Arbitrary Format) image format
    raster (not the header).
------------------------------------------------------------------------------*/
+
+   This file was originally written by Bryan Henderson and is contributed
+   to the public domain by him and subsequent authors.
+=============================================================================*/
 
 /* See pmfileio.c for the complicated explanation of this 32/64 bit file
    offset stuff.
@@ -16,8 +19,10 @@
 #include <limits.h>
 #include <assert.h>
 
+#include "netpbm/pm_config.h"
+#include "netpbm/nstring.h"
+
 #include "fileio.h"
-#include "nstring.h"
 #include "pam.h"
 
 
@@ -198,6 +203,51 @@ parse4BpsRow(const struct pam *    const pamP,
 
 
 static void
+validatePamRow(const struct pam * const pamP,
+               tuple *            const tuplerow,
+               const char **      const errorP) {
+/*----------------------------------------------------------------------------
+  Check for sample values above maxval in input.  
+
+  Note: a program that wants to deal with invalid sample values itself can
+  simply make sure it sets pamP->maxval sufficiently high, so this validation
+  never fails.
+-----------------------------------------------------------------------------*/
+    /* To save time, skip the test for if the maxval is a saturated value
+       (255, 65535) or format is PBM.
+
+       This is an expensive test, but is skipped in most cases: in practice
+       maxvals other than 255 or 65535 are uncommon.  Thus we do this in a
+       separate pass through the row rather than while reading in the row.
+    */
+
+    if (pamP->maxval == (((sample) 0x1) << pamP->bytes_per_sample*8) - 1 ||
+        PAM_FORMAT_TYPE(pamP->format) == PBM_FORMAT) {
+        /* There's no way a sample can be invalid, so we don't need to
+           look at the samples individually.
+        */
+        *errorP = NULL;
+    } else {
+        unsigned int col;
+        for (col = 0; col < pamP->width; ++col) {
+            unsigned int plane;
+            for (plane = 0; plane < pamP->depth; ++plane) {
+                if (tuplerow[col][plane] > pamP->maxval) {
+                    pm_asprintf(errorP,
+                                "Plane %u sample value %lu exceeds the "
+                                "image maxval of %lu",
+                                plane, tuplerow[col][plane], pamP->maxval);
+                    return;
+                }
+            }
+        }
+        *errorP = NULL;
+    }
+}
+
+
+
+static void
 readRawNonPbmRow(const struct pam * const pamP,
                  tuple *            const tuplerow) {
 
@@ -214,13 +264,12 @@ readRawNonPbmRow(const struct pam * const pamP,
 
     if (bytesRead != rowImageSize) {
         if (feof(pamP->file))
-            asprintfN(&error,
-                      "End of file encountered when trying to read a row from "
-                      "input file.");
+            pm_asprintf(&error, "End of file encountered "
+                        "when trying to read a row from input file.");
         else 
-            asprintfN(&error, "Error reading a row from input file.  "
-                      "fread() fails with errno=%d (%s)",
-                      errno, strerror(errno));
+            pm_asprintf(&error, "Error reading a row from input file.  "
+                        "fread() fails with errno=%d (%s)",
+                        errno, strerror(errno));
     } else {
         error = NULL;  /* initial assumption */
         if (tuplerow) {
@@ -230,16 +279,18 @@ readRawNonPbmRow(const struct pam * const pamP,
             case 3: parse3BpsRow(pamP, tuplerow, inbuf); break;
             case 4: parse4BpsRow(pamP, tuplerow, inbuf); break;
             default:
-                asprintfN(&error, "invalid bytes per sample passed to "
-                          "pnm_formatpamrow(): %u",  pamP->bytes_per_sample);
+                pm_asprintf(&error, "invalid bytes per sample passed to "
+                            "pnm_formatpamrow(): %u", pamP->bytes_per_sample);
             }
+            if (error == NULL)
+                validatePamRow(pamP, tuplerow, &error);
         }
     }
     pnm_freerowimage(inbuf);
 
     if (error) {
         pm_errormsg("%s", error);
-        strfree(error);
+        pm_strfree(error);
         pm_longjmp();
     }
 }
@@ -261,7 +312,7 @@ pnm_readpamrow(const struct pam * const pamP,
     /* For speed, we don't check any of the inputs for consistency 
        here (unless it's necessary to avoid crashing).  Any consistency
        checking should have been done by a prior call to 
-       pnm_writepaminit().
+       pnm_readpaminit().
     */  
 
     /* Need a special case for raw PBM because it has multiple tuples (8)

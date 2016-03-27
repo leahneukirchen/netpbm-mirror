@@ -7,7 +7,7 @@ VPATH=.:$(SRCDIR)/$(SUBDIR)
 
 include $(BUILDDIR)/config.mk
 
-SUBDIRS = specialty
+SUBDIRS = pamflip specialty
 
 # We tend to separate out the build targets so that we don't have
 # any more dependencies for a given target than it really needs.
@@ -19,13 +19,14 @@ SUBDIRS = specialty
 PORTBINARIES = pamaddnoise pambackground pamcomp pamcut \
 	       pamdice pamditherbw pamedge \
 	       pamenlarge \
-	       pamflip pamfunc pammasksharpen \
-	       pamperspective \
+	       pamfunc pammasksharpen \
+	       pamperspective pamrecolor pamrubber \
 	       pamscale pamsistoaglyph pamstretch pamthreshold pamundice \
+	       pamwipeout \
 	       pbmclean pbmmask pbmpscale pbmreduce \
 	       pgmdeshadow pgmenhance \
 	       pgmmedian \
-	       pnmalias pnmcat pnmcomp pnmconvol pnmcrop \
+	       pnmalias pnmcat pnmconvol pnmcrop \
 	       pnmgamma \
 	       pnmhisteq pnminvert pnmmontage \
 	       pnmnlfilt pnmnorm pnmpad pnmpaste \
@@ -42,10 +43,9 @@ PORTBINARIES = pamaddnoise pambackground pamcomp pamcut \
 NOMERGEBINARIES = 
 MERGEBINARIES = $(PORTBINARIES)
 
-
 BINARIES = $(MERGEBINARIES) $(NOMERGEBINARIES)
-SCRIPTS = pnmflip ppmfade ppmquant ppmquantall ppmshadow \
-	  pamstretch-gen pnmmargin pnmquant 
+SCRIPTS = pnmflip ppmfade ppmquant ppmshadow \
+	  pamstretch-gen pnmmargin pnmquant pnmquantall 
 
 OBJECTS = $(BINARIES:%=%.o)
 
@@ -90,3 +90,11 @@ install.bin.local: $(PKGDIR)/bin
 	cd $(PKGDIR)/bin ; \
 	rm -f pnmscale$(EXE) ; \
 	$(SYMLINK) pamscale$(EXE) pnmscale$(EXE)
+# In March 2012, pnmquantall replaced ppmquantall
+	cd $(PKGDIR)/bin ; \
+	rm -f ppmquantall$(EXE) ; \
+	$(SYMLINK) pnmquantall ppmquantall
+# In August 2014, pamcomp replaced pnmcomp
+	cd $(PKGDIR)/bin ; \
+	rm -f pnmcomp$(EXE) ; \
+	$(SYMLINK) pamcomp$(EXE) pnmcomp$(EXE)

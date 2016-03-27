@@ -47,7 +47,10 @@ sub prompt($$) {
 
 
 sub getPkgdir() {
-
+#-----------------------------------------------------------------------------
+#  Find out from the user where the Netpbm package is (i.e. where
+#  'make package' put it).
+#-----------------------------------------------------------------------------
     my $pkgdir;
 
     while (!$pkgdir) {
@@ -141,7 +144,7 @@ sub getPrefix() {
 
 sub getCpCommand() {
 #-----------------------------------------------------------------------------
-# compute the command + options need to do a recursive copy, preserving
+# Compute the command + options need to do a recursive copy, preserving
 # symbolic links and file attributes.
 #-----------------------------------------------------------------------------
     my $cpCommand;
@@ -168,7 +171,10 @@ sub getCpCommand() {
 
 
 sub getBinDir($) {
-
+#-----------------------------------------------------------------------------
+#  Find out from the user where he wants the programs installed, and return
+#  that.
+#-----------------------------------------------------------------------------
     my ($prefix) = @_;
 
     print("Where do you want the programs installed?\n");
@@ -223,7 +229,10 @@ sub installProgram($$$) {
 
 
 sub getLibDir($) {
-
+#-----------------------------------------------------------------------------
+#  Find out from the user where he wants the runtime libraries installed and
+#  return that.
+#-----------------------------------------------------------------------------
     my ($prefix) = @_;
 
     print("Where do you want the shared library installed?\n");
@@ -256,8 +265,174 @@ sub getLibDir($) {
 
 
 
-sub 
-execLdconfig() {
+sub ldconfigExists() {
+
+    return (system("ldconfig -? >/dev/null 2>/dev/null") >> 8) != 127;
+}
+
+
+
+sub crleExists() {
+
+    return (system("crle -? 2>/dev/null") >> 8) != 127;
+}
+
+
+
+sub dirName($) {
+    my ($fileName) = @_;
+#-----------------------------------------------------------------------------
+#  The directory component of file name $fileName.
+#-----------------------------------------------------------------------------
+
+    my @components = split(m{/}, $fileName);
+
+    pop(@components);
+
+    if (@components == 1 && $components[0] eq '') {
+        return '/';
+    } else {
+        return join('/', @components);
+    }
+}
+
+
+
+sub ldConfigKnowsDir($) {
+    my ($shlibDir) = @_;
+#-----------------------------------------------------------------------------
+#  Ldconfig appears to search $shlibDir for shared libraries.
+#
+#  Our determination is approximate.  We just look at whether 'ldconfig'
+#  found anything in $shlibDir the last time it searched.  If it searched
+#  $shlibDir and just didn't find anything or $shlibDir has been added to
+#  its search path since then, we'll wrongly conclue that it doesn't search
+#  $shlibDir now.
+#-----------------------------------------------------------------------------
+    my @ldconfigOutput = split(m{\n}, qx{ldconfig -p});
+
+    my $found;
+
+    foreach (@ldconfigOutput) {
+
+        if (m{ => \s (.*) $ }x) {
+            my ($fileName) = ($1);
+
+            if (dirName($fileName) eq $shlibDir) {
+                $found = $TRUE;
+            }
+        }
+    }
+    return $found;
+}
+
+
+
+
+sub warnNonstandardShlibDirLdconfig($) {
+    my ($shlibDir) = @_;
+#-----------------------------------------------------------------------------
+#  Assuming this is a system that has an 'ldconfig' program, warn the user
+#  if $shlibDir appears not to be in the system shared library search path.
+#-----------------------------------------------------------------------------
+
+    # This appears to be a system that uses the GNU libc dynamic linker.
+    # The list of system shared library directories is in /etc/ld.so.conf.
+    # The program Ldconfig searches the directories in that list and
+    # remembers all the shared libraries it found (and some informtaion
+    # about them) in its cache /etc/ld.so.cache, which is what the 
+    # dynamic linker uses at run time to find the shared libraries.
+
+    if (!ldConfigKnowsDir($shlibDir)) {
+        print("You have installed shared libraries in " .
+              "'$shlibDir',\n" .
+              "which does not appear to be a system shared " .
+              "library directory ('ldconfig -p' \n" .
+              "doesn't show any other libraries in there).  " .
+              "Therefore, the system may not be\n" .
+              "able to find the Netpbm shared libraries " .
+              "when you run Netpbm programs.\n" .
+              "\n" .
+              "To fix this, you may need to update /etc/ld.so.conf\n" .
+              "\n" .
+              "You may need to use an LD_LIBRARY_PATH " .
+              "environment variable when running Netpbm programs\n" .
+              "\n");
+    }
+}
+
+
+
+
+sub warnNonstandardShlibDirCrle($) {
+    my ($shlibDir) = @_;
+#-----------------------------------------------------------------------------
+#  Assuming this is a system that has a 'crle' program, warn the user
+#  if $shlibDir appears not to be in the system shared library search path.
+#-----------------------------------------------------------------------------
+    # We should use 'crle' here to determine whether $shlibDir is a
+    # system directory.  But I don't have a Solaris system to reverse
+    # engineer/test with.
+
+    if ($shlibDir ne "/lib" && $shlibDir ne "/usr/lib") {
+        print("You have installed shared libraries in " .
+              "'$shlibDir',\n" .
+              "which is not a conventional system shared " .
+              "library directory.\n" .
+              "Therefore, the system may not be able to " .
+              "find the Netpbm\n" .
+              "shared libraries when you run Netpbm programs.\n" .
+              "\n" .
+              "To fix this, you may need to run 'crle -l'.\n" .
+              "\n" .
+              "You may need to use an LD_LIBRARY_PATH " .
+              "environment variable when running Netpbm programs\n" .
+              "\n");
+    }
+}
+        
+
+
+sub warnNonstandardShlibDirGeneric($) {
+    my ($shlibDir) = @_;
+#-----------------------------------------------------------------------------
+#  Without assuming any particular shared library search scheme on this
+#  system, warn if $shlibDir appears not to be in the system shared library
+#  search path.
+#-----------------------------------------------------------------------------
+
+    if ($shlibDir ne "/lib" && $shlibDir ne "/usr/lib") {
+        print("You have installed shared libraries in " .
+              "'$shlibDir',\n" .
+              "which is not a conventional system shared " .
+              "library directory.\n" .
+              "Therefore, the system may not be able to " .
+              "find the Netpbm\n" .
+              "shared libraries when you run Netpbm programs.\n" .
+              "\n" .
+              "You may need to use an LD_LIBRARY_PATH " .
+              "environment variable when running Netpbm programs\n" .
+              "\n");
+    }
+}
+
+
+
+sub warnNonstandardShlibDir($) {
+    my ($shlibDir) = @_;
+
+    if (ldconfigExists()) {
+        warnNonstandardShlibDirLdconfig($shlibDir);
+    } elsif (crleExists()) {
+        warnNonstandardShlibDirCrle($shlibDir);
+    } else {
+        warnNonstandardShlibDirGeneric($shlibDir);
+    }
+}
+
+
+
+sub execLdconfig() {
 #-----------------------------------------------------------------------------
 #  Run Ldconfig.  Try with the -X option first, and if that is an invalid
 #  option (which we have seen on an openBSD system), try it without -X.
@@ -311,15 +486,7 @@ execLdconfig() {
 
 
 
-sub ldconfigExists() {
-
-    return (system("ldconfig -? 2>/dev/null") >> 8) != 127;
-}
-
-
-
-sub
-doLdconfig() {
+sub doLdconfig() {
 #-----------------------------------------------------------------------------
 #  Run Ldconfig where appropriate.
 #-----------------------------------------------------------------------------
@@ -336,7 +503,7 @@ doLdconfig() {
               "to put the \n");
         print("Netpbm shared library in the cache?  This works only if " .
               "you have\n");
-        print("installed the library in a standard location.\n");
+        print("installed the library in a directory Ldconfig knows about.\n");
         print("\n");
         
         my $done;
@@ -377,6 +544,9 @@ sub installSharedLib($$$) {
         } else {
             print("done.\n");
             print("\n");
+
+            warnNonstandardShlibDir($libDir);
+
             doLdconfig();
         }
         $$libdirR = $libDir;
@@ -390,7 +560,10 @@ sub installSharedLib($$$) {
 
 
 sub getLinkDir($) {
-
+#-----------------------------------------------------------------------------
+#  Find out from the user where he wants the link-edit libraries installed and
+#  return that.
+#-----------------------------------------------------------------------------
     my ($prefix) = @_;
 
     print("Where do you want the static link library installed?\n");
@@ -450,7 +623,10 @@ sub installStaticLib($$$) {
 
 
 sub getDataDir($) {
-
+#-----------------------------------------------------------------------------
+#  Find out from the user where he wants the runtime data files installed and
+#  return that.
+#-----------------------------------------------------------------------------
     my ($prefix) = @_;
 
     print("Where do you want the data files installed?\n");
@@ -484,7 +660,10 @@ sub getDataDir($) {
 
 
 sub getHdrDir($) {
-
+#-----------------------------------------------------------------------------
+#  Find out from the user where he wants the compile-time header files
+#  installed and return that.
+#-----------------------------------------------------------------------------
     my ($prefix) = @_;
 
     print("Where do you want the library interface header files installed?\n");
@@ -574,7 +753,10 @@ sub installHeader($$$) {
 
 
 sub getManDir($) {
-
+#-----------------------------------------------------------------------------
+#  Find out from the user where he wants the pointer man pages
+#  installed and return that.
+#-----------------------------------------------------------------------------
     my ($prefix) = @_;
 
     print("Where do you want the man pages installed?\n");
@@ -792,10 +974,37 @@ sub installManPage($$$) {
 
 
 
+sub netpbmVersion($) {
+    my ($pkgdir) = @_;
+
+    my $versionOpened = open(VERSION, "<$pkgdir/VERSION");
+
+    my $version;
+    my $error;
+
+    if (!$versionOpened) {
+        $error = "Unable to open $pkgdir/VERSION for reading.  " .
+            "Errno=$ERRNO\n";
+    } else {
+        $version = <VERSION>;
+        chomp($version);
+        close(VERSION);
+    }
+
+    if ($error) {
+        print("Failed to determine the version of Netpbm from the package, "
+              . "so that will not be correct in netpbm.config and netpbm.pc.  "
+              . $error . "\n");
+        $version = "???";
+    }
+    return $version;
+}
+
+
+
 sub 
-processTemplate($$$$$$$$$) {
-    my ($templateR, $version, $bindir, $libdir, $linkdir, $datadir, 
-        $includedir, $mandir, $outputR) = @_;
+processTemplate($$$) {
+    my ($templateR, $infoR, $outputR) = @_;
 
     my @output;
 
@@ -803,26 +1012,26 @@ processTemplate($$$$$$$$$) {
         if (m{^@}) {
             # Comment -- ignore it.
         } else {
-            if (defined($version)) {
-                s/\@VERSION\@/$version/;
+            if (defined($infoR->{VERSION})) {
+                s/\@VERSION\@/$infoR->{VERSION}/;
             }
-            if (defined($bindir)) {
-                s/\@BINDIR@/$bindir/;
+            if (defined($infoR->{BINDIR})) {
+                s/\@BINDIR@/$infoR->{BINDIR}/;
             }
-            if (defined($libdir)) {
-                s/\@LIBDIR@/$libdir/;
+            if (defined($infoR->{LIBDIR})) {
+                s/\@LIBDIR@/$infoR-.{LIBDIR}/;
             }
-            if (defined($linkdir)) {
-                s/\@LINKDIR@/$linkdir/;
+            if (defined($infoR->{LINKDIR})) {
+                s/\@LINKDIR@/$infoR->{LINKDIR}/;
             }
-            if (defined($datadir)) {
-                s/\@DATADIR@/$datadir/;
+            if (defined($infoR->{DATADIR})) {
+                s/\@DATADIR@/$infoR->{DATADIR}/;
             }
-            if (defined($includedir)) {
-                s/\@INCLUDEDIR@/$includedir/;
+            if (defined($infoR->{INCLUDEDIR})) {
+                s/\@INCLUDEDIR@/$infoR->{INCLUDEDIR}/;
             }
-            if (defined($mandir)) {
-                s/\@MANDIR@/$mandir/;
+            if (defined($infoR->{MANDIR})) {
+                s/\@MANDIR@/$infoR->{MANDIR}/;
             }
             push(@output, $_);
         }
@@ -832,11 +1041,12 @@ processTemplate($$$$$$$$$) {
 
 
 
-sub
-installConfig($$$$$$$) {
-    my ($pkgdir, 
-        $bindir, $libdir, $linkdir, $datadir, $includedir, $mandir) = @_;
-
+sub installConfig($$) {
+    my ($installdir, $templateSubsR) = @_;
+#-----------------------------------------------------------------------------
+# Install 'netpbm-config' -- a program you run to tell you things about
+# how Netpbm is installed.
+#-----------------------------------------------------------------------------
     my $error;
 
     my $configTemplateFilename = dirname($0) . "/config_template";
@@ -849,41 +1059,108 @@ installConfig($$$$$$$) {
 
         close(TEMPLATE);
 
-        my $versionOpened = open(VERSION, "<$pkgdir/VERSION");
+        processTemplate(\@template, $templateSubsR, \my $fileContentsR);
 
-        my $version;
-        if (!$versionOpened) {
-            $error = "Unable to open $pkgdir/VERSION for reading.  " .
-                "Errno=$ERRNO\n";
+        # TODO: Really, this ought to go in an independent directory,
+        # because you might want to have the Netpbm executables in
+        # some place not in the PATH and use this program, via the
+        # PATH, to find them.
+        
+        my $filename = "$installdir/netpbm-config";
+        
+        my $success = open(NETPBM_CONFIG, ">$filename");
+        if ($success) {
+            chmod(0755, $filename);
+            foreach (@{$fileContentsR}) { print NETPBM_CONFIG; }
+            close(NETPBM_CONFIG);
         } else {
-            $version = <VERSION>;
-            chomp($version);
-            close(VERSION);
-
-            processTemplate(\@template, $version, $bindir, $libdir,
-                            $linkdir, $datadir, $includedir, $mandir,
-                            \my $fileContentsR);
-
-            # TODO: Really, this ought to go in an independent directory,
-            # because you might want to have the Netpbm executables in
-            # some place not in the PATH and use this program, via the
-            # PATH, to find them.
-            
-            my $filename = "$bindir/netpbm-config";
-            
-            my $success = open(NETPBM_CONFIG, ">$filename");
-            if ($success) {
-                chmod(0755, $filename);
-                foreach (@{$fileContentsR}) { print NETPBM_CONFIG; }
-                close(NETPBM_CONFIG);
-            } else {
-                $error = "Unable to open the file " .
-                    "'$filename' for writing.  Errno=$ERRNO\n";
-            }
+            $error = "Unable to open the file " .
+                "'$filename' for writing.  Errno=$ERRNO\n";
         }
     }
     if ($error) {
         print(STDERR "Failed to create the Netpbm configuration program.  " .
+              "$error\n");
+    }
+}
+
+
+
+
+sub getPkgconfigDir($) {
+#-----------------------------------------------------------------------------
+#  Find out from the user where he wants the Pkg-config file for the
+#  installation (netpbm.pc) and return that.
+#-----------------------------------------------------------------------------
+    my ($prefix) = @_;
+
+    print("Where do you want the Pkg-config file netpbm.pc installed?\n");
+    print("\n");
+
+    my $pkgconfigDir;
+
+    while (!$pkgconfigDir) {
+        my $default = "$prefix/lib/pkgconfig";
+
+        my $response = prompt("Pkg-config directory", $default);
+        
+        if (-d($response)) {
+            $pkgconfigDir = $response;
+        } else {
+            my $succeeded = mkdir($response, 0777);
+            
+            if (!$succeeded) {
+                print("Unable to create directory '$response'.  " .
+                      "Error=$ERRNO\n");
+            } else {
+                $pkgconfigDir = $response;
+            }
+        }
+    }
+    print("\n");
+
+    return $pkgconfigDir;
+}
+
+
+
+sub installPkgConfig($$) {
+    my ($prefix, $templateSubsR) = @_;
+#-----------------------------------------------------------------------------
+# Install a pkg-config file (netpbm.pc) - used by the 'pkg-config' program to
+# find out various things about how Netpbm is installed.
+#-----------------------------------------------------------------------------
+    my $pkgconfigDir = getPkgconfigDir($prefix);
+
+    my $error;
+
+    my $pcTemplateFilename = dirname($0) . "/pkgconfig_template";
+
+    my $templateOpened = open(TEMPLATE, "<$pcTemplateFilename");
+    if (!$templateOpened) {
+        $error = "Can't open template file '$pcTemplateFilename'.\n";
+    } else {
+        my @template = <TEMPLATE>;
+
+        close(TEMPLATE);
+
+        processTemplate(\@template, $templateSubsR,
+                        \my $fileContentsR);
+
+        my $filename = "$pkgconfigDir/netpbm.pc";
+        
+        my $success = open(NETPBM_PC, ">$filename");
+        if ($success) {
+            chmod(0755, $filename);
+            foreach (@{$fileContentsR}) { print NETPBM_PC; }
+            close(NETPBM_PC);
+        } else {
+            $error = "Unable to open the file " .
+                "'$filename' for writing.  Errno=$ERRNO\n";
+        }
+    }
+    if ($error) {
+        print(STDERR "Failed to create the Netpbm Pkg-config file.  " .
               "$error\n");
     }
 }
@@ -929,8 +1206,18 @@ print("\n");
 installManPage($pkgdir, $prefix, \my $mandir);
 print("\n");
 
-installConfig($pkgdir, 
-              $bindir, $libdir, $linkdir, $datadir, $includedir, $mandir);
+my $templateSubsR =
+    {VERSION    => netpbmVersion($pkgdir),
+     BINDIR     => $bindir,
+     LIBDIR     => $libdir,
+     LINKDIR    => $linkdir,
+     DATADIR    => $datadir,
+     INCLUDEDIR => $includedir,
+     MANDIR     => $mandir};
+
+installConfig($bindir, $templateSubsR);
+
+installPkgConfig($prefix, $templateSubsR);
 
 print("Installation is complete (except where previous error messages have\n");
 print("indicated otherwise).\n");

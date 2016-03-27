@@ -231,7 +231,7 @@ int main (int argc, char **argv)
         pm_error("Problem while reading input file '%s", fnin);
     if (result != JBG_EOK && result != JBG_EOK_INTR) 
         pm_error("Problem with input file '%s': %s\n", 
-                 fnin, jbg_strerror(result, JBG_EN));
+                 fnin, jbg_strerror(result));
     if (plane >= 0 && jbg_dec_getplanes(&s) <= plane) 
         pm_error("Image has only %d planes!\n", jbg_dec_getplanes(&s));
 

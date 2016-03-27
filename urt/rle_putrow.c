@@ -31,6 +31,7 @@
  */
  
 #include <stdio.h>
+
 #include "rle_put.h"
 #include "rle.h"
 
@@ -62,7 +63,7 @@
  * Assumptions:
  *
  * Algorithm:
- * 	Search for occurences of pixels not of the given color outside
+ * 	Search for occurrences of pixels not of the given color outside
  *	the runs already found.  When some are found, add a new run or
  *	extend an existing one.  Adjacent runs with fewer than two
  *	pixels intervening are merged.

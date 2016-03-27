@@ -1,5 +1,6 @@
-#define _XOPEN_SOURCE    /* Make sure M_PI is in math.h */
-#define _BSD_SOURCE      /* Make sure strdup is in string.h */
+#define _XOPEN_SOURCE 500 
+   /* Make sure M_PI is in math.h, strdup is in string.h */
+#define _BSD_SOURCE      /* Make sure strdup is in string.h (alternate) */
 
 #include <string.h>
 #include <ctype.h>
@@ -44,7 +45,7 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine (int argc, char ** argv,
+parseCommandLine (int argc, const char ** argv,
                   struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
@@ -57,7 +58,7 @@ parseCommandLine (int argc, char ** argv,
    was passed to us as the argv array.  We also trash *argv.
 -----------------------------------------------------------------------------*/
     optEntry *option_def;
-        /* Instructions to optParseOptions3 on how to parse our options.
+        /* Instructions to pm_optParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
 
@@ -80,7 +81,7 @@ parseCommandLine (int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3( &argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
     
     if (!scriptSpec && !scriptfileSpec)
@@ -189,6 +190,7 @@ enum drawVerb {
     VERB_LINE_HERE,
     VERB_SPLINE3,
     VERB_CIRCLE,
+    VERB_FILLEDCIRCLE,
     VERB_FILLEDRECTANGLE,
     VERB_TEXT,
     VERB_TEXT_HERE
@@ -288,10 +290,10 @@ freeDrawCommand(const struct drawCommand * const commandP) {
     case VERB_SETLINECLIP:
         break;
     case VERB_SETCOLOR:
-        strfree(commandP->u.setcolorArg.colorName);
+        pm_strfree(commandP->u.setcolorArg.colorName);
         break;
     case VERB_SETFONT:
-        strfree(commandP->u.setfontArg.fontFileName);
+        pm_strfree(commandP->u.setfontArg.fontFileName);
         break;
     case VERB_LINE:
         break;
@@ -301,11 +303,13 @@ freeDrawCommand(const struct drawCommand * const commandP) {
         break;
     case VERB_CIRCLE:
         break;
+    case VERB_FILLEDCIRCLE:
+        break;
     case VERB_FILLEDRECTANGLE:
         break;
     case VERB_TEXT:
     case VERB_TEXT_HERE:
-        strfree(commandP->u.textArg.text);
+        pm_strfree(commandP->u.textArg.text);
         break;
     }
     
@@ -342,6 +346,35 @@ freeScript(struct script * const scriptP) {
 
     free(scriptP);
 }
+
+
+
+static void
+doFilledCircle(pixel **                   const pixels,
+               unsigned int               const cols,
+               unsigned int               const rows,
+               pixval                     const maxval,
+               const struct drawCommand * const commandP,
+               const struct drawState *   const drawStateP) {
+
+    struct fillobj * fhP;
+
+    fhP = ppmd_fill_create();
+            
+    ppmd_circle(pixels, cols, rows, maxval,
+                commandP->u.circleArg.cx,
+                commandP->u.circleArg.cy,
+                commandP->u.circleArg.radius,
+                ppmd_fill_drawproc,
+                fhP);
+            
+    ppmd_fill(pixels, cols, rows, maxval,
+              fhP,
+              PPMD_NULLDRAWPROC,
+              &drawStateP->color);
+
+    ppmd_fill_destroy(fhP);
+} 
 
 
 
@@ -462,6 +495,9 @@ executeScript(struct script * const scriptP,
                         commandP->u.circleArg.radius,
                         PPMD_NULLDRAWPROC,
                         &drawState.color);
+            break;
+        case VERB_FILLEDCIRCLE:
+            doFilledCircle(pixels, cols, rows, maxval, commandP, &drawState);
             break;
         case VERB_FILLEDRECTANGLE:
             ppmd_filledrectangle(pixels, cols, rows, maxval,
@@ -611,6 +647,17 @@ parseDrawCommand(struct tokenSet             const commandTokens,
                 argP->cy     = atoi(commandTokens.token[2]);
                 argP->radius = atoi(commandTokens.token[3]);
             } 
+        } else if (streq(verb, "filledcircle")) {
+            drawCommandP->verb = VERB_FILLEDCIRCLE;
+            if (commandTokens.count < 4)
+                pm_error("Not enough tokens for a 'filledcircle' command.  "
+                         "Need %u.  Got %u", 4, commandTokens.count);
+            else {
+                struct circleArg * const argP = &drawCommandP->u.circleArg;
+                argP->cx     = atoi(commandTokens.token[1]);
+                argP->cy     = atoi(commandTokens.token[2]);
+                argP->radius = atoi(commandTokens.token[3]);
+            } 
         } else if (streq(verb, "filledrectangle")) {
             drawCommandP->verb = VERB_FILLEDRECTANGLE;
             if (commandTokens.count < 5)
@@ -677,7 +724,7 @@ disposeOfCommandTokens(struct tokenSet * const tokenSetP,
     {
         unsigned int i;
         for (i = 0; i < tokenSetP->count; ++i)
-            strfree(tokenSetP->token[i]);
+            pm_strfree(tokenSetP->token[i]);
         tokenSetP->count = 0;
     }
     /* Put the list element for this command at the tail of the list */
@@ -828,7 +875,7 @@ getScript(struct cmdlineInfo const cmdline,
 
     parseScript(scriptText, scriptPP);
 
-    strfree(scriptText);
+    pm_strfree(scriptText);
 }
 
           
@@ -853,14 +900,14 @@ doOneImage(FILE *          const ifP,
 
 
 int
-main(int argc, char * argv[]) {
+main(int argc, const char * argv[]) {
 
     struct cmdlineInfo cmdline;
     FILE * ifP;
     struct script * scriptP;
-    bool eof;
+    int eof;
 
-    ppm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 

@@ -48,22 +48,30 @@ DEVELOPMENT PROCESS
 -------------------
 
 Just email your code to the Netpbm maintainer.  Base it on the most recent
-Latest Netpbm release if possible.  It's a good idea to ask the maintainer
-before starting a big change to a file to make sure it doesn't conflict
-with some other work that has been done since the last release.
+Netpbm Development release if possible.
 
 The preferred form for changes to existing files is a unified diff patch --
-the conventional Unix means of communicating code changes.
+the conventional Unix means of communicating code changes.  A Subversion
+'svn diff' creates that easily.
 
-You should update or create documentation too.  The source files for
-the documentation are the HTML files at
-http://netpbm.sourceforge.net.doc/ .  But if you don't, the Netpbm
-maintainer will do the update before releasing your code.
+You should update or create documentation too.  But if you don't, the Netpbm
+maintainer will do the update before releasing your code.  The source files
+for the documentation are the HTML files in the 'userguide' directory of the
+Netpbm Subversion repository: https://svn.code.sf.net/p/netpbm/code/userguide.
+The identical files are at http://netpbm.sourceforge.net/doc/ .
 
 There are some automated tests in the package - shell scripts in files
 named such as "pbmtog3.test".  You can use those to verify your
 changes.  You should also add to these tests and create new ones.  But
 most developers don't.
+
+As you code and test, do 'make dep' to create the header file dependency files
+(depend.mk).  Do it after 'configure' and every time you change the
+dependencies.  If you don't, 'make' won't know to recompile things when you
+change the header files.  For the convenience of users who are just building,
+and not changing anything, the make files do work without a 'make dep', but do
+so by automatically generating empty depend.mk files.  This is not what you
+want as a developer.
 
 
 CODING GUIDELINES
@@ -88,40 +96,14 @@ before you read these.
   but don't depend very much on these; use the library functions
   instead to read and write the image files.
 
-* Your new program must belong to one of the four Netpbm classes,
-  which are loosely based on the Netpbm formats.  They are defined as
-  follows:
+* You should try to use the "pam" library functions, which are newer than the
+  "pbm", "pgm", and "pnm" ones.  The "pam" functions read and write all four
+  Netpbm formats and make code easier to write and to read.
 
-  pbm: These programs take PBM (bitmap - pixels are black or white)
-       files as input or output or both.  They never have PGM or PPM 
-       primary input or output.  They use the libpbm Netpbm
-       library.  They have "pbm" in their names.
-
-  pgm: These programs take PBM or PGM (grayscale) files as input, or
-       produce PGM files as output, or both.  They treat PBM input
-       as if it were the equivalent PGM input.  They never produce PBM
-       primary output and never have PPM primary input or output.
-       They use the libpbm and libpgm Netpbm libraries.  They have
-       "pgm" in their names.
-
-  ppm: These programs take PBM or PGM or PPM (color) files as input,
-       or produce PPM files as output, or both.  They treat PBM and
-       PGM input as if it were the equivalent PPM input.  They never
-       produce PBM or PGM primary output.  They use the libpbm,
-       libpgm, and libppm Netpbm libraries.  They have "ppm" in their
-       names.
-
-  pnm: These are the most general programs.  They handle all four
-       Netpbm formats (PBM, PGM, PPM, and PAM).  They use all Netpbm
-       formats as input or output or both.  They recognize the
-       difference between PBM, PGM, and PPM input, so a PBM input
-       might produce a different result than the equivalent PGM input.
-       These programs use the libpbm, libpgm, libppm, and libpnm
-       Netpbm libraries.  They have "pnm" or "pam" in their names.
-
-  Decide which one of these classes your program belongs to.  Your choice
-  determines the proper naming of the program and which set of library
-  subroutines you should use.
+* A new program should generate PAM output.  Note that any program that uses
+  the modern Netpbm library can read PAM even if it was designed for the older
+  formats.  For other programs, one can convert PAM to the older formats
+  with 'pamtopnm'.
 
 * If your program involves transparency (alpha masks), you have two
   alternatives.  The older method is to use a separate PGM file for the
@@ -137,10 +119,7 @@ before you read these.
   cause problems to other programs when you do a "merge build" of 
   Netpbm.
 
-* Declare main() with return type 'int', not 'void'.  Some systems won't
-  compile void main().
-
-* Always start the code in main() with a call to p?m_init().
+* Always start the code in main() with a call to pm_proginit().
 
 * Use shhopt for option processing.  i.e. call optParseOptions3().
   This is really easy if you just copy the parseCommandLine() function
@@ -193,8 +172,7 @@ before you read these.
   makes samples fit in a single byte and at one time was the maximum 
   possible maxval in the format.
 
-  Note that the Pnmdepth program converts an image from one maxval to
-  another.
+  Note that the Pamdepth program converts an image from one maxval to another.
 
 * Don't include extra function.  If you can already do something by 
   piping the input or output of your program through another Netpbm
@@ -203,11 +181,14 @@ before you read these.
 
   Similarly, if your program does two things which would be useful
   separately, write two programs and advise users to pipe them
-  together.  Or add a third program that simply calls the first two.
+  together.  Or add a third program that simply runs the first two.
 
 * Your program should, if appropriate, allow the user to use Standard
   Input and Output for images.  This is because Netpbm users commonly
-  use pipes.
+  use pipes.  As an alternative to Standard Input, the user should be able
+  to name the input file as a non-option program argument.  But the user
+  should not be able to name the output file if Standard Output is
+  feasible.  That's just the Netpbm tradition.
 
 * Don't forget to write a proper html documentation page.  Get an
   example to use as a template from
@@ -223,6 +204,37 @@ before you read these.
   the other hand, look the same for everyone.  Modern editors let you
   compose code just as easily with spaces as with tabs.
 
+* Limit your C code to original ANSI C.  Not C99.  Not C89.  Not C++.  Don't
+  use // for comments or put declarations in the interior of a block.
+  Interpreted languages are OK, with Perl being preferred.
+
+* Make output invariant with input.  The program should produce the same output
+  when fed the same input.  This helps with testing and also reduces the chance
+  of bugs being encountered randomly.
+
+  This is an issue when there are "don't care" bits in the output.  You should
+  normally make those zero.
+
+  The valgrind utility helps you identify instances of undefined bits and
+  bytes getting to output.
+
+  A common place to find "don't care" bits is padding at the end of a raster
+  row.  You can use pbm_cleanrowend_packed() to clear padding bits when you
+  use pbm_writepbmrow_packed().
+
+  Some programs are designed to produce random output.  For those, include a
+  -seed option to specify the seed of the random number generator so that a
+  tester can make the output predictable.
+
+
+* Never assume that input will be valid; make sure your program can
+  handle corrupt input gracefully.
+
+  Watch out for arithmetic overflows caused by large numbers in the input.
+
+  Be careful when writing decoders.  Make sure that corruptions in the
+  input image do not cause buffer overruns.
+
 
 
 
@@ -231,6 +243,9 @@ DISCONTINUED CODING GUIDELINES
 
 Here are some things you will see in old Netpbm programs, but they are
 obsolete and you shouldn't propagate them into a new program:
+
+* Use of pbm_init(), pgm_init(), ppm_init(), and pnm_init().  We use
+  pm_proginit() now.
 
 * Tolerating non-standard C libraries.  You may assume all users have
   ANSI and POSIX compliant C libraries.  E.g. use strrchr() and forget
@@ -317,9 +332,11 @@ code.  Modular and structured above all.
   Especially never modify the argument of a function.  All function arguments
   should be "const".
 
-  Don't use initializers except for constants.  If you're going to set 
-  a variable twice, do it out in the open; don't hide one in the declaration
-  of the variable.
+  Don't use initializers except for with constants.  The first value a
+  variable has is a property of the algorithm that uses the variable, not of
+  the variable.  A reader expects to see the whole algorithm in one place, as
+  opposed to having part of it hidden in the declaration of the algorithm
+  variables.
 
 * Avoid global variables.  Sometimes, a value is truly global and
   passing it as a parameter just muddies the code.  But most of the
@@ -328,6 +345,10 @@ code.  Modular and structured above all.
 
   Declare a variable in the most local scope possible.
 
+  Global constants are OK.
+
+* Do not use static variables, except for global constants.
+
 * Keep subroutines small.  Generally under 50 lines.  But if the
   routine is a long sequence of simple, similar things, it's OK for it
   run on ad infinitem.
@@ -335,18 +356,22 @@ code.  Modular and structured above all.
 * Use the type "bool" for boolean variables.  "bool" is defined in Netpbm
   headers.  Use TRUE and FALSE as its values.
 
-* Do not say "if (a)" when you mean "if (a != 0)".  Use "if (a)" only if
-  a is a boolean variable.  Or where it's defined so that a zero value 
-  means ("doesn't exist").
+* Do not say "if (a)" when you mean "if (a != 0)".  Use "if (a)" only if a is
+  a boolean variable.  Or where it's defined so that zero is a special value
+  that means "doesn't exist".
 
-* Do multiword variable names like this:  "multiWordName".  Underscores waste
-  valuable screen real estate.
+* Do multiword variable names in camel case: "multiWordName".  Underscores
+  waste valuable screen real estate.
 
-* If a variable's value is the address of something (a pointer to something),
-  it's name should reflect that, as opposed to lying and saying the value is
-  the thing pointed to.  A "P" on the end is the conventional way to say
-  "address of."  E.g. if a variable's value is the address of a color value,
-  name it "colorP", not "color".
+* If a variable's value is a pointer to something, it's name should reflect
+  that, as opposed to lying and saying the value is the thing pointed to.  A
+  "P" on the end is the conventional way to say "pointer to."  E.g. if a
+  variable's value is a pointer to a color value, name it "colorP", not
+  "color".
+
+* A variable that represents the number of widgets should be "widgetCt",
+  ("widget count"), not "widgets".  The latter should represent the actual
+  widgets instead.
 
 * Put "const" as close as possible to the thing that is constant.
   "int const width", not "const int width".  When pointers to
@@ -355,4 +380,46 @@ code.  Modular and structured above all.
 * Free something in the same subroutine that allocates it.  Have exactly 
   one free per allocate (this comes naturally if you eliminate gotos).
 
+* Dynamically allocate buffers, for example raster buffers, rather than use
+  automatic variables.  Accidentally overrunning an automatic variable,
+  typically stored on the stack, is much more dangerous than overrunning a
+  variable stored in the heap.
+
+* Use pm_asprintf() to compose strings, instead of sprintf(), strcat(), and
+  strcpy().  pm_asprintf() is essentially the same as GNU asprintf(), i.e.
+  sprintf(), except it dynamically allocates the result memory.  This
+  effortlessly makes it impossible to overrun the result buffer.  Use
+  pm_strfree() to free the result memory.  You usually need not worry about
+  the pathological case that there is no memory available for the result,
+  because in that case, pm_asprintf() returns a constant string "OUT OF MEMORY"
+  and in most cases, that won't cause a disaster - just incorrect behavior that
+  is reasonable in the face of such a pathological situation.
+
+* Do not use the "register" qualifier of a variable.
+
+
+MISCELLANEOUS
+-------------
+
+Object code immutability across compilations
+--------------------------------------------
+
+In a normal build process the same source code always produces the same object
+code.  (Of course this depends on your compiler and its settings: if your
+compiler writes time stamps into the objects, they will naturally be different
+with each compilation.)
+
+The file lib/compile.h has a time stamp which gets written into libnetpbm.a
+and libnetpbm.so .  This will affect individual binary executables if they are
+statically linked.
+
+If compile.h does not exist it will be created by the program
+buildtools/stamp-date.  Once created, compile.h will stay unchanged until you
+do "make clean".
+
+If you make alterations to source which are entirely cosmetic (for example,
+changes to comments or amount of indentation) and need to confirm that the
+actual program logic is not affected, compare the object files.  If you need
+to compare library files (or for some reason, statically linked binaries) make
+sure that the same compile.h is used throughout.
 

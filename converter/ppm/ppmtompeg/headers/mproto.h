@@ -70,7 +70,6 @@
  *==============*/
 
 #include "general.h"
-#include "ansi.h"
 #include "bitio.h"
 
 
@@ -86,39 +85,39 @@ typedef DCTELEM DCTBLOCK[DCTSIZE2];
 /*  
  *  from mbasic.c:
  */
-void mp_reset _ANSI_ARGS_((void));
-void mp_free _ANSI_ARGS_((MpegFrame *mf));
-MpegFrame *mp_new _ANSI_ARGS_((int fnumber, char type, MpegFrame *oldFrame));
-void mp_ycc_calc _ANSI_ARGS_((MpegFrame *mf));
-void mp_dct_blocks _ANSI_ARGS_((MpegFrame *mf));
-void	AllocDecoded _ANSI_ARGS_((MpegFrame *frame));
+void mp_reset (void);
+void mp_free (MpegFrame *mf);
+MpegFrame *mp_new (int fnumber, char type, MpegFrame *oldFrame);
+void mp_ycc_calc (MpegFrame *mf);
+void mp_dct_blocks (MpegFrame *mf);
+void	AllocDecoded (MpegFrame *frame);
 
 /*  
  *  from moutput.c:
  */
-boolean mp_quant_zig_block _ANSI_ARGS_((Block in, FlatBlock out, int qscale, int iblock));
-void	UnQuantZig _ANSI_ARGS_((FlatBlock in, Block out, int qscale, boolean iblock));
-void mp_rle_huff_block _ANSI_ARGS_((FlatBlock in, BitBucket *out));
-void mp_rle_huff_pblock _ANSI_ARGS_((FlatBlock in, BitBucket *out));
-void mp_create_blocks _ANSI_ARGS_((MpegFrame *mf));
+boolean mp_quant_zig_block (Block in, FlatBlock out, int qscale, int iblock);
+void	UnQuantZig (FlatBlock in, Block out, int qscale, boolean iblock);
+void mp_rle_huff_block (FlatBlock in, BitBucket *out);
+void mp_rle_huff_pblock (FlatBlock in, BitBucket *out);
+void mp_create_blocks (MpegFrame *mf);
 
 
 
 
-void	ReadEYUV _ANSI_ARGS_((MpegFrame * mf, FILE *fpointer, int width,
-			    int height));
-boolean	ReadPPM _ANSI_ARGS_((MpegFrame *mf, FILE *fpointer));
-void PPMtoYCC _ANSI_ARGS_((MpegFrame * mf));
+void	ReadEYUV (MpegFrame * mf, FILE *fpointer, int width,
+			    int height);
+boolean	ReadPPM (MpegFrame *mf, FILE *fpointer);
+void PPMtoYCC (MpegFrame * mf);
 
-void	ComputeHalfPixelData _ANSI_ARGS_((MpegFrame *frame));
-void mp_validate_size _ANSI_ARGS_((int *x, int *y));
-void AllocYCC _ANSI_ARGS_((MpegFrame * mf));
+void	ComputeHalfPixelData (MpegFrame *frame);
+void mp_validate_size (int *x, int *y);
+void AllocYCC (MpegFrame * mf);
 
 
 /* jrevdct.c */
-void init_pre_idct _ANSI_ARGS_((void ));
-void j_rev_dct_sparse _ANSI_ARGS_((DCTBLOCK data , int pos ));
-void j_rev_dct _ANSI_ARGS_((DCTBLOCK data ));
-void j_rev_dct_sparse _ANSI_ARGS_((DCTBLOCK data , int pos ));
-void j_rev_dct _ANSI_ARGS_((DCTBLOCK data ));
+void init_pre_idct (void );
+void j_rev_dct_sparse (DCTBLOCK data , int pos );
+void j_rev_dct (DCTBLOCK data );
+void j_rev_dct_sparse (DCTBLOCK data , int pos );
+void j_rev_dct (DCTBLOCK data );
 

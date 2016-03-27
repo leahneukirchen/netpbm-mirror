@@ -58,7 +58,7 @@ parseCommandLine(int                 argc,
    was passed to us as the argv array.  We also trash *argv.
 -----------------------------------------------------------------------------*/
     optEntry *option_def;
-        /* Instructions to optParseOptions3 on how to parse our options.
+        /* Instructions to pm_optParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
 
@@ -82,7 +82,7 @@ parseCommandLine(int                 argc,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    optParseOptions3( &argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3( &argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (!outputSpec)
@@ -524,9 +524,9 @@ makePalette(pixel **          const xorPPMarray,
     xorChv = ppm_computecolorhist(xorPPMarray, xorCols, xorRows, MAXCOLORS, 
                                   &colors);
     if (xorChv == NULL)
-        asprintfN(errorP,
-                  "image has too many colors - try doing a 'pnmquant %d'",
-                  MAXCOLORS);
+        pm_asprintf(errorP,
+                    "image has too many colors - try doing a 'pnmquant %d'",
+                    MAXCOLORS);
     else {
         *errorP = NULL;
 
@@ -584,10 +584,10 @@ getOrFakeAndMap(const char *      const andPgmFname,
         pm_close(andfile);
 
         if ((andCols != xorCols) || (andRows != xorRows)) {
-            asprintfN(errorP,
-                      "And mask and image have different dimensions "
-                     "(%d x %d vs %d x %d).  Aborting.",
-                     andCols, xorCols, andRows, xorRows);
+            pm_asprintf(errorP,
+                        "And mask and image have different dimensions "
+                        "(%d x %d vs %d x %d).  Aborting.",
+                        andCols, xorCols, andRows, xorRows);
         } else
             *errorP = NULL;
     }
@@ -670,7 +670,7 @@ addEntryToIcon(MS_Ico       const MSIconData,
     * All the icons I found seemed to pad the palette to the max entries
     * for that bitdepth.
     * 
-    * The spec indicates this isn't neccessary, but I'll follow this behaviour
+    * The spec indicates this isn't necessary, but I'll follow this behaviour
     * just in case.
     */
     if (colors < 3) {

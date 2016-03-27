@@ -135,7 +135,7 @@
 #define	JPC_CEILDIVPOW2(x, y) \
 	(assert(x >= 0 && y >= 0), ((x) + (1 << (y)) - 1) >> (y))
 /* JPC_CEILDIVPOW2U is for unsigned arguments (JPC_CEILDIVPOW2 would generate
-   compiler warnings due to its superfluous >= 0 check)
+   compiler warnings because of its superfluous >= 0 check)
 */
 #define	JPC_CEILDIVPOW2U(x, y) \
 	(((x) + (1 << (y)) - 1) >> (y))

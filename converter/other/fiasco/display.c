@@ -27,16 +27,8 @@
 #include <X11/Xutil.h>
 #include <X11/keysym.h>
 
-#if STDC_HEADERS
-#	include <stdlib.h>
-#	include <string.h>
-#else /* not STDC_HEADERS */
-#	if HAVE_STRING_H
-#		include <string.h>
-#	else /* not HAVE_STRING_H */
-#		include <strings.h>
-#	endif /* not HAVE_STRING_H */
-#endif /* not STDC_HEADERS */
+#include <stdlib.h>
+#include <string.h>
 
 #include "types.h"
 #include "macros.h"
@@ -315,7 +307,8 @@ alloc_ximage (x11_info_t *xinfo, unsigned width, unsigned height)
       shmem_flag = 0;
       if (fiasco_get_verbosity ())
 	 fprintf (stderr,
-		  "Shared memory not supported\nReverting to normal Xlib.\n");
+              "Shared memory does not work on this system\n"
+              "Reverting to normal Xlib.\n");
    }
 
    if (shmem_flag)

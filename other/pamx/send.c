@@ -78,8 +78,8 @@ ximageToPixmap(Display *    const disp,
 
 
 
-/* find the best pixmap depth supported by the server for a particular
- * visual and return that depth.
+/* find the best pixmap depth the server can do for a particular visual and
+ * return that depth.
  *
  * this is complicated by R3's lack of XListPixmapFormats so we fake it
  * by looking at the structure ourselves.
@@ -587,7 +587,7 @@ makeXImage(XImageInfo * const ximageinfoP,
         MALLOCARRAY(data, byteCount);
         if (data == NULL)
             pm_error("Can't allocate space for %u byte image", byteCount);
-        bcopy(imageP->data, data, byteCount);
+        memcpy(data, imageP->data, byteCount);
 
         ximageinfoP->ximageP =
             XCreateImage(disp, visualP, 1, XYBitmap,

@@ -114,7 +114,7 @@ typedef struct DiskObject_ { /* 78 bytes (including Gadget struct) */
     unsigned char version[2];       /* Object version number */
     unsigned char gadget[44];       /* Copy of in memory gadget (44 by */
     unsigned char type;             /* ??? */
-    unsigned char pad;              /* Pad it out to the next word boundry */
+    unsigned char pad;              /* Pad it out to the next word boundary */
     unsigned char pDefaultTool[4];  /* Pointer  to default tool */
     unsigned char ppToolTypes[4];   /* Pointer pointer to tool types */
     unsigned char currentX[4];      /* Current X position (?) */
@@ -175,7 +175,7 @@ parseCommandLine( int              argc,
     opt.allowNegNum   = FALSE;  /* No negative number parameters */
 
     /* Parse the command line */
-    optParseOptions3( &argc, argv, opt, sizeof( opt ), 0 );
+    pm_optParseOptions3( &argc, argv, opt, sizeof( opt ), 0 );
 
     infoP->forceColor = forceColorSpec;
     infoP->selected = selectedSpec;
@@ -233,33 +233,33 @@ getDiskObject( IconInfo * const infoP ) {
     /* Read the disk object header */
     bytesRead = fread( &dobj, 1, sizeof(dobj), infoP->fp );
     if (ferror(infoP->fp))
-        pm_error( "Cannot read disk object header for file '%s'.  "
-                  "fread() errno = %d (%s)",
-                  infoP->name, errno, strerror( errno ) );
-    else if ( bytesRead != sizeof(dobj) )
-        pm_error( "Cannot read entire disk object header for file '%s'.  "
-                  "Only read 0x%X of 0x%X bytes",
-                  infoP->name, bytesRead, sizeof(dobj) );
+        pm_error("Cannot read disk object header for file '%s'.  "
+                 "fread() errno = %d (%s)",
+                 infoP->name, errno, strerror(errno));
+    else if (bytesRead != sizeof(dobj))
+        pm_error("Cannot read entire disk object header for file '%s'.  "
+                 "Only read 0x%X of 0x%X bytes",
+                 infoP->name, (unsigned)bytesRead, (unsigned)sizeof(dobj));
 
     /* Check magic number */
-    if ( ( dobj.magic[0] != 0xE3 ) && ( dobj.magic[1] != 0x10 ) )
-        pm_error( "Wrong magic number for file '%s'.  "
-                  "Expected 0xE310, but got 0x%X%X",
-                  infoP->name, dobj.magic[0], dobj.magic[1] );
+    if ((dobj.magic[0] != 0xE3) && (dobj.magic[1] != 0x10))
+        pm_error("Wrong magic number for file '%s'.  "
+                 "Expected 0xE310, but got 0x%X%X",
+                 infoP->name, dobj.magic[0], dobj.magic[1]);
 
     /* Set version info and have drawer data flag */
-    infoP->version     = ( dobj.version[0]     <<  8 ) +
-        ( dobj.version[1]           );
-    infoP->drawerData  = ( dobj.pDrawerData[0] << 24 ) +
-        ( dobj.pDrawerData[1] << 16 ) +
-        ( dobj.pDrawerData[2] <<  8 ) +
-        ( dobj.pDrawerData[3]       ) ? TRUE : FALSE;
+    infoP->version     = (dobj.version[0]     <<  8) +
+        (dobj.version[1]           );
+    infoP->drawerData  = (dobj.pDrawerData[0] << 24) +
+        (dobj.pDrawerData[1] << 16) +
+        (dobj.pDrawerData[2] <<  8) +
+        (dobj.pDrawerData[3]      ) ? TRUE : FALSE;
 }
 
 
 
 static void 
-getIconHeader( IconInfo * const infoP ) {
+getIconHeader(IconInfo * const infoP) {
 /*-------------------------------------------------------------------------
  * Get fields from icon header portion of info file
  *-------------------------------------------------------------------------*/
@@ -267,25 +267,25 @@ getIconHeader( IconInfo * const infoP ) {
     size_t      bytesRead;
 
     /* Read icon header */
-    bytesRead = fread( &ihead, 1, sizeof(ihead), infoP->fp );
-    if ( ferror(infoP->fp ) )
-         pm_error( "Cannot read icon header for file '%s'.  "
-                   "fread() errno = %d (%s)",
-                   infoP->name, errno, strerror( errno ) );
-    else if ( bytesRead != sizeof(ihead) )
-        pm_error( "Cannot read the entire icon header for file '%s'.  "
-                  "Only read 0x%X of 0x%X bytes",
-                  infoP->name, bytesRead, sizeof(ihead) );
+    bytesRead = fread(&ihead, 1, sizeof(ihead), infoP->fp);
+    if (ferror(infoP->fp))
+        pm_error("Cannot read icon header for file '%s'.  "
+                 "fread() errno = %d (%s)",
+                 infoP->name, errno, strerror(errno));
+    else if (bytesRead != sizeof(ihead))
+        pm_error("Cannot read the entire icon header for file '%s'.  "
+                 "Only read 0x%X of 0x%X bytes",
+                 infoP->name, (unsigned)bytesRead, (unsigned)sizeof(ihead));
 
     /* Get icon width, heigh, and bitplanes */
-    infoP->width  = ( ihead.iconWidth[0]  << 8 ) + ihead.iconWidth[1];
-    infoP->height = ( ihead.iconHeight[0] << 8 ) + ihead.iconHeight[1];
-    infoP->depth  = ( ihead.bpp[0]        << 8 ) + ihead.bpp[1];
+    infoP->width  = (ihead.iconWidth[0]  << 8) + ihead.iconWidth[1];
+    infoP->height = (ihead.iconHeight[0] << 8) + ihead.iconHeight[1];
+    infoP->depth  = (ihead.bpp[0]        << 8) + ihead.bpp[1];
 
     /* Check number of bit planes */
-    if ( ( infoP->depth > 2 ) || ( infoP->depth < 1 ) )
-        pm_error( "We don't know how to interpret %u bitplanes file '%s'.  ",
-                  infoP->depth, infoP->name );
+    if ((infoP->depth > 2) || (infoP->depth < 1))
+        pm_error("We don't know how to interpret %u bitplanes file '%s'.  ",
+                 infoP->depth, infoP->name);
 }
 
 

@@ -44,7 +44,7 @@ parseCommandLine(int argc, char ** argv,
    was passed to us as the argv array.
 -----------------------------------------------------------------------------*/
     optEntry * option_def;
-        /* Instructions to optParseOptions3 on how to parse our options.
+        /* Instructions to pm_optParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
     extern struct pam pam;  /* Just so we can look at field sizes */
@@ -62,7 +62,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We may have parms that are negative numbers */
 
-    optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (!tupletypeSpec)
@@ -70,7 +70,8 @@ parseCommandLine(int argc, char ** argv,
     else
         if (strlen(cmdlineP->tupletype)+1 > sizeof(pam.tuple_type))
             pm_error("Tuple type name specified is too long.  Maximum of "
-                     "%u characters allowed.", sizeof(pam.tuple_type));
+                     "%u characters allowed.",
+                     (unsigned)sizeof(pam.tuple_type));
 
     cmdlineP->nInput = 0;  /* initial value */
     { 
@@ -215,10 +216,10 @@ nextImageAllStreams(unsigned int const nInput,
     unsigned int inputSeq;
 
     for (inputSeq = 0; inputSeq < nInput; ++inputSeq) {
-        bool eof;
+        int eof;
         pnm_nextimage(ifP[inputSeq], &eof);
         if (eof)
-            *eofP = eof;
+            *eofP = true;
     }
 }
 

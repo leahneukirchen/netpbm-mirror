@@ -17,7 +17,6 @@
 #define _XOPEN_SOURCE    /* Make sure stdio.h contains fileno() */
 #include <unistd.h>
 #include <stdio.h>
-#include "all.h"
 /* With the lossless jpeg patch applied to the Jpeg library
     (ftp://ftp.wizards.dupont.com/pub/ImageMagick/delegates/ljpeg-6b.tar.gz),
     the name of min_DCT_scaled_size changes to min_codec_data_unit,
@@ -26,16 +25,17 @@
 #define min_codec_data_unit min_DCT_scaled_size
 #include <jpeglib.h>
 #undef min_codec_data_unit
-#include "mtypes.h"
-#include "frames.h"
-#include "prototypes.h"
-#include "param.h"
-#include "readframe.h"
+
+#include "netpbm/pm_config.h"
+#include "netpbm/pm_c_util.h"
+#include "netpbm/mallocvar.h"
+#include "netpbm/pm.h"
+
 #include "fsize.h"
-#include "rgbtoycc.h"
+#include "frame.h"
+
 #include "jpeg.h"
 
-#include "mallocvar.h"
 
 /* make it happier.... */
 #undef DCTSIZE2
@@ -101,7 +101,7 @@ JMovie2JPEG(const char * const infilename,
     char ofname[256];     /* output filename string */
     int Temp = 0, temp = 0;   /* dummy variables */
     int image_offset = 0;     /* counting variable */
-    /* J_Movie header infomation */
+    /* J_Movie header information */
     int ver_no;           /* version number - expected to be 2 */
     int fps;              /* frame rate - frames per second */
     int no_frames;        /* total number of frames in jmovie */
@@ -360,7 +360,7 @@ JMovie2JPEG(const char * const infilename,
  *
  *      allocate and initialize JPEG decompression object
  *      specify data source (eg, a file)
- *      jpeg_read_header();     // obtain image dimensions and other parameters
+ *      jpeg_read_header();      obtain image dimensions and other parameters
  *      set parameters for decompression
  *      jpeg_start_decompress();
  *      while (scan lines remain to be read)
@@ -385,7 +385,7 @@ ReadJPEG(MpegFrame * const mf,
     jpeg_component_info *compptr;
     int buffer_height;
     int current_row[3];
-    uint8 **orig[3];
+    uint8_t **orig[3];
     int h_samp[3],v_samp[3];
     int max_h_samp,max_v_samp;
     int temp_h, temp_v;
@@ -500,7 +500,7 @@ ReadJPEG(MpegFrame * const mf,
 
         (void) jpeg_read_raw_data(&cinfo, scanarray, buffer_height);
 
-        /* alter subsample ratio's if neccessary */
+        /* alter subsample ratio's if necessary */
         if ((h_samp[0]==2) && (h_samp[1]==1) && (h_samp[2]==1) &&
             (v_samp[0]==2) && (v_samp[1]==1) && (v_samp[2]==1)) {
             /* we are 4:1:1 as expected by the encoder*/
