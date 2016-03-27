@@ -8,6 +8,8 @@
 #   merge:        Build everything as merged executables, in the source dir
 #   package:      Make a package of Netpbm files ready to install
 #   
+#   deb:          Make a .deb file in the current dir.
+#
 #   The default target is either "merge" or "nonmerge", as determined by
 #   the DEFAULT_TARGET variable set by config.mk.
 
@@ -392,6 +394,12 @@ endif
 install.sharedlibstub:
 	$(MAKE) -C lib -f $(SRCDIR)/lib/Makefile \
 	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) install.sharedlibstub 
+
+# Make the 'deb' target after making 'package'.  It generates a .deb
+# file in the current directory.
+.PHONY: deb
+deb:
+	buildtools/debian/mkdeb --buildtools=buildtools --pkgdir=$(PKGDIR)
 
 clean: localclean
 

@@ -1,0 +1,122 @@
+Files in this directory are for creating a Debian package (.deb file),
+which one can use to install Netpbm on a Debian system (or a system running
+a derivative of Debian, such as Ubuntu or Mint).
+
+You can of course install on one of these systems by running 'installnetpbm',
+or otherwise inserting all the files in the proper place in your system file
+tree, but having a Debian package allows you to manage those files using
+Debian's normal package management.  The package management system will know
+where the Netpbm files came from, and you can upgrade or remove Netpbm easily.
+The package management system will also be aware of prerequisites of Netpbm
+and ensure that you don't have Debian's own inferior version of Netpbm
+installed (which would cause conflicts).
+
+The package we create is named 'netpbm-sf' (where the "sf" is from
+"SourceForge"), to be distinct from the package named "netpbm" which is part
+of Debian.
+
+To install Netpbm as a Debian package:
+
+  1) Follow the regular instructions to build and package Netpbm
+     (configure, make, make package).
+
+  2) With the root of the built Netpbm build tree as your current
+     directory:
+
+     $ make deb
+
+     (This defaults to getting Netpbm from /tmp/netpbm, which is also where
+     'make package' defaults to putting it).
+
+  3) $ dpkg --install netpbm-sfXXXX.deb
+
+     (netpbm-sfXXXX.deb is the file created by 'make deb', in the current
+     directory).
+
+
+PREREQUSISITES
+--------------
+
+The following information was taken from the Wheezy version (Version 7) of
+Debian, in January 2014.
+
+You don't actually need the current version of any of these.  For example,
+while we list package libjpeg8-dev, the package libjpeg62-dev works fine.
+
+
+Building
+--------
+
+You need the following Debian packages to build all of Netpbm.
+
+You could omit some of these and, in the Netpbm build configuration dialog,
+indicate you don't have them, and the build will simply omit some parts.
+For example, if you don't install libx11-dev, the Netpbm build process
+will not build the 'pamx' program.
+
+  libjpeg8-dev
+  libpng12-0-dev
+  libsvga1-dev
+  libtiff5-dev
+  libx11-dev
+  libxml2a-dev
+  zlib1g-dev
+
+
+In addition, you need the following build tools:
+
+  make
+  gcc
+  flex
+  perl
+  pkg-config
+
+
+
+Running
+-------
+
+The following Debian packages are the known prerequisites for running Netpbm
+(and the package created by 'mkdeb' knows this).
+
+    libc6
+    libjpeg8
+    libpng12-0
+    libsvga1
+    libtiff5
+    libx11-6
+    zlib1g
+    ghostscript
+    perl
+    perl-base
+    bash
+
+Note that many of these are needed only for a few parts of Netpbm, and it will
+be pretty obvious what the problem is when you need the prerequisite package
+and don't have it, so if you don't want to install a prerequisite, it would
+probably be fine to force install Netpbm, ignoring the prerequisites.
+
+
+CONFLICTS WITH DEBIAN'S NETPBM
+------------------------------
+
+Debian has several packages of Netpbm, all based on a slightly modified
+Sourceforge Netpbm 9.25 from 2002 (don't be confused by Debian's numbering
+system, which makes it look like it is Netpbm 10).  If you want to install
+Sourceforge Netpbm on your system, you will want first to remove any of these
+you have installed:
+
+  netpbm
+  netpbm-dev
+  libnetpbm9
+  libnetpbm10
+
+Sourceforge Netpbm should be backward compatible with all of those.  Note that
+'mkdeb' makes only one package.  It contains the programs, the runtime
+libraries, and the development files.
+
+We have not yet worked out what has to be done about the fact that the Debian
+packaging system thinks the Debian Netpbm packages are prerequisites for
+things.  If you install Sourceforge Netpbm via the package created by mkdeb,
+you should tell the Netpbm maintainer whatever you learn about that.
+
