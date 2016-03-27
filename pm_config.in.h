@@ -63,7 +63,7 @@
 
 /* CONFIGURE: There should be an environment variable telling where the color
 ** names database (color dictionary) is for Netpbm to use, e.g. to determine
-** what colord name "Salmon" is.  The name of that environment variable is
+** what color "Salmon" is.  The name of that environment variable is
 ** above.  But as some people prefer hardcoded file paths to environment
 ** variables, if such environment variable is not set, Netpbm looks for the
 ** first existing file in the list which is the value of 'RGB_DB_PATH'.  And

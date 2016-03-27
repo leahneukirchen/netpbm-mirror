@@ -4,6 +4,44 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+16.03.27 BJH  Release 10.74.00
+
+              pbmtext: produce same image when you run pbmtext with -width
+              explicitly set to the width you get when you don't specify
+              width.
+
+              pbmtext: ignore -nomargins with -width is specified.
+
+              pbmtext: report when line ends are dropped because of
+              truncation.
+
+              pbmtext: Fix bug: if input has an code point that is not in the
+              font, Pbmtext substitutes space, but behavior is undefined if
+              font doesn't have space either.  Now it aborts the program in
+              that case.
+
+              pbmtext: fix bug: Respect -width when specified.
+
+              pbmtext: fix bug: Deal correctly with negative -space.
+
+              pbmtext: fix bug: Consider all characters in line, not just
+              first and last, in determining line width.
+
+              libnetbpm font facility (so pbmtext): fix bug: undefined
+              behavior when font definitions are invalid in any of various
+              ways.
+
+              libnetpbm font facility (so pbmtext): fix incorrect font names
+              in error messages.
+
+              pnmtopsnr: Add -machine, -max .
+
+              Netpbmlib: add /usr/local/netpbm/lib and /etc/X11 to search
+              path for rgb.txt.
+
+              makeman: Add some text replacements to solve glitches.
+              Handle &mdash, &minus.
+
 15.12.26 BJH  Release 10.73.00
 
               anytopnm: use --mime-type option instead of --mime on newer
@@ -206,10 +244,9 @@ CHANGE HISTORY
               test: replace some GNU-only code with more portable code that
               works on OS X.  Thanks Ryan Schmidt <ryandesign@macports.org>.
 
-              makeman: deal properly with backlash in source.  Thanks Willem
-              van Schaik <willem@schaik.com>.  But something was wrong with
-              this change and it caused the program always to fail, so
-              we reversed this change in 10.72.
+              makeman: deal properly with backlash in source.  But something
+              was wrong with this change and it caused the program always to
+              fail, so we reversed this change in 10.72.
 
               Build: don't build and install libjbig and libjasper if we
               are using external versions of them instead.

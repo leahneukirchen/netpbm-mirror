@@ -10,6 +10,17 @@ extern "C" {
 } /* to fake out automatic code indenters */
 #endif
 
+
+/* Maximum dimensions for fonts */
+
+#define  pbm_maxfontwidth()  65536
+#define  pbm_maxfontheight() 65536
+    /* These limits are not in the official Adobe BDF definition, but
+       should never be a problem for practical purposes, considering that
+       a 65536 x 65536 glyph occupies 4G pixels. 
+    */
+
+
 struct glyph {
     /* A glyph consists of white borders and the "central glyph" which
        can be anything, but normally does not have white borders because
@@ -51,7 +62,8 @@ struct font {
     */
     int maxwidth, maxheight;
     int x;
-        /* ?? Not used by Pbmtext */
+        /* The minimum value of glyph.font.  The left edge of the glyph
+           in the glyph set which advances furthest to the left. */
     int y;
         /* Amount of white space that should be added between lines of
            this font.  Can be negative.

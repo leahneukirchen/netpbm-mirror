@@ -32,11 +32,16 @@ This creates a directory "userguide" in your current directory containing
 all the same files that are on the web site.
 
 
-An apparent alternative is just to copy the web site with something like GNU
-Wget.  However, the Sourceforge web server has limitations on how much you can
+An alternative is just to copy the web site with something like GNU Wget.
+However, the Sourceforge web server has limitations on how much you can
 download.  In a February 2012 experiment, Sourceforge started refusing HTTP
 requests (with an Internal Server Error indication and a message saying there
-had been too many requests) before all the files could be fetched.
+had been too many requests) before all the files could be fetched.  But you
+can use Wget controls to fool Sourceforge.  The following worked in January
+2016:
+
+  wget --wait=1 --random-wait \
+       --recursive --relative http://netpbm.sourceforge.net/doc/
 
 
 
@@ -97,8 +102,8 @@ ways:
 
   2) convert the HTML to formatted plain text (suitable as man "cat"
      pages) with the 'makecat' program in the 'buildtools' directory
-     of the Netpbm source tree.  This program just does a 
-     'lynx -dump'.
+     of the Netpbm source tree.  This program uses the dump feature
+     of the lynx text web browser for conversion.
 
 The "loss of quality" mentioned above is because:
 
@@ -119,46 +124,81 @@ The "loss of quality" mentioned above is because:
 Also, these methods require manual effort, and technical
 understanding, on your part to set up.  Setting it up is too complex
 for an automated process to do it for you with any significant
-integrity.  The examples are guidelines and you shouldn't expect them
-to work literally in your situation.
+integrity.  The examples are guidelines and may not work literally
+in your situation.
 
-Here is an old example of making troff pages, which doesn't actually
-work anymore, but might be helpful.  You'll probably want to use a Subversion
-export of the manual instead of a Wget download (see above).
 
-  mkdir netpbmdoc
-  cd netpbmdoc
-  wget --recursive --relative http://netpbm.sourceforge.net/doc/
-  cd netpbm.sourceforge.net/doc
-  make MAKEMAN=/usr/src/netpbm/buildtools/makeman \
-    -f /usr/src/netpbm/buildtools/manpage.mk manpages
-  make -f /usr/src/netpbm/buildtools/manpage.mk installman
-  cd ../../..
-  rm -r netpbmdoc
+MAKING TROFF MAN PAGES
+----------------------
 
-  man ppmtogif
+1. Start work at the top-level directory of the source package. 
 
-Here is an example of making "cat" pages:
+2. Download the HTML files using the subversion command.
+The downloaded files will go into "./userguide/".
+
+  svn export https://svn.code.sf.net/p/netpbm/code/userguide
+
+3. Create a work directory named "netpbmdoc".  The troff man pages,
+as they are converted from HTML pages by the makeman utility, will
+be written here.
 
   mkdir netpbmdoc
   cd netpbmdoc
-  wget --recursive --relative http://netpbm.sourceforge.net/doc/
-  cd netpbm.sourceforge.net/doc
-  /usr/src/netpbm/buildtools/makecat *.html
-  cp *.1 /usr/man/cat1/
-  cd ../../..
-  rm -r netpbmdoc
+  make USERGUIDE=../userguide/ -f ../buildtools/manpage.mk manpages
 
-  man ppmtogif
+USERGUIDE is the directory containing the input HTML pages.  Keep
+it intact until installation is complete.
+
+4. Install the troff man pages, with MANDIR set up appropriately
+to the destination.
+
+MANDIR and MANDIR/{man1,man3,man5} must be existing directories.
+The install step usually requires superuser permissions.
+
+  make MANDIR=/usr/local/netpbm/man USERGUIDE=../userguide/ \
+       -f ../buildtools/manpage.mk installman
+  cd ../
+  rm -rf netpbmdoc
+
+5. Adjust MANPATH if necessary and try showing one manual page.
+
+  man pamflip
+
+
+MAKING CAT PAGES
+----------------
+
+As with the above example for troff man pages, start at the top-level
+directory of the source package. 
+
+  svn export https://svn.code.sf.net/p/netpbm/code/userguide
+
+  cd ./userguide
+  ../buildtools/makecat *.html
+
+  cp *.1 /usr/man/cat1/      # Usually requires superuser permission
+
+The makecat utility reads files from the current directory and writes
+the results into the same directory.  As noted above, it requires lynx
+<http://lynx.invisible-island.net/>.
 
 
 DOCBOOK
 -------
 
-You can turn the Netpbm user manual into Docbook XML pages using
-Doclifter.  Because Doclifter works on troff pages, you have to
-convert the documentation down to troff first, which means the Docbook
-pages are of lower quality than the main HTML documentation.
+You can turn the Netpbm user manual into Docbook XML pages using Doclifter.
+Because Doclifter works on troff pages, you have to convert the documentation
+down to troff first, which means the Docbook pages are of lower quality than
+the master HTML documentation.
 
-To create Docbook XML, follow the example above for creating troff
-pages, and use 'make xmlpages' instead of 'make manpages'.
+To create Docbook XML, do as follows:
+
+  mkdir netpbmdoc
+  cd netpbmdoc
+  make USERGUIDE=../userguide/ -f ../buildtools/manpage.mk xmlpages
+
+The 'make' executes the HTML to troff conversion step automatically.  For the
+troff to XML step, there are problems that have not been completely worked
+out; conversion of several files will fail.
+
+There is no equivalent for 'make installman' for the Docbook XML pages.

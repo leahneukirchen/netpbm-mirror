@@ -1,12 +1,68 @@
 #! /bin/bash
 # This script tests: pbmtext
-# Also requires:
+# Also requires: pamfile
+
+tmpdir=${tmpdir:-/tmp}
+
+# Test 1:
+
+pbmtext UNIX Philosophy: Do one thing and do it well. | cksum
+echo -n "UNIX Philosophy: Do one thing and do it well." | pbmtext | cksum
+
+pbmtext -builtin fixed \
+    For truth is always strange. Stranger than fiction. Lord Byron | cksum
+echo -n "For truth is always strange. Stranger than fiction. Lord Byron" | \
+    pbmtext -builtin fixed | cksum
 
 
-for i in 0123456789 abcdefghijk lmnopqrst uzwxyz ABCDEFGHIJK LMNOPQRST UVWXYZ
-do
+text="The quick brown fog jumps over the lazy docs."
+
+# Test 2:
+
 for flags in "" "-nom" "-builtin fixed"
 do
-echo $i | pbmtext $flags | cksum
+echo $text | pbmtext $flags | cksum
 done
+
+temp_pbm=${tmpdir}/temp.pbm
+
+
+# Test 3: Check if image is produced unaltered when -width is specified
+# Should print 1028079028 967 twice, then 1305436978 1018 twice
+
+for flags in "" "-builtin fixed"
+do
+pbmtext ${flags} ${text} | tee ${temp_pbm} | cksum
+width=`pamfile ${temp_pbm} | awk '$2=="PBM" && NR==1 { w=$4}; END {print w}' `
+pbmtext ${flags} -width=$width $text | cksum
+rm ${temp_pbm}
 done
+
+
+# Test 3: Should print 1647614653 2027 twice
+# Note: backslashes inserted in 3 locations in the rectange to make
+# possible input as a here document.
+
+fontRectangle_txt=${tmpdir}/fontRectangle.txt
+font_pbm=${tmpdir}/font.pbm
+
+cat > ${fontRectangle_txt} << EOF
+M ",/^_[\`jpqy| M
+
+/  !"#$%&'()*+ /
+< ,-./01234567 <
+> 89:;<=>?@ABC >
+@ DEFGHIJKLMNO @
+_ PQRSTUVWXYZ[ _
+{ \\]^_\`abcdefg {
+} hijklmnopqrs }
+~ tuvwxyz{|}~  ~
+
+M ",/^_[\`jpqy| M
+EOF
+
+cat ${fontRectangle_txt} | pbmtext -nom -builtin fixed | tee ${font_pbm} | \
+cksum
+cat ${fontRectangle_txt} | pbmtext -nom -font ${font_pbm} | cksum
+
+rm ${fontRectangle_txt} ${font_pbm}
