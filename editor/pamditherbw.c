@@ -29,6 +29,10 @@ enum halftone {QT_FS,
 
 enum ditherType {DT_REGULAR, DT_CLUSTER};
 
+static sample blackSample = (sample) PAM_BLACK;
+static sample whiteSample = (sample) PAM_BW_WHITE;
+static tuple  const blackTuple = &blackSample;
+static tuple  const whiteTuple = &whiteSample;
 
 struct cmdlineInfo {
     /* All the information the user supplied in the command line,
@@ -474,11 +478,11 @@ fsConvertRow(struct converter * const converterP,
             /* We've accumulated enough light (power) to justify a
                white output pixel.
             */
-            bitrow[col][0] = PAM_BW_WHITE;
+            bitrow[col] = whiteTuple;
             /* Remove from sum the power of this white output pixel */
             accum -= stateP->white;
         } else
-            bitrow[col][0] = PAM_BLACK;
+            bitrow[col] = blackTuple;
 
         /* Forward to future output pixels the power from current
            input pixel and the power forwarded from previous input
@@ -623,11 +627,11 @@ atkinsonConvertRow(struct converter * const converterP,
             /* We've accumulated enough light (power) to justify a
                white output pixel.
             */
-            bitrow[col][0] = PAM_BW_WHITE;
+            bitrow[col] = whiteTuple;
             /* Remove from accum the power of this white output pixel */
             accum -= stateP->white;
         } else
-            bitrow[col][0] = PAM_BLACK;
+            bitrow[col] = blackTuple;
         
         /* Forward to future output pixels 3/4 of the power from current
            input pixel and the power forwarded from previous input
@@ -715,8 +719,8 @@ threshConvertRow(struct converter * const converterP,
 
     unsigned int col;
     for (col = 0; col < converterP->cols; ++col)
-        bitrow[col][0] =
-            grayrow[col][0] >= stateP->threshval ? PAM_BW_WHITE : PAM_BLACK;
+        bitrow[col] =
+            grayrow[col][0] >= stateP->threshval ? whiteTuple : blackTuple;
 }
 
 
@@ -770,8 +774,8 @@ clusterConvertRow(struct converter * const converterP,
     for (col = 0; col < converterP->cols; ++col) {
         float const threshold = 
             stateP->clusterMatrix[row % diameter][col % diameter];
-        bitrow[col][0] = 
-            grayrow[col][0] > threshold ? PAM_BW_WHITE : PAM_BLACK;
+        bitrow[col] =
+            grayrow[col][0] > threshold ? whiteTuple : blackTuple;
     }
 }
 
@@ -919,7 +923,7 @@ main(int argc, char *argv[]) {
         }
 
         grayrow = pnm_allocpamrown(&graypam);
-        bitrow  = pnm_allocpamrow(&bitpam);
+        MALLOCARRAY_NOFAIL(bitrow, bitpam.width);
 
         for (row = 0; row < graypam.height; ++row) {
             pnm_readpamrown(&graypam, grayrow);
@@ -928,7 +932,7 @@ main(int argc, char *argv[]) {
             
             pnm_writepamrow(&bitpam, bitrow);
         }
-        pnm_freepamrow(bitrow);
+        free(bitrow);
         pnm_freepamrow(grayrow);
 
         if (converter.destroy)
