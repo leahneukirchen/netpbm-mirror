@@ -1509,11 +1509,11 @@ processChars(readline *    const readlineP,
         } else if (!streq(readlineP->arg[0], "STARTCHAR"))
             pm_error("no STARTCHAR after CHARS in BDF font file");
         else {
-	    char * const charName = strndup(readlineP->arg[1], 32);
-	    /* Above is not perfect, for the character name may
-               consist of several parts separated by whitespace,
-               for example "CAPITAL LETTER A WITH ACUTE ACCENT" .
-	    */
+            char * const charName = strndup(readlineP->arg[1], 32);
+                /* Above is not perfect, for the character name may
+                   consist of several parts separated by whitespace,
+                   for example "CAPITAL LETTER A WITH ACUTE ACCENT" .
+                */
 
             struct glyph * glyphP;
             unsigned int codepoint;
@@ -1531,9 +1531,9 @@ processChars(readline *    const readlineP,
 
             if (badCodepoint)
                 skipCharacter(readlineP);
-	    else if (fontP->glyph[codepoint] != NULL)
-	        pm_error("Multiple definition of code point %d "
-			 "in font file", (unsigned int) codepoint); 
+            else if (fontP->glyph[codepoint] != NULL)
+                pm_error("Multiple definition of code point %d "
+                         "in font file", (unsigned int) codepoint); 
             else {
                 readExpectedStatement(readlineP, "SWIDTH");
                     
@@ -1557,7 +1557,7 @@ processChars(readline *    const readlineP,
                 assert(codepoint < 256); /* Ensured by readEncoding() */
 
                 fontP->glyph[codepoint] = glyphP;
-		free (charName);
+                free (charName);
             }
             ++nCharsDone;
         }
