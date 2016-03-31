@@ -1523,11 +1523,7 @@ processChars(Readline *     const readlineP,
         } else if (!streq(readlineP->arg[0], "STARTCHAR"))
             pm_error("no STARTCHAR after CHARS in BDF font file");
         else {
-            const char * const charName = strndup(readlineP->arg[1], 32);
-                /* Above is not perfect, for the character name may
-                   consist of several parts separated by whitespace,
-                   for example "CAPITAL LETTER A WITH ACUTE ACCENT" .
-                */
+            const char * const charName = pm_strdup(readlineP->arg[1]);
 
             struct glyph * glyphP;
             unsigned int codepoint;
