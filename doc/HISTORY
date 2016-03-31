@@ -6,18 +6,21 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.75.00
 
+              Build: Remove use of strndup so it compiles on Mac OS X 10.6.
+              Broken in 10.74.
+
 16.03.27 BJH  Release 10.74.00
 
               pbmtext: produce same image when you run pbmtext with -width
               explicitly set to the width you get when you don't specify
               width.
 
-              pbmtext: ignore -nomargins with -width is specified.
+              pbmtext: ignore -nomargins when -width is specified.
 
               pbmtext: report when line ends are dropped because of
               truncation.
 
-              pbmtext: Fix bug: if input has an code point that is not in the
+              pbmtext: Fix bug: if input has a code point that is not in the
               font, Pbmtext substitutes space, but behavior is undefined if
               font doesn't have space either.  Now it aborts the program in
               that case.
