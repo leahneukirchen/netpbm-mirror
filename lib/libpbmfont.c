@@ -1008,92 +1008,101 @@ pbm_loadpbmfont(const char * const filename) {
 
 
 void
-pbm_dumpfont( fn )
-    struct font* fn;
-{
-    /* Dump out font as C source code. */
-    int row, col, scol, lperrow;
-    unsigned long l;
+pbm_dumpfont(struct font * const fnP) {
+/*----------------------------------------------------------------------------
+  Dump out font as C source code.
+-----------------------------------------------------------------------------*/
+    unsigned int row;
 
-    if (fn->oldfont) {
-    printf( "#define DEFAULTFONT_ROWS %d\n", fn->frows );
-    printf( "#define DEFAULTFONT_COLS %d\n", fn->fcols );
-    printf( "static unsigned long defaultfont_bits[DEFAULTFONT_ROWS][(DEFAULTFONT_COLS+31)/32] = {\n" );
-    for ( row = 0; row < fn->frows; ++row )
-        {
-        lperrow = 0;
-        for ( col = 0; col < fn->fcols; col += 32 )
-        {
-        if ( lperrow == 0 )
-            printf( "    {" );
-        else if ( lperrow % 6 == 0 )
-            {
-            printf( ",\n     " );
+    if (fnP->oldfont) {
+        printf( "#define DEFAULTFONT_ROWS %d\n", fnP->frows);
+        printf( "#define DEFAULTFONT_COLS %d\n", fnP->fcols);
+        printf( "static unsigned long defaultfont_bits"
+                "[DEFAULTFONT_ROWS][(DEFAULTFONT_COLS+31)/32] = {\n");
+
+        for (row = 0; row < fnP->frows; ++row) {
+            unsigned int lperrow;
+            unsigned int col;
+
             lperrow = 0;
+
+            for (col = 0; col < fnP->fcols; col += 32) {
+                if (lperrow == 0)
+                    printf( "    {");
+                else if (lperrow % 6 == 0) {
+                    printf( ",\n     " );
+                    lperrow = 0;
+                } else
+                    printf( "," );
+
+                {
+                    unsigned long l;
+                    unsigned int scol;
+                    l = 0;
+                    for (scol = col, l = 0;
+                         scol < MIN(col + 32, fnP->fcols);
+                         ++scol) {
+                        l <<= 1;
+                        if (fnP->oldfont[row][scol])
+                            l |= 1;
+                    }
+                    printf("0x%08lxL", l);
+                    ++lperrow;
+                }
             }
-        else
-            printf( "," );
-        l = 0;
-        for ( scol = col; scol < MIN( col + 32, fn->fcols ); ++scol )
-            {
-            l <<= 1;
-            if ( fn->oldfont[row][scol] )
-            l |= 1;
-            }
-        printf( "0x%08lxL", l );
-        ++lperrow;
+            printf("}%s\n", row == fnP->frows - 1 ? "" : ",");
         }
-        printf( "}%s\n", row == fn->frows - 1 ? "" : "," );
+        printf("    };\n");
+    } else {
+        struct glyph * glyphP;
+        unsigned int i;
+        unsigned int ng;
+
+        for (i = 0, ng = 0; i < 256; ++i)
+            if (fnP->glyph[i])
+                ++ng;
+        
+        printf("static struct glyph _g[%d] = {\n", ng);
+        for (i = 0; i < 256; ++i) {
+            unsigned int j;
+            glyphP = fnP->glyph[i];
+            if (!glyphP)
+                continue;
+
+            printf(" { %d, %d, %d, %d, %d, \"",
+                   glyphP->width, glyphP->height,
+                   glyphP->x, glyphP->y, glyphP->xadd);
+
+            for (j = 0; j < glyphP->width * glyphP->height; ++j)
+                if (glyphP->bmap[j])
+                    printf("\\1");
+                else
+                    printf("\\0");
+            
+            --ng;
+            printf("\" }%s\n", ng ? "," : "");
         }
-    printf( "    };\n" );
-    }
-    else {
-    struct glyph* glyph;
-    int i, j, ng;
+        printf("};\n");
 
-    ng = 0;
-    for (i = 0; i < 256; i++)
-        if (fn->glyph[i])
-            ng++;
+        printf("static struct font default_bdffont = { %d, %d, %d, %d, {\n",
+               fnP->maxwidth, fnP->maxheight, fnP->x, fnP->y);
 
-    printf("static struct glyph _g[%d] = {\n", ng);
-    for (i = 0; i < 256; i++) {
-        if (!(glyph = fn->glyph[i]))
-            continue;
-
-        printf(" { %d, %d, %d, %d, %d, \"", glyph->width, glyph->height,
-            glyph->x, glyph->y, glyph->xadd);
-
-        for (j = 0; j < glyph->width * glyph->height; j++)
-            if (glyph->bmap[j])
-                printf("\\1");
+        for (i = 0; i < 256; ++i) {
+            if (fnP->glyph[i])
+                printf(" _g + %d", ng++);
             else
-                printf("\\0");
+                printf(" 0");
         
-        ng--;
-        printf("\" }%s\n", ng ? "," : "");
+            if (i != 255)
+                printf(",");
+            printf("\n");
+        }
+
+        printf(" }\n};\n");
+        exit(0);
     }
-    printf("};\n");
-
-    printf("static struct font default_bdffont = { %d, %d, %d, %d, {\n",
-        fn->maxwidth, fn->maxheight, fn->x, fn->y);
-
-    for (i = 0; i < 256; i++) {
-        if (fn->glyph[i])
-            printf(" _g + %d", ng++);
-        else
-            printf(" 0");
-        
-        if (i != 255) printf(",");
-        printf("\n");
-    }
-
-    printf(" }\n};\n");
-    exit(0);
-
-    }
-
 }
+
 
 
 /* Routines for loading a BDF font file */
@@ -1101,7 +1110,8 @@ pbm_dumpfont( fn )
 #define  MAXBDFLINE 1024 
 
 /* Official Adobe document says max length of string is 65535 characters.
-   However the value 1024 is sufficient for practical uses. */
+   However the value 1024 is sufficient for practical uses.
+*/
 
 typedef struct {
 /*----------------------------------------------------------------------------
@@ -1118,12 +1128,12 @@ typedef struct {
         */
     const char * arg[32];
         /* These are the words; each entry is a pointer into line[] (above) */
-} readline;
+} Readline;
 
 
 
 static void
-readline_init(readline * const readlineP,
+readline_init(Readline * const readlineP,
               FILE *     const ifP) {
 
     readlineP->ifP = ifP;
@@ -1167,7 +1177,7 @@ tokenize(char *         const s,
 
 
 static void
-readline_read(readline * const readlineP,
+readline_read(Readline * const readlineP,
               bool *     const eofP) {
 /*----------------------------------------------------------------------------
    Read a nonblank line from the file.  Make its contents available
@@ -1260,7 +1270,7 @@ parseBitmapRow(const char *    const hex,
 
 
 static void
-readBitmap(readline *      const readlineP,
+readBitmap(Readline *      const readlineP,
            unsigned int    const glyphWidth,
            unsigned int    const glyphHeight,
            const char *    const charName,
@@ -1301,7 +1311,7 @@ readBitmap(readline *      const readlineP,
 static void
 createBmap(unsigned int  const glyphWidth,
            unsigned int  const glyphHeight,
-           readline *    const readlineP,
+           Readline *    const readlineP,
            const char *  const charName,
            const char ** const bmapP) {
 
@@ -1343,7 +1353,7 @@ createBmap(unsigned int  const glyphWidth,
 
 
 static void
-readExpectedStatement(readline *    const readlineP,
+readExpectedStatement(Readline *    const readlineP,
                       const char *  const expected) {
 /*----------------------------------------------------------------------------
   Have the readline object *readlineP read the next line from the file, but
@@ -1365,7 +1375,7 @@ readExpectedStatement(readline *    const readlineP,
 
 
 static void
-skipCharacter(readline * const readlineP) {
+skipCharacter(Readline * const readlineP) {
 /*----------------------------------------------------------------------------
   In the BDF font file being read by readline object *readlineP, skip through
   the end of the character we are presently in.
@@ -1428,7 +1438,7 @@ interpEncoding(const char **  const arg,
 
 
 static void
-readEncoding(readline *     const readlineP,
+readEncoding(Readline *     const readlineP,
              unsigned int * const codepointP,
              bool *         const badCodepointP) {
 
@@ -1443,48 +1453,52 @@ validateFontLimits(const struct font * const fontP) {
 
     assert( pbm_maxfontheight() > 0 && pbm_maxfontwidth() > 0 );
 
-    if ( fontP->maxwidth  <= 0 ||
-         fontP->maxheight <= 0 ||
-         fontP->maxwidth  > pbm_maxfontwidth()  ||
-         fontP->maxheight > pbm_maxfontheight() ||
-         fontP->x < - fontP->maxwidth  +1 ||
-         fontP->y < - fontP->maxheight +1 ||
-         fontP->x > fontP->maxwidth  ||
-         fontP->y > fontP->maxheight ||
-         fontP->x + fontP->maxwidth  > pbm_maxfontwidth() || 
+    if (fontP->maxwidth  <= 0 ||
+        fontP->maxheight <= 0 ||
+        fontP->maxwidth  > pbm_maxfontwidth()  ||
+        fontP->maxheight > pbm_maxfontheight() ||
+        fontP->x < - fontP->maxwidth  +1 ||
+        fontP->y < - fontP->maxheight +1 ||
+        fontP->x > fontP->maxwidth  ||
+        fontP->y > fontP->maxheight ||
+        fontP->x + fontP->maxwidth  > pbm_maxfontwidth() || 
          fontP->y + fontP->maxheight > pbm_maxfontheight()
-       )
+        ) {
 
-      pm_error("Global font metric(s) out of bounds.\n"); 
+        pm_error("Global font metric(s) out of bounds.\n"); 
+    }
 }
 
 
 
 static void
 validateGlyphLimits(const struct font  * const fontP,
-		    const struct glyph * const glyphP,
-                    const char * const charName) {
+                    const struct glyph * const glyphP,
+                    const char *         const charName) {
 
-    if ( glyphP->width  == 0 ||
-         glyphP->height == 0 ||
-         glyphP->width  > fontP->maxwidth  ||
-         glyphP->height > fontP->maxheight ||
-         glyphP->width  > fontP->maxwidth  ||
-         glyphP->height > fontP->maxheight ||
-         glyphP->x < fontP->x ||
-         glyphP->y < fontP->y ||
-         glyphP->x + (int) glyphP->width  > fontP->x + fontP->maxwidth  ||
-	 glyphP->y + (int) glyphP->height > fontP->y + fontP->maxheight ||
-         glyphP->xadd > pbm_maxfontwidth() ||
-	 glyphP->xadd + MAX(glyphP->x,0) + (int) glyphP->width >
-             pbm_maxfontwidth()
-       )
-      pm_error("Font metric(s) for char '%s' out of bounds.\n", charName);
+    if (glyphP->width  == 0 ||
+        glyphP->height == 0 ||
+        glyphP->width  > fontP->maxwidth  ||
+        glyphP->height > fontP->maxheight ||
+        glyphP->width  > fontP->maxwidth  ||
+        glyphP->height > fontP->maxheight ||
+        glyphP->x < fontP->x ||
+        glyphP->y < fontP->y ||
+        glyphP->x + (int) glyphP->width  > fontP->x + fontP->maxwidth  ||
+        glyphP->y + (int) glyphP->height > fontP->y + fontP->maxheight ||
+        glyphP->xadd > pbm_maxfontwidth() ||
+        glyphP->xadd + MAX(glyphP->x,0) + (int) glyphP->width >
+        pbm_maxfontwidth()
+        ) {
+
+        pm_error("Font metric(s) for char '%s' out of bounds.\n", charName);
+    }
 }
 
 
+
 static void
-processChars(readline *    const readlineP,
+processChars(Readline *     const readlineP,
              struct font  * const fontP) {
 /*----------------------------------------------------------------------------
    Process the CHARS block in a BDF font file, assuming the file is positioned
@@ -1509,7 +1523,7 @@ processChars(readline *    const readlineP,
         } else if (!streq(readlineP->arg[0], "STARTCHAR"))
             pm_error("no STARTCHAR after CHARS in BDF font file");
         else {
-            char * const charName = strndup(readlineP->arg[1], 32);
+            const char * const charName = strndup(readlineP->arg[1], 32);
                 /* Above is not perfect, for the character name may
                    consist of several parts separated by whitespace,
                    for example "CAPITAL LETTER A WITH ACUTE ACCENT" .
@@ -1557,7 +1571,7 @@ processChars(readline *    const readlineP,
                 assert(codepoint < 256); /* Ensured by readEncoding() */
 
                 fontP->glyph[codepoint] = glyphP;
-                free (charName);
+                pm_strfree(charName);
             }
             ++nCharsDone;
         }
@@ -1567,7 +1581,7 @@ processChars(readline *    const readlineP,
 
 
 static void
-processBdfFontLine(readline     * const readlineP,
+processBdfFontLine(Readline     * const readlineP,
                    struct font  * const fontP,
                    bool         * const endOfFontP) {
 /*----------------------------------------------------------------------------
@@ -1602,13 +1616,13 @@ processBdfFontLine(readline     * const readlineP,
         validateFontLimits(fontP);
     } else if (streq(readlineP->arg[0], "ENDPROPERTIES")) {
       if (fontP->maxwidth ==0)
-	  pm_error("Encountered ENDPROPERTIES before FONTBOUNDINGBOX " 
+      pm_error("Encountered ENDPROPERTIES before FONTBOUNDINGBOX " 
                    "in BDF font file");
     } else if (streq(readlineP->arg[0], "ENDFONT")) {
         *endOfFontP = true;
     } else if (streq(readlineP->arg[0], "CHARS")) {
       if (fontP->maxwidth ==0)
-	  pm_error("Encountered CHARS before FONTBOUNDINGBOX " 
+      pm_error("Encountered CHARS before FONTBOUNDINGBOX " 
                    "in BDF font file");
       else
         processChars(readlineP, fontP);
@@ -1623,7 +1637,7 @@ struct font *
 pbm_loadbdffont(const char * const name) {
 
     FILE * ifP;
-    readline readline;
+    Readline readline;
     struct font * fontP;
     bool endOfFont;
 
@@ -1664,3 +1678,6 @@ pbm_loadbdffont(const char * const name) {
     }
     return fontP;
 }
+
+
+
