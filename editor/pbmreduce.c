@@ -10,200 +10,343 @@
 ** implied warranty.
 */
 
+#include "pm_c_util.h"
 #include "pbm.h"
 #include "mallocvar.h"
+#include "shhopt.h"
+#include <assert.h>
 
-int
-main( argc, argv )
-    int argc;
-    char* argv[];
-    {
-    FILE* ifp;
-    register bit** bitslice;
-    register bit* newbitrow;
-    register bit* nbP;
-    int argn, n, rows, cols, format, newrows, newcols;
-    int row, col, limitcol, subrow, subcol, count, direction;
-    const char* const usage = "[-floyd|-fs | -threshold] [-value <val>] N [pbmfile]";
-    int halftone;
-#define QT_FS 1
-#define QT_THRESH 2
 #define SCALE 1024
 #define HALFSCALE 512
-    long threshval, sum;
-    long* thiserr;  /* used for Floyd-Steinberg stuff */
-    long* nexterr;  /* used for Floyd-Steinberg stuff */
-    long* temperr;
 
 
-    pbm_init( &argc, argv );
+enum Halftone {QT_FS, QT_THRESH};
 
-    argn = 1;
-    halftone = QT_FS;
-    threshval = HALFSCALE;
+struct CmdlineInfo {
+    /* All the information the user supplied in the command line,
+       in a form easy for the program to use.
+    */
+    const char *  inputFilespec;
+    enum Halftone halftone;
+    int           value;
+    unsigned int  randomseed;
+    unsigned int  randomseedSpec;
+    int           scale;
+};
 
-    while ( argn < argc && argv[argn][0] == '-' && argv[argn][1] != '\0' )
-	{
-	if ( pm_keymatch( argv[argn], "-fs", 2 ) ||
-	     pm_keymatch( argv[argn], "-floyd", 2 ) )
-	    halftone = QT_FS;
-	else if ( pm_keymatch( argv[argn], "-threshold", 2 ) )
-	    halftone = QT_THRESH;
-	else if ( pm_keymatch( argv[argn], "-value", 2 ) )
-	    {
-	    float f;
 
-	    ++argn;
-	    if ( argn == argc || sscanf( argv[argn], "%f", &f ) != 1 ||
-		 f < 0.0 || f > 1.0 )
-		pm_usage( usage );
-	    threshval = f * SCALE;
-	    }
-	else
-	    pm_usage( usage );
-	++argn;
-	}
 
-    if ( argn == argc )
-	pm_usage( usage );
-    if ( sscanf( argv[argn], "%d", &n ) != 1 )
-	pm_usage( usage );
-    if ( n < 2 )
-	pm_error( "N must be greater than 1" );
-    ++argn;
+static void
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo *cmdlineP) {
+/*----------------------------------------------------------------------------
+   Note that the file spec array we return is stored in the storage that
+   was passed to us as the argv array.
+-----------------------------------------------------------------------------*/
+    optEntry * option_def;
+        /* Instructions to pm_optParseOptions3 on how to parse our options.
+         */
+    optStruct3 opt;
 
-    if ( argn == argc )
-	ifp = stdin;
-    else
-	{
-	ifp = pm_openr( argv[argn] );
-	++argn;
-	}
+    unsigned int option_def_index;
+    unsigned int floydOpt, thresholdOpt;
+    unsigned int valueSpec;
+    float        value;
 
-    if ( argn != argc )
-	pm_usage( usage );
+    MALLOCARRAY_NOFAIL(option_def, 100);
 
-    pbm_readpbminit( ifp, &cols, &rows, &format );
-    bitslice = pbm_allocarray( cols, n );
+    option_def_index = 0;   /* incremented by OPTENTRY */
+    OPTENT3(0, "floyd",       OPT_FLAG,  NULL,
+            &floydOpt,                      0);
+    OPTENT3(0, "fs",          OPT_FLAG,  NULL,
+            &floydOpt,                      0);
+    OPTENT3(0, "threshold",   OPT_FLAG,  NULL,
+            &thresholdOpt,                  0);
+    OPTENT3(0, "value",       OPT_FLOAT, &value,
+            &valueSpec,                     0);
+    OPTENT3(0, "randomseed",  OPT_UINT,  &cmdlineP->randomseed,
+            &cmdlineP->randomseedSpec,      0);
 
-    newrows = rows / n;
-    newcols = cols / n;
+    opt.opt_table = option_def;
+    opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = FALSE;  /* We may have parms that are negative numbers */
+
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+        /* Uses and sets argc, argv, and some of *cmdlineP and others. */
+
+    if (floydOpt + thresholdOpt == 0)
+        cmdlineP->halftone = QT_FS;
+    else if (!!floydOpt + !!thresholdOpt > 1)
+        pm_error("Cannot specify both floyd and threshold");
+    else {
+        if (floydOpt)
+            cmdlineP->halftone = QT_FS;
+        else {
+            cmdlineP->halftone = QT_THRESH;
+            if (cmdlineP->randomseedSpec)
+                pm_message("-randomseed value has no effect with -threshold");
+        }
+    }
+
+    if (!valueSpec)
+        cmdlineP->value = HALFSCALE;
+    else {
+        if (value < 0.0)
+            pm_error("-value cannot be negative.  You specified %f", value);
+        if (value > 1.0)
+            pm_error("-value cannot be greater than one.  You specified %f",
+                     value);
+        else
+            cmdlineP->value = value * SCALE;
+    }
+
+    if (argc-1 > 1) {
+        char * endptr;   /* ptr to 1st invalid character in scale arg */
+        unsigned int scale;
+
+        scale = strtol(argv[1], &endptr, 10);
+        if (*argv[1] == '\0') 
+            pm_error("Scale argument is a null string.  Must be a number.");
+        else if (*endptr != '\0')
+            pm_error("Scale argument contains non-numeric character '%c'.",
+                     *endptr);
+        else if (scale < 2)
+            pm_error("Scale argument must be at least 2.  "
+                     "You specified %d", scale);
+        else if (scale > INT_MAX / scale)
+            pm_error("Scale argument too large.  You specified %d", scale);
+        else 
+            cmdlineP->scale = scale;
+
+        if (argc-1 > 1) {
+            cmdlineP->inputFilespec = argv[2];
+
+            if (argc-1 > 2)
+                pm_error("Too many arguments (%d).  There are at most two "
+                         "non-option arguments: "
+                         "scale factor and the file name",
+                         argc-1);
+        } else
+            cmdlineP->inputFilespec = "-";
+    } else
+        pm_error("You must specify the scale factor as an argument");
+
+    free(option_def);
+}
+
+
+
+struct FS {
+  int * thiserr;
+  int * nexterr;
+};
+
+
+static void
+initializeFloydSteinberg(struct FS  * const fsP,
+                         int          const newcols,
+                         unsigned int const seed,
+                         bool         const seedSpec) {
+
+    unsigned int col;
+
+    MALLOCARRAY(fsP->thiserr, newcols + 2);
+    MALLOCARRAY(fsP->nexterr, newcols + 2);
+
+    if (fsP->thiserr == NULL || fsP->nexterr == NULL)
+        pm_error("out of memory");
+
+    srand(seedSpec ? seed : pm_randseed());
+
+    for (col = 0; col < newcols + 2; ++col)
+        fsP->thiserr[col] = (rand() % SCALE - HALFSCALE) / 4;
+        /* (random errors in [-SCALE/8 .. SCALE/8]) */
+}
+
+
+
+/*
+    Scanning method
+    
+    In Floyd-Steinberg dithering mode horizontal direction of scan alternates
+    between rows; this is called "serpentine scanning".
+    
+    Example input (14 x 7), N=3:
+    
+    111222333444xx    Fractional pixels on the right edge and bottom edge (x)
+    111222333444xx    are ignored; their values do not influence output. 
+    111222333444xx
+    888777666555xx
+    888777666555xx
+    888777666555xx
+    xxxxxxxxxxxxxx
+    
+    Output (4 x 2):
+    
+    1234
+    8765
+
+*/
+
+
+
+enum Direction { RIGHT_TO_LEFT, LEFT_TO_RIGHT };
+
+
+static enum Direction
+oppositeDir(enum Direction const arg) {
+
+    switch (arg) {
+    case LEFT_TO_RIGHT: return RIGHT_TO_LEFT;
+    case RIGHT_TO_LEFT: return LEFT_TO_RIGHT;
+    }
+    assert(false);  /* All cases handled above */
+}
+
+
+
+int
+main(int argc, const char * argv[]) {
+
+    FILE * ifP;
+    struct CmdlineInfo cmdline;
+    bit ** bitslice;
+    bit * newbitrow;
+    int rows, cols;
+    int format;
+    unsigned int newrows, newcols;
+    unsigned int row;
+    enum Direction direction;
+    struct FS fs;
+
+    pm_proginit(&argc, argv);
+
+    parseCommandLine(argc, argv, &cmdline);
+
+    ifP = pm_openr(cmdline.inputFilespec);
+
+    pbm_readpbminit(ifP, &cols, &rows, &format);
+
+    bitslice = pbm_allocarray(cols, cmdline.scale);
+
+    if (rows < cmdline.scale || cols < cmdline.scale)
+        pm_error("Scale argument (%u) too large for image", cmdline.scale);
+    else {
+        newrows = rows / cmdline.scale;
+        newcols = cols / cmdline.scale;
+    }
     pbm_writepbminit( stdout, newcols, newrows, 0 );
-    newbitrow = pbm_allocrow( newcols );
+    newbitrow = pbm_allocrow_packed( newcols );
 
-    if (halftone == QT_FS) {
-        unsigned int col;
-        /* Initialize Floyd-Steinberg. */
-        MALLOCARRAY(thiserr, newcols + 2);
-        MALLOCARRAY(nexterr, newcols + 2);
-        if (thiserr == NULL || nexterr == NULL)
-            pm_error("out of memory");
-
-        srand(pm_randseed());
-        for (col = 0; col < newcols + 2; ++col)
-            thiserr[col] = (rand() % SCALE - HALFSCALE) / 4;
-	    /* (random errors in [-SCALE/8 .. SCALE/8]) */
-	} else {
+    if (cmdline.halftone == QT_FS)
+        initializeFloydSteinberg(&fs, newcols,
+                                 cmdline.randomseed, cmdline.randomseedSpec);
+    else {
         /* These variables are meaningless in this case, and the values
            should never be used.
         */
-        thiserr = NULL;
-        nexterr = NULL;
+        fs.thiserr = NULL;
+        fs.nexterr = NULL;
     }
-    direction = 1;
 
-    for ( row = 0; row < newrows; ++row )
-	{
-	for ( subrow = 0; subrow < n; ++subrow )
-	    pbm_readpbmrow( ifp, bitslice[subrow], cols, format );
+    for (row = 0, direction = LEFT_TO_RIGHT; row < newrows; ++row) {
+        unsigned int const colChars = pbm_packed_bytes(newcols);
 
-	if ( halftone == QT_FS )
-	    for ( col = 0; col < newcols + 2; ++col )
-		nexterr[col] = 0;
-	if ( direction )
-	    {
-	    col = 0;
-	    limitcol = newcols;
-	    nbP = newbitrow;
-	    }
-	else
-	    {
-	    col = newcols - 1;
-	    limitcol = -1;
-	    nbP = &(newbitrow[col]);
-	    }
+        unsigned int colChar;
+        unsigned int subrow;
+        unsigned int col;
+        int limitCol;
+        int startCol;
+        int step;
+   
+        for (colChar = 0; colChar < colChars; ++colChar)
+            newbitrow[colChar] = 0x00;  /* Clear to white */
+ 
+        for (subrow = 0; subrow < cmdline.scale; ++subrow)
+            pbm_readpbmrow(ifP, bitslice[subrow], cols, format);
 
-	do
-	    {
-	    sum = 0;
-	    count = 0;
-	    for ( subrow = 0; subrow < n; ++subrow )
-		for ( subcol = 0; subcol < n; ++subcol )
-		    if ( row * n + subrow < rows && col * n + subcol < cols )
-			{
-			count += 1;
-			if ( bitslice[subrow][col * n + subcol] == PBM_WHITE )
-			    sum += 1;
-			}
-	    sum = ( sum * SCALE ) / count;
+        if (cmdline.halftone == QT_FS) {
+            unsigned int col;
+            for (col = 0; col < newcols + 2; ++col)
+                fs.nexterr[col] = 0;
+        }
+        switch (direction) {
+        case LEFT_TO_RIGHT: {
+            startCol = 0;
+            limitCol = newcols;
+            step = +1;  
+        }
+        case RIGHT_TO_LEFT: {
+            startCol = newcols - 1;
+            limitCol = -1;
+            step = -1;
+        }
+        }
 
-	    if ( halftone == QT_FS )
-		sum += thiserr[col + 1];
+        for (col = startCol; col != limitCol; col += step) {
+            int const n = cmdline.scale;
+            unsigned int sum;
+            int sumScaled;
+            unsigned int subrow;
 
-	    if ( sum >= threshval )
-		{
-		*nbP = PBM_WHITE;
-		if ( halftone == QT_FS )
-		    sum = sum - threshval - HALFSCALE;
-		}
-	    else
-		*nbP = PBM_BLACK;
+            for (subrow = 0, sum = 0; subrow < n; ++subrow) {
+                unsigned int subcol;
+                for (subcol = 0; subcol < n; ++subcol) {
+                    assert(row * n + subrow < rows);
+                    assert(col * n + subcol < cols);
+                    if (bitslice[subrow][col * n + subcol] == PBM_WHITE)
+                        ++sum;
+                }
+            }
 
-	    if ( halftone == QT_FS )
-		{
-		if ( direction )
-		    {
-		    thiserr[col + 2] += ( sum * 7 ) / 16;
-		    nexterr[col    ] += ( sum * 3 ) / 16;
-		    nexterr[col + 1] += ( sum * 5 ) / 16;
-		    nexterr[col + 2] += ( sum     ) / 16;
-		    }
-		else
-		    {
-		    thiserr[col    ] += ( sum * 7 ) / 16;
-		    nexterr[col + 2] += ( sum * 3 ) / 16;
-		    nexterr[col + 1] += ( sum * 5 ) / 16;
-		    nexterr[col    ] += ( sum     ) / 16;
-		    }
-		}
-	    if ( direction )
-		{
-		++col;
-		++nbP;
-		}
-	    else
-		{
-		--col;
-		--nbP;
-		}
-	    }
-	while ( col != limitcol );
+            sumScaled = (sum * SCALE) / (SQR(n));
 
-	pbm_writepbmrow( stdout, newbitrow, newcols, 0 );
+            if (cmdline.halftone == QT_FS)
+                sumScaled += fs.thiserr[col + 1];
 
-	if ( halftone == QT_FS )
-	    {
-	    temperr = thiserr;
-	    thiserr = nexterr;
-	    nexterr = temperr;
-	    direction = ! direction;
-	    }
-	}
+            if (sumScaled >= cmdline.value) {
+                if (cmdline.halftone == QT_FS)
+                    sumScaled = sumScaled - cmdline.value - HALFSCALE;
+            } else
+                newbitrow[col/8] |= (PBM_BLACK << (7 - col%8));
 
-    pm_close( ifp );
-    pm_close( stdout );
+            if (cmdline.halftone == QT_FS) {
+                switch (direction) {
+                case LEFT_TO_RIGHT: {
+                    fs.thiserr[col + 2] += ( sumScaled * 7 ) / 16;
+                    fs.nexterr[col    ] += ( sumScaled * 3 ) / 16;
+                    fs.nexterr[col + 1] += ( sumScaled * 5 ) / 16;
+                    fs.nexterr[col + 2] += ( sumScaled     ) / 16;
+                }
+                case RIGHT_TO_LEFT: {
+                    fs.thiserr[col    ] += ( sumScaled * 7 ) / 16;
+                    fs.nexterr[col + 2] += ( sumScaled * 3 ) / 16;
+                    fs.nexterr[col + 1] += ( sumScaled * 5 ) / 16;
+                    fs.nexterr[col    ] += ( sumScaled     ) / 16;
+                }
+                }
+            }
+        }
 
-    exit( 0 );
+        pbm_writepbmrow_packed(stdout, newbitrow, newcols, 0);
+
+        if (cmdline.halftone == QT_FS) {
+            int * const temperr = fs.thiserr;
+            fs.thiserr = fs.nexterr;
+            fs.nexterr = temperr;
+            direction  = oppositeDir(direction);
+        }
     }
+
+    free(fs.thiserr);
+    free(fs.nexterr);
+
+    pbm_freerow(newbitrow);
+    pbm_freearray(bitslice, cmdline.scale);
+    pm_close(ifP);
+    pm_close(stdout);
+
+    return 0;
+}
 
 
