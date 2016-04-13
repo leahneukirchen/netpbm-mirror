@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.75.00
 
+              pbmtext: Fix bug: invalid memory reference when text contains
+              code points > 127.  Broken in 10.74.
+
               Build: Remove use of strndup so it compiles on Mac OS X 10.6.
               Broken in 10.74.
 

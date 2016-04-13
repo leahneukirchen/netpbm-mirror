@@ -579,7 +579,7 @@ insertCharacters(bit **        const bits,
     
         for (cursor = 0; lp.textArray[line][cursor] != '\0'; ++cursor) {
             char const currentChar = lp.textArray[line][cursor];
-            unsigned int const glyphIndex = (unsigned int) currentChar;
+            unsigned int const glyphIndex = (unsigned char) currentChar;
             struct glyph * const glyphP = fontP->glyph[glyphIndex];
             int const toprow = row + fontP->maxheight + fontP->y 
                 - glyphP->height - glyphP->y;
