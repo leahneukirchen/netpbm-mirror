@@ -4,9 +4,15 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+16.04.12 BJH  Release 10.74.02
+
+              pbmtext: Fix bug: invalid memory reference when text contains
+              code points > 127.  Broken in 10.74.00
+
 16.03.31 BJH  Release 10.74.01
          
               Build: Remove use of strndup so it compiles on Mac OS X 10.6.
+              Broken in 10.74.00.
 
 16.03.27 BJH  Release 10.74.00
 
