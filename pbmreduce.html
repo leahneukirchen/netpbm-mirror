@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pbmreduce User Manual</TITLE></HEAD>
 <BODY>
 <H1>pbmreduce</H1>
-Updated: 02 August 1989
+Updated: 13 April 2016
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -15,6 +15,7 @@ pbmreduce - read a PBM image and reduce it N times
 <B>pbmreduce</B>
 [<B>-floyd</B>|<B>-fs</B>|<B>-threshold</B>]
 [<B>-value</B> <I>val</I>] <I>N</I>
+[<b>-randomseed=</b><i>integer</i>]
 [<I>pbmfile</I>]
 
 <P>You can abbreviate any option to its shortest unique prefix.
@@ -40,14 +41,32 @@ correct the brightness of an image, by using the <B>-value</B> option.
 
 <H2 id="options">OPTIONS</H2>
 
-<P>By default, <b>pbmreduce</b> does the halftoning after the
-reduction via boustrophedonic Floyd-Steinberg error diffusion;
-however, you can use the <B>-threshold</B> option to specify simple
-thresholding.  This gives better results when reducing line drawings.
+<dl>
 
-<P>The <B>-value</B> option alters the thresholding value for all
-quantizations.  It should be a real number between 0 and 1.  Above 0.5
-means darker images; below 0.5 means lighter.
+<dt><b>-threshold</b>
+<dd>
+By default, <b>pbmreduce</b> does the halftoning after the reduction via
+boustrophedonic Floyd-Steinberg error diffusion; however, you can use this
+option to specify simple thresholding.  This gives better results when
+reducing line drawings.
+
+<dt><b>-value</b>
+<dd>
+<P>This option alters the thresholding value for all quantizations.  It should
+be a real number between 0 and 1.  Above 0.5 means darker images; below 0.5
+means lighter.
+
+<dt><b>-randomseed=</b><i>integer</i>
+
+<dd>This is the seed for the random number generator that controls the
+halftoning.
+
+<p>Use this to ensure you get the same image on separate invocations.
+
+<p>This option was new in Netpbm 10.75 (June 2016).
+
+</dl>
+
 
 <H2 id="seealso">SEE ALSO</H2>
 
