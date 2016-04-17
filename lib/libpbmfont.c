@@ -340,9 +340,11 @@ pbm_loadpbmfont(const char * const filename) {
 
 
 void
-pbm_dumpfont(struct font * const fontP) {
-    /* Dump out font as C source code. */
-
+pbm_dumpfont(struct font * const fontP,
+             FILE *        const ofP) {
+/*----------------------------------------------------------------------------
+  Dump out font as C source code.
+-----------------------------------------------------------------------------*/
     unsigned int i;
     unsigned int ng;
 

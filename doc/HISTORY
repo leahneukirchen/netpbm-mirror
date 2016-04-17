@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.75.00
 
+              pbmtext: remove undocumented -dump option; add 'genfontc'
+              development tool (buildtools/ directory) to replace it.
+
               pbmtext: Add -dry-run
 
               pbmtext: Add -dump-sheet

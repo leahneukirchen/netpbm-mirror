@@ -14,6 +14,9 @@
 
    To ensure future compatibility call pbm_defaultfont() before accessing
    default_fixedfont.
+
+   The Netpbm development tool 'genfontc' generates C source code like this
+   from a libnetpbm font file or builtin font.
 */
 
 static struct glyph glFxd[96] = {
