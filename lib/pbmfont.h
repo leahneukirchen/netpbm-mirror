@@ -86,6 +86,10 @@ struct font* pbm_loadpbmfont(const char * const filename);
 struct font* pbm_loadbdffont(const char * const filename);
 void pbm_dumpfont(struct font * const fnP);
 
+extern struct font pbm_defaultFixedfont;
+extern struct font pbm_defaultBdffont;
+
+
 #ifdef __cplusplus
 }
 #endif

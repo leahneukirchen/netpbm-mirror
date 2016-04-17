@@ -6,6 +6,12 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.75.00
 
+              pbmtext: Add -dry-run
+
+              pbmtext: Add -dump-sheet
+
+              pbmtext: Speedup: renders directly in raw PBM.
+
               pbmreduce: add -randomseed.
 
               pbmreduce: fix undefined behavior when scale factor argument is

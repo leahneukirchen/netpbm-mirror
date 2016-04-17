@@ -20,6 +20,7 @@
 
 #include "pm_c_util.h"
 #include "mallocvar.h"
+#include "nstring.h"
 #include "shhopt.h"
 #include "pbm.h"
 #include "pbmfont.h"
@@ -33,13 +34,14 @@ struct CmdlineInfo {
     const char * text;    /* text from command line or NULL if none */
     const char * font;    /* -font option value or NULL if none */
     const char * builtin; /* -builtin option value or NULL if none */
-    unsigned int dump;   
-        /* undocumented dump option for installing a new built-in font */
-    float space;   /* -space option value or default */
-    unsigned int width;     /* -width option value or zero */
-    int lspace;    /* lspace option value or default */
-    unsigned int nomargins;     /* -nomargins */
-    unsigned int verbose;
+    float space;          /* -space option value or default */
+    int lspace;           /* -lspace option value or default */
+    unsigned int width;   /* -width option value or zero */
+    unsigned int nomargins;  /* -nomargins option specified  */
+    unsigned int dryrun;  /* -dry-run option specified */ 
+    unsigned int verbose; /* -verbose option specified */
+        /* undocumented option */
+    unsigned int dumpsheet; /* font data sheet in PBM format for -font */   
 };
 
 
@@ -61,21 +63,22 @@ parseCommandLine(int argc, const char ** argv,
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENTRY */
-    OPTENT3(0, "font",      OPT_STRING, &cmdlineP->font, NULL,        0);
-    OPTENT3(0, "builtin",   OPT_STRING, &cmdlineP->builtin, NULL,     0);
-    OPTENT3(0, "dump",      OPT_FLAG,   NULL, &cmdlineP->dump,        0);
-    OPTENT3(0, "space",     OPT_FLOAT,  &cmdlineP->space, NULL,       0);
-    OPTENT3(0, "width",     OPT_UINT,   &cmdlineP->width, NULL,       0);
-    OPTENT3(0, "lspace",    OPT_INT,    &cmdlineP->lspace, NULL,      0);
-    OPTENT3(0, "nomargins", OPT_FLAG,   NULL, &cmdlineP->nomargins,   0);
-    OPTENT3(0, "verbose",   OPT_FLAG,   NULL, &cmdlineP->verbose,     0);
+    OPTENT3(0, "font",       OPT_STRING, &cmdlineP->font,    NULL,   0);
+    OPTENT3(0, "builtin",    OPT_STRING, &cmdlineP->builtin, NULL,   0);
+    OPTENT3(0, "space",      OPT_FLOAT,  &cmdlineP->space,   NULL,   0);
+    OPTENT3(0, "lspace",     OPT_INT,    &cmdlineP->lspace,  NULL,   0);
+    OPTENT3(0, "width",      OPT_UINT,   &cmdlineP->width,   NULL,   0);
+    OPTENT3(0, "nomargins",  OPT_FLAG,   NULL, &cmdlineP->nomargins, 0);
+    OPTENT3(0, "verbose",    OPT_FLAG,   NULL, &cmdlineP->verbose,   0);
+    OPTENT3(0, "dry-run",    OPT_FLAG,   NULL, &cmdlineP->dryrun,    0);
+    OPTENT3(0, "dump-sheet", OPT_FLAG,   NULL, &cmdlineP->dumpsheet, 0);
 
     /* Set the defaults */
-    cmdlineP->font = NULL;
+    cmdlineP->font    = NULL;
     cmdlineP->builtin = NULL;
-    cmdlineP->space = 0.0;
-    cmdlineP->width = 0;
-    cmdlineP->lspace = 0;
+    cmdlineP->space   = 0.0;
+    cmdlineP->width   = 0;
+    cmdlineP->lspace  = 0;
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -128,6 +131,7 @@ parseCommandLine(int argc, const char ** argv,
         }
         cmdlineP->text = text;
     }
+    free(option_def);
 }
 
 
@@ -170,16 +174,12 @@ computeFont(struct CmdlineInfo const cmdline,
     if (cmdline.verbose)
         reportFont(fontP);
 
-    if (cmdline.dump) {
-        pbm_dumpfont(fontP);
-        exit(0);
-    }
     *fontPP = fontP;
 }
 
 
 
-struct text {
+struct Text {
     char **      textArray;  /* malloc'ed */
     unsigned int allocatedLineCount;
     unsigned int lineCount;
@@ -188,7 +188,7 @@ struct text {
 
 
 static void
-allocTextArray(struct text * const textP,
+allocTextArray(struct Text * const textP,
                unsigned int  const maxLineCount,
                unsigned int  const maxColumnCount) {
 
@@ -198,7 +198,7 @@ allocTextArray(struct text * const textP,
     MALLOCARRAY_NOFAIL(textP->textArray, maxLineCount);
 
     for (line = 0; line < maxLineCount; ++line) {
-        if(maxColumnCount > 0)
+        if (maxColumnCount > 0)
             MALLOCARRAY_NOFAIL(textP->textArray[line], maxColumnCount+1);
     else
         textP->textArray[line] = NULL;
@@ -209,7 +209,7 @@ allocTextArray(struct text * const textP,
 
 
 static void
-freeTextArray(struct text const text) {
+freeTextArray(struct Text const text) {
 
     unsigned int line;
 
@@ -221,10 +221,16 @@ freeTextArray(struct text const text) {
 
 
 
+enum FixMode {SILENT, /* convert silently */
+              WARN,   /* output message to stderr */
+              QUIT    /* abort */ };
+
+
 static void
 fixControlChars(const char *  const input,
                 struct font * const fontP,
-                const char ** const outputP) {
+                const char ** const outputP,
+                enum FixMode  const fixMode) {
 /*----------------------------------------------------------------------------
    Return a translation of input[] that can be rendered as glyphs in
    the font 'fontP'.  Return it as newly malloced *outputP.
@@ -233,9 +239,10 @@ fixControlChars(const char *  const input,
 
    Remove any trailing newline.  (But leave intermediate ones as line
    delimiters).
-
-   Turn anything that isn't a code point in the font to a single space
-   (which isn't guaranteed to be in the font either, of course).
+   
+   Depending on value of fixMode, turn anything that isn't a code point
+   in the font to a single space (which isn't guaranteed to be in the
+   font either, of course).
 -----------------------------------------------------------------------------*/
     /* We don't know in advance how big the output will be because of the
        tab expansions.  So we make sure before processing each input
@@ -281,10 +288,17 @@ fixControlChars(const char *  const input,
                 output[outCursor++] = ' ';
         } else if (!fontP->glyph[(unsigned char)input[inCursor]]) {
             /* Turn this unknown char into a single space. */
-            if(fontP->glyph[(unsigned char) ' '] == NULL)
+            if (fontP->glyph[(unsigned char) ' '] == NULL)
                 pm_error("space character not defined in font");
-            else
+            else if (fixMode == QUIT)
+                pm_error("character %d not defined in font",
+                         (unsigned int )input[inCursor] );
+            else {
+                if (fixMode == WARN)
+                    pm_message("converting character %d to space",
+                               (unsigned int) input[inCursor] );
                 output[outCursor++] = ' ';
+            }
         } else
             output[outCursor++] = input[inCursor];
 
@@ -300,17 +314,16 @@ fixControlChars(const char *  const input,
 
 
 static void
-fillRect(bit** const bits, 
-         int   const height, 
-         int   const width, 
-         bit   const color) {
+clearBackground(bit ** const bits, 
+                int    const cols, 
+                int    const rows) {
 
     unsigned int row;
-
-    for (row = 0; row < height; ++row) {
-        unsigned int col;
-        for (col = 0; col < width; ++col)
-            bits[row][col] = color;
+    
+    for (row = 0; row < rows; ++row) {
+        unsigned int colChar;
+        for (colChar = 0; colChar < pbm_packed_bytes(cols); ++colChar)
+            bits[row][colChar] = 0x00;
     }
 }
 
@@ -514,7 +527,7 @@ getCharsWithinWidth(char                const line[],
 
 
 static void
-insertCharacter(const struct glyph * const glyph, 
+insertCharacter(const struct glyph * const glyphP,
                 int                  const toprow, 
                 int                  const leftcol,
                 unsigned int         const cols,
@@ -526,19 +539,20 @@ insertCharacter(const struct glyph * const glyph,
 -----------------------------------------------------------------------------*/
     unsigned int glyph_y;  /* Y position within the glyph */
 
-    if (leftcol + glyph->x < 0 ||
-        leftcol + glyph->x + glyph->width > cols ||
+    if (leftcol + glyphP->x < 0 ||
+        leftcol + glyphP->x + glyphP->width > cols ||
         toprow < 0 ||
-        toprow + glyph->height >rows )
+        toprow + glyphP->height >rows )
         pm_error("internal error.  Rendering out of bounds");
 
-    for (glyph_y = 0; glyph_y < glyph->height; ++glyph_y) {
+    for (glyph_y = 0; glyph_y < glyphP->height; ++glyph_y) {
         unsigned int glyph_x;  /* position within the glyph */
 
-        for (glyph_x = 0; glyph_x < glyph->width; ++glyph_x) {
-            if (glyph->bmap[glyph_y * glyph->width + glyph_x])
-                bits[toprow + glyph_y][leftcol + glyph->x + glyph_x] = 
-                    PBM_BLACK;
+        for (glyph_x = 0; glyph_x < glyphP->width; ++glyph_x) {
+            if (glyphP->bmap[glyph_y * glyphP->width + glyph_x]) {
+                unsigned int const col = leftcol + glyphP->x + glyph_x;
+                bits[toprow+glyph_y][col/8] |= PBM_BLACK << (7-col%8);
+        }
         }
     }
 }    
@@ -547,14 +561,15 @@ insertCharacter(const struct glyph * const glyph,
 
 static void
 insertCharacters(bit **        const bits, 
-                 struct text   const lp,
+                 struct Text   const lp,
                  struct font * const fontP, 
                  int           const topmargin, 
                  int           const leftmargin,
                  float         const intercharacter_space,
                  unsigned int  const cols,
                  unsigned int  const rows,
-                 int           const lspace) {
+                 int           const lspace,
+                 bool          const fixedAdvance) {
 /*----------------------------------------------------------------------------
    Render the text 'lp' into the image 'bits' using font *fontP and
    putting 'intercharacter_space' pixels between characters and
@@ -581,14 +596,17 @@ insertCharacters(bit **        const bits,
             char const currentChar = lp.textArray[line][cursor];
             unsigned int const glyphIndex = (unsigned char) currentChar;
             struct glyph * const glyphP = fontP->glyph[glyphIndex];
-            int const toprow = row + fontP->maxheight + fontP->y 
-                - glyphP->height - glyphP->y;
+            int const toprow =
+                row + fontP->maxheight + fontP->y - glyphP->height - glyphP->y;
                 /* row number in image of top row in glyph */
 
             assert(glyphP != NULL);
             
             insertCharacter(glyphP, toprow, leftcol, cols, rows, bits);
 
+        if (fixedAdvance)
+            leftcol += fontP->maxwidth;
+        else
             advancePosition(leftcol, currentChar, glyphP,
                             intercharacter_space, accumulatedIcs,
                             &leftcol, &accumulatedIcs);
@@ -599,11 +617,11 @@ insertCharacters(bit **        const bits,
 
 
 static void
-flowText(struct text    const inputText,
+flowText(struct Text    const inputText,
          int            const targetWidth, 
          struct font  * const fontP, 
          float          const intercharacterSpace,
-         struct text  * const outputTextP,
+         struct Text  * const outputTextP,
          unsigned int * const maxleftbP) {
     
     unsigned int outputLineNum;
@@ -650,7 +668,7 @@ flowText(struct text    const inputText,
 
 
 static void
-truncateText(struct text    const inputText, 
+truncateText(struct Text    const inputText, 
              unsigned int   const targetWidth, 
              struct font  * const fontP, 
              float          const intercharacterSpace,
@@ -685,16 +703,17 @@ truncateText(struct text    const inputText,
 static void
 getText(char          const cmdlineText[], 
         struct font * const fontP,
-        struct text * const inputTextP) {
+        struct Text * const inputTextP,
+        enum FixMode  const fixMode) {
 
-    struct text inputText;
+    struct Text inputText;
 
     if (cmdlineText) {
         MALLOCARRAY_NOFAIL(inputText.textArray, 1);
         inputText.allocatedLineCount = 1;
         inputText.lineCount = 1;
         fixControlChars(cmdlineText, fontP,
-                        (const char**)&inputText.textArray[0]);
+                        (const char**)&inputText.textArray[0], fixMode);
     } else {
         /* Read text from stdin. */
 
@@ -730,7 +749,8 @@ getText(char          const cmdlineText[],
                 if (textArray == NULL)
                     pm_error("out of memory");
             }
-            fixControlChars(buf, fontP, (const char **)&textArray[lineCount]);
+            fixControlChars(buf, fontP,
+                            (const char **)&textArray[lineCount], fixMode);
             if (textArray[lineCount] == NULL)
                 pm_error("out of memory");
             ++lineCount;
@@ -745,7 +765,62 @@ getText(char          const cmdlineText[],
 
 
 static void
-computeImageHeight(struct text         const formattedText, 
+computeMargins(struct CmdlineInfo const cmdline,
+               struct Text        const inputText,
+               struct font *      const fontP,
+               unsigned int *     const vmarginP,
+               unsigned int *     const hmarginP) {
+       
+    if (cmdline.nomargins) {
+        *vmarginP = 0;
+        *hmarginP = 0;
+    } else {
+        if (inputText.lineCount == 1) {
+            *vmarginP = fontP->maxheight / 2;
+            *hmarginP = fontP->maxwidth;
+        } else {
+            *vmarginP = fontP->maxheight;
+            *hmarginP = 2 * fontP->maxwidth;
+        }
+    }
+}
+
+    
+
+static void
+formatText(struct CmdlineInfo const cmdline,
+           struct Text        const inputText,
+           struct font *      const fontP,
+           unsigned int       const hmargin,
+           struct Text *      const formattedTextP,
+           unsigned int *     const maxleftb0P) {
+/*----------------------------------------------------------------------------
+  Flow or truncate lines to meet user's width request.
+-----------------------------------------------------------------------------*/
+    if (cmdline.width > 0) {
+        unsigned int const fontMargin = fontP->x < 0 ? -fontP->x : 0;
+
+        if (cmdline.width > INT_MAX -10)
+            pm_error("-width value too large: %u", cmdline.width);
+        else if (cmdline.width < 2 * hmargin)
+            pm_error("-width value too small: %u", cmdline.width);
+        else if (inputText.lineCount == 1) {
+            flowText(inputText, cmdline.width - fontMargin,
+                     fontP, cmdline.space, formattedTextP, maxleftb0P);
+            freeTextArray(inputText);
+        } else {
+            truncateText(inputText, cmdline.width - fontMargin,
+                         fontP, cmdline.space, maxleftb0P);
+            *formattedTextP = inputText;
+        }
+    } else
+        *formattedTextP = inputText;
+}
+
+
+
+static void
+computeImageHeight(struct Text         const formattedText, 
                    const struct font * const fontP,
                    int                 const interlineSpace,
                    unsigned int        const vmargin,
@@ -769,7 +844,7 @@ computeImageHeight(struct text         const formattedText,
 
 
 static void
-computeImageWidth(struct text         const formattedText, 
+computeImageWidth(struct Text         const formattedText, 
                   const struct font * const fontP,
                   float               const intercharacterSpace,
                   unsigned int        const hmargin,
@@ -817,17 +892,168 @@ computeImageWidth(struct text         const formattedText,
 
 
 
+static void
+renderText(unsigned int  const cols,
+           unsigned int  const rows,
+           struct font * const fontP,
+           unsigned int  const hmargin,
+           unsigned int  const vmargin,
+           struct Text   const formattedText,
+           unsigned int  const maxleftb,
+           float         const space,
+           int           const lspace,
+           bool          const fixedAdvance,
+           FILE *        const ofP) {
+
+    bit ** const bits = pbm_allocarray(pbm_packed_bytes(cols), rows);
+
+    /* Fill background with white */
+    clearBackground(bits, cols, rows);
+
+    /* Put the text in  */
+    insertCharacters(bits, formattedText, fontP, vmargin, hmargin + maxleftb, 
+                     space, cols, rows, lspace, fixedAdvance);
+
+    {
+        unsigned int row;
+
+        pbm_writepbminit(ofP, cols, rows, 0);
+
+        for (row = 0; row < rows; ++row)
+            pbm_writepbmrow_packed(ofP, bits[row], cols, 0);
+    }
+
+    pbm_freearray(bits, rows);
+}
+
+
+
+static char const * sheetTextArray[] = { 
+"M \",/^_[`jpqy| M",
+"                ",
+"/  !\"#$%&'()*+ /",
+"< ,-./01234567 <",
+"> 89:;<=>?@ABC >",
+"@ DEFGHIJKLMNO @",
+"_ PQRSTUVWXYZ[ _",
+"{ \\]^_`abcdefg {",
+"} hijklmnopqrs }",
+"~ tuvwxyz{|}~  ~",
+"                ",
+"M \",/^_[`jpqy| M" };
+
+
+
+static void
+validateText(const char ** const textArray,
+             struct font * const fontP) {
+/*----------------------------------------------------------------------------
+   Abort the program if there are characters in 'textArray' which cannot be
+   rendered in font *fontP.
+-----------------------------------------------------------------------------*/
+    const char * output;
+    unsigned int textRow;
+
+    for (textRow = 0; textRow < 12; ++textRow)
+        fixControlChars(textArray[textRow], fontP, &output, QUIT);
+
+    pm_strfree(output);
+}
+
+
+
+static void
+renderSheet(struct font * const fontP,
+            FILE *        const ofP) {
+
+    int const cols  = fontP->maxwidth  * 16;
+    int const rows  = fontP->maxheight * 12;
+    struct Text const sheetText = { (char ** const) sheetTextArray, 12, 12};
+
+    validateText(sheetTextArray, fontP);
+
+    renderText(cols, rows, fontP, 0, 0, sheetText, MAX(-(fontP->x),0),
+               0.0, 0, TRUE, ofP);
+}
+
+
+
+static void
+dryrunOutput(unsigned int const cols,
+             unsigned int const rows,
+             FILE *       const ofP) {
+ 
+    fprintf(ofP, "%u %u\n", cols, rows); 
+}
+
+
+
+static void
+pbmtext(struct CmdlineInfo const cmdline,
+        struct font *      const fontP,
+        FILE *             const ofP) {
+
+    unsigned int rows, cols;
+        /* Dimensions in pixels of the output image */
+    unsigned int cols0;
+    unsigned int vmargin, hmargin;
+        /* Margins in pixels we add to the output image */
+    unsigned int hmargin0;
+    struct Text inputText;
+    struct Text formattedText;
+    unsigned int maxleftb, maxleftb0;
+
+    getText(cmdline.text, fontP, &inputText,
+            cmdline.verbose ? WARN : SILENT);
+
+    computeMargins(cmdline, inputText, fontP, &vmargin, &hmargin0);
+
+    formatText(cmdline, inputText, fontP, hmargin0,
+               &formattedText, &maxleftb0);
+
+    if (formattedText.lineCount == 0)
+        pm_error("No input text");
+    
+    computeImageHeight(formattedText, fontP, cmdline.lspace, vmargin, &rows);
+
+    computeImageWidth(formattedText, fontP, cmdline.space,
+                      cmdline.width > 0 ? 0 : hmargin0, &cols0, &maxleftb);
+
+    if (cols0 == 0 || rows == 0)
+        pm_error("Input is all whitespace and/or non-renderable characters.");
+
+    if (cmdline.width == 0) {
+        cols    = cols0;
+        hmargin = hmargin0;
+    } else {
+        if (cmdline.width < cols0)
+            pm_error("internal error: calculated image width (%u) exceeds "
+                     "specified -width value: %u",
+                     cols0, cmdline.width);
+        else if (maxleftb0 != maxleftb)
+            pm_error("internal error: contradicting backup values");
+        else {
+            hmargin = MIN(hmargin0, (cmdline.width - cols0) / 2);
+            cols = cmdline.width;
+        }
+    }
+
+    if (cmdline.dryrun)
+        dryrunOutput(cols, rows, ofP);
+    else 
+        renderText(cols, rows, fontP, hmargin, vmargin, formattedText,
+                   maxleftb, cmdline.space, cmdline.lspace, FALSE, ofP);
+
+    freeTextArray(formattedText);
+}
+
+
+
 int
 main(int argc, const char *argv[]) {
 
     struct CmdlineInfo cmdline;
-    bit ** bits;
-    unsigned int rows, cols;
     struct font * fontP;
-    unsigned int vmargin, hmargin, fontMargin;
-    struct text inputText;
-    struct text formattedText;
-    unsigned int maxleftb, maxleftb0;
 
     pm_proginit(&argc, argv);
 
@@ -835,80 +1061,11 @@ main(int argc, const char *argv[]) {
     
     computeFont(cmdline, &fontP);
 
-    getText(cmdline.text, fontP, &inputText);
-       
-    if (cmdline.nomargins) {
-        vmargin = 0;
-        hmargin = 0;
-    } else {
-        if (inputText.lineCount == 1) {
-            vmargin = fontP->maxheight / 2;
-            hmargin = fontP->maxwidth;
-        } else {
-            vmargin = fontP->maxheight;
-            hmargin = 2 * fontP->maxwidth;
-        }
-    }
-    
-    if (cmdline.width > 0) {
-        fontMargin = fontP->x < 0 ? -fontP->x : 0;
+    if (cmdline.dumpsheet)
+        renderSheet(fontP, stdout);
+    else
+        pbmtext(cmdline, fontP, stdout);
 
-        if (cmdline.width > INT_MAX -10)
-            pm_error("-width value too large: %u", cmdline.width);
-        else if (cmdline.width < 2 * hmargin)
-            pm_error("-width value too small: %u", cmdline.width);
-        /* Flow or truncate lines to meet user's width request */
-        else if (inputText.lineCount == 1) {
-            flowText(inputText, cmdline.width - fontMargin,
-                     fontP, cmdline.space, &formattedText, &maxleftb0);
-            freeTextArray(inputText);
-        } else {
-            truncateText(inputText, cmdline.width - fontMargin,
-                         fontP, cmdline.space, &maxleftb0);
-            formattedText = inputText;
-        }
-    } else
-        formattedText = inputText;
-        
-    if (formattedText.lineCount == 0)
-        pm_error("No input text");
-    
-    computeImageHeight(formattedText, fontP, cmdline.lspace, vmargin,
-                       &rows);
-
-    computeImageWidth(formattedText, fontP, cmdline.space,
-              cmdline.width > 0 ? 0 : hmargin, &cols, &maxleftb);
-
-    if (cols == 0 || rows == 0)
-        pm_error("Input is all whitespace and/or non-renderable characters.");
-
-    if (cmdline.width > 0) {
-      if(cmdline.width < cols)
-      pm_error("internal error: calculated image width (%u) exceeds "
-                   "specified -width value: %u",
-                   cols, cmdline.width);
-      else if(maxleftb0 != maxleftb)
-      pm_error("internal error: contradicting backup values");
-      else {
-      hmargin = MIN(hmargin, (cmdline.width - cols) / 2);
-          cols = cmdline.width;
-      }
-    }
-
-    bits = pbm_allocarray(cols, rows);
-
-    /* Fill background with white */
-    fillRect(bits, rows, cols, PBM_WHITE);
-
-    /* Put the text in  */
-    insertCharacters(bits, formattedText, fontP, vmargin, hmargin + maxleftb, 
-                     cmdline.space, cols, rows, cmdline.lspace);
-
-    pbm_writepbm(stdout, bits, cols, rows, 0);
-
-    pbm_freearray(bits, rows);
-
-    freeTextArray(formattedText);
     pm_close(stdout);
 
     return 0;
