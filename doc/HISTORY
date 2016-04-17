@@ -9,7 +9,7 @@ not yet  BJH  Release 10.75.00
               pbmreduce: add -randomseed.
 
               pbmreduce: fix undefined behavior when scale factor argument is
-              too big.
+              too big.  Always present (pbmreduce was new in September 1989).
 
               pbmtext: Fix bug: invalid memory reference when text contains
               code points > 127.  Broken in 10.74.
