@@ -100,7 +100,7 @@ parseCommandLine(int argc, const char ** argv,
             cmdlineP->value = value * SCALE;
     }
 
-    if (argc-1 > 1) {
+    if (argc-1 > 0) {
         char * endptr;   /* ptr to 1st invalid character in scale arg */
         unsigned int scale;
 
@@ -275,12 +275,12 @@ main(int argc, const char * argv[]) {
             startCol = 0;
             limitCol = newcols;
             step = +1;  
-        }
+        } break;
         case RIGHT_TO_LEFT: {
             startCol = newcols - 1;
             limitCol = -1;
             step = -1;
-        }
+        } break;
         }
 
         for (col = startCol; col != limitCol; col += step) {
@@ -317,12 +317,14 @@ main(int argc, const char * argv[]) {
                     fs.nexterr[col    ] += ( sumScaled * 3 ) / 16;
                     fs.nexterr[col + 1] += ( sumScaled * 5 ) / 16;
                     fs.nexterr[col + 2] += ( sumScaled     ) / 16;
+                    break;
                 }
                 case RIGHT_TO_LEFT: {
                     fs.thiserr[col    ] += ( sumScaled * 7 ) / 16;
                     fs.nexterr[col + 2] += ( sumScaled * 3 ) / 16;
                     fs.nexterr[col + 1] += ( sumScaled * 5 ) / 16;
                     fs.nexterr[col    ] += ( sumScaled     ) / 16;
+                    break;
                 }
                 }
             }
