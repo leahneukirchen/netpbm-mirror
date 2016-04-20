@@ -12,6 +12,13 @@
 ** copyright notice and this permission notice appear in supporting
 ** documentation.  This software is provided "as is" without express or
 ** implied warranty.
+**
+** BDF font specs available from:
+** https://partners.adobe.com/public/developer/en/font/5005.BDF_Spec.pdf
+** Glyph Bitmap Distribution Format (BDF) Specification
+** Version 2.2
+** 22 March 1993
+** Adobe Developer Support
 */
 
 #include <assert.h>
@@ -774,8 +781,6 @@ validateGlyphLimits(const struct font  * const fontP,
 
     if (glyphP->width  == 0 ||
         glyphP->height == 0 ||
-        glyphP->width  > fontP->maxwidth  ||
-        glyphP->height > fontP->maxheight ||
         glyphP->width  > fontP->maxwidth  ||
         glyphP->height > fontP->maxheight ||
         glyphP->x < fontP->x ||
