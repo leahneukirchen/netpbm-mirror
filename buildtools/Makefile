@@ -41,7 +41,7 @@ genfontc.o:%.o:%.c importinc
 	  $(NETPBM_INCLUDES) \
 	  $<
 genfontc:%:%.o $(NETPBMLIB)
-	$(LD_FOR_BUILD) -o $@ $(LDFLAGS_FOR_BUILD) $(NETPBMLIB) $<
+	$(LD_FOR_BUILD) -o $@ $(LDFLAGS_FOR_BUILD)  $< $(NETPBMLIB)
 
 $(BUILDPROGS):%:%.o
 	$(LD_FOR_BUILD) -o $@ $(LDFLAGS_FOR_BUILD) $<
@@ -49,4 +49,4 @@ $(BUILDPROGS):%:%.o
 distclean clean: cleanlocal
 .PHONY: cleanlocal
 cleanlocal:
-	rm -f $(BUILDPROGS)
+	rm -f $(BUILDPROGS) genfontc
