@@ -17,6 +17,9 @@ not yet  BJH  Release 10.75.00
 
               pbmreduce: add -randomseed.
 
+              pnmpaste: fix possible invalid memory access.  Introduced in
+              Netpbm 1.44 (September 2008).
+
               pbmreduce: fix undefined behavior when scale factor argument is
               too big.  Always present (pbmreduce was new in September 1989).
 

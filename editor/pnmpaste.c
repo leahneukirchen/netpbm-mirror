@@ -201,8 +201,8 @@ insertShift(FILE *          const ifP,
    Same as insertDirect(), but start merging 'offset' bits from the left
    end of 'destrow'.  'offset' is less than 8.
 
-   buffer[] is wide enough to hold a packed PBM row of *ifP plus one
-   byte of margin.
+   buffer[] is wide enough to hold a packed PBM row of *ifP plus two
+   bytes of margin.
 -----------------------------------------------------------------------------*/
     unsigned int  const shiftByteCt = pbm_packed_bytes(cols + offset);
     unsigned int  const last        = shiftByteCt - 1;
@@ -268,7 +268,7 @@ pastePbm(FILE *       const fpInset,
   Fast paste for PBM
 -----------------------------------------------------------------------------*/
     unsigned char * const baserow       = pbm_allocrow_packed(baseCols);
-    unsigned char * const buffer        = pbm_allocrow_packed(insetCols+8);
+    unsigned char * const buffer        = pbm_allocrow_packed(insetCols+16);
     unsigned int    const shiftByteCt   = insertCol / 8;
     unsigned int    const shiftOffset   = insertCol % 8;
     unsigned int    const baseColByteCt = pbm_packed_bytes(baseCols);
