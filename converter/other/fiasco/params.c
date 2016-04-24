@@ -325,8 +325,17 @@ parseargs (param_t *usr_params,
 		      NO, sys_path, usr_file_name);
 	    else if (streq (params [param_index].name, "version"))
 	    {
-	       fprintf (stderr, "%s " VERSION "\n", argv [0]);
-	       exit (2);
+           fprintf (stderr, "%s " VERSION "\n", argv [0]);
+           {
+              /* Kludge for standard Netpbm version announcement */
+              char * modified_argv[2];
+              int argc;
+              modified_argv[0] = argv[0];
+              modified_argv[1] = (char *) "--version";
+              argc = 2;
+              pm_proginit(&argc, (const char **) modified_argv);
+           }
+           exit (2);
 	    }
 	    else if (streq (params [param_index].name, "verbose"))
 	       fiasco_set_verbosity (

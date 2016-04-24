@@ -42,6 +42,21 @@ my ($TRUE, $FALSE) = (1,0);
 
 my ($SEEK_SET, $SEEK_CUR, $SEEK_END) = (0, 1, 2);
 
+
+
+sub doVersionHack($) {
+    my ($argvR) = @_;
+
+    my $arg1 = $argvR->[0];
+
+    if (defined($arg1) && (($arg1 eq "--version") || ($arg1 eq "-version"))) {
+        my $termStatus = system('pnmcolormap', '--version');
+        exit($termStatus == 0 ? 0 : 1);
+    }
+}
+
+
+
 sub tempFile($) {
 
     # We trust Perl's File::Temp to do a better job of creating the temp
@@ -93,7 +108,7 @@ sub parseCommandLine(@) {
               scalar(@ARGV), "\n");
         exit(1);
     } 
-    if (@ARGV < 1) {
+    elsif (@ARGV < 1) {
         print(STDERR 
               "You must specify the number of colors as an argument.\n");
         exit(1);
@@ -266,6 +281,8 @@ sub remap($$$$) {
 ##############################################################################
 #                              MAIN PROGRAM
 ##############################################################################
+
+doVersionHack(\@ARGV);
 
 my $cmdlineR = parseCommandLine(@ARGV);
 

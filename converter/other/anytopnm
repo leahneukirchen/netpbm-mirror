@@ -527,14 +527,18 @@ if [ $# -gt 1 ] ; then
          "input file name." 1>&2
     exit 1
 elif [ $# -eq 1 ] ; then
-    inputFile="$1"
+    if [ $1 = "--version" -o $1 = "-version" ] ; then
+        pamtopnm --version ; exit $?
+    else 
+        inputFile="$1"
+    fi
 else
-    inputFile="-"
+        inputFile="-"
+
 fi
 
-tempdir="${TMPDIR-/tmp}/anytopnm.$$"
-mkdir -m 0700 $tempdir || \
-  { echo "Could not create temporary file. Exiting."; exit 1;}
+tempdir=$(mktemp -d "${TMPDIR:-/tmp}/anytopnm.XXXXXXXX") ||
+    ( echo "Could not create temporary file. Exiting." 1>&2; exit 1; ) 
 trap 'rm -rf $tempdir' 0
 
 # Take out all spaces

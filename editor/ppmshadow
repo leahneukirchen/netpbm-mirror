@@ -48,11 +48,26 @@ exec perl -w -x -S -- "$0" "$@"
 ##############################################################################
 
 use strict;
+use File::Temp;
 require 5.0;
 #  The good open() syntax, with the mode separate from the file name,
 #  came after 5.0.  So did mkdir() with default mode.
 
 my $true=1; my $false=0;
+
+
+
+sub doVersionHack($) {
+    my ($argvR) = @_;
+
+    my $arg1 = $argvR->[0];
+
+    if (defined($arg1) && (($arg1 eq "--version") || ($arg1 eq "-version"))) {
+        my $termStatus = system('pamarith', '--version');
+        exit($termStatus == 0 ? 0 : 1);
+    }
+}
+
 
 
 sub getDimensions($) {
@@ -95,14 +110,9 @@ sub makeConvolutionKernel($$) {
 #                           MAINLINE
 ##############################################################################
 
-
-my $tmpdir = $ENV{TMPDIR} || "/tmp";
-my $ourtmp = "$tmpdir/ppmshadow$$";
-mkdir($ourtmp, 0777) or
-    die("Unable to create directory for temporary files '$ourtmp");
+doVersionHack(\@ARGV);
 
 #   Process command line options
-
 
 my $ifile; # Input file name
 my ($xoffset, $yoffset);
@@ -113,6 +123,7 @@ my $translucent = $false;            # Default not translucent
 
 while (@ARGV) {
     my $arg = shift;
+
     if ((substr($arg, 0, 1) eq '-') && (length($arg) > 1)) {
         my $opt;
         $opt = substr($arg, 1, 1);
@@ -142,6 +153,8 @@ while (@ARGV) {
             if ($yoffset < 0) {
                 $yoffset = -$xoffset;
             }
+        } else {
+            die("Unknown option '$opt'\n");
         }
     } else {
         if (defined $ifile) {
@@ -149,6 +162,19 @@ while (@ARGV) {
         }
         $ifile = $arg;   
     }
+}
+
+# Create temporary directory
+
+my $tmpdir = $ENV{TMPDIR} || "/tmp";
+my $ourtmp;
+
+if ($keeptemp) {
+    $ourtmp = "$tmpdir/ppmshadow$$";
+    mkdir($ourtmp, 0777) or
+        die("Unable to create directory for temporary files '$ourtmp");
+} else {
+    $ourtmp = File::Temp::tempdir("$tmpdir/ppmrainbowXXXX", UNLINK=>1);
 }
 
 #   Apply defaults for arguments not specified

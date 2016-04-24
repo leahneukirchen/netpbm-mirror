@@ -17,6 +17,14 @@ not yet  BJH  Release 10.75.00
 
               pbmreduce: add -randomseed.
 
+              anytopnm, pnmmargin, pnmquant, pnmquantall, pgmcrater,
+              ppmfade, ppmrainbow, ppmshadow: Add -version.
+
+              fiascotopnm: change -version to include Netpbm version.
+
+              ppmshadow: fix bug: don't ignore invalid option.  Introduced in
+              Netpbm 10.9 (September 2002).
+
               pnmpaste: fix possible invalid memory access.  Introduced in
               Netpbm 1.44 (September 2008).
 

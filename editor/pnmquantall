@@ -61,6 +61,19 @@ my $TRUE=1; my $FALSE = 0;
 
 
 
+sub doVersionHack($) {
+    my ($argvR) = @_;
+
+    my $arg1 = $argvR->[0];
+
+    if (defined($arg1) && (($arg1 eq "--version") || ($arg1 eq "-version"))) {
+        my $termStatus = system('pnmcolormap', '--version');
+        exit($termStatus == 0 ? 0 : 1);
+    }
+}
+
+
+
 sub parseArgs($$$$) {
     my ($argvR, $extR, $newColorCtR, $fileNamesR) = @_;
 
@@ -178,6 +191,8 @@ sub remapFiles($$$$) {
 ###############################################################################
 
 my $progError;
+
+doVersionHack(\@ARGV);
 
 parseArgs(\@ARGV, \my $ext, \my $newColorCt, \my @fileNames);
 
