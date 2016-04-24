@@ -62,6 +62,7 @@ pambackground.test
 pbmpscale.test
 pnmremap1.test
 pnmremap2.test
+pnmquantall.test
 pnmtile.test
 ppmbrighten.test
 ppmdither.test
@@ -103,6 +104,7 @@ ppmchange-roundtrip.test
 pamdice-roundtrip.test
 pamslice-roundtrip.test
 lookup-roundtrip.test
+enlarge-reduce-roundtrip.test
 
 # Round-trip tests : lossless converters
 
@@ -150,6 +152,7 @@ xpm-roundtrip.test
 xv-roundtrip.test
 xwd-roundtrip.test
 
-# Round-trip tests : lossy converter
+# Round-trip tests : lossy converters
 
+fiasco-roundtrip.test
 yuv-roundtrip.test

@@ -1,0 +1,8 @@
+#! /bin/bash
+# This script tests: pnmtofiasco fiascotopnm
+# Also requires: pnmpad
+
+# Should print 215556145 102615
+
+pnmpad --black --bottom 1 --left 1 testimg.ppm | \
+    pnmtofiasco --progress-meter 0 | fiascotopnm | cksum
