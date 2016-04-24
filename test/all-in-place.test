@@ -4,9 +4,12 @@
 # We test by actually running all the executables.
 
 # Failure message
-# See Netpbm Library Prerequisites
-# http://netpbm.sourceforge.net/prereq.html
-# if make succeeds but this test fails.
+## See Netpbm Library Prerequisites
+## http://netpbm.sourceforge.net/prereq.html
+## if make succeeds but this test fails
+##
+## If you run the "make test-install" on an older version, some executables
+## may be reported as missing because of missing features.
 
 function testExitStatus () {
 
@@ -50,6 +53,7 @@ ordinary_testprogs="\
   ddbugtopbm \
   escp2topbm \
   eyuvtoppm \
+  fiascotopnm \
   fitstopnm \
   fstopgm \
   g3topbm \
@@ -234,6 +238,7 @@ ordinary_testprogs="\
   pnmhistmap \
   pnmindex \
   pnminvert \
+  pnmmargin \
   pnmmercator \
   pnmmontage \
   pnmnlfilt \
@@ -275,6 +280,7 @@ ordinary_testprogs="\
   ppmdither \
   ppmdmkfont \
   ppmdraw \
+  ppmfade \
   ppmflash \
   ppmforge \
   ppmglobe \
@@ -284,8 +290,10 @@ ordinary_testprogs="\
   ppmmix \
   ppmntsc \
   ppmpat \
+  ppmrainbow \
   ppmrelief \
   ppmrough \
+  ppmshadow \
   ppmshift \
   ppmspread \
   ppmtoacad \
@@ -356,32 +364,25 @@ ordinary_testprogs="\
   zeisstopnm \
 "
 
+# The string "fiascotopnm" has to be filtered out by egrep for fiascotopnm
+# has a slightly different version report format.
+
 for i in $ordinary_testprogs
   do
     $i --version  2>&1 | \
-    egrep -v \
+    egrep -v -e fiascotopnm -e \
     "(Using libnetpbm|Compiled|(BSD|SYSV|MSDOS|AMIGA) defined|RGB_?ENV=)" \
       1>&2;
     testExitStatus $i 0 ${PIPESTATUS[0]}
   done
 
 
-# Test fiascotopnm, which has a unique -v flag.
-fiascotopnm -v 2> /dev/null
-    testExitStatus fiascotopnm 2 $?
-
-
-# Test manweb and pnmmargin, which have --help.
+# Test manweb which has --help.
 manweb --help > /dev/null
     testExitStatus manweb 0 $?
 
-pnmmargin --help 2> /dev/null
-    testExitStatus pnmmargin 1 $?
 
-
-# Test anytopnm, pnmnoraw, pnmquant, pnmquantall
-# ppmrainbow, ppmshadow, ppmtomap
-# with trivial input.
+# Test anytopnm, pnmnoraw, pnmquant, pnmquantall with trivial input.
 
 $i ${tmpdir}/test.pbm > /dev/null 2> /dev/null;
 tmpdir=${tmpdir:-/tmp}
@@ -393,33 +394,24 @@ P1
 1
 EOF
 
-for i in anytopnm ppmtomap ppmshadow
-  do
-    $i ${tmpdir}/test.pbm > /dev/null 2> /dev/null;
-    testExitStatus $i 0 $?
-  done
+# Anytopnm now supports --version but it delegates the report to pamtopnm.
+# It fails if pamtopnm is absent.
+# We consider anytopnm too important to test in an indirect manner.
 
+anytopnm ${tmpdir}/test.pbm > /dev/null 2> /dev/null;
+testExitStatus anytopnm 0 $?
+
+# Likewise pnmquant and pnmquantall support --version but we test them
+# by running them with actual input.
 for i in pnmquant pnmquantall
   do
     $i 2 ${tmpdir}/test.pbm > /dev/null 2> /dev/null;
     testExitStatus $i 0 $?
   done
 
-rm ${test_pbm}
-    ppmrainbow rgb:00/00/00 rgb:ff/ff/ff \
-    -tmpdir=${tmpdir} -width=2 -height=2 > /dev/null
-    testExitStatus ppmrainbow 0 $?
-
-
-# Test ppmfade with corrupt input.
-# Prevent the creation of output files by setting base to /dev/null.
-# Exit status should be 50.
-    ppmfade -f /dev/zero -base /dev/null > /dev/null 2> /dev/null
-    testExitStatus ppmfade 50 $?
-
 
 # Test pamstretch-gen and pcdovtoppm with no input.
-# These two programs write a usage message on standout in this case.
+# These two programs write a usage message on stdout when there is no input.
 # Exit status should be 1.
 
 for i in pamstretch-gen pcdovtoppm

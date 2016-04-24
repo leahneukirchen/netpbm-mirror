@@ -10,6 +10,12 @@
 ##
 ## Important: This test checks obsoleted names.
 ## Programs here do not appear in other tests.
+##
+## Programs here are wrapper scripts provided for backward compatibility.
+## The newer replacement program may be the cause of any failure reported.
+##
+## If you run the "make test-install" on an older version, some executables
+## may be reported as missing because of missing features.
 
 
 # Skip this test if CHECK_TYPE = tree
@@ -55,6 +61,7 @@ ordinary_testprogs="\
   pamfixtrunc \
   pamrgbatopng \
   pbmtoicon \
+  pgmcrater \
   pgmedge \
   pgmnorm \
   pgmoil \
@@ -76,6 +83,7 @@ ordinary_testprogs="\
   ppmnorm \
   ppmtogif \
   ppmtojpeg \
+  ppmtomap \
   ppmtompeg \
   ppmtotga \
   ppmtouil \
@@ -91,13 +99,8 @@ for i in $ordinary_testprogs
   done
 
 
-# Test pgmcrater
 
-pgmcrater -number 1 -xsize 15 -ysize 15 -randomseed 1 > /dev/null
-testExitStatus pgmcrater 0 $?
-
-
-# Test pbmtox10bm, pnmnoraw, pnmtoplainpnm, ppmquantall, ppmrainbow
+# Test pbmtox10bm, pnmnoraw, pnmtoplainpnm, ppmquantall
 # with trivial input.
 
 $i ${tmpdir}/test.pbm > /dev/null 2> /dev/null;

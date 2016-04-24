@@ -4,6 +4,7 @@ icontopbm: ok
 pamfixtrunc: ok
 pamrgbatopng: ok
 pbmtoicon: ok
+pgmcrater: ok
 pgmedge: ok
 pgmnorm: ok
 pgmoil: ok
@@ -25,10 +26,10 @@ pnmtotiff: ok
 ppmnorm: ok
 ppmtogif: ok
 ppmtojpeg: ok
+ppmtomap: ok
 ppmtompeg: ok
 ppmtotga: ok
 ppmtouil: ok
-pgmcrater: ok
 pbmtox10bm: ok
 pnmnoraw: ok
 pnmtoplainpnm: ok

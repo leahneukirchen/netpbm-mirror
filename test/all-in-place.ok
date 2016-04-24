@@ -11,6 +11,7 @@ cmuwmtopbm: ok
 ddbugtopbm: ok
 escp2topbm: ok
 eyuvtoppm: ok
+fiascotopnm: ok
 fitstopnm: ok
 fstopgm: ok
 g3topbm: ok
@@ -195,6 +196,7 @@ pnmhisteq: ok
 pnmhistmap: ok
 pnmindex: ok
 pnminvert: ok
+pnmmargin: ok
 pnmmercator: ok
 pnmmontage: ok
 pnmnlfilt: ok
@@ -236,6 +238,7 @@ ppmdist: ok
 ppmdither: ok
 ppmdmkfont: ok
 ppmdraw: ok
+ppmfade: ok
 ppmflash: ok
 ppmforge: ok
 ppmglobe: ok
@@ -245,8 +248,10 @@ ppmmake: ok
 ppmmix: ok
 ppmntsc: ok
 ppmpat: ok
+ppmrainbow: ok
 ppmrelief: ok
 ppmrough: ok
+ppmshadow: ok
 ppmshift: ok
 ppmspread: ok
 ppmtoacad: ok
@@ -315,15 +320,9 @@ yuvsplittoppm: ok
 yuvtoppm: ok
 yuy2topam: ok
 zeisstopnm: ok
-fiascotopnm: ok
 manweb: ok
-pnmmargin: ok
 anytopnm: ok
-ppmtomap: ok
-ppmshadow: ok
 pnmquant: ok
 pnmquantall: ok
-ppmrainbow: ok
-ppmfade: ok
 pamstretch-gen: ok
 pcdovtoppm: ok
