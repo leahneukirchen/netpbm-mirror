@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Ppmshadow User Manual</TITLE></HEAD>
 <BODY>
 <H1>ppmshadow</H1>
-Updated: 17 April 2005
+Updated: 26 April 2016
 <BR><A HREF="#index">Table Of Contents</A>
 
 <H2 id="name">NAME</H2>
@@ -106,15 +106,18 @@ Input.
 <P>The output is a PPM file, written to Standard Output.
 
 <p><B>ppmshadow</B> creates a number of temporary files as it executes.  It
-creates a new directory for them, <b>/tmp/ppmshadow</b><i>pid</i>,
-where <i>pid</i> is the process ID of the <b>ppmshadow</b> process.
-If the <b>TMPDIR</b> environment variable is set, <b>ppmshadow</b> creates
-the directory there instead of <b>/tmp</b>.
+creates a new directory for them in the directory named by the
+<b>TMPDIR</b> environment variable, defaulting to <b>/tmp</b> if it is not
+set.
 
-In normal operation, <B>ppmshadow</B> deletes each temporary file as
+<p>In normal operation, <B>ppmshadow</B> finds a unique name for the
+temporary directory and deletes each temporary file as
 soon as it is done with it and leaves no debris around after it
 completes.  To preserve the intermediate files for debugging, use the
-<B>-k</B> command line option.
+<B>-k</B> command line option.  In that case, the directory name is
+<b>ppmshadow</b><i>pid</i>, where <i>pid</i> is the process ID of
+the <b>ppmshadow</b> process, and the program fails if <b>ppmshadow</b> cannot
+create that directory because the name is already in use.
 
 <p>The temporary files are: 
 <DL COMPACT>
