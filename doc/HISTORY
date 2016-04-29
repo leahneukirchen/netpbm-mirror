@@ -22,6 +22,8 @@ not yet  BJH  Release 10.75.00
 
               fiascotopnm: change -version to include Netpbm version.
 
+              hpcdtoppm dummy version: update web link to real version.
+
               ppmshadow: fix bug: don't ignore invalid option.  Introduced in
               Netpbm 10.9 (September 2002).
 
