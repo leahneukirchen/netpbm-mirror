@@ -18,7 +18,8 @@ not yet  BJH  Release 10.75.00
               pbmreduce: add -randomseed.
 
               anytopnm, pnmmargin, pnmquant, ppmquant, pnmquantall, pgmcrater,
-              ppmfade, ppmrainbow, ppmshadow, pbmtox10bm: Add -version.
+              ppmfade, ppmrainbow, ppmshadow, pbmtox10bm, pamstretch-gen:
+              Add -version.
 
               fiascotopnm: change -version to include Netpbm version.
 
