@@ -254,7 +254,7 @@ install.bin.local: $(PKGDIR)/bin
 # Remember that $(SYMLINK) might just be a copy command.
 # backward compatibility: program used to be named pnmnoraw
 	cd $(PKGDIR)/bin ; \
-	$(SYMLINK) pnmtoplainpnm pnmnoraw
+	$(SYMLINK) pnmtoplainpnm$(EXE) pnmnoraw$(EXE)
 # backward compatibility: program used to be gemtopbm
 	cd $(PKGDIR)/bin ; \
 	$(SYMLINK) gemtopnm$(EXE) gemtopbm$(EXE)
