@@ -55,7 +55,7 @@ sub doVersionHack($) {
 #
 ##############################################################################
 
-doVersionHack();
+doVersionHack(\@ARGV);
 
 my @pgmcraterArgv = @ARGV;
 
@@ -71,11 +71,6 @@ my $validOptions = GetOptions(
 if (!$validOptions) {
     print STDERR "Invalid syntax\n";
     exit(100);
-}
-
-if (defined($versionOpt)) {
-    my $termStatus = system("pamcrater --version");
-    exit($termStatus);
 }
 
 my $pamcraterArgs;
