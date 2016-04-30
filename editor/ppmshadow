@@ -174,7 +174,7 @@ if ($keeptemp) {
     mkdir($ourtmp, 0777) or
         die("Unable to create directory for temporary files '$ourtmp");
 } else {
-    $ourtmp = File::Temp::tempdir("$tmpdir/ppmrainbowXXXX", UNLINK=>1);
+    $ourtmp = File::Temp::tempdir("$tmpdir/ppmshadowXXXX", UNLINK=>1);
 }
 
 #   Apply defaults for arguments not specified
