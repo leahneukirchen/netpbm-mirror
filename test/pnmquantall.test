@@ -2,8 +2,6 @@
 # This script tests: pnmquantall
 # Also requires: ppmtorgb3 pgmhist
 
-PATH=/src/netpbm/pbin/:/usr/bin
-
 ppmtorgb3 testimg.ppm
 
 pnmquantall 20 testimg.red testimg.grn testimg.blu
