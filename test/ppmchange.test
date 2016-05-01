@@ -5,7 +5,7 @@
 
 #  Failure message
 ## If this test fails and ppmchange-roundtrip.test succeeds,
-## the probably cause is a problem with one of the options of
+## the probable cause is a problem with one of the options of
 ## ppmchange: -closeness or -remainder.
 
 tmpdir=${tmpdir:-/tmp}

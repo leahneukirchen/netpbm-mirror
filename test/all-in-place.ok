@@ -79,6 +79,7 @@ pamsplit: ok
 pamstack: ok
 pamstereogram: ok
 pamstretch: ok
+pamstretch-gen: ok
 pamsumm: ok
 pamsummcol: ok
 pamthreshold: ok
@@ -204,6 +205,8 @@ pnmnorm: ok
 pnmpad: ok
 pnmpaste: ok
 pnmpsnr: ok
+pnmquant: ok
+pnmquantall: ok
 pnmremap: ok
 pnmrotate: ok
 pnmscalefixed: ok
@@ -320,9 +323,5 @@ yuvsplittoppm: ok
 yuvtoppm: ok
 yuy2topam: ok
 zeisstopnm: ok
-manweb: ok
 anytopnm: ok
-pnmquant: ok
-pnmquantall: ok
-pamstretch-gen: ok
-pcdovtoppm: ok
+manweb: ok

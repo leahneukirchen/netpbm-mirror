@@ -121,6 +121,7 @@ ordinary_testprogs="\
   pamstack \
   pamstereogram \
   pamstretch \
+  pamstretch-gen \
   pamsumm \
   pamsummcol \
   pamthreshold \
@@ -246,6 +247,8 @@ ordinary_testprogs="\
   pnmpad \
   pnmpaste \
   pnmpsnr \
+  pnmquant \
+  pnmquantall \
   pnmremap \
   pnmrotate \
   pnmscalefixed \
@@ -377,45 +380,15 @@ for i in $ordinary_testprogs
   done
 
 
-# Test manweb which has --help.
-manweb --help > /dev/null
-    testExitStatus manweb 0 $?
-
-
-# Test anytopnm, pnmnoraw, pnmquant, pnmquantall with trivial input.
-
-$i ${tmpdir}/test.pbm > /dev/null 2> /dev/null;
-tmpdir=${tmpdir:-/tmp}
-test_pbm=${tmpdir}/test.pbm
-
-cat > ${test_pbm} <<EOF
-P1
-1 1
-1
-EOF
-
 # Anytopnm now supports --version but it delegates the report to pamtopnm.
 # It fails if pamtopnm is absent.
 # We consider anytopnm too important to test in an indirect manner.
 
-anytopnm ${tmpdir}/test.pbm > /dev/null 2> /dev/null;
+anytopnm testgrid.pbm > /dev/null 2> /dev/null;
 testExitStatus anytopnm 0 $?
 
-# Likewise pnmquant and pnmquantall support --version but we test them
-# by running them with actual input.
-for i in pnmquant pnmquantall
-  do
-    $i 2 ${tmpdir}/test.pbm > /dev/null 2> /dev/null;
-    testExitStatus $i 0 $?
-  done
 
+# Test manweb which has --help.
 
-# Test pamstretch-gen and pcdovtoppm with no input.
-# These two programs write a usage message on stdout when there is no input.
-# Exit status should be 1.
-
-for i in pamstretch-gen pcdovtoppm
-  do
-     $i > /dev/null
-     testExitStatus $i 1 $?
-  done
+manweb --help > /dev/null
+    testExitStatus manweb 0 $?
