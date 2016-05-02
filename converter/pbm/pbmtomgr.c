@@ -40,7 +40,7 @@ putinit(unsigned int const rows,
 
 int
 main(int argc,
-     char * argv[]) {
+     const char * argv[]) {
 
     FILE * ifP;
     unsigned char * bitrow;
@@ -50,15 +50,11 @@ main(int argc,
     unsigned int row;
     unsigned int bytesPerRow;
         /* Number of packed bytes (8 columns per byte) in a row. */
-    unsigned int padright;
-        /* Number of columns added to the right of each row to get up to
-           a multiple of 8, i.e. an integral number of packed bytes.
-        */
     const char * inputFileName;
     unsigned int const maxDimension = 4095;
         /* Dimensions are 2 characters of the header -- 12 bits */
 
-    pbm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     if (argc-1 > 1)
         pm_error("Too many arguments (%u).  "
@@ -78,7 +74,6 @@ main(int argc,
     
     bitrow = pbm_allocrow_packed(cols);
     bytesPerRow = pbm_packed_bytes(cols);
-    padright = bytesPerRow * 8 - cols;
 
     putinit(rows, cols);
     
