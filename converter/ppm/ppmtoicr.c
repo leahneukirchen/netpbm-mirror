@@ -53,35 +53,6 @@ makeIcrColormap(colorhist_vector const chv,
 
 
 static int
-bppFromColorCt(unsigned int const colorCt) {
-
-    unsigned int bpp;
-
-    if (colorCt <= 2)
-        bpp = 1;
-    else if (colorCt <= 4)
-        bpp = 2;
-    else if (colorCt <= 8)
-        bpp = 3;
-    else if (colorCt <= 16)
-        bpp = 4;
-    else if (colorCt <= 32)
-        bpp = 5;
-    else if (colorCt <= 64)
-        bpp = 6;
-    else if (colorCt <= 128)
-        bpp = 7;
-    else if (colorCt <= 256)
-        bpp = 8;
-    else
-        assert(false);
-
-    return bpp;
-}
-
-
-
-static int
 colorIndexAtPosition(unsigned int    const x,
                      unsigned int    const y,
                      pixel **        const pixels,
@@ -166,7 +137,6 @@ main(int argc, const char ** const argv) {
     int rows, cols;
     int colorCt;
     int argn;
-    unsigned int bitsPerPixel;
     pixval maxval;
     colorhist_vector chv;
     char rgb[CLUTCOLORCT];
@@ -234,8 +204,6 @@ main(int argc, const char ** const argv) {
     pm_message("%u colors found", colorCt );
 
     makeIcrColormap(chv, colorCt, maxval, rgb);
-
-    bitsPerPixel = bppFromColorCt(colorCt);
 
     /* And make a hash table for fast lookup. */
     cht = ppm_colorhisttocolorhash(chv, colorCt);
