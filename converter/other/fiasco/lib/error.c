@@ -64,117 +64,106 @@ jmp_buf env;
 *****************************************************************************/
 
 void
-set_error (const char *format, ...)
-/*
- *  Set error text to given string.
- */
-{
-   va_list     args;
-   unsigned    len = 0;
-   const char *str = format;
+set_error(const char *format, ...) {
+/*----------------------------------------------------------------------------
+  Set error text to given string.
+-----------------------------------------------------------------------------*/
+    va_list      args;
+    unsigned     len;
+    const char * str;
+
+    len = 0;  /* initial value */
+    str = format;  /* initial value */
+
+    VA_START (args, format);
+
+    len = strlen (format);
+    while ((str = strchr (str, '%'))) {
+        ++str;
+        if (*str == 's') {
+            char * const vstring = va_arg (args, char *);
+            len += strlen(vstring);
+        } else if (*str == 'd') {
+            va_arg (args, int);
+            len += 10;
+        } else if (*str == 'c') {
+            va_arg (args, int);
+            len += 1;
+        } else
+            return;
+        ++str;
+    }
+    va_end(args);
+
+    VA_START(args, format);
+
+    if (error_message)
+        Free(error_message);
+    error_message = Calloc(len, sizeof (char));
    
-   VA_START (args, format);
+    vsprintf(error_message, format, args);
 
-   len = strlen (format);
-   while ((str = strchr (str, '%')))
-   {
-      str++;
-      if (*str == 's')
-      {
-	 char *vstring = va_arg (args, char *);
-	 len += strlen (vstring);
-      }
-      else if (*str == 'd')
-      {
-	 int dummy;
-     dummy = va_arg (args, int);
-	 len += 10;
-      }
-      else if (*str == 'c')
-      {
-	 int dummy;
-     dummy = va_arg (args, int);
-	 len += 1;
-      }
-      else
-	 return;
-      str++;
-   }
-   va_end(args);
-
-   VA_START (args, format);
-
-   if (error_message)
-      Free (error_message);
-   error_message = Calloc (len, sizeof (char));
-   
-   vsprintf (error_message, format, args);
-
-   va_end (args);
+    va_end(args);
 }
+
+
 
 void
-error (const char *format, ...)
-/*
- *  Set error text to given string.
- */
-{
-   va_list     args;
-   unsigned    len = 0;
-   const char *str = format;
+error(const char *format, ...) {
+/*----------------------------------------------------------------------------
+  Set error text to given string.
+  -----------------------------------------------------------------------------*/
+    va_list      args;
+    unsigned     len;
+    const char * str;
    
-   VA_START (args, format);
+    len = 0; /* initial value */
+    str = &format[0];  /* initial value */
 
-   len = strlen (format);
-   while ((str = strchr (str, '%')))
-   {
-      str++;
-      if (*str == 's')
-      {
-	 char *vstring = va_arg (args, char *);
-	 len += strlen (vstring);
-      }
-      else if (*str == 'd')
-      {
-	 int dummy;
-     dummy = va_arg (args, int);
-	 len += 10;
-      }
-      else if (*str == 'c')
-      {
-	 int dummy;
-     dummy = va_arg (args, int);
-	 len += 1;
-      }
-      else
-      {
+    VA_START (args, format);
+
+    len = strlen (format);
+    while ((str = strchr (str, '%'))) {
+        ++str;
+        if (*str == 's') {
+            char * const vstring = va_arg (args, char *);
+            len += strlen(vstring);
+        } else if (*str == 'd') {
+            va_arg (args, int);
+            len += 10;
+        } else if (*str == 'c') {
+            va_arg (args, int);
+            len += 1;
+        } else {
 #if HAVE_SETJMP_H
-	 longjmp (env, 1);
-#else /* not HAVE_SETJMP_H */
-	 exit (1);
-#endif /* HAVE_SETJMP_H */
-      };
+            longjmp(env, 1);
+#else
+            exit(1);
+#endif
+        };
       
-      str++;
-   }
-   va_end(args);
+        ++str;
+    }
+    va_end(args);
 
-   VA_START (args, format);
+    VA_START(args, format);
 
-   if (error_message)
-      Free (error_message);
-   error_message = Calloc (len, sizeof (char));
+    if (error_message)
+        Free(error_message);
+    error_message = Calloc(len, sizeof (char));
    
-   vsprintf (error_message, format, args);
+    vsprintf(error_message, format, args);
 
-   va_end (args);
+    va_end(args);
    
 #if HAVE_SETJMP_H
-   longjmp (env, 1);
-#else /* not HAVE_SETJMP_H */
-   exit (1);
-#endif /* HAVE_SETJMP_H */
+    longjmp(env, 1);
+#else
+    exit(1);
+#endif
 }
+
+
 
 const char *
 fiasco_get_error_message (void)

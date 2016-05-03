@@ -361,6 +361,8 @@ video_decoder (const char *wfa_name, const char *image_name, bool_t panel,
                 while (prg_timer (&fps_timer, STOP) < frame_time) /* wait */
                     ;
             }
+#else
+            if (frame_time) {/* defeat compiler warning */}
 #endif /* not X_DISPLAY_MISSING */   
         }
         free (filename);

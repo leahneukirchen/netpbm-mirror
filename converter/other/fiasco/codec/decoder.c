@@ -603,7 +603,6 @@ decode_range (unsigned range_state, unsigned range_label, unsigned range_level,
  *  'wfa->level_of_state []' is changed
  */
 {
-   unsigned   root_state [3];       /* dummy (for alloc_state_images) */
    image_t   *state_image;      /* regenerated state image */
    word_t   **images;           /* pointer to array of pointers
                        to state images */
@@ -613,7 +612,6 @@ decode_range (unsigned range_state, unsigned range_label, unsigned range_level,
 
    enlarge_image (range_level - (wfa->level_of_state [range_state] - 1),
           FORMAT_4_4_4, -1, wfa);
-   root_state [0] = range_state;
    state_image    = alloc_image (width_of_level (range_level + 1),
                  height_of_level (range_level + 1),
                  NO, FORMAT_4_4_4);
