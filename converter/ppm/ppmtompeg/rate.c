@@ -389,7 +389,6 @@ targetRateControl(MpegFrame * const frame) {
     float tempX, tempY, tempZ;
     int result;
     int frameType;
-    const char *strPtr;
   
     minimumBits = (bit_rate / (8 * frameRateRounded));
   
@@ -445,14 +444,18 @@ targetRateControl(MpegFrame * const frame) {
     Qscale = (mquant > 31 ? 31 : mquant);
     Qscale = (Qscale < 1 ? 1 : Qscale);
   
-    /*   Print headers for Frame info */
-    strPtr = Frame_header1;
-    DBG_PRINT(("%s\n",strPtr));
-    strPtr = Frame_header2;
-    DBG_PRINT(("%s\n",strPtr));
-    strPtr = Frame_header3;
-    DBG_PRINT(("%s\n",strPtr));
-  
+#ifdef HEINOUS_DEBUG_MODE
+    {
+        const char * strPtr;
+        /*   Print headers for Frame info */
+        strPtr = Frame_header1;
+        DBG_PRINT(("%s\n",strPtr));
+        strPtr = Frame_header2;
+        DBG_PRINT(("%s\n",strPtr));
+        strPtr = Frame_header3;
+        DBG_PRINT(("%s\n",strPtr));
+    }
+#endif
     /*   Print Frame info */
     sprintf(rc_buffer, "%4d     %1c  %4d  %6d %7d  "
             "%2d %2d %2d   %2.2f  %6d %4d    %3d",
@@ -467,10 +470,13 @@ targetRateControl(MpegFrame * const frame) {
   
     /*  Print headers for Macroblock info */
     if (RC_MB_SAMPLE_RATE) {
+#ifdef HEINOUS_DEBUG_MODE
+        const char * strPtr;
         strPtr = MB_header1;
         DBG_PRINT(("%s\n",strPtr));
         strPtr = MB_header2;
         DBG_PRINT(("%s\n",strPtr));
+#endif
     }
 }
 
@@ -519,7 +525,6 @@ void
 updateRateControl(int const type) {
     int totalBits, frameComplexity, pctAllocUsed, pctGOPUsed;
     float avgQuant;
-    const char *strPtr;
 
     totalBits = rc_totalFrameBits;
     avgQuant = ((float) rc_totalQuant / (float) rc_numBlocks);
@@ -559,15 +564,18 @@ updateRateControl(int const type) {
         break;
     }
   
-  
-    /*  Print Frame info */
-    strPtr = Frame_trailer1;
-    DBG_PRINT(("%s\n",strPtr));
-    strPtr = Frame_trailer2;
-    DBG_PRINT(("%s\n",strPtr));
-    strPtr = Frame_trailer3;
-    DBG_PRINT(("%s\n",strPtr));
-  
+#ifdef HEINOUS_DEBUG_MODE
+    {  
+        /*  Print Frame info */
+        const char * strPtr;
+        strPtr = Frame_trailer1;
+        DBG_PRINT(("%s\n",strPtr));
+        strPtr = Frame_trailer2;
+        DBG_PRINT(("%s\n",strPtr));
+        strPtr = Frame_trailer3;
+        DBG_PRINT(("%s\n",strPtr));
+    }
+#endif  
     sprintf(rc_buffer, "%6d  %2.2f  %6d  %3d  %2.2f %7d   "
             "%3d %7d   %3d  %6d %6d",
             totalBits, avgQuant, frameComplexity, avg_act, N_act, 
