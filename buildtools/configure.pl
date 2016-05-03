@@ -1456,14 +1456,52 @@ sub gnuOptimizeOpt($) {
 
 
 
+sub wnostrictoverflowWorks($) {
+    my ($gccCommandName) = @_;
+
+    my ($cFile, $cFileName) = tempFile(".c");
+
+    print $cFile "int x;";
+    
+    my $compileCommand =
+        "$gccCommandName -c -o /dev/null -Wno-strict-overflow $cFileName";
+    print ("Doing test compile to see if -Wno-strict-overflow works: "
+           . "$compileCommand\n");
+    my $rc = system($compileCommand);
+    
+    unlink($cFileName);
+    close($cFile);
+
+    return ($rc == 0);
+}
+
+
+
 sub gnuCflags($) {
     my ($gccCommandName) = @_;
 
-    return("CFLAGS = " . gnuOptimizeOpt($gccCommandName) . " -ffast-math " .
-           " -pedantic -fno-common " . 
-           "-Wall -Wno-uninitialized -Wmissing-declarations -Wimplicit " .
-           "-Wwrite-strings -Wmissing-prototypes -Wundef " .
-           "-Wno-unknown-pragmas\n");
+    my $flags;
+
+    $flags = gnuOptimizeOpt($gccCommandName) . " -ffast-math " .
+        " -pedantic -fno-common " . 
+        "-Wall -Wno-uninitialized -Wmissing-declarations -Wimplicit " .
+        "-Wwrite-strings -Wmissing-prototypes -Wundef " .
+        "-Wno-unknown-pragmas ";
+
+    if (wnostrictoverflowWorks($gccCommandName)) {
+        # The compiler generates some optimizations based on the assumption
+        # that you wouldn't code something that can arithmetically overflow,
+        # so adding a positive value to something can only make it bigger.
+        # E.g. if (x + y > x), where y is unsigned, is a no-op.  The compiler
+        # optionally warns when it makes that assumption.  Sometimes, the
+        # compiler is able to do that optimization because of inlining, so the
+        # code per se is not ridiculous, it just becomes superfluous in
+        # context.  That means you can't code around the warning.  Ergo, we
+        # must disable the warning.
+
+        $flags .= '-Wno-strict-overflow';
+    }
+    return("CFLAGS = $flags\n");
 }
 
 
