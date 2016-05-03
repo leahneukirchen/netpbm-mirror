@@ -1504,12 +1504,12 @@ get_timestamp(FILE * const ifp)
 static void 
 parse_exif(FILE * const ifp, int base)
 {
-  int entries, tag, type, len, val, save;
+  int entries, tag, len, val, save;
 
   entries = get2(ifp);
   while (entries--) {
     tag  = get2(ifp);
-    type = get2(ifp);
+    /* type = */ get2(ifp);
     len  = get4(ifp);
     val  = get4(ifp);
     save = ftell(ifp);
