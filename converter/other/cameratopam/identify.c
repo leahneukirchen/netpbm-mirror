@@ -250,7 +250,7 @@ adobeCoeff(const char * const make,
         if (strneq(name, entryP->prefix, strlen(entryP->prefix))) {
             unsigned int j;
             for (j = 0; j < 12; ++j)
-                cm[j/4][j%4] = entryP->trans[j];
+                cm[j/3][j%3] = entryP->trans[j];
             dng_coeff(cc, cm, xyz);
 
             break;

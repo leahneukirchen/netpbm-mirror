@@ -40,6 +40,9 @@ not yet  BJH  Release 10.75.00
               pbmtext: Fix bug: invalid memory reference when text contains
               code points > 127.  Broken in 10.74.
 
+              cameratopam: fix invalid memory reference; effect unknown.
+              Introduced in Netpbm 10.68 (September 2014).
+
               Install on Windows: fix backward compatibility symlinks for
               pnmtoplainpnm, pnmquantall.
 
