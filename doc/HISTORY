@@ -25,6 +25,9 @@ not yet  BJH  Release 10.75.00
 
               hpcdtoppm dummy version: update web link to real version.
 
+              ppmhist: fix incorrect color names.  Introduced in
+              Netpbm 10.19 (November 2003).
+
               ppmshadow: fix bug: don't ignore invalid option.  Introduced in
               Netpbm 10.9 (September 2002).
 
