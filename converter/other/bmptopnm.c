@@ -249,11 +249,7 @@ bmpReadfileheader(FILE *         const ifP,
                   unsigned int * const bytesReadP, 
                   unsigned int * const offBitsP) {
 
-    unsigned short    xHotSpot;
-    unsigned short    yHotSpot;
     unsigned long     offBits;
-    unsigned long int fileSize;
-
 
     if (GetByte(ifP) != 'B')
         pm_error("'%s' is not a BMP file.  (It doesn't start with 'BM')",
@@ -263,9 +259,9 @@ bmpReadfileheader(FILE *         const ifP,
                  ifname);
 
 
-    fileSize = GetLong(ifP);  /* This is not always reliable. */
-    xHotSpot = GetShort(ifP);
-    yHotSpot = GetShort(ifP);
+    /* fileSize = */ GetLong(ifP);  /* This is not always reliable. */
+    /* xHotSpot = */ GetShort(ifP);
+    /* yHotSpot = */ GetShort(ifP);
     offBits  = GetLong(ifP);
 
     *offBitsP = offBits;
@@ -366,7 +362,6 @@ readWindowsBasic40ByteInfoHeader(FILE *                 const ifP,
 
    Return the information from the info header as *headerP.
 -----------------------------------------------------------------------------*/
-    int colorsimportant;   /* ColorsImportant value from header */
     int colorsused;        /* ColorsUsed value from header */
     unsigned short planesField, bitCountField;
 
@@ -410,7 +405,7 @@ readWindowsBasic40ByteInfoHeader(FILE *                 const ifP,
     /* See comments in bmp.h for info about the definition of the following
        word and its relationship to the color map size (headerP->cmapsize).
     */
-    colorsimportant = GetLong(ifP);  /* ColorsImportant */
+    /* colorsimportant = */ GetLong(ifP);  /* ColorsImportant */
 
     if (headerP->cBitCount <= 8) {
         if (colorsused != 0) {
