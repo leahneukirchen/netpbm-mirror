@@ -1842,9 +1842,9 @@ buildColorLookup(pixel                   palette_pnm[],
 
 
 static void 
-buildColorAlphaLookup(pixel              palette_pnm[], 
+buildColorAlphaLookup(pixel              palettePnm[], 
                       unsigned int const paletteSize,
-                      gray               trans_pnm[], 
+                      gray               transPnm[], 
                       unsigned int const transSize,
                       gray         const alphaMaxval,
                       coloralphahash_table * const cahtP) {
@@ -1857,12 +1857,12 @@ buildColorAlphaLookup(pixel              palette_pnm[],
         gray paletteTrans;
 
         if (paletteIndex < transSize)
-            paletteTrans = alphaMaxval;
+            paletteTrans = transPnm[paletteIndex];
         else
-            paletteTrans = trans_pnm[paletteIndex];
+            paletteTrans = alphaMaxval;
 
-        addtocoloralphahash(caht, &palette_pnm[paletteIndex],
-                            &trans_pnm[paletteIndex], paletteIndex);
+        addtocoloralphahash(caht, &palettePnm[paletteIndex],
+                            &paletteTrans, paletteIndex);
     }
     *cahtP = caht;
 }
