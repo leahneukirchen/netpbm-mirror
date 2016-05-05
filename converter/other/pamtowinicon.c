@@ -643,7 +643,7 @@ writePng(const struct pam * const pamP,
     
     if (haveAlpha || haveAnd) {
         const char * alphaFileName;
-        const char * command;
+        const char * alphaOpt;
 
         if (haveAlpha)
             makeAlphaFile(pamP, tuples, alphaPlane, &alphaFileName);
@@ -653,19 +653,19 @@ writePng(const struct pam * const pamP,
         strcpy (pam.tuple_type,
                 pam.depth == 3 ? PAM_PPM_TUPLETYPE: PAM_PGM_TUPLETYPE);
         
-        pm_asprintf(&command, "pnmtopng -alpha=\"%s\"", alphaFileName);
+        pm_asprintf(&alphaOpt, "-alpha=%s", alphaFileName);
 
-        pm_system(pm_feed_from_pamtuples, &pamTuples,
-                  acceptToFile, &acceptParm,
-                  command);
+        pm_system_lp("pnmtopng", pm_feed_from_pamtuples, &pamTuples,
+                     acceptToFile, &acceptParm,
+                     "pnmtopng", alphaOpt, NULL);
     
-        pm_strfree(command);
+        pm_strfree(alphaOpt);
     
         unlink(alphaFileName);
     } else {
-        pm_system(pm_feed_from_pamtuples, &pamTuples,
-                  acceptToFile, &acceptParm,
-                  "pnmtopng");
+        pm_system_lp("pnmtopng", pm_feed_from_pamtuples, &pamTuples,
+                     acceptToFile, &acceptParm,
+                     "pnmtopng", NULL);
     }
 
     *sizeP = pngSize;
