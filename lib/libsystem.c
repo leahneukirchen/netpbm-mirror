@@ -456,8 +456,11 @@ pm_system_lp(const char *    const progName,
              void *          const accepterParm,
              ...) {
 /*----------------------------------------------------------------------------
-  same as pm_system_vp() except with arguments as variable arguments
+  Same as pm_system_vp() except with arguments as variable arguments
   instead of an array.
+
+  N.B. the first variable argument is the program's arg 0; the last
+  variable argument must be NULL.
 -----------------------------------------------------------------------------*/
     va_list args;
     bool endOfArgs;
