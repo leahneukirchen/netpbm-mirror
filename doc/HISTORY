@@ -49,6 +49,9 @@ not yet  BJH  Release 10.75.00
               Build: Remove use of strndup so it compiles on Mac OS X 10.6.
               Broken in 10.74.
 
+              Build: Remove use of isfinite so it compiles with C89 standard
+              compiler.
+
 16.03.27 BJH  Release 10.74.00
 
               pbmtext: produce same image when you run pbmtext with -width
