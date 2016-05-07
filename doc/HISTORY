@@ -25,6 +25,9 @@ not yet  BJH  Release 10.75.00
 
               hpcdtoppm dummy version: update web link to real version.
 
+              libnetpbm: Add pm_system2(), pm_system2_lp(), pm_system2_vp() -
+              same as pm_system(), etc. but returns the termination status.
+
               ppmhist: fix incorrect color names.  Introduced in
               Netpbm 10.19 (November 2003).
 
