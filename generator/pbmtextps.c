@@ -27,12 +27,13 @@
 #include "mallocvar.h"
 #include "nstring.h"
 #include "shhopt.h"
+#include "pm_system.h"
 #include "pbm.h"
 
 
 #define BUFFER_SIZE 2048
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -78,7 +79,7 @@ writeFileToStdout(const char * const fileName){
 
 static void
 buildTextFromArgs(int           const argc,
-                  char **       const argv,
+                  const char ** const argv,
                   const char ** const textP) {
 
     char * text;
@@ -108,8 +109,8 @@ buildTextFromArgs(int           const argc,
 
 
 static void
-parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo *cmdlineP) {
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo * const cmdlineP) {
 /*---------------------------------------------------------------------------
   Note that the file spec array we return is stored in the storage that
   was passed to us as the argv array.
@@ -140,7 +141,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
 
     buildTextFromArgs(argc, argv, &cmdlineP->text);
 }
@@ -148,7 +149,7 @@ parseCommandLine(int argc, char ** argv,
 
 
 static const char *
-construct_postscript(struct cmdlineInfo const cmdline) {
+construct_postscript(struct CmdlineInfo const cmdline) {
 
     const char * retval;
     const char * template;
@@ -245,16 +246,19 @@ cropExecutableName(void) {
 
 
 
-static const char *
-gsCommand(const char *       const psFname,
+static const char **
+gsArgList(const char *       const psFname,
           const char *       const outputFilename, 
-          struct cmdlineInfo const cmdline) {
+          struct CmdlineInfo const cmdline) {
 
-    const char * retval;
+    unsigned int const maxArgCt = 50;
     double const x = (double) cmdline.res * 11;
     double const y = (double) cmdline.res * 
                      ((double) cmdline.fontsize * 2 + 72)  / 72;
     
+    const char ** retval;
+    unsigned int argCt;  /* Number of arguments in 'retval' so far */
+
     if (cmdline.res <= 0)
          pm_error("Resolution (dpi) must be positive.");
     
@@ -272,31 +276,50 @@ gsCommand(const char *       const psFname,
     if (y > (double) INT_MAX-10)
          pm_error("Absurdly fine resolution (%u) and/or huge font size (%u). "
                   "Output height too large.", cmdline.res, cmdline.fontsize);
-         
-    pm_asprintf(&retval, "%s -g%dx%d -r%d -sDEVICE=pbm "
-                "-sOutputFile=%s -q -dBATCH -dNOPAUSE %s "
-                "</dev/null >/dev/null", 
-                gsExecutableName(), (int) x, (int) y, cmdline.res, 
-                outputFilename, psFname);
+    
+    MALLOCARRAY_NOFAIL(retval, maxArgCt+2);
+
+    argCt = 0;  /* initial value */
+
+    pm_asprintf(&retval[argCt++], "ghostscript");
+
+    pm_asprintf(&retval[argCt++], "-g%dx%d", (int) x, (int) y);
+    pm_asprintf(&retval[argCt++], "-r%d", cmdline.res);
+    pm_asprintf(&retval[argCt++], "-sDEVICE=pbm");
+    pm_asprintf(&retval[argCt++], "-sOutputFile=%s", outputFilename);
+    pm_asprintf(&retval[argCt++], "-q");
+    pm_asprintf(&retval[argCt++], "-dBATCH");
+    pm_asprintf(&retval[argCt++], "-dNOPAUSE");
+    pm_asprintf(&retval[argCt++], "%s", psFname);
+
+    retval[argCt++] = NULL;
 
     return retval;
 }
 
 
 
-static const char *
-cropCommand(const char * const inputFileName) {
+static const char **
+cropArgList(const char * const inputFileName) {
 
-    const char * retval;
-    const char * plainOpt = pm_plain_output ? "-plain" : "" ;
-    
-    if (cropExecutableName()) {
-        pm_asprintf(&retval, "%s -top -right %s %s", 
-                    cropExecutableName(), plainOpt, inputFileName);
-        if (retval == pm_strsol)
-            pm_error("Unable to allocate memory");
-    } else
-        retval = NULL;
+    unsigned int const maxArgCt = 50;
+
+    const char ** retval;
+    unsigned int argCt;
+
+    MALLOCARRAY_NOFAIL(retval, maxArgCt+2);
+
+    argCt = 0;  /* initial value */
+
+    pm_asprintf(&retval[argCt++], "pnmcrop");
+
+    pm_asprintf(&retval[argCt++], "-top");
+    pm_asprintf(&retval[argCt++], "-right");
+    if (pm_plain_output)
+        pm_asprintf(&retval[argCt++], "-plain");
+    pm_asprintf(&retval[argCt++], "%s", inputFileName);
+
+    retval[argCt++] = NULL;
 
     return retval;
 }
@@ -305,7 +328,7 @@ cropCommand(const char * const inputFileName) {
 
 static void
 writeProgram(const char *       const psFname,
-             struct cmdlineInfo const cmdline) {
+             struct CmdlineInfo const cmdline) {
 
     const char * ps;
     FILE * psfile;
@@ -331,25 +354,76 @@ writeProgram(const char *       const psFname,
 
 
 static void
+reportGhostScript(const char *  const executableNm,
+                  const char ** const argList) {
+
+    unsigned int i;
+
+    pm_message("Running Ghostscript interpreter '%s'", executableNm);
+
+    pm_message("Program arguments:");
+
+    for (i = 0; argList[i]; ++i)
+        pm_message("  '%s'", argList[i]);
+}
+
+
+
+static void
+freeArgList(const char ** const argList) {
+
+    unsigned int i;
+
+    for (i = 0; argList[i]; ++i)
+        pm_strfree(argList[i]);
+
+    free(argList);
+}
+
+
+
+static void
 executeProgram(const char *       const psFname, 
                const char *       const outputFname,
-               struct cmdlineInfo const cmdline) {
+               struct CmdlineInfo const cmdline) {
 
-    const char * com;
-    int rc;
+    const char * const executableNm = gsExecutableName();
+    const char ** const argList = gsArgList(psFname, outputFname, cmdline);
+    int termStatus;
 
-    com = gsCommand(psFname, outputFname, cmdline);
-    if (com == NULL)
-        pm_error("Can't allocate memory for a 'ghostscript' command");
-    
     if (cmdline.verbose)
-        pm_message("Running Postscript interpreter '%s'", com);
+        reportGhostScript(executableNm, argList);
 
-    rc = system(com);
-    if (rc != 0)
-        pm_error("Failed to run Ghostscript process.  rc=%d", rc);
+    pm_system2_vp(executableNm,
+                  argList,
+                  pm_feed_null, NULL,
+                  pm_accept_null, NULL,
+                  &termStatus);
 
-    pm_strfree(com);
+    if (termStatus != 0) {
+        const char * const msg = pm_termStatusDesc(termStatus);
+
+        pm_error("Failed to run Ghostscript process.  %s", msg);
+
+        pm_strfree(msg);
+    }
+    freeArgList(argList);
+}
+
+
+
+static void
+reportCrop(const char *  const executableNm,
+           const char ** const argList) {
+
+    unsigned int i;
+
+    pm_message("Running '%s' to crop the output", executableNm);
+
+    pm_message("Program arguments:");
+
+    for (i = 0; argList[i]; ++i)
+        pm_message("  '%s'", argList[i]);
 }
 
 
@@ -358,54 +432,41 @@ static void
 cropToStdout(const char * const inputFileName,
              bool         const verbose) {
 
-    const char * com;
+    const char * executableNm = cropExecutableName();
 
-    com = cropCommand(inputFileName);
+    if (executableNm) {
+        const char ** const argList = cropArgList(inputFileName);
 
-    if (com == NULL) {
-        /* No pnmcrop.  So don't crop. */
-        pm_message("Can't find pnmcrop command, image will be large");
-        writeFileToStdout(inputFileName);
-    } else {
-        FILE * pnmcrop;
+        int termStatus;
 
         if (verbose)
-            pm_message("Running crop command '%s'", com);
+            reportCrop(executableNm, argList);
+    
+        pm_system2_vp(executableNm,
+                      argList,
+                      pm_feed_null, NULL,
+                      NULL, NULL,
+                      &termStatus);
         
-        pnmcrop = popen(com, "r");
-        if (pnmcrop == NULL)
-            pm_error("Can't run pnmcrop process");
-        else {
-            char buf[2048];
-            bool eof;
+        if (termStatus != 0) {
+            const char * const msg = pm_termStatusDesc(termStatus);
 
-            eof = FALSE;
-            
-            while (!eof) {
-                int bytesRead;
+            pm_error("Failed to run pnmcrop process.  %s", msg);
 
-                bytesRead = fread(buf, 1, sizeof(buf), pnmcrop);
-                if (bytesRead > 0) {
-                    int rc;
-                    rc = fwrite(buf, 1, bytesRead, stdout);
-                    if (rc != bytesRead)
-                        pm_error("Can't write to stdout");
-                } else if (bytesRead == 0)
-                    eof = TRUE;
-                else
-                    pm_error("Failed to read output of Pnmcrop process.  "
-                             "Errno=%d (%s)", errno, strerror(errno));
-            }
-            fclose(pnmcrop);
+            pm_strfree(msg);
         }
-        pm_strfree(com);
+        freeArgList(argList);
+    } else {
+        /* No pnmcrop.  So don't crop. */
+        pm_message("Can't find pnmcrop program, image will be large");
+        writeFileToStdout(inputFileName);
     }
 }
 
 
 
 static void
-createOutputFile(struct cmdlineInfo const cmdline) {
+createOutputFile(struct CmdlineInfo const cmdline) {
 
     const char * const template = "./pstextpbm.%d.tmp.%s";
     
@@ -436,11 +497,11 @@ createOutputFile(struct cmdlineInfo const cmdline) {
 
 
 int 
-main(int argc, char *argv[]) {
+main(int argc, const char *argv[]) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
 
-    pbm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
