@@ -226,7 +226,6 @@ pm_vsnprintf(char *       const str,
             }
             p += n; str_l += n;
         } else {
-            const char *starting_p;
             size_t min_field_width;
             size_t precision = 0;
             bool precision_specified;
@@ -268,7 +267,6 @@ pm_vsnprintf(char *       const str,
             str_arg = credits;
                 /* just to make compiler happy (defined but not used) */
             str_arg = NULL;
-            starting_p = p;
             ++p;  /* skip '%' */
 
             /* parse flags */
