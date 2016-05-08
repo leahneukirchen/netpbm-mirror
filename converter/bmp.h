@@ -85,6 +85,21 @@
 
 enum bmpClass {C_WIN, C_OS2};
 
+static __inline__ const char *
+BMPClassName(enum bmpClass const class) {
+
+    const char * name;
+
+    switch (class) {
+    case C_OS2: name = "OS/2 (v1)";    break;
+    case C_WIN: name = "Windows (v1)"; break;
+    }
+
+  return name;
+}
+
+
+
 static char const er_internal[] = "%s: internal error!";
 
 /* Values of the "compression" field of the BMP info header */
@@ -114,16 +129,35 @@ BMPCompTypeName(BMPCompType const compression) {
 
 
 static __inline__ unsigned int
-BMPlenfileheader(enum bmpClass const class) {
+BMPlenfileheader(void) {
 
-    unsigned int retval;
-
-    switch (class) {
-    case C_WIN: retval = 14; break;
-    case C_OS2: retval = 14; break;
-    }
-    return retval;
+    return 14;
 }
+
+
+
+enum BMPinfoHeaderLen {
+/*----------------------------------------------------------------------------
+   BMPs come in various kinds, distinguished by the length of their
+   info header, which is the first field in that header.
+
+   These are those lengths.
+-----------------------------------------------------------------------------*/
+    BMP_HDRLEN_OS2_1x =  12,
+        /* BITMAPCOREHEADER; since Windows 2.0, OS/2 1.x */
+    BMP_HDRLEN_OS2_2x =  64,
+        /* not documented by Microsoft; since OS/2 2.x */
+    BMP_HDRLEN_WIN_V1 =  40,
+        /* BITMAPINFOHEADER; since Windows NT 3, Windows 3.x */
+    BMP_HDRLEN_WIN_V2 =  52,
+        /* not documented by Microsoft */
+    BMP_HDRLEN_WIN_V3 =  56,
+        /* not documented by Microsoft */
+    BMP_HDRLEN_WIN_V4 = 108,
+        /* BITMAPV4HEADER; since Windows NT 4, Windows 95 */
+    BMP_HDRLEN_WIN_V5 = 124
+        /* BITMAPV5HEADER; since Windows 2000, Windows 98 */
+};
 
 
 
@@ -133,8 +167,8 @@ BMPleninfoheader(enum bmpClass const class) {
     unsigned int retval;
 
     switch (class) {
-    case C_WIN: retval = 40; break;
-    case C_OS2: retval = 12; break;
+    case C_WIN: retval = BMP_HDRLEN_WIN_V1; break;
+    case C_OS2: retval = BMP_HDRLEN_OS2_1x; break;
     }
     return retval;
 }
@@ -231,7 +265,7 @@ BMPoffbits(enum bmpClass const class,
 /*----------------------------------------------------------------------------
   return the offset to the BMP image bits.
 -----------------------------------------------------------------------------*/
-    return BMPlenfileheader(class)
+    return BMPlenfileheader()
         + BMPleninfoheader(class)
         + BMPlencolormap(class, bitcount, cmapsize);
 }

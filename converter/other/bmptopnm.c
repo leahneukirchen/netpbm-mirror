@@ -266,6 +266,8 @@ bmpReadfileheader(FILE *         const ifP,
 
     *offBitsP = offBits;
 
+    assert(BMPlenfileheader() == 14);
+
     *bytesReadP = 14;
 }
 
@@ -1191,10 +1193,7 @@ reportHeader(struct bmpInfoHeader const header,
              unsigned int         const offBits) {
              
     pm_message("BMP image header says:");
-    pm_message("  Class of BMP: %s", 
-               header.class == C_WIN ? "Windows" : 
-               header.class == C_OS2 ? "OS/2" :
-               "???");
+    pm_message("  Class of BMP: %s", BMPClassName(header.class));
     pm_message("  Width: %d pixels", header.cols);
     pm_message("  Height: %d pixels", header.rows);
     pm_message("  Depth: %d planes", header.cPlanes);

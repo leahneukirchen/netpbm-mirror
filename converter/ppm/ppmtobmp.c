@@ -208,6 +208,8 @@ BMPwritefileheader(FILE *        const fp,
     
     /* offBits */
     PutLong(fp, offBits);
+
+    assert(BMPlenfileheader() == 14);
     
     return 14;
 }
@@ -229,7 +231,7 @@ BMPwriteinfoheader(FILE *        const fp,
 
     switch (class) {
     case C_WIN: {
-        cbFix = 40;
+        cbFix = BMP_HDRLEN_WIN_V1;
         PutLong(fp, cbFix);
 
         PutLong(fp, x);         /* cx */
@@ -248,16 +250,20 @@ BMPwriteinfoheader(FILE *        const fp,
         PutLong(fp, 0);   /* YpixelsPerMeter */
         PutLong(fp, 0);   /* ColorsUsed */
         PutLong(fp, 0);   /* ColorsImportant */
+
+        assert(BMP_HDRLEN_OS2_1x == 40);  /* We wrote 40 bytes */
     }
     break;
     case C_OS2: {
-        cbFix = 12;
+        cbFix = BMP_HDRLEN_OS2_1x;
         PutLong(fp, cbFix);
 
         PutShort(fp, x);        /* cx */
         PutShort(fp, y);        /* cy */
         PutShort(fp, 1);        /* cPlanes */
         PutShort(fp, bitcount); /* cBitCount */
+
+        assert(BMP_HDRLEN_OS2_1x == 12);  /* We wrote 12 bytes */
     }
     break;
     }
