@@ -634,7 +634,7 @@ bmpReadinfoheader(FILE *                 const ifP,
 
 static void
 bmpReadColormap(FILE *         const ifP, 
-                int            const class, 
+                enum bmpClass  const class, 
                 xel **         const colormapP, 
                 unsigned int   const cmapsize,
                 unsigned int * const bytesReadP) {

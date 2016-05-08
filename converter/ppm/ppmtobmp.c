@@ -68,11 +68,11 @@ struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char * inputFilename;
-    int class;  /* C_WIN or C_OS2 */
-    unsigned int bppSpec;
-    unsigned int bpp;
-    const char * mapfile;
+    const char *  inputFilename;
+    enum bmpClass class;
+    unsigned int  bppSpec;
+    unsigned int  bpp;
+    const char *  mapfile;
 };
 
 
@@ -214,13 +214,15 @@ BMPwritefileheader(FILE *        const fp,
 
 
 
-static int
+static unsigned int
 BMPwriteinfoheader(FILE *        const fp, 
-                   int           const class, 
+                   enum bmpClass const class, 
                    unsigned long const bitcount, 
                    unsigned long const x, 
                    unsigned long const y) {
 /*----------------------------------------------------------------------------
+  Write the INFO header.
+
   Return the number of bytes written.
 ----------------------------------------------------------------------------*/
     unsigned int cbFix;
@@ -258,8 +260,6 @@ BMPwriteinfoheader(FILE *        const fp,
         PutShort(fp, bitcount); /* cBitCount */
     }
     break;
-    default:
-        pm_error(er_internal, "BMPwriteinfoheader");
     }
 
     return cbFix;
@@ -267,38 +267,38 @@ BMPwriteinfoheader(FILE *        const fp,
 
 
 
-static int
-BMPwriteRgb(FILE * const fp, 
-            int    const class, 
-            pixval const R, 
-            pixval const G, 
-            pixval const B) {
+static unsigned int
+BMPwriteRgb(FILE *        const fp, 
+            enum bmpClass const class, 
+            pixval        const R, 
+            pixval        const G, 
+            pixval        const B) {
 /*----------------------------------------------------------------------------
   Return the number of bytes written.
 -----------------------------------------------------------------------------*/
+    unsigned int retval;
+
     switch (class) {
     case C_WIN:
         PutByte(fp, B);
         PutByte(fp, G);
         PutByte(fp, R);
         PutByte(fp, 0);
-        return 4;
+        retval = 4;
     case C_OS2:
         PutByte(fp, B);
         PutByte(fp, G);
         PutByte(fp, R);
-        return 3;
-    default:
-        pm_error(er_internal, "BMPwriteRgb");
-        return -1;  /* avoid compiler warning. */
+        retval = 3;
     }
+    return retval;
 }
 
 
 
-static int
+static unsigned int
 BMPwriteColormap(FILE *           const ifP, 
-                 int              const class, 
+                 enum bmpClass    const class, 
                  int              const bpp,
                  const colorMap * const colorMapP) {
 /*----------------------------------------------------------------------------
@@ -443,7 +443,7 @@ bmpWriteRow_truecolor(FILE *         const fp,
 
 
 
-static int
+static unsigned int
 BMPwritebits(FILE *          const fp, 
              unsigned long   const cols, 
              unsigned long   const rows,
@@ -453,6 +453,8 @@ BMPwritebits(FILE *          const fp,
              pixval          const maxval,
              colorhash_table const cht) {
 /*----------------------------------------------------------------------------
+  Write the raster.
+
   Return the number of bytes written.
 -----------------------------------------------------------------------------*/
     unsigned int nbyte;
@@ -487,7 +489,7 @@ BMPwritebits(FILE *          const fp,
 
 static void
 bmpEncode(FILE *           const ifP, 
-          int              const class, 
+          enum bmpClass    const class, 
           enum colortype   const colortype,
           unsigned int     const bpp,
           int              const x, 
@@ -542,7 +544,7 @@ makeBilevelColorMap(colorMap * const colorMapP) {
 
 static void
 bmpEncodePbm(FILE *           const ifP, 
-             int              const class, 
+             enum bmpClass    const class, 
              int              const cols, 
              int              const rows, 
              unsigned char ** const bitrow) {
@@ -818,12 +820,12 @@ chooseColortypeBpp(bool             const userRequestsBpp,
 
 
 static void
-doPbm(FILE *       const ifP,
-      unsigned int const cols,
-      unsigned int const rows,
-      int          const format,
-      int          const class,
-      FILE *       const ofP) {
+doPbm(FILE *        const ifP,
+      unsigned int  const cols,
+      unsigned int  const rows,
+      int           const format,
+      enum bmpClass const class,
+      FILE *        const ofP) {
     
     /* We read the raster directly from the input with
         pbm_readpbmrow_packed().  The raster format is almost
@@ -872,16 +874,16 @@ doPbm(FILE *       const ifP,
 
 
 static void
-doPgmPpm(FILE *       const ifP,
-         unsigned int const cols,
-         unsigned int const rows,
-         pixval       const maxval,
-         int          const ppmFormat,
-         int          const class,
-         bool         const userRequestsBpp,
-         unsigned int const requestedBpp,
-         const char * const mapFileName,
-         FILE *       const ofP) {
+doPgmPpm(FILE *        const ifP,
+         unsigned int  const cols,
+         unsigned int  const rows,
+         pixval        const maxval,
+         int           const ppmFormat,
+         enum bmpClass const class,
+         bool          const userRequestsBpp,
+         unsigned int  const requestedBpp,
+         const char *  const mapFileName,
+         FILE *        const ofP) {
 
     /* PGM and PPM.  We read the input image into a PPM array, scan it
        to analyze the colors, and convert it to a BMP raster.  Logic
@@ -952,3 +954,6 @@ main(int           argc,
 
     return 0;
 }
+
+
+

@@ -83,7 +83,7 @@
 
 #include "pm.h"  /* For pm_error() */
 
-enum bmpClass {C_WIN=1, C_OS2=2};
+enum bmpClass {C_WIN, C_OS2};
 
 static char const er_internal[] = "%s: internal error!";
 
