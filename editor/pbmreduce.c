@@ -10,6 +10,7 @@
 ** implied warranty.
 */
 
+#include <limits.h>
 #include "pbm.h"
 #include "mallocvar.h"
 
@@ -70,6 +71,8 @@ main( argc, argv )
 	pm_usage( usage );
     if ( n < 2 )
 	pm_error( "N must be greater than 1" );
+    if (n > INT_MAX / n)
+        pm_error("Scale argument too large.  You specified %d", n);
     ++argn;
 
     if ( argn == argc )

@@ -93,7 +93,7 @@ install.bin.local: $(PKGDIR)/bin
 # In March 2012, pnmquantall replaced ppmquantall
 	cd $(PKGDIR)/bin ; \
 	rm -f ppmquantall$(EXE) ; \
-	$(SYMLINK) pnmquantall ppmquantall
+	$(SYMLINK) pnmquantall$(EXE) ppmquantall$(EXE)
 # In August 2014, pamcomp replaced pnmcomp
 	cd $(PKGDIR)/bin ; \
 	rm -f pnmcomp$(EXE) ; \
