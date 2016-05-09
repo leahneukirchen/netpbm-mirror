@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.75.00
 
+              bmptopnm: Add ability to convert Version 4 and 5 Windows BMP.
+
               pbmtext: remove undocumented -dump option; add 'genfontc'
               development tool (buildtools/ directory) to replace it.
 

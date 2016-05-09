@@ -80,6 +80,19 @@ struct pixelformat {
         */
 };
 
+typedef struct {
+    /* These are all encodings of floating point */
+    unsigned long x;
+    unsigned long y; 
+    unsigned long z;
+} cieXyz;
+
+typedef struct {
+    cieXyz red;
+    cieXyz grn;
+    cieXyz blu;
+} cieXyzTriple;
+
 struct bmpInfoHeader {
     enum rowOrder rowOrder;
     unsigned int cols;
@@ -103,6 +116,7 @@ struct bmpInfoHeader {
     unsigned short cPlanes;
     BMPCompType compression;
     struct pixelformat pixelformat;
+    cieXyzTriple endPoints;
 };
 
 
@@ -208,21 +222,30 @@ GetLong(FILE * const fp) {
 
 
 
-typedef struct {
-    long dummy[12];
-} cieXyzTriple;
+static cieXyz
+GetCieXyz(FILE * const ifP) {
+
+    cieXyz retval;
+
+    retval.x = GetLong(ifP);
+    retval.y = GetLong(ifP);
+    retval.z = GetLong(ifP);
+
+    return retval;
+}
+
+
 
 static cieXyzTriple
-GetCieXyzTriple(FILE * const fp) {
+GetCieXyzTriple(FILE *         const ifP) {
 
-    cieXyzTriple v;
-    unsigned int i;
+    cieXyzTriple retval;
 
-    for (i = 0; i < 12; ++i) 
-        if (pm_readlittlelong(fp, &v.dummy[i]) == -1)
-            pm_error(er_read, ifname);
+    retval.red = GetCieXyz(ifP);
+    retval.grn = GetCieXyz(ifP);
+    retval.blu = GetCieXyz(ifP);
 
-    return v;
+    return retval;
 }
 
 
@@ -274,13 +297,11 @@ bmpReadfileheader(FILE *         const ifP,
 
 
 static void
-readOs2InfoHeader(FILE *                 const ifP,
-                  struct bmpInfoHeader * const headerP) {
+readOs2InfoHeaderRest(FILE *                 const ifP,
+                      struct bmpInfoHeader * const headerP) {
 
     unsigned short colsField, rowsField;
     unsigned short planesField, bitCountField;
-
-    headerP->class = C_OS2;
 
     pm_readlittleshortu(ifP, &colsField);
     if (colsField == 0)
@@ -317,9 +338,6 @@ readOs2InfoHeader(FILE *                 const ifP,
                  headerP->cBitCount);
                  
     headerP->compression = BMPCOMP_RGB;
-    
-    pm_message("OS/2 BMP, %dx%dx%d",
-               headerP->cols, headerP->rows, headerP->cBitCount);
 }
 
 
@@ -366,8 +384,6 @@ readWindowsBasic40ByteInfoHeader(FILE *                 const ifP,
 -----------------------------------------------------------------------------*/
     int colorsused;        /* ColorsUsed value from header */
     unsigned short planesField, bitCountField;
-
-    headerP->class = C_WIN;
 
     headerP->cols = GetLong(ifP);
     if (headerP->cols == 0)
@@ -541,7 +557,15 @@ defaultPixelformat(unsigned int const bitCount) {
 
 static void
 readV4InfoHeaderExtension(FILE *                 const ifP, 
-                          struct bmpInfoHeader * const headerP) {
+                          struct bmpInfoHeader * const headerP,
+                          unsigned int *         const bytesReadP) {
+
+    unsigned long redMsk, grnMsk, bluMsk, trnMsk;
+
+    redMsk = GetLong(ifP);
+    grnMsk = GetLong(ifP);
+    bluMsk = GetLong(ifP);
+    trnMsk = GetLong(ifP);
 
     if (headerP->bitFields) {
         /* A document from Microsoft says on Windows 95 there is no
@@ -549,21 +573,40 @@ readV4InfoHeaderExtension(FILE *                 const ifP,
            (5,5,5) or (5,6,5) for 16 bit and (8,8,8) for 32 bit.
            It calls these RGB555, RGB565, RGB888.
         */
-        headerP->pixelformat.red = bitPositionFromMask(GetLong(ifP));
-        headerP->pixelformat.grn = bitPositionFromMask(GetLong(ifP));
-        headerP->pixelformat.blu = bitPositionFromMask(GetLong(ifP));
-        headerP->pixelformat.trn = bitPositionFromMask(GetLong(ifP));
+        headerP->pixelformat.red = bitPositionFromMask(redMsk);
+        headerP->pixelformat.grn = bitPositionFromMask(grnMsk);
+        headerP->pixelformat.blu = bitPositionFromMask(bluMsk);
+        headerP->pixelformat.trn = bitPositionFromMask(trnMsk);
 
         computeConventionalBgr(&headerP->pixelformat, headerP->cBitCount);
     } else
         headerP->pixelformat = defaultPixelformat(headerP->cBitCount);
 
     GetLong(ifP);  /* Color space */
-    GetCieXyzTriple(ifP);  /* Endpoints */
+
+    headerP->endPoints = GetCieXyzTriple(ifP);  /* 36 bytes */
+
     GetLong(ifP);  /* GammaRed */
     GetLong(ifP);  /* GammaGreen */
     GetLong(ifP);  /* GammaBlue */
+
+    *bytesReadP = 68;
 } 
+
+
+
+static void
+readV5InfoHeaderExtension(FILE *                 const ifP, 
+                          struct bmpInfoHeader * const headerP,
+                          unsigned int *         const bytesReadP) {
+
+    GetLong(ifP);  /* Intent */
+    GetLong(ifP);  /* ProfileData */
+    GetLong(ifP);  /* ProfileSize */
+    GetLong(ifP);  /* Reserved */
+
+    *bytesReadP = 16;
+}
 
 
 
@@ -577,9 +620,9 @@ defaultV4InfoHeaderExtension(struct bmpInfoHeader * const headerP) {
 
 
 static void
-readWindowsInfoHeader(FILE *                 const ifP, 
-                      unsigned int           const cInfoHeaderSize,
-                      struct bmpInfoHeader * const headerP) {
+readWindowsInfoHeaderRest(FILE *                 const ifP, 
+                          unsigned int           const cInfoHeaderSize,
+                          struct bmpInfoHeader * const headerP) {
 
     /* There are 3 major formats of Windows
        BMP, identified by the 3 info header lengths.  The original
@@ -587,23 +630,34 @@ readWindowsInfoHeader(FILE *                 const ifP,
        new with Windows 95 and NT 4.0.  The "V5 header" is 124 bytes
        and was new with Windows 98 and Windows 2000.
     */
+    unsigned int bytesRead;
+
     readWindowsBasic40ByteInfoHeader(ifP, headerP);
 
-    if (cInfoHeaderSize >= 108) 
-        readV4InfoHeaderExtension(ifP, headerP);
-    else 
+    bytesRead = 40;
+
+    if (cInfoHeaderSize >= BMP_HDRLEN_WIN_V4) {
+        unsigned int v4BytesRead;
+        readV4InfoHeaderExtension(ifP, headerP, &v4BytesRead);
+        bytesRead += v4BytesRead;
+
+        assert(bytesRead == BMP_HDRLEN_WIN_V4);
+    } else 
         defaultV4InfoHeaderExtension(headerP);
 
-    if (cInfoHeaderSize >= 124) {
-        /* Read off the V5 info header extension. */
-        GetLong(ifP);  /* Intent */
-        GetLong(ifP);  /* ProfileData */
-        GetLong(ifP);  /* ProfileSize */
-        GetLong(ifP);  /* Reserved */
+    if (cInfoHeaderSize >= BMP_HDRLEN_WIN_V5) {
+        unsigned int v5BytesRead;
+        readV5InfoHeaderExtension(ifP, headerP, &v5BytesRead);
+        bytesRead += v5BytesRead;
+        assert(bytesRead == BMP_HDRLEN_WIN_V5);
     }
 
-    pm_message("Windows BMP, %dx%dx%d",
-               headerP->cols, headerP->rows, headerP->cBitCount);
+    for (; bytesRead < cInfoHeaderSize;) {
+        GetByte(ifP);
+        ++bytesRead;
+    }
+    
+    assert(bytesRead == cInfoHeaderSize);
 }
 
 
@@ -611,25 +665,36 @@ readWindowsInfoHeader(FILE *                 const ifP,
 static void
 bmpReadinfoheader(FILE *                 const ifP, 
                   unsigned int *         const bytesReadP,
-                  struct bmpInfoHeader * const headerP) {
+                  struct bmpInfoHeader * const headerP,
+                  const char **          const errorP) {
 
     unsigned int const cInfoHeaderSize = GetLong(ifP);
 
-    switch (cInfoHeaderSize) {
-    case 12:
-        readOs2InfoHeader(ifP, headerP);
-        break;
-    case 40: 
-    case 108:
-    case 124:
-        readWindowsInfoHeader(ifP, cInfoHeaderSize, headerP);
-        break;
-    default:
-        pm_error("%s: unknown Info Header size: %u bytes", 
-                 ifname, cInfoHeaderSize);
-        break;
+    const char * error;
+
+    BMPdetermineclass(cInfoHeaderSize, &headerP->class, &error);
+
+    if (error) {
+        pm_asprintf(errorP, "Cannot determine the class of BMP from the "
+                    "info header size %u.  %s", cInfoHeaderSize, error);
+        pm_strfree(error);
+    } else {
+        switch (headerP->class) {
+        case BMP_C_WIN_V1: 
+        case BMP_C_WIN_V2: 
+        case BMP_C_WIN_V3: 
+        case BMP_C_WIN_V4: 
+        case BMP_C_WIN_V5: 
+            readWindowsInfoHeaderRest(ifP, cInfoHeaderSize, headerP);
+            break;
+        case BMP_C_OS2_1x:
+        case BMP_C_OS2_2x:
+            readOs2InfoHeaderRest(ifP, headerP);
+            break;
+        }
+        *errorP = NULL;
+        *bytesReadP = cInfoHeaderSize;
     }
-    *bytesReadP = cInfoHeaderSize;
 }
 
 
@@ -676,11 +741,12 @@ bmpReadColormap(FILE *         const ifP,
 
         bytesRead += 3;
 
-        if (class == C_WIN) {
+        for (i = 3; i < BMPlenrgb(class); ++i) {
             GetByte(ifP);
             bytesRead += 1;
         }
     }
+
     *colormapP = colormap;
     *bytesReadP = bytesRead;
 }
@@ -1190,19 +1256,28 @@ bmpReadraster(FILE *            const ifP,
 
 static void
 reportHeader(struct bmpInfoHeader const header,
-             unsigned int         const offBits) {
+             unsigned int         const offBits,
+             bool                 const verbose) {
              
-    pm_message("BMP image header says:");
-    pm_message("  Class of BMP: %s", BMPClassName(header.class));
-    pm_message("  Width: %d pixels", header.cols);
-    pm_message("  Height: %d pixels", header.rows);
-    pm_message("  Depth: %d planes", header.cPlanes);
-    pm_message("  Row order: %s", 
-               header.rowOrder == BOTTOMUP ? "bottom up" : "top down");
-    pm_message("  Byte offset of raster within file: %u", offBits);
-    pm_message("  Bits per pixel in raster: %u", header.cBitCount);
-    pm_message("  Compression: %s", BMPCompTypeName(header.compression));
-    pm_message("  Colors in color map: %u", header.cmapsize);
+    if (verbose) {
+        pm_message("BMP image header says:");
+        pm_message("  Class of BMP: %s", BMPClassName(header.class));
+        pm_message("  Width: %d pixels", header.cols);
+        pm_message("  Height: %d pixels", header.rows);
+        pm_message("  Depth: %d planes", header.cPlanes);
+        pm_message("  Row order: %s", 
+                   header.rowOrder == BOTTOMUP ? "bottom up" : "top down");
+        pm_message("  Byte offset of raster within file: %u", offBits);
+        pm_message("  Bits per pixel in raster: %u", header.cBitCount);
+        pm_message("  Compression: %s", BMPCompTypeName(header.compression));
+        pm_message("  Colors in color map: %u", header.cmapsize);
+    } else {
+        pm_message("%s BMP, %ux%ux%u",
+                   BMPClassName(header.class),
+                   header.cols,
+                   header.rows,
+                   header.cBitCount);
+    }
 }        
 
 
@@ -1340,14 +1415,18 @@ readBmp(FILE *               const ifP,
     }
     {
         unsigned int bytesRead;
-        bmpReadinfoheader(ifP, &bytesRead, &bmpHeader);
+        const char * error;
+        bmpReadinfoheader(ifP, &bytesRead, &bmpHeader, &error);
+        if (error)
+            pm_error("Failed to read the BMP info header.  Image may "
+                     "not be a valid BMP.  %s", error);
+
         if (verbose)
             pm_message("Read %u bytes of header", bytesRead);
         pos += bytesRead;
     }
 
-    if (verbose) 
-        reportHeader(bmpHeader, offBits);
+    reportHeader(bmpHeader, offBits, verbose);
 
     warnIfOffBitsWrong(bmpHeader, offBits);
 
