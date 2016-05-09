@@ -623,9 +623,15 @@ bmpReadinfoheader(FILE *                 const ifP,
         readOs2InfoHeader(ifP, headerP);
         break;
     case 40: 
-    case 108:
-    case 124:
         readWindowsInfoHeader(ifP, cInfoHeaderSize, headerP);
+        break;
+    case 108:
+        pm_error("%s: this is a Version 4 Windows BMP; "
+                 "this program knows only Version 1");
+        break;
+    case 124:
+        pm_error("%s: this is a Version 5 Windows BMP; "
+                 "this program knows only Version 1");
         break;
     default:
         pm_error("%s: unknown Info Header size: %u bytes", 

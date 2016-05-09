@@ -322,7 +322,7 @@ colornameLabel(pixel        const color,
 
     PPM_DEPTH(color255, color, maxval, 255);
 
-    colorIndex = ppm_findclosestcolor(dictColors, nDictColor, &color);
+    colorIndex = ppm_findclosestcolor(dictColors, nDictColor, &color255);
 
     assert(colorIndex >= 0 && colorIndex < nDictColor);
 

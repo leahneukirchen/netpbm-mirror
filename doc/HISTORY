@@ -4,6 +4,25 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+16.05.09 BJH  Release 10.73.01
+
+              bmptopnm: fail properly with Version 4, 5 Windows BMP.
+
+              ppmhist: fix incorrect color names.  Introduced in
+              Netpbm 10.19 (November 2003).
+
+              pnmpaste: fix possible invalid memory access.  Introduced in
+              Netpbm 1.44 (September 2008).
+
+              pbmreduce: fix undefined behavior when scale factor argument is
+              too big.  Always present (pbmreduce was new in September 1989).
+
+              cameratopam: fix invalid memory reference; effect unknown.
+              Introduced in Netpbm 10.68 (September 2014).
+
+              Install on Windows: fix backward compatibility symlinks for
+              pnmtoplainpnm, pnmquantall.
+
 15.12.26 BJH  Release 10.73.00
 
               anytopnm: use --mime-type option instead of --mime on newer
