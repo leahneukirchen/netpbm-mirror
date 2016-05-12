@@ -29,6 +29,8 @@
 
 #define MAXCOLORS 256
 
+enum WinOs2 { C_WIN, C_OS2 };
+
 enum colortype {TRUECOLOR, PALETTE};
 
 struct rgb {
@@ -218,7 +220,7 @@ BMPwritefileheader(FILE *        const fp,
 
 static unsigned int
 BMPwriteinfoheader(FILE *        const fp, 
-                   enum bmpClass const class, 
+                   enum WinOs2   const class, 
                    unsigned long const bitcount, 
                    unsigned long const x, 
                    unsigned long const y) {
@@ -275,7 +277,7 @@ BMPwriteinfoheader(FILE *        const fp,
 
 static unsigned int
 BMPwriteRgb(FILE *        const fp, 
-            enum bmpClass const class, 
+            enum WinOs2   const class, 
             pixval        const R, 
             pixval        const G, 
             pixval        const B) {
