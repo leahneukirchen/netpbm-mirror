@@ -113,11 +113,11 @@ parseCommandLine(int argc, const char ** argv,
     if (windowsSpec && os2Spec) 
         pm_error("Can't specify both -windows and -os2 options.");
     else if (windowsSpec) 
-        cmdlineP->class = C_WIN;
+        cmdlineP->class = BMP_C_WIN_V1;
     else if (os2Spec)
-        cmdlineP->class = C_OS2;
+        cmdlineP->class = BMP_C_OS2_1x;
     else 
-        cmdlineP->class = C_WIN;
+        cmdlineP->class = BMP_C_WIN_V1;
 
 
     if (cmdlineP->bppSpec) {
@@ -230,7 +230,12 @@ BMPwriteinfoheader(FILE *        const fp,
     unsigned int cbFix;
 
     switch (class) {
-    case C_WIN: {
+    case BMP_C_WIN_V1:
+    case BMP_C_WIN_V2:
+    case BMP_C_WIN_V3:
+    case BMP_C_WIN_V4:
+    case BMP_C_WIN_V5:
+    {
         cbFix = BMP_HDRLEN_WIN_V1;
         PutLong(fp, cbFix);
 
@@ -251,10 +256,17 @@ BMPwriteinfoheader(FILE *        const fp,
         PutLong(fp, 0);   /* ColorsUsed */
         PutLong(fp, 0);   /* ColorsImportant */
 
-        assert(BMP_HDRLEN_OS2_1x == 40);  /* We wrote 40 bytes */
+        assert(BMP_HDRLEN_WIN_V1 == 40);  /* We wrote 40 bytes */
+
+        if (class != BMP_C_WIN_V1) {
+            /* Invalid call to this function - we don't know how to write
+               these header extensions.
+            */
+            assert(false);
+        }
     }
     break;
-    case C_OS2: {
+    case BMP_C_OS2_1x: {
         cbFix = BMP_HDRLEN_OS2_1x;
         PutLong(fp, cbFix);
 
@@ -266,8 +278,11 @@ BMPwriteinfoheader(FILE *        const fp,
         assert(BMP_HDRLEN_OS2_1x == 12);  /* We wrote 12 bytes */
     }
     break;
+    case BMP_C_OS2_2x:
+        /* Invalid call to this function */
+        assert(false);
+        break;
     }
-
     return cbFix;
 }
 
@@ -285,13 +300,18 @@ BMPwriteRgb(FILE *        const fp,
     unsigned int retval;
 
     switch (class) {
-    case C_WIN:
+    case BMP_C_WIN_V1:
+    case BMP_C_WIN_V2:
+    case BMP_C_WIN_V3:
+    case BMP_C_WIN_V4:
+    case BMP_C_WIN_V5:
         PutByte(fp, B);
         PutByte(fp, G);
         PutByte(fp, R);
         PutByte(fp, 0);
         retval = 4;
-    case C_OS2:
+    case BMP_C_OS2_1x:
+    case BMP_C_OS2_2x:
         PutByte(fp, B);
         PutByte(fp, G);
         PutByte(fp, R);
