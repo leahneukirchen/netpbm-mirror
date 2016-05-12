@@ -7,7 +7,7 @@
 
 <body>
 <h1>pm_system()</h1>
-Updated: 17 October 2006
+Updated: 12 May 2016
 <br>
 
 <h2>Name</h2>
@@ -38,6 +38,29 @@ pm_system_vp(const char *  const progName,
              void *        const feederParm,
              void                stdoutAccepter(int, void *),
              void *        const accepterParm);
+
+pm_system2(void                  stdinFeeder(int, void *),
+           void *          const feederParm,
+           void                  stdoutAccepter(int, void *),
+           void *          const accepterParm,
+           const char *    const shellCommand,
+           int *           const termStatusP );
+
+pm_system2_lp(const char *  const progName,
+             void                stdinFeeder(int, void *),
+             void *        const feederParm,
+             void                stdoutAccepter(int, void *),
+             int *         const terminationStatusP,
+             void *        const accepterParm,
+             ...);
+
+pm_system2_vp(const char *  const progName,
+             const char ** const argArray,
+             void                stdinFeeder(int, void *),
+             void *        const feederParm,
+             void                stdoutAccepter(int, void *),
+             void *        const accepterParm,
+             int *         const termStatusP);
 
 </code>
 </pre>
@@ -176,9 +199,28 @@ Standard Input and Output.  Example:
 </kbd>
 </pre>
 
-<b>pm_system()</b> creates a child process to run the shell and waits
+<p><b>pm_system()</b> creates a child process to run the shell and waits
 for that process to terminate (and accepts its completion status)
 before returning.
+
+<p>If the shell fails, i.e. does not exit voluntarily with zero exit status,
+<b>pm_system</b> calls <b>pm_error()</b>, which normally issues an error
+message to Standard Error and exits the program.  Use <b>pm_system2()</b>
+if you don't want that.
+
+<p>Note that the &quot;termination status&quot; of a Unix process is a value
+which is a combination of 1) whether the process exited voluntarily or was
+killed by the operating system; 2) in the case of termination by the OS, what
+class of signal did it; and 3) in the case of voluntary exit, what &quot;exit
+status&quot; the program declared.
+
+
+<h3>pm_system2()</h3>
+
+<p>This is the same as <b>pm_system()</b> except that rather than respond to
+the shell process' termination status, it just returns it to you (via your
+<i>termStatusP</i> argument).
+
 
 <h3>pm_system_lp()</h3>
 
@@ -223,6 +265,18 @@ contain characters that mean something to the shell such as
 <p><b>pm_system_lp()</b> can also be considerably faster that
 <b>pm_system()</b>, since it skips the whole running of the shell.
 
+<p>If the process fails, i.e. produces nonzero termination status,
+<b>pm_system_lp</b> calls <b>pm_error()</b>, which normally issues an error
+message to Standard Error and exits the program.  Use <b>pm_system2_lp()</b>
+if you don't want that.
+
+
+<h3>pm_system2_lp()</h3>
+
+<p>This is the same as <b>pm_system_lp()</b> except that rather than respond
+to the process' termination status, it just returns it to you (via your
+<i>termStatusP</i> argument).
+
 
 <h3>pm_system_vp()</h3>
 
@@ -244,6 +298,19 @@ the array identifies the end of the arguments.
     pm_system_vp("pnmtojpeg", argArray, NULL, NULL, NULL, NULL);
 </code>
 </pre>
+
+
+<p>If the process fails, i.e. produces nonzero termination status,
+<b>pm_system_vp</b> calls <b>pm_error()</b>, which normally issues an error
+message to Standard Error and exits the program.  Use <b>pm_system2_vp()</b>
+if you don't want that.
+
+
+<h3>pm_system2_vp()</h3>
+
+<p>This is the same as <b>pm_system_vp()</b> except that rather than respond
+to the process' termination status, it just returns it to you (via your
+<i>termStatusP</i> argument).
 
 
 <h2>Applications</h2>
@@ -387,7 +454,14 @@ for the tuple array with malloc().  You are responsible for freeing
 that memory.
 
 <h2>HISTORY</h2>
-<b>pm_system()</b> was introduced in Netpbm 10.13 (January 2003).
+
+<p><b>pm_system()</b> was introduced in Netpbm 10.13 (January 2003).
+
+<p><b>pm_system_lp()</b> and <b>pm_system_vp()</b> were introduced in
+Netpbm 10.40 (September 2007).
+
+<p><b>pm_system2()</b>, <b>pm_system2_lp()</b>, and <b>pm_system2_vp()</b>
+were introduce in Netpbm 10.75 (June 2016).
 
 </body>
 </html>
