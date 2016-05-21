@@ -14,7 +14,14 @@
  *
  * Additions by Bryan Henderson contributed to public domain by author.
  *
+ * PostScript(R) Language Reference, Third Edition  (a.k.a. "Red Book")
+ * http://www.adobe.com/products/postscript/pdfs/PLRM.pdf
+ * ISBN 0-201-37922-8
+ *
+ * Other resources:
+ * http://partners.adobe.com/public/developer/ps/index_specs.html
  */
+
 #define _XOPEN_SOURCE   /* Make sure popen() is in stdio.h */
 #define _BSD_SOURCE     /* Make sure stdrup() is in string.h */
 #include <unistd.h>
@@ -22,6 +29,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <assert.h>
 
 #include "pm_c_util.h"
 #include "mallocvar.h"
@@ -29,9 +37,6 @@
 #include "shhopt.h"
 #include "pm_system.h"
 #include "pbm.h"
-
-
-#define BUFFER_SIZE 2048
 
 struct CmdlineInfo {
     /* All the information the user supplied in the command line,
@@ -45,35 +50,6 @@ struct CmdlineInfo {
     unsigned int verbose;
     const char * text;
 };
-
-
-
-static void
-writeFileToStdout(const char * const fileName){
-    /* simple pbmtopbm */
-
-    FILE * ifP;
-    int format;
-    int cols, rows, row ;
-    unsigned char * bitrow; 
-    
-    ifP = pm_openr(fileName);
-    pbm_readpbminit(ifP, &cols, &rows, &format);
-
-    if (cols==0 || rows==0 || cols>INT_MAX-10 || rows>INT_MAX-10)
-      pm_error("Abnormal output from gs program.  "
-               "width x height = %u x %u", cols, rows);
-               
-    pbm_writepbminit(stdout, cols, rows, 0);           
-               
-    bitrow = pbm_allocrow_packed(cols);
-    
-    for (row = 0; row < rows; ++row) {
-        pbm_readpbmrow_packed(ifP, bitrow, cols, format);
-        pbm_writepbmrow_packed(stdout, bitrow, cols, 0);
-    }
-    pbm_freerow_packed(bitrow);
-}
 
 
 
@@ -144,103 +120,80 @@ parseCommandLine(int argc, const char ** argv,
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
 
     buildTextFromArgs(argc, argv, &cmdlineP->text);
+
+    free(option_def);
 }
 
 
 
 static const char *
-construct_postscript(struct CmdlineInfo const cmdline) {
+constructPostscript(struct CmdlineInfo const cmdline) {
+/*-----------------------------------------------------------------------------
+  In Postscript, the bottom of the page is row zero.  Negative values are
+  allowed but negative regions are clipped from the output image.  We make
+  adjustments to ensure that nothing is lost.
+
+  Postscript fonts also allow negative values in the bounding box coordinates.
+  The bottom edge of "L" is row zero.  The feet of "g" "p" "y" extend into
+  negative region.  In a similar manner the left edge of the bounding box may
+  be negative.  We add margins on the left and the bottom with "xinit" and
+  "yinit" to provide for such characters.
+
+  The sequence "textstring false charpath flattenpath pathbbox" determines
+  the bounding box of the entire text when rendered.  We make adjustments
+  with  "xdelta", "ydelta" whenever "xinit", "yinit" is insufficient.
+  This may sound unlikely, but is likely to happen with right-to-left or
+  vertical writing, which we haven't tested.
+-----------------------------------------------------------------------------*/
+
+    /* C89 limits the size of a string constant, so we have to build the
+       Postscript command in pieces.
+    */
+
+    const char * const psTemplate =
+        "/%s findfont\n"
+        "/fontsize %u def\n"
+        "/stroke %f def\n"
+        "/textstring (%s) def\n";
+
+    const char * const psFixed1 =
+        "fontsize scalefont\n"
+        "setfont\n"
+        "/xinit fontsize 2   div def\n"
+        "/yinit fontsize 1.5 mul def\n"
+        "xinit yinit moveto\n"
+        "textstring false charpath flattenpath pathbbox\n"
+        "/top    exch def\n"
+        "/right  exch def\n"
+        "/bottom exch def\n"
+        "/left   exch def\n"
+        "/xdelta left   0 lt {left neg}   {0} ifelse def\n"
+        "/ydelta bottom 0 lt {bottom neg} {0} ifelse def\n"
+        "/width  right xdelta add def\n"
+        "/height top   ydelta add def\n";
+
+    const char * const psFixed2 =
+        "<</PageSize [width height]>> setpagedevice\n"
+        "xinit yinit moveto\n"
+        "xdelta ydelta rmoveto\n" 
+        "stroke 0 lt\n"
+        "  {textstring show}\n"
+        "  {stroke setlinewidth 0 setgray\n"
+        "  textstring true charpath stroke}\n"
+        "  ifelse\n"
+        "textstring false charpath flattenpath pathbbox\n"
+        "showpage";
 
     const char * retval;
-    const char * template;
+    const char * psVariable;
 
-    if (cmdline.stroke < 0) 
-        template =
-            "/%s findfont\n"
-            "%d scalefont\n"
-            "setfont\n"
-            "12 36 moveto\n"
-            "(%s) show\n"
-            "showpage\n";
-    else 
-        template =
-            "/%s findfont\n"
-            "%d scalefont\n"
-            "setfont\n"
-            "12 36 moveto\n"
-            "%f setlinewidth\n"
-            "0 setgray\n"
-            "(%s) true charpath\n"
-            "stroke\n"
-            "showpage\n";
+    pm_asprintf(&psVariable, psTemplate, cmdline.font, cmdline.fontsize, 
+                cmdline.stroke, cmdline.text);
 
-    if (cmdline.stroke < 0)
-        pm_asprintf(&retval, template, cmdline.font, cmdline.fontsize, 
-                    cmdline.text);
-    else
-        pm_asprintf(&retval, template, cmdline.font, cmdline.fontsize, 
-                    cmdline.stroke, cmdline.text);
+    pm_asprintf(&retval, "%s%s%s", psVariable, psFixed1, psFixed2);
 
-    return retval;
-}
+    pm_strfree(psVariable);
 
-
-
-static const char *
-gsExecutableName() {
-
-    const char * const which = "which gs";
-
-    static char buffer[BUFFER_SIZE];
-
-    FILE * f;
-
-    memset(buffer, 0, BUFFER_SIZE);
-
-    f = popen(which, "r");
-    if (!f)
-        pm_error("Can't find ghostscript");
-
-    fread(buffer, 1, BUFFER_SIZE, f);
-    if (buffer[strlen(buffer) - 1] == '\n')
-        buffer[strlen(buffer) - 1] = '\0';
-    pclose(f);
-    
-    if (buffer[0] != '/' && buffer[0] != '.')
-        pm_error("Can't find ghostscript");
-
-    return buffer;
-}
-
-
-
-static const char *
-cropExecutableName(void) {
-
-    const char * const which = "which pnmcrop";
-
-    static char buffer[BUFFER_SIZE];
-    const char * retval;
-
-    FILE * f;
-
-    memset(buffer, 0, BUFFER_SIZE);
-
-    f = popen(which, "r");
-    if (!f)
-        retval = NULL;
-    else {
-        fread(buffer, 1, BUFFER_SIZE, f);
-        if (buffer[strlen(buffer) - 1] == '\n')
-            buffer[strlen(buffer) - 1] = 0;
-        pclose(f);
-            
-        if (buffer[0] != '/' && buffer[0] != '.') {
-            retval = NULL;
-            pm_message("Can't find pnmcrop");
-        } else
-            retval = buffer;
-    }
     return retval;
 }
 
@@ -252,9 +205,6 @@ gsArgList(const char *       const psFname,
           struct CmdlineInfo const cmdline) {
 
     unsigned int const maxArgCt = 50;
-    double const x = (double) cmdline.res * 11;
-    double const y = (double) cmdline.res * 
-                     ((double) cmdline.fontsize * 2 + 72)  / 72;
     
     const char ** retval;
     unsigned int argCt;  /* Number of arguments in 'retval' so far */
@@ -264,62 +214,25 @@ gsArgList(const char *       const psFname,
     
     if (cmdline.fontsize <= 0)
          pm_error("Font size must be positive.");
-    
-    /* The following checks are for guarding against overflows in this 
-       function.  Huge x,y values that pass these checks may be
-       rejected by the 'gs' program.
-    */
-    
-    if (x > (double) INT_MAX-10)
-         pm_error("Absurdly fine resolution: %u. Output width too large.",
-                   cmdline.res );
-    if (y > (double) INT_MAX-10)
-         pm_error("Absurdly fine resolution (%u) and/or huge font size (%u). "
-                  "Output height too large.", cmdline.res, cmdline.fontsize);
-    
+  
     MALLOCARRAY_NOFAIL(retval, maxArgCt+2);
 
     argCt = 0;  /* initial value */
 
     pm_asprintf(&retval[argCt++], "ghostscript");
 
-    pm_asprintf(&retval[argCt++], "-g%dx%d", (int) x, (int) y);
     pm_asprintf(&retval[argCt++], "-r%d", cmdline.res);
-    pm_asprintf(&retval[argCt++], "-sDEVICE=pbm");
+    pm_asprintf(&retval[argCt++], "-sDEVICE=pbmraw");
     pm_asprintf(&retval[argCt++], "-sOutputFile=%s", outputFilename);
     pm_asprintf(&retval[argCt++], "-q");
     pm_asprintf(&retval[argCt++], "-dBATCH");
+    pm_asprintf(&retval[argCt++], "-dSAFER");
     pm_asprintf(&retval[argCt++], "-dNOPAUSE");
     pm_asprintf(&retval[argCt++], "%s", psFname);
 
     retval[argCt++] = NULL;
 
-    return retval;
-}
-
-
-
-static const char **
-cropArgList(const char * const inputFileName) {
-
-    unsigned int const maxArgCt = 50;
-
-    const char ** retval;
-    unsigned int argCt;
-
-    MALLOCARRAY_NOFAIL(retval, maxArgCt+2);
-
-    argCt = 0;  /* initial value */
-
-    pm_asprintf(&retval[argCt++], "pnmcrop");
-
-    pm_asprintf(&retval[argCt++], "-top");
-    pm_asprintf(&retval[argCt++], "-right");
-    if (pm_plain_output)
-        pm_asprintf(&retval[argCt++], "-plain");
-    pm_asprintf(&retval[argCt++], "%s", inputFileName);
-
-    retval[argCt++] = NULL;
+    assert(argCt < maxArgCt);
 
     return retval;
 }
@@ -338,7 +251,7 @@ writeProgram(const char *       const psFname,
         pm_error("Can't open temp file '%s'.  Errno=%d (%s)",
                  psFname, errno, strerror(errno));
 
-    ps = construct_postscript(cmdline);
+    ps = constructPostscript(cmdline);
 
     if (cmdline.verbose)
         pm_message("Postscript program = '%s'", ps);
@@ -347,7 +260,6 @@ writeProgram(const char *       const psFname,
         pm_error("Can't write postscript to temp file");
 
     fclose(psfile);
-
     pm_strfree(ps);
 }
 
@@ -387,8 +299,9 @@ executeProgram(const char *       const psFname,
                const char *       const outputFname,
                struct CmdlineInfo const cmdline) {
 
-    const char * const executableNm = gsExecutableName();
+    const char *  const executableNm = "gs";
     const char ** const argList = gsArgList(psFname, outputFname, cmdline);
+
     int termStatus;
 
     if (cmdline.verbose)
@@ -413,54 +326,36 @@ executeProgram(const char *       const psFname,
 
 
 static void
-reportCrop(const char *  const executableNm,
-           const char ** const argList) {
+writePbmToStdout(const char * const fileName){
+/*----------------------------------------------------------------------------
+  Write the PBM image that is in the file named 'fileName" to Standard
+  Output.  I.e. pbmtopbm.
 
-    unsigned int i;
-
-    pm_message("Running '%s' to crop the output", executableNm);
-
-    pm_message("Program arguments:");
-
-    for (i = 0; argList[i]; ++i)
-        pm_message("  '%s'", argList[i]);
-}
-
-
-
-static void
-cropToStdout(const char * const inputFileName,
-             bool         const verbose) {
-
-    const char * executableNm = cropExecutableName();
-
-    if (executableNm) {
-        const char ** const argList = cropArgList(inputFileName);
-
-        int termStatus;
-
-        if (verbose)
-            reportCrop(executableNm, argList);
+  It's not a byte-for-byte copy because PBM allows the same image to be
+  represented many ways (all of which we can accept as our input), but we use
+  libnetpbm to write our output in its specific way.
+----------------------------------------------------------------------------*/
+    FILE * ifP;
+    int format;
+    int cols, rows, row ;
+    unsigned char * bitrow; 
     
-        pm_system2_vp(executableNm,
-                      argList,
-                      pm_feed_null, NULL,
-                      NULL, NULL,
-                      &termStatus);
-        
-        if (termStatus != 0) {
-            const char * const msg = pm_termStatusDesc(termStatus);
+    ifP = pm_openr(fileName);
+    pbm_readpbminit(ifP, &cols, &rows, &format);
 
-            pm_error("Failed to run pnmcrop process.  %s", msg);
-
-            pm_strfree(msg);
-        }
-        freeArgList(argList);
-    } else {
-        /* No pnmcrop.  So don't crop. */
-        pm_message("Can't find pnmcrop program, image will be large");
-        writeFileToStdout(inputFileName);
+    if (cols == 0 || rows == 0 || cols > INT_MAX - 10 || rows > INT_MAX - 10)
+        pm_error("Abnormal output from gs program.  "
+                 "width x height = %u x %u", cols, rows);
+               
+    pbm_writepbminit(stdout, cols, rows, 0);           
+               
+    bitrow = pbm_allocrow_packed(cols);
+    
+    for (row = 0; row < rows; ++row) {
+        pbm_readpbmrow_packed(ifP, bitrow, cols, format);
+        pbm_writepbmrow_packed(stdout, bitrow, cols, 0);
     }
+    pbm_freerow_packed(bitrow);
 }
 
 
@@ -468,30 +363,35 @@ cropToStdout(const char * const inputFileName,
 static void
 createOutputFile(struct CmdlineInfo const cmdline) {
 
-    const char * const template = "./pstextpbm.%d.tmp.%s";
-    
     const char * psFname;
-    const char * uncroppedPbmFname;
+    const char * tempPbmFname;
+    FILE * psFileP;
+    FILE * pbmFileP;
 
-    pm_asprintf(&psFname, template, getpid(), "ps");
-    if (psFname == NULL)
-        pm_error("Unable to allocate memory");
+    pm_make_tmpfile(&psFileP, &psFname);
+    assert(psFileP != NULL && psFname != NULL);
+    fclose(psFileP);
  
     writeProgram(psFname, cmdline);
 
-    pm_asprintf(&uncroppedPbmFname, template, getpid(), "pbm");
-    if (uncroppedPbmFname == NULL)
-        pm_error("Unable to allocate memory");
- 
-    executeProgram(psFname, uncroppedPbmFname, cmdline);
+    pm_make_tmpfile(&pbmFileP, &tempPbmFname);
+    assert(pbmFileP != NULL && tempPbmFname != NULL);
+    fclose(pbmFileP);
+
+    executeProgram(psFname, tempPbmFname, cmdline);
 
     unlink(psFname);
     pm_strfree(psFname);
 
-    cropToStdout(uncroppedPbmFname, cmdline.verbose);
+    /* Although Ghostscript created a legal PBM file, it uses a different
+       implementation of the format from libnetpbm's canonical output format,
+       so instead of copying the content of 'tempPbmFname' to Standard output
+       byte for byte, we copy it as a PBM image.
+    */
+    writePbmToStdout(tempPbmFname);
 
-    unlink(uncroppedPbmFname);
-    pm_strfree(uncroppedPbmFname);
+    unlink(tempPbmFname);
+    pm_strfree(tempPbmFname);
 }
 
 

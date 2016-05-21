@@ -17,6 +17,10 @@ not yet  BJH  Release 10.75.00
 
               pbmtext: Speedup: renders directly in raw PBM.
 
+              pbmtextps: Change margins for non-default fonts.
+
+              pbmtextps: Minor output changes caused by code cleanup.
+
               pbmreduce: add -randomseed.
 
               anytopnm, pnmmargin, pnmquant, ppmquant, pnmquantall, pgmcrater,
