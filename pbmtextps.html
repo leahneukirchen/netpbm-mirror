@@ -2,7 +2,7 @@
 <HTML><HEAD><title>Pbmtextps User Manual</title></HEAD>
 <BODY>
 <H1>pbmtextps</H1>
-Updated: 09 December 2007
+Updated: 21 May 2016
 <BR>
 <A HREF="#index">Table Of Contents</A>
 <H2>NAME</H2>
@@ -12,9 +12,9 @@ pbmtextps - render text into a PBM image using a postscript interpreter
 
 <B>pbmtextps</B>
 [<B>-font</B> <I>fontname</I>]
-[<B>-fontsize</B> <I>fontsize</I>]
-[<B>-resolution</B> <I>resolution</I>]
-[<B>-stroke</B> <I>strokesize</I>]
+[<B>-fontsize</B> <I>n</I>]
+[<B>-resolution</B> <I>n</I>]
+[<B>-stroke</B> <I>n</I>]
 [<b>-verbose</b>]
 <I>text</I>
 
@@ -42,38 +42,41 @@ is always raw PBM.
 <H2 id="options">OPTIONS</H2>
 
 <DL COMPACT>
-<DT><B>-font</B>
+<DT><B>-font=</B><i>fontname</i>
 <DD>
-By default, <b>pbmtextps</b> uses TimesRoman.
+<P>This specifies the font to use.  <i>fontname</i> is the name of any valid
+postscript font which is installed on the system.
 
-<P>You can specify the font to use with the <B>-font</B> option.
-This is the name of any valid postscript font which is installed on your
-system.
+<p>The default is <b>TimesRoman</b>.
 
-<DT><B>-fontsize</B>
+<P><strong>Warning:</strong> if <i>fontname</i> does not name a valid font,
+<b>pbmtextps</b> just uses the default font.  It does not tell you it is doing
+this.
+
+<DT><B>-fontsize=</B><i>n</i>
 <DD>
-Size of font in points.  See the <b>-resolution</b> option for information
-on how to interpret this size.
+This is the size of the font in points.  See the <b>-resolution</b> option for
+information on how to interpret this size.
 
-<p>Default is 24 points.
+<p>The default is 24 points.
 
-<DT><B>-resolution</B>
+<DT><B>-resolution=</B><i></i>
 <DD>
-Resolution in dots per inch of distance measurements pertaining to generation
-of the image.  PBM images don't have any inherent resolution, so a distance
-such as "1 inch" doesn't mean anything unless you separately specify what
-resolution you're talking about.  That's what this option does.
+This is the resolution in dots per inch of distance measurements pertaining to
+generation of the image.  PBM images don't have any inherent resolution, so a
+distance such as "1 inch" doesn't mean anything unless you separately specify
+what resolution you're talking about.  That's what this option does.
 
 <p>In particular, the meaning of the font size is determined by this
-resolution.  If the font size is 24 points and the resolution is 150
-dpi, then the font size is 50 pixels.
+resolution.  If the font size is 24 points and the resolution is 150 dpi, then
+the font size is 50 pixels.
 
-<p>Default is 150 dpi.
+<p>The default is 150 dpi.
 
-<DT><B>-stroke</B>
+<DT><B>-stroke=</B><i>n</i>
 <DD>
-Width of line to use for stroke font.  There is no default stroke width
-because the characters are solid by default.
+This is the width of line to use for stroke font.  There is no default stroke
+width because the characters are solid by default.
 
 <dt><b>-verbose</b>
 <dd>
