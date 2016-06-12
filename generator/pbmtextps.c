@@ -77,16 +77,82 @@ writeFileToStdout(const char * const fileName){
 
 
 static void
+validateFontName(const char * const name) {
+/*-----------------------------------------------------------------------------
+  Validate font name string.
+
+  Abort with error message if it contains anything other than the printable
+  characters in the ASCII 7-bit range, or any character with a special meaning
+  in PostScript.
+-----------------------------------------------------------------------------*/
+    unsigned int idx;
+
+    for (idx = 0; name[idx] != '\0'; ++idx) {
+        char const c = name[idx]; 
+
+        if (c < 32 || c > 125)
+            pm_error("Invalid character in font name");
+        else 
+            switch (c) {
+              case '[':   case ']':   case '(':   case ')':
+              case '{':   case '}':   case '/':   case '\\':
+              case '<':   case '>':   case '%':   case ' ':
+              case '@':
+                pm_error("Invalid character in font name");
+            }
+    }
+}
+
+
+
+static void
+asciiHexEncode(char *          const inbuff,
+               char *          const outbuff) {
+/*-----------------------------------------------------------------------------
+  Convert the input text string to ASCII-Hex encoding.
+
+  Examples: "ABC abc 123" -> <4142432061626320313233>
+            "FOO(BAR)FOO" -> <464f4f2842415229464f4f>
+-----------------------------------------------------------------------------*/
+    char const hexits[16] = "0123456789abcdef";
+
+    unsigned int idx;
+
+    for (idx = 0; inbuff[idx] != '\0'; ++idx) {
+        unsigned int const item = (unsigned char) inbuff[idx]; 
+
+        outbuff[idx*2]   = hexits[item >> 4];
+        outbuff[idx*2+1] = hexits[item & 0xF];
+    }
+
+    outbuff[idx * 2] = '\0';
+}
+
+
+
+static void
 buildTextFromArgs(int           const argc,
                   char **       const argv,
-                  const char ** const textP) {
+                  const char ** const asciiHexTextP) {
+/*----------------------------------------------------------------------------
+   Build the array of text to be included in the Postscript program to
+   be rendered, from the arguments of this program.
 
+   We encode it in ASCII-Hex notation as opposed to using the plain text from
+   the command line because 1) the command line might have Postscript control
+   characters in it; and 2) the command line might have text in 8-bit or
+   multibyte code, but a Postscript program is supposed to be entirely
+   printable ASCII characters.
+-----------------------------------------------------------------------------*/
     char * text;
     unsigned int totalTextSize;
     unsigned int i;
 
     text = strdup("");
     totalTextSize = 1;
+
+    if (argc-1 < 1)
+        pm_error("No text");
 
     for (i = 1; i < argc; ++i) {
         if (i > 1) {
@@ -102,7 +168,20 @@ buildTextFromArgs(int           const argc,
             pm_error("out of memory");
         strcat(text, argv[i]);
     }
-    *textP = text;
+
+    { 
+        char * asciiHexText;
+
+        MALLOCARRAY(asciiHexText, totalTextSize * 2);
+
+        if (!asciiHexText)
+            pm_error("Unable to allocate memory for hex encoding of %u "
+                     "characters of text", totalTextSize);
+
+        asciiHexEncode(text, asciiHexText);
+        *asciiHexTextP = asciiHexText;
+    }
+    pm_strfree(text);
 }
 
 
@@ -142,7 +221,17 @@ parseCommandLine(int argc, char ** argv,
 
     pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
 
+    validateFontName(cmdlineP->font);
+
     buildTextFromArgs(argc, argv, &cmdlineP->text);
+}
+
+
+
+static void
+termCmdline(struct cmdlineInfo const cmdline) {
+
+    pm_strfree(cmdline.text);
 }
 
 
@@ -159,7 +248,7 @@ construct_postscript(struct cmdlineInfo const cmdline) {
             "%d scalefont\n"
             "setfont\n"
             "12 36 moveto\n"
-            "(%s) show\n"
+            "<%s> show\n"
             "showpage\n";
     else 
         template =
@@ -169,7 +258,7 @@ construct_postscript(struct cmdlineInfo const cmdline) {
             "12 36 moveto\n"
             "%f setlinewidth\n"
             "0 setgray\n"
-            "(%s) true charpath\n"
+            "<%s> true charpath\n"
             "stroke\n"
             "showpage\n";
 
@@ -445,6 +534,8 @@ main(int argc, char *argv[]) {
     parseCommandLine(argc, argv, &cmdline);
 
     createOutputFile(cmdline);
+
+    termCmdline(cmdline);
 
     return 0;
 }
