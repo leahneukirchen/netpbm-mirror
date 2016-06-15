@@ -2,7 +2,7 @@
 <HTML><HEAD><title>Pbmtextps User Manual</title></HEAD>
 <BODY>
 <H1>pbmtextps</H1>
-Updated: 21 May 2016
+Updated: 15 June 2016
 <BR>
 <A HREF="#index">Table Of Contents</A>
 <H2>NAME</H2>
@@ -12,32 +12,127 @@ pbmtextps - render text into a PBM image using a postscript interpreter
 
 <B>pbmtextps</B>
 [<B>-font</B> <I>fontname</I>]
-[<B>-fontsize</B> <I>n</I>]
+[<B>-fontsize</B> <I>float</I>]
 [<B>-resolution</B> <I>n</I>]
+[<b>-leftmargin=</b><i>n</i>
+[<b>-rightmargin=</b><i>n</i>
+[<b>-topmargin=</b><i>n</i>
+[<b>-bottommargin=</b><i>n</i>
+[<b>-ascent=</b><i>n</i>
+[<b>-descent=</b><i>n</i>
+[<b>-pad</b>]
+[<b>-crop</b>]
 [<B>-stroke</B> <I>n</I>]
 [<b>-verbose</b>]
+[<b>-dump-ps</b>]
 <I>text</I>
 
 <H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<P><b>pbmtextps</b> takes a single line of text from the command line
-and renders it into a PBM image.  The image is of a single line of text;
-newline characters in the input have no effect.
+<P><b>pbmtextps</b> takes a single line of text from the command line and
+renders it into a PBM image.  The image is of a single line of text; newline
+characters in the input have no effect.
 
-<P>The image is cropped at the top and the right.  It is not cropped
-at the left or bottom so that the text begins at the same position
-relative to the origin.  You can use <b>pnmcrop</b> to crop it all the
-way.
+<p>See <b>pbmtext</b> for a more sophisticated generator of text, but using
+less common font formats.  <b>pbmtext</b> can generate multiple lines of text.
 
-<p>See <b>pbmtext</b> for a more sophisticated generator of text, but
-using less common font formats.  <b>pbmtext</b> can generate multiple
-lines of text.
+<p>The <b>-plain</b> <a href="index.html#commonoptions">common option</a> has
+no effect before Netpbm 10.42 (March 2008).  The output is always raw PBM.
 
-<p>The <b>-plain</b> <a href="index.html#commonoptions">common
-option</a> has no effect before Netpbm 10.42 (March 2008).  The output
-is always raw PBM.
+<h3 id="margins">Margins</h3>
+
+<P>By default, the image is cropped at the top and the right.  It is not
+cropped at the left or bottom so that the text begins at the same position
+relative to the origin.  The size of the default left and bottom margins is
+explained below.
+
+<p>You can set whatever margin you want with options
+<b>-leftmargin</b>, <b>-rightmargin</b>, <b>-topmargin</b> and
+<b>-bottommargin</b>.  The specified amount of white space gets added to the
+far edge of type, e.g. if you specify 10 points for <b>-topmargin</b>, you
+will get 10 points of white space above the highest character on the line.
+Specify 0 to crop a side.
+
+<p><b>-ascent</b> adds white space to the top to reach a specified distance
+above the text baseline, and <b>-descent</b> adds white space to to the bottom
+to reach a specified distance below the text baseline.
+
+<p><b>-ascent</b> and <b>-descent</b> are more useful than <b>-topmargin</b>
+and <b>-bottomargin</b> when you render two pieces of text (in separate
+invocations of <b>pbmtextps</b>) that you will concatenate horizontally.
+With <b>-ascent</b> and <b>-descent</b>, the two images will be the same
+height with the text baseline in the same place.  With <b>-topmargin</b>
+and <b>-bottommargin</b>, that may not be the case.
+
+<p>Example:
+
+<pre>
+<kbd>
+     $ pbmtextps -font=Times-Roman -descent=20 \
+          &quot;The soup is called&quot; &gt; a1.pbm
+     $ pbmtextps -font=Itallic -descent=20 &quot;Goulash.&quot; &gt; a2.pbm
+     $ pnmcat -lr -jb a1.pbm a2.pbm &gt; out.pbm
+</kbd>
+</pre>
+
+<p>If you have <b>-ascent</b>, there is probably no point in specifying
+<b>-topmargin</b> too, but if you do, the effect is cumulative.  The same is
+true of <b>-descent</b> and <b>-bottommargin</b>.
+
+<p><b>-pad</b> pads the image on the top and bottom to the where the highest
+and lowest characters in the font would reach, even if you don't have those
+characters in your text.  This is useful if you will generate multiple images
+of text (with multiple invocations of <b>pbmtextps</b> and concatenate them
+vertically to create a multiline text image.  <b>-pad</b> makes sure the lines
+in this image are equally spaced.
+
+<p>Example:
+
+<pre>
+<kbd>
+    $ pbmtextps &quot;cat&quot;   | pamfile
+    $ pbmtextps &quot;Catty&quot; | pamfile
+</kbd>
+</pre>
+
+<p>The commands above, with no <b>-pad</b>, show that the &quot;Catty&quot;
+image is higher because capital C reaches high and &quot;y&quot; reaches low.
+
+<pre>
+<kbd>
+    $ pbmtextps -pad &quot;cat&quot;   | pamfile
+    $ pbmtextps -pad &quot;Catty&quot; | pamfile
+</kbd>
+</pre>
+
+<p>The commands above, with <b>-pad</b>, show that both images are the same
+height.
+
+<p>If you specify <b>-pad</b> with <b>-ascent</b> or <b>-descent</b>, the
+larger value is effective.
+
+<p><b>-crop</b> makes the program crop all sides to the far edge of the type.
+It is the same as <kbd>-leftmargin=0 -rightmargin=0 -topmargin=0
+-bottommargin=0</kbd>.
+
+<p>You cannot specify any other margin-affecting options with <b>-crop</b>.
+
+<P>The default top margin, when you specify neither <b>-ascent</b>,
+<b>-topmargin</b>, nor <b>-pad</b>, is as if you specified
+<b>topmargin=0</b>.
+
+<p>The default bottom margin, when you specify neither <b>-descent</b>,
+<b>-bottommargin</b>, nor <b>-pad</b>, is as if you specified
+<b>-descent=</b><i>1.5*fontsize</i>.
+
+<P>The default left margin, when you do not specify <b>-leftmargin</b>, is
+as if you specified <b>-leftmargin=</b><i>0.5*fontsize</i>.
+
+<P>The default right margin, when you do not specify <b>-rightmargin</b>,
+is as if you specified <b>-rightmargin=0</b>.
+
 
 <H2 id="options">OPTIONS</H2>
 
@@ -53,12 +148,14 @@ postscript font which is installed on the system.
 <b>pbmtextps</b> just uses the default font.  It does not tell you it is doing
 this.
 
-<DT><B>-fontsize=</B><i>n</i>
+<DT><B>-fontsize=</B><i>float</i>
 <DD>
 This is the size of the font in points.  See the <b>-resolution</b> option for
 information on how to interpret this size.
 
 <p>The default is 24 points.
+
+<p>Before Netpbm 10.75 (June 2016), this has to be a whole number.
 
 <DT><B>-resolution=</B><i>n</i>
 <DD>
@@ -73,15 +170,62 @@ the font size is 50 pixels.
 
 <p>The default is 150 dpi.
 
+<dt><b>-leftmargin=</b><i>n</i>
+<dt><b>-rightmargin=</b><i>n</i>
+<dt><b>-topmargin=</b><i>n</i>
+<dt><b>-bottommargin=</b><i>n</i>
+<dd>
+These options control the margins added to the image, measured from the far
+edge of the type.  See <a href="#margins">Margins</a> for details.
+
+<p>All sizes are in points, as a floating point number.
+
+<P>These options were new in Netpbm 10.75 (June 2016).
+
+<dt><b>-ascent=</b><i>n</i>
+<dt><b>-descent=</b><i>n</i>
+<dd>
+These options control the the margins added to the image, measured from
+the text baseline.  See <a href="#margins">Margins</a> for details.
+
+<p>Sizes are in points, as a floating point number.
+
+<P>These options were new in Netpbm 10.75 (June 2016).
+
+<dt><b>-pad</b>
+<dd>
+This pads the image on the top and bottom to the where the highest and lowest
+characters in the font would reach, even if you don't have those characters in
+your text.  See <a href="#margins">Margins</a> for details.
+
+<P>This option was new in Netpbm 10.75 (June 2016).
+
+<dt><b>-crop</b>
+<dd>
+This makes the program crop all sides to the far edge of the type.  It is the
+same as <kbd>-leftmargin=0 -rightmargin=0 -topmargin=0 -bottommargin=0</kbd>.
+See <a href="#margins">Margins</a> for details.
+
+<P>This option was new in Netpbm 10.75 (June 2016).
+
 <DT><B>-stroke=</B><i>n</i>
 <DD>
-This is the width of line to use for stroke font.  There is no default stroke
-width because the characters are solid by default.
+This is the width of line, in points, to use for stroke font.  There is no
+default stroke width because the characters are solid by default.
 
 <dt><b>-verbose</b>
 <dd>
 This option makes <b>pbmtextps</b> display extra information on Standard Error
 about its processing.
+
+<dt><b>-dump-ps</b>
+<dd>
+This option makes <b>pbmtextps</b> write to Standard Output the Postscript
+program it would use to create the image, rather than the image itself.  You
+can use this as input to a Postscript interpreter (such as Ghostscript or a a
+printer) or to understand the program better.
+
+<P>This option was new in Netpbm 10.75 (June 2016).
 
 </DL>
 
