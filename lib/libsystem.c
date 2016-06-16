@@ -320,11 +320,23 @@ signalName(unsigned int const signalClass) {
 
 
 const char *
-pm_termStatusDesc(int const termStatus) {
+pm_termStatusDesc(int const termStatusArg) {
 /*----------------------------------------------------------------------------
    English description of  process termination status 'termStatus'.
 -----------------------------------------------------------------------------*/
     const char * retval;
+
+    /* WIFEXITED, etc. do not work with a constant argument in older GNU C
+       library.  Compilation fails with "attempt to assign read-only
+       location".  This is because The GNU C library has some magic to allow
+       for a BSD 'union wait' (instead of int) argument to WIFEXITED.  The
+       magic involves defining a variable with 'typeof' the argument and
+       assigning to that variable.
+       
+       To work around this, we make sure the argument is not constant.
+    */
+
+    int termStatus = termStatusArg;
 
     if (WIFEXITED(termStatus)) {
         int const exitStatus = WEXITSTATUS(termStatus);
