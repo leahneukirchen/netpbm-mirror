@@ -717,37 +717,32 @@ bmpReadColormap(FILE *         const ifP,
  
    'class' is the class of BMP image - Windows or OS/2.
 -----------------------------------------------------------------------------*/
-
+    xel * const colormap = pnm_allocrow(MAX(1, cmapsize));
+    
     unsigned int i;
-
-    xel * colormap;
     unsigned int bytesRead;
 
-    colormap = pnm_allocrow(MAX(1,cmapsize));
-    
-    bytesRead = 0;  /* initial value */
-
-    for (i = 0; i < cmapsize; ++i) {
+    for (i = 0, bytesRead = 0; i < cmapsize; ++i) {
         /* There is a document that says the bytes are ordered R,G,B,Z,
            but in practice it appears to be the following instead:
         */
-        unsigned int r, g, b;
-        
-        b = GetByte(ifP);
-        g = GetByte(ifP);
-        r = GetByte(ifP);
+        unsigned int const b = GetByte(ifP);
+        unsigned int const g = GetByte(ifP);
+        unsigned int const r = GetByte(ifP);
+
+        unsigned int j;
 
         PNM_ASSIGN(colormap[i], r, g, b);
 
         bytesRead += 3;
 
-        for (i = 3; i < BMPlenrgb(class); ++i) {
+        for (j = 3; j < BMPlenrgb(class); ++j) {
             GetByte(ifP);
             bytesRead += 1;
         }
     }
 
-    *colormapP = colormap;
+    *colormapP  = colormap;
     *bytesReadP = bytesRead;
 }
 
