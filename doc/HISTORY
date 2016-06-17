@@ -62,6 +62,10 @@ not yet  BJH  Release 10.75.00
               pbmtext: Fix bug: invalid memory reference when text contains
               code points > 127.  Broken in 10.74.
 
+              pnmtofiasco, fiascotopnm: Fix incorrect math on systems with
+              unusual floating point representation.  Always broken (programs
+              were new in Netpbm 9.6 (July 2000).
+
               cameratopam: fix invalid memory reference; effect unknown.
               Introduced in Netpbm 10.68 (September 2014).
 
