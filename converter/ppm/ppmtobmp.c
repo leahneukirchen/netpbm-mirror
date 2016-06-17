@@ -309,12 +309,14 @@ bmpWriteRgb(FILE *        const fp,
         putByte(fp, R);
         putByte(fp, 0);
         retval = 4;
+        break;
     case BMP_C_OS2_1x:
     case BMP_C_OS2_2x:
         putByte(fp, B);
         putByte(fp, G);
         putByte(fp, R);
         retval = 3;
+        break;
     }
     return retval;
 }
