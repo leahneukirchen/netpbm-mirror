@@ -47,10 +47,9 @@ not yet  BJH  Release 10.75.00
               (December 2007).
 
               pbmtextps: Fix bug: input text or font name with Postscript
+              control characters messes up the Postscript program.
 
               hpcdtoppm dummy version: update web link to real version.
-
-              control characters messes up the Postscript program.
 
               ppmhist: fix incorrect color names.  Introduced in
               Netpbm 10.19 (November 2003).
