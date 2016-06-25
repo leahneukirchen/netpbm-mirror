@@ -39,12 +39,17 @@ not yet  BJH  Release 10.75.00
 
               fiascotopnm: change -version to include Netpbm version.
 
-              hpcdtoppm dummy version: update web link to real version.
-
               libnetpbm: Add pm_system2(), pm_system2_lp(), pm_system2_vp() -
               same as pm_system(), etc. but returns the termination status.
 
+              pamarith: fix incorrect output when maxvals differ, for
+              -add, -multiply, -mean, -min, -max.  Broken in Neptbm 10.41
+              (December 2007).
+
               pbmtextps: Fix bug: input text or font name with Postscript
+
+              hpcdtoppm dummy version: update web link to real version.
+
               control characters messes up the Postscript program.
 
               ppmhist: fix incorrect color names.  Introduced in
