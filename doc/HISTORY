@@ -43,7 +43,7 @@ not yet  BJH  Release 10.75.00
               same as pm_system(), etc. but returns the termination status.
 
               pamarith: fix incorrect output when maxvals differ, for
-              -add, -multiply, -mean, -min, -max.  Broken in Neptbm 10.41
+              -add, -multiply, -mean, -min, -max.  Broken in Netpbm 10.41
               (December 2007).
 
               pbmtextps: Fix bug: input text or font name with Postscript
@@ -1007,7 +1007,7 @@ not yet  BJH  Release 10.75.00
 
               pngtopam: fix crash with invalid tIME chunk.  Always broken.
 
-              pamarith: fix wrong result with -multiply.  Broken in Neptbm
+              pamarith: fix wrong result with -multiply.  Broken in Netpbm
               10.41.
 
               pamscale: fix all black output with resampling.  Always broken.
@@ -1052,7 +1052,7 @@ not yet  BJH  Release 10.75.00
               "from bottom edge."
 
               ppmcie: fix bug: fails with "X coordinate out of range" error.
-              Introduced in Neptbm 10.51.
+              Introduced in Netpbm 10.51.
 
               bmptopnm: Fail properly with BMP that indicates an illegal bits
               per pixel.
