@@ -265,7 +265,7 @@ computeOutputType(struct pam *  const outpamP,
 
 
 
-static sample
+static samplen
 samplenSum(samplen      const operands[],
            unsigned int const operandCt) {
 
@@ -282,7 +282,7 @@ samplenSum(samplen      const operands[],
 
 
 
-static sample
+static samplen
 samplenMin(samplen      const operands[],
            unsigned int const operandCt) {
 
@@ -298,7 +298,7 @@ samplenMin(samplen      const operands[],
 
 
 
-static sample
+static samplen
 samplenMax(samplen      const operands[],
            unsigned int const operandCt) {
 
@@ -314,7 +314,7 @@ samplenMax(samplen      const operands[],
 
 
 
-static sample
+static samplen
 samplenMean(samplen      const operands[],
             unsigned int const operandCt) {
 
@@ -329,7 +329,7 @@ samplenMean(samplen      const operands[],
 
 
 
-static sample
+static samplen
 samplenProduct(samplen      const operands[],
                unsigned int const operandCt) {
 

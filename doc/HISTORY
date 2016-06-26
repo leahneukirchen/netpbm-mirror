@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+16.06.26 BJH  Release 10.73.03
+
+              pamarith: fix incorrect output when maxvals differ, for
+              -add, -multiply, -mean, -min, -max.  Broken in Neptbm 10.41
+              (December 2007).
+
 16.06.12 BJH  Release 10.73.02
 
               pbmtextps: Abort with error instead of generating single space
