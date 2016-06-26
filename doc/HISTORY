@@ -4,6 +4,18 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+16.06.26 BJH  Release 10.47.62
+
+              pamarith: fix incorrect output when maxvals differ, for
+              -add, -multiply, -mean, -min, -max.  Broken in Netpbm 10.41
+              (December 2007).
+
+              pbmtextps: Abort with error instead of generating single space
+              when user supplies no text.
+
+              pbmtextps: Fix bug: input text or font name with Postscript
+              control characters messes up the Postscript program.
+
 16.05.09 BJH  Release 10.47.61
 
               bmptopnm: fail properly with Version 4, 5 Windows BMP.
