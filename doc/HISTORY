@@ -4,7 +4,7 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-not yet  BJH  Release 10.75.00
+16.06.26 BJH  Release 10.75.00
 
               pbmtextps: Add -leftmargin, -rightmargin, -topmargin,
               -bottommargin, -ascent, -descent, -pad, -crop.
