@@ -518,11 +518,12 @@ f3_corr(float **     const p,
    the image.
 -----------------------------------------------------------------------------*/
     unsigned int i;
-    float sumSqrx, sumSqry, tmp;
+    float sumSqrx;
+    float tmp;
     float * px;
     float meanx, meany, stddevx, stddevy;
 
-    sumSqrx = 0.0; sumSqry = 0.0;
+    sumSqrx = 0.0;
     meanx = 0.0; meany = 0.0;
 
     px = vector(0, ng);
@@ -545,7 +546,6 @@ f3_corr(float **     const p,
     }
 
     meany = meanx;
-    sumSqry = sumSqrx;
     stddevx = sqrt(sumSqrx - (SQR(meanx)));
     stddevy = stddevx;
 

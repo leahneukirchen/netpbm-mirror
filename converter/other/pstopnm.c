@@ -784,12 +784,11 @@ execGhostscript(int               const inputPipeFd,
     const char * gopt;
     const char * ropt;
     const char * textalphabitsopt;
-    int rc;
 
     findGhostscriptProg(&ghostscriptProg);
 
     /* Put the input pipe on Standard Input */
-    rc = dup2(inputPipeFd, STDIN_FILENO);
+    dup2(inputPipeFd, STDIN_FILENO);
     close(inputPipeFd);
 
     pm_asprintf(&arg0, "gs");

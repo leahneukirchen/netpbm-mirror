@@ -782,14 +782,22 @@ spawnWithInputPipe(const char *  const shellCmd,
                 else
                     *errorP = NULL;
             } else {
-                int rc;
+                int terminationStatus;
                 close(fd[PIPE_WRITE]);
                 close(STDIN_FILENO);
                 dup2(fd[PIPE_READ], STDIN_FILENO);
 
-                rc = system(shellCmd);
+                terminationStatus = system(shellCmd);
 
-                exit(rc);
+                if (WIFSIGNALED(terminationStatus))
+                    pm_error("Shell process was killed "
+                             "by a Class %u signal.",
+                             WTERMSIG(terminationStatus));
+                else if (!WIFEXITED(terminationStatus))
+                    pm_error("Shell process died, but its termination status "
+                             "0x%x doesn't make sense", terminationStatus);
+                else
+                    exit(WEXITSTATUS(terminationStatus));
             }
         }
     }

@@ -217,7 +217,10 @@ typedef struct {
     OPTENTRY(shortvalue, longvalue, typevalue, outputvalue, flagvalue) \
     }
 
-#define OPTENTINIT OPTION_DEF[0].type = OPT_END
+#define OPTENTINIT \
+    do {OPTION_DEF_INDEX=0; \
+        OPTION_DEF[OPTION_DEF_INDEX].type = OPT_END; \
+    } while (0)
 
 
 struct optNameValue {

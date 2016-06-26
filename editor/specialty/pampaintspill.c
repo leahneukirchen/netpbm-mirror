@@ -253,7 +253,7 @@ locatePaintSources(struct pam *            const pamP,
     if (downsample > 0 && downsample < paintSources.size) {
         unsigned int i;
 
-        srand(time(NULL));
+        srand(pm_randseed());
 
         for (i = 0; i < downsample; ++i) {
             unsigned int const swapIdx =

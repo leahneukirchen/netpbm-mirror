@@ -190,16 +190,17 @@ parseArgs(int     const argc,
             ++idx;
         } else if (streq(argv[idx], "-child")) {
             if (idx+7 < argc-1) {
-                int combinePortNumber;
-                    /* This used to be important information, when the child
-                       notified the combine server.  Now the master notifies
-                       the combine server after the child notifies the master
-                       it is done.  So this value is unused.
-                    */
                 cmdlineP->masterHostname = argv[idx+1];
                 cmdlineP->masterPortNumber = atoi(argv[idx+2]);
                 ioPortNumber = atoi(argv[idx+3]);
-                combinePortNumber = atoi(argv[idx+4]);
+                /*
+                  combinePortNumber = atoi(argv[idx+4]);
+
+                  This used to be important information, when the child
+                  notified the combine server.  Now the master notifies
+                  the combine server after the child notifies the master
+                  it is done.  So this value is unused.
+                */
                 decodePortNumber = atoi(argv[idx+5]);
                 machineNumber = atoi(argv[idx+6]);
                 remoteIO = atoi(argv[idx+7]);

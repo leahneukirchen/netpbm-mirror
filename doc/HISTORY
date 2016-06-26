@@ -4,26 +4,58 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-16.06.25 BJH  Release 10.74.05
+16.06.26 BJH  Release 10.75.00
 
-              pamarith: fix incorrect output when maxvals differ, for
-              -add, -multiply, -mean, -min, -max.  Broken in Neptbm 10.41
-              (December 2007).
+              pbmtextps: Add -leftmargin, -rightmargin, -topmargin,
+              -bottommargin, -ascent, -descent, -pad, -crop.
 
-16.06.12 BJH  Release 10.74.04
+              pbmtextps: Add -dump-ps.
 
               pbmtextps: Abort with error instead of generating single space
               when user supplies no text.
 
+              pbmtextps: Accept fractional -fontsize.
+              
+              pbmtextps: Change margins for non-default fonts.
+
+              pbmtextps: Minor output changes caused by code cleanup.
+
+              bmptopnm: Add ability to convert Version 4 and 5 Windows BMP.
+
+              pbmtext: remove undocumented -dump option; add 'genfontc'
+              development tool (buildtools/ directory) to replace it.
+
+              pbmtext: Add -dry-run
+
+              pbmtext: Add -dump-sheet
+
+              pbmtext: Speedup: renders directly in raw PBM.
+
+              pbmreduce: add -randomseed.
+
+              anytopnm, pnmmargin, pnmquant, ppmquant, pnmquantall, pgmcrater,
+              ppmfade, ppmrainbow, ppmshadow, pbmtox10bm, pamstretch-gen:
+              Add -version.
+
+              fiascotopnm: change -version to include Netpbm version.
+
+              libnetpbm: Add pm_system2(), pm_system2_lp(), pm_system2_vp() -
+              same as pm_system(), etc. but returns the termination status.
+
+              pamarith: fix incorrect output when maxvals differ, for
+              -add, -multiply, -mean, -min, -max.  Broken in Netpbm 10.41
+              (December 2007).
+
               pbmtextps: Fix bug: input text or font name with Postscript
               control characters messes up the Postscript program.
 
-16.05.09 BJH  Release 10.74.03
-
-              bmptopnm: fail properly with Version 4, 5 Windows BMP.
+              hpcdtoppm dummy version: update web link to real version.
 
               ppmhist: fix incorrect color names.  Introduced in
               Netpbm 10.19 (November 2003).
+
+              ppmshadow: fix bug: don't ignore invalid option.  Introduced in
+              Netpbm 10.9 (September 2002).
 
               pnmpaste: fix possible invalid memory access.  Introduced in
               Netpbm 1.44 (September 2008).
@@ -31,21 +63,24 @@ CHANGE HISTORY
               pbmreduce: fix undefined behavior when scale factor argument is
               too big.  Always present (pbmreduce was new in September 1989).
 
+              pbmtext: Fix bug: invalid memory reference when text contains
+              code points > 127.  Broken in 10.74.
+
+              pnmtofiasco, fiascotopnm: Fix incorrect math on systems with
+              unusual floating point representation.  Always broken (programs
+              were new in Netpbm 9.6 (July 2000).
+
               cameratopam: fix invalid memory reference; effect unknown.
               Introduced in Netpbm 10.68 (September 2014).
 
               Install on Windows: fix backward compatibility symlinks for
               pnmtoplainpnm, pnmquantall.
 
-16.04.13 BJH  Release 10.74.02
-
-              pbmtext: Fix bug: invalid memory reference when text contains
-              code points > 127.  Broken in 10.74.00
-
-16.03.31 BJH  Release 10.74.01
-         
               Build: Remove use of strndup so it compiles on Mac OS X 10.6.
-              Broken in 10.74.00.
+              Broken in 10.74.
+
+              Build: Remove use of isfinite so it compiles with C89 standard
+              compiler.
 
 16.03.27 BJH  Release 10.74.00
 
@@ -53,12 +88,12 @@ CHANGE HISTORY
               explicitly set to the width you get when you don't specify
               width.
 
-              pbmtext: ignore -nomargins with -width is specified.
+              pbmtext: ignore -nomargins when -width is specified.
 
               pbmtext: report when line ends are dropped because of
               truncation.
 
-              pbmtext: Fix bug: if input has an code point that is not in the
+              pbmtext: Fix bug: if input has a code point that is not in the
               font, Pbmtext substitutes space, but behavior is undefined if
               font doesn't have space either.  Now it aborts the program in
               that case.
@@ -972,7 +1007,7 @@ CHANGE HISTORY
 
               pngtopam: fix crash with invalid tIME chunk.  Always broken.
 
-              pamarith: fix wrong result with -multiply.  Broken in Neptbm
+              pamarith: fix wrong result with -multiply.  Broken in Netpbm
               10.41.
 
               pamscale: fix all black output with resampling.  Always broken.
@@ -1017,7 +1052,7 @@ CHANGE HISTORY
               "from bottom edge."
 
               ppmcie: fix bug: fails with "X coordinate out of range" error.
-              Introduced in Neptbm 10.51.
+              Introduced in Netpbm 10.51.
 
               bmptopnm: Fail properly with BMP that indicates an illegal bits
               per pixel.

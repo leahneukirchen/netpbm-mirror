@@ -264,7 +264,8 @@ writePpmRaster(FILE * const imageoutFileP,
     pixel *pixelrow;
     gray *alpharow;
    
-    int scan, x, y;
+    int scan;
+    int x;
     /*
      *  Allocate some stuff.
      */
@@ -280,9 +281,9 @@ writePpmRaster(FILE * const imageoutFileP,
     /*
      * Loop through those scan lines.
      */
-    for (scan = 0; scan < height; scan++)
-        y = rle_getrow(&hdr, scanlines[height - scan - 1]);
-    for (scan = 0; scan < height; scan++) {
+    for (scan = 0; scan < height; ++scan)
+        rle_getrow(&hdr, scanlines[height - scan - 1]);
+    for (scan = 0; scan < height; ++scan) {
         scanline = scanlines[scan];
         switch (visual) {
         case GRAYSCALE:    /* 8 bits without colormap */
@@ -366,7 +367,6 @@ writePgmRaster(FILE * const imageoutFileP,
     gray * pixelrow;
     gray * alpharow;
     int scan;
-    int y;
     /*
      *  Allocate some stuff.
      */
@@ -383,7 +383,7 @@ writePgmRaster(FILE * const imageoutFileP,
      * Loop through those scan lines.
      */
     for (scan = 0; scan < height; ++scan)
-        y = rle_getrow(&hdr, scanlines[height - scan - 1]);
+        rle_getrow(&hdr, scanlines[height - scan - 1]);
 
     for (scan = 0; scan < height; ++scan) {
         int x;

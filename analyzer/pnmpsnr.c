@@ -2,7 +2,7 @@
  *  pnmpsnr.c: Compute error (RMSE, PSNR) between images
  *
  *
- *  Derived from pnmpnsmr by Ulrich Hafner, part of his fiasco package,
+ *  Derived from pnmpnsmr by Ullrich Hafner, part of his fiasco package,
  *  On 2001.03.04.
 
  *  Copyright (C) 1994-2000 Ullrich Hafner <hafner@bigfoot.de>
@@ -402,6 +402,21 @@ psnrFromSumSqDiff(struct SqDiff const sumSqDiff,
 
 
 
+static bool
+psnrIsFinite(double const psnr) {
+
+    /* We would just use C standard isfinite(), but that is not standard
+       before C99.  Neither is INFINITY.
+
+       A finite PSNR, in this program, cannot be anywhere near 1,000,000,
+       because of limits of the program, so we just compare to that.
+    */
+
+    return psnr < 1000000.0;
+}
+
+
+
 static void
 reportPsnrHuman(struct Psnr   const psnr,
                 ColorSpace    const colorSpace,
@@ -417,7 +432,7 @@ reportPsnrHuman(struct Psnr   const psnr,
 
         pm_asprintf(&label, "%s:", colorSpace.componentName[i]);
 
-        if (isfinite(psnr.psnr[i]))
+        if (psnrIsFinite(psnr.psnr[i]))
             pm_message("  %-6.6s %.2f dB", label, psnr.psnr[i]);
         else
             pm_message("  %-6.6s no difference", label);

@@ -36,6 +36,7 @@
  * HEADER FILES *
  *==============*/
 
+#include "netpbm/mallocvar.h"
 #include "all.h"
 #include "mtypes.h"
 #include "frames.h"
@@ -239,7 +240,6 @@ FILE *fp;
   FrameSpecList *current, *new;
   char typ; 
   int fnum,snum, bnum, qs, newqs;
-  int num_scanned;
 
   fsl = MakeFslEntry();
   current = fsl;
@@ -274,7 +274,7 @@ FILE *fp;
       break;
     case 'B':
       lp += 6;
-      num_scanned = sscanf(lp, "%d %d", &bnum, &newqs);
+      sscanf(lp, "%d %d", &bnum, &newqs);
       if (qs == newqs) break;
       qs = newqs;
       AddBs(current, bnum, FALSE, qs);
@@ -289,116 +289,140 @@ FILE *fp;
   
 }
 
-/* Version 2 */
-void Parse_Specifics_File_v2(fp)
-FILE *fp;
-{
-  char line[1024], *lp;
-  FrameSpecList *current, *new;
-  char typ;
-  int fnum, snum, bnum, qs, newqs;
-  int num_scanned, fx=0, fy=0, sx=0, sy=0;
-  char kind[100];
-  Block_Specifics *new_blk;
-  boolean relative;
 
-  fsl = MakeFslEntry();
-  current = fsl;
 
-  while ((fgets(line,1023,fp))!=NULL) {
-    lp = &line[0];
-    while ((*lp == ' ') || (*lp == '\t')) lp++;
-    if (( *lp == '#' ) || (*lp=='\n')) {
-      continue;
+void
+Parse_Specifics_File_v2(FILE * const fP) {
+/*----------------------------------------------------------------------------
+   Parse Version 2 specific file.
+-----------------------------------------------------------------------------*/
+    char line[1024];
+    FrameSpecList * current;
+    int qs;
+    int numScanned;
+    int fx, fy, sx, sy;
+    char kind[100];
+    Block_Specifics *new_blk;
+    boolean relative;
+
+    fx = fy = sx = sy = 0;  /* initial value */
+
+    fsl = MakeFslEntry();
+    current = fsl;
+
+    while ((fgets(line,1023, fP))!=NULL) {
+        const char * lp;
+
+        lp = &line[0];  /* initial value */
+
+        while ((*lp == ' ') || (*lp == '\t'))
+            ++lp;
+        if (*lp == '#' || *lp == '\n') {
+            /* comment or blank line */
+        } else {
+            switch (my_upper(*lp)) {
+            case 'F': {
+                char typ;
+                FrameSpecList * new;
+                int fnum;
+
+                lp += 6;
+                sscanf(lp,"%d %c %d", &fnum, &typ, &qs);
+                new = MakeFslEntry();
+                if (current->framenum != -1) {
+                    current->next = new;
+                    current = new;
+                }
+                current->framenum = fnum;
+                current->frametype = CvtType(typ);
+                if (qs <= 0)
+                    qs = -1;
+                current->qscale = qs;
+            } break;
+            case 'S': {
+                int snum;
+                int newqs;
+                lp += 6;
+                sscanf(lp,"%d %d", &snum, &newqs);
+                if (qs == newqs)
+                    break;
+                qs = newqs;
+                AddSlc(current, snum, qs);
+            } break;
+            case 'B': {
+                int bnum;
+                int newqs;
+                lp += 6;
+                numScanned = 0;
+                bnum = atoi(lp);
+                SkipToSpace(lp);
+                while ((*lp != '-') && (*lp != '+') &&
+                       ((*lp < '0') || (*lp > '9')))
+                    ++lp;
+                relative = (*lp == '-' || *lp == '+');
+                newqs = atoi(lp);
+                SkipToSpace(lp);
+                if (EndString(lp)) {
+                    numScanned = 2;
+                } else {
+                    numScanned =
+                        2 + sscanf(lp, "%s %d %d %d %d",
+                                   kind, &fx, &fy, &sx, &sy); 
+                }
+
+                qs = newqs;
+                new_blk = AddBs(current, bnum, relative, qs);
+                if (numScanned > 2) {
+                    BlockMV * tmp;
+
+                    MALLOCVAR(tmp);
+
+                    switch (numScanned) {
+                    case 7:
+                        tmp->typ = TYP_BOTH;
+                        tmp->fx = fx;
+                        tmp->fy = fy;
+                        tmp->bx = sx;
+                        tmp->by = sy;
+                        new_blk->mv = tmp;
+                        break;
+                    case 3:
+                        tmp->typ = TYP_SKIP;
+                        new_blk->mv = tmp;
+                        break;
+                    case 5:
+                        if (my_upper(kind[0]) == 'B') {
+                            tmp->typ = TYP_BACK;
+                            tmp->bx = fx;
+                            tmp->by = fy;
+                        } else {
+                            tmp->typ = TYP_FORW;
+                            tmp->fx = fx;
+                            tmp->fy = fy;
+                        }
+                        new_blk->mv = tmp;
+                        break;
+                    default:
+                        fprintf(stderr,
+                                "Bug in specifics file!  "
+                                "Skipping short/long entry: %s\n",line);
+                        break;
+                    }
+                } else
+                    new_blk->mv = NULL;
+
+            } break;
+            case 'V':
+                fprintf(stderr,
+                        "Cannot specify version twice!  Taking first (%d).\n",
+                        version);
+                break;
+            default:
+                printf("What? *%s*\n",line);
+                break;
+            }
+        }
     }
-
-    switch (my_upper(*lp)) {
-    case 'F':
-      lp += 6;
-      sscanf(lp,"%d %c %d", &fnum, &typ, &qs);
-      new = MakeFslEntry();
-      if (current->framenum != -1) {
-	current->next = new;
-	current = new;
-      }
-      current->framenum = fnum;
-      current->frametype = CvtType(typ);
-      if (qs <= 0) qs = -1;
-      current->qscale = qs;
-      break;
-    case 'S':
-      lp += 6;
-      sscanf(lp,"%d %d", &snum, &newqs);
-      if (qs == newqs) break;
-      qs = newqs;
-      AddSlc(current, snum, qs);
-      break;
-    case 'B':
-      lp += 6;
-      num_scanned = 0;
-      bnum = atoi(lp);
-      SkipToSpace(lp);
-      while ((*lp != '-') && (*lp != '+') &&
-	     ((*lp < '0') || (*lp > '9'))) lp++;
-      relative = ((*lp == '-') || (*lp == '+'));
-      newqs = atoi(lp);
-      SkipToSpace(lp);
-      if (EndString(lp)) {
-	num_scanned = 2;
-      } else {
-	num_scanned = 2+sscanf(lp, "%s %d %d %d %d", kind, &fx, &fy, &sx, &sy); 
-      }
-
-      qs = newqs;
-      new_blk = AddBs(current, bnum, relative, qs);
-      if (num_scanned > 2) {
-	BlockMV *tmp;
-	tmp = (BlockMV *) malloc(sizeof(BlockMV));
-	switch (num_scanned) {
-	case 7:
-	  tmp->typ = TYP_BOTH;
-	  tmp->fx = fx;
-	  tmp->fy = fy;
-	  tmp->bx = sx;
-	  tmp->by = sy;
-	  new_blk->mv = tmp;
-	  break;
-	case 3:
-	  tmp->typ = TYP_SKIP;
-	  new_blk->mv = tmp;
-	  break;
-	case 5:
-	  if (my_upper(kind[0]) == 'B') {
-	    tmp->typ = TYP_BACK;
-	    tmp->bx = fx;
-	    tmp->by = fy;
-	  } else {
-	    tmp->typ = TYP_FORW;
-	    tmp->fx = fx;
-	    tmp->fy = fy;
-	  }
-	  new_blk->mv = tmp;
-	  break;
-	default:
-	  fprintf(stderr,
-		  "Bug in specifics file!  Skipping short/long entry: %s\n",line);
-	  break;
-	}
-      } else {
-	new_blk->mv = (BlockMV *) NULL;
-      }
-
-      break;
-    case 'V':
-      fprintf(stderr,
-	      "Cannot specify version twice!  Taking first (%d).\n",
-	      version);
-      break;
-    default:
-      printf("What? *%s*\n",line);
-      break;
-    }}
-  
 }
 
 

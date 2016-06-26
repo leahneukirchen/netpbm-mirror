@@ -1,0 +1,17 @@
+#! /bin/bash
+# This script tests: pnmquantall
+# Also requires: ppmtorgb3 pgmhist
+
+ppmtorgb3 testimg.ppm
+
+pnmquantall 20 testimg.red testimg.grn testimg.blu
+
+for i in testimg.red testimg.grn testimg.blu
+do
+cksum $i
+done
+
+# Should print 1
+
+pnmcat testimg.red testimg.grn testimg.blu -tb | \
+    pgmhist -m | awk '$2>0 {s++}; END { print s<=20 }'

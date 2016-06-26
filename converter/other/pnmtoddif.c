@@ -538,14 +538,11 @@ convertRaster(FILE *       const ifP,
               unsigned int const bytesPerLine) {
 
     unsigned char * data;
-    unsigned char * p;
 
     MALLOCARRAY(data, bytesPerLine);
 
     if (data == NULL)
         pm_error("Couldn't allocate %u-byte line buffer", bytesPerLine);
-
-    p = data;  /* initial value */
 
     switch (PNM_FORMAT_TYPE(format)) {
     case PBM_TYPE:

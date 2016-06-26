@@ -4,8 +4,8 @@
  *  Written by:     Ullrich Hafner
  *          Michael Unger
  *      
- *  This file is part of FIASCO («F»ractal «I»mage «A»nd «S»equence «CO»dec)
- *  Copyright (C) 1994-2000 Ullrich Hafner <hafner@bigfoot.de>
+ *  This file is part of FIASCO (Fractal Image And Sequence COdec)
+ *  Copyright (C) 1994-2000 Ullrich Hafner
  */
  
 /*
@@ -361,6 +361,8 @@ video_decoder (const char *wfa_name, const char *image_name, bool_t panel,
                 while (prg_timer (&fps_timer, STOP) < frame_time) /* wait */
                     ;
             }
+#else
+            if (frame_time) {/* defeat compiler warning */}
 #endif /* not X_DISPLAY_MISSING */   
         }
         free (filename);

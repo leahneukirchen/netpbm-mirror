@@ -99,7 +99,8 @@ fitLookup(tuple **     const inputLookup,
 /*----------------------------------------------------------------------------
   Scale the lookup table image so that it has dimensions 'cols' x 'rows'.
 -----------------------------------------------------------------------------*/
-    const char * pamscaleCommand;
+    const char * widthArg;
+    const char * heightArg;
     struct pamtuples inPamtuples;
     struct pamtuples outPamtuples;
 
@@ -107,18 +108,21 @@ fitLookup(tuple **     const inputLookup,
     fitLookuppamP->width = cols;
     fitLookuppamP->height = rows;
 
-    pm_asprintf(&pamscaleCommand, "pamscale -width=%u -height=%u", cols, rows);
+    pm_asprintf(&widthArg,  "-width=%u", cols);
+    pm_asprintf(&heightArg, "-height=%u", rows);
 
     inPamtuples.pamP = (struct pam *) &inputLookuppam;
     inPamtuples.tuplesP = (tuple ***) &inputLookup;
     outPamtuples.pamP = fitLookuppamP;
     outPamtuples.tuplesP = fitLookupP;
     
-    pm_system(&pm_feed_from_pamtuples, &inPamtuples,
-              &pm_accept_to_pamtuples, &outPamtuples,
-              pamscaleCommand);
+    pm_system_lp("pamscale",
+                 &pm_feed_from_pamtuples, &inPamtuples,
+                 &pm_accept_to_pamtuples, &outPamtuples,
+                 "pamscale", widthArg, heightArg, NULL);
 
-    pm_strfree(pamscaleCommand);
+    pm_strfree(heightArg);
+    pm_strfree(widthArg);
 }
 
 

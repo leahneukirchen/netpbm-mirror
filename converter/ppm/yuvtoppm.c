@@ -45,6 +45,7 @@ parseCommandLine(int argc, const char ** argv,
     optEntry * option_def;
         /* Instructions to OptParseOptions3 on how to parse our options */
     optStruct3 opt;
+    unsigned int option_def_index;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
