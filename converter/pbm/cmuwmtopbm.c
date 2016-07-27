@@ -117,6 +117,7 @@ main(int     argc,
         pbm_writepbmrow_packed(stdout, bitrow, cols, 0);
     }
 
+    pbm_freerow_packed(bitrow);
     pm_close(ifP);
     pm_close(stdout);
 

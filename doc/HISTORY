@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.76.00
 
+              cmuwmtopbm: fix trivial memory leak.  Always broken (cmuwmtopbm
+              was in primordial Pbmplus, in 1988).
+
 16.06.26 BJH  Release 10.75.00
 
               pbmtextps: Add -leftmargin, -rightmargin, -topmargin,
