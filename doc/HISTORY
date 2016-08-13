@@ -6,6 +6,10 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.76.00
 
+              giftopnm: Fix bug: crash on little-ending computers that can't
+              toleration unaligned memory access.  Thanks Ignatios Souvatzis
+              (is@netbsd.org).  Broken in Netpbm 10.47 (June 2009).
+
               cmuwmtopbm: fix trivial memory leak.  Always broken (cmuwmtopbm
               was in primordial Pbmplus, in 1988).
 

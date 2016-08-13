@@ -257,12 +257,17 @@
 /* UNALIGNED_OK means it's OK to do unaligned memory access, e.g.
    loading an 8-byte word from an address that is not a multiple of 8.
    On some systems, such an access causes a trap and a signal.
+
+   This determination is conservative - There may be cases where unaligned
+   access is OK and we say here it isn't.
+
+   We know unaligned access is _not_ OK on at least SPARC and some ARM.
 */
 
-#if defined(__sparc__)
-# define UNALIGNED_OK 0
-#else
+#if defined(__x86_64__) | defined(__i486__) | defined(__vax__)
 # define UNALIGNED_OK 1
+#else
+# define UNALIGNED_OK 0
 #endif
 
 
