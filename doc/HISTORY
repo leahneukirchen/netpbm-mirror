@@ -4,10 +4,16 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+16.08.13 BJH  Release 10.73.04
+
+              giftopnm: Fix bug: crash on little-endian computers that can't
+              toleration unaligned memory access.  Thanks Ignatios Souvatzis
+              (is@netbsd.org).  Broken in Netpbm 10.47 (June 2009).
+
 16.06.26 BJH  Release 10.73.03
 
               pamarith: fix incorrect output when maxvals differ, for
-              -add, -multiply, -mean, -min, -max.  Broken in Neptbm 10.41
+              -add, -multiply, -mean, -min, -max.  Broken in Netpbm 10.41
               (December 2007).
 
 16.06.12 BJH  Release 10.73.02
