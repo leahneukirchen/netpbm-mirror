@@ -24,6 +24,7 @@
 #include <string.h>
 #include <assert.h>
 
+#include "pm_config.h"
 #include "pm_c_util.h"
 #include "mallocvar.h"
 #include "nstring.h"
@@ -38,12 +39,6 @@
 #define CM_BLU 2
 
 #define MAX_LZW_BITS  12
-
-#if !defined(BYTE_ORDER) || !defined(LITTLE_ENDIAN)
-  /* make sure (BYTE_ORDER == LITTLE_ENDIAN) is FALSE */ 
-  #define BYTE_ORDER    0
-  #define LITTLE_ENDIAN 1
-#endif
 
 #ifndef   FASTPBMRENDER
   #define FASTPBMRENDER TRUE
@@ -684,7 +679,7 @@ bitsOfLeBuffer(const unsigned char * const buf,
 
     assert(len <= 16);
 
-    if (BYTE_ORDER == LITTLE_ENDIAN)
+    if (BYTE_ORDER == LITTLE_ENDIAN && UNALIGNED_OK)
         /* Fast path */
         codeBlock = *(uint32_t *) & buf[start/8];
     else

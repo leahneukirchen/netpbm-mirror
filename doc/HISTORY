@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+16.08.13 BJH  Release 10.75.01
+
+              giftopnm: Fix bug: crash on little-endian computers that can't
+              toleration unaligned memory access.  Thanks Ignatios Souvatzis
+              (is@netbsd.org).  Broken in Netpbm 10.47 (June 2009).
+
 16.06.26 BJH  Release 10.75.00
 
               pbmtextps: Add -leftmargin, -rightmargin, -topmargin,
