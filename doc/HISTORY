@@ -4,6 +4,16 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+16.09.01 BJH  Release 10.75.02
+
+              pnmquantall: Fix failure when temporary file location is
+              not the same filesystem as the output file.
+
+              pnmquantall: Fix incorrect handling of when the Pnmremap or
+              the final rename fails.
+
+              Build: tifftopnm.c: fix undefined WIFSIGNALED, etc. in 
+
 16.08.13 BJH  Release 10.75.01
 
               giftopnm: Fix bug: crash on little-endian computers that can't

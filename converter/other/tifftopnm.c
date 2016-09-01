@@ -52,6 +52,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
+#include <sys/wait.h>  /* WIFSIGNALED, etc. */
 
 #include "pm_c_util.h"
 #include "shhopt.h"
