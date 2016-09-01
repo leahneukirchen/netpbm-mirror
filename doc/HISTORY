@@ -6,6 +6,12 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.76.00
 
+              pnmquantall: Fix failure when temporary file location is
+              not the same filesystem as the output file.
+
+              pnmquantall: Fix incorrect handling of when the Pnmremap or
+              the final rename fails.
+
               giftopnm: Fix bug: crash on little-endian computers that can't
               toleration unaligned memory access.  Thanks Ignatios Souvatzis
               (is@netbsd.org).  Broken in Netpbm 10.47 (June 2009).
