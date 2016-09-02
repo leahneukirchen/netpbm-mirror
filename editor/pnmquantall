@@ -170,7 +170,7 @@ sub remapFiles($$$$) {
             my $pnmremapTermStatus = system($pnmremapCmd);
 
             if ($pnmremapTermStatus != 0) {
-                $errorR =
+                $$errorR =
                     "Shell command to quantize '$inFileName'  failed:  " .
                     "'$pnmremapCmd'";
             } else {
@@ -178,7 +178,7 @@ sub remapFiles($$$$) {
 
                 unlink($newFileName);
                 File::Copy::move($outputFileName, $newFileName)
-                    or $errorR = "Rename to '$newFileName' failed.";
+                    or $$errorR = "Rename to '$newFileName' failed.";
             }
         }
         unlink($outputFileName);  # In case something failed
