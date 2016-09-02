@@ -4,6 +4,14 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+16.09.02 BJH  Release 10.73.05
+
+              pnmquantall: Fix failure when temporary file location is
+              not the same filesystem as the output file.
+
+              pnmquantall: Fix incorrect handling of when the Pnmremap or
+              the final rename fails.
+
 16.08.13 BJH  Release 10.73.04
 
               giftopnm: Fix bug: crash on little-endian computers that can't

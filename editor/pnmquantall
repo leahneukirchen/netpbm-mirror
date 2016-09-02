@@ -56,6 +56,7 @@ use strict;
 use warnings;
 use English;
 use Fcntl;  # gets open flags
+use File::Copy;
 
 my $TRUE=1; my $FALSE = 0;
 
@@ -163,7 +164,7 @@ sub remapFiles($$$$) {
                 my $newFileName = $inFileName . $ext;
 
                 unlink($newFileName);
-                rename($outputFileName, $newFileName)
+                File::Copy::move($outputFileName, $newFileName)
                     or $errorR = "Rename to '$newFileName' failed.";
             }
         }
