@@ -32,6 +32,12 @@
 #include "shhopt.h"
 #include "pnm.h"
 
+#if PNG_LIBPNG_VER >= 10500
+#error Your PNG library (<png.h>) is incompatible with this Netpbm source code.
+#error You need either an older PNG library (older than 1.5) or
+#error newer Netpbm source code (at least 10.55)
+#endif
+
 /* A hack until we can remove direct access to png_info from the program */
 #if PNG_LIBPNG_VER >= 10400
 #define TRANS_ALPHA trans_alpha

@@ -4,6 +4,15 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+16.09.26 BJH  Release 10.47.63
+
+              Build: Add warning when libpng versions is later than 1.4, since
+              it is incompatible with this release of Netpbm.
+
+              giftopnm: Fix bug: crash on little-endian computers that can't
+              tolerate unaligned memory access.  Thanks Ignatios Souvatzis
+              (is@netbsd.org).  Broken in Netpbm 10.47 (June 2009).
+
 16.06.26 BJH  Release 10.47.62
 
               pamarith: fix incorrect output when maxvals differ, for

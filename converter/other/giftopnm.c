@@ -48,6 +48,13 @@
   #define LITTLE_ENDIAN 1
 #endif
 
+#if defined(__x86_64__) | defined(__i486__) | defined(__vax__)
+# define UNALIGNED_OK 1
+#else
+# define UNALIGNED_OK 0
+#endif
+
+
 
 static __inline__ bool
 ReadOK(FILE *          const fileP,
@@ -591,7 +598,7 @@ bitsOfLeBuffer(const unsigned char * const buf,
 
     assert(len <= 16);
 
-    if (BYTE_ORDER == LITTLE_ENDIAN)
+    if (BYTE_ORDER == LITTLE_ENDIAN && UNALIGNED_OK)
         /* Fast path */
         codeBlock = *(uint32_t *) & buf[start/8];
     else
