@@ -4,6 +4,8 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+not yet  BJH  Release 10.77.00
+
 16.09.27 BJH  Release 10.76.00
 
               pnmquantall: Fix failure when temporary file location is
