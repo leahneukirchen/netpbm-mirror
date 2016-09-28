@@ -68,14 +68,16 @@ appear at the end:
 =================
 
 The tests require the Bash command shell.  The script Execute-Tests has
-some expressions unique to bash.  Quite old versions work, at least back
-to bash v. 2.05b.
+some expressions unique to Bash.  Quite old versions work, at least back
+to Bash v. 2.05b.
 
-The tests also use the following utilities:
+Awk is also required, but the constructs are all simple.  Gawk, Mawk and
+BWK Awk (the "One True Awk") are all known to work. 
+
+The tests use the following utilities:
 
  - sh
  - awk
- - perl
 
  - cat
  - cksum

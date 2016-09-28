@@ -6,8 +6,12 @@ tmpdir=${tmpdir:-/tmp}
 
 # Test 1:
 
+# Should print 3898818212 967 twice
+
 pbmtext UNIX Philosophy: Do one thing and do it well. | cksum
 echo -n "UNIX Philosophy: Do one thing and do it well." | pbmtext | cksum
+
+# Should print 2506052117 1354 twice
 
 pbmtext -builtin fixed \
     For truth is always strange. Stranger than fiction. Lord Byron | cksum
@@ -76,13 +80,13 @@ rm ${fontRectangle_txt} ${font_pbm}
 # Test 5: Print all characters defined in the built-in bdf font
 
 # One long row
-# Should print
+# Should print 3233136020 4535
 awk 'BEGIN { for (i=32; i<=125;++i) printf("%c",i);
              for (i=160;i<=255;++i) printf("%c",i); }' | \
     pbmtext -builtin bdf | cksum
 
 # One tall column
-# Should print
+# Should print 1216262214 5711
 awk 'BEGIN { for (i=32; i<=125;++i) printf("%c\n",i);
              for (i=160;i<=255;++i) printf("%c\n",i); }' | \
     pbmtext -nomargins -builtin bdf | cksum
@@ -94,7 +98,7 @@ awk 'BEGIN { for (i=32; i<=125;++i) printf("%c\n",i);
 font_bdf=${tmpdir}/font.bdf
 font_corrupt_bdf=${tmpdir}/fontcorrupt.bdf
 
-# Though this is BDF font file defines only three letters, it is valid.
+# Though this BDF font file defines only three letters, it is valid.
 
 cat > ${font_bdf} << EOF
 STARTFONT 2.1

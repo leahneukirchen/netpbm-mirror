@@ -2,6 +2,10 @@
 #define PNGX_H_INCLUDED
 
 #include <png.h>
+    /* This includes the Zlib interface header file zlib.h because libpng uses
+       libz and some of the Zlib interface, e.g. the Z_DEFLATED constant,
+       is part of the libpng interface.
+    */
 #include "pm_c_util.h"
 
 /* pngx is designed to be an extension of the PNG library to make using
