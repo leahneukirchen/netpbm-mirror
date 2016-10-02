@@ -53,9 +53,11 @@
 #else
   /* The test for __STDC__ is paranoid.  It is there just in case some
      nonstandard compiler defines __STDC_VERSION__ in an arbitrary manner.
+
+     We know GCC 2.95.3 has stdbool; not sure about earlier GCC 2.
   */
-  #if ( defined(__GNUC__) && (__GNUC__ >= 3) ) || \
-      ( defined(__STDC__) && (__STDC__ ==1) && \
+  #if ( defined(__GNUC__) && (__GNUC__ >= 2) ) || \
+      ( defined(__STDC__) && (__STDC__ == 1) && \
         defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L) ) 
     #include <stdbool.h>
   #else
