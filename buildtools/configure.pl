@@ -1465,8 +1465,8 @@ sub wnostrictoverflowWorks($) {
     
     my $compileCommand =
         "$gccCommandName -c -o /dev/null -Wno-strict-overflow $cFileName";
-    print ("Doing test compile to see if -Wno-strict-overflow works: "
-           . "$compileCommand\n");
+    print("Doing test compile to see if -Wno-strict-overflow works: "
+          . "$compileCommand\n");
     my $rc = system($compileCommand);
     
     unlink($cFileName);
