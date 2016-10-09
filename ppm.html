@@ -6,7 +6,7 @@
 </HEAD>
 <BODY>
 <H1>ppm</H1>
-Updated: 02 November 2013
+Updated: 09 October 2016
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -92,6 +92,8 @@ in the color universe of which the image is part (the color universe
 is all the colors in all images to which this image might be
 compared).
 
+<p>BT.709's range of channel values (16-240) is irrelevant to PPM.
+
 <p>ITU-R Recommendation BT.709 is a renaming of the former CCIR
 Recommendation 709.  When CCIR was absorbed into its parent
 organization, the ITU, ca. 2000, the standard was renamed.  This
@@ -100,9 +102,9 @@ clear now that CIE ever sponsored such a standard.
 
 <P>Note that another popular color space is the newer sRGB.  A common
 variation on PPM is to substitute this color space for the one specified.
+There is no known program to convert between this variation and true PPM.
 
-<p>
-Note that a common variation on the PPM format is to have the sample
+<p>Note that a common variation on the PPM format is to have the sample
 values be "linear," i.e. as specified above except without
 the gamma adjustment.  <B>pnmgamma</B> takes such a PPM variant as
 input and produces a true PPM as output.

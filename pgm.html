@@ -6,7 +6,7 @@
 </HEAD>
 <BODY>
 <H1>pgm</H1>
-Updated: 27 November 2013
+Updated: 09 October 2016
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -85,10 +85,16 @@ therefore black.  A value of Maxval represents CIE D65 white and the
 most intense value in the image and any other image to which the image
 might be compared.
 
+<p>BT.709's range of channel values (16-240) is irrelevant to PGM.
+
 <p>Note that a common variation on the PGM format is to have the
 gray value be "linear," i.e. as specified above except
 without the gamma adjustment.  <B>pnmgamma</B> takes such a PGM
 variant as input and produces a true PGM as output.
+
+<P>Another popular variation on PGM is to substitute the newer sRGB transfer
+function for the BT.709 one.  There is no known program to convert between
+this variation and true PGM.
 
 <p>In the transparency mask variation on PGM, the value represents
 opaqueness.  It is proportional to the fraction of intensity of a
