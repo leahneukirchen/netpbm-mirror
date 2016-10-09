@@ -87,16 +87,16 @@ might be compared.
 
 <p>BT.709's range of channel values (16-240) is irrelevant to PGM.
 
-<p>Note that a common variation on the PGM format is to have the
+<p>Note that a common variation from the PGM format is to have the
 gray value be "linear," i.e. as specified above except
 without the gamma adjustment.  <B>pnmgamma</B> takes such a PGM
 variant as input and produces a true PGM as output.
 
-<P>Another popular variation on PGM is to substitute the newer sRGB transfer
-function for the BT.709 one.  There is no known program to convert between
+<P>Another popular variation from PGM is to substitute the newer sRGB transfer
+function for the BT.709 one.  You can use <b>pnmgamma</b> to convert between
 this variation and true PGM.
 
-<p>In the transparency mask variation on PGM, the value represents
+<p>In the transparency mask variation from PGM, the value represents
 opaqueness.  It is proportional to the fraction of intensity of a
 pixel that would show in place of an underlying pixel.  So what
 normally means white represents total opaqueness and what normally

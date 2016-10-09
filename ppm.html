@@ -101,10 +101,10 @@ document once referred to the standard as CIE Rec. 709, but it isn't
 clear now that CIE ever sponsored such a standard.
 
 <P>Note that another popular color space is the newer sRGB.  A common
-variation on PPM is to substitute this color space for the one specified.
-There is no known program to convert between this variation and true PPM.
+variation from PPM is to substitute this color space for the one specified.
+You can use <b>pnmgamma</b> to convert between this variation and true PPM.
 
-<p>Note that a common variation on the PPM format is to have the sample
+<p>Note that a common variation from the PPM format is to have the sample
 values be "linear," i.e. as specified above except without
 the gamma adjustment.  <B>pnmgamma</B> takes such a PPM variant as
 input and produces a true PPM as output.
