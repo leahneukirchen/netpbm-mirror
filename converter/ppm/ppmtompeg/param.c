@@ -7,6 +7,8 @@
 
 /* COPYRIGHT INFORMATION IS AT THE END OF THIS FILE */
 
+#define _DEFAULT_SOURCE 1
+    /* New name for SVID & BSD source defines */
 #define _XOPEN_SOURCE 500
     /* This makes sure popen() is in stdio.h.  In GNU libc 2.1.3, 
      _POSIX_C_SOURCE = 2 is sufficient, but on AIX 4.3, the higher level

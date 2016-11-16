@@ -1,3 +1,4 @@
+#define _DEFAULT_SOURCE /* New name for SVID & BSD source defines */
 #define _BSD_SOURCE    /* Make sure string.h containst strcasecmp() */
 #include <stdlib.h>
 #include <string.h>

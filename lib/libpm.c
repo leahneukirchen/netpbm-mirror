@@ -8,6 +8,7 @@
   Netpbm library subroutines.
 **************************************************************************/
 
+#define _DEFAULT_SOURCE      /* New name for SVID & BSD source defines */
 #define _BSD_SOURCE          /* Make sure strdup is in string.h */
 #define _XOPEN_SOURCE 500    /* Make sure ftello, fseeko are defined */
 

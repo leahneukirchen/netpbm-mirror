@@ -1,3 +1,4 @@
+#define _DEFAULT_SOURCE /* New name for SVID & BSD source defines */
 #define _XOPEN_SOURCE 500 
    /* Make sure M_PI is in math.h, strdup is in string.h */
 #define _BSD_SOURCE      /* Make sure strdup is in string.h (alternate) */

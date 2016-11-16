@@ -8,6 +8,7 @@
 
 *****************************************************************************/
 
+#define _DEFAULT_SOURCE 1  /* New name for SVID & BSD source defines */
 #define _BSD_SOURCE 1      /* Make sure strdup() is in string.h */
 #define _XOPEN_SOURCE 500 /* Make sure strdup() is in string.h */
     /* In 2014.09, this was _XOPEN_SOURCE 600, with a comment saying it was
