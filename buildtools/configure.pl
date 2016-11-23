@@ -2180,8 +2180,8 @@ my ($linuxsvgalib, $linuxsvgahdr_dir) = getLinuxsvgaLibrary($platform);
 
 print("\n");
 
-# We should add the JBIG and URT libraries here too.  They're a little
-# more complicated because there are versions shipped with Netpbm.
+# We should add the URT, JBIG, and Jasper libraries here too.  They're a
+# little more complicated because there are versions shipped with Netpbm.
 
 
 #******************************************************************************
