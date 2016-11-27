@@ -367,11 +367,49 @@ ordinary_testprogs="\
   zeisstopnm \
 "
 
+enabled_testprog() {
+    case $1 in
+      fiascotopnm|\
+      pnmtofiasco)
+        [ "${BUILD_FIASCO}" = "N" ] && return 1 ;;
+
+      jpeg2ktopam|\
+      pamtojpeg2k)
+        [ "${JASPERLIB}" = "NONE" ] && return 1 ;;
+
+      jbigtopnm|\
+      pnmtojbig)
+        [ "${JBIGLIB}" = "NONE" ] && return 1 ;;
+
+      jpegtopnm|\
+      pnmtojpeg|\
+      ppmtojpeg)
+        [ "${JPEGLIB}" = "NONE" ] && return 1 ;;
+
+      pamtotiff|\
+      pnmtotiffcmyk|\
+      tifftopnm)
+        [ "${TIFFLIB}" = "NONE" ] && return 1 ;;
+
+      pnmtorle|\
+      rletopnm)
+        [ "${URTLIB}" = "NONE" ] && return 1 ;;
+    esac
+
+    return 0
+}
+
 # The string "fiascotopnm" has to be filtered out by egrep for fiascotopnm
 # has a slightly different version report format.
 
 for i in $ordinary_testprogs
   do
+    # Stub out programs that aren't built.
+    if ! enabled_testprog "$i"; then
+      echo "$i: ok"
+      continue
+    fi
+
     $i --version  2>&1 | \
     egrep -v -e fiascotopnm -e \
     "(Using libnetpbm|Compiled|(BSD|SYSV|MSDOS|AMIGA) defined|RGB_?ENV=)" \

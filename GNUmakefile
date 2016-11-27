@@ -455,6 +455,17 @@ deb:
 .PHONY: check-package
 .PHONY: check-install
 
+# Variables from the make env we pass down to the test scripts.
+CHECK_VARS = \
+	BUILDDIR=$(BUILDDIR) \
+	RGBDEF=$(RGBDEF) \
+	BUILD_FIASCO=$(BUILD_FIASCO) \
+	JASPERLIB="$(JASPERLIB)" \
+	JBIGLIB="$(JBIGLIB)" \
+	JPEGLIB="$(JPEGLIB)" \
+	TIFFLIB="$(TIFFLIB)" \
+	URTLIB="$(URTLIB)"
+
 # Test files in source tree.
 
 check-tree : BUILDBINDIRS :=./analyzer \
@@ -525,10 +536,10 @@ resultdir-backup: FORCE
 
 check-tree: $(TESTRANDOM) resultdir-backup
 	cd $(RESULTDIR); \
+	  $(CHECK_VARS) \
 	  CHECK_TYPE=tree \
-	  PBM_TEST_PATH=$(PBM_TEST_PATH) BUILDDIR=$(BUILDDIR) \
+	  PBM_TEST_PATH=$(PBM_TEST_PATH) \
 	  LD_LIBRARY_PATH=$(PBM_LIBRARY_PATH):${LD_LIBRARY_PATH} \
-	  RGBDEF=$(RGBDEF) \
 	  $(SRCDIR)/test/Execute-Tests 2>&1
 
 # Execute-Tests needs to know BUILDDIR in order to locate testrandom.
@@ -545,19 +556,18 @@ check: check-package
 
 check-package: $(TESTRANDOM) resultdir-backup
 	cd $(RESULTDIR); \
+	  $(CHECK_VARS) \
 	  CHECK_TYPE=package \
-	  PBM_TEST_PATH=$(PBM_TEST_PATH) BUILDDIR=$(BUILDDIR) \
+	  PBM_TEST_PATH=$(PBM_TEST_PATH) \
 	  LD_LIBRARY_PATH=$(PBM_LIBRARY_PATH):${LD_LIBRARY_PATH} \
-	  RGBDEF=$(RGBDEF) \
 	  $(SRCDIR)/test/Execute-Tests 2>&1
 
 
 # Check after install
 check-install: $(TESTRANDOM) resultdir-backup
 	cd $(RESULTDIR); \
+	  $(CHECK_VARS) \
 	  CHECK_TYPE=install \
-	  BUILDDIR=$(BUILDDIR) \
-	  RGBDEF=$(RGBDEF) \
 	  $(SRCDIR)/test/Execute-Tests 2>&1
 
 

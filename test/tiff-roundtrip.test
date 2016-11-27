@@ -2,6 +2,9 @@
 # This script tests: pamtotiff tifftopnm
 # Also requires:
 
+if [ "${TIFFLIB}" = "NONE" ]; then
+  exit 80
+fi
 
 # Failure message
 ## Second test fails if Netpbm was built without the flate library

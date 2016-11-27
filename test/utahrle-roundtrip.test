@@ -2,6 +2,9 @@
 # This script tests: pnmtorle rletopnm
 # Also requires: pamchannel pamtopnm
 
+if [ "${URTLIB}" = "NONE" ]; then
+  exit 80
+fi
 
 #Test 1.  Should produce 1571496937 33838, cksum of testimg.red
 pamchannel -infile=testimg.ppm -tupletype="GRAYSCALE" 0 | pamtopnm | \
