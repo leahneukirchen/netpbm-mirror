@@ -8,6 +8,10 @@
 ## (1) zlib was not linked.
 ## (2) ghostscript is not available.
 
+if [ "${ZLIB}" = "NONE" ]; then
+  exit 80
+fi
+
 tmpdir=${tmpdir:-/tmp}
 
 # pstopnm does not use libnetpbm functions for output.

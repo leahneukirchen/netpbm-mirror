@@ -386,6 +386,16 @@ enabled_testprog() {
       ppmtojpeg)
         [ "${JPEGLIB}" = "NONE" ] && return 1 ;;
 
+      pamtopng|\
+      pngtopam|\
+      pnmtopng)
+        [ "${PNGLIB}" = "NONE" ] && return 1 ;;
+
+      svgtopam)
+        [ "${PNGLIB}" = "NONE" ] && return 1
+        [ "${XML2_LIBS}" = "NONE" ] && return 1
+        ;;
+
       pamtotiff|\
       pnmtotiffcmyk|\
       tifftopnm)
@@ -394,6 +404,9 @@ enabled_testprog() {
       pnmtorle|\
       rletopnm)
         [ "${URTLIB}" = "NONE" ] && return 1 ;;
+
+      pamx)
+        [ "${X11LIB}" = "NONE" ] && return 1 ;;
     esac
 
     return 0

@@ -463,8 +463,12 @@ CHECK_VARS = \
 	JASPERLIB="$(JASPERLIB)" \
 	JBIGLIB="$(JBIGLIB)" \
 	JPEGLIB="$(JPEGLIB)" \
+	PNGLIB="$(PNGLIB)" \
 	TIFFLIB="$(TIFFLIB)" \
-	URTLIB="$(URTLIB)"
+	URTLIB="$(URTLIB)" \
+	X11LIB="$(X11LIB)" \
+	XML2_LIBS="$(XML2_LIBS)" \
+	ZLIB="$(ZLIB)"
 
 # Test files in source tree.
 

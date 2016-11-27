@@ -94,8 +94,30 @@ ordinary_testprogs="\
   ppmtouil \
 "
 
+enabled_testprog() {
+    case $1 in
+      ppmtojpeg)
+        [ "${JPEGLIB}" = "NONE" ] && return 1 ;;
+
+      pamrgbatopng|\
+      pngtopnm)
+        [ "${PNGLIB}" = "NONE" ] && return 1 ;;
+
+      pnmtotiff)
+        [ "${TIFFLIB}" = "NONE" ] && return 1 ;;
+    esac
+
+    return 0
+}
+
 for i in $ordinary_testprogs
   do
+    # Stub out programs that aren't built.
+    if ! enabled_testprog "$i"; then
+      echo "$i: ok"
+      continue
+    fi
+
     $i --version  2>&1 | \
     egrep -v \
     "(Using libnetpbm|Compiled|(BSD|SYSV|MSDOS|AMIGA) defined|RGB_?ENV=)" \
