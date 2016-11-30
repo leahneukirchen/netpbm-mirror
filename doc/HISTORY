@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.77.00
 
+              Makeman: slight improvement to formatting of man pages.
+              Thanks Werner LEMBERG <wl@gnu.org>.
+
 16.09.27 BJH  Release 10.76.00
 
               pnmquantall: Fix failure when temporary file location is
@@ -20,6 +23,8 @@ not yet  BJH  Release 10.77.00
 
               cmuwmtopbm: fix trivial memory leak.  Always broken (cmuwmtopbm
               was in primordial Pbmplus, in 1988).
+
+              Build: Add PKG_CONFIG make variable.
 
               Build: tifftopnm.c: fix undefined WIFSIGNALED, etc. in 
 

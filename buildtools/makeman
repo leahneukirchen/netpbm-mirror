@@ -160,7 +160,7 @@ def makeman(name, file, indoc):
         if xrefsection == 0:
             return "\n.I " + xrefto
         else:
-            return "\n.BR %s (%d)\n" % (xrefto, xrefsection)
+            return '\n.BR "%s" (%d)\\c\n\\&' % (xrefto, xrefsection)
     indoc = re.sub(r'(?i)\n* *(?:\\fB)?<A[ \n]+HREF="?([^>]+.html)"?>([^<]+)</A>(?:\\fP)?',
                    xrefmatch, indoc)
     # Format URLs
@@ -231,25 +231,25 @@ def makeman(name, file, indoc):
     indoc = indoc.replace("&mu;", "mu")
     indoc = indoc.replace("&sigma;", "sigma")
     # Tables
-    indoc = re.sub(' *<table[^>]*>.*', ".TS", indoc)
-    indoc = re.sub(" *</table>.*", ".TE", indoc)
+    indoc = re.sub('(?i) *<table[^>]*>.*', ".TS", indoc)
+    indoc = re.sub("(?i) *</table>.*", ".TE", indoc)
     # First the single-line case
-    indoc = re.sub("</td> *<td>", "\t", indoc)
-    indoc = re.sub("<tr> *<td>", "", indoc)
-    indoc = re.sub("</td> *</tr>", "", indoc)
+    indoc = re.sub("(?i)</td> *<td>", "\t", indoc)
+    indoc = re.sub("(?i)<tr> *<td>", "", indoc)
+    indoc = re.sub("(?i)</td> *</tr>", "", indoc)
     # Then the multiline case
-    indoc = re.sub(r'\s*<t[hd][^>]*>([^<\n]*)</t[dh]>\s*', '\t\\1', indoc)
-    indoc = re.sub(r'\s*<t[hd][^>]*>([^<]*)</t[dh]>\s*', '\tT{\n\\1T}', indoc)
+    indoc = re.sub(r'(?i)\s*<t[hd][^>]*>([^<\n]*)</t[dh]>\s*', '\t\\1', indoc)
+    indoc = re.sub(r'(?i)\s*<t[hd][^>]*>([^<]*)</t[dh]>\s*', '\tT{\n\\1T}', indoc)
     indoc = indoc.replace("\n\\&T}", "\nT}")
-    indoc = re.sub(" *</tr>", "", indoc)
-    indoc = re.sub(" *<tr[^>]*>\t*", "", indoc)
-    indoc = re.sub(r"\.TS\s+<caption>([^<]*)</caption>\s*", ".B \\1\n.TS\n", indoc)
+    indoc = re.sub("(?i) *</tr>", "", indoc)
+    indoc = re.sub("(?i) *<tr[^>]*>\t*", "", indoc)
+    indoc = re.sub(r"\.TS\s+<[Cc][Aa][Pp][Tt][Ii][Oo][Nn]>([^<]*)</[Cc][Aa][Pp][Tt][Ii][Oo][Nn]>\s*", ".B \\1\n.TS\n", indoc)
     # Debugging
     #sys.stderr.write("Name: %s, Title: %s, Date: %s\n" % (name, title, date))
     # Time for error checking now
     badlines = []
     for line in indoc.split("\n"):
-        if "<" in line or ">" in line.replace(" >", "") or re.search("&.*;", line):
+        if "<" in line or ">" in line.replace(" >", "") or re.search(r'(?<!^\\)&.*;', line):
             badlines.append(line)
     if badlines:
         sys.stderr.write(("Bad lines from %s:\n-----------------\n" % file) + "\n".join(badlines) + "\n-----------------\n")
