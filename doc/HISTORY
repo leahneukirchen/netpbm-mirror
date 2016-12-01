@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+16.12.01 BJH  Release 10.76.01
+
+              pnmpad: fix bug: incorrect output width.  Introduced in
+              Netpbm 10.72 (July 2015).
+
 16.09.27 BJH  Release 10.76.00
 
               pnmquantall: Fix failure when temporary file location is

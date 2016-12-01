@@ -309,7 +309,7 @@ computePadSizeBeforeMult(unsigned int   const unpaddedSize,
             *begPadP = begPadReq;
             *endPadP = MAX(sizeReq, unpaddedSize + begPadReq) -
                 (begPadReq + unpaddedSize);
-        } else if (endPadReq) {
+        } else if (endPadSpec) {
             *endPadP = endPadReq;
             *begPadP = MAX(sizeReq, unpaddedSize + endPadReq) -
                 (unpaddedSize + endPadReq);
