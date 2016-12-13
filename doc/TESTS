@@ -246,12 +246,20 @@ problem, such as a misconfigured dynamic library or a directory-wide
 permission issue.  This kind of failure is known to happen when N is
 set too high with "make -jN" (overambitious parallel make.) 
 
-The current test routines assume a typical build configuration - they are
-not aware of the actual configuration you chose.  If a choice you make
-during configure causes "make" to skip compilation of certain programs,
-the test routines won't know and will report failures.
+Configuration choices affect tests.  If a choice you make during configure
+causes "make" to skip compilation of certain programs, the corresponding
+test routines will be skipped and reported as NOT TESTABLE.  However,
+if you override a glitch with "make --keep-going" the test programs
+won't know and quite certainly you'll get failure messages.
 
-For details read 'Netpbm Library Prerequisites':
+If you run the tests as "make check-install" information about
+configuration choices is deliberately ignored.  This is because the
+post-install check is typically run on systems with multiple versions
+of Netpbm and in this case users want to get a clear idea of absent
+components.
+
+For details on the effects of missing libraries, read
+'Netpbm Library Prerequisites':
 http://netpbm.sourceforge.net/prereq.html .
 
 
