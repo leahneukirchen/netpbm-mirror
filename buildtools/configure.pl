@@ -1168,6 +1168,12 @@ sub getPngLibrary($@) {
         # We don't need to ask where Libpng is; there's a 'libpng-config'
         # That tells exactly how to access it, and the make files will use
         # that.
+        #
+        # To limit the confusion when someone tries to use our result in
+        # spite of the fact that 'libpng-config' exists, we assign suggestive
+        # dummy values.
+        $pnglib     = 'USE_LIBPNG-CONFIG.a';
+        $pnghdr_dir = 'USE_LIBPNG-CONFIG.a';
     } else {
         {
             my $default = "libpng" . libSuffix($platform);
