@@ -83,15 +83,15 @@ BSQ,D04, D04,D05, D04,'L', D05,'[', '<','Z', '/','Z', 'c','k',D06,'R',/*D0-DF*/
 
 
 static void
-makeRowOfSigs(FILE *         const ifP,
-              unsigned int   const cols,
-              unsigned int   const rows,
-              int            const format,
-              unsigned int   const cellWidth,
-              unsigned int   const cellHeight,
-              unsigned int   const row,
-              unsigned int * const sig,
-              unsigned int   const ccols) {
+makeRowOfSignatures(FILE *         const ifP,
+                    unsigned int   const cols,
+                    unsigned int   const rows,
+                    int            const format,
+                    unsigned int   const cellWidth,
+                    unsigned int   const cellHeight,
+                    unsigned int   const row,
+                    unsigned int * const sig,
+                    unsigned int   const ccols) {
 /*----------------------------------------------------------------------------
    Compute the signatures for every cell in a row.
 
@@ -183,13 +183,19 @@ pbmtoascii(FILE *       const ifP,
            unsigned int const cellHeight,
            const char * const carr) {
 
-    int cols, rows, format;
+    int format;
+    int cols, rows;
+        /* Dimensions of the input in pixels */
     unsigned int ccols;
+        /* Width of the output in characters */
     char * line;         /* malloc'ed array */
     unsigned int row;
-    unsigned int * sig;  /* malloc'ed array */
-        /* This describes in a single integer the pixels of a cell,
-           as described above.
+    unsigned int * signatureRow;  /* malloc'ed array */
+        /* This is the cell signatures of a row of cells.
+           signatureRow[0] is the signature for the first (leftmost) cell
+           in the row, signatureRow[1] is the signature for the next one,
+           etc.  A signature is an encoding of the pixels of a cell as
+           an integer, as described above.
         */
     assert(cellWidth * cellHeight <= sizeof(sig[0]*8));
 
@@ -197,9 +203,10 @@ pbmtoascii(FILE *       const ifP,
 
     ccols = (cols + cellWidth - 1) / cellWidth;
 
-    MALLOCARRAY(sig, ccols);
-    if (sig == NULL)
+    MALLOCARRAY(signatureRow, ccols);
+    if (signatureRow == NULL)
         pm_error("No memory for %u columns", ccols);
+
     MALLOCARRAY_NOFAIL(line, ccols+1);
     if (line == NULL)
         pm_error("No memory for %u columns", ccols);
@@ -207,16 +214,16 @@ pbmtoascii(FILE *       const ifP,
     for (row = 0; row < rows; row += cellHeight) {
         unsigned int endCol;
 
-        makeRowOfSigs(ifP, cols, rows, format, cellWidth, cellHeight,
-                      row, sig, ccols);
+        makeRowOfSignatures(ifP, cols, rows, format, cellWidth, cellHeight,
+                            row, signatureRow, ccols);
 
-        findRightMargin(sig, ccols, carr, &endCol);
+        findRightMargin(signatureRow, ccols, carr, &endCol);
 
-        assembleCellRow(sig, endCol, carr, line);
+        assembleCellRow(signatureRow, endCol, carr, line);
 
         puts(line);
     }
-    free(sig);
+    free(signatureRow);
     free(line);
 }
 
