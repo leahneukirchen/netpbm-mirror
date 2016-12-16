@@ -197,7 +197,7 @@ pbmtoascii(FILE *       const ifP,
            etc.  A signature is an encoding of the pixels of a cell as
            an integer, as described above.
         */
-    assert(cellWidth * cellHeight <= sizeof(signatureRow[0]*8));
+    assert(cellWidth * cellHeight <= sizeof(signatureRow[0])*8);
 
     pbm_readpbminit(ifP, &cols, &rows, &format);
 
