@@ -1164,10 +1164,20 @@ sub getPngLibrary($@) {
 
     my ($pnglib, $pnghdr_dir);
 
-    if (commandExists('libpng-config')) {
-        # We don't need to ask where Libpng is; there's a 'libpng-config'
-        # That tells exactly how to access it, and the make files will use
-        # that.
+    if (system('pkg-config libpng --exists') == 0) {
+        # We don't need to ask where Libpng is; the Pkg-config database knows
+        # and the make files will use that.
+        #
+        # To limit the confusion when someone tries to use our result in
+        # spite of the fact that 'libpng-config' exists, we assign suggestive
+        # dummy values (just for use in human debugging).
+        $pnglib     = 'USE_PKG_CONFIG.a';
+        $pnghdr_dir = 'USE_PKG_CONFIG.a';
+    } elsif (commandExists('libpng-config')) {
+        # As with Pkg-config above, we can find out how to access the
+        # library by invoking a 'libpng-config' command.
+        $pnglib     = 'USE_LIBPNG-CONFIG.a';
+        $pnghdr_dir = 'USE_LIBPNG-CONFIG.a';
     } else {
         {
             my $default = "libpng" . libSuffix($platform);
@@ -1252,6 +1262,12 @@ sub getX11Library($@) {
     if (system('pkg-config x11 --exists') == 0) {
         # We don't need to ask where X libraries are; pkg-config knows and the
         # make files will use that.
+        #
+        # To limit the confusion when someone tries to use our result in
+        # spite of the fact that 'libpng-config' exists, we assign suggestive
+        # dummy values (just for use in human debugging).
+        $x11lib     = 'USE_PKGCONFIG.a';
+        $x11hdr_dir = 'USE_PKGCONFIG.a';
     } else {
         {
             my $default;
@@ -1465,8 +1481,8 @@ sub wnostrictoverflowWorks($) {
     
     my $compileCommand =
         "$gccCommandName -c -o /dev/null -Wno-strict-overflow $cFileName";
-    print ("Doing test compile to see if -Wno-strict-overflow works: "
-           . "$compileCommand\n");
+    print("Doing test compile to see if -Wno-strict-overflow works: "
+          . "$compileCommand\n");
     my $rc = system($compileCommand);
     
     unlink($cFileName);
@@ -2180,8 +2196,8 @@ my ($linuxsvgalib, $linuxsvgahdr_dir) = getLinuxsvgaLibrary($platform);
 
 print("\n");
 
-# We should add the JBIG and URT libraries here too.  They're a little
-# more complicated because there are versions shipped with Netpbm.
+# We should add the URT, JBIG, and Jasper libraries here too.  They're a
+# little more complicated because there are versions shipped with Netpbm.
 
 
 #******************************************************************************

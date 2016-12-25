@@ -21,6 +21,7 @@
 ** other special, indirect and consequential damages.
 */
 
+#define _DEFAULT_SOURCE  /* New name for SVID & BSD source defines */
 #define _XOPEN_SOURCE    /* Make sure stdio.h contains fileno() */
 #define _BSD_SOURCE      /* Make sure string.h contains strcasecmp() */
 

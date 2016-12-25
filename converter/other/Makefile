@@ -7,12 +7,12 @@ VPATH=.:$(SRCDIR)/$(SUBDIR)
 
 include $(BUILDDIR)/config.mk
 
-TEST_PKGCONFIG_LIBXML2 = if pkg-config libxml-2.0; then echo exists; fi
+TEST_PKGCONFIG_LIBXML2 = if $(PKG_CONFIG) libxml-2.0; then echo exists; fi
 
 ifneq ($(shell $(TEST_PKGCONFIG_LIBXML2)),)
   # pkg-config libxml2 works on this system
-  XML2_LIBS = $(shell pkg-config libxml-2.0 --libs)
-  XML2_CFLAGS = $(shell pkg-config libxml-2.0 --cflags)
+  XML2_LIBS = $(shell $(PKG_CONFIG) libxml-2.0 --libs)
+  XML2_CFLAGS = $(shell $(PKG_CONFIG) libxml-2.0 --cflags)
 else
   ifeq ($(shell xml2-config --version),)
     XML2_LIBS=NONE
@@ -34,12 +34,12 @@ ifneq ($(TIFFLIB),NONE)
   endif
 endif
 
-TEST_PKGCONFIG_LIBPNG = if pkg-config libpng$(PNGVER); then echo exists; fi
+TEST_PKGCONFIG_LIBPNG = if $(PKG_CONFIG) libpng$(PNGVER); then echo exists; fi
 
 ifneq ($(shell $(TEST_PKGCONFIG_LIBPNG)),)
   # pkg-config libpng works on this system
   HAVE_PNGLIB = Y
-  EXTERN_INCLUDES += $(shell pkg-config libpng$(PNGVER) --cflags)
+  EXTERN_INCLUDES += $(shell $(PKG_CONFIG) libpng$(PNGVER) --cflags)
 else
   ifneq ($(shell libpng$(PNGVER)-config --version),)
     # No pkg-config, but we have libpng-config on this system
@@ -192,7 +192,7 @@ tifftopnm pamtotiff pnmtotiffcmyk: \
 
 ifneq ($(shell $(TEST_PKGCONFIG_LIBPNG)),)
   # pkg-config libpng works on this system
-  PNGLIB_LIBOPTS = $(shell pkg-config libpng$(PNGVER) --libs)
+  PNGLIB_LIBOPTS = $(shell $(PKG_CONFIG) libpng$(PNGVER) --libs)
 else
   ifneq ($(shell libpng$(PNGVER)-config --version),)
     # No pkg-config, but we have libpng-config on this system

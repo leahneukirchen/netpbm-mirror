@@ -161,6 +161,12 @@ LEX = flex
 # 
 # LEX = lex
 
+# PKG_CONFIG is the beginning of a shell command that tells things about how
+# some package (e.g. the PNG library) is installed on the build system.  For
+# example, it can tell what link options you need to link the PNG library to a
+# program.
+PKG_CONFIG = pkg-config
+
 # C compiler options 
 
 # gcc:

@@ -22,6 +22,7 @@
    additional work by multiple authors.
 -----------------------------------------------------------------------------*/
 
+#define _DEFAULT_SOURCE /* New name for SVID & BSD source defines */
 #define _BSD_SOURCE    /* Make sure strcaseceq() is in nstring.h */
 #include <assert.h>
 #include <string.h>

@@ -94,8 +94,17 @@ ordinary_testprogs="\
   ppmtouil \
 "
 
+
 for i in $ordinary_testprogs
   do
+    # Stub out programs that aren't built.
+    Available-Testprog "$i"
+      if [ $? = 1 ]; then
+      echo "$i: program was not built" 1>&2
+      echo "$i: ok"
+      continue
+      fi
+
     $i --version  2>&1 | \
     egrep -v \
     "(Using libnetpbm|Compiled|(BSD|SYSV|MSDOS|AMIGA) defined|RGB_?ENV=)" \

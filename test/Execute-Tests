@@ -236,18 +236,29 @@ if [ $VALGRIND_TESTS = "on" ]
 fi
 
 # Execute a single test and test its result.
+# But first see if the target programs and requirements are in place.
 
-PATH=${testpath} $vg_command ${srcdir}/$tname > ${tname%.test}.out;
-let result=$?
-case $result in
-0)   cmp -s ${tname%.test}.out ${srcdir}/${tname%.test}.ok ;
-     if [ $? -eq 0 ]
-        then let result=0;  rm  ${tname%.test}.out ;
-        else let result=1;
-             grep "^##" ${srcdir}/$tname  # Print failure message.
-     fi ;;
-80) let result=4 ;;
-*)  let result=1 ;;
+${srcdir}/Available-Testprog \
+  `sed -n -e '/^# This script tests: /s/# This script tests: //p' \
+          -e '/^# Also requires: /s/^# Also requires: //p' \
+          -e '/^$/q' ${srcdir}/$tname | tr '\n' ' '`
+case $? in
+0)
+  PATH=${testpath} $vg_command ${srcdir}/$tname > ${tname%.test}.out;
+  let retval=$?
+  case $retval in
+  0)   cmp -s ${tname%.test}.out ${srcdir}/${tname%.test}.ok ;
+       if [ $? -eq 0 ]
+          then let result=0;  rm  ${tname%.test}.out ;
+          else let result=1;
+               grep "^##" ${srcdir}/$tname  # Print failure message.
+       fi ;;
+  80) let result=4 ;;
+  *)  let result=1 ;;
+  esac ;;
+
+1)   let result=4 ;;
+*)   let result=1 ;;
 esac
 
 # Report whether a single test succeeded or failed.

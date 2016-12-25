@@ -2,7 +2,6 @@
 # This script tests: pamtotiff tifftopnm
 # Also requires:
 
-
 # Failure message
 ## Second test fails if Netpbm was built without the flate library
 

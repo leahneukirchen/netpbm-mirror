@@ -2,7 +2,6 @@
 # This script tests: pnmtojbig jbigtopnm
 # Also requires: pamchannel pamtopnm
 
-
 # Test 1.  Should print 2425386270 41
 pnmtojbig testgrid.pbm | jbigtopnm | cksum
 
