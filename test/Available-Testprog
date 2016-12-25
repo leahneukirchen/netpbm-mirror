@@ -35,17 +35,6 @@ for i in $@
       ppmtojpeg)
         [ "${JPEGLIB}" = "NONE" ] && exit 1 ;;
 
-      pamtopng|\
-      pngtopam|\
-      pnmtopng|\
-      pamrgbatopng|\
-      pngtopnm)
-        [ "${PNGLIB}" = "NONE" ] && exit 1 ;;
-
-      svgtopam)
-        [ "${PNGLIB}" = "NONE" ] && exit 1
-        [ "${XML2_LIBS}" = "NONE" ] && exit 1 ;;
-
       pamtotiff|\
       pnmtotiff|\
       pnmtotiffcmyk|\
@@ -56,8 +45,6 @@ for i in $@
       rletopnm)
         [ "${URTLIB}" = "NONE" ] && exit 1 ;;
 
-      pamx)
-        [ "${X11LIB}" = "NONE" ] && exit 1 ;;
     esac
 done
 
