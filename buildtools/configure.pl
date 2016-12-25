@@ -1164,14 +1164,18 @@ sub getPngLibrary($@) {
 
     my ($pnglib, $pnghdr_dir);
 
-    if (commandExists('libpng-config')) {
-        # We don't need to ask where Libpng is; there's a 'libpng-config'
-        # That tells exactly how to access it, and the make files will use
-        # that.
+    if (system('pkg-config libpng --exists') == 0) {
+        # We don't need to ask where Libpng is; the Pkg-config database knows
+        # and the make files will use that.
         #
         # To limit the confusion when someone tries to use our result in
         # spite of the fact that 'libpng-config' exists, we assign suggestive
-        # dummy values.
+        # dummy values (just for use in human debugging).
+        $pnglib     = 'USE_PKG_CONFIG.a';
+        $pnghdr_dir = 'USE_PKG_CONFIG.a';
+    } elsif (commandExists('libpng-config')) {
+        # As with Pkg-config above, we can find out how to access the
+        # library by invoking a 'libpng-config' command.
         $pnglib     = 'USE_LIBPNG-CONFIG.a';
         $pnghdr_dir = 'USE_LIBPNG-CONFIG.a';
     } else {
@@ -1258,6 +1262,12 @@ sub getX11Library($@) {
     if (system('pkg-config x11 --exists') == 0) {
         # We don't need to ask where X libraries are; pkg-config knows and the
         # make files will use that.
+        #
+        # To limit the confusion when someone tries to use our result in
+        # spite of the fact that 'libpng-config' exists, we assign suggestive
+        # dummy values (just for use in human debugging).
+        $x11lib     = 'USE_PKGCONFIG.a';
+        $x11hdr_dir = 'USE_PKGCONFIG.a';
     } else {
         {
             my $default;
