@@ -191,7 +191,7 @@ pbmtoascii(FILE *       const ifP,
         /* This describes in a single integer the pixels of a cell,
            as described above.
         */
-    assert(cellWidth * cellHeight <= sizeof(sig[0]*8));
+    assert(cellWidth * cellHeight <= sizeof(sig[0])*8);
 
     pbm_readpbminit(ifP, &cols, &rows, &format);
 

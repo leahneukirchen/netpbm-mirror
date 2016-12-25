@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+16.12.25 BJH  Release 10.73.06
+
+              pbmtoascii: fix bogus assertion failure.  Introduced in 
+              Netpbm 10.51 (June 2010) and visible only with a custom
+              build with assertion checking.
+
 16.12.01 BJH  Release 10.73.05
 
               pnmpad: fix bug: incorrect output width.  Introduced in
