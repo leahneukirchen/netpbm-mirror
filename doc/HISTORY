@@ -4,13 +4,16 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-not yet  BJH  Release 10.77.00
+16.12.25 BJH  Release 10.77.00
 
               pnmpad: fix bug: incorrect output width.  Introduced in
               Netpbm 10.72 (July 2015).
 
               Makeman: slight improvement to formatting of man pages.
               Thanks Werner LEMBERG <wl@gnu.org>.
+
+              Test: skip tests of some parts that are configured out of the
+              build.
 
 16.09.27 BJH  Release 10.76.00
 
