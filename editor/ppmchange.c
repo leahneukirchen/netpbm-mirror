@@ -19,7 +19,7 @@
 #include "mallocvar.h"
 
 #define TCOLS 256
-#define SQRT3 1.73205080756887729352
+static double const sqrt3 = 1.73205080756887729352;
     /* The square root of 3 */
 static double const EPSILON = 1.0e-5;
 
@@ -206,7 +206,7 @@ main(int argc, char *argv[]) {
                                           cmdline.closeok);
         }
     }
-    closeness = SQRT3 * maxval * cmdline.closeness/100;
+    closeness = sqrt3 * maxval * cmdline.closeness/100;
 
     ppm_writeppminit( stdout, cols, rows, maxval, 0 );
     inrow = ppm_allocrow(cols);
