@@ -21,8 +21,9 @@
 #define TCOLS 256
 #define SQRT3 1.73205080756887729352
     /* The square root of 3 */
+static double const EPSILON = 1.0e-5;
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -30,8 +31,7 @@ struct cmdlineInfo {
     int ncolors;      /* Number of valid entries in color0[], color1[] */
     char * oldcolorname[TCOLS];  /* colors user wants replaced */
     char * newcolorname[TCOLS];  /* colors with which he wants them replaced */
-    int closeness;    
-       /* -closeness option value.  Zero if no -closeness option */
+    float closeness;    
     char * remainder_colorname;  
       /* Color user specified for -remainder.  Null pointer if he didn't
          specify -remainder.
@@ -43,7 +43,7 @@ struct cmdlineInfo {
 
 static void
 parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
@@ -59,7 +59,7 @@ parseCommandLine(int argc, char ** argv,
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENTRY */
-    OPTENT3(0, "closeness",     OPT_UINT,
+    OPTENT3(0, "closeness",     OPT_FLOAT,
             &cmdlineP->closeness,           &closenessSpec,     0);
     OPTENT3(0, "remainder",     OPT_STRING,
             &cmdlineP->remainder_colorname, &remainderSpec,     0);
@@ -77,7 +77,10 @@ parseCommandLine(int argc, char ** argv,
         cmdlineP->remainder_colorname = NULL;
 
     if (!closenessSpec)
-        cmdlineP->closeness = 0;
+        cmdlineP->closeness = 0.0;
+
+    if (cmdlineP->closeness < 0.0)
+        pm_error("-closeness value %f is negative", cmdlineP->closeness);
 
     if ((argc-1) % 2 == 0) 
         cmdlineP->input_filespec = "-";
@@ -99,26 +102,19 @@ parseCommandLine(int argc, char ** argv,
 
 
 
-static double
-sqrf(float const F) {
-    return F*F;
-}
-
-
-
 static int 
-colormatch(pixel const comparand, 
-           pixel const comparator, 
-           float const closeness) {
+colormatch(pixel  const comparand, 
+           pixel  const comparator, 
+           double const closeness) {
 /*----------------------------------------------------------------------------
    Return true iff 'comparand' matches 'comparator' in color within the
    fuzz factor 'closeness'.
 -----------------------------------------------------------------------------*/
     /* Fast path for usual case */
-    if (closeness == 0)
+    if (closeness < EPSILON)
         return PPM_EQUAL(comparand, comparator);
 
-    return PPM_DISTANCE(comparand, comparator) <= sqrf(closeness);
+    return PPM_DISTANCE(comparand, comparator) <= SQR(closeness);
 }
 
 
@@ -132,7 +128,7 @@ changeRow(const pixel * const inrow,
           const pixel         colorto[],
           bool          const remainder_specified, 
           pixel         const remainder_color, 
-          float         const closeness) {
+          double        const closeness) {
 /*----------------------------------------------------------------------------
    Replace the colors in a single row.  There are 'ncolors' colors to 
    replace.  The to-replace colors are in the array colorfrom[], and the
@@ -173,7 +169,7 @@ changeRow(const pixel * const inrow,
 
 int
 main(int argc, char *argv[]) {
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP;
     int format;
     int rows, cols;
