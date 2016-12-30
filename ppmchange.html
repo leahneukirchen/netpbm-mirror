@@ -2,17 +2,15 @@
 <HTML><HEAD><TITLE>Ppmchange User Manual</TITLE></HEAD>
 <BODY>
 <H1>ppmchange</H1>
-Updated: September 2005
+Updated: December 2016
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 
 ppmchange - change all pixels of one color to another in a PPM image
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>ppmchange</B>
 
@@ -22,8 +20,7 @@ ppmchange - change all pixels of one color to another in a PPM image
 [<I>oldcolor newcolor</I>] ...
 [<I>ppmfile</I>]
 
-<A NAME="example"></a>
-<H2>EXAMPLES</H2>
+<H2 id="examples">EXAMPLES</H2>
 
 <PRE>
 <b>ppmchange red blue redimage.ppm &gt;blueimage.ppm</b>
@@ -34,8 +31,7 @@ ppmchange - change all pixels of one color to another in a PPM image
 
 </PRE>
 
-<A NAME="description">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -77,16 +73,14 @@ if the user specified <b>-closeok</b> and there was no <b>-closeok</b>
 option.
 
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<H2 id="options">OPTIONS</H2>
 
 <DL COMPACT>
 <DT><B>-closeness </B><I>closeness_percent</I>
 
-<DD><I>closeness</I> is an integer percentage indicating how close
-to the color you specified a pixel must be to get replaced.  By
-default, it is 0, which means the pixel must be the exact color you
-specified.
+<DD><I>closeness</I> is a percentage indicating how close to the color you
+specified a pixel must be to get replaced.  By default, it is 0, which means
+the pixel must be the exact color you specified.
 
 <P>A pixel gets replaced if the distance in color between it and the
 color you specified is less than or equal to <I>closeness</I> per cent
@@ -142,8 +136,7 @@ to create a mask file for the red portions of the image.
 
 </DL>
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="pgmtoppm.html">pgmtoppm</A></B>,
 
@@ -151,8 +144,7 @@ to create a mask file for the red portions of the image.
 
 <B><A HREF="ppm.html">ppm</A></B>
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>AUTHOR</H2>
+<H2 id="author">AUTHOR</H2>
 
 Wilson H. Bent. Jr. (<A HREF="mailto:whb@usc.edu">whb@usc.edu</A>)
 with modifications by Alberto Accomazzi (<A
@@ -162,13 +154,12 @@ HREF="mailto:alberto@cfa.harvard.edu">alberto@cfa.harvard.edu</A>)
 <A NAME="index">&nbsp;</A>
 <H2>Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
 <LI><A HREF="#examples">EXAMPLES</A>
 <LI><A HREF="#description">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">SEE ALSO</A>
-<LI><A HREF="#lbAG">AUTHOR</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#seealos">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
 </UL>
 </BODY>
 </HTML>
