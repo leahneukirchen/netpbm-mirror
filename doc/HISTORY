@@ -6,15 +6,17 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.78.00
 
+              pnmcrop: Add -closeness
+
 16.12.25 BJH  Release 10.77.00
 
-              pnmpad: fix bug: incorrect output width.  Introduced in
+              pnmpad: Fix bug: incorrect output width.  Introduced in
               Netpbm 10.72 (July 2015).
 
-              Makeman: slight improvement to formatting of man pages.
+              Makeman: Slight improvement to formatting of man pages.
               Thanks Werner LEMBERG <wl@gnu.org>.
 
-              Test: skip tests of some parts that are configured out of the
+              Test: Skip tests of some parts that are configured out of the
               build.
 
 16.09.27 BJH  Release 10.76.00
@@ -29,12 +31,12 @@ not yet  BJH  Release 10.78.00
               toleration unaligned memory access.  Thanks Ignatios Souvatzis
               (is@netbsd.org).  Broken in Netpbm 10.47 (June 2009).
 
-              cmuwmtopbm: fix trivial memory leak.  Always broken (cmuwmtopbm
+              cmuwmtopbm: Fix trivial memory leak.  Always broken (cmuwmtopbm
               was in primordial Pbmplus, in 1988).
 
               Build: Add PKG_CONFIG make variable.
 
-              Build: tifftopnm.c: fix undefined WIFSIGNALED, etc. in 
+              Build: tifftopnm.c: Fix undefined WIFSIGNALED, etc. in 
 
 16.06.26 BJH  Release 10.75.00
 
@@ -54,7 +56,7 @@ not yet  BJH  Release 10.78.00
 
               bmptopnm: Add ability to convert Version 4 and 5 Windows BMP.
 
-              pbmtext: remove undocumented -dump option; add 'genfontc'
+              pbmtext: Remove undocumented -dump option; add 'genfontc'
               development tool (buildtools/ directory) to replace it.
 
               pbmtext: Add -dry-run
@@ -63,36 +65,36 @@ not yet  BJH  Release 10.78.00
 
               pbmtext: Speedup: renders directly in raw PBM.
 
-              pbmreduce: add -randomseed.
+              pbmreduce: Add -randomseed.
 
               anytopnm, pnmmargin, pnmquant, ppmquant, pnmquantall, pgmcrater,
               ppmfade, ppmrainbow, ppmshadow, pbmtox10bm, pamstretch-gen:
               Add -version.
 
-              fiascotopnm: change -version to include Netpbm version.
+              fiascotopnm: Change -version to include Netpbm version.
 
               libnetpbm: Add pm_system2(), pm_system2_lp(), pm_system2_vp() -
               same as pm_system(), etc. but returns the termination status.
 
-              pamarith: fix incorrect output when maxvals differ, for
+              pamarith: Fix incorrect output when maxvals differ, for
               -add, -multiply, -mean, -min, -max.  Broken in Netpbm 10.41
               (December 2007).
 
               pbmtextps: Fix bug: input text or font name with Postscript
               control characters messes up the Postscript program.
 
-              hpcdtoppm dummy version: update web link to real version.
+              hpcdtoppm dummy version: Update web link to real version.
 
-              ppmhist: fix incorrect color names.  Introduced in
+              ppmhist: Fix incorrect color names.  Introduced in
               Netpbm 10.19 (November 2003).
 
-              ppmshadow: fix bug: don't ignore invalid option.  Introduced in
+              ppmshadow: Fix bug: don't ignore invalid option.  Introduced in
               Netpbm 10.9 (September 2002).
 
-              pnmpaste: fix possible invalid memory access.  Introduced in
+              pnmpaste: Fix possible invalid memory access.  Introduced in
               Netpbm 1.44 (September 2008).
 
-              pbmreduce: fix undefined behavior when scale factor argument is
+              pbmreduce: Fix undefined behavior when scale factor argument is
               too big.  Always present (pbmreduce was new in September 1989).
 
               pbmtext: Fix bug: invalid memory reference when text contains
@@ -102,10 +104,10 @@ not yet  BJH  Release 10.78.00
               unusual floating point representation.  Always broken (programs
               were new in Netpbm 9.6 (July 2000).
 
-              cameratopam: fix invalid memory reference; effect unknown.
+              cameratopam: Fix invalid memory reference; effect unknown.
               Introduced in Netpbm 10.68 (September 2014).
 
-              Install on Windows: fix backward compatibility symlinks for
+              Install on Windows: Fix backward compatibility symlinks for
               pnmtoplainpnm, pnmquantall.
 
               Build: Remove use of strndup so it compiles on Mac OS X 10.6.
@@ -116,13 +118,13 @@ not yet  BJH  Release 10.78.00
 
 16.03.27 BJH  Release 10.74.00
 
-              pbmtext: produce same image when you run pbmtext with -width
+              pbmtext: Produce same image when you run pbmtext with -width
               explicitly set to the width you get when you don't specify
               width.
 
-              pbmtext: ignore -nomargins when -width is specified.
+              pbmtext: Ignore -nomargins when -width is specified.
 
-              pbmtext: report when line ends are dropped because of
+              pbmtext: Report when line ends are dropped because of
               truncation.
 
               pbmtext: Fix bug: if input has a code point that is not in the
@@ -130,23 +132,23 @@ not yet  BJH  Release 10.78.00
               font doesn't have space either.  Now it aborts the program in
               that case.
 
-              pbmtext: fix bug: Respect -width when specified.
+              pbmtext: Fix bug: Respect -width when specified.
 
-              pbmtext: fix bug: Deal correctly with negative -space.
+              pbmtext: Fix bug: Deal correctly with negative -space.
 
-              pbmtext: fix bug: Consider all characters in line, not just
+              pbmtext: Fix bug: Consider all characters in line, not just
               first and last, in determining line width.
 
-              libnetbpm font facility (so pbmtext): fix bug: undefined
+              libnetbpm font facility (so pbmtext): Fix bug: undefined
               behavior when font definitions are invalid in any of various
               ways.
 
-              libnetpbm font facility (so pbmtext): fix incorrect font names
+              libnetpbm font facility (so pbmtext): Fix incorrect font names
               in error messages.
 
               pnmtopsnr: Add -machine, -max .
 
-              Netpbmlib: add /usr/local/netpbm/lib and /etc/X11 to search
+              Netpbmlib: Add /usr/local/netpbm/lib and /etc/X11 to search
               path for rgb.txt.
 
               makeman: Add some text replacements to solve glitches.
