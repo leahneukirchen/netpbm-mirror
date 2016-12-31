@@ -2,13 +2,13 @@
 <HTML><HEAD><TITLE>Pnmcrop User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmcrop</H1>
-Updated: 11 March 2009
+Updated: 31 December 2016
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
 <H2>NAME</H2>
 
-pnmcrop - crop a PNM image
+pnmcrop - crop a Netpbm image
 
 <H2 id="synopsis">SYNOPSIS</H2>
 
@@ -24,7 +24,11 @@ pnmcrop - crop a PNM image
 
 [<B>-bottom</B>]
 
+[<b>-verbose</b>]
+
 [<B>-margin=</B><i>pixels</i>]
+
+[<B>-closeness=</B><I>closeness_percent</I>]
 
 [<B>-borderfile=</B><i>filename</i>]
 
@@ -73,6 +77,7 @@ all input images but the first.
 
 <P>If you want to add different borders after removing the existing
 ones, use <B>pnmcat</B> or <B>pamcomp</B>.
+
 
 <H2 id="options">OPTIONS</H2>
 
@@ -127,6 +132,28 @@ to three times that it would read it without <B>-sides</B>.
 if necessary.
 
 <p>This option was new in Netpbm 10.29 (August 2005).
+
+<dt><B>-closeness=</B><I>closeness_percent</I>
+
+<p>Any color in the image that is at least this close to the operative
+background color is considered to be background.
+
+<p>You can use this if the image has borders that vary slightly in color, such
+as would be the case in a photograph.  Consider a photograph against a white
+screen.  The color of the screen varies slightly with shading and dirt and
+such, but is still quite distinct in color from the subject of the
+photograph.  <b>pnmcrop</b> will choose some particular shade as the
+background color and if you specify an appropriate <b>-closeness</b> value, it
+will correctly identify all of the screen as background and crop it off.
+
+<p>To implement more complex rules for identifying background, use
+<b>-borderfile</b>.
+
+<p>The default is zero, which means a pixel's color must exactly match the
+background color for the pixel to be considered part of a background border.
+
+<p>This option was new in Netpbm 10.78 (March 2017).  With older Netpbm,
+colors must match exactly.
 
 <dt><b>-borderfile=</b><i>filename</i>
 
