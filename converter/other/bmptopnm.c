@@ -1456,8 +1456,8 @@ readBmp(FILE *               const ifP,
 
 static void
 writeRasterGen(unsigned char **   const bmpRaster,
-               int                const cols, 
-               int                const rows, 
+               unsigned int       const cols, 
+               unsigned int       const rows, 
                int                const format,
                unsigned int       const cBitCount, 
                struct pixelformat const pixelformat,
@@ -1492,8 +1492,8 @@ writeRasterGen(unsigned char **   const bmpRaster,
 
 static void
 writeRasterPbm(unsigned char ** const bmpRaster,
-               int              const cols, 
-               int              const rows, 
+               unsigned int     const cols, 
+               unsigned int     const rows, 
                xel              const colormap[]) {
 /*----------------------------------------------------------------------------
   Write the PBM raster to Standard Output corresponding to the raw BMP
@@ -1510,9 +1510,9 @@ writeRasterPbm(unsigned char ** const bmpRaster,
   
   We destroy *bmpRaster as a side effect.
 -----------------------------------------------------------------------------*/
-    unsigned int const colChars = pbm_packed_bytes(cols);
+    unsigned int const colCharCt = pbm_packed_bytes(cols);
     
-    int row;
+    unsigned int row;
     enum colorFormat {BlackWhite, WhiteBlack};
     enum colorFormat colorformat;
                   
@@ -1521,12 +1521,12 @@ writeRasterPbm(unsigned char ** const bmpRaster,
     else                  
         colorformat = BlackWhite;
         
-    for (row=0; row < rows; ++row){
+    for (row = 0; row < rows; ++row){
         unsigned char * const bitrow = bmpRaster[row]; 
 
         if (colorformat == BlackWhite) {
             unsigned int i;
-            for (i = 0; i < colChars; ++i) 
+            for (i = 0; i < colCharCt; ++i) 
                 bitrow[i] = ~bitrow[i]; /* flip all pixels */ 
         }   
 
@@ -1550,7 +1550,7 @@ main(int argc, const char ** argv) {
            and gray.
         */
     int cols, rows;
-    unsigned char **bmpRaster;
+    unsigned char ** bmpRaster;
         /* The raster part of the BMP image, as a row x column array, with
            each element being a raw byte from the BMP raster.  Note that
            bmpRaster[0] is really Row 0 -- the top row of the image, even
