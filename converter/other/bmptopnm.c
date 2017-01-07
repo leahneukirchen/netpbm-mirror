@@ -695,6 +695,13 @@ bmpReadinfoheader(FILE *                 const ifP,
         *errorP = NULL;
         *bytesReadP = cInfoHeaderSize;
     }
+    /* Part of our anti-arithmetic overflow strategy is to make sure height
+       and width always fit in 16 bits, so they can be multiplied together.
+       This shouldn't be a problem, since they come from 16 bit fields in
+       the BMP info header.
+    */
+    assert(headerP->cols < (1<<16));
+    assert(headerP->rows < (1<<16));
 }
 
 
@@ -1203,6 +1210,9 @@ bmpReadraster(FILE *            const ifP,
            with don't cares.
         */
     unsigned char ** bmpRaster;
+
+    assert(cols < (1<<16));
+    assert(bytesPerRow < (1<<16));
 
     bmpRaster = allocBmpRaster(rows, bytesPerRow);
 
