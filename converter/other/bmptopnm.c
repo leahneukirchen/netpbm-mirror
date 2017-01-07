@@ -942,8 +942,6 @@ allocBmpRaster(unsigned int const rows,
     unsigned int row;
     unsigned char * startOfRows;
 
-    assert(UINT_MAX/rows > (bytesPerRow + sizeof(unsigned char *)));
-
     /* The raster array consists of an array of pointers to the rows
        followed by the rows of bytes, in a single allocated chunk of storage.
     */
