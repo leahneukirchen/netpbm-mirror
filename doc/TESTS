@@ -178,7 +178,7 @@ only the test scripts which examine giftopnm and pamtogif, do:
 
 
 1.10 Valgrind
-============
+=============
 
 You can run the whole test under Valgrind.  This is an advanced feature
 intended for programmers who work on Netpbm code.
