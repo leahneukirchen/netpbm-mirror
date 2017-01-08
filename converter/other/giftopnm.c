@@ -1113,8 +1113,9 @@ expandCodeOntoStack(Decompressor * const decompP,
    as *errorP).
 -----------------------------------------------------------------------------*/
     unsigned int code;
+    const char * gifError;
 
-    *errorP = NULL; /* Initial value */
+    gifError = NULL; /* Initial value */
 
     if (incode <= decompP->maxDataVal) {
         if (incode < decompP->cmapSize)
@@ -1126,18 +1127,17 @@ expandCodeOntoStack(Decompressor * const decompP,
             /* transparent code outside cmap   exceptional case */
             code = incode;
         else
-            pm_asprintf(errorP, "Error in GIF image: invalid color code %u. "
+            pm_asprintf(&gifError, "Invalid color code %u. "
                         "Valid color values are 0 - %u",
                         incode, decompP->cmapSize - 1);
-    }
-    else if (incode < decompP->nextTableSlot)  
+    } else if (incode < decompP->nextTableSlot)  
         /* LZW string, defined */
         code = incode;
     else if (incode == decompP->nextTableSlot) {
         /* It's a code that isn't in our translation table yet.
         */
         if (decompP->fresh)
-            pm_asprintf(errorP, "LZW string code encountered with "
+            pm_asprintf(&gifError, "LZW string code encountered with "
                         "decompressor in fresh state");
         else {
             if (wantLzwCodes && verbose)
@@ -1147,17 +1147,22 @@ expandCodeOntoStack(Decompressor * const decompP,
             code = decompP->prevcode;
         }
     } else
-        pm_asprintf(errorP, "Error in GIF image: LZW string code %u "
+        pm_asprintf(&gifError, "LZW string code %u "
                     "is neither a previously defined one nor the "
                     "next in sequence to define (%u)",
                     incode, decompP->nextTableSlot);
 
-    if (!*errorP) {
+    if (gifError) {
+        pm_asprintf(errorP, "INVALID GIF IMAGE: %s", gifError);
+        pm_strfree(gifError);
+    } else {
         pushWholeStringOnStack(decompP, code);
 
         addLzwStringCode(decompP);
 
         decompP->prevcode = incode;
+
+        *errorP = NULL;
     }
 }
 
