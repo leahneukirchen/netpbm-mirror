@@ -62,7 +62,11 @@ readFile(FILE *          const ifP,
          unsigned char * const buffer,
          size_t          const len,
          const char **   const errorP) {
+/*----------------------------------------------------------------------------
+   Read the next 'len' bytes from *ifP into 'buffer'.
 
+   Fail if there aren't that many bytes to read.
+-----------------------------------------------------------------------------*/
     size_t bytesRead;
 
     bytesRead = fread(buffer, 1, len, ifP);
@@ -103,7 +107,7 @@ struct CmdlineInfo {
 
 
 static void
-parseCommandLine(int argc, char ** argv,
+parseCommandLine(int argc, const char ** argv,
                  struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
@@ -140,7 +144,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = false;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = false;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3( &argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     free(option_def);
@@ -1359,6 +1363,9 @@ renderRow(unsigned char *    const cmapIndexRow,
 /*----------------------------------------------------------------------------
   Convert one row of cmap indexes to PPM/PGM/PBM output.
 
+  The row is *xelrow, which is 'cols' columns wide and has pixels of format
+  'format'.
+
   Render the alpha row to *alphaFileP iff 'alphabits' is non-NULL.  If
   'haveTransColor' is false, render all white (i.e. the row is
   opaque).  'alphabits' is otherwise just a one-row buffer for us to use
@@ -2141,14 +2148,14 @@ convertImages(FILE *       const ifP,
 
 
 int
-main(int argc, char **argv) {
+main(int argc, const char **argv) {
 
     struct CmdlineInfo cmdline;
     FILE * ifP;
     FILE * alphaFileP;
     FILE * imageOutFileP;
 
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
     verbose = cmdline.verbose;
