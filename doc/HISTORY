@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+17.01.11 BJH  Release 10.77.01
+
+              svgtopam: Fix crash when out of memory.  Always broken
+              (svgtopam was new in Netpbm 10.33 (March 2006)).
+
 16.12.25 BJH  Release 10.77.00
 
               pnmpad: fix bug: incorrect output width.  Introduced in
