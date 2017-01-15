@@ -1459,16 +1459,47 @@ enum convertDisp {CONV_DONE,
                   CONV_FAILED, 
                   CONV_NOTATTEMPTED};
 
+
+static void
+convertRasterIntoProvidedMemory(pnmOut *           const pnmOutP,
+                                unsigned int       const cols,
+                                unsigned int       const rows,
+                                xelval             const maxval,
+                                TIFF *             const tif,
+                                bool               const verbose,
+                                uint32 *           const raster,
+                                enum convertDisp * const statusP) {
+
+    int const stopOnErrorFalse = false;
+
+    TIFFRGBAImage img;
+    char emsg[1024];
+    int ok;
+                
+    ok = TIFFRGBAImageBegin(&img, tif, stopOnErrorFalse, emsg);
+    if (!ok) {
+        pm_message("%s", emsg);
+        *statusP = CONV_FAILED;
+    } else {
+        int ok;
+        ok = TIFFRGBAImageGet(&img, raster, cols, rows);
+        TIFFRGBAImageEnd(&img) ;
+        if (!ok) {
+            pm_message("%s", emsg);
+            *statusP = CONV_FAILED;
+        } else {
+            *statusP = CONV_DONE;
+            convertTiffRaster(raster, cols, rows, maxval, pnmOutP);
+        }
+    } 
+}
+
+
+
 static void
 convertRasterInMemory(pnmOut *           const pnmOutP,
                       xelval             const maxval,
                       TIFF *             const tif,
-                      unsigned short     const photomet, 
-                      unsigned short     const planarconfig,
-                      unsigned short     const bps,
-                      unsigned short     const spp,
-                      unsigned short     const fillorder,
-                      xel                const colormap[],
                       bool               const verbose,
                       enum convertDisp * const statusP) {
 /*----------------------------------------------------------------------------
@@ -1488,57 +1519,49 @@ convertRasterInMemory(pnmOut *           const pnmOutP,
    programs, we simply abort the program if we are unable to allocate
    memory for other things.
 -----------------------------------------------------------------------------*/
-    unsigned int cols, rows;  /* Dimensions of output image */
+    char emsg[1024];
+    int ok;
 
     if (verbose)
         pm_message("Converting in memory ...");
 
     warnBrokenTiffLibrary(tif);
 
-    getTiffDimensions(tif, &cols, &rows);
+    ok = TIFFRGBAImageOK(tif, emsg);
+    if (!ok) {
+        pm_message("%s", emsg);
+        *statusP = CONV_UNABLE;
+    } else {
+        unsigned int cols, rows;  /* Dimensions of output image */
+        getTiffDimensions(tif, &cols, &rows);
 
-    if (rows == 0 || cols == 0) 
-        *statusP = CONV_DONE;
-    else {
-        char emsg[1024];
-        int ok;
-        ok = TIFFRGBAImageOK(tif, emsg);
-        if (!ok) {
-            pm_message("%s", emsg);
-            *statusP = CONV_UNABLE;
-        } else {
-            uint32 * raster;
-
-            /* Note that TIFFRGBAImageGet() converts any bits per sample
-               to 8.  Maxval of the raster it returns is always 255.
-            */
-            MALLOCARRAY(raster, cols * rows);
-            if (raster == NULL) {
-                pm_message("Unable to allocate space for a raster of %u "
-                           "pixels.", cols * rows);
+        if (rows == 0 || cols == 0) 
+            *statusP = CONV_DONE;
+        else {
+            if (cols > UINT_MAX/rows) {
+                pm_message("%u rows of %u columns is too large to compute",
+                           rows, cols);
                 *statusP = CONV_OOM;
             } else {
-                int const stopOnErrorFalse = FALSE;
-                TIFFRGBAImage img;
-                int ok;
-                
-                ok = TIFFRGBAImageBegin(&img, tif, stopOnErrorFalse, emsg);
-                if (!ok) {
-                    pm_message("%s", emsg);
-                    *statusP = CONV_FAILED;
+                unsigned int const pixelCt = rows * cols;
+
+                uint32 * raster;
+
+                /* Note that TIFFRGBAImageGet() converts any bits per sample
+                   to 8.  Maxval of the raster it returns is always 255.
+                */
+                MALLOCARRAY(raster, pixelCt);
+                if (raster == NULL) {
+                    pm_message("Unable to allocate space for a raster of %u "
+                               "pixels.", pixelCt);
+                    *statusP = CONV_OOM;
                 } else {
-                    int ok;
-                    ok = TIFFRGBAImageGet(&img, raster, cols, rows);
-                    TIFFRGBAImageEnd(&img) ;
-                    if (!ok) {
-                        pm_message("%s", emsg);
-                        *statusP = CONV_FAILED;
-                    } else {
-                        *statusP = CONV_DONE;
-                        convertTiffRaster(raster, cols, rows, maxval, pnmOutP);
-                    }
-                } 
-                free(raster);
+                    convertRasterIntoProvidedMemory(
+                        pnmOutP, cols, rows, maxval, tif, verbose,
+                        raster, statusP);
+                    
+                    free(raster);
+                }
             }
         }
     }
@@ -1563,11 +1586,7 @@ convertRaster(pnmOut *           const pnmOutP,
     if (byrow || !flipOk)
         status = CONV_NOTATTEMPTED;
     else {
-        convertRasterInMemory(
-            pnmOutP, maxval,
-            tifP, tiffDir.photomet, tiffDir.planarconfig, 
-            tiffDir.bps, tiffDir.spp, fillorder,
-            colormap, verbose, &status);
+        convertRasterInMemory(pnmOutP, maxval, tifP, verbose, &status);
     }
     if (status == CONV_DONE) {
         if (tiffDir.bps > 8)

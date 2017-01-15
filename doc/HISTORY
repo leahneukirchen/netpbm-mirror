@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.78.00
 
+              tifftopnm: Fix memory corruption when image is more pixels
+              than can be represented as a C unsigned integer.
+
               svgtopam: Fix crash when out of memory.  Always broken
               (svgtopam was new in Netpbm 10.33 (March 2006)).
 
