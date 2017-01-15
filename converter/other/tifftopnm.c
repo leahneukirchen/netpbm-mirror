@@ -219,26 +219,30 @@ struct tiffDirInfo {
 
 
 static void
-tiffToImageDim(unsigned int   const tiffCols,
-               unsigned int   const tiffRows,
+tiffToImageDim(unsigned int   const tiffWidth,
+               unsigned int   const tiffHeight,
                unsigned short const orientation,
                unsigned int * const imageColsP,
                unsigned int * const imageRowsP) {
-
+/*----------------------------------------------------------------------------
+   Determine the image dimensions (as *imageColsP and *imageRowsP) from the
+   width, height, and orientation of the TIFF raster ('tiffWidth',
+   'tiffHeight', and 'orientation', respectively.
+-----------------------------------------------------------------------------*/
     switch (orientation) {
     case ORIENTATION_TOPLEFT:
     case ORIENTATION_TOPRIGHT:
     case ORIENTATION_BOTRIGHT:
     case ORIENTATION_BOTLEFT:
-        *imageColsP = tiffCols;
-        *imageRowsP = tiffRows;
+        *imageColsP = tiffWidth;
+        *imageRowsP = tiffHeight;
         break;
     case ORIENTATION_LEFTTOP:
     case ORIENTATION_RIGHTTOP:
     case ORIENTATION_RIGHTBOT:
     case ORIENTATION_LEFTBOT:
-        *imageColsP = tiffRows;
-        *imageRowsP = tiffCols;
+        *imageColsP = tiffHeight;
+        *imageRowsP = tiffWidth;
         break;
     default:
         pm_error("Invalid value for orientation tag in TIFF directory: %u",
