@@ -291,7 +291,7 @@ readDirectory(TIFF *               const tiffP,
    Read various values of TIFF tags from the TIFF directory, and
    default them if not in there and make guesses where values are
    invalid.  Exit program with error message if required tags aren't
-   there or values are inconsistent or beyond our capabilities.  if
+   there or values are inconsistent or beyond our capabilities.  If
    'headerdump' is true, issue informational messages about what we
    find.
 

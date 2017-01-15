@@ -7,12 +7,27 @@ CHANGE HISTORY
 not yet  BJH  Release 10.78.00
 
               tifftopnm: Fix memory corruption when image is more pixels
-              than can be represented as a C unsigned integer.
+              than can be represented as a C unsigned integer.  Broken in
+              Netpbm 10.11 (October 2002).
 
               svgtopam: Fix crash when out of memory.  Always broken
               (svgtopam was new in Netpbm 10.33 (March 2006)).
 
               pnmcrop: Add -closeness
+
+              Build: don't create pointer man pages anymore.  These were
+              classic man pages, created by 'make package', one for each
+              program, that just told the user to get the manual from the web
+              and that other options for manuals are available at install
+              time.  Getting documentation online is commonplace enough now
+              that the user doesn't need to be told to do it or that there are
+              other options.  The existence of pointer man pages was,
+              meanwhile, misleading, since it looked from the outside like
+              they actually contained documentation.
+
+              Build: Don't package or install Manweb setup (for accessing
+              manuals on the web with Manweb).  Probably 100% unused and
+              distracting.
 
 16.12.25 BJH  Release 10.77.00
 

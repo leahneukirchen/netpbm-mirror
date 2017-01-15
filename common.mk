@@ -509,36 +509,6 @@ $(DATAFILES:%=%_installdata): $(PKGDIR)/misc
 	  $(SRCDIR)/$(SUBDIR)/$(@:%_installdata=%) $<
 
 
-.PHONY: install.man install.man1 install.man3 install.man5
-install.man: install.man1 install.man3 install.man5 \
-	$(SUBDIRS:%=%/install.man)
-
-MANUALS1 = $(BINARIES) $(SCRIPTS)
-
-install.man1: $(MANUALS1:%=%_installman1)
-
-install.man3: $(MANUALS3:%=%_installman3)
-
-install.man5: $(MANUALS5:%=%_installman5)
-
-install.manweb: $(MANUALS1:%=%_installmanweb) $(SUBDIRS:%=%/install.manweb)
-
-%_installman1: $(PKGDIR)/$(PKGMANDIR)/man1
-	perl -w $(SRCDIR)/buildtools/makepointerman $(@:%_installman1=%) \
-          $(NETPBM_DOCURL) $< 1 $(MANPAGE_FORMAT) $(INSTALL_PERM_MAN)
-
-%_installman3: $(PKGDIR)/$(PKGMANDIR)/man3
-	perl -w $(SRCDIR)/buildtools/makepointerman $(@:%_installman3=%) \
-          $(NETPBM_DOCURL) $< 3 $(MANPAGE_FORMAT) $(INSTALL_PERM_MAN)
-
-%_installman5: $(PKGDIR)/$(PKGMANDIR)/man5
-	perl -w $(SRCDIR)/buildtools/makepointerman $(@:%_installman5=%) \
-          $(NETPBM_DOCURL) $< 5 $(MANPAGE_FORMAT) $(INSTALL_PERM_MAN)
-
-%_installmanweb: $(PKGDIR)/$(PKGMANDIR)/web
-	echo $(NETPBM_DOCURL)$(@:%_installmanweb=%).html \
-	  >$</$(@:%_installmanweb=%).url
-
 .PHONY: clean
 
 ifneq ($(EXE)x,x)
@@ -579,12 +549,6 @@ endif
 	$(MAKE) -C $(dir $@) -f $(SRCDIR)/$(SUBDIR)/$(dir $@)Makefile \
 	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@) 
 %/install.lib:
-	$(MAKE) -C $(dir $@) -f $(SRCDIR)/$(SUBDIR)/$(dir $@)Makefile \
-	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@) 
-%/install.man:
-	$(MAKE) -C $(dir $@) -f $(SRCDIR)/$(SUBDIR)/$(dir $@)Makefile \
-	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@) 
-%/install.manweb:
 	$(MAKE) -C $(dir $@) -f $(SRCDIR)/$(SUBDIR)/$(dir $@)Makefile \
 	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@) 
 %/install.data:

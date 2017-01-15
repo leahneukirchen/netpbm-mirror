@@ -276,11 +276,9 @@ install-run: install-nonmerge
 endif
 
 .PHONY: install-merge install-nonmerge
-install-merge: install.merge install.lib install.data \
-	install.manwebmain install.manweb install.man
+install-merge: install.merge install.lib install.data
 
-install-nonmerge: install.bin install.lib install.data \
-	install.manwebmain install.manweb install.man
+install-nonmerge: install.bin install.lib install.data
 
 .PHONY: merge
 merge: lib/all netpbm
@@ -392,17 +390,6 @@ install.lib: lib/install.lib
 else
 install.lib:
 endif
-
-.PHONY: install.manwebmain
-install.manwebmain: $(PKGDIR)/$(PKGMANDIR)/web/netpbm.url $(PKGDIR)/bin/doc.url
-
-$(PKGDIR)/$(PKGMANDIR)/web/netpbm.url: $(PKGDIR)/$(PKGMANDIR)/web
-	echo "$(NETPBM_DOCURL)" > $@
-	chmod $(INSTALL_PERM_MAN) $@
-
-$(PKGDIR)/bin/doc.url: $(PKGDIR)/bin
-	echo "$(NETPBM_DOCURL)" > $@
-	chmod $(INSTALL_PERM_MAN) $@
 
 .PHONY: install-dev
 # Note that you might install the development package and NOT the runtime
