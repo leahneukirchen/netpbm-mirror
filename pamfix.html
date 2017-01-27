@@ -14,6 +14,9 @@ pamfix - repair a Netpbm image with various corruptions
 
 <B>pamfix</B>
 
+[<b>-truncate</b>]
+[<b>-changemaxval</b>]
+[<b>-clip</b>]
 [<b>-verbose</b>]
 
 [<I>netpbmfile</I>]
@@ -33,7 +36,7 @@ streams that are truncated and that contain illegally large sample values.
 
 <h3 id="truncatedstream">Truncated stream</h3>
 
-<p>This is an stream that is missing the last part.  Netpbm corrects this
+<p>This is a stream that is missing the last part.  Netpbm corrects this
 by creating an output image that simply has fewer rows.
 
 <p>You select this kind of repair with a <b>-truncate</b> option.
