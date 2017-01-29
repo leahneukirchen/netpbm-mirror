@@ -4,6 +4,15 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+16.01.29 BJH  Release 10.73.07
+
+              tifftopnm: Fix memory corruption when image is more pixels
+              than can be represented as a C unsigned integer.  Broken in
+              Netpbm 10.11 (October 2002).
+
+              svgtopam: Fix crash when out of memory.  Always broken
+              (svgtopam was new in Netpbm 10.33 (March 2006)).
+
 16.12.25 BJH  Release 10.73.06
 
               pbmtoascii: fix bogus assertion failure.  Introduced in 

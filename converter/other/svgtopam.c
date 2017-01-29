@@ -102,16 +102,23 @@ parseCommandLine(int argc,
 /*============================================================================
    Wrappers for libxml2 routines.
 
-   The difference is that these use conventional C data types and have
-   shorter names.
+   The difference is that these use conventional C data types, have shorter
+   names, and abort the program instead of returning a special value when they
+   fail.
 =============================================================================*/
 
 static const char *
 getAttribute(xmlTextReaderPtr const xmlReaderP,
              const char *     const attributeName) {
 
-    return (const char *)
+    const char * const rc = (const char *)
         xmlTextReaderGetAttribute(xmlReaderP, (const xmlChar *)attributeName);
+
+    if (rc == NULL)
+        pm_error("xmlTextReaderGetAttribute(\"%.256s\") failed.  ",
+                 attributeName);
+
+    return rc;
 }
 
 
@@ -119,7 +126,13 @@ getAttribute(xmlTextReaderPtr const xmlReaderP,
 static const char *
 currentNodeName(xmlTextReaderPtr const xmlReaderP) {
 
-    return (const char *)xmlTextReaderConstName(xmlReaderP);
+    const char * const rc = (const char *)
+        xmlTextReaderConstName(xmlReaderP);
+
+    if (rc == NULL)
+        pm_error("xmlTextReaderConstName() failed.  ");
+
+    return rc;
 }
 
 

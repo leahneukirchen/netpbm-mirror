@@ -1498,6 +1498,13 @@ convertRasterInMemory(pnmOut *           const pnmOutP,
             /* Note that TIFFRGBAImageGet() converts any bits per sample
                to 8.  Maxval of the raster it returns is always 255.
             */
+            if (cols > UINT_MAX/rows) {
+                pm_message("%u rows of %u columns is too large to compute",
+                           rows, cols);
+                *statusP = CONV_OOM;
+                return;
+            }
+
             MALLOCARRAY(raster, cols * rows);
             if (raster == NULL) {
                 pm_message("Unable to allocate space for a raster of %u "
