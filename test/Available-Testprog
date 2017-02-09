@@ -15,6 +15,10 @@ fi
 # Normal operation: Walk through the argument list and exit if an
 # unavailable program is encountered.
 
+# See http://netpbm.sourceforge.net/prereq.html and the makefiles in
+# each directory (for example converter/other/Makefile) for library
+# requirements and relevant variables.
+
 for i in $@
     do
     case $i in
@@ -39,14 +43,33 @@ for i in $@
       pnmtotiff|\
       pnmtotiffcmyk|\
       tifftopnm)
-        [ "${TIFFLIB}" = "NONE" ] && exit 1 ;;
+        [ "${TIFFLIB}" = "NONE" -o \
+          "${JPEGLIB}" = "NONE" -o \
+          "${ZLIB}" = "NONE" ] && exit 1 ;;
 
       pnmtorle|\
       rletopnm)
         [ "${URTLIB}" = "NONE" ] && exit 1 ;;
+
+      pamx)
+        [ "${X11LIB}" = "NONE" ] && exit 1 ;;
+
+      svgtopam)
+        [ "${XML2_LIBS}" = "NONE" ] && exit 1 ;;
+
+      thinkjettopbm)
+        [ -z "${LEX}" ] && exit 1 ;;
+
+      zlib)
+        [ "${ZLIB}" = "NONE" ] && exit 1 ;;
 
     esac
 done
 
 # All checks passed.  Exit with success status.
 exit 0
+
+
+# TODO: We don't have a good method for testing whether PNGLIB is
+# available for linking.
+# Affected programs: pamtopng, pngtopam, pngtopnm, pnmtopng

@@ -124,6 +124,7 @@ gif-quant-roundtrip.test
 hdiff-roundtrip.test
 ilbm-roundtrip.test
 jbig-roundtrip.test
+jpeg2k-roundtrip.test
 leaf-roundtrip.test
 macp-roundtrip.test
 mda-roundtrip.test
@@ -136,6 +137,7 @@ pict-roundtrip.test
 png-roundtrip.test
 png-roundtrip2.test
 ps-roundtrip.test
+ps-flate-roundtrip.test
 ps-alt-roundtrip.test
 sgi-roundtrip.test
 sbig-roundtrip.test
@@ -144,6 +146,7 @@ sunicon-roundtrip.test
 sunrast-roundtrip.test
 targa-roundtrip.test
 tiff-roundtrip.test
+tiff-flate-lzw-roundtrip.test
 utahrle-roundtrip.test
 wbmp-roundtrip.test
 winicon-roundtrip.test
@@ -155,4 +158,5 @@ xwd-roundtrip.test
 # Round-trip tests : lossy converters
 
 fiasco-roundtrip.test
+jpeg-roundtrip.test
 yuv-roundtrip.test

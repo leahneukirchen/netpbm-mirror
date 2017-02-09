@@ -1,0 +1,21 @@
+#! /bin/bash
+# This script tests: pnmtojpeg jpegtopnm
+# Also requires: pnmpsnr
+
+# TODO: threshold has been determined without much thought.
+# Observed pnmpsnr output: 56.20 58.26 49.38
+# A small margin has been added to the above numbers.
+
+# Should print 3 1 1 1 three times
+
+pnmtojpeg testimg.ppm | jpegtopnm | \
+  pnmpsnr -machine - testimg.ppm |\
+  awk '{printf("%3d %1d %1d %1d\n",NF,$1>55.0,$2>57.0,$3>48.0)}'
+
+pnmtojpeg testimg.ppm -opt | jpegtopnm | \
+  pnmpsnr -machine - testimg.ppm |\
+  awk '{printf("%3d %1d %1d %1d\n",NF,$1>55.0,$2>57.0,$3>48.0)}'
+
+pnmtojpeg testimg.ppm -progressive | jpegtopnm | \
+  pnmpsnr -machine - testimg.ppm |\
+  awk '{printf("%3d %1d %1d %1d\n",NF,$1>55.0,$2>57.0,$3>48.0)}'
