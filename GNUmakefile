@@ -455,7 +455,8 @@ CHECK_VARS = \
 	URTLIB="$(URTLIB)" \
 	X11LIB="$(X11LIB)" \
 	XML2_LIBS="$(XML2_LIBS)" \
-	ZLIB="$(ZLIB)"
+	LEX="$(LEX)" \
+	ZLIB="$(ZLIB)" \
 
 # Test files in source tree.
 
