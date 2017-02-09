@@ -29,8 +29,6 @@
 
 #ifdef DEBUG
 #include <stdio.h>
-#else
-#define NDEBUG
 #endif
 
 #include <stdlib.h>
