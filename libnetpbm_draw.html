@@ -26,8 +26,6 @@ in this facility.
 
 <p>The functions are all declared in the <b>ppmdraw.h</b> header file.
 
-<h3><b>ppmd_point_drawproc</b></h3>
-
 <h3><b>ppmd_setlinetype</b></h3>
 
 <h3><b>ppmd_setlineclip</b></h3>
@@ -42,13 +40,74 @@ in this facility.
 
 <h3><b>ppmd_filledrectangle</b></h3>
 
-<h3><b>ppmd_fill_drawproc</b></h3>
-
 <h3><b>ppmd_fill</b></h3>
+
+<h3><b>ppmd_fill_path</b></h3>
+
+<h4>Synopsis</h4>
+
+<b>
+void
+ppmd_fill_path(pixel **      pixels, 
+               int           cols, 
+               int           rows, 
+               pixval        maxval,
+               ppmd_path *   pathP,
+               pixel         color);
+</b>
+
+<h4>Description</h4>
+
+<p>This fills a closed path.
+
+<p><i>pixels</i>, <i>cols</i>, <i>rows</i>, and <i>maxval</i> describe the
+canvas on which to draw.
+
+<p><i>pathP</i> identifies a closed path on that canvas.  If it does not end
+on the same point at which it starts, 
+<b>ppmd_fill_path</b> aborts the program with a call to <b>pm_error</b>.  The
+path may cross itself, though, creating multiple closed areas, each of
+which <b>ppmd_fill_path</b> fills.  The path must fit within the <i>cols</i>
+x <i>rows</i> dimensions.  If it does not,
+<b>ppmd_fill_path</b> aborts the program with a call to <b>pm_error</b>.
+
+<p><i>color</i> is the fill color.  <b>ppmd_fill_path</b> makes every pixel
+within the closed path that color.
+
+<p><b>ppmd_fill</b> is more general, but harder to use.  With that, you can
+fill with a pattern.
 
 <h3><b>ppmd_text</b></h3>
 
 <h3><b>ppmd_text_box</b></h3>
+
+
+<h2 id="drawprocs">Drawprocs</h2>
+
+<p>Drawprocs are functions that tell how to draw a point.  You pass drawprocs
+to drawing functions that require them.
+
+<p>There are two types: <b>ppmd_drawprocp</b> and <b>ppmd_drawproc</b>.  The
+only difference is that the former takes the location at which to draw the
+point as an argument of point type (<b>ppmd_point</b>), whereas the latter
+takes integer column and row arguments.
+
+<h3><b>ppmd_point_drawproc</b></h3>
+
+<p>This simply fills in a single pixel.  This is usually what you want.
+
+
+<h3><b>ppmd_fill_drawprocp</b></h3>
+
+<p>This is a <b>ppmd_drawprocp</b> function that you can pass to functions
+that require one.  This one is useful for filling, in that it not only draws
+on the canvas, but remembers where it's been, outlining an area that you can
+fill with <b>ppmd_fill</b>.
+
+<h3><b>ppmd_fill_drawproc</b></h3>
+
+<p>This is the same thing as <b>ppmd_fill_drawprocp</b> except that it is
+a <b>ppmd_drawproc</b> function instead of <b>ppmd_drawprocp</b>.
 
 
 <h2 id="fonts">Fonts</h2>
