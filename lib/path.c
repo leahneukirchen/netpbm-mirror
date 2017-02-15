@@ -269,7 +269,6 @@ pushStack(fillStack * const stackP,
     assert(stackP->topOfStack < stackP->stackSize);
 
     stackP->stack[stackP->topOfStack++] = newPoint;
-pm_message("pushed (%u, %u) at %u", newPoint.x, newPoint.y, stackP->topOfStack-1);
 }
 
 
@@ -350,7 +349,6 @@ fillPoint(fillStack * const stackP,
    Fill the image in 'pixels' with color 'color' and update *stackP as
    required.
 -----------------------------------------------------------------------------*/
-pm_message("filling point (%u, %u)", point.x, point.y);
     if (inStackDirection(stackP, point)) {
         pushStack(stackP, point);
         pixels[point.y][point.x] = color;

@@ -15,6 +15,9 @@ not yet  BJH  Release 10.78.00
 
               pnmcrop: Add -closeness
 
+              libnetpbm: ppmd_fill_path: remove debug trace.  Always broken
+              (ppmd_fill_path was new in Netpbm 10.34 (June 2006).
+
               Build: don't create pointer man pages anymore.  These were
               classic man pages, created by 'make package', one for each
               program, that just told the user to get the manual from the web
