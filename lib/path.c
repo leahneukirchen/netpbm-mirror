@@ -281,7 +281,6 @@ popStack(fillStack * const stackP) {
     assert(stackP->topOfStack < stackP->stackSize);
 
     retval = stackP->stack[--stackP->topOfStack];
-pm_message("popped (%u, %u) at %u", retval.x, retval.y, stackP->topOfStack);
     return retval;
 }
 
@@ -320,7 +319,6 @@ drawFillLine(ppmd_point const begPoint,
 
     assert(begPoint.y == endPoint.y);
 
-pm_message("filling from (%u, %u) to (%u, %u)", begPoint.x, begPoint.y, endPoint.x, endPoint.y);
     row = begPoint.y;
 
     if (begPoint.x <= endPoint.x) {
