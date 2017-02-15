@@ -58,7 +58,7 @@
 /* NOTE NOTE NOTE
 
    In all the path logic below, we call the direction of increasing row
-   number "up" because we think of the raster as standard Cartesian
+   number "up" because we think of the raster as a standard Cartesian
    plane.  So visualize the image as upside down in the first quadrant
    of the Cartesian plane -- the real top left corner of the image is at
    the origin.
