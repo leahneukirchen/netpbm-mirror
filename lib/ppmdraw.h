@@ -9,6 +9,7 @@
 */
 
 #include <netpbm/pm_config.h>
+#include <netpbm/ppm.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -59,6 +60,9 @@ typedef struct {
     } u;
 } ppmd_pathleg;
 
+ppmd_pathleg
+ppmd_makeLineLeg(ppmd_point const point);
+
 typedef struct {
 /*----------------------------------------------------------------------------
    A closed path
@@ -75,9 +79,58 @@ typedef struct {
            as the definition of ppmd_pathleg changes.
         */
     ppmd_pathleg * legs;
+        /* An array of the legs of the path, in order, starting at 'begPoint'.
+        */
 } ppmd_path;
 
+typedef struct {
 
+    ppmd_path path;
+        /* The path we are building (or have built).
+           Null for path.legs means we don't have a leg array yet.
+        */
+
+    bool begIsSet;
+        /* User has set path.begPoint.  If this is false, path.begPoint is
+           meaningless.
+        */
+    
+    unsigned int legsAllocSize;
+        /* How many legs of space is allocated in the leg array path.legs */
+
+    bool legsAreAutoAllocated;
+        /* The array 'legs' is allocated or reallocated automatically by
+           ppmd_path_addlineline(), as opposed to being supplied by the
+           user as part of initializing this structure, never to be altered.
+        */
+    
+} ppmd_pathbuilder;
+
+ppmd_pathbuilder *
+ppmd_pathbuilder_create(void);
+
+void
+ppmd_pathbuilder_destroy(ppmd_pathbuilder * const pathBuilderP);
+
+void
+ppmd_pathbuilder_setLegArray(ppmd_pathbuilder * const pathBuilderP,
+                             ppmd_pathleg *     const legs,
+                             unsigned int       const legCount);
+
+void
+ppmd_pathbuilder_preallocLegArray(ppmd_pathbuilder * const pathBuilderP,
+                                  unsigned int       const legCount);
+
+void
+ppmd_pathbuilder_setBegPoint(ppmd_pathbuilder * const pathBuilderP,
+                             ppmd_point         const begPoint);
+
+void
+ppmd_pathbuilder_addLineLeg(ppmd_pathbuilder * const pathBuilderP,
+                            ppmd_pathleg       const leg);
+
+const ppmd_path *
+ppmd_pathbuilder_pathP(ppmd_pathbuilder * const pathBuilderP);
 
 typedef void ppmd_drawprocp(pixel **, unsigned int, unsigned int,
                             pixval, ppmd_point, const void *);
@@ -272,12 +325,12 @@ ppmd_filledrectangle(pixel **      const pixels,
 
 
 void
-ppmd_fill_path(pixel **      const pixels, 
-               int           const cols, 
-               int           const rows, 
-               pixval        const maxval,
-               ppmd_path *   const pathP,
-               pixel         const color);
+ppmd_fill_path(pixel **          const pixels, 
+               int               const cols, 
+               int               const rows, 
+               pixval            const maxval,
+               const ppmd_path * const pathP,
+               pixel             const color);
     /* Fills in a closed path.  Not much different from ppmd_fill(),
        but with a different interface.
     */
