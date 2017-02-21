@@ -142,9 +142,9 @@ not access directly, but only through the functions in this section.
     unsigned int row;
 
     /* Initialize the canvas to all black */
-    for (row = 0; row < 100; ++row) {
+    for (row = 0; row &lt; 100; ++row) {
         unsigned int col;
-        for (col = 0; col < 100; ++col)
+        for (col = 0; col &lt; 100; ++col)
             pixels[row][col] = ppm_blackpixel();
     }
 
