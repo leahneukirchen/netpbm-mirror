@@ -231,6 +231,7 @@ def makeman(name, file, indoc):
     indoc = indoc.replace("&mu;", "mu")
     indoc = indoc.replace("&sigma;", "sigma")
     # Tables
+    # This will not handle rowspan
     indoc = re.sub('(?i) *<table[^>]*>.*', ".TS", indoc)
     indoc = re.sub("(?i) *</table>.*", ".TE", indoc)
     # First the single-line case
