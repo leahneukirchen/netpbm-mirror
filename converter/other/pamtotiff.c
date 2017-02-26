@@ -578,7 +578,7 @@ analyzeColorsInRgbInput(struct pam *   const pamP,
                         CmdlineInfo    const cmdline,
                         int            const maxcolors,
                         tupletable *   const chvP,
-                        unsigned int * const colorsP,
+                        unsigned int * const colorCtP,
                         bool *         const grayscaleP) {
 /*----------------------------------------------------------------------------
    Same as analyzeColors(), except assuming input image has R/G/B tuples.
@@ -593,15 +593,15 @@ analyzeColorsInRgbInput(struct pam *   const pamP,
         pm_message("computing colormap...");
         chv = pnm_computetuplefreqtable2(pamP, NULL, maxcolors,
                                          pamP->maxval,
-                                         colorsP);
+                                         colorCtP);
         if (chv == NULL) {
             grayscale = FALSE;
         } else {
             unsigned int i;
             pm_message("%u color%s found",
-                       *colorsP, *colorsP == 1 ? "" : "s");
+                       *colorCtP, *colorCtP == 1 ? "" : "s");
             grayscale = TRUE;  /* initial assumption */
-            for (i = 0; i < *colorsP && grayscale; ++i) {
+            for (i = 0; i < *colorCtP && grayscale; ++i) {
                 if (!pnm_rgbtupleisgray(chv[i]->tuple))
                     grayscale = FALSE;
             }
@@ -635,20 +635,21 @@ analyzeColors(struct pam *   const pamP,
               CmdlineInfo    const cmdline,
               int            const maxcolors,
               tupletable *   const chvP,
-              unsigned int * const colorsP,
+              unsigned int * const colorCtP,
               bool *         const grayscaleP) {
 /*----------------------------------------------------------------------------
    Analyze the colors in the input image described by 'pamP', whose file
    is positioned to the raster.
 
-   If the colors, combined with command line options 'cmdline', indicate
-   a colormapped TIFF should be generated, return as *chvP the address
-   of a color map (in newly malloc'ed space).  If a colormapped TIFF is
-   not indicated, return *chvP == NULL.
-
    Return *grayscaleP == true iff the image should be stored as a grayscale
    image (which means the image is monochromatic and the user doesn't
    insist on color format).
+
+   If *grayscaleP is false and the colors, combined with command line options
+   'cmdline', indicate a colormapped TIFF should be generated, return as *chvP
+   the address of a color map (in newly malloc'ed space) and the number of
+   colors in it as *colorCtP.  If a colormapped color TIFF is not indicated,
+   return *chvP == NULL and nothing as *colorCtP.
 
    Leave the file position undefined.
 -----------------------------------------------------------------------------*/
@@ -657,7 +658,7 @@ analyzeColors(struct pam *   const pamP,
            (tuple type RGB or RGB_ALPHA)
         */
         analyzeColorsInRgbInput(pamP, cmdline, maxcolors,
-                                chvP, colorsP, grayscaleP);
+                                chvP, colorCtP, grayscaleP);
     else {
         *chvP = NULL;
         *grayscaleP = TRUE;
@@ -667,9 +668,27 @@ analyzeColors(struct pam *   const pamP,
 
 
 static void
+reportTiffType(bool const grayscale,
+               bool const colormapped,
+               unsigned int const colorCt,
+               bool const verbose) {
+
+    if (verbose) {
+        pm_message("Generating %s TIFF", grayscale ? "grayscale" : "color");
+
+        if (colormapped)
+            pm_message("TIFF will have palette of %u colors", colorCt);
+        else
+            pm_message("TIFF will be truecolor (24 bit RGB)");
+    }
+}
+
+
+
+static void
 computeRasterParm(struct pam *     const pamP,
                   tupletable       const chv,
-                  int              const colors,
+                  int              const colorCt,
                   bool             const grayscale,
                   int              const compression,
                   bool             const minisblack,
@@ -710,14 +729,14 @@ computeRasterParm(struct pam *     const pamP,
         if (chv) {
             *samplesperpixelP = 1;  /* Pixel is just the one index value */
             *bitspersampleP =
-                colors <=   2 && indexsizeAllowed.b1 ? 1 :
-                colors <=   4 && indexsizeAllowed.b2 ? 2 :
-                colors <=  16 && indexsizeAllowed.b4 ? 4 :
-                colors <= 256 && indexsizeAllowed.b8 ? 8 :
+                colorCt <=   2 && indexsizeAllowed.b1 ? 1 :
+                colorCt <=   4 && indexsizeAllowed.b2 ? 2 :
+                colorCt <=  16 && indexsizeAllowed.b4 ? 4 :
+                colorCt <= 256 && indexsizeAllowed.b8 ? 8 :
                 0;
             if (*bitspersampleP == 0)
                 pm_error("Your -indexbits option is insufficient for the "
-                         "%d colors in this image.", colors);
+                         "%d colors in this image.", colorCt);
 
             defaultPhotometric = PHOTOMETRIC_PALETTE;
         } else {
@@ -995,7 +1014,7 @@ static void
 createTiffColorMap(struct pam *       const pamP,
                    unsigned int       const bitspersample,
                    tupletable         const chv,
-                   unsigned int       const colors,
+                   unsigned int       const colorCt,
                    unsigned short *** const tiffColorMapP) {
 
     unsigned int const colorMapSize = 1 << bitspersample;
@@ -1010,7 +1029,7 @@ createTiffColorMap(struct pam *       const pamP,
     for (i = 0; i < colorMapSize; ++i) {
         unsigned int plane;
         for (plane = 0; plane < pamP->depth; ++plane) {
-            if (i < colors)
+            if (i < colorCt)
                 tiffColorMap[plane][i] =
                     chv[i]->tuple[plane] * 65535L / pamP->maxval;
             else
@@ -1137,7 +1156,7 @@ convertImage(FILE *       const ifP,
     tuplehash cht;
     unsigned short ** tiffColorMap;  /* malloc'ed */
     struct pam pam;
-    unsigned int colors;
+    unsigned int colorCt;
     bool grayscale;
     unsigned short photometric;
     unsigned short samplesperpixel;
@@ -1153,14 +1172,16 @@ convertImage(FILE *       const ifP,
 
     pm_tell2(ifP, &rasterPos, sizeof(rasterPos));
 
-    analyzeColors(&pam, cmdline, MAXCOLORS, &chv, &colors, &grayscale);
+    analyzeColors(&pam, cmdline, MAXCOLORS, &chv, &colorCt, &grayscale);
+
+    reportTiffType(grayscale, chv != NULL, colorCt, cmdline.verbose);
 
     /* Go back to beginning of raster */
     pm_seek2(ifP, &rasterPos, sizeof(rasterPos));
 
     /* Figure out TIFF parameters. */
 
-    computeRasterParm(&pam, chv, colors, grayscale,
+    computeRasterParm(&pam, chv, colorCt, grayscale,
                       cmdline.compression,
                       cmdline.minisblack, cmdline.miniswhite,
                       cmdline.indexsizeAllowed,
@@ -1173,10 +1194,10 @@ convertImage(FILE *       const ifP,
         cht = NULL;
         tiffColorMap = NULL;
     } else {
-        createTiffColorMap(&pam, bitspersample, chv, colors, &tiffColorMap);
+        createTiffColorMap(&pam, bitspersample, chv, colorCt, &tiffColorMap);
 
         /* Convert color vector to color hash table, for fast lookup. */
-        cht = pnm_computetupletablehash(&pam, chv, colors);
+        cht = pnm_computetupletablehash(&pam, chv, colorCt);
         pnm_freetupletable(&pam, chv);
     }
 
@@ -1191,9 +1212,6 @@ convertImage(FILE *       const ifP,
     if (tiffColorMap)
         destroyTiffColorMap(&pam, tiffColorMap);
 }
-
-
-
 
 
 
