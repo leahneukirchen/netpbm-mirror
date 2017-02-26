@@ -518,7 +518,7 @@ writeScanLines(struct pam *   const pamP,
 
        The samples form pixel values according to the pixel format indicated
        by the TIFF photometric.  E.g. if it is MINISWHITE, then a pixel is
-       one sample and a value of 0 for that sample means white.
+       grayscale, composed of one sample where a value of 0 means white.
     */
     MALLOCARRAY(buf, bytesperrow);
 
@@ -756,11 +756,15 @@ computeRasterParm(struct pam *     const pamP,
         }
     }
 
-    if (miniswhite)
+    if (miniswhite) {
+        if (!grayscale)
+            pm_error("Image is color, so -miniswhite is invalid");
         *photometricP = PHOTOMETRIC_MINISWHITE;
-    else if (minisblack)
+    } else if (minisblack) {
+        if (!grayscale)
+            pm_error("Image is color, so -minisblack is invalid");
         *photometricP = PHOTOMETRIC_MINISBLACK;
-    else
+    } else
         *photometricP = defaultPhotometric;
 
     {
