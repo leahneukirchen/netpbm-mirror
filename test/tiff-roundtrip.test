@@ -2,18 +2,23 @@
 # This script tests: pamtotiff tifftopnm
 # Also requires:
 
-pamtotiff testimg.ppm 1<>${tmpdir}/test1.tiff &&
-  tifftopnm ${tmpdir}/test1.tiff | cksum
+# Failure message
+## If this test fails, the cause may be a problem in the TIFF library.
 
-# test packbits compression
-pamtotiff -packbits testimg.ppm 1<>${tmpdir}/test2.tiff &&
-  tifftopnm ${tmpdir}/test2.tiff | cksum
+# PPM image
+# Should print 1926073387 101484 five times
 
-pamtotiff testgrid.pbm 1<>${tmpdir}/test3.tiff &&
-  tifftopnm ${tmpdir}/test3.tiff | cksum
+pamtotiff testimg.ppm | tifftopnm | cksum
+pamtotiff -truecolor testimg.ppm | tifftopnm | cksum
 
-# test G4 compression
-pamtotiff -g4 testgrid.pbm 1<>${tmpdir}/test4.tiff &&
-  tifftopnm ${tmpdir}/test4.tiff | cksum
+pamtotiff -truecolor -packbits testimg.ppm | tifftopnm | cksum
+pamtotiff -truecolor -rowsperstrip=2 testimg.ppm | tifftopnm | cksum
+pamtotiff -truecolor -lsb2msb  testimg.ppm | \
+  tifftopnm -respectfillorder | cksum
 
-rm ${tmpdir}/test[1234].tiff
+# PBM image
+# Should print 2425386270 41 three times
+
+pamtotiff testgrid.pbm | tifftopnm | cksum
+pamtotiff -g3 -fill testgrid.pbm | tifftopnm | cksum
+pamtotiff -g4 testgrid.pbm | tifftopnm | cksum
