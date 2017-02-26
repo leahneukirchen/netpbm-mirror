@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.78.00
 
+              pnmtotiff: Fail with -miniswhite or -minisblack on color image
+              rather than produce an invalid TIFF.
+
               tifftopnm: Fix memory corruption when image is more pixels
               than can be represented as a C unsigned integer.  Broken in
               Netpbm 10.11 (October 2002).
