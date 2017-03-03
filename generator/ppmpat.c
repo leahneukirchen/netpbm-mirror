@@ -46,9 +46,14 @@ typedef enum {
 } Pattern;
 
 typedef struct {
+/*----------------------------------------------------------------------------
+   An ordered list of colors with a cursor.
+-----------------------------------------------------------------------------*/
     unsigned int count;
     unsigned int index;
+        /* Current position in the list */
     pixel *      color;
+        /* Malloced array 'count' in size. */
 } ColorTable;
 
 struct CmdlineInfo {
@@ -552,7 +557,6 @@ clearBackgroundCamo(pixel **     const pixels,
 
     if (colorTableP->count > 0) {
         color = colorTableP->color[0];
-        colorTableP->index = 1;
     } else if (antiflag)
         color = randomAnticamoColor(maxval);
     else
@@ -562,6 +566,7 @@ clearBackgroundCamo(pixel **     const pixels,
         pixels, cols, rows, maxval, 0, 0, cols, rows, PPMD_NULLDRAWPROC,
         &color);
 }
+
 
 
 static void
@@ -577,9 +582,8 @@ camoFill(pixel **         const pixels,
 
     if (colorTableP->count > 0) {
         color = colorTableP->color[colorTableP->index];
-	nextColorBg(colorTableP);
-    }
-    else if (antiflag)
+        nextColorBg(colorTableP);
+    } else if (antiflag)
         color = randomAnticamoColor(maxval);
     else
         color = randomCamoColor(maxval);
@@ -640,11 +644,16 @@ camo(pixel **     const pixels,
      pixval       const maxval,
      bool         const antiflag) {
 
-    unsigned int const n = (rows * cols) / (BLOBRAD * BLOBRAD) * 5;
+    unsigned int const n = (rows * cols) / SQR(BLOBRAD) * 5;
 
     unsigned int i;
 
     clearBackgroundCamo(pixels, cols, rows, maxval, colorTableP, antiflag);
+
+    if (colorTableP) {
+        assert(colorTableP->count > 1);
+        colorTableP->index = 1;  /* Foreground colors start at 1 */
+    }
 
     for (i = 0; i < n; ++i) {
         unsigned int const pointCt =
