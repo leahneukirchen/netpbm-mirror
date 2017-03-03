@@ -140,7 +140,11 @@ parseColorOpt(const char ** const colorText,
     for (colorCount = 0; colorText[colorCount] != NULL; ++colorCount)
         ;
 
-    MALLOCARRAY_NOFAIL(inColor, colorCount);
+    MALLOCARRAY(inColor, colorCount);
+
+    if (!inColor)
+        pm_error("Failed to allocate table space for %u colors "
+                 "specified by -color", colorCount);
 
     for (i = 0; i < colorCount; ++i)
         inColor[i] = ppm_parsecolor(colorText[i], PPM_MAXMAXVAL);
