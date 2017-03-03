@@ -508,15 +508,16 @@ intensity, maximum green intensity, and about half blue intensity.
 
 <LI> An X11-style decimal specifier:
 <tt>rgbi:<i>r</i>/<i>g</i>/<i>b</i></tt>, where <i>r</i>, <i>g</i>,
-and <i>b</i> are floating point numbers from 0 to 1.
+and <i>b</i> are floating point numbers from 0 to 1.  Example:
+<tt>rgbi:1.0/0.5/.25</tt>.
 
 <li>an old-X11-style hexadecimal triple: <tt>#rgb</tt>, <tt>#rrggbb</tt>, 
 <tt>#rrrgggbbb</tt>, or <tt>#rrrrggggbbbb</tt>.
 
-<li>A triplet of decimal floating point numbers from 0.0 to 1.0,
-representing red, green, and blue intensities respectively, separated
-by commas.  E.g. <tt>1.0,0.5,.25</tt>.  This is for backwards compatibility;
-it was in use before MIT came up with the similar and preferred rgbi style).
+<li>A triplet of decimal floating point numbers from 0.0 to 1.0, representing
+red, green, and blue intensities respectively, separated by commas.
+Example: <tt>1.0,0.5,.25</tt>.  This is for backwards compatibility; it was in
+use before MIT came up with the similar and preferred rgbi style).
 
 </ul>
 

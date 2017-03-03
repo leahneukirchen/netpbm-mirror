@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Ppmpat User Manual</TITLE></HEAD>
 <BODY>
 <H1>ppmpat</H1>
-Updated: 24 November 2012
+Updated: 2 March 2016
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -21,7 +21,10 @@ ppmpat - make a pretty PPM image
 <B>-squig</B> |
 <B>-camo</B> |
 <B>-anticamo</B>
-[<b>-randomseed=</b><i>integer</i>]
+<b>-argyle1</b>
+<b>-argyle2</b>
+[<b>-colors</b> <i>colorlist</i>
+[<b>-randomseed</b> <i>integer</i>]
 
 <I>width</I> <I>height</I>
 
@@ -82,7 +85,42 @@ a simpler pattern, use <b>pnmquant</b> on the output.
 
 <DD>Anti-camouflage pattern - like -camo, but ultra-bright colors.
 
-<dt><b>-randomseed=</b><i>integer</i>
+<DT><B>-argyle1</B>
+
+<DD>An diamond argyle pattern, without a cross through the diamond, with one
+diamond.  Can be tiled.
+
+<p>This option was new in Netpbm 10.78 (March 2017).
+
+<DT><B>-argyle2</B>
+
+<DD>An diamond argyle pattern, with a cross through the diamond, with one
+diamond.  Can be tiled.
+
+<p>This option was new in Netpbm 10.78 (March 2017).
+
+<dt><b>-color</b> <i>colorlist</i>
+
+<dd>This specifies the colors to appear in the pattern.
+
+<p>If you do not specify this option, <b>ppmpat</b> chooses colors at
+random.
+
+<p>Different patterns take different numbers of colors.  Some can involve
+variable numbers of colors.  If you specify a number of colors incompatible
+with the pattern you specify, <b>ppmpat</b> fails, telling you how many colors
+to specify.
+
+<p><i>colorlist</i> is a comma-separated list of colors.
+<P>Specify each color as described for the <a
+href="libppm.html#colorname">argument of the <b>ppm_parsecolor()</b>
+library routine</a>.
+
+<p>Example: <b>-color red, green, rgbi:1.0/0.5/.25</b> .
+
+<p>This option was new in Netpbm 10.78 (March 2017).
+
+<dt><b>-randomseed</b> <i>integer</i>
 
 <dd>This is the seed for the random number generator that generates the
 pixels.

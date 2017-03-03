@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pamtotiff User Manual</TITLE></HEAD>
 <BODY>
 <H1>pamtotiff</H1>
-Updated: 17 April 2014
+Updated: 26 February 2017
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -274,12 +274,19 @@ either, <B>pamtotiff</b> uses minimum is black except when using Group
 3 or Group 4 compression, in which case <B>pamtotiff</B> follows CCITT
 fax standards and uses "minimum is white." This usually
 results in better compression and is generally preferred for bilevel
-coding.
+coding.  These photometrics are for grayscale images, so these options are
+invalid if the image is color (but only if it is truly color; they are
+valid with, for example, a PPM image that contains only shades of gray).
 
-<P>Before February 2001, <B>pamtotiff</B> always produced
+<P>Before Netpbm 9.11 (February 200)1, <B>pamtotiff</B> always produced
 "minimum is black," because of a bug.  In either case,
 <B>pamtotiff</B> sets the photometric interpretation tag in the TIFF
 output according to which photometric is actually used.
+
+<p>Before Netpbm 10.78 (March 2017), <b>pamtotiff</b> respected
+<b>-miniswhite</b> and <b>-minisblack</b> even with color images, producing
+invalid TIFF images that have the indicated photometric but red, green, and
+blue raster planes.
 
 <P>The <B>-indexbits</B> option is meaningful only for a colormapped
 (paletted) image.  In this kind of image, the raster contains values
