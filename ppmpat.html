@@ -23,7 +23,7 @@ ppmpat - make a pretty PPM image
 <B>-anticamo</B>
 <b>-argyle1</b>
 <b>-argyle2</b>
-[<b>-colors</b> <i>colorlist</i>
+[<b>-color</b> <i>colorlist</i>
 [<b>-randomseed</b> <i>integer</i>]
 
 <I>width</I> <I>height</I>
@@ -57,38 +57,59 @@ a simpler pattern, use <b>pnmquant</b> on the output.
 
 <DD>A gingham check pattern.  Can be tiled.
 
+<p>If you specify -color, give two colors.
+
 <DT><B>-gingham3</B>
 
 <DD>A slightly more complicated gingham.  Can be tiled.
+
+<p>If you specify -color, give three colors.
 
 <DT><B>-madras</B>
 
 <DD>A madras plaid.  Can be tiled.
 
+<p>If you specify -color, give three colors.
+
 <DT><B>-tartan</B>
 
 <DD>A tartan plaid.  Can be tiled.
+
+<p>If you specify -color, give three colors.
 
 <DT><B>-poles</B>
 
 <DD>Color gradients centered on randomly-placed poles.
 
+<p>If you specify -color, give two or more colors.
+
 <DT><B>-squig</B>
 
 <DD>Squiggley tubular pattern.  Can be tiled.
+
+<p>If you specify -color, give three or more colors.
 
 <DT><B>-camo</B>
 
 <DD>Camouflage pattern.
 
+<p>If you specify <b>-color</b>, give three or more colors.  The first is the
+background color; the others are colors for the leafy foreground shapes.
+The foreground shapes will probably occupy nearly the entire image, so that the
+background color is barely visible.
+
 <DT><B>-anticamo</B>
 
 <DD>Anti-camouflage pattern - like -camo, but ultra-bright colors.
+
+<p>If you specify <b>-color</b>, this is the same as <b>-camo</b>.
 
 <DT><B>-argyle1</B>
 
 <DD>An diamond argyle pattern, without a cross through the diamond, with one
 diamond.  Can be tiled.
+
+<p>If you specify -color, give two colors.
 
 <p>This option was new in Netpbm 10.78 (March 2017).
 
@@ -98,6 +119,8 @@ diamond.  Can be tiled.
 diamond.  Can be tiled.
 
 <p>This option was new in Netpbm 10.78 (March 2017).
+
+<p>If you specify -color, give three colors.
 
 <dt><b>-color</b> <i>colorlist</i>
 
