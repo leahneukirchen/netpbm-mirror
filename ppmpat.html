@@ -38,14 +38,12 @@ ppmpat - make a pretty PPM image
 <p><b>ppmpat</b> produces a PPM of the specified width and height,
 with a pattern in it.
 
-<P>This program is mainly to demonstrate use of the ppmdraw routines,
-a simple but powerful drawing library.  See the ppmdraw.h include file
-for more info on using these routines.  Still, some of the patterns
-can be rather pretty.  If you have a color workstation, something like
-<B>ppmpat -squig 300 300 | pnmquant 128</B>
-should generate a nice background.
+<p>You could, for example, use it to create wallpaper for a computer screen.
 
-<p>Some of these patterns have large numbers of colors, so if you want
+<p>One use of this program is as an example of the Netpbm library
+<a href="libnetpbm_draw.html">drawing</a> functions, which it uses.
+
+<p>Some of the patterns have large numbers of colors, so if you want
 a simpler pattern, use <b>pnmquant</b> on the output.
 
 <H2 id="options">OPTIONS</H2>
@@ -111,7 +109,7 @@ background color is barely visible.
 
 <DT><B>-argyle1</B>
 
-<DD>An diamond argyle pattern, without a cross through the diamond, with one
+<DD>A diamond argyle pattern, without a cross through the diamond, with one
 diamond.  Can be tiled.
 
 <p>If you specify -color, give two colors: background and foreground, in that
@@ -121,20 +119,19 @@ order.
 
 <DT><B>-argyle2</B>
 
-<DD>An diamond argyle pattern, with a cross through the diamond, with one
+<DD>A diamond argyle pattern, with a cross through the diamond, with one
 diamond.  Can be tiled.
-
-<p>This option was new in Netpbm 10.78 (March 2017).
 
 <p>If you specify -color, give three colors: background, foreground, and
 stripe, in that order.
+
+<p>This option was new in Netpbm 10.78 (March 2017).
 
 <dt><b>-color</b> <i>colorlist</i>
 
 <dd>This specifies the colors to appear in the pattern.
 
-<p>If you do not specify this option, <b>ppmpat</b> chooses colors at
-random.
+<p>If you do not specify this option, <b>ppmpat</b> chooses colors at random.
 
 <p>Different patterns take different numbers of colors.  Some can involve
 variable numbers of colors.  If you specify a number of colors incompatible
