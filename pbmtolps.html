@@ -3,23 +3,20 @@
 <BODY>
 
 <H1>pbmtolps</H1>
-Updated: 12 Dec 1990
+Updated: 12 March 2017
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 pbmtolps - convert PBM image to PostScript
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <b>pbmtolps</b>
 [<b>-dpi</b> <i>n</i>]
 [<i>pbmfile</i>]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -28,12 +25,15 @@ The output Postscript uses lines instead of the image operator to
 generate a (device dependent) picture which will be imaged much
 faster.
 
+<p><b>pnmtops</b> is a more general program for converting from the Netpbm
+formats to Postscript, though it cannot produce the particular, probably
+obsolete, subformat that <b>pbmtolps</b> does.
+
 <P>The Postscript path length is constrained to be less that 1000
 points so that no limits are overrun on the Apple Laserwriter and
 (presumably) no other printers.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="pnmtops.html">pnmtops</A></B>,
 <B><A HREF="pstopnm.html">pstopnm</A></B>,
@@ -42,21 +42,18 @@ points so that no limits are overrun on the Apple Laserwriter and
 <B>gs</B>,
 <B><A HREF="pbm.html">pbm</A></B>,
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>AUTHOR</H2>
+<H2 id="author">AUTHOR</H2>
 
 George Phillips &lt;<A
 HREF="mailto:phillips@cs.ubc.ca">phillips@cs.ubc.ca</A>&gt;
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">SEE ALSO</A>
-<LI><A HREF="#lbAF">AUTHOR</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#author">AUTHOR</A>
 </UL>
 </BODY>
 </HTML>

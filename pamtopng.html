@@ -3,7 +3,7 @@
 <head><title>Pamtopng User Manual</title></head>
 <body>
 <h1>pamtopng</h1>
-Updated: 20 July 2015
+Updated: 12 March 2017
 <BR>
 <a href="#index">Table Of Contents</a>
 
@@ -63,6 +63,15 @@ conversion and create PNGs with various arcane features.  It does various
 transformations on the image to create the greatest compression possible, to a
 degree that probably doesn't make any difference in the modern world.
 
+<p>The main advantage <b>pamtopng</b> has over <b>pnmtopng</b> is that the
+former can use the transparency channel of a PAM image to generate the
+transparency information in the PNG.  In contrast, handling of the alpha
+channel is very cumbersome with <b>pnmotpng</b>.
+
+<p>One difference that <em>does not</em> exist, that some people might
+incorrectly infer from the names is the possible input formats.  Both programs
+can take PBM, PGM, PPM, and PAM input.
+
 <p>Because <b>pnmtopng</b> has been around virtually forever, programs and
 procedures that use it are more portable than those that use <b>pamtopng</b>.
 Its age and popularity also probably make it have fewer bugs.
@@ -87,10 +96,8 @@ Its age and popularity also probably make it have fewer bugs.
 <li><b>-comp_</b><i>xxx</i>
 </ul>
 
-
-
-<p>These are some of the other functions of <b>pnmtopng</b>
-that <b>pamtopng</b> lacks:
+<p>These are some of the other functions of <b>pnmtopng</b> that
+<b>pamtopng</b> lacks:
 
 <ul>
 <li>When you specify a transparent or background color that is not in the
@@ -112,7 +119,6 @@ of the option value to conform to the rest of Netpbm.
 <b>-rgb</b>.
 
 </ul>
-
 
 
 <h2 id="options">OPTIONS</h2>

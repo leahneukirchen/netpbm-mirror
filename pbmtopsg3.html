@@ -2,28 +2,29 @@
 <HTML><HEAD><TITLE>Pbmtopsg3 User Manual</TITLE></HEAD>
 <BODY>
 <H1>pbmtopsg3</H1>
-Updated: 22 July 2004
+Updated: 12 March 2017
 <BR>
 <A HREF="#index">Table Of Contents</A>
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 pbmtopsg3 - convert PBM images to Postscript with G3 fax compression
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>pbmtopsg3</B>
 [<B>--title=</B><I>title</I>]
 [<B>--dpi=</B><I>dpi</I>]
 [<I>filespec</I>]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <P><b>pbmtopsg3</b> converts the PBM images in the input PBM file to
 pages in a Postscript file encoded with G3 fax compression.
+
+<p><b>pnmtops</b> is a more general program for converting from the Netpbm
+formats to Postscript, though it cannot produce the particular, probably
+obsolete, subformat that <b>pbmtolps</b> does.
 
 <P>If you don't specify <I>filespec</I>, the input is from Standard
 Input.
@@ -36,8 +37,7 @@ different file, you might do:
 cat faxpage* | pbmtopsg3 &gt;fax.ps
 </pre>
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<H2 id="options">OPTIONS</H2>
 
 <DL COMPACT>
 <DT><B>-title</B>
@@ -50,12 +50,11 @@ cat faxpage* | pbmtopsg3 &gt;fax.ps
 
 </DL>
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="pnmtops.html">pnmtops</A></B>,
 <B><A HREF="pstopnm.html">pstopnm</A></B>,
-<B>gs</b>(1),
+<B>gs</b>,
 <B><A HREF="pstopnm.html">pstopnm</A></B>,
 <B><A HREF="pbmtolps.html">pbmtolps</A></B>,
 <B><A HREF="pbmtoepsi.html">pbmtoepsi</A></B>,
@@ -64,14 +63,12 @@ cat faxpage* | pbmtopsg3 &gt;fax.ps
 <B><A HREF="pbm.html">pbm</A></B>
 
 <HR>
-<A NAME="index">&nbsp;</A>
-<H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">SEE ALSO</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
 </UL>
 </BODY>
 </HTML>
