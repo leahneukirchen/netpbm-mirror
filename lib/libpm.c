@@ -517,13 +517,51 @@ pm_init(const char * const progname,
 
 
 
+static const char *
+dtMsg(time_t const dateTime) {
+/*----------------------------------------------------------------------------
+   Text for the version message to indicate datetime 'dateTime'.
+-----------------------------------------------------------------------------*/
+    struct tm * const brokenTimeP = localtime(&dateTime);
+
+    char buffer[100];
+    
+    strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", brokenTimeP);
+
+    return pm_strdup(buffer);
+}
+
+
+
 static void
 showVersion(void) {
-    pm_message( "Using libnetpbm from Netpbm Version: %s", NETPBM_VERSION );
-#if defined(COMPILE_TIME) && defined(COMPILED_BY)
-    pm_message( "Compiled %s by user \"%s\"",
-                COMPILE_TIME, COMPILED_BY );
+
+    pm_message("Using libnetpbm from Netpbm Version: %s", NETPBM_VERSION);
+
+    /* SOURCE_DATETIME is defined when the user wants a reproducible build,
+       so wants the source code modification datetime instead of the build
+       datetime in the object code.
+    */
+#if defined(SOURCE_DATETIME)
+    {
+        const char * const sourceDtMsg = dtMsg(SOURCE_DATETIME);
+        pm_message("Built from source dated %s", sourceDtMsg);
+        pm_strfree(sourceDtMsg);
+    }
+#else
+  #if defined(BUILD_DATETIME)
+    {
+        const char * const buildDtMsg = dtMsg(BUILD_DATETIME);
+        pm_message("Built at %s", buildDtMsg);
+        pm_strfree(buildDtMsg);
+    }
+  #endif
 #endif
+
+#if defined(COMPILED_BY)
+    pm_message("Built by %s", COMPILED_BY);
+#endif
+
 #ifdef BSD
     pm_message( "BSD defined" );
 #endif /*BSD*/

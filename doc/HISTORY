@@ -13,6 +13,12 @@ not yet  BJH  Release 10.78.00
               pnmtotiff: Fail with -miniswhite or -minisblack on color image
               rather than produce an invalid TIFF.
 
+              --version global option: with SOURCE_DATE_EPOCH environment
+              variable, display source code datetime instead of build
+              datetime.  And when displaying build datetime, do it in the
+              local time of the process running the command instead of the
+              process that did the build.
+
               tifftopnm: Fix memory corruption when image is more pixels than
               can be represented as a C unsigned integer.  Broken in Netpbm
               10.11 (October 2002).
