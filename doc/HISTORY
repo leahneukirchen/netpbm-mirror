@@ -54,11 +54,13 @@ not yet  BJH  Release 10.78.00
 
 16.09.27 BJH  Release 10.76.00
 
-              pnmquantall: Fix failure when temporary file location is
-              not the same filesystem as the output file.
+              pnmquantall: Fix failure when temporary file location is not the
+              same filesystem as the output file.  Always broken (pnmremap was
+              new in Netpbm 10.58 (March 2012)).
 
               pnmquantall: Fix incorrect handling of when the Pnmremap or
-              the final rename fails.
+              the final rename fails.  Always broken (pnmremap was new
+              in Netpbm 10.58 (March 2012)).
 
               giftopnm: Fix bug: crash on little-endian computers that can't
               toleration unaligned memory access.  Thanks Ignatios Souvatzis
@@ -69,7 +71,7 @@ not yet  BJH  Release 10.78.00
 
               Build: Add PKG_CONFIG make variable.
 
-              Build: tifftopnm.c: Fix undefined WIFSIGNALED, etc. in 
+              Build: tifftopnm.c: Fix undefined WIFSIGNALED, etc.
 
 16.06.26 BJH  Release 10.75.00
 
@@ -114,7 +116,8 @@ not yet  BJH  Release 10.78.00
               (December 2007).
 
               pbmtextps: Fix bug: input text or font name with Postscript
-              control characters messes up the Postscript program.
+              control characters messes up the Postscript program.  Always
+              broken (pbmtextps was new in Netpbm 10.0 (June 2002).
 
               hpcdtoppm dummy version: Update web link to real version.
 
@@ -131,7 +134,7 @@ not yet  BJH  Release 10.78.00
               too big.  Always present (pbmreduce was new in September 1989).
 
               pbmtext: Fix bug: invalid memory reference when text contains
-              code points > 127.  Broken in 10.74.
+              code points > 127.  Broken in 10.74 (March 2016).
 
               pnmtofiasco, fiascotopnm: Fix incorrect math on systems with
               unusual floating point representation.  Always broken (programs
