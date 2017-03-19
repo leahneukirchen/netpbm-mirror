@@ -13,6 +13,9 @@ not yet  BJH  Release 10.78.00
               pnmtotiff: Fail with -miniswhite or -minisblack on color image
               rather than produce an invalid TIFF.
 
+              tifftopnmcmyk: Default rows per strip to the TIFF library
+              default instead of whatever yields 8K strips.
+
               --version global option: with SOURCE_DATE_EPOCH environment
               variable, display source code datetime instead of build
               datetime.  And when displaying build datetime, do it in the
@@ -22,6 +25,10 @@ not yet  BJH  Release 10.78.00
               tifftopnm: Fix memory corruption when image is more pixels than
               can be represented as a C unsigned integer.  Broken in Netpbm
               10.11 (October 2002).
+
+              tifftopnmcmyk: Fix bug: fails with very wide images and no
+              -rowsperstrip.  Always broken.  (Tifftocmyk was new in Netpbm
+              8.2 (March 2000).
 
               svgtopam: Fix crash when out of memory.  Always broken (svgtopam
               was new in Netpbm 10.33 (March 2006)).
