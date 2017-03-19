@@ -47,6 +47,9 @@ not yet  BJH  Release 10.78.00
               manuals on the web with Manweb).  Probably 100% unused and
               distracting.
 
+              Debian package: change dependencies to be compatible with
+              Debian 8.
+
 16.12.25 BJH  Release 10.77.00
 
               pnmpad: Fix bug: incorrect output width.  Introduced in
