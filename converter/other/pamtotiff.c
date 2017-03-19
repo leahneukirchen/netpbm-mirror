@@ -996,9 +996,9 @@ copyBufferToStdout(int const tmpfileFd) {
 
 
 static void
-destroyTiffGenerator(WriteMethod const writeMethod,
-                     TIFF *      const tifP,
-                     int         const ofd) {
+closeTiffGenerator(WriteMethod const writeMethod,
+                   TIFF *      const tifP,
+                   int         const ofd) {
 
     TIFFFlushData(tifP);
 
@@ -1277,7 +1277,7 @@ main(int argc, const char *argv[]) {
         }
     }
 
-    destroyTiffGenerator(cmdline.writeMethod, tifP, ofd);
+    closeTiffGenerator(cmdline.writeMethod, tifP, ofd);
     pm_close(ifP);
 
     return 0;
