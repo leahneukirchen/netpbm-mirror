@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pnmtotiffcmyk User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmtotiffcmyk</H1>
-Updated: 07 February 2004
+Updated: 21 March 2017
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -33,6 +33,14 @@ pnmtotiffcmyk - convert a Netpbm image into a CMYK encoded TIFF file
 <p><b>pnmtotiffcmyk</b>reads a PNM image as input and produces a CMYK
 encoded TIFF file as output.  It optionally modifies the color
 balance and black level, and modifies removal of CMY from under K.
+
+<p>Output is to Standard Output, but unlike with most Netpbm programs,
+Standard Output must be a seekable file.  An ordinary file is fine, but you
+cannot pipe the output to another program.  Furthermore, the program replaces
+any content currently in the file even if it was opened for appending.
+
+<p><b>pamtotiff</b> generates many other kinds of TIFF files.
+
 
 <H2 id="options">OPTIONS</H2>
 
@@ -141,7 +149,7 @@ appear fuzzy.  It's hard to see what the utility of this is.
 
 <H2 id="seealso">SEE ALSO</H2>
 
-<A HREF="pnmtotiff.html">pnmtotiff</A>, 
+<A HREF="pamtotiff.html">pamtotiff</A>, 
 <A HREF="tifftopnm.html">tifftopnm</A>, 
 <A HREF="pnm.html">pnm</A>
 
