@@ -184,10 +184,10 @@ getBps(TIFF *           const tif,
 
     unsigned short tiffBps;
     unsigned short bps;
-    int rc;
+    int fldPresent;
 
-    rc = TIFFGetField(tif, TIFFTAG_BITSPERSAMPLE, &tiffBps);
-    bps = (rc == 0) ? 1 : tiffBps;
+    fldPresent = TIFFGetField(tif, TIFFTAG_BITSPERSAMPLE, &tiffBps);
+    bps = fldPresent ? tiffBps : 1;
 
     if (bps < 1 || (bps > 8 && bps != 16 && bps != 32))
         pm_error("This program can process Tiff images with only "
@@ -261,24 +261,92 @@ getTiffDimensions(TIFF *         const tiffP,
    dimensions of the internal raster matrix -- the dimensions of the
    actual visual image.
 -----------------------------------------------------------------------------*/
-    int ok;
+    int fldPresent;
 
     unsigned int width, length;
     unsigned short tiffOrientation;
     unsigned short orientation;
-    int present;
 
-    ok = TIFFGetField(tiffP, TIFFTAG_IMAGEWIDTH, &width);
-    if (!ok)
+    fldPresent = TIFFGetField(tiffP, TIFFTAG_IMAGEWIDTH, &width);
+    if (!fldPresent)
         pm_error("Input Tiff file is invalid.  It has no IMAGEWIDTH tag.");
-    ok = TIFFGetField(tiffP, TIFFTAG_IMAGELENGTH, &length);
-    if (!ok)
+    fldPresent = TIFFGetField(tiffP, TIFFTAG_IMAGELENGTH, &length);
+    if (!fldPresent)
         pm_error("Input Tiff file is invalid.  It has no IMAGELENGTH tag.");
 
-    present = TIFFGetField(tiffP, TIFFTAG_ORIENTATION, &tiffOrientation);
-    orientation = present ? tiffOrientation : ORIENTATION_TOPLEFT;
+    fldPresent = TIFFGetField(tiffP, TIFFTAG_ORIENTATION, &tiffOrientation);
+    orientation = fldPresent ? tiffOrientation : ORIENTATION_TOPLEFT;
 
     tiffToImageDim(width, length, orientation, colsP, rowsP);
+}
+
+
+
+static unsigned short
+planarConfigFmTiff(TIFF * const tiffP) {
+
+    int fldPresent;
+    unsigned short retval;
+
+    fldPresent = TIFFGetField(tiffP, TIFFTAG_PLANARCONFIG, &retval);
+
+    if (!fldPresent)
+        pm_error("PLANARCONFIG tag is not in Tiff file, though it "
+                 "has more than one sample per pixel.  "
+                 "TIFFGetField() of it failed.  This means the input "
+                 "is not valid Tiff.");
+
+    return retval;
+}
+
+
+
+static void
+validatePlanarConfig(unsigned short const planarconfig,
+                     unsigned short const photomet) {
+
+    switch (planarconfig) {
+    case PLANARCONFIG_CONTIG:
+        break;
+    case PLANARCONFIG_SEPARATE:
+        if (photomet != PHOTOMETRIC_RGB && 
+            photomet != PHOTOMETRIC_SEPARATED)
+            pm_error("This program can handle separate planes only "
+                     "with RGB (PHOTOMETRIC tag = %u) or SEPARATED "
+                     "(PHOTOMETRIC tag = %u) data.  The input Tiff file " 
+                     "has PHOTOMETRIC tag = %hu.",
+                     PHOTOMETRIC_RGB, PHOTOMETRIC_SEPARATED,
+                     photomet);
+        break;
+    default:
+        pm_error("Unrecognized PLANARCONFIG tag value in Tiff input: %u",
+                 planarconfig);
+    }
+}
+
+
+
+static unsigned short
+orientationFmTiff(TIFF * const tiffP) {
+
+    unsigned short tiffOrientation;
+    int fldPresent;
+
+    fldPresent = TIFFGetField(tiffP, TIFFTAG_ORIENTATION, &tiffOrientation);
+
+    return fldPresent ? tiffOrientation : ORIENTATION_TOPLEFT;
+}
+
+
+
+static void
+dumpHeader(const struct tiffDirInfo * const headerP) {
+
+    pm_message("%ux%ux%u raster matrix, oriented %u",
+               headerP->width, headerP->height,
+               headerP->bps * headerP->spp, headerP->orientation);
+    pm_message("%hu bits/sample, %hu samples/pixel",
+               headerP->bps, headerP->spp);
 }
 
 
@@ -299,7 +367,7 @@ readDirectory(TIFF *               const tiffP,
    input file contains invalid values).  We generally return those
    invalid values to our caller.
 -----------------------------------------------------------------------------*/
-    int rc;
+    int fldPresent;
     unsigned short tiffSpp;
 
     if (headerdump)
@@ -307,65 +375,35 @@ readDirectory(TIFF *               const tiffP,
 
     getBps(tiffP, &headerP->bps);
 
-    rc = TIFFGetFieldDefaulted(tiffP, TIFFTAG_FILLORDER, &headerP->fillorder);
-    rc = TIFFGetField(tiffP, TIFFTAG_SAMPLESPERPIXEL, &tiffSpp);
-    headerP->spp = (rc == 0) ? 1 : tiffSpp;
+    fldPresent =
+        TIFFGetFieldDefaulted(tiffP, TIFFTAG_FILLORDER, &headerP->fillorder);
+    fldPresent = TIFFGetField(tiffP, TIFFTAG_SAMPLESPERPIXEL, &tiffSpp);
+    headerP->spp = fldPresent ? tiffSpp: 1;
 
-    rc = TIFFGetField(tiffP, TIFFTAG_PHOTOMETRIC, &headerP->photomet);
-    if (rc == 0)
+    fldPresent = TIFFGetField(tiffP, TIFFTAG_PHOTOMETRIC, &headerP->photomet);
+    if (!fldPresent)
         pm_error("PHOTOMETRIC tag is not in Tiff file.  "
                  "TIFFGetField() of it failed.\n"
                  "This means the input is not valid Tiff.");
 
-    if (headerP->spp > 1) {
-        rc = TIFFGetField(tiffP, TIFFTAG_PLANARCONFIG, &headerP->planarconfig);
-        if (rc == 0)
-            pm_error("PLANARCONFIG tag is not in Tiff file, though it "
-                     "has more than one sample per pixel.  "
-                     "TIFFGetField() of it failed.  This means the input "
-                     "is not valid Tiff.");
-    } else
+    if (headerP->spp > 1)
+        headerP->planarconfig = planarConfigFmTiff(tiffP);
+    else
         headerP->planarconfig = PLANARCONFIG_CONTIG;
 
-    switch (headerP->planarconfig) {
-    case PLANARCONFIG_CONTIG:
-        break;
-    case PLANARCONFIG_SEPARATE:
-        if (headerP->photomet != PHOTOMETRIC_RGB && 
-            headerP->photomet != PHOTOMETRIC_SEPARATED)
-            pm_error("This program can handle separate planes only "
-                     "with RGB (PHOTOMETRIC tag = %u) or SEPARATED "
-                     "(PHOTOMETRIC tag = %u) data.  The input Tiff file " 
-                     "has PHOTOMETRIC tag = %hu.",
-                     PHOTOMETRIC_RGB, PHOTOMETRIC_SEPARATED,
-                     headerP->photomet);
-        break;
-    default:
-        pm_error("Unrecognized PLANARCONFIG tag value in Tiff input: %u.\n",
-                 headerP->planarconfig);
-    }
+    validatePlanarConfig(headerP->planarconfig, headerP->photomet);
 
-    rc = TIFFGetField(tiffP, TIFFTAG_IMAGEWIDTH, &headerP->width);
-    if (rc == 0)
+    fldPresent = TIFFGetField(tiffP, TIFFTAG_IMAGEWIDTH, &headerP->width);
+    if (!fldPresent)
         pm_error("Input Tiff file is invalid.  It has no IMAGEWIDTH tag.");
-    rc = TIFFGetField(tiffP, TIFFTAG_IMAGELENGTH, &headerP->height);
-    if (rc == 0)
+    fldPresent = TIFFGetField(tiffP, TIFFTAG_IMAGELENGTH, &headerP->height);
+    if (!fldPresent)
         pm_error("Input Tiff file is invalid.  It has no IMAGELENGTH tag.");
 
-    {
-        unsigned short tiffOrientation;
-        int present;
-        present = TIFFGetField(tiffP, TIFFTAG_ORIENTATION, &tiffOrientation);
-        headerP->orientation =
-            present ? tiffOrientation : ORIENTATION_TOPLEFT;
-    }
-    if (headerdump) {
-        pm_message("%ux%ux%u raster matrix, oriented %u",
-                   headerP->width, headerP->height,
-                   headerP->bps * headerP->spp, headerP->orientation);
-        pm_message("%hu bits/sample, %hu samples/pixel",
-                   headerP->bps, headerP->spp);
-    }
+    headerP->orientation = orientationFmTiff(tiffP);
+
+    if (headerdump)
+        dumpHeader(headerP);
 }
 
 
@@ -577,6 +615,7 @@ analyzeImageType(TIFF *             const tif,
             break;
             
         case PHOTOMETRIC_PALETTE: {
+            int fldPresent;
             int i;
             int numcolors;
             unsigned short* redcolormap;
@@ -590,8 +629,11 @@ analyzeImageType(TIFF *             const tif,
                 pm_error("This paletted image has %d samples per pixel.  "
                          "We understand only 1.", spp);
 
-            if (!TIFFGetField(tif, TIFFTAG_COLORMAP, 
-                              &redcolormap, &greencolormap, &bluecolormap))
+            fldPresent = TIFFGetField(
+                tif, TIFFTAG_COLORMAP, 
+                &redcolormap, &greencolormap, &bluecolormap);
+
+            if (!fldPresent)
                 pm_error("error getting colormaps");
 
             numcolors = 1 << bps;
@@ -611,12 +653,13 @@ analyzeImageType(TIFF *             const tif,
 
         case PHOTOMETRIC_SEPARATED: {
             unsigned short inkset;
+            int fldPresent;
 
             if (headerdump)
                 pm_message("color separation");
-            if (TIFFGetField(tif, TIFFTAG_INKNAMES, &inkset) == 1
-                && inkset != INKSET_CMYK)
-            if (inkset != INKSET_CMYK) 
+
+            fldPresent = TIFFGetField(tif, TIFFTAG_INKNAMES, &inkset);
+            if (fldPresent && inkset != INKSET_CMYK)
                 pm_error("This color separation file uses an inkset (%d) "
                          "we can't handle.  We handle only CMYK.", inkset);
             if (spp != 4) 
@@ -1385,9 +1428,9 @@ warnBrokenTiffLibrary(TIFF * const tiffP) {
 */
 
     unsigned short tiffOrientation;
-    int present;
-    present = TIFFGetField(tiffP, TIFFTAG_ORIENTATION, &tiffOrientation);
-    if (present) {
+    int fldPresent;
+    fldPresent = TIFFGetField(tiffP, TIFFTAG_ORIENTATION, &tiffOrientation);
+    if (fldPresent) {
         switch (tiffOrientation) {
         case ORIENTATION_LEFTTOP:
         case ORIENTATION_RIGHTTOP:
