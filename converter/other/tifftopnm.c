@@ -577,7 +577,7 @@ computeFillorder(unsigned short   const fillorderTag,
 
 
 static void
-analyzeImageType(TIFF *             const tif, 
+analyzeImageType(TIFF *             const tiffP, 
                  unsigned short     const bps, 
                  unsigned short     const spp, 
                  unsigned short     const photomet,
@@ -586,141 +586,147 @@ analyzeImageType(TIFF *             const tif,
                  xel *              const colormap,
                  bool               const headerdump,
                  struct CmdlineInfo const cmdline) {
+/*----------------------------------------------------------------------------
+   Determine from the TIFF header in *tif certain properties of the image
+   as well as the proper format of PNM image for the conversion.
 
-    bool grayscale; 
+   *formatP and *maxvalP are the basic PNM parameters.
+-----------------------------------------------------------------------------*/
+    switch (photomet) {
+    case PHOTOMETRIC_MINISBLACK:
+    case PHOTOMETRIC_MINISWHITE:
+        if (spp != 1)
+            pm_error("This grayscale image has %d samples per pixel.  "
+                     "We understand only 1.", spp);
 
-    if (bps == 1 && spp == 1) {
-        if (cmdline.headerdump)
-            pm_message("bilevel");
-        grayscale = TRUE;
-        *maxvalP = 1;
-    } else {
-        /* How come we don't deal with the photometric for the monochrome 
-           case (make sure it's one we know)?  -Bryan 00.03.04
-        */
-        switch (photomet) {
-        case PHOTOMETRIC_MINISBLACK:
-        case PHOTOMETRIC_MINISWHITE:
-            if (spp != 1)
-                pm_error("This grayscale image has %d samples per pixel.  "
-                         "We understand only 1.", spp);
-            grayscale = TRUE;
-            *maxvalP = pm_bitstomaxval(MIN(bps,16));
-            if (headerdump)
-                pm_message("grayscale image, (min=%s) output maxval %u ", 
-                           photomet == PHOTOMETRIC_MINISBLACK ? 
-                           "black" : "white",
-                           *maxvalP
-                           );
-            break;
-            
-        case PHOTOMETRIC_PALETTE: {
-            int fldPresent;
-            int i;
-            int numcolors;
-            unsigned short* redcolormap;
-            unsigned short* greencolormap;
-            unsigned short* bluecolormap;
+        *formatP = bps == 1 ? PBM_TYPE : PGM_TYPE;
 
-            if (headerdump)
-                pm_message("colormapped");
+        *maxvalP = pm_bitstomaxval(MIN(bps, 16));
 
-            if (spp != 1)
-                pm_error("This paletted image has %d samples per pixel.  "
-                         "We understand only 1.", spp);
-
-            fldPresent = TIFFGetField(
-                tif, TIFFTAG_COLORMAP, 
-                &redcolormap, &greencolormap, &bluecolormap);
-
-            if (!fldPresent)
-                pm_error("error getting colormaps");
-
-            numcolors = 1 << bps;
-            if (numcolors > MAXCOLORS)
-                pm_error("too many colors");
-            *maxvalP = PNM_MAXMAXVAL;
-            grayscale = FALSE;
-            for (i = 0; i < numcolors; ++i) {
-                xelval r, g, b;
-                r = (long) redcolormap[i] * PNM_MAXMAXVAL / 65535L;
-                g = (long) greencolormap[i] * PNM_MAXMAXVAL / 65535L;
-                b = (long) bluecolormap[i] * PNM_MAXMAXVAL / 65535L;
-                PPM_ASSIGN(colormap[i], r, g, b);
-            }
-        }
-        break;
-
-        case PHOTOMETRIC_SEPARATED: {
-            unsigned short inkset;
-            int fldPresent;
-
-            if (headerdump)
-                pm_message("color separation");
-
-            fldPresent = TIFFGetField(tif, TIFFTAG_INKNAMES, &inkset);
-            if (fldPresent && inkset != INKSET_CMYK)
-                pm_error("This color separation file uses an inkset (%d) "
-                         "we can't handle.  We handle only CMYK.", inkset);
-            if (spp != 4) 
-                pm_error("This CMYK color separation file is %d samples per "
-                         "pixel.  "
-                         "We need 4 samples, though: C, M, Y, and K.  ",
-                         spp);
-            grayscale = FALSE;
-            *maxvalP = (1 << bps) - 1;
-        }
+        if (headerdump)
+            pm_message("grayscale image, (min=%s) output maxval %u ", 
+                       photomet == PHOTOMETRIC_MINISBLACK ? 
+                       "black" : "white",
+                       *maxvalP
+                );
         break;
             
-        case PHOTOMETRIC_RGB:
-            if (headerdump)
-                pm_message("RGB truecolor");
-            grayscale = FALSE;
+    case PHOTOMETRIC_PALETTE: {
+        int fldPresent;
+        int i;
+        int numcolors;
+        unsigned short* redcolormap;
+        unsigned short* greencolormap;
+        unsigned short* bluecolormap;
 
-            if (spp != 3 && spp != 4)
-                pm_error("This RGB image has %d samples per pixel.  "
-                         "We understand only 3 or 4.", spp);
+        if (headerdump)
+            pm_message("colormapped");
 
-            *maxvalP = (1 << bps) - 1;
-            break;
+        if (spp != 1)
+            pm_error("This paletted image has %d samples per pixel.  "
+                     "We understand only 1.", spp);
 
-        case PHOTOMETRIC_MASK:
-            pm_error("don't know how to handle PHOTOMETRIC_MASK");
+        fldPresent = TIFFGetField(
+            tiffP, TIFFTAG_COLORMAP, 
+            &redcolormap, &greencolormap, &bluecolormap);
 
-        case PHOTOMETRIC_DEPTH:
-            pm_error("don't know how to handle PHOTOMETRIC_DEPTH");
+        if (!fldPresent)
+            pm_error("error getting colormaps");
 
-        case PHOTOMETRIC_YCBCR:
-            pm_error("don't know how to handle PHOTOMETRIC_YCBCR");
+        numcolors = 1 << bps;
+        if (numcolors > MAXCOLORS)
+            pm_error("too many colors");
 
-        case PHOTOMETRIC_CIELAB:
-            pm_error("don't know how to handle PHOTOMETRIC_CIELAB");
+        *formatP = PPM_TYPE;
 
-        case PHOTOMETRIC_LOGL:
-            pm_error("don't know how to handle PHOTOMETRIC_LOGL");
+        *maxvalP = PNM_MAXMAXVAL;
 
-        case PHOTOMETRIC_LOGLUV:
-            pm_error("don't know how to handle PHOTOMETRIC_LOGLUV");
-            
-        default:
-            pm_error("unknown photometric: %d", photomet);
+        for (i = 0; i < numcolors; ++i) {
+            xelval r, g, b;
+            r = (long) redcolormap[i] * PNM_MAXMAXVAL / 65535L;
+            g = (long) greencolormap[i] * PNM_MAXMAXVAL / 65535L;
+            b = (long) bluecolormap[i] * PNM_MAXMAXVAL / 65535L;
+            PPM_ASSIGN(colormap[i], r, g, b);
         }
+    }
+        break;
+
+    case PHOTOMETRIC_SEPARATED: {
+        unsigned short inkset;
+        int fldPresent;
+
+        if (headerdump)
+            pm_message("color separation");
+
+        fldPresent = TIFFGetField(tiffP, TIFFTAG_INKNAMES, &inkset);
+        if (fldPresent && inkset != INKSET_CMYK)
+            pm_error("This color separation file uses an inkset (%d) "
+                     "we can't handle.  We handle only CMYK.", inkset);
+        if (spp != 4) 
+            pm_error("This CMYK color separation file is %d samples per "
+                     "pixel.  "
+                     "We need 4 samples, though: C, M, Y, and K.  ",
+                     spp);
+
+        *formatP = PPM_TYPE;
+
+        *maxvalP = (1 << bps) - 1;
+    }
+        break;
+            
+    case PHOTOMETRIC_RGB:
+        if (headerdump)
+            pm_message("RGB truecolor");
+
+        if (spp != 3 && spp != 4)
+            pm_error("This RGB image has %d samples per pixel.  "
+                     "We understand only 3 or 4.", spp);
+
+        *formatP = PPM_TYPE;
+
+        *maxvalP = (1 << bps) - 1;
+        break;
+
+    case PHOTOMETRIC_MASK:
+        pm_error("don't know how to handle PHOTOMETRIC_MASK");
+
+    case PHOTOMETRIC_DEPTH:
+        pm_error("don't know how to handle PHOTOMETRIC_DEPTH");
+
+    case PHOTOMETRIC_YCBCR:
+        pm_error("don't know how to handle PHOTOMETRIC_YCBCR");
+
+    case PHOTOMETRIC_CIELAB:
+        pm_error("don't know how to handle PHOTOMETRIC_CIELAB");
+
+    case PHOTOMETRIC_LOGL:
+        pm_error("don't know how to handle PHOTOMETRIC_LOGL");
+
+    case PHOTOMETRIC_LOGLUV:
+        pm_error("don't know how to handle PHOTOMETRIC_LOGLUV");
+            
+    default:
+        pm_error("unknown photometric: %d", photomet);
     }
     if (*maxvalP > PNM_OVERALLMAXVAL)
-        pm_error("bits/sample (%d) in the input image is too large.",
-                 bps);
-    if (grayscale) {
-        if (*maxvalP == 1) {
-            *formatP = PBM_TYPE;
-            pm_message("writing PBM file");
-        } else {
-            *formatP = PGM_TYPE;
-            pm_message("writing PGM file");
-        }
-    } else {
-        *formatP = PPM_TYPE;
-        pm_message("writing PPM file");
+        pm_error("bits/sample (%u) in the input image is too large.", bps);
+}
+
+
+
+static void
+reportOutputFormat(int const format) {
+
+    const char * formatDesc;
+
+    switch (format) {
+    case PBM_TYPE: formatDesc = "PBM"; break;
+    case PGM_TYPE: formatDesc = "PGM"; break;
+    case PPM_TYPE: formatDesc = "PPM"; break;
+    default: assert(false);
     }
+
+    pm_message("writing %s file", formatDesc);
 }
 
 
@@ -1677,6 +1683,8 @@ convertImage(TIFF *             const tifP,
 
     analyzeImageType(tifP, tiffDir.bps, tiffDir.spp, tiffDir.photomet, 
                      &maxval, &format, colormap, cmdline.headerdump, cmdline);
+
+    reportOutputFormat(format);
 
     pnmOut_init(imageoutFileP, alphaFileP, tiffDir.width, tiffDir.height,
                 tiffDir.orientation, maxval, format, maxval,

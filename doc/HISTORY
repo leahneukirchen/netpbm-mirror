@@ -22,12 +22,15 @@ not yet  BJH  Release 10.78.00
               local time of the process running the command instead of the
               process that did the build.
 
+              tifftonm: Fix incorrect PBM output with two-color paletted TIFF
+              image.  Broken in primordial Netpbm, ca 1990.
+
               tifftopnm: Fix memory corruption when image is more pixels than
               can be represented as a C unsigned integer.  Broken in Netpbm
               10.11 (October 2002).
 
               tifftopnmcmyk: Fix bug: fails with very wide images and no
-              -rowsperstrip.  Always broken.  (Tifftocmyk was new in Netpbm
+              -rowsperstrip.  Always broken.  (Tifftopnmcmyk was new in Netpbm
               8.2 (March 2000).
 
               svgtopam: Fix crash when out of memory.  Always broken (svgtopam
