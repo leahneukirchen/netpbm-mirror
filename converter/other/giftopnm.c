@@ -897,7 +897,21 @@ expandCodeOntoStack(struct decompressor * const decompP,
     if (incode < decompP->next_tableSlot) 
         code = incode;
     else {
-        /* It's a code that isn't in our translation table yet */
+        /* It's a code that isn't in our translation table yet
+        
+           The only thing it could legally be is one higher than the
+           highest one we've seen so far.
+        */
+        if (code > decompP->next_tableSlot) {
+            /* We just abort because we added this to stable code to fix
+               a bug and we don't want to disturb stable code more than we
+               have to.
+            */
+            pm_error("Error in GIF image: LZW string code %u "
+                     "is neither a previously defined one nor the "
+                     "next in sequence to define (%u)",
+                     code, decompP->next_tableSlot);
+        }
         pushStack(&decompP->stack, decompP->firstcode);
         code = decompP->prevcode;
     }
@@ -1560,6 +1574,9 @@ convertImage(FILE *           const ifP,
     if (verbose)
         reportImageInfo(cols, rows, useGlobalColormap, localColorMapSize,
                         interlaced);
+
+    if (cols == 0)
+        pm_error("Invalid GIF - width is zero");
         
     xels = pnm_allocarray(cols, rows);
     if (!xels)

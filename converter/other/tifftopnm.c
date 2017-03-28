@@ -521,12 +521,6 @@ analyzeImageType(TIFF *             const tif,
 
     bool grayscale; 
 
-    if (bps == 1 && spp == 1) {
-        if (cmdline.headerdump)
-            pm_message("bilevel");
-        grayscale = TRUE;
-        *maxvalP = 1;
-    } else {
         /* How come we don't deal with the photometric for the monochrome 
            case (make sure it's one we know)?  -Bryan 00.03.04
         */
@@ -632,7 +626,6 @@ analyzeImageType(TIFF *             const tif,
         default:
             pm_error("unknown photometric: %d", photomet);
         }
-    }
     if (*maxvalP > PNM_OVERALLMAXVAL)
         pm_error("bits/sample (%d) in the input image is too large.",
                  bps);
@@ -1477,6 +1470,13 @@ convertRasterInMemory(pnmOut *       const pnmOutP,
             /* Note that TIFFRGBAImageGet() converts any bits per sample
                to 8.  Maxval of the raster it returns is always 255.
             */
+            if (cols > UINT_MAX/rows) {
+                pm_message("%u rows of %u columns is too large to compute",
+                           rows, cols);
+                *statusP = CONV_OOM;
+                return;
+            }
+
             MALLOCARRAY(raster, cols * rows);
             if (raster == NULL) {
                 pm_message("Unable to allocate space for a raster of %u "

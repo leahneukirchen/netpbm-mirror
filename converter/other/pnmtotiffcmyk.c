@@ -540,17 +540,11 @@ tiffOpen( Out* out, Root *r ) {
   short samplesperpixel = 4 ; /* cmyk has four values */
   uint16 bitspersample = MAXTIFFBITS ;
   short photometric = PHOTOMETRIC_SEPARATED ; /* ie cmyk */
-  int bytesperrow = r->nCols ;
 
   t->tiff = TIFFFdOpen( 1, "Standard Output", "w" ) ;
   if ( ! t->tiff ) {
     fprintf( stderr, "cannot open tiff stream to standard output\n" ) ;
     return ERR_TIFF ;
-  }
-
-  /* from pnmtotiff - default is to have 8kb strips */
-  if ( ! t->rowsperstrip ) {
-    t->rowsperstrip = ( 8 * 1024 ) / bytesperrow ;
   }
 
   TIFFSetField( t->tiff, TIFFTAG_DOTRANGE, t->lowdotrange, t->highdotrange ) ;
@@ -567,6 +561,9 @@ tiffOpen( Out* out, Root *r ) {
   TIFFSetField( t->tiff, TIFFTAG_DOCUMENTNAME, r->name ) ;
   TIFFSetField( t->tiff, TIFFTAG_IMAGEDESCRIPTION, "PNM -> CMYK tiff" ) ;
   TIFFSetField( t->tiff, TIFFTAG_SAMPLESPERPIXEL, samplesperpixel ) ;
+  if ( t->rowsperstrip == 0) {
+    t->rowsperstrip = TIFFDefaultStripSize(t->tiff, 0) ;
+  }
   TIFFSetField( t->tiff, TIFFTAG_ROWSPERSTRIP, t->rowsperstrip ) ;
   TIFFSetField( t->tiff, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG ) ;
 
