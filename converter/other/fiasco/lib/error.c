@@ -84,10 +84,10 @@ set_error(const char *format, ...) {
             char * const vstring = va_arg (args, char *);
             len += strlen(vstring);
         } else if (*str == 'd') {
-            va_arg (args, int);
+            (void)va_arg(args, int);
             len += 10;
         } else if (*str == 'c') {
-            va_arg (args, int);
+            (void)va_arg(args, int);
             len += 1;
         } else
             return;
@@ -129,10 +129,10 @@ error(const char *format, ...) {
             char * const vstring = va_arg (args, char *);
             len += strlen(vstring);
         } else if (*str == 'd') {
-            va_arg (args, int);
+            (void)va_arg(args, int);
             len += 10;
         } else if (*str == 'c') {
-            va_arg (args, int);
+            (void)va_arg(args, int);
             len += 1;
         } else {
 #if HAVE_SETJMP_H

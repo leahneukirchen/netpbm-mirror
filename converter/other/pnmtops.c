@@ -87,7 +87,7 @@ setSignals() {
 
 
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -209,7 +209,7 @@ validateCompDimension(unsigned int const value,
 
 static void
 parseCommandLine(int argc, const char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+                 struct CmdlineInfo * const cmdlineP) {
 
     unsigned int imagewidthSpec, imageheightSpec;
     float imagewidth, imageheight;
@@ -2035,7 +2035,7 @@ main(int argc, const char * argv[]) {
 
     FILE * ifP;
     const char * name;  /* malloc'ed */
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
 
     pm_proginit(&argc, argv);
 

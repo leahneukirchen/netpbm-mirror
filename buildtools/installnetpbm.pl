@@ -752,228 +752,6 @@ sub installHeader($$$) {
 
 
 
-sub getManDir($) {
-#-----------------------------------------------------------------------------
-#  Find out from the user where he wants the pointer man pages
-#  installed and return that.
-#-----------------------------------------------------------------------------
-    my ($prefix) = @_;
-
-    print("Where do you want the man pages installed?\n");
-
-    print("\n");
-
-    my $manDir;
-
-    while (!$manDir) {
-        my $default = "$prefix/man";
-
-        my $response = prompt("man page directory", $default);
-
-        if (-d($response)) {
-            $manDir = $response;
-        } else {
-            my $succeeded = mkdir($response, 0777);
-            
-            if (!$succeeded) {
-                print("Unable to create directory '$response'.  " .
-                      "Error=$ERRNO\n");
-            } else {
-                $manDir = $response;
-            }
-        }
-    }
-    print("\n");
-
-    return $manDir;
-}
-
-
-
-sub removeObsoleteManPage($) {
-
-    my ($mandir) = @_;
-
-    unlink("$mandir/man1/pgmoil");
-    unlink("$mandir/man1/pgmnorm");
-    unlink("$mandir/man1/ppmtojpeg");
-    unlink("$mandir/man1/bmptoppm");
-    unlink("$mandir/man1/ppmtonorm");
-    unlink("$mandir/man1/ppmtouil");
-    unlink("$mandir/man1/pnmnoraw");
-    unlink("$mandir/man1/gemtopbm");
-    unlink("$mandir/man1/pnminterp");
-}
-
-
-
-sub tryToCreateManwebConf($) {
-
-    my ($manweb_conf_filename) = $@;
-
-    print("You don't have a /etc/manweb.conf, which is the " .
-          "configuration\n");
-    print("file for the 'manweb' program, which is a quick way to " .
-          "get to Netpbm\n");
-    print("documentation.  Would you like to create one now?\n");
-        
-    my $done;
-    
-    while (!$done) {
-        my $response = prompt("create /etc/manweb.conf", "Y");
-        
-        if (uc($response) eq "Y") {
-            my $successful = open(MANWEB_CONF, ">/etc/manweb.conf");
-            if (!$successful) {
-                print("Unable to create file /etc/manweb.conf.  " .
-                          "error = $ERRNO\n");
-            } else {
-                print(MANWEB_CONF "#Configuration file for Manweb\n");
-                print(MANWEB_CONF "webdir=/usr/man/web\n");
-                close(MANWEB_CONF);
-                $done = $TRUE;
-            }
-        } else {
-            $done = $TRUE;
-        }
-    }
-}
-
-
-
-sub getWebdir($) {
-    my ($manweb_conf_filename) = @_;
-#-----------------------------------------------------------------------------
-#  Return the value of the Manweb "web directory," as indicated by the
-#  Manweb configuration file $manweb_conf_filename.
-#
-#  If that file doesn't exist, or doesn't have a 'webdir' value, or
-#  the 'webdir' value is a chain of directories instead of just one,
-#  we return an undefined value.
-#-----------------------------------------------------------------------------
-    my $webdir;
-
-    my $success = open(MANWEB_CONF, "<$manweb_conf_filename");
-    if (!$success) {
-        print("Unable to open file '$manweb_conf_filename' for reading.  " .
-              "error is $ERRNO\n");
-    } else {
-        while (<MANWEB_CONF>) {
-            chomp();
-            if (/^\s*#/) {
-                #It's comment - ignore
-            } elsif (/^\s*$/) {
-                #It's a blank line - ignore
-            } elsif (/\s*(\S+)\s*=\s*(\S+)/) {
-                #It looks like "keyword=value"
-                my ($keyword, $value) = ($1, $2);
-                if ($keyword eq "webdir") {
-                    # We can't handle a multi-directory path; we're looking
-                    # only for a webdir statement naming a sole directory.
-                    if ($value !~ m{:}) {
-                        $webdir = $value;
-                    }
-                }
-            }
-        }
-        close(MANWEB_CONF);
-    }              
-
-    return $webdir
-}
-
-
-
-sub userWantsManwebSymlink($$) {
-
-    my ($webdir, $netpbmWebdir) = @_;
-
-    print("Your manweb.conf file says top level documentation " .
-          "is in $webdir, \n");
-    print("but you installed netpbm.url in $netpbmWebdir.\n");
-    print("Do you want to create a symlink in $webdir now?\n");
-
-    my $wants;
-    my $done;
-    
-    while (!$done) {
-        my $response = prompt("create symlink (Y/N)", "Y");
-        
-        if (uc($response) eq "Y") {
-            $wants = $TRUE;
-            $done = $TRUE;
-        } elsif (uc($response) eq "N") {
-            $wants = $FALSE;
-            $done = $TRUE;
-        }
-    }
-    return $wants;
-}
-
-
-
-sub makeInManwebPath($) {
-
-    my ($netpbmWebdir) = @_;
-
-    # Now we need /etc/manweb.conf to point to the directory in which we
-    # just installed netpbm.url.
-
-    if (!-f("/etc/manweb.conf")) {
-        tryToCreateManwebConf("/etc/manweb.conf");
-    }
-    if (-f("/etc/manweb.conf")) {
-        my $webdir = getWebdir("/etc/manweb.conf");
-        if (defined($webdir)) {
-            if ($webdir ne $netpbmWebdir) {
-                if (userWantsManwebSymlink($webdir, $netpbmWebdir)) {
-                    my $old = "$netpbmWebdir/netpbm.url";
-                    my $new = "$webdir/netpbm.url";
-                    mkdir($webdir, 0777);
-                    my $success = symlink($old, $new);
-                    if (!$success) {
-                        print("Failed to create symbolic link from $new to " .
-                              "$old.  Error is $ERRNO\n");
-                    }
-                }
-            }
-        }
-    }
-}
-
-
-
-sub installManPage($$$) {
-
-
-# Note: This installs the pointer man pages and the netpbm.url file for Manweb.
-
-    my ($pkgdir, $prefix, $mandirR) = @_;
-
-    my $manDir = getManDir($prefix);
-
-    print("Installing man pages...\n");
-
-    my $rc = system("$cpCommand $pkgdir/man/* $manDir/");
-
-    if ($rc != 0) {
-        print("copy of man pages from $pkgdir/man to $manDir failed.\n");
-        print("cp exit code is $rc\n");
-    } else {
-        print("done.\n");
-    }
-
-    print("\n");
-
-    removeObsoleteManPage($manDir);
-
-    makeInManwebPath("$manDir/web");
-    
-    $$mandirR = $manDir;
-}
-
-
-
 sub netpbmVersion($) {
     my ($pkgdir) = @_;
 
@@ -1029,9 +807,6 @@ processTemplate($$$) {
             }
             if (defined($infoR->{INCLUDEDIR})) {
                 s/\@INCLUDEDIR@/$infoR->{INCLUDEDIR}/;
-            }
-            if (defined($infoR->{MANDIR})) {
-                s/\@MANDIR@/$infoR->{MANDIR}/;
             }
             push(@output, $_);
         }
@@ -1203,9 +978,6 @@ print("\n");
 installHeader($pkgdir, $prefix, \my $includedir);
 print("\n");
 
-installManPage($pkgdir, $prefix, \my $mandir);
-print("\n");
-
 my $templateSubsR =
     {VERSION    => netpbmVersion($pkgdir),
      BINDIR     => $bindir,
@@ -1213,7 +985,7 @@ my $templateSubsR =
      LINKDIR    => $linkdir,
      DATADIR    => $datadir,
      INCLUDEDIR => $includedir,
-     MANDIR     => $mandir};
+    };
 
 installConfig($bindir, $templateSubsR);
 

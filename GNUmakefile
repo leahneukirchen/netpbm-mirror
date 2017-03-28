@@ -276,11 +276,9 @@ install-run: install-nonmerge
 endif
 
 .PHONY: install-merge install-nonmerge
-install-merge: install.merge install.lib install.data \
-	install.manwebmain install.manweb install.man
+install-merge: install.merge install.lib install.data
 
-install-nonmerge: install.bin install.lib install.data \
-	install.manwebmain install.manweb install.man
+install-nonmerge: install.bin install.lib install.data
 
 .PHONY: merge
 merge: lib/all netpbm
@@ -393,17 +391,6 @@ else
 install.lib:
 endif
 
-.PHONY: install.manwebmain
-install.manwebmain: $(PKGDIR)/$(PKGMANDIR)/web/netpbm.url $(PKGDIR)/bin/doc.url
-
-$(PKGDIR)/$(PKGMANDIR)/web/netpbm.url: $(PKGDIR)/$(PKGMANDIR)/web
-	echo "$(NETPBM_DOCURL)" > $@
-	chmod $(INSTALL_PERM_MAN) $@
-
-$(PKGDIR)/bin/doc.url: $(PKGDIR)/bin
-	echo "$(NETPBM_DOCURL)" > $@
-	chmod $(INSTALL_PERM_MAN) $@
-
 .PHONY: install-dev
 # Note that you might install the development package and NOT the runtime
 # package.  If you have a special system for building stuff, maybe for 
@@ -468,7 +455,8 @@ CHECK_VARS = \
 	URTLIB="$(URTLIB)" \
 	X11LIB="$(X11LIB)" \
 	XML2_LIBS="$(XML2_LIBS)" \
-	ZLIB="$(ZLIB)"
+	LEX="$(LEX)" \
+	ZLIB="$(ZLIB)" \
 
 # Test files in source tree.
 

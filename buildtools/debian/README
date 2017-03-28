@@ -37,11 +37,11 @@ To install Netpbm as a Debian package:
 PREREQUSISITES
 --------------
 
-The following information was taken from the Wheezy version (Version 7) of
-Debian, in January 2014.
+The following information was taken from the Jessie version (Version 8) of
+Debian, in March 2017.
 
 You don't actually need the current version of any of these.  For example,
-while we list package libjpeg8-dev, the package libjpeg62-dev works fine.
+while we list package libjpeg62-dev, the package libjpeg8-dev works fine.
 
 
 Building
@@ -54,12 +54,11 @@ indicate you don't have them, and the build will simply omit some parts.
 For example, if you don't install libx11-dev, the Netpbm build process
 will not build the 'pamx' program.
 
-  libjpeg8-dev
+  libjpeg62-dev
   libpng12-0-dev
-  libsvga1-dev
   libtiff5-dev
   libx11-dev
-  libxml2a-dev
+  libxml2-dev
   zlib1g-dev
 
 

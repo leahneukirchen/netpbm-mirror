@@ -4,63 +4,93 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-17.03.25 BJH  Release 10.77.04
+17.03.28 BJH  Release 10.78.00
+
+              ppmpat: Add -color.
+
+              ppmpat: Add -argyle1, -argyle2.
+
+              pnmtotiff: Fail with -miniswhite or -minisblack on color image
+              rather than produce an invalid TIFF.
+
+              tifftopnmcmyk: Default rows per strip to the TIFF library
+              default instead of whatever yields 8K strips.
+
+              --version global option: with SOURCE_DATE_EPOCH environment
+              variable, display source code datetime instead of build
+              datetime.  And when displaying build datetime, do it in the
+              local time of the process running the command instead of the
+              process that did the build.
 
               tifftonm: Fix incorrect PBM output with two-color paletted TIFF
               image.  Broken in primordial Netpbm, ca 1990.
 
-17.03.19 BJH  Release 10.77.03
-
-              tifftopnmcmyk: Default rows per strip to the TIFF library
-              default instead of whatever yields 8K strips.
+              tifftopnm: Fix memory corruption when image is more pixels than
+              can be represented as a C unsigned integer.  Broken in Netpbm
+              10.11 (October 2002).
 
               tifftopnmcmyk: Fix bug: fails with very wide images and no
               -rowsperstrip.  Always broken.  (Tifftopnmcmyk was new in Netpbm
               8.2 (March 2000).
 
+              svgtopam: Fix crash when out of memory.  Always broken (svgtopam
+              was new in Netpbm 10.33 (March 2006)).
+
+              pnmcrop: Add -closeness
+
+              libnetpbm: Add ppmd_pathbuilder_* functions.
+
               libnetpbm: ppmd_fill_path: remove debug trace.  Always broken
               (ppmd_fill_path was new in Netpbm 10.34 (June 2006).
 
-17.01.24 BJH  Release 10.77.02
+              Build: don't create pointer man pages anymore.  These were
+              classic man pages, created by 'make package', one for each
+              program, that just told the user to get the manual from the web
+              and that other options for manuals are available at install
+              time.  Getting documentation online is commonplace enough now
+              that the user doesn't need to be told to do it or that there are
+              other options.  The existence of pointer man pages was,
+              meanwhile, misleading, since it looked from the outside like
+              they actually contained documentation.
 
-              tifftopnm: Fix memory corruption when image is more pixels
-              than can be represented as a C unsigned integer.  Broken in
-              Netpbm 10.11 (October 2002).
+              Build: Don't package or install Manweb setup (for accessing
+              manuals on the web with Manweb).  Probably 100% unused and
+              distracting.
 
-17.01.11 BJH  Release 10.77.01
-
-              svgtopam: Fix crash when out of memory.  Always broken
-              (svgtopam was new in Netpbm 10.33 (March 2006)).
+              Debian package: change dependencies to be compatible with
+              Debian 8.
 
 16.12.25 BJH  Release 10.77.00
 
-              pnmpad: fix bug: incorrect output width.  Introduced in
+              pnmpad: Fix bug: incorrect output width.  Introduced in
               Netpbm 10.72 (July 2015).
 
-              Makeman: slight improvement to formatting of man pages.
+              Makeman: Slight improvement to formatting of man pages.
               Thanks Werner LEMBERG <wl@gnu.org>.
 
-              Test: skip tests of some parts that are configured out of the
+              Test: Skip tests of some parts that are configured out of the
               build.
 
 16.09.27 BJH  Release 10.76.00
 
-              pnmquantall: Fix failure when temporary file location is
-              not the same filesystem as the output file.
+              pnmquantall: Fix failure when temporary file location is not the
+              same filesystem as the output file.  Always broken (pnmremap was
+              new in Netpbm 10.58 (March 2012)).
 
               pnmquantall: Fix incorrect handling of when the Pnmremap or
-              the final rename fails.
+              the final rename fails.  Always broken (pnmremap was new
+              in Netpbm 10.58 (March 2012)).
 
               giftopnm: Fix bug: crash on little-endian computers that can't
               toleration unaligned memory access.  Thanks Ignatios Souvatzis
               (is@netbsd.org).  Broken in Netpbm 10.47 (June 2009).
 
-              cmuwmtopbm: fix trivial memory leak.  Always broken (cmuwmtopbm
+              cmuwmtopbm: Fix trivial memory leak.  Always broken (cmuwmtopbm
               was in primordial Pbmplus, in 1988).
 
               Build: Add PKG_CONFIG make variable.
 
-              Build: tifftopnm.c: fix undefined WIFSIGNALED, etc. in 
+              Build: tifftopnm.c: Fix undefined WIFSIGNALED, etc.
 
 16.06.26 BJH  Release 10.75.00
 
@@ -80,7 +110,7 @@ CHANGE HISTORY
 
               bmptopnm: Add ability to convert Version 4 and 5 Windows BMP.
 
-              pbmtext: remove undocumented -dump option; add 'genfontc'
+              pbmtext: Remove undocumented -dump option; add 'genfontc'
               development tool (buildtools/ directory) to replace it.
 
               pbmtext: Add -dry-run
@@ -89,49 +119,50 @@ CHANGE HISTORY
 
               pbmtext: Speedup: renders directly in raw PBM.
 
-              pbmreduce: add -randomseed.
+              pbmreduce: Add -randomseed.
 
               anytopnm, pnmmargin, pnmquant, ppmquant, pnmquantall, pgmcrater,
               ppmfade, ppmrainbow, ppmshadow, pbmtox10bm, pamstretch-gen:
               Add -version.
 
-              fiascotopnm: change -version to include Netpbm version.
+              fiascotopnm: Change -version to include Netpbm version.
 
               libnetpbm: Add pm_system2(), pm_system2_lp(), pm_system2_vp() -
               same as pm_system(), etc. but returns the termination status.
 
-              pamarith: fix incorrect output when maxvals differ, for
+              pamarith: Fix incorrect output when maxvals differ, for
               -add, -multiply, -mean, -min, -max.  Broken in Netpbm 10.41
               (December 2007).
 
               pbmtextps: Fix bug: input text or font name with Postscript
-              control characters messes up the Postscript program.
+              control characters messes up the Postscript program.  Always
+              broken (pbmtextps was new in Netpbm 10.0 (June 2002).
 
-              hpcdtoppm dummy version: update web link to real version.
+              hpcdtoppm dummy version: Update web link to real version.
 
-              ppmhist: fix incorrect color names.  Introduced in
+              ppmhist: Fix incorrect color names.  Introduced in
               Netpbm 10.19 (November 2003).
 
-              ppmshadow: fix bug: don't ignore invalid option.  Introduced in
+              ppmshadow: Fix bug: don't ignore invalid option.  Introduced in
               Netpbm 10.9 (September 2002).
 
-              pnmpaste: fix possible invalid memory access.  Introduced in
+              pnmpaste: Fix possible invalid memory access.  Introduced in
               Netpbm 1.44 (September 2008).
 
-              pbmreduce: fix undefined behavior when scale factor argument is
+              pbmreduce: Fix undefined behavior when scale factor argument is
               too big.  Always present (pbmreduce was new in September 1989).
 
               pbmtext: Fix bug: invalid memory reference when text contains
-              code points > 127.  Broken in 10.74.
+              code points > 127.  Broken in 10.74 (March 2016).
 
               pnmtofiasco, fiascotopnm: Fix incorrect math on systems with
               unusual floating point representation.  Always broken (programs
               were new in Netpbm 9.6 (July 2000).
 
-              cameratopam: fix invalid memory reference; effect unknown.
+              cameratopam: Fix invalid memory reference; effect unknown.
               Introduced in Netpbm 10.68 (September 2014).
 
-              Install on Windows: fix backward compatibility symlinks for
+              Install on Windows: Fix backward compatibility symlinks for
               pnmtoplainpnm, pnmquantall.
 
               Build: Remove use of strndup so it compiles on Mac OS X 10.6.
@@ -142,13 +173,13 @@ CHANGE HISTORY
 
 16.03.27 BJH  Release 10.74.00
 
-              pbmtext: produce same image when you run pbmtext with -width
+              pbmtext: Produce same image when you run pbmtext with -width
               explicitly set to the width you get when you don't specify
               width.
 
-              pbmtext: ignore -nomargins when -width is specified.
+              pbmtext: Ignore -nomargins when -width is specified.
 
-              pbmtext: report when line ends are dropped because of
+              pbmtext: Report when line ends are dropped because of
               truncation.
 
               pbmtext: Fix bug: if input has a code point that is not in the
@@ -156,23 +187,23 @@ CHANGE HISTORY
               font doesn't have space either.  Now it aborts the program in
               that case.
 
-              pbmtext: fix bug: Respect -width when specified.
+              pbmtext: Fix bug: Respect -width when specified.
 
-              pbmtext: fix bug: Deal correctly with negative -space.
+              pbmtext: Fix bug: Deal correctly with negative -space.
 
-              pbmtext: fix bug: Consider all characters in line, not just
+              pbmtext: Fix bug: Consider all characters in line, not just
               first and last, in determining line width.
 
-              libnetbpm font facility (so pbmtext): fix bug: undefined
+              libnetbpm font facility (so pbmtext): Fix bug: undefined
               behavior when font definitions are invalid in any of various
               ways.
 
-              libnetpbm font facility (so pbmtext): fix incorrect font names
+              libnetpbm font facility (so pbmtext): Fix incorrect font names
               in error messages.
 
               pnmtopsnr: Add -machine, -max .
 
-              Netpbmlib: add /usr/local/netpbm/lib and /etc/X11 to search
+              Netpbmlib: Add /usr/local/netpbm/lib and /etc/X11 to search
               path for rgb.txt.
 
               makeman: Add some text replacements to solve glitches.

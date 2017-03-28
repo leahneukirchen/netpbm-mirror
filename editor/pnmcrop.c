@@ -1,4 +1,4 @@
-/* pnmcrop.c - crop a portable anymap
+/* pnmcrop.c - crop a Netpbm image
 **
 ** Copyright (C) 1988 by Jef Poskanzer.
 **
@@ -30,6 +30,10 @@
 #include "shhopt.h"
 #include "mallocvar.h"
 
+static double const sqrt3 = 1.73205080756887729352;
+    /* The square root of 3 */
+static double const EPSILON = 1.0e-5;
+
 enum bg_choice {BG_BLACK, BG_WHITE, BG_DEFAULT, BG_SIDES};
 
 typedef enum { LEFT = 0, RIGHT = 1, TOP = 2, BOTTOM = 3} edgeLocation;
@@ -53,7 +57,7 @@ typedef enum {
         /* Immediately after the raster */
 } imageFilePos;
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -64,13 +68,14 @@ struct cmdlineInfo {
     unsigned int verbose;
     unsigned int margin;
     const char * borderfile;  /* NULL if none */
+    float closeness;
 };
 
 
 
 static void
 parseCommandLine(int argc, const char ** argv,
-                 struct cmdlineInfo *cmdlineP) {
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
@@ -81,7 +86,7 @@ parseCommandLine(int argc, const char ** argv,
     optStruct3 opt;
 
     unsigned int blackOpt, whiteOpt, sidesOpt;
-    unsigned int marginSpec, borderfileSpec;
+    unsigned int marginSpec, borderfileSpec, closenessSpec;
     unsigned int leftOpt, rightOpt, topOpt, bottomOpt;
     
     unsigned int option_def_index;
@@ -101,6 +106,8 @@ parseCommandLine(int argc, const char ** argv,
             &marginSpec,     0);
     OPTENT3(0, "borderfile", OPT_STRING, &cmdlineP->borderfile,
             &borderfileSpec, 0);
+    OPTENT3(0, "closeness",  OPT_FLOAT,  &cmdlineP->closeness,
+            &closenessSpec,  0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -147,6 +154,16 @@ parseCommandLine(int argc, const char ** argv,
 
     if (!borderfileSpec)
         cmdlineP->borderfile = NULL;
+
+    if (!closenessSpec)
+        cmdlineP->closeness = 0.0;
+
+    if (cmdlineP->closeness < 0.0)
+        pm_error("-closeness value %f is negative", cmdlineP->closeness);
+
+    if (cmdlineP->closeness > 100.0)
+        pm_error("-closeness value %f is more than 100%%",
+                 cmdlineP->closeness);
 }
 
 
@@ -217,7 +234,7 @@ background2Corners(FILE * const ifP,
   Expect the file to be positioned to the start of the raster, and leave
   it positioned arbitrarily.
 ----------------------------------------------------------------------------*/
-    xel *xelrow;
+    xel * xelrow;
     xel background;   /* our return value */
     
     xelrow = pnm_allocrow(cols);
@@ -269,7 +286,24 @@ computeBackground(FILE *         const ifP,
         break;
     }
 
-    return(background);
+    return background;
+}
+
+
+
+static bool
+colorMatches(pixel        const comparand, 
+             pixel        const comparator, 
+             unsigned int const allowableDiff) {
+/*----------------------------------------------------------------------------
+   The colors 'comparand' and 'comparator' are within 'allowableDiff'
+   color levels of each other, in cartesian distance.
+-----------------------------------------------------------------------------*/
+    /* Fast path for usual case */
+    if (allowableDiff < EPSILON)
+        return PPM_EQUAL(comparand, comparator);
+
+    return PPM_DISTANCE(comparand, comparator) <= SQR(allowableDiff);
 }
 
 
@@ -281,6 +315,7 @@ findBordersInImage(FILE *         const ifP,
                    xelval         const maxval,
                    int            const format,
                    xel            const backgroundColor,
+                   double         const closeness,
                    bool *         const hasBordersP,
                    borderSet *    const borderSizeP) {
 /*----------------------------------------------------------------------------
@@ -292,9 +327,11 @@ findBordersInImage(FILE *         const ifP,
    Expect the input file to be positioned to the beginning of the
    image raster and leave it positioned arbitrarily.
 -----------------------------------------------------------------------------*/
+    unsigned int const allowableDiff = ROUNDU(sqrt3 * maxval * closeness/100);
+
     xel * xelrow;        /* A row of the input image */
     int row;
-    bool gottop;
+    bool gotTop;
     int left, right, bottom, top;
         /* leftmost, etc. nonbackground pixel found so far; -1 for none */
 
@@ -305,8 +342,7 @@ findBordersInImage(FILE *         const ifP,
     top    = rows;  /* initial value */
     bottom = -1;    /* initial value */
 
-    gottop = FALSE;
-    for (row = 0; row < rows; ++row) {
+    for (row = 0, gotTop = false; row < rows; ++row) {
         int col;
         int thisRowLeft;
         int thisRowRight;
@@ -314,12 +350,14 @@ findBordersInImage(FILE *         const ifP,
         pnm_readpnmrow(ifP, xelrow, cols, maxval, format);
         
         col = 0;
-        while (col < cols && PNM_EQUAL(xelrow[col], backgroundColor))
+        while (col < cols &&
+               colorMatches(xelrow[col], backgroundColor, allowableDiff))
             ++col;
         thisRowLeft = col;
 
         col = cols-1;
-        while (col >= thisRowLeft && PNM_EQUAL(xelrow[col], backgroundColor))
+        while (col >= thisRowLeft &&
+               colorMatches(xelrow[col], backgroundColor, allowableDiff))
             --col;
         thisRowRight = col + 1;
 
@@ -329,9 +367,9 @@ findBordersInImage(FILE *         const ifP,
             left  = MIN(thisRowLeft,  left);
             right = MAX(thisRowRight, right);
 
-            if (!gottop) {
-                gottop = TRUE;
+            if (!gotTop) {
                 top = row;
+                gotTop = true;
             }
             bottom = row + 1;   /* New candidate */
         }
@@ -360,6 +398,7 @@ analyzeImage(FILE *         const ifP,
              xelval         const maxval,
              int            const format,
              enum bg_choice const backgroundReq,
+             double         const closeness,
              imageFilePos   const newFilePos,
              xel *          const backgroundColorP,
              bool *         const hasBordersP,
@@ -389,7 +428,7 @@ analyzeImage(FILE *         const ifP,
     pm_seek2(ifP, &rasterpos, sizeof(rasterpos));
 
     findBordersInImage(ifP, cols, rows, maxval, format, 
-                       background, hasBordersP, borderSizeP);
+                       background, closeness, hasBordersP, borderSizeP);
 
     if (newFilePos == FILEPOS_BEG)
         pm_seek2(ifP, &rasterpos, sizeof(rasterpos));
@@ -750,7 +789,7 @@ writeCroppedPBM(FILE *       const ifP,
 
 
 static void
-determineCrops(struct cmdlineInfo const cmdline,
+determineCrops(struct CmdlineInfo const cmdline,
                borderSet *        const oldBorderSizeP,
                cropSet *          const cropP) {
 
@@ -798,7 +837,7 @@ validateComputableSize(unsigned int const cols,
 
 
 static void
-cropOneImage(struct cmdlineInfo const cmdline,
+cropOneImage(struct CmdlineInfo const cmdline,
              FILE *             const ifP,
              FILE *             const bdfP,
              FILE *             const ofP) {
@@ -828,11 +867,11 @@ cropOneImage(struct cmdlineInfo const cmdline,
 
     if (bdfP)
         analyzeImage(bdfP, bcols, brows, bmaxval, bformat, cmdline.background,
-                     FILEPOS_END,
+                     cmdline.closeness, FILEPOS_END,
                      &background, &hasBorders, &oldBorder);
     else
         analyzeImage(ifP, cols, rows, maxval, format, cmdline.background,
-                     FILEPOS_BEG,
+                     cmdline.closeness, FILEPOS_BEG,
                      &background, &hasBorders, &oldBorder);
 
     if (cmdline.verbose) {
@@ -863,7 +902,7 @@ cropOneImage(struct cmdlineInfo const cmdline,
 int
 main(int argc, const char *argv[]) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP;   
         /* The program's regular input file.  Could be a seekable copy of
            it in a temporary file.

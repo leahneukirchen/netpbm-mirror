@@ -8,16 +8,25 @@
 # copyright notice and this permission notice appear in supporting
 # documentation.  This software is provided "as is" without express or
 # implied warranty.
-#
-DATE=$(date)
+
+# SOURCE_DATE_EPOCH is an environment variable as described here:
+# https://reproducible-builds.org/specs/source-date-epoch/ on 2017.03.16.
+
+SOURCE_DATE_OR_NONE=${SOURCE_DATE_EPOCH:-NONE}
+
+BUILD_DATETIME=$(date +%s)
+
 LOGNAME_OR_UNKNOWN=${LOGNAME:-UNKNOWN}
 USER=${USER:-$LOGNAME_OR_UNKNOWN}
 if [ "$USER" = "UNKNOWN" ]; then
-    USER=`whoami`
+    USER=$(whoami)
 fi
 
-echo "/* This file tells the package when it was compiled */"
+echo "/* This file tells some facts about the building of the package */"
 echo "/* DO NOT EDIT - THIS FILE IS MAINTAINED AUTOMATICALLY */"
 echo "/* Created by the program 'stamp-date'  */"
-echo "#define COMPILE_TIME \"$DATE\""
+if [ "$SOURCE_DATE_OR_NONE" != "NONE" ]; then
+  echo "#define SOURCE_DATETIME $SOURCE_DATE_OR_NONE"
+fi
+echo "#define BUILD_DATETIME $BUILD_DATETIME"
 echo "#define COMPILED_BY \"$USER\""

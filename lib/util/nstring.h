@@ -3,6 +3,7 @@
 
 #include <stdarg.h>
 #include <string.h>
+#include <strings.h>  /* For strncasecmp */
 #include <ctype.h>
 
 #include "pm_c_util.h"
