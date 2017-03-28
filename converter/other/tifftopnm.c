@@ -545,12 +545,6 @@ analyzeImageType(TIFF *             const tif,
 
     bool grayscale; 
 
-    if (bps == 1 && spp == 1) {
-        if (cmdline.headerdump)
-            pm_message("bilevel");
-        grayscale = TRUE;
-        *maxvalP = 1;
-    } else {
         /* How come we don't deal with the photometric for the monochrome 
            case (make sure it's one we know)?  -Bryan 00.03.04
         */
@@ -656,7 +650,6 @@ analyzeImageType(TIFF *             const tif,
         default:
             pm_error("unknown photometric: %d", photomet);
         }
-    }
     if (*maxvalP > PNM_OVERALLMAXVAL)
         pm_error("bits/sample (%d) in the input image is too large.",
                  bps);

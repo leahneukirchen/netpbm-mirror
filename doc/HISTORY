@@ -4,6 +4,21 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+17.03.28 BJH  Release 10.73.08
+
+              tifftonm: Fix incorrect PBM output with two-color paletted TIFF
+              image.  Broken in primordial Netpbm, ca 1990.
+
+              tifftopnmcmyk: Default rows per strip to the TIFF library
+              default instead of whatever yields 8K strips.
+
+              tifftopnmcmyk: Fix bug: fails with very wide images and no
+              -rowsperstrip.  Always broken.  (Tifftopnmcmyk was new in Netpbm
+              8.2 (March 2000).
+
+              libnetpbm: ppmd_fill_path: remove debug trace.  Always broken
+              (ppmd_fill_path was new in Netpbm 10.34 (June 2006).
+
 16.01.29 BJH  Release 10.73.07
 
               tifftopnm: Fix memory corruption when image is more pixels
