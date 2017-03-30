@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.79.00
 
+              pnmtojpeg: fix array bounds violation in argument list.  Always
+              broken (pnmtojpeg was new to Netpbm in Netpbm 8.2 (March 2000).
+
 17.03.28 BJH  Release 10.78.00
 
               ppmpat: Add -color.
