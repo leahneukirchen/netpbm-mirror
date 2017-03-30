@@ -18,11 +18,12 @@ ppmgauss.test
 ppmcie.test
 ppmwheel.test
 pamcrater.test
+ppmpat.test
 
 # Generators with random components
 
 pgmnoise.test
-ppmpat.test
+ppmpat-random.test
 ppmforge.test
 ppmrough.test
 
@@ -159,4 +160,5 @@ xwd-roundtrip.test
 
 fiasco-roundtrip.test
 jpeg-roundtrip.test
+tiffcmyk-roundtrip.test
 yuv-roundtrip.test

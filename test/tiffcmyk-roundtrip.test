@@ -1,0 +1,46 @@
+#! /bin/bash
+# This script tests: pnmtotiffcmyk tifftopnm
+# Also requires: pnmpsnr
+
+# Failure message
+## If this test fails, the cause may be a problem in the TIFF library.
+
+tmpdir=${tmpdir:-/tmp}
+tartan_ppm=${tmpdir}/tartan.ppm
+output_ppm=${tmpdir}/output.ppm
+output_tiff=${tmpdir}/output.tiff
+
+# Note that color images cannot be tested by the roundtrip method
+# because of approximations incurred by converting from RGB to CMYK
+
+pnmtotiffcmyk testimg.ppm > ${output_tiff} && \
+  tifftopnm -headerdump -byrow ${output_tiff} | \
+  pnmpsnr -machine - testimg.ppm | \
+  awk '{printf("%3d %1d %1d %1d\n",NF,$1>45.0,$2>59.5,$3>56.5)}'
+
+
+# Note that "-rowsperstrip=1" does not work
+pnmtotiffcmyk -rowsperstrip 1 -lsb2msb testimg.ppm > ${output_tiff} && \
+  tifftopnm -respectfillorder -byrow  ${output_tiff} | \
+  pnmpsnr -machine - testimg.ppm | \
+  awk '{printf("%3d %1d %1d %1d\n",NF,$1>45.0,$2>59.5,$3>56.5)}'
+
+
+pnmtotiffcmyk -packbits testimg.ppm > ${output_tiff} && \
+  tifftopnm -byrow ${output_tiff} | \
+  pnmpsnr -machine - testimg.ppm | \
+  awk '{printf("%3d %1d %1d %1d\n",NF,$1>45.0,$2>59.5,$3>56.5)}'
+
+
+pnmtotiffcmyk -lzw testimg.ppm > ${output_tiff} && \
+  tifftopnm -byrow ${output_tiff} | \
+    pnmpsnr -machine - testimg.ppm | \
+  awk '{printf("%3d %1d %1d %1d\n",NF,$1>45.0,$2>59.5,$3>56.5)}'
+
+
+pnmtotiffcmyk -lzw -predictor 2 testimg.ppm > ${output_tiff} && \
+  tifftopnm -respectfillorder -byrow ${output_tiff} | \
+  pnmpsnr -machine - testimg.ppm | \
+  awk '{printf("%3d %1d %1d %1d\n",NF,$1>45.0,$2>59.5,$3>56.5)}'
+
+rm ${output_tiff}

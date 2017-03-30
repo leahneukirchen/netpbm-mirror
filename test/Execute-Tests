@@ -180,7 +180,8 @@ elif [ $VALGRIND_TESTS = "on" ]
   vg_command_base="valgrind --trace-children=yes";
 
   for i in awk cat cksum cmp cp cut date dirname egrep fgrep file grep gs \
-    head mkdir mktemp perl rm sed seq sh tee testrandom tr uniq
+    head mkdir mktemp perl rm sed seq sh tee testrandom tr uniq \
+    Available-Testprog
 
     # Tell valgrind not to probe execution of the above programs.
 

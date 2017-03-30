@@ -368,8 +368,16 @@ ordinary_testprogs="\
 "
 
 
-# The string "fiascotopnm" has to be filtered out by egrep for fiascotopnm
+# The string "fiascotopnm" has to be filtered out by fgrep for fiascotopnm
 # has a slightly different version report format.
+
+# Switch to control output from "program --version"
+#
+grepSwitch=1        # Initial value
+                    # Always 1 for check-install,
+                    # otherwise changes to 0 once a command succeeds.
+grepOption[0]="-v"  # Suppress output
+grepOption[1]=""    # Output --version message
 
 for i in $ordinary_testprogs
   do
@@ -381,11 +389,24 @@ for i in $ordinary_testprogs
       continue
       fi
 
-    $i --version  2>&1 | \
-    egrep -v -e fiascotopnm -e \
-    "(Using libnetpbm|Compiled|(BSD|SYSV|MSDOS|AMIGA) defined|RGB_?ENV=)" \
-      1>&2;
-    testExitStatus $i 0 ${PIPESTATUS[0]}
+
+    $i --version < /dev/null 2>&1 | \
+    # Older versions of pamstretch-gen and ppmshadow (encountered when
+    # one does "make check-install") get stuck when there is no input.
+    # Supply /dev/null as input to placate these programs.
+    
+    egrep -v -e "fiascotopnm" -e \
+    ": ((BSD|SYSV|MSDOS|AMIGA) defined|RGB_?ENV=)" | \
+    egrep ${grepOption[$grepSwitch]} -e \
+    ": (Using lib(net)?pbm|(Built (by|at)|Compiled ))" 1>&2;
+    # See showVersion() in lib/libpm.c for the above regular expressions.
+  
+    exitStatus=${PIPESTATUS[0]}
+    testExitStatus $i 0 ${exitStatus}
+
+    if [ ${CHECK_TYPE} != "install" ]
+      then grepSwitch=$((${grepSwitch} * ${exitStatus})) ;
+    fi
   done
 
 
