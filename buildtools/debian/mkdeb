@@ -428,7 +428,9 @@ sub buildDpkgBuildTree($$$$$) {
     makePkgConfig("$dpkgDirName/usr/lib/pkgconfig/netpbm.pc", $templateSubsR,
                   $netpbmPkgDir);
 
-    makeManweb($dpkgDirName, $netpbmPkgDir);
+    # Beginning in Netpbm 10.78 (March 2017_, 'make package' doesn't package
+    # the manweb stuff, so we no longer put it in the Debian package.
+    #makeManweb($dpkgDirName, $netpbmPkgDir);
 }
 
 

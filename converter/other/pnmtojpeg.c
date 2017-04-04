@@ -231,7 +231,7 @@ parseCommandLine(const int argc, char ** argv,
     char ** argv_parse;
         /* argv, except we modify it as we parse */
 
-    MALLOCARRAY(argv_parse, argc);
+    MALLOCARRAY(argv_parse, argc + 1);  /* +1 for the terminating null ptr */
 
     option_def_index = 0;   /* incremented by OPTENTRY */
     OPTENT3(0, "verbose",     OPT_FLAG,   NULL, &cmdlineP->verbose,        0);
@@ -274,7 +274,7 @@ parseCommandLine(const int argc, char ** argv,
 
     /* Make private copy of arguments for pm_optParseOptions to corrupt */
     argc_parse = argc;
-    for (i=0; i < argc; i++) argv_parse[i] = argv[i];
+    for (i=0; i < argc+1; i++) argv_parse[i] = argv[i];
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
