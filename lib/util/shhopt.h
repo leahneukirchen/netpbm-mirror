@@ -69,7 +69,7 @@ main ( int argc, char **argv ) {
             printf("option '%s' = '%s'\n", optlist[i].name, optlist[i].value);
             ++i;
         }
-        optDestroyNameValueList(optlist);
+        pm_optDestroyNameValueList(optlist);
     } else
         printf("No -options\n");
 }
