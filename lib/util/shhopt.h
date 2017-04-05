@@ -18,6 +18,7 @@ main ( int argc, char **argv ) {
     int height=7;
     int verbose_flag=7;
     int debug_flag=7;
+    char ** methodlist;
     struct optNameValue * optlist;
     
     optStruct3 opt;
@@ -25,12 +26,13 @@ main ( int argc, char **argv ) {
     optEntry * option_def;
     MALLOCARRAY(option_def, 100);
 
-    OPTENT3(0,   "help",     OPT_FLAG,     &help_flag,    &help_spec,   0);
-    OPTENT3(0,   "height",   OPT_INT,      &height,       &height_spec, 0);
-    OPTENT3('n', "name",     OPT_STRING,   &name,         &name_spec,   0);
-    OPTENT3('v', "verbose",  OPT_FLAG,     &verbose_flag, NULL,         0);
-    OPTENT3('g', "debug",    OPT_FLAG,     &debug_flag,   NULL,         0);
-    OPTENT3(0,   "options",  OPT_NAMELIST, &optlist,      NULL,         0);
+    OPTENT3(0,   "help",     OPT_FLAG,       &help_flag,    &help_spec,   0);
+    OPTENT3(0,   "height",   OPT_INT,        &height,       &height_spec, 0);
+    OPTENT3('n', "name",     OPT_STRING,     &name,         &name_spec,   0);
+    OPTENT3('v', "verbose",  OPT_FLAG,       &verbose_flag, NULL,         0);
+    OPTENT3('g', "debug",    OPT_FLAG,       &debug_flag,   NULL,         0);
+    OPTENT3(0,   "methods",  OPT_STRINGLIST, &methodlist,   NULL,         0);
+    OPTENT3(0,   "options",  OPT_NAMELIST,   &optlist,      NULL,         0);
 
     opt.opt_table = option_def;
     opt.short_allowed = 1;
@@ -49,6 +51,17 @@ main ( int argc, char **argv ) {
     printf("name_spec=%d\n", name_spec);
     printf("verbose_flag=%d\n", verbose_flag);
     printf("debug_flag=%d\n", verbose_flag);
+
+    if (methodlist) {
+        unsigned int i;
+        printf("methods: ");
+        while (methodlist[i]) {
+            printf("'%s', ", methodlist[i]);
+            ++i;
+        }
+        free(methodlist);
+    } else
+        printf("No -options\n");
 
     if (optlist) {
         unsigned int i;
