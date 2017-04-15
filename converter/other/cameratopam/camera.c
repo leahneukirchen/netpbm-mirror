@@ -1023,6 +1023,7 @@ static void  sony_decrypt (unsigned *data, int len, int start, int key)
 {
   static uint32_t pad[128];
   unsigned int p;
+  unsigned int i;
 
   if (start) {
     for (p=0; p < 4; p++)
@@ -1047,8 +1048,9 @@ static void  sony_decrypt (unsigned *data, int len, int start, int key)
         pad[p] = u.word;
     }
   }
-  while (len--)
-    *data++ ^= pad[p++ & 0x7f] = pad[(p+1) & 0x7f] ^ pad[(p+65) & 0x7f];
+  for (i = 0, p = 0; i < len; ++i, ++p) {
+    *data++ ^= pad[p & 0x7f] = pad[(p+1) & 0x7f] ^ pad[(p+65) & 0x7f];
+  }
 }
 
 void
