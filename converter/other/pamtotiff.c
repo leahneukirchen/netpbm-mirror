@@ -136,6 +136,44 @@ validateTagList(struct optNameValue const taglist[]) {
 
 
 static void
+parseIndexbits(bool          const indexbitsSpec,
+               char **       const indexbits,
+               CmdlineInfo * const cmdlineP) {
+
+    if (indexbitsSpec) {
+        unsigned int i;
+
+        /* Set initial values */
+        cmdlineP->indexsizeAllowed.b1 = FALSE;
+        cmdlineP->indexsizeAllowed.b2 = FALSE;
+        cmdlineP->indexsizeAllowed.b4 = FALSE;
+        cmdlineP->indexsizeAllowed.b8 = FALSE;
+
+        for (i = 0; indexbits[i]; ++i) {
+            const char * const thisItem = indexbits[i];
+            if (streq(thisItem, "1"))
+                cmdlineP->indexsizeAllowed.b1 = TRUE;
+            else if (streq(thisItem, "2"))
+                cmdlineP->indexsizeAllowed.b2 = TRUE;
+            else if (streq(thisItem, "4"))
+                cmdlineP->indexsizeAllowed.b4 = TRUE;
+            else if (streq(thisItem, "8"))
+                cmdlineP->indexsizeAllowed.b8 = TRUE;
+            else
+                pm_error("Invalid item in -indexbits list: '%s'.  "
+                         "We recognize only 1, 2, 4, and 8", thisItem);
+        }           
+    } else {
+        cmdlineP->indexsizeAllowed.b1 = FALSE;
+        cmdlineP->indexsizeAllowed.b2 = FALSE;
+        cmdlineP->indexsizeAllowed.b4 = FALSE;
+        cmdlineP->indexsizeAllowed.b8 = TRUE;
+    }
+}
+
+
+
+static void
 parseCommandLine(int                 argc,
                  const char ** const argv,
                  CmdlineInfo * const cmdlineP) {
@@ -149,7 +187,7 @@ parseCommandLine(int                 argc,
 
     unsigned int none, packbits, lzw, g3, g4, msb2lsb, lsb2msb, opt_2d, fill;
     unsigned int flate, adobeflate;
-    char * indexbits;
+    char ** indexbits;
     char * resolutionunit;
 
     unsigned int appendSpec, outputSpec, predictorSpec, rowsperstripSpec,
@@ -192,7 +230,7 @@ parseCommandLine(int                 argc,
             &yresolutionSpec,  0);
     OPTENT3(0, "resolutionunit", OPT_STRING, &resolutionunit,
             &resolutionunitSpec,    0);
-    OPTENT3(0, "indexbits",    OPT_STRING,   &indexbits,
+    OPTENT3(0, "indexbits",    OPT_STRINGLIST, &indexbits,
             &indexbitsSpec,    0);
     OPTENT3(0, "tag",          OPT_NAMELIST, &cmdlineP->taglist, &tagSpec, 0);
 
@@ -302,35 +340,16 @@ parseCommandLine(int                 argc,
     } else
         cmdlineP->resolutionunit = RESUNIT_INCH;
 
-    if (indexbitsSpec) {
-        if (strstr(indexbits, "1"))
-            cmdlineP->indexsizeAllowed.b1 = TRUE;
-        else
-            cmdlineP->indexsizeAllowed.b1 = FALSE;
-        if (strstr(indexbits, "2"))
-            cmdlineP->indexsizeAllowed.b2 = TRUE;
-        else
-            cmdlineP->indexsizeAllowed.b2 = FALSE;
-        if (strstr(indexbits, "4"))
-            cmdlineP->indexsizeAllowed.b4 = TRUE;
-        else
-            cmdlineP->indexsizeAllowed.b4 = FALSE;
-        if (strstr(indexbits, "8"))
-            cmdlineP->indexsizeAllowed.b8 = TRUE;
-        else
-            cmdlineP->indexsizeAllowed.b8 = FALSE;
-    } else {
-        cmdlineP->indexsizeAllowed.b1 = FALSE;
-        cmdlineP->indexsizeAllowed.b2 = FALSE;
-        cmdlineP->indexsizeAllowed.b4 = FALSE;
-        cmdlineP->indexsizeAllowed.b8 = TRUE;
-    }
+    parseIndexbits(indexbitsSpec, indexbits, cmdlineP);
+
+    if (indexbitsSpec)
+        free(indexbits);
 
     if (tagSpec)
         validateTagList(cmdlineP->taglist);
     else {
         MALLOCARRAY_NOFAIL(cmdlineP->taglist, 1);
-        cmdlineP->taglist[0].name = NULL;
+        cmdlineP->taglist[0].name  = NULL;
         cmdlineP->taglist[0].value = NULL;
     }
 
@@ -341,6 +360,14 @@ parseCommandLine(int                 argc,
                  "specified %d", argc-1);
     else
         cmdlineP->inputFileName = argv[1];
+}
+
+
+
+static void
+freeCmdline(CmdlineInfo const cmdline) {
+
+    pm_optDestroyNameValueList(cmdline.taglist);
 }
 
 
@@ -1279,6 +1306,8 @@ main(int argc, const char *argv[]) {
 
     closeTiffGenerator(cmdline.writeMethod, tifP, ofd);
     pm_close(ifP);
+
+    freeCmdline(cmdline);
 
     return 0;
 }
