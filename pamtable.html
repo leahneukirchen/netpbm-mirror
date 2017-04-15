@@ -1,0 +1,99 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML><HEAD><TITLE>Pamtable User Manual</TITLE></HEAD>
+<BODY>
+<H1>pamtable</H1>
+Updated: 15 April 2017
+<BR>
+<A HREF="#index">Table Of Contents</A>
+
+<H2>NAME</H2>
+
+pamtable - print the raster as a table of numerical sample values
+
+<H2 id="synopsis">SYNOPSIS</H2>
+
+<B>pamtable</B>
+
+[<I>netpbmfile</I>]
+
+
+<H2 id="description">DESCRIPTION</H2>
+
+<p>This program is part of <a href="index.html">Netpbm</a>.
+
+<p><b>pamtable</b> prints the raster of a Netpbm image as a table of numerical
+sample values.  For example, a 5-pixel wide, 2-pixel high rainbow (black, red,
+green, blue, white) PPM image with maxval 255 would appear as follows:
+
+<pre>
+<tt>
+
+        0   0   0|255   0   0|  0 255   0|  0   0 255|255 255 255
+        0   0   0|255   0   0|  0 255   0|  0   0 255|255 255 255
+
+</tt>
+</pre>
+
+
+<p>If you care to see only certain rows or columns, use <b>pamcut</b> to
+filter the input.
+
+<p>If you care to see only certain planes, use <b>pamchannel</b> to filter the
+input.
+
+<p><b>pamtable</b> prints vertical bars between tuples, unless there is only
+one sample per pixel, in which case it prints a single space between tuples.
+
+<p><b>pamtable</b> prints a single space between samples within a tuple.
+
+<p>For each sample, <b>pamtable</b> prints the numerical value from the Netpbm
+image, uninterpreted.  It prints it in decimal, right justified in the minimum
+number of spaces required to print the maxval of the image.
+
+<p>If you want the samples to print more densely, use <b>pamdepth</b> to
+reduce the maxval (thus making the decimal numbers for the samples narrower).
+
+<P>The <b>less</b> program (not part of Netpbm) is good for browsing through
+the table.  Use its <b>--chop-long-lines</b> option and use cursor movement
+keys to scroll around in the image.
+
+
+<h2 id="arguments">ARGUMENTS</h2>
+
+<p>The only possible argument is the name of the file containing the input
+Netpbm image.  This is optional; if you don't specify any arguments, the input
+comes from Standard Input.
+
+
+<h2 id="options">OPTIONS</h2>
+
+<p>None.
+
+<H2 id="seealso">SEE ALSO</H2>
+
+<A HREF="pamfile.html">pamfile</A>,
+<A HREF="pamcut.html">pamcut</A>,
+<A HREF="pamchannel.html">pamchannel</A>,
+<A HREF="pnm.html">pnm</A>,
+<A HREF="pam.html">pam</A>,
+<A HREF="pamslice.html">pamslice</A>,
+<A HREF="ppmtoarbtxt.html">ppmtoarbtxt</A>,
+<A HREF="ppmtoterm.html">ppmtoterm</A>,
+
+
+<h2 id="history">HISTORY</h2>
+
+<p><b>pamtable</b> was new in Netpbm 10.79 (June 2017).
+
+<HR>
+<H2 id="index">Table Of Contents</H2>
+<UL>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#seealso">ARGUMENTS</A>
+<LI><A HREF="#seealso">OPTIONS</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#history">HISTORY</A>
+</UL>
+</BODY>
+</HTML>

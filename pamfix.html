@@ -21,6 +21,10 @@ pamfix - repair a Netpbm image with various corruptions
 
 [<I>netpbmfile</I>]
 
+<p>Minimum unique abbreviation of option is acceptable.  You may use double
+hyphens instead of single hyphen to denote options.  You may use white
+space in place of the equals sign to separate an option name from its value.
+
 
 <H2 id="description">DESCRIPTION</H2>
 
@@ -28,8 +32,10 @@ pamfix - repair a Netpbm image with various corruptions
 
 <p><b>pamfix</b> reads a stream that is mostly a Netpbm image but may have
 certain types of corruptions and produces a valid Netpbm image that preserves
-much of the information in the original.  In particular, Netpbm salvages
-streams that are truncated and that contain illegally large sample values.
+much of the information in the original.
+
+In particular, Netpbm salvages streams that are truncated and that contain
+illegally large sample values.
 
 <p><b>pamfix</b> looks at only on the first image in a multi-image stream.
 
