@@ -437,6 +437,13 @@ computeOverlayPosition(int                const underCols,
    overlaying images are plastic slides and we taped them together to make a
    composed plastic slide, the calculations go as follows.
 
+   U means color of underlay pixel
+   O means color of overlay pixel
+   C means color of composed pixel
+   X is a variable, standing for U, O, or C
+   X_T means transparency of the X pixel
+   X_O means opacity of the X pixel
+
    Opacity and transparency are fractions in [0,1] and are complements:
 
      X_T = 1 - X_O
@@ -480,23 +487,24 @@ static sample
 composeComponents(sample           const compA, 
                   sample           const compB,
                   float            const distrib,
-                  float            const aFactor,
+                  float            const bFactor,
                   float            const composedFactor,
                   sample           const maxval,
                   enum sampleScale const sampleScale) {
 /*----------------------------------------------------------------------------
   Compose a single color component of each of two pixels, with 'distrib' being
   the fraction of 'compA' in the result, 1-distrib the fraction of 'compB'.
-  Note that this does not apply to an opacity component.
+
+  Note that this function is not useful for an opacity component.
 
   'sampleScale' tells in what domain the 'distrib' fraction applies:
   brightness or light intensity (gamma-adjusted or not).
 
-  'aFactor' is a factor in [0,1] to apply to 'compA' first.
+  'bFactor' is a factor in [0,1] to apply to 'compB' first.
 
   'composedFactor' is a factor to apply to the result.
 
-  See above for explanation of why 'aFactor' and 'composedFactor' are
+  See above for explanation of why 'bFactor' and 'composedFactor' are
   useful.
 
   The inputs and result are based on a maxval of 'maxval'.
@@ -507,22 +515,22 @@ composeComponents(sample           const compA,
 -----------------------------------------------------------------------------*/
     sample retval;
 
-    if (fabs(distrib) > .999 && aFactor > .999 && composedFactor > .999)
+    if (fabs(distrib) > .999 && bFactor > .999 && composedFactor > .999)
         /* Fast path for common case */
         retval = compA;
     else {
         if (sampleScale == INTENSITY_SAMPLE) {
             sample const mix = 
-                ROUNDU(compA * aFactor * distrib + compB * (1.0 - distrib));
+                ROUNDU(compA * distrib + compB * bFactor *(1.0 - distrib));
             retval = MIN(maxval, MAX(0, mix));
         } else {
             float const compANormalized = (float)compA/maxval;
             float const compBNormalized = (float)compB/maxval;
             float const compALinear = pm_ungamma709(compANormalized);
             float const compBLinear = pm_ungamma709(compBNormalized);
-            float const compALinearAdj = compALinear * aFactor;
+            float const compBLinearAdj = compBLinear * bFactor;
             float const mix = 
-                compALinearAdj * distrib + compBLinear * (1.0 - distrib)
+                compALinear * distrib + compBLinearAdj * (1.0 - distrib)
                 * composedFactor;
             sample const sampleValue = ROUNDU(pm_gamma709(mix) * maxval);
             retval = MIN(maxval, MAX(0, sampleValue));
