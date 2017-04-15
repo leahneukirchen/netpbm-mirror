@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.79.00
 
+              Add pamtable .
+
               pamcomp: fix incorrect output with -mixtransparency.
               Always broken.  (-mixtransparency was new in Netpbm 10.56,
               September 2011).

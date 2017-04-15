@@ -14,9 +14,24 @@ include $(BUILDDIR)/config.mk
 # This package is so big, it's useful even when some parts won't 
 # build.
 
-PORTBINARIES = pamfile pammosaicknit pamslice pamsumm pamtilt \
-               pbmminkowski pgmhist pnmhistmap ppmhist pgmminkowski
-MATHBINARIES = pamsharpmap pamsharpness pgmtexture pnmpsnr 
+PORTBINARIES = \
+  pamfile \
+  pammosaicknit \
+  pamslice \
+  pamsumm \
+  pamtable \
+  pamtilt \
+  pbmminkowski \
+  pgmhist \
+  pnmhistmap \
+  ppmhist \
+  pgmminkowski \
+
+MATHBINARIES = \
+  pamsharpmap \
+  pamsharpness \
+  pgmtexture \
+  pnmpsnr \
 
 BINARIES = $(PORTBINARIES) $(MATHBINARIES)
 SCRIPT =
