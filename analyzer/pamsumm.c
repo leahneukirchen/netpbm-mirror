@@ -30,12 +30,9 @@ struct CmdlineInfo {
 static void
 parseCommandLine(int argc, const char ** const argv,
                  struct CmdlineInfo * const cmdlineP) {
-/*----------------------------------------------------------------------------
-   Note that the file spec array we return is stored in the storage that
-   was passed to us as the argv array.
------------------------------------------------------------------------------*/
+
     optEntry * option_def;
-        /* Instructions to OptParseOptions2 on how to parse our options.
+        /* Instructions to OptParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
 
@@ -45,7 +42,7 @@ parseCommandLine(int argc, const char ** const argv,
 
     MALLOCARRAY(option_def, 100);
 
-    option_def_index = 0;   /* incremented by OPTENTRY */
+    option_def_index = 0;   /* incremented by OPTENT3 */
     OPTENT3(0,   "sum",       OPT_FLAG,  NULL, &sumSpec,             0);
     OPTENT3(0,   "mean",      OPT_FLAG,  NULL, &meanSpec,            0);
     OPTENT3(0,   "min",       OPT_FLAG,  NULL, &minSpec,             0);
@@ -76,7 +73,7 @@ parseCommandLine(int argc, const char ** const argv,
         pm_error("You must specify one of -sum, -min, -max, or -mean");
         
     if (argc-1 > 1)
-        pm_error("Too many arguments (%d).  File spec is the only argument.",
+        pm_error("Too many arguments (%d).  File name is the only argument.",
                  argc-1);
 
     if (argc-1 < 1)
@@ -201,7 +198,7 @@ main(int argc, const char *argv[]) {
 
     FILE * ifP;
     tuple * inputRow;   /* Row from input image */
-    int row;
+    unsigned int row;
     struct CmdlineInfo cmdline;
     struct pam inpam;   /* Input PAM image */
     struct Accum accumulator;
