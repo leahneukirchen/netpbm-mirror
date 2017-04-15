@@ -1,42 +1,40 @@
-/******************************************************************************
+/*=============================================================================
                                pamsumm
-*******************************************************************************
+===============================================================================
   Summarize all the samples of a PAM image with various functions.
 
   By Bryan Henderson, San Jose CA 2004.02.07.
 
   Contributed to the public domain
-
-
-******************************************************************************/
-
+=============================================================================*/
 #include "pm_c_util.h"
 #include "pam.h"
 #include "shhopt.h"
 #include "mallocvar.h"
 
-enum function {FN_ADD, FN_MEAN, FN_MIN, FN_MAX};
+enum Function {FN_ADD, FN_MEAN, FN_MIN, FN_MAX};
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *inputFilespec;  /* Filespec of input file */
-    enum function function;
-    unsigned int normalize;
-    unsigned int brief;
-    unsigned int verbose;
+    const char *  inputFileName;  /* Name of input file */
+    enum Function function;
+    unsigned int  normalize;
+    unsigned int  brief;
+    unsigned int  verbose;
 };
 
 
+
 static void
-parseCommandLine(int argc, char ** const argv,
-                 struct cmdlineInfo * const cmdlineP) {
+parseCommandLine(int argc, const char ** const argv,
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
 -----------------------------------------------------------------------------*/
-    optEntry *option_def = malloc(100*sizeof(optEntry));
+    optEntry * option_def;
         /* Instructions to OptParseOptions2 on how to parse our options.
          */
     optStruct3 opt;
@@ -44,6 +42,8 @@ parseCommandLine(int argc, char ** const argv,
     unsigned int option_def_index;
 
     unsigned int sumSpec, meanSpec, minSpec, maxSpec;
+
+    MALLOCARRAY(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENTRY */
     OPTENT3(0,   "sum",       OPT_FLAG,  NULL, &sumSpec,             0);
@@ -58,7 +58,7 @@ parseCommandLine(int argc, char ** const argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (sumSpec + minSpec + maxSpec > 1)
@@ -80,14 +80,16 @@ parseCommandLine(int argc, char ** const argv,
                  argc-1);
 
     if (argc-1 < 1)
-        cmdlineP->inputFilespec = "-";
+        cmdlineP->inputFileName = "-";
     else 
-        cmdlineP->inputFilespec = argv[1];
+        cmdlineP->inputFileName = argv[1];
     
+    free(option_def);
 }
 
 
-struct accum {
+
+struct Accum {
     union {
         double sum;
         unsigned int min;
@@ -98,8 +100,8 @@ struct accum {
 
 
 static void
-initAccumulator(struct accum * const accumulatorP,
-                enum function  const function) {
+initAccumulator(struct Accum * const accumulatorP,
+                enum Function  const function) {
 
     switch(function) {
     case FN_ADD:  accumulatorP->u.sum = 0.0;      break;
@@ -114,8 +116,8 @@ initAccumulator(struct accum * const accumulatorP,
 static void
 aggregate(struct pam *   const inpamP,
           tuple *        const tupleRow,
-          enum function  const function,
-          struct accum * const accumulatorP) {
+          enum Function  const function,
+          struct Accum * const accumulatorP) {
 
     unsigned int col;
 
@@ -143,18 +145,18 @@ aggregate(struct pam *   const inpamP,
 
 
 static void
-printSummary(struct accum  const accumulator,
+printSummary(struct Accum  const accumulator,
              unsigned int  const scale,
              unsigned int  const count,
-             enum function const function,
-             bool          const normalize,
+             enum Function const function,
+             bool          const mustNormalize,
              bool          const brief) {
 
-    switch(function) {
+    switch (function) {
     case FN_ADD: {  
         const char * const intro = brief ? "" : "the sum of all samples is ";
 
-        if (normalize)
+        if (mustNormalize)
             printf("%s%f\n", intro, accumulator.u.sum/scale);
         else
             printf("%s%u\n", intro, (unsigned int)accumulator.u.sum);
@@ -163,7 +165,7 @@ printSummary(struct accum  const accumulator,
     case FN_MEAN: {
         const char * const intro = brief ? "" : "the mean of all samples is ";
 
-        if (normalize)
+        if (mustNormalize)
             printf("%s%f\n", intro, accumulator.u.sum/count/scale);
         else
             printf("%s%f\n", intro, accumulator.u.sum/count);
@@ -173,7 +175,7 @@ printSummary(struct accum  const accumulator,
         const char * const intro = 
             brief ? "" : "the minimum of all samples is ";
 
-        if (normalize)
+        if (mustNormalize)
             printf("%s%f\n", intro, (double)accumulator.u.min/scale);
         else
             printf("%s%u\n", intro, accumulator.u.min);
@@ -183,7 +185,7 @@ printSummary(struct accum  const accumulator,
         const char * const intro = 
             brief ? "" : "the maximum of all samples is ";
 
-        if (normalize)
+        if (mustNormalize)
             printf("%s%f\n", intro, (double)accumulator.u.max/scale);
         else
             printf("%s%u\n", intro, accumulator.u.max);
@@ -195,20 +197,20 @@ printSummary(struct accum  const accumulator,
 
 
 int
-main(int argc, char *argv[]) {
+main(int argc, const char *argv[]) {
 
-    FILE* ifP;
-    tuple* inputRow;   /* Row from input image */
+    FILE * ifP;
+    tuple * inputRow;   /* Row from input image */
     int row;
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     struct pam inpam;   /* Input PAM image */
-    struct accum accumulator;
+    struct Accum accumulator;
 
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
-    ifP = pm_openr(cmdline.inputFilespec);
+    ifP = pm_openr(cmdline.inputFileName);
 
     pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
 
@@ -216,7 +218,7 @@ main(int argc, char *argv[]) {
 
     initAccumulator(&accumulator, cmdline.function);
 
-    for (row = 0; row < inpam.height; row++) {
+    for (row = 0; row < inpam.height; ++row) {
         pnm_readpamrow(&inpam, inputRow);
 
         aggregate(&inpam, inputRow, cmdline.function, &accumulator);
