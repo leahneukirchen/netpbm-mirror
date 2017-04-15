@@ -4,6 +4,19 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+17.04.15 BJH  Release 10.73.09
+
+              pamcomp: fix incorrect output with -mixtransparency.
+              Always broken.  (-mixtransparency was new in Netpbm 10.56,
+              September 2011).
+
+              pamcomp: remove debug trace message with -mixtransparency.
+              Always broken.  (-mixtransparency was new in Netpbm 10.56,
+              September 2011).
+
+              pnmtojpeg: fix array bounds violation in argument list.  Always
+              broken (pnmtojpeg was new to Netpbm in Netpbm 8.2 (March 2000).
+
 17.03.28 BJH  Release 10.73.08
 
               tifftonm: Fix incorrect PBM output with two-color paletted TIFF
