@@ -774,11 +774,18 @@ pm_readmagicnumber(FILE * const ifP) {
     int ich1, ich2;
 
     ich1 = getc(ifP);
+
+    if (ich1 == EOF)
+        pm_error("Error reading first byte of what is expected to be "
+                 "a Netpbm magic number.  "
+                 "Most often, this means your input file is empty");
+
     ich2 = getc(ifP);
-    if (ich1 == EOF || ich2 == EOF)
-        pm_error( "Error reading magic number from Netpbm image stream.  "
-                  "Most often, this "
-                  "means your input file is empty." );
+
+    if (ich2 == EOF)
+        pm_error("Error reading second byte of what is expected to be "
+                 "a Netpbm magic number (the first byte was successfully "
+                 "read as 0x%02x)", ich1);
 
     return ich1 * 256 + ich2;
 }

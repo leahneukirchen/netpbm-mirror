@@ -8,6 +8,10 @@ not yet  BJH  Release 10.79.00
 
               Add pamtable .
 
+              libnetpbm: Improve error message for purported image that is
+              exactly 1 byte long (so ends in the middle of what would be the
+              magic number).
+
               pamcomp: fix incorrect output with -mixtransparency.
               Always broken.  (-mixtransparency was new in Netpbm 10.56,
               September 2011).
