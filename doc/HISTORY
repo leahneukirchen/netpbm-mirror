@@ -8,6 +8,8 @@ not yet  BJH  Release 10.79.00
 
               Add pamtable .
 
+              pbmtog3: Add -align8, -align16.
+
               libnetpbm: Improve error message for purported image that is
               exactly 1 byte long (so ends in the middle of what would be the
               magic number).

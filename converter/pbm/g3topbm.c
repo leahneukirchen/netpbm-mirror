@@ -44,11 +44,11 @@
 
 #define HASHSIZE 1021
 
-static g3TableEntry * whash[HASHSIZE];
-static g3TableEntry * bhash[HASHSIZE];
+static G3TableEntry * whash[HASHSIZE];
+static G3TableEntry * bhash[HASHSIZE];
 
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -63,8 +63,8 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine(int argc, char ** const argv,
-                 struct cmdlineInfo * const cmdlineP) {
+parseCommandLine(int argc, const char ** const argv,
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
@@ -98,7 +98,7 @@ parseCommandLine(int argc, char ** const argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We may have parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char**)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     if (widthSpec && paper_sizeSpec)
@@ -136,7 +136,7 @@ parseCommandLine(int argc, char ** const argv,
 
 
 
-struct bitStream {
+struct BitStream {
 
     FILE * fileP;
     bool reversebits;
@@ -156,7 +156,7 @@ struct bitStream {
 
 
 static void
-readBit(struct bitStream * const bitStreamP,
+readBit(struct BitStream * const bitStreamP,
         unsigned int *     const bitP,
         const char **      const errorP) {
 /*----------------------------------------------------------------------------
@@ -189,7 +189,7 @@ readBit(struct bitStream * const bitStreamP,
 
 
 static void
-readBitAndDetectEol(struct bitStream * const bitStreamP,
+readBitAndDetectEol(struct BitStream * const bitStreamP,
                     unsigned int *     const bitP,
                     bool *             const eolP,
                     const char **      const errorP) {
@@ -217,7 +217,7 @@ readBitAndDetectEol(struct bitStream * const bitStreamP,
 
 
 static void
-initBitStream(struct bitStream * const bitStreamP,
+initBitStream(struct BitStream * const bitStreamP,
               FILE *             const fileP,
               bool               const reversebits) {
     
@@ -230,7 +230,7 @@ initBitStream(struct bitStream * const bitStreamP,
 
 
 static void
-skipToNextLine(struct bitStream * const bitStreamP) {
+skipToNextLine(struct BitStream * const bitStreamP) {
 
     bool eol;
     const char * error;
@@ -248,8 +248,8 @@ skipToNextLine(struct bitStream * const bitStreamP) {
 
 
 static void
-addtohash(g3TableEntry *     hash[], 
-          g3TableEntry       table[], 
+addtohash(G3TableEntry *     hash[], 
+          G3TableEntry       table[], 
           unsigned int const n, 
           int          const a, 
           int          const b) {
@@ -257,7 +257,7 @@ addtohash(g3TableEntry *     hash[],
     unsigned int i;
 
     for (i = 0; i < n; ++i) {
-        g3TableEntry * const teP = &table[i*2];
+        G3TableEntry * const teP = &table[i*2];
         unsigned int const pos =
             ((teP->length + a) * (teP->code + b)) % HASHSIZE;
         if (hash[pos])
@@ -268,15 +268,15 @@ addtohash(g3TableEntry *     hash[],
 
 
 
-static g3TableEntry *
-hashfind(g3TableEntry *       hash[], 
+static G3TableEntry *
+hashfind(G3TableEntry *       hash[], 
          int            const length, 
          int            const code, 
          int            const a, 
          int            const b) {
 
     unsigned int pos;
-    g3TableEntry * te;
+    G3TableEntry * te;
 
     pos = ((length + a) * (code + b)) % HASHSIZE;
     te = hash[pos];
@@ -286,8 +286,8 @@ hashfind(g3TableEntry *       hash[],
 
 
 static void
-buildHashes(g3TableEntry * (*whashP)[HASHSIZE],
-            g3TableEntry * (*bhashP)[HASHSIZE]) {
+buildHashes(G3TableEntry * (*whashP)[HASHSIZE],
+            G3TableEntry * (*bhashP)[HASHSIZE]) {
 
     unsigned int i;
 
@@ -315,7 +315,7 @@ makeRowWhite(unsigned char * const packedBitrow,
 
 
 
-static g3TableEntry *
+static G3TableEntry *
 g3code(unsigned int const curcode,
        unsigned int const curlen,
        bit          const color) {
@@ -326,7 +326,7 @@ g3code(unsigned int const curcode,
    Note that it is the _position_ in the table that determines the meaning
    of the code.  The contents of the table entry do not.
 -----------------------------------------------------------------------------*/
-    g3TableEntry * retval;
+    G3TableEntry * retval;
 
     switch (color) {
     case PBM_WHITE:
@@ -383,7 +383,7 @@ writeBlackBitSpan(unsigned char * const packedBitrow,
 enum g3tableId {TERMWHITE, TERMBLACK, MKUPWHITE, MKUPBLACK};
 
 static void
-processG3Code(const g3TableEntry * const teP,
+processG3Code(const G3TableEntry * const teP,
               unsigned char *      const packedBitrow,
               unsigned int *       const colP,
               bit *                const colorP,
@@ -452,7 +452,7 @@ formatBadCodeException(const char ** const exceptionP,
 
 
 static void
-readFaxRow(struct bitStream * const bitStreamP,
+readFaxRow(struct BitStream * const bitStreamP,
            unsigned char *    const packedBitrow,
            unsigned int *     const lineLengthP,
            const char **      const exceptionP,
@@ -526,7 +526,7 @@ readFaxRow(struct bitStream * const bitStreamP,
                     formatBadCodeException(exceptionP, col, curlen, curcode);
                     done = TRUE;
                 } else if (curcode != 0) {
-                    const g3TableEntry * const teP =
+                    const G3TableEntry * const teP =
                         g3code(curcode, curlen, currentColor);
                         /* Address of structure that describes the 
                            current G3 code.  Null means 'curcode' isn't
@@ -680,7 +680,7 @@ analyzeLineSize(lineSizeAnalyzer * const analyzerP,
 */
 
 static void
-readFax(struct bitStream * const bitStreamP,
+readFax(struct BitStream * const bitStreamP,
         bool               const stretch,
         unsigned int       const expectedLineSize,
         bool               const tolerateErrors,
@@ -747,16 +747,16 @@ readFax(struct bitStream * const bitStreamP,
 
 
 int
-main(int argc, char * argv[]) {
+main(int argc, const char * argv[]) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP;
-    struct bitStream bitStream;
+    struct BitStream bitStream;
     unsigned int rows, cols;
     unsigned char ** packedBits;
     int row;
 
-    pbm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
