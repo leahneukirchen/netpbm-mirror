@@ -25,6 +25,13 @@ not yet  BJH  Release 10.79.00
               pnmtojpeg: fix array bounds violation in argument list.  Always
               broken (pnmtojpeg was new to Netpbm in Netpbm 8.2 (March 2000).
 
+              Windows: fix bug: pm_system_lp() and pm_system_vp() fail
+              silently instead of with a clear error message in an environment
+              that does not provide Unix process management.  Always broken.
+              (pm_system_lp and pm_system_vp were new in Netpbm 10.40
+              (September 2007), but wouldn't even compile until Netpbm 10.42
+              (March 2008)).
+
               Debian packaging: fix bug: don't try to include Manweb files, as
               it is no longer packaged by 'make package'.
 
