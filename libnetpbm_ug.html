@@ -17,14 +17,11 @@ href="index.html">Netpbm</a>.
 
 <ul>
 <li><a href="#example">Example</a>
-<li><a href="#guide">Guide To Using Libnetpbm</a>
-  <ul>
-  <li><a href="#classes"><b>libnetpbm</b> Classes</a>
-  <li><a href="#initialization">Library Initialization classes</a>
-  <li><a href="#pamstruct">The <b>pam</b> Structure</a>
-  <li><a href="#plainvsraw">Plain versus Raw Format</a>
-  <li><a href="#reference">Reference</a>
-  </ul>
+<li><a href="#classes"><b>libnetpbm</b> Classes</a>
+<li><a href="#initialization">Library Initialization classes</a>
+<li><a href="#pamstruct">The <b>pam</b> Structure</a>
+<li><a href="#plainvsraw">Plain versus Raw Format</a>
+<li><a href="#reference">Reference</a>
 </ul>
 
 <H2 id="example">Example</H2>
@@ -69,9 +66,7 @@ Netpbm image input and produce a Netpbm image output.
 
 </pre>
 
-<H2 id="guide">Guide To Using Libnetpbm</H2>
-
-<h3 id="classes"><b>libnetpbm</b> Classes</h3>
+<h2 id="classes"><b>libnetpbm</b> Classes</h2>
 
 <p>In this section, Guide To Using Libnetpbm, we cover only the PAM functions
 in <b>libnetpbm</b>.  As described in <a href="libnetpbm.html">the
@@ -102,14 +97,14 @@ functions require you to pass up to 5 pieces of image information
 </ul>
 
 
-<h3 id="initialization">Library Initialization</h3>
+<h2 id="initialization">Library Initialization</h2>
 
 <p>Every program that uses the library must initialize the library, i.e. set
 up the process to use the library, as described in <a href="libpm.html#initialization">Initialization</a>.  That is the purpose of the call to
 <b>pm_init()</b> in the example above.
 
 
-<H3 id="pamstruct">The <b>pam</b> Structure</H3>
+<H2 id="pamstruct">The <b>pam</b> Structure</H2>
 
 <P>The PAM functions take most of their arguments in the form of a
 single <B>pam</B> structure.  This is not an opaque object, but just a
@@ -351,7 +346,7 @@ exists.
 
 
 
-<H3 id="plainvsraw">Plain  Versus Raw Format</H3>
+<H2 id="plainvsraw">Plain  Versus Raw Format</H2>
 
 <P>The PNM formats each come in two varieties: the older plain (text)
 format and the newer raw (binary) format.  There are different format
@@ -376,7 +371,7 @@ under any circumstance.  A user who needs a plain format can use the
 <B>pnmtoplainpnm</B> program to convert the output of your program to
 plain format.
 
-<H3 id="reference">Reference</h3>
+<H2 id="reference">Reference</h2>
 
 <p>The <a href="libnetpbm_image.html">Libnetpbm Netpbm Image
 Processing Manual</a> describes the the <b>libnetpbm</b> functions for
