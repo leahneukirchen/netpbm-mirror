@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pbmtog3 User Manual</TITLE></HEAD>
 <BODY>
 <H1>pbmtog3</H1>
-Updated: 03 December 2008
+Updated: 20 April 2017
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -15,14 +15,15 @@ pbmtog3 - convert a PBM image into a Group 3 MH fax file
 <B>pbmtog3</B>
 [<b>-reversebits</b>]
 [<b>-nofixedwidth</b>]
+[<b>-align8</b>|<b>-align16</b>]
 [<I>pbmfile</I>]
 
 <H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><b>pbmtog3</b> reads a PBM image as input and produces a Group 3 MH
-fax file as output.
+<p><b>pbmtog3</b> reads a PBM image as input and produces a Group 3 MH fax
+file as output.
 
 <p>You can also generate a TIFF file that uses the same encoding
 inside, with <b>pamtotiff</b>.
@@ -51,7 +52,18 @@ keep the width of the original image, use this option.
 
 <p>This option was new in Netpbm 10.6 (July 2002).  Before that,
 <b>pbmtog3</b> always kept the width of the original image.
-     
+
+<dt><b>-align8</b>
+<dt><b>-align16</b>
+<dd>These options say to align output rows to 8-bit or 16-bit boundaries,
+respectively, by adding padding bits in front of EOL codes
+<p>
+Without these options, <b>pbmtog3</b> adds no padding and rows may begin
+and ends anywhere within a byte.
+<p>
+You cannot specify both.
+<p>These options were new in Netpbm 10.79 (June 2017).     
+
 </dl>
 
 <H2 id="seealso">SEE ALSO</H2>
@@ -62,10 +74,18 @@ keep the width of the original image, use this option.
 <A HREF="faxformat.html">fax formats</A>
 
 
-<H2 id="author">AUTHOR</H2>
+<H2 id="history">HISTORY</H2>
 
-Copyright (C) 1989 by Paul Haeberli &lt;<A
-HREF="mailto:paul@manray.sgi.com">paul@manray.sgi.com</A>&gt;.
+<p>Before Netpbm 10.79 (June 2017), there was a different program by the same
+name in Netpbm, which was written by by Paul Haeberli
+&lt;<A HREF="mailto:paul@manray.sgi.com">paul@manray.sgi.com</A>&gt; in 1989
+and then modified extensively by others.
+
+<p>Akira Urushibata &lt;afu@wta.att.ne.jp&gt; wrote the current version, with
+an entirely different algorithm, in April 2017 and contributed his work to the
+public domain.
+
+<p>The current program is backward compatible with the pre-10.79 version.
 
 <HR>
 <H2 id="index">Table Of Contents</H2>
@@ -74,7 +94,7 @@ HREF="mailto:paul@manray.sgi.com">paul@manray.sgi.com</A>&gt;.
 <LI><A HREF="#description">DESCRIPTION</A>
 <LI><A HREF="#references">REFERENCES</A>
 <LI><A HREF="#seealso">SEE ALSO</A>
-<LI><A HREF="#author">AUTHOR</A>
+<LI><A HREF="#history">HISTORY</A>
 </UL>
 </BODY>
 </HTML>
