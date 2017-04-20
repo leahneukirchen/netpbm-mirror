@@ -776,10 +776,17 @@ extractAfterLastSlash(const char * const fullPath,
         strncpy(retval, slashPos +1, retvalSize);
         retval[retvalSize-1] = '\0';
     }
+}
 
-    /* Chop any .exe off the right end */
-    if (strlen(retval) >= 4 && strcmp(retval+strlen(retval)-4, ".exe") == 0)
-        retval[strlen(retval)-4] = 0;
+
+
+static void
+chopOffExe(char * const arg) {
+/*----------------------------------------------------------------------------
+  Chop any .exe off the right end of 'arg'.
+-----------------------------------------------------------------------------*/
+    if (strlen(arg) >= 4 && strcmp(arg+strlen(arg)-4, ".exe") == 0)
+        arg[strlen(arg)-4] = 0;
 }
 
 
@@ -814,6 +821,7 @@ pm_arg0toprogname(const char arg0[]) {
 #else
     static char retval[MAX_RETVAL_SIZE+1];
     extractAfterLastSlash(arg0, retval, sizeof(retval));
+    chopOffExe(retval);
 #endif
 
     return retval;
