@@ -26,7 +26,11 @@
  * matrix, perhaps with the difference cases encoded.
  */
 
+#define _XOPEN_SOURCE  /* Make sure M_PI is in math.h */
+
 #include <memory.h>
+#include <math.h>
+
 #include "all.h"
 #include "dct.h"
 
@@ -1211,34 +1215,28 @@ mpeg_jrevdct_quick(data)
 */
 
 
-/* Here we use math.h to generate constants.  Compiler results may
-   vary a little */
-
-#ifndef PI
-#ifdef M_PI
-#define PI M_PI
-#else
-#define PI 3.14159265358979323846
-#endif
-#endif
-
 /* cosine transform matrix for 8x1 IDCT */
 static double itrans_coef[8][8];
 
-/* initialize DCT coefficient matrix */
 
-void init_idctref()
-{
-  int freq, time;
-  double scale;
 
-  for (freq=0; freq < 8; freq++)
-  {
-    scale = (freq == 0) ? sqrt(0.125) : 0.5;
-    for (time=0; time<8; time++)
-      itrans_coef[freq][time] = scale*cos((PI/8.0)*freq*(time + 0.5));
-  }
+void init_idctref() {
+/*----------------------------------------------------------------------------
+   initialize DCT coefficient matrix 
+-----------------------------------------------------------------------------*/
+    unsigned int freq;
+
+    for (freq=0; freq < 8; ++freq) {
+        double const scale = (freq == 0) ? sqrt(0.125) : 0.5;
+
+        unsigned int time;
+
+        for (time = 0; time < 8; ++time)
+            itrans_coef[freq][time] = scale*cos((M_PI/8.0)*freq*(time + 0.5));
+    }
 }
+
+
 
 /* perform IDCT matrix multiply for 8x8 coefficient block */
 

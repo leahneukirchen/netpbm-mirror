@@ -15,6 +15,10 @@
  * instead of floating point.
  */
 
+#define _XOPEN_SOURCE  /* Make sure M_PI is in math.h */
+
+#include <math.h>
+
 #include "all.h"
 
 #include "dct.h"
@@ -375,26 +379,19 @@ mp_fwd_dct_block2(data, dest)
  *
  */
 
-#ifndef PI
-#ifdef M_PI
-#define PI M_PI
-#else
-#define PI 3.14159265358979323846
-#endif
-#endif
 
-void init_fdct()
-{
-  int i, j;
-  double s;
+void init_fdct() {
 
-  for (i=0; i<8; i++)
-  {
-    s = (i==0) ? sqrt(0.125) : 0.5;
+    unsigned int i;
 
-    for (j=0; j<8; j++)
-      trans_coef[i][j] = s * cos((PI/8.0)*i*(j+0.5));
-  }
+    for (i = 0; i < 8; ++i) {
+        double const s = i == 0 ? sqrt(0.125) : 0.5;
+
+        unsigned int j;
+
+        for (j = 0; j < 8; ++j)
+            trans_coef[i][j] = s * cos((M_PI/8.0) * i * (j+0.5));
+    }
 }
 
 
