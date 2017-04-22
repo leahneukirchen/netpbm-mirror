@@ -32,6 +32,10 @@ not yet  BJH  Release 10.79.00
               (September 2007), but wouldn't even compile until Netpbm 10.42
               (March 2008)).
 
+              Build: don't try to build standardppmdfont.c if it already
+              exists (so don't require ppmdcfont to exist).  Broken around
+              Netpbm 10.35 (2006).
+
               Debian packaging: fix bug: don't try to include Manweb files, as
               it is no longer packaged by 'make package'.
 
