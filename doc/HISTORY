@@ -25,6 +25,10 @@ not yet  BJH  Release 10.79.00
               pnmtojpeg: fix array bounds violation in argument list.  Always
               broken (pnmtojpeg was new to Netpbm in Netpbm 8.2 (March 2000).
 
+              libnetpbm: fix bug: pm_system_XXX closes Standard Input if you
+              supply a Standard Output accepter but not a Standard Input
+              feeder.  Broken since Netpbm 10.40 (September 2007).
+
               Windows: fix bug: pm_system_lp() and pm_system_vp() fail
               silently instead of with a clear error message in an environment
               that does not provide Unix process management.  Always broken.
