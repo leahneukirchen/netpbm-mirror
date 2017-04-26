@@ -553,8 +553,8 @@ readFaxRow(struct BitStream * const bitStreamP,
 
 		if (curlen > 11 && curcode == 0x00) {
 		    if (++fillbits > MAXFILLBITS)
-		      pm_error("Encountered %u consecutive fill bits.  "
-                               "Aborting", fillbits);
+                pm_error("Encountered %u consecutive fill bits.  "
+                       "Aborting", fillbits);
 		}
 		else if (curlen - fillbits > 13) {
                     formatBadCodeException(exceptionP, col, curlen, curcode);
