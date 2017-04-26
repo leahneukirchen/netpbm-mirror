@@ -44,6 +44,32 @@
 
 #define HASHSIZE 1021
 
+#define MAXFILLBITS (5 * 9600)
+
+/*
+Fill bits are for flow control.  This was important when DRAM was
+expensive and fax machines came with small buffers.
+
+If data arrives too quickly it may overflow the buffer of the
+receiving device.  On sending devices transmission time of compressed
+data representing a single row can be shorter than the time required
+to scan and encode.  The CCITT standard allows sending devices to
+insert fill bits to put communication on hold in these cases.
+
+By the CCITT standard, the maximum transmission time for one row is:
+
+100 - 400 pixels/inch 13 seconds
+(standard mode: 200 pixels/inch)
+600 pixels/inch 19 seconds
+1200 pixels/inch 37 seconds
+
+If one row is not received within the above limits, the receiving
+machine must disconnect the line.
+
+The receiver may be less patient.  It may opt to disconnect if one row
+is not received within 5 seconds.
+*/
+
 static G3TableEntry * whash[HASHSIZE];
 static G3TableEntry * bhash[HASHSIZE];
 
@@ -477,6 +503,8 @@ readFaxRow(struct BitStream * const bitStreamP,
         /* Number of bits we've read so far for the code we're currently 
            reading
         */
+    unsigned int fillbits;
+        /* Number of consecutive 0 bits.  Can precede EOL codes */
     unsigned int curcode; 
         /* What we've assembled so far of the code we're currently reading */
     unsigned int count;
@@ -490,6 +518,7 @@ readFaxRow(struct BitStream * const bitStreamP,
     col = 0;
     curlen = 0;
     curcode = 0;
+    fillbits = 0;
     currentColor = PBM_WHITE;
     count = 0;
     *exceptionP = NULL;
@@ -521,8 +550,13 @@ readFaxRow(struct BitStream * const bitStreamP,
             else {
                 curcode = (curcode << 1) | bit;
                 ++curlen;
-            
-                if (curlen > 13) {
+
+		if (curlen > 11 && curcode == 0x00) {
+		    if (++fillbits > MAXFILLBITS)
+		      pm_error("Encountered %u consecutive fill bits.  "
+                               "Aborting", fillbits);
+		}
+		else if (curlen - fillbits > 13) {
                     formatBadCodeException(exceptionP, col, curlen, curcode);
                     done = TRUE;
                 } else if (curcode != 0) {

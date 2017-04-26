@@ -8,6 +8,8 @@ not yet  BJH  Release 10.79.00
 
               Add pamtable .
 
+              g3topbm: tolerate fill bits.
+
               pbmtog3: Add -align8, -align16.
 
               libnetpbm: Improve error message for purported image that is
