@@ -16,8 +16,8 @@
    implements the for statements in our algorithm with instructions that do 16
    bytes at a time on CPUs that have them (movdqa on x86).  This is "tree
    vectorization."  A more primitive compiler will do one byte at a time; we
-   could change the code to use libnetpbm's wordaccess.h facility and it will
-   do one word at a time.  (But we don't think it's worth complicating the
+   could change the code to use uint32_t or uint64_t and it will do four or
+   eight bytes at a time.  (But we don't think it's worth complicating the
    code for that).
 */
 
