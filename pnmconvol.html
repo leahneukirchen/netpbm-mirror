@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pnmconvol User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmconvol</H1>
-Updated: 06 August 2014
+Updated: 30 April 2017
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -50,21 +50,30 @@ by the convolution matrix (sometimes called a convolution kernel),
 which you supply in one of several ways.  See <a href="#convolutionmatrix">
 Convolution Matrix</a>.
 
-<P>At the edges of the convolved image, where the convolution matrix
-would extend over the edge of the image, <B>pnmconvol</B> just copies
-the input pixels directly to the output.
+<P>At the edges of the convolved image, where the convolution matrix would
+extend over the edge of the image, <B>pnmconvol</B> just copies the input
+pixels directly to the output.  It's often better to deal with the pixels near
+an edge by assuming some blank or background color beyond the edge.  To do
+that, use <b>pnmpad</b> to add a margin all around whose size is half that of
+your convolution matrix size, not counting its center, in the same dimension.
+(E.g. if your convolution matrix is 5 wide by 3 high, use
+<kbd>pnmpad -left=2 -right=2 -top=1 -bottom=1</kbd>).  Feed that enlarged
+image to <b>pnmconvol</b>, then use <b>pamcut</b> to chop the edges off the
+convolved output, getting back to your original image dimensions.  (E.g.
+<kbd>pamcut -left=2 -right=-2 -top=1 -bottom=-1</kbd>).
 
 <p>The convolution computation can result in a value which is outside the
 range representable in the output.  When that happens, <b>pnmconvol</b> just
 clips the output, which means brightness is not conserved.
 
-<p>To avoid clipping, you may want to scale your input.  For example, if your
-convolution matrix might produce an output value as much as double the maximum
-value in the input, then make sure the maxval of the input (which is also the
-maxval of the output) is at least twice the actual maximum value in the input.
+<p>To avoid clipping, you may want to scale your input values.  For example,
+if your convolution matrix might produce an output value as much as double the
+maximum value in the input, then make sure the maxval of the input (which is
+also the maxval of the output) is at least twice the actual maximum value in
+the input.
 
 <p>Clipping negative numbers deserves special consideration.  If your
-convolution matrix includes negative numbers, it is possible for 
+convolution matrix includes negative numbers, it is possible for
 <b>pnmconvol</b> to calculate an output pixel as a negative value,
 which <b>pnmconvol</b> would of course clip to zero, since Netpbm formats
 cannot represent negative numbers.
@@ -404,6 +413,8 @@ the maxval.
 <B><A HREF="pgmkernel.html">pgmkernel</A></B>,
 <B><A HREF="pamgauss.html">pamgauss</A></B>,
 <B><A HREF="pammasksharpen.html">pammasksharpen</A></B>,
+<B><A HREF="pnmpad.html">pnmpad</A></B>,
+<B><A HREF="pamcut.html">pamcut</A></B>,
 <B><A HREF="pnm.html">pnm</A></B>
 
 <H2 id="authors">AUTHORS</H2>
