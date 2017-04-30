@@ -26,7 +26,7 @@
  * matrix, perhaps with the difference cases encoded.
  */
 
-#define _XOPEN_SOURCE  /* Make sure M_PI is in math.h */
+#define _XOPEN_SOURCE 500  /* get M_PI in math.h */
 
 #include <memory.h>
 #include <math.h>

@@ -31,7 +31,7 @@
 
 */
 
-#define _XOPEN_SOURCE   /* get M_PI in math.h */
+#define _XOPEN_SOURCE 500  /* get M_PI in math.h */
 
 #include <math.h>
 #include <assert.h>

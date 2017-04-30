@@ -42,6 +42,13 @@ not yet  BJH  Release 10.79.00
               exists (so don't require ppmdcfont to exist).  Broken around
               Netpbm 10.35 (2006).
 
+              Build: Define _XOPEN_SOURCE=500 in source files that use M_PI.
+              While C libraries in the past have always provided this with
+              just _XOPEN_SOURCE=null, it appears that M_PI is actually
+              defined by Single Unix Specification 2, aka UNIX98, for which
+              you need _XOPEN_SOURCE=500, and Cygwin has changed to enforce
+              this.
+
               Debian packaging: fix bug: don't try to include Manweb files, as
               it is no longer packaged by 'make package'.
 

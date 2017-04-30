@@ -15,7 +15,7 @@
  * instead of floating point.
  */
 
-#define _XOPEN_SOURCE  /* Make sure M_PI is in math.h */
+#define _XOPEN_SOURCE 500  /* get M_PI in math.h */
 
 #include <math.h>
 
