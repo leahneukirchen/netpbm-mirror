@@ -407,13 +407,22 @@ pm_system_vp(const char *    const progName,
     */
     
     int progStdinFd;
+        /* File descriptor that the processor program will get as Standard
+           Input
+        */
+    bool weCreatedStdinFd;
+        /* This program created (opened) file descriptor 'progStdinFd',
+           as opposed to inheriting it.
+        */
     pid_t feederPid;
     pid_t processorPid;
 
-    if (stdinFeeder) 
+    if (stdinFeeder) {
         createPipeFeeder(stdinFeeder, feederParm, &progStdinFd, &feederPid);
-    else {
+        weCreatedStdinFd = true;
+    } else {
         progStdinFd = STDIN;
+        weCreatedStdinFd = false;
         feederPid = 0;
     }
 
@@ -426,10 +435,6 @@ pm_system_vp(const char *    const progName,
         spawnProcessor(progName, argArray, progStdinFd, 
                        &progStdoutFd, &processorPid);
 
-        /* The child process has cloned our 'progStdinFd'; we have no
-           more use for our copy.
-        */
-        close(progStdinFd);
         /* Dispose of the stdout from that child */
         (*stdoutAccepter)(progStdoutFd, accepterParm);
         close(progStdoutFd);
@@ -438,6 +443,13 @@ pm_system_vp(const char *    const progName,
            to our Standard Output
         */
         spawnProcessor(progName, argArray, progStdinFd, NULL, &processorPid);
+    }
+
+    if (weCreatedStdinFd) {
+        /* The child process has cloned our 'progStdinFd'; we have no
+           more use for our copy.
+        */
+        close(progStdinFd);
     }
 
     cleanupProcessorProcess(processorPid);
