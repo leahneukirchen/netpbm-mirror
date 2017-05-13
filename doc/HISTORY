@@ -49,6 +49,9 @@ not yet  BJH  Release 10.79.00
               you need _XOPEN_SOURCE=500, and Cygwin has changed to enforce
               this.
 
+              Build: document MinGW _XOPEN_SOURCE incompatibility and add
+              warning to Configure.
+
               Debian packaging: fix bug: don't try to include Manweb files, as
               it is no longer packaged by 'make package'.
 
