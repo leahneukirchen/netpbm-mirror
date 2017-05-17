@@ -8,6 +8,9 @@ not yet  BJH  Release 10.79.00
 
               Add pamtable .
 
+              pnmconvol: Extend -normalize to be applicable to convolution
+              kernels specified by PGM file.
+
               g3topbm: tolerate fill bits.
 
               pbmtog3: Add -align8, -align16.
