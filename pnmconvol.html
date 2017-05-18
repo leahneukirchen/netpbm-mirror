@@ -209,7 +209,7 @@ an attempt to exploit the generic matrix processing capabilities of
 Netpbm, but as the Netpbm formats don't directly allow matrices with
 the kinds of numbers you need in a convolution matrix, it is quite
 cumbersome.  In fact, there simply is no way to specify some convolution
-matrices with a legal Netpbm image, so make it work, <b>pnmconvol</b> has
+matrices with a legal Netpbm image, so to make it work, <b>pnmconvol</b> has
 to relax the Netpbm file requirement that sample values be no greater
 than the image's maxval.  I.e. it isn't even a real PNM file.
 
@@ -256,7 +256,9 @@ After scaling, the range is 0 to 1.
 subtracting total value from the image, but merely moving it around,
 you'll want to make sure that all the scaled values in (each plane of)
 your convolution PNM add up to 1, which means all the actual sample
-values add up to the maxval.
+values add up to the maxval.  Alternatively, you can use the
+<b>-normalize</b> option to scale the scaled values further to make them all
+add up to 1 automatically.
 
 <p>When you <em>don't</em> specify <b>-nooffset</b>, <b>pnmconvol</b>
 applies an offset, the purpose of which is to allow you to indicate
@@ -352,10 +354,9 @@ weights to maintain normalcy.  And you can use friendly integers.
 <p>This is of course a basic 3x3 average, but without you having to
 specify 1/9 (.1111111) for each weight.
 
-<p>This option has no effect when you specify the convolution matrix
-via pseudo-PNM file.
-
-<p>This option was new in Netpbm 10.50 (March 2010).
+<p>This option was new in Netpbm 10.50 (March 2010).  But before Netpbm 10.79
+(June 2017), it has no effect when you specify the convolution matrix via
+pseudo-PNM file.
 
 <dt><b>-bias=</b><i>n</i>
 <dd>
