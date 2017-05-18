@@ -8,8 +8,12 @@ not yet  BJH  Release 10.79.00
 
               Add pamtable .
 
+              pamgauss: Add -maximize, -oversample .  Thanks Anton Shepelev
+              <anton.txt@gmail.com>
+
               pnmconvol: Extend -normalize to be applicable to convolution
-              kernels specified by PGM file.
+              kernels specified by PGM file.  Thanks Anton Shepelev
+              <anton.txt@gmail.com>
 
               g3topbm: tolerate fill bits.
 

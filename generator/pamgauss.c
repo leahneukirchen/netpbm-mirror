@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -18,7 +19,9 @@ struct CmdlineInfo {
     unsigned int width;
     unsigned int height;
     unsigned int maxval;
-    float sigma;
+    float        sigma;
+    unsigned int oversample;
+    unsigned int maximize;
     const char * tupletype;
 };
 
@@ -35,23 +38,27 @@ parseCommandLine(int argc, const char ** argv,
   Note that some string information we return as *cmdlineP is in the storage 
   argv[] points to.
 -----------------------------------------------------------------------------*/
-    optEntry *option_def;
+    optEntry * option_def;
         /* Instructions to OptParseOptions2 on how to parse our options.
          */
     optStruct3 opt;
 
-    unsigned int tupletypeSpec, maxvalSpec, sigmaSpec;
+    unsigned int tupletypeSpec, maxvalSpec, sigmaSpec, oversampleSpec;
     unsigned int option_def_index;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENTRY */
     OPTENT3(0,   "tupletype",  OPT_STRING, &cmdlineP->tupletype, 
-            &tupletypeSpec,     0);
+            &tupletypeSpec,      0);
     OPTENT3(0,   "maxval",     OPT_UINT,   &cmdlineP->maxval, 
-            &maxvalSpec,        0);
+            &maxvalSpec,         0);
     OPTENT3(0,   "sigma",      OPT_FLOAT,  &cmdlineP->sigma, 
-            &sigmaSpec,        0);
+            &sigmaSpec,          0);
+    OPTENT3(0,   "maximize",   OPT_FLAG,   NULL,
+            &cmdlineP->maximize, 0);
+    OPTENT3(0,   "oversample", OPT_UINT,   &cmdlineP->oversample,
+            &oversampleSpec,     0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -86,6 +93,13 @@ parseCommandLine(int argc, const char ** argv,
             pm_error("-maxval must be at least 1");
     }    
 
+    if (oversampleSpec) {
+        if (cmdlineP->oversample < 1)
+            pm_error("The oversample factor (-oversample) "
+                     "must be at least 1.");
+    } else
+        cmdlineP->oversample = ceil(5.0 / cmdlineP->sigma);
+
     if (argc-1 < 2)
         pm_error("Need two arguments: width and height.");
     else if (argc-1 > 2)
@@ -107,11 +121,13 @@ parseCommandLine(int argc, const char ** argv,
 
 
 static double
-distFromCenter(struct pam * const pamP,
-               int          const col,
-               int          const row) {
-
-    return sqrt(SQR(col - pamP->width/2) + SQR(row - pamP->height/2));
+distFromCenter(unsigned int const width,
+               unsigned int const height,
+               double       const x,
+               double       const y)
+{
+    return sqrt(SQR(x - (double)width  / 2) +
+                SQR(y - (double)height / 2));
 }
 
 
@@ -120,87 +136,214 @@ static double
 gauss(double const arg,
       double const sigma) {
 /*----------------------------------------------------------------------------
-   Compute the value of the gaussian function with sigma parameter 'sigma'
-   and mu parameter zero of argument 'arg'.
+   Compute the value of the gaussian function centered at zero with
+   standard deviation 'sigma' and amplitude 1, at 'arg'.
 -----------------------------------------------------------------------------*/
-    double const pi = 3.14159;
-    double const coefficient = 1 / (sigma * sqrt(2*pi));
-    double const exponent = - SQR(arg-0) / (2 * SQR(sigma));
+    double const exponent = - SQR(arg) / (2 * SQR(sigma));
 
-    return coefficient * exp(exponent);
+    return exp(exponent);
 }
 
 
 
 static double
-imageNormalizer(struct pam * const pamP,
-                double       const sigma) {
+pixelValue(unsigned int const width,
+           unsigned int const height,
+           unsigned int const row,
+           unsigned int const col,
+           unsigned int const subpixDivision,
+           double       const sigma) {
 /*----------------------------------------------------------------------------
-   Compute the value that has to be multiplied by the value of the 
-   one-dimensional gaussian function of the distance from center in
-   order to get the value for a normalized two-dimensional gaussian
-   function.  Normalized here means that the volume under the whole
-   curve is 1, just as the area under a whole one-dimensional gaussian
-   function is 1.
+  The gaussian value for the pixel at row 'row', column 'col' in an image
+  described by *pamP.
+
+  This is the mean of the values of the gaussian function computed at
+  all the subpixel locations within the pixel when it is divided into
+  subpixels 'subpixDivision' times horizontally and vertically.
+
+  The gaussian function has standard deviation 'sigma' and amplitude 1.
 -----------------------------------------------------------------------------*/
-    double volume;
+    double const offset = 1.0 / (subpixDivision * 2);
+    double const y0     = (double)row + offset; 
+    double const x0     = (double)col + offset;
 
-    unsigned int row;
+    double const subpixSize = 1.0 / subpixDivision;
 
-    volume = 0.0;   /* initial value */
+    unsigned int i;
+    double total;
+        /* Running total of the gaussian values at all subpixel locations */
 
-    for (row = 0; row < pamP->height; ++row) {
-        unsigned int col;
-        for (col = 0; col < pamP->width; ++col)
-            volume += gauss(distFromCenter(pamP, col, row), sigma);
+    for (i = 0, total = 0.0; i < subpixDivision; ++i) {
+        /* Sum up one column of subpixels */
+
+        unsigned int j;
+
+        for (j = 0; j < subpixDivision; ++j) {
+            double const dist =
+                distFromCenter(width, height,
+                               x0 + i * subpixSize,
+                               y0 + j * subpixSize);
+
+            total += gauss(dist, sigma);
+        }
     }
-    return 1.0 / volume;
+
+    return total / SQR(subpixDivision);
 }
 
 
 
-int
-main(int argc, const char **argv) {
+static double **
+gaussianKernel(unsigned int const width,
+               unsigned int const height,
+               unsigned int const subpixDivision,
+               double       const sigma) {
+/*----------------------------------------------------------------------------
+   A Gaussian matrix 'width' by 'height', with each value being the mean
+   of a Gaussian function evaluated at 'subpixDivision' x 'subpixDivision'
+   locations.
 
-    struct CmdlineInfo cmdline;
+   Return value is newly malloc'ed storage that Caller must free.
+-----------------------------------------------------------------------------*/
+    double ** kernel;
+    unsigned int row;
+
+    MALLOCARRAY2(kernel, height, width);
+
+    if (!kernel)
+        pm_error("Unable to allocate %u x %u array in which to build kernel",
+                 height, width);
+
+    for (row = 0; row < height; ++row) {
+        unsigned int col;
+        for (col = 0; col < width; ++col) {
+            double const gaussval =
+                pixelValue(width, height, row, col, subpixDivision, sigma);
+            kernel[row][col] = gaussval;
+        }
+    }
+    return kernel;
+}
+
+
+
+static double
+maximumKernelValue(double **    const kernel,
+                   unsigned int const width,
+                   unsigned int const height) {
+
+    /* As this is Gaussian in both directions, centered at the center,
+       we know the maximum value is at the center.
+    */
+    return kernel[height/2][width/2];
+}        
+
+
+
+static double
+totalKernelValue(double **    const kernel,
+                 unsigned int const width,
+                 unsigned int const height) {
+
+    double total;
+    unsigned int row;
+
+    for (row = 0, total = 0.0; row < height; ++row) {
+        unsigned int col;
+        
+        for (col = 0; col < width; ++col)
+            total += kernel[row][col];
+    }
+
+    return total;
+}        
+
+
+
+static void
+initpam(struct pam * const pamP,
+        unsigned int const width,
+        unsigned int const height,
+        sample       const maxval,
+        const char * const tupleType,
+        FILE *       const ofP) {
+
+    pamP->size        = sizeof(*pamP);
+    pamP->len         = PAM_STRUCT_SIZE(tuple_type);
+    pamP->file        = ofP;
+    pamP->format      = PAM_FORMAT;
+    pamP->plainformat = 0;
+    pamP->width       = width;
+    pamP->height      = height;
+    pamP->depth       = 1;
+    pamP->maxval      = maxval;
+    strcpy(pamP->tuple_type, tupleType);
+}
+
+
+
+static void
+writePam(double **    const kernel,
+         unsigned int const width,
+         unsigned int const height,
+         sample       const maxval,
+         const char * const tupleType,
+         double       const normalizer,
+         FILE *       const ofP) {
+/*----------------------------------------------------------------------------
+   Write the kernel 'kernel', which is 'width' by 'height', as a PAM image
+   with maxval 'maxval' and tuple type 'tupleType' to file *ofP.
+
+   Divide the kernel values by 'normalizer' to get the normalized PAM sample
+   value.  Assume that no value in 'kernel' is greater that 'normalizer'.
+-----------------------------------------------------------------------------*/
     struct pam pam;
-    int row;
-    double normalizer;
+    unsigned int row;
     tuplen * tuplerown;
-    
-    pm_proginit(&argc, argv);
-   
-    parseCommandLine(argc, argv, &cmdline);
 
-    pam.size        = sizeof(pam);
-    pam.len         = PAM_STRUCT_SIZE(tuple_type);
-    pam.file        = stdout;
-    pam.format      = PAM_FORMAT;
-    pam.plainformat = 0;
-    pam.width       = cmdline.width;
-    pam.height      = cmdline.height;
-    pam.depth       = 1;
-    pam.maxval      = cmdline.maxval;
-    strcpy(pam.tuple_type, cmdline.tupletype);
+    initpam(&pam, width, height, maxval, tupleType, ofP);
 
-    normalizer = imageNormalizer(&pam, cmdline.sigma);
-    
     pnm_writepaminit(&pam);
-   
+
     tuplerown = pnm_allocpamrown(&pam);
 
     for (row = 0; row < pam.height; ++row) {
-        int col;
+        unsigned int col;
         for (col = 0; col < pam.width; ++col) {
-            double const gauss1 = gauss(distFromCenter(&pam, col, row),
-                                        cmdline.sigma);
-
-            tuplerown[col][0] = gauss1 * normalizer;
+            tuplerown[col][0] = kernel[row][col] / normalizer;
+        
+            assert(tuplerown[col][0] <= 1.0);
         }
         pnm_writepamrown(&pam, tuplerown);
     }
-    
-    pnm_freepamrown(tuplerown);
 
+    pnm_freepamrown(tuplerown);
+}
+    
+
+
+int
+main(int argc, const char **argv) {
+    struct CmdlineInfo cmdline;
+    double ** kernel;
+    double    normalizer;
+    
+    pm_proginit(&argc, argv);
+
+    parseCommandLine(argc, argv, &cmdline);
+
+    kernel = gaussianKernel(cmdline.width, cmdline.height, cmdline.oversample,
+                            cmdline.sigma);
+
+    normalizer = cmdline.maximize ?
+        maximumKernelValue(kernel, cmdline.width, cmdline.height) :
+        totalKernelValue(kernel, cmdline.width, cmdline.height);
+
+    writePam(kernel,
+             cmdline.width, cmdline.height, cmdline.maxval, cmdline.tupletype,
+             normalizer, stdout);
+
+    pm_freearray2((void **)kernel);
+    
     return 0;
 }
