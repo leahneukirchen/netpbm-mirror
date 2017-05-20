@@ -19,7 +19,7 @@ Updated: 18 May 2017
 [<b>-maxval=</b><i>number</i>]
 [<b>-tupletype=</b><i>string</i>]
 [<b>-maximize</b>]
-[<b>-oversample=</b><i>number</i>
+[<b>-oversample=</b><i>number</i>]
 
 
 <p>Minimum unique abbreviation of option is acceptable.  You may use double
@@ -125,9 +125,9 @@ It can be any string up to 255 characters.  If you don't specify this,
 
 <dt><b>-oversample=</b><i>number</i>
 <dd>
-<p>This sets the oversampling factor.  <b>pamgauss</b> samples the
-Gaussian function this many times, bother horizontally and vertically, to
-get the value of each sample in the output.
+<p>This sets the oversampling factor.  <b>pamgauss</b> samples the Gaussian
+function this many times, both horizontally and vertically, to get the value
+of each sample in the output.
 
 <p>An oversampling factor of 1 means no oversampling, which means each 
 sample is based only on the value of the Gaussian function at the center of
@@ -136,8 +136,8 @@ the sample.
 <p>The default is 5 divided by the standard deviation, rounded up to a whole
 number.
 
-<p>This option was new in Netpbm 10.79 (June 2017).  Before that, there
-it is essentially 1 - there is no oversampling.
+<p>This option was new in Netpbm 10.79 (June 2017).  Before that, it is
+essentially 1 - there is no oversampling.
 
 </dl>
 
