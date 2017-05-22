@@ -45,6 +45,9 @@ not yet  BJH  Release 10.79.00
               (September 2007), but wouldn't even compile until Netpbm 10.42
               (March 2008)).
 
+              Installnetpbm: Accept globs for directory name responses
+              (notably, ~/DIR).
+
               Build: don't try to build standardppmdfont.c if it already
               exists (so don't require ppmdcfont to exist).  Broken around
               Netpbm 10.35 (2006).
