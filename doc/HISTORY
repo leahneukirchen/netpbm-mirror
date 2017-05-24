@@ -23,6 +23,10 @@ not yet  BJH  Release 10.79.00
               exactly 1 byte long (so ends in the middle of what would be the
               magic number).
 
+              pbmtox10bm: Get the Perl interpreter for this Perl program from
+              the PATH instead of hardcoded as /usr/bin/perl (like all other
+              Netpbm Perl programs).
+
               pamcomp: fix incorrect output with -mixtransparency.
               Always broken.  (-mixtransparency was new in Netpbm 10.56,
               September 2011).
