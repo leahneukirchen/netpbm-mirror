@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+17.05.27 BJH  Release 10.78.04
+
+              pamcrater: fix incorrect output with non-square image.
+              Introduced in Netpbm 10.69 (December 2014).
+
 17.04.23 BJH  Release 10.78.03
 
               libnetpbm: fix bug: pm_system_XXX closes Standard Input if you

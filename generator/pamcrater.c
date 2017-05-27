@@ -215,7 +215,7 @@ terrainModP(struct pam * const pamP,
    would be a pointer to the sample at Column 2 or Row 2.  If they are both
    -1, we would point to Column 9, Row 9.
 -----------------------------------------------------------------------------*/
-    return &terrain[mod(x, pamP->height)][mod(y, pamP->width)][0];
+    return &terrain[mod(y, pamP->height)][mod(x, pamP->width)][0];
 }
 
 
