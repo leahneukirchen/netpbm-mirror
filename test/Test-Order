@@ -14,7 +14,7 @@ pbmpage.test
 pbmtext.test
 pbmupc.test
 pgmramp.test
-ppmgauss.test
+pamgauss.test
 ppmcie.test
 ppmwheel.test
 pamcrater.test
@@ -30,6 +30,7 @@ ppmrough.test
 # Analyzer tests
 
 pamfile.test
+pamtable.test
 pgmhist.test
 ppmhist.test
 pamsumm.test

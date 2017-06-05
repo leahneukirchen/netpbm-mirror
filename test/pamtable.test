@@ -1,0 +1,20 @@
+#! /bin/bash
+# This script tests: pamtable
+# Also requires: pamgradient pamseq pamdepth
+
+pamtable testgrid.pbm
+echo
+pamseq 3 2 -tupletype=RGB | pamtable
+echo
+pamseq 4 1 -tupletype=RGBA | pamtable
+echo
+for maxval in 9 10 9999 10000 65535
+  do pbmmake -g 2 2 | pamdepth $maxval | pamtable
+     echo
+     ppmrainbow -width=3 -height=2 -norepeat black white | \
+     pamdepth $maxval | pamtable
+     echo
+     ppmrainbow -width=4 -height=2 -norepeat red blue green | \
+     pamdepth $maxval | pamtable
+     echo
+  done

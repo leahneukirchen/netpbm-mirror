@@ -82,6 +82,7 @@ pamstretch: ok
 pamstretch-gen: ok
 pamsumm: ok
 pamsummcol: ok
+pamtable: ok
 pamthreshold: ok
 pamtilt: ok
 pamtoavs: ok

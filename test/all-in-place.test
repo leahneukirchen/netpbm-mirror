@@ -124,6 +124,7 @@ ordinary_testprogs="\
   pamstretch-gen \
   pamsumm \
   pamsummcol \
+  pamtable \
   pamthreshold \
   pamtilt \
   pamtoavs \
