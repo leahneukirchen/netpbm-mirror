@@ -20,18 +20,12 @@
 
 enum G3eol {EOL, ALIGN8, ALIGN16, NO_EOL, NO_RTC, NO_EOLRTC};
 
-enum OutMode {BINARY, DUMP};
-
 struct OutStream;
-
-typedef void PutbitsFn(struct OutStream * const outP,
-                       struct BitString   const newBits);
 
 struct OutStream {
     FILE * fp;
     struct BitString buffer;
     bool reverseBits;    /* Reverse bit order */  
-    PutbitsFn * putbitsFn;
     enum G3eol eolAlign; /* Omit EOL and/or RTC; align EOL to 8/16 bits */ 
     void * data;         /* Reserved for future expansion */
 };
@@ -45,7 +39,6 @@ struct CmdlineInfo {
     const char * inputFileName;
     unsigned int reversebits;
     enum G3eol   align;
-    unsigned int dump;
     unsigned int desiredWidth;
     unsigned int verbose;
 };
@@ -79,8 +72,6 @@ parseCommandLine(int argc, const char ** const argv,
     OPTENT3(0,   "align16",          OPT_FLAG,  NULL, &align16,
             0);
     OPTENT3(0,   "verbose",          OPT_FLAG,  NULL, &cmdlineP->verbose, 
-            0);
-    OPTENT3(0,   "dump",             OPT_FLAG,  NULL, &cmdlineP->dump,
             0);
 
     /* TODO
@@ -160,15 +151,17 @@ flushBuffer(struct OutStream * const outP) {
 }
 
 
-
-static PutbitsFn putbitsDump;
-
+#if 1==0
 static void
 putbitsDump(struct OutStream * const outP,
             struct BitString   const newBits) {
 /*----------------------------------------------------------------------------
   Print the content of the bit put request, in human readable text form
   For debugging.  Also good for studying how the coding scheme works.
+
+  By default the compiler ignores this function.
+  To turn on, remove the "#if" - "#endif" lines enclosing the function and
+  edit the output function name in putbits().
 -----------------------------------------------------------------------------*/
     unsigned int const bitCount = newBits.bitCount;
 
@@ -187,10 +180,9 @@ putbitsDump(struct OutStream * const outP,
     charBuff[bitCount+1] = '\0';
     fwrite(charBuff, 1, bitCount+1, outP->fp);
 }
+#endif
 
 
-
-static PutbitsFn putbitsDump;
 
 static void
 putbitsBinary(struct OutStream * const outP,
@@ -239,14 +231,12 @@ putbitsBinary(struct OutStream * const outP,
 static void 
 initOutStream(struct OutStream * const outP,
               bool               const reverseBits,
-              enum G3eol         const eolAlign,
-              bool               const wantDump) {
+              enum G3eol         const eolAlign) {
 
     outP->buffer.intBuffer = 0;
     outP->buffer.bitCount  = 0;
     outP->reverseBits      = reverseBits;
-    outP->putbitsFn        = wantDump ? &putbitsDump : &putbitsBinary;
-    outP->fp               = wantDump ? stderr : stdout;
+    outP->fp               = stdout;
     outP->eolAlign         = eolAlign;
 }
 
@@ -269,7 +259,8 @@ static void
 putbits(struct OutStream * const outP,
         struct BitString   const newBits) {
 
-    outP->putbitsFn(outP, newBits);
+    putbitsBinary(outP, newBits); 
+    /* Change to putbitsDump() for human readable output */
 }
 
 
@@ -329,7 +320,7 @@ putcodeExtra(struct OutStream * const outP,
    According to the standard, the mark-up code for 2560 can be issued as
    many times as necessary without terminal codes.  
    --------------------------------------------------------------------------*/
-    G3TableEntry const markUp2560 = mtable[2560/64];
+    G3TableEntry const markUp2560 = mtable[2560/64*2];
                               /* Same code for black and white */
 
     unsigned int remainingLen;
@@ -530,8 +521,8 @@ convertRowToG3(struct OutStream * const outP,
    spanning several bytes.  Likewise for the rightmost 0.
 
    So we first remove the sequence on the left side and compare its
-   color with the leftmost pixel of the adjacent byte and emit codes
-   for either ones sequence if they agree, or two if they disagree. 
+   color with the leftmost pixel of the adjacent byte and emit either
+   one code for a single sequence if they agree or two if they disagree. 
    Next the composite code for the central part (in the above example
    110011 -> 11 0111 11) is emitted.  Finally we save the length and
    color of the sequence on the right end as carry-over for the next
@@ -643,7 +634,7 @@ main(int          argc,
     if (!bitrow)
         pm_error("Failed to allocate a row buffer for %u columns", cols);
 
-    initOutStream(&out, cmdline.reversebits, cmdline.align, cmdline.dump);
+    initOutStream(&out, cmdline.reversebits, cmdline.align);
     
     puteol(&out);
 
