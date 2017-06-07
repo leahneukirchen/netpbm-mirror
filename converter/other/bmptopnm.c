@@ -384,10 +384,17 @@ readWindowsBasic40ByteInfoHeader(FILE *                 const ifP,
 -----------------------------------------------------------------------------*/
     int colorsused;        /* ColorsUsed value from header */
     unsigned short planesField, bitCountField;
+    int32_t colsField;
 
-    headerP->cols = GetLong(ifP);
-    if (headerP->cols == 0)
+    pm_readlittlelong2(ifP, &colsField);
+
+    if (colsField == 0)
         pm_error("Invalid BMP file: says width is zero");
+    else if (colsField < 0)
+        pm_error("Invalid BMP file: says width is negative (%d)", colsField);
+    else
+        headerP->cols = (unsigned int)colsField;
+
     {
         long const cy = GetLong(ifP);
 
