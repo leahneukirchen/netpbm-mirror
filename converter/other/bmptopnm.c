@@ -384,10 +384,17 @@ readWindowsBasic40ByteInfoHeader(FILE *                 const ifP,
 -----------------------------------------------------------------------------*/
     int colorsused;        /* ColorsUsed value from header */
     unsigned short planesField, bitCountField;
+    int32_t colsField;
 
-    headerP->cols = GetLong(ifP);
-    if (headerP->cols == 0)
+    pm_readlittlelong2(ifP, &colsField);
+
+    if (colsField == 0)
         pm_error("Invalid BMP file: says width is zero");
+    else if (colsField < 0)
+        pm_error("Invalid BMP file: says width is negative (%d)", colsField);
+    else
+        headerP->cols = (unsigned int)colsField;
+
     {
         long const cy = GetLong(ifP);
 
@@ -1393,8 +1400,8 @@ isValidBmpBpp(unsigned int const cBitCount) {
 static void
 readBmp(FILE *               const ifP, 
         unsigned char ***    const bmpRasterP, 
-        int *                const colsP, 
-        int *                const rowsP,
+        unsigned int *       const colsP, 
+        unsigned int *       const rowsP,
         bool *               const grayPresentP, 
         bool *               const colorPresentP,
         unsigned int *       const cBitCountP, 
@@ -1559,7 +1566,7 @@ main(int argc, const char ** argv) {
            black and white and whether it has colors other than black, white,
            and gray.
         */
-    int cols, rows;
+    unsigned int cols, rows;
     unsigned char ** bmpRaster;
         /* The raster part of the BMP image, as a row x column array, with
            each element being a raw byte from the BMP raster.  Note that

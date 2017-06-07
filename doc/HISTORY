@@ -27,6 +27,10 @@ not yet  BJH  Release 10.79.00
               the PATH instead of hardcoded as /usr/bin/perl (like all other
               Netpbm Perl programs).
 
+              bmptopnm: fix crash when input is a Windows BMP with negative
+              number for width.  Always broken.  (bmptopnm was new, as
+              bmptoppm, in original Netpbm, 1992).
+
               pamcomp: fix incorrect output with -mixtransparency.
               Always broken.  (-mixtransparency was new in Netpbm 10.56,
               September 2011).
