@@ -45,6 +45,9 @@ not yet  BJH  Release 10.79.00
               pamcrater: fix incorrect output with non-square image.
               Introduced in Netpbm 10.69 (December 2014).
 
+              svgtopam: fix treating negative width or height values in SVG
+              like twos complement positive numbers; fail instead.
+
               libnetpbm: fix bug: pm_system_XXX closes Standard Input if you
               supply a Standard Output accepter but not a Standard Input
               feeder.  Broken since Netpbm 10.40 (September 2007).

@@ -670,29 +670,6 @@ processPathElement(xmlTextReaderPtr const xmlReaderP,
 
 
 static void
-stringToUint(const char *   const string,
-             unsigned int * const uintP,
-             const char **  const errorP) {
-
-    /* TODO: move this to nstring.c */
-
-    if (strlen(string) == 0)
-        pm_asprintf(errorP, "Value is a null string");
-    else {
-        char * tailptr;
-
-        *uintP = strtoul(string, &tailptr, 10);
-
-        if (*tailptr != '\0')
-            pm_asprintf(errorP, "Non-numeric crap in string: '%s'", tailptr);
-        else
-            *errorP = NULL;
-    }
-}
-
-
-
-static void
 getSvgAttributes(xmlTextReaderPtr const xmlReaderP,
                  unsigned int *   const colsP,
                  unsigned int *   const rowsP) {
@@ -702,14 +679,16 @@ getSvgAttributes(xmlTextReaderPtr const xmlReaderP,
 
     const char * error;
 
-    stringToUint(width, colsP, &error);
+    pm_string_to_uint(width, colsP, &error);
     if (error) {
-        pm_error("'width' attribute of <svg> has invalid value.  %s", error);
+        pm_error("'width' attribute of <svg> has invalid value '%s'.  %s",
+                 width, error);
         pm_strfree(error);
     }
-    stringToUint(height, rowsP, &error);
+    pm_string_to_uint(height, rowsP, &error);
     if (error) {
-        pm_error("'height' attribute of <svg> has invalid value.  %s", error);
+        pm_error("'height' attribute of <svg> has invalid value '%s'.  %s",
+                 height, error);
         pm_strfree(error);
     }
 }
