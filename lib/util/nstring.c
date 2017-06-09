@@ -1030,3 +1030,43 @@ pm_interpret_uint(const char *   const string,
 }
 
 
+void
+pm_string_to_uint(const char *   const string,
+                  unsigned int * const uintP,
+                  const char **  const errorP) {
+
+    if (strlen(string) == 0)
+        pm_asprintf(errorP, "Value is a null string");
+    else {
+        char * tailptr;
+
+        /* We can't use 'strtoull'.  Contrary to expectations, though as
+           designed, it returns junk if there is a minus sign.
+        */
+
+        long longValue;
+
+        longValue = strtol(string, &tailptr, 10);
+
+
+        *uintP = strtoul(string, &tailptr, 10);
+
+        if (*tailptr != '\0')
+            pm_asprintf(errorP, "Non-numeric crap in string: '%s'", tailptr);
+        else {
+            if (longValue < 0)
+                pm_asprintf(errorP, "Number is negative");
+            else {
+                if ((unsigned int)longValue != longValue)
+                    pm_asprintf(errorP, "Number is too large for computation");
+                else {
+                    *uintP = (unsigned int)longValue;
+                    *errorP = NULL;
+                }
+            }
+        }
+    }
+}
+
+
+
