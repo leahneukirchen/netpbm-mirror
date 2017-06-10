@@ -740,7 +740,7 @@ newIcSkelFromReplString(const char *       const objstr,
     SkeletonObject * retval;
     unsigned int icolmin, icolmax;
     char formstr[MAX_OBJ_BUF];
-    unsigned int nOdata;
+    int nOdata;
 
     nOdata = sscanf(objstr, "%*s%s%u%u", formstr, &icolmin, &icolmax);
 
@@ -764,7 +764,7 @@ newFcSkelFromReplString(const char *       const objstr,
     SkeletonObject * retval;
     double fcolmin, fcolmax;
     char formstr[MAX_OBJ_BUF];
-    unsigned int nOdata;
+    int nOdata;
 
     nOdata = sscanf(objstr, "%*s%s%lf%lf", formstr,
                     &fcolmin, &fcolmax);
@@ -788,7 +788,9 @@ newISkelFromReplString(const char *       const objstr,
 
     SkeletonObject * retval;
     char formstr[MAX_OBJ_BUF];
-    unsigned int const nOdata = sscanf(objstr, "%*s%s", formstr);
+    int nOdata;
+
+    nOdata = sscanf(objstr, "%*s%s", formstr);
     
     if (nOdata == 1)
         retval = newIdataObj(objType, formstr);
