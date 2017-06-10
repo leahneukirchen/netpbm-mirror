@@ -734,15 +734,20 @@ interpretObjType(const char * const typstr) {
 
 
 static SkeletonObject *
-newIcSkelFromReplString(const char *       const objstr,
+newIcSkelFromReplString(const char *       const icolorObjstr,
                         SkeletonObjectType const objType) {
-
+/*----------------------------------------------------------------------------
+  A new skeleton for an integer color substitution specifier (class
+  OBJTYP_ICOLOR) whose replacement string (the stuff between the parentheses
+  in #(...)) says substitution type 'objType' and the rest of the
+  replacement string is 'icolorObjstr'.
+-----------------------------------------------------------------------------*/
     SkeletonObject * retval;
     unsigned int icolmin, icolmax;
     char formstr[MAX_OBJ_BUF];
     int nOdata;
 
-    nOdata = sscanf(objstr, "%*s%s%u%u", formstr, &icolmin, &icolmax);
+    nOdata = sscanf(icolorObjstr, "%s%u%u", formstr, &icolmin, &icolmax);
 
     if (nOdata == 3)
         retval = newIcolDataObj(objType, formstr, icolmin, icolmax);
@@ -758,16 +763,20 @@ newIcSkelFromReplString(const char *       const objstr,
 
 
 static SkeletonObject *
-newFcSkelFromReplString(const char *       const objstr,
+newFcSkelFromReplString(const char *       const fcolorObjstr,
                         SkeletonObjectType const objType) {
-
+/*----------------------------------------------------------------------------
+  A new skeleton for a floating point color substitution specifier (class
+  OBJTYP_FCOLOR) whose replacement string (the stuff between the parentheses
+  in #(...)) says substitution type 'objType' and the rest of the
+  replacement string is 'fcolorObjstr'.
+-----------------------------------------------------------------------------*/
     SkeletonObject * retval;
     double fcolmin, fcolmax;
     char formstr[MAX_OBJ_BUF];
     int nOdata;
 
-    nOdata = sscanf(objstr, "%*s%s%lf%lf", formstr,
-                    &fcolmin, &fcolmax);
+    nOdata = sscanf(fcolorObjstr, "%s%lf%lf", formstr, &fcolmin, &fcolmax);
 
     if (nOdata == 3)
         retval = newFcolDataObj(objType, formstr, fcolmin, fcolmax);
@@ -783,14 +792,19 @@ newFcSkelFromReplString(const char *       const objstr,
 
 
 static SkeletonObject *
-newISkelFromReplString(const char *       const objstr,
+newISkelFromReplString(const char *       const intObjstr,
                        SkeletonObjectType const objType) {
-
+/*----------------------------------------------------------------------------
+  A new skeleton for an integer substitution specifier (class OBJTYP_INT)
+  whose replacement string (the stuff between the parentheses in #(...))
+  says substitution type 'objType' and the rest of the replacement string is
+  'intObjstr'.
+-----------------------------------------------------------------------------*/
     SkeletonObject * retval;
     char formstr[MAX_OBJ_BUF];
     int nOdata;
 
-    nOdata = sscanf(objstr, "%*s%s", formstr);
+    nOdata = sscanf(intObjstr, "%s", formstr);
     
     if (nOdata == 1)
         retval = newIdataObj(objType, formstr);
@@ -808,7 +822,7 @@ newISkelFromReplString(const char *       const objstr,
 static SkeletonObject *
 newSkeletonFromReplString(const char * const objstr) {
 /*----------------------------------------------------------------------------
-  Create a skeleton from the replacement string 'objstr' (the stuff
+  A new skeleton created from the replacement string 'objstr' (the stuff
   between the parentheses in #(...) ).
 
   Return NULL if it isn't a valid replacement string.
@@ -823,6 +837,7 @@ newSkeletonFromReplString(const char * const objstr) {
 
     SkeletonObject * retval;
     char typstr[MAX_OBJ_BUF];
+    int typlen;
     SkeletonObjectType objType;
     int conversionCt;
     char s1[MAX_OBJ_BUF];    /* Dry read. */
@@ -831,7 +846,8 @@ newSkeletonFromReplString(const char * const objstr) {
 
     typstr[0] = '\0';  /* initial value */
 
-    conversionCt = sscanf(objstr, "%s%s%f%f%s", typstr, s1, &f1, &f2, s2);
+    conversionCt = sscanf(objstr, "%s%n%s%f%f%s",
+                          typstr, &typlen, s1, &f1, &f2, s2);
     switch (conversionCt) {
     case 1: case 2: case 4:
         objType = interpretObjType(typstr);
@@ -842,13 +858,13 @@ newSkeletonFromReplString(const char * const objstr) {
 
     switch (objClass(objType)) {
     case OBJTYP_ICOLOR:
-        retval = newIcSkelFromReplString(objstr, objType);
+        retval = newIcSkelFromReplString(&objstr[typlen], objType);
         break;
     case OBJTYP_FCOLOR:
-        retval = newFcSkelFromReplString(objstr, objType);
+        retval = newFcSkelFromReplString(&objstr[typlen], objType);
         break;
     case OBJTYP_INT:
-        retval = newISkelFromReplString(objstr, objType);
+        retval = newISkelFromReplString(&objstr[typlen], objType);
         break;
     case OBJTYP_BDATA:
         retval = NULL;
