@@ -46,7 +46,8 @@ not yet  BJH  Release 10.79.00
               Introduced in Netpbm 10.69 (December 2014).
 
               svgtopam: fix treating negative width or height values in SVG
-              like twos complement positive numbers; fail instead.
+              like twos complement positive numbers; fail instead.  Always
+              broken (svgtopam was new in Netpbm 10.33 (March 2006)).
 
               libnetpbm: fix bug: pm_system_XXX closes Standard Input if you
               supply a Standard Output accepter but not a Standard Input
