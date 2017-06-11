@@ -64,7 +64,7 @@ EXCEPTIONS = \
 # Instead the list is generated afresh from HTML file names.  Reasons:
 # 1. Any list would have to be updated every time an HTML file is added.
 # 2. The suffix (man section) depends on content (a "META" tag) of the
-#    HTML file.  (The mankeman script is clever.)
+#    HTML file.  (The makeman script is clever.)
 # 3. In one instance the file stem name changes: index.html => netpbm.1
 
 # HTML files in USERGUIDE
@@ -178,7 +178,7 @@ installman: report
 
 
 # This will uninstall the man pages.
-# Only pages with corresponing files in USERGUIDE are deleted.
+# Only pages with corresponding files in USERGUIDE are deleted.
 .PHONY : uninstallman
 uninstallman: report
 	for f in $(MAN1); do if [ -f $(MANDIR)/man1/$$f.gz ]; then rm -f $(MANDIR)/man1/$$f.gz; fi; done
