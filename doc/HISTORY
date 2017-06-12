@@ -60,8 +60,10 @@ not yet  BJH  Release 10.79.00
               (September 2007), but wouldn't even compile until Netpbm 10.42
               (March 2008)).
 
-              Installnetpbm: Accept globs for directory name responses
+              installnetpbm: Accept globs for directory name responses
               (notably, ~/DIR).
+
+              makeman: Make it work with Python 3.6.
 
               Build: don't try to build standardppmdfont.c if it already
               exists (so don't require ppmdcfont to exist).  Broken around
