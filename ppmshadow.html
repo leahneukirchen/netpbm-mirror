@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Ppmshadow User Manual</TITLE></HEAD>
 <BODY>
 <H1>ppmshadow</H1>
-Updated: 26 April 2016
+Updated: 21 June 2017
 <BR><A HREF="#index">Table Of Contents</A>
 
 <H2 id="name">NAME</H2>
@@ -126,6 +126,10 @@ create that directory because the name is already in use.
 <DD>
 A copy of the input.
 
+<DT><B>background.ppm</B>
+<DD>
+Blank image with background of source image
+
 <DT><B>bgmask.ppm</B>
 <DD>
 Positive binary mask
@@ -134,41 +138,21 @@ Positive binary mask
 <DD>
 Convolution kernel for blurring shadow
 
+<DT><B>blurredlackshad.ppm</B>
+<DD>
+Blurred shadow image before coloring
+
 <DT><B>blurred.ppm</B>
 <DD>
 Blurred, colored shadow image
-
-<DT><B>blurred2.ppm</B>
-<DD>
-Blurred shadow image before coloring
 
 <DT><B>shadow.ppm</B>
 <DD>
 Clipped shadow image, offset as requested
 
-<DT><B>background.ppm</B>
-<DD>
-Blank image with background of source image
-
-<DT><B>shadow.ppm</B>
-<DD>
-Offset shadow
-
-<DT><B>fgmask.ppm</B>
-<DD>
-Inverse mask file
-
-<DT><B>justfg.ppm</B>
-<DD>
-Just the foreground.  Rest is black.  Original image times inverse mask.
-
 <DT><B>shadback.ppm</B>
 <DD>
 Generated shadow times positive mask
-
-<DT><B>allbutfg.ppm</b>
-<dd>
-Everything but the foreground (foreground area is black).
 
 </DL>
 
@@ -205,10 +189,6 @@ image generation process along the way, you can keep the intermediate
 files with the <B>-k </B> option, modify them appropriately with an
 image editor, then recombine them with the steps used by the code in
 <B>ppmshadow</B>.
-
-See the <B>ppmshadow.doc</B> file in the Netpbm source tree for
-additional details and examples of the intermediate files and debugging
-<b>ppmshadow</b>.
 
 <P>Shadows are by default black, as cast by opaque material in the
 image occluding white light.  Use the <B>-t</B> option to simulate
