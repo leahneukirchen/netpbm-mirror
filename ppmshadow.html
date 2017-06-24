@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Ppmshadow User Manual</TITLE></HEAD>
 <BODY>
 <H1>ppmshadow</H1>
-Updated: 21 June 2017
+Updated: 24 June 2017
 <BR><A HREF="#index">Table Of Contents</A>
 
 <H2 id="name">NAME</H2>
@@ -44,6 +44,21 @@ image.  The output image is the same dimensions as the input image.
 <p>You can use <b>pamcomp</b> to place a foreground image over a background
 before running <b>ppmshadow</b> on it.  You can use <b>ppmmake</b> to make
 the background image (just an image of a solid color).
+
+<p>The output has the same dimensions and maxval as the input.
+
+<p>The blurring to make the fringes of the shadow will not have a desirable
+effect if the color depth (maxval) of the image is too low -- you need a high
+maxval to get all the shades needed to create a smooth gradient.  So if your
+input has low maxval (including most notably if the input is PBM, which means
+its maxval is 1), run it through <b>pamdepth</b> to raise its maxval.  255 is
+usually a good choice.
+
+<p>Input is a PPM file named by the <I>ppmfile</I> command line argument; if
+you don't specify <I>ppmfile</I>, the input is Standard Input.
+
+<P>The output is a PPM file, written to Standard Output.
+
 
 <H2 id="options">OPTIONS</H2>
 
@@ -96,65 +111,6 @@ same as the horizontal offset (above), upward.
 
 </DL>
 
-
-<H2 id="files">FILES</H2>
-
-<p>Input is a PPM file named by the <I>ppmfile</I> command line
-argument; if you don't specify <I>ppmfile</I>, the input is Standard
-Input.
-
-<P>The output is a PPM file, written to Standard Output.
-
-<p><B>ppmshadow</B> creates a number of temporary files as it executes.  It
-creates a new directory for them in the directory named by the
-<b>TMPDIR</b> environment variable, defaulting to <b>/tmp</b> if it is not
-set.
-
-<p>In normal operation, <B>ppmshadow</B> finds a unique name for the
-temporary directory and deletes each temporary file as
-soon as it is done with it and leaves no debris around after it
-completes.  To preserve the intermediate files for debugging, use the
-<B>-k</B> command line option.  In that case, the directory name is
-<b>ppmshadow</b><i>pid</i>, where <i>pid</i> is the process ID of
-the <b>ppmshadow</b> process, and the program fails if <b>ppmshadow</b> cannot
-create that directory because the name is already in use.
-
-<p>The temporary files are: 
-<DL COMPACT>
-
-<DT><B>infile.ppm</b>
-<DD>
-A copy of the input.
-
-<DT><B>background.ppm</B>
-<DD>
-Blank image with background of source image
-
-<DT><B>bgmask.ppm</B>
-<DD>
-Positive binary mask
-
-<DT><B>convkernel.ppm</B>
-<DD>
-Convolution kernel for blurring shadow
-
-<DT><B>blurredlackshad.ppm</B>
-<DD>
-Blurred shadow image before coloring
-
-<DT><B>blurred.ppm</B>
-<DD>
-Blurred, colored shadow image
-
-<DT><B>shadow.ppm</B>
-<DD>
-Clipped shadow image, offset as requested
-
-<DT><B>shadback.ppm</B>
-<DD>
-Generated shadow times positive mask
-
-</DL>
 
 <H2 id="limitations">LIMITATIONS</H2>
 
@@ -236,6 +192,59 @@ program succeeded.
 <B><A HREF="ppm.html">ppm</A></B>
 
 
+<H2 id="tempfiles">TEMPORARY FILES</H2>
+
+<p><B>ppmshadow</B> creates a number of temporary files as it executes.  It
+creates a new directory for them in the directory named by the
+<b>TMPDIR</b> environment variable, defaulting to <b>/tmp</b> if it is not
+set.
+
+<p>In normal operation, <B>ppmshadow</B> finds a unique name for the
+temporary directory and deletes each temporary file as
+soon as it is done with it and leaves no debris around after it
+completes.  To preserve the intermediate files for debugging, use the
+<B>-k</B> command line option.  In that case, the directory name is
+<b>ppmshadow</b><i>pid</i>, where <i>pid</i> is the process ID of
+the <b>ppmshadow</b> process, and the program fails if <b>ppmshadow</b> cannot
+create that directory because the name is already in use.
+
+<p>The temporary files are: 
+<DL COMPACT>
+
+<DT><B>infile.ppm</b>
+<DD>
+A copy of the input.
+
+<DT><B>background.ppm</B>
+<DD>
+Blank image with background of source image
+
+<DT><B>bgmask.ppm</B>
+<DD>
+Positive binary mask
+
+<DT><B>convkernel.ppm</B>
+<DD>
+Convolution kernel for blurring shadow
+
+<DT><B>blurredlackshad.ppm</B>
+<DD>
+Blurred shadow image before coloring
+
+<DT><B>blurred.ppm</B>
+<DD>
+Blurred, colored shadow image
+
+<DT><B>shadow.ppm</B>
+<DD>
+Clipped shadow image, offset as requested
+
+<DT><B>shadback.ppm</B>
+<DD>
+Generated shadow times positive mask
+
+</DL>
+
 <H2 id="author">AUTHOR</H2>
 
 John Walker &lt;<A
@@ -255,9 +264,9 @@ restrictions.
 <LI><A HREF="#synopsis">SYNOPSIS</A>
 <LI><A HREF="#description">DESCRIPTION</A>
 <LI><A HREF="#options">OPTIONS</A>
-<LI><A HREF="#files">FILES</A>
 <LI><A HREF="#limitations">LIMITATIONS</A>
 <LI><A HREF="#exitstatus">EXIT STATUS</A>
+<LI><A HREF="#tempfiles">TEMPORARY FILES</A>
 <LI><A HREF="#seealso">SEE ALSO</A>
 <LI><A HREF="#author">AUTHOR</A>
 <LI><A HREF="#copyright">COPYRIGHT</A>
