@@ -54,10 +54,10 @@ Postscript fonts.  But it also means you have to have Ghostscript
 installed and it isn't as fast.  Also, <b>pbmtextps</b> generates only
 one line of text, whereas <b>pbmtext</b> can create multiple lines.
 
-<p><b>pbmtext</b> is meant for small quantities of simple text.  If you're
-working with a <em>document</em>, you would be better off using a document
-formatting program to "print" to a Postscript file, then
-feeding that Postscript to <b>pstopnm</b>.
+<p><b>pbmtext</b> is meant for simple text.  If you're working with
+a <em>document</em>, you would be better off using a document formatting
+program to "print" to a Postscript file, then feeding that Postscript
+to <b>pstopnm</b>.
 
 <H2 id="options">OPTIONS</H2>
 
@@ -248,13 +248,13 @@ displays with a piece of the character that is next to it in the
 matrix.  For example, "l" might display with a little piece
 of the "m" attached on its right.
 
-<p>Do a screen grab or window dump of that text, using for instance
-<B>xwd</B>, <B>xgrabsc</B>, or <B>screendump</B>.  Convert the result
-into a pbm file.  If necessary, use <B>pamcut</B> to remove anything
-you grabbed in addition to the text pictured above (or be a wimp and
-use a graphical editor such as ImageMagick).  Finally, run it through
-<B>pnmcrop</B> to make sure the edges are right up against the text.
-<B>pbmtext</B> can figure out the sizes and spacings from that.
+<p>Do a screen grab or window dump of that text, using for instance 
+<B>xwd</B>, <B>xgrabsc</B>, or <B>screendump</B>.  Convert the result into a
+pbm file.  If necessary, use <B>pamcut</B> to remove anything you grabbed in
+addition to the text pictured above (or be a wimp and use a graphical editor
+such as Gimp).  Finally, run it through <B>pnmcrop</B> to make sure the edges
+are right up against the text.  <B>pbmtext</B> can figure out the sizes and
+spacings from that.
 
 <p>There are some historical computer fonts, such as that used by the original
 IBM PC, in the form that you can screen-grab and turn into a PBM font file
