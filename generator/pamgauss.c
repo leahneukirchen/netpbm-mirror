@@ -111,7 +111,8 @@ distFromCenter(struct pam * const pamP,
                int          const col,
                int          const row) {
 
-    return sqrt(SQR(col - pamP->width/2) + SQR(row - pamP->height/2));
+    return sqrt(SQR(0.5 + col - (double)pamP->width/2) +
+                SQR(0.5 + row - (double)pamP->height/2));
 }
 
 
