@@ -53,6 +53,10 @@ not yet  BJH  Release 10.79.00
               like twos complement positive numbers; fail instead.  Always
               broken (svgtopam was new in Netpbm 10.33 (March 2006)).
 
+              svgtopam: fix error messages when input has splines or negative
+              positions.  Always broken (svgtopam was new in Netpbm 10.33
+              (March 2006)).
+
               libnetpbm: fix bug: pm_system_XXX closes Standard Input if you
               supply a Standard Output accepter but not a Standard Input
               feeder.  Broken since Netpbm 10.40 (September 2007).

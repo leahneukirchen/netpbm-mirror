@@ -317,6 +317,19 @@ pathReader_destroy(PathReader * const pathReaderP) {
 
 
 
+static const char *
+pathReader_context(PathReader * const pathReaderP) {
+
+    const char * retval;
+
+    pm_asprintf(&retval, "Character position %u (starting at 0) in '%s'",
+                pathReaderP->cursor, pathReaderP->pathP->pathText);
+
+    return retval;
+}
+
+
+
 static void
 pathReader_skipWhiteSpace(PathReader * const pathReaderP) {
 /*----------------------------------------------------------------------------
@@ -343,7 +356,10 @@ pathReader_getNumber(PathReader *   const pathReaderP,
 
     if (pathReaderP->cursor >= pathTextLength)
         pm_error("Path description ends where a number was expected.");
-    else {
+    else if (!isdigit(pathText[pathReaderP->cursor])) {
+        pm_error("Character '%c' instead of a digit where number expected",
+                 pathText[pathReaderP->cursor]);
+    } else {
         unsigned int number;
 
         number = 0;  /* initial value */
@@ -353,6 +369,10 @@ pathReader_getNumber(PathReader *   const pathReaderP,
             number = 10 * number + (pathText[pathReaderP->cursor] - '0');
             ++pathReaderP->cursor;
         }
+        if (pathText[pathReaderP->cursor] == '.')
+            pm_error("Number contains decimal point.  This program does not "
+                     "know how to deal with fractional positions");
+
         *numberP = number;
     }
 }
@@ -410,12 +430,20 @@ pathReader_getNextCommand(PathReader *  const pathReaderP,
         case 'z':
             pathCommandP->verb = PATH_CLOSEPATH;
             break;
-        default:
-            pm_error("Unrecognized command in <path>: '%c'.",
-                     pathText[pathReaderP->cursor++]);
+        default: {
+            const char * const context = pathReader_context(pathReaderP);
+            
+            pm_errormsg("Unrecognized command in <path>: '%c'.  %s",
+                        pathText[pathReaderP->cursor++], context);
+
+            pm_strfree(context);
+
+            pm_longjmp();
+        }
         }
     }
 }
+
 
 
 static void
@@ -476,6 +504,8 @@ outlineObject(Path *           const pathP,
                 if (traceDraw)
                     pm_message("Doing cubic spline to (%u, %u)",
                                dest.x, dest.y);
+                pm_error("SVG image contains a cubic spline path.  "
+                         "This program cannot process cubic splines.");
                 /* We need to write ppmd_spline4() */
                 ppmd_spline4p(NULL, 0, 0, 0,
                               makePpmdPoint(currentPos),
