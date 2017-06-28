@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Svgtopam User Manual</TITLE></HEAD>
 <BODY>
 <H1>svgtopam</H1>
-Updated: 15 June 2013
+Updated: 28 June 2017
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -27,10 +27,10 @@ from its value.
 <p><b>svgtopam</b> reads an SVG (Scalable Vector Graphics) image as input and
 produces a PAM image as output.
 
-<p><b>svgtopam</b> is so weak that it is probably not useful in general
-for converting SVG images.  It understands only &lt;path&gt; SVG elements
-which use only the "M", "L", and "z" commands.
-This is sufficient for converting anything that comes out of
+<p><b>svgtopam</b> is so weak that it is probably not useful in general for
+converting SVG images.  It understands only &lt;path&gt; SVG elements which
+use only the "M", "L", and "z" commands, and only those that use whole number
+arguments.  This is sufficient for converting most of what comes out of
 <b>pamtosvg</b> (not by coincidence - the program was developed for the
 specific task of testing <b>pamtosvg</b>), but the main reason it is part of
 Netpbm is to provide a base for someone to create a full SVG to Netpbm

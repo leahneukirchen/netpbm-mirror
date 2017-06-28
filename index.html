@@ -557,6 +557,18 @@ expert might be able to figure it out and get some use out of it.
 <P>Netpbm contains primitive building blocks.  It certainly is not a
 complete graphics software library.
 
+<h3 id="othercmdline">Command Line Programs</h3>
+
+<P><B>ImageMagick</B> does many of the same things &mdash; mainly the more
+popular ones &mdash; that Netpbm does, including conversion between popular
+formats and basic editing.  <b>convert</b>, <b>mogrify</b>, <b>montage</b>, and
+<b>animate</b> are popular programs from the <B>ImageMagick</B>
+package.  <B>ImageMagick</B> runs on Unix, Windows, Windows NT, Macintosh, and
+VMS.
+
+<p><b>ImageMagick</b> also contains the program <b>display</b>, which is a
+<h3 id="#viewers">viewer</h3> and <a href="#visual">visual editor</a>.
+
 <h3 id="viewers">Image Viewers</h3>
 
 <P>The first thing you will want to make use of any of these tools is a
@@ -613,24 +625,21 @@ and generates a PPM image of it.  It works with Linux framebuffer devices.
 displays an image and lets you work on it and see the results as you go.
 This is fundamentally different from what Netpbm programs do.
 
-<P><B>ImageMagick</B> is like a visual version of Netpbm.  Using the
-X/Window system on Unix, you can do basic editing of images and lots
-of format conversions.  The package does include at least some
-non-visual tools.  <b>convert</b>, <b>mogrify</b>, <b>montage</b>, and
-<b>animate</b> are popular programs from the <B>ImageMagick</B>
-package.  <B>ImageMagick</B> runs on Unix, Windows, Windows NT,
-Macintosh, and VMS.
-
 <p><b>xv</b> is a very old and very popular simple image editor in the
 Unix world.  It does not have much in the way of current support,
 or maintenance, though.
 
-<P>The Gimp is a visual image editor for Unix and X, in the same category as
-the more famous, less capable, and much more expensive Adobe Photoshop,
-etc. for Windows.  See <B><A
-HREF="http://www.gimp.org">http://www.gimp.org</A></B>.  And you can add most
-of Netpbm's function to The Gimp using <a
-href="http://netpbm2gimp.sourceforge.net/">Netpbm2gimp</a>.
+<P>Gimp is a visual image editor for Unix and the X Window System, in the same
+category as the more famous, less capable, and much more expensive Adobe
+Photoshop, etc. for Windows.
+See <B><A HREF="http://www.gimp.org">http://www.gimp.org</A></B>.  And you can
+add most of Netpbm's function to Gimp
+using <a href="http://netpbm2gimp.sourceforge.net/">Netpbm2gimp</a>.
+
+<p><b>ImageMagick</b> contains the program <b>display</b>, which is another
+visual image editor.  It has fewer functions than Gimp.  This program uses the
+X Window System.  The package also contains <a href="othercmdline">command
+line</a> graphics programs.
 
 <p>Electric Eyes, <b>kuickshow</b>, and <b>gthumb</b> are also visual
 editors for the X/Window system, and <b>KView</b> and <b>gwenview</b>
