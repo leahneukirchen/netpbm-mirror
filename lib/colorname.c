@@ -21,8 +21,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <math.h>
 
 #include "netpbm/nstring.h"
+#include "netpbm/mallocvar.h"
 
 #include "colorname.h"
 
@@ -187,60 +189,77 @@ pm_colorget(FILE * const f) {
 
 
 void
-pm_parse_dictionary_name(char    const colorname[], 
-                         pixval  const maxval,
-                         int     const closeOk,
-                         pixel * const colorP) {
+pm_parse_dictionary_namen(char   const colorname[], 
+                          tuplen const color) {
 
-    FILE* f;
+    FILE * fP;
     bool gotit;
     bool colorfileExhausted;
-    struct colorfile_entry colorfile_entry;
+    struct colorfile_entry colorfileEntry;
     char * canoncolor;
-    pixval r,g,b;
 
-    f = pm_openColornameFile(NULL, TRUE);  /* exits if error */
+    fP = pm_openColornameFile(NULL, TRUE);  /* exits if error */
     canoncolor = strdup(colorname);
     pm_canonstr(canoncolor);
     gotit = FALSE;
     colorfileExhausted = FALSE;
     while (!gotit && !colorfileExhausted) {
-        colorfile_entry = pm_colorget(f);
-        if (colorfile_entry.colorname) {
-            pm_canonstr(colorfile_entry.colorname);
-            if (strcmp( canoncolor, colorfile_entry.colorname) == 0)
+        colorfileEntry = pm_colorget(fP);
+        if (colorfileEntry.colorname) {
+            pm_canonstr(colorfileEntry.colorname);
+            if (streq(canoncolor, colorfileEntry.colorname))
                 gotit = TRUE;
         } else
             colorfileExhausted = TRUE;
     }
-    fclose(f);
+    fclose(fP);
     
     if (!gotit)
         pm_error("unknown color '%s'", colorname);
-    
-    /* Rescale from [0..255] if necessary. */
-    if (maxval != 255) {
-        r = colorfile_entry.r * maxval / 255;
-        g = colorfile_entry.g * maxval / 255;
-        b = colorfile_entry.b * maxval / 255;
 
-        if (!closeOk) {
-            if (r * 255 / maxval != colorfile_entry.r ||
-                g * 255 / maxval != colorfile_entry.g ||
-                b * 255 / maxval != colorfile_entry.b)
+    color[PAM_RED_PLANE] = (samplen)colorfileEntry.r / PAM_COLORFILE_MAXVAL;
+    color[PAM_GRN_PLANE] = (samplen)colorfileEntry.g / PAM_COLORFILE_MAXVAL;
+    color[PAM_BLU_PLANE] = (samplen)colorfileEntry.b / PAM_COLORFILE_MAXVAL;
+
+    free(canoncolor);
+}
+
+
+
+void
+pm_parse_dictionary_name(char    const colorname[], 
+                         pixval  const maxval,
+                         int     const closeOk,
+                         pixel * const colorP) {
+
+    double const epsilon = 1.0/65536.0;
+
+    tuplen color;
+    pixval r, g, b;
+
+    MALLOCARRAY_NOFAIL(color, 3);
+
+    pm_parse_dictionary_namen(colorname, color);
+
+    r = ROUNDU(color[PAM_RED_PLANE] * maxval);
+    g = ROUNDU(color[PAM_GRN_PLANE] * maxval);
+    b = ROUNDU(color[PAM_BLU_PLANE] * maxval);
+    
+    if (!closeOk) {
+        if (maxval != PAM_COLORFILE_MAXVAL) {
+            if (fabs((double)r / maxval - color[PAM_RED_PLANE]) > epsilon ||
+                fabs((double)g / maxval - color[PAM_GRN_PLANE]) > epsilon ||
+                fabs((double)b / maxval - color[PAM_BLU_PLANE]) > epsilon) {
                 pm_message("WARNING: color '%s' cannot be represented "
                            "exactly with a maxval of %u.  "
                            "Approximating as (%u,%u,%u).  "
-                           "The color dictionary uses maxval 255, so that "
-                           "maxval will always work.",
-                           colorname, maxval, r, g, b);
+                           "(The color dictionary uses maxval %u, so that "
+                           "maxval will always work).",
+                           colorname, maxval, r, g, b,
+                           PAM_COLORFILE_MAXVAL);
+            }
         }
-    } else {
-        r = colorfile_entry.r;
-        g = colorfile_entry.g;
-        b = colorfile_entry.b;
     }
-    free(canoncolor);
 
     PPM_ASSIGN(*colorP, r, g, b);
 }

@@ -850,7 +850,7 @@ ppmd_spline4p(pixel **       const pixels,
 /*----------------------------------------------------------------------------
    Draw a cubic spline from 'endPt0' to 'endPt1', using 'ctlPt0' and
    'ctlPt1' as control points in the classic way: a line through
-   'endPt0' and 'ctlPt0' is tangent to the curve at 'entPt0' and the
+   'endPt0' and 'ctlPt0' is tangent to the curve at 'endPt0' and the
    length of that line controls "enthusiasm," whatever that is.
    Same for 'endPt1' and 'ctlPt1'.
 -----------------------------------------------------------------------------*/
