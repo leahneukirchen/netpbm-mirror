@@ -22,19 +22,19 @@
 #include "ppm.h"
 #include "pbm.h"
 
-enum matchType {
+typedef enum {
     MATCH_EXACT,
     MATCH_BK
-};
+} MatchType;
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
     const char * inputFilename;
     unsigned int colorCount;
     struct {
-        enum matchType matchType;
+        MatchType matchType;
         union {
             pixel    color;   /* matchType == MATCH_EXACT */
             bk_color bkColor; /* matchType == MATCH_BK */
@@ -47,7 +47,7 @@ struct cmdlineInfo {
 
 static void
 parseColorOpt(const char *         const colorOpt,
-              struct cmdlineInfo * const cmdlineP) {
+              struct CmdlineInfo * const cmdlineP) {
 
     unsigned int colorCount;
     char * colorOptWork;
@@ -85,7 +85,7 @@ parseColorOpt(const char *         const colorOpt,
 
 static void
 parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo *cmdlineP) {
+                 struct CmdlineInfo *cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that many of the strings that this function returns in the
    *cmdlineP structure are actually in the supplied argv array.  And
@@ -166,7 +166,7 @@ isBkColor(pixel    const comparator,
 static bool
 colorIsInSet(pixel              const color,
              pixval             const maxval,
-             struct cmdlineInfo const cmdline) {
+             struct CmdlineInfo const cmdline) {
 
     bool isInSet;
     unsigned int i;
@@ -195,7 +195,7 @@ colorIsInSet(pixel              const color,
 int
 main(int argc, char *argv[]) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
 
     FILE * ifP;
 
