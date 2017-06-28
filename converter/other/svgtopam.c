@@ -147,36 +147,36 @@ typedef struct {
     unsigned int height;
     pixel ** pixels;
     pixval maxval;
-} canvas;
+} Canvas;
 
 typedef struct {
     pixel fillColor;
-} style;
+} Style;
 
 
 
 typedef struct {
     const char * pathText;
         /* This is e.g. "M0 0 L1 1 L9 8 Z" */
-    style        style;
+    Style        style;
         /* This is the style as given by a 'style' attribute of <path> */
     unsigned int pathTextLength;
         /* This is the length in characters of 'pathText'.  It's redundant
            with 'pathText' and exists for convenience.
         */
-} path;
+} Path;
 
 static void
 createPath(const char * const pathText,
-           style        const style,
-           path **      const pathPP) {
+           Style        const style,
+           Path **      const pathPP) {
 /*----------------------------------------------------------------------------
    Create a path as described by a <path> element whose "style" attribute
    indicates style 'style' and whose "d" attribute indicates path data
    'pathText'.
 -----------------------------------------------------------------------------*/
     bool error;
-    path * pathP;
+    Path * pathP;
     
     MALLOCVAR(pathP);
     if (pathP == NULL)
@@ -204,7 +204,7 @@ createPath(const char * const pathText,
 
 
 static void
-destroyPath(path * const pathP) {
+destroyPath(Path * const pathP) {
     
     assert(pathP->pathTextLength == strlen(pathP->pathText));
 
@@ -218,13 +218,13 @@ destroyPath(path * const pathP) {
 typedef struct {
     unsigned int x;
     unsigned int y;
-} point;
+} Point;
 
-static point
+static Point
 makePoint(unsigned int const x,
           unsigned int const y) {
 
-    point p;
+    Point p;
     
     p.x = x;
     p.y = y;
@@ -233,7 +233,7 @@ makePoint(unsigned int const x,
 }
 
 static ppmd_point
-makePpmdPoint(point const arg) {
+makePpmdPoint(Point const arg) {
 
     ppmd_point p;
 
@@ -248,16 +248,16 @@ typedef enum {
     PATH_LINETO,
     PATH_CLOSEPATH,
     PATH_CUBIC
-} pathCommandVerb;
+} PathCommandVerb;
 
 typedef struct {
-    point dest;
-} pathMovetoArgs;
+    Point dest;
+} PathMovetoArgs;
 
 typedef struct {
     /* Draw a line segment from current point to 'dest' */
-    point dest;
-} pathLinetoArgs;
+    Point dest;
+} PathLinetoArgs;
 
 typedef struct {
     /* Draw a cubic spline from current point to 'dest' with control points
@@ -272,19 +272,19 @@ typedef struct {
        A cubic curve is a plot of a polynomial equation of degree 3
        (or less, for our purposes).
     */
-    point dest;
-    point ctl1;
-    point ctl2;
-} pathCubicArgs;
+    Point dest;
+    Point ctl1;
+    Point ctl2;
+} PathCubicArgs;
 
 typedef struct {
-    pathCommandVerb verb;
+    PathCommandVerb verb;
     union {
-        pathMovetoArgs moveto;
-        pathLinetoArgs lineto;
-        pathCubicArgs  cubic;
+        PathMovetoArgs moveto;
+        PathLinetoArgs lineto;
+        PathCubicArgs  cubic;
     } args;
-} pathCommand;
+} PathCommand;
 
 
 
@@ -292,15 +292,15 @@ typedef struct {
 /*----------------------------------------------------------------------------
    This is an object for reading through a path from beginning to end.
 -----------------------------------------------------------------------------*/
-    path *       pathP;
+    Path *       pathP;
     unsigned int cursor;
-} pathReader;
+} PathReader;
 
 static void
-createPathReader(path *        const pathP,
-                 pathReader ** const pathReaderPP) {
+pathReader_create(Path *        const pathP,
+                  PathReader ** const pathReaderPP) {
 
-    pathReader * pathReaderP;
+    PathReader * pathReaderP;
 
     MALLOCVAR_NOFAIL(pathReaderP);
 
@@ -311,18 +311,18 @@ createPathReader(path *        const pathP,
 }
 
 static void
-destroyPathReader(pathReader * const pathReaderP) {
+pathReader_destroy(PathReader * const pathReaderP) {
     free(pathReaderP);
 }
 
 
 
 static void
-skipWhiteSpace(pathReader * const pathReaderP) {
+pathReader_skipWhiteSpace(PathReader * const pathReaderP) {
 /*----------------------------------------------------------------------------
    Move the cursor over any white space where it now points.
 -----------------------------------------------------------------------------*/
-    const path * const pathP = pathReaderP->pathP;
+    const Path * const pathP = pathReaderP->pathP;
 
     while (isspace(pathP->pathText[pathReaderP->cursor]) &&
            pathReaderP->cursor < pathP->pathTextLength)
@@ -332,10 +332,10 @@ skipWhiteSpace(pathReader * const pathReaderP) {
 
 
 static void
-getNumber(pathReader *   const pathReaderP,
-          unsigned int * const numberP) {
+pathReader_getNumber(PathReader *   const pathReaderP,
+                     unsigned int * const numberP) {
 
-    const path * const pathP          = pathReaderP->pathP;
+    const Path * const pathP          = pathReaderP->pathP;
     const char * const pathText       = pathP->pathText;
     size_t       const pathTextLength = pathP->pathTextLength;
 
@@ -360,15 +360,15 @@ getNumber(pathReader *   const pathReaderP,
 
 
 static void
-getNextCommand(pathReader *  const pathReaderP,
-               pathCommand * const pathCommandP,
-               bool *        const endOfPathP) {
+pathReader_getNextCommand(PathReader *  const pathReaderP,
+                          PathCommand * const pathCommandP,
+                          bool *        const endOfPathP) {
 
-    const path * const pathP          = pathReaderP->pathP;
+    const Path * const pathP          = pathReaderP->pathP;
     const char * const pathText       = pathP->pathText;
     size_t       const pathTextLength = pathP->pathTextLength;
 
-    skipWhiteSpace(pathReaderP);
+    pathReader_skipWhiteSpace(pathReaderP);
 
     if (pathReaderP->cursor >= pathTextLength)
         *endOfPathP = true;
@@ -376,38 +376,42 @@ getNextCommand(pathReader *  const pathReaderP,
         switch (pathText[pathReaderP->cursor++]) {
         case 'M':
             pathCommandP->verb = PATH_MOVETO;
-            skipWhiteSpace(pathReaderP);
-            getNumber(pathReaderP, &pathCommandP->args.moveto.dest.x);
-            skipWhiteSpace(pathReaderP);
-            getNumber(pathReaderP, &pathCommandP->args.moveto.dest.y);
+            pathReader_skipWhiteSpace(pathReaderP);
+            pathReader_getNumber(pathReaderP,
+                                 &pathCommandP->args.moveto.dest.x);
+            pathReader_skipWhiteSpace(pathReaderP);
+            pathReader_getNumber(pathReaderP,
+                                 &pathCommandP->args.moveto.dest.y);
             break;
         case 'L':
             pathCommandP->verb = PATH_LINETO;
-            skipWhiteSpace(pathReaderP);
-            getNumber(pathReaderP, &pathCommandP->args.lineto.dest.x);
-            skipWhiteSpace(pathReaderP);
-            getNumber(pathReaderP, &pathCommandP->args.lineto.dest.y);
+            pathReader_skipWhiteSpace(pathReaderP);
+            pathReader_getNumber(pathReaderP,
+                                 &pathCommandP->args.lineto.dest.x);
+            pathReader_skipWhiteSpace(pathReaderP);
+            pathReader_getNumber(pathReaderP,
+                                 &pathCommandP->args.lineto.dest.y);
             break;
         case 'C':
             pathCommandP->verb = PATH_CUBIC;
-            skipWhiteSpace(pathReaderP);
-            getNumber(pathReaderP, &pathCommandP->args.cubic.ctl1.x);
-            skipWhiteSpace(pathReaderP);
-            getNumber(pathReaderP, &pathCommandP->args.cubic.ctl1.y);
-            skipWhiteSpace(pathReaderP);
-            getNumber(pathReaderP, &pathCommandP->args.cubic.ctl2.x);
-            skipWhiteSpace(pathReaderP);
-            getNumber(pathReaderP, &pathCommandP->args.cubic.ctl2.y);
-            skipWhiteSpace(pathReaderP);
-            getNumber(pathReaderP, &pathCommandP->args.cubic.dest.x);
-            skipWhiteSpace(pathReaderP);
-            getNumber(pathReaderP, &pathCommandP->args.cubic.dest.y);
+            pathReader_skipWhiteSpace(pathReaderP);
+            pathReader_getNumber(pathReaderP, &pathCommandP->args.cubic.ctl1.x);
+            pathReader_skipWhiteSpace(pathReaderP);
+            pathReader_getNumber(pathReaderP, &pathCommandP->args.cubic.ctl1.y);
+            pathReader_skipWhiteSpace(pathReaderP);
+            pathReader_getNumber(pathReaderP, &pathCommandP->args.cubic.ctl2.x);
+            pathReader_skipWhiteSpace(pathReaderP);
+            pathReader_getNumber(pathReaderP, &pathCommandP->args.cubic.ctl2.y);
+            pathReader_skipWhiteSpace(pathReaderP);
+            pathReader_getNumber(pathReaderP, &pathCommandP->args.cubic.dest.x);
+            pathReader_skipWhiteSpace(pathReaderP);
+            pathReader_getNumber(pathReaderP, &pathCommandP->args.cubic.dest.y);
             break;
         case 'z':
             pathCommandP->verb = PATH_CLOSEPATH;
             break;
         default:
-            pm_error("Unrecognized command in <path>: '%c'",
+            pm_error("Unrecognized command in <path>: '%c'.",
                      pathText[pathReaderP->cursor++]);
         }
     }
@@ -415,28 +419,28 @@ getNextCommand(pathReader *  const pathReaderP,
 
 
 static void
-outlineObject(path *           const pathP,
+outlineObject(Path *           const pathP,
               struct fillobj * const fillObjP) {
 /*----------------------------------------------------------------------------
   Create a fill object, which contains and outline of the object and
   can be used with ppmd_fill() to fill the figure.  The outline is as
   described by *pathP.
 -----------------------------------------------------------------------------*/
-    pathReader * pathReaderP;
+    PathReader * pathReaderP;
     bool endOfPath;
-    point currentPos;
-    point subpathStart;
+    Point currentPos;
+    Point subpathStart;
         /* Point at which the current subpath starts */
 
     endOfPath = false;
     subpathStart = makePoint(0,0);
     currentPos = subpathStart;
 
-    createPathReader(pathP, &pathReaderP);
+    pathReader_create(pathP, &pathReaderP);
 
     while (!endOfPath) {
-        pathCommand pathCommand;
-        getNextCommand(pathReaderP, &pathCommand, &endOfPath);
+        PathCommand pathCommand;
+        pathReader_getNextCommand(pathReaderP, &pathCommand, &endOfPath);
         if (!endOfPath) {
             switch (pathCommand.verb) {
             case PATH_MOVETO:
@@ -448,7 +452,7 @@ outlineObject(path *           const pathP,
                 currentPos = subpathStart;
                 break;
             case PATH_LINETO: {
-                point const dest = pathCommand.args.lineto.dest;
+                Point const dest = pathCommand.args.lineto.dest;
                 if (traceDraw)
                     pm_message("Lining to (%u, %u)", dest.x, dest.y);
                 ppmd_line(NULL, 0, 0, 0,
@@ -466,9 +470,9 @@ outlineObject(path *           const pathP,
                 currentPos = subpathStart;
                 break;
             case PATH_CUBIC: {
-                point const dest = pathCommand.args.cubic.dest;
-                point const ctl1 = pathCommand.args.cubic.ctl1;
-                point const ctl2 = pathCommand.args.cubic.ctl2;
+                Point const dest = pathCommand.args.cubic.dest;
+                Point const ctl1 = pathCommand.args.cubic.ctl1;
+                Point const ctl2 = pathCommand.args.cubic.ctl2;
                 if (traceDraw)
                     pm_message("Doing cubic spline to (%u, %u)",
                                dest.x, dest.y);
@@ -484,14 +488,14 @@ outlineObject(path *           const pathP,
             }
         }
     }
-    destroyPathReader(pathReaderP);
+    pathReader_destroy(pathReaderP);
 }
 
 
 
 static void
-drawPath(canvas * const canvasP,
-         path *   const pathP) {
+drawPath(Canvas * const canvasP,
+         Path *   const pathP) {
 /*----------------------------------------------------------------------------
    Draw the path 'pathP' on the canvas 'canvasP'.
 -----------------------------------------------------------------------------*/
@@ -518,10 +522,10 @@ drawPath(canvas * const canvasP,
 
 
 
-static style
+static Style
 interpretStyle(const char * const styleAttr) {
 
-    style style;
+    Style style;
 
     char * buffer;
 
@@ -582,7 +586,7 @@ interpretStyle(const char * const styleAttr) {
 
 static void
 getPathAttributes(xmlTextReaderPtr const xmlReaderP,
-                  style *          const styleP,
+                  Style *          const styleP,
                   const char **    const pathP) {
 
     const char * const style = getAttribute(xmlReaderP, "style");
@@ -628,11 +632,11 @@ processSubPathNode(xmlTextReaderPtr const xmlReaderP,
 
 static void
 processPathElement(xmlTextReaderPtr const xmlReaderP,
-                   canvas *         const canvasP) {
+                   Canvas *         const canvasP) {
 
-    style style;
+    Style style;
     const char * pathData;
-    path * pathP;
+    Path * pathP;
     bool endOfPath;
 
     assert(xmlTextReaderNodeType(xmlReaderP) == XML_READER_TYPE_ELEMENT);
@@ -697,7 +701,7 @@ getSvgAttributes(xmlTextReaderPtr const xmlReaderP,
 
 static void
 processSubSvgElement(xmlTextReaderPtr const xmlReaderP,
-                     canvas *         const canvasP) {
+                     Canvas *         const canvasP) {
 
     const char * const nodeName = currentNodeName(xmlReaderP);
 
@@ -714,7 +718,7 @@ processSubSvgElement(xmlTextReaderPtr const xmlReaderP,
 
 static void
 processSubSvgNode(xmlTextReaderPtr const xmlReaderP,
-                  canvas *         const canvasP,
+                  Canvas *         const canvasP,
                   bool *           const endOfSvgP) {
 
     xmlReaderTypes const nodeType = xmlTextReaderNodeType(xmlReaderP);
@@ -744,9 +748,9 @@ static void
 createCanvas(unsigned int const width,
              unsigned int const height,
              pixval       const maxval,
-             canvas **    const canvasPP) {
+             Canvas **    const canvasPP) {
 
-    canvas * canvasP;
+    Canvas * canvasP;
 
     MALLOCVAR_NOFAIL(canvasP);
 
@@ -761,7 +765,7 @@ createCanvas(unsigned int const width,
 
 
 static void
-destroyCanvas(canvas * const canvasP) {
+destroyCanvas(Canvas * const canvasP) {
 
     ppm_freearray(canvasP->pixels, canvasP->height);
 
@@ -772,7 +776,7 @@ destroyCanvas(canvas * const canvasP) {
 
 static void
 writePam(FILE *   const ofP,
-         canvas * const canvasP) {
+         Canvas * const canvasP) {
 
     unsigned int row;
     struct pam pam;
@@ -818,7 +822,7 @@ processSvgElement(xmlTextReaderPtr const xmlReaderP,
 
     unsigned int width, height;
     bool endOfSvg;
-    canvas * canvasP;
+    Canvas * canvasP;
 
     assert(xmlTextReaderNodeType(xmlReaderP) == XML_READER_TYPE_ELEMENT);
     assert(streq(currentNodeName(xmlReaderP), "svg"));
