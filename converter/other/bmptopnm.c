@@ -372,10 +372,16 @@ readWindowsBasic40ByteInfoHeader(FILE *                 const ifP,
 -----------------------------------------------------------------------------*/
     int colorsimportant;   /* ColorsImportant value from header */
     int colorsused;        /* ColorsUsed value from header */
+    long colsField;
 
     headerP->class = C_WIN;
 
-    headerP->cols = GetLong(ifP);
+    colsField = GetLong(ifP);
+
+    if (colsField <= 0)
+        pm_error("Invalid BMP file: says width is %ld", colsField);
+
+    headerP->cols = (unsigned long)colsField;
     {
         long const cy = GetLong(ifP);
         if (cy == 0)

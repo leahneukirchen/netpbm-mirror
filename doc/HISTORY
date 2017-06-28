@@ -4,13 +4,43 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+17.06.28 BJH  Release 10.47.65
+
+              pamgauss: Fix skewed output with even dimension.  Always broken
+              (Pamgauss was added in Netpbm 10.23 (July 2004).
+
+              bmptopnm: fix crash when input is a Windows BMP with negative
+              number for width.  Always broken.  (bmptopnm was new, as
+              bmptoppm, in original Netpbm, 1992).
+
+              pnmtojpeg: fix array bounds violation in argument list.  Always
+              broken (pnmtojpeg was new to Netpbm in Netpbm 8.2 (March 2000).
+
+              Build: correct link order in Jpeg2000 converter builds to
+              correct undefined symbol reference at link time.
+
+              libnetpbm: fix bug: pm_system_XXX closes Standard Input if you
+              supply a Standard Output accepter but not a Standard Input
+              feeder.  Broken since Netpbm 10.40 (September 2007).
+
+              Windows: fix bug: pm_system_lp() and pm_system_vp() fail
+              silently instead of with a clear error message in an environment
+              that does not provide Unix process management.  Always broken.
+              (pm_system_lp and pm_system_vp were new in Netpbm 10.40
+              (September 2007), but wouldn't even compile until Netpbm 10.42
+              (March 2008)).
+
+              Build: don't try to build standardppmdfont.c if it already
+              exists (so don't require ppmdcfont to exist).  Broken around
+              Netpbm 10.35 (2006).
+
 17.03.28 BJH  Release 10.47.64
 
               tifftonm: Fix incorrect PBM output with two-color paletted TIFF
               image.  Broken in primordial Netpbm, ca 1990.
 
               giftopnm: Fix buffer overflow/crash with invalid GIF input.
-              Broken since primorial Netpbm.
+              Broken since primordial Netpbm.
 
               bmptopnm: Fix buffer overflow/crash with negative height or
               width in OS/2 BMP.  Broken since primordial Netpbm.

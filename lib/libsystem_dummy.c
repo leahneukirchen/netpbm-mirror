@@ -21,6 +21,12 @@ pm_system_vp(const char *    const progName,
              void *          const feederParm,
              void stdoutAccepter(int, void *),
              void *          const accepterParm) {
+
+    pm_error("This program wants to run another program using pm_system_vp() "
+             "in the libnetpbm library, but libnetpbm was built without "
+             "the pm_system_vp() facility -- probably because this system "
+             "doesn't have the process management facilities pm_system() "
+             "requires.");
 }
 
 void
@@ -30,6 +36,12 @@ pm_system_lp(const char *    const progName,
              void stdoutAccepter(int, void *),
              void *          const accepterParm,
              ...) {
+
+    pm_error("This program wants to run another program using pm_system_lp() "
+             "in the libnetpbm library, but libnetpbm was built without "
+             "the pm_system_lp() facility -- probably because this system "
+             "doesn't have the process management facilities pm_system() "
+             "requires.");
 }
 
 void
@@ -39,8 +51,8 @@ pm_system(void                  stdinFeeder(int, void *),
           void *          const accepterParm,
           const char *    const shellCommand) {
 
-    pm_error("This program wants to run another program using pm_system() in "
-             "the libnetpbm library, but libnetpbm was built without "
+    pm_error("This program wants to run another program using pm_system() "
+             "in the libnetpbm library, but libnetpbm was built without "
              "the pm_system() facility -- probably because this system "
              "doesn't have the process management facilities pm_system() "
              "requires.");
