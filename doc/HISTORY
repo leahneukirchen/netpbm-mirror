@@ -31,6 +31,9 @@ not yet  BJH  Release 10.79.00
               the PATH instead of hardcoded as /usr/bin/perl (like all other
               Netpbm Perl programs).
 
+              ppmcolormask: fix incorrect output when input maxval is not 255.
+              Always broken (ppmcolormask was new in Netpbm 9.0, April 2000).
+
               bmptopnm: fix crash when input is a Windows BMP with negative
               number for width.  Always broken.  (bmptopnm was new, as
               bmptoppm, in original Netpbm, 1992).
