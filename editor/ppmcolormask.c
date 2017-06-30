@@ -222,7 +222,12 @@ main(int argc, char *argv[]) {
             int col;
             ppm_readppmrow(ifP, inputRow, cols, maxval, format);
             for (col = 0; col < cols; ++col) {
-                if (colorIsInSet(inputRow[col], maxval, cmdline)) {
+                pixel thisColor;
+                    /* Color of this pixel with same maxval as used in
+                       'cmdline'
+                    */
+                PPM_DEPTH(thisColor, inputRow[col], maxval, PPM_MAXMAXVAL);
+                if (colorIsInSet(thisColor, PPM_MAXMAXVAL, cmdline)) {
                     maskRow[col] = PBM_BLACK;
                     ++numPixelsMasked;
                 } else 

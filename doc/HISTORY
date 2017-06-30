@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+17.06.30 BJH  Release 10.73.13
+
+              ppmcolormask: fix incorrect output when input maxval is not 255.
+              Always broken (ppmcolormask was new in Netpbm 9.0, April 2000).
+
 17.06.28 BJH  Release 10.73.12
 
               pamgauss: Fix skewed output with even dimension.  Always broken
