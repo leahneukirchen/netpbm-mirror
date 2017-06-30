@@ -294,9 +294,9 @@ static bool_t used [MAXSTATES];
 
 static void 
 matching_pursuit (mp_t *mp, bool_t full_search, real_t price,
-          unsigned max_edges, int y_state, const range_t *range,
-          const domain_pool_t *domain_pool, const coeff_t *coeff,
-          const wfa_t *wfa, const coding_t *c)
+                  unsigned max_edges, int y_state, const range_t *range,
+                  const domain_pool_t *domain_pool, const coeff_t *coeff,
+                  const wfa_t *wfa, const coding_t *c)
 /*
  *  Find an approximation of the current 'range' with a linear
  *  combination of vectors of the 'domain_pool'. The linear
@@ -320,303 +320,310 @@ matching_pursuit (mp_t *mp, bool_t full_search, real_t price,
  *  vectors, factors, rate, distortion and costs are stored in 'mp'
  */
 {
-   unsigned  n;         /* current vector of the OB */
-   int       index;         /* best fitting domain image */
-   unsigned  domain;        /* counter */
-   real_t    norm;          /* norm of range image */
-   real_t    additional_bits;   /* bits for mc, nd, and tree */
-   word_t   *domain_blocks;     /* current set of domain images */
-   const real_t  min_norm = 2e-3;   /* lower bound of norm */
-   unsigned      best_n   = 0;
-   unsigned  size     = size_of_level (range->level);
+    unsigned  n;         /* current vector of the OB */
+    int       index;         /* best fitting domain image */
+    unsigned  domain;        /* counter */
+    real_t    norm;          /* norm of range image */
+    real_t    additional_bits;   /* bits for mc, nd, and tree */
+    word_t   *domain_blocks;     /* current set of domain images */
+    const real_t  min_norm = 2e-3;   /* lower bound of norm */
+    unsigned      best_n   = 0;
+    unsigned  size     = size_of_level (range->level);
  
-   /*
-    *  Initialize domain pool and inner product arrays
-    */
-   domain_blocks = domain_pool->generate (range->level, y_state, wfa,
-                      domain_pool->model);
-   for (domain = 0; domain_blocks [domain] >= 0; domain++)
-   {
-      used [domain] = NO;
-      rem_denominator [domain]      /* norm of domain */
-     = get_ip_state_state (domain_blocks [domain], domain_blocks [domain],
-                   range->level, c);
-      if (rem_denominator [domain] / size < min_norm)
-     used [domain] = YES;       /* don't use domains with small norm */
-      else
-     rem_numerator [domain]     /* inner product <s_domain, b> */
-        = get_ip_image_state (range->image, range->address,
-                  range->level, domain_blocks [domain], c);
-      if (!used [domain] && fabs (rem_numerator [domain]) < min_norm)
-     used [domain] = YES;
-   }
+    /*
+     *  Initialize domain pool and inner product arrays
+     */
+    domain_blocks = domain_pool->generate (range->level, y_state, wfa,
+                                           domain_pool->model);
+    for (domain = 0; domain_blocks [domain] >= 0; domain++)
+    {
+        used [domain] = NO;
+        rem_denominator [domain] =     /* norm of domain */
+            get_ip_state_state (domain_blocks [domain], domain_blocks [domain],
+                                range->level, c);
+        if (rem_denominator [domain] / size < min_norm)
+            used [domain] = YES;       /* don't use domains with small norm */
+        else
+            rem_numerator [domain]     /* inner product <s_domain, b> */
+                = get_ip_image_state (range->image, range->address,
+                                      range->level, domain_blocks [domain], c);
+        if (!used [domain] && fabs (rem_numerator [domain]) < min_norm)
+            used [domain] = YES;
+    }
 
-   /*
-    *  Exclude all domain blocks given in array 'mp->exclude'
-    */
-   for (n = 0; isdomain (mp->exclude [n]); n++)
-      used [mp->exclude [n]] = YES;
+    /*
+     *  Exclude all domain blocks given in array 'mp->exclude'
+     */
+    for (n = 0; isdomain (mp->exclude [n]); n++)
+        used [mp->exclude [n]] = YES;
 
-   /*
-    *  Compute the approximation costs if 'range' is approximated with
-    *  no linear combination, i.e. the error is equal to the square
-    *  of the image norm and the size of the automaton is determined by
-    *  storing only zero elements in the current matrix row
-    */
-   for (norm = 0, n = 0; n < size; n++)
-      norm += square (c->pixels [range->address * size + n]);
+    /*
+     *  Compute the approximation costs if 'range' is approximated with
+     *  no linear combination, i.e. the error is equal to the square
+     *  of the image norm and the size of the automaton is determined by
+     *  storing only zero elements in the current matrix row
+     */
+    for (norm = 0, n = 0; n < size; n++)
+        norm += square (c->pixels [range->address * size + n]);
 
-   additional_bits = range->tree_bits + range->mv_tree_bits
-             + range->mv_coord_bits + range->nd_tree_bits
-             + range->nd_weights_bits;
+    additional_bits = range->tree_bits + range->mv_tree_bits
+        + range->mv_coord_bits + range->nd_tree_bits
+        + range->nd_weights_bits;
 
-   mp->err          = norm;
-   mp->weights_bits = 0;
-   mp->matrix_bits  = domain_pool->bits (domain_blocks, NULL, range->level,
-                     y_state, wfa, domain_pool->model);
-   mp->costs        = (mp->matrix_bits + mp->weights_bits
-               + additional_bits) * price + mp->err;
+    mp->err          = norm;
+    mp->weights_bits = 0;
+    mp->matrix_bits  = domain_pool->bits (domain_blocks, NULL, range->level,
+                                          y_state, wfa, domain_pool->model);
+    mp->costs        = (mp->matrix_bits + mp->weights_bits
+                        + additional_bits) * price + mp->err;
 
-   n = 0;
-   do 
-   {
-      /*
-       *  Current approximation is: b = d_0 o_0 + ... + d_(n-1) o_(n-1)
-       *  with corresponding costs 'range->err + range->bits * p'.
-       *  For all remaining state images s_i (used[s_i] == NO) set
-       *  o_n : = s_i - \sum(k = 0, ... , n-1) {(<s_i, o_k> / ||o_k||^2) o_k}
-       *  and try to beat current costs.
-       *  Choose that vector for the next orthogonalization step,
-       *  which has minimal costs: s_index.
-       *  (No progress is indicated by index == -1)
-       */
-      
-      real_t min_matrix_bits  = 0;
-      real_t min_weights_bits = 0;
-      real_t min_error        = 0;
-      real_t min_weight [MAXEDGES];
-      real_t min_costs = full_search ? MAXCOSTS : mp->costs;
-      
-      for (index = -1, domain = 0; domain_blocks [domain] >= 0; domain++) 
-     if (!used [domain]) 
-     {
-        real_t    matrix_bits, weights_bits;
+    n = 0;
+    do 
+    {
         /*
-         *  To speed up the search through the domain images,
-         *  the costs of using domain image 'domain' as next vector
-         *  can be approximated in a first step:
-         *  improvement of image quality
-         *    <= square (rem_numerator[domain]) / rem_denominator[domain]
+         *  Current approximation is: b = d_0 o_0 + ... + d_(n-1) o_(n-1)
+         *  with corresponding costs 'range->err + range->bits * p'.
+         *  For all remaining state images s_i (used[s_i] == NO) set
+         *  o_n : = s_i - \sum(k = 0, ... , n-1) {(<s_i, o_k> / ||o_k||^2) o_k}
+         *  and try to beat current costs.
+         *  Choose that vector for the next orthogonalization step,
+         *  which has minimal costs: s_index.
+         *  (No progress is indicated by index == -1)
          */
-        {
-          word_t   vectors [MAXEDGES + 1];
-          word_t   states [MAXEDGES + 1];
-          real_t   weights [MAXEDGES + 1];
-          unsigned i, k;
-          
-          for (i = 0, k = 0; k < n; k++)
-             if (mp->weight [k] != 0)
-             {
-            vectors [i] = mp->indices [k];
-            states [i]  = domain_blocks [vectors [i]];
-            weights [i] = mp->weight [k];
-            i++;
-             }
-          vectors [i]     = domain;
-          states [i]      = domain_blocks [domain];
-          weights [i]     = 0.5;
-          vectors [i + 1] = -1;
-          states [i + 1]  = -1;
-
-          weights_bits = coeff->bits (weights, states, range->level,
-                          coeff);
-          matrix_bits = domain_pool->bits (domain_blocks, vectors,
-                           range->level, y_state,
-                           wfa, domain_pool->model);
-        }
-        if (((matrix_bits + weights_bits + additional_bits) * price +
-         mp->err -
-         square (rem_numerator [domain]) / rem_denominator [domain])
-        < min_costs)
-        {
-           /*
-        *  1.) Compute the weights (linear factors) c_i of the
-        *  linear combination
-        *  b = c_0 v_0 + ... + c_(n-1) v_(n-1) + c_n v_'domain'
-        *  Use backward substitution to obtain c_i from the linear
-        *  factors of the lin. comb. b = d_0 o_0 + ... + d_n o_n
-        *  of the corresponding orthogonal vectors {o_0, ..., o_n}.
-        *  Vector o_n of the orthogonal basis is obtained by using
-        *  vector 'v_domain' in step n of the Gram Schmidt
-        *  orthogonalization (see above for definition of o_n).
-        *  Recursive formula for the coefficients c_i:
-        *  c_n := <b, o_n> / ||o_n||^2
-        *  for i = n - 1, ... , 0:
-        *  c_i := <b, o_i> / ||o_i||^2 +
-        *          \sum (k = i + 1, ... , n){ c_k <v_k, o_i>
-        *                   / ||o_i||^2 }
-        *  2.) Because linear factors are stored with reduced precision
-        *  factor c_i is rounded with the given precision in step i
-        *  of the recursive formula. 
-        */
-
-           unsigned k;      /* counter */
-           int      l;      /* counter */
-           real_t   m_bits;     /* number of matrix bits to store */
-           real_t   w_bits;     /* number of weights bits to store */
-           real_t   r [MAXEDGES];   /* rounded linear factors */
-           real_t   f [MAXEDGES];   /* linear factors */
-           int      v [MAXEDGES];   /* mapping of domains to vectors */
-           real_t   costs;      /* current approximation costs */
-           real_t   m_err;      /* current approximation error */
-
-           f [n] = rem_numerator [domain] / rem_denominator [domain];
-           v [n] = domain;      /* corresponding mapping */
-           for (k = 0; k < n; k++)
-           {
-          f [k] = ip_image_ortho_vector [k] / norm_ortho_vector [k];
-          v [k] = mp->indices [k];
-           }
-        
-           for (l = n; l >= 0; l--) 
-           {
-          rpf_t *rpf = domain_blocks [v [l]]
-                   ? coeff->rpf : coeff->dc_rpf;
-
-          r [l] = f [l] = btor (rtob (f [l], rpf), rpf);
-             
-          for (k = 0; k < (unsigned) l; k++)
-             f [k] -= f [l] * ip_domain_ortho_vector [v [l]][k]
-                  / norm_ortho_vector [k] ;
-           } 
-
-           /*
-        *  Compute the number of output bits of the linear combination
-        *  and store the weights with reduced precision. The
-        *  resulting linear combination is
-        *  b = r_0 v_0 + ... + r_(n-1) v_(n-1) + r_n v_'domain'
-        */
-           {
-          word_t vectors [MAXEDGES + 1];
-          word_t states [MAXEDGES + 1];
-          real_t weights [MAXEDGES + 1];
-          int    i;
-          
-          for (i = 0, k = 0; k <= n; k++)
-             if (f [k] != 0)
-             {
-            vectors [i] = v [k];
-            states [i]  = domain_blocks [v [k]];
-            weights [i] = f [k];
-            i++;
-             }
-          vectors [i] = -1;
-          states [i]  = -1;
-
-          w_bits = coeff->bits (weights, states, range->level, coeff);
-          m_bits = domain_pool->bits (domain_blocks, vectors,
-                          range->level, y_state,
-                          wfa, domain_pool->model);
-           }
-           
-           /*
-        *  To compute the approximation error, the corresponding
-        *  linear factors of the linear combination 
-        *  b = r_0 o_0 + ... + r_(n-1) o_(n-1) + r_n o_'domain'
-        *  with orthogonal vectors must be computed with following
-        *  formula:
-        *  r_i := r_i +
-        *          \sum (k = i + 1, ... , n) { r_k <v_k, o_i>
-        *                   / ||o_i||^2 }
-        */
-           for (l = 0; (unsigned) l <= n; l++)
-           {
-          /*
-           *  compute <v_n, o_n>
-           */
-          real_t a;
-
-          a = get_ip_state_state (domain_blocks [v [l]],
-                      domain_blocks [domain],
-                      range->level, c);
-          for (k = 0; k < n; k++) 
-             a -= ip_domain_ortho_vector [v [l]][k]
-              / norm_ortho_vector [k]
-              * ip_domain_ortho_vector [domain][k];
-          ip_domain_ortho_vector [v [l]][n] = a;
-           }
-           norm_ortho_vector [n]     = rem_denominator [domain];
-           ip_image_ortho_vector [n] = rem_numerator [domain];
-        
-           for (k = 0; k <= n; k++)
-          for (l = k + 1; (unsigned) l <= n; l++)
-             r [k] += ip_domain_ortho_vector [v [l]][k] * r [l]
-                  / norm_ortho_vector [k];
-           /*
-        *  Compute approximation error:
-        *  error := ||b||^2 +
-        *  \sum (k = 0, ... , n){r_k^2 ||o_k||^2 - 2 r_k <b, o_k>}
-        */
-           m_err = norm;
-           for (k = 0; k <= n; k++)
-          m_err += square (r [k]) * norm_ortho_vector [k]
-             - 2 * r [k] * ip_image_ortho_vector [k];
-           if (m_err < 0)       /* TODO: return MAXCOSTS */
-          warning ("Negative image norm: %f"
-               " (current domain: %d, level = %d)",
-               (double) m_err, domain, range->level);
-
-           costs = (m_bits + w_bits + additional_bits) * price + m_err;
-           if (costs < min_costs)   /* found a better approximation */
-           {
-          index            = domain;
-          min_costs        = costs;
-          min_matrix_bits  = m_bits;
-          min_weights_bits = w_bits;
-          min_error        = m_err;
-          for (k = 0; k <= n; k++)
-             min_weight [k] = f [k];
-           }
-        }
-     }
       
-      if (index >= 0)           /* found a better approximation */
-      {
-     if (min_costs < mp->costs)
-     {
-        unsigned k;
-        
-        mp->costs        = min_costs;
-        mp->err          = min_error;
-        mp->matrix_bits  = min_matrix_bits;
-        mp->weights_bits = min_weights_bits;
-        
-        for (k = 0; k <= n; k++)
-           mp->weight [k] = min_weight [k];
+        real_t min_matrix_bits  = 0;
+        real_t min_weights_bits = 0;
+        real_t min_error        = 0;
+        real_t min_weight [MAXEDGES];
+        real_t min_costs = full_search ? MAXCOSTS : mp->costs;
+      
+        for (index = -1, domain = 0; domain_blocks [domain] >= 0; domain++) 
+            if (!used [domain]) 
+            {
+                real_t    matrix_bits, weights_bits;
+                /*
+                 *  To speed up the search through the domain images,
+                 *  the costs of using domain image 'domain' as next vector
+                 *  can be approximated in a first step:
+                 *  improvement of image quality
+                 *  <= square (rem_numerator[domain]) / rem_denominator[domain]
+                 */
+                {
+                    word_t   vectors [MAXEDGES + 1];
+                    word_t   states [MAXEDGES + 1];
+                    real_t   weights [MAXEDGES + 1];
+                    unsigned i, k;
+          
+                    for (i = 0, k = 0; k < n; k++)
+                        if (mp->weight [k] != 0)
+                        {
+                            vectors [i] = mp->indices [k];
+                            states [i]  = domain_blocks [vectors [i]];
+                            weights [i] = mp->weight [k];
+                            i++;
+                        }
+                    vectors [i]     = domain;
+                    states [i]      = domain_blocks [domain];
+                    weights [i]     = 0.5;
+                    vectors [i + 1] = -1;
+                    states [i + 1]  = -1;
 
-        best_n = n + 1;
-     }
+                    weights_bits = coeff->bits (weights, states, range->level,
+                                                coeff);
+                    matrix_bits = domain_pool->bits (domain_blocks, vectors,
+                                                     range->level, y_state,
+                                                     wfa, domain_pool->model);
+                }
+                if (((matrix_bits + weights_bits + additional_bits) * price +
+                     mp->err -
+                     square (rem_numerator[domain]) / rem_denominator[domain])
+                    < min_costs)
+                {
+                    /*
+                     *  1.) Compute the weights (linear factors) c_i of the
+                     *  linear combination
+                     *  b = c_0 v_0 + ... + c_(n-1) v_(n-1) + c_n v_'domain'
+                     *  Use backward substitution to obtain c_i from the linear
+                     *  factors of the lin. comb. b = d_0 o_0 + ... + d_n o_n
+                     *  of the corresponding orthogonal vectors {o_0, ..., o_n}.
+                     *  Vector o_n of the orthogonal basis is obtained by using
+                     *  vector 'v_domain' in step n of the Gram Schmidt
+                     *  orthogonalization (see above for definition of o_n).
+                     *  Recursive formula for the coefficients c_i:
+                     *  c_n := <b, o_n> / ||o_n||^2
+                     *  for i = n - 1, ... , 0:
+                     *  c_i := <b, o_i> / ||o_i||^2 +
+                     *          \sum (k = i + 1, ... , n){ c_k <v_k, o_i>
+                     *                   / ||o_i||^2 }
+                     *  2.) Because linear factors are stored with reduced
+                     *  precision factor c_i is rounded with the given
+                     *  precision in step i of the recursive formula.
+                     */
+
+                    unsigned k;      /* counter */
+                    int      l;      /* counter */
+                    real_t   m_bits;     /* number of matrix bits to store */
+                    real_t   w_bits;     /* number of weights bits to store */
+                    real_t   r [MAXEDGES];   /* rounded linear factors */
+                    real_t   f [MAXEDGES];   /* linear factors */
+                    int      v [MAXEDGES];   /* mapping of domains to vectors*/
+                    real_t   costs;      /* current approximation costs */
+                    real_t   m_err;      /* current approximation error */
+
+                    f [n] = rem_numerator [domain] / rem_denominator [domain];
+                    v [n] = domain;      /* corresponding mapping */
+                    for (k = 0; k < n; k++)
+                    {
+                        f[k] = ip_image_ortho_vector[k] / norm_ortho_vector[k];
+                        v [k] = mp->indices [k];
+                    }
+        
+                    for (l = n; l >= 0; --l) {
+                        rpf_t * const rpf = domain_blocks[v[l]]
+                            ? coeff->rpf : coeff->dc_rpf;
+
+                        unsigned int k;
+
+                        r[l] = f[l] = btor(rtob(f[l], rpf), rpf);
+
+                        {
+                            real_t const fl = f[l];
+             
+                            for (k = 0; k < l; ++k) {
+                                f[k] -= fl * ip_domain_ortho_vector[v[l]][k]
+                                    / norm_ortho_vector[k];
+                            }
+                        }
+                    } 
+
+                    /*
+                     *  Compute the number of output bits of the linear
+                     *  combination and store the weights with reduced
+                     *  precision. The resulting linear combination is
+                     *  b = r_0 v_0 + ... + r_(n-1) v_(n-1) + r_n v_'domain'
+                     */
+                    {
+                        word_t vectors [MAXEDGES + 1];
+                        word_t states [MAXEDGES + 1];
+                        real_t weights [MAXEDGES + 1];
+                        int    i;
+          
+                        for (i = 0, k = 0; k <= n; k++)
+                            if (f [k] != 0)
+                            {
+                                vectors [i] = v [k];
+                                states [i]  = domain_blocks [v [k]];
+                                weights [i] = f [k];
+                                i++;
+                            }
+                        vectors [i] = -1;
+                        states [i]  = -1;
+
+                        w_bits =
+                            coeff->bits(weights, states, range->level, coeff);
+                        m_bits = domain_pool->bits (domain_blocks, vectors,
+                                                    range->level, y_state,
+                                                    wfa, domain_pool->model);
+                    }
+           
+                    /*
+                     *  To compute the approximation error, the corresponding
+                     *  linear factors of the linear combination 
+                     *  b = r_0 o_0 + ... + r_(n-1) o_(n-1) + r_n o_'domain'
+                     *  with orthogonal vectors must be computed with following
+                     *  formula:
+                     *  r_i := r_i +
+                     *          \sum (k = i + 1, ... , n) { r_k <v_k, o_i>
+                     *                   / ||o_i||^2 }
+                     */
+                    for (l = 0; (unsigned) l <= n; l++)
+                    {
+                        /*
+                         *  compute <v_n, o_n>
+                         */
+                        real_t a;
+
+                        a = get_ip_state_state (domain_blocks [v [l]],
+                                                domain_blocks [domain],
+                                                range->level, c);
+                        for (k = 0; k < n; k++) 
+                            a -= ip_domain_ortho_vector [v [l]][k]
+                                / norm_ortho_vector [k]
+                                * ip_domain_ortho_vector [domain][k];
+                        ip_domain_ortho_vector [v [l]][n] = a;
+                    }
+                    norm_ortho_vector [n]     = rem_denominator [domain];
+                    ip_image_ortho_vector [n] = rem_numerator [domain];
+        
+                    for (k = 0; k <= n; k++)
+                        for (l = k + 1; (unsigned) l <= n; l++)
+                            r [k] += ip_domain_ortho_vector [v [l]][k] * r [l]
+                                / norm_ortho_vector [k];
+                    /*
+                     *  Compute approximation error:
+                     *  error := ||b||^2 +
+                     *  \sum (k = 0, ... , n){r_k^2 ||o_k||^2 - 2 r_k <b, o_k>}
+                     */
+                    m_err = norm;
+                    for (k = 0; k <= n; k++)
+                        m_err += square (r [k]) * norm_ortho_vector [k]
+                            - 2 * r [k] * ip_image_ortho_vector [k];
+                    if (m_err < 0)       /* TODO: return MAXCOSTS */
+                        warning ("Negative image norm: %f"
+                                 " (current domain: %d, level = %d)",
+                                 (double) m_err, domain, range->level);
+
+                    costs = (m_bits + w_bits + additional_bits) * price + m_err;
+                    if (costs < min_costs)   /* found a better approximation */
+                    {
+                        index            = domain;
+                        min_costs        = costs;
+                        min_matrix_bits  = m_bits;
+                        min_weights_bits = w_bits;
+                        min_error        = m_err;
+                        for (k = 0; k <= n; k++)
+                            min_weight [k] = f [k];
+                    }
+                }
+            }
+      
+        if (index >= 0)           /* found a better approximation */
+        {
+            if (min_costs < mp->costs)
+            {
+                unsigned k;
+        
+                mp->costs        = min_costs;
+                mp->err          = min_error;
+                mp->matrix_bits  = min_matrix_bits;
+                mp->weights_bits = min_weights_bits;
+        
+                for (k = 0; k <= n; k++)
+                    mp->weight [k] = min_weight [k];
+
+                best_n = n + 1;
+            }
      
-     mp->indices [n] = index;
-     mp->into [n]    = domain_blocks [index];
+            mp->indices [n] = index;
+            mp->into [n]    = domain_blocks [index];
 
-     used [index] = YES;
+            used [index] = YES;
 
-     /* 
-      *  Gram-Schmidt orthogonalization step n 
-      */
-     orthogonalize (index, n, range->level, min_norm, domain_blocks, c);
-     n++;
-      } 
-   } 
-   while (n < max_edges && index >= 0);
+            /* 
+             *  Gram-Schmidt orthogonalization step n 
+             */
+            orthogonalize (index, n, range->level, min_norm, domain_blocks, c);
+            n++;
+        } 
+    } 
+    while (n < max_edges && index >= 0);
 
-   mp->indices [best_n] = NO_EDGE;
+    mp->indices [best_n] = NO_EDGE;
    
-   mp->costs = (mp->matrix_bits + mp->weights_bits + additional_bits) * price
-           + mp->err;
+    mp->costs = (mp->matrix_bits + mp->weights_bits + additional_bits) * price
+        + mp->err;
 
-   Free (domain_blocks);
+    Free (domain_blocks);
 }
 
 static void

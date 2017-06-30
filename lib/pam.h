@@ -493,6 +493,9 @@ tuple
 pnm_parsecolor(const char * const colorname,
                sample       const maxval);
 
+tuplen
+pnm_parsecolorn(const char * const colorname);
+
 const char *
 pnm_colorname(struct pam * const pamP,
               tuple        const color,

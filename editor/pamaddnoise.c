@@ -26,7 +26,7 @@
 ** Prentice Hall, 1993  ISBN 0-13-145814-0
 */
 
-#define _XOPEN_SOURCE   /* get M_PI in math.h */
+#define _XOPEN_SOURCE 500  /* get M_PI in math.h */
 
 #include <math.h>
 

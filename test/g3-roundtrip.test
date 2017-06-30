@@ -2,6 +2,10 @@
 # This script tests: g3topbm pbmtog3
 # Also requires: pnmcrop
 
+tmpdir=${tmpdir:-/tmp}
+complete256_pbm=${tmpdir}/complete256.pbm
+widew_pbm=${tmpdir}/widew.pbm
+wideb_pbm=${tmpdir}/wideb.pbm
 
 pbmtog3 -nofixedwidth testgrid.pbm | \
 g3topbm -width=14 | cmp -s - testgrid.pbm
@@ -14,3 +18,37 @@ echo $?
 pbmtog3 testgrid.pbm | \
 g3topbm  | pnmcrop -white -right -bottom | \
  cmp -s - testgrid.pbm ; echo $?
+
+awk 'BEGIN { print "P4";         # header
+             print "8 256";
+             for (i=0;i<256;++i) # raster
+                  printf("%c",i) }' > ${complete256_pbm}
+
+pbmtog3 -nofixedwidth  ${complete256_pbm} |  g3topbm -width=8 | tee /tmp/z1 | \
+ cmp -s - ${complete256_pbm} ; echo $?
+
+pbmtog3 -reverse -nofixedwidth ${complete256_pbm} | \
+g3topbm -reversebits -width=8 | \
+ cmp -s - ${complete256_pbm} ; echo $?
+
+pbmtog3 -align8 ${complete256_pbm} | \
+g3topbm -width=1728 | pnmcrop -white -right | \
+ cmp -s - ${complete256_pbm} ; echo $?
+
+pbmtog3 -align16 ${complete256_pbm} | \
+g3topbm -width=1728 | pnmcrop -white -right | \
+ cmp -s - ${complete256_pbm} ; echo $?
+
+pbmmake -w 5000 5 | tee ${widew_pbm} | pbmtog3 -nofixedwidth | \
+g3topbm | \
+ cmp -s - ${widew_pbm} ; echo $?
+
+pbmtog3 -nofixedwidth ${widew_pbm} | \
+g3topbm -width=5000 | \
+ cmp -s - ${widew_pbm} ; echo $?
+
+pbmmake -b 5000 5 | tee ${wideb_pbm} | pbmtog3 -nofixedwidth | \
+g3topbm | \
+ cmp -s - ${wideb_pbm} ; echo $?
+
+rm ${complete256_pbm} ${wideb_pbm} ${widew_pbm}

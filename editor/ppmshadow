@@ -70,19 +70,20 @@ sub doVersionHack($) {
 
 
 
-sub getDimensions($) {
+sub imageDimensions($) {
     my ($fileName) = @_;
 #-----------------------------------------------------------------------------
 #  Return the dimensions of the Netpbm image in the named file
 #-----------------------------------------------------------------------------
-    my ($width, $height);
+    my ($width, $height, $depth);
     my $pamfileOutput = `pamfile $fileName`;
-    if ($pamfileOutput =~ m/.*\sP[BGP]M\s.*,\s*(\d*)\sby\s(\d*)/) {
-        ($width, $height) = ($1, $2);
+    if ($pamfileOutput =~
+            m/.*\sP[BGP]M\s.*,\s*(\d*)\sby\s(\d*)\s*maxval\s(\d*)/) {
+        ($width, $height, $depth) = ($1, $2, $3);
     } else {
         die("Unrecognized output from 'pamfile' shell command");
     }
-    return ($width, $height);
+    return ($width, $height, $depth);
 }    
 
 
@@ -207,7 +208,8 @@ system("ppmtoppm");
 # seem to be able to open stdin and stdout pipes properly if stdin and 
 # stdout didn't already exist.  2002.09.07 BJH
 
-my ($sourceImageWidth, $sourceImageHeight) = getDimensions($infile);
+my ($sourceImageWidth, $sourceImageHeight, $sourceImageDepth) =
+    imageDimensions($infile);
 
 #   Create an all-background-color image (same size as original image)
 
@@ -216,8 +218,8 @@ system("pamcut -left=0 -top=0 -width=1 -height=1 $infile | " .
        "pamscale -xsize=$sourceImageWidth " .
        "-ysize=$sourceImageHeight >$backgroundfile");
 
-#   Create mask file for background.  It is white wherever there is background
-#   image in the input.
+#   Create mask file for background, named $bgmaskfile.  It is a PBM, white
+#   wherever there is background image in the input.
 
 my $bgmaskfile = "$ourtmp/bgmask.pbm";
 system("pamarith -difference $infile $backgroundfile | pnminvert | ppmtopgm " .
@@ -234,7 +236,7 @@ if ($translucent) {
     #   Convolve the input color image with the kernel
     #   to create a translucent shadow image.
 
-    system("pnmconvol $convkernelfile $infile >$ourtmp/blurred.ppm");
+    system("pnmconvol -quiet $convkernelfile $infile >$ourtmp/blurred.ppm");
     unlink("$convkernelfile") unless $keeptemp;
     while ($ckern < $convolve) {
         system("pnmsmooth $ourtmp/blurred.ppm >$ourtmp/convolvedx.ppm");
@@ -246,8 +248,8 @@ if ($translucent) {
     #   Convolve the positive mask with the kernel to create shadow
  
     my $blurredblackshadfile = "$ourtmp/blurredblackshad.pgm";
-    system("pamdepth -quiet 255 $bgmaskfile | " .
-           "pnmconvol $convkernelfile >$blurredblackshadfile");
+    system("pamdepth -quiet $sourceImageDepth $bgmaskfile | " .
+           "pnmconvol -quiet $convkernelfile >$blurredblackshadfile");
     unlink($convkernelfile) unless $keeptemp;
 
     while ($ckern < $convolve) {
@@ -277,21 +279,6 @@ my $shadowfile = "$ourtmp/shadow.ppm";
 }
 unlink("$ourtmp/blurred.ppm") unless $keeptemp;
 
-#   Make mask for foreground
-
-my $fgmaskfile = "$ourtmp/fgmask.pbm";
-open(STDIN, "<$bgmaskfile") or die();
-open(STDOUT, ">$fgmaskfile") or die();
-system("pnminvert");
-
-#   Make image which is just foreground; rest is black.
-
-my $justfgfile = "$ourtmp/justfg.ppm";
-open(STDOUT, ">$justfgfile") or die();
-system("pamarith", "-multiply", $infile, $fgmaskfile);
-
-unlink($fgmaskfile) unless $keeptemp;
-unlink($infile) unless $keeptemp;
 
 #   Paste shadow onto background.
 
@@ -302,22 +289,15 @@ system("pnmpaste", "-replace", $shadowfile, $xoffset, $yoffset,
 unlink($shadowfile) unless $keeptemp;
 unlink($backgroundfile) unless $keeptemp;
 
-#   Knock out (make black) foreground area
 
-my $allbutfgfile = "$ourtmp/allbutfg.ppm";
-open(STDOUT, ">$allbutfgfile") or die();
-system("pamarith", "-multiply", $shadbackfile, $bgmaskfile);
-
-unlink($shadbackfile) unless $keeptemp;
-unlink($bgmaskfile) unless $keeptemp;
-
-#   Place foreground in blacked out area, send to original Standard Output.
+#   Create composite file, send to original Standard Output.
 
 open(STDOUT, ">&OLDOUT");
 
-system("pamarith", "-add", $justfgfile, $allbutfgfile);
-unlink($justfgfile) unless $keeptemp;
-unlink($allbutfgfile) unless $keeptemp;
+system("pamcomp -invert -alpha $bgmaskfile $infile $shadbackfile");
+unlink($bgmaskfile) unless $keeptemp;
+unlink($infile) unless $keeptemp;
+unlink($shadbackfile) unless $keeptemp;
 
 if (!$keeptemp) {
     rmdir($ourtmp) or die ("Unable to remove temporary directory '$ourtmp'");

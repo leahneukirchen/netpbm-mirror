@@ -150,10 +150,7 @@ IMPORTINC_LIB_HEADERS := \
 IMPORTINC_LIB_UTIL_HEADERS := \
   bitarith.h bitio.h bitreverse.h filename.h intcode.h floatcode.h io.h \
   matrix.h mallocvar.h \
-  nsleep.h nstring.h pm_c_util.h runlength.h shhopt.h token.h \
-  wordaccess.h  wordaccess_generic.h wordaccess_64_le.h \
-  wordaccess_be_aligned.h wordaccess_be_unaligned.h \
-  wordintclz.h
+  nsleep.h nstring.h pm_c_util.h runlength.h shhopt.h token.h
 
 IMPORTINC_HEADERS := \
   $(IMPORTINC_ROOT_HEADERS) \

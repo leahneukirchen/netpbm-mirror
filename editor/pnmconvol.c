@@ -493,10 +493,9 @@ convKernelCreatePnm(struct pam *         const cpamP,
                     bool                 const offsetPnm,
                     struct ConvKernel ** const convKernelPP) {
 /*----------------------------------------------------------------------------
-   Compute the convolution matrix in normalized form from the PGM form
-   'ctuples'/'cpamP'.  Each element of the output matrix is the actual weight
-   we give an input pixel -- i.e. the thing by which we multiple a value from
-   the input image.
+   Compute the convolution matrix from the PGM form 'ctuples'/'cpamP'.  Each
+   element of the output matrix is the actual weight we give an input pixel --
+   i.e. the thing by which we multiple a value from the input image.
 
    'depth' is the required number of planes in the kernel.  If 'ctuples' has
    fewer planes than that, we duplicate as necessary.  E.g. if 'ctuples' is
@@ -570,7 +569,10 @@ convKernelDestroy(struct ConvKernel * const convKernelP) {
 static void
 normalizeKernelPlane(struct ConvKernel * const convKernelP,
                      unsigned int        const plane) {
-
+/*----------------------------------------------------------------------------
+   Modify *convKernelP by scaling every weight in plane 'plane' by the same
+   factor such that the weights in the plane all add up to 1.
+-----------------------------------------------------------------------------*/
     unsigned int row;
     float sum;
 
@@ -602,8 +604,9 @@ normalizeKernelPlane(struct ConvKernel * const convKernelP,
 static void
 normalizeKernel(struct ConvKernel * const convKernelP) {
 /*----------------------------------------------------------------------------
-   Modify *convKernelP by scaling every weight in a plane by the same factor
-   such that the weights in the plane all add up to 1.
+   Modify *convKernelP by scaling each plane as follows: Scale every weight in
+   the plane by the same factor such that the weights in the plane all add up
+   to 1.
 -----------------------------------------------------------------------------*/
     unsigned int plane;
 
@@ -648,7 +651,6 @@ getKernelPnm(const char *         const fileName,
 
 static void
 convKernelCreateMatrixOpt(struct matrixOpt     const matrixOpt,
-                          bool                 const normalize,
                           unsigned int         const depth,
                           unsigned int         const bias,
                           struct ConvKernel ** const convKernelPP) {
@@ -657,11 +659,6 @@ convKernelCreateMatrixOpt(struct matrixOpt     const matrixOpt,
    option.
    
    The option value is 'matrixOpt'.
-
-   If 'normalize' is true, we normalize whatever numbers the option specifies
-   so that they add up to one; otherwise, we take the numbers as we find them,
-   so they may form a biased matrix -- i.e. one which brightens or dims the
-   image overall.
 -----------------------------------------------------------------------------*/
     struct ConvKernel * convKernelP;
     unsigned int plane;
@@ -687,11 +684,8 @@ convKernelCreateMatrixOpt(struct matrixOpt     const matrixOpt,
                     matrixOpt.weight[row][col];
         }
     }
-    if (normalize)
-        normalizeKernel(convKernelP);
 
     convKernelP->bias = bias;
-
     *convKernelPP = convKernelP;
 }
 
@@ -859,7 +853,6 @@ copyWeight(float **       const srcWeight,
 
 static void
 convKernelCreateSimpleFile(const char **        const fileNameList,
-                           bool                 const normalize,
                            unsigned int         const depth,
                            unsigned int         const bias,
                            struct ConvKernel ** const convKernelPP) {
@@ -869,11 +862,6 @@ convKernelCreateSimpleFile(const char **        const fileNameList,
    legacy pseudo-PNM thing.
 
    The name of the file is 'fileNameList'.
-
-   If 'normalize' is true, we normalize whatever numbers we find in the file
-   so that they add up to one; otherwise, we take the numbers as we find them,
-   so they may form a biased matrix -- i.e. one which brightens or dims the
-   image overall.
 -----------------------------------------------------------------------------*/
     struct ConvKernel * convKernelP;
     unsigned int fileCt;
@@ -923,9 +911,6 @@ convKernelCreateSimpleFile(const char **        const fileNameList,
         }
     }
 
-    if (normalize)
-        normalizeKernel(convKernelP);
-
     convKernelP->cols = width;
     convKernelP->rows = height;
     convKernelP->bias = bias;
@@ -953,11 +938,14 @@ getKernel(struct cmdlineInfo   const cmdline,
         getKernelPnm(cmdline.pnmMatrixFileName, depth, !cmdline.nooffset,
                      &convKernelP);
     else if (cmdline.matrixfile)
-        convKernelCreateSimpleFile(cmdline.matrixfile, cmdline.normalize,
-                                   depth, cmdline.bias, &convKernelP);
+        convKernelCreateSimpleFile(cmdline.matrixfile, depth, cmdline.bias,
+            &convKernelP);
     else if (cmdline.matrixSpec)
-        convKernelCreateMatrixOpt(cmdline.matrix, cmdline.normalize,
-                                  depth, cmdline.bias, &convKernelP);
+        convKernelCreateMatrixOpt(cmdline.matrix, depth, cmdline.bias,
+            &convKernelP);
+
+    if (cmdline.normalize)
+        normalizeKernel(convKernelP);
 
     warnBadKernel(convKernelP);
 

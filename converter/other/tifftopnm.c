@@ -191,7 +191,7 @@ getBps(TIFF *           const tif,
 
     if (bps < 1 || (bps > 8 && bps != 16 && bps != 32))
         pm_error("This program can process Tiff images with only "
-                 "1-8 or 16 bits per sample.  The input Tiff image "
+                 "1-8 or 16 or 32 bits per sample.  The input Tiff image "
                  "has %hu bits per sample.", bps);
     else
         *bpsP = bps;

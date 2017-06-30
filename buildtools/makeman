@@ -332,9 +332,7 @@ def main(args, mainout=sys.stdout, mainerr=sys.stderr):
                 outdoc = makeman(name, file, indoc)
             except:
                 os.remove(tempfile)
-                # Pass the exception upwards
-                (exc_type, exc_value, exc_traceback) = sys.exc_info()
-                raise exc_type, exc_value, exc_traceback
+                raise
             if outdoc == indoc:
                 os.remove(tempfile)
             if outdoc is None:
@@ -355,8 +353,7 @@ def main(args, mainout=sys.stdout, mainerr=sys.stderr):
         return 4
     except:
         if verbosity:
-            (exc_type, exc_value, exc_traceback) = sys.exc_info()
-            raise exc_type, exc_value, exc_traceback
+            raise
         else:
             mainerr.write("makeman: internal error!\n")
             return 5

@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <netpbm/ppm.h>
+#include <netpbm/pam.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -15,8 +16,13 @@ extern "C" {
 enum colornameFormat {PAM_COLORNAME_ENGLISH = 0,
                       PAM_COLORNAME_HEXOK   = 1};
 
+#define PAM_COLORFILE_MAXVAL 255
+
 struct colorfile_entry {
     long r, g, b;
+        /* Red, green, and blue components of color based on maxval
+           PAM_COLORFILE_MAXVAL
+        */
     char * colorname;
 };
 
@@ -30,6 +36,10 @@ pm_openColornameFile(const char * const fileName, const int must_open);
 
 struct colorfile_entry
 pm_colorget(FILE * const f);
+
+void
+pm_parse_dictionary_namen(char   const colorname[], 
+                          tuplen const color);
 
 void
 pm_parse_dictionary_name(const char       colorname[], 

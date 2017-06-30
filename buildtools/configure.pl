@@ -442,6 +442,18 @@ sub askAboutDjgpp() {
 
 
 
+sub askAboutMingw() {
+
+    print("Are you building for the MinGW environment?\n");
+    print("\n");
+    
+    my $retval = promptYesNo("n");
+
+    return $retval;
+}
+
+
+
 sub computePlatformDefault($) {
 
     my ($defaultP) = @_;
@@ -552,6 +564,29 @@ sub getPlatform() {
     }
 
     return($platform, $subplatform);
+}
+
+
+
+sub warnMingwXopenSource($) {
+    my ($subplatform) = @_;
+
+    if ($subplatform ne 'cygwin' && $subplatform ne 'djgpp') {
+        my $mingw = askAboutMingw();
+
+        if ($mingw) {
+            print << 'EOF';
+
+MinGW does not implement enough of the standard on which Netpbm relies to
+build out-of-the-box, but there is a trivial way to add the needed capability
+to MinGW.  See file doc/INSTALL for details.
+
+Press ENTER to continue.
+
+EOF
+            <STDIN>;
+        }
+    }
 }
 
 
@@ -2082,6 +2117,10 @@ if ($platform eq "NONE") {
     print("Please report your results to the Netpbm maintainer so he \n");
     print("can improve the configure program. \n");
     exit;
+}
+
+if ($platform eq 'WINDOWS') {
+    warnMingwXopenSource($subplatform);
 }
 
 getCompiler($platform, $subplatform, \my $compiler);

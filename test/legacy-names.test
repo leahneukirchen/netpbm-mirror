@@ -94,6 +94,13 @@ ordinary_testprogs="\
   ppmtouil \
 "
 
+# Switch to control output from "program --version"
+# See comments in all-in-place.test
+
+if [ ${CHECK_TYPE} = "install" ]
+  then grepOption[1]="" ;   # Output --version message
+  else grepOption[0]="-v" ; # Suppress output
+fi
 
 for i in $ordinary_testprogs
   do
@@ -105,11 +112,15 @@ for i in $ordinary_testprogs
       continue
       fi
 
-    $i --version  2>&1 | \
-    egrep -v \
-    "(Using libnetpbm|Compiled|(BSD|SYSV|MSDOS|AMIGA) defined|RGB_?ENV=)" \
-      1>&2;
-    testExitStatus $i 0 ${PIPESTATUS[0]}
+    $i --version < /dev/null 2>&1 | \
+    egrep -v -e "fiascotopnm" -e \
+    ": ((BSD|SYSV|MSDOS|AMIGA) defined|RGB_?ENV=)" | \
+    egrep ${grepOption[$grepSwitch]} -e \
+    ": (Using lib(net)?pbm|(Built (by|at)|Compiled ))" 1>&2;
+    # See showVersion() in lib/libpm.c for the above regular expressions.
+  
+    exitStatus=${PIPESTATUS[0]}
+    testExitStatus $i 0 ${exitStatus}
   done
 
 

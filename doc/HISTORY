@@ -4,26 +4,61 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-17.06.30 BJH  Release 10.78.06
+17.06.30 BJH  Release 10.79.00
+
+              Add pamtable .
+
+              pamgauss: Add -maximize, -oversample .  Thanks Anton Shepelev
+              <anton.txt@gmail.com>
+
+              pnmconvol: Extend -normalize to be applicable to convolution
+              kernels specified by PGM file.  Thanks Anton Shepelev
+              <anton.txt@gmail.com>
+
+              g3topbm: tolerate fill bits.
+
+              pbmtog3: Add -align8, -align16.
+
+              ppmshadow: Improve results for very small maxval.
+
+              ppmshadow: eliminate extraneous messages from pnmconvol.
+
+              libnetpbm: Improve error message for purported image that is
+              exactly 1 byte long (so ends in the middle of what would be the
+              magic number).
+
+              pbmtox10bm: Get the Perl interpreter for this Perl program from
+              the PATH instead of hardcoded as /usr/bin/perl (like all other
+              Netpbm Perl programs).
 
               ppmcolormask: fix incorrect output when input maxval is not 255.
               Always broken (ppmcolormask was new in Netpbm 9.0, April 2000).
-
-17.06.07 BJH  Release 10.78.05
-
-              pamgauss: Fix skewed output with even dimension.  Always broken
-              (Pamgauss was added in Netpbm 10.23 (July 2004).
 
               bmptopnm: fix crash when input is a Windows BMP with negative
               number for width.  Always broken.  (bmptopnm was new, as
               bmptoppm, in original Netpbm, 1992).
 
-17.05.27 BJH  Release 10.78.04
+              pamcomp: fix incorrect output with -mixtransparency.
+              Always broken.  (-mixtransparency was new in Netpbm 10.56,
+              September 2011).
+
+              pamcomp: remove debug trace message with -mixtransparency.
+              Always broken.  (-mixtransparency was new in Netpbm 10.56,
+              September 2011).
+
+              pnmtojpeg: fix array bounds violation in argument list.  Always
+              broken (pnmtojpeg was new to Netpbm in Netpbm 8.2 (March 2000).
 
               pamcrater: fix incorrect output with non-square image.
               Introduced in Netpbm 10.69 (December 2014).
 
-17.04.23 BJH  Release 10.78.03
+              svgtopam: fix treating negative width or height values in SVG
+              like twos complement positive numbers; fail instead.  Always
+              broken (svgtopam was new in Netpbm 10.33 (March 2006)).
+
+              svgtopam: fix error messages when input has splines or negative
+              positions.  Always broken (svgtopam was new in Netpbm 10.33
+              (March 2006)).
 
               libnetpbm: fix bug: pm_system_XXX closes Standard Input if you
               supply a Standard Output accepter but not a Standard Input
@@ -36,24 +71,24 @@ CHANGE HISTORY
               (September 2007), but wouldn't even compile until Netpbm 10.42
               (March 2008)).
 
+              installnetpbm: Accept globs for directory name responses
+              (notably, ~/DIR).
+
+              makeman: Make it work with Python 3.6.
+
               Build: don't try to build standardppmdfont.c if it already
               exists (so don't require ppmdcfont to exist).  Broken around
               Netpbm 10.35 (2006).
 
-17.04.15 BJH  Release 10.78.02
+              Build: Define _XOPEN_SOURCE=500 in source files that use M_PI.
+              While C libraries in the past have always provided this with
+              just _XOPEN_SOURCE=null, it appears that M_PI is actually
+              defined by Single Unix Specification 2, aka UNIX98, for which
+              you need _XOPEN_SOURCE=500, and Cygwin has changed to enforce
+              this.
 
-              pamcomp: fix incorrect output with -mixtransparency.
-              Always broken.  (-mixtransparency was new in Netpbm 10.56,
-              September 2011).
-
-              pamcomp: remove debug trace message with -mixtransparency.
-              Always broken.  (-mixtransparency was new in Netpbm 10.56,
-              September 2011).
-
-17.04.04 BJH  Release 10.78.01
-
-              pnmtojpeg: fix array bounds violation in argument list.  Always
-              broken (pnmtojpeg was new to Netpbm in Netpbm 8.2 (March 2000).
+              Build: document MinGW _XOPEN_SOURCE incompatibility and add
+              warning to Configure.
 
               Debian packaging: fix bug: don't try to include Manweb files, as
               it is no longer packaged by 'make package'.

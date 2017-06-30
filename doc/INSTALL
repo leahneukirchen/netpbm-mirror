@@ -182,6 +182,45 @@ Netpbm has also been built for Windows using Djgpp, as late as 2001.
 
 See also the general installation instructions above.
 
+Mingw Modification
+-------------------
+
+With at least some versions of MinGW, you have to make a small change to
+_mingw.h or you get a compilation failure for invalid syntax in that file
+where it expands the macro _XOPEN_SOURCE.
+
+The problem is that many Netpbm programs declare that they need a C library
+that conforms to any version of the X/Open (XPG, XSI, SUS) standard.  The way
+they do that is, in accordance with the earliest version of that standard, by
+defining the macro _XOPEN_SOURCE with a null (zero-length) body.  But MinGW is
+not designed to work with programs that request anything earlier than Issue
+(version) 5 of this standard, and in fact _mingw.h will not compile if the
+macro expands to something other than a number.
+
+But it is easy to add pre-Issue 5 function to MinGW and having done so, your
+MinGW installation will also work with lots of other code.  All you have to do
+is change
+
+  if _XOPEN_SOURCE < 500
+
+to
+
+  if (_XOPEN_SOURCE + 0) < 500
+
+in _mingw.h.  This is the trick other C libraries use.
+
+(A user proposed that this change be distributed in _mingw.h, in April 2017 on
+the mingw-users mailing list, but the maintainer was opposed to accomodating
+programs written for the older standards).
+
+If you cannot change _mingw.h, you can alternatively change Netpbm.  Find all
+instances of
+
+  #define _XOPEN_SOURCE
+
+and change them to
+
+  #define _XOPEN_SOURCE 0
 
 
 INSTALLATION - MAKING ONLY THE PARTS YOU NEED
@@ -457,5 +496,3 @@ link is picking up the old system version instead.  Why?  Because the link
 options say to search /usr/lib _before_ the local build directory.  And they
 do that because libpng-config erroneously says that you need a -L /usr/lib
 link option to find the Libpng library.
-
-

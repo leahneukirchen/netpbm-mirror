@@ -46,12 +46,54 @@ sub prompt($$) {
 
 
 
+sub fsObjPrompt($$) {
+    my ($prompt, $default) = @_;
+#-----------------------------------------------------------------------------
+#  Prompt for a filesystem object name and accept glob pattern such as
+#  ~/mydir and /usr/lib/net* .
+#
+#  If there are zero or multiple filesystem object names that match the
+#  pattern the user gave, ask again.  If there is only one possible name
+#  consistent with the user's response, return that even if no filesystem
+#  object by that name exists.
+#-----------------------------------------------------------------------------
+    my $globbedResponse;
+
+    while (!$globbedResponse) {
+        my $response = prompt($prompt, $default);
+
+        my @matchList = glob($response);
+
+        if (@matchList == 0) {
+            print("No filesystem object matches that pattern\n");
+        } elsif (@matchList > 1) {
+            print("Multiple filesystem objects match that pattern\n");
+        } else {
+            $globbedResponse = $matchList[0];
+        }
+    }
+    return $globbedResponse;
+}
+
+
+
 sub getPkgdir() {
 #-----------------------------------------------------------------------------
 #  Find out from the user where the Netpbm package is (i.e. where
 #  'make package' put it).
 #-----------------------------------------------------------------------------
     my $pkgdir;
+
+    # We allow the user to respond with a shell filename pattern.  This seems
+    # like a lot of complexity for a barely useful feature, but we actually
+    # saw a problem where a user typed ~/mypackage without realizing that ~ is
+    # a globbing thing and was stumped when we said no such file exists, while
+    # shell commands said it does.
+
+    # Note that glob() of something that has no wildcard/substitution
+    # characters just returns its argument, whether a filesystem object by
+    # that name exists or not.  But for a wildcard pattern that doesn't match
+    # any existing files, glob() returns an empty list.
 
     while (!$pkgdir) {
     
@@ -61,13 +103,32 @@ sub getPkgdir() {
         
         my $response = prompt("package directory", $default);
 
-        if (!-f("$response/pkginfo")) {
-            print("This does not appear to be a Netpbm install package. \n");
-            print("A file named $response/pkginfo does not exist.\n");
-            print("\n");
+        my @matchList = glob($response);
+
+        if (@matchList == 0) {
+            print("No filesystem object matches that pattern\n");
+        } elsif (@matchList > 1) {
+            print("Multiple filesystem objects match that pattern\n");
         } else {
-            $pkgdir = $response;
+            my $fsObjNm = $matchList[0];
+            
+            if (!-e($fsObjNm)) {
+                print("No filesystem object named '$fsObjNm' exists.\n");
+            } else {
+                if (!-d($fsObjNm)) {
+                    print("'$fsObjNm' is not a directory\n");
+                } else {
+                    if (!-f("$fsObjNm/pkginfo")) {
+                        print("Directory '$fsObjNm' does not appear to be " .
+                              "a Netpbm install package. \n");
+                        print("It does not contain a file named 'pkginfo'.\n");
+                    } else {
+                        $pkgdir = $fsObjNm;
+                    }
+                }
+            }
         }
+        print("\n");
     }
     print("\n");
     return $pkgdir;
@@ -80,8 +141,8 @@ sub makePrefixDirectory($) {
     my ($prefixDir) = @_;
 
     if ($prefixDir ne "" and !-d($prefixDir)) {
-        print("No directory named '$prefixDir' exists.  Do you want " .
-              "to create it?\n");
+        print("No directory named '$prefixDir' exists.  " .
+              "Do you want to create it?\n");
 
         my $done;
         while (!$done) {
@@ -97,6 +158,7 @@ sub makePrefixDirectory($) {
                 $done = $TRUE;
             } 
         }
+        print("\n");
     }
 }
 
@@ -123,7 +185,7 @@ sub getPrefix() {
         $default = "/usr/local/netpbm";
     }
 
-    my $response = prompt("install prefix", $default);
+    my $response = fsObjPrompt("install prefix", $default);
 
     my $prefix;
 
@@ -185,7 +247,7 @@ sub getBinDir($) {
     while (!$binDir) {
         my $default = "$prefix/bin";
 
-        my $response = prompt("program directory", $default);
+        my $response = fsObjPrompt("program directory", $default);
         
         if (-d($response)) {
             $binDir = $response;
@@ -243,7 +305,7 @@ sub getLibDir($) {
     while (!$libDir) {
         my $default = "$prefix/lib";
 
-        my $response = prompt("shared library directory", $default);
+        my $response = fsObjPrompt("shared library directory", $default);
         
         if (-d($response)) {
             $libDir = $response;
@@ -574,7 +636,7 @@ sub getLinkDir($) {
     while (!$linkDir) {
         my $default = "$prefix/lib";
 
-        my $response = prompt("static library directory", $default);
+        my $response = fsObjPrompt("static library directory", $default);
         
         if (-d($response)) {
             $linkDir = $response;
@@ -637,7 +699,7 @@ sub getDataDir($) {
     while (!$dataDir) {
         my $default = "$prefix/lib";
 
-        my $response = prompt("data file directory", $default);
+        my $response = fsObjPrompt("data file directory", $default);
         
         if (-d($response)) {
             $dataDir = $response;
@@ -674,7 +736,7 @@ sub getHdrDir($) {
     while (!$hdrDir) {
         my $default = "$prefix/include";
 
-        my $response = prompt("header directory", $default);
+        my $response = fsObjPrompt("header directory", $default);
         
         if (-d($response)) {
             $hdrDir = $response;
@@ -877,7 +939,7 @@ sub getPkgconfigDir($) {
     while (!$pkgconfigDir) {
         my $default = "$prefix/lib/pkgconfig";
 
-        my $response = prompt("Pkg-config directory", $default);
+        my $response = fsObjPrompt("Pkg-config directory", $default);
         
         if (-d($response)) {
             $pkgconfigDir = $response;
@@ -959,7 +1021,13 @@ print("\n");
 
 my $pkgdir = getPkgdir();
 
+print("Installing from package directory '$pkgdir'\n");
+print("\n");
+
 my $prefix = getPrefix();
+
+print("Using prefix '$prefix'\n");
+print("\n");
 
 $cpCommand = getCpCommand();
 

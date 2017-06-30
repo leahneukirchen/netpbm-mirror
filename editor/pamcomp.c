@@ -1,6 +1,6 @@
-/*----------------------------------------------------------------------------
+/*=============================================================================
                               pamcomp
------------------------------------------------------------------------------
+===============================================================================
    This program composes two images together, with optional translucence.
 
    This program is derived from (and replaces) Pnmcomp, whose origin is
@@ -20,10 +20,9 @@
 
    The current version is derived from the January 2004 version, with
    additional work by multiple authors.
------------------------------------------------------------------------------*/
-
+=============================================================================*/
 #define _DEFAULT_SOURCE /* New name for SVID & BSD source defines */
-#define _BSD_SOURCE    /* Make sure strcaseceq() is in nstring.h */
+#define _BSD_SOURCE    /* Make sure strcaseeq() is in nstring.h */
 #include <assert.h>
 #include <string.h>
 #include <math.h>
@@ -457,7 +456,7 @@ computeOverlayPosition(int                const underCols,
 
    The transparency of each slide is the fraction of light that gets
    through that slide, so the transparency of the composed slide is the
-   product of the underlay and overlay transparencies.
+   product of the underlay and overlay transparencies:
 
        C_T = U_T * O_T
 
