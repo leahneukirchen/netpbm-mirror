@@ -3,7 +3,9 @@
 #include "shhopt.h"
 #include "pgm.h"
 
-struct cmdlineInfo {
+
+
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -16,8 +18,8 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
   Convert program invocation arguments (argc,argv) into a format the 
   program can use easily, struct cmdlineInfo.  Validate arguments along
@@ -34,7 +36,7 @@ parseCommandLine(int argc, char ** argv,
     unsigned int maxvalSpec;
     unsigned int option_def_index;
 
-    MALLOCARRAY(option_def, 100);
+    MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENTRY */
     OPTENT3(0,   "maxval",    OPT_UINT, &cmdlineP->maxval, &maxvalSpec,    0);
@@ -43,7 +45,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = false;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = false;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
     free (option_def);
@@ -75,22 +77,24 @@ parseCommandLine(int argc, char ** argv,
         cmdlineP->cols = pm_parse_width(argv[2]);
         cmdlineP->rows = pm_parse_height(argv[3]);
     }
+    free(option_def);
 }
 
 
 
 int
-main(int argc, char *argv[]) {
+main(int argc, const char ** const argv) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     gray * grayrow;
     unsigned int col, row;
 
-    pgm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
     pgm_writepgminit(stdout, cmdline.cols, cmdline.rows, cmdline.maxval, 0);
+
     grayrow = pgm_allocrow(cmdline.cols);
 
     /* All rows are identical.  Fill once. */
@@ -105,3 +109,5 @@ main(int argc, char *argv[]) {
 
     return 0;
 }
+
+
