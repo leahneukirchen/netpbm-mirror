@@ -131,18 +131,18 @@ printRow(const struct pam * const pamP,
         unsigned int plane;
 
         if (col > 0)
-            fprintf(ofP, format.interTupleGutter);
+            fputs(format.interTupleGutter, ofP);
 
         for (plane = 0; plane < pamP->depth; ++plane) {
 
             if (plane > 0)
-                fprintf(ofP, format.interSampleGutter);
+                fputs(format.interSampleGutter, ofP);
 
             fprintf(ofP, format.sampleFmt, tupleRow[col][plane]);
         }
     }
 
-    fprintf(ofP, "\n");
+    fputs("\n", ofP);
 }
 
 

@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+17.07.03 BJH  Release 10.79.0-1
+
+              Fix 'format-security' GNU compiler warning.  Introduced in
+              Netpbm 10.79.00 a few days ago.
+
 17.06.30 BJH  Release 10.79.00
 
               Add pamtable .
