@@ -9,6 +9,10 @@ not yet  BJH  Release 10.80.00
               pgmmake: Fix bug: treats non-numeric gray-level argument as zero.
               Always broken (Pgmmake was new in Netpbm 10.32, February 2006).
 
+              libnetpbm: pnm_parsecolorn(), pnm_parsecolor(): fix parsing of
+              rgb: color specifications: yields value slightly too dim.
+              Affects many programs.  Broken in Netpbm 10.79 (June 2017).
+
 17.06.30 BJH  Release 10.79.00
 
               Add pamtable .
