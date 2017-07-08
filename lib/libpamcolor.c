@@ -68,23 +68,28 @@ parseHexDigits(const char *   const string,
 
     unsigned int digitCt;
     unsigned long n;
-    unsigned long maxval;
+    unsigned long range;
+        /* 16 for one hex digit, 256 for two hex digits, etc. */
 
-    for (digitCt = 0, n = 0, maxval = 1; string[digitCt] != delim; ) {
+    for (digitCt = 0, n = 0, range = 1; string[digitCt] != delim; ) {
         char const digit = string[digitCt];
         if (digit == '\0')
-            pm_error("rgb: color spec ends prematurely");
+            pm_error("rgb: color spec '%s' ends prematurely", string);
         else {
             int const hexval = hexit[(unsigned int)digit];
             if (hexval == -1)
                 pm_error("Invalid hex digit in rgb: color spec: 0x%02x",
                          digit);
             n = n * 16 + hexval;
-            maxval *= 16;
+            range *= 16;
             ++digitCt;
         }
     }
-    *nP = (samplen) n / maxval;
+    if (range <= 1)
+        pm_error("No digits where hexadecimal number expected in rgb: "
+                 "color spec '%s'", string);
+
+    *nP = (samplen) n / (range-1);
     *digitCtP = digitCt;
 }
 
