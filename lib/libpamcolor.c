@@ -31,30 +31,30 @@
 
 
 
-static void
-computeHexTable(int * const hexit) {
+static unsigned int
+hexDigitValue(char const digit) {
 
-    unsigned int i;
-
-    for (i = 0; i < 256; ++i)
-        hexit[i] = -1;
-
-    hexit['0'] = 0;
-    hexit['1'] = 1;
-    hexit['2'] = 2;
-    hexit['3'] = 3;
-    hexit['4'] = 4;
-    hexit['5'] = 5;
-    hexit['6'] = 6;
-    hexit['7'] = 7;
-    hexit['8'] = 8;
-    hexit['9'] = 9;
-    hexit['a'] = hexit['A'] = 10;
-    hexit['b'] = hexit['B'] = 11;
-    hexit['c'] = hexit['C'] = 12;
-    hexit['d'] = hexit['D'] = 13;
-    hexit['e'] = hexit['E'] = 14;
-    hexit['f'] = hexit['F'] = 15;
+    switch (digit) {
+    case '0': return 0;
+    case '1': return 1;
+    case '2': return 2;
+    case '3': return 3;
+    case '4': return 4;
+    case '5': return 5;
+    case '6': return 6;
+    case '7': return 7;
+    case '8': return 8;
+    case '9': return 9;
+    case 'a': case 'A': return 10;
+    case 'b': case 'B': return 11;
+    case 'c': case 'C': return 12;
+    case 'd': case 'D': return 13;
+    case 'e': case 'E': return 14;
+    case 'f': case 'F': return 15;
+    default:
+        pm_error("Invalid hex digit '%c'", digit);
+        return 0;  /* Defeat compiler warning */
+    }
 }
 
 
@@ -62,7 +62,6 @@ computeHexTable(int * const hexit) {
 static void
 parseHexDigits(const char *   const string,
                char           const delim,
-               const int *    const hexit,
                samplen *      const nP,
                unsigned int * const digitCtP) {
 
@@ -76,11 +75,7 @@ parseHexDigits(const char *   const string,
         if (digit == '\0')
             pm_error("rgb: color spec '%s' ends prematurely", string);
         else {
-            int const hexval = hexit[(unsigned int)digit];
-            if (hexval == -1)
-                pm_error("Invalid hex digit in rgb: color spec: 0x%02x",
-                         digit);
-            n = n * 16 + hexval;
+            n = n * 16 + hexDigitValue(digit);
             range *= 16;
             ++digitCt;
         }
@@ -107,26 +102,22 @@ parseNewHexX11(char   const colorname[],
    Assume colorname[] starts with "rgb:", but otherwise it might be
    gibberish.
 -----------------------------------------------------------------------------*/
-    int hexit[256];
-
     const char * cp;
     unsigned int digitCt;
 
-    computeHexTable(hexit);
-
     cp = &colorname[4];
 
-    parseHexDigits(cp, '/', hexit, &color[PAM_RED_PLANE], &digitCt);
+    parseHexDigits(cp, '/', &color[PAM_RED_PLANE], &digitCt);
 
     cp += digitCt;
     ++cp;  /* Skip the slash */
 
-    parseHexDigits(cp, '/', hexit, &color[PAM_GRN_PLANE], &digitCt);
+    parseHexDigits(cp, '/', &color[PAM_GRN_PLANE], &digitCt);
 
     cp += digitCt;
     ++cp;  /* Skip the slash */
 
-    parseHexDigits(cp, '\0', hexit, &color[PAM_BLU_PLANE], &digitCt);
+    parseHexDigits(cp, '\0', &color[PAM_BLU_PLANE], &digitCt);
 }
 
 
@@ -170,71 +161,67 @@ parseOldX11(const char * const colorname,
    Return as *colorP the color specified by the old X11 style color
    specififier colorname[] (e.g. #554055).
 -----------------------------------------------------------------------------*/
-    int hexit[256];
-    
-    computeHexTable(hexit);
-
     if (!pm_strishex(&colorname[1]))
         pm_error("Non-hexadecimal characters in #-type color specification");
 
     switch (strlen(colorname) - 1 /* (Number of hex digits) */) {
     case 3:
-        color[PAM_RED_PLANE] = (samplen)hexit[(unsigned int)colorname[1]]/15;
-        color[PAM_GRN_PLANE] = (samplen)hexit[(unsigned int)colorname[2]]/15;
-        color[PAM_BLU_PLANE] = (samplen)hexit[(unsigned int)colorname[3]]/15;
+        color[PAM_RED_PLANE] = (samplen)hexDigitValue(colorname[1])/15;
+        color[PAM_GRN_PLANE] = (samplen)hexDigitValue(colorname[2])/15;
+        color[PAM_BLU_PLANE] = (samplen)hexDigitValue(colorname[3])/15;
         break;
 
     case 6:
         color[PAM_RED_PLANE] =
-            ((samplen)(hexit[(unsigned int)colorname[1]] << 4) +
-             (samplen)(hexit[(unsigned int)colorname[2]] << 0))
+            ((samplen)(hexDigitValue(colorname[1]) << 4) +
+             (samplen)(hexDigitValue(colorname[2]) << 0))
              / 255;
         color[PAM_GRN_PLANE] =
-            ((samplen)(hexit[(unsigned int)colorname[3]] << 4) +
-             (samplen)(hexit[(unsigned int)colorname[4]] << 0))
+            ((samplen)(hexDigitValue(colorname[3]) << 4) +
+             (samplen)(hexDigitValue(colorname[4]) << 0))
              / 255;
         color[PAM_BLU_PLANE] =
-            ((samplen)(hexit[(unsigned int)colorname[5]] << 4) + 
-             (samplen)(hexit[(unsigned int)colorname[6]] << 0))
+            ((samplen)(hexDigitValue(colorname[5]) << 4) + 
+             (samplen)(hexDigitValue(colorname[6]) << 0))
              / 255;
         break;
 
     case 9:
         color[PAM_RED_PLANE] =
-            ((samplen)(hexit[(unsigned int)colorname[1]] << 8) +
-             (samplen)(hexit[(unsigned int)colorname[2]] << 4) +
-             (samplen)(hexit[(unsigned int)colorname[3]] << 0))
+            ((samplen)(hexDigitValue(colorname[1]) << 8) +
+             (samplen)(hexDigitValue(colorname[2]) << 4) +
+             (samplen)(hexDigitValue(colorname[3]) << 0))
             / 4095;
         color[PAM_GRN_PLANE] =
-            ((samplen)(hexit[(unsigned int)colorname[4]] << 8) + 
-             (samplen)(hexit[(unsigned int)colorname[5]] << 4) +
-             (samplen)(hexit[(unsigned int)colorname[6]] << 0))
+            ((samplen)(hexDigitValue(colorname[4]) << 8) + 
+             (samplen)(hexDigitValue(colorname[5]) << 4) +
+             (samplen)(hexDigitValue(colorname[6]) << 0))
             / 4095;
         color[PAM_BLU_PLANE] =
-            ((samplen)(hexit[(unsigned int)colorname[7]] << 8) + 
-             (samplen)(hexit[(unsigned int)colorname[8]] << 4) +
-             (samplen)(hexit[(unsigned int)colorname[9]] << 0))
+            ((samplen)(hexDigitValue(colorname[7]) << 8) + 
+             (samplen)(hexDigitValue(colorname[8]) << 4) +
+             (samplen)(hexDigitValue(colorname[9]) << 0))
             / 4095;
         break;
 
     case 12:
         color[PAM_RED_PLANE] =
-            ((samplen)(hexit[(unsigned int)colorname[1]] << 12) + 
-             (samplen)(hexit[(unsigned int)colorname[2]] <<  8) +
-             (samplen)(hexit[(unsigned int)colorname[3]] <<  4) + 
-             (samplen)(hexit[(unsigned int)colorname[4]] <<  0))
+            ((samplen)(hexDigitValue(colorname[1]) << 12) + 
+             (samplen)(hexDigitValue(colorname[2]) <<  8) +
+             (samplen)(hexDigitValue(colorname[3]) <<  4) + 
+             (samplen)(hexDigitValue(colorname[4]) <<  0))
             / 65535;
         color[PAM_GRN_PLANE] =
-            ((samplen)(hexit[(unsigned int)colorname[5]] << 12) + 
-             (samplen)(hexit[(unsigned int)colorname[6]] <<  8) +
-             (samplen)(hexit[(unsigned int)colorname[7]] <<  4) +
-             (samplen)(hexit[(unsigned int)colorname[8]] <<  0))
+            ((samplen)(hexDigitValue(colorname[5]) << 12) + 
+             (samplen)(hexDigitValue(colorname[6]) <<  8) +
+             (samplen)(hexDigitValue(colorname[7]) <<  4) +
+             (samplen)(hexDigitValue(colorname[8]) <<  0))
             / 65535;
         color[PAM_BLU_PLANE] =
-            ((samplen)(hexit[(unsigned int)colorname[9]] << 12) + 
-             (samplen)(hexit[(unsigned int)colorname[10]] << 8) +
-             (samplen)(hexit[(unsigned int)colorname[11]] << 4) +
-             (samplen)(hexit[(unsigned int)colorname[12]] << 0))
+            ((samplen)(hexDigitValue(colorname[ 9]) << 12) + 
+             (samplen)(hexDigitValue(colorname[10]) << 8) +
+             (samplen)(hexDigitValue(colorname[11]) << 4) +
+             (samplen)(hexDigitValue(colorname[12]) << 0))
             / 65535;
         break;
 
