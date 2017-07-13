@@ -73,7 +73,7 @@ sub doVersionHack($) {
 sub imageDimensions($) {
     my ($fileName) = @_;
 #-----------------------------------------------------------------------------
-#  Return the dimensions of the Netpbm image in the named file
+#  Return the dimensions of the Netpbm image in the file named $fileName.
 #-----------------------------------------------------------------------------
     my ($width, $height, $depth);
     my $pamfileOutput = `pamfile $fileName`;
@@ -85,6 +85,29 @@ sub imageDimensions($) {
     }
     return ($width, $height, $depth);
 }    
+
+sub backgroundColor($) {
+    my ($fileName) = @_;
+#-----------------------------------------------------------------------------
+#  Return the color of the backround of the image in the file named $fileName.
+#-----------------------------------------------------------------------------
+    # We call the color of the top left pixel the background color.
+
+    my $ppmhistOut = qx{pamcut 0 0 1 1 $fileName | ppmhist -noheader -float};
+
+    my ($ired, $igrn, $iblu, $lum, $count);
+
+    if ($ppmhistOut =~
+        m{\s*([01].\d+)\s*([01].\d+)\s*([01].\d+)\s*([01].\d+)\s*(\d+)}) {
+        ($ired, $igrn, $iblu, $lum, $count) = ($1, $2, $3, $4, $5);
+    } else {
+        die("Unrecognized format of output from 'ppmhist' shell command");
+    }
+    my $irgb = sprintf("rgbi:%f/%f/%f", $ired, $igrn, $iblu);
+
+    return $irgb;
+}    
+
 
 
 sub makeConvolutionKernel($$) {
@@ -211,19 +234,22 @@ system("ppmtoppm");
 my ($sourceImageWidth, $sourceImageHeight, $sourceImageDepth) =
     imageDimensions($infile);
 
-#   Create an all-background-color image (same size as original image)
+my $bgColorIrgb = backgroundColor($infile);
+
+# Create an all-background-color image (same size as original image),
+# named $backgroundfile. 
 
 my $backgroundfile = "$ourtmp/background.ppm";
-system("pamcut -left=0 -top=0 -width=1 -height=1 $infile | " .
-       "pamscale -xsize=$sourceImageWidth " .
-       "-ysize=$sourceImageHeight >$backgroundfile");
+system("ppmmake $bgColorIrgb $sourceImageWidth $sourceImageHeight " .
+    "-maxval $sourceImageDepth " .
+    ">$backgroundfile");
 
-#   Create mask file for background, named $bgmaskfile.  It is a PBM, white
-#   wherever there is background image in the input.
+# Create mask file for background, named $bgmaskfile.  It is a PBM, white
+# wherever there is background image in the input.
 
 my $bgmaskfile = "$ourtmp/bgmask.pbm";
-system("pamarith -difference $infile $backgroundfile | pnminvert | ppmtopgm " .
-       "| pgmtopbm -thresh -value 1.0 >$bgmaskfile");
+system("ppmchange -remainder=black $bgColorIrgb white $infile | " .
+       "ppmtopgm | pgmtopbm -threshold -value=0.5 >$bgmaskfile"); 
 
 my $ckern = $convolve <= 11 ? $convolve : 11;
 
