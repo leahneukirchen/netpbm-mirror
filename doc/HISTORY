@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+17.08.02 BJH  Release 10.79.03
+
+              pbmtoibm23xx: change license terms to GPL 2 or later.
+
+              Makeman: make it work with Python 3.6 II.
+
 17.07.08 BJH  Release 10.79.02
 
               libnetpbm: pnm_parsecolorn(), pnm_parsecolor(): fix parsing of

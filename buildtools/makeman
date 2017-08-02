@@ -32,7 +32,7 @@
 #   Added footer message to clarify original source. 
 #
 
-import os, sys, exceptions, re
+import os, sys, re
 
 source = "netpbm documentation"
 section = 1
@@ -50,7 +50,7 @@ source.  The master documentation is at
 .IP
 .B http://netpbm.sourceforge.net/doc/'''
 
-class LiftException(exceptions.Exception):
+class LiftException(Exception):
     def __init__(self, message, retval=1):
         self.message = message
         self.retval = retval
@@ -341,11 +341,11 @@ def main(args, mainout=sys.stdout, mainerr=sys.stderr):
                 outfp.write(outdoc)
                 outfp.close()	# under Windows you can't rename an open file
                 stem = file[:file.find(".")]
-                os.rename(tempfile, stem + "." + `sectmap[file]`)
-    except LiftException, e:
+                os.rename(tempfile, stem + "." + repr(sectmap[file]))
+    except LiftException as e:
         mainerr.write("makeman: " + e.message + "\n")
         return e.retval
-    except IOError, e:
+    except IOError as e:
         mainerr.write("makeman: file I/O error: %s\n" % e)
         return 3
     except KeyboardInterrupt:
@@ -360,7 +360,7 @@ def main(args, mainout=sys.stdout, mainerr=sys.stderr):
 
 if __name__ == "__main__":
     # Run the main sequence
-    raise SystemExit, main(sys.argv[1:])
+    raise SystemExit(main(sys.argv[1:]))
 
 # The following sets edit modes for GNU EMACS
 # Local Variables:
