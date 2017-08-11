@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+17.08.11 BJH  Release 10.79.04
+
+              libnetpbm: font facilities: fix invalid memory reference with
+              certain font files.
+
 17.08.02 BJH  Release 10.79.03
 
               pbmtoibm23xx: change license terms to GPL 2 or later.
