@@ -307,10 +307,13 @@ pbm_loadfont(const char * const filename) {
 
     FILE * fileP;
     struct font * fontP;
-    char line[256];
+    char line[10] = "\0\0\0\0\0\0\0\0\0\0";
+        /* Initialize to suppress Valgrind error which is reported when file
+           is empty or very small.
+        */
 
     fileP = pm_openr(filename);
-    fgets(line, 256, fileP);
+    fgets(line, 10, fileP);
     pm_close(fileP);
 
     if (line[0] == PBM_MAGIC1 && 
@@ -339,8 +342,23 @@ pbm_loadpbmfont(const char * const filename) {
     int fcols, frows;
 
     ifP = pm_openr(filename);
+
     font = pbm_readpbm(ifP, &fcols, &frows);
+
+    if ((fcols - 1) / 16 >= pbm_maxfontwidth() ||
+       (frows - 1) / 12 >= pbm_maxfontheight())
+        pm_error("Absurdly large PBM font file: %s", filename);
+    else if (fcols < 31 || frows < 23) {
+        /* Need at least one pixel per character, and this is too small to
+           have that.
+        */
+        pm_error("PBM font file '%s' too small to be a font file: %u x %u.  "
+                 "Minimum sensible size is 31 x 23",
+                 filename, fcols, frows);
+    }
+
     pm_close(ifP);
+
     return pbm_dissectfont((const bit **)font, frows, fcols);
 }
 
@@ -406,10 +424,18 @@ pbm_dumpfont(struct font * const fontP,
 }
 
 
+/*----------------------------------------------------------------------------
+  Routines for loading a BDF font file
+-----------------------------------------------------------------------------*/
 
-/* Routines for loading a BDF font file */
 
-#define  MAXBDFLINE 1024 
+/* The following do not work:
+   Vertical writing systems: DWIDTH1, SWIDTH1, VVECTOR
+   global DWIDTH
+*/
+
+
+#define MAXBDFLINE 1024 
 
 /* Official Adobe document says max length of string is 65535 characters.
    However the value 1024 is sufficient for practical uses.
@@ -428,7 +454,7 @@ typedef struct {
 
            It also functions as a work area for readline_read().
         */
-    const char * arg[32];
+    const char * arg[6];
         /* These are the words; each entry is a pointer into line[] (above) */
 } Readline;
 
@@ -448,15 +474,17 @@ readline_init(Readline * const readlineP,
 static void
 tokenize(char *         const s,
          const char **  const words,
-         unsigned int   const maxWordCt) {
+         unsigned int   const wordsSz) {
 /*----------------------------------------------------------------------------
-   Chop up 's' into words by changing space characters to NUL.  Return
-   as 'words' pointer to the beginning of those words in 's'.
+   Chop up 's' into words by changing space characters to NUL.  Return as
+   'words' an array of pointers to the beginnings of those words in 's'.
+   Terminate the words[] list with a null pointer.
 
-   If there are more than 'maxWordCt' words in 's', ignore the excess on
-   the right.
+   'wordsSz' is the number of elements of space in 'words'.  If there are more
+   words in 's' than will fit in that space (including the terminating null
+   pointer), ignore the excess on the right.
 -----------------------------------------------------------------------------*/
-    unsigned int n;
+    unsigned int n;  /* Number of words in words[] so far */
     char * p;
 
     p = &s[0];
@@ -467,12 +495,13 @@ tokenize(char *         const s,
             *p++ = '\0';
         else {
             words[n++] = p;
-            if (n >= maxWordCt)
+            if (n >= wordsSz - 1)
                 break;
             while (*p && !ISSPACE(*p))
                 ++p;
         }
     }
+    assert(n <= wordsSz - 1);
     words[n] = NULL;
 }
 
@@ -634,6 +663,9 @@ createBmap(unsigned int  const glyphWidth,
                  "BDF font file.");
     
     if (streq(readlineP->arg[0], "ATTRIBUTES")) {
+        /* ATTRIBUTES is defined in Glyph Bitmap Distribution Format (BDF)
+           Specification Version 2.1, but not in Version 2.2. 
+        */
         bool eof;
         readline_read(readlineP, &eof);
         if (eof)
@@ -754,7 +786,7 @@ readEncoding(Readline *     const readlineP,
 static void
 validateFontLimits(const struct font * const fontP) {
 
-    assert( pbm_maxfontheight() > 0 && pbm_maxfontwidth() > 0 );
+    assert(pbm_maxfontheight() > 0 && pbm_maxfontwidth() > 0);
 
     if (fontP->maxwidth  <= 0 ||
         fontP->maxheight <= 0 ||
@@ -765,7 +797,7 @@ validateFontLimits(const struct font * const fontP) {
         fontP->x > fontP->maxwidth  ||
         fontP->y > fontP->maxheight ||
         fontP->x + fontP->maxwidth  > pbm_maxfontwidth() || 
-         fontP->y + fontP->maxheight > pbm_maxfontheight()
+        fontP->y + fontP->maxheight > pbm_maxfontheight()
         ) {
 
         pm_error("Global font metric(s) out of bounds.\n"); 
@@ -779,8 +811,13 @@ validateGlyphLimits(const struct font  * const fontP,
                     const struct glyph * const glyphP,
                     const char *         const charName) {
 
-    if (glyphP->width  == 0 ||
-        glyphP->height == 0 ||
+    /* Some BDF files code space with zero width and height,
+       no bitmap data and just the xadd value.
+       We allow zero width and height, iff both are zero.
+    */
+
+    if (((glyphP->width == 0 || glyphP->height == 0) &&
+         !(glyphP->width == 0 && glyphP->height == 0)) ||
         glyphP->width  > fontP->maxwidth  ||
         glyphP->height > fontP->maxheight ||
         glyphP->x < fontP->x ||

@@ -6,9 +6,18 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.80.00
 
+              pbmtext, libnetpbm font facilities: allow glyphs in font files
+              that have no bitmap data; just used for their advance value to
+              code a space.
+
+              libnetpbm font facilities: consider font invalid if a glyph is
+              more than 65536 pixels high or wide.
+
               ppmshadow: handle images with a black background and low
               contrast images (i.e. little difference between foreground and
               background).
+
+              libnetpbm: font facilities: fix invalid memory reference.
 
               libnetpbm: ppm_readcolordict: Improve error message when there is
               a problem reading the color dictionary.  Affects ppmhist.

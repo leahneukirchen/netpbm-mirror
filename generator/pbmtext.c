@@ -538,22 +538,26 @@ insertCharacter(const struct glyph * const glyphP,
    Insert one character (whose glyph is 'glyph') into the image bits[].
    Its top left corner shall be row 'toprow', column 'leftcol'.
 -----------------------------------------------------------------------------*/
-    unsigned int glyph_y;  /* Y position within the glyph */
+    if (glyphP->width == 0 && glyphP->height == 0) {
+        /* No bitmap data.  Some BDF files code space this way */
+    } else {
+        unsigned int glyph_y;  /* Y position within the glyph */
 
-    if (leftcol + glyphP->x < 0 ||
-        leftcol + glyphP->x + glyphP->width > cols ||
-        toprow < 0 ||
-        toprow + glyphP->height >rows )
-        pm_error("internal error.  Rendering out of bounds");
+        if (leftcol + glyphP->x < 0 ||
+            leftcol + glyphP->x + glyphP->width > cols ||
+            toprow < 0 ||
+            toprow + glyphP->height >rows )
+            pm_error("internal error.  Rendering out of bounds");
 
-    for (glyph_y = 0; glyph_y < glyphP->height; ++glyph_y) {
-        unsigned int glyph_x;  /* position within the glyph */
+        for (glyph_y = 0; glyph_y < glyphP->height; ++glyph_y) {
+            unsigned int glyph_x;  /* position within the glyph */
 
-        for (glyph_x = 0; glyph_x < glyphP->width; ++glyph_x) {
-            if (glyphP->bmap[glyph_y * glyphP->width + glyph_x]) {
-                unsigned int const col = leftcol + glyphP->x + glyph_x;
-                bits[toprow+glyph_y][col/8] |= PBM_BLACK << (7-col%8);
-        }
+            for (glyph_x = 0; glyph_x < glyphP->width; ++glyph_x) {
+                if (glyphP->bmap[glyph_y * glyphP->width + glyph_x]) {
+                    unsigned int const col = leftcol + glyphP->x + glyph_x;
+                    bits[toprow+glyph_y][col/8] |= PBM_BLACK << (7-col%8);
+                }
+            }
         }
     }
 }    
