@@ -68,7 +68,7 @@ static pm_usererrormsgfn * userErrorMsgFn = NULL;
     */
 
 static pm_usermessagefn * userMessageFn = NULL;
-    /* A function to call to issue an error message.
+    /* A function to call to issue a non-error message.
 
        NULL means use the library default: print to Standard Error
     */
