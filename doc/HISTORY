@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+17.08.11 BJH  Release 10.73.14
+
+              libnetpbm: font facilities: fix invalid memory reference with
+              certain font files.
+
 17.06.30 BJH  Release 10.73.13
 
               ppmcolormask: fix incorrect output when input maxval is not 255.

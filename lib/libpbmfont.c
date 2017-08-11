@@ -1126,7 +1126,7 @@ tokenize(char *         const s,
             *p++ = '\0';
         else {
             words[n++] = p;
-            if (n >= maxWordCt)
+            if (n >= maxWordCt-1)
                 break;
             while (*p && !ISSPACE(*p))
                 ++p;
