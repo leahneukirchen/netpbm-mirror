@@ -429,9 +429,14 @@ pbm_dumpfont(struct font * const fontP,
 -----------------------------------------------------------------------------*/
 
 
-/* The following do not work:
-   Vertical writing systems: DWIDTH1, SWIDTH1, VVECTOR
-   global DWIDTH
+/* The following are not recognized in individual glyph data; library
+   routines do a pm_error if they see one:
+
+   Vertical writing systems: DWIDTH1, SWIDTH1, VVECTOR, METRICSET,
+   CONTENTVERSION.
+
+   The following is not recognized and is thus ignored at the global level:
+   DWIDTH
 */
 
 
