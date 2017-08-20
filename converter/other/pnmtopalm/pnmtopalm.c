@@ -34,14 +34,16 @@ struct cmdline_info {
        in a form easy for the program to use.
     */
     const char * inputFilespec;  /* Filespecs of input files */
-    const char * transparent;    /* -transparent value.  Null if unspec */
-    unsigned int depth;         /* -depth value.  0 if unspec */
-    unsigned int maxdepth;      /* -maxdepth value.  0 if unspec */
+    const char * transparent;
+    unsigned int depthSpec;
+    unsigned int depth;
+    unsigned int maxdepthSpec;
+    unsigned int maxdepth;
     enum compressionType compression;
     unsigned int verbose;
     unsigned int colormap;
-    unsigned int offset;        /* -offset specified */
-    unsigned int density;       /* screen density */
+    unsigned int offset;
+    unsigned int density;
     unsigned int withdummy;
 };
 
@@ -57,7 +59,7 @@ parseCommandLine(int argc, char ** argv, struct cmdline_info *cmdlineP) {
     optEntry *option_def;
     unsigned int option_def_index;
 
-    unsigned int transSpec, depthSpec, maxdepthSpec, densitySpec;
+    unsigned int transSpec, densitySpec;
     unsigned int scanline_compression, rle_compression, packbits_compression;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
@@ -66,9 +68,9 @@ parseCommandLine(int argc, char ** argv, struct cmdline_info *cmdlineP) {
     OPTENT3(0, "transparent",      OPT_STRING, 
             &cmdlineP->transparent, &transSpec, 0);
     OPTENT3(0, "depth",            OPT_UINT, 
-            &cmdlineP->depth,       &depthSpec, 0);
+            &cmdlineP->depth,       &cmdlineP->depthSpec, 0);
     OPTENT3(0, "maxdepth",         OPT_UINT, 
-            &cmdlineP->maxdepth,    &maxdepthSpec, 0);
+            &cmdlineP->maxdepth,    &cmdlineP->maxdepthSpec, 0);
     OPTENT3(0, "scanline_compression", OPT_FLAG, 
             NULL,                   &scanline_compression, 0);
     OPTENT3(0, "rle_compression",  OPT_FLAG, 
@@ -93,25 +95,23 @@ parseCommandLine(int argc, char ** argv, struct cmdline_info *cmdlineP) {
     pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdline_p and others. */
 
-    if (depthSpec) {
+    if (cmdlineP->depthSpec) {
         if (cmdlineP->depth != 1 && cmdlineP->depth != 2 
             && cmdlineP->depth != 4 && cmdlineP->depth != 8
             && cmdlineP->depth != 16)
             pm_error("invalid value for -depth: %u.  Valid values are "
                      "1, 2, 4, 8, and 16", cmdlineP->depth);
-    } else
-        cmdlineP->depth = 0;
+    }
 
-    if (maxdepthSpec) {
+    if (cmdlineP->maxdepthSpec) {
         if (cmdlineP->maxdepth != 1 && cmdlineP->maxdepth != 2 
             && cmdlineP->maxdepth != 4 && cmdlineP->maxdepth != 8
             && cmdlineP->maxdepth != 16)
             pm_error("invalid value for -maxdepth: %u.  Valid values are "
                      "1, 2, 4, 8, and 16", cmdlineP->maxdepth);
-    } else
-        cmdlineP->maxdepth = 0;
+    }
 
-    if (depthSpec && maxdepthSpec && 
+    if (cmdlineP->depthSpec && cmdlineP->maxdepthSpec && 
         cmdlineP->depth > cmdlineP->maxdepth)
         pm_error("-depth value (%u) is greater than -maxdepth (%u) value.",
                  cmdlineP->depth, cmdlineP->maxdepth);
@@ -172,8 +172,10 @@ determinePalmFormat(unsigned int   const cols,
                     xelval         const maxval, 
                     int            const format, 
                     xel **         const xels,
-                    unsigned int   const specified_bpp,
-                    unsigned int   const max_bpp, 
+                    bool           const bppSpecified,
+                    unsigned int   const bpp,
+                    bool           const maxBppSpecified,
+                    unsigned int   const maxBpp, 
                     bool           const custom_colormap,
                     bool           const verbose,
                     unsigned int * const bppP, 
@@ -184,8 +186,8 @@ determinePalmFormat(unsigned int   const cols,
         if (custom_colormap)
             pm_error("You specified -colormap with a black and white input "
                      "image.  -colormap is valid only with color.");
-        if (specified_bpp)
-            *bppP = specified_bpp;
+        if (bppSpecified)
+            *bppP = bpp;
         else
             *bppP = 1;    /* no point in wasting bits */
         *directColorP = FALSE;
@@ -198,10 +200,10 @@ determinePalmFormat(unsigned int   const cols,
         if (custom_colormap)
             pm_error("You specified -colormap with a black and white input"
                      "image.  -colormap is valid only with color.");
-        if (specified_bpp)
-            *bppP = specified_bpp;
-        else if (max_bpp && (maxval >= (1 << max_bpp)))
-            *bppP = max_bpp;
+        if (bppSpecified)
+            *bppP = bpp;
+        else if (maxBppSpecified && (maxval >= (1 << maxBpp)))
+            *bppP = maxBpp;
         else if (maxval > 16)
             *bppP = 4;
         else {
@@ -227,8 +229,8 @@ determinePalmFormat(unsigned int   const cols,
            pnmquant.  We try for 8-bit color first, since it works on
            more PalmOS devices. 
         */
-        if ((specified_bpp == 16) || 
-            (specified_bpp == 0 && max_bpp == 16)) {
+        if ((bppSpecified && bpp == 16) || 
+            (!bppSpecified && maxBppSpecified && maxBpp == 16)) {
             /* we do the 16-bit direct color */
             *directColorP = TRUE;
             *colormapP = NULL;
@@ -237,8 +239,7 @@ determinePalmFormat(unsigned int   const cols,
             /* standard indexed 8-bit color */
             *colormapP = palmcolor_build_default_8bit_colormap();
             *bppP = 8;
-            if (((specified_bpp != 0) && (specified_bpp != 8)) ||
-                ((max_bpp != 0) && (max_bpp < 8)))
+            if ((bppSpecified && bpp != 8) || (maxBppSpecified && maxBpp < 8))
                 pm_error("Must use depth of 8 for color Palm Bitmap without "
                          "custom color table.");
             *directColorP = FALSE;
@@ -249,13 +250,13 @@ determinePalmFormat(unsigned int   const cols,
             *colormapP = 
                 palmcolor_build_custom_8bit_colormap(rows, cols, xels);
             for (*bppP = 1; (1 << *bppP) < (*colormapP)->ncolors; *bppP *= 2);
-            if (specified_bpp != 0) {
-                if (specified_bpp >= *bppP)
-                    *bppP = specified_bpp;
+            if (bppSpecified) {
+                if (bpp >= *bppP)
+                    *bppP = bpp;
                 else
                     pm_error("Too many colors for specified depth.  "
                              "Use pnmquant to reduce.");
-            } else if ((max_bpp != 0) && (max_bpp < *bppP)) {
+            } else if (maxBppSpecified && maxBpp < *bppP) {
                 pm_error("Too many colors for specified max depth.  "
                          "Use pnmquant to reduce.");
             }
@@ -823,7 +824,7 @@ rleCompressAndBufferRow(const unsigned char * const rowdata,
         unsigned int repeatcount;
         for (repeatcount = 1;  
              repeatcount < (rowbytes - pos) && repeatcount  < 255;  
-             ++repeatcount)
+             ++repeatcount) 
             if (rowdata[pos + repeatcount] != rowdata[pos])
                 break;
 
@@ -1226,8 +1227,10 @@ main( int argc, char **argv ) {
         pm_message("Input is %dx%d %s, maxval %d", 
                    cols, rows, formatName(format), maxval);
     
-    determinePalmFormat(cols, rows, maxval, format, xels, cmdline.depth,
-                        cmdline.maxdepth, cmdline.colormap, cmdline.verbose,
+    determinePalmFormat(cols, rows, maxval, format, xels,
+                        cmdline.depthSpec, cmdline.depth,
+                        cmdline.maxdepthSpec, cmdline.maxdepth,
+                        cmdline.colormap, cmdline.verbose,
                         &bpp, &directColor, &colormap);
 
     newMaxval = (1 << bpp) - 1;
