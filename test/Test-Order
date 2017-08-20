@@ -132,6 +132,7 @@ macp-roundtrip.test
 mda-roundtrip.test
 mgr-roundtrip.test
 mrf-roundtrip.test
+palm-roundtrip.test
 pcx-roundtrip.test
 pfm-roundtrip.test
 pi3-roundtrip.test
