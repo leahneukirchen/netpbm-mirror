@@ -17,7 +17,8 @@ not yet  BJH  Release 10.80.00
               contrast images (i.e. little difference between foreground and
               background).
 
-              libnetpbm: font facilities: fix invalid memory reference.
+              libnetpbm: font facilities: fix invalid memory reference with
+              certain font files.
 
               libnetpbm: ppm_readcolordict: Improve error message when there is
               a problem reading the color dictionary.  Affects ppmhist.
