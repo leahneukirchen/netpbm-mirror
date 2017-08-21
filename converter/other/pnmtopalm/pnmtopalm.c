@@ -13,7 +13,13 @@
  *
  * See LICENSE file for licensing information.
  *
- *  
+ * References for the Palm Bitmap format:
+ *
+ * https://web.archive.org/web/20030621112139/http://www.palmos.com:80/dev/support/docs/
+ * https://web.archive.org/web/20030413080018/http://www.palmos.com:80/dev/support/docs/palmos/ReferenceTOC.html
+ *
+ * http://www.trantor.de/kawt/doc/palmimages.html
+ * (above retrieved August 2017)
  */
 
 #include <string.h>
@@ -26,6 +32,7 @@
 #include "palm.h"
 #include "shhopt.h"
 #include "mallocvar.h"
+#include "runlength.h"
 
 enum compressionType {COMP_NONE, COMP_SCANLINE, COMP_RLE, COMP_PACKBITS};
 
@@ -836,79 +843,6 @@ rleCompressAndBufferRow(const unsigned char * const rowdata,
 
 
 
-/* FIXME Incorrect for images with pixelSize == 16 */
-static void
-computeNextPackbitsRun(const unsigned char * const rowdata,
-                       unsigned int          const rowbytes,
-                       unsigned int          const startPos,
-                       unsigned int *        const nextPosP,
-                       unsigned char *       const output,
-                       int *                 const countP) {
-
-    unsigned int pos;
-    int count;
-    
-    pos = startPos;
-    count = 0;
-    
-    if (rowdata[pos] == rowdata[pos + 1]) {
-        ++pos;
-        --count;
-        while ((count > -127) && (pos < (rowbytes - 1)) &&
-               (rowdata[pos] == rowdata[pos + 1])) {
-            ++pos;
-            --count;
-        }
-        ++pos;  /* push pos past end of this run */
-    } else {
-        output[count] = rowdata[pos];
-        ++pos;
-        while ((count < 127) && (pos < (rowbytes - 1)) && 
-               (rowdata[pos] != rowdata[pos + 1])) {
-            ++count;
-            output[count] = rowdata[pos];
-            ++pos;
-        }
-        /* trailing literal */
-        if ((count < 127) && (pos == (rowbytes - 1)) &&
-            (rowdata[pos - 1] != rowdata[pos])) {
-            ++count;
-            output[count] = rowdata[pos];
-            ++pos;
-        }
-    }
-    *nextPosP = pos;
-    *countP = count;
-}
-
-
-
-static void
-addPackbitsRunToBuffer(const unsigned char * const rowdata,
-                       unsigned int          const rowbytes,
-                       unsigned int          const pos,
-                       unsigned char *       const output,
-                       int                   const count,
-                       struct seqBuffer *    const rasterBufferP) {
-
-    addByteToBuffer(rasterBufferP, (unsigned char)(signed char)count);
-    if (count < 0) {
-        addByteToBuffer(rasterBufferP, rowdata[pos - 1]);
-    } else {
-        unsigned int j;
-        for (j = 0; j <= count; j++)
-            addByteToBuffer(rasterBufferP, output[j]);
-    }
-    
-    if (pos == (rowbytes - 1) && (rowdata[pos - 1] != rowdata[pos])) {
-        /* orphaned byte, treat as literal */
-        addByteToBuffer(rasterBufferP, 0);
-        addByteToBuffer(rasterBufferP, rowdata[pos]);
-    }
-}
-
-
-
 static void
 packbitsCompressAndBufferRow(const unsigned char * const rowdata,
                              unsigned int          const rowbytes,
@@ -918,21 +852,18 @@ packbitsCompressAndBufferRow(const unsigned char * const rowdata,
    add the packbits-compressed representation of it to the buffer 
    with handle 'rasterBufferP'.
 -----------------------------------------------------------------------------*/
-    unsigned int position;
-        /* byte position within the row */
+    unsigned char * compressedData;
+    size_t          compressedDataCt;
+    unsigned int    byteCt;
 
-    position = 0;  /* Start at beginning of row */
+    pm_rlenc_allocoutbuf(&compressedData, rowbytes, PM_RLE_PACKBITS);
+    pm_rlenc_compressbyte(rowdata, compressedData, PM_RLE_PACKBITS,
+                          rowbytes, &compressedDataCt);
 
-    while (position < rowbytes - 1) {
-        unsigned char output[128];
-        int count;
+    for (byteCt = 0; byteCt < compressedDataCt; ++byteCt)
+        addByteToBuffer(rasterBufferP, compressedData[byteCt]);
 
-        computeNextPackbitsRun(rowdata, rowbytes, position, 
-                               &position, output, &count);
-
-        addPackbitsRunToBuffer(rowdata, rowbytes, position, output, count,
-                               rasterBufferP);
-    }
+    free(compressedData);
 }
 
 
@@ -1029,7 +960,13 @@ bufferRaster(xel **               const xels,
     createBuffer(rasterBufferPP);
     
     MALLOCARRAY_NOFAIL(rowdata, rowbytes);
-    MALLOCARRAY_NOFAIL(lastrow, rowbytes);
+    if (compression == COMP_SCANLINE)
+        MALLOCARRAY_NOFAIL(lastrow, rowbytes);
+    else
+        lastrow = NULL;
+
+    /* clear pad bytes to suppress valgrind error */
+    rowdata[rowbytes - 1] = rowdata[rowbytes - 2] = 0x00;
 
     /* And write out the data. */
     for (row = 0; row < rows; ++row) {
@@ -1041,8 +978,9 @@ bufferRaster(xel **               const xels,
         if (compression == COMP_SCANLINE)
             memcpy(lastrow, rowdata, rowbytes);
     }
-    free(lastrow);
     free(rowdata);
+    if (compression == COMP_SCANLINE)
+        free(lastrow);
 }
 
 
