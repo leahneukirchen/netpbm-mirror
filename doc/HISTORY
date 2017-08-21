@@ -6,6 +6,9 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.80.00
 
+              pnmpalm: Refuse to create a compressed image with more than 8
+              bits per pixel.
+
               pbmtext, libnetpbm font facilities: allow glyphs in font files
               that have no bitmap data; just used for their advance value to
               code a space.
