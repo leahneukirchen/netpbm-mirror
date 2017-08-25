@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pnmtopalm User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmtopalm</H1>
-Updated: 20 August 2017
+Updated: 25 August 2017
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -48,11 +48,14 @@ from its value.
 <p><b>pnmtopalm</b> reads a PNM image as input, from Standard Input or
 <I>pnmfile</I> and produces a Palm Bitmap as output.
 
-<P>Palm Bitmap files are either grayscale files 1, 2, or 4 bits wide,
-or color files 8 or 16 bits wide, so <B>pnmtopalm</B> automatically scales
-colors to have an appropriate maxval, unless you specify a depth or
-max depth.  Input files must have an appropriate number and set of
-colors for the selected output constraints.
+<P>Palm Bitmap files are either grayscale files with 1, 2, or 4 bits per
+pixel, or mapped color files with 8 bit per pixel, or a direct color file with
+16 bits per pixel, and <B>pnmtopalm</B> chooses this color depth based on the
+maxval and number of colors in the input, unless you specify a depth (bits per
+pixel) with <b>-depth</b>.  You can also specify a maximum depth
+with <b>-maxdepth</b> to partially constrain <b>pnmtopalm</b>'s choice.  Input
+files must have an appropriate number and set of colors for the selected
+output constraints.
 
 <p>This often means that you should run the PNM image through
 <B>pnmquant</B> or <b>pnmremap</b> before you pass it to
@@ -73,6 +76,13 @@ and you can find the Netpbm data directory with a <b>netpbm-config
   | pnmtopalm -depth=2 &gt;myimage.palm
 
 </pre>
+
+<p>Compressed Palm Bitmap files, at least the ones <b>pnmtopalm</b> knows how
+to create, cannot have more than 8 bits per pixel.  <b>pnmtopalm</b> defaults
+to 8 bits per pixel if you specify a compressed output.  You can specify the
+number of bits per pixel explicitly with <b>-depth</b>.  <b>-maxdepth</b>
+has the same effect as <b>-depth</b>.  If you specify more than 8 bits per
+pixel with either of these, <b>pnmtopalm</b> fails.
 
 
 <h3 id="version">Palm Bitmap Version</h3>
