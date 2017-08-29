@@ -13,6 +13,9 @@ not yet  BJH  Release 10.80.00
               that have no bitmap data; just used for their advance value to
               code a space.
 
+              pbmtext: Improve error message when there is a problem reading
+              the font file.
+
               libnetpbm font facilities: consider font invalid if a glyph is
               more than 65536 pixels high or wide.
 

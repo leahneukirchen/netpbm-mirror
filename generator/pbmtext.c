@@ -18,11 +18,13 @@
 #include <math.h>
 #include <limits.h>
 #include <assert.h>
+#include <setjmp.h>
 
 #include "pm_c_util.h"
 #include "mallocvar.h"
 #include "nstring.h"
 #include "shhopt.h"
+#include "pm.h"
 #include "pbm.h"
 #include "pbmfont.h"
 
@@ -157,6 +159,37 @@ reportFont(struct font * const fontP) {
 
 
 
+static struct font *
+fontFromFile(const char * const fileName) {
+
+    struct font * retval;
+
+    jmp_buf jmpbuf;
+    int rc;
+
+    rc = setjmp(jmpbuf);
+
+    if (rc == 0) {
+        /* This is the normal program flow */
+        pm_setjmpbuf(&jmpbuf);
+
+        retval = pbm_loadfont(fileName);
+
+        pm_setjmpbuf(NULL);
+    } else {
+        /* This is the second pass, after pbm_loadfont does a longjmp
+           because it fails.
+        */
+        pm_setjmpbuf(NULL);
+
+        pm_error("Failed to load font from file '%s'", fileName);
+    }
+
+    return retval;
+}
+
+
+
 static void
 computeFont(struct CmdlineInfo const cmdline,
             struct font **     const fontPP) {
@@ -164,7 +197,7 @@ computeFont(struct CmdlineInfo const cmdline,
     struct font * fontP;
 
     if (cmdline.font)
-        fontP = pbm_loadfont(cmdline.font);
+        fontP = fontFromFile(cmdline.font);
     else {
         if (cmdline.builtin)
             fontP = pbm_defaultfont(cmdline.builtin);
