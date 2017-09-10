@@ -12,8 +12,8 @@
   documentation.  This software is provided "as is" without express or implied
   warranty.
 
-  Functions pm_rlenc_byte() and pm_rlenc_word() are based on algorithm
-  originally by Robert A. Knop (rknop@mop.caltech.edu).
+  Functions pm_rlenc_compressbyte() and pm_rlenc_compressword() are based
+  on algorithm originally by Robert A. Knop (rknop@mop.caltech.edu).
 
   Those who wish to incorporate the code herein into their own programs are
   strongly discouraged from removing the comments within borders consisting
@@ -41,12 +41,12 @@
   code.  This redundancy bloated the Netpbm package and made maintenance
   difficult.  This maintenance difficulty surfaced as an issue when tests with
   valgrind revealed multiple memory-related problems in the above programs.
-  Indeed, just determining which programs do this compression by this method
+  Indeed, just determining which programs do compression by this method
   was not simple because of differences in terminology.  "Packbits" is often
   called "run length encoding."  In ppmtoilbm the name is "byterun1."
 
-  Today, all Netpbm programs that do Packbits compression use the facilities
-  in this file for it.
+  Today, all Netpbm programs that do Packbits compression with the exception
+  of pbmtoppa and pbmtogo use the facilities   in this file for it.  
 =============================================================================*/
 
 #include <string.h>
@@ -68,11 +68,11 @@ static const char * const errorUndefinedMode =
 
    In this simple run-length encoding scheme, compressed and uncompressed
    strings follow a single index or "flag" byte N.  There are several
-   variations, differing in the format of the flag byte, maximum string length
-   and element size (byte or word).
+   variations, differing in the format of the flag byte, maximum string
+   length and element size (byte or word).
    
-   In the most widely used version, Packbits, the meaning of the flag byte N
-   is defined as follows:
+   In the most widely used version, Packbits, the meaning of the flag byte
+   N is defined as follows:
 
     0-127 means the next N+1 bytes are uncompressed.
     129-255 means the next byte is to be repeated 257-N times.
@@ -99,7 +99,7 @@ pm_rlenc_compressbyte(const unsigned char * const inbuf,
   Always encode 3-byte repeat sequences.
 
   Encode 2-byte repeat sequences only when they are at the start of the block.
-  This ensures that the output is never unnecessary bloated.
+  This ensures that the output is never unnecessarily bloated.
 
   Original algorithm by Robert A. Knop (rknop@mop.caltech.edu)
 -----------------------------------------------------------------------------*/
@@ -107,8 +107,17 @@ pm_rlenc_compressbyte(const unsigned char * const inbuf,
 
     size_t inCurs, outCurs;
 
-    if (mode != PM_RLE_PACKBITS)
-        pm_error(errorUndefinedMode, mode);
+    int packBase;
+    int packSign;
+ 
+    switch (mode) {
+    case PM_RLE_PACKBITS:
+        packBase = 257 ; packSign = -1; break;
+    case PM_RLE_PALMPDB:
+        packBase = 127 ; packSign = +1; break;
+    default:
+         pm_error(errorUndefinedMode, mode);
+    }
 
     for (inCurs = 0, outCurs = 0; inCurs < inSize; ) {
         if ((inCurs < inSize - 1) && (inbuf[inCurs] == inbuf[inCurs+1])) {
@@ -121,8 +130,7 @@ pm_rlenc_compressbyte(const unsigned char * const inbuf,
                      count < maxRun; 
                  ++inCurs, ++count)
                 ;
-
-            outbuf[outCurs++] = (unsigned char)(257 - count);
+            outbuf[outCurs++] = (unsigned char) (packBase + packSign * count);
             outbuf[outCurs++] = inbuf[hold];
         } else {
             /*Do a non-run*/
@@ -258,6 +266,8 @@ pm_rlenc_compressword(const uint16_t   * const inbuf,
    number of flag bytes.  The worst case happens when there are no repeat
    sequences in the input.
 
+   The encoder in this file is an efficient one.
+
    The key to an efficient encoder is correct handling of short, inefficient
    sequences.  The following algorithm (not actually used in this file)
    describes the idea.
@@ -288,6 +298,16 @@ pm_rlenc_compressword(const uint16_t   * const inbuf,
 
      - Whenever savings are larger than the added overhead, encode the run
        as a compressed block.
+
+   -----------------------------------------------------------------------
+
+   MS-DOS/Windows BMP format note
+
+   The compression method for BMP is a variant of packbits.
+   We could support the 8-bit version with some modifications to functions
+   in this file.  Determining the worst-case output size of an efficient
+   coder is rather complicated because uncompressed blocks may not be less
+   than three bytes long and are indicated by two-byte flags.
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
 
@@ -318,15 +338,22 @@ pm_rlenc_maxbytes(size_t          const inSize,  /* number of elements */
 
     switch (mode) {
     case PM_RLE_PACKBITS:
-        blockSize = 128; flagSize = 1; itemSize = 1; miscSize = 0; break;
+    case PM_RLE_PALMPDB:
+        blockSize = 128; flagSize = 1; itemSize = 1; miscSize = 0;
+        break;
     case PM_RLE_SGI8:
-        blockSize = 127; flagSize = 1; itemSize = 1; miscSize = 0; break;
-    case PM_RLE_GRAPHON:  case PM_RLE_PPA:
-        blockSize =  64; flagSize = 1; itemSize = 1; miscSize = 0; break;
+        blockSize = 127; flagSize = 1; itemSize = 1; miscSize = 0;
+        break;
+    case PM_RLE_GRAPHON:
+    case PM_RLE_PPA:
+        blockSize =  64; flagSize = 1; itemSize = 1; miscSize = 0;
+        break;
     case PM_RLE_SGI16:
-        blockSize = 127; flagSize = 2; itemSize = 2; miscSize = 2; break;
+        blockSize = 127; flagSize = 2; itemSize = 2; miscSize = 2;
+        break;
     case PM_RLE_PALM16:
-        blockSize = 128; flagSize = 1; itemSize = 2; miscSize = 0; break;
+        blockSize = 128; flagSize = 1; itemSize = 2; miscSize = 0;
+        break;
     default:
         pm_error(errorUndefinedMode, mode);
     }

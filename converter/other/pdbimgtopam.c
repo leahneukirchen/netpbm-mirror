@@ -97,6 +97,8 @@ parseCommandLine(int argc, const char ** argv,
         cmdlineP->inputFileName = argv[1];
     else
         pm_error("Program takes at most one argument:  input file name");
+
+    free(option_def);
 }
 
 
@@ -211,7 +213,8 @@ readCompressed(IMAGE *    const imgP,
 
     if (end_offset == UNKNOWN_OFFSET) {
         /*
-         * Read until EOF. Some of them have an extra zero byte
+         * Read sufficient amount for worst-case compressed image,
+         * or until EOF.  Some of them have an extra zero byte
          * dangling off the end.  I originally thought this was
          * an empty note record (even though there was no record
          * header for it); however, the release notes for Image
@@ -221,12 +224,20 @@ readCompressed(IMAGE *    const imgP,
          * this extra byte and ignore it by paying attention to
          * the image dimensions.
          */
-        MALLOCARRAY(buffer, ipdb_img_size(imgP));
+       size_t const maxCompressedSizeWithBloat = ipdb_img_size(imgP) * 2;
+         /*
+          * Provide a buffer large enough for the worst case.
+          * See note in lib/util/runlength.c .
+          * We do not use pm_rlenc_allocoutbuf() because there is no
+          * guarantee that the encoder that produced the image was
+          * efficient.
+          */
+       MALLOCARRAY(buffer, maxCompressedSizeWithBloat);
 
         if (buffer == NULL)
             retval = ENOMEM;
         else {
-            dataSize = fread(buffer, 1, ipdb_img_size(imgP), fP);
+            dataSize = fread(buffer, 1,  maxCompressedSizeWithBloat, fP);
             if (dataSize <= 0)
                 retval = EIO;
             else
@@ -307,6 +318,8 @@ imageReadData(FILE *   const fileP,
               IMAGE *  const imgP,
               uint32_t const end_offset) {
 
+    size_t const imageSize = ipdb_img_size(imgP);  
+
     int retval;
     size_t dataSize;
     uint8_t * buffer;
@@ -318,14 +331,24 @@ imageReadData(FILE *   const fileP,
          * Compressed data can cross row boundaries so we decompress
          * the data here to avoid messiness in the row access functions.
          */
-        if (dataSize != ipdb_img_size(imgP)) {
-            decompress(buffer, dataSize, ipdb_img_size(imgP), &imgP->data);
+        if (dataSize < imageSize || imgP->version == 1) {
+            if (imgP->version == 0)
+                pm_message("Image header says raster data is uncompressed.  "
+                           "Encountered only %u instead of the "
+                           "required %u bytes.  Assuming compressed mode.",
+                           (unsigned)dataSize, (unsigned)imageSize);
+            decompress(buffer, dataSize, imageSize, &imgP->data);
             if (imgP->data == NULL)
                 retval = ENOMEM;
             else
                 imgP->compressed = true;
             free(buffer);
         } else {
+            if (dataSize > imageSize)
+                pm_message("Image header says raster data is uncompressed. "
+                           "Encountered %u instead of the required %u bytes. "
+                           "Assuming uncompressed mode.",
+                           (unsigned)dataSize, (unsigned)imageSize);
             imgP->compressed = false;
             imgP->data       = buffer;
             /* Storage at 'buffer' now belongs to *imgP */
