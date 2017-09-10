@@ -4,6 +4,15 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+17.09.10 BJH  Release 10.79.05
+
+              pnmtopalm: fix incorrect output with certain input files and
+              -packbits_compression.  Always broken.  -packbits_compression
+              was new in Netpbm 10.27 (March 2005).
+
+              pamtopdbimg: Fix incorrect output. Always broken (pamtopdbimg
+              was new in Netpbm 10.52.00 (October 2010)).
+
 17.08.11 BJH  Release 10.79.04
 
               libnetpbm: font facilities: fix invalid memory reference with
