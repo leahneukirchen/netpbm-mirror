@@ -446,6 +446,7 @@ deb:
 CHECK_VARS = \
 	BUILDDIR=$(BUILDDIR) \
 	RGBDEF=$(RGBDEF) \
+	PALMMAPDIR=$(PALMMAPDIR) \
 	BUILD_FIASCO=$(BUILD_FIASCO) \
 	JASPERLIB="$(JASPERLIB)" \
 	JBIGLIB="$(JBIGLIB)" \
@@ -512,6 +513,7 @@ colon :=:
 check-tree : PBM_TEST_PATH := $(subst $(space),$(colon),$(strip $(RBINDIRS)))
 check-tree : PBM_LIBRARY_PATH ?= $(BUILDDIR)/lib
 check-tree : RGBDEF ?= $(SRCDIR)/lib/rgb.txt
+check-tree : PALMMAPDIR ?= $(SRCDIR)/converter/other/pnmtopalm
 
 
 # Create RESULTDIR.
@@ -544,6 +546,7 @@ check-tree: $(TESTRANDOM) resultdir-backup
 check-package : PBM_TEST_PATH := $(PKGDIR)/bin
 check-package : PBM_LIBRARY_PATH := $(PKGDIR)/lib
 check-package : RGBDEF ?= $(PKGDIR)/misc/rgb.txt
+check-package : PALMMAPDIR ?= $(PKGDIR)/misc/
 check: check-package
 
 check-package: $(TESTRANDOM) resultdir-backup
@@ -556,6 +559,7 @@ check-package: $(TESTRANDOM) resultdir-backup
 
 
 # Check after install
+check-install: PALMMAPDIR ?= ""
 check-install: $(TESTRANDOM) resultdir-backup
 	cd $(RESULTDIR); \
 	  $(CHECK_VARS) \

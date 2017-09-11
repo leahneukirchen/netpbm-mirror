@@ -82,6 +82,7 @@ symmetry.test
 
 # Format converter tests
 
+pamtopdbimg.test
 pbmtog3.test
 411toppm.test
 eyuvtoppm.test
@@ -133,7 +134,9 @@ mda-roundtrip.test
 mgr-roundtrip.test
 mrf-roundtrip.test
 palm-roundtrip.test
+palm-roundtrip2.test
 pcx-roundtrip.test
+pdb-roundtrip.test
 pfm-roundtrip.test
 pi3-roundtrip.test
 pict-roundtrip.test
