@@ -23,6 +23,9 @@ not yet  BJH  Release 10.80.00
               contrast images (i.e. little difference between foreground and
               background).
 
+              palmtopnm: fix crash if invalid input contains color index that
+              is not in the palette.
+
               pnmtopalm: fix incorrect output with certain input files and
               -packbits_compression.  Always broken.  -packbits_compression
               was new in Netpbm 10.27 (March 2005).

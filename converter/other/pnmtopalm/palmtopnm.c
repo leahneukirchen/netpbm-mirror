@@ -686,11 +686,16 @@ doTransparent(FILE *                 const ofP,
     if (hasTransparency) {
         if (colormap) {
             Color_s const color = transparentIndex << 24;
-            Color const actualColor = (bsearch(&color,
-                                               colormap->color_entries, 
-                                               colormap->ncolors,
-                                               sizeof(color), 
-                                               palmcolor_compare_indices));
+            Color const actualColor = bsearch(&color,
+                                              colormap->color_entries, 
+                                              colormap->ncolors,
+                                              sizeof(color), 
+                                              palmcolor_compare_indices);
+            if (!actualColor)
+                pm_error("Invalid input; transparent index %u "
+                         "is not among the %u colors in the image's colormap",
+                         transparentIndex, colormap->ncolors);
+
             fprintf(ofP, "#%02x%02x%02x\n", 
                    (unsigned int) ((*actualColor >> 16) & 0xFF),
                    (unsigned int) ((*actualColor >>  8) & 0xFF), 
@@ -1025,6 +1030,13 @@ convertRowToPnmNotDirect(const unsigned char * const palmrow,
                                                 colormap->ncolors,
                                                 sizeof(color2), 
                                                 palmcolor_compare_indices);
+
+            if (!actualColor)
+                pm_error("Invalid input.  A color index in column %u "
+                         "is %u, which is not among the %u colors "
+                         "in the colormap",
+                         j, color, colormap->ncolors);
+
             PPM_ASSIGN(xelrow[j], 
                        (*actualColor >> 16) & 0xFF, 
                        (*actualColor >>  8) & 0xFF, 
@@ -1125,11 +1137,11 @@ showHistogram(unsigned int * const seen,
                        colorIndex, graymap[colorIndex], seen[colorIndex]);
         else {
             Color_s const color = colorIndex << 24;
-            Color const actualColor = (bsearch(&color,
-                                               colormap->color_entries, 
-                                               colormap->ncolors,
-                                               sizeof(color), 
-                                               palmcolor_compare_indices));
+            Color const actualColor = bsearch(&color,
+                                              colormap->color_entries, 
+                                              colormap->ncolors,
+                                              sizeof(color), 
+                                              palmcolor_compare_indices);
             if (actualColor)
                 pm_message("%.3d -> %ld,%ld,%ld:  %d", colorIndex,
                            (*actualColor >> 16) & 0xFF,
