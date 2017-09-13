@@ -24,14 +24,14 @@
 
 
 
-enum palmCompressionType {
+enum PalmCompressionType {
     COMPRESSION_NONE, 
     COMPRESSION_RLE, 
     COMPRESSION_SCANLINE,
     COMPRESSION_PACKBITS
 };
 
-struct palmHeader {
+struct PalmHeader {
     unsigned short cols;
     unsigned short rows;
     unsigned short bytesPerRow;
@@ -46,7 +46,7 @@ struct palmHeader {
     unsigned int   pixelSize;
     unsigned char  version;
     unsigned int   transparentIndex;
-    enum palmCompressionType compressionType;
+    enum PalmCompressionType compressionType;
     /* version 3 encoding specific */
     unsigned char  size;
     unsigned char  pixelFormat;
@@ -56,7 +56,7 @@ struct palmHeader {
 
 
 
-struct directPixelFormat {
+struct DirectPixelFormat {
     unsigned int redbits;
     unsigned int greenbits;
     unsigned int bluebits;
@@ -64,15 +64,15 @@ struct directPixelFormat {
 
 
 
-struct directColorInfo {
-    struct directPixelFormat pixelFormat;
+struct DirectColorInfo {
+    struct DirectPixelFormat pixelFormat;
     Color_s                  transparentColor;
 };
 
 
 
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -85,13 +85,13 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo *cmdlineP) {
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo *cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
 -----------------------------------------------------------------------------*/
-    optEntry *option_def = malloc( 100*sizeof( optEntry ) );
+    optEntry * option_def;
         /* Instructions to pm_optParseOptions3 on how to parse our options.
          */
     optStruct3 opt;
@@ -100,6 +100,8 @@ parseCommandLine(int argc, char ** argv,
 
     unsigned int option_def_index;
 
+    MALLOCARRAY_NOFAIL(option_def, 100);
+    
     option_def_index = 0;   /* incremented by OPTENTRY */
     OPTENT3(0, "verbose",     OPT_FLAG, NULL,
             &cmdlineP->verbose,  0);
@@ -114,7 +116,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We may have parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
 
@@ -135,6 +137,7 @@ parseCommandLine(int argc, char ** argv,
             pm_error("Too many arguments (%d).  The only non-option "
                      "argument is the file name", argc-1);
     }
+    free(option_def);
 }
 
 
@@ -183,7 +186,7 @@ skipbytes(FILE *       const ifP,
 
 static void
 interpretCompression(unsigned char              const compressionValue,
-                     enum palmCompressionType * const compressionTypeP) {
+                     enum PalmCompressionType * const compressionTypeP) {
     
     switch (compressionValue) {
     case PALM_COMPRESSION_RLE:
@@ -292,7 +295,7 @@ readRestOfHeaderOld(FILE *           const ifP,
 
 
 static void
-interpretHeader(struct palmHeader * const palmHeaderP,
+interpretHeader(struct PalmHeader * const palmHeaderP,
                 short               const cols,
                 short               const rows,
                 short               const bytesPerRow,
@@ -345,7 +348,7 @@ interpretHeader(struct palmHeader * const palmHeaderP,
 static void
 readHeader(FILE *              const ifP,
            unsigned int        const requestedRendition,
-           struct palmHeader * const palmHeaderP) {
+           struct PalmHeader * const palmHeaderP) {
 /*----------------------------------------------------------------------------
    Read the Palm Bitmap header from the file 'ifP'.  Read past all
    renditions up to 'requestedRendition' and read the header of that
@@ -441,8 +444,8 @@ yesno(bool const arg) {
 
 
 static void
-reportPalmHeader(struct palmHeader      const palmHeader,
-                 struct directColorInfo const directColorInfo) {
+reportPalmHeader(struct PalmHeader      const palmHeader,
+                 struct DirectColorInfo const directColorInfo) {
 
     const char *ctype;
 
@@ -489,7 +492,7 @@ reportPalmHeader(struct palmHeader      const palmHeader,
 
 
 static void
-determineOutputFormat(struct palmHeader const palmHeader,
+determineOutputFormat(struct PalmHeader const palmHeader,
                       int *             const formatP,
                       xelval *          const maxvalP) {
 
@@ -515,7 +518,7 @@ determineOutputFormat(struct palmHeader const palmHeader,
 
 static void
 readRgbFormat(FILE *                     const ifP,
-              struct directPixelFormat * const pixelFormatP) {
+              struct DirectPixelFormat * const pixelFormatP) {
 
     unsigned char r, g, b;
 
@@ -553,8 +556,8 @@ readDirectTransparentColor(FILE *    const ifP,
 
 static void
 readDirectInfoType(FILE *                   const ifP,
-                   struct palmHeader        const palmHeader,
-                   struct directColorInfo * const directInfoTypeP) {
+                   struct PalmHeader        const palmHeader,
+                   struct DirectColorInfo * const directInfoTypeP) {
 /*----------------------------------------------------------------------------
    Read the Palm Bitmap Direct Info Type section, if any.
 
@@ -596,7 +599,7 @@ readDirectInfoType(FILE *                   const ifP,
 
 static void
 readColormap(FILE *            const ifP,
-             struct palmHeader const palmHeader,
+             struct PalmHeader const palmHeader,
              Colormap *        const colormapP) {
 /*----------------------------------------------------------------------------
    Read the colormap, if any from the Palm Bitmap.
@@ -611,12 +614,12 @@ readColormap(FILE *            const ifP,
 
 
 static void
-getColorInfo(struct palmHeader        const palmHeader,
-             struct directColorInfo   const directInfoType,
+getColorInfo(struct PalmHeader        const palmHeader,
+             struct DirectColorInfo   const directInfoType,
              Colormap                 const colormapFromImage,
              Colormap *               const colormapP,
              unsigned int *           const ncolorsP,
-             struct directColorInfo * const directColorInfoP) {
+             struct DirectColorInfo * const directColorInfoP) {
 /*----------------------------------------------------------------------------
    Gather color encoding information from the various sources.
 
@@ -671,7 +674,7 @@ doTransparent(FILE *                 const ofP,
               unsigned char          const transparentIndex,
               unsigned char          const pixelSize,
               Colormap               const colormap,
-              struct directColorInfo const directColorInfo) {
+              struct DirectColorInfo const directColorInfo) {
 /*----------------------------------------------------------------------------
    Generate a PNM comment on *ofP telling what color in the raster is
    supposed to be transparent.
@@ -902,7 +905,7 @@ static void
 readDecompressedRow(FILE *                   const ifP,
                     unsigned char *          const palmrow,
                     unsigned char *          const lastrow,
-                    enum palmCompressionType const compressionType,
+                    enum PalmCompressionType const compressionType,
                     unsigned int             const bytesPerRow,
                     unsigned int             const pixelSize,
                     bool                     const firstRow) {
@@ -1002,24 +1005,26 @@ convertRowToPnmNotDirect(const unsigned char * const palmrow,
 
     unsigned int const mask = (1 << pixelSize) - 1;
 
-    const unsigned char *inbyte;
+    const unsigned char * inbyteP;
     unsigned int inbit;
     unsigned int j;
+
+    assert(pixelSize <= 8);
     
     inbit = 8 - pixelSize;
-    inbyte = palmrow;
+    inbyteP = &palmrow[0];
     for (j = 0; j < cols; ++j) {
-        short const color = ((*inbyte) & (mask << inbit)) >> inbit;
+        short const color = (*inbyteP & (mask << inbit)) >> inbit;
         if (seen)
             ++seen[color];
         
         if (colormap) {
             Color_s const color2      = color << 24;
-            Color   const actualColor = (bsearch (&color2,
-                                                  colormap->color_entries, 
-                                                  colormap->ncolors,
-                                                  sizeof(color2), 
-                                                  palmcolor_compare_indices));
+            Color   const actualColor = bsearch(&color2,
+                                                colormap->color_entries, 
+                                                colormap->ncolors,
+                                                sizeof(color2), 
+                                                palmcolor_compare_indices);
             PPM_ASSIGN(xelrow[j], 
                        (*actualColor >> 16) & 0xFF, 
                        (*actualColor >>  8) & 0xFF, 
@@ -1028,7 +1033,7 @@ convertRowToPnmNotDirect(const unsigned char * const palmrow,
             PNM_ASSIGN1(xelrow[j], graymap[color]);
         
         if (!inbit) {
-            ++inbyte;
+            ++inbyteP;
             inbit = 8 - pixelSize;
         } else
             inbit -= pixelSize;
@@ -1039,7 +1044,7 @@ convertRowToPnmNotDirect(const unsigned char * const palmrow,
 
 static void
 writePnm(FILE *            const ofP,
-         struct palmHeader const palmHeader,
+         struct PalmHeader const palmHeader,
          FILE *            const ifP,
          Colormap          const colormap,
          xelval *          const graymap,
@@ -1137,22 +1142,21 @@ showHistogram(unsigned int * const seen,
 
 
 int
-main(int argc, char **argv) {
+main(int argc, const char **argv) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
 
-    FILE* ifP;
-    struct palmHeader palmHeader;
-    struct directColorInfo directInfoType;
+    FILE * ifP;
+    struct PalmHeader palmHeader;
+    struct DirectColorInfo directInfoType;
     Colormap colormapFromImage;
     Colormap colormap;
-    struct directColorInfo directColorInfo;
+    struct DirectColorInfo directColorInfo;
     int format;
     xelval maxval;
     unsigned int nColors;
 
-    /* Parse default params */
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
