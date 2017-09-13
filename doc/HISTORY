@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+17.09.13 BJH  Release 10.78.06
+
+              palmtopnm: fix crash if invalid input contains color index that
+              is not in the palette.  Always broken (palmtopnm was new in
+              Netpbm 9.10 (October 2001)).
+
 17.09.10 BJH  Release 10.79.05
 
               pnmtopalm: fix incorrect output with certain input files and
