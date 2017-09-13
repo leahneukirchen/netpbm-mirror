@@ -283,7 +283,7 @@ ipdb_image_alloc(const char * const name,
                 MALLOCARRAY(imgP->data, w * h);
 
                 if (imgP->data) {
-                    MEMSZERO(imgP->data);
+                    memset(imgP->data, 0, sizeof(*(imgP->data)) * w * h);
                 } else
                     failed = true;
             }

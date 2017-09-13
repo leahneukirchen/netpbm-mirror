@@ -4,6 +4,19 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+17.09.13 BJH  Release 10.73.15
+
+              palmtopnm: fix crash if invalid input contains color index that
+              is not in the palette.  Always broken (palmtopnm was new in
+              Netpbm 9.10 (October 2001)).
+
+              pnmtopalm: fix incorrect output with certain input files and
+              -packbits_compression.  Always broken.  -packbits_compression
+              was new in Netpbm 10.27 (March 2005).
+
+              pamtopdbimg: Fix incorrect output. Always broken (pamtopdbimg
+              was new in Netpbm 10.52.00 (October 2010)).
+
 17.08.11 BJH  Release 10.73.14
 
               libnetpbm: font facilities: fix invalid memory reference with
