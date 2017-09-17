@@ -24,7 +24,8 @@ not yet  BJH  Release 10.80.00
               background).
 
               palmtopnm: fix crash if invalid input contains color index that
-              is not in the palette.
+              is not in the palette.  Always broken (palmtopnm was new in
+              Netpbm 9.10 (October 2001)).
 
               pnmtopalm: fix incorrect output with certain input files and
               -packbits_compression.  Always broken.  -packbits_compression
