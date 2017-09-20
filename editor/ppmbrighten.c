@@ -102,7 +102,7 @@ parseCommandLine(int argc, char ** argv,
 static __inline__ unsigned int
 mod(int const dividend, unsigned int const divisor) {
 
-    int remainder = dividend % divisor;
+    int remainder = dividend % (int)divisor;
 
     if (remainder < 0)
         return divisor + remainder;
