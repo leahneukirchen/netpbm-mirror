@@ -57,7 +57,7 @@ struct CmdlineInfo {
 
 
 static void
-parseCommandLine(int argc, char ** argv, struct CmdlineInfo *cmdlineP) {
+parseCommandLine(int argc, const char ** argv, struct CmdlineInfo *cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
@@ -99,7 +99,7 @@ parseCommandLine(int argc, char ** argv, struct CmdlineInfo *cmdlineP) {
     opt.short_allowed = FALSE; /* We have some short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdline_p and others. */
 
     if (cmdlineP->depthSpec) {
@@ -1163,7 +1163,7 @@ writeBitmap(xel **               const xels,
 
 
 int 
-main( int argc, char **argv ) {
+main( int argc, const char **argv ) {
     struct CmdlineInfo cmdline;
     unsigned int version;
     FILE* ifP;
@@ -1179,8 +1179,7 @@ main( int argc, char **argv ) {
     unsigned int newMaxval;
     Colormap colormap;
     
-    /* Parse default params */
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
