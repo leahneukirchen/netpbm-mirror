@@ -21,6 +21,7 @@
 #include "mallocvar.h"
 
 #include "palm.h"
+#include "palmcolormap.h"
 
 
 
@@ -66,7 +67,7 @@ struct DirectPixelFormat {
 
 struct DirectColorInfo {
     struct DirectPixelFormat pixelFormat;
-    Color_s                  transparentColor;
+    ColormapEntry            transparentColor;
 };
 
 
@@ -476,7 +477,7 @@ reportPalmHeader(struct PalmHeader      const palmHeader,
     if (palmHeader.hasTransparency) {
         if (palmHeader.directColor) {
             /* Copied from doTransparent(...) */
-            Color_s const color = directColorInfo.transparentColor;
+            ColormapEntry const color = directColorInfo.transparentColor;
             pm_message("Transparent value: #%02x%02x%02x", 
                        (unsigned int)((color >> 16) & 0xFF), 
                        (unsigned int)((color >>  8) & 0xFF), 
@@ -540,8 +541,8 @@ readRgbFormat(FILE *                     const ifP,
 
 
 static void
-readDirectTransparentColor(FILE *    const ifP,
-                           Color_s * const colorP) {
+readDirectTransparentColor(FILE *          const ifP,
+                           ColormapEntry * const colorP) {
 
     unsigned char r, g, b;
 
@@ -600,7 +601,7 @@ readDirectInfoType(FILE *                   const ifP,
 static void
 readColormap(FILE *            const ifP,
              struct PalmHeader const palmHeader,
-             Colormap *        const colormapP) {
+             Colormap **       const colormapPP) {
 /*----------------------------------------------------------------------------
    Read the colormap, if any from the Palm Bitmap.
 
@@ -608,7 +609,7 @@ readColormap(FILE *            const ifP,
    return an undefined value as *colormapP.
 -----------------------------------------------------------------------------*/
     if (palmHeader.hasColormap)
-        *colormapP = palmcolor_read_colormap(ifP);
+        *colormapPP = palmcolor_read_colormap(ifP);
 }
 
 
@@ -616,8 +617,8 @@ readColormap(FILE *            const ifP,
 static void
 getColorInfo(struct PalmHeader        const palmHeader,
              struct DirectColorInfo   const directInfoType,
-             Colormap                 const colormapFromImage,
-             Colormap *               const colormapP,
+             Colormap *               const colormapFromImageP,
+             Colormap **              const colormapPP,
              unsigned int *           const ncolorsP,
              struct DirectColorInfo * const directColorInfoP) {
 /*----------------------------------------------------------------------------
@@ -629,7 +630,7 @@ getColorInfo(struct PalmHeader        const palmHeader,
    If it's a version 3 direct color, the pixel format must be "565".
 -----------------------------------------------------------------------------*/
     if (palmHeader.version == 3 && palmHeader.directColor) {
-        *colormapP = NULL;
+        *colormapPP = NULL;
 
         assert(palmHeader.pixelFormat == PALM_FORMAT_565);
 
@@ -649,18 +650,18 @@ getColorInfo(struct PalmHeader        const palmHeader,
             ((((palmHeader.transparentValue >>  0) & 0x1F) * 255 / 0x1F)
              <<  0);
     } else if (palmHeader.directColor) {
-        *colormapP = NULL;
+        *colormapPP = NULL;
         *directColorInfoP = directInfoType;
     } else if (palmHeader.hasColormap)
-        *colormapP = colormapFromImage;
+        *colormapPP = colormapFromImageP;
     else if (palmHeader.pixelSize >= 8) {
-        Colormap colormap;
-        colormap = palmcolor_build_default_8bit_colormap();
-        qsort(colormap->color_entries, colormap->ncolors, 
-              sizeof(Color_s), palmcolor_compare_indices);
-        *colormapP = colormap;
+        Colormap * const colormapP =
+            palmcolor_build_default_8bit_colormap();
+        qsort(colormapP->color_entries, colormapP->ncolors, 
+              sizeof(ColormapEntry), palmcolor_compare_indices);
+        *colormapPP = colormapP;
     } else
-        *colormapP = NULL;
+        *colormapPP = NULL;
 
     *ncolorsP = 1 << palmHeader.pixelSize;
 }
@@ -673,7 +674,7 @@ doTransparent(FILE *                 const ofP,
               bool                   const directColor,
               unsigned char          const transparentIndex,
               unsigned char          const pixelSize,
-              Colormap               const colormap,
+              Colormap *             const colormapP,
               struct DirectColorInfo const directColorInfo) {
 /*----------------------------------------------------------------------------
    Generate a PNM comment on *ofP telling what color in the raster is
@@ -684,24 +685,25 @@ doTransparent(FILE *                 const ofP,
    RGB_ALPHA and GRAYSCALE_ALPHA tuple types).
 -----------------------------------------------------------------------------*/
     if (hasTransparency) {
-        if (colormap) {
-            Color_s const color = transparentIndex << 24;
-            Color const actualColor = bsearch(&color,
-                                              colormap->color_entries, 
-                                              colormap->ncolors,
-                                              sizeof(color), 
-                                              palmcolor_compare_indices);
-            if (!actualColor)
+        if (colormapP) {
+            ColormapEntry const searchTarget = transparentIndex << 24;
+            ColormapEntry * const foundEntryP =
+                bsearch(&searchTarget,
+                        colormapP->color_entries, 
+                        colormapP->ncolors,
+                        sizeof(searchTarget), 
+                        palmcolor_compare_indices);
+            if (!foundEntryP)
                 pm_error("Invalid input; transparent index %u "
                          "is not among the %u colors in the image's colormap",
-                         transparentIndex, colormap->ncolors);
+                         transparentIndex, colormapP->ncolors);
 
             fprintf(ofP, "#%02x%02x%02x\n", 
-                   (unsigned int) ((*actualColor >> 16) & 0xFF),
-                   (unsigned int) ((*actualColor >>  8) & 0xFF), 
-                   (unsigned int) ((*actualColor >>  0) & 0xFF));
+                   (unsigned int) ((*foundEntryP >> 16) & 0xFF),
+                   (unsigned int) ((*foundEntryP >>  8) & 0xFF), 
+                   (unsigned int) ((*foundEntryP >>  0) & 0xFF));
         } else if (directColor) {
-            Color_s const color = directColorInfo.transparentColor;
+            ColormapEntry const color = directColorInfo.transparentColor;
             fprintf(ofP, "#%02x%02x%02x\n", 
                    (unsigned int)((color >> 16) & 0xFF), 
                    (unsigned int)((color >>  8) & 0xFF), 
@@ -1003,7 +1005,7 @@ static void
 convertRowToPnmNotDirect(const unsigned char * const palmrow,
                          xel *                 const xelrow,
                          unsigned int          const cols,
-                         Colormap              const colormap,
+                         Colormap *            const colormapP,
                          xelval *              const graymap,
                          unsigned int *        const seen,
                          unsigned int          const pixelSize) {
@@ -1023,24 +1025,25 @@ convertRowToPnmNotDirect(const unsigned char * const palmrow,
         if (seen)
             ++seen[color];
         
-        if (colormap) {
-            Color_s const color2      = color << 24;
-            Color   const actualColor = bsearch(&color2,
-                                                colormap->color_entries, 
-                                                colormap->ncolors,
-                                                sizeof(color2), 
-                                                palmcolor_compare_indices);
+        if (colormapP) {
+            ColormapEntry const searchTarget = color << 24;
+            ColormapEntry * const foundEntryP =
+                bsearch(&searchTarget,
+                        colormapP->color_entries, 
+                        colormapP->ncolors,
+                        sizeof(searchTarget), 
+                        palmcolor_compare_indices);
 
-            if (!actualColor)
+            if (!foundEntryP)
                 pm_error("Invalid input.  A color index in column %u "
                          "is %u, which is not among the %u colors "
                          "in the colormap",
-                         j, color, colormap->ncolors);
+                         j, color, colormapP->ncolors);
 
             PPM_ASSIGN(xelrow[j], 
-                       (*actualColor >> 16) & 0xFF, 
-                       (*actualColor >>  8) & 0xFF, 
-                       (*actualColor >>  0) & 0xFF);
+                       (*foundEntryP >> 16) & 0xFF, 
+                       (*foundEntryP >>  8) & 0xFF, 
+                       (*foundEntryP >>  0) & 0xFF);
         } else
             PNM_ASSIGN1(xelrow[j], graymap[color]);
         
@@ -1058,7 +1061,7 @@ static void
 writePnm(FILE *            const ofP,
          struct PalmHeader const palmHeader,
          FILE *            const ifP,
-         Colormap          const colormap,
+         Colormap *        const colormapP,
          xelval *          const graymap,
          unsigned int      const nColors,
          int               const format,
@@ -1111,7 +1114,7 @@ writePnm(FILE *            const ofP,
             assert(palmHeader.pixelSize == 16);
             convertRowToPnmDirect(palmrow, xelrow, cols, maxval, seen);
         } else
-            convertRowToPnmNotDirect(palmrow, xelrow, cols, colormap, graymap,
+            convertRowToPnmNotDirect(palmrow, xelrow, cols, colormapP, graymap,
                                      seen, palmHeader.pixelSize);
 
         pnm_writepnmrow(ofP, xelrow, cols, maxval, format, 0);
@@ -1125,28 +1128,29 @@ writePnm(FILE *            const ofP,
 
 static void
 showHistogram(unsigned int * const seen,
-              Colormap       const colormap,
+              Colormap *     const colormapP,
               const xelval * const graymap,
               unsigned int   const ncolors) {
 
     unsigned int colorIndex;
     
     for (colorIndex = 0;  colorIndex < ncolors; ++colorIndex) {
-        if (!colormap)
+        if (!colormapP)
             pm_message("%.3d -> %.3d:  %d", 
                        colorIndex, graymap[colorIndex], seen[colorIndex]);
         else {
-            Color_s const color = colorIndex << 24;
-            Color const actualColor = bsearch(&color,
-                                              colormap->color_entries, 
-                                              colormap->ncolors,
-                                              sizeof(color), 
-                                              palmcolor_compare_indices);
-            if (actualColor)
+            ColormapEntry const searchTarget = colorIndex << 24;
+            ColormapEntry * const foundEntryP =
+                bsearch(&searchTarget,
+                        colormapP->color_entries, 
+                        colormapP->ncolors,
+                        sizeof(searchTarget), 
+                        palmcolor_compare_indices);
+            if (foundEntryP)
                 pm_message("%.3d -> %ld,%ld,%ld:  %d", colorIndex,
-                           (*actualColor >> 16) & 0xFF,
-                           (*actualColor >> 8) & 0xFF,
-                           (*actualColor & 0xFF), seen[colorIndex]);
+                           (*foundEntryP >> 16) & 0xFF,
+                           (*foundEntryP >> 8) & 0xFF,
+                           (*foundEntryP & 0xFF), seen[colorIndex]);
         }
     }
 }
@@ -1161,8 +1165,8 @@ main(int argc, const char **argv) {
     FILE * ifP;
     struct PalmHeader palmHeader;
     struct DirectColorInfo directInfoType;
-    Colormap colormapFromImage;
-    Colormap colormap;
+    Colormap * colormapFromImageP;
+    Colormap * colormapP;
     struct DirectColorInfo directColorInfo;
     int format;
     xelval maxval;
@@ -1178,12 +1182,12 @@ main(int argc, const char **argv) {
 
     readDirectInfoType(ifP, palmHeader, &directInfoType);
    
-    readColormap(ifP, palmHeader, &colormapFromImage);
+    readColormap(ifP, palmHeader, &colormapFromImageP);
     
     determineOutputFormat(palmHeader, &format, &maxval);
     
-    getColorInfo(palmHeader, directInfoType, colormapFromImage,
-                 &colormap, &nColors, &directColorInfo);
+    getColorInfo(palmHeader, directInfoType, colormapFromImageP,
+                 &colormapP, &nColors, &directColorInfo);
 
     if (cmdline.verbose)
         reportPalmHeader(palmHeader, directColorInfo);
@@ -1192,7 +1196,7 @@ main(int argc, const char **argv) {
         doTransparent(stdout, 
                       palmHeader.hasTransparency, palmHeader.directColor,
                       palmHeader.transparentIndex, 
-                      palmHeader.pixelSize, colormap, directColorInfo);
+                      palmHeader.pixelSize, colormapP, directColorInfo);
     else {
         unsigned int * seen;
         xelval * graymap;
@@ -1200,11 +1204,11 @@ main(int argc, const char **argv) {
         graymap = createGraymap(nColors, maxval);
 
         writePnm(stdout,
-                 palmHeader, ifP, colormap, graymap, nColors, format, maxval, 
+                 palmHeader, ifP, colormapP, graymap, nColors, format, maxval, 
                  cmdline.showhist ? &seen : NULL);
         
         if (cmdline.showhist)
-            showHistogram(seen, colormap, graymap, nColors);
+            showHistogram(seen, colormapP, graymap, nColors);
         
         free(graymap);
     }

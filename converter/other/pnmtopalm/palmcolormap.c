@@ -4,8 +4,9 @@
 #include "pm_c_util.h"
 #include "mallocvar.h"
 #include "pnm.h"
-
 #include "palm.h"
+
+#include "palmcolormap.h"
 
 int
 palmcolor_compare_indices(const void * const p1,
@@ -13,9 +14,9 @@ palmcolor_compare_indices(const void * const p1,
 /*----------------------------------------------------------------------------
    This is a 'qsort' collation function.
 -----------------------------------------------------------------------------*/
-    if ((*((Color) p1) & 0xFF000000) < (*((Color) p2) & 0xFF000000))
+    if ((*((ColormapEntry *) p1) & 0xFF000000) < (*((ColormapEntry *) p2) & 0xFF000000))
         return -1;
-    else if ((*((Color) p1) & 0xFF000000) > (*((Color) p2) & 0xFF000000))
+    else if ((*((ColormapEntry *) p1) & 0xFF000000) > (*((ColormapEntry *) p2) & 0xFF000000))
         return 1;
     else
         return 0;
@@ -165,86 +166,87 @@ static int PalmPalette8bpp[256][3] =
 
 
 
-Colormap
+Colormap *
 palmcolor_build_default_8bit_colormap(void) {
 
     unsigned int i;
 
-    Colormap cm;
+    Colormap * cmP;
 
-    MALLOCVAR_NOFAIL(cm);
-    cm->nentries = 232;
-    MALLOCARRAY_NOFAIL(cm->color_entries, cm->nentries);
+    MALLOCVAR_NOFAIL(cmP);
+    cmP->nentries = 232;
+    MALLOCARRAY_NOFAIL(cmP->color_entries, cmP->nentries);
 
     /* Fill in the colors */
     for (i = 0; i < 231; ++i) {
-        cm->color_entries[i] = ((i << 24) |
+        cmP->color_entries[i] = ((i << 24) |
                                 (PalmPalette8bpp[i][0] << 16) |
                                 (PalmPalette8bpp[i][1] << 8) |
                                 (PalmPalette8bpp[i][2]));
     }
-    cm->color_entries[231] = 0xFF000000;
-    cm->ncolors = 232;
+    cmP->color_entries[231] = 0xFF000000;
+    cmP->ncolors = 232;
 
     /* now sort the table */
-    qsort (cm->color_entries, cm->ncolors, sizeof(Color_s), 
-           palmcolor_compare_colors);
-    return cm;
+    qsort(cmP->color_entries, cmP->ncolors, sizeof(ColormapEntry), 
+          palmcolor_compare_colors);
+    return cmP;
 }
 
 
 
-Colormap
+Colormap *
 palmcolor_build_custom_8bit_colormap(unsigned int const rows,
                                      unsigned int const cols,
                                      pixel **     const pixels) {
     unsigned int row;
-    Colormap colormap;
+    Colormap * colormapP;
 
-    MALLOCVAR_NOFAIL(colormap);
-    colormap->nentries = 256;
-    MALLOCARRAY_NOFAIL(colormap->color_entries, colormap->nentries);
-    colormap->ncolors = 0;  /* initial value */
+    MALLOCVAR_NOFAIL(colormapP);
+    colormapP->nentries = 256;
+    MALLOCARRAY_NOFAIL(colormapP->color_entries, colormapP->nentries);
+    colormapP->ncolors = 0;  /* initial value */
     
     for (row = 0; row < rows; ++row) {
         unsigned int col;
         for (col = 0; col < cols; ++col) {
-            Color found;
-            Color_s temp;
-
-            temp = ((PPM_GETR(pixels[row][col]) << 16) |
-                    (PPM_GETG(pixels[row][col]) << 8) |
-                    PPM_GETB(pixels[row][col]));
-            found = (bsearch (&temp,
-                              colormap->color_entries, colormap->ncolors,
-                              sizeof(Color_s), palmcolor_compare_colors));
-            if (!found) {
-                if (colormap->ncolors >= colormap->nentries)
+            ColormapEntry * foundEntryP;
+            ColormapEntry const searchTarget =
+                (PPM_GETR(pixels[row][col]) << 16) |
+                (PPM_GETG(pixels[row][col]) << 8) |
+                PPM_GETB(pixels[row][col]);
+            foundEntryP =
+                bsearch(&searchTarget,
+                        colormapP->color_entries, colormapP->ncolors,
+                        sizeof(ColormapEntry), palmcolor_compare_colors);
+            if (!foundEntryP) {
+                if (colormapP->ncolors >= colormapP->nentries)
                     pm_error("Too many colors for custom colormap "
                              "(max 256).  "
                              "Try using pnmquant to reduce the number "
                              "of colors.");
                 else {
                     /* add the new color, and re-sort */
-                    temp |= ((colormap->ncolors) << 24);
-                    colormap->color_entries[colormap->ncolors] = temp;
-                    colormap->ncolors += 1;
-                    qsort(colormap->color_entries, colormap->ncolors, 
-                          sizeof(Color_s), palmcolor_compare_colors);
+                    ColormapEntry const newEntry =
+                        searchTarget | ((colormapP->ncolors) << 24);
+                    colormapP->color_entries[colormapP->ncolors] = newEntry;
+                    colormapP->ncolors += 1;
+                    qsort(colormapP->color_entries, colormapP->ncolors, 
+                          sizeof(ColormapEntry), palmcolor_compare_colors);
                 }
             }
         }
     }
-    return colormap;
+    return colormapP;
 }
 
 
 
-Colormap
+Colormap *
 palmcolor_read_colormap (FILE * const ifP) {
 
     unsigned short ncolors;
-    Colormap retval;
+    Colormap * retval;
     int rc;
     
     rc = pm_readbigshort(ifP, (short *) &ncolors);
@@ -252,13 +254,13 @@ palmcolor_read_colormap (FILE * const ifP) {
         retval = NULL;
     else {
         long colorentry;
-        Colormap colormap;
+        Colormap * colormapP;
         unsigned int i;
         bool error;
 
-        MALLOCVAR_NOFAIL(colormap);
-        colormap->nentries = ncolors;
-        MALLOCARRAY_NOFAIL(colormap->color_entries, colormap->nentries);
+        MALLOCVAR_NOFAIL(colormapP);
+        colormapP->nentries = ncolors;
+        MALLOCARRAY_NOFAIL(colormapP->color_entries, colormapP->nentries);
         
         for (i = 0, error = FALSE;  i < ncolors && !error;  ++i) {
             int rc;
@@ -266,15 +268,15 @@ palmcolor_read_colormap (FILE * const ifP) {
             if (rc != 0)
                 error = TRUE;
             else
-                colormap->color_entries[i] = (colorentry & 0xFFFFFFFF);
+                colormapP->color_entries[i] = (colorentry & 0xFFFFFFFF);
         }
         if (error) {
-            free (colormap->color_entries);
-            free (colormap);
+            free (colormapP->color_entries);
+            free (colormapP);
             retval = NULL;
         } else {
-            colormap->ncolors = ncolors;
-            retval = colormap;
+            colormapP->ncolors = ncolors;
+            retval = colormapP;
         }
     }
     return retval;
