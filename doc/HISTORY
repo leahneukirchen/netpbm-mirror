@@ -6,7 +6,7 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.80.00
 
-              pnmpalm: Refuse to create a compressed image with more than 8
+              pnmtopalm: Refuse to create a compressed image with more than 8
               bits per pixel.
 
               pbmtext, libnetpbm font facilities: allow glyphs in font files
@@ -34,6 +34,13 @@ not yet  BJH  Release 10.80.00
               pnmtopalm: fix incorrect output with certain input files and
               -packbits_compression.  Always broken.  -packbits_compression
               was new in Netpbm 10.27 (March 2005).
+
+              pnmtopalm: Correct error message recommending running
+              pnmquant when the real solution is to run pnmremap to modify the
+              image to Palm standard colors.
+
+              pnmtopalm: Fix bug causing "color not in colormap" failure with
+              -colormap and maxval other than 255.
 
               libnetpbm: font facilities: fix invalid memory reference with
               certain font files.
