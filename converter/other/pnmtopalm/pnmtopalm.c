@@ -243,14 +243,14 @@ determinePalmFormat(unsigned int         const cols,
         *colormapPP = NULL;
     } else if (PNM_FORMAT_TYPE(format) == PPM_TYPE) {
 
-        /* We assume that we only get a PPM if the image cannot be represented
-           as PBM or PGM.  There are two options here: either 8-bit with a
+        /* We don't attempt to identify PPM files that are actually
+           monochrome.  So there are two options here: either 8-bit with a
            colormap, either the standard one or a custom one, or 16-bit direct
-           color.  In the 8-bit case, if there is a custom colormap ispecified
-           (not recommended by Palm) we will put in our own colormap;
-           otherwise we will assume that the colors have been mapped to the
-           default Palm colormap by appropriate use of pnmquant.  We try for
-           8-bit color first, since it works on more PalmOS devices.
+           color.  In the colormap case, if there is a custom colormap
+           specified (not recommended by Palm) we will put in our own
+           colormap; otherwise we will assume that the colors have been mapped
+           to the default Palm colormap by appropriate use of Pnmquant.  We
+           try for colormapped first, since it works on more PalmOS devices.
         */
         if ((bppSpecified && bpp == 16) || 
             (!bppSpecified && maxBppSpecified && maxBpp == 16)) {
@@ -259,7 +259,7 @@ determinePalmFormat(unsigned int         const cols,
             *colormapPP = NULL;
             *bppP = 16;
         } else if (!haveCustomColormap) {
-            /* standard indexed 8-bit color */
+            /* colormapped with the standard colormap */
             *colormapPP = palmcolor_build_default_8bit_colormap();
             *bppP = 8;
             if ((bppSpecified && bpp != 8) || (maxBppSpecified && maxBpp < 8))
@@ -269,7 +269,7 @@ determinePalmFormat(unsigned int         const cols,
             if (verbose)
                 pm_message("Output is color with default colormap at 8 bpp");
         } else {
-            /* indexed 8-bit color with a custom colormap */
+            /* colormapped with a custom colormap */
             *colormapPP = 
                 palmcolor_build_custom_8bit_colormap(rows, cols, xels);
             for (*bppP = 1; (1 << *bppP) < (*colormapPP)->ncolors; *bppP *= 2);
