@@ -235,8 +235,6 @@ determinePalmFormat(unsigned int         const cols,
             for (*bppP = 1;  (1 << *bppP) < maxval;  *bppP *= 2)
                 ;
         }
-        if (*bppP > 4)
-            *bppP = 4;
         if (verbose)
             pm_message("output is grayscale %d bits-per-pixel", *bppP);
         *directColorP = FALSE;
