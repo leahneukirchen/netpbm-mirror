@@ -176,6 +176,169 @@ parseCommandLine(int argc, const char ** argv, struct CmdlineInfo *cmdlineP) {
 
 
 static void
+determinePalmFormatPgm(xelval               const maxval, 
+                       bool                 const bppSpecified,
+                       unsigned int         const bpp,
+                       bool                 const maxBppSpecified,
+                       unsigned int         const maxBpp, 
+                       bool                 const wantCustomColormap,
+                       enum CompressionType const compression,
+                       bool                 const verbose,
+                       unsigned int *       const bppP) {
+        
+    /* We can usually handle this one, but may not have enough pixels.  So
+       check.
+    */
+
+    if (wantCustomColormap)
+        pm_error("You specified -colormap with a black and white input"
+                 "image.  -colormap is valid only with color.");
+    if (bppSpecified)
+        *bppP = bpp;
+    else if (maxBppSpecified && (maxval >= (1 << maxBpp)))
+        *bppP = maxBpp;
+    else if (compression != COMP_NONE && maxval > 255)
+        *bppP = 8;
+    else if (maxval > 16)
+        *bppP = 4;
+    else {
+        /* scale to minimum number of bpp needed */
+        unsigned int bpp;
+        for (bpp = 1;  (1 << bpp) < maxval;  bpp *= 2)
+            ;
+        *bppP = bpp;
+    }
+    if (verbose)
+        pm_message("output is grayscale %d bits-per-pixel", *bppP);
+}
+
+
+
+static void
+validateImageAgainstStandardColormap(const Colormap * const colormapP,
+                                     xel **           const xels,
+                                     unsigned int     const cols,
+                                     unsigned int     const rows,
+                                     xelval           const maxval) {
+/*----------------------------------------------------------------------------
+   Abort program if the image xels[][] (which is 'cols' x 'rows') contains a
+   color not in the colormap *colormapP, giving an error message assuming the
+   user chose the standard Palm colormap.
+-----------------------------------------------------------------------------*/
+    unsigned int row;
+
+    for (row = 0; row < rows; ++row) {
+        unsigned int col;
+
+        for (col = 0; col < cols; ++col) {
+            xel const color = xels[row][col];
+            
+            ColormapEntry const searchTarget = 
+                ((((PPM_GETR(color)*255) / maxval) << 16) 
+                 | (((PPM_GETG(color)*255) / maxval) << 8)
+                 | ((PPM_GETB(color)*255) / maxval));
+
+            ColormapEntry * const foundEntryP = 
+                (bsearch(&searchTarget,
+                         colormapP->color_entries, colormapP->ncolors,
+                         sizeof(ColormapEntry), palmcolor_compare_colors));
+            if (!foundEntryP)
+                pm_error(
+                    "A color in the input image is not in the standard Palm "
+                    "8-bit color palette.  Either adjust the colors in the "
+                    "input with 'pnmremap' and the 'palmcolor8.map' file "
+                    "(see manual) or specify -colormap or -depth=16");
+        }
+    }
+}
+
+
+
+static void
+determinePalmFormatPpm(unsigned int         const cols, 
+                       unsigned int         const rows, 
+                       xelval               const maxval, 
+                       xel **               const xels,
+                       bool                 const bppSpecified,
+                       unsigned int         const bpp,
+                       bool                 const maxBppSpecified,
+                       unsigned int         const maxBpp, 
+                       bool                 const wantCustomColormap,
+                       enum CompressionType const compression,
+                       bool                 const verbose,
+                       unsigned int *       const bppP, 
+                       bool *               const directColorP, 
+                       Colormap **          const colormapPP) {
+            
+    /* We don't attempt to identify PPM files that are actually
+       monochrome.  So there are two options here: either 8-bit with a
+       colormap, either the standard one or a custom one, or 16-bit direct
+       color.  In the colormap case, if 'wantCustomColormap' is true (not
+       recommended by Palm) we will put in our own colormap that has the
+       colors of the input image; otherwise we will select the default
+       Palm colormap and will fail if the input image has any colors that
+       are not in that map (user should use Pnmremap and the
+       palmcolor8.map file that comes with Netpbm to avoid this).  We try
+       for colormapped first, since it works on more PalmOS devices.
+    */
+    if ((bppSpecified && bpp == 16) || 
+        (!bppSpecified && maxBppSpecified && maxBpp == 16)) {
+        /* we do the 16-bit direct color */
+        *directColorP = TRUE;
+        *colormapPP = NULL;
+        *bppP = 16;
+    } else if (!wantCustomColormap) {
+        /* colormapped with the standard colormap */
+        Colormap * colormapP;
+            
+        if ((bppSpecified && bpp != 8) || (maxBppSpecified && maxBpp < 8))
+            pm_error("Must use depth of 8 for color Palm Bitmap without "
+                     "custom color table.");
+        colormapP = palmcolor_build_default_8bit_colormap();
+        validateImageAgainstStandardColormap(colormapP,
+                                             xels, cols, rows, maxval);
+
+        *colormapPP = colormapP;
+        *bppP = 8;
+        *directColorP = FALSE;
+        if (verbose)
+            pm_message("Output is color with default colormap at 8 bpp");
+    } else {
+        /* colormapped with a custom colormap */
+        *colormapPP = 
+            palmcolor_build_custom_8bit_colormap(rows, cols, xels);
+        for (*bppP = 1; (1 << *bppP) < (*colormapPP)->ncolors; *bppP *= 2);
+        if (bppSpecified) {
+            if (bpp >= *bppP)
+                *bppP = bpp;
+            else
+                pm_error("Too many colors for specified depth.  "
+                         "Specified depth is %u bits; would need %u to "
+                         "represent the %u colors in the image.  "
+                         "Use pnmquant to reduce.",
+                         maxBpp, *bppP, (*colormapPP)->ncolors);
+        } else if (maxBppSpecified && maxBpp < *bppP) {
+            pm_error("Too many colors for specified max depth.  "
+                     "Specified maximum is %u bits; would need %u to "
+                     "represent the %u colors in the image.  "
+                     "Use pnmquant to reduce.",
+                     maxBpp, *bppP, (*colormapPP)->ncolors);
+        } else if (compression != COMP_NONE && *bppP > 8) {
+            pm_error("Too many colors for a compressed image.  "
+                     "Maximum is 256; the image has %u",
+                     (*colormapPP)->ncolors);
+        }
+        *directColorP = FALSE;
+        if (verbose)
+            pm_message("Output is color with custom colormap "
+                       "with %d colors at %d bpp", 
+                       (*colormapPP)->ncolors, *bppP);
+    }
+}
+
+
+
+static void
 determinePalmFormat(unsigned int         const cols, 
                     unsigned int         const rows, 
                     xelval               const maxval, 
@@ -185,13 +348,18 @@ determinePalmFormat(unsigned int         const cols,
                     unsigned int         const bpp,
                     bool                 const maxBppSpecified,
                     unsigned int         const maxBpp, 
-                    bool                 const haveCustomColormap,
+                    bool                 const wantCustomColormap,
                     enum CompressionType const compression,
                     bool                 const verbose,
                     unsigned int *       const bppP, 
                     bool *               const directColorP, 
                     Colormap **          const colormapPP) {
+/*----------------------------------------------------------------------------
+   Determine what kind of Palm output file to make.
 
+   Also compute the colormap, if there is to be one.  This could be either one
+   we make up, that needs to go into the image, or a standard one.
+-----------------------------------------------------------------------------*/
     if (compression != COMP_NONE) {
         if (bppSpecified && bpp > 8)
             pm_error("You requested %u bits per pixel and compression.  "
@@ -205,7 +373,7 @@ determinePalmFormat(unsigned int         const cols,
                      maxBpp);
     }
     if (PNM_FORMAT_TYPE(format) == PBM_TYPE) {
-        if (haveCustomColormap)
+        if (wantCustomColormap)
             pm_error("You specified -colormap with a black and white input "
                      "image.  -colormap is valid only with color.");
         if (bppSpecified)
@@ -217,88 +385,19 @@ determinePalmFormat(unsigned int         const cols,
         if (verbose)
             pm_message("output is black and white");
     } else if (PNM_FORMAT_TYPE(format) == PGM_TYPE) {
-        /* we can usually handle this one, but may not have enough
-           pixels.  So check... */
-        if (haveCustomColormap)
-            pm_error("You specified -colormap with a black and white input"
-                     "image.  -colormap is valid only with color.");
-        if (bppSpecified)
-            *bppP = bpp;
-        else if (maxBppSpecified && (maxval >= (1 << maxBpp)))
-            *bppP = maxBpp;
-        else if (compression != COMP_NONE && maxval > 255)
-            *bppP = 8;
-        else if (maxval > 16)
-            *bppP = 4;
-        else {
-            /* scale to minimum number of bpp needed */
-            unsigned int bpp;
-            for (bpp = 1;  (1 << bpp) < maxval;  bpp *= 2)
-                ;
-            *bppP = bpp;
-        }
-        if (verbose)
-            pm_message("output is grayscale %d bits-per-pixel", *bppP);
+        determinePalmFormatPgm(maxval,
+                               bppSpecified, bpp, maxBppSpecified, maxBpp,
+                               wantCustomColormap, compression,
+                               verbose,
+                               bppP);
+
         *directColorP = FALSE;
         *colormapPP = NULL;
     } else if (PNM_FORMAT_TYPE(format) == PPM_TYPE) {
-
-        /* We don't attempt to identify PPM files that are actually
-           monochrome.  So there are two options here: either 8-bit with a
-           colormap, either the standard one or a custom one, or 16-bit direct
-           color.  In the colormap case, if there is a custom colormap
-           specified (not recommended by Palm) we will put in our own
-           colormap; otherwise we will assume that the colors have been mapped
-           to the default Palm colormap by appropriate use of Pnmquant.  We
-           try for colormapped first, since it works on more PalmOS devices.
-        */
-        if ((bppSpecified && bpp == 16) || 
-            (!bppSpecified && maxBppSpecified && maxBpp == 16)) {
-            /* we do the 16-bit direct color */
-            *directColorP = TRUE;
-            *colormapPP = NULL;
-            *bppP = 16;
-        } else if (!haveCustomColormap) {
-            /* colormapped with the standard colormap */
-            *colormapPP = palmcolor_build_default_8bit_colormap();
-            *bppP = 8;
-            if ((bppSpecified && bpp != 8) || (maxBppSpecified && maxBpp < 8))
-                pm_error("Must use depth of 8 for color Palm Bitmap without "
-                         "custom color table.");
-            *directColorP = FALSE;
-            if (verbose)
-                pm_message("Output is color with default colormap at 8 bpp");
-        } else {
-            /* colormapped with a custom colormap */
-            *colormapPP = 
-                palmcolor_build_custom_8bit_colormap(rows, cols, xels);
-            for (*bppP = 1; (1 << *bppP) < (*colormapPP)->ncolors; *bppP *= 2);
-            if (bppSpecified) {
-                if (bpp >= *bppP)
-                    *bppP = bpp;
-                else
-                    pm_error("Too many colors for specified depth.  "
-                             "Specified depth is %u bits; would need %u to "
-                             "represent the %u colors in the image.  "
-                             "Use pnmquant to reduce.",
-                             maxBpp, *bppP, (*colormapPP)->ncolors);
-            } else if (maxBppSpecified && maxBpp < *bppP) {
-                pm_error("Too many colors for specified max depth.  "
-                         "Specified maximum is %u bits; would need %u to "
-                         "represent the %u colors in the image.  "
-                         "Use pnmquant to reduce.",
-                         maxBpp, *bppP, (*colormapPP)->ncolors);
-            } else if (compression != COMP_NONE && *bppP > 8) {
-                pm_error("Too many colors for a compressed image.  "
-                         "Maximum is 256; the image has %u",
-                         (*colormapPP)->ncolors);
-            }
-            *directColorP = FALSE;
-            if (verbose)
-                pm_message("Output is color with custom colormap "
-                           "with %d colors at %d bpp", 
-                           (*colormapPP)->ncolors, *bppP);
-        }
+        determinePalmFormatPpm(cols, rows, maxval, xels, bppSpecified, bpp,
+                               maxBppSpecified, maxBpp,
+                               wantCustomColormap, compression, verbose,
+                               bppP, directColorP, colormapPP);
     } else {
         pm_error("unknown format 0x%x on input file", (unsigned) format);
     }
