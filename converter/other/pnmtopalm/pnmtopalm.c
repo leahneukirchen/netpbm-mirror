@@ -134,8 +134,8 @@ parseCommandLine(int argc, const char ** argv, struct CmdlineInfo *cmdlineP) {
             cmdlineP->density != PALM_DENSITY_DOUBLE &&
             cmdlineP->density != PALM_DENSITY_TRIPLE &&
             cmdlineP->density != PALM_DENSITY_QUADRUPLE)
-            pm_error("Invalid value for -density: %d.  Valid values are "
-                     "%d, %d, %d, %d and %d.", cmdlineP->density, 
+            pm_error("Invalid value for -density: %u.  Valid values are "
+                     "%u, %u, %u, %u and %u.", cmdlineP->density, 
                      PALM_DENSITY_LOW, PALM_DENSITY_ONEANDAHALF,
                      PALM_DENSITY_DOUBLE, PALM_DENSITY_TRIPLE,
                      PALM_DENSITY_QUADRUPLE);
@@ -166,7 +166,7 @@ parseCommandLine(int argc, const char ** argv, struct CmdlineInfo *cmdlineP) {
         
     if (argc-1 > 1)
         pm_error("This program takes at most 1 argument: the file name.  "
-                 "You specified %d", argc-1);
+                 "You specified %u", argc-1);
     else if (argc-1 > 0) 
         cmdlineP->inputFilespec = argv[1];
     else
@@ -180,21 +180,7 @@ scaleSample(pixval const arg,
             pixval const oldMaxval,
             pixval const newMaxval) {
 
-    return (arg * newMaxval + newMaxval/2) / oldMaxval;
-}
-
-
-
-static ColormapEntry
-colormapEntryColorFmXel(xel    const color,
-                        xelval const maxval,
-                        xelval const newMaxval) {
-
-    return
-        0
-        | (scaleSample(PPM_GETR(color), maxval, newMaxval) << 16) 
-        | (scaleSample(PPM_GETG(color), maxval, newMaxval) <<  8)
-        | (scaleSample(PPM_GETB(color), maxval, newMaxval) <<  0);
+    return (arg * newMaxval + oldMaxval/2) / oldMaxval;
 }
 
 
@@ -233,7 +219,7 @@ determinePalmFormatPgm(xelval               const maxval,
         *bppP = bpp;
     }
     if (verbose)
-        pm_message("output is grayscale %d bits-per-pixel", *bppP);
+        pm_message("output is grayscale %u bits-per-pixel", *bppP);
 }
 
 
@@ -256,7 +242,7 @@ validateImageAgainstStandardColormap(const Colormap * const colormapP,
 
         for (col = 0; col < cols; ++col) {
             ColormapEntry const searchTarget = 
-                colormapEntryColorFmXel(xels[row][col], maxval, 255);
+                palmcolor_mapEntryColorFmPixel(xels[row][col], maxval, 255);
 
             ColormapEntry * const foundEntryP = 
                 (bsearch(&searchTarget,
@@ -326,7 +312,7 @@ determinePalmFormatPpm(unsigned int         const cols,
     } else {
         /* colormapped with a custom colormap */
         *colormapPP = 
-            palmcolor_build_custom_8bit_colormap(rows, cols, xels);
+            palmcolor_build_custom_8bit_colormap(xels, rows, cols, maxval);
         for (*bppP = 1; (1 << *bppP) < (*colormapPP)->ncolors; *bppP *= 2);
         if (bppSpecified) {
             if (bpp >= *bppP)
@@ -351,7 +337,7 @@ determinePalmFormatPpm(unsigned int         const cols,
         *directColorP = FALSE;
         if (verbose)
             pm_message("Output is color with custom colormap "
-                       "with %d colors at %d bpp", 
+                       "with %u colors at %u bpp", 
                        (*colormapPP)->ncolors, *bppP);
     }
 }
@@ -456,7 +442,7 @@ findTransparentColor(const char *   const colorSpec,
     *transcolorP = ppm_parsecolor(colorSpec, maxval);
     if (!directColor) {
         ColormapEntry const searchTarget = 
-            colormapEntryColorFmXel(*transcolorP, maxval, newMaxval);
+            palmcolor_mapEntryColorFmPixel(*transcolorP, maxval, newMaxval);
         ColormapEntry * const foundEntryP = 
             (bsearch(&searchTarget,
                      colormapP->color_entries, colormapP->ncolors,
@@ -699,7 +685,7 @@ writeColormap(bool         const explicitColormap,
             fputc(5, stdout);   /* # of bits of blue */
             fputc(0, stdout);   /* reserved by Palm */
         } else
-            pm_error("Don't know how to create %d bit DirectColor bitmaps.", 
+            pm_error("Don't know how to create %u bit DirectColor bitmaps.", 
                      bpp);
         if (transparent) {
             fputc(0, stdout);
@@ -760,6 +746,7 @@ computeRawRowNonDirect(const xel *     const xelrow,
   intensities.
 
   If 'colormapP' is non-null, the pixel is an index into that colormap.
+  'newMaxval' is meaningless.
 
   If 'colormapP' is null, the pixel is a grayscale intensity, on a scale with
   maximum value 'newMaxval'.  (N.B. this is really direct color, but for some
@@ -792,7 +779,7 @@ computeRawRowNonDirect(const xel *     const xelrow,
             color = newMaxval - color; /* note grayscale maps are inverted */
         } else {
             ColormapEntry const searchTarget =
-                colormapEntryColorFmXel(xelrow[col], maxval, newMaxval);
+                palmcolor_mapEntryColorFmPixel(xelrow[col], maxval, 255);
             ColormapEntry * const foundEntryP =
                 bsearch(&searchTarget,
                         colormapP->color_entries, 
@@ -1335,7 +1322,7 @@ main( int argc, const char **argv ) {
     pm_close(ifP);
 
     if (cmdline.verbose)
-        pm_message("Input is %dx%d %s, maxval %d", 
+        pm_message("Input is %ux%u %s, maxval %u", 
                    cols, rows, formatName(format), maxval);
     
     determinePalmFormat(cols, rows, maxval, format, xels,

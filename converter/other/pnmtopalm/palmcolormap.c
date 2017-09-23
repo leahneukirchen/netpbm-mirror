@@ -8,6 +8,33 @@
 
 #include "palmcolormap.h"
 
+
+
+static pixval
+scaleSample(pixval const arg,
+            pixval const oldMaxval,
+            pixval const newMaxval) {
+
+    return (arg * newMaxval + oldMaxval/2) / oldMaxval;
+}
+
+
+
+ColormapEntry
+palmcolor_mapEntryColorFmPixel(pixel  const color,
+                               pixval const maxval,
+                               pixval const newMaxval) {
+
+
+    return
+        0
+        | (scaleSample(PPM_GETR(color), maxval, newMaxval) << 16) 
+        | (scaleSample(PPM_GETG(color), maxval, newMaxval) <<  8)
+        | (scaleSample(PPM_GETB(color), maxval, newMaxval) <<  0);
+}
+
+
+
 int
 palmcolor_compare_indices(const void * const p1,
                           const void * const p2) {
@@ -196,9 +223,11 @@ palmcolor_build_default_8bit_colormap(void) {
 
 
 Colormap *
-palmcolor_build_custom_8bit_colormap(unsigned int const rows,
+palmcolor_build_custom_8bit_colormap(pixel **     const pixels,
+                                     unsigned int const rows,
                                      unsigned int const cols,
-                                     pixel **     const pixels) {
+                                     pixval       const maxval) {
+
     unsigned int row;
     Colormap * colormapP;
 
@@ -212,9 +241,8 @@ palmcolor_build_custom_8bit_colormap(unsigned int const rows,
         for (col = 0; col < cols; ++col) {
             ColormapEntry * foundEntryP;
             ColormapEntry const searchTarget =
-                (PPM_GETR(pixels[row][col]) << 16) |
-                (PPM_GETG(pixels[row][col]) << 8) |
-                PPM_GETB(pixels[row][col]);
+                palmcolor_mapEntryColorFmPixel(pixels[row][col], maxval, 255);
+
             foundEntryP =
                 bsearch(&searchTarget,
                         colormapP->color_entries, colormapP->ncolors,
@@ -222,15 +250,15 @@ palmcolor_build_custom_8bit_colormap(unsigned int const rows,
             if (!foundEntryP) {
                 if (colormapP->ncolors >= colormapP->nentries)
                     pm_error("Too many colors for custom colormap "
-                             "(max 256).  "
+                             "(max %u).  "
                              "Try using pnmquant to reduce the number "
-                             "of colors.");
+                             "of colors.", colormapP->nentries);
                 else {
                     /* add the new color, and re-sort */
+                    unsigned int const colorIndex = colormapP->ncolors++;
                     ColormapEntry const newEntry =
-                        searchTarget | ((colormapP->ncolors) << 24);
-                    colormapP->color_entries[colormapP->ncolors] = newEntry;
-                    colormapP->ncolors += 1;
+                        searchTarget | (colorIndex << 24);
+                    colormapP->color_entries[colorIndex] = newEntry;
                     qsort(colormapP->color_entries, colormapP->ncolors, 
                           sizeof(ColormapEntry), palmcolor_compare_colors);
                 }
