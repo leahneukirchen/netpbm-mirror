@@ -175,6 +175,30 @@ parseCommandLine(int argc, const char ** argv, struct CmdlineInfo *cmdlineP) {
 
 
 
+static xelval
+scaleSample(pixval const arg,
+            pixval const oldMaxval,
+            pixval const newMaxval) {
+
+    return (arg * newMaxval + newMaxval/2) / oldMaxval;
+}
+
+
+
+static ColormapEntry
+colormapEntryColorFmXel(xel    const color,
+                        xelval const maxval,
+                        xelval const newMaxval) {
+
+    return
+        0
+        | (scaleSample(PPM_GETR(color), maxval, newMaxval) << 16) 
+        | (scaleSample(PPM_GETG(color), maxval, newMaxval) <<  8)
+        | (scaleSample(PPM_GETB(color), maxval, newMaxval) <<  0);
+}
+
+
+
 static void
 determinePalmFormatPgm(xelval               const maxval, 
                        bool                 const bppSpecified,
@@ -231,12 +255,8 @@ validateImageAgainstStandardColormap(const Colormap * const colormapP,
         unsigned int col;
 
         for (col = 0; col < cols; ++col) {
-            xel const color = xels[row][col];
-            
             ColormapEntry const searchTarget = 
-                ((((PPM_GETR(color)*255) / maxval) << 16) 
-                 | (((PPM_GETG(color)*255) / maxval) << 8)
-                 | ((PPM_GETB(color)*255) / maxval));
+                colormapEntryColorFmXel(xels[row][col], maxval, 255);
 
             ColormapEntry * const foundEntryP = 
                 (bsearch(&searchTarget,
@@ -436,9 +456,7 @@ findTransparentColor(const char *   const colorSpec,
     *transcolorP = ppm_parsecolor(colorSpec, maxval);
     if (!directColor) {
         ColormapEntry const searchTarget = 
-            ((((PPM_GETR(*transcolorP)*newMaxval) / maxval) << 16) 
-             | (((PPM_GETG(*transcolorP)*newMaxval) / maxval) << 8)
-             | ((PPM_GETB(*transcolorP)*newMaxval) / maxval));
+            colormapEntryColorFmXel(*transcolorP, maxval, newMaxval);
         ColormapEntry * const foundEntryP = 
             (bsearch(&searchTarget,
                      colormapP->color_entries, colormapP->ncolors,
@@ -609,9 +627,9 @@ writeRemainingHeaderHigh(unsigned int         const bpp,
         if (bpp == 16) {
             /* Blind guess here */
             fputc(0, stdout);
-            fputc((PPM_GETR(transcolor) * 255) / maxval, stdout);
-            fputc((PPM_GETG(transcolor) * 255) / maxval, stdout);
-            fputc((PPM_GETB(transcolor) * 255) / maxval, stdout);
+            fputc(scaleSample(PPM_GETR(transcolor), maxval, 255), stdout);
+            fputc(scaleSample(PPM_GETG(transcolor), maxval, 255), stdout);
+            fputc(scaleSample(PPM_GETB(transcolor), maxval, 255), stdout);
         } else {
             assert(transindex <= UCHAR_MAX);
             fputc(0, stdout);
@@ -685,9 +703,9 @@ writeColormap(bool         const explicitColormap,
                      bpp);
         if (transparent) {
             fputc(0, stdout);
-            fputc((PPM_GETR(transcolor) * 255) / maxval, stdout);
-            fputc((PPM_GETG(transcolor) * 255) / maxval, stdout);
-            fputc((PPM_GETB(transcolor) * 255) / maxval, stdout);
+            fputc(scaleSample(PPM_GETR(transcolor) , maxval, 255), stdout);
+            fputc(scaleSample(PPM_GETG(transcolor) , maxval, 255), stdout);
+            fputc(scaleSample(PPM_GETB(transcolor) , maxval, 255), stdout);
         } else
             pm_writebiglong(stdout, 0);     /* no transparent color */
     }
@@ -717,9 +735,10 @@ computeRawRowDirectColor(const xel *     const xelrow,
     
     for (col = 0, outCursor = &rowdata[0]; col < cols; ++col) {
         unsigned int const color = 
-            ((((PPM_GETR(xelrow[col])*31)/maxval) << 11) |
-             (((PPM_GETG(xelrow[col])*63)/maxval) << 5) |
-             ((PPM_GETB(xelrow[col])*31)/maxval));
+            (scaleSample(PPM_GETR(xelrow[col]), maxval, 31) << 11) |
+            (scaleSample(PPM_GETG(xelrow[col]), maxval, 63) <<  5) |
+            (scaleSample(PPM_GETB(xelrow[col]), maxval, 31) <<  0);
+
         *outCursor++ = (color >> 8) & 0xFF;
         *outCursor++ = color & 0xFF;
     }
@@ -773,9 +792,7 @@ computeRawRowNonDirect(const xel *     const xelrow,
             color = newMaxval - color; /* note grayscale maps are inverted */
         } else {
             ColormapEntry const searchTarget =
-                ((((PPM_GETR(xelrow[col])*newMaxval)/maxval)<<16) 
-                 | (((PPM_GETG(xelrow[col])*newMaxval)/maxval)<<8)
-                 | (((PPM_GETB(xelrow[col])*newMaxval)/maxval)));
+                colormapEntryColorFmXel(xelrow[col], maxval, newMaxval);
             ColormapEntry * const foundEntryP =
                 bsearch(&searchTarget,
                         colormapP->color_entries, 
@@ -783,7 +800,7 @@ computeRawRowNonDirect(const xel *     const xelrow,
                         sizeof(ColormapEntry), 
                         palmcolor_compare_colors);
             if (!foundEntryP) {
-                pm_error("Color %d:%d:%d not found in colormap.  "
+                pm_error("Color %u:%u:%u not found in colormap.  "
                          "Try using pnmquant to reduce the "
                          "number of colors.",
                          PPM_GETR(xelrow[col]), 
