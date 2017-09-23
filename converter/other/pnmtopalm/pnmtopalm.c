@@ -787,9 +787,9 @@ computeRawRowNonDirect(const xel *     const xelrow,
                         sizeof(ColormapEntry), 
                         palmcolor_compare_colors);
             if (!foundEntryP) {
-                pm_error("Color %u:%u:%u not found in colormap.  "
-                         "Try using pnmquant to reduce the "
-                         "number of colors.",
+                pm_error("INERNAL ERROR: "
+                         "Color (%u,%u,%u) not found in colormap, "
+                         "though it was supposedly there before",
                          PPM_GETR(xelrow[col]), 
                          PPM_GETG(xelrow[col]), 
                          PPM_GETB(xelrow[col]));
