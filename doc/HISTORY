@@ -4,7 +4,7 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-not yet  BJH  Release 10.47.66
+17.09.28 BJH  Release 10.47.66
 
               ppmbrighten: fix bug: red pixels change hue.  Introduced in
               after Netpbm 10.11 (October 2002) and before Netpbm 10.18
