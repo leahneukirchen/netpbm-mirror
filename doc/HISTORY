@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+17.09.28 BJH  Release 10.73.16
+
+              ppmbrighten: fix bug: red pixels change hue.  Introduced in
+              after Netpbm 10.11 (October 2002) and before Netpbm 10.18
+              (September 2003).
+
 17.09.13 BJH  Release 10.73.15
 
               palmtopnm: fix crash if invalid input contains color index that
