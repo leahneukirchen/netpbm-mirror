@@ -1088,7 +1088,7 @@ mk_argvn(char *        const s,
             *p++ = '\0';
         else {
             vec[n++] = p;
-            if (n >= mk_max)
+            if (n >= mk_max-1)
                 break;
             while (*p && !ISSPACE(*p))
                 ++p;

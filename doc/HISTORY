@@ -4,6 +4,19 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+not yet  BJH  Release 10.47.66
+
+              ppmbrighten: fix bug: red pixels change hue.  Introduced in
+              after Netpbm 10.11 (October 2002) and before Netpbm 10.18
+              (September 2003).
+
+              palmtopnm: fix crash if invalid input contains color index that
+              is not in the palette.  Always broken (palmtopnm was new in
+              Netpbm 9.10 (October 2001)).
+
+              libnetpbm: font facilities: fix invalid memory reference with
+              certain font files.
+
 17.06.28 BJH  Release 10.47.65
 
               pamgauss: Fix skewed output with even dimension.  Always broken
