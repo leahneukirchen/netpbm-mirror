@@ -539,15 +539,14 @@ openColornameFile(const char *  const fileName,
 
     if (setjmp(jmpbuf) != 0) {
         pm_asprintf(errorP, "Failed to open color name file");
-        pm_setjmpbuf(origJmpbufP);
-        pm_longjmp();
     } else {
+        pm_setjmpbufsave(&jmpbuf, &origJmpbufP);
+
         *filePP = pm_openColornameFile(fileName, mustOpen);
 
         *errorP = NULL;  /* Would have longjmped if there were a problem */
-
-        pm_setjmpbuf(origJmpbufP);
     }
+    pm_setjmpbuf(origJmpbufP);
 }
 
 
@@ -733,7 +732,7 @@ ppm_readcolordict(const char *      const fileName,
     if (error) {
         pm_errormsg("%s", error);
         pm_strfree(error);
-        ppm_freecolorhash(cht);
+        pm_longjmp();
     } else {
         if (chtP)
             *chtP = cht;

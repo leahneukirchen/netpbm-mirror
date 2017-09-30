@@ -2,16 +2,26 @@
 # This script tests: pnmquantall
 # Also requires: ppmtorgb3 pgmhist
 
-ppmtorgb3 testimg.ppm
+tmpdir=${tmpdir:-/tmp}
+test_ppm=${tmpdir}/testimg.ppm
 
-pnmquantall 20 testimg.red testimg.grn testimg.blu
+cp testimg.ppm ${tmpdir} &&
+ppmtorgb3 ${test_ppm}
 
-for i in testimg.red testimg.grn testimg.blu
+test_red=${tmpdir}/testimg.red
+test_grn=${tmpdir}/testimg.grn
+test_blu=${tmpdir}/testimg.blu
+
+pnmquantall 20 ${test_red} ${test_grn} ${test_blu}
+
+for i in ${test_red} ${test_grn} ${test_blu}
 do
-cksum $i
+cat $i | cksum
 done
 
 # Should print 1
 
-pnmcat testimg.red testimg.grn testimg.blu -tb | \
+pnmcat ${test_red} ${test_grn} ${test_blu} -tb | \
     pgmhist -m | awk '$2>0 {s++}; END { print (s<=20) }'
+
+rm ${test_red} ${test_grn} ${test_blu} ${test_ppm}

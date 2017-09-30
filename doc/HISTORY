@@ -4,49 +4,62 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-17.09.19 BJH  Release 10.79.07
+17.09.30 BJH  Release 10.80.00
+
+              pnmtopalm: Refuse to create a compressed image with more than 8
+              bits per pixel.
+
+              pbmtext, libnetpbm font facilities: allow glyphs in font files
+              that have no bitmap data; just used for their advance value to
+              code a space.
+
+              pbmtext: Improve error message when there is a problem reading
+              the font file.
+
+              libnetpbm font facilities: consider font invalid if a glyph is
+              more than 65536 pixels high or wide.
+
+              ppmshadow: handle images with a black background and low
+              contrast images (i.e. little difference between foreground and
+              background).
 
               ppmbrighten: fix bug: red pixels change hue.  Introduced in
               after Netpbm 10.11 (October 2002) and before Netpbm 10.18
               (September 2003).
 
-17.09.13 BJH  Release 10.79.06
-
               palmtopnm: fix crash if invalid input contains color index that
               is not in the palette.  Always broken (palmtopnm was new in
               Netpbm 9.10 (October 2001)).
-
-17.09.10 BJH  Release 10.79.05
 
               pnmtopalm: fix incorrect output with certain input files and
               -packbits_compression.  Always broken.  -packbits_compression
               was new in Netpbm 10.27 (March 2005).
 
-              pamtopdbimg: Fix incorrect output. Always broken (pamtopdbimg
-              was new in Netpbm 10.52.00 (October 2010)).
+              pnmtopalm: Correct error message recommending running
+              pnmquant when the real solution is to run pnmremap to modify the
+              image to Palm standard colors.
 
-17.08.11 BJH  Release 10.79.04
+              pnmtopalm: Fix bug causing "color not in colormap" failure with
+              -colormap and maxval other than 255.
 
               libnetpbm: font facilities: fix invalid memory reference with
               certain font files.
 
-17.08.02 BJH  Release 10.79.03
+              libnetpbm: ppm_readcolordict: Improve error message when there is
+              a problem reading the color dictionary.  Affects ppmhist.
 
-              pbmtoibm23xx: change license terms to GPL 2 or later.
+              pgmmake: Fix bug: treats non-numeric gray-level argument as zero.
+              Always broken (Pgmmake was new in Netpbm 10.32, February 2006).
 
-              Makeman: make it work with Python 3.6 II.
-
-17.07.08 BJH  Release 10.79.02
+              pdbimgtopam, pamtopdbimg: fix various cases of incorrect output,
+              some always present (programs were new in Netpbm 10.52.00
+              (October 2010)).
 
               libnetpbm: pnm_parsecolorn(), pnm_parsecolor(): fix parsing of
               rgb: color specifications: yields value slightly too dim.
-              Affects many programs.  Broken in Netpbm 10.79.00 about a week
-              ago.
+              Affects many programs.  Broken in Netpbm 10.79 (June 2017).
 
-17.07.03 BJH  Release 10.79.01
-
-              Fix 'format-security' GNU compiler warning.  Introduced in
-              Netpbm 10.79.00 a few days ago.
+              Makeman: make it work with Python 3.6 II.
 
 17.06.30 BJH  Release 10.79.00
 

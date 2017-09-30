@@ -15,7 +15,7 @@ else
   MAKEFILE_DIR := $(dir $(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST)))
 endif
 
-# Python script makeman should be in the same directory.
+# Program 'makeman' should be in the same directory.
 MAKEMAN ?= $(MAKEFILE_DIR)makeman
 
 # Install location of manpages.
@@ -33,10 +33,9 @@ else
   endif
 endif
 
-# In the past the following default value was used.
-# It works if you've done a SVN checkout for netpbm and userguide in the
-# same directory, and you are working in a subdirectory of netpbm, say
-# ./buildtools .
+# In the past, the following default value was used.  It works if you've done
+# a Subversion checkout for source code and userguide in the same directory,
+# and you are working in a subdirectory of netpbm, say ./buildtools .
 # USERGUIDE = ../../userguide
 
 # The files that don't get converted to manual pages.

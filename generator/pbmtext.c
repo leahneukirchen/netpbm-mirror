@@ -18,11 +18,13 @@
 #include <math.h>
 #include <limits.h>
 #include <assert.h>
+#include <setjmp.h>
 
 #include "pm_c_util.h"
 #include "mallocvar.h"
 #include "nstring.h"
 #include "shhopt.h"
+#include "pm.h"
 #include "pbm.h"
 #include "pbmfont.h"
 
@@ -157,6 +159,37 @@ reportFont(struct font * const fontP) {
 
 
 
+static struct font *
+fontFromFile(const char * const fileName) {
+
+    struct font * retval;
+
+    jmp_buf jmpbuf;
+    int rc;
+
+    rc = setjmp(jmpbuf);
+
+    if (rc == 0) {
+        /* This is the normal program flow */
+        pm_setjmpbuf(&jmpbuf);
+
+        retval = pbm_loadfont(fileName);
+
+        pm_setjmpbuf(NULL);
+    } else {
+        /* This is the second pass, after pbm_loadfont does a longjmp
+           because it fails.
+        */
+        pm_setjmpbuf(NULL);
+
+        pm_error("Failed to load font from file '%s'", fileName);
+    }
+
+    return retval;
+}
+
+
+
 static void
 computeFont(struct CmdlineInfo const cmdline,
             struct font **     const fontPP) {
@@ -164,7 +197,7 @@ computeFont(struct CmdlineInfo const cmdline,
     struct font * fontP;
 
     if (cmdline.font)
-        fontP = pbm_loadfont(cmdline.font);
+        fontP = fontFromFile(cmdline.font);
     else {
         if (cmdline.builtin)
             fontP = pbm_defaultfont(cmdline.builtin);
@@ -538,22 +571,26 @@ insertCharacter(const struct glyph * const glyphP,
    Insert one character (whose glyph is 'glyph') into the image bits[].
    Its top left corner shall be row 'toprow', column 'leftcol'.
 -----------------------------------------------------------------------------*/
-    unsigned int glyph_y;  /* Y position within the glyph */
+    if (glyphP->width == 0 && glyphP->height == 0) {
+        /* No bitmap data.  Some BDF files code space this way */
+    } else {
+        unsigned int glyph_y;  /* Y position within the glyph */
 
-    if (leftcol + glyphP->x < 0 ||
-        leftcol + glyphP->x + glyphP->width > cols ||
-        toprow < 0 ||
-        toprow + glyphP->height >rows )
-        pm_error("internal error.  Rendering out of bounds");
+        if (leftcol + glyphP->x < 0 ||
+            leftcol + glyphP->x + glyphP->width > cols ||
+            toprow < 0 ||
+            toprow + glyphP->height >rows )
+            pm_error("internal error.  Rendering out of bounds");
 
-    for (glyph_y = 0; glyph_y < glyphP->height; ++glyph_y) {
-        unsigned int glyph_x;  /* position within the glyph */
+        for (glyph_y = 0; glyph_y < glyphP->height; ++glyph_y) {
+            unsigned int glyph_x;  /* position within the glyph */
 
-        for (glyph_x = 0; glyph_x < glyphP->width; ++glyph_x) {
-            if (glyphP->bmap[glyph_y * glyphP->width + glyph_x]) {
-                unsigned int const col = leftcol + glyphP->x + glyph_x;
-                bits[toprow+glyph_y][col/8] |= PBM_BLACK << (7-col%8);
-        }
+            for (glyph_x = 0; glyph_x < glyphP->width; ++glyph_x) {
+                if (glyphP->bmap[glyph_y * glyphP->width + glyph_x]) {
+                    unsigned int const col = leftcol + glyphP->x + glyph_x;
+                    bits[toprow+glyph_y][col/8] |= PBM_BLACK << (7-col%8);
+                }
+            }
         }
     }
 }    

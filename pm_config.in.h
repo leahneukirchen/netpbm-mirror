@@ -123,7 +123,7 @@
 #endif
 
 /* WIN32 is a macro that some older compilers predefine (compilers aren't
-   supposed to because it doesn't start with an underscore, hence the change.
+   supposed to because it doesn't start with an underscore, hence the change).
    Many build systems (project files, etc.) set WIN32 explicitly for
    backward compatibility.  Netpbm doesn't use it.
 */

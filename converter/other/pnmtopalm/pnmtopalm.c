@@ -29,33 +29,37 @@
 
 #include "pm_c_util.h"
 #include "pnm.h"
-#include "palm.h"
 #include "shhopt.h"
 #include "mallocvar.h"
 #include "runlength.h"
 
-enum compressionType {COMP_NONE, COMP_SCANLINE, COMP_RLE, COMP_PACKBITS};
+#include "palm.h"
+#include "palmcolormap.h"
 
-struct cmdline_info {
+enum CompressionType {COMP_NONE, COMP_SCANLINE, COMP_RLE, COMP_PACKBITS};
+
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
     const char * inputFilespec;  /* Filespecs of input files */
-    const char * transparent;    /* -transparent value.  Null if unspec */
-    unsigned int depth;         /* -depth value.  0 if unspec */
-    unsigned int maxdepth;      /* -maxdepth value.  0 if unspec */
-    enum compressionType compression;
+    const char * transparent;
+    unsigned int depthSpec;
+    unsigned int depth;
+    unsigned int maxdepthSpec;
+    unsigned int maxdepth;
+    enum CompressionType compression;
     unsigned int verbose;
     unsigned int colormap;
-    unsigned int offset;        /* -offset specified */
-    unsigned int density;       /* screen density */
+    unsigned int offset;
+    unsigned int density;
     unsigned int withdummy;
 };
 
 
 
 static void
-parseCommandLine(int argc, char ** argv, struct cmdline_info *cmdlineP) {
+parseCommandLine(int argc, const char ** argv, struct CmdlineInfo *cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
@@ -64,7 +68,7 @@ parseCommandLine(int argc, char ** argv, struct cmdline_info *cmdlineP) {
     optEntry *option_def;
     unsigned int option_def_index;
 
-    unsigned int transSpec, depthSpec, maxdepthSpec, densitySpec;
+    unsigned int transSpec, densitySpec;
     unsigned int scanline_compression, rle_compression, packbits_compression;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
@@ -73,9 +77,9 @@ parseCommandLine(int argc, char ** argv, struct cmdline_info *cmdlineP) {
     OPTENT3(0, "transparent",      OPT_STRING, 
             &cmdlineP->transparent, &transSpec, 0);
     OPTENT3(0, "depth",            OPT_UINT, 
-            &cmdlineP->depth,       &depthSpec, 0);
+            &cmdlineP->depth,       &cmdlineP->depthSpec, 0);
     OPTENT3(0, "maxdepth",         OPT_UINT, 
-            &cmdlineP->maxdepth,    &maxdepthSpec, 0);
+            &cmdlineP->maxdepth,    &cmdlineP->maxdepthSpec, 0);
     OPTENT3(0, "scanline_compression", OPT_FLAG, 
             NULL,                   &scanline_compression, 0);
     OPTENT3(0, "rle_compression",  OPT_FLAG, 
@@ -97,28 +101,26 @@ parseCommandLine(int argc, char ** argv, struct cmdline_info *cmdlineP) {
     opt.short_allowed = FALSE; /* We have some short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdline_p and others. */
 
-    if (depthSpec) {
+    if (cmdlineP->depthSpec) {
         if (cmdlineP->depth != 1 && cmdlineP->depth != 2 
             && cmdlineP->depth != 4 && cmdlineP->depth != 8
             && cmdlineP->depth != 16)
             pm_error("invalid value for -depth: %u.  Valid values are "
                      "1, 2, 4, 8, and 16", cmdlineP->depth);
-    } else
-        cmdlineP->depth = 0;
+    }
 
-    if (maxdepthSpec) {
+    if (cmdlineP->maxdepthSpec) {
         if (cmdlineP->maxdepth != 1 && cmdlineP->maxdepth != 2 
             && cmdlineP->maxdepth != 4 && cmdlineP->maxdepth != 8
             && cmdlineP->maxdepth != 16)
             pm_error("invalid value for -maxdepth: %u.  Valid values are "
                      "1, 2, 4, 8, and 16", cmdlineP->maxdepth);
-    } else
-        cmdlineP->maxdepth = 0;
+    }
 
-    if (depthSpec && maxdepthSpec && 
+    if (cmdlineP->depthSpec && cmdlineP->maxdepthSpec && 
         cmdlineP->depth > cmdlineP->maxdepth)
         pm_error("-depth value (%u) is greater than -maxdepth (%u) value.",
                  cmdlineP->depth, cmdlineP->maxdepth);
@@ -132,8 +134,8 @@ parseCommandLine(int argc, char ** argv, struct cmdline_info *cmdlineP) {
             cmdlineP->density != PALM_DENSITY_DOUBLE &&
             cmdlineP->density != PALM_DENSITY_TRIPLE &&
             cmdlineP->density != PALM_DENSITY_QUADRUPLE)
-            pm_error("Invalid value for -density: %d.  Valid values are "
-                     "%d, %d, %d, %d and %d.", cmdlineP->density, 
+            pm_error("Invalid value for -density: %u.  Valid values are "
+                     "%u, %u, %u, %u and %u.", cmdlineP->density, 
                      PALM_DENSITY_LOW, PALM_DENSITY_ONEANDAHALF,
                      PALM_DENSITY_DOUBLE, PALM_DENSITY_TRIPLE,
                      PALM_DENSITY_QUADRUPLE);
@@ -164,7 +166,7 @@ parseCommandLine(int argc, char ** argv, struct cmdline_info *cmdlineP) {
         
     if (argc-1 > 1)
         pm_error("This program takes at most 1 argument: the file name.  "
-                 "You specified %d", argc-1);
+                 "You specified %u", argc-1);
     else if (argc-1 > 0) 
         cmdlineP->inputFilespec = argv[1];
     else
@@ -173,108 +175,241 @@ parseCommandLine(int argc, char ** argv, struct cmdline_info *cmdlineP) {
 
 
 
-static void
-determinePalmFormat(unsigned int   const cols, 
-                    unsigned int   const rows, 
-                    xelval         const maxval, 
-                    int            const format, 
-                    xel **         const xels,
-                    unsigned int   const specified_bpp,
-                    unsigned int   const max_bpp, 
-                    bool           const custom_colormap,
-                    bool           const verbose,
-                    unsigned int * const bppP, 
-                    bool *         const directColorP, 
-                    Colormap *     const colormapP) {
+static xelval
+scaleSample(pixval const arg,
+            pixval const oldMaxval,
+            pixval const newMaxval) {
 
+    return (arg * newMaxval + oldMaxval/2) / oldMaxval;
+}
+
+
+
+static void
+determinePalmFormatPgm(xelval               const maxval, 
+                       bool                 const bppSpecified,
+                       unsigned int         const bpp,
+                       bool                 const maxBppSpecified,
+                       unsigned int         const maxBpp, 
+                       bool                 const wantCustomColormap,
+                       enum CompressionType const compression,
+                       bool                 const verbose,
+                       unsigned int *       const bppP) {
+        
+    /* We can usually handle this one, but may not have enough pixels.  So
+       check.
+    */
+
+    if (wantCustomColormap)
+        pm_error("You specified -colormap with a black and white input"
+                 "image.  -colormap is valid only with color.");
+    if (bppSpecified)
+        *bppP = bpp;
+    else if (maxBppSpecified && (maxval >= (1 << maxBpp)))
+        *bppP = maxBpp;
+    else if (compression != COMP_NONE && maxval > 255)
+        *bppP = 8;
+    else if (maxval > 16)
+        *bppP = 4;
+    else {
+        /* scale to minimum number of bpp needed */
+        unsigned int bpp;
+        for (bpp = 1;  (1 << bpp) < maxval;  bpp *= 2)
+            ;
+        *bppP = bpp;
+    }
+    if (verbose)
+        pm_message("output is grayscale %u bits-per-pixel", *bppP);
+}
+
+
+
+static void
+validateImageAgainstStandardColormap(const Colormap * const colormapP,
+                                     xel **           const xels,
+                                     unsigned int     const cols,
+                                     unsigned int     const rows,
+                                     xelval           const maxval) {
+/*----------------------------------------------------------------------------
+   Abort program if the image xels[][] (which is 'cols' x 'rows') contains a
+   color not in the colormap *colormapP, giving an error message assuming the
+   user chose the standard Palm colormap.
+-----------------------------------------------------------------------------*/
+    unsigned int row;
+
+    for (row = 0; row < rows; ++row) {
+        unsigned int col;
+
+        for (col = 0; col < cols; ++col) {
+            ColormapEntry const searchTarget = 
+                palmcolor_mapEntryColorFmPixel(xels[row][col], maxval, 255);
+
+            ColormapEntry * const foundEntryP = 
+                (bsearch(&searchTarget,
+                         colormapP->color_entries, colormapP->ncolors,
+                         sizeof(ColormapEntry), palmcolor_compare_colors));
+            if (!foundEntryP)
+                pm_error(
+                    "A color in the input image is not in the standard Palm "
+                    "8-bit color palette.  Either adjust the colors in the "
+                    "input with 'pnmremap' and the 'palmcolor8.map' file "
+                    "(see manual) or specify -colormap or -depth=16");
+        }
+    }
+}
+
+
+
+static void
+determinePalmFormatPpm(unsigned int         const cols, 
+                       unsigned int         const rows, 
+                       xelval               const maxval, 
+                       xel **               const xels,
+                       bool                 const bppSpecified,
+                       unsigned int         const bpp,
+                       bool                 const maxBppSpecified,
+                       unsigned int         const maxBpp, 
+                       bool                 const wantCustomColormap,
+                       enum CompressionType const compression,
+                       bool                 const verbose,
+                       unsigned int *       const bppP, 
+                       bool *               const directColorP, 
+                       Colormap **          const colormapPP) {
+            
+    /* We don't attempt to identify PPM files that are actually
+       monochrome.  So there are two options here: either 8-bit with a
+       colormap, either the standard one or a custom one, or 16-bit direct
+       color.  In the colormap case, if 'wantCustomColormap' is true (not
+       recommended by Palm) we will put in our own colormap that has the
+       colors of the input image; otherwise we will select the default
+       Palm colormap and will fail if the input image has any colors that
+       are not in that map (user should use Pnmremap and the
+       palmcolor8.map file that comes with Netpbm to avoid this).  We try
+       for colormapped first, since it works on more PalmOS devices.
+    */
+    if ((bppSpecified && bpp == 16) || 
+        (!bppSpecified && maxBppSpecified && maxBpp == 16)) {
+        /* we do the 16-bit direct color */
+        *directColorP = TRUE;
+        *colormapPP = NULL;
+        *bppP = 16;
+    } else if (!wantCustomColormap) {
+        /* colormapped with the standard colormap */
+        Colormap * colormapP;
+            
+        if ((bppSpecified && bpp != 8) || (maxBppSpecified && maxBpp < 8))
+            pm_error("Must use depth of 8 for color Palm Bitmap without "
+                     "custom color table.");
+        colormapP = palmcolor_build_default_8bit_colormap();
+        validateImageAgainstStandardColormap(colormapP,
+                                             xels, cols, rows, maxval);
+
+        *colormapPP = colormapP;
+        *bppP = 8;
+        *directColorP = FALSE;
+        if (verbose)
+            pm_message("Output is color with default colormap at 8 bpp");
+    } else {
+        /* colormapped with a custom colormap */
+        *colormapPP = 
+            palmcolor_build_custom_8bit_colormap(xels, rows, cols, maxval);
+        for (*bppP = 1; (1 << *bppP) < (*colormapPP)->ncolors; *bppP *= 2);
+        if (bppSpecified) {
+            if (bpp >= *bppP)
+                *bppP = bpp;
+            else
+                pm_error("Too many colors for specified depth.  "
+                         "Specified depth is %u bits; would need %u to "
+                         "represent the %u colors in the image.  "
+                         "Use pnmquant to reduce.",
+                         maxBpp, *bppP, (*colormapPP)->ncolors);
+        } else if (maxBppSpecified && maxBpp < *bppP) {
+            pm_error("Too many colors for specified max depth.  "
+                     "Specified maximum is %u bits; would need %u to "
+                     "represent the %u colors in the image.  "
+                     "Use pnmquant to reduce.",
+                     maxBpp, *bppP, (*colormapPP)->ncolors);
+        } else if (compression != COMP_NONE && *bppP > 8) {
+            pm_error("Too many colors for a compressed image.  "
+                     "Maximum is 256; the image has %u",
+                     (*colormapPP)->ncolors);
+        }
+        *directColorP = FALSE;
+        if (verbose)
+            pm_message("Output is color with custom colormap "
+                       "with %u colors at %u bpp", 
+                       (*colormapPP)->ncolors, *bppP);
+    }
+}
+
+
+
+static void
+determinePalmFormat(unsigned int         const cols, 
+                    unsigned int         const rows, 
+                    xelval               const maxval, 
+                    int                  const format, 
+                    xel **               const xels,
+                    bool                 const bppSpecified,
+                    unsigned int         const bpp,
+                    bool                 const maxBppSpecified,
+                    unsigned int         const maxBpp, 
+                    bool                 const wantCustomColormap,
+                    enum CompressionType const compression,
+                    bool                 const verbose,
+                    unsigned int *       const bppP, 
+                    bool *               const directColorP, 
+                    Colormap **          const colormapPP) {
+/*----------------------------------------------------------------------------
+   Determine what kind of Palm output file to make.
+
+   Also compute the colormap, if there is to be one.  This could be either one
+   we make up, that needs to go into the image, or a standard one.
+-----------------------------------------------------------------------------*/
+    if (compression != COMP_NONE) {
+        if (bppSpecified && bpp > 8)
+            pm_error("You requested %u bits per pixel and compression.  "
+                     "This program does not know how to generate a "
+                     "compressed image with more than 8 bits per pixel",
+                     bpp);
+        if (maxBppSpecified && maxBpp > 8)
+            pm_error("You requested %u max bits per pixel and compression.  "
+                     "This program does not know how to generate a "
+                     "compressed image with more than 8 bits per pixel",
+                     maxBpp);
+    }
     if (PNM_FORMAT_TYPE(format) == PBM_TYPE) {
-        if (custom_colormap)
+        if (wantCustomColormap)
             pm_error("You specified -colormap with a black and white input "
                      "image.  -colormap is valid only with color.");
-        if (specified_bpp)
-            *bppP = specified_bpp;
+        if (bppSpecified)
+            *bppP = bpp;
         else
             *bppP = 1;    /* no point in wasting bits */
         *directColorP = FALSE;
-        *colormapP = NULL;
+        *colormapPP = NULL;
         if (verbose)
             pm_message("output is black and white");
     } else if (PNM_FORMAT_TYPE(format) == PGM_TYPE) {
-        /* we can usually handle this one, but may not have enough
-           pixels.  So check... */
-        if (custom_colormap)
-            pm_error("You specified -colormap with a black and white input"
-                     "image.  -colormap is valid only with color.");
-        if (specified_bpp)
-            *bppP = specified_bpp;
-        else if (max_bpp && (maxval >= (1 << max_bpp)))
-            *bppP = max_bpp;
-        else if (maxval > 16)
-            *bppP = 4;
-        else {
-            /* scale to minimum number of bpp needed */
-            for (*bppP = 1;  (1 << *bppP) < maxval;  *bppP *= 2)
-                ;
-        }
-        if (*bppP > 4)
-            *bppP = 4;
-        if (verbose)
-            pm_message("output is grayscale %d bits-per-pixel", *bppP);
-        *directColorP = FALSE;
-        *colormapP = NULL;
-    } else if (PNM_FORMAT_TYPE(format) == PPM_TYPE) {
+        determinePalmFormatPgm(maxval,
+                               bppSpecified, bpp, maxBppSpecified, maxBpp,
+                               wantCustomColormap, compression,
+                               verbose,
+                               bppP);
 
-        /* We assume that we only get a PPM if the image cannot be
-           represented as PBM or PGM.  There are two options here: either
-           8-bit with a colormap, either the standard one or a custom one,
-           or 16-bit direct color.  In the 8-bit case, if "custom_colormap"
-           is specified (not recommended by Palm) we will put in our own
-           colormap; otherwise we will assume that the colors have been
-           mapped to the default Palm colormap by appropriate use of
-           pnmquant.  We try for 8-bit color first, since it works on
-           more PalmOS devices. 
-        */
-        if ((specified_bpp == 16) || 
-            (specified_bpp == 0 && max_bpp == 16)) {
-            /* we do the 16-bit direct color */
-            *directColorP = TRUE;
-            *colormapP = NULL;
-            *bppP = 16;
-        } else if (!custom_colormap) {
-            /* standard indexed 8-bit color */
-            *colormapP = palmcolor_build_default_8bit_colormap();
-            *bppP = 8;
-            if (((specified_bpp != 0) && (specified_bpp != 8)) ||
-                ((max_bpp != 0) && (max_bpp < 8)))
-                pm_error("Must use depth of 8 for color Palm Bitmap without "
-                         "custom color table.");
-            *directColorP = FALSE;
-            if (verbose)
-                pm_message("Output is color with default colormap at 8 bpp");
-        } else {
-            /* indexed 8-bit color with a custom colormap */
-            *colormapP = 
-                palmcolor_build_custom_8bit_colormap(rows, cols, xels);
-            for (*bppP = 1; (1 << *bppP) < (*colormapP)->ncolors; *bppP *= 2);
-            if (specified_bpp != 0) {
-                if (specified_bpp >= *bppP)
-                    *bppP = specified_bpp;
-                else
-                    pm_error("Too many colors for specified depth.  "
-                             "Use pnmquant to reduce.");
-            } else if ((max_bpp != 0) && (max_bpp < *bppP)) {
-                pm_error("Too many colors for specified max depth.  "
-                         "Use pnmquant to reduce.");
-            }
-            *directColorP = FALSE;
-            if (verbose)
-                pm_message("Output is color with custom colormap "
-                           "with %d colors at %d bpp", 
-                           (*colormapP)->ncolors, *bppP);
-        }
+        *directColorP = FALSE;
+        *colormapPP = NULL;
+    } else if (PNM_FORMAT_TYPE(format) == PPM_TYPE) {
+        determinePalmFormatPpm(cols, rows, maxval, xels, bppSpecified, bpp,
+                               maxBppSpecified, maxBpp,
+                               wantCustomColormap, compression, verbose,
+                               bppP, directColorP, colormapPP);
     } else {
         pm_error("unknown format 0x%x on input file", (unsigned) format);
     }
+
+    if (compression != COMP_NONE)
+        assert(*bppP <= 8);
 }
 
 
@@ -300,25 +435,23 @@ findTransparentColor(const char *   const colorSpec,
                      pixval         const newMaxval,
                      bool           const directColor, 
                      pixval         const maxval, 
-                     Colormap       const colormap,
+                     Colormap *     const colormapP,
                      xel *          const transcolorP, 
                      unsigned int * const transindexP) {
 
     *transcolorP = ppm_parsecolor(colorSpec, maxval);
     if (!directColor) {
-        Color_s const temp_color = 
-            ((((PPM_GETR(*transcolorP)*newMaxval) / maxval) << 16) 
-             | (((PPM_GETG(*transcolorP)*newMaxval) / maxval) << 8)
-             | ((PPM_GETB(*transcolorP)*newMaxval) / maxval));
-        Color const found = 
-            (bsearch(&temp_color,
-                     colormap->color_entries, colormap->ncolors,
-                     sizeof(Color_s), palmcolor_compare_colors));
-        if (!found) {
+        ColormapEntry const searchTarget = 
+            palmcolor_mapEntryColorFmPixel(*transcolorP, maxval, newMaxval);
+        ColormapEntry * const foundEntryP = 
+            (bsearch(&searchTarget,
+                     colormapP->color_entries, colormapP->ncolors,
+                     sizeof(ColormapEntry), palmcolor_compare_colors));
+        if (!foundEntryP) {
             pm_error("Specified transparent color %s not found "
                      "in colormap.", colorSpec);
         } else
-            *transindexP = (*found >> 24) & 0xFF;
+            *transindexP = (*foundEntryP >> 24) & 0xFF;
     }
 }
 
@@ -326,9 +459,9 @@ findTransparentColor(const char *   const colorSpec,
 
 static unsigned int
 bitmapVersion(unsigned int         const bpp,
-              bool                 const colormap,
+              bool                 const colormapped,
               bool                 const transparent,
-              enum compressionType const compression,
+              enum CompressionType const compression,
               unsigned int         const density) {
 /*----------------------------------------------------------------------------
    Return the version number of the oldest version that can represent
@@ -343,7 +476,7 @@ bitmapVersion(unsigned int         const bpp,
         version = 3;
     else if (transparent || compression != COMP_NONE)
         version = 2;
-    else if (bpp > 1 || colormap)
+    else if (bpp > 1 || colormapped)
         version = 1;
     else
         version = 0;
@@ -357,8 +490,8 @@ static void
 writeCommonHeader(unsigned int         const cols,
                   unsigned int         const rows,
                   unsigned int         const rowbytes,
-                  enum compressionType const compression,
-                  bool                 const colormap,
+                  enum CompressionType const compression,
+                  bool                 const colormapped,
                   bool                 const transparent,
                   bool                 const directColor,
                   unsigned int         const bpp,
@@ -382,7 +515,7 @@ writeCommonHeader(unsigned int         const cols,
     flags = 0;  /* initial value */
     if (compression != COMP_NONE)
         flags |= PALM_IS_COMPRESSED_FLAG;
-    if (colormap)
+    if (colormapped)
         flags |= PALM_HAS_COLORMAP_FLAG;
     if (transparent)
         flags |= PALM_HAS_TRANSPARENCY_FLAG;
@@ -398,7 +531,7 @@ writeCommonHeader(unsigned int         const cols,
 
 
 static unsigned char 
-compressionFieldValue(enum compressionType const compression) {
+compressionFieldValue(enum CompressionType const compression) {
 
     unsigned char retval;
 
@@ -424,7 +557,7 @@ compressionFieldValue(enum compressionType const compression) {
 static void
 writeRemainingHeaderLow(unsigned int         const nextDepthOffset,
                         unsigned int         const transindex,
-                        enum compressionType const compression,
+                        enum CompressionType const compression,
                         unsigned int         const bpp) {
 /*----------------------------------------------------------------------------
    Write last 6 bytes of a low density Palm Bitmap header. 
@@ -449,7 +582,7 @@ writeRemainingHeaderLow(unsigned int         const nextDepthOffset,
 
 static void
 writeRemainingHeaderHigh(unsigned int         const bpp,
-                         enum compressionType const compression,
+                         enum CompressionType const compression,
                          unsigned int         const density,
                          xelval               const maxval,
                          bool                 const transparent,
@@ -480,9 +613,9 @@ writeRemainingHeaderHigh(unsigned int         const bpp,
         if (bpp == 16) {
             /* Blind guess here */
             fputc(0, stdout);
-            fputc((PPM_GETR(transcolor) * 255) / maxval, stdout);
-            fputc((PPM_GETG(transcolor) * 255) / maxval, stdout);
-            fputc((PPM_GETB(transcolor) * 255) / maxval, stdout);
+            fputc(scaleSample(PPM_GETR(transcolor), maxval, 255), stdout);
+            fputc(scaleSample(PPM_GETG(transcolor), maxval, 255), stdout);
+            fputc(scaleSample(PPM_GETB(transcolor), maxval, 255), stdout);
         } else {
             assert(transindex <= UCHAR_MAX);
             fputc(0, stdout);
@@ -523,7 +656,7 @@ writeDummy() {
 
 static void
 writeColormap(bool         const explicitColormap,
-              Colormap     const colormap,
+              Colormap *   const colormapP,
               bool         const directColor,
               unsigned int const bpp,
               bool         const transparent,
@@ -534,14 +667,14 @@ writeColormap(bool         const explicitColormap,
     /* if there's a colormap, write it out */
     if (explicitColormap) {
         unsigned int row;
-        if (!colormap)
+        if (!colormapP)
             pm_error("Internal error: user specified -colormap, but we did "
                      "not generate a colormap.");
-        qsort (colormap->color_entries, colormap->ncolors,
-               sizeof(Color_s), palmcolor_compare_indices);
-        pm_writebigshort( stdout, colormap->ncolors );
-        for (row = 0;  row < colormap->ncolors; ++row)
-            pm_writebiglong (stdout, colormap->color_entries[row]);
+        qsort(colormapP->color_entries, colormapP->ncolors,
+              sizeof(ColormapEntry), palmcolor_compare_indices);
+        pm_writebigshort( stdout, colormapP->ncolors );
+        for (row = 0;  row < colormapP->ncolors; ++row)
+            pm_writebiglong (stdout, colormapP->color_entries[row]);
     }
 
     if (directColor && (version < 3)) {
@@ -552,13 +685,13 @@ writeColormap(bool         const explicitColormap,
             fputc(5, stdout);   /* # of bits of blue */
             fputc(0, stdout);   /* reserved by Palm */
         } else
-            pm_error("Don't know how to create %d bit DirectColor bitmaps.", 
+            pm_error("Don't know how to create %u bit DirectColor bitmaps.", 
                      bpp);
         if (transparent) {
             fputc(0, stdout);
-            fputc((PPM_GETR(transcolor) * 255) / maxval, stdout);
-            fputc((PPM_GETG(transcolor) * 255) / maxval, stdout);
-            fputc((PPM_GETB(transcolor) * 255) / maxval, stdout);
+            fputc(scaleSample(PPM_GETR(transcolor) , maxval, 255), stdout);
+            fputc(scaleSample(PPM_GETG(transcolor) , maxval, 255), stdout);
+            fputc(scaleSample(PPM_GETB(transcolor) , maxval, 255), stdout);
         } else
             pm_writebiglong(stdout, 0);     /* no transparent color */
     }
@@ -571,17 +704,29 @@ computeRawRowDirectColor(const xel *     const xelrow,
                          unsigned int    const cols,
                          xelval          const maxval,
                          unsigned char * const rowdata) {
+/*----------------------------------------------------------------------------
+  Compute a row of Palm data in raw (uncompressed) form for an image that
+  uses direct color (really, true color: each pixel contains RGB intensities
+  as distinct R, G, and B numbers).
 
+  In this format, each pixel is 16 bits: 5 red, 6 green, 5 blue.
+
+  'xelrow' is the image contents of row.  It is 'cols' columns wide and
+  samples are based on maxval 'maxval'.
+
+  Put the output data at 'rowdata'. 
+-----------------------------------------------------------------------------*/
     unsigned int col;
-    unsigned char *outptr;
+    unsigned char * outCursor;
     
-    for (col = 0, outptr = rowdata; col < cols; ++col) {
+    for (col = 0, outCursor = &rowdata[0]; col < cols; ++col) {
         unsigned int const color = 
-            ((((PPM_GETR(xelrow[col])*31)/maxval) << 11) |
-             (((PPM_GETG(xelrow[col])*63)/maxval) << 5) |
-             ((PPM_GETB(xelrow[col])*31)/maxval));
-        *outptr++ = (color >> 8) & 0xFF;
-        *outptr++ = color & 0xFF;
+            (scaleSample(PPM_GETR(xelrow[col]), maxval, 31) << 11) |
+            (scaleSample(PPM_GETG(xelrow[col]), maxval, 63) <<  5) |
+            (scaleSample(PPM_GETB(xelrow[col]), maxval, 31) <<  0);
+
+        *outCursor++ = (color >> 8) & 0xFF;
+        *outCursor++ = color & 0xFF;
     }
 }
 
@@ -592,23 +737,40 @@ computeRawRowNonDirect(const xel *     const xelrow,
                        unsigned int    const cols,
                        xelval          const maxval,
                        unsigned int    const bpp,
-                       Colormap        const colormap,
+                       Colormap *      const colormapP,
                        unsigned int    const newMaxval,
                        unsigned char * const rowdata) {
+/*----------------------------------------------------------------------------
+  Compute a row of Palm data in raw (uncompressed) form for an image that
+  does not have a raster whose elements are explicit R, G, and B
+  intensities.
 
+  If 'colormapP' is non-null, the pixel is an index into that colormap.
+  'newMaxval' is meaningless.
+
+  If 'colormapP' is null, the pixel is a grayscale intensity, on a scale with
+  maximum value 'newMaxval'.  (N.B. this is really direct color, but for some
+  reason it's historically lumped in with the paletted formats).
+
+  'xelrow' is the image contents of row.  It is 'cols' columns wide and
+  samples are based on maxval 'maxval'.
+
+  Put the output data at 'rowdata', using 'bpp' bits per pixel.
+-----------------------------------------------------------------------------*/
     unsigned int col;
-    unsigned char *outptr;
+    unsigned char * outCursor;
+        /* Points to next slot in 'rowdata' we will fill */
     unsigned char outbyte;
         /* Accumulated bits to be output */
     unsigned char outbit;
         /* The lowest bit number we want to access for this pixel */
 
-    outbyte = 0x00;
-    outptr = rowdata;
+    outbyte = 0x00;  /* initial value */
+    outCursor = &rowdata[0];  /* Start at the beginning of the row */
 
     for (outbit = 8 - bpp, col = 0; col < cols; ++col) {
         unsigned int color;
-        if (!colormap) {
+        if (!colormapP) {
             /* we assume grayscale, and use simple scaling */
             color = (PNM_GET1(xelrow[col]) * newMaxval)/maxval;
             if (color > newMaxval)
@@ -616,24 +778,23 @@ computeRawRowNonDirect(const xel *     const xelrow,
                          "color of %u.", color);
             color = newMaxval - color; /* note grayscale maps are inverted */
         } else {
-            Color_s const temp_color =
-                ((((PPM_GETR(xelrow[col])*newMaxval)/maxval)<<16) 
-                 | (((PPM_GETG(xelrow[col])*newMaxval)/maxval)<<8)
-                 | (((PPM_GETB(xelrow[col])*newMaxval)/maxval)));
-            Color const found = (bsearch (&temp_color,
-                                          colormap->color_entries, 
-                                          colormap->ncolors,
-                                          sizeof(Color_s), 
-                                          palmcolor_compare_colors));
-            if (!found) {
-                pm_error("Color %d:%d:%d not found in colormap.  "
-                         "Try using pnmquant to reduce the "
-                         "number of colors.",
+            ColormapEntry const searchTarget =
+                palmcolor_mapEntryColorFmPixel(xelrow[col], maxval, 255);
+            ColormapEntry * const foundEntryP =
+                bsearch(&searchTarget,
+                        colormapP->color_entries, 
+                        colormapP->ncolors,
+                        sizeof(ColormapEntry), 
+                        palmcolor_compare_colors);
+            if (!foundEntryP) {
+                pm_error("INERNAL ERROR: "
+                         "Color (%u,%u,%u) not found in colormap, "
+                         "though it was supposedly there before",
                          PPM_GETR(xelrow[col]), 
                          PPM_GETG(xelrow[col]), 
                          PPM_GETB(xelrow[col]));
             }
-            color = (*found >> 24) & 0xFF;
+            color = (*foundEntryP >> 24) & 0xFF;
         }
 
         if (color > newMaxval)
@@ -642,7 +803,7 @@ computeRawRowNonDirect(const xel *     const xelrow,
         outbyte |= (color << outbit);
         if (outbit == 0) {
             /* Bit buffer is full.  Flush to to rowdata. */
-            *outptr++ = outbyte;
+            *outCursor++ = outbyte;
             outbyte = 0x00;
             outbit = 8 - bpp;
         } else
@@ -650,7 +811,7 @@ computeRawRowNonDirect(const xel *     const xelrow,
     }
     if ((cols % (8 / bpp)) != 0) {
         /* Flush bits remaining in the bit buffer to rowdata */
-        *outptr++ = outbyte;
+        *outCursor++ = outbyte;
     }
 }
 
@@ -830,7 +991,7 @@ rleCompressAndBufferRow(const unsigned char * const rowdata,
         unsigned int repeatcount;
         for (repeatcount = 1;  
              repeatcount < (rowbytes - pos) && repeatcount  < 255;  
-             ++repeatcount)
+             ++repeatcount) 
             if (rowdata[pos + repeatcount] != rowdata[pos])
                 break;
 
@@ -870,7 +1031,7 @@ packbitsCompressAndBufferRow(const unsigned char * const rowdata,
 static void
 bufferRowFromRawRowdata(const unsigned char *  const rowdata,
                         unsigned int           const rowbytes,
-                        enum compressionType   const compression,
+                        enum CompressionType   const compression,
                         const unsigned char *  const lastrow,
                         struct seqBuffer *     const rasterBufferP) {
 /*----------------------------------------------------------------------------
@@ -909,16 +1070,17 @@ bufferRow(const xel *          const xelrow,
           unsigned int         const rowbytes,
           unsigned int         const bpp,
           unsigned int         const newMaxval,
-          enum compressionType const compression,
+          enum CompressionType const compression,
           bool                 const directColor,
-          Colormap             const colormap,
+          Colormap *           const colormapP,
           unsigned char *      const rowdata,
           unsigned char *      const lastrow,
           struct seqBuffer *   const rasterBufferP) {
 /*----------------------------------------------------------------------------
    Add a row of the Palm Bitmap raster to buffer 'rasterBufferP'.
    
-   'xelrow' is the image contents of row.  It is 'cols' columns wide.
+   'xelrow' is the image contents of row.  It is 'cols' columns wide and
+   samples are based on maxval 'maxval'.
 
    If 'compression' indicates scanline compression, 'lastrow' is the
    row immediately preceding this one in the image (and this function
@@ -930,7 +1092,7 @@ bufferRow(const xel *          const xelrow,
     if (directColor)
         computeRawRowDirectColor(xelrow, cols, maxval, rowdata);
     else 
-        computeRawRowNonDirect(xelrow, cols, maxval, bpp, colormap, newMaxval,
+        computeRawRowNonDirect(xelrow, cols, maxval, bpp, colormapP, newMaxval,
                                rowdata);
 
     bufferRowFromRawRowdata(rowdata, rowbytes, compression,
@@ -947,9 +1109,9 @@ bufferRaster(xel **               const xels,
              unsigned int         const rowbytes,
              unsigned int         const bpp,
              unsigned int         const newMaxval,
-             enum compressionType const compression,
+             enum CompressionType const compression,
              bool                 const directColor,
-             Colormap             const colormap,
+             Colormap *           const colormapP,
              struct seqBuffer **  const rasterBufferPP) {
     
     unsigned char * rowdata;
@@ -971,7 +1133,7 @@ bufferRaster(xel **               const xels,
     for (row = 0; row < rows; ++row) {
         bufferRow(xels[row], cols, maxval, rowbytes, bpp, newMaxval,
                   compression,
-                  directColor, colormap, rowdata, row > 0 ? lastrow : NULL,
+                  directColor, colormapP, rowdata, row > 0 ? lastrow : NULL,
                   *rasterBufferPP);
 
         if (compression == COMP_SCANLINE)
@@ -988,8 +1150,8 @@ static void
 computeOffsetStuff(bool                 const offsetWanted,
                    unsigned int         const version,
                    bool                 const directColor,
-                   enum compressionType const compression,
-                   bool                 const colormap,
+                   enum CompressionType const compression,
+                   bool                 const colormapped,
                    unsigned int         const colormapColorCount,
                    unsigned int         const sizePlusRasterSize,
                    unsigned int *       const nextDepthOffsetP,
@@ -1003,7 +1165,7 @@ computeOffsetStuff(bool                 const offsetWanted,
         */
         unsigned int const headerSize = ((version < 3) ? 16 : 24);
         unsigned int const colormapSize =
-            (colormap ? (2 + colormapColorCount * 4) : 0);
+            (colormapped ? (2 + colormapColorCount * 4) : 0);
         if (version < 3) {
             unsigned int const directSize = 
                 (directColor && version < 3) ? 8 : 0; 
@@ -1058,12 +1220,12 @@ writeBitmap(xel **               const xels,
             unsigned int         const rowbytes,
             unsigned int         const bpp,
             unsigned int         const newMaxval,
-            enum compressionType const compression,
+            enum CompressionType const compression,
             bool                 const transparent,
             bool                 const directColor,
             bool                 const offsetWanted,
-            bool                 const hasColormap,
-            Colormap             const colormap,
+            bool                 const colormapped,
+            Colormap *           const colormapP,
             unsigned int         const transindex,
             xel                  const transcolor,
             unsigned int         const version,
@@ -1086,11 +1248,11 @@ writeBitmap(xel **               const xels,
         */
     struct seqBuffer * rasterBufferP;
 
-    writeCommonHeader(cols, rows, rowbytes, compression, hasColormap, 
+    writeCommonHeader(cols, rows, rowbytes, compression, colormapped, 
                       transparent, directColor, bpp, version);
     
     bufferRaster(xels, cols, rows, maxval, rowbytes, bpp, newMaxval,
-                 compression, directColor, colormap, &rasterBufferP);
+                 compression, directColor, colormapP, &rasterBufferP);
 
     /* rasterSize itself takes 2 or 4 bytes */
     if (version < 3)
@@ -1099,7 +1261,7 @@ writeBitmap(xel **               const xels,
         sizePlusRasterSize = 4 + bufferLength(rasterBufferP);
     
     computeOffsetStuff(offsetWanted, version, directColor, compression,
-                       hasColormap, hasColormap ? colormap->ncolors : 0, 
+                       colormapped, colormapped ? colormapP->ncolors : 0, 
                        sizePlusRasterSize,
                        &nextDepthOffset, &nextBitmapOffset,
                        &padBytesRequired);
@@ -1111,7 +1273,7 @@ writeBitmap(xel **               const xels,
                                  maxval, transparent, transcolor,
                                  transindex, nextBitmapOffset);
 
-    writeColormap(hasColormap, colormap, directColor, bpp, 
+    writeColormap(colormapped, colormapP, directColor, bpp, 
                   transparent, transcolor, maxval, version);
 
     if (compression != COMP_NONE)
@@ -1134,8 +1296,8 @@ writeBitmap(xel **               const xels,
 
 
 int 
-main( int argc, char **argv ) {
-    struct cmdline_info cmdline;
+main( int argc, const char **argv ) {
+    struct CmdlineInfo cmdline;
     unsigned int version;
     FILE* ifP;
     xel** xels;
@@ -1148,10 +1310,9 @@ main( int argc, char **argv ) {
     unsigned int bpp;
     bool directColor;
     unsigned int newMaxval;
-    Colormap colormap;
+    Colormap * colormapP;
     
-    /* Parse default params */
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
@@ -1161,18 +1322,20 @@ main( int argc, char **argv ) {
     pm_close(ifP);
 
     if (cmdline.verbose)
-        pm_message("Input is %dx%d %s, maxval %d", 
+        pm_message("Input is %ux%u %s, maxval %u", 
                    cols, rows, formatName(format), maxval);
     
-    determinePalmFormat(cols, rows, maxval, format, xels, cmdline.depth,
-                        cmdline.maxdepth, cmdline.colormap, cmdline.verbose,
-                        &bpp, &directColor, &colormap);
+    determinePalmFormat(cols, rows, maxval, format, xels,
+                        cmdline.depthSpec, cmdline.depth,
+                        cmdline.maxdepthSpec, cmdline.maxdepth,
+                        cmdline.colormap, cmdline.compression, cmdline.verbose,
+                        &bpp, &directColor, &colormapP);
 
     newMaxval = (1 << bpp) - 1;
 
     if (cmdline.transparent) 
         findTransparentColor(cmdline.transparent, newMaxval, directColor,
-                             maxval, colormap, &transcolor, &transindex);
+                             maxval, colormapP, &transcolor, &transindex);
     else 
         transindex = 0;
 
@@ -1185,7 +1348,7 @@ main( int argc, char **argv ) {
     writeBitmap(xels, cols, rows, maxval,
                 rowbytes, bpp, newMaxval, cmdline.compression,
                 !!cmdline.transparent, directColor, cmdline.offset, 
-                cmdline.colormap, colormap, transindex, transcolor,
+                cmdline.colormap, colormapP, transindex, transcolor,
                 version, cmdline.density, cmdline.withdummy);
     
     return 0;

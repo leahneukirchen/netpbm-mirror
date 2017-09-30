@@ -77,6 +77,7 @@ parseCommandLine(int argc, const char **argv,
             pm_error("height argument must be a positive number.  You "
                      "specified '%s'", argv[6]);
     }
+    free(option_def);
 }
 
 
