@@ -4,7 +4,7 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-not yet  BJH  Release 10.80.00
+17.09.30 BJH  Release 10.80.00
 
               pnmtopalm: Refuse to create a compressed image with more than 8
               bits per pixel.
