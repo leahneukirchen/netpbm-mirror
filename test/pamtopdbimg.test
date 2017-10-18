@@ -48,12 +48,18 @@ rm ${noise_pgm}
 # 0
 # 1
 # 0
+
+# Some versions of wc have extra whitespace in the output (e.g. MAC OS)
+# Delete with tr -d
+
 echo long titles 
 for flag in "" "-title=0123456789012345678901234567890" \
                "-title=01234567890123456789012345678901"
    do
-   pamtopdbimg $flag testgrid.pbm | wc -c ; echo ${PIPESTATUS[0]}
+   pamtopdbimg $flag testgrid.pbm | wc -c | tr -d ' '
+   echo ${PIPESTATUS[0]}
    done
+
 
 
 # Test 4. large notefile
@@ -76,11 +82,14 @@ awk 'BEGIN { ABC="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 head -c 65533 ${text65597} > ${text65533}
 head -c 65534 ${text65597} > ${text65534}
-pamtopdbimg -uncompressed testgrid.pbm | wc -c
+pamtopdbimg -uncompressed testgrid.pbm | \
+  wc -c | tr -d ' '
   echo ${PIPESTATUS[0]}
-pamtopdbimg -uncompressed -notefile=${text65533} testgrid.pbm | wc -c
+pamtopdbimg -uncompressed -notefile=${text65533} testgrid.pbm | \
+  wc -c | tr -d ' '
   echo ${PIPESTATUS[0]}
-pamtopdbimg -uncompressed -notefile=${text65534} testgrid.pbm | wc -c
+pamtopdbimg -uncompressed -notefile=${text65534} testgrid.pbm | \
+  wc -c | tr -d ' '
   echo ${PIPESTATUS[0]}
 
 rm ${text65533} ${text65534} ${text65597}
