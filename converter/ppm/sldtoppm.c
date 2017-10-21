@@ -210,27 +210,27 @@ slidefind(const char * const sname,
             eof = true;
         else if (strlen((char *)libent) == 0)
             eof = true;
-    }
-    if (!eof) {
-        pos += 36;
-        if (dironly) {
-            pm_message("  %s", libent);
-        } else if (streq((char *)libent, uname)) {
-            long dpos;
 
-            dpos = (((((libent[35] << 8) | libent[34]) << 8) |
-                     libent[33]) << 8) | libent[32];
+        if (!eof) {
+            pos += 36;
+            if (dironly) {
+                pm_message("  %s", libent);
+            } else if (streq((char *)libent, uname)) {
+                long dpos;
 
-            if ((slfile == stdin) || (fseek(slfile, dpos, 0) == -1)) {
-                dpos -= pos;
+                dpos = (((((libent[35] << 8) | libent[34]) << 8) |
+                         libent[33]) << 8) | libent[32];
 
-                while (dpos-- > 0)
-                    getc(slfile);
+                if ((slfile == stdin) || (fseek(slfile, dpos, 0) == -1)) {
+                    dpos -= pos;
+
+                    while (dpos-- > 0)
+                        getc(slfile);
+                }
+                found = true;
             }
-            found = true;
         }
     }
-
     if (!found && !dironly)
         pm_error("slide '%s' not in library.", sname);
 }
