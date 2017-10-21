@@ -6,6 +6,10 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.81.00
 
+              sldtoppm: fix bug: says AutoCAD slide file isn't an AutoCAD
+              slide file.  Broken after Netpbm 10.26 (January 2005), but no
+              later than 10.35 (August 2006).
+
 17.09.30 BJH  Release 10.80.00
 
               pnmtopalm: Refuse to create a compressed image with more than 8

@@ -350,7 +350,7 @@ slider(slvecfn   slvec,
 
     /* Verify that slide format is compatible with this program. */
 
-    if (streq(slfrof.slh, slhi.slh))
+    if (!streq(slfrof.slh, slhi.slh))
         pm_error("this is not an AutoCAD slide file.");
 
     /* Verify that the number format and file level in the header  are
