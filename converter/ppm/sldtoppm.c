@@ -50,7 +50,7 @@ struct spoint {
 
 /* Screen polygon */
 
-struct spolygon { 
+struct spolygon {
     int npoints,              /* Number of points in polygon */
           fill;           /* Fill type */
     struct spoint pt[11];         /* Actual points */
@@ -130,7 +130,7 @@ sli(void) {
 
 /*  SLIB  --  Input byte from slide file  */
 
-static int 
+static int
 slib(void) {
     unsigned char ch;
 
@@ -175,9 +175,9 @@ slidefind(const char * const sname,
     else {
         unsigned int i;
         const char * ip;
-        
+
         ip = sname; /* initial value */
-        
+
         for (i = 0; i < 31; ++i) {
             char const ch = *ip++;
             if (ch == EOS)
@@ -186,23 +186,23 @@ slidefind(const char * const sname,
             {
                 char const upperCh =
                     ucasen && islower(ch) ? toupper(ch) : ch;
-                
+
                 uname[i] = upperCh;
             }
         }
         uname[i] = EOS;
     }
-    
+
     /* Read slide library header and verify. */
-    
+
     if ((fread(libent, 32, 1, slfile) != 1) ||
         (!streq((char *)libent, "AutoCAD Slide Library 1.0\015\012\32"))) {
         pm_error("not an AutoCAD slide library file.");
     }
     pos = 32;
-    
+
     /* Search for a slide with the requested name or list the directory */
-    
+
     for (found = false, eof = false; !found && !eof; ) {
         size_t readCt;
         readCt = fread(libent, 36, 1, slfile);
@@ -223,7 +223,7 @@ slidefind(const char * const sname,
 
             if ((slfile == stdin) || (fseek(slfile, dpos, 0) == -1)) {
                 dpos -= pos;
-        
+
                 while (dpos-- > 0)
                     getc(slfile);
             }
@@ -295,14 +295,14 @@ flood(struct spolygon * const poly,
         assert(poly->pt[i].x >= 0 && poly->pt[i].x < pixcols);
         assert(poly->pt[i].y >= 0 && poly->pt[i].y < pixrows);
         ppmd_line(pixels, pixcols, pixrows, pixmaxval,
-                  poly->pt[i].x, iydots - poly->pt[i].y, 
+                  poly->pt[i].x, iydots - poly->pt[i].y,
                   poly->pt[(i + 1) % poly->npoints].x,
                   iydots - poly->pt[(i + 1) % poly->npoints].y,
                   ppmd_fill_drawproc, handle);
     }
     ppmd_fill(pixels, pixcols, pixrows, pixmaxval,
               handle, PPMD_NULLDRAWPROC, (char *) &rgbcolor);
-    
+
     ppmd_fill_destroy(handle);
 }
 
@@ -333,11 +333,11 @@ slider(slvecfn   slvec,
     {"AutoCAD Slide\r\n\32", 86,2, 0,0, 0.0, 0};
     int curcolor = 7;             /* Current vector color */
     pixel rgbcolor;           /* Pixel used to clear pixmap */
-    
+
     lx = ly = 32000;
-    
+
     /* Process the header of the slide file.  */
-    
+
     sdrawkcab = false;            /* Initially guess byte order is OK */
     fread(slfrof.slh, 17, 1, slfile);
     fread(&slfrof.sntype, sizeof(char), 1, slfile);
@@ -361,12 +361,12 @@ slider(slvecfn   slvec,
         pm_error("incompatible slide file format");
 
     /* Build SDSAR value from long scaled version. */
-    
+
     ldsar = 0L;
     for (i = 3; i >= 0; --i)
         ldsar = (ldsar << 8) | ubfr[i];
     slfrof.sdsar = ((double) ldsar) / 1E7;
-    
+
     /* Examine the byte order test value.   If it's backwards, set the
        byte-reversal flag and correct all of the values we've read  in
        so far.
@@ -380,7 +380,7 @@ slider(slvecfn   slvec,
         rshort(slfrof.shwfill);
         #undef rshort
     }
-    
+
     /* Dump the header if we're blithering. */
 
     if (blither || info) {
@@ -455,29 +455,29 @@ slider(slvecfn   slvec,
         }
         iydots = sysize - 1;
     }
-    
+
     if (adjust) {
         pm_message(
             "Resized from %dx%d to %dx%d to correct pixel aspect ratio.",
             slfrof.sxdots + 1, slfrof.sydots + 1, ixdots + 1, iydots + 1);
     }
-    
+
     /* Allocate image buffer and clear it to black. */
-    
+
     pixels = ppm_allocarray(pixcols = ixdots + 1, pixrows = iydots + 1);
     PPM_ASSIGN(rgbcolor, 0, 0, 0);
     ppmd_filledrectangle(pixels, pixcols, pixrows, pixmaxval, 0, 0,
                          pixcols, pixrows, PPMD_NULLDRAWPROC,
                          (char *) &rgbcolor);
-    
+
     if ((rescale = slfrof.sxdots != ixdots ||
          slfrof.sydots != iydots ||
          slfrof.sdsar != dsar) != 0) {
-        
+
         /* Rescale all coords. so they'll look (more or less)
            right on this display.
         */
-        
+
         xfac = (ixdots + 1) * 0x10000L;
         xfac /= (long) (slfrof.sxdots + 1);
         yfac = (iydots + 1) * 0x10000L;
@@ -490,7 +490,7 @@ slider(slvecfn   slvec,
     }
 
     poly.npoints = 0;             /* No flood in progress. */
-    
+
     while ((cw = sli()) != 0xFC00) {
         switch (cw & 0xFF00) {
         case 0xFB00:          /*  Short vector compressed  */
@@ -508,10 +508,10 @@ slider(slvecfn   slvec,
             slx = vec.f.x;        /* Save scaled point */
             sly = vec.f.y;
             break;
-            
+
         case 0xFC00:          /*  End of file  */
             break;
-            
+
         case 0xFD00:          /*  Flood command  */
             vec.f.x = sli();
             vec.f.y = sli();
@@ -538,7 +538,7 @@ slider(slvecfn   slvec,
                 poly.npoints++;
             }
             break;
-            
+
         case 0xFE00:          /*  Common endpoint compressed  */
             vec.f.x = lx + extend(cw & 0xFF);
             vec.f.y = ly + slib();
@@ -553,7 +553,7 @@ slider(slvecfn   slvec,
             slx = vec.f.x;        /* Save scaled point */
             sly = vec.f.y;
             break;
-            
+
         case 0xFF00:          /*  Change color  */
             curcolor = cw & 0xFF;
             break;
@@ -661,7 +661,7 @@ main(int          argc,
     }
 
     /* If a file name is specified, open it.  Otherwise read from
-       standard input. 
+       standard input.
     */
 
     if (argn < argc) {
@@ -670,24 +670,24 @@ main(int          argc,
     } else {
         slfile = stdin;
     }
-    
+
     if (argn != argc) {           /* Extra bogus arguments ? */
         pm_usage(usage);
     }
-    
+
     /* If we're extracting an item from a slide library, position the
        input stream to the start of the chosen slide.
     */
- 
+
     if (dironly || slobber)
         slidefind(slobber, dironly, ucasen);
- 
+
     if (!dironly) {
         slider(draw, flood);
         ppm_writeppm(stdout, pixels, pixcols, pixrows, pixmaxval, 0);
     }
     pm_close(slfile);
     pm_close(stdout);
-    
+
     return 0;
 }
