@@ -267,7 +267,7 @@ slidefind(const char * const slideName,
     /* Read slide library header and verify. */
 
     if ((fread(header, 32, 1, slfile) != 1) ||
-        (!STRSEQ(header, "AutoCAD Slide Library 1.0\015\012\32"))) {
+        (!STRSEQ(header, "AutoCAD Slide Library 1.0\r\n\32"))) {
         pm_error("not an AutoCAD slide library file.");
     }
 
