@@ -13,6 +13,9 @@ not yet  BJH  Release 10.81.00
               slide file.  Broken after Netpbm 10.26 (January 2005), but no
               later than 10.35 (August 2006).
 
+              sldtoppm: fix bug: wild memory accesses, weird messages when
+              invalid input file has unterminated strings.
+              
 17.09.30 BJH  Release 10.80.00
 
               pnmtopalm: Refuse to create a compressed image with more than 8

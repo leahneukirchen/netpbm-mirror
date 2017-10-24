@@ -154,85 +154,127 @@ vscale(int * const px,
 
 
 
+static void
+upcase(const char * const sname,
+       char *       const uname) {
+
+    unsigned int i;
+    const char * ip;
+
+    for (i = 0, ip = sname; i < 31; ++i) {
+        char const ch = *ip++;
+
+        if (ch != EOS)
+            uname[i] = islower(ch) ? toupper(ch) : ch;
+    }
+    uname[i] = EOS;
+}
+
+
+
+static void
+skipBytes(FILE *       const fileP,
+          unsigned int const count) {
+
+    unsigned int i;
+
+    for (i = 0; i < count; ++i)
+        getc(fileP);
+}
+
+
+
+static void
+scanDirectory(FILE *       const slFileP,
+              long         const dirPos,
+              bool         const dirOnly,
+              const char * const uname,
+              bool *       const foundP) {
+/*----------------------------------------------------------------------------
+   Scan the directory at the current position in *slFileP, either listing
+   the directory ('dirOnly' true) or searching for a slide named
+   'uname' ('dirOnly' false).
+
+   'dirPos' is the offset in the file of the directory, i.e. the current
+   position of *slFileP.
+
+   In the latter case, return as *foundP whether the slide name is there.
+-----------------------------------------------------------------------------*/
+    bool found;
+    bool eof;
+    long pos;
+    unsigned char libent[36];
+
+    for (found = false, eof = false, pos = dirPos; !found && !eof; ) {
+        size_t readCt;
+        readCt = fread(libent, 36, 1, slFileP);
+        if (readCt != 1)
+            eof = true;
+        else {
+            /* The directory entry is 32 bytes of NUL-terminated slide name
+               followed by 4 bytes of offset of the next directory entry.
+            */
+            const char * const slideName = (const char *)(&libent[0]);
+            if (strnlen(slideName, 32) == 32)
+                pm_error("Invalid input: slide name field is not "
+                         "nul-terminated");
+            else {
+                if (strlen(slideName) == 0)
+                    eof = true;
+                else {
+                    pos += 36;
+                    if (dirOnly) {
+                        pm_message("  %s", slideName);
+                    } else if (streq(slideName, uname)) {
+                        long const dpos =
+                            (((((libent[35] << 8) | libent[34]) << 8) |
+                              libent[33]) << 8) | libent[32];
+
+                        if ((slFileP == stdin) ||
+                            (fseek(slFileP, dpos, 0) == -1)) {
+
+                            skipBytes(slFileP, dpos - pos);
+                        }
+                        found = true;
+                    }
+                }
+            }
+        }
+    }
+    *foundP = found;
+}
+
 /*  SLIDEFIND  --  Find  a  slide  in  a  library  or,  if  DIRONLY is
            nonzero, print a directory listing of the  library.
            If  UCASEN  is nonzero, the requested slide name is
            converted to upper case. */
 
 static void
-slidefind(const char * const sname,
-          bool         const dironly,
+slidefind(const char * const slideName,
+          bool         const dirOnly,
           bool         const ucasen) {
 
-    char uname[32];
-    unsigned char libent[36];
-    long pos;
+    char uname[32];  /* upper case translation of 'slideName' */
+    char header[32]; /* (supposed) header read from file */
     bool found;
-    bool eof;
 
-    if (dironly)
+    if (dirOnly)
         pm_message("Slides in library:");
     else {
-        unsigned int i;
-        const char * ip;
-
-        ip = sname; /* initial value */
-
-        for (i = 0; i < 31; ++i) {
-            char const ch = *ip++;
-            if (ch == EOS)
-                break;
-
-            {
-                char const upperCh =
-                    ucasen && islower(ch) ? toupper(ch) : ch;
-
-                uname[i] = upperCh;
-            }
-        }
-        uname[i] = EOS;
+        upcase(slideName, uname);
     }
 
     /* Read slide library header and verify. */
 
-    if ((fread(libent, 32, 1, slfile) != 1) ||
-        (!streq((char *)libent, "AutoCAD Slide Library 1.0\015\012\32"))) {
+    if ((fread(header, 32, 1, slfile) != 1) ||
+        (!STRSEQ(header, "AutoCAD Slide Library 1.0\015\012\32"))) {
         pm_error("not an AutoCAD slide library file.");
     }
-    pos = 32;
 
-    /* Search for a slide with the requested name or list the directory */
+    scanDirectory(slfile, 32, dirOnly, ucasen ? uname : slideName, &found);
 
-    for (found = false, eof = false; !found && !eof; ) {
-        size_t readCt;
-        readCt = fread(libent, 36, 1, slfile);
-        if (readCt != 1)
-            eof = true;
-        else if (strlen((char *)libent) == 0)
-            eof = true;
-
-        if (!eof) {
-            pos += 36;
-            if (dironly) {
-                pm_message("  %s", libent);
-            } else if (streq((char *)libent, uname)) {
-                long dpos;
-
-                dpos = (((((libent[35] << 8) | libent[34]) << 8) |
-                         libent[33]) << 8) | libent[32];
-
-                if ((slfile == stdin) || (fseek(slfile, dpos, 0) == -1)) {
-                    dpos -= pos;
-
-                    while (dpos-- > 0)
-                        getc(slfile);
-                }
-                found = true;
-            }
-        }
-    }
-    if (!found && !dironly)
-        pm_error("slide '%s' not in library.", sname);
+    if (!found && !dirOnly)
+        pm_error("slide '%s' not in library.", slideName);
 }
 
 
@@ -350,7 +392,7 @@ slider(slvecfn   slvec,
 
     /* Verify that slide format is compatible with this program. */
 
-    if (!streq(slfrof.slh, slhi.slh))
+    if (!STRSEQ(slfrof.slh, slhi.slh))
         pm_error("this is not an AutoCAD slide file.");
 
     /* Verify that the number format and file level in the header  are
