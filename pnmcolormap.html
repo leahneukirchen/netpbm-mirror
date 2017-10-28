@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pnmcolormap User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmcolormap</H1>
-Updated: 15 August 2015
+Updated: 28 October 2017
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -140,16 +140,20 @@ number of pixels.  You start with one box and split boxes in two until
 the number of boxes is the same as the number of colors you want in
 the output, and choose one color to represent each box.
 
-<P>When you split a box, you do it so that all the colors in one
-sub-box are "greater" than all the colors in the other.
-"Greater," for a particular box, means it is brighter in the
-color component (red, green, blue) which has the largest spread in
-that box.  <B>pnmcolormap</B> gives you two ways to define
-"largest spread.": 1) largest spread of brightness; 2)
-largest spread of contribution to the luminosity of the color.
-E.g. red is weighted much more than blue.  Select among these with the
-<B>-spreadbrightness</B> and <B>-spreadluminosity</B> options.  The
-default is <B>-spreadbrightness</B>.
+<P>When you split a box, you do it so each sub-box has the same number of
+pixels (except one sub-box has more if the full box has an odd number), with
+the &quot;greatest&quot; pixels in one sub-box and the &quot;least&quot;
+pixels in the other.  "Greater," for a particular box, means it is brighter in
+the color component (red, green, blue) which has the largest spread in that
+box.  <B>pnmcolormap</B> gives you two ways to define "largest spread.": 1)
+largest spread of brightness; 2) largest spread of contribution to the
+luminosity of the color.  E.g. red is weighted much more than blue.  Select
+among these with the <B>-spreadbrightness</B> and <B>-spreadluminosity</B>
+options.  The default is <B>-spreadbrightness</B>.  Where there are multiple
+colors of the mediam magnitude, they are distributed arbitrarily among between
+the suboxes.  This arbitrary distribution depends upon what the system's
+<b>qsort</b> function does with multiple equal values, so <b>pnmcolormap</b>
+may produce slightly different results on different systems.
 
 <P><B>pnmcolormap</B> provides three ways of choosing a color to
 represent a box: 1) the center color - the color halfway between the
