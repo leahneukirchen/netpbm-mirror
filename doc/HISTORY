@@ -4,6 +4,18 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+17.10.28 BJH  Release 10.73.17
+
+              sldtoppm: -lib and -dir don't work - always says slide not
+              found.  Broken in Netpbm 10.63 (June 2013).
+
+              sldtoppm: fix bug: says AutoCAD slide file isn't an AutoCAD
+              slide file.  Broken after Netpbm 10.26 (January 2005), but no
+              later than 10.35 (August 2006).
+
+              sldtoppm: fix bug: wild memory accesses, weird messages when
+              invalid input file has unterminated strings.
+              
 17.09.28 BJH  Release 10.73.16
 
               ppmbrighten: fix bug: red pixels change hue.  Introduced in
