@@ -8,6 +8,7 @@
 
   Options:
     -q : quiet mode
+    -x : print exit code to stdout, otherwise equivalent to quite mode
     -v : verbose mode : Use to generate values for new table 
 
   This is a self-contained program which does not require any libnetpbm
@@ -16,11 +17,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define  bool  int
+#define  TRUE  1
+#define  FALSE 0
+
+
 /* Exit values */
 #define EXIT_ERROR 1
 #define EXIT_UNKNOWN 80
 #define ISO_GLIBC 81
-/* 82-90: reserved */
+#define MAC_OS    82
+/* 83-90: reserved */
 
 typedef enum {QUIET=0, NORMAL=1, VERBOSE=2} VerbosityLevel;
 
@@ -41,11 +48,15 @@ static struct {
         /* Sample values returned from our tests */
     const char * const name;
         /* Name for this rand() function */
-} rTable[2] = {
+} rTable[3] = {
     { ISO_GLIBC,  /* glibc rand() */ 
       0x7fffffff, /* 31 bits */ 
       { 217313873, 969144303, 1757357552, 1096307597, 818311031 },
       "ISO C glibc rand() or equivalent" },
+    { MAC_OS,
+      0x7fffffff, /* 31 bits */
+      { 63715337, 1416812753, 1073261735, 1594828992, 1547470337 },
+      "MAC OS c library rand() or equivalent" },
     
     /* Insert additional entries here */
     
@@ -59,15 +70,19 @@ static struct {
 static void
 parseCommandLine(int              const argc,
                  const char *     const argv[],
-                 VerbosityLevel * const verbosityP) {
+                 VerbosityLevel * const verbosityP,
+                 bool *           const printExitCodeP) {
 
-    *verbosityP = NORMAL; /* Initial value */
+    *verbosityP = NORMAL;       /* Initial value */
+    *printExitCodeP = FALSE;    /* Initial value */
 
     if (argc == 2) {
         if (argv[1][0] == '-' && argv[1][2] == '\0') {
             switch ( argv[1][1] ) {
             case 'v' : *verbosityP = VERBOSE; break;
             case 'q' : *verbosityP = QUIET  ; break;
+            case 'x' : *verbosityP = QUIET  ;
+                       *printExitCodeP = TRUE ; break;
             default :  fprintf (stderr,
                                 "Error: Unrecognized argument: %s\n", argv[1]);
                 exit (EXIT_ERROR);
@@ -88,8 +103,9 @@ main(int const argc, const char * const argv[]) {
     unsigned int i;
     unsigned int res[5];
     VerbosityLevel verbosity;
+    bool printExitCode;
 
-    parseCommandLine(argc, argv, &verbosity);
+    parseCommandLine(argc, argv, &verbosity, &printExitCode);
 
     if (verbosity == VERBOSE) {
         if (RAND_MAX > 0)
@@ -120,12 +136,16 @@ main(int const argc, const char * const argv[]) {
                 fprintf(stderr,
                         "Random number generator is %s.\n", rTable[i].name);
 
+            if (printExitCode == TRUE)
+                printf("%03u", rTable[i].type);
             exit(rTable[i].type);
         }
     }
     /* No matches */
     if (verbosity != QUIET)   
         fprintf(stderr, "Random number generator is of unknown type.\n");
+    if (printExitCode == TRUE)
+        printf("%03u",EXIT_UNKNOWN);
     exit(EXIT_UNKNOWN);
 }
 
