@@ -19,7 +19,7 @@ for flags in "" \
 rm ${test4bit_pgm}
 
 
-# Test 2. Should print 1 4 times
+# Test 2. Should print 0 4 times
 
 pnmquant 256 testimg.ppm > ${test256color_ppm}
 
@@ -27,7 +27,7 @@ for flags in "" \
              "-scanline_compression" \
              "-rle_compression" \
              "-packbits_compression" 
-  do pnmtopalm -colormap $flags ${test256color_ppm} | \
+  do pnmtopalm -colormap $flags ${test256color_ppm} | palmtopnm | \
      cmp -s - ${test256color_ppm} > /dev/null
      echo $?
   done
