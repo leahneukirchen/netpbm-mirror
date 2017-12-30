@@ -196,7 +196,7 @@ slidefind(const char * const sname,
     /* Read slide library header and verify. */
     
     if ((fread(libent, 32, 1, slfile) != 1) ||
-        (!streq((char *)libent, "AutoCAD Slide Library 1.0\015\012\32"))) {
+        (!strneq((char *)libent, "AutoCAD Slide Library 1.0\015\012\32", 32))) {
         pm_error("not an AutoCAD slide library file.");
     }
     pos = 32;
@@ -208,14 +208,14 @@ slidefind(const char * const sname,
         readCt = fread(libent, 36, 1, slfile);
         if (readCt != 1)
             eof = true;
-        else if (strlen((char *)libent) == 0)
+        else if (strnlen((char *)libent, 32) == 0)
             eof = true;
 
         if (!eof) {
             pos += 36;
             if (dironly) {
                 pm_message("  %s", libent);
-            } else if (streq((char *)libent, uname)) {
+            } else if (strneq((char *)libent, uname, 32)) {
                 long dpos;
 
                 dpos = (((((libent[35] << 8) | libent[34]) << 8) |
@@ -350,7 +350,7 @@ slider(slvecfn   slvec,
 
     /* Verify that slide format is compatible with this program. */
 
-    if (!streq(slfrof.slh, slhi.slh))
+    if (!STRSEQ(slfrof.slh, slhi.slh))
         pm_error("this is not an AutoCAD slide file.");
 
     /* Verify that the number format and file level in the header  are
