@@ -4,7 +4,7 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-not yet  BJH  Release 10.81.00
+17.12.30 BJH  Release 10.81.00
 
               sldtoppm: -lib and -dir don't work - always says slide not
               found.  Broken in Netpbm 10.63 (June 2013).
