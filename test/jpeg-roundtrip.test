@@ -10,12 +10,23 @@
 
 pnmtojpeg testimg.ppm | jpegtopnm | \
   pnmpsnr -machine - testimg.ppm |\
-  awk '{printf("%3d %1d %1d %1d\n",NF,$1>55.0,$2>57.0,$3>48.0)}'
+  awk '{printf("%3d %.2f %.2f %.2f\n", NF,
+                $1>55.0 ? 1000.00 : $1,
+                $2>57.0 ? 1000.00 : $2,
+                $3>48.0 ? 1000.00 : $3) }'
+
 
 pnmtojpeg testimg.ppm -opt | jpegtopnm | \
   pnmpsnr -machine - testimg.ppm |\
-  awk '{printf("%3d %1d %1d %1d\n",NF,$1>55.0,$2>57.0,$3>48.0)}'
+  awk '{printf("%3d %.2f %.2f %.2f\n", NF,
+                $1>55.0 ? 1000.00 : $1,
+                $2>57.0 ? 1000.00 : $2,
+                $3>48.0 ? 1000.00 : $3) }'
+
 
 pnmtojpeg testimg.ppm -progressive | jpegtopnm | \
   pnmpsnr -machine - testimg.ppm |\
-  awk '{printf("%3d %1d %1d %1d\n",NF,$1>55.0,$2>57.0,$3>48.0)}'
+  awk '{printf("%3d %.2f %.2f %.2f\n", NF,
+                $1>55.0 ? 1000.00 : $1,
+                $2>57.0 ? 1000.00 : $2,
+                $3>48.0 ? 1000.00 : $3) }'

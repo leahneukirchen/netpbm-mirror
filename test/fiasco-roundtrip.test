@@ -7,7 +7,7 @@
 # TODO: As in jpeg-rountrip.test the threshold has been determined
 # without much thought.
 
-# Should print 3 1 1 1
+# Should print 3 1000.00 1000.00 1000.00
 
 tmpdir=${tmpdir:-/tmp}
 padded_ppm=${tmpdir}/padded.ppm
@@ -15,6 +15,9 @@ padded_ppm=${tmpdir}/padded.ppm
 pnmpad --black --bottom 1 --left 1 testimg.ppm > ${padded_ppm} &&
 pnmtofiasco --progress-meter 0 ${padded_ppm} | fiascotopnm | \
     pnmpsnr -machine - ${padded_ppm} | \
-    awk '{printf("%3d %1d %1d %1d",NF,$1>14.0,$2>21.0,$3>$29.0)}'
+    awk '{printf("%3d %.2f %.2f %.2f", NF,
+                  $1>14.0 ? 1000.00 : $1,
+                  $2>21.0 ? 1000.00 : $2,
+                  $3>29.0 ? 1000.00 : $3) }'
 
 rm ${padded_ppm}
