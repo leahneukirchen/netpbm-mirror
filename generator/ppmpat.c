@@ -581,6 +581,7 @@ camoFill(pixel **         const pixels,
     pixel color;
 
     if (colorTableP->count > 0) {
+        assert(colorTableP->index < colorTableP->count);
         color = colorTableP->color[colorTableP->index];
         nextColorBg(colorTableP);
     } else if (antiflag)
@@ -650,7 +651,7 @@ camo(pixel **     const pixels,
 
     clearBackgroundCamo(pixels, cols, rows, maxval, colorTableP, antiflag);
 
-    if (colorTableP) {
+    if (colorTableP->count > 0) {
         assert(colorTableP->count > 1);
         colorTableP->index = 1;  /* Foreground colors start at 1 */
     }
