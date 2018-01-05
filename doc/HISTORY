@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+18.01.05 BJH  Release 10.81.01
+
+              ppmpat: Fix bug - crash or junk output with -camo or -anticamo
+              and no -color.  Introduced in Netpbm 10.78 (March 2017).
+
 17.12.30 BJH  Release 10.81.00
 
               sldtoppm: -lib and -dir don't work - always says slide not
