@@ -75,7 +75,7 @@ validateColorCount(Pattern      const basePattern,
                    unsigned int const colorCount) {
 
     if (colorCount == 0)
-        pm_error("-color: no colors specified"); 
+        pm_error("-color: no colors specified");
 
     switch (basePattern) {
     case PAT_GINGHAM2:
@@ -84,7 +84,7 @@ validateColorCount(Pattern      const basePattern,
         if (colorCount != 2)
             pm_error("Wrong number of colors: %u. "
                      "2 colors are required for the specified pattern.",
-                     colorCount); 
+                     colorCount);
         break;
     case PAT_GINGHAM3:
     case PAT_MADRAS:
@@ -93,14 +93,14 @@ validateColorCount(Pattern      const basePattern,
         if (colorCount != 3)
             pm_error("Wrong number of colors: %u. "
                      "3 colors are required for the specified pattern.",
-                     colorCount); 
+                     colorCount);
         break;
     case PAT_POLES:
         if (colorCount < 2)
-            pm_error("Too few colors: %u. " 
+            pm_error("Too few colors: %u. "
                      "At least 2 colors are required "
                      "for the specified pattern.",
-                     colorCount); 
+                     colorCount);
         break;
     case PAT_SQUIG:
     case PAT_CAMO:
@@ -109,7 +109,7 @@ validateColorCount(Pattern      const basePattern,
             pm_error("Wrong number of colors: %u. "
                      "At least 3 colors are required "
                      "for the specified pattern.",
-                     colorCount); 
+                     colorCount);
         break;
 
     case PAT_SPIRO2:
@@ -132,7 +132,7 @@ parseColorOpt(const char ** const colorText,
     "-color=rgb:ff/ff/ff,rgb:00/00/00,rgb:80/80/ff"
 
     Input:
-      Color name/value string-list: colorText[] 
+      Color name/value string-list: colorText[]
 
     Output values:
       Color array: colorTableP->color[]
@@ -154,7 +154,7 @@ parseColorOpt(const char ** const colorText,
     for (i = 0; i < colorCount; ++i)
         inColor[i] = ppm_parsecolor(colorText[i], PPM_MAXMAXVAL);
 
-    validateColorCount(basePattern, colorCount); 
+    validateColorCount(basePattern, colorCount);
 
     colorTableP->count = colorCount;
     colorTableP->index = 0;  /* initial value */
@@ -309,7 +309,7 @@ parseCommandLine(int argc, const char ** argv,
 
 static void
 freeCmdline(struct CmdlineInfo const cmdline) {
-    
+
     if (cmdline.colorSpec)
         free(cmdline.colorTable.color);
 }
@@ -330,7 +330,7 @@ validateComputableDimensions(unsigned int const cols,
       PPMD functions use signed integers for pixel positions
       (because they allow you to specify points off the canvas).
     */
-      
+
     if (cols > INT_MAX/4 || rows > INT_MAX/4 || rows > INT_MAX/cols)
         pm_error("Width and/or height are way too large: %u x %u",
                  cols, rows);
@@ -348,7 +348,7 @@ randomColor(pixval const maxval) {
                rand() % (maxval + 1),
                rand() % (maxval + 1)
         );
-    
+
     return p;
 }
 
@@ -403,12 +403,12 @@ averageTwoColors(pixel const p1,
 static ppmd_drawproc average_drawproc;
 
 static void
-average_drawproc(pixel **     const pixels, 
-                 int          const cols, 
-                 int          const rows, 
-                 pixval       const maxval, 
-                 int          const col, 
-                 int          const row, 
+average_drawproc(pixel **     const pixels,
+                 int          const cols,
+                 int          const rows,
+                 pixval       const maxval,
+                 int          const col,
+                 int          const row,
                  const void * const clientdata) {
 
     if (col >= 0 && col < cols && row >= 0 && row < rows)
@@ -466,7 +466,7 @@ randomAnticamoColor(pixval const maxval) {
     case 3:
         PPM_ASSIGN(p, rand() % v2, rand() % v1 + v3, rand() % v2);
         break;
-        
+
     case 4:
     case 5:
         PPM_ASSIGN(p, rand() % v2, rand() % v2, rand() % v1 + v3);
@@ -490,7 +490,7 @@ randomAnticamoColor(pixval const maxval) {
         PPM_ASSIGN(p, rand() % v1 + v3, rand() % v1 + v3, rand() % v2);
         break;
     }
-    
+
     return p;
 }
 
@@ -519,7 +519,7 @@ randomCamoColor(pixval const maxval) {
         /* dark green */
         PPM_ASSIGN(p, rand() % v2, rand() % v2 + 3 * v1, rand() % v2);
         break;
-    
+
     case 6:
     case 7:
         /* brown */
@@ -577,7 +577,7 @@ camoFill(pixel **         const pixels,
          struct fillobj * const fh,
          ColorTable     * const colorTableP,
          bool             const antiflag) {
-         
+
     pixel color;
 
     if (colorTableP->count > 0) {
@@ -589,7 +589,7 @@ camoFill(pixel **         const pixels,
         color = randomCamoColor(maxval);
 
     ppmd_fill(pixels, cols, rows, maxval, fh, PPMD_NULLDRAWPROC, &color);
-}        
+}
 
 
 
@@ -620,9 +620,9 @@ computeXsYs(int *        const xs,
     double const b = rnduni() * (MAX_ELLIPSE_FACTOR - MIN_ELLIPSE_FACTOR) +
         MIN_ELLIPSE_FACTOR;
     double const theta = rnduni() * 2.0 * M_PI;
-    
+
     unsigned int p;
-        
+
     for (p = 0; p < pointCt; ++p) {
         double const c = rnduni() * (MAX_POINT_FACTOR - MIN_POINT_FACTOR) +
             MIN_POINT_FACTOR;
@@ -673,9 +673,9 @@ camo(pixel **     const pixels,
         ppmd_polyspline(
             pixels, cols, rows, maxval, x0, y0, pointCt, xs, ys, x0, y0,
             ppmd_fill_drawproc, fh);
-        
+
         camoFill(pixels, cols, rows, maxval, fh, colorTableP, antiflag);
-        
+
         ppmd_fill_destroy(fh);
     }
 }
@@ -840,7 +840,7 @@ madras(pixel **     const pixels,
         pixels, cols, rows, maxval, 9 * cols2 + 3 * cols3 + cols6a + cols6b, 0,
         cols2, rows, PPMD_NULLDRAWPROC, &backcolor);
     ppmd_filledrectangle(
-        pixels, cols, rows, maxval, 10 * cols2 + 3 * cols3 + cols6a + cols6b, 
+        pixels, cols, rows, maxval, 10 * cols2 + 3 * cols3 + cols6a + cols6b,
         0, cols3, rows, PPMD_NULLDRAWPROC, &fore1color);
 
     /* Woof. */
@@ -890,7 +890,7 @@ madras(pixel **     const pixels,
         pixels, cols, rows, maxval, 0, 9 * rows2 + 3 * rows3 + rows6a + rows6b,
         cols, rows2, average_drawproc, &backcolor);
     ppmd_filledrectangle(
-        pixels, cols, rows, maxval, 0, 
+        pixels, cols, rows, maxval, 0,
         10 * rows2 + 3 * rows3 + rows6a + rows6b,
         cols, rows3, average_drawproc, &fore2color);
 }
@@ -1059,7 +1059,7 @@ placeAndColorPolesRandomly(int *        const xs,
                            unsigned int const cols,
                            unsigned int const rows,
                            pixval       const maxval,
-                           ColorTable * const colorTableP, 
+                           ColorTable * const colorTableP,
                            unsigned int const poleCt) {
 
     unsigned int i;
@@ -1085,8 +1085,8 @@ assignInterpolatedColor(pixel * const resultP,
                         double  const dist1,
                         pixel   const color2,
                         double  const dist2) {
-    
-    if (dist1 == 0) 
+
+    if (dist1 == 0)
         /* pixel is a pole */
         *resultP = color1;
     else {
@@ -1095,7 +1095,7 @@ assignInterpolatedColor(pixel * const resultP,
         pixval const r = (PPM_GETR(color1)*dist2 + PPM_GETR(color2)*dist1)/sum;
         pixval const g = (PPM_GETG(color1)*dist2 + PPM_GETG(color2)*dist1)/sum;
         pixval const b = (PPM_GETB(color1)*dist2 + PPM_GETB(color2)*dist1)/sum;
-        
+
         PPM_ASSIGN(*resultP, r, g, b);
     }
 }
@@ -1110,7 +1110,7 @@ poles(pixel **     const pixels,
       pixval       const maxval) {
 
     unsigned int const poleCt = MAX(2, MIN(MAXPOLES, cols * rows / 30000));
-    
+
     int xs[MAXPOLES], ys[MAXPOLES];
     pixel colors[MAXPOLES];
     unsigned int row;
@@ -1176,7 +1176,7 @@ validateSquigAspect(unsigned int const cols,
     if (cols / rows >= 25 || rows / cols >= 25)
         pm_error("Image too narrow.  Aspect ratio: %u/%u=%f "
                  "is outside accepted range: 0.04 - 25.0",
-                 cols, rows, (float)cols/rows ); 
+                 cols, rows, (float)cols/rows );
 
 }
 
@@ -1194,10 +1194,10 @@ vectorSum(ppmd_point const a,
 static ppmd_drawprocp sqMeasureCircleDrawproc;
 
 static void
-sqMeasureCircleDrawproc(pixel**      const pixels, 
-                        unsigned int const cols, 
-                        unsigned int const rows, 
-                        pixval       const maxval, 
+sqMeasureCircleDrawproc(pixel**      const pixels,
+                        unsigned int const cols,
+                        unsigned int const rows,
+                        pixval       const maxval,
                         ppmd_point   const p,
                         const void * const clientdata) {
 
@@ -1213,10 +1213,10 @@ sqMeasureCircleDrawproc(pixel**      const pixels,
 static ppmd_drawprocp sqRainbowCircleDrawproc;
 
 static void
-sqRainbowCircleDrawproc(pixel **     const pixels, 
-                        unsigned int const cols, 
-                        unsigned int const rows, 
-                        pixval       const maxval, 
+sqRainbowCircleDrawproc(pixel **     const pixels,
+                        unsigned int const cols,
+                        unsigned int const rows,
+                        pixval       const maxval,
                         ppmd_point   const p,
                         const void * const clientdata) {
 
@@ -1254,7 +1254,7 @@ chooseSqPoleColors(ColorTable * const colorTableP,
         *color3P = randomBrightColor(maxval);
     }
 }
-    
+
 
 
 static void
@@ -1321,7 +1321,7 @@ clearBackgroundSquig(pixel **     const pixels,
     if (colorTableP->count > 0) {
         color = colorTableP->color[0];
         colorTableP->index = 1;
-    } else 
+    } else
         PPM_ASSIGN(color, 0, 0, 0);
 
     ppmd_filledrectangle(
@@ -1340,7 +1340,7 @@ chooseWrapAroundPoint(unsigned int const cols,
                       ppmd_point * const p1P,
                       ppmd_point * const p2P,
                       ppmd_point * const p3P) {
-                      
+
     switch (rand() % 4) {
     case 0:
         p1P->x = rand() % cols;
@@ -1428,7 +1428,7 @@ squig(pixel **     const pixels,
     int i;
 
     validateSquigAspect(cols, rows);
-    
+
     clearBackgroundSquig(pixels, cols, rows, colorTableP, maxval);
 
     /* Draw the squigs. */
@@ -1491,11 +1491,11 @@ main(int argc, const char ** argv) {
     pixel ** pixels;
 
     pm_proginit(&argc, argv);
-    
+
     parseCommandLine(argc, argv, &cmdline);
 
     validateComputableDimensions(cmdline.width, cmdline.height);
-    
+
     srand(cmdline.randomseedSpec ? cmdline.randomseed : pm_randseed());
 
     pixels = ppm_allocarray(cmdline.width, cmdline.height);
