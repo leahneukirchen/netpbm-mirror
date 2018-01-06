@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pnmpsnr User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmpsnr</H1>
-Updated: 23 January 2016
+Updated: 06 January 2018
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -21,6 +21,10 @@ pnmpsnr - compute the difference between two images (the PSNR)
 [<b>-rgb</b>]
 [<b>-machine</b>]
 [<b>-max=</b><i>n</i>]
+[<b>-target=</b><i>n</i>]
+[<b>-target1=</b><i>n</i>]
+[<b>-target2=</b><i>n</i>]
+[<b>-target3=</b><i>n</i>]
 
 <P>Minimum unique abbreviations of options are acceptable.  You may use
 double hyphens instead of single hyphen to denote options.  You may use
@@ -33,14 +37,13 @@ from its value.
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
 <p><b>pnmpsnr</b> reads two PBM, PGM, or PPM files, or PAM equivalents, as
-input and prints the magnitude of difference between the two images as a peak
+input and computes the magnitude of difference between the two images as a peak
 signal-to-noise ratio (PSNR) This metric is typically used in image
 compression papers to rate the distortion between original and decoded image.
 
-<P>If the inputs are PBM or PGM, <B>pnmpsnr</B> prints the PSNR of the
-luminance only.  Otherwise, it prints the separate PSNRs of the
-luminance, and chrominance (Cb and Cr) components of the colors.
-
+<p><b>pnmpsnr</b> either prints these values or compares them to thresholds
+you specify.
+  
 <P>The PSNR of a given component is the ratio of the maximum mean square
 difference of component values that could exist between the two images (a
 measure of the information content in an image) to the actual mean square
@@ -63,6 +66,21 @@ i.e. 0.01.
 metric is a mean.  But "peak signal to noise ratio" is for some reason the
 common term for this measurement.
 
+<P>If the inputs are PBM or PGM, <B>pnmpsnr</B> computes the PSNR of the
+luminance only.  Otherwise, it computes three separate PSNRs: either the
+luminance, and chrominance (Cb and Cr) components of the colors or the
+red, green, and blue components.
+
+<p>By default, the program prints the PSNRs to Standard Output in
+human-friendly form.
+
+<p>With the <b>-machine</b> option, the program prints the PSNRs, but
+in machine-friendly form.
+
+<p>With a <b>-target</b>[<i>x</i>] option, the program just prints
+&quot;match&quot; or &quot;nomatch&quot;, depending on whether the PSNRs
+exceed targets you specify.
+  
 <p><b>pnmpsnr</b> reports the PSNR either in human-friendly form or in
 machine-friendly form (see <b>-machine</b>).
 
@@ -74,7 +92,7 @@ machine-friendly form (see <b>-machine</b>).
 
 <DD>This option causes <b>pnmpsnr</b> to compare the red, green, and blue
 components of the color rather than the luminance and chrominance components.
-It has no effect on a grayscale image.
+It has no effect on a monotone image.
 
 <p>This option was new in Netpbm 10.71 (June 2015).
 
@@ -87,14 +105,15 @@ form, so another program can easily use the information.
 for each color component, with a single space between every two.  (This means
 there are either 1 or 3 numbers).  For the YCbCr color space (no <b>-rgb</b>),
 they are in the order Y, Cb, Cr.  For the RGB color space (<b>-rgb</b>), they
-are in R, G, B order.  For a grayscale image, there is one number.
+are in R, G, B order.  For a monotone image, there is one number.
 
 <p>Where the component does not differ between the images, so the PSNR is
 infinite, the number is <b>inf</b>
 
 <p>But note that the number displayed is also modified by the effect of
-<b>-max</b>.  In particular, with <b>-max</b>, you will never see
-<b>inf</b>.
+<b>-max</b>.  In particular, with <b>-max</b>, you will never see <b>inf</b>.
+
+<p>This option has no effect when you also specify <b>-target</b>[<i>n</i>].
 
 <p>This option was new in Netpbm 10.74 (March 2016).
 
@@ -121,6 +140,49 @@ have a PSNR less than 1000.
 
 <p>This option was new in Netpbm 10.74 (March 2016).
 
+<dt><b>-target</b>=<i>n</i>
+                        
+<dd>This option causes <b>pnmpsnr</b> to run in comparison mode - rather than
+print the PSNRs, it just tells you whether the PSNRs exceed 
+<i>n</i> (a floating point number), i.e. whether the compared images are the
+same within a given margin of error.  If all the computed PSNRs (luminance for
+a PBM or PGM; luminance and chrominance or red, green, and blue for PPM)
+exceed <i>n</i>, the program prints &quot;match&quot; to Standard Output.
+Otherwise, it prints &quot;nomatch&quot;.
+
+<p>If you also specify any of <b>-target1</b>, <b>-target2</b>, or
+<b>-target3</b>, and the images are color, <b>pnmpsnr</b> ignores
+<b>-target</b>.
+
+<p>This is mainly useful for use in a program.  If you're
+running <b>pnmpsnr</b> manually, you could just run <b>pnmpsnr</b>
+without <b>-target</b> and compare the PSNRs to your targets yourself.
+
+<p>This option was new in Netpbm 10.82 (March 2018).
+
+<dt><b>-target</b>{<b>1</b>,<b>2</b>,<b>3</b>}=<i>n</i>
+<dd>
+Like <b>-target</b>, these options cause <b>pnmpsnr</b> to run in comparison
+mode.  But they provide separate targets for the individual color component
+PSNRs.  <b>-target1</b>, <b>target-2</b>, and <b>-target3</b> are for either
+the Y, Cb, and Cr components, respectively, or the red, green, and blue
+components, respectively, depending upon whether you specified <b>-rgb</b>.
+
+<p>If you don't specify the corresponding <b>-target</b><i>n</i> option for a
+component, <b>pnmpsnr</b> ignores the PSNR of that component in deciding
+whether the images match.
+
+<p>If the image is a PBM or PGM, these options have no effect, except that it
+stilll selects comparison mode, so if you don't <em>also</em>
+specify <b>-target</b>, and the image is PBM or PGM, the program fails.
+
+<p>Note that the options are defined so that you could code a
+<b>pnmpsnr</b> command in a program that works on both color and monotone
+images, specifying individual PSNR targets for use on the color images and the
+single target for use on the monotone images.
+
+<p>These options were new in Netpbm 10.82 (March 2018).
+    
 </dl>
 
 
