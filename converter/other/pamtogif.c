@@ -76,6 +76,7 @@ struct CmdlineInfo {
     const char *transparent;    /* -transparent option value.  NULL if none. */
     const char *comment;        /* -comment option value; NULL if none */
     unsigned int nolzw;         /* -nolzw option */
+    unsigned int noclear;       /* -noclear option */
     float aspect;               /* -aspect option value (the ratio).  */
     unsigned int verbose;
 };
@@ -134,6 +135,8 @@ parseCommandLine(int argc, char ** argv,
             NULL,                       &cmdlineP->sort, 0);
     OPTENT3(0,   "nolzw",       OPT_FLAG,
             NULL,                       &cmdlineP->nolzw, 0);
+    OPTENT3(0,   "noclear",     OPT_FLAG,
+            NULL,                       &cmdlineP->noclear, 0);
     OPTENT3(0,   "mapfile",     OPT_STRING,
             &cmdlineP->mapfile,        NULL, 0);
     OPTENT3(0,   "transparent", OPT_STRING,
@@ -798,6 +801,11 @@ typedef struct {
            proper data, but always using one code per pixel, and therefore
            not effecting any compression and not using the LZW patent.
         */
+    bool noclear;
+        /* Never put a clear code in the output.  Ergo don't recompute the
+           string table from current input.  When the string table fills up,
+           continue using that table for the rest of the image.
+        */
     unsigned int hsize;
         /* The number of slots in the hash table.  This variable to
            enhance overall performance by reducing memory use when
@@ -863,6 +871,10 @@ typedef struct {
 
            Ignored in the non-lzw case.
         */
+    bool reportedNoclear;
+        /* We have reported to Standard Error that the string table filled up
+           and we elected not to clear it.
+        */
 } LzwCompressor;
 
 
@@ -891,6 +903,7 @@ static LzwCompressor *
 lzw_create(FILE *       const ofP,
            unsigned int const initBits,
            bool         const lzw,
+           bool         const noclear,
            unsigned int const pixelCount) {
 
     unsigned int const hsizeTable[] = {257, 521, 1031, 2053, 4099, 5003};
@@ -917,7 +930,8 @@ lzw_create(FILE *       const ofP,
     MALLOCVAR_NOFAIL(lzwP);
 
     /* Constants */
-    lzwP->lzw = lzw;
+    lzwP->lzw     = lzw;
+    lzwP->noclear = noclear;
 
     lzwP->clearCode     = 1 << (initBits - 1);
     lzwP->eofCode       = lzwP->clearCode + 1;
@@ -947,6 +961,8 @@ lzw_create(FILE *       const ofP,
 
     lzwP->codeBufferP = codeBuffer_create(ofP, initBits, lzw);
 
+    lzwP->reportedNoclear = false;
+
     return lzwP;
 }
 
@@ -975,6 +991,18 @@ lzwHashClear(LzwCompressor * const lzwP) {
         lzwP->hashTable[i].present = false;
 
     lzwP->nextUnusedCode = lzwP->clearCode + 2;
+}
+
+
+
+static void
+lzw_reportNoclear(LzwCompressor * const lzwP) {
+
+    if (verbose && !lzwP->reportedNoclear) {
+        pm_message("String table filled up.  Not starting a new one "
+                   "because of noclear mode");
+        lzwP->reportedNoclear = true;
+    }
 }
 
 
@@ -1031,6 +1059,12 @@ lzwOutputCurrentString(LzwCompressor * const lzwP) {
    put a clear code in the stream to tell the decompressor to do the
    same.  So Caller must add it to the hash _before_ calling us.
 
+   BUT: if the string table has reached its maximum size (which means the
+   decoder won't define any new code because of our output), issue a clear
+   code instead to cause the decoder to start its table over and start ours
+   over as well.  EXCEPT: if we're running in no-clear mode; then we skip the
+   clear code and just keep using the current table (as will the decoder).
+
    Note that in the non-compressing case, the overall limit is small
    enough to prevent us from ever defining string codes; we'll always
    reset the hash.
@@ -1067,10 +1101,18 @@ lzwOutputCurrentString(LzwCompressor * const lzwP) {
         */
         lzwAdjustCodeSize(lzwP, newCode);
     } else {
-        /* Forget all the strings so far; start building again; tell
-           decompressor to do the same.
-        */
-        lzw_clearBlock(lzwP);
+        if (lzwP->noclear)
+            lzw_reportNoclear(lzwP);
+        else {
+            /* Forget all the strings so far; start building again; tell
+               decompressor to do the same.
+            */
+            lzw_clearBlock(lzwP);
+
+            if (verbose)
+                pm_message("String table filled up.  "
+                           "Clearing and starting over");
+        }
     }
 }
 
@@ -1180,11 +1222,12 @@ lzw_encodePixel(LzwCompressor * const lzwP,
                table.
             */
 
-            lzwP->hashTable[hash].present         = true;
-            lzwP->hashTable[hash].baseString      = lzwP->stringSoFar;
-            lzwP->hashTable[hash].additionalPixel = gifPixel;
-            lzwP->hashTable[hash].combinedString  = lzwP->nextUnusedCode;
-
+            if (lzwP->nextUnusedCode < lzwP->codeBufferP->maxCodeLimit) {
+                lzwP->hashTable[hash].present         = true;
+                lzwP->hashTable[hash].baseString      = lzwP->stringSoFar;
+                lzwP->hashTable[hash].additionalPixel = gifPixel;
+                lzwP->hashTable[hash].combinedString  = lzwP->nextUnusedCode;
+            }
             /* Output the code for the known prefix of the string, thus
                defining a new string code for possible later use.  Warning:
                lzwOutputCurrentString() does more than you think.
@@ -1231,7 +1274,8 @@ writeRaster(struct pam *  const pamP,
             struct Cmap * const cmapP,
             unsigned int  const initBits,
             FILE *        const ofP,
-            bool          const lzw) {
+            bool          const lzw,
+            bool          const noclear) {
 /*----------------------------------------------------------------------------
    Write the raster to file 'ofP'.
 
@@ -1243,6 +1287,10 @@ writeRaster(struct pam *  const pamP,
 
    Write the raster using LZW compression, or uncompressed depending
    on 'lzw'.
+
+   If 'noclear', don't use any GIF clear codes in the output; i.e. don't
+   recompute the string table from current input.  Once the string table gets
+   to maximum size, just keep using that table for the rest of the image.
 -----------------------------------------------------------------------------*/
     LzwCompressor * lzwP;
     tuple * tuplerow;
@@ -1253,7 +1301,7 @@ writeRaster(struct pam *  const pamP,
            number of the current row.
         */
 
-    lzwP = lzw_create(ofP, initBits, lzw, pamP->height * pamP->width);
+    lzwP = lzw_create(ofP, initBits, lzw, noclear, pamP->height * pamP->width);
 
     tuplerow = pnm_allocpamrow(pamP);
 
@@ -1453,7 +1501,8 @@ gifEncode(struct pam *  const pamP,
           struct Cmap * const cmapP,
           char          const comment[],
           float         const aspect,
-          bool          const lzw) {
+          bool          const lzw,
+          bool          const noclear) {
 
     unsigned int const leftOffset = 0;
     unsigned int const topOffset  = 0;
@@ -1494,7 +1543,7 @@ gifEncode(struct pam *  const pamP,
     /* Write the actual raster */
 
     writeRaster(pamP, rowReaderP, alphaPlane, alphaThreshold,
-                cmapP, initCodeSize + 1, ofP, lzw);
+                cmapP, initCodeSize + 1, ofP, lzw, noclear);
 
     rowReader_destroy(rowReaderP);
 
@@ -1946,7 +1995,7 @@ main(int argc, char *argv[]) {
     /* All set, let's do it. */
     gifEncode(&pam, stdout, rasterPos,
               cmdline.interlace, 0, bitsPerPixel, &cmap, cmdline.comment,
-              cmdline.aspect, !cmdline.nolzw);
+              cmdline.aspect, !cmdline.nolzw, cmdline.noclear);
 
     destroyCmap(&cmap);
 

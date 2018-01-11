@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.82.00
 
+              pamtogif: Add -noclear option.
+
               pnmpsnr: Add -targetX options.
 
               ppmpat: Fix bug - crash or junk output with -camo or -anticamo
