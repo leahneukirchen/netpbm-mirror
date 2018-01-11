@@ -28,6 +28,8 @@ pamtogif - convert a Netpbm image to a GIF image
 
 [<B>-comment=</B><I>text</I>]
 
+[<B>-noclear</B>]
+
 [<B>-nolzw</B>]
 
 [<b>-aspect=</b><i>fraction</i>]
@@ -233,6 +235,35 @@ think it is multiple arguments:
 $ pamtogif -comment "this is a comment" &lt;xxx.ppm &gt;xxx.gif
 </pre>
 
+<DT><B>-noclear</B>
+
+<DD>
+<p>This option causes the output not to contain any GIF clear codes.
+
+<p>In GIF, the stream defines codes that represent strings of pixels as it
+goes.  The stream contains definitions of codes mixed in with the references
+to those codes that describe the pixels of the image.  GIF specifies a maximum
+number of codes that can be defined; when the stream has defined that many,
+the stream can either just use those for the rest of the image or include a
+clear code, deleting all the string codes so that the stream can start over
+defining new ones.
+
+<p>By far the most common choice is the clear code.  This usually results in a
+smaller stream because the set of strings of pixels that occur in an image
+vary over the parts of the image.  Hardly any GIF encoders produce streams
+that don't use the clear code.
+
+<p>But it is conceivable that a stream could be smaller without the use of the
+clear code because it saves the stream having to redefine the same string
+codes over and over.  It could even avoid a thrashing situation where the
+stream continually defines a set of strings that never get used again before
+the maximum is reached.
+
+<p>The default is to use the clear codes.
+
+<p>This option was new in Netpbm 10.82 (March 2018).  Before that, the program
+aways uses the clear codes.
+    
 <DT><B>-nolzw</B>
 
 <DD>
