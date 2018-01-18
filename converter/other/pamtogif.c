@@ -663,13 +663,14 @@ typedef struct {
            In either case, output code never reaches this value.
         */
     unsigned long curAccum;
-    int curBits;
-    unsigned int codeCount;
-        /* Number of codes that have been output to this buffer (doesn't
-           matter if they have gone out the other side yet or not) since
-           the last flush (or ever, if no last flush).  The main use of this
-           is debugging -- when something fails, you can see in a debugger
-           where in the image it was, then set a trap for there.
+    unsigned int curBits;
+    unsigned int stringCount;
+        /* Number of strings that have been output to this buffer (by writing
+           a string code) since the last flush (or ever, if no last flush).
+           Note that this counts only strings that go into the buffer; it
+           doesn't matter if they have gone out the other side yet.  The main
+           use of this is debugging -- when something fails, you can see in a
+           debugger where in the image it was, then set a trap for there.
         */
 } CodeBuffer;
 
@@ -692,7 +693,7 @@ codeBuffer_create(FILE *       const ofP,
     codeBufferP->byteBufferP = byteBuffer_create(ofP);
     codeBufferP->curAccum    = 0;
     codeBufferP->curBits     = 0;
-    codeBufferP->codeCount   = 0;
+    codeBufferP->stringCount = 0;
 
     return codeBufferP;
 }
@@ -731,6 +732,8 @@ codeBuffer_increaseCodeSize(CodeBuffer * const codeBufferP) {
     codeBufferP->maxCode = (1 << codeBufferP->nBits) - 1;
 }
 
+
+
 static void
 codeBuffer_output(CodeBuffer * const codeBufferP,
                   StringCode   const code) {
@@ -762,7 +765,7 @@ codeBuffer_output(CodeBuffer * const codeBufferP,
         codeBufferP->curBits -= 8;
     }
 
-    ++codeBufferP->codeCount;
+    ++codeBufferP->stringCount;
 }
 
 
@@ -783,8 +786,8 @@ codeBuffer_flush(CodeBuffer * const codeBufferP) {
 
     if (verbose)
         pm_message("%u strings of pixels written to file",
-                   codeBufferP->codeCount);
-    codeBufferP->codeCount = 0;
+                   codeBufferP->stringCount);
+    codeBufferP->stringCount = 0;
 }
 
 
