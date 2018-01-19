@@ -814,7 +814,6 @@ typedef struct {
            enhance overall performance by reducing memory use when
            encoding smaller gifs.
          */
-
     unsigned int hshift;
         /* This is how many bits we shift left a string code in forming the
            primary hash of the concatenation of that string with another.
@@ -844,20 +843,15 @@ typedef struct {
 
            Constant.
         */
-
     StringCode codeLimit;
         /* One beyond the maximum code possible with the current code
            size.
         */
-
     struct HashTableEntry * hashTable;
-    StringCode nextUnusedCode;
-        /* Numerically next code available to assign to a a multi-pixel
-           string.  Note that codes for multi-pixel strings are in the
-           upper half of the range of codes, always greater than
-           'clearCode'.
+    StringCode nextCodeToDefine;
+        /* The next string code the GIF protocol will define.  It will do this
+           the next time we emit a string code.
         */
-
     StringCode stringSoFar;
         /* The code for the string we have built so far.  This code indicates
            one or more pixels that we have encoded but not yet output
@@ -993,7 +987,7 @@ lzwHashClear(LzwCompressor * const lzwP) {
     for (i = 0; i < lzwP->hsize; ++i)
         lzwP->hashTable[i].present = false;
 
-    lzwP->nextUnusedCode = lzwP->clearCode + 2;
+    lzwP->nextCodeToDefine = lzwP->clearCode + 2;
 }
 
 
@@ -1055,53 +1049,42 @@ lzwOutputCurrentString(LzwCompressor * const lzwP) {
 /*----------------------------------------------------------------------------
    Put a code for the currently built-up string in the output stream.
 
-   Doing this causes a new string code to be defined (code is
-   lzwP->nextUnusedCode), so Caller must add that to the hash.  If
-   that code's size is beyond the overall limit, we reset the hash
-   (which means future codes will start back at the minimum size) and
-   put a clear code in the stream to tell the decompressor to do the
-   same.  So Caller must add it to the hash _before_ calling us.
+   Doing this causes the protocol to define a new string code, defined as the
+   string we put plus the first pixel of the next string we put.  (It almost
+   seems to violate causality, especially since the next string we put can
+   legally be the very string code that gets defined here, but it actually
+   works).
 
-   BUT: if the string table has reached its maximum size (which means the
-   decoder won't define any new code because of our output), issue a clear
-   code instead to cause the decoder to start its table over and start ours
-   over as well.  EXCEPT: if we're running in no-clear mode; then we skip the
-   clear code and just keep using the current table (as will the decoder).
+   The code that gets defined is lzwP->nextCodeToDefine.  Caller is
+   responsible for figuring out the value for the code (i.e. what we just said
+   above) so it can use the code in the future.
 
-   Note that in the non-compressing case, the overall limit is small
-   enough to prevent us from ever defining string codes; we'll always
-   reset the hash.
+   BUT: if the string table has reached its maximum size, issue a clear code
+   instead to cause the protocol to forget all the defined string coes and
+   start its table over (so Caller must start its own table over too).
+   EXCEPT: if we're running in no-clear mode; then we skip the clear code (so
+   the protocol maintains all the string code definitions and caller will have
+   to do so as well).
 
-   There's an odd case that always screws up any attempt to make this
-   code cleaner: At the end of the LZW stream, you have to output the
-   code for the final string even though you don't have a following
-   pixel that would make a longer string.  So there's nothing to add
-   to the hash table and no point in allocating a new string code.
-   But the decompressor doesn't know that we're done, so he allocates
-   the next string code and may therefore increase his code length.
-   If we don't do the same, we will write our one last code -- the EOF
-   code -- in a code length smaller than what the decompressor is
-   expecting, and he will have a premature end of stream.
+   Note that in the non-compressing case, the overall limit is small enough to
+   prevent us from ever defining string codes; we'll always issue the clear
+   code.
 
-   So this subroutine does run for that final code flush and does some
-   of the motions of defining a new string code, but this subroutine
-   can't update the hash because in that particular case, there's
-   nothing to add.
+   Note that there is a case where Caller can just ignore the fact that we
+   cause the protocol to define a new string code: where the string we're
+   outputting is the last one in the stream.  In that case, the new string
+   code we define is irrelevant; it will never be used.
 -----------------------------------------------------------------------------*/
     codeBuffer_output(lzwP->codeBufferP, lzwP->stringSoFar);
-    if (lzwP->nextUnusedCode < lzwP->codeBufferP->maxCodeLimit) {
-        /* Allocate the code for the extended string, which Caller
-           should have already put in the hash so he can use it in the
-           future.  Decompressor knows when it sees the code output
-           above to define a string on its end too, using the same
-           string code we do.
-        */
-        StringCode const newCode = lzwP->nextUnusedCode++;
 
-        /* This code may be too big to fit in the current code size, in
-           which case we have to increase the code size (and decompressor
-           will do the same).
+    if (lzwP->nextCodeToDefine < lzwP->codeBufferP->maxCodeLimit) {
+        /* Record that the protocol defined a new string code, to wit
+           the numerically next one, when we did the output to the stream
+           above, and adjust the code size if this code is too wide to
+           fit in the current size.
         */
+        StringCode const newCode = lzwP->nextCodeToDefine++;
+
         lzwAdjustCodeSize(lzwP, newCode);
     } else {
         if (lzwP->noclear)
@@ -1220,21 +1203,22 @@ lzw_encodePixel(LzwCompressor * const lzwP,
             */
             lzwP->stringSoFar = code;
         else {
-            /* Make up a new string code for the current string (for use if we
-               see that string later in the stream), and add it to the string
-               table.
+            /* We've found the longest prefix of the rest of the image for
+               which we have a string code defined.  Output the code for that
+               prefix, thus defining a new string code in the protocol for
+               possible later use.  The new code is defined as this string
+               plus the first pixel of the next string.
+
+               But if there aren't any unused string codes left, outputting
+               our string doesn't define any new string code.
             */
 
-            if (lzwP->nextUnusedCode < lzwP->codeBufferP->maxCodeLimit) {
+            if (lzwP->nextCodeToDefine < lzwP->codeBufferP->maxCodeLimit) {
                 lzwP->hashTable[hash].present         = true;
                 lzwP->hashTable[hash].baseString      = lzwP->stringSoFar;
                 lzwP->hashTable[hash].additionalPixel = gifPixel;
-                lzwP->hashTable[hash].combinedString  = lzwP->nextUnusedCode;
+                lzwP->hashTable[hash].combinedString  = lzwP->nextCodeToDefine;
             }
-            /* Output the code for the known prefix of the string, thus
-               defining a new string code for possible later use.  Warning:
-               lzwOutputCurrentString() does more than you think.
-            */
 
             lzwOutputCurrentString(lzwP);
 
@@ -1268,6 +1252,7 @@ writePixelUncompressed(LzwCompressor * const lzwP,
     lzwOutputCurrentString(lzwP);
 
 }
+
 
 static void
 writeRaster(struct pam *  const pamP,
