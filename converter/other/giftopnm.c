@@ -839,21 +839,21 @@ termStack(struct Stack * const stackP) {
 
    The true data elements are dataWidth bits wide, so the maximum
    value of a true data element is 2**dataWidth-1.  We call that
-   max_dataVal.  The first byte in the stream tells you what dataWidth
+   maxDataVal.  The first byte in the stream tells you what dataWidth
    is.
 
-   LZW codes 0 - max_dataVal are direct codes.  Each one represents
+   LZW codes 0 - maxDataVal are direct codes.  Each one represents
    the true data element whose value is that of the LZW code itself.
    No decompression is required.
 
-   max_dataVal + 1 and up are compression codes.  They encode
+   maxDataVal + 1 and up are compression codes.  They encode
    true data elements:
 
-   max_dataVal + 1 is the clear code.
+   maxDataVal + 1 is the clear code.
 
-   max_dataVal + 2 is the end code.
+   maxDataVal + 2 is the end code.
 
-   max_dataVal + 3 and up are string codes.  Each string code
+   maxDataVal + 3 and up are string codes.  Each string code
    represents a string of true data elements.  The translation from a
    string code to the string of true data elements varies as the stream
    progresses.  In the beginning and after every clear code, the
@@ -861,6 +861,13 @@ termStack(struct Stack * const stackP) {
    stream progresses, the table gets filled and more string codes
    become valid.
 
+   At the beginning of the stream, string codes are represented by
+   dataWidth + 1 bits.  When enough codes have been defined to use up that
+   space, they start being represented by dataWidth + 2 bits, and so on.
+
+   What we call 'dataWidth', others call the "minimum code size," which is a
+   misnomer, because the minimum code size in a stream must be at least one
+   more than 'dataWidth', to accomodate the clear and end codes.
 -----------------------------------------------------------------------------*/
 
 static int const maxLzwCodeCt = (1<<MAX_LZW_BITS);
@@ -903,6 +910,9 @@ typedef struct {
     /* The following are constant for the life of the decompressor */
     FILE * ifP;
     unsigned int initCodeSize;
+        /* The code size, in bits, at the start of the stream and immediately
+           after a Clear code.
+        */
     unsigned int cmapSize;
     unsigned int maxDataVal;
     unsigned int clearCode;
@@ -928,7 +938,7 @@ typedef struct {
 static void
 resetDecompressor(Decompressor * const decompP) {
 
-    decompP->codeSize      = decompP->initCodeSize+1;
+    decompP->codeSize      = decompP->initCodeSize;
     decompP->maxCodeCt     = 1 << decompP->codeSize;
     decompP->nextTableSlot = decompP->maxDataVal + 3;
     decompP->fresh         = true;
@@ -964,21 +974,19 @@ validateTransparentIndex(unsigned int const transparentIndex,
 static void
 lzwInit(Decompressor * const decompP,
         FILE *         const ifP,
-        int            const initCodeSize,
+        int            const dataWidth,
         unsigned int   const cmapSize,
         bool           const haveTransColor,
         unsigned int   const transparentIndex,
         bool           const tolerateBadInput) {
 
-    unsigned int const maxDataVal = (1 << initCodeSize) - 1;
+    unsigned int const maxDataVal = (1 << dataWidth) - 1;
 
     if (verbose)
-        pm_message("Image says the initial compression code size is "
-                   "%d bits",
-                   initCodeSize);
+        pm_message("Image says the data width is %u bits", dataWidth);
 
     decompP->ifP              = ifP;
-    decompP->initCodeSize     = initCodeSize;
+    decompP->initCodeSize     = dataWidth + 1;
     decompP->cmapSize         = cmapSize;
     decompP->tolerateBadInput = tolerateBadInput;
     decompP->maxDataVal       = maxDataVal;
@@ -1017,7 +1025,7 @@ lzwInit(Decompressor * const decompP,
 
     initStack(&decompP->stack, maxLzwCodeCt);
 
-    assert(decompP->initCodeSize < sizeof(decompP->maxDataVal) * 8);
+    assert(decompP->initCodeSize < sizeof(decompP->maxDataVal) * 8 + 1);
 }
 
 
@@ -1087,7 +1095,7 @@ addLzwStringCode(Decompressor * const decompP) {
                Future codes in the stream will have codes one bit longer.
                But there's an exception if we're already at the LZW
                maximum, in which case the codes will simply continue
-               the same size.
+               the same size and no new ones will be defined.
             */
             if (decompP->codeSize < MAX_LZW_BITS) {
                 ++decompP->codeSize;
@@ -1700,22 +1708,25 @@ readImageData(FILE *       const ifP,
               bool         const hasColor,
               bool         const tolerateBadInput) {
 
-    unsigned char lzwMinCodeSize;
+    unsigned char lzwDataWidth;
     Decompressor decomp;
     const char * error;
 
-    readFile(ifP, &lzwMinCodeSize, sizeof(lzwMinCodeSize), &error);
+    readFile(ifP, &lzwDataWidth, sizeof(lzwDataWidth), &error);
     if (error)
         pm_error("Can't read GIF stream "
                  "right after an image separator; no "
                  "image data follows.  %s", error);
 
-    if (lzwMinCodeSize > MAX_LZW_BITS)
-        pm_error("Invalid minimum code size value in image data: %u.  "
-                 "Maximum allowable code size in GIF is %u",
-                 lzwMinCodeSize, MAX_LZW_BITS);
+    if (lzwDataWidth+1 > MAX_LZW_BITS)
+        pm_error("Invalid data width (bits for a true data item) "
+                 "in image data: %u.  "
+                 "Maximum allowable code size in GIF is %u, "
+                 "and a code has to be wide enough to accomodate both "
+                 "all possible data values and two control codes",
+                 lzwDataWidth, MAX_LZW_BITS);
 
-    lzwInit(&decomp, ifP, lzwMinCodeSize, cmap.size,
+    lzwInit(&decomp, ifP, lzwDataWidth, cmap.size,
             haveTransColor, transparentIndex, tolerateBadInput);
 
     issueTransparencyMessage(haveTransColor, transparentIndex, cmap);
@@ -2185,6 +2196,5 @@ main(int argc, const char **argv) {
 
     return 0;
 }
-
 
 

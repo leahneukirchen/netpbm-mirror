@@ -8,6 +8,11 @@ not yet  BJH  Release 10.82.00
 
               pamtogif: Add -noclear option.
 
+              giftopnm: Check "data width" value from GIF image properly:
+              can't be bigger than 11, because the minimum code size is one
+              more than the data width and the maximum code size is 12.  (Note
+              that GIF spec prohibits anything more than 8).
+
               pnmpsnr: Add -targetX options.
 
               ppmpat: Fix bug - crash or junk output with -camo or -anticamo
