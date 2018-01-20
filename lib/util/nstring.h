@@ -150,6 +150,10 @@ strncaseeq(const char * const comparand,
 
 extern const char * const pm_strsol;
 
+size_t
+pm_strnlen(const char * const s,
+           size_t       const maxlen);
+
 int
 pm_snprintf(char *       const dest,
             size_t       const str_m,
