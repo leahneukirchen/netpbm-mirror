@@ -215,7 +215,7 @@ scanDirectory(FILE *       const slFileP,
                followed by 4 bytes of offset of the next directory entry.
             */
             const char * const slideName = (const char *)(&libent[0]);
-            if (strnlen(slideName, 32) == 32)
+            if (pm_strnlen(slideName, 32) == 32)
                 pm_error("Invalid input: slide name field is not "
                          "nul-terminated");
             else {
