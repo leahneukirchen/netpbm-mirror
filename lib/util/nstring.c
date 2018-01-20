@@ -195,6 +195,19 @@ static char credits[] = "\n\
 @(#)snprintf.c, v2.2: http://www.ijs.si/software/snprintf/\n";
 
 
+/* MacOS X before 10.7, for one, does not have strnlen */
+size_t
+pm_strnlen(const char * const s,
+           size_t       const maxlen) {
+
+    unsigned int i;
+
+    for (i = 0; i < maxlen && s[i]; ++i) {}
+
+    return i;
+}
+
+
 
 void
 pm_vsnprintf(char *       const str,
