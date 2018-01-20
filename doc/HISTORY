@@ -18,6 +18,9 @@ not yet  BJH  Release 10.82.00
               ppmpat: Fix bug - crash or junk output with -camo or -anticamo
               and no -color.  Introduced in Netpbm 10.78 (March 2017).
 
+              Build: fix compile failure on systems without strnlen (such
+              as MacOS X before 10.7).  Broken in 10.81 (December 2017).
+
 17.12.30 BJH  Release 10.81.00
 
               sldtoppm: -lib and -dir don't work - always says slide not
