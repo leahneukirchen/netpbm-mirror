@@ -742,10 +742,6 @@ codeBuffer_output(CodeBuffer * const codeBufferP,
 
    The code is represented as N bits in the file -- the lower
    N bits of 'code'.  N is a the current code size of *codeBufferP.
-
-   Id 'code' is the maximum possible code for the current code size
-   for *codeBufferP, increase that code size (unless it's already
-   maxed out).
 -----------------------------------------------------------------------------*/
     assert (code <= codeBufferP->maxCode);
 
@@ -1142,30 +1138,33 @@ lookupInHash(LzwCompressor *  const lzwP,
              StringCode *     const codeP,
              unsigned int *   const hashP) {
 
-    int disp;
+    unsigned int disp;
         /* secondary hash stride (after G. Knott) */
-    int i;
+    unsigned int hash;
         /* Index into hash table */
 
-    i = primaryHash(lzwP->stringSoFar, gifPixel, lzwP->hshift);
-    disp = (i == 0) ? 1 : lzwP->hsize - i;
+    hash = primaryHash(lzwP->stringSoFar, gifPixel, lzwP->hshift);
+    assert(hash < lzwP->hsize);
+    disp = (hash == 0) ? 1 : lzwP->hsize - hash;
 
-    while (lzwP->hashTable[i].present &&
-           (lzwP->hashTable[i].baseString != lzwP->stringSoFar ||
-            lzwP->hashTable[i].additionalPixel != gifPixel)) {
-        i -= disp;
-        if (i < 0)
-            i += lzwP->hsize;
+    while (lzwP->hashTable[hash].present &&
+           (lzwP->hashTable[hash].baseString != lzwP->stringSoFar ||
+            lzwP->hashTable[hash].additionalPixel != gifPixel)) {
+        if (hash < disp)
+            hash += lzwP->hsize;
+        assert(hash >= disp);
+        hash -= disp;
+        assert(hash < lzwP->hsize);
     }
 
-    if (lzwP->hashTable[i].present) {
+    if (lzwP->hashTable[hash].present) {
         /* Found fcode in hash table */
         *foundP = true;
-        *codeP = lzwP->hashTable[i].combinedString;
+        *codeP  = lzwP->hashTable[hash].combinedString;
     } else {
         /* Found where it _should_ be (but it's not) with primary hash */
         *foundP = false;
-        *hashP = i;
+        *hashP  = hash;
     }
 }
 
