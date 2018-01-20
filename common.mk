@@ -272,24 +272,24 @@ $(OBJECTS): %.o: %.c importinc
 LIBOPT = $(BUILDDIR)/buildtools/libopt
 
 ifneq ($(OMIT_BUILDTOOL_RULE),1)
-$(LIBOPT) $(TYPEGEN): $(BUILDDIR)/buildtools
+$(LIBOPT) $(TYPEGEN): $(BUILDDIR)/buildtools FORCE
 	$(MAKE) -C $(dir $@) -f $(SRCDIR)/buildtools/Makefile \
 	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@) 
 endif
 
 ifneq ($(OMIT_LIBRARY_RULE),1)
-$(NETPBMLIB): $(BUILDDIR)/lib
+$(NETPBMLIB): $(BUILDDIR)/lib FORCE
 	$(MAKE) -C $(dir $@) -f $(SRCDIR)/lib/Makefile \
 	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@) 
 endif
 
 ifneq ($(OMIT_URT_RULE),1)
-$(BUNDLED_URTLIB): $(BUILDDIR)/urt
+$(BUNDLED_URTLIB): $(BUILDDIR)/urt FORCE
 	$(MAKE) -C $(dir $@) -f $(SRCDIR)/urt/Makefile \
 	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@) 
 endif
 
-$(BUILDDIR)/icon/netpbm.o: $(BUILDDIR)/icon
+$(BUILDDIR)/icon/netpbm.o: $(BUILDDIR)/icon FORCE
 	$(MAKE) -C $(dir $@) -f $(SRCDIR)/icon/Makefile \
 	    SRCDIR=$(SRCDIR) BUILDDIR=$(BUILDDIR) $(notdir $@) 
 
