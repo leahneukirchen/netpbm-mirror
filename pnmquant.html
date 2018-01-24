@@ -16,6 +16,9 @@ pnmquant - quantize the colors in a Netpbm image to a smaller set
 [<B>-floyd</B>|<B>-fs</B>]
 [<B>-nofloyd</B>|<B>-nofs</B>]
 [<B>-spreadbrightness</B>|<B>-spreadluminosity</B>]
+[<b>-norandom</b>]
+[<b>-quiet</b>]
+[<b>-plain</b>]
 <I>ncolors</I> [<I>pnmfile</I>]
 
 <P>All options can be abbreviated to their shortest unique prefix.  You
@@ -62,11 +65,17 @@ just a convenience.
 </kbd>
 </pre>
 
+<h2 id="history">HISTORY</h2>
+
 <p><b>pnmquant</b> did not exist before Netpbm 9.21 (January 2001).
 Before that, <b>ppmquant</b> did the same thing, but only on PPM
 images.  <b>ppmquant</b> continues to exist, but is only a front end
 (for name compatibility) to <b>pnmquant</b>.
 
+<p><b>-version</b> did not exist before Netpbm 10.75 (June 2016).
+  
+<p><b>-norandom</b> did not exist before Netpbm 10.82 (March 2018).
+  
 <H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="pnmcolormap.html">pnmcolormap</A></B>,
@@ -82,6 +91,7 @@ images.  <b>ppmquant</b> continues to exist, but is only a front end
 <UL>
 <LI><A HREF="#synopsis">SYNOPSIS</A>
 <LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#history">HISTORY</A>
 <LI><A HREF="#seealso">SEE ALSO</A>
 </UL>
 </BODY>
