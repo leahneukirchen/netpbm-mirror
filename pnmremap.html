@@ -18,7 +18,7 @@ pnmremap - replace colors in a PNM image with colors from another set
 
 [<B>-floyd</B>|<B>-fs</B>|<B>-nfloyd</B>|<B>-nofs</B>]
 
-[<b>-norandom</b>]
+{[<b>-norandom</b>]|<b>randomseed=</b><i>n</i>}
 
 [<B>-firstisdefault</B>]
 
@@ -236,8 +236,31 @@ comparison difficult.
 <p>With <b>-norandom</b>, <b>pnmremap</b> initializes the error
 accumulators to zero and the output is completely predictable.
 
+<p>Alternatively, you can use <b>-randomseed</b> to get randomization
+across the image, but still have repeatable results.
+
+<p>You cannot specify this along with <b>-randomseed</b>.
+  
 <p><b>-norandom</b> was new in Netpbm 10.39 (June 2007).
 
+
+<dt><b>-randomseed=</b><i>n</i>
+
+<dd>This option affects a detail of the Floyd-Steinberg dithering process.
+It has no effect if you aren't doing Floyd-Steinberg dithering.
+
+<p>This option supplies the seed for the random number generator used in the
+randomization process described in the explanation of the <b>-norandom</b>
+option.  If you run <b>pnmremap</b> twice with the same <b>-randomseed</b>
+value, you will get identical results.
+
+<p>If you do not specify <b>-randomseed</b>, <b>pnmremap</b> chooses a seed
+at random, adding another level of randomness to the dithering.
+
+<p>You cannot specify this along with <b>-norandom</b>.
+
+<p>This option was new in Netpbm 10.82 (March 2018).
+  
 
 <DT><B>-firstisdefault</B>
 
