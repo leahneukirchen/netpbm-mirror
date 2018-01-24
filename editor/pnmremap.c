@@ -366,7 +366,7 @@ computeColorMapFromMap(struct pam *   const mappamP,
 
 #define FS_SCALE 1024
 
-struct fserr {
+struct Fserr {
     unsigned int width;
         /* Width of the image being dithered */
     long ** thiserr;
@@ -436,7 +436,7 @@ zeroError(long **      const err,
 
 
 static void
-fserrSetForward(struct fserr * const fserrP) {
+fserr_setForward(struct Fserr * const fserrP) {
 
     fserrP->fsForward = TRUE;
     fserrP->begCol = 0;
@@ -447,7 +447,7 @@ fserrSetForward(struct fserr * const fserrP) {
 
 
 static void
-fserrSetBackward(struct fserr * const fserrP) {
+fserr_setBackward(struct Fserr * const fserrP) {
 
     fserrP->fsForward = FALSE;
     fserrP->begCol = fserrP->width - 1;
@@ -458,9 +458,9 @@ fserrSetBackward(struct fserr * const fserrP) {
 
 
 static void
-initFserr(struct pam *   const pamP,
-          struct fserr * const fserrP,
-          struct Random  const random) {
+fserr_init(struct pam *   const pamP,
+           struct Fserr * const fserrP,
+           struct Random  const random) {
 /*----------------------------------------------------------------------------
    Initialize the Floyd-Steinberg error vectors
 -----------------------------------------------------------------------------*/
@@ -495,13 +495,13 @@ initFserr(struct pam *   const pamP,
     else
         zeroError(fserrP->thiserr, fserrSize, pamP->depth);
 
-    fserrSetForward(fserrP);
+    fserr_setForward(fserrP);
 }
 
 
 
 static void
-floydInitRow(struct pam * const pamP, struct fserr * const fserrP) {
+floydInitRow(struct pam * const pamP, struct Fserr * const fserrP) {
 
     int col;
 
@@ -518,7 +518,7 @@ static void
 floydAdjustColor(struct pam *   const pamP,
                  tuple          const intuple,
                  tuple          const outtuple,
-                 struct fserr * const fserrP,
+                 struct Fserr * const fserrP,
                  int            const col) {
 /*----------------------------------------------------------------------------
   Use Floyd-Steinberg errors to adjust actual color.
@@ -536,7 +536,7 @@ floydAdjustColor(struct pam *   const pamP,
 
 static void
 floydPropagateErr(struct pam *   const pamP,
-                  struct fserr * const fserrP,
+                  struct Fserr * const fserrP,
                   int            const col,
                   tuple          const oldtuple,
                   tuple          const newtuple) {
@@ -571,7 +571,7 @@ floydPropagateErr(struct pam *   const pamP,
 
 
 static void
-floydSwitchDir(struct pam * const pamP, struct fserr * const fserrP) {
+floydSwitchDir(struct pam * const pamP, struct Fserr * const fserrP) {
 
     unsigned int plane;
 
@@ -582,9 +582,9 @@ floydSwitchDir(struct pam * const pamP, struct fserr * const fserrP) {
     }
 
     if (fserrP->fsForward)
-        fserrSetBackward(fserrP);
+        fserr_setBackward(fserrP);
     else
-        fserrSetForward(fserrP);
+        fserr_setForward(fserrP);
 }
 
 
@@ -897,7 +897,7 @@ convertRowDither(struct pam *            const inpamP,
                  tuplehash               const colorhash,
                  bool *                  const usehashP,
                  tuple                   const defaultColor,
-                 struct fserr *          const fserrP,
+                 struct Fserr *          const fserrP,
                  tuple                         outrow[],
                  unsigned int *          const missingCountP) {
 /*----------------------------------------------------------------------------
@@ -971,7 +971,7 @@ convertRow(struct pam *            const inpamP,
            bool *                  const usehashP,
            bool                    const floyd,
            tuple                   const defaultColor,
-           struct fserr *          const fserrP,
+           struct Fserr *          const fserrP,
            tuple                         outrow[],
            unsigned int *          const missingCountP) {
 /*----------------------------------------------------------------------------
@@ -1030,7 +1030,7 @@ copyRaster(struct pam *   const inpamP,
     depthAdjustment depthAdjustment;
     struct colormapFinder * colorFinderP;
     bool usehash;
-    struct fserr fserr;
+    struct Fserr fserr;
     int row;
 
     workpam = *outpamP;
@@ -1055,7 +1055,7 @@ copyRaster(struct pam *   const inpamP,
     createColormapFinder(outpamP, colormap, colormapSize, &colorFinderP);
 
     if (floyd)
-        initFserr(inpamP, &fserr, random);
+        fserr_init(inpamP, &fserr, random);
 
     *missingCountP = 0;  /* initial value */
 
