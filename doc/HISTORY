@@ -6,6 +6,10 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.82.00
 
+              pnmremap: Add -randomseed.
+
+              pnmquant: Add -norandom, -randomseed.
+
               pamtogif: Add -noclear option.
 
               giftopnm: Check "data width" value from GIF image properly:

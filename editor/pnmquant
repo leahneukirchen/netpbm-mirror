@@ -97,6 +97,7 @@ sub parseCommandLine(@) {
                                   "spreadluminosity",
                                   "floyd|fs!",
                                   "norandom",
+                                  "randomseed=i",
                                   "quiet",
                                   "plain");
 
@@ -249,9 +250,10 @@ sub makeColormap($$$$$) {
 
 
 
-sub remap($$$$$) {
+sub remap($$$$$$) {
 
-    my ($mapfileSpec, $opt_floyd, $opt_norandom, $opt_plain, $opt_quiet) = @_;
+    my ($mapfileSpec, $opt_floyd, $opt_norandom, $opt_randomseed,
+        $opt_plain, $opt_quiet) = @_;
 
     # Remap the image on Standard Input to Standard Output, using the colors
     # from the colormap file named $mapfileSpec.
@@ -264,6 +266,14 @@ sub remap($$$$$) {
     }
     if ($opt_norandom) {
         push(@options, "-norandom");
+    }
+    if (defined($opt_randomseed)) {
+        if ($opt_randomseed < 0) {
+             print(STDERR "-randomseed value must not be negative.  " .
+                   "You specified $opt_randomseed\n");
+             exit(10);
+        }
+        push(@options, "-randomseed=$opt_randomseed");
     }
     if ($opt_plain) {
         push(@options, "-plain");
@@ -316,6 +326,7 @@ open(STDOUT, ">&OLDOUT");
 remap($mapfileSpec, 
       $cmdlineR->{floyd}, 
       $cmdlineR->{norandom}, 
+      $cmdlineR->{randomseed}, 
       $cmdlineR->{plain},
       $cmdlineR->{quiet});
 
