@@ -22,7 +22,7 @@ enum sort {SORT_BY_FREQUENCY, SORT_BY_RGB};
 
 enum ColorFmt {FMT_DECIMAL, FMT_HEX, FMT_FLOAT, FMT_PPMPLAIN};
 
-struct cmdline_info {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -38,7 +38,7 @@ struct cmdline_info {
 
 static void
 parseCommandLine(int argc, const char ** argv,
-                 struct cmdline_info * const cmdlineP) {
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
@@ -470,7 +470,7 @@ printInvalidSamples(colorhist_vector const chv,
 int
 main(int argc, const char *argv[]) {
 
-    struct cmdline_info cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP;
     colorhist_vector chv;
     colorhist_vector chvInvalid;
