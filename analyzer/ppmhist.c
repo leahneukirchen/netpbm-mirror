@@ -296,6 +296,77 @@ sortHistogramNormal(enum sort        const sortFn,
 
 
 typedef struct {
+    unsigned int nTotal;
+        /* Number of colors; sum of all the following */
+    unsigned int nBlack;
+        /* 1 if black is present; 0 otherwise */
+    unsigned int nWhite;
+        /* 1 if white is present; 0 otherwise */
+    unsigned int nGray;
+        /* Number of gray shades, not including black and white */
+    unsigned int nColor;
+        /* number of colors other than black, white, and gray */
+
+} ColorSummary;
+
+
+
+static ColorSummary
+colorSummary(colorhist_vector const chv,
+             unsigned int     const colorCt,
+             pixval           const maxval) {
+
+    ColorSummary retval;
+
+    unsigned int i;
+
+    retval.nTotal = colorCt;
+
+    for (i = 0,
+             retval.nBlack = 0,
+             retval.nWhite = 0,
+             retval.nGray = 0,
+             retval.nColor = 0;
+         i < colorCt;
+         ++i) {
+
+        pixel const color = chv[i].color;
+        pixval const r = PPM_GETR(color);
+        pixval const g = PPM_GETG(color);
+        pixval const b = PPM_GETB(color);
+
+        if (r == 0 && g == 0 && b == 0)
+            ++retval.nBlack;
+        else if (r == maxval && g == maxval && b == maxval)
+            ++retval.nWhite;
+        else if (r == g && r ==b)
+            ++retval.nGray;
+        else
+            ++retval.nColor;
+    }
+    assert(retval.nBlack + retval.nWhite + retval.nGray + retval.nColor ==
+           retval.nTotal);
+
+    return retval;
+}
+
+
+static void
+printColorSummary(ColorSummary const colorSummary) {
+
+    printf("Summary: %u colors: %u black, %u white, %u gray, %u color\n",
+           colorSummary.nTotal,
+           colorSummary.nBlack,
+           colorSummary.nWhite,
+           colorSummary.nGray,
+           colorSummary.nColor);
+
+    printf("\n");
+}
+
+
+
+typedef struct {
 /*----------------------------------------------------------------------------
    A map of color name to color.
 
@@ -412,6 +483,44 @@ printColors(colorhist_vector const chv,
 
 
 static void
+printHistogram(colorhist_vector const chv,
+               unsigned int     const colorCt,
+               pixval           const maxval,
+               enum ColorFmt    const colorFmt,
+               bool             const wantHeader,
+               bool             const wantColorName) {
+
+    ColorDict colorDict;
+
+    if (colorFmt == FMT_PPMPLAIN)
+        printf("P3\n# color map\n%d 1\n%d\n", colorCt, maxval);
+
+    if (wantHeader) {
+        const char commentDelim = colorFmt == FMT_PPMPLAIN ? '#' : ' ';
+        printf("%c  r     g     b   \t lum \t count  %s\n",
+               commentDelim, wantColorName ? "name" : "");
+        printf("%c----- ----- ----- \t-----\t------- %s\n",
+               commentDelim, wantColorName ? "----" : "");
+    }
+    if (wantColorName) {
+        bool const mustOpenTrue = TRUE;
+        ppm_readcolordict(NULL, mustOpenTrue,
+                          &colorDict.n, &colorDict.name, &colorDict.color,
+                          NULL);
+    }
+
+    printColors(chv, colorCt, maxval,
+                colorFmt, wantColorName, colorDict);
+
+    if (wantColorName) {
+        free(colorDict.color);
+        free(colorDict.name);
+    }
+}
+
+
+
+static void
 summarizeInvalidPixels(unsigned long int const validPixelCt,
                        unsigned long int const invalidPixelCt,
                        pixval            const maxval) {
@@ -498,7 +607,6 @@ main(int argc, const char *argv[]) {
     pixval mmaxval;
     int format;
     int colorCt;
-    ColorDict colorDict;
     unsigned int validColorCt;
 
     pm_proginit(&argc, argv);
@@ -529,35 +637,15 @@ main(int argc, const char *argv[]) {
         validColorCt = colorCt;
     }
 
-    /* And print the histogram. */
-    if (cmdline.colorFmt == FMT_PPMPLAIN)
-        printf("P3\n# color map\n%d 1\n%d\n", colorCt, maxval);
+    if (!cmdline.noheader)
+        printColorSummary(colorSummary(chv, validColorCt, maxval));
 
-    if (!cmdline.noheader) {
-        const char commentDelim = cmdline.colorFmt == FMT_PPMPLAIN ? '#' : ' ';
-        printf("%c  r     g     b   \t lum \t count  %s\n",
-               commentDelim, cmdline.colorname ? "name" : "");
-        printf("%c----- ----- ----- \t-----\t------- %s\n",
-               commentDelim, cmdline.colorname ? "----" : "");
-    }
-    if (cmdline.colorname) {
-        bool const mustOpenTrue = TRUE;
-        ppm_readcolordict(NULL, mustOpenTrue,
-                          &colorDict.n, &colorDict.name, &colorDict.color,
-                          NULL);
-    }
-
-    printColors(chv, validColorCt, maxval,
-                cmdline.colorFmt, cmdline.colorname, colorDict);
+    printHistogram(chv, validColorCt, maxval,
+                   cmdline.colorFmt, !cmdline.noheader, cmdline.colorname);
 
     if (colorCt > validColorCt)
         printInvalidSamples(chv, chvInvalid, colorCt, validColorCt,
                             maxval, cmdline.colorFmt);
-
-    if (cmdline.colorname) {
-        free(colorDict.color);
-        free(colorDict.name);
-    }
 
     ppm_freecolorhist(chv);
 
@@ -566,6 +654,5 @@ main(int argc, const char *argv[]) {
 
     return 0;
 }
-
 
 
