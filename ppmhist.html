@@ -23,7 +23,7 @@ ppmhist - print a histogram of the colors in a PPM image
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
-<p><b>ppmhist</b>reads a PPM image as input and generates a histogram
+<p><b>ppmhist</b> reads a PPM image as input and generates a histogram
 of the colors in the image, i.e. a list of all the colors and how many
 pixels of each color are in the image.
 
@@ -40,9 +40,13 @@ readable by humans too.
 
 <p>The format is one line for each color in the input image.
 
-<p>By default, there are two lines of column header at the top.  Use the
-<b>-noheader</b> option to suppress those lines.
+<p>By default, there are two lines of column header and a summary at the top.
+Use the <b>-noheader</b> option to suppress those lines.
 
+<p>The summary tells you whether black or white are present and how many
+shades of gray and color are present.  The summary was new in Netpbm 10.82
+(March 2018).
+  
 <p>In each line, <b>ppmhist</b> identifies the color by red, green,
 and blue components.  By default, it lists each of these in decimal,
 using the exact values that are in the PPM input.  So if the image has
