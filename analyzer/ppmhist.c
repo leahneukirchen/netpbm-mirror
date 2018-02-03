@@ -230,21 +230,21 @@ separateInvalidItems(colorhist_vector const chv,
                      unsigned int  *  const validColorCtP) {
 /*----------------------------------------------------------------------------
   Move invalid color entries from chv to chvInvalid.
-  Count how many color entries are valid. 
+  Count how many color entries are valid.
 -----------------------------------------------------------------------------*/
     unsigned int i;
     unsigned int validCt;
     unsigned int invalidCt;
- 
+
     for (i = 0, validCt = 0, invalidCt = 0; i < colorCt; ++i) {
         if (!colorIsValid(chv[i].color, maxval))
             chvInvalid[invalidCt++] = chv[i];
         else
             chv[validCt++] = chv[i];
-    } 
+    }
     *validColorCtP = validCt;
 }
-  
+
 
 
 static void
@@ -261,7 +261,7 @@ sortHistogramForensic(enum sort        const sortFn,
 
     {
         int (*compare_function)(const void *, const void *);
-    
+
         switch (sortFn) {
         case SORT_BY_FREQUENCY: compare_function = countcompare; break;
         case SORT_BY_RGB:       compare_function = rgbcompare;   break;
@@ -269,7 +269,7 @@ sortHistogramForensic(enum sort        const sortFn,
 
         qsort((void*) chv, validColorCt,
               sizeof(struct colorhist_item), compare_function);
-        
+
         qsort((void*) chvInvalid, colorCt - validColorCt,
               sizeof(struct colorhist_item), compare_function);
     }
@@ -430,7 +430,7 @@ printInvalidSamples(colorhist_vector const chv,
     unsigned long int invalidPixelCt;
 
     for (i = 0, validPixelCt = 0; i < validColorCt; ++i)
-        validPixelCt += chv[i].value; 
+        validPixelCt += chv[i].value;
 
     for (i = 0, invalidPixelCt = 0; i < invalidColorCt; ++i) {
         pixval       const r     = PPM_GETR(chvInvalid[i].color);
@@ -438,7 +438,7 @@ printInvalidSamples(colorhist_vector const chv,
         pixval       const b     = PPM_GETB(chvInvalid[i].color);
         unsigned int const count = chvInvalid[i].value;
 
-        invalidPixelCt += chvInvalid[i].value; 
+        invalidPixelCt += chvInvalid[i].value;
 
         switch(colorFmt) {
         case FMT_FLOAT:
