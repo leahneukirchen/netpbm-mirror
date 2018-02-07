@@ -49,7 +49,7 @@ sub doVersionHack($) {
 sub fatal($) {
     my ($msg) = @_;
 
-    print(STDERR "$msg\n");
+    print(STDERR "ppmrainbow: $msg\n");
     exit(1);
 }
 
