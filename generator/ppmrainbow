@@ -115,7 +115,7 @@ while (@colorlist >= 2) {
     my $rc = system("$verboseCommand pgmramp -lr $w $Thgt | " .
                     "pgmtoppm \"$colorlist[0]-$colorlist[1]\" >$outfile");
     if ($rc != 0) {
-        fatal("pgmramp|pgmtoppm failed.");
+        fatal("pgmramp|pgmtoppm pipe failed.");
     }
     $widthRemaining -= $w;
     $n++;

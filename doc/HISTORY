@@ -25,6 +25,8 @@ not yet  BJH  Release 10.82.00
               ppmrainbow: Add "ppmrainbow: " to error messages, like other
               programs.
 
+              ppmrainbow: improve error message.
+              
               ppmpat: Fix bug - crash or junk output with -camo or -anticamo
               and no -color.  Introduced in Netpbm 10.78 (March 2017).
 
