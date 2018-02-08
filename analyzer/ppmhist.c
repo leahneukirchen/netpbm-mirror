@@ -352,9 +352,11 @@ colorSummary(colorhist_vector const chv,
 
 
 static void
-printColorSummary(ColorSummary const colorSummary) {
+printColorSummary(ColorSummary const colorSummary,
+                  const char * const prefix) {
 
-    printf("Summary: %u colors: %u black, %u white, %u gray, %u color\n",
+    printf("%sSummary: %u colors: %u black, %u white, %u gray, %u color\n",
+           prefix,
            colorSummary.nTotal,
            colorSummary.nBlack,
            colorSummary.nWhite,
@@ -496,10 +498,13 @@ printHistogram(colorhist_vector const chv,
         printf("P3\n# color map\n%d 1\n%d\n", colorCt, maxval);
 
     if (wantHeader) {
-        const char commentDelim = colorFmt == FMT_PPMPLAIN ? '#' : ' ';
-        printf("%c  r     g     b   \t lum \t count  %s\n",
+        const char * commentDelim = colorFmt == FMT_PPMPLAIN ? "#" : " ";
+
+        printColorSummary(colorSummary(chv, colorCt, maxval), commentDelim);
+
+        printf("%s  r     g     b   \t lum \t count  %s\n",
                commentDelim, wantColorName ? "name" : "");
-        printf("%c----- ----- ----- \t-----\t------- %s\n",
+        printf("%s----- ----- ----- \t-----\t------- %s\n",
                commentDelim, wantColorName ? "----" : "");
     }
     if (wantColorName) {
@@ -636,9 +641,6 @@ main(int argc, const char *argv[]) {
         sortHistogramNormal(cmdline.sort, chv, colorCt);
         validColorCt = colorCt;
     }
-
-    if (!cmdline.noheader)
-        printColorSummary(colorSummary(chv, validColorCt, maxval));
 
     printHistogram(chv, validColorCt, maxval,
                    cmdline.colorFmt, !cmdline.noheader, cmdline.colorname);
