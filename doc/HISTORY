@@ -4,6 +4,14 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+18.02.17 BJH  Release 10.73.18
+
+              g3topbm: Fix bug - produces invalid empty PBM image if input
+              image is empty.
+
+              mrftopbm: Fix bug - wrong error messages or output when input
+              invalidly short.
+
 17.10.28 BJH  Release 10.73.17
 
               sldtoppm: -lib and -dir don't work - always says slide not

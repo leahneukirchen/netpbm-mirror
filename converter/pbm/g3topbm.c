@@ -753,7 +753,6 @@ main(int argc, char * argv[]) {
     struct bitStream bitStream;
     unsigned int rows, cols;
     unsigned char ** packedBits;
-    int row;
 
     pbm_init(&argc, argv);
 
@@ -779,9 +778,13 @@ main(int argc, char * argv[]) {
 
     pm_close(ifP);
 
-    pbm_writepbminit(stdout, cols, rows, 0);
-    for (row = 0; row < rows; ++row)
-        pbm_writepbmrow_packed(stdout, packedBits[row], cols, 0);
+    if (cols > 0 && rows > 0) {
+        unsigned int row;
+        pbm_writepbminit(stdout, cols, rows, 0);
+        for (row = 0; row < rows; ++row)
+            pbm_writepbmrow_packed(stdout, packedBits[row], cols, 0);
+    } else
+        pm_error("No image data in input");
 
     pm_close(stdout);
 

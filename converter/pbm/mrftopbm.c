@@ -31,7 +31,12 @@ bit_init(void) {
 static int 
 bit_input(FILE * const in) {
     if (bitsleft == 0)   {
-        bitbox = fgetc(in);
+        int rc;
+        rc = fgetc(in);
+        if (rc == EOF)
+            pm_error("Unexpected EOF reading image data.");
+
+        bitbox = rc;
         bitsleft = 8;
     }
     --bitsleft;
@@ -133,11 +138,15 @@ readMrfImage(FILE *           const ifP,
     unsigned int w64, h64;
 
     unsigned char * image;
+    unsigned int bytesRead;
 
-    fread(buf, 1, 13, ifP);
+    bytesRead = fread(buf, 1, 13, ifP);
+    if (bytesRead != 13)
+        pm_error("Input in not an MRF image.  We know this because it is less "
+                 "than 13 bytes, the size of an MRF header");
 
     if (memcmp(buf, "MRF1", 4) != 0)
-        pm_error("Input is not an mrf image.  "
+        pm_error("Input is not an MRF image.  "
                  "We know this because it does not start with 'MRF1'.");
 
     if (buf[12] != 0)
