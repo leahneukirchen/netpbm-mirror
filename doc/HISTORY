@@ -28,7 +28,10 @@ not yet  BJH  Release 10.82.00
               programs.
 
               ppmrainbow: improve error message.
-              
+
+              g3topbm: Fix bug - produces invalid empty PBM image if input
+              image is empty.
+
               ppmpat: Fix bug - crash or junk output with -camo or -anticamo
               and no -color.  Introduced in Netpbm 10.78 (March 2017).
 
