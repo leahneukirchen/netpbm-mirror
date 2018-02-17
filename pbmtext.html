@@ -19,6 +19,7 @@ pbmtext - render text into a PBM image
 [<B>-lspace</B> <I>pixels</I>]
 [<B>-nomargins</B>]
 [<B>-width</B> <i>pixels</i>]
+[<b>-text-dump</b>]
 [<I>text</I>]
 
 <p>Minimum unique abbreviation of option is acceptable.  You may use double
@@ -34,6 +35,10 @@ space in place of the equals sign to separate an option name from its value.
 the command line or multiple lines from standard input, and renders it
 into a PBM graphical image.
 
+<p>The text rendered is all the non-option command line arguments, separated
+by spaces, except that if there are no non-option command line arguments, it
+is Standard Input.
+  
 <P>In the image, each line of input is a line of output.  Formatting
 characters such as newline have no effect on the formatting; like any
 unprintable character, they turn into spaces.
@@ -137,6 +142,13 @@ the middle of a word and a line may begin or end with white space.
 <p>If the input is multiple lines, <b>pbmtext</b> assumes you already
 have line breaks where they make sense, and <b>pbmtext</b> simply
 truncates each line as needed to fit the specified width.
+
+<dt><b>-text-dump</b>
+<dd>
+This option causes <b>pbmtext</b> just to write to Standard Output the text in
+ASCII that would be rendered.  The output reflects any text formatting,
+unprintable character substitution, tab expansion, etc.  It is for diagnosing
+problems.  This option was new in Netpbm 10.82 (March 2018).
 
 </DL>
 
