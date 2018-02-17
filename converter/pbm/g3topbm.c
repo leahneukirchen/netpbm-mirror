@@ -4,7 +4,7 @@
 
   This program reads a Group 3 FAX file and produces a PBM image.
 
-  Bryan Henderson wrote this on August 5, 2004 and contributed it to 
+  Bryan Henderson wrote this on August 5, 2004 and contributed it to
   the public domain.
 
   This program is designed to be a drop-in replacement for the program
@@ -111,15 +111,15 @@ parseCommandLine(int argc, const char ** const argv,
             0);
     OPTENT3(0, "kludge",           OPT_FLAG,  NULL, &cmdlineP->kludge,
             0);
-    OPTENT3(0, "stretch",          OPT_FLAG,  NULL, &cmdlineP->stretch, 
+    OPTENT3(0, "stretch",          OPT_FLAG,  NULL, &cmdlineP->stretch,
             0);
-    OPTENT3(0, "stop_error",       OPT_FLAG,  NULL, &cmdlineP->stop_error, 
+    OPTENT3(0, "stop_error",       OPT_FLAG,  NULL, &cmdlineP->stop_error,
             0);
     OPTENT3(0, "width",            OPT_UINT,  &cmdlineP->expectedLineSize,
             &widthSpec,                0);
     OPTENT3(0, "paper_size",       OPT_STRING, &paperSize,
             &paper_sizeSpec,           0);
-    
+
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We may have parms that are negative numbers */
@@ -151,7 +151,7 @@ parseCommandLine(int argc, const char ** const argv,
     } else
         cmdlineP->expectedLineSize = 0;
 
-    if (argc-1 == 0) 
+    if (argc-1 == 0)
         cmdlineP->inputFilespec = "-";
     else if (argc-1 != 1)
         pm_error("Program takes zero or one argument (filename).  You "
@@ -246,7 +246,7 @@ static void
 initBitStream(struct BitStream * const bitStreamP,
               FILE *             const fileP,
               bool               const reversebits) {
-    
+
     bitStreamP->fileP        = fileP;
     bitStreamP->reversebits  = reversebits;
     bitStreamP->shbit        = 0x00;
@@ -263,10 +263,10 @@ skipToNextLine(struct BitStream * const bitStreamP) {
 
     eol = FALSE;
     error = NULL;
-    
+
     while (!eol && !error) {
         unsigned int bit;
-        
+
         readBitAndDetectEol(bitStreamP, &bit, &eol, &error);
     }
 }
@@ -274,12 +274,12 @@ skipToNextLine(struct BitStream * const bitStreamP) {
 
 
 static void
-addtohash(G3TableEntry *     hash[], 
-          G3TableEntry       table[], 
-          unsigned int const n, 
-          int          const a, 
+addtohash(G3TableEntry *     hash[],
+          G3TableEntry       table[],
+          unsigned int const n,
+          int          const a,
           int          const b) {
-    
+
     unsigned int i;
 
     for (i = 0; i < n; ++i) {
@@ -295,10 +295,10 @@ addtohash(G3TableEntry *     hash[],
 
 
 static G3TableEntry *
-hashfind(G3TableEntry *       hash[], 
-         int            const length, 
-         int            const code, 
-         int            const a, 
+hashfind(G3TableEntry *       hash[],
+         int            const length,
+         int            const code,
+         int            const a,
          int            const b) {
 
     unsigned int pos;
@@ -423,7 +423,7 @@ processG3Code(const G3TableEntry * const teP,
         (teP > mtable ? 2 : 0) + (teP - ttable) % 2;
 
     unsigned int teCount;
-    
+
     switch(teId) {
     case TERMWHITE: teCount = (teP - ttable    ) / 2;      break;
     case TERMBLACK: teCount = (teP - ttable - 1) / 2;      break;
@@ -436,7 +436,7 @@ processG3Code(const G3TableEntry * const teP,
     case TERMBLACK: {
         unsigned int totalRunLength;
         unsigned int col;
-        
+
         col = *colP;
         totalRunLength = MIN(*countP + teCount, MAXCOLS - col);
 
@@ -484,7 +484,7 @@ readFaxRow(struct BitStream * const bitStreamP,
            const char **      const exceptionP,
            const char **      const errorP) {
 /*----------------------------------------------------------------------------
-  Read one line of G3 fax from the bit stream *bitStreamP into 
+  Read one line of G3 fax from the bit stream *bitStreamP into
   packedBitrow[].  Return the length of the line, in pixels, as *lineLengthP.
 
   If there's a problem with the line, return as much of it as we can,
@@ -495,17 +495,17 @@ readFaxRow(struct BitStream * const bitStreamP,
   We guarantee that we make progress through the input stream.
 
   Iff there is an error, return a text description of it in newly
-  malloc'ed storage at *errorP and all other specified behavior 
+  malloc'ed storage at *errorP and all other specified behavior
   (including return values) is unspecified.
 -----------------------------------------------------------------------------*/
     unsigned int col;
-    unsigned int curlen;  
-        /* Number of bits we've read so far for the code we're currently 
+    unsigned int curlen;
+        /* Number of bits we've read so far for the code we're currently
            reading
         */
     unsigned int fillbits;
         /* Number of consecutive 0 bits.  Can precede EOL codes */
-    unsigned int curcode; 
+    unsigned int curcode;
         /* What we've assembled so far of the code we're currently reading */
     unsigned int count;
         /* Number of consecutive pixels of the same color */
@@ -562,14 +562,14 @@ readFaxRow(struct BitStream * const bitStreamP,
                 } else if (curcode != 0) {
                     const G3TableEntry * const teP =
                         g3code(curcode, curlen, currentColor);
-                        /* Address of structure that describes the 
+                        /* Address of structure that describes the
                            current G3 code.  Null means 'curcode' isn't
                            a G3 code yet (probably just the beginning of one)
                         */
                     if (teP) {
                         processG3Code(teP, packedBitrow,
                                       &col, &currentColor, &count);
-                        
+
                         curcode = 0;
                         curlen = 0;
                     }
@@ -597,7 +597,7 @@ freeBits(unsigned char ** const packedBits,
             /* This is just a pointer to the previous row; don't want to
                free it twice.
             */
-        } else 
+        } else
             pbm_freerow_packed(packedBits[row]);
     }
     free(packedBits);
@@ -710,7 +710,7 @@ analyzeLineSize(lineSizeAnalyzer * const analyzerP,
    line.  Starting in Netpbm 10.24 (August 2004), we assume there is
    no valid reason to have an empty line and recognize EOF as any
    empty line.  Alternatively, we could read off and ignore two empty
-   lines without a 3rd.  
+   lines without a 3rd.
 */
 
 static void
@@ -727,7 +727,7 @@ readFax(struct BitStream * const bitStreamP,
     const char * error;
     bool eof;
     unsigned int row;
-    
+
     MALLOCARRAY_NOFAIL(packedBits, MAXROWS);
 
     initializeLineSizeAnalyzer(&lineSizeAnalyzer,
@@ -758,7 +758,7 @@ readFax(struct BitStream * const bitStreamP,
                     eof = TRUE;
                 } else {
                     analyzeLineSize(&lineSizeAnalyzer, lineSize);
-                    
+
                     if (stretch) {
                         ++row;
                         if (row >= MAXROWS)
@@ -809,7 +809,7 @@ main(int argc, const char * argv[]) {
     buildHashes(&whash, &bhash);
 
     readFax(&bitStream, cmdline.stretch, cmdline.expectedLineSize,
-            !cmdline.stop_error, 
+            !cmdline.stop_error,
             &packedBits, &cols, &rows);
 
     pm_close(ifP);
