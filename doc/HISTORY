@@ -35,6 +35,9 @@ not yet  BJH  Release 10.82.00
               ppmpat: Fix bug - crash or junk output with -camo or -anticamo
               and no -color.  Introduced in Netpbm 10.78 (March 2017).
 
+              mrftopbm: Fix bug - wrong error messages or output when input
+              invalidly short.
+
               Build: fix compile failure on systems without strnlen (such
               as MacOS X before 10.7).  Broken in 10.81 (December 2017).
 
