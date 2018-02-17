@@ -41,8 +41,9 @@ struct CmdlineInfo {
     int lspace;           /* -lspace option value or default */
     unsigned int width;   /* -width option value or zero */
     unsigned int nomargins;  /* -nomargins option specified  */
-    unsigned int dryrun;  /* -dry-run option specified */ 
-    unsigned int verbose; /* -verbose option specified */
+    unsigned int dryrun;     /* -dry-run option specified */ 
+    unsigned int textdump;   /* -text-dump option specified */ 
+    unsigned int verbose;    /* -verbose option specified */
         /* undocumented option */
     unsigned int dumpsheet; /* font data sheet in PBM format for -font */   
 };
@@ -74,6 +75,7 @@ parseCommandLine(int argc, const char ** argv,
     OPTENT3(0, "nomargins",  OPT_FLAG,   NULL, &cmdlineP->nomargins, 0);
     OPTENT3(0, "verbose",    OPT_FLAG,   NULL, &cmdlineP->verbose,   0);
     OPTENT3(0, "dry-run",    OPT_FLAG,   NULL, &cmdlineP->dryrun,    0);
+    OPTENT3(0, "text-dump",  OPT_FLAG,   NULL, &cmdlineP->textdump,  0);
     OPTENT3(0, "dump-sheet", OPT_FLAG,   NULL, &cmdlineP->dumpsheet, 0);
 
     /* Set the defaults */
@@ -105,6 +107,16 @@ parseCommandLine(int argc, const char ** argv,
         pm_error("-lspace value too large");
     else if (cmdlineP->lspace < -pbm_maxfontheight())
         pm_error("negative -lspace value too large");
+
+    if (cmdlineP->textdump) {
+        if (cmdlineP->dryrun)
+            pm_error("You cannot specify both -dry-run and -text-dump");
+        else if (cmdlineP->dumpsheet)
+            pm_error("You cannot specify both -dump-sheet and -text-dump");
+    }
+
+    if (cmdlineP->dryrun && cmdlineP->dumpsheet)
+        pm_error("You cannot specify both -dry-run and -dump-sheet");
 
     if (argc-1 == 0)
         cmdlineP->text = NULL;
@@ -215,6 +227,9 @@ computeFont(struct CmdlineInfo const cmdline,
 
 struct Text {
     char **      textArray;  /* malloc'ed */
+        /* This is strictly characters that are in user's font - no control
+           characters, no undefined code points.
+        */
     unsigned int allocatedLineCount;
     unsigned int lineCount;
 };
@@ -743,7 +758,18 @@ getText(char          const cmdlineText[],
         struct font * const fontP,
         struct Text * const inputTextP,
         enum FixMode  const fixMode) {
+/*----------------------------------------------------------------------------
+   Get as *inputTextP the text to format, given that the text on the
+   command line (one word per command line argument, separated by spaces),
+   is 'cmdlineText'.
 
+   If 'cmdlineText' is null, that means to get the text from Standard Input.
+   Otherwise, 'cmdlineText' is that text.
+
+   But we return text as only renderable characters - characters in *fontP -
+   with control characters interpreted or otherwise fixed, according to
+   'fixMode'.
+-----------------------------------------------------------------------------*/
     struct Text inputText;
 
     if (cmdlineText) {
@@ -1027,6 +1053,22 @@ dryrunOutput(unsigned int const cols,
 
 
 static void
+textDumpOutput(struct Text   const lp,
+               FILE *        const ofP) {
+/*----------------------------------------------------------------------------
+   Output the text 'lp' as characters.  (Do not render.)
+-----------------------------------------------------------------------------*/
+    unsigned int line;  /* Line number in input text */
+
+    for (line = 0; line < lp.lineCount; ++line) {
+        fputs(lp.textArray[line], ofP);
+        fputc('\n', ofP);
+    }
+}
+
+
+
+static void
 pbmtext(struct CmdlineInfo const cmdline,
         struct font *      const fontP,
         FILE *             const ofP) {
@@ -1078,6 +1120,8 @@ pbmtext(struct CmdlineInfo const cmdline,
 
     if (cmdline.dryrun)
         dryrunOutput(cols, rows, ofP);
+    else if (cmdline.textdump)
+        textDumpOutput(formattedText, ofP);
     else 
         renderText(cols, rows, fontP, hmargin, vmargin, formattedText,
                    maxleftb, cmdline.space, cmdline.lspace, FALSE, ofP);

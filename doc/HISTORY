@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.82.00
 
+              pbmtext: Add -text-dump option.
+
               ppmhist: Add color summary to top of output, (except with
               -noheader).
 
