@@ -90,61 +90,61 @@ ppm_allocrow(unsigned int const cols);
 #define ppm_freerow(pixelrow) pm_freerow(pixelrow);
 
 pixel**
-ppm_readppm(FILE *   const fileP, 
-            int *    const colsP, 
-            int *    const rowsP, 
+ppm_readppm(FILE *   const fileP,
+            int *    const colsP,
+            int *    const rowsP,
             pixval * const maxvalP);
 
 void
-ppm_readppminit(FILE *   const fileP, 
-                int *    const colsP, 
-                int *    const rowsP, 
-                pixval * const maxvalP, 
+ppm_readppminit(FILE *   const fileP,
+                int *    const colsP,
+                int *    const rowsP,
+                pixval * const maxvalP,
                 int *    const formatP);
 
 void
-ppm_readppmrow(FILE*  const fileP, 
-               pixel* const pixelrow, 
-               int    const cols, 
-               pixval const maxval, 
+ppm_readppmrow(FILE*  const fileP,
+               pixel* const pixelrow,
+               int    const cols,
+               pixval const maxval,
                int    const format);
 
 void
-ppm_writeppm(FILE *  const fileP, 
-             pixel** const pixels, 
-             int     const cols, 
-             int     const rows, 
-             pixval  const maxval, 
+ppm_writeppm(FILE *  const fileP,
+             pixel** const pixels,
+             int     const cols,
+             int     const rows,
+             pixval  const maxval,
              int     const forceplain);
 
 void
-ppm_writeppminit(FILE*  const fileP, 
-                 int    const cols, 
-                 int    const rows, 
-                 pixval const maxval, 
+ppm_writeppminit(FILE*  const fileP,
+                 int    const cols,
+                 int    const rows,
+                 pixval const maxval,
                  int    const forceplain);
 
 void
-ppm_writeppmrow(FILE *        const fileP, 
-                const pixel * const pixelrow, 
-                int           const cols, 
-                pixval        const maxval, 
+ppm_writeppmrow(FILE *        const fileP,
+                const pixel * const pixelrow,
+                int           const cols,
+                pixval        const maxval,
                 int           const forceplain);
 
 void
-ppm_check(FILE *               const fileP, 
-          enum pm_check_type   const check_type, 
-          int                  const format, 
-          int                  const cols, 
-          int                  const rows, 
+ppm_check(FILE *               const fileP,
+          enum pm_check_type   const check_type,
+          int                  const format,
+          int                  const cols,
+          int                  const rows,
           pixval               const maxval,
           enum pm_check_code * const retval_p);
 
 void
-ppm_nextimage(FILE * const fileP, 
+ppm_nextimage(FILE * const fileP,
               int *  const eofP);
 
-pixel 
+pixel
 ppm_parsecolor(const char * const colorname,
                pixval       const maxval);
 
@@ -154,8 +154,8 @@ ppm_parsecolor2(const char * const colorname,
                 int          const closeOk);
 
 char*
-ppm_colorname(const pixel* const colorP, 
-              pixval       const maxval, 
+ppm_colorname(const pixel* const colorP,
+              pixval       const maxval,
               int          const hexok);
 
 void
@@ -167,9 +167,9 @@ ppm_readcolordict(const char *      const fileName,
                   colorhash_table * const chtP);
 
 void
-ppm_readcolornamefile(const char *      const fileName, 
+ppm_readcolornamefile(const char *      const fileName,
                       int               const mustOpen,
-                      colorhash_table * const chtP, 
+                      colorhash_table * const chtP,
                       const char ***    const colornamesP);
 
 void
@@ -230,8 +230,8 @@ PPM_DISTANCE(pixel const p1,
                          - 0.08131 * PPM_GETB(p) )
 
 pixel
-ppm_color_from_ycbcr(unsigned int const y, 
-                     int          const cb, 
+ppm_color_from_ycbcr(unsigned int const y,
+                     int          const cb,
                      int          const cr);
 
 /* Hue/Saturation/Value calculations */
