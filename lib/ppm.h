@@ -211,9 +211,7 @@ PPM_DISTANCE(pixel const p1,
    combination of intensities, whereas luma is a linear combination of
    gamma-adjusted intensities, as you would find in a Netpbm image.
 
-   These are from ITU-R BT.601.5.  That means they probably aren't technically
-   right for use with PPM images, because the PPM spec says ITU-R BT.709.
-   The two are similar, though.
+   These are from ITU-R BT.601.5.
 */
 #define PPM_LUMINR (0.2989)
 #define PPM_LUMING (0.5866)
@@ -222,12 +220,12 @@ PPM_DISTANCE(pixel const p1,
 #define PPM_LUMIN(p) ( PPM_LUMINR * PPM_GETR(p) \
                        + PPM_LUMING * PPM_GETG(p) \
                        + PPM_LUMINB * PPM_GETB(p) )
-#define PPM_CHROM_B(p) ( -0.16874 * PPM_GETR(p) \
-                         - 0.33126 * PPM_GETG(p) \
+#define PPM_CHROM_B(p) ( -0.168736 * PPM_GETR(p) \
+                         - 0.331264 * PPM_GETG(p) \
                          + 0.5 * PPM_GETB(p) )
 #define PPM_CHROM_R(p) ( 0.5 * PPM_GETR(p) \
-                         - 0.41869 * PPM_GETG(p) \
-                         - 0.08131 * PPM_GETB(p) )
+                         - 0.418688 * PPM_GETG(p) \
+                         - 0.081312 * PPM_GETB(p) )
 
 pixel
 ppm_color_from_ycbcr(unsigned int const y,
