@@ -82,17 +82,16 @@ significant byte is first.
 <P>A row of an image is horizontal.  A column is vertical.  The pixels
 in the image are square and contiguous.
      
-<p>In the raster, the sample values are "nonlinear." They are
-proportional to the intensity of the ITU-R Recommendation BT.709 red,
-green, and blue in the pixel, adjusted by the BT.709 gamma transfer
-function.  (That transfer function specifies a gamma number of 2.2 and
-has a linear section for small intensities).  A value of Maxval for
-all three samples represents CIE D65 white and the most intense color
-in the color universe of which the image is part (the color universe
-is all the colors in all images to which this image might be
-compared).
+<p>In the raster, the sample values are "nonlinear." They are proportional to
+the intensity of the ITU-R Recommendation BT.601 625-line red, green, and blue
+in the pixel, adjusted by the BT.601 gamma transfer function.  (That transfer
+function specifies a gamma number of 2.2 and has a linear section for small
+intensities).  A value of Maxval for all three samples represents CIE D65
+white (as specified by BT.601) and the most intense color in the color
+universe of which the image is part (the color universe is all the colors in
+all images to which this image might be compared).
 
-<p>BT.709's range of channel values (16-240) is irrelevant to PPM.
+<p>BT.601 is identical to ITU-R Recommendation BT.709 in these respects.
 
 <p>ITU-R Recommendation BT.709 is a renaming of the former CCIR
 Recommendation 709.  When CCIR was absorbed into its parent
