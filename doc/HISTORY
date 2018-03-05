@@ -36,7 +36,8 @@ not yet  BJH  Release 10.82.00
               and no -color.  Introduced in Netpbm 10.78 (March 2017).
 
               mrftopbm: Fix bug - wrong error messages or output when input
-              invalidly short.
+              invalidly short.  Always broken (mrftopbm was new in Netpbm
+              10.18 (September 2003).
 
               Build: fix compile failure on systems without strnlen (such
               as MacOS X before 10.7).  Broken in 10.81 (December 2017).
@@ -1900,8 +1901,9 @@ not yet  BJH  Release 10.82.00
               (produces grayscale output).  Broken between Netpbm 10.19 and
               10.26, inclusive.
 
-              pbmtomrf, mrftopbm: fix crashes, incorrect output in all
-              cases.  Broken forever.
+              pbmtomrf, mrftopbm: fix crashes, incorrect output in all cases.
+              Always broken (mrftopbm was new in Netpbm 10.18 (September
+              2003).
 
               pnm_alloctupletable, pnm_tuplehashtotable,
               pnm_computetuplefreqtable3: fix crash when out of memory,
