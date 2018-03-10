@@ -1183,11 +1183,9 @@ pnm_makerowrgb(const struct pam * const pamP,
             pm_error("allocation depth %u passed to pnm_makerowrgb().  "
                      "Must be at least 3.", allocationDepth(pamP));
 
-        if (strncmp(pamP->tuple_type, "RGB", 3) != 0) {
-            for (col = 0; col < pamP->width; ++col) {
-                tuple const thisTuple = tuplerow[col];
-                thisTuple[2] = thisTuple[1] = thisTuple[0];
-            }
+        for (col = 0; col < pamP->width; ++col) {
+            tuple const thisTuple = tuplerow[col];
+            thisTuple[2] = thisTuple[1] = thisTuple[0];
         }
     }
 }
