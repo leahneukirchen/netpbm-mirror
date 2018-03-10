@@ -77,17 +77,15 @@ Otherwise, it is 2 bytes.  The most significant byte is first.
 <P>A row of an image is horizontal.  A column is vertical.  The pixels
 in the image are square and contiguous.
 
-<p>Each gray value is a number proportional to the intensity of the pixel,
-adjusted by the ITU-R Recommendation BT.601 gamma transfer function.  (That
-transfer function specifies a gamma number of 2.2 and has a linear section for
-small intensities).  A value of zero is therefore black.  A value of Maxval
-represents CIE D65 white (as specified by BT.601) and the most intense value
-in the image and any other image to which the image might be compared.
+<p>Each gray value is a number proportional to the intensity of the
+pixel, adjusted by the ITU-R Recommendation BT.709 gamma transfer
+function.  (That transfer function specifies a gamma number of 2.2 and
+has a linear section for small intensities).  A value of zero is
+therefore black.  A value of Maxval represents CIE D65 white and the
+most intense value in the image and any other image to which the image
+might be compared.
 
-<p>BT.601 is sometimes called &quot;NTSC&quot;, as that standard for
-television broadcast is its most famous use.
-  
-<p>BT.601 is identical to ITU-R Recommendation BT.709 in these respects.
+<p>BT.709's range of channel values (16-240) is irrelevant to PGM.
 
 <p>Note that a common variation from the PGM format is to have the
 gray value be "linear," i.e. as specified above except
