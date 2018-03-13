@@ -14,7 +14,7 @@
    offset stuff.
 */
 #define _FILE_OFFSET_BITS 64
-#define _LARGE_FILES  
+#define _LARGE_FILES
 
 #include <string.h>
 #include <stdio.h>
@@ -56,7 +56,7 @@ ppm_init(int * const argcP, char ** const argv) {
 
 
 void
-ppm_nextimage(FILE * const fileP, 
+ppm_nextimage(FILE * const fileP,
               int *  const eofP) {
     pm_nextimage(fileP, eofP);
 }
@@ -64,9 +64,9 @@ ppm_nextimage(FILE * const fileP,
 
 
 void
-ppm_readppminitrest(FILE *   const fileP, 
-                    int *    const colsP, 
-                    int *    const rowsP, 
+ppm_readppminitrest(FILE *   const fileP,
+                    int *    const colsP,
+                    int *    const rowsP,
                     pixval * const maxvalP) {
     unsigned int maxval;
 
@@ -79,7 +79,7 @@ ppm_readppminitrest(FILE *   const fileP,
     if (maxval > PPM_OVERALLMAXVAL)
         pm_error("maxval of input image (%u) is too large.  "
                  "The maximum allowed by the PPM format is %u.",
-                 maxval, PPM_OVERALLMAXVAL); 
+                 maxval, PPM_OVERALLMAXVAL);
     if (maxval == 0)
         pm_error("maxval of input image is zero.");
 
@@ -114,10 +114,10 @@ validateComputableSize(unsigned int const cols,
 
 
 void
-ppm_readppminit(FILE *   const fileP, 
-                int *    const colsP, 
-                int *    const rowsP, 
-                pixval * const maxvalP, 
+ppm_readppminit(FILE *   const fileP,
+                int *    const colsP,
+                int *    const rowsP,
+                pixval * const maxvalP,
                 int *    const formatP) {
 
     int realFormat;
@@ -156,10 +156,10 @@ ppm_readppminit(FILE *   const fileP,
 
 
 static void
-readPpmRow(FILE *       const fileP, 
-           pixel *      const pixelrow, 
-           unsigned int const cols, 
-           pixval       const maxval, 
+readPpmRow(FILE *       const fileP,
+           pixel *      const pixelrow,
+           unsigned int const cols,
+           pixval       const maxval,
            int          const format) {
 
     unsigned int col;
@@ -168,7 +168,7 @@ readPpmRow(FILE *       const fileP,
         pixval const r = pm_getuint(fileP);
         pixval const g = pm_getuint(fileP);
         pixval const b = pm_getuint(fileP);
-        
+
         if (r > maxval)
             pm_error("Red sample value %u is greater than maxval (%u)",
                      r, maxval);
@@ -178,7 +178,7 @@ readPpmRow(FILE *       const fileP,
         if (b > maxval)
             pm_error("Blue sample value %u is greater than maxval (%u)",
                      b, maxval);
-        
+
         PPM_ASSIGN(pixelrow[col], r, g, b);
     }
 }
@@ -194,7 +194,7 @@ interpRasterRowRaw(const unsigned char * const rowBuffer,
     unsigned int bufferCursor;
 
     bufferCursor = 0;  /* start at beginning of rowBuffer[] */
-        
+
     if (bytesPerSample == 1) {
         unsigned int col;
         for (col = 0; col < cols; ++col) {
@@ -208,16 +208,16 @@ interpRasterRowRaw(const unsigned char * const rowBuffer,
         unsigned int col;
         for (col = 0; col < cols; ++col) {
             pixval r, g, b;
-                    
+
             r = rowBuffer[bufferCursor++] << 8;
             r |= rowBuffer[bufferCursor++];
-                    
+
             g = rowBuffer[bufferCursor++] << 8;
             g |= rowBuffer[bufferCursor++];
-                    
+
             b = rowBuffer[bufferCursor++] << 8;
             b |= rowBuffer[bufferCursor++];
-                    
+
             PPM_ASSIGN(pixelrow[col], r, g, b);
         }
     }
@@ -231,7 +231,7 @@ validateRppmRow(pixel *       const pixelrow,
                 pixval        const maxval,
                 const char ** const errorP) {
 /*----------------------------------------------------------------------------
-  Check for sample values above maxval in input.  
+  Check for sample values above maxval in input.
 
   Note: a program that wants to deal with invalid sample values itself can
   simply make sure it uses a sufficiently high maxval on the read function
@@ -272,20 +272,20 @@ validateRppmRow(pixel *       const pixelrow,
 
 
 static void
-readRppmRow(FILE *       const fileP, 
-            pixel *      const pixelrow, 
-            unsigned int const cols, 
-            pixval       const maxval, 
+readRppmRow(FILE *       const fileP,
+            pixel *      const pixelrow,
+            unsigned int const cols,
+            pixval       const maxval,
             int          const format) {
 
     unsigned int const bytesPerSample = maxval < 256 ? 1 : 2;
     unsigned int const bytesPerRow    = cols * 3 * bytesPerSample;
-        
+
     unsigned char * rowBuffer;
     const char * error;
-    
+
     MALLOCARRAY(rowBuffer, bytesPerRow);
-        
+
     if (rowBuffer == NULL)
         pm_asprintf(&error, "Unable to allocate memory for row buffer "
                     "for %u columns", cols);
@@ -293,7 +293,7 @@ readRppmRow(FILE *       const fileP,
         ssize_t rc;
 
         rc = fread(rowBuffer, 1, bytesPerRow, fileP);
-    
+
         if (feof(fileP))
             pm_asprintf(&error, "Unexpected EOF reading row of PPM image.");
         else if (ferror(fileP))
@@ -323,10 +323,10 @@ readRppmRow(FILE *       const fileP,
 
 
 static void
-readPgmRow(FILE *       const fileP, 
-           pixel *      const pixelrow, 
-           unsigned int const cols, 
-           pixval       const maxval, 
+readPgmRow(FILE *       const fileP,
+           pixel *      const pixelrow,
+           unsigned int const cols,
+           pixval       const maxval,
            int          const format) {
 
     jmp_buf jmpbuf;
@@ -341,7 +341,7 @@ readPgmRow(FILE *       const fileP,
         pm_longjmp();
     } else {
         unsigned int col;
-    
+
         pm_setjmpbufsave(&jmpbuf, &origJmpbufP);
 
         pgm_readpgmrow(fileP, grayrow, cols, maxval, format);
@@ -358,10 +358,10 @@ readPgmRow(FILE *       const fileP,
 
 
 static void
-readPbmRow(FILE *       const fileP, 
-           pixel *      const pixelrow, 
-           unsigned int const cols, 
-           pixval       const maxval, 
+readPbmRow(FILE *       const fileP,
+           pixel *      const pixelrow,
+           unsigned int const cols,
+           pixval       const maxval,
            int          const format) {
 
     jmp_buf jmpbuf;
@@ -395,10 +395,10 @@ readPbmRow(FILE *       const fileP,
 
 
 void
-ppm_readppmrow(FILE *  const fileP, 
-               pixel * const pixelrow, 
-               int     const cols, 
-               pixval  const maxval, 
+ppm_readppmrow(FILE *  const fileP,
+               pixel * const pixelrow,
+               int     const cols,
+               pixval  const maxval,
                int     const format) {
 
     switch (format) {
@@ -432,9 +432,9 @@ ppm_readppmrow(FILE *  const fileP,
 
 
 pixel**
-ppm_readppm(FILE *   const fileP, 
-            int *    const colsP, 
-            int *    const rowsP, 
+ppm_readppm(FILE *   const fileP,
+            int *    const colsP,
+            int *    const rowsP,
             pixval * const maxvalP) {
 
     jmp_buf jmpbuf;
@@ -472,11 +472,11 @@ ppm_readppm(FILE *   const fileP,
 
 
 void
-ppm_check(FILE *               const fileP, 
-          enum pm_check_type   const checkType, 
-          int                  const format, 
-          int                  const cols, 
-          int                  const rows, 
+ppm_check(FILE *               const fileP,
+          enum pm_check_type   const checkType,
+          int                  const format,
+          int                  const cols,
+          int                  const rows,
           pixval               const maxval,
           enum pm_check_code * const retvalP) {
 
@@ -484,7 +484,7 @@ ppm_check(FILE *               const fileP,
         pm_error("Invalid number of rows passed to ppm_check(): %d", rows);
     if (cols < 0)
         pm_error("Invalid number of columns passed to ppm_check(): %d", cols);
-    
+
     if (checkType != PM_CHECK_BASIC) {
         if (retvalP)
             *retvalP = PM_CHECK_UNKNOWN_TYPE;
@@ -495,10 +495,10 @@ ppm_check(FILE *               const fileP,
     } else if (format != RPPM_FORMAT) {
         if (retvalP)
             *retvalP = PM_CHECK_UNCHECKABLE;
-    } else {        
+    } else {
         pm_filepos const bytesPerRow    = cols * 3 * (maxval > 255 ? 2 : 1);
         pm_filepos const needRasterSize = rows * bytesPerRow;
-        
+
         pm_check(fileP, checkType, needRasterSize, retvalP);
     }
 }
