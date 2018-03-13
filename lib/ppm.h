@@ -220,6 +220,10 @@ PPM_DISTANCE(pixel const p1,
 #define PPM_LUMIN(p) ( PPM_LUMINR * PPM_GETR(p) \
                        + PPM_LUMING * PPM_GETG(p) \
                        + PPM_LUMINB * PPM_GETB(p) )
+
+/* The coefficients in the following formulae are functions of
+   PPM_LUMIN{R,G,B} and nothing else.
+*/
 #define PPM_CHROM_B(p) ( -0.168736 * PPM_GETR(p) \
                          - 0.331264 * PPM_GETG(p) \
                          + 0.5 * PPM_GETB(p) )
