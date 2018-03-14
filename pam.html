@@ -210,6 +210,19 @@ official subformats of PAM for especially popular applications of the
 format.  Users of the format may also define their own tuple types,
 and thus their own subformats.
 
+<p>Tuple type affects <em>only</em> the meanings of the samples (which are
+unsigned integers) in the tuples of the image.  It does not affect how the
+samples or tuples are encoded or their order.
+
+<p>Tuple type never determines how many samples are in a tuple (that is
+instead determined by the DEPTH header line).  Tuple type could be said to
+imply a depth (number of samples per tuple)it because certain tuple types are
+valid only in combination with certain DEPTH values, but it is good
+programming practice to use DEPTH for the depth when decoding the raster and
+separately validate that the depth is consistent with the tuple type.  Also,
+it is good practice to accept a depth that is too great and just ignore the
+higher numbered planes.
+  
 <H3 id="visual">PAM Used For Visual Images</H3>
 
 <P>A common use of PAM images is to represent visual images such
@@ -221,15 +234,16 @@ PBM, PGM, and PPM formats.
 <P>A black and white image, such as would alternatively be represented by a
 PBM image, has a tuple type of "BLACKANDWHITE".  Such a PAM image has a depth
 of 1 and maxval 1 where the one sample in each tuple is 0 to represent a black
-pixel and 1 to represent a white one.  The height, width, and raster bear the
-obvious relationship to those of the equivalent PBM image.
+pixel and 1 to represent a white one.  The maxval, height, width, and order of
+tuples in the raster bear the obvious relationship to those of the equivalent
+PGM image.
 
-<P>Note that in the PBM format, a zero value means white, but in PAM,
-zero means black.
+<P>Note that in the PBM format, a sample value of zero means white, but in
+PAM, zero means black.
 
 <h4>Grayscale</h4>
 
-<P>A grayscale image, such as would alternativelybe represented by a PGM
+<P>A grayscale image, such as would alternatively be represented by a PGM
 image, has a tuple type of "GRAYSCALE".  Such a PAM image has a depth of 1.
 The maxval, height, width, and raster bear the obvious relationship to those
 of the equivalent PGM image.
