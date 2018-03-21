@@ -55,13 +55,19 @@ pbm_writepbminit(FILE * const fileP,
 
 static void
 writePackedRawRow(FILE *                const fileP,
-                  const unsigned char * const packed_bits,
-                  int                   const cols) {
+                  const unsigned char * const packedBits,
+                  unsigned int          const cols) {
 
-    int bytesWritten;
-    bytesWritten = fwrite(packed_bits, 1, pbm_packed_bytes(cols), fileP);
-    if (bytesWritten < pbm_packed_bytes(cols))
-        pm_error("I/O error writing packed row to raw PBM file.");
+    unsigned int const packedByteCt = pbm_packed_bytes(cols);
+
+    size_t writtenByteCt;
+
+    writtenByteCt = fwrite(packedBits, 1, packedByteCt, fileP);
+    if (writtenByteCt < packedByteCt)
+        pm_error("I/O error writing packed row to raw PBM file.  "
+                 "(Attempted fwrite() of %u packed bytes; "
+                 "only %u got written)",
+                 packedByteCt, (unsigned)writtenByteCt);
 }
 
 
