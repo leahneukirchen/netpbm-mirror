@@ -836,8 +836,7 @@ fgetNarrowWideString(PM_WCHAR *    const widestring,
   Return the next line from file *ifP, up to 'size' characters, as
   *widestring.
 
-  Return error if we can't read the file, file is at EOF, or next thing in
-  file is an empty line.
+  Return error if we can't read the file, or file is at EOF.
 -----------------------------------------------------------------------------*/
     int wideCode;
         /* Width orientation for *ifP: positive means wide, negative means
