@@ -256,7 +256,7 @@ pbm_dissectfont(const bit ** const font,
     /* Initialize all character positions to "undefined."  Those that
        are defined in the font will be filled in below.
     */
-    for (i = 0; i < 256; i++)
+    for (i = 0; i < PM_FONT_MAXGLYPH + 1; i++)
         fn->glyph[i] = NULL;
 
     MALLOCARRAY(glyph, nCharsInFont);
@@ -294,7 +294,7 @@ pbm_dissectfont(const bit ** const font,
             row += cellHeight;
         }
     }
-    for (i = firstCodePoint + nCharsInFont; i < 256; ++i)
+    for (i = firstCodePoint + nCharsInFont; i < PM_FONT_MAXGLYPH + 1; ++i)
         fn->glyph[i] = NULL;
     
     return fn;
@@ -377,14 +377,14 @@ pbm_dumpfont(struct font * const fontP,
         pm_message("Netpbm no longer has the capability to generate "
                    "a font in long hexadecimal data format");
 
-    for (i = 0, ng = 0; i < 256; ++i) {
+    for (i = 0, ng = 0; i < PM_FONT_MAXGLYPH +1; ++i) {
         if (fontP->glyph[i])
             ++ng;
     }
 
     printf("static struct glyph _g[%d] = {\n", ng);
 
-    for (i = 0; i < 256; ++i) {
+    for (i = 0; i < PM_FONT_MAXGLYPH + 1; ++i) {
         struct glyph * const glyphP = fontP->glyph[i];
         if (glyphP) {
             unsigned int j;
@@ -409,13 +409,13 @@ pbm_dumpfont(struct font * const fontP,
     {
         unsigned int i;
 
-        for (i = 0; i < 256; ++i) {
+        for (i = 0; i < PM_FONT_MAXGLYPH + 1; ++i) {
             if (fontP->glyph[i])
                 printf(" _g + %d", ng++);
             else
                 printf(" NULL");
         
-            if (i != 255) printf(",");
+            if (i != PM_FONT_MAXGLYPH) printf(",");
             printf("\n");
         }
     }
@@ -738,7 +738,8 @@ skipCharacter(Readline * const readlineP) {
 static void
 interpEncoding(const char **  const arg,
                unsigned int * const codepointP,
-               bool *         const badCodepointP) {
+               bool *         const badCodepointP,
+               PM_WCHAR       const maxglyph) {
 /*----------------------------------------------------------------------------
    With arg[] being the ENCODING statement from the font, return as
    *codepointP the codepoint that it indicates (code point is the character
@@ -746,8 +747,9 @@ interpEncoding(const char **  const arg,
 
    But if the statement doesn't give an acceptable codepoint return
    *badCodepointP == TRUE.
------------------------------------------------------------------------------*/
 
+   'maxglyph' is the maximum codepoint in the font.
+-----------------------------------------------------------------------------*/
     bool gotCodepoint;
     bool badCodepoint;
     unsigned int codepoint;
@@ -763,7 +765,7 @@ interpEncoding(const char **  const arg,
             gotCodepoint = false;
     }
     if (gotCodepoint) {
-        if (codepoint > 255)
+        if (codepoint > maxglyph)
             badCodepoint = true;
         else
             badCodepoint = false;
@@ -779,17 +781,18 @@ interpEncoding(const char **  const arg,
 static void
 readEncoding(Readline *     const readlineP,
              unsigned int * const codepointP,
-             bool *         const badCodepointP) {
+             bool *         const badCodepointP,
+             PM_WCHAR       const maxglyph) {
 
     readExpectedStatement(readlineP, "ENCODING");
     
-    interpEncoding(readlineP->arg, codepointP, badCodepointP);
+    interpEncoding(readlineP->arg, codepointP, badCodepointP, maxglyph);
 }
 
 
 
 static void
-validateFontLimits(const struct font * const fontP) {
+validateFontLimits(const struct font2 * const fontP) {
 
     assert(pbm_maxfontheight() > 0 && pbm_maxfontwidth() > 0);
 
@@ -797,22 +800,27 @@ validateFontLimits(const struct font * const fontP) {
         fontP->maxheight <= 0 ||
         fontP->maxwidth  > pbm_maxfontwidth()  ||
         fontP->maxheight > pbm_maxfontheight() ||
-        fontP->x < - fontP->maxwidth  +1 ||
-        fontP->y < - fontP->maxheight +1 ||
+        -fontP->x + 1 > fontP->maxwidth ||
+        -fontP->y + 1 > fontP->maxheight ||
         fontP->x > fontP->maxwidth  ||
         fontP->y > fontP->maxheight ||
         fontP->x + fontP->maxwidth  > pbm_maxfontwidth() || 
         fontP->y + fontP->maxheight > pbm_maxfontheight()
         ) {
 
-        pm_error("Global font metric(s) out of bounds.\n"); 
+        pm_error("Global font metric(s) out of bounds."); 
     }
+
+    if (fontP->maxglyph > PM_FONT2_MAXGLYPH)
+        pm_error("Internal error.  Glyph table too large: %u glyphs; "
+                 "Maximum possible in Netpbm is %u",
+                 fontP->maxglyph, PM_FONT2_MAXGLYPH);
 }
 
 
 
 static void
-validateGlyphLimits(const struct font  * const fontP,
+validateGlyphLimits(const struct font2 * const fontP,
                     const struct glyph * const glyphP,
                     const char *         const charName) {
 
@@ -842,7 +850,8 @@ validateGlyphLimits(const struct font  * const fontP,
 
 static void
 processChars(Readline *     const readlineP,
-             struct font  * const fontP) {
+             struct font2 * const fontP,
+             PM_WCHAR       const maxglyph ) {
 /*----------------------------------------------------------------------------
    Process the CHARS block in a BDF font file, assuming the file is positioned
    just after the CHARS line.  Read the rest of the block and apply its
@@ -880,7 +889,7 @@ processChars(Readline *     const readlineP,
                 pm_error("no memory for font glyph for '%s' character",
                          charName);
 
-            readEncoding(readlineP, &codepoint, &badCodepoint);
+            readEncoding(readlineP, &codepoint, &badCodepoint, maxglyph);
 
             if (badCodepoint)
                 skipCharacter(readlineP);
@@ -907,7 +916,7 @@ processChars(Readline *     const readlineP,
 
                 readExpectedStatement(readlineP, "ENDCHAR");
 
-                assert(codepoint < 256); /* Ensured by readEncoding() */
+                assert(codepoint <= maxglyph); /* Ensured by readEncoding() */
 
                 fontP->glyph[codepoint] = glyphP;
                 pm_strfree(charName);
@@ -921,8 +930,9 @@ processChars(Readline *     const readlineP,
 
 static void
 processBdfFontLine(Readline     * const readlineP,
-                   struct font  * const fontP,
-                   bool         * const endOfFontP) {
+                   struct font2 * const fontP,
+                   bool         * const endOfFontP,
+                   PM_WCHAR       const maxglyph) {
 /*----------------------------------------------------------------------------
    Process a nonblank line just read from a BDF font file.
 
@@ -964,7 +974,7 @@ processBdfFontLine(Readline     * const readlineP,
       pm_error("Encountered CHARS before FONTBOUNDINGBOX " 
                    "in BDF font file");
       else
-        processChars(readlineP, fontP);
+        processChars(readlineP, fontP, maxglyph);
     } else {
         /* ignore */
     }
@@ -972,36 +982,57 @@ processBdfFontLine(Readline     * const readlineP,
 
 
 
-struct font *
-pbm_loadbdffont(const char * const name) {
+struct font2 *
+pbm_loadbdffont2(const char * const filename,
+                 PM_WCHAR     const maxglyph) {
+/*----------------------------------------------------------------------------
+   Read a BDF font file "filename" as a 'font2' structure.  A 'font2'
+   structure is more expressive than a 'font' structure, most notably in that
+   it can handle wide code points and many more glyphs.
 
-    FILE * ifP;
-    Readline readline;
-    struct font * fontP;
-    bool endOfFont;
+   Codepoints up to maxglyph inclusive are valid in the file.
 
-    ifP = fopen(name, "rb");
+   The returned object is in new malloc'ed storage, in many pieces, and
+   cannot be destroyed.
+-----------------------------------------------------------------------------*/
+    /* For our return object to be destroyable, we need to supply a destroy
+       function, and it needs to return glyph and raster memory, and
+       struct font needs to manage glyph memory separately from mapping
+       code points to glyphs.
+    */
+    FILE *         ifP;
+    Readline       readline;
+    struct font2 * font2P;
+    bool           endOfFont;
+
+    ifP = fopen(filename, "rb");
     if (!ifP)
         pm_error("Unable to open BDF font file name '%s'.  errno=%d (%s)",
-                 name, errno, strerror(errno));
+                 filename, errno, strerror(errno));
 
     readline_init(&readline, ifP);
 
-    MALLOCVAR(fontP);
-    if (fontP == NULL)
+    MALLOCVAR(font2P);
+    if (font2P == NULL)
         pm_error("no memory for font");
 
-    fontP->oldfont = 0;
-    { 
+    MALLOCARRAY(font2P->glyph, maxglyph + 1);
+    if (font2P->glyph == NULL)
+        pm_error("no memory for font glyphs");
+
+    font2P->maxglyph = maxglyph;
+
+    font2P->oldfont = NULL;
+    {
         /* Initialize all characters to nonexistent; we will fill the ones we
            find in the bdf file later.
         */
-        unsigned int i;
-        for (i = 0; i < 256; ++i) 
-            fontP->glyph[i] = NULL;
+        PM_WCHAR i;
+        for (i = 0; i <= maxglyph; ++i)
+            font2P->glyph[i] = NULL;
     }
 
-    fontP->maxwidth = fontP->maxheight = fontP->x = fontP->y = 0;
+    font2P->maxwidth = font2P->maxheight = font2P->x = font2P->y = 0;
 
     readExpectedStatement(&readline, "STARTFONT");
 
@@ -1013,10 +1044,112 @@ pbm_loadbdffont(const char * const name) {
         if (eof)
             pm_error("End of file before ENDFONT statement in BDF font file");
 
-        processBdfFontLine(&readline, fontP, &endOfFont);
+        processBdfFontLine(&readline, font2P, &endOfFont, maxglyph);
     }
+    return font2P;
+}
+
+
+
+struct font *
+pbm_loadbdffont(const char * const filename) {
+/*----------------------------------------------------------------------------
+   Read a BDF font file "filename" into a traditional font structure.
+
+   Codepoints up to 255 (PM_FONT_MAXGLYPH) are valid.
+
+   Can handle ASCII, ISO-8859-1, ISO-8859-2, ISO-8859-15, etc.
+
+   The returned object is in new malloc'ed storage, in many pieces, and
+   cannot be destroyed.
+-----------------------------------------------------------------------------*/
+    /* For our return object to deep copy the glyphs and fonts from
+       the struct font2be destroyable, we need to supply a destroy
+       function, and it needs to return glyph and raster memory, and
+       struct font needs to manage glyph memory separately from mapping
+       code points to glyphs.
+    */
+    struct font  * fontP;
+    struct font2 * font2P;
+    unsigned int   codePoint;
+
+    MALLOCVAR(fontP);
+    if (fontP == NULL)
+        pm_error("no memory for font");
+
+    font2P = pbm_loadbdffont2(filename, PM_FONT_MAXGLYPH);
+
+    fontP->maxwidth  = font2P->maxwidth;
+    fontP->maxheight = font2P->maxheight;
+
+    fontP->x = font2P->x;
+    fontP->y = font2P->y;
+
+    for (codePoint = 0; codePoint < PM_FONT_MAXGLYPH + 1; ++codePoint)
+        fontP->glyph[codePoint] = font2P->glyph[codePoint];
+
+    fontP->oldfont = NULL;
+
+    fontP->fcols = 0;
+    fontP->frows = 0;
+
+    /* Note that *fontP2 is unfreeable.  See pbm_loadbdffont2.  And even if it
+       were, we hooked *fontP into it above, so that would have to turn into a
+       deep copy before we could free *fontP2.
+    */
+
     return fontP;
 }
 
+
+
+struct font2 *
+pbm_expandbdffont(const struct font * const fontP) {
+/*----------------------------------------------------------------------------
+  Convert a traditional font structure into an expanded font2 structure.
+
+  This function depends upon the fact that *fontP, like any struct font,
+  cannot be destroyed.  The returned object refers to memory that belongs
+  to *fontP.
+
+  The returned object is in new malloc'ed storage, in many pieces, and
+  cannot be destroyed.
+-----------------------------------------------------------------------------*/
+    /* If we ever make struct font destroyable, this function needs to
+       copy the glyphs and rasters, and struct font and struct font2 need
+       to manage glyph memory separately from mapping code points to the
+       glyphs.
+    */
+    PM_WCHAR const maxglyph = PM_FONT_MAXGLYPH;
+
+    struct font2 * font2P;
+    unsigned int   codePoint;
+
+    MALLOCVAR(font2P);
+    if (font2P == NULL)
+        pm_error("no memory for font");
+
+    MALLOCARRAY(font2P->glyph, maxglyph + 1);
+    if (font2P->glyph == NULL)
+        pm_error("no memory for font glyphs");
+
+    font2P->maxwidth  = fontP->maxwidth;
+    font2P->maxheight = fontP->maxheight;
+
+    font2P->x = fontP->x;
+    font2P->y = fontP->y;
+
+    font2P->maxglyph = maxglyph;
+
+    for (codePoint = 0; codePoint < maxglyph + 1; ++codePoint)
+        font2P->glyph[codePoint] = fontP->glyph[codePoint];
+
+    font2P->oldfont = fontP->oldfont;
+
+    font2P->fcols = fontP->fcols;
+    font2P->frows = fontP->frows;
+
+    return font2P;
+}
 
 

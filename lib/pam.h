@@ -29,8 +29,8 @@ struct pam {
     /* This structure describes an open PAM image file.  It consists
        entirely of information that belongs in the header of a PAM image
        and filesystem information.  It does not contain any state
-       information about the processing of that image.  
-       
+       information about the processing of that image.
+
        This is not considered to be an opaque object.  The user of Netbpm
        libraries is free to access and set any of these fields whenever
        appropriate.  The structure exists to make coding of function calls
@@ -41,11 +41,11 @@ struct pam {
        backward compatibility between library functions and calling programs
        as this structure grows.
        */
-    unsigned int size;   
+    unsigned int size;
         /* The storage size of this entire structure, in bytes */
-    unsigned int len;    
+    unsigned int len;
         /* The length, in bytes, of the information in this structure.
-           The information starts in the first byte and is contiguous.  
+           The information starts in the first byte and is contiguous.
            This cannot be greater than 'size'
 
            Use PAM_STRUCT_SIZE() to compute or interpret a value for this.
@@ -76,12 +76,12 @@ struct pam {
            have plain and raw variations.
         */
     int height;  /* Height of image in rows */
-    int width;   
+    int width;
         /* Width of image in number of columns (tuples per row) */
-    unsigned int depth;   
+    unsigned int depth;
         /* Depth of image (number of samples in each tuple). */
     sample maxval;  /* Maximum defined value for a sample */
-    unsigned int bytes_per_sample;  
+    unsigned int bytes_per_sample;
         /* Number of bytes used to represent each sample in the image file.
            Note that this is strictly a function of 'maxval'.  It is in a
            a separate member for computational speed.
@@ -100,7 +100,7 @@ struct pam {
 
            The purpose of this is to make it possible for a program to
            change the type of a tuple to one with more or fewer
-           planes.  
+           planes.
 
            0 means the allocation depth is the same as the image depth.
         */
@@ -141,7 +141,7 @@ struct pam {
 #define PAM_HAVE_ALLOCATION_DEPTH 1
 #define PAM_HAVE_COMMENT_P 1
 
-/* PAM_STRUCT_SIZE(x) tells you how big a struct pam is up through the 
+/* PAM_STRUCT_SIZE(x) tells you how big a struct pam is up through the
    member named x.  This is useful in conjunction with the 'len' value
    to determine which fields are present in the structure.
 */
@@ -172,7 +172,7 @@ struct pam {
     /* These are values of samples in a PAM image that represents a black
        and white bitmap image.  They are the values of black and white,
        respectively.  For example, if you use pnm_readpamrow() to read a
-       row from a PBM file, the black pixels get returned as 
+       row from a PBM file, the black pixels get returned as
        PAM_PBM_BLACK.
     */
 
@@ -192,7 +192,7 @@ struct pam {
 #define PAM_GRAY_TRN_PLANE 1
     /* For a "GRAYSCALE" tuple type, this is the transparency plane */
 
-typedef sample *tuple;  
+typedef sample *tuple;
     /* A tuple in a PAM.  This is an array such that tuple[i-1] is the
        ith sample (element) in the tuple.  It's dimension is the depth
        of the image (see pam.depth above).
@@ -203,7 +203,7 @@ typedef sample *tuple;
 /* Note: xv uses the same "P7" signature for its thumbnail images (it
    started using it years before PAM and unbeknownst to the designer
    of PAM).  But these images are still easily distinguishable from
-   PAMs 
+   PAMs
 */
 #define PAM_MAGIC1 'P'
 #define PAM_MAGIC2 '7'
@@ -221,9 +221,9 @@ struct pamtuples {
 
 
 typedef float * pnm_transformMap;
-    /* This is an array of transform maps.  transform[N] is the 
+    /* This is an array of transform maps.  transform[N] is the
        array that is the map for Plane N.
-   
+
        Transform maps define a transformation between PAM sample value
        to normalized libnetpbm "samplen" value, i.e. what you get back
        from pnm_readpamrown() or pass to pnm_writepamrown().
@@ -244,7 +244,7 @@ typedef float * pnm_transformMap;
        obvious table lookup.  The samplen -> sample transformation is
        more complicated -- if the samplen value is between map[N]
        and map[N+1], then the sample value is N.  And only transforms
-       where map[N+1] > map[N] are allowed.  
+       where map[N+1] > map[N] are allowed.
     */
 
 /* Declarations of library functions. */
@@ -257,8 +257,8 @@ unsigned int
 pnm_bytespersample(sample const maxval);
 
 int
-pnm_tupleequal(const struct pam * const pamP, 
-               tuple              const comparand, 
+pnm_tupleequal(const struct pam * const pamP,
+               tuple              const comparand,
                tuple              const comparator);
 
 void
@@ -267,14 +267,14 @@ pnm_assigntuple(const struct pam * const pamP,
                 tuple              const source);
 
 static __inline__ sample
-pnm_scalesample(sample const source, 
-                sample const oldmaxval, 
+pnm_scalesample(sample const source,
+                sample const oldmaxval,
                 sample const newmaxval) {
 
     if (oldmaxval == newmaxval)
         /* Fast path for common case */
         return source;
-    else 
+    else
         return (source * newmaxval + (oldmaxval/2)) / oldmaxval;
 }
 
@@ -283,24 +283,24 @@ pnm_scalesample(sample const source,
 void
 pnm_scaletuple(const struct pam * const pamP,
                tuple              const dest,
-               tuple              const source, 
+               tuple              const source,
                sample             const newmaxval);
 
-void 
+void
 pnm_scaletuplerow(const struct pam * const pamP,
                   tuple *            const destRow,
                   tuple *            const sourceRow,
                   sample             const newMaxval);
 
-void 
+void
 pnm_maketuplergb(const struct pam * const pamP,
                  tuple              const tuple);
 
-void 
+void
 pnm_makerowrgb(const struct pam * const pamP,
                tuple *            const tuplerow);
 
-void 
+void
 pnm_makearrayrgb(const struct pam * const pamP,
                  tuple **           const tuples);
 
@@ -336,13 +336,13 @@ pnm_allocpamarray(const struct pam * const pamP);
 void
 pnm_freepamarray(tuple ** const tuplearray, const struct pam * const pamP);
 
-void 
+void
 pnm_setminallocationdepth(struct pam * const pamP,
                           unsigned int const allocationDepth);
 
 void
-pnm_setpamrow(const struct pam * const pam, 
-              tuple *            const tuplerow, 
+pnm_setpamrow(const struct pam * const pam,
+              tuple *            const tuplerow,
               sample             const value);
 
 unsigned char *
@@ -351,20 +351,20 @@ pnm_allocrowimage(const struct pam * const pamP);
 void
 pnm_freerowimage(unsigned char * const rowimage);
 
-void 
-pnm_readpaminit(FILE *       const file, 
-                struct pam * const pamP, 
+void
+pnm_readpaminit(FILE *       const file,
+                struct pam * const pamP,
                 int          const size);
 
-void 
+void
 pnm_readpamrow(const struct pam * const pamP, tuple* const tuplerow);
 
-tuple ** 
-pnm_readpam(FILE *       const file, 
-            struct pam * const pamP, 
+tuple **
+pnm_readpam(FILE *       const file,
+            struct pam * const pamP,
             int          const size);
 
-void 
+void
 pnm_writepaminit(struct pam * const pamP);
 
 void
@@ -373,19 +373,19 @@ pnm_formatpamrow(const struct pam * const pamP,
                  unsigned char *    const outbuf,
                  unsigned int *     const rowSizeP);
 
-void 
+void
 pnm_writepamrow(const struct pam * const pamP, const tuple * const tuplerow);
 
 void
-pnm_writepamrowmult(const struct pam * const pamP, 
+pnm_writepamrowmult(const struct pam * const pamP,
                     const tuple *      const tuplerow,
                     unsigned int       const rptcnt);
 
-void 
+void
 pnm_writepam(struct pam * const pamP, tuple ** const tuplearray);
 
 void
-pnm_checkpam(const struct pam *   const pamP, 
+pnm_checkpam(const struct pam *   const pamP,
              enum pm_check_type   const checkType,
              enum pm_check_code * const retvalP);
 
@@ -409,28 +409,28 @@ pnm_allocpamrown(const struct pam * const pamP);
 tuplen *
 pnm_allocpamrown(const struct pam * const pamP);
 
-void 
-pnm_readpamrown(const struct pam * const pamP, 
+void
+pnm_readpamrown(const struct pam * const pamP,
                 tuplen *           const tuplenrow);
 
-void 
-pnm_writepamrown(const struct pam * const pamP, 
+void
+pnm_writepamrown(const struct pam * const pamP,
                  const tuplen *     const tuplenrow);
 
 tuplen **
 pnm_allocpamarrayn(const struct pam * const pamP);
 
 void
-pnm_freepamarrayn(tuplen **          const tuplenarray, 
+pnm_freepamarrayn(tuplen **          const tuplenarray,
                   const struct pam * const pamP);
 
-tuplen** 
-pnm_readpamn(FILE *       const file, 
-             struct pam * const pamP, 
+tuplen**
+pnm_readpamn(FILE *       const file,
+             struct pam * const pamP,
              int          const size);
 
-void 
-pnm_writepamn(struct pam * const pamP, 
+void
+pnm_writepamn(struct pam * const pamP,
               tuplen **    const tuplenarray);
 
 
@@ -501,18 +501,18 @@ pnm_colorname(struct pam * const pamP,
               tuple        const color,
               int          const hexok);
 
-extern double 
+extern double
 pnm_lumin_factor[3];
 
 void
-pnm_YCbCrtuple(const tuple tuple, 
+pnm_YCbCrtuple(const tuple tuple,
                double * const YP, double * const CbP, double * const CrP);
 
-void 
+void
 pnm_YCbCr_to_rgbtuple(const struct pam * const pamP,
                       tuple              const tuple,
                       double             const Y,
-                      double             const Cb, 
+                      double             const Cb,
                       double             const Cr,
                       int *              const overflowP);
 

@@ -1,5 +1,3 @@
-   r     g     b   	 lum 	 count  
- ----- ----- ----- 	-----	------- 
      0     0     0	    0	      2 
      1     1     1	    1	      2 
      2     2     2	    2	      2 
@@ -8,4 +6,14 @@
      5     5     5	    5	      2 
      6     6     6	    6	      2 
      8     8     8	    8	      2 
-3438989921 711087
+3081591280 60957
+ Summary: 1 colors: 1 black, 0 white, 0 gray, 0 color
+ Summary: 1 colors: 0 black, 1 white, 0 gray, 0 color
+ Summary: 2 colors: 1 black, 1 white, 0 gray, 0 color
+ Summary: 16 colors: 1 black, 1 white, 14 gray, 0 color
+ Summary: 8 colors: 1 black, 1 white, 6 gray, 0 color
+ Summary: 8 colors: 1 black, 1 white, 0 gray, 6 color
+ Summary: 27 colors: 1 black, 1 white, 1 gray, 24 color
+ Summary: 6 colors: 0 black, 0 white, 0 gray, 6 color
+ Summary: 6 colors: 1 black, 0 white, 0 gray, 5 color
+ Summary: 6 colors: 1 black, 1 white, 1 gray, 3 color

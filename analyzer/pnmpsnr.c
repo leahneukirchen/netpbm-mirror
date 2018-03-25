@@ -21,6 +21,33 @@
 
 
 
+struct TargetSet {
+    unsigned int targetSpec;
+    float        target;
+    unsigned int target1Spec;
+    float        target1;
+    unsigned int target2Spec;
+    float        target2;
+    unsigned int target3Spec;
+    float        target3;
+};
+
+
+
+static bool
+targetSet_compTargetSpec(struct TargetSet const targetSet) {
+/*----------------------------------------------------------------------------
+   The target set specifies individual color component targets
+   (some may be "don't care", though).
+-----------------------------------------------------------------------------*/
+    return
+        targetSet.target1Spec ||
+        targetSet.target2Spec ||
+        targetSet.target3Spec;
+}
+
+
+
 struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
@@ -31,7 +58,32 @@ struct CmdlineInfo {
     unsigned int machine;
     unsigned int maxSpec;
     float        max;
+    bool         targetMode;
+    struct TargetSet target;
 };
+
+
+
+static void
+interpretTargetSet(struct TargetSet const targetSet,
+                   bool *           const targetModeP) {
+
+    if (targetSet.targetSpec && targetSet.target <= 0.0)
+        pm_error("Nonpositive -target does not make sense");
+
+    if (targetSet.target1Spec && targetSet.target1 <= 0.0)
+        pm_error("Nonpositive -target1 does not make sense");
+
+    if (targetSet.target2Spec && targetSet.target2 <= 0.0)
+        pm_error("Nonpositive -target2 does not make sense");
+
+    if (targetSet.target3Spec && targetSet.target3 <= 0.0)
+        pm_error("Nonpositive -target3 does not make sense");
+
+    *targetModeP =
+        targetSet.targetSpec || targetSet.target1Spec ||
+        targetSet.target2Spec || targetSet.target3Spec;
+}
 
 
 
@@ -50,23 +102,31 @@ parseCommandLine(int argc, const char ** argv,
     unsigned int option_def_index;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
-    
+
     option_def_index = 0;   /* incremented by OPTENT3 */
     OPTENT3(0,   "rgb",      OPT_FLAG,  NULL,
             &cmdlineP->rgb,       0);
     OPTENT3(0,   "machine",  OPT_FLAG,  NULL,
             &cmdlineP->machine,   0);
-    OPTENT3(0,   "max",      OPT_FLOAT, &cmdlineP->max,  
+    OPTENT3(0,   "max",      OPT_FLOAT, &cmdlineP->max,
             &cmdlineP->maxSpec,   0);
+    OPTENT3(0,   "target",   OPT_FLOAT, &cmdlineP->target.target,
+            &cmdlineP->target.targetSpec,   0);
+    OPTENT3(0,   "target1",  OPT_FLOAT, &cmdlineP->target.target1,
+            &cmdlineP->target.target1Spec,   0);
+    OPTENT3(0,   "target2",  OPT_FLOAT, &cmdlineP->target.target2,
+            &cmdlineP->target.target2Spec,   0);
+    OPTENT3(0,   "target3",  OPT_FLOAT, &cmdlineP->target.target3,
+            &cmdlineP->target.target3Spec,   0);
 
     opt.opt_table     = option_def;
     opt.short_allowed = FALSE; /* We have no short (old-fashioned) options */
     opt.allowNegNum   = FALSE; /* We have no parms that are negative numbers */
-    
+
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others */
 
-    if (argc-1 < 2) 
+    if (argc-1 < 2)
         pm_error("Takes two arguments:  names of the two files to compare");
     else {
         cmdlineP->inputFile1Name = argv[1];
@@ -78,6 +138,11 @@ parseCommandLine(int argc, const char ** argv,
     }
 
     free(option_def);
+
+    interpretTargetSet(cmdlineP->target, &cmdlineP->targetMode);
+
+    if (cmdlineP->targetMode && cmdlineP->maxSpec)
+        pm_error("-max is meaningless with -targetX");
 }
 
 
@@ -221,10 +286,10 @@ sqDiffYCbCr(tuple    const tuple1,
     struct SqDiff retval;
 
     double y1, y2, cb1, cb2, cr1, cr2;
-    
+
     pnm_YCbCrtuple(tuple1, &y1, &cb1, &cr1);
     pnm_YCbCrtuple(tuple2, &y2, &cb2, &cr2);
-    
+
     retval.sqDiff[Y_INDEX]  = square(y1  - y2);
     retval.sqDiff[CB_INDEX] = square(cb1 - cb2);
     retval.sqDiff[CR_INDEX] = square(cr1 - cr2);
@@ -316,12 +381,12 @@ sumSqDiffFromRaster(struct pam * const pam1P,
 
     tuplerow1 = pnm_allocpamrow(pam1P);
     tuplerow2 = pnm_allocpamrow(pam2P);
-    
+
     sumSqDiff = zeroSqDiff();
 
     for (row = 0; row < pam1P->height; ++row) {
         unsigned int col;
-        
+
         pnm_readpamrow(pam1P, tuplerow1);
         pnm_readpamrow(pam2P, tuplerow2);
 
@@ -385,7 +450,7 @@ psnrFromSumSqDiff(struct SqDiff const sumSqDiff,
        to the actual mean square difference, which is also the ratio of
        the maximum possible sum square difference to the actual sum square
        difference.
-   
+
        Note that in the important special case that the images are
        identical, the sum square differences are identically 0.0.
        No precision error; no rounding error.
@@ -413,6 +478,49 @@ psnrIsFinite(double const psnr) {
     */
 
     return psnr < 1000000.0;
+}
+
+
+
+static void
+reportTarget(struct Psnr      const psnr,
+             ColorSpace       const colorSpace,
+             struct TargetSet const target) {
+
+    bool hitsTarget;
+
+    if (colorSpace.componentCt == 1) {
+        if (!target.targetSpec)
+            pm_error("Image is monochrome and you specified "
+                     "-target1, -target2, or -target3 but not -target");
+
+        hitsTarget = psnr.psnr[0] >= target.target;
+    } else {
+        float compTarget[3];
+
+        unsigned int i;
+
+        assert(colorSpace.componentCt == 3);
+
+        if (targetSet_compTargetSpec(target)) {
+            compTarget[0] = target.target1Spec ? target.target1 : -1;
+            compTarget[1] = target.target2Spec ? target.target2 : -1;
+            compTarget[2] = target.target3Spec ? target.target3 : -1;
+        } else {
+            assert(target.targetSpec);
+            compTarget[0] = target.target;
+            compTarget[1] = target.target;
+            compTarget[2] = target.target;
+        }
+        for (i = 0, hitsTarget = true;
+             i < colorSpace.componentCt && hitsTarget;
+             ++i) {
+
+            if (psnr.psnr[i] < compTarget[i])
+                hitsTarget = false;
+        }
+    }
+    fprintf(stdout, "%s\n", hitsTarget ? "match" : "nomatch");
 }
 
 
@@ -470,7 +578,7 @@ main (int argc, const char **argv) {
     FILE * if2P;
     struct pam pam1, pam2;
     ColorSpace colorSpace;
-    
+
     struct CmdlineInfo cmdline;
 
     pm_proginit(&argc, argv);
@@ -508,17 +616,22 @@ main (int argc, const char **argv) {
             psnrFromSumSqDiff(
                 sumSqDiff, maxSumSqDiff, colorSpace.componentCt);
 
-        if (cmdline.machine)
+        if (cmdline.targetMode)
+            reportTarget(psnr, colorSpace, cmdline.target);
+        else if (cmdline.machine)
             reportPsnrMachine(psnr, colorSpace.componentCt,
                               cmdline.maxSpec, cmdline.max);
         else
             reportPsnrHuman(psnr, colorSpace,
                             cmdline.inputFile1Name, cmdline.inputFile2Name);
+
+
     }
     pm_close(if2P);
     pm_close(if1P);
 
     return 0;
 }
+
 
 

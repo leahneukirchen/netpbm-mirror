@@ -20,6 +20,23 @@ extern "C" {
        a 65536 x 65536 glyph occupies 4G pixels. 
     */
 
+typedef wchar_t PM_WCHAR;
+    /* Precaution to make adjustments, if necessary, for systems with
+       unique wchar_t.
+    */
+
+#define PM_FONT_MAXGLYPH 255
+
+#define PM_FONT2_MAXGLYPH 65535
+    /* Upper limit of codepoint value.
+
+       This is large enough to handle Unicode Plane 0 (Basic Multilingual
+       Plane: BMP) which defines the great majority of characters used in
+       modern languages.
+
+       This can be set to a higher value at some cost to efficiency.
+       As of Unicode v. 11.0.0 planes up to 16 are defined.
+    */
 
 struct glyph {
     /* A glyph consists of white borders and the "central glyph" which
@@ -60,7 +77,7 @@ struct font {
        an code point in the range 0..255, this structure describes the
        glyph for that character.
     */
-    int maxwidth, maxheight;
+    unsigned int maxwidth, maxheight;
     int x;
         /* The minimum value of glyph.font.  The left edge of the glyph
            in the glyph set which advances furthest to the left. */
@@ -74,6 +91,33 @@ struct font {
         /* for compatibility with old pbmtext routines */
         /* oldfont is NULL if the font is BDF derived */
     int fcols, frows;
+};
+
+
+struct font2 {
+    /* Font structure for expanded character set.  Code point is in the
+       range 0..maxglyph .
+     */
+    int maxwidth, maxheight;
+
+    int x;
+        /* The minimum value of glyph.font.  The left edge of the glyph
+           in the glyph set which advances furthest to the left. */
+    int y;
+        /* Amount of white space that should be added between lines of
+           this font.  Can be negative.
+        */
+    struct glyph ** glyph;
+        /* glyph[i] is the glyph for code point i */
+
+    PM_WCHAR maxglyph;
+        /* max code point for glyphs, including vacant slots */
+
+    const bit ** oldfont;
+        /* for compatibility with old pbmtext routines */
+        /* oldfont is NULL if the font is BDF derived */
+
+    unsigned int fcols, frows;
 };
 
 struct font *
@@ -92,6 +136,13 @@ pbm_loadpbmfont(const char * const filename);
 
 struct font *
 pbm_loadbdffont(const char * const filename);
+
+struct font2 *
+pbm_loadbdffont2(const char * const filename,
+                 PM_WCHAR     const maxglyph);
+
+struct font2 *
+pbm_expandbdffont(const struct font * const font);
 
 void
 pbm_dumpfont(struct font * const fontP,

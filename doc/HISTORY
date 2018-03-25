@@ -4,23 +4,45 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-18.02.17 BJH  Release 10.81.03
+18.03.25 BJH  Release 10.82.00
+
+              pbmtext: Add -wchar.
+
+              pbmtext: Add -text-dump option.
+
+              ppmhist: Add color summary to top of output, (except with
+              -noheader).
+
+              pnmremap: Add -randomseed.
+
+              pnmquant: Add -norandom, -randomseed.
+
+              pamtogif: Add -noclear option.
+
+              giftopnm: Check "data width" value from GIF image properly:
+              can't be bigger than 11, because the minimum code size is one
+              more than the data width and the maximum code size is 12.  (Note
+              that GIF spec prohibits anything more than 8).
+
+              pnmpsnr: Add -targetX options.
+
+              ppmrainbow: Add "ppmrainbow: " to error messages, like other
+              programs.
+
+              ppmrainbow: improve error message.
 
               g3topbm: Fix bug - produces invalid empty PBM image if input
               image is empty.
 
-              mrftopbm: Fix bug - wrong error messages or output when input
-              invalidly short.
-
-18.01.20 BJH  Release 10.81.02
-
-              Build: fix compile failure on systems without strnlen (such
-              as MacOS X before 10.7).  Broken in 10.81.00 (December 2017).
-
-18.01.05 BJH  Release 10.81.01
-
               ppmpat: Fix bug - crash or junk output with -camo or -anticamo
               and no -color.  Introduced in Netpbm 10.78 (March 2017).
+
+              mrftopbm: Fix bug - wrong error messages or output when input
+              invalidly short.  Always broken (mrftopbm was new in Netpbm
+              10.18 (September 2003).
+
+              Build: fix compile failure on systems without strnlen (such
+              as MacOS X before 10.7).  Broken in 10.81 (December 2017).
 
 17.12.30 BJH  Release 10.81.00
 
@@ -1881,8 +1903,9 @@ CHANGE HISTORY
               (produces grayscale output).  Broken between Netpbm 10.19 and
               10.26, inclusive.
 
-              pbmtomrf, mrftopbm: fix crashes, incorrect output in all
-              cases.  Broken forever.
+              pbmtomrf, mrftopbm: fix crashes, incorrect output in all cases.
+              Always broken (mrftopbm was new in Netpbm 10.18 (September
+              2003).
 
               pnm_alloctupletable, pnm_tuplehashtotable,
               pnm_computetuplefreqtable3: fix crash when out of memory,

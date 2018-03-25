@@ -3,7 +3,7 @@
  *
 
    THIS MODULE WAS ADAPTED FOR NETPBM BY BRYAN HENDERSON ON 2002.03.24.
-   Bryan got the base from 
+   Bryan got the base from
    http://www.ijs.si/software/snprintf/snprintf-2.2.tar.gz, but made
    a lot of changes and additions.
 
@@ -215,7 +215,7 @@ pm_vsnprintf(char *       const str,
              const char * const fmt,
              va_list            ap,
              size_t *     const sizeP) {
-    
+
     size_t str_l = 0;
     const char *p = fmt;
 
@@ -417,7 +417,7 @@ pm_vsnprintf(char *       const str,
                         str_arg_l = 0;
                     else if (!precision_specified)
                         /* truncate string if necessary as requested by
-                           precision 
+                           precision
                         */
                         str_arg_l = strlen(str_arg);
                     else if (precision == 0)
@@ -469,7 +469,7 @@ pm_vsnprintf(char *       const str,
                       undefined. (Actually %hp converts only 16-bits
                       of address and %llp treats address as 64-bit
                       data which is incompatible with (void *)
-                      argument on a 32-bit system). 
+                      argument on a 32-bit system).
                     */
 
                     length_modifier = '\0';
@@ -602,7 +602,7 @@ pm_vsnprintf(char *       const str,
                         && !(zero_padding_insertion_ind < str_arg_l
                              && tmp[zero_padding_insertion_ind] == '0')) {
                         /* assure leading zero for alternate-form
-                           octal numbers 
+                           octal numbers
                         */
                         if (!precision_specified ||
                             precision < num_of_digits+1) {
@@ -616,7 +616,7 @@ pm_vsnprintf(char *       const str,
                         }
                     }
                     /* zero padding to specified precision? */
-                    if (num_of_digits < precision) 
+                    if (num_of_digits < precision)
                         number_of_zeros_to_pad = precision - num_of_digits;
                 }
                 /* zero padding to specified minimal field width? */
@@ -768,7 +768,7 @@ pm_snprintf(char *       const dest,
     va_list ap;
 
     va_start(ap, fmt);
-    
+
     pm_vsnprintf(dest, str_m, fmt, ap, &size);
 
     va_end(ap);
@@ -807,12 +807,12 @@ pm_strdup(const char * const arg) {
 
 void PM_GNU_PRINTF_ATTR(2,3)
 pm_asprintf(const char ** const resultP,
-            const char *  const fmt, 
+            const char *  const fmt,
             ...) {
 
     const char * result;
     va_list varargs;
-    
+
 #if HAVE_VASPRINTF
     int rc;
     va_start(varargs, fmt);
@@ -822,7 +822,7 @@ pm_asprintf(const char ** const resultP,
         result = pm_strsol;
 #else
     size_t dryRunLen;
-    
+
     va_start(varargs, fmt);
 
     pm_vsnprintf(NULL, 0, fmt, varargs, &dryRunLen);
@@ -843,7 +843,7 @@ pm_asprintf(const char ** const resultP,
             va_start(varargs, fmt);
 
             pm_vsnprintf(buffer, allocSize, fmt, varargs, &realLen);
-                
+
             assert(realLen == dryRunLen);
             va_end(varargs);
 
@@ -871,7 +871,7 @@ pm_strfree(const char * const string) {
 
 const char *
 pm_strsep(char ** const stringP, const char * const delim) {
-    const char * retval;   
+    const char * retval;
 
     if (stringP == NULL || *stringP == NULL)
         retval = NULL;
@@ -881,16 +881,16 @@ pm_strsep(char ** const stringP, const char * const delim) {
         retval = *stringP;
 
         for (p = *stringP; *p && strchr(delim, *p) == NULL; ++p);
- 
+
         if (*p) {
-            /* We hit a delimiter, not end-of-string.  So null out the 
+            /* We hit a delimiter, not end-of-string.  So null out the
                delimiter and advance user's pointer to the next token
             */
             *p++ = '\0';
             *stringP = p;
         } else {
-            /* We ran out of string.  So the end-of-string delimiter is 
-               already there, and we set the user's pointer to NULL to 
+            /* We ran out of string.  So the end-of-string delimiter is
+               already there, and we set the user's pointer to NULL to
                indicate there are no more tokens.
             */
             *stringP = NULL;
@@ -914,7 +914,7 @@ pm_stripeq(const char * const comparand,
     const char * px;
     const char * qx;
     bool equal;
-  
+
     /* Make p and q point to the first non-blank character in each string.
        If there are no non-blank characters, make them point to the terminating
        NUL.
@@ -1021,7 +1021,7 @@ pm_interpret_uint(const char *   const string,
         */
         char * tail;
         unsigned long ulongValue;
-        
+
         errno = 0;  /* So we can tell if strtoul() overflowed */
 
         ulongValue = strtoul(string, &tail, 10);
