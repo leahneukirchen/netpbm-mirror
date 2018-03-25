@@ -4,6 +4,14 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+18.03.25 BJH  Release 10.47.68
+
+              g3topbm: Fix bug - produces invalid empty PBM image if input
+              image is empty.
+
+              mrftopbm: Fix bug - wrong error messages or output when input
+              invalidly short.
+
 17.12.30 BJH  Release 10.47.67
 
               sldtoppm: fix bug: says AutoCAD slide file isn't an AutoCAD
