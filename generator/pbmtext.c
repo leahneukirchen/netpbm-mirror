@@ -828,17 +828,112 @@ truncateText(struct Text    const inputText,
 
 
 static void
+fgetWideString(PM_WCHAR *    const widestring,
+               unsigned int  const size,
+               FILE *        const ifP,
+               bool *        const eofP,
+               const char ** const errorP) {
+
+    wchar_t * rc;
+
+    assert(widestring);
+    assert(size > 0);
+
+    rc = fgetws(widestring, size, ifP);
+
+    if (rc == NULL) {
+        if (feof(ifP)) {
+            *eofP   = true;
+            *errorP = NULL;
+        } else if (ferror(ifP) && errno == EILSEQ)
+            pm_asprintf(errorP,
+                        "fgetws(): conversion error: sequence is "
+                        "invalid for locale '%s'",
+                        setlocale(LC_CTYPE, NULL));
+        else
+            pm_asprintf(errorP,
+                        "fgetws() of max %u bytes failed",
+                        size);
+    } else {
+        *eofP   = false;
+        *errorP = NULL;
+    }
+}
+
+
+
+static void
+fgetNarrowString(PM_WCHAR *    const widestring,
+                 unsigned int  const size,
+                 FILE *        const ifP,
+                 bool *        const eofP,
+                 const char ** const errorP) {
+
+    char * bufNarrow;
+    char * rc;
+
+    assert(widestring);
+    assert(size > 0);
+
+    MALLOCARRAY_NOFAIL(bufNarrow, MAXLINECHARS+1);
+
+    rc = fgets(bufNarrow, size, ifP);
+
+    if (rc == NULL) {
+        if (feof(ifP)) {
+            *eofP   = true;
+            *errorP = NULL;
+        } else
+            pm_asprintf(errorP, "Error reading file");
+    } else {
+        size_t cnt;
+
+        for (cnt = 0; cnt < size && bufNarrow[cnt] != '\0'; ++cnt)
+            widestring[cnt] = (PM_WCHAR)(unsigned char) bufNarrow[cnt];
+
+        widestring[cnt] = L'\0';
+
+        *eofP   = false;
+        *errorP = NULL;
+    }
+    free(bufNarrow);
+}
+
+
+
+static void
 fgetNarrowWideString(PM_WCHAR *    const widestring,
                      unsigned int  const size,
                      FILE *        const ifP,
+                     bool *        const eofP,
                      const char ** const errorP) {
 /*----------------------------------------------------------------------------
   Return the next line from file *ifP, up to 'size' characters, as
   *widestring.
 
-  Return error if we can't read the file, or file is at EOF.
+  Return *eofP == true iff we encounter end of file (and therefore don't read
+  a line).
+
+  If we can't read the file (or sense EOF), return as *errorP a text
+  explanation of why; otherwise, return *errorP = NULL.
+
+  Lines are delimited by newline characters and EOF.
+
+  The line we return is null-terminated.  But it also includes any embedded
+  null characters that are within the line in the file.  It is not
+  strictly possible to tell whether a null character in *widestring comes from
+  the file or is the one we put there, so Caller should just ignore any null
+  character and anything after it.
+
+  Null characters never appear within normal text (including wide-character
+  text).  If there is one in the input file, it is probably because the input
+  is corrupted.
+
+  The line we return may or may not end in a newline character.  It ends in a
+  newline character unless it doesn't fit in 'size' characters or it is the
+  last line in the file and doesn't end in newline.
 -----------------------------------------------------------------------------*/
-    int wideCode;
+    int const wideCode = fwide(ifP, 0);
         /* Width orientation for *ifP: positive means wide, negative means
            byte, zero means undecided.
         */
@@ -846,37 +941,11 @@ fgetNarrowWideString(PM_WCHAR *    const widestring,
     assert(widestring);
     assert(size > 0);
 
-    wideCode = fwide(ifP, 0);
-    if (wideCode > 0) {
+    if (wideCode > 0)
         /* *ifP is wide-oriented */
-        wchar_t * rc;
-        rc = fgetws(widestring, size, ifP);
-        if (rc == NULL)
-            pm_asprintf(errorP,
-                        "fgetws() of max %u bytes failed or end of stream",
-                        size);
-        else
-            *errorP = NULL;
-    } else {
-        char * bufNarrow;
-        char * rc;
-
-        MALLOCARRAY_NOFAIL(bufNarrow, MAXLINECHARS+1);
-
-        rc = fgets(bufNarrow, size, ifP);
-        if (rc == NULL)
-            pm_asprintf(errorP, "EOF or error reading file");
-        else {
-            size_t cnt;
-
-            for (cnt = 0; cnt < size && bufNarrow[cnt] != '\0'; ++cnt)
-                widestring[cnt] = (PM_WCHAR)(unsigned char) bufNarrow[cnt];
-
-            widestring[cnt] = L'\0';
-            *errorP = NULL;
-        }
-        free(bufNarrow);
-    }
+        fgetWideString(widestring, size, ifP, eofP, errorP);
+    else
+        fgetNarrowString(widestring, size, ifP, eofP, errorP);
 }
 
 
@@ -934,30 +1003,31 @@ getText(PM_WCHAR       const cmdlineText[],
 
         for (lineCount = 0, eof = false; !eof; ) {
             const char * error;
-            fgetNarrowWideString(buf, MAXLINECHARS, stdin, &error);
-            if (error) {
-                /* We're lazy, so we treat any error as EOF */
-                pm_strfree(error);
-                eof = true;
-            } else {
-                if (wcslen(buf) + 1 >= MAXLINECHARS)
-                    pm_error(
-                        "Line %u (starting at zero) of input text "
-                        "is longer than %u characters."
-                        "Cannot process",
-                        lineCount, (unsigned int) MAXLINECHARS-1);
-                if (lineCount >= maxlines) {
-                    maxlines *= 2;
-                    REALLOCARRAY(textArray, maxlines);
-                    if (textArray == NULL)
+            fgetNarrowWideString(buf, MAXLINECHARS, stdin, &eof, &error);
+            if (error)
+                pm_error("Unable to read line %u from file.  %s",
+                         lineCount, error);
+            else {
+                if (!eof) {
+                    if (wcslen(buf) + 1 >= MAXLINECHARS)
+                        pm_error(
+                            "Line %u (starting at zero) of input text "
+                            "is longer than %u characters."
+                            "Cannot process",
+                            lineCount, (unsigned int) MAXLINECHARS-1);
+                    if (lineCount >= maxlines) {
+                        maxlines *= 2;
+                        REALLOCARRAY(textArray, maxlines);
+                        if (textArray == NULL)
+                            pm_error("out of memory");
+                    }
+                    fixControlChars(buf, fontP,
+                                    (const PM_WCHAR **)&textArray[lineCount],
+                                    fixMode);
+                    if (textArray[lineCount] == NULL)
                         pm_error("out of memory");
+                    ++lineCount;
                 }
-                fixControlChars(buf, fontP,
-                                (const PM_WCHAR **)&textArray[lineCount],
-                                fixMode);
-                if (textArray[lineCount] == NULL)
-                    pm_error("out of memory");
-                ++lineCount;
             }
         }
         inputText.textArray = textArray;
@@ -1305,7 +1375,7 @@ main(int argc, const char *argv[]) {
         char * newLocale;
         newLocale = setlocale(LC_ALL, "");
         if (!newLocale)
-            pm_error("Failed to set locale (LC_ALL) from environemt");
+            pm_error("Failed to set locale (LC_ALL) from environment");
 
         /* Orient standard input stream to wide */
         fwide(stdin,  1);
