@@ -908,8 +908,15 @@ fgetNarrowWideString(PM_WCHAR *    const widestring,
                      bool *        const eofP,
                      const char ** const errorP) {
 /*----------------------------------------------------------------------------
-  Return the next line from file *ifP, up to 'size' characters, as
-  *widestring.
+  Return the next line from file *ifP, as *widestring.
+
+  Lines are delimited by newline characters and EOF.
+
+  'size' is the size in characters of the buffer at *widestring.  If the line
+  to which the file is positioned is longer than that minus 1, we consider it
+  to be only that long and consider the next character of the actual line to
+  be the first character of the next line.  We leave the file positioned
+  to that character.
 
   Return *eofP == true iff we encounter end of file (and therefore don't read
   a line).
@@ -917,13 +924,16 @@ fgetNarrowWideString(PM_WCHAR *    const widestring,
   If we can't read the file (or sense EOF), return as *errorP a text
   explanation of why; otherwise, return *errorP = NULL.
 
-  Lines are delimited by newline characters and EOF.
-
   The line we return is null-terminated.  But it also includes any embedded
-  null characters that are within the line in the file.  It is not
-  strictly possible to tell whether a null character in *widestring comes from
-  the file or is the one we put there, so Caller should just ignore any null
-  character and anything after it.
+  null characters that are within the line in the file.  It is not strictly
+  possible for Caller to tell whether a null character in *widestring comes
+  from the file or is the one we put there, so Caller should just ignore any
+  null character and anything after it.  It is also not possible for Caller to
+  tell if we trunctaed the actual line because of 'size' if there is a null
+  character in the line.  This means there just isn't any way to get
+  reasonable behavior from this function if the input file contains null
+  characters (but at least the damage is limited to presenting arbitrary text
+  as the contents of the file - the program won't crash).
 
   Null characters never appear within normal text (including wide-character
   text).  If there is one in the input file, it is probably because the input
@@ -933,6 +943,12 @@ fgetNarrowWideString(PM_WCHAR *    const widestring,
   newline character unless it doesn't fit in 'size' characters or it is the
   last line in the file and doesn't end in newline.
 -----------------------------------------------------------------------------*/
+    /* The limitations described above with respect to null characters in
+       *ifP are derived from the same limitations in POSIX 'fgets' and
+       'fgetws'.  To avoid them, we would have to read *ifP one character
+       at a time with 'fgetc' and 'fgetwc'.
+    */
+
     int const wideCode = fwide(ifP, 0);
         /* Width orientation for *ifP: positive means wide, negative means
            byte, zero means undecided.
@@ -967,6 +983,10 @@ getText(PM_WCHAR       const cmdlineText[],
    But we return text as only renderable characters - characters in *fontP -
    with control characters interpreted or otherwise fixed, according to
    'fixMode'.
+
+   If *inputTextP indicates Standard Input and Standard Input contains null
+   characters, we will truncate lines or consider a single line to be multiple
+   lines.
 -----------------------------------------------------------------------------*/
     struct Text inputText;
 
