@@ -6,13 +6,13 @@
    This program is derived from (and replaces) Pnmcomp, whose origin is
    as follows:
 
-       Copyright 1992, David Koblas.                                    
-         Permission to use, copy, modify, and distribute this software  
+       Copyright 1992, David Koblas.
+         Permission to use, copy, modify, and distribute this software
          and its documentation for any purpose and without fee is hereby
          granted, provided that the above copyright notice appear in all
-         copies and that both that copyright notice and this permission 
-         notice appear in supporting documentation.  This software is   
-         provided "as is" without express or implied warranty.          
+         copies and that both that copyright notice and this permission
+         notice appear in supporting documentation.  This software is
+         provided "as is" without express or implied warranty.
 
    No code from the original remains in the present version.  The
    January 2004 version was coded entirely by Bryan Henderson.
@@ -40,11 +40,11 @@ enum vertPos {ABOVE, TOP, MIDDLE, BOTTOM, BELOW};
 
 enum sampleScale {INTENSITY_SAMPLE, GAMMA_SAMPLE};
     /* This indicates a scale for a PAM sample value.  INTENSITY_SAMPLE means
-       the value is proportional to light intensity; GAMMA_SAMPLE means the 
+       the value is proportional to light intensity; GAMMA_SAMPLE means the
        value is gamma-adjusted as defined in the PGM/PPM spec.  In both
        scales, the values are continuous and normalized to the range 0..1.
-       
-       This scale has no meaning if the PAM is not a visual image.  
+
+       This scale has no meaning if the PAM is not a visual image.
     */
 
 enum alphaMix {AM_KEEPUNDER, AM_OVERLAY};
@@ -84,12 +84,12 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine(int                        argc, 
+parseCommandLine(int                        argc,
                  const char **              argv,
                  struct cmdlineInfo * const cmdlineP ) {
 /*----------------------------------------------------------------------------
    Parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -111,11 +111,11 @@ parseCommandLine(int                        argc,
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0, "invert",             OPT_FLAG,   NULL,                  
+    OPTENT3(0, "invert",             OPT_FLAG,   NULL,
             &cmdlineP->alphaInvert,       0);
-    OPTENT3(0, "xoff",               OPT_INT,    &cmdlineP->xoff,       
+    OPTENT3(0, "xoff",               OPT_INT,    &cmdlineP->xoff,
             &xoffSpec,                    0);
-    OPTENT3(0, "yoff",               OPT_INT,    &cmdlineP->yoff,       
+    OPTENT3(0, "yoff",               OPT_INT,    &cmdlineP->yoff,
             &yoffSpec,                    0);
     OPTENT3(0, "opacity",            OPT_FLOAT,  &cmdlineP->opacity,
             &opacitySpec,                 0);
@@ -125,9 +125,9 @@ parseCommandLine(int                        argc,
             &alignSpec,                   0);
     OPTENT3(0, "valign",             OPT_STRING, &valign,
             &valignSpec,                  0);
-    OPTENT3(0, "linear",             OPT_FLAG,   NULL,       
+    OPTENT3(0, "linear",             OPT_FLAG,   NULL,
             &cmdlineP->linear,            0);
-    OPTENT3(0, "mixtransparency",    OPT_FLAG,   NULL,       
+    OPTENT3(0, "mixtransparency",    OPT_FLAG,   NULL,
             &cmdlineP->mixtransparency,   0);
 
     opt.opt_table = option_def;
@@ -158,9 +158,9 @@ parseCommandLine(int                        argc,
             cmdlineP->align = BEYONDRIGHT;
         else
             pm_error("Invalid value for align option: '%s'.  Only LEFT, "
-                     "RIGHT, CENTER, BEYONDLEFT, and BEYONDRIGHT are valid.", 
+                     "RIGHT, CENTER, BEYONDLEFT, and BEYONDRIGHT are valid.",
                      align);
-    } else 
+    } else
         cmdlineP->align = LEFT;
 
     if (valignSpec) {
@@ -176,12 +176,12 @@ parseCommandLine(int                        argc,
             cmdlineP->valign = BELOW;
         else
             pm_error("Invalid value for valign option: '%s'.  Only TOP, "
-                     "BOTTOM, MIDDLE, ABOVE, and BELOW are valid.", 
+                     "BOTTOM, MIDDLE, ABOVE, and BELOW are valid.",
                      align);
-    } else 
+    } else
         cmdlineP->valign = TOP;
 
-    if (!opacitySpec) 
+    if (!opacitySpec)
         cmdlineP->opacity = 1.0;
 
     if (argc-1 < 1)
@@ -219,7 +219,7 @@ commonFormat(int const formatA,
 
     int const typeA = PAM_FORMAT_TYPE(formatA);
     int const typeB = PAM_FORMAT_TYPE(formatB);
-    
+
     if (typeA == PAM_TYPE || typeB == PAM_TYPE)
         retval = PAM_FORMAT;
     else if (typeA == PPM_TYPE || typeB == PPM_TYPE)
@@ -242,7 +242,7 @@ typedef enum { TT_BLACKANDWHITE, TT_GRAYSCALE, TT_RGB } BaseTupletype;
 
 
 static BaseTupletype
-commonTupletype(const char * const tupletypeA, 
+commonTupletype(const char * const tupletypeA,
                 const char * const tupletypeB) {
 
     if (strneq(tupletypeA, "RGB", 3) ||
@@ -300,11 +300,11 @@ determineOutputType(const struct pam * const underlayPamP,
     composedPamP->height = underlayPamP->height;
     composedPamP->width  = underlayPamP->width;
 
-    composedPamP->format = commonFormat(underlayPamP->format, 
+    composedPamP->format = commonFormat(underlayPamP->format,
                                         overlayPamP->format);
     composedPamP->plainformat = FALSE;
 
-    composedPamP->maxval = pm_lcm(underlayPamP->maxval, overlayPamP->maxval, 
+    composedPamP->maxval = pm_lcm(underlayPamP->maxval, overlayPamP->maxval,
                                   1, PNM_OVERALLMAXVAL);
 
     composedPamP->visual = true;
@@ -325,7 +325,7 @@ determineOutputType(const struct pam * const underlayPamP,
 
 static void
 warnOutOfFrame(int const originLeft,
-               int const originTop, 
+               int const originTop,
                int const overCols,
                int const overRows,
                int const underCols,
@@ -362,7 +362,7 @@ warnOutOfFrame(int const originLeft,
 
 
 static void
-validateComputableHeight(int const originTop, 
+validateComputableHeight(int const originTop,
                          int const overRows) {
 
     if (originTop < 0) {
@@ -381,11 +381,11 @@ validateComputableHeight(int const originTop,
 
 
 static void
-computeOverlayPosition(int                const underCols, 
+computeOverlayPosition(int                const underCols,
                        int                const underRows,
-                       int                const overCols, 
+                       int                const overCols,
                        int                const overRows,
-                       struct cmdlineInfo const cmdline, 
+                       struct cmdlineInfo const cmdline,
                        int *              const originLeftP,
                        int *              const originTopP) {
 /*----------------------------------------------------------------------------
@@ -421,8 +421,8 @@ computeOverlayPosition(int                const underCols,
 
     validateComputableHeight(*originTopP, overRows);
 
-    warnOutOfFrame(*originLeftP, *originTopP, 
-                   overCols, overRows, underCols, underRows);    
+    warnOutOfFrame(*originLeftP, *originTopP,
+                   overCols, overRows, underCols, underRows);
 }
 
 
@@ -484,7 +484,7 @@ computeOverlayPosition(int                const underCols,
 
 
 static sample
-composeComponents(sample           const compA, 
+composeComponents(sample           const compA,
                   sample           const compB,
                   float            const distrib,
                   float            const bFactor,
@@ -508,7 +508,7 @@ composeComponents(sample           const compA,
   useful.
 
   The inputs and result are based on a maxval of 'maxval'.
-  
+
   Note that while 'distrib' in the straightforward case is always in
   [0,1], it can in fact be negative or greater than 1.  We clip the
   result as required to return a legal sample value.
@@ -520,7 +520,7 @@ composeComponents(sample           const compA,
         retval = compA;
     else {
         if (sampleScale == INTENSITY_SAMPLE) {
-            sample const mix = 
+            sample const mix =
                 ROUNDU(compA * distrib + compB * bFactor *(1.0 - distrib));
             retval = MIN(maxval, MAX(0, mix));
         } else {
@@ -529,7 +529,7 @@ composeComponents(sample           const compA,
             float const compALinear = pm_ungamma709(compANormalized);
             float const compBLinear = pm_ungamma709(compBNormalized);
             float const compBLinearAdj = compBLinear * bFactor;
-            float const mix = 
+            float const mix =
                 compALinear * distrib + compBLinearAdj * (1.0 - distrib)
                 * composedFactor;
             sample const sampleValue = ROUNDU(pm_gamma709(mix) * maxval);
@@ -624,13 +624,13 @@ overlayPixel(tuple            const overlayTuple,
         /* Part of formula for AM_OVERLAY -- see explanation above */
 
     overlayWeight = masterOpacity;  /* initial value */
-    
+
     if (overlayPamP->have_opacity)
         overlayWeight *= (float)
             overlayTuple[overlayPamP->opacity_plane] / overlayPamP->maxval;
-    
+
     if (alphaTuplen) {
-        float const alphaval = 
+        float const alphaval =
             invertAlpha ? (1.0 - alphaTuplen[0]) : alphaTuplen[0];
         overlayWeight *= alphaval;
     }
@@ -645,7 +645,7 @@ overlayPixel(tuple            const overlayTuple,
         float  const uOpacityN = uOpacity / uMaxval;
         float  const oOpacityN = oOpacity / oMaxval;
         float  const composedTrans = (1.0 - uOpacityN) * (1.0 * oOpacityN);
-        
+
         if (composedTrans > .999) {
             underlayWeight = 1.0;
             composedWeight = 1.0;
@@ -659,10 +659,10 @@ overlayPixel(tuple            const overlayTuple,
     }
     {
         unsigned int plane;
-        
+
         for (plane = 0; plane < composedPamP->color_depth; ++plane)
-            composedTuple[plane] = 
-                composeComponents(overlayTuple[plane], underlayTuple[plane], 
+            composedTuple[plane] =
+                composeComponents(overlayTuple[plane], underlayTuple[plane],
                                   overlayWeight, underlayWeight,
                                   composedWeight,
                                   composedPamP->maxval,
@@ -707,7 +707,7 @@ adaptRowFormat(struct pam * const inpamP,
 
 
 static void
-composeRow(int              const originleft, 
+composeRow(int              const originleft,
            struct pam *     const underlayPamP,
            struct pam *     const overlayPamP,
            bool             const invertAlpha,
@@ -732,7 +732,7 @@ composeRow(int              const originleft,
         int const ovlcol = col - originleft;
 
         if (ovlcol >= 0 && ovlcol < overlayPamP->width) {
-            tuplen const alphaTuplen = 
+            tuplen const alphaTuplen =
                 alphaTuplerown ? alphaTuplerown[ovlcol] : NULL;
 
             overlayPixel(overlayTuplerow[ovlcol], overlayPamP,
@@ -799,8 +799,8 @@ determineInputAdaptations(const struct pam * const underlayPamP,
 
 
 static void
-composite(int          const originleft, 
-          int          const origintop, 
+composite(int          const originleft,
+          int          const origintop,
           struct pam * const underlayPamP,
           struct pam * const overlayPamP,
           struct pam * const alphaPamP,
@@ -829,7 +829,7 @@ composite(int          const originleft,
    We assume that the span from the topmost row of the two images to
    the bottommost row is less than INT_MAX.
 -----------------------------------------------------------------------------*/
-    enum sampleScale const sampleScale = 
+    enum sampleScale const sampleScale =
         assumeLinear ? INTENSITY_SAMPLE : GAMMA_SAMPLE;
     enum alphaMix const alphaMix =
         mixTransparency ? AM_OVERLAY : AM_KEEPUNDER;
@@ -859,7 +859,7 @@ composite(int          const originleft,
     assert(INT_MAX - overlayPamP->height > origintop); /* arg constraint */
 
     for (underlayRow = MIN(0, origintop), overlayRow = MIN(0, -origintop);
-         underlayRow < MAX(underlayPamP->height, 
+         underlayRow < MAX(underlayPamP->height,
                            origintop + overlayPamP->height);
          ++underlayRow, ++overlayRow) {
 
@@ -872,19 +872,19 @@ composite(int          const originleft,
         if (underlayRow >= 0 && underlayRow < underlayPamP->height) {
             pnm_readpamrow(underlayPamP, underlayTuplerow);
             adaptRowFormat(underlayPamP, &adaptUnderlayPam, underlayTuplerow);
-            if (underlayRow < origintop || 
+            if (underlayRow < origintop ||
                 underlayRow >= origintop + overlayPamP->height) {
-            
+
                 /* Overlay image does not touch this underlay row. */
 
                 pnm_writepamrow(composedPamP, underlayTuplerow);
             } else {
                 composeRow(originleft, &adaptUnderlayPam, &adaptOverlayPam,
-                           invertAlpha, masterOpacity, 
+                           invertAlpha, masterOpacity,
                            composedPamP, sampleScale, alphaMix,
                            underlayTuplerow, overlayTuplerow, alphaTuplerown,
                            composedTuplerow);
-                
+
                 pnm_writepamrow(composedPamP, composedTuplerow);
             }
         }
@@ -905,13 +905,13 @@ initAlphaFile(struct cmdlineInfo const cmdline,
               struct pam *       const pamP) {
 
     FILE * fileP;
-    
+
     if (cmdline.alphaFilespec) {
         fileP = pm_openr(cmdline.alphaFilespec);
         pamP->comment_p = NULL;
         pnm_readpaminit(fileP, pamP, PAM_STRUCT_SIZE(opacity_plane));
 
-        if (overlayPamP->width != pamP->width || 
+        if (overlayPamP->width != pamP->width ||
             overlayPamP->height != pamP->height)
             pm_error("Opacity map and overlay image are not the same size");
     } else
@@ -942,7 +942,7 @@ main(int argc, const char *argv[]) {
     overlayFileP = pm_openr(cmdline.overlayFilespec);
 
     overlayPam.comment_p = NULL;
-    pnm_readpaminit(overlayFileP, &overlayPam, 
+    pnm_readpaminit(overlayFileP, &overlayPam,
                     PAM_STRUCT_SIZE(opacity_plane));
 
     if (overlayPam.len < PAM_STRUCT_SIZE(opacity_plane))
@@ -959,7 +959,7 @@ main(int argc, const char *argv[]) {
     underlayFileP = pm_openr(cmdline.underlyingFilespec);
 
     underlayPam.comment_p = NULL;
-    pnm_readpaminit(underlayFileP, &underlayPam, 
+    pnm_readpaminit(underlayFileP, &underlayPam,
                     PAM_STRUCT_SIZE(opacity_plane));
 
     assert(underlayPam.len >= PAM_STRUCT_SIZE(opacity_plane));
@@ -968,8 +968,8 @@ main(int argc, const char *argv[]) {
         pm_error("Overlay image has tuple type '%s', which is not a "
                  "standard visual type.  We don't know how to compose.",
                  overlayPam.tuple_type);
-    
-    computeOverlayPosition(underlayPam.width, underlayPam.height, 
+
+    computeOverlayPosition(underlayPam.width, underlayPam.height,
                            overlayPam.width,  overlayPam.height,
                            cmdline, &originLeft, &originTop);
 
@@ -983,7 +983,7 @@ main(int argc, const char *argv[]) {
 
     pnm_setminallocationdepth(&underlayPam, composedPam.depth);
     pnm_setminallocationdepth(&overlayPam,  composedPam.depth);
-    
+
     composite(originLeft, originTop,
               &underlayPam, &overlayPam, alphaFileP ? &alphaPam : NULL,
               cmdline.alphaInvert, cmdline.opacity,
