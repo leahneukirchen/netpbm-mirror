@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pbmtext User Manual</TITLE></HEAD>
 <BODY>
 <H1>pbmtext</H1>
-Updated: 25 March 2018
+Updated: 04 April 2018
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -330,6 +330,17 @@ the user to supply a BDF file covering the necessary glyphs with the
 <p><b>pbmtext</b> does not inspect the encoding of the font file.
 
 
+<h2 id="limitations">LIMITATIONS</h2>
+
+<P>If the text is from Standard Input, no line may be longer than 4999
+characters.  If one is, the program aborts with an appropriate error message.
+
+<P>If the text is from Standard Input and contains a null character, the
+results are abnormal.  Lines may be truncated, and a single line may be
+considered multiple lines.  Normal text does not contain null characters, so
+this isn't a big problem.
+
+
 <h2 id="tips">TIPS</h2>
 
 <p>If you get garbled output, check the input text encoding and font file
@@ -424,6 +435,7 @@ Copyright (C) 1993 by Jef Poskanzer and George Phillips
 <LI><A HREF="#usage">USAGE</A>
 <LI><A HREF="#fonts">FONTS</A>
 <LI><A HREF="#multibyte">MULTI-BYTE INPUT</A>
+<LI><A HREF="#limitations">LIMITATIONS</A>
 <LI><A HREF="#tips">TIPS</A>
 <LI><A HREF="#seealso">SEE ALSO</A>
 <LI><A HREF="#author">AUTHOR</A>
