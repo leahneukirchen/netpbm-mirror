@@ -19,7 +19,7 @@ SUBDIRS = pamflip specialty
 PORTBINARIES = pamaddnoise pambackground pamcomp pamcut \
 	       pamdice pamditherbw pamedge \
 	       pamenlarge \
-	       pamfunc pammasksharpen \
+	       pamfunc pamlevels pammasksharpen \
 	       pamperspective pamrecolor pamrubber \
 	       pamscale pamsistoaglyph pamstretch pamthreshold pamundice \
 	       pamwipeout \

@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.83.00
 
+              Add pamlevels.  Thanks Anton Shepelev <anton.txt@gmail.com>.
+
 18.03.25 BJH  Release 10.82.00
 
               pbmtext: Add -wchar.
