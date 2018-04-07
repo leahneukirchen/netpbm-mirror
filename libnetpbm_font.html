@@ -1,0 +1,148 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+<TITLE>Libnetpbm PBM Font Function Manual</TITLE>
+<META NAME="manual_section" CONTENT="3">
+</HEAD>
+<BODY>
+<H1>Libnetpbm PBM Font Function Manual</H1>
+Updated: April 2018
+<br>
+<p><A HREF="#toc">Table Of Contents</A>
+<?makeman .SH NAME ?>
+<?makeman libnetpbm_draw \- Libnetpbm PPM Drawing Function Manual ?>
+<?makeman .SH DESCRIPTION ?>
+
+<p>This reference manual covers functions in the <b>libnetpbm</b> library for
+accessing fonts to draw text characters, using the PBM image format and the
+<b>libnetpbm</b> in-memory image formats.
+
+<p>We actually have very little information here; this is mainly a
+framework for adding documentation later if someone becomes interested
+in this facility.
+
+<p>Note that the primary known user of this library is the Netpbm program
+<b>pbmtext</b>.  You can use that program's source code as an example.
+
+
+<h2 id="fontobject">Font Object</h2>
+
+<p><b>libnetpbm</b> represents a font with an object of type
+<b>struct font</b>.  The library provides functions to create these objects.
+  
+<P>The object these functions create is in newly allocated memory and you
+can't actually free it.  The memory may be in multiple pieces, pointing to
+each other, and <b>libnetpbm</b> provides no destroy function.  (This is only
+because of implementation laziness).
+
+
+<h2 id="thefunctions">The Functions</h2>
+
+<p>The functions are all declared in the <b>pbmfont.h</b> header file.
+
+<h3 id="pbm_defaultfont"><b>pbm_defaultfont</b></h3>
+
+<h4>Synopsis</h4>
+
+<pre>
+<code>
+    struct font *
+    pbm_defaultfont(const char * which);
+</code>
+</pre>
+
+<h4>Description</h4>
+
+<p>This returns a font object representing a font built in to <b>libnetpbm</b>.
+
+<p><i>which</i> is the name of the desired built-in font.  There are two:
+<dl>
+  <dt>bdf
+    <dd>A proportional font similar to Adobe's <b>timR12</b> font
+  <dt>fixed
+    <dd>A fixed space font
+</dl>
+
+<h4>Copyright</h4>
+
+<p>The provenance of the built-in fonts are not known for sure, but in 2018,
+the <b>bdf</b> font was almost identical to a font on which Adobe and
+Digital Equipment Corporation once claimed copyright.  That font was
+available in the
+<a href="ftp://ftp.x.org/pub/current/src/font/">X.org source code</a> in a
+collection named &quot;font-adobe-75dpi&quot;, in a file named
+<b>timR12.pcf.gz</b>.
+
+<P>Ergo, it is likely that the font was copied into Netpbm from that font in
+1991.
+
+<p>You may need a copyright license from the copyright owners of that original
+font not only to copy the <b>libnetpbm</b> code, but to execute it, thus
+generating copies of the glyphs of the font.
+  
+<p>The X.org files in 2018 indicate the following copyright claims, along
+with a license to the public to copy them:
+<blockquote>
+<p>
+  Copyright 1984-1989, 1994 Adobe Systems Incorporated.
+  Copyright 1988, 1994 Digital Equipment Corporation.
+<p>
+  Permission to use, copy, modify, distribute and sell this software
+  and its documentation for any purpose and without fee is hereby
+  granted, provided that the above copyright notices appear in all
+  copies and that both those copyright notices and this permission
+  notice appear in supporting documentation, and that the names of
+  Adobe Systems and Digital Equipment Corporation not be used in
+  advertising or publicity pertaining to distribution of the software
+  without specific, written prior permission.  Adobe Systems and
+  Digital Equipment Corporation make no representations about the
+  suitability of this software for any purpose.  It is provided &quot;as
+  is&quot; without express or implied warranty.
+</blockquote>
+
+
+<h3 id="pbm_dissectfont"><b>pbm_dissectfont</b></h3>
+
+<h3 id="pbm_loadfont"><b>pbm_loadfont</b></h3>
+
+<p>This function returns a font object for a font described in a file.  The
+file may be either a special PBM file or a BDF file.  The function determines
+which it is and behaves as either <b>pbm_loadpbmfont</b>
+or <b>pbm_loadbdffont</b> accordingly.
+
+<h3 id="pbm_loadpbmfont"><b>pbm_loadpbmfont</b></h3>
+
+<h3 id="pbm_loadbffont2"><b>pbm_loadbdffont2</b></h3>
+
+<h3 id="pbm_loadbdffont"><b>pbm_loadbdffont</b></h3>
+
+<p>This is obsolete.  New programs should use <b>pbm_loadbdffont2</b>
+instead.
+  
+<h3 id="pbm_expandbdffont"><b>pbm_expandbdffont</b></h3>
+
+<h3 id="pbm_dumpfont"><b>pbm_dumpfont</b></h3>
+
+
+<HR>
+<H2 id="toc">Table Of Contents</H2>
+
+<ul>
+  <li><a href="#fontobject">Font Object</a>
+  <li><a href="#thefunctions">The Functions</a>
+    <ul>
+      <li><a href="#pbm_default_font">pbm_default_font</a>
+      <li><a href="#pbm_dissectfont">pbm_dissectfont</a>
+      <li><a href="#pbm_loadfont">pbm_loadfont</a>
+      <li><a href="#pbm_loadpbmfont">pbm_loadpbmfont</a>
+      <li><a href="#pbm_loadbdffont2">pbm_loadbdffont2</a>
+      <li><a href="#pbm_lodbdffont">pbm_loadbdffont</a>
+      <li><a href="#pbm_expandbdffont">pbm_expandbdffont</a>
+      <li><a href="#pbm_dumpfont">pbm_dumpfont</a>
+      </ul>
+  </ul>
+
+
+
+</BODY>
+</HTML>
