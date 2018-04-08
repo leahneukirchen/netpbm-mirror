@@ -21,7 +21,7 @@ typedef struct   pam  pam;
 
 typedef struct {
 /*----------------------------------------------------------------------------
-  An RGB triple, in linear intensity
+  An RGB triple, in linear intensity or linear brightness; user's choice.
 -----------------------------------------------------------------------------*/
     double _[3];
 } Rgb;
@@ -35,7 +35,9 @@ typedef struct {
 
 typedef struct {
 /*----------------------------------------------------------------------------
-  A set of source or target sample values, in some plane, intensity-linear.
+  A set of source or target sample values, in some plane.
+
+  These are either intensity-linear or brightness-linear; user's choice.
 
   There could be two or three values; user must know which.
 -----------------------------------------------------------------------------*/
@@ -48,8 +50,8 @@ typedef struct {
 /*----------------------------------------------------------------------------
   A mapping of one source color to one target color
 -----------------------------------------------------------------------------*/
-    Rgb from;
-    Rgb to;
+    tuplen from;
+    tuplen to;
 } Trans;
 
 typedef struct {
@@ -77,6 +79,7 @@ typedef struct {
 
 typedef struct {
     unsigned int linear;
+    unsigned int fitbrightness;
     TransSet     xlats; /* color mappings (-from1, -to1, etc.) */
     const char * inputFileName;  /* the input file name, "-" for stdin     */
 } CmdlineInfo;
@@ -113,13 +116,14 @@ optAddTrans (optEntry *     const option_def,
 
 static void
 parseColor(const char * const text,
-           Rgb *        const rgbLinearP) {
+           tuplen *     const colorP) {
 
     const char * const lastsc = strrchr(text, ':');
 
     const char * colorname;
     double mul;
-    pixel  color;
+    tuplen unmultipliedColor;
+    tuplen color;
 
     if (lastsc) {
         /* Specification contains a colon.  It might be the colon that
@@ -154,16 +158,21 @@ parseColor(const char * const text,
         colorname = pm_strdup(text);
     }
 
-    color = ppm_parsecolor(colorname, PAM_OVERALL_MAXVAL);
+    unmultipliedColor = pnm_parsecolorn(colorname);
 
     pm_strfree(colorname);
 
-    rgbLinearP->_[0] = pm_ungamma709(
-        (double)PPM_GETR(color) / PAM_OVERALL_MAXVAL * mul);
-    rgbLinearP->_[1] =
-        pm_ungamma709((double)PPM_GETG(color) / PAM_OVERALL_MAXVAL * mul);
-    rgbLinearP->_[2] =
-        pm_ungamma709((double)PPM_GETB(color) / PAM_OVERALL_MAXVAL * mul);
+    MALLOCARRAY_NOFAIL(color, 3);
+
+    {
+        /* Apply multiplier */
+        unsigned int i;
+        for (i = 0; i < 3; ++i)
+            color[i] = unmultipliedColor[i] * mul;
+    }
+    free(unmultipliedColor);
+
+    *colorP = color;
 }
 
 
@@ -210,7 +219,7 @@ parseCommandLine(int                 argc,
                  const char **       argv,
                  CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
-   parse program command line described in Unix standard form by argc
+   Parse program command line described in Unix standard form by argc
    and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
@@ -232,7 +241,10 @@ parseCommandLine(int                 argc,
 
     option_def_index = 0;  /* incremented by OPTENT3 */
 
-    OPTENT3(0, "linear", OPT_FLAG, NULL, &cmdlineP->linear, 0);
+    OPTENT3(0, "fitbrightness",          OPT_FLAG, NULL,
+            &cmdlineP->fitbrightness, 0);
+    OPTENT3(0, "linear",                 OPT_FLAG, NULL,
+            &cmdlineP->linear,          0);
 
     {
         unsigned int i;
@@ -246,6 +258,14 @@ parseCommandLine(int                 argc,
     opt.allowNegNum   = 0;
 
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
+
+    if (cmdlineP->linear && cmdlineP->fitbrightness) {
+        pm_error("You cannot use -linear and -fitbrightness together");
+        /* Note: It actually makes sense to use them together; we're just not
+           willing to put the effort into something it's unlikely anyone will
+           want.
+        */
+    }
 
     calcTrans(xlations, &cmdlineP->xlats);
 
@@ -335,6 +355,7 @@ solveOnePlane(SampleSet    const f,
 
 static void
 chanData(TransSet     const ta,
+         bool         const fittingBrightness,
          unsigned int const plane,
          SampleSet *  const fromP,
          SampleSet *  const toP) {
@@ -344,8 +365,13 @@ chanData(TransSet     const ta,
     unsigned int i;
 
     for (i = 0; i < ta.n; ++i) {
-        fromP->_[i] = ta.t[i].from._[plane];
-        toP->  _[i] = ta.t[i].to  ._[plane];
+        if (fittingBrightness) {
+            fromP->_[i] = ta.t[i].from[plane];
+            toP->  _[i] = ta.t[i].to  [plane];
+        } else {
+            fromP->_[i] = pm_ungamma709(ta.t[i].from[plane]);
+            toP->  _[i] = pm_ungamma709(ta.t[i].to  [plane]);
+        }
     }
 }
 
@@ -362,8 +388,11 @@ solveFmCmdlineOpts(CmdlineInfo  const cmdline,
                    unsigned int const depth,
                    Solution *   const solutionP) {
 /*----------------------------------------------------------------------------
-   Compute the function that will transform the tuples, with intensity-linear
-   sample values, based on what the user requested ('cmdline').
+   Compute the function that will transform the tuples, based on what the user
+   requested ('cmdline').
+
+   The function takes intensity-linear tuples for the normal levels function,
+   or brightness-linear for the brightness approximation levels function.
 
    The transformed image has 'depth' planes.
 -----------------------------------------------------------------------------*/
@@ -371,7 +400,8 @@ solveFmCmdlineOpts(CmdlineInfo  const cmdline,
 
     for (plane = 0; plane < depth; ++plane) {
         SampleSet from, to;
-        chanData(cmdline.xlats, plane, &from, &to);
+
+        chanData(cmdline.xlats, cmdline.fitbrightness, plane, &from, &to);
         solveOnePlane(from, to, cmdline.xlats.n, &solutionP->_[plane]);
     }
 }
@@ -421,7 +451,7 @@ pamlevels(CmdlineInfo const cmdline) {
 
         pnm_readpamrown(&inPam, tuplerown);
 
-        if (!cmdline.linear)
+        if (!cmdline.linear && !cmdline.fitbrightness)
             pnm_ungammarown(&inPam, tuplerown);
 
         for (col = 0; col < inPam.width; ++col) {
@@ -432,7 +462,7 @@ pamlevels(CmdlineInfo const cmdline) {
                     xformedSample(tuplerown[col][plane], solution._[plane]);
             }
         }
-        if (!cmdline.linear)
+        if (!cmdline.linear && !cmdline.fitbrightness)
             pnm_gammarown(&inPam, tuplerown);
 
         pnm_writepamrown(&outPam, tuplerown);
