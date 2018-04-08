@@ -12,7 +12,7 @@
    offset stuff.
 */
 #define _FILE_OFFSET_BITS 64
-#define _LARGE_FILES  
+#define _LARGE_FILES
 
 #define _DEFAULT_SOURCE 1  /* New name for SVID & BSD source defines */
 #define _BSD_SOURCE 1      /* Make sure strdup() is in string.h */
@@ -91,7 +91,7 @@ parseHexDigits(const char *   const string,
 
 
 static void
-parseNewHexX11(char   const colorname[], 
+parseNewHexX11(char   const colorname[],
                tuplen const color) {
 /*----------------------------------------------------------------------------
    Determine what color colorname[] specifies in the new style hex
@@ -131,11 +131,11 @@ isNormal(samplen const arg) {
 
 
 static void
-parseNewDecX11(const char * const colorname, 
+parseNewDecX11(const char * const colorname,
                tuplen       const color) {
 
     int rc;
-    
+
     rc = sscanf(colorname, "rgbi:%f/%f/%f",
                 &color[PAM_RED_PLANE],
                 &color[PAM_GRN_PLANE],
@@ -155,7 +155,7 @@ parseNewDecX11(const char * const colorname,
 
 
 static void
-parseOldX11(const char * const colorname, 
+parseOldX11(const char * const colorname,
             tuplen       const color) {
 /*----------------------------------------------------------------------------
    Return as *colorP the color specified by the old X11 style color
@@ -181,7 +181,7 @@ parseOldX11(const char * const colorname,
              (samplen)(hexDigitValue(colorname[4]) << 0))
              / 255;
         color[PAM_BLU_PLANE] =
-            ((samplen)(hexDigitValue(colorname[5]) << 4) + 
+            ((samplen)(hexDigitValue(colorname[5]) << 4) +
              (samplen)(hexDigitValue(colorname[6]) << 0))
              / 255;
         break;
@@ -193,12 +193,12 @@ parseOldX11(const char * const colorname,
              (samplen)(hexDigitValue(colorname[3]) << 0))
             / 4095;
         color[PAM_GRN_PLANE] =
-            ((samplen)(hexDigitValue(colorname[4]) << 8) + 
+            ((samplen)(hexDigitValue(colorname[4]) << 8) +
              (samplen)(hexDigitValue(colorname[5]) << 4) +
              (samplen)(hexDigitValue(colorname[6]) << 0))
             / 4095;
         color[PAM_BLU_PLANE] =
-            ((samplen)(hexDigitValue(colorname[7]) << 8) + 
+            ((samplen)(hexDigitValue(colorname[7]) << 8) +
              (samplen)(hexDigitValue(colorname[8]) << 4) +
              (samplen)(hexDigitValue(colorname[9]) << 0))
             / 4095;
@@ -206,19 +206,19 @@ parseOldX11(const char * const colorname,
 
     case 12:
         color[PAM_RED_PLANE] =
-            ((samplen)(hexDigitValue(colorname[1]) << 12) + 
+            ((samplen)(hexDigitValue(colorname[1]) << 12) +
              (samplen)(hexDigitValue(colorname[2]) <<  8) +
-             (samplen)(hexDigitValue(colorname[3]) <<  4) + 
+             (samplen)(hexDigitValue(colorname[3]) <<  4) +
              (samplen)(hexDigitValue(colorname[4]) <<  0))
             / 65535;
         color[PAM_GRN_PLANE] =
-            ((samplen)(hexDigitValue(colorname[5]) << 12) + 
+            ((samplen)(hexDigitValue(colorname[5]) << 12) +
              (samplen)(hexDigitValue(colorname[6]) <<  8) +
              (samplen)(hexDigitValue(colorname[7]) <<  4) +
              (samplen)(hexDigitValue(colorname[8]) <<  0))
             / 65535;
         color[PAM_BLU_PLANE] =
-            ((samplen)(hexDigitValue(colorname[ 9]) << 12) + 
+            ((samplen)(hexDigitValue(colorname[ 9]) << 12) +
              (samplen)(hexDigitValue(colorname[10]) << 8) +
              (samplen)(hexDigitValue(colorname[11]) << 4) +
              (samplen)(hexDigitValue(colorname[12]) << 0))
@@ -233,7 +233,7 @@ parseOldX11(const char * const colorname,
 
 
 static void
-parseOldX11Dec(const char* const colorname, 
+parseOldX11Dec(const char* const colorname,
                tuplen      const color) {
 
     int rc;
@@ -260,7 +260,7 @@ tuplen
 pnm_parsecolorn(const char * const colorname) {
 
     tuplen retval;
-    
+
     MALLOCARRAY_NOFAIL(retval, 3);
 
     if (strncmp(colorname, "rgb:", 4) == 0)
@@ -276,7 +276,7 @@ pnm_parsecolorn(const char * const colorname) {
              colorname[0] == '.')
         /* It's an old-style decimal/float rgb specifier. */
         parseOldX11Dec(colorname, retval);
-    else 
+    else
         /* Must be a name from the X-style rgb file. */
         pm_parse_dictionary_namen(colorname, retval);
 
@@ -324,7 +324,7 @@ pnm_colorname(struct pam * const pamP,
 
     if (pamP->depth < 3)
         PPM_ASSIGN(colorp, color[0], color[0], color[0]);
-    else 
+    else
         PPM_ASSIGN(colorp,
                    color[PAM_RED_PLANE],
                    color[PAM_GRN_PLANE],
@@ -344,18 +344,18 @@ pnm_colorname(struct pam * const pamP,
 double pnm_lumin_factor[3] = {PPM_LUMINR, PPM_LUMING, PPM_LUMINB};
 
 void
-pnm_YCbCrtuple(tuple    const tuple, 
-               double * const YP, 
-               double * const CbP, 
+pnm_YCbCrtuple(tuple    const tuple,
+               double * const YP,
+               double * const CbP,
                double * const CrP) {
 /*----------------------------------------------------------------------------
-   Assuming that the tuple 'tuple' is of tupletype RGB, return the 
+   Assuming that the tuple 'tuple' is of tupletype RGB, return the
    Y/Cb/Cr representation of the color represented by the tuple.
 -----------------------------------------------------------------------------*/
     int const red = (int)tuple[PAM_RED_PLANE];
     int const grn = (int)tuple[PAM_GRN_PLANE];
     int const blu = (int)tuple[PAM_BLU_PLANE];
-    
+
     *YP  = (+ PPM_LUMINR * red + PPM_LUMING * grn + PPM_LUMINB * blu);
     *CbP = (- 0.16874 * red - 0.33126 * grn + 0.50000 * blu);
     *CrP = (+ 0.50000 * red - 0.41869 * grn - 0.08131 * blu);
@@ -363,11 +363,11 @@ pnm_YCbCrtuple(tuple    const tuple,
 
 
 
-void 
+void
 pnm_YCbCr_to_rgbtuple(const struct pam * const pamP,
                       tuple              const tuple,
                       double             const Y,
-                      double             const Cb, 
+                      double             const Cb,
                       double             const Cr,
                       int *              const overflowP) {
 
@@ -388,7 +388,7 @@ pnm_YCbCr_to_rgbtuple(const struct pam * const pamP,
         } else if (rgb[plane] < 0.0) {
             overflow = TRUE;
             tuple[plane] = 0;
-        } else 
+        } else
             tuple[plane] = (sample)rgb[plane];
     }
     if (overflowP)
