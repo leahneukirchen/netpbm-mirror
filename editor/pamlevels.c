@@ -198,6 +198,9 @@ calcTrans(TransArgSet   const transArgs,
             parseTran(*xformP, &transP->t[transP->n++]);
         }
     }
+    if (transP->n < 2)
+        pm_error("You must specify at least two mappings with "
+                 "-from1, -to1, etc.  You specified %u", transP->n);
 }
 
 
