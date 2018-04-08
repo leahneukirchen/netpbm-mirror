@@ -1,12 +1,14 @@
+#include <stdbool.h>
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
-#include <pam.h>
-#include <pm_system.h>
-#include <pm_gamma.h>
-#include <netpbm/ppm.h>
+#include "netpbm/pam.h"
+#include "netpbm/pm_system.h"
+#include "netpbm/pm_gamma.h"
+#include "netpbm/nstring.h"
+#include "netpbm/ppm.h"
 
 #include "shhopt.h"
 #include "mallocvar.h"
@@ -17,172 +19,224 @@ typedef unsigned char uchar;
 typedef unsigned int  uint;
 typedef struct   pam  pam;
 
-typedef struct Rgb    /* an RGB sample */
-{   double _[3];
+typedef struct {
+/*----------------------------------------------------------------------------
+  An RGB triple, in linear intensity
+-----------------------------------------------------------------------------*/
+    double _[3];
 } Rgb;
 
-typedef struct Float3 /* the coefficients of a quadratic polynom */
-{   double _[3];
-} Float3;
+typedef struct {
+/*----------------------------------------------------------------------------
+  A quadratic polynomial
+-----------------------------------------------------------------------------*/
+    double coeff[3];
+} Polynomial;
+
+typedef struct {
+/*----------------------------------------------------------------------------
+  A set of source or target sample values, in some plane, intensity-linear.
+
+  There could be two or three values; user must know which.
+-----------------------------------------------------------------------------*/
+    double _[3];
+} SampleSet;
 
 /* ------------------------- Parse transformations ------------------------- */
 
-typedef struct Trans /* a color transformation */
-{   Rgb from;
+typedef struct {
+/*----------------------------------------------------------------------------
+  A mapping of one source color to one target color
+-----------------------------------------------------------------------------*/
+    Rgb from;
     Rgb to;
 } Trans;
 
-typedef struct TransArg
-{   char* from;         /* color specifictaionts         */
-    char* to;           /* as they appear on commandline */
-    uint  hasfrom;      /* is the "from" part present? */
-    uint  hasto;
+typedef struct {
+    const char * from;  /* color specifications  */
+    const char * to;    /*   as they appear on commandline */
+    unsigned int  hasFrom;      /* "from" part is present */
+    unsigned int  hasTo;        /* "to" part is present */
     char  nameFromS[3]; /* short option name */
     char  nameToS  [3];
     char  nameFromL[6]; /* long option name */
     char  nameToL  [6];
 } TransArg;
 
-typedef struct Sets
-{   uint     direct;        /* direct processing of brightness values */
-    TransArg xlations[  3]; /* color mapping as read from commandline */
-    Trans    xlats   [  3]; /* color mappings parsed                  */
-    char     infname [255]; /* the input file name, "-" for stdin     */
-} Sets;
+typedef struct {
+    TransArg _[3];
+} TransArgSet;
+
+typedef struct {
+    unsigned int n;
+        /* Number of elements in 't', 2 for linear transformation; 3 for
+           quadratic.
+        */
+    Trans t[3];
+} TransSet;
+
+typedef struct {
+    unsigned int linear;
+    TransSet     xlats; /* color mappings (-from1, -to1, etc.) */
+    const char * inputFileName;  /* the input file name, "-" for stdin     */
+} CmdlineInfo;
 
 
 
-static void optAddTrans
-(   optEntry * const option_def,
-    uint *     const option_def_indexP,
-    TransArg * const xP,
-    char       const index
-)
-{   char indexc;
+static void
+optAddTrans (optEntry *     const option_def,
+             unsigned int * const option_def_indexP,
+             TransArg *     const xP,
+             char           const index) {
+
+    char indexc;
     uint option_def_index;
 
     option_def_index = *option_def_indexP;
 
     indexc = '0' + index;
 
-    strcpy( xP->nameFromL, "from " ); xP->nameFromL[4] = indexc;
-    strcpy( xP->nameToL,   "to "   ); xP->nameToL  [2] = indexc;
-    strcpy( xP->nameFromS, "f "    ); xP->nameFromS[1] = indexc;
-    strcpy( xP->nameToS,   "t "    ); xP->nameToS  [1] = indexc;
+    STRSCPY(xP->nameFromL, "from "); xP->nameFromL[4] = indexc;
+    STRSCPY(xP->nameToL,   "to "  ); xP->nameToL  [2] = indexc;
+    STRSCPY(xP->nameFromS, "f "   ); xP->nameFromS[1] = indexc;
+    STRSCPY(xP->nameToS,   "t "   ); xP->nameToS  [1] = indexc;
 
-    OPTENT3(0, xP->nameFromL, OPT_STRING, &xP->from, &xP->hasfrom, 0);
-    OPTENT3(0, xP->nameFromS, OPT_STRING, &xP->from, &xP->hasfrom, 0);
-    OPTENT3(0, xP->nameToL,   OPT_STRING, &xP->to,   &xP->hasto,   0);
-    OPTENT3(0, xP->nameToS,   OPT_STRING, &xP->to,   &xP->hasto,   0);
+    OPTENT3(0, xP->nameFromL, OPT_STRING, &xP->from, &xP->hasFrom, 0);
+    OPTENT3(0, xP->nameFromS, OPT_STRING, &xP->from, &xP->hasFrom, 0);
+    OPTENT3(0, xP->nameToL,   OPT_STRING, &xP->to,   &xP->hasTo,   0);
+    OPTENT3(0, xP->nameToS,   OPT_STRING, &xP->to,   &xP->hasTo,   0);
 
     *option_def_indexP = option_def_index;
 }
 
 
 
-static void ungammaSample( Rgb * const rgb )
-{   int i;
-    for( i = 0; i < 3; i++ )
-    {   rgb->_[i] = pm_ungamma709( rgb->_[i] );  }
-}
+static void
+parseColor(const char * const text,
+           Rgb *        const rgbLinearP) {
 
+    const char * const lastsc = strrchr(text, ':');
 
-
-static void parseSample
-(   const char * const text,
-    Rgb *        const sample,
-    uint         const direct
-)
-{   uint const MAXMAXVAL = 0xffff; /* for maximum precision */
-    char   *lastsc, *endP, *colorP, *mulstart;
-    char   color[50];
+    const char * colorname;
     double mul;
-    pixel pix;
+    pixel  color;
 
-    mul = 1.0;
-    colorP = ( char* )text;
-    lastsc = strrchr( text, ':' );
-    do /* parse the optional color multiplier, if it present */
-    {   if( lastsc == NULL ) break;
+    if (lastsc) {
+        /* Specification contains a colon.  It might be the colon that
+           introduces the optional multiplier, or it might just be the colon
+           after the type specifier, e.g. "rgbi:...".
+        */
 
-        if( strstr( text, "rgb" ) == text )
-        {   if( strchr( text, ':' ) == lastsc ) break;  }
+        if (strstr(text, "rgb") == text && strchr(text, ':') == lastsc) {
+            /* The only colon present is the one on the type specifier.
+               So there is no multiplier.
+            */
+            mul = 1.0;
+            colorname = pm_strdup(text);
+        } else {
+            /* There is a multiplier (possibly invalid, though). */
+            const char * const mulstart = lastsc + 1;
 
-        mulstart = lastsc + 1;
-        errno    = 0;
-        mul      = strtof( mulstart, &endP );
-        if( errno != 0 || endP == mulstart )
-        {   pm_error("Wrong sample multiplier: %s", mulstart );  }
-        strncpy( color, text, lastsc-text );
-        color[lastsc-text] = '\0';
-        colorP = color;
-    } while ( 1 == 0 );
+            char * endP;
+            char colorbuf[50];
 
-    pix = ppm_parsecolor( colorP, MAXMAXVAL);
-    sample->_[0] = (double)PPM_GETR( pix ) / MAXMAXVAL * mul;
-    sample->_[1] = (double)PPM_GETG( pix ) / MAXMAXVAL * mul;
-    sample->_[2] = (double)PPM_GETB( pix ) / MAXMAXVAL * mul;
-    if( !direct )
-    {   ungammaSample( sample );  }
-}
+            errno = 0;
+            mul = strtof(mulstart, &endP);
+            if (errno != 0 || endP == mulstart)
+                pm_error("Invalid sample multiplier: '%s'", mulstart);
 
-
-
-static void parseTran
-(   const TransArg * const xP,
-    Trans *          const rP,
-    uint             const direct
-)
-{   parseSample( xP->from, &rP->from, direct );
-    parseSample( xP->to,   &rP->to,   direct );
-}
-
-
-
-static void calcTrans( Sets * const setsP )
-{   const char *const FIRST2_UNDEF  = "The first two transformatios must be completely specified.";
-    const char * const THIRD_INCOMPL = "The third transformation is incompletely specified.";
-
-    TransArg * xP;
-    uchar      xi;
-
-    for( xi = 0; xi < 3; xi++ )
-    {   xP = &setsP->xlations[xi];
-        if( ( xi < 2 ) && ( !xP->hasto || !xP->hasfrom ) )
-        {   pm_error( FIRST2_UNDEF );  }
-        if( xi == 2 )
-        {   if( xP->hasto != xP->hasfrom )
-            {   pm_error( THIRD_INCOMPL );  }
-            if( !xP->hasto )
-            {   break;  }
+            strncpy(colorbuf, text, lastsc - text);
+            colorbuf[lastsc - text] = '\0';
+            colorname = pm_strdup(colorbuf);
         }
-        parseTran( xP, &setsP->xlats[xi], setsP->direct );
+    } else {
+        mul = 1.0;
+        colorname = pm_strdup(text);
+    }
+
+    color = ppm_parsecolor(colorname, PAM_OVERALL_MAXVAL);
+
+    pm_strfree(colorname);
+
+    rgbLinearP->_[0] = pm_ungamma709(
+        (double)PPM_GETR(color) / PAM_OVERALL_MAXVAL * mul);
+    rgbLinearP->_[1] =
+        pm_ungamma709((double)PPM_GETG(color) / PAM_OVERALL_MAXVAL * mul);
+    rgbLinearP->_[2] =
+        pm_ungamma709((double)PPM_GETB(color) / PAM_OVERALL_MAXVAL * mul);
+}
+
+
+
+static void
+parseTran (TransArg const transArg,
+           Trans *  const rP) {
+
+    parseColor(transArg.from, &rP->from);
+    parseColor(transArg.to,   &rP->to);
+}
+
+
+
+static void
+calcTrans(TransArgSet   const transArgs,
+          TransSet *    const transP) {
+/*----------------------------------------------------------------------------
+   Interpret transformation option (-from1, etc.) values 'transArg'
+   as transformations, *transP.
+-----------------------------------------------------------------------------*/
+    unsigned int xi;
+
+    for (transP->n = 0, xi = 0; xi < 3; ++xi) {
+        const TransArg * const xformP = &transArgs._[xi];
+
+        if (xformP->hasFrom || xformP->hasTo) {
+            if (!xformP->hasFrom || !xformP->hasTo)
+                pm_error("Mapping %u incompletely specified - "
+                         "you specified -fromN or -toN but not the other",
+                    xi + 1);
+            parseTran(*xformP, &transP->t[transP->n++]);
+        }
     }
 }
 
 
 
-static Sets readOpts
-(   int           argc,
-    const char ** argv
-)
-{   const char* PM_STDIN = "-";
+static void
+parseCommandLine(int                 argc,
+                 const char **       argv,
+                 CmdlineInfo * const cmdlineP) {
+/*----------------------------------------------------------------------------
+   parse program command line described in Unix standard form by argc
+   and argv.  Return the information in the options as *cmdlineP.
 
-    Sets       sets;
-    optStruct3 opt;
-    uchar      xi;
-    uint       option_def_index;
+   If command line is internally inconsistent (invalid options, etc.),
+   issue error message to stderr and abort program.
+
+   Note that the strings we return are stored in the storage that
+   was passed to us as the argv array.  We also trash *argv.
+-----------------------------------------------------------------------------*/
     optEntry * option_def;
+        /* Instructions to pm_optParseOptions3 on how to parse our options.
+         */
+    optStruct3 opt;
 
-    sets.direct = 0;
+    unsigned int option_def_index;
+
+    TransArgSet xlations; /* color mapping as read from command line */
 
     MALLOCARRAY_NOFAIL(option_def, 100);
 
     option_def_index = 0;  /* incremented by OPTENT3 */
 
-    OPTENT3(0, "direct", OPT_FLAG, &sets.direct, NULL, 0);
-    for( xi = 0; xi < 3; xi++ )
-    {   optAddTrans( option_def, &option_def_index, &sets.xlations[xi], xi+1 );  }
+    OPTENT3(0, "linear", OPT_FLAG, NULL, &cmdlineP->linear, 0);
+
+    {
+        unsigned int i;
+        for (i = 0; i < 3; ++i)
+            optAddTrans(option_def, &option_def_index,
+                        &xlations._[i], i + 1);
+    }
 
     opt.opt_table     = option_def;
     opt.short_allowed = 0;
@@ -190,164 +244,211 @@ static Sets readOpts
 
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
 
-    calcTrans( &sets );
-    if( argc > 2 )
-    {   pm_error( "Too many positional arguments." );  }
+    calcTrans(xlations, &cmdlineP->xlats);
 
-    if( argc == 1 )
-    {   strcpy( sets.infname, PM_STDIN );  }
-    else
-    {   strcpy( sets.infname, argv[1] );  }
+    if (argc-1 < 1)
+        cmdlineP->inputFileName = "-";
+    else {
+        cmdlineP->inputFileName = argv[1];
 
-    free( option_def );
-    return sets;
+        if (argc-1 > 1)
+            pm_error("Too many arguments.  "
+                     "The only possible non-option argument "
+                     "is the input file name");
+    }
+
+    free(option_def);
 }
 
 
 
-static void errResolve( void )
-{   pm_error( "Cannot resolve the transormations.");  }
+static void
+errResolve(void) {
+    pm_error( "Cannot resolve the transformations");
+}
 
 
 
-static double sqr( double const x )
-{   return x * x;  }
+static double
+sqr(double const x) {
+    return x * x;
+}
 
 
 
-/* Find the transformation that maps f[i] to t[i] for 0 <= i < n */
-static void solve
-(   Float3   const f,
-    Float3   const t,
-    int      const n,
-    Float3 * const coeffs
-)
-{   double const eps = 0.00001;
-    double a, a_denom, b, b_denom, c;
+static void
+solveOnePlane(SampleSet    const f,
+              SampleSet    const t,
+              unsigned int const n,
+              Polynomial * const solutionP) {
+/*----------------------------------------------------------------------------
+  Find the transformation that maps f[i] to t[i] for 0 <= i < n.
+-----------------------------------------------------------------------------*/
+    double const eps = 0.00001;
+
+    double a, b, c;
 
     /* I have decided against generic methods of solving systems of linear
-     * equations in favour of simple explicit formulas, with no memory
-     * allocation and tedious matrix processing. */
+       equations in favour of simple explicit formulas, with no memory
+       allocation and tedious matrix processing.
+    */
 
-    switch( n )
-    {   case 3:
-            a_denom = sqr( f._[0] ) * ( f._[1] - f._[2] ) -
-                      sqr( f._[2] ) * ( f._[1] - f._[0] ) -
-                      sqr( f._[1] ) * ( f._[0] - f._[2] );
+    switch (n) {
+    case 3: {
+        double const aDenom =
+            sqr( f._[0] ) * ( f._[1] - f._[2] ) -
+            sqr( f._[2] ) * ( f._[1] - f._[0] ) -
+            sqr( f._[1] ) * ( f._[0] - f._[2] );
 
-            if( fabs( a_denom ) < eps )
-            {   errResolve();  }
+        if (fabs(aDenom) < eps)
+            errResolve();
 
-            a = t._[1] * ( f._[2] - f._[0] ) - t._[0] * ( f._[2] - f._[1] ) -
-                t._[2] * ( f._[1] - f._[0] );
-            a = a / a_denom;
+        a = (t._[1] * (f._[2] - f._[0]) - t._[0] * (f._[2] - f._[1]) -
+             t._[2] * (f._[1] - f._[0]))
+            / aDenom;
+    } break;
+    case 2:
+        a = 0.0;
         break;
-        case 2: a = 0.0; break;
-        default: pm_error( "solve(): incorrect value of n: %i. This is a bug. Contact the maintainer.", n ); break;
+    default:
+        pm_error("INTERNAL ERROR: solve(): impossible value of n: %u", n);
     }
-    b_denom = f._[1] - f._[0];
-    if( fabs( b_denom ) < eps )
-    {   errResolve();  }
-    b = t._[1] - t._[0] + a * ( sqr( f._[0] ) - sqr( f._[1] ) );
-    b = b / b_denom;
-    c = -a * sqr( f._[0] ) - b * f._[0] + t._[0];
-    coeffs->_[0] = a;  coeffs->_[1] = b;  coeffs->_[2] = c;
+
+    {
+        double const bDenom = f._[1] - f._[0];
+
+        if (fabs(bDenom) < eps)
+            errResolve();
+
+        b = (t._[1] - t._[0] + a * (sqr(f._[0]) - sqr(f._[1]))) / bDenom;
+    }
+
+    c = -a * sqr(f._[0]) - b * f._[0] + t._[0];
+
+    solutionP->coeff[0] = a; solutionP->coeff[1] = b; solutionP->coeff[2] = c;
 }
 
 
 
-static double apply
-(   const double value,
-    const Float3 coeffs,
-    const uint   direct
-)
-{   double res;
-    res = value;
-    if( !direct)
-    {   res = pm_ungamma709( res );  }
+static void
+chanData(TransSet     const ta,
+         unsigned int const plane,
+         SampleSet *  const fromP,
+         SampleSet *  const toP) {
+/*----------------------------------------------------------------------------
+  Collate transformations from 'ta' for plane 'plane'.
+-----------------------------------------------------------------------------*/
+    unsigned int i;
 
-    res = ( coeffs._[0] * res + coeffs._[1] ) * res + coeffs._[2];
-
-    /* Clipping: */
-    if( res > 1.0f )
-    {   res = 1.0f;  }
-    if( res < 0.0f )
-    {   res = 0.0f;  }
-
-    if( !direct )
-    {   res = pm_gamma709( res );  }
-    return res;
-}
-
-
-
-/* collate <tn> transformatons from <ta> for channel <ch> */
-static void chanData
-(   const Trans * const ta,
-    uchar         const tn,
-    uchar         const ch,
-    Float3 *      const f,
-    Float3 *      const t
-)
-{   uchar i;
-    for( i = 0; i < tn; i++ )
-    {   f->_[i] = ta[i].from._[ ch ];
-        t->_[i] = ta[i].to  ._[ ch ];
+    for (i = 0; i < ta.n; ++i) {
+        fromP->_[i] = ta.t[i].from._[plane];
+        toP->  _[i] = ta.t[i].to  ._[plane];
     }
 }
 
 
 
-static void process( Sets const sets )
-{   uint     x, y;
-    uchar    l, tn;
+typedef struct {
+    Polynomial _[3];  /* One per plane */
+} Solution;
+
+
+
+static void
+solveFmCmdlineOpts(CmdlineInfo  const cmdline,
+                   unsigned int const depth,
+                   Solution *   const solutionP) {
+/*----------------------------------------------------------------------------
+   Compute the function that will transform the tuples, with intensity-linear
+   sample values, based on what the user requested ('cmdline').
+
+   The transformed image has 'depth' planes.
+-----------------------------------------------------------------------------*/
+    unsigned int plane;
+
+    for (plane = 0; plane < depth; ++plane) {
+        SampleSet from, to;
+        chanData(cmdline.xlats, plane, &from, &to);
+        solveOnePlane(from, to, cmdline.xlats.n, &solutionP->_[plane]);
+    }
+}
+
+
+
+static double
+xformedSample(double     const value,
+              Polynomial const polynomial) {
+/*----------------------------------------------------------------------------
+   The sample value 'value', transformed by the polynomial with coefficients
+   'coeffs'.
+-----------------------------------------------------------------------------*/
+    double const res =
+        (polynomial.coeff[0] * value + polynomial.coeff[1]) * value +
+        polynomial.coeff[2];
+
+    return MAX(0.0f, MIN(1.0f, res));
+}
+
+
+
+static void
+pamlevels(CmdlineInfo const cmdline) {
+
+    unsigned int row;
     pam      inPam, outPam;
-    Float3   sol[3];
-    Float3   from, to;
-    tuplen * row;
-    FILE   * inF;
+    Solution solution;
+    tuplen * tuplerown;
+    FILE   * ifP;
 
-    inF = pm_openr( sets.infname );
-    pnm_readpaminit( inF, &inPam, PAM_STRUCT_SIZE( tuple_type ) );
+    ifP = pm_openr(cmdline.inputFileName);
+
+    pnm_readpaminit(ifP, &inPam, PAM_STRUCT_SIZE(tuple_type));
+
     outPam = inPam;
     outPam.file = stdout;
 
-    if( sets.xlations[2].hasto )
-    {   tn = 3;  }
-    else
-    {   tn = 2;  }
+    solveFmCmdlineOpts(cmdline, inPam.depth, &solution);
 
-    for( l = 0; l < inPam.depth; l++ )
-    {   chanData( sets.xlats, tn, l, &from, &to );
-        solve( from, to, tn, &sol[ l ] );
-    }
+    tuplerown = pnm_allocpamrown(&inPam);
 
-    row = pnm_allocpamrown( &inPam );
-    pnm_writepaminit( &outPam );
-    for( y = 0; y < inPam.height; y++ )
-    {   pnm_readpamrown( &inPam, row );
-        for( x = 0; x < inPam.width; x++ )
-        {   for( l = 0; l < inPam.depth; l++ )
-            {   row[x][l] = apply( row[x][l], sol[l], sets.direct);  }
+    pnm_writepaminit(&outPam);
+
+    for (row = 0; row < inPam.height; ++row) {
+        unsigned int col;
+
+        pnm_readpamrown(&inPam, tuplerown);
+
+        if (!cmdline.linear)
+            pnm_ungammarown(&inPam, tuplerown);
+
+        for (col = 0; col < inPam.width; ++col) {
+            unsigned int plane;
+
+            for (plane = 0; plane < inPam.depth; ++plane) {
+                tuplerown[col][plane] =
+                    xformedSample(tuplerown[col][plane], solution._[plane]);
+            }
         }
-        pnm_writepamrown( &outPam, row );
+        if (!cmdline.linear)
+            pnm_gammarown(&inPam, tuplerown);
+
+        pnm_writepamrown(&outPam, tuplerown);
     }
-    pnm_freepamrown( row );
-    pm_close( inF );
+    pnm_freepamrown(tuplerown);
+    pm_close(ifP);
 }
 
 
 
-int main
-(   int   argc,
-    char *argv[]
-)
-{   const char** const argvc = (const char**)argv;
-    Sets sets;
+int main(int    argc, const char * argv[]) {
 
-    pm_proginit( &argc, argvc );
-    sets = readOpts( argc, argvc );
-    process( sets );
+    CmdlineInfo cmdline;
+
+    pm_proginit(&argc, argv);
+
+    parseCommandLine(argc, argv, &cmdline);
+
+    pamlevels(cmdline);
 
     return 0;
 }
