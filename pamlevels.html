@@ -20,6 +20,7 @@ pamlevels - effect a &quot;levels&quot; transformation
 [<b>-from3</b> <I>from3</I>
 <b>-to3</b> <I>to3</I>]
 [<b>-linear</b>]
+[<b>-fitbrightness</b>]
 [<I>pamfile</I>]
 
 <H2 id="description">DESCRIPTION</H2>
@@ -83,12 +84,36 @@ The latter tranformation similar to gamma-correction.
 <dd>
 These options define the mappings of input colors to output colors that anchor
 the transformation function.  See <a href="#description">DESCRIPTION</a>.
+<p>
+You must specify at least two of these pairs.
 
 <dt><b>-linear</b>
 <dd>This option tells <b>pamlevels</b> to work with the intensity-linear
 variation on PPM where the samples are proportional to light intensity, rather
 than brightness (gamma-adjusted) as in true PPM.  The input must be of this
 form and the <b>pamlevels</b> makes the output of this form.
+
+<p>Note that the numbers in a <b>rgbi:</b> color specification are brightness
+levels (gamma-adjusted) regardless of the input and output format.
+
+<p>You cannot use this with <b>-fitbrightness</b> because that function is
+not implemented.
+  
+<dt><b>-fitbrightness</b>
+<dd>This option selects a transformation which is not very useful - it is
+linear or quadratic in brightness rather than light intensity of the pixels.
+There is no physical basis for doing it this way and the result is normally
+undesirable.
+
+<p>Note that many tools other than Netpbm do the transformation this way.  One
+use for this option is simply to demonstrate the poor result of this method.
+
+<p>One advantage of this transformation is that it is faster, because the
+input and output image formats use brightness values.  The result is
+approximately correct.
+  
+<p>You cannot use this with <b>-linear</b> because that function is not
+implemented.
   
 </dl>
 
