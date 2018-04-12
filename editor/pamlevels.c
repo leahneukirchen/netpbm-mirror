@@ -408,12 +408,11 @@ solveFmCmdlineOpts(CmdlineInfo  const cmdline,
 
 
 
-static double
-xformedSample(double     const value,
+static samplen
+xformedSample(samplen    const value,
               Polynomial const polynomial) {
 /*----------------------------------------------------------------------------
-   The sample value 'value', transformed by the polynomial with coefficients
-   'coeffs'.
+  'sample' transformed by 'polynomial'.
 -----------------------------------------------------------------------------*/
     double const res =
         (polynomial.coeff[0] * value + polynomial.coeff[1]) * value +
