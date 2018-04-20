@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pamlevels User Manual</TITLE>
 </HEAD><BODY>
 <H1>pamlevels</H1>
-Updated: 08 April 2018
+Updated: 10 April 2018
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -38,17 +38,16 @@ color-mapping options may be shortened to <b>-f1</b>...<b>-f3</b> and
 <b>-t1</b>...<b>-t3</b>.  
 
 <p>Color values have the following format:
-<i>color</i>[:<i>scale</i>], where <i>color</i> is
-a <a href="libppm.html#colorname"> Netpbm color specification</a>
-and <i>scale</i> an optional coefficient that is applied to each component
-of <i>color</i>.
-
-<p>The transformation preserves
-<A HREF="http://www.c-f-systems.com/ColorIntegrity.html">color integrity</A>.
+<i>color</i>[:<i>scale</i>], where <i>color</i> is a
+<a href="libppm.html#colorname"> Netpbm color specification</a> and
+<i>scale</i> an optional coefficient that is applied to each RGB component (in
+the standard Netpbm gamma-adjusted color space) of <i>color</i>.
 
 <p>When the transformation is linear (i.e. uses two mappings) and preserves
 zero (i.e. maps black to black), it corresponds to multiplication of light
-intensity by a constant.
+intensity by a constant and preserves
+<A HREF="http://www.c-f-systems.com/ColorIntegrity.html">color integrity</A>.
+
 
 <H2 id="examples">EXAMPLES</H2>
 In the examples below, <code>\</code> denotes a line continuation:
@@ -70,7 +69,7 @@ pamlevels -f1 black -t1 black\
 <pre>pamlevels \
 -f1 black -t1 black -f2 white -t2 white \
 -f3 white:0.5 -t3 white:0.6 in.ppm &gt; out.ppm</pre>
-The latter tranformation similar to gamma-correction.
+The latter tranformation is similar to gamma-correction.
 
 <h2 id="options">OPTIONS</h2>
 
@@ -93,8 +92,9 @@ variation on PPM where the samples are proportional to light intensity, rather
 than brightness (gamma-adjusted) as in true PPM.  The input must be of this
 form and the <b>pamlevels</b> makes the output of this form.
 
-<p>Note that the numbers in a <b>rgbi:</b> color specification are brightness
-levels (gamma-adjusted) regardless of the input and output format.
+<p>Note that the numbers in a color specification like
+<b>rgbi:0.9/0.83/0.80</b> are brightness levels (gamma-adjusted) regardless of
+the input and output format.
 
 <p>You cannot use this with <b>-fitbrightness</b> because that function is
 not implemented.
