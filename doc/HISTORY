@@ -136,6 +136,8 @@ not yet  BJH  Release 10.83.00
 
               ppmshadow: eliminate extraneous messages from pnmconvol.
 
+              libnetpbm: Add pnm_parsecolorn().
+
               libnetpbm: Improve error message for purported image that is
               exactly 1 byte long (so ends in the middle of what would be the
               magic number).
