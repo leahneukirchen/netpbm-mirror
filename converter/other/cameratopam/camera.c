@@ -1,8 +1,6 @@
 #define _DEFAULT_SOURCE /* New name for SVID & BSD source defines */
-#define _BSD_SOURCE
-    /* Make sure strcasecmp is in string.h */
-#define _XOPEN_SOURCE
-    /* Make sure putenv is in stdlib.h */
+#define _XOPEN_SOURCE 500
+    /* Make sure putenv is in stdlib.h, strcaseeq is in nstring.h */
 
 #include <stdlib.h>
 #include <string.h>
@@ -17,6 +15,7 @@
 #include "pm.h"
 #include "mallocvar.h"
 #include "pm_c_util.h"
+#include "nstring.h"
 
 #include "global_variables.h"
 #include "cameratopam.h"
@@ -1770,7 +1769,7 @@ parse_external_jpeg(const char * const ifname)
     strcpy (jname, ifname);
     jfile = jname + (file - ifname);
     jext  = jname + (ext  - ifname);
-    if (strcasecmp (ext, ".jpg")) {
+    if (!strcaseeq (ext, ".jpg")) {
         strcpy (jext, isupper(ext[1]) ? ".JPG":".jpg");
         memcpy (jfile, file+4, 4);
         memcpy (jfile+4, file, 4);
