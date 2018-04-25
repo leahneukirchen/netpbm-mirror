@@ -60,7 +60,7 @@ static __inline__ int
 memeq(const void * const comparand,
       const void * const comparator,
       size_t       const size) {
-    
+
     return memcmp(comparand, comparator, size) == 0;
 }
 
@@ -92,7 +92,7 @@ strncaseeq(const char * const comparand,
 #endif
 
 
-/* The standard C library routines isdigit(), for some weird 
+/* The standard C library routines isdigit(), for some weird
    historical reason, does not take a character (type 'char') as its
    argument.  Instead it takes an integer.  When the integer is a whole
    number, it represents a character in the obvious way using the local
@@ -132,7 +132,7 @@ strncaseeq(const char * const comparand,
    Netpbm must include them in its own libraries, and because some
    standard C libraries have some of them, Netpbm must use different
    names for them.
-   
+
    The GNU C library has all of them.  All but the oldest standard C libraries
    have snprintf().
 
@@ -189,7 +189,7 @@ pm_vasprintf(const char ** const resultP,
 bool
 pm_vasprintf_knows_float(void);
 
-void 
+void
 pm_strfree(const char * const string);
 
 const char *
