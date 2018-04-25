@@ -46,8 +46,8 @@
 #define FORC3 for (c=0; c < 3; c++)
 #define FORC4 for (c=0; c < colors; c++)
 
-static void 
-merror (const void *ptr, const char *where) 
+static void
+merror (const void *ptr, const char *where)
 {
     if (ptr == NULL)
         pm_error ("Out of memory in %s", where);
@@ -56,7 +56,7 @@ merror (const void *ptr, const char *where)
 
 
 
-static void  
+static void
 adobeCopyPixel(Image             const image,
                unsigned int      const row,
                unsigned int      const col,
@@ -306,7 +306,7 @@ minolta_z2()
 
 void
 nikon_e2100_load_raw(Image const image) {
-        
+
   unsigned char   data[3432], *dp;
   unsigned short pixel[2288], *pix;
   int row, col;
@@ -383,7 +383,7 @@ fuji_s3_load_raw(Image const image) {
   }
 }
 
-static void 
+static void
 fuji_common_load_raw(Image        const image,
                      unsigned int const ncol,
                      unsigned int const icol,
@@ -1043,7 +1043,7 @@ static void  sony_decrypt (unsigned *data, int len, int start, int key)
         u.bytes[1] = pad[p] >> 16;
         u.bytes[2] = pad[p] >>  8;
         u.bytes[3] = pad[p] >>  0;
-        
+
         pad[p] = u.word;
     }
   }
@@ -1153,9 +1153,9 @@ static void  ciff_block_1030()
 /*
    Parse a CIFF file, better known as Canon CRW format.
  */
-void 
-parse_ciff(FILE * const ifp, 
-           int    const offset, 
+void
+parse_ciff(FILE * const ifp,
+           int    const offset,
            int    const length)
 {
   int tboff, nrecs, i, type, len, roff, aoff, save, wbi=-1;
@@ -1308,7 +1308,7 @@ parse_rollei(FILE * const ifp)
 
 
 void
-parse_mos(FILE * const ifp, 
+parse_mos(FILE * const ifp,
           int    const offset)
 {
     char data[40];
@@ -1357,7 +1357,7 @@ static double getrat()
 
 
 
-static void 
+static void
 parse_makernote(FILE * const ifp)
 {
   unsigned base=0, offset=0, entries, tag, type, len, save;
@@ -1503,7 +1503,7 @@ get_timestamp(FILE * const ifp)
     timestamp = ts;
 }
 
-static void 
+static void
 parse_exif(FILE * const ifp, int base)
 {
   int entries, tag, len, val, save;
@@ -1528,7 +1528,7 @@ parse_exif(FILE * const ifp, int base)
   }
 }
 
-static int 
+static int
 parse_tiff_ifd(FILE * const ifp, int base, int level)
 {
   unsigned entries, tag, type, len, plen=16, save;
@@ -1689,7 +1689,7 @@ guess_cfa_pc:
       case 50723:           /* CameraCalibration1 */
       case 50724:           /* CameraCalibration2 */
     for (i=0; i < colors; i++)
-      FORC4 cc[i][c] = getrat();    
+      FORC4 cc[i][c] = getrat();
       case 50727:           /* AnalogBalance */
     FORC4 ab[c] = getrat();
     break;
