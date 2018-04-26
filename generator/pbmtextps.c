@@ -54,11 +54,11 @@ validateFontName(const char * const name) {
     unsigned int idx;
 
     for (idx = 0; name[idx] != '\0'; ++idx) {
-        char const c = name[idx]; 
+        char const c = name[idx];
 
         if (c < 32 || c > 125)
             pm_error("Invalid character in font name");
-        else 
+        else
             switch (c) {
               case '[':   case ']':   case '(':   case ')':
               case '{':   case '}':   case '/':   case '\\':
@@ -85,7 +85,7 @@ asciiHexEncode(char *          const inbuff,
     unsigned int idx;
 
     for (idx = 0; inbuff[idx] != '\0'; ++idx) {
-        unsigned int const item = (unsigned char) inbuff[idx]; 
+        unsigned int const item = (unsigned char) inbuff[idx];
 
         outbuff[idx*2]   = hexits[item >> 4];
         outbuff[idx*2+1] = hexits[item & 0xF];
@@ -127,7 +127,7 @@ buildTextFromArgs(int           const argc,
             if (text == NULL)
                 pm_error("out of memory");
             strcat(text, " ");
-        } 
+        }
         totalTextSize += strlen(argv[i]);
         text = realloc(text, totalTextSize);
         if (text == NULL)
@@ -135,7 +135,7 @@ buildTextFromArgs(int           const argc,
         strcat(text, argv[i]);
     }
 
-    { 
+    {
         char * asciiHexText;
 
         MALLOCARRAY(asciiHexText, totalTextSize * 2);
@@ -263,7 +263,7 @@ parseCommandLine(int argc, const char ** argv,
     if (cropSpec == TRUE) {
         if (ascentSpec || descentSpec ||
             leftmarginSpec || rightmarginSpec ||
-            topmarginSpec || bottommarginSpec || 
+            topmarginSpec || bottommarginSpec ||
             cmdlineP->pad)
               pm_error("-crop cannot be specified with -ascent, -descent, "
                        "-leftmargin, -rightmargin, "
@@ -346,7 +346,7 @@ postscriptProgram(struct CmdlineInfo const cmdline) {
         "  {/padbottom 0 def /padtop 0 def}\n"
         "  ifelse\n"
         "setfont\n";
-    
+
     const char * const psFixed2 =
         "0 0 moveto\n"
         "textstring false charpath flattenpath pathbbox\n"
@@ -359,7 +359,7 @@ postscriptProgram(struct CmdlineInfo const cmdline) {
         "/xorigin leftmargin BBleft max def\n"
         "/width xorigin BBright add rightmargin add def\n"
         "/height ascent BBtop max padtop max topmargin add yorigin add def\n";
-    
+
     const char * const psFixed3 =
         "<</PageSize [width height]>> setpagedevice\n"
         "xorigin yorigin moveto\n"
@@ -369,7 +369,7 @@ postscriptProgram(struct CmdlineInfo const cmdline) {
         "  textstring true charpath stroke}\n"
         "  ifelse\n"
         "showpage\n";
-    
+
     const char * const psFixed4 =
         "verbose\n"
         "  {xorigin yorigin moveto\n"
@@ -383,7 +383,7 @@ postscriptProgram(struct CmdlineInfo const cmdline) {
         "       {pop (anonymous)}\n"
         "       ifelse]  ==}\n"
         "  if";
-    
+
     const char * retval;
     const char * psVariable;
 
@@ -399,27 +399,27 @@ postscriptProgram(struct CmdlineInfo const cmdline) {
                 psFixed1, psFixed2, psFixed3, psFixed4);
 
     pm_strfree(psVariable);
-        
+
     return retval;
 }
 
 
 
 static const char **
-gsArgList(const char *       const outputFilename, 
+gsArgList(const char *       const outputFilename,
           struct CmdlineInfo const cmdline) {
 
     unsigned int const maxArgCt = 50;
-    
+
     const char ** retval;
     unsigned int argCt;  /* Number of arguments in 'retval' so far */
 
     if (cmdline.res <= 0)
          pm_error("Resolution (dpi) must be positive.");
-    
+
     if (cmdline.fontsize <= 0)
          pm_error("Font size must be positive.");
-  
+
     MALLOCARRAY_NOFAIL(retval, maxArgCt+2);
 
     argCt = 0;  /* initial value */
@@ -491,7 +491,7 @@ reportMetrics(float const  width,
               float const  BBoxright,
               float const  BBoxtop) {
 
-    pm_message("-- Metrics in points.  Bottom left is (0,0) --");  
+    pm_message("-- Metrics in points.  Bottom left is (0,0) --");
     pm_message("Width:   %f", width);
     pm_message("Height:  %f", height);
     pm_message("Ascent:  %f", ascent);
@@ -537,7 +537,7 @@ acceptGSoutput(int             const pipetosuckFd,
     widthHeightReported   = FALSE; /* Initial value */
     ascentDescentReported = FALSE; /* Initial value */
     BBoxReported          = FALSE; /* Initial value */
-    
+
     MALLOCARRAY_NOFAIL(lineBuff, lineBuffSize);
 
     while (fgets(lineBuff, lineBuffSize, inFileP) != NULL) {
@@ -567,7 +567,7 @@ acceptGSoutput(int             const pipetosuckFd,
     }
 
     if (fontnameReported) {
-        fontname[strlen(fontname)-1] = 0; 
+        fontname[strlen(fontname)-1] = 0;
         reportFontName(fontname);
 
         if (widthHeightReported && ascentDescentReported && BBoxReported)
@@ -581,7 +581,7 @@ acceptGSoutput(int             const pipetosuckFd,
 
 
 static void
-executeProgram(const char *       const psProgram, 
+executeProgram(const char *       const psProgram,
                const char *       const outputFname,
                struct CmdlineInfo const cmdline) {
 
@@ -633,19 +633,19 @@ writePbm(const char * const fileName,
     FILE * ifP;
     int format;
     int cols, rows, row ;
-    unsigned char * bitrow; 
-    
+    unsigned char * bitrow;
+
     ifP = pm_openr(fileName);
     pbm_readpbminit(ifP, &cols, &rows, &format);
 
     if (cols == 0 || rows == 0 || cols > INT_MAX - 10 || rows > INT_MAX - 10)
         pm_error("Abnormal output from gs program.  "
                  "width x height = %u x %u", cols, rows);
-               
-    pbm_writepbminit(ofP, cols, rows, 0);           
-               
+
+    pbm_writepbminit(ofP, cols, rows, 0);
+
     bitrow = pbm_allocrow_packed(cols);
-    
+
     for (row = 0; row < rows; ++row) {
         pbm_readpbmrow_packed(ifP, bitrow, cols, format);
         pbm_writepbmrow_packed(ofP, bitrow, cols, 0);
@@ -699,7 +699,7 @@ dumpPsProgram(struct CmdlineInfo const cmdline) {
 
 
 
-int 
+int
 main(int argc, const char *argv[]) {
 
     struct CmdlineInfo cmdline;
