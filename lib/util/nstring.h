@@ -70,7 +70,7 @@ memeq(const void * const comparand,
    strcasecmp() in that case.
 
    (Actually, _XOPEN_SOURCE 500 is stronger than you need for strcasecmp -
-   _XOPEN_SOURCE_EXTENDED, which asks for XPG 4 would do, whereas
+   _XOPEN_SOURCE_EXTENDED, which asks for XPG 4, would do, whereas
    _XOPEN_SOURCE 500 asks for XPG 5, but for simplicity, we don't use
    _XOPEN_SOURCE_EXTENDED in Netpbm.
 */
