@@ -341,7 +341,7 @@ convertToJasperImage(struct pam *   const inpamP,
 
     createJasperImage(inpamP, &jasperP);
 
-    if (strncmp(inpamP->tuple_type, "RGB", 3) == 0) {
+    if (strneq(inpamP->tuple_type, "RGB", 3)) {
         if (inpamP->depth < 3)
             pm_error("Input tuple type is RGB*, but depth is only %d.  "
                      "It should be at least 3.", inpamP->depth);
@@ -355,8 +355,8 @@ convertToJasperImage(struct pam *   const inpamP,
                                   JAS_IMAGE_CT_COLOR(JAS_IMAGE_CT_RGB_B));
         }
     } else {
-        if (strncmp(inpamP->tuple_type, "GRAYSCALE", 9) == 0 ||
-            strncmp(inpamP->tuple_type, "BLACKANDWHITE", 13) == 0) {
+        if (strneq(inpamP->tuple_type, "GRAYSCALE", 9) ||
+            strneq(inpamP->tuple_type, "BLACKANDWHITE", 13)) {
             jas_image_setclrspc(jasperP, JAS_CLRSPC_GENGRAY);
             jas_image_setcmpttype(jasperP, 0,
                                   JAS_IMAGE_CT_COLOR(JAS_IMAGE_CT_GRAY_Y));
