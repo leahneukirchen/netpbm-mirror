@@ -25,9 +25,8 @@
  * http://partners.adobe.com/public/developer/ps/index_specs.html
  */
 
-#define _DEFAULT_SOURCE /* New name for SVID & BSD source defines */
-#define _XOPEN_SOURCE   /* Make sure popen() is in stdio.h */
-#define _BSD_SOURCE     /* Make sure stdrup() is in string.h */
+#define _XOPEN_SOURCE 500
+  /* Make sure popen() is in stdio.h, strdup() is in string.h */
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
