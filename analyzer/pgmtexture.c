@@ -708,8 +708,8 @@ f9_entropy (float **     const p,
 
 
 static float
-f10_dvar (float **     const p,
-          unsigned int const ng) {
+f10_dvar(float **     const p,
+         unsigned int const ng) {
 /*----------------------------------------------------------------------------
    Difference Variance
 -----------------------------------------------------------------------------*/
@@ -728,7 +728,7 @@ f10_dvar (float **     const p,
     for (i = 0; i < ng; ++i) {
         unsigned int j;
         for (j = 0; j < ng; ++j)
-            pxpy[abs(i - j)] += p[i][j];
+            pxpy[abs((int)i - (int)j)] += p[i][j];
     }
     /* Now calculate the variance of Pxpy (Px-y) */
     for (i = 0, sum = 0.0, sumSqr = 0.0; i < ng; ++i) {
@@ -761,7 +761,7 @@ f11_dentropy (float **     const p,
     for (i = 0; i < ng; ++i) {
         unsigned int j;
         for (j = 0; j < ng; ++j)
-            pxpy[abs(i - j)] += p[i][j];
+            pxpy[abs((int)i - (int)j)] += p[i][j];
     }
     for (i = 0, sum = 0.0; i < ng; ++i)
         sum += pxpy[i] * log10(pxpy[i] + EPSILON);
