@@ -4,6 +4,13 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+18.04.28 BJH  Release 10.82.01
+
+              ilbmtoppm: Fix bug: may fail with bogus error message about an
+              invalid CLUT chunk if image has a CLUT chunk.  Introduced after
+              Netpbm 10.26 (January 2005) and at or before Netpbm 10.35
+              (August 2006).
+
 18.03.25 BJH  Release 10.82.00
 
               pbmtext: Add -wchar.
