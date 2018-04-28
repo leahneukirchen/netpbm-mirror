@@ -34,9 +34,9 @@
 ** ANY SUCH ITEM. LICENSEE AND/OR USER AGREES TO INDEMNIFY AND HOLD
 ** TAES AND TAMUS HARMLESS FROM ANY CLAIMS ARISING OUT OF THE USE OR
 ** POSSESSION OF SUCH ITEMS.
-** 
+**
 ** Modification History:
-** 24 Jun 91 - J. Michael Carstensen <jmc@imsor.dth.dk> supplied fix for 
+** 24 Jun 91 - J. Michael Carstensen <jmc@imsor.dth.dk> supplied fix for
 **             correlation function.
 **
 ** 05 Oct 05 - Marc Breithecker <Marc.Breithecker@informatik.uni-erlangen.de>
@@ -151,7 +151,7 @@ matrix (unsigned int const nrl,
 
 
 
-static void 
+static void
 results (const char *  const name,
          const float * const a) {
 
@@ -167,7 +167,7 @@ results (const char *  const name,
 
 
 
-static void 
+static void
 simplesrt (unsigned int  const n,
            float *       const arr) {
 
@@ -190,7 +190,7 @@ simplesrt (unsigned int  const n,
 
 
 
-static void 
+static void
 mkbalanced (float **     const a,
             unsigned int const n) {
 
@@ -240,7 +240,7 @@ mkbalanced (float **     const a,
 
 
 
-static void 
+static void
 reduction (float **     const a,
            unsigned int const n) {
 
@@ -262,7 +262,7 @@ reduction (float **     const a,
             for (j = m - 1; j <= n; ++j)
                 SWAP(a[i][j], a[m][j]);
             for (j = 1; j <= n; j++)
-                SWAP(a[j][i], a[j][m]); 
+                SWAP(a[j][i], a[j][m]);
             a[j][i] = a[j][i];
         }
         if (x != 0.0) {
@@ -302,7 +302,7 @@ norm(float **     const a,
 
 
 
-static void 
+static void
 hessenberg(float **     const a,
            unsigned int const n,
            float *      const wr,
@@ -344,7 +344,7 @@ hessenberg(float **     const a,
                     float const z = sqrt(fabs(q));
                     x += t;
                     if (q >= 0.0) {
-                        float const z2 = p + sign(z, p); 
+                        float const z2 = p + sign(z, p);
                         wr[nn - 1] = wr[nn] = x + z2;
                         if (z2)
                             wr[nn] = x - w / z2;
@@ -386,7 +386,7 @@ hessenberg(float **     const a,
                         if (m == l)
                             break;
                         u = fabs(a[m][m - 1]) * (fabs(q) + fabs(r));
-                        v = fabs(p) * (fabs(a[m - 1][m - 1]) + fabs(z) + 
+                        v = fabs(p) * (fabs(a[m - 1][m - 1]) + fabs(z) +
                                        fabs(a[m + 1][m + 1]));
                         if (u + v == v)
                             break;
@@ -454,7 +454,7 @@ hessenberg(float **     const a,
 
 
 
-static float 
+static float
 f1_a2m(float **     const p,
        unsigned int const ng) {
 /*----------------------------------------------------------------------------
@@ -478,12 +478,12 @@ f1_a2m(float **     const p,
 
 
 
-static float 
+static float
 f2_contrast(float **     const p,
             unsigned int const ng) {
 /*----------------------------------------------------------------------------
    Contrast
-   
+
    The contrast feature is a difference moment of the P matrix and is a
    measure of the contrast or the amount of local variations present in an
    image.
@@ -508,7 +508,7 @@ f2_contrast(float **     const p,
 
 
 
-static float 
+static float
 f3_corr(float **     const p,
         unsigned int const ng) {
 /*----------------------------------------------------------------------------
@@ -560,7 +560,7 @@ f3_corr(float **     const p,
 
 
 
-static float 
+static float
 f4_var (float **     const p,
         unsigned int const ng) {
 /*----------------------------------------------------------------------------
@@ -584,7 +584,7 @@ f4_var (float **     const p,
 
 
 
-static float 
+static float
 f5_idm (float **     const p,
         unsigned int const ng) {
 /*----------------------------------------------------------------------------
@@ -603,7 +603,7 @@ f5_idm (float **     const p,
 
 
 
-static float 
+static float
 f6_savg (float **     const p,
          unsigned int const ng) {
 /*----------------------------------------------------------------------------
@@ -631,7 +631,7 @@ f6_savg (float **     const p,
 
 
 
-static float 
+static float
 f7_svar (float **     const p,
          unsigned int const ng,
          float        const s) {
@@ -660,7 +660,7 @@ f7_svar (float **     const p,
 
 
 
-static float 
+static float
 f8_sentropy (float **     const p,
              unsigned int const ng) {
 /*----------------------------------------------------------------------------
@@ -688,7 +688,7 @@ f8_sentropy (float **     const p,
 
 
 
-static float 
+static float
 f9_entropy (float **     const p,
             unsigned int const ng) {
 /*----------------------------------------------------------------------------
@@ -707,7 +707,7 @@ f9_entropy (float **     const p,
 
 
 
-static float 
+static float
 f10_dvar (float **     const p,
           unsigned int const ng) {
 /*----------------------------------------------------------------------------
@@ -743,7 +743,7 @@ f10_dvar (float **     const p,
 
 
 
-static float 
+static float
 f11_dentropy (float **     const p,
               unsigned int const ng) {
 /*----------------------------------------------------------------------------
@@ -771,7 +771,7 @@ f11_dentropy (float **     const p,
 
 
 
-static float 
+static float
 f12_icorr (float **     const p,
            unsigned int const ng) {
 /*----------------------------------------------------------------------------
@@ -817,8 +817,8 @@ f12_icorr (float **     const p,
 
 
 
-static float 
-f13_icorr (float **     const p, 
+static float
+f13_icorr (float **     const p,
            unsigned int const ng) {
 /*----------------------------------------------------------------------------
   Information Measures of Correlation
@@ -863,7 +863,7 @@ f13_icorr (float **     const p,
 
 
 
-static float 
+static float
 f14_maxcorr (float **     const p,
              unsigned int const ng) {
 /*----------------------------------------------------------------------------
