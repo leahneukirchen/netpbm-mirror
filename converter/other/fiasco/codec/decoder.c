@@ -603,73 +603,73 @@ decode_range (unsigned range_state, unsigned range_label, unsigned range_level,
  *  'wfa->level_of_state []' is changed
  */
 {
-   image_t   *state_image;      /* regenerated state image */
-   word_t   **images;           /* pointer to array of pointers
-                       to state images */
-   u_word_t  *offsets;          /* pointer to array of state image
-                       offsets */
-   word_t    *range;
+    image_t   *state_image;      /* regenerated state image */
+    word_t   **images;           /* pointer to array of pointers
+                                    to state images */
+    u_word_t  *offsets;          /* pointer to array of state image
+                                    offsets */
+    word_t    *range;
 
-   enlarge_image (range_level - (wfa->level_of_state [range_state] - 1),
-          FORMAT_4_4_4, -1, wfa);
-   state_image    = alloc_image (width_of_level (range_level + 1),
-                 height_of_level (range_level + 1),
-                 NO, FORMAT_4_4_4);
-   alloc_state_images (&images, &offsets, state_image, NULL, range_state,
-               range_level + 1, NO, wfa);
-   compute_state_images (range_level + 1, images, offsets, wfa);
+    enlarge_image (range_level - (wfa->level_of_state [range_state] - 1),
+                   FORMAT_4_4_4, -1, wfa);
+    state_image = alloc_image (width_of_level (range_level + 1),
+                               height_of_level (range_level + 1),
+                               NO, FORMAT_4_4_4);
+    alloc_state_images (&images, &offsets, state_image, NULL, range_state,
+                        range_level + 1, FORMAT_4_4_4, wfa);
+    compute_state_images (range_level + 1, images, offsets, wfa);
 
-   range = Calloc (size_of_level (range_level), sizeof (word_t));
+    range = Calloc (size_of_level (range_level), sizeof (word_t));
 
-   if ((range_level & 1) == 0)      /* square image */
-   {
-      memcpy (range,
-          images [range_state + (range_level + 1) * wfa->states]
-          + range_label * size_of_level (range_level),
-          size_of_level (range_level) * sizeof (word_t));
-   }
-   else                 /* rectangle */
-   {
-      word_t   *src, *dst;
-      unsigned  y;
+    if ((range_level & 1) == 0)      /* square image */
+    {
+        memcpy (range,
+                images [range_state + (range_level + 1) * wfa->states]
+                + range_label * size_of_level (range_level),
+                size_of_level (range_level) * sizeof (word_t));
+    }
+    else                 /* rectangle */
+    {
+        word_t   *src, *dst;
+        unsigned  y;
 
-      src = images [range_state + (range_level + 1) * wfa->states]
-        + range_label * width_of_level (range_level);
-      dst = range;
-      for (y = height_of_level (range_level); y; y--)
-      {
-     memcpy (dst, src, width_of_level (range_level) * sizeof (word_t));
-     dst += width_of_level (range_level);
-     src += width_of_level (range_level + 1);
-      }
-   }
+        src = images [range_state + (range_level + 1) * wfa->states]
+            + range_label * width_of_level (range_level);
+        dst = range;
+        for (y = height_of_level (range_level); y; y--)
+        {
+            memcpy (dst, src, width_of_level (range_level) * sizeof (word_t));
+            dst += width_of_level (range_level);
+            src += width_of_level (range_level + 1);
+        }
+    }
 
-   if (domain != NULL)          /* copy domain images */
-   {
-      int      s;           /* domain state */
-      unsigned edge;            /* counter */
+    if (domain != NULL)          /* copy domain images */
+    {
+        int      s;           /* domain state */
+        unsigned edge;            /* counter */
 
-      if (ischild (s = wfa->tree [range_state][range_label]))
-     *domain++ = duplicate_state_image (images [s + (range_level)
-                           * wfa->states],
-                        offsets [s + (range_level)
-                            * wfa->states],
-                        range_level);
-      for (edge = 0; isedge (s = wfa->into[range_state][range_label][edge]);
-       edge++)
-     *domain++ = duplicate_state_image (images [s + (range_level)
-                           * wfa->states],
-                        offsets [s + (range_level)
-                            * wfa->states],
-                        range_level);
-      *domain = NULL;
-   }
+        if (ischild (s = wfa->tree [range_state][range_label]))
+            *domain++ = duplicate_state_image (images [s + (range_level)
+                                                       * wfa->states],
+                                               offsets [s + (range_level)
+                                                        * wfa->states],
+                                               range_level);
+        for (edge = 0; isedge (s = wfa->into[range_state][range_label][edge]);
+             edge++)
+            *domain++ = duplicate_state_image (images [s + (range_level)
+                                                       * wfa->states],
+                                               offsets [s + (range_level)
+                                                        * wfa->states],
+                                               range_level);
+        *domain = NULL;
+    }
 
-   free_state_images (range_level + 1, NO, images, offsets, NULL, range_state,
-              NO, wfa);
-   free_image (state_image);
+    free_state_images (range_level + 1, NO, images, offsets, NULL, range_state,
+                       FORMAT_4_4_4, wfa);
+    free_image (state_image);
 
-   return range;
+    return range;
 }
 
 void
