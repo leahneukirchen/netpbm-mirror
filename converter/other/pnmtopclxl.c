@@ -3,7 +3,7 @@
  *
  *  (C) 2002 Jochen Karrer, Linuxdata GbR
  *
- *      convert a pnm to PCL-XL image 
+ *      convert a pnm to PCL-XL image
  *
  * -------------------------------------------------------------
  */
@@ -44,7 +44,7 @@
 
 
 typedef struct InputSource {
-    const char *         name; 
+    const char *         name;
     struct InputSource * next;
 } InputSource;
 
@@ -82,7 +82,7 @@ parseCommandLine(int argc, char ** argv,
                  struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -104,25 +104,25 @@ parseCommandLine(int argc, char ** argv,
     option_def_index = 0;   /* incremented by OPTENT3 */
     OPTENT3(0, "dpi",       OPT_UINT,    &cmdlineP->dpi,
             &dpiSpec,         0);
-    OPTENT3(0, "xoffs",     OPT_FLOAT,   &cmdlineP->xoffs, 
+    OPTENT3(0, "xoffs",     OPT_FLOAT,   &cmdlineP->xoffs,
             &xoffsSpec,        0);
-    OPTENT3(0, "yoffs",     OPT_FLOAT,   &cmdlineP->yoffs, 
+    OPTENT3(0, "yoffs",     OPT_FLOAT,   &cmdlineP->yoffs,
             &yoffsSpec,        0);
-    OPTENT3(0, "format",    OPT_STRING,  &formatOpt, 
+    OPTENT3(0, "format",    OPT_STRING,  &formatOpt,
             &formatSpec,        0);
-    OPTENT3(0, "duplex",    OPT_STRING,  &duplexOpt, 
+    OPTENT3(0, "duplex",    OPT_STRING,  &duplexOpt,
             &cmdlineP->duplexSpec,        0);
     OPTENT3(0, "copies",    OPT_UINT,    &cmdlineP->copies,
             &cmdlineP->copiesSpec,        0);
-    OPTENT3(0, "colorok",   OPT_FLAG,    NULL,                  
+    OPTENT3(0, "colorok",   OPT_FLAG,    NULL,
             &cmdlineP->colorok, 0);
-    OPTENT3(0, "center",    OPT_FLAG,    NULL,                  
+    OPTENT3(0, "center",    OPT_FLAG,    NULL,
             &cmdlineP->center, 0 );
     OPTENT3(0, "feeder",    OPT_UINT,    &cmdlineP->feeder,
             &cmdlineP->feederSpec,        0);
     OPTENT3(0, "outtray",   OPT_UINT,    &cmdlineP->outtray,
             &cmdlineP->outtraySpec,       0);
-    OPTENT3(0, "verbose",   OPT_FLAG,    NULL,                  
+    OPTENT3(0, "verbose",   OPT_FLAG,    NULL,
             &cmdlineP->verbose, 0);
     OPTENT3(0, "jobsetup",  OPT_STRING,  &cmdlineP->jobsetup,
             &jobsetupSpec,      0);
@@ -216,7 +216,7 @@ parseCommandLine(int argc, char ** argv,
 
 static void
 freeSource(InputSource * const firstSourceP) {
-    
+
     InputSource * sourceP;
 
     sourceP = firstSourceP;
@@ -284,7 +284,7 @@ pnmToPcllinePackbits(pclGenerator * const pclGeneratorP,
     unsigned int col, padCt;
     unsigned int const padsize =
         pclGeneratorP->paddedLinelen - pclGeneratorP->linelen;
-        
+
     tuplerow = pnm_allocpamrow(pamP);
 
     pnm_readpamrow(pamP, tuplerow);
@@ -297,7 +297,7 @@ pnmToPcllinePackbits(pclGenerator * const pclGeneratorP,
         if (bitmask == 0) {
             pclGeneratorP->data[pclGeneratorP->cursor++] = accum;
             bitmask = 0x80; accum = 0x0;
-        } 
+        }
     }
     if (bitmask != 0x80)
         pclGeneratorP->data[pclGeneratorP->cursor++] = accum;
@@ -351,7 +351,7 @@ createPclGeneratorPackbits(struct pam *    const pamP,
 
     pclGeneratorP->data =
         malloc(pclDatabuffSize(pclGeneratorP->paddedLinelen));
-    
+
     if (pclGeneratorP->data == NULL)
         pm_error("Unable to allocate row buffer.");
 
@@ -378,7 +378,7 @@ pnmToPcllineWholebytes(pclGenerator * const pclGeneratorP,
     for (col = 0; col < pamP->width; ++col) {
         unsigned int plane;
         for (plane = 0; plane < pamP->depth; ++plane) {
-            pclGeneratorP->data[pclGeneratorP->cursor++] = 
+            pclGeneratorP->data[pclGeneratorP->cursor++] =
                 pnm_scalesample(tuplerow[col][plane], pamP->maxval, 255);
         }
     }
@@ -399,7 +399,7 @@ createPclGeneratorWholebytes(struct pam *    const pamP,
     pclGenerator * pclGenP;
 
     MALLOCVAR_NOFAIL(pclGenP);
-    
+
     if (pamP->depth <  3)
         pclGenP->colorSpace = eGray;
     else
@@ -418,7 +418,7 @@ createPclGeneratorWholebytes(struct pam *    const pamP,
         if (pclGenP->data == NULL)
             pm_error("Unable to allocate row buffer.");
     }
-    
+
     pclGenP->getnextrow = pnmToPcllineWholebytes;
 
     *pclGenPP = pclGenP;
@@ -436,7 +436,7 @@ destroyPclGenerator(pclGenerator * const pclGenP) {
 
 
 
-static void 
+static void
 createPclGenerator(struct pam *        const pamP,
                    pclGenerator **     const pclGeneratorPP,
                    bool                const colorok) {
@@ -448,16 +448,16 @@ createPclGenerator(struct pam *        const pamP,
                    "through Ppmtopgm.  To suppress this warning, use the "
                    "-colorok option.");
 
-    if (pamP->depth == 1 && pamP->maxval == 1) 
+    if (pamP->depth == 1 && pamP->maxval == 1)
         createPclGeneratorPackbits(pamP, pclGeneratorPP);
-    else 
+    else
         createPclGeneratorWholebytes(pamP, pclGeneratorPP);
 }
 
 
 
 
-struct tPrinter { 
+struct tPrinter {
     const char *name;
     float topmargin;
     float bottommargin;
@@ -478,7 +478,7 @@ out_ubyte(int           const fd,
 
 
 
-static int 
+static int
 XL_Operator(int           const fd,
             enum Operator const data)  {
 
@@ -514,7 +514,7 @@ static int
 out_sint16(int          const fd,
            signed short const sdata ) {
 
-    unsigned short const data= (unsigned short)sdata;    
+    unsigned short const data= (unsigned short)sdata;
 
     unsigned char c[2];
 
@@ -559,7 +559,7 @@ xl_ubyte_array(int                   const fd,
 
     unsigned int i;
     unsigned char head[4];
-    
+
     head[0] = 0xc8;
     head[1] = 0xc1;
     head[2] = len & 0xff;
@@ -671,7 +671,7 @@ convertAndWriteRleBlock(int                  const outFd,
     pm_rlenc_compressbyte(pclGeneratorP->data, outbuf, PM_RLE_PACKBITS,
                           pclGeneratorP->paddedLinelen * lineCt, &rlelen);
 
-    xl_dataLength(outFd, rlelen); 
+    xl_dataLength(outFd, rlelen);
     XY_Write(outFd, outbuf, rlelen);
 }
 
@@ -680,10 +680,10 @@ convertAndWriteRleBlock(int                  const outFd,
 /*
  * ------------------------------------------------------------
  * XL_WriteImage
- *  Write a PCL-XL image to the datastream 
+ *  Write a PCL-XL image to the datastream
  * ------------------------------------------------------------
  */
-static void 
+static void
 convertAndWriteImage(int            const outFd,
                      pclGenerator * const pclGenP,
                      struct pam *   const pamP) {
@@ -695,10 +695,10 @@ convertAndWriteImage(int            const outFd,
 
     xl_ubyte(outFd, eDirectPixel); xl_attr_ubyte(outFd, aColorMapping);
     xl_ubyte(outFd, pclGenP->colorDepth); xl_attr_ubyte(outFd, aColorDepth);
-    xl_uint16(outFd, pclGenP->width); xl_attr_ubyte(outFd, aSourceWidth);  
-    xl_uint16(outFd, pclGenP->height); xl_attr_ubyte(outFd, aSourceHeight);    
-    xl_uint16_xy(outFd, pclGenP->width*1, pclGenP->height*1); 
-    xl_attr_ubyte(outFd, aDestinationSize);   
+    xl_uint16(outFd, pclGenP->width); xl_attr_ubyte(outFd, aSourceWidth);
+    xl_uint16(outFd, pclGenP->height); xl_attr_ubyte(outFd, aSourceHeight);
+    xl_uint16_xy(outFd, pclGenP->width*1, pclGenP->height*1);
+    xl_attr_ubyte(outFd, aDestinationSize);
     XL_Operator(outFd, oBeginImage);
 
     pm_rlenc_allocoutbuf(&outbuf, inSize, PM_RLE_PACKBITS);
@@ -707,13 +707,13 @@ convertAndWriteImage(int            const outFd,
         unsigned int const blockHeight =
             MIN(20, pclGenP->height-blockStartLine);
 
-        xl_uint16(outFd, blockStartLine); xl_attr_ubyte(outFd, aStartLine); 
+        xl_uint16(outFd, blockStartLine); xl_attr_ubyte(outFd, aStartLine);
         xl_uint16(outFd, blockHeight); xl_attr_ubyte(outFd, aBlockHeight);
         xl_ubyte(outFd, eRLECompression); xl_attr_ubyte(outFd, aCompressMode);
         /* In modern PCL-XL, we could use a PadBytesMultiple attribute
            here to avoid having to pad the data to a multiple of 4
            bytes.  But PCL-XL 1.1 didn't have PadBytesMultiple.
-           xl_ubyte(outFd, 1); xl_attr_ubyte(outFd, aPadBytesMultiple); 
+           xl_ubyte(outFd, 1); xl_attr_ubyte(outFd, aPadBytesMultiple);
         */
         XL_Operator(outFd, oReadImage);
         convertAndWriteRleBlock(outFd, pclGenP, pamP,
@@ -740,11 +740,11 @@ printEmbeddedImage(int                 const outFd,
     ifP = pm_openr(sourceP->name);
 
     pnm_readpaminit(ifP, &pam, PAM_STRUCT_SIZE(tuple_type));
-                
+
     createPclGenerator(&pam, &pclGeneratorP, colorok);
 
     convertAndWriteImage(outFd, pclGeneratorP, &pam);
-    
+
     destroyPclGenerator(pclGeneratorP);
 
     pm_close(ifP);
@@ -772,9 +772,9 @@ copyFile(const char * const sourceFileName,
         if (ferror(sourceFileP))
             pm_error("Read from file failed.  errno=%d (%s)",
                      errno, strerror(errno));
-        
+
         totalBytesWritten = 0;
-        
+
         while (totalBytesWritten < bytesRead) {
             ssize_t rc;
 
@@ -804,16 +804,16 @@ jobHead(int          const outFd,
    as opposed to e.g. Postscript.
 -----------------------------------------------------------------------------*/
     /* Reset */
-    XY_Puts(outFd,"\033%-12345X");  
+    XY_Puts(outFd,"\033%-12345X");
 
     if (userJobSetupFileName)
         copyFile(userJobSetupFileName, outFd);
 
     if (renderGray)
-        XY_Puts(outFd, "@PJL SET RENDERMODE=GRAYSCALE\n");  
+        XY_Puts(outFd, "@PJL SET RENDERMODE=GRAYSCALE\n");
 
-    XY_Puts(outFd, "@PJL ENTER LANGUAGE=PCLXL\n");  
-    XY_Puts(outFd, ") HP-PCL XL;1;1;Generated by Netpbm Pnmtopclxl\n");  
+    XY_Puts(outFd, "@PJL ENTER LANGUAGE=PCLXL\n");
+    XY_Puts(outFd, ") HP-PCL XL;1;1;Generated by Netpbm Pnmtopclxl\n");
 }
 
 
@@ -825,7 +825,7 @@ jobEnd(int const outFd) {
 
    Reset printer to quiescent mode.  Exit the printer language.
 -----------------------------------------------------------------------------*/
-    XY_Puts(outFd,"\033%-12345X");  
+    XY_Puts(outFd,"\033%-12345X");
 }
 
 
@@ -852,7 +852,7 @@ beginPage(int                 const outFd,
     }
 
     if (doMediaDestination) {
-        xl_ubyte(outFd, mediaDestination);  
+        xl_ubyte(outFd, mediaDestination);
         xl_attr_ubyte(outFd, aMediaDestination);
     }
 
@@ -898,11 +898,11 @@ setColorSpace(int                   const outFd,
    paletteDepth is not e8Bit.  Is each palette entry still a byte and only
    some of the byte gets used?  Or are there multiple entries per byte?
 -----------------------------------------------------------------------------*/
-    xl_ubyte(outFd, colorSpace); xl_attr_ubyte(outFd, aColorSpace);   
+    xl_ubyte(outFd, colorSpace); xl_attr_ubyte(outFd, aColorSpace);
     if (palette) {
-        xl_ubyte(outFd, paletteDepth); 
-        xl_attr_ubyte(outFd, aPaletteDepth);   
-        xl_ubyte_array(outFd, palette, paletteSize); 
+        xl_ubyte(outFd, paletteDepth);
+        xl_attr_ubyte(outFd, aPaletteDepth);
+        xl_ubyte_array(outFd, palette, paletteSize);
         xl_attr_ubyte(outFd, aPaletteData);
     }
     XL_Operator(outFd, oSetColorSpace);
@@ -925,8 +925,8 @@ positionCursor(int            const outFd,
     float xpos, ypos;
 
     if (center) {
-        float const width  = 1.0 * imageWidth/dpi;  
-        float const height = 1.0 * imageHeight/dpi;    
+        float const width  = 1.0 * imageWidth/dpi;
+        float const height = 1.0 * imageHeight/dpi;
         xpos = (PAPERWIDTH(format) - width)/2;
         ypos = (PAPERHEIGHT(format) - height)/2;
     } else {
@@ -985,11 +985,11 @@ convertAndPrintPage(int                  const outFd,
        an IllegalArraySize error from the printer on the SetColorSpace
        command.
 
-       So we don't use a palette at all now.  
+       So we don't use a palette at all now.
     */
     setColorSpace(outFd, pclGeneratorP->colorSpace, NULL, 0, 0);
 
-    positionCursor(outFd, center, xoffs, yoffs, 
+    positionCursor(outFd, center, xoffs, yoffs,
                    pclGeneratorP->width, pclGeneratorP->height, dpi, format);
 
     convertAndWriteImage(outFd, pclGeneratorP, pamP);
@@ -1007,7 +1007,7 @@ beginSession(int              const outFd,
              bool             const noReporting,
              enum ErrorReport const errorReport) {
 
-    xl_uint16_xy(outFd, xdpi, ydpi); xl_attr_ubyte(outFd, aUnitsPerMeasure); 
+    xl_uint16_xy(outFd, xdpi, ydpi); xl_attr_ubyte(outFd, aUnitsPerMeasure);
     xl_ubyte(outFd, measure);  xl_attr_ubyte(outFd, aMeasure);
     /* xl_ubyte(outFd,eNoReporting); xl_attr_ubyte(outFd,aErrorReport); */
     xl_ubyte(outFd,errorReport); xl_attr_ubyte(outFd,aErrorReport);
@@ -1015,8 +1015,8 @@ beginSession(int              const outFd,
 }
 
 
-             
-static void 
+
+static void
 endSession(int outFd) {
     XL_Operator(outFd,oEndSession);
 }
@@ -1046,7 +1046,7 @@ printPages(int                 const outFd,
     InputSource * sourceP;
     unsigned int sourceNum;
 
-    sourceP = firstSourceP;    
+    sourceP = firstSourceP;
 
     openDataSource(outFd, eBinaryLowByteFirst, eDefaultSource);
 
@@ -1074,9 +1074,9 @@ printPages(int                 const outFd,
                 pm_message("Processing File %u, Page %u", sourceNum, pageNum);
 
                 pnm_readpaminit(ifP, &pam, PAM_STRUCT_SIZE(tuple_type));
-                
+
                 createPclGenerator(&pam, &pclGeneratorP, colorok);
-                
+
                 convertAndPrintPage(
                     outFd, pclGeneratorP, &pam,
                     format, dpi, center, xoffs, yoffs, doDuplex, duplex,
@@ -1087,7 +1087,7 @@ printPages(int                 const outFd,
             }
         }
         pm_close(ifP);
-        sourceP = sourceP->next; 
+        sourceP = sourceP->next;
     }
     closeDataSource(outFd);
 }
@@ -1100,9 +1100,9 @@ main(int argc, char *argv[]) {
     int const outFd = STDOUT_FILENO;
 
     struct cmdlineInfo cmdline;
-    
+
     /* In case you're wondering why we do direct file descriptor I/O
-       instead of stream (FILE *), it's because Jochen originally 
+       instead of stream (FILE *), it's because Jochen originally
        wrote this code for an embedded system with diet-libc.  Without
        the stream library, the statically linked binary was only about
        5K big.
@@ -1116,7 +1116,7 @@ main(int argc, char *argv[]) {
     else {
         jobHead(outFd, cmdline.rendergray, cmdline.jobsetup);
 
-        beginSession(outFd, cmdline.dpi, cmdline.dpi, eInch, 
+        beginSession(outFd, cmdline.dpi, cmdline.dpi, eInch,
                      FALSE, eBackChAndErrPage);
 
         printPages(outFd, cmdline.sourceP,
