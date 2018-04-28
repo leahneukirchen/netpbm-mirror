@@ -85,9 +85,9 @@ invRgbnorm(pixval       const rgb,
 
 
 static pixval
-rgbnorm(long         const rgb, 
-        pixval       const maxval, 
-        unsigned int const hexDigitCount, 
+rgbnorm(long         const rgb,
+        pixval       const maxval,
+        unsigned int const hexDigitCount,
         bool         const closeOk,
         const char * const colorname) {
 /*----------------------------------------------------------------------------
@@ -97,7 +97,7 @@ rgbnorm(long         const rgb,
    the complete color color specification in error as 'colorname'.
 
    For example, if the user says "0ff" and the maxval is 100,
-   then rgb is 0xff, n is 3, and our result is 
+   then rgb is 0xff, n is 3, and our result is
    0xff / (16**3-1) * 100 = 6.
 -----------------------------------------------------------------------------*/
     pixval retval;
@@ -145,7 +145,7 @@ parseHexDigits(const char *   const string,
 
     unsigned int digitCount;
     pixval n;
-    
+
     digitCount = 0;  /* initial value */
     n = 0;           /* initial value */
     while (string[digitCount] != delim) {
@@ -168,7 +168,7 @@ parseHexDigits(const char *   const string,
 
 
 static void
-parseNewHexX11(char       const colorname[], 
+parseNewHexX11(char       const colorname[],
                pixval     const maxval,
                bool       const closeOk,
                pixel *    const colorP) {
@@ -216,7 +216,7 @@ parseNewHexX11(char       const colorname[],
 
 
 static void
-parseNewDecX11(char       const colorname[], 
+parseNewDecX11(char       const colorname[],
                pixval     const maxval,
                bool       const closeOk,
                pixel *    const colorP) {
@@ -227,7 +227,7 @@ parseNewDecX11(char       const colorname[],
 
     if (sscanf( colorname, "rgbi:%f/%f/%f", &fr, &fg, &fb) != 3)
         pm_error("invalid color specifier '%s'", colorname);
-    if (fr < 0.0 || fr > 1.0 || fg < 0.0 || fg > 1.0 
+    if (fr < 0.0 || fr > 1.0 || fg < 0.0 || fg > 1.0
         || fb < 0.0 || fb > 1.0)
         pm_error("invalid color specifier '%s' - "
                  "values must be between 0.0 and 1.0", colorname );
@@ -251,7 +251,7 @@ parseNewDecX11(char       const colorname[],
 
 
 static void
-parseOldX11(char       const colorname[], 
+parseOldX11(char       const colorname[],
             pixval     const maxval,
             bool       const closeOk,
             pixel *    const colorP) {
@@ -262,7 +262,7 @@ parseOldX11(char       const colorname[],
     int hexit[256];
     long r,g,b;
     pixval rNorm, gNorm, bNorm;
-    
+
     computeHexTable(hexit);
 
     if (!pm_strishex(&colorname[1]))
@@ -291,10 +291,10 @@ parseOldX11(char       const colorname[],
         r = (hexit[(int)colorname[1]] << 8) +
             (hexit[(int)colorname[2]] << 4) +
             (hexit[(int)colorname[3]] << 0);
-        g = (hexit[(int)colorname[4]] << 8) + 
+        g = (hexit[(int)colorname[4]] << 8) +
             (hexit[(int)colorname[5]] << 4) +
             (hexit[(int)colorname[6]] << 0);
-        b = (hexit[(int)colorname[7]] << 8) + 
+        b = (hexit[(int)colorname[7]] << 8) +
             (hexit[(int)colorname[8]] << 4) +
             (hexit[(int)colorname[9]] << 0);
         rNorm = rgbnorm(r, maxval, 3, closeOk, colorname);
@@ -303,13 +303,13 @@ parseOldX11(char       const colorname[],
         break;
 
     case 12:
-        r = (hexit[(int)colorname[1]] << 12) + 
+        r = (hexit[(int)colorname[1]] << 12) +
             (hexit[(int)colorname[2]] <<  8) +
             (hexit[(int)colorname[3]] <<  4) + hexit[(int)colorname[4]];
-        g = (hexit[(int)colorname[5]] << 12) + 
+        g = (hexit[(int)colorname[5]] << 12) +
             (hexit[(int)colorname[6]] <<  8) +
             (hexit[(int)colorname[7]] <<  4) + hexit[(int)colorname[8]];
-        b = (hexit[(int)colorname[9]] << 12) + 
+        b = (hexit[(int)colorname[9]] << 12) +
             (hexit[(int)colorname[10]] << 8) +
             (hexit[(int)colorname[11]] << 4) + hexit[(int)colorname[12]];
         rNorm = rgbnorm(r, maxval, 4, closeOk, colorname);
@@ -327,7 +327,7 @@ parseOldX11(char       const colorname[],
 
 
 static void
-parseOldX11Dec(const char       colorname[], 
+parseOldX11Dec(const char       colorname[],
                pixval     const maxval,
                bool       const closeOk,
                pixel *    const colorP) {
@@ -339,7 +339,7 @@ parseOldX11Dec(const char       colorname[],
 
     if (sscanf(colorname, "%f,%f,%f", &fr, &fg, &fb) != 3)
         pm_error("invalid color specifier '%s'", colorname);
-    if (fr < 0.0 || fr > 1.0 || fg < 0.0 || fg > 1.0 
+    if (fr < 0.0 || fr > 1.0 || fg < 0.0 || fg > 1.0
         || fb < 0.0 || fb > 1.0)
         pm_error("invalid color specifier '%s' - "
                  "values must be between 0.0 and 1.0", colorname );
@@ -368,7 +368,7 @@ ppm_parsecolor2(const char * const colorname,
                 int          const closeOk) {
 
     pixel color;
-    
+
     if (strncmp(colorname, "rgb:", 4) == 0)
         /* It's a new-X11-style hexadecimal rgb specifier. */
         parseNewHexX11(colorname, maxval, closeOk, &color);
@@ -382,17 +382,17 @@ ppm_parsecolor2(const char * const colorname,
              colorname[0] == '.')
         /* It's an old-style decimal/float rgb specifier. */
         parseOldX11Dec(colorname, maxval, closeOk, &color);
-    else 
+    else
         /* Must be a name from the X-style rgb file. */
         pm_parse_dictionary_name(colorname, maxval, closeOk, &color);
-    
+
     return color;
 }
 
 
 
 pixel
-ppm_parsecolor(const char * const colorname, 
+ppm_parsecolor(const char * const colorname,
                pixval       const maxval) {
 
     return ppm_parsecolor2(colorname, maxval, TRUE);
@@ -401,8 +401,8 @@ ppm_parsecolor(const char * const colorname,
 
 
 char *
-ppm_colorname(const pixel * const colorP, 
-              pixval        const maxval, 
+ppm_colorname(const pixel * const colorP,
+              pixval        const maxval,
               int           const hexok)   {
 
     int r, g, b;
@@ -509,7 +509,7 @@ processColorfileEntry(struct colorfile_entry const ce,
             /* The color is already in the hash, which means we saw it
                earlier in the file.  We prefer the first name that the
                file gives for each color, so we just ignore the
-               current entry.  
+               current entry.
             */
             *errorP = NULL;
         } else {
@@ -576,15 +576,15 @@ readOpenColorFile(FILE *          const colorFileP,
 
     while (!done && !*errorP) {
         struct colorfile_entry const ce = pm_colorget(colorFileP);
-        
-        if (!ce.colorname)  
+
+        if (!ce.colorname)
             done = TRUE;
-        else 
+        else
             processColorfileEntry(ce, cht, colornames, colors,
                                   &nColorsDone, errorP);
     }
     *nColorsP = nColorsDone;
-    
+
     if (*errorP) {
         unsigned int colorIndex;
 
@@ -630,13 +630,13 @@ readColorFile(const char *    const fileName,
         } else {
             readOpenColorFile(colorFileP, nColorsP, colornames, colors, cht,
                               errorP);
-            
+
             fclose(colorFileP);
         }
     }
 }
 
-    
+
 
 static void
 readcolordict(const char *      const fileName,
@@ -657,14 +657,14 @@ readcolordict(const char *      const fileName,
         pixel * colors;
 
         MALLOCARRAY(colors, MAXCOLORNAMES);
-        
+
         if (colors == NULL)
             pm_asprintf(errorP, "Unable to allocate space for color table.");
         else {
             colorhash_table cht;
 
             cht = allocColorHash();
-            
+
             if (cht == NULL)
                 pm_asprintf(errorP, "Unable to allocate space for color hash");
             else {
@@ -754,9 +754,9 @@ ppm_readcolordict(const char *      const fileName,
 
 
 void
-ppm_readcolornamefile(const char *      const fileName, 
+ppm_readcolornamefile(const char *      const fileName,
                       int               const mustOpen,
-                      colorhash_table * const chtP, 
+                      colorhash_table * const chtP,
                       const char ***    const colornamesP) {
 
     ppm_readcolordict(fileName, mustOpen, NULL, colornamesP, NULL, chtP);
@@ -778,7 +778,7 @@ ppm_freecolornames(const char ** const colornames) {
 
 
 
-static unsigned int 
+static unsigned int
 nonnegative(unsigned int const arg) {
 
     if ((int)(arg) < 0)
@@ -790,8 +790,8 @@ nonnegative(unsigned int const arg) {
 
 
 pixel
-ppm_color_from_ycbcr(unsigned int const y, 
-                     int          const cb, 
+ppm_color_from_ycbcr(unsigned int const y,
+                     int          const cb,
                      int          const cr) {
 /*----------------------------------------------------------------------------
    Return the color that has luminance 'y', blue chrominance 'cb', and
@@ -805,12 +805,12 @@ ppm_color_from_ycbcr(unsigned int const y,
 -----------------------------------------------------------------------------*/
     pixel retval;
 
-    PPM_ASSIGN(retval, 
+    PPM_ASSIGN(retval,
                y + 1.4022 * cr,
                nonnegative(y - 0.7145 * cr - 0.3456 * cb),
                y + 1.7710 * cb
         );
-    
+
     return retval;
 }
 
@@ -876,7 +876,7 @@ ppm_color_from_hsv(struct hsv const hsv,
             pm_error("Invalid H value passed to color_from_HSV: %f", hsv.h);
         }
     }
-    PPM_ASSIGN(retval, 
+    PPM_ASSIGN(retval,
                ROUNDU(R * maxval),
                ROUNDU(G * maxval),
                ROUNDU(B * maxval));
