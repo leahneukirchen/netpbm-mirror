@@ -222,8 +222,8 @@ xformDimensions(struct XformCore const xform,
    E.g. if it's a 90 degree rotation of a 10 x 20 image, the output is
    a 20 x 10 image.
 -----------------------------------------------------------------------------*/
-    *outColsP = abs(xform.a * inCols + xform.c * inRows);
-    *outRowsP = abs(xform.b * inCols + xform.d * inRows);
+    *outColsP = abs(xform.a * (int)inCols + xform.c * (int)inRows);
+    *outRowsP = abs(xform.b * (int)inCols + xform.d * (int)inRows);
 }
 
 
