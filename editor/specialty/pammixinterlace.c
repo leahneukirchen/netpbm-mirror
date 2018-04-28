@@ -2,7 +2,7 @@
                              pammixinterlace
 *******************************************************************************
   De-interlace an image by merging adjacent rows.
-   
+
   Copyright (C) 2007 Bruce Guenter, FutureQuest, Inc.
 
   Permission to use, copy, modify, and distribute this software and its
@@ -70,7 +70,7 @@ filterLinearBlend(tuple *      const outputrow,
                 out = (above + mid * 2 + below) / 4;
             else
                 out = mid;
-            
+
             outputrow[col][plane] = out;
         }
     }
@@ -87,17 +87,17 @@ filterFfmpeg(tuple *      const outputrow,
              sample       const maxval) {
 
     unsigned int col;
-    
+
     for (col = 0; col < width; ++col) {
         unsigned int plane;
-        
+
         for (plane = 0; plane < depth; ++plane) {
             long const above = tuplerowWindow[1][col][plane];
             long const mid   = tuplerowWindow[2][col][plane];
             long const below = tuplerowWindow[3][col][plane];
 
             sample out;
-            
+
             if (!adaptive || distant(above, mid, below)) {
                 long const a = (- (long)tuplerowWindow[0][col][plane]
                                 + above * 4
@@ -145,7 +145,7 @@ filterFIR(tuple *      const outputrow,
                 out = clamp(a, maxval);
             } else
                 out = mid;
-            
+
             outputrow[col][plane] = out;
         }
     }
@@ -218,7 +218,7 @@ parseCommandLine(int argc, char ** argv,
         if (!cmdlineP->filterP)
             pm_error("The filter name '%s' is not known.", filterName);
     }
-    
+
     if (argc-1 < 1)
         cmdlineP->inputFileName = "-";
     else if (argc-1 == 1)
@@ -280,12 +280,12 @@ main(int argc, char *argv[]) {
 
     FILE * ifP;
     struct cmdlineInfo cmdline;
-    struct pam inpam;  
+    struct pam inpam;
     struct pam outpam;
     tuple * tuplerowWindow[5];
     tuple * outputrow;
     unsigned int rows;
-    
+
     pnm_init(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
@@ -293,7 +293,7 @@ main(int argc, char *argv[]) {
     rows = cmdline.filterP->rows;
 
     ifP = pm_openr(cmdline.inputFileName);
-    
+
     pnm_readpaminit(ifP, &inpam, PAM_STRUCT_SIZE(tuple_type));
 
     outpam = inpam;    /* Initial value -- most fields should be same */
@@ -328,10 +328,10 @@ main(int argc, char *argv[]) {
                                 inpam.width, inpam.depth,
                                 cmdline.adaptive, inpam.maxval);
         pnm_writepamrow(&outpam, outputrow);
-        
+
         slideWindowDown(tuplerowWindow, rows);
     }
-    
+
     /* Pass through last rows */
     for (row = rows/2; row < rows-1; ++row)
         pnm_writepamrow(&outpam, tuplerowWindow[row]);
@@ -341,6 +341,9 @@ main(int argc, char *argv[]) {
     pnm_freepamrow(outputrow);
     pm_close(inpam.file);
     pm_close(outpam.file);
-    
+
     return 0;
 }
+
+
+
