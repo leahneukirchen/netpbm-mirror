@@ -421,15 +421,18 @@ ppm_colorname(const pixel * const colorP,
 
     f = pm_openColornameFile(NULL, !hexok);
     if (f != NULL) {
-        int bestDiff, thisDiff;
+        int bestDiff;
         bool eof;
 
-        bestDiff = 32767;
-        eof = FALSE;
-        while (!eof && bestDiff > 0 ) {
+        for (bestDiff = 32767, eof = FALSE;
+             !eof && bestDiff > 0; ) {
             struct colorfile_entry const ce = pm_colorget(f);
             if (ce.colorname)  {
-                thisDiff = abs(r - ce.r) + abs(g - ce.g) + abs(b - ce.b);
+                int const thisDiff =
+                    abs(r - (int)ce.r) +
+                    abs(g - (int)ce.g) +
+                    abs(b - (int)ce.b);
+
                 if (thisDiff < bestDiff) {
                     bestDiff = thisDiff;
                     strcpy(colorname, ce.colorname);
