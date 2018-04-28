@@ -228,7 +228,8 @@ readRestOfHeaderVersion3(FILE *           const ifP,
     pm_readcharu(ifP, sizeP);
     /* should be 0x18, but I can't see why we should really care */
     if (*sizeP != 0x18)
-        pm_message("Strange value for Palm bitmap header size: %hu", *sizeP);
+        pm_message("Strange value for Palm bitmap header size: %u",
+                   (unsigned)*sizeP);
 
     pm_readcharu(ifP, pixelFormatP);
     if (*pixelFormatP != PALM_FORMAT_INDEXED &&
@@ -466,9 +467,9 @@ reportPalmHeader(struct PalmHeader      const palmHeader,
     }
     pm_message("Dimensions: %hu columns x %hu rows",
                palmHeader.cols, palmHeader.rows);
-    pm_message("Row layout: %hu bytes per row, %hu bits per pixel",
+    pm_message("Row layout: %hu bytes per row, %u bits per pixel",
                palmHeader.bytesPerRow, palmHeader.pixelSize);
-    pm_message("Pixel Size code: %hu", palmHeader.pixelSizeCode);
+    pm_message("Pixel Size code: %u", (unsigned)palmHeader.pixelSizeCode);
     pm_message("Flags: 0x%04hx", palmHeader.flags);
     pm_message("  Direct Color: %s", yesno(palmHeader.directColor));
     pm_message("  Colormap:     %s", yesno(palmHeader.hasColormap));
