@@ -37,9 +37,9 @@ clamp(sample const val,
 
 
 static bool
-distant(long const above,
-        long const mid,
-        long const below) {
+distant(int const above,
+        int const mid,
+        int const below) {
 
     return abs(mid - (above + below) / 2) > abs(above - below);
 }
@@ -60,9 +60,9 @@ filterLinearBlend(tuple *      const outputrow,
         unsigned int plane;
 
         for (plane = 0; plane < depth; ++plane) {
-            long const above = tuplerowWindow[0][col][plane];
-            long const mid   = tuplerowWindow[1][col][plane];
-            long const below = tuplerowWindow[2][col][plane];
+            int const above = tuplerowWindow[0][col][plane];
+            int const mid   = tuplerowWindow[1][col][plane];
+            int const below = tuplerowWindow[2][col][plane];
 
             sample out;
 
@@ -92,18 +92,18 @@ filterFfmpeg(tuple *      const outputrow,
         unsigned int plane;
 
         for (plane = 0; plane < depth; ++plane) {
-            long const above = tuplerowWindow[1][col][plane];
-            long const mid   = tuplerowWindow[2][col][plane];
-            long const below = tuplerowWindow[3][col][plane];
+            int const above = tuplerowWindow[1][col][plane];
+            int const mid   = tuplerowWindow[2][col][plane];
+            int const below = tuplerowWindow[3][col][plane];
 
             sample out;
 
             if (!adaptive || distant(above, mid, below)) {
-                long const a = (- (long)tuplerowWindow[0][col][plane]
+                int const a = (- (int)tuplerowWindow[0][col][plane]
                                 + above * 4
                                 + mid * 2
                                 + below * 4
-                                - (long)tuplerowWindow[4][col][plane]) / 8;
+                                - (int)tuplerowWindow[4][col][plane]) / 8;
                 out = clamp(a, maxval);
             } else
                 out = mid;
@@ -130,18 +130,18 @@ filterFIR(tuple *      const outputrow,
 
         for (plane = 0; plane < depth; ++plane) {
 
-            long const above = tuplerowWindow[1][col][plane];
-            long const mid   = tuplerowWindow[2][col][plane];
-            long const below = tuplerowWindow[3][col][plane];
+            int const above = tuplerowWindow[1][col][plane];
+            int const mid   = tuplerowWindow[2][col][plane];
+            int const below = tuplerowWindow[3][col][plane];
 
             sample out;
 
             if (!adaptive || distant(above, mid, below)) {
-                long const a = (- (long)tuplerowWindow[0][col][plane]
+                int const a = (- (int)tuplerowWindow[0][col][plane]
                                 + above * 2
                                 + mid * 6
                                 + below * 2
-                                - (long)tuplerowWindow[4][col][plane]) / 8;
+                                - (int)tuplerowWindow[4][col][plane]) / 8;
                 out = clamp(a, maxval);
             } else
                 out = mid;
