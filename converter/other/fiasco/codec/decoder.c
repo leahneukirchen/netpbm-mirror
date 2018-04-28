@@ -3,11 +3,11 @@
  *
  *  Written by:     Ullrich Hafner
  *          Michael Unger
- *      
+ *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
  */
- 
+
 /*
  *  $Date: 2000/10/22 10:44:48 $
  *  $Author: hafner $
@@ -37,7 +37,7 @@
 /*****************************************************************************
 
                 prototypes
-  
+
 *****************************************************************************/
 
 static void
@@ -63,7 +63,7 @@ duplicate_state_image (const word_t *domain, unsigned offset, unsigned level);
 /*****************************************************************************
 
                 public code
-  
+
 *****************************************************************************/
 
 video_t *
@@ -78,7 +78,7 @@ alloc_video (bool_t store_wfa)
  */
 {
    video_t *video = Calloc (1, sizeof (video_t));
-   
+
    video->future_display = -1;
    video->display        = 0;
 
@@ -138,13 +138,13 @@ get_next_frame (bool_t store_wfa, int enlarge_factor,
  *  Get next frame of the WFA 'video' from stream 'input'.
  *  'orig_wfa' is the constant part of the WFA used by all frames.
  *  Depending on values of 'enlarge_factor' and 'smoothing' enlarge and
- *  smooth image, respectively. 
+ *  smooth image, respectively.
  *  If 'store_wfa' is TRUE, then store WFA structure of reference frames
  *  (used by analysis tool xwfa).
  *  If 'reference_frame' is not NULL, then load image 'reference_frame'
  *  from disk.
  *  'format' gives the color format to be used (either 4:2:0 or 4:4:4).
- *  If 'timer' is not NULL, then accumulate running time statistics. 
+ *  If 'timer' is not NULL, then accumulate running time statistics.
  *
  *  Return value:
  *  pointer to decoded frame
@@ -157,7 +157,7 @@ get_next_frame (bool_t store_wfa, int enlarge_factor,
    image_t *sframe            = NULL; /* current smoothed frame */
    bool_t   current_frame_is_future_frame = NO;
 
-   if (video->future_display == video->display)  
+   if (video->future_display == video->display)
    {
       /*
        *  Future frame is already computed since it has been used
@@ -189,7 +189,7 @@ get_next_frame (bool_t store_wfa, int enlarge_factor,
      clock_t       ptimer;
      unsigned int  stop_timer [3];
      wfa_t        *tmp_wfa = NULL;
-     
+
      if (!store_wfa)
         video->wfa = orig_wfa;
      else
@@ -198,7 +198,7 @@ get_next_frame (bool_t store_wfa, int enlarge_factor,
         copy_wfa (tmp_wfa, video->wfa);
         copy_wfa (video->wfa, orig_wfa);
      }
-   
+
      /*
       *  First step: read WFA from disk
       */
@@ -210,7 +210,7 @@ get_next_frame (bool_t store_wfa, int enlarge_factor,
         timer->input [video->wfa->frame_type] += stop_timer [0];
         timer->frames [video->wfa->frame_type]++;
      }
-      
+
      /*
       *  Read reference frame from disk if required
       *  (i.e., 1st frame is of type B or P)
@@ -225,7 +225,7 @@ get_next_frame (bool_t store_wfa, int enlarge_factor,
         video->frame  = read_image_file (reference_frame);
         video->sframe = NULL;
      }
-   
+
      /*
       *  Depending on current frame type update past and future frames
       */
@@ -313,7 +313,7 @@ get_next_frame (bool_t store_wfa, int enlarge_factor,
      }
      if (tmp_wfa)
         free_wfa (tmp_wfa);
-     
+
      current_frame_is_future_frame = NO;
      /*
       *  Second step: decode image
@@ -323,7 +323,7 @@ get_next_frame (bool_t store_wfa, int enlarge_factor,
         unsigned orig_width, orig_height;
 
         stop_timer [0] = stop_timer [1] = stop_timer [2] = 0;
-     
+
         enlarge_image (enlarge_factor, format,
                (video->wfa->wfainfo->color
                 && format == FORMAT_4_2_0)
@@ -332,10 +332,10 @@ get_next_frame (bool_t store_wfa, int enlarge_factor,
         if (enlarge_factor > 0)
         {
            orig_width  = video->wfa->wfainfo->width  << enlarge_factor;
-           orig_height = video->wfa->wfainfo->height << enlarge_factor; 
+           orig_height = video->wfa->wfainfo->height << enlarge_factor;
         }
         else
-        { 
+        {
            orig_width  = video->wfa->wfainfo->width  >> - enlarge_factor;
            orig_height = video->wfa->wfainfo->height >> - enlarge_factor;
            if (orig_width & 1)
@@ -343,7 +343,7 @@ get_next_frame (bool_t store_wfa, int enlarge_factor,
            if (orig_height & 1)
           orig_height++;
         }
-     
+
         frame = decode_image (orig_width, orig_height, format,
                   timer != NULL ? stop_timer : NULL,
                   video->wfa);
@@ -381,7 +381,7 @@ get_next_frame (bool_t store_wfa, int enlarge_factor,
      }
      else
         sframe = NULL;
-     
+
      stop_timer [0] = prg_timer (&ptimer, STOP);
      if (timer)
         timer->smooth [video->wfa->frame_type] += stop_timer [0];
@@ -399,7 +399,7 @@ get_next_frame (bool_t store_wfa, int enlarge_factor,
         video->future_display     = frame_number;
         current_frame_is_future_frame = YES;
      }
-      
+
      if (!store_wfa)
         remove_states (video->wfa->basis_states, video->wfa);
       } while (!video->frame);
@@ -407,7 +407,7 @@ get_next_frame (bool_t store_wfa, int enlarge_factor,
       if (!store_wfa)
      video->wfa = NULL;
    }
-   
+
    return video->sframe ? video->sframe : video->frame;
 }
 
@@ -418,8 +418,8 @@ decode_image (unsigned orig_width, unsigned orig_height, format_e format,
  *  Compute image which is represented by the given 'wfa'.
  *  'orig_width'x'orig_height' gives the resolution of the image at
  *  coding time. Use 4:2:0 subsampling or 4:4:4 'format' for color images.
- *  If 'dec_timer' is given, accumulate running time statistics. 
- *  
+ *  If 'dec_timer' is given, accumulate running time statistics.
+ *
  *  Return value:
  *  pointer to decoded image
  *
@@ -458,7 +458,7 @@ decode_image (unsigned orig_width, unsigned orig_height, format_e format,
    for (max_level = 0, state = wfa->basis_states; state < wfa->states; state++)
       if (isedge (wfa->into [state][0][0]) || isedge (wfa->into [state][1][0]))
      max_level = MAX(max_level, wfa->level_of_state [state]);
-   
+
 
    /*
     *  Allocate frame buffer for decoded image
@@ -468,7 +468,7 @@ decode_image (unsigned orig_width, unsigned orig_height, format_e format,
    width  = MAX(width, orig_width);
    height = MAX(height, orig_height);
    frame = alloc_image (width, height, wfa->wfainfo->color, format);
-   
+
    /*
     *  Allocate buffers for intermediate state images
     */
@@ -478,7 +478,7 @@ decode_image (unsigned orig_width, unsigned orig_height, format_e format,
       wfa->level_of_state [wfa->tree[wfa->root_state][0]] = 128;
       wfa->level_of_state [wfa->tree[wfa->root_state][1]] = 128;
    }
-   alloc_state_images (&images, &offsets, frame, root_state, 0, max_level, 
+   alloc_state_images (&images, &offsets, frame, root_state, 0, max_level,
                format, wfa);
 
    if (dec_timer)
@@ -498,20 +498,20 @@ decode_image (unsigned orig_width, unsigned orig_height, format_e format,
    prg_timer (&ptimer, START);
    free_state_images (max_level, frame->color, images, offsets, root_state, 0,
               format, wfa);
-   
+
    /*
     *  Crop decoded image if the image size differs.
     */
    if (orig_width != width || orig_height != height)
    {
-      frame->height = orig_height;  
-      frame->width  = orig_width;   
-      if (orig_width != width)      
+      frame->height = orig_height;
+      frame->width  = orig_width;
+      if (orig_width != width)
       {
      color_e   band;        /* current color band */
      word_t   *src, *dst;       /* source and destination pointers */
      unsigned  y;           /* current row */
-     
+
      for (band  = first_band (frame->color);
           band <= last_band (frame->color); band++)
      {
@@ -546,7 +546,7 @@ decode_state (unsigned state, unsigned level, wfa_t *wfa)
  *  pointer to decoded state image
  *
  *  Side effects:
- *  'wfa' states > 'state' are removed.  
+ *  'wfa' states > 'state' are removed.
  */
 {
    word_t  *domains [2];
@@ -571,7 +571,7 @@ decode_state (unsigned state, unsigned level, wfa_t *wfa)
    {
       word_t   *src, *dst;
       unsigned  y;
-        
+
       src = domains [0];
       dst = img->pixels [GRAY];
       for (y = img->height; y; y--)
@@ -632,7 +632,7 @@ decode_range (unsigned range_state, unsigned range_label, unsigned range_level,
    {
       word_t   *src, *dst;
       unsigned  y;
-      
+
       src = images [range_state + (range_level + 1) * wfa->states]
         + range_label * width_of_level (range_level);
       dst = range;
@@ -648,7 +648,7 @@ decode_range (unsigned range_state, unsigned range_label, unsigned range_level,
    {
       int      s;           /* domain state */
       unsigned edge;            /* counter */
-        
+
       if (ischild (s = wfa->tree [range_state][range_label]))
      *domain++ = duplicate_state_image (images [s + (range_level)
                            * wfa->states],
@@ -664,11 +664,11 @@ decode_range (unsigned range_state, unsigned range_label, unsigned range_level,
                         range_level);
       *domain = NULL;
    }
-   
+
    free_state_images (range_level + 1, NO, images, offsets, NULL, range_state,
               NO, wfa);
    free_image (state_image);
-   
+
    return range;
 }
 
@@ -685,7 +685,7 @@ smooth_image (unsigned sf, const wfa_t *wfa, image_t *image)
  */
 {
    int      is, inegs;          /* integer factors of s and 1 - s*/
-   unsigned state;          
+   unsigned state;
    unsigned img_width  = image->width;
    unsigned img_height = image->height;
    real_t   s          = 1.0 - sf / 200.0;
@@ -695,7 +695,7 @@ smooth_image (unsigned sf, const wfa_t *wfa, image_t *image)
 
    is    = s * 512 + .5;        /* integer representation of s */
    inegs = (1 - s) * 512 + .5;      /* integer representation of 1 - s */
-   
+
    for (state = wfa->basis_states;
     state < (wfa->wfainfo->color
          ? wfa->tree [wfa->root_state][0]
@@ -706,10 +706,10 @@ smooth_image (unsigned sf, const wfa_t *wfa, image_t *image)
       unsigned  level  = wfa->level_of_state[state]; /* level of state image */
       unsigned  width  = width_of_level (level); /* size of state image */
       unsigned  height = height_of_level (level); /* size of state image */
-      
+
       if (wfa->y [state][1] >= img_height || wfa->x [state][1] >= img_width)
      continue;          /* outside visible area */
-     
+
       if (level % 2)            /* horizontal smoothing */
       {
      unsigned  i;           /* line counter */
@@ -719,12 +719,12 @@ smooth_image (unsigned sf, const wfa_t *wfa, image_t *image)
      img1 = bptr + (wfa->y [state][1] - 1) * img_width
         + wfa->x [state][1];
      img2 = bptr + wfa->y [state][1] * img_width + wfa->x [state][1];
-     
+
      for (i = MIN(width, img_width - wfa->x [state][1]); i;
           i--, img1++, img2++)
      {
         int tmp = *img1;
-        
+
 #ifdef HAVE_SIGNED_SHIFT
         *img1 = (((is * tmp) >> 10) << 1)
             + (((inegs * (int) *img2) >> 10) << 1);
@@ -746,12 +746,12 @@ smooth_image (unsigned sf, const wfa_t *wfa, image_t *image)
 
      img1 = bptr + wfa->y [state][1] * img_width + wfa->x [state][1] - 1;
      img2 = bptr + wfa->y [state][1] * img_width + wfa->x [state][1];
-     
+
      for (i = MIN(height, img_height - wfa->y [state][1]); i;
           i--, img1 += img_width, img2 += img_width)
      {
         int tmp = *img1;
-        
+
 #ifdef HAVE_SIGNED_SHIFT
         *img1 = (((is * tmp) >> 10) << 1)
             + (((inegs * (int) *img2) >> 10) << 1);
@@ -771,7 +771,7 @@ smooth_image (unsigned sf, const wfa_t *wfa, image_t *image)
 /*****************************************************************************
 
                 private code
-  
+
 *****************************************************************************/
 
 static void
@@ -789,7 +789,7 @@ enlarge_image (int enlarge_factor, format_e format, unsigned y_root,
  *  are modified.
  */
 {
-   
+
    if (enlarge_factor != 0 || format == FORMAT_4_2_0)
    {
       unsigned state;
@@ -801,11 +801,11 @@ enlarge_image (int enlarge_factor, format_e format, unsigned y_root,
       }
       else
      state = wfa->basis_states;
-      
+
       for (; state < wfa->states; state++)
       {
      unsigned label, n;
-     
+
      wfa->level_of_state [state]
         = MAX(wfa->level_of_state [state] + enlarge_factor * 2, 0);
 
@@ -855,12 +855,12 @@ compute_actual_size (unsigned luminance_root,
 {
    unsigned x = 0, y = 0;       /* maximum coordinates */
    unsigned state;          /* counter */
-   
+
    for (state = wfa->basis_states; state < wfa->states; state++)
       if (isedge (wfa->into [state][0][0]) || isedge (wfa->into [state][1][0]))
       {
           unsigned mult = state > luminance_root ? 2 : 1;
-          
+
           x = MAX((wfa->x [state][0]
                    + width_of_level (wfa->level_of_state [state])) * mult, x);
           y = MAX((wfa->y [state][0]
@@ -886,7 +886,7 @@ alloc_state_images (word_t ***images, u_word_t **offsets, const image_t *frame,
  *  'max_level' fives the max. level of a linear combination.
  *  Memory is allocated for every required state image.
  *  Use 4:2:0 subsampling or 4:4:4 'format' for color images.
- *  If 'range_state' > 0 then rather compute image of 'range_state' than 
+ *  If 'range_state' > 0 then rather compute image of 'range_state' than
  *  image of 'wfa->root_state'.
  *
  *  Return values:
@@ -900,7 +900,7 @@ alloc_state_images (word_t ***images, u_word_t **offsets, const image_t *frame,
    word_t   **simg;         /* ptr to list of state image ptr's */
    u_word_t  *offs;         /* ptr to list of offsets */
    unsigned   level;            /* counter */
-   
+
    simg = Calloc (wfa->states * (max_level + 1), sizeof (word_t *));
    offs = Calloc (wfa->states * (max_level + 1), sizeof (u_word_t));
 
@@ -938,7 +938,7 @@ alloc_state_images (word_t ***images, u_word_t **offsets, const image_t *frame,
         }
       }
    }
-   
+
    /*
     *  Generate list of state images which must be computed at each level
     */
@@ -946,9 +946,9 @@ alloc_state_images (word_t ***images, u_word_t **offsets, const image_t *frame,
    {
       int      child, domain;
       unsigned state, label, edge;
-      
+
       /*
-       *  Range approximation with child. 
+       *  Range approximation with child.
        */
       for (state = 1; state < (range_state > 0 ?
                    range_state + 1 : wfa->states); state++)
@@ -990,7 +990,7 @@ alloc_state_images (word_t ***images, u_word_t **offsets, const image_t *frame,
           }
            }
       /*
-       *  Range approximation with linear combination 
+       *  Range approximation with linear combination
        */
       for (state = 1; state < (range_state > 0 ?
                    range_state + 1 : wfa->states); state++)
@@ -1008,7 +1008,7 @@ alloc_state_images (word_t ***images, u_word_t **offsets, const image_t *frame,
             = width_of_level (level - 1);
           }
            }
-      
+
    }
 
    *images  = simg;
@@ -1039,7 +1039,7 @@ free_state_images (unsigned max_level, bool_t color, word_t **state_image,
    else
    {
       unsigned state;
-      
+
       /*
        *  Initialize state image array with states at 'max_level'
        */
@@ -1053,19 +1053,19 @@ free_state_images (unsigned max_level, bool_t color, word_t **state_image,
         level = max_level - 2;
      else
         level = max_level;
-      
+
      for (; state < wfa->states; state++)
         if (wfa->level_of_state [state] == level)
            state_image [state + level * wfa->states] = &marker;
       }
    }
-   
+
    for (level = max_level; level > 0; level--)
    {
       int      domain, child;
       unsigned state, label, edge;
       /*
-       *  Range approximation with child. 
+       *  Range approximation with child.
        */
       for (state = 1; state < (range_state > 0 ?
                    range_state + 1 : wfa->states); state++)
@@ -1080,7 +1080,7 @@ free_state_images (unsigned max_level, bool_t color, word_t **state_image,
           state_image [child + (level - 1) * wfa->states] = &marker;
            }
       /*
-       *  Range approximation with linear combination 
+       *  Range approximation with linear combination
        */
       for (state = 1; state < (range_state > 0 ?
                    range_state + 1 : wfa->states);
@@ -1089,7 +1089,7 @@ free_state_images (unsigned max_level, bool_t color, word_t **state_image,
         for (label = 0; label < MAXLABELS; label++)
            for (edge = 0; isedge (domain = wfa->into[state][label][edge]);
             edge++)
-          if (domain > 0    
+          if (domain > 0
               && (state_image [domain + (level - 1) * wfa->states]
               != NULL)
               && (state_image [domain + (level - 1) * wfa->states]
@@ -1112,7 +1112,7 @@ compute_state_images (unsigned max_level, word_t **simg,
  *  which are marked in the array 'simg' (offsets of state images
  *  are given by 'offset').
  *
- *  Warning: Several optimizations are used in this function making 
+ *  Warning: Several optimizations are used in this function making
  *  it difficult to understand.
  *
  *  No return value.
@@ -1123,7 +1123,7 @@ compute_state_images (unsigned max_level, word_t **simg,
  */
 {
    unsigned level, state;
-     
+
    /*
     *  Copy one-pixel images in case state_image pointer != &final distr.
     */
@@ -1138,17 +1138,17 @@ compute_state_images (unsigned max_level, word_t **simg,
     *  'weight' gives the weight in integer notation
     *  'src', 'dst', and 'idst' are pointers to the source and
     *  destination pixels (short or integer format), respectively.
-    *  Short format : one operation per register (16 bit mode). 
-    *  Integer format : two operations per register (32 bit mode). 
+    *  Short format : one operation per register (16 bit mode).
+    *  Integer format : two operations per register (32 bit mode).
     *  'src_offset', 'dst_offset', and 'dst_offset' give the number of
     *  pixels which have to be omitted when jumping to the next image row.
     */
-   for (level = 1; level <= max_level; level++) 
+   for (level = 1; level <= max_level; level++)
    {
       unsigned label;
       unsigned width  = width_of_level (level - 1);
       unsigned height = height_of_level (level - 1);
-      
+
       for (state = 1; state < wfa->states; state++)
      if (simg [state + level * wfa->states] != NULL)
         for (label = 0; label < MAXLABELS; label++)
@@ -1176,7 +1176,7 @@ compute_state_images (unsigned max_level, word_t **simg,
           }
 
           /*
-           *  Generate the state images by adding the corresponding 
+           *  Generate the state images by adding the corresponding
            *  weighted state images:
            *  subimage [label] =
            *       weight_1 * image_1 + ... + weight_n * image_n
@@ -1226,12 +1226,12 @@ compute_state_images (unsigned max_level, word_t **simg,
             src_offset = offset [domain + ((level - 1)
                                * wfa->states)] - width;
             weight     = wfa->int_weight [state][label][edge];
-            
+
             if (width == 1) /* can't add two-pixels in a row */
             {
                word_t   *dst;
                unsigned  dst_offset;
-               
+
                dst        = range;
                dst_offset = offset [state + level * wfa->states]
                     - width;
@@ -1240,7 +1240,7 @@ compute_state_images (unsigned max_level, word_t **simg,
 #else                   /* not HAVE_SIGNED_SHIFT */
                *dst++ = ((weight * (int) *src++) / 1024) * 2;
 #endif /* not HAVE_SIGNED_SHIFT */
-               if (height == 2) 
+               if (height == 2)
                {
                   src += src_offset;
                   dst += dst_offset;
@@ -1256,14 +1256,14 @@ compute_state_images (unsigned max_level, word_t **simg,
                unsigned  y;
                int      *idst;
                unsigned  idst_offset;
-               
+
                idst        = (int *) range;
                idst_offset = (offset [state + level * wfa->states]
                       - width) / 2;
                for (y = height; y; y--)
                {
                   int *comp_dst = idst + (width >> 1);
-                  
+
                   for (; idst != comp_dst; )
                   {
                  int tmp; /* temp. value of adjacent pixels */
@@ -1312,11 +1312,11 @@ compute_state_images (unsigned max_level, word_t **simg,
             {
                word_t   *dst;
                unsigned  dst_offset;
-               
+
                dst        = range;
                dst_offset = offset [state + level * wfa->states]
                     - width;
-               
+
                *dst++ = weight;
                if (height == 2)
                {
@@ -1329,7 +1329,7 @@ compute_state_images (unsigned max_level, word_t **simg,
                unsigned  x, y;
                int      *idst;
                unsigned  idst_offset;
-               
+
                weight      = (weight * 65536) | (weight & 0xffff);
                idst        = (int *) range;
                idst_offset = offset [state + level * wfa->states]
@@ -1351,7 +1351,7 @@ compute_state_images (unsigned max_level, word_t **simg,
           }
           else
              edge = 0;
-          
+
           /*
            *  Add remaining weighted domain images to current range
            */
@@ -1368,12 +1368,12 @@ compute_state_images (unsigned max_level, word_t **simg,
             src_offset = offset [domain + ((level - 1)
                                * wfa->states)] - width;
             weight     = wfa->int_weight [state][label][edge];
-            
+
             if (width == 1) /* can't add two-pixels in a row */
             {
                word_t   *dst;
                unsigned  dst_offset;
-               
+
                dst        = range;
                dst_offset = offset [state + level * wfa->states]
                     - width;
@@ -1383,7 +1383,7 @@ compute_state_images (unsigned max_level, word_t **simg,
 #else /* not HAVE_SIGNED_SHIFT */
                *dst++ += ((weight * (int) *src++) / 1024) * 2;
 #endif /* not HAVE_SIGNED_SHIFT */
-               if (height == 2) 
+               if (height == 2)
                {
                   src += src_offset;
                   dst += dst_offset;
@@ -1399,15 +1399,15 @@ compute_state_images (unsigned max_level, word_t **simg,
                int      *idst;
                unsigned  idst_offset;
                unsigned  y;
-               
+
                idst        = (int *) range;
                idst_offset = (offset [state + level * wfa->states]
                       - width) / 2;
-               
+
                for (y = height; y; y--)
                {
                   int *comp_dst = idst + (width >> 1);
-                  
+
                   for (; idst != comp_dst;)
                   {
                  int tmp; /* temp. value of adjacent pixels */
@@ -1457,11 +1457,11 @@ compute_state_images (unsigned max_level, word_t **simg,
             {
                word_t   *dst;
                unsigned  dst_offset;
-               
+
                dst        = range;
                dst_offset = offset [state + level * wfa->states]
                     - width;
-               
+
                *dst++ += weight;
                if (height == 2)
                {
@@ -1474,16 +1474,16 @@ compute_state_images (unsigned max_level, word_t **simg,
                int      *idst;
                unsigned  idst_offset;
                unsigned  y;
-               
+
                weight      = (weight * 65536) | (weight & 0xffff);
                idst        = (int *) range;
                idst_offset = (offset [state + level * wfa->states]
                       - width) /2;
-               
+
                for (y = height; y; y--)
                {
                   int *comp_dst = idst + (width >> 1);
-                  
+
                   for (; idst != comp_dst; )
                   {
                  *idst = (*idst + weight) & 0xfffefffe;
@@ -1494,14 +1494,14 @@ compute_state_images (unsigned max_level, word_t **simg,
             }
              }
           }
-           } 
+           }
    }
 }
 
 static word_t *
 duplicate_state_image (const word_t *domain, unsigned offset, unsigned level)
 /*
- *  Allocate new memory block 'pixels' and copy pixel values of 'domain' 
+ *  Allocate new memory block 'pixels' and copy pixel values of 'domain'
  *  (size and pixel offset are given by 'level' and 'offset')
  *  to the lock 'pixels'.
  *
