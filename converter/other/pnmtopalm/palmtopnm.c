@@ -26,8 +26,8 @@
 
 
 enum PalmCompressionType {
-    COMPRESSION_NONE, 
-    COMPRESSION_RLE, 
+    COMPRESSION_NONE,
+    COMPRESSION_RLE,
     COMPRESSION_SCANLINE,
     COMPRESSION_PACKBITS
 };
@@ -102,7 +102,7 @@ parseCommandLine(int argc, const char ** argv,
     unsigned int option_def_index;
 
     MALLOCARRAY_NOFAIL(option_def, 100);
-    
+
     option_def_index = 0;   /* incremented by OPTENTRY */
     OPTENT3(0, "verbose",     OPT_FLAG, NULL,
             &cmdlineP->verbose,  0);
@@ -110,7 +110,7 @@ parseCommandLine(int argc, const char ** argv,
             &cmdlineP->showhist, 0);
     OPTENT3(0, "transparent",    OPT_FLAG, NULL,
             &cmdlineP->transparent, 0);
-    OPTENT3(0, "rendition",  OPT_UINT, &cmdlineP->rendition, 
+    OPTENT3(0, "rendition",  OPT_UINT, &cmdlineP->rendition,
             &renditionSpec, 0);
 
     opt.opt_table = option_def;
@@ -124,9 +124,9 @@ parseCommandLine(int argc, const char ** argv,
     if (renditionSpec) {
         if (cmdlineP->rendition < 1)
             pm_error("The -rendition value must be at least 1");
-    } else 
+    } else
         cmdlineP->rendition = 1;
-    
+
     if (cmdlineP->transparent && cmdlineP->showhist)
         pm_error("You can't specify -showhist with -transparent");
 
@@ -144,7 +144,7 @@ parseCommandLine(int argc, const char ** argv,
 
 
 static xelval *
-createGraymap(unsigned int const ncolors, 
+createGraymap(unsigned int const ncolors,
               xelval       const maxval) {
     int i;
     xelval *map;
@@ -158,8 +158,8 @@ createGraymap(unsigned int const ncolors,
 
 
 
-static void 
-skipbytes(FILE *       const ifP, 
+static void
+skipbytes(FILE *       const ifP,
           unsigned int const nbytes) {
 
     unsigned char buf[256];
@@ -180,7 +180,7 @@ skipbytes(FILE *       const ifP,
                pm_error("Error reading Palm file.  Short read.");
             n = 0;
         }
-    }    
+    }
 }
 
 
@@ -188,7 +188,7 @@ skipbytes(FILE *       const ifP,
 static void
 interpretCompression(unsigned char              const compressionValue,
                      enum PalmCompressionType * const compressionTypeP) {
-    
+
     switch (compressionValue) {
     case PALM_COMPRESSION_RLE:
         *compressionTypeP = COMPRESSION_RLE;
@@ -224,7 +224,7 @@ readRestOfHeaderVersion3(FILE *           const ifP,
                          short *          const nextDepthOffsetP) {
 
     unsigned char unused;
-    
+
     pm_readcharu(ifP, sizeP);
     /* should be 0x18, but I can't see why we should really care */
     if (*sizeP != 0x18)
@@ -234,7 +234,7 @@ readRestOfHeaderVersion3(FILE *           const ifP,
     if (*pixelFormatP != PALM_FORMAT_INDEXED &&
         *pixelFormatP != PALM_FORMAT_565)
         pm_error("Unrecognized pixelformat type: %u", *pixelFormatP);
-    
+
     pm_readcharu(ifP, &unused);
 
 
@@ -248,15 +248,15 @@ readRestOfHeaderVersion3(FILE *           const ifP,
         *densityP != PALM_DENSITY_TRIPLE &&
         *densityP != PALM_DENSITY_QUADRUPLE)
         pm_error("Invalid value for -density: %d.", *densityP);
- 
+
     pm_readbiglong(ifP, transparentValueP);
     if (pixelSize < 16)
         *transparentIndexP = *transparentValueP;
     else
         *transparentIndexP = 0;
- 
+
     pm_readbiglong(ifP, nextBitmapOffsetP);
-    
+
     /* version < 3 specific */
     *nextDepthOffsetP = 0;
 }
@@ -273,18 +273,18 @@ readRestOfHeaderOld(FILE *           const ifP,
                     long *           const transparentValueP,
                     long *           const nextBitmapOffsetP,
                     short *          const nextDepthOffsetP) {
-    
+
     short pad;
     unsigned char transparentIndex;
-    
+
     pm_readbigshort(ifP, nextDepthOffsetP);
     pm_readcharu(ifP, &transparentIndex);
     *transparentIndexP = transparentIndex;
- 
+
     pm_readcharu(ifP,compressionTypeP);
-    
+
     pm_readbigshort(ifP, &pad); /* reserved by Palm as of 8/9/00 */
-    
+
     /* version 3 specific */
     *sizeP = 0;
     *pixelFormatP = 0;
@@ -310,7 +310,7 @@ interpretHeader(struct PalmHeader * const palmHeaderP,
                 long                const transparentValue,
                 unsigned int        const transparentIndex,
                 unsigned char       const compressionType) {
-    
+
     palmHeaderP->cols = cols;
     palmHeaderP->rows = rows;
     palmHeaderP->bytesPerRow = bytesPerRow;
@@ -333,11 +333,11 @@ interpretHeader(struct PalmHeader * const palmHeaderP,
         */
         pm_error("PALM_DIRECT_COLOR_FLAG is set but pixelFormat is not"
                  "PALM_FORMAT_565.");
-        
-    palmHeaderP->directColor = ((flags & PALM_DIRECT_COLOR_FLAG) || 
+
+    palmHeaderP->directColor = ((flags & PALM_DIRECT_COLOR_FLAG) ||
                                 palmHeaderP->pixelFormat == PALM_FORMAT_565);
-    
-    if (flags & PALM_IS_COMPRESSED_FLAG) 
+
+    if (flags & PALM_IS_COMPRESSED_FLAG)
         interpretCompression(compressionType,
                              &palmHeaderP->compressionType);
     else
@@ -362,7 +362,7 @@ readHeader(FILE *              const ifP,
     currentRendition = 1;
     while (!gotHeader) {
         short cols, rows, bytesPerRow, flags, nextDepthOffset, density;
-        unsigned char pixelSizeCode, version, compressionType, 
+        unsigned char pixelSizeCode, version, compressionType,
             size, pixelFormat;
         long transparentValue, nextBitmapOffset;
         unsigned int pixelSize, transparentIndex;
@@ -371,7 +371,7 @@ readHeader(FILE *              const ifP,
         pm_readbigshort(ifP, &rows);
         pm_readbigshort(ifP, &bytesPerRow);
         pm_readbigshort(ifP, &flags);
- 
+
         pm_readcharu(ifP, &pixelSizeCode);
         pixelSize = pixelSizeCode == 0 ? 1 : pixelSizeCode;
         if (pixelSizeCode != 0x00 &&
@@ -388,12 +388,12 @@ readHeader(FILE *              const ifP,
                      "bits per pixel.", bytesPerRow, cols, pixelSize);
 
         pm_readcharu(ifP, &version);
-        if (version > 3) 
+        if (version > 3)
             pm_error("Unknown encoding version type: %d", version);
         else if (version == 3)
             readRestOfHeaderVersion3(ifP, pixelSize,
                                      &size, &pixelFormat, &compressionType,
-                                     &density, &transparentIndex, 
+                                     &density, &transparentIndex,
                                      &transparentValue, &nextBitmapOffset,
                                      &nextDepthOffset);
         else
@@ -404,29 +404,29 @@ readHeader(FILE *              const ifP,
                                 &nextDepthOffset);
 
         if (currentRendition < requestedRendition) {
-             if (version < 3 && nextDepthOffset == 0 && pixelSizeCode != 0xFF) 
+             if (version < 3 && nextDepthOffset == 0 && pixelSizeCode != 0xFF)
                  pm_error("Not enough renditions in the input Palm Bitmap "
                           "to extract the %dth", requestedRendition);
-             if (version == 3 && nextBitmapOffset == 0) 
+             if (version == 3 && nextBitmapOffset == 0)
                  pm_error("Not enough renditions in the input Palm Bitmap "
                           "to extract the %dth", requestedRendition);
              /* nextDepthOffset is calculated in 4 byte words
-                from the beginning of this bitmap (so it equals its size) 
+                from the beginning of this bitmap (so it equals its size)
              */
              if (version < 3 && pixelSizeCode != 0xFF )
                  skipbytes(ifP, (nextDepthOffset*4)-16);
              else if (version == 3)
                  /* FIXME rewrite skipbytes to accept longs? */
-                 skipbytes(ifP, (short) nextBitmapOffset-24); 
+                 skipbytes(ifP, (short) nextBitmapOffset-24);
              if (pixelSizeCode != 0xFF)
                  ++currentRendition;
         } else if (pixelSizeCode != 0xFF) {
             gotHeader = TRUE;
-            
+
             interpretHeader(palmHeaderP,
                             cols, rows, bytesPerRow, flags, pixelSizeCode,
                             pixelSize, version, size, pixelFormat, density,
-                            transparentValue, transparentIndex, 
+                            transparentValue, transparentIndex,
                             compressionType);
         }
     }
@@ -478,9 +478,9 @@ reportPalmHeader(struct PalmHeader      const palmHeader,
         if (palmHeader.directColor) {
             /* Copied from doTransparent(...) */
             ColormapEntry const color = directColorInfo.transparentColor;
-            pm_message("Transparent value: #%02x%02x%02x", 
-                       (unsigned int)((color >> 16) & 0xFF), 
-                       (unsigned int)((color >>  8) & 0xFF), 
+            pm_message("Transparent value: #%02x%02x%02x",
+                       (unsigned int)((color >> 16) & 0xFF),
+                       (unsigned int)((color >>  8) & 0xFF),
                        (unsigned int)((color >>  0) & 0xFF));
         } else
             pm_message("Transparent index: %u", palmHeader.transparentIndex);
@@ -526,7 +526,7 @@ readRgbFormat(FILE *                     const ifP,
     pm_readcharu(ifP, &r);
     pm_readcharu(ifP, &g);
     pm_readcharu(ifP, &b);
-    
+
     if (r != 5 || g != 6 || b != 5)
         pm_error("This image has a direct color pixel format of "
                  "%u red, %u green, %u blue bits.  This program "
@@ -572,12 +572,12 @@ readDirectInfoType(FILE *                   const ifP,
     if ((palmHeader.directColor) && palmHeader.pixelSize != 16)
         pm_error("The image is of the direct color type, but has %u "
                  "bits per pixel.  The only kind of direct color images "
-                 "this program understands are 16 bit ones.", 
+                 "this program understands are 16 bit ones.",
                  palmHeader.pixelSize);
 
     if (palmHeader.version == 3) {
         /* All direct color info is in the header, because it'sversion
-           3 encoding.  No Direct Info Type section.  
+           3 encoding.  No Direct Info Type section.
         */
     } else {
         if (palmHeader.directColor) {
@@ -588,7 +588,7 @@ readDirectInfoType(FILE *                   const ifP,
             pm_readcharu(ifP, &padding);
             pm_readcharu(ifP, &padding);
 
-            readDirectTransparentColor(ifP, 
+            readDirectTransparentColor(ifP,
                                        &directInfoTypeP->transparentColor);
         } else {
             /* Not a direct color image; no Direct Info Type section. */
@@ -637,7 +637,7 @@ getColorInfo(struct PalmHeader        const palmHeader,
         directColorInfoP->pixelFormat.redbits   = 5;
         directColorInfoP->pixelFormat.greenbits = 6;
         directColorInfoP->pixelFormat.bluebits  = 5;
-        directColorInfoP->transparentColor = 
+        directColorInfoP->transparentColor =
             /* See convertRowToPnmDirect for this trick
 
                This will break once maxval isn't always set 255 for
@@ -657,7 +657,7 @@ getColorInfo(struct PalmHeader        const palmHeader,
     else if (palmHeader.pixelSize >= 8) {
         Colormap * const colormapP =
             palmcolor_build_default_8bit_colormap();
-        qsort(colormapP->color_entries, colormapP->ncolors, 
+        qsort(colormapP->color_entries, colormapP->ncolors,
               sizeof(ColormapEntry), palmcolor_compare_indices);
         *colormapPP = colormapP;
     } else
@@ -689,28 +689,28 @@ doTransparent(FILE *                 const ofP,
             ColormapEntry const searchTarget = transparentIndex << 24;
             ColormapEntry * const foundEntryP =
                 bsearch(&searchTarget,
-                        colormapP->color_entries, 
+                        colormapP->color_entries,
                         colormapP->ncolors,
-                        sizeof(searchTarget), 
+                        sizeof(searchTarget),
                         palmcolor_compare_indices);
             if (!foundEntryP)
                 pm_error("Invalid input; transparent index %u "
                          "is not among the %u colors in the image's colormap",
                          transparentIndex, colormapP->ncolors);
 
-            fprintf(ofP, "#%02x%02x%02x\n", 
+            fprintf(ofP, "#%02x%02x%02x\n",
                    (unsigned int) ((*foundEntryP >> 16) & 0xFF),
-                   (unsigned int) ((*foundEntryP >>  8) & 0xFF), 
+                   (unsigned int) ((*foundEntryP >>  8) & 0xFF),
                    (unsigned int) ((*foundEntryP >>  0) & 0xFF));
         } else if (directColor) {
             ColormapEntry const color = directColorInfo.transparentColor;
-            fprintf(ofP, "#%02x%02x%02x\n", 
-                   (unsigned int)((color >> 16) & 0xFF), 
-                   (unsigned int)((color >>  8) & 0xFF), 
+            fprintf(ofP, "#%02x%02x%02x\n",
+                   (unsigned int)((color >> 16) & 0xFF),
+                   (unsigned int)((color >>  8) & 0xFF),
                    (unsigned int)((color >>  0) & 0xFF));
         } else {
             unsigned int const maxval = pm_bitstomaxval(pixelSize);
-            unsigned int const grayval = 
+            unsigned int const grayval =
                 ((maxval - transparentIndex) * 256) / maxval;
             fprintf(ofP, "#%02x%02x%02x\n", grayval, grayval, grayval);
         }
@@ -728,10 +728,10 @@ createHistogram(unsigned int    const ncolors,
     MALLOCARRAY(seen, ncolors);
     if (!seen)
         pm_error("Can't allocate array for keeping track of "
-                 "how many pixels of each of %u colors are in the image.", 
+                 "how many pixels of each of %u colors are in the image.",
                  ncolors);
 
-    {    
+    {
         /* Initialize the counter for each color to zero */
         unsigned int i;
         for (i = 0; i < ncolors; ++i)
@@ -766,7 +766,7 @@ readScanlineRow(FILE *          const ifP,
 
         pm_readcharu(ifP, &diffmask);
         byteCount = MIN(bytesPerRow - j, 8);
-        
+
         for (k = 0; k < byteCount; ++k) {
             /* the first row cannot be compressed */
             if (firstRow || ((diffmask & (1 << (7 - k))) != 0)) {
@@ -805,7 +805,7 @@ readRleRow(FILE *          const ifP,
         memset(palmrow + j, inval, incount);
         j += incount;
     }
-} 
+}
 
 
 
@@ -815,7 +815,7 @@ readPackBitsRow16(FILE *          const ifP,
                   unsigned int    const bytesPerRow) {
 
     /*  From the Palm OS Programmer's API Reference:
-  
+
         Although the [...] spec is byte-oriented, the 16-bit algorithm is
         identical [to the 8-bit algorithm]: just substitute "word" for "byte".
     */
@@ -824,7 +824,7 @@ readPackBitsRow16(FILE *          const ifP,
     for (j = 0;  j < bytesPerRow; ) {
         char incount;
         pm_readchar(ifP, &incount);
-        if (incount < 0) { 
+        if (incount < 0) {
             /* How do we handle incount == -128 ? */
             unsigned int const runlength = (-incount + 1) * 2;
             unsigned int k;
@@ -846,13 +846,13 @@ readPackBitsRow16(FILE *          const ifP,
             }
             j += nonrunlength;
         }
-        if (j > bytesPerRow) 
+        if (j > bytesPerRow)
             pm_error("Bytes in PackBits compressed row exceed bytes per row.  "
                      "Bytes per row is %u.  "
                      "The bytes in this row were pushed up to %u bytes "
                      "(and then we gave up).", bytesPerRow, j);
     }
-} 
+}
 
 
 
@@ -866,7 +866,7 @@ readPackBitsRow(FILE *          const ifP,
     for (j = 0;  j < bytesPerRow; ) {
         char incount;
         pm_readchar(ifP, &incount);
-        if (incount < 0) { 
+        if (incount < 0) {
             /* How do we handle incount == -128 ? */
             unsigned int const runlength = -incount + 1;
             unsigned char inval;
@@ -884,13 +884,13 @@ readPackBitsRow(FILE *          const ifP,
             }
             j += nonrunlength;
         }
-        if (j > bytesPerRow) 
+        if (j > bytesPerRow)
             pm_error("Bytes in PackBits compressed row exceed bytes per row.  "
                      "Bytes per row is %u.  "
                      "The bytes in this row were pushed up to %u bytes "
                      "(and then we gave up).", bytesPerRow, j);
     }
-} 
+}
 
 
 
@@ -900,7 +900,7 @@ readUncompressedRow(FILE *          const ifP,
                     unsigned int    const bytesPerRow) {
 
     int bytesRead;
-    
+
     bytesRead = fread(palmrow, 1, bytesPerRow, ifP);
     if (bytesRead != bytesPerRow)
         pm_error("Error reading Palm file.  Short read.");
@@ -973,27 +973,27 @@ convertRowToPnmDirect(const unsigned char * const palmrow,
        blue=0x1F.  How do we promote those colors?  Simple
        shift would give us R=248,G=252,B=248; which is
        slightly green.  Hardly seems right.
-       
+
        So I've perverted the math a bit.  Each color value is
        multiplied by 255, then divided by either 31 (red or
        blue) or 63 (green).  That's the right way to do it
-       anyway.  
+       anyway.
     */
 
     const unsigned char *inbyte;
     unsigned int j;
-    
+
     for (inbyte = palmrow, j = 0;  j < cols;  ++j) {
         unsigned int inval;
         inval = *inbyte++ << 8;
         inval |= *inbyte++;
-        
+
         if (seen)
             ++seen[inval];
-        
-        PPM_ASSIGN(xelrow[j], 
-                   (((inval >> 11) & 0x1F) * maxval) / 0x1F, 
-                   (((inval >>  5) & 0x3F) * maxval) / 0x3F, 
+
+        PPM_ASSIGN(xelrow[j],
+                   (((inval >> 11) & 0x1F) * maxval) / 0x1F,
+                   (((inval >>  5) & 0x3F) * maxval) / 0x3F,
                    (((inval >>  0) & 0x1F) * maxval) / 0x1F
             );
     }
@@ -1017,21 +1017,21 @@ convertRowToPnmNotDirect(const unsigned char * const palmrow,
     unsigned int j;
 
     assert(pixelSize <= 8);
-    
+
     inbit = 8 - pixelSize;
     inbyteP = &palmrow[0];
     for (j = 0; j < cols; ++j) {
         short const color = (*inbyteP & (mask << inbit)) >> inbit;
         if (seen)
             ++seen[color];
-        
+
         if (colormapP) {
             ColormapEntry const searchTarget = color << 24;
             ColormapEntry * const foundEntryP =
                 bsearch(&searchTarget,
-                        colormapP->color_entries, 
+                        colormapP->color_entries,
                         colormapP->ncolors,
-                        sizeof(searchTarget), 
+                        sizeof(searchTarget),
                         palmcolor_compare_indices);
 
             if (!foundEntryP)
@@ -1040,13 +1040,13 @@ convertRowToPnmNotDirect(const unsigned char * const palmrow,
                          "in the colormap",
                          j, color, colormapP->ncolors);
 
-            PPM_ASSIGN(xelrow[j], 
-                       (*foundEntryP >> 16) & 0xFF, 
-                       (*foundEntryP >>  8) & 0xFF, 
+            PPM_ASSIGN(xelrow[j],
+                       (*foundEntryP >> 16) & 0xFF,
+                       (*foundEntryP >>  8) & 0xFF,
                        (*foundEntryP >>  0) & 0xFF);
         } else
             PNM_ASSIGN1(xelrow[j], graymap[color]);
-        
+
         if (!inbit) {
             ++inbyteP;
             inbit = 8 - pixelSize;
@@ -1076,22 +1076,22 @@ writePnm(FILE *            const ofP,
     xel *           xelrow;
     unsigned int *  seen;
     unsigned int    row;
-    
+
     pnm_writepnminit(ofP, cols, rows, maxval, format, 0);
     xelrow = pnm_allocrow(cols);
 
     /* Read the picture data, one row at a time */
     MALLOCARRAY_NOFAIL(palmrow, palmHeader.bytesPerRow);
-    MALLOCARRAY_NOFAIL(lastrow, palmHeader.bytesPerRow); 
-    
+    MALLOCARRAY_NOFAIL(lastrow, palmHeader.bytesPerRow);
+
     if (seenP) {
         createHistogram(nColors, &seen);
         *seenP = seen;
     } else
         seen = NULL;
 
-    /* We should actually use compressedDataSizeNN for checking the sanity 
-       of the data we're reading ... 
+    /* We should actually use compressedDataSizeNN for checking the sanity
+       of the data we're reading ...
     */
     if (palmHeader.compressionType != COMPRESSION_NONE) {
         if (palmHeader.version < 3) {
@@ -1104,8 +1104,8 @@ writePnm(FILE *            const ofP,
     }
 
     for (row = 0; row < rows; ++row) {
-        readDecompressedRow(ifP, palmrow, lastrow, 
-                            palmHeader.compressionType, 
+        readDecompressedRow(ifP, palmrow, lastrow,
+                            palmHeader.compressionType,
                             palmHeader.bytesPerRow,
                             palmHeader.pixelSize,
                             row == 0);
@@ -1133,18 +1133,18 @@ showHistogram(unsigned int * const seen,
               unsigned int   const ncolors) {
 
     unsigned int colorIndex;
-    
+
     for (colorIndex = 0;  colorIndex < ncolors; ++colorIndex) {
         if (!colormapP)
-            pm_message("%.3d -> %.3d:  %d", 
+            pm_message("%.3d -> %.3d:  %d",
                        colorIndex, graymap[colorIndex], seen[colorIndex]);
         else {
             ColormapEntry const searchTarget = colorIndex << 24;
             ColormapEntry * const foundEntryP =
                 bsearch(&searchTarget,
-                        colormapP->color_entries, 
+                        colormapP->color_entries,
                         colormapP->ncolors,
-                        sizeof(searchTarget), 
+                        sizeof(searchTarget),
                         palmcolor_compare_indices);
             if (foundEntryP)
                 pm_message("%.3d -> %ld,%ld,%ld:  %d", colorIndex,
@@ -1181,11 +1181,11 @@ main(int argc, const char **argv) {
     readHeader(ifP, cmdline.rendition, &palmHeader);
 
     readDirectInfoType(ifP, palmHeader, &directInfoType);
-   
+
     readColormap(ifP, palmHeader, &colormapFromImageP);
-    
+
     determineOutputFormat(palmHeader, &format, &maxval);
-    
+
     getColorInfo(palmHeader, directInfoType, colormapFromImageP,
                  &colormapP, &nColors, &directColorInfo);
 
@@ -1193,9 +1193,9 @@ main(int argc, const char **argv) {
         reportPalmHeader(palmHeader, directColorInfo);
 
     if (cmdline.transparent)
-        doTransparent(stdout, 
+        doTransparent(stdout,
                       palmHeader.hasTransparency, palmHeader.directColor,
-                      palmHeader.transparentIndex, 
+                      palmHeader.transparentIndex,
                       palmHeader.pixelSize, colormapP, directColorInfo);
     else {
         unsigned int * seen;
@@ -1204,12 +1204,12 @@ main(int argc, const char **argv) {
         graymap = createGraymap(nColors, maxval);
 
         writePnm(stdout,
-                 palmHeader, ifP, colormapP, graymap, nColors, format, maxval, 
+                 palmHeader, ifP, colormapP, graymap, nColors, format, maxval,
                  cmdline.showhist ? &seen : NULL);
-        
+
         if (cmdline.showhist)
             showHistogram(seen, colormapP, graymap, nColors);
-        
+
         free(graymap);
     }
     pm_close(ifP);
