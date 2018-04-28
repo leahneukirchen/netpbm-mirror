@@ -1,7 +1,7 @@
 #ifndef FLIP_H_INCLUDED
 #define FLIP_H_INCLUDED
 
-struct xformCore {
+struct XformCore {
     /* a b
        c d
     */

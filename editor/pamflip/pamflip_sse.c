@@ -37,7 +37,7 @@
 
 /*----------------------------------------------------------------------------
    This is a specialized routine for row-for-column PBM transformations.
-   (-cw, -ccw, -xy).  It requires GCC (>= v. 4.2.0) and SSE2. 
+   (-cw, -ccw, -xy).  It requires GCC (>= v. 4.2.0) and SSE2.
 
    In each cycle, we read sixteen rows from the input.  We process this band
    left to right in blocks 8 pixels wide.  We use the SSE2 instruction
@@ -70,7 +70,7 @@
    It is possible to write a non-SSE version by providing a generic
    version of transpose16Bitrows() or one tuned for a specific
    architecture.  Use 8x8 blocks to avoid endian issues.
- 
+
    Further enhancement should be possible by employing wider bands,
    larger blocks as wider SIMD registers become available.  Clearing
    the white parts after instead of before transposition is also a
@@ -149,7 +149,7 @@ transpose16Bitrows(unsigned int const cols,
 
         register v16qi vReg = {
             block[0][col8],  block[1][col8],
-            block[2][col8],  block[3][col8],  
+            block[2][col8],  block[3][col8],
             block[4][col8],  block[5][col8],
             block[6][col8],  block[7][col8],
             block[8][col8],  block[9][col8],
@@ -163,14 +163,14 @@ transpose16Bitrows(unsigned int const cols,
         if (_mm_movemask_epi8(compare) != 0xffff) {
 
             /* There is some black content in this block; write to outplane */
-            
+
             unsigned int outrow;
             unsigned int i;
 
             outrow = col;  /* initial value */
 
             for (i = 0; i < 7; ++i) {
-                /* GCC (>=4.2) automatically unrolls this loop */  
+                /* GCC (>=4.2) automatically unrolls this loop */
                 outplane[outrow++][outcol16] =
                     _mm_movemask_epi8((__m128i)vReg);
                 vReg = (v16qi)_mm_slli_epi32((__m128i)vReg, 1);
@@ -197,7 +197,7 @@ analyzeBlock(const struct pam * const inpamP,
   "twists" brought about by Intel byte ordering which occur when:
     (1) 16 bytes are loaded to a SSE register
     (2) 16 bits are written to memory.
- 
+
   If 'rows' is not a multiple of 8, a partial input band appears at one edge.
   Set *topOfFullBlockP accordingly.  blockPartial[] is an adjusted "block" for
   this partial band, brought up to a size of 8 rows.  The extra pointers point
@@ -227,7 +227,7 @@ analyzeBlock(const struct pam * const inpamP,
                 : block[i];
         }
         *topOfFullBlockP = inpamP->height % 16;
-    
+
         if (inpamP->height >= 16) {
             *outcol16P = inpamP->height/16 - 1;
         } else
@@ -243,7 +243,7 @@ doPartialBlockTop(const struct pam * const inpamP,
                   const bit *        const blockPartial[16],
                   unsigned int       const topOfFullBlock,
                   uint16_t **        const outplane) {
-    
+
     if (topOfFullBlock > 0) {
         unsigned int colChar, row;
         unsigned int pad = 16 - topOfFullBlock;
@@ -267,7 +267,7 @@ doPartialBlockTop(const struct pam * const inpamP,
                            outplane, inpamP->height /16);
             /* Transpose partial rows on top of input.  Place on right edge of
                output.
-            */ 
+            */
     }
 }
 
@@ -303,7 +303,7 @@ doFullBlocks(const struct pam * const inpamP,
         ++modrow;
         if (modrow == 16) {
             /* 16 row buffer is full.  Transpose. */
-            modrow = 0; 
+            modrow = 0;
 
             transpose16Bitrows(inpamP->width, inpamP->height,
                                block, outplane, outcol16);
@@ -320,7 +320,7 @@ doPartialBlockBottom(const struct pam * const inpamP,
                      int                const xdir,
                      const bit *        const blockPartial[16],
                      uint16_t **        const outplane) {
-    
+
     if (xdir > 0 && inpamP->height % 16 > 0) {
         unsigned int colChar;
 
@@ -331,7 +331,7 @@ doPartialBlockBottom(const struct pam * const inpamP,
                            outplane, inpamP->height/16);
             /* Transpose partial rows on bottom of input.  Place on right edge
                of output.
-            */ 
+            */
     }
 }
 
@@ -341,7 +341,7 @@ static void
 writeOut(const struct pam * const outpamP,
          uint16_t **        const outplane,
          int                const ydir) {
-             
+
     unsigned int row;
 
     for (row = 0; row < outpamP->height; ++row) {
@@ -357,23 +357,23 @@ writeOut(const struct pam * const outpamP,
 
 static void
 clearOutplane(const struct pam * const outpamP,
-              uint16_t **        const outplane) { 
-    
+              uint16_t **        const outplane) {
+
     unsigned int row;
-    
+
     for (row = 0; row < outpamP->height; ++row) {
         unsigned int col16;  /* column divided by 16 */
         for (col16 = 0; col16 < (outpamP->width + 15)/16; ++col16)
             outplane[row][col16] = 0x0000;
     }
-} 
+}
 
 
 
 void
 pamflip_transformRowsToColumnsPbmSse(const struct pam * const inpamP,
                                      const struct pam * const outpamP,
-                                     struct xformCore const xformCore) { 
+                                     struct XformCore   const xformCore) {
 /*----------------------------------------------------------------------------
   This is a specialized routine for row-for-column PBM transformations.
   (-cw, -ccw, -xy).
@@ -397,11 +397,11 @@ pamflip_transformRowsToColumnsPbmSse(const struct pam * const inpamP,
         pm_error("Could not allocate %u x %u array of 16 bit units",
                  blocksPerRow, outpamP->height + 7);
 
-    /* We write to the output array in 16 bit units.  Add margin. */  
+    /* We write to the output array in 16 bit units.  Add margin. */
 
     clearOutplane(outpamP, outplane);
 
-    analyzeBlock(inpamP, inrow, xdir, block, blockPartial, 
+    analyzeBlock(inpamP, inrow, xdir, block, blockPartial,
                  &topOfFullBlock, &outcol16);
 
     doPartialBlockTop(inpamP, inrow, blockPartial, topOfFullBlock, outplane);
@@ -421,9 +421,9 @@ pamflip_transformRowsToColumnsPbmSse(const struct pam * const inpamP,
 void
 pamflip_transformRowsToColumnsPbmSse(const struct pam * const inpamP,
                                      const struct pam * const outpamP,
-                                     struct xformCore   const xformCore) { 
+                                     struct xformCore   const xformCore) {
 
     /* Nobody is supposed to call this */
     assert(false);
 }
-#endif 
+#endif
