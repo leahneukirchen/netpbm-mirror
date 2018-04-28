@@ -735,7 +735,7 @@ printEmbeddedImage(int                 const outFd,
     struct pam pam;
     pclGenerator * pclGeneratorP;
 
-    openDataSource(outFd, eBinaryLowByteFirst, eDefaultSource);
+    openDataSource(outFd, eBinaryLowByteFirst, eDefaultDataSource);
 
     ifP = pm_openr(sourceP->name);
 
@@ -1048,7 +1048,7 @@ printPages(int                 const outFd,
 
     sourceP = firstSourceP;
 
-    openDataSource(outFd, eBinaryLowByteFirst, eDefaultSource);
+    openDataSource(outFd, eBinaryLowByteFirst, eDefaultDataSource);
 
     sourceNum = 0;   /* initial value */
 

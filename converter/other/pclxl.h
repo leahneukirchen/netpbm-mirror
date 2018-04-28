@@ -48,7 +48,7 @@ enum DataOrg {
 };
 
 enum DataSource {
-    eDefault = 0
+    eDefaultDataSource = 0
 };
 
 enum DataType {
@@ -109,7 +109,7 @@ enum Measure {
 };
 
 enum MediaSource {
-    eDefaultSource = 0,
+    eDefaultMediaSource = 0,
     eAutoSelect = 1,
     eManualFeed = 2,
     eMultiPurposeTray = 3,
