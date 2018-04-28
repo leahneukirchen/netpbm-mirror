@@ -8,10 +8,6 @@ not yet  BJH  Release 10.83.00
 
               Add pamlevels.  Thanks Anton Shepelev <anton.txt@gmail.com>.
 
-              pgmtexture: fix invalid memory reference with any image with
-              difference variance and different entropy analyses.  Introduced
-              in Netpbm 10.56 (September 2011).
-
               ilbmtoppm: Fix bug: may fail with bogus error message about an
               invalid CLUT chunk if image has a CLUT chunk.  Introduced after
               Netpbm 10.26 (January 2005) and at or before Netpbm 10.35
