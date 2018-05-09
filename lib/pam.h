@@ -490,6 +490,11 @@ pnm_createungammatransform(const struct pam * const pamP);
 #define pnm_freeungammatransform pnm_freegammatransform;
 
 tuple
+pnm_parsecolor2(const char * const colorname,
+                sample       const maxval,
+                int          const closeOk);
+
+tuple
 pnm_parsecolor(const char * const colorname,
                sample       const maxval);
 

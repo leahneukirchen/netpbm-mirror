@@ -23,343 +23,7 @@
 #include "netpbm/nstring.h"
 #include "ppm.h"
 #include "colorname.h"
-
-
-static void
-computeHexTable(int hexit[]) {
-
-    unsigned int i;
-
-    for ( i = 0; i < 256; ++i )
-        hexit[i] = -1;
-
-    hexit['0'] = 0;
-    hexit['1'] = 1;
-    hexit['2'] = 2;
-    hexit['3'] = 3;
-    hexit['4'] = 4;
-    hexit['5'] = 5;
-    hexit['6'] = 6;
-    hexit['7'] = 7;
-    hexit['8'] = 8;
-    hexit['9'] = 9;
-    hexit['a'] = hexit['A'] = 10;
-    hexit['b'] = hexit['B'] = 11;
-    hexit['c'] = hexit['C'] = 12;
-    hexit['d'] = hexit['D'] = 13;
-    hexit['e'] = hexit['E'] = 14;
-    hexit['f'] = hexit['F'] = 15;
-}
-
-
-
-static long
-invRgbnorm(pixval       const rgb,
-           pixval       const maxval,
-           unsigned int const hexDigits) {
-/*----------------------------------------------------------------------------
-  This is the inverse of 'rgbnorm', below.
------------------------------------------------------------------------------*/
-    long retval;
-
-    switch (hexDigits) {
-    case 1:
-        retval = (long)((double) rgb * 15 / maxval + 0.5);
-        break;
-    case 2:
-        retval = (long) ((double) rgb * 255 / maxval + 0.5);
-        break;
-    case 3:
-        retval = (long) ((double) rgb * 4095 / maxval + 0.5);
-        break;
-    case 4:
-        retval = (long) ((double) rgb * 65535UL / maxval + 0.5);
-        break;
-    default:
-        pm_message("Internal error in invRgbnorm()");
-        abort();
-    }
-    return retval;
-}
-
-
-
-static pixval
-rgbnorm(long         const rgb,
-        pixval       const maxval,
-        unsigned int const hexDigitCount,
-        bool         const closeOk,
-        const char * const colorname) {
-/*----------------------------------------------------------------------------
-   Normalize the color (r, g, or b) value 'rgb', which was specified
-   with 'hexDigitCount' digits, to a maxval of 'maxval'.  If the
-   number of digits isn't valid, issue an error message and identify
-   the complete color color specification in error as 'colorname'.
-
-   For example, if the user says "0ff" and the maxval is 100,
-   then rgb is 0xff, n is 3, and our result is
-   0xff / (16**3-1) * 100 = 6.
------------------------------------------------------------------------------*/
-    pixval retval;
-
-    switch (hexDigitCount) {
-    case 0:
-        pm_error("A hexadecimal color specifier in color '%s' is "
-                 "an empty string", colorname);
-        break;
-    case 1:
-        retval = (pixval)((double) rgb * maxval / 15 + 0.5);
-        break;
-    case 2:
-        retval = (pixval) ((double) rgb * maxval / 255 + 0.5);
-        break;
-    case 3:
-        retval = (pixval) ((double) rgb * maxval / 4095 + 0.5);
-        break;
-    case 4:
-        retval = (pixval) ((double) rgb * maxval / 65535L + 0.5);
-        break;
-    default:
-        pm_error("color specifier '%s' has too many digits", colorname);
-    }
-
-    if (!closeOk) {
-        long const newrgb = invRgbnorm(retval, maxval, hexDigitCount);
-        if (newrgb != rgb)
-            pm_message("WARNING: Component 0x%lx of color '%s' "
-                       "cannot be represented precisely with maxval %u.  "
-                       "Approximating as %u.",
-                       rgb, colorname, maxval, retval);
-    }
-    return retval;
-}
-
-
-
-static void
-parseHexDigits(const char *   const string,
-               char           const delim,
-               int            const hexit[],
-               pixval *       const nP,
-               unsigned int * const digitCountP) {
-
-    unsigned int digitCount;
-    pixval n;
-
-    digitCount = 0;  /* initial value */
-    n = 0;           /* initial value */
-    while (string[digitCount] != delim) {
-        char const digit = string[digitCount];
-        if (digit == '\0')
-            pm_error("rgb: color spec ends prematurely");
-        else {
-            int const hexval = hexit[(unsigned int)digit];
-            if (hexval == -1)
-                pm_error("Invalid hex digit in rgb: color spec: 0x%02x",
-                         digit);
-            n = n * 16 + hexval;
-            ++digitCount;
-        }
-    }
-    *nP = n;
-    *digitCountP = digitCount;
-}
-
-
-
-static void
-parseNewHexX11(char       const colorname[],
-               pixval     const maxval,
-               bool       const closeOk,
-               pixel *    const colorP) {
-/*----------------------------------------------------------------------------
-   Determine what color colorname[] specifies in the new style hex
-   color specification format (e.g. rgb:55/40/55).
-
-   Return that color as *colorP.
-
-   Assume colorname[] starts with "rgb:", but otherwise it might be
-   gibberish.
------------------------------------------------------------------------------*/
-    int hexit[256];
-
-    const char * cp;
-    pixval n;
-    unsigned int digitCount;
-    pixval rNorm, gNorm, bNorm;
-
-    computeHexTable(hexit);
-
-    cp = &colorname[4];
-
-    parseHexDigits(cp, '/', hexit, &n, &digitCount);
-
-    rNorm = rgbnorm(n, maxval, digitCount, closeOk, colorname);
-
-    cp += digitCount;
-    ++cp;  /* Skip the slash */
-
-    parseHexDigits(cp, '/', hexit, &n, &digitCount);
-
-    gNorm = rgbnorm(n, maxval, digitCount, closeOk, colorname);
-
-    cp += digitCount;
-    ++cp;  /* Skip the slash */
-
-    parseHexDigits(cp, '\0', hexit, &n, &digitCount);
-
-    bNorm = rgbnorm(n, maxval, digitCount, closeOk, colorname);
-
-    PPM_ASSIGN(*colorP, rNorm, gNorm, bNorm);
-}
-
-
-
-static void
-parseNewDecX11(char       const colorname[],
-               pixval     const maxval,
-               bool       const closeOk,
-               pixel *    const colorP) {
-
-    float const epsilon = 1.0/65536.0;
-    float fr, fg, fb;
-    pixval rNorm, gNorm, bNorm;
-
-    if (sscanf( colorname, "rgbi:%f/%f/%f", &fr, &fg, &fb) != 3)
-        pm_error("invalid color specifier '%s'", colorname);
-    if (fr < 0.0 || fr > 1.0 || fg < 0.0 || fg > 1.0
-        || fb < 0.0 || fb > 1.0)
-        pm_error("invalid color specifier '%s' - "
-                 "values must be between 0.0 and 1.0", colorname );
-
-    rNorm = fr * maxval + 0.5;
-    gNorm = fg * maxval + 0.5;
-    bNorm = fb * maxval + 0.5;
-
-    if (!closeOk) {
-        if (fabs((double)rNorm/maxval - fr) > epsilon ||
-            fabs((double)gNorm/maxval - fg) > epsilon ||
-            fabs((double)bNorm/maxval - fb) > epsilon)
-            pm_message("WARNING: Color '%s' cannot be represented "
-                       "precisely with maxval %u.  "
-                       "Approximating as (%u,%u,%u).",
-                       colorname, maxval, rNorm, gNorm, bNorm);
-    }
-    PPM_ASSIGN(*colorP, rNorm, gNorm, bNorm);
-}
-
-
-
-static void
-parseOldX11(char       const colorname[],
-            pixval     const maxval,
-            bool       const closeOk,
-            pixel *    const colorP) {
-/*----------------------------------------------------------------------------
-   Return as *colorP the color specified by the old X11 style color
-   specififier colorname[] (e.g. #554055).
------------------------------------------------------------------------------*/
-    int hexit[256];
-    long r,g,b;
-    pixval rNorm, gNorm, bNorm;
-
-    computeHexTable(hexit);
-
-    if (!pm_strishex(&colorname[1]))
-        pm_error("Non-hexadecimal characters in #-type color specification");
-
-    switch (strlen(colorname) - 1 /* (Number of hex digits) */) {
-    case 3:
-        r = hexit[(int)colorname[1]];
-        g = hexit[(int)colorname[2]];
-        b = hexit[(int)colorname[3]];
-        rNorm = rgbnorm(r, maxval, 1, closeOk, colorname);
-        gNorm = rgbnorm(g, maxval, 1, closeOk, colorname);
-        bNorm = rgbnorm(b, maxval, 1, closeOk, colorname);
-        break;
-
-    case 6:
-        r = (hexit[(int)colorname[1]] << 4 ) + hexit[(int)colorname[2]];
-        g = (hexit[(int)colorname[3]] << 4 ) + hexit[(int)colorname[4]];
-        b = (hexit[(int)colorname[5]] << 4 ) + hexit[(int)colorname[6]];
-        rNorm = rgbnorm(r, maxval, 2, closeOk, colorname);
-        gNorm = rgbnorm(g, maxval, 2, closeOk, colorname);
-        bNorm = rgbnorm(b, maxval, 2, closeOk, colorname);
-        break;
-
-    case 9:
-        r = (hexit[(int)colorname[1]] << 8) +
-            (hexit[(int)colorname[2]] << 4) +
-            (hexit[(int)colorname[3]] << 0);
-        g = (hexit[(int)colorname[4]] << 8) +
-            (hexit[(int)colorname[5]] << 4) +
-            (hexit[(int)colorname[6]] << 0);
-        b = (hexit[(int)colorname[7]] << 8) +
-            (hexit[(int)colorname[8]] << 4) +
-            (hexit[(int)colorname[9]] << 0);
-        rNorm = rgbnorm(r, maxval, 3, closeOk, colorname);
-        gNorm = rgbnorm(g, maxval, 3, closeOk, colorname);
-        bNorm = rgbnorm(b, maxval, 3, closeOk, colorname);
-        break;
-
-    case 12:
-        r = (hexit[(int)colorname[1]] << 12) +
-            (hexit[(int)colorname[2]] <<  8) +
-            (hexit[(int)colorname[3]] <<  4) + hexit[(int)colorname[4]];
-        g = (hexit[(int)colorname[5]] << 12) +
-            (hexit[(int)colorname[6]] <<  8) +
-            (hexit[(int)colorname[7]] <<  4) + hexit[(int)colorname[8]];
-        b = (hexit[(int)colorname[9]] << 12) +
-            (hexit[(int)colorname[10]] << 8) +
-            (hexit[(int)colorname[11]] << 4) + hexit[(int)colorname[12]];
-        rNorm = rgbnorm(r, maxval, 4, closeOk, colorname);
-        gNorm = rgbnorm(g, maxval, 4, closeOk, colorname);
-        bNorm = rgbnorm(b, maxval, 4, closeOk, colorname);
-        break;
-
-    default:
-        pm_error("invalid color specifier '%s'", colorname);
-    }
-    PPM_ASSIGN(*colorP, rNorm, gNorm, bNorm);
-}
-
-
-
-
-static void
-parseOldX11Dec(const char       colorname[],
-               pixval     const maxval,
-               bool       const closeOk,
-               pixel *    const colorP) {
-
-    float const epsilon = 1.0/65536.0;
-
-    float fr, fg, fb;
-    pixval rNorm, gNorm, bNorm;
-
-    if (sscanf(colorname, "%f,%f,%f", &fr, &fg, &fb) != 3)
-        pm_error("invalid color specifier '%s'", colorname);
-    if (fr < 0.0 || fr > 1.0 || fg < 0.0 || fg > 1.0
-        || fb < 0.0 || fb > 1.0)
-        pm_error("invalid color specifier '%s' - "
-                 "values must be between 0.0 and 1.0", colorname );
-
-    rNorm = fr * maxval + 0.5;
-    gNorm = fg * maxval + 0.5;
-    bNorm = fb * maxval + 0.5;
-
-    if (!closeOk) {
-        if (fabs((float)rNorm/maxval - fr) > epsilon ||
-            fabs((float)gNorm/maxval - fg) > epsilon ||
-            fabs((float)bNorm/maxval - fb) > epsilon)
-            pm_message("WARNING: Color '%s' cannot be represented "
-                       "precisely with maxval %u.  "
-                       "Approximating as (%u,%u,%u).",
-                       colorname, maxval, rNorm, gNorm, bNorm);
-    }
-    PPM_ASSIGN(*colorP, rNorm, gNorm, bNorm);
-}
-
+#include "pam.h"
 
 
 pixel
@@ -367,26 +31,17 @@ ppm_parsecolor2(const char * const colorname,
                 pixval       const maxval,
                 int          const closeOk) {
 
-    pixel color;
+    tuple const color = pnm_parsecolor2(colorname, maxval, closeOk);
 
-    if (strncmp(colorname, "rgb:", 4) == 0)
-        /* It's a new-X11-style hexadecimal rgb specifier. */
-        parseNewHexX11(colorname, maxval, closeOk, &color);
-    else if (strncmp(colorname, "rgbi:", 5) == 0)
-        /* It's a new-X11-style decimal/float rgb specifier. */
-        parseNewDecX11(colorname, maxval, closeOk, &color);
-    else if (colorname[0] == '#')
-        /* It's an old-X11-style hexadecimal rgb specifier. */
-        parseOldX11(colorname, maxval, closeOk, &color);
-    else if ((colorname[0] >= '0' && colorname[0] <= '9') ||
-             colorname[0] == '.')
-        /* It's an old-style decimal/float rgb specifier. */
-        parseOldX11Dec(colorname, maxval, closeOk, &color);
-    else
-        /* Must be a name from the X-style rgb file. */
-        pm_parse_dictionary_name(colorname, maxval, closeOk, &color);
+    pixel retval;
 
-    return color;
+    PPM_PUTR(retval, color[PAM_RED_PLANE]);
+    PPM_PUTG(retval, color[PAM_GRN_PLANE]);
+    PPM_PUTB(retval, color[PAM_BLU_PLANE]);
+
+    free(color);
+
+    return retval;
 }
 
 
@@ -408,6 +63,7 @@ ppm_colorname(const pixel * const colorP,
     int r, g, b;
     FILE * f;
     static char colorname[200];
+        /* Null string means no suitable name so far */
 
     if (maxval == 255) {
         r = PPM_GETR(*colorP);
@@ -420,7 +76,10 @@ ppm_colorname(const pixel * const colorP,
     }
 
     f = pm_openColornameFile(NULL, !hexok);
-    if (f != NULL) {
+
+    if (!f)
+        strcpy(colorname, "");
+    else {
         int bestDiff;
         bool eof;
 
@@ -441,15 +100,33 @@ ppm_colorname(const pixel * const colorP,
                 eof = TRUE;
         }
         fclose(f);
-        if (bestDiff != 32767 && (bestDiff == 0 || ! hexok))
-            return colorname;
+
+        if (bestDiff == 32767) {
+            /* Color file contain no entries, so we can't even pick a close
+               one
+            */
+            strcpy(colorname, "");
+        } else if (bestDiff > 0 && hexok) {
+            /* We didn't find an exact match and user is willing to accept
+               hex, so we don't have to use an approximate match.
+            */
+            strcpy(colorname, "");
+        }
     }
 
-    /* Color lookup failed, but caller is willing to take an X11-style
-       hex specifier, so return that.
-    */
-    sprintf(colorname, "#%02x%02x%02x", r, g, b);
-    return colorname;}
+    if (streq(colorname, "")) {
+        if (hexok) {
+            /* Color lookup failed, but caller is willing to take an X11-style
+               hex specifier, so return that.
+            */
+            sprintf(colorname, "#%02x%02x%02x", r, g, b);
+        } else {
+            pm_error("Couldn't find any name colors at all");
+        }
+    }
+
+    return colorname;
+}
 
 
 

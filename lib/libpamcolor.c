@@ -20,6 +20,7 @@
 
 #include <string.h>
 #include <limits.h>
+#include <math.h>
 
 #include "netpbm/pm_c_util.h"
 #include "netpbm/mallocvar.h"
@@ -155,6 +156,50 @@ parseNewDecX11(const char * const colorname,
 
 
 static void
+parseInteger(const char * const colorname,
+             tuplen       const color) {
+
+    unsigned int maxval;
+    unsigned int r, g, b;
+    int rc;
+
+    rc = sscanf(colorname, "rgb-%u:%u/%u/%u", &maxval, &r, &g, &b);
+
+    if (rc != 4)
+        pm_error("invalid color specifier '%s'.  "
+                 "If it starts with \"rgb-\", then it must have the format "
+                 "rgb-<MAXVAL>:<RED>:<GRN>:<BLU>, "
+                 "where <MAXVAL>, <RED>, <GRN>, and <BLU> are "
+                 "unsigned integers",
+                 colorname);
+
+    if (maxval < 1 || maxval > PNM_OVERALLMAXVAL)
+        pm_error("Maxval in color specification '%s' is %u, "
+                 "which is invalid because it is not between "
+                 "1 and %u, inclusive",
+                 colorname, maxval, PNM_OVERALLMAXVAL);
+
+    if (r > maxval)
+        pm_error("Red value in color specification '%s' is %u, "
+                 "whcih is invalid because the specified maxval is %u",
+                 colorname, r, maxval);
+    if (g > maxval)
+        pm_error("Green value in color specification '%s' is %u, "
+                 "whcih is invalid because the specified maxval is %u",
+                 colorname, g, maxval);
+    if (b > maxval)
+        pm_error("Blue value in color specification '%s' is %u, "
+                 "whcih is invalid because the specified maxval is %u",
+                 colorname, b, maxval);
+
+    color[PAM_RED_PLANE] = (float)r/maxval;
+    color[PAM_GRN_PLANE] = (float)g/maxval;
+    color[PAM_BLU_PLANE] = (float)b/maxval;
+}
+
+
+
+static void
 parseOldX11(const char * const colorname,
             tuplen       const color) {
 /*----------------------------------------------------------------------------
@@ -263,12 +308,15 @@ pnm_parsecolorn(const char * const colorname) {
 
     MALLOCARRAY_NOFAIL(retval, 3);
 
-    if (strncmp(colorname, "rgb:", 4) == 0)
+    if (strneq(colorname, "rgb:", 4))
         /* It's a new-X11-style hexadecimal rgb specifier. */
         parseNewHexX11(colorname, retval);
-    else if (strncmp(colorname, "rgbi:", 5) == 0)
+    else if (strneq(colorname, "rgbi:", 5))
         /* It's a new-X11-style decimal/float rgb specifier. */
         parseNewDecX11(colorname, retval);
+    else if (strneq(colorname, "rgb-", 4))
+        /* It's a Netpbm-native decimal integer rgb specifier */
+        parseInteger(colorname, retval);
     else if (colorname[0] == '#')
         /* It's an old-X11-style hexadecimal rgb specifier. */
         parseOldX11(colorname, retval);
@@ -285,9 +333,29 @@ pnm_parsecolorn(const char * const colorname) {
 
 
 
+static void
+warnIfNotExact(const char * const colorname,
+               tuple        const rounded,
+               tuplen       const exact,
+               sample       const maxval,
+               unsigned int const plane) {
+
+    float const epsilon = 1.0/65536.0;
+
+    if (fabs((float)(rounded[plane] / maxval) - exact[plane]) > epsilon) {
+        pm_message("WARNING: Component %u of color '%s' is %f, "
+                   "which cannot be represented precisely with maxval %lu.  "
+                   "Approximating as %lu.",
+                   plane, colorname, exact[plane], maxval, rounded[plane]);
+    }
+}
+
+
+
 tuple
-pnm_parsecolor(const char * const colorname,
-               sample       const maxval) {
+pnm_parsecolor2(const char * const colorname,
+                sample       const maxval,
+                int          const closeOk) {
 
     tuple retval;
     tuplen color;
@@ -306,9 +374,24 @@ pnm_parsecolor(const char * const colorname,
     retval[PAM_GRN_PLANE] = ROUNDU(color[PAM_GRN_PLANE] * maxval);
     retval[PAM_BLU_PLANE] = ROUNDU(color[PAM_BLU_PLANE] * maxval);
 
+    if (!closeOk) {
+        warnIfNotExact(colorname, retval, color, maxval, PAM_RED_PLANE);
+        warnIfNotExact(colorname, retval, color, maxval, PAM_GRN_PLANE);
+        warnIfNotExact(colorname, retval, color, maxval, PAM_BLU_PLANE);
+    }
+
     free(color);
 
     return retval;
+}
+
+
+
+tuple
+pnm_parsecolor(const char * const colorname,
+               sample       const maxval) {
+
+    return pnm_parsecolor2(colorname, maxval, true);
 }
 
 
