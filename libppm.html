@@ -160,6 +160,13 @@ libppm - functions for PPM programs
    <b>pixval</B> <I>maxval</I><B>)</B>
 
 <P>
+<B>pixel ppm_parsecolor2(</B>
+<b>char *</b> <I>colorname</I><B>,</b>
+<b>pixval</B> <I>maxval</I><B>,</B>
+<b>int</B> <I>closeOk</I>
+<B>)</B>
+
+<P>
 <B>char * ppm_colorname(pixel *</B> <I>colorP</I><B>,</b>
   <b>pixval</B> <I>maxval</I><B>,</b>
   <b>int</B> <I>hexok</I><B>)</B>
@@ -491,40 +498,16 @@ color dictionary.
 <H4 id="ppm_parsecolor">ppm_parsecolor</H4>
 
 <p><B>ppm_parsecolor()</B> interprets a color specification and returns a
-pixel of the color that it indicates.  The color specification is
-ASCII text, in one of these formats:
+pixel of the color that it indicates.  It is the same as
+<a href="libnetbm_image.html#colorname">pnm_parsecolor</a>, except that it
+returns a <b>pixel</b> instead of a <b>tuple</b>.
 
-<ul>
+<H4 id="ppm_parsecolor2">ppm_parsecolor2</H4>
 
-<li>a name, as defined in the <a href="#rgb.txt">system color dictionary
-</a>.
-
-<LI> An X11-style hexadecimal specifier:
-<tt>rgb:<i>r</i>/<i>g</i>/<i>b</i></tt>, where <i>r</i>, <i>g</i>, and
-<i>b</i> are each 1- to 4-digit hexadecimal numbers.  For each, the maxval
-is the maximum number that can be represented in the number of hexadecimal
-digits given.  Example: <tt>rgb:01/ff/8000</tt> specifies 1/255 red
-intensity, maximum green intensity, and about half blue intensity.
-
-<LI> An X11-style decimal specifier:
-<tt>rgbi:<i>r</i>/<i>g</i>/<i>b</i></tt>, where <i>r</i>, <i>g</i>,
-and <i>b</i> are floating point numbers from 0 to 1.  Example:
-<tt>rgbi:1.0/0.5/.25</tt>.
-
-<li>an old-X11-style hexadecimal triple: <tt>#rgb</tt>, <tt>#rrggbb</tt>, 
-<tt>#rrrgggbbb</tt>, or <tt>#rrrrggggbbbb</tt>.
-
-<li>A triplet of decimal floating point numbers from 0.0 to 1.0, representing
-red, green, and blue intensities respectively, separated by commas.
-Example: <tt>1.0,0.5,.25</tt>.  This is for backwards compatibility; it was in
-use before MIT came up with the similar and preferred rgbi style).
-
-</ul>
-
-<P>If the color specification does not conform to any of these
-formats, including the case that it is a name, but is not in the
-system color dictionary, <B>ppm_parsecolor()</B> <a
-href="liberror.html">throws an error</a>.
+<p><B>ppm_parsecolor2()</B> interprets a color specification and returns a
+pixel of the color that it indicates and warns about rounding.  It is the same
+as <a href="libnetbm_image.html#colorname">pnm_parsecolor2</a>, except
+that it returns a <b>pixel</b> instead of a <b>tuple</b>.
 
 <h4 id="ppm_colorname">ppm_colorname</h4>
 
@@ -805,6 +788,7 @@ Copyright (C) 1989, 1991 by Tony Hansen and Jef Poskanzer.
     <ul>
     <li><a href="#dictionary">System Color Dictionary</a>
     <li><a href="#ppm_parsecolor">ppm_parsecolor</a>
+    <li><a href="#ppm_parsecolor2">ppm_parsecolor2</a>
     <li><a href="#ppm_colorname">ppm_colorname</a>
     <li><a href="#ppm_readcolornamefile">ppm_readcolornamefile</a>
     </ul>

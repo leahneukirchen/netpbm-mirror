@@ -6,7 +6,7 @@
 </HEAD>
 <BODY>
 <H1>Libnetpbm Image Processing Manual</H1>
-Updated: December 2003
+Updated: May 2018
 <br>
 <p><A HREF="#toc">Table Of Contents</A>
 <?makeman .SH NAME ?>
@@ -393,7 +393,6 @@ C library string functions.
 
 <h4>Synopsis</h4>
 
-
 <P>
 <B>void pnm_YCbCrtuple(</B>
 <B>tuple </B><I>tuple</I><B>,</B>
@@ -609,7 +608,93 @@ in PAM visual images and normalizes or unnormalizes the sample values.
 <b>pnm_freegammatransform()</b> and <b>pnm_freeungammatransform()</b>
 destroy the objects.
 
+<h3 id="colorname">Color specification</h3>
 
+<p>These are functions you use that deal with names or identifiers for colors.
+
+<h4>Synopsis</h4>
+
+<P>
+<B>tuple pnm_parsecolor(</B>
+<B>const char * </B><I>colorname</I><b>,</b>
+<b>sample </b><i>maxval</i>
+<B>);</B>
+  
+<P>
+<B>tuple pnm_parsecolor2(</B>
+<B>const char * </B><I>colorname</I><b>,</b>
+<b>sample </b><i>maxval</i><b>,</b>
+<b>int </b><i>closeOk</i>
+<B>);</B>
+  
+<P>
+<B>tuplen pnm_parsecolorn(</B>
+<B>const char * </B><I>colorname</I>
+<B>);</B>
+  
+<h4>Description</h4>
+
+<p><b>pnm_parsecolor</b>, <b>pnm_parsecolor2</b>, and <b>pnm_parsecolorn</b>
+return a color in the conventional form used by <b>libnetpbm</b> to
+represent a color, given a human-intelligible name for the color such
+as &quot;red&quot; or &quot;rgbi:1.0/0.5/0.25&quot;.
+
+<p><b>pnm_parsecolorn</b> returns a normalized tuple (type <b>tuplen</b>),
+whereas <b>pnm_parsecolor</b> and <b>pnm_parsecolor2</b> return a tuple that
+  uses an integer scale with a specified maxval.
+
+<p>When you use an integer scale, only certain discrete colors can be
+represented, so the functions may round.  For example, &quot;wheat&quot; which
+is 245/222/179 with maxval 255, cannot be represented exactly with maxval 15,
+so if you call <b>pnm_parsecolor</b> to produce a wheat color tuple with
+maxval 15, you get 14/13/11, which is not quite the same.
+With <b>pnm_parsecolor2</b>, you get a warning message to Standard Error when
+such rounding occurs, unless you specify <i>closeOk</i> = true.
+<b>pnm_parsecolor</b> never warns about this.
+
+
+<h5>Color name</h5>
+
+<p>The <i>colorname</i> argument is ASCII text in one of these formats:
+
+<ul>
+
+<li>a name, as defined in the <a href="#rgb.txt">system color dictionary
+</a>.
+
+<LI> An X11-style hexadecimal specifier:
+<tt>rgb:<i>r</i>/<i>g</i>/<i>b</i></tt>, where <i>r</i>, <i>g</i>, and
+<i>b</i> are each 1- to 4-digit hexadecimal numbers.  For each, the maxval
+is the maximum number that can be represented in the number of hexadecimal
+digits given.  Example: <tt>rgb:01/ff/8000</tt> specifies 1/255 red
+intensity, maximum green intensity, and about half blue intensity.
+
+<LI> An X11-style decimal specifier:
+<tt>rgbi:<i>r</i>/<i>g</i>/<i>b</i></tt>, where <i>r</i>, <i>g</i>,
+and <i>b</i> are floating point numbers from 0 to 1.  Example:
+<tt>rgbi:1.0/0.5/.25</tt>.
+
+<li><tt>rgb-<i>maxval</i>:<i>r</i>/<i>g</i>/<i>b</i></tt>, where
+<i>r</i>, <i>g</i>, and <i>b</i> are integers from 0 to <i>maxval</i>.
+Example: <tt>rgb-255:255/128/64</tt>.  <i>maxval</i> can be from 1 to 65535.
+<p>
+This format was new in Netpbm 10.83 (June 2018).
+
+<li>an old-X11-style hexadecimal triple: <tt>#rgb</tt>, <tt>#rrggbb</tt>, 
+<tt>#rrrgggbbb</tt>, or <tt>#rrrrggggbbbb</tt>.
+
+<li>A triplet of decimal floating point numbers from 0.0 to 1.0, representing
+red, green, and blue intensities respectively, separated by commas.
+Example: <tt>1.0,0.5,.25</tt>.  This is for backwards compatibility; it was in
+use before MIT came up with the similar and preferred rgbi style).
+
+</ul>
+
+<P>If <i>colorname</i> does not conform to any of these formats, including the
+case that it is a name, but is not in the system color dictionary,
+<B>pnm_parsecolor()</B> <a href="liberror.html">throws an error</a>.
+
+  
 <h3 id="misc">Miscellaneous</h3>
 
 <h4>Synopsis</h4>
@@ -652,6 +737,7 @@ its header).
     <li><a href="#reading">Reading Netpbm Files</a>
     <li><a href="#writing">Writing Netpbm Files</a>
     <li><a href="#transform">Transforming Pixels</a>
+    <li><a href="#colorname">Color Specification</a>
     <li><a href="#misc">Miscellaneous</a>
     </ul>
   </ul>
