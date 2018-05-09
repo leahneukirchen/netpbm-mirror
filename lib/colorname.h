@@ -28,7 +28,7 @@ struct colorfile_entry {
 
 
 
-void 
+void
 pm_canonstr(char * const str);
 
 FILE *
@@ -38,11 +38,11 @@ struct colorfile_entry
 pm_colorget(FILE * const f);
 
 void
-pm_parse_dictionary_namen(char   const colorname[], 
+pm_parse_dictionary_namen(char   const colorname[],
                           tuplen const color);
 
 void
-pm_parse_dictionary_name(const char       colorname[], 
+pm_parse_dictionary_name(const char       colorname[],
                          pixval     const maxval,
                          int        const closeOk,
                          pixel *    const colorP);
