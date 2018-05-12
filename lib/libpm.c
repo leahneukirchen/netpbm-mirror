@@ -45,7 +45,7 @@ const char * pm_progname;
 int pm_plain_output;
     /* Boolean: programs should produce output in plain format */
 
-static bool pm_showmessages;  
+static bool pm_showmessages;
     /* Programs should display informational messages (because the user didn't
        specify the --quiet option).
     */
@@ -249,7 +249,7 @@ pm_errormsg(const char format[], ...) {
     va_start(args, format);
 
     pm_vasprintf(&msg, format, args);
-    
+
     errormsg(msg);
 
     pm_strfree(msg);
@@ -267,7 +267,7 @@ pm_error(const char format[], ...) {
     va_start(args, format);
 
     pm_vasprintf(&msg, format, args);
-    
+
     errormsg(msg);
 
     pm_strfree(msg);
@@ -356,7 +356,7 @@ pm_allocarray(int const cols,
 
 
 void
-pm_freearray(char ** const rowIndex, 
+pm_freearray(char ** const rowIndex,
              int     const rows) {
 
     void * const rowIndexVoid = rowIndex;
@@ -369,8 +369,8 @@ pm_freearray(char ** const rowIndex,
 /* Case-insensitive keyword matcher. */
 
 int
-pm_keymatch(const char *       const strarg, 
-            const char * const keywordarg, 
+pm_keymatch(const char *       const strarg,
+            const char * const keywordarg,
             int          const minchars) {
     int len;
     const char * keyword;
@@ -449,7 +449,7 @@ pm_bitstomaxval(int const bits) {
 
 
 unsigned int PURE_FN_ATTR
-pm_lcm(unsigned int const x, 
+pm_lcm(unsigned int const x,
        unsigned int const y,
        unsigned int const z,
        unsigned int const limit) {
@@ -472,7 +472,7 @@ pm_lcm(unsigned int const x,
            candidate <= limit)
         candidate += biggest;
 
-    if (candidate > limit) 
+    if (candidate > limit)
         candidate = limit;
 
     return candidate;
@@ -499,7 +499,7 @@ pm_init(const char * const progname,
 #ifdef HAVE_SETMODE
     /* Set the stdin and stdout mode to binary.  This means nothing on Unix,
        but matters on Windows.
-       
+
        Note that stdin and stdout aren't necessarily image files.  In
        particular, stdout is sometimes text for human consumption,
        typically printed on the terminal.  Binary mode isn't really
@@ -507,7 +507,7 @@ pm_init(const char * const progname,
        any knowledge of how stdin and stdout are being used because it is
        easy.  But we do make an exception for the case that we know the
        file is a terminal, to get a little closer to doing the right
-       thing.  
+       thing.
     */
     if (!isatty(0)) setmode(0,O_BINARY);  /* Standard Input */
     if (!isatty(1)) setmode(1,O_BINARY);  /* Standard Output */
@@ -525,7 +525,7 @@ dtMsg(time_t const dateTime) {
     struct tm * const brokenTimeP = localtime(&dateTime);
 
     char buffer[100];
-    
+
     strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", brokenTimeP);
 
     return pm_strdup(buffer);
@@ -579,7 +579,7 @@ showVersion(void) {
         pm_message( "RGB_ENV='%s'", RGBENV );
         rgbdef = getenv(RGBENV);
         if( rgbdef )
-            pm_message( "RGBENV= '%s' (env vbl set to '%s')", 
+            pm_message( "RGBENV= '%s' (env vbl set to '%s')",
                         RGBENV, rgbdef );
         else
             pm_message( "RGBENV= '%s' (env vbl is unset)", RGBENV);
@@ -592,7 +592,7 @@ static void
 showNetpbmHelp(const char progname[]) {
 /*----------------------------------------------------------------------------
   Tell the user where to get help for this program, assuming it is a Netpbm
-  program (a program that comes with the Netpbm package, as opposed to a 
+  program (a program that comes with the Netpbm package, as opposed to a
   program that just uses the Netpbm libraries).
 
   Tell him to go to the URL listed in the Netpbm configuration file.
@@ -610,9 +610,9 @@ showNetpbmHelp(const char progname[]) {
 
     if (getenv("NETPBM_CONF"))
         netpbmConfigFileName = getenv("NETPBM_CONF");
-    else 
+    else
         netpbmConfigFileName = "/etc/netpbm";
-    
+
     netpbmConfigFile = fopen(netpbmConfigFileName, "r");
     if (netpbmConfigFile == NULL) {
         pm_message("Unable to open Netpbm configuration file '%s'.  "
@@ -666,14 +666,14 @@ parseCommonOptions(int *         const argcP,
 
     for (inCursor = 1, outCursor = 1; inCursor < *argcP; ++inCursor) {
             if (strcaseeq(argv[inCursor], "-quiet") ||
-                strcaseeq(argv[inCursor], "--quiet")) 
+                strcaseeq(argv[inCursor], "--quiet"))
                 *showMessagesP = false;
             else if (strcaseeq(argv[inCursor], "-version") ||
-                     strcaseeq(argv[inCursor], "--version")) 
+                     strcaseeq(argv[inCursor], "--version"))
                 *showVersionP = true;
             else if (strcaseeq(argv[inCursor], "-help") ||
                      strcaseeq(argv[inCursor], "--help") ||
-                     strcaseeq(argv[inCursor], "-?")) 
+                     strcaseeq(argv[inCursor], "-?"))
                 *showHelpP = true;
             else if (strcaseeq(argv[inCursor], "-plain") ||
                      strcaseeq(argv[inCursor], "--plain"))
@@ -728,7 +728,7 @@ pm_proginit(int *         const argcP,
         exit(0);
     } else if (justShowHelp) {
         pm_error("Use 'man %s' for help.", progname);
-        /* If we can figure out a way to distinguish Netpbm programs from 
+        /* If we can figure out a way to distinguish Netpbm programs from
            other programs using the Netpbm libraries, we can do better here.
         */
         if (0)
@@ -742,7 +742,7 @@ pm_proginit(int *         const argcP,
 void
 pm_setMessage(int   const newState,
               int * const oldStateP) {
-    
+
     if (oldStateP)
         *oldStateP = pm_showmessages;
 
@@ -763,7 +763,7 @@ static void
 extractAfterLastSlash(const char * const fullPath,
                       char *       const retval,
                       size_t       const retvalSize) {
-    
+
     char * slashPos;
 
     /* Chop any directories off the left end */
@@ -794,13 +794,13 @@ chopOffExe(char * const arg) {
 char *
 pm_arg0toprogname(const char arg0[]) {
 /*----------------------------------------------------------------------------
-   Given a value for argv[0] (a command name or file name passed to a 
+   Given a value for argv[0] (a command name or file name passed to a
    program in the standard C calling sequence), return the name of the
    Netpbm program to which it refers.
 
    In the most ordinary case, this is simply the argument itself.
 
-   But if the argument contains a slash, it is the part of the argument 
+   But if the argument contains a slash, it is the part of the argument
    after the last slash, and if there is a .exe on it (as there is for
    DJGPP), that is removed.
 
