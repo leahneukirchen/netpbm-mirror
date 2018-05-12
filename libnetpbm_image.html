@@ -178,6 +178,10 @@ href="libnetpbm_ug.html#pamstruct">the <b>pam</b> structure</a>.
 <B>);</B>
 
 <P>
+<B>tuple * allocpamtuplen(</B>
+<B>struct pam *</B><I>pamP</I><B>);</B>
+
+<P>
 <B>tuplen * pnm_allocpamrown(</B>
 <B>struct pam *</B><I>pamP</I><B>);</B>
 
@@ -189,9 +193,16 @@ href="libnetpbm_ug.html#pamstruct">the <b>pam</b> structure</a>.
 
 <h4>Description</h4>
 
+<p><b>pnm_allocpamtuple</b> allocates space for a tuple.
+  <b>pnm_freepamtuple</b> frees space allocated for a tuple.
+
 <p><B>pnm_allocpamarray()</B> allocates space for an array of tuples.
 <B>pnm_freepamarray()</B> frees an array space allocated by
 <B>pnm_allocpamarray()</B> or <B>pnm_readpam()</B>.
+
+<p><b>pnm_allocpamtuplen</b> is the same as <b>pnm_allocpamtuple</b>
+except that it allocates space for a tuple in the normalized form.
+<b>pnm_freepamtuplen</b> is similarly like <b>pnm_freepamtuple</b>.
 
 <P><B>pnm_allocpamrow() </B> allocates space for a row of a PAM image,
 in basic form.  <B>pnm_freepamrow()</B> frees it.
@@ -631,7 +642,42 @@ destroy the objects.
 <B>tuplen pnm_parsecolorn(</B>
 <B>const char * </B><I>colorname</I>
 <B>);</B>
-  
+
+
+<P>
+<B>pnm_colorspec_rgb_integer(</B>
+<b>struct pam * </b><i>pamP</i><b>,</b>
+<b>tuple </b><i>color</i><b>,</b>
+<b>sample </b><i>maxval</i>
+<B>);</B>
+
+<P>
+<B>pnm_colorspec_rgb_norm(</B>
+<b>struct pam * </b><i>pamP</i><b>,</b>
+<b>tuple </b><i>color</i>
+<b>unsigned int </b><i>digitCt</i>
+<B>);</B>
+
+<P>
+<B>pnm_colorspec_rgb_x11(</B>
+<b>struct pam * </b><i>pamP</i><b>,</b>
+<b>tuple </b><i>color</i><b>,</b>
+<b>unsigned int </b><i>hexDigitCt</i>
+<B>);</B>
+
+<P>
+<B>pnm_colorspec_dict(</B>
+<b>struct pam * </b><i>pamP</i><b>,</b>
+<b>tuple </b><i>color</i>
+<B>);</B>
+
+<P>
+<B>pnm_colorspec_dict_close(</B>
+<b>struct pam * </b><i>pamP</i><b>,</b>
+<b>tuple </b><i>color</i>
+<B>);</B>
+
+
 <h4>Description</h4>
 
 <p><b>pnm_parsecolor</b>, <b>pnm_parsecolor2</b>, and <b>pnm_parsecolorn</b>
@@ -652,10 +698,40 @@ With <b>pnm_parsecolor2</b>, you get a warning message to Standard Error when
 such rounding occurs, unless you specify <i>closeOk</i> = true.
 <b>pnm_parsecolor</b> never warns about this.
 
+<p><b>pnm_colorspec_rgb_integer</b> returns the color specification for the
+color <i>color</i> in integer/maxval form like &quot;rgb-255:0/128/254&quot;.
+<i>maxval</i> is the maxval to be used in the color specification (255 in this
+example);
+
+<p><b>pnm_colorspec_rgb_norm</b> returns the color specification for the
+color <i>color</i> in normalized form like &quot;rgbi:0.000/0.052/0.996&quot;.
+<i>digitCt</i> is the number of digits after the decimal point (3 in this
+example).  The function rounds and zero-fills as necessary.
+
+<p><b>pnm_colorspec_rgb_x11</b> returns the color specification for the
+color <i>color</i> in X11 form like &quot;rgb:00/80/fe&quot;.
+<i>hexDigitCt</i> is the number of hexadecimal digits to use for each
+component (2 in this example).  The function rounds and zero-fills as
+necessary.
+
+<p><b>pnm_colorspec_dict</b> returns the color specification for the
+color <i>color</i> as name such as &quot;pink&quot; from the color dictionary.
+If the color is not in the dictionary, including where the function does not
+find a color dictionary file, the return value is null.
+
+<p><b>pnm_colorspect_dict_close</b> is the same as <b>pnm_colorspec_dict</b>
+except that when the color is not in the dictionary, it returns the closest
+color to it that <em>is</em> in the dictionary.  As an exception, if the
+function cannot find a color dictionary file or the file it finds does not
+contain even a single color definition, the function returns a null string.
+
 
 <h5>Color name</h5>
 
-<p>The <i>colorname</i> argument is ASCII text in one of these formats:
+<p>Color names in Netpbm are ASCSII text in one of the formats described
+below.  This is what you use for the <i>colorname</i> argument of functions
+such as <b>pnm_parsecolor</b> and is the return value of functions such as
+<b>pnm_colorspec_rgb_norm</b>.
 
 <ul>
 
