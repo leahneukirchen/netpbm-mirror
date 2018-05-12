@@ -8,6 +8,21 @@ not yet  BJH  Release 10.83.00
 
               Add pamlevels.  Thanks Anton Shepelev <anton.txt@gmail.com>.
 
+              Add rgb-<maxval>:r/g/b color specification format.
+
+              libnetpbm: Add pnm_colorspec_rgb_integer,
+              pnm_colorspec_rgb_norm, pnm_colorspec_rgb_x11,
+              pnm_colorspec_dict, pnm_colorspec_dict_close.
+
+              libnetpbm: Add pnm_parsecolor2.
+
+              libnetpbm: Add pnm_allocpamtuplen, pnm_freepamtuplen.
+              
+              libnetpbm: Make the normalized tuple functions respect the
+              allocation depth specified in struct pam (member
+              'allocation_depth') instead of using the actual tuple depth
+              (member 'depth').
+
               ilbmtoppm: Fix bug: may fail with bogus error message about an
               invalid CLUT chunk if image has a CLUT chunk.  Introduced after
               Netpbm 10.26 (January 2005) and at or before Netpbm 10.35

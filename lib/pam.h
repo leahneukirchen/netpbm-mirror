@@ -401,6 +401,11 @@ typedef float samplen;
 typedef samplen *tuplen;
     /* Same as 'tuple', except using normalized samples. */
 
+tuplen
+pnm_allocpamtuplen(const struct pam * const pamP);
+
+#define pnm_freepamtuplen(tuplen) pm_freerow((char*) tuplen)
+
 tuplen *
 pnm_allocpamrown(const struct pam * const pamP);
 
@@ -505,6 +510,29 @@ const char *
 pnm_colorname(struct pam * const pamP,
               tuple        const color,
               int          const hexok);
+
+const char *
+pnm_colorspec_rgb_integer(struct pam * const pamP,
+                          tuple        const color,
+                          sample       const maxval);
+
+const char *
+pnm_colorspec_rgb_norm(struct pam * const pamP,
+                       tuple        const color,
+                       unsigned int const digitCt);
+
+const char *
+pnm_colorspec_rgb_x11(struct pam * const pamP,
+                      tuple        const color,
+                      unsigned int const hexDigitCt);
+
+const char *
+pnm_colorspec_dict(struct pam * const pamP,
+                   tuple        const color);
+
+const char *
+pnm_colorspec_dict_close(struct pam * const pamP,
+                         tuple        const color);
 
 extern double
 pnm_lumin_factor[3];

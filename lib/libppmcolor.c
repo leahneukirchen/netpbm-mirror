@@ -78,7 +78,7 @@ ppm_colorname(const pixel * const colorP,
     f = pm_openColornameFile(NULL, !hexok);
 
     if (!f)
-        strcpy(colorname, "");
+        STRSCPY(colorname, "");
     else {
         int bestDiff;
         bool eof;
@@ -94,7 +94,7 @@ ppm_colorname(const pixel * const colorP,
 
                 if (thisDiff < bestDiff) {
                     bestDiff = thisDiff;
-                    strcpy(colorname, ce.colorname);
+                    STRSCPY(colorname, ce.colorname);
                 }
             } else
                 eof = TRUE;
@@ -105,12 +105,12 @@ ppm_colorname(const pixel * const colorP,
             /* Color file contain no entries, so we can't even pick a close
                one
             */
-            strcpy(colorname, "");
+            STRSCPY(colorname, "");
         } else if (bestDiff > 0 && hexok) {
             /* We didn't find an exact match and user is willing to accept
                hex, so we don't have to use an approximate match.
             */
-            strcpy(colorname, "");
+            STRSCPY(colorname, "");
         }
     }
 

@@ -23,6 +23,43 @@
 
 
 
+static unsigned int
+allocationDepth(const struct pam * const pamP) {
+
+    unsigned int retval;
+
+    if (pamP->len >= PAM_STRUCT_SIZE(allocation_depth)) {
+        if (pamP->allocation_depth == 0)
+            retval = pamP->depth;
+        else {
+            if (pamP->depth > pamP->allocation_depth)
+                pm_error("'allocationDepth' (%u) is smaller than 'depth' (%u)",
+                         pamP->allocation_depth, pamP->depth);
+            retval = pamP->allocation_depth;
+        }
+    } else
+        retval = pamP->depth;
+    return retval;
+}
+
+
+
+tuplen
+pnm_allocpamtuplen(const struct pam * const pamP) {
+
+    tuplen retval;
+
+    retval = malloc(allocationDepth(pamP) * sizeof(retval[0]));
+
+    if (retval == NULL)
+        pm_error("Out of memory allocating %u-plane normalized tuple",
+                 allocationDepth(pamP));
+
+    return retval;
+}
+
+
+
 static void
 allocpamrown(const struct pam * const pamP,
              tuplen **          const tuplerownP,
@@ -32,7 +69,7 @@ allocpamrown(const struct pam * const pamP,
    overflow will not occur in our calculations.  NOTE: pnm_readpaminit()
    ensures this assumption is valid.
 -----------------------------------------------------------------------------*/
-    int const bytes_per_tuple = pamP->depth * sizeof(samplen);
+    int const bytes_per_tuple = allocationDepth(pamP) * sizeof(samplen);
 
     tuplen * tuplerown;
     const char * error;
@@ -47,7 +84,8 @@ allocpamrown(const struct pam * const pamP,
         pm_asprintf(&error, "Out of memory allocating space for a tuple row of"
                     "%u tuples by %u samples per tuple "
                     "by %u bytes per sample.",
-                    pamP->width, pamP->depth, (unsigned)sizeof(samplen));
+                    pamP->width, allocationDepth(pamP),
+                    (unsigned)sizeof(samplen));
     else {
         /* Now we initialize the pointers to the individual tuples to make this
            a regulation C two dimensional array.

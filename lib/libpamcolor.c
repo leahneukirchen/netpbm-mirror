@@ -424,6 +424,263 @@ pnm_colorname(struct pam * const pamP,
 
 
 
+static tuple
+scaledRgb(struct pam * const pamP,
+          tuple        const color,
+          sample       const maxval) {
+
+    tuple scaledColor;
+
+    struct pam pam;
+
+    pam.size             = sizeof(pam);
+    pam.len              = PAM_STRUCT_SIZE(allocation_depth);
+    pam.maxval           = pamP->maxval;
+    pam.depth            = pamP->depth;
+    pam.allocation_depth = 3;
+
+    scaledColor = pnm_allocpamtuple(&pam);
+
+    pnm_scaletuple(&pam, scaledColor, color, maxval);
+
+    pnm_maketuplergb(&pam, scaledColor);
+
+    return scaledColor;
+}
+
+
+
+const char *
+pnm_colorspec_rgb_integer(struct pam * const pamP,
+                          tuple        const color,
+                          sample       const maxval) {
+
+    const char * retval;
+
+    tuple scaledColor = scaledRgb(pamP, color, maxval);
+
+    pm_asprintf(&retval, "rgb-%lu:%lu/%lu/%lu",
+                maxval,
+                scaledColor[PAM_RED_PLANE],
+                scaledColor[PAM_GRN_PLANE],
+                scaledColor[PAM_BLU_PLANE]
+        );
+
+    pnm_freepamtuple(scaledColor);
+
+    return retval;
+}
+
+
+
+const char *
+pnm_colorspec_rgb_norm(struct pam * const pamP,
+                       tuple        const color,
+                       unsigned int const digitCt) {
+
+    const char * retval;
+
+    tuple rgbColor;
+
+    tuplen normColor;
+
+    struct pam rgbPam;
+
+    rgbPam.size             = sizeof(rgbPam);
+    rgbPam.len              = PAM_STRUCT_SIZE(allocation_depth);
+    rgbPam.maxval           = pamP->maxval;
+    rgbPam.depth            = pamP->depth;
+    rgbPam.allocation_depth = 3;
+
+    rgbColor = pnm_allocpamtuple(&rgbPam);
+
+    pnm_assigntuple(&rgbPam, rgbColor, color);  /* initial value */
+
+    pnm_maketuplergb(&rgbPam, rgbColor);
+
+    normColor = pnm_allocpamtuplen(&rgbPam);
+
+    rgbPam.depth = 3;
+
+    pnm_normalizetuple(&rgbPam, rgbColor, normColor);
+
+    {
+        const char * format;
+        pm_asprintf(&format, "rgbi:%%.%uf/%%.%uf/%%.%uf",
+                    digitCt, digitCt, digitCt);
+
+        pm_asprintf(&retval, format,
+                    normColor[PAM_RED_PLANE],
+                    normColor[PAM_GRN_PLANE],
+                    normColor[PAM_BLU_PLANE]
+            );
+    }
+
+    pnm_freepamtuplen(normColor);
+    pnm_freepamtuple(rgbColor);
+
+    return retval;
+}
+
+
+
+const char *
+pnm_colorspec_rgb_x11(struct pam * const pamP,
+                      tuple        const color,
+                      unsigned int const hexDigitCt) {
+
+    const char * retval;
+
+    sample maxval;
+    const char * format;
+
+    switch(hexDigitCt) {
+    case 1:
+        maxval =    15;
+        format = "rgb:%01x:%01x:%01x";
+        break;
+    case 2:
+        maxval =   255;
+        format = "rgb:%02x:%02x:%02x";
+        break;
+    case 3:
+        maxval =  4095;
+        format = "rgb:%03x:%03x:%03x";
+        break;
+    case 4:
+        maxval = 65535;
+        format = "rgb:%04x:%04x:%04x";
+        break;
+    default:
+        pm_error("Invalid number of hex digits "
+                 "for X11 color specification: %u.  "
+                 "Must be 1, 2, 3, or 4", hexDigitCt);
+    }
+
+    {
+        tuple const scaledColor = scaledRgb(pamP, color, maxval);
+
+        pm_asprintf(&retval, format,
+                    scaledColor[PAM_RED_PLANE],
+                    scaledColor[PAM_GRN_PLANE],
+                    scaledColor[PAM_BLU_PLANE]
+            );
+
+        pnm_freepamtuple(scaledColor);
+    }
+    return retval;
+}
+
+
+
+const char *
+pnm_colorspec_dict(struct pam * const pamP,
+                   tuple        const color) {
+/*----------------------------------------------------------------------------
+   Return the name from the color dictionary of color 'color'.
+
+   Return it in newly allocated pm_strdrup storage.
+
+   If the color is not in the dictionary, or the dictionary doesn't even
+   exist (file not found in any of the possible places), return NULL.
+
+   The color dictionary uses maxval 255, so we match to that precision.
+   E.g. if a component of 'color' is 1000 out of maxval 65535 (which would be
+   3.9 out of maxval 255), we consider it a match to a component value of 4
+   in the color dictionary.
+-----------------------------------------------------------------------------*/
+    tuple scaledColor = scaledRgb(pamP, color, PAM_COLORFILE_MAXVAL);
+
+    FILE * dictFileP;
+    const char * colorname;
+
+    dictFileP = pm_openColornameFile(NULL, false);
+
+    if (dictFileP) {
+        bool eof;
+        for (colorname = NULL, eof = false; !colorname && !eof; ) {
+            struct colorfile_entry const ce = pm_colorget(dictFileP);
+
+            if (ce.colorname)  {
+                if (scaledColor[PAM_RED_PLANE] == (sample)ce.r &&
+                    scaledColor[PAM_GRN_PLANE] == (sample)ce.g &&
+                    scaledColor[PAM_BLU_PLANE] == (sample)ce.b) {
+                    colorname = pm_strdup(ce.colorname);
+                }
+            } else
+                eof = TRUE;
+        }
+
+        fclose(dictFileP);
+    } else
+        colorname = NULL;
+
+    pnm_freepamtuple(scaledColor);
+
+    return colorname;
+}
+
+
+
+const char *
+pnm_colorspec_dict_close(struct pam * const pamP,
+                         tuple        const color) {
+/*----------------------------------------------------------------------------
+   Return the name from the color dictionary of the color closst to 'color'.
+
+   Return it in newly allocated pm_strdrup storage.
+
+   If the color dictionary is empty, or the dictionary doesn't even exist
+   (file not found in any of the possible places), return a null string.
+   This is the only case in which we would return a null string, as the
+   color dictionary cannot define a null string color name.
+-----------------------------------------------------------------------------*/
+    tuple scaledColor = scaledRgb(pamP, color, PAM_COLORFILE_MAXVAL);
+
+    FILE * dictFileP;
+    static char colorname[200];
+
+    dictFileP = pm_openColornameFile(NULL, false);
+
+    if (dictFileP) {
+        unsigned int bestDiff;
+        bool eof;
+
+        for (bestDiff = 32767, eof = FALSE; !eof && bestDiff > 0; ) {
+            struct colorfile_entry const ce = pm_colorget(dictFileP);
+
+            if (ce.colorname)  {
+                unsigned int const thisDiff =
+                    abs((int)scaledColor[PAM_RED_PLANE] - (int)ce.r) +
+                    abs((int)scaledColor[PAM_GRN_PLANE] - (int)ce.g) +
+                    abs((int)scaledColor[PAM_BLU_PLANE] - (int)ce.b);
+
+                if (thisDiff < bestDiff) {
+                    bestDiff = thisDiff;
+                    STRSCPY(colorname, ce.colorname);
+                }
+            } else
+                eof = TRUE;
+        }
+
+        fclose(dictFileP);
+
+        if (bestDiff == 32767) {
+            /* Color file contain no entries, so we can't even pick a close
+               one
+            */
+            STRSCPY(colorname, "");
+        }
+    } else
+        STRSCPY(colorname, "");
+
+    pnm_freepamtuple(scaledColor);
+
+    return pm_strdup(colorname);
+}
+
+
+
 double pnm_lumin_factor[3] = {PPM_LUMINR, PPM_LUMING, PPM_LUMINB};
 
 void
