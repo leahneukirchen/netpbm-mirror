@@ -421,7 +421,7 @@ pamflip_transformRowsToColumnsPbmSse(const struct pam * const inpamP,
 void
 pamflip_transformRowsToColumnsPbmSse(const struct pam * const inpamP,
                                      const struct pam * const outpamP,
-                                     struct xformCore   const xformCore) {
+                                     struct XformCore   const xformCore) {
 
     /* Nobody is supposed to call this */
     assert(false);
