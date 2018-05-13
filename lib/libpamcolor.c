@@ -514,6 +514,7 @@ pnm_colorspec_rgb_norm(struct pam * const pamP,
                     normColor[PAM_GRN_PLANE],
                     normColor[PAM_BLU_PLANE]
             );
+        pm_strfree(format);
     }
 
     pnm_freepamtuplen(normColor);
