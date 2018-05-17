@@ -111,12 +111,23 @@ parseCommandLine(int argc, char ** argv,
 
 
 
+static int
+diffu(unsigned int const subtrahend,
+      unsigned int const subtractor) {
+
+    return (int)subtrahend - (int)subtractor;
+
+    /* (Not the conventional terminology, but better) */
+}
+
+
+
 int
 main(int argc, char *argv[]) {
 
     struct cmdlineInfo cmdline;
     gray *grayrow;
-    int rowso2, colso2;
+    unsigned int rowso2, colso2;
     unsigned int row;
 
     pgm_init( &argc, argv );
@@ -149,15 +160,15 @@ main(int argc, char *argv[]) {
                         MAX((float) cmdline.cols + cmdline.rows-2, 1);
                 break;
             case RT_RECT: {
-                float const r = fabs((float)(rowso2 - row)) / rowso2;
-                float const c = fabs((float)(colso2 - col)) / colso2;
+                float const r = fabs((float)diffu(rowso2, row)) / rowso2;
+                float const c = fabs((float)diffu(colso2, col)) / colso2;
                 grayrow[col] =
                     cmdline.maxval - (r + c) / 2.0 * cmdline.maxval;
             } break;
 
             case RT_ELLIP: {
-                float const r = fabs((float)(rowso2 - row)) / rowso2;
-                float const c = fabs((float)(colso2 - col)) / colso2;
+                float const r = fabs((float)diffu(rowso2, row)) / rowso2;
+                float const c = fabs((float)diffu(colso2, col)) / colso2;
                 float const v = MAX(0.0f, MIN(1.0f, SQR(r) + SQR(c)));
 
                 grayrow[col] = cmdline.maxval - v * cmdline.maxval;
