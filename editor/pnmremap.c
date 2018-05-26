@@ -501,9 +501,10 @@ fserr_init(struct pam *   const pamP,
 
 
 static void
-floydInitRow(struct pam * const pamP, struct Fserr * const fserrP) {
+floydInitRow(struct pam *   const pamP,
+             struct Fserr * const fserrP) {
 
-    int col;
+    unsigned int col;
 
     for (col = 0; col < pamP->width + 2; ++col) {
         unsigned int plane;
@@ -571,7 +572,8 @@ floydPropagateErr(struct pam *   const pamP,
 
 
 static void
-floydSwitchDir(struct pam * const pamP, struct Fserr * const fserrP) {
+floydSwitchDir(struct pam *   const pamP,
+               struct Fserr * const fserrP) {
 
     unsigned int plane;
 
