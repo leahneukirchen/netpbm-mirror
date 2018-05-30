@@ -155,12 +155,11 @@ the suboxes.  This arbitrary distribution depends upon what the system's
 <b>qsort</b> function does with multiple equal values, so <b>pnmcolormap</b>
 may produce slightly different results on different systems.
 
-<P><B>pnmcolormap</B> provides three ways of choosing a color to
-represent a box: 1) the center color - the color halfway between the
-greatest and least colors in the box, using the above definition of
-"greater"; 2) the mean of the colors (each component
-averaged separately by brightness) in the box; 3) the mean weighted by
-the number of pixels of a color in the image.
+<P><B>pnmcolormap</B> provides three ways of choosing a color to represent a
+box: 1) the center color - the color halfway between the greatest and least
+colors in the box, using the above definition of "greater"; 2) the mean of the
+colors (each component averaged separately by brightness) in the box; 3) the
+mean weighted by the number of pixels of a color in the image.
 
 <P>Note that in all three methods, there may be colors in the output
 which do not appear in the input at all.
@@ -178,6 +177,7 @@ SIGGRAPH '82 Proceedings, page 297.
 <B><A HREF="pnmremap.html">pnmremap</A></B>,
 <B><A HREF="pnmquant.html">pnmquant</A></B>,
 <B><A HREF="ppmquantall.html">ppmquantall</A></B>,
+<B><A HREF="pamgetcolor.html">pamgetcolor</A></B>,
 <B><A HREF="pamdepth.html">pamdepth</A></B>,
 <B><A HREF="ppmdither.html">ppmdither</A></B>,
 <B><A HREF="pamseq.html">pamseq</A></B>,
