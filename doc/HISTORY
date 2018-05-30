@@ -8,6 +8,8 @@ not yet  BJH  Release 10.83.00
 
               Add pamlevels.  Thanks Anton Shepelev <anton.txt@gmail.com>.
 
+              Add pamgetcolor.  Thanks Anton Shepelev <anton.txt@gmail.com>.
+
               Add rgb-<maxval>:r/g/b color specification format.
 
               libnetpbm: Add pnm_colorspec_rgb_integer,

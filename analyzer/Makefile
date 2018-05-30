@@ -15,6 +15,7 @@ include $(BUILDDIR)/config.mk
 # build.
 
 PORTBINARIES = \
+  pamgetcolor \
   pamfile \
   pammosaicknit \
   pamslice \
