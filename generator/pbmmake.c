@@ -61,7 +61,7 @@ parseCommandLine(int argc, char ** argv,
 
     if (blackOpt + whiteOpt + grayOpt > 1)
         pm_error("You can specify only one of -black, -white, and -gray");
-    
+
     if (blackOpt)
         cmdlineP->color = COLOR_BLACK;
     else if (whiteOpt)
@@ -83,8 +83,8 @@ parseCommandLine(int argc, char ** argv,
 
 
 
-static void 
-writeGrayRaster(unsigned int const cols, 
+static void
+writeGrayRaster(unsigned int const cols,
                 unsigned int const rows,
                 FILE *       const ofP) {
 
@@ -96,7 +96,7 @@ writeGrayRaster(unsigned int const cols,
     bitrow0 = pbm_allocrow_packed(cols);
     bitrow1 = pbm_allocrow_packed(cols);
 
-    for (i=0; i <= lastCol; ++i) { 
+    for (i=0; i <= lastCol; ++i) {
         bitrow0[i] = (PBM_WHITE*0xaa) | (PBM_BLACK*0x55);
         bitrow1[i] = (PBM_WHITE*0x55) | (PBM_BLACK*0xaa);
         /* 0xaa = 10101010 ; 0x55 = 01010101 */
@@ -119,7 +119,7 @@ writeGrayRaster(unsigned int const cols,
     pbm_freerow(bitrow1);
 }
 
-    
+
 
 static void
 writeSingleColorRaster(unsigned int const cols,
@@ -134,7 +134,7 @@ writeSingleColorRaster(unsigned int const cols,
 
     bitrow0 = pbm_allocrow_packed(cols);
 
-    for (i = 0; i <= lastCol; ++i) 
+    for (i = 0; i <= lastCol; ++i)
         bitrow0[i] = color*0xff;
 
     if (color != 0)
@@ -161,7 +161,7 @@ main(int argc, char * argv[]) {
     parseCommandLine(argc, argv, &cmdline);
 
     pbm_writepbminit(stdout, cmdline.width, cmdline.height, 0);
-    
+
     if (cmdline.color == COLOR_GRAY)
         writeGrayRaster(cmdline.width, cmdline.height, stdout);
     else {
@@ -169,6 +169,6 @@ main(int argc, char * argv[]) {
         writeSingleColorRaster(cmdline.width, cmdline.height, color, stdout);
     }
     pm_close(stdout);
-    
+
     return 0;
 }
