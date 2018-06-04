@@ -209,11 +209,6 @@ bool
 pm_strishex(const char * const subject);
 
 void
-pm_interpret_uint(const char *   const string,
-               unsigned int * const valueP,
-               const char **  const errorP);
-
-void
 pm_string_to_uint(const char *   const string,
                   unsigned int * const uintP,
                   const char **  const errorP);

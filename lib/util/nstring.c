@@ -1007,43 +1007,6 @@ pm_strishex(const char * const subject) {
 
 
 void
-pm_interpret_uint(const char *   const string,
-                  unsigned int * const valueP,
-                  const char **  const errorP) {
-
-    if (string[0] == '\0')
-        pm_asprintf(errorP, "Null string.");
-    else {
-        /* strtoul() does a bizarre thing where if the number is out
-           of range, it returns a clamped value but tells you about it
-           by setting errno = ERANGE.  If it is not out of range,
-           strtoul() leaves errno alone.
-        */
-        char * tail;
-        unsigned long ulongValue;
-
-        errno = 0;  /* So we can tell if strtoul() overflowed */
-
-        ulongValue = strtoul(string, &tail, 10);
-
-        if (tail[0] != '\0')
-            pm_asprintf(errorP, "Non-digit stuff in string: %s", tail);
-        else if (errno == ERANGE)
-            pm_asprintf(errorP, "Number too large");
-        else if (ulongValue > UINT_MAX)
-            pm_asprintf(errorP, "Number too large");
-        else if (string[0] == '-')
-            pm_asprintf(errorP, "Negative number");
-            /* Sleazy code; string may have leading spaces. */
-        else {
-            *valueP = ulongValue;
-            *errorP = NULL;
-        }
-    }
-}
-
-
-void
 pm_string_to_uint(const char *   const string,
                   unsigned int * const uintP,
                   const char **  const errorP) {
@@ -1052,31 +1015,39 @@ pm_string_to_uint(const char *   const string,
         pm_asprintf(errorP, "Value is a null string");
     else {
         char * tailptr;
+        long longValue;
 
-        /* We can't use 'strtoull'.  Contrary to expectations, though as
+        /* We can't use 'strtoul'.  Contrary to expectations, though as
            designed, it returns junk if there is a minus sign.
         */
 
-        long longValue;
+        /* strtol() does a bizarre thing where if the number is out
+           of range, it returns a clamped value but tells you about it
+           by setting errno = ERANGE.  If it is not out of range,
+           strtol() leaves errno alone.
+        */
+        errno = 0;  /* So we can tell if strtoul() overflowed */
 
         longValue = strtol(string, &tailptr, 10);
-
-
-        *uintP = strtoul(string, &tailptr, 10);
 
         if (*tailptr != '\0')
             pm_asprintf(errorP, "Non-numeric crap in string: '%s'", tailptr);
         else {
-            if (longValue < 0)
-                pm_asprintf(errorP, "Number is negative");
-            else {
-                if ((unsigned int)longValue != longValue)
-                    pm_asprintf(errorP, "Number is too large for computation");
-                else {
-                    *uintP = (unsigned int)longValue;
-                    *errorP = NULL;
-                }
-            }
+             if (errno == ERANGE)
+                 pm_asprintf(errorP, "Number is too large for computation");
+             else {
+                 if (longValue < 0)
+                     pm_asprintf(errorP, "Number is negative");
+                 else {
+                     if ((unsigned int)longValue != longValue)
+                         pm_asprintf(errorP,
+                                     "Number is too large for computation");
+                     else {
+                         *uintP = (unsigned int)longValue;
+                         *errorP = NULL;
+                     }
+                 }
+             }
         }
     }
 }
