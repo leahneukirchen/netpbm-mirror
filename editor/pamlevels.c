@@ -48,7 +48,7 @@ typedef struct {
 
 typedef struct {
 /*----------------------------------------------------------------------------
-  A mapping of one source color to one target color
+  A mapping of one source color to one target color, encoded in linear RGB
 -----------------------------------------------------------------------------*/
     tuplen from;
     tuplen to;
@@ -117,7 +117,10 @@ optAddTrans (optEntry *     const option_def,
 static void
 parseColor(const char * const text,
            tuplen *     const colorP) {
-
+/*----------------------------------------------------------------------------
+  Parses color secification in <text>, converts it into linear RGB,
+  and stores the result in <colorP>.
+-----------------------------------------------------------------------------*/
     const char * const lastsc = strrchr(text, ':');
 
     const char * colorname;
@@ -145,7 +148,7 @@ parseColor(const char * const text,
             char colorbuf[50];
 
             errno = 0;
-            mul = strtof(mulstart, &endP);
+            mul = strtod(mulstart, &endP);
             if (errno != 0 || endP == mulstart)
                 pm_error("Invalid sample multiplier: '%s'", mulstart);
 
@@ -165,10 +168,10 @@ parseColor(const char * const text,
     MALLOCARRAY_NOFAIL(color, 3);
 
     {
-        /* Apply multiplier */
+        /* Linearize and apply multiplier */
         unsigned int i;
         for (i = 0; i < 3; ++i)
-            color[i] = unmultipliedColor[i] * mul;
+            color[i] = pm_ungamma709(unmultipliedColor[i]) * mul;
     }
     free(unmultipliedColor);
 
@@ -244,7 +247,7 @@ parseCommandLine(int                 argc,
     OPTENT3(0, "fitbrightness",          OPT_FLAG, NULL,
             &cmdlineP->fitbrightness, 0);
     OPTENT3(0, "linear",                 OPT_FLAG, NULL,
-            &cmdlineP->linear,          0);
+            &cmdlineP->linear,        0);
 
     {
         unsigned int i;
@@ -334,6 +337,7 @@ solveOnePlane(SampleSet    const f,
         a = 0.0;
         break;
     default:
+        a = 0.0; /* to avoid a warning that <a> "may be uninitialized". */
         pm_error("INTERNAL ERROR: solve(): impossible value of n: %u", n);
     }
 
@@ -365,12 +369,12 @@ chanData(TransSet     const ta,
     unsigned int i;
 
     for (i = 0; i < ta.n; ++i) {
-        if (fittingBrightness) {
+        if (fittingBrightness) { /* working with gamma-compressed values */
+            fromP->_[i] = pm_gamma709(ta.t[i].from[plane]);
+            toP->  _[i] = pm_gamma709(ta.t[i].to  [plane]);
+        } else { /* working in linear RGB */
             fromP->_[i] = ta.t[i].from[plane];
             toP->  _[i] = ta.t[i].to  [plane];
-        } else {
-            fromP->_[i] = pm_ungamma709(ta.t[i].from[plane]);
-            toP->  _[i] = pm_ungamma709(ta.t[i].to  [plane]);
         }
     }
 }
@@ -397,9 +401,12 @@ solveFmCmdlineOpts(CmdlineInfo  const cmdline,
    The transformed image has 'depth' planes.
 -----------------------------------------------------------------------------*/
     unsigned int plane;
+    SampleSet from, to;
+    /* This initialization to bypass the "may be uninitialized" warning: */
+    to  ._[0] = 0; to.  _[1] = 0; to  ._[2] = 0;
+    from._[0] = 1; from._[1] = 0; from._[2] = 0;
 
     for (plane = 0; plane < depth; ++plane) {
-        SampleSet from, to;
 
         chanData(cmdline.xlats, cmdline.fitbrightness, plane, &from, &to);
         solveOnePlane(from, to, cmdline.xlats.n, &solutionP->_[plane]);
@@ -472,6 +479,23 @@ pamlevels(CmdlineInfo const cmdline) {
 
 
 
+static void
+freeCmdLineInfo(CmdlineInfo cmdline) {
+/*----------------------------------------------------------------------------
+  Free any memory that has been dynamically allcoated in <cmdline>.
+-----------------------------------------------------------------------------*/
+    TransSet * const xxP = &cmdline.xlats;
+
+    uint x;
+
+    for (x = 0; x < xxP->n; ++x) {
+        free(xxP->t[x].from);
+        free(xxP->t[x].to);
+    }
+}
+
+
+
 int main(int    argc, const char * argv[]) {
 
     CmdlineInfo cmdline;
@@ -481,6 +505,8 @@ int main(int    argc, const char * argv[]) {
     parseCommandLine(argc, argv, &cmdline);
 
     pamlevels(cmdline);
+
+    freeCmdLineInfo(cmdline);
 
     return 0;
 }
