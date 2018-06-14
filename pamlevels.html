@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pamlevels User Manual</TITLE>
 </HEAD><BODY>
 <H1>pamlevels</H1>
-Updated: 10 April 2018
+Updated: 13 June 2018
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -40,8 +40,8 @@ color-mapping options may be shortened to <b>-f1</b>...<b>-f3</b> and
 <p>Color values have the following format:
 <i>color</i>[:<i>scale</i>], where <i>color</i> is a
 <a href="libppm.html#colorname"> Netpbm color specification</a> and
-<i>scale</i> an optional coefficient that is applied to each RGB component (in
-the standard Netpbm gamma-adjusted color space) of <i>color</i>.
+<i>scale</i> an optional coefficient that is applied to the intensity
+(i.e. <em>not</em> gamma-adjusted) of each RGB component of <i>color</i>.
 
 <p>When the transformation is linear (i.e. uses two mappings) and preserves
 zero (i.e. maps black to black), it corresponds to multiplication of light
