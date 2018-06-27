@@ -6,13 +6,14 @@
 =============================================================================*/
 #include <assert.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 #include "pm_c_util.h"
 #include "mallocvar.h"
 #include "shhopt.h"
 #include "pbm.h"
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
@@ -28,7 +29,7 @@ struct cmdlineInfo {
 
 static void
 parseCommandLine(int argc, const char ** argv,
-                 struct cmdlineInfo *cmdlineP) {
+                 struct CmdlineInfo *cmdlineP) {
 /*----------------------------------------------------------------------------
    Note that the file spec array we return is stored in the storage that
    was passed to us as the argv array.
@@ -46,13 +47,13 @@ parseCommandLine(int argc, const char ** argv,
     OPTENT3(0,   "verbose",          OPT_FLAG, NULL, &cmdlineP->verbose, 0);
     OPTENT3(0,   "black",            OPT_FLAG, NULL, &black, 0);
     OPTENT3(0,   "white",            OPT_FLAG, NULL, &white, 0);
-    OPTENT3(0,   "minneighbors",     OPT_UINT, &cmdlineP->minneighbors, 
+    OPTENT3(0,   "minneighbors",     OPT_UINT, &cmdlineP->minneighbors,
             &minneighborsSpec, 0);
     OPTENT3(0,   "extended",         OPT_FLAG, NULL, &cmdlineP->extended, 0);
 
     opt.opt_table = option_def;
-    opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
-    opt.allowNegNum = TRUE;  /* We sort of allow negative numbers as parms */
+    opt.short_allowed = false;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = true;  /* We sort of allow negative numbers as parms */
 
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
@@ -64,8 +65,8 @@ parseCommandLine(int argc, const char ** argv,
             pm_error("With -extended, you cannot specify both "
                      "-black and -white");
         else if (!black & !white) {
-            cmdlineP->flipBlack = TRUE;
-            cmdlineP->flipWhite = FALSE;
+            cmdlineP->flipBlack = true;
+            cmdlineP->flipWhite = false;
         } else {
             cmdlineP->flipBlack = !!black;
             cmdlineP->flipWhite = !!white;
@@ -77,7 +78,7 @@ parseCommandLine(int argc, const char ** argv,
         } else {
             cmdlineP->flipBlack = !!black;
             cmdlineP->flipWhite = !!white;
-        }    
+        }
     }
     if (!minneighborsSpec) {
         /* Now we do a sleazy tour through the parameters to see if
@@ -86,7 +87,7 @@ parseCommandLine(int argc, const char ** argv,
            unconventional syntax where a -N option was used instead of
            the current -minneighbors option.  The only reason -N didn't
            get processed by pm_pm_optParseOptions3() is that it looked
-           like a negative number parameter instead of an option.  
+           like a negative number parameter instead of an option.
            If we find a -N, we make like it was a -minneighbors=N option.
         */
         int i;
@@ -109,7 +110,7 @@ parseCommandLine(int argc, const char ** argv,
             --argc;
     }
 
-    if (argc-1 < 1) 
+    if (argc-1 < 1)
         cmdlineP->inputFileName = "-";
     else if (argc-1 == 1)
         cmdlineP->inputFileName = argv[1];
@@ -160,7 +161,7 @@ bitpop24(uint32_t const w){
 -----------------------------------------------------------------------------*/
     return (bitpop8((w >> 16) & 0xff) +
             bitpop8((w >>  8) & 0xff) +
-            bitpop8((w >>  0) & 0xff));  
+            bitpop8((w >>  0) & 0xff));
 }
 
 
@@ -204,11 +205,11 @@ and written to outrow at the byte boundary.
 
 
 static unsigned int
-likeNeighbors(uint32_t     const blackSample, 
+likeNeighbors(uint32_t     const blackSample,
               unsigned int const offset) {
 
     bool const thispoint = ( blackSample >> (18-offset) ) & 0x01;
-    uint32_t const sample = (thispoint == PBM_BLACK ) 
+    uint32_t const sample = (thispoint == PBM_BLACK )
                           ?   blackSample
                           : ~ blackSample ;
     uint32_t const selection = 0x701407;
@@ -238,7 +239,7 @@ setSample(const bit *  const prevrow,
         ((nextrow[col8 - 1] & 0x01)  <<  9) |
         ((nextrow[col8]           )  <<  1) |
         ((nextrow[col8 + 1] & 0x80)  >>  7);
-    
+
     return sample;
 }
 
@@ -277,7 +278,7 @@ cleanrow(const bit *    const prevrow,
 /* ----------------------------------------------------------------------
   Work through row, scanning for bits that require flipping, and write
   the results to 'outrow'.
-  
+
   Returns the number of bits flipped within this one row as *nFlippedP.
 -------------------------------------------------------------------------*/
     uint32_t sample;
@@ -350,9 +351,9 @@ setupInputBuffers(FILE *       const ifP,
 
     for (i = 0; i < pbm_packed_bytes(cols+16); ++i)
         edgeRow[i] = 0x00;
-        
+
     for (i = 0; i < 3; ++i) {
-        /* Add blank (all white) bytes beside the edges */ 
+        /* Add blank (all white) bytes beside the edges */
         buffer[i][0] = buffer[i][ pbm_packed_bytes( cols +16 ) - 1] = 0x00;
     }
     nextRow = &buffer[0][1];
@@ -374,7 +375,7 @@ setupInputBuffers(FILE *       const ifP,
 static void
 cleanSimple(FILE *             const ifP,
             FILE *             const ofP,
-            struct cmdlineInfo const cmdline,
+            struct CmdlineInfo const cmdline,
             double *           const nFlippedP) {
 /*----------------------------------------------------------------------------
    Do the traditional clean where you look only at the immediate neighboring
@@ -412,7 +413,7 @@ cleanSimple(FILE *             const ifP,
         if (row < rows -1){
             nextRow = &buffer[(row+1)%3][1];
             /* We take the address directly instead of shuffling the rows
-               with the help of a temporary.  This provision is for proper 
+               with the help of a temporary.  This provision is for proper
                handling of the initial edgerow.
             */
             pbm_readpbmrow_packed(ifP, nextRow, cols, format);
@@ -423,7 +424,7 @@ cleanSimple(FILE *             const ifP,
 
         cleanrow(prevRow, thisRow, nextRow, outRow, cols, cmdline.minneighbors,
                  cmdline.flipWhite, cmdline.flipBlack, &nFlipped);
-        
+
         *nFlippedP += nFlipped;
 
         pbm_writepbmrow_packed(ofP, outRow, cols, 0) ;
@@ -446,7 +447,7 @@ typedef struct {
    A queue of pixel locations.
 -----------------------------------------------------------------------------*/
     unsigned int size;
-    
+
     struct PixQueueElt * headP;
     struct PixQueueElt * tailP;
 } PixQueue;
@@ -495,7 +496,7 @@ pixQueue_push(PixQueue *    const queueP,
     newEltP->nextP = NULL;
     if (queueP->tailP)
         queueP->tailP->nextP = newEltP;
-    
+
     queueP->tailP = newEltP;
 
     if (!queueP->headP)
@@ -538,7 +539,7 @@ pixQueue_term(PixQueue * const queueP) {
 
     struct PixQueueElt * p;
     struct PixQueueElt * nextP;
-    
+
     for (p = queueP->headP; p; p = nextP) {
         nextP = p->nextP;
         free(p);
@@ -720,9 +721,9 @@ cleanPixels(bit **       const pixels,
         for (thisPix.col = 0; thisPix.col < cols; ++thisPix.col) {
             if (pixels[thisPix.row][thisPix.col] == foregroundColor
                 && !visited[thisPix.row][thisPix.col]) {
-                
+
                 double nFlipped;
-                
+
                 processBlob(thisPix, pixels, cols, rows, trivialSize,
                             visited, &nFlipped);
 
@@ -772,7 +773,7 @@ cleanExtended(FILE *             const ifP,
 static void
 pbmclean(FILE *             const ifP,
          FILE *             const ofP,
-         struct cmdlineInfo const cmdline,
+         struct CmdlineInfo const cmdline,
          double *           const nFlippedP) {
 
     if (cmdline.extended) {
@@ -791,7 +792,7 @@ pbmclean(FILE *             const ifP,
 int
 main(int argc, const char *argv[]) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP;
     double nFlipped;
         /* Number of pixels we have flipped so far.  Use type double to
