@@ -11,6 +11,7 @@
 */
 
 #include <stdbool.h>
+#include <assert.h>
 
 #include "pbm.h"
 #include "shhopt.h"
@@ -99,6 +100,8 @@ backcolorFmImage(bit **       const bits,
     unsigned int col;
     unsigned int wcount;
 
+    assert(cols > 0); assert(rows > 0);
+
     wcount = 0;
     for (row = 0; row < rows; ++row) {
         if (bits[row][0] == PBM_WHITE)
@@ -164,6 +167,8 @@ floodEdge(bit **       const bits,
     /* Flood the entire edge.  Probably the first call will be enough, but
        might as well be sure.
     */
+    assert(cols > 0); assert(rows > 0);
+
     for (col = cols - 3; col >= 2; col -= 2) {
         addflood(bits, mask, col, rows - 1, backcolor);
         addflood(bits, mask, col, 0, backcolor);
@@ -182,6 +187,8 @@ flood(bit **       const bits,
       unsigned int const rows,
       bit          const backcolor,
       bit **       const mask) {
+
+    assert(cols > 0); assert(rows > 0);
 
     floodEdge(bits, cols, rows, backcolor, mask);
 
@@ -284,6 +291,10 @@ pbmmask(FILE *             const ifP,
     bit backcolor;
 
     bits = pbm_readpbm(ifP, &cols, &rows);
+
+    if (cols == 0 || rows == 0)
+        pm_error("Image contains no pixels, so there is no such thing "
+                 "as background and foreground");
 
     mask = pbm_allocarray(cols, rows);
 

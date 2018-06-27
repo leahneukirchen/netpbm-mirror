@@ -16,6 +16,9 @@ not yet  BJH  Release 10.83.00
               not contain pixel resolution information.  Introduced in Netpbm
               10.48 (September 2009)
 
+              Pbmmask: Fix invalid memory reference with zero-dimension
+              input image.  Broken in primordial Netpbm, ca 1989.
+
               libnetpbm: Add pnm_colorspec_rgb_integer,
               pnm_colorspec_rgb_norm, pnm_colorspec_rgb_x11,
               pnm_colorspec_dict, pnm_colorspec_dict_close.

@@ -334,7 +334,7 @@ computeSizeRes(struct CmdlineInfo  const cmdline,
   Figure out how big the output image should be and what output device
   resolution Ghostscript should assume (return as *imageDimP).
 
-  A resolution number is the number of pixels per inch that the a
+  A resolution number is the number of pixels per inch that the
   printer prints.  Since we're emulating a printed page with a PNM
   image, and a PNM image has no spatial dimension (you can't say how
   many inches wide a PNM image is), it's kind of confusing.
@@ -347,7 +347,7 @@ computeSizeRes(struct CmdlineInfo  const cmdline,
   tell Ghostscript that our horizontal output device resolution is 500
   pixels per inch.
 
-  X and Y in all returned values is with respect to the image, not the
+  X and Y in all returned values are with respect to the image, not the
   page.  Note that the image might be placed sideways on the page, so that
   page X and Y would be reversed from image X and Y.
 -----------------------------------------------------------------------------*/
