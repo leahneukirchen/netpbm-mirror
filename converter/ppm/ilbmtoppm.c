@@ -404,6 +404,8 @@ read_clut(FILE *        const ifp,
         unsigned long remainingChunksize;
         unsigned int i;
 
+        remainingChunksize = chunksize;  /* initial value */
+
         type = get_big_long(ifp, iffid, &remainingChunksize);
         get_big_long(ifp, iffid, &remainingChunksize); /* skip reserved fld */
 
