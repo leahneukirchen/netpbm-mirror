@@ -323,7 +323,7 @@ void
 pngx_setChrm(struct pngx *      const pngxP,
              struct pngx_chroma const chroma) {
 
-    png_set_cHRM(pngxP->png_ptr, pngxP->info_ptr, 
+    png_set_cHRM(pngxP->png_ptr, pngxP->info_ptr,
                  chroma.wx, chroma.wy,
                  chroma.rx, chroma.ry,
                  chroma.gx, chroma.gy,
@@ -460,7 +460,7 @@ void
 pngx_setPhys(struct pngx *    const pngxP,
              struct pngx_phys const phys) {
 
-    png_set_pHYs(pngxP->png_ptr, pngxP->info_ptr, 
+    png_set_pHYs(pngxP->png_ptr, pngxP->info_ptr,
                  phys.x, phys.y, phys.unit);
 }
 
@@ -664,7 +664,7 @@ pngx_readStart(struct pngx * const pngxP,
                FILE *        const ifP) {
 
     size_t sigByteCt;
-            
+
     verifyFileIsPng(ifP, &sigByteCt);
 
     /* Declare that we already read the signature bytes */
@@ -711,7 +711,7 @@ pngx_writeRow(struct pngx *    const pngxP,
 void
 pngx_readEnd(struct pngx * const pngxP) {
 
-    /* Note that some of info_ptr is not defined until png_read_end() 
+    /* Note that some of info_ptr is not defined until png_read_end()
        completes.  That's because it comes from chunks that are at the
        end of the stream.  In particular, text and time chunks may
        be at the end.  Furthermore, they may be in both places, in
