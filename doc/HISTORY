@@ -14,7 +14,10 @@ not yet  BJH  Release 10.83.00
 
               pngtopam: Fix bogus warning of non-square pixels when image does
               not contain pixel resolution information.  Introduced in Netpbm
-              10.48 (September 2009)
+              10.48 (September 2009).
+
+              pstopnm: Fix divide-by-zero crash when Postscript input says
+              the image has zero size.
 
               pbmmask: Fix invalid memory reference with zero-dimension
               input image.  Broken in primordial Netpbm, ca 1989.

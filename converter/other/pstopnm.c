@@ -40,14 +40,29 @@ enum Orientation {PORTRAIT, LANDSCAPE, UNSPECIFIED};
 struct Box {
     /* Description of a rectangle within an image; all coordinates
        measured in points (1/72") with lower left corner of page being the
-       origin.
+       origin.  Negative values are OK.
     */
+    bool isDefined;
+
+    /* Nothing below is meaningful unless 'isDefined' is true */
     int llx;  /* lower left X coord */
-        /* -1 for llx means whole box is undefined. */
     int lly;  /* lower left Y coord */
     int urx;  /* upper right X coord */
     int ury;  /* upper right Y coord */
 };
+
+
+
+static void
+assertValidBox(struct Box const box) {
+
+    if (box.isDefined) {
+        assert(box.urx >= box.llx);
+        assert(box.ury >= box.lly);
+    }
+}
+
+
 
 struct Dimensions {
 /*----------------------------------------------------------------------------
@@ -188,6 +203,8 @@ parseCommandLine(int argc, char ** argv,
        command line, we default any of the 4 that aren't.
     */
     if (llxSpec || llySpec || urxSpec || urySpec) {
+        cmdlineP->extractBox.isDefined = true;
+
         if (!llxSpec) cmdlineP->extractBox.llx = 72;
         else cmdlineP->extractBox.llx = llx * 72;
         if (!llySpec) cmdlineP->extractBox.lly = 72;
@@ -197,7 +214,7 @@ parseCommandLine(int argc, char ** argv,
         if (!urySpec) cmdlineP->extractBox.ury = 720;
         else cmdlineP->extractBox.ury = ury * 72;
     } else {
-        cmdlineP->extractBox.llx = -1;
+        cmdlineP->extractBox.isDefined = false;
     }
 
     if (dpiSpec) {
@@ -277,6 +294,8 @@ computeSizeResFromSizeSpec(unsigned int        const requestedXsize,
                            unsigned int        const imageHeight,
                            struct Dimensions * const imageDimP) {
 
+    assert(imageWidth > 0);
+
     if (requestedXsize) {
         imageDimP->xsize = requestedXsize;
         imageDimP->xres = (unsigned int)
@@ -310,8 +329,12 @@ computeSizeResBlind(unsigned int        const xmax,
                     bool                const nocrop,
                     struct Dimensions * const imageDimP) {
 
-    imageDimP->xres = imageDimP->yres = MIN(xmax * 72 / imageWidth,
-                                            ymax * 72 / imageHeight);
+    if (imageWidth == 0 || imageHeight == 0) {
+        imageDimP->xres = imageDimP->yres = 72;
+    } else {
+        imageDimP->xres = imageDimP->yres = MIN(xmax * 72 / imageWidth,
+                                                ymax * 72 / imageHeight);
+    }
 
     if (nocrop) {
         imageDimP->xsize = xmax;
@@ -357,15 +380,21 @@ computeSizeRes(struct CmdlineInfo  const cmdline,
     unsigned int const sx = borderedBox.urx - borderedBox.llx;
     unsigned int const sy = borderedBox.ury - borderedBox.lly;
 
+    assertValidBox(borderedBox); assert(borderedBox.isDefined);
+
     if (cmdline.dpi) {
         /* User gave resolution; we figure out output image size */
         imageDimP->xres = imageDimP->yres = cmdline.dpi;
         imageDimP->xsize = ROUNDU(cmdline.dpi * sx / 72.0);
         imageDimP->ysize = ROUNDU(cmdline.dpi * sy / 72.0);
-    } else  if (cmdline.xsize || cmdline.ysize)
+    } else  if (cmdline.xsize || cmdline.ysize) {
+        if (sx == 0 || sy == 0)
+            pm_error("Input image is zero size; we cannot satisfy your "
+                     "produce your requested output dimensions");
+
         computeSizeResFromSizeSpec(cmdline.xsize, cmdline.ysize, sx, sy,
                                    imageDimP);
-    else
+    } else
         computeSizeResBlind(cmdline.xmax, cmdline.ymax, sx, sy, cmdline.nocrop,
                             imageDimP);
 
@@ -424,12 +453,57 @@ languageDeclaration(char const inputFileName[]) {
 
 
 static struct Box
+boundingBoxFmPostscriptFile(FILE * const ifP) {
+
+    struct Box retval;
+    bool eof;
+
+    for (retval.isDefined = false, eof = false; !retval.isDefined && !eof; ) {
+        char line[200];
+        char * fgetsRc;
+
+        fgetsRc = fgets(line, sizeof(line), ifP);
+
+        if (fgetsRc == NULL)
+            eof = true;
+        else {
+            int rc;
+            int llx, lly, urx, ury;
+
+            rc = sscanf(line, "%%%%BoundingBox: %d %d %d %d",
+                        &llx, &lly, &urx, &ury);
+            if (rc == 4) {
+                /* We found a BoundingBox statement */
+
+                if (llx > urx)
+                    pm_error("%%%%BoundingBox statement in input file has "
+                             "lower left corner to the right of the "
+                             "upper right corner");
+                if (lly > ury)
+                    pm_error("%%%%BoundingBox statement in input file has "
+                             "lower left corner above the "
+                             "upper right corner");
+
+                retval.llx = llx; retval.lly = lly;
+                retval.urx = urx; retval.ury = ury;
+                retval.isDefined = true;
+            }
+        }
+    }
+    fclose(ifP);
+
+    return retval;
+}
+
+
+
+static struct Box
 computeBoxToExtract(struct Box const cmdlineExtractBox,
                     char       const inputFileName[]) {
 
     struct Box retval;
 
-    if (cmdlineExtractBox.llx != -1)
+    if (cmdlineExtractBox.isDefined)
         /* User told us what box to extract, so that's what we'll do */
         retval = cmdlineExtractBox;
     else {
@@ -442,52 +516,35 @@ computeBoxToExtract(struct Box const cmdlineExtractBox,
             /* Can't read stdin, because we need it to remain
                positioned for the Ghostscript interpreter to read it.
             */
-            psBb.llx = -1;
+            psBb.isDefined = false;
         else {
             FILE * ifP;
-            bool foundBb;
-            bool eof;
 
             ifP = pm_openr(inputFileName);
 
-            for (foundBb = FALSE, eof = FALSE; !foundBb && !eof; ) {
-                char line[200];
-                char * fgetsRc;
+            psBb = boundingBoxFmPostscriptFile(ifP);
 
-                fgetsRc = fgets(line, sizeof(line), ifP);
-
-                if (fgetsRc == NULL)
-                    eof = TRUE;
-                else {
-                    int rc;
-                    rc = sscanf(line, "%%%%BoundingBox: %d %d %d %d",
-                                &psBb.llx, &psBb.lly,
-                                &psBb.urx, &psBb.ury);
-                    if (rc == 4)
-                        foundBb = TRUE;
-                }
-            }
-            fclose(ifP);
-
-            if (!foundBb) {
-                psBb.llx = -1;
+            if (!psBb.isDefined)
                 pm_message("Warning: no %%%%BoundingBox statement "
                            "in the input or command line.  "
                            "Will use defaults");
-            }
         }
-        if (psBb.llx != -1) {
+        if (psBb.isDefined) {
             if (verbose)
                 pm_message("Using %%%%BoundingBox statement from input.");
             retval = psBb;
         } else {
             /* Use the center of an 8.5" x 11" page with 1" border all around*/
+            retval.isDefined = true;
             retval.llx = 72;
             retval.lly = 72;
             retval.urx = 540;
             retval.ury = 720;
         }
     }
+
+    assert(retval.isDefined);
+
     if (verbose)
         pm_message("Extracting the box ((%d,%d),(%d,%d))",
                    retval.llx, retval.lly, retval.urx, retval.ury);
@@ -590,14 +647,13 @@ addBorders(struct Box const inputBox,
 
     struct Box retval;
 
-
-    assert(inputBox.urx >= inputBox.llx);
-    assert(inputBox.ury >= inputBox.lly);
+    assertValidBox(inputBox); assert(inputBox.isDefined);
 
     retval.llx = inputBox.llx - (int)leftRightBorderSize;
     retval.lly = inputBox.lly - (int)topBottomBorderSize;
     retval.urx = inputBox.urx + (int)leftRightBorderSize;
     retval.ury = inputBox.ury + (int)topBottomBorderSize;
+    retval.isDefined = true;
 
     if (verbose)
         pm_message("With borders, extracted box is ((%d,%d),(%d,%d))",
@@ -1028,6 +1084,8 @@ main(int argc, char ** argv) {
     orientation = computeOrientation(cmdline, extractBox);
 
     borderedBox = addBorders(extractBox, cmdline.xborder, cmdline.yborder);
+
+    assertValidBox(borderedBox); assert(borderedBox.isDefined);
 
     computeSizeRes(cmdline, borderedBox, &imageDim);
 
