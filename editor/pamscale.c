@@ -11,9 +11,9 @@
    people contributed code changes over the years.
 
    Copyright (C) 2003 by Michael Reinelt <reinelt@eunet.at>
-  
+
    Copyright (C) 1989, 1991 by Jef Poskanzer.
-  
+
    Permission to use, copy, modify, and distribute this software and its
    documentation for any purpose and without fee is hereby granted, provided
    that the above copyright notice appear in all copies and that both that
@@ -54,14 +54,14 @@
 
 
 /* x^2 and x^3 helper functions */
-static __inline__ double 
+static __inline__ double
 pow2(double const x) {
     return x * x;
 }
 
 
 
-static __inline__ double 
+static __inline__ double
 pow3(double const x) {
     return x * x * x;
 }
@@ -75,7 +75,7 @@ pow3(double const x) {
 #define radius_point (0.0)
 #define radius_box (0.5)
 
-static double 
+static double
 filter_box(double const x) {
 
     double const absx = x < 0.0 ? -x : x;
@@ -91,7 +91,7 @@ filter_box(double const x) {
 
 #define radius_triangle (1.0)
 
-static double 
+static double
 filter_triangle(double const x) {
 
     double const absx = x < 0.0 ? -x : x;
@@ -105,7 +105,7 @@ filter_triangle(double const x) {
 
 #define radius_quadratic (1.5)
 
-static double 
+static double
 filter_quadratic(double const x) {
 
     double const absx = x < 0.0 ? -x : x;
@@ -122,7 +122,7 @@ filter_quadratic(double const x) {
 
 #define radius_cubic (2.0)
 
-static double 
+static double
 filter_cubic(double const x) {
 
     double const absx = x < 0.0 ? -x : x;
@@ -139,7 +139,7 @@ filter_cubic(double const x) {
 
 #define radius_catrom (2.0)
 
-static double 
+static double
 filter_catrom(double const x) {
 
     double const absx = x < 0.0 ? -x : x;
@@ -158,7 +158,7 @@ filter_catrom(double const x) {
 
 #define radius_mitchell (2.0)
 
-static double 
+static double
 filter_mitchell(double x)
 {
 
@@ -187,7 +187,7 @@ filter_mitchell(double x)
 
 #define radius_gauss (1.25)
 
-static double 
+static double
 filter_gauss(double const x) {
 
     return exp(-2.0*pow2(x)) * sqrt(2.0/M_PI);
@@ -199,14 +199,14 @@ filter_gauss(double const x) {
 
 #define radius_sinc (4.0)
 
-static double 
+static double
 filter_sinc(double const x) {
     /* Note: Some people say sinc(x) is sin(x)/x.  Others say it's
        sin(PI*x)/(PI*x), a horizontal compression of the former which is
        zero at integer values.  We use the latter, whose Fourier transform
        is a canonical rectangle function (edges at -1/2, +1/2, height 1).
     */
-    return 
+    return
         x == 0.0 ? 1.0 :
         sin(M_PI*x)/(M_PI*x);
 }
@@ -218,10 +218,10 @@ filter_sinc(double const x) {
 
 #define radius_bessel (3.2383)
 
-static double 
+static double
 filter_bessel(double const x) {
 
-    return 
+    return
         x == 0.0 ? M_PI/4.0 :
         j1(M_PI * x) / (2.0 * x);
 }
@@ -232,7 +232,7 @@ filter_bessel(double const x) {
 
 #define radius_hanning (1.0)
 
-static double 
+static double
 filter_hanning(double const x) {
 
     return 0.5 * cos(M_PI * x) + 0.5;
@@ -244,7 +244,7 @@ filter_hanning(double const x) {
 
 #define radius_hamming (1.0)
 
-static double 
+static double
 filter_hamming(double const x) {
     return 0.46 * cos(M_PI * x) + 0.54;
 }
@@ -255,7 +255,7 @@ filter_hamming(double const x) {
 
 #define radius_blackman (1.0)
 
-static double 
+static double
 filter_blackman(double const x) {
     return 0.5 * cos(M_PI * x) + 0.08 * cos(2.0 * M_PI * x) + 0.42;
 }
@@ -268,12 +268,12 @@ filter_blackman(double const x) {
 #define radius_kaiser (1.0)
 
 /* modified zeroth order Bessel function of the first kind. */
-static double 
+static double
 bessel_i0(double const x) {
-  
+
     int i;
     double sum, y, t;
-  
+
     sum = 1.0;
     y = pow2(x)/4.0;
     t = y;
@@ -286,15 +286,15 @@ bessel_i0(double const x) {
 
 
 
-static double 
+static double
 filter_kaiser(double const x) {
     /* typically 4 < a < 9 */
     /* param a trades off main lobe width (sharpness) */
     /* for side lobe amplitude (ringing) */
-  
+
     double const a   = 6.5;
     double const i0a = 1.0/bessel_i0(a);
-  
+
     return i0a * bessel_i0(a * sqrt(1.0-pow2(x)));
 }
 
@@ -305,7 +305,7 @@ filter_kaiser(double const x) {
 
 #define radius_normal (1.0)
 
-static double 
+static double
 filter_normal(double const x) {
     return exp(-pow2(x)/2.0) / sqrt(2.0*M_PI);
 }
@@ -316,7 +316,7 @@ filter_normal(double const x) {
 
 #define radius_hermite  (1.0)
 
-static double 
+static double
 filter_hermite(double const x) {
     /* f(x) = 2|x|^3 - 3|x|^2 + 1, -1 <= x <= 1 */
 
@@ -333,7 +333,7 @@ filter_hermite(double const x) {
 
 #define radius_lanczos (3.0)
 
-static double 
+static double
 filter_lanczos(double const x) {
 
     double const absx = x < 0.0 ? -x : x;
@@ -352,7 +352,7 @@ typedef struct {
         /* This is how far from the Y axis (on either side) the
            function has significant value.  (You can use this to limit
            how much of your domain you bother to compute the function
-           over).  
+           over).
         */
     bool windowed;
 } filter;
@@ -420,25 +420,25 @@ struct CmdlineInfo {
     basicFunction_t filterFunction; /* NULL if not using resample method */
     basicFunction_t windowFunction;
         /* Meaningful only when filterFunction != NULL */
-    double filterRadius;           
+    double filterRadius;
         /* Meaningful only when filterFunction != NULL */
     enum scaleType scaleType;
     /* 'xsize' and 'ysize' are numbers of pixels.  Their meaning depends upon
-       'scaleType'.  for SCALE_BOXFIT and SCALE_BOXFILL, they are the box 
+       'scaleType'.  for SCALE_BOXFIT and SCALE_BOXFILL, they are the box
        dimensions.  For SCALE_SEPARATE, they are the separate dimensions, or
        zero to indicate unspecified.  For SCALE_PIXELMAX, they are
        meaningless.
     */
     unsigned int xsize;
     unsigned int ysize;
-    /* 'xscale' and 'yscale' are meaningful only for scaleType == 
+    /* 'xscale' and 'yscale' are meaningful only for scaleType ==
        SCALE_SEPARATE and only where the corresponding xsize/ysize is
        unspecified.  0.0 means unspecified.
     */
     float xscale;
     float yscale;
     /* 'pixels' is meaningful only for scaleType == SCALE_PIXELMAX */
-    unsigned int pixels; 
+    unsigned int pixels;
     unsigned int linear;
     unsigned int verbose;
 };
@@ -466,7 +466,7 @@ lookupFilterByName(const char * const filtername,
         strcpy(known_filters, "");
         for (i = 0; Filters[i].name; ++i) {
             const char * const name = Filters[i].name;
-            if (strlen(known_filters) + strlen(name) + 1 + 1 < 
+            if (strlen(known_filters) + strlen(name) + 1 + 1 <
                 sizeof(known_filters)) {
                 strcat(known_filters, name);
                 strcat(known_filters, " ");
@@ -489,13 +489,13 @@ processFilterOptions(unsigned int const         filterSpec,
     if (filterSpec) {
         filter baseFilter;
         lookupFilterByName(filterOpt, &baseFilter);
-        cmdlineP->filterFunction = baseFilter.function; 
+        cmdlineP->filterFunction = baseFilter.function;
         cmdlineP->filterRadius   = baseFilter.radius;
 
         if (windowSpec) {
             filter windowFilter;
             lookupFilterByName(windowOpt, &windowFilter);
-            
+
             if (cmdlineP->windowFunction == filter_box)
                 cmdlineP->windowFunction = NULL;
             else
@@ -526,28 +526,28 @@ parseSizeParm(const char *   const sizeString,
 
     sizeLong = strtol(sizeString, &endptr, 10);
     if (strlen(sizeString) > 0 && *endptr != '\0')
-        pm_error("%s size argument not an integer: '%s'", 
+        pm_error("%s size argument not an integer: '%s'",
                  description, sizeString);
     else if (sizeLong > INT_MAX - 2)
         pm_error("%s size argument is too large "
-                 "for computations: %ld", 
+                 "for computations: %ld",
                  description, sizeLong);
     else if (sizeLong <= 0)
-        pm_error("%s size argument is not positive: %ld", 
+        pm_error("%s size argument is not positive: %ld",
                  description, sizeLong);
     else
         *sizeP = (unsigned int) sizeLong;
-}        
+}
 
 
 
 static void
-parseXyParms(int                  const argc, 
+parseXyParms(int                  const argc,
              const char **        const argv,
              struct CmdlineInfo * const cmdlineP) {
 
     /* parameters are box width (columns), box height (rows), and
-       optional filespec 
+       optional filespec
     */
     if (argc-1 < 2)
         pm_error("You must supply at least two parameters with "
@@ -571,7 +571,7 @@ parseXyParms(int                  const argc,
 
 
 static void
-parseScaleParms(int                   const argc, 
+parseScaleParms(int                   const argc,
                 const char **         const argv,
                 struct CmdlineInfo  * const cmdlineP) {
 /*----------------------------------------------------------------------------
@@ -583,7 +583,7 @@ parseScaleParms(int                   const argc,
                  "one parameter: the scale factor.");
     else {
         cmdlineP->xscale = cmdlineP->yscale = atof(argv[1]);
-        
+
         if (cmdlineP->xscale <= 0.0)
             pm_error("The scale parameter %s is not a positive number.",
                      argv[1]);
@@ -592,7 +592,7 @@ parseScaleParms(int                   const argc,
                 cmdlineP->inputFileName = "-";
             else {
                 cmdlineP->inputFileName = argv[2];
-                
+
                 if (argc-1 > 2)
                     pm_error("Too many arguments.  There are at most two "
                              "arguments with this set of options: "
@@ -606,7 +606,7 @@ parseScaleParms(int                   const argc,
 
 
 static void
-parseFilespecOnlyParms(int                   const argc, 
+parseFilespecOnlyParms(int                   const argc,
                        const char **         const argv,
                        struct CmdlineInfo  * const cmdlineP) {
 
@@ -618,13 +618,13 @@ parseFilespecOnlyParms(int                   const argc,
 }
 
 
-static void 
-parseCommandLine(int argc, 
-                 const char ** argv, 
+static void
+parseCommandLine(int argc,
+                 const char ** argv,
                  struct CmdlineInfo  * const cmdlineP) {
 /* --------------------------------------------------------------------------
    Parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -635,7 +635,7 @@ parseCommandLine(int argc,
     optEntry * option_def;
     optStruct3 opt;
         /* Instructions to pm_optParseOptions3 on how to parse our options. */
-  
+
     unsigned int option_def_index;
     unsigned int xyfit, xyfill;
     int xsize, ysize, pixels;
@@ -665,7 +665,7 @@ parseCommandLine(int argc,
     OPTENT3(0, "window",    OPT_STRING,  &window,    &windowSpec,          0);
     OPTENT3(0, "nomix",     OPT_FLAG,    NULL,       &cmdlineP->nomix,     0);
     OPTENT3(0, "linear",    OPT_FLAG,    NULL,       &cmdlineP->linear,    0);
-  
+
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;   /* We have no parms that are negative numbers */
@@ -673,7 +673,7 @@ parseCommandLine(int argc,
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
     /* Uses and sets argc, argv, and some of *cmdlineP and others. */
 
-    if (cmdlineP->nomix && filterSpec) 
+    if (cmdlineP->nomix && filterSpec)
         pm_error("You cannot specify both -nomix and -filter.");
 
     processFilterOptions(filterSpec, filterOpt, windowSpec, window,
@@ -694,19 +694,19 @@ parseCommandLine(int argc,
         pm_error("Cannot specify both -xsize/width and -xscale.");
     if (ysizeSpec && yscaleSpec)
         pm_error("Cannot specify both -ysize/height and -yscale.");
-    
+
     if ((xyfit || xyfill) &&
-        (xsizeSpec || xscaleSpec || ysizeSpec || yscaleSpec || 
+        (xsizeSpec || xscaleSpec || ysizeSpec || yscaleSpec ||
          reduceSpec || pixelsSpec) )
         pm_error("Cannot specify -xyfit/xyfill/xysize with other "
                  "dimension options.");
     if (xyfit && xyfill)
         pm_error("Cannot specify both -xyfit and -xyfill");
-    if (pixelsSpec && 
+    if (pixelsSpec &&
         (xsizeSpec || xscaleSpec || ysizeSpec || yscaleSpec ||
          reduceSpec) )
         pm_error("Cannot specify -pixels with other dimension options.");
-    if (reduceSpec && 
+    if (reduceSpec &&
         (xsizeSpec || xscaleSpec || ysizeSpec || yscaleSpec) )
         pm_error("Cannot specify -reduce with other dimension options.");
 
@@ -722,9 +722,9 @@ parseCommandLine(int argc,
         cmdlineP->scaleType = SCALE_SEPARATE;
         parseFilespecOnlyParms(argc, argv, cmdlineP);
         cmdlineP->xsize = cmdlineP->ysize = 0;
-        cmdlineP->xscale = cmdlineP->yscale = 
+        cmdlineP->xscale = cmdlineP->yscale =
             ((double) 1.0) / ((double) reduce);
-        pm_message("reducing by %d gives scale factor of %f.", 
+        pm_message("reducing by %d gives scale factor of %f.",
                    reduce, cmdlineP->xscale);
     } else if (pixelsSpec) {
         cmdlineP->scaleType = SCALE_PIXELMAX;
@@ -746,12 +746,12 @@ parseCommandLine(int argc,
 
 
 
-static void 
-computeOutputDimensions(struct CmdlineInfo  const cmdline, 
-                        unsigned int        const cols, 
-                        unsigned int        const rows, 
+static void
+computeOutputDimensions(struct CmdlineInfo  const cmdline,
+                        unsigned int        const cols,
+                        unsigned int        const rows,
                         int *               const newcolsP,
-                        int *               const newrowsP) { 
+                        int *               const newrowsP) {
 
     double newcolsD, newrowsD;
         /* Intermediate calculation of the output dimensions, in double
@@ -775,10 +775,10 @@ computeOutputDimensions(struct CmdlineInfo  const cmdline,
     case SCALE_BOXFIT:
     case SCALE_BOXFILL: {
         double const aspect_ratio = (float) cols / (float) rows;
-        double const box_aspect_ratio = 
+        double const box_aspect_ratio =
             (float) cmdline.xsize / (float) cmdline.ysize;
-        
-        if ((box_aspect_ratio > aspect_ratio && 
+
+        if ((box_aspect_ratio > aspect_ratio &&
              cmdline.scaleType == SCALE_BOXFIT) ||
             (box_aspect_ratio < aspect_ratio &&
              cmdline.scaleType == SCALE_BOXFILL)) {
@@ -809,7 +809,7 @@ computeOutputDimensions(struct CmdlineInfo  const cmdline,
             newrowsD = rows;
     }
     }
-    
+
     /* If the rounding yields a zero dimension, we fudge it up to 1.  We do
        this rather than considering it a specification error (and dying)
        because it's friendlier to automated processes that work on arbitrary
@@ -898,9 +898,9 @@ typedef struct {
            at index 0.
         */
     unsigned int allocWeight;
-        /* Number of allocated frames in 'Weight' */ 
+        /* Number of allocated frames in 'Weight' */
     WEIGHT *Weight;
-        /* The terms of the linear combination.  Has 'nWeight' elements. 
+        /* The terms of the linear combination.  Has 'nWeight' elements.
            The coefficients (weights) of each add up to unity.
         */
 } WLIST;
@@ -911,7 +911,7 @@ typedef struct {
         /* The row number in the input image of the row.
            -1 means no row.
         */
-    tuple *tuplerow;  
+    tuple *tuplerow;
         /* The tuples of the row.
            If rowNumber = -1, these are arbitrary, but allocated, tuples.
         */
@@ -957,7 +957,7 @@ appendWeight(WLIST * const WList,
         unsigned int const n = WList->nWeight;
 
         assert(WList->allocWeight >= n+1);
-        
+
         WList->Weight[n].position = index;
         WList->Weight[n].weight   = weight;
         ++WList->nWeight;
@@ -977,7 +977,7 @@ unnormalize(double const normalized,
        wrong thing in actual practice, EG on Darwin PowerPC (my iBook
        running OS X) negative values clamp to maxval.  We get negative
        values because some of the filters (EG catrom) have negative
-       weights.  
+       weights.
     */
 
     return MIN(maxval, (sample)(MAX(0.0, (normalized*maxval + 0.5))));
@@ -1007,10 +1007,10 @@ createWeightList(unsigned int          const targetPos,
                  WLIST *               const weightListP) {
 /*----------------------------------------------------------------------------
    Create a weight list for computing target pixel number 'targetPos' from
-   a set of source pixels.  These pixels are a line of pixels either 
+   a set of source pixels.  These pixels are a line of pixels either
    horizontally or vertically.  The weight list is a list of weights to give
    each source pixel in the set.
-   
+
    The source pixel set is a window of source pixels centered on some
    point.  The weights are defined by the function 'filter' of
    the position within the window, and normalized to add up to 1.0.
@@ -1034,7 +1034,7 @@ createWeightList(unsigned int          const targetPos,
 
    We want to calculate 3 weights, one to be applied to each source pixel
    in computing the target pixel.  Ideally, we would compute the average
-   height of the filter function over each source pixel region.  But 
+   height of the filter function over each source pixel region.  But
    that's too hard.  So we approximate by assuming that the filter function
    is constant within each region, at the value the function has at the
    _center_ of the region.
@@ -1064,12 +1064,12 @@ createWeightList(unsigned int          const targetPos,
        'leftPixel' and 'rightPixel' are the pixel positions of the
        pixels at the edges of that window.  Note that if we're
        doing vertical weights, "left" and "right" mean top and
-       bottom.  
+       bottom.
     */
     double const windowCenter = ((double)targetPos + 0.5) / scale;
     double left = MAX(0.0, windowCenter - filter.radius - EPSILON);
     unsigned int const leftPixel = floor(left);
-    double right = MIN((double)sourceSize - EPSILON, 
+    double right = MIN((double)sourceSize - EPSILON,
                        windowCenter + filter.radius + EPSILON);
     unsigned int const rightPixel = floor(right);
 
@@ -1082,7 +1082,7 @@ createWeightList(unsigned int          const targetPos,
     norm = 0.0;  /* initial value */
 
     for (j = leftPixel; j <= rightPixel; ++j) {
-        /* Calculate the weight that source pixel 'j' will have in the 
+        /* Calculate the weight that source pixel 'j' will have in the
            value of target pixel 'targetPos'.
         */
         double const regionLeft   = MAX(left, (double)j);
@@ -1132,7 +1132,7 @@ createWeightListSet(unsigned int          const sourceSize,
    pixels in a region to effect a resampling.  Multiplying by these
    factors effects all of the following transformations on the
    original pixels:
-   
+
    1) Filter out any frequencies that are artifacts of the
       original sampling.  We assume a perfect sampling was done,
       which means the original continuous dataset had a maximum
@@ -1140,12 +1140,12 @@ createWeightListSet(unsigned int          const sourceSize,
       above that is an artifact of the sampling.  So we filter out
       anything above 1/2 of the original sample rate (sample rate
       == pixel resolution).
-      
+
    2) Filter out any frequencies that are too high to be captured
       by the new sampling -- i.e. frequencies above 1/2 the new
       sample rate.  This is the information we must lose because of low
       sample rate.
-      
+
    3) Sample the result at the new sample rate.
 
    We do all three of these steps in a single convolution of the
@@ -1154,7 +1154,7 @@ createWeightListSet(unsigned int          const sourceSize,
    rectangle function is a pixel domain sinc function, which is
    what we assume 'filterFunction' is.  We get Step 3 by computing
    the convolution only at the new sample points.
-   
+
    I don't know what any of this means when 'filterFunction' is
    not sinc.  Maybe it just means some approximation or additional
    filtering steps are happening.
@@ -1164,7 +1164,7 @@ createWeightListSet(unsigned int          const sourceSize,
     unsigned int targetPos;
 
     MALLOCARRAY_NOFAIL(weightListSet, targetSize);
-    
+
     for (targetPos = 0; targetPos < targetSize; ++targetPos)
         createWeightList(targetPos, sourceSize, scale, filterFunction,
                          &weightListSet[targetPos]);
@@ -1210,7 +1210,7 @@ makeFilterFunction(double          const scale,
 
     retval.basicFunction = basicFunction;
     retval.windowFunction = windowFunction;
-    
+
     retval.horizontalScaler = freqLimit;
 
     /* Our 'windowFunction' argument is a function normalized to the
@@ -1235,11 +1235,11 @@ makeFilterFunction(double          const scale,
 
     return retval;
 }
-                   
 
-                   
+
+
 static void
-destroyWeightListSet(WLIST *      const weightListSet, 
+destroyWeightListSet(WLIST *      const weightListSet,
                      unsigned int const size) {
 
     unsigned int i;
@@ -1264,14 +1264,14 @@ createScanBuf(struct pam * const pamP,
     scanbuf.width = pamP->width;
     scanbuf.height = maxRowWeights;
     MALLOCARRAY_NOFAIL(scanbuf.line, scanbuf.height);
-  
+
     for (lineNumber = 0; lineNumber < scanbuf.height; ++lineNumber) {
         scanbuf.line[lineNumber].rowNumber = -1;
         scanbuf.line[lineNumber].tuplerow = pnm_allocpamrow(pamP);
     }
-  
+
     if (verbose)
-        pm_message("scanline buffer: %d lines of %d pixels", 
+        pm_message("scanline buffer: %d lines of %d pixels",
                    scanbuf.height, scanbuf.width);
 
     *scanbufP = scanbuf;
@@ -1296,10 +1296,10 @@ static void
 resampleDimensionMessage(struct pam * const inpamP,
                          struct pam * const outpamP) {
 
-    pm_message ("resampling from %d*%d to %d*%d (%f, %f)", 
-                inpamP->width, inpamP->height, 
+    pm_message ("resampling from %d*%d to %d*%d (%f, %f)",
+                inpamP->width, inpamP->height,
                 outpamP->width, outpamP->height,
-                (double)outpamP->width/inpamP->width, 
+                (double)outpamP->width/inpamP->width,
                 (double)outpamP->height/inpamP->height);
 }
 
@@ -1325,12 +1325,12 @@ addInPixel(const struct pam * const pamP,
     for (plane = 0; plane < pamP->depth; ++plane) {
         double const normalizedSample = (double)tuple[plane]/pamP->maxval;
         double opacityAdjustment;
-        
+
         if (haveOpacity && plane != opacityPlane)
             opacityAdjustment = (double)tuple[opacityPlane]/pamP->maxval;
         else
             opacityAdjustment = 1;
-        
+
         accum[plane] += opacityAdjustment * normalizedSample * weight;
     }
 }
@@ -1340,7 +1340,7 @@ addInPixel(const struct pam * const pamP,
 static void
 generateOutputTuple(const struct pam * const pamP,
                     double             const accum[],
-                    bool               const haveOpacity, 
+                    bool               const haveOpacity,
                     unsigned int       const opacityPlane,
                     tuple *            const tupleP) {
 /*----------------------------------------------------------------------------
@@ -1358,7 +1358,7 @@ generateOutputTuple(const struct pam * const pamP,
         if (haveOpacity && plane != opacityPlane) {
             if (accum[opacityPlane] < EPSILON) {
                 opacityAdjustedSample = 0.0;
-            } else 
+            } else
                 opacityAdjustedSample = accum[plane] / accum[opacityPlane];
         } else
             opacityAdjustedSample = accum[plane];
@@ -1377,7 +1377,7 @@ outputOneResampledRow(const struct pam * const outpamP,
                       tuple *            const line,
                       double *           const accum) {
 /*----------------------------------------------------------------------------
-   From the data in 'scanbuf' and weights in 'YW' and 'XWeight', 
+   From the data in 'scanbuf' and weights in 'YW' and 'XWeight',
    generate one output row for the image described by *outpamP and
    output it.
 
@@ -1411,24 +1411,24 @@ outputOneResampledRow(const struct pam * const outpamP,
             for (plane = 0; plane < outpamP->depth; ++plane)
                 accum[plane] = 0.0;
         }
-        
+
         for (i = 0; i < YW.nWeight; ++i) {
             int   const yp   = YW.Weight[i].position;
             float const yw   = YW.Weight[i].weight;
             int   const slot = yp % scanbuf.height;
 
             unsigned int j;
-            
+
             for (j = 0; j < XW.nWeight; ++j) {
                 int   const xp    = XW.Weight[j].position;
                 tuple const tuple = scanbuf.line[slot].tuplerow[xp];
-                
-                addInPixel(outpamP, tuple, yw * XW.Weight[j].weight, 
+
+                addInPixel(outpamP, tuple, yw * XW.Weight[j].weight,
                            haveOpacity, opacityPlane,
                            accum);
             }
         }
-        generateOutputTuple(outpamP, accum, haveOpacity, opacityPlane, 
+        generateOutputTuple(outpamP, accum, haveOpacity, opacityPlane,
                             &line[col]);
     }
     pnm_writepamrow(outpamP, line);
@@ -1447,7 +1447,7 @@ scanbufContainsTheRows(SCAN  const scanbuf,
 -----------------------------------------------------------------------------*/
     bool missingRow;
     unsigned int i;
-    
+
     for (i = 0, missingRow = FALSE;
          i < rowWeights.nWeight && !missingRow;
         ++i) {
@@ -1481,7 +1481,7 @@ createWeightLists(struct pam *     const inpamP,
 /*----------------------------------------------------------------------------
    This is the function that actually does the resampling.  Note that it
    does it without ever looking at the source or target pixels!  It produces
-   a simple set of numbers that Caller can blindly apply to the source 
+   a simple set of numbers that Caller can blindly apply to the source
    pixels to get target pixels.
 -----------------------------------------------------------------------------*/
     struct filterFunction horizFilter, vertFilter;
@@ -1490,14 +1490,14 @@ createWeightLists(struct pam *     const inpamP,
         (double)outpamP->width/inpamP->width,
         filterFunction, filterRadius, windowFunction);
 
-    createWeightListSet(inpamP->width, outpamP->width, horizFilter, 
+    createWeightListSet(inpamP->width, outpamP->width, horizFilter,
                         horizWeightP);
-    
+
     vertFilter = makeFilterFunction(
         (double)outpamP->height/inpamP->height,
         filterFunction, filterRadius, windowFunction);
 
-    createWeightListSet(inpamP->height, outpamP->height, vertFilter, 
+    createWeightListSet(inpamP->height, outpamP->height, vertFilter,
                         vertWeightP);
 
     *maxRowWeightsP = ceil(2.0*(vertFilter.radius+EPSILON) + 1 + EPSILON);
@@ -1516,12 +1516,12 @@ resample(struct pam *     const inpamP,
 /*---------------------------------------------------------------------------
   Resample the image in the input file, described by *inpamP,
   so as to create the image in the output file, described by *outpamP.
-  
+
   Input and output differ by height, width, and maxval only.
 
   Use the resampling filter function 'filterFunction', applied over
   radius 'filterRadius'.
-  
+
   The input file is positioned past the header, to the beginning of the
   raster.  The output file is too.
 ---------------------------------------------------------------------------*/
@@ -1539,7 +1539,7 @@ resample(struct pam *     const inpamP,
     if (linear)
         pm_error("You cannot use the resampling scaling method on "
                  "linear input.");
-  
+
     createWeightLists(inpamP, outpamP, filterFunction, filterRadius,
                       windowFunction, &horizWeight, &vertWeight,
                       &maxRowWeights);
@@ -1576,10 +1576,10 @@ resample(struct pam *     const inpamP,
                    i.e. what fractions of which input rows combine to create
                    this output row.
                 */
-            assert(rowWeights.nWeight <= scanbuf.height); 
+            assert(rowWeights.nWeight <= scanbuf.height);
 
             if (scanbufContainsTheRows(scanbuf, rowWeights)) {
-                outputOneResampledRow(outpamP, scanbuf, rowWeights, 
+                outputOneResampledRow(outpamP, scanbuf, rowWeights,
                                       horizWeight, line, weight);
                 ++outputRow;
             } else
@@ -1609,7 +1609,7 @@ resample(struct pam *     const inpamP,
 static void
 zeroNewRow(struct pam * const pamP,
            tuplen *     const tuplenrow) {
-    
+
     unsigned int col;
 
     for (col = 0; col < pamP->width; ++col) {
@@ -1625,7 +1625,7 @@ zeroNewRow(struct pam * const pamP,
 static void
 accumOutputCol(struct pam * const pamP,
                tuplen       const intuplen,
-               float        const fraction, 
+               float        const fraction,
                tuplen       const accumulator) {
 /*----------------------------------------------------------------------------
    Add fraction 'fraction' of the pixel indicated by 'intuplen' to the
@@ -1645,7 +1645,7 @@ accumOutputCol(struct pam * const pamP,
 
 
 static void
-horizontalScale(tuplen *     const inputtuplenrow, 
+horizontalScale(tuplen *     const inputtuplenrow,
                 tuplen *     const newtuplenrow,
                 struct pam * const inpamP,
                 struct pam * const outpamP,
@@ -1683,7 +1683,7 @@ horizontalScale(tuplen *     const inputtuplenrow,
             /* Generate one output pixel in 'newtuplerow'.  It will
                consist of anything accumulated from prior input pixels
                in accumulator[], plus a fraction of the current input
-               pixel.  
+               pixel.
             */
             assert(newcol < outpamP->width);
             accumOutputCol(inpamP, inputtuplenrow[col], fraccoltofill,
@@ -1695,7 +1695,7 @@ horizontalScale(tuplen *     const inputtuplenrow,
             ++newcol;
             fraccoltofill = 1.0;
         }
-        /* There's not enough left in the current input pixel to fill up 
+        /* There's not enough left in the current input pixel to fill up
            a whole output column, so just accumulate the remainder of the
            pixel into the current output column.  Because of rounding, we may
            have a tiny bit of pixel left and have run out of output pixels.
@@ -1714,17 +1714,17 @@ horizontalScale(tuplen *     const inputtuplenrow,
                  newcol, outpamP->width-1);
 
     if (newcol < outpamP->width) {
-        /* We were still working on the last output column when we 
+        /* We were still working on the last output column when we
            ran out of input columns.  This would be because of rounding
            down, and we should be missing only a tiny fraction of that
            last output column.  Just fill in the missing color with the
            color of the rightmost input pixel.
         */
-        accumOutputCol(inpamP, inputtuplenrow[inpamP->width-1], 
+        accumOutputCol(inpamP, inputtuplenrow[inpamP->width-1],
                        fraccoltofill, newtuplenrow[newcol]);
-        
+
         *stretchP = fraccoltofill;
-    } else 
+    } else
         *stretchP = 0.0;
 }
 
@@ -1747,11 +1747,11 @@ zeroAccum(struct pam * const pamP,
 
 static void
 accumOutputRow(struct pam * const pamP,
-               tuplen *     const tuplenrow, 
-               float        const fraction, 
+               tuplen *     const tuplenrow,
+               float        const fraction,
                tuplen *     const accumulator) {
 /*----------------------------------------------------------------------------
-   Take 'fraction' times the samples in row 'tuplenrow' and add it to 
+   Take 'fraction' times the samples in row 'tuplenrow' and add it to
    'accumulator' in the same way as accumOutputCol().
 
    'fraction' is less than 1.0.
@@ -1838,7 +1838,7 @@ writeARow(struct pam *             const pamP,
 
 
 static void
-issueStretchWarning(bool   const verbose, 
+issueStretchWarning(bool   const verbose,
                     double const fracrowtofill) {
 
     /* We need another input row to fill up this
@@ -1847,11 +1847,11 @@ issueStretchWarning(bool   const verbose,
        scaling arithmetic.  So we go ahead with
        the data from the last row we read, which
        amounts to stretching out the last output
-       row.  
+       row.
     */
     if (verbose)
         pm_message("%f of bottom row stretched because of "
-                   "arithmetic imprecision", 
+                   "arithmetic imprecision",
                    fracrowtofill);
 }
 
@@ -1873,21 +1873,21 @@ scaleHorizontallyAndOutputRow(struct pam *             const inpamP,
    'newtuplenrow' is work space Caller provides us.  It is at least
    wide enough to hold one output row.
 -----------------------------------------------------------------------------*/
-    if (outpamP->width == inpamP->width)    
+    if (outpamP->width == inpamP->width)
         /* shortcut X scaling */
         writeARow(outpamP, rowAccumulator, transform);
             /* This destroys 'rowAccumulator' */
     else {
         float stretch;
-            
+
         horizontalScale(rowAccumulator, newtuplenrow, inpamP, outpamP,
                         xscale, &stretch);
-            
+
         if (verbose && row == 0)
             pm_message("%f of right column stretched because of "
-                       "arithmetic imprecision", 
+                       "arithmetic imprecision",
                        stretch);
-            
+
         writeARow(outpamP, newtuplenrow, transform);
             /* This destroys 'newtuplenrow' */
     }
@@ -1919,7 +1919,7 @@ destroyTransforms(const pnm_transformMap * const inputTransform,
 
     if (inputTransform)
         free((void*)inputTransform);
-    
+
     if (outputTransform)
         free((void*)outputTransform);
 }
@@ -1929,7 +1929,7 @@ destroyTransforms(const pnm_transformMap * const inputTransform,
 static void
 scaleWithMixing(struct pam * const inpamP,
                 struct pam * const outpamP,
-                float        const xscale, 
+                float        const xscale,
                 float        const yscale,
                 bool         const assumeLinear,
                 bool         const verbose) {
@@ -1950,8 +1950,8 @@ scaleWithMixing(struct pam * const inpamP,
   approximate but fast results).
 
 -----------------------------------------------------------------------------*/
-    /* Here's how we think of the color mixing scaling operation:  
-       
+    /* Here's how we think of the color mixing scaling operation:
+
        First, I'll describe scaling in one dimension.  Assume we have
        a one row image.  A raster row is ordinarily a sequence of
        discrete pixels which have no width and no distance between
@@ -1973,7 +1973,7 @@ scaleWithMixing(struct pam * const inpamP,
        look the same.
 
        This works for all scale factors, both scaling up and scaling down.
-       
+
        For images with an opacity plane, imagine Input Pixel 0's
        foreground is fully opaque red (1,0,0,1), and Input Pixel 1 is
        fully transparent (foreground irrelevant) (0,0,0,0).  We make
@@ -1994,14 +1994,14 @@ scaleWithMixing(struct pam * const inpamP,
        stretch the image vertically first (same process as above, but
        in place of a single-color pixels, we have a vector of colors).
        Then we take each row this vertical stretching generates and
-       stretch it horizontally.  
+       stretch it horizontally.
     */
 
     tuplen * tuplenrow;     /* An input row */
     tuplen * newtuplenrow;  /* Working space */
     float rowsleft;
     /* The number of rows of output that need to be formed from the
-       current input row (the one in tuplerow[]), less the number that 
+       current input row (the one in tuplerow[]), less the number that
        have already been formed (either in accumulator[]
        or output to the file).  This can be fractional because of the
        way we define rows as having height.
@@ -2021,8 +2021,8 @@ scaleWithMixing(struct pam * const inpamP,
     int row;
     const pnm_transformMap * inputTransform;
     const pnm_transformMap * outputTransform;
-    
-    tuplenrow = pnm_allocpamrown(inpamP); 
+
+    tuplenrow = pnm_allocpamrown(inpamP);
     rowAccumulator = pnm_allocpamrown(inpamP);
 
     rowsread = 0;
@@ -2087,7 +2087,7 @@ scaleWithMixing(struct pam * const inpamP,
 static void
 scaleWithoutMixing(const struct pam * const inpamP,
                    const struct pam * const outpamP,
-                   float              const xscale, 
+                   float              const xscale,
                    float              const yscale) {
 /*----------------------------------------------------------------------------
   Scale the image described by *inpamP by xscale horizontally and
@@ -2096,9 +2096,9 @@ scaleWithoutMixing(const struct pam * const inpamP,
 
   The input file is positioned past the header, to the beginning of the
   raster.  The output file is too.
-  
+
   Don't mix colors from different input pixels together in the output
-  pixels.  Each output pixel is an exact copy of some corresponding 
+  pixels.  Each output pixel is an exact copy of some corresponding
   input pixel.
 -----------------------------------------------------------------------------*/
     tuple * tuplerow;  /* An input row */
@@ -2109,22 +2109,22 @@ scaleWithoutMixing(const struct pam * const inpamP,
     assert(outpamP->maxval == inpamP->maxval);
     assert(outpamP->depth  == inpamP->depth);
 
-    tuplerow = pnm_allocpamrow(inpamP); 
+    tuplerow = pnm_allocpamrow(inpamP);
     rowInInput = -1;
 
     newtuplerow = pnm_allocpamrow(outpamP);
 
     for (row = 0; row < outpamP->height; ++row) {
         int col;
-        
+
         int const inputRow = (int) (row / yscale);
 
-        for (; rowInInput < inputRow; ++rowInInput) 
+        for (; rowInInput < inputRow; ++rowInInput)
             pnm_readpamrow(inpamP, tuplerow);
-        
+
         for (col = 0; col < outpamP->width; ++col) {
             int const inputCol = (int) (col / xscale);
-            
+
             pnm_assigntuple(inpamP, newtuplerow[col], tuplerow[inputCol]);
         }
 
@@ -2140,7 +2140,7 @@ static void
 pamscale(FILE *             const ifP,
          FILE *             const ofP,
          struct CmdlineInfo const cmdline) {
-    
+
     struct pam inpam, outpam;
     float xscale, yscale;
 
@@ -2158,21 +2158,21 @@ pamscale(FILE *             const ifP,
         outpam.maxval = inpam.maxval;
     }
 
-    computeOutputDimensions(cmdline, inpam.width, inpam.height, 
+    computeOutputDimensions(cmdline, inpam.width, inpam.height,
                             &outpam.width, &outpam.height);
 
     xscale = (float) outpam.width / inpam.width;
     yscale = (float) outpam.height / inpam.height;
 
     if (cmdline.verbose) {
-        pm_message("Scaling by %f horizontally to %d columns.", 
+        pm_message("Scaling by %f horizontally to %d columns.",
                    xscale, outpam.width);
-        pm_message("Scaling by %f vertically to %d rows.", 
+        pm_message("Scaling by %f vertically to %d rows.",
                    yscale, outpam.height);
     }
 
     if (xscale * inpam.width < outpam.width - 1 ||
-        yscale * inpam.height < outpam.height - 1) 
+        yscale * inpam.height < outpam.height - 1)
         pm_error("Arithmetic precision of this program is inadequate to "
                  "do the specified scaling.  Use a smaller input image "
                  "or a slightly different scale factor.");
@@ -2186,7 +2186,7 @@ pamscale(FILE *             const ifP,
     } else if (!cmdline.filterFunction) {
         if (cmdline.verbose)
             pm_message("Using simple pixel mixing rescaling method");
-        scaleWithMixing(&inpam, &outpam, xscale, yscale, 
+        scaleWithMixing(&inpam, &outpam, xscale, yscale,
                         cmdline.linear, cmdline.verbose);
     } else {
         if (cmdline.verbose)
@@ -2221,6 +2221,6 @@ main(int argc, const char **argv ) {
 
     pm_close(ifP);
     pm_close(stdout);
-    
+
     return 0;
 }
