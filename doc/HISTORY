@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+18.06.27 BJH  Release 10.73.20
+
+              Pngtopam: Fix bogus warning of non-square pixels when image does
+              not contain pixel resolution information.  Introduced in Netpbm
+              10.48 (September 2009)
+
 18.04.28 BJH  Release 10.73.19
 
               ilbmtoppm: Fix bug: may fail with bogus error message about an

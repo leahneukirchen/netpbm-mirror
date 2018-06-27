@@ -1238,9 +1238,8 @@ static void
 warnNonsquarePixels(struct pngx * const pngxP,
                     int *         const errorLevelP) {
 
-    if (pngx_chunkIsPresent(pngxP, PNG_INFO_pHYs)) {
-        float const r =
-            (float)pngx_xPixelsPerMeter(pngxP) / pngx_yPixelsPerMeter(pngxP);
+    if (pngx_pixelAspectRatioIsKnown(pngxP)) {
+        float const r = pngx_pixelAspectRatio(pngxP);
 
         if (r != 1.0) {
             const char * const baseMsg = "warning - non-square pixels";
