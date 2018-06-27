@@ -12,11 +12,11 @@ not yet  BJH  Release 10.83.00
 
               Add rgb-<maxval>:r/g/b color specification format.
 
-              Pngtopam: Fix bogus warning of non-square pixels when image does
+              pngtopam: Fix bogus warning of non-square pixels when image does
               not contain pixel resolution information.  Introduced in Netpbm
               10.48 (September 2009)
 
-              Pbmmask: Fix invalid memory reference with zero-dimension
+              pbmmask: Fix invalid memory reference with zero-dimension
               input image.  Broken in primordial Netpbm, ca 1989.
 
               libnetpbm: Add pnm_colorspec_rgb_integer,
