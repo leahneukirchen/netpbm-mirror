@@ -270,15 +270,39 @@ pngx_trns(struct pngx * const pngxP) {
 
 uint32_t
 pngx_xPixelsPerMeter(struct pngx * const pngxP) {
-
+/*----------------------------------------------------------------------------
+  Horizontal pixel density in pixel per meter; 0 if unknown.
+-----------------------------------------------------------------------------*/
     return png_get_x_pixels_per_meter(pngxP->png_ptr, pngxP->info_ptr);
+}
+
+
+
+float
+pngx_pixelAspectRatio(struct pngx * const pngxP) {
+/*----------------------------------------------------------------------------
+  Aspect ratio - y/x.  0.0 if unknown
+-----------------------------------------------------------------------------*/
+    return png_get_pixel_aspect_ratio(pngxP->png_ptr, pngxP->info_ptr);
+}
+
+
+
+bool
+pngx_pixelAspectRatioIsKnown(struct pngx * const pngxP) {
+/*----------------------------------------------------------------------------
+  There is pixel aspect ratio information in the PNG image.
+-----------------------------------------------------------------------------*/
+    return png_get_pixel_aspect_ratio(pngxP->png_ptr, pngxP->info_ptr) != 0.0;
 }
 
 
 
 uint32_t
 pngx_yPixelsPerMeter(struct pngx * const pngxP) {
-
+/*----------------------------------------------------------------------------
+  Vertical pixel density in pixel per meter; 0 if unknown.
+-----------------------------------------------------------------------------*/
     return png_get_y_pixels_per_meter(pngxP->png_ptr, pngxP->info_ptr);
 }
 

@@ -116,6 +116,12 @@ pngx_xPixelsPerMeter(struct pngx * const pngxP);
 uint32_t
 pngx_yPixelsPerMeter(struct pngx * const pngxP);
 
+float
+pngx_pixelAspectRatio(struct pngx * const pngxP);
+
+bool
+pngx_pixelAspectRatioIsKnown(struct pngx * const pngxP);
+
 void
 pngx_removeChunk(struct pngx * const pngxP,
                  uint32_t      const chunkType);
