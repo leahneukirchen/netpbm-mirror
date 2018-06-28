@@ -1037,6 +1037,11 @@ main(int argc, char ** argv) {
     borderedBox = addBorders(extractBox, cmdline.xborder, cmdline.yborder);
 
     computeSizeRes(cmdline, borderedBox, &imageDim);
+
+    if (imageDim.xres == 0)
+        imageDim.xres = 1;
+    if (imageDim.yres == 0)
+        imageDim.yres = 1;
     
     outfileArg = computeOutfileArg(cmdline);
 
