@@ -4,6 +4,14 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+18.06.28 BJH  Release 10.82.03
+
+              pbmmask: Fix invalid memory reference with zero-dimension
+              input image.  Broken in primordial Netpbm, ca 1989.
+
+              pstopnm: Fix divide-by-zero crash when Postscript input says
+              the image has zero size.
+
 18.06.27 BJH  Release 10.82.02
 
               Pngtopam: Fix bogus warning of non-square pixels when image does
