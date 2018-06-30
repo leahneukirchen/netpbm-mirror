@@ -4,10 +4,17 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-18.06.28 BJH  Release 10.82.03
+18.06.30 BJH  Release 10.83.00
 
-              pbmmask: Fix invalid memory reference with zero-dimension
-              input image.  Broken in primordial Netpbm, ca 1989.
+              Add pamlevels.  Thanks Anton Shepelev <anton.txt@gmail.com>.
+
+              Add pamgetcolor.  Thanks Anton Shepelev <anton.txt@gmail.com>.
+
+              Add rgb-<maxval>:r/g/b color specification format.
+
+              pngtopam: Fix bogus warning of non-square pixels when image does
+              not contain pixel resolution information.  Introduced in Netpbm
+              10.48 (September 2009).
 
               pstopnm: Fix divide-by-zero crash when Postscript input says
               the image has zero size.
@@ -15,13 +22,21 @@ CHANGE HISTORY
               pstopnm: Fix divide-by-zero crash when computed resolution
               rounds down to zero dots per inch.
 
-18.06.27 BJH  Release 10.82.02
+              pbmmask: Fix invalid memory reference with zero-dimension
+              input image.  Broken in primordial Netpbm, ca 1989.
 
-              Pngtopam: Fix bogus warning of non-square pixels when image does
-              not contain pixel resolution information.  Introduced in Netpbm
-              10.48 (September 2009)
+              libnetpbm: Add pnm_colorspec_rgb_integer,
+              pnm_colorspec_rgb_norm, pnm_colorspec_rgb_x11,
+              pnm_colorspec_dict, pnm_colorspec_dict_close.
 
-18.04.28 BJH  Release 10.82.01
+              libnetpbm: Add pnm_parsecolor2.
+
+              libnetpbm: Add pnm_allocpamtuplen, pnm_freepamtuplen.
+              
+              libnetpbm: Make the normalized tuple functions respect the
+              allocation depth specified in struct pam (member
+              'allocation_depth') instead of using the actual tuple depth
+              (member 'depth').
 
               ilbmtoppm: Fix bug: may fail with bogus error message about an
               invalid CLUT chunk if image has a CLUT chunk.  Introduced after
@@ -155,6 +170,8 @@ CHANGE HISTORY
               ppmshadow: Improve results for very small maxval.
 
               ppmshadow: eliminate extraneous messages from pnmconvol.
+
+              libnetpbm: Add pnm_parsecolorn().
 
               libnetpbm: Improve error message for purported image that is
               exactly 1 byte long (so ends in the middle of what would be the

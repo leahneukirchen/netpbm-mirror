@@ -1,3 +1,5 @@
+Please cut and paste from below:
+---------------------------------------------------------------------------
 Contents
 ========
 
@@ -91,6 +93,7 @@ The tests use the following utilities:
  - grep
  - file
  - head
+ - iconv
  - mkdir
  - mktemp
  - rm
@@ -208,18 +211,23 @@ test/Execute-Tests:
 
   vg_command_base="valgrind --trace-children=yes"
 
-To run "valgrind --track-origins=yes", you must make two changes in
-config.mk:
+To get useful information from "--trace-origins=yes", you must make
+two changes to config.mk before compilation:
 
   - Add -g to CFLAGS
   - Turn stripping off: STRIPFLAG =
+
+Without these changes valgrind will report how many errors were
+detected, of what kind, and at what addresses (in binary).  With the
+above "-g" turned on during compilation valgrind reports source file
+and line numbers of detected problems.
 
 Valgrind significantly increases execution time.  If ordinary
 "make check" requires 10 seconds, "make check VALGRIND_TESTS=on"
 will require roughly 12 minutes, maybe more.  You should consider
 either setting "target=..." or paring down the items in Test-Order.
 In the latter case, you probably don't need to run "all-in-place.test"
-and "legacy-names.test".
+and "legacy-names.test"; consider commenting them out.
 
 The option "--trace-children-skip" is used to prevent valgrind from
 stepping into child processes that are not relevant.  This option
@@ -255,8 +263,8 @@ won't know and quite certainly you'll get failure messages.
 If you run the tests as "make check-install" information about
 configuration choices is deliberately ignored.  This is because the
 post-install check is typically run on systems with multiple versions
-of Netpbm and in this case users want to get a clear idea of absent
-components.
+of Netpbm and in this case most users would want to get a clear idea
+of absent components.
 
 For details on the effects of missing libraries, read
 'Netpbm Library Prerequisites':
@@ -280,6 +288,9 @@ When a test fails, a ".out" file will be produced in the
 /tmp/netpbm-test/ directory.  By comparing ".ok" and ".out" you
 can tell exactly what went wrong.  Often one does not need to
 go this far; the error messages tell enough.
+
+In some cases the ".ok" file is generated dynamically.  See "2.5
+System Dependent Issues."
 
 
 
@@ -345,22 +356,33 @@ the tests on installed Netpbm programs, regardless of the version:
    ./configure           # accept the defaults
    make check-install
 
+As of this writing (April 2018) Debian is working on resolving the
+fork.  A new version, tagged as "experimental", based on the Sourceforge
+line of source files is available.
+
+
 
 2.5 System dependent issues
 ===========================
 
-The tests have worked on x86 and x86_64 GNU/Linux systems, with several
-versions of GCC and Clang.  Reports from users of other systems including Mac
-OS, Sun SPARC and BSD and compilers other than GCC are highly welcome.
+The tests have worked on x86 and x86_64 GNU/Linux systems and with several
+versions of GCC and Clang and also Mac OS/Clang.  Reports from users of
+other systems including OS, Sun SPARC and BSD and compilers other than
+GCC are highly welcome.
 
 Floating point math precision seems to be an issue.  Some discrepancies
 have been observed between x86 32 bit and 64 bit; the tests are written to
 work around them as much as possible.  The use of the "--fast-math"
-flag by default may also be a factor.
+c compiler flag by default may also be a factor.
 
-The current test framework checks whether the random number generator
-is the one from glibc and skips certain tests if a different one is
-detected.
+Another cause of discrepancies is the qsort function.  The tests are
+written to circumvent this issue at some cost to accuracy and
+coverage.
+
+The test directory Makefile checks whether the random number generator
+is the one from glibc or Mac OS and automatically generates the proper
+".ok" files from master files with the suffix ".rand-ok".  If some other
+random number generator is detected the affected tests are skipped.
 
 
 
@@ -370,3 +392,7 @@ detected.
 When reporting problems with the tests, please give both
 the output of "make check" and the contents of the "netpbm-test"
 directory.
+
+
+
+

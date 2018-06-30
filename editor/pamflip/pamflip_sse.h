@@ -7,6 +7,6 @@ struct pam;
 void
 pamflip_transformRowsToColumnsPbmSse(const struct pam *     const inpamP,
                                      const struct pam *     const outpamP,
-                                     struct xformCore       const xformCore);
+                                     struct XformCore       const xformCore);
 
 #endif

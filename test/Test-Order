@@ -12,6 +12,9 @@ pamseq.test
 
 pbmpage.test
 pbmtext.test
+pbmtext-bdf.test
+pbmtext-iso88591.test
+pbmtext-utf8.test
 pbmupc.test
 pgmramp.test
 pamgauss.test

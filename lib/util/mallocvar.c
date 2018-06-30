@@ -30,7 +30,7 @@ allocarrayNoHeap(void **      const rowIndex,
         void * rowSpace;
 
         mallocProduct(&rowSpace, cols, elementSize);
-        
+
         if (rowSpace == NULL) {
             unsigned int row;
 
@@ -123,7 +123,7 @@ pm_mallocarray2(void **      const resultP,
 
             if (rowheap) {
                 unsigned int row;
-                
+
                 for (row = 0; row < rows; ++row)
                     rowIndex[row] = &(rowheap[row * cols * elementSize]);
             }
@@ -133,7 +133,7 @@ pm_mallocarray2(void **      const resultP,
                format.
             */
             rowIndex[rows+1] = NULL;   /* Declare it fragmented format */
-            
+
             allocarrayNoHeap(rowIndex, rows, cols, elementSize, &failed);
         }
         rowIndex[rows+0] = NULL;   /* mark end of rows */
@@ -151,7 +151,7 @@ array2RowCount(void ** const rowIndex) {
 /*----------------------------------------------------------------------------
    Return the number of rows in the 2-dimensional array.
 -----------------------------------------------------------------------------*/
-    /* The end of the rows is marked by a null pointer where a row 
+    /* The end of the rows is marked by a null pointer where a row
        pointer otherwise would be.
     */
 

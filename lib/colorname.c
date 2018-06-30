@@ -32,7 +32,7 @@ static int lineNo;
 
 
 
-void 
+void
 pm_canonstr(char * const arg) {
 /*----------------------------------------------------------------------------
    Modify string 'arg' to canonical form: lower case, no white space.
@@ -93,7 +93,7 @@ pm_openColornameFile(const char * const fileName, const int must_open) {
    environment variable whose name is RGB_ENV (e.g. "RGBDEF").  Except
    if that environment variable is not set, it is the first file found,
    if any, in the search path RGB_DB_PATH.
-   
+
    'must_open' is a logical: we must get the file open or die.  If
    'must_open' is true and we can't open the file (e.g. it doesn't
    exist), exit the program with an error message.  If 'must_open' is
@@ -111,7 +111,7 @@ pm_openColornameFile(const char * const fileName, const int must_open) {
                          "named %s, per the %s environment variable.  "
                          "errno = %d (%s)",
                          rgbdef, RGBENV, errno, strerror(errno));
-        } else {            
+        } else {
             /* The environment variable isn't set, so try the hardcoded
                default color name dictionary locations.
             */
@@ -122,7 +122,7 @@ pm_openColornameFile(const char * const fileName, const int must_open) {
                          "path '%s' "
                          "and Environment variable %s not set.  Set %s to "
                          "the pathname of your rgb.txt file or don't use "
-                         "color names.", 
+                         "color names.",
                          RGB_DB_PATH, RGBENV, RGBENV);
             }
         }
@@ -131,7 +131,7 @@ pm_openColornameFile(const char * const fileName, const int must_open) {
         if (f == NULL && must_open)
             pm_error("Can't open the color names dictionary file '%s'.  "
                      "errno = %d (%s)", fileName, errno, strerror(errno));
-        
+
     }
     lineNo = 0;
     return(f);
@@ -154,7 +154,7 @@ pm_colorget(FILE * const f) {
     bool eof;
     struct colorfile_entry retval;
     char * rc;
-    
+
     gotOne = FALSE;  /* initial value */
     eof = FALSE;
     while (!gotOne && !eof) {
@@ -165,15 +165,15 @@ pm_colorget(FILE * const f) {
         else {
             if (buf[0] != '#' && buf[0] != '\n' && buf[0] != '!' &&
                 buf[0] != '\0') {
-                if (sscanf(buf, "%ld %ld %ld %[^\n]", 
-                           &retval.r, &retval.g, &retval.b, colorname) 
+                if (sscanf(buf, "%ld %ld %ld %[^\n]",
+                           &retval.r, &retval.g, &retval.b, colorname)
                     == 4 )
                     gotOne = TRUE;
                 else {
                     if (buf[strlen(buf)-1] == '\n')
                         buf[strlen(buf)-1] = '\0';
                     pm_message("can't parse color names dictionary Line %d:  "
-                               "'%s'", 
+                               "'%s'",
                                lineNo, buf);
                 }
             }
@@ -189,7 +189,7 @@ pm_colorget(FILE * const f) {
 
 
 void
-pm_parse_dictionary_namen(char   const colorname[], 
+pm_parse_dictionary_namen(char   const colorname[],
                           tuplen const color) {
 
     FILE * fP;
@@ -213,7 +213,7 @@ pm_parse_dictionary_namen(char   const colorname[],
             colorfileExhausted = TRUE;
     }
     fclose(fP);
-    
+
     if (!gotit)
         pm_error("unknown color '%s'", colorname);
 
@@ -227,7 +227,7 @@ pm_parse_dictionary_namen(char   const colorname[],
 
 
 void
-pm_parse_dictionary_name(char    const colorname[], 
+pm_parse_dictionary_name(char    const colorname[],
                          pixval  const maxval,
                          int     const closeOk,
                          pixel * const colorP) {
@@ -244,7 +244,7 @@ pm_parse_dictionary_name(char    const colorname[],
     r = ROUNDU(color[PAM_RED_PLANE] * maxval);
     g = ROUNDU(color[PAM_GRN_PLANE] * maxval);
     b = ROUNDU(color[PAM_BLU_PLANE] * maxval);
-    
+
     if (!closeOk) {
         if (maxval != PAM_COLORFILE_MAXVAL) {
             if (fabs((double)r / maxval - color[PAM_RED_PLANE]) > epsilon ||
