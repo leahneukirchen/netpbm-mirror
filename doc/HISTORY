@@ -19,6 +19,9 @@ not yet  BJH  Release 10.83.00
               pstopnm: Fix divide-by-zero crash when Postscript input says
               the image has zero size.
 
+              pstopnm: Fix divide-by-zero crash when computed resolution
+              rounds down to zero dots per inch.
+
               pbmmask: Fix invalid memory reference with zero-dimension
               input image.  Broken in primordial Netpbm, ca 1989.
 

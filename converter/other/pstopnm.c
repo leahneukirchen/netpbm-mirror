@@ -287,30 +287,56 @@ addPsToFileName(char          const origFileName[],
 
 
 
+static unsigned int
+resolution(unsigned int const dotCt,
+           unsigned int const pointCt) {
+/*----------------------------------------------------------------------------
+   The resolution in dots per inch when 'dotCt' dots print 'pointCt' points
+   long.
+
+   When this would round to zero, we return 1 dot per inch instead so it
+   doesn't play havoc with arithmetic - it's never going to happen unless
+   something is broken anyway.
+-----------------------------------------------------------------------------*/
+    return MAX(1, (unsigned int)((float)dotCt * 72 / pointCt + 0.5));
+}
+
+
+
 static void
 computeSizeResFromSizeSpec(unsigned int        const requestedXsize,
                            unsigned int        const requestedYsize,
                            unsigned int        const imageWidth,
                            unsigned int        const imageHeight,
                            struct Dimensions * const imageDimP) {
+/*----------------------------------------------------------------------------
+   Compute output image size and assumed Postscript input resolution, assuming
+   user requested a specific size for at least one of the dimensions and the
+   input is 'imageWidth' x 'imageHeight' points.
+
+   'requestedXsize' is what the user requested for output image width in
+   pixels, or zero if he made no request.  'requestedYsize' is analogous
+   for the height.
+-----------------------------------------------------------------------------*/
+    assert(requestedXsize || requestedYsize);
 
     assert(imageWidth > 0);
 
     if (requestedXsize) {
         imageDimP->xsize = requestedXsize;
-        imageDimP->xres = (unsigned int)
-            (requestedXsize * 72 / imageWidth + 0.5);
+        imageDimP->xres = resolution(requestedXsize, imageWidth);
         if (!requestedYsize) {
             imageDimP->yres = imageDimP->xres;
             imageDimP->ysize = (unsigned int)
                 (imageHeight * (float)imageDimP->yres/72 + 0.5);
-            }
         }
+    }
+
+    assert(imageHeight > 0);
 
     if (requestedYsize) {
         imageDimP->ysize = requestedYsize;
-        imageDimP->yres = (unsigned int)
-            (requestedYsize * 72 / imageHeight + 0.5);
+        imageDimP->yres = resolution(requestedYsize, imageHeight);
         if (!requestedXsize) {
             imageDimP->xres = imageDimP->yres;
             imageDimP->xsize = (unsigned int)
@@ -332,8 +358,9 @@ computeSizeResBlind(unsigned int        const xmax,
     if (imageWidth == 0 || imageHeight == 0) {
         imageDimP->xres = imageDimP->yres = 72;
     } else {
-        imageDimP->xres = imageDimP->yres = MIN(xmax * 72 / imageWidth,
-                                                ymax * 72 / imageHeight);
+        imageDimP->xres = imageDimP->yres =
+            MIN(resolution(xmax, imageWidth),
+                resolution(ymax, imageHeight));
     }
 
     if (nocrop) {
@@ -676,6 +703,8 @@ writePstrans(struct Box        const box,
     int const yres  = d.yres;
 
     const char * pstrans;
+
+    assert(xres > 0); assert(yres > 0);
 
     switch (orientation) {
     case PORTRAIT: {
@@ -1088,6 +1117,8 @@ main(int argc, char ** argv) {
     assertValidBox(borderedBox); assert(borderedBox.isDefined);
 
     computeSizeRes(cmdline, borderedBox, &imageDim);
+
+    assert(imageDim.xres > 0); assert(imageDim.yres > 0);
 
     outfileArg = computeOutfileArg(cmdline);
 
