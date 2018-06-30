@@ -12,6 +12,9 @@ CHANGE HISTORY
               pstopnm: Fix divide-by-zero crash when Postscript input says
               the image has zero size.
 
+              pstopnm: Fix divide-by-zero crash when computed resolution
+              rounds down to zero dots per inch.
+
 18.06.27 BJH  Release 10.82.02
 
               Pngtopam: Fix bogus warning of non-square pixels when image does
