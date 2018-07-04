@@ -1,4 +1,5 @@
 #include "pbmfont.h"
+#include "pbmfontdata.h"
 
 /* Default proportional font.
    BDF-style advance value, bounding box dimensions and point of origin.
@@ -15,7 +16,7 @@
    from a libnetpbm font file or builtin font.
 */
 
-static struct glyph glBdf[190] = {
+static struct glyph glBdf[191] = {
 /*  32 character    */
 { 1, 1, 0, 0, 3, "\0" },
 /*  33 character !  */
@@ -204,8 +205,10 @@ static struct glyph glBdf[190] = {
 { 1, 9, 1, 0, 3, "\1\1\1\1\1\1\1\1\1" },
 /* 125 character }  */
 { 4, 12, 0, -3, 6, "\1\1\0\0\0\0\1\0\0\0\1\0\0\0\1\0\0\0\1\0\0\0\0\1\0\0\1\0\0\0\1\0\0\0\1\0\0\0\1\0\0\0\1\0\1\1\0\0" },
-/* 160 */
+/* 126 character ~  */
 { 6, 2, 0, 3, 7, "\0\1\1\0\0\1\1\0\0\1\1\0" },
+/* 160 */
+{ 1, 1, 0, 0, 3, "\0" },
 /* 161 */
 { 1, 9, 1, -3, 4, "\1\0\1\1\1\1\1\1\1" },
 /* 162 */
@@ -421,7 +424,7 @@ glBdf+84, glBdf+85, glBdf+86, glBdf+87, glBdf+88, glBdf+89,
 glBdf+90, glBdf+91, glBdf+92, glBdf+93, glBdf+94,
 NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 
+NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 glBdf+95,  glBdf+96,  glBdf+97,  glBdf+98,  glBdf+99,  glBdf+100,
 glBdf+101, glBdf+102, glBdf+103, glBdf+104, glBdf+105, glBdf+106,
 glBdf+107, glBdf+108, glBdf+109, glBdf+110, glBdf+111, glBdf+112,
@@ -437,7 +440,23 @@ glBdf+161, glBdf+162, glBdf+163, glBdf+164, glBdf+165, glBdf+166,
 glBdf+167, glBdf+168, glBdf+169, glBdf+170, glBdf+171, glBdf+172,
 glBdf+173, glBdf+174, glBdf+175, glBdf+176, glBdf+177, glBdf+178,
 glBdf+179, glBdf+180, glBdf+181, glBdf+182, glBdf+183, glBdf+184,
-glBdf+185, glBdf+186, glBdf+187, glBdf+188, glBdf+189  }
+glBdf+185, glBdf+186, glBdf+187, glBdf+188, glBdf+189, glBdf+190 },
+NULL, 0, 0
+};
+
+struct font2 const pbm_defaultBdffont2 = {
+  sizeof(pbm_defaultFixedfont2),         /* len */
+  PBM_FONT2_STRUCT_SIZE(charset_string), /* size */
+  14, 15, -1, -3,                 /* maxwidth, maxheight, x, y */
+  pbm_defaultBdffont.glyph,       /* glyph table */
+  255, NULL, 255,                 /* maxglyph, selector, maxmaxglyph */
+  NULL, 0, 0,                     /* oldfont, fcols, frows */
+  PBM_FORMAT,                     /* bit_format */
+  190, 190,                       /* total_chars, chars */
+  FIXED_DATA,                     /* load_fn */
+  32, 1,                          /* default_char, default_char_defined */
+  (char *) "builtin bdf",         /* name */
+  ISO_8859_1, (char *)"ISO8859-1" /* charset, charset_string */
 };
 
 

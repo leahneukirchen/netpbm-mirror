@@ -1,4 +1,5 @@
 #include "pbmfont.h"
+#include "pbmfontdata.h"
 
 /* Default fixed-width font
    All glyphs fit into a 7 x 12 rectangular cell.
@@ -20,7 +21,7 @@
 */
 
 static struct glyph glFxd[96] = {
-/*  32 character   */ 
+/*  32 character   */
 {7,12,0,0,7,"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0" },
 /*  33 character ! */
 {7,12,0,0,7,"\0\0\0\1\0\0\0\0\0\0\1\0\0\0\0\0\0\1\0\0\0\0\0\0\1\0\0\0\0\0\0\1\0\0\0\0\0\0\1\0\0\0\0\0\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0" },
@@ -210,9 +211,9 @@ static struct glyph glFxd[96] = {
 {7,12,0,0,7,"\0\0\0\0\0\0\0\0\0\1\0\0\0\0\0\0\0\1\0\0\0\0\0\0\1\0\0\0\0\0\0\1\0\0\0\0\0\0\0\1\0\0\0\0\0\1\0\0\0\0\0\0\1\0\0\0\0\0\0\1\0\0\0\0\0\0\1\0\0\0\0\0\1\0\0\0\0\0\0\0\0\0\0\0" },
 /* 126 character ~ */
 {7,12,0,0,7,"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\1\0\0\1\0\0\1\0\1\0\1\0\0\1\0\0\1\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0" },
-/* 127 character (?) */
+/* 127 character (Control character, retained for backward compatibility) */
 {7,12,0,0,7,"\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0" }
-}; 
+};
 
 
 
@@ -246,7 +247,22 @@ NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL}
+NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL}, NULL, 0, 0
+};
+
+struct font2 const pbm_defaultFixedfont2 = {
+  sizeof(pbm_defaultFixedfont2),         /* len */
+  PBM_FONT2_STRUCT_SIZE(charset_string), /* size */
+  7, 12, 0, 0,                    /* maxwidth, maxheight, x, y */
+  pbm_defaultFixedfont.glyph,     /* glyph table */
+  255, NULL, 255,                 /* maxglyph, selector, maxmaxglyph */
+  NULL, 0, 0,                     /* oldfont, fcols, frows */
+  PBM_FORMAT,                     /* bit_format */
+  96, 96,                         /* total_chars, chars */
+  FIXED_DATA,                     /* load_fn */
+  32, 1,                          /* default_char, default_char_defined */
+  (char *) "builtin fixed",       /* name */
+  ISO646_1991_IRV, (char *)"ASCII"  /* charset, charset_string */
 };
 
 

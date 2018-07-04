@@ -6,6 +6,17 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.84.00
 
+              pbmtext: -wchar works with built-in fonts.
+
+              pbmtext: improved -verbose information about BDF fonts:
+              include CHARSET_REGISTRY, CHARSET_ENCODING.
+
+              libnetpbm font facilities: built-in fonts work with wide
+              characters.
+
+              libnetpbm: fix invalid memory references when BDF font file
+              has certain invalid bounding box parameters.
+
 18.06.30 BJH  Release 10.83.00
 
               Add pamlevels.  Thanks Anton Shepelev <anton.txt@gmail.com>.
