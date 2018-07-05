@@ -2,9 +2,10 @@
 **
 ** Font routines.
 **
-** BDF font code by George Phillips, copyright 1993
+** Wide character stuff written by Akira Urushibata in 2018 and contributed
+** to the public domain.
 **
-** Wide character stuff written by Akira Urushibata, copyright 2018
+** BDF font code by George Phillips, copyright 1993
 **
 ** Permission to use, copy, modify, and distribute this software and its
 ** documentation for any purpose and without fee is hereby granted, provided

@@ -2,9 +2,11 @@
 **
 ** Font routines.
 **
-** Wide character stuff written by Akira Urushibata, 2018
+** Wide character stuff written by Akira Urushibata in 2018 and contributed
+** to the public domain.
 **
-** Also copyright (C) 1991 by Jef Poskanzer.
+** Also copyright (C) 1991 by Jef Poskanzer and licensed to the public as
+** follows.
 **
 ** Permission to use, copy, modify, and distribute this software and its
 ** documentation for any purpose and without fee is hereby granted, provided
