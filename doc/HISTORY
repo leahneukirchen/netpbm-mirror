@@ -4,6 +4,12 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+18.07.07 BJH  Release 10.83.01
+
+              pbmtext; libnetpbm BDF font processing: fix invalid memory
+              reference when BDF font file has invalid syntax.  Broken
+              in primordial Netpbm, ca 1993.
+
 18.06.30 BJH  Release 10.83.00
 
               Add pamlevels.  Thanks Anton Shepelev <anton.txt@gmail.com>.
