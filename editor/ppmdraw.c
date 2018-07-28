@@ -1,5 +1,5 @@
 #define _DEFAULT_SOURCE /* New name for SVID & BSD source defines */
-#define _XOPEN_SOURCE 500 
+#define _XOPEN_SOURCE 500
    /* Make sure M_PI is in math.h, strdup is in string.h */
 #define _BSD_SOURCE      /* Make sure strdup is in string.h (alternate) */
 
@@ -50,7 +50,7 @@ parseCommandLine (int argc, const char ** argv,
                   struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -84,7 +84,7 @@ parseCommandLine (int argc, const char ** argv,
 
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
-    
+
     if (!scriptSpec && !scriptfileSpec)
         pm_error("You must specify either -script or -scriptfile");
 
@@ -282,7 +282,7 @@ struct drawCommand {
 
 static void
 freeDrawCommand(const struct drawCommand * const commandP) {
-    
+
     switch (commandP->verb) {
     case VERB_SETPOS:
         break;
@@ -313,7 +313,7 @@ freeDrawCommand(const struct drawCommand * const commandP) {
         pm_strfree(commandP->u.textArg.text);
         break;
     }
-    
+
 
     free((void *) commandP);
 }
@@ -361,21 +361,21 @@ doFilledCircle(pixel **                   const pixels,
     struct fillobj * fhP;
 
     fhP = ppmd_fill_create();
-            
+
     ppmd_circle(pixels, cols, rows, maxval,
                 commandP->u.circleArg.cx,
                 commandP->u.circleArg.cy,
                 commandP->u.circleArg.radius,
                 ppmd_fill_drawproc,
                 fhP);
-            
+
     ppmd_fill(pixels, cols, rows, maxval,
               fhP,
               PPMD_NULLDRAWPROC,
               &drawStateP->color);
 
     ppmd_fill_destroy(fhP);
-} 
+}
 
 
 
@@ -386,7 +386,7 @@ doTextHere(pixel **                   const pixels,
            pixval                     const maxval,
            const struct drawCommand * const commandP,
            struct drawState *         const drawStateP) {
-    
+
     ppmd_text(pixels, cols, rows, maxval,
               drawStateP->currentPos.x,
               drawStateP->currentPos.y,
@@ -395,14 +395,14 @@ doTextHere(pixel **                   const pixels,
               commandP->u.textArg.text,
               PPMD_NULLDRAWPROC,
               &drawStateP->color);
-    
+
     {
         int left, top, right, bottom;
-        
+
         ppmd_text_box(commandP->u.textArg.height, 0,
                       commandP->u.textArg.text,
                       &left, &top, &right, &bottom);
-        
+
 
         drawStateP->currentPos.x +=
             ROUND((right-left) * cosdeg(commandP->u.textArg.angle));
@@ -529,10 +529,10 @@ executeScript(struct script * const scriptP,
 
 
 struct tokenSet {
-    
+
     const char * token[10];
     unsigned int count;
-    
+
 };
 
 
@@ -571,7 +571,7 @@ parseDrawCommand(struct tokenSet             const commandTokens,
                 if (streq(typeArg, "normal"))
                     drawCommandP->u.setlinetypeArg.type = PPMD_LINETYPE_NORMAL;
                 else if (streq(typeArg, "normal"))
-                    drawCommandP->u.setlinetypeArg.type = 
+                    drawCommandP->u.setlinetypeArg.type =
                         PPMD_LINETYPE_NODIAGS;
                 else
                     pm_error("Invalid type");
@@ -610,7 +610,7 @@ parseDrawCommand(struct tokenSet             const commandTokens,
                 drawCommandP->u.lineArg.y0 = atoi(commandTokens.token[2]);
                 drawCommandP->u.lineArg.x1 = atoi(commandTokens.token[3]);
                 drawCommandP->u.lineArg.y1 = atoi(commandTokens.token[4]);
-            } 
+            }
         } else if (streq(verb, "line_here")) {
             drawCommandP->verb = VERB_LINE_HERE;
             if (commandTokens.count < 3)
@@ -621,7 +621,7 @@ parseDrawCommand(struct tokenSet             const commandTokens,
                     &drawCommandP->u.lineHereArg;
                 argP->right = atoi(commandTokens.token[1]);
                 argP->down = atoi(commandTokens.token[2]);
-            } 
+            }
        } else if (streq(verb, "spline3")) {
             drawCommandP->verb = VERB_SPLINE3;
             if (commandTokens.count < 7)
@@ -636,7 +636,7 @@ parseDrawCommand(struct tokenSet             const commandTokens,
                 argP->y1 = atoi(commandTokens.token[4]);
                 argP->x2 = atoi(commandTokens.token[5]);
                 argP->y2 = atoi(commandTokens.token[6]);
-            } 
+            }
         } else if (streq(verb, "circle")) {
             drawCommandP->verb = VERB_CIRCLE;
             if (commandTokens.count < 4)
@@ -647,7 +647,7 @@ parseDrawCommand(struct tokenSet             const commandTokens,
                 argP->cx     = atoi(commandTokens.token[1]);
                 argP->cy     = atoi(commandTokens.token[2]);
                 argP->radius = atoi(commandTokens.token[3]);
-            } 
+            }
         } else if (streq(verb, "filledcircle")) {
             drawCommandP->verb = VERB_FILLEDCIRCLE;
             if (commandTokens.count < 4)
@@ -658,7 +658,7 @@ parseDrawCommand(struct tokenSet             const commandTokens,
                 argP->cx     = atoi(commandTokens.token[1]);
                 argP->cy     = atoi(commandTokens.token[2]);
                 argP->radius = atoi(commandTokens.token[3]);
-            } 
+            }
         } else if (streq(verb, "filledrectangle")) {
             drawCommandP->verb = VERB_FILLEDRECTANGLE;
             if (commandTokens.count < 5)
@@ -671,7 +671,7 @@ parseDrawCommand(struct tokenSet             const commandTokens,
                 argP->y      = atoi(commandTokens.token[2]);
                 argP->width  = atoi(commandTokens.token[3]);
                 argP->height = atoi(commandTokens.token[4]);
-            } 
+            }
         } else if (streq(verb, "text")) {
             drawCommandP->verb = VERB_TEXT;
             if (commandTokens.count < 6)
@@ -713,9 +713,9 @@ disposeOfCommandTokens(struct tokenSet * const tokenSetP,
     /* We've got a whole command in 'tokenSet'.  Parse it into *scriptP
        and reset tokenSet to empty.
     */
-    
+
     struct commandListElt * commandListEltP;
-    
+
     MALLOCVAR(commandListEltP);
     if (commandListEltP == NULL)
         pm_error("Out of memory allocating command list element frame");
@@ -752,7 +752,7 @@ processToken(const char *      const scriptText,
     MALLOCARRAY_NOFAIL(token, tokenLength + 1);
     memcpy(token, &scriptText[tokenStart], tokenLength);
     token[tokenLength] = '\0';
-    
+
     if (streq(token, ";")) {
         disposeOfCommandTokens(tokenSetP, scriptP);
         free(token);
@@ -779,7 +779,7 @@ parseScript(const char *     const scriptText,
         */
     bool quotedToken;
         /* Current token is a quoted string.  Meaningless if 'intoken'
-           is false 
+           is false
         */
     struct tokenSet tokenSet;
 
@@ -803,7 +803,7 @@ parseScript(const char *     const scriptText,
 
     while (scriptText[cursor] != '\0') {
         char const scriptChar = scriptText[cursor];
-        
+
         if (intoken) {
             if ((quotedToken && scriptChar == '"') ||
                 (!quotedToken && (isspace(scriptChar) || scriptChar == ';'))) {
@@ -835,7 +835,7 @@ parseScript(const char *     const scriptText,
                 }
             }
             ++cursor;
-        }            
+        }
     }
 
     if (intoken) {
@@ -879,7 +879,7 @@ getScript(struct cmdlineInfo const cmdline,
     pm_strfree(scriptText);
 }
 
-          
+
 
 static void
 doOneImage(FILE *          const ifP,
@@ -888,13 +888,13 @@ doOneImage(FILE *          const ifP,
     pixel ** pixels;
     pixval maxval;
     int rows, cols;
-    
+
     pixels = ppm_readppm(ifP, &cols, &rows, &maxval);
-    
+
     executeScript(scriptP, pixels, cols, rows, maxval);
-    
+
     ppm_writeppm(stdout, pixels, cols, rows, maxval, 0);
-    
+
     ppm_freearray(pixels, rows);
 }
 
