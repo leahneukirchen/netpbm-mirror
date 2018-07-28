@@ -14,8 +14,9 @@ not yet  BJH  Release 10.84.00
               libnetpbm font facilities: built-in fonts work with wide
               characters.
 
-              libnetpbm: fix invalid memory references when BDF font file
-              has certain invalid bounding box parameters.
+              pbmtext; libnetpbm BDF font processing: fix invalid memory
+              reference when BDF font file has invalid syntax.  Broken
+              in primordial Netpbm, ca 1993.
 
 18.06.30 BJH  Release 10.83.00
 
