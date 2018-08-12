@@ -1,6 +1,15 @@
+#include <stdbool.h>
+#include <stdint.h>
 #include <stdlib.h>
 
-#include "common.h"
+#include "netpbm/mallocvar.h"
+#include "netpbm/shhopt.h"
+#include "netpbm/pam.h"
+
+#include "limits_pamtris.h"
+#include "framebuffer.h"
+#include "boundaries.h"
+#include "input.h"
 
 #define MAX_METRICS 8192
 
@@ -62,7 +71,7 @@ parse_command_line (
     }
 
     if (maxval_spec) {
-        if (*maxval < 1 || *maxval > MAX_MAXVAL) {
+        if (*maxval < 1 || *maxval > PAM_OVERALL_MAXVAL) {
             pm_errormsg("invalid maxval.");
 
             return 0;

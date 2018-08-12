@@ -1,12 +1,32 @@
+/*=============================================================================
+                                 boundaries.c
+===============================================================================
+   Boundary buffer functions
+
+   New triangles are drawn one scanline at a time, and for every such scanline
+   we have left and right boundary columns within the frame buffer such that
+   the fraction of the triangle's area within that scanline is enclosed
+   between those two points (inclusive). Those coordinates may correspond to
+   columns outside the frame buffer's actual limits, in which case proper
+   post-processing should be made wherever such coordinates are used to
+   actually plot anything into the frame buffer.
+=============================================================================*/
+
 #include <stdlib.h>
 
-#include "common.h"
+#include <netpbm/mallocvar.h>
+
+#include "utils.h"
+#include "fract.h"
+
+
+#include "boundaries.h"
 
 
 
 static fract
 make_pos_fract(int32_t const quotient,
-           int32_t const remainder) {
+               int32_t const remainder) {
 
     fract retval;
 
@@ -39,7 +59,18 @@ gen_triangle_boundaries(int32_t         xy[3][2],
                         boundary_info * bi,
                         int16_t         width,
                         int16_t         height) {
+/*----------------------------------------------------------------------------
+  Generate an entry in the boundary buffer for the boundaries of every
+  VISIBLE row of a particular triangle. In case there is no such row,
+  start_row is accordingly set to -1. The argument is a 3-element array
+  of pairs of int16_t's representing the coordinates of the vertices of
+  a triangle. Those vertices MUST be already sorted in order from the
+  uppermost to the lowermost vertex (which is what draw_triangle, the
+  only function which uses this one, does with the help of sort3).
 
+  The return value indicates whether the middle vertex is to the left of the
+  line connecting the top vertex to the bottom vertex or not.
+-----------------------------------------------------------------------------*/
     int16_t leftmost_x = xy[0][0];
     int16_t rightmost_x = xy[0][0];
     int mid_is_to_the_left;
@@ -277,7 +308,12 @@ get_triangle_boundaries(uint16_t              row_index,
                         int32_t *             left,
                         int32_t *             right,
                         const boundary_info * bi) {
-
+/*----------------------------------------------------------------------------
+  Return the left and right boundaries for a given VISIBLE triangle row (the
+  row index is relative to the first visible row). These values may be out of
+  the horizontal limits of the frame buffer, which is necessary in order to
+  compute correct attribute interpolations.
+-----------------------------------------------------------------------------*/
     uint32_t i  = row_index << 1;
 
     *left       = bi->buffer[i];

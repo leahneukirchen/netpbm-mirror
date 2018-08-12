@@ -1,14 +1,63 @@
+/*=============================================================================
+                              framebuffer.c
+===============================================================================
+  Frame buffer functions
+
+  Every drawing operation is applied on an internal "frame buffer", which is
+  simply an "image buffer" which represents the picture currently being drawn,
+  along with a "Z-Buffer" which contains the depth values for every pixel in
+  the image buffer. Once all desired drawing operations for a particular
+  picture are effected, a function is provided to print the current contents
+  of the image buffer as a PAM image on standard output.  Another function is
+  provided to clear the contents of the frame buffer (i. e. set all image
+  samples and Z-Buffer entries to 0), with the option of only clearing either
+  the image buffer or the Z-Buffer individually.
+
+  The Z-Buffer works as follows: Every pixel in the image buffer has a
+  corresponding entry in the Z-Buffer. Initially, every entry in the Z-Buffer
+  is set to 0. Every time we desire to plot a pixel at some particular
+  position in the frame buffer, the current value of the corresponding entry
+  in the Z-Buffer is compared against the the Z component of the incoming
+  pixel. If MAX_Z minus the value of the Z component of the incoming pixel is
+  equal to or greater than the current value of the corresponding entry in the
+  Z-Buffer, the frame buffer is changed as follows:
+
+    1. All the samples but the last of the corresponding position in the
+       image buffer are set to equal those of the incoming pixel.
+
+    2. The last sample, that is, the A-component of the corresponding position
+       in the image buffer is set to equal the maxval.
+
+    3. The corresponding entry in the Z-Buffer is set to equal MAX_Z minus the
+       value of the Z component of the incoming pixel.
+
+    Otherwise, no changes are made on the frame buffer.
+=============================================================================*/
+#include <stdbool.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "common.h"
+#include "utils.h"
+#include "fract.h"
+#include "limits_pamtris.h"
+
+#include "framebuffer.h"
 
 
 
 int
 set_tupletype(const char * str,
               char         tupletype[256]) {
-
+/*----------------------------------------------------------------------------
+  Set the tuple type for the output PAM images given a string ("str") of 255
+  characters or less. If the string has more than 255 characters, the function
+  returns 0. Otherwise, it returns 1. If NULL is given for the "str" argument,
+  the tuple type is set to a null string. This function is called during
+  program initialization and whenever a "r" command is executed. The second
+  argument must point to the tuple_type member of the "outpam" field in the
+  framebuffer_info struct.
+-----------------------------------------------------------------------------*/
     if (str == NULL) {
         memset(tupletype, 0, 256);
 
@@ -101,7 +150,27 @@ int
 realloc_image_buffer(int32_t            new_maxval,
                      int32_t            new_num_attribs,
                      framebuffer_info * fbi) {
+/*----------------------------------------------------------------------------
+  Reallocate the image buffer with a new maxval and depth, given the struct
+  with information about the framebuffer. The fields variables "maxval" and
+  "num_attribs".
 
+  From the point this function is called onwards, new PAM images printed on
+  standard output will have the new maxval for the maxval and num_attribs + 1
+  for the depth.
+
+  This function does *not* check whether the new maxval and num_attribs are
+  within the proper allowed limits. That is done inside the input processing
+  function "process_next_command", which is the only function that calls this
+  one.
+
+  If the function suceeds, the image buffer is left in cleared state. The
+  Z-Buffer, however, is not touched at all.
+
+  If the new depth is equal to the previous one, no actual reallocation is
+  performed: only the global variable "maxval" is changed. But the image
+  buffer is nonetheless left in cleared state regardless.
+-----------------------------------------------------------------------------*/
     uint8_t num_planes = fbi->num_attribs + 1;
 
     pnm_freepamrow(fbi->pamrow);
@@ -209,7 +278,14 @@ draw_span(uint32_t           base,
           const fract *      attribs_steps,
           int32_t            div,
           framebuffer_info * fbi) {
+/*----------------------------------------------------------------------------
+  Draw a horizontal span of "length" pixels into the frame buffer, performing
+  the appropriate depth tests. "base" must equal the row of the frame buffer
+  where one desires to draw the span *times* the image width, plus the column
+  of the first pixel in the span.
 
+  This function does not perform any kind of bounds checking.
+-----------------------------------------------------------------------------*/
     uint8_t num_planes = fbi->num_attribs + 1;
 
     unsigned int i;

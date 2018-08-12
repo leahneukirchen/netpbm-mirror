@@ -1,9 +1,20 @@
+/*=============================================================================
+                                  triangle.c
+===============================================================================
+   Triangle functions
+=============================================================================*/
 #include <stdlib.h>
 #include <string.h>
 
-#include "common.h"
+#include "netpbm/mallocvar.h"
 
+#include "utils.h"
+#include "fract.h"
+#include "limits.h"
+#include "boundaries.h"
+#include "framebuffer.h"
 
+#include "triangle.h"
 
 static void
 draw_partial_triangle(

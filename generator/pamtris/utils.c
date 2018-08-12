@@ -1,13 +1,35 @@
-#include <stdlib.h>
+/*=============================================================================
+                              utils.c
+===============================================================================
+   Utility functions
+=============================================================================*/
 
-#include "common.h"
+#include <stdlib.h>
+#include <stdint.h>
+
+#include "fract.h"
+
+#include "utils.h"
+
+
 
 void
 step_up(fract *       vars,
         const fract * steps,
         uint8_t       elements,
         int32_t       div) {
+/*----------------------------------------------------------------------------
+  Apply interpolation steps (see above) to a collection of fract
+  variables (also see above) once. This is done by adding the
+  quotient of each step to the quotient of the corresponding variable
+  and the remainder of that step to the remainder of the variable. If the
+  remainder of the variable becomes equal to or larger than the
+  divisor, we increment the quotient of the variable if the negetive_flag
+  of the step is false, or decrement it if the negetive_flag is true, and
+  subtract the divisor from the remainder of the variable (in both cases).
 
+  It *is* safe to pass a 0 divisor to this function.
+-----------------------------------------------------------------------------*/
     unsigned int i;
 
     for (i = 0; i < elements; ++i) {
@@ -35,7 +57,12 @@ multi_step_up(fract *       vars,
               uint8_t       elements,
               int32_t       times,
               int32_t       div) {
+/*----------------------------------------------------------------------------
+  Similar to step_up, but apply the interpolation step an arbitrary number
+  of times, instead of just once.
 
+  It *is* also safe to pass a 0 divisor to this function.
+-----------------------------------------------------------------------------*/
     unsigned int i;
 
     for (i = 0; i < elements; i++) {
@@ -61,7 +88,25 @@ void
 gen_steps(const int32_t * begin,
           const int32_t * end,
           fract         * out, uint8_t elements, int32_t div) {
+/*----------------------------------------------------------------------------
+  Generate the interpolation steps for a collection of initial and final
+  values. "begin" points to an array of initial values, "end" points to the
+  array of corresponding final values; each interpolation step is stored in
+  the appropriate position in the array pointed by "out"; "elements" indicates
+  the number of elements in each of the previously mentioned arrays and
+  "divisor" is the common value by which we want to divide the difference
+  between each element in the array pointed to by "end" and the corresponding
+  element in the array pointed to by "begin".  After an execution of this
+  function, for each out[i], with 0 <= i < elements, the following will hold:
 
+    1. If divisor > 1:
+      out[i].q = (end[i] - begin[i]) / divisor
+      out[i].r = abs((end[i] - begin[i]) % divisor)
+
+    2. If divisor == 1 || divisor == 0:
+      out[i].q = end[i] - begin[i]
+      out[i].r = 0
+-----------------------------------------------------------------------------*/
     if (div > 1) {
         unsigned int i;
 
@@ -133,7 +178,25 @@ void
 sort3(uint8_t *       index_array,
       const int32_t * y_array,
       const int32_t * x_array) {
+/*----------------------------------------------------------------------------
+  Sort an index array of 3 elements. This function is used to sort vertices
+  with regard to relative row from top to bottom, but instead of sorting
+  an array of vertices with all their coordinates, we simply sort their
+  indices. Each element in the array pointed to by "index_array" should
+  contain one of the numbers 0, 1 or 2, and each one of them should be
+  different. "y_array" should point to an array containing the corresponding
+  Y coordinates (row) of each vertex and "x_array" should point to an array
+  containing the corresponding X coordinates (column) of each vertex.
 
+  If the Y coordinates are all equal, the indices are sorted with regard to
+  relative X coordinate from left to right. If only the top two vertex have
+  the same Y coordinate, the array is sorted normally with regard to relative
+  Y coordinate, but the first two indices are then sorted with regard to
+  relative X coordinate. Finally, If only the bottom two vertex have the same
+  Y coordinate, the array is sorted normally with regard to relative Y
+  coordinate, but the last two indices are then sorted with regard to relative
+  X coordinate.
+-----------------------------------------------------------------------------*/
     uint8_t * ia = index_array;
     const int32_t * ya = y_array;
     const int32_t * xa = x_array;

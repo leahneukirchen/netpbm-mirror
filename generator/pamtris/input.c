@@ -1,8 +1,21 @@
+/*=============================================================================
+                              input.c
+===============================================================================
+   Input handling functions
+=============================================================================*/
+#include <stdbool.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
 
-#include "common.h"
+#include "netpbm/mallocvar.h"
+
+#include "limits_pamtris.h"
+#include "framebuffer.h"
+#include "triangle.h"
+
+#include "input.h"
 
 #define MAX_COORD       32767
 #define MIN_COORD       -MAX_COORD
@@ -186,10 +199,15 @@ remove_comments(char * str) {
 
 
 int
-process_next_command(input_info       * line,
-                     boundary_info    * bi,
-                     framebuffer_info * fbi) {
-
+process_next_command(input_info           * line,
+                     struct boundary_info * bi,
+                     framebuffer_info     * fbi) {
+/*----------------------------------------------------------------------------
+  Doesn't necessarily process a command, just the next line of input, which
+  may be empty. Always returns 1, except when it cannot read any more lines of
+  input, an image buffer reallocation fails, or a "q" command is found in the
+  input -- in such cases it returns 0.
+-----------------------------------------------------------------------------*/
     static state_info state;
 
     token nt;
@@ -547,7 +565,7 @@ process_next_command(input_info       * line,
             break;
         }
 
-        if (i_args[0] < 1 || i_args[0] > MAX_MAXVAL) {
+        if (i_args[0] < 1 || i_args[0] > PAM_OVERALL_MAXVAL) {
             pm_errormsg("error: invalid new maxval: line %lu.",
                         line->number);
 
