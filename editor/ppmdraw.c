@@ -747,8 +747,10 @@ processToken(const char *      const scriptText,
              struct script *   const scriptP,
              struct tokenSet * const tokenSetP) {
 
-    char * token;
     unsigned int const tokenLength = cursor - tokenStart;
+
+    char * token;
+
     MALLOCARRAY_NOFAIL(token, tokenLength + 1);
     memcpy(token, &scriptText[tokenStart], tokenLength);
     token[tokenLength] = '\0';

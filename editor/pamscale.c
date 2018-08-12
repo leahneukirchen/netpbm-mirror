@@ -24,6 +24,7 @@
 
 #define _XOPEN_SOURCE 500  /* get M_PI in math.h */
 
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -359,23 +360,23 @@ typedef struct {
 
 
 static filter Filters[] = {
-    { "point",     filter_box,       radius_point,     FALSE },
-    { "box",       filter_box,       radius_box,       FALSE },
-    { "triangle",  filter_triangle,  radius_triangle,  FALSE },
-    { "quadratic", filter_quadratic, radius_quadratic, FALSE },
-    { "cubic",     filter_cubic,     radius_cubic,     FALSE },
-    { "catrom",    filter_catrom,    radius_catrom,    FALSE },
-    { "mitchell",  filter_mitchell,  radius_mitchell,  FALSE },
-    { "gauss",     filter_gauss,     radius_gauss,     FALSE },
-    { "sinc",      filter_sinc,      radius_sinc,      TRUE  },
-    { "bessel",    filter_bessel,    radius_bessel,    TRUE  },
-    { "hanning",   filter_hanning,   radius_hanning,   FALSE },
-    { "hamming",   filter_hamming,   radius_hamming,   FALSE },
-    { "blackman",  filter_blackman,  radius_blackman,  FALSE },
-    { "kaiser",    filter_kaiser,    radius_kaiser,    FALSE },
-    { "normal",    filter_normal,    radius_normal,    FALSE },
-    { "hermite",   filter_hermite,   radius_hermite,   FALSE },
-    { "lanczos",   filter_lanczos,   radius_lanczos,   FALSE },
+    { "point",     filter_box,       radius_point,     false },
+    { "box",       filter_box,       radius_box,       false },
+    { "triangle",  filter_triangle,  radius_triangle,  false },
+    { "quadratic", filter_quadratic, radius_quadratic, false },
+    { "cubic",     filter_cubic,     radius_cubic,     false },
+    { "catrom",    filter_catrom,    radius_catrom,    false },
+    { "mitchell",  filter_mitchell,  radius_mitchell,  false },
+    { "gauss",     filter_gauss,     radius_gauss,     false },
+    { "sinc",      filter_sinc,      radius_sinc,      true  },
+    { "bessel",    filter_bessel,    radius_bessel,    true  },
+    { "hanning",   filter_hanning,   radius_hanning,   false },
+    { "hamming",   filter_hamming,   radius_hamming,   false },
+    { "blackman",  filter_blackman,  radius_blackman,  false },
+    { "kaiser",    filter_kaiser,    radius_kaiser,    false },
+    { "normal",    filter_normal,    radius_normal,    false },
+    { "hermite",   filter_hermite,   radius_hermite,   false },
+    { "lanczos",   filter_lanczos,   radius_lanczos,   false },
    { NULL },
 };
 
@@ -452,12 +453,12 @@ lookupFilterByName(const char * const filtername,
     unsigned int i;
     bool found;
 
-    found = FALSE;  /* initial assumption */
+    found = false;  /* initial assumption */
 
     for (i=0; Filters[i].name; ++i) {
         if (strcmp(filtername, Filters[i].name) == 0) {
             *filterP = Filters[i];
-            found = TRUE;
+            found = true;
         }
     }
     if (!found) {
@@ -641,7 +642,8 @@ parseCommandLine(int argc,
     int xsize, ysize, pixels;
     int reduce;
     float xscale, yscale;
-    const char *filterOpt, *window;
+    const char * filterOpt;
+    const char * window;
     unsigned int filterSpec, windowSpec;
     unsigned int xscaleSpec, yscaleSpec, xsizeSpec, ysizeSpec;
     unsigned int pixelsSpec, reduceSpec;
@@ -667,8 +669,8 @@ parseCommandLine(int argc,
     OPTENT3(0, "linear",    OPT_FLAG,    NULL,       &cmdlineP->linear,    0);
 
     opt.opt_table = option_def;
-    opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
-    opt.allowNegNum = FALSE;   /* We have no parms that are negative numbers */
+    opt.short_allowed = false;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = false;   /* We have no parms that are negative numbers */
 
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
     /* Uses and sets argc, argv, and some of *cmdlineP and others. */
@@ -1440,7 +1442,7 @@ static bool
 scanbufContainsTheRows(SCAN  const scanbuf,
                        WLIST const rowWeights) {
 /*----------------------------------------------------------------------------
-   Return TRUE iff scanbuf 'scanbuf' contains every row mentioned in
+   Return true iff scanbuf 'scanbuf' contains every row mentioned in
    'rowWeights'.
 
    It might contain additional rows besides.
@@ -1448,7 +1450,7 @@ scanbufContainsTheRows(SCAN  const scanbuf,
     bool missingRow;
     unsigned int i;
 
-    for (i = 0, missingRow = FALSE;
+    for (i = 0, missingRow = false;
          i < rowWeights.nWeight && !missingRow;
         ++i) {
         unsigned int const inputRow = rowWeights.Weight[i].position;
@@ -1461,7 +1463,7 @@ scanbufContainsTheRows(SCAN  const scanbuf,
             /* Nope, this slot has some other row or no row at all.
                So the row we're looking for isn't in the scanbuf.
             */
-            missingRow = TRUE;
+            missingRow = true;
         }
     }
     return !missingRow;
@@ -1569,7 +1571,7 @@ resample(struct pam *     const inpamP,
         /* Output all the rows we can make out of the current contents of
            the scanbuf.  Might be none.
         */
-        needMoreInput = FALSE;  /* initial assumption */
+        needMoreInput = false;  /* initial assumption */
         while (outputRow < outpamP->height && !needMoreInput) {
             WLIST const rowWeights = vertWeight[outputRow];
                 /* The description of what makes up our current output row;
@@ -1583,7 +1585,7 @@ resample(struct pam *     const inpamP,
                                       horizWeight, line, weight);
                 ++outputRow;
             } else
-                needMoreInput = TRUE;
+                needMoreInput = true;
         }
     }
 
@@ -2213,7 +2215,7 @@ main(int argc, const char **argv ) {
 
     ifP = pm_openr(cmdline.inputFileName);
 
-    eof = FALSE;
+    eof = false;
     while (!eof) {
         pamscale(ifP, stdout, cmdline);
         pnm_nextimage(ifP, &eof);
