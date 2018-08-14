@@ -46,30 +46,30 @@ set_tupletype(const char * const str,
               char *       const tupletype);
 
 int
-init_framebuffer(framebuffer_info *);
+init_framebuffer(framebuffer_info * const fbi);
 
 void
-free_framebuffer(framebuffer_info *);
+free_framebuffer(framebuffer_info * const fbi);
 
 void
-print_framebuffer(framebuffer_info *);
+print_framebuffer(framebuffer_info * const fbi);
 
 void
-clear_framebuffer(bool               clear_image_buffer,
-                  bool               clear_z_buffer,
-                  framebuffer_info *);
+clear_framebuffer(bool               const clear_image_buffer,
+                  bool               const clear_z_buffer,
+                  framebuffer_info * const fbi);
 
 int
-realloc_image_buffer(int32_t            new_maxval,
-                     int32_t            new_num_attribs,
-                     framebuffer_info *);
+realloc_image_buffer(int32_t            const new_maxval,
+                     int32_t            const new_num_attribs,
+                     framebuffer_info * const fbi);
 
 void
-draw_span(uint32_t           base,
-          uint16_t           length,
-          fract *            attribs_start,
-          const fract *      attribs_steps,
-          int32_t            divisor,
-          framebuffer_info *);
+draw_span(uint32_t           const base,
+          uint16_t           const length,
+          fract *            const attribs_start,
+          const fract *      const attribs_steps,
+          int32_t            const divisor,
+          framebuffer_info * const fbi);
 
 #endif

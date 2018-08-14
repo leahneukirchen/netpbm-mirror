@@ -50,22 +50,22 @@ typedef struct boundary_info {
 } boundary_info;
 
 void
-init_boundary_buffer(boundary_info * ,
-                     int16_t         height);
+init_boundary_buffer(boundary_info * const bdi,
+                     int16_t         const height);
 
 void
 free_boundary_buffer(boundary_info *);
 
 bool
-gen_triangle_boundaries(Xy              xy,
-                        boundary_info *,
-                        int16_t         width,
-                        int16_t         height);
+gen_triangle_boundaries(Xy              const xy,
+                        boundary_info * const bdi,
+                        int16_t         const width,
+                        int16_t         const height);
 
 void
-get_triangle_boundaries(uint16_t              row_index,
-                        int32_t *             left,
-                        int32_t *             right,
-                        const boundary_info *);
+get_triangle_boundaries(uint16_t              const row_index,
+                        int32_t *             const left,
+                        int32_t *             const right,
+                        const boundary_info * const bdi);
 
 #endif

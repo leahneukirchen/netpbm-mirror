@@ -19,7 +19,7 @@ typedef struct {
 void
 draw_triangle(Xy                        const xy,
               Attribs                   const attribs,
-              struct boundary_info *    const,
-              struct framebuffer_info * const);
+              struct boundary_info *    const bdi,
+              struct framebuffer_info * const fbi);
 
 #endif

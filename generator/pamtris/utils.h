@@ -4,38 +4,38 @@
 #include "fract.h"
 
 void
-gen_steps(const int32_t * begin,
-          const int32_t * end,
-          fract *         out,
-          uint8_t         elements,
-          int32_t         divisor);
+gen_steps(const int32_t * const begin,
+          const int32_t * const end,
+          fract *         const out,
+          uint8_t         const elements,
+          int32_t         const divisor);
 
 void
-step_up(fract *       vars,
-        const fract * steps,
-        uint8_t       elements,
-        int32_t       divisor);
+step_up(fract *       const vars,
+        const fract * const steps,
+        uint8_t       const elements,
+        int32_t       const divisor);
 
 void
-multi_step_up(fract *       vars,
-              const fract * steps,
-              uint8_t       elements,
-              int32_t       times,
-              int32_t       divisor);
+multi_step_up(fract *       const vars,
+              const fract * const steps,
+              uint8_t       const elements,
+              int32_t       const times,
+              int32_t       const divisor);
 
 void
-fract_to_int32_array(const fract * in,
-                     int32_t     * out,
-                     uint8_t       elements);
+fract_to_int32_array(const fract * const in,
+                     int32_t     * const out,
+                     uint8_t       const elements);
 
 void
-int32_to_fract_array(const int32_t * in,
-                     fract *         out,
-                     uint8_t         elements);
+int32_to_fract_array(const int32_t * const in,
+                     fract *         const out,
+                     uint8_t         const elements);
 
 void
-sort3(uint8_t *       index_array,
-      const int32_t * y_array,
-      const int32_t * x_array);
+sort3(uint8_t *       const index_array,
+      const int32_t * const y_array,
+      const int32_t * const x_array);
 
 #endif
