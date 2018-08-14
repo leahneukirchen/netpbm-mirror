@@ -42,8 +42,8 @@ typedef struct framebuffer_info {
 
 
 int
-set_tupletype(const char * str,
-              char         tupletype[256]);
+set_tupletype(const char * const str,
+              char *       const tupletype);
 
 int
 init_framebuffer(framebuffer_info *);

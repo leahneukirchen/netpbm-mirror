@@ -55,7 +55,7 @@ free_boundary_buffer(boundary_info * bi) {
 
 
 bool
-gen_triangle_boundaries(int32_t         xy[3][2],
+gen_triangle_boundaries(Xy              xy,
                         boundary_info * bi,
                         int16_t         width,
                         int16_t         height) {
@@ -71,8 +71,8 @@ gen_triangle_boundaries(int32_t         xy[3][2],
   The return value indicates whether the middle vertex is to the left of the
   line connecting the top vertex to the bottom vertex or not.
 -----------------------------------------------------------------------------*/
-    int16_t leftmost_x = xy[0][0];
-    int16_t rightmost_x = xy[0][0];
+    int16_t leftmost_x = xy._[0][0];
+    int16_t rightmost_x = xy._[0][0];
     int mid_is_to_the_left;
     fract left_x;
     fract right_x;
@@ -104,7 +104,7 @@ gen_triangle_boundaries(int32_t         xy[3][2],
     bi->num_upper_rows = 0;
     bi->num_lower_rows = 0;
 
-    if (xy[2][1] < 0 || xy[0][1] >= height) {
+    if (xy._[2][1] < 0 || xy._[0][1] >= height) {
         /* Triangle is either completely above the topmost scanline or
            completely below the bottom scanline.
         */
@@ -116,12 +116,12 @@ gen_triangle_boundaries(int32_t         xy[3][2],
         unsigned int i;
 
         for (i = 1; i < 3; i++) {
-            if (xy[i][0] < leftmost_x) {
-                leftmost_x = xy[i][0];
+            if (xy._[i][0] < leftmost_x) {
+                leftmost_x = xy._[i][0];
             }
 
-            if (xy[i][0] > rightmost_x) {
-                rightmost_x = xy[i][0];
+            if (xy._[i][0] > rightmost_x) {
+                rightmost_x = xy._[i][0];
             }
         }
     }
@@ -133,28 +133,28 @@ gen_triangle_boundaries(int32_t         xy[3][2],
         return false; /* Actual value doesn't matter. */
     }
 
-    if (xy[0][1] == xy[1][1] && xy[1][1] == xy[2][1]) {
+    if (xy._[0][1] == xy._[1][1] && xy._[1][1] == xy._[2][1]) {
         /* Triangle is degenarate: its visual representation consists only of
            a horizontal straight line.
         */
 
-        bi->start_scanline = xy[0][1];
+        bi->start_scanline = xy._[0][1];
 
         return false; /* Actual value doesn't matter. */
     }
 
     mid_is_to_the_left = 2;
 
-    left_x  = make_pos_fract(xy[0][0], 0);
-    right_x = make_pos_fract(xy[0][0], 0);
+    left_x  = make_pos_fract(xy._[0][0], 0);
+    right_x = make_pos_fract(xy._[0][0], 0);
 
-    if (xy[0][1] == xy[1][1]) {
+    if (xy._[0][1] == xy._[1][1]) {
         /* Triangle has only a lower part. */
 
         mid_is_to_the_left = 0;
 
-        right_x.q = xy[1][0];
-    } else if (xy[1][1] == xy[2][1]) {
+        right_x.q = xy._[1][0];
+    } else if (xy._[1][1] == xy._[2][1]) {
         /* Triangle has only an upper part (plus the row of the middle
            vertex).
         */
@@ -162,15 +162,15 @@ gen_triangle_boundaries(int32_t         xy[3][2],
         mid_is_to_the_left = 1;
     }
 
-    no_upper_part = (xy[1][1] == xy[0][1]);
+    no_upper_part = (xy._[1][1] == xy._[0][1]);
 
-    top2mid_delta = xy[1][1] - xy[0][1] + !no_upper_part;
-    top2bot_delta = xy[2][1] - xy[0][1] + 1;
-    mid2bot_delta = xy[2][1] - xy[1][1] + no_upper_part;
+    top2mid_delta = xy._[1][1] - xy._[0][1] + !no_upper_part;
+    top2bot_delta = xy._[2][1] - xy._[0][1] + 1;
+    mid2bot_delta = xy._[2][1] - xy._[1][1] + no_upper_part;
 
-    gen_steps(&xy[0][0], &xy[1][0], &top2mid_step, 1, top2mid_delta);
-    gen_steps(&xy[0][0], &xy[2][0], &top2bot_step, 1, top2bot_delta);
-    gen_steps(&xy[1][0], &xy[2][0], &mid2bot_step, 1, mid2bot_delta);
+    gen_steps(&xy._[0][0], &xy._[1][0], &top2mid_step, 1, top2mid_delta);
+    gen_steps(&xy._[0][0], &xy._[2][0], &top2bot_step, 1, top2bot_delta);
+    gen_steps(&xy._[1][0], &xy._[2][0], &mid2bot_step, 1, mid2bot_delta);
 
     if (mid_is_to_the_left == 2) {
         if (top2bot_step.negative_flag == true) {
@@ -232,7 +232,7 @@ gen_triangle_boundaries(int32_t         xy[3][2],
     num_rows_ptr[0] = &bi->num_upper_rows;
     num_rows_ptr[1] = &bi->num_lower_rows;
 
-    y = xy[0][1];
+    y = xy._[0][1];
 
     i = 0;
     k = 0;
@@ -240,14 +240,14 @@ gen_triangle_boundaries(int32_t         xy[3][2],
     if (no_upper_part == true) {
         k = 1;
 
-        right_x.q = xy[1][0];
+        right_x.q = xy._[1][0];
     }
 
     step_up(&left_x, left_step[k], 1, left_delta[k]);
     step_up(&right_x, right_step[k], 1, right_delta[k]);
 
     while (k < 2) {
-        int32_t end = xy[k + 1][1] + k;
+        int32_t end = xy._[k + 1][1] + k;
 
         if (y < 0) {
             int32_t delta;
@@ -255,7 +255,7 @@ gen_triangle_boundaries(int32_t         xy[3][2],
             if (end > 0) {
                 delta = -y;
             } else {
-                delta = xy[k + 1][1] - y;
+                delta = xy._[k + 1][1] - y;
             }
 
             y += delta;

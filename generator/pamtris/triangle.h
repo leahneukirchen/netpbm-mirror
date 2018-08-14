@@ -8,10 +8,18 @@
 struct boundary_info;
 struct framebuffer_info;
 
+typedef struct {
+    int32_t _[3][2];
+} Xy;
+
+typedef struct {
+    int32_t _[3][MAX_NUM_ATTRIBS + 1];
+} Attribs;
+
 void
-draw_triangle(int32_t            xy[3][2],
-              int32_t            attribs[3][MAX_NUM_ATTRIBS + 1],
-              struct boundary_info *,
-              struct framebuffer_info *);
+draw_triangle(Xy                        const xy,
+              Attribs                   const attribs,
+              struct boundary_info *    const,
+              struct framebuffer_info * const);
 
 #endif

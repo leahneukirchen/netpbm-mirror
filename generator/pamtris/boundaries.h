@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#include "triangle.h"
+
 typedef struct boundary_info {
 /*----------------------------------------------------------------------------
   Information about visible triangle rows' boundaries. Also see the
@@ -55,7 +57,7 @@ void
 free_boundary_buffer(boundary_info *);
 
 bool
-gen_triangle_boundaries(int32_t         xy[3][2],
+gen_triangle_boundaries(Xy              xy,
                         boundary_info *,
                         int16_t         width,
                         int16_t         height);

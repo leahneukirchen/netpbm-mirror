@@ -42,12 +42,12 @@
 #define SYNTAX_ERROR        "syntax error: line %lu."
 
 typedef struct {
-    int32_t v_xy[3][2];
+    Xy v_xy;
         /* X- and Y-coordinates of the vertices for the current triangle.
            int32_t v_attribs[3][MAX_NUM_ATTRIBS + 1]; // Vertex attributes for
            the current triangle. Includes the Z-coordinates.
         */
-	int32_t v_attribs[3][MAX_NUM_ATTRIBS + 1];
+	Attribs v_attribs;
         /* Vertex attributes for the current triangle. Includes the
            Z-coordinates.
         */
@@ -69,9 +69,9 @@ typedef struct {
 
 
 static void
-clear_attribs(state_info * si,
-              int32_t      maxval,
-              int16_t      num_attribs) {
+clear_attribs(state_info * const si,
+              int32_t      const maxval,
+              int16_t      const num_attribs) {
 
     unsigned int i;
 
@@ -83,7 +83,7 @@ clear_attribs(state_info * si,
 
 
 void
-init_input_processor(input_info * ii) {
+init_input_processor(input_info * const ii) {
 
     MALLOCARRAY_NOFAIL(ii->buffer, 128);
 
@@ -94,7 +94,7 @@ init_input_processor(input_info * ii) {
 
 
 void
-free_input_processor(input_info * ii) {
+free_input_processor(input_info * const ii) {
     free(ii->buffer);
 }
 
@@ -112,22 +112,18 @@ typedef struct {
 
 
 static token
-next_token(char * string_ptr) {
+next_token(char * const startPos) {
 
     token retval;
+    char * p;
 
-    while (*string_ptr != '\0' && isspace(*string_ptr)) {
-        string_ptr++;
-    }
+    for (p = startPos; *p && isspace(*p); ++p);
 
-    retval.begin = string_ptr;
+    retval.begin = p;
 
-    while (*string_ptr != '\0' && !isspace(*string_ptr))
-    {
-        string_ptr++;
-    }
+    for (; *p && !isspace(*p); ++p)
 
-    retval.end = string_ptr;
+    retval.end = p;
 
     return retval;
 }
@@ -135,33 +131,29 @@ next_token(char * string_ptr) {
 
 
 static bool
-validate_string(const char * target,
-                const char * src_begin,
-                const char * src_end) {
+validate_string(const char * const target,
+                const char * const srcBegin,
+                const char * const srcEnd) {
 
-    uint8_t chars_matched = 0;
+    unsigned int charsMatched;
+    const char * p;
 
-    while (src_begin != src_end && target[chars_matched] != '\0') {
-        if (*src_begin == target[chars_matched]) {
-            chars_matched++;
-        } else {
+    for (p = srcBegin, charsMatched = 0;
+         p != srcEnd && target[charsMatched] != '\0'; ++p) {
+
+        if (*p == target[charsMatched])
+            ++charsMatched;
+        else
             break;
-        }
-
-        src_begin++;
     }
 
-    if (!isspace(*src_begin) && *src_begin != '\0') {
-        return false;
-    }
-
-    return true;
+    return (*p == '\0' || isspace(*p));
 }
 
 
 
 static void
-init_state(state_info * si) {
+init_state(state_info * const si) {
 
     si->next = 0;
     si->draw = false;
@@ -171,37 +163,36 @@ init_state(state_info * si) {
 
 
 static void
-make_lowercase(token t) {
+make_lowercase(token const t) {
 
-    while (t.begin != t.end) {
-        *t.begin = tolower(*t.begin);
+    char * p;
 
-        t.begin++;
-    }
+    for (p = t.begin; t.begin != t.end; ++p)
+        *p = tolower(*p);
 }
 
 
 
 static void
-remove_comments(char * str) {
+remove_comments(char * const str) {
 
-    while (*str != '\0') {
-        if (*str == '#') {
-            *str = '\0';
+    char * p;
 
-            return;
+    for (p = &str[0]; *p; ++p) {
+        if (*p == '#') {
+            *p = '\0';
+
+            break;
         }
-
-        str++;
     }
 }
 
 
 
 int
-process_next_command(input_info           * line,
-                     struct boundary_info * bi,
-                     framebuffer_info     * fbi) {
+process_next_command(input_info           * const line,
+                     struct boundary_info * const bi,
+                     framebuffer_info     * const fbi) {
 /*----------------------------------------------------------------------------
   Doesn't necessarily process a command, just the next line of input, which
   may be empty. Always returns 1, except when it cannot read any more lines of
@@ -415,13 +406,13 @@ process_next_command(input_info           * line,
         }
 
         for (i = 0; i < fbi->num_attribs; i++) {
-            state.v_attribs[state.next][i] = state.curr_attribs[i];
+            state.v_attribs._[state.next][i] = state.curr_attribs[i];
         }
 
-        state.v_attribs[state.next][fbi->num_attribs] = i_args[2];
+        state.v_attribs._[state.next][fbi->num_attribs] = i_args[2];
 
-        state.v_xy[state.next][0] = i_args[0];
-        state.v_xy[state.next][1] = i_args[1];
+        state.v_xy._[state.next][0] = i_args[0];
+        state.v_xy._[state.next][1] = i_args[1];
 
         state.next++;
 

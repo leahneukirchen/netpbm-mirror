@@ -47,8 +47,8 @@
 
 
 int
-set_tupletype(const char * str,
-              char         tupletype[256]) {
+set_tupletype(const char * const str,
+              char *       const tupletype) {
 /*----------------------------------------------------------------------------
   Set the tuple type for the output PAM images given a string ("str") of 255
   characters or less. If the string has more than 255 characters, the function
@@ -86,7 +86,7 @@ set_tupletype(const char * str,
 
 
 int
-init_framebuffer(framebuffer_info * fbi) {
+init_framebuffer(framebuffer_info * const fbi) {
 
     uint8_t num_planes = fbi->num_attribs + 1;
 
@@ -136,7 +136,7 @@ init_framebuffer(framebuffer_info * fbi) {
 
 
 void
-free_framebuffer(framebuffer_info * fbi) {
+free_framebuffer(framebuffer_info * const fbi) {
 
     free(fbi->img.buffer);
     free(fbi->z.buffer);
@@ -147,9 +147,9 @@ free_framebuffer(framebuffer_info * fbi) {
 
 
 int
-realloc_image_buffer(int32_t            new_maxval,
-                     int32_t            new_num_attribs,
-                     framebuffer_info * fbi) {
+realloc_image_buffer(int32_t            const new_maxval,
+                     int32_t            const new_num_attribs,
+                     framebuffer_info * const fbi) {
 /*----------------------------------------------------------------------------
   Reallocate the image buffer with a new maxval and depth, given the struct
   with information about the framebuffer. The fields variables "maxval" and
@@ -227,7 +227,7 @@ realloc_image_buffer(int32_t            new_maxval,
 
 
 void
-print_framebuffer(framebuffer_info * fbi) {
+print_framebuffer(framebuffer_info * const fbi) {
 
     uint8_t num_planes = fbi->num_attribs + 1;
     uint32_t i = 0;
@@ -256,9 +256,9 @@ print_framebuffer(framebuffer_info * fbi) {
 
 
 void
-clear_framebuffer(bool              clear_image_buffer,
-                  bool              clear_z_buffer,
-                  framebuffer_info* fbi) {
+clear_framebuffer(bool               const clear_image_buffer,
+                  bool               const clear_z_buffer,
+                  framebuffer_info * const fbi) {
 
     if (clear_image_buffer) {
         memset(fbi->img.buffer, 0, fbi->img.bytes);
@@ -272,12 +272,12 @@ clear_framebuffer(bool              clear_image_buffer,
 
 
 void
-draw_span(uint32_t           base,
-          uint16_t           length,
-          fract *            attribs_start,
-          const fract *      attribs_steps,
-          int32_t            div,
-          framebuffer_info * fbi) {
+draw_span(uint32_t           const base,
+          uint16_t           const length,
+          fract *            const attribs_start,
+          const fract *      const attribs_steps,
+          int32_t            const div,
+          framebuffer_info * const fbi) {
 /*----------------------------------------------------------------------------
   Draw a horizontal span of "length" pixels into the frame buffer, performing
   the appropriate depth tests. "base" must equal the row of the frame buffer
@@ -324,5 +324,7 @@ draw_span(uint32_t           base,
         step_up(attribs_start, attribs_steps, num_planes, div);
     }
 }
+
+
 
 

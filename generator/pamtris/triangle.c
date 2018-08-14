@@ -18,15 +18,15 @@
 
 static void
 draw_partial_triangle(
-    const fract *         left_attribs_input,
-    const fract *         left_attribs_steps,
-    const fract *         right_attribs_input,
-    const fract *         right_attribs_steps,
-    int32_t               left_div,
-    int32_t               right_div,
-    bool                  upper_part,
-    const boundary_info * bi,
-    framebuffer_info *    fbi) {
+    const fract *         const left_attribs_input,
+    const fract *         const left_attribs_steps,
+    const fract *         const right_attribs_input,
+    const fract *         const right_attribs_steps,
+    int32_t               const left_div,
+    int32_t               const right_div,
+    bool                  const upper_part,
+    const boundary_info * const bi,
+    framebuffer_info *    const fbi) {
 
     uint8_t num_planes = fbi->num_attribs + 1;
 
@@ -123,16 +123,16 @@ draw_partial_triangle(
 
 
 static void
-draw_degenerate_horizontal(int32_t           xy[3][2],
-                           fract *           attribs_left,
-                           fract *           attribs_mid,
-                           const fract *     top2mid_steps,
-                           const fract *     top2bot_steps,
-                           const fract *     mid2bot_steps,
-                           int32_t           top2mid_delta,
-                           int32_t           top2bot_delta,
-                           int32_t           mid2bot_delta,
-                           framebuffer_info* fbi) {
+draw_degenerate_horizontal(Xy                 const xy,
+                           fract *            const attribs_left,
+                           fract *            const attribs_mid,
+                           const fract *      const top2mid_steps,
+                           const fract *      const top2bot_steps,
+                           const fract *      const mid2bot_steps,
+                           int32_t            const top2mid_delta,
+                           int32_t            const top2bot_delta,
+                           int32_t            const mid2bot_delta,
+                           framebuffer_info * const fbi) {
 
     uint8_t num_planes = fbi->num_attribs + 1;
 
@@ -143,7 +143,7 @@ draw_degenerate_horizontal(int32_t           xy[3][2],
     memcpy(attribs_left_bkup, attribs_left, num_planes * sizeof(fract));
 
     {
-        int16_t y = xy[0][1];
+        int16_t y = xy._[0][1];
 
         int16_t x[3];
         int16_t x_start[3];
@@ -152,9 +152,9 @@ draw_degenerate_horizontal(int32_t           xy[3][2],
         int32_t span_length[3];
         unsigned int i;
 
-        x[0] = xy[0][0];
-        x[1] = xy[1][0];
-        x[2] = xy[2][0];
+        x[0] = xy._[0][0];
+        x[1] = xy._[1][0];
+        x[2] = xy._[2][0];
 
         x_start[0] = x[0];
         x_start[1] = x[0];
@@ -204,14 +204,14 @@ draw_degenerate_horizontal(int32_t           xy[3][2],
 
 
 void
-draw_triangle(int32_t            xy_input[3][2],
-              int32_t            attribs_input[3][MAX_NUM_ATTRIBS + 1],
-              boundary_info *    bi,
-              framebuffer_info * fbi) {
+draw_triangle(Xy                 const xy_input,
+              Attribs            const attribs_input,
+              boundary_info *    const bi,
+              framebuffer_info * const fbi) {
 
     uint8_t num_planes = fbi->num_attribs + 1;
 
-    int32_t xy[3][2];
+    Xy xy;
     int32_t * attribs[3];
     unsigned int i;
     uint8_t index_array[3];
@@ -222,17 +222,17 @@ draw_triangle(int32_t            xy_input[3][2],
     MALLOCARRAY_NOFAIL(attribs[1], num_planes);
     MALLOCARRAY_NOFAIL(attribs[2], num_planes);
 
-    memcpy(xy, xy_input, sizeof(xy));
+    xy = xy_input;
 
     for (i = 0; i < 3; i++) {
-        memcpy(attribs[i], attribs_input[i], num_planes * sizeof(int32_t));
+        memcpy(attribs[i], attribs_input._[i], num_planes * sizeof(int32_t));
     }
 
     /* Argument preparations for sort3: */
 
     index_array[0] = 0; index_array[1] = 1; index_array[2] = 2;
-    y_array[0] = xy[0][1]; y_array[1] = xy[1][1]; y_array[2] = xy[2][1];
-    x_array[0] = xy[0][0]; x_array[1] = xy[1][0]; x_array[2] = xy[2][0];
+    y_array[0] = xy._[0][1]; y_array[1] = xy._[1][1]; y_array[2] = xy._[2][1];
+    x_array[0] = xy._[0][0]; x_array[1] = xy._[1][0]; x_array[2] = xy._[2][0];
 
     sort3(index_array, y_array, x_array);
 
@@ -243,14 +243,14 @@ draw_triangle(int32_t            xy_input[3][2],
 
         bool mid_is_to_the_left;
 
-        int32_t xy_sorted[3][2];
+        Xy xy_sorted;
 
-        xy_sorted[0][0] = xy[top][0];
-        xy_sorted[0][1] = xy[top][1];
-        xy_sorted[1][0] = xy[mid][0];
-        xy_sorted[1][1] = xy[mid][1];
-        xy_sorted[2][0] = xy[bot][0];
-        xy_sorted[2][1] = xy[bot][1];
+        xy_sorted._[0][0] = xy._[top][0];
+        xy_sorted._[0][1] = xy._[top][1];
+        xy_sorted._[1][0] = xy._[mid][0];
+        xy_sorted._[1][1] = xy._[mid][1];
+        xy_sorted._[2][0] = xy._[bot][0];
+        xy_sorted._[2][1] = xy._[bot][1];
 
         mid_is_to_the_left =
             gen_triangle_boundaries(xy_sorted, bi, fbi->width, fbi->height);
@@ -260,16 +260,17 @@ draw_triangle(int32_t            xy_input[3][2],
 
             return;
         } else {
-            bool no_upper_part = (xy_sorted[1][1] == xy_sorted[0][1]);
+            bool no_upper_part = (xy_sorted._[1][1] == xy_sorted._[0][1]);
 
-            bool horizontal = (xy[0][1] == xy[1][1] && xy[1][1] == xy[2][1]);
+            bool horizontal =
+                (xy._[0][1] == xy._[1][1] && xy._[1][1] == xy._[2][1]);
                 /* We are dealing with a degenerate horizontal triangle */
 
             uint8_t t = ~horizontal & 1;
 
-            int32_t top2mid_delta = xy[mid][t] - xy[top][t];
-            int32_t top2bot_delta = xy[bot][t] - xy[top][t];
-            int32_t mid2bot_delta = xy[bot][t] - xy[mid][t];
+            int32_t top2mid_delta = xy._[mid][t] - xy._[top][t];
+            int32_t top2bot_delta = xy._[bot][t] - xy._[top][t];
+            int32_t mid2bot_delta = xy._[bot][t] - xy._[mid][t];
 
             fract * top2mid_steps;
             fract * top2bot_steps;
@@ -361,8 +362,8 @@ draw_triangle(int32_t            xy_input[3][2],
 
                 if (bi->num_upper_rows > 0) {
 
-                    if (bi->start_scanline > xy[top][1]) {
-                        delta = bi->start_scanline - xy[top][1];
+                    if (bi->start_scanline > xy._[top][1]) {
+                        delta = bi->start_scanline - xy._[top][1];
 
                         multi_step_up(left_attribs, upper_left_attribs_steps,
                                       num_planes, delta, upper_left_delta);
@@ -379,7 +380,7 @@ draw_triangle(int32_t            xy_input[3][2],
                         fbi
                         );
 
-                    delta = xy[mid][1] - bi->start_scanline;
+                    delta = xy._[mid][1] - bi->start_scanline;
                 } else {
                     delta = top2mid_delta;
                 }
@@ -390,8 +391,8 @@ draw_triangle(int32_t            xy_input[3][2],
                               num_planes, delta, upper_right_delta);
             }
 
-            if (bi->start_scanline > xy[mid][1]) {
-                int32_t delta = bi->start_scanline - xy[mid][1];
+            if (bi->start_scanline > xy._[mid][1]) {
+                int32_t delta = bi->start_scanline - xy._[mid][1];
 
                 multi_step_up(left_attribs, lower_left_attribs_steps,
                               num_planes, delta, lower_left_delta);

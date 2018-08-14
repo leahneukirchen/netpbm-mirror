@@ -16,15 +16,14 @@
 
 
 static int
-parse_command_line (
- int       argv_idx,
- int *     argc_ptr,
- const char ** argv,
- int32_t * width,
- int32_t * height,
- int32_t * maxval,
- int32_t * num_attribs,
- char      tupletype[256]) {
+parse_command_line(int           const argv_idx,
+                   int *         const argc_ptr,
+                   const char ** const argv,
+                   int32_t *     const width,
+                   int32_t *     const height,
+                   int32_t *     const maxval,
+                   int32_t *     const num_attribs,
+                   char *        const tupletype) {
 
     optEntry * option_def;
     optStruct3 opt;
@@ -72,6 +71,8 @@ parse_command_line (
 
     if (maxval_spec) {
         if (*maxval < 1 || *maxval > PAM_OVERALL_MAXVAL) {
+
+
             pm_errormsg("invalid maxval.");
 
             return 0;
