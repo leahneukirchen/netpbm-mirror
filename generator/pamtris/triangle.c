@@ -289,6 +289,8 @@ draw_triangle(Xy                 const xy_input,
             fract * left_attribs;
             fract * right_attribs;
 
+            bool degenerate_horizontal;
+
             MALLOCARRAY_NOFAIL(top2mid_steps, num_planes);
             MALLOCARRAY_NOFAIL(top2bot_steps, num_planes);
             MALLOCARRAY_NOFAIL(mid2bot_steps, num_planes);
@@ -311,7 +313,7 @@ draw_triangle(Xy                 const xy_input,
             int32_to_fract_array(attribs[top], left_attribs, num_planes);
             int32_to_fract_array(attribs[top], right_attribs, num_planes);
 
-            if (mid_is_to_the_left == true) {
+            if (mid_is_to_the_left) {
                 upper_left_attribs_steps    = top2mid_steps;
                 lower_left_attribs_steps    = mid2bot_steps;
                 upper_right_attribs_steps   = top2bot_steps;
@@ -337,23 +339,19 @@ draw_triangle(Xy                 const xy_input,
                 int32_to_fract_array(attribs[mid], right_attribs, num_planes);
 
                 if (horizontal) {
-                    draw_degenerate_horizontal(
-                        xy_sorted,
-                        left_attribs, right_attribs,
-                        top2mid_steps, top2bot_steps, mid2bot_steps,
-                        top2mid_delta, top2bot_delta, mid2bot_delta,
-                        fbi
-                        );
+                    degenerate_horizontal = true;
+                } else {
+                    degenerate_horizontal = false;
 
-                    return;
+                    step_up(left_attribs, lower_left_attribs_steps, num_planes,
+                            lower_left_delta);
+                    step_up(right_attribs, lower_right_attribs_steps, num_planes,
+                            lower_right_delta);
                 }
-
-                step_up(left_attribs, lower_left_attribs_steps, num_planes,
-                        lower_left_delta);
-                step_up(right_attribs, lower_right_attribs_steps, num_planes,
-                        lower_right_delta);
             } else {
                 int32_t delta;
+
+                degenerate_horizontal = false;
 
                 step_up(left_attribs, upper_left_attribs_steps, num_planes,
                         upper_left_delta);
@@ -390,24 +388,33 @@ draw_triangle(Xy                 const xy_input,
                 multi_step_up(right_attribs, upper_right_attribs_steps,
                               num_planes, delta, upper_right_delta);
             }
+            if (degenerate_horizontal) {
+                draw_degenerate_horizontal(
+                    xy_sorted,
+                    left_attribs, right_attribs,
+                    top2mid_steps, top2bot_steps, mid2bot_steps,
+                    top2mid_delta, top2bot_delta, mid2bot_delta,
+                    fbi
+                    );
+            } else {
+                if (bi->start_scanline > xy._[mid][1]) {
+                    int32_t delta = bi->start_scanline - xy._[mid][1];
 
-            if (bi->start_scanline > xy._[mid][1]) {
-                int32_t delta = bi->start_scanline - xy._[mid][1];
+                    multi_step_up(left_attribs, lower_left_attribs_steps,
+                                  num_planes, delta, lower_left_delta);
+                    multi_step_up(right_attribs, lower_right_attribs_steps,
+                                  num_planes, delta, lower_right_delta);
+                }
 
-                multi_step_up(left_attribs, lower_left_attribs_steps,
-                              num_planes, delta, lower_left_delta);
-                multi_step_up(right_attribs, lower_right_attribs_steps,
-                              num_planes, delta, lower_right_delta);
+                draw_partial_triangle(
+                    left_attribs, lower_left_attribs_steps,
+                    right_attribs, lower_right_attribs_steps,
+                    lower_left_delta, lower_right_delta,
+                    false,
+                    bi,
+                    fbi
+                    );
             }
-
-            draw_partial_triangle(
-                left_attribs, lower_left_attribs_steps,
-                right_attribs, lower_right_attribs_steps,
-                lower_left_delta, lower_right_delta,
-                false,
-                bi,
-                fbi
-                );
             free(right_attribs); free(left_attribs);
             free(mid2bot_steps); free(top2bot_steps); free(top2mid_steps);
         }
