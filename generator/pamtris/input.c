@@ -307,8 +307,8 @@ process_next_command(input_info           * const line,
         }
 
         if (unrecognized_arg == true) {
-            pm_errormsg("error: unrecognized drawing mode (\"%c\"): "
-                        "line %lu.", *nt.begin, line->number);
+            pm_errormsg("error: unrecognized drawing mode in line %lu.",
+                        line->number);
         }
 
         break;
