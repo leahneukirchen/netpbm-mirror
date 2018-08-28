@@ -16,8 +16,7 @@
 
 
 static int
-parse_command_line(int           const argv_idx,
-                   int *         const argc_ptr,
+parse_command_line(int *         const argc_ptr,
                    const char ** const argv,
                    int32_t *     const width,
                    int32_t *     const height,
@@ -95,6 +94,8 @@ parse_command_line(int           const argv_idx,
         }
     }
 
+    free(option_def);
+
     return 1;
 }
 
@@ -111,7 +112,7 @@ main(int argc, const char ** argv) {
 
     set_tupletype(NULL, fbi.outpam.tuple_type);
 
-    if (!parse_command_line(1, &argc, argv,
+    if (!parse_command_line(&argc, argv,
                             &fbi.width, &fbi.height, &fbi.maxval,
                             &fbi.num_attribs, fbi.outpam.tuple_type)) {
         return 1;
