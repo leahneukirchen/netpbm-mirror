@@ -40,8 +40,8 @@ make_pos_fract(int32_t const quotient,
 
 
 void
-init_boundary_buffer(boundary_info * bi,
-                     int16_t         height) {
+init_boundary_buffer(boundary_info * const bi,
+                     int16_t         const height) {
     MALLOCARRAY_NOFAIL(bi->buffer, height * 2 * sizeof(int16_t));
 }
 
@@ -55,10 +55,10 @@ free_boundary_buffer(boundary_info * bi) {
 
 
 bool
-gen_triangle_boundaries(Xy              xy,
-                        boundary_info * bi,
-                        int16_t         width,
-                        int16_t         height) {
+gen_triangle_boundaries(Xy              const xy,
+                        boundary_info * const bi,
+                        int16_t         const width,
+                        int16_t         const height) {
 /*----------------------------------------------------------------------------
   Generate an entry in the boundary buffer for the boundaries of every
   VISIBLE row of a particular triangle. In case there is no such row,
@@ -71,8 +71,8 @@ gen_triangle_boundaries(Xy              xy,
   The return value indicates whether the middle vertex is to the left of the
   line connecting the top vertex to the bottom vertex or not.
 -----------------------------------------------------------------------------*/
-    int16_t leftmost_x = xy._[0][0];
-    int16_t rightmost_x = xy._[0][0];
+    int16_t leftmost_x;
+    int16_t rightmost_x;
     int mid_is_to_the_left;
     fract left_x;
     fract right_x;
@@ -97,8 +97,11 @@ gen_triangle_boundaries(Xy              xy,
     int32_t right_delta[2];
     int16_t* num_rows_ptr[2];
     int32_t y;
-    int32_t i = 0;
-    uint8_t k = 0;
+    int32_t i;
+    uint8_t k;
+
+    leftmost_x = xy._[0][0];   /* initial value */
+    rightmost_x = xy._[0][0];  /* initial value */
 
     bi->start_scanline = -1;
     bi->num_upper_rows = 0;
@@ -173,8 +176,8 @@ gen_triangle_boundaries(Xy              xy,
     gen_steps(&xy._[1][0], &xy._[2][0], &mid2bot_step, 1, mid2bot_delta);
 
     if (mid_is_to_the_left == 2) {
-        if (top2bot_step.negative_flag == true) {
-            if (top2mid_step.negative_flag == true) {
+        if (top2bot_step.negative_flag) {
+            if (top2mid_step.negative_flag) {
                 if (top2mid_step.q == top2bot_step.q) {
                     mid_is_to_the_left =
                         top2mid_step.r * top2bot_delta >
@@ -186,7 +189,7 @@ gen_triangle_boundaries(Xy              xy,
                 mid_is_to_the_left = 0;
             }
         } else {
-            if (top2mid_step.negative_flag == false) {
+            if (!top2mid_step.negative_flag) {
                 if (top2mid_step.q == top2bot_step.q) {
                     mid_is_to_the_left =
                         top2mid_step.r * top2bot_delta <
@@ -237,7 +240,7 @@ gen_triangle_boundaries(Xy              xy,
     i = 0;
     k = 0;
 
-    if (no_upper_part == true) {
+    if (no_upper_part) {
         k = 1;
 
         right_x.q = xy._[1][0];
@@ -247,7 +250,9 @@ gen_triangle_boundaries(Xy              xy,
     step_up(&right_x, right_step[k], 1, right_delta[k]);
 
     while (k < 2) {
-        int32_t end = xy._[k + 1][1] + k;
+        int32_t end;
+
+        end = xy._[k + 1][1] + k;  /* initial value */
 
         if (y < 0) {
             int32_t delta;
@@ -304,17 +309,17 @@ gen_triangle_boundaries(Xy              xy,
 
 
 void
-get_triangle_boundaries(uint16_t              row_index,
-                        int32_t *             left,
-                        int32_t *             right,
-                        const boundary_info * bi) {
+get_triangle_boundaries(uint16_t              const row_index,
+                        int32_t *             const left,
+                        int32_t *             const right,
+                        const boundary_info * const bi) {
 /*----------------------------------------------------------------------------
   Return the left and right boundaries for a given VISIBLE triangle row (the
   row index is relative to the first visible row). These values may be out of
   the horizontal limits of the frame buffer, which is necessary in order to
   compute correct attribute interpolations.
 -----------------------------------------------------------------------------*/
-    uint32_t i  = row_index << 1;
+    uint32_t const i  = row_index << 1;
 
     *left       = bi->buffer[i];
     *right      = bi->buffer[i + 1];

@@ -63,7 +63,9 @@ set_tupletype(const char * const str,
 
         return 1;
     } else {
-        size_t len = strlen(str);
+        size_t len;
+
+        len = strlen(str);   /* initial value */
 
         if (len > 255) {
             return 0;
@@ -88,9 +90,9 @@ set_tupletype(const char * const str,
 int
 init_framebuffer(framebuffer_info * const fbi) {
 
-    uint8_t num_planes = fbi->num_attribs + 1;
+    uint8_t const num_planes = fbi->num_attribs + 1;
 
-    uint32_t elements = fbi->width * fbi->height;
+    uint32_t const elements = fbi->width * fbi->height;
 
     fbi->img.bytes = elements * (num_planes * sizeof(uint16_t));
     fbi->z.bytes = elements * sizeof(uint32_t);
@@ -100,8 +102,7 @@ init_framebuffer(framebuffer_info * const fbi) {
     fbi->z.buffer =
         calloc(fbi->z.bytes / sizeof(uint32_t), sizeof(uint32_t));
 
-    if(fbi->img.buffer == NULL || fbi->z.buffer == NULL)
-    {
+    if(fbi->img.buffer == NULL || fbi->z.buffer == NULL) {
         free(fbi->img.buffer);
         free(fbi->z.buffer);
 
@@ -171,10 +172,12 @@ realloc_image_buffer(int32_t            const new_maxval,
   performed: only the global variable "maxval" is changed. But the image
   buffer is nonetheless left in cleared state regardless.
 -----------------------------------------------------------------------------*/
-    uint8_t num_planes = fbi->num_attribs + 1;
+    uint8_t num_planes;
 
     pnm_freepamrow(fbi->pamrow);
     fbi->pamrow = NULL;
+
+    num_planes = fbi->num_attribs + 1;  /* initial value */
 
     if (new_num_attribs != fbi->num_attribs) {
         fbi->num_attribs = new_num_attribs;
@@ -184,7 +187,8 @@ realloc_image_buffer(int32_t            const new_maxval,
             fbi->width * fbi->height * (num_planes * sizeof(uint16_t));
 
         {
-            uint16_t* new_ptr = realloc(fbi->img.buffer, fbi->img.bytes);
+            uint16_t * const new_ptr =
+                realloc(fbi->img.buffer, fbi->img.bytes);
 
             if (new_ptr == NULL) {
                 free(fbi->img.buffer);
@@ -229,16 +233,17 @@ realloc_image_buffer(int32_t            const new_maxval,
 void
 print_framebuffer(framebuffer_info * const fbi) {
 
-    uint8_t num_planes = fbi->num_attribs + 1;
-    uint32_t i = 0;
-    uint32_t end = fbi->width * fbi->height;
+    uint8_t  const num_planes = fbi->num_attribs + 1;
+    uint32_t const end        = fbi->width * fbi->height;
+
+    uint32_t i;
 
     pnm_writepaminit(&fbi->outpam);
 
-    while (i != end) {
+    for (i = 0; i != end; ) {
         int j;
         for (j = 0; j < fbi->width; j++) {
-            uint32_t k = (i + j) * num_planes;
+            uint32_t const k = (i + j) * num_planes;
 
             unsigned int l;
 
@@ -286,19 +291,19 @@ draw_span(uint32_t           const base,
 
   This function does not perform any kind of bounds checking.
 -----------------------------------------------------------------------------*/
-    uint8_t num_planes = fbi->num_attribs + 1;
+    uint8_t const num_planes = fbi->num_attribs + 1;
 
     unsigned int i;
 
     /* Process each pixel in the span: */
 
     for (i = 0; i < length; i++) {
-        int32_t z = MAX_Z - attribs_start[fbi->num_attribs].q;
-        uint32_t z_mask = -(~(z - fbi->z.buffer[base + i]) >> 31);
-        uint32_t n_z_mask = ~z_mask;
+        int32_t  const z        = MAX_Z - attribs_start[fbi->num_attribs].q;
+        uint32_t const z_mask   = -(~(z - fbi->z.buffer[base + i]) >> 31);
+        uint32_t const n_z_mask = ~z_mask;
 
-        uint32_t j = base + i;
-        uint32_t k = j * num_planes;
+        uint32_t const j = base + i;
+        uint32_t const k = j * num_planes;
 
         unsigned int l;
 
@@ -324,7 +329,6 @@ draw_span(uint32_t           const base,
         step_up(attribs_start, attribs_steps, num_planes, div);
     }
 }
-
 
 
 

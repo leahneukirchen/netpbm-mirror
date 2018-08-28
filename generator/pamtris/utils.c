@@ -33,12 +33,14 @@ step_up(fract *       const vars,
     unsigned int i;
 
     for (i = 0; i < elements; ++i) {
-        uint32_t negative_mask = -steps[i].negative_flag;
+        uint32_t const negative_mask = -steps[i].negative_flag;
+
         vars[i].q += steps[i].q;
         vars[i].r += steps[i].r;
 
         {
-            uint32_t overdiv_mask = -(((uint32_t)~(vars[i].r - div)) >> 31);
+            uint32_t const overdiv_mask =
+                -(((uint32_t)~(vars[i].r - div)) >> 31);
                 /*  = ~0 if var->r >= div; 0 otherwise. */
 
             vars[i].q += (negative_mask | 1) & overdiv_mask;
@@ -66,14 +68,14 @@ multi_step_up(fract *       const vars,
     unsigned int i;
 
     for (i = 0; i < elements; i++) {
-        uint32_t negative_mask = -steps[i].negative_flag;
+        uint32_t const negative_mask = -steps[i].negative_flag;
 
         vars[i].q += times * steps[i].q;
         vars[i].r += times * steps[i].r;
 
         if(vars[i].r >= div && div != 0) {
-            int32_t r_q = vars[i].r / div;
-            int32_t r_r = vars[i].r % div;
+            int32_t const r_q = vars[i].r / div;
+            int32_t const r_r = vars[i].r % div;
 
             vars[i].q += (-r_q & negative_mask) | (r_q & ~negative_mask);
                 /* = -r_q if the step is negative; r_q, otherwise. */
@@ -113,7 +115,7 @@ gen_steps(const int32_t * const begin,
         unsigned int i;
 
         for (i = 0; i < elements; i++) {
-            int32_t delta = end[i] - begin[i];
+            int32_t const delta = end[i] - begin[i];
 
             out[i].q = delta / div;
             out[i].r = abs(delta % div);
@@ -123,7 +125,7 @@ gen_steps(const int32_t * const begin,
         unsigned int i;
 
         for (i = 0; i < elements; i++) {
-            int32_t delta = end[i] - begin[i];
+            int32_t const delta = end[i] - begin[i];
 
             out[i].q = delta;
             out[i].r = 0;
@@ -169,7 +171,8 @@ swap(uint8_t * const a,
 /*----------------------------------------------------------------------------
   Swap the contents pointed to by a and b.
 -----------------------------------------------------------------------------*/
-    uint8_t temp = *a;
+    uint8_t const temp = *a;
+
     *a = *b;
     *b = temp;
 }
@@ -199,9 +202,13 @@ sort3(uint8_t *       const index_array,
   coordinate, but the last two indices are then sorted with regard to relative
   X coordinate.
 -----------------------------------------------------------------------------*/
-    uint8_t * ia = index_array;
-    const int32_t * ya = y_array;
-    const int32_t * xa = x_array;
+    uint8_t * const ia = index_array;
+
+    const int32_t * ya;
+    const int32_t * xa;
+
+    ya = y_array;  /* initial value */
+    xa = x_array;  /* initial value */
 
     if (ya[0] == ya[1] && ya[1] == ya[2]) {
         /* In case the vertices represent a degenerate horizontal triangle, we

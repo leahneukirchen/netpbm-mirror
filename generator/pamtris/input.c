@@ -131,7 +131,7 @@ next_token(char * const startPos) {
 
 
 static bool
-validate_string(const char * const target,
+string_is_valid(const char * const target,
                 const char * const srcBegin,
                 const char * const srcEnd) {
 
@@ -205,26 +205,33 @@ process_next_command(input_info           * const line,
 
     long int i_args[MAX_NUM_ATTRIBS];
         /* For storing potential integer arguments. */
-    char * strtol_end = NULL;
+    char * strtol_end;
         /* To compare against nt.end when checking for errors with strtol */
-    bool unrecognized_cmd = false;
+    bool unrecognized_cmd;
         /* To print out an error message in case an unrecognized command was
            given.
         */
-    bool unrecognized_arg = false;
+    bool unrecognized_arg;
         /* To print out an error message in case an unrecognized argument was
            given.
         */
-    bool break_out = false;
+    bool must_break_out;
         /* To break out of the below switch statement when an invalid argument
            is found.
         */
-    bool ok = false;
+    bool ok;
         /* Indicates whether the input line was OK so that we can print out a
            warning in case of excess arguments.
         */
 
-    if (state.initialized == false) {
+    /* initial values */
+    strtol_end = NULL;
+    unrecognized_cmd = false;
+    unrecognized_arg = false;
+    must_break_out = false;
+    ok = false;
+
+    if (!state.initialized) {
         init_state(&state);
         clear_attribs(&state, fbi->maxval, fbi->num_attribs);
 
@@ -243,7 +250,7 @@ process_next_command(input_info           * const line,
 
     switch (*nt.begin) {
     case 'm':
-        if (validate_string(CMD_SET_MODE, nt.begin, nt.end) == false) {
+        if (!string_is_valid(CMD_SET_MODE, nt.begin, nt.end)) {
             unrecognized_cmd = true;
 
             break;
@@ -261,7 +268,7 @@ process_next_command(input_info           * const line,
 
         switch(*nt.begin) {
         case 't':
-            if (validate_string(ARG_TRIANGLES, nt.begin, nt.end) == false) {
+            if (!string_is_valid(ARG_TRIANGLES, nt.begin, nt.end)) {
                 unrecognized_arg = true;
 
                 break;
@@ -275,7 +282,7 @@ process_next_command(input_info           * const line,
 
             break;
         case 's':
-            if (validate_string(ARG_STRIP, nt.begin, nt.end) == false) {
+            if (!string_is_valid(ARG_STRIP, nt.begin, nt.end)) {
                 unrecognized_arg = true;
 
                 break;
@@ -289,7 +296,7 @@ process_next_command(input_info           * const line,
 
             break;
         case 'f':
-            if (validate_string(ARG_FAN, nt.begin, nt.end) == false) {
+            if (!string_is_valid(ARG_FAN, nt.begin, nt.end)) {
                 unrecognized_arg = true;
 
                 break;
@@ -306,7 +313,7 @@ process_next_command(input_info           * const line,
             unrecognized_arg = true;
         }
 
-        if (unrecognized_arg == true) {
+        if (unrecognized_arg) {
             pm_errormsg("error: unrecognized drawing mode in line %lu.",
                         line->number);
         }
@@ -314,7 +321,7 @@ process_next_command(input_info           * const line,
         break;
     case 'a': {
         uint8_t i;
-        if (validate_string(CMD_SET_ATTRIBS, nt.begin, nt.end) == false) {
+        if (!string_is_valid(CMD_SET_ATTRIBS, nt.begin, nt.end)) {
             unrecognized_cmd = true;
 
             break;
@@ -328,7 +335,7 @@ process_next_command(input_info           * const line,
             if (*nt.begin == '\0' || strtol_end != nt.end) {
                 pm_errormsg(SYNTAX_ERROR, line->number);
 
-                break_out = true;
+                must_break_out = true;
 
                 break;
             }
@@ -337,13 +344,13 @@ process_next_command(input_info           * const line,
                 pm_errormsg("error: argument(s) out of bounds: line %lu.",
                             line->number);
 
-                break_out = true;
+                must_break_out = true;
 
                 break;
             }
         }
 
-        if (break_out == true)
+        if (must_break_out)
         {
             break;
         }
@@ -358,7 +365,7 @@ process_next_command(input_info           * const line,
     case 'v': {
         uint8_t i;
 
-        if (validate_string(CMD_VERTEX, nt.begin, nt.end) == false) {
+        if (!string_is_valid(CMD_VERTEX, nt.begin, nt.end)) {
             unrecognized_cmd = true;
 
             break;
@@ -372,7 +379,7 @@ process_next_command(input_info           * const line,
             if (*nt.begin == '\0' || strtol_end != nt.end) {
                 pm_errormsg(SYNTAX_ERROR, line->number);
 
-                break_out = true;
+                must_break_out = true;
 
                 break;
             }
@@ -383,7 +390,7 @@ process_next_command(input_info           * const line,
                         "error: coordinates out of bounds: line %lu.",
                         line->number);
 
-                    break_out = true;
+                    must_break_out = true;
 
                     break;
                 }
@@ -393,14 +400,14 @@ process_next_command(input_info           * const line,
                         "error: Z component out of bounds: line %lu.",
                         line->number);
 
-                    break_out = true;
+                    must_break_out = true;
 
                     break;
                 }
             }
         }
 
-        if (break_out == true)
+        if (must_break_out)
         {
             break;
         }
@@ -416,7 +423,7 @@ process_next_command(input_info           * const line,
 
         state.next++;
 
-        if (state.draw == false) {
+        if (!state.draw) {
             if (state.next == 3) {
                 state.draw = true;
             }
@@ -443,7 +450,7 @@ process_next_command(input_info           * const line,
 
     } break;
     case 'p':
-        if (validate_string(CMD_PRINT, nt.begin, nt.end) == false) {
+        if (!string_is_valid(CMD_PRINT, nt.begin, nt.end)) {
             unrecognized_cmd = true;
 
             break;
@@ -463,15 +470,14 @@ process_next_command(input_info           * const line,
 
         break;
     case 'c':
-        if (validate_string(CMD_CLEAR, nt.begin, nt.end) == false) {
+        if (!string_is_valid(CMD_CLEAR, nt.begin, nt.end)) {
             unrecognized_cmd = true;
 
             break;
         }
     case '*':
         if (*nt.begin == '*') {
-            if(nt.end - nt.begin > 1)
-            {
+            if(nt.end - nt.begin > 1) {
                 unrecognized_cmd = true;
 
                 break;
@@ -485,7 +491,7 @@ process_next_command(input_info           * const line,
 
             switch(*nt.begin) {
             case 'i':
-                if (validate_string("image", nt.begin, nt.end) == false) {
+                if (!string_is_valid("image", nt.begin, nt.end)) {
                     unrecognized_arg = true;
 
                     break;
@@ -495,7 +501,7 @@ process_next_command(input_info           * const line,
 
                 break;
             case 'd':
-                if (validate_string("depth", nt.begin, nt.end) == false) {
+                if (!string_is_valid("depth", nt.begin, nt.end)) {
                     unrecognized_arg = true;
 
                     break;
@@ -516,7 +522,7 @@ process_next_command(input_info           * const line,
                 unrecognized_arg = true;
             }
 
-            if (unrecognized_arg == true) {
+            if (unrecognized_arg) {
                 pm_errormsg("error: unrecognized argument: line %lu.",
                             line->number);
 
@@ -532,7 +538,7 @@ process_next_command(input_info           * const line,
     case 'r': {
         uint8_t i;
 
-        if (validate_string(CMD_RESET, nt.begin, nt.end) == false) {
+        if (!string_is_valid(CMD_RESET, nt.begin, nt.end)) {
             unrecognized_cmd = true;
 
             break;
@@ -546,13 +552,13 @@ process_next_command(input_info           * const line,
             if (*nt.begin == '\0' || nt.end != strtol_end) {
                 pm_errormsg(SYNTAX_ERROR, line->number);
 
-                break_out = true;
+                must_break_out = true;
 
                 break;
             }
         }
 
-        if (break_out == true) {
+        if (must_break_out) {
             break;
         }
 
@@ -603,7 +609,7 @@ process_next_command(input_info           * const line,
 
     } break;
     case 'q':
-        if (validate_string(CMD_QUIT, nt.begin, nt.end) == false) {
+        if (!string_is_valid(CMD_QUIT, nt.begin, nt.end)) {
             unrecognized_cmd = true;
 
             break;
@@ -617,13 +623,13 @@ process_next_command(input_info           * const line,
     }
 
     {
-        char next = *next_token(nt.end).begin;
+        char const next = *next_token(nt.end).begin;
 
-        if (unrecognized_cmd == true) {
+        if (unrecognized_cmd) {
             pm_errormsg("error: unrecognized command: line %lu.",
                         line->number);
         }
-        else if (ok == true && next != '\0') {
+        else if (ok && next != '\0') {
             pm_message(WARNING_EXCESS_ARGS, line->number);
         }
     }
