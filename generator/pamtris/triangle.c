@@ -256,9 +256,7 @@ draw_triangle(Xy                 const xy_input,
             gen_triangle_boundaries(xy_sorted, bi, fbi->width, fbi->height);
 
         if (bi->start_scanline == -1) {
-            /* Triangle completely out of the bounds of the framebuffer. */
-
-            return;
+            /* Triangle is completely out of the bounds of the framebuffer. */
         } else {
             bool no_upper_part = (xy_sorted._[1][1] == xy_sorted._[0][1]);
 
