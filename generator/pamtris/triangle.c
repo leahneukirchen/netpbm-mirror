@@ -70,10 +70,10 @@ draw_partial_triangle(
                 int32_t * attribs_end;
                 fract   * attribs_steps;
 
-                MALLOCARRAY(attribs_start, num_planes);
-                MALLOCARRAY(attribs_begin, num_planes);
-                MALLOCARRAY(attribs_end,   num_planes);
-                MALLOCARRAY(attribs_steps, num_planes);
+                MALLOCARRAY_NOFAIL(attribs_start, num_planes);
+                MALLOCARRAY_NOFAIL(attribs_begin, num_planes);
+                MALLOCARRAY_NOFAIL(attribs_end,   num_planes);
+                MALLOCARRAY_NOFAIL(attribs_steps, num_planes);
 
                 start_column = left_boundary;  /* initial value */
                 span_length = column_delta;    /* initial value */
