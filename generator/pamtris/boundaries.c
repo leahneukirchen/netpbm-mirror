@@ -15,6 +15,7 @@
 #include <stdlib.h>
 
 #include <netpbm/mallocvar.h>
+#include <netpbm/pm.h>
 
 #include "utils.h"
 #include "fract.h"
@@ -42,7 +43,12 @@ make_pos_fract(int32_t const quotient,
 void
 init_boundary_buffer(boundary_info * const bi,
                      int16_t         const height) {
-    MALLOCARRAY_NOFAIL(bi->buffer, height * 2 * sizeof(int16_t));
+
+    MALLOCARRAY(bi->buffer, height * 2);
+
+    if (!bi->buffer)
+        pm_error("Unable to get memory for %u-row high boundary buffer",
+                 height);
 }
 
 
