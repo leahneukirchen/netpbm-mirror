@@ -16,38 +16,43 @@
 void
 step_up(fract *       const vars,
         const fract * const steps,
-        uint8_t       const elements,
-        int32_t       const div) {
+        uint8_t       const element_ct,
+        int32_t       const divisor) {
 /*----------------------------------------------------------------------------
-  Apply interpolation steps (see above) to a collection of fract
-  variables (also see above) once. This is done by adding the
-  quotient of each step to the quotient of the corresponding variable
-  and the remainder of that step to the remainder of the variable. If the
-  remainder of the variable becomes equal to or larger than the
-  divisor, we increment the quotient of the variable if the negetive_flag
-  of the step is false, or decrement it if the negetive_flag is true, and
-  subtract the divisor from the remainder of the variable (in both cases).
+  Apply interpolation steps steps[] to a collection of fract variables vars[]
+  once.  I.e. add each steps[i] to vars[i].
+
+  'element_ct' is the number of elements in 'vars' and 'steps'.
+
+  'divisor' is the divisor used to interpret the fractions.
 
   It *is* safe to pass a 0 divisor to this function.
 -----------------------------------------------------------------------------*/
     unsigned int i;
 
-    for (i = 0; i < elements; ++i) {
-        uint32_t const negative_mask = -steps[i].negative_flag;
+    for (i = 0; i < element_ct; ++i) {
+        /* To add the fraction steps[i] to the fraction vars[i]: add the
+           quotient of step steps[i] to the quotient of variable vars[i] and
+           the remainder of the step to the remainder of the variable. If this
+           makes the agumented remainder equal to or larger than the divisor,
+           increment the quotient of the variable if the step is positive or
+           decrement it if the step is negative, and subtract the divisor from
+           the remainder of the variable (in either case).
+        */
 
         vars[i].q += steps[i].q;
         vars[i].r += steps[i].r;
 
         {
+            uint32_t const negative_mask = -steps[i].negative_flag;
+                /* (-1 if the step is negative; 1 otherwise) */
+
             uint32_t const overdiv_mask =
-                -(((uint32_t)~(vars[i].r - div)) >> 31);
+                -(((uint32_t)~(vars[i].r - divisor)) >> 31);
                 /*  = ~0 if var->r >= div; 0 otherwise. */
 
             vars[i].q += (negative_mask | 1) & overdiv_mask;
-                /* = (-1 if the step is negative; 1 otherwise) &'ed with
-                   overdiv_mask.
-                */
-            vars[i].r -= div & overdiv_mask;
+            vars[i].r -= divisor & overdiv_mask;
         }
     }
 }
