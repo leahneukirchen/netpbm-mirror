@@ -10,7 +10,6 @@
 
 #include "utils.h"
 #include "fract.h"
-#include "limits.h"
 #include "boundaries.h"
 #include "framebuffer.h"
 
