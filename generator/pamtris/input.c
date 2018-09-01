@@ -121,7 +121,7 @@ next_token(char * const startPos) {
 
     retval.begin = p;
 
-    for (; *p && !isspace(*p); ++p)
+    for (; *p && !isspace(*p); ++p);
 
     retval.end = p;
 
@@ -167,7 +167,7 @@ make_lowercase(token const t) {
 
     char * p;
 
-    for (p = t.begin; t.begin != t.end; ++p)
+    for (p = t.begin; p != t.end; ++p)
         *p = tolower(*p);
 }
 
