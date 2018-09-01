@@ -45,8 +45,9 @@ step_up(fract *       const vars,
 
             vars[i].q += (negative_mask | 1) & overdiv_mask;
                 /* = (-1 if the step is negative; 1 otherwise) &'ed with
-                   overdiv_mask.  vars[i].r -= div & overdiv_mask;
+                   overdiv_mask.
                 */
+            vars[i].r -= div & overdiv_mask;
         }
     }
 }
