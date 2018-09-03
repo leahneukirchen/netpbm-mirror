@@ -117,25 +117,25 @@ provided.</p>
 <DD>Sets the width of the internal framebuffer and, by extension, of the
 output PAM images, given in number of columns. This must be an integer in the
 closed interval [1, 8192].</DD>
-<BR>
+
 <DT><B>-height=</B><I>height</I></DT>
 <DD>Sets the height of the internal framebuffer and, by extension, of the
 output PAM images, given in number of rows. This must also be an integer in
 the closed interval [1, 8192].</DD>
-<BR>
+
 <DT><B>-num_attribs=</B><I>attributes_per_vertex</I></DT>
 <DD>Sets the number of generic attributes per vertex and, by extension, the
 depth of the output PAM images, which is equal to this value plus one (to
 accomodate the alpha plane). The argument must be an integer in the closed
 interval [1, 20]. This value may modified afterwards through the <i>reset</i>
 command.</DD>
-<BR>
+
 <DT><B>-maxval=</B><I>maxval</I></DT>
 <DD>Sets the maxval of the output PAM images, which is also the maximum
 permitted value for each generic vertex attribute. This must be an integer
 in the closed interval [1, 65535]. The default value is 255. This value may
 also be modified afterwards through the <i>reset</i> command.</DD>
-<BR>
+
 <DT><B>-tupletype=</B><I>tupletype</I></DT>
 <DD>Sets the tupletype for the output PAM images. The argument is a string
 which may be no longer than 255 characters. The default tupletype is the
