@@ -42,7 +42,7 @@ typedef struct {
     uint         formatId;  /* the Id of the selected color format           */
     uint         formatArg; /* the argument to the color formatting function */
     const char * infile;
-} CmdlineInfo;
+} CmdLineInfo;
 
 /* Generic pointer to a color-formatting function. Returns the textual
    representation of the color <tuple> in terms of the image pointed-to
@@ -77,7 +77,7 @@ fcInt(struct pam * const pamP,
       tuple        const color,
       uint         const param) {
 /*----------------------------------------------------------------------------
-  Format <color> as an integer tuple with maxval <param>
+  Format 'color' as an integer tuple with maxval 'param'
 -----------------------------------------------------------------------------*/
     return pnm_colorspec_rgb_integer(pamP, color, param);
 }
@@ -89,7 +89,7 @@ fcNorm(struct pam * const pamP,
        tuple        const color,
        uint         const param) {
 /*----------------------------------------------------------------------------
-  Format <color> as normalized tuple with precision <param>
+  Format 'color' as normalized tuple with precision 'param'
 -----------------------------------------------------------------------------*/
     return pnm_colorspec_rgb_norm(pamP, color, param);
 }
@@ -101,7 +101,7 @@ fcX11(struct pam * const pamP,
       tuple        const color,
       uint         const param) {
 /*----------------------------------------------------------------------------
-  Format <color> as hexadecimal tuple with <param> digits
+  Format 'color' as hexadecimal tuple with 'param' digits
 -----------------------------------------------------------------------------*/
     return pnm_colorspec_rgb_x11(pamP, color, param);
 }
@@ -129,10 +129,11 @@ sqri(int const v) {
 
 
 static RegSpec
-parseRegSpec(const char * const s) {
+parsedRegSpec(const char * const s) {
 /*----------------------------------------------------------------------------
-  Parse region specification <s> from the command line and return its
-  structured representation.  A specification is of the format <x,y[:label].
+  The region specification represented by command line argument 's'.
+
+  's' is of the format x,y[:label].
 -----------------------------------------------------------------------------*/
     char * end;
     char *start;
@@ -174,40 +175,42 @@ parseRegSpec(const char * const s) {
 
 
 static void
-parseColorFmt(CmdlineInfo * const cmdLineP) {
+parseColorFmt(const char * const formatStr,
+              uint *       const formatIdP,
+              uint *       const formatArgP) {
 /*----------------------------------------------------------------------------
-  Parse the color format specificaction from the command line stored in the
-  <formatStr> member of <cmdLineP> and save it into members <formatId> and
-  <formatArg>.  A format specification is <format>[:<arg>].
+  Parse the color format specification string 'formatStr' as
+  *formatIdP and *formatArgP.
+
+  A format specification string is of format format[:arg].
 -----------------------------------------------------------------------------*/
     int           const FmtNotFound = -1;
     const char *  const errSpec = "Wrong color format specification: ";
 
-    const char *  formatStr;
-          char *  colonLoc; /* location of the colon in the specification */
+    const char *  colonLoc; /* location of the colon in the specification */
     uint          n, f;
     const ColorFormat * formatP;
+    uint formatId;
 
-    formatStr = cmdLineP->formatStr;
     colonLoc  = strchr(formatStr, ':');
     if (colonLoc != NULL) n = colonLoc - formatStr;
     else                  n = strlen(formatStr);
 
-    cmdLineP->formatId = FmtNotFound;
-
-    for (f = 0; f < ARRAY_SIZE(formats); ++f) {
-        if (strncmp(formatStr, formats[f].id, n) == 0) {
-            cmdLineP->formatId = f;
-            break;
-        }
+    for (f = 0, formatId = FmtNotFound;
+         f < ARRAY_SIZE(formats) && formatId == FmtNotFound; ++f) {
+        if (strncmp(formatStr, formats[f].id, n) == 0)
+            formatId = f;
     }
-    if (cmdLineP->formatId == FmtNotFound) {
+    if (formatId == FmtNotFound)
         pm_error("Color format not recognised.");
-    }
-    formatP = &formats[cmdLineP->formatId];
+
+    *formatIdP = formatId;
+
+    formatP = &formats[formatId];
+
     if (colonLoc) {
         long int arg;
-        char * argStart;
+        const char * argStart;
         char * argEnd;
 
         argStart = colonLoc + 1;
@@ -230,14 +233,14 @@ parseColorFmt(CmdlineInfo * const cmdLineP) {
             pm_error("%s%s cannot exceed %i.",
                 errSpec, formatP->argName, formatP->maxParam);
 
-        cmdLineP->formatArg = arg;
+        *formatArgP = arg;
     } else
-        cmdLineP->formatArg = formatP->defParam;
+        *formatArgP = formatP->defParam;
 }
 
 
 
-static CmdlineInfo
+static CmdLineInfo
 parsedCommandLine(int                 argc,
                   const char ** const argv) {
 
@@ -248,7 +251,7 @@ parsedCommandLine(int                 argc,
 
     unsigned int option_def_index;
 
-    CmdlineInfo cmdLine;
+    CmdLineInfo cmdLine;
 
     uint infileSpec, radiusSpec, formatSpec, linearSpec;
 
@@ -274,7 +277,8 @@ parsedCommandLine(int                 argc,
         cmdLine.radius = 0;
 
     if (formatSpec) {
-        parseColorFmt(&cmdLine);
+        parseColorFmt(cmdLine.formatStr,
+                      &cmdLine.formatId, &cmdLine.formatArg);
     } else {
         cmdLine.formatId  = defaultFormat;
         cmdLine.formatArg = formats[defaultFormat].defParam;
@@ -300,7 +304,7 @@ parsedCommandLine(int                 argc,
 
         for (r = 0, maxLbLen = 0; r < argc - 1; ++r) {
             size_t lbLen;
-            cmdLine.regSpecs[r] = parseRegSpec(argv[r+1]);
+            cmdLine.regSpecs[r] = parsedRegSpec(argv[r+1]);
             lbLen = strlen(cmdLine.regSpecs[r].label);
             maxLbLen = MAX(maxLbLen, lbLen);
         }
@@ -310,6 +314,14 @@ parsedCommandLine(int                 argc,
     free(option_def);
 
     return cmdLine;
+}
+
+
+
+static void
+freeCommandLine(CmdLineInfo const cmdLine) {
+
+    free(cmdLine.regSpecs);
 }
 
 
@@ -336,7 +348,7 @@ static RegData * allocRegSamples(uint n) {
 
 
 static uint getYmax(struct pam * const pamP,
-                    CmdlineInfo  const cmdLine) {
+                    CmdLineInfo  const cmdLine) {
 /*----------------------------------------------------------------------------
   Find the maximum row in the image that contains a pixel from a region.
 -----------------------------------------------------------------------------*/
@@ -367,16 +379,17 @@ readChord(RegData *    const dataP,
           uint         const x0,
           uint         const x1) {
 /*----------------------------------------------------------------------------
-  Update region sample <dataP> with the data from horisontal chord lying in
-  row <row> and going from <x0> to <x1>. <linear> denotes whether <pamP> is
-  true PPM or the linear variation.
+  Update region sample *dataP with the data from horisontal chord lying in row
+  'row' and going from 'x0' to 'x1'. 'linear' means tuples in 'row' are the
+  intensity-linear values as opposed to normal libnetpbm gamma-adjusted
+  values.
 -----------------------------------------------------------------------------*/
     uint x;
 
-    for (x = x0; x <= x1; x++) {
+    for (x = x0; x <= x1; ++x) {
         uint l;
 
-        for (l = 0; l < 3; l++) {
+        for (l = 0; l < 3; ++l) {
             double val;
 
             val = (double)row[x][l] / pamP->maxval;
@@ -385,7 +398,7 @@ readChord(RegData *    const dataP,
                 val = pm_ungamma709(val);
             dataP->color[l] += val;
         }
-        dataP->area++;
+        ++dataP->area;
     }
 }
 
@@ -395,85 +408,93 @@ static void
 processRow(tuple *      const   row,
            uint         const   y,
            struct pam * const   pamP,
-           CmdlineInfo  const * cmdLineP,
+           CmdLineInfo  const * cmdLineP,
            RegData *    const   regSamples) {
 /*----------------------------------------------------------------------------
-  Reads a row from image <pamP> into allocated tuple array <row>, and updates
-  region samples <regSamples[]> from it.  <y> is the position of the row.
+  Read a row from image described by *pamP into 'row', and update region
+  samples regSamples[] from it.  'y' is the position of the row.
 -----------------------------------------------------------------------------*/
     uint r;
 
     pnm_readpamrow(pamP, row);
-    for (r = 0; r < cmdLineP->regN; r++) {
-        RegSpec   spec;
-        RegData * dataP;
-        uint      yd, xd, xd2;
-        int       x0, x1;
 
-        spec  = cmdLineP->regSpecs[r];
-        dataP = &regSamples[r];
-        yd    = spec.y - y;
-        if (abs(yd) > cmdLineP->radius)
-            continue; /* to avoid the slow root operation when possible */
-        xd2 = sqri(cmdLineP->radius) - sqri(yd);
-        xd = (int)(sqrt((double)xd2) + 0.5);
-        x0 = spec.x - xd;
-        x1 = spec.x + xd;
+    for (r = 0; r < cmdLineP->regN; ++r) {
+        RegSpec   const spec = cmdLineP->regSpecs[r];
+        RegData * const dataP = &regSamples[r];
+        uint      const yd = spec.y - y;
 
-        /* clip horisontal chord to image boundaries: */
-        if (x0 < 0)
-            x0 = 0;
-        if (x1 >= pamP->width)
-            x1 = pamP->width - 1;
+        if (abs(yd) > cmdLineP->radius) {
+            /* Avoid the slow root operation */
+        } else {
+            uint const xd2 = sqri(cmdLineP->radius) - sqri(yd);
+            uint const xd = (int)(sqrt((double)xd2) + 0.5);
 
-        readChord(dataP, cmdLineP->linear, pamP, row, x0, x1);
+            int x0, x1;
+
+            x0 = spec.x - xd;  /* initial value */
+            x1 = spec.x + xd;  /* initial value */
+
+            /* clip horizontal chord to image boundaries: */
+            if (x0 < 0)
+                x0 = 0;
+            if (x1 >= pamP->width)
+                x1 = pamP->width - 1;
+
+            readChord(dataP, cmdLineP->linear, pamP, row, x0, x1);
+        }
     }
 }
 
 
 
 static RegData *
-getColors(struct pam * const pamP,
-          CmdlineInfo  const cmdLine) {
+colorsFmImage(struct pam * const pamP,
+              CmdLineInfo  const cmdLine) {
 /*----------------------------------------------------------------------------
-  Scans image <pamP> and collects color data for the regions.
+  Color data for the regions requested by 'cmdLine' in the image described by
+  *pamP.
 -----------------------------------------------------------------------------*/
     uint      y, ymax;
-    RegData * samples;
+    RegData * samplesP;
     tuple *   row;
-    FILE *    inFile;
+    FILE *    ifP;
 
-    inFile = pm_openr(cmdLine.infile);
-    pnm_readpaminit(inFile, pamP, PAM_STRUCT_SIZE(tuple_type));
+    ifP = pm_openr(cmdLine.infile);
 
-    ymax = getYmax( pamP, cmdLine );
+    pnm_readpaminit(ifP, pamP, PAM_STRUCT_SIZE(tuple_type));
 
-    samples = allocRegSamples( cmdLine.regN );
-    row     = pnm_allocpamrow(pamP);
-    y       = 0;
-    for (y = 0; y <= ymax; y++)
-        processRow( row, y, pamP, &cmdLine, samples );
+    ymax = getYmax(pamP, cmdLine);
+
+    samplesP = allocRegSamples(cmdLine.regN);
+    row      = pnm_allocpamrow(pamP);
+
+    for (y = 0; y <= ymax; ++y)
+        processRow(row, y, pamP, &cmdLine, samplesP);
 
     pnm_freepamrow(row);
-    pm_close(inFile);
-    return samples;
+    pm_close(ifP);
+
+    return samplesP;
 }
 
 
 
 static const char *
-formatColor(RegData      const data,
-            CmdlineInfo  const cmdLine,
-            struct pam * const pamP,
-            tuple        const tup) {
+outputColorSpec(RegData      const data,
+                CmdLineInfo  const cmdLine,
+                struct pam * const pamP,
+                tuple        const tup) {
 /*----------------------------------------------------------------------------
-  Format the color of region sample <data> according to the format specified
-  in <cmdLine>.  The image <pamP> and tuple <tup> are required by the Netpbm
-  formatting functions.
+  Color of region sample 'data' formatted for output as requested by
+  'cmdLine'.
+
+  *pamP tells how to interpret 'data'.
+
+  'tup' is working space for internal use.
 -----------------------------------------------------------------------------*/
     uint l;
 
-    for (l = 0; l < 3; l++)
+    for (l = 0; l < 3; ++l)
         tup[l] = pm_gamma709(data.color[l]/data.area) * pamP->maxval;
 
     return formats[cmdLine.formatId].
@@ -483,29 +504,37 @@ formatColor(RegData      const data,
 
 
 static void
-printColors(struct pam * const pamP,
-            CmdlineInfo  const cmdLine,
-            FILE *       const outChan,
-            RegData      const regSamples[]) {
+printColors(struct pam *    const pamP,
+            CmdLineInfo     const cmdLine,
+            FILE *          const ofP,
+            const RegData * const regSamples) {
 /*----------------------------------------------------------------------------
-  Prints the colors or <regSamples> to channel <outChan> in the format
-  specified in <cmdLine>. <pamP> is required by the formatting function.
+  Print the colors regSamples[] to *ofP in the format
+  requested by 'cmdLine'. 
+
+  *pamP tells how to interpret regSamples[]
 -----------------------------------------------------------------------------*/
     char  fmt[20];
     uint  r;
     tuple tup;
 
     tup = pnm_allocpamtuple(pamP);
-    sprintf(fmt, "%%%is: %%s\n", cmdLine.maxLbLen);
-    for (r = 0; r < cmdLine.regN; r++) {
+
+    pm_snprintf(fmt, sizeof(fmt), "%%%is: %%s\n", cmdLine.maxLbLen);
+
+    for (r = 0; r < cmdLine.regN; ++r) {
         RegSpec      spec;
         RegData      data;
         const char * color;
 
         spec  = cmdLine.regSpecs[r];
+
         data  = regSamples[r];
-        color = formatColor( data, cmdLine, pamP, tup );
-        fprintf(outChan, fmt, spec.label, color);
+
+        color = outputColorSpec(data, cmdLine, pamP, tup);
+
+        fprintf(ofP, fmt, spec.label, color);
+
         pm_strfree(color);
     }
     pnm_freepamtuple(tup);
@@ -517,18 +546,18 @@ int
 main(int argc, const char *argv[]) {
 
     RegData *   regSamples;
-    CmdlineInfo cmdLine;
+    CmdLineInfo cmdLine;
     struct pam  pam;
 
     pm_proginit(&argc, argv);
 
     cmdLine = parsedCommandLine(argc, argv);
 
-    regSamples = getColors(&pam, cmdLine);
+    regSamples = colorsFmImage(&pam, cmdLine);
 
     printColors(&pam, cmdLine, stdout, regSamples);
 
-    free(cmdLine.regSpecs); /* Asymmetrical: maybe write freeCommandLine() ? */
+    freeCommandLine(cmdLine);
     free(regSamples);
 
     return 0;
