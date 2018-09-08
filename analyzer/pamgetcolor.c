@@ -370,12 +370,13 @@ processRow(tuple *      const   row,
     for (r = 0; r < cmdLineP->regN; r++) {
         RegSpec   spec;
         RegData * dataP;
-        uint      yd, xd, xd2;
+        uint      xd, xd2;
+        int       yd;
         int       x0, x1;
 
         spec  = cmdLineP->regSpecs[r];
         dataP = &regSamples[r];
-        yd    = spec.y - y;
+        yd    = (int)spec.y - (int)y;
         if (abs(yd) > cmdLineP->radius)
             continue; /* to avoid the slow root operation when possible */
         xd2 = sqri(cmdLineP->radius) - sqri(yd);

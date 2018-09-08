@@ -4,6 +4,11 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+18.09.08 BJH  Release 10.83.02
+
+              pamgetcolor: fix bug: gets color of only the top half of a
+              region.
+
 18.07.07 BJH  Release 10.83.01
 
               pbmtext; libnetpbm BDF font processing: fix invalid memory
