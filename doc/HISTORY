@@ -21,6 +21,9 @@ not yet  BJH  Release 10.84.00
               reference when BDF font file has invalid syntax.  Broken
               in primordial Netpbm, ca 1993.
 
+              pamgetcolor: fix bug: gets color of only the top half of a
+              region.
+
 18.06.30 BJH  Release 10.83.00
 
               Add pamlevels.  Thanks Anton Shepelev <anton.txt@gmail.com>.

@@ -379,7 +379,7 @@ readChord(RegData *    const dataP,
           uint         const x0,
           uint         const x1) {
 /*----------------------------------------------------------------------------
-  Update region sample *dataP with the data from horisontal chord lying in row
+  Update region sample *dataP with the data from horizontal chord lying in row
   'row' and going from 'x0' to 'x1'. 'linear' means tuples in 'row' are the
   intensity-linear values as opposed to normal libnetpbm gamma-adjusted
   values.
@@ -421,13 +421,15 @@ processRow(tuple *      const   row,
     for (r = 0; r < cmdLineP->regN; ++r) {
         RegSpec   const spec = cmdLineP->regSpecs[r];
         RegData * const dataP = &regSamples[r];
-        uint      const yd = spec.y - y;
+        int       const yd = (int)spec.y - (int)y;
 
         if (abs(yd) > cmdLineP->radius) {
-            /* Avoid the slow root operation */
+            /* Row is entirely above or below the region; Avoid the slow root
+               operation
+            */
         } else {
             uint const xd2 = sqri(cmdLineP->radius) - sqri(yd);
-            uint const xd = (int)(sqrt((double)xd2) + 0.5);
+            uint const xd  = ROUNDU(sqrt((double)xd2));
 
             int x0, x1;
 
