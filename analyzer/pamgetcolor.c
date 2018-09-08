@@ -3,37 +3,45 @@
 #include <pm_gamma.h>
 #include <pam.h>
 
+#include "pm_c_util.h"
 #include "shhopt.h"
 #include "mallocvar.h"
 
 typedef unsigned int  uint;
 
-/* specification of a cirtular "region" over which to measre the avg. color: */
 typedef struct {
+/*----------------------------------------------------------------------------
+  Specification of a circular "region" over which to measure the average color
+-----------------------------------------------------------------------------*/
     uint         x;        /* coordinates of the center                      */
     uint         y;        /* of the region;                                 */
-    char const * label;    /* optional label supplied on the command line    */
+    const char * label;    /* optional label supplied on the command line    */
 } RegSpec;
 
-/* represents a single color measurement over a "region": */
 typedef struct {
+/*----------------------------------------------------------------------------
+  Represents a single color measurement over a "region"
+-----------------------------------------------------------------------------*/
     uint         area;     /* area in pixels over which to average the color */
     /* cumulative normalised intensity-proportiunal value of the region:     */
     double       color[3];
 } RegData;
 
-/*command-line parameters: */
 typedef struct {
+/*----------------------------------------------------------------------------
+  All the information the user supplied in the command line, in a form easy
+  for the program to use.
+-----------------------------------------------------------------------------*/
     uint         linear;
     uint         radius;
     uint         regN;      /* number of regions                             */
     uint         maxLbLen;  /* maximum label length                          */
     RegSpec *    regSpecs;
         /* list of points to sample, dymamically allocated*/
-    char const * formatStr; /* output color format as string                 */
+    const char * formatStr; /* output color format as string                 */
     uint         formatId;  /* the Id of the selected color format           */
     uint         formatArg; /* the argument to the color formatting function */
-    char const * infile;
+    const char * infile;
 } CmdlineInfo;
 
 /* Generic pointer to a color-formatting function. Returns the textual
@@ -41,60 +49,69 @@ typedef struct {
    by <pamP>. <param> is a generic integer parameter that depends on the
    specific funcion and may denote precison or maxval.
 */
-typedef char const *
+typedef const char *
 (*FormatColor)(struct pam * const pamP,
                tuple        const color,
                uint         const param);
 
-/* The color format specificaiton: */
 typedef struct ColorFormat {
-    /* format id (compared against the -format command-line argument):       */
+/*----------------------------------------------------------------------------
+  The color format specification
+-----------------------------------------------------------------------------*/
     char        const * id;
-    /* function that returns converts a color into this format:              */
+        /* format id (compared against the -format command-line argument) */
     FormatColor const   formatColor;
-    /* meaning of the <param> argument of <formatColor>():                   */
+        /* function that returns converts a color into this format */
     char        const * argName;
-    uint        const   defParam;   /* default value of that argument        */
-    uint        const   maxParam;   /* maximum value of that argument        */
+        /* meaning of the <param> argument of <formatColor>() */
+    uint        const   defParam;
+        /* default value of that argument        */
+    uint        const   maxParam;
+        /* maximum value of that argument        */
 } ColorFormat;
 
 
 
-static char const *
+static const char *
 fcInt(struct pam * const pamP,
       tuple        const color,
       uint         const param) {
-/* format <color> as an integer tuple with maxval <param> */
+/*----------------------------------------------------------------------------
+  Format <color> as an integer tuple with maxval <param>
+-----------------------------------------------------------------------------*/
     return pnm_colorspec_rgb_integer(pamP, color, param);
 }
 
 
 
-static char const *
+static const char *
 fcNorm(struct pam * const pamP,
        tuple        const color,
        uint         const param) {
-/* format <color> as normalised tuple with precision <param> */
+/*----------------------------------------------------------------------------
+  Format <color> as normalized tuple with precision <param>
+-----------------------------------------------------------------------------*/
     return pnm_colorspec_rgb_norm(pamP, color, param);
 }
 
 
 
-static char const *
+static const char *
 fcX11(struct pam * const pamP,
       tuple        const color,
       uint         const param) {
-/* format <color> as hexadecimal tuple with <param> digits*/
+/*----------------------------------------------------------------------------
+  Format <color> as hexadecimal tuple with <param> digits
+-----------------------------------------------------------------------------*/
     return pnm_colorspec_rgb_x11(pamP, color, param);
 }
 
 
 
-#define FormatsN 3
+static int const defaultFormat = 0;
 
-static int const DefaultFormat = 0;
 /* Table with the full information about color formats */
-ColorFormat formats[ FormatsN ] = {
+ColorFormat const formats[ 3 ] = {
     /*   Id     Function  Argument name  Default  Max   */
     {   "int",  &fcInt,   "maxval",      255,     65535  },
     {   "norm", &fcNorm,  "digit count",   3,         6  },
@@ -112,12 +129,13 @@ sqri(int const v) {
 
 
 static RegSpec
-parseRegSpec(char const * const s) {
+parseRegSpec(const char * const s) {
 /*----------------------------------------------------------------------------
   Parse region specification <s> from the command line and return its
   structured representation.  A specification is of the format <x,y[:label].
 -----------------------------------------------------------------------------*/
-    char* end, *start;
+    char * end;
+    char *start;
     RegSpec res;
 
     start = (char *)s;
@@ -146,8 +164,7 @@ parseRegSpec(char const * const s) {
                 break; /* empty label */
             return res;
         }
-    }
-    while (1 == 0);
+    } while (false);
 
     pm_error("Wrong region specification: %s", s);
 
@@ -163,12 +180,13 @@ parseColorFmt(CmdlineInfo * const cmdLineP) {
   <formatStr> member of <cmdLineP> and save it into members <formatId> and
   <formatArg>.  A format specification is <format>[:<arg>].
 -----------------------------------------------------------------------------*/
-    const int     FmtNotFound = -1;
-    const char *  ErrSpec = "Wrong color format specification: ";
+    int           const FmtNotFound = -1;
+    const char *  const errSpec = "Wrong color format specification: ";
+
     const char *  formatStr;
           char *  colonLoc; /* location of the colon in the specification */
     uint          n, f;
-    ColorFormat * formatP;
+    const ColorFormat * formatP;
 
     formatStr = cmdLineP->formatStr;
     colonLoc  = strchr(formatStr, ':');
@@ -177,7 +195,7 @@ parseColorFmt(CmdlineInfo * const cmdLineP) {
 
     cmdLineP->formatId = FmtNotFound;
 
-    for (f = 0; f < FormatsN; f++) {
+    for (f = 0; f < ARRAY_SIZE(formats); ++f) {
         if (strncmp(formatStr, formats[f].id, n) == 0) {
             cmdLineP->formatId = f;
             break;
@@ -187,91 +205,110 @@ parseColorFmt(CmdlineInfo * const cmdLineP) {
         pm_error("Color format not recognised.");
     }
     formatP = &formats[cmdLineP->formatId];
-    if (colonLoc != NULL) {
+    if (colonLoc) {
         long int arg;
-        char *argStart, *argEnd;
+        char * argStart;
+        char * argEnd;
 
         argStart = colonLoc + 1;
+
         if (*argStart == '\0')
             pm_error("%sthe colon should be followed by %s.",
-                ErrSpec, formatP->argName);
+                errSpec, formatP->argName);
 
         arg = strtol(argStart, &argEnd, 10);
+
         if (*argEnd != '\0')
             pm_error("%sfailed to parse the %s: %s.",
-                ErrSpec, formatP->argName, argStart);
+                errSpec, formatP->argName, argStart);
 
         if (arg < 1)
             pm_error("%s%s must be greater than zero.",
-                ErrSpec, formatP->argName);
+                errSpec, formatP->argName);
 
         if (arg > formatP->maxParam)
             pm_error("%s%s cannot exceed %i.",
-                ErrSpec, formatP->argName, formatP->maxParam);
+                errSpec, formatP->argName, formatP->maxParam);
+
         cmdLineP->formatArg = arg;
-    }
-    else
+    } else
         cmdLineP->formatArg = formatP->defParam;
 }
 
 
 
 static CmdlineInfo
-parseCommandLine(int argc, char const ** argv) {
-/*----------------------------------------------------------------------------
-  Parse the command-line arguments and store them in a form convenient for the
-  program.
------------------------------------------------------------------------------*/
-    int         r;
-    uint        formatSet;
-    CmdlineInfo cmdLine;
-    optStruct3  opt;
-    uint        option_def_index = 0;
+parsedCommandLine(int                 argc,
+                  const char ** const argv) {
 
     optEntry * option_def;
+        /* Instructions to OptParseOptions3 on how to parse our options.
+         */
+    optStruct3 opt;
+
+    unsigned int option_def_index;
+
+    CmdlineInfo cmdLine;
+
+    uint infileSpec, radiusSpec, formatSpec, linearSpec;
+
     MALLOCARRAY_NOFAIL(option_def, 100);
 
-    cmdLine.radius    = 0;
+    option_def_index = 0;   /* incremented by OPTENT3 */
+    OPTENT3(0, "infile",    OPT_STRING, &cmdLine.infile,    &infileSpec, 0);
+    OPTENT3(0, "radius",    OPT_INT,    &cmdLine.radius,    &radiusSpec, 0);
+    OPTENT3(0, "format",    OPT_STRING, &cmdLine.formatStr, &formatSpec, 0);
+    OPTENT3(0, "linear",    OPT_FLAG,   &cmdLine.linear,    &linearSpec, 0);
+    OPTENT3(0,  0,          OPT_END,    NULL,               NULL,        0);
 
-    opt.opt_table     = option_def;
-    opt.short_allowed = 0;
-    opt.allowNegNum   = 0;
-
-    OPTENT3(0, "infile",    OPT_STRING, &cmdLine.infile,    NULL,       0);
-    OPTENT3(0, "radius",    OPT_INT,    &cmdLine.radius,    NULL,       0);
-    OPTENT3(0, "format",    OPT_STRING, &cmdLine.formatStr, &formatSet, 0);
-    OPTENT3(0, "linear",    OPT_FLAG,   &cmdLine.linear,    NULL,       0);
-    OPTENT3(0,  0,          OPT_END,    NULL,               NULL,       0);
-
-    cmdLine.radius = 0;
-    cmdLine.linear = 0;
-    cmdLine.infile = "-";
+    opt.opt_table = option_def;
+    opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
 
-    if (formatSet) {
+    if (!infileSpec)
+        cmdLine.infile = "-";
+
+    if (!radiusSpec)
+        cmdLine.radius = 0;
+
+    if (formatSpec) {
         parseColorFmt(&cmdLine);
     } else {
-        cmdLine.formatId  = DefaultFormat;
-        cmdLine.formatArg = formats[DefaultFormat].defParam;
+        cmdLine.formatId  = defaultFormat;
+        cmdLine.formatArg = formats[defaultFormat].defParam;
     }
 
-    cmdLine.regN    = argc - 1;
-    MALLOCARRAY_NOFAIL(cmdLine.regSpecs, cmdLine.regN);
+    if (!linearSpec)
+        cmdLine.radius = 0;
 
-    cmdLine.maxLbLen = 0;
-    if (argc < 2)
+    if (argc-1 < 1)
         pm_error("No regions specified.");
 
-    for (r = 0; r < argc - 1; r++) {
-        size_t lbLen;
-        cmdLine.regSpecs[r] = parseRegSpec(argv[r+1]);
-        lbLen = strlen(cmdLine.regSpecs[r].label);
-        if (lbLen > cmdLine.maxLbLen)
-            cmdLine.maxLbLen = lbLen;
+    cmdLine.regN = argc - 1;
+
+    MALLOCARRAY(cmdLine.regSpecs, cmdLine.regN);
+
+    if (!cmdLine.regSpecs)
+        pm_error("Could not get memory for %u region specifications",
+                 cmdLine.regN);
+
+    {
+        uint r;
+        uint maxLbLen;
+
+        for (r = 0, maxLbLen = 0; r < argc - 1; ++r) {
+            size_t lbLen;
+            cmdLine.regSpecs[r] = parseRegSpec(argv[r+1]);
+            lbLen = strlen(cmdLine.regSpecs[r].label);
+            maxLbLen = MAX(maxLbLen, lbLen);
+        }
+        cmdLine.maxLbLen = maxLbLen;
     }
 
     free(option_def);
+
     return cmdLine;
 }
 
@@ -424,7 +461,7 @@ getColors(struct pam * const pamP,
 
 
 
-static char const *
+static const char *
 formatColor(RegData      const data,
             CmdlineInfo  const cmdLine,
             struct pam * const pamP,
@@ -463,7 +500,7 @@ printColors(struct pam * const pamP,
     for (r = 0; r < cmdLine.regN; r++) {
         RegSpec      spec;
         RegData      data;
-        char const * color;
+        const char * color;
 
         spec  = cmdLine.regSpecs[r];
         data  = regSamples[r];
@@ -477,7 +514,7 @@ printColors(struct pam * const pamP,
 
 
 int
-main(int argc, char const *argv[]) {
+main(int argc, const char *argv[]) {
 
     RegData *   regSamples;
     CmdlineInfo cmdLine;
@@ -485,7 +522,7 @@ main(int argc, char const *argv[]) {
 
     pm_proginit(&argc, argv);
 
-    cmdLine    = parseCommandLine(argc, argv);
+    cmdLine = parsedCommandLine(argc, argv);
 
     regSamples = getColors(&pam, cmdLine);
 
