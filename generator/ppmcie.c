@@ -10,7 +10,7 @@
     granted,  without any conditions or restrictions.  This software is
     provided "as is" without express or implied warranty.
 
-    This program was called cietoppm in Walker's original work.  
+    This program was called cietoppm in Walker's original work.
     Because "cie" is not a graphics format, Bryan changed the name
     when he integrated it into the Netpbm package in March 2000.
 */
@@ -294,10 +294,10 @@ static struct colorSystem const
 */
 static struct colorSystem Customsystem = {
     "Custom",
-    0.64,  0.33,  0.30,  0.60,  0.15,  0.06,  
+    0.64,  0.33,  0.30,  0.60,  0.15,  0.06,
     IlluminantD65, GAMMA_REC709
 };
-    
+
 
 
 static void
@@ -344,11 +344,11 @@ xyz_to_rgb(const struct colorSystem * const cs,
     which   sums  to  the  desired  chromaticity.   If  the  requested
     chromaticity falls outside the  Maxwell  triangle  (color  gamut)
     formed  by the three primaries, one of the r, g, or b weights will
-    be negative.  
+    be negative.
 
     Caller can use constrain_rgb() to desaturate an outside-gamut
     color to the closest representation within the available
-    gamut. 
+    gamut.
 -----------------------------------------------------------------------------*/
     double xr, yr, zr, xg, yg, zg, xb, yb, zb;
     double xw, yw, zw;
@@ -542,7 +542,7 @@ drawTongueOutline(pixel ** const pixels,
 
         computeMonochromeColorLocation(wavelength, pxcols, pxrows, upvp,
                                        &icx, &icy);
-        
+
         if (wavelength > 380)
             ppmd_line(pixels, pixcols, pixrows, maxval,
                       B(lx, ly), B(icx, icy),
@@ -589,7 +589,7 @@ findTongue(pixel ** const pixels,
         int const leftEdge = i;
 
         *presentP = true;
-        
+
         for (j = pxcols - 1;
              j >= leftEdge && PPM_GETR(Bixels(row, j)) == 0;
              --j);
@@ -651,12 +651,12 @@ fillInTongue(pixel **                   const pixels,
                 xyz_to_rgb(cs, cx, cy, cz, &jr, &jg, &jb);
 
                 mx = maxval;
-        
+
                 /* Check whether the requested color  is  within  the
                    gamut  achievable with the given color system.  If
                    not, draw it in a reduced  intensity,  interpolated
                    by desaturation to the closest within-gamut color. */
-        
+
                 if (constrain_rgb(&jr, &jg, &jb))
                     mx = highlightGamut ? maxval : ((maxval + 1) * 3) / 4;
 
@@ -688,7 +688,7 @@ drawYAxis(pixel **     const pixels,
           unsigned int const xBias,
           unsigned int const yBias,
           pixel        const axisColor) {
-              
+
     unsigned int const pxrows = pixrows - yBias;
 
     ppmd_line(pixels, pixcols, pixrows, maxval,
@@ -706,7 +706,7 @@ drawXAxis(pixel **     const pixels,
           unsigned int const xBias,
           unsigned int const yBias,
           pixel        const axisColor) {
-              
+
     unsigned int const pxcols = pixcols - xBias;
     unsigned int const pxrows = pixrows - yBias;
 
@@ -778,7 +778,7 @@ tickY(pixel **     const pixels,
         /* Pixel row where the top of the tick goes */
     unsigned int const tickThickness = Sz(3);
         /* Thickness of the tick in pixels */
-    
+
     char s[20];
 
     assert(tenth < 10);
@@ -970,7 +970,7 @@ plotBlackBodyCurve(pixel **                   const pixels,
 
                 /* Label selected tick marks with decreasing density. */
 
-                if (t <= 5000.1 || (t > 5000.0 && 
+                if (t <= 5000.1 || (t > 5000.0 &&
                                     ((((int) t) % 5000) == 0) &&
                                     t != 20000.0)) {
                     char bb[20];
@@ -980,7 +980,7 @@ plotBlackBodyCurve(pixel **                   const pixels,
                               B(lx - Sz(12), ly - Sz(4)), Sz(6), 0, bb,
                               PPMD_NULLDRAWPROC, (char *) &rgbcolor);
                 }
-  
+
             }
         }
         lx = xb;
@@ -998,7 +998,7 @@ overlappingLegend(bool const upvp,
 
     if (upvp)
         retval = (waveLength == 430 || waveLength == 640);
-    else 
+    else
         retval = (waveLength == 460 || waveLength == 630 || waveLength == 640);
     return retval;
 }
@@ -1054,7 +1054,7 @@ plotMonochromeWavelengths(
             /* Draw the tick mark */
             PPM_ASSIGN(rgbcolor, maxval, maxval, maxval);
             tx = icx + ((x < 520) ? Sz(-2) : ((x >= 535) ? Sz(2) : 0));
-            ty = icy + ((x < 520) ? 0 : ((x >= 535) ? Sz(-1) : Sz(-2))); 
+            ty = icy + ((x < 520) ? 0 : ((x >= 535) ? Sz(-1) : Sz(-2)));
             ppmd_line(pixels, pixcols, pixrows, maxval,
                       B(icx, icy), B(tx, ty),
                       PPMD_NULLDRAWPROC, (char *) &rgbcolor);
@@ -1113,7 +1113,7 @@ writeLabel(pixel **                   const pixels,
     char sysdesc[256];
 
     PPM_ASSIGN(rgbcolor, maxval, maxval, maxval);
-    
+
     pm_snprintf(sysdesc, sizeof(sysdesc),
                 "System: %s\n"
                 "Primary illuminants (X, Y)\n"
@@ -1198,9 +1198,9 @@ main(int          argc,
         } else if (pm_keymatch(argv[argn], "-smpte", 2)) {
             cs = &SMPTEsystem;
         } else if (pm_keymatch(argv[argn], "-hdtv", 2)) {
-            cs = &HDTVsystem;                 
+            cs = &HDTVsystem;
         } else if (pm_keymatch(argv[argn], "-cie", 1)) {
-            cs = &CIEsystem;                 
+            cs = &CIEsystem;
         } else if (pm_keymatch(argv[argn], "-black", 3)) {
             showBlack = true;         /* Show black body curve */
         } else if (pm_keymatch(argv[argn], "-wpoint", 2)) {
