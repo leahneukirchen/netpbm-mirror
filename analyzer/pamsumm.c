@@ -69,18 +69,18 @@ parseCommandLine(int argc, const char ** const argv,
         cmdlineP->function = FN_MIN;
     } else if (maxSpec) {
         cmdlineP->function = FN_MAX;
-    } else 
+    } else
         pm_error("You must specify one of -sum, -min, -max, or -mean");
-        
+
     if (argc-1 > 1)
         pm_error("Too many arguments (%d).  File name is the only argument.",
                  argc-1);
 
     if (argc-1 < 1)
         cmdlineP->inputFileName = "-";
-    else 
+    else
         cmdlineP->inputFileName = argv[1];
-    
+
     free(option_def);
 }
 
@@ -122,11 +122,11 @@ aggregate(struct pam *   const inpamP,
         unsigned int plane;
         for (plane = 0; plane < inpamP->depth; ++plane) {
             switch(function) {
-            case FN_ADD:  
-            case FN_MEAN: 
+            case FN_ADD:
+            case FN_MEAN:
                 accumulatorP->u.sum += tupleRow[col][plane];
             break;
-            case FN_MIN:  
+            case FN_MIN:
                 if (tupleRow[col][plane] < accumulatorP->u.min)
                     accumulatorP->u.min = tupleRow[col][plane];
                 break;
@@ -134,7 +134,7 @@ aggregate(struct pam *   const inpamP,
                 if (tupleRow[col][plane] > accumulatorP->u.min)
                     accumulatorP->u.min = tupleRow[col][plane];
                 break;
-            } 
+            }
         }
     }
 }
@@ -150,7 +150,7 @@ printSummary(struct Accum  const accumulator,
              bool          const brief) {
 
     switch (function) {
-    case FN_ADD: {  
+    case FN_ADD: {
         const char * const intro = brief ? "" : "the sum of all samples is ";
 
         if (mustNormalize)
@@ -169,7 +169,7 @@ printSummary(struct Accum  const accumulator,
     }
     break;
     case FN_MIN: {
-        const char * const intro = 
+        const char * const intro =
             brief ? "" : "the minimum of all samples is ";
 
         if (mustNormalize)
@@ -179,7 +179,7 @@ printSummary(struct Accum  const accumulator,
     }
     break;
     case FN_MAX: {
-        const char * const intro = 
+        const char * const intro =
             brief ? "" : "the maximum of all samples is ";
 
         if (mustNormalize)
@@ -221,11 +221,11 @@ main(int argc, const char *argv[]) {
         aggregate(&inpam, inputRow, cmdline.function, &accumulator);
     }
     printSummary(accumulator, (unsigned)inpam.maxval,
-                 inpam.height * inpam.width * inpam.depth, 
+                 inpam.height * inpam.width * inpam.depth,
                  cmdline.function, cmdline.normalize, cmdline.brief);
 
     pnm_freepamrow(inputRow);
     pm_close(inpam.file);
-    
+
     return 0;
 }
