@@ -31,11 +31,11 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine(int argc, char ** argv,
+parseCommandLine(int argc, const char ** argv,
                  struct cmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    parse program command line described in Unix standard form by argc
-   and argv.  Return the information in the options as *cmdlineP.  
+   and argv.  Return the information in the options as *cmdlineP.
 
    If command line is internally inconsistent (invalid options, etc.),
    issue error message to stderr and abort program.
@@ -68,9 +68,9 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3( &argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3( &argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
-    
+
     if (saturationSpec) {
         if (saturationOpt < -100)
             pm_error("Saturation reduction cannot be more than 100%%.  "
@@ -106,17 +106,17 @@ mod(int const dividend, unsigned int const divisor) {
 
     if (remainder < 0)
         return divisor + remainder;
-    else 
+    else
         return (unsigned int) remainder;
 }
 
 
 
-static void 
+static void
 RGBtoHSV(pixel          const color,
          pixval         const maxval,
-         unsigned int * const hP, 
-         unsigned int * const sP, 
+         unsigned int * const hP,
+         unsigned int * const sP,
          unsigned int * const vP) {
 
     unsigned int const R = (MULTI * PPM_GETR(color) + maxval - 1) / maxval;
@@ -161,12 +161,12 @@ RGBtoHSV(pixel          const color,
 
 
 static void
-HSVtoRGB(unsigned int   const h, 
-         unsigned int   const s, 
-         unsigned int   const v, 
+HSVtoRGB(unsigned int   const h,
+         unsigned int   const s,
+         unsigned int   const v,
          pixval         const maxval,
          pixel *        const colorP) {
-    
+
     unsigned int R, G, B;
 
     if (s == 0) {
@@ -222,7 +222,7 @@ HSVtoRGB(unsigned int   const h,
             pm_error("Invalid H value passed to HSVtoRGB: %u/%u", h, MULTI);
         }
     }
-    PPM_ASSIGN(*colorP, 
+    PPM_ASSIGN(*colorP,
                (R * maxval) / MULTI,
                (G * maxval) / MULTI,
                (B * maxval) / MULTI);
@@ -267,7 +267,7 @@ getMinMax(FILE *         const ifP,
 
 
 int
-main(int argc, char * argv[]) {
+main(int argc, const char ** argv) {
 
     struct cmdlineInfo cmdline;
     FILE * ifP;
@@ -276,7 +276,7 @@ main(int argc, char * argv[]) {
     pixval maxval;
     int rows, cols, format, row;
 
-    ppm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
@@ -311,7 +311,7 @@ main(int argc, char * argv[]) {
             unsigned int H, S, V;
 
             RGBtoHSV(pixelrow[col], maxval, &H, &S, &V);
-            
+
             if (cmdline.normalize) {
                 V -= minValue;
                 V = (V * MULTI) /
@@ -335,3 +335,6 @@ main(int argc, char * argv[]) {
     */
     return 0;
 }
+
+
+
