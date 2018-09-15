@@ -66,10 +66,10 @@ parseColorOpt(const char *         const colorOpt,
     char * colorOptWork;
     char * cursor;
     bool eol;
-    
+
     colorOptWork = strdup(colorOpt);
     cursor = &colorOptWork[0];
-    
+
     eol = FALSE;    /* initial value */
     colorCt = 0;    /* initial value */
     while (!eol && colorCt < ARRAY_SIZE(cmdlineP->maskColor)) {
@@ -150,7 +150,7 @@ parseCommandLine(int argc, const char ** argv,
                 cmdlineP->inputFilename = "-";  /* he wants stdin */
             else if (argc-1 == 2)
                 cmdlineP->inputFilename = argv[2];
-            else 
+            else
                 pm_error("Too many arguments.  The only arguments accepted "
                          "are the mask color and optional input file name");
         }
@@ -191,7 +191,7 @@ isBkColor(tuple        const comparator,
     /* TODO: keep a cache of the bk color for each color in
        a colorhash_table.
     */
-    
+
     assert(pamP->depth >= 3);
 
     PPM_ASSIGN(comparatorPixel,
@@ -281,7 +281,7 @@ main(int argc, const char *argv[]) {
                 if (colorIsInSet(inputRow[col], &inPam, cmdline)) {
                     maskRow[col][0] = PAM_BLACK;
                     ++numPixelsMasked;
-                } else 
+                } else
                     maskRow[col][0] = PAM_BW_WHITE;
             }
             pnm_writepamrow(&outPam, maskRow);
