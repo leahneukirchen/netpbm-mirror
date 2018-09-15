@@ -1,0 +1,220 @@
+<html><head>
+<meta http-equiv="content-type" content="text/html;
+charset=windows-1252"><title>Pamaltsat User Manual</title>
+</head><body>
+<h1>pamaltsat</h1>
+Updated: 14 September 2018
+<br>
+<a href="#index">Table Of Contents</a>
+
+<h2>NAME</h2>
+
+pamaltsat - increase or decrease the saturation of an image using one of
+several alternative methods.
+
+<h2 id="synopsis">SYNOPSIS</h2>
+
+<b>pamaltsat</b>
+[<b>-method</b> <i>name</i>]
+[<b>-strength</b> <i>number</i>]
+[<b>-linear</b>]
+[<i>infile</i>]
+
+<h2 id="description">DESCRIPTION</h2>
+
+<p>This program is part of
+<a href="http://netpbm.sourceforge.net/doc/index.html">Netpbm</a>.
+
+<p><b>pamaltsat</b> decreases or increases the saturation of a Netpbm image by
+one of various non-standard (<i>alt</i>ernative) methods.
+
+<p>The input is a Netpbm image from Standard Input or a file named by the
+arguments.  The output is a Netpbm image in the same format written to
+Standard Output.
+
+<p>The most conventional way to change the saturation of an image is what
+<b>ppmbrighten</b> does.
+  
+
+<h2 id="examples">EXAMPLES</h2>
+
+<p>To increase saturation by a factor of 2.1 using the
+logarithmic method:
+
+<pre>
+<kdb>
+     pamaltsat -method log -strength 2.1 test.ppm
+</kdb>
+</pre>
+
+<p>To convert a color image to grayscale:
+
+<pre>
+<kbd>
+    pamaltsat -strength 0 test.ppm
+</kbd>
+</pre>
+
+
+<h2 id = "methods">SATURATION METHODS</h2>
+
+<p>The following saturation methods are available.
+
+<h3>Logarithmic Method</h3>
+
+<p>This saturation model is inspired by the concept of
+<a href="http://www.c-f-systems.com/ColorIntegrity.html">color integrity</a>,
+which works with color in terms of intensity ratios, where intensity is a 
+value of the
+<a href="https://en.wikipedia.org/wiki/Luminosity_function">luminosity
+function</a>, rather than brightness, or the numercial value of the sample in
+the image file.  From this viewpoint, it is natural to define the saturation
+of a color as the ratio of maximum and minimum intensities of its primary
+components. In order, however, to make saturation an additive value and to
+endow the <b>-strength</b> parameter with the semantics of a multiplier,
+it is convenient to operate on the logarithm of that ratio.  The addition of
+such saturations acquires physical sense, and multiplication corresponds to
+the raising of intensity to the power of the multiplier.
+
+<p>With this method, <b>pamaltsat</b> raises the intensity of each component
+to the power of the <b>strength</b> value. Since the total intensity of the
+resulting sample will differ from that of the original, it is thus necessary to
+restore it by multiplying the component intensities of the saturated sample by
+the ratio of the original intensity to that of the saturated sample.
+
+<p>Although it is always possible to decrease saturation by any given factor,
+there are two cases where it cannot be increased.  When the total intensity
+(or brightness) of a color is too high for the desired
+saturation, <b>pamaltsat</b> applies the maximum possible saturation that
+keeps the original intensity.  For example, any color with at least one
+component at the maxiumum is already fully saturated.  When one of the primary
+components is zero, the definition of saturation given above no longer works
+because of a zero in the denominator.  <b>pamaltsat</b> offers no special
+treatment of this situation because it does not create discontinuities and
+therefore produces no visible defects at reasonable strength levels.  When,
+however, strength approaches infinity, each color tends to its primary
+component with the highest intensity.
+
+
+<h3>Spectral Method</h3>
+
+<p>This is the default method.  It treats color as a spectrum with three
+bands: one for the intensity of each primary component.  Since neutral gray
+has a uniform (constant) spectrum, saturation can be measured as the
+difference of the spectrum of the given color from the uniform spectrum of the
+same total intensity.  The spectral method uses one of the simplest measures
+of such a difference: the diffirence between the highest and lowest component
+intensities, which is an additive value and therefore amenable to
+multiplication with good physical sense.  Although a complete hue-saturation
+model can be dervied from this approach, <b>pamaltsat</b> need not concern
+itself with it because it always preserves both hue and total intensity.
+
+<p>In order to change saturation, <b>pamaltsat</b> first multiplies the
+intensity of each component by the desired strength.  The saturation of the
+result is the strength times the saturation of the original, and likewise the
+total intensity, but it is then restored by subtraction of the neutral gray
+with a suitable intensity.
+
+<p>The effect of this method on each component intensity may be expressed in
+the following equation:
+<center>
+<tt>sat = orig * strength - Iorig * (strength - 1)</tt>
+</center>
+<br>
+where <tt>sat</tt> is the saturated sample, <tt>orig</tt> the original sample,
+and <tt>Iorig</tt> the total intensity of the original color.
+
+<p>The method is also related to color integrity because both its operations
+are part of that concept: multiplication of component intensities by the same
+quotient is an important operation because changes brightness but keeps color
+balance, and subtraction of a constant from all component intensities is
+described by the inventor of color integrity as &quot;subtraction of
+white.&quot;
+
+<p>This procedure may produce both negative and over-unity component
+intensities.  For such samples, <b>pamaltsat</b> decreases the strength to the
+highest value that keeps the resulting color in range.
+  
+
+<h2 id="options">OPTIONS</h2>
+
+<dl>
+<dt><b>-method</b> <i>method</i>
+<dd>specifies the saturation method to use:
+<table>
+<tr><th>method name</th><th>option value</th></tr>
+<tr><td>Logarithmic</td><td><tt>log </tt></td></tr>
+<tr><td>Spectral   </td><td><tt>spectrum</tt></td></tr>
+</table>
+
+<P>The default is <b>spectrum</b>
+
+<dt><b>-strength</b> <i>strength</i>
+
+<dd>This specifies a real nonnegative factor whereby to modify saturation.  A
+value greater than unity will increase saturation, whereas a value less than
+unity will decrease it. Unity will leave the image unchanged, and zero will
+produce greyscale output according to Rec 709.
+  
+<b>pamaltsat</b> preserves the total intensity of each pixel and never
+affects neutral gray pixels.
+
+<p>This option is mandatory.
+
+<dt><b>-linear</b>
+
+<dd>This tells <b>pamaltsat</b> that the input is the intensity-linear
+variation of a Netpbm image forat, in which the samples are proportional to
+light intensity rather than to brightness, as they are in true&mdash;or
+gamma-adjusted&mdash; Netpbm image formats.
+</dl>
+
+<h2 id="unotes">USAGE NOTES</h2>
+
+<p>Since <b>pamaltsat</b> does not affect neutral colors, you should adjust
+the color balance before saturation. You can do this with <b>pamlevels</b>.
+
+  
+<h2 id="ext">EXTENSIBILITY</h2>
+
+<b>pamaltsat</b> is written with an eye to extending it with new saturation
+methods, which programmers are welcome to contribute.  The only requirement is
+that every new method depend on a single strength parameter with the semantics
+described under the <b>-strength</b> command-line option.
+
+
+<h2 id="seealso">SEE ALSO</h2>
+
+<p>
+<A HREF="ppmbrighten.html">ppmbrighten</A>,
+<A HREF="ppmflash.html">ppmflash</A>, 
+
+
+<h2 id="author">AUTHOR</h2>
+
+<p>This program was first submitted by Anton Shepelev
+(<a href="mailto:anton.txt@gmail.com">anton.txt@gmail.com</a>).
+
+<h2 id="history">HISTORY</h2>
+
+<p><b>pamaltsat</b> was new in Netpbm 10.84 (September 2018).
+  
+
+<h2 id="index">Table Of Contents</h2>
+<ul>
+<li><a href="#synopsis"   >SYNOPSIS</a>
+<li><a href="#description">DESCRIPTION</a>
+<li><a href="#examples"   >EXAMPLES</a>
+<li><a href="#methods"    >SATURATION METHODS</a>
+<li><a href="#options"    >OPTIONS</a>
+<li><a href="#unotes"     >USAGE NOTES</a>
+<li><a href="#ext"        >EXTENSIBILITY</a>
+<li><a href="#seealso"    >SEE ALSO</a>
+<li><a href="#author"     >AUTHOR</a>
+<li><a href="#history"    >HISTORY</a>
+</ul>
+
+
+</body>
+</html>
+
