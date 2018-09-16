@@ -12,16 +12,6 @@
 typedef unsigned int  uint;
 typedef unsigned char uchar;
 
-/* To register a new method:
-   1. append its Id to the enum <Method>,
-   2. append its name to the array <methodTable>,
-   3. increment the value of <methodCt> by one, and
-   4. implement the new method and invoke it from the switch statement
-      in saturateTup().
-
-   TODO: Consider providing a RegisterMethod() function if the procedure above
-         is too cumbersome.
-*/
 typedef enum {MLog,  MSpectrum } Method; /* method identifiers */
 
 typedef struct {
