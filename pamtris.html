@@ -440,14 +440,14 @@ the following picture of NAMCO's <i>Pac-Man</i> is produced:
 
 int main()
 {
-        const int center_x = 0.5 * WIDTH;
-        const int center_y = 0.5 * HEIGHT;
+        int const center_x = 0.5 * WIDTH;
+        int const center_y = 0.5 * HEIGHT;
 
-        const double radius = 0.48 * WIDTH;
+        double const radius = 0.48 * WIDTH;
 
         puts("mode triangles");
 
-        int y_leg = tan(PI / 4.0) * center_x;
+        int const y_leg = tan(PI / 4.0) * center_x;
 
         printf("vertex %d %d 0\n", center_x, center_y);
         printf("vertex %d %d 0\n", WIDTH, center_y - y_leg);
@@ -459,13 +459,14 @@ int main()
         printf("vertex %d %d 1\n", center_x, center_y);
         puts("attribs 255 128 0");
 
-        double ang = 0.0;
-        const double ang_step = PI2 / SEGMENTS;
+        double const ang_step = PI2 / SEGMENTS;
+        unsigned int i;
+        double ang;
 
-        for(int i = 0; i &lt;= SEGMENTS; i++)
+        for(i = 0, ang = 0.0; i &lt;= SEGMENTS; i++)
         {
-                int x = round(cos(ang) * radius + center_x);
-                int y = round(sin(ang) * radius + center_y);
+                int const x = round(cos(ang) * radius + center_x);
+                int const y = round(sin(ang) * radius + center_y);
 
                 printf("vertex %d %d 1\n", x, y);
 
