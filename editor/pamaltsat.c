@@ -250,6 +250,8 @@ getTupInfo(tuplen          const tup,
 
 /* ------------------------ Logarithmic saturation ------------------------- */
 
+/* Method and algorithm by Anton Shepelev.  */
+
 static void
 tryLogSat(double          const sat,
           LinSampleInfo * const siP,
@@ -375,7 +377,9 @@ saturateLog(LinSampleInfo* const siP,
 
 
 
-/* -------------------------- Spectrum saturation --------------------------- */
+/* ------------------------- Spectrum saturation --------------------------- */
+
+/* Method and algorithm by Anton Shepelev.  */
 
 static void
 saturateSpectrum(LinSampleInfo * const siP,
