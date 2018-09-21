@@ -67,7 +67,7 @@ logarithmic method:
 which works with color in terms of intensity ratios, where intensity is a 
 value of the
 <a href="https://en.wikipedia.org/wiki/Luminosity_function">luminosity
-function</a>, rather than brightness, or the numercial value of the sample in
+function</a>, rather than brightness, or the numerical value of the sample in
 the image file.  From this viewpoint, it is natural to define the saturation
 of a color as the ratio of maximum and minimum intensities of its primary
 components. In order, however, to make saturation an additive value and to
@@ -78,9 +78,10 @@ the raising of intensity to the power of the multiplier.
 
 <p>With this method, <b>pamaltsat</b> raises the intensity of each component
 to the power of the <b>strength</b> value. Since the total intensity of the
-resulting sample will differ from that of the original, it is thus necessary to
-restore it by multiplying the component intensities of the saturated sample by
-the ratio of the original intensity to that of the saturated sample.
+resulting color will differ from that of the original, it is necessary to
+restore the intensity by multiplying the component intensities of the
+saturated color by the ratio of the intensity of the original color to that of
+the saturated color.
 
 <p>Although it is always possible to decrease saturation by any given factor,
 there are two cases where it cannot be increased.  When the total intensity
@@ -105,7 +106,7 @@ bands: one for the intensity of each primary component.  Since neutral gray
 has a uniform (constant) spectrum, saturation can be measured as the
 difference of the spectrum of the given color from the uniform spectrum of the
 same total intensity.  The spectral method uses one of the simplest measures
-of such a difference: the diffirence between the highest and lowest component
+of such a difference: the difference between the highest and lowest component
 intensities, which is an additive value and therefore amenable to
 multiplication with good physical sense.  Although a complete hue-saturation
 model can be dervied from this approach, <b>pamaltsat</b> need not concern
