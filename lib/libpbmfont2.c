@@ -547,10 +547,12 @@ processChars(Readline *     const readlineP,
 -----------------------------------------------------------------------------*/
     unsigned int const nCharacters = wordToInt(readlineP->arg[1]);
 
-    unsigned int nCharsDone  = 0;   /* Initial value */
-    unsigned int nCharsValid = 0;   /* Initial value */
+    unsigned int nCharsDone;
+    unsigned int nCharsValid;
 
-    while (nCharsDone < nCharacters) {
+    for (nCharsDone = 0, nCharsValid = 0;
+         nCharsDone < nCharacters; ) {
+
         bool eof;
 
         readline_read(readlineP, &eof);
@@ -677,9 +679,9 @@ processBdfFontNameLine(Readline     * const readlineP,
 
 
 static void
-loadCharsetString(char *  const registry,
-                  char *  const encoding,
-                  char ** const string) {
+loadCharsetString(const char * const registry,
+                  const char * const encoding,
+                  char **      const string) {
 
     unsigned int inCt, outCt;
     char * const dest = malloc (strlen(registry) + strlen(encoding) + 1);
@@ -706,26 +708,94 @@ loadCharsetString(char *  const registry,
 
 
 
+
+static unsigned int const maxTokenLen = 60;
+
+
+
+static void
+doCharsetRegistry(Readline *    const readlineP,
+                  bool *        const gotRegistryP,
+                  const char ** const registryP) {
+
+    if (*gotRegistryP)
+        pm_error("Multiple CHARSET_REGISTRY lines in BDF font file");
+    else if (readlineP->arg[2] != NULL)
+        pm_message("CHARSET_REGISTRY in BDF font file is not "
+                   "a single word.  Ignoring extra element(s) %s ...",
+                   readlineP->arg[2]);
+    else if (strlen(readlineP->arg[1]) > maxTokenLen)
+        pm_message("CHARSET_REGISTRY in BDF font file is too long. "
+                   "Truncating");
+
+    *registryP = strndup(readlineP->arg[1], maxTokenLen);
+    *gotRegistryP = true;
+}
+
+
+
+static void
+doCharsetEncoding(Readline *    const readlineP,
+                  bool *        const gotEncodingP,
+                  const char ** const encodingP) {
+
+    if (*gotEncodingP)
+        pm_error("Multiple CHARSET_ENCODING lines in BDF font file");
+    else if (readlineP->arg[2] != NULL)
+        pm_message("CHARSET_ENCODING in BDF font file is not "
+                   "a single word.  Ignoring extra element(s) %s ...",
+                   readlineP->arg[2]);
+    else if (strlen(readlineP->arg[1]) > maxTokenLen)
+        pm_message("CHARSET_ENCODING in BDF font file is too long. "
+                   "Truncating");
+
+    *encodingP = strndup(readlineP->arg[1], maxTokenLen);
+    *gotEncodingP = true;
+}
+
+
+
+static void
+doDefaultChar(Readline * const readlineP,
+              bool *     const gotDefaultCharP,
+              PM_WCHAR * const defaultCharP) {
+
+    if (*gotDefaultCharP)
+        pm_error("Multiple DEFAULT_CHAR lines in BDF font file");
+    else if (readlineP->arg[1] == NULL)
+        pm_error("Malformed DEFAULT_CHAR line in BDF font file");
+    else {
+        *defaultCharP = (PM_WCHAR) wordToInt(readlineP->arg[1]);
+        *gotDefaultCharP = true;
+    }
+}
+
+
+
 static void
 processBdfPropertyLine(Readline     * const readlineP,
                        struct font2 * const font2P) {
 
-    char * registry = NULL;      /* Initial value */
-    char * encoding = NULL;      /* Initial value */
-    /* Above initialization required by older versions of strndup() */
-    /* strndup() in glibc 2.7 has this problem */
+    bool gotRegistry;
+    const char * registry;
+    bool gotEncoding;
+    const char * encoding;
+    bool gotDefaultChar;
+    PM_WCHAR defaultChar;
+    unsigned int propCt;
+    unsigned int commentCt;
     unsigned int propTotal;
-    bool gotRegistry = FALSE;    /* Initial value */
-    bool gotEncoding = FALSE;    /* Initial value */
-    PM_WCHAR defaultChar = 0;    /* Initial value */
-    bool gotDefaultchar = FALSE; /* Initial value */
-    unsigned int propCt = 0;     /* Initial value */
-    unsigned int commentCt = 0;  /* Initial value */
-    unsigned int const maxTokenLen = 60;
 
     validateWordCount(readlineP, 2);   /* STARTPROPERTIES n */
 
     propTotal = wordToInt(readlineP->arg[1]);
+
+    gotRegistry    = false;  /* initial value */
+    gotEncoding    = false;  /* initial value */
+    gotDefaultChar = false;  /* initial value */
+
+    propCt    = 0;  /* initial value */
+    commentCt = 0;  /* initial value */
 
     do {
         bool eof;
@@ -735,48 +805,16 @@ processBdfPropertyLine(Readline     * const readlineP,
             pm_error("End of file after STARTPROPERTIES in BDF font file");
         else if (streq(readlineP->arg[0], "CHARSET_REGISTRY") &&
                  readlineP->arg[1] != NULL) {
-            if (gotRegistry)
-                pm_error("Multiple CHARSET_REGISTRY lines in BDF font file");
-            else if (readlineP->arg[2] != NULL)
-                pm_message("CHARSET_REGISTRY in BDF font file is not "
-                           "a single word.  Ignoring extra element(s) %s ...",
-                           readlineP->arg[2]);
-            else if (strlen(readlineP->arg[1]) > maxTokenLen)
-                pm_message("CHARSET_REGISTRY in BDF font file is too long. "
-                           "Truncating");
-
-            registry = strndup (readlineP->arg[1], maxTokenLen);
-            gotRegistry = TRUE;
-            }
-        else if (streq(readlineP->arg[0], "CHARSET_ENCODING") &&
-                 readlineP->arg[1] != NULL) {
-            if (gotEncoding)
-                pm_error("Multiple CHARSET_ENCODING lines in BDF font file");
-            else if (readlineP->arg[2] != NULL)
-                pm_message("CHARSET_ENCODING in BDF font file is not "
-                           "a single word.  Ignoring extra element(s) %s ...",
-                           readlineP->arg[2]);
-            else if (strlen(readlineP->arg[1]) > maxTokenLen)
-                pm_message("CHARSET_ENCODING in BDF font file is too long. "
-                           "Truncating");
-
-            encoding = strndup (readlineP->arg[1], maxTokenLen);
-            gotEncoding = TRUE;
+            doCharsetRegistry(readlineP, &gotRegistry, &registry);
+        } else if (streq(readlineP->arg[0], "CHARSET_ENCODING") &&
+                   readlineP->arg[1] != NULL) {
+            doCharsetEncoding(readlineP, &gotEncoding, &encoding);
+        } else if (streq(readlineP->arg[0], "DEFAULT_CHAR")) {
+            doDefaultChar(readlineP, &gotDefaultChar, &defaultChar);
+        } else if (streq(readlineP->arg[0], "COMMENT")) {
+            ++commentCt;
         }
-        else if (streq(readlineP->arg[0], "DEFAULT_CHAR")) {
-            if (gotDefaultchar)
-                pm_error("Multiple DEFAULT_CHAR lines in BDF font file");
-            else if (readlineP->arg[1] == NULL)
-                pm_error("Malformed DEFAULT_CHAR line in BDF font file");
-            else {
-                defaultChar = (PM_WCHAR) wordToInt(readlineP->arg[1]);
-                gotDefaultchar = TRUE;
-            }
-        }
-        else if (streq(readlineP->arg[0], "COMMENT")) {
-            commentCt++;
-        }
-        propCt++;
+        ++propCt;
 
     } while (!streq(readlineP->arg[0], "ENDPROPERTIES"));
 
@@ -801,11 +839,14 @@ processBdfPropertyLine(Readline     * const readlineP,
                     gotEncoding ? "REGISTRY" : "ENCODING",
                     gotEncoding ? "ENCODING" : "REGISTRY");
     }
-    free(registry); free(encoding);
+    if (gotRegistry)
+        pm_strfree(registry);
+    if (gotEncoding)
+        pm_strfree(encoding);
 
-    if (gotDefaultchar) {
-      font2P->default_char = defaultChar;
-      font2P->default_char_defined = TRUE;
+    if (gotDefaultChar) {
+        font2P->default_char         = defaultChar;
+        font2P->default_char_defined = true;
     }
 
 }
@@ -891,9 +932,9 @@ pbm_loadbdffont2(const char * const filename,
     pbm_createbdffont2_base(&font2P, maxmaxglyph);
 
     font2P->maxglyph = 0;
-    /* Initial value.  Increases as new characters are loaded */
+        /* Initial value.  Increases as new characters are loaded */
     font2P->glyph[0] = NULL;
-    /* Initial value.  Overwrite later if codepoint 0 is defined. */
+        /* Initial value.  Overwrite later if codepoint 0 is defined. */
 
     font2P->maxmaxglyph = maxmaxglyph;
 
