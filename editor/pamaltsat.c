@@ -41,7 +41,7 @@ methodFmNm(const char * const methodNm) {
 /*----------------------------------------------------------------------------
    The method of saturation whose name is 'methodNm'
 -----------------------------------------------------------------------------*/
-    uchar  i;
+    uint  i;
     bool found;
     Method method;
 
@@ -56,6 +56,7 @@ methodFmNm(const char * const methodNm) {
         /* Issue error message and abort */
         char * methodList;
         uint   methodListLen;
+        uint   i;
 
         /* Allocate a buffer to store the list of known saturation methods: */
         for (i = 0, methodListLen = 0; i < ARRAY_SIZE(methodTable); ++i)
@@ -65,7 +66,7 @@ methodFmNm(const char * const methodNm) {
 
         if (!methodList)
             pm_error("Failed to allocate memory for %lu saturation "
-                     "method names", ARRAY_SIZE(methodTable));
+                     "method names", (unsigned long)ARRAY_SIZE(methodTable));
 
         /* Fill the list of methods: */
         for (i = 0, methodList[0] = '\0'; i < ARRAY_SIZE(methodTable); ++i) {
@@ -409,7 +410,7 @@ saturateSpectrum(LinSampleInfo * const siP,
         /* To satisfy both constraints, choose the strictest: */
         double const km = km1 > km2 ? km2 : km1;
 
-        /* Ensure the saturation factor does exceed the maximum
+        /* Ensure the saturation factor does not exceed the maximum
            possible value:
         */
         k = sat < km ? sat : km;
