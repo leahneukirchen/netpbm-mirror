@@ -21,26 +21,26 @@ if [ $? -ne 0  ]
 fi
 
 # Two rows
-# Should print 3491766365 5110 twice
+# Should print 3806607098 5110 twice
 LC_ALL=C \
-awk 'BEGIN { for (i=32; i<=125;++i) printf("%c",i); print ""; \
+awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""; \
              for (i=160;i<=255;++i) printf("%c",i); }' | \
     pbmtext -builtin bdf | cksum
 
 
 LC_ALL=C \
-awk 'BEGIN { for (i=32; i<=125;++i) printf("%c",i);  print ""; \
+awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""; \
              for (i=160;i<=255;++i) printf("%c",i); }' | \
     LC_ALL=en_US.iso88591 pbmtext -builtin bdf -wchar | cksum
 
 
 # Two rows
-# Should print 259944121 191 twice
+# Should print 2858870527 192 twice
 LC_ALL=C \
-awk 'BEGIN { for (i=32; i<=125;++i) printf("%c",i); print ""; \
+awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""; \
              for (i=161;i<=255;++i) printf("%c",i); print "" }' | cksum
 
 LC_ALL=C \
-awk 'BEGIN { for (i=32; i<=125;++i) printf("%c",i); print ""; \
+awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""; \
              for (i=161;i<=255;++i) printf("%c",i); print ""}' | \
     LC_ALL=en_US.iso88591 pbmtext -builtin bdf -wchar -text-dump | cksum

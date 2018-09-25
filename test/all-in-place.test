@@ -78,6 +78,7 @@ ordinary_testprogs="\
   neotoppm \
   palmtopnm \
   pamaddnoise \
+  pamaltsat \
   pamarith \
   pambackground \
   pambayer \
@@ -98,7 +99,9 @@ ordinary_testprogs="\
   pamflip \
   pamfunc \
   pamgauss \
+  pamgetcolor \
   pamgradient \
+  pamlevels \
   pamlookup \
   pammasksharpen \
   pammixinterlace \
@@ -148,6 +151,7 @@ ordinary_testprogs="\
   pamtouil \
   pamtowinicon \
   pamtoxvmini \
+  pamtris \
   pamundice \
   pamunlookup \
   pamvalidate \
