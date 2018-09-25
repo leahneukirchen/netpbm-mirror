@@ -7,6 +7,8 @@ VPATH=.:$(SRCDIR)/$(SUBDIR)
 
 include $(BUILDDIR)/config.mk
 
+SUBDIRS = pamtris
+
 # We tend to separate out the build targets so that we don't have
 # any more dependencies for a given target than it really needs.
 # That way, if there is a problem with a dependency, we can still

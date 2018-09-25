@@ -460,6 +460,7 @@ CHECK_VARS = \
 	ZLIB="$(ZLIB)" \
 
 # Test files in source tree.
+# BUILDBINDIRS is a list of directories which contain target binaries
 
 check-tree : BUILDBINDIRS :=./analyzer \
 ./converter/other \
@@ -479,6 +480,7 @@ check-tree : BUILDBINDIRS :=./analyzer \
 ./editor/pamflip \
 ./editor/specialty \
 ./generator \
+./generator/pamtris \
 ./other \
 ./other/pamx
 
