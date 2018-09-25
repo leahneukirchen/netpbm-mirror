@@ -560,7 +560,7 @@ processChars(Readline *     const readlineP,
         if (streq(readlineP->arg[0], "COMMENT")) {
             /* ignore */
         } else if (!streq(readlineP->arg[0], "STARTCHAR"))
-            pm_error("%s detected where STARTCHAR expected "
+            pm_error("%s detected where \'STARTCHAR\' expected "
                      "in BDF font file", readlineP->arg[0] );
         else {
             const char * charName;
@@ -710,8 +710,10 @@ static void
 processBdfPropertyLine(Readline     * const readlineP,
                        struct font2 * const font2P) {
 
-    char * registry;
-    char * encoding;
+    char * registry = NULL;      /* Initial value */
+    char * encoding = NULL;      /* Initial value */
+    /* Above initialization required by older versions of strndup() */
+    /* strndup() in glibc 2.7 has this problem */
     unsigned int propTotal;
     bool gotRegistry = FALSE;    /* Initial value */
     bool gotEncoding = FALSE;    /* Initial value */
@@ -731,7 +733,8 @@ processBdfPropertyLine(Readline     * const readlineP,
         readline_read(readlineP, &eof);
         if (eof)
             pm_error("End of file after STARTPROPERTIES in BDF font file");
-        else if (streq(readlineP->arg[0], "CHARSET_REGISTRY")) {
+        else if (streq(readlineP->arg[0], "CHARSET_REGISTRY") &&
+                 readlineP->arg[1] != NULL) {
             if (gotRegistry)
                 pm_error("Multiple CHARSET_REGISTRY lines in BDF font file");
             else if (readlineP->arg[2] != NULL)
@@ -745,7 +748,8 @@ processBdfPropertyLine(Readline     * const readlineP,
             registry = strndup (readlineP->arg[1], maxTokenLen);
             gotRegistry = TRUE;
             }
-        else if (streq(readlineP->arg[0], "CHARSET_ENCODING")) {
+        else if (streq(readlineP->arg[0], "CHARSET_ENCODING") &&
+                 readlineP->arg[1] != NULL) {
             if (gotEncoding)
                 pm_error("Multiple CHARSET_ENCODING lines in BDF font file");
             else if (readlineP->arg[2] != NULL)
@@ -763,7 +767,7 @@ processBdfPropertyLine(Readline     * const readlineP,
             if (gotDefaultchar)
                 pm_error("Multiple DEFAULT_CHAR lines in BDF font file");
             else if (readlineP->arg[1] == NULL)
-                pm_error("Malformed DEFAULT_CHAR lines in BDF font file");
+                pm_error("Malformed DEFAULT_CHAR line in BDF font file");
             else {
                 defaultChar = (PM_WCHAR) wordToInt(readlineP->arg[1]);
                 gotDefaultchar = TRUE;
@@ -792,7 +796,7 @@ processBdfPropertyLine(Readline     * const readlineP,
     if (gotRegistry && gotEncoding)
         loadCharsetString(registry, encoding, &font2P->charset_string);
     else if (gotRegistry != gotEncoding) {
-        pm_message ("CHARSET_%s absent in BDF font file. "
+        pm_message ("CHARSET_%s absent or incomplete in BDF font file. "
                     "Ignoring CHARSET_%s.",
                     gotEncoding ? "REGISTRY" : "ENCODING",
                     gotEncoding ? "ENCODING" : "REGISTRY");

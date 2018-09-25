@@ -11,6 +11,9 @@ not yet  BJH  Release 10.84.00
               Add pamtris.  Thanks Lucas Brunno Luna
               <lucaslunar32@hotmail.com>.
 
+              libpbmfont, pbmtext: fix bugs with BDF file lines with
+              insufficient number of fields.  Unknown effect.
+
               pbmtext: -wchar works with built-in fonts.
 
               pbmtext: improved -verbose information about BDF fonts:
