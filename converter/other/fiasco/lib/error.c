@@ -26,6 +26,7 @@
 
 #include "config.h"
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <errno.h>
 
@@ -64,46 +65,54 @@ jmp_buf env;
 *****************************************************************************/
 
 void
-set_error(const char *format, ...) {
+set_error(const char * const format, ...) {
 /*----------------------------------------------------------------------------
   Set error text to given string.
 -----------------------------------------------------------------------------*/
     va_list      args;
     unsigned     len;
+    bool         error;
     const char * str;
-
-    len = 0;  /* initial value */
-    str = format;  /* initial value */
 
     VA_START (args, format);
 
-    len = strlen (format);
-    while ((str = strchr (str, '%'))) {
-        ++str;
-        if (*str == 's') {
-            char * const vstring = va_arg (args, char *);
-            len += strlen(vstring);
-        } else if (*str == 'd') {
-            (void)va_arg(args, int);
-            len += 10;
-        } else if (*str == 'c') {
-            (void)va_arg(args, int);
-            len += 1;
-        } else
-            return;
-        ++str;
+    /* Compute how long the error text will be: 'len' */
+
+    for (len = strlen(format), str = &format[0], error = false;
+         *str && !error; ) {
+
+        str = strchr(str, '%');
+
+        if (*str) {
+            ++str; /* Move past % */
+            if (*str == 's') {
+                char * const vstring = va_arg (args, char *);
+                len += strlen(vstring);
+            } else if (*str == 'd') {
+                (void)va_arg(args, int);
+                len += 10;
+            } else if (*str == 'c') {
+                (void)va_arg(args, int);
+                len += 1;
+            } else
+                error = true;
+            if (!error)
+                ++str;
+        }
     }
     va_end(args);
 
-    VA_START(args, format);
+    if (!error) {
+        VA_START(args, format);
 
-    if (error_message)
-        Free(error_message);
-    error_message = Calloc(len, sizeof (char));
+        if (error_message)
+            Free(error_message);
+        error_message = Calloc(len, sizeof (char));
 
-    vsprintf(error_message, format, args);
+        vsprintf(error_message, format, args);
 
-    va_end(args);
+        va_end(args);
+    }
 }
 
 
@@ -204,13 +213,13 @@ warning (const char *format, ...)
 
    VA_START (args, format);
 
-   if (verboselevel == FIASCO_NO_VERBOSITY)
-      return;
-
-   fprintf (stderr, "Warning: ");
-   vfprintf (stderr, format, args);
-   fputc ('\n', stderr);
-
+   if (verboselevel == FIASCO_NO_VERBOSITY) {
+       /* User doesn't want warnings */
+   } else {
+       fprintf (stderr, "Warning: ");
+       vfprintf (stderr, format, args);
+       fputc ('\n', stderr);
+   }
    va_end (args);
 }
 
@@ -224,11 +233,12 @@ message (const char *format, ...)
 
    VA_START (args, format);
 
-   if (verboselevel == FIASCO_NO_VERBOSITY)
-      return;
-
-   vfprintf (stderr, format, args);
-   fputc ('\n', stderr);
+   if (verboselevel == FIASCO_NO_VERBOSITY) {
+       /* User doesn't want messages */
+   } else {
+       vfprintf (stderr, format, args);
+       fputc ('\n', stderr);
+   }
    va_end (args);
 }
 
@@ -242,12 +252,11 @@ debug_message (const char *format, ...)
 
    VA_START (args, format);
 
-   if (verboselevel < FIASCO_ULTIMATE_VERBOSITY)
-      return;
-
-   fprintf (stderr, "*** ");
-   vfprintf (stderr, format, args);
-   fputc ('\n', stderr);
+   if (verboselevel >= FIASCO_ULTIMATE_VERBOSITY) {
+       fprintf (stderr, "*** ");
+       vfprintf (stderr, format, args);
+       fputc ('\n', stderr);
+   }
    va_end (args);
 }
 
@@ -261,11 +270,12 @@ info (const char *format, ...)
 
    VA_START (args, format);
 
-   if (verboselevel == FIASCO_NO_VERBOSITY)
-      return;
-
-   vfprintf (stderr, format, args);
-   fflush (stderr);
+   if (verboselevel == FIASCO_NO_VERBOSITY) {
+       /* User doesn't want informational messages */
+   } else {
+       vfprintf (stderr, format, args);
+       fflush (stderr);
+   }
    va_end (args);
 }
 
