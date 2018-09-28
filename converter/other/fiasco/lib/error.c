@@ -9,17 +9,6 @@
  *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
-
-    "int dummy = " change to int dummy; dummy =" for Netpbm to avoid
-    unused variable warning.
-
- */
-
-/*
- *  $Date: 2000/06/14 20:49:37 $
- *  $Author: hafner $
- *  $Revision: 5.1 $
- *  $State: Exp $
  */
 
 #define _ERROR_C
@@ -118,10 +107,10 @@ set_error(const char * const format, ...) {
 
 
 void
-error(const char *format, ...) {
+error(const char * const format, ...) {
 /*----------------------------------------------------------------------------
   Set error text to given string.
-  -----------------------------------------------------------------------------*/
+-----------------------------------------------------------------------------*/
     va_list      args;
     unsigned     len;
     const char * str;
@@ -175,119 +164,121 @@ error(const char *format, ...) {
 
 
 const char *
-fiasco_get_error_message (void)
-/*
- *  Return value:
- *	Last error message of FIASCO library.
- */
-{
-   return error_message ? error_message : "";
+fiasco_get_error_message(void) {
+/*----------------------------------------------------------------------------
+  Last error message of FIASCO library.
+-----------------------------------------------------------------------------*/
+    return error_message ? error_message : "";
 }
+
+
 
 const char *
-get_system_error (void)
-{
-   return strerror (errno);
+get_system_error(void) {
+    return strerror(errno);
 }
 
+
+
 void
-file_error (const char *filename)
-/*
- *  Print file error message and exit.
- *
- *  No return value.
- */
-{
-   error ("File `%s': I/O Error - %s.", filename, get_system_error ());
+file_error(const char * const filename) {
+/*----------------------------------------------------------------------------
+   Print file error message and exit.
+-----------------------------------------------------------------------------*/
+    error("File `%s': I/O Error - %s.", filename, get_system_error ());
 }
 
+
+
 void
-warning (const char *format, ...)
-/*
- *  Issue a warning and continue execution.
- *
- *  No return value.
- */
-{
-   va_list	args;
+warning(const char * const format, ...) {
+/*----------------------------------------------------------------------------
+  Issue a warning.
+-----------------------------------------------------------------------------*/
+    va_list	args;
 
-   VA_START (args, format);
+    VA_START (args, format);
 
-   if (verboselevel == FIASCO_NO_VERBOSITY) {
-       /* User doesn't want warnings */
-   } else {
-       fprintf (stderr, "Warning: ");
-       vfprintf (stderr, format, args);
-       fputc ('\n', stderr);
-   }
-   va_end (args);
+    if (verboselevel == FIASCO_NO_VERBOSITY) {
+        /* User doesn't want warnings */
+    } else {
+        fprintf (stderr, "Warning: ");
+        vfprintf (stderr, format, args);
+        fputc ('\n', stderr);
+    }
+    va_end (args);
 }
 
+
+
 void
-message (const char *format, ...)
-/*
- *  Print a message to stderr.
- */
-{
-   va_list args;
+message(const char * const format, ...) {
+/*----------------------------------------------------------------------------
+   Print a message to Standard Error
+-----------------------------------------------------------------------------*/
+    va_list args;
 
-   VA_START (args, format);
+    VA_START (args, format);
 
-   if (verboselevel == FIASCO_NO_VERBOSITY) {
-       /* User doesn't want messages */
-   } else {
-       vfprintf (stderr, format, args);
-       fputc ('\n', stderr);
-   }
-   va_end (args);
+    if (verboselevel == FIASCO_NO_VERBOSITY) {
+        /* User doesn't want messages */
+    } else {
+        vfprintf (stderr, format, args);
+        fputc ('\n', stderr);
+    }
+    va_end (args);
 }
 
+
+
 void
-debug_message (const char *format, ...)
-/*
- *  Print a message to stderr.
- */
-{
-   va_list args;
+debug_message(const char * const format, ...) {
+/*----------------------------------------------------------------------------
+   Print a message to Standard Error if debug messages are enabled.
+-----------------------------------------------------------------------------*/
+    va_list args;
 
-   VA_START (args, format);
+    VA_START (args, format);
 
-   if (verboselevel >= FIASCO_ULTIMATE_VERBOSITY) {
-       fprintf (stderr, "*** ");
-       vfprintf (stderr, format, args);
-       fputc ('\n', stderr);
-   }
-   va_end (args);
+    if (verboselevel >= FIASCO_ULTIMATE_VERBOSITY) {
+        fprintf (stderr, "*** ");
+        vfprintf (stderr, format, args);
+        fputc ('\n', stderr);
+    }
+    va_end (args);
 }
 
+
+
 void
-info (const char *format, ...)
-/*
- *  Print a message to stderr. Do not append a newline.
- */
-{
-   va_list args;
+info(const char * const format, ...) {
+/*----------------------------------------------------------------------------
+   Print a message to stderr. Do not append a newline.
+-----------------------------------------------------------------------------*/
+    va_list args;
 
-   VA_START (args, format);
+    VA_START (args, format);
 
-   if (verboselevel == FIASCO_NO_VERBOSITY) {
-       /* User doesn't want informational messages */
-   } else {
-       vfprintf (stderr, format, args);
-       fflush (stderr);
-   }
-   va_end (args);
+    if (verboselevel == FIASCO_NO_VERBOSITY) {
+        /* User doesn't want informational messages */
+    } else {
+        vfprintf (stderr, format, args);
+        fflush (stderr);
+    }
+    va_end (args);
 }
 
+
+
 void
-fiasco_set_verbosity (fiasco_verbosity_e level)
-{
+fiasco_set_verbosity(fiasco_verbosity_e const level) {
    verboselevel = level;
 }
 
+
+
 fiasco_verbosity_e
-fiasco_get_verbosity (void)
-{
+fiasco_get_verbosity(void) {
    return verboselevel;
 }
 
