@@ -3,14 +3,14 @@
  *
  *  Written by:		Stefan Frank
  *			Ullrich Hafner
- *  
+ *
  *  Credits:	Modelled after variable argument routines from Jef
- *		Poskanzer's pbmplus package. 
+ *		Poskanzer's pbmplus package.
  *
  *  This file is part of FIASCO (Fractal Image And Sequence COdec)
  *  Copyright (C) 1994-2000 Ullrich Hafner
 
-    "int dummy = " change to int dummy; dummy =" for Netpbm to avoid 
+    "int dummy = " change to int dummy; dummy =" for Netpbm to avoid
     unused variable warning.
 
  */
@@ -47,7 +47,7 @@
 /*****************************************************************************
 
 			     local variables
-  
+
 *****************************************************************************/
 
 static fiasco_verbosity_e  verboselevel  = FIASCO_SOME_VERBOSITY;
@@ -60,7 +60,7 @@ jmp_buf env;
 /*****************************************************************************
 
 			       public code
-  
+
 *****************************************************************************/
 
 void
@@ -100,7 +100,7 @@ set_error(const char *format, ...) {
     if (error_message)
         Free(error_message);
     error_message = Calloc(len, sizeof (char));
-   
+
     vsprintf(error_message, format, args);
 
     va_end(args);
@@ -116,7 +116,7 @@ error(const char *format, ...) {
     va_list      args;
     unsigned     len;
     const char * str;
-   
+
     len = 0; /* initial value */
     str = &format[0];  /* initial value */
 
@@ -141,7 +141,7 @@ error(const char *format, ...) {
             exit(1);
 #endif
         };
-      
+
         ++str;
     }
     va_end(args);
@@ -151,11 +151,11 @@ error(const char *format, ...) {
     if (error_message)
         Free(error_message);
     error_message = Calloc(len, sizeof (char));
-   
+
     vsprintf(error_message, format, args);
 
     va_end(args);
-   
+
 #if HAVE_SETJMP_H
     longjmp(env, 1);
 #else
@@ -192,7 +192,7 @@ file_error (const char *filename)
    error ("File `%s': I/O Error - %s.", filename, get_system_error ());
 }
 
-void 
+void
 warning (const char *format, ...)
 /*
  *  Issue a warning and continue execution.
@@ -206,7 +206,7 @@ warning (const char *format, ...)
 
    if (verboselevel == FIASCO_NO_VERBOSITY)
       return;
-	
+
    fprintf (stderr, "Warning: ");
    vfprintf (stderr, format, args);
    fputc ('\n', stderr);
@@ -214,7 +214,7 @@ warning (const char *format, ...)
    va_end (args);
 }
 
-void 
+void
 message (const char *format, ...)
 /*
  *  Print a message to stderr.
@@ -232,7 +232,7 @@ message (const char *format, ...)
    va_end (args);
 }
 
-void 
+void
 debug_message (const char *format, ...)
 /*
  *  Print a message to stderr.
@@ -280,3 +280,6 @@ fiasco_get_verbosity (void)
 {
    return verboselevel;
 }
+
+
+
