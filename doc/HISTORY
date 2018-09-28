@@ -29,6 +29,9 @@ not yet  BJH  Release 10.84.00
               pamgetcolor: fix bug: gets color of only the top half of a
               region.
 
+              pnmfiasco, fiascotopnm: Fix trivial memory leak.  Always broken
+              (programs were new in Netpbm 9.6, July 2000).
+
 18.06.30 BJH  Release 10.83.00
 
               Add pamlevels.  Thanks Anton Shepelev <anton.txt@gmail.com>.
