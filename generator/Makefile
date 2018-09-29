@@ -41,6 +41,6 @@ OBJECTS = $(BINARIES:%=%.o)
 MERGE_OBJECTS = $(MERGEBINARIES:%=%.o2)
 
 .PHONY: all
-all: $(BINARIES)
+all: $(BINARIES) $(SUBDIRS:%=%/all)
 
 include $(SRCDIR)/common.mk
