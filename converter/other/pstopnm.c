@@ -275,9 +275,13 @@ computeSizeResBlind(unsigned int   const xmax,
                     unsigned int * const xresP,
                     unsigned int * const yresP) {
 
-    *xresP = *yresP = MIN(xmax * 72 / imageWidth, 
-                          ymax * 72 / imageHeight);
-    
+    if (imageWidth == 0 || imageHeight == 0) {
+        *xresP = *yresP = 72;
+    } else {
+        *xresP = *yresP = MIN(xmax * 72 / imageWidth,
+                              ymax * 72 / imageHeight);
+    }
+
     if (nocrop) {
         *xsizeP = xmax;
         *ysizeP = ymax;
@@ -335,10 +339,13 @@ computeSizeRes(struct cmdlineInfo const cmdline,
         *xresP = *yresP = cmdline.dpi;
         *xsizeP = (int) (cmdline.dpi * sx / 72 + 0.5);
         *ysizeP = (int) (cmdline.dpi * sy / 72 + 0.5);
-    } else  if (cmdline.xsize || cmdline.ysize)
+    } else  if (cmdline.xsize || cmdline.ysize) {
+        if (sx == 0 || sy == 0)
+            pm_error("Input image is zero size; we cannot satisfy your "
+                     "produce your requested output dimensions");
         computeSizeResFromSizeSpec(cmdline.xsize, cmdline.ysize, sx, sy,
                                    xsizeP, ysizeP, xresP, yresP);
-    else 
+    } else
         computeSizeResBlind(cmdline.xmax, cmdline.ymax, sx, sy, cmdline.nocrop,
                             xsizeP, ysizeP, xresP, yresP);
 
@@ -886,7 +893,12 @@ main(int argc, char ** argv) {
 
     computeSizeRes(cmdline, orientation, bordered_box, 
                    &xsize, &ysize, &xres, &yres);
-    
+
+    if (xres == 0)
+        xres = 1;
+    if (yres == 0)
+        yres = 1;
+
     pstrans = computePstrans(bordered_box, orientation,
                              xsize, ysize, xres, yres);
 

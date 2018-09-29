@@ -1297,6 +1297,8 @@ validateEncoding(const char **  const arg,
     bool badCodepoint;
     unsigned int codepoint;
 
+    if (!arg[1])
+        pm_error("Invalid ENCODING statement - no arguments");
     if (atoi(arg[1]) >= 0) {
         codepoint = atoi(arg[1]);
         gotCodepoint = true;
@@ -1327,9 +1329,13 @@ processCharsLine(FILE *        const fp,
                  const char ** const arg,
                  struct font * const fontP) {
 
-    unsigned int const nCharacters = atoi(arg[1]);
-
+    unsigned int nCharacters;
     unsigned int nCharsDone;
+
+    if (!arg[1])
+        pm_error("Invalid CHARS line - no arguments");
+
+    nCharacters = atoi(arg[1]);
 
     nCharsDone = 0;
 
@@ -1346,6 +1352,8 @@ processCharsLine(FILE *        const fp,
             /* ignore */
         } else if (!streq(arg[0], "STARTCHAR"))
             pm_error("no STARTCHAR after CHARS in BDF font file");
+        else if (!arg[1])
+            pm_error("Invalid STARTCHAR - no arguments");
         else {
             const char * const charName = arg[1];
             struct glyph * glyphP;
@@ -1377,15 +1385,25 @@ processCharsLine(FILE *        const fp,
                     const char * arg[32];
                     
                     expect(fp, "DWIDTH", arg, line);
+                    if (!arg[1])
+                        pm_error("Invalid DWIDTH statement - no arguments");
                     glyphP->xadd = atoi(arg[1]);
                 }
                 {
                     const char * arg[32];
                     
                     expect(fp, "BBX", arg, line);
+                    if (!arg[1])
+                        pm_error("Invalid BBX statement - no arguments");
                     glyphP->width  = atoi(arg[1]);
+                    if (!arg[2])
+                        pm_error("Invalid BBX statement - only 1 argument");
                     glyphP->height = atoi(arg[2]);
+                    if (!arg[3])
+                        pm_error("Invalid BBX statement - only 2 arguments");
                     glyphP->x      = atoi(arg[3]);
+                    if (!arg[4])
+                        pm_error("Invalid BBX statement - only 3 arguments");
                     glyphP->y      = atoi(arg[4]);
                 }
                 createBmap(glyphP->width, glyphP->height, fp, charName,
@@ -1420,8 +1438,13 @@ processFontLine(FILE *        const fp,
     } else if (streq(arg[0], "SIZE")) {
         /* ignore */
     } else if (streq(arg[0], "STARTPROPERTIES")) {
-        unsigned int const propCount = atoi(arg[1]);
+        unsigned int propCount;
         unsigned int i;
+
+        if (!arg[1])
+            pm_error("Invalid STARTPROPERTIES statement - no arguments");
+        propCount = atoi(arg[1]);
+
         for (i = 0; i < propCount; ++i) {
             char line[1024];
             const char * arg[32];
@@ -1431,9 +1454,17 @@ processFontLine(FILE *        const fp,
                 pm_error("End of file after STARTPROPERTIES in BDF font file");
         }
     } else if (streq(arg[0], "FONTBOUNDINGBOX")) {
+        if (!arg[1])
+            pm_error("Invalid FONTBOUNDINGBOX  statement - no arguments");
         fontP->maxwidth  = atoi(arg[1]);
+        if (!arg[2])
+            pm_error("Invalid FONTBOUNDINGBOX  statement - only 1 argument");
         fontP->maxheight = atoi(arg[2]);
+        if (!arg[3])
+            pm_error("Invalid FONTBOUNDINGBOX  statement - only 2 arguments");
         fontP->x         = atoi(arg[3]);
+        if (!arg[4])
+            pm_error("Invalid FONTBOUNDINGBOX  statement - only 3 arguments");
         fontP->y         = atoi(arg[4]);
     } else if (streq(arg[0], "ENDFONT")) {
         *endOfFontP = true;
