@@ -1,11 +1,11 @@
 /*
     jbigtopnm - JBIG to PNM converter
-  
+
     This program was derived from jbgtopbm.c in Markus Kuhn's
     JBIG-KIT package by Bryan Henderson on 2000.05.11
 
     The main difference is that this version uses the Netpbm libraries.
-  
+
  */
 
 #include <stdio.h>
@@ -29,7 +29,7 @@ collect_image (unsigned char *data, size_t len, void *image) {
 
 
 
-static void 
+static void
 write_pnm (FILE *fout, const unsigned char * const image, const int bpp,
            const int rows, const int cols, const int maxval,
            const int format) {
@@ -46,22 +46,22 @@ write_pnm (FILE *fout, const unsigned char * const image, const int bpp,
         for (col = 0; col < cols; col++) {
             int j;
             for (j = 0; j < bpp; j++)
-                PNM_ASSIGN1(pnm_row[col], 
+                PNM_ASSIGN1(pnm_row[col],
                             image[(((row*cols)+col) * bpp) + j]);
         }
         pnm_writepnmrow(fout, pnm_row, cols, maxval, format, 0);
     }
-    
+
     pnm_freerow(pnm_row);
 }
 
 
 
 static void
-write_raw_pbm(FILE * const fout, 
+write_raw_pbm(FILE * const fout,
               const unsigned char * const binary_image,
               int                   const cols,
-              int                   const rows) { 
+              int                   const rows) {
 
     unsigned int const bytes_per_row = pbm_packed_bytes(cols);
 
@@ -70,7 +70,7 @@ write_raw_pbm(FILE * const fout,
     pbm_writepbminit(fout, cols, rows, 0);
 
     for (row = 0; row < rows; ++row)
-        pbm_writepbmrow_packed(fout, &binary_image[row*bytes_per_row], cols, 
+        pbm_writepbmrow_packed(fout, &binary_image[row*bytes_per_row], cols,
                                0);
 }
 
@@ -79,7 +79,7 @@ write_raw_pbm(FILE * const fout,
 /*
  *
  */
-static void 
+static void
 diagnose_bie(FILE *f)
 {
   unsigned char bih[20];
@@ -89,39 +89,39 @@ diagnose_bie(FILE *f)
   len = fread(bih, 1, 20, f);
   if (len < 20) {
     printf("Input file is %d < 20 bytes long and does therefore not "
-	   "contain an intact BIE header!\n", len);
+       "contain an intact BIE header!\n", len);
     return;
   }
 
   printf("Decomposition of BIH:\n\n  DL = %d\n  D  = %d\n  P  = %d\n"
-	 "  -  = %d\n  XD = %lu\n  YD = %lu\n  L0 = %lu\n  MX = %d\n"
-	 "  MY = %d\n",
-	 bih[0], bih[1], bih[2], bih[3],
-	 xd = ((unsigned long) bih[ 4] << 24) | ((unsigned long)bih[ 5] << 16)|
-	 ((unsigned long) bih[ 6] <<  8) | ((unsigned long) bih[ 7]),
-	 yd = ((unsigned long) bih[ 8] << 24) | ((unsigned long)bih[ 9] << 16)|
-	 ((unsigned long) bih[10] <<  8) | ((unsigned long) bih[11]),
-	 l0 = ((unsigned long) bih[12] << 24) | ((unsigned long)bih[13] << 16)|
-	 ((unsigned long) bih[14] <<  8) | ((unsigned long) bih[15]),
-	 bih[16], bih[17]);
+     "  -  = %d\n  XD = %lu\n  YD = %lu\n  L0 = %lu\n  MX = %d\n"
+     "  MY = %d\n",
+     bih[0], bih[1], bih[2], bih[3],
+     xd = ((unsigned long) bih[ 4] << 24) | ((unsigned long)bih[ 5] << 16)|
+     ((unsigned long) bih[ 6] <<  8) | ((unsigned long) bih[ 7]),
+     yd = ((unsigned long) bih[ 8] << 24) | ((unsigned long)bih[ 9] << 16)|
+     ((unsigned long) bih[10] <<  8) | ((unsigned long) bih[11]),
+     l0 = ((unsigned long) bih[12] << 24) | ((unsigned long)bih[13] << 16)|
+     ((unsigned long) bih[14] <<  8) | ((unsigned long) bih[15]),
+     bih[16], bih[17]);
   printf("  order   = %d %s%s%s%s%s\n", bih[18],
-	 bih[18] & JBG_HITOLO ? " HITOLO" : "",
-	 bih[18] & JBG_SEQ ? " SEQ" : "",
-	 bih[18] & JBG_ILEAVE ? " ILEAVE" : "",
-	 bih[18] & JBG_SMID ? " SMID" : "",
-	 bih[18] & 0xf0 ? " other" : "");
+     bih[18] & JBG_HITOLO ? " HITOLO" : "",
+     bih[18] & JBG_SEQ ? " SEQ" : "",
+     bih[18] & JBG_ILEAVE ? " ILEAVE" : "",
+     bih[18] & JBG_SMID ? " SMID" : "",
+     bih[18] & 0xf0 ? " other" : "");
   printf("  options = %d %s%s%s%s%s%s%s%s\n", bih[19],
-	 bih[19] & JBG_LRLTWO ? " LRLTWO" : "",
-	 bih[19] & JBG_VLENGTH ? " VLENGTH" : "",
-	 bih[19] & JBG_TPDON ? " TPDON" : "",
-	 bih[19] & JBG_TPBON ? " TPBON" : "",
-	 bih[19] & JBG_DPON ? " DPON" : "",
-	 bih[19] & JBG_DPPRIV ? " DPPRIV" : "",
-	 bih[19] & JBG_DPLAST ? " DPLAST" : "",
-	 bih[19] & 0x80 ? " other" : "");
+     bih[19] & JBG_LRLTWO ? " LRLTWO" : "",
+     bih[19] & JBG_VLENGTH ? " VLENGTH" : "",
+     bih[19] & JBG_TPDON ? " TPDON" : "",
+     bih[19] & JBG_TPBON ? " TPBON" : "",
+     bih[19] & JBG_DPON ? " DPON" : "",
+     bih[19] & JBG_DPPRIV ? " DPPRIV" : "",
+     bih[19] & JBG_DPLAST ? " DPLAST" : "",
+     bih[19] & 0x80 ? " other" : "");
   printf("\n  %lu stripes, %d layers, %d planes\n\n",
-	 ((yd >> bih[1]) +  ((((1UL << bih[1]) - 1) & xd) != 0) + l0 - 1) / l0,
-	 bih[1] - bih[0], bih[2]);
+     ((yd >> bih[1]) +  ((((1UL << bih[1]) - 1) & xd) != 0) + l0 - 1) / l0,
+     bih[1] - bih[0], bih[2]);
 
   return;
 }
@@ -227,12 +227,12 @@ int main (int argc, char **argv)
             len -= cnt;
         }
     } while (result == JBG_EAGAIN || result == JBG_EOK);
-    if (ferror(fin)) 
+    if (ferror(fin))
         pm_error("Problem while reading input file '%s", fnin);
-    if (result != JBG_EOK && result != JBG_EOK_INTR) 
-        pm_error("Problem with input file '%s': %s\n", 
+    if (result != JBG_EOK && result != JBG_EOK_INTR)
+        pm_error("Problem with input file '%s': %s\n",
                  fnin, jbg_strerror(result));
-    if (plane >= 0 && jbg_dec_getplanes(&s) <= plane) 
+    if (plane >= 0 && jbg_dec_getplanes(&s) <= plane)
         pm_error("Image has only %d planes!\n", jbg_dec_getplanes(&s));
 
     {
@@ -248,9 +248,9 @@ int main (int argc, char **argv)
         maxval = pm_bitstomaxval(jbg_dec_getplanes(&s));
         bpp = (jbg_dec_getplanes(&s)+7)/8;
 
-        if (jbg_dec_getplanes(&s) == 1) 
+        if (jbg_dec_getplanes(&s) == 1)
             plane_to_write = 0;
-        else 
+        else
             plane_to_write = plane;
 
         if (plane_to_write >= 0) {
@@ -267,7 +267,7 @@ int main (int argc, char **argv)
 
             /* Write out all the planes */
             /* What jbig.doc doesn't tell you is that jbg_dec_merge_planes
-               delivers the image in chunks, in consecutive calls to 
+               delivers the image in chunks, in consecutive calls to
                the data-out callback function.  And a row can span two
                chunks.
             */
@@ -277,10 +277,13 @@ int main (int argc, char **argv)
             free(image);
         }
     }
-  
+
     pm_close(fout);
 
     jbg_dec_free(&s);
 
     return 0;
 }
+
+
+
