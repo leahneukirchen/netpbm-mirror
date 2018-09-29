@@ -142,30 +142,30 @@ parseIndexbits(bool          const indexbitsSpec,
         unsigned int i;
 
         /* Set initial values */
-        cmdlineP->indexsizeAllowed.b1 = FALSE;
-        cmdlineP->indexsizeAllowed.b2 = FALSE;
-        cmdlineP->indexsizeAllowed.b4 = FALSE;
-        cmdlineP->indexsizeAllowed.b8 = FALSE;
+        cmdlineP->indexsizeAllowed.b1 = false;
+        cmdlineP->indexsizeAllowed.b2 = false;
+        cmdlineP->indexsizeAllowed.b4 = false;
+        cmdlineP->indexsizeAllowed.b8 = false;
 
         for (i = 0; indexbits[i]; ++i) {
             const char * const thisItem = indexbits[i];
             if (streq(thisItem, "1"))
-                cmdlineP->indexsizeAllowed.b1 = TRUE;
+                cmdlineP->indexsizeAllowed.b1 = true;
             else if (streq(thisItem, "2"))
-                cmdlineP->indexsizeAllowed.b2 = TRUE;
+                cmdlineP->indexsizeAllowed.b2 = true;
             else if (streq(thisItem, "4"))
-                cmdlineP->indexsizeAllowed.b4 = TRUE;
+                cmdlineP->indexsizeAllowed.b4 = true;
             else if (streq(thisItem, "8"))
-                cmdlineP->indexsizeAllowed.b8 = TRUE;
+                cmdlineP->indexsizeAllowed.b8 = true;
             else
                 pm_error("Invalid item in -indexbits list: '%s'.  "
                          "We recognize only 1, 2, 4, and 8", thisItem);
-        }           
+        }
     } else {
-        cmdlineP->indexsizeAllowed.b1 = FALSE;
-        cmdlineP->indexsizeAllowed.b2 = FALSE;
-        cmdlineP->indexsizeAllowed.b4 = FALSE;
-        cmdlineP->indexsizeAllowed.b8 = TRUE;
+        cmdlineP->indexsizeAllowed.b1 = false;
+        cmdlineP->indexsizeAllowed.b2 = false;
+        cmdlineP->indexsizeAllowed.b4 = false;
+        cmdlineP->indexsizeAllowed.b8 = true;
     }
 }
 
@@ -233,8 +233,8 @@ parseCommandLine(int                 argc,
     OPTENT3(0, "tag",          OPT_NAMELIST, &cmdlineP->taglist, &tagSpec, 0);
 
     opt.opt_table = option_def;
-    opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
-    opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
+    opt.short_allowed = false;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = false;  /* We have no parms that are negative numbers */
 
     pm_optParseOptions3(&argc, (char**)argv, opt, sizeof(opt), 0);
     /* Uses and sets argc, argv, and some of *cmdlineP and others. */
@@ -610,7 +610,7 @@ analyzeColorsInRgbInput(struct pam *   const pamP,
 -----------------------------------------------------------------------------*/
     if (cmdline.color && cmdline.truecolor) {
         *chvP = NULL;
-        *grayscaleP = FALSE;
+        *grayscaleP = false;
     } else {
         tupletable chv;
         bool grayscale;
@@ -620,15 +620,15 @@ analyzeColorsInRgbInput(struct pam *   const pamP,
                                          pamP->maxval,
                                          colorCtP);
         if (chv == NULL) {
-            grayscale = FALSE;
+            grayscale = false;
         } else {
             unsigned int i;
             pm_message("%u color%s found",
                        *colorCtP, *colorCtP == 1 ? "" : "s");
-            grayscale = TRUE;  /* initial assumption */
+            grayscale = true;  /* initial assumption */
             for (i = 0; i < *colorCtP && grayscale; ++i) {
                 if (!pnm_rgbtupleisgray(chv[i]->tuple))
-                    grayscale = FALSE;
+                    grayscale = false;
             }
         }
         *grayscaleP = grayscale;
@@ -686,7 +686,7 @@ analyzeColors(struct pam *   const pamP,
                                 chvP, colorCtP, grayscaleP);
     else {
         *chvP = NULL;
-        *grayscaleP = TRUE;
+        *grayscaleP = true;
     }
 }
 
@@ -727,7 +727,7 @@ computeRasterParm(struct pam *     const pamP,
    Compute the parameters of the raster portion of the TIFF image.
 
    'minisblack' and 'miniswhite' mean the user requests the corresponding
-   photometric.  Both FALSE means user has no explicit requirement.
+   photometric.  Both false means user has no explicit requirement.
 -----------------------------------------------------------------------------*/
     unsigned short defaultPhotometric;
     /* The photometric we use if the user specified no preference */
@@ -813,9 +813,9 @@ computeRasterParm(struct pam *     const pamP,
 /*----------------------------------------------------------------------------
   WRITE MODES
   -----------
-  
+
   The Tiff library does all output.  There are several issues:
-  
+
     1) The manner of output is opaque to the library client.  I.e.  we cannot
        see or control it.
 
@@ -826,22 +826,22 @@ computeRasterParm(struct pam *     const pamP,
 
     4) The Tiff library produces unhelpful error messages when the above
        conditions are not met.
-  
+
   We provide two modes for output:
-  
+
   1. Tmpfile mode (default)
-  
+
      We have the Tiff library direct output to an unnamed temporary file we
      create which is seekable and readable.  When output is complete, we copy
      the file's contents to Standard Output.
-  
+
   2. Direct mode (specified with -output)
-  
+
      We have the Tiff library write output to the specified file.  As the Tiff
      library requires taht it be be seekable and readable, we fail the program
      rather than ask the Tiff library to use the file if it does not meet
      these requirements.
-  
+
      Direct mode is further divided into append and create.  They are the same
      except that in append mode, we insist that the file already exist,
      whereas with create mode, we create it if necessary.  In either case, if
@@ -1253,7 +1253,7 @@ main(int argc, const char *argv[]) {
     int ofd;
     int eof;
     unsigned int imageSeq;
-    
+
     pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
@@ -1277,7 +1277,7 @@ main(int argc, const char *argv[]) {
         break;
     }
 
-    eof = FALSE;  /* initial assumption */
+    eof = false;  /* initial assumption */
     imageSeq = 0;
 
     while (!eof) {
