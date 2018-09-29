@@ -143,6 +143,11 @@ main(int argc, char * argv[]) {
         pm_usage( usage );
 
     bits = pbm_readpbm( ifp, &cols, &rows );
+
+    if (cols == 0 || rows == 0)
+        pm_error("Image contains no pixels, so there is no such thing "
+                 "as background and foreground");
+
     pm_close( ifp );
     mask = pbm_allocarray( cols, rows );
 

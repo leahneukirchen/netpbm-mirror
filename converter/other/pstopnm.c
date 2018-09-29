@@ -308,10 +308,14 @@ computeSizeResBlind(unsigned int        const xmax,
                     unsigned int        const imageHeight,
                     bool                const nocrop,
                     struct Dimensions * const imageDimP) {
-    
-    imageDimP->xres = imageDimP->yres = MIN(xmax * 72 / imageWidth, 
-                                            ymax * 72 / imageHeight);
-    
+
+    if (imageWidth == 0 || imageHeight == 0) {
+        imageDimP->xres = imageDimP->yres = 72;
+    } else {
+        imageDimP->xres = imageDimP->yres = MIN(xmax * 72 / imageWidth,
+                                                ymax * 72 / imageHeight);
+    }
+
     if (nocrop) {
         imageDimP->xsize = xmax;
         imageDimP->ysize = ymax;
@@ -361,10 +365,13 @@ computeSizeRes(struct CmdlineInfo  const cmdline,
         imageDimP->xres = imageDimP->yres = cmdline.dpi;
         imageDimP->xsize = ROUNDU(cmdline.dpi * sx / 72.0);
         imageDimP->ysize = ROUNDU(cmdline.dpi * sy / 72.0);
-    } else  if (cmdline.xsize || cmdline.ysize)
+    } else  if (cmdline.xsize || cmdline.ysize) {
+        if (sx == 0 || sy == 0)
+            pm_error("Input image is zero size; we cannot satisfy your "
+                     "produce your requested output dimensions");
         computeSizeResFromSizeSpec(cmdline.xsize, cmdline.ysize, sx, sy,
                                    imageDimP);
-    else 
+    } else
         computeSizeResBlind(cmdline.xmax, cmdline.ymax, sx, sy, cmdline.nocrop,
                             imageDimP);
 
@@ -1030,6 +1037,11 @@ main(int argc, char ** argv) {
     borderedBox = addBorders(extractBox, cmdline.xborder, cmdline.yborder);
 
     computeSizeRes(cmdline, borderedBox, &imageDim);
+
+    if (imageDim.xres == 0)
+        imageDim.xres = 1;
+    if (imageDim.yres == 0)
+        imageDim.yres = 1;
     
     outfileArg = computeOutfileArg(cmdline);
 

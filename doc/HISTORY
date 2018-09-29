@@ -4,6 +4,21 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+18.09.29 BJH  Release 10.73.21
+
+              pstopnm: Fix divide-by-zero crash when Postscript input says
+              the image has zero size.
+
+              pstopnm: Fix divide-by-zero crash when computed resolution
+              rounds down to zero dots per inch.
+
+              pbmtext; libnetpbm BDF font processing: fix invalid memory
+              reference when BDF font file has invalid syntax.  Broken
+              in primordial Netpbm, ca 1993.
+
+              pbmmask: Fix invalid memory reference with zero-dimension
+              input image.  Broken in primordial Netpbm, ca 1989.
+
 18.06.27 BJH  Release 10.73.20
 
               Pngtopam: Fix bogus warning of non-square pixels when image does
