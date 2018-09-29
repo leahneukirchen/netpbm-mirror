@@ -8,13 +8,84 @@
 
  */
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <limits.h>
+
 #include <jbig.h>
+
 #include "pnm.h"
+#include "shhopt.h"
+#include "mallocvar.h"
 
 #define BUFSIZE 8192
+
+
+
+typedef struct {
+    /* All the information the user supplied in the command line,
+       in a form easy for the program to use.
+    */
+    const char * inputFileName;
+    const char * outputFileName;
+    unsigned long xmax;
+    unsigned long ymax;
+    unsigned int binary;
+    unsigned int diagnose;
+    unsigned int planeSpec;
+    unsigned int plane;
+} CmdlineInfo;
+
+
+
+static void
+parseCommandLine(int                 argc,
+                 const char ** const argv,
+                 CmdlineInfo * const cmdlineP) {
+/*----------------------------------------------------------------------------
+   Note that the file spec array we return is stored in the storage that
+   was passed to us as the argv array.
+-----------------------------------------------------------------------------*/
+    optEntry * option_def;
+
+    optStruct3 opt;
+
+    unsigned int xmaxSpec, ymaxSpec;
+
+    unsigned int option_def_index;
+
+    MALLOCARRAY_NOFAIL(option_def, 100);
+
+    option_def_index = 0;   /* incremented by OPTENT3 */
+    OPTENT3(0, "binary",   OPT_FLAG, NULL,             &cmdlineP->binary,   0);
+    OPTENT3(0, "diagnose", OPT_FLAG, NULL,             &cmdlineP->diagnose, 0);
+    OPTENT3(0, "plane",    OPT_UINT, &cmdlineP->plane, &cmdlineP->planeSpec,0);
+    OPTENT3(0, "xmax",     OPT_UINT, &cmdlineP->xmax,  &xmaxSpec,           0);
+    OPTENT3(0, "ymax",     OPT_UINT, &cmdlineP->ymax,  &ymaxSpec,           0);
+
+    opt.opt_table = option_def;
+    opt.short_allowed = false;  /* We have no short (old-fashioned) options */
+    opt.allowNegNum = false;  /* We have no parms that are negative numbers */
+
+    pm_optParseOptions3(&argc, (char**)argv, opt, sizeof(opt), 0);
+    /* Uses and sets argc, argv, and some of *cmdlineP and others. */
+
+    if (!xmaxSpec)
+        cmdlineP->xmax = UINT_MAX;
+    if (!ymaxSpec)
+        cmdlineP->ymax = UINT_MAX;
+
+    cmdlineP->inputFileName  = (argc-1 >= 1) ? argv[1] : "-";
+    cmdlineP->outputFileName = (argc-1 >= 2) ? argv[2] : "-";
+
+    if (argc-1 > 2)
+        pm_error("Too  many arguments: %u.  The only possible "
+                 "non-option arguments are input file name and "
+                 "output file name", argc-1);
+}
+
 
 
 static void
@@ -127,161 +198,113 @@ diagnose_bie(FILE *f)
 }
 
 
-int main (int argc, char **argv)
+int main (int argc, const char **argv)
 {
-    FILE *fin = stdin, *fout = stdout;
-    const char *fnin = "<stdin>", *fnout = "<stdout>";
-    int i, j, result;
-    int all_args = 0, files = 0;
-    struct jbg_dec_state s;
-    char *buffer;
-    unsigned char *p;
-    size_t len, cnt;
-    unsigned long xmax = 4294967295UL, ymax = 4294967295UL;
-    int plane = -1, use_graycode = 1, diagnose = 0;
+    CmdlineInfo cmdline;
+    FILE * ifP;
+    FILE * ofP;
 
-    pnm_init(&argc, argv);
+    pm_proginit(&argc, argv);
 
-    buffer = malloc(BUFSIZE);
-    if (!buffer)
-        pm_error("Sorry, not enough memory available!");
+    parseCommandLine(argc, argv, &cmdline);
 
-    /* parse command line arguments */
-    for (i = 1; i < argc; i++) {
-        if (!all_args && argv[i][0] == '-') {
-            if (argv[i][1] == '\0' && files == 0)
-                ++files;
-            else {
-                for (j = 1; j > 0 && argv[i][j]; j++) {
-                    switch(tolower(argv[i][j])) {
-                    case '-' :
-                        all_args = 1;
-                        break;
-                    case 'b':
-                        use_graycode = 0;
-                        break;
-                    case 'd':
-                        diagnose = 1;
-                        break;
-                    case 'x':
-                        if (++i >= argc)
-                            pm_error("-x needs a value");
-                        xmax = atol(argv[i]);
-                        j = -1;
-                        break;
-                    case 'y':
-                        if (++i >= argc)
-                            pm_error("-y needs a value");
-                        ymax = atol(argv[i]);
-                        j = -1;
-                        break;
-                    case 'p':
-                        if (++i >= argc)
-                            pm_error("-p needs a value");
-                        plane = atoi(argv[i]);
-                        j = -1;
-                        break;
-                    default:
-                        pm_error("Unrecognized option: %c", argv[i][j]);
-                    }
-                }
-            }
-        } else {
-            switch (files++) {
-            case 0:
-                if (argv[i][0] != '-' || argv[i][1] != '\0') {
-                    fnin = argv[i];
-                    fin = fopen(fnin, "rb");
-                    if (!fin)
-                        pm_error("Can't open input file '%s'", fnin);
-                }
-                if (diagnose) {
-                    diagnose_bie(fin);
-                    exit(0);
-                }
+    ifP = pm_openr(cmdline.inputFileName);
+    ofP = pm_openw(cmdline.outputFileName);
+
+    if (cmdline.diagnose)
+        diagnose_bie(ifP);
+    else {
+        struct jbg_dec_state s;
+        unsigned char * buffer;
+        int result;
+
+        MALLOCARRAY(buffer, BUFSIZE);
+        if (!buffer)
+            pm_error("Failed to get %u bytes of memory for buffer", BUFSIZE);
+
+        /* send input file to decoder */
+        jbg_dec_init(&s);
+        jbg_dec_maxsize(&s, cmdline.xmax, cmdline.ymax);
+        result = JBG_EAGAIN;
+        do {
+            size_t len;
+            size_t cnt;
+            unsigned char * p;
+
+            len = fread(buffer, 1, BUFSIZE, ifP);
+            if (len == 0)
                 break;
-            case 1:
-                fnout = argv[i];
-                fout = fopen(fnout, "wb");
-                if (!fout)
-                    pm_error("Can't open output file '%s'", fnout);
-                break;
-            default:
-                pm_error("Too many non-option arguments");
+            cnt = 0;
+            p = &buffer[0];
+            while (len > 0 && (result == JBG_EAGAIN || result == JBG_EOK)) {
+                result = jbg_dec_in(&s, p, len, &cnt);
+                p += cnt;
+                len -= cnt;
             }
+        } while (result == JBG_EAGAIN || result == JBG_EOK);
+        if (ferror(ifP))
+            pm_error("Error reading input file");
+        if (result != JBG_EOK && result != JBG_EOK_INTR)
+            pm_error("Invalid contents of input file.  %s",
+                     jbg_strerror(result));
+        if (cmdline.planeSpec && jbg_dec_getplanes(&s) <= cmdline.plane)
+            pm_error("Image has only %u planes", jbg_dec_getplanes(&s));
+
+        {
+            /* Write it out */
+
+            int rows, cols;
+            int maxval;
+            int bpp;
+            bool justOnePlane;
+            unsigned int plane_to_write;
+
+            cols = jbg_dec_getwidth(&s);
+            rows = jbg_dec_getheight(&s);
+            maxval = pm_bitstomaxval(jbg_dec_getplanes(&s));
+            bpp = (jbg_dec_getplanes(&s)+7)/8;
+
+            if (jbg_dec_getplanes(&s) == 1) {
+                justOnePlane = true;
+                plane_to_write = 0;
+            } else {
+                if (cmdline.planeSpec) {
+                    justOnePlane = true;
+                    plane_to_write = cmdline.plane;
+                } else
+                    justOnePlane = false;
+            }
+
+            if (justOnePlane) {
+                unsigned char * binary_image;
+
+                pm_message("WRITING PBM FILE");
+
+                binary_image=jbg_dec_getimage(&s, plane_to_write);
+                write_raw_pbm(ofP, binary_image, cols, rows);
+            } else {
+                unsigned char *image;
+                pm_message("WRITING PGM FILE");
+
+                /* Write out all the planes */
+                /* What jbig.doc doesn't tell you is that jbg_dec_merge_planes
+                   delivers the image in chunks, in consecutive calls to
+                   the data-out callback function.  And a row can span two
+                   chunks.
+                */
+                image = malloc(cols*rows*bpp);
+                jbg_dec_merge_planes(&s, !cmdline.binary, collect_image,
+                                     image);
+                write_pnm(ofP, image, bpp, rows, cols, maxval, PGM_TYPE);
+                free(image);
+            }
+            jbg_dec_free(&s);
         }
+
+        pm_close(ofP);
+        pm_close(ifP);
+        free(buffer);
     }
-
-    /* send input file to decoder */
-    jbg_dec_init(&s);
-    jbg_dec_maxsize(&s, xmax, ymax);
-    result = JBG_EAGAIN;
-    do {
-        len = fread(buffer, 1, BUFSIZE, fin);
-        if (!len) break;
-        cnt = 0;
-        p = (unsigned char *) buffer;
-        while (len > 0 && (result == JBG_EAGAIN || result == JBG_EOK)) {
-            result = jbg_dec_in(&s, p, len, &cnt);
-            p += cnt;
-            len -= cnt;
-        }
-    } while (result == JBG_EAGAIN || result == JBG_EOK);
-    if (ferror(fin))
-        pm_error("Problem while reading input file '%s", fnin);
-    if (result != JBG_EOK && result != JBG_EOK_INTR)
-        pm_error("Problem with input file '%s': %s\n",
-                 fnin, jbg_strerror(result));
-    if (plane >= 0 && jbg_dec_getplanes(&s) <= plane)
-        pm_error("Image has only %d planes!\n", jbg_dec_getplanes(&s));
-
-    {
-        /* Write it out */
-
-        int rows, cols;
-        int maxval;
-        int bpp;
-        int plane_to_write;
-
-        cols = jbg_dec_getwidth(&s);
-        rows = jbg_dec_getheight(&s);
-        maxval = pm_bitstomaxval(jbg_dec_getplanes(&s));
-        bpp = (jbg_dec_getplanes(&s)+7)/8;
-
-        if (jbg_dec_getplanes(&s) == 1)
-            plane_to_write = 0;
-        else
-            plane_to_write = plane;
-
-        if (plane_to_write >= 0) {
-            /* Write just one plane */
-            unsigned char * binary_image;
-
-            pm_message("WRITING PBM FILE");
-
-            binary_image=jbg_dec_getimage(&s, plane_to_write);
-            write_raw_pbm(fout, binary_image, cols, rows);
-        } else {
-            unsigned char *image;
-            pm_message("WRITING PGM FILE");
-
-            /* Write out all the planes */
-            /* What jbig.doc doesn't tell you is that jbg_dec_merge_planes
-               delivers the image in chunks, in consecutive calls to
-               the data-out callback function.  And a row can span two
-               chunks.
-            */
-            image = malloc(cols*rows*bpp);
-            jbg_dec_merge_planes(&s, use_graycode, collect_image, image);
-            write_pnm(fout, image, bpp, rows, cols, maxval, PGM_TYPE);
-            free(image);
-        }
-    }
-
-    pm_close(fout);
-
-    jbg_dec_free(&s);
-
     return 0;
 }
 
