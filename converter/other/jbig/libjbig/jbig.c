@@ -844,8 +844,8 @@ int jbg_enc_lrlmax(struct jbg_enc_state *s, unsigned long x,
 
 
 /*
- * As an alternative to jbg_enc_lrlmax(), the following function allows
- * to specify the number of layers directly. The stripe height and layer
+ * As an alternative to jbg_enc_lrlmax(), the following function allows the
+ * user to specify the number of layers directly. The stripe height and layer
  * range is also adjusted automatically here.
  */
 void jbg_enc_layers(struct jbg_enc_state *s, int d)
@@ -877,9 +877,9 @@ int jbg_enc_lrange(struct jbg_enc_state *s, int dl, int dh)
 
 
 /*
- * The following function allows to specify the bits describing the
- * options of the format as well as the maximum AT movement window and
- * the number of layer 0 lines per stripes.
+ * The following function allows the user to specify the bits describing the
+ * options of the format as well as the maximum AT movement window and the
+ * number of layer 0 lines per stripes.
  */
 void jbg_enc_options(struct jbg_enc_state *s, int order, int options,
 		     unsigned long l0, int mx, int my)
