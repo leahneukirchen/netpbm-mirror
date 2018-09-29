@@ -60,17 +60,17 @@ parseCommandLine(int argc, char ** argv,
     unsigned int cmap, mono, rgb;
 
     option_def_index = 0;   /* incremented by OPTENT3 */
-    OPTENT3(0,   "name",       OPT_STRING, 
+    OPTENT3(0,   "name",       OPT_STRING,
             &cmdlineP->outName, &outNameSpec, 0);
-    OPTENT3(0,   "cmap",       OPT_FLAG, 
+    OPTENT3(0,   "cmap",       OPT_FLAG,
             NULL, &cmap, 0);
-    OPTENT3(0,   "mono",       OPT_FLAG, 
+    OPTENT3(0,   "mono",       OPT_FLAG,
             NULL, &mono, 0);
-    OPTENT3(0,   "rgb",        OPT_FLAG, 
+    OPTENT3(0,   "rgb",        OPT_FLAG,
             NULL, &rgb, 0);
-    OPTENT3(0,   "norle",      OPT_FLAG, 
+    OPTENT3(0,   "norle",      OPT_FLAG,
             NULL, &cmdlineP->norle, 0);
-    
+
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
@@ -85,7 +85,7 @@ parseCommandLine(int argc, char ** argv,
         cmdlineP->defaultFormat = TRUE;
     else {
         cmdlineP->defaultFormat = FALSE;
-    
+
         if (cmap)
             cmdlineP->imgType = TGA_MAP_TYPE;
         else if (mono)
@@ -96,8 +96,8 @@ parseCommandLine(int argc, char ** argv,
 
     if (!outNameSpec)
         cmdlineP->outName = NULL;
-    
-    if (argc-1 == 0) 
+
+    if (argc-1 == 0)
         cmdlineP->inputFilespec = "-";
     else if (argc-1 != 1)
         pm_error("Program takes zero or one argument (filename).  You "
@@ -130,22 +130,22 @@ writeTgaHeader(struct ImageHeader const tgaHeader) {
     putchar(tgaHeader.Height_lo);
     putchar(tgaHeader.Height_hi);
     putchar(tgaHeader.PixelSize);
-    flags = (tgaHeader.AttBits & 0xf) | 
+    flags = (tgaHeader.AttBits & 0xf) |
         ((tgaHeader.Rsrvd & 0x1) << 4) |
-        ((tgaHeader.OrgBit & 0x1) << 5) | 
+        ((tgaHeader.OrgBit & 0x1) << 5) |
         ((tgaHeader.OrgBit & 0x3) << 6);
     putchar(flags);
 
     if (tgaHeader.IdLength > 0)
         fwrite(tgaHeader.Id, 1, (int) tgaHeader.IdLength, stdout);
 }
-    
+
 
 
 static void
 putPixel(struct pam *          const pamP,
-         tuple                 const tuple, 
-         enum TGAbaseImageType const imgType, 
+         tuple                 const tuple,
+         enum TGAbaseImageType const imgType,
          bool                  const withAlpha,
          tuplehash             const cht) {
 /*----------------------------------------------------------------------------
@@ -167,22 +167,22 @@ putPixel(struct pam *          const pamP,
         if (imgType == TGA_RGB_TYPE && pamP->depth < 3) {
             /* Make RGB pixel out of a single input plane */
             unsigned int plane;
-            
-            for (plane = 0; plane < 3; ++plane) 
-                putchar(pnm_scalesample(tuple[0], 
+
+            for (plane = 0; plane < 3; ++plane)
+                putchar(pnm_scalesample(tuple[0],
                                         pamP->maxval, TGA_MAXVAL));
         } else if (imgType == TGA_MONO_TYPE)
-            putchar(pnm_scalesample(tuple[0], 
+            putchar(pnm_scalesample(tuple[0],
                                     pamP->maxval, TGA_MAXVAL));
         else {
-            putchar(pnm_scalesample(tuple[PAM_BLU_PLANE], 
+            putchar(pnm_scalesample(tuple[PAM_BLU_PLANE],
                                     pamP->maxval, TGA_MAXVAL));
-            putchar(pnm_scalesample(tuple[PAM_GRN_PLANE], 
+            putchar(pnm_scalesample(tuple[PAM_GRN_PLANE],
                                     pamP->maxval, TGA_MAXVAL));
-            putchar(pnm_scalesample(tuple[PAM_RED_PLANE], 
+            putchar(pnm_scalesample(tuple[PAM_RED_PLANE],
                                     pamP->maxval, TGA_MAXVAL));
             if (withAlpha)
-                putchar(pnm_scalesample(tuple[PAM_TRN_PLANE], 
+                putchar(pnm_scalesample(tuple[PAM_TRN_PLANE],
                                         pamP->maxval, TGA_MAXVAL));
         }
     }
@@ -191,8 +191,8 @@ putPixel(struct pam *          const pamP,
 
 
 static void
-putMapEntry(struct pam * const pamP, 
-            tuple        const value, 
+putMapEntry(struct pam * const pamP,
+            tuple        const value,
             int          const size) {
 
     if (size == 15 || size == 16) {
@@ -202,28 +202,28 @@ putMapEntry(struct pam * const pamP,
 
         pnm_scaletuple(pamP, tuple31, value, 31);
         {
-            int const mapentry = 
+            int const mapentry =
                 tuple31[PAM_BLU_PLANE] << 0 |
                 tuple31[PAM_GRN_PLANE] << 5 |
                 tuple31[PAM_RED_PLANE] << 10;
-            
+
             putchar(mapentry % 256);
             putchar(mapentry / 256);
         }
         pnm_freepamtuple(tuple31);
     } else if (size == 8)
-        putchar(pnm_scalesample(value[0], 
+        putchar(pnm_scalesample(value[0],
                                 pamP->maxval, TGA_MAXVAL));
     else {
         /* Must be 24 or 32 */
-        putchar(pnm_scalesample(value[PAM_BLU_PLANE], 
+        putchar(pnm_scalesample(value[PAM_BLU_PLANE],
                                 pamP->maxval, TGA_MAXVAL));
-        putchar(pnm_scalesample(value[PAM_GRN_PLANE], 
+        putchar(pnm_scalesample(value[PAM_GRN_PLANE],
                                 pamP->maxval, TGA_MAXVAL));
-        putchar(pnm_scalesample(value[PAM_RED_PLANE], 
+        putchar(pnm_scalesample(value[PAM_RED_PLANE],
                                     pamP->maxval, TGA_MAXVAL));
         if (size == 32)
-            putchar(pnm_scalesample(value[PAM_TRN_PLANE], 
+            putchar(pnm_scalesample(value[PAM_TRN_PLANE],
                                     pamP->maxval, TGA_MAXVAL));
     }
 }
@@ -231,8 +231,8 @@ putMapEntry(struct pam * const pamP,
 
 
 static void
-computeRunlengths(struct pam * const pamP, 
-                   tuple *      const tuplerow, 
+computeRunlengths(struct pam * const pamP,
+                   tuple *      const tuplerow,
                    int *        const runlength) {
 
     int col, start;
@@ -240,7 +240,7 @@ computeRunlengths(struct pam * const pamP,
     /* Initialize all run lengths to 0.  (This is just an error check.) */
     for (col = 0; col < pamP->width; ++col)
         runlength[col] = 0;
-    
+
     /* Find runs of identical pixels. */
     for ( col = 0; col < pamP->width; ) {
         start = col;
@@ -251,7 +251,7 @@ computeRunlengths(struct pam * const pamP,
                   pnm_tupleequal(pamP, tuplerow[col], tuplerow[start]));
         runlength[start] = col - start;
     }
-    
+
     /* Now look for runs of length-1 runs, and turn them into negative runs. */
     for (col = 0; col < pamP->width; ) {
         if (runlength[col] == 1) {
@@ -271,9 +271,9 @@ computeRunlengths(struct pam * const pamP,
 
 
 static void
-computeOutName(struct cmdlineInfo const cmdline, 
+computeOutName(struct cmdlineInfo const cmdline,
                const char **      const outNameP) {
-    
+
     char * workarea;
 
     if (cmdline.outName)
@@ -287,7 +287,7 @@ computeOutName(struct cmdlineInfo const cmdline,
         if (cp != NULL)
         	*cp = '\0';	/* remove extension */
     }
-    
+
     if (workarea == NULL)
         *outNameP = NULL;
     else {
@@ -306,16 +306,16 @@ validateTupleType(struct pam * const pamP) {
     if (streq(pamP->tuple_type, "RGB_ALPHA")) {
         if (pamP->depth < 4)
             pm_error("Invalid depth for tuple type RGB_ALPHA.  "
-                     "Should have at least 4 planes, but has %d.", 
+                     "Should have at least 4 planes, but has %d.",
                      pamP->depth);
     } else if (streq(pamP->tuple_type, "RGB")) {
         if (pamP->depth < 3)
             pm_error("Invalid depth for tuple type RGB.  "
-                     "Should have at least 3 planes, but has %d.", 
+                     "Should have at least 3 planes, but has %d.",
                      pamP->depth);
     } else if (streq(pamP->tuple_type, "GRAYSCALE")) {
     } else if (streq(pamP->tuple_type, "BLACKANDWHITE")) {
-    } else 
+    } else
         pm_error("Invalid type of input.  PAM tuple type is '%s'.  "
                  "This programs understands only RGB_ALPHA, RGB, GRAYSCALE, "
                  "and BLACKANDWHITE.", pamP->tuple_type);
@@ -325,12 +325,12 @@ validateTupleType(struct pam * const pamP) {
 
 static void
 computeImageType_cht(struct pam *            const pamP,
-                     struct cmdlineInfo      const cmdline, 
+                     struct cmdlineInfo      const cmdline,
                      tuple **                const tuples,
                      enum TGAbaseImageType * const baseImgTypeP,
                      bool *                  const withAlphaP,
                      tupletable *            const chvP,
-                     tuplehash *             const chtP, 
+                     tuplehash *             const chtP,
                      int *                   const ncolorsP) {
 
     unsigned int ncolors;
@@ -348,12 +348,12 @@ computeImageType_cht(struct pam *            const pamP,
             *chvP = NULL;
         } else if (pamP->depth > 1) {
             pm_message("computing colormap...");
-            *chvP = 
+            *chvP =
                 pnm_computetuplefreqtable(pamP, tuples, MAXCOLORS, &ncolors);
             if (*chvP == NULL) {
                 pm_message("Too many colors for colormapped TGA.  Doing RGB.");
                 baseImgType = TGA_RGB_TYPE;
-            } else 
+            } else
                 baseImgType = TGA_MAP_TYPE;
         } else {
             baseImgType = TGA_MONO_TYPE;
@@ -367,11 +367,11 @@ computeImageType_cht(struct pam *            const pamP,
                 pm_error("Can't do a colormap because image has transparency "
                          "information");
             pm_message("computing colormap...");
-            *chvP = 
+            *chvP =
                 pnm_computetuplefreqtable(pamP, tuples, MAXCOLORS, &ncolors);
-            if (*chvP == NULL) 
+            if (*chvP == NULL)
                 pm_error("Too many colors for colormapped TGA.  "
-                         "Use 'pnmquant %d' to reduce the number of colors.", 
+                         "Use 'pnmquant %d' to reduce the number of colors.",
                          MAXCOLORS);
         } else
             *chvP = NULL;
@@ -379,7 +379,7 @@ computeImageType_cht(struct pam *            const pamP,
             pm_error("For Mono TGA output, input must be "
                      "GRAYSCALE or BLACKANDWHITE PAM or PBM or PGM");
     }
-    
+
     if (baseImgType == TGA_MAP_TYPE) {
         pm_message("%d colors found.", ncolors);
         /* Make a hash table for fast color lookup. */
@@ -398,7 +398,7 @@ static void
 computeTgaHeader(struct pam *          const pamP,
                  enum TGAbaseImageType const baseImgType,
                  bool                  const withAlpha,
-                 bool                  const rle, 
+                 bool                  const rle,
                  int                   const ncolors,
                  unsigned char         const orgBit,
                  const char *          const id,
@@ -417,7 +417,7 @@ computeTgaHeader(struct pam *          const pamP,
         case TGA_RGB_TYPE:  tgaHeaderP->ImgType = TGA_RGB;           break;
         }
     }
-    
+
     if (id) {
         tgaHeaderP->IdLength = strlen(id);
         tgaHeaderP->Id = strdup(id);
@@ -469,9 +469,9 @@ releaseTgaHeader(struct ImageHeader const tgaHeader) {
 
 
 
-static void 
+static void
 writeTgaRaster(struct pam *          const pamP,
-               tuple **              const tuples, 
+               tuple **              const tuples,
                tuplehash             const cht,
                enum TGAbaseImageType const imgType,
                bool                  const withAlpha,
@@ -500,7 +500,7 @@ writeTgaRaster(struct pam *          const pamP,
                     int i;
                     putchar(-runlength[col] - 1);
                     for (i = 0; i < -runlength[col]; ++i)
-                        putPixel(pamP, tuples[realrow][col+i], 
+                        putPixel(pamP, tuples[realrow][col+i],
                                  imgType, withAlpha, cht);
                     col += -runlength[col];
                 } else
@@ -544,14 +544,14 @@ main(int argc, char *argv[]) {
     tuples = pnm_readpam(ifP, &pam, PAM_STRUCT_SIZE(tuple_type));
     pm_close(ifP);
 
-    computeImageType_cht(&pam, cmdline, tuples, 
+    computeImageType_cht(&pam, cmdline, tuples,
                          &baseImgType, &withAlpha, &chv, &cht, &ncolors);
 
     /* Do the Targa header */
     computeTgaHeader(&pam, baseImgType, withAlpha, !cmdline.norle,
                      ncolors, 0, outName, &tgaHeader);
     writeTgaHeader(tgaHeader);
-    
+
     if (baseImgType == TGA_MAP_TYPE) {
         /* Write out the Targa colormap. */
         int i;
@@ -559,7 +559,7 @@ main(int argc, char *argv[]) {
             putMapEntry(&pam, chv[i]->tuple, tgaHeader.CoSize);
     }
 
-    writeTgaRaster(&pam, tuples, cht, baseImgType, withAlpha, 
+    writeTgaRaster(&pam, tuples, cht, baseImgType, withAlpha,
                    !cmdline.norle, 0);
 
     if (cht)
