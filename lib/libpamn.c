@@ -69,7 +69,8 @@ allocpamrown(const struct pam * const pamP,
    overflow will not occur in our calculations.  NOTE: pnm_readpaminit()
    ensures this assumption is valid.
 -----------------------------------------------------------------------------*/
-    int const bytes_per_tuple = allocationDepth(pamP) * sizeof(samplen);
+    unsigned int const bytes_per_tuple =
+        allocationDepth(pamP) * sizeof(samplen);
 
     tuplen * tuplerown;
     const char * error;
@@ -639,6 +640,63 @@ pnm_unapplyopacityrown(struct pam * const pamP,
                        tuplen *     const tuplenrow) {
 
     applyopacityCommon(OPACITY_UNAPPLY, pamP, tuplenrow);
+}
+
+
+
+void
+pnm_maketuplergbn(const struct pam * const pamP,
+                  tuplen             const tuple) {
+
+    if (allocationDepth(pamP) < 3)
+        pm_error("allocation depth %u passed to pnm_maketuplergb().  "
+                 "Must be at least 3.", allocationDepth(pamP));
+
+    if (pamP->depth < 3)
+        tuple[2] = tuple[1] = tuple[0];
+}
+
+
+
+void
+pnm_makerowrgbn(const struct pam * const pamP,
+                tuplen *           const tuplerow) {
+
+    if (pamP->depth < 3) {
+        unsigned int col;
+
+        if (allocationDepth(pamP) < 3)
+            pm_error("allocation depth %u passed to pnm_makerowrgb().  "
+                     "Must be at least 3.", allocationDepth(pamP));
+
+        for (col = 0; col < pamP->width; ++col) {
+            tuplen const thisTuple = tuplerow[col];
+            thisTuple[2] = thisTuple[1] = thisTuple[0];
+        }
+    }
+}
+
+
+
+void
+pnm_makearrayrgbn(const struct pam * const pamP,
+                  tuplen **          const tuples) {
+
+    if (pamP->depth < 3) {
+        unsigned int row;
+        if (allocationDepth(pamP) < 3)
+            pm_error("allocation depth %u passed to pnm_makearrayrgb().  "
+                     "Must be at least 3.", allocationDepth(pamP));
+
+        for (row = 0; row < pamP->height; ++row) {
+            tuplen * const tuplerow = tuples[row];
+            unsigned int col;
+            for (col = 0; col < pamP->width; ++col) {
+                tuplen const thisTuple = tuplerow[col];
+                thisTuple[2] = thisTuple[1] = thisTuple[0];
+            }
+        }
+    }
 }
 
 

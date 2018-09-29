@@ -179,59 +179,26 @@ parseCommandLine(int argc, const char ** argv,
 
 
 static void
-reportFont(struct font2 * const fontP) {
-
-    unsigned int n;
-    unsigned int c;
+reportFont(const struct font2 * const fontP) {
 
     pm_message("FONT:");
-    pm_message("  character dimensions: %uw x %uh",
+    pm_message("  Name: %s", fontP->name);
+    pm_message("  Encoding: %s", fontP->charset_string);
+    pm_message("  Origin: %s", pbmFontOrigin[fontP->load_fn]);
+    pm_message("  Character dimensions: %uw x %uh",
                fontP->maxwidth, fontP->maxheight);
     pm_message("  Additional vert white space: %d pixels", fontP->y);
-
-    for (c = 0, n = 0; c <= fontP->maxglyph; ++c) {
-        if (fontP->glyph[c])
-            ++n;
-    }
-
-    pm_message("  # characters: %u", n);
+    pm_message("  # characters loaded: %u", fontP->chars);
 }
 
 
 
-static struct font *
-fontFromFile(const char * const fileName) {
-
-    struct font  * retval;
-
-    jmp_buf jmpbuf;
-    int rc;
-
-    rc = setjmp(jmpbuf);
-
-    if (rc == 0) {
-        /* This is the normal program flow */
-        pm_setjmpbuf(&jmpbuf);
-
-        retval = pbm_loadfont(fileName);
-
-        pm_setjmpbuf(NULL);
-    } else {
-        /* This is the second pass, after pbm_loadfont does a longjmp
-           because it fails.
-        */
-        pm_setjmpbuf(NULL);
-
-        pm_error("Failed to load font from file '%s'", fileName);
-    }
-
-    return retval;
-}
 
 
 
 static struct font2 *
-font2FromFile(const char * const fileName) {
+font2FromFile(const char * const fileName,
+              PM_WCHAR     const maxmaxglyph) {
 
     struct font2 * font2P;
 
@@ -244,7 +211,7 @@ font2FromFile(const char * const fileName) {
         /* This is the normal program flow */
         pm_setjmpbuf(&jmpbuf);
 
-        font2P = pbm_loadbdffont2(fileName, PM_FONT2_MAXGLYPH);
+        font2P = pbm_loadfont2(fileName, maxmaxglyph);
 
         pm_setjmpbuf(NULL);
     } else {
@@ -267,21 +234,14 @@ computeFont(struct CmdlineInfo const cmdline,
 
     struct font2 * font2P;
 
-    if (cmdline.wchar && cmdline.font)
-        font2P = font2FromFile(cmdline.font);
-    else {
-        struct font  * fontP;
-
-        if (cmdline.font)
-            fontP = fontFromFile(cmdline.font);
-        else {
-            if (cmdline.builtin)
-                fontP = pbm_defaultfont(cmdline.builtin);
-            else
-                fontP = pbm_defaultfont("bdf");
-        }
-        font2P = pbm_expandbdffont(fontP);
-    }
+    if (cmdline.font)
+        font2P = font2FromFile(cmdline.font,
+                               cmdline.wchar ? PM_FONT2_MAXGLYPH :
+                                               PM_FONT_MAXGLYPH);
+    else if (cmdline.builtin)
+        font2P = pbm_defaultfont2(cmdline.builtin);
+    else
+        font2P = pbm_defaultfont2(cmdline.wchar ? "bdf" : "bdf");
 
     if (cmdline.verbose)
         reportFont(font2P);
@@ -292,7 +252,7 @@ computeFont(struct CmdlineInfo const cmdline,
 
 
 struct Text {
-    PM_WCHAR **     textArray;  /* malloc'ed */
+    PM_WCHAR **  textArray;  /* malloc'ed */
         /* This is strictly characters that are in user's font - no control
            characters, no undefined code points.
         */
@@ -996,6 +956,7 @@ getText(PM_WCHAR       const cmdlineText[],
         inputText.lineCount = 1;
         fixControlChars(cmdlineText, fontP,
                         (const PM_WCHAR**)&inputText.textArray[0], fixMode);
+        free((void *) cmdlineText);
     } else {
         /* Read text from stdin. */
 
@@ -1053,6 +1014,7 @@ getText(PM_WCHAR       const cmdlineText[],
         inputText.textArray = textArray;
         inputText.lineCount = lineCount;
         inputText.allocatedLineCount = lineCount;
+        free(buf);
     }
     *inputTextP = inputText;
 }
@@ -1208,6 +1170,9 @@ renderText(unsigned int   const cols,
     /* Put the text in  */
     insertCharacters(bits, formattedText, fontP, vmargin, hmargin + maxleftb,
                      space, cols, rows, lspace, fixedAdvance);
+
+    /* Free all font data */
+    pbm_destroybdffont2(fontP); 
 
     {
         unsigned int row;
@@ -1411,10 +1376,6 @@ main(int argc, const char *argv[]) {
         renderSheet(fontP, stdout);
     else
         pbmtext(cmdline, fontP, stdout);
-
-    /* Note that *fontP is unfreeable.  See pbm_loadbdffont2,
-       pbm_expandbdffont
-    */
 
     pm_close(stdout);
 

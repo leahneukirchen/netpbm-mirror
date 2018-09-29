@@ -31,4 +31,4 @@ include $(SRCDIR)/common.mk
 distclean clean: cleanlocal
 .PHONY: cleanlocal
 cleanlocal:
-	rm -f $(PROGS) $(OKSTOGENERATE)
+	rm -f $(PROGS) $(patsubst %.rand-ok,%.ok,$(wildcard *.rand-ok))

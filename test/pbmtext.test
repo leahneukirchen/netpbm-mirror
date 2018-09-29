@@ -82,13 +82,13 @@ rm ${fontRectangle_txt} ${font_pbm}
 # One long row
 # Should print 3233136020 4535
 LC_ALL=C \
-awk 'BEGIN { for (i=32; i<=125;++i) printf("%c",i);
+awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i);
              for (i=160;i<=255;++i) printf("%c",i); }' | \
     pbmtext -builtin bdf | cksum
 
 # One tall column
 # Should print 1216262214 5711
 LC_ALL=C \
-awk 'BEGIN { for (i=32; i<=125;++i) printf("%c\n",i);
+awk 'BEGIN { for (i=32; i<=126;++i) printf("%c\n",i);
              for (i=160;i<=255;++i) printf("%c\n",i); }' | \
     pbmtext -nomargins -builtin bdf | cksum

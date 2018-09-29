@@ -21,14 +21,14 @@ fi
 
 # Test 1.
 # Two rows
-# Should print 1240895458 5110 twice
+# Should print 2066913605 5110 twice
 LC_ALL=C \
-awk 'BEGIN { for (i=32; i<=125;++i) printf("%c",i); print ""; \
+awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""; \
              for (i=161;i<=255;++i) printf("%c",i); }' | \
     pbmtext -builtin bdf | cksum
 
 LC_ALL=C \
-awk 'BEGIN { for (i=32; i<=125;++i) printf("%c",i); print ""; \
+awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""; \
              for (i=161;i<=255;++i) printf("%c",i);  }' | \
     iconv -f iso8859-1 -t utf-8 | \
     LC_ALL=en_US.utf8 pbmtext -builtin bdf -wchar | cksum
@@ -36,13 +36,13 @@ awk 'BEGIN { for (i=32; i<=125;++i) printf("%c",i); print ""; \
 
 # Test 2.
 # One row
-# Should print 898975479 2272 twice
+# Should print 2920616515 2301 twice
 LC_ALL=C \
-awk 'BEGIN { for (i=32; i<=125;++i) printf("%c",i); print "" }' | \
+awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print "" }' | \
     pbmtext -builtin bdf | cksum
 
 LC_ALL=C \
-awk 'BEGIN { for (i=32; i<=125;++i) printf("%c",i);  print ""}' | \
+awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i);  print ""}' | \
     LC_ALL=en_US.utf8 pbmtext -builtin bdf -wchar | cksum
 
 
@@ -55,12 +55,12 @@ output=${tmpdir}/output
 # Output may be affected by locale.  Compare with cmp.
 # Should print 0
 LC_ALL=C \
-awk 'BEGIN { for (i=32; i<=125;++i) printf("%c",i); print ""; \
+awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""; \
              for (i=161;i<=255;++i) printf("%c",i); print "" }' | \
-    iconv -f iso88591 -t utf8 > ${output}
+    iconv -f iso8859-1 -t utf-8 > ${output}
 
 LC_ALL=C \
-awk 'BEGIN { for (i=32; i<=125;++i) printf("%c",i); print ""; \
+awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""; \
              for (i=161;i<=255;++i) printf("%c",i); print "" }' | \
     iconv -f iso8859-1 -t utf-8 | \
     LC_ALL=en_US.utf8 pbmtext -builtin bdf -wchar -text-dump | \
@@ -73,14 +73,18 @@ rm ${output}
 # Test 4.
 # One row
 # Should print the following twice:
-# !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}
+# !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~
 LC_ALL=C \
-awk 'BEGIN { for (i=32; i<=125;++i) printf("%c",i); print "" } '
+awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print "" } '
 
 LC_ALL=C \
-awk 'BEGIN { for (i=32; i<=125;++i) printf("%c",i);  print ""}' | \
+awk 'BEGIN { for (i=32; i<=126;++i) printf("%c",i); print ""}' | \
         LC_ALL=en_US.utf8 pbmtext -builtin bdf -wchar -text-dump
 
+
+echo "Invalid utf-8 sequence as input." 1>&2
+echo "An error message should appear below the line." 1>&2
+echo "-----------------------------------------------------------" 1>&2
 
 # Test 5.
 # Invalid utf-8 sequence

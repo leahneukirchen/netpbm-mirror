@@ -172,7 +172,7 @@ universalMaxval(pixval const maxval,
                 int    const format) {
 /*----------------------------------------------------------------------------
   A maxval that makes it impossible for a pixel to be invalid in an image that
-  states it maxval as 'maxval' and has format 'format'.
+  states its maxval as 'maxval' and has format 'format'.
 
   E.g. in a one-byte-per-sample image, it's not possible to read a sample
   value greater than 255, so a maxval of 255 makes it impossible for a sample

@@ -482,6 +482,18 @@ void
 pnm_unapplyopacityrown(struct pam * const pamP,
                        tuplen *     const tuplenrow);
 
+void
+pnm_maketuplergbn(const struct pam * const pamP,
+                  tuplen             const tuple);
+
+void
+pnm_makerowrgbn(const struct pam * const pamP,
+                tuplen *           const tuplerow);
+
+void
+pnm_makearrayrgbn(const struct pam * const pamP,
+                  tuplen **          const tuples);
+
 pnm_transformMap *
 pnm_creategammatransform(const struct pam * const pamP);
 
