@@ -6,6 +6,10 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.85.00
 
+              pamtojpeg2k: fix incorrect interprtation of -ilyrrates option
+              when it contains multiple delimiter characters in a row.  Always
+              broken (pamtojpeg2k was new in Netpbm 10.12 (November 2002)).
+
               pnmtojbig: fix incorrect handling of -x option.  Always broken
               (pnmtojbig was new in Netpbm 9.2 (May 2000)).
 
