@@ -728,7 +728,7 @@ doCharsetRegistry(Readline *    const readlineP,
         pm_message("CHARSET_REGISTRY in BDF font file is too long. "
                    "Truncating");
 
-    *registryP = strndup(readlineP->arg[1], maxTokenLen);
+    *registryP = pm_strdup(readlineP->arg[1]);
     *gotRegistryP = true;
 }
 
