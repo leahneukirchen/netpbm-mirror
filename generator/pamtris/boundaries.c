@@ -3,11 +3,11 @@
 ===============================================================================
    Boundary buffer functions
 
-   New triangles are drawn one scanline at a time, and for every such scanline
-   we have left and right boundary columns within the frame buffer such that
-   the fraction of the triangle's area within that scanline is enclosed
-   between those two points (inclusive). Those coordinates may correspond to
-   columns outside the frame buffer's actual limits, in which case proper
+   New triangles are drawn one row at a time, and for every such row we have
+   left and right boundary columns within the frame buffer such that the
+   fraction of the triangle's area within that scanline is enclosed between
+   those two points (inclusive). Those coordinates may correspond to columns
+   outside the frame buffer's actual limits, in which case proper
    post-processing should be made wherever such coordinates are used to
    actually plot anything into the frame buffer.
 =============================================================================*/
@@ -17,26 +17,11 @@
 #include <netpbm/mallocvar.h>
 #include <netpbm/pm.h>
 
+#include "varying.h"
 #include "utils.h"
-#include "fract.h"
 
 
 #include "boundaries.h"
-
-
-
-static fract
-make_pos_fract(int32_t const quotient,
-               int32_t const remainder) {
-
-    fract retval;
-
-    retval.q = quotient;
-    retval.r = remainder;
-    retval.negative_flag = 0;
-
-    return retval;
-}
 
 
 
@@ -46,9 +31,10 @@ init_boundary_buffer(boundary_info * const bi,
 
     MALLOCARRAY(bi->buffer, height * 2);
 
-    if (!bi->buffer)
-        pm_error("Unable to get memory for %u-row high boundary buffer",
+    if (!bi->buffer) {
+        pm_error("unable to get memory for %u-row high boundary buffer.",
                  height);
+    }
 }
 
 
@@ -68,39 +54,30 @@ gen_triangle_boundaries(Xy              const xy,
 /*----------------------------------------------------------------------------
   Generate an entry in the boundary buffer for the boundaries of every
   VISIBLE row of a particular triangle. In case there is no such row,
-  start_row is accordingly set to -1. The argument is a 3-element array
-  of pairs of int16_t's representing the coordinates of the vertices of
+  start_scanline is accordingly set to -1. "xy" is a 3-element array
+  of pairs of integers representing the coordinates of the vertices of
   a triangle. Those vertices MUST be already sorted in order from the
   uppermost to the lowermost vertex (which is what draw_triangle, the
   only function which uses this one, does with the help of sort3).
 
-  The return value indicates whether the middle vertex is to the left of the
-  line connecting the top vertex to the bottom vertex or not.
+  The return value indicates whether the middle vertex is to the left of
+  the line connecting the top vertex to the bottom vertex or not.
 -----------------------------------------------------------------------------*/
     int16_t leftmost_x;
     int16_t rightmost_x;
     int mid_is_to_the_left;
-    fract left_x;
-    fract right_x;
-    bool no_upper_part;
-    int32_t top2mid_delta;
-    int32_t top2bot_delta;
-    int32_t mid2bot_delta;
-    fract top2mid_step;
-    fract top2bot_step;
-    fract mid2bot_step;
-    fract* upper_left_step;
-    fract* lower_left_step;
-    fract* upper_right_step;
-    fract* lower_right_step;
-    int32_t upper_left_delta;
-    int32_t lower_left_delta;
-    int32_t upper_right_delta;
-    int32_t lower_right_delta;
-    fract* left_step[2];
-    fract* right_step[2];
-    int32_t left_delta[2];
-    int32_t right_delta[2];
+    varying top_x;
+    varying mid_x;
+    varying bot_x;
+    varying top2mid;
+    varying top2bot;
+    varying mid2bot;
+    varying* upper_left;
+    varying* lower_left;
+    varying* upper_right;
+    varying* lower_right;
+    varying* left[2];
+    varying* right[2];
     int16_t* num_rows_ptr[2];
     int32_t y;
     int32_t i;
@@ -114,8 +91,8 @@ gen_triangle_boundaries(Xy              const xy,
     bi->num_lower_rows = 0;
 
     if (xy._[2][1] < 0 || xy._[0][1] >= height) {
-        /* Triangle is either completely above the topmost scanline or
-           completely below the bottom scanline.
+        /* Triangle is either completely above the uppermost scanline or
+           completely below the lowermost scanline.
         */
 
         return false; /* Actual value doesn't matter. */
@@ -154,106 +131,57 @@ gen_triangle_boundaries(Xy              const xy,
 
     mid_is_to_the_left = 2;
 
-    left_x  = make_pos_fract(xy._[0][0], 0);
-    right_x = make_pos_fract(xy._[0][0], 0);
+    int32_to_varying_array(&xy._[0][0], &top_x, 1);
+    int32_to_varying_array(&xy._[1][0], &mid_x, 1);
+    int32_to_varying_array(&xy._[2][0], &bot_x, 1);
 
     if (xy._[0][1] == xy._[1][1]) {
         /* Triangle has only a lower part. */
+        k = 1;
 
         mid_is_to_the_left = 0;
+    } else {
+        k = 0;
 
-        right_x.q = xy._[1][0];
-    } else if (xy._[1][1] == xy._[2][1]) {
-        /* Triangle has only an upper part (plus the row of the middle
-           vertex).
-        */
-
-        mid_is_to_the_left = 1;
-    }
-
-    no_upper_part = (xy._[1][1] == xy._[0][1]);
-
-    top2mid_delta = xy._[1][1] - xy._[0][1] + !no_upper_part;
-    top2bot_delta = xy._[2][1] - xy._[0][1] + 1;
-    mid2bot_delta = xy._[2][1] - xy._[1][1] + no_upper_part;
-
-    gen_steps(&xy._[0][0], &xy._[1][0], &top2mid_step, 1, top2mid_delta);
-    gen_steps(&xy._[0][0], &xy._[2][0], &top2bot_step, 1, top2bot_delta);
-    gen_steps(&xy._[1][0], &xy._[2][0], &mid2bot_step, 1, mid2bot_delta);
-
-    if (mid_is_to_the_left == 2) {
-        if (top2bot_step.negative_flag) {
-            if (top2mid_step.negative_flag) {
-                if (top2mid_step.q == top2bot_step.q) {
-                    mid_is_to_the_left =
-                        top2mid_step.r * top2bot_delta >
-                        top2bot_step.r * top2mid_delta;
-                } else {
-                    mid_is_to_the_left = top2mid_step.q < top2bot_step.q;
-                }
-            } else {
-                mid_is_to_the_left = 0;
-            }
-        } else {
-            if (!top2mid_step.negative_flag) {
-                if (top2mid_step.q == top2bot_step.q) {
-                    mid_is_to_the_left =
-                        top2mid_step.r * top2bot_delta <
-                        top2bot_step.r * top2mid_delta;
-                } else {
-                    mid_is_to_the_left = top2mid_step.q < top2bot_step.q;
-                }
-            } else {
-                mid_is_to_the_left = 1;
-            }
+        if (xy._[1][1] == xy._[2][1]) {
+            /* Triangle has only an upper part (plus the row of the middle
+               vertex).
+            */
+            mid_is_to_the_left = 1;
         }
     }
-    if (mid_is_to_the_left) {
-        upper_left_step     = &top2mid_step;
-        lower_left_step     = &mid2bot_step;
-        upper_right_step    = &top2bot_step;
-        lower_right_step    = upper_right_step;
 
-        upper_left_delta    = top2mid_delta;
-        lower_left_delta    = mid2bot_delta;
-        upper_right_delta   = top2bot_delta;
-        lower_right_delta   = upper_right_delta;
-    } else {
-        upper_right_step    = &top2mid_step;
-        lower_right_step    = &mid2bot_step;
-        upper_left_step     = &top2bot_step;
-        lower_left_step     = upper_left_step;
+    prepare_for_interpolation(&top_x, &mid_x, &top2mid, xy._[1][1] - xy._[0][1], 1);
+    prepare_for_interpolation(&top_x, &bot_x, &top2bot, xy._[2][1] - xy._[0][1], 1);
+    prepare_for_interpolation(&mid_x, &bot_x, &mid2bot, xy._[2][1] - xy._[1][1], 1);
 
-        upper_right_delta   = top2mid_delta;
-        lower_right_delta   = mid2bot_delta;
-        upper_left_delta    = top2bot_delta;
-        lower_left_delta    = upper_left_delta;
+    if (mid_is_to_the_left == 2) {
+        mid_is_to_the_left = top2mid.s < top2bot.s;
     }
 
-    left_step[0] = upper_left_step;
-    left_step[1] = lower_left_step;
-    right_step[0] = upper_right_step;
-    right_step[1] = lower_right_step;
-    left_delta[0] = upper_left_delta;
-    left_delta[1] = lower_left_delta;
-    right_delta[0] = upper_right_delta;
-    right_delta[1] = lower_right_delta;
+    if (mid_is_to_the_left) {
+        upper_left     = &top2mid;
+        lower_left     = &mid2bot;
+        upper_right    = &top2bot;
+        lower_right    = upper_right;
+    } else {
+        upper_right    = &top2mid;
+        lower_right    = &mid2bot;
+        upper_left     = &top2bot;
+        lower_left     = upper_left;
+    }
+
+    left[0] = upper_left;
+    left[1] = lower_left;
+    right[0] = upper_right;
+    right[1] = lower_right;
+
     num_rows_ptr[0] = &bi->num_upper_rows;
     num_rows_ptr[1] = &bi->num_lower_rows;
 
     y = xy._[0][1];
 
     i = 0;
-    k = 0;
-
-    if (no_upper_part) {
-        k = 1;
-
-        right_x.q = xy._[1][0];
-    }
-
-    step_up(&left_x, left_step[k], 1, left_delta[k]);
-    step_up(&right_x, right_step[k], 1, right_delta[k]);
 
     while (k < 2) {
         int32_t end;
@@ -271,8 +199,8 @@ gen_triangle_boundaries(Xy              const xy,
 
             y += delta;
 
-            multi_step_up(&left_x, left_step[k], 1, delta, left_delta[k]);
-            multi_step_up(&right_x, right_step[k], 1, delta, right_delta[k]);
+            multi_step_up(left[k], delta, 1);
+            multi_step_up(right[k], delta, 1);
 
             if (y < 0) {
                 k++;
@@ -287,7 +215,7 @@ gen_triangle_boundaries(Xy              const xy,
         }
 
         while (y < end) {
-            if (left_x.q >= width || right_x.q < 0) {
+            if (round_varying(*left[k]) >= width || round_varying(*right[k]) < 0) {
                 if (bi->start_scanline > -1) {
                     return mid_is_to_the_left;
                 }
@@ -296,14 +224,14 @@ gen_triangle_boundaries(Xy              const xy,
                     bi->start_scanline = y;
                 }
 
-                bi->buffer[i++] = left_x.q;
-                bi->buffer[i++] = right_x.q;
+                bi->buffer[i++] = round_varying(*left[k]);
+                bi->buffer[i++] = round_varying(*right[k]);
 
                 (*(num_rows_ptr[k]))++;
             }
 
-            step_up(&left_x, left_step[k], 1, left_delta[k]);
-            step_up(&right_x, right_step[k], 1, right_delta[k]);
+            step_up(left[k], 1);
+            step_up(right[k], 1);
 
             y++;
         }

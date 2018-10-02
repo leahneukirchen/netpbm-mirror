@@ -6,167 +6,177 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include <math.h>
 
-#include "fract.h"
+#include "limits_pamtris.h"
+#include "varying.h"
 
 #include "utils.h"
 
 
 
 void
-step_up(fract *       const vars,
-        const fract * const steps,
-        uint8_t       const element_ct,
-        int32_t       const divisor) {
-/*----------------------------------------------------------------------------
-  Apply interpolation steps steps[] to a collection of fract variables vars[]
-  once.  I.e. add each steps[i] to vars[i].
+prepare_for_interpolation(const varying * const begin,
+                          const varying * const end,
+                          varying *       const out,
+                          int32_t               num_steps,
+                          uint8_t         const elements) {
 
-  'element_ct' is the number of elements in 'vars' and 'steps'.
-
-  'divisor' is the divisor used to interpret the fractions.
-
-  It *is* safe to pass a 0 divisor to this function.
------------------------------------------------------------------------------*/
+    double inverse_num_steps;
     unsigned int i;
 
-    for (i = 0; i < element_ct; ++i) {
-        /* To add the fraction steps[i] to the fraction vars[i]: add the
-           quotient of step steps[i] to the quotient of variable vars[i] and
-           the remainder of the step to the remainder of the variable. If this
-           makes the agumented remainder equal to or larger than the divisor,
-           increment the quotient of the variable if the step is positive or
-           decrement it if the step is negative, and subtract the divisor from
-           the remainder of the variable (in either case).
-        */
-
-        vars[i].q += steps[i].q;
-        vars[i].r += steps[i].r;
-
-        {
-            uint32_t const negative_mask = -steps[i].negative_flag;
-                /* (-1 if the step is negative; 1 otherwise) */
-
-            uint32_t const overdiv_mask =
-                -(((uint32_t)~(vars[i].r - divisor)) >> 31);
-                /*  = ~0 if var->r >= div; 0 otherwise. */
-
-            vars[i].q += (negative_mask | 1) & overdiv_mask;
-            vars[i].r -= divisor & overdiv_mask;
-        }
+    if (num_steps < 1) {
+        num_steps = 1;
     }
-}
 
-
-
-void
-multi_step_up(fract *       const vars,
-              const fract * const steps,
-              uint8_t       const elements,
-              int32_t       const times,
-              int32_t       const div) {
-/*----------------------------------------------------------------------------
-  Similar to step_up, but apply the interpolation step an arbitrary number
-  of times, instead of just once.
-
-  It *is* also safe to pass a 0 divisor to this function.
------------------------------------------------------------------------------*/
-    unsigned int i;
+    inverse_num_steps = 1.0 / num_steps;
 
     for (i = 0; i < elements; i++) {
-        uint32_t const negative_mask = -steps[i].negative_flag;
-
-        vars[i].q += times * steps[i].q;
-        vars[i].r += times * steps[i].r;
-
-        if(vars[i].r >= div && div != 0) {
-            int32_t const r_q = vars[i].r / div;
-            int32_t const r_r = vars[i].r % div;
-
-            vars[i].q += (-r_q & negative_mask) | (r_q & ~negative_mask);
-                /* = -r_q if the step is negative; r_q, otherwise. */
-            vars[i].r = r_r;
-        }
+        out[i].v = begin[i].v;
+        out[i].s = (end[i].v - begin[i].v) * inverse_num_steps;
     }
 }
 
 
 
-void
-gen_steps(const int32_t * const begin,
-          const int32_t * const end,
-          fract         * const out,
-          uint8_t         const elements,
-          int32_t         const div) {
-/*----------------------------------------------------------------------------
-  Generate the interpolation steps for a collection of initial and final
-  values. "begin" points to an array of initial values, "end" points to the
-  array of corresponding final values; each interpolation step is stored in
-  the appropriate position in the array pointed by "out"; "elements" indicates
-  the number of elements in each of the previously mentioned arrays and
-  "divisor" is the common value by which we want to divide the difference
-  between each element in the array pointed to by "end" and the corresponding
-  element in the array pointed to by "begin".  After an execution of this
-  function, for each out[i], with 0 <= i < elements, the following will hold:
+varying
+compute_varying_z(int32_t const input_z) {
 
-    1. If divisor > 1:
-      out[i].q = (end[i] - begin[i]) / divisor
-      out[i].r = abs((end[i] - begin[i]) % divisor)
+    varying retval;
 
-    2. If divisor == 1 || divisor == 0:
-      out[i].q = end[i] - begin[i]
-      out[i].r = 0
------------------------------------------------------------------------------*/
-    if (div > 1) {
-        unsigned int i;
+    retval.v = 1.0 / (1 + input_z - MIN_COORD);
+    retval.s = 0.0;
 
-        for (i = 0; i < elements; i++) {
-            int32_t const delta = end[i] - begin[i];
-
-            out[i].q = delta / div;
-            out[i].r = abs(delta % div);
-            out[i].negative_flag = ((uint32_t)delta) >> 31;
-        }
-    } else {
-        unsigned int i;
-
-        for (i = 0; i < elements; i++) {
-            int32_t const delta = end[i] - begin[i];
-
-            out[i].q = delta;
-            out[i].r = 0;
-            out[i].negative_flag = ((uint32_t)delta) >> 31;
-        }
-    }
+    return retval;
 }
 
 
 
 void
-fract_to_int32_array(const fract * const in,
-                     int32_t *     const out,
-                     uint8_t       const elements) {
+multiply_varying_array_by_varying(varying * const vars,
+                                  varying   const multiplier,
+                                  uint8_t   const elements) {
 
     unsigned int i;
 
     for (i = 0; i < elements; i++) {
-        out[i] = in[i].q;
+        vars[i].v *= multiplier.v;
+	vars[i].s  = 0.0;
+    }
+}
+
+
+void
+divide_varying_array_by_varying(varying * const vars,
+                                varying   const divisor,
+                                uint8_t   const elements) {
+
+    double const inverse_divisor = 1.0 / divisor.v;
+
+    unsigned int i;
+
+    for (i = 0; i < elements; i++) {
+        vars[i].v *= inverse_divisor;
+	vars[i].s  = 0.0;
+    }
+}
+
+
+
+varying
+inverse_varying(varying const var) {
+
+    varying retval;
+
+    retval.v = 1.0 / var.v;
+    retval.s = 0.0;
+
+    return retval;
+}
+
+
+
+varying
+multiply_varyings(varying const a,
+                  varying const b) {
+
+    varying retval;
+
+    retval.v = a.v * b.v;
+    retval.s = 0.0;
+
+    return retval;
+}
+
+
+
+void
+step_up(varying * const vars,
+        uint8_t   const elements) {
+
+    unsigned int i;
+
+    for (i = 0; i < elements; i++) {
+        vars[i].v += vars[i].s;
     }
 }
 
 
 
 void
-int32_to_fract_array(const int32_t * const in,
-                     fract *         const out,
-                     uint8_t         const elements) {
+multi_step_up(varying * const vars,
+              int32_t   const times,
+              uint8_t   const elements) {
 
     unsigned int i;
 
     for (i = 0; i < elements; i++) {
-        out[i].q = in[i];
-        out[i].r = 0;
+        vars[i].v += times * vars[i].s;
     }
+}
+
+
+
+void
+int32_to_varying_array(const int32_t * const in,
+                       varying *       const out,
+                       uint8_t         const elements) {
+
+    unsigned int i;
+
+    for (i = 0; i < elements; i++) {
+        out[i].v = in[i];
+        out[i].s = 0.0;
+    }
+}
+
+
+
+/* static int64_t
+abs64(int64_t x)
+{
+
+    int64_t const nm = ~geq_mask64(x, 0);
+
+    return (-x & nm) | (x & ~nm);
+} */
+
+
+
+int32_t
+round_varying(varying const var) {
+
+    return round(var.v);
+}
+
+
+
+int64_t
+geq_mask64(int64_t a, int64_t b) {
+
+    uint64_t const diff = a - b;
+
+    return -((~diff) >> 63);
 }
 
 

@@ -1,6 +1,7 @@
 #ifndef BOUNDARIES_H_INCLUDED
 #define BOUNDARIES_H_INCLUDED
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include "triangle.h"

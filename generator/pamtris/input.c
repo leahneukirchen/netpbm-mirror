@@ -17,37 +17,32 @@
 
 #include "input.h"
 
-#define MAX_COORD       32767
-#define MIN_COORD       -MAX_COORD
-
 #define DRAW_MODE_TRIANGLES 1
 #define DRAW_MODE_STRIP     2
 #define DRAW_MODE_FAN       3
 
 #define CMD_SET_MODE        "mode"
 #define CMD_SET_ATTRIBS     "attribs"
-#define CMD_VERTEX      "vertex"
-#define CMD_PRINT       "print"
-#define CMD_CLEAR       "clear"
-#define CMD_RESET       "reset"
-#define CMD_QUIT        "quit"
+#define CMD_VERTEX          "vertex"
+#define CMD_PRINT           "print"
+#define CMD_CLEAR           "clear"
+#define CMD_RESET           "reset"
+#define CMD_QUIT            "quit"
 
 #define ARG_TRIANGLES       "triangles"
-#define ARG_STRIP       "strip"
-#define ARG_FAN         "fan"
-#define ARG_IMAGE       "image"
-#define ARG_DEPTH       "depth"
+#define ARG_STRIP           "strip"
+#define ARG_FAN             "fan"
+#define ARG_IMAGE           "image"
+#define ARG_DEPTH           "depth"
 
 #define WARNING_EXCESS_ARGS "warning: ignoring excess arguments: line %lu."
 #define SYNTAX_ERROR        "syntax error: line %lu."
-
+    
 typedef struct {
     Xy v_xy;
         /* X- and Y-coordinates of the vertices for the current triangle.
-           int32_t v_attribs[3][MAX_NUM_ATTRIBS + 1]; // Vertex attributes for
-           the current triangle. Includes the Z-coordinates.
         */
-	Attribs v_attribs;
+    Attribs v_attribs;
         /* Vertex attributes for the current triangle. Includes the
            Z-coordinates.
         */
@@ -371,20 +366,32 @@ process_next_command(input_info           * const line,
             break;
         }
 
-        for (i = 0; i < 3; i++) {
+        for (i = 0; i < 4; i++) {
             nt = next_token(nt.end);
 
             i_args[i] = strtol(nt.begin, &strtol_end, 10);
 
-            if (*nt.begin == '\0' || strtol_end != nt.end) {
-                pm_errormsg(SYNTAX_ERROR, line->number);
+            if (*nt.begin == '\0') {
+		if(i != 3) {
+                    pm_errormsg(SYNTAX_ERROR, line->number);
 
-                must_break_out = true;
+                    must_break_out = true;
 
-                break;
+                    break;
+                } else {
+                    i_args[i] = 1;
+                }
+            } else {
+                if (strtol_end != nt.end) {
+                    pm_errormsg(SYNTAX_ERROR, line->number);
+
+                    must_break_out = true;
+
+                    break;
+                }
             }
 
-            if (i < 2) {
+            if (i < 3) {
                 if (i_args[i] < MIN_COORD || i_args[i] > MAX_COORD) {
                     pm_errormsg(
                         "error: coordinates out of bounds: line %lu.",
@@ -395,9 +402,9 @@ process_next_command(input_info           * const line,
                     break;
                 }
             } else {
-                if (i_args[i] < 0 || i_args[i] > MAX_Z) {
+                if (i_args[i] < MIN_INPUT_W || i_args[i] > MAX_INPUT_W) {
                     pm_errormsg(
-                        "error: Z component out of bounds: line %lu.",
+                        "error: perspective correction factor (w) out of bounds: line %lu.",
                         line->number);
 
                     must_break_out = true;
@@ -416,7 +423,8 @@ process_next_command(input_info           * const line,
             state.v_attribs._[state.next][i] = state.curr_attribs[i];
         }
 
-        state.v_attribs._[state.next][fbi->num_attribs] = i_args[2];
+        state.v_attribs._[state.next][fbi->num_attribs + 0] = i_args[2];
+        state.v_attribs._[state.next][fbi->num_attribs + 1] = i_args[3];
 
         state.v_xy._[state.next][0] = i_args[0];
         state.v_xy._[state.next][1] = i_args[1];

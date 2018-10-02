@@ -13,7 +13,7 @@ typedef struct {
 } Xy;
 
 typedef struct {
-    int32_t _[3][MAX_NUM_ATTRIBS + 1];
+    int32_t _[3][MAX_NUM_ATTRIBS + 2];
 } Attribs;
 
 void

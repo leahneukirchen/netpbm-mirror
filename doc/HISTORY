@@ -6,6 +6,10 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.85.00
 
+              pamtris: Add -rgb, -grayscale.  Add w parameter to vertex
+              instructions.  Fix perspective correctness.  Thanks Lucas Brunno
+              Luna <lucaslunar32@hotmail.com>.
+
               libnetpbm: Fix invalid memory reference in color name processing
               when trivial memory allocation fails.
 

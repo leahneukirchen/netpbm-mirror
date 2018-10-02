@@ -3,7 +3,8 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "fract.h"
+
+#include "varying.h"
 #include "netpbm/pam.h"
 
 typedef struct framebuffer_info {
@@ -12,7 +13,8 @@ typedef struct framebuffer_info {
 -----------------------------------------------------------------------------*/
     /* These fields are initialized once by reading the command line
        arguments. "maxval" and "num_attribs" may be modified later
-       through "realloc_image_buffer".
+       through "realloc_image_buffer"; "correct" may also be modified
+       if the eponymous command is given.
     */
     int32_t width;
     int32_t height;
@@ -67,9 +69,7 @@ realloc_image_buffer(int32_t            const new_maxval,
 void
 draw_span(uint32_t           const base,
           uint16_t           const length,
-          fract *            const attribs_start,
-          const fract *      const attribs_steps,
-          int32_t            const divisor,
+          varying *          const attribs,
           framebuffer_info * const fbi);
 
 #endif
