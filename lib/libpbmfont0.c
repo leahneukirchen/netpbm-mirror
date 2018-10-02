@@ -216,8 +216,8 @@ pbm_destroybdffont2_base(struct font2 * const font2P) {
 
     free(font2P->selector);
 
-    free(font2P->name);
-    free(font2P->charset_string);
+    pm_strfree(font2P->name);
+    pm_strfree(font2P->charset_string);
     free(font2P->glyph);
 
     if (font2P->oldfont !=NULL)

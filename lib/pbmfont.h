@@ -251,7 +251,7 @@ struct font2 {
            FALSE: font file has no DEFAULT_CHAR field.
         */
 
-    char * name;
+    const char * name;
         /* Name of the font.  Available in BDF fonts.
            NULL means no name.
         */
@@ -261,7 +261,7 @@ struct font2 {
            Set by analyzing following charset_string.
         */
 
-    char * charset_string;
+    const char * charset_string;
         /* Charset registry and encoding.
            Available in most BDF fonts between STARPROPERTIES - ENDPROPERTIES.
            NULL means no name.

@@ -6,7 +6,10 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.85.00
 
-              pamtojpeg2k: fix incorrect interprtation of -ilyrrates option
+              libnetpbm: Fix invalid memory reference in color name processing
+              when trivial memory allocation fails.
+
+              pamtojpeg2k: fix incorrect interpretation of -ilyrrates option
               when it contains multiple delimiter characters in a row.  Always
               broken (pamtojpeg2k was new in Netpbm 10.12 (November 2002)).
 
