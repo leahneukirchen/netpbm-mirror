@@ -4,7 +4,7 @@
 <body>
 
 <h1>pamtris</h1>
-Updated: 21 September 2018
+Updated: 02 October 2018
 <br>
 <a href="#index">Table Of Contents</a>
 
@@ -689,6 +689,7 @@ same line as it.</p>
 </dl>
 
 <h2 id="tips">TIPS</h2>
+
 <h3>Texturing</h3>
 
 <p>It is possible to apply so-called "textures" to images produced with
@@ -697,7 +698,7 @@ coordinates, then using <a href="pamchannel.html"><b>pamchannel</b></a> to
 select the appropriate channels in the output image(s), and finally
 processing the result through <a href="pamlookup.html"><b>pamlookup</b></a>,
 providing the desired texture file as a "lookup table."  If you are drawing
-picutures in perspective, make sure to provide adequate values for the
+pictures in perspective, make sure to provide adequate values for the
 <i>w</i> parameter to your vertex commands
 (<a href="#cmd_vertex">see above</a>) so the resulting samples in
 the images produced by <b>pamtris</b> are perspective-correct.</p>
@@ -705,6 +706,11 @@ the images produced by <b>pamtris</b> are perspective-correct.</p>
 <p>You might want to consider using
 <a href="pnmtile.html"><b>pnmtile</b></a> to make textures which are
 inteded to be "repeated" along triangle meshes.</p>
+
+<p>Since the <i>w</i> parameter to the <b>vertex</b> command was new in Netpbm
+10.85 (December 2018), it is not really possible to achieve
+perspective-correct texturing before that.
+
 
 <h3>Anti-aliased edges</h3>
 
