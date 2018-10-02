@@ -2,23 +2,29 @@
 <HTML><HEAD><TITLE>Jbigtopnm User Manual</TITLE></HEAD>
 <BODY>
 <H1>Jbigtopnm</H1>
-Updated: 19 November 2003
+Updated: 29 September 2018
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
-<A NAME="lbAB">&nbsp;</A>
 <H2>NAME</H2>
 jbigtopnm - JBIG to PNM image file converter
 
-<A NAME="lbAC">&nbsp;</A>
-<H2>SYNOPSIS</H2>
+<H2 id="synopsis">SYNOPSIS</H2>
 
 <B>jbigtopnm</B>
-[<I>options</I>]
+[<b>-xmax</b>]
+[<b>-ymax</b>]
+[<b>-binary</b>]
+[<b>-diagnose</b>]
+[<b>-plane</b>]
 [<I>input-file</I> [<I>output-file</I>]]
 
-<A NAME="lbAD">&nbsp;</A>
-<H2>DESCRIPTION</H2>
+<p>Minimum unique abbreviation of option is acceptable.  You may use double
+hyphens instead of single hyphen to denote options.  You may use white
+space in place of the equals sign to separate an option name from its value.
+
+
+<H2 id="description">DESCRIPTION</H2>
 
 <p>This program is part of <a href="index.html">Netpbm</a>.
 
@@ -39,8 +45,10 @@ specified maximal output image size.  The input file can consist of
 several concatenated BIEs which contain different increasing
 resolution layers of the same image.
 
-<A NAME="lbAE">&nbsp;</A>
-<H2>OPTIONS</H2>
+<H2 id="options">OPTIONS</H2>
+
+<p>Before Netpbm 10.85 (December 2018), only single-character single-hyphen
+abbreviations of the options are accepted.
 
 <DL COMPACT>
 
@@ -80,14 +88,12 @@ specified single plane as a PBM file.  The first plane has number 0.
 
 </DL>
 
-<A NAME="lbAF">&nbsp;</A>
-<H2>STANDARDS</H2>
+<H2 id="standards">STANDARDS</H2>
 
 <p>This program implements the JBIG image coding algorithm as
 specified in ISO/IEC 11544:1993 and ITU-T T.82(1993).
 
-<A NAME="lbAG">&nbsp;</A>
-<H2>AUTHOR</H2>
+<H2 id="author">AUTHOR</H2>
 
 <!-- jbgtopnm below is not a typo.  It is not meant to be jbigtopnm -->
 <p><B>jbigtopnm</B> is based on the JBIG library by Markus Kuhn, part
@@ -98,30 +104,27 @@ package</a>.  The <B>jbgtopbm</B> program is part of the
 
 <P><B>jbigtopnm</B> is part of the Netpbm package of graphics tools.
 
-<A NAME="lbAH">&nbsp;</A>
-<H2>SEE ALSO</H2>
+<H2 id="seealso">SEE ALSO</H2>
 
 <B><A HREF="pnm.html">pnm</A></B>,
 <B><A HREF="pnmtojbig.html">pnmtojbig</A></B>
 
-<A NAME="lbAI">&nbsp;</A>
-<H2>LICENSE</H2>
+<H2 id="license">LICENSE</H2>
 
 If you use <B>jbigtopnm</B>, you are using various patents,
 particularly on its arithmetic encoding method, and in all probability
 you do not have a license from the patent owners to do so.
 
 <HR>
-<A NAME="index">&nbsp;</A><H2>Table Of Contents</H2>
+<H2 id="index">Table Of Contents</H2>
 <UL>
-<LI><A HREF="#lbAB">NAME</A>
-<LI><A HREF="#lbAC">SYNOPSIS</A>
-<LI><A HREF="#lbAD">DESCRIPTION</A>
-<LI><A HREF="#lbAE">OPTIONS</A>
-<LI><A HREF="#lbAF">STANDARDS</A>
-<LI><A HREF="#lbAG">AUTHOR</A>
-<LI><A HREF="#lbAH">SEE ALSO</A>
-<LI><A HREF="#lbAI">LICENSE</A>
+<LI><A HREF="#synopsis">SYNOPSIS</A>
+<LI><A HREF="#description">DESCRIPTION</A>
+<LI><A HREF="#options">OPTIONS</A>
+<LI><A HREF="#standards">STANDARDS</A>
+<LI><A HREF="#author">AUTHOR</A>
+<LI><A HREF="#seealso">SEE ALSO</A>
+<LI><A HREF="#license">LICENSE</A>
 </UL>
 </BODY>
 </HTML>
