@@ -62,6 +62,10 @@ not yet  BJH  Release 10.85.00
               pbmmask: Fix invalid memory reference with zero-dimension
               input image.  Broken in primordial Netpbm, ca 1989.
 
+              pamtojpeg2k: Fix incorrect metadata in output with GRAYSCALE PAM
+              input.  Always broken (pamtojpeg2k was new in Netpbm 10.12
+              (November 2002)).
+
               libnetpbm: Add pnm_colorspec_rgb_integer,
               pnm_colorspec_rgb_norm, pnm_colorspec_rgb_x11,
               pnm_colorspec_dict, pnm_colorspec_dict_close.
