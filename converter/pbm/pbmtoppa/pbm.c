@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 
 #include "pm.h"
 #include "nstring.h"
@@ -41,7 +42,7 @@ make_pbm_stat(pbm_stat * const pbmStatP,
             pbmStatP->version=P4;
 
         if (pbmStatP->version == none) {
-            pm_message("pbm_readheader(): unknown PBM magic '%s'", line);
+            pm_message("unknown PBM magic '%s'", line);
             retval = 0;
         } else {
             do {
@@ -50,12 +51,31 @@ make_pbm_stat(pbm_stat * const pbmStatP,
                 if (rc == NULL)
                     return 0;
             } while (line[0] == '#');
-
-            if (sscanf (line, "%d %d", &pbmStatP->width, &pbmStatP->height)
-                != 2)
-                retval = 0;
-            else
-                retval = 1;
+            {
+                int rc;
+                rc = sscanf(line, "%d %d",
+                            &pbmStatP->width, &pbmStatP->height);
+                if (rc != 2)
+                    retval = 0;
+                else {
+                    if (pbmStatP->width < 0) {
+                        pm_message("Image has negative width");
+                        retval = 0;
+                    } else if (pbmStatP->width > INT_MAX/2) {
+                        pm_message("Uncomputeably large width: %d",
+                                   pbmStatP->width);
+                        retval = 0;
+                    } else if (pbmStatP->height < 0) {
+                        pm_message("Image has negative height");
+                        retval = 0;
+                    } else if (pbmStatP->height > INT_MAX/2) {
+                        pm_message("Uncomputeably large height: %d",
+                                   pbmStatP->height);
+                        retval = 0;
+                    } else
+                        retval = 1;
+                }
+            }
         }
     }
     return retval;
