@@ -16,6 +16,20 @@
 
 static char usage[] =  "[paintjetfile]";
 
+
+
+static unsigned int
+uintProduct(unsigned int const multiplicand,
+            unsigned int const multiplier) {
+
+    if (UINT_MAX / multiplier < multiplicand)
+        pm_error("Airthmetic overflow");
+
+    return multiplicand * multiplier;
+}
+
+
+
 static int
 egetc(FILE * const ifP) {
     int c;
@@ -138,21 +152,16 @@ main(int argc, const char ** argv) {
                         if (rows == -1 || row >= rows)
                             rows += 100;
                         if (image == NULL) {
-                            MALLOCARRAY(image, rows * planes);
-                            MALLOCARRAY(imlen, rows * planes);
-                        }
-                        else {
-                            image = (unsigned char **)
-                                realloc(image,
-                                        rows * planes *
-                                        sizeof(unsigned char *));
-                            imlen = (int *)
-                                realloc(imlen, rows * planes * sizeof(int));
+                            MALLOCARRAY(image, uintProduct(rows, planes));
+                            MALLOCARRAY(imlen, uintProduct(rows, planes));
+                        } else {
+                            REALLOCARRAY(image, uintProduct(rows, planes));
+                            REALLOCARRAY(imlen, uintProduct(rows, planes));
                         }
                     }
                     if (image == NULL || imlen == NULL)
                         pm_error("out of memory");
-                    if (plane == planes)
+                    if (plane >= planes)
                         pm_error("too many planes");
                     cols = MAX(cols, val);
                     imlen[row * planes + plane] = val;
