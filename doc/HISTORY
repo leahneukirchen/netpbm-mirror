@@ -20,6 +20,8 @@ not yet  BJH  Release 10.85.00
               pnmtojbig: fix incorrect handling of -x option.  Always broken
               (pnmtojbig was new in Netpbm 9.2 (May 2000)).
 
+              pjtoppm, pbmtoppa: fix arithmetic overflow.
+
               Build: fix reference to nonexistent strndup on Mac OS X 10.6.
 
 18.09.29 BJH  Release 10.84.00
