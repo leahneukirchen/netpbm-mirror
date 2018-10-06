@@ -101,12 +101,12 @@ readXvHeader(FILE *         const ifP,
              unsigned int * const colsP,
              unsigned int * const rowsP,
              unsigned int * const maxvalP) {
-           
+
     char buf[256];
     unsigned int cols, rows, maxval;
     int rc;
     bool endOfComments;
-    
+
     getLine(ifP, buf, sizeof(buf));
 
     if (!strneq(buf, "P7 332", 6))
@@ -166,7 +166,7 @@ writePpm(FILE *             const ifP,
             else {
                 unsigned int const paletteIndex = byte;
                 assert(byte >= 0);
-                
+
                 PPM_ASSIGN(pixrow[col],
                            xvPaletteP->red[paletteIndex],
                            xvPaletteP->grn[paletteIndex],
@@ -181,7 +181,7 @@ writePpm(FILE *             const ifP,
 
 
 
-int 
+int
 main(int    argc,
      char * argv[]) {
 
@@ -190,7 +190,7 @@ main(int    argc,
     unsigned int cols, rows;
     pixval maxval;
     xvPalette xvPalette;
- 
+
     ppm_init(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
