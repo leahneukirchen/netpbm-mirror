@@ -274,7 +274,7 @@ static void
 doLookupTableColors(colorhist_vector const table,
                     unsigned int     const nColor,
                     hashinfo *       const colorhashtable) {
-                
+
     unsigned int colval;
     for (colval = 0; colval < nColor; ++colval) {
         struct hashinfo * const hashchain =
@@ -287,7 +287,7 @@ doLookupTableColors(colorhist_vector const table,
         datum(PPM_GETR((table[colval]).color));
         datum(PPM_GETG((table[colval]).color));
         datum(PPM_GETB((table[colval]).color));
-        
+
         hashrun = hashchain;  /* start at beginning of chain */
 
         if (hashrun->flag == -1) {
@@ -323,7 +323,7 @@ doLookupTableGrays(colorhist_vector const table,
         datum(PPM_GETB((table[colval]).color));
         datum(PPM_GETB((table[colval]).color));
         datum(PPM_GETB((table[colval]).color));
-        
+
         hashrun = hashchain;  /* start at beginning of chain */
 
         if (hashrun->flag == -1) {
@@ -410,7 +410,7 @@ writeColormapRaster(pixel **         const pixels,
             struct hashinfo * const hashchain =
                 &colorhashtable[myhash(pixrow[col])];
             struct hashinfo * p;
-                
+
             p = hashchain;
             while (!PPM_EQUAL((p->color), pixrow[col])) {
                 assert(p->next);
@@ -554,7 +554,7 @@ doTiny(FILE *           const ifP,
        int              const enlarge,
        int              const copy,
        struct mediasize const medias) {
-       
+
     pixel * pixelrow;
     unsigned char * redrow;
     unsigned char * grnrow;
@@ -690,7 +690,7 @@ main(int argc, char * argv[]) {
     }
 
     ppm_readppminit(ifP, &cols, &rows, &maxval, &format);
-    
+
     if (tiny) {
         doTiny(ifP, cols, rows, maxval, format,
                sharpness, enlarge, copy, medias);
@@ -707,7 +707,7 @@ main(int argc, char * argv[]) {
 
         /* first check wether we can use the lut transfer */
 
-        table = ppm_computecolorhist(pixels, cols, rows, MAXLUTCOL+1, 
+        table = ppm_computecolorhist(pixels, cols, rows, MAXLUTCOL+1,
                                      &nColor);
         if (table)
             useLookupTable(pixels, table, sharpness, enlarge, copy, medias,
