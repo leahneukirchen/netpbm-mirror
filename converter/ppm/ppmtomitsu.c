@@ -653,7 +653,7 @@ main(int argc, char * argv[]) {
         tiny = TRUE;
     else
         pm_usage(usage);
-        ++argn;
+    ++argn;
     }
 
     if (argn < argc) {
