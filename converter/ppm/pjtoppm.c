@@ -26,6 +26,8 @@ egetc(fp)
     return(c);
 }
 
+
+
 int
 main(argc, argv)
     int argc;
@@ -69,7 +71,7 @@ main(argc, argv)
             }
             if (i != 0) {
                 buffer[i] = '\0';
-                if (sscanf(buffer, "%d", &val) != 1) 
+                if (sscanf(buffer, "%d", &val) != 1)
                     pm_error("bad value `%s' at <ESC>*%c%c", buffer, cmd, c);
             }
             else
@@ -100,7 +102,7 @@ main(argc, argv)
                     break;
                 case 'U':   /* planes */
                     planes = val;
-                    if (planes != 3) 
+                    if (planes != 3)
                         pm_error("can handle only 3 plane files");
                     break;
                 case 'A':   /* begin raster */
@@ -134,24 +136,24 @@ main(argc, argv)
                             MALLOCARRAY(imlen, rows * planes);
                         }
                         else {
-                            image = (unsigned char **) 
-                                realloc(image, 
-                                        rows * planes * 
+                            image = (unsigned char **)
+                                realloc(image,
+                                        rows * planes *
                                         sizeof(unsigned char *));
-                            imlen = (int *) 
+                            imlen = (int *)
                                 realloc(imlen, rows * planes * sizeof(int));
                         }
                     }
                     if (image == NULL || imlen == NULL)
                         pm_error("out of memory");
-                    if (p == planes) 
+                    if (p == planes)
                         pm_error("too many planes");
                     cols = cols > val ? cols : val;
                     imlen[r * planes + p] = val;
                     MALLOCARRAY(image[r * planes + p], val);
-                    if (image[r * planes + p] == NULL) 
+                    if (image[r * planes + p] == NULL)
                         pm_error("out of memory");
-                    if (fread(image[r * planes + p], 1, val, fp) != val) 
+                    if (fread(image[r * planes + p], 1, val, fp) != val)
                         pm_error("short data");
                     if (c == 'V')
                         p++;
@@ -166,7 +168,7 @@ main(argc, argv)
                 }
                 break;
             case 'p': /* Position */
-                if (p != 0) 
+                if (p != 0)
                     pm_error("changed position in the middle of "
                              "transferring planes");
                 switch (c) {
@@ -178,7 +180,7 @@ main(argc, argv)
                         val = r + val;
                     if (buffer[0] == '-')
                         val = r - val;
-                    for (; val > r; r++) 
+                    for (; val > r; r++)
                         for (p = 0; p < 3; p++) {
                             imlen[r * planes + p] = 0;
                             image[r * planes + p] = NULL;
@@ -207,17 +209,17 @@ main(argc, argv)
                 continue;
             for (p = 0; p < planes; p++) {
                 MALLOCARRAY(buf, newcols);
-                if (buf == NULL) 
+                if (buf == NULL)
                     pm_error("out of memory");
                 for (i = 0, c = 0; c < imlen[p + r * planes]; c += 2)
                     for (cmd = image[p + r * planes][c],
-                             val = image[p + r * planes][c+1]; 
-                         cmd >= 0 && i < newcols; cmd--, i++) 
+                             val = image[p + r * planes][c+1];
+                         cmd >= 0 && i < newcols; cmd--, i++)
                         buf[i] = val;
                 cols = cols > i ? cols : i;
                 free(image[p + r * planes]);
-                /* 
-                 * This is less than what we have so it realloc should 
+                /*
+                 * This is less than what we have so it realloc should
                  * not return null. Even if it does, tough! We will
                  * lose a line, and probably die on the next line anyway
                  */
@@ -226,8 +228,8 @@ main(argc, argv)
         }
         cols *= 8;
     }
-            
-       
+
+
     ppm_writeppminit(stdout, cols, rows, (pixval) 255, 0);
     pixrow = ppm_allocrow(cols);
     for (r = 0; r < rows; r++) {
@@ -236,13 +238,13 @@ main(argc, argv)
                 PPM_ASSIGN(pixrow[c], 0, 0, 0);
             continue;
         }
-        for (cmd = 0, c = 0; c < cols; c += 8, cmd++) 
+        for (cmd = 0, c = 0; c < cols; c += 8, cmd++)
             for (i = 0; i < 8 && c + i < cols; i++) {
-                for (p = 0; p < planes; p++) 
+                for (p = 0; p < planes; p++)
                     if (mode == 0 && cmd >= imlen[r * planes + p])
                         bf[p] = 0;
                     else
-                        bf[p] = (image[r * planes + p][cmd] & 
+                        bf[p] = (image[r * planes + p][cmd] &
                                  (1 << (7 - i))) ? 255 : 0;
                 PPM_ASSIGN(pixrow[c + i], bf[0], bf[1], bf[2]);
             }
@@ -251,3 +253,6 @@ main(argc, argv)
     pm_close(stdout);
     exit(0);
 }
+
+
+
