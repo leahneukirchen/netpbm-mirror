@@ -759,7 +759,7 @@ doCharsetEncoding(Readline *    const readlineP,
         pm_message("CHARSET_ENCODING in BDF font file is too long. "
                    "Truncating");
 
-    *encodingP = strndup(readlineP->arg[1], maxTokenLen);
+    *encodingP = pm_strdup(readlineP->arg[1]);
     *gotEncodingP = true;
 }
 
