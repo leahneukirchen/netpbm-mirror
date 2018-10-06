@@ -11,61 +11,67 @@
 */
 
 #include "ppm.h"
+#include "pm_c_util.h"
 #include "mallocvar.h"
 
 static char usage[] =  "[paintjetfile]";
 
-static int egetc ARGS((FILE *fp));
 static int
-egetc(fp)
-    FILE *fp;
-{
+egetc(FILE * const ifP) {
     int c;
-    if ((c = fgetc(fp)) == -1)
+
+    c = fgetc(ifP);
+
+    if (c == -1)
         pm_error("unexpected end of file");
-    return(c);
+
+    return c;
 }
 
 
 
 int
-main(argc, argv)
-    int argc;
-    char *argv[];
-{
+main(int argc, const char ** argv) {
+
     int cmd, val;
     char buffer[BUFSIZ];
     int planes = 3, rows = -1, cols = -1;
-    int r = 0, c = 0, p = 0, i;
     unsigned char **image = NULL;
     int *imlen;
-    FILE *fp = stdin;
+    FILE * ifP;
     int mode;
     int argn;
     unsigned char bf[3];
-    pixel *pixrow;
+    pixel * pixrow;
+    int c;
+    int row;
+    int plane;
 
+    pm_proginit(&argc, argv);
 
-    ppm_init(&argc, argv);
     argn = 1;
     if (argn != argc)
-        fp = pm_openr(argv[argn++]);
+        ifP = pm_openr(argv[argn++]);
     else
-        fp = stdin;
+        ifP = stdin;
 
     if (argn != argc)
         pm_usage(usage);
 
-    while ((c = fgetc(fp)) != -1) {
+    row = 0;  /* initial value */
+    plane = 0;  /* initial value */
+
+    while ((c = fgetc(ifP)) != -1) {
         if (c != '\033')
             continue;
-        switch (c = egetc(fp)) {
+        switch (c = egetc(ifP)) {
         case 'E':   /* reset */
             break;
-        case '*':
-            cmd = egetc(fp);
+        case '*': {
+            unsigned int i;
+            cmd = egetc(ifP);
             for (i = 0; i < BUFSIZ; i++) {
-                if (!isdigit(c = egetc(fp)) && c != '+' && c != '-')
+                if (!isdigit(c = egetc(ifP)) && c != '+' && c != '-')
                     break;
                 buffer[i] = c;
             }
@@ -128,8 +134,8 @@ main(argc, argv)
                     break;
                 case 'V':   /* send plane */
                 case 'W':   /* send last plane */
-                    if (rows == -1 || r >= rows || image == NULL) {
-                        if (rows == -1 || r >= rows)
+                    if (rows == -1 || row >= rows || image == NULL) {
+                        if (rows == -1 || row >= rows)
                             rows += 100;
                         if (image == NULL) {
                             MALLOCARRAY(image, rows * planes);
@@ -146,20 +152,20 @@ main(argc, argv)
                     }
                     if (image == NULL || imlen == NULL)
                         pm_error("out of memory");
-                    if (p == planes)
+                    if (plane == planes)
                         pm_error("too many planes");
-                    cols = cols > val ? cols : val;
-                    imlen[r * planes + p] = val;
-                    MALLOCARRAY(image[r * planes + p], val);
-                    if (image[r * planes + p] == NULL)
+                    cols = MAX(cols, val);
+                    imlen[row * planes + plane] = val;
+                    MALLOCARRAY(image[row * planes + plane], val);
+                    if (image[row * planes + plane] == NULL)
                         pm_error("out of memory");
-                    if (fread(image[r * planes + p], 1, val, fp) != val)
+                    if (fread(image[row * planes + plane], 1, val, ifP) != val)
                         pm_error("short data");
                     if (c == 'V')
-                        p++;
+                        ++plane;
                     else {
-                        p = 0;
-                        r++;
+                        plane = 0;
+                        ++row;
                     }
                     break;
                 default:
@@ -168,7 +174,7 @@ main(argc, argv)
                 }
                 break;
             case 'p': /* Position */
-                if (p != 0)
+                if (plane != 0)
                     pm_error("changed position in the middle of "
                              "transferring planes");
                 switch (c) {
@@ -177,15 +183,15 @@ main(argc, argv)
                     break;
                 case 'Y':
                     if (buffer[0] == '+')
-                        val = r + val;
+                        val = row + val;
                     if (buffer[0] == '-')
-                        val = r - val;
-                    for (; val > r; r++)
-                        for (p = 0; p < 3; p++) {
-                            imlen[r * planes + p] = 0;
-                            image[r * planes + p] = NULL;
+                        val = row - val;
+                    for (; val > row; ++row)
+                        for (plane = 0; plane < 3; ++plane) {
+                            imlen[row * planes + plane] = 0;
+                            image[row * planes + plane] = NULL;
                         }
-                    r = val;
+                    row = val;
                     break;
                 default:
                     pm_message("uninmplemented <ESC>*%c%d%c", cmd, val, c);
@@ -194,64 +200,79 @@ main(argc, argv)
             default:
                 pm_message("uninmplemented <ESC>*%c%d%c", cmd, val, c);
                 break;
-            }
-        }
+             }
+        } /* case */
+        } /* switch */
     }
-    pm_close(fp);
-    rows = r;
+    pm_close(ifP);
+    rows = row;
     if (mode == 1) {
-        unsigned char *buf;
-        int newcols = 0;
-        newcols = 10240; /* It could not be larger that that! */
-        cols = 0;
-        for (r = 0; r < rows; r++) {
-            if (image[r * planes] == NULL)
+        int const newcols = 10240;  /* It could not be larger that that! */
+        unsigned char * buf;
+        unsigned int row;
+
+        for (row = 0, cols = 0; row < rows; ++row) {
+            unsigned int plane;
+            if (image[row * planes] == NULL)
                 continue;
-            for (p = 0; p < planes; p++) {
+            for (plane = 0; plane < planes; ++plane) {
+                unsigned int i;
+                unsigned int col;
                 MALLOCARRAY(buf, newcols);
                 if (buf == NULL)
                     pm_error("out of memory");
-                for (i = 0, c = 0; c < imlen[p + r * planes]; c += 2)
-                    for (cmd = image[p + r * planes][c],
-                             val = image[p + r * planes][c+1];
+                for (i = 0, col = 0;
+                     col < imlen[plane + row * planes];
+                     col += 2)
+                    for (cmd = image[plane + row * planes][col],
+                             val = image[plane + row * planes][col+1];
                          cmd >= 0 && i < newcols; cmd--, i++)
                         buf[i] = val;
-                cols = cols > i ? cols : i;
-                free(image[p + r * planes]);
+                cols = MAX(cols, i);
+                free(image[plane + row * planes]);
                 /*
                  * This is less than what we have so it realloc should
                  * not return null. Even if it does, tough! We will
                  * lose a line, and probably die on the next line anyway
                  */
-                image[p + r * planes] = (unsigned char *) realloc(buf, i);
+                image[plane + row * planes] = realloc(buf, i);
             }
         }
         cols *= 8;
     }
 
-
     ppm_writeppminit(stdout, cols, rows, (pixval) 255, 0);
     pixrow = ppm_allocrow(cols);
-    for (r = 0; r < rows; r++) {
-        if (image[r * planes] == NULL) {
-            for (c = 0; c < cols; c++)
-                PPM_ASSIGN(pixrow[c], 0, 0, 0);
+
+    for (row = 0; row < rows; ++row) {
+        if (image[row * planes] == NULL) {
+            unsigned int col;
+            for (col = 0; col < cols; ++col)
+                PPM_ASSIGN(pixrow[col], 0, 0, 0);
             continue;
         }
-        for (cmd = 0, c = 0; c < cols; c += 8, cmd++)
-            for (i = 0; i < 8 && c + i < cols; i++) {
-                for (p = 0; p < planes; p++)
-                    if (mode == 0 && cmd >= imlen[r * planes + p])
-                        bf[p] = 0;
-                    else
-                        bf[p] = (image[r * planes + p][cmd] &
-                                 (1 << (7 - i))) ? 255 : 0;
-                PPM_ASSIGN(pixrow[c + i], bf[0], bf[1], bf[2]);
+        {
+            unsigned int col;
+            unsigned int cmd;
+            for (cmd = 0, col = 0; col < cols; col += 8, ++cmd) {
+                unsigned int i;
+                for (i = 0; i < 8 && col + i < cols; ++i) {
+                    unsigned int plane;
+                    for (plane = 0; plane < planes; ++plane)
+                        if (mode == 0 && cmd >= imlen[row * planes + plane])
+                            bf[plane] = 0;
+                        else
+                            bf[plane] = (image[row * planes + plane][cmd] &
+                                     (1 << (7 - i))) ? 255 : 0;
+                    PPM_ASSIGN(pixrow[col + i], bf[0], bf[1], bf[2]);
+                }
             }
-        ppm_writeppmrow(stdout, pixrow, cols, (pixval) 255, 0);
+        }
+        ppm_writeppmrow(stdout, pixrow, cols, 255, 0);
     }
     pm_close(stdout);
-    exit(0);
+
+    return 0;
 }
 
 
