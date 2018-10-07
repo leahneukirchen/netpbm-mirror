@@ -58,7 +58,7 @@ parseCommandLine(int argc, char ** const argv,
         /* Uses and sets argc, argv, and some of *cmdlineP and others. */
     free(option_def);
 
-    if (argc-1 == 0) 
+    if (argc-1 == 0)
         cmdlineP->inputFileName = "-";
     else if (argc-1 != 1)
         pm_error("Program takes zero or one argument (filename).  You "
@@ -119,7 +119,7 @@ analyzeRaster(const struct pam * const pamP,
     unsigned int row;
     jmp_buf jmpbuf;
     int rc;
-    
+
     tuplerow = pnm_allocpamrow(pamP);
 
     pm_setusererrormsgfn(handleRowErrMsg);
@@ -178,13 +178,13 @@ clipPamRow(const struct pam * const pamP,
         unsigned int plane;
         for (plane = 0; plane < pamP->depth; ++plane) {
             if (tuplerow[col][plane] > pamP->maxval) {
-                if (verbose) 
+                if (verbose)
                     pm_message("Clipping: Row %u Col %u Plane %u.  "
                                "Sample value %lu exceeds the "
                                "image maxval of %lu",
                                row, col, plane, tuplerow[col][plane],
                                pamP->maxval);
-	            tuplerow[col][plane] = pamP->maxval;
+                tuplerow[col][plane] = pamP->maxval;
             }
         }
     }
@@ -211,7 +211,7 @@ copyGoodRows(const struct pam * const inpamP,
         clipPamRow(outpamP, tuplerow, row, verbose);
         pnm_writepamrow(outpamP, tuplerow);
     }
-    
+
     pnm_freepamrow(tuplerow);
 }
 
@@ -283,7 +283,7 @@ main(int argc, char * argv[]) {
     copyGoodRows(&tweakedPam, &outpam, cmdline.verbose);
 
     pm_close(inpam.file);
-    
+
     return 0;
 }
 
