@@ -96,10 +96,8 @@ readXvHeader(FILE *         const ifP,
     bufferSz = 0; /* initial value */
 
     pm_getline(ifP, &buf, &bufferSz, &eof, &lineLen);
-    if (eof)
-        pm_error("Unexpected EOF");
 
-    if (!strneq(buf, "P7 332", 6))
+    if (eof || !strneq(buf, "P7 332", 6))
         pm_error("Input is not a XV thumbnail picture.  It does not "
                  "begin with the characters 'P7 332'.");
 
@@ -108,7 +106,7 @@ readXvHeader(FILE *         const ifP,
         size_t lineLen;
         pm_getline(ifP, &buf, &bufferSz, &eof, &lineLen);
         if (eof)
-            pm_error("Unexpected EOF");
+            pm_error("EOF before #END_OF_COMMENTS line");
         if (strneq(buf, "#END_OF_COMMENTS", 16))
             endOfComments = true;
         else if (strneq(buf, "#BUILTIN", 8))
@@ -117,7 +115,7 @@ readXvHeader(FILE *         const ifP,
     }
     pm_getline(ifP, &buf, &bufferSz, &eof, &lineLen);
     if (eof)
-        pm_error("Unexpected EOF");
+        pm_error("EOF where cols/rows/maxval line expected");
 
     rc = sscanf(buf, "%u %u %u", &cols, &rows, &maxval);
     if (rc != 3)
