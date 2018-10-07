@@ -22,6 +22,8 @@ not yet  BJH  Release 10.85.00
 
               pjtoppm, pbmtoppa: fix arithmetic overflow.
 
+              Build: fix reference to nonexistent getline on Mac OS X 10.6.
+
               Build: fix reference to nonexistent strndup on Mac OS X 10.6.
 
 18.09.29 BJH  Release 10.84.00
