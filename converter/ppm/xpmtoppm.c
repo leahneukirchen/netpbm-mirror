@@ -941,8 +941,8 @@ convertRaster(FILE *                const ifP,
         if (imageOutFileP)
             ppm_writeppmrow(imageOutFileP,
                             pixrow, cols, PPM_MAXMAXVAL, 0);
-            if (alphaOutFileP)
-                pbm_writepbmrow(alphaOutFileP, alpharow, cols, 0);
+        if (alphaOutFileP)
+            pbm_writepbmrow(alphaOutFileP, alpharow, cols, 0);
     }
 
     pbm_freerow(alpharow);
