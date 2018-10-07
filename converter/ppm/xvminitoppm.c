@@ -13,12 +13,13 @@
 #include <assert.h>
 #include <string.h>
 #include <errno.h>
+#include <stdbool.h>
 
 #include "pm_c_util.h"
 #include "nstring.h"
+#include "pm.h"
 #include "ppm.h"
 
-#define BUFSIZE 256
 
 
 typedef struct xvPalette {
@@ -47,25 +48,6 @@ parseCommandLine(int const argc,
         if (argc-1 > 1)
             pm_error("Too many arguments: %u.  Only argument is optional "
                      "input file name.", argc-1);
-    }
-}
-
-
-
-static void
-getLine(FILE * const ifP,
-        char * const buf,
-        size_t const size) {
-
-    char * rc;
-
-    rc = fgets(buf, size, ifP);
-    if (rc == NULL) {
-        if (ferror(ifP))
-            pm_error("read error.  fgets() failed, errno=%d (%s)",
-                     errno, strerror(errno));
-        else
-            pm_error("unexpected EOF");
     }
 }
 
@@ -102,36 +84,54 @@ readXvHeader(FILE *         const ifP,
              unsigned int * const rowsP,
              unsigned int * const maxvalP) {
 
-    char buf[256];
+    char * buf;
+    size_t bufferSz;
+    int eof;
+    size_t lineLen;
     unsigned int cols, rows, maxval;
     int rc;
     bool endOfComments;
 
-    getLine(ifP, buf, sizeof(buf));
+    buf = NULL;   /* initial value */
+    bufferSz = 0; /* initial value */
+
+    pm_getline(ifP, &buf, &bufferSz, &eof, &lineLen);
+    if (eof)
+        pm_error("Unexpected EOF");
 
     if (!strneq(buf, "P7 332", 6))
         pm_error("Input is not a XV thumbnail picture.  It does not "
                  "begin with the characters 'P7 332'.");
 
-    endOfComments = FALSE;
-    while (!endOfComments) {
-        getLine(ifP, buf, sizeof(buf));
+    for (endOfComments = false; !endOfComments; ) {
+        int eof;
+        size_t lineLen;
+        pm_getline(ifP, &buf, &bufferSz, &eof, &lineLen);
+        if (eof)
+            pm_error("Unexpected EOF");
         if (strneq(buf, "#END_OF_COMMENTS", 16))
-            endOfComments = TRUE;
+            endOfComments = true;
         else if (strneq(buf, "#BUILTIN", 8))
             pm_error("This program does not know how to "
                      "convert builtin XV thumbnail pictures");
     }
-    getLine(ifP, buf, sizeof(buf));
+    pm_getline(ifP, &buf, &bufferSz, &eof, &lineLen);
+    if (eof)
+        pm_error("Unexpected EOF");
+
     rc = sscanf(buf, "%u %u %u", &cols, &rows, &maxval);
     if (rc != 3)
         pm_error("error parsing dimension info '%s'.  "
                  "It does not consist of 3 decimal numbers.", buf);
     if (maxval != 255)
         pm_error("bogus XV thumbnail maxval %u.  Should be 255", maxval);
+
     *colsP = cols;
     *rowsP = rows;
     *maxvalP = maxval;
+
+    if (buf)
+        free(buf);
 }
 
 
