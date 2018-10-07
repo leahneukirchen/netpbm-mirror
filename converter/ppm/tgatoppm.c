@@ -79,14 +79,14 @@ parseCommandLine(int argc, char ** argv,
         cmdlineP->input_filename = "-";  /* he wants stdin */
     else if (argc - 1 == 1)
         cmdlineP->input_filename = strdup(argv[1]);
-    else 
+    else
         pm_error("Too many arguments.  The only argument accepted "
                  "is the input file specification");
 
     if (alpha_spec &&
         streq(cmdlineP->alpha_filename, "-"))
         cmdlineP->alpha_stdout = 1;
-    else 
+    else
         cmdlineP->alpha_stdout = 0;
 
     if (!alpha_spec)
@@ -103,7 +103,7 @@ getbyte(FILE * const ifP) {
 
     if ( fread( (char*) &c, 1, 1, ifP ) != 1 )
         pm_error( "EOF / read error" );
-    
+
     return c;
 }
 
@@ -217,7 +217,7 @@ readtga(FILE * const ifP, struct ImageHeader * tgaP) {
     tgaP->Rsrvd = ( flags & 0x10 ) >> 4;
     tgaP->OrgBit = ( flags & 0x20 ) >> 5;
     tgaP->IntrLve = ( flags & 0xc0 ) >> 6;
-    
+
     if ( tgaP->IdLength != 0 )
         fread( junk, 1, (int) tgaP->IdLength, ifP );
 }
@@ -236,7 +236,7 @@ get_map_entry(FILE * const ifP, pixel * Value, int Size, gray * Alpha) {
         r = g = b = getbyte( ifP );
         a = 0;
         break;
-        
+
 	case 16:			/* 5 bits each of red green and blue. */
 	case 15:			/* Watch for byte order. */
         j = getbyte( ifP );
@@ -246,7 +246,7 @@ get_map_entry(FILE * const ifP, pixel * Value, int Size, gray * Alpha) {
         b = j & 0x1F;
         a = 0;
         break;
-        
+
 	case 32:            /* 8 bits each of blue, green, red, and alpha */
 	case 24:			/* 8 bits each of blue green and red. */
         b = getbyte( ifP );
@@ -254,10 +254,10 @@ get_map_entry(FILE * const ifP, pixel * Value, int Size, gray * Alpha) {
         r = getbyte( ifP );
         if ( Size == 32 )
             a = getbyte( ifP );
-        else 
+        else
             a = 0;
         break;
-        
+
 	default:
         pm_error( "unknown colormap pixel size (#2) - %d", Size );
 	}
@@ -326,20 +326,20 @@ main(int argc, char * argv[]) {
 
     if (cmdline.alpha_stdout)
         alpha_file = stdout;
-    else if (cmdline.alpha_filename == NULL) 
+    else if (cmdline.alpha_filename == NULL)
         alpha_file = NULL;
     else
         alpha_file = pm_openw(cmdline.alpha_filename);
-    
-    if (cmdline.alpha_stdout) 
+
+    if (cmdline.alpha_stdout)
         imageout_file = NULL;
     else
         imageout_file = stdout;
-    
+
     /* Read the Targa file header. */
     readtga(ifP, &tga_head);
 
-    if (cmdline.headerdump) 
+    if (cmdline.headerdump)
         dumpHeader(tga_head);
 
     rows = ((int) tga_head.Height_lo) + ((int) tga_head.Height_hi) * 256;
@@ -356,14 +356,14 @@ main(int argc, char * argv[]) {
 	default:
         pm_error("unknown Targa image type %d", tga_head.ImgType);
 	}
-    
+
     if (tga_head.ImgType == TGA_Map ||
         tga_head.ImgType == TGA_RLEMap ||
         tga_head.ImgType == TGA_CompMap ||
         tga_head.ImgType == TGA_CompMap4)
 	{ /* Color-mapped image */
         if (tga_head.CoMapType != 1)
-            pm_error( 
+            pm_error(
                 "mapped image (type %d) with color map type != 1",
                 tga_head.ImgType );
         mapped = true;
@@ -384,7 +384,7 @@ main(int argc, char * argv[]) {
 	    pm_error(
 		"unknown colormap pixel size - %d", tga_head.CoSize );
 	    }
-	} else { 
+	} else {
         /* Not colormap, so figure maxval from PixelSize. */
         mapped = false;
         switch ( tga_head.PixelSize ) {
@@ -393,17 +393,17 @@ main(int argc, char * argv[]) {
 	    case 32:
             maxval = 255;
             break;
-            
+
 	    case 15:
 	    case 16:
             maxval = 31;
             break;
-            
+
 	    default:
             pm_error("unknown pixel size - %d", tga_head.PixelSize);
 	    }
 	}
-    
+
     /* If required, read the color map information. */
     if ( tga_head.CoMapType != 0 ) {
         unsigned int i;
@@ -425,7 +425,7 @@ main(int argc, char * argv[]) {
         rlencoded = 1;
     else
         rlencoded = 0;
-    
+
     /* Read the Targa file body and convert to portable format. */
     pixels = ppm_allocarray( cols, rows );
     alpha = pgm_allocarray( cols, rows );
@@ -437,7 +437,7 @@ main(int argc, char * argv[]) {
         realrow = truerow;
         if (tga_head.OrgBit == 0)
             realrow = rows - realrow - 1;
-        
+
         for (col = 0; col < cols; ++col)
             get_pixel(ifP, &(pixels[realrow][col]), (int) tga_head.PixelSize,
                       &(alpha[realrow][col]));
@@ -451,12 +451,12 @@ main(int argc, char * argv[]) {
             truerow = ++baserow;
 	}
     pm_close(ifP);
-    
-    if (imageout_file) 
+
+    if (imageout_file)
         ppm_writeppm(imageout_file, pixels, cols, rows, (pixval) maxval, 0);
     if (alpha_file)
         pgm_writepgm(alpha_file, alpha, cols, rows, (pixval) maxval, 0);
-    if (imageout_file) 
+    if (imageout_file)
         pm_close(imageout_file);
     if (alpha_file)
         pm_close(alpha_file);
