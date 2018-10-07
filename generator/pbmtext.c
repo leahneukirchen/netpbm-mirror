@@ -364,10 +364,11 @@ fixControlChars(const PM_WCHAR  * const input,
                 output[outCursor++] = L' ';
         } else if (currentChar > fontP->maxglyph ||
                    !fontP->glyph[currentChar]) {
-        if (currentChar > PM_FONT2_MAXGLYPH)
-            pm_message("code point %X is beyond what this program "
-                       "can handle.  Max=%X",
-                       (unsigned int)currentChar, PM_FONT2_MAXGLYPH);
+            if (currentChar > PM_FONT2_MAXGLYPH)
+                pm_message("code point %X is beyond what this program "
+                           "can handle.  Max=%X",
+                           (unsigned int)currentChar, PM_FONT2_MAXGLYPH);
+
             /* Turn this unknown char into a single space. */
             if (fontP->glyph[L' '] == NULL)
                 pm_error("space character not defined in font");
