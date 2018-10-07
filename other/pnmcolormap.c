@@ -836,7 +836,7 @@ colormapToSquare(struct pam * const pamP,
                  tuple ***    const outputRasterP) {
     {
         unsigned int const intsqrt = (int)sqrt((float)colormap.size);
-        if (intsqrt * intsqrt == colormap.size)
+        if (SQR(intsqrt) == colormap.size)
             pamP->width = intsqrt;
         else
             pamP->width = intsqrt + 1;
