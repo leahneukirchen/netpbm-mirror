@@ -733,7 +733,7 @@ parsePlaneFileLine(const char *   const line,
                          "-matrix value is not a valid floating point "
                          "number", colCt, line);
 
-                ++colCt;
+            ++colCt;
         }
         pm_strfree(token);
     }
