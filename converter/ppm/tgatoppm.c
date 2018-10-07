@@ -110,82 +110,84 @@ getbyte(FILE * const ifP) {
 
 
 static void
-get_pixel(FILE * const ifP, pixel * dest, int Size, gray *alpha_p) {
+getPixel(FILE *  const ifP,
+         pixel * const dest,
+         int     const size,
+         gray *  const alphaP) {
 
-    static pixval Red, Grn, Blu;
-    static pixval Alpha;
+    pixval red, grn, blu;
+    pixval alpha;
     unsigned char j, k;
-    static unsigned int l;
+    unsigned int l;
 
     /* Check if run length encoded. */
-    if ( rlencoded )
-	{
-	if ( RLE_count == 0 )
-	    { /* Have to restart run. */
-	    unsigned char i;
-	    i = getbyte( ifP );
-	    RLE_flag = ( i & 0x80 );
-	    if ( RLE_flag == 0 )
-		/* Stream of unencoded pixels. */
-		RLE_count = i + 1;
-	    else
-		/* Single pixel replicated. */
-		RLE_count = i - 127;
-	    /* Decrement count & get pixel. */
-	    --RLE_count;
-	    }
-	else
-	    { /* Have already read count & (at least) first pixel. */
-	    --RLE_count;
-	    if ( RLE_flag != 0 )
-		/* Replicated pixels. */
-		goto PixEncode;
-	    }
-	}
+    if (rlencoded) {
+        if (RLE_count == 0) {
+            /* Have to restart run. */
+            unsigned char i;
+            i = getbyte(ifP);
+            RLE_flag = (i & 0x80);
+            if (RLE_flag == 0) {
+                /* Stream of unencoded pixels. */
+                RLE_count = i + 1;
+            } else {
+                /* Single pixel replicated. */
+                RLE_count = i - 127;
+            }
+            /* Decrement count & get pixel. */
+            --RLE_count;
+        } else {
+            /* Have already read count & (at least) first pixel. */
+            --RLE_count;
+            if (RLE_flag != 0) {
+                /* Replicated pixels. */
+                goto PixEncode;
+            }
+        }
+    }
     /* Read appropriate number of bytes, break into RGB. */
-    switch ( Size )
-	{
-	case 8:				/* Grayscale, read and triplicate. */
-	Red = Grn = Blu = l = getbyte( ifP );
-    Alpha = 0;
-	break;
+    switch (size) {
+    case 8:             /* Grayscale, read and triplicate. */
+        red = grn = blu = l = getbyte(ifP);
+        alpha = 0;
+        break;
 
-	case 16:			/* 5 bits each of red green and blue. */
-	case 15:			/* Watch byte order. */
-	j = getbyte( ifP );
-	k = getbyte( ifP );
-	l = ( (unsigned int) k << 8 ) + j;
-	Red = ( k & 0x7C ) >> 2;
-	Grn = ( ( k & 0x03 ) << 3 ) + ( ( j & 0xE0 ) >> 5 );
-	Blu = j & 0x1F;
-    Alpha = 0;
-	break;
+    case 16:            /* 5 bits each of red green and blue. */
+    case 15:            /* Watch byte order. */
+        j = getbyte(ifP);
+        k = getbyte(ifP);
+        l = ((unsigned int)k << 8) + j;
+        red = (k & 0x7C) >> 2;
+        grn = ((k & 0x03) << 3) + ((j & 0xE0) >> 5);
+        blu = j & 0x1F;
+        alpha = 0;
+        break;
 
-	case 32:            /* 8 bits each of blue, green, red, and alpha */
-	case 24:			/* 8 bits each of blue, green, and red. */
-	Blu = getbyte( ifP );
-	Grn = getbyte( ifP );
-	Red = getbyte( ifP );
-	if ( Size == 32 )
-	    Alpha = getbyte( ifP );
-    else
-        Alpha = 0;
-	l = 0;
-	break;
+    case 32:            /* 8 bits each of blue, green, red, and alpha */
+    case 24:            /* 8 bits each of blue, green, and red. */
+        blu = getbyte(ifP);
+        grn = getbyte(ifP);
+        red = getbyte(ifP);
+        if (size == 32)
+            alpha = getbyte(ifP);
+        else
+            alpha = 0;
+        l = 0;
+        break;
 
-	default:
-	pm_error( "unknown pixel size (#2) - %d", Size );
-	}
+    default:
+        pm_error("unknown pixel size (#2) - %d", size);
+    }
 
 PixEncode:
-    if ( mapped ) {
+    if (mapped) {
         *dest = ColorMap[l];
-        *alpha_p = AlphaMap[l];
+        *alphaP = AlphaMap[l];
     } else {
-        PPM_ASSIGN( *dest, Red, Grn, Blu );
-        *alpha_p = Alpha;
+        PPM_ASSIGN(*dest, red, grn, blu);
+        *alphaP = alpha;
     }
-    }
+}
 
 
 
@@ -231,14 +233,14 @@ get_map_entry(FILE * const ifP, pixel * Value, int Size, gray * Alpha) {
 
     /* Read appropriate number of bytes, break into rgb & put in map. */
     switch ( Size )
-	{
-	case 8:				/* Grayscale, read and triplicate. */
+    {
+    case 8:             /* Grayscale, read and triplicate. */
         r = g = b = getbyte( ifP );
         a = 0;
         break;
 
-	case 16:			/* 5 bits each of red green and blue. */
-	case 15:			/* Watch for byte order. */
+    case 16:            /* 5 bits each of red green and blue. */
+    case 15:            /* Watch for byte order. */
         j = getbyte( ifP );
         k = getbyte( ifP );
         r = ( k & 0x7C ) >> 2;
@@ -247,8 +249,8 @@ get_map_entry(FILE * const ifP, pixel * Value, int Size, gray * Alpha) {
         a = 0;
         break;
 
-	case 32:            /* 8 bits each of blue, green, red, and alpha */
-	case 24:			/* 8 bits each of blue green and red. */
+    case 32:            /* 8 bits each of blue, green, red, and alpha */
+    case 24:            /* 8 bits each of blue green and red. */
         b = getbyte( ifP );
         g = getbyte( ifP );
         r = getbyte( ifP );
@@ -258,9 +260,9 @@ get_map_entry(FILE * const ifP, pixel * Value, int Size, gray * Alpha) {
             a = 0;
         break;
 
-	default:
+    default:
         pm_error( "unknown colormap pixel size (#2) - %d", Size );
-	}
+    }
     PPM_ASSIGN( *Value, r, g, b );
     *Alpha = a;
 }
@@ -346,22 +348,22 @@ main(int argc, char * argv[]) {
     cols = ((int) tga_head.Width_lo)  + ((int) tga_head.Width_hi)  * 256;
 
     switch (tga_head.ImgType) {
-	case TGA_Map:
-	case TGA_RGB:
-	case TGA_Mono:
-	case TGA_RLEMap:
-	case TGA_RLERGB:
-	case TGA_RLEMono:
+    case TGA_Map:
+    case TGA_RGB:
+    case TGA_Mono:
+    case TGA_RLEMap:
+    case TGA_RLERGB:
+    case TGA_RLEMono:
         break;
-	default:
+    default:
         pm_error("unknown Targa image type %d", tga_head.ImgType);
-	}
+    }
 
     if (tga_head.ImgType == TGA_Map ||
         tga_head.ImgType == TGA_RLEMap ||
         tga_head.ImgType == TGA_CompMap ||
         tga_head.ImgType == TGA_CompMap4)
-	{ /* Color-mapped image */
+    { /* Color-mapped image */
         if (tga_head.CoMapType != 1)
             pm_error(
                 "mapped image (type %d) with color map type != 1",
@@ -369,40 +371,40 @@ main(int argc, char * argv[]) {
         mapped = true;
         /* Figure maxval from CoSize. */
         switch (tga_head.CoSize) {
-	    case 8:
-	    case 24:
-	    case 32:
+        case 8:
+        case 24:
+        case 32:
             maxval = 255;
             break;
 
-	    case 15:
-	    case 16:
+        case 15:
+        case 16:
             maxval = 31;
             break;
 
-	    default:
-	    pm_error(
-		"unknown colormap pixel size - %d", tga_head.CoSize );
-	    }
-	} else {
+        default:
+        pm_error(
+        "unknown colormap pixel size - %d", tga_head.CoSize );
+        }
+    } else {
         /* Not colormap, so figure maxval from PixelSize. */
         mapped = false;
         switch ( tga_head.PixelSize ) {
-	    case 8:
-	    case 24:
-	    case 32:
+        case 8:
+        case 24:
+        case 32:
             maxval = 255;
             break;
 
-	    case 15:
-	    case 16:
+        case 15:
+        case 16:
             maxval = 31;
             break;
 
-	    default:
+        default:
             pm_error("unknown pixel size - %d", tga_head.PixelSize);
-	    }
-	}
+        }
+    }
 
     /* If required, read the color map information. */
     if ( tga_head.CoMapType != 0 ) {
@@ -416,7 +418,7 @@ main(int argc, char * argv[]) {
         for (i = temp1; i < (temp1 + temp2); ++i)
             get_map_entry(ifP, &ColorMap[i], (int) tga_head.CoSize,
                           &AlphaMap[i]);
-	}
+    }
 
     /* Check run-length encoding. */
     if (tga_head.ImgType == TGA_RLEMap ||
@@ -439,8 +441,8 @@ main(int argc, char * argv[]) {
             realrow = rows - realrow - 1;
 
         for (col = 0; col < cols; ++col)
-            get_pixel(ifP, &(pixels[realrow][col]), (int) tga_head.PixelSize,
-                      &(alpha[realrow][col]));
+            getPixel(ifP, &(pixels[realrow][col]), (int) tga_head.PixelSize,
+                     &(alpha[realrow][col]));
         if (tga_head.IntrLve == TGA_IL_Four)
             truerow += 4;
         else if (tga_head.IntrLve == TGA_IL_Two)
@@ -449,7 +451,7 @@ main(int argc, char * argv[]) {
             ++truerow;
         if (truerow >= rows)
             truerow = ++baserow;
-	}
+    }
     pm_close(ifP);
 
     if (imageout_file)
@@ -463,3 +465,6 @@ main(int argc, char * argv[]) {
 
     return 0;
 }
+
+
+
