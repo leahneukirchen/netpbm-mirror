@@ -131,7 +131,8 @@ main(int argc, const char ** argv) {
 
     framebuffer_info fbi;
     boundary_info bi;
-    input_info ii;
+    Input input;
+    bool no_more_commands;
 
     pm_proginit(&argc, (const char**)argv);
 
@@ -155,11 +156,12 @@ main(int argc, const char ** argv) {
 
     init_boundary_buffer(&bi, fbi.height);
 
-    init_input_processor(&ii);
+    input_init(&input);
 
-    while (process_next_command(&ii, &bi, &fbi));
+    for (no_more_commands = false; !no_more_commands; )
+        input_process_next_command(&input, &bi, &fbi, &no_more_commands);
 
-    free_input_processor(&ii);
+    input_term(&input);
     free_boundary_buffer(&bi);
     free_framebuffer(&fbi);
 
