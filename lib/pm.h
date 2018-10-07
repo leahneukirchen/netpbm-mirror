@@ -373,6 +373,13 @@ char*
 pm_read_unknown_size(FILE * const ifP,
                      long * const buf);
 
+void
+pm_getline(FILE *   const ifP,
+           char **  const bufferP,
+           size_t * const bufferSzP,
+           int *    const eofP,
+           size_t * const lineLenP);
+
 short
 pm_bs_short(short const s);
 
