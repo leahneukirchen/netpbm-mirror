@@ -10,6 +10,7 @@
 #include <ctype.h>
 
 #include "netpbm/mallocvar.h"
+#include "netpbm/pm.h"
 
 #include "limits_pamtris.h"
 #include "framebuffer.h"
@@ -85,9 +86,8 @@ clear_attribs(state_info * const si,
 void
 init_input_processor(input_info * const ii) {
 
-    MALLOCARRAY_NOFAIL(ii->buffer, 128);
-
-    ii->length = 128;
+    ii->buffer = NULL;
+    ii->length = 0;
     ii->number = 1;
 }
 
@@ -95,7 +95,9 @@ init_input_processor(input_info * const ii) {
 
 void
 free_input_processor(input_info * const ii) {
-    free(ii->buffer);
+
+    if (ii->buffer)
+        free(ii->buffer);
 }
 
 
@@ -238,8 +240,14 @@ process_next_command(input_info           * const line,
         state.initialized = true;
     }
 
-    if (getline(&line->buffer, &line->length, stdin) == -1) {
-        return 0;
+    {
+        int eof;
+        size_t lineLen;
+
+        pm_getline(stdin, &line->buffer, &line->length, &eof, &lineLen);
+
+        if (eof)
+            return 0;
     }
 
     remove_comments(line->buffer);

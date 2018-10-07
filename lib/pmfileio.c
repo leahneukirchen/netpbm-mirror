@@ -839,6 +839,73 @@ pm_read_unknown_size(FILE * const file,
 
 
 
+void
+pm_getline(FILE *   const ifP,
+           char **  const bufferP,
+           size_t * const bufferSzP,
+           int *    const eofP,
+           size_t * const lineLenP) {
+/*----------------------------------------------------------------------------
+   This is like POSIX 'getline'.
+
+   But we don't include the newline in the returned line.
+-----------------------------------------------------------------------------*/
+    char * buffer;
+    size_t bufferSz;
+    bool gotLine;
+    bool eof;
+    size_t nReadSoFar;
+
+    buffer   = *bufferP;    /* initial value */
+    bufferSz = *bufferSzP;  /* initial value */
+
+    for (nReadSoFar = 0, gotLine = false, eof = false;
+         !gotLine && !eof; ) {
+
+        int rc;
+
+        rc = fgetc(ifP);
+
+        if (rc == EOF) {
+            if (ferror(ifP))
+                pm_error("Error reading input file.  fgets() failed with "
+                         "errno %d (%s)", errno, strerror(errno));
+
+            if (nReadSoFar == 0) {
+                /* Didn't get anything before EOF, so return EOF */
+                eof = true;
+            } else {
+                /* End of file ends the line */
+                gotLine = true;
+            }
+        } else {
+            char const c = (char)rc;
+
+            if (c == '\n') {
+                /* Newline ends the line, and is not part of it */
+                gotLine = true;
+            } else {
+                if (nReadSoFar + 2 > bufferSz) {
+                    /* + 2 = 1 for 'c', one for terminating NUL */
+                    bufferSz += 128;
+                    REALLOCARRAY(buffer, bufferSz);
+                }
+                buffer[nReadSoFar++] = c;
+            }
+        }
+    }
+
+    if (gotLine)
+        buffer[nReadSoFar] = '\0';
+
+    *eofP      = eof;
+    *bufferP   = buffer;
+    *bufferSzP = bufferSz;
+    *lineLenP  = nReadSoFar;
+}
+
+
+
 union cheat {
     uint32_t l;
     short s;
