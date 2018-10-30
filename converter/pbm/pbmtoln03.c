@@ -259,7 +259,7 @@ main (int argc, char **argv) {
    convert (ifP, width, height, format) ;
 
    /* Terminate sixel data */
-   puts ("\033\\\n") ;
+   puts ("\033\\") ;
 
    /* If the program failed, it previously aborted with nonzero completion
       code, via various function calls.
