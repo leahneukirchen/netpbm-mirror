@@ -115,10 +115,10 @@ getPixel(FILE *  const ifP,
          int     const size,
          gray *  const alphaP) {
 
-    pixval red, grn, blu;
-    pixval alpha;
+    static pixval red, grn, blu;
+    static pixval alpha;
+    static unsigned int l;
     unsigned char j, k;
-    unsigned int l;
 
     /* Check if run length encoded. */
     if (rlencoded) {
