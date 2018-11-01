@@ -30,7 +30,6 @@ static int mapped, rlencoded;
 
 static pixel ColorMap[MAXCOLORS];
 static gray AlphaMap[MAXCOLORS];
-static int RLE_count = 0, RLE_flag = 0;
 
 struct cmdlineInfo {
     /* All the information the user supplied in the command line,
@@ -109,18 +108,14 @@ getbyte(FILE * const ifP) {
 
 
 
+static int RLE_count = 0, RLE_flag = 0;
+
+
+
 static void
-getPixel(FILE *  const ifP,
-         pixel * const dest,
-         int     const size,
-         gray *  const alphaP) {
+handleRun(FILE * const ifP,
+          bool * const repeatP) {
 
-    static pixval red, grn, blu;
-    static pixval alpha;
-    static unsigned int l;
-    unsigned char j, k;
-
-    /* Check if run length encoded. */
     if (rlencoded) {
         if (RLE_count == 0) {
             /* Have to restart run. */
@@ -136,50 +131,74 @@ getPixel(FILE *  const ifP,
             }
             /* Decrement count & get pixel. */
             --RLE_count;
+            *repeatP = false;
         } else {
             /* Have already read count & (at least) first pixel. */
             --RLE_count;
             if (RLE_flag != 0) {
                 /* Replicated pixels. */
-                goto PixEncode;
-            }
+                *repeatP = true;
+            } else
+                *repeatP = false;
+        }
+    } else
+        *repeatP = false;
+}
+
+
+
+static void
+getPixel(FILE *  const ifP,
+         pixel * const dest,
+         int     const size,
+         gray *  const alphaP) {
+
+    static pixval red, grn, blu;
+    static pixval alpha;
+    static unsigned int l;
+    unsigned char j, k;
+    bool repeat;
+        /* Next pixel is just a repeat (from an encoded run) */
+
+    handleRun(ifP, &repeat);
+
+    if (repeat) {
+        /* Use red, grn, blu, alpha, and l from prior call to getPixel */
+    } else {
+        /* Read appropriate number of bytes, break into RGB. */
+        switch (size) {
+        case 8:             /* Grayscale, read and triplicate. */
+            red = grn = blu = l = getbyte(ifP);
+            alpha = 0;
+            break;
+
+        case 16:            /* 5 bits each of red green and blue. */
+        case 15:            /* Watch byte order. */
+            j = getbyte(ifP);
+            k = getbyte(ifP);
+            l = ((unsigned int)k << 8) + j;
+            red = (k & 0x7C) >> 2;
+            grn = ((k & 0x03) << 3) + ((j & 0xE0) >> 5);
+            blu = j & 0x1F;
+            alpha = 0;
+            break;
+
+        case 32:            /* 8 bits each of blue, green, red, and alpha */
+        case 24:            /* 8 bits each of blue, green, and red. */
+            blu = getbyte(ifP);
+            grn = getbyte(ifP);
+            red = getbyte(ifP);
+            if (size == 32)
+                alpha = getbyte(ifP);
+            else
+                alpha = 0;
+            l = 0;
+            break;
+
+        default:
+            pm_error("unknown pixel size (#2) - %d", size);
         }
     }
-    /* Read appropriate number of bytes, break into RGB. */
-    switch (size) {
-    case 8:             /* Grayscale, read and triplicate. */
-        red = grn = blu = l = getbyte(ifP);
-        alpha = 0;
-        break;
-
-    case 16:            /* 5 bits each of red green and blue. */
-    case 15:            /* Watch byte order. */
-        j = getbyte(ifP);
-        k = getbyte(ifP);
-        l = ((unsigned int)k << 8) + j;
-        red = (k & 0x7C) >> 2;
-        grn = ((k & 0x03) << 3) + ((j & 0xE0) >> 5);
-        blu = j & 0x1F;
-        alpha = 0;
-        break;
-
-    case 32:            /* 8 bits each of blue, green, red, and alpha */
-    case 24:            /* 8 bits each of blue, green, and red. */
-        blu = getbyte(ifP);
-        grn = getbyte(ifP);
-        red = getbyte(ifP);
-        if (size == 32)
-            alpha = getbyte(ifP);
-        else
-            alpha = 0;
-        l = 0;
-        break;
-
-    default:
-        pm_error("unknown pixel size (#2) - %d", size);
-    }
-
-PixEncode:
     if (mapped) {
         *dest = ColorMap[l];
         *alphaP = AlphaMap[l];
