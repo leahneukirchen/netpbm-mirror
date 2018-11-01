@@ -22,9 +22,9 @@
 
 ===============================================================================
 
-  Packbits is a simple yet efficient simple run-length compression method.  It
-  has a provision for uncompressed sequences which allows efficient encoding
-  of noisy input.
+  Packbits is a simple yet efficient simple run-length compression method.
+  It has a provision for uncompressed sequences which allows efficient
+  encoding of noisy input.
 
   A survey of netpbm source code in 2015 found Packbits encoding in the
   following Netpbm programs: pbmtoescp2, pbmtomacp, pnmtopalm, pnmtopclxl,
@@ -34,8 +34,8 @@
   images that use Packbits compression, but does so via code in the TIFF
   library (not part of Netpbm).
 
-  Variants of Packbits are employed in pnmtosgi,  pamtopdbimg,  pbmtoppa
-  and  pbmtogo.
+  Variants of Packbits are employed in pnmtosgi, pamtopdbimg, pbmtoppa
+  pbmtogo and pamtotga.
 
   All the above programs formerly did the same compression through different
   code.  This redundancy bloated the Netpbm package and made maintenance
@@ -46,7 +46,8 @@
   called "run length encoding."  In ppmtoilbm the name is "byterun1."
 
   Today, all Netpbm programs that do Packbits compression with the exception
-  of pbmtoppa and pbmtogo use the facilities   in this file for it.  
+  of pamtotiff, pbmtoppa, pbmtogo and pamtotga use the facilities in this
+  file for it.  
 =============================================================================*/
 
 #include <string.h>
@@ -184,11 +185,11 @@ pm_rlenc_compressword(const uint16_t   * const inbuf,
                       size_t             const inSize,
                       size_t           * const outputSizeP) {
 /*---------------------------------------------------------------------------
-   Similar to pm_rlenc_byte(), but this works with two-byte elements.  The
-   difference between SGI16 and PALM16 is the size of the flag.  SGI16 : 16
-   bits; PALM16 : 8 bits
+   Similar to pm_rlenc_compressbyte(), but this works with two-byte elements.
+   The difference between SGI16 and PALM16 is the size of the flag.
+   SGI16 : 16 bits; PALM16 : 8 bits
 
-   'inSize' is a number of words,but *outputSizeP is a number of bytes.
+   'inSize' is a number of words, but *outputSizeP is a number of bytes.
 -----------------------------------------------------------------------------*/
     size_t inCurs, outCurs;
     size_t flagSz;
@@ -277,9 +278,9 @@ pm_rlenc_compressword(const uint16_t   * const inbuf,
    different from its neighbors.
 
    A compressed block is one that encodes a sequence of identical values
-   (which could be a run or just part of a run) as a value and a count.
-   count.  An uncompressed block is one that encodes a sequence of any values
-   by listing the values individually.
+   (which could be a run or just part of a very long run) as a value and
+   a count.  An uncompressed block is one that encodes a sequence of any
+   values by listing the values individually.
 
    Start by encoding the entire input as uncompressed blocks.  Seek runs that
    can be encoded with compressed blocks, but only if doing so doesn't make
@@ -330,11 +331,12 @@ pm_rlenc_maxbytes(size_t          const inSize,  /* number of elements */
    /* The upper limit could be raised above INT_MAX, but no program needs that
       today.
    */
-    size_t blockSize;
-    size_t flagSize;
-    size_t itemSize;
-    size_t miscSize;
-    size_t overhead;
+    size_t blockSize;  /* Number of items in data block */
+    size_t flagSize;   /* Size of flag, in bytes */
+    size_t itemSize;   /* Size of item, in bytes */
+    size_t miscSize;   /* Size of other elements such as term code, in bytes */
+    size_t overhead;   /* Worst-case overhead, in bytes */
+    /* return value:      Worst-case output size, in bytes */ 
 
     switch (mode) {
     case PM_RLE_PACKBITS:
