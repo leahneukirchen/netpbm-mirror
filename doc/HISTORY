@@ -13,6 +13,9 @@ not yet  BJH  Release 10.85.00
               picttoppm: accept rectangle specifications in input that have
               the corners in any order, not just upper left, then lower right.
 
+              pamtotga: identify compressed colormapped format in error
+              message saying the program doesn't know how to interpret it.
+              
               libnetpbm: Fix invalid memory reference in color name processing
               when trivial memory allocation fails.
 

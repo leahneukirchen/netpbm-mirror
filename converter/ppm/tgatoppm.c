@@ -374,6 +374,11 @@ main(int argc, char * argv[]) {
     case TGA_RLERGB:
     case TGA_RLEMono:
         break;
+    case TGA_CompMap:
+    case TGA_CompMap4:
+        pm_error("Targa image type %d (compressed color-mapped data). "
+                 "Cannot handle this format.", tga_head.ImgType);
+        break;
     default:
         pm_error("unknown Targa image type %d", tga_head.ImgType);
     }
