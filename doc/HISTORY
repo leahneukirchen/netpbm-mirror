@@ -4,6 +4,25 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
+18.11.02 BJH  Release 10.73.22
+
+              picttoppm: accept rectangle specifications in input that have
+              the corners in any order, not just upper left, then lower right.
+
+              libnetpbm: Fix invalid memory reference in color name processing
+              when trivial memory allocation fails.
+
+              pamtojpeg2k: fix incorrect interpretation of -ilyrrates option
+              when it contains multiple delimiter characters in a row.  Always
+              broken (pamtojpeg2k was new in Netpbm 10.12 (November 2002)).
+
+              pamtojpeg2k: Fix incorrect metadata in output with GRAYSCALE PAM
+              input.  Always broken (pamtojpeg2k was new in Netpbm 10.12
+              (November 2002)).
+
+              pnmtojbig: fix incorrect handling of -x option.  Always broken
+              (pnmtojbig was new in Netpbm 9.2 (May 2000)).
+
 18.09.29 BJH  Release 10.73.21
 
               pstopnm: Fix divide-by-zero crash when Postscript input says

@@ -354,7 +354,7 @@ convertToJasperImage(struct pam *   const inpamP,
                                   JAS_IMAGE_CT_COLOR(JAS_IMAGE_CT_RGB_B));
         }
     } else {
-        if (strncmp(inpamP->tuple_type, "GRAYSCALE", 9 == 0) ||
+        if (strncmp(inpamP->tuple_type, "GRAYSCALE", 9) == 0 ||
             strncmp(inpamP->tuple_type, "BLACKANDWHITE", 13) == 0) {
             jas_image_setclrspc(jasperP, JAS_CLRSPC_GENGRAY);
             jas_image_setcmpttype(jasperP, 0,

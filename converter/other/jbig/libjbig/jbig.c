@@ -889,7 +889,7 @@ void jbg_enc_options(struct jbg_enc_state *s, int order, int options,
   if (order >= 0 && order <= 0x0f) s->order = order;
   if (options >= 0) s->options = options;
   if (l0 > 0) s->l0 = l0;
-  if (mx >= 0 && my < 128) s->mx = mx;
+  if (mx >= 0 && mx < 128) s->mx = mx;
   if (my >= 0 && my < 256) s->my = my;
 
   return;

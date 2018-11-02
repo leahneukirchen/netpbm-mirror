@@ -794,19 +794,25 @@ dumpRect(const char * const label,
 static void
 readRect(struct Rect * const r) {
 
-    r->top    = readWord();
-    r->left   = readWord();
-    r->bottom = readWord();
-    r->right  = readWord();
+    /* We don't have a formal specification for the Pict format, but we have
+       seen samples that have the rectangle corners either in top left, bottom
+       right order or bottom right, top left.  top left, bottom right is the
+       only one Picttoppm handled until October 2018, when we saw several
+       images in the bottom right, top left order and other Pict processing
+       programs considered that fine.
 
-    if (r->top > r->bottom || r->right < r->left)
-        dumpRect("Invalid rectangle", *r);
+       So now we accept all 4 possibilities.
+    */
 
-    if (r->top > r->bottom)
-        pm_error("Invalid PICT: a rectangle has a top below its bottom");
-    if (r->right < r->left)
-        pm_error("Invalid PICT: a rectangle has a right edge "
-                 "left of its left edge");
+    Word const y1 = readWord();
+    Word const x1 = readWord();
+    Word const y2 = readWord();
+    Word const x2 = readWord();
+
+    r->top    = MIN(y1, y2);
+    r->left   = MIN(x1, x2);
+    r->bottom = MAX(y1, y2);
+    r->right  = MAX(x1, x2);
 }
 
 
