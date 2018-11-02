@@ -10,6 +10,9 @@ not yet  BJH  Release 10.85.00
               instructions.  Fix perspective correctness.  Thanks Lucas Brunno
               Luna <lucaslunar32@hotmail.com>.
 
+              picttoppm: accept rectangle specifications in input that have
+              the corners in any order, not just upper left, then lower right.
+
               libnetpbm: Fix invalid memory reference in color name processing
               when trivial memory allocation fails.
 
