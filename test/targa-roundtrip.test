@@ -1,18 +1,56 @@
 #! /bin/bash
 # This script tests: pamtotga tgatoppm
-# Also requires: ppmtopgm pgmtopbm pamchannel
+# Also requires: ppmtopgm pgmtopbm pamchannel pnmquant
+
+tmpdir=${tmpdir:-/tmp}
+
+#Test 1: Should print 2425386270 41, cksum of testgrid.pbm, eight times
+
+echo "Test 1"
+
+for mode in "-mono" "-mono -norle" "-cmap" "-cmap -norle" \
+            "-rgb"  "-rgb  -norle" "" "-norle"
+  do
+  pamtotga ${mode} testgrid.pbm | \
+    tgatoppm | ppmtopgm | \
+    pgmtopbm -threshold -val 0.5 | cksum
+  done
+
+#Test 2:  Should produce 1571496937 33838, cksum of testimg.red, eight times
+
+echo "Test 2"
+
+test_pam=${tmpdir}/testimg.pgm
+pamchannel -infile=testimg.ppm -tupletype="GRAYSCALE" 0 > ${test_pam}
+
+for mode in "-mono" "-mono -norle" "-cmap" "-cmap -norle" \
+            "-rgb"  "-rgb  -norle" "" "-norle"
+  do
+  pamtotga ${mode} ${test_pam} | tgatoppm | ppmtopgm | cksum
+  done
+
+rm ${test_pam}
 
 
-#Test 1: Should print 2425386270 41, cksum of testgrid.pbm
+#Test 3: Should print 1926073387 101484, cksum of testimg.ppm, four times
 
-pamtotga -mono testgrid.pbm | \
-  tgatoppm | ppmtopgm | \
-  pgmtopbm -threshold -val 0.5 | cksum
+echo "Test 3"
 
-#Test 2:  Should produce 1571496937 33838, cksum of testimg.red
-pamchannel -infile=testimg.ppm -tupletype="GRAYSCALE" 0 | \
-  pamtotga -cmap | tgatoppm | ppmtopgm | cksum
+for mode in "-rgb" "-rgb -norle" "" "-norle"
+  do
+  pamtotga ${mode} testimg.ppm | tgatoppm | cksum
+  done
 
-#Test 3: Should print 1926073387 101484, cksum of testimg.ppm
+#Test 4: Should print 0 four times
 
-pamtotga -rgb testimg.ppm | tgatoppm | cksum
+echo "Test 4"
+
+test256_ppm=${tmpdir}/test256.ppm
+pnmquant 256 testimg.ppm > ${test256_ppm}
+for mode in "-rgb" "-rgb -norle" "" "-norle"
+  do
+  pamtotga ${mode} ${test256_ppm} | tgatoppm | cmp -s - ${test256_ppm}
+  echo $?
+done
+
+rm ${test256_ppm}
