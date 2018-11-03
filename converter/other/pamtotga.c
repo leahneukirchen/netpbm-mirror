@@ -14,6 +14,7 @@
 #define _BSD_SOURCE  /* Make sure string.h contains strdup() */
 #define _XOPEN_SOURCE 500  /* Make sure strdup() is in string.h */
 
+#include <assert.h>
 #include <string.h>
 
 #include "pm_c_util.h"
@@ -27,12 +28,12 @@
 /* Max number of colors allowed for colormapped output. */
 #define MAXCOLORS 256
 
-struct cmdlineInfo {
+struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char *inputFilespec;  /* Filespec of input file */
-    char *outName;
+    const char * inputFileName;
+    const char * outName;
     enum TGAbaseImageType imgType;
     bool defaultFormat;
     unsigned int norle;
@@ -41,8 +42,8 @@ struct cmdlineInfo {
 
 
 static void
-parseCommandLine(int argc, char ** argv,
-                 struct cmdlineInfo * const cmdlineP) {
+parseCommandLine(int argc, const char ** argv,
+                 struct CmdlineInfo * const cmdlineP) {
 /*----------------------------------------------------------------------------
    Parse the program arguments (given by argc and argv) into a form
    the program can deal with more easily -- a cmdline_info structure.
@@ -75,7 +76,7 @@ parseCommandLine(int argc, char ** argv,
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
     opt.allowNegNum = FALSE;  /* We have no parms that are negative numbers */
 
-    pm_optParseOptions3(&argc, argv, opt, sizeof(opt), 0);
+    pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdline_p and others. */
 
     if (cmap + mono + rgb > 1)
@@ -98,12 +99,12 @@ parseCommandLine(int argc, char ** argv,
         cmdlineP->outName = NULL;
 
     if (argc-1 == 0)
-        cmdlineP->inputFilespec = "-";
+        cmdlineP->inputFileName = "-";
     else if (argc-1 != 1)
         pm_error("Program takes zero or one argument (filename).  You "
                  "specified %d", argc-1);
     else
-        cmdlineP->inputFilespec = argv[1];
+        cmdlineP->inputFileName = argv[1];
 
 }
 
@@ -215,7 +216,8 @@ putMapEntry(struct pam * const pamP,
         putchar(pnm_scalesample(value[0],
                                 pamP->maxval, TGA_MAXVAL));
     else {
-        /* Must be 24 or 32 */
+        assert(size == 24 || size == 32);
+
         putchar(pnm_scalesample(value[PAM_BLU_PLANE],
                                 pamP->maxval, TGA_MAXVAL));
         putchar(pnm_scalesample(value[PAM_GRN_PLANE],
@@ -271,18 +273,18 @@ computeRunlengths(struct pam * const pamP,
 
 
 static void
-computeOutName(struct cmdlineInfo const cmdline,
+computeOutName(struct CmdlineInfo const cmdline,
                const char **      const outNameP) {
 
     char * workarea;
 
     if (cmdline.outName)
         workarea = strdup(cmdline.outName);
-    else if (streq(cmdline.inputFilespec, "-"))
+    else if (streq(cmdline.inputFileName, "-"))
         workarea = NULL;
     else {
         char * cp;
-        workarea = strdup(cmdline.inputFilespec);
+        workarea = strdup(cmdline.inputFileName);
         cp = strchr(workarea, '.');
         if (cp != NULL)
         	*cp = '\0';	/* remove extension */
@@ -325,7 +327,7 @@ validateTupleType(struct pam * const pamP) {
 
 static void
 computeImageType_cht(struct pam *            const pamP,
-                     struct cmdlineInfo      const cmdline,
+                     struct CmdlineInfo      const cmdline,
                      tuple **                const tuples,
                      enum TGAbaseImageType * const baseImgTypeP,
                      bool *                  const withAlphaP,
@@ -519,25 +521,25 @@ writeTgaRaster(struct pam *          const pamP,
 
 
 int
-main(int argc, char *argv[]) {
+main(int argc, const char **argv) {
 
-    struct cmdlineInfo cmdline;
+    struct CmdlineInfo cmdline;
     FILE * ifP;
     tuple ** tuples;
     struct pam pam;
-    int ncolors;
+    int colorCt;
     tupletable chv;
     tuplehash cht;
     struct ImageHeader tgaHeader;
     enum TGAbaseImageType baseImgType;
     bool withAlpha;
-    const char *outName;
+    const char * outName;
 
-    pnm_init( &argc, argv );
+    pm_proginit(&argc, argv);
 
     parseCommandLine(argc, argv, &cmdline);
 
-    ifP = pm_openr(cmdline.inputFilespec);
+    ifP = pm_openr(cmdline.inputFileName);
 
     computeOutName(cmdline, &outName);
 
@@ -545,17 +547,17 @@ main(int argc, char *argv[]) {
     pm_close(ifP);
 
     computeImageType_cht(&pam, cmdline, tuples,
-                         &baseImgType, &withAlpha, &chv, &cht, &ncolors);
+                         &baseImgType, &withAlpha, &chv, &cht, &colorCt);
 
     /* Do the Targa header */
     computeTgaHeader(&pam, baseImgType, withAlpha, !cmdline.norle,
-                     ncolors, 0, outName, &tgaHeader);
+                     colorCt, 0, outName, &tgaHeader);
     writeTgaHeader(tgaHeader);
 
     if (baseImgType == TGA_MAP_TYPE) {
         /* Write out the Targa colormap. */
-        int i;
-        for (i = 0; i < ncolors; ++i)
+        unsigned int i;
+        for (i = 0; i < colorCt; ++i)
             putMapEntry(&pam, chv[i]->tuple, tgaHeader.CoSize);
     }
 
