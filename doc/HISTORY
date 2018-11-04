@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.85.00
 
+              pamtotga: Add -cmap16 .
+    
               pamtris: Add -rgb, -grayscale.  Add w parameter to vertex
               instructions.  Fix perspective correctness.  Thanks Lucas Brunno
               Luna <lucaslunar32@hotmail.com>.

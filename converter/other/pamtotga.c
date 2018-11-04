@@ -32,11 +32,13 @@ struct CmdlineInfo {
     /* All the information the user supplied in the command line,
        in a form easy for the program to use.
     */
-    const char * inputFileName;
-    const char * outName;
+    const char *          inputFileName;
+    const char *          outName;
     enum TGAbaseImageType imgType;
-    bool defaultFormat;
-    unsigned int norle;
+    enum TGAmapType       mapType;
+    bool                  defaultFormat;
+    unsigned int          norle;
+    unsigned int          verbose;
 };
 
 
@@ -58,19 +60,23 @@ parseCommandLine(int argc, const char ** argv,
     unsigned int option_def_index;
 
     unsigned int outNameSpec;
-    unsigned int cmap, mono, rgb;
+    unsigned int cmap, cmap16, mono, rgb;
 
     option_def_index = 0;   /* incremented by OPTENT3 */
     OPTENT3(0,   "name",       OPT_STRING,
             &cmdlineP->outName, &outNameSpec, 0);
     OPTENT3(0,   "cmap",       OPT_FLAG,
             NULL, &cmap, 0);
+    OPTENT3(0,   "cmap16",     OPT_FLAG,
+            NULL, &cmap16, 0);
     OPTENT3(0,   "mono",       OPT_FLAG,
             NULL, &mono, 0);
     OPTENT3(0,   "rgb",        OPT_FLAG,
             NULL, &rgb, 0);
     OPTENT3(0,   "norle",      OPT_FLAG,
             NULL, &cmdlineP->norle, 0);
+    OPTENT3(0,   "verbose",    OPT_FLAG,
+            NULL, &cmdlineP->verbose, 0);
 
     opt.opt_table = option_def;
     opt.short_allowed = FALSE;  /* We have no short (old-fashioned) options */
@@ -79,17 +85,22 @@ parseCommandLine(int argc, const char ** argv,
     pm_optParseOptions3(&argc, (char **)argv, opt, sizeof(opt), 0);
         /* Uses and sets argc, argv, and some of *cmdline_p and others. */
 
-    if (cmap + mono + rgb > 1)
-        pm_error("You may specify only one of -cmap, -mono, and -rgb.");
+    if (cmap + cmap16 + mono + rgb > 1)
+        pm_error("You may specify only one of -cmap, -cmap16, "
+                 "-mono, and -rgb.");
 
-    if (cmap + mono + rgb == 0)
+    if (cmap + cmap16 + mono + rgb == 0)
         cmdlineP->defaultFormat = TRUE;
     else {
         cmdlineP->defaultFormat = FALSE;
 
-        if (cmap)
+        if (cmap) {
             cmdlineP->imgType = TGA_MAP_TYPE;
-        else if (mono)
+            cmdlineP->mapType = TGA_MAPTYPE_LONG;
+        } else if (cmap16) {
+            cmdlineP->imgType = TGA_MAP_TYPE;
+            cmdlineP->mapType = TGA_MAPTYPE_SHORT;
+        } else if (mono)
             cmdlineP->imgType = TGA_MONO_TYPE;
         else if (rgb)
             cmdlineP->imgType = TGA_RGB_TYPE;
@@ -107,40 +118,6 @@ parseCommandLine(int argc, const char ** argv,
         cmdlineP->inputFileName = argv[1];
 
 }
-
-
-static void
-writeTgaHeader(struct ImageHeader const tgaHeader) {
-
-    unsigned char flags;
-
-    putchar(tgaHeader.IdLength);
-    putchar(tgaHeader.CoMapType);
-    putchar(tgaHeader.ImgType);
-    putchar(tgaHeader.Index_lo);
-    putchar(tgaHeader.Index_hi);
-    putchar(tgaHeader.Length_lo);
-    putchar(tgaHeader.Length_hi);
-    putchar(tgaHeader.CoSize);
-    putchar(tgaHeader.X_org_lo);
-    putchar(tgaHeader.X_org_hi);
-    putchar(tgaHeader.Y_org_lo);
-    putchar(tgaHeader.Y_org_hi);
-    putchar(tgaHeader.Width_lo);
-    putchar(tgaHeader.Width_hi);
-    putchar(tgaHeader.Height_lo);
-    putchar(tgaHeader.Height_hi);
-    putchar(tgaHeader.PixelSize);
-    flags = (tgaHeader.AttBits & 0xf) |
-        ((tgaHeader.Rsrvd & 0x1) << 4) |
-        ((tgaHeader.OrgBit & 0x1) << 5) |
-        ((tgaHeader.OrgBit & 0x3) << 6);
-    putchar(flags);
-
-    if (tgaHeader.IdLength > 0)
-        fwrite(tgaHeader.Id, 1, (int) tgaHeader.IdLength, stdout);
-}
-
 
 
 static void
@@ -197,17 +174,20 @@ putMapEntry(struct pam * const pamP,
             int          const size) {
 
     if (size == 15 || size == 16) {
-        /* 5 bits each of red, green, and blue.  Watch for byte order */
-
         tuple const tuple31 = pnm_allocpamtuple(pamP);
 
         pnm_scaletuple(pamP, tuple31, value, 31);
         {
-            int const mapentry =
+            unsigned int const trn =
+                size == 16 && tuple31[PAM_TRN_PLANE] > 0 ? 1 : 0;
+
+            unsigned int const mapentry =
                 tuple31[PAM_BLU_PLANE] << 0 |
                 tuple31[PAM_GRN_PLANE] << 5 |
-                tuple31[PAM_RED_PLANE] << 10;
+                tuple31[PAM_RED_PLANE] << 10 |
+                trn                    << 15;
 
+            /* Note little-endian byte swapping */
             putchar(mapentry % 256);
             putchar(mapentry / 256);
         }
@@ -330,14 +310,16 @@ computeImageType_cht(struct pam *            const pamP,
                      struct CmdlineInfo      const cmdline,
                      tuple **                const tuples,
                      enum TGAbaseImageType * const baseImgTypeP,
+                     enum TGAmapType *       const mapTypeP,
                      bool *                  const withAlphaP,
                      tupletable *            const chvP,
                      tuplehash *             const chtP,
                      int *                   const ncolorsP) {
 
-    unsigned int ncolors;
+    unsigned int          ncolors;
     enum TGAbaseImageType baseImgType;
-    bool withAlpha;
+    enum TGAmapType       mapType;
+    bool                  withAlpha;
 
     validateTupleType(pamP);
 
@@ -354,8 +336,10 @@ computeImageType_cht(struct pam *            const pamP,
             if (*chvP == NULL) {
                 pm_message("Too many colors for colormapped TGA.  Doing RGB.");
                 baseImgType = TGA_RGB_TYPE;
-            } else
+            } else {
                 baseImgType = TGA_MAP_TYPE;
+                mapType = TGA_MAPTYPE_LONG;
+            }
             withAlpha = false;
         } else {
             baseImgType = TGA_MONO_TYPE;
@@ -368,6 +352,8 @@ computeImageType_cht(struct pam *            const pamP,
         baseImgType = cmdline.imgType;
 
         if (baseImgType == TGA_MAP_TYPE) {
+            mapType = cmdline.mapType;
+
             if (withAlpha)
                 pm_error("Can't do a colormap because image has transparency "
                          "information");
@@ -383,13 +369,14 @@ computeImageType_cht(struct pam *            const pamP,
     }
 
     if (baseImgType == TGA_MAP_TYPE) {
-        pm_message("%d colors found.", ncolors);
+        pm_message("%u colors found.", ncolors);
         /* Make a hash table for fast color lookup. */
         *chtP = pnm_computetupletablehash(pamP, *chvP, ncolors);
     } else
         *chtP = NULL;
 
     *baseImgTypeP = baseImgType;
+    *mapTypeP     = mapType;
     *withAlphaP   = withAlpha;
     *ncolorsP     = ncolors;
 }
@@ -399,6 +386,7 @@ computeImageType_cht(struct pam *            const pamP,
 static void
 computeTgaHeader(struct pam *          const pamP,
                  enum TGAbaseImageType const baseImgType,
+                 enum TGAmapType       const mapType,
                  bool                  const withAlpha,
                  bool                  const rle,
                  int                   const ncolors,
@@ -431,7 +419,14 @@ computeTgaHeader(struct pam *          const pamP,
         tgaHeaderP->CoMapType = 1;
         tgaHeaderP->Length_lo = ncolors % 256;
         tgaHeaderP->Length_hi = ncolors / 256;
-        tgaHeaderP->CoSize = withAlpha ? 32 : 24;
+        switch (mapType) {
+        case TGA_MAPTYPE_SHORT:
+            tgaHeaderP->CoSize = withAlpha ? 16 : 15;
+            break;
+        case TGA_MAPTYPE_LONG:
+            tgaHeaderP->CoSize = withAlpha ? 32 : 24;
+            break;
+        }
     } else {
         tgaHeaderP->CoMapType = 0;
         tgaHeaderP->Length_lo = 0;
@@ -458,6 +453,70 @@ computeTgaHeader(struct pam *          const pamP,
     tgaHeaderP->Rsrvd = 0;
     tgaHeaderP->IntrLve = 0;
     tgaHeaderP->OrgBit = orgBit;
+}
+
+
+
+static void
+reportTgaHeader(struct ImageHeader const tgaHeader) {
+
+    switch (tgaHeader.ImgType) {
+    case TGA_RLEMono:
+        pm_message("Generating monochrome, run-length encoded");
+        break;
+    case TGA_RLEMap:
+        pm_message("Generating colormapped, run-length encoded");
+        pm_message("%u bits per colormap entry", tgaHeader.CoSize);
+        break;
+    case TGA_RLERGB:
+        pm_message("Generating RGB truecolor, run-length encoded");
+        break;
+    case TGA_Mono:
+        pm_message("Generating monochrome, uncompressed");
+        break;
+    case TGA_Map:
+        pm_message("Generating colormapped, uncompressed");
+        pm_message("%u bits per colormap entry", tgaHeader.CoSize);
+        break;
+    case TGA_RGB:
+        pm_message("Generating RGB truecolor, uncompressed");
+        break;
+    }
+    pm_message("%u bits per pixel", tgaHeader.PixelSize);
+}
+
+
+
+static void
+writeTgaHeader(struct ImageHeader const tgaHeader) {
+
+    unsigned char flags;
+
+    putchar(tgaHeader.IdLength);
+    putchar(tgaHeader.CoMapType);
+    putchar(tgaHeader.ImgType);
+    putchar(tgaHeader.Index_lo);
+    putchar(tgaHeader.Index_hi);
+    putchar(tgaHeader.Length_lo);
+    putchar(tgaHeader.Length_hi);
+    putchar(tgaHeader.CoSize);
+    putchar(tgaHeader.X_org_lo);
+    putchar(tgaHeader.X_org_hi);
+    putchar(tgaHeader.Y_org_lo);
+    putchar(tgaHeader.Y_org_hi);
+    putchar(tgaHeader.Width_lo);
+    putchar(tgaHeader.Width_hi);
+    putchar(tgaHeader.Height_lo);
+    putchar(tgaHeader.Height_hi);
+    putchar(tgaHeader.PixelSize);
+    flags = (tgaHeader.AttBits & 0xf) |
+        ((tgaHeader.Rsrvd & 0x1) << 4) |
+        ((tgaHeader.OrgBit & 0x1) << 5) |
+        ((tgaHeader.OrgBit & 0x3) << 6);
+    putchar(flags);
+
+    if (tgaHeader.IdLength > 0)
+        fwrite(tgaHeader.Id, 1, (int) tgaHeader.IdLength, stdout);
 }
 
 
@@ -532,6 +591,7 @@ main(int argc, const char **argv) {
     tuplehash cht;
     struct ImageHeader tgaHeader;
     enum TGAbaseImageType baseImgType;
+    enum TGAmapType mapType;
     bool withAlpha;
     const char * outName;
 
@@ -547,11 +607,16 @@ main(int argc, const char **argv) {
     pm_close(ifP);
 
     computeImageType_cht(&pam, cmdline, tuples,
-                         &baseImgType, &withAlpha, &chv, &cht, &colorCt);
+                         &baseImgType, &mapType,
+                         &withAlpha, &chv, &cht, &colorCt);
 
     /* Do the Targa header */
-    computeTgaHeader(&pam, baseImgType, withAlpha, !cmdline.norle,
+    computeTgaHeader(&pam, baseImgType, mapType, withAlpha, !cmdline.norle,
                      colorCt, 0, outName, &tgaHeader);
+
+    if (cmdline.verbose)
+        reportTgaHeader(tgaHeader);
+
     writeTgaHeader(tgaHeader);
 
     if (baseImgType == TGA_MAP_TYPE) {
