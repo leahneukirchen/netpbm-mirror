@@ -341,14 +341,13 @@ computeImageType_cht(struct pam *            const pamP,
 
     validateTupleType(pamP);
 
-    withAlpha = (streq(pamP->tuple_type, "RGB_ALPHA"));
-
     if (cmdline.defaultFormat) {
         /* default the image type */
-        if (withAlpha) {
+        if (streq(pamP->tuple_type, "RGB_ALPHA")) {
             baseImgType = TGA_RGB_TYPE;
             *chvP = NULL;
-        } else if (pamP->depth > 1) {
+            withAlpha = true;
+        } else if (streq(pamP->tuple_type, "RGB")) {
             pm_message("computing colormap...");
             *chvP =
                 pnm_computetuplefreqtable(pamP, tuples, MAXCOLORS, &ncolors);
@@ -357,11 +356,15 @@ computeImageType_cht(struct pam *            const pamP,
                 baseImgType = TGA_RGB_TYPE;
             } else
                 baseImgType = TGA_MAP_TYPE;
+            withAlpha = false;
         } else {
             baseImgType = TGA_MONO_TYPE;
             *chvP = NULL;
+            withAlpha = false;
         }
     } else {
+        withAlpha = (streq(pamP->tuple_type, "RGB_ALPHA"));
+
         baseImgType = cmdline.imgType;
 
         if (baseImgType == TGA_MAP_TYPE) {
@@ -377,9 +380,6 @@ computeImageType_cht(struct pam *            const pamP,
                          MAXCOLORS);
         } else
             *chvP = NULL;
-        if (baseImgType == TGA_MONO_TYPE && pamP->depth > 1)
-            pm_error("For Mono TGA output, input must be "
-                     "GRAYSCALE or BLACKANDWHITE PAM or PBM or PGM");
     }
 
     if (baseImgType == TGA_MAP_TYPE) {
@@ -431,7 +431,7 @@ computeTgaHeader(struct pam *          const pamP,
         tgaHeaderP->CoMapType = 1;
         tgaHeaderP->Length_lo = ncolors % 256;
         tgaHeaderP->Length_hi = ncolors / 256;
-        tgaHeaderP->CoSize = 8 * pamP->depth;
+        tgaHeaderP->CoSize = withAlpha ? 32 : 24;
     } else {
         tgaHeaderP->CoMapType = 0;
         tgaHeaderP->Length_lo = 0;
@@ -443,7 +443,7 @@ computeTgaHeader(struct pam *          const pamP,
         tgaHeaderP->PixelSize = 8;
         break;
     case TGA_RGB_TYPE:
-        tgaHeaderP->PixelSize = 8 * MAX((withAlpha ? 4: 3), pamP->depth);
+        tgaHeaderP->PixelSize = 8 * (withAlpha ? 4: 3);
         break;
     case TGA_MONO_TYPE:
         tgaHeaderP->PixelSize = 8;

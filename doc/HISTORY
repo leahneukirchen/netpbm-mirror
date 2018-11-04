@@ -15,7 +15,10 @@ not yet  BJH  Release 10.85.00
 
               pamtotga: identify compressed colormapped format in error
               message saying the program doesn't know how to interpret it.
-              
+
+              pamtotga: Ignore extra planes in black and white or grayscale
+              input instead of generating junk output.
+
               libnetpbm: Fix invalid memory reference in color name processing
               when trivial memory allocation fails.
 
