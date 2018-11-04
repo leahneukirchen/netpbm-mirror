@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pnmpad User Manual</TITLE></HEAD>
 <BODY>
 <H1>pnmpad</H1>
-Updated: 1 July 2015
+Updated: 18 October 2018
 <BR>
 <A HREF="#index">Table Of Contents</A>
 
@@ -82,9 +82,9 @@ padding added to the left and right sides, respectively, of the image.
 
 <p>Alternatively, you can specify <b>-width</b> and just one of
 <b>-left</b> and <b>-right</b> and <b>pnmpad</b> calculates the required
-padding on the other side based on the width of the input image.  If
-the <b>-width</b> value is less than the width of the image plus the
-specified padding, the <b>-width</b> values is ignored.
+padding on the other side to make the output <i>width</i> pixels wide.  If
+the <b>-width</b> value is less than the width of the input image plus the
+specified padding, <b>pnmpad</b> ignores <b>-width</b>.
 
 <p>If you specify all three of <b>-width</b>, <b>-left</b>, and
 <b>-right</b>, you must ensure that the <b>-left</b> and <b>-right</b>

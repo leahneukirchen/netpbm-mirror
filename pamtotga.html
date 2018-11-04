@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pamtotga User Manual</TITLE></HEAD>
 <BODY>
 <H1>pamtotga</H1>
-Updated: 12 June 2008
+Updated: 04 November 2018
 <BR>
 
 <A HREF="#index">Table Of Contents</A>
@@ -51,9 +51,26 @@ image with maxval 255.
 <DL COMPACT>
 <DT><B>-cmap</B>
 <DD>
-Make output Targa file of type 24 bit colormapped.  Input must contain no
-more than 256 distinct colors. 
+Make output Targa file of type 24 bit colormapped.  Each color is 8 bits
+each of red, green, and blue, stored as 3 bytes for each distinct color in
+the image.
 
+<p>Input must contain no more than 256 distinct colors and must not contain
+  transparency information.
+
+<p>(The transparency limitation is not a limitation of the format, but
+  of <b>pamtotga</b>.  Implementing a color map that contains transparency
+  information is harder to implement).
+
+<DT><B>-cmap16</B>
+<DD>
+Same as <b>-cmap</b>, except colors are 5 bits each of red, green, and blue,
+stored as two bytes(16 bits) for each distinct color in the image.
+
+<p>Restrictions are the same as for <b>-cmap</b>.
+
+<p>This option was new in Netpbm 10.85 (December 2018).
+    
 <DT><B>-mono</B>
 <DD>
 Make output Targa file of type 8 bit monochrome.  Input must be PBM or PGM
@@ -109,7 +126,7 @@ channel, so it became a PAM class program.
 Netpbm package to recognize a transparency channel in a PAM.  It recognized
 tuple type "RGBA".  But when this kind of PAM image was later
 added to the PAM specification, it was specified with tuple type
-"RGB_ALPHA".  So in Netpbm 10-26 (January 2005), <b>pamtotga</b>
+"RGB_ALPHA".  So in Netpbm 10.26 (January 2005), <b>pamtotga</b>
 changed to recognize "RGB_ALPHA" instead of "RGBA".
 
 <H2 id="author">AUTHOR</H2>
