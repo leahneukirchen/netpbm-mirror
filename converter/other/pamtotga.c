@@ -173,8 +173,13 @@ putMapEntry(struct pam * const pamP,
             tuple        const value,
             int          const size) {
 
-    if (size == 15 || size == 16) {
+    if (size == 8)
+        putchar(pnm_scalesample(value[0],
+                                pamP->maxval, TGA_MAXVAL));
+    else if (size == 15 || size == 16) {
         tuple const tuple31 = pnm_allocpamtuple(pamP);
+
+        assert(pamP->depth >= 3);
 
         pnm_scaletuple(pamP, tuple31, value, 31);
         {
@@ -192,11 +197,10 @@ putMapEntry(struct pam * const pamP,
             putchar(mapentry / 256);
         }
         pnm_freepamtuple(tuple31);
-    } else if (size == 8)
-        putchar(pnm_scalesample(value[0],
-                                pamP->maxval, TGA_MAXVAL));
-    else {
+    } else {
         assert(size == 24 || size == 32);
+
+        assert(pamP->depth >= 3);
 
         putchar(pnm_scalesample(value[PAM_BLU_PLANE],
                                 pamP->maxval, TGA_MAXVAL));
@@ -419,13 +423,17 @@ computeTgaHeader(struct pam *          const pamP,
         tgaHeaderP->CoMapType = 1;
         tgaHeaderP->Length_lo = ncolors % 256;
         tgaHeaderP->Length_hi = ncolors / 256;
-        switch (mapType) {
-        case TGA_MAPTYPE_SHORT:
-            tgaHeaderP->CoSize = withAlpha ? 16 : 15;
-            break;
-        case TGA_MAPTYPE_LONG:
-            tgaHeaderP->CoSize = withAlpha ? 32 : 24;
-            break;
+        if (pamP->depth < 3)
+            tgaHeaderP->CoSize = 8;
+        else {
+            switch (mapType) {
+            case TGA_MAPTYPE_SHORT:
+                tgaHeaderP->CoSize = withAlpha ? 16 : 15;
+                break;
+            case TGA_MAPTYPE_LONG:
+                tgaHeaderP->CoSize = withAlpha ? 32 : 24;
+                break;
+            }
         }
     } else {
         tgaHeaderP->CoMapType = 0;
