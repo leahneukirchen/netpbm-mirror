@@ -1,14 +1,15 @@
 #! /bin/bash
 # This script tests: pamtotga tgatoppm
-# Also requires: ppmtopgm pgmtopbm pamchannel pnmquant
+# Also requires: ppmtopgm pgmtopbm pamchannel pnmquant pamdepth
 
 tmpdir=${tmpdir:-/tmp}
 
-#Test 1: Should print 2425386270 41, cksum of testgrid.pbm, eight times
+#Test 1: Should print 2425386270 41, cksum of testgrid.pbm, ten times
 
 echo "Test 1"
 
-for mode in "-mono" "-mono -norle" "-cmap" "-cmap -norle" \
+for mode in "-mono" "-mono -norle" \
+            "-cmap" "-cmap -norle" "-cmap16" "-cmap16 -norle" \
             "-rgb"  "-rgb  -norle" "" "-norle"
   do
   pamtotga ${mode} testgrid.pbm | \
@@ -16,14 +17,15 @@ for mode in "-mono" "-mono -norle" "-cmap" "-cmap -norle" \
     pgmtopbm -threshold -val 0.5 | cksum
   done
 
-#Test 2:  Should produce 1571496937 33838, cksum of testimg.red, eight times
+#Test 2:  Should produce 1571496937 33838, cksum of testimg.red, ten times
 
 echo "Test 2"
 
 test_pam=${tmpdir}/testimg.pgm
 pamchannel -infile=testimg.ppm -tupletype="GRAYSCALE" 0 > ${test_pam}
 
-for mode in "-mono" "-mono -norle" "-cmap" "-cmap -norle" \
+for mode in "-mono" "-mono -norle" \
+            "-cmap" "-cmap -norle" "-cmap16" "-cmap16 -norle" \
             "-rgb"  "-rgb  -norle" "" "-norle"
   do
   pamtotga ${mode} ${test_pam} | tgatoppm | ppmtopgm | cksum
@@ -41,16 +43,38 @@ for mode in "-rgb" "-rgb -norle" "" "-norle"
   pamtotga ${mode} testimg.ppm | tgatoppm | cksum
   done
 
-#Test 4: Should print 0 four times
+#Test 4: Should print 0 six times
 
 echo "Test 4"
 
 test256_ppm=${tmpdir}/test256.ppm
-pnmquant 256 testimg.ppm > ${test256_ppm}
-for mode in "-rgb" "-rgb -norle" "" "-norle"
+pnmquant 256 testimg.ppm > ${test256_ppm} || echo "pnmquant failed"
+# test image may have less than 256 colors
+
+for mode in "-rgb" "-rgb -norle" "-cmap" "-cmap -norle" "" "-norle"
   do
   pamtotga ${mode} ${test256_ppm} | tgatoppm | cmp -s - ${test256_ppm}
   echo $?
 done
 
+
+#Test 5: Should print 0 eight times
+
+echo "Test 5"
+
+test256_31_ppm=${tmpdir}/test256-31.ppm
+pamdepth 31 ${test256_ppm} > ${test256_31_ppm} || echo "pamdepth failed"
 rm ${test256_ppm}
+
+for mode in "-cmap16" "-cmap16 -norle"
+  do pamtotga ${mode} ${test256_31_ppm} | tgatoppm | cmp -s - ${test256_31_ppm}
+  echo $?
+  done
+
+for mode in  "-rgb" "-rgb -norle" "-cmap" "-cmap -norle" "" "-norle"
+  do pamtotga ${mode} ${test256_31_ppm} | tgatoppm | \
+     pamdepth 31 | cmp -s - ${test256_31_ppm}
+  echo $?
+  done
+
+rm ${test256_31_ppm}
