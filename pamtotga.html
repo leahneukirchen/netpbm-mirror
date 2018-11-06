@@ -2,7 +2,7 @@
 <HTML><HEAD><TITLE>Pamtotga User Manual</TITLE></HEAD>
 <BODY>
 <H1>pamtotga</H1>
-Updated: 04 November 2018
+Updated: 06 November 2018
 <BR>
 
 <A HREF="#index">Table Of Contents</A>
@@ -14,9 +14,10 @@ pamtotga - convert a Netpbm image to a TrueVision Targa file
 <H2 id="synopsis">SYNOPSIS</H2>
 
 <B>pamtotga</B>
-[<B>-mono|-cmap|-rgb</B>]
+[<B>-mono|-cmap|-cmap16|-rgb</B>]
 [<B>-norle</B>]
 [<b>-name=</b><i>name</i>
+[<B>-verhose</B>]
 [<I>pamfile</I>]
 
 <P>All options can be abbreviated to their shortest unique prefix.  You
@@ -51,21 +52,23 @@ image with maxval 255.
 <DL COMPACT>
 <DT><B>-cmap</B>
 <DD>
-Make output Targa file of type 24 bit colormapped.  Each color is 8 bits
-each of red, green, and blue, stored as 3 bytes for each distinct color in
-the image.
+Make output Targa file use a color map (palette) to make the output smaller.
+<p>
+Each color in the color map is 3 bytes, 8 bits each of red, green, and blue,
+unless the input is black and white or grayscale, in which case each color in
+the palette is represented by one byte.
 
 <p>Input must contain no more than 256 distinct colors and must not contain
-  transparency information.
+transparency information.
 
 <p>(The transparency limitation is not a limitation of the format, but
-  of <b>pamtotga</b>.  Implementing a color map that contains transparency
-  information is harder to implement).
+of <b>pamtotga</b>.  Implementing a color map that contains transparency
+information is harder to implement).
 
 <DT><B>-cmap16</B>
 <DD>
-Same as <b>-cmap</b>, except colors are 5 bits each of red, green, and blue,
-stored as two bytes(16 bits) for each distinct color in the image.
+Same as <b>-cmap</b>, except a color map entry for full color input is 5
+bits each of red, green, and blue, stored as two bytes (16 bits).
 
 <p>Restrictions are the same as for <b>-cmap</b>.
 
@@ -103,6 +106,11 @@ the first period (or the whole thing if there is no period).  It truncates
 it as necessary to meet TGA standards.  If you specify (or default to)
 Standard Input, <b>pamtotga</b> omits the image ID from the TGA header.
 
+<dt><b>-verbose</b>
+<dd>This causes <b>pamtotga</b> to issues messages about the conversion
+process.
+
+      
 </DL>
 
 <H2 id="seealso">SEE ALSO</H2>
