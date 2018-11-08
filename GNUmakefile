@@ -11,6 +11,7 @@
 #   deb:          Make a .deb file in the current dir.
 #
 #   check-tree:     Conduct tests on Netpbm files in the source dir. 
+#                   with "target=pamtotga" tests only pamtotga.
 #   check-package:  Conduct tests on packaged Netpbm files.
 #   check-install:  Conduct tests on installed Netpbm files.
 #   check:          Default check.  Synonym for check-package.
@@ -519,9 +520,9 @@ check-tree : PALMMAPDIR ?= $(SRCDIR)/converter/other/pnmtopalm
 
 
 # Create RESULTDIR.
-# If it already exists, rename and covert to an archive directory.
+# If it already exists, rename and convert to an archive directory.
 # Use numbered backup.
-# TODO: Renaming fails with old versions of mv which do not support -T.  
+# Note: Renaming fails with old versions of mv which do not have -T.  
 
 resultdir-backup: FORCE
 	if [ -d $(RESULTDIR) ]; \
