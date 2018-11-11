@@ -4,7 +4,18 @@ Netpbm.
 CHANGE HISTORY 
 --------------
 
-not yet  BJH  Release 10.84.02
+18.11.11 BJH  Release 10.84.03
+
+              picttoppm: accept rectangle specifications in input that have
+              the corners in any order, not just upper left, then lower right.
+
+              Merge build: fix so legacy program names 'pnmtopnm', 'ppmnorm',
+              and 'ppmtotga' work again.
+
+              Merge build: fix duplicate symbol 'prefabCode' in g3topbm,
+              pbmtog3.  Introduced in Netpbm 10.79 (June 2017).
+
+18.10.07 BJH  Release 10.84.02
 
               libnetpbm: Fix invalid memory reference in color name processing
               when trivial memory allocation fails.

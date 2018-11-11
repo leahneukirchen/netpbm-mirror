@@ -27,6 +27,7 @@
 #include "nstring.h"
 #include "mallocvar.h"
 #include "g3.h"
+#include "g3ttable.h"
 #include "bitreverse.h"
 #include "bitarith.h"
 
@@ -320,11 +321,11 @@ buildHashes(G3TableEntry * (*whashP)[HASHSIZE],
     for (i = 0; i < HASHSIZE; ++i)
         (*whashP)[i] = (*bhashP)[i] = NULL;
 
-    addtohash(*whashP, &ttable[0], 64, WHASHA, WHASHB);
-    addtohash(*whashP, &mtable[2], 40, WHASHA, WHASHB);
+    addtohash(*whashP, &g3ttable_table[0], 64, WHASHA, WHASHB);
+    addtohash(*whashP, &g3ttable_mtable[2], 40, WHASHA, WHASHB);
 
-    addtohash(*bhashP, &ttable[1], 64, BHASHA, BHASHB);
-    addtohash(*bhashP, &mtable[3], 40, BHASHA, BHASHB);
+    addtohash(*bhashP, &g3ttable_table[1], 64, BHASHA, BHASHB);
+    addtohash(*bhashP, &g3ttable_mtable[3], 40, BHASHA, BHASHB);
 
 }
 
@@ -420,15 +421,15 @@ processG3Code(const G3TableEntry * const teP,
    matters.
 -----------------------------------------------------------------------------*/
     enum g3tableId const teId =
-        (teP > mtable ? 2 : 0) + (teP - ttable) % 2;
+        (teP > g3ttable_mtable ? 2 : 0) + (teP - g3ttable_table) % 2;
 
     unsigned int teCount;
 
     switch(teId) {
-    case TERMWHITE: teCount = (teP - ttable    ) / 2;      break;
-    case TERMBLACK: teCount = (teP - ttable - 1) / 2;      break;
-    case MKUPWHITE: teCount = (teP - mtable    ) / 2 * 64; break;
-    case MKUPBLACK: teCount = (teP - mtable - 1) / 2 * 64; break;
+    case TERMWHITE: teCount = (teP - g3ttable_table    ) / 2;      break;
+    case TERMBLACK: teCount = (teP - g3ttable_table - 1) / 2;      break;
+    case MKUPWHITE: teCount = (teP - g3ttable_mtable    ) / 2 * 64; break;
+    case MKUPBLACK: teCount = (teP - g3ttable_mtable - 1) / 2 * 64; break;
     }
 
     switch (teId) {

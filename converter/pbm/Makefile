@@ -31,11 +31,12 @@ endif
 MATHBINARIES =	pbmtopk
 BINARIES =	$(PORTBINARIES) $(MATHBINARIES)
 SCRIPTS =       pbmtox10bm
+EXTRA_OBJECTS = g3ttable.o g3prefab.o
 
-OBJECTS = $(BINARIES:%=%.o)
+OBJECTS = $(BINARIES:%=%.o) $(EXTRA_OBJECTS)
 
 MERGEBINARIES = $(BINARIES)
-MERGE_OBJECTS = $(MERGEBINARIES:%=%.o2)
+MERGE_OBJECTS = $(MERGEBINARIES:%=%.o2) $(EXTRA_OBJECTS)
 
 SUBDIRS=pbmtoppa
 
@@ -85,3 +86,9 @@ thisdirclean: localclean
 .PHONY: localclean
 localclean:
 	-rm -f thinkjettopbm.c
+
+pbmtog3: g3ttable.o g3prefab.o
+pbmtog3: ADDL_OBJECTS = g3ttable.o g3prefab.o
+
+g3topbm: g3ttable.o
+g3topbm: ADDL_OBJECTS = g3ttable.o

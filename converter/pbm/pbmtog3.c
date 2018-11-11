@@ -16,6 +16,8 @@
 #include "bitreverse.h"
 #include "intcode.h"
 #include "g3.h"
+#include "g3ttable.h"
+#include "g3prefab.h"
 #include "pbm.h"
 
 enum G3eol {EOL, ALIGN8, ALIGN16, NO_EOL, NO_RTC, NO_EOLRTC};
@@ -25,8 +27,8 @@ struct OutStream;
 struct OutStream {
     FILE * fp;
     struct BitString buffer;
-    bool reverseBits;    /* Reverse bit order */  
-    enum G3eol eolAlign; /* Omit EOL and/or RTC; align EOL to 8/16 bits */ 
+    bool reverseBits;    /* Reverse bit order */
+    enum G3eol eolAlign; /* Omit EOL and/or RTC; align EOL to 8/16 bits */
     void * data;         /* Reserved for future expansion */
 };
 
@@ -71,7 +73,7 @@ parseCommandLine(int argc, const char ** const argv,
             0);
     OPTENT3(0,   "align16",          OPT_FLAG,  NULL, &align16,
             0);
-    OPTENT3(0,   "verbose",          OPT_FLAG,  NULL, &cmdlineP->verbose, 
+    OPTENT3(0,   "verbose",          OPT_FLAG,  NULL, &cmdlineP->verbose,
             0);
 
     /* TODO
@@ -102,7 +104,7 @@ parseCommandLine(int argc, const char ** const argv,
     else
         cmdlineP->desiredWidth = 1728;
 
-    if (argc-1 == 0) 
+    if (argc-1 == 0)
         cmdlineP->inputFileName = "-";
     else if (argc-1 != 1)
         pm_error("Program takes zero or one argument (filename).  You "
@@ -114,7 +116,7 @@ parseCommandLine(int argc, const char ** const argv,
 
 
 static void
-reversebuffer(unsigned char * const p, 
+reversebuffer(unsigned char * const p,
               unsigned int    const n) {
 
     unsigned int i;
@@ -128,14 +130,14 @@ reversebuffer(unsigned char * const p,
 static void
 flushBuffer(struct OutStream * const outP) {
 /*----------------------------------------------------------------------------
-  Flush the contents of the bit buffer 
+  Flush the contents of the bit buffer
 -----------------------------------------------------------------------------*/
     struct BitString const buffer = outP->buffer;
 
     assert (buffer.bitCount <= 32);
 
     if (buffer.bitCount > 0) {
-        unsigned int const fullBuffer = sizeof(buffer.intBuffer) * 8; 
+        unsigned int const fullBuffer = sizeof(buffer.intBuffer) * 8;
         unsigned int const bytesToWrite = (buffer.bitCount+7)/8;
         bigend32 outbytes;
         size_t rc;
@@ -197,7 +199,7 @@ putbitsBinary(struct OutStream * const outP,
 
    N.B. the definition of struct BitString requires upper bits to be zero.
 -----------------------------------------------------------------------------*/
-    unsigned int const fullBuffer = sizeof(outP->buffer.intBuffer) * 8; 
+    unsigned int const fullBuffer = sizeof(outP->buffer.intBuffer) * 8;
     unsigned int const spaceLeft = fullBuffer - outP->buffer.bitCount;
         /* Number of bits of unused space (at the high end) in buffer */
 
@@ -206,17 +208,17 @@ putbitsBinary(struct OutStream * const outP,
 
     if (spaceLeft > newBits.bitCount) {
         /* New bits fit with bits to spare */
-        outP->buffer.intBuffer = 
+        outP->buffer.intBuffer =
             outP->buffer.intBuffer << newBits.bitCount | newBits.intBuffer;
         outP->buffer.bitCount += newBits.bitCount;
-    } else { 
+    } else {
         /* New bits fill buffer.  We'll have to flush the buffer to stdout
            and put the rest of the bits in the new buffer.
         */
         unsigned int const nextBufBitCount = newBits.bitCount - spaceLeft;
-        unsigned int const bitMask = ((1<<nextBufBitCount) - 1); 
+        unsigned int const bitMask = ((1<<nextBufBitCount) - 1);
 
-        outP->buffer.intBuffer = ( (outP->buffer.intBuffer << spaceLeft) 
+        outP->buffer.intBuffer = ( (outP->buffer.intBuffer << spaceLeft)
                                  | (newBits.intBuffer >> nextBufBitCount));
         outP->buffer.bitCount  = fullBuffer;
         flushBuffer(outP);
@@ -228,7 +230,7 @@ putbitsBinary(struct OutStream * const outP,
 
 
 
-static void 
+static void
 initOutStream(struct OutStream * const outP,
               bool               const reverseBits,
               enum G3eol         const eolAlign) {
@@ -259,7 +261,7 @@ static void
 putbits(struct OutStream * const outP,
         struct BitString   const newBits) {
 
-    putbitsBinary(outP, newBits); 
+    putbitsBinary(outP, newBits);
     /* Change to putbitsDump() for human readable output */
 }
 
@@ -267,14 +269,14 @@ putbits(struct OutStream * const outP,
 
 static void
 putcodeShort(struct OutStream * const outP,
-             bit                const color, 
+             bit                const color,
              unsigned int       const runLength) {
 
-    /* Note that this requires ttable to be aligned white entry, black
+    /* Note that this requires g3ttable_table to be aligned white entry, black
        entry, white, black, etc.
     */
     unsigned int index = runLength * 2 + color;
-    putbits(outP, tableEntryToBitString(ttable[index]));
+    putbits(outP, tableEntryToBitString(g3ttable_table[index]));
 }
 
 
@@ -286,24 +288,24 @@ putcodeLong(struct OutStream * const outP,
 /*----------------------------------------------------------------------------
    Output Make-up code and Terminating code at once.
 
-   For run lengths which require both: length 64 and above 
+   For run lengths which require both: length 64 and above
 
    The codes are combined here to avoid calculations in putbits()
 
    Terminating code is max 12 bits, Make-up code is max 13 bits.
-   (See ttable, mtable entries in pbmtog3.h)  
+   (See g3ttable_table, g3ttable_mtable entries in g3ttable.h)
 
    Also reduces object code size when putcode is compiled inline.
 -----------------------------------------------------------------------------*/
     unsigned int const loIndex = runLength % 64 * 2 + color;
     unsigned int const hiIndex = runLength / 64 * 2 + color;
-    unsigned int const loLength = ttable[loIndex].length;
-    unsigned int const hiLength = mtable[hiIndex].length;
+    unsigned int const loLength = g3ttable_table[loIndex].length;
+    unsigned int const hiLength = g3ttable_mtable[hiIndex].length;
 
     struct BitString combinedCode;
 
-    combinedCode.intBuffer = mtable[hiIndex].code << loLength |
-                             ttable[loIndex].code;
+    combinedCode.intBuffer = g3ttable_mtable[hiIndex].code << loLength |
+                             g3ttable_table[loIndex].code;
     combinedCode.bitCount  = hiLength + loLength;
 
     putbits(outP, combinedCode);
@@ -318,9 +320,9 @@ putcodeExtra(struct OutStream * const outP,
 /*----------------------------------------------------------------------------
    Lengths over 2560.  This is rare.
    According to the standard, the mark-up code for 2560 can be issued as
-   many times as necessary without terminal codes.  
+   many times as necessary without terminal codes.
    --------------------------------------------------------------------------*/
-    G3TableEntry const markUp2560 = mtable[2560/64*2];
+    G3TableEntry const markUp2560 = g3ttable_mtable[2560/64*2];
                               /* Same code for black and white */
 
     unsigned int remainingLen;
@@ -339,7 +341,7 @@ putcodeExtra(struct OutStream * const outP,
 
 static void
 putspan(struct OutStream * const outP,
-        bit                const color, 
+        bit                const color,
         unsigned int       const runLength) {
 
     if (runLength < 64)
@@ -399,7 +401,7 @@ putrtc(struct OutStream * const outP) {
 static void
 readOffSideMargins(unsigned char * const bitrow,
                    unsigned int    const colChars,
-                   unsigned int  * const firstNonWhiteCharP, 
+                   unsigned int  * const firstNonWhiteCharP,
                    unsigned int  * const lastNonWhiteCharP,
                    bool          * const blankRowP) {
 /*----------------------------------------------------------------------------
@@ -464,7 +466,7 @@ setBlockBitsInFinalChar(unsigned char * const finalByteP,
 static void
 trimFinalChar(struct OutStream * const outP,
               bit                const color,
-              int                const carryLength, 
+              int                const carryLength,
               int                const existingCols,
               int                const desiredWidth) {
 /*---------------------------------------------------------------------------
@@ -479,7 +481,7 @@ trimFinalChar(struct OutStream * const outP,
        is valid.  We add to it the margin width.  Right-side margin may
        be added in main() to a narrow input image, detected in the
        input row by readOffSideMargins() or both.  The same treatment
-       applies regardless of the nature of the right-side margin.  
+       applies regardless of the nature of the right-side margin.
 ----------------------------------------------------------------------------*/
     if (existingCols == desiredWidth) {
         if (existingCols % 8 == 0)
@@ -502,12 +504,12 @@ trimFinalChar(struct OutStream * const outP,
 
 static void
 convertRowToG3(struct OutStream * const outP,
-               unsigned char    * const bitrow, 
+               unsigned char    * const bitrow,
                unsigned int       const existingCols,
                unsigned int       const desiredWidth) {
 /*----------------------------------------------------------------------------
    Table based Huffman coding
-  
+
    Normally Huffman code encoders count sequences of ones and zeros
    and convert them to binary codes as they terminate.  This program
    recognizes chains of pixels and converts them directly, reading
@@ -522,12 +524,12 @@ convertRowToG3(struct OutStream * const outP,
 
    So we first remove the sequence on the left side and compare its
    color with the leftmost pixel of the adjacent byte and emit either
-   one code for a single sequence if they agree or two if they disagree. 
+   one code for a single sequence if they agree or two if they disagree.
    Next the composite code for the central part (in the above example
    110011 -> 11 0111 11) is emitted.  Finally we save the length and
    color of the sequence on the right end as carry-over for the next
    byte cycle.  Some 8-bit input sequences (00000000, 01111111,
-   00111111, etc.) have no central part: these are special cases.  
+   00111111, etc.) have no central part: these are special cases.
 ---------------------------------------------------------------------------*/
     unsigned int const colChars = pbm_packed_bytes(existingCols);
 
@@ -537,7 +539,7 @@ convertRowToG3(struct OutStream * const outP,
     bool         blankRow;
     bit          borderColor;
 
-    borderColor = PBM_WHITE; /* initial value */ 
+    borderColor = PBM_WHITE; /* initial value */
 
     if (existingCols == desiredWidth && (desiredWidth % 8) > 0)
         setBlockBitsInFinalChar(&bitrow[colChars-1], desiredWidth);
@@ -564,9 +566,9 @@ convertRowToG3(struct OutStream * const outP,
                 carryLength = 8;
                 borderColor = rColor;
             } else {
-                struct PrefabCode const code = prefabCode[byte];
+                struct PrefabCode const code = g3prefab_code[byte];
                 unsigned int const activeLength =
-                    8 - code.leadBits - code.trailBits; 
+                    8 - code.leadBits - code.trailBits;
 
                 if (borderColor == (byte >> 7)) {
                     putspan(outP, borderColor, carryLength + code.leadBits);
@@ -635,7 +637,7 @@ main(int          argc,
         pm_error("Failed to allocate a row buffer for %u columns", cols);
 
     initOutStream(&out, cmdline.reversebits, cmdline.align);
-    
+
     puteol(&out);
 
     for (row = 0; row < rows; ++row) {
