@@ -80,7 +80,6 @@ main(int argc, char *argv[]) {
     TRY("ppmnorm", main_pnmnorm);
     TRY("ppmtotga", main_pamtotga);
     TRY("ppmtouil", main_pamtouil);
-    TRY("pnmnoraw", main_pnmtoplainpnm);
     TRY("pnmtopnm", main_pamtopnm);
     TRY("ppmnorm", main_pnmnorm);
     TRY("ppmtotga", main_pamtotga);
