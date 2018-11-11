@@ -248,7 +248,7 @@ bmptopnm.o bmptopnm.o2: bmp.h
 
 pamtotga.o pamtotga.o2: tga.h
 
-install.bin: install.bin.local
+install.bin install.merge: install.bin.local
 .PHONY: install.bin.local
 install.bin.local: $(PKGDIR)/bin
 # Remember that $(SYMLINK) might just be a copy command.

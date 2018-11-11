@@ -74,7 +74,7 @@ thinkjettopbm.c:%.c:%.c1 $(SRCDIR)/lib/util/lexheader
 	  grep -v "^[[:space:]]*int yywrap(void);" \
 	  >$@
 
-install.bin: install.bin.local
+install.bin install.merge: install.bin.local
 .PHONY: install.bin.local
 install.bin.local: $(PKGDIR)/bin
 # Remember that $(SYMLINK) might just be a copy command.

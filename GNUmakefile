@@ -374,18 +374,6 @@ netpbm:%:%.o $(OBJECT_DEP) $(NETPBMLIB) $(URTLIBDEP) $(LIBOPT)
 
 netpbm.o: mergetrylist
 
-install.merge: local.install.merge
-.PHONY: local.install.merge
-local.install.merge:
-	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pnmnoraw
-	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm gemtopbm
-	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pnminterp
-	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pgmoil
-	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm ppmtojpeg
-	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm bmptoppm
-	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pgmnorm
-	cd $(PKGDIR)/bin; $(SYMLINKEXE) netpbm pnmfile
-
 ifneq ($(NETPBMLIBTYPE),unixstatic)
 install.lib: lib/install.lib
 else

@@ -46,7 +46,7 @@ all: $(BINARIES)
 
 include $(SRCDIR)/common.mk
 
-install.bin: install.bin.local
+install.bin install.merge: install.bin.local
 
 .PHONY: install.bin.local
 install.bin.local: $(PKGDIR)/bin
