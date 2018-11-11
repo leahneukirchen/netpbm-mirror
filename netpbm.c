@@ -30,7 +30,7 @@ int
 main(int argc, char *argv[]) {
 
     const char * cp;
-    
+
     if (strcmp(pm_arg0toprogname(argv[0]), "netpbm") == 0) {
         ++argv;
         --argc;
@@ -45,7 +45,7 @@ main(int argc, char *argv[]) {
 	}
 
     cp = pm_arg0toprogname(argv[0]);
-    
+
     /* merge.h is an automatically generated file that generates code to
        match the string 'cp' against the name of every program that is part
        of this merge and, upon finding a match, invoke that program.
@@ -87,8 +87,8 @@ main(int argc, char *argv[]) {
        which would know whether pnmtojpeg was built into the merged binary
        or not.  But that's too much work.  Same with TIFF converters.
 
-    TRY("ppmtojpeg", main_pnmtojpeg); 
-    TRY("pngtopnm", main_pngtopam); 
+    TRY("ppmtojpeg", main_pnmtojpeg);
+    TRY("pngtopnm", main_pngtopam);
     TRY("pnmtotiff", main_pamtotiff);
     */
 
