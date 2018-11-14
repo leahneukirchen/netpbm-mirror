@@ -6,6 +6,8 @@ CHANGE HISTORY
 
 not yet  BJH  Release 10.85.00
 
+              Add pammixmulti.  Thanks Scott Pakin (scott@pakin.org).
+
               pamtotga: Add -cmap16 .
     
               pamtris: Add -rgb, -grayscale.  Add w parameter to vertex
@@ -36,6 +38,9 @@ not yet  BJH  Release 10.85.00
               Build: fix reference to nonexistent getline on Mac OS X 10.6.
 
               Build: fix reference to nonexistent strndup on Mac OS X 10.6.
+
+              Merge build: fix duplicate symbol 'prefabCode' in g3topbm,
+              pbmtog3.  Introduced in Netpbm 10.79 (June 2017).
 
 18.09.29 BJH  Release 10.84.00
 
